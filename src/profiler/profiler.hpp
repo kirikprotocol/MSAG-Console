@@ -38,13 +38,15 @@ struct Profile{
   {
     return codepage==src.codepage &&
            reportoptions==src.reportoptions &&
-           locale==src.locale;
+           locale==src.locale &&
+           hide==src.hide;
   }
   void assign(const Profile& src)
   {
     codepage=src.codepage;
     reportoptions=src.reportoptions;
     locale=src.locale;
+    hide=src.hide;
   }
 };
 

@@ -394,11 +394,16 @@ void Smsc::init(const SmscConfigs& cfg)
   {
     char *rep=cfg.cfgman->getString("profiler.defaultReport");
     char *dc=cfg.cfgman->getString("profiler.defaultDataCoding");
+
+
     char *str=rep;
     while((*str=toupper(*str)))str++;
     str=dc;
     while((*str=toupper(*str)))str++;
     smsc::profiler::Profile defProfile={0,0,"",0};
+
+    defProfile.hide=cfg.cfgman->getBool("profiler.defaultHide");
+
     if(!strcmp(dc,"DEFAULT"))
       defProfile.codepage=profiler::ProfileCharsetOptions::Default;
     else if(!strcmp(dc,"UCS2"))
@@ -415,7 +420,6 @@ void Smsc::init(const SmscConfigs& cfg)
     {
       log.warn("Profiler:Unrecognized default report options");
     }
-
     profiler=new smsc::profiler::Profiler(defProfile,
                &smeman,
                cfg.cfgman->getString("profiler.systemId"));
