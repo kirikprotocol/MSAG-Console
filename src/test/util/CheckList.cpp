@@ -23,7 +23,10 @@ TestCase* CheckList::registerTc(const char* id, const char* desc)
 	MutexGuard mguard(mutex);
 	TcMap::iterator it = tcMap.find(id);
 	__require__(it == tcMap.end());
+	__require__(id);
+	__require__(desc);
 	TestCase* tc = new TestCase(id, desc);
+	__trace2__("registerTc(): id = %s, desc = %s", tc->id.c_str(), tc->desc.c_str());
 	tcMap[id] = tc;
 	tcList.push_back(tc);
 	return tc;
@@ -34,6 +37,18 @@ TestCase* CheckList::getTc(const char* id) const
 	TcMap::const_iterator it = tcMap.find(id);
 	__require__(it != tcMap.end());
 	return it->second;
+}
+
+void CheckList::reset()
+{
+	MutexGuard mguard(mutex);
+	for (TcMap::iterator it = tcMap.begin(); it != tcMap.end(); it++)
+	{
+		SyncTestCase tc(it->second);
+		tc->correct = 0;
+		tc->incorrect = 0;
+		tc->errCodes.clear();
+	}
 }
 
 int CheckList::getTcMag(const TestCase* tc) const

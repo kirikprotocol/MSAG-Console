@@ -199,6 +199,11 @@ public:
 	 */
 	TestCase* getTc(const char* id) const;
 
+	/**
+	 * Обнуление счетчиков и ошибок.
+	 */
+	void reset();
+
 	void save(bool printErrorCodes = true,
 		bool printExecCount = true, bool printTcIds = true) const;
 
