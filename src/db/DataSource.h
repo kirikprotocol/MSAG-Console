@@ -391,6 +391,7 @@ namespace smsc { namespace db
         
         virtual Connection* getConnection() = 0;
         virtual void freeConnection(Connection* connection) = 0;
+        virtual void closeConnections() = 0;
     };
 
     class DataSourceFactory 
@@ -459,7 +460,7 @@ namespace smsc { namespace db
 
         Array<Connection *> connections;
         unsigned            size, count;
-
+        
         void push(Connection* connection);
         Connection* pop(void);
 
@@ -472,6 +473,7 @@ namespace smsc { namespace db
 
         Connection* getConnection();
         void freeConnection(Connection* connection);
+        void closeConnections();
     };
 
     class PoolledDataSource : public DataSource
@@ -498,13 +500,14 @@ namespace smsc { namespace db
             if (pool) delete pool;
         };
 
-        Connection* getConnection() 
-        {
+        Connection* getConnection() {
             return pool->getConnection();
         };
-        void freeConnection(Connection* connection)
-        {
+        void freeConnection(Connection* connection) {
             pool->freeConnection(connection);
+        };
+        void closeConnections() {
+            pool->closeConnections();
         };
     };
     

@@ -92,8 +92,7 @@ void ConnectionPool::loadPoolSize(ConfigView* config)
 ConnectionPool::ConnectionPool(DataSource& _ds, ConfigView* config)
     throw(ConfigException) : ds(_ds), count(0),
         log(Logger::getCategory("smsc.db.ConnectionPool")),
-            idleHead(0L), idleTail(0L), idleCount(0),
-                head(0L), tail(0L), queueLen(0)
+            idleHead(0), idleTail(0), idleCount(0), head(0), tail(0), queueLen(0)
 {
     loadPoolSize(config);
 }
@@ -127,14 +126,7 @@ Connection* ConnectionPool::pop(void)
 
 ConnectionPool::~ConnectionPool()
 {
-    MutexGuard  guard(monitor);
-
-    while (connections.Count())
-    {
-        Connection* connection=0L;
-        (void) connections.Pop(connection);
-        if (connection) delete connection;
-    }
+    closeConnections();
 }
 
 Connection* ConnectionPool::getConnection()
@@ -195,12 +187,25 @@ void ConnectionPool::freeConnection(Connection* connection)
             }
         }
         if (connection) delete connection;
-        count--;
+        if (count > 0) count--;
     }
     else 
     {
         push(connection);
     }
+}
+void ConnectionPool::closeConnections()
+{
+    MutexGuard  guard(monitor);
+    
+    while (connections.Count()) {
+        Connection* connection=0L;
+        (void) connections.Pop(connection);
+        if (connection) delete connection;
+    }
+
+    idleHead = 0; idleTail = 0; idleCount = 0; 
+    count = 0; head = 0; tail = 0; queueLen = 0;
 }
 
 /* ------------------- Connection WatchDog (DataSource) ------------------- */
