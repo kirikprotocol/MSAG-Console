@@ -128,6 +128,15 @@ public:
   {
     return idx;
   }
+  virtual bool getPeers(char* in,char* out)
+  {
+    MutexGuard guard(mutex);
+    if ( proxy )
+    {
+      proxy->getPeers(in,out);
+    }
+    else throw runtime_error("proxy not connected");
+  }
 };
 
 using core::synchronization::Mutex;
