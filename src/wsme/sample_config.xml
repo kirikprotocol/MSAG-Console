@@ -39,8 +39,9 @@
 	
 	<section name="AdManager">
 	    <section name="History">
-		<param name="keepPeriod" type="int">10</param>
+		<param name="keepPeriod" type="int">36000</param>
 		<param name="lifePeriod" type="int">3600</param>
+		<param name="cleanPeriod" type="int">3600</param>
 	    </section>
 	    <section name="Repository">
 	    </section>

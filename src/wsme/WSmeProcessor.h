@@ -25,6 +25,10 @@
 #include <util/config/ConfigView.h>
 #include <util/config/ConfigException.h>
 
+#include <core/threads/Thread.hpp>
+#include <core/synchronization/Mutex.hpp>
+#include <core/synchronization/Event.hpp>
+
 #include <db/DataSource.h>
 
 namespace smsc { namespace wsme
@@ -36,7 +40,11 @@ namespace smsc { namespace wsme
     using smsc::util::Exception;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
-    
+
+    using smsc::core::threads::Thread;
+    using smsc::core::synchronization::Event;
+    using smsc::core::synchronization::Mutex;
+
     class InitException : public Exception
     {
     public:
@@ -152,7 +160,7 @@ namespace smsc { namespace wsme
             throw (ProcessException);
     };
     
-    class AdHistory
+    class AdHistory : public Thread
     {
     private:
         
@@ -161,13 +169,24 @@ namespace smsc { namespace wsme
         
         AdIdManager&        idManager;
 
-        int keepPeriod, lifePeriod;
+        int     keepPeriod, lifePeriod, cleanPeriod;
+
+        Event   job, exit, exited;
+        Mutex   startLock;
+        bool    bStarted;
+        
+        void cleanup()
+            throw (ProcessException);
     
     public:
 
         AdHistory(DataSource& _ds, ConfigView* config, AdIdManager& idman)
             throw(ConfigException, InitException);
         virtual ~AdHistory();
+
+        int  Execute();
+        void Start();
+        void Stop();
 
         bool getId(const std::string msisdn, int& id)
             throw (ProcessException);

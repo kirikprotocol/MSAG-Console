@@ -364,16 +364,103 @@ int AdRepository::getNextId(int id)
 
 AdHistory::AdHistory(DataSource& _ds, ConfigView* config, AdIdManager& idman)
     throw(ConfigException, InitException) 
-        : log(Logger::getCategory("smsc.wsme.AdHistory")), 
-            ds(_ds), idManager(idman)
+        : Thread(), log(Logger::getCategory("smsc.wsme.AdHistory")), 
+            ds(_ds), idManager(idman), bStarted(false)
 
 {
     keepPeriod = config->getInt("keepPeriod");
     lifePeriod = config->getInt("lifePeriod");
+    cleanPeriod = config->getInt("cleanPeriod");
+    
+    Start();
 }
 AdHistory::~AdHistory()
 {
+    Stop();
+}
+void AdHistory::Start()
+{
+    MutexGuard  guard(startLock);
+    
+    if (!bStarted)
+    {
+        Thread::Start();
+        bStarted = true;
+    }
+}
+void AdHistory::Stop()
+{
+    MutexGuard  guard(startLock);
+    
+    if (bStarted)
+    {
+        exit.Signal();
+        job.Signal();
+        exited.Wait();
+        bStarted = false;
+    }
+}
 
+int AdHistory::Execute()
+{
+    while (!exit.isSignaled())
+    {
+        job.Wait(cleanPeriod);
+        if (exit.isSignaled()) break;
+
+        try 
+        {
+            job.Signal(); cleanup(); job.Wait(0);
+        } 
+        catch (ProcessException& exc) 
+        {
+            log.error("Exception occurred during history cleanup : %s",
+                      exc.what());
+        }
+    } 
+    
+    exit.Wait(0);
+    exited.Signal();
+    return 0;
+}
+
+const char* SQL_DELETE_HISTORY_INFO =
+"DELETE FROM WSME_HISTORY WHERE LAST_UPDATE<:CT";
+void AdHistory::cleanup()
+    throw (ProcessException)
+{
+    Statement* statement = 0; 
+    Connection* connection = 0;
+
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection)
+            throw ProcessException("Get connection failed");
+        if (!connection->isAvailable()) connection->connect();
+
+        statement = connection->createStatement(SQL_DELETE_HISTORY_INFO);
+        statement->setDateTime(1, time(NULL)-keepPeriod);
+        statement->executeUpdate();
+        connection->commit();
+        
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        if (statement) delete statement;
+        if (connection) {
+            try {
+                connection->rollback();
+            } catch (Exception& eee) {
+                log.error("Rollback failed, Cause: %s", eee.what());
+            }
+            ds.freeConnection(connection);
+        }
+        log.error(exc.what());
+        throw ProcessException(exc.what());
+    }
 }
 
 const char* SQL_SELECT_HISTORY_INFO =
