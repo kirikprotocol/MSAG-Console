@@ -92,7 +92,7 @@ struct Address
 
   Address(const char* text)
   {
-    if(!text)throw runtime_error("bad address NULL");
+    if(!text || !*text)throw runtime_error("bad address NULL");
     AddressValue addr_value;
     int iplan,itype;
     memset(addr_value,0,sizeof(addr_value));
@@ -695,7 +695,7 @@ public:
     tag&=0xff;
     __require__(tag<=SMS_LAST_TAG);
     if ( !HSNS_isEqual() ) {
-      if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) || tag == unType(Tag::SMSC_RAW_SHORTMESSAGE)) 
+      if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) || tag == unType(Tag::SMSC_RAW_SHORTMESSAGE))
       {
         __trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
         dropProperty(Tag::SMPP_SHORT_MESSAGE);
