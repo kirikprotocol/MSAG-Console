@@ -140,6 +140,41 @@ namespace smsc { namespace sms
             setValue(addr.length, addr.value);   
         };
 
+				Address(const char* text)
+				{
+					char addr_value[21];
+					int iplan,itype;
+					memset(addr_value,0,21);
+					int scaned = sscanf(text,".%d.%d.%20s",
+								 &itype,
+								 &iplan,
+								 addr_value);
+					if ( scaned != 3 )
+					{
+						scaned = sscanf(text,"+%[0123456789?]20s",addr_value);
+						if ( scaned )
+						{
+							iplan = 1;//ISDN
+							itype = 1;//INTERNATIONAL
+						}
+						else
+						{
+							scaned = sscanf(text,"%[0123456789?]20s",addr_value);
+							if ( !scaned )
+								throw runtime_error(string("bad address ")+text);
+							else
+							{
+								iplan = 1;//ISDN
+								itype = 2;//NATIONAL
+							}
+						}
+					}
+					plan = (uint8_t)iplan;
+					type = (uint8_t)itype;
+					length = strlen(addr_value);
+					memcpy(value,addr_value,length);
+				}
+
         /**
          * Переопределённый оператор '=',
          * используется для копирования адресов друг в друга
