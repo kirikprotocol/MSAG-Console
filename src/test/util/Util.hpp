@@ -9,6 +9,8 @@ namespace smsc {
 namespace test {
 namespace util {
 
+using std::vector;
+
 /**
  * Флаг задающий выполнение всех тестовых процедур в рамках тест кейса.
  */
@@ -55,6 +57,7 @@ public:
 	const char* getId() const;
 	int getChoice() const;
 	void addFailure(int subTC);
+	void addFailure(const vector<int>& subTC, int base = 0);
 	const std::vector<int>& getFailures() const;
 	bool value() const;
 	bool operator== (const TCResult& tcRes) const;
@@ -111,6 +114,17 @@ inline void TCResult::addFailure(int subTC)
 	abort();
 #endif
 	failures.push_back(subTC);
+}
+
+inline void TCResult::addFailure(const vector<int>& subTC, int base)
+{
+#ifdef ABORT_ON_FAILURE
+	abort();
+#endif
+	for (int i = 0; i < subTC.size(); i++)
+	{
+		failures.push_back(base + subTC[i]);
+	}
 }
 
 inline const std::vector<int>& TCResult::getFailures() const
