@@ -63,6 +63,7 @@ public class RoutesEdit extends SmscBean
 				permissible = r.isEnabling();
 				billing = r.isBilling();
 				archiving = r.isArchiving();
+				serviceId = r.getServiceId();
 				checkedSources = (String[]) r.getSources().getSubjectNames().toArray(new String[0]);
 				srcMasks = (String[]) r.getSources().getMaskNames().toArray(new String[0]);
 				checkedDestinations = (String[]) r.getDestinations().getSubjectNames().toArray(new String[0]);
