@@ -360,7 +360,7 @@ Array<DistrList> DistrListManager::list(const Address& dlOwner)
             if (!checkRs || !checkRs->fetchNext()) 
                 throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
             if (!checkRs->getUint32(1))
-                throw PrincipalNotExistsException("Principal for address '%s' bot exists",
+                throw PrincipalNotExistsException("Principal for address '%s' not exists",
                                                   dlOwnerStr);
         }
     }

@@ -43,6 +43,8 @@ namespace smsc { namespace distrlist
             throw(SQLException, ListNotExistsException);
         virtual DistrList getDistrList(string dlName)
             throw(SQLException, ListNotExistsException);
+        virtual Array<DistrList> list(const Address& dlOwner)
+            throw(SQLException, PrincipalNotExistsException);
         virtual Array<DistrList> list()
             throw(SQLException);
         
