@@ -35,7 +35,7 @@ public class Source
 			Element subjElem = (Element) list.item(0);
 			subj = subjects.get(subjElem.getAttribute("id"));
 			if (subj == null)
-				throw new NullPointerException("Subject is unknown");
+				throw new NullPointerException("Subject is unknown: "+subjElem.getAttribute("id"));
 		}
 		else
 		{
