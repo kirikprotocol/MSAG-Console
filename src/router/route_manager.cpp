@@ -13,6 +13,15 @@ namespace router{
 using std::runtime_error;
 using std::auto_ptr;
 
+static inline void printRoute(RouteRecord* record)
+{
+	__trace2__("R(%s:%x->%s:%x)",
+						 record->pattern.src_addressPattern,
+						 record->pattern.src_addressPattern_32[0],
+						 record->pattern.dest_addressPattern,
+						 record->pattern.dest_addressPattern_32[0]);
+}
+
 #define is_a(pattern,address) ( compare_pataddr(pattern,address) == 0 )
 static inline int compare_pataddr( const RoutePattern& pattern,
                                    const RouteAddress& addr )
@@ -46,7 +55,7 @@ static inline int compare_pataddr( const RoutePattern& pattern,
   result = pattern.num_n_plan - addr.num_n_plan; ifn0goto;
 //  __trace2__("compare src(0): %d ",compare_src(0));
 //  __trace2__("compare dest(0): %d ",compare_dest(0));
-        result = compare_src(0); ifn0goto;
+  result = compare_src(0); ifn0goto;
   result = compare_src(1); ifn0goto;
   result = compare_src(2); ifn0goto;
   result = compare_src(3); ifn0goto;
@@ -221,9 +230,10 @@ __synchronized__
         //__trace2__("add route mask: %llx->%llx",
         //                                       *(uint64_t*)(table[table_ptr-1]->pattern.src_addressMask),
         //                                       *(uint64_t*)(table[table_ptr-1]->pattern.dest_addressMask));
-  __trace2__("add route: %s->%s",
+  /*__trace2__("add route: %s->%s",
              (table[table_ptr-1]->pattern.src_addressPattern),
-             (table[table_ptr-1]->pattern.dest_addressPattern));
+             (table[table_ptr-1]->pattern.dest_addressPattern)); */
+	printRoute(table[table_ptr-1]);
   sorted = false;
 }
 
@@ -251,6 +261,8 @@ __synchronized__
   {
     qsort(table,table_ptr,sizeof(RouteRecord*),route_pattern_compare);
     sorted = true;
+		for ( int i=0; i < table_ptr; ++i )
+			printRoute(table[i]);
   }
   RouteAddress address;
   proxy = 0;
