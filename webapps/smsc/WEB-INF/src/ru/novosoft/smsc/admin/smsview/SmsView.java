@@ -52,22 +52,20 @@ public class SmsView
     {
       SmsSet set = new SmsSet();
       Connection connection = null;
-      try
-      {
+      PreparedStatement stmt = null;
+      try {
         connection = ds.getConnection();
         if (connection == null) return set;
         String sql = prepareQueryString(query);
-        PreparedStatement stmt = connection.prepareStatement(sql);
+        stmt = connection.prepareStatement(sql);
         bindInput(stmt, query);
         fetchRows(stmt, set, query.getRowsMaximum());
-        connection.close();
-      }
-      catch (Exception exc)
-      {
-        try { if (connection != null) connection.close(); }
-        catch (Exception cexc) { cexc.printStackTrace(); }
+      } catch (Exception exc) {
         System.out.println("Operation with DB failed !");
         exc.printStackTrace();
+      } finally {
+          try { if (stmt != null) stmt.close(); connection.close(); }
+          catch (Exception cexc) { cexc.printStackTrace(); }
       }
       return set;
     }
@@ -75,12 +73,13 @@ public class SmsView
     public int delArchiveSmsSet(SmsSet set)
     {
       Connection connection = null;
+      PreparedStatement stmt = null;
       int deleted = 0;
       try {
         connection = ds.getConnection();
         if (connection == null) return 0;
         String sql = "DELETE FROM SMS_ARC WHERE ID=?";
-        PreparedStatement stmt = connection.prepareStatement(sql);
+        stmt = connection.prepareStatement(sql);
         for (int i=0; i<set.getRowsCount(); i++) {
           SmsRow row = set.getRow(i);
           if (row != null) {
@@ -89,14 +88,12 @@ public class SmsView
             connection.commit();
           }
         }
-        connection.close();
-      }
-      catch (Exception exc)
-      {
-        try { if (connection != null) connection.close(); }
-        catch (Exception cexc) { cexc.printStackTrace(); }
+      } catch (Exception exc) {
         System.out.println("Operation with DB failed !");
         exc.printStackTrace();
+      } finally {
+          try { if (stmt != null) stmt.close(); connection.close(); }
+          catch (Exception cexc) { cexc.printStackTrace(); }
       }
       return deleted;
     }
@@ -211,49 +208,57 @@ public class SmsView
     {
       String selectLargeBody = "SELECT BODY FROM SMS_ATCH WHERE ID=?";
       ResultSet rs = stmt.executeQuery();
-      Connection connection = stmt.getConnection();
-      PreparedStatement lbstmt = connection.prepareStatement(selectLargeBody);
-      int fetchedCount = 0;
-      while (rs.next() && rowsMaximum > fetchedCount++)
+
+      try
       {
-        SmsRow row = new SmsRow();
-        int pos=1;
-        byte id[] = rs.getBytes(pos++);
-        row.setId(id);
-        //row.setDate(DateConvertor.convertGMTToLocal(rs.getTimestamp(pos++)));
-        GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-        row.setDate(rs.getTimestamp(pos++, cal));
-        row.setFrom(rs.getString(pos++));
-        row.setTo(rs.getString(pos++));
-        row.setToDealiased(rs.getString(pos++));
-        row.setStatus(rs.getInt(pos++));
-        row.setLastResult(rs.getInt(pos++));
-        int bodyLen = rs.getInt(pos++);
-        if (bodyLen <= 0) {
-          row.setText("<< No message >>");
-        }
-        else if (bodyLen <= MAX_SMS_BODY_LENGTH) {
-          byte body[] = rs.getBytes(pos);
-          if (body == null || body.length == 0) row.setText("<< No message (body null) >>");
-          else row.setText(convertBody(new ByteArrayInputStream(body, 0, bodyLen)));
-        }
-        else {
-          ResultSet lbrs = null;
-          try {
-            lbstmt.setBytes(1, id);
-            lbrs = lbstmt.executeQuery();
-            lbrs.next();
-            Blob blob = lbrs.getBlob(1);
-            row.setText("BLOB >> " +convertBody(blob.getBinaryStream()));
-          } catch (Exception exc) {
-              System.out.println("Retrive Blob from DB failed !");
-              if (lbrs != null) lbrs.close();
-              exc.printStackTrace();
+        int fetchedCount = 0;
+        while (rs.next() && rowsMaximum > fetchedCount++)
+        {
+          SmsRow row = new SmsRow();
+          int pos=1;
+          byte id[] = rs.getBytes(pos++);
+          row.setId(id);
+          GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+          row.setDate(rs.getTimestamp(pos++, cal));
+          row.setFrom(rs.getString(pos++));
+          row.setTo(rs.getString(pos++));
+          row.setToDealiased(rs.getString(pos++));
+          row.setStatus(rs.getInt(pos++));
+          row.setLastResult(rs.getInt(pos++));
+          int bodyLen = rs.getInt(pos++);
+
+          if (bodyLen <= 0) { row.setText("<< No message >>"); }
+          else if (bodyLen <= MAX_SMS_BODY_LENGTH) {
+            byte body[] = rs.getBytes(pos);
+            if (body == null || body.length == 0) row.setText("<< No message (body null) >>");
+            else row.setText(convertBody(new ByteArrayInputStream(body, 0, bodyLen)));
+          } else {
+            PreparedStatement lbstmt = null;
+            ResultSet lbrs = null;
+            try {
+              lbstmt = stmt.getConnection().prepareStatement(selectLargeBody);
+              lbstmt.setBytes(1, id);
+              lbrs = lbstmt.executeQuery(); lbrs.next();
+              Blob blob = lbrs.getBlob(1);
+              row.setText("BLOB >> " +convertBody(blob.getBinaryStream()));
+            } catch (Exception exc) {
+                System.out.println("Retrive Blob from DB failed !");
+                exc.printStackTrace();
+            } finally {
+                if (lbrs != null) lbrs.close();
+                if (lbstmt != null) lbstmt.close();
+            }
           }
+          set.addRow(row);
         }
-        set.addRow(row);
+      } catch (Exception exc) {
+        System.out.println("Operation with DB failed !");
+        exc.printStackTrace();
+        throw new SQLException(exc.getMessage());
+      } finally {
+          try { if (rs != null) rs.close(); }
+          catch (Exception cexc) { cexc.printStackTrace(); }
       }
-      rs.close();
     }
 
     private String convertBody(InputStream source)
