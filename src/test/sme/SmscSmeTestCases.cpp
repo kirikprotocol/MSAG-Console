@@ -79,22 +79,26 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 	__require__(monitor);
 	__require__(monitor->pduData->objProps.count("senderData"));
 	__cfg_int__(timeCheckAccuracy);
-	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+	SmsPduWrapper origPdu(monitor->pduData);
 	SenderData* senderData =
 		dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
 	Address destAlias;
 	SmppUtil::convert(origPdu.getDest(), &destAlias);
+	//взять текущий профиль отправителя
+	time_t t;
+	const Profile& profile = fixture->profileReg->getProfile(senderData->srcAddr, t);
+	bool validProfile = t + timeCheckAccuracy < recvTime;
 	switch (monitor->state)
 	{
 		case SMPP_DELIVERED_STATE:
 			for (time_t t = recvTime; t > recvTime - timeCheckAccuracy; t--)
 			{
-				const pair<string, uint8_t> p =
-					SmscSmeDeliveredReceipt::format(senderData->profile, destAlias, t);
+				const pair<string, uint8_t> p = SmscSmeDeliveredReceipt::format(
+					senderData->smeInfo->receiptSchemeName, profile, destAlias, t);
 				__trace2__("getExpectedResponse(): %s", p.first.c_str());
 				if (p.first.find(text) != string::npos)
 				{
-					return new AckText(p.first, p.second, senderData->validProfile);
+					return new AckText(p.first, p.second, validProfile);
 				}
 			}
 			break;
@@ -114,18 +118,19 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 					Status::EXPIRED : monitor->deliveryStatus;
 				for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 				{
-					const pair<string, uint8_t> p =
-						SmscSmeFailedReceipt::format(senderData->profile, destAlias, t, status);
+					const pair<string, uint8_t> p = SmscSmeFailedReceipt::format(
+						senderData->smeInfo->receiptSchemeName, profile,
+						destAlias, t, status);
 					__trace2__("getExpectedResponse(): %s", p.first.c_str());
 					if (p.first.find(text) != string::npos)
 					{
-						return new AckText(p.first, p.second, senderData->validProfile);
+						return new AckText(p.first, p.second, validProfile);
 					}
 				}
 			}
 			break;
 	}
-	return new AckText("Unknown", DEFAULT, senderData->validProfile);
+	return new AckText("Unknown", DEFAULT, validProfile);
 }
 
 AckText* SmscSmeTestCases::getExpectedResponse(
@@ -133,11 +138,15 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 {
 	__require__(monitor);
 	__cfg_int__(timeCheckAccuracy);
-	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+	SmsPduWrapper origPdu(monitor->pduData);
 	SenderData* senderData =
 		dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
 	Address destAlias;
 	SmppUtil::convert(origPdu.getDest(), &destAlias);
+	//взять текущий профиль отправителя
+	time_t t;
+	const Profile& profile = fixture->profileReg->getProfile(senderData->srcAddr, t);
+	bool validProfile = t + timeCheckAccuracy < recvTime;
 	time_t sendTime = monitor->pduData->sendTime;
 	PduData* pduData = monitor->pduData;
 	//для replace_sm не меняется время submitTime
@@ -149,15 +158,16 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 	}
 	for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 	{
-		const pair<string, uint8_t> p =
-			SmscSmeNotification::format(senderData->profile, destAlias, t, monitor->deliveryStatus);
+		const pair<string, uint8_t> p = SmscSmeNotification::format(
+			senderData->smeInfo->receiptSchemeName, profile,
+			destAlias, t, monitor->deliveryStatus);
 		__trace2__("getExpectedResponse(): %s", p.first.c_str());
 		if (p.first.find(text) != string::npos)
 		{
-			return new AckText(p.first, p.second, senderData->validProfile);
+			return new AckText(p.first, p.second, validProfile);
 		}
 	}
-	return new AckText("Unknown", DEFAULT, senderData->validProfile);
+	return new AckText("Unknown", DEFAULT, validProfile);
 }
 
 #define __compare__(errCode, field, value) \
@@ -174,7 +184,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 		return;
 	}
 	SmsPduWrapper pdu(header, 0);
-	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+	SmsPduWrapper origPdu(monitor->pduData);
 	__require__(pdu.isDeliverSm());
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
@@ -274,7 +284,7 @@ void SmscSmeTestCases::processIntermediateNotification(
 		return;
 	}
 	SmsPduWrapper pdu(header, 0);
-	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+	SmsPduWrapper origPdu(monitor->pduData);
 	__require__(pdu.isDeliverSm());
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),

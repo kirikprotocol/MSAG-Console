@@ -212,7 +212,7 @@ struct SmscSmeMessage
 				return errDesc;
 			}
 			ostringstream s;
-			s << reason;
+			s << (reason & 0xffff);
 			return s.str();
 		}
 		if (profile.locale == "ru_ru")
@@ -228,7 +228,7 @@ struct SmscSmeMessage
 				return errDesc;
 			}
 			ostringstream s;
-			s << reason;
+			s << (reason & 0xffff);
 			return s.str();
 		}
 		__unreachable__("Invalid locale");
@@ -239,15 +239,27 @@ struct SmscSmeMessage
 //Латиница для en, кирилица для ru
 struct SmscSmeDeliveredReceipt : SmscSmeMessage
 {
-	static const pair<string, uint8_t> format(const Profile& profile,
-		const Address& destAlias, time_t deliveryTime)
+	static const pair<string, uint8_t> format(const string& schema,
+		const Profile& profile, const Address& destAlias, time_t deliveryTime)
 	{
+		ostringstream s;
+		if (schema == "default")
+		{
+			s << "*";
+		}
+		else if (schema == "special")
+		{
+			s << "*=";
+		}
+		else
+		{
+			__unreachable__("Invalid report schema");
+		}
 //*Your message sent to .0.0.12345678901234567890 was successfully delivered on 01 January 2003, 12:00:00
 		if (profile.locale == "en_us" || profile.locale == "en_gb")
 		{
 			static const DateFormatter df("dd MMMM yyyy, HH:mm:ss");
-			ostringstream s;
-			s << "*Your message sent to ";
+			s << "Your message sent to ";
 			s << SmsUtil::configString(destAlias);
 			s << " was successfully delivered on ";
 			s << df.format(deliveryTime);
@@ -258,8 +270,7 @@ struct SmscSmeDeliveredReceipt : SmscSmeMessage
 		if (profile.locale == "ru_ru")
 		{
 			static const DateFormatter df("dd-MM-yy HH:mm:ss");
-			ostringstream s;
-			s << "*Сообщение на ";
+			s << "Сообщение на ";
 			s << SmsUtil::configString(destAlias);
 			s << " доставлено ";
 			s << df.format(deliveryTime);
@@ -274,15 +285,27 @@ struct SmscSmeDeliveredReceipt : SmscSmeMessage
 //Латиница для en, кирилица для ru
 struct SmscSmeFailedReceipt : SmscSmeMessage
 {
-	static const pair<string, uint8_t> format(const Profile& profile,
-		const Address& destAlias, time_t sendTime, int status)
+	static const pair<string, uint8_t> format(const string& schema,
+		const Profile& profile, const Address& destAlias, time_t sendTime, int status)
 	{
+		ostringstream s;
+		if (schema == "default")
+		{
+			s << "*";
+		}
+		else if (schema == "special")
+		{
+			s << "*=";
+		}
+		else
+		{
+			__unreachable__("Invalid report schema");
+		}
 //*Message to +123 sent on 01 January 2003, 12:00:00 failed: temporary error. Resend the message to +123 once again and maybe you will have luck next time. Sincerely, smsc sme.
 		if (profile.locale == "en_us" || profile.locale == "en_gb")
 		{
 			static const DateFormatter df("dd MMMM yyyy, HH:mm:ss");
-			ostringstream s;
-			s << "*Message to ";
+			s << "Message to ";
 			s << SmsUtil::configString(destAlias);
 			s << " sent on ";
 			s << df.format(sendTime);
@@ -298,8 +321,7 @@ struct SmscSmeFailedReceipt : SmscSmeMessage
 		if (profile.locale == "ru_ru")
 		{
 			static const DateFormatter df("dd-MM-yy HH:mm:ss");
-			ostringstream s;
-			s << "*Сообщение на ";
+			s << "Сообщение на ";
 			s << SmsUtil::configString(destAlias);
 			s << " от ";
 			s << df.format(sendTime);
@@ -319,13 +341,25 @@ struct SmscSmeFailedReceipt : SmscSmeMessage
 //Наследование из базовой локали
 struct SmscSmeDeletedReceipt : SmscSmeMessage
 {
-	static const pair<string, uint8_t> format(const Profile& profile,
-		const Address& destAlias, time_t sendTime, int status)
+	static const pair<string, uint8_t> format(const string& schema,
+		const Profile& profile, const Address& destAlias, time_t sendTime, int status)
 	{
+		ostringstream s;
+		if (schema == "default")
+		{
+			s << "*";
+		}
+		else if (schema == "special")
+		{
+			s << "*=";
+		}
+		else
+		{
+			__unreachable__("Invalid report schema");
+		}
 //*Сообщение на .0.0.12345678901234567890 от 01-01-03 12:00:00 удалено
 		static const DateFormatter df("dd-MM-yy HH:mm:ss");
-		ostringstream s;
-		s << "*Сообщение на ";
+		s << "Сообщение на ";
 		s << SmsUtil::configString(destAlias);
 		s << " от ";
 		s << df.format(sendTime);
@@ -338,15 +372,27 @@ struct SmscSmeDeletedReceipt : SmscSmeMessage
 //Пустое сообщение
 struct SmscSmeNotification : SmscSmeMessage
 {
-	static const pair<string, uint8_t> format(const Profile& profile,
-		const Address& destAlias, time_t sendTime, int status)
+	static const pair<string, uint8_t> format(const string& schema,
+		const Profile& profile, const Address& destAlias, time_t sendTime, int status)
 	{
+		ostringstream s;
+		if (schema == "default")
+		{
+			s << "$";
+		}
+		else if (schema == "special")
+		{
+			s << "$=";
+		}
+		else
+		{
+			__unreachable__("Invalid report schema");
+		}
 //$Сообщение на +123 от 01-01-03 12:00:00 обломалось: временная ошибка
 		if (profile.locale == "en_us" || profile.locale == "en_gb")
 		{
 			static const DateFormatter df("dd-MM-yy HH:mm:ss");
-			ostringstream s;
-			s << "$Сообщение на ";
+			s << "Сообщение на ";
 			s << SmsUtil::configString(destAlias);
 			s << " от ";
 			s << df.format(sendTime);
@@ -357,7 +403,7 @@ struct SmscSmeNotification : SmscSmeMessage
 		}
 		if (profile.locale == "ru_ru")
 		{
-			return convert("$", profile.codepage);
+			return convert(s.str(), profile.codepage);
 		}
 		__unreachable__("Invalid locale");
 	}
