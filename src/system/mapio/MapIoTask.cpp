@@ -448,7 +448,7 @@ USHORT_T  Et96MapOpenConf (
   return ET96MAP_E_OK;
 }
 
-void MapIoTask::init(unsigned timeout = 0)
+void MapIoTask::init(unsigned timeout)
 {
   USHORT_T err;
   __global_bind_counter = 0;
@@ -493,7 +493,7 @@ void MapIoTask::dispatcher()
   e.Wait();
 }
 
-void MapIoTask::init()
+void MapIoTask::init(unsigned)
 {
   __trace2__("MapIoTask::init: no map stack on this platform");
 }

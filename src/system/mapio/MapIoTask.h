@@ -353,7 +353,7 @@ private:
   Event* startevent;
   bool is_started;
   void dispatcher();
-  void init();
+  void init(unsigned timeout=0);
   void deinit();
 };
 
