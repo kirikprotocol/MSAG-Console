@@ -197,10 +197,10 @@ void processDbSmeRes()
 		"Значение по умолчанию yesterday для даты вычисляется правильно");
 	__reg_tc__("processDbSmeRes.select.defaultOutput.tomorrow",
 		"Значение по умолчанию tomorrow для даты вычисляется правильно");
-	__reg_tc__("processDbSmeRes.select.noRecordNoDefaults",
-		"При отсутствии записей удовлетворяющих условиям запроса и отсутствии значений по умолчанию, возвращается сообщение об ошибке");
 	__reg_tc__("processDbSmeRes.select.nullsNoDefaults",
 		"Если в какой-либо записи из результата запроса есть поле со значением NULL, для которого нет значения по умолчанию, тогда для данной записи возвращается сообщение об ошибке");
+	__reg_tc__("processDbSmeRes.select.noRecords",
+		"При отсутствии записей удовлетворяющих условиям запроса возвращается сообщение об ошибке");
 	__reg_tc__("processDbSmeRes.select.singleRecord",
 		"Если условиям запроса удовлетворяет единственная запись, значения полей в output берутся из результатов запроса");
 	__reg_tc__("processDbSmeRes.select.multipleRecords",
