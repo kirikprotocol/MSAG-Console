@@ -66,22 +66,22 @@ void StoreManager::startup(Manager& config)
             pool = new ConnectionPool(config);
             archiver = new Archiver(config);
             generator = new IDGenerator(archiver->getMaxId());
+            archiver->Start();
         }
         catch (StorageException& exc)
         {
-            //log.error("StorageException: %s", exc.what());
-            if (pool) 
-            {
+            if (pool) {
                 delete pool; pool = 0L;
             }
-            if (generator)
-            {
+            if (archiver) {
+                delete archiver; archiver = 0L;
+            }
+            if (generator) {
                 delete generator; generator = 0L;
             }
             throw ConnectionFailedException(exc);
         }
         instance = new StoreManager();
-        archiver->Start();
         log.info("Storage Manager was started up.");
     }
 }

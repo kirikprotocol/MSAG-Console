@@ -100,6 +100,17 @@ namespace smsc { namespace store
             __require__(pool);
             return pool->getPendingQueueLength();
         }
+        
+        static void startArchiver() 
+            throw (StorageException)
+        {
+            __require__(archiver);
+            return archiver->Start();
+        }
+        static void stopArchiver() {
+            __require__(archiver);
+            return archiver->Stop();
+        }
 
         virtual SMSId store(const SMS &sms)  
             throw(StorageException, DuplicateMessageException);
