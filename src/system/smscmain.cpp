@@ -116,16 +116,22 @@ int main(int argc,char* argv[])
     {
       fprintf(stderr, "WARNING: parameter \"logger.initFile\" not found in config - logger initialized by default\n");
     }
+    log4cpp::Category& logger = Logger::getCategory("smscmain");
+    logger.info( "Starting up SMSC" );
     smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
+    logger.info( "Locale resources loaded" );
     smsc::util::config::smeman::SmeManConfig smemancfg;
     smemancfg.load(get_filename("sme.xml"));
     cfgs.smemanconfig=&smemancfg;
+    logger.info( "SME configuration loaded" );
     smsc::util::config::alias::AliasConfig aliascfg;
     aliascfg.load(get_filename("aliases.xml"));
     cfgs.aliasconfig=&aliascfg;
+    logger.info( "Alias configuration loaded" );
     smsc::util::config::route::RouteConfig rc;
     rc.load(get_filename("routes.xml"));
     cfgs.routesconfig=&rc;
+    logger.info( "Route configuration loaded" );
 
     in_port_t servicePort = 0;
     if (argc > 1)

@@ -189,7 +189,6 @@ void Smsc::init(const SmscConfigs& cfg)
   log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.init");
   try{
   tp.preCreateThreads(15);
-
   //smsc::util::config::Manager::init("config.xml");
   //cfgman=&cfgman->getInstance();
 
@@ -199,6 +198,7 @@ void Smsc::init(const SmscConfigs& cfg)
   //smsc::util::config::smeman::SmeManConfig smemancfg;
   //smemancfg.load("sme.xml");
   {
+    log.info( "Registering SMEs" );
     smsc::util::config::smeman::SmeManConfig::RecordIterator i=cfg.smemanconfig->getRecordIterator();
     using namespace smsc::util::regexp;
     RegExp re;
@@ -248,6 +248,7 @@ void Smsc::init(const SmscConfigs& cfg)
         }
       }
     }
+    log.info( "SME registration done" );
   }
   // initialize aliases
   /*{
@@ -276,7 +277,9 @@ void Smsc::init(const SmscConfigs& cfg)
   }*/
 
   reloadAliases(cfg);
+  log.info( "Aliases loaded" );
   reloadRoutes(cfg);
+  log.info( "Routes loaded" );
 
   /*auto_ptr<RouteManager> router(new RouteManager());
 
@@ -321,6 +324,7 @@ void Smsc::init(const SmscConfigs& cfg)
   store=smsc::store::StoreManager::getMessageStore();
 
   {
+    log.info( "Starting statemachines" );
     int cnt=cfg.cfgman->getInt("core.state_machines_count");
     time_t maxValidTime=cfg.cfgman->getInt("sms.max_valid_time");
     for(int i=0;i<cnt;i++)
@@ -331,6 +335,7 @@ void Smsc::init(const SmscConfigs& cfg)
       m->scAddress=addr;
       tp.startTask(m);
     }
+    log.info( "Statemachines started" );
   }
 
   RescheduleCalculator::Init(cfg.cfgman->getString("core.reschedule_table"));
@@ -355,7 +360,8 @@ void Smsc::init(const SmscConfigs& cfg)
       remove("stats.txt");
     }
     tp.startTask(sm);
-  }
+    log.info( "Speedmonitor started" );
+ }
 
   {
     using namespace smsc::db;
@@ -373,25 +379,31 @@ void Smsc::init(const SmscConfigs& cfg)
         new ConfigView(*cfg.cfgman,"DataSource");
 
     dataSource->init(config);
+    log.info( "Datasource configured" );
   }
   statMan=new smsc::stat::StatisticsManager(*dataSource);
   tp.startTask(statMan);
+  log.info( "Statistics manager started" );
 
   distlstman=new DistrListManager(*dataSource,*cfg.cfgman);
 
   distlstsme=new DistrListProcess(distlstman);
   tp.startTask(distlstsme);
+  log.info( "Distribution list processor started" );
 
   smeman.registerInternallSmeProxy("DSTRLST",distlstsme);
 
   smsc::mscman::MscManager::startup(*dataSource,*cfg.cfgman);
+  log.info( "MSC manager started" );
 
   smsc::resourcemanager::ResourceManager::init
   (
     cfg.cfgman->getString("core.locales"),
     cfg.cfgman->getString("core.default_locale")
   );
+  log.info( "Resource manager configured" );
 
+  log.info( "Starting profiler" );
   {
     char *rep=cfg.cfgman->getString("profiler.defaultReport");
     char *dc=cfg.cfgman->getString("profiler.defaultDataCoding");
@@ -429,9 +441,12 @@ void Smsc::init(const SmscConfigs& cfg)
     profiler->serviceType=cfg.cfgman->getString("profiler.service_type");
     profiler->protocolId=cfg.cfgman->getInt("profiler.protocol_id");
   }
+  log.info( "Profiler configured" );
   profiler->loadFromDB(dataSource);
+  log.info( "Profiler data loaded" );
 
   tp.startTask(profiler);
+  log.info( "Profiler started" );
 
   try{
     smeman.registerInternallSmeProxy(
@@ -457,6 +472,7 @@ void Smsc::init(const SmscConfigs& cfg)
       smeman.registerInternallSmeProxy(
         cfg.cfgman->getString("abonentinfo.systemId"),
         abonentInfo);
+      log.info( "Abonent info started" );
     }catch(exception& e)
     {
       log.warn("Failed to register abonentinfo");
@@ -474,6 +490,7 @@ void Smsc::init(const SmscConfigs& cfg)
     smeman.registerInternallSmeProxy(
       cfg.cfgman->getString("core.systemId"),
       smscsme);
+    log.info( "SMSC sme started" );
   }catch(exception& e)
   {
     log.warn("Failed to register smscsme");
@@ -481,11 +498,14 @@ void Smsc::init(const SmscConfigs& cfg)
     __warning__("Failed to register smscsme");
   }
 
+
   cancelAgent=new CancelAgent(eventqueue,store);
   tp.startTask(cancelAgent);
+  log.info( "Cancel agent started" );
 
   alertAgent=new AlertAgent(eventqueue,store);
   tp.startTask(alertAgent);
+  log.info( "Alert agent started" );
 
 
   smscHost=cfg.cfgman->getString("smpp.host");
@@ -495,6 +515,7 @@ void Smsc::init(const SmscConfigs& cfg)
   ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
 
   mrCache.loadFromStore(store);
+  log.info( "MR cache loaded" );
 
   {
     performance::PerformanceServer *perfSrv=new performance::PerformanceServer
@@ -504,6 +525,7 @@ void Smsc::init(const SmscConfigs& cfg)
       &perfDataDisp
     );
     tp.startTask(perfSrv);
+    log.info( "Performance server started" );
   }
 
   smsc::util::regexp::RegExp::InitLocale();
@@ -511,7 +533,7 @@ void Smsc::init(const SmscConfigs& cfg)
   AddressValue addrval;
   addr.getValue( addrval );
   scAddr = addrval;
-
+  log.info( "SMSC init complete" );
   }catch(exception& e)
   {
     __trace2__("Smsc::init exception:%s",e.what());
