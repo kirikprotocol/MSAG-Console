@@ -173,6 +173,7 @@ Profiler::Profiler(const Profile& pr,SmeRegistrar* psmeman,const char* sysId)
   smeman=psmeman;
   seq=1;
   prio=SmeProxyPriorityDefault;
+  notifier=0;
   log=smsc::logger::Logger::getInstance("smsc.prof");
 }
 
@@ -217,6 +218,9 @@ int Profiler::update(const Address& address,const Profile& profile)
       DumpProfile(profile).c_str(),
       exact?"exact":"inexact");
   if(prof==profile)return pusUnchanged;
+
+  if(notifier)notifier->AddChange(address,profile);
+
   try{
   if(exact)
   {
@@ -865,11 +869,11 @@ int Profiler::Execute()
           }
         }else if(profCmd=="TRANSLIT")
         {
-          if(arg1=="ON")
+          if(arg1=="ON" || arg1=="YES")
           {
             msg=msgTranslitOn;
             internal_update(_update_translit,addr,1,0);
-          }else
+          }else if(arg1=="OFF" || arg1=="NO")
           {
             msg=msgTranslitOff;
             internal_update(_update_translit,addr,0,0);

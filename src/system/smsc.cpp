@@ -20,6 +20,8 @@
 #include <typeinfo>
 #include "system/status_sme.hpp"
 
+#include "profiler/profile-notifier.hpp"
+
 //#define ENABLE_MAP_SYM
 
 #ifdef ENABLE_MAP_SYM
@@ -496,6 +498,18 @@ void Smsc::init(const SmscConfigs& cfg)
 
   smsc_log_info(log, "Starting profiler" );
   {
+    ProfileNotifier* pnot=0;
+    try{
+      const char* host=cfg.cfgman->getString("profiler.notify.host");
+      int port=cfg.cfgman->getInt("profiler.notify.port");
+      const char* dir=cfg.cfgman->getString("profiler.notify.dir");
+      pnot=new ProfileNotifier(host,port,dir);
+      tp2.startTask(pnot);
+    }catch(std::exception& e)
+    {
+      __warning2__("Failed to initialize profileNotifier:%s",e.what());
+    }
+
     char *rep=cfg.cfgman->getString("profiler.defaultReport");
     char *dc=cfg.cfgman->getString("profiler.defaultDataCoding");
 
@@ -550,10 +564,13 @@ void Smsc::init(const SmscConfigs& cfg)
       profiler->addToUssdCmdMap(cfg.cfgman->getInt(pn.c_str()),*i);
     }
     delete params;
+    profiler->setNotifier(pnot);
   }
   smsc_log_info(log, "Profiler configured" );
   profiler->loadFromDB(dataSource);
   smsc_log_info(log, "Profiler data loaded" );
+
+
 
   tp2.startTask(profiler);
   smsc_log_info(log, "Profiler started" );
