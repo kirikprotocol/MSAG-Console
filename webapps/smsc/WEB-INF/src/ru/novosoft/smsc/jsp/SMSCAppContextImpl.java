@@ -53,8 +53,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			daemonManager = serviceManager.getDaemonManager();
 			System.out.println("SMSCAppContextImpl.SMSCAppContextImpl **************************************************");
 			File usersConfig = new File(new File(configManager.getConfig().getString("system.webapp folder"), "WEB-INF"), configManager.getConfig().getString("system.users"));
-            console = new Console(this);
-            console.start();
+            startConsole();
 			userManager = new UserManager(usersConfig);
 			perfServer = new PerfServer(configManager.getConfig());
 			perfServer.start();
@@ -70,7 +69,18 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		}
 	}
 
-	public Config getConfig()
+	private void startConsole()
+        throws Exception
+    {
+        boolean needConsole = false;
+        try { needConsole = configManager.getConfig().getBool("console.enabled"); }
+        catch (Exception eee) { /* do nothing, console disabled by default */ }
+        if (needConsole) {
+            console = new Console(this);
+            console.start();
+        }
+    }
+    public Config getConfig()
 	{
 		return configManager.getConfig();
 	}
@@ -112,7 +122,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
 	public void destroy()
 	{
-		console.close();
+		if (console != null) console.close();
         perfServer.shutdown();
 	}
 
