@@ -111,6 +111,10 @@ public:
 	 */
 	void bindUnbindScenario(int num);
 
+	/**
+	 * Отправка submit_sm, replace_sm, cancel_sm и т.п. реквестов с sme
+	 * зарегистрированной как receiver.
+	 */
 	void invalidBindStatusScenario(int num);
 
 protected:

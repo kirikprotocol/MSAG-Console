@@ -12,6 +12,7 @@ using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::test::smpp;
 using namespace smsc::test::util;
 
+//команды разрешенные для sme, кроме bind & unbind
 static const uint32_t allowedCmdIds[] = {
 	GENERIC_NACK,
 	//BIND_RECIEVER,
@@ -42,6 +43,7 @@ static const uint32_t allowedCmdIds[] = {
 	DATA_SM_RESP
 };
 
+//команды разрешенные только для SC
 static const uint32_t notAllowedCmdIds[] = {
 	//GENERIC_NACK,
 	//BIND_RECIEVER,
@@ -502,6 +504,7 @@ public:
 		connect();
 		PduBindTRX bindPdu;
 		sendPdu(setupBindPdu(bindPdu, BindType::Transceiver));
+		sleep(1);
 		//неправильные pdu
 		TCSelector s(num, 7);
 		SmppHeader* pdu = NULL;
@@ -616,18 +619,18 @@ public:
 				checkBindResp(pdu);
 				break;
 			case GENERIC_NACK:
-				__check__(3, invalidCmdId);
-				__check__(4, pdu->get_commandStatus() == ESME_RINVCMDID);
+				__check__(2, invalidCmdId);
+				__check__(3, pdu->get_commandStatus() == ESME_RINVCMDID);
 				setComplete(true);
 				break;
 			default:
-				__tc_fail__(5);
+				__tc_fail__(4);
 		}
 	}
 	virtual void handleError(int errorCode)
 	{
 		__trace2__("handleError(): errorCode = %d", errorCode);
-		__check__(6, invalidSize);
+		__check__(5, invalidSize);
 		setComplete(true);
 	}
 };
@@ -675,15 +678,6 @@ public:
 			__tc_fail__(1);
 			return;
 		}
-		setComplete(false);
-		//unbind
-		sleep(1); //иначе на unbind реквест закроется прокси, а очередь обработаться не успеет
-		PduUnbind unbindPdu;
-		sendPdu(setupUnbindPdu(unbindPdu));
-		if (!checkComplete(10000))
-		{
-			__tc_fail__(2);
-		}
 		__tc_ok_cond__;
 	}
 	virtual void handleEvent(SmppHeader* pdu)
@@ -696,29 +690,25 @@ public:
 			case BIND_TRANCIEVER_RESP:
 				checkBindResp(pdu);
 				break;
-			case UNBIND_RESP:
-				checkUnbindResp(pdu);
-				setComplete(true);
-				break;
 			case DELIVERY_SM:
 				{
 					__trace2__("deliver_sm_resp: serviceType = %s, sequenceNumber = %u, scenario = %p",
 						reinterpret_cast<PduDeliverySm*>(pdu)->get_message().get_serviceType(),
 						pdu->get_sequenceNumber(), this);
-					__check__(5, ++deliveryCount <= pduCount);
+					__check__(2, ++deliveryCount <= pduCount);
 					PduDeliverySmResp respPdu;
 					sendPdu(setupDeliverySmRespPdu(respPdu, pdu->get_sequenceNumber()));
 				}
 				break;
 			case SUBMIT_SM_RESP:
-				__check__(6, ++respCount <= pduCount);
-				__check__(7, pdu->get_commandStatus() == ESME_ROK);
-				__check__(8, pdu->get_sequenceNumber() == 0);
+				__check__(3, ++respCount <= pduCount);
+				__check__(4, pdu->get_commandStatus() == ESME_ROK);
+				__check__(5, pdu->get_sequenceNumber() == 0);
 				break;
 			default:
-				__tc_fail__(9);
+				__tc_fail__(6);
 		}
-		if (bound && respCount == pduCount && deliveryCount == pduCount)
+		if (respCount == pduCount && deliveryCount == pduCount)
 		{
 			setComplete(true);
 		}
@@ -727,7 +717,7 @@ public:
 	{
 		__trace2__("handleError(): errorCode = %d", errorCode);
 		//SC не закрывает сокет при unbind
-		__tc_fail__(10);
+		__tc_fail__(7);
 	}
 };
 
@@ -740,13 +730,14 @@ void SmppProtocolErrorTestCases::equalSequenceNumbersScenario()
 class SubmitAfterUnbindScenario : public SmppProtocolErrorScenario
 {
 	int num;
+	bool invalidSize;
 	bool allowedCmdId;
 	bool notAllowedCmdId;
 public:
 	SubmitAfterUnbindScenario(const SmeConfig& conf, const Address& addr,
 		CheckList* chkList, int _num)
 	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num),
-		allowedCmdId(false), notAllowedCmdId(false)
+		invalidSize(false), allowedCmdId(false), notAllowedCmdId(false)
 
 	{
 		__tc__("protocolError.submitAfterUnbind");
@@ -772,24 +763,54 @@ public:
 		}
 		setComplete(false);
 		//произвольные pdu
-		TCSelector s(num, 3);
+		TCSelector s(num, 7);
 		SmppHeader* pdu = NULL;
+		int size;
 		uint32_t cmdId;
 		switch (s.value())
 		{
-			case 1: //неправильный commandId
+			case 1: //меньше размера хедера
+				__tc__("protocolError.submitAfterUnbind.smallerSize1");
+				cmdId = allowedCmdIds[rand0(allowedCmdIdsSize - 1)];
+				pdu = createPdu(cmdId);
+				size = rand0(15);
+				invalidSize = true;
+				break;
+			case 2: //меньше оригинального размера
+				__tc__("protocolError.submitAfterUnbind.smallerSize2");
+				cmdId = allowedCmdIds[rand0(allowedCmdIdsSize - 1)];
+				pdu = createPdu(cmdId);
+				size = calcSmppPacketLength(pdu) == 16 ? rand0(15) :
+					rand2(16, calcSmppPacketLength(pdu) - 1);
+				invalidSize = true;
+				break;
+			case 3: //больше оригинального размера
+				__tc__("protocolError.submitAfterUnbind.greaterSize1");
+				cmdId = allowedCmdIds[rand0(allowedCmdIdsSize - 1)];
+				pdu = createPdu(cmdId);
+				size = rand2(calcSmppPacketLength(pdu) + 1, 65535);
+				invalidSize = true;
+				break;
+			case 4: //больше оригинального размера
+				__tc__("protocolError.submitAfterUnbind.greaterSize2");
+				cmdId = allowedCmdIds[rand0(allowedCmdIdsSize - 1)];
+				pdu = createPdu(cmdId);
+				size = rand2(100000, INT_MAX);
+				invalidSize = true;
+				break;
+			case 5: //неправильный commandId
 				__tc__("protocolError.submitAfterUnbind.allowedCommandId");
 				cmdId = allowedCmdIds[rand0(allowedCmdIdsSize - 1)];
 				pdu = createPdu(cmdId);
 				allowedCmdId = true;
 				break;
-			case 2: //неправильный commandId
+			case 6: //неправильный commandId
 				__tc__("protocolError.submitAfterUnbind.notAllowedCommandId");
 				cmdId = notAllowedCmdIds[rand0(notAllowedCmdIdsSize - 1)];
 				pdu = createPdu(cmdId);
 				notAllowedCmdId = true;
 				break;
-			case 3:  //несуществующий commandId
+			case 7:  //несуществующий commandId
 				__tc__("protocolError.submitAfterUnbind.nonExistentCommandId");
 				cmdId = rand2(0xa, INT_MAX);
 				pdu = createPdu(bindCmdIds[rand0(bindCmdIdsSize - 1)]);
@@ -801,13 +822,22 @@ public:
 		__require__(pdu);
 		PduBuffer pb = sess.getBytes(pdu);
 		__require__(pb.size >= 16);
+		__trace2__("before disposePdu: commandId = %x", pdu->get_commandId());
 		disposePdu(pdu);
-		__trace2__("invalid pdu: scenario = %p, new command id = %x", this, cmdId);
 		uint32_t* tmp = (uint32_t*) pb.buf;
-		*(tmp + 1) = htonl(cmdId);
+		if (invalidSize)
+		{
+			__trace2__("invalid pdu: scenario = %p, command id = %x, original size = %d, new size = %d",
+				this, cmdId, pb.size, size);
+			*tmp = htonl(size);
+		}
+		if (allowedCmdId || notAllowedCmdId)
+		{
+			__trace2__("invalid pdu: scenario = %p, new command id = %x",
+				this, cmdId);
+			*(tmp + 1) = htonl(cmdId);
+		}
 		sess.sendBytes(pb);
-		//PduSubmitSm pdu;
-		//sendPdu(setupSubmitSmPdu(pdu));
 		if (!checkComplete(10000))
 		{
 			__tc_fail__(2);
@@ -829,30 +859,30 @@ public:
 				setComplete(true);
 				break;
 			case GENERIC_NACK:
-				__check__(5, !bound);
+				__check__(3, !bound);
 				if (allowedCmdId)
 				{
-					__check__(6, pdu->get_commandStatus() == ESME_RINVBNDSTS);
+					__check__(4, pdu->get_commandStatus() == ESME_RINVBNDSTS);
 				}
-				else if (!allowedCmdId)
+				else if (notAllowedCmdId)
 				{
-					__check__(7, pdu->get_commandStatus() == ESME_RINVCMDID);
+					__check__(5, pdu->get_commandStatus() == ESME_RINVCMDID);
 				}
 				else
 				{
-					__tc_fail__(8);
+					__tc_fail__(6);
 				}
 				setComplete(true);
 				break;
 			default:
-				__tc_fail__(9);
+				__tc_fail__(7);
 		}
 	}
 	virtual void handleError(int errorCode)
 	{
 		__trace2__("handleError(): errorCode = %d", errorCode);
-		//SC не закрывает сокет при unbind
-		__tc_fail__(10);
+		__check__(8, invalidSize);
+		setComplete(true);
 	}
 };
 
@@ -883,6 +913,7 @@ public:
 		connect();
 		PduBindTRX bindPdu;
 		sendPdu(setupBindPdu(bindPdu, BindType::Transceiver));
+		sleep(1);
 		//отправка пустых pdu
 		for (int i = 0; i < 5; i++)
 		{
@@ -910,18 +941,11 @@ public:
 			catch (...)
 			{
 				__trace__("Exception when sending pdu: exiting test scenario");
+				__tc_fail__(1);
 				disposePdu(pdu);
 				return;
 			}
 		}
-		//unbind
-		PduUnbind unbindPdu;
-		sendPdu(setupUnbindPdu(unbindPdu));
-		if (!checkComplete(10000))
-		{
-			__tc_fail__(1);
-		}
-		__tc_ok_cond__;
 	}
 	virtual void handleEvent(SmppHeader* pdu)
 	{
@@ -933,10 +957,6 @@ public:
 			case BIND_TRANCIEVER_RESP:
 				checkBindResp(pdu);
 				break;
-			case UNBIND_RESP:
-				checkUnbindResp(pdu);
-				setComplete(true);
-				break;
 			default:
 				; //не проверяю
 		}
@@ -944,7 +964,7 @@ public:
 	virtual void handleError(int errorCode)
 	{
 		__trace2__("handleError(): errorCode = %d", errorCode);
-		//ничего не проверяю
+		__tc_fail__(2);
 	}
 };
 
@@ -1001,7 +1021,6 @@ public:
 	}
 	virtual void handleEvent(SmppHeader* pdu)
 	{
-		__decl_tc__;
 		switch (pdu->get_commandId())
 		{
 			case BIND_RECIEVER_RESP:
@@ -1015,12 +1034,11 @@ public:
 			default:
 				__unreachable__("not expected");
 		}
-		__tc_ok_cond__;
 	}
 	virtual void handleError(int errorCode)
 	{
 		__trace2__("handleError(): errorCode = %d", errorCode);
-		__unreachable__("not expected");
+		__tc_fail__(100);
 	}
 };
 
@@ -1105,7 +1123,7 @@ public:
 	virtual void handleError(int errorCode)
 	{
 		__trace2__("handleError(): errorCode = %d", errorCode);
-		__unreachable__("not expected");
+		__tc_fail__(100);
 	}
 };
 
