@@ -69,7 +69,8 @@ enum CommandId
   SUBMIT_MULTI_SM,        //22
   SUBMIT_MULTI_SM_RESP,   //23
   ALERT_NOTIFICATION,     //24
-  SMEALERT                //25
+  SMEALERT,               //25
+  KILLMRCACHEITEM         //26
 };
 
 enum CommandStatus{
@@ -363,6 +364,12 @@ public:
   ~SubmitMultiResp() { if ( messageId ) delete messageId; }
 };
 
+struct KillMrCacheItemCmd{
+  Address org;
+  Address dst;
+  uint16_t mr;
+};
+
 class SmeProxy;
 
 struct _SmscCommand
@@ -429,6 +436,9 @@ struct _SmscCommand
     case FORWARD:
       if(dta)delete (ForwardData*)dta;
       break;
+    case KILLMRCACHEITEM:
+      if(dta)delete (KillMrCacheItemCmd*)dta;
+      break;
     case UNKNOWN:
     case GENERIC_NACK:
     case UNBIND_RESP:
@@ -478,6 +488,11 @@ struct _SmscCommand
 
   void set_status(int st){status=st;}
   int get_status(){return status;} // for enquirelink and unbind
+
+  KillMrCacheItemCmd& get_KillMrCacheItem()
+  {
+    return *((KillMrCacheItemCmd*)dta);
+  }
 
 };
 
@@ -840,6 +855,22 @@ public:
     an->dst=dst;
     an->status=status;
     _cmd.dta=an;
+    _cmd.dialogId=0;
+    return cmd;
+  }
+
+  static SmscCommand makeKillMrCacheItemCmd(const Address& org,const Address& dst,uint16_t mr)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=KILLMRCACHEITEM;
+    KillMrCacheItemCmd *item=new KillMrCacheItemCmd;
+    item->org=org;
+    item->dst=dst;
+    item->mr=mr;
+    _cmd.dta=item;
     _cmd.dialogId=0;
     return cmd;
   }
