@@ -216,11 +216,11 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>MCISme address(es)</th>
-  <td><input class=txt name=voiceMailAddress value="<%=StringEncoderDecoder.encode(bean.getMCiSmeAddresses())%>"></td>
+  <td><input class=txt name=mciSmeAddresses value="<%=StringEncoderDecoder.encode(bean.getMciSmeAddresses())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>VoiceMail address(es)</th>
-  <td><input class=txt name=voiceMailAddress value="<%=StringEncoderDecoder.encode(bean.getVoiceMailAddresses())%>"></td>
+  <td><input class=txt name=voiceMailAddresses value="<%=StringEncoderDecoder.encode(bean.getVoiceMailAddresses())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>MSC host</th>
