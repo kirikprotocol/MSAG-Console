@@ -236,6 +236,8 @@ refreshStartStopButtonsStatus();
         param(out, "divert to",                                 "profiler.ussdOpsMapping.DIVERT TO",           bean.getIntParam("profiler.ussdOpsMapping.DIVERT TO"));
         param(out, "concat on",                                 "profiler.ussdOpsMapping.CONCAT ON",           bean.getIntParam("profiler.ussdOpsMapping.CONCAT ON"));
         param(out, "concat off",                                "profiler.ussdOpsMapping.CONCAT OFF",          bean.getIntParam("profiler.ussdOpsMapping.CONCAT OFF"));
+        param(out, "translit on",                                 "profiler.ussdOpsMapping.TRANSLIT ON",           bean.getIntParam("profiler.ussdOpsMapping.TRANSLIT ON"));
+        param(out, "translit off",                                "profiler.ussdOpsMapping.TRANSLIT OFF",          bean.getIntParam("profiler.ussdOpsMapping.TRANSLIT OFF"));
       finishParams(out);
     finishSection(out);
   finishSection(out);
