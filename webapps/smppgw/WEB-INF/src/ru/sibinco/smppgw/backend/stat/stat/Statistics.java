@@ -13,12 +13,10 @@ import java.util.Collections;
  */
 public class Statistics
 {
-  private ExtendedCountersSet total = new ExtendedCountersSet();
-  private ArrayList byDates    = new ArrayList(100); // contains DateCountersSet
-  private ArrayList bySmeId    = new ArrayList(100); // contains SmeIdCountersSet
-  private ArrayList byRouteId  = new ArrayList(100); // contains RouteIdCountersSet
-
-  private boolean full = false;
+  private CountersSet total   = new CountersSet();
+  private ArrayList byDates   = new ArrayList(100); // contains DateCountersSet
+  private ArrayList bySmeId   = new ArrayList(100); // contains SmeIdCountersSet
+  private ArrayList byRouteId = new ArrayList(100); // contains RouteIdCountersSet
 
   public CountersSet getTotal() {
     return total;
@@ -30,13 +28,6 @@ public class Statistics
   }
   public Collection getDateStat() {
     return byDates;
-  }
-
-  public void addErrorStat(ErrorCounterSet set) {
-    total.addError(set);
-  }
-  public Collection getErrorStat() {
-    return total.getErrors();
   }
 
   public void addSmeIdStat(SmeIdCountersSet set) {
@@ -61,10 +52,4 @@ public class Statistics
     return byRouteId;
   }
 
-  public boolean isFull() {
-    return full;
-  }
-  public void setFull(boolean full) {
-    this.full = full;
-  }
 }

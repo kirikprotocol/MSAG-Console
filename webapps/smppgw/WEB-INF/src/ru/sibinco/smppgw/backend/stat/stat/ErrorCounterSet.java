@@ -10,16 +10,16 @@ package ru.sibinco.smppgw.backend.stat.stat;
 public class ErrorCounterSet
 {
   protected int errcode;
-  protected int counter;
+  protected long counter;
 
-  ErrorCounterSet(int err, int count) {
+  ErrorCounterSet(int err, long count) {
     errcode = err; counter = count;
   }
 
   public int getErrcode() {
     return errcode;
   }
-  public int getCounter() {
+  public long getCounter() {
     return counter;
   }
 }

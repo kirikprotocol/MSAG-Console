@@ -18,7 +18,7 @@ public class StatQuery
   private Date fromDate = new Date();
   private Date tillDate = new Date();
 
-  private boolean fromDateEnabled = true;
+  private boolean fromDateEnabled = false;
   private boolean tillDateEnabled = false;
 
   private long providerId = ALL_PROVIDERS;

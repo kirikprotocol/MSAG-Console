@@ -50,14 +50,14 @@ public class Index extends SmppgwBean
     Principal userPrincipal = super.getLoginedPrincipal();
     if (userPrincipal == null)
       throw new SmppgwJspException(
-          Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
+        Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
     User user = (User)context.getUserManager().getUsers().get(userPrincipal.getName());
     if (user == null)
       throw new SmppgwJspException(
-          Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '"+userPrincipal.getName()+"'");
+        Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '"+userPrincipal.getName()+"'");
 
     userProviderId = user.getProviderId();
-    System.out.println("User: "+userPrincipal.getName()+", Proviedr id: "+userProviderId);
+    //System.out.println("User: "+userPrincipal.getName()+", Proviedr id: "+userProviderId);
     administrator = (userProviderId == StatQuery.ALL_PROVIDERS);
     if (administrator)
     {
@@ -76,9 +76,15 @@ public class Index extends SmppgwBean
       names.add(0, ALL_PROVIDERS); // TODO: sort names ?
       providerIds = (String[])(ids.toArray(new String[0]));
       providerNames = (String[])(names.toArray(new String[0]));
-    } else {
+    }
+    else
+    {
       query.setProviderId(userProviderId);
-      providerName = user.getName();
+      Object obj = context.getProviderManager().getProviders().get(new Long(userProviderId));
+      if (obj == null || !(obj instanceof Provider))
+        throw new SmppgwJspException(Constants.errors.providers.PROVIDER_NOT_FOUND,
+          "Failed to locate provider for id="+userProviderId);
+      providerName = ((Provider)obj).getName();
     }
   }
 

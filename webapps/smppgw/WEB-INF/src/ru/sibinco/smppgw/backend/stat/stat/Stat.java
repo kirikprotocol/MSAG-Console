@@ -25,18 +25,16 @@ public class Stat
   private final static String VALUES_SET =
     " sum(accepted), sum(rejected), sum(delivered), sum(temperror), sum(permerror) ";
   private final static String TRANS_VALUES_SET =
-    " sum(SmsTrOk), sum(SmsTrFailed), sum(UssdTrFromScOk), sum(UssdTrFromScFailed),"+
+    " sum(SmsTrOk), sum(SmsTrFailed), sum(SmsTrBilled), sum(UssdTrFromScOk), sum(UssdTrFromScFailed),"+
     " sum(UssdTrFromScBilled), sum(UssdTrFromSmeOk), sum(UssdTrFromSmeFailed), sum(UssdTrFromSmeBilled) ";
 
-  private final static String SMS_QUERY =     // group by period
-    "SELECT period,"+VALUES_SET+"FROM smppgw_stat ";
+  private final static String TOTAL_QUERY =   // group by period
+    "SELECT period,"+VALUES_SET+","+TRANS_VALUES_SET+"FROM smppgw_stat_sme ";
   private final static String SME_QUERY =     // group by systemid
     "SELECT systemid,"+VALUES_SET+","+TRANS_VALUES_SET+"FROM smppgw_stat_sme ";
   private static final String ROUTE_QUERY =   // group by routeid
     "SELECT routeid,"+VALUES_SET+"FROM smppgw_stat_route ";
 
-  private static final String STATE_QUERY =       // group by errcode
-    "SELECT"+ERRORS_SET+"FROM smppgw_stat_errors ";
   private static final String SME_STATE_QUERY =   // group by systemid, errcode
     "SELECT systemid,"+ERRORS_SET+"FROM smppgw_stat_sme_errors ";
   private static final String ROUTE_STATE_QUERY = // group by routeid, errcode
@@ -50,13 +48,13 @@ public class Stat
   }
 
   /*
-  private Statistics getFakeStatistics() throws Exception
+  private Statistics getFakeStatistics(StatQuery query) throws Exception
   {
     stat = new Statistics();
     for (int i=0; i<5; i++)
     {
       DateCountersSet dcs = new DateCountersSet(new Date());
-      SmeIdCountersSet sics = new SmeIdCountersSet(i,i,i,i,i,i,i,i,i,i,i,i,i,"SME"+(5-i));
+      SmeIdCountersSet sics = new SmeIdCountersSet(i,i,i,i,i,i,i,i,i,i,i,i,i,i,"SME"+(5-i));
       RouteIdCountersSet rics = new RouteIdCountersSet(i,i,i,i,i,"Route"+(10-i));
       for (int j=0; j<3; j++)
       {
@@ -65,31 +63,23 @@ public class Stat
         dcs.addHourStat(hcs);
         sics.addError(ecs);
         rics.addError(ecs);
-        stat.addErrorStat(ecs);
       }
       stat.addDateStat(dcs);
       stat.addSmeIdStat(sics);
       stat.addRouteIdStat(rics);
     }
+
     return stat;
-  }
-  */
+  }*/
 
   public Statistics getStatistics(StatQuery query) throws Exception
   {
-    //return getFakeStatistics();
     if (ds == null) throw new Exception("DataSource is not initialized");
     Connection connection = null;
-    stat = new Statistics(); stat.setFull(false);
+    stat = new Statistics();
     try
     {
       connection = ds.getConnection();
-
-      if (query.getProviderId() == StatQuery.ALL_PROVIDERS) {
-        processSmsQuery(connection, query);
-        processStateQuery(connection, query);
-        stat.setFull(true);
-      }
       processSmeQuery(connection, query);
       processRouteQuery(connection, query);
     }
@@ -102,9 +92,10 @@ public class Stat
       catch (Exception cexc) { cexc.printStackTrace(); }
     }
     return stat;
+    //return getFakeStatistics(query);
   }
 
-  private void bindPeriodPart(PreparedStatement stmt, StatQuery query, boolean provider)
+  private void bindWherePart(PreparedStatement stmt, StatQuery query, boolean provider)
       throws SQLException
   {
     provider = (provider && (query.getProviderId() != StatQuery.ALL_PROVIDERS));
@@ -116,7 +107,7 @@ public class Stat
     if (provider)
       stmt.setLong(pos++, query.getProviderId());
   }
-  private String preparePeriodPart(StatQuery query, boolean provider)
+  private String prepareWherePart(StatQuery query, boolean provider)
   {
     provider = (provider && (query.getProviderId() != StatQuery.ALL_PROVIDERS));
     String str = (query.isFromDateEnabled() ||
@@ -135,54 +126,55 @@ public class Stat
     return str;
   }
 
-  private String prepareSmsQuery(StatQuery query) {
-    return SMS_QUERY+preparePeriodPart(query, false)+"GROUP BY period ORDER BY period ASC";
+  private String prepareTotalQuery(StatQuery query) {
+    return TOTAL_QUERY+prepareWherePart(query, true)+"GROUP BY period ORDER BY period ASC";
   }
   private String prepareSmeQuery(StatQuery query) {
-    return SME_QUERY+preparePeriodPart(query, true)+"GROUP BY systemid";
+    return SME_QUERY+prepareWherePart(query, true)+"GROUP BY systemid";
   }
   private String prepareRouteQuery(StatQuery query) {
-    return ROUTE_QUERY+preparePeriodPart(query, true)+"GROUP BY routeid";
-  }
-  private String prepareStateQuery(StatQuery query) {
-    return STATE_QUERY+preparePeriodPart(query, false)+"GROUP BY errcode";
+    return ROUTE_QUERY+prepareWherePart(query, true)+"GROUP BY routeid";
   }
   private String prepareSmeStateQuery(StatQuery query) {
-    return SME_STATE_QUERY+preparePeriodPart(query, false)+"GROUP BY systemid, errcode";
+    return SME_STATE_QUERY+prepareWherePart(query, false)+"GROUP BY systemid, errcode";
   }
   private String prepareRouteStateQuery(StatQuery query) {
-    return ROUTE_STATE_QUERY+preparePeriodPart(query, false)+"GROUP BY routeid, errcode";
+    return ROUTE_STATE_QUERY+prepareWherePart(query, false)+"GROUP BY routeid, errcode";
   }
 
   private PreparedStatement getQuery(Connection connection, StatQuery query, String sql, boolean provider)
       throws SQLException
   {
     PreparedStatement stmt = connection.prepareStatement(sql);
-    bindPeriodPart(stmt, query, provider);
+    bindWherePart(stmt, query, provider);
     return stmt;
   }
 
-  private void processSmsQuery(Connection connection, StatQuery query)
+  private void processSmeQuery(Connection connection, StatQuery query)
       throws SQLException, Exception
   {
-    int oldPeriod = 0;
-    DateCountersSet dateCounters = null;
-    PreparedStatement stmt = getQuery(connection, query, prepareSmsQuery(query), false);
+    HashMap countersForSme = new HashMap();
+    PreparedStatement stmt = getQuery(connection, query, prepareTotalQuery(query), true);
     ResultSet rs = stmt.executeQuery();
 
     try
     {
+      DateCountersSet dateCounters = null;
+      int oldPeriod = 0;
+
       while (rs.next())
       {
           int newPeriod = rs.getInt(1);
           int hour = calculateHour(newPeriod);
           HourCountersSet hourCounters = new HourCountersSet(
-                  rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getInt(6), hour);
+                  rs.getLong(2), rs.getLong(3), rs.getLong(4), rs.getLong(5), rs.getLong(6),
+                  rs.getLong(7), rs.getLong(8), rs.getLong(9), rs.getLong(10), rs.getLong(11),
+                  rs.getLong(12), rs.getLong(13), rs.getLong(14), rs.getLong(15), hour);
           if (dateCounters == null) { // on first iteration
               Date date = calculateDate(newPeriod);
               dateCounters = new DateCountersSet(date);
           }
-          else if (needChangeDate(oldPeriod, newPeriod)) { // on date changed
+          else if (needChangeDate(oldPeriod, newPeriod)) { // date is unchanged
               stat.addDateStat(dateCounters);
               Date date = calculateDate(newPeriod);
               dateCounters = new DateCountersSet(date);
@@ -191,44 +183,30 @@ public class Stat
           oldPeriod = newPeriod;
       }
       if (dateCounters != null) stat.addDateStat(dateCounters);
+      rs.close(); stmt.close();
 
-    } catch (SQLException ex) {
-        throw ex;
-    } finally {
-        if (rs != null) rs.close();
-        if (stmt != null) stmt.close();
-    }
-  }
-
-  private void processSmeQuery(Connection connection, StatQuery query)
-      throws SQLException
-  {
-    HashMap countersForSme = new HashMap();
-    PreparedStatement stmt = null;
-    ResultSet rs = null;
-
-    try
-    {
       stmt = getQuery(connection, query, prepareSmeQuery(query), true);
       rs = stmt.executeQuery();
-      while (rs.next()) {
+      while (rs.next())
+      {
         String smeId = rs.getString(1);
         if (rs.wasNull() || smeId == null) continue;
         countersForSme.put(smeId,
-            new SmeIdCountersSet(rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getInt(6),
-                                 rs.getInt(7), rs.getInt(8), rs.getInt(9), rs.getInt(10), rs.getInt(11),
-                                 rs.getInt(12), rs.getInt(13), rs.getInt(14), smeId));
+            new SmeIdCountersSet(rs.getLong(2), rs.getLong(3), rs.getLong(4), rs.getLong(5), rs.getLong(6),
+                                 rs.getLong(7), rs.getLong(8), rs.getLong(9), rs.getLong(10), rs.getLong(11),
+                                 rs.getLong(12), rs.getLong(13), rs.getLong(14), rs.getLong(15), smeId));
       }
       rs.close(); stmt.close();
 
       stmt = getQuery(connection, query, prepareSmeStateQuery(query), false);
       rs = stmt.executeQuery();
-      while (rs.next()) {
+      while (rs.next())
+      {
         String smeId = rs.getString(1);
         if (rs.wasNull() || smeId == null) continue;
         Object obj = countersForSme.get(smeId);
         if (obj != null && obj instanceof SmeIdCountersSet)
-          ((SmeIdCountersSet)obj).addError(new ErrorCounterSet(rs.getInt(2), rs.getInt(3)));
+          ((SmeIdCountersSet)obj).addError(new ErrorCounterSet(rs.getInt(2), rs.getLong(3)));
       }
 
     } catch (SQLException ex) {
@@ -257,7 +235,8 @@ public class Stat
         String routeId = rs.getString(1);
         if (rs.wasNull() || routeId == null) continue;
         countersForRoute.put(routeId,
-            new RouteIdCountersSet(rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getInt(6), routeId));
+            new RouteIdCountersSet(rs.getLong(2), rs.getLong(3), rs.getLong(4), rs.getLong(5), rs.getLong(6),
+                                   routeId));
       }
       rs.close(); stmt.close();
 
@@ -268,7 +247,7 @@ public class Stat
         if (rs.wasNull() || routeId == null) continue;
         Object obj = countersForRoute.get(routeId);
         if (obj != null && obj instanceof RouteIdCountersSet)
-          ((RouteIdCountersSet)obj).addError(new ErrorCounterSet(rs.getInt(2), rs.getInt(3)));
+          ((RouteIdCountersSet)obj).addError(new ErrorCounterSet(rs.getInt(2), rs.getLong(3)));
       }
 
     } catch (SQLException ex) {
@@ -280,24 +259,6 @@ public class Stat
 
     Collection counters = countersForRoute.values();
     if (counters != null) stat.addRouteIdCollection(counters);
-  }
-
-  private void processStateQuery(Connection connection, StatQuery query)
-      throws SQLException
-  {
-    PreparedStatement stmt = getQuery(connection, query, prepareStateQuery(query), false);
-    ResultSet rs = stmt.executeQuery();
-
-    try {
-      while (rs.next()) {
-        stat.addErrorStat(new ErrorCounterSet(rs.getInt(1), rs.getInt(2)));
-      }
-    } catch (SQLException ex) {
-      throw ex;
-    } finally {
-      if (rs != null) rs.close();
-      if (stmt != null) stmt.close();
-    }
   }
 
   private static final String PERIOD_DATE_FORMAT = "yyyyMMddHH";
