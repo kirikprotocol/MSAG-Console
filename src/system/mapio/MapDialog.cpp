@@ -432,18 +432,18 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
 #endif
 }
 
-virtual void Et96MapPAbortInd(
+void MapDialog::Et96MapPAbortInd(
   ET96MAP_LOCAL_SSN_T lssn,
   ET96MAP_DIALOGUE_ID_T dialogid,
   ET96MAP_PROV_REASON_T reason,
   ET96MAP_SOURCE_T source,
   UCHAR_T priorityOrder)
 {
-  __trace2__("MAP::Dialog::Et96MapPAbortInd");
+  __trace2__("MAP::MapDialog::Et96MapPAbortInd");
   state = MAPST_READY_FOR_CLOSE;
 }
 
-virtual void Et96MapUAbortInd(
+void MapDialog::Et96MapUAbortInd(
   ET96MAP_LOCAL_SSN_T lssn,
   ET96MAP_DIALOGUE_ID_T dialogid,
   ET96MAP_USER_REASON_T *reason,
@@ -451,7 +451,7 @@ virtual void Et96MapUAbortInd(
   ET96MAP_USERDATA_T *ud,
   UCHAR_T priorityOrder)
 {
-  __trace2__("MAP::Dialog::Et96MapUAbortInd");
+  __trace2__("MAP::MapDialog::Et96MapUAbortInd");
   state = MAPST_READY_FOR_CLOSE;
 }
 

@@ -89,8 +89,9 @@ public:
     }
   }
   USHORT_T getDialogId() { return dialogid; }
-  void setSMSCDialogId(unsigned did) {smscDialogId=did;}
+  void setDialogId(USHORT_T ndid) { dialogid = ndid; }
   unsigned getSMSCDialogId() { return smscDialogId; }
+  void setSMSCDialogId(unsigned did) {smscDialogId=did;}
   virtual USHORT_T  Et96MapV2SendRInfoForSmConf ( 
     ET96MAP_LOCAL_SSN_T localSsn,
 		ET96MAP_DIALOGUE_ID_T dialogueId,
@@ -116,6 +117,20 @@ public:
   // возвращает истину если это последнее сообщение в диалоге и далее диалог
   // должн быть закрыт
   virtual bool ProcessCmd(const SmscCommand& cmd);
+  virtual void Et96MapPAbortInd(
+    ET96MAP_LOCAL_SSN_T lssn,
+    ET96MAP_DIALOGUE_ID_T dialogid,
+    ET96MAP_PROV_REASON_T reason,
+    ET96MAP_SOURCE_T source,
+    UCHAR_T priorityOrder);
+
+  virtual void Et96MapUAbortInd(
+    ET96MAP_LOCAL_SSN_T lssn,
+    ET96MAP_DIALOGUE_ID_T dialogid,
+    ET96MAP_USER_REASON_T *reason,
+    ET96MAP_DIAGNOSTIC_INFO_T* diag,
+    ET96MAP_USERDATA_T *ud,
+    UCHAR_T priorityOrder);
 };
 
 /**
@@ -184,6 +199,19 @@ public:
     __trace2__("MAP:: new dialog 0x%x for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
     dialogId_pool.pop_front();
     return dlg;
+  }
+  
+  USHORT_T reAssignDialog(unsigned did){
+    MutexGuard g(sync);
+    MapDialog* dlg = getDialog(did);
+    ET96MAP_DIALOGUE_ID_T map_dialogid = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
+    dialogId_pool.push_back(did);
+    dlg->setDialogId (map_dialogid);
+    hash.Delete(did);
+    hash.Insert(map_dialogid,dlg);
+    __trace2__("MAP:: reassign dialog 0x%x->0x%x",did,map_dialogid);
+    dialogId_pool.pop_front();
+    return map_dialogid;
   }
   
   void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
