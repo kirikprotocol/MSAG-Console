@@ -100,8 +100,8 @@ namespace smsc { namespace stat
             if (o_counter) delete o_counter; o_counter = 0;
         };
         inline void initCounters() {
-            i_counter = new TimeSlotCounter<int>(1000, 10);
-            o_counter = new TimeSlotCounter<int>(1000, 10);
+            i_counter = new TimeSlotCounter<int>(1, 10);
+            o_counter = new TimeSlotCounter<int>(1, 10);
         }
         inline void reinitCounters() {
             deleteCounters();
