@@ -54,6 +54,8 @@ public class ServiceEditSme extends SmeBean
 			receiptSchemeName = sme.getReceiptSchemeName();
 			disabled = sme.isDisabled();
 			mode = sme.getMode();
+      proclimit = sme.getProclimit();
+      schedlimit = sme.getSchedlimit();
 		}
 
 		return RESULT_OK;
@@ -92,10 +94,13 @@ public class ServiceEditSme extends SmeBean
 
 		try
 		{
-			SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode);
+			SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit);
+      logger.debug("1: proclimit:" + sme.getProclimit() + " schedlimit:" + sme.getSchedlimit());
 			if (hostsManager.isService(serviceId))
 				hostsManager.getServiceInfo(serviceId).setSme(sme);
+      logger.debug("1: proclimit:" + sme.getProclimit() + " schedlimit:" + sme.getSchedlimit());
 			appContext.getSmeManager().update(sme);
+      logger.debug("1: proclimit:" + sme.getProclimit() + " schedlimit:" + sme.getSchedlimit());
 			//appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (Throwable t)
