@@ -76,9 +76,7 @@ void SmppInputThread::removeSocket(Socket *sock)
       }
       else
       {
-        mon.Unlock();
         killSocket(i);
-        mon.Lock();
       }
       break;
     }
@@ -96,7 +94,9 @@ void SmppInputThread::killSocket(int idx)
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
   trace2("removing socket %p by input thread",s);
   int rcnt=m->removeSocket(s);
+  mon.Unlock();
   KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
+  mon.Lock();
   delete ss;
 }
 
@@ -579,7 +579,9 @@ int SmppInputThread::Execute()
                       )
                     );
                     //ss->getProxy()->close();
+                    mon.Unlock();
                     KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
+                    mon.Lock();
                     ss->assignProxy(0);
                   }else
                   {
@@ -835,9 +837,7 @@ void SmppOutputThread::removeSocket(Socket *sock)
       }
       else
       {
-        mon.Unlock();
         killSocket(i);
-        mon.Lock();
       }
       break;
     }
@@ -854,7 +854,9 @@ void SmppOutputThread::killSocket(int idx)
   SmppSocketsManager *m=
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
   int rcnt=m->removeSocket(s);
+  mon.Unlock(); // this method is always called only with locked mon.
   KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
+  mon.Lock();
   delete ss;
 }
 
@@ -878,7 +880,11 @@ int SmppOutputThread::Execute()
         if(isStopping)break;
         trace("out:got new socket");
       }
-      if(isStopping)break;
+      if(isStopping)
+      {
+        mon.Unlock();
+        break;
+      }
       int cnt=0;
       mul.clear();
       //trace("check data for output");
@@ -1042,10 +1048,12 @@ int SmppOutputThread::Execute()
       mon.Unlock();
     }
   } // main loop return
+  mon.Lock();
   for(i=sockets.Count()-1;i>=0;i--)
   {
     killSocket(i);
   }
+  mon.Unlock();
   sockets.Clean();
   return 0;
 } // Execute
