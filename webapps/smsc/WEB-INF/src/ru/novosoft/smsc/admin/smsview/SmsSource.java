@@ -150,7 +150,7 @@ public abstract class SmsSource
         }
       }
     } else {
-      byte msgText[] = new byte[textLen];
+      byte msgText[] = new byte[len];
       System.arraycopy(text,  start, msgText, 0, len);
       sb.append( decodeMessage(msgText, len, encoding) );
     }
