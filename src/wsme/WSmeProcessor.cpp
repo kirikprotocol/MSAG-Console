@@ -753,7 +753,13 @@ AdHistory::AdHistory(DataSource& _ds, ConfigView* config, AdIdManager& idman)
             ds(_ds), idManager(idman), bStarted(false)
 
 {
-    historyAge    = config->getInt("age")*3600*24; // in days
+    bool ageInSec = false;
+    try {
+      ageInSec = config->getBool("ageInSeconds");
+    } catch (...) {};
+    historyAge    = config->getInt("age"); 
+    if (!ageInSec) historyAge *= 3600*24; // in days
+
     cleanupPeriod = config->getInt("cleanup");     // in seconds
     messageLife   = config->getInt("messageLife"); // in seconds
 

@@ -273,8 +273,12 @@ public:
     virtual ~WSmeTaskManager() 
     {
         __trace2__("WSme: deinit WSmeTaskManager\n");
-        pool.shutdown();
+        shutdown();
     };
+    void shutdown()
+    {
+        pool.shutdown();
+    }
 
     void init(ConfigView* config)
         throw(ConfigException)
@@ -483,12 +487,16 @@ int main(void)
                 if (exc.getReason() == 
                     SmppConnectException::Reason::bindFailed) throw;
                 sleep(cfg.timeOut);
+                session.close();
+                runner.shutdown();
                 continue;
             }
             log.info("Connected.\n");
             
             while (!bWSmeIsStopped && bWSmeIsConnected) sleep(2);
             log.info("Disconnecting from SMSC ...\n");
+            session.close();
+            runner.shutdown();
         };
     }
     catch (ConfigException& exc) 
