@@ -171,8 +171,11 @@ void transLiterateSms(SMS* sms)
 int partitionSms(SMS* sms,int dstdc)
 {
   unsigned int len;
-  int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
   const char* msg=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+  bool udhi=sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40;
+  int  udhilen=udhi?(1+*((unsigned char*)msg)):0;
+  if(udhilen>140)return psErrorUdhi;
+  int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
   if(len==0 && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
     msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
@@ -183,20 +186,29 @@ int partitionSms(SMS* sms,int dstdc)
   if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
   {
     buf8=auto_ptr<char>(new char[len]);
-    ConvertUCS2ToMultibyte((short*)msg,len/2,buf8.get(),len,CONV_ENCODING_CP1251);
+    short *data=(short*)(msg+udhilen);
+    len-=udhilen;
+    ConvertUCS2ToMultibyte(data,len/2,buf8.get(),len,CONV_ENCODING_CP1251);
     len/=2;
-    bufTr=auto_ptr<char>(new char[len*3]);
-    len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get(),len*3);
+    bufTr=auto_ptr<char>(new char[udhilen+len*3]);
+    len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhilen,len*3);
+    if(udhi)memcpy(bufTr.get(),msg,udhilen);
     msg=bufTr.get();
   }
   int maxlen=134,maxfulllen=140;
   if(dstdc==DataCoding::DEFAULT)
   {
-    maxlen=153;
-    maxfulllen=160;
+    if(udhi)
+    {
+      maxfulllen=udhilen+(140-udhilen)*8/7;
+    }else
+    {
+      maxlen=153;
+      maxfulllen=160;
+    }
   }
   if(len<maxfulllen)return psSingle;
-  if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)return psErrorUdhi;
+  if(udhi)return psErrorUdhi;
   int parts=len/maxlen+(len%maxlen?1:0);
   if(parts>256)return psErrorLength;
   __trace2__("partitionSms: newlen=%d, parts=%d, maxlen=%d",len,parts,maxlen);
