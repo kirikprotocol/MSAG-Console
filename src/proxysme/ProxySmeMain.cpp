@@ -122,7 +122,7 @@ bool LoadConfig(ProxyConfig& pconf)
 #endif
 }
 
-//extern "C" 
+extern "C" 
 int main()
 {
   try {
