@@ -15,6 +15,7 @@ using std::vector;
 using smsc::profiler::Profile;
 using smsc::profiler::Profiler;
 using smsc::sms::Address;
+using smsc::smeman::SmscCommand;
 using smsc::test::util::BaseTestCases;
 using smsc::test::core::ProfileRegistry;
 using smsc::test::util::CheckList;
@@ -54,9 +55,14 @@ public:
 	void lookup(const Address& addr);
 
 	/**
-	 * Работа с профилем через submit_sm pdu.
+	 * Работа с менеджером профилей через deliver_sm pdu.
 	 */
 	void putCommand(const Address& addr, int num);
+
+	/**
+	 * Обработка команд поступающих от менеджера профилей.
+	 */
+	void onCommand();
 
 protected:
 	virtual Category& getLog();
@@ -67,6 +73,10 @@ private:
 	CheckList* chkList;
 
 	void fillAddressWithQuestionMarks(Address& addr, int len);
+	bool updateProfile(const char* tc, int num, const Address& addr,
+		const Profile& profile, bool create);
+	void onSubmit(SmscCommand& cmd);
+	void onDeliveryResp(SmscCommand& cmd);
 };
 
 }
