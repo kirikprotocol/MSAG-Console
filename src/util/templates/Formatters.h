@@ -45,8 +45,8 @@ namespace smsc { namespace util { namespace templates
         class FakeHash
         {
             Hash<Formatter *>& GetInstance() {
-                static Hash<Formatter *>  formatters;
-                return formatters;
+                static Hash<Formatter *>  _formatters;
+                return _formatters;
             }
 
         public:

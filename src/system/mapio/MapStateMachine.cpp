@@ -528,7 +528,7 @@ static void SendRInfo(MapDialog* dialog)
   }
   __map_trace2__("MAP::%s dialogid:0x%x ssn:%d hiprior:%s ac:%d",__func__,dialog_id,dialog->ssn,hiPrior?"true":"false", sms?(int)sms->getAttemptsCount():-1);
   USHORT_T result = Et96MapOpenReq(
-    SSN, dialog_id,
+    dialog->ssn, dialog_id,
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
@@ -541,11 +541,11 @@ static void SendRInfo(MapDialog* dialog)
   // !!!!!
 
   if ( dialog->version == 2 ) {
-    result = Et96MapV2SendRInfoForSmReq(dialog->ssn, dialog_id, 1, &dialog->m_msAddr,
+    result = Et96MapV2SendRInfoForSmReq(dialog->ssn, dialog_id, 0, &dialog->m_msAddr,
       hiPrior ? ET96MAP_ATTEMPT_DELIVERY : ET96MAP_DO_NOT_ATTEMPT_DELIVERY,
       &dialog->m_scAddr );
   }else if ( dialog->version == 1 ) {
-    result = Et96MapV1SendRInfoForSmReq(dialog->ssn, dialog_id, 1, &dialog->m_msAddr,
+    result = Et96MapV1SendRInfoForSmReq(dialog->ssn, dialog_id, 0, &dialog->m_msAddr,
       hiPrior ? ET96MAP_ATTEMPT_DELIVERY : ET96MAP_DO_NOT_ATTEMPT_DELIVERY,
       &dialog->m_scAddr, 0, 0);
   }else throw runtime_error(

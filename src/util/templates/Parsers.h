@@ -53,8 +53,8 @@ namespace smsc { namespace util { namespace templates
         class FakeHash
         {
             Hash<Parser *>& GetInstance() {
-                static Hash<Parser *>  parsers;
-                return parsers;
+                static Hash<Parser *>  _parsers;
+                return _parsers;
             }
 
         public:
