@@ -119,6 +119,7 @@ void MapIoTask::dispatcher()
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
       if ( __pingPongWaitCounter > 0 )  {
         result = MSG_BROKEN_CONNECTION;
+        kill(getpid(),17);
         __trace2__("MAP:: ping-pong failed");
       }
       else{
