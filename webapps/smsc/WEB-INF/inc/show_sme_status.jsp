@@ -26,7 +26,9 @@ String showSmeStatus(SmeStatus status)
 						result += " class=C080>RX&nbsp;" + status.getInAddress() + "</span>";
 						break;
 					case SME.MODE_TRX:
-						result += " class=C080>TRX&nbsp;" + status.getInAddress() + "/" + status.getOutAddress() + "</span>";
+            final String inAddress = status.getInAddress();
+            final String outAddress = status.getOutAddress();
+            result += " class=C080>TRX&nbsp;" + (inAddress.equals(outAddress) ? inAddress : inAddress + "/" + outAddress) + "</span>";
 						break;
 					default:
 						result += " class=C080>unknown&nbsp;" + status.getInAddress() + '/' + status.getOutAddress() + "</span>";
