@@ -209,7 +209,7 @@ Targets:
   </target>
 
   <target name="tar" description="tar distr directory">
-    <tar destfile="${DISTR_DIR}/smppgw_update.tar.gz" compression="GZIP" basedir="${DISTR_DIR}"/>
+    <tar destfile="${DISTR_DIR}/smppgw_update.tar.gz" compression="gzip" basedir="${DISTR_DIR}"/>
   </target>
 
 
