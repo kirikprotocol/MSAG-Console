@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <exception>
 #include "system/smsc.hpp"
+#include "alias/aliasman.h"
+#include "util/config/alias/aliasconf.h"
 
 int main(int argc,char* argv[])
 {
@@ -12,6 +14,9 @@ int main(int argc,char* argv[])
   smsc::util::config::smeman::SmeManConfig smemancfg;
   smemancfg.load("sme.xml");
   cfgs.smemanconfig=&smemancfg;
+  smsc::util::config::alias::AliasConfig aliascfg;
+  aliascfg.load("aliases.xml");
+  cfgs.aliasconfig=&aliascfg;
 
   app->init(cfgs);
   try{

@@ -11,6 +11,7 @@
 #include "store/MessageStore.h"
 #include "util/config/smeman/SmeManConfig.h"
 #include "alias/aliasman.h"
+#include "util/config/alias/aliasconf.h"
 
 namespace smsc{
 namespace system{
@@ -25,6 +26,7 @@ using smsc::router::RouteInfo;
 struct SmscConfigs{
   smsc::util::config::Manager* cfgman;
   smsc::util::config::smeman::SmeManConfig* smemanconfig;
+  smsc::util::config::alias::AliasConfig* aliasconfig;
 };
 
 class Smsc
