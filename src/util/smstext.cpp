@@ -422,7 +422,30 @@ int partitionSms(SMS* sms,int dstdc)
   int parts=1;
   uint16_t offsets[256];
   offsets[0]=0;
-  maxlen=140-7-exudhilen;
+  if(sms->getIntProperty(Tag::SMSC_UDH_CONCAT) || dc==DataCoding::BINARY)
+  {
+    maxlen=140-7-exudhilen;
+  }else
+  {
+    int hdrlen=0;
+    if(dc==DataCoding::UCS2)
+    {
+      int estimate=len/(140-exudhilen-7);
+      if(estimate>10)
+      {
+        hdrlen=7*2;
+      }else
+      {
+        hdrlen=5*2;
+      }
+    }else
+    if(dc!=DataCoding::BINARY)
+    {
+      hdrlen=7;
+    }
+    maxlen=140-exudhilen-hdrlen;
+  }
+
   if(dc==DataCoding::UCS2)
   {
     int lastword=0;
@@ -610,30 +633,44 @@ void extractSmsPart(SMS* sms,int partnum)
       sms->setIntProperty(Tag::SMPP_DATA_CODING,dstdc);
       if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
       {
-        int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
-        int olddc=dc;
-        if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+        int orgdc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
+        int olddc=orgdc;
+        if((orgdc&0xc0)==0 || (orgdc&0xf0)==0xf0) //groups 00xx and 1111
         {
-          dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+          orgdc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
 
-        }else if((dc&0xf0)==0xe0)
+        }else if((orgdc&0xf0)==0xe0)
         {
-          dc=0xd0 | (dc&0x0f);
+          orgdc=0xd0 | (orgdc&0x0f);
         }
-        sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
-        __trace2__("extractSmsPart: transliterate olddc(%x)->dc(%x)",olddc,dc);
+        sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,orgdc);
+        __trace2__("extractSmsPart: transliterate olddc(%x)->dc(%x)",olddc,orgdc);
       }
     }
     uint8_t buf[256];
 
     bool haveudh=true;
-    if(!sms->getIntProperty(Tag::SMSC_UDH_CONCAT))
+    if(!sms->getIntProperty(Tag::SMSC_UDH_CONCAT) && dc!=DataCoding::BINARY)
     {
+      char hdrbuf[32];
       int pfx;
       if(ci->num<100)
-        pfx=sprintf((char*)buf,"%d/%d:",partnum+1,(int)ci->num);
+        pfx=sprintf(hdrbuf,"(%d/%d)",partnum+1,(int)ci->num);
       else
-        pfx=sprintf((char*)buf,"%d:",partnum+1);
+        pfx=sprintf(hdrbuf,"%d:",partnum+1);
+      if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)==DataCoding::UCS2)
+      {
+        ConvertMultibyteToUCS2(hdrbuf,pfx,(short*)buf,256,CONV_ENCODING_ANSI);
+        pfx*=2;
+      }else
+      /*
+      if(dc==DataCoding::SMSC7BIT)
+      {
+        pfx=ConvertLatin1ToSMSC7Bit(hdrbuf,pfx,(char*)buf);
+      }else*/
+      {
+        memcpy(buf,hdrbuf,pfx);
+      }
       memcpy(buf+pfx,msg+off,newlen);
       newlen+=pfx;
       haveudh=false;
@@ -714,18 +751,18 @@ void extractSmsPart(SMS* sms,int partnum)
         if(len>140)len=140;
         if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
         {
-          int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
-          int olddc=dc;
-          if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+          int orgdc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
+          int olddc=orgdc;
+          if((orgdc&0xc0)==0 || (orgdc&0xf0)==0xf0) //groups 00xx and 1111
           {
-            dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+            orgdc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
 
-          }else if((dc&0xf0)==0xe0)
+          }else if((orgdc&0xf0)==0xe0)
           {
-            dc=0xd0 | (dc&0x0f);
+            orgdc=0xd0 | (orgdc&0x0f);
           }
-          sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
-          __trace2__("extractSmsPart: transliterate olddc(%x)->dc(%x)",olddc,dc);
+          sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,orgdc);
+          __trace2__("extractSmsPart: transliterate olddc(%x)->orgdc(%x)",olddc,orgdc);
         }
       }
       sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
