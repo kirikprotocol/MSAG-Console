@@ -34,8 +34,11 @@ void initXerces()
 	{
 		XMLPlatformUtils::Initialize();
     addEncoding("CP1251");
+    addEncoding("CP-1251");
     addEncoding("ANSI-1251");
+    addEncoding("ANSI1251");
     addEncoding("ISO8859-5");
+    addEncoding("ISO-8859-5");
     addEncoding("WINDOWS-1251");
     addEncoding("KOI8-R");
     addEncoding(getLocalEncoding());
