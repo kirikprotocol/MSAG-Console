@@ -335,6 +335,7 @@ void Smsc::processCommand(SmscCommand& cmd)
       __trace2__("delivery response received. seqnum=%d,msgId=%lld,sms=%p",dialogId,task.messageId,task.sms);
       cmd->get_resp()->set_sms(task.sms);
       cmd->get_resp()->set_diverted(task.diverted);
+      cmd->set_priority(31);
       id=task.messageId;
       break;
     }
