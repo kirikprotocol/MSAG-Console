@@ -149,8 +149,6 @@ IS
    billId            NUMBER;
 BEGIN
    
-   DELETE FROM SMS_MSG WHERE ID=A_id;
-   
    IF A_arc != 0 THEN
     INSERT INTO SMS_ARC
 	(ID, ST, SUBMIT_TIME, VALID_TIME, ATTEMPTS, LAST_RESULT,
@@ -190,7 +188,9 @@ BEGIN
              A_daVal, A_daTon, A_daNpi, A_dstImsi, A_dstMsc,
              A_oaVal, A_oaTon, A_oaNpi, 
              A_routeId, A_svcId, A_txtLength);
-   END IF;    	    
+   END IF;
+   
+   DELETE FROM SMS_MSG WHERE ID=A_id;
 
 END DO_FINALIZE_SMS;
 /
