@@ -94,6 +94,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=view();
 			break;
 		}
+		case ACT_SHOW:
+		{
+			match(ACT_SHOW);
+			cmd=show();
+			break;
+		}
 		case ACT_APPLY:
 		{
 			match(ACT_APPLY);
@@ -292,6 +298,33 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			throw new NoViableAltException(LT(1), getFilename());
 		}
+		}
+		return cmd;
+	}
+	
+	public final Command  show() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		Token  addr = null;
+		
+		cmd = null;
+		
+		
+		match(TGT_ALIAS);
+		{
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Target address expected");
+				
+		}
+		
+				    //cmd = new AliasShowCommand();
+				    //cmd.setAddress(addr.getText());   
+				
 		}
 		return cmd;
 	}
@@ -831,73 +864,35 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new ProfileAlterCommand();
 		
 		
-		try {      // for error handling
-			{
-			try { // for error handling
-				addr = LT(1);
-				match(STR);
-			}
-			catch (RecognitionException ex) {
+		{
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Profile address expected");
 				
-					    throw new RecognitionException("Profile address expected");
-					
-			}
-			cmd.setAddress(addr.getText());
-			}
+		}
+		cmd.setAddress(addr.getText());
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_REPORT:
+		{
+			match(OPT_REPORT);
 			{
 			switch ( LA(1)) {
-			case OPT_REPORT:
+			case VAL_FULL:
 			{
-				{
-				match(OPT_REPORT);
-				{
-				switch ( LA(1)) {
-				case VAL_FULL:
-				{
-					match(VAL_FULL);
-					cmd.setFullReport();
-					break;
-				}
-				case VAL_NONE:
-				{
-					match(VAL_NONE);
-					cmd.setNoneReport();
-					break;
-				}
-				default:
-				{
-					throw new NoViableAltException(LT(1), getFilename());
-				}
-				}
-				}
-				}
+				match(VAL_FULL);
+				cmd.setFullReport();
 				break;
 			}
-			case OPT_ENCODE:
+			case VAL_NONE:
 			{
-				{
-				match(OPT_ENCODE);
-				{
-				switch ( LA(1)) {
-				case VAL_DEF:
-				{
-					match(VAL_DEF);
-					cmd.setGsm7Encoding();
-					break;
-				}
-				case VAL_UCS2:
-				{
-					match(VAL_UCS2);
-					cmd.setUcs2Encoding();
-					break;
-				}
-				default:
-				{
-					throw new NoViableAltException(LT(1), getFilename());
-				}
-				}
-				}
-				}
+				match(VAL_NONE);
+				cmd.setNoneReport();
 				break;
 			}
 			default:
@@ -906,11 +901,55 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			}
+			break;
 		}
-		catch (RecognitionException ex) {
-			
-				    throw new RecognitionException("Syntax: alter profile <profile_address> (report (full|none) | encoding (ucs2|default))");
-				
+		case EOF:
+		case OPT_ENCODE:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_ENCODE:
+		{
+			match(OPT_ENCODE);
+			{
+			switch ( LA(1)) {
+			case VAL_DEF:
+			{
+				match(VAL_DEF);
+				cmd.setGsm7Encoding();
+				break;
+			}
+			case VAL_UCS2:
+			{
+				match(VAL_UCS2);
+				cmd.setUcs2Encoding();
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case EOF:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		return cmd;
 	}
@@ -1148,17 +1187,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SRC);
 			{
-			int _cnt23=0;
-			_loop23:
+			int _cnt25=0;
+			_loop25:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt23>=1 ) { break _loop23; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt25>=1 ) { break _loop25; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt23++;
+				_cnt25++;
 			} while (true);
 			}
 			}
@@ -1180,17 +1219,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_DST);
 			{
-			int _cnt27=0;
-			_loop27:
+			int _cnt29=0;
+			_loop29:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd, needSmeId);
 				}
 				else {
-					if ( _cnt27>=1 ) { break _loop27; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt29>=1 ) { break _loop29; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt27++;
+				_cnt29++;
 			} while (true);
 			}
 			}
@@ -1404,14 +1443,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop70:
+			_loop72:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop70;
+					break _loop72;
 				}
 				
 			} while (true);
@@ -1460,6 +1499,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"list\"",
 		"\"view\"",
 		"\"apply\"",
+		"\"show\"",
 		"\"alias\"",
 		"\"route\"",
 		"\"profile\"",

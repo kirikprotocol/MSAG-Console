@@ -19,6 +19,7 @@ tokens {
   ACT_LIST	= "list"	;
   ACT_VIEW	= "view"	;
   ACT_APPLY	= "apply"	;
+  ACT_SHOW	= "show"	;
 
   TGT_ALIAS	= "alias"	;
   TGT_ROUTE	= "route"	;

@@ -49,6 +49,7 @@ parse returns [Command cmd] {
 	| 	ACT_ALTER 	cmd = alt
 	| 	ACT_LIST 	cmd = lst 
 	| 	ACT_VIEW	cmd = view
+	|	ACT_SHOW	cmd = show
 	|	ACT_APPLY     { cmd = new ApplyCommand(); }
 	;
 	
@@ -96,6 +97,19 @@ view returns [Command cmd] {
 	|	TGT_SUBJECT	cmd = viewsubject
 	|	TGT_PROFILE	cmd = viewprofile
 	;
+/* ----------------------- Show action parser --------------------- */
+show returns [Command cmd] {
+    cmd = null;
+}
+	:	TGT_ALIAS (addr:STR { 
+		    //cmd = new AliasShowCommand();
+		    //cmd.setAddress(addr.getText());   
+		})
+	;
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Target address expected");
+	}
 	
 	
 /* ----------------------- Common names parser ------------------------- */
@@ -394,22 +408,19 @@ addprofile returns [ProfileAddCommand cmd] {
 	catch [RecognitionException ex] {
 	    throw new RecognitionException("Profile mask expected");
 	}
+	
 altprofile returns [ProfileAlterCommand cmd] {
     cmd = new ProfileAlterCommand();
 }
 	:	(addr:STR  { cmd.setAddress(addr.getText()); })
-		((OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
-			     |VAL_NONE { cmd.setNoneReport(); } ))
-		|(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding();  }
-			     |VAL_UCS2 { cmd.setUcs2Encoding();  } )))
+		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
+			   | VAL_NONE { cmd.setNoneReport(); } ))?
+		(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding(); }
+			   | VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
 	;
 	exception[addr]
 	catch [RecognitionException ex] {
 	    throw new RecognitionException("Profile address expected");
-	}
-	exception
-	catch [RecognitionException ex] {
-	    throw new RecognitionException("Syntax: alter profile <profile_address> (report (full|none) | encoding (ucs2|default))");
 	}
 delprofile returns [ProfileDeleteCommand cmd] {
     cmd = new ProfileDeleteCommand();

@@ -27,6 +27,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
                            "Syntax: alter profile <profile_address> "+
                            "[report (full|none)] [encoding (ucs2|default)]");
             ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
+            return;
         }
         String out = "Profile for address '"+address+"'";
         try {
