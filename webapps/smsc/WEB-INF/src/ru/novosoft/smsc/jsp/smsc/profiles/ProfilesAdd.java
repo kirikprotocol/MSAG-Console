@@ -10,7 +10,6 @@ import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.List;
 
@@ -27,13 +26,14 @@ public class ProfilesAdd extends ProfilesBean
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
+		if (mbCancel != null)
+			return RESULT_DONE;
+
 		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 
-		if (mbCancel != null)
-			return RESULT_DONE;
-		else if (mbSave != null)
+		if (mbSave != null)
 			return save();
 
 		return RESULT_OK;

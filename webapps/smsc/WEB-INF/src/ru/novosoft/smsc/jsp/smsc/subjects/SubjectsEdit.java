@@ -44,13 +44,14 @@ public class SubjectsEdit extends SmscBean
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
+		if (mbCancel != null)
+			return RESULT_DONE;
+
 		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 
-		if (mbCancel != null)
-			return RESULT_DONE;
-		else if (mbSave != null)
+		if (mbSave != null)
 			return save();
 
 		return RESULT_OK;
@@ -78,6 +79,7 @@ public class SubjectsEdit extends SmscBean
 		}
 		catch (Throwable e)
 		{
+			logger.debug("Can't save subject \"" + name + "\"", e);
 			return error(SMSCErrors.error.subjects.cantEdit, name, e);
 		}
 	}

@@ -38,6 +38,9 @@ public class HostEdit extends SmscBean
 
 	public int process()
 	{
+		if (mbCancel != null)
+			return RESULT_DONE;
+
 		if (port == -1)
 			try
 			{
@@ -63,8 +66,6 @@ public class HostEdit extends SmscBean
 			appContext.getStatuses().setHostsChanged(true);
 			return RESULT_DONE;
 		}
-		else if (mbCancel != null)
-			return RESULT_DONE;
 		else
 			return RESULT_OK;
 	}

@@ -18,7 +18,7 @@
 		{
 			String smeId = (String) i.next();
 			String encSmeId = StringEncoderDecoder.encode(smeId);
-			%><option value=<%=encSmeId%> <%=smeId.equals(bean.getDefSme()) ? "selected" : ""%>><%=encSmeId%></option><%
+			%><option value="<%=encSmeId%>" <%=smeId.equals(bean.getDefSme()) ? "selected" : ""%>><%=encSmeId%></option><%
 		}%>
 	</select></div></td>
 </tr>

@@ -95,6 +95,9 @@ public class dlEdit extends dlBody
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
+		if (mbCancel != null)
+			return cancel();
+
 		if (admin == null)
 			admin = appContext.getSmsc().getDistributionListAdmin();
 
@@ -104,8 +107,6 @@ public class dlEdit extends dlBody
 
 		if (mbSave != null)
 			return save();
-		else if (mbCancel != null)
-			return cancel();
 
 		return RESULT_OK;
 	}

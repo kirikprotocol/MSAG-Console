@@ -42,14 +42,15 @@ public class dlAdd extends dlBody
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
+		if (mbCancel != null)
+			return cancel();
+
 		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 
 		if (mbSave != null)
 			return save();
-		else if (mbCancel != null)
-			return cancel();
 
 		return RESULT_OK;
 	}

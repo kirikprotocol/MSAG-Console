@@ -26,6 +26,9 @@ public class ProfilesEdit extends ProfilesBean
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
+		if (mbCancel != null)
+			return RESULT_DONE;
+
 		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
@@ -49,9 +52,7 @@ public class ProfilesEdit extends ProfilesBean
 			}
 		}
 
-		if (mbCancel != null)
-			return RESULT_DONE;
-		else if (mbSave != null)
+		if (mbSave != null)
 			return save();
 
 		return RESULT_OK;

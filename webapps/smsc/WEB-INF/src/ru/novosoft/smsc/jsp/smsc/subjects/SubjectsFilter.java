@@ -70,6 +70,9 @@ public class SubjectsFilter extends SmscBean
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
+		if (mbCancel != null)
+			return RESULT_DONE;
+
 		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
@@ -96,8 +99,6 @@ public class SubjectsFilter extends SmscBean
 			checkedSmesSet.clear();
 			return RESULT_OK;
 		}
-		else if (mbCancel != null)
-			return RESULT_DONE;
 
 		return RESULT_OK;
 	}

@@ -47,7 +47,7 @@ for (int i=0; i<bean.getSrcMasks().length; i++)
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to sources filter"></th>
+	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to sources filter"></th>
 	<td><input class=txtW name=srcMasks validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 

@@ -70,6 +70,9 @@ public class AliasesEdit extends SmscBean
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
+		if (mbCancel != null)
+			return RESULT_DONE;
+
 		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
@@ -83,9 +86,7 @@ public class AliasesEdit extends SmscBean
 		if (countQuestions(address) != countQuestions(alias))
 			return error(SMSCErrors.error.aliases.QuestionCountsNotMathes);
 
-		if (mbCancel != null)
-			return RESULT_DONE;
-		else if (mbSave != null)
+		if (mbSave != null)
 			return save();
 
 		return RESULT_OK;
