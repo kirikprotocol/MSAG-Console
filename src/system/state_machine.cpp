@@ -56,12 +56,22 @@ StateType StateMachine::submit(Tuple& t)
     __trace2__("ALIAS:%20s->%20s",sms->getDestinationAddress().value,dst.value);
     sms->setDestinationAddress(dst);
   }
+  else
+  {
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::NOALIAS);
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+    }
+    return ERROR_STATE;
+  }
 
   bool has_route = smsc->routeSms(sms,dest_proxy_index,dest_proxy);
   if ( !has_route )
   {
     //send_no_route;
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::ERROR);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::NOROUTE);
     try{
       src_proxy->putCommand(resp);
     }catch(...)
@@ -77,7 +87,25 @@ StateType StateMachine::submit(Tuple& t)
   }catch(...)
   {
     __trace2__("failed to create sms with id %lld",t.msgId);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::DBERROR);
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+    }
     return ERROR_STATE;
+  }
+
+  {
+    // sms сохранена в базе, с выставленным Next Time, таким образом
+    // даже если дальше что-то обломится, потом будет еще попытка послать её
+    // то бишь мы приняли sms в обработку, можно слать ok.
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::OK);
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+    }
   }
 
   if(sms->getWaitTime()>time(NULL))
@@ -85,14 +113,9 @@ StateType StateMachine::submit(Tuple& t)
     return ENROUTE_STATE;
   }
 
+
   if ( !dest_proxy )
   {
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::ERROR);
-    try{
-      src_proxy->putCommand(resp);
-    }catch(...)
-    {
-    }
     __warning__("SUBMIT_SM: SME is not connected");
     return ENROUTE_STATE;
   }
@@ -111,12 +134,6 @@ StateType StateMachine::submit(Tuple& t)
   task.messageId=t.msgId;
   if ( !smsc->tasks.createTask(task) )
   {
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::ERROR);
-    try{
-      src_proxy->putCommand(resp);
-    }catch(...)
-    {
-    }
     __warning__("SUBMIT_SM: can't create task");
     return ENROUTE_STATE;
   }
@@ -137,16 +154,6 @@ StateType StateMachine::submit(Tuple& t)
   {
     return ENROUTE_STATE;
   }
-  try{
-    // send responce
-    SmscCommand resp2 = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::OK);
-    src_proxy->putCommand(resp2);
-  }catch(std::exception& e)
-  {
-    __trace2__("exception in submit:%s",e.what());
-//    return
-  }
-
   __trace__("mainLoop:SUBMIT:OK");
   return DELIVERING_STATE;
 }

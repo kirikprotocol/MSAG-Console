@@ -148,8 +148,12 @@ public:
 
   struct Status
   {
-    static const int ERROR = 8;
-    static const int OK = 0;
+    static const int OK       = 0;
+    static const int SYSERROR = 1;
+    static const int NOALIAS  = 2;
+    static const int NOROUTE  = 3;
+    static const int DBERROR  = 4;
+
   };
 
   SmeProxy* getProxy(){return cmd->proxy;}
