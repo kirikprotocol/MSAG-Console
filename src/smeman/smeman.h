@@ -102,11 +102,14 @@ public:
   virtual SmeProxyPriority getPriority() const
   {
     MutexGuard guard(mutex);
+    return info.priority;
+    /*
     if ( proxy )
     {
-      return proxy->getPriority();
+      return //proxy->getPriority();
     }
     else throw runtime_error("proxy unregistred");
+    */
   }
   virtual void attachMonitor(ProxyMonitor* monitor) {__unreachable__("");}
   virtual bool attached(){__unreachable__("");return 0;}
