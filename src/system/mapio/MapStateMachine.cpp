@@ -329,7 +329,7 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
   }
   __require__(dialog->ssn==ssn);
   try{
-  if ( !dialog.isnull() ){
+    if ( !dialog.isnull() )
     {
       //MutexGuard(dialog->mutex);
       __map_trace2__("%s: dropping dialog 0x%x, chain size %d , dropChain %d, associate:%p",__func__,dialog->dialogid_map,dialog->chain.size(),dialog->dropChain, dialog->associate);
@@ -364,33 +364,32 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
         goto dropDialogLabel;
       }
     }
-    } catch (std::exception &e) {
-      __map_warn2__("%s: exception %s",__func__,e.what());
-    } catch (...) {
-      __map_warn2__("%s: unknown exception",__func__);
-    }
-    __map_trace2__("%s: restart on next in chain",__func__);
-    if ( dialog->dropChain ) {
-      //MutexGuard(dialog->mutex);
+  } catch (std::exception &e) {
+    __map_warn2__("%s: exception %s",__func__,e.what());
+  } catch (...) {
+    __map_warn2__("%s: unknown exception",__func__);
+  }
+  __map_trace2__("%s: restart on next in chain",__func__);
+  if ( dialog->dropChain ) {
+    //MutexGuard(dialog->mutex);
 dropDialogLabel:
-      MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map,dialog->ssn);
-      for (;!dialog->chain.empty();dialog->chain.pop_front())
-      {
-        try{
-          SmscCommand cmd = dialog->chain.front();
-          SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,Status::SUBSCRBUSYMT));
-        }catch(exception& e){
-          __map_warn2__("%s: exception %s",__func__,e.what());
-        }catch(...){
-          __map_warn2__("%s: unknown exception",__func__);
-        }
+    MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map,dialog->ssn);
+    for (;!dialog->chain.empty();dialog->chain.pop_front())
+    {
+      try{
+        SmscCommand cmd = dialog->chain.front();
+        SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,Status::SUBSCRBUSYMT));
+      }catch(exception& e){
+        __map_warn2__("%s: exception %s",__func__,e.what());
+      }catch(...){
+        __map_warn2__("%s: unknown exception",__func__);
       }
-    }else{
-      SmscCommand cmd = dialog->chain.front();
-      dialog->chain.pop_front();
-      dialog->Clean();
-      MAPIO_PutCommand(cmd, dialog.get());
     }
+  }else{
+    SmscCommand cmd = dialog->chain.front();
+    dialog->chain.pop_front();
+    dialog->Clean();
+    MAPIO_PutCommand(cmd, dialog.get());
   }
 }
 
