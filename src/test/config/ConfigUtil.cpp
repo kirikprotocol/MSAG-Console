@@ -125,25 +125,23 @@ void ConfigUtil::setupSystemSmeRoutes()
 	}
 }
 
+void ConfigUtil::setupRoute(const Address& srcAddr, const Address& destAddr,
+	const SmeSystemId destSmeId)
+{
+	RouteInfo route;
+	RouteUtil::setupRandomCorrectRouteInfo(&route);
+	route.source = srcAddr;
+	route.dest = destAddr;
+	route.smeSystemId = destSmeId;
+	route.enabling = true;
+	routeReg->putRoute(route, NULL);
+}
+
 void ConfigUtil::setupDuplexRoutes(const Address& addr1, const SmeSystemId smeId1,
 	const Address& addr2, const SmeSystemId smeId2)
 {
-	//1 -> 2
-	RouteInfo route1;
-	RouteUtil::setupRandomCorrectRouteInfo(&route1);
-	route1.source = addr1;
-	route1.dest = addr2;
-	route1.smeSystemId = smeId2;
-	route1.enabling = true;
-	routeReg->putRoute(route1, NULL);
-	//2 -> 1
-	RouteInfo route2;
-	RouteUtil::setupRandomCorrectRouteInfo(&route2);
-	route2.source = addr2;
-	route2.dest = addr1;
-	route2.smeSystemId = smeId1;
-	route2.enabling = true;
-	routeReg->putRoute(route2, NULL);
+	setupRoute(addr1, addr2, smeId2);
+	setupRoute(addr2, addr1, smeId1);
 }
 
 void ConfigUtil::checkRoute(const Address& origAddr, const SmeSystemId& origSmeId,
