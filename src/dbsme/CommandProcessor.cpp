@@ -238,6 +238,7 @@ void DataProvider::process(Command& command)
         if (!name || name[0] == '\0')
             name = SMSC_DBSME_DEFAULT_JOB_NAME;
         command.setJobName(name);
+        name = command.getJobName();
 
         str = &input[curPos];
         command.setInData(str.c_str());
