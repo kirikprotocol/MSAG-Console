@@ -22,9 +22,10 @@ namespace leaktracing{
 
 static const int MAXTRACESIZE=20;
 
-static const int PRE_ALLOC=32;
-static const int POST_ALLOC=32;
-static const int USER_DATA=sizeof(size_t)*2+sizeof(void*);
+static const int PRE_ALLOC=16;
+static const int POST_ALLOC=16;
+static const int USER_DATA_RAW=sizeof(size_t)*2+sizeof(void*);
+static const int USER_DATA=(USER_DATA_RAW&0xF)?(USER_DATA_RAW&(~0xF))+0x10:USER_DATA_RAW;
 static const int CHECK_SIZE=(PRE_ALLOC+POST_ALLOC+USER_DATA);
 
 static const int PRE_FILL_PATTERN=0xaa;
