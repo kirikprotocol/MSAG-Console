@@ -350,7 +350,6 @@ namespace smsc { namespace infosme
             return *this;
         };
 
-
     protected:
         
         Task* task;
@@ -366,6 +365,9 @@ namespace smsc { namespace infosme
     public:
         
         TaskGuard(Task* task=0) : task(task) {
+            changeTaskCounter(true);
+        }
+        TaskGuard(const TaskGuard& tg) : task(tg.task) {
             changeTaskCounter(true);
         }
         virtual ~TaskGuard() {
