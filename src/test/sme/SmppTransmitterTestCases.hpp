@@ -28,9 +28,14 @@ public:
 	virtual ~SmppTransmitterTestCases() {}
 
 	/**
-	 * Отправка submit_sm pdu другим sme.
+	 * Отправка корректной submit_sm pdu другим sme.
 	 */
-	void submitSm(bool sync, int num);
+	void submitSmCorrect(bool sync, int num);
+
+	/**
+	 * Отправка некорректной submit_sm pdu другим sme.
+	 */
+	void submitSmIncorrect(bool sync, int num);
 
 	/**
 	 * Заполнение и отправка submit_sm pdu с недопустимыми значениями полей.
@@ -88,16 +93,20 @@ private:
 	PduData* getNonReplaceRescheduledEnrotePdu();
 	template <class Message>
 	void checkRegisteredDelivery(Message& m);
+	void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu);
 	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* replacePduData,
 		time_t submitTime);
 	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu,
 		time_t respTime);
 	void processSubmitSmAsync(PduData* pduData, PduSubmitSmResp* respPdu);
+	void sendSubmitSmPdu(PduSubmitSm* pdu, PduData* existentPduData, bool sync);
+	PduData* setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu);
 	PduData* registerReplaceSm(PduReplaceSm* pdu, PduData* replacePduData,
 		time_t submitTime);
 	void processReplaceSmSync(PduData* pduData, PduReplaceSmResp* respPdu,
 		time_t respTime);
 	void processReplaceSmAsync(PduData* pduData, PduReplaceSmResp* respPdu);
+	void sendReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData, bool sync);
 };
 
 }
