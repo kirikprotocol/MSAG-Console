@@ -16,7 +16,7 @@ import org.apache.log4j.Category;
  * Date: 06.09.2004
  * Time: 14:34:36
  */
-public class DivertManager
+public class DivertManager extends Thread
 {
   private static DivertManager instance = null;
   private static Object syncObj = new Object();
@@ -61,7 +61,8 @@ public class DivertManager
     if (is == null)
       throw new ScenarioInitializationException("Failed to locate commutator properties file");
 
-    try {
+    try
+    {
       Properties properties = new Properties();
       properties.load(is);
 
@@ -78,11 +79,17 @@ public class DivertManager
       if (voiceMailAddresses == null)
         throw new Exception("Shuold be at least one VoiceMail address specified");
 
-    } catch(Exception e) {
+      this.start();
+      java.lang.Runtime.getRuntime().addShutdownHook(new Thread() {
+        public void run() { shutdown(); };
+      });
+    }
+    catch(Exception e) {
       final String err = "Failed to load commutator properties";
       logger.error(err, e);
       throw new ScenarioInitializationException(err, e);
-    } finally {
+    }
+    finally {
       try { is.close(); } catch (Throwable th) {}
     }
   }
@@ -225,10 +232,12 @@ public class DivertManager
   private void disconnect()
   {
     if (mscSocket != null) {
+      logger.info("Disconnecting from MSC "+mscHost+":"+mscPort+"...");
       try { if (is != null) is.close(); } catch (IOException e) { logger.error("MSC is close error", e); }
       try { if (os != null) os.close(); } catch (IOException e) { logger.error("MSC os close error", e); }
       try { mscSocket.close(); } catch (IOException e) { logger.error("MSC socket close error", e); }
       is = null; os = null; mscSocket = null;
+      logger.info("Disconnected from MSC.");
     }
   }
   private void connect() throws DivertManagerException, IOException
@@ -434,4 +443,44 @@ public class DivertManager
       }
     }
   }
+
+  private boolean needExit = false;
+
+  private void shutdown()
+  {
+    synchronized(mscSocketLock)
+    {
+      needExit = true;
+      mscSocketLock.notify();
+      disconnect();
+    }
+  }
+  /**
+   * Used for MSC pinging (to avoid connection close)
+   */
+  public void run()
+  {
+    synchronized(mscSocketLock)
+    {
+      while (!needExit)
+      {
+        try {
+          connect();
+          logger.info("MSC pinging ...");
+          while (is.available() > 0 && (is.read() != -1)); // skip is data
+          writeTelnetLine(""); // ping MSC
+          readTelnetString(ESC_PROMPT);
+          logger.info("MSC ping ok.");
+          mscSocketLock.wait(60000); // interval 1 min
+        } catch (InterruptedException exc) {
+          logger.error("MSC ping interrupted", exc);
+          continue;
+        } catch (Exception exc) {
+          disconnect();
+          logger.error("MSC connect or ping error", exc);
+        }
+      }
+    }
+  }
+
 }
