@@ -199,7 +199,7 @@ public class SmsView
     }
     private void addWherePartEQ(ArrayList list, String field, String str) {
         if (needExpression(str))
-            list.add("UPPER("+field+") = ?"));
+            list.add("UPPER("+field+")=?");
     }
     private String prepareWhereClause(SmsQuery query)
     {
@@ -226,7 +226,6 @@ public class SmsView
     private void fetchRows(PreparedStatement stmt, SmsSet set, int rowsMaximum)
       throws SQLException
     {
-      String selectLargeBody = "SELECT BODY FROM SMS_ATCH WHERE ID=?";
       ResultSet rs = stmt.executeQuery();
 
       try
@@ -285,6 +284,8 @@ public class SmsView
             ResultSet lbrs = null;
             PreparedStatement lbstmt = null;
             try {
+              String selectLargeBody = "SELECT BODY FROM SMS_ATCH WHERE ID=?";
+              lbstmt = stmt.getConnection().prepareStatement(selectLargeBody);
               lbstmt.setBytes(1, id);
               lbrs = lbstmt.executeQuery();
               lbrs.next();

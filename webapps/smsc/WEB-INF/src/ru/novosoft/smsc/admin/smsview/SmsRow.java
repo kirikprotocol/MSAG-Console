@@ -55,15 +55,14 @@ public class SmsRow
   public byte[] getId() { return id; };
 
   public long getIdLong() {
-    return
-            (((long)id[0])<<7*8)
-            |(((long)id[1])<<6*8)
-            |(((long)id[2])<<5*8)
-            |(((long)id[3])<<4*8)
-            |(((long)id[4])<<3*8)
-            |(((long)id[5])<<2*8)
-            |(((long)id[6])<<1*8)
-            |(((long)id[7]));
+    return   ((((long)id[0])&0xff)<<56)
+            |((((long)id[1])&0xff)<<48)
+            |((((long)id[2])&0xff)<<40)
+            |((((long)id[3])&0xff)<<32)
+            |((((long)id[4])&0xff)<<24)
+            |((((long)id[5])&0xff)<<16)
+            |((((long)id[6])&0xff)<<8)
+            |((((long)id[7])&0xff));
   }
 
   public String getIdString() {
