@@ -83,7 +83,7 @@ public:
 struct TestSmeStat
 {
 	int ops;
-	boolean stopped;
+	bool stopped;
 	TestSmeStat() : ops(0), stopped(false) {}
 };
 
@@ -314,14 +314,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 		smeInfo.push_back(new SmeInfo());
 		SmsUtil::setupRandomCorrectAddress(addr[i]);
 		process(tcSme->addCorrectSme(smeInfo[i], RAND_TC));
-		if (i < numSme)
-		{
-			smeReg->registerSme(*addr[i], smeInfo[i]->systemId);
-		}
-		else
-		{
-			smeReg->registerAddressWithNoSme(*addr[i]);
-		}
+		smeReg->registerSme(*addr[i], (i < numSme ? smeInfo[i] : NULL));
 	}
 	//регистрация алиасов
 	for (int i = 0; i < numAddr; i++)
@@ -559,18 +552,7 @@ void executeFunctionalTest(int numAddr, int numSme,
 			cin >> cmd;
 			if (cmd == "pdu")
 			{
-				const SmeRegistry::AddressList& addr = smeReg->list();
-				for (int i = 0; i < addr.size(); i++)
-				{
-					ostringstream os;
-					os << *addr[i];
-					fprintf(TRACE_LOG_STREAM, "Sme = %s\n", os.str().c_str());
-					PduRegistry* pduReg = smeReg->getPduRegistry(*addr[i]);
-					if (pduReg)
-					{
-						pduReg->dump(TRACE_LOG_STREAM);
-					}
-				}
+				smeReg->dump(TRACE_LOG_STREAM);
 				cout << "Pdu registry dumped successfully" << endl;
 			}
 			else

@@ -22,13 +22,13 @@ SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _syste
 	__require__(resultHandler);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
 	routeChecker = new RouteChecker(systemId, smeAddr, smeReg, aliasReg, routeReg);
-	responseChecker = new SmppResponsePduChecker(pduReg, routeChecker);
+	pduChecker = new SmppPduChecker(pduReg, routeChecker);
 	receiver = new SmppReceiverTestCases(systemId, smeAddr, smeReg,
-		aliasReg, routeReg, handler, routeChecker, responseChecker);
+		aliasReg, routeReg, handler, routeChecker, pduChecker);
 	session = new SmppSession(config, receiver);
 	receiver->setSession(session);
 	transmitter = new SmppTransmitterTestCases(session, smeAddr,
-		smeReg, responseChecker);
+		smeReg, pduChecker);
 }
 
 SmppTestCases::~SmppTestCases()
@@ -36,7 +36,7 @@ SmppTestCases::~SmppTestCases()
 	if (session)
 	{
 		delete routeChecker;
-		delete responseChecker;
+		delete pduChecker;
 		delete receiver;
 		delete transmitter;
 		try

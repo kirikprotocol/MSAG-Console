@@ -41,17 +41,17 @@ SmppReceiverTestCases::SmppReceiverTestCases(const SmeSystemId& _systemId,
 	const Address& addr, const SmeRegistry* _smeReg,
 	const AliasRegistry* _aliasReg, const RouteRegistry* _routeReg,
 	ResultHandler* handler, RouteChecker* _routeChecker,
-	SmppResponsePduChecker* _responseChecker)
+	SmppPduChecker* _pduChecker)
 	: systemId(_systemId), smeAddr(addr), smeReg(_smeReg),
 	aliasReg(_aliasReg), routeReg(_routeReg), resultHandler(handler),
-	routeChecker(_routeChecker), responseChecker(_responseChecker)
+	routeChecker(_routeChecker), pduChecker(_pduChecker)
 {
 	__require__(smeReg);
 	__require__(aliasReg);
 	__require__(routeReg);
 	__require__(resultHandler);
 	__require__(routeChecker);
-	__require__(responseChecker);
+	__require__(pduChecker);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
 }
 
@@ -92,7 +92,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 			//обновить pduData по данным из респонса
 			__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 			PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-			vector<int> tmp = responseChecker->checkSubmitSmResp(pduData, pdu);
+			vector<int> tmp = pduChecker->checkSubmitSmResp(pduData, pdu);
 			for (int i = 0; i < tmp.size(); i++)
 			{
 				res->addFailure(10 + tmp[i]);

@@ -81,7 +81,7 @@ private:
 	//internal
 	SmppSession* session;
 	RouteChecker* routeChecker;
-	SmppResponsePduChecker* responseChecker;
+	SmppPduChecker* pduChecker;
 	SmppReceiverTestCases* receiver;
 	SmppTransmitterTestCases* transmitter;
 

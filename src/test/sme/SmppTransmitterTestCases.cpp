@@ -16,13 +16,13 @@ using namespace smsc::smpp::SmppCommandSet;
 
 SmppTransmitterTestCases::SmppTransmitterTestCases(SmppSession* sess,
 	const Address& addr, const SmeRegistry* _smeReg,
-	SmppResponsePduChecker* _responseChecker)
+	SmppPduChecker* _pduChecker)
 	: session(sess), smeAddr(addr), smeReg(_smeReg),
-	responseChecker(_responseChecker)
+	pduChecker(_pduChecker)
 {
 	__require__(session);
 	__require__(smeReg);
-	__require__(responseChecker);
+	__require__(pduChecker);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
 }
 
@@ -330,7 +330,7 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 				if (respPdu)
 				{
 					vector<int> tmp =
-						responseChecker->checkSubmitSmResp(&pduData, *respPdu);
+						pduChecker->checkSubmitSmResp(&pduData, *respPdu);
 					for (int i = 0; i < tmp.size(); i++)
 					{
 						res->addFailure(tmp[i] > 0 ? 110 + tmp[i] : tmp[i]);

@@ -1,6 +1,5 @@
 #include "SmeManagerTestCases.hpp"
 #include "SmeManagerUtil.hpp"
-#include "test/core/CoreTestManager.hpp"
 #include "smeman/smetypes.h"
 #include "util/debug.h"
 #include <map>
@@ -14,7 +13,6 @@ using namespace std;
 using namespace smsc::smeman; //SmeIndex, SmeIterator
 using namespace smsc::test::util;
 using smsc::util::Logger;
-using test::core::CoreTestManager;
 
 ostream& operator<< (ostream& os, const SmeInfo& sme)
 {

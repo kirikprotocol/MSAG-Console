@@ -9,7 +9,7 @@
 #include "test/core/AliasRegistry.hpp"
 #include "test/core/RouteRegistry.hpp"
 #include "test/core/RouteChecker.hpp"
-#include "SmppResponsePduChecker.hpp"
+#include "SmppPduChecker.hpp"
 
 namespace smsc {
 namespace test {
@@ -49,7 +49,7 @@ public:
 	SmppReceiverTestCases(const SmeSystemId& systemId, const Address& smeAddr,
 		const SmeRegistry* smeReg, const AliasRegistry* aliasReg,
 		const RouteRegistry* routeReg, ResultHandler* handler,
-		RouteChecker* routeChecker, SmppResponsePduChecker* responseChecker);
+		RouteChecker* routeChecker, SmppPduChecker* pduChecker);
 
 	virtual ~SmppReceiverTestCases() {}
 
@@ -108,7 +108,7 @@ private:
 	const RouteRegistry* routeReg;
 	ResultHandler* resultHandler;
 	RouteChecker* routeChecker;
-	SmppResponsePduChecker* responseChecker;
+	SmppPduChecker* pduChecker;
 };
 
 }
