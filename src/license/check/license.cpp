@@ -140,6 +140,8 @@ bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic)
     smsc_log_error(log, "error: failed to read license file!");
     return false;
   }
+  fclose(f);
+
 
   string msg;
   for(unsigned i=0;i<sizeof(lkeys)/sizeof(char*);i++)
