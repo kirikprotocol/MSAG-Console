@@ -11,10 +11,6 @@ DbSmeJobTestCases::DbSmeJobTestCases(DbSmeRegistry* _dbSmeReg, CheckList* _chkLi
 	//__require__(chkList);
 }
 
-#define __trace_job__(monitor, match, pos, output, expected) \
-	__trace2__("db sme cmd: match = %s, input:\n%s\noutput(%d):\n%s\nexpected:\n%s\n", \
-		match ? "true" : "false", monitor->pduData->strProps["input"].c_str(), pos, output.c_str(), expected.c_str())
-
 void DbSmeJobTestCases::processJobOutput(const string& text, DbSmeTestRecord* rec,
 	SmeAckMonitor* monitor)
 {
@@ -26,38 +22,36 @@ void DbSmeJobTestCases::processJobOutput(const string& text, DbSmeTestRecord* re
 		monitor->pduData->strProps["output"] =
 			processJobFirstOutput(text, rec);
 	}
-	const string& expected = monitor->pduData->strProps["output"];
+	string& expected = monitor->pduData->strProps["output"];
 	//ошибки при обработке
 	if (!expected.length())
 	{
 		monitor->setReceived();
 		return;
 	}
-	int pos = monitor->pduData->intProps.count("output") ?
-		monitor->pduData->intProps["output"] : 0;
-	bool match = !expected.compare(pos, text.length(), text);
-	__trace_job__(monitor, match, pos, text, expected);
 	__tc__("processDbSmeRes.output");
-	if (match)
+	int pos = expected.find(text);
+	__trace2__("db sme cmd: pos = %d, input: %s\noutput:\n%s\nexpected:\n%s\n",
+		pos, monitor->pduData->strProps["input"].c_str(), text.c_str(), expected.c_str());
+	if (pos == string::npos)
 	{
-		pos += text.length();
-		monitor->pduData->intProps["output"] = pos;
-		if (pos == expected.length())
+		__tc_fail__(1);
+		monitor->setReceived();
+		//delete rec;
+	}
+	else
+	{
+		//pdu порезана на куски по 200 байт
+		if (pos + text.length() < expected.length() && text.length() != 200)
+		{
+			__tc_fail__(2);
+		}
+		expected.erase(pos, text.length());
+		if (!expected.length())
 		{
 			monitor->setReceived();
 			//delete rec;
 		}
-		//pdu порезана на куски по 200 байт
-		else if (text.length() != 200)
-		{
-			__tc_fail__(1);
-		}
-	}
-	else
-	{
-		__tc_fail__(2);
-		monitor->setReceived();
-		//delete rec;
 	}
 	__tc_ok_cond__;
 }
