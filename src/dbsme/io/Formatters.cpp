@@ -218,15 +218,23 @@ void FloatFormatter::format(
 {
     const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-
+    
     if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
     {
         output += def;
     }
     else if (!adapter.isNull(entity.position))
     {
+        char    format[8] = "%f";
+        const char* pre = 
+            entity.getOption(SMSC_DBSME_IO_FORMAT_PRECISION_OPTION);
+        int precision = 0; // after '.'
+        if (pre && (precision = atoi(pre)) >=0)
+        {
+            sprintf(format, "%%.%d%%f", precision);
+        }
         char    buff[128] = "";
-        sprintf(buff, "%f", adapter.getFloat(entity.position));
+        sprintf(buff, format, adapter.getFloat(entity.position));
         output += buff;
     }
 }
@@ -243,8 +251,22 @@ void DoubleFormatter::format(
     }
     else if (!adapter.isNull(entity.position))
     {
+        char    format[8] = "%lg";
+        const char* dgt = 
+            entity.getOption(SMSC_DBSME_IO_FORMAT_DIGITS_OPTION);
+        int digits = 0; // significant digits
+        if (dgt && (digits = atoi(dgt)) >=0)
+        {
+            const char* exp = 
+                entity.getOption(SMSC_DBSME_IO_FORMAT_EXPONENT_OPTION);
+            if (exp && strcmp(exp, "yes") == 0) {
+                sprintf(format, "%%.%d%%le", digits);
+            } else {
+                sprintf(format, "%%.%d%%lg", digits);
+            }
+        }
         char    buff[128] = "";
-        sprintf(buff, "%e", adapter.getDouble(entity.position));
+        sprintf(buff, format, adapter.getDouble(entity.position));
         output += buff;
     }
 }
@@ -261,8 +283,22 @@ void LongDoubleFormatter::format(
     }
     else if (!adapter.isNull(entity.position))
     {
+        char    format[8] = "%Lg";
+        const char* dgt = 
+            entity.getOption(SMSC_DBSME_IO_FORMAT_DIGITS_OPTION);
+        int digits = 0; // significant digits
+        if (dgt && (digits = atoi(dgt)) >=0)
+        {
+            const char* exp = 
+                entity.getOption(SMSC_DBSME_IO_FORMAT_EXPONENT_OPTION);
+            if (exp && strcmp(exp, "yes") == 0) {
+                sprintf(format, "%%.%d%%Le", digits);
+            } else {
+                sprintf(format, "%%.%d%%Lg", digits);
+            }
+        }
         char    buff[256] = "";
-        sprintf(buff, "%Le", adapter.getLongDouble(entity.position));
+        sprintf(buff, format, adapter.getLongDouble(entity.position));
         output += buff;
     }
 }

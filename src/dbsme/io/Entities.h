@@ -38,7 +38,10 @@ namespace smsc { namespace dbsme { namespace io
     static const char* SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION  = "arg";
     static const char* SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION   = "default";
     static const char* SMSC_DBSME_IO_FORMAT_PATTERN_OPTION   = "pattern";
-
+    static const char* SMSC_DBSME_IO_FORMAT_PRECISION_OPTION = "precision";
+    static const char* SMSC_DBSME_IO_FORMAT_EXPONENT_OPTION  = "exponent";
+    static const char* SMSC_DBSME_IO_FORMAT_DIGITS_OPTION    = "digits";
+    
     static const char  SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER = '$';
     static const char  SMSC_DBSME_IO_FORMAT_STRING_DELIMETER = '\"';
     static const char  SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER   = '\\';
