@@ -43,7 +43,16 @@ public:
       return ++(*dta);
     }else
     {
-      int rv=store->getConcatMessageReference(addr);
+      int rv;
+      mtx.Unlock();
+      try{
+        rv=store->getConcatMessageReference(addr);
+      }catch(std::exception& e)
+      {
+        rv=0;
+        __warning2__("getConcatMessageReference failed:%s",e.what());
+      }
+      mtx.Lock();
       rv=rv==-1?0:rv;
       cache[straddr]=rv;
       return rv;
