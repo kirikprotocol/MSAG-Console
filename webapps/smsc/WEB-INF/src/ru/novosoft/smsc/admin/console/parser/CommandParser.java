@@ -204,6 +204,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=delsubject();
 			break;
 		}
+		case TGT_PROFILE:
+		{
+			match(TGT_PROFILE);
+			cmd=delprofile();
+			break;
+		}
 		case TGT_PRINCIPAL:
 		{
 			match(TGT_PRINCIPAL);
@@ -653,6 +659,7 @@ public CommandParser(ParserSharedInputState state) {
 		case EOF:
 		case TGT_ALIAS:
 		case OPT_DIVERT:
+		case OPT_UDHCONCAT:
 		{
 			break;
 		}
@@ -672,6 +679,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		case EOF:
 		case OPT_DIVERT:
+		case OPT_UDHCONCAT:
 		{
 			break;
 		}
@@ -694,6 +702,7 @@ public CommandParser(ParserSharedInputState state) {
 			break;
 		}
 		case EOF:
+		case OPT_UDHCONCAT:
 		{
 			break;
 		}
@@ -703,6 +712,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
+		profile_udh_concat_opt(cmd);
 		return cmd;
 	}
 	
@@ -957,6 +967,29 @@ public CommandParser(ParserSharedInputState state) {
 		
 				    cmd.setSubject(getnameid("Subject name"));
 				
+		}
+		return cmd;
+	}
+	
+	public final ProfileDeleteCommand  delprofile() throws RecognitionException, TokenStreamException {
+		ProfileDeleteCommand cmd;
+		
+		Token  mask = null;
+		
+		cmd = new ProfileDeleteCommand();
+		
+		
+		{
+		try { // for error handling
+			mask = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Profile mask expected");
+				
+		}
+		cmd.setMask(mask.getText());
 		}
 		return cmd;
 	}
@@ -1446,6 +1479,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_ENCODE:
 		case OPT_LOCALE:
 		case OPT_DIVERT:
+		case OPT_UDHCONCAT:
 		{
 			break;
 		}
@@ -1467,6 +1501,7 @@ public CommandParser(ParserSharedInputState state) {
 		case TGT_ALIAS:
 		case OPT_ENCODE:
 		case OPT_DIVERT:
+		case OPT_UDHCONCAT:
 		{
 			break;
 		}
@@ -1487,6 +1522,7 @@ public CommandParser(ParserSharedInputState state) {
 		case EOF:
 		case TGT_ALIAS:
 		case OPT_DIVERT:
+		case OPT_UDHCONCAT:
 		{
 			break;
 		}
@@ -1506,6 +1542,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		case EOF:
 		case OPT_DIVERT:
+		case OPT_UDHCONCAT:
 		{
 			break;
 		}
@@ -1547,6 +1584,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_UNCONDIT:
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
+			case OPT_UDHCONCAT:
 			case OPT_ON:
 			case OPT_OFF:
 			{
@@ -1584,6 +1622,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_UNCONDIT:
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
+			case OPT_UDHCONCAT:
 			{
 				break;
 			}
@@ -1597,6 +1636,7 @@ public CommandParser(ParserSharedInputState state) {
 			break;
 		}
 		case EOF:
+		case OPT_UDHCONCAT:
 		{
 			break;
 		}
@@ -1606,6 +1646,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
+		profile_udh_concat_opt(cmd);
 		return cmd;
 	}
 	
@@ -2474,6 +2515,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_UNCONDIT:
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
+			case OPT_UDHCONCAT:
 			{
 				break;
 			}
@@ -2497,6 +2539,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_UNCONDIT:
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
+			case OPT_UDHCONCAT:
 			{
 				break;
 			}
@@ -2519,6 +2562,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_UNCONDIT:
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
+			case OPT_UDHCONCAT:
 			{
 				break;
 			}
@@ -2540,6 +2584,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_UNCONDIT:
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
+			case OPT_UDHCONCAT:
 			{
 				break;
 			}
@@ -2560,6 +2605,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
+			case OPT_UDHCONCAT:
 			{
 				break;
 			}
@@ -2584,6 +2630,7 @@ public CommandParser(ParserSharedInputState state) {
 				break;
 			}
 			case EOF:
+			case OPT_UDHCONCAT:
 			{
 				break;
 			}
@@ -2597,6 +2644,57 @@ public CommandParser(ParserSharedInputState state) {
 		catch (RecognitionException ex) {
 			
 			throw new RecognitionException("Profile devert options expected. Syntax: [absent][barred][blocked][capacity][unconditional] [modifiable|notmodifiable]");
+				
+		}
+	}
+	
+	public final void profile_udh_concat_opt(
+		ProfileGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		
+		try {      // for error handling
+			{
+			switch ( LA(1)) {
+			case OPT_UDHCONCAT:
+			{
+				match(OPT_UDHCONCAT);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setUdhConcat(true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setUdhConcat(false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("Profile udh concat option expected. Syntax: udhconcat on|off");
 				
 		}
 	}
@@ -2628,6 +2726,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_MODIF:
 			case OPT_NOTMODIF:
 			case OPT_DIVERT:
+			case OPT_UDHCONCAT:
 			{
 				break;
 			}
@@ -2653,6 +2752,7 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			case EOF:
 			case OPT_DIVERT:
+			case OPT_UDHCONCAT:
 			{
 				break;
 			}
@@ -2722,6 +2822,7 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case TGT_ALIAS:
 			case OPT_DIVERT:
+			case OPT_UDHCONCAT:
 			{
 				break;
 			}
@@ -2737,29 +2838,6 @@ public CommandParser(ParserSharedInputState state) {
 			throw new RecognitionException("Profile encoding options expected. Syntax: (default|ucs2|latin1|ucs2-latin1) [ussd7bit]");
 				
 		}
-	}
-	
-	public final ProfileDeleteCommand  delprofile() throws RecognitionException, TokenStreamException {
-		ProfileDeleteCommand cmd;
-		
-		Token  mask = null;
-		
-		cmd = new ProfileDeleteCommand();
-		
-		
-		{
-		try { // for error handling
-			mask = LT(1);
-			match(STR);
-		}
-		catch (RecognitionException ex) {
-			
-				    throw new RecognitionException("Profile mask expected");
-				
-		}
-		cmd.setMask(mask.getText());
-		}
-		return cmd;
 	}
 	
 	
@@ -2822,6 +2900,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"set\"",
 		"\"clear\"",
 		"\"ussd7bit\"",
+		"\"udhconcat\"",
 		"\"on\"",
 		"\"off\"",
 		"\"full\"",

@@ -32,9 +32,11 @@ public class ProfileAddCommand extends ProfileGenCommand
     }
     if (isDivertOptions && !isDivert && !isDivertModifiable &&
         !isDivertActiveAbsent && !isDivertActiveBarred && !isDivertActiveBlocked &&
-        !isDivertActiveCapacity && !isDivertActiveUnconditional) {
+        !isDivertActiveCapacity && !isDivertActiveUnconditional)
+    {
       ctx.setMessage("expecting divert option(s). " +
-                     "Syntax: divert <string> [absent][barred][blocked][capacity][unconditional] [modifiable|notmodifiable]");
+                     "Syntax: divert <string> [absent][barred][blocked][capacity][unconditional] "+
+                     "[modifiable|notmodifiable]");
       ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
       return;
     }
@@ -48,8 +50,7 @@ public class ProfileAddCommand extends ProfileGenCommand
                                     aliasHide, aliasModifiable,
                                     divert, divertActiveUnconditional, divertActiveAbsent,
                                     divertActiveBlocked, divertActiveBarred, divertActiveCapacity,
-                                    divertModifiable,
-                                    isUdhConcat); //todo: implement udhConcat
+                                    divertModifiable, udhConcat);
 
       switch (ctx.getSmsc().profileUpdate(profileMask, profile)) {
         case 1:	//pusUpdated

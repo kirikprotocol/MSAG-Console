@@ -25,14 +25,15 @@ public class ProfileAlterCommand extends ProfileGenCommand
         if (!isCodepage && !isReport && !isLocale && !isAliasHide && !isAliasModifiable &&
             isDivertOptions && !isDivert && !isDivertModifiable && !isDivertActiveAbsent &&
             !isDivertActiveBarred && !isDivertActiveBlocked &&  !isDivertActiveCapacity &&
-            !isDivertActiveUnconditional)
+            !isDivertActiveUnconditional && !isUdhConcat)
         {
             ctx.setMessage("expecting 'encoding', 'report', 'locale', 'alias', 'divert' option(s). "+
                            "Syntax: alter profile <profile_address> "+
                            "[report (full|none)] [locale <locale_name>] "+
                            "[encoding (default|ucs2|latin1|ucs2-latin1) [ussd7bit]] "+
                            "[alias [hide|nohide] [modifiable|notmodifiable]] "+
-                           "[divert [(set <divert>)|clear] [(on|off) [absent][barred][blocked][capacity][unconditional]] [modifiable|notmodifiable]]");
+                           "[divert [(set <divert>)|clear] [(on|off) [absent][barred][blocked][capacity][unconditional]] "+
+                           "[modifiable|notmodifiable]] [udhconcat on|off]");
             ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
             return;
         }
@@ -60,6 +61,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
                 if (isDivertActiveCapacity) profile.setDivertActiveCapacity(divertActiveOn ? divertActiveCapacity:false);
                 if (isDivertActiveUnconditional) profile.setDivertActiveUnconditional(divertActiveOn ? divertActiveUnconditional:false);
                 if (isDivertModifiable) profile.setDivertModifiable(divertModifiable);
+                if (isUdhConcat) profile.setUdhConcat(udhConcat);
                 if (isLocale) {
                    if (!ctx.getSmsc().isLocaleRegistered(locale))
                       throw new Exception("Locale '"+locale+"' is not registered");

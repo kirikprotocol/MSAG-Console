@@ -70,6 +70,7 @@ tokens {
   OPT_SET       = "set"	         ;
   OPT_CLEAR	= "clear"	 ;
   OPT_USSD7BIT	= "ussd7bit"	 ;
+  OPT_UDHCONCAT = "udhconcat"	 ;
   OPT_ON	= "on"		 ;
   OPT_OFF	= "off"		 ;
   

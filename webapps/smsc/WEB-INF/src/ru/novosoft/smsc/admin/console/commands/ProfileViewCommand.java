@@ -52,6 +52,7 @@ public class ProfileViewCommand implements Command
     }
     else result += " off";
     result += (profile.isDivertModifiable() ? " modifiable":" notmodifiable");
+    result += ", udhconcat:"+((profile.isUdhConcat()) ? "on":"off");
     return result;
   }
 

@@ -74,6 +74,7 @@ del returns [Command cmd] {
 	:	TGT_ROUTE 	cmd = delroute
 	|	TGT_ALIAS 	cmd = delalias
 	|	TGT_SUBJECT	cmd = delsubject
+	|	TGT_PROFILE	cmd = delprofile
 	|	TGT_PRINCIPAL	cmd = delprincipal
 	|	TGT_DL		cmd = deldl
 	|	TGT_DLSUB	cmd = deldlsubmitter
@@ -449,6 +450,15 @@ profile_divert_opt[ProfileGenCommand cmd]
            throw new RecognitionException("Profile devert options expected. Syntax: [absent][barred][blocked][capacity][unconditional] [modifiable|notmodifiable]");
 	}
 
+profile_udh_concat_opt[ProfileGenCommand cmd] 
+	:	(OPT_UDHCONCAT (OPT_ON  { cmd.setUdhConcat(true);  }
+			       |OPT_OFF { cmd.setUdhConcat(false); }))?
+	;
+	exception
+	catch [RecognitionException ex] {
+           throw new RecognitionException("Profile udh concat option expected. Syntax: udhconcat on|off");
+	}
+
 profile_alias_opt[ProfileGenCommand cmd] {
     cmd.setAliasOptions(true);
 }
@@ -461,6 +471,7 @@ profile_alias_opt[ProfileGenCommand cmd] {
 	catch [RecognitionException ex] {
            throw new RecognitionException("Profile alias options expected. Syntax: [hide|nohide] [modifiable|notmodifiable]");
 	}
+
 profile_encode_opt[ProfileGenCommand cmd] {
     cmd.setUssd7Bit(false);
 }
@@ -487,6 +498,7 @@ addprofile returns [ProfileAddCommand cmd] {
 		(OPT_DIVERT  { cmd.setDivertOptions(true); }
 			    ({ cmd.setDivert(getnameid("Divert value")); })
 			    profile_divert_opt[cmd] )?
+		profile_udh_concat_opt[cmd]
 	;
 	exception[mask]
 	catch [RecognitionException ex] {
@@ -508,6 +520,7 @@ altprofile returns [ProfileAlterCommand cmd] {
 			    ((OPT_OFF   { cmd.setDivertActiveOn(false); })|
 			     (OPT_ON    { cmd.setDivertActiveOn(true);  }))?
 			    profile_divert_opt[cmd] )?
+		profile_udh_concat_opt[cmd]
 	;
 	exception[addr]
 	catch [RecognitionException ex] {
