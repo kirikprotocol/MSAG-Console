@@ -987,7 +987,8 @@ CREATE OR REPLACE PROCEDURE DO_FINALIZE_SMS
    dstMsc IN VARCHAR2, dstImsi IN VARCHAR2, dstSmeN IN NUMBER,
    routeId IN VARCHAR2, svcId IN NUMBER, prty IN NUMBER,
    srcSmeId IN VARCHAR2, dstSmeId VARCHAR2, txtLength IN NUMBER,
-   bodyLen IN NUMBER, body IN RAW, arc IN NUMBER, bill IN NUMBER)
+   bodyLen IN NUMBER, body IN RAW, arc IN NUMBER, bill IN NUMBER,
+   delete IN NUMBER, diverted IN NUMBER)
 */
 const char* ToFinalStatement::sql = (const char*)
 "BEGIN\
@@ -998,7 +999,7 @@ const char* ToFinalStatement::sql = (const char*)
      :mr, :svcType, :dr, :br,\
      :srcMsc, :srcImsi, :srcSmeN, :dstMsc, :dstImsi, :dstSmeN,\
      :routeId, :svcId, :prty, :srcSmeId, :dstSmeId,\
-     :txtLength, :bodyLen, :body, :arc, :bill);\
+     :txtLength, :bodyLen, :body, :arc, :bill, :delete, :diverted);\
  END;";
 ToFinalStatement::ToFinalStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -1006,7 +1007,7 @@ ToFinalStatement::ToFinalStatement(Connection* connection, bool assign)
 {
     __trace2__("%p : FinalizeStatement creating ...", stmt);
 }
-void ToFinalStatement::bindSms(SMSId id, SMS& sms)
+void ToFinalStatement::bindSms(SMSId id, SMS& sms, bool needDelete)
     throw(StorageException)
 {
     setSMSId(id);
@@ -1118,10 +1119,17 @@ void ToFinalStatement::bindSms(SMSId id, SMS& sms)
     bind(i++, SQLT_BIN, (dvoid *) bodyBuffer,
          (sb4) bodyBufferLen, &indBody);
 
+    deleteFlag = (needDelete) ? 1:0;
+    divertedFlag = (sms.hasStrProperty(Tag::SMSC_DIVERTED_TO)) ? 1:0;
+
     bind(i++, SQLT_UIN, (dvoid *)&(sms.needArchivate), // arc
          (sb4) sizeof(sms.needArchivate));
     bind(i++, SQLT_UIN, (dvoid *)&(sms.billingRecord), // bill
          (sb4)sizeof(sms.billingRecord));
+    bind(i++, SQLT_UIN, (dvoid *)&(deleteFlag),        // delete
+         (sb4)sizeof(deleteFlag));
+    bind(i++, SQLT_UIN, (dvoid *)&(divertedFlag),      // diverted
+         (sb4)sizeof(divertedFlag));                   
 }
 
 

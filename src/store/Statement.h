@@ -463,13 +463,15 @@ namespace smsc { namespace store
         int         bodyTextLen, bodyBufferLen;
         uint8_t*    bodyBuffer;
 
+        ub1     deleteFlag, divertedFlag;
+
     public:
 
         ToFinalStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~ToFinalStatement() {};
 
-        void bindSms(SMSId id, SMS& sms)
+        void bindSms(SMSId id, SMS& sms, bool needDelete=true)
             throw(StorageException);
 
         inline bool wasFinalized() {

@@ -1024,7 +1024,7 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
 #endif
 }
 
-void RemoteStore::doFinalizeSms(SMSId id, SMS& sms)
+void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
     throw(StorageException)
 {
     __require__(pool);
@@ -1044,7 +1044,7 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms)
                     ToFinalStatement* toFinalStatement
                         = connection->getToFinalStatement();
 
-                    toFinalStatement->bindSms(id, sms);
+                    toFinalStatement->bindSms(id, sms, needDelete);
                     connection->check(toFinalStatement->execute());
                     connection->commit();
                     pool->freeConnection(connection);
@@ -1094,7 +1094,7 @@ void RemoteStore::createFinalizedSms(SMSId id, SMS& sms)
 
     sms.lastTime = time(NULL);
     sms.nextTime = 0;
-    doFinalizeSms(id, sms);
+    doFinalizeSms(id, sms, false); // not need to delete sms
 
 #else
     
@@ -1118,7 +1118,7 @@ void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
     sms.nextTime = 0;
     sms.lastResult = 0;
     sms.destinationDescriptor = dst;
-    doFinalizeSms(id, sms);
+    doFinalizeSms(id, sms, true);
 
 #else
 
@@ -1151,7 +1151,7 @@ void RemoteStore::changeSmsStateToUndeliverable(SMSId id,
     sms.nextTime = 0;
     sms.lastResult = failureCause;
     sms.destinationDescriptor = dst;
-    doFinalizeSms(id, sms);
+    doFinalizeSms(id, sms, true);
 
 #else
 
@@ -1181,7 +1181,7 @@ void RemoteStore::changeSmsStateToExpired(SMSId id)
     sms.lastTime = time(NULL);
     sms.nextTime = 0;
     sms.lastResult = smsc::system::Status::EXPIRED;
-    doFinalizeSms(id, sms);
+    doFinalizeSms(id, sms, true);
 
 #else
 
@@ -1210,7 +1210,7 @@ void RemoteStore::changeSmsStateToDeleted(SMSId id)
     sms.lastTime = time(NULL);
     sms.nextTime = 0;
     sms.lastResult = smsc::system::Status::DELETED;
-    doFinalizeSms(id, sms);
+    doFinalizeSms(id, sms, true);
 
 #else
 

@@ -159,7 +159,7 @@ namespace smsc { namespace store
             SMSId id, const Descriptor& dst,
             uint32_t failureCause, time_t nextTryTime, uint32_t attempts)
                 throw(StorageException, NoSuchMessageException);
-        void doFinalizeSms(SMSId id, SMS& sms)
+        void doFinalizeSms(SMSId id, SMS& sms, bool needDelete=true)
             throw(StorageException);
         
         void doChangeSmsConcatSequenceNumber(StorageConnection* connection,
