@@ -6,8 +6,6 @@ namespace smsc { namespace util { namespace config
 using smsc::logger::Logger;
 
 /* ----------------------- Tree Configuration Management ------------------- */
-smsc::logger::Logger *ConfigView::log = 
-    Logger::getInstance("smsc.util.config.ConfigView");
 
 char* ConfigView::prepareSubSection(const char* sub)
 {
@@ -26,7 +24,8 @@ char* ConfigView::prepareSubSection(const char* sub)
     return section;
 }
 ConfigView::ConfigView(Manager& manager, const char* cat)
-    : config(manager), category(0)
+    : log(Logger::getInstance("smsc.util.config.ConfigView")),
+        config(manager), category(0)
 {
     if (cat)
     {
