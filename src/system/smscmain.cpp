@@ -71,7 +71,7 @@ int main(int argc,char* argv[])
     char * admin_host = 0;
     try
     {
-      cfgs.cfgman->getString("admin.host");
+      admin_host = cfgs.cfgman->getString("admin.host");
     } 
     catch (smsc::util::config::ConfigException &c)
     {}
