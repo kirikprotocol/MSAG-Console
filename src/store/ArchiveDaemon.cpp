@@ -62,7 +62,7 @@ extern "C" void setShutdownHandler(void)
     sigset_t set;
     sigemptyset(&set); 
     sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
-    if(thr_sigsetmask(SIG_UNBLOCK, &set, NULL) != 0) {
+    if(pthread_sigsetmask(SIG_UNBLOCK, &set, NULL) != 0) {
         if (logger) smsc_log_error(logger, "Failed to set signal mask (shutdown handler)");
     }
     sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
@@ -73,7 +73,7 @@ extern "C" void clearSignalMask(void)
     sigemptyset(&set);
     for(int i=1;i<=37;i++)
         if(i!=SIGQUIT && i!=SIGBUS && i!=SIGSEGV) sigaddset(&set,i);
-    if(thr_sigsetmask(SIG_SETMASK, &set, NULL) != 0) {
+    if(pthread_sigsetmask(SIG_SETMASK, &set, NULL) != 0) {
         if (logger) smsc_log_error(logger, "Failed to clear signal mask");
     }
 }
