@@ -342,13 +342,12 @@ class InvalidBindScenario : public SmppProtocolErrorScenario
 {
 	int num;
 	bool invalidSize;
-	bool allowedCmdId;
-	bool notAllowedCmdId;
+	bool invalidCmdId;
 public:
 	InvalidBindScenario(const SmeConfig& conf, const Address& addr,
 		CheckList* chkList, int _num)
-	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num), invalidSize(false),
-		allowedCmdId(false), notAllowedCmdId(false)
+	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num),
+		invalidSize(false), invalidCmdId(false)
 	{
 		__trace2__("InvalidBindScenario(): scenario = %p, num = %d", this, num);
 	}
@@ -400,9 +399,13 @@ public:
 				break;
 			case 5: //неправильный commandId
 				__tc__("protocolError.invalidBind.cmdId.allowedCmdId");
-				cmdId = allowedRequestCmdIds[rand0(allowedRequestCmdIdsSize - 1)];
+				do
+				{
+					cmdId = allowedRequestCmdIds[rand0(allowedRequestCmdIdsSize - 1)];
+				}
+				while (cmdId == ENQUIRE_LINK); //на ENQUIRE_LINK будет всегда респонс с ESME_ROK
 				pdu = createPdu(cmdId);
-				allowedCmdId = true;
+				invalidCmdId = true;
 				break;
 			case 6: //неправильный commandId
 				__tc__("protocolError.invalidBind.cmdId.allowedCmdId");
@@ -412,19 +415,19 @@ public:
 				}
 				while (cmdId == GENERIC_NACK); //на GENERIC_NACK не будет ответа
 				pdu = createPdu(cmdId);
-				allowedCmdId = true;
+				invalidCmdId = true;
 				break;
 			case 7: //неправильный commandId
 				__tc__("protocolError.invalidBind.cmdId.notAllowedCmdId");
 				cmdId = notAllowedCmdIds[rand0(notAllowedCmdIdsSize - 1)];
 				pdu = createPdu(cmdId);
-				notAllowedCmdId = true;
+				invalidCmdId = true;
 				break;
 			case 8:  //несуществующий commandId
 				__tc__("protocolError.invalidBind.cmdId.nonExistentCmdId");
 				cmdId = rand2(0xa, INT_MAX);
 				pdu = createPdu(bindCmdIds[rand0(bindCmdIdsSize - 1)]);
-				notAllowedCmdId = true;
+				invalidCmdId = true;
 				break;
 			default:
 				__unreachable__("Invalid num");
@@ -439,7 +442,7 @@ public:
 				this, cmdId, pb.size, size);
 			*tmp = htonl(size);
 		}
-		if (allowedCmdId || notAllowedCmdId)
+		if (invalidCmdId)
 		{
 			__trace2__("invalid bind: scenario = %p, new command id = %x",
 				this, cmdId);
@@ -457,18 +460,9 @@ public:
 		switch (pdu->get_commandId())
 		{
 			case GENERIC_NACK:
-				if (allowedCmdId)
-				{
-					__check__(1, pdu->get_commandStatus() == ESME_RINVBNDSTS);
-				}
-				else if (notAllowedCmdId)
-				{
-					__check__(2, pdu->get_commandStatus() == ESME_RINVCMDID);
-				}
-				else
-				{
-					__tc_fail__(3);
-				}
+				__check__(1, !bound);
+				__check__(2, invalidCmdId);
+				__check__(3, pdu->get_commandStatus() == ESME_RINVBNDSTS);
 				__tc_ok_cond__;
 				setComplete(true);
 				break;
@@ -776,13 +770,12 @@ class SubmitAfterUnbindScenario : public SmppProtocolErrorScenario
 {
 	int num;
 	bool invalidSize;
-	bool allowedCmdId;
-	bool notAllowedCmdId;
+	bool invalidCmdId;
 public:
 	SubmitAfterUnbindScenario(const SmeConfig& conf, const Address& addr,
 		CheckList* chkList, int _num)
 	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num),
-		invalidSize(false), allowedCmdId(false), notAllowedCmdId(false)
+		invalidSize(false), invalidCmdId(false)
 
 	{
 		__trace2__("SubmitAfterUnbindScenario(): scenario = %p, num = %d", this, num);
@@ -878,9 +871,13 @@ public:
 				break;
 			case 9: //неправильный commandId
 				__tc__("protocolError.submitAfterUnbind.cmdId.allowedCmdId");
-				cmdId = allowedRequestCmdIds[rand0(allowedRequestCmdIdsSize - 1)];
+				do
+				{
+					cmdId = allowedRequestCmdIds[rand0(allowedRequestCmdIdsSize - 1)];
+				}
+				while (cmdId == ENQUIRE_LINK); //на ENQUIRE_LINK будет всегда респонс с ESME_ROK
 				pdu = createPdu(cmdId);
-				allowedCmdId = true;
+				invalidCmdId = true;
 				break;
 			case 10: //неправильный commandId
 				__tc__("protocolError.submitAfterUnbind.cmdId.allowedCmdId");
@@ -888,21 +885,21 @@ public:
 				{
 					cmdId = allowedResponseCmdIds[rand0(allowedResponseCmdIdsSize - 1)];
 				}
-				while (cmdId == GENERIC_NACK);
+				while (cmdId == GENERIC_NACK); //на GENERIC_NACK не будет ответа
 				pdu = createPdu(cmdId);
-				allowedCmdId = true;
+				invalidCmdId = true;
 				break;
 			case 11: //неправильный commandId
 				__tc__("protocolError.submitAfterUnbind.cmdId.notAllowedCmdId");
 				cmdId = notAllowedCmdIds[rand0(notAllowedCmdIdsSize - 1)];
 				pdu = createPdu(cmdId);
-				notAllowedCmdId = true;
+				invalidCmdId = true;
 				break;
 			case 12:  //несуществующий commandId
 				__tc__("protocolError.submitAfterUnbind.cmdId.nonExistentCmdId");
 				cmdId = rand2(0xa, INT_MAX);
 				pdu = createPdu(bindCmdIds[rand0(bindCmdIdsSize - 1)]);
-				notAllowedCmdId = true;
+				invalidCmdId = true;
 				break;
 			default:
 				__unreachable__("Invalid num");
@@ -919,7 +916,7 @@ public:
 				this, cmdId, pb.size, size);
 			*tmp = htonl(size);
 		}
-		if (allowedCmdId || notAllowedCmdId)
+		if (invalidCmdId)
 		{
 			__trace2__("invalid pdu: scenario = %p, new command id = %x",
 				this, cmdId);
@@ -947,23 +944,13 @@ public:
 				break;
 			case GENERIC_NACK:
 				__check__(1, !bound);
-				if (allowedCmdId)
-				{
-					__check__(2, pdu->get_commandStatus() == ESME_RINVBNDSTS);
-				}
-				else if (notAllowedCmdId)
-				{
-					__check__(3, pdu->get_commandStatus() == ESME_RINVCMDID);
-				}
-				else
-				{
-					__tc_fail__(4);
-				}
+				__check__(2, invalidCmdId);
+				__check__(3, pdu->get_commandStatus() == ESME_RINVBNDSTS);
 				__tc_ok_cond__;
 				setComplete(true);
 				break;
 			default:
-				__tc_fail__(5);
+				__tc_fail__(4);
 		}
 	}
 	virtual void handleError(int errorCode)
