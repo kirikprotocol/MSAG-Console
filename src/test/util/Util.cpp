@@ -1,4 +1,5 @@
 #include "Util.hpp"
+#include "core/synchronization/Mutex.hpp"
 #include <cstdlib>
 #include <ctime>
 
@@ -7,8 +8,19 @@ namespace test {
 namespace util {
 
 using namespace std;
+using namespace smsc::core::synchronization; //Mutex, MutexGuard
 
-//srand((unsigned) time(NULL));
+void init_rand()
+{
+	static bool inited = false;
+	static Mutex lock;
+    MutexGuard mguard(lock);
+	if (!inited)
+	{
+		inited = true;
+		srand(time(NULL));
+	}
+}
 
 int rand0(int maxValue)
 {

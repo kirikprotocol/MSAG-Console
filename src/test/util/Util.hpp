@@ -25,6 +25,8 @@ const int RAND_TC = -1;
  */
 const int RAND_SET_TC = -2;
 
+void init_rand();
+
 int rand0(int maxValue);
 
 int rand1(int maxValue);
