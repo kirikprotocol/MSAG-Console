@@ -117,7 +117,7 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
       mdci->invokeId = invokeId;
       mdci->dialogue->Et96MapV2ForwardSmMOInd(
         SSN,dialogId,invokeId,dstAddr,srcAddr,ud);
-      SMSC_FORWARD_RESPONSE_T* p = new SMSC_FORWARD_RESPONSE_T();
+/*      SMSC_FORWARD_RESPONSE_T* p = new SMSC_FORWARD_RESPONSE_T();
       p->dialogId = dialogId;
       MSG_T msg;
       msg.primitive = SMSC_FORWARD_RESPONSE;
@@ -129,7 +129,8 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
       if ( result != MSG_OK ){
         __trace2__("MAP::Et96MapV2ForwardSmMOInd MsgSend broken with code 0x%x",result);
         throw 0;
-      }
+      } */
+      ForwardResponse(dialogId);
   	}catch(...){
   		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
       CloseAndRemoveDialog(SSN,dialogId);
@@ -163,8 +164,8 @@ USHORT_T Et96MapStateInd (
 void MapIoTask::deinit()
 {
   warning_if(Et96MapUnbindReq(SSN)!=ET96MAP_E_OK);  
-  warning_if(MsgRel(USER01_ID,ETSIMAP_ID)!=MSG_OK);
-  warning_if(MsgClose(USER01_ID)!=MSG_OK);
+  warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
+  warning_if(MsgClose(MY_USER_ID)!=MSG_OK);
   MsgExit();
 }
 
