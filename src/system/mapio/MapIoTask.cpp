@@ -109,6 +109,13 @@ USHORT_T Et96MapDelimiterInd(
     __trace2__("broken response with error 0x%hx",err);
     throw runtime_error("MAPIO::ERR broken response");
   }
+  __trace2__("responce Ok");
+  err = Et96MapDelimiterReq(lssn,dialogId,priorityOrder,0);
+  if ( err != ET96MAP_E_OK ) {
+    __trace2__("broken delimiter with error 0x%hx",err);
+    throw runtime_error("MAPIO::ERR broken delimiter");
+  }
+  __trace2__("delimiter Ok");
   CloseAndRemoveDialog(lssn,dialogId);
   return ET96MAP_E_OK;
 }
