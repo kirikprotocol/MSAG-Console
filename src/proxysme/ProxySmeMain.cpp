@@ -9,6 +9,7 @@
 //
 
 #include <memory>
+#include <iostream>
 #include "ProxySmeSMachine.h"
 #include "ProxySmeQueue.h"
 #include "ProxySmeMixer.h"
@@ -20,6 +21,8 @@
 #include "../admin/service/Component.h"
 #include "../admin/service/Method.h"
 #include "../admin/service/Type.h"
+#include "../admin/service/ComponentManager.h"
+#include "../admin/service/ServiceSocketListener.h"
 
 
 SMSC_SMEPROXY_BEGIN
@@ -27,17 +30,20 @@ SMSC_SMEPROXY_BEGIN
 using namespace std;
 using namespace smsc::smpp;
 using namespace smsc::core::synchronization;
+using namespace smsc::admin::service;
 
 class ProxySmeComponent : public Component, public SMachineNotifier
 {
   Methods methods_;
-  bool need_reloading_config_
+  bool need_reloading_config_;
   enum { APPLAY_METHOD };
   void error(const char* method, const char* param) {}
 public:
   ProxySmeComponent() : need_reloading_config_(false)
   {
-    methods[APPLAY_METHOD] = Method(APPLAY_METHOD,"applay",mhparams,StringType);
+    Parameters mhparams;
+    Method mth(APPLAY_METHOD,"applay",mhparams,StringType);
+    methods_[mth.getName()] = mth;
   }
   bool SMachineBreak_() { 
     bool x = need_reloading_config_; need_reloading_config_ = false; 
@@ -116,7 +122,7 @@ bool LoadConfig(ProxyConfig& pconf)
 #endif
 }
 
-extern "C" 
+//extern "C" 
 int main()
 {
   try {
@@ -124,7 +130,7 @@ int main()
     smsc::util::Logger::getCategory("smsc.proxysme.X").info("!!!!");
     smsc::util::Logger::getCategory("smsc.proxysme.X").info("!!!! -- Starting");
     smsc::util::Logger::getCategory("smsc.proxysme.X").info("!!!!");
-  }catch( exception& e ){
+  }catch( exception& ){
     cerr << "can't init logger" << endl;
     return -1;
   }
@@ -136,10 +142,12 @@ int main()
     return -1;
   }
 
+  ProxySmeComponent component;
+  ServiceSocketListener adminListener; 
+
   try {
-    ProxySmeAdminComponent component;
     ComponentManager::registerComponent(&component); 
-    adminListener.init(pconf.admin_host,pconf.admin_port);               
+    adminListener.init(pconf.admin_host.c_str(),pconf.admin_port);               
     adminListener.Start();                                     
   }catch(exception& e){
     smsc::util::Logger::getCategory("smsc.proxysme").error("can't init admin interface, skipped");
@@ -150,7 +158,7 @@ int main()
     Mixer     mixer(que,pconf);
     SMachine  smachine(que,mixer,pconf);
   
-    if ( smachine.ProcessCommands() == END_PROCESSING ) break;
+    if ( smachine.ProcessCommands(component) == END_PROCESSING ) break;
 
     // перезачитаем конфиг
     if ( !LoadConfig(pconf) ) {
