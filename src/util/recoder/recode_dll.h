@@ -52,6 +52,8 @@ RECODE_DLL_API int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff
 RECODE_DLL_API int RECODE_DECL Transliterate(const char* buf,int len,
                     ConvEncodingEnum encoding,char *dest,int destlen);
 
+RECODE_DLL_API unsigned RECODE_DECL ConvertLatin1ToSMSC7Bit(const char* in, unsigned chars,char* out);
+RECODE_DLL_API unsigned RECODE_DECL ConvertSMSC7BitToLatin1(const char* in, unsigned chars,char* out);
 
 
 }

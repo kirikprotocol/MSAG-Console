@@ -9,6 +9,8 @@
 #include "latin1.hxx"
 #include "translit.hxx"
 #include "7_8_bits.hxx"
+#include <stdexcept>
+using namespace std;
 
 unsigned char* GetW2CRussionTable(ConvEncodingEnum encoding)
 {
@@ -304,6 +306,60 @@ int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff_size,
     }
   }
   return bstream.Size();
+}
+
+unsigned RECODE_DECL ConvertSMSC7BitToLatin1(const char* in, unsigned chars,char* out){
+  unsigned k = 0;
+	for(unsigned i=0; i<chars; ++i){
+		if ( in[i]&0x7f == 0x1b ) {
+			if ( ++i>=chars ) throw runtime_error("incorrect input buffer");
+			switch(in[i]&0x7f){
+				case 0x0a: // page break
+					out[k++] = '\f'; break;
+				case 0x14: // 
+					out[k++] = '^'; break;
+				case 0x1b: // ??? national
+					out[k++] = '?'; break;
+				case 0x40:
+					out[k++] = '|'; break;
+				case 0x28: // {
+					out[k++] = '{'; break;
+				case 0x29: // }
+					out[k++] = '}'; break;
+				case 0x3c: // [
+					out[k++] = '['; break;
+				case 0x3d: // ~
+					out[k++] = '~'; break;
+				case 0x3e: // ]
+					out[k++] = ']'; break;
+				case 0x2f:
+					out[k++] = '\\'; break;
+			}
+		}else{
+			out[k++] = _7bit_2_8bit[in[i]&0x7f];
+		}
+	}
+	return k;
+}
+
+unsigned RECODE_DECL ConvertLatin1ToSMSC7Bit(const char* in, unsigned chars,char* out){
+  unsigned k = 0;
+	for(unsigned i=0; i<chars; ++i){
+		switch(in[i]){
+		case '^': out[k++] = 0x1b; out[k++] = 0x14; break;
+		case '\f':out[k++] = 0x1b; out[k++] = 0x0a; break;
+		case '|': out[k++] = 0x1b; out[k++] = 0x40; break;
+		case '{': out[k++] = 0x1b; out[k++] = 0x28; break;
+		case '}': out[k++] = 0x1b; out[k++] = 0x29; break;
+		case '[': out[k++] = 0x1b; out[k++] = 0x3c; break;
+		case ']': out[k++] = 0x1b; out[k++] = 0x3e; break;
+		case '~': out[k++] = 0x1b; out[k++] = 0x3d; break;
+		case '\\':out[k++] = 0x1b; out[k++] = 0x2f; break;
+		default:
+			out[k++] = _8bit_2_7bit[in[i]];
+		}
+	}
+	return k;
 }
 
 #ifdef _WIN32

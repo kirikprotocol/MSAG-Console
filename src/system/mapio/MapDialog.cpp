@@ -15,7 +15,8 @@ using namespace smsc::smeman;
 #define TP_VP_ENCH  2
 #define TP_VP_ABS   3
 
-#define MAP_OCTET7BIT_ENCODING 0
+#define MAP_OCTET7BIT_ENCODING 0x0
+#define MAP_SMSC7BIT_ENCODING 0xf0
 #define MAP_LATIN1_ENCODING 0x3
 #define MAP_8BIT_ENCODING 0x4
 #define MAP_UCS2_ENCODING 0x8
@@ -42,12 +43,12 @@ inline char GetChar(const unsigned char*& ptr,unsigned& shift){
     ++ptr;
   }
   //__trace2__("MAP: 7bit : %x",val);
-  return lll_7bit_2_8bit[val];
+  return val;
 }
 
 inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit){
   //__trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,*ptr);
-  unsigned char val = lll_8bit_2_7bit[val8bit];
+  unsigned char val = val8bit;
   //char val = (*ptr >> shift)&0x7f;
   *ptr = *ptr | (val << shift);
   if ( shift > 1 )
@@ -63,6 +64,31 @@ inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit){
 }
 
 void Convert7BitToText(
+  const unsigned char* bit7buf, unsigned chars,
+  MicroString* text)
+{
+  __require__(chars<=255);
+  unsigned shift = 0;
+  for ( unsigned i=0; i< chars; ++i ){
+    text->bytes[i] =lll_7bit_2_8bit[GetChar(bit7buf,shift)&0x7f];
+  }
+  text->len = chars;
+  text->bytes[chars] = 0;
+#if !defined DISABLE_TRACING
+  __trace2__("MAP::7bit->latin1: %s",text->bytes);
+  {
+    char b[255*4];
+    unsigned k;
+    unsigned i;
+    for ( i=0,k=0; i<text->len;++i){
+      k += sprintf(b+k,"%x ",text->bytes[i]);
+    }
+    __trace2__("MAP::latin1(hex): %s",b);
+  }
+#endif
+}
+
+void Convert7BitToSMSC7Bit(
   const unsigned char* bit7buf, unsigned chars,
   MicroString* text)
 {
@@ -88,6 +114,57 @@ void Convert7BitToText(
 }
 
 unsigned ConvertText27bit(
+  const unsigned char* text, unsigned chars, unsigned char* bit7buf)
+{
+  //__require__(chars<=255);
+  if ( chars > 160 ){
+    __trace2__("MAP::ConvertText27bit: text length(%d) > 160",chars);
+    throw runtime_error("text length > 160");
+  }
+  unsigned char* base = bit7buf;
+  unsigned shift = 0;
+  for ( unsigned i=0; i< chars; ++i ){
+#define __pchar(x) PutChar(bit7buf,shift,x)
+#define __escape(x) __pchar(0x1b); __pchar(x)
+    switch(in[i]){
+		case '^': __escape(0x14); break;
+		case '\f':__escape(0x0a); break;
+		case '|': __escape(0x40); break;
+		case '{': __escape(0x28); break;
+		case '}': __escape(0x29); break;
+		case '[': __escape(0x3c); break;
+		case ']': __escape(0x3e); break;
+		case '~': __escape(0x3d); break;
+		case '\\':__escape(0x2f); break;
+		default:
+      PutChar(bit7buf,shift,lll_8bit_2_7bit[text[i]]);
+    }
+#undef __pchar
+#undef __escape
+  }
+#if !defined DISABLE_TRACING
+  {
+    char b[chars+1];
+    memcpy(b,text,chars);
+    b[chars] = 0;
+    __trace2__("MAP::latin1->7bit: %s",b);
+  }
+  {
+    char b[255*4];
+    unsigned k;
+    unsigned i;
+    for ( i=0,k=0; i<chars;++i){
+      k += sprintf(b+k,"%x ",text[i]);
+    }
+    __trace2__("MAP::7bit(hex): %s",b);
+  }
+#endif
+  unsigned _7bit_len = bit7buf-base+(shift?1:0);
+  __trace2__("MAP::7bit buffer length: %d",_7bit_len);
+  return _7bit_len;
+}
+
+unsigned ConvertSMSC7bit27bit(
   const unsigned char* text, unsigned chars, unsigned char* bit7buf)
 {
   //__require__(chars<=255);
@@ -345,8 +422,8 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
         throw runtime_error("MAP::DIALOG::ForwardReq: required compression");
       }
       encoding = user_data_coding&0x0c;
-      sms.setIntProperty(Tag::MS_VALIDITY,
-                         ((user_data_coding & 0xc0) == 0)?0:0x03);
+      if ( (user_data_coding & 0xc0) == 0x40 )
+        sms.setIntProperty(Tag::MS_VALIDITY,0x03);
     }
     else if ( (user_data_coding & 0xf0) == 0xc0 ) // 1100xxxx
     {
@@ -382,13 +459,16 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     {
       if (  encoding == MAP_OCTET7BIT_ENCODING ){
         MicroString ms;
-        Convert7BitToText(user_data,user_data_len,&ms);
+        //Convert7BitToText(user_data,user_data_len,&ms);
+        Convert7BitToSMSC7Bit(user_data,user_data_len,&ms);
         sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
+        sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
       }
-      else
+      else{
         sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
+        sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)encoding);
+      }
     }
-    sms.setIntProperty(Tag::SMPP_DATA_CODING,encoding);
     unsigned esm_class = 0;
     esm_class |= (ssfh->udhi?0x40:0);
     esm_class |= (ssfh->reply_path?0x80:0);
@@ -562,11 +642,16 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     pdu_tm->tz = tz;
     pdu_ptr+=sizeof(MAP_TIMESTAMP);
   }
-  if ( encoding == 0 ){ // 7bit
+  if ( encoding == MAP_OCTET7BIT_ENCODING  || encoding == MAP_LATIN1_ENCODING ){
     unsigned text_len;
     const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
     *pdu_ptr++ = text_len;
     pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr);
+  }else if ( encoding == MAP_SMSC7BIT_ENCODING  ){ // 7bit
+      unsigned text_len;
+      const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+      *pdu_ptr++ = text_len;
+      pdu_ptr += ConvertSMSC7Bit27bit(text,text_len,pdu_ptr);
   }else{ // UCS2 || 8BIT
     unsigned text_len;
     const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
