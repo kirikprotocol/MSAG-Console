@@ -15,7 +15,7 @@ using namespace std;
 using namespace smsc::system;
 
 static const bool SMS_SEGMENTATION = true;
-static inline unsigned GetMOLockTimeout() {return 15;}
+static inline unsigned GetMOLockTimeout() {return 45;}
 
 struct XMOMAPLocker {
   string imsi;
