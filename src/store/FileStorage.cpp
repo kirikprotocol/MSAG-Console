@@ -15,10 +15,10 @@
 #include "FileStorage.h"
 
 /* Static check for 64bit positions for files */
-template <bool cnd> struct StaticCheck {}; 
-template <>  struct StaticCheck<true>  {}; 
-template <>  struct StaticCheck<false> { private: StaticCheck(); }; 
-static StaticCheck< sizeof(fpos_t)==8 > staticCheck; 
+template <bool cnd> struct StaticCheck {};
+template <>  struct StaticCheck<true>  {};
+template <>  struct StaticCheck<false> { private: StaticCheck(); };
+static StaticCheck< sizeof(fpos_t)==8 > staticCheck;
 
 namespace smsc { namespace store
 {
@@ -44,7 +44,7 @@ const char* SMSC_PERSIST_DIR_NAME_PATTERN  = "%04d%02d%02d";
 const uint16_t SMSC_ARCHIVE_VERSION_INFO = 0x0001;
 const char*    SMSC_ARCHIVE_HEADER_TEXT  = "SMSC.ARC";
 
-void FileStorage::findEntries(const std::string& location, Array<std::string>& entries, 
+void FileStorage::findEntries(const std::string& location, Array<std::string>& entries,
                               bool files, const char* ext)
 {
     int extFileLen  = 0;
@@ -54,13 +54,13 @@ void FileStorage::findEntries(const std::string& location, Array<std::string>& e
         if (!ext || !ext[0]) return;
         extFileLen = strlen(ext)+1;
     }
-    
+
     DIR *locationDir = 0;
     if (!(locationDir = opendir(locationStr))) {
         Exception exc("Failed to open directory '%s'. Details: %s", locationStr, strerror(errno));
         throw StorageException(exc.what());
     }
-    
+
     //printf("Max name len=%d\n", pathconf(locationStr, _PC_NAME_MAX));
     TmpBuf<char, 1024> entryGuard(sizeof(struct dirent)+pathconf(locationStr, _PC_NAME_MAX));
     char* entry = entryGuard.get();
@@ -82,7 +82,7 @@ void FileStorage::findEntries(const std::string& location, Array<std::string>& e
             }
             //printf("%s\tmode:%d\n", pentry->d_name, description.st_mode);
             if (files) {                                        // file
-                if (!(description.st_mode & S_IFDIR)) {    
+                if (!(description.st_mode & S_IFDIR)) {
                     int fileNameLen = strlen(pentry->d_name);
                     if (fileNameLen > extFileLen) {
                         const char* extPos = pentry->d_name+(fileNameLen-extFileLen);
@@ -109,11 +109,11 @@ void FileStorage::findEntries(const std::string& location, Array<std::string>& e
 
 void FileStorage::findFiles(const std::string& location, const char* ext, Array<std::string>& files)
 {
-    FileStorage::findEntries(location, files, true, ext);    
+    FileStorage::findEntries(location, files, true, ext);
 }
 void FileStorage::findDirs (const std::string& location, Array<std::string>& dirs)
 {
-    FileStorage::findEntries(location, dirs, false, 0);    
+    FileStorage::findEntries(location, dirs, false, 0);
 }
 
 void FileStorage::deleteFile(const std::string& fullPath)
@@ -158,9 +158,9 @@ void FileStorage::rollErrorFile(const std::string& location, const std::string& 
 }
 void FileStorage::rollFileExtension(const std::string& location, const char* fileName, bool bill)
 {
-    std::string fullOldFile = location; fullOldFile += '/'; fullOldFile += fileName; fullOldFile += '.'; 
+    std::string fullOldFile = location; fullOldFile += '/'; fullOldFile += fileName; fullOldFile += '.';
     std::string fullNewFile = location; fullNewFile += '/'; fullNewFile += fileName; fullNewFile += '.';
-    
+
     fullOldFile += (bill) ? SMSC_LAST_BILLING_FILE_EXTENSION : SMSC_LAST_ARCHIVE_FILE_EXTENSION;
     fullNewFile += (bill) ? SMSC_PREV_BILLING_FILE_EXTENSION : SMSC_PREV_ARCHIVE_FILE_EXTENSION;
     if (rename(fullOldFile.c_str(), fullNewFile.c_str()) != 0) {
@@ -254,7 +254,7 @@ void RollingStorage::init(Manager& config, bool bill)
                               (bill ? "billing":"archive"), minInterval);
     }
     else storageInterval = ci;
-    
+
     Array<std::string> files;
     const char* extension = bill ? SMSC_LAST_BILLING_FILE_EXTENSION:SMSC_LAST_ARCHIVE_FILE_EXTENSION;
     FileStorage::findFiles(storageLocation, extension, files);
@@ -278,7 +278,7 @@ void RollingStorage::init(Manager& config, bool bill)
 bool RollingStorage::create(bool bill)
 {
     if (storageFile) return false;
-    
+
     time_t current = time(NULL);
     tm dt; gmtime_r(&current, &dt);
     sprintf(storageFileName, bill ? SMSC_BILLING_FILE_NAME_PATTERN:SMSC_ARCHIVE_FILE_NAME_PATTERN,
@@ -295,7 +295,7 @@ bool RollingStorage::create(bool bill)
         fclose(storageFile); storageFile = 0;
         needFile = false;
     }
-    
+
     storageFile = fopen(fullFilePathStr, needFile ? "ab+":"rb+");
     if (!storageFile) {
         Exception exc("Failed to create %s file '%s'. Details: %s",
@@ -349,7 +349,8 @@ void BillingStorage::createRecord(SMSId id, SMS& sms)
 
     create();
 
-    std::string out = "";
+    std::string out;
+    out.reserve(512);
     bool isDiverted = sms.hasStrProperty(Tag::SMSC_DIVERTED_TO);
     bool isBinary   = sms.hasIntProperty(Tag::SMPP_DATA_CODING) ?
                      (sms.getIntProperty(Tag::SMPP_DATA_CODING) == DataCoding::BINARY) : false;
@@ -459,13 +460,13 @@ void FileStorage::save(SMSId id, SMS& sms, fpos_t* pos /*= 0 (no getPos) */)
     uint32_t writeBufferSize = recordSize+sizeof(recordSize)*2;
     TmpBuf<char, 2048> writeBufferGuard(writeBufferSize);
     char* writeBuffer = writeBufferGuard.get(); char* position = writeBuffer;
-    
+
     recordSize = htonl(recordSize);
     memcpy(position, &recordSize, sizeof(recordSize)); position+=sizeof(recordSize);
     SMSId idd = Uint64Converter::toNetworkOrder(id);
     memcpy(position, &idd, sizeof(idd)); position+=sizeof(idd);
     memcpy(position, &smsState, sizeof(smsState)); position+=sizeof(smsState);
-    
+
     time_t writeTime = htonl(sms.submitTime);
     memcpy(position, &writeTime, sizeof(writeTime)); position+=sizeof(writeTime);
     writeTime = htonl(sms.validTime);
@@ -474,19 +475,19 @@ void FileStorage::save(SMSId id, SMS& sms, fpos_t* pos /*= 0 (no getPos) */)
     memcpy(position, &writeTime, sizeof(writeTime)); position+=sizeof(writeTime);
     writeTime = htonl(sms.nextTime);
     memcpy(position, &writeTime, sizeof(writeTime)); position+=sizeof(writeTime);
-    
+
     uint32_t attempts = htonl(sms.attempts);
     memcpy(position, &attempts, sizeof(attempts)); position+=sizeof(attempts);
     uint32_t lastResult = htonl(sms.lastResult);
     memcpy(position, &lastResult, sizeof(lastResult)); position+=sizeof(lastResult);
-    
+
     memcpy(position, &oaSize, sizeof(oaSize));   position+=sizeof(oaSize);
     if (oaSize > 0)  { memcpy(position, oa.c_str(), oaSize);   position+=oaSize;  }
-    memcpy(position, &daSize, sizeof(daSize));   position+=sizeof(daSize);    
+    memcpy(position, &daSize, sizeof(daSize));   position+=sizeof(daSize);
     if (daSize > 0)  { memcpy(position, da.c_str(), daSize);   position+=daSize;  }
     memcpy(position, &ddaSize, sizeof(ddaSize)); position+=sizeof(ddaSize);
     if (ddaSize > 0) { memcpy(position, dda.c_str(), ddaSize); position+=ddaSize; }
-    
+
     uint16_t mr = htons(sms.messageReference);
     memcpy(position, &mr, sizeof(mr)); position+=sizeof(mr);
     memcpy(position, &svcSize, sizeof(svcSize)); position+=sizeof(svcSize);
@@ -506,7 +507,7 @@ void FileStorage::save(SMSId id, SMS& sms, fpos_t* pos /*= 0 (no getPos) */)
     if (ddImsiSize > 0) { memcpy(position, sms.destinationDescriptor.imsi, ddImsiSize); position+=ddImsiSize; }
     uint32_t ddSme = htonl(sms.destinationDescriptor.sme);
     memcpy(position, &ddSme, sizeof(ddSme)); position+=sizeof(ddSme);
-    
+
     memcpy(position, &routeSize, sizeof(routeSize)); position+=sizeof(routeSize);
     if (routeSize > 0)  { memcpy(position,  sms.routeId, routeSize); position+=routeSize; }
     int32_t svcId = (int32_t)htonl(sms.serviceId);
@@ -524,7 +525,7 @@ void FileStorage::save(SMSId id, SMS& sms, fpos_t* pos /*= 0 (no getPos) */)
         uint8_t* bodyBuffer = sms.messageBody.getBuffer();
         memcpy(position,  bodyBuffer, bodyBufferLen); position+=bodyBufferLen;
     }
-    
+
     memcpy(position, &recordSize, sizeof(recordSize)); position+=sizeof(recordSize);
 
     write(writeBuffer, writeBufferSize);
@@ -536,7 +537,7 @@ bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) 
     uint8_t  smsState = 0;
     uint32_t recordSize1 = 0; uint32_t recordSize2 = 0;
     int8_t oaSize    = 0; int8_t daSize = 0; int8_t ddaSize  = 0; int8_t svcSize  = 0;
-    int8_t odMscSize = 0; int8_t odImsiSize = 0; 
+    int8_t odMscSize = 0; int8_t odImsiSize = 0;
     int8_t ddMscSize = 0; int8_t ddImsiSize = 0;
     int8_t routeSize = 0; int8_t srcSmeSize = 0; int8_t dstSmeSize = 0;
     int32_t textLen  = 0; int32_t bodyBufferLen = 0;
@@ -551,13 +552,13 @@ bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) 
         TmpBuf<char, 2048> readBufferGuard(recordSize1);
         char* readBuffer = readBufferGuard.get();
         if (!read(readBuffer, recordSize1)) return false;
-        
+
         if (!read(&recordSize2, sizeof(recordSize2))) return false;
         else recordSize2 = ntohl(recordSize2);
 
-        if (recordSize1 != recordSize2) 
+        if (recordSize1 != recordSize2)
             throw Exception("Inconsistent archive file rs1=%u, rs2=%u", recordSize1, recordSize2);
-        
+
         char* position = readBuffer;
         memcpy(&id, position, sizeof(id)); position+=sizeof(id);
         id = Uint64Converter::toHostOrder(id);
@@ -577,7 +578,7 @@ bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) 
         sms.attempts = ntohl(sms.attempts);
         memcpy(&sms.lastResult, position, sizeof(sms.lastResult)); position+=sizeof(sms.lastResult);
         sms.lastResult = ntohl(sms.lastResult);
-        
+
         char strBuff[1024];
         memcpy(&oaSize, position, sizeof(oaSize)); position+=sizeof(oaSize);
         if (oaSize > 0) {
@@ -601,7 +602,7 @@ bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) 
         memcpy(&sms.messageReference, position, sizeof(sms.messageReference));
         position+=sizeof(sms.messageReference);
         sms.messageReference = ntohs(sms.messageReference);
-        
+
         memcpy(&svcSize, position, sizeof(svcSize)); position+=sizeof(svcSize);
         if (svcSize > 0) {
             if (svcSize <= sizeof(sms.eServiceType)) {
@@ -610,13 +611,13 @@ bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) 
                 position+=svcSize;
 
             } else throw Exception("svcType invalid, size=%d", svcSize);
-        } 
-        
+        }
+
         memcpy(&sms.deliveryReport, position, sizeof(sms.deliveryReport));
         position+=sizeof(sms.deliveryReport);
         memcpy(&sms.billingRecord, position, sizeof(sms.billingRecord));
         position+=sizeof(sms.billingRecord);
-    
+
         memcpy(&odMscSize, position, sizeof(odMscSize)); position+=sizeof(odMscSize);
         if (odMscSize > 0) {
             memcpy(strBuff, position, odMscSize); strBuff[odMscSize] = '\0';
@@ -632,7 +633,7 @@ bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) 
         memcpy(&sms.originatingDescriptor.sme, position, sizeof(sms.originatingDescriptor.sme));
         position+=sizeof(sms.originatingDescriptor.sme);
         sms.originatingDescriptor.sme = ntohl(sms.originatingDescriptor.sme);
-    
+
         memcpy(&ddMscSize, position, sizeof(ddMscSize)); position+=sizeof(ddMscSize);
         if (ddMscSize > 0) {
             memcpy(strBuff, position, ddMscSize); strBuff[ddMscSize] = '\0';
@@ -648,14 +649,14 @@ bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) 
         memcpy(&sms.destinationDescriptor.sme, position, sizeof(sms.destinationDescriptor.sme));
         position+=sizeof(sms.destinationDescriptor.sme);
         sms.destinationDescriptor.sme = ntohl(sms.destinationDescriptor.sme);
-        
+
         memcpy(&routeSize, position, sizeof(routeSize)); position+=sizeof(routeSize);
         if (routeSize > 0) {
             memcpy(strBuff, position, routeSize); strBuff[routeSize] = '\0';
             sms.setRouteId(strBuff);
             position+=routeSize;
         } else sms.setRouteId("");
-        
+
         memcpy(&sms.serviceId, position, sizeof(sms.serviceId)); position+=sizeof(sms.serviceId);
         sms.serviceId = (int32_t)ntohl(sms.serviceId);
         memcpy(&sms.priority, position, sizeof(sms.priority)); position+=sizeof(sms.priority);
@@ -681,7 +682,7 @@ bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) 
             memcpy(bodyBuffer, position, bodyBufferLen); position+=bodyBufferLen;
             sms.messageBody.setBuffer(bodyBuffer, bodyBufferLen);
         } else sms.messageBody.setBuffer(0, 0);
-        
+
 
     } catch (Exception& exc) {
       Exception e("Inconsistent archive file data. Details: %s", exc.what());
@@ -692,13 +693,13 @@ bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) 
     } catch (...) {
       throw StorageException("Inconsistent archive file data. Reason unknown");
     }
-    
+
     return true;
 }
 
 void BillingStorage::create()
-{ 
-    static const char* SMSC_BILLING_HEADER_TEXT = 
+{
+    static const char* SMSC_BILLING_HEADER_TEXT =
         "MSG_ID,RECORD_TYPE,MEDIA_TYPE,BEARER_TYPE,SUBMIT,FINALIZED,STATUS,"
         "SRC_ADDR,SRC_IMSI,SRC_MSC,SRC_SME_ID,DST_ADDR,DST_IMSI,DST_MSC,DST_SME_ID,"
         "DIVERTED_FOR,ROUTE_ID,SERVICE_ID,USER_MSG_REF,DATA_LENGTH\n";
@@ -708,7 +709,7 @@ void BillingStorage::create()
     }
 }
 void ArchiveStorage::create()
-{ 
+{
     if (RollingStorage::create(false)) {
         write( SMSC_ARCHIVE_HEADER_TEXT , strlen(SMSC_ARCHIVE_HEADER_TEXT));
         uint16_t version = htons(SMSC_ARCHIVE_VERSION_INFO);
@@ -727,17 +728,17 @@ void ArchiveStorage::createRecord(SMSId id, SMS& sms)
 bool PersistentStorage::create(bool create)
 {
     if (storageFile) return false;
-    
+
     std::string fullFilePath = storageLocation+'/'+storageFileName;
     const char* fullFilePathStr = fullFilePath.c_str();
     storageFile = fopen(fullFilePathStr, "r");
-    
+
     bool needFile = true;
     if (storageFile)  { // opened for reading
-        if (!create) return true;   
+        if (!create) return true;
         fclose(storageFile); storageFile = 0;
         needFile = false;
-    } 
+    }
     else if (!create) {  // not exist for reading
         Exception exc("File '%s' not exists. Details: %s", fullFilePathStr, strerror(errno));
         throw StorageException(exc.what());
@@ -745,7 +746,7 @@ bool PersistentStorage::create(bool create)
 
     storageFile = fopen(fullFilePathStr, needFile ? "ab+":"rb+");
     if (!storageFile) {
-        Exception exc("Failed to open file '%s' for writing. Details: %s", 
+        Exception exc("Failed to open file '%s' for writing. Details: %s",
                       fullFilePathStr, strerror(errno));
         throw StorageException(exc.what());
     }
@@ -758,7 +759,7 @@ bool PersistentStorage::create(bool create)
     return needFile;
 }
 void PersistentStorage::open(bool read)
-{ 
+{
     if (PersistentStorage::create(!read))
     {
         if (read) {
@@ -768,9 +769,9 @@ void PersistentStorage::open(bool read)
                 headerText[headerTextLen] = '\0';
                 if (strcmp(headerText, SMSC_ARCHIVE_HEADER_TEXT) == 0) {
                     uint16_t version = 0;
-                    if (FileStorage::read(&version, sizeof(version)) && 
+                    if (FileStorage::read(&version, sizeof(version)) &&
                         SMSC_ARCHIVE_VERSION_INFO == ntohs(version)) return;
-                } 
+                }
             }
             throw StorageException("Invalid archive file header format.");
         }
@@ -812,20 +813,20 @@ bool PersistentStorage::readRecord(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 
 bool TextDumpStorage::create()
 {
     if (storageFile) return false;
-    
+
     std::string fullFilePath = storageLocation+'/'+storageFileName;
     const char* fullFilePathStr = fullFilePath.c_str();
     storageFile = fopen(fullFilePathStr, "r");
-    
+
     bool needFile = true;
     if (storageFile)  { // opened for reading
         fclose(storageFile); storageFile = 0;
         needFile = false;
-    } 
+    }
 
     storageFile = fopen(fullFilePathStr, needFile ? "ab+":"rb+");
     if (!storageFile) {
-        Exception exc("Failed to open file '%s' for writing. Details: %s", 
+        Exception exc("Failed to open file '%s' for writing. Details: %s",
                       fullFilePathStr, strerror(errno));
         throw StorageException(exc.what());
     }
@@ -840,10 +841,10 @@ bool TextDumpStorage::create()
 
 void TextDumpStorage::open()
 {
-    static const char* SMSC_TXT_ARCHIVE_HEADER_TEXT = 
+    static const char* SMSC_TXT_ARCHIVE_HEADER_TEXT =
         "ID,SUBMIT,FINALIZED,STATUS,ROUTE_ID,SRC_ADDR,SRC_SME_ID,"
         "DST_ADDR,DST_SME_ID,DST_ADDR_DEALIASED,MESSAGE\n";
-    
+
     if (TextDumpStorage::create()) {
         FileStorage::write(SMSC_TXT_ARCHIVE_HEADER_TEXT, strlen(SMSC_TXT_ARCHIVE_HEADER_TEXT));
         FileStorage::flush();
@@ -859,7 +860,7 @@ void TextDumpStorage::openWrite(fpos_t* pos /*= 0 (no getPos) */)
 static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& message)
 {
     if (encoding == DataCoding::LATIN1)
-    {           
+    {
         std::auto_ptr<char> textGuard(new char[msgLen+1]);
         char* text = textGuard.get();
         memcpy(text, msg, msgLen);
@@ -888,7 +889,7 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
         }
     }
     else if (encoding == DataCoding::BINARY)
-    { 
+    {
         char strbuff[256];
         message += "<< BIN: ";
         for (int i=0; i<msgLen; i++) {
@@ -903,7 +904,7 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
     }
 }
 
-static void convertMessage(uint8_t* msg, int start, int msgLen, 
+static void convertMessage(uint8_t* msg, int start, int msgLen,
                            bool udh, int encoding, std::string& message)
 {
     if (!udh) decodeMessage(msg+start, msgLen, encoding, message);
@@ -929,11 +930,11 @@ static void convertMessage(uint8_t* msg, int start, int msgLen,
 
 static void parseMessageBody(const Body& body, std::string& message)
 {
-    int encoding = (body.hasIntProperty(Tag::SMPP_DATA_CODING)) ? 
+    int encoding = (body.hasIntProperty(Tag::SMPP_DATA_CODING)) ?
                     body.getIntProperty(Tag::SMPP_DATA_CODING) : DataCoding::SMSC7BIT;
     int esmClass = (body.hasIntProperty(Tag::SMPP_ESM_CLASS)) ?
                     body.getIntProperty(Tag::SMPP_ESM_CLASS) : 0;
-    
+
     unsigned msgLen  = 0; bool isPayload = false;
     uint8_t* msg = (uint8_t *)body.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &msgLen);
     if (!msg || msgLen == 0) {
@@ -949,7 +950,7 @@ static void parseMessageBody(const Body& body, std::string& message)
         unsigned concatInfoLen = 0;
         ConcatInfo* concatInfo = 0;
         if (!body.hasBinProperty(Tag::SMSC_CONCATINFO) ||
-            !(concatInfo = (ConcatInfo *)body.getBinProperty(Tag::SMSC_CONCATINFO, &concatInfoLen)) || 
+            !(concatInfo = (ConcatInfo *)body.getBinProperty(Tag::SMSC_CONCATINFO, &concatInfoLen)) ||
             concatInfoLen <= 0 || concatInfo->num <= 0) {
             message = "<< ERR: Invalid or missed ConcatInfo part >>"; return;
         }
@@ -961,7 +962,7 @@ static void parseMessageBody(const Body& body, std::string& message)
         if (partsEncoding && partsEncodingLen != concatInfo->num) {
             message = "<< ERR: Invalid parts encoding count >>"; return;
         }
-        
+
         for (int i=0; i<concatInfo->num; i++)
         {
             uint16_t offset = concatInfo->getOff(i);
@@ -971,7 +972,7 @@ static void parseMessageBody(const Body& body, std::string& message)
                 len = offset_next-offset;
             }
             if (len < 0) message += "<< ERR: Invalid ConcatInfo offset >>";
-            else convertMessage(msg, offset, len, true, 
+            else convertMessage(msg, offset, len, true,
                                 (partsEncoding) ? partsEncoding[i]:encoding, message);
         }
     }
@@ -981,7 +982,7 @@ static void parseMessageBody(const Body& body, std::string& message)
 void TextDumpStorage::writeRecord(SMSId id, SMS& sms)
 {
     MutexGuard guard(storageFileLock);
-    
+
     this->open();
 
     std::string out = "";
@@ -992,7 +993,7 @@ void TextDumpStorage::writeRecord(SMSId id, SMS& sms)
     CSVFileEncoder::addString  (out, sms.routeId);
 
     char addressBuffer[256];
-    
+
     sms.originatingAddress.getText(addressBuffer, sizeof(addressBuffer));
     CSVFileEncoder::addString  (out, addressBuffer);
     CSVFileEncoder::addString  (out, sms.srcSmeId);
@@ -1011,7 +1012,7 @@ void TextDumpStorage::writeRecord(SMSId id, SMS& sms)
       message += ex.what();
     }
     CSVFileEncoder::addString  (out, message.c_str(), true);
-    
+
     write(out.c_str(), out.length());
     flush();
 }
@@ -1029,7 +1030,7 @@ bool TransactionStorage::open(bool create)
             if (create) {
                 storageFile = fopen(fullFilePathStr, "ab+");
                 if (!storageFile) {
-                    Exception exc("Failed to create transactional file '%s'. Details: %s", 
+                    Exception exc("Failed to create transactional file '%s'. Details: %s",
                                   fullFilePathStr, strerror(errno));
                     throw StorageException(exc.what());
                 }
