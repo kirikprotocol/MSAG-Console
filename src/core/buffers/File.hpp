@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <exception>
 #include <stdexcept>
+#include <string>
 #include <errno.h>
 #include "util/int.h"
 #include <sys/types.h>
@@ -62,39 +63,39 @@ public:
   ~FileException()throw(){}
   const char* what()const throw()
   {
+    if(fileName.length())
+    {
+      errbuf="(";
+      errbuf+=fileName;
+      errbuf+=")";
+    }
     switch(errCode)
     {
       case errOpenFailed:
-        errbuf="Failed to open file";
-        if(fileName.length())errbuf+="("+fileName+")";
+        errbuf="Failed to open file"+errbuf;
         errbuf+=":";
         errbuf+=strerror(error);
         return errbuf.c_str();
       case errReadFailed:
-        errbuf="Failed to read from file";
-        if(fileName.length())errbuf+="("+fileName+")";
+        errbuf="Failed to read from file"+errbuf;
         errbuf+=":";
         errbuf+=strerror(error);
         return errbuf.c_str();
       case errEndOfFile:
-        if(fileName.length())errbuf+="("+fileName+")";
-        return "End of file reached";
+        errbuf="End of file reached"+errbuf;
+        return errbuf.c_str();
       case errWriteFailed:
-        errbuf="Failed to write to file";
-        if(fileName.length())errbuf+="("+fileName+")";
+        errbuf="Failed to write to file"+errbuf;
         errbuf+=":";
         errbuf+=strerror(error);
         return errbuf.c_str();
       case errSeekFailed:
-        errbuf="Failed to change file pointer";
-        if(fileName.length())errbuf+="("+fileName+")";
+        errbuf="Failed to change file pointer"+errbuf;
         errbuf+=":";
         errbuf+=strerror(error);
         return errbuf.c_str();
       case errFileNotOpened:
-        errbuf="Attempt to make an operation on file that is not opened";
-        errbuf+=":";
-        if(fileName.length())errbuf+="("+fileName+")";
+        errbuf="Attempt to make an operation on file that is not opened"+errbuf;
         return errbuf.c_str();
       default: return "Unknown error";
     }

@@ -51,9 +51,30 @@ protected:
       lastRootOffset=f.ReadNetInt64();
       hdrcrc32=f.ReadNetInt32();
     }
+
+    static uint32_t fldcrc(uint32_t crc,uint32_t fld)
+    {
+      uint32_t no=htonl(fld);
+      return crc32(crc,&no,4);
+    }
+
+    static uint32_t fldcrc(uint32_t crc,uint64_t fld)
+    {
+      uint32_t low=(fld&0xFFFFFFFFLL);
+      uint32_t high=(fld>>32)&0xFFFFFFFFLL;
+      uint32_t no=htonl(high);
+      crc=crc32(crc,&no,4);
+      no=htonl(low);
+      return crc32(crc,&no,4);
+    }
+
+
     void Write(File& f)
     {
-      hdrcrc32=crc32(0,this,sizeof(*this)-sizeof(uint32_t));
+      hdrcrc32=fldcrc(0,magic);
+      hdrcrc32=fldcrc(hdrcrc32,version);
+      hdrcrc32=fldcrc(hdrcrc32,flags);
+      hdrcrc32=fldcrc(hdrcrc32,(uint64_t)lastRootOffset);
       f.WriteNetInt32(magic);
       f.WriteNetInt32(version);
       f.WriteNetInt32(flags);
@@ -235,7 +256,9 @@ public:
   }
 
 
+#ifndef _WIN32
   friend class smsc::core::buffers::ChunkFile::ChunkHandle;
+#endif
 
   class ChunkHandle{
   public:
