@@ -39,8 +39,8 @@ void Body::encode(uint8_t* buffer,int& length) const
   int offset=0;
   for(int i=0;i<=SMS_LAST_TAG;i++)
   {
-		if ( i == Tag::SMPP_SHORT_MESSAGE ) continue;
-		if ( i == Tag::SMPP_MESSAGE_PAYLOAD ) continue;
+    if ( i == Tag::SMPP_SHORT_MESSAGE ) continue;
+    if ( i == Tag::SMPP_MESSAGE_PAYLOAD ) continue;
     if(prop.properties[i].isSet)
     {
       __require__(offset<length);
@@ -189,6 +189,8 @@ trivial:
     __trace2__(":SMS::Body::%s set trivial value",__FUNCTION__);
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ) tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
     if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) ) tag = unType(Tag::SMSC_RAW_PAYLOAD);
+    dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
+    dropProperty(Tag::SMPP_SHORT_MESSAGE);
     prop.properties[tag].setBin(value,len);
   }
 }
@@ -251,9 +253,9 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
 trivial:
     __trace2__(":SMS::Body::%s get trivial value",__FUNCTION__);
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) )
-	    tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
-	  if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) )
-	  	tag = unType(Tag::SMSC_RAW_PAYLOAD);
+      tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
+    if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) )
+      tag = unType(Tag::SMSC_RAW_PAYLOAD);
   }
   return prop.properties[tag].getBin(len);
 }
