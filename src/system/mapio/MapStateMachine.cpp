@@ -255,7 +255,9 @@ static void SendRInfo(MapDialog* dialog)
   appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
   SetVersion(appContext,dialog->version);
   //unsigned dialog_id = dialog->isMOreq?dialog->dialogid_req:dialog->dialogid_map;
+  require ( dialog->ssn == SSN );
   unsigned dialog_id = dialog->dialogid_map;
+  __trace2__("MAP::%s dialogid:0x%x ssn:%d",__FUNCTION__,dialog_id,dialog->ssn);
   USHORT_T result = Et96MapOpenReq(
     SSN, dialog_id, 
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
