@@ -157,10 +157,11 @@ void MapIoTask::dispatcher()
     }
 */
     if ( result == MSG_TIMEOUT ) {
-	if ( __global_bind_counter == CORRECT_BIND_COUNTER ) continue;
-        if( ++bindTimer <= MAX_BIND_TIMEOUT ) continue;
-	result = MSG_BROKEN_CONNECTION;
-	__map_warn2__("MAP:: not all binders binded in %d seconds. Restarting...", MAX_BIND_TIMEOUT);
+      if ( __global_bind_counter == CORRECT_BIND_COUNTER ) continue;
+	    __map_trace2__("MAP:: check binders %d", bindTimer);
+      if( ++bindTimer <= MAX_BIND_TIMEOUT ) continue;
+      result = MSG_BROKEN_CONNECTION;
+      __map_warn2__("MAP:: not all binders binded in %d seconds. Restarting...", MAX_BIND_TIMEOUT);
     }
     if ( result == MSG_BROKEN_CONNECTION ){
       __map_warn2__("Broken connection");
