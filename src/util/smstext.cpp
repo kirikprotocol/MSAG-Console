@@ -224,10 +224,8 @@ void transLiterateSms(SMS* sms,int datacoding)
 
 static int CalcExUserDataLen(SMS* sms)
 {
-  if(sms->hasIntProperty(Tag::SMPP_SOURCE_PORT) || sms->hasIntProperty(Tag::SMPP_DESTINATION_PORT))
+  if(sms->hasIntProperty(Tag::SMPP_SOURCE_PORT) && sms->hasIntProperty(Tag::SMPP_DESTINATION_PORT))
   {
-    if(!sms->hasIntProperty(Tag::SMPP_DESTINATION_PORT)||
-       !sms->hasIntProperty(Tag::SMPP_SOURCE_PORT))return -1;
     int rv=1+1;//tag+len
     if(sms->getIntProperty(Tag::SMPP_SOURCE_PORT)<256 &&
        sms->getIntProperty(Tag::SMPP_DESTINATION_PORT)<256)
@@ -365,10 +363,13 @@ int partitionSms(SMS* sms,int dstdc)
   __require__(len>=0 && len<=65535);
   int maxlen=133;
   int exudhilen=CalcExUserDataLen(sms);
-  if(exudhilen==-1)return psErrorUdhi;
-  if(udhi && exudhilen)return psErrorUdhi;
+  //if(udhi && exudhilen)return psErrorUdhi;
 
-  if(exudhilen)udhilen=exudhilen;
+  if(exudhilen>0)
+  {
+    if(udhilen>0)udhilen+=exudhilen;
+    else udhilen=exudhilen+1;
+  }
   int rv=psErrorUdhi;
   if(dc==DataCoding::LATIN1)
   {
@@ -708,6 +709,7 @@ void extractSmsPart(SMS* sms,int partnum)
       sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
       sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
       sms->setIntProperty(Tag::SMPP_DATA_SM,0);
+      FillUd(sms);
     }
   }
 }
