@@ -108,6 +108,7 @@ public:
         errbuf="Failed to rename file"+errbuf;
         errbuf+=":";
         errbuf+=strerror(error);
+        return errbuf.c_str();
       default: return "Unknown error";
     }
   }
@@ -143,6 +144,7 @@ public:
     std::swap(fileSize,swp.fileSize);
     std::swap(bufferPosition,swp.bufferPosition);
     std::swap(filename,swp.filename);
+    std::swap(autoFlush,swp.autoFlush);
   }
 
   void OpenInMemory(int sz)
@@ -178,16 +180,18 @@ public:
   {
     if(!inMemoryFile || !f)throw FileException(FileException::errFileNotOpened,filename.c_str());
     std::string tmp=filename+".tmp";
+    __trace2__("File: memflush %s->%s",filename.c_str(),tmp.c_str());
     FILE *g=fopen(tmp.c_str(),"wb+");
+    if(!g)throw FileException(FileException::errOpenFailed,filename.c_str());
     if(fwrite(buffer,fileSize,1,g)!=1)
     {
       fclose(g);
       remove(tmp.c_str());
       throw FileException(FileException::errWriteFailed,filename.c_str());
     }
-    std::string old=filename+".old";
     fclose(f);
     f=0;
+    std::string old=filename+".old";
     if(rename(filename.c_str(),old.c_str())!=0)
     {
       throw FileException(FileException::errRenameFailed,filename.c_str());
