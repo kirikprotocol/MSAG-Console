@@ -4,7 +4,9 @@
 #include "sms/sms.h"
 #include "smeman/smeman.h"
 #include "core/synchronization/EventMonitor.hpp"
+#include "core/synchronization/Mutex.hpp"
 #include "core/threads/ThreadedTask.hpp"
+
 
 namespace smsc{
 namespace db{
@@ -173,6 +175,7 @@ protected:
   ProxyMonitor *managerMonitor;
   ProfilesTable *profiles;
   SmeRegistrar *smeman;
+  Mutex mtx;
 
   string systemId;
 
