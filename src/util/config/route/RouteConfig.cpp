@@ -31,7 +31,7 @@ RouteConfig::status RouteConfig::RouteIterator::fetchNext(Route *&record)
 }
 
 RouteConfig::RouteConfig()
-	: logger(smsc::util::Logger::getCategory("smsc.igork_tests.smeman.SmeManConfig"))
+	: logger(smsc::util::Logger::getCategory("smsc.util.config.route.RouteConfig"))
 {
 }
 
