@@ -104,7 +104,7 @@ static void QueryHlrVersion(MapDialog* dialog)
       FormatText("MAP::QueryHlrVersion: error 0x%x when GetAcVersion",result));
   }
   string s_((char*)dialog->mshlrAddr.ss7Addr,(char*)dialog->mshlrAddr.ss7Addr+sizeof(dialog->mshlrAddr.ss7Addr));
-  __trace2__("MAP::QueryHlrVersion: [store %s]=0x%x",s_,dialog->dialogid_map);
+  __trace2__("MAP::QueryHlrVersion: [store %s]=0x%x",s_.c_srt(),dialog->dialogid_map);
   x_map[s_] = dialog->dialogid_map;
 }
 
@@ -117,7 +117,7 @@ static void QueryMcsVersion(MapDialog* dialog)
       FormatText("MAP::QueryMcsVersion: error 0x%x when GetAcVersion",result));
   }
   string s_((char*)dialog->destMscAddr.ss7Addr,(char*)dialog->destMscAddr.ss7Addr+sizeof(dialog->destMscAddr.ss7Addr));
-  __trace2__("MAP::QueryMcsVersion: [store %s]=0x%x",s_,dialog->dialogid_map);
+  __trace2__("MAP::QueryMcsVersion: [store %s]=0x%x",s_.c_str(),dialog->dialogid_map);
   x_map[s_] = dialog->dialogid_map;
 }
 
@@ -544,7 +544,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
   MAP_TRY{
     __trace2__("MAP::%s ",__FUNCTION__);
     string s_((char*)ss7Address_sp->ss7Addr,(char*)ss7Address_sp->ss7Addr+sizeof(ss7Address_sp->ss7Addr));
-    __trace2__("MAP::%s: [exists %s]?",__FUNCTION__,s_);
+    __trace2__("MAP::%s: [exists %s]?",__FUNCTION__,s_.c_str());
     map<string,unsigned>::iterator it = x_map.find(s_);
     if ( it == x_map.end() ){
       //throw MAPDIALOG_FATAL_ERROR("MAP::Et96MapGetACVersionConf has no address for AC resolving");
