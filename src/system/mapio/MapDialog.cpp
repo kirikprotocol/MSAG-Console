@@ -242,6 +242,12 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   return ET96MAP_E_OK;
 }
 
+ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS& sms)
+{
+
+}
+
+
 bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
                          ET96MAP_DIALOGUE_ID_T,
                          ET96MAP_USERDATA_T *,
@@ -259,7 +265,7 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
 	  smRpOa.addr[0] = m_scaddr.typeOfAddress;
 	  memcpy( smRpOa.addr+1, m_scaddr.address, (m_scaddr.addressLength+1)/2 );
 
-    ET96MAP_SM_RP_UI_T *ui;// = mkDeliverPDU( oaddress, message ); 
+    auto_ptr<ET96MAP_SM_RP_UI_T> ui(mkDeliverPDU(sms.get()));// = mkDeliverPDU( oaddress, message ); 
 
     USHORT_T result;
     __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");

@@ -85,8 +85,10 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
     __trace2__("MAP::dialog is not present")
   }else{
   	try{
+      __trace2__("MAP::mdci->Et96MapV2ForwardSmMOInd");
       mdci->Et96MapV2ForwardSmMOInd(
         SSN,dialogId,invokeId,dstAddr,srcAddr,ud);
+      __trace2__("MAP::mdci->Et96MapV2ForwardSmMOInd OK");
   	}catch(...){
   		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
       CloseAndRemoveDialog(SSN,dialogId);
