@@ -42,7 +42,7 @@
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th>interface version</th>
-	<td><input class=txt type="text" name="interfaceVersion" value="3.4" readonly></td>
+	<td><input class=txt type="text" name="interfaceVersion" value="3.4"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<th>range of address</th>
