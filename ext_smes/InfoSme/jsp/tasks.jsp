@@ -110,6 +110,7 @@ function setSort(sorting)
       String svcType = task.getSvcType();
 
       String idEnc = StringEncoderDecoder.encode(id);
+      String idHex = StringEncoderDecoder.encodeHEX(id);
       String nameEnc = StringEncoderDecoder.encode(name);
       String providerEnc = StringEncoderDecoder.encode(provider);
       String svcTypeEnc = StringEncoderDecoder.encode(svcType);
