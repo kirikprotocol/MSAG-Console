@@ -7,22 +7,23 @@
  */
 package ru.novosoft.smsc.admin.smsstat;
 
-import java.util.Vector;
 import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class Statistics
 {
   private ExtendedCountersSet total = new ExtendedCountersSet();
-  private Vector byDates    = new Vector(); // contains DateCountersSet
-  private Vector bySmeId    = new Vector(); // contains SmeIdCountersSet
-  private Vector byRouteId  = new Vector(); // contains RouteIdCountersSet
+  private ArrayList byDates    = new ArrayList(100); // contains DateCountersSet
+  private ArrayList bySmeId    = new ArrayList(100); // contains SmeIdCountersSet
+  private ArrayList byRouteId  = new ArrayList(100); // contains RouteIdCountersSet
 
   public CountersSet getTotal() {
     return total;
   }
 
   public void addDateStat(DateCountersSet set) {
-    byDates.addElement(set);
+    byDates.add(set);
     total.increment(set);
   }
   public Collection getDateStat() {
@@ -37,22 +38,24 @@ public class Statistics
   }
 
   public void addSmeIdStat(SmeIdCountersSet set) {
-    bySmeId.addElement(set);
+    bySmeId.add(set);
   }
   public void addSmeIdCollection(Collection col) {
     bySmeId.addAll(col);
   }
   public Collection getSmeIdStat() {
+    Collections.sort(bySmeId);
     return bySmeId;
   }
 
   public void addRouteIdStat(RouteIdCountersSet set) {
-    byRouteId.addElement(set);
+    byRouteId.add(set);
   }
   public void addRouteIdCollection(Collection col) {
     byRouteId.addAll(col);
   }
   public Collection getRouteIdStat() {
+    Collections.sort(byRouteId);
     return byRouteId;
   }
 }

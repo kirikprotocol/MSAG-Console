@@ -11,9 +11,7 @@ import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 
-import java.util.Date;
-import java.util.Hashtable;
-import java.util.Collection;
+import java.util.*;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -183,7 +181,7 @@ public class SmsStat
   private void processSmeQuery(Connection connection, StatQuery query)
       throws SQLException
   {
-    Hashtable countersForSme = new Hashtable();
+    HashMap countersForSme = new HashMap();
     PreparedStatement stmt = null;
     ResultSet rs = null;
 

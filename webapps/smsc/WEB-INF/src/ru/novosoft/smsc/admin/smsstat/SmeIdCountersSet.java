@@ -7,7 +7,7 @@
  */
 package ru.novosoft.smsc.admin.smsstat;
 
-public class SmeIdCountersSet extends ExtendedCountersSet
+public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable
 {
   public String smeid;
 
@@ -23,4 +23,8 @@ public class SmeIdCountersSet extends ExtendedCountersSet
     this.smeid = smeid;
   }
 
+  public int compareTo(Object o) {
+    if (o == null || smeid == null || !(o instanceof SmeIdCountersSet)) return -1;
+    return smeid.compareTo(((SmeIdCountersSet)o).smeid);
+  }
 }

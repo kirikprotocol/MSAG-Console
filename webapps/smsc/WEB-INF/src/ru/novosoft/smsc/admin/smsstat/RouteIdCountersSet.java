@@ -7,7 +7,7 @@
  */
 package ru.novosoft.smsc.admin.smsstat;
 
-public class RouteIdCountersSet extends ExtendedCountersSet
+public class RouteIdCountersSet extends ExtendedCountersSet implements Comparable
 {
   public String routeid;
 
@@ -23,4 +23,8 @@ public class RouteIdCountersSet extends ExtendedCountersSet
     this.routeid = routeid;
   }
 
+  public int compareTo(Object o) {
+    if (o == null || routeid == null || !(o instanceof RouteIdCountersSet)) return -1;
+    return routeid.compareTo(((RouteIdCountersSet)o).routeid);
+  }
 }
