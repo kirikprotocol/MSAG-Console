@@ -80,6 +80,8 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	{
 		MapMsg* msg = dynamic_cast<MapMsg*>(pduData->objProps["map.msg"]);
 		__require__(msg);
+		__trace2__("check map msg: this = %p, udhi = %s, len = %d, dataCoding = %d, numSegments = %d, valid = %s",
+			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, msg->numSegments, msg->valid ? "true" : "false");
 		if (msg->udhi)
 		{
 			int msgLen = msg->len;
@@ -91,7 +93,7 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 			}
 			if (msgLen > MAX_MAP_SM_LENGTH)
 			{
-				res.insert(ESME_RINVMSGLEN);
+				res.insert(ESME_RSUBMITFAIL);
 			}
 		}
 		else if (msg->numSegments > 255)
