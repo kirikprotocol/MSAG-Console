@@ -1409,15 +1409,18 @@ StateType StateMachine::forward(Tuple& t)
   {
     try{
       SmeProxy  *src_proxy=smsc->getSmeProxy(sms.getSourceSmeId());
-      int dialogId=src_proxy->getNextSequenceNumber();
-      SmscCommand cmd=SmscCommand::makeAlertNotificationCommand
-      (
-        dialogId,
-        sms.getDestinationAddress(),
-        sms.getOriginatingAddress(),
-        0
-      );
-      src_proxy->putCommand(cmd);
+      if(src_proxy)
+      {
+        int dialogId=src_proxy->getNextSequenceNumber();
+        SmscCommand cmd=SmscCommand::makeAlertNotificationCommand
+        (
+          dialogId,
+          sms.getDestinationAddress(),
+          sms.getOriginatingAddress(),
+          0
+        );
+        src_proxy->putCommand(cmd);
+      }
     }catch(exception& e)
     {
       __trace2__("FORWARD: Failed to send AlertNotification:%s",e.what());

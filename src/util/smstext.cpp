@@ -277,6 +277,7 @@ static bool FillUd(SMS* sms)
   }
   if(processed)
   {
+    if(len==0)return false;
     userdata[0]=off-1;
     char buf[256];
     memcpy(buf,userdata,off);
@@ -438,7 +439,7 @@ int partitionSms(SMS* sms,int dstdc)
     int l=0,wl=0;
     maxlen*=8;
     maxlen/=7;
-    for(int i=0;i<=len;i++)
+    for(int i=0;i<len;i++)
     {
       unsigned char c;
       c=msg[i];
