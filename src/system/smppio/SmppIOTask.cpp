@@ -1,6 +1,7 @@
 #include "system/smppio/SmppIOTask.hpp"
 #include "core/network/Multiplexer.hpp"
 #include "system/smppio/SmppProxy.hpp"
+#include "util/debug.h"
 
 namespace smsc{
 namespace system{
@@ -19,6 +20,7 @@ void SmppIOTask::removeSocket(Socket *sock)
       sockets.Delete(i);
     }
   }
+  mon.Unlock();
 }
 
 
@@ -56,7 +58,13 @@ int SmppInputThread::Execute()
       for(i=0;i<ready.Count();i++)
       {
         SmppSocket *ss=(SmppSocket*)(ready[i]->getData(0));
-        if(ss->receive())
+        int retcode=ss->receive();
+        if(retcode==-1)
+        {
+          removeSocket(ss->getSocket());
+          outTask->removeSocket(ss->getSocket());
+        }else
+        if(retcode==1)
         {
           smsc::smpp::SmppHeader *pdu=ss->decode();
           switch(pdu->commandId)
@@ -68,9 +76,12 @@ int SmppInputThread::Execute()
               smsc::smpp::PduBindTRX* bindpdu=reinterpret_cast<smsc::smpp::PduBindTRX*>(pdu);
               SmppProxy *proxy=new SmppProxy(ss);
               try{
+                trace("try to register sme");
                 smeManager->registerSmeProxy(bindpdu->get_systemId(),proxy);
               }catch(...)
               {
+
+                trace("registration failed");
                 delete proxy;
               }
             }break;

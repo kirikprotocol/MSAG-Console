@@ -64,7 +64,7 @@ void Smsc::run()
       &ssockman
     )
   );
-
+  for(;;)sleep(1);
 }
 
 };//system
