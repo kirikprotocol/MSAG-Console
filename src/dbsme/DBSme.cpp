@@ -43,7 +43,7 @@ using namespace smsc::dbsme;
 
 static smsc::logger::Logger *logger = 0;
 
-static std::auto_ptr<smsc::admin::service::ServiceSocketListener> adminListener;
+static smsc::admin::service::ServiceSocketListener* adminListener = 0;
 static bool bAdminListenerInited = false;
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
@@ -522,17 +522,17 @@ int main(void)
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
-    int resultCode = 0;
-
     atexit(atExitHandler);
     smsc::logger::Logger::Init();
     logger = Logger::getInstance("smsc.dbsme.DBSme");
-    adminListener.reset(new smsc::admin::service::ServiceSocketListener());
+    std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
+    adminListener = adml.get();
 
     SQLJobFactory _sqlJobFactory; PLSQLJobFactory _plsqlJobFactory;
     JobFactory::registerFactory(&_sqlJobFactory, SMSC_DBSME_SQL_JOB_IDENTITY);
     JobFactory::registerFactory(&_plsqlJobFactory, SMSC_DBSME_PLSQL_JOB_IDENTITY);
 
+    int resultCode = 0;
     try
     {
         smsc_log_info(logger, getStrVersion());
@@ -641,7 +641,7 @@ int main(void)
         resultCode = -5;
     }
 
-    if (bAdminListenerInited) {
+    if (adminListener && bAdminListenerInited) {
         adminListener->shutdown();
         adminListener->WaitFor();
     }
