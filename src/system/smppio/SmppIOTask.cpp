@@ -25,9 +25,20 @@ const int SOCKET_SLOT_INPUTMULTI=4;
 const int SOCKET_SLOT_OUTPUTMULTI=5;
 const int SOCKET_SLOT_KILL=6;
 
+static Mutex getKillMutex;
+
+static SmppProxy* getRegisteredProxy(SmeManager* smeManager,const char* sysId,const char* pass)
+{
+  MutexGuard mg(getKillMutex);
+  SmppProxy* proxy=(SmppProxy*)smeManager->checkSmeProxy(sysId,pass);
+  if(!proxy)return 0;
+  proxy->AddRef();
+  return proxy;
+}
 
 static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
 {
+  MutexGuard mg(getKillMutex);
   if(proxy && !proxy->Unref(ct))
   {
     try{
@@ -312,14 +323,15 @@ int SmppInputThread::Execute()
                 bool rebindproxy=false;
 
                 try{
-                  proxy=(SmppProxy*)smeManager->checkSmeProxy(
+                  proxy=getRegisteredProxy(
+                    smeManager,
                     bindpdu->get_systemId()?bindpdu->get_systemId():"",
                     bindpdu->get_password()?bindpdu->get_password():""
                   );
                   if(proxy)
                   {
                     rebindproxy=true;
-                    __trace__("SmppProxy: rebind!");
+                    __trace2__("SmppProxy: rebind %p!",proxy);
                   }
                 }catch(...)
                 {
@@ -341,7 +353,11 @@ int SmppInputThread::Execute()
                 if(!err)
                 {
                   si=smeManager->getSmeInfo(proxyIndex);
-                  if(!proxy)proxy=new SmppProxy(ss,totalLimit,si.proclimit,si.timeout);
+                  if(!proxy)
+                  {
+                    proxy=new SmppProxy(ss,totalLimit,si.proclimit,si.timeout);
+                    __trace2__("SmppProxy: new %p!",proxy);
+                  }
                   switch(pdu->get_commandId())
                   {
                     case SmppCommandSet::BIND_RECIEVER:
@@ -362,12 +378,15 @@ int SmppInputThread::Execute()
                             err=true;
                           }else
                           {
-                            __trace__("SmppProxy: upgrade to transceiver");
+                            __warning2__("SmppProxy: upgrade %p to transceiver (rss=%p)",proxy,ss);
                             proxy->setProxyType(proxyTransceiver);
                             proxy->setReceiverSocket(ss);
                           }
                         }else
+                        {
                           proxy->setProxyType(proxyReceiver);
+                          proxy->setTransmitterSocket(0);
+                        }
 
                         ss->setChannelType(ctReceiver);
                         ((SmppSocket*)(ss->getSocket()->
@@ -393,12 +412,15 @@ int SmppInputThread::Execute()
                             err=true;
                           }else
                           {
-                            __trace__("SmppProxy: upgrade to transceiver");
+                            __warning2__("SmppProxy: upgrade %p to transceiver (trs=%p)",proxy,ss);
                             proxy->setProxyType(proxyTransceiver);
                             proxy->setTransmitterSocket(ss);
                           }
                         }else
+                        {
                           proxy->setProxyType(proxyTransmitter);
+                          proxy->setReceiverSocket(0);
+                        }
 
                         ss->setChannelType(ctTransmitter);
                         ((SmppSocket*)(ss->getSocket()->
@@ -490,7 +512,7 @@ int SmppInputThread::Execute()
                     }else
                     {
                       smsc_log_debug(snmpLog,"register second channel of sme:%s",sid.c_str());
-                      proxy->AddRef();
+                      //proxy->AddRef();
                     }
                     resppdu.get_header().
                       set_commandStatus(SmppStatusSet::ESME_ROK);
@@ -563,7 +585,14 @@ int SmppInputThread::Execute()
                       break;
                     }
                   }
-                  if(!rebindproxy && proxy)delete proxy;
+                  if(rebindproxy)
+                  {
+                    KillProxy(-1,proxy,smeManager);
+                    KillProxy(-1,proxy,smeManager);
+                  }else
+                  {
+                    if(proxy)delete proxy;
+                  }
                 }else
                 {
                   proxy->setForceDc(smeManager->getSmeInfo(proxy->getSmeIndex()).forceDC);

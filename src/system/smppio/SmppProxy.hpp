@@ -354,6 +354,7 @@ public:
 
   void setProxyType(int newtype)
   {
+    MutexGuard g(mutex);
     proxyType=newtype;
   }
 
@@ -379,24 +380,28 @@ public:
   int Unref(int ct)
   {
     MutexGuard g(mutex);
-    if(refcnt>2)
+    __warning2__("SmppProxy: unref %p/rc=%d/pt=%d",this,refcnt,proxyType);
+    if(ct!=-1)
     {
-      if(ct==ctReceiver && proxyType==proxyTransceiver)
+      if(refcnt==3)
       {
-        proxyType=proxyTransmitter;
+        if(ct==ctReceiver && proxyType==proxyTransceiver)
+        {
+          proxyType=proxyTransmitter;
+          smppReceiverSocket=0;
+          __warning2__("SmppProxy: downgrade %p to transmitter(rc=%d,pt=%d)",this,refcnt,proxyType);
+        }else if(ct==ctTransmitter && proxyType==proxyTransceiver)
+        {
+          proxyType=proxyReceiver;
+          smppTransmitterSocket=0;
+          __warning2__("SmppProxy: downgrade %p to receiver(rc=%d,pt=%d)",this,refcnt,proxyType);
+        }
+      }
+      if(proxyType==proxyTransceiver)
+      {
         smppReceiverSocket=0;
-        __trace__("SmppProxy: downgrade to transmitter");
-      }else if(ct==ctTransmitter && proxyType==proxyTransceiver)
-      {
-        __trace__("SmppProxy: downgrade to receiver");
-        proxyType=proxyReceiver;
         smppTransmitterSocket=0;
       }
-    }
-    if(proxyType==proxyTransceiver)
-    {
-      smppReceiverSocket=0;
-      smppTransmitterSocket=0;
     }
     int cnt=--refcnt;
     if(refcnt==1)close();
@@ -428,11 +433,15 @@ public:
 
   void setReceiverSocket(SmppSocket* ss)
   {
+    MutexGuard g(mutex);
     smppReceiverSocket=ss;
+    if(smppReceiverSocket)smppReceiverSocket->assignProxy(this);
   }
   void setTransmitterSocket(SmppSocket* ss)
   {
+    MutexGuard g(mutex);
     smppTransmitterSocket=ss;
+    if(smppTransmitterSocket)smppTransmitterSocket->assignProxy(this);
   }
 
   bool getForceDc()
