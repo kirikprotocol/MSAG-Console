@@ -6,7 +6,11 @@
 #if !defined  __Cxx_Header__smpp_structures_h__
 #define  __Cxx_Header__smpp_structures_h__
 
+#ifdef _WIN32
+#include <stdint.h>
+#else
 #include <inttypes.h>
+#endif
 #include "util/debug.h"
 #include "smpp_memory.h"
 #include "smpp_strings.h"
@@ -372,6 +376,16 @@ namespace DataCoding{
 #define _s_cstr_property__(field) + (uint32_t)(field.size()+1)
 #define _s_ostr_property__(field) + (uint32_t)(field.size())
 
+#ifdef _WIN32
+
+#define __LOG__ void*
+#define dump_text
+#define dump_uint
+#define dump_int
+#define dump_ostr
+#define dump_cstr
+
+#else
 #define __LOG__ FILE*
 inline void fprintf_tab(__LOG__ log, int align) { for( int i=0; i<align; ++i) fprintf(log,"  ");}
 #define dump_text(format,args...) {fprintf_tab(log,align); fprintf(log,format"\n",##args);}
@@ -382,6 +396,7 @@ inline void fprintf_tab(__LOG__ log, int align) { for( int i=0; i<align; ++i) fp
     for ( int i = 0; i < field.size() ; ++i ) fprintf(log,"%02x ",(unsigned char)field.cstr()[i]); fprintf(log,"\n");}}
 #define dump_cstr(field) { if ( field.cstr() ) {dump_text("%s = %s",#field,field.cstr());} \
   else {dump_text("%s = NULL",#field);} }
+#endif
 
 struct SmppHeader //: public MemoryManagerUnit
 {
@@ -759,7 +774,7 @@ struct PduPartSm //: public MemoryManagerUnit
   {
     dump_text("PduPartSm{");
     ++align;
-    dump_cstr(serviceType)
+    dump_cstr(serviceType);
     dump_text("source = "); source.dump(log,align+1);
     dump_text("dest = "); dest.dump(log,align+1);
     dump_uint(numberOfDests);
@@ -987,7 +1002,7 @@ struct PduDataPartSm //: public MemoryManagerUnit
   {
     dump_text("PduPartSm{");
     ++align;
-    dump_cstr(serviceType)
+    dump_cstr(serviceType);
     dump_text("source = "); source.dump(log,align+1);
     dump_text("dest = "); dest.dump(log,align+1);
     //_s_ptr_property__(PduDestAddress,dests)
@@ -1144,7 +1159,7 @@ struct PduReplaceSm
     dump_text("PduReplaceSm{");
     header.dump(log,align+1);
     ++align;
-    dump_cstr(messageId)
+    dump_cstr(messageId);
     dump_text("source = "); source.dump(log,align+1);
     dump_cstr(scheduleDeliveryTime);
     dump_cstr(validityPeriod);

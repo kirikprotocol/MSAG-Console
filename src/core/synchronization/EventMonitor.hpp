@@ -6,8 +6,8 @@
 #else
 #include <thread.h>
 #include <synch.h>
-#include "Mutex.hpp"
 #endif
+#include "Mutex.hpp"
 
 namespace smsc{
 namespace core{
@@ -15,6 +15,33 @@ namespace synchronization{
 
 class EventMonitor:public Mutex{
 public:
+#ifdef _WIN32
+  EventMonitor()
+  {
+    hEvent=CreateEvent(NULL,FALSE,FALSE,NULL);
+  }
+  ~EventMonitor()
+  {
+    CloseHandle(hEvent);
+  }
+  int wait()
+  {
+    Unlock();
+    WaitForSingleObject(hEvent,INFINITE);
+    Lock();
+    return 0;
+  }
+  int wait(int timeout)
+  {
+    return WaitForSingleObject(hEvent,INFINITE);
+  }
+  int notify()
+  {
+    return SetEvent(hEvent);
+  }
+protected:
+  HANDLE hEvent;
+#else
   EventMonitor()
   {
     cond_init(&event,USYNC_THREAD,NULL);
@@ -58,6 +85,7 @@ public:
   }
 protected:
   cond_t event;
+#endif
 };//EventMonitor
 
 };//synchronization
@@ -66,3 +94,4 @@ protected:
 
 
 #endif
+

@@ -4,12 +4,12 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include <sys/ioctl.h>
-#include <sys/filio.h>
-
 
 #ifdef _WIN32
 #pragma comment(lib,"ws2_32.lib")
+#else
+#include <sys/ioctl.h>
+#include <sys/filio.h>
 #endif
 
 namespace smsc{
@@ -240,7 +240,11 @@ Socket* Socket::Accept()
 
 void Socket::setNonBlocking(int mode)
 {
+#ifdef _WIN32
+  ioctlsocket(sock, FIONBIO, (unsigned long*)&mode);
+#else
   ioctl(sock, FIONBIO, &mode);
+#endif
 }
 
 int Socket::ReadAll(char* buf,int size)

@@ -97,8 +97,12 @@ inline time_t smppTime2CTime(COStr& str)
 		//__trace2__("result time: %s",asctime(&dtm));
 		
 		resultTime = mktime(&dtm);
-		__retval_if_fail__ ( resultTime != -1,(time_t)-1 ); 
+		__retval_if_fail__ ( resultTime != -1,(time_t)-1 );
+#ifdef _WIN32
+		resultTime -= _timezone;
+#else
 		resultTime -= timezone;
+#endif
 		if ( utcfix == '+' ) resultTime-=utc*60*15;
 		else resultTime+=utc*60*15;
 	}

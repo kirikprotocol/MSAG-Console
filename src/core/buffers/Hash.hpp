@@ -41,7 +41,7 @@ public:
   }
   _strcon(const _strcon& ptr)
   {
-    str=strdup(ptr);
+    str=strdup(ptr.str);
   }
   _strcon()
   {
@@ -64,10 +64,10 @@ public:
   void operator=(const _strcon& ptr)
   {
     if(str)free(str);
-    str=strdup(ptr);
+    str=strdup(ptr.str);
   }
-  int operator==(const _strcon ptr){return str?!strcmp(str,ptr):0;}
-  int operator==(const _strcon ptr)const {return str?!strcmp(str,ptr):0;}
+  int operator==(const _strcon& ptr){return str?!strcmp(str,ptr.str):0;}
+  int operator==(const _strcon& ptr)const {return str?!strcmp(str,ptr.str):0;}
   int operator==(pchashstr ptr){return str?!strcmp(str,ptr):0;}
   int operator==(pchashstr ptr)const{return str?!strcmp(str,ptr):0;}
   operator phashstr(){return str;}

@@ -41,8 +41,8 @@ public:
     };
   };
   explicit SmppConnectException(int reason):reason(reason){}
-  int getReason(){return reason;}
-  const char* getTextReason()
+  int getReason()const{return reason;}
+  const char* getTextReason()const
   {
     switch(reason)
     {
@@ -55,7 +55,7 @@ public:
     }
     return "INVALID REASON";
   }
-  virtual const char* what(){return getTextReason();}
+  virtual const char* what()const{return getTextReason();}
 };
 
 
@@ -443,7 +443,9 @@ protected:
       return NULL;
     };
   };
-
+  friend InnerAsyncTransmitter;
+  friend InnerSyncTransmitter;
+  friend InnerListener;
 public:
   SmppSession(const SmeConfig& config,SmppPduEventListener* lst):
     cfg(config),

@@ -6,8 +6,8 @@
 #else
 #include <thread.h>
 #include <synch.h>
-#include "Mutex.hpp"
 #endif
+#include "Mutex.hpp"
 
 namespace smsc{
 namespace core{
@@ -88,6 +88,7 @@ public:
     mutex.Unlock();
 #endif
   }
+#ifndef _WIN32
   int isSignaled()
   {
     mutex.Lock();
@@ -95,6 +96,7 @@ public:
     mutex.Unlock();
     return retval;
   }
+#endif  
 protected:
 #ifdef _WIN32
   HANDLE event;

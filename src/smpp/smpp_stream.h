@@ -7,10 +7,16 @@
 
 #include <algorithm>
 #include <exception>
+#ifdef _WIN32
+#include <winsock2.h>
+#else
 #include <netinet/in.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include "util/debug.h"
 #include "smpp_memory.h"
 #include "smpp_structures.h"

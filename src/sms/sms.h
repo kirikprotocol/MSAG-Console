@@ -70,12 +70,20 @@ keyToTag[Tag::x]=tag;
 * @see MessageStore
 */
 
+#ifdef _WIN32
+#include <stdint.h>
+#else
 #include <inttypes.h>
+#endif
 #include <time.h>
 #include <string.h>
 #include <string>
 #include <stdexcept>
+#ifdef _WIN32
+#include <winsock2.h>
+#else
 #include <netinet/in.h>
+#endif
 #include <memory>
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/XHash.hpp"
@@ -838,7 +846,7 @@ namespace smsc {
           unsigned length() {return len;}
           void set(const char* text,unsigned len){
             this->len = len;
-            data = new char[len];
+            data = auto_ptr<char>(new char[len]);
             memcpy(data.get(),text,len);
           }
           const char* dat() { return data.get();}
@@ -990,7 +998,7 @@ namespace smsc {
           uint8_t* b = new uint8_t[len];
           memcpy(b,body.getBuffer(),len);
           setBuffer(b, len);*/
-          buff=0;
+          buff=auto_ptr<char>(0);
           temporaryBodyStr=body.temporaryBodyStr;
           temporaryBodyInt=body.temporaryBodyInt;
           temporaryBodyBin=body.temporaryBodyBin;
@@ -1006,7 +1014,7 @@ namespace smsc {
         Body& operator =(const Body& body)
         {
           buffLen=0;
-          buff=0;
+          buff=auto_ptr<char>(0);
           temporaryBodyStr=body.temporaryBodyStr;
           temporaryBodyInt=body.temporaryBodyInt;
           temporaryBodyBin=body.temporaryBodyBin;
@@ -1050,7 +1058,7 @@ namespace smsc {
         {
           //encode(buffer,length);
           decode(buffer,length);
-          this->buff = buffer;
+          this->buff = auto_ptr<uint8_t>(buffer);
           //delete buffer;
         }
 

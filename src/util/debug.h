@@ -6,9 +6,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/timeb.h>
+#ifndef _WIN32
 #include <thread.h>
+#endif
 #include <stdexcept>
 using std::runtime_error;
+
+#ifdef _WIN32
+
+#define __require__(expr)
+#define require(expr)
+#define trace(txt)
+#define __trace__(txt)
+#define __trace2__
+#define trace2
+#define warning
+#define __warning__
+#define __warning2__
+#define __goto_if_fail__(expr,label)
+#define __ret_if_fail__(expr)
+#define __ret0_if_fail__(expr)
+#define __ret1_if_fail__(expr)
+#define __retneg_if_fail__(expr)
+#define __retval_if_fail__(expr,val)
+#define __throw_if_fail__(expr,except)
+#define __unreachable__(text)
+#define __watch__(var)
+#define throw_if(expr)
+#define __trace2_if_fail__
+
+#else
  
 #if !defined ( __Cpp_Header__smsc_util_debug_h__ )
 #define __Cpp_Header__smsc_util_debug_h__
@@ -79,8 +106,8 @@ using std::runtime_error;
 #else
   #define __goto_if_fail__(expr,label)
   #define __ret_if_fail__(expr)
-  #define __ret0_if_fail__(expr) 
-  #define __ret1_if_fail__(expr) 
+  #define __ret0_if_fail__(expr)
+  #define __ret1_if_fail__(expr)
   #define __retneg_if_fail__(expr)
   #define __retval_if_fail__(expr,val)
   #define __throw_if_fail__(expr,except)
@@ -426,5 +453,7 @@ namespace util{
 };
 };
 
+#endif
 
 #endif /* __Cpp_Header__smsc_util_debug_h__ */
+
