@@ -9,6 +9,7 @@ namespace alias {
 using smsc::sms::AddressValue;
 using smsc::util::Logger;
 using smsc::test::sms::SmsUtil;
+using smsc::test::sms::operator<<;
 using namespace smsc::sms; //constants
 using namespace smsc::test::util;
 
@@ -557,6 +558,11 @@ TCResult* AliasManagerTestCases::findAliasByAddress(
 	const AliasRegistry& aliasReg, const Address& addr)
 {
 	TCResult* res = new TCResult(TC_FIND_ALIAS_BY_ADDRESS);
+	{
+		ostringstream os;
+		os << "findAliasByAddress(): addr = " << addr;
+		getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
+	}
 	const AliasRegistry::AliasList data = aliasReg.findAliasByAddress(addr);
 	try
 	{
@@ -607,6 +613,11 @@ TCResult* AliasManagerTestCases::findAddressByAlias(
 	const AliasRegistry& aliasReg, const Address& alias)
 {
 	TCResult* res = new TCResult(TC_FIND_ADDRESS_BY_ALIAS);
+	{
+		ostringstream os;
+		os << "findAddressByAlias(): alias = " << alias;
+		getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
+	}
 	const AliasRegistry::AliasList data = aliasReg.findAddressByAlias(alias);
 	try
 	{
