@@ -320,7 +320,7 @@ void TaskProcessor::Run()
     while (bOutQueueOpen)
     {
         if (mciModule && !mciModule->isRunning()) {
-            smsc_log_error(logger, "MCI Module is down. Exiting messages send loop");
+            smsc_log_info(logger, "MCI Module is down. Exiting message processing loop");
             break;
         }
 
