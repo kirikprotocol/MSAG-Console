@@ -1354,7 +1354,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 {
 	__require__(intProps.count("directive.offset"));
 	__decl_tc__;
-	TCSelector s(num, 9);
+	TCSelector s(num, 8);
 	int& offset = intProps["directive.offset"];
 	string dir;
 	SmsPduWrapper pdu(header, 0);
@@ -1459,19 +1459,6 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 				}
 			}
 			break;
-		case 9: //t2, параметры не заданы
-			{
-				ostringstream s;
-				dir = "#template=t2#";
-				s << mixedCase(dir);
-				if (setDirective(header, s.str(), offset))
-				{
-					__tc__("directive.correct.template"); __tc_ok__;
-					__tc__("directive.mixedCase"); __tc_ok__;
-					strProps["directive.template"] = "t2";
-				}
-			}
-			break;
 		default:
 			__unreachable__("Invalid num for template directive");
 	}
@@ -1548,7 +1535,8 @@ void SmppProtocolTestCases::correctDirectives(bool sync, const TestCaseId& num)
 template<typename T, int size>
 inline int sz(T (&)[size]) { return size; }
 
-void SmppProtocolTestCases::incorrectDirectives(SmppHeader* header, int num)
+void SmppProtocolTestCases::incorrectDirectives(SmppHeader* header,
+	PduData::IntProps& intProps, int num)
 {
 	__decl_tc__;
 	const string invalidDir[] =
@@ -1566,7 +1554,8 @@ void SmppProtocolTestCases::incorrectDirectives(SmppHeader* header, int num)
 	const string invalidTemplateDir[] =
 	{
 		"#template=#", "#template=t#", "#template=t00#",
-		"#template=t#{}=aaa", "#template=t#{name1}={name2}="
+		"#template=t#{}=aaa", "#template=t#{name1}={name2}=",
+		"#template=t2#" //не задан обязательный параметр
 	};
 	TCSelector s(num, 3);
 	int offset = 0;
@@ -1588,6 +1577,7 @@ void SmppProtocolTestCases::incorrectDirectives(SmppHeader* header, int num)
 			if (setDirective(header, invalidTemplateDir[rand0(sz(invalidTemplateDir) - 1)], offset))
 			{
 				__tc__("directive.incorrect.invalidTemplateDir"); __tc_ok__;
+				intProps["directive.invalidTemplateDir"] = 1;
 			}
 			break;
 		default:
@@ -1599,6 +1589,7 @@ void SmppProtocolTestCases::incorrectDirectives(bool sync, const TestCaseId& num
 {
 	__require__(num.size() == 2);
 	__decl_tc__;
+	PduData::IntProps intProps;
 	try
 	{
 		//тип pdu
@@ -1613,7 +1604,7 @@ void SmppProtocolTestCases::incorrectDirectives(bool sync, const TestCaseId& num
 					PduSubmitSm* pdu = new PduSubmitSm();
 					fixture->transmitter->setupRandomCorrectSubmitSmPdu(
 						pdu, *destAlias, rand0(1));
-					incorrectDirectives(reinterpret_cast<SmppHeader*>(pdu), num[1]);
+					incorrectDirectives(reinterpret_cast<SmppHeader*>(pdu), intProps, num[1]);
 					//отправить и зарегистрировать pdu
 					fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync);
 				}
@@ -1623,7 +1614,7 @@ void SmppProtocolTestCases::incorrectDirectives(bool sync, const TestCaseId& num
 					__tc__("directive.dataSm");
 					PduDataSm* pdu = new PduDataSm();
 					fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, *destAlias);
-					incorrectDirectives(reinterpret_cast<SmppHeader*>(pdu), num[1]);
+					incorrectDirectives(reinterpret_cast<SmppHeader*>(pdu), intProps, num[1]);
 					//отправить и зарегистрировать pdu
 					fixture->transmitter->sendDataSmPdu(pdu, NULL, sync);
 				}
