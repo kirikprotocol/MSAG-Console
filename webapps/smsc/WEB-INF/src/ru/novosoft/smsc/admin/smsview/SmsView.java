@@ -48,7 +48,7 @@ public class SmsView
       String sql = prepareQueryString(query);
       PreparedStatement stmt = connection.prepareStatement(sql);
       bindInput(stmt, query);
-      fetchRows(stmt, set);
+      fetchRows(stmt, set, query.getRowsMaximum());
       connection.close();
     }
     catch (Exception exc)
@@ -119,7 +119,7 @@ public class SmsView
       stmt.setTimestamp(pos++,
         new java.sql.Timestamp(query .getTillDate().getTime()));
   }
-  private void fetchRows(PreparedStatement stmt, SmsSet set)
+  private void fetchRows(PreparedStatement stmt, SmsSet set, int rowsMaximum)
     throws SQLException
   {
     String selectLargeBody = "SELECT BODY FROM SMS_ATCH WHERE ID=?";
@@ -127,7 +127,7 @@ public class SmsView
     Connection connection = stmt.getConnection();
     PreparedStatement lbstmt = connection.prepareStatement(selectLargeBody);
     int fetchedCount = 0;
-    while (rs.next() && SmsSet.MAX_SMS_FETCH_COUNT > fetchedCount++)
+    while (rs.next() && rowsMaximum > fetchedCount++)
     {
       SmsRow row = new SmsRow();
       int pos=1;

@@ -18,6 +18,7 @@ public class SmsQuery
   public static int SMS_ARCHIVE_STORAGE_TYPE = 200;
 
   private int    storageType = SMS_ARCHIVE_STORAGE_TYPE;
+  private int    rowsMaximum = 500;
   private String fromAddress = "*";
   private String toAddress = "*";
   private String srcSmeId = "*";
@@ -32,6 +33,8 @@ public class SmsQuery
 
   public int getStorageType() { return storageType; }
   public void setStorageType(int type) { storageType = type; }
+  public int getRowsMaximum() { return rowsMaximum; }
+  public void setRowsMaximum(int max) { rowsMaximum = max; }
 
   public String getFromAddress() { return fromAddress; }
   public void setFromAddress(String address) { fromAddress = address; }

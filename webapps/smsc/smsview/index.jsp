@@ -115,7 +115,19 @@ FORM_METHOD="POST";
       </td>
 
       <td colspan=1>
-      <b>Rows&nbsp;per&nbsp;page:</b><br>
+      <b>Rows&nbsp;Max&nbsp;/&nbsp;Per&nbsp;page:</b><br>
+      <select name="rowsMaximum"><%
+        int rowsMaximum = formBean.getRowsMaximum();%>
+	      <option value="100" <%= (rowsMaximum  <= 100) ?   "selected":""%>>100</option>
+	      <option value="200" <%= (rowsMaximum == 200) ? "selected":""%>>200</option>
+	      <option value="300" <%= (rowsMaximum == 300) ? "selected":""%>>300</option>
+	      <option value="400" <%= (rowsMaximum == 400) ? "selected":""%>>400</option>
+	      <option value="500" <%= (rowsMaximum == 500) ? "selected":""%>>500</option>
+	      <option value="1000" <%= (rowsMaximum == 1000) ? "selected":""%>>1000</option>
+        <option value="2000" <%= (rowsMaximum == 2000) ? "selected":""%>>2000</option>
+        <option value="5000" <%= (rowsMaximum >= 5000) ? "selected":""%>>5000</option>
+	    </select>
+      <b>/</b>
       <select name="rowsToDisplay"><%
         int rowsToDisplay = formBean.getRowsToDisplay();%>
 	      <option value="5" <%= (rowsToDisplay < 10) ?   "selected":""%>>5</option>
