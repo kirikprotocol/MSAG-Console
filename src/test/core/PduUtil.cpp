@@ -327,6 +327,7 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 {
 	__require__(!registered);
 	__cfg_int__(timeCheckAccuracy);
+	updateCount++;
 	vector<int> res;
 	PduFlag prevFlag = flag;
 	int attempt = 0;
@@ -358,7 +359,12 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 					else
 					{
 						checkTime = nextTime;
+						//статус не меняется
 					}
+					break;
+				case RESP_PDU_CONTINUE:
+					checkTime = time(NULL);
+					//статус не меняется
 					break;
 				default:
 					__unreachable__("Unknown resp flag");

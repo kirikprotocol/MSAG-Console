@@ -81,14 +81,7 @@ void ConfigUtil::setupSystemSme()
 	abonentInfoMapAliasInfo.alias = abonentInfoAliasMap;
 	abonentInfoMapAliasInfo.hide = true; //rand0(2);
 	aliasReg->putAlias(abonentInfoMapAliasInfo);
-	//регистрация map proxy
-	__cfg_str__(mapProxySystemId);
-	SmeInfo mapProxySme;
-	mapProxySme.wantAlias = rand0(1);
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&mapProxySme);
-	mapProxySme.systemId = mapProxySystemId;
-	smeReg->registerSme("+123", mapProxySme, false, true);
-	smeReg->bindSme(mapProxySme.systemId, SME_TRANSCEIVER);
+	//регистрация map proxy делается тестовой sme
 }
 
 void ConfigUtil::setupSystemSmeRoutes()

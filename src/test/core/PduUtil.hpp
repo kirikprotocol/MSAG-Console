@@ -47,7 +47,8 @@ typedef enum
 	RESP_PDU_OK = 0x0, //респонс pdu отправлена со статусом ok
 	RESP_PDU_ERROR = 0x1, //респонс pdu отправлена со статусом ошибки
 	RESP_PDU_RESCHED = 0x2, //респонс pdu отправлена со статусом передоставки
-	RESP_PDU_MISSING = 0x3 //респонс pdu не отправлена
+	RESP_PDU_MISSING = 0x3, //респонс pdu не отправлена
+	RESP_PDU_CONTINUE = 0x4 //продолжить доставку в текущий момент времени
 } RespPduFlag;
 
 typedef enum
@@ -176,7 +177,8 @@ class ReschedulePduMonitor : public PduMonitor
 protected:
 	time_t startTime; //начало доставки pdu
 	time_t lastTime;
-	int lastAttempt;
+	int lastAttempt; //может быть lastAttempt = 1 для 10-ой конкатенированной sms
+	int updateCount; //инкрементируется при каждом update для каждой конкатенированной sms
 
 	void eval(time_t time, int& attempt, time_t& diff, time_t& nextTime,
 		time_t& calcTime) const;
@@ -190,6 +192,7 @@ public:
 	time_t getLastTime() const { return lastTime; }
 	time_t calcNextTime(time_t t) const;
 	int getLastAttempt() const { return lastAttempt; }
+	int getUpdateCount() const { return updateCount; }
 
 	/**
 	 * Проверки:
