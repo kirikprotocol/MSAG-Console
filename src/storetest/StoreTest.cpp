@@ -59,7 +59,8 @@ int main(void)
     {
         store = StoreManager::getMessageStore();
 
-        SMSId id = store->createSms(sms);
+        SMSId id = store->getNextId();
+        store->createSms(sms, id);
         printf("Message was stored, id = %u !\n", id);
 
         /*time_t begTime, endTime;
