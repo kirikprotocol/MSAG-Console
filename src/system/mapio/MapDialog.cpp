@@ -349,7 +349,7 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
     	mkSS7GTAddress( &mshlrAddr, &m_msaddr, 6 );
       
       appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
-      appContext.version = ET96MAP_VERSION_2;
+      appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
       
       result = Et96MapOpenReq(ssn, dialogid, &appContext, &mshlrAddr, &scAddr, 0, 0, 0 );
       if ( result != ET96MAP_E_OK ) {
