@@ -27,7 +27,7 @@ SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _syste
 		aliasReg, routeReg, handler, routeChecker, pduChecker);
 	session = new SmppSession(config, receiver);
 	receiver->setSession(session);
-	transmitter = new SmppTransmitterTestCases(session, smeAddr,
+	transmitter = new SmppTransmitterTestCases(session, systemId, smeAddr,
 		smeReg, pduChecker);
 }
 
@@ -183,6 +183,26 @@ TCResult* SmppTestCases::bindIncorrectSme(int num)
 	return res;
 }
 
+#define __missingPdu__(tc, pduName) \
+	__trace2__("%s(): missing %s for sequenceNumber = %u, submitTime = %d, waitTime = %d, validTime = %d", \
+	tc, pduName, pduData->pdu->get_sequenceNumber(), pduData->submitTime, pduData->waitTime, pduData->validTime)
+	/*
+	static const char* fmt = "%Y-%m-%d %H:%M:%S"; \
+	char __submitTime[20]; char __waitTime[20]; char __validTime[20]; \
+	strftime(__submitTime, 20, fmt, localtime(&pduData->submitTime)); \
+	strftime(__waitTime, 20, fmt, localtime(&pduData->waitTime)); \
+	strftime(__validTime, 20, fmt, localtime(&pduData->validTime)); \
+	__trace2__("%s(): missing %s for sequenceNumber = %u, submitTime = %s, waitTime = %s, validTime = %s", \
+	tc, pduName, pduData->pdu->get_sequenceNumber(), __submitTime, __waitTime, __validTime)
+	*/
+
+#define __removedPdu__(tc) \
+	__trace2__("%s(): removed pdu data with sequenceNumber = %u", \
+	tc, pduData->pdu->get_sequenceNumber())
+	
+#define __checkSummary__(tc) \
+	__trace2__("%s(): found = %d, deleted = %d", tc, found, deleted);
+
 int SmppTestCases::checkSubmitTime()
 {
 	int res = 0x0;
@@ -195,19 +215,19 @@ int SmppTestCases::checkSubmitTime()
 		found++;
 		if (!pduData->responseFlag)
 		{
-			__trace2__("SmppTestCases::checkSubmitTime(): missing response for seqNum = %d",
-				pduData->pdu->get_sequenceNumber());
+			__missingPdu__("SmppTestCases::checkSubmitTime", "response");
 			res |= 0x1;
 			pduData->responseFlag = true;
 		}
 		if (pduData->complete())
 		{
+			 __removedPdu__("SmppTestCases::checkSubmitTime");
 			deleted++;
 			pduReg->removePdu(pduData);
 		}
 	}
 	delete it;
-	__trace2__("SmppTestCases::checkSubmitTime(): found = %d, deleted = %d", found, deleted);
+	__checkSummary__("SmppTestCases::checkSubmitTime");
 	return res;
 }
 
@@ -230,33 +250,31 @@ int SmppTestCases::checkWaitTime()
 		}
 		if (!pduData->deliveryFlag)
 		{
-			__trace2__("SmppTestCases::checkWaitTime(): missing delivery for seqNum = %d",
-				pduData->pdu->get_sequenceNumber());
+			__missingPdu__("SmppTestCases::checkWaitTime", "deliver_sm");
 			res |= 0x2;
 			pduData->deliveryFlag = true;
 		}
 		if (!pduData->deliveryReceiptFlag)
 		{
-			__trace2__("SmppTestCases::checkWaitTime(): missing delivery receipt for seqNum = %d",
-				pduData->pdu->get_sequenceNumber());
+			__missingPdu__("SmppTestCases::checkWaitTime", "delivery_receipt");
 			res |= 0x4;
 			pduData->deliveryReceiptFlag = true;
 		}
 		if (!pduData->intermediateNotificationFlag)
 		{
-			__trace2__("SmppTestCases::checkWaitTime(): missing intermediate notification for seqNum = %d",
-				pduData->pdu->get_sequenceNumber());
+			__missingPdu__("SmppTestCases::checkWaitTime", "intermediate_notification");
 			res |= 0x8;
 			pduData->intermediateNotificationFlag = true;
 		}
 		if (pduData->complete())
 		{
+			__removedPdu__("SmppTestCases::checkWaitTime");
 			deleted++;
 			pduReg->removePdu(pduData);
 		}
 	}
 	delete it;
-	__trace2__("SmppTestCases::checkWaitTime(): found = %d, deleted = %d", found, deleted);
+	__checkSummary__("SmppTestCases::checkWaitTime");
 	return res;
 }
 
@@ -279,30 +297,28 @@ int SmppTestCases::checkValidTime()
 		}
 		if (!pduData->deliveryFlag)
 		{
-			__trace2__("SmppTestCases::checkValidTime(): missing delivery for seqNum = %d",
-				pduData->pdu->get_sequenceNumber());
+			__missingPdu__("SmppTestCases::checkValidTime", "deliver_sm");
 			res |= 0x2;
 			pduData->deliveryFlag = true;
 		}
 		if (!pduData->deliveryReceiptFlag)
 		{
-			__trace2__("SmppTestCases::checkValidTime(): missing delivery receipt for seqNum = %d",
-				pduData->pdu->get_sequenceNumber());
+			__missingPdu__("SmppTestCases::checkValidTime", "delivery_receipt");
 			res |= 0x4;
 			pduData->deliveryReceiptFlag = true;
 		}
 		if (!pduData->intermediateNotificationFlag)
 		{
-			__trace2__("SmppTestCases::checkValidTime(): missing intermediate notification for seqNum = %d",
-				pduData->pdu->get_sequenceNumber());
+			__missingPdu__("SmppTestCases::checkValidTime", "intermediate_notification");
 			res |= 0x8;
 			pduData->intermediateNotificationFlag = true;
 		}
-		pduReg->removePdu(pduData);
+		__removedPdu__("SmppTestCases::checkValidTime");
 		deleted++;
+		pduReg->removePdu(pduData);
 	}
 	delete it;
-	__trace2__("SmppTestCases::checkValidTime(): found = %d, deleted = %d", found, deleted);
+	__checkSummary__("SmppTestCases::checkValidTime");
 	return res;
 }
 

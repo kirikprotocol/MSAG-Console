@@ -9,23 +9,30 @@ namespace smsc {
 namespace test {
 namespace smpp {
 
+using std::string;
 using smsc::sms::Address;
 using smsc::sms::SMSId;
 using namespace smsc::smpp;
 using namespace smsc::test::sms; //constants
 
-#define __maxValidPeriod__ (time(NULL) + 7 * 24 * 3600) //7 суток
+#define __maxValidPeriod__ (time(NULL) + 24 * 3600) //1 сутки
 #define __checkTime__ (time(NULL) - 5) //5 секунд
 #define __numTime__ rand1(3)
 #define __absoluteTime__ rand1(2)
 
-#define __dumpPdu__(tc, pdu) \
-	__trace2__("%s(): pdu = ", (tc)); \
-	(pdu).dump(TRACE_LOG_STREAM)
+#define __dumpPdu__(tc, id, pdu) \
+	__trace2__("%s(): systemId = %s, sequenceNumber = %u, pdu = ", \
+		tc, id.c_str(), pdu.get_header().get_sequenceNumber()); \
+	pdu.dump(TRACE_LOG_STREAM)
 
-#define __dumpPdu2__(tc, pdu) \
-	if (pdu) { __trace2__("%s(): pdu = ", (tc)); (pdu)->dump(TRACE_LOG_STREAM); } \
-	else __trace2__("%s(): pdu = NULL", (tc))
+#define __dumpPdu2__(tc, id, pdu) \
+	if (pdu) { \
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, pdu = ", \
+			tc, id.c_str(), pdu->get_header().get_sequenceNumber()); \
+		pdu->dump(TRACE_LOG_STREAM); \
+	} else { \
+		__trace2__("%s(): pdu = NULL", (tc)); \
+	}
 
 typedef enum
 { 
