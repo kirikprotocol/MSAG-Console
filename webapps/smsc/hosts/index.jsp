@@ -75,7 +75,7 @@ String hostName = (String) i.next();
 	<td class=check><input class=check type=checkbox name=hostIds value="<%=hostName%>" <%=hostIds.contains(hostName) ? "checked" : ""%>></td>
 	<td class=name><a href="#" title="View host info" onClick='return viewHost("<%=hostName%>")'><%=hostName%></a></td>
 	<td class=num><%=bean.getHostPort(hostName)%></td>
-	<td><span class=C00F title="total"><%=bean.getServicesTotal(hostName)%></span> / <span class=C080 title="running"><%=bean.getServicesRunning(hostName)%></span></td>
+	<td align=center><span class=C00F title="total"><%=bean.getServicesTotal(hostName)%></span> / <span class=C080 title="running"><%=bean.getServicesRunning(hostName)%></span></td>
 </tr>
 <%}}%>
 </tbody>

@@ -9,12 +9,14 @@
   </section>
 
   <section name="daemons">
-    <section name="192/168/0/105">
+    <section name="192/168/1/5">
       <param name="port" type="int">6012</param>
+      <param name="services folder" type="string">/export/home/igork/install/second_host/daemon/services</param>
     </section>
 
     <section name="smsc">
       <param name="port" type="int">6011</param>
+      <param name="services folder" type="string">/export/home/igork/install/dumb_sme_host/daemon/services</param>
     </section>
 
   </section>
@@ -37,11 +39,13 @@
   <section name="smsc">
     <param name="host" type="string">smsc</param>
     <param name="port" type="int">6003</param>
+    <param name="config folder" type="string">/export/home/igork/install/smsc_host/conf</param>
   </section>
 
   <section name="system">
-    <param name="users" type="string">users.xml</param>
-    <param name="webapp folder" type="string">D:\igork\work\cvs\smsc\src\webapp\smsc</param>
+    <param name="users file" type="string">webapps/smsc/WEB-INF/users.xml</param>
+    <param name="webapp folder" type="string">webapps/smsc</param>
+    <param name="work folder" type="string">temp</param>
   </section>
 
 </config>
