@@ -41,6 +41,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			org.apache.log4j.BasicConfigurator.configure();
 			ConfigManager.Init(configFileName);
 			configManager = ConfigManager.getInstance();
+      Locale locale = new Locale("ru");
+      localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
+      locale = new Locale("en");
+      localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
 			Properties props = new Properties();
 			props.setProperty("jdbc.source", configManager.getConfig().getString("profiler.jdbc.source"));
 			props.setProperty("jdbc.driver", configManager.getConfig().getString("profiler.jdbc.driver"));
@@ -57,10 +61,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			userManager = new UserManager(usersConfig);
 			perfServer = new PerfServer(configManager.getConfig());
 			perfServer.start();
-			Locale locale = new Locale("ru");
-			localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
-			locale = new Locale("en");
-			localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
 		}
 		catch (Exception e)
 		{

@@ -1,5 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="java.util.*, java.text.SimpleDateFormat"%>
+<%@ page import="java.util.*, java.text.SimpleDateFormat,
+                 ru.novosoft.smsc.jsp.SMSCAppContext"%>
 <%@ page import="ru.novosoft.smsc.admin.smsstat.*"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsstat.*"%>
 <jsp:useBean id="smsStatFormBean" scope="session" class="ru.novosoft.smsc.jsp.smsstat.SmsStatFormBean" />
@@ -157,7 +158,17 @@ while (i.hasNext()) {
             ErrorCounterSet errid = (ErrorCounterSet)i.next();
         %>
         <tr class=row1>
-            <td align=right><%= errid.errcode%></td>
+            <td align=right>
+          <% String errstr = appContext.getLocaleMessages(request.getLocale()).getProperty("smsc.errcode."+errid.errcode);
+             if( errstr != null ) {
+          %><%=errstr%>
+          <%
+             } else {
+          %><%=errid.errcode%>
+          <%
+             }
+          %>
+            </td>
             <td align=right><%= errid.counter%></td>
             <td align=right>&nbsp;</td>
             <td align=right>&nbsp;</td>
