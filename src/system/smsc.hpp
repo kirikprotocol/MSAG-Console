@@ -52,7 +52,13 @@ struct SmscConfigs{
 class Smsc
 {
 public:
-  Smsc():ssockman(&tp,&smeman),stopFlag(false){};
+  Smsc():ssockman(&tp,&smeman),stopFlag(false)
+  {
+    successCounter=0;
+    errorCounter=0;
+    rescheduleCounter=0;
+    submitCounter=0;
+  };
   ~Smsc();
   void init(const SmscConfigs& cfg);
   void run();
@@ -110,6 +116,8 @@ public:
       */
       case etSubmitOk:
       {
+        MutexGuard g(perfMutex);
+        submitCounter++;
       }break;
       case etSubmitErr:
       {
@@ -134,12 +142,13 @@ public:
     }
   }
 
-  void getPerfData(uint64_t& succ,uint64_t& err,uint64_t& resch)
+  void getPerfData(uint64_t& submit,uint64_t& succ,uint64_t& err,uint64_t& resch)
   {
     MutexGuard g(perfMutex);
     succ=successCounter;
     err=errorCounter;
     resch=rescheduleCounter;
+    submit=submitCounter;
   }
 
 protected:
@@ -166,6 +175,7 @@ protected:
   uint64_t successCounter;
   uint64_t errorCounter;
   uint64_t rescheduleCounter;
+  uint64_t submitCounter;
 
 };
 

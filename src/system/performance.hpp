@@ -30,6 +30,7 @@ struct PerformanceCounter{
 };
 
 struct PerformanceData{
+  PerformanceCounter submit;
   PerformanceCounter success;
   PerformanceCounter error;
   PerformanceCounter rescheduled;
@@ -49,6 +50,16 @@ public:
     MutexGuard g(mtx);
     PerformanceData ld=*data;
     int high,low;
+
+    ld.submit.lastSecond=htonl(ld.submit.lastSecond);
+    ld.submit.average=htonl(ld.submit.average);
+
+    low=ld.submit.total&0xffffffff;
+    high=ld.submit.total>>32;
+    ld.submit.high=htonl(high);
+    ld.submit.low=htonl(low);
+
+
     ld.success.lastSecond=htonl(ld.success.lastSecond);
     ld.success.average=htonl(ld.success.average);
 

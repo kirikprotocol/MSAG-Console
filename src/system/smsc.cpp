@@ -68,7 +68,7 @@ public:
     times[0]=start.tv_sec;
     int lastscnt=0;
     memset(perfCnt,0,sizeof(perfCnt));
-    uint64_t lastPerfCnt[3]={0,0,0};
+    uint64_t lastPerfCnt[4]={0,0,0};
     now.tv_sec=0;
     for(;;)
     {
@@ -93,20 +93,22 @@ public:
       last=cnt;
       lasttime=now;
       if(isStopping)break;
-      uint64_t perf[3];
+      uint64_t perf[4];
       // success, error, reschedule
-      smsc->getPerfData(perf[0],perf[1],perf[2]);
+      smsc->getPerfData(perf[0],perf[1],perf[2],perf[3]);
       performance::PerformanceData d;
-      d.success.lastSecond=perf[0]-lastPerfCnt[0];
-      d.error.lastSecond=perf[1]-lastPerfCnt[1];
-      d.rescheduled.lastSecond=perf[2]-lastPerfCnt[2];
-      d.success.total=perf[0];
-      d.error.total=perf[1];
-      d.rescheduled.total=perf[2];
+      d.submit.lastSecond=perf[0]-lastPerfCnt[0];
+      d.success.lastSecond=perf[1]-lastPerfCnt[1];
+      d.error.lastSecond=perf[2]-lastPerfCnt[2];
+      d.rescheduled.lastSecond=perf[3]-lastPerfCnt[3];
+      d.submit.total=perf[0];
+      d.success.total=perf[1];
+      d.error.total=perf[2];
+      d.rescheduled.total=perf[3];
 
 
       int scnt=(now.tv_sec-perfStart)/60;
-      __trace2__("SpeedMonitor: scnt=%d",scnt);
+      //__trace2__("SpeedMonitor: scnt=%d",scnt);
       if(scnt>=60)
       {
         timeshift++;
@@ -119,14 +121,16 @@ public:
         perfCnt[0][idx]=0;
         perfCnt[1][idx]=0;
         perfCnt[2][idx]=0;
+        perfCnt[3][idx]=0;
       }
       if(scnt!=lastscnt)
       {
         times[scnt]=now.tv_sec;
         lastscnt=scnt;
       }
-      d.error.average=0;
+      d.submit.average=0;
       d.success.average=0;
+      d.error.average=0;
       d.rescheduled.average=0;
       int idx=timeshift;
       for(int i=0;i<=scnt;i++,idx++)
@@ -134,19 +138,22 @@ public:
         if(idx>=60)idx=0;
         if(i==scnt)
         {
-          perfCnt[0][idx]+=d.success.lastSecond;
-          perfCnt[1][idx]+=d.error.lastSecond;
-          perfCnt[2][idx]+=d.rescheduled.lastSecond;
+          perfCnt[0][idx]+=d.submit.lastSecond;
+          perfCnt[1][idx]+=d.success.lastSecond;
+          perfCnt[2][idx]+=d.error.lastSecond;
+          perfCnt[3][idx]+=d.rescheduled.lastSecond;
         }
-        d.success.average+=perfCnt[0][idx];
-        d.error.average+=perfCnt[1][idx];
-        d.rescheduled.average+=perfCnt[2][idx];
+        d.submit.average+=perfCnt[0][idx];
+        d.success.average+=perfCnt[1][idx];
+        d.error.average+=perfCnt[2][idx];
+        d.rescheduled.average+=perfCnt[3][idx];
       }
       int diff=now.tv_sec-times[timeshift];
       if(diff==0)diff=1;
-      __trace2__("ca=%d,ea=%d,ra=%d, time diff=%u",
-        d.success.average,d.error.average,d.rescheduled.average,diff);
+      //__trace2__("ca=%d,ea=%d,ra=%d, time diff=%u",
+      //  d.success.average,d.error.average,d.rescheduled.average,diff);
 
+      d.submit.average/=diff;
       d.success.average/=diff;
       d.error.average/=diff;
       d.rescheduled.average/=diff;
@@ -159,6 +166,7 @@ public:
       lastPerfCnt[0]=perf[0];
       lastPerfCnt[1]=perf[1];
       lastPerfCnt[2]=perf[2];
+      lastPerfCnt[3]=perf[3];
     }
     return 0;
   }
@@ -168,7 +176,7 @@ public:
   }
 protected:
   EventQueue& queue;
-  int perfCnt[3][60];
+  int perfCnt[4][60];
   int timeshift;
   time_t times[60];
   performance::PerformanceListener* perfListener;
