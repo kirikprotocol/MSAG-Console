@@ -42,6 +42,8 @@ public:
 
 	void runSmsc() throw (AdminException);
 	void stopSmsc() throw (AdminException);
+	bool isSmscRunning() {return smsc_app_runner.get() != 0;}
+	bool isSmscStopping() {return isStopping;}
 	void abort();
 	void dump();
 
@@ -55,10 +57,6 @@ protected:
 	std::string processCancelMessages(const Arguments &args) throw (AdminException);
 	void processCancelMessage(const std::string &sid, const std::string &ssrc, const std::string &sdst);
 
-	bool isSmscRunning() throw()
-	{
-		return smsc_app_runner.get() != 0;
-	}
 	void applyRoutes() throw (AdminException);
 	void applyAliases() throw (AdminException);
 	void applySmscConfig() throw (AdminException);
