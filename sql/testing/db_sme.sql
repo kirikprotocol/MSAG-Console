@@ -4,8 +4,8 @@ create table db_sme_test
 	id number(10),
 	int16 number(5),
 	int32 number(10),
-	flt number(3,2),
-	dbl number(3,2),
+	flt number(5,2),
+	dbl number(5,2),
 	dt date,
 	str varchar2(200)
 ) tablespace smsc_data;
