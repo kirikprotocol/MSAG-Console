@@ -10,9 +10,10 @@ namespace store {
 class SMUtil
 {
 public:
-	bool compareAddresses(smsc::sms::Address& a1, smsc::sms::Address& a2);
-	bool compareMessageBody(smsc::sms::Body& b1, smsc::sms::Body& b2);
-};
+	bool compareAddresses(const smsc::sms::Address& a1, 
+		const smsc::sms::Address& a2);
+	bool compareMessageBody(const smsc::sms::Body& b1,
+		const smsc::sms::Body& b2); };
 
 }
 }

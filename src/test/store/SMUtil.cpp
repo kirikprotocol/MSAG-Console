@@ -8,7 +8,7 @@ namespace store {
 using namespace std;
 using namespace smsc::sms;
 
-bool SMUtil::compareAddresses(Address& a1, Address& a2)
+bool SMUtil::compareAddresses(const Address& a1, const Address& a2)
 {
 	bool res = &a1 != NULL && &a2 != NULL &&
 		a1.getLenght() == a2.getLenght() &&
@@ -21,7 +21,7 @@ bool SMUtil::compareAddresses(Address& a1, Address& a2)
 	return res;
 }
 	
-bool SMUtil::compareMessageBody(Body& b1, Body& b2)
+bool SMUtil::compareMessageBody(const Body& b1, const Body& b2)
 {
 	bool res = &b1 != NULL && &b2 != NULL &&
 		b1.isHeaderIndicator() == b2.isHeaderIndicator() &&
