@@ -23,7 +23,7 @@ public:
 	{
 		if (obj)
 		{
-			__trace2__("auto_sync(T*): lock, this=%p, obj=%p", this, obj);
+			//__trace2__("auto_sync(T*): lock, this=%p, obj=%p", this, obj);
 			obj->getMutex().Lock();
 		}
 	}
@@ -32,7 +32,7 @@ public:
 	{
 		if (obj)
 		{
-			__trace2__("~auto_sync(): unlock, this=%p, obj=%p", this, obj);
+			//__trace2__("~auto_sync(): unlock, this=%p, obj=%p", this, obj);
 			obj->getMutex().Unlock();
 		}
 	}
@@ -46,13 +46,13 @@ public:
 	{
 		if (obj)
 		{
-			__trace2__("auto_sync:operator=(T*): unlock, this=%p, obj=%p", this, obj);
+			//__trace2__("auto_sync:operator=(T*): unlock, this=%p, obj=%p", this, obj);
 			obj->getMutex().Unlock();
 		}
 		obj = o;
 		if (obj)
 		{
-			__trace2__("auto_sync:operator=(T*): lock, this=%p, obj=%p", this, obj);
+			//__trace2__("auto_sync:operator=(T*): lock, this=%p, obj=%p", this, obj);
 			obj->getMutex().Lock();
 		}
 		return *this;
