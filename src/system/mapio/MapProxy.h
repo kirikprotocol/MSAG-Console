@@ -73,9 +73,29 @@ public:
     return true;
   }
 
+  virtual int getCommandEx(std::vector<SmscCommand>& cmds,int& mx,SmeProxy* prx)
+  {
+    MutexGuard g(mutex);
+    if(inqueue.Count()==0)
+    {
+      mx=0;
+      return 0;
+    }
+    int cnt=inqueue.Count()<mx?inqueue.Count():mx;
+    SmscCommand cmd;
+    for(int i=0;i<cnt;i++)
+    {
+      inqueue.Shift(cmd);
+      cmds.push_back(cmd);
+      cmd.setProxy(prx);
+    }
+    mx=cnt;
+    return true;
+  }
+
+
   void putIncomingCommand(const SmscCommand& cmd)
   {
-    __mapproxy_trace__("putIncomingCommand");
     {
       MutexGuard g(mutex);
       if(inqueue.Count()==MAP_PROXY_QUEUE_LIMIT)
