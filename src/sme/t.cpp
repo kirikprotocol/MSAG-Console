@@ -103,6 +103,8 @@ struct VClientData{
 
   int validTime;
 
+  bool replaceIfPresent;
+
   int respStatus;
 
   string sourceAddress;
@@ -155,6 +157,8 @@ struct VClientData{
     sleepTillMsec=0;
     waitStart=0;
     respStatus=0;
+    validTime=0;
+    replaceIfPresent=false;
   }
 
 }defVC;
@@ -182,6 +186,8 @@ int& waitRespTimeout=defVC.waitRespTimeout;
 int& lastMr=defVC.lastMr;
 
 int& validTime=defVC.validTime;
+
+bool& replaceIfPresent=defVC.replaceIfPresent;
 
 int& respStatus=defVC.respStatus;
 
@@ -226,7 +232,8 @@ Option options[]={
 {"hexinput",'b',&hexinput},
 {"respstatus",'i',&respStatus},
 {"silent",'b',&silent},
-{"validTime",'i',&validTime}
+{"validTime",'i',&validTime},
+{"replaceIfPresent",'b',&replaceIfPresent}
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -1618,6 +1625,8 @@ int main(int argc,char* argv[])
       s.setDeliveryReport(0);
       s.setArchivationRequested(false);
       s.setEServiceType("TEST");
+
+      if(replaceIfPresent)s.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,1);
 
 
       if(ussd)s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,ussd);
