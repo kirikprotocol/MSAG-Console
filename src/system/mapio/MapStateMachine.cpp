@@ -670,7 +670,7 @@ static void ForwardMO(MapDialog* dialog) {
   memcpy(ui.signalInfo, mo_pdu, length );
   ui.signalInfoLen = (UCHAR_T)length;
 
-  if( smsc::util::_map_cat->isDebugEnabled() ) {
+  if( smsc::logger::_map_cat->isDebugEnabled() ) {
    {
     char *text = new char[256*4+1];
     unsigned char *buf = (unsigned char *)&smRpDa;
@@ -680,7 +680,7 @@ static void ForwardMO(MapDialog* dialog) {
       k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
     }
     text[k]=0;
-    __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_WARN, "rpda: %s",text);
+    __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "rpda: %s",text);
 
     buf = (unsigned char *)&smRpOa;
     buflen = smRpOa.addrLen+2;
@@ -689,7 +689,7 @@ static void ForwardMO(MapDialog* dialog) {
       k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
     }
     text[k]=0;
-    __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_WARN, "rpoa: %s",text);
+    __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "rpoa: %s",text);
     
     buf = (unsigned char *)&ui;
     buflen = ui.signalInfoLen+1;
@@ -698,7 +698,7 @@ static void ForwardMO(MapDialog* dialog) {
       k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
     }
     text[k]=0;
-    __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_WARN, "ui: %s",text);
+    __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "ui: %s",text);
     delete text;
    }
   }
@@ -729,7 +729,7 @@ unsigned ParseSemiOctetU(unsigned char v)
 static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_SM_RP_OA_T *srcAddr)
 {
   __map_trace2__("%s:dialog 0x%x received PDU: signalInfoLen 0x%x", __FUNCTION__, dialog->dialogid_map, ud->signalInfoLen);
-  if( smsc::util::_map_cat->isDebugEnabled() )
+  if( smsc::logger::_map_cat->isDebugEnabled() )
   {
     char text[sizeof(*ud)*4] = {0,};
     int k = 0;
@@ -758,7 +758,7 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   unsigned tpvpLen = (ssfh->tp_vp==0)?0:(ssfh->tp_vp==2)?1:7;
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2);
 
-  if( smsc::util::_map_cat->isDebugEnabled() )
+  if( smsc::logger::_map_cat->isDebugEnabled() )
   {
     __map_trace2__("MR(8) = 0x%x",ssfh->mr);
     __map_trace2__("MSG_TYPE_IND(2) = 0x%x",ssfh->mg_type_ind);
@@ -1315,7 +1315,7 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
     }
     // if buffer have trailing 7 unfilled bits place <cr> there
     if( bytes*8-text_len*7 == 7 ) ussdString.ussdStr[bytes-1] |= (0x0D<<1);
-    if( smsc::util::_map_cat->isDebugEnabled() ) {
+    if( smsc::logger::_map_cat->isDebugEnabled() ) {
       char *text = new char[bytes*4+1];
       int k = 0;
       for ( int i=0; i<bytes; i++){
@@ -1383,7 +1383,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     }
     // if buffer have trailing 7 unfilled bits place <cr> there
     if( bytes*8-text_len*7 == 7 ) ussdString.ussdStr[bytes-1] |= (0x0D<<1);
-    if( smsc::util::_map_cat->isDebugEnabled() ) {
+    if( smsc::logger::_map_cat->isDebugEnabled() ) {
       char *text = new char[bytes*4+1];
       int k = 0;
       for ( int i=0; i<bytes; i++){
@@ -2132,7 +2132,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
           dialog->smRpDa.addrLen = imsi_sp->imsiLen;
           memcpy( dialog->smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
   //#if !defined DISABLE_TRACING
-          if( smsc::util::_map_cat->isDebugEnabled() ) {
+          if( smsc::logger::_map_cat->isDebugEnabled() ) {
             {
               auto_ptr<char> b(new char[imsi_sp->imsiLen*4+1]);
               memset(b.get(),0,imsi_sp->imsiLen*4+1);
@@ -2394,7 +2394,7 @@ USHORT_T Et96MapOpenInd (
         memcpy(&dialog->m_msAddr,specificInfo_sp->specificData+1,specificInfo_sp->specificInfoLen-1);
         dialog->m_msAddr.addressLength = x;
         dialog->hasIndAddress = true;
-        if( smsc::util::_map_cat->isDebugEnabled() )
+        if( smsc::logger::_map_cat->isDebugEnabled() )
         {
           ostringstream ost;
           unsigned x = specificInfo_sp->specificData[1]-1;
@@ -2881,7 +2881,7 @@ static void PauseOnImsiReq(MapDialog* map)
       if (!map->hasIndAddress )
         throw runtime_error("MAP::%s MAP.did:{0x%x} has no originating address");
       dialog->m_msAddr = map->m_msAddr;
-/*      if( smsc::util::_map_cat->isDebugEnabled() )
+/*      if( smsc::logger::_map_cat->isDebugEnabled() )
       {
         auto_ptr<char> b(new char[sizeof(ET96MAP_ADDRESS_T)*3+1]);
         memset(b.get(),0,sizeof(ET96MAP_ADDRESS_T)*3+1);
@@ -3102,7 +3102,7 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
 {
   Address addr;
   ConvAddrMSISDN2Smc(mapAddr,&addr);
-    if( smsc::util::_map_cat->isDebugEnabled() ) {
+    if( smsc::logger::_map_cat->isDebugEnabled() ) {
      {
       char *text = new char[mapAddr->addressLength*4+1];
       int k = 0;
@@ -3110,7 +3110,7 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
         k+=sprintf(text+k,"%02x ",(unsigned)mapAddr->address[i]);
       }
       text[k]=0;
-      __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, 
+      __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, 
         "%s: mapaddress len=%d, type=%x, val=%s",__FUNCTION__, mapAddr->addressLength, mapAddr->typeOfAddress, text);
       delete text;
      }
@@ -3234,7 +3234,7 @@ USHORT_T Et96MapV2InformSCInd (
     __require__(dialog->ssn==localSsn);
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__FUNCTION__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
-    if( msisdnAlert_sp && smsc::util::_map_cat->isDebugEnabled() )
+    if( msisdnAlert_sp && smsc::logger::_map_cat->isDebugEnabled() )
     {
        int len = (msisdnAlert_sp->addressLength+1)/2+2;
        char *text = new char[len*4+1];
@@ -3244,10 +3244,10 @@ USHORT_T Et96MapV2InformSCInd (
 	   k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
        }
        text[k]=0;
-       __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "msisdnAlert_s: %s",text);
+       __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "msisdnAlert_s: %s",text);
        delete text;
     }
-    if( mwdStatus_sp && smsc::util::_map_cat->isDebugEnabled() )
+    if( mwdStatus_sp && smsc::logger::_map_cat->isDebugEnabled() )
     {
        int len = sizeof(ET96MAP_MWD_STATUS_T);
        char *text = new char[len*4+1];
@@ -3257,7 +3257,7 @@ USHORT_T Et96MapV2InformSCInd (
 	   k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
        }
        text[k]=0;
-       __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "mwdStatus_s: %s",text);
+       __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "mwdStatus_s: %s",text);
        delete text;
     }
     switch( dialog->state ){

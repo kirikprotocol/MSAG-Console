@@ -20,8 +20,8 @@ namespace util{
 extern smsc::logger::Logger* _mapproxy_cat;
 };
 };
-#define __mapproxy_trace2__(format,args...) __debug2__(smsc::util::_mapproxy_cat,format,##args)
-#define __mapproxy_trace__(text) __debug__(smsc::util::_mapproxy_cat,text)
+#define __mapproxy_trace2__(format,args...) __debug2__(smsc::logger::_mapproxy_cat,format,##args)
+#define __mapproxy_trace__(text) __debug__(smsc::logger::_mapproxy_cat,text)
 
 
 

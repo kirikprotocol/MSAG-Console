@@ -79,7 +79,7 @@ inline void Convert7BitToSMSC7Bit(
   text->len = chars;
   text->bytes[chars] = 0;
   __map_trace2__("7bit(%d)->SMSC7Bit: %s",chars,text->bytes);
-  if( smsc::util::_map_cat->isDebugEnabled() ) {
+  if( smsc::logger::_map_cat->isDebugEnabled() ) {
     char b[255*4];
     unsigned k;
     unsigned i;
@@ -102,7 +102,7 @@ inline void Convert7BitToText(
   text->len = chars;
   text->bytes[chars] = 0;
   __map_trace2__("7bit(%d)->Text: %s",chars,text->bytes);
-  if( smsc::util::_map_cat->isDebugEnabled() ){
+  if( smsc::logger::_map_cat->isDebugEnabled() ){
     char b[255*4];
     unsigned k;
     unsigned i;
@@ -146,7 +146,7 @@ inline unsigned ConvertText27bit(
 #undef __pchar
 #undef __escape
   }
-  if( smsc::util::_map_cat->isDebugEnabled() ){
+  if( smsc::::_map_cat->isDebugEnabled() ){
     {
       char b[chars+1];
       memcpy(b,text,chars);
@@ -182,7 +182,7 @@ inline unsigned ConvertSMSC7bit27bit(
   for ( unsigned i=0; i< chars; ++i ){
     PutChar(bit7buf,shift,text[i],bit7buf_end);
   }
-  if( smsc::util::_map_cat->isDebugEnabled() ){
+  if( smsc::logger::_map_cat->isDebugEnabled() ){
     {
       char b[chars+1];
       memcpy(b,text,chars);

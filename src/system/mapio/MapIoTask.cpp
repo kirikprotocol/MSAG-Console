@@ -180,7 +180,7 @@ void MapIoTask::dispatcher()
     }
     if( message.primitive == 0x88 ) {
       // MapOpenInd
-      if ( smsc::util::_map_cat->isDebugEnabled() ) {
+      if ( smsc::logger::_map_cat->isDebugEnabled() ) {
         {
           char *text = new char[message.size*4+1];
           int k = 0;
@@ -188,7 +188,7 @@ void MapIoTask::dispatcher()
             k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
           }
           text[k]=0;
-		  __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "Decoding openInd: %s",text);
+		  __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "Decoding openInd: %s",text);
           delete text;
         }
       }
@@ -227,7 +227,7 @@ void MapIoTask::dispatcher()
       map_result = Et96MapHandleIndication(&message);
 
     }
-    if ( map_result != ET96MAP_E_OK && smsc::util::_map_cat->isWarnEnabled() ) {
+    if ( map_result != ET96MAP_E_OK && smsc::logger::_map_cat->isWarnEnabled() ) {
       {
         char *text = new char[message.size*4+1];
         int k = 0;
@@ -235,7 +235,7 @@ void MapIoTask::dispatcher()
           k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
         }
         text[k]=0;
-		__log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
+		__log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
         delete text;
       }
     }

@@ -24,12 +24,12 @@ extern smsc::logger::Logger* _mapdlg_cat;
 };
 };
 using namespace smsc::util;
-#define __map_trace2__(format,args...) __debug2__(smsc::util::_map_cat,format,##args)
-#define __map_trace__(text) __debug__(smsc::util::_map_cat,text)
-#define __map_warn2__(format,args...) __warn2__(smsc::util::_map_cat,format,##args)
-#define __map_warn__(text) __warn__(smsc::util::_map_cat,text)
-#define __mapdlg_trace2__(format,args...) __debug2__(smsc::util::_mapdlg_cat,format,##args)
-#define __mapdlg_trace__(text) __debug__(smsc::util::_mapdlg_cat,text)
+#define __map_trace2__(format,args...) __debug2__(smsc::logger::_map_cat,format,##args)
+#define __map_trace__(text) __debug__(smsc::logger::_map_cat,text)
+#define __map_warn2__(format,args...) __warn2__(smsc::logger::_map_cat,format,##args)
+#define __map_warn__(text) __warn__(smsc::logger::_map_cat,text)
+#define __mapdlg_trace2__(format,args...) __debug2__(smsc::logger::_mapdlg_cat,format,##args)
+#define __mapdlg_trace__(text) __debug__(smsc::logger::_mapdlg_cat,text)
 
 #include "../../core/buffers/XHash.hpp"
 #include "../../core/synchronization/Mutex.hpp"
@@ -454,7 +454,7 @@ public:
     //  throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
     MutexGuard g(sync);
     if ( dialogId_pool.size() == 0 ) {
-      smsc::util::_mapdlg_cat->warn( "Dialog id POOL is empty" );
+      smsc::logger::_mapdlg_cat->warn( "Dialog id POOL is empty" );
       Dump();
       throw runtime_error("MAP:: POOL is empty");
     }
@@ -469,7 +469,7 @@ public:
       time_t curtime = time(NULL);
       if( curtime - item->lockedAt >= MAX_MT_LOCK_TIME ) {
         // drop locked dialog and all msg in chain, and create dialog as new.
-        __warn2__(smsc::util::_mapdlg_cat,"Dialog locked too long id=%x.",item->dialogid_map);
+        __warn2__(smsc::logger::_mapdlg_cat,"Dialog locked too long id=%x.",item->dialogid_map);
         for (;!item->chain.empty();item->chain.pop_front())
         {
 	  //drop chain elements
@@ -528,7 +528,7 @@ public:
       throw runtime_error("MAP:: reassign dialog: here is no did");
     }
     if ( dialogId_pool.size() == 0 ) {
-      smsc::util::_mapdlg_cat->warn( "Dialog id POOL is empty" );
+      smsc::logger::_mapdlg_cat->warn( "Dialog id POOL is empty" );
       Dump();
       throw runtime_error("MAP:: POOL is empty");
     }
