@@ -220,13 +220,14 @@ void SmppTransmitterTestCases::processSubmitSmSync(PduData* pduData,
 	if (!respPdu)
 	{
 		__decl_tc__;
-		__tc__("processSubmitSmRespSync");
+		__tc__("processSubmitSmResp.sync");
 		__tc_fail__(1);
 		pduData->responseFlag = PDU_MISSING_ON_TIME_FLAG;
+		//обновить sequenceNumber
+		pduReg->updatePdu(pduData);
 	}
 	else
 	{
-		pduData->smsId = respPdu->get_messageId();
 		pduChecker->processSubmitSmResp(pduData, *respPdu, time(NULL));
 		delete respPdu; //disposePdu
 	}
@@ -242,10 +243,9 @@ void SmppTransmitterTestCases::processSubmitSmAsync(PduData* pduData,
 	if (respPdu)
 	{
 		__decl_tc__;
-		__tc__("processSubmitSmRespAsync");
+		__tc__("processSubmitSmResp.async");
 		__tc_fail__(1);
 	}
-	pduReg->updatePdu(pduData); //обновить sequenceNumber
 }
 
 void SmppTransmitterTestCases::submitSm(bool sync, int num)
@@ -547,8 +547,6 @@ void SmppTransmitterTestCases::submitSm(bool sync, int num)
 					__dumpSubmitSmPdu__("submitSmSyncBefore", systemId, pdu);
 					PduSubmitSmResp* respPdu = session->getSyncTransmitter()->submit(*pdu);
 					__dumpSubmitSmPdu__("submitSmSyncAfter", systemId, pdu);
-					getLog().debug("[%d]\tsubmitSmSync(%d): sequenceNumber = %d",
-						thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
 					{
 						MutexGuard mguard(pduReg->getMutex());
 						processSubmitSmSync(pduData, respPdu); //smsId, sequenceNumber
@@ -560,8 +558,6 @@ void SmppTransmitterTestCases::submitSm(bool sync, int num)
 					__dumpSubmitSmPdu__("submitSmAsyncBefore", systemId, pdu);
 					PduSubmitSmResp* respPdu = session->getAsyncTransmitter()->submit(*pdu);
 					__dumpSubmitSmPdu__("submitSmAsyncAfter", systemId, pdu);
-					getLog().debug("[%d]\tsubmitSmAsync(%d): sequenceNumber = %d",
-						thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
 					PduData* pduData = registerSubmitSm(pdu, replacePduData); //all times, msgRef, sequenceNumber
 					processSubmitSmAsync(pduData, respPdu);
 				}
@@ -635,7 +631,7 @@ void SmppTransmitterTestCases::processReplaceSmSync(PduData* pduData,
 {
 	__require__(pduData);
 	__decl_tc__;
-	__tc__("processReplaceSmRespSync");
+	__tc__("processReplaceSmResp.sync");
 	__dumpPdu__("processReplaceSmRespSync", systemId, respPdu);
 	if (!respPdu)
 	{
@@ -658,10 +654,9 @@ void SmppTransmitterTestCases::processReplaceSmAsync(PduData* pduData,
 	if (respPdu)
 	{
 		__decl_tc__;
-		__tc__("processReplaceSmRespAsync");
+		__tc__("processReplaceSmResp.async");
 		__tc_fail__(1);
 	}
-	pduReg->updatePdu(pduData); //обновить sequenceNumber
 }
 
 void SmppTransmitterTestCases::replaceSm(bool sync, int num)
@@ -816,13 +811,12 @@ void SmppTransmitterTestCases::replaceSm(bool sync, int num)
 					PduData* pduData;
 					{
 						MutexGuard mguard(pduReg->getMutex());
+						pdu->get_header().set_sequenceNumber(0); //не известен
 						pduData = registerReplaceSm(pdu, replacePduData);
 					}
 					__dumpReplaceSmPdu__("replaceSmSyncBefore", systemId, pdu);
 					PduReplaceSmResp* respPdu = session->getSyncTransmitter()->replace(*pdu);
 					__dumpReplaceSmPdu__("replaceSmSyncAfter", systemId, pdu);
-					getLog().debug("[%d]\treplaceSmSync(%d): sequenceNumber = %d",
-						thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
 					{
 						MutexGuard mguard(pduReg->getMutex());
 						processReplaceSmSync(pduData, respPdu);
@@ -834,8 +828,6 @@ void SmppTransmitterTestCases::replaceSm(bool sync, int num)
 					__dumpReplaceSmPdu__("replaceSmAsyncBefore", systemId, pdu);
 					PduReplaceSmResp* respPdu = session->getAsyncTransmitter()->replace(*pdu);
 					__dumpReplaceSmPdu__("replaceSmAsyncAfter", systemId, pdu);
-					getLog().debug("[%d]\treplaceSmAsync(%d): sequenceNumber = %d",
-						thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
 					PduData* pduData = registerReplaceSm(pdu, replacePduData);
 					processReplaceSmAsync(pduData, respPdu);
 				}
