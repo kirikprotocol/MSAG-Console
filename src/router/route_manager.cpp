@@ -656,8 +656,12 @@ __synchronized__
   
   if ( trace_enabled_ ) {
     ostringstream ost;
-    ost << "lookup for alternative route with src proxy: '" << srcidx << ":"  
-      << (srcidx?sme_table->getSmeInfo(srcidx).systemId:string("default")) << "'";
+    ost << "lookup for alternative route with src proxy: '" << srcidx << ":";  
+    if ( srcidx ) 
+      ost << sme_table->getSmeInfo(srcidx).systemId;
+    else 
+      ost << "default";
+    ost << "'";
     trace_.push_back(ost.str());
   }
 
