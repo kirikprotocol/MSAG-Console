@@ -9,6 +9,7 @@ import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.protocol.Command;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
+import ru.sibinco.lib.backend.service.ServiceInfo;
 
 
 public class CommandAddService extends Command

@@ -8,6 +8,7 @@ package ru.sibinco.lib.backend.daemon;
 import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
+import ru.sibinco.lib.backend.service.ServiceCommand;
 
 
 public class CommandSetServiceStartupParameters extends ServiceCommand

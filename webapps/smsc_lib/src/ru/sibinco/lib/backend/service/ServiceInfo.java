@@ -1,11 +1,15 @@
-package ru.sibinco.lib.backend.daemon;
+package ru.sibinco.lib.backend.service;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.sme.Sme;
 import ru.sibinco.lib.backend.sme.SmeManager;
+import ru.sibinco.lib.backend.service.Component;
 
 import java.io.File;
+import java.util.Map;
+import java.util.HashMap;
 
 
 /**
@@ -27,6 +31,7 @@ public class ServiceInfo
   protected byte status = STATUS_STOPPED;
   private File serviceFolder;
   private boolean autostart;
+   protected Map components = new HashMap();
 
 
   public ServiceInfo(final Element serviceElement, final String serviceHost, final SmeManager smeManager, final String daemonServicesFolder)
@@ -84,6 +89,21 @@ public class ServiceInfo
     return args;
   }
 
+  public Map getComponents()
+  {
+    return components;
+  }
+  public void setComponents(final Element response)
+   {
+     components.clear();
+     final NodeList list = response.getElementsByTagName("component");
+     for (int i = 0; i < list.getLength(); i++) {
+       final Element compElem = (Element) list.item(i);
+       final Component c = new Component(compElem);
+       components.put(c.getName(), c);
+     }
+   }
+  
   public long getPid()
   {
     return pid;

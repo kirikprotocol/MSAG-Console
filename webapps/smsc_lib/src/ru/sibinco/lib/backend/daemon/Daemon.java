@@ -8,6 +8,7 @@ import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.protocol.Response;
 import ru.sibinco.lib.backend.sme.SmeManager;
 import ru.sibinco.lib.backend.util.SortedList;
+import ru.sibinco.lib.backend.service.ServiceInfo;
 
 import java.util.*;
 

@@ -3,7 +3,7 @@
  * Date: Apr 3, 2002
  * Time: 1:53:39 PM
  */
-package ru.sibinco.lib.backend.daemon;
+package ru.sibinco.lib.backend.service;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.protocol.Command;

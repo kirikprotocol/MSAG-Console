@@ -6,6 +6,7 @@
 package ru.sibinco.lib.backend.daemon;
 
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.service.ServiceCommand;
 
 
 public class CommandStartService extends ServiceCommand
