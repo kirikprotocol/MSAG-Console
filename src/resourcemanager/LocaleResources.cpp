@@ -13,6 +13,17 @@ namespace resourcemanager {
 
 using smsc::util::xml::DOMTreeReader;
 
+std::string strToLower(const std::string & str)
+{
+	char dst[str.length()+1];
+	const char * const src = str.c_str();
+	const size_t length	= str.length();
+	for (int i=0; i<length; i++)
+		dst[i] = tolower(src[i]);
+	dst[length] = 0;
+	return dst;
+}
+
 void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_stringmap & settings, const std::string &prefix) throw ()
 {
   log4cpp::Category &logger(smsc::util::Logger::getCategory("smsc.resourcemanager.LocaleResources"));
@@ -43,7 +54,7 @@ void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_s
           if (!prefix.empty())
             paramName += '.';
           paramName += name.get();
-          settings[paramName] = value.get();
+          settings[strToLower(paramName)] = value.get();
         }
       }
     }
@@ -144,7 +155,7 @@ LocaleResources::~LocaleResources()
 // возвращает строку из сетингов для ключа.
 std::string LocaleResources::getSetting(const std::string & key) const throw ()
 {
-  const _stringmap::const_iterator & value = settings.find(key);
+  const _stringmap::const_iterator & value = settings.find(strToLower(key));
   if (value != settings.end())
     return value->second;
   else
@@ -154,7 +165,7 @@ std::string LocaleResources::getSetting(const std::string & key) const throw ()
 // возвращает строку из ресурса для ключа.
 std::string LocaleResources::getString(const std::string & key) const throw ()
 {
-  const _stringmap::const_iterator & value = resources.find(key);
+  const _stringmap::const_iterator & value = resources.find(strToLower(key));
   if (value != resources.end())
   {
     __trace2__("LR: key=%s, value=%s",key.c_str(),value->second.c_str());
@@ -169,24 +180,25 @@ std::string LocaleResources::getString(const std::string & key) const throw ()
 
 bool LocaleResources::hasString(const std::string& key)const throw()
 {
-  return resources.find(key)!=resources.end();
+  return resources.find(strToLower(key))!=resources.end();
 }
 
 
 OutputFormatter* LocaleResources::getFormatter(const std::string& key)throw()
 {
-  std::map<std::string,OutputFormatter*>::const_iterator i=formatters.find(key);
+	std::string lower_key(strToLower(key));
+  std::map<std::string,OutputFormatter*>::const_iterator i=formatters.find(lower_key);
   if(i!=formatters.end())
   {
-    __trace2__("LR: found cached formatter for key %s",key.c_str());
+    __trace2__("LR: found cached formatter for key %s",lower_key.c_str());
     return i->second;
   }
-  std::string str=getString(key).c_str();
-  __trace2__("LR: creating new formatter for key %s, text=%s",key.c_str(),str.c_str());
+  std::string str=getString(lower_key).c_str();
+  __trace2__("LR: creating new formatter for key %s, text=%s",lower_key.c_str(),str.c_str());
 
   OutputFormatter* res=new OutputFormatter(str.c_str());
   __trace2__("LR: formatter=%p",res);
-  formatters.insert(std::pair<std::string,OutputFormatter*>(key,res));
+  formatters.insert(std::pair<std::string,OutputFormatter*>(lower_key,res));
   return res;
 }
 
