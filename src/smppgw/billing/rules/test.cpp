@@ -11,7 +11,7 @@ using namespace smsc::sms;
 
 int main(int argc,char* argv[])
 {
-  smsc::logger::Logger::Init("logger.properties");
+  smsc::logger::Logger::Init();
 
   smsc::util::regexp::RegExp::InitLocale();
 

@@ -20,7 +20,7 @@ int main(int argc,char* argv[])
 {
   if(argc!=3)return 0;
 
-  smsc::logger::Logger::Init("logger.properties");
+  smsc::logger::Logger::Init();
 
   RouteManager rm;
   smsc::smeman::SmeManager smeman;
