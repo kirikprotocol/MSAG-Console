@@ -389,9 +389,6 @@ int main(void)
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
-    sigset(SIGTERM, appSignalHandler);
-    sigset(SIGINT , appSignalHandler);
-
     //added by igork
     atexit(atExitHandler);
     
@@ -417,6 +414,9 @@ int main(void)
         ConfigView ssConfig(manager, "DBSme.SMSC");
         DBSmeConfig cfg(&ssConfig);
         
+        sigset(SIGTERM, appSignalHandler);
+        sigset(SIGINT , appSignalHandler);
+
         while (!bDBSmeIsStopped)
         {
             DBSmeTaskManager runner(&mnConfig);
