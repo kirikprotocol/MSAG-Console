@@ -82,7 +82,7 @@ public:
 	SmeAcknowledgementHandler* getDbSmeAckHandler() { return &dbSmeTc; }
 
 private:
-	virtual uint32_t sendDeliverySmResp(PduDeliverySm& pdu);
+	virtual pair<uint32_t, time_t> sendDeliverySmResp(PduDeliverySm& pdu);
 	virtual void updateStat();
 };
 
@@ -235,7 +235,7 @@ void TestSme::onStopped()
 	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
 }
 
-uint32_t TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
+pair<uint32_t, time_t> TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 {
 	return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
 }
@@ -341,6 +341,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	__cfg_addr__(dbSmeAlias);
 	__cfg_addr__(dbSmeInvalidAddr);
 	__cfg_str__(dbSmeSystemId);
+	__cfg_str__(dbSmePassword);
 	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
 	__cfg_str__(profilerSystemId);
@@ -397,6 +398,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	dbSmeInfo.wantAlias = true;
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&dbSmeInfo);
 	dbSmeInfo.systemId = dbSmeSystemId;
+	dbSmeInfo.password = dbSmePassword;
 	smeReg->registerSme(dbSmeAddr, dbSmeInfo, false, true);
 	smeReg->bindSme(dbSmeInfo.systemId);
 	//алиас для db sme
@@ -470,7 +472,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		//config.password;
 		//config.systemType;
 		//config.origAddr;
-		SmppFixture* fixture = new SmppFixture(smeInfo[i]->systemId, *addr[i],
+		SmppFixture* fixture = new SmppFixture(*smeInfo[i], *addr[i],
 			NULL, smeReg, aliasReg, routeReg, profileReg, chkList);
 		sme.push_back(new TestSme(i, config, fixture));
 		fixture->pduHandler[smscAddr] = sme.back()->getDeliveryReceiptHandler();
