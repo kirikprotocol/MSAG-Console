@@ -641,6 +641,8 @@ typedef PduWithOnlyHeader PduUnbindResp;
 typedef PduWithOnlyHeader PduGenericNack;
 typedef PduWithOnlyHeader PduEnquireLink;
 typedef PduWithOnlyHeader PduEnquireLinkResp;
+typedef PduWithOnlyHeader PduReplaceSmResp;
+typedef PduWithOnlyHeader PduCancelSmResp;
 
 struct PduPartSm //: public MemoryManagerUnit
 {
@@ -776,7 +778,32 @@ typedef PduXSm  PduMultiSm;
 
 typedef PduXSmResp  PduSubmitSmResp;
 typedef PduXSmResp  PduDeliverySmResp;
-typedef PduXSmResp  PduDataSmResp;
+
+struct PduDataSmResp //: public SmppHeader //MemoryManagerUnit
+{
+  __ref_property__(SmppHeader,header)
+  __cstr_property__(messageId)
+	__ref_property__(SmppOptional,optional)
+  inline uint32_t size()
+  {
+    return (uint32_t)(0
+                      _s_ref_property__(SmppHeader,header)
+                      _s_cstr_property__(messageId)
+											_s_ref_property__(SmppOptional,optional));
+
+  }
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduXSmResp{");
+    header.dump(log,align+1);
+    ++align;
+    dump_cstr(messageId);
+    optional.dump(log,align);
+		--align;
+    dump_text("} //PduXSm");
+  }
+};
+
 
 struct UnsuccessDeliveries //: public MemoryManagerUnit
 {
@@ -970,17 +997,17 @@ struct PduQuerySmResp
 {
   __ref_property__(SmppHeader,header)
   __cstr_property__(messageId)
-	__cstr_property__(final_date)
-	__int_property__(uint8_t,message_state)
-	__int_property__(uint8_t,error_code)
+	__cstr_property__(finalDate)
+	__int_property__(uint8_t,messageState)
+	__int_property__(uint8_t,errorCode)
   inline uint32_t size()
   {
     return (uint32_t)(0
                       _s_ref_property__(SmppHeader,header)
 											_s_cstr_property__(messageId)
-											_s_cstr_property__(final_date)
-											_s_int_property__(uint8_t,message_state)
-											_s_int_property__(uint8_t,error_code));
+											_s_cstr_property__(finalDate)
+											_s_int_property__(uint8_t,messageState)
+											_s_int_property__(uint8_t,errorCode));
   }
   inline void dump(__LOG__ log,int align = 0)
   {
@@ -988,9 +1015,9 @@ struct PduQuerySmResp
     header.dump(log,align+1);
     ++align;
 		dump_cstr(messageId);
-		dump_cstr(final_date);
-		dump_uint(message_state);
-		dump_uint(error_code);
+		dump_cstr(finalDate);
+		dump_uint(messageState);
+		dump_uint(errorCode);
     --align;
     dump_text("} //PduQuerySmResp");
   }
@@ -1023,30 +1050,11 @@ struct PduCancelSm
   }
 };
 
-struct PduCancelSmResp
-{
-  __ref_property__(SmppHeader,header)
-  inline uint32_t size()
-  {
-    return (uint32_t)(0
-                      _s_ref_property__(SmppHeader,header) );
-  }
-  inline void dump(__LOG__ log,int align = 0)
-  {
-    dump_text("PduCancelSmResp{");
-    header.dump(log,align+1);
-    ++align;
-    --align;
-    dump_text("} //PduCancelSmResp");
-  }
-};
-
 struct PduReplaceSm
 {
   __ref_property__(SmppHeader,header)
-  __cstr_property__(serviceType)
+  __cstr_property__(messageId)
   __ref_property__(PduAddress,source)
-  __ref_property__(PduAddress,dest)
   __cstr_property__(scheduleDeliveryTime)
   __cstr_property__(validityPeriod)
   __int_property__(uint8_t,registredDelivery)
@@ -1069,9 +1077,8 @@ struct PduReplaceSm
   {
 		return (uint32_t)(0 + 1 // sizeof(smLength)
 										_s_ref_property__(SmppHeader,header)
-										_s_cstr_property__(serviceType)
+										_s_cstr_property__(messageId)
 										_s_ref_property__(PduAddress,source)
-										_s_ref_property__(PduAddress,dest)
 										_s_cstr_property__(scheduleDeliveryTime)
 										_s_cstr_property__(validityPeriod)
 										_s_int_property__(uint8_t,registredDelivery)
@@ -1083,9 +1090,8 @@ struct PduReplaceSm
     dump_text("PduReplaceSm{");
     header.dump(log,align+1);
     ++align;
-    dump_cstr(serviceType)
+    dump_cstr(messageId)
     dump_text("source = "); source.dump(log,align+1);
-    dump_text("dest = "); dest.dump(log,align+1);
     dump_cstr(scheduleDeliveryTime);
     dump_cstr(validityPeriod);
     dump_uint(registredDelivery);
@@ -1093,24 +1099,6 @@ struct PduReplaceSm
     dump_ostr(shortMessage); 
     --align;
     dump_text("} //PduReplaceSm");
-  }
-};
-
-struct PduReplaceSmResp
-{
-  __ref_property__(SmppHeader,header)
-  inline uint32_t size()
-  {
-    return (uint32_t)(0
-                      _s_ref_property__(SmppHeader,header));
-  }
-  inline void dump(__LOG__ log,int align = 0)
-  {
-    dump_text("PduReplaceSmResp{");
-    header.dump(log,align+1);
-    ++align;
-    --align;
-    dump_text("} //PduReplaceSmResp");
   }
 };
 

@@ -149,6 +149,10 @@ static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
     case UNBIND:
     case UNBIND_RESP:
     case GENERIC_NACK:
+    case ENQUIRE_LINK:
+    case ENQUIRE_LINK_RESP:
+    case REPLACE_SM_RESP:
+    case CANCEL_SM_RESP:
     {
       fillSmppHeader(stream,*_pdu);
       return true;
@@ -161,17 +165,87 @@ static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
       fillCOctetStr(stream,pdu->password);
       return true;
     }
+    //case REPLACE_SM:
+    //case CANCEL_SM:
+    //case ALERT_NOTIFICATION:
+    //case DATA_SM:
+    //case DATA_SM_RESP:
+    //case QUERY_SM:
+    //case QUERY_SM_RESP:
     case REPLACE_SM:
-    case REPLACE_SM_RESP:
+		{
+			PduReplaceSm* pdu = reinterpret_cast<PduReplaceSm*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillCOctetStr(stream,pdu->messageId);
+			fillPduAddress(stream,pdu->source);
+      fillCOctetStr(stream,pdu->scheduleDeliveryTime);
+      fillCOctetStr(stream,pdu->validityPeriod);
+      fillX(stream,pdu->registredDelivery);
+      fillX(stream,pdu->smDefaultMsgId);
+      fillX(stream,((uint8_t)pdu->shortMessage.size()));
+      fillOctetStr(stream,pdu->shortMessage);
+			return true;
+		}
     case CANCEL_SM:
-    case CANCEL_SM_RESP:
-    case ENQUIRE_LINK:
-    case ENQUIRE_LINK_RESP:
+		{
+			PduCancelSm* pdu = reinterpret_cast<PduCancelSm*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillCOctetStr(stream,pdu->serviceType);
+			fillCOctetStr(stream,pdu->messageId);
+			fillPduAddress(stream,pdu->source);
+			fillPduAddress(stream,pdu->dest);
+      return true;
+		}
     case ALERT_NOTIFICATION:
+		{
+			PduAlertNotification* pdu = reinterpret_cast<PduAlertNotification*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillPduAddress(stream,pdu->source);
+			fillPduAddress(stream,pdu->esme);
+			fillSmppOptional(stream,&pdu->optional);
+      return true;
+		}
     case DATA_SM:
+		{
+			PduDataSm* pdu = reinterpret_cast<PduDataSm*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillCOctetStr(stream,pdu->data.serviceType);
+			fillPduAddress(stream,pdu->data.source);
+			fillPduAddress(stream,pdu->data.dest);
+			fillX(stream,pdu->data.esmClass);
+			fillX(stream,pdu->data.registredDelivery);
+			fillX(stream,pdu->data.dataCoding);
+			fillSmppOptional(stream,&pdu->optional);
+			return true;
+		}
     case DATA_SM_RESP:
+		{
+			PduDataSmResp* pdu = reinterpret_cast<PduDataSmResp*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillCOctetStr(stream,pdu->messageId);
+			fillSmppOptional(stream,&pdu->optional);
+			return true;
+		}
     case QUERY_SM:
+		{
+			PduQuerySm* pdu = reinterpret_cast<PduQuerySm*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillCOctetStr(stream,pdu->messageId);
+			fillPduAddress(stream,pdu->source);
+			return true;
+		}
     case QUERY_SM_RESP:
+		{
+			PduQuerySmResp* pdu = reinterpret_cast<PduQuerySmResp*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillCOctetStr(stream,pdu->messageId);
+			fillCOctetStr(stream,pdu->finalDate);
+			fillX(stream,pdu->messageState);
+			fillX(stream,pdu->errorCode);
+			return true;
+		}
+		//default:
+    //  goto trap;
       break;
     }
     __warning__("bad smpp pdu");
@@ -325,6 +399,10 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
     case UNBIND:
     case UNBIND_RESP:
     case GENERIC_NACK:
+    case ENQUIRE_LINK:
+    case ENQUIRE_LINK_RESP:
+    case REPLACE_SM_RESP:
+    case CANCEL_SM_RESP:
     {
       auto_ptr<PduWithOnlyHeader> pdu(new PduWithOnlyHeader);
       fetchSmppHeader(stream,pdu->header);
@@ -339,17 +417,82 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
       return reinterpret_cast<SmppHeader*>(pdu.release());
     }
     case REPLACE_SM:
-    case REPLACE_SM_RESP:
+		{
+			auto_ptr<PduReplaceSm> pdu(new PduReplaceSm);
+			fetchSmppHeader(stream,pdu->header);
+			fetchCOctetStr(stream,pdu->messageId,65);
+			fetchPduAddress(stream,pdu->source);
+      fetchCOctetStr(stream,pdu->scheduleDeliveryTime,17);
+      fetchCOctetStr(stream,pdu->validityPeriod,17);
+      fetchX(stream,pdu->registredDelivery);
+      fetchX(stream,pdu->smDefaultMsgId);
+      uint8_t smLength = 0;
+      fetchX(stream,smLength);
+      pdu->shortMessage.dispose();
+      if ( smLength )
+        fetchOctetStr(stream,pdu->shortMessage,smLength);
+      return reinterpret_cast<SmppHeader*>(pdu.release());
+		}
     case CANCEL_SM:
-    case CANCEL_SM_RESP:
-    case ENQUIRE_LINK:
-    case ENQUIRE_LINK_RESP:
+		{
+			auto_ptr<PduCancelSm> pdu(new PduCancelSm);
+			fetchSmppHeader(stream,pdu->header);
+			fetchCOctetStr(stream,pdu->serviceType,6);
+			fetchCOctetStr(stream,pdu->messageId,65);
+			fetchPduAddress(stream,pdu->source);
+			fetchPduAddress(stream,pdu->dest);
+      return reinterpret_cast<SmppHeader*>(pdu.release());
+		}
     case ALERT_NOTIFICATION:
+		{
+			auto_ptr<PduAlertNotification> pdu(new PduAlertNotification);
+			fetchSmppHeader(stream,pdu->header);
+			fetchPduAddress(stream,pdu->source);
+			fetchPduAddress(stream,pdu->esme);
+			fetchSmppOptional(stream,&pdu->optional);
+      return reinterpret_cast<SmppHeader*>(pdu.release());
+		}
     case DATA_SM:
+		{
+			auto_ptr<PduDataSm> pdu(new PduDataSm);
+			fetchSmppHeader(stream,pdu->header);
+			fetchCOctetStr(stream,pdu->data.serviceType,6);
+			fetchPduAddress(stream,pdu->data.source);
+			fetchPduAddress(stream,pdu->data.dest);
+			fetchX(stream,pdu->data.esmClass);
+			fetchX(stream,pdu->data.registredDelivery);
+			fetchX(stream,pdu->data.dataCoding);
+			fetchSmppOptional(stream,&pdu->optional);
+			return reinterpret_cast<SmppHeader*>(pdu.release());
+		}
     case DATA_SM_RESP:
+		{
+			auto_ptr<PduDataSmResp> pdu(new PduDataSmResp);
+			fetchSmppHeader(stream,pdu->header);
+			fetchCOctetStr(stream,pdu->messageId,65);
+			fetchSmppOptional(stream,&pdu->optional);
+			return reinterpret_cast<SmppHeader*>(pdu.release());
+		}
     case QUERY_SM:
+		{
+			auto_ptr<PduQuerySm> pdu(new PduQuerySm);
+			fetchSmppHeader(stream,pdu->header);
+			fetchCOctetStr(stream,pdu->messageId,65);
+			fetchPduAddress(stream,pdu->source);
+			return reinterpret_cast<SmppHeader*>(pdu.release());
+		}
     case QUERY_SM_RESP:
-      goto trap;
+		{
+			auto_ptr<PduQuerySmResp> pdu(new PduQuerySmResp);
+			fetchSmppHeader(stream,pdu->header);
+			fetchCOctetStr(stream,pdu->messageId,65);
+			fetchCOctetStr(stream,pdu->finalDate,17);
+			fetchX(stream,pdu->messageState);
+			fetchX(stream,pdu->errorCode);
+			return reinterpret_cast<SmppHeader*>(pdu.release());
+		}
+		//default:
+    //  goto trap;
     }
     __watch__(cmdid);
     __unreachable__("");
