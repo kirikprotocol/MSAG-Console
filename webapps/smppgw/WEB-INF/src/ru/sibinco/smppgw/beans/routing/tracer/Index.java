@@ -29,8 +29,10 @@ public class Index extends TabledBeanImpl implements TabledBean
     private String dstAddress = null;
     private String srcAddress = null;
     private String srcSysId = "";
+    private String editId = "";
+     private String add = "";
 
-    private String message = null;
+  private String message = null;
     private List routeInfo = null;
     private List traceResults = null;
     private int messageType = TRACE_ROUTE_STATUS;
@@ -49,6 +51,7 @@ public class Index extends TabledBeanImpl implements TabledBean
       gwRoutingManager = appContext.getGwRoutingManager();
       gwSmeManager = appContext.getGwSmeManager();
       smppgw=appContext.getSmppgw();
+      gateway=appContext.getGateway();
       if (null != mbCheck)
          loadAndCheck();
       else if (null != mbTrace && null != dstAddress && null != srcAddress)
@@ -59,7 +62,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     private void loadAndCheck() throws SmppgwJspException
     {
       try {
-        traceResults = smppgw.loadRoutes(gwRoutingManager);
+        traceResults = gateway.loadRoutes(gwRoutingManager);
         if (null == traceResults || 0 >= traceResults.size())
           throw new SibincoException("Transport error, invalid responce.");
         message = (String) traceResults.get(0);
@@ -217,6 +220,26 @@ public class Index extends TabledBeanImpl implements TabledBean
     {
       return messageType;
     }
+
+  public String getEditId()
+  {
+    return editId;
+  }
+
+  public void setEditId(String editId)
+  {
+    this.editId = editId;
+  }
+
+  public String getAdd()
+  {
+    return add;
+  }
+
+  public void setAdd(String add)
+  {
+    this.add = add;
+  }
 
   public Gateway getGateway()
   {
