@@ -30,6 +30,7 @@ using smsc::test::core::SmeRegistry;
 using smsc::test::core::ProfileRegistry;
 using smsc::test::core::RouteChecker;
 using smsc::test::core::PduDataObject;
+using smsc::test::core::RespPduFlag;
 using smsc::test::sms::ltAddress;
 using smsc::test::util::CheckList;
 
@@ -38,10 +39,10 @@ struct SmppResponseSender
 	virtual uint32_t sendDeliverySmResp(PduDeliverySm& pdu) = NULL;
 };
 
-struct SmeAcknowledgementHandler
+struct PduHandler
 {
-	virtual void processSmeAcknowledgement(SmeAckMonitor* monitor,
-		PduDeliverySm &pdu, time_t recvTime) = NULL;
+	virtual void processPdu(PduDeliverySm &pdu, time_t recvTime) = NULL;
+	RespPduFlag isAccepted(uint32_t status);
 };
 
 struct AckText : public PduDataObject
@@ -57,13 +58,15 @@ class SmppBaseTestCases;
 class SmppTransmitterTestCases;
 class SmppReceiverTestCases;
 
+typedef map<const Address, PduHandler*, ltAddress> PduHandlerMap;
+
 struct SmppFixture
 {
 	SmppSession* session;
 	const SmeSystemId systemId;
 	const Address smeAddr;
 	SmppResponseSender* respSender;
-	map<const Address, SmeAcknowledgementHandler*, ltAddress> ackHandler;
+	PduHandlerMap pduHandler;
 	const SmeRegistry* smeReg;
 	const AliasRegistry* aliasReg;
 	const RouteRegistry* routeReg;
@@ -76,46 +79,11 @@ struct SmppFixture
 	SmppTransmitterTestCases* transmitter;
 	SmppReceiverTestCases* receiver;
 
-	SmppFixture(const SmeSystemId& _systemId, const Address& _smeAddr,
-		SmppResponseSender* _respSender, const SmeRegistry* _smeReg,
-		const AliasRegistry* _aliasReg, const RouteRegistry* _routeReg,
-		ProfileRegistry* _profileReg, CheckList* _chkList)
-	: session(NULL), systemId(_systemId), smeAddr(_smeAddr),
-	respSender(_respSender), smeReg(_smeReg), aliasReg(_aliasReg),
-	routeReg(_routeReg), pduReg(smeReg->getPduRegistry(smeAddr)),
-	profileReg(_profileReg), chkList(_chkList), routeChecker(NULL),
-	pduChecker(NULL), base(NULL), transmitter(NULL), receiver(NULL)
-	{
-		//__require__(respSender);
-		__require__(smeReg);
-		//__require__(aliasReg);
-		//__require__(routeReg);
-		//__require__(profileReg);
-		//__require__(chkList);
-		if (pduReg && aliasReg && routeReg)
-		{
-			routeChecker = new RouteChecker(systemId, smeAddr, smeReg, aliasReg, routeReg);
-			pduChecker = new SmppPduChecker(pduReg, routeChecker, chkList);
-		}
-	}
-	~SmppFixture()
-	{
-		delete pduChecker;
-		delete routeChecker;
-		if (session)
-		{
-			try
-			{
-				session->close();
-			}
-			catch(...)
-			{
-				//nothing
-			}
-			delete session;
-		}
-	}
-
+	SmppFixture(const SmeSystemId& systemId, const Address& smeAddr,
+		SmppResponseSender* respSender, const SmeRegistry* smeReg,
+		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
+		ProfileRegistry* profileReg, CheckList* chkList);
+	~SmppFixture();
 };
 
 }
