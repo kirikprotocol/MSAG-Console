@@ -81,7 +81,7 @@ public:
   int WriteAll(const void *buf,int bufsize);
   int Gets(char *buf, int len);
   void Done();
-  int Printf(char* fmt,...);
+  int Printf(const char* fmt,...);
   int Puts(const char* str);
   int InitServer(const char *host,int port,int timeout,int lng=1);
   int StartServer();

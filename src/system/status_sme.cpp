@@ -34,7 +34,7 @@ int StatusSme::Execute()
   char body[MAX_SHORT_MESSAGE_LENGTH+1];
   SMS *sms;
   SMS s;
-  string answer;
+  //string answer;
   char msc[]="";
   char imsi[]="";
   s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);

@@ -116,7 +116,7 @@ class EventQueue
     }
     void put(MsgIdType key,Locker* value)
     {
-      int idx = key%(TABLE_SIZE);
+      unsigned int idx = (unsigned int)(key%(TABLE_SIZE));
       if ( table[idx] )
       {
         value->next_hash = table[idx];
@@ -128,7 +128,7 @@ class EventQueue
     }
     Locker* get(MsgIdType key)
     {
-      int idx = key%(TABLE_SIZE);
+      unsigned int idx = (unsigned int)(key%(TABLE_SIZE));
       for ( Locker* l = table[idx]; l!=0; l = l->next_hash)
       {
         if ( l->msgId == key ) return l;
@@ -137,7 +137,7 @@ class EventQueue
     }
     void remove(MsgIdType key)
     {
-      int idx = key%(TABLE_SIZE);
+      unsigned int idx = (unsigned int)(key%(TABLE_SIZE));
       for ( Locker** l = table+idx; *l!=0; l = &((*l)->next_hash))
       {
         if ( (*l)->msgId == key )

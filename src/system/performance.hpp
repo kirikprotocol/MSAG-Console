@@ -83,8 +83,8 @@ public:
       ld.counters[i].lastSecond=htonl(ld.counters[i].lastSecond);
       ld.counters[i].average=htonl(ld.counters[i].average);
 
-      low=ld.counters[i].total&0xffffffff;
-      high=ld.counters[i].total>>32;
+      low=(int)(ld.counters[i].total&0xffffffff);
+      high=(int)(ld.counters[i].total>>32);
       ld.counters[i].high=htonl(high);
       ld.counters[i].low=htonl(low);
     }

@@ -179,7 +179,7 @@ int Socket::Gets(char *buf, int len)
 }
 
 
-int Socket::Printf(char* fmt,...)
+int Socket::Printf(const char* fmt,...)
 {
   char buf_init[4096];
   char *buf=buf_init;

@@ -812,8 +812,8 @@ int RegExp::CalcLength(const prechar src,int srclength)
         int c=TOLOWER(src[i]);
         if((c>='0' && c<='9')||(c>='a' && c<='f'))
         {
-          int c=TOLOWER(src[i+1]);
-          if((c>='0' && c<='9')||(c>='a' && c<='f'))i++;
+          int c2=TOLOWER(src[i+1]);
+          if((c2>='0' && c2<='9')||(c2>='a' && c2<='f'))i++;
 
         }else return SetError(errSyntax,i);
       }
@@ -2076,24 +2076,24 @@ inline StateStackItem *RegExp::FindStateByPos(PREOpCode pos,int op)
 }
 
 
-inline int RegExp::StrCmp(prechar& str,prechar start,prechar end)
+inline int RegExp::StrCmp(prechar& str,prechar st,prechar ed)
 {
   prechar save=str;
   if(ignorecase)
   {
-    while(start<end)
+    while(st<ed)
     {
-      if(TOLOWER(*str)!=TOLOWER(*start)){str=save;return 0;}
+      if(TOLOWER(*str)!=TOLOWER(*st)){str=save;return 0;}
       str++;
-      start++;
+      st++;
     }
   }else
   {
-    while(start<end)
+    while(st<ed)
     {
-      if(*str!=*start){str=save;return 0;}
+      if(*str!=*st){str=save;return 0;}
       str++;
-      start++;
+      st++;
     }
   }
   return 1;

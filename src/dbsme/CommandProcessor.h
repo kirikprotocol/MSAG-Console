@@ -2,10 +2,10 @@
 #define SMSC_DBSME_COMMANDPROCESSOR
 
 /**
- * 
+ *
  * @author Victor V. Makarov
  * @version 1.0
- * @see 
+ * @see
  */
 
 #include <time.h>
@@ -31,13 +31,13 @@
 #include "Command.h"
 #include "Jobs.h"
 
-namespace smsc { namespace dbsme 
+namespace smsc { namespace dbsme
 {
     using namespace smsc::sms;
 
     using namespace smsc::core::buffers;
     using namespace smsc::db;
-    
+
     using smsc::logger::Logger;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
@@ -45,7 +45,7 @@ namespace smsc { namespace dbsme
     static const char* PROVIDER_NOT_FOUND  = "PROVIDER_NOT_FOUND";
     static const char* SERVICE_NOT_AVAIL   = "SERVICE_NOT_AVAIL";
     static const char* JOB_NOT_FOUND       = "JOB_NOT_FOUND";
-    
+
     class DataProvider;
     class ProviderGuard;
     class CommandProcessor
@@ -58,21 +58,21 @@ namespace smsc { namespace dbsme
 
         int     protocolId;
         char*   svcType;
-        
+
         Mutex                   providersLock;
         Hash<DataProvider *>    allProviders;   // all providers by id
         Hash<DataProvider *>    idxProviders;   // by provider address
-        
+
         ProviderGuard getProvider(const char* id);
         ProviderGuard getProvider(const Address& address);
-        
+
         bool hasProvider(const char* id);
         bool hasProvider(const Address& address);
-        
+
         bool addProvider(const char* id, const Address& address, DataProvider *provider);
         bool addProviderIndex(const Address& address, DataProvider *provider);
         bool delProviderIndex(const char* idx);
-    
+
     public:
 
         CommandProcessor();
@@ -110,13 +110,13 @@ namespace smsc { namespace dbsme
         Event       usersCountEvent;
         Mutex       usersCountLock;
         long        usersCount[2];
-        
+
         Mutex       finalizingLock, enabledLock, setEnabledLock;
         bool        bFinalizing, bEnabled;
 
         CommandProcessor*       owner;
         DataSource*             ds;
-        
+
         Mutex                   jobsLock;
         Hash<Job *>             allJobs;        // jobs by id
         Hash<Job *>             jobsByAddress;  // jobs by address
@@ -126,7 +126,7 @@ namespace smsc { namespace dbsme
             MutexGuard guard(enabledLock);
             return bEnabled ? &usersCount[0]:&usersCount[1];
         };
-        
+
         void doWait(bool total=true)
         {
             while (true) {
@@ -136,29 +136,29 @@ namespace smsc { namespace dbsme
                 else if (!total && usersCount[0] <= 0) break;
             }
         };
-        
-        void createDataSource(ConfigView* config) 
+
+        void createDataSource(ConfigView* config)
             throw(ConfigException);
-        void registerJob(Job* job, const char* id, const char* address, 
+        void registerJob(Job* job, const char* id, const char* address,
                          const char* alias, const char* name)
             throw(ConfigException);
 
         JobGuard getJob(const Address& address);
         JobGuard getJob(const char* name);
-    
+
         virtual ~DataProvider();
 
     public:
-        
-        DataProvider(CommandProcessor* root, ConfigView* config, 
+
+        DataProvider(CommandProcessor* root, ConfigView* config,
                      const char* providerId, const MessageSet& set)
             throw(ConfigException);
-        
+
         virtual void finalize()
         {
             MutexGuard guard(setEnabledLock);
             {
-                MutexGuard guard(finalizingLock);
+                MutexGuard guard2(finalizingLock);
                 if (bFinalizing) return;
                 bFinalizing = true;
             }
@@ -171,16 +171,16 @@ namespace smsc { namespace dbsme
         }
         virtual void process(Command& command)
             throw(CommandProcessException);
-        
-        void createJob(const char* id, ConfigView* jobConfig) 
+
+        void createJob(const char* id, ConfigView* jobConfig)
             throw(ConfigException);
         void removeJob(const char* id);
-        
+
         void setEnabled(bool enabled)
         {
             MutexGuard guard(setEnabledLock);
             {
-                MutexGuard guard(enabledLock);
+                MutexGuard guard2(enabledLock);
                 if (bEnabled == enabled) return;
                 bEnabled = enabled;
                 if (bEnabled) return;
@@ -197,22 +197,22 @@ namespace smsc { namespace dbsme
     class ProviderGuard
     {
     private:
-        
+
         ProviderGuard& operator=(const ProviderGuard& pg) {
             return *this;
         };
 
     protected:
-        
+
         DataProvider* provider;
         long*         counter;
-        
+
     public:
-        
+
         ProviderGuard(DataProvider* provider=0) : provider(provider), counter(0) {
             if (!provider) return;
             MutexGuard guard(provider->usersCountLock);
-            counter = provider->getUserCounter(); 
+            counter = provider->getUserCounter();
             if (counter) (*counter)++;
         }
         ProviderGuard(const ProviderGuard& pg) : provider(pg.provider), counter(0) {
@@ -226,7 +226,7 @@ namespace smsc { namespace dbsme
             MutexGuard guard(provider->usersCountLock);
             (*counter)--; provider->usersCountEvent.Signal();
         }
-    
+
         inline DataProvider* get() {
             return provider;
         }
@@ -236,5 +236,3 @@ namespace smsc { namespace dbsme
 }}
 
 #endif
-
-

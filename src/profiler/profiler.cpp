@@ -473,16 +473,16 @@ int Profiler::Execute()
             __trace2__("Profiler: ussd op=%s(%d)",str,code);
             if(ussdCmdMap.Exist(code))
             {
-              string cmd=ussdCmdMap.Get(code);
-              if(cmd=="DIVERT TO")
+              string scmd=ussdCmdMap.Get(code);
+              if(scmd=="DIVERT TO")
               {
-                cmd+=' ';
+                scmd+=' ';
                 if(str[pos]=='*')
                 {
-                  cmd.append(str+pos+1);
+                  scmd.append(str+pos+1);
                 }
               }
-              strcpy(body,cmd.c_str());
+              strcpy(body,scmd.c_str());
               __trace2__("Profiler: command mapped to %s",body);
               i=0;
               len=strlen(body);
@@ -526,7 +526,7 @@ int Profiler::Execute()
           {
             string loc;
             loc.assign(body+j,i-j);
-            for(int i=0;i<loc.length();i++)loc.at(i)=tolower(loc.at(i));
+            for(int x=0;i<loc.length();x++)loc.at(x)=tolower(loc.at(x));
             __trace2__("Profiler: new locale %s",loc.c_str());
             if(ResourceManager::getInstance()->isValidLocale(loc))
             {
@@ -582,7 +582,7 @@ int Profiler::Execute()
             string div(body+i,body+j+1);
             __trace2__("divert address=%s",div.c_str());
             try{
-              Address addr(div.c_str());
+              Address addrCheck(div.c_str());
             }catch(...)
             {
               msg=msgInvalidParam;

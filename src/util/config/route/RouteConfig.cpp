@@ -220,8 +220,8 @@ RouteConfig::status RouteConfig::load(const char * const filename)
     for (unsigned i=0; i<subj_defs.getLength(); i++)
     {
       DOM_Node node(subj_defs.item(i));
-      DOM_Element &elem = (DOM_Element &)node;
-      Subject *s = createSubjectDef(elem);
+      DOM_Element &elem2 = (DOM_Element &)node;
+      Subject *s = createSubjectDef(elem2);
       if (subjects.Exists(s->getId()))
       {
         smsc_log_warn(logger, "Duplicate of subject \"%s\" definition. Second subject definition skipped", s->getId());
@@ -237,10 +237,10 @@ RouteConfig::status RouteConfig::load(const char * const filename)
     for (unsigned i=0; i<route_list.getLength(); i++)
     {
       DOM_Node node(route_list.item(i));
-      DOM_Element &elem = (DOM_Element &) node;
+      DOM_Element &elem2 = (DOM_Element &) node;
       try
       {
-        std::auto_ptr<Route> route(createRoute(elem, subjects));
+        std::auto_ptr<Route> route(createRoute(elem2, subjects));
         if (route->isActive())
           routes.push_back(route.release());
       }
@@ -300,11 +300,11 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       << "\" forwardTo=\""  << r->getForwardTo()
       << "\">" << std::endl;
 
-      Source s;
-      for (SourceHash::Iterator j = r->getSources().getIterator(); j.Next(key, s);)
+      Source src;
+      for (SourceHash::Iterator j = r->getSources().getIterator(); j.Next(key, src);)
       {
         out << "    <source>" << std::endl;
-        out << "      " << (s.isSubject() ? "<subject id=\"" : "<mask value=\"") << encode(s.getId()) << "\"/>" << std::endl;
+        out << "      " << (src.isSubject() ? "<subject id=\"" : "<mask value=\"") << encode(src.getId()) << "\"/>" << std::endl;
         out << "    </source>" << std::endl;
       }
 

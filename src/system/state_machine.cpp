@@ -1149,8 +1149,8 @@ StateType StateMachine::submit(Tuple& t)
       {
         uint16_t mr0;
         uint8_t idx0,num0;
-        bool havemoreudh;
-        smsc::util::findConcatInfo(newbody+ci->off[i],mr0,idx0,num0,havemoreudh);
+        bool havemoreudh0;
+        smsc::util::findConcatInfo(newbody+ci->off[i],mr0,idx0,num0,havemoreudh0);
         if(idx0==idx || num0!=num || mr0!=mr)
         {
           submitResp(t,sms,Status::INVOPTPARAMVAL);
@@ -1200,10 +1200,10 @@ StateType StateMachine::submit(Tuple& t)
         {
           uint16_t mr0;
           uint8_t idx0,num0;
-          bool havemoreudh;
-          smsc::util::findConcatInfo((unsigned char*)tmp.c_str()+ci->off[i],mr0,idx0,num0,havemoreudh);
+          bool havemoreudh0;
+          smsc::util::findConcatInfo((unsigned char*)tmp.c_str()+ci->off[i],mr0,idx0,num0,havemoreudh0);
           __trace2__("SUBMIT_SM: merge check order %d:%d",i,idx0);
-          totalMoreUdh=totalMoreUdh || havemoreudh;
+          totalMoreUdh=totalMoreUdh || havemoreudh0;
           order.push_back(idx0);
           rightOrder=rightOrder && idx0==i+1;
         }
@@ -1948,7 +1948,7 @@ StateType StateMachine::submit(Tuple& t)
     unsigned bodyLen=0;
     delivery->get_sms()->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&bodyLen);
     __trace2__("SUBMIT: delivery.sms.sm_length=%d",bodyLen);
-    int prio=ri.priority/1000;
+    prio=ri.priority/1000;
     if(prio<0)prio=0;
     if(prio>=32)prio=31;
     delivery->set_priority(prio);

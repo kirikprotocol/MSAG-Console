@@ -3,7 +3,7 @@
 #include <util/config/Manager.h>
 #include "CommandProcessor.h"
 
-namespace smsc { namespace dbsme 
+namespace smsc { namespace dbsme
 {
 
 using smsc::util::config::Manager;
@@ -27,16 +27,16 @@ void CommandProcessor::init(ConfigView* config)
 
     try { protocolId = config->getInt("ProtocolId"); }
     catch(ConfigException& exc) { protocolId = 0; };
-    
+
     try { svcType = config->getString("SvcType"); }
     catch(ConfigException& exc) { svcType = 0; };
-    
+
     std::auto_ptr<ConfigView> providersCfgGuard(config->getSubConfig("DataProviders"));
     ConfigView* providersConfig = providersCfgGuard.get();
     if (!providersConfig) throw ConfigException("DataProviders section missed !");
     std::auto_ptr< std::set<std::string> > setGuard(providersConfig->getShortSectionNames());
     std::set<std::string>* set = setGuard.get();
-    
+
     for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
     {
         const char* providerId = (const char *)i->c_str();
@@ -51,23 +51,23 @@ void CommandProcessor::init(ConfigView* config)
         {
             if (hasProvider(providerId))
                 throw ConfigException("DataProvider '%s' already registered.", providerId);
-            
+
             std::auto_ptr<char> addressGuard(providerConfig->getString("address"));
             const char* address = addressGuard.get();
-            
-            Address addr(address); 
+
+            Address addr(address);
             if (hasProvider(addr))
                 throw ConfigException("Failed to bind DataProvider '%s' to address: '%s'. "
-                                      "Address already in use !", 
+                                      "Address already in use !",
                                       providerId, (address) ? address:"");
-            
-            DataProvider* provider = new DataProvider(this, providerConfig, providerId, messages); 
-            if (!addProvider(providerId, addr, provider)) 
+
+            DataProvider* provider = new DataProvider(this, providerConfig, providerId, messages);
+            if (!addProvider(providerId, addr, provider))
                 throw ConfigException("Failed to bind DataProvider '%s' to address: '%s'. "
                                       "Address already used by internal job !",
                                       providerId, (address) ? address:"");
-            
-            smsc_log_info(log, "Loaded DataProvider '%s'. Primary bind address is: %s", 
+
+            smsc_log_info(log, "Loaded DataProvider '%s'. Primary bind address is: %s",
                      providerId, (address) ? address:"");
         }
         catch (ConfigException& exc)
@@ -86,7 +86,7 @@ CommandProcessor::~CommandProcessor()
 void CommandProcessor::clean()
 {
     MutexGuard guard(providersLock);
-    
+
     char* id = 0; DataProvider* provider = 0; allProviders.First();
     while (allProviders.Next(id, provider))
     {
@@ -96,7 +96,7 @@ void CommandProcessor::clean()
     }
     allProviders.Empty();
     idxProviders.Empty();
-    
+
     messages.clear();
     if (svcType) delete svcType; svcType=0;
 }
@@ -187,10 +187,10 @@ void DataProvider::createDataSource(ConfigView* config)
 {
     std::auto_ptr<ConfigView> dsCfgGuard(config->getSubConfig("DataSource"));
     ConfigView* dsConfig = dsCfgGuard.get();
-    
+
     std::auto_ptr<char> dsIdentityGuard(dsConfig->getString("type"));
     const char* dsIdentity = dsIdentityGuard.get();
-    try 
+    try
     {
         ds = DataSourceFactory::getDataSource(dsIdentity);
         if (ds) ds->init(dsConfig);
@@ -204,9 +204,9 @@ void DataProvider::createDataSource(ConfigView* config)
     }
 }
 
-DataProvider::DataProvider(CommandProcessor* root, ConfigView* config, 
+DataProvider::DataProvider(CommandProcessor* root, ConfigView* config,
                            const char* providerId, const MessageSet& mset)
-    throw(ConfigException) 
+    throw(ConfigException)
         : log(Logger::getInstance("smsc.dbsme.DataProvider")), messages(mset, config),
             id(providerId), bFinalizing(false), bEnabled(false), owner(root), ds(0)
 {
@@ -218,13 +218,13 @@ DataProvider::DataProvider(CommandProcessor* root, ConfigView* config,
     if (!jobsConfig) throw ConfigException("Jobs section missed !");
     std::auto_ptr< std::set<std::string> > setGuard(jobsConfig->getShortSectionNames());
     std::set<std::string>* set = setGuard.get();
-    
+
     for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
     {
         const char* jobId = (const char *)i->c_str();
         if (!jobId || jobId[0] == '\0')
             throw ConfigException("Job id empty or wasn't specified");
-        
+
         smsc_log_info(log, "Loading Job '%s' ...", jobId);
         std::auto_ptr<ConfigView> jobCfgGuard(jobsConfig->getSubConfig(jobId));
         ConfigView* jobConfig = jobCfgGuard.get();
@@ -236,18 +236,18 @@ DataProvider::DataProvider(CommandProcessor* root, ConfigView* config,
     usersCount[0] = 0; usersCount[1] = 0;
 }
 
-DataProvider::~DataProvider() 
+DataProvider::~DataProvider()
 {
     MutexGuard guard(jobsLock);
 
-    char* id = 0; Job* job = 0; allJobs.First();
-    while (allJobs.Next(id, job))
+    char* id2 = 0; Job* job = 0; allJobs.First();
+    while (allJobs.Next(id2, job))
     {
         if (!job) continue;
         job->finalize();
-        smsc_log_debug(log, "Job '%s' destructed.", id ? id:"");
+        smsc_log_debug(log, "Job '%s' destructed.", id2 ? id2:"");
     }
-    
+
     messages.clear();
     if (ds) delete ds;
 }
@@ -265,7 +265,7 @@ JobGuard DataProvider::getJob(const char* name)
     return JobGuard(jobsByName.Exists(name) ? jobsByName.Get(name):0);
 }
 
-void DataProvider::registerJob(Job* job, const char* id, const char* address, 
+void DataProvider::registerJob(Job* job, const char* id, const char* address,
                                const char* alias, const char* name)
     throw(ConfigException)
 {
@@ -282,7 +282,7 @@ void DataProvider::registerJob(Job* job, const char* id, const char* address,
     {
         Address addr(address); FullAddressValue fav;
         addr.toString(fav, MAX_FULL_ADDRESS_VALUE_LENGTH);
-        if (jobsByAddress.Exists(fav)) 
+        if (jobsByAddress.Exists(fav))
             throw ConfigException("Job registration failed! Job with address: "
                                   "'%s' already registered.", fav);
         if (!owner->addProviderIndex(addr, this))
@@ -293,7 +293,7 @@ void DataProvider::registerJob(Job* job, const char* id, const char* address,
     if (name)
     {
         std::auto_ptr<char> upname(strToUpperCase(name));
-        if (jobsByName.Exists(upname.get())) 
+        if (jobsByName.Exists(upname.get()))
             throw ConfigException("Job registration failed! Name/Alias: "
                                   "'%s' already in use.", name);
         jobsByName.Insert(upname.get(), job);
@@ -301,7 +301,7 @@ void DataProvider::registerJob(Job* job, const char* id, const char* address,
     if (alias)
     {
         std::auto_ptr<char> upalias(strToUpperCase(alias));
-        if (jobsByName.Exists(upalias.get())) 
+        if (jobsByName.Exists(upalias.get()))
             throw ConfigException("Job registration failed! Name/Alias: "
                                   "'%s' already in use.", alias);
         jobsByName.Insert(upalias.get(), job);
@@ -326,15 +326,15 @@ void DataProvider::createJob(const char* jobId, ConfigView* jobConfig)
     if(address && strlen(address) == 0 ) address = 0;
 
     Job* job = JobFactory::getJob(type);
-    if (!job) 
-        throw ConfigException("Job creation failed! Can't find JobFactory for type '%s'", 
+    if (!job)
+        throw ConfigException("Job creation failed! Can't find JobFactory for type '%s'",
                               (type) ? type:"");
-    try 
+    try
     {
         std::string queryId = this->id; queryId += '.'; queryId += jobId;
         job->init(jobConfig, queryId.c_str(), messages);
         registerJob(job, jobId, address, alias, name);
-    } 
+    }
     catch (...) {
         if (job) job->finalize();
         throw;
@@ -346,15 +346,15 @@ void DataProvider::removeJob(const char* jobId)
 
     MutexGuard guard(jobsLock);
 
-    Job* job = 0; 
+    Job* job = 0;
     if (!allJobs.Exists(jobId) || !(job = allJobs.Get(jobId)))
         throw Exception("Job '%s' not registered", jobId);
-    
+
     char* name = 0; Job* foundJob = 0; jobsByName.First();
     while (jobsByName.Next(name, foundJob)) {
         if (job == foundJob) jobsByName.Delete(name);
     }
-    
+
     char* address = 0; jobsByAddress.First();
     while (jobsByAddress.Next(address, foundJob)) {
         if (job == foundJob) {
@@ -362,7 +362,7 @@ void DataProvider::removeJob(const char* jobId)
             owner->delProviderIndex(address);
         }
     }
-    
+
     allJobs.Delete(jobId);
     job->finalize();
 
@@ -384,7 +384,7 @@ void DataProvider::process(Command& command)
                  destination.type, destination.plan, destination.value);
         throw CommandProcessException(message ? message:SERVICE_NOT_AVAIL);
     }
-    
+
     Job* job = 0; JobGuard jg = getJob(destination);
     if (!(job = jg.get()))
     {
@@ -395,11 +395,11 @@ void DataProvider::process(Command& command)
             const char* input = command.getInData();
             std::string str = "";
 
-            while (input && isspace(input[curPos])) curPos++; 
+            while (input && isspace(input[curPos])) curPos++;
             while (input && isalnum(input[curPos])) str += input[curPos++];
 
             name = str.c_str();
-            if (!name || name[0] == '\0') 
+            if (!name || name[0] == '\0')
             {
                 name = SMSC_DBSME_DEFAULT_JOB_NAME;
                 smsc_log_warn(log, "Job name/alias missed! Requesting address: '.%d.%d.%s'",
@@ -411,11 +411,11 @@ void DataProvider::process(Command& command)
             str = &input[curPos];
             command.setInData(str.c_str());
         }
-        
+
         std::auto_ptr<char> upNameGuard(strToUpperCase(name));
         char* upname = upNameGuard.get();
         jg = getJob(upname);
-        if (!upname || !(job = jg.get())) 
+        if (!upname || !(job = jg.get()))
         {
             const char* message = messages.get(JOB_NOT_FOUND);
             smsc_log_error(log, "%s Requesting address: '.%d.%d.%s', name/alias: '%s'",
@@ -428,7 +428,7 @@ void DataProvider::process(Command& command)
 
     struct timeval utime, curtime;
     if( log->isInfoEnabled() ) gettimeofday( &utime, 0 );
-    try 
+    try
     {
         job->process(command, *ds);
         if( log->isInfoEnabled() ) {
@@ -436,7 +436,7 @@ void DataProvider::process(Command& command)
             gettimeofday( &curtime, 0 );
             usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
             smsc_log_info(log,  "job %s processed in s=%ld us=%ld", job->getName(), curtime.tv_sec-utime.tv_sec, usecs );
-	    }
+      }
     }
     catch (CommandProcessException& exc)
     {
@@ -455,21 +455,21 @@ void CommandProcessor::addJob(std::string providerId, std::string jobId)
     const char* providerIdStr = providerId.c_str();
     ProviderGuard pg = getProvider(providerIdStr);
     DataProvider* provider = pg.get();
-    if (!provider) 
+    if (!provider)
         throw Exception("Provider '%s' not exists.", providerIdStr);
 
     const char* jobIdStr = jobId.c_str();
-    try 
+    try
     {
         Manager::reinit();
         char jobSection[1024];
         sprintf(jobSection, "DBSme.DataProviders.%s.Jobs.%s", providerIdStr, jobIdStr);
         ConfigView jobConfig(Manager::getInstance(), jobSection);
-        
+
         provider->createJob(jobIdStr, &jobConfig);
-    
+
     } catch (Exception& exc) {
-        smsc_log_error(log, "Failed to add job '%s.%s'. Details: %s", 
+        smsc_log_error(log, "Failed to add job '%s.%s'. Details: %s",
                   providerIdStr, jobIdStr, exc.what());
         throw;
     } catch (std::exception& exc) {
@@ -477,7 +477,7 @@ void CommandProcessor::addJob(std::string providerId, std::string jobId)
                   providerIdStr, jobIdStr, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
-        smsc_log_error(log, "Failed to add job '%s.%s'. Cause is unknown", 
+        smsc_log_error(log, "Failed to add job '%s.%s'. Cause is unknown",
                   providerIdStr, jobIdStr);
         throw Exception("Cause is unknown");
     }
@@ -487,14 +487,14 @@ void CommandProcessor::removeJob(std::string providerId, std::string jobId)
     const char* providerIdStr = providerId.c_str();
     ProviderGuard pg = getProvider(providerIdStr);
     DataProvider* provider = pg.get();
-    if (!provider) 
+    if (!provider)
         throw Exception("Provider '%s' not exists.", providerIdStr);
 
     const char* jobIdStr = jobId.c_str();
-    try 
+    try
     {
         provider->removeJob(jobIdStr);
-    
+
     } catch (Exception& exc) {
         smsc_log_error(log, "Failed to remove job '%s.%s'. Details: %s",
                   providerIdStr, jobIdStr, exc.what());
@@ -514,21 +514,21 @@ void CommandProcessor::changeJob(std::string providerId, std::string jobId)
     const char* providerIdStr = providerId.c_str();
     ProviderGuard pg = getProvider(providerIdStr);
     DataProvider* provider = pg.get();
-    if (!provider) 
+    if (!provider)
         throw Exception("Provider '%s' not exists.", providerIdStr);
 
     const char* jobIdStr = jobId.c_str();
-    try 
+    try
     {
         provider->removeJob(jobIdStr);
-        
+
         Manager::reinit();
         char jobSection[1024];
         sprintf(jobSection, "DBSme.DataProviders.%s.Jobs.%s", providerIdStr, jobIdStr);
         ConfigView jobConfig(Manager::getInstance(), jobSection);
-        
+
         provider->createJob(jobIdStr, &jobConfig);
-    
+
     } catch (Exception& exc) {
         smsc_log_error(log, "Failed to change job '%s.%s'. Details: %s",
                   providerIdStr, jobIdStr, exc.what());
@@ -547,18 +547,16 @@ void CommandProcessor::setProviderEnabled(std::string providerId, bool enabled)
 {
     const char* providerIdStr = providerId.c_str();
     DataProvider* provider = 0;
-    
+
     {
         ProviderGuard pg = getProvider(providerIdStr);
         provider = pg.get();
-        
-        if (!provider) 
+
+        if (!provider)
             throw Exception("Provider '%s' not exists.", providerIdStr);
     }
-    
+
     provider->setEnabled(enabled);
 }
 
 }}
-
-

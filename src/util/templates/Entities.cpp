@@ -17,8 +17,8 @@ const char* FormatEntity::getOption(const char* name)
 {
     if (options.Exists(name))
     {
-        std::string str = options.Get(name);
-        return str.c_str();
+        //std::string str = options.Get(name);
+        return options.Get(name).c_str();
     }
     return 0;
 }
@@ -102,13 +102,13 @@ void FormatEntity::renderOptions(const char* line)
 }
 
 // io == false --> parser, io == true --> formatter
-FormatEntity::FormatEntity(std::string line, bool io, bool type)
+FormatEntity::FormatEntity(std::string line, bool io, bool _type)
     throw(FormatRenderingException)
 {
     str = "";
     char* raw = (char *)line.c_str();
 
-    if (type)
+    if (_type)
     {
         while (isspace(*raw)) raw++;
 

@@ -2,10 +2,10 @@
 #define SMSC_DBSME_COMMAND
 
 /**
- * 
+ *
  * @author Victor V. Makarov
  * @version 1.0
- * @see 
+ * @see
  */
 
 #include <stdio.h>
@@ -15,10 +15,10 @@
 #include <util/debug.h>
 #include <sms/sms.h>
 
-namespace smsc { namespace dbsme 
+namespace smsc { namespace dbsme
 {
     using smsc::sms::Address;
-    
+
     class Command
     {
     protected:
@@ -30,9 +30,9 @@ namespace smsc { namespace dbsme
         char*   inData;
         char*   outData;
 
-        inline void setString(char*& str, const char* name) 
+        inline void setString(char*& str, const char* name)
         {
-            if (str) 
+            if (str)
             {
                 delete str;
                 str = 0;
@@ -47,31 +47,31 @@ namespace smsc { namespace dbsme
     public:
 
         Command() : jobName(0), inData(0), outData(0) {};
-        virtual ~Command() 
+        virtual ~Command()
         {
             if (jobName) delete jobName;
             if (inData) delete inData;
             if (outData) delete outData;
         };
 
-        inline void setFromAddress(const Address& from) {
-            this->from = from;
+        inline void setFromAddress(const Address& _from) {
+            from = _from;
         };
         inline const Address& getFromAddress() const {
-            return from; 
+            return from;
         };
         inline Address& getFromAddress() {
-            return from; 
+            return from;
         };
-        
-        inline void setToAddress(const Address& to) {
-            this->to = to;
+
+        inline void setToAddress(const Address& _to) {
+            to = _to;
         };
         inline const Address& getToAddress() const {
-            return to; 
+            return to;
         };
         inline Address& getToAddress() {
-            return to; 
+            return to;
         };
 
         inline void setJobName(const char* name) {
@@ -80,14 +80,14 @@ namespace smsc { namespace dbsme
         inline const char* getJobName() const {
             return jobName;
         };
-        
+
         inline void setInData(const char* data) {
             setString(inData, data);
         };
         inline const char* getInData() const {
             return inData;
         };
-        
+
         inline void setOutData(const char* data) {
             setString(outData, data);
         };

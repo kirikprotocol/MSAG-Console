@@ -32,6 +32,7 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
   {
     try{
       __trace2__("unregistering smeId=%s",proxy->getSystemId());
+      smsc_log_debug(smsc::logger::Logger::getInstance("sms.snmp.alarm"),"unregister sme:%s",proxy->getSystemId());
       smeManager->unregisterSmeProxy(proxy->getSystemId());
     }catch(...)
     {
@@ -462,25 +463,30 @@ int SmppInputThread::Execute()
 
               if(!err)
               {
+                smsc::logger::Logger* snmpLog=smsc::logger::Logger::getInstance("sms.snmp.alarm");
                 try{
                   if(!rebindproxy)
                   {
                     __trace2__("try to register sme:%s",sid.c_str());
+                    smsc_log_debug(snmpLog,"register sme:%s",sid.c_str());
                     smeManager->registerSmeProxy(
                       bindpdu->get_systemId()?bindpdu->get_systemId():"",
                       bindpdu->get_password()?bindpdu->get_password():"",
                       proxy);
+                    smsc_log_debug(snmpLog,"register sme:%s successful",sid.c_str());
                     proxy->setId(sid,proxyIndex);
                     proxy->putIncomingCommand(SmscCommand::makeSMEAlert(proxyIndex));
                     __trace2__("NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
                   }else
                   {
+                    smsc_log_debug(snmpLog,"register second channel of sme:%s",sid.c_str());
                     proxy->AddRef();
                   }
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_ROK);
                 }catch(SmeRegisterException& e)
                 {
+                  smsc_log_debug(snmpLog,"registration of sme:%s failed",sid.c_str());
                   int errcode=SmppStatusSet::ESME_RBINDFAIL;
                   switch(e.getReason())
                   {

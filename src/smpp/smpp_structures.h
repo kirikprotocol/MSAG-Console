@@ -507,22 +507,22 @@ struct SmppOptional //: public MemoryManagerUnit
   uint64_t field_present;
 #define _o_int_property__(type,field) \
   type field;\
-  inline bool has_##field(){ return field_present & SmppOptionalFields::field; } \
+  inline bool has_##field(){ return (field_present & SmppOptionalFields::field)!=0; } \
   inline void set_##field(type value) {field_present |= SmppOptionalFields::field; field = value; } \
   inline type get_##field() { __ret0_if_fail__(has_##field()); return field; }
 #define _o_intarr_property__(type,field,size)\
   type field[size];\
-  inline bool has_##field(){ return field_present & SmppOptionalFields::field; } \
+  inline bool has_##field(){ return (field_present & SmppOptionalFields::field)!=0; } \
   inline void set_##field(type* value) { __require__(value!=NULL); field_present |= SmppOptionalFields::field; memcpy(field,value,size); } \
   inline const type* get_##field() { __ret0_if_fail__(has_##field()); return field; }
 #define _o_cstr_property__(field)\
   COStr field;\
-  inline bool has_##field(){ return (field_present & SmppOptionalFields::field) && (field.cstr() != 0 ); } \
+  inline bool has_##field(){ return (field_present & SmppOptionalFields::field)!=0 && (field.cstr() != 0 ); } \
   inline void set_##field(const char* value) { __require__(value!=NULL); field_present |= SmppOptionalFields::field; field.copy(value); } \
   inline const char* get_##field() { __ret0_if_fail__(has_##field()); return field.cstr(); }
 #define _o_ostr_property__(field)\
   OStr field;\
-  inline bool has_##field(){ return (field_present & SmppOptionalFields::field) && (field.cstr()!=0); } \
+  inline bool has_##field(){ return (field_present & SmppOptionalFields::field)!=0 && (field.cstr()!=0); } \
   inline void set_##field(const char* value,int len) { __require__(value!=NULL); field_present |= SmppOptionalFields::field; field.copy(value,len); } \
   inline const char* get_##field() { __ret0_if_fail__(has_##field()); return field.cstr(); } \
   inline int size_##field() { __ret0_if_fail__(has_##field()); return field.size(); }

@@ -64,7 +64,7 @@ void OCIConnection::connect()
 
             // open connection to DB and begin user session
             {
-                MutexGuard  guard(doConnectLock);
+                MutexGuard  guard2(doConnectLock);
 
                 check(OCIEnvCreate(&envhp, OCI_OBJECT|OCI_ENV_NO_MUTEX,
                                    (dvoid *)0, 0, 0, 0, (size_t) 0, (dvoid **)0));
@@ -112,7 +112,7 @@ void OCIConnection::disconnect()
     {
         Connection::disconnect();
 
-        MutexGuard  guard(doConnectLock);
+        MutexGuard  guard2(doConnectLock);
         if (errhp && svchp) {
         // logoff from database server
             (void) OCILogoff(svchp, errhp);
@@ -1052,7 +1052,7 @@ OCIRoutine::OCIRoutine(OCIConnection* connection,
         cleanupDescriptors();
         throw;
     }
-    
+
     if (dschp) check(OCIHandleFree((dvoid *) dschp, (ub4) OCI_HTYPE_DESCRIBE));
 }
 

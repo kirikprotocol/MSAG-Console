@@ -31,7 +31,7 @@ using namespace std;
 
 #define __synchronized__
 inline
-void print(const APattern& pattern,char* text)
+void print(const APattern& pattern,const char* text)
 {
   __trace2__("#### %s = PATTERN {%s(len:%d/def:%d), npi: %d, ton: %d, num_n_plan: %d}",
               text,
