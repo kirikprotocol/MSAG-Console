@@ -160,4 +160,5 @@ public abstract class TasksListBean extends InfoSmeBean
   {
     return checkedSet;
   }
+
 }

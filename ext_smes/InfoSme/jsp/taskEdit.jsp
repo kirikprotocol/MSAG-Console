@@ -37,106 +37,214 @@
 <col width="10%">
 <tr class=row<%=rowN++&1%>>
   <th>Task ID</th>
-  <td><input class=txt name=id value="<%=StringEncoderDecoder.encode(bean.getId())%>"></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=txt name=id value="<%=StringEncoderDecoder.encode(bean.getId())%>"><%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getId())%><%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Task name</th>
-  <td><input class=txt name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>"></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=txt name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>"><%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getName())%><%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Provider</th>
-  <td><select name=provider><%
-    for (Iterator i = bean.getAllProviders().iterator(); i.hasNext();) {
-      String providerName = (String) i.next();
-      String providerNameEnc = StringEncoderDecoder.encode(providerName);
-      %><option value="<%=providerNameEnc%>"<%=providerName.equals(bean.getProvider()) ? " selected" : ""%>><%=providerNameEnc%></option><%
-    }
-  %></select></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><select name=provider><%
+      for (Iterator i = bean.getAllProviders().iterator(); i.hasNext();) {
+        String providerName = (String) i.next();
+        String providerNameEnc = StringEncoderDecoder.encode(providerName);
+        %><option value="<%=providerNameEnc%>"<%=providerName.equals(bean.getProvider()) ? " selected" : ""%>><%=providerNameEnc%></option><%
+      }
+    %></select><%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getProvider())%><%
+  }%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><label for=enabled>Enabled</label></th>
-  <td><input class=check type=checkbox id=enabled name=enabled value=true <%=bean.isEnabled() ? "checked" : ""%>></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=check type=checkbox id=enabled name=enabled value=true <%=bean.isEnabled() ? "checked" : ""%>><%
+  } else {
+    %><%=bean.isEnabled()%><%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><label for=transactionMode>transaction mode</label></th>
-  <td><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=bean.isTransactionMode() ? "checked" : ""%>></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=bean.isTransactionMode() ? "checked" : ""%>><%
+  } else {
+    %><%=bean.isTransactionMode() ? "enabled" : "disabled"%><%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Priority</th>
-  <td><input class=txt name=priority value="<%=StringEncoderDecoder.encode(bean.getPriority())%>" validation="int_range" range_min="1" range_max="100" onkeyup="resetValidation(this)"></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=txt name=priority value="<%=StringEncoderDecoder.encode(bean.getPriority())%>" validation="int_range" range_min="1" range_max="100" onkeyup="resetValidation(this)"><%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getPriority())%><%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Active period</th>
-  <td>
-    <input class=timeField id=activePeriodStart name=activePeriodStart value="<%=StringEncoderDecoder.encode(bean.getActivePeriodStart())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodStart, false, true);">...</button>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=timeField id=activePeriodStart name=activePeriodStart value="<%=StringEncoderDecoder.encode(bean.getActivePeriodStart())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodStart, false, true);">...</button>
     to
-    <input class=timeField id=activePeriodEnd name=activePeriodEnd value="<%=StringEncoderDecoder.encode(bean.getActivePeriodEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button>
+    <input class=timeField id=activePeriodEnd name=activePeriodEnd value="<%=StringEncoderDecoder.encode(bean.getActivePeriodEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button><%
+  } else {
+    if (bean.getActivePeriodStart() != null && bean.getActivePeriodStart().trim().length() > 0) {
+      %>from <%=StringEncoderDecoder.encode(bean.getActivePeriodStart())%> <%
+    } else if (bean.getActivePeriodEnd() != null && bean.getActivePeriodEnd().trim().length() > 0) {
+      %>to <%=StringEncoderDecoder.encode(bean.getActivePeriodEnd())%><%
+    } else {
+      %>not specified<%
+    }
+  }%>
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Validity period or date</th>
-  <td>
-    <input class=timeField id=validityPeriod name=validityPeriod value="<%=StringEncoderDecoder.encode(bean.getValidityPeriod())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(validityPeriod, false, true);">...</button>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=timeField id=validityPeriod name=validityPeriod value="<%=StringEncoderDecoder.encode(bean.getValidityPeriod())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(validityPeriod, false, true);">...</button>
     or
-    <input class=calendarField id=validityDate name=validityDate value="<%=StringEncoderDecoder.encode(bean.getValidityDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(validityDate, false, true);">...</button>
+    <input class=calendarField id=validityDate name=validityDate value="<%=StringEncoderDecoder.encode(bean.getValidityDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(validityDate, false, true);">...</button><%
+  } else {
+    if (bean.getValidityPeriod() != null && bean.getValidityPeriod().trim().length() > 0) {
+      %><%=StringEncoderDecoder.encode(bean.getValidityPeriod())%><%
+    } else if (bean.getValidityDate() != null && bean.getValidityDate().trim().length() > 0) {
+      %><%=StringEncoderDecoder.encode(bean.getValidityDate())%><%
+    } else {
+      %>not specified<%
+    }
+  }%>
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>End date</th>
-  <td nowrap><input class=calendarField id=endDate name=endDate value="<%=StringEncoderDecoder.encode(bean.getEndDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(endDate, false, true);">...</button></td>
+  <td nowrap><%if (bean.isSmeRunning()) {
+    %><input class=calendarField id=endDate name=endDate value="<%=StringEncoderDecoder.encode(bean.getEndDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(endDate, false, true);">...</button><%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getEndDate())%><%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Query</th>
-  <td><textarea name=query><%=StringEncoderDecoder.encode(bean.getQuery())%></textarea></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><textarea name=query><%=StringEncoderDecoder.encode(bean.getQuery())%></textarea><%
+  } else {
+    %><pre><%=StringEncoderDecoder.encode(bean.getQuery())%></pre><%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Template</th>
-  <td><textarea name=template><%=StringEncoderDecoder.encode(bean.getTemplate())%></textarea></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><textarea name=template><%=StringEncoderDecoder.encode(bean.getTemplate())%></textarea><%
+  } else {
+    %><pre><%=StringEncoderDecoder.encode(bean.getTemplate())%></pre><%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><label for=retryOnFail>Retry on fail (time)</label></th>
-  <td>
+  <td><%if (bean.isSmeRunning()) {%>
     <input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="opForm.all.retryTime.disabled = !this.checked;">
     <input class=txt name=retryTime id=retryTime value="<%=StringEncoderDecoder.encode(bean.getRetryTime())%>">
-    <script>opForm.all.retryTime.disabled = !opForm.all.retryOnFail.checked;</script>
+    <script>opForm.all.retryTime.disabled = !opForm.all.retryOnFail.checked;</script><%
+  } else {
+    if (bean.isRetryOnFail() && bean.getRetryTime() != null && bean.getRetryTime().trim().length() > 0) {
+      %>enabled, retry on <%=StringEncoderDecoder.encode(bean.getRetryTime())%> secs<%
+    } else {
+      %>disabled<%
+    }
+  }%>
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><label for=replaceMessage>Replace message (service type)</label></th>
-  <td>
+  <td><%if (bean.isSmeRunning()) {%>
     <input class=check type=checkbox id=replaceMessage name=replaceMessage value=true <%=bean.isReplaceMessage() ? "checked" : ""%> onClick="opForm.all.svcType.disabled = !this.checked;">
     <input class=txt id=svcType name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>">
-    <script>opForm.all.svcType.disabled = !opForm.all.replaceMessage.checked;</script>
+    <script>opForm.all.svcType.disabled = !opForm.all.replaceMessage.checked;</script><%
+  } else {
+    if (bean.isReplaceMessage() && bean.getSvcType() != null && bean.getSvcType().trim().length() > 0) {
+      %>enabled, "<%=StringEncoderDecoder.encode(bean.getSvcType())%>"<%
+    } else {
+      %>disabled<%
+    }
+  }%>
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><label for=trackIntegrity>track integrity</label></th>
-  <td><input class=check type=checkbox id=trackIntegrity name=trackIntegrity value=true <%=bean.isTrackIntegrity() ? "checked" : ""%>></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=check type=checkbox id=trackIntegrity name=trackIntegrity value=true <%=bean.isTrackIntegrity() ? "checked" : ""%>><%
+  } else {
+    %><%=bean.isTrackIntegrity() ? "enabled" : "disabled"%><%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>system data source timeout</th>
-  <td><input class=txt name=dsOwnTimeout value="<%=StringEncoderDecoder.encode(bean.getDsTimeout())%>">secs</td>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=txt name=dsOwnTimeout value="<%=StringEncoderDecoder.encode(bean.getDsTimeout())%>">secs<%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getDsTimeout())%> secs<%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>messages cache size </th>
-  <td><input class=txt name=messagesCacheSize value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSize())%>"></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=txt name=messagesCacheSize value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSize())%>"><%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getMessagesCacheSize())%><%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>messages cache sleep</th>
-  <td><input class=txt name=messagesCacheSleep value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSleep())%>">secs</td>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=txt name=messagesCacheSleep value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSleep())%>">secs<%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getMessagesCacheSleep())%> secs<%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>uncommited in generation</th>
-  <td><input class=txt name=uncommitedInGeneration value="<%=StringEncoderDecoder.encode(bean.getUncommitedInGeneration())%>"></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=txt name=uncommitedInGeneration value="<%=StringEncoderDecoder.encode(bean.getUncommitedInGeneration())%>"><%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getUncommitedInGeneration())%><%
+  }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>uncommited in process</th>
-  <td><input class=txt name=uncommitedInProcess value="<%=StringEncoderDecoder.encode(bean.getUncommitedInProcess())%>"></td>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=txt name=uncommitedInProcess value="<%=StringEncoderDecoder.encode(bean.getUncommitedInProcess())%>"><%
+  } else {
+    %><%=StringEncoderDecoder.encode(bean.getUncommitedInProcess())%><%
+  }%>
+  </td>
 </tr>
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",  "Done",  "Done editing");
+if (bean.isSmeRunning()) {
+  page_menu_button(out, "mbDone",  "Done",  "Done editing");
+}
 page_menu_button(out, "mbCancel", "Cancel", "Cancel changes", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);

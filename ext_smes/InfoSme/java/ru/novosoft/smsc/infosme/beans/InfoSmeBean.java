@@ -1,9 +1,11 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
+import ru.novosoft.smsc.infosme.backend.InfoSme;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 
 import java.security.Principal;
 import java.util.*;
@@ -30,6 +32,8 @@ public class InfoSmeBean extends PageBean
 
   private Config config = null;
   private InfoSmeContext infoSmeContext = null;
+  private InfoSme infoSme = null;
+  private boolean smeRunning = false;
 
   protected int init(List errors)
   {
@@ -39,6 +43,8 @@ public class InfoSmeBean extends PageBean
 
     try {
       infoSmeContext = InfoSmeContext.getInstance(appContext);
+      infoSme = infoSmeContext.getInfoSme();
+      smeRunning = infoSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING;
       config = infoSmeContext.getConfig();
     } catch (Throwable e) {
       logger.debug("Couldn't get InfoSME config", e);
@@ -92,5 +98,15 @@ public class InfoSmeBean extends PageBean
   public InfoSmeContext getInfoSmeContext()
   {
     return infoSmeContext;
+  }
+
+  public InfoSme getInfoSme()
+  {
+    return infoSme;
+  }
+
+  public boolean isSmeRunning()
+  {
+    return smeRunning;
   }
 }

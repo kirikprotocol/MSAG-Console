@@ -241,9 +241,4 @@ public abstract class IndexProperties extends TasksListBean
   {
     this.mbStopTask = mbStopTask;
   }
-
-  protected InfoSme getInfoSme()
-  {
-    return infoSme;
-  }
 }

@@ -38,19 +38,23 @@
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=edit>
 <input type=hidden name=sort>
-<OBJECT id="tdcTasksStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
-	<PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_InfoSme/taskStatuses.jsp">
-	<PARAM NAME="UseHeader" VALUE="True">
-	<PARAM NAME="TextQualifier" VALUE='"'>
-</OBJECT><script>
-function refreshTaskStatuses()
-{
-	document.all.tdcTasksStatuses.DataURL = document.all.tdcTasksStatuses.DataURL;
-	document.all.tdcTasksStatuses.reset();
-	window.setTimeout(refreshTaskStatuses, 1000);
-}
-refreshTaskStatuses();
-
+<%if (bean.isSmeRunning()) {%>
+  <OBJECT id="tdcTasksStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+    <PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_InfoSme/taskStatuses.jsp">
+    <PARAM NAME="UseHeader" VALUE="True">
+    <PARAM NAME="TextQualifier" VALUE='"'>
+  </OBJECT>
+  <script>
+    function refreshTaskStatuses()
+    {
+      document.all.tdcTasksStatuses.DataURL = document.all.tdcTasksStatuses.DataURL;
+      document.all.tdcTasksStatuses.reset();
+      window.setTimeout(refreshTaskStatuses, 1000);
+    }
+    refreshTaskStatuses();
+  </script>
+<%}%>
+<script>
 function setSort(sorting)
 {
 	if (sorting == "<%=bean.getSort()%>")
@@ -116,7 +120,7 @@ function setSort(sorting)
       String svcTypeEnc = StringEncoderDecoder.encode(svcType);
 
       %><tr class=row<%=rowN++&1%>>
-        <td><input class=check type=checkbox name=checked value="<%=idEnc%>" <%=bean.isTaskChecked(id) ? "checked" : ""%> onclick="checkCheckboxesForMbDeleteButton();"></td>
+        <td><%if (bean.isSmeRunning()) {%><input class=check type=checkbox name=checked value="<%=idEnc%>" <%=bean.isTaskChecked(id) ? "checked" : ""%> onclick="checkCheckboxesForMbDeleteButton();"><%}else{%>&nbsp;<%}%></td>
         <td><a href="#" title="Edit task" onClick='return editSomething("<%=idEnc%>");'><%=nameEnc%></a></td>
         <td nowrap><%=providerEnc%></td>
         <td><%if (enabled       ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
@@ -133,13 +137,15 @@ function setSort(sorting)
   }%>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",    "Add",    "Add new task");
-page_menu_button(out, "mbDelete", "Delete", "Delete checked task(s)", "return confirm('Are you sure to delete all checked task(s)?');");
+if (bean.isSmeRunning()) {
+  page_menu_button(out, "mbAdd",    "Add",    "Add new task");
+  page_menu_button(out, "mbDelete", "Delete", "Delete checked task(s)", "return confirm('Are you sure to delete all checked task(s)?');");
+}
 page_menu_space(out);
 page_menu_end(out);
 %>
 <script>
-checkCheckboxesForMbDeleteButton();
+<%if (bean.isSmeRunning()) {%>checkCheckboxesForMbDeleteButton();<%}%>
 </script>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
