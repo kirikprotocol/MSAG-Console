@@ -102,6 +102,7 @@ refreshStartStopButtonsStatus();
       param(out, "BusyMT delay", "map.busyMTDelay", bean.getIntParam("map.busyMTDelay"));
       param(out, "Locked by MO delay", "map.lockedByMODelay", bean.getIntParam("map.lockedByMODelay"));
       param(out, "MO lock timeout", "map.MOLockTimeout", bean.getIntParam("map.MOLockTimeout"));
+      param(out, "Allow call barred", "map.allowCallBarred", bean.getBoolParam("map.allowCallBarred"));
     finishParams(out);
   finishSection(out);
 
