@@ -365,7 +365,7 @@ void Archiver::billing(bool check)
         billingLookIdStmt->check(billingLookIdStmt->execute());
     }
     
-    if (idCounter == 0)
+    if (sms.billingRecord && idCounter == 0)
     {
         billingPutIdStmt->check(billingPutIdStmt->execute());
         // TO DO : Isert more code here ! Actual conversion to SMS_BR
