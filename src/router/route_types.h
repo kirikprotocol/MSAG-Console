@@ -17,6 +17,8 @@ typedef int RoutePriority;
 static const RoutePriority RoutePriorityMax = 32000;
 static const RoutePriority RoutePriorityMin = 0;
 
+typedef enum {ReplyPathPass, ReplyPathForce, ReplyPathSuppress} ReplyPath;
+
 typedef std::string RouteId;
 
 struct TrafficRules{
@@ -149,7 +151,7 @@ struct RouteInfo
   bool enabling;
   bool suppressDeliveryReports;
   bool hide;
-  bool forceReplyPath;
+  ReplyPath replyPath;
   bool forceDelivery;
   int serviceId;
   smsc::acls::AclIdent aclId;

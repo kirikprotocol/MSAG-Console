@@ -6,6 +6,7 @@
 #include <core/buffers/Hash.hpp>
 #include <sms/sms_const.h>
 #include <acls/interfaces.h>
+#include "router/route_types.h"
 
 namespace smsc {
 namespace util {
@@ -115,7 +116,7 @@ private:
   bool suppressDeliveryReports;
   bool active;
   bool hide;
-  bool forceReplyPath;
+  smsc::router::ReplyPath replyPath;
   int serviceId;
   std::string srcSmeSystemId;
   const uint8_t deliveryMode;
@@ -129,17 +130,17 @@ private:
 
 public:
   Route()
-    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true),suppressDeliveryReports(false), hide(true), forceReplyPath(false), serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE), forwardTo(), aclId(-1), forceDelivery(false)
+    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true),suppressDeliveryReports(false), hide(true), replyPath(smsc::router::ReplyPathPass), serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE), forwardTo(), aclId(-1), forceDelivery(false)
   {}
   Route(const Route &r)
     : id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),
     billing(r.billing), archiving(r.archiving), enabling(r.enabling),suppressDeliveryReports(r.suppressDeliveryReports), serviceId(r.serviceId),
-    active(r.active),hide(r.hide),forceReplyPath(r.forceReplyPath),
+    active(r.active),hide(r.hide),replyPath(r.replyPath),
     srcSmeSystemId(r.srcSmeSystemId), deliveryMode(r.deliveryMode), forwardTo(r.forwardTo),trafrules(r.trafrules), aclId(r.aclId), forceDelivery(r.forceDelivery)
   {}
-  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR, bool isActive,bool isHide,bool isForceRP, int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode, const std::string & _forwardTo,const std::string& _trafrules, const AclIdent aclId, const bool forceDelivery)
+  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR, bool isActive,bool isHide,smsc::router::ReplyPath replyPath, int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode, const std::string & _forwardTo,const std::string& _trafrules, const AclIdent aclId, const bool forceDelivery)
     : id(rid), priority(prior), sources(), destinations(),
-    billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR), active(isActive), hide(isHide),forceReplyPath(isForceRP),serviceId(_serviceId),
+    billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR), active(isActive), hide(isHide),replyPath(replyPath),serviceId(_serviceId),
     srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo),trafrules(_trafrules), aclId(aclId), forceDelivery(forceDelivery)
   {}
 
@@ -157,7 +158,7 @@ public:
   const bool isSuppressDeliveryReports(){return suppressDeliveryReports;}
   const bool isActive(){return active;}
   const bool isHide()const{return hide;}
-  const bool isForceReplyPath() const{return forceReplyPath;}
+  const smsc::router::ReplyPath getReplyPath() const{return replyPath;}
   const char * const getId() const {return id.c_str();}
   int getPriority() {return priority;}
   const std::string & getIdString() const {return id;}

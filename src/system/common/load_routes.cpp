@@ -98,7 +98,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               rinfo.priority=route->getPriority();
               rinfo.suppressDeliveryReports=route->isSuppressDeliveryReports();
               rinfo.hide=route->isHide();
-              rinfo.forceReplyPath=route->isForceReplyPath();
+              rinfo.replyPath=route->getReplyPath();
               rinfo.deliveryMode = route->getDeliveryMode();
               rinfo.forwardTo = route->getForwardTo();
               rinfo.trafRules=TrafficRules(route->getTrafRules());

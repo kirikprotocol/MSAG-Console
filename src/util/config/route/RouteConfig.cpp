@@ -156,6 +156,25 @@ const char * const deliveryModeToStr(const uint8_t deliveryMode)
   }
 }
 
+const Route::ReplyPath strToReplyPath(const char * const replyPathStr)
+{
+  if (::stricmp("pass", replyPathStr) == 0)     return smsc::util::config::route::Route::REPLY_PATH_PASS;
+  if (::stricmp("force", replyPathStr) == 0)    return smsc::util::config::route::Route::REPLY_PATH_FORCE;
+  if (::stricmp("SUPPRESS", replyPathStr) == 0) return smsc::util::config::route::Route::REPLY_PATH_SUPPRESS;
+  return smsc::util::config::route::Route::REPLY_PATH_PASS;
+}
+
+const char * const replyPathToStr(const Route::ReplyPath replyPath)
+{
+  switch(replyPath)
+  {
+    case smsc::util::config::route::Route::REPLY_PATH_PASS:     return "pass";
+    case smsc::util::config::route::Route::REPLY_PATH_FORCE:    return "force";
+    case smsc::util::config::route::Route::REPLY_PATH_SUPPRESS: return "suppress";
+    default:                                                    return "pass";
+  }
+}
+
 Route * RouteConfig::createRoute(const DOMElement &elem, const SubjectPHash &subjects)
 throw (SubjectNotFoundException)
 {
@@ -166,7 +185,7 @@ throw (SubjectNotFoundException)
   XmlStr suppressDeliveryReports(elem.getAttribute(XmlStr("suppressDeliveryReports")));
   XmlStr active(elem.getAttribute(XmlStr("active")));
   XmlStr hide(elem.getAttribute(XmlStr("hide")));
-  XmlStr forceRP(elem.getAttribute(XmlStr("forceReplyPath")));
+  XmlStr forceRP(elem.getAttribute(XmlStr("replyPath")));
   //XmlStr priorityStr(elem.getAttribute(XmlStr("priority")));
   //XmlStr serviceIdStr(elem.getAttribute(XmlStr("serviceId")));
   unsigned int priority = atoi(XmlStr(elem.getAttribute(XmlStr("priority"))));
@@ -186,7 +205,7 @@ throw (SubjectNotFoundException)
                                    strcmp("true", suppressDeliveryReports) == 0,
                                    strcmp("true", active) == 0,
                                    strcmp("false", hide) != 0,
-                                   strcmp("true", forceRP) == 0,
+                                   strToReplyPath(forceRP),
                                    serviceId,
                                    std::string(srcSmeSystemId),
                                    strToDeliveryMode(deliveryModeStr),
@@ -308,6 +327,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       << "\" forwardTo=\""     << r->getForwardTo()
       << "\" aclId=\""         << r->getAclId()
       << "\" forceDelivery=\"" << (r->isForceDelivery() ? "true" : "false")
+      << "\" replyPath=\""    << replyPathToStr(r->getReplyPath())
       << "\">" << std::endl;
 
       Source src;
