@@ -357,17 +357,23 @@ int Profiler::Execute()
       while(isspace(body[i]))i++;
       int j=i;
       while(body[i] && !isspace(body[i]))i++;
-      string loc;
-      loc.assign(body+j,i-j);
-      for(int i=0;i<loc.length();i++)loc.at(i)=tolower(loc.at(i));
-      __trace2__("Profiler: new locale %s",loc.c_str());
-      if(ResourceManager::getInstance()->isValidLocale(loc))
+      if(i==j)
       {
-        internal_update(_update_locale,addr,0,loc.c_str());
-        msg=4;
+        msg=-1;
       }else
       {
-        msg=5;
+        string loc;
+        loc.assign(body+j,i-j);
+        for(int i=0;i<loc.length();i++)loc.at(i)=tolower(loc.at(i));
+        __trace2__("Profiler: new locale %s",loc.c_str());
+        if(ResourceManager::getInstance()->isValidLocale(loc))
+        {
+          internal_update(_update_locale,addr,0,loc.c_str());
+          msg=4;
+        }else
+        {
+          msg=5;
+        }
       }
     }else
     if(!strncmp(body+i,"DEFAULT",7))
