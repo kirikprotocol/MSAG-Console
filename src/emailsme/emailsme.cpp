@@ -700,20 +700,20 @@ struct XBuffer{
   int freeSpace(){return size-offset;}
 };
 
-static void disp(int sig)
+extern "C"  void disp(int sig)
 {
 }
 
-static void ctrlc(int sig)
+extern "C"  void ctrlc(int sig)
 {
   cfg::stopSme=1;
   thr_kill(cfg::mainId,16);
 }
 
 
-void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
-    smsc::util::xml::TerminateXerces();
+  smsc::util::xml::TerminateXerces();
 	smsc::logger::Logger::Shutdown();
 }
 

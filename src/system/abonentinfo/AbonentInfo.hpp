@@ -119,9 +119,9 @@ public:
     return inQueue.Count()!=0;
   }
 
-  void attachMonitor(ProxyMonitor* mon)
+  void attachMonitor(ProxyMonitor* _mon)
   {
-    managerMonitor=mon;
+    managerMonitor=_mon;
   }
   bool attached()
   {

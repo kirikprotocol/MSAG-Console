@@ -438,7 +438,7 @@ enum REOp{
   opLibCall,
 #endif
   opRegExpEnd,
-};
+}
 
 struct REOpCode{
   int op;
@@ -2076,24 +2076,24 @@ inline StateStackItem *RegExp::FindStateByPos(PREOpCode pos,int op)
 }
 
 
-inline int RegExp::StrCmp(prechar& str,prechar st,prechar ed)
+inline int RegExp::StrCmp(prechar& str,prechar _st,prechar ed)
 {
   prechar save=str;
   if(ignorecase)
   {
-    while(st<ed)
+    while(_st<ed)
     {
-      if(TOLOWER(*str)!=TOLOWER(*st)){str=save;return 0;}
+      if(TOLOWER(*str)!=TOLOWER(*_st)){str=save;return 0;}
       str++;
-      st++;
+      _st++;
     }
   }else
   {
-    while(st<ed)
+    while(_st<ed)
     {
-      if(*str!=*st){str=save;return 0;}
+      if(*str!=*_st){str=save;return 0;}
       str++;
-      st++;
+      _st++;
     }
   }
   return 1;

@@ -91,7 +91,7 @@ enum REError{
   errReferenceToUndefinedNamedBracket,
   //! Only fixed length look behind assertions are supported
   errVariableLengthLookBehind,
-};
+}
 
 //! Used internally
 struct REOpCode;
@@ -348,7 +348,7 @@ private:
 
   void TrimTail(prechar& end);
 
-  int SetError(int code,int pos){errorcode=code;errorpos=pos;return 0;}
+  int SetError(int _code,int pos){errorcode=_code;errorpos=pos;return 0;}
 
   int GetNum(const prechar src,int& i);
 

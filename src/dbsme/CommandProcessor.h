@@ -209,7 +209,7 @@ namespace smsc { namespace dbsme
 
     public:
 
-        ProviderGuard(DataProvider* provider=0) : provider(provider), counter(0) {
+        ProviderGuard(DataProvider* _provider=0) : provider(_provider), counter(0) {
             if (!provider) return;
             MutexGuard guard(provider->usersCountLock);
             counter = provider->getUserCounter();
