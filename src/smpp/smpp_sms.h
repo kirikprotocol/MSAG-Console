@@ -196,9 +196,9 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
     //sms->setMessageReference(optional.get_userMessageReference());
     sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
                         optional.get_userMessageReference());
-  else
+//  else
     //sms->setMessageReference(0);
-    sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,0);
+//    sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,0);
 
   if ( optional.has_receiptedMessageId() )
   {
