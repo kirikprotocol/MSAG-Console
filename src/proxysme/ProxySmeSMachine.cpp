@@ -61,7 +61,7 @@ void MacroSleep()
 #if defined _WIN32
   Sleep(3000);
 #else
-  sleep(3)
+  sleep(3);
 #endif
 }
 
