@@ -22,12 +22,12 @@ void SMachine::Stop()
 {
   if ( stopIt_ != IS_RUNNING ) return;
   stopIt_ = IS_STOPPING;
-  while ( stopIt_ != IS_STOPPED ) 
-#if defined _WIN32
-    Sleep(100);
-#else
-    sleep(1);
-#endif
+//  while ( stopIt_ != IS_STOPPED ) 
+//#if defined _WIN32
+//    Sleep(100);
+//#else
+//    sleep(1);
+//#endif
 }
 
 //void SMachine::Start()

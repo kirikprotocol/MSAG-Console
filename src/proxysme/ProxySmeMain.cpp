@@ -187,6 +187,9 @@ int main()
     SetStopper(0);
   }
 
+  adminListener.shutdown();
+  adminListener.WaitFor();
+
   return 0;
 }
 
