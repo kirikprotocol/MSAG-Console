@@ -5,17 +5,13 @@
  */
 package ru.novosoft.smsc.jsp.smsc.aliases;
 
-import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasQuery;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Index extends IndexBean
 {

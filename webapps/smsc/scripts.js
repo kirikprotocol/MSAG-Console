@@ -186,3 +186,29 @@ function clickCancel()
 	opForm.submit();
 	return false;
 }
+
+function selectFirstTextInput()
+{
+	var inputs = document.all.tags("INPUT");
+	if (inputs!=null)
+	{
+		for (i=0; i<inputs.length; i++) 
+		{
+			try {
+			if (inputs[i].type == "text" 
+					&& !inputs[i].readOnly 
+					&& !inputs[i].disabled
+					&& inputs[i].currentStyle.display != "none"
+				)
+			{
+				inputs[i].focus();
+				return;
+			}
+			}
+			catch (to_trash) 
+			{ // do nothing
+			}
+		}
+	}
+}
+
