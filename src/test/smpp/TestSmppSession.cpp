@@ -52,23 +52,20 @@ void TestSmppSession::sendBytes(PduBuffer& pb)
 {
 	__require__(!closed);
 	__require__(pb.buf && pb.size);
-	try
+	int count = 0;
+	__trace2__("writer:sending buffer %p, %d", pb.buf, pb.size);
+	MutexGuard mguard(lockMutex);
+	do
 	{
-		int count = 0, wr;
-		__trace2__("writer:sending buffer %p, %d", pb.buf, pb.size);
-		MutexGuard mguard(lockMutex);
-		do
+		int wr = socket.Write(pb.buf + count, pb.size - count);
+		if (wr <= 0)
 		{
-			wr = socket.Write(pb.buf + count, pb.size - count);
-			if (wr <= 0) throw Exception("Failed to send smpp packet");
-			count += wr;
+			__trace2__("socket write error: wr = %d", wr);
+			throw Exception("Failed to send smpp packet");
 		}
-		while (count != pb.size);
+		count += wr;
 	}
-	catch (...)
-	{
-		if (!closed) listener->handleError(smppErrorNetwork);
-	}
+	while (count != pb.size);
 	delete pb.buf;
 }
 
