@@ -512,20 +512,19 @@ static void SendRInfo(MapDialog* dialog)
   SMS *sms = dialog->sms.get();
 
   if ( !dialog->isQueryAbonentStatus ) {
-    hiPrior = true;
-/*    if( sms != 0 ) {
-      __map_trace2__("MAP::%s dialogid:0x%x ssn:%d smpp_prio:%d lastres:%d ac:%d",__func__,dialog_id,dialog->ssn,sms->getIntProperty(Tag::SMPP_PRIORITY), sms->getLastResult(), sms?(int)sms->getAttemptsCount():-1);
-      if( sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ) {
+    if( sms != 0 ) {
+      if( sms->getIntProperty(Tag::SMPP_PRIORITY) == 3 ) {
         hiPrior = true;
       } else {
         if( sms->getLastResult() != Status::ABSENTSUBSCR && 
             sms->getLastResult() != Status::SMDELIFERYFAILURE ) {
           hiPrior = true;
-        } else if( (sms->getAttemptsCount()+1)%4 == 0 ) {
+        } else if( (sms->getAttemptsCount())%4 == 0 ) {
           hiPrior = true;
         }
       }
-    }*/
+    }
+//    hiPrior = true;
   }
   __map_trace2__("MAP::%s dialogid:0x%x ssn:%d hiprior:%s ac:%d ver:%d",__func__,dialog_id,dialog->ssn,hiPrior?"true":"false", sms?(int)sms->getAttemptsCount():-1, dialog->version);
   USHORT_T result = Et96MapOpenReq(
