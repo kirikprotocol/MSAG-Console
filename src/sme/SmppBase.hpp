@@ -845,7 +845,7 @@ protected:
         resp.get_header().set_commandId(ENQUIRE_LINK_RESP);
         resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
         resp.get_header().set_commandStatus(0);
-        atrans.sendPdu((SmppHeader*)&resp);
+        writer.enqueue((SmppHeader*)&resp);
         disposePdu(pdu);
       }break;
       case SUBMIT_SM_RESP:
