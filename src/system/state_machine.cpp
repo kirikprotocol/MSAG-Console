@@ -4474,7 +4474,6 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
   rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
-  rpt.setIntProperty(Tag::SMPP_ESM_CLASS,0);
 
   char msgid[60];
   sprintf(msgid,"%lld",msgId);
@@ -4577,7 +4576,10 @@ void StateMachine::submitReceipt(SMS& sms,int type)
   sms.setNextTime(now);
   sms.setValidTime(now+maxValidTime);
 
-  sms.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+  if(sms.hasIntProperty(Tag::SMPP_ESM_CLASS))
+  {
+    sms.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+  }
 
   try{
     int dest_proxy_index;
