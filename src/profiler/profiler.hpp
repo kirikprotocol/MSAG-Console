@@ -20,8 +20,9 @@ using smsc::core::threads::ThreadedTask;
 using namespace smsc::core::synchronization;
 
 namespace ProfileReportOptions{
-  static const int ReportNone =0;
-  static const int ReportFull =1;
+  static const int ReportNone  =0;
+  static const int ReportFull  =1;
+  static const int ReportFinal =3;
 };
 
 namespace ProfileCharsetOptions{
