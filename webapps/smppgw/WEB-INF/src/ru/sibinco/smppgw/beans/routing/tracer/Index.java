@@ -8,6 +8,7 @@ import ru.sibinco.smppgw.beans.TabledBeanImpl;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
 import ru.sibinco.smppgw.backend.sme.GwSmeManager;
 import ru.sibinco.smppgw.backend.Smppgw;
+import ru.sibinco.smppgw.backend.Gateway;
 import ru.sibinco.smppgw.backend.protocol.alias.Alias;
 import ru.sibinco.smppgw.Constants;
 
@@ -40,6 +41,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     protected GwRoutingManager gwRoutingManager = null;
     protected GwSmeManager gwSmeManager = null;
     protected Smppgw smppgw = null;
+    protected Gateway gateway = null;
 
   public void process(final HttpServletRequest request, final HttpServletResponse response) throws SmppgwJspException
     {
@@ -215,6 +217,17 @@ public class Index extends TabledBeanImpl implements TabledBean
     {
       return messageType;
     }
+
+  public Gateway getGateway()
+  {
+    return gateway;
+  }
+
+  public void setGateway(Gateway gateway)
+  {
+    this.gateway = gateway;
+  }
+
    protected Collection getDataSource()
   {
     return new ArrayList();//appContext.getGwRoutingManager().getRoutes().values();

@@ -8,9 +8,13 @@ import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.WebAppFolders;
 import ru.sibinco.lib.backend.sme.Sme;
 import ru.sibinco.lib.backend.sme.SmeStatus;
+import ru.sibinco.lib.backend.protocol.Response;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
 import ru.sibinco.smppgw.backend.protocol.alias.AliasSet;
+import ru.sibinco.smppgw.backend.protocol.commands.LoadRoutes;
+import ru.sibinco.smppgw.backend.protocol.commands.TraceRoute;
+import ru.sibinco.smppgw.backend.protocol.commands.CommandCall;
 import ru.sibinco.lib.Constants;
 import java.util.List;
 import java.util.HashMap;
@@ -19,6 +23,7 @@ import java.util.Iterator;
 import java.io.*;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.FactoryConfigurationError;
@@ -80,23 +85,57 @@ public class Smppgw  extends Service
 
 
   }
-  public synchronized List loadRoutes(final GwRoutingManager gwRoutingManager)
+   public Object loadRoutes(final String subject) throws SibincoException
+   {
+     final Response response = super.runCommand(new LoadRoutes(subject));
+     if (Response.StatusOk != response.getStatus())
+       throw new SibincoException("Couldn't load active routes configuration, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    if (Response.StatusOk != response.getStatus())
+        throw new SibincoException("Error occured: " + response.getDataAsString());
+      final Element resultElem = (Element) response.getData().getElementsByTagName("variant").item(0);
+      final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
+      switch (resultType.getId()) {
+        case Type.StringType:
+          return Utils.getNodeText(resultElem);
+        case Type.IntType:
+          return Long.decode(Utils.getNodeText(resultElem));
+        case Type.BooleanType:
+          return Boolean.valueOf(Utils.getNodeText(resultElem));
+        case Type.StringListType:
+          return translateStringList(Utils.getNodeText(resultElem));
+        default:
+          throw new SibincoException("Unknown result type");
+      }
+   }
+  public synchronized List loadRoutes(final GwRoutingManager gwRoutingManager, Gateway gateway)
           throws SibincoException
   {
     gwRoutingManager.trace();
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new SibincoException("SMPPGW is not running.");
+   // gateway.loadRoutes(LOAD_ROUTES_METHOD_ID);
+   //  if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
+   //   throw new SibincoException("SMPPGW is not running.");
 
-    final Object res = call(SMPPGW_COMPONENT_ID, LOAD_ROUTES_METHOD_ID, Type.Types[Type.StringListType], new HashMap());
-
+    //final Object res = call(SMPPGW_COMPONENT_ID, LOAD_ROUTES_METHOD_ID, Type.Types[Type.StringListType], new HashMap());
+    final Object res =loadRoutes(LOAD_ROUTES_METHOD_ID);
     return res instanceof List ? (List) res : null;
   }
-
+ /*
+  public  Object TraceRoute(final String subject,final String dstAddress, final String srcAddress, final String srcSysId) throws SibincoException
+     {
+       final Map args = new HashMap();
+       args.put("dstAddress", dstAddress);
+       args.put("srcAddress", srcAddress);
+       args.put("srcSysId", srcSysId);
+       final Response response = super.runCommand(new CommandCall(TRACE_ROUTE_METHOD_ID, TRACE_ROUTE_METHOD_ID, Type.Types[Type.StringListType], args));
+       if (Response.StatusOk != response.getStatus())
+         throw new SibincoException("Couldn't trace route , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+     }
+   */
   public synchronized List traceRoute(final String dstAddress, final String srcAddress, final String srcSysId)
           throws SibincoException
   {
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new SibincoException("SMSC is not running.");
+   // if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
+   //   throw new SibincoException("SMSC is not running.");
 
     final Map args = new HashMap();
     args.put("dstAddress", dstAddress);
