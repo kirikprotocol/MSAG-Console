@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ConnectionManager.h"
-
 #ifndef DISABLE_TRACING
 #define DISABLE_TRACING
 #endif
+
+#include "ConnectionManager.h"
 
 namespace smsc { namespace store 
 {
