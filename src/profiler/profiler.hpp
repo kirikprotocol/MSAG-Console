@@ -166,6 +166,9 @@ public:
   string msgDCUCS2;
   string msgError;
 
+  string serviceType;
+  int protocolId;
+
 protected:
   mutable EventMonitor mon;
   smsc::core::buffers::Array<SmscCommand> outQueue;

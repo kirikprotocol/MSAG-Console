@@ -358,7 +358,8 @@ int Profiler::Execute()
     ans.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
     ans.setDeliveryReport(0);
     ans.setArchivationRequested(false);
-    ans.setEServiceType("XXX");
+    ans.setEServiceType(serviceType.c_str());
+    ans.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
     ans.setIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE,
       sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
 

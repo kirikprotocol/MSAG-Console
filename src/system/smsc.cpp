@@ -236,6 +236,8 @@ void Smsc::init(const SmscConfigs& cfg)
     profiler->msgDCDef=cfg.cfgman->getString("profiler.msgDataCodingDefault");
     profiler->msgDCUCS2=cfg.cfgman->getString("profiler.msgDataCodingUCS2");
     profiler->msgError=cfg.cfgman->getString("profiler.msgError");
+    profiler->serviceType=cfg.cfgman->getString("profiler.service_type");
+    profiler->protocolId=cfg.cfgman->getInt("profiler.protocol_id");
   }
   profiler->loadFromDB();
 
