@@ -330,7 +330,8 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  if(sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+  if(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 &&
+     sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
   {
     unsigned len;
     const unsigned char* msg;
@@ -367,6 +368,35 @@ StateType StateMachine::submit(Tuple& t)
       __warning__("SUBMIT_SM: invalid message length");
       return ERROR_STATE;
     }
+  }
+
+  if(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
+  {
+    unsigned len=sms->getIntProperty(Tag::SMPP_SM_LENGTH);
+    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    }
+    if(len>140)
+    {
+      sms->lastResult=Status::INVMSGLEN;
+      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           Status::INVMSGLEN,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+      }
+      __warning__("SUBMIT_SM: invalid message length");
+      return ERROR_STATE;
+    }
+
   }
 
 
@@ -1314,44 +1344,38 @@ StateType StateMachine::alert(Tuple& t)
 StateType StateMachine::replace(Tuple& t)
 {
   __trace2__("REPLACE:msgid=%lld",t.msgId);
+
+#define __REPLACE__RESPONSE(status)   \
+    try{                              \
+      t.command.getProxy()->putCommand\
+      (                               \
+        SmscCommand::makeReplaceSmResp\
+        (                             \
+          t.command->get_dialogId(),  \
+          Status::status              \
+        )                             \
+      );                              \
+    }catch(...)                       \
+    {                                 \
+      __trace__("REPLACE: failed to put response command"); \
+    }                                 \
+    return UNKNOWN_STATE;
+
+
   SMS sms;
   try{
     store->retriveSms((SMSId)t.msgId,sms);
   }catch(...)
   {
     __trace2__("REPLACE: Failed to retrieve sms:%lld",t.msgId);
-    try{
-      t.command.getProxy()->putCommand
-      (
-        SmscCommand::makeReplaceSmResp
-        (
-          t.command->get_dialogId(),
-          Status::REPLACEFAIL
-        )
-      );
-    }catch(...)
-    {
-    }
-    return UNKNOWN_STATE;
+    __REPLACE__RESPONSE(REPLACEFAIL);
   }
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
     if(sms.getConcatSeqNum()>0)
     {
       __trace__("REPLACE: replace of concatenated message");
-      try{
-        t.command.getProxy()->putCommand
-        (
-          SmscCommand::makeReplaceSmResp
-          (
-            t.command->get_dialogId(),
-            Status::REPLACEFAIL
-          )
-        );
-      }catch(...)
-      {
-      }
-      return UNKNOWN_STATE;
+      __REPLACE__RESPONSE(REPLACEFAIL);
     }
     sms.getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
   }
@@ -1368,23 +1392,11 @@ StateType StateMachine::replace(Tuple& t)
     }
   }catch(...)
   {
-    try{
-      t.command.getProxy()->putCommand
-      (
-        SmscCommand::makeReplaceSmResp
-        (
-          t.command->get_dialogId(),
-          Status::REPLACEFAIL
-        )
-      );
-    }catch(...)
-    {
-    }
-    return UNKNOWN_STATE;
+    __REPLACE__RESPONSE(REPLACEFAIL);
   }
 
 
-  if(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+  if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x03 && sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
   {
     if(
         t.command->get_replaceSm().smLength==0 ||
@@ -1393,20 +1405,7 @@ StateType StateMachine::replace(Tuple& t)
       )
     {
       __trace__("REPLACE: invalid length of/for UDHI");
-      try{
-        t.command.getProxy()->putCommand
-        (
-          SmscCommand::makeReplaceSmResp
-          (
-            t.command->get_dialogId(),
-            Status::REPLACEFAIL
-          )
-        );
-      }catch(...)
-      {
-        __trace__("REPLACE: failed to put response command");
-      }
-      return UNKNOWN_STATE;
+      __REPLACE__RESPONSE(REPLACEFAIL);
     }
   }
 
@@ -1418,26 +1417,20 @@ StateType StateMachine::replace(Tuple& t)
   );
   sms.setIntProperty(Tag::SMPP_SM_LENGTH,t.command->get_replaceSm().smLength);
 
+  if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03 &&
+     t.command->get_replaceSm().smLength>140)
+  {
+    __trace__("REPLACE: das=3, and smLength>140");
+    __REPLACE__RESPONSE(INVMSGLEN);
+  }
+
   if(!strcmp(sms.getDestinationSmeId(),"MAP_PROXY"))
   {
     int pres=partitionSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
     if(pres==psErrorUdhi || pres==psErrorUdhi)
     {
       __trace2__("REPLACE: concatenation failed(%d)",pres);
-      try{
-        t.command.getProxy()->putCommand
-        (
-          SmscCommand::makeReplaceSmResp
-          (
-            t.command->get_dialogId(),
-            Status::REPLACEFAIL
-          )
-        );
-      }catch(...)
-      {
-        __trace__("REPLACE: failed to put response command");
-      }
-      return UNKNOWN_STATE;
+      __REPLACE__RESPONSE(REPLACEFAIL);
     }
     if(pres==psMultiple)
     {
@@ -1453,39 +1446,13 @@ StateType StateMachine::replace(Tuple& t)
   {
     sms.lastResult=Status::INVEXPIRY;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
-    try{
-      t.command.getProxy()->putCommand
-      (
-        SmscCommand::makeReplaceSmResp
-        (
-          t.command->get_dialogId(),
-          Status::INVEXPIRY
-        )
-      );
-    }catch(...)
-    {
-      __trace__("REPLACE: failed to put response command");
-    }
-    return UNKNOWN_STATE;
+    __REPLACE__RESPONSE(INVEXPIRY);
   }
   if(t.command->get_replaceSm().scheduleDeliveryTime==-1)
   {
     sms.lastResult=Status::INVSCHED;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
-    try{
-      t.command.getProxy()->putCommand
-      (
-        SmscCommand::makeReplaceSmResp
-        (
-          t.command->get_dialogId(),
-          Status::INVSCHED
-        )
-      );
-    }catch(...)
-    {
-      __trace__("REPLACE: failed to put response command");
-    }
-    return UNKNOWN_STATE;
+    __REPLACE__RESPONSE(INVSCHED);
   }
   time_t newvalid=t.command->get_replaceSm().validityPeriod?
     t.command->get_replaceSm().validityPeriod:sms.getValidTime();
@@ -1499,19 +1466,7 @@ StateType StateMachine::replace(Tuple& t)
   {
     sms.lastResult=Status::INVSCHED;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
-    try{
-      t.command.getProxy()->putCommand
-      (
-        SmscCommand::makeReplaceSmResp
-        (
-          t.command->get_dialogId(),
-          Status::INVSCHED
-        )
-      );
-    }catch(...)
-    {
-      __trace__("REPLACE: failed to put response command");
-    }
+    __REPLACE__RESPONSE(INVSCHED);
     return UNKNOWN_STATE;
   }
 
@@ -1532,20 +1487,7 @@ StateType StateMachine::replace(Tuple& t)
     //
     sms.lastResult=Status::SYSERR;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
-    try{
-      t.command.getProxy()->putCommand
-      (
-        SmscCommand::makeReplaceSmResp
-        (
-          t.command->get_dialogId(),
-          Status::REPLACEFAIL
-        )
-      );
-    }catch(...)
-    {
-      __trace__("REPLACE: failed to put response command");
-    }
-    return UNKNOWN_STATE;
+    __REPLACE__RESPONSE(REPLACEFAIL);
   }
   try{
     t.command.getProxy()->putCommand
@@ -1561,6 +1503,7 @@ StateType StateMachine::replace(Tuple& t)
     __trace__("REPLACE: failed to put response command");
   }
   smsc->notifyScheduler();
+#undef __REPLACE__RESPONSE
   return ENROUTE;
 }
 
