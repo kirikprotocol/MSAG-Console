@@ -138,7 +138,8 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
   }else{
     __trace2__("MAP:%s: Preapre Abonent Status command",__FUNCTION__);
     AbonentStatus& as = dialog->QueryAbonentCommand->get_abonentStatus();
-    mkMapAddress( &dialog->m_msAddr, as.addr.value, as.addr.length );
+    __trace2__("MAP::%s: (%d.%d.%s)",__FUNCTION__,(unsigned)as.addr.type,(unsigned)as.addr.plan,as.addr.value);
+   mkMapAddress( &dialog->m_msAddr, as.addr.value, as.addr.length );
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
@@ -316,7 +317,7 @@ static void SendRInfo(MapDialog* dialog)
       FormatText("MAP::SendRInfo: Et96MapOpenReq error 0x%x",result));
   }
   bool hiPrior = false;
-  if ( dialog->sms.get() != 0 && dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ) 
+  if ( !dialog->isQueryAbonentStatus && dialog->sms.get() != 0 && dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ) 
     hiPrior = true;
   if ( dialog->version == 2 ) {
     result = Et96MapV2SendRInfoForSmReq(dialog->ssn, dialog_id, 1, &dialog->m_msAddr, 
@@ -1320,8 +1321,10 @@ USHORT_T Et96MapCloseInd(
     case MAPST_WaitRInfoClose:
       if ( dialog->isQueryAbonentStatus ){
         int status;
-        if (dialog->routeErr) status = AbonentStatus::OFFLINE;
-        else status = AbonentStatus::ONLINE;
+        if ( dialog->routeErr || dialog->subscriberAbsent ) 
+          status = AbonentStatus::OFFLINE;
+        else 
+          status = AbonentStatus::ONLINE;
         SendAbonentStatusToSmsc(dialog.get(),status);
         dialog->state = MAPST_CLOSED;
         DropMapDialog(dialog.get());
