@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="windows-1251"?>
 <!DOCTYPE users SYSTEM "file://users.dtd">
 
 <users>
@@ -20,6 +20,23 @@
 		<role name="aliases"/>
 		<role name="apply"/>
 		<role name="hosts"/>
+		<role name="perfmon"/>
+		<role name="profiles"/>
+		<role name="routes"/>
+		<role name="services"/>
+		<role name="smsView"/>
+		<role name="smsc_service"/>
+		<role name="smsstat"/>
+		<role name="subjects"/>
+		<role name="users"/>
+	</user>
+	<user login="denik" password="denik" firstName="denik" lastName="denik" dept="novosoft" workPhone="novosoft" homePhone="home" cellPhone="cell" email="denik@novosoft.ru">
+		<role name="aliases"/>
+		<role name="apply"/>
+		<role name="hosts"/>
+		<role name="dl"/>
+		<role name="locale_resources"/>
+		<role name="mscman"/>
 		<role name="perfmon"/>
 		<role name="profiles"/>
 		<role name="routes"/>
