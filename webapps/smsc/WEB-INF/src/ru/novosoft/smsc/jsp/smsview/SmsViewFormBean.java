@@ -120,8 +120,10 @@ public class SmsViewFormBean extends IndexBean
               Long r2_v = new Long(r2.getId());
               result = r1_v.compareTo(r2_v);
             }
-            if (sortField.equalsIgnoreCase("date"))
+            if (sortField.equalsIgnoreCase("sendDate"))
               result = r1.getSubmitTime().compareTo(r2.getSubmitTime());
+            if (sortField.equalsIgnoreCase("lastDate"))
+              result = r1.getLastTryTime().compareTo(r2.getLastTryTime());
             if (sortField.equalsIgnoreCase("from"))
               result = r1.getOriginatingAddress().compareTo(r2.getOriginatingAddress());
             if (sortField.equalsIgnoreCase("to"))
@@ -157,8 +159,11 @@ public class SmsViewFormBean extends IndexBean
       }
 
       rows = view.getSmsSet(query);
-      if (exactRowsCount) totalRowsCount = view.getSmsCount(query);
-      else totalRowsCount = rows.getRowsCount();
+      if (!exactRowsCount) totalRowsCount = rows.getRowsCount();
+      else {
+        totalRowsCount = view.getSmsCount(query);
+        if (rows != null) rows.setHasMore(false);
+      }
       startPosition = 0;
       totalSize = (rows == null) ? 0:rows.getRowsCount();
       processResortAndNavigate(true);
@@ -241,6 +246,7 @@ public class SmsViewFormBean extends IndexBean
     setFromDate(null);
     setTillDate(null);
     checkedRows.removeAllElements();
+    exactRowsCount = false;
   }
 
   /********************************* query delegeates *********************************/

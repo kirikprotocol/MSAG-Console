@@ -30,7 +30,7 @@ public class SmsQuery
   private String smsId = "*";
   private Date fromDate = Functions.truncateTime(new Date());
   private Date tillDate = new Date();
-  private String sortBy = "Date";
+  private String sortBy = "lastDate";
   private boolean fromDateEnabled = true;
   private boolean tillDateEnabled = false;
 

@@ -40,7 +40,7 @@ public class UserPreferences {
 
 	private int smsviewPageSize = 20;
 	private int smsviewMaxResults = 500;
-	private String smsviewSortOrder = "date";
+	private String smsviewSortOrder = "lastDate";
 
 	private int localeResourcesPageSize = 20;
 	private String localeResourcesSortOrder = "locale";
