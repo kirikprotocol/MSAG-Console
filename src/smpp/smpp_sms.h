@@ -372,8 +372,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
         sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(user_data_coding&0x3)+1);
       }
       else{
-        __trace2__("SmppToSms: unknown coding scheme 0x%x",user_data_coding);
-        return false;
+        encoding=DataCoding::BINARY;
       }
       sms->setIntProperty(Tag::SMPP_DATA_CODING,encoding);
     }else

@@ -1357,7 +1357,17 @@ StateType StateMachine::replace(Tuple& t)
   }
   if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
-    __trace__("REPLACE: repalce of message with payload");
+    sms.getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
+  }
+
+  try{
+    Address addr(t.command->get_replaceSm().sourceAddr.get());
+    if(!(sms.getOriginatingAddress()==addr))
+    {
+      throw Exception("replace failed");
+    }
+  }catch(...)
+  {
     try{
       t.command.getProxy()->putCommand
       (
@@ -1372,6 +1382,7 @@ StateType StateMachine::replace(Tuple& t)
     }
     return UNKNOWN_STATE;
   }
+
 
   if(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
   {
@@ -1399,17 +1410,19 @@ StateType StateMachine::replace(Tuple& t)
     }
   }
 
+  sms.setBinProperty
+  (
+    Tag::SMPP_SHORT_MESSAGE,
+    t.command->get_replaceSm().shortMessage.get(),
+    t.command->get_replaceSm().smLength
+  );
+
   if(!strcmp(sms.getDestinationSmeId(),"MAP_PROXY"))
   {
-    sms.setBinProperty
-    (
-      Tag::SMPP_SHORT_MESSAGE,
-      t.command->get_replaceSm().shortMessage.get(),
-      t.command->get_replaceSm().smLength
-    );
-    if(partitionSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE))!=psSingle)
+    int pres=partitionSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
+    if(pres==psErrorUdhi || pres==psErrorUdhi)
     {
-      __trace__("REPLACE: attempt to replace message with message that require concatenation");
+      __trace2__("REPLACE: concatenation failed(%d)",pres);
       try{
         t.command.getProxy()->putCommand
         (
@@ -1421,8 +1434,16 @@ StateType StateMachine::replace(Tuple& t)
         );
       }catch(...)
       {
+        __trace__("REPLACE: failed to put response command");
       }
       return UNKNOWN_STATE;
+    }
+    if(pres==psMultiple)
+    {
+      Address dst=sms.getDealiasedDestinationAddress();
+      uint8_t msgref=smsc->getNextMR(dst);
+      sms.setConcatMsgRef(msgref);
+      sms.setConcatSeqNum(0);
     }
   }
 
@@ -1442,6 +1463,7 @@ StateType StateMachine::replace(Tuple& t)
       );
     }catch(...)
     {
+      __trace__("REPLACE: failed to put response command");
     }
     return UNKNOWN_STATE;
   }
@@ -1460,6 +1482,7 @@ StateType StateMachine::replace(Tuple& t)
       );
     }catch(...)
     {
+      __trace__("REPLACE: failed to put response command");
     }
     return UNKNOWN_STATE;
   }
@@ -1469,6 +1492,7 @@ StateType StateMachine::replace(Tuple& t)
     t.command->get_replaceSm().scheduleDeliveryTime:sms.getNextTime();
   time_t now=time(NULL);
   if(newsched<now)newsched=now;
+  if(newvalid>now+maxValidTime)newvalid=now+maxValidTime;
 
   if(newsched>newvalid)
   {
@@ -1485,27 +1509,25 @@ StateType StateMachine::replace(Tuple& t)
       );
     }catch(...)
     {
+      __trace__("REPLACE: failed to put response command");
     }
     return UNKNOWN_STATE;
   }
 
+  sms.setValidTime(newvalid);
+  sms.setNextTime(newsched);
+  sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY,t.command->get_replaceSm().registeredDelivery);
+
   try{
-    Address addr(t.command->get_replaceSm().sourceAddr.get());
-    store->replaceSms
-    (
-      t.msgId,addr,
-      (uint8_t*)t.command->get_replaceSm().shortMessage.get(),
-      t.command->get_replaceSm().smLength,
-      t.command->get_replaceSm().registeredDelivery,
-      t.command->get_replaceSm().validityPeriod,
-      t.command->get_replaceSm().scheduleDeliveryTime
-    );
+    //Address addr(t.command->get_replaceSm().sourceAddr.get());
+    store->replaceSms(t.msgId,sms);
     smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
 //  }catch(NoSuchMessageException& e)
 //  {
     //
   }catch(...)
   {
+    __trace__("REPLACE: replacefailed");
     //
     sms.lastResult=Status::SYSERR;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
@@ -1520,6 +1542,7 @@ StateType StateMachine::replace(Tuple& t)
       );
     }catch(...)
     {
+      __trace__("REPLACE: failed to put response command");
     }
     return UNKNOWN_STATE;
   }
@@ -1534,6 +1557,7 @@ StateType StateMachine::replace(Tuple& t)
     );
   }catch(...)
   {
+    __trace__("REPLACE: failed to put response command");
   }
   smsc->notifyScheduler();
   return ENROUTE;
