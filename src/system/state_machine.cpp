@@ -1054,7 +1054,7 @@ StateType StateMachine::submit(Tuple& t)
 
     if(firstPiece) //first piece
     {
-      smsLog->info("merging sms Id=%lld, first part arrived(%u/%u)",t.msgId,idx,num);
+      smsLog->info("merging sms Id=%lld, first part arrived(%u/%u),mr=%d",t.msgId,idx,num,sms->getMessageReference());
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
       string tmp;
       if(!isForwardTo)
@@ -1082,7 +1082,7 @@ StateType StateMachine::submit(Tuple& t)
       if(sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
       {
         vector<unsigned char> umrlist(num);
-        umrlist[0]=sms->getMessageReference();
+        umrlist[idx-1]=sms->getMessageReference();
         sms->setBinProperty(Tag::SMSC_UMR_LIST,(const char*)&umrlist[0],num);
       }
 
@@ -1110,7 +1110,7 @@ StateType StateMachine::submit(Tuple& t)
 
     }else
     {
-      smsLog->info("merging sms Id=%lld, next part arrived(%u/%u)",t.msgId,idx,num);
+      smsLog->info("merging sms Id=%lld, next part arrived(%u/%u), mr=%d",t.msgId,idx,num,sms->getMessageReference());
       SMS* smsptr=smsc->getTempStore().Extract(t.msgId);
       SMS _sms;
       SMS& newsms=smsptr?*smsptr:_sms;
