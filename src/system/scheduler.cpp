@@ -65,7 +65,6 @@ int Scheduler::Execute()
     ids.Clean();
 
     if(isStopping)break;
-    sleep(1);
     {
       MutexGuard guard(mon);
       if(timeLine.size())
