@@ -1124,6 +1124,37 @@ time_t MinNextTimeStatement::getMinNextTime()
     return minTime;
 }
 
+const char* CancelIdsStatement::sql1 = (const char*)
+"SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE AND\
+ OA=:OA AND DA=:DA AND SVC_TYPE=:SVC";
+const char* CancelIdsStatement::sql2 = (const char*)
+"SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE AND\
+ OA=:OA AND DA=:DA AND SVC_TYPE IS NULL";
+CancelIdsStatement::CancelIdsStatement(Connection* connection,
+    const Address& _oa, const Address& _da, const char* svc, bool assign)
+        throw(StorageException) 
+        : IdStatement(connection, ((svc) ? CancelIdsStatement::sql1: 
+                                           CancelIdsStatement::sql2), assign)
+{
+    ub4 i=1; 
+    bind(i++, SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
+    
+    convertAddressToString(_oa, oa);
+    bind(i++, SQLT_STR, (dvoid *) (oa), (sb4) sizeof(oa));
+    convertAddressToString(_da, da);
+    bind(i++, SQLT_STR, (dvoid *) (da), (sb4) sizeof(da));
+    
+    if (svc)
+    {
+        bind(i++, SQLT_STR, (dvoid *)svc, (sb4) strlen(svc)+1);
+    }
+    
+    define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
+}
+
+/* --------------------- Body (BLOB) statements -------------------- */
+
 BodyStatement::BodyStatement(Connection* connection, const char* sql, 
                              bool assign=false) 
     throw(StorageException)

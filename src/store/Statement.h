@@ -542,6 +542,23 @@ namespace smsc { namespace store
             throw(StorageException);
     };
     
+    class CancelIdsStatement : public IdStatement
+    {
+    static const char* sql1;
+    static const char* sql2;
+    private:
+        
+        FullAddressValue    oa, da;
+
+    public:
+
+        CancelIdsStatement(Connection* connection,
+                           const Address& _oa, const Address& _da, 
+                           const char* svc = 0, bool assign=false)
+            throw(StorageException);
+        virtual ~CancelIdsStatement() {};
+    };
+
     class MinNextTimeStatement : public Statement
     {
     static const char* sql;

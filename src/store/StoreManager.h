@@ -70,14 +70,33 @@ namespace smsc { namespace store
         private:
 
             Connection*                 connection;
-            StorageConnectionPool*      pool;
             ReadyByNextTimeStatement*   readyStmt;
-
+            StorageConnectionPool*      pool;
+            
         public:
 
-            ReadyIdIterator(StorageConnectionPool* pool, time_t retryTime)
+            ReadyIdIterator(StorageConnectionPool* _pool, time_t retryTime)
                 throw(StorageException);
             virtual ~ReadyIdIterator();
+
+            virtual bool getNextId(SMSId &id)
+                throw(StorageException);
+        };
+
+        class CancelIdIterator : public IdIterator
+        {
+        private:
+
+            Connection*                 connection;
+            CancelIdsStatement*         cancelStmt;
+            StorageConnectionPool*      pool;
+            
+        public:
+            
+            CancelIdIterator(StorageConnectionPool* _pool, 
+                const Address& oa, const Address& da, const char* svc=0)
+                    throw(StorageException);
+            virtual ~CancelIdIterator();
 
             virtual bool getNextId(SMSId &id)
                 throw(StorageException);
@@ -219,6 +238,13 @@ namespace smsc { namespace store
         virtual void changeSmsStateToDeleted(SMSId id)
                 throw(StorageException, NoSuchMessageException);
 
+        /**
+         * Реализация метода MessageStore
+         * @see MessageStore
+         */
+        virtual IdIterator* getReadyForCancel(const Address& oa, 
+            const Address& da, const char* svcType = 0)
+                throw(StorageException); 
         /**
          * Реализация метода MessageStore
          * @see MessageStore

@@ -159,7 +159,7 @@ namespace smsc { namespace store
             const uint8_t* newMsg, uint8_t newMsgLen,
             uint8_t deliveryReport, time_t validTime = 0, time_t nextTime = 0)
                 throw(StorageException, NoSuchMessageException) = 0; 
-        
+
         /**
          * »змен€ет аттрибуты SMS в хранилище сообщений.
          * »спользуетс€ в случае неуспешной попытки доставки.
@@ -274,6 +274,24 @@ namespace smsc { namespace store
         virtual void destroySms(SMSId id) 
                 throw(StorageException, NoSuchMessageException) = 0;
     
+        /**
+         * ¬озвращает итератор над набором id сообщений по составному ключу:
+         *  адрес отправител€ + адрес получател€ + идентификатор сервиса
+         * 
+         * @param   oa      адрес отправител€
+         * @param   da      адрес получател€
+         * @param   svcType идентификатор сервиса, если нет то 0
+         *
+         * @return итератор над набором id сообщений
+         * @exception StorageException
+         *                   возникает при ошибке хранилища физической природы,
+         *                   т.н когда хранилище недоступно.
+         * @see IdIterator
+         */
+        virtual IdIterator* getReadyForCancel(const Address& oa, 
+            const Address& da, const char* svcType = 0)
+                throw(StorageException) = 0; 
+        
         /**
          * ¬озвращает итератор над набором id сообщений, готовых
          * к следующей попытке доставки, т.е. те у которых

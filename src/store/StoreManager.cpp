@@ -1088,7 +1088,7 @@ void RemoteStore::changeSmsStateToDeleted(SMSId id)
 
 RemoteStore::ReadyIdIterator::ReadyIdIterator(
     StorageConnectionPool* _pool, time_t retryTime) 
-        throw(StorageException) : IdIterator(), pool(_pool)
+        throw(StorageException) : IdIterator(), pool(_pool), connection(0)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
@@ -1096,10 +1096,8 @@ RemoteStore::ReadyIdIterator::ReadyIdIterator(
     try
     {
         if (connection && !connection->isAvailable())
-        {
             connection->connect();
-        }
-
+        
         readyStmt = new ReadyByNextTimeStatement(connection, false);
         if (readyStmt)
         {
@@ -1119,7 +1117,7 @@ RemoteStore::ReadyIdIterator::~ReadyIdIterator()
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     if (readyStmt) delete readyStmt;
-    pool->freeConnection(connection);
+    if (pool && connection) pool->freeConnection(connection);
 
 #endif
 }
@@ -1129,7 +1127,7 @@ bool RemoteStore::ReadyIdIterator::getNextId(SMSId &id)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
-    if (readyStmt && connection->isAvailable())
+    if (readyStmt && connection && connection->isAvailable())
     {
         sword status = readyStmt->fetch();
         if (status != OCI_NO_DATA)
@@ -1163,10 +1161,7 @@ time_t RemoteStore::getNextRetryTime()
         MinNextTimeStatement* minTimeStmt = 0L;
         try
         {
-            if (!connection->isAvailable())
-            {
-                connection->connect();
-            }
+            if (!connection->isAvailable()) connection->connect();
             minTimeStmt = new MinNextTimeStatement(connection, false);
         }
         catch (...)
@@ -1201,6 +1196,69 @@ time_t RemoteStore::getNextRetryTime()
     return ((uint32_t)-1);
 #endif
 }
+
+/* --------------------- Service classes & methods -------------------- */
+
+RemoteStore::CancelIdIterator::CancelIdIterator(StorageConnectionPool* _pool, 
+    const Address& oa, const Address& da, const char* svc)
+        throw(StorageException) : IdIterator(), pool(_pool), connection(0)
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+
+    connection = pool->getConnection();
+    try
+    {
+        if (connection && !connection->isAvailable()) 
+            connection->connect();
+        
+        cancelStmt = new CancelIdsStatement(connection, oa, da, svc, false);
+        if (cancelStmt)
+            connection->check(cancelStmt->execute(OCI_DEFAULT, 0, 0));
+    }
+    catch (...)
+    {
+        pool->freeConnection(connection);
+        throw;
+    }
+#endif
+}
+RemoteStore::CancelIdIterator::~CancelIdIterator()
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
+    if (cancelStmt) delete cancelStmt;
+    if (pool && connection) pool->freeConnection(connection);
+
+#endif
+}
+bool RemoteStore::CancelIdIterator::getNextId(SMSId &id)
+    throw(StorageException)
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+
+    if (cancelStmt && connection && connection->isAvailable())
+    {
+        sword status = cancelStmt->fetch();
+        if (status != OCI_NO_DATA)
+        {
+            connection->check(status);
+            cancelStmt->getSMSId(id);
+            return true;
+        }
+    }
+    return false;
+#else
+    return false;
+#endif
+}
+
+IdIterator* RemoteStore::getReadyForCancel(const Address& oa, 
+    const Address& da, const char* svcType = 0)
+        throw(StorageException)
+{
+    return (new CancelIdIterator(pool, oa, da, svcType));
+}
+
 /* ------------------------------ Remote Store ------------------------------ */
 
 /* ------------------------------- SMS Cache -------------------------------- */
