@@ -118,14 +118,14 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(TestAliasData* data, int n
 				{
 					int adLen = rand1(addrLen - 1);
 					int alLen = rand2(
-						max(adLen - (MAX_ADDRESS_VALUE_LENGTH - aliasLen), 0),
+						max(adLen - (MAX_ADDRESS_VALUE_LENGTH - aliasLen), 1),
 						min(adLen + (MAX_ADDRESS_VALUE_LENGTH - addrLen), aliasLen - 1));
 					setupRandomAliasMatchWithAsterisk(data, adLen, alLen);
 				}
 				break;
 			case 5: //адрес со '*' в конце, алиас = '*'
 				{
-					int adLen = rand2(addrLen,
+					int adLen = rand2(addrLen - 1,
 						max(1, addrLen + aliasLen - MAX_ADDRESS_VALUE_LENGTH));
 					//int alLen = aliasLen;
 					setupRandomAliasMatchWithAsterisk(data, adLen, aliasLen);
@@ -134,7 +134,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(TestAliasData* data, int n
 			case 6: //адрес со '*' в конце, алиас равен оригиналу + '*' в конце
 				if (aliasLen < MAX_ADDRESS_VALUE_LENGTH)
 				{
-					int adLen = rand1(min((int) addrLen,
+					int adLen = rand1(min(addrLen - 1,
 						MAX_ADDRESS_VALUE_LENGTH - aliasLen));
 					//int alLen = 0;
 					setupRandomAliasMatchWithAsterisk(data, adLen, 0);
@@ -143,7 +143,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(TestAliasData* data, int n
 			case 7: //адрес = '*', алиас со '*' в конце
 				{
 					//int adLen = addrLen;
-					int alLen = rand2(aliasLen,
+					int alLen = rand2(aliasLen - 1,
 						max(1, addrLen + aliasLen - MAX_ADDRESS_VALUE_LENGTH));
 					setupRandomAliasMatchWithAsterisk(data, addrLen, alLen);
 				}
@@ -159,7 +159,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(TestAliasData* data, int n
 				if (addrLen < MAX_ADDRESS_VALUE_LENGTH)
 				{
 					//int adLen = 0;
-					int alLen = rand1(min((int) aliasLen,
+					int alLen = rand1(min(aliasLen - 1,
 						MAX_ADDRESS_VALUE_LENGTH - addrLen));
 					setupRandomAliasMatchWithAsterisk(data, 0, alLen);
 				}
@@ -490,7 +490,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasException(
 				}
 				break;
 			case 4: //преобразование адрес -> алиас вызывает переполнение алиаса
-				if (aliasLen + addrLen > MAX_ADDRESS_VALUE_LENGTH)
+				if (aliasLen + addrLen > MAX_ADDRESS_VALUE_LENGTH + 1)
 				{
 					int alLen = rand1(aliasLen + addrLen - MAX_ADDRESS_VALUE_LENGTH - 1);
 					int adLen = rand2(MAX_ADDRESS_VALUE_LENGTH - aliasLen + alLen + 1, addrLen);
