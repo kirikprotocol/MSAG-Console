@@ -66,13 +66,13 @@ public:
     mon.notify();
 
   }
-  virtual SmscCommand getCommand()
+  virtual bool getCommand(SmscCommand& cmd)
   {
     MutexGuard guard(mon);
     time_t t=time(NULL);
     if(timeLine.size()==0 || timeLine.begin()->first>t)
     {
-      return SmscCommand();
+      return false;
     }
     Data d=timeLine.begin()->second;
     CacheItem *ci=smeCountCache.GetPtr(d.idx);
@@ -85,7 +85,8 @@ public:
       ci->totalCount--;
     }
     timeLine.erase(timeLine.begin());
-    return SmscCommand::makeForward(d.idx,d.id,d.resched);
+    cmd=SmscCommand::makeForward(d.idx,d.id,d.resched);
+    return true;
   }
   virtual SmeProxyState getState()const
   {

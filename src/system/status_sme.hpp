@@ -50,13 +50,12 @@ public:
     outQueue.Push(cmd);
   }
 
-  SmscCommand getCommand()
+  bool getCommand(SmscCommand& cmd)
   {
     MutexGuard g(mon);
-    SmscCommand cmd;
-    if(inQueue.Count()==0)return cmd;
+    if(inQueue.Count()==0)return false;
     inQueue.Shift(cmd);
-    return cmd;
+    return true;
   };
 
   void putIncomingCommand(const SmscCommand& cmd)

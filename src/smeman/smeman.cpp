@@ -322,8 +322,8 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
         if ( (*p)->deleted || (*p)->proxy==NULL) continue;
 
         try {
-          SmscCommand cmd=(*p)->proxy->getCommand();
-          if(cmd.IsOk())
+          SmscCommand cmd;
+          if((*p)->proxy->getCommand(cmd))
           {
             frames.push_back(cmd);
             frames.back().setProxy((*p));

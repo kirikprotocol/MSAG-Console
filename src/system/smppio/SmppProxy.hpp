@@ -7,6 +7,7 @@
 #include <list>
 #include "core/buffers/PriorityQueue.hpp"
 #include "core/buffers/CyclicQueue.hpp"
+#include "core/buffers/FastMTQueue.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "system/smppio/SmppSocket.hpp"
@@ -94,16 +95,13 @@ public:
     if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
     if(smppTransmitterSocket)smppTransmitterSocket->notifyOutThread();
   }
-  virtual SmscCommand getCommand()
+  virtual bool getCommand(SmscCommand& cmd)
   {
-    MutexGuard g(mutexin);
-    if(inqueue.Count()==0)return SmscCommand();
-    //throw Exception("SmppProxy::getCommand: no commands in input queue");
-    SmscCommand cmd;
-    inqueue.Shift(cmd);
+    if(!inqueue.Pop(cmd))return false;
     trace2("get command:%p",*((void**)&cmd));
+    MutexGuard g(mutexin);
     if(cmd->get_commandId()==SUBMIT)submitCount--;
-    return cmd;
+    return true;
   }
 
   void putIncomingCommand(const SmscCommand& cmd)
@@ -174,27 +172,29 @@ public:
     }
     else
     {
-      MutexGuard g(mutexin);
-      if(!opened)
       {
-        return;
-      }
-      if(cmd->get_commandId()==SUBMIT)
-      {
-        if(submitCount>submitLimit)
+        MutexGuard g(mutexin);
+        if(!opened)
         {
-          throw ProxyQueueLimitException(submitCount,submitLimit);
+          return;
         }
-        submitCount++;
-      }
-      else
-      if(inqueue.Count()>=totalLimit)
-      {
-        throw ProxyQueueLimitException(inqueue.Count(),totalLimit);
-      }
-      if(cmd->get_commandId()==DELIVERY_RESP)
-      {
-        processResonse(cmd);
+        if(cmd->get_commandId()==SUBMIT)
+        {
+          if(submitCount>submitLimit)
+          {
+            throw ProxyQueueLimitException(submitCount,submitLimit);
+          }
+          submitCount++;
+        }
+        else
+        if(inqueue.Count()>=totalLimit)
+        {
+          throw ProxyQueueLimitException(inqueue.Count(),totalLimit);
+        }
+        if(cmd->get_commandId()==DELIVERY_RESP)
+        {
+          processResponse(cmd);
+        }
       }
       inqueue.Push(cmd);
     }
@@ -269,7 +269,7 @@ public:
   virtual SmeProxyPriority getPriority()const{return SmeProxyPriorityDefault;}
   bool hasInput()const
   {
-    MutexGuard g(mutexin);
+    //MutexGuard g(mutexin);
     return inqueue.Count()!=0;
   }
   virtual void attachMonitor(ProxyMonitor* mon)
@@ -384,7 +384,8 @@ protected:
   mutable Mutex mutex,mutexin,mutexout;
   std::string id;
   SmeIndex smeIndex;
-  smsc::core::buffers::Array<SmscCommand> inqueue;
+  //smsc::core::buffers::Array<SmscCommand> inqueue;
+  smsc::core::buffers::FastMTQueue<SmscCommand> inqueue;
   smsc::core::buffers::PriorityQueue<SmscCommand,smsc::core::buffers::CyclicQueue<SmscCommand>,0,31> outqueue;
   bool forceDc;
 
@@ -414,7 +415,7 @@ protected:
     limitHash.Insert(ci.seqNum,--limitQueue.end());
   }
 
-  void processResonse(const SmscCommand& cmd)
+  void processResponse(const SmscCommand& cmd)
   {
     if(processLimit==0)return;
     MutexGuard g(mutex);

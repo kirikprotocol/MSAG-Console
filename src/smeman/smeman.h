@@ -77,12 +77,12 @@ public:
     }
     else throw runtime_error("proxy unregistred");
   }
-  virtual SmscCommand getCommand()
+  virtual bool getCommand(SmscCommand& cmd)
   {
     MutexGuard guard(mutex);
     if ( proxy )
     {
-      return proxy->getCommand();
+      return proxy->getCommand(cmd);
     }
     else throw runtime_error("proxy unregistred");
   }

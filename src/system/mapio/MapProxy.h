@@ -64,14 +64,13 @@ public:
       smsc_log_debug(time_logger, "cmdid=%d s=%ld us=%ld", cmd->get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
     }
   }
-  virtual SmscCommand getCommand()
+  virtual bool getCommand(SmscCommand& cmd)
   {
     MutexGuard g(mutex);
-    SmscCommand cmd;
-    if(inqueue.Count()==0)return cmd;
+    if(inqueue.Count()==0)return false;
     inqueue.Shift(cmd);
     __mapproxy_trace2__("get command:%p",*((void**)&cmd));
-    return cmd;
+    return true;
   }
 
   void putIncomingCommand(const SmscCommand& cmd)

@@ -56,14 +56,12 @@ public:
   }
 
 
-  SmscCommand getCommand()
+  bool getCommand(SmscCommand& cmd)
   {
     MutexGuard g(mutexin);
-    SmscCommand cmd;
-    if(inqueue.Count()==0)return cmd;
-    //throw Exception("SmppProxy::getCommand: no commands in input queue");
+    if(inqueue.Count()==0)return false;
     inqueue.Pop(cmd);
-    return cmd;
+    return true;
   }
   SmeProxyState getState()const
   {

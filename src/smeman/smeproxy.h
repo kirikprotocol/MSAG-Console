@@ -72,7 +72,7 @@ public:
   /// кидает exception если был достигнут лимит
   /// и длина очереди еще не упала до допустимого значения
   virtual void putCommand(const SmscCommand& command) = 0;
-  virtual SmscCommand getCommand() = 0;
+  virtual bool getCommand(SmscCommand& cmd) = 0;
   virtual SmeProxyState getState() const = 0;
   virtual void init() = 0;
   virtual SmeProxyPriority getPriority()const {return SmeProxyPriorityDefault;};

@@ -41,13 +41,12 @@ void DistrListProcess::putCommand(const SmscCommand& cmd)
   outQueue.Push(cmd);
 }
 
-SmscCommand DistrListProcess::getCommand()
+bool DistrListProcess::getCommand(SmscCommand& cmd)
 {
   MutexGuard g(mon);
-  SmscCommand cmd;
-  if(inQueue.Count()==0)return cmd;
+  if(inQueue.Count()==0)return false;
   inQueue.Shift(cmd);
-  return cmd;
+  return true;
 }
 
 SmeProxyState DistrListProcess::getState() const
