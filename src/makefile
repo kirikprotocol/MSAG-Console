@@ -20,7 +20,7 @@ endif
 
 ifndef CVSROOT
 #$(warning CVSROOT is not defined)
-CVSROOT:=:pserver:$(USER)@src.novosoft.ru:/cvsroot/main
+CVSROOT:=:pserver:$(USER)@cvs:/cvsroot
 $(warning set CVSROOT = $(CVSROOT))
 export CVSROOT
 endif
@@ -150,3 +150,6 @@ override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@)
 	else \
 	    echo "'$(_module)' is not module"; exit 1;\
 	fi
+
+webapp.newbuild:
+	@cd webapp;perl $(SMSC_SRCDIR)/conf/newbuild.pl webapp
