@@ -18,7 +18,18 @@
          <param name="msg">Divert status - enabled: $$string import=enabled$$, disabled: $$string import=disabled$$, to: $$string import=to$$</param>
          <param name="none">none</param>
          <param name="unconditional">unconditional</param>
+         <param name="short">Divert status sent by sms</param>
       </section>
+
+      <param name="msgDivertAbsOn">Conditional divert for absent turned on</param>
+      <param name="msgDivertAbsOff">Conditional divert for absent turned off</param>
+      <param name="msgDivertBlkOn">Conditional divert for blocked turned on</param>
+      <param name="msgDivertBlkOff">Conditional divert for blocked turned off</param>
+      <param name="msgDivertBarOn">Conditional divert for bared turned on</param>
+      <param name="msgDivertBarOff">Conditional divert for bared turned off</param>
+      <param name="msgDivertCapOn">Conditional divert for capacity turned on</param>
+      <param name="msgDivertCapOff">Conditional divert for capacity turned off</param>
+
       <param name="msgConcatOff">Multipart messages concatenation disabled.</param>
       <param name="msgConcatOn">Multipart messages concatenation enabled.</param>
       <param name="msgDefault">Now you are a default language user</param>
