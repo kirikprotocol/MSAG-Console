@@ -19,7 +19,7 @@ using core::synchronization::MutexGuard;
 SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long timeout,int* idx)
 {
   bool after_wait = false;
-	for(;;)
+  for(;;)
   {
     {__synchronized__
       Unit* unit = unqueuedProxies;
@@ -32,7 +32,11 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long timeout,int* idx)
           unit->prior = unit->proxy->getPriority();
           __require__ ( unit->prior > SmeProxyPriorityMinBr &&
                         unit->prior < SmeProxyPriorityMaxBr );
-          if ( unit->prev ) unit->prev->next = unit->next; // remove from list
+          if ( unit->prev )
+					{ 
+						unit->prev->next = unit->next; // remove from list
+						if ( unit->next ) uint->next->prev = unit->prev;
+					}
           else
           {
             __require__ ( unit == unqueuedProxies );
@@ -88,8 +92,8 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long timeout,int* idx)
       }
     }// __synchronization__
     if ( after_wait ) return 0;
-		mon.Wait((int)timeout);
-		after_wait = true;
+    mon.Wait((int)timeout);
+    after_wait = true;
   }
 }
 
