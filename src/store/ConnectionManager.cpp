@@ -111,7 +111,8 @@ void ConnectionPool::checkErr(sword status, Connection* connection)
     for (int i=0; i<busy.Count(); i++)
 	{
         tmp = busy[i];
-		if (tmp == connection) { // set Connection dead
+		if (tmp == connection) // set Connection dead
+		{ 
 			busy.Delete(i); 
             (void) dead.Push(connection);
 			curConnectionsCount--;
@@ -210,14 +211,6 @@ void ConnectionPool::freeConnection(Connection* connection)
 text* Connection::sqlGetMessagesCount = (text *)
 "SELECT NVL(MAX(ID), 0) FROM SMS_MSG";
  
-/*text* Connection::sqlStoreInsert = (text *)
-"BEGIN\
- INSERT_NEW_MSG (:ID, :ST, :MR, :RM,\
- :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
- :VALID_TIME, :WAIT_TIME, :SUBMIT_TIME, :DELIVERY_TIME,\
- :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD);\
- END;";*/
-
 text* Connection::sqlStoreInsert = (text *)
 "INSERT INTO SMS_MSG VALUES (:ID, :ST, :MR, :RM,\
  :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
@@ -617,7 +610,7 @@ SMSId Connection::getMessagesCount()
 	return smsId;
 }
 
-void Connection::setSMS(SMS& _sms)
+void Connection::setSMS(const SMS &_sms)
 	throw(StorageException)
 {
 	sms = _sms;
@@ -655,7 +648,7 @@ void Connection::setSMS(SMS& _sms)
 	uState = (uint8_t) sms.state;
 }
 
-void Connection::store(SMS& sms, SMSId id) 
+void Connection::store(const SMS &sms, SMSId id) 
 	throw(StorageException)
 {
 	MutexGuard	guard(mutex);
@@ -679,7 +672,7 @@ void Connection::store(SMS& sms, SMSId id)
 	}
 }
 
-SMS& Connection::getSMS()
+const SMS& Connection::getSMS()
 	throw(StorageException)
 {
 	// get additional data
@@ -719,7 +712,7 @@ SMS& Connection::getSMS()
     return sms;
 }
 
-SMS& Connection::retrive(SMSId id) 
+const SMS& Connection::retrive(SMSId id) 
 	throw(StorageException, NoSuchMessageException)
 {
 	MutexGuard	guard(mutex);

@@ -119,9 +119,9 @@ namespace smsc { namespace store
 		void checkErr(sword status) 
 			throw(StorageException);
 
-		void setSMS(SMS& _sms) 
+		void setSMS(const SMS &_sms) 
 			throw(StorageException);
-		SMS& getSMS() 
+		const SMS& getSMS() 
 			throw(StorageException);
         
         OCIFocbkStruct failover;
@@ -137,10 +137,10 @@ namespace smsc { namespace store
         SMSId getMessagesCount()
 			throw(ConnectionFailedException);
 
-		void store(SMS& sms, SMSId id) 
+		void store(const SMS &sms, SMSId id) 
             throw(StorageException);
 
-        SMS& retrive(SMSId id) 
+        const SMS& retrive(SMSId id) 
             throw(StorageException, NoSuchMessageException);
 
 		friend class ConnectionPool; // ???

@@ -3,6 +3,7 @@
 
 #include <oci.h>
 #include <core/synchronization/Mutex.hpp>
+#include <util/Logger.h>
 
 #include "StoreConfig.h"
 #include "MessageStore.h"
@@ -12,6 +13,7 @@ namespace smsc { namespace store
 {
     using namespace smsc::sms;
 	using namespace smsc::core::synchronization;
+	using smsc::util::Logger;
     
 	class IDGenerator 
 	{
@@ -41,10 +43,12 @@ namespace smsc { namespace store
 		static IDGenerator		*generator;
 	    static StoreManager		*instance;
         static ConnectionPool	*pool;
+        log4cpp::Category 		&log;
 
     protected:
         
-        StoreManager() : MessageStore() {};
+        StoreManager() : MessageStore(), 
+			log(Logger::getCategory("smsc.store.StoreManager")) {};
         virtual ~StoreManager() {};
 
     public:    
@@ -58,9 +62,9 @@ namespace smsc { namespace store
 			return ((MessageStore *)instance);
 		};
         
-        virtual SMSId store(SMS& sms)  
+        virtual SMSId store(const SMS &sms)  
 			throw(StorageException);
-        virtual SMS& retrive(SMSId id)
+        virtual const SMS& retrive(SMSId id)
 			throw(StorageException, NoSuchMessageException);
     };
 

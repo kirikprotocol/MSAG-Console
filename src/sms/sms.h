@@ -439,7 +439,7 @@ namespace smsc { namespace sms
 		 * @see Address
 		 */
         inline void setOriginatingAddress(uint8_t lenght, uint8_t type, 
-                                         uint8_t plan, char* buff) 
+										  uint8_t plan, const char* buff) 
         { // Copies address value from 'buff' to static structure
             originatingAddress.setTypeOfNumber(type);
             originatingAddress.setNumberingPlan(plan);
@@ -453,7 +453,7 @@ namespace smsc { namespace sms
 		 * @param address новый адрес отправителя
 		 * @see Address
 		 */
-        inline void setOriginatingAddress(Address& address) 
+        inline void setOriginatingAddress(const Address& address) 
         { // Copies address value from 'address' to static structure 
             originatingAddress = address;     
         };
@@ -479,7 +479,7 @@ namespace smsc { namespace sms
 		 * @see Address
 		 */
         inline void setDestinationAddress(uint8_t lenght, uint8_t type, 
-                                          uint8_t plan, char* buff) 
+                                          uint8_t plan, const char* buff) 
         { // Copies address value from 'buff' to static structure 
             __require__(lenght);
 
@@ -495,7 +495,7 @@ namespace smsc { namespace sms
 		 * @param address новый адрес получателя
 		 * @see Address
 		 */
-		inline void setDestinationAddress(Address& address) 
+		inline void setDestinationAddress(const Address& address) 
         { // Copies address value from 'address' to static structure 
             destinationAddress = address;     
         };
@@ -736,7 +736,7 @@ namespace smsc { namespace sms
 		 * @see Body
 		 */
         inline void setMessageBody(uint8_t lenght, uint8_t scheme, 
-                                         bool header, uint8_t* buff) 
+								   bool header, const uint8_t* buff) 
         { // Copies body data from 'buff' to static structure 
             messageBody.setCodingScheme(scheme);
             messageBody.setHeaderIndicator(header);
@@ -749,7 +749,7 @@ namespace smsc { namespace sms
 		 * @param body тело сообщения
 		 * @see Body
 		 */
-		inline void setMessageBody(Body& body) 
+		inline void setMessageBody(const Body& body) 
         { // Copies body data from 'body' to static structure 
             messageBody = body;     
         };

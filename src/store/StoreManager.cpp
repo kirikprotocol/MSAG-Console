@@ -9,6 +9,7 @@ namespace smsc { namespace store
 {
 /* ----------------------------- StoreManager -------------------------- */
 using namespace smsc::sms;
+using smsc::util::Logger;
 
 Mutex StoreManager::mutex;
 ConnectionPool*	StoreManager::pool = 0L;
@@ -22,7 +23,7 @@ void StoreManager::startup(StoreConfig* config)
 
 	if (!instance)
 	{
-		pool = new ConnectionPool(config);
+        pool = new ConnectionPool(config);
 		Connection* connection = pool->getConnection();
 		try
 		{
@@ -55,7 +56,7 @@ void StoreManager::shutdown()
 
 const int MAX_TRIES_TO_PROCESS = 3;
 
-SMSId StoreManager::store(SMS& sms) 
+SMSId StoreManager::store(const SMS &sms) 
 	throw(StorageException)
 {
 	__require__(pool && generator);
@@ -79,20 +80,19 @@ SMSId StoreManager::store(SMS& sms)
 		catch (StorageException& exc) 
 		{
 			if (connection) pool->freeConnection(connection);
-			// Write log here
-			printf("Storage Exception : %s\n", exc.what());
-			if (iteration < MAX_TRIES_TO_PROCESS) 
+            log.debug("Storage Exception : %s\n", exc.what());
+            if (iteration < MAX_TRIES_TO_PROCESS) 
 			{
 				iteration++;
 				continue;
             }
-			printf("Max tries count exceeded !\n");
-			throw;
+			log.warn("Max tries count exceeded !\n");
+            throw;
 		}
 	}
 }
 
-SMS& StoreManager::retrive(SMSId id) 
+const SMS& StoreManager::retrive(SMSId id) 
 	throw(StorageException, NoSuchMessageException)
 {
     __require__(pool);
@@ -104,7 +104,7 @@ SMS& StoreManager::retrive(SMSId id)
 		try 
 		{
 			connection = pool->getConnection();
-			SMS& sms = connection->retrive(id);
+			const SMS& sms = connection->retrive(id);
             pool->freeConnection(connection);
 			return sms;
 		}
@@ -119,14 +119,13 @@ SMS& StoreManager::retrive(SMSId id)
 		catch (StorageException& exc) 
 		{
 			if (connection) pool->freeConnection(connection);
-			// Write log here
-            printf("Storage Exception : %s\n", exc.what());
+            log.debug("Storage Exception : %s\n", exc.what());
 			if (iteration < MAX_TRIES_TO_PROCESS) 
 			{
 				iteration++;
 				continue;
             }
-            printf("Max tries count exided !\n");
+            log.warn("Max tries count exceeded !\n");
 			throw;
 		}
 	}
