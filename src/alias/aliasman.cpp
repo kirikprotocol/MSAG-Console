@@ -24,6 +24,16 @@ static inline int compare_patval( const APattern& pattern,
   __trace2__("compare Pat:%s ? Val:%s",
               pattern.value,
               val.value);
+  __trace2__("compare Pat(npi):%d ? Val(npi):%d, P:%x,v:%x",
+              pattern.numberingPlan,
+              val.numberingPlan,
+						  pattern.num_n_plan,
+						  val.num_n_plan);
+  __trace2__("compare Pat(tni):%d ? Val(tni):%d, P:%x,v:%x",
+              pattern.typeOfNumber,
+              val.typeOfNumber,
+						  pattern.num_n_plan,
+						  val.num_n_plan);
 #define compare_v(n) (pattern.value_32[n] - (pattern.mask_32[n] & val.value_32[n]))
 #define ifn0goto {if (result) goto result_;}
   int32_t result;
@@ -40,7 +50,7 @@ static inline int compare_patval( const APattern& pattern,
   result = pattern.hasStar?0:
       ((int)pattern.length)-((int)val.length)?-1:0;
 result_:
-  __trace2__("= %c == %d",result,result>0?'>':result<0?'<':'0');
+  __trace2__("= %c == %d",result>0?'>':result<0?'<':'0',result);
   return (int32_t)result;
 #undef if0ngoto
 #undef compare_v
@@ -69,7 +79,7 @@ static inline int compare_patpat( const APattern& pat1,
       ((int)pat1.length)-((int)pat2.length)?-1:0;
   ifn0goto;
 result_:
-  __trace2__("= %c == %d",result,result>0?'>':result<0?'<':'0');
+  __trace2__("= %c == %d",result>0?'>':result<0?'<':'0',result);
   return (int32_t)result;
 #undef if0ngoto
 #undef compare_v
@@ -235,7 +245,8 @@ __synchronized__
                         table_ptr,
                         sizeof(AliasRecord*),
                         compare_adr);
-  if (!recordX) return false;
+  __trace2__("find record %p",recordX);
+	if (!recordX) return false;
   AliasRecord* record = *recordX;
   record->ok_next = 0;
   AliasRecord* ok_adr = record;
@@ -303,6 +314,7 @@ __synchronized__
                         table_ptr,
                         sizeof(AliasRecord*),
                         compare_ali);
+  __trace2__("find record %p",recordX);
   if (!recordX) return false;
   AliasRecord* record = *recordX;
   record->ok_next = 0;
