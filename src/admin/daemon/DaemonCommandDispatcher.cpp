@@ -23,8 +23,8 @@ using smsc::admin::protocol::CommandListServices;
 using smsc::core::synchronization::MutexGuard;
 using smsc::util::setExtendedSignalHandler;
 using smsc::util::config::CStrSet;
-using smsc::util::encode_;
-using smsc::util::decode_;
+using smsc::util::encode;
+using smsc::util::cStringCopy;
 
 ServicesList DaemonCommandDispatcher::services;
 Mutex DaemonCommandDispatcher::servicesListMutex;
@@ -195,7 +195,7 @@ void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceName,
 {
 	MutexGuard lock(configManagerMutex);
 	std::string serviceSectionName = "services.";
-	std::auto_ptr<char> tmpServiceName(encode_(serviceName));
+	std::auto_ptr<char> tmpServiceName(encode(serviceName));
 	serviceSectionName += tmpServiceName.get();
 
 	std::string tmpName = serviceSectionName;
@@ -254,7 +254,7 @@ void DaemonCommandDispatcher::removeServiceFromConfig(const char * const service
 	MutexGuard lock(configManagerMutex);
 	std::string serviceSectionName = "services.";
 
-	std::auto_ptr<char> tmpServiceName(encode_(serviceName));
+	std::auto_ptr<char> tmpServiceName(encode(serviceName));
 	serviceSectionName += tmpServiceName.get();
 	configManager->removeSection(serviceSectionName.c_str());
 	configManager->save();
@@ -354,7 +354,7 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 			const char * fullServiceName = i->c_str();
 			char * dotpos = strrchr(fullServiceName, '.');
 			//const size_t serviceNameBufLen = strlen(dotpos+1) +1;
-			std::auto_ptr<char> serviceName(decode_(dotpos+1));
+			std::auto_ptr<char> serviceName(cStringCopy(dotpos+1));
 		
 			std::string prefix(fullServiceName);
 			prefix += '.';

@@ -18,12 +18,13 @@
 	<li><a href="<%=urlPrefix+servicesPrefix%>/index.jsp">Services</a></li>
 	<ul compact>
 		<%
-		Set services = serviceManager.getServiceNames();
+		Set services = serviceManager.getServiceIds();
 		for (Iterator i = services.iterator(); i.hasNext(); )
 		{
-			String serviceName = (String) i.next();
-			String encodedServiceName = URLEncoder.encode(serviceName);
-			%><li><a href="<%=urlPrefix+servicesPrefix%>/view_service.jsp?service=<%=encodedServiceName%>"><%=serviceName%></a></li><%
+			String serviceId = (String) i.next();
+			String serviceName = serviceManager.getServiceInfo(serviceId).getName();
+			String encodedServiceId = URLEncoder.encode(serviceId);
+			%><li><a href="<%=urlPrefix+servicesPrefix%>/view_service.jsp?serviceId=<%=encodedServiceId%>"><%=serviceName%></a></li><%
 		} %>
 	</ul>
 </ul>

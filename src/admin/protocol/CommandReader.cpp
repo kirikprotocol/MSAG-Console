@@ -139,7 +139,7 @@ char * CommandReader::getCommandName(DOM_Document data)
 		logger.warn("<command> tag not found in command");
 		throw AdminException("<command> tag not found in command");
 	}
-	return decode(commandElem.getAttribute("name"));
+	return commandElem.getAttribute("name").transcode();
 }
 
 Command * CommandReader::createCommand(Command::Id id, DOM_Document data) {

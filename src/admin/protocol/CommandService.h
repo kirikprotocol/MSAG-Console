@@ -11,7 +11,6 @@ namespace protocol {
 
 using smsc::admin::protocol::Command;
 using smsc::util::xml::getNodeText;
-using smsc::util::decode;
 
 class CommandService : public Command
 {
@@ -21,7 +20,7 @@ public:
 	{
 		serviceName = 0;
 		setData(doc);
-		serviceName = decode(doc.getDocumentElement().getAttribute("service"));
+		serviceName = doc.getDocumentElement().getAttribute("service").transcode();
 	}
 
 	virtual ~CommandService()

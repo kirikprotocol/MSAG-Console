@@ -48,7 +48,8 @@ inline const size_t calculateStringSizeAfterEncoding(const char * const src)
 inline char * encode(const char * const src)
 {
 	char * result = new char[calculateStringSizeAfterEncoding(src) +1];
-	for (const char *s = src, *d = result; *s != 0; s++)
+	char *d = result;
+	for (const char *s = src; *s != 0; s++)
 	{
 		switch (*s)
 		{

@@ -2,4 +2,9 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
+  <section name="daemons">
+    <section name="smsc">
+      <param name="port" type="int">6681</param>
+    </section>
+  </section>
 </config>

@@ -17,12 +17,13 @@
 		for (Iterator i = hostNames.iterator(); i.hasNext(); )
 		{
 			String hostName = (String) i.next();
-			Set serviceNames = serviceManager.getServiceNames(hostName);
+			Set serviceNames = serviceManager.getServiceIds(hostName);
 			for (Iterator j = serviceNames.iterator(); j.hasNext(); )
 			{
-				String serviceName = (String) j.next();
-				String params = "host=" + URLEncoder.encode(hostName) + "&service=" + URLEncoder.encode(serviceName);
-				boolean isRunning = serviceManager.getServiceInfo(serviceName).getPid() != 0;
+				String serviceId = (String) j.next();
+				String params = "host=" + URLEncoder.encode(hostName) + "&serviceId=" + URLEncoder.encode(serviceId);
+				boolean isRunning = serviceManager.getServiceInfo(serviceId).getPid() != 0;
+        String serviceName = serviceManager.getServiceInfo(serviceId).getName();
 				%>
 				<TR class="list">
 					<TD class="list"><A href="<%=urlPrefix + servicesPrefix%>/view_service.jsp?<%=params%>"><%=serviceName%></a></TD>

@@ -14,7 +14,6 @@ namespace protocol {
 using smsc::admin::AdminException;
 using smsc::util::xml::getNodeAttribute;
 using smsc::util::xml::getNodeText;
-using smsc::util::decode;
 
 typedef std::pair<int, char *> CmdArgument;
 
@@ -34,12 +33,12 @@ public:
 				std::vector<CmdArgument> cmd_args;
 				DOM_Node serviceNode = list.item(0);
 				DOM_Element &serviceElem = (DOM_Element&) serviceNode;
-				serviceName = decode(serviceElem.getAttribute("name"));
-				cmdLine = decode(serviceElem.getAttribute("cmd_line"));
-				configFile = decode(serviceElem.getAttribute("config_file"));
-				std::auto_ptr<char> portStr(decode(serviceElem.getAttribute("port")));
+				serviceName = serviceElem.getAttribute("name").transcode();
+				cmdLine = serviceElem.getAttribute("cmd_line").transcode();
+				configFile = serviceElem.getAttribute("config_file").transcode();
+				std::auto_ptr<char> portStr(serviceElem.getAttribute("port").transcode());
 				port = atol(portStr.get());
-				args = decode(serviceElem.getAttribute("args"));
+				args = serviceElem.getAttribute("args").transcode();
 			}
 		}
 		catch (...)

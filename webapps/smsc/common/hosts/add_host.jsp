@@ -1,4 +1,4 @@
-<%@ include file="/header.jsp"%>
+<%@ include file="/common/header.jsp"%>
 <form action="add_host_2.jsp">
 	<h2>Add host:</h2>
 	<table border="1" class="list" cellspacing="0">

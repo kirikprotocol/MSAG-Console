@@ -39,15 +39,15 @@ public:
 		  logger(Logger::getCategory("smsc.admin.service.ServiceCommand"))
 	{
 		DOM_Element elem = data.getDocumentElement();
-		component	= decode(elem.getAttribute("component"));
+		component	= elem.getAttribute("component").transcode();
 
 		DOM_NodeList params = elem.getElementsByTagName("param");
 		for (unsigned i=0; i<params.getLength(); i++)
 		{
 			DOM_Node paramNode = params.item(i);
 			DOM_Element & paramElem = (DOM_Element &) paramNode;
-			std::auto_ptr<char> name(decode(paramElem.getAttribute("name")));
-			std::auto_ptr<char> type(decode(paramElem.getAttribute("type")));
+			std::auto_ptr<char> name(paramElem.getAttribute("name").transcode());
+			std::auto_ptr<char> type(paramElem.getAttribute("type").transcode());
 			std::auto_ptr<char> value(getNodeText(paramElem));
 			switch (cstr2Type(type.get()))
 			{

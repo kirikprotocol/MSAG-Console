@@ -11,7 +11,7 @@ namespace protocol {
 using smsc::admin::service::StringType;
 using smsc::admin::service::BooleanType;
 using smsc::admin::service::LongType;
-using smsc::util::encode_;
+using smsc::util::encode;
 
 static const char * const RESPONSE_HEADER =
 "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n\
@@ -66,7 +66,7 @@ Response::Response(Status status, Variant v)
 		throw AdminException("Unknown response value type");
 	}
 
-	std::auto_ptr<char> encodedValue(encode_(value));
+	std::auto_ptr<char> encodedValue(encode(value));
 	std::auto_ptr<char> data(new char[VARIANT_TEMPLET_LENGTH+strlen(type)+strlen(encodedValue.get())+1]);
 	snprintf(data.get(), VARIANT_TEMPLET_LENGTH+strlen(type)+strlen(encodedValue.get())+1, "%s%s%s%s%s", VARIANT_HEADER, type, VARIANT_MIDDLE,
 					                           encodedValue.get(), VARIANT_FOOTER);

@@ -6,7 +6,7 @@ namespace smsc {
 namespace admin {
 namespace daemon {
 
-using smsc::util::encode_;
+using smsc::util::encode;
 
 void ServicesList::add(Service *service) throw (AdminException)
 {
@@ -64,10 +64,10 @@ char * ServicesList::getText() const
 		snprintf(pid, sizeof(pid), "%lu", (unsigned long)s->getPid());
 		char port[sizeof(in_port_t)*3 + 1];
 		snprintf(port, sizeof(port), "%lu", (unsigned long)s->getPort());
-		std::auto_ptr<char> tmpServiceName(encode_(s->getName()));
-		std::auto_ptr<char> tmpCmdLine(encode_(s->getCommandLine()));
-		std::auto_ptr<char> tmpConfig(encode_(s->getConfigFileName()));
-		std::auto_ptr<char> tmpArgs(encode_(s->getArgs()));
+		std::auto_ptr<char> tmpServiceName(encode(s->getName()));
+		std::auto_ptr<char> tmpCmdLine(encode(s->getCommandLine()));
+		std::auto_ptr<char> tmpConfig(encode(s->getConfigFileName()));
+		std::auto_ptr<char> tmpArgs(encode(s->getArgs()));
 		
 		result += "<service name=\"";
 		result += tmpServiceName.get();

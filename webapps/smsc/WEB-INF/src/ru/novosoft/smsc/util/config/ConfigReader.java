@@ -11,6 +11,7 @@ package ru.novosoft.smsc.util.config;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.apache.log4j.Category;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,6 +23,8 @@ import java.io.InputStream;
 
 public class ConfigReader
 {
+  protected static Category logger = Category.getInstance(ConfigReader.class);
+
   public static Config readConfig(InputStream inputStream)
           throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException
   {
@@ -29,6 +32,8 @@ public class ConfigReader
     DocumentBuilder builder = factory.newDocumentBuilder();
     builder.setEntityResolver(new ConfigEntityResolver());
     InputSource source = new InputSource(inputStream);
+    if (inputStream == null)
+      logger.error("Config file not found");
     Document doc = builder.parse(source);
     return new Config(doc);
   }

@@ -16,7 +16,7 @@
           boolean isSelected = false;
           for (Iterator i = serviceManager.getHostNames().iterator(); i.hasNext(); )
           {
-            String name = StringEncoder.encode((String) i.next());
+            String name = StringEncoderDecoder.encode((String) i.next());
             %><option value="<%=name%>"<%=isSelected ? "" : " selected"%>><%=name%></option><%
             isSelected = true;
           }
