@@ -35,35 +35,37 @@ namespace smsc { namespace mcisme
     {
         uint64_t    id;
         bool        replace, notify;
-        std::string abonent, message;
+        std::string abonent, message, smsc_id;
         int         eventCount;
 
-        Message(uint64_t id=0, std::string abonent="", std::string message="",
-                bool replace=false, bool notify=false) 
-            : id(id), abonent(abonent), message(message),
-              replace(replace), notify(notify), eventCount(0) {};
+        static int countEvents(const std::string& message);
+
+        Message(uint64_t id=0, std::string abonent="",
+                std::string message="", std::string smsc_id="", bool replace=false) 
+            : id(id), abonent(abonent), message(message), smsc_id(smsc_id), replace(replace),
+              eventCount(countEvents(message)) {};
         Message(const Message& msg) 
-            : id(msg.id), abonent(msg.abonent), message(msg.message),
-              replace(msg.replace), notify(msg.notify), eventCount(0) {};
+            : id(msg.id), abonent(msg.abonent), message(msg.message), smsc_id(msg.smsc_id),
+              replace(msg.replace), eventCount(msg.eventCount) {};
         
         Message& operator=(const Message& msg) {
             id = msg.id; eventCount = msg.eventCount;
             abonent = msg.abonent; message = msg.message;
-            replace = msg.replace; notify = msg.notify;
+            smsc_id = msg.smsc_id; replace = msg.replace;
             return (*this);
         };
 
         bool addEvent(const MissedCallEvent& event, bool force=false);
     };
     
-    static const uint8_t MESSAGE_NEW_STATE          = 0;  // Новое или перешедуленное сообщение
-    static const uint8_t MESSAGE_WAIT_STATE         = 10; // Ожидает submitResponce
-    static const uint8_t MESSAGE_ENROUTE_STATE      = 20; // В процессе доставки, ожидает deliveryReciept
+    static const uint8_t MESSAGE_NEW_STATE  = 0;  // Новое или перешедуленное сообщение
+    static const uint8_t MESSAGE_WAIT_RESP  = 10; // Ожидает submit|replace responce 
+    static const uint8_t MESSAGE_WAIT_RCPT  = 20; // Ожидает delivery reciept
 
     typedef enum {
-        NEW         = MESSAGE_NEW_STATE,
-        WAIT        = MESSAGE_WAIT_STATE,
-        ENROUTE     = MESSAGE_ENROUTE_STATE
+        NEW_STATE   = MESSAGE_NEW_STATE,
+        WAIT_RESP   = MESSAGE_WAIT_RESP,
+        WAIT_RCPT   = MESSAGE_WAIT_RCPT
     } MessageState;
     
     class Task : public Mutex
@@ -94,13 +96,12 @@ namespace smsc { namespace mcisme
             return bUpdated;
         };
         
-        void load(); // loadup messages on startup
-        void roll(); // roll to next message (if available)
+        void loadMessages(Connection* connection=0); // loadup task messages
 
         void addEvent(const MissedCallEvent& event);
-        bool getMessage(Message& message);
         
-        void rollCurrent(const char* smsc_id);
+        bool getMessage(Message& message);
+        bool nextMessage(const char* smsc_id, Message& message);
     };
 
     /* TODO: Implement it ???

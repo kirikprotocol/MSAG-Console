@@ -12,6 +12,8 @@ const char* GET_NEXT_SEQID_ID  = "GET_NEXT_SEQID_ID";
 const char* CREATE_NEW_MSG_ID  = "CREATE_NEW_MSG_ID";
 const char* UPDATE_MSG_TXT_ID  = "UPDATE_MSG_TXT_ID";
 const char* SELECT_MSG_TXT_ID  = "SELECT_MSG_TXT_ID";
+
+const char* LOADUP_MESSAGES_ID = "LOADUP_MESSAGES_ID";
 const char* INS_CURRENT_MSG_ID = "INS_CURRENT_MSG_ID";
 const char* DEL_CURRENT_MSG_ID = "DEL_CURRENT_MSG_ID";
 const char* GET_CURRENT_MSG_ID = "GET_CURRENT_MSG_ID";
@@ -25,7 +27,8 @@ const char* SELECT_MSG_TXT_SQL  = "SELECT MESSAGE FROM MCISME_MSG_SET WHERE ID=:
 const char* CREATE_NEW_MSG_SQL  = "INSERT INTO MCISME_MSG_SET (ID, STATE, ABONENT, MESSAGE, SMSC_ID) "
                                   "VALUES (:ID, :STATE, :ABONENT, :MESSAGE, NULL)";
 const char* UPDATE_MSG_TXT_SQL  = "UPDATE MCISME_MSG_SET SET MESSAGE=:MESSAGE WHERE ID=:ID";
-const char* LOADUP_MESSAGES_SQL = "SELECT MESSAGE FROM MCISME_MSG_SET WHERE ID>=:ID AND STATE=:STATE"; // ???
+const char* LOADUP_MESSAGES_SQL = "SELECT ID, SMSC_ID, MESSAGE FROM MCISME_MSG_SET "
+                                  "WHERE ID>=:ID ORDER BY ID";
 
 /* ----------------------- Access to current message ids (MCI_CUR_MSG) ----------------------- */
 const char* INS_CURRENT_MSG_SQL = "INSERT INTO MCISME_CUR_MSG (ABONENT, ID) VALUES (:ABONENT, :ID)";
@@ -87,6 +90,76 @@ uint64_t Task::getNextId(Connection* connection/*=0*/)
 
 /* ----------------------- Main logic implementation ----------------------- */
 
+void Task::loadMessages(Connection* connection/*=0*/)
+{
+    __require__(ds);
+
+    messages.Clean(); bUpdated = false;
+
+    bool isConnectionGet = false;
+    try
+    {
+        if (!connection) {
+            connection = ds->getConnection();
+            if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+            isConnectionGet = true;
+        }
+
+        Statement* currIdStmt = connection->getStatement(GET_CURRENT_MSG_ID, GET_CURRENT_MSG_SQL);
+        if (!currIdStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "messages loadup");
+
+        currIdStmt->setString(1, abonent.c_str());
+        std::auto_ptr<ResultSet> currIdRsGuard(currIdStmt->executeQuery());
+        ResultSet* currIdRs = currIdRsGuard.get();
+        if (!currIdRs)
+            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "messages loadup");
+        
+        if (currIdRs->fetchNext() && !currIdRs->isNull(1))
+        {
+            uint64_t currId = currIdRs->getUint64(1);
+            
+            Statement* getMsgStmt = connection->getStatement(LOADUP_MESSAGES_ID, LOADUP_MESSAGES_SQL);
+            if (!getMsgStmt)
+                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "messages loadup");
+
+            getMsgStmt->setUint64(1, currId);
+            std::auto_ptr<ResultSet> rsGuard(getMsgStmt->executeQuery());
+            ResultSet* rs = rsGuard.get();
+            if (!rs)
+                throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "messages loadup");
+            
+            while (rs->fetchNext()) //ID, STATE, SMSC_ID, MESSAGE
+            {
+                uint64_t msgId = rs->getUint64(1);
+                std::string msgSmscId = (rs->isNull(3) ? "":rs->getString(3));
+                std::string msgText   = (rs->isNull(4) ? "":rs->getString(4));
+                
+                // set replace flag in getMessage & nextMessage methods only
+                Message message(msgId, abonent, msgText, msgSmscId, false);
+                messages.Push(message);
+            }
+        }
+
+        if (connection && isConnectionGet) ds->freeConnection(connection);
+    }
+    catch (Exception& exc) {
+        if (connection && isConnectionGet) ds->freeConnection(connection);
+        throw;
+    }
+}
+
+bool Task::nextMessage(const char* smsc_id, Message& message)
+{
+    __require__(ds);
+
+    MessageState newState = this->wasUpdated() ? WAIT_RESP:WAIT_RCPT;
+
+    // TODO: implement !
+
+    return false;
+}
+
 void Task::insertNewEvent(Connection* connection, const MissedCallEvent& event, bool setCurrent/*=false*/)
 {
     __require__(connection);
@@ -96,11 +169,11 @@ void Task::insertNewEvent(Connection* connection, const MissedCallEvent& event, 
     if (!createMessage || !insertCurrent) 
         throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "new message create");
 
-    Message message(Task::getNextId(connection), abonent, "", false, false);
+    Message message(Task::getNextId(connection), abonent, "", "", false);
     message.addEvent(event, true);
     
     createMessage->setUint64(1, message.id);
-    createMessage->setUint8 (2, (setCurrent) ? MESSAGE_WAIT_STATE:MESSAGE_NEW_STATE); // ???
+    createMessage->setUint8 (2, (setCurrent) ? WAIT_RESP:NEW_STATE);
     createMessage->setString(3, abonent.c_str());
     createMessage->setString(4, message.message.c_str());
     createMessage->executeUpdate();
@@ -151,6 +224,13 @@ static const char*  constShortEngMonthesNames[12] = {
 static int maxEventsPerMessage = 10; // TODO: do it configurable
 static int maxMessageTextSize = 256; // TODO: do it configurable
 
+int Message::countEvents(const std::string& message)
+{
+    int counter = 0;
+    const char* msg = message.c_str();
+    while (msg && *msg) if (*msg++ == '\n') counter++;
+    return counter;
+}
 bool Message::addEvent(const MissedCallEvent& event, bool force/*=false*/)
 {
     if (!force && (eventCount >= maxEventsPerMessage || 
@@ -161,7 +241,6 @@ bool Message::addEvent(const MissedCallEvent& event, bool force/*=false*/)
     sprintf(eventMessage, "%s\n%s at %02d %s %02d:%02d", (eventCount > 0) ? "":"Missed call(s):", 
             event.from.c_str(), dt.tm_mday, constShortEngMonthesNames[dt.tm_mon], dt.tm_hour, dt.tm_min);
     message += eventMessage; eventCount++;
-
     return true;
 }
 void Task::addEvent(const MissedCallEvent& event)
@@ -216,24 +295,5 @@ bool Task::getMessage(Message& message)
     }
     return notEmpty;
 }
-
-void Task::rollCurrent(const char* smsc_id)
-{
-    if (messages.Count() <= 0) return;
-
-    Message message;
-    messages.Shift(message);
-    // ÆÎÏÀ !!!
-}
-
-void Task::load()
-{
-    // TODO: loadup messages on startup
-}
-void Task::roll()
-{
-    // TODO: roll to next message (if available)
-}
-
 
 }}
