@@ -476,6 +476,7 @@ public:
     atrans(*this),
     closed(true)
   {
+    __trace2__("SmppSession: CREATE SESSION %p", this);
   }
   ~SmppSession()
   {
@@ -483,6 +484,7 @@ public:
   }
   void connect(int bindtype=BindType::Transceiver)throw(SmppConnectException)
   {
+    __trace2__("SmppSession: CONNECT %p",this);
     if(!closed)return;
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
       throw SmppConnectException(SmppConnectException::Reason::networkResolve);
@@ -537,10 +539,12 @@ public:
       throw SmppConnectException(reason);
     }
     disposePdu((SmppHeader*)resp);
+    __trace2__("SmppSession: CONNECTED %p",this);
     closed=false;
   }
   void close()
   {
+    __trace2__("SmppSession: CLOSING %p",this);
     if(closed)return;
     reader.Stop();
     writer.Stop();
