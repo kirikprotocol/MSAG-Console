@@ -203,6 +203,8 @@ void sendDeliverySmRespTc()
 		"Отправить статус ESME_RMSGQFUL (переполнение очереди стороне sme)");
 	__reg_tc__("sendDeliverySmResp.sendRetry.invalidSequenceNumber",
 		"Отправить респонс с неправильным sequence_number");
+	__reg_tc__("sendDeliverySmResp.sendRetry.sendAfterSmeTimeout",
+		"Отправить респонс после sme timeout");
 	//sendDeliverySmResp.sendError
 	__reg_tc__("sendDeliverySmResp.sendError",
 		"Отправить респонс для прекращения повторной доставки deliver_sm");
