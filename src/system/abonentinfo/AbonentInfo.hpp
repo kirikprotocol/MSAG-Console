@@ -17,6 +17,7 @@ using namespace smsc::smeman;
 using namespace smsc::core::threads;
 using namespace smsc::core::synchronization;
 using namespace smsc::profiler;
+using smsc::system::Smsc;
 
 class AbonentInfoSme:public SmeProxy,public ThreadedTask{
 public:

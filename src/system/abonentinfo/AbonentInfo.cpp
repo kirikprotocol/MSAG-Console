@@ -35,7 +35,7 @@ int AbonentInfoSme::Execute()
     }
     if(!hasOutput())continue;
     cmd=getOutgoingCommand();
-    if(cmd->cmdid!=smsc::smeman::DELIVERY)
+    if(cmd->cmdid!=smsc::smeman::DELIVERY || cmd->cmdid!=smsc::smeman::QUERYABONENTSTATUS_RESP)
     {
       __trace2__("AbonentInfoSme: incorrect command submitted");
       log.warn("Incorrect command received");
@@ -49,16 +49,40 @@ int AbonentInfoSme::Execute()
     putIncomingCommand(resp);
 
     getSmsText(sms,body,sizeof(body));
-    try{
-      Address a(body);
-      Address d;
-      if(!smsc->AliasToAddress(a,d))
-      {
-        d=a;
+    if(cmd->cmdid==smsc::smeman::DELIVERY)
+    {
+      try{
+        Address a(body);
+        Address d;
+        if(!smsc->AliasToAddress(a,d))
+        {
+          d=a;
+        }
+        SmscCommand cmd=
+          SmscCommand::makeQueryAbonentStatus
+          (
+            d,
+            body,
+            sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
+          );
+        putIncomingCommand(cmd);
       }
+      catch(...)
+      {
+        __trace__("AbonentInfo: invalid address received. Ignored");
+      }
+    }else
+    if(cmd->cmdid==smsc::smeman::QUERYABONENTSTATUS_RESP)
+    {
+      Address d=cmd->get_abonentStatus().addr;
+
       p=smsc->getProfiler()->lookup(d);
+
       char answ[MAX_SHORT_MESSAGE_LENGTH];
-      sprintf(answ,"%s:%d,%d",body,1,p.codepage);
+      sprintf(answ,"%s:%d,%d",
+        cmd->get_abonentStatus().originalAddr.c_str(),
+        cmd->get_abonentStatus().status,
+        p.codepage);
 
       int len=strlen(answ);
       //char buf7[MAX_SHORT_MESSAGE_LENGTH];
@@ -70,13 +94,11 @@ int AbonentInfoSme::Execute()
       s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
       s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
       s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
-        sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+        cmd->get_abonentStatus().userMessageReference);
 
 
       resp=SmscCommand::makeSumbmitSm(s,getNextSequenceNumber());
       putIncomingCommand(resp);
-    }catch(...)
-    {
     }
 
   }

@@ -9,12 +9,13 @@
 #include "util/Exception.hpp"
 #include "system/rescheduler.hpp"
 #include "util/config/route/RouteConfig.h"
-#include "system/mapio/MapIoTask.h"
 #include "system/abonentinfo/AbonentInfo.hpp"
 #include "util/Logger.h"
 #include "system/smscsme.hpp"
 #include "util/regexp/RegExp.hpp"
 #include "util/config/ConfigView.h"
+#include "system/mapio/MapIoTask.h"
+#include "system/abonentinfo/AbonentInfo.hpp"
 
 //#define ENABLE_MAP_SYM
 
@@ -415,22 +416,23 @@ void Smsc::init(const SmscConfigs& cfg)
   }
 
   {
-    smsc::system::abonentinfo::AbonentInfoSme *ai=
+    smsc::system::abonentinfo::AbonentInfoSme *abonentInfo=
       new smsc::system::abonentinfo::AbonentInfoSme(this,
         cfg.cfgman->getString("abonentinfo.systemId"));
-    ai->servType=cfg.cfgman->getString("abonentinfo.service_type");
-    ai->protId=cfg.cfgman->getInt("abonentinfo.protocol_id");
-    tp.startTask(ai);
+    abonentInfo->servType=cfg.cfgman->getString("abonentinfo.service_type");
+    abonentInfo->protId=cfg.cfgman->getInt("abonentinfo.protocol_id");
+    tp.startTask(abonentInfo);
     try{
       smeman.registerInternallSmeProxy(
         cfg.cfgman->getString("abonentinfo.systemId"),
-        ai);
+        abonentInfo);
     }catch(exception& e)
     {
       log.warn("Failed to register abonentinfo");
       __trace2__("Failed to register abonentinfo Sme:%s",e.what());
       __warning__("Failed to register abonentinfo Sme");
     }
+    abonentInfoProxy=abonentInfo;
   }
 
   smscsme=new SmscSme("smscsme",&smeman);
@@ -496,6 +498,7 @@ void Smsc::run()
     }
     tp.startTask(new MapTracker());
     MapDialogContainer::getInstance()->registerSelf(&smeman);
+    mapProxy=MapDialogContainer::getInstance()->getProxy();
   }
 
   scheduler=new Scheduler(eventqueue,store);

@@ -21,6 +21,7 @@
 #include "smeman/smetypes.h"
 #include "smpp/smpp_time.h"
 #include "util/Exception.hpp"
+#include <string>
 
 namespace smsc{
 namespace smeman{
@@ -34,30 +35,33 @@ using smsc::sms::Descriptor;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using smsc::util::Exception;
+using std::string;
 
 const int SmscCommandDefaultPriority=16;
 
 enum CommandId
 {
-  UNKNOWN,         //0
-  DELIVERY,        //1
-  DELIVERY_RESP,   //2
-  SUBMIT,          //3
-  SUBMIT_RESP,     //4
-  FORWARD,         //5
-  ALERT,           //6
-  GENERIC_NACK,    //7
-  QUERY,           //8
-  QUERY_RESP,      //9
-  UNBIND,          //10
-  UNBIND_RESP,     //11
-  REPLACE,         //12
-  REPLACE_RESP,    //13
-  CANCEL,          //14
-  CANCEL_RESP,     //15
-  HLRALERT,        //16
-  ENQUIRELINK,     //17
-  ENQUIRELINK_RESP,//18
+  UNKNOWN,                //0
+  DELIVERY,               //1
+  DELIVERY_RESP,          //2
+  SUBMIT,                 //3
+  SUBMIT_RESP,            //4
+  FORWARD,                //5
+  ALERT,                  //6
+  GENERIC_NACK,           //7
+  QUERY,                  //8
+  QUERY_RESP,             //9
+  UNBIND,                 //10
+  UNBIND_RESP,            //11
+  REPLACE,                //12
+  REPLACE_RESP,           //13
+  CANCEL,                 //14
+  CANCEL_RESP,            //15
+  HLRALERT,               //16
+  ENQUIRELINK,            //17
+  ENQUIRELINK_RESP,       //18
+  QUERYABONENTSTATUS,     //19
+  QUERYABONENTSTATUS_RESP,//20
 };
 
 
@@ -72,6 +76,31 @@ enum CommandStatus{
 #define MAKE_COMMAND_STATUS(type,code) ((type<<16)|code)
 #define GET_STATUS_TYPE(status) ((status>>16)&7)
 #define GET_STATUS_CODE(status) (status&0x0ffff)
+
+struct AbonentStatus{
+  Address addr;
+  int     status;
+  int     userMessageReference;
+  string  originalAddr;
+
+  AbonentStatus(const Address& addr,const char* oaddr,int umr):
+    addr(addr),
+    status(0),
+    userMessageReference(umr),
+    originalAddr(oaddr)
+  {
+  }
+  AbonentStatus(const AbonentStatus& as,int status):
+    addr(as.addr),
+    status(status),
+    userMessageReference(as.userMessageReference),
+    originalAddr(as.originalAddr)
+  {
+  }
+  static const int OFFLINE=0;
+  static const int ONLINE=1;
+  static const int UNKNOWN=2;
+};
 
 struct SmsResp
 {
@@ -277,7 +306,10 @@ struct _SmscCommand
     case HLRALERT:
       delete ( (Address*)dta);
       break;
-
+    case QUERYABONENTSTATUS:
+    case QUERYABONENTSTATUS_RESP:
+      delete ( (AbonentStatus*)dta);
+      break;
     case UNKNOWN:
     case FORWARD:
     case ALERT:
@@ -307,6 +339,11 @@ struct _SmscCommand
   const char* get_sourceId(){return sourceId.c_str();}
   const Address& get_address() { return *(Address*)dta; }
   void set_address(const Address& addr) { *(Address*)dta = addr; }
+
+  AbonentStatus& get_abonentStatus()
+  {
+    return *((AbonentStatus*)dta);
+  }
 
   bool is_reschedulingForward(){return dta!=0;}
 };
@@ -546,6 +583,30 @@ public:
     _cmd.ref_count = 1;
     _cmd.cmdid = CANCEL;
     _cmd.dta = new CancelSm(id,oa,da);
+    _cmd.dialogId = 0;
+    return cmd;
+  }
+
+  static SmscCommand makeQueryAbonentStatus(const Address& addr,const char* oaddr,int umr)
+  {
+    SmscCommand cmd;
+    cmd.cmd = new _SmscCommand;
+    _SmscCommand& _cmd = *cmd.cmd;
+    _cmd.ref_count = 1;
+    _cmd.cmdid = QUERYABONENTSTATUS;
+    _cmd.dta = new AbonentStatus(addr,oaddr,umr);
+    _cmd.dialogId = 0;
+    return cmd;
+  }
+
+  static SmscCommand makeQueryAbonentStatusResp(const AbonentStatus& as,int status)
+  {
+    SmscCommand cmd;
+    cmd.cmd = new _SmscCommand;
+    _SmscCommand& _cmd = *cmd.cmd;
+    _cmd.ref_count = 1;
+    _cmd.cmdid = QUERYABONENTSTATUS_RESP;
+    _cmd.dta = new AbonentStatus(as,status);
     _cmd.dialogId = 0;
     return cmd;
   }

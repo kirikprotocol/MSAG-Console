@@ -273,8 +273,11 @@ protected:
   performance::PerformanceDataDispatcher perfDataDisp;
   smsc::db::DataSource *dataSource;
 
+  SmeProxy* abonentInfoProxy;
 
   smsc::stat::StatisticsManager *statMan;
+
+  SmeProxy* mapProxy;
 
   Mutex perfMutex;
   uint64_t submitOkCounter;

@@ -283,6 +283,16 @@ void Smsc::mainLoop()
         alertAgent->putCommand(cmd);
         continue;
       }
+      case __CMD__(QUERYABONENTSTATUS):
+      {
+        mapProxy->putCommand(cmd);
+        continue;
+      }
+      case __CMD__(QUERYABONENTSTATUS_RESP):
+      {
+        abonentInfoProxy->putCommand(cmd);
+        continue;
+      }
     }
     __require__(cmd.getProxy()==src_proxy);
     eventqueue.enqueue(id,cmd);
