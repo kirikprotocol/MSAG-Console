@@ -58,8 +58,6 @@ int CommandDispatcher::Execute()
 {
 	init();
 
-	//ShutdownableList::addListener(this);
-	
 	logger.info("Command dispather started");
 	
 	std::auto_ptr<Command> command(0);
@@ -124,8 +122,6 @@ int CommandDispatcher::Execute()
 					 && (command->getId() != Command::undefined)
 					 && (command->getId() != Command::shutdown_service));
 	
-	//ShutdownableList::removeListener(this);
-
 	sock->Abort();
   delete sock;
   sock = 0;

@@ -47,34 +47,44 @@ public:
 
 	virtual int Execute()
 	{
-		//ShutdownableList::addListener(this);
-		sock.StartServer();
-		
-		logger.info("socket listener started");
-		
-		while (!isShutdownSignaled)
-		{
-			if (Socket *newSocket = sock.Accept())
-			{
-				pool.startTask(new _T_CommandDispatcher(newSocket));
-			}
-			else
-			{
-				if (isShutdownSignaled)
-					logger.info("ServiceSocketListener shutdown");
-			}
-		}
-		
-    sock.Abort();
-		logger.info("ServiceSocketListener stopped");
-		return 0;
+    try 
+    {
+  		sock.StartServer();
+  		
+  		logger.info("socket listener started");
+  		
+  		while (!isShutdownSignaled)
+  		{
+  			if (Socket *newSocket = sock.Accept())
+  			{
+  				pool.startTask(new _T_CommandDispatcher(newSocket));
+  			}
+  			else
+  			{
+  				if (isShutdownSignaled)
+  					logger.info("ServiceSocketListener shutdown");
+  			}
+  		}
+  		
+      sock.Abort();
+  		pool.shutdown();
+  		logger.info("ServiceSocketListener stopped");
+    }
+    catch (std::exception &e)
+    {
+      logger.error("Exception on listener thread: %s\n", e.what());
+    }
+    catch (...)
+    {
+      logger.error("Unknown Exception on listener thread\n");
+    }
+    return 0;
 	}
 
 	void shutdown()
 	{
 		isShutdownSignaled = true;
     sock.Abort();
-		pool.shutdown();
     logger.debug("ServiceSocketListener: server socket closed");
 	}
 

@@ -10,6 +10,7 @@
 #include <admin/AdminException.h>
 #include <admin/daemon/DaemonSocketListener.h>
 #include <admin/daemon/config_parameter_names.h>
+#include <admin/daemon/DaemonShutdownHandler.h>
 #include <admin/service/AdminSocketManager.h>
 #include <admin/util/SignalHandler.h>
 #include <util/config/ConfigException.h>
@@ -70,6 +71,13 @@ void daemonInit()
 
 using smsc::admin::daemon::daemonInit;
 using smsc::admin::daemon::DaemonCommandDispatcher;
+using smsc::admin::daemon::DaemonShutdownHandler;
+
+void pipehandler(int a, siginfo_t* info, void* p)
+{
+  fprintf(stderr, "BROKEN PIPE SIGNAL RECEIVED, ABORTING...\n");
+  //abort();
+}
 
 int main(int argc, char **argv)
 {
@@ -105,9 +113,15 @@ int main(int argc, char **argv)
 		listener.Start();
 
 		DaemonCommandDispatcher::activateChildSignalHandler();
+    DaemonShutdownHandler shutdownHandler(listener);
+    DaemonShutdownHandler::registerShutdownHandler(&shutdownHandler);
 		logger.info("Started");
+
+    setExtendedSignalHandler(SIGPIPE, pipehandler); 
+
 		listener.WaitFor();
 		logger.info("Stopped");
+    fprintf(stderr, "Daemon stopped\n");
 	}
 	catch (ConfigException &e)
 	{
