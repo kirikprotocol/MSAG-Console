@@ -2100,7 +2100,6 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
   unsigned dialogid_smsc = 0;
   MAP_TRY{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn));
-    __require__(dialog->ssn==localSsn);
     if ( dialog.isnull() ) {
       unsigned _di = dialogid_map;
       dialogid_map = 0;

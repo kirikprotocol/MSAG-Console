@@ -440,9 +440,9 @@ public:
       if( curtime - item->lockedAt >= MAX_MT_LOCK_TIME ) {
         // drop locked dialog and all msg in chain, and create dialog as new.
         __warn2__(smsc::util::_mapdlg_cat,"Dialog locked too long id=%x.",item->dialogid_map);
-        dropDialog( item->dialogid_map, item->ssn );
+        _dropDialog( item->dialogid_map, item->ssn );
       } else {
-        if( item->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
+        if( item->sms && item->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
           // check if it's really next part of concatenated message
           if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) ) 
             throw NextMMSPartWaiting("Waiting next part of concat message");
@@ -513,6 +513,10 @@ public:
 
   void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn){
     MutexGuard g(sync);
+    _dropDialog(dialogueid,ssn);
+  }
+  
+  void _dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn){
     MapDialog* item = 0;
     if ( hash_.Get(MKDID(dialogueid,ssn),item) ){
       if ( item->abonent.length() != 0 ) {
@@ -526,7 +530,6 @@ public:
       __mapdlg_trace2__("has no dialog for dialogid 0x%x",dialogueid);
     }
   }
-
   void registerSelf(SmeManager* smeman);
   void unregisterSelf(SmeManager* smeman);
   void abort();
