@@ -184,7 +184,7 @@ class MapDialogContainer{
   Mutex sync;
   MapProxy proxy;
   XHash<ET96MAP_DIALOGUE_ID_T,MapDialog*,hash_func_ET96MAP_DID> hash;
-  XHash<const string,unsigned,StringHashFunc> lock_map;
+  XHash<const string,MapDialog*,StringHashFunc> lock_map;
   list<unsigned> dialogId_pool;
   friend void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
   //ET96MAP_DIALOGUE_ID_T allocateDialogueId();
@@ -231,14 +231,10 @@ public:
     __trace2__("MAP::createSMSCDialog: try create SMSC dialog on abonent %s",abonent.c_str());
     if ( lock_map.Exists(abonent) ) {
       __trace2__("MAP::createSMSCDialog: locked");
-      unsigned did = lock_map[abonent];
-      MapDialog* item = 0;
-      if ( hash.Get(did,item) ){
-        __trace2__("MAP::createSMSCDialog: chain size %d",item->chain.size());
-        item->chain.push_back(cmd);
-      }else{
-        throw runtime_error("MAP::%s dialog id 0x%x is not present!",__FUNCTION__,did);
-      }
+      MapDialog* item = lock_map[abonent];
+      if ( dlg == 0 ) throw runtime_error("MAP::%s dialog for abonent %s is not present!",__FUNCTION__,abonent);
+      __trace2__("MAP::createSMSCDialog: chain size %d",item->chain.size());
+      item->chain.push_back(cmd);
       return 0;
     }
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
@@ -247,7 +243,7 @@ public:
     dlg->dialogid_smsc = smsc_did;
     dlg->abonent = abonent;
     hash.Insert(map_dialog,dlg);
-    lock_map.Insert(abonent,map_dialog);
+    lock_map.Insert(abonent,dlg);
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
     dlg->AddRef();
     return dlg;
