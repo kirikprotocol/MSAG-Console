@@ -4,17 +4,20 @@
 #include <algorithm>
 #include <functional>
 
+#include "db/DataSource.h"
+
 namespace smsc {
 namespace acls {
 
 typedef std::string    AclPhoneNumber;
-inline const string& AclPhoneAsString(const AclPhoneNumber& a) { return a; }
+inline const std::string& AclPhoneAsString(const AclPhoneNumber& a) { return a; }
+inline const AclPhoneNumber MakeAclPhoneNumber(const std::string& val) { return val; }
 
 typedef std::string    AclName;
 typedef std::string    AclDescription;
 typedef unsigned long  AclIdent;
-typedef const char*    AclPChar;
 
+typedef const char*    AclPChar;
 typedef std::pair<AclIdent,AclName> AclNamedIdent; 
 inline AclNamedIdent MakeAclNamedIdent(AclIdent ident,const AclName& name) 
 { return AclNamedIdent(ident,name); }
@@ -24,6 +27,8 @@ enum AclCacheType {
   ACT_DBSDIRECT = '1',
   ACT_FULLCACHE = '2'
 };
+inline char AclCacheTypeAsChar(AclCacheType act) { return char(act); }
+inline AclCacheType MakeAclCacheType(char act) { return AclCacheType(act); }
 
 struct AclInfo
 {
@@ -32,9 +37,9 @@ struct AclInfo
   AclDescription  desctiption;
   AclCacheType    cache;
 };
-inline AclInfo MakeAclInfo(AclIdent ident,AclName name,AclDescription desctiption,AclCacheType cache)
+inline AclInfo MakeAclInfo(AclIdent ident,AclName name,AclDescription desc,AclCacheType cache)
 {
-  AclInfo aclifo = { ident,name,description,cach };
+  AclInfo aclinfo = { ident,name,desc,cache };
   return aclinfo;
 }
 
@@ -43,15 +48,15 @@ struct AclEditor
 {
   virtual void    enumerate(std::vector<AclNamedIdent>& result) = 0;
   virtual AclInfo getInfo(AclIdent) = 0;  
-  virtual bool    remove(AclIdent) = 0;
+  virtual void    remove(AclIdent) = 0;
   virtual void    create(
                         AclIdent,
                         const char* aclname,
                         const char* descr,
                         const std::vector<AclPhoneNumber>& phones = std::vector<AclPhoneNumber>(),
                         AclCacheType act = ACT_DBSDIRECT) = 0;
-  virtual bool    lookupByPrefix(AclIdent,const char* prefix,std::vector<AclPhoneNumber>&) = 0;
-  virtual bool    removePhone(AclIdent,const AclPhoneNumber&) = 0;
+  virtual void    lookupByPrefix(AclIdent,const char* prefix,std::vector<AclPhoneNumber>&) = 0;
+  virtual void    removePhone(AclIdent,const AclPhoneNumber&) = 0;
   virtual void    addPhone(AclIdent,const AclPhoneNumber&) = 0;
   virtual void    updateAclInfo(
                         AclIdent,
@@ -81,7 +86,7 @@ struct AclAbstractMgr : public AclEditor, public AclLookuper
 {  
   //virtual void AddRef() = 0;
   //virtual void Release() = 0;
-  virtual void LoadUp() = 0;
+  virtual void LoadUp(smsc::db::DataSource*) = 0;
   //virtual void Relax() = 0;
   //protected:
   virtual ~AclAbstractMgr() {}
