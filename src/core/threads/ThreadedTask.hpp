@@ -62,7 +62,7 @@ public:
     heap->freeMem(ptr);
   }
 
-  void stop(){isStopping=true;}
+  virtual void stop(){isStopping=true;}
 
 protected:
   smsc::core::buffers::MemoryHeap *heap;
