@@ -65,64 +65,23 @@ public class Gateway extends Proxy
     if (Response.StatusOk != response.getStatus())
       throw new SibincoException("Couldn't update sme info, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
   }
-  public Object loadRoutes(final String subject) throws SibincoException
-   {
-     final Response response = super.runCommand(new LoadRoutes(subject));
-     if (Response.StatusOk != response.getStatus())
-       throw new SibincoException("Couldn't load active routes configuration, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
-     final Element resultElem = (Element) response.getData().getElementsByTagName("variant").item(0);
-      final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
-      switch (resultType.getId()) {
-        case Type.StringType:
-          return Utils.getNodeText(resultElem);
-        case Type.IntType:
-          return Long.decode(Utils.getNodeText(resultElem));
-        case Type.BooleanType:
-          return Boolean.valueOf(Utils.getNodeText(resultElem));
-        case Type.StringListType:
-          return translateStringList(Utils.getNodeText(resultElem));
-        default:
-          throw new SibincoException("Unknown result type");
-      }
-   }
+
    public synchronized List loadRoutes(final GwRoutingManager gwRoutingManager)
           throws SibincoException
   {
     gwRoutingManager.trace();
-
-    //final Object res = call(SMPPGW_COMPONENT_ID, LOAD_ROUTES_METHOD_ID, Type.Types[Type.StringListType], new HashMap());
-    final Object res =loadRoutes(LOAD_ROUTES_METHOD_ID);
+    String err="Couldn't load active routes configuration, nested: ";
+    final Object res = call( LOAD_ROUTES_METHOD_ID, err,Type.Types[Type.StringListType], new HashMap());
     return res instanceof List ? (List) res : null;
   }
- public  Object traceRoute(final String subject,final Map args) throws SibincoException
-     {
-      //final Response response = super.runCommand(new CommandCall(TRACE_ROUTE_METHOD_ID, TRACE_ROUTE_METHOD_ID, Type.Types[Type.StringListType], args));
-       final Response response = runCommand(new CommandCall(subject, Type.Types[Type.StringListType], args));
-       if (Response.StatusOk != response.getStatus())
-             throw new SibincoException("Couldn't trace route , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
-      final Element resultElem = (Element) response.getData().getElementsByTagName("variant").item(0);
-      final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
-      switch (resultType.getId()) {
-        case Type.StringType:
-          return Utils.getNodeText(resultElem);
-        case Type.IntType:
-          return Long.decode(Utils.getNodeText(resultElem));
-        case Type.BooleanType:
-          return Boolean.valueOf(Utils.getNodeText(resultElem));
-        case Type.StringListType:
-          return translateStringList(Utils.getNodeText(resultElem));
-        default:
-          throw new SibincoException("Unknown result type");
-      }
-     }
 
   public synchronized SmeStatus getSmeStatus(final String id) throws SibincoException
   {
     final long currentTime = System.currentTimeMillis();
     if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp) {
       serviceRefreshTimeStamp = currentTime;
-      smeStatuses.clear();
-      final Object result = call(SME_STATUS_ID, Type.Types[Type.StringListType], new HashMap());
+      smeStatuses.clear(); String err="Couldn't get sme status, nested: ";
+      final Object result = call(SME_STATUS_ID,err, Type.Types[Type.StringListType], new HashMap());
       if (!(result instanceof List))
         throw new SibincoException("Error in response");
 
@@ -134,17 +93,14 @@ public class Gateway extends Proxy
     }
     return (SmeStatus) smeStatuses.get(id);
   }
-  public Object call( final String commandId, final Type returnType, final Map arguments) throws SibincoException
+  public Object call( final String commandId,final String err, final Type returnType, final Map arguments) throws SibincoException
    {
-//    if (info.status != ServiceInfo.STATUS_RUNNING)
-//      throw new SibincoException("Service \"" + info.getId() + "\" is not running");
-
+     //if (info.status != ServiceInfo.STATUS_RUNNING)
+    // throw new SibincoException("Service \"" + info.getId() + "\" is not running");
     // refreshComponents();
-
-
        final Response r = runCommand(new CommandCall(commandId,  returnType, arguments));
        if (Response.StatusOk != r.getStatus())
-         throw new SibincoException("Error occured: " + r.getDataAsString());
+         throw new SibincoException("Error occured: "+err + r.getDataAsString());
        final Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
        final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
        switch (resultType.getId()) {
@@ -159,23 +115,23 @@ public class Gateway extends Proxy
          default:
            throw new SibincoException("Unknown result type");
        }
-
-
    }
 
 
   public synchronized List traceRoute(final String dstAddress, final String srcAddress, final String srcSysId)
           throws SibincoException
   {
-
+    String err="Couldn't trace route , nested: ";
     final Map args = new HashMap();
     args.put("dstAddress", dstAddress);
     args.put("srcAddress", srcAddress);
     args.put("srcSysId", srcSysId);
     //final Object res = call(SMPPGW_COMPONENT_ID, TRACE_ROUTE_METHOD_ID, Type.Types[Type.StringListType], args);
-    final Object res =traceRoute(TRACE_ROUTE_METHOD_ID,args);
+    final Object res =call(TRACE_ROUTE_METHOD_ID,err,Type.Types[Type.StringListType], args);
     return res instanceof List ? (List) res : null;
   }
+
+
   protected List translateStringList(final String listStr)
     {
       if (null == listStr || 0 == listStr.length())
