@@ -52,6 +52,17 @@ public class SmsViewFormBean extends SmsQuery
     processFirstIndexing();
     setDates();
   }
+  /*public void processDeleteAll()
+  {
+    getDates(); rows = null;
+    deletedRowsCount = view.delSmsSet(this);
+    processFirstIndexing();
+    setDates();
+  }
+  public void processDeleteSelected()
+  {
+  }*/
+
   public void moveToPrev() {
     processPrevIndexing();
   }
@@ -121,11 +132,13 @@ public class SmsViewFormBean extends SmsQuery
   public void setToDateSecond(int second) { toDateSecond = second; }
   public int getToDateSecond() { return toDateSecond; }
 
+  //public int getDeletedRowsCount() { return deletedRowsCount; }
   /* --------------------------- Private Part ----------------------------- */
 
   private boolean prevEnabled = false;
   private boolean nextEnabled = true;
 
+  //private int deletedRowsCount = 0;
   private int rowsToDisplay = 10;
   private int rowIndex = 0;
 
