@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT scenarios (scenario+)>
+
+<!--
+USSD:
+  0 - not supported
+  1 - USSD phase 1
+  2 - USSD phase 2
+
+SMS:
+  0 - not supported
+  1 - dialog via SMS
+  2 - initialize USSD dialog (WARNING! In this case "ussd" value should be 2.)
+-->
+<!ELEMENT scenario (scenarioPreProcessor?,scenarioPostProcesoor?,errorHandler?,page+)>
+<!ATTLIST scenario id            CDATA #REQUIRED
+                   active        (0|1|yes|no|true|false|YES|NO|TRUE|FALSE) "0"
+                   ussd          (0|1|2) "2"
+                   sms           (0|1|2) "2"
+                   resources     CDATA #IMPLIED>
+
+<!ELEMENT page (pagePreProcessor?,pagePostProcessor?,(pageExecutor|segment+),command*)>
+<!ATTLIST page id            CDATA #REQUIRED
+               question      CDATA #REQUIRED
+               shortcut      CDATA #IMPLIED>
+
+<!ELEMENT segment (data|segmentExecutor)>
+
+<!ELEMENT data (#PCDATA)>
+
+<!ELEMENT command EMPTY>
+<!ATTLIST command name    CDATA #REQUIRED
+                  target  CDATA #REQUIRED>
+
+<!ELEMENT scenarioPreProcessor (initParam|bundle)*>
+<!ATTLIST scenarioPreProcessor class CDATA #REQUIRED>
+
+<!ELEMENT scenarioPostProcessor (initParam|bundle)*>
+<!ATTLIST scenarioPostProcessor class CDATA #REQUIRED>
+
+<!ELEMENT errorHandler (initParam|bundle)*>
+<!ATTLIST errorHandler class CDATA #REQUIRED>
+
+<!ELEMENT pagePreProcessor (initParam|bundle)*>
+<!ATTLIST pagePreProcessor class CDATA #REQUIRED>
+
+<!ELEMENT pagePostProcessor (initParam|bundle)*>
+<!ATTLIST pagePostProcessor class CDATA #REQUIRED>
+
+<!ELEMENT pageExecutor (initParam|bundle)*>
+<!ATTLIST pageExecutor class CDATA #REQUIRED>
+
+<!ELEMENT segmentEexecutor (initParam|bundle)*>
+<!ATTLIST segmentEexecutor class CDATA #REQUIRED>
+
+<!ELEMENT initParam (#PCDATA)>
+<!ATTLIST initParam name  CDATA #REQUIRED
+                    value CDATA #IMPLIED>
+
+<!ELEMENT bundle EMPTY>
+<!ATTLIST bundle name CDATA #REQUIRED>

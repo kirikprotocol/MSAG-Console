@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE scenarios SYSTEM "file:///scenarios.dtd">
+<scenarios>
+  <scenario id="0" active="1" sms="1" ussd="2" resources="resources.xml">
+    <page id="MAIN" question="0">
+      <segment>
+        Привет!
+        1>Просмотр переадресации
+        2>Управление переадресацией
+        3>Управление профилем
+      </segment>
+      <command name="1" target="divert_info"/>
+      <command name="2" target="divert_mgr"/>
+      <command name="3" target="profile_mgr"/>
+      <command name="(**)" target="MAIN"/>
+    </page>
+    <page id="divert_mgr" question="0">
+      <segment>
+        Установить переадресацию
+        1>Безусл
+        2>Busy
+        3>Absent
+        4>Not avail
+      </segment>
+      <command name="1" target="uncond_divert"/>
+    </page>
+    <page id="uncoond_divert" question="0" >
+      <segment>
+        Введите номер телефона
+        или 0 выключить
+        00 мисед колс
+        000 автоответчик
+      </segment>
+      <command name="(**)" target="u_divert_set"/>
+    </page>
+    <page id="u_divert_set" question="0">
+      <pageExecutor class="ru.sibinco.mci.profile.DivertSet">
+        <initParam name="type" value="uncond"/>
+        <bundle name="system"/>
+      </pageExecutor>
+      <command name="(**)" target="divert_mgr"/>
+    </page>
+  </scenario>
+</scenarios>

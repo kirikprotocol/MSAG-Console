@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<project name="MCIProf" default="build" basedir=".">
+    <description>Sportlive build file</description>
+  <property file="${basedir}/build.properties"/>
+  <fileset>
+    <include name="${build.dir}/lnadjnalsdnln"/>
+  </fileset>
+  <target name="compile" description="Compile">
+  </target>
+  <target name="build" depends="compile" description="build all">
+  </target>
+  <target name="distr" depends="build" description="make war">
+    <!-- должен сделать war с jar'ами, конфигами, схемами и т.д. и т.п. -->
+    
+  </target>
+  <target name="update" depends="build" description="make update package">
+    <!-- должен сделать зип с jar'ами, schema.xml, resources.xml --> 
+  </target>  
+  
+</project>

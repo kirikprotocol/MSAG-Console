@@ -1,0 +1,32 @@
+#! /bin/bash
+export LC_ALL=ru_RU.ANSI1251            
+export NLS_LANG=RUSSIAN_CIS.CL8MSWIN1251
+
+if [ -d logs ]; then 
+  rm -rf logs
+fi
+
+if [ -d log ]; then 
+  rm -rf log
+fi
+
+if [ ! -L logs ]; then
+  ln -s ../../logs logs
+fi
+
+echo $$ >pid
+if [ -f logs/mciprof.err ]; then
+  mv logs/mciprof.err logs/mciprof.err.old
+fi
+
+cls=conf
+for i in lib/*.jar ; do cls=$cls:$i ; done
+
+while true;
+do
+/usr/java14/bin/java -Dsmsc_mciprof -Xmx64M -classpath $cls ru.sibinco.smpp.appgw.ApplicationsGateWay conf/appgw.properties 1>/dev/null 2>>logs/mciprof.err&
+PID=$!
+export PID
+trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
+wait $PID
+done

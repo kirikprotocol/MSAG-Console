@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE resources SYSTEM "file:///resources.dtd">
+<resources>
+  <bundle name="system">
+    <str name="test" value="test value"/>
+    <str name="pattern">
+      Это текст {0} такой
+    </str>
+    <str name="divert_set">
+      Переадресация установлена на {0} для причины {1}.
+      0> назад
+    </str>
+    <str name="reason_busy" value="занят"/>
+    <str name="reason_uncond" value="безусловно"/>
+  </bundle>
+</resources>

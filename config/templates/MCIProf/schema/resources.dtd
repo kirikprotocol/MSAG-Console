@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT resources (bundle+)>
+
+<!ELEMENT bundle (str|int|long|double|date)*>
+<!ATTLIST bundle name CDATA #REQUIRED>
+
+<!ELEMENT str (#PCDATA)>
+<!ATTLIST str name  CDATA #REQUIRED
+              value CDATA #IMPLIED>
+
+<!ELEMENT int EMPTY>
+<!ATTLIST int name  CDATA #REQUIRED
+              value CDATA #REQUIRED>
+
+<!ELEMENT long EMPTY>
+<!ATTLIST long name  CDATA #REQUIRED
+               value CDATA #REQUIRED>
+
+<!ELEMENT double EMPTY>
+<!ATTLIST double name  CDATA #REQUIRED
+                 value CDATA #REQUIRED>
+
+<!ELEMENT date EMPTY>
+<!ATTLIST date name   CDATA #REQUIRED
+               format CDATA #REQUIRED
+               value  CDATA #REQUIRED>
+
