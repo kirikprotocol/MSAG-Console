@@ -1,6 +1,7 @@
 #include <util/xml/SmscTranscoder.h>
 #include <util/xml/utilFunctions.h>
 #include <util/Exception.hpp>
+#include <errno.h>
 
 namespace smsc {
 namespace util {
