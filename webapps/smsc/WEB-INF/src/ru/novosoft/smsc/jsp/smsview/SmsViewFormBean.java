@@ -21,7 +21,6 @@ public class SmsViewFormBean extends IndexBean
 		"Oct", "Nov", "Dec"
 	};
 
-
 	private String mbDelete = null;
 	private String mbQuery = null;
 	private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
@@ -122,104 +121,68 @@ public class SmsViewFormBean extends IndexBean
 		return processQuery();
 	}
 
-	public SmsRow getRow(int index)
-	{
-		return rows == null ? null : rows.getRow(index);
+	public SmsRow getRow(int index)	{
+        return rows == null ? null : rows.getRow(index);
 	}
 
 	/********************************* query delegeates *********************************/
-	public void setSort(String by)
-	{
+	public void setSort(String by) {
 		sort = by;
 	}
-
-	public String getSort()
-	{
+	public String getSort() {
 		return sort;
 	}
-
-	public int getStorageType()
-	{
+	public int getStorageType() {
 		return query.getStorageType();
 	}
-
-	public void setStorageType(int type)
-	{
+	public void setStorageType(int type) {
 		query.setStorageType(type);
 	}
-
-	public int getRowsMaximum()
-	{
+	public int getRowsMaximum() {
 		return query.getRowsMaximum();
 	}
-
-	public void setRowsMaximum(int max)
-	{
+	public void setRowsMaximum(int max) {
 		query.setRowsMaximum(max);
 	}
-
-	public String getFromAddress()
-	{
+	public String getFromAddress() {
 		return query.getFromAddress();
 	}
-
-	public void setFromAddress(String address)
-	{
+	public void setFromAddress(String address) {
 		query.setFromAddress(address);
 	}
-
-	public String getToAddress()
-	{
+	public String getToAddress() {
 		return query.getToAddress();
 	}
-
-	public void setToAddress(String address)
-	{
+	public void setToAddress(String address) {
 		query.setToAddress(address);
 	}
-
-	public String getSrcSmeId()
-	{
+	public String getSrcSmeId()	{
 		return query.getSrcSmeId();
 	}
-
-	public void setSrcSmeId(String id)
-	{
+	public void setSrcSmeId(String id) {
 		query.setSrcSmeId(id);
 	}
-
-	public String getDstSmeId()
-	{
+	public String getDstSmeId() {
 		return query.getDstSmeId();
 	}
-
-	public void setDstSmeId(String id)
-	{
+	public void setDstSmeId(String id)	{
 		query.setDstSmeId(id);
 	}
-
-	public String getRouteId()
-	{
+	public String getRouteId() {
 		return query.getRouteId();
 	}
-
-	public void setRouteId(String id)
-	{
+	public void setRouteId(String id) {
 		query.setRouteId(id);
 	}
-
-	public String getSmsId()
-	{
+	public String getSmsId() {
 		return query.getSmsId();
 	}
-
-	public void setSmsId(String id)
-	{
+	public void setSmsId(String id)	{
 		query.setSmsId(id);
 	}
 
-	public String getFromDate()
-	{
+    public String getFromDate()
+    {
 		if (query.getFromDateEnabled())
 		{
 			SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
@@ -233,7 +196,6 @@ public class SmsViewFormBean extends IndexBean
 
 	public void setFromDate(String dateString)
 	{
-		System.out.println("BLYA!  setFromDate:  dateString = " + dateString);
 		final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
 		query.setFromDateEnabled(dateEnabled);
 		if (dateEnabled)
@@ -266,7 +228,6 @@ public class SmsViewFormBean extends IndexBean
 
 	public void setTillDate(String dateString)
 	{
-		System.out.println("BLYA!  setTillDate:  dateString = " + dateString);
 		final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
 		query.setTillDateEnabled(dateEnabled);
 		if (dateEnabled)
@@ -284,23 +245,8 @@ public class SmsViewFormBean extends IndexBean
 		}
 	}
 
-	public String getMbDelete()
-	{
-		return mbDelete;
-	}
-
-	public void setMbDelete(String mbDelete)
-	{
-		this.mbDelete = mbDelete;
-	}
-
-	public String getMbQuery()
-	{
-		return mbQuery;
-	}
-
-	public void setMbQuery(String mbQuery)
-	{
-		this.mbQuery = mbQuery;
-	}
+	public String getMbDelete() { return mbDelete; }
+	public void setMbDelete(String mbDelete) {	this.mbDelete = mbDelete; }
+	public String getMbQuery() { return mbQuery; }
+	public void setMbQuery(String mbQuery) { this.mbQuery = mbQuery; }
 }
