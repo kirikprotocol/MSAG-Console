@@ -5,6 +5,7 @@
 
 using namespace smsc::sms;
 using namespace smsc::sme;
+using namespace smsc::smpp;
 
 int stopped=0;
 
@@ -12,21 +13,41 @@ class MyListener:public SmppPduEventListener{
 public:
   void handleEvent(SmppHeader *pdu)
   {
-    printf("event!\n");
+    if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
+    {
+      printf("\nReceived:%s\n",((PduXSm*)pdu)->get_message().get_shortMessage());
+      PduDeliverySmResp resp;
+      resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+      resp.set_messageId("");
+      resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+      trans->sendDeliverySmResp(resp);
+    }
   }
   void handleError(int errorCode)
   {
     printf("error!\n");
     stopped=1;
   }
+
+  void setTrans(SmppTransmitter *t)
+  {
+    trans=t;
+  }
+protected:
+  SmppTransmitter* trans;
 };
 
 int main(int argc,char* argv[])
 {
+  if(argc==1)
+  {
+    printf("usage: %s systemid\n",argv[0]);
+    return -1;
+  }
   SmeConfig cfg;
   cfg.host="smsc";
   cfg.port=9002;
-  cfg.sid="1";
+  cfg.sid=argv[1];
   cfg.timeOut=10;
   cfg.password="";
   MyListener lst;
@@ -34,18 +55,10 @@ int main(int argc,char* argv[])
   try{
     ss.connect();
     sleep(1);
-  {
-    unsigned char message[512];
-    printf("Enter message:");fflush(stdout);
-    fgets((char*)message,sizeof(message),stdin);
-    printf("Accepted:%s\n",message);fflush(stdout);
-  }
     PduSubmitSm sm;
     SMS s;
-    const char *src="1";
-    const char *dst="2";
-    s.setOriginatingAddress(strlen(src),0,0,src);
-    s.setDestinationAddress(strlen(dst),0,0,dst);
+//    const char *dst="2";
+    s.setOriginatingAddress(strlen(cfg.sid.c_str()),0,0,cfg.sid.c_str());
     char msc[]="123";
     char imsi[]="123";
     s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
@@ -59,26 +72,39 @@ int main(int argc,char* argv[])
     s.setArchivationRequested(false);
     //unsigned char message[]="SME test message";
     SmppTransmitter *tr=ss.getSyncTransmitter();
+    lst.setTrans(tr);
     s.setEServiceType("XXX");
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
     while(!stopped)
     {
       unsigned char message[512];
+      printf("Enter destination:");fflush(stdout);
+      fgets((char*)message,sizeof(message),stdin);
+      s.setDestinationAddress(strlen((char*)message),0,0,(char*)message);
       printf("Enter message:");fflush(stdout);
       fgets((char*)message,sizeof(message),stdin);
-      printf("Accepted\n");fflush(stdout);
       for(int i=0;message[i];i++)
       {
         if(message[i]<32)message[i]=32;
       }
-      s.setMessageBody(strlen((char*)message),1,false,message);
+      int len=strlen((char*)message);
+      s.setMessageBody(len,1,false,message);
       fillSmppPduFromSms(&sm,&s);
       PduSubmitSmResp *resp=tr->submit(sm);
+      if(resp->get_header().get_commandStatus()==0)
+      {
+        printf("Accepted:%d bytes\n",len);fflush(stdout);
+      }else
+      {
+        printf("Wasn't accepted\n");fflush(stdout);
+      }
       disposePdu((SmppHeader*)resp);
     }
   }catch(...)
   {
     printf("exception\n");
   }
+  ss.close();
+  printf("Exiting\n");
   return 0;
 }

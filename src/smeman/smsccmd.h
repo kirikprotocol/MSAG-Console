@@ -50,6 +50,7 @@ private:
 public:
   void set_messageId(const char* msgid)
   {
+    if(!msgid)return;
     if ( messageId ) delete( messageId);
     messageId = new char[strlen(msgid+1)];
     strcpy(messageId,msgid);
@@ -83,8 +84,8 @@ struct _SmscCommand
     case SUBMIT_RESP:
       delete ( (SmsResp*)dta ); break;
     case UNKNOWN:
-		case FORWARD:
-		case ALERT:
+    case FORWARD:
+    case ALERT:
       //__unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
       //__warning__("uninitialized command");
                         break;
