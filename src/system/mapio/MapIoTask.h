@@ -112,7 +112,7 @@ public:
     }
   }
   void AddRef(){
-    MutexGuard(mutex);
+    MutexGuard g(mutex);
     ++ref_count;
   }
   USHORT_T getDialogId() { return dialogid; }
