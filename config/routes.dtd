@@ -16,6 +16,7 @@
 	hide CDATA #IMPLIED
 	forceReplayPath CDATA #IMPLIED
 	forceDelivery (true|false) "false"
+	aclId CDATA "-1"
 >
 <!ELEMENT notes (#PCDATA)>
 <!ELEMENT source (subject | mask)>
