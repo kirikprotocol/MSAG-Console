@@ -20,7 +20,6 @@
     </section>
   </section>
 
-
   <section name="admin">
     <param name="host" type="string">smsc</param>
     <param name="port" type="int">4050</param>
@@ -35,7 +34,6 @@
       <param name="host" type="string">smsc</param>
       <param name="port" type="int">4153</param>
     </section>
-
   </section>
 
   <section name="billing">
@@ -65,4 +63,8 @@
     <param name="maxSmsPerSecond" type="int">1000</param>
   </section>
 
+  <section name="providers">
+    <param name="last used provider id" type="int">0</param>
+  </section>
 </config>
+
