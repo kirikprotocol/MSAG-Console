@@ -179,15 +179,16 @@ void TestSme::executeCycle()
 	{
 		//стартовая последовательност команд
 		seq.push_back(1);
-		seq.insert(seq.end(), 3, 3);
+		seq.insert(seq.end(), 3, 4);
 		seq.insert(seq.end(), 3, 2);
+		seq.insert(seq.end(), 3, 3);
 		seq.push_back(1);
 		for (int i = 0; i < seq.size(); i++)
 		{
 			switch (seq[i])
 			{
 				case 1: //правильный bind
-					evt.Wait(2000);
+					sleep(2);
 					boundOk = baseTc.bindCorrectSme();
 					if (!boundOk)
 					{
@@ -198,7 +199,10 @@ void TestSme::executeCycle()
 				case 2: //неправильный bind
 					baseTc.bindIncorrectSme(RAND_TC);
 					break;
-				case 3: //unbind
+				case 3:
+					baseTc.bindUnbindCorrect(RAND_TC);
+					break;
+				case 4: //unbind
 					baseTc.unbind();
 					boundOk = false;
 					break;
@@ -207,14 +211,16 @@ void TestSme::executeCycle()
 			}
 		}
 		__require__(boundOk);
-		evt.Wait(3000);
+		sleep(5);
 		//тестовая последовательност команд
 		seq.clear();
 #ifdef LOAD_TEST
 		seq.push_back(201);
 #else
-		seq.insert(seq.end(), 20, 1);
+		seq.insert(seq.end(), 30, 1);
 		seq.insert(seq.end(), 10, 2);
+		//seq.insert(seq.end(), 5, 3);
+		//seq.insert(seq.end(), 5, 4);
 		seq.push_back(51);
 		seq.push_back(52);
 		seq.push_back(53);

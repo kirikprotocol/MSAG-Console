@@ -40,6 +40,11 @@ public:
 	void bindIncorrectSme(int num);
 	
 	/**
+	 * Bind sme зарегистрированной в smsc с проверкой внутренностей bind и unbind pdu.
+	 */
+	void bindUnbindCorrect(int num);
+
+	/**
 	 * Все подтверждений доставки, нотификации и sms доставляются и не теряются.
 	 */
 	void checkMissingPdu();
