@@ -146,6 +146,7 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 					throw s;
 			}
 			SMSId smsId = msgStore->getNextId();
+			__trace2__("@@@ storeCorrectSms(): nextTime = %ld", sms.getNextTime());
 			msgStore->createSms(sms, smsId, CREATE_NEW);
 			if (idp != NULL && smsp != NULL)
 			{
@@ -307,7 +308,8 @@ TCResult* MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
 		//Согласно GSM 03.40 пункт 9.2.3.25 должны совпадать: TP-MR, TP-DA, OA.
 		sms.setMessageReference(existentSms.getMessageReference());
 		sms.setOriginatingAddress(existentSms.getOriginatingAddress());
-		sms.setDestinationAddress(existentSms.getDestinationAddress());
+		//sms.setDestinationAddress(existentSms.getDestinationAddress());
+		sms.setDealiasedDestinationAddress(existentSms.getDealiasedDestinationAddress());
 		SMSId smsId = msgStore->getNextId();
 		msgStore->createSms(sms, smsId, ETSI_REJECT_IF_PRESENT);
 		res->addFailure(101);
@@ -884,6 +886,7 @@ TCResult* MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
 	{
 		SMS _sms;
 		msgStore->retriveSms(id, _sms);
+		__trace2__("@@@ loadExistentSms(): nextTime = %ld", _sms.getNextTime());
 		if (&sms == NULL || &_sms == NULL)
 		{
 			res->addFailure(101);
@@ -975,6 +978,9 @@ TCResult* MessageStoreTestCases::checkReadyForRetrySms(const vector<SMSId*>& ids
 	time_t minNextTime, middleNextTime, maxNextTime;
 	for (int i = 0; i < sms.size(); i++)
 	{
+ostringstream os;
+os << "smsId = " << *ids[i] << ", nextTime = " << sms[i]->getNextTime();
+__trace2__("checkReadyForRetrySms(): %s", os.str().c_str());
 		if (sms[i]->getState() != ENROUTE)
 		{
 			continue;
@@ -1008,12 +1014,15 @@ TCResult* MessageStoreTestCases::checkReadyForRetrySms(const vector<SMSId*>& ids
 	try
 	{
 		time_t nextTime = msgStore->getNextRetryTime();
+		__trace2__("@@@ checkReadyForRetrySms(): nextTime = %ld", nextTime);
 		if (!found && nextTime != 0)
 		{
 			res->addFailure(1);
 		}
 		if (found && nextTime != minNextTime)
 		{
+			__trace2__("checkReadyForRetrySms(): nextTime = %ld, minNextTime = %ld",
+				nextTime, minNextTime);
 			res->addFailure(2);
 		}
 	}
