@@ -1,6 +1,7 @@
 #include "MessageStoreTestCases.hpp"
 #include "test/util/CheckList.hpp"
 #include "test/util/Util.hpp"
+#include "test/util/TCResultFilter.hpp"
 #include <iostream>
 
 using namespace std;
@@ -19,16 +20,36 @@ using namespace smsc::test::util;
 int main(int argc, char* argv[])
 {
 	MessageStoreTestCases tc; //throws StoreException
+    TCResultFilter filter;
+
+	//регистрация описаний test cases
+cout << "Register test cases" << endl;
+	filter.registerTC(TC_STORE_CORRECT_SM, "Сохранение правильного SM");
+	filter.registerTC(TC_STORE_INCORRECT_SM, "Сохранение неправильного SM");
+	filter.registerTC(TC_LOAD_EXISTENT_SM, "Чтение существующего SM");
+	filter.registerTC(TC_LOAD_NONEXISTENT_SM, "Чтение несуществующего SM");
+	
+	//выполнение тестов
+	SMSId id;
+	SMS sms;
+	for (int i = 0; i < 10; i++)
+	{
+cout << "i = " << i << endl;
+		TCResultStack stack;
+		stack.push_back(tc.storeCorrectSM(&id, &sms, RAND_TC));
+		stack.push_back(tc.loadExistentSM(id, sms));
+		filter.addResultStack(stack);
+	}
+	filter.addResult(*tc.storeIncorrectSM(sms, RAND_TC));
+	filter.addResult(*tc.loadNonExistentSM());
+	
+	//сохранить checklist
+cout << "Save checklist" << endl;
 	CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
 	cl.startNewGroup("Message Store");
-	
-	//Сохранение SM
-	SMS sms;
-	cl.writeResult("Сохранение правильного SM",
-		tc.storeCorrectSM(&sms, ALL_TC)); //RAND_TC
-	cl.writeResult("Сохранение неправильного SM",
-		tc.storeIncorrectSM(sms, ALL_TC));
-	
+	cl.writeResult(filter);
+
+
 	/*
 	//Изменение статуса SM
 	cl.writeResult("Корректное изменение статуса SM", tc.setCorrectSMStatus());
@@ -45,12 +66,8 @@ int main(int argc, char* argv[])
 	cl.writeResult("Обновление несуществующего SM", tc.updateNonExistentSM());
 	
 	//Удаление SM
-	cl.writeResult("Удаление существующего SM", tc.deleteExistingSM());
-	cl.writeResult("Удаление несуществующего SM", tc.deleteNonExistingSM());
-	
-	//Чтение SM
-	cl.writeResult("Чтение существующего SM", tc.loadExistingSM());
-	cl.writeResult("Чтение несуществующего SM", tc.loadNonExistingSM());
+	cl.writeResult("Удаление существующего SM", tc.deleteExistentSM());
+	cl.writeResult("Удаление несуществующего SM", tc.deleteNonExistentSM());
 	
 	//Создание записи для начисления оплаты
 	cl.writeResult("Создание записи для начисления оплаты", 

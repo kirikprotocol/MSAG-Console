@@ -23,6 +23,28 @@ int rand0(int maxValue);
 std::auto_ptr<uint8_t> rand_uint8_t(int length);
 
 /**
+ * Класс для хранения результатов выполнения test case.
+ */
+class TCResult
+{
+private:
+	const std::string id;
+	const int choice;
+	std::vector<int> failures;
+
+public:
+	TCResult(const std::string& id, const int choice);
+	TCResult(TCResult& tcRes);
+	const std::string& getId() const;
+	int getChoice() const;
+	void addFailure(int subTC);
+	const std::vector<int>& getFailures() const;
+	bool value();
+	void print(std::ostream& os);
+	bool operator== (const TCResult& tcRes) const;
+};
+
+/**
  * Позволяет выбрать нужную или все процедуры в test case в зависимости от 
  * параметров.
  */
@@ -30,28 +52,71 @@ class TCSelector
 {
 private:
 	int i;
-	int val;
-	int maxVal;
+	const int val;
+	const int maxVal;
 
 public:
-	TCSelector(int _val, int _maxVal);
+	TCSelector(int val, int maxVal);
 	int value();
 	bool check();
 	TCSelector& operator++ (int);
+	int getChoice();
 };
 
-class TCResult
+//TCResult inline member functions definitions
+inline TCResult::TCResult(const std::string& _id, const int _choice)
+	: id(_id), choice(_choice) {}
+
+inline TCResult::TCResult(TCResult& tcRes)
+	: id(tcRes.getId()), choice(tcRes.getChoice()), 
+	failures(tcRes.getFailures()) {}
+
+inline const std::string& TCResult::getId() const
 {
-private:
-	const char* id;
-	std::vector<int> failedTC;
+	return id;
+}
 
-public:
-	TCResult(const char* id);
-	void addFailure(int subTC);
-	bool value();
-	void print(std::ostream& os);
-};
+inline int TCResult::getChoice() const
+{
+	return choice;
+}
+
+inline void TCResult::addFailure(int subTC)
+{
+	failures.push_back(subTC);
+}
+
+inline const std::vector<int>& TCResult::getFailures() const
+{
+	return failures;
+}
+
+inline bool TCResult::value()
+{
+	return failures.empty();
+}
+
+//TCSelector inline member functions definitions
+inline int TCSelector::value()
+{
+	return i;
+}
+
+inline bool TCSelector::check()
+{
+	return (val == 0 ? i <= maxVal : i == 1);
+}
+	
+inline TCSelector& TCSelector::operator++ (int)
+{
+	i++;
+	return *this;
+}
+
+inline int TCSelector::getChoice()
+{
+	return (val == -1 ? i : val);
+}
 
 }
 }

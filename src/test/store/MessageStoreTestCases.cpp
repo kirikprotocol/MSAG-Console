@@ -21,11 +21,13 @@ MessageStoreTestCases::MessageStoreTestCases()
 	msgStore = StoreManager::getInstance();
 }
 
-TCResult MessageStoreTestCases::storeCorrectSM(SMS* smsp, int num)
+TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 {
-	TCResult res("MessageStoreTestCases::storeCorrectSM");
+	TCSelector s(num, 4);
+	TCResult* res = new TCResult(TC_STORE_CORRECT_SM, s.getChoice());
+	SMSId smsId;
 	SMS sms;
-	for (TCSelector s(num, 4); s.check(); s++)
+	for (; s.check(); s++)
 	{
 		sms.setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED
 		sms.setOriginatingAddress(10, 20, 30, rand_uint8_t(10).get());
@@ -58,29 +60,31 @@ TCResult MessageStoreTestCases::storeCorrectSM(SMS* smsp, int num)
 				sms.setMessageBody(256, 20, false, rand_uint8_t(256).get());
 				break;
 			default:
-				res.addFailure(s.value());
+				res->addFailure(s.value());
 				return res;
 		}
 		try
 		{
-			SMSId smsId = msgStore->store(sms);
+			smsId = msgStore->store(sms);
 		}
 		catch(exception& e)
 		{
-			res.addFailure(s.value());;
+			res->addFailure(s.value());;
 		}
 	}
-	if (smsp != NULL)
+	if (idp != NULL && smsp != NULL)
 	{
+		*idp = smsId;
 		*smsp = sms;
 	}
 	return res;
 }
 
-TCResult MessageStoreTestCases::storeIncorrectSM(SMS& existentSMS, int num)
+TCResult* MessageStoreTestCases::storeIncorrectSM(SMS& existentSMS, int num)
 {
-	TCResult res("MessageStoreTestCases::storeIncorrectSM");
-	for (TCSelector s(num, 10); s.check(); s++)
+	TCSelector s(num, 10);
+	TCResult* res = new TCResult(TC_STORE_INCORRECT_SM, s.getChoice());
+	for (; s.check(); s++)
 	{
 		SMS sms;
 		sms.setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED
@@ -136,13 +140,13 @@ TCResult MessageStoreTestCases::storeIncorrectSM(SMS& existentSMS, int num)
 			case 100: //корректное сообщение
 				break;
 			default:
-				res.addFailure(s.value());
+				res->addFailure(s.value());
 				return res;
 		}
 		try
 		{
 			SMSId smsId = msgStore->store(sms);
-			res.addFailure(s.value());
+			res->addFailure(s.value());
 		}
 		catch(StoreException e)
 		{
@@ -150,7 +154,7 @@ TCResult MessageStoreTestCases::storeIncorrectSM(SMS& existentSMS, int num)
 		}
 		catch(exception& e)
 		{
-			res.addFailure(s.value());;
+			res->addFailure(s.value());;
 		}
 	}
 	return res;
@@ -186,36 +190,118 @@ bool MessageStoreTestCases::updateNonExistentSM()
 	return false;
 }
 
-bool MessageStoreTestCases::deleteExistingSM()
+bool MessageStoreTestCases::deleteExistentSM()
 {
 	return false;
 }
 	
-bool MessageStoreTestCases::deleteNonExistingSM()
+bool MessageStoreTestCases::deleteNonExistentSM()
 {
 	return false;
 }
 	
-bool MessageStoreTestCases::loadExistingSM()
+TCResult* MessageStoreTestCases::loadExistentSM(SMSId id, SMS& sms)
 {
-	/*
+	TCResult* res = new TCResult(TC_LOAD_EXISTENT_SM, 1);
 	try
 	{
-		SMS* retrive(SMSId id);
+		SMS& _sms = msgStore->retrive(id);
+		if (&sms == NULL || &_sms == NULL)
+		{
+			res->addFailure(101);
+		}
+		else
+		{
+			if (sms.getState() != _sms.getState())
+			{
+				res->addFailure(102);
+			}
+			if (!smUtil.compareAddresses(sms.getOriginatingAddress(),
+				_sms.getOriginatingAddress()))
+			{
+				res->addFailure(103);
+			}
+			if (!smUtil.compareAddresses(sms.getDestinationAddress(),
+				_sms.getDestinationAddress()))
+			{
+				res->addFailure(104);
+			}
+			if (sms.getWaitTime() != _sms.getWaitTime())
+			{
+				res->addFailure(105);
+			}
+			if (sms.getValidTime() != _sms.getValidTime())
+			{
+				res->addFailure(106);
+			}
+			if (sms.getSubmitTime() != _sms.getSubmitTime())
+			{
+				res->addFailure(107);
+			}
+			if (sms.getDeliveryTime() != _sms.getDeliveryTime())
+			{
+				res->addFailure(108);
+			}
+			if (sms.getMessageReference() != _sms.getMessageReference())
+			{
+				res->addFailure(109);
+			}
+			if (sms.getMessageIdentifier() != _sms.getMessageIdentifier())
+			{
+				res->addFailure(110);
+			}
+			if (sms.getPriority() != _sms.getPriority())
+			{
+				res->addFailure(111);
+			}
+			if (sms.getProtocolIdentifier() != _sms.getProtocolIdentifier())
+			{
+				res->addFailure(112);
+			}
+			if (sms.isStatusReportRequested() != _sms.isStatusReportRequested())
+			{
+				res->addFailure(113);
+			}
+			if (sms.isRejectDuplicates() != _sms.isRejectDuplicates())
+			{
+				res->addFailure(114);
+			}
+			if (sms.getFailureCause() != _sms.getFailureCause())
+			{
+				res->addFailure(115);
+			}
+			if (!smUtil.compareMessageBody(sms.getMessageBody(),
+				_sms.getMessageBody()))
+			{
+				res->addFailure(116);
+			}
+		}
 	}
-	catch(ResourceAllocationException& e)
+	catch(StoreException& e)
 	{
+		res->addFailure(100);
+	}
+	return res;
+}
+
+TCResult* MessageStoreTestCases::loadNonExistentSM()
+{
+	TCResult* res = new TCResult(TC_LOAD_NONEXISTENT_SM, 1);
+	try
+	{
+		SMSId id = 0xFFFFFFFF;
+		SMS& sms = msgStore->retrive(id);
+		res->addFailure(100);
 	}
 	catch(NoSuchMessageException& e)
 	{
+		//Ok
 	}
-	*/
-	return false;
-}
-
-bool MessageStoreTestCases::loadNonExistingSM()
-{
-	return false;
+	catch(StoreException& e)
+	{
+		res->addFailure(101);
+	}
+	return res;
 }
 
 bool MessageStoreTestCases::createBillingRecord()

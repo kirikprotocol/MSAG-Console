@@ -2,6 +2,7 @@
 #define TEST_UTIL_CHECK_LIST
 
 #include "Util.hpp"
+#include "TCResultFilter.hpp"
 #include <fstream>
 #include <map>
 #include <string>
@@ -38,7 +39,13 @@ public:
 	/**
 	 * Записать результаты тестирования (test case) в текущцю группу/таблицу
 	 */
-	void writeResult(const std::string& testCaseDesc, TCResult result);
+	void writeResult(const std::string& testCaseDesc, TCResult& result);
+
+	/**
+	 * Записать результаты тестирования (группы test case) в текущцю 
+	 * группу/таблицу
+	 */
+	void writeResult(TCResultFilter& resultFilter);
 
 private:
 	static CheckListMap* clists;

@@ -23,8 +23,9 @@ int MessageStoreLoadTestTask::Execute()
 {
 	while (flag)
 	{
+		SMSId id;
 		SMS sms;
-		tc.storeCorrectSM(&sms, RAND_TC);
+		delete tc.storeCorrectSM(&id, &sms, RAND_TC);
 		//tc.setCorrectSMStatus();
 		ops++;
 
@@ -32,23 +33,23 @@ int MessageStoreLoadTestTask::Execute()
 		{
 			if (ops % 100 == 0)
 			{
-				tc.storeIncorrectSM(sms, RAND_TC);
+				delete tc.storeIncorrectSM(sms, RAND_TC);
 			}
 			else if (ops % 50 == 0)
 			{
-				tc.storeCorrectSM(&sms, RAND_TC);
+				delete tc.storeCorrectSM(&id, &sms, RAND_TC);
 				//tc.setIncorrectSMStatus();
 			}
 			else
 			{
-				tc.storeCorrectSM(&sms, RAND_TC);
+				delete tc.storeCorrectSM(&id, &sms, RAND_TC);
 				//tc.setCorrectSMStatus();
 			}
 			//tc.createBillingRecord();
 		}
 		//tc.updateCorrectExistentSM(); ops++;
-		//tc.deleteExistingSM(); ops++;
-		//tc.loadExistingSM(); ops++;
+		//tc.deleteExistentSM(); ops++;
+		//tc.loadExistentSM(); ops++;
 	}
 	stopped = true;
 	return 0;

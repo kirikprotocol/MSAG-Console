@@ -28,8 +28,8 @@ bool MessageStoreUseCases::updateSM()
 
 bool MessageStoreUseCases::deleteSM()
 {
-	return tc.deleteExistingSM() &&
-		tc.deleteNonExistingSM();
+	return tc.deleteExistentSM() &&
+		tc.deleteNonExistentSM();
 }
 	
 bool MessageStoreUseCases::deleteWaitingSMByNumber()
@@ -39,11 +39,13 @@ bool MessageStoreUseCases::deleteWaitingSMByNumber()
 
 }
 
+/*
 bool MessageStoreUseCases::loadSM()
 {
-	return tc.loadExistingSM() &&
-		tc.loadNonExistingSM();
+	return tc.loadExistentSM() &&
+		tc.loadNonExistentSM();
 }
+*/
 
 bool MessageStoreUseCases::loadWaitingSMByDestinationNumber()
 {

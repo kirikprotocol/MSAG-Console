@@ -25,77 +25,50 @@ auto_ptr<uint8_t> rand_uint8_t(int length)
 	return auto_ptr<uint8_t>(res);
 }
 
-TCSelector::TCSelector(int _val, int _maxVal)
+bool TCResult::operator== (const TCResult& tcRes) const
 {
-	i = 1;
-	val = _val;
-	maxVal = _maxVal;
-}
-
-int TCSelector::value()
-{
-	if (val < 0)
+	bool res = id == tcRes.getId() && choice == tcRes.getChoice() &&
+		failures.size() == tcRes.getFailures().size();
+	if (res)
 	{
-		return 1 + rand0(maxVal);
+		for (int i = 0; i < failures.size(); i++)
+		{
+			res &= failures[i] == tcRes.getFailures()[i];
+		}
 	}
-	if (val == 0)
-	{
-		return i;
-	}
-	return val;
-}
-
-bool TCSelector::check()
-{
-	return (val == 0 ? i <= maxVal : i == 1);
-}
-	
-TCSelector& TCSelector::operator++ (int)
-{
-	i++;
-	return *this;
-}
-
-TCResult::TCResult(const char* _id)
-{
-	id = _id;
-}
-
-void TCResult::addFailure(int subTC)
-{
-	failedTC.push_back(subTC);
-}
-
-bool TCResult::value()
-{
-	return failedTC.empty();
+	return res;
 }
 
 void TCResult::print(ostream& os)
 {
 	os << id << "(";
-	for (int i = 0; i < failedTC.size(); i++)
+	for (int i = 0; i < failures.size(); i++)
 	{
-		os << failedTC[i] << ",";
+		if (i > 0)
+		{
+			os << ",";
+		}
+		os << failures[i];
 	}
 	os << ")";
 }
 
-/*
-int selectTestProc(int value, int maxValue)
+TCSelector::TCSelector(int _val, int _maxVal)
+	: val(_val), maxVal(_maxVal)
 {
-	if (value < 0)
+	if (val < 0)
 	{
-		int num = (int) (maxValue * rand() / (RAND_MAX + 1.0));
-		return num;
+		i = 1 + rand0(maxVal);
 	}
-	if (value > maxValue)
+	else if (val == 0)
 	{
-		return value % maxValue;
+		i = 1;
 	}
-	return value;
+	else
+	{
+		i = val;
+	}
 }
-*/
 
 }
 }

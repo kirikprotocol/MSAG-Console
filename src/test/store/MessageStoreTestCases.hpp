@@ -4,6 +4,7 @@
 #include "sms/sms.h"
 #include "store/MessageStore.h"
 #include "test/util/Util.hpp"
+#include "SMUtil.hpp"
 #include <exception>
 
 namespace smsc  {
@@ -11,6 +12,11 @@ namespace test  {
 namespace store {
 
 using namespace smsc::test::util;
+
+const std::string TC_STORE_CORRECT_SM = "storeCorrectSM";
+const std::string TC_STORE_INCORRECT_SM = "storeIncorrectSM";
+const std::string TC_LOAD_EXISTENT_SM = "loadExistentSM";
+const std::string TC_LOAD_NONEXISTENT_SM = "loadNonExistentSM";
 
 /**
  * Этот класс содержит все test cases необходимые для тестирования подсистемы
@@ -35,13 +41,13 @@ public:
 	 * @param smsId возвращает id созданного в БД сообщения
 	 * @param num номер тест-процедуры
 	 */
-	TCResult storeCorrectSM(smsc::sms::SMS* sms, int num);
+	TCResult* storeCorrectSM(smsc::sms::SMSId* id, smsc::sms::SMS* sms, int num);
 
 	/**
 	 * Сохранение неправильного SM.
 	 * Диагностика ошибки должна выводиться в лог.
 	 */
-	TCResult storeIncorrectSM(smsc::sms::SMS& existentSMS, int num);
+	TCResult* storeIncorrectSM(smsc::sms::SMS& existentSMS, int num);
 
 	/**
 	 * Корректное изменение статуса SM.
@@ -86,13 +92,13 @@ public:
 	 * Сохраняет в базу правильное SMS сообщение, затем удаляет его.
 	 * Только debug информация должна выводиться в лог.
 	 */
-	bool deleteExistingSM();
+	bool deleteExistentSM();
 	
 	/**
 	 * Удаление несуществующего SM.
 	 * Только debug информация должна выводиться в лог.
 	 */
-	bool deleteNonExistingSM();
+	bool deleteNonExistentSM();
 
 	/**
 	 * Удаление существующих SM ожидающих доставки на определенный номер.
@@ -111,13 +117,13 @@ public:
 	 * Сохраняет в базу правильное SMS сообщение, затем загружает его.
 	 * Только debug информация должна выводиться в лог.
 	 */
-	bool loadExistingSM();
+	TCResult* loadExistentSM(smsc::sms::SMSId id, smsc::sms::SMS& sms);
 
 	/**
 	 * Чтение несуществующего SM.
 	 * Только debug информация должна выводиться в лог.
 	 */
-	bool loadNonExistingSM();
+	TCResult* loadNonExistentSM();
 
 	/**
 	 * Загрузка непустого списка SM ожидающих доставки на определенный номер.
@@ -174,6 +180,7 @@ public:
 
 private:
 	smsc::store::MessageStore* msgStore;
+	smsc::test::store::SMUtil smUtil;
 };
 
 }
