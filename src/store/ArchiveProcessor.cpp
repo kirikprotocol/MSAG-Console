@@ -250,8 +250,8 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                         arcDestination->writeRecord(id, sms);
                     }
                     catch (DiskHashDuplicateKeyException& duplicateExc) {
-                        smsc_log_warn(log, "Duplicate index key for file '%s'. Sms #%lld skipped. Details: %s.",
-                                      file.c_str(), id, duplicateExc.what());
+                        smsc_log_warn(log, "SMS #%lld in file '%s' skipped. Details: %s.",
+                                      id, file.c_str(), duplicateExc.what());
                     }
                 }
             }
