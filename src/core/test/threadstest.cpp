@@ -74,7 +74,7 @@ int MyTask::Execute()
   for(i=0;i<ZZZ;i++)
   {
 #ifdef USEPOOL
-    freeMem(a[i]);
+    freeMem((void*)a[i]);
 #else
     delete [] a[i];
     delete [] b[i];
