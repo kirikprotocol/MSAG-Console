@@ -87,6 +87,14 @@ public:
       }catch(...)
       {
         __trace2__("CANCELAGENT: batch cancel processing error\n");
+        cmd.getProxy()->putCommand
+        (
+          SmscCommand::makeCancelSmResp
+          (
+            cmd->get_dialogId(),
+            SmscCommand::Status::CANCELFAIL
+          )
+        );
       }
 
       // end of processing
