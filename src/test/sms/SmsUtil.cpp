@@ -197,12 +197,11 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 {
 	if (desc)
 	{
-		//задаю максимальную длину адресов на всякий случай, возможно
-		//в некоторых тест кейсах это будут ключевые поля
-		auto_ptr<char> mscAddr = rand_char(MAX_ADDRESS_VALUE_LENGTH);
-		auto_ptr<char> imsiAddr = rand_char(MAX_ADDRESS_VALUE_LENGTH);
-		desc->setMsc(MAX_ADDRESS_VALUE_LENGTH, mscAddr.get());
-		desc->setImsi(MAX_ADDRESS_VALUE_LENGTH, imsiAddr.get());
+		int len = rand1(MAX_ADDRESS_VALUE_LENGTH);
+		auto_ptr<char> mscAddr = rand_char(len);
+		auto_ptr<char> imsiAddr = rand_char(len);
+		desc->setMsc(len, mscAddr.get());
+		desc->setImsi(len, imsiAddr.get());
 		desc->setSmeNumber((uint32_t) rand0(INT_MAX));
 	}
 }
