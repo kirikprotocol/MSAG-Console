@@ -9,12 +9,13 @@ namespace smsc {
 namespace test {
 namespace sms  {
 
+using std::auto_ptr;
+using std::ostream;
+using std::vector;
 using smsc::sms::Address;
 using smsc::sms::Descriptor;
 using smsc::sms::Body;
 using smsc::sms::SMS;
-using std::vector;
-using std::auto_ptr;
 
 const int MAX_ADDRESS_LENGTH = 20;
 const int MAX_MSG_BODY_LENGTH = 200;
@@ -62,6 +63,8 @@ struct ltAddress
 {
 	bool operator() (const Address& a1, const Address& a2) const;
 };
+
+ostream& operator<< (ostream& os, const Address& a);
 
 }
 }

@@ -231,8 +231,8 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms)
 	sms->setSubmitTime(time(NULL) - 1);
 	//sms->setLastTime();
 	//sms->setNextTime();
-	sms->setPriority((uint8_t) rand0(255));
 	sms->setMessageReference((uint8_t) rand0(255));
+	sms->setPriority((uint8_t) rand0(255));
 	sms->setProtocolIdentifier((uint8_t) rand0(255));
 	//SMPP v3.4, пункт 5.2.17
 	//xxxxxx00 - No SMSC Delivery Receipt requested (default)
@@ -241,7 +241,7 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms)
 	//xxxxxx10 - SMSC Delivery Receipt requested where the final
 	//			delivery outcome is delivery failure
 	sms->setDeliveryReport((uint8_t) rand0(255));
-	sms->setArchivationRequested(true); //!!! архивировать все сообщения
+	sms->setArchivationRequested(rand0(3));
 	//sms->setFailureCause();
 	//sms->setAttemptsCount();
 	setupRandomCorrectBody(&sms->getMessageBody());
@@ -294,6 +294,17 @@ bool ltAddress::operator() (const Address& a1, const Address& a2) const
 	a1.getValue(val1);
 	a2.getValue(val2);
 	return memcmp(val1, val2, a1.getLenght()) < 0;
+}
+
+ostream& operator<< (ostream& os, const Address& a)
+{
+	AddressValue addrVal;
+	int addrLen = a.getValue(addrVal);
+	int ton = a.getTypeOfNumber();
+	int npi = a.getNumberingPlan();
+	os << "{ton=" << ton << ", npi=" << npi <<
+		", val=" << addrVal << "(" << addrLen << ")}";
+	return os;
 }
 
 }
