@@ -63,7 +63,6 @@ void showTable(JspWriter out, QueryResultSet results)
 	            + "&nbsp;<a href=\"delete.jsp" + params + "\">Delete</a></td>");
     out.println("  </tr>");
   }
-  //out.println("<tr class=\"list\"></tr>");
   out.println("</table>");
 }
 %>

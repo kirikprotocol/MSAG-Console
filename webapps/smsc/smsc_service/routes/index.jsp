@@ -20,7 +20,11 @@ if (route_filter == null)
 Integer pagesizeI = (Integer) session.getAttribute("route_page_size");
 int pagesize = pagesizeI == null ? 20 : pagesizeI.intValue();
 
-QueryResultSet results = smsc.getRoutes().query(new RouteQuery(pagesize, route_filter, sortOrder, 0));
+	int startPosition = getIntegerParam(request, "startPosition");
+	if (startPosition == Integer.MIN_VALUE)
+		startPosition = 0;
+
+QueryResultSet results = smsc.getRoutes().query(new RouteQuery(pagesize, route_filter, sortOrder, startPosition));
 %>
   <h4>Routes</h4><!--a href="show_smsc_data.jsp">Show SMSC data</a-->
   <a href="route_filter.jsp">Filter</a> &nbsp;&nbsp;&nbsp; 
@@ -62,4 +66,11 @@ QueryResultSet results = smsc.getRoutes().query(new RouteQuery(pagesize, route_f
       <%}%>
 		</tbody>
 	</table>
+<%
+  if (startPosition > 0)
+  {%><a href="?sort=<%=sort%>&startPosition=<%=startPosition - pagesize%>">prev</a><%}
+  else
+  {%>prev<%}
+%>
+<a href="?sort=<%=sort%>&startPosition=<%=startPosition + pagesize%>">next</a>
 <%@ include file="/common/footer.jsp"%>

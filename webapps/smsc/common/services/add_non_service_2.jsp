@@ -14,6 +14,7 @@ if (wizard == null)
 serviceManager.addNonAdmService(wizard);
 session.removeAttribute("AddAdmServiceWizard");
 %>
-Service <i><%=wizard.getSystemId()%></i> added sucessfully.
+Service <i><%=wizard.getSystemId()%></i> added sucessfully.<br>
+<a href="<%=urlPrefix+smscPrefix%>/apply_routes.jsp">Restart SMSC to apply new sme's config now</a> or <a href="<%=urlPrefix%>/">restart SMSC later</a>.
 <%@ include file="/common/footer.jsp"%>
 <%}%>

@@ -10,5 +10,6 @@
 %>
 <h2>Remove service <i><%=serviceId%></i> from host <i><%=host%></i>: </h2>
 <%serviceManager.removeService(serviceId);%>
-Service <i><%=serviceId%></i> removed from host <i><%=host%></i>.
+Service <i><%=serviceId%></i> removed from host <i><%=host%></i>.<br>
+<a href="<%=urlPrefix+smscPrefix%>/apply_routes.jsp">Restart SMSC to apply new sme's config now</a> or <a href="<%=urlPrefix%>/">restart SMSC later</a>.
 <%@ include file="/common/footer.jsp"%>

@@ -31,7 +31,7 @@
 				//String serviceName = info.getName();
 				%>
 				<TR class="list">
-				<TD class="list"><A href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(_serviceId)%>"><%=StringEncoderDecoder.encode(_serviceId)%></a></TD>
+				<TD class="list"><A href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(_serviceId)%>/"><%=StringEncoderDecoder.encode(_serviceId)%></a></TD>
 				<%if (isHostColumnNeeded) {%>
 					<TD class="list"><A href="<%=urlPrefix + hostsPrefix%>/view_host.jsp?<%=params%>"><%=StringEncoderDecoder.encode(hostName)%></a></TD>
 				<%}%>

@@ -21,6 +21,15 @@
 	Integer pagesizeI = (Integer) session.getAttribute("alias_page_size");
 	int pagesize = pagesizeI == null ? 20 : pagesizeI.intValue();
 	
-	showTable(out, smsc.getAliases().query(new AliasQuery(pagesize, filter, sortOrder, 0)));
+	int startPosition = getIntegerParam(request, "startPosition");
+	if (startPosition == Integer.MIN_VALUE)
+		startPosition = 0;
+	showTable(out, smsc.getAliases().query(new AliasQuery(pagesize, filter, sortOrder, startPosition)));
+
+  if (startPosition > 0)
+  {%><a href="?sort=<%=sort%>&startPosition=<%=startPosition - pagesize%>">prev</a><%}
+  else
+  {%>prev<%}
 %>
+<a href="?sort=<%=sort%>&startPosition=<%=startPosition + pagesize%>">next</a>
 <%@ include file="/common/footer.jsp"%>
