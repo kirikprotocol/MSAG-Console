@@ -1622,8 +1622,8 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
 
     dialog->routeErr = 0;
 
-    if ( dialog->state == MAPST_WaitRInfoConf )
-    {
+//    if ( dialog->state == MAPST_WaitRInfoConf )
+//    {
       if ( errorSendRoutingInfoForSm_sp &&
         (errorSendRoutingInfoForSm_sp->errorCode == 27 ) )
       {
@@ -1638,8 +1638,8 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
           dialog->routeErr = e.code;
         }
       }
-    }
-    else DoRInfoErrorProcessor(errorSendRoutingInfoForSm_sp,provErrCode_p);
+//    }
+//    else DoRInfoErrorProcessor(errorSendRoutingInfoForSm_sp,provErrCode_p);
     __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitRInfoConf:
@@ -1649,39 +1649,47 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
       }
     case MAPST_ImsiWaitRInfo:
       {
-        dialog->s_imsi = ImsiToString(imsi_sp);
-        dialog->s_msc = MscToString(mscNumber_sp);
-        mkSS7GTAddress( &dialog->destMscAddr, mscNumber_sp, 8 );
-        dialog->smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
-        dialog->smRpDa.addrLen = imsi_sp->imsiLen;
-        memcpy( dialog->smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
-//#if !defined DISABLE_TRACING
-        if( smsc::util::_map_cat->isDebugEnabled() ) {
-          {
-            auto_ptr<char> b(new char[imsi_sp->imsiLen*4+1]);
-            memset(b.get(),0,imsi_sp->imsiLen*4+1);
-            for ( int i=0,k=0; i < imsi_sp->imsiLen; ++i ) {
-              k += sprintf(b.get()+k,"%02x ",imsi_sp->imsi[i]);
-            }
-            __map_trace2__("IMSI: %s",b.get());
-          }
-          {
-            auto_ptr<char> b(new char[mscNumber_sp->addressLength*4+1]);
-            memset(b.get(),0,mscNumber_sp->addressLength*4+1);
-            for ( int i=0,k=0; i < (mscNumber_sp->addressLength+1)/2; ++i ) {
-              k += sprintf(b.get()+k,"%02x ",mscNumber_sp->address[i]);
-            }
-            __map_trace2__("MSCNUMBER: %s",b.get());
-          }
-        }
-//#endif
-        if ( dialog->state == MAPST_WaitRInfoConf )
-          dialog->state = MAPST_WaitRInfoClose;
-        else if ( dialog->state == MAPST_ImsiWaitRInfo )
+        if ( dialog->routeErr ) {
+          dialog->s_imsi = "";
+          dialog->s_msc = "";
           dialog->state = MAPST_ImsiWaitCloseInd;
-        else
-          throw MAPDIALOG_BAD_STATE(
-            FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
+          break;
+        }
+        else {
+          dialog->s_imsi = ImsiToString(imsi_sp);
+          dialog->s_msc = MscToString(mscNumber_sp);
+          mkSS7GTAddress( &dialog->destMscAddr, mscNumber_sp, 8 );
+          dialog->smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
+          dialog->smRpDa.addrLen = imsi_sp->imsiLen;
+          memcpy( dialog->smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
+  //#if !defined DISABLE_TRACING
+          if( smsc::util::_map_cat->isDebugEnabled() ) {
+            {
+              auto_ptr<char> b(new char[imsi_sp->imsiLen*4+1]);
+              memset(b.get(),0,imsi_sp->imsiLen*4+1);
+              for ( int i=0,k=0; i < imsi_sp->imsiLen; ++i ) {
+                k += sprintf(b.get()+k,"%02x ",imsi_sp->imsi[i]);
+              }
+              __map_trace2__("IMSI: %s",b.get());
+            }
+            {
+              auto_ptr<char> b(new char[mscNumber_sp->addressLength*4+1]);
+              memset(b.get(),0,mscNumber_sp->addressLength*4+1);
+              for ( int i=0,k=0; i < (mscNumber_sp->addressLength+1)/2; ++i ) {
+                k += sprintf(b.get()+k,"%02x ",mscNumber_sp->address[i]);
+              }
+              __map_trace2__("MSCNUMBER: %s",b.get());
+            }
+          }
+  //#endif
+          if ( dialog->state == MAPST_WaitRInfoConf )
+            dialog->state = MAPST_WaitRInfoClose;
+          else if ( dialog->state == MAPST_ImsiWaitRInfo )
+            dialog->state = MAPST_ImsiWaitCloseInd;
+          else
+            throw MAPDIALOG_BAD_STATE(
+              FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
+        }
         break;
       }
     default:
@@ -1953,9 +1961,26 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
         dialog->state = MAPST_ABORTED;
       }
       __require__(dialog->ssn==localSsn);
-      Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
-      Et96MapDelimiterReq(localSsn,dialogueId,0,0);
+      Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
+//      Et96MapDelimiterReq(localSsn,dialogueId,0,0);
+    } 
+    ET96MAP_ERROR_FORW_SM_MO_T moResp;
+    moResp.errorCode = ET96MAP_UE_SYS_FAILURE;
+    moResp.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
+    if( version == 2 ) {
+      result = Et96MapV2ForwardSmMOResp(
+        localSsn,
+        dialogueId,
+        invokeId,
+        &moResp);
+    }else if ( dialog->version == 1 ) {
+      result = Et96MapV1ForwardSmMOResp(
+        dialog->ssn,
+        dialog->dialogid_map,
+        dialog->invokeId,
+        &moResp);
     }
+
     TryDestroyDialog(dialogueId,localSsn);
   }
   return ET96MAP_E_OK;
