@@ -7,22 +7,22 @@
 
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
-//#include "smeman/smsccmd.h"
-#include <stdexcept>
-//#include <inttypes.h>
+#include "smeman/smsccmd.h"
+//#include <stdexcept>
+#include <inttypes.h>
 #include <stdint.h>
 
 
 namespace smsc {
 namespace system {
 
-//using namespace smsc::smeman;
+using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
 
 typedef uint64_t MsgIdType;
 typedef uint64_t StateType;
-//typedef SmscCommand CommandType;
-typedef uint64_t CommandType;
+typedef SmscCommand CommandType;
+//typedef uint64_t CommandType;
 
 const int MAX_COMMAND_PROCESSED = 200;
 const int LOCK_LIFE_LENGTH = 8;
