@@ -348,7 +348,10 @@ Connection::~Connection()
 void Connection::connect() 
     throw(ConnectionFailedException) 
 {
-    if (isConnected && isDead) disconnect();
+    if (isConnected && isDead) {
+        disconnect();
+        usleep(100000); //100 msec
+    }
     
     try
     {
