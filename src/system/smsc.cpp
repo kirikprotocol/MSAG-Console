@@ -17,6 +17,7 @@
 #include "system/abonentinfo/AbonentInfo.hpp"
 #include "mscman/MscManager.h"
 #include "resourcemanager/ResourceManager.hpp"
+#include <typeinfo>
 
 //#define ENABLE_MAP_SYM
 
@@ -635,7 +636,8 @@ void Smsc::run()
   //shutdown();
   }catch(exception& e)
   {
-    __trace2__("Smsc::run exception:%s",e.what());
+
+    __trace2__("Smsc::run exception:(%s)%s",typeid(e).name(),e.what());
     log.warn("Smsc::run exception:%s",e.what());
     throw;
   }catch(...)
