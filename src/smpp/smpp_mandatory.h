@@ -1,3 +1,91 @@
+/*
+	$Id$
+*/
+
+///
+/// Этот файл содержит код вычитывающий пакет из потока и 
+/// код записывающий пакет в поток
+///
+
+#if !defined __Cxx_Header__smpp_mandatory_h__
+#define __Cxx_header__smpp_mandatory_h__
+
+#include "util/debug.h"
+#include "smpp_structures.h"
+#include "smpp_optional.h"
+#include "smpp_stream.h"
+
+namespace smsc{
+namespace smpp{
+
+using std::auto_ptr;
+
+inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
+{
+	int cmdid = _pdu->commandId;
+	try
+	{
+		switch( cmdid )
+		{
+		case BIND_RECIEVER:
+		case BIND_TRANSMITTER:
+		case BIND_TRANCIEVER:
+		{
+			return true;
+		}
+		case BIND_TRANSMITTER_RESP:
+		case BIND_RECIEVER_RESP:
+		case BIND_TRANCIEVER_RESP:
+		{
+			return true;
+		}
+		case SUBMIT_SM:
+		case DELIVERY_SM:
+		case SUBMIT_MULTI:
+		{
+			return true;
+		}
+		case SUBMIT_SM_RESP:
+		case DELIVERY_SM_RESP:
+		{
+			return true;
+		}
+		case SUBMIT_MULTI_RESP:
+		{
+			return true;
+		}
+		case UNBIND:
+		case UNBIND_RESP:
+		case GENERIC_NACK:
+		{
+			return true;
+		}
+		case OUTBIND:
+		{
+			return true;
+		}
+		case REPLACE_SM:
+		case REPLACE_SM_RESP:
+		case CANCEL_SM:
+		case CANCEL_SM_RESP:
+		case ENQUIRE_LINK:
+		case ENQUIRE_LINK_RESP:
+		case ALERT_NOTIFICATION:
+		case DATA_SM:
+		case DATA_SM_RESP:
+		case QUERY_SM:
+		case QUERY_SM_RESP:
+			break;
+		}
+		__message__("bad smpp pdu");
+		return false;
+	}
+	throw(...)
+	{
+		__warning__ ("fill pdu error");
+		throw;
+	}
+}
 
 /**
   Достаем обязательные поля
@@ -169,3 +257,7 @@ inline SmppHeader* fetchSmppPdu(SmppStream* stream)
     throw BadStreamException();
 }
 
+};
+};
+
+#endif

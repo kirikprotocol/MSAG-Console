@@ -1,3 +1,17 @@
+/*
+	$Id$
+*/
+
+
+#if !defined  __Cxx_Header__smpp_time_h__
+#define  __Cxx_Header__smpp_time_h__
+
+#include <time.h>
+#include "util/debug.h"
+
+namespace smsc{
+namespace smpp{
+
 inline time_t smppTime2CTime(COStr& str)
 {
   time_t resultTime = 0;
@@ -35,4 +49,9 @@ inline time_t smppTime2CTime(COStr& str)
   
   return resultTime;
 }
+
+};
+};
+
+#endif
 

@@ -1,3 +1,17 @@
+/*
+	$Id$
+*/
+
+
+#if !defined  __Cxx_Header__smpp_structures_h__
+#define  __Cxx_Header__smpp_structures_h__
+
+#include <inttypes.h>
+#include "util/debug.h"
+#include "memory.h"
+
+namespace smsc{
+namespace smpp{
 
 namespace SmppComandSet{ /* SMPP v3.4 (5.1.2.1) */
   static const int32_t GENERIC_NACK                 = 0x80000000;
@@ -90,7 +104,7 @@ namespace UssdServiceOpValue{/* SMPP v3.4 (5.3.2.44) */
   static const USSN_CONFIRM           = 19;
 };
 
-struct SmppHeader
+struct SmppHeader : public MemoryManagerUnit
 {
   uint32_t commandLength;
   int32_t commandId;
@@ -98,7 +112,26 @@ struct SmppHeader
   uint32_t sequenceNumber;
 };
 
-struct SmppOptional
+struct PduAddress : public MemoryManagerUnit
+{
+  uint8_t typeOfNumber;
+  uint8_t numberingPlan;
+  COStr value;
+  PduAddr() :
+    ton(0),
+    numberingPlan(0) {};
+};
+
+struct PduDestAddress : public PduAddress
+{
+	uint8_t flag;
+  PduDestAddress() :
+    flag(0),
+    addrTon(0),
+    addrNpi(0) {};
+};
+
+struct SmppOptional : public MemoryManagerUnit
 {
   uint8_t   destAddrSubunit;
   uint8_t   sourceAddrSubunit;
@@ -147,14 +180,14 @@ struct SmppOptional
 };
 
 
-struct PduOutBind
+struct PduOutBind : public MemoryManagerUnit
 {
   SmppHeader header;
   COStr systemId;
   COStr password;
 };
 
-struct PduWithOnlyHeader
+struct PduWithOnlyHeader : public MemoryManagerUnit
 {
   SmppHeader header;
 }
@@ -162,17 +195,7 @@ typedef PduWithOnlyHeader PduUnbind;
 typedef PduWithOnlyHeader PduUnbindResp;
 typedef PduWithOnlyHeader PduGenericNack;
 
-
-struct PduDestAddress : public PduAddress
-{
-	uint8_t flag;
-  PduDestAddress() :
-    flag(0),
-    addrTon(0),
-    addrNpi(0) {};
-};
-
-struct PduPartSm
+struct PduPartSm : public MemoryManagerUnit
 {
   COStr serviceType;
   PduAddress source;
@@ -203,14 +226,14 @@ struct PduPartSm
     smLength(0) {}
 }
 
-struct PduXSm
+struct PduXSm : public MemoryManagerUnit
 {
   SmppHeader   header;
   PduPartSm    message;
   SmppOptional optional;
 };
 
-struct PduXSmResp
+struct PduXSmResp : public MemoryManagerUnit
 {
   SmppHeader   header;
   COStr        messageId;
@@ -223,13 +246,13 @@ typedef PduXSm  PduMultiSm;
 typedef PduXSmResp  PduSubmitSmResp;
 typedef PduXSmResp  PduDeliverySmResp;
 
-struct UnsuccessDeliveries
+struct UnsuccessDeliveries : public MemoryManagerUnit
 {
   PduAddress addr;
   uint32_t errorStatusCode;
 };
 
-struct PduSubmitMultiResp
+struct PduSubmitMultiResp : public MemoryManagerUnit
 {
   SmppHeader   header;
   COStr        messageId;
@@ -238,17 +261,8 @@ struct PduSubmitMultiResp
 };
 
 
-struct PduAddress
-{
-  uint8_t typeOfNumber;
-  uint8_t numberingPlan;
-  COStr value;
-  PduAddr() :
-    ton(0),
-    numberingPlan(0) {};
-};
 
-struct PduBindTRX
+struct PduBindTRX : public MemoryManagerUnit
 {
   SmppHeader header;
   COStr systemId;
@@ -258,7 +272,7 @@ struct PduBindTRX
   PduAddress addressRange;
 };
 
-struct PduBindTRXResp
+struct PduBindTRXResp : public MemoryManagerUnit
 {
   SmppHeader header;
   COStr systemId;
@@ -272,12 +286,16 @@ inline bool smppPduHasSms(SmppHeader* pdu)
 {
   switch(pdu->commandId)
   {
-  case SUBMIT_SM:
-  case DELIVERY_SM:
-  case SUBMIT_MULTI:
-  case DATA_SM:
+	case SmppComandSet::SUBMIT_SM:
+	case SmppComandSet::DELIVERY_SM:
+	case SmppComandSet::SUBMIT_MULTI:
+	case SmppComandSet::DATA_SM:
     return true;
   }
   return false;
 }
 
+};
+};
+
+#endif

@@ -1,3 +1,23 @@
+/*
+	$Id$
+*/
+
+//
+// этот файл содержит код для доступа к SMS запакоманному в пакет SMPP
+//
+
+#if !defined __Cxx_Header__smpp_sms_h__
+#define __Cxx_Header__smpp_sms_h__
+
+#include "util/debug.h"
+#include "smpp_structures.h"
+
+namespace smsc{
+namespace smpp{
+
+using smsc::sms::SMS;
+using smsc::sms::Address;
+
 inline bool fillSmppPduFromSms(PduXsm* pdu,SMS* sms)
 {
   __require__ ( pdu != NULL );
@@ -58,3 +78,7 @@ inline bool fetchSmsFromSmppPdu(PduXsm* pdu,SMS* sms)
   }
 }
 
+};
+};
+
+#endif

@@ -1,3 +1,14 @@
+#include "util/debug.h"
+#include "smpp_memory.h"
+#include "smpp_structures.h"
+#include "smpp_stream.h"
+
+#if !defined __Cxx_Header__smpp_optional_h__
+#define __Cxx_Header__smpp_optional_h__
+
+namespace smsc{
+namespace smpp{
+
 /**
   Достаем опциональные поля
 */
@@ -206,4 +217,7 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
     throw BadStreamException();
 }
 
+};
+};
 
+#endif /* __Cxx_Header__smpp_optional_h__ */
