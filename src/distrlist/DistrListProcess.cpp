@@ -202,7 +202,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
         ++task->count;
       }
     }
-    else if (multi->dests[i].dest_flag == 0x01 ) 
+    else if ( multi->dests[i].dest_flag == 0x01 ) 
     {
      __trace2__(":DPL: distrib addr %d.%d.%s",multi->dests[i].ton,multi->dests[i].npi,multi->dests[i].value);
      task->list[task->count].addr = Address(
@@ -216,7 +216,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
     }
     else
     {
-      __warning__(":DPL: invalid distflag");
+      __warning__(":DPL: invalid distflag %x",multi->dests[i].dest_flag);
     }
   }
   task->submited_count = 0;
