@@ -40,9 +40,6 @@ using namespace smsc::admin::service;
 
 using namespace smsc::wsme;
 
-static bool bWSmeIsStopped   = false;
-static bool bWSmeIsConnected = false;
-
 static log4cpp::Category& logger = Logger::getCategory("smsc.wsme.WSme");
 static int messageLifePeriod;
 
@@ -51,6 +48,34 @@ const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
 static smsc::admin::service::ServiceSocketListener adminListener; 
 static bool bAdminListenerInited = false;
+
+static Event WSmeWaitEvent;
+
+static Mutex needStopLock;
+static Mutex needReconnectLock;
+
+static bool  bWSmeIsStopped    = false;
+static bool  bWSmeIsConnected  = false;
+
+static void setNeedStop(bool stop=true) {
+    MutexGuard gauard(needStopLock);
+    bWSmeIsStopped = stop;
+    if (stop) WSmeWaitEvent.Signal();
+}
+static bool isNeedStop() {
+    MutexGuard gauard(needStopLock);
+    return bWSmeIsStopped;
+}
+
+static void setNeedReconnect(bool reconnect=true) {
+    MutexGuard gauard(needReconnectLock);
+    bWSmeIsConnected = !reconnect;
+    if (reconnect) WSmeWaitEvent.Signal();
+}
+static bool isNeedReconnect() {
+    MutexGuard gauard(needReconnectLock);
+    return !bWSmeIsConnected;
+}
 
 static bool convertMSISDNStringToAddress(const char* string, Address& address)
 {
@@ -328,15 +353,14 @@ public:
 
     void handleEvent(SmppHeader *pdu)
     {
-        __trace2__("WSme: pdu received. Starting task...\n");
+        __trace__("WSme: pdu received. Starting task...");
         manager.startTask(new WSmeTask(pdu, processor, *trans));
     }
     
     void handleError(int errorCode)
     {
-        bWSmeIsConnected = false;
-        __trace2__("Transport error !!!\n");
-        logger.error("Oops, Error handled! Code is: %d\n", errorCode);
+        logger.error("Transport error handled! Code is: %d", errorCode);
+        setNeedReconnect(true);
     }
     
     void setTrans(SmppTransmitter *t)
@@ -411,7 +435,7 @@ static void appSignalHandler(int sig)
     {
         __trace__("Stopping ...");
         if (bAdminListenerInited) adminListener.shutdown();
-        bWSmeIsStopped = true;
+        setNeedStop(true);
     }
 }
 
@@ -462,7 +486,7 @@ int main(void)
         messageLifePeriod = cpConfig.getInt("AdManager.History.messageLife", 
                                             "Message life period wasn't defined !");
         
-        while (!bWSmeIsStopped)
+        while (!isNeedStop())
         {
             WSmeTaskManager runner(&mnConfig);
             WSmePduListener listener(processor, runner);
@@ -477,16 +501,15 @@ int main(void)
             try
             {
                 listener.setTrans(session.getSyncTransmitter());
+                setNeedReconnect(false);
                 session.connect();
-                bWSmeIsConnected = true;
             }
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
                 logger.error("Connect to SMSC failed. Cause: %s\n", (msg) ? msg:"unknown");
-                bWSmeIsConnected = false;
-                if (exc.getReason() == 
-                    SmppConnectException::Reason::bindFailed) throw exc;
+                setNeedReconnect(true);
+                if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw exc;
                 sleep(cfg.timeOut);
                 session.close();
                 runner.shutdown();
@@ -494,7 +517,10 @@ int main(void)
             }
             logger.info("Connected.\n");
             
-            while (!bWSmeIsStopped && bWSmeIsConnected) sleep(2);
+            WSmeWaitEvent.Wait(0);
+            while (!isNeedStop() && !isNeedReconnect()) {
+                WSmeWaitEvent.Wait();
+            }
             logger.info("Disconnecting from SMSC ...\n");
             session.close();
             runner.shutdown();

@@ -43,12 +43,6 @@ using namespace smsc::infosme;
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
-static bool  bInfoSmeIsStopped   = false;
-static bool  bInfoSmeIsConnected = false;
-
-static Event infoSmeReady;
-static int   infoSmeReadyTimeout = 10000;
-
 static int   unrespondedMessagesSleep = 1000;
 static int   unrespondedMessagesCount = 0;
 static int   unrespondedMessagesMax   = 100;
@@ -59,6 +53,37 @@ static log4cpp::Category& logger = Logger::getCategory("smsc.infosme.InfoSme");
 
 static smsc::admin::service::ServiceSocketListener adminListener; 
 static bool bAdminListenerInited = false;
+
+static Event infoSmeWaitEvent;
+static Event infoSmeReady;
+static int   infoSmeReadyTimeout = 60000;
+
+static Mutex needStopLock;
+static Mutex needReconnectLock;
+
+static bool  bInfoSmeIsStopped    = false;
+static bool  bInfoSmeIsConnected  = false;
+static bool  bInfoSmeIsConnecting = false;
+
+static void setNeedStop(bool stop=true) {
+    MutexGuard gauard(needStopLock);
+    bInfoSmeIsStopped = stop;
+    if (stop) infoSmeWaitEvent.Signal();
+}
+static bool isNeedStop() {
+    MutexGuard gauard(needStopLock);
+    return bInfoSmeIsStopped;
+}
+
+static void setNeedReconnect(bool reconnect=true) {
+    MutexGuard gauard(needReconnectLock);
+    bInfoSmeIsConnected = !reconnect;
+    if (reconnect) infoSmeWaitEvent.Signal();
+}
+static bool isNeedReconnect() {
+    MutexGuard gauard(needReconnectLock);
+    return !bInfoSmeIsConnected;
+}
 
 extern bool isMSISDNAddress(const char* string)
 {
@@ -147,7 +172,7 @@ private:
             MutexGuard guard(unrespondedMessagesLock);
             count = ++unrespondedMessagesCount;
         }
-        while (count >= unrespondedMessagesMax && !bInfoSmeIsStopped && bInfoSmeIsConnected)
+        while (count >= unrespondedMessagesMax && !isNeedStop() && !isNeedReconnect())
         {
             unrespondedMessagesEvent.Wait(unrespondedMessagesSleep);
             MutexGuard guard(unrespondedMessagesLock);
@@ -387,9 +412,9 @@ public:
 
     void handleEvent(SmppHeader *pdu)
     {
-        if (!bInfoSmeIsConnected) {
+        if (bInfoSmeIsConnecting) {
             infoSmeReady.Wait(infoSmeReadyTimeout);
-            if (!bInfoSmeIsConnected) {
+            if (bInfoSmeIsConnecting) {
                 disposePdu(pdu);
                 return;
             }
@@ -416,7 +441,7 @@ public:
     void handleError(int errorCode)
     {
         logger.error("Transport error handled! Code is: %d", errorCode);
-        bInfoSmeIsConnected = false;
+        setNeedReconnect(true);
     }
 };
 
@@ -427,7 +452,7 @@ static void appSignalHandler(int sig)
     {
         logger.info("Stopping ...");
         if (bAdminListenerInited) adminListener.shutdown();
-        bInfoSmeIsStopped = true;
+        setNeedStop(true);
     }
 }
 void atExitHandler(void)
@@ -482,7 +507,7 @@ int main(void)
         ConfigView smscConfig(manager, "InfoSme.SMSC");
         InfoSmeConfig cfg(&smscConfig);
 
-        while (!bInfoSmeIsStopped)
+        while (!isNeedStop())
         {
             InfoSmePduListener      listener(processor);
             SmppSession             session(cfg, &listener);
@@ -494,18 +519,21 @@ int main(void)
                 listener.setSyncTransmitter(session.getSyncTransmitter());
                 listener.setAsyncTransmitter(session.getAsyncTransmitter());
                 
+                bInfoSmeIsConnecting = true;
                 infoSmeReady.Wait(0);
+                setNeedReconnect(false);
                 session.connect();
                 processor.assignMessageSender(&sender);
                 processor.Start();
-                bInfoSmeIsConnected = true;
+                bInfoSmeIsConnecting = false;
                 infoSmeReady.Signal();
             }
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
                 logger.error("Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
-                bInfoSmeIsConnected = false;
+                bInfoSmeIsConnecting = false;
+                setNeedReconnect(true);
                 if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw exc;
                 sleep(cfg.timeOut);
                 session.close();
@@ -518,15 +546,15 @@ int main(void)
             sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
             sigprocmask(SIG_SETMASK, &set, &old);
             
-            Event aaa;
-            while (!bInfoSmeIsStopped && bInfoSmeIsConnected) {
-                aaa.Wait(100);
-                //sleep(1);
-                TaskStat stat;
+            infoSmeWaitEvent.Wait(0);
+            while (!isNeedStop() && !isNeedReconnect())
+            {
+                infoSmeWaitEvent.Wait(100);
+                /*TaskStat stat;
                 if (processor.getStatistics("Task1", stat)) {
                     printf("Generated:%6d Delivered:%6d Retried:%6d Failed:%6d\r",
                            stat.generated, stat.delivered, stat.retried, stat.failed);
-                }
+                }*/
             }
             logger.info("Disconnecting from SMSC ...");
             unrespondedMessagesEvent.Signal();
