@@ -615,8 +615,14 @@ public:
           __require__(offs+4<length);
           uint32_t len = (uint32_t)value->length()+1; 
           uint16_t tag = tag_hash.getTag(key);
-          *(uint16_t*)(buffer+offs) = htons(tag);
-          *(uint32_t*)(buffer+offs+2) = htonl(len);
+          {
+            uint16_t tmp16 = htons(tag);;
+            //*(uint16_t*)(buffer+offs) = htons(tag);
+            memcpy(buffer+offs+2,&tmp16,2);
+            uint32_t tmp32 = htonl(len);
+            //*(uint32_t*)(buffer+offs+2) = htonl(len);
+            memcpy(buffer+offs+2,&tmp32,4);
+          }
           offs+=4+2;
                                         __trace2__("Senc: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
           __require__(offs+len<=(unsigned)length);
