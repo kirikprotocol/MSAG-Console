@@ -202,7 +202,6 @@ public class Smsc extends Service
 			throws AdminException
 	{
 		checkComponents();
-
 		try
 		{
 			final File smscConfFolder = getSmscConfFolder();
@@ -243,7 +242,6 @@ public class Smsc extends Service
 			throws AdminException
 	{
 		checkComponents();
-
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
 		Object result = call(smsc_component, lookup_profile_method, Type.Types[Type.StringType], args);
@@ -257,7 +255,6 @@ public class Smsc extends Service
 			throws AdminException
 	{
 		checkComponents();
-
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
 		args.put("profile", newProfile.getStringRepresentation());
@@ -317,6 +314,7 @@ public class Smsc extends Service
 	public void processCancelMessages(Collection messageIds)
 			throws AdminException
 	{
+		checkComponents();
 		String ids = "";
 		for (Iterator i = messageIds.iterator(); i.hasNext();)
 		{
@@ -331,6 +329,7 @@ public class Smsc extends Service
 	public void flushStatistics()
 			throws AdminException
 	{
+		checkComponents();
 		call(smsc_component, flush_statistics_method, Type.Types[Type.StringType], new HashMap());
 	}
 
