@@ -126,7 +126,7 @@ const vector<const SmeProxy*> RouteRegistry::lookup(const Address& origAddr,
 	}
 	const RouteList& routes = it->second;
 	RouteList tmp;
-	//приоритеты маршрутов: destAddr, origAddr, priority
+	//приоритеты маршрутов: destAddr, origAddr
 	for (int i = 0; i < routes.size(); i++)
 	{
 		//общие проверки
@@ -158,18 +158,7 @@ const vector<const SmeProxy*> RouteRegistry::lookup(const Address& origAddr,
 			tmp.push_back(routes[i]);
 			continue;
 		}
-		if (tmp.back()->origAddrMatch > routes[i]->origAddrMatch)
-		{
-			continue;
-		}
-		//priority
-		if (tmp.back()->route->priority < routes[i]->route->priority)
-		{
-			tmp.clear();
-			tmp.push_back(routes[i]);
-			continue;
-		}
-		if (tmp.back()->route->priority == routes[i]->route->priority)
+		if (tmp.back()->origAddrMatch == routes[i]->origAddrMatch)
 		{
 			tmp.push_back(routes[i]);
 			continue;
