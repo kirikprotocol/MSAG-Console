@@ -85,7 +85,8 @@ public:
         command.setJobName(0);
         
         char smsTextBuff[MAX_ALLOWED_MESSAGE_LENGTH+1];
-        int smsTextBuffLen = getSmsText(&request, (char *)&smsTextBuff);
+        int smsTextBuffLen = getSmsText(&request, 
+            (char *)&smsTextBuff, sizeof(smsTextBuff));
         __require__(smsTextBuffLen < MAX_ALLOWED_MESSAGE_LENGTH);
         command.setInData((const char*)smsTextBuff);
         __trace2__("Input Data for DBSme '%s'", smsTextBuff);
