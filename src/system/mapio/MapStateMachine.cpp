@@ -866,6 +866,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
         if ( dialog->isQueryAbonentStatus )
         {
           dialog->QueryAbonentCommand = cmd;
+          __require__ (dialog->QueryAbonentCommand->get_abonentStatus() != 0);
         }
         dialog->wasDelivered = false;
         dialog->hlrWasNotified = false;
