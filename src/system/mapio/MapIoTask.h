@@ -234,6 +234,7 @@ public:
       unsigned did = lock_map[abonent];
       MapDialog* item = 0;
       if ( hash.Get(did,item) ){
+        __trace2__("MAP::createSMSCDialog: chain size %d",item->chain.size());
         item->chain.push_back(cmd);
       }
       return 0;
