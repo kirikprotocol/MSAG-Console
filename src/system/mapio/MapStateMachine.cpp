@@ -668,9 +668,18 @@ static long long NextSequence()
 static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
 {
   __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);
-  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
-  //ET96MAP_ERROR_PROCESS_UNSTRUCTURED_SS_REQ_T error = 0;
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
   ET96MAP_USSD_STRING_T ussdString = {0,};
+  unsigned text_len;
+  const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+  if ( text_len > 160 ) throw runtime_error(
+    FormatText("MAP::%s MAP.did:{0x%x} very long string %d",__FUNCTION__,dialog->dialogid_map,text_len));
+  unsigned bytes = 0;
+  {
+    unsigned elen = sizeof(ussdString.ussdStr);
+    bytes = ConvertText27bit(text,text_len,ussdString.ussdStr,&elen);
+  }
+  ussdString.ussdStrLen = bytes;
   UCHAR_T result;
   if ( dialog->version == 2 ) 
   {
