@@ -24,8 +24,17 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     
     logger.info("Internal DataSource driver '%s' obtained.", dsInternalName);
     
+    logger.info("Loading tasks ...");
+    
     // TODO: Init tasks here !!!
-
+    
+    logger.info("Tasks loaded.");
+    
+    logger.info("Loading task schedule ...");
+    std::auto_ptr<ConfigView> schedulerCfgGuard(config->getSubConfig("TaskScheduler"));
+    ConfigView* schedulerCfg = schedulerCfgGuard.get();
+    scheduler.init(schedulerCfg);
+    logger.info("Task schedule loaded.");
     logger.info("Load success.");
 }
 TaskProcessor::~TaskProcessor()

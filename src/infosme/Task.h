@@ -57,6 +57,7 @@ namespace smsc { namespace infosme
             : id(0), priority(0), name("") {};
         TaskInfo(const TaskInfo& info) 
             : id(info.id), priority(info.priority), name(info.name) {}; 
+        virtual ~TaskInfo() {};
         
         TaskInfo& operator=(const TaskInfo& info)
         {

@@ -16,6 +16,7 @@
 #include <core/synchronization/Event.hpp>
 
 #include "Task.h"
+#include "Schedules.h"
 
 namespace smsc { namespace infosme 
 {
@@ -31,8 +32,6 @@ namespace smsc { namespace infosme
     {
     private:
 
-        Hash<Task*> tasks;
-
         Event       awake, exited;
         bool        bStarted, bNeedExit;
         Mutex       startLock;
@@ -45,14 +44,43 @@ namespace smsc { namespace infosme
         TaskScheduler();
         virtual ~TaskScheduler();
 
+        /**
+         * Initializes TaskScheduler, loads up all specified tasks schedules 
+         *
+         * @param config
+         * @exception ConfigException throws when configuration is invalid
+         */
+        void init(ConfigView* config);
+
         virtual int Execute();
         void Start();
         void Stop();
         
-        inline bool isStarted() { return bStarted; };
+        /**
+         * Adds task schedule into scheduling plan and reactivates scheduler.
+         *
+         * @param schedule      shedule for task(s)
+         */
+        void addSchedule(Schedule& schedule);
 
-        bool registerTask(Task* task);
-        bool unregisterTask(const char* name);
+        /**
+         * Changes task schedule in scheduling plan and reactivates scheduler.
+         * If task wasn't scheduled returns false, else returns true.
+         *
+         * @param scheduleId    id of old shedule for task
+         * @param schedule      new shedule for task
+         * @return false if task wasn't scheduled, else returns true.
+         */
+        bool changeSchedule(int scheduleId, Schedule& schedule);
+        
+        /**
+         * Removes task schedule from scheduling plan.
+         * If task wasn't scheduled returns false, else returns true.
+         *
+         * @param taskName      task name to be removed
+         * @return false if task wasn't scheduled, else returns true.
+         */
+        bool removeSchedule(int scheduleId);
     };
 
 }}

@@ -27,12 +27,21 @@ int TaskScheduler::Execute()
     return 0;
 }
 
-bool TaskScheduler::registerTask(Task* task)
+void TaskScheduler::init(ConfigView* config)
+{
+    // TODO: load up task scheduling plan from config
+}
+
+void TaskScheduler::addSchedule(Schedule& schedule)
+{
+    // TODO: implement it
+}
+bool TaskScheduler::changeSchedule(int scheduleId, Schedule& schedule)
 {
     // TODO: implement it
     return false;
 }
-bool TaskScheduler::unregisterTask(const char* name)
+bool TaskScheduler::removeSchedule(int scheduleId)
 {
     // TODO: implement it
     return false;
