@@ -17,7 +17,7 @@ namespace smsc {
 
 
             SmscComponent::SmscComponent(SmscConfigs &all_configs)
-            : configs(all_configs),
+            : configs(all_configs),isStopping(false),
                             logger(Logger::getCategory("smsc.admin.smsc_service.SmscComponent"))
             {
                 Parameters empty_params;
@@ -374,7 +374,9 @@ namespace smsc {
             void SmscComponent::stopSmsc()
             throw (AdminException)
             {
+	        if( isStopping ) return;
                 smsc::core::synchronization::MutexGuard guard(mutex);
+		isStopping = true;
                 if (smsc_app_runner.get() != 0)
                 {
                     try
@@ -405,7 +407,7 @@ namespace smsc {
 
             void SmscComponent::abort()
             {
-                smsc::core::synchronization::MutexGuard guard(mutex);
+//                smsc::core::synchronization::MutexGuard guard(mutex);
                 if (smsc_app_runner.get() != 0)
                 {
                     try
@@ -416,7 +418,7 @@ namespace smsc {
                     }
                     catch (smsc::util::Exception &e)
                     {
-                        logger.error("Exception on starting SMSC: \"%s\"", e.what());
+                        logger.error("Exception on aborting SMSC: \"%s\"", e.what());
                         throw AdminException("Exception on aborting SMSC: \"%s\"", e.what());
                     }
                     catch (std::exception &e)
@@ -432,7 +434,7 @@ namespace smsc {
 
             void SmscComponent::dump()
             {
-                smsc::core::synchronization::MutexGuard guard(mutex);
+//                smsc::core::synchronization::MutexGuard guard(mutex);
                 if (smsc_app_runner.get() != 0)
                 {
                     try

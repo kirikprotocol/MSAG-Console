@@ -75,6 +75,7 @@ protected:
     mscRegistrateMethod, mscUnregisterMethod, mscBlockMethod, mscClearMethod, mscListMethod};
 
   smsc::core::synchronization::Mutex mutex;
+  bool isStopping;
 
 private:
   class SmscAppRunner : public Thread
