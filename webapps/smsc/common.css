@@ -258,13 +258,14 @@ div.p
 /* SECTIONS                                                                   */
 /******************************************************************************/
 .secTitle,
+.secTitleOpened,
+.secTitleClosed,
 .secList,
 .secInfo,
 .secView,
 .secQuestion
 {
 	font-weight: bold;
-	border-bottom: 1px solid #888888;
 	background-color: #D8E8F5;
 	color:#336699;
 	vertical-align:middle;
@@ -272,6 +273,7 @@ div.p
 	background-repeat: no-repeat;
 	padding-left:20px;
 	text-align: left;
+	border-bottom: 1px solid #888888;
 }
 .secList {	background-image: url(img/ico16_list_bg.gif); }
 .secInfo,
@@ -285,6 +287,17 @@ div.p
 	border-bottom: 1px solid #888888;
 	background-color: #FFFFFF;
 	padding:4px;
+}
+.secTitleOpened {
+	background-image: url(img/list_opened.gif);
+	background-position: left;
+	border-bottom: none;
+}
+.secTitleClosed {
+	background-image: url(img/list_closed.gif);
+	background-position: left;
+	margin-bottom: 1px;
+	border-bottom: none;
 }
 /******************************************************************************/
 /* NAVBAR TYPE 0                                                              */

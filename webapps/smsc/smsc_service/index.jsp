@@ -47,15 +47,22 @@ function showhide(elem)
 {
 	var st = elem.nextSibling.style;
 	if (st.display != "none")
+	{
+		elem.className = "secTitleClosed";
+		//elem.style.borderBottom = "1px solid #888888";
 		st.display="none";
+	}
 	else
+	{
+		elem.className = "secTitleOpened";
 		st.display = "";
+	}
 }
 </script>
 <dl>
-<dt class=secTitle onclick='showhide(this)'>Logger</dt>
-<dd style="display:none">
-<%int row = 0;%>
+<dt class=secTitleClosed onclick='showhide(this)'>Logger</dt> 
+<dd style="display:none"> 
+<%int row = 0;%> 
 <table class=secRep cellspacing=1 width="100%">
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
@@ -64,7 +71,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>Administartion</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>Administartion</dt>
 <dd style="display:none">
 <%row=0;%>
 <table class=secRep cellspacing=1 width="100%">
@@ -79,7 +86,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>Message store</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>Message store</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -90,7 +97,7 @@ function showhide(elem)
 </tr>
 </table>
 <dl>
-<dt class=secTitle onclick='showhide(this)'>Storage</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>Storage</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -109,7 +116,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>Archive</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>Archive</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -132,7 +139,7 @@ function showhide(elem)
 </tr>
 </table>
 <dl>
-<dt class=secTitle onclick='showhide(this)'>Cleaner</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>Cleaner</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -149,7 +156,7 @@ function showhide(elem)
 </dd>
 </dl>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>Billing</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>Billing</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -168,7 +175,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>Cache</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>Cache</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -183,7 +190,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>Connections</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>Connections</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -200,7 +207,7 @@ function showhide(elem)
 </dd>
 </dl>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>map</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>map</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -215,7 +222,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>smpp</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>smpp</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -238,7 +245,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>core</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>core</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -281,7 +288,7 @@ function showhide(elem)
 </tr>
 </table>
 <dl>
-<dt class=secTitle onclick='showhide(this)'>performance</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>performance</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -298,7 +305,7 @@ function showhide(elem)
 </dd>
 </dl>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>Abonent Info</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>Abonent Info</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -325,7 +332,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>profiler</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>profiler</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -372,7 +379,7 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>sms</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>sms</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -383,10 +390,10 @@ function showhide(elem)
 </tr>
 </table>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>StartupLoader</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>StartupLoader</dt>
 <dd style="display:none">
 	<dl>
-	<dt class=secTitle onclick='showhide(this)'>DataSourceDrivers</dt>
+	<dt class=secTitleClosed onclick='showhide(this)'>DataSourceDrivers</dt>
 	<dd style="display:none">
 	<%
 		for (Iterator i = bean.getDatasourceDrivers().iterator(); i.hasNext();)
@@ -394,7 +401,7 @@ function showhide(elem)
 			String name = (String) i.next();
 			%>
 		<dl>
-		<dt class=secTitle onclick='showhide(this)'><%=name%></dt>
+		<dt class=secTitleClosed onclick='showhide(this)'><%=name%></dt>
 		<dd style="display:none">
 			<table class=secRep cellspacing=1 width="100%">
 			<%row=0;%>
@@ -414,7 +421,7 @@ function showhide(elem)
 	</dd>
 	</dl>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>DataSource</dt>
+<dt class=secTitleClosed onclick='showhide(this)'>DataSource</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
