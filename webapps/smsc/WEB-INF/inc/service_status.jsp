@@ -8,26 +8,30 @@ String smeStatus(String serviceId)
 	try {
 		status = appContext.getSmeManager().smeStatus(serviceId);
 	}
-	catch (AdminException e)
+	catch (Throwable e)
 	{}
 	String elem_id = "CONNECTION_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
 	return "<span id=\"" + elem_id + "\" datasrc=#tdcConnStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\" "+ showSmeStatus(status);
 }
 String serviceStatus(String serviceId)
 {
+  String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
+  return serviceStatus(serviceId, elem_id);
+}
+String serviceStatus(String serviceId, String elem_id)
+{
 	byte status = ServiceInfo.STATUS_UNKNOWN;
 	try {
 		status = appContext.getHostsManager().getServiceInfo(serviceId).getStatus();
-	} catch (AdminException e)
+	} catch (Throwable e)
 	{}
-	String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
 	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">";
 	if (isServiceStatusColored)
 	{
 		switch (status)
 		{
 			case ServiceInfo.STATUS_RUNNING:
-				result += "<img src=\"" + CPATH + "/img/ic_running.gif\" title='running'></span>";
+				result += "<img src=\"" + CPATH + "/img/ic_running.gif\" title='running'>";
 				break;
 			case ServiceInfo.STATUS_STOPPING:
 				result += "<img src=\"" + CPATH + "/img/ic_stopping.gif\" title='stopping'>";

@@ -19,7 +19,7 @@ import java.io.File;
 
 
 public class Service extends Proxy {
-  ServiceInfo info = null;
+  private ServiceInfo info = null;
   private Category logger = Category.getInstance(this.getClass());
 
   public Service(ServiceInfo info) throws AdminException
