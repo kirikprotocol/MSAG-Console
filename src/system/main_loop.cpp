@@ -190,7 +190,7 @@ void Smsc::mainLoop()
 
         if (!tasks.findAndRemoveTask(src_proxy->getUniqueId(),dialogId,&task))
         {
-          __warning__("task not found for delivery response");
+          __warning2__("task not found for delivery response. Sid=%s, did=%d",src_proxy->getSystemId(),dialogId);
           continue; //jump to begin of for
         }
         id=task.messageId;

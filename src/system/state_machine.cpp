@@ -419,7 +419,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
     }else
     if(!strncasecmp(buf+i,"#unhide#",8))
     {
-      __trace__("DIRECT: hide");
+      __trace__("DIRECT: unhide");
       sms.setIntProperty(Tag::SMSC_HIDE,0);
       Directive d(i,8);
       offsets.Push(d);
