@@ -208,7 +208,7 @@ protected:
 
   std::list<ControlItem> limitQueue;
   smsc::core::buffers::IntHash<std::list<ControlItem>::iterator> limitHash;
-  int processLimit = 0;
+  int processLimit;
   int processTimeout;
 
   void checkProcessLimit(const SmscCommand& cmd)

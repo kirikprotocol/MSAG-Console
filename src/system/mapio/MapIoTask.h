@@ -289,30 +289,6 @@ private:
   unsigned ref_count;
 };
 
-class DialogRefGuard{
-  MapDialog* dialog;
-  DialogRefGuard(const DialogRefGuard&);
-public:
-  DialogRefGuard(MapDialog* d = 0):dialog(d){/*d->AddRef();*/}
-  ~DialogRefGuard(){
-    if ( dialog ) {
-      MapDialogContainer::getInstance()->releaseDialog(dialog);
-    }
-  }
-  void assign(MapDialog* d){
-    if ( dialog == d ) return;
-    if ( dialog ) {
-      MapDialogContainer::getInstance()->releaseDialog(dialog);
-    }
-    dialog = d;
-    dialog->lockedAt = time(NULL);
-  }
-  bool isnull(){return dialog==0;}
-  void forget(){dialog = 0;}
-  MapDialog* operator->() { return dialog; }
-  MapDialog* get() { return dialog; }
-};
-
 inline unsigned
 MKDID(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn)
 {
@@ -611,6 +587,31 @@ public:
   void unregisterSelf(SmeManager* smeman);
   void abort();
 };
+
+class DialogRefGuard{
+  MapDialog* dialog;
+  DialogRefGuard(const DialogRefGuard&);
+public:
+  DialogRefGuard(MapDialog* d = 0):dialog(d){/*d->AddRef();*/}
+  ~DialogRefGuard(){
+    if ( dialog ) {
+      MapDialogContainer::getInstance()->releaseDialog(dialog);
+    }
+  }
+  void assign(MapDialog* d){
+    if ( dialog == d ) return;
+    if ( dialog ) {
+      MapDialogContainer::getInstance()->releaseDialog(dialog);
+    }
+    dialog = d;
+    dialog->lockedAt = time(NULL);
+  }
+  bool isnull(){return dialog==0;}
+  void forget(){dialog = 0;}
+  MapDialog* operator->() { return dialog; }
+  MapDialog* get() { return dialog; }
+};
+
 
 inline
 void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId)
