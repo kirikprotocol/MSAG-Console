@@ -169,9 +169,11 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 			default:
 				throw s;
 		}
-		debugAlias("addCorrectAliasMatch", s.value(), alias);
-		aliasMan->addAlias(*alias);
-		aliasReg->putAlias(*alias);
+		if (aliasReg->putAlias(*alias))
+		{
+			debugAlias("addCorrectAliasMatch", s.value(), alias);
+			aliasMan->addAlias(*alias);
+		}
 	}
 	catch(...)
 	{
@@ -254,9 +256,11 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 			default:
 				throw s;
 		}
-		debugAlias("addCorrectAliasNotMatchAddress", s.value(), alias);
-		aliasMan->addAlias(*alias);
-		aliasReg->putAlias(*alias);
+		if (aliasReg->putAlias(*alias))
+		{
+			debugAlias("addCorrectAliasNotMatchAddress", s.value(), alias);
+			aliasMan->addAlias(*alias);
+		}
 	}
 	catch(...)
 	{
@@ -339,9 +343,11 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 			default:
 				throw s;
 		}
-		debugAlias("addCorrectAliasNotMatchAlias", s.value(), alias);
-		aliasMan->addAlias(*alias);
-		aliasReg->putAlias(*alias);
+		if (aliasReg->putAlias(*alias))
+		{
+			debugAlias("addCorrectAliasNotMatchAlias", s.value(), alias);
+			aliasMan->addAlias(*alias);
+		}
 	}
 	catch(...)
 	{
@@ -430,9 +436,11 @@ TCResult* AliasManagerTestCases::addCorrectAliasException(
 			default:
 				throw s;
 		}
-		debugAlias("addCorrectAliasException", s.value(), alias);
-		aliasMan->addAlias(*alias);
-		aliasReg->putAlias(*alias);
+		if (aliasReg->putAlias(*alias))
+		{
+			debugAlias("addCorrectAliasException", s.value(), alias);
+			aliasMan->addAlias(*alias);
+		}
 	}
 	catch(...)
 	{
