@@ -10,12 +10,15 @@
 #include "smpp/smpp_sms.h"
 #include <string.h>
 #include <memory>
+#include <inttypes.h>
 
 namespace smsc{
 namespace smeman{
 
 using std::auto_ptr;
 using namespace smsc::smpp;
+using smsc::sms::SMS;
+using smsc::sms::Address;
 
 enum CommandId
 {
@@ -30,15 +33,18 @@ struct SmsResp
 {
 private:
   char* messageId;
+	uint32_t status;
 public:
-  void setMessageId(const char* msgid)
+  void set_messageId(const char* msgid)
   {
     if ( messageId ) delete( messageId);
     messageId = new char[strlen(msgid+1)];
     strcpy(messageId,msgid);
   }
-  const char* getMessageId() {return messageId;}
-  SmsResp() : messageId(0) {};
+  void set_status(uint32_t st) { status = st; }
+	const char* get_messageId() {return messageId;}
+	uint32_t get_status() { return status; }
+  SmsResp() : messageId(0), status(0) {};
   ~SmsResp() { if ( messageId ) delete messageId; }
 };
 
@@ -46,6 +52,7 @@ struct _SmscCommand
 {
   mutable int ref_count;
   CommandId cmdid;
+	uint32_t dialogId;
   void* dta;
   _SmscCommand() : ref_count(0), dta(0){};
   ~_SmscCommand()
@@ -54,7 +61,7 @@ struct _SmscCommand
     {
     case DELIVERY:
     case SUBMIT:
-      delete ( (smsc::sms::SMS*)dta );
+      delete ( (SMS*)dta );
     case DELIVERY_RESP:
     case SUBMIT_RESP:
       delete ( (SmsResp*)dta );
@@ -62,8 +69,12 @@ struct _SmscCommand
       __unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
     default:
       __unreachable__("unprocessed cmdid");
-                }
+    }
   }
+	uint32_t get_dialogId() { return dialogId; }
+	CommandId get_commandId() { return cmdid; }
+	SMS* get_sms() { return (SMS*)dta; }
+	SmsResp* get_resp() { return (SmsResp*)dta; }
 };
 
 class SmscCommand
@@ -87,18 +98,67 @@ class SmscCommand
     return cmd;
   }
   
-        void copy(const _SmscCommand& _cmd)
+  void copy(const _SmscCommand& _cmd)
   {
     if ( cmd ) unref(cmd);
     cmd = ref(const_cast<_SmscCommand*>(&_cmd));
   }
 
 public:
-  SmscCommand() : cmd (0) {}
-  SmscCommand(SmppHeader* pdu) : cmd (0)
+	// specialized constructors (meta constructors)
+  static SmscCommand makeSumbmitSM(const SMS& sms,uint32_t dialogId)
+	{
+		SmscCommand cmd;
+		cmd.cmd = new _SmscCommand;
+		_SmscCommand& _cmd = *cmd.cmd;
+		_cmd.cmdid = SUBMIT;
+		_cmd.dta = new SMS;
+		*_cmd.get_sms() = sms;
+		_cmd.dialogId = dialogId;
+		return cmd;
+	}
+  
+	static SmscCommand makeDeliverySM(const SMS& sms,uint32_t dialogId)
+	{
+		SmscCommand cmd;
+		cmd.cmd = new _SmscCommand;
+		_SmscCommand& _cmd = *cmd.cmd;
+		_cmd.cmdid = DELIVERY;
+		_cmd.dta = new SMS;
+		*_cmd.get_sms() = sms;
+		_cmd.dialogId = dialogId;
+		return cmd;
+	}
+	
+	static SmscCommand makeSubmitSmResp(const char* messageId, uint32_t dialogId, uint32_t status)
+	{
+		SmscCommand cmd;
+		cmd.cmd = new _SmscCommand;
+		_SmscCommand& _cmd = *cmd.cmd;
+		_cmd.cmdid = SUBMIT_RESP;
+		_cmd.dta = new SmsResp;
+		_cmd.get_resp()->set_messageId(messageId);
+		_cmd.get_resp()->set_status(status);
+		_cmd.dialogId = dialogId;
+		return cmd;
+	}
+	static SmscCommand makeDeliverySmResp(const char* messageId, uint32_t dialogId, uint32_t status)
+	{
+		SmscCommand cmd;
+		cmd.cmd = new _SmscCommand;
+		_SmscCommand& _cmd = *cmd.cmd;
+		_cmd.cmdid = DELIVERY_RESP;
+		_cmd.dta = new SmsResp;
+		_cmd.get_resp()->set_messageId(messageId);
+		_cmd.get_resp()->set_status(status);
+		_cmd.dialogId = dialogId;
+		return cmd;
+	}
+	SmscCommand() : cmd (0) {}
+	SmscCommand(SmppHeader* pdu) : cmd (0)
   {
-                __require__ ( pdu != NULL );
-                auto_ptr<_SmscCommand> _cmd(ref(new _SmscCommand()));
+    __require__ ( pdu != NULL );
+    auto_ptr<_SmscCommand> _cmd(ref(new _SmscCommand()));
     switch ( pdu->commandId )
     {
       //case GENERIC_NACK:  reinterpret_cast<PduGenericNack*>(_pdu)->dump(log); break;
@@ -134,27 +194,72 @@ public:
     __unreachable__("command id is not processed");
     sms_pdu:
     {
-                        PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
-                        (smsc::sms::SMS*)_cmd->dta =  new smsc::sms::SMS;
-      fetchSmsFromSmppPdu(xsm,(smsc::sms::SMS*)(_cmd->dta));
-                        //delete (smsc::sms::SMS*)_cmd; _cmd = 0;
+      PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
+      (SMS*)_cmd->dta =  new SMS;
+      fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta));
+      //delete (SMS*)_cmd; _cmd = 0;
       goto end_construct;
     }
     sms_resp:
     {
       PduXSmResp* xsm = reinterpret_cast<PduXSmResp*>(pdu);
-                        (SmsResp*)_cmd->dta = new SmsResp;
+      (SmsResp*)_cmd->dta = new SmsResp;
       //fetchSmsFromSmppPdu(xsm,&_cmd->sms);
-      ((SmsResp*)_cmd->dta)->setMessageId(xsm->get_messageId());
-                        //delete (*(SmsResp*))_cmd; _cmd = 0;
+      ((SmsResp*)_cmd->dta)->set_messageId(xsm->get_messageId());
+			((SmsResp*)_cmd->dta)->set_status(xsm->header.get_commandStatus());
+      //delete (*(SmsResp*))_cmd; _cmd = 0;
       goto end_construct;
     }
     // unreachable
-                //_pdu.release();
-                end_construct:
-                        cmd = _cmd.release();
-                        return;
+    //_pdu.release();
+    end_construct:
+     cmd = _cmd.release();
+     return;
   }
+
+	SmppHeader* makePdu()
+	{
+		_SmscCommand& c = *cmd;
+		switch ( c.get_commandId() )
+		{
+		case SUBMIT:
+			{
+				auto_ptr<PduXSm> xsm(new PduXSm);
+				xsm->header.set_commandId(SmppCommandSet::SUBMIT_SM);
+				xsm->header.set_sequenceNumber(c.get_dialogId());
+				fillSmppPduFromSms(xsm.get(),c.get_sms());
+				return reinterpret_cast<SmppHeader*>(xsm.release());
+			}	
+		case DELIVERY:
+			{
+				auto_ptr<PduXSm> xsm(new PduXSm);
+				xsm->header.set_commandId(SmppCommandSet::DELIVERY_SM);
+				xsm->header.set_sequenceNumber(c.get_dialogId());
+				fillSmppPduFromSms(xsm.get(),c.get_sms());
+				return reinterpret_cast<SmppHeader*>(xsm.release());
+			}	
+		case SUBMIT_RESP:
+			{
+				auto_ptr<PduXSmResp> xsm(new PduXSmResp);
+				xsm->header.set_commandId(SmppCommandSet::SUBMIT_SM_RESP);
+				xsm->header.set_sequenceNumber(c.get_dialogId());
+				xsm->header.set_commandStatus(c.get_resp()->get_status());
+				xsm->set_messageId(c.get_resp()->get_messageId());
+				return reinterpret_cast<SmppHeader*>(xsm.release());
+			}	
+		case DELIVERY_RESP:
+			{
+				auto_ptr<PduXSmResp> xsm(new PduXSmResp);
+				xsm->header.set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+				xsm->header.set_sequenceNumber(c.get_dialogId());
+				xsm->header.set_commandStatus(c.get_resp()->get_status());
+				xsm->set_messageId(c.get_resp()->get_messageId());
+				return reinterpret_cast<SmppHeader*>(xsm.release());
+			}	
+		default:
+			__unreachable__("unknown commandid");
+		}
+	}
 
   SmscCommand(const SmscCommand& _cmd)
   {
