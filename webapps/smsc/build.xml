@@ -36,7 +36,7 @@
 
   <target name="compile" depends="init" description="compile the sources">
     <echo message="Compiling applets"/>
-    <javac srcdir="${java_src}" destdir="${java_out}" classpathref="classpath" debug="yes" target="1.1" verbose="yes" >
+    <javac srcdir="${java_src}" destdir="${java_out}" classpathref="classpath" debug="yes" target="1.1" listfiles="yes"  >
       <include name="${perfmon_path}/applet/*.java"/>
       <include name="${perfmon_path}/PerfSnap.java"/>
       <include name="${smsc_package_path}/util/applet/*.java"/>
@@ -46,8 +46,8 @@
       <include name="${topmon_path}/ErrorSnap.java"/>
       <include name="${topmon_path}/SmeSnap.java"/>
     </javac>
-    <echo message="Compiling smsc"/> 
-    <javac srcdir="${java_src}" destdir="${java_out}" classpathref="classpath" debug="yes"/>
+    <echo message="Compiling smsc"/>
+    <javac srcdir="${java_src}" destdir="${java_out}" classpathref="classpath" debug="yes" listfiles="yes"/>
     <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales" includes="*.properties"/>
     <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet" includes="*.properties"/>
     <native2ascii encoding="Cp1251" src="${topmon_src}/applet" dest="${topmon_out}/applet" includes="*.properties"/>
