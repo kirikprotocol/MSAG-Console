@@ -68,10 +68,10 @@ struct _SmscCommand
     {
     case DELIVERY:
     case SUBMIT:
-      delete ( (SMS*)dta );	break;
+      delete ( (SMS*)dta );     break;
     case DELIVERY_RESP:
     case SUBMIT_RESP:
-      delete ( (SmsResp*)dta );	break;
+      delete ( (SmsResp*)dta ); break;
     case UNKNOWN:
       __unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
     default:
@@ -91,7 +91,7 @@ class SmscCommand
   {
     __require__ ( cmd != 0 );
     __require__ ( cmd->ref_count > 0 );
-    if ( --cmd->ref_count == 0 )
+    if ( --(cmd->ref_count) == 0 )
     {
       delete cmd;
       cmd = 0;
@@ -101,7 +101,7 @@ class SmscCommand
   {
     __require__ ( cmd != 0 );
     __require__ ( cmd->ref_count >= 0 );
-    ++cmd->ref_count;
+    ++(cmd->ref_count);
     return cmd;
   }
   
