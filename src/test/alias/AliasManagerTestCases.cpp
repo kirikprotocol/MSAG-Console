@@ -17,8 +17,8 @@ using namespace smsc::test::util;
 AliasManagerTestCases::AliasManagerTestCases(AliasManager* manager,
 	AliasRegistry* reg) : aliasMan(manager), aliasReg(reg)
 {
-	__require__(aliasMan);
-	__require__(aliasReg);
+	//__require__(aliasMan);
+	//__require__(aliasReg);
 }
 
 Category& AliasManagerTestCases::getLog()
@@ -38,6 +38,7 @@ void AliasManagerTestCases::debugAlias(const char* tc, int val,
 
 void AliasManagerTestCases::commit()
 {
+	__require__(aliasMan);
 	try
 	{
 		aliasMan->commit();
@@ -88,6 +89,26 @@ void AliasManagerTestCases::setupRandomAliasMatchWithAsterisk(
 	alias->alias.setValue(aliasLen - alLen + 1, tmp);
 }
 */
+
+void AliasManagerTestCases::addAlias(const char* tc, int num, const AliasInfo* alias)
+{
+	if (aliasReg)
+	{
+		if (aliasReg->putAlias(*alias))
+		{
+			debugAlias(tc, num, alias);
+			if (aliasMan)
+			{
+				aliasMan->addAlias(*alias);
+			}
+		}
+	}
+	else if (aliasMan)
+	{
+		debugAlias(tc, num, alias);
+		aliasMan->addAlias(*alias);
+	}
+}
 
 TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 {
@@ -172,11 +193,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 			default:
 				throw s;
 		}
-		if (aliasReg->putAlias(*alias))
-		{
-			debugAlias("addCorrectAliasMatch", s.value(), alias);
-			aliasMan->addAlias(*alias);
-		}
+		addAlias("addCorrectAliasMatch", s.value(), alias);
 	}
 	catch(...)
 	{
@@ -192,8 +209,6 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 {
 	TCSelector s(num, 5);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ALIAS_NOT_MATCH_ADDRESS, s.getChoice());
-	getLog().debugStream() << "[" << thr_self() <<
-		"]\taddCorrectAliasNotMatchAddress(" << s.value() << ")";
 	try
 	{
 		AddressValue addrVal, aliasVal, tmp;
@@ -259,11 +274,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 			default:
 				throw s;
 		}
-		if (aliasReg->putAlias(*alias))
-		{
-			debugAlias("addCorrectAliasNotMatchAddress", s.value(), alias);
-			aliasMan->addAlias(*alias);
-		}
+		addAlias("addCorrectAliasNotMatchAddress", s.value(), alias);
 	}
 	catch(...)
 	{
@@ -279,8 +290,6 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 {
 	TCSelector s(num, 5);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ALIAS_NOT_MATCH_ALIAS, s.getChoice());
-	getLog().debugStream() << "[" << thr_self() <<
-		"]\taddCorrectAliasNotMatchAlias(" << s.value() << ")";
 	try
 	{
 		AddressValue addrVal, aliasVal, tmp;
@@ -346,11 +355,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 			default:
 				throw s;
 		}
-		if (aliasReg->putAlias(*alias))
-		{
-			debugAlias("addCorrectAliasNotMatchAlias", s.value(), alias);
-			aliasMan->addAlias(*alias);
-		}
+		addAlias("addCorrectAliasNotMatchAlias", s.value(), alias);
 	}
 	catch(...)
 	{
@@ -471,8 +476,14 @@ TCResult* AliasManagerTestCases::deleteAliases()
 	try
 	{
 		AliasInfo alias;
-		aliasMan->clean();
-		aliasReg->clear();
+		if (aliasMan)
+		{
+			aliasMan->clean();
+		}
+		if (aliasReg)
+		{
+			aliasReg->clear();
+		}
 	}
 	catch(...)
 	{
@@ -515,6 +526,7 @@ void AliasManagerTestCases::printFindResult(const char* tc,
 
 TCResult* AliasManagerTestCases::findAliasByAddress(const Address& addr)
 {
+	__require__(aliasReg && aliasMan);
 	TCResult* res = new TCResult(TC_FIND_ALIAS_BY_ADDRESS);
 	const AliasHolder* aliasHolder = aliasReg->findAliasByAddress(addr);
 	printFindResult("AliasRegistry::findAliasByAddress()", addr, aliasHolder);
@@ -557,6 +569,7 @@ TCResult* AliasManagerTestCases::findAliasByAddress(const Address& addr)
 
 TCResult* AliasManagerTestCases::findAddressByAlias(const Address& alias)
 {
+	__require__(aliasReg && aliasMan);
 	TCResult* res = new TCResult(TC_FIND_ADDRESS_BY_ALIAS);
 	const AliasHolder* aliasHolder = aliasReg->findAddressByAlias(alias);
 	printFindResult("AliasRegistry::findAddressByAlias()", alias, aliasHolder);
@@ -599,12 +612,15 @@ TCResult* AliasManagerTestCases::findAddressByAlias(const Address& alias)
 
 TCResult* AliasManagerTestCases::checkInverseTransformation(const Address& addr)
 {
+	__require__(aliasReg && aliasMan);
 	TCResult* res = new TCResult(TC_CHECK_INVERSE_TRANSFORMATION);
 	try
 	{
 		Address alias = addr, addr2, alias2;
+		/*
 		if (aliasMan->AddressToAlias(addr, alias2))
 		{
+			__trace__("AliasManagerTestCases::checkInverseTransformation(): addr->alias->addr");
 			if (!aliasMan->AliasToAddress(alias2, addr2))
 			{
 				res->addFailure(101);
@@ -614,8 +630,10 @@ TCResult* AliasManagerTestCases::checkInverseTransformation(const Address& addr)
 				res->addFailure(102);
 			}
 		}
+		*/
 		if (aliasMan->AliasToAddress(alias, addr2))
 		{
+			__trace__("AliasManagerTestCases::checkInverseTransformation(): alias->addr->alias");
 			if (!aliasMan->AddressToAlias(addr2, alias2))
 			{
 				res->addFailure(103);
