@@ -29,6 +29,7 @@ compile:
 	@mkdir -p $(SME_BUILDDIR)/bin
 	@mkdir -p $(SME_BUILDDIR)/conf
 	@mkdir -p $(SME_BUILDDIR)/jsp
+	@mkdir -p $(SME_BUILDDIR)/jsp/inc
 	@mkdir -p $(SME_BUILDDIR)/lib
 	@cp -f service $(SME_BUILDDIR)/bin
 	@cp -f log4cpp.properties $(SME_BUILDDIR)/log4cpp.infosme
@@ -38,6 +39,7 @@ compile:
 	@cp -f ../../config/command.dtd $(SME_BUILDDIR)/conf/command.dtd
 	@cp -f ../../config/response.dtd $(SME_BUILDDIR)/conf/response.dtd
 	@cp -f jsp/*.* $(SME_BUILDDIR)/jsp
+	@cp -f jsp/inc/*.* $(SME_BUILDDIR)/jsp/inc
 	@cp -f config.xml $(SME_BUILDDIR)
 
 pack:
