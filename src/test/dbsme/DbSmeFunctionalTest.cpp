@@ -11,6 +11,7 @@
 #include "test/config/AliasConfigGen.hpp"
 #include "test/config/RouteConfigGen.hpp"
 #include "test/util/TestTaskManager.hpp"
+#include "test/util/TextUtil.hpp"
 #include "util/debug.h"
 #include <vector>
 #include <sstream>
@@ -158,10 +159,10 @@ void TestSme::executeCycle()
 	}
 	//Отправка неправильной команды db sme, 1/5
 	//Отправка правильной команды db sme, 4/5
-	switch (rand1(5))
+	switch (rand1(1))
 	{
 		case 1:
-			//tc.submitIncorrectDbSmeCmd(...);
+			tc.submitCorrectQueryDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
 		default:
 			//tc.submitCorrectDbSmeCmd(...);
@@ -251,6 +252,10 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	SmeManagerTestCases tcSme(NULL, smeReg, NULL);
 	AliasManagerTestCases tcAlias(NULL, aliasReg, NULL);
 	RouteManagerTestCases tcRoute(NULL, routeReg, NULL);
+	
+	__cfg_addr__(dbSmeAddr);
+	__cfg_addr__(dbSmeAlias);
+	__cfg_str__(dbSmeSystemId);
 
 	vector<Address*> addr;
 	vector<SmeInfo*> smeInfo;
@@ -266,28 +271,53 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		os << *addr[i];
 		__trace2__("genConfig(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
 	}
-	//алиасов нет
-	//регистрация маршрутов
-	__cfg_addr__(dbSmeAddr);
+	//регистрация db sme
+	SmeInfo dbSmeInfo;
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&dbSmeInfo);
+	dbSmeInfo.systemId = dbSmeSystemId;
+	smeReg->registerSme(dbSmeAddr, dbSmeInfo);
+	smeReg->bindSme(dbSmeInfo.systemId);
+	//регистрация алиасов (самая простая схема)
 	for (int i = 0; i < numSme; i++)
 	{
-		RouteInfo route;
-		route.source = *addr[i];
-		route.dest = dbSmeAddr;
-		route.smeSystemId = smeInfo[i]->systemId;
-		//route.priority = 0;
-		route.billing = false;
-		route.archived = false;
-		route.enabling = true;
-		route.routeId = i;
+		for (int j = 0; j < numSme; j++)
+		{
+			AliasInfo alias;
+			alias.alias = *addr[i];
+			alias.addr = *addr[j];
+			tcAlias.addCorrectAliasMatch(&alias, RAND_TC);
+		}
+	}
+	//алиас для db sme
+	AliasInfo dbSmeAliasInfo;
+	dbSmeAliasInfo.addr = dbSmeAddr;
+	dbSmeAliasInfo.alias = dbSmeAlias;
+	dbSmeAliasInfo.hide = true;
+	aliasReg->putAlias(dbSmeAliasInfo);
+	//tcAlias->commit();
+	//регистрация маршрутов (от каждой sme до db sme и обратно)
+	for (int i = 0; i < numSme; i++)
+	{
+		//sme -> db sme
+		RouteInfo route1;
+		route1.source = *addr[i];
+		route1.dest = dbSmeAddr;
+		route1.smeSystemId = dbSmeSystemId;
+		tcRoute.addCorrectRouteMatch(&route1, NULL, RAND_TC);
+		//db sme -> sme
+		RouteInfo route2;
+		route2.source = dbSmeAddr;
+		route2.dest = *addr[i];
+		route2.smeSystemId = smeInfo[i]->systemId;
+		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
 	}
 	//сохранение конфигов
 	SmeConfigGen smeCfg(smeReg, NULL);
 	AliasConfigGen aliasCfg(aliasReg, NULL);
 	RouteConfigGen routeCfg(routeReg, NULL);
-	smeCfg.saveConfig("../system/sme.xml");
-	aliasCfg.saveConfig("../system/aliases.xml");
-	routeCfg.saveConfig("../system/routes.xml");
+	smeCfg.saveConfig("../conf/sme.xml");
+	aliasCfg.saveConfig("../conf/aliases.xml");
+	routeCfg.saveConfig("../conf/routes.xml");
 	//создание sme
 	vector<TestSme*> sme;
 	for (int i = 0; i < numSme; i++)
