@@ -221,5 +221,8 @@ int main(int argc,char* argv[])
     fprintf(stderr,"FATAL EXCEPTION!\n");
     exit(-1);
   }
+  //graceful shutdown
+  //we don't need to restore stats on next startup in this case
+  remove("stats.txt");
   return 0;
 }

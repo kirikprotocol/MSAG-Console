@@ -481,6 +481,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
     case UNBIND_RESP:
     case GENERIC_NACK:
     case SMPP_PDU:
+    case SMEALERT:
       return true;
   }
   switch(proxyType)

@@ -69,6 +69,7 @@ enum CommandId
   SUBMIT_MULTI_SM,        //22
   SUBMIT_MULTI_SM_RESP,   //23
   ALERT_NOTIFICATION,     //24
+  SMEALERT,               //25
 };
 
 enum CommandStatus{
@@ -434,6 +435,7 @@ struct _SmscCommand
     case CANCEL_RESP:
     case ENQUIRELINK:
     case ENQUIRELINK_RESP:
+    case SMEALERT:
       // nothing to delete
       break;
     default:
@@ -459,6 +461,8 @@ struct _SmscCommand
   void set_address(const Address& addr) { *(Address*)dta = addr; }
 
   SmppHeader* get_smppPdu(){return (SmppHeader*)dta;}
+
+  int get_smeIndex(){return (int)dta;}
 
   AlertNotification& get_alertNotification(){return *(AlertNotification*)dta;}
 
@@ -655,8 +659,20 @@ public:
     _SmscCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = HLRALERT;
-    _cmd.dta = new Address;
+    _cmd.dta = new Address();
     _cmd.set_address(addr);
+    _cmd.dialogId = 0;
+    return cmd;
+  }
+
+  static SmscCommand makeSMEAlert(int idx)
+  {
+    SmscCommand cmd;
+    cmd.cmd = new _SmscCommand;
+    _SmscCommand& _cmd = *cmd.cmd;
+    _cmd.ref_count = 1;
+    _cmd.cmdid = SMEALERT;
+    _cmd.dta = (void*)idx;
     _cmd.dialogId = 0;
     return cmd;
   }

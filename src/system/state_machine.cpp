@@ -34,6 +34,8 @@ using smsc::core::synchronization::Mutex;
 static const int REPORT_ACK=2;
 static const int REPORT_NOACK=255;
 
+Hash<std::list<std::string> > StateMachine::directiveAliases;
+
 
 class ReceiptGetAdapter:public GetAdapter{
 public:
@@ -126,6 +128,65 @@ public:
   }
 
 };
+
+static std::string AltConcat(const char* prefix,Hash<std::list<std::string> >& h,const char* postfix="")
+{
+  std::string res;
+  if(!h.Exists(prefix))
+  {
+    res+='#';
+    res+=prefix;
+    res+=postfix;
+    res+='#';
+    return res;
+  }
+  res+="#(?:";
+  res+=prefix;
+  std::list<std::string>& lst=h[prefix];
+  std::list<std::string>::const_iterator i=lst.begin();
+  while(i!=lst.end())
+  {
+    res+='|';
+    res+=*i;
+    i++;
+  }
+  res+=')';
+  res+=postfix;
+  res+='#';
+  __trace2__("StateMachine:: directive regexp for %s=%s",prefix,res.c_str());
+  return res;
+}
+
+StateMachine::StateMachine(EventQueue& q,
+               smsc::store::MessageStore* st,
+               smsc::system::Smsc *app):
+               eq(q),
+               store(st),
+               smsc(app)
+
+{
+  using namespace smsc::util::regexp;
+  smsLog=&smsc::util::Logger::getCategory("sms.trace");
+  dreAck.Compile(AltConcat("ack",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
+  __throw_if_fail__(dreAck.LastError()==regexp::errNone,RegExpCompilationException);
+  dreNoAck.Compile(AltConcat("noack",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
+  __throw_if_fail__(dreNoAck.LastError()==regexp::errNone,RegExpCompilationException);
+  dreHide.Compile(AltConcat("hide",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);;
+  __throw_if_fail__(dreHide.LastError()==regexp::errNone,RegExpCompilationException);
+  dreUnhide.Compile(AltConcat("unhide",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);;
+  __throw_if_fail__(dreUnhide.LastError()==regexp::errNone,RegExpCompilationException);
+  dreFlash.Compile(AltConcat("flash",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);;
+  __throw_if_fail__(dreFlash.LastError()==regexp::errNone,RegExpCompilationException);
+  dreDef.Compile(AltConcat("def",directiveAliases,"\\s+(\\d+)").c_str(),OP_IGNORECASE|OP_OPTIMIZE);;
+  __throw_if_fail__(dreDef.LastError()==regexp::errNone,RegExpCompilationException);
+  dreTemplate.Compile(AltConcat("template",directiveAliases,"=(.*?)").c_str(),OP_IGNORECASE|OP_OPTIMIZE);;;
+  __throw_if_fail__(dreTemplate.LastError()==regexp::errNone,RegExpCompilationException);
+  dreTemplateParam.Compile("/\\s*\\{(\\w+)\\}=(\".*?\"|[^{\\s]+)/s");
+  __throw_if_fail__(dreTemplateParam.LastError()==regexp::errNone,RegExpCompilationException);
+  dreUnknown.Compile("/#.*?#/");
+  __throw_if_fail__(dreUnknown.LastError()==regexp::errNone,RegExpCompilationException);
+}
+
 
 void StateMachine::formatDeliver(const FormatData& fd,std::string& out)
 {
@@ -335,7 +396,7 @@ struct Directive{
   int start;
   int end;
   Directive():start(0),end(0){}
-  Directive(int st,int len):start(st),end(st+len){}
+  Directive(int st,int en):start(st),end(en){}
   Directive(const Directive& d):start(d.start),end(d.end){}
 };
 
@@ -388,7 +449,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   len=getSmsText(&sms,buf,len+1);
 
   Array<Directive> offsets;
-  int i=0;
+  /*
   RegExp def("/#def\\s+(\\d+)#/i");
   __require__(def.LastError()==regexp::errNone);
   RegExp tmpl("/#template=(.*?)#/i");
@@ -397,7 +458,9 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   __require__(tmplparam.LastError()==regexp::errNone);
   RegExp unkdir("/#.*?#/");
   __require__(unkdir.LastError()==regexp::errNone);
+  */
   SMatch m[10];
+  int i=0;
 
   ContextEnvironment ce;
   ReceiptGetAdapter ga;
@@ -409,23 +472,21 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   while(i<len && buf[i]=='#')
   {
     int n=10;
-    if(!strncasecmp(buf+i,"#ack#",5))
+    if(dreAck.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       __trace__("DIRECT: ack found");
       sms.setDeliveryReport(REPORT_ACK);
-      Directive d(i,5);
-      offsets.Push(d);
-      i+=5;
+      offsets.Push(Directive(m[0].start,m[0].end));
+      i=m[0].end;
     }else
-    if(!strncasecmp(buf+i,"#noack#",7))
+    if(dreNoAck.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       __trace__("DIRECT: noack found");
       sms.setDeliveryReport(REPORT_NOACK);
-      Directive d(i,7);
-      offsets.Push(d);
-      i+=7;
+      offsets.Push(Directive(m[0].start,m[0].end));
+      i=m[0].end;
     }else
-    if(!strncasecmp(buf+i,"#hide#",6))
+    if(dreHide.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       __trace__("DIRECT: hide");
       if(srcprof.hideModifiable)
@@ -434,11 +495,10 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       {
         __trace__("DIRECT: error, hide is not modifiable");
       }
-      Directive d(i,6);
-      offsets.Push(d);
-      i+=6;
+      offsets.Push(Directive(m[0].start,m[0].end));
+      i=m[0].end;
     }else
-    if(!strncasecmp(buf+i,"#unhide#",8))
+    if(dreUnhide.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       __trace__("DIRECT: unhide");
       if(srcprof.hideModifiable)
@@ -447,31 +507,28 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       {
         __trace__("DIRECT: error, hide is not modifiable");
       }
-      Directive d(i,8);
-      offsets.Push(d);
-      i+=8;
+      offsets.Push(Directive(m[0].start,m[0].end));
+      i=m[0].end;
     }else
-    if(!strncasecmp(buf+i,"#flash#",7))
+    if(dreFlash.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       if(!sms.hasIntProperty(Tag::SMSC_FORCE_DC))
       {
         sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
       }
-      Directive d(i,7);
-      offsets.Push(d);
-      i+=7;
+      offsets.Push(Directive(m[0].start,m[0].end));
+      i=m[0].end;
     }else
-    if(def.MatchEx(buf,buf+i,buf+len,m,n))
+    if(dreDef.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       int t=atoi(buf+m[1].start);
       if(t>999)t=999;
       __trace2__("DIRECT: %*s, t=%d",m[0].end-m[0].start,buf+m[0].start,t);
       sms.setNextTime(time(NULL)+t*60*60);
-      Directive d(i,m[0].end-m[0].start);
-      offsets.Push(d);
-      i+=m[0].end-m[0].start;
+      offsets.Push(Directive(m[0].start,m[0].end));
+      i=m[0].end;
     }else
-    if(tmpl.MatchEx(buf,buf+i,buf+len,m,n))
+    if(dreTemplate.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       tmplname.assign(buf+m[1].start,m[1].end-m[1].start);
       __trace2__("DIRECT: template=%s",tmplname.c_str());
@@ -480,7 +537,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       int j=m[0].end;
       n=10;
       string name,value;
-      while(tmplparam.MatchEx(buf,buf+j,buf+len,m,n))
+      while(dreTemplate.MatchEx(buf,buf+j,buf+len,m,n))
       {
         name.assign(buf+m[1].start,m[1].end-m[1].start);
         value.assign
@@ -522,13 +579,13 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
         }
         j=m[0].end;
       }
-      Directive d(i,j-i);
+      Directive d(i,j);
       tmplstart=i;
       tmpllen=j-i;
       offsets.Push(d);
       i=j;
     }else
-    if(unkdir.MatchEx(buf,buf+i,buf+len,m,n))
+    if(dreUnknown.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       i=m[0].end;
     }else
@@ -1852,7 +1909,7 @@ StateType StateMachine::forward(Tuple& t)
     return EXPIRED_STATE;
   }
   time_t now=time(NULL);
-  if(sms.getValidTime()<=now && sms.getAttemptsCount()!=0)
+  if(sms.getValidTime()<=now && sms.getLastResult()!=0)
   {
     sms.setLastResult(Status::EXPIRED);
     smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
@@ -1893,7 +1950,7 @@ StateType StateMachine::forward(Tuple& t)
     smsLog->warn("FWD: sms msgId=%lld is not in enroute (%d)",t.msgId,sms.getState());
     return sms.getState();
   }
-  if(!t.command->is_reschedulingForward() && sms.getNextTime()>now)
+  if( sms.getNextTime()>now && (!t.command->is_reschedulingForward() || sms.getLastResult()==0) )
   {
     smsLog->debug("FWD: nextTime>now (%d>%d)",sms.getNextTime(),now);
     SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);

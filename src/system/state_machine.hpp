@@ -7,6 +7,10 @@
 #include "util/templates/Formatters.h"
 #include <string>
 #include "profiler/profiler.hpp"
+#include "core/buffers/Hash.hpp"
+#include <list>
+#include "util/regexp/RegExp.hpp"
+#include <exception>
 
 namespace smsc{
 namespace system{
@@ -16,18 +20,19 @@ using smsc::profiler::Profile;
 
 using namespace smsc::util::templates;
 
+class RegExpCompilationException:public std::exception{
+public:
+  const char* what()const throw()
+  {
+    return "failed to compile directive processing regexp in state machine";
+  }
+};
+
 class StateMachine:public smsc::core::threads::ThreadedTask{
 public:
   StateMachine(EventQueue& q,
                smsc::store::MessageStore* st,
-               smsc::system::Smsc *app):
-               eq(q),
-               store(st),
-               smsc(app)
-
-  {
-    smsLog=&smsc::util::Logger::getCategory("sms.trace");
-  }
+               smsc::system::Smsc *app);
   virtual ~StateMachine()
   {
   }
@@ -64,13 +69,18 @@ public:
   time_t maxValidTime;
   Address scAddress;
 
-  static void processDirectives(SMS& sms,Profile& p,Profile& srcprof);
+  void processDirectives(SMS& sms,Profile& p,Profile& srcprof);
 
   void setReceiptInfo(const std::string& st,int pid,std::string sid)
   {
     serviceType=st;
     protocolId=pid;
     smscSmeId=sid;
+  }
+
+  static void AddDirectiveAlias(const char* dir,const char* alias)
+  {
+    directiveAliases[dir].push_back(alias);
   }
 
 protected:
@@ -84,6 +94,18 @@ protected:
   std::string serviceType;
   int protocolId;
   std::string smscSmeId;
+
+  static Hash<std::list<std::string> > directiveAliases;
+
+  smsc::util::regexp::RegExp dreAck;
+  smsc::util::regexp::RegExp dreNoAck;
+  smsc::util::regexp::RegExp dreHide;
+  smsc::util::regexp::RegExp dreUnhide;
+  smsc::util::regexp::RegExp dreFlash;
+  smsc::util::regexp::RegExp dreDef;
+  smsc::util::regexp::RegExp dreTemplate;
+  smsc::util::regexp::RegExp dreTemplateParam;
+  smsc::util::regexp::RegExp dreUnknown;
 
   StateType submit(Tuple& t);
   StateType forward(Tuple& t);

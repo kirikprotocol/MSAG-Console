@@ -471,6 +471,7 @@ int SmppInputThread::Execute()
                       bindpdu->get_password()?bindpdu->get_password():"",
                       proxy);
                     proxy->setId(sid,proxyIndex);
+                    proxy->putIncomingCommand(SmscCommand::makeSMEAlert(proxyIndex));
                     __trace2__("NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
                   }else
                   {

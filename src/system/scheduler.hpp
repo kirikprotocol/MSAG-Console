@@ -58,7 +58,13 @@ public:
   }
 
   virtual void close(){}
-  virtual void putCommand(const SmscCommand& command){}
+  virtual void putCommand(const SmscCommand& command)
+  {
+    MutexGuard g(mon);
+    outQueue.Push(command);
+    mon.notify();
+
+  }
   virtual SmscCommand getCommand()
   {
     MutexGuard guard(mon);
@@ -124,6 +130,7 @@ public:
 protected:
   EventQueue &queue;
   mutable EventMonitor mon;
+  Array<SmscCommand> outQueue;
   int rescheduleLimit;
   time_t lastCheck;
   struct Data{

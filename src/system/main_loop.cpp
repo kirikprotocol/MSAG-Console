@@ -523,6 +523,11 @@ void Smsc::processCommand(SmscCommand& cmd)
       id=cmd->get_forwardMsgId();
       break;
     }
+    case __CMD__(SMEALERT):
+    {
+      scheduler->putCommand(cmd);
+      return;
+    }
     default:;
   }
   eventqueue.enqueue(id,cmd);

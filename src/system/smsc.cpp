@@ -41,6 +41,7 @@ using util::Exception;
 
 Smsc::~Smsc()
 {
+  SaveStats();
 }
 
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
@@ -189,6 +190,7 @@ extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteCo
 
 void Smsc::init(const SmscConfigs& cfg)
 {
+  smsc::util::regexp::RegExp::InitLocale();
   log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.init");
   try{
   tp.preCreateThreads(15);
@@ -350,6 +352,21 @@ void Smsc::init(const SmscConfigs& cfg)
   log.info( "Initializing MR cache" );
   mrCache.assignStore(store);
   log.info( "MR cache inited" );
+
+  {
+    using smsc::util::config::CStrSet;
+    CStrSet *params=cfg.cfgman->getChildStrParamNames("directives");
+    CStrSet::iterator i=params->begin();
+    string da;
+    for(;i!=params->end();i++)
+    {
+      da="directives.";
+      da+=*i;
+      StateMachine::AddDirectiveAlias(cfg.cfgman->getString(da.c_str()),i->c_str());
+    }
+    delete params;
+  }
+
   {
     log.info( "Starting statemachines" );
     int cnt=cfg.cfgman->getInt("core.state_machines_count");
@@ -584,7 +601,6 @@ void Smsc::init(const SmscConfigs& cfg)
     log.info( "Performance server started" );
   }
 
-  smsc::util::regexp::RegExp::InitLocale();
   Address addr(cfg.cfgman->getString("core.service_center_address"));
   AddressValue addrval;
   addr.getValue( addrval );

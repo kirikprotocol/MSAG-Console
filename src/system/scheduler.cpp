@@ -111,18 +111,33 @@ int Scheduler::Execute()
     t=time(NULL);
     r=0;
     MutexGuard guard(mon);
-    TimeLineMap::iterator it=timeLine.upper_bound(lastCheck);
-    if(it!=timeLine.end())
+    while(outQueue.Count())
     {
-      r=it->first;
-      if(r>lastCheck)lastCheck=r+1;
-      else r=0;
+      SmscCommand cmd;
+      outQueue.Shift(cmd);
+      if(cmd->cmdid!=SMEALERT)continue;
+      int idx=cmd->get_smeIndex();
+      TimeLineMap::iterator it=timeLine.begin(),tmpit;
+      while(it!=timeLine.end())
+      {
+        if(it->second.idx!=idx || it->first<=t)
+        {
+          it++;
+          continue;
+        }
+        timeLine.insert(TimeIdPair(t,Data(it->second.id,idx,true)));
+        tmpit=it;
+        it++;
+        timeLine.erase(tmpit);
+      }
     }
-    if(r==0)
-      mon.wait();
-    else
-      if(r>t)mon.wait((r-t)*1000);
-    if(prxmon)prxmon->Signal();
+    if(timeLine.begin()->first<t)
+    {
+      if(prxmon)prxmon->Signal();
+    }else
+    {
+      mon.wait(1000);
+    }
   }
   return 0;
 }

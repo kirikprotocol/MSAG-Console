@@ -265,7 +265,7 @@ public:
     }
   }
 
-  void abortSmsc()
+  void SaveStats()
   {
     FILE *f=fopen("stats.txt","wt");
     if(f)
@@ -280,6 +280,10 @@ public:
       );
       fclose(f);
     }
+  }
+  void abortSmsc()
+  {
+    SaveStats();
     statMan->flushStatistics();
     MapDialogContainer::getInstance()->abort();
     kill(getpid(),9);
