@@ -3,7 +3,9 @@
 {*/
 String CPATH = request.getContextPath() + "/smsc";
 bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), new LinkedList(), request.getUserPrincipal());
-List c = bean.getServiceIds();
+List c = new ArrayList(bean.getServiceIds());
+if (!c.contains(ru.novosoft.smsc.admin.Constants.SMSC_SME_ID))
+c.add(ru.novosoft.smsc.admin.Constants.SMSC_SME_ID);
 for (Iterator i = c.iterator(); i.hasNext(); )
 {
 	out.print('"' + (String) i.next() + '"');
