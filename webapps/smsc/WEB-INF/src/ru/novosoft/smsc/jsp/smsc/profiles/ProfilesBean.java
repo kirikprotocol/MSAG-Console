@@ -21,7 +21,7 @@ public class ProfilesBean extends SmscBean
 	protected List registeredLocales = new LinkedList();
 
   protected boolean aliasHide = false;
-  protected boolean aliasModifiable = true;
+  protected boolean aliasModifiable = false;
 
 	protected int init(List errors)
 	{
