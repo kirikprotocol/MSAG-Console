@@ -867,9 +867,10 @@ struct PduXSmResp //: public SmppHeader //MemoryManagerUnit
   __cstr_property__(messageId)
   inline uint32_t size()
   {
-    return (uint32_t)(0
-                      _s_ref_property__(SmppHeader,header)
-                      _s_cstr_property__(messageId));
+    return header.get_commandStatus()==0 || header.get_commandId()!=SmppCommandSet::SUBMIT_SM_RESP?
+       (uint32_t)(0 _s_ref_property__(SmppHeader,header)
+                    _s_cstr_property__(messageId))
+                    :(uint32_t)(0 _s_ref_property__(SmppHeader,header));
   }
   inline void dump(__LOG__ log,int align = 0)
   {
