@@ -1046,10 +1046,7 @@ static void SendSubmitCommand(MapDialog* dialog)
   desc.setMsc(dialog->s_msc.length(),dialog->s_msc.c_str());
   dialog->sms->setOriginatingDescriptor(desc);
   if ( dialog->isUSSD ) {
-    Address src_addr;
-    ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
-    dialog->sms->setOriginatingAddress(src_addr);
-    istringstream(src_addr.value)>>dialog->ussdSequence;
+    istringstream(dialog->sms->getOriginatingAddress().value)>>dialog->ussdSequence;
     {
       MutexGuard ussd_map_guard( ussd_map_lock );
       ussd_map[dialog->ussdSequence] = dialog->dialogid_map;
@@ -3075,9 +3072,14 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       dialog->hasIndAddress = true;
       __map_trace2__("MAP::%s has msisdn %d.%d", __func__,dialog->m_msAddr.addressLength, dialog->m_msAddr.typeOfAddress );
     }
+
     string subsystem;
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
+    Address src_addr;
+    ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
+    sms.setOriginatingAddress(src_addr);
+
     sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, ussdDataCodingScheme );
     UCHAR_T udhPresent, msgClassMean, msgClass;
     unsigned dataCoding = (unsigned)convertCBSDatacoding2SMSC(ussdDataCodingScheme, &udhPresent, &msgClassMean, &msgClass);
@@ -3434,15 +3436,23 @@ static bool NeedNotifyHLR(MapDialog* dialog)
   return
     !dialog->isUSSD &&
     !dialog->hlrWasNotified && dialog->hlrVersion != 0 &&
-    ((!dialog->wasDelivered &&
-      ( ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
-        ((unsigned)dialog->memoryExceeded != (unsigned)dialog->mwdStatus.mcef )
-      ))
+    (
+     (!dialog->wasDelivered &&
+      ( 
+//      ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
+//        ((unsigned)dialog->memoryExceeded != (unsigned)dialog->mwdStatus.mcef )
+	dialog->subscriberAbsent || dialog->memoryExceeded
+      )
+     )
     ||
-      (dialog->wasDelivered && dialog->hasMwdStatus &&
-        ( ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
-          ((unsigned)dialog->memoryExceeded != (unsigned)dialog->mwdStatus.mcef )
-        )));
+     (dialog->wasDelivered && dialog->hasMwdStatus 
+//       &&
+//       ( 
+//          ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
+//          ((unsigned)dialog->memoryExceeded != (unsigned)dialog->mwdStatus.mcef )
+//       )
+     )
+    );
 }
 static void NotifyHLR(MapDialog* dialog)
 {
