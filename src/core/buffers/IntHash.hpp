@@ -48,7 +48,7 @@ public:
   {
     //printf("ins:%d\n",key);fflush(stdout);
     if(!size || count>=size/4)Rehash(size*4);
-    int idx=Index(key,0);
+    unsigned int idx=Index(key,0);
     int res=0;
     int attempt=0;
     for(;;)
@@ -92,7 +92,7 @@ public:
     int idx;
     int attempt=0;
     do{
-      idx=Index(key,attempt);
+      unsigned idx=Index(key,attempt);
       if(refcounts[idx]==0)throw;
       attempt++;
     }while(keys[idx]!=key);
@@ -103,7 +103,7 @@ public:
   {
 //    printf("get:%d\n",key);fflush(stdout);
     if(!size || !count)return 0;
-    int idx;
+    unsigned int idx;
     int attempt=0;
     do{
       idx=Index(key,attempt);
@@ -117,7 +117,7 @@ public:
 
   int Exist(int key)
   {
-    int idx;
+    unsigned int idx;
     int attempt=0;
     do{
       idx=Index(key,attempt);
@@ -130,7 +130,7 @@ public:
   int Delete(int key)
   {
     //printf("del:%d\n",key);fflush(stdout);
-    int idx;
+    unsigned int idx;
     int attempt=0;
     do{
       idx=Index(key,attempt);
@@ -204,17 +204,17 @@ protected:
   int reflistsize;
   int emptycount;
 
-  inline int HashKey(int key,int attempt)const
+  inline unsigned int HashKey(int key,int attempt)const
   {
     return key+attempt;
   }
 
-  inline int Index(int key,int attempt)const
+  inline unsigned int Index(int key,int attempt)const
   {
     return HashKey(key,attempt)%size;
   }
 
-  void AddRef(int refidx,int& idx)
+  void AddRef(unsigned int refidx,int& idx)
   {
     if(reflistsize==idx)
     {
