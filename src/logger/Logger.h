@@ -19,6 +19,7 @@ class Logger
 public:
 	typedef enum {
 		LEVEL_FATAL,
+		LEVEL_CRIT,
 		LEVEL_ERROR,
 		LEVEL_WARN,
 		LEVEL_INFO,
