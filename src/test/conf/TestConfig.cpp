@@ -21,7 +21,10 @@ TestConfig::TestConfig()
 	intMap["maxDeliveryPeriod"] = 120; //max(validTime - waitTime)
 	//адреса
 	addrMap["smscAddr"] = ".3.5.123abc";
-	addrMap["profilerAddr"] = ".3.5.456def";
+	//profiler
+	addrMap["profilerAddr"] = "+38435435";
+	addrMap["profilerAlias"] = ".3.3.profilerAlias123";
+	strMap["profilerSystemId"] = "profiler";
 	//db sme
 	addrMap["dbSmeAddr"] = "+1597534682";
 	addrMap["dbSmeAlias"] = ".5.5.dbSmeAlias123";
