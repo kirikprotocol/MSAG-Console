@@ -276,7 +276,7 @@ int main(int argc, char* argv[])
 		}
 		cout << endl;
 		StoreManager::shutdown();
-		chkList.save("message_store.chk");
+		chkList.save();
 	}
 	catch (...)
 	{
