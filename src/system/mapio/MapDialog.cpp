@@ -43,7 +43,6 @@ void Convert7BitToText(
   text->len = chars;
   text->bytes[chars] = 0;
   __trace2__("7bit->latin1: %s",text->len);
-  return i;
 }
 
 int ConvertTextTo7Bit(MicroString* text, char* bit7buf, int bit7buf_size)
