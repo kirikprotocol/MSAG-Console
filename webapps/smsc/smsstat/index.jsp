@@ -1,6 +1,7 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="java.util.*, java.text.SimpleDateFormat,
-                 ru.novosoft.smsc.jsp.SMSCAppContext"%>
+                 ru.novosoft.smsc.jsp.SMSCAppContext,
+                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
 <%@ page import="ru.novosoft.smsc.admin.smsstat.*"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsstat.*"%>
 <jsp:useBean id="smsStatFormBean" scope="session" class="ru.novosoft.smsc.jsp.smsstat.SmsStatFormBean" />
@@ -110,7 +111,7 @@ while (i.hasNext()) {
             SmeIdCountersSet smeid = (SmeIdCountersSet)i.next();
         %>
         <tr class=row1>
-            <td align=right><%= smeid.smeid%></td>
+            <td align=right><%= StringEncoderDecoder.encode(smeid.smeid)%></td>
             <td align=right><%= smeid.sent%></td>
             <td align=right><%= smeid.received%></td>
             <td align=right>&nbsp;</td>
@@ -134,7 +135,7 @@ while (i.hasNext()) {
             RouteIdCountersSet routeid = (RouteIdCountersSet)i.next();
         %>
         <tr class=row1>
-            <td align=right><%= routeid.routeid%></td>
+            <td align=right><%= StringEncoderDecoder.encode(routeid.routeid)%></td>
             <td align=right><%= routeid.counter%></td>
             <td align=right>&nbsp;</td>
             <td align=right>&nbsp;</td>
