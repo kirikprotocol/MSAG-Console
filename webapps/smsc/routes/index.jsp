@@ -77,6 +77,13 @@ function setSort(sorting)
 	opForm.submit();
 	return false;
 }
+
+function clickFilter()
+{
+	document.all.jbutton.name = "filterSelect";
+	opForm.submit();
+	return false;
+}
 function setFilter(filtering)
 {
 	if (filtering == "<%=bean.getSort()%>")
@@ -128,7 +135,7 @@ o.put("Show Dest list", "8");
 <input:select name="filterSelect" default="1"
     attributes="<%= as %>" options="<%= o %>"  />
     &nbsp; Query: &nbsp;<input:text name="query"  />
-
+    &nbsp;&nbsp;<%button(out, "but_filter.gif", "filterSelect", "Quick Filter", "Quick Filter", "return clickFilterSelect()");%>
 <br>
 <table class=list cellspacing=0 cellpadding=0 id=ROUTE_LIST_TABLE>
 <col width="1%">
