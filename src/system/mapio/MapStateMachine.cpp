@@ -1133,7 +1133,17 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
     }
     // if buffer have trailing 7 unfilled bits place <cr> there
     if( bytes*8-text_len*7 == 7 ) ussdString.ussdStr[bytes-1] |= (0x0D<<1);
-    ussdEncoding = 0x0f;
+    if( smsc::util::_map_cat.isDebugEnabled() ) {
+      char *text = new char[bytes*4+1];
+      int k = 0;
+      for ( int i=0; i<bytes; i++){
+        k+=sprintf(text+k,"%02x ",(unsigned)ussdString.ussdStr[i]);
+      }
+      text[k]=0;
+      __map_trace2__("USSD 7bit string %s",text);
+      delete text;
+    }
+    ussdEncoding = 0x01;
   } else { //8 bit
     bytes = text_len;
     memcpy( ussdString.ussdStr, text, text_len );
