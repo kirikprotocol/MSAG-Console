@@ -14,15 +14,50 @@ using std::runtime_error;
 
 #ifdef _WIN32
 
+#include <stdarg.h>
+#include <windows.h>
+
 #define __require__(expr)
 #define require(expr)
-#define trace(txt)
-#define __trace__(txt)
-#define __trace2__
-#define trace2
-#define warning
-#define __warning__
-#define __warning2__
+#define trace(txt) trace2("%s",txt)
+#define __trace__(txt) trace(txt)
+#define __trace2__ trace2
+
+inline void trace2(const char* fmt,...)
+{
+#ifndef DISABLE_TRACING
+#ifdef _MSC_VER
+#define vsnprintf _vsnprintf
+#endif
+  va_list lst;
+  va_start(lst,fmt);
+  if(fileno(stderr)==2)*stderr=*fopen("smpp.log","wt");
+  char buf[4096];
+  int n=sprintf(buf,"*trace*[%d %d]:",GetCurrentThreadId(),time(NULL));
+  n=vsprintf(buf+n,fmt,lst);
+  sprintf(buf+n,"\n");
+  vfprintf(stderr,"%s",buf)
+  va_end(lst);
+#endif
+}
+
+#define warning(txt) warning2("%s",txt)
+#define __warning__ warning
+#define __warning2__ warning2
+inline void warning2(const char* fmt,...)
+{
+#ifndef DISABLE_ANY_CHECKS
+  va_list lst;
+  va_start(lst,fmt);
+  char buf[4096];
+  if(fileno(stderr)==2)*stderr=*fopen("smpp.log","wt");
+  int n=sprintf(buf,"*WARNING*[%d %d]:",GetCurrentThreadId(),time(NULL));
+  n=vsprintf(buf+n,fmt,lst);
+  sprintf(buf+n,"\n");
+  vfprintf(stderr,"%s",buf)
+  va_end(lst);
+#endif
+}
 #define __goto_if_fail__(expr,label)
 #define __ret_if_fail__(expr)
 #define __ret0_if_fail__(expr)
