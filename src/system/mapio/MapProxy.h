@@ -9,9 +9,9 @@
 #include "smeman/smsccmd.h"
 #include <string>
 
-#if defined USE_MAP
+//#if defined USE_MAP
 extern void MAPIO_PutCommand(const smsc::smeman::SmscCommand& cmd );
-#endif
+//#endif
 
 namespace smsc{
 namespace system{
@@ -32,9 +32,9 @@ public:
   void notifyOutThread(){}
   virtual void putCommand(const SmscCommand& cmd)
   {
-#if defined USE_MAP
+//#if defined USE_MAP
     ::MAPIO_PutCommand(cmd);
-#endif
+//#endif
   }
   //{
   //  __trace2__("MAPPROXY::putCommand");
