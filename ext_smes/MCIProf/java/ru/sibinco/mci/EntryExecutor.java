@@ -31,7 +31,9 @@ public class EntryExecutor implements Executor
     try {
       Properties properties = new Properties();
       properties.load(is);
-      strategy = Integer.decode(properties.getProperty("MSC.mcisme.strategy")).intValue();
+      String strategyStr = properties.getProperty("MSC.mcisme.strategy");
+      strategy = ((strategyStr != null && strategyStr.length() > 0)) ?
+          Integer.decode(strategyStr).intValue() : Constants.RELEASE_REDIRECT_STRATEGY;
       mciSmeReasons = properties.getProperty("MSC.mcisme.reasons");
     } catch(Exception e) {
       final String err = "Failed to load MCISme properties";
