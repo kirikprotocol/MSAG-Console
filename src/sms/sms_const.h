@@ -40,6 +40,11 @@ const uint8_t SMSC_BYTE_EXPIRED_STATE       = (uint8_t)2;
 const uint8_t SMSC_BYTE_UNDELIVERABLE_STATE = (uint8_t)3;
 const uint8_t SMSC_BYTE_DELETED_STATE       = (uint8_t)4;
 
+const uint8_t SMSC_DEFAULT_MSG_MODE = 0;
+const uint8_t SMSC_TRANSACTION_MSG_MODE     = 1;
+const uint8_t SMSC_DATAGRAM_MSG_MODE        = 2;
+const uint8_t SMSC_STOREANDFORWARD_MSG_MODE = 3;
+
 /**
 * Множество состояний SMS в контексте SMS центра
 *
