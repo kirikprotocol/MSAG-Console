@@ -1259,16 +1259,16 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         StartDialogProcessing(dialog.get(),cmd);
       }
     }else{ // MAP dialog
-      dialogid_map = dialogid_smsc&0xffff;
-      if ( ((dialogid_smsc >> 16)&0x3) == 1 ) dialogid_smsc = USSD_SSN;
+      dialogid_map = dialogid_smsc&0x0ffff;
+      if ( ((dialogid_smsc >> 16)&0x3) == 1 ) dialog_ssn = USSD_SSN;
       else dialog_ssn = SSN; 
-      dialogid_smsc = 0;
       if ( dialog2 ) throw runtime_error("MAP::putCommand can't chain MAPINPUT");
       dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
       if ( dialog.isnull() )
         throw MAPDIALOG_FATAL_ERROR(
-          FormatText("MAP::putCommand: Opss, here is no dialog with id x%x",(ET96MAP_DIALOGUE_ID_T)dialogid_smsc));
+          FormatText("MAP::putCommand: Opss, here is no dialog with id 0x%x/0x%x",dialogid_smsc,dialogid_map));
       //dialog->state = MAPST_START;
+      dialogid_smsc = 0;
       __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
       //dialogid_map = dialogid_smsc;
       if ( dialog->state == MAPST_WaitSubmitCmdConf ){
