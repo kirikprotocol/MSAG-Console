@@ -214,7 +214,7 @@ __synchronized__
 }
 
 static
-RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcmp )
+RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcmp,vector<string>* trace_ )
 {
   __trace2__("findInSrcTreeRecurse");
   print(node->record,"\tnode->record");
@@ -222,6 +222,15 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
   bool strong = false;
   int cmp;
   xcmp = compare_addr_addr_src(r,node->record,strong);
+  if (trace_)
+  {
+    ostringstream ost;
+    ost << (xcmp?(strong?"strong":"weak  "):"none  ")
+      << " matching with " 
+      << AddrToString(node->record->info.source) << " -> "
+      << AddrToString(node->record->info.dest);
+    trace_->push_back(ost.str());
+  }
   if ( xcmp == 0 )
   {
     if ( !strong )
@@ -238,7 +247,7 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
       for(;right>=left;)
       {
         int ptr = (right+left) >> 1;
-        rec = findInSrcTreeRecurse(node->child[ptr-1],r,cmp);
+        rec = findInSrcTreeRecurse(node->child[ptr-1],r,cmp,trace_);
         if ( rec ) return rec;
         __require__( cmp != 0 );
         //if ( right > left )
@@ -272,7 +281,7 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vect
     ost << (xcmp?(strong?"strong":"weak  "):"none  ")
       << " matching with " 
       << AddrToString(node->record->info.source) << " -> "
-      << AddrToString(node->record->info.dst);
+      << AddrToString(node->record->info.dest);
     trace_->push_back(ost.str());
   }
   if ( xcmp == 0 )
