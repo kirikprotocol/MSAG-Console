@@ -5,6 +5,7 @@
 #include <string>
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 
 #define SMSC_UTIL_EX_FILL(fmt) \
     va_list arglist;\
