@@ -377,7 +377,7 @@ int SmppInputThread::Execute()
             }
             default:
             {
-              SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
+              SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVCMDID);
               /*SmscCommand cmd=
                 SmscCommand::makeGenericNack
                 (
