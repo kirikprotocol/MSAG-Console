@@ -288,16 +288,18 @@ void TaskProcessor::processMessage(const Message& message)
         // Add responce waiting. If timeout will be reached => need resend message (Check thread ???)
     }
 
+    smsc_log_debug(logger, "Sending message #%lld to '%s' ...",
+                   message.id, message.abonent.c_str());
     if (!messageSender->send(seqNum, message))
     {
-        smsc_log_error(logger, "Failed to send message #%lld to '%s'", 
+        smsc_log_error(logger, "Failed to send message #%lld to '%s'.", 
                        message.id, message.abonent.c_str());
 
         MutexGuard snGuard(messagesBySeqNumLock);
         if (messagesBySeqNum.Exist(seqNum)) messagesBySeqNum.Delete(seqNum);
         return;
     }
-    smsc_log_debug(logger, "Sent message #%lld to '%s'",
+    smsc_log_debug(logger, "Sent message #%lld to '%s'.",
                    message.id, message.abonent.c_str());
 }
 
@@ -321,7 +323,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
         messagesBySeqNum.Delete(seqNum);
     }
     
-    Task* task = getTask(message.abonent.c_str()); // ??? or createTask
+    Task* task = getTask(message.abonent.c_str()); // TODO: ??? or createTask
     if (!task) {
         smsc_log_warn(logger, "Unable to locate task '%s' for sequence number=%d", 
                       message.abonent.c_str(), seqNum);
@@ -361,14 +363,16 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                         // TODO: skip old events from message and try send new only
                     }
                     else {
-                        // TODO: kill task & delete all messages
+                        task->deleteAllMessages();
+                        // TODO: destroy task
                     }
                 }
                 else
                 {
-                    // TODO: kill task & delete all messages
                     smsc_log_debug(logger, "Message send error, deleting task for abonent:%s !",
                                    message.abonent.c_str());
+                    task->deleteAllMessages();
+                    // TODO: destroy task
                 }
             }
         }
@@ -378,11 +382,38 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
 
             ReceiptData receipt;
             checkAddReceipt(smsc_id, receipt);
-            if (!receipt.receipted) // wasn't receipted before responce
+            if (!receipt.receipted) // wasn't receipted before responce => processing responce
             {
+                if (task->wasUpdated() && task->getMessage(messageToSend)) 
+                {
+                    task->setCurrentMessageState(smsc_id, WAIT_RESP);
+                    messageToSend.smsc_id = smsc_id;
+                    messageToSend.replace = true;
+                    isMessageToSend = true;
+                    // do not kill task
+                }
+                else
+                {
+                    task->setCurrentMessageState(smsc_id, WAIT_RCPT);
+                    if (task->isCurrentMessageFull()) {
+                        task->rollCurrent(); // + setCurrentMessageState(smsc_id, WAIT_RESP);
+                    }
+                    
+                    if (task->getMessage(messageToSend)) {
+                        messageToSend.replace = false;
+                        isMessageToSend = true;
+                    }
+                    else {
+                        // kill task
+                    }
+                }
+
+                // Set SMSC_ID. If current message was extended => ST=W_RESP
+                // else => roll current message to next ??? & ST=W_RCPT
                 if (task->nextMessage(smsc_id, messageToSend)) isMessageToSend = true;
                 else {
-                    // TODO: kill task
+                    // no more messages to send
+                    // TODO: kill task (remove from Hash)
                 }
             }
             checkDelReceipt(smsc_id, receipt);

@@ -12,6 +12,8 @@ const char* GET_NEXT_SEQID_ID  = "GET_NEXT_SEQID_ID";
 const char* CREATE_NEW_MSG_ID  = "CREATE_NEW_MSG_ID";
 const char* UPDATE_MSG_TXT_ID  = "UPDATE_MSG_TXT_ID";
 const char* SELECT_MSG_TXT_ID  = "SELECT_MSG_TXT_ID";
+const char* ROLLUP_CUR_MSG_ID  = "ROLLUP_CUR_MSG_ID";
+const char* DROP_TASK_MSGS_ID  = "DROP_TASK_MSGS_ID";
 
 const char* LOADUP_MESSAGES_ID = "LOADUP_MESSAGES_ID";
 const char* INS_CURRENT_MSG_ID = "INS_CURRENT_MSG_ID";
@@ -20,17 +22,23 @@ const char* GET_CURRENT_MSG_ID = "GET_CURRENT_MSG_ID";
 const char* SET_CURRENT_MSG_ID = "SET_CURRENT_MSG_ID";
 
 /* ----------------------- Access to message ids generation (MCI_MSG_SEQ) -------------------- */
+
 const char* GET_NEXT_SEQID_SQL  = "SELECT MCISME_MSG_SEQ.NEXTVAL FROM DUAL";
 
 /* ----------------------- Access to current messages set (MCI_MSG_SET) ---------------------- */
+
 const char* SELECT_MSG_TXT_SQL  = "SELECT MESSAGE FROM MCISME_MSG_SET WHERE ID=:ID";
 const char* CREATE_NEW_MSG_SQL  = "INSERT INTO MCISME_MSG_SET (ID, STATE, ABONENT, MESSAGE, SMSC_ID) "
                                   "VALUES (:ID, :STATE, :ABONENT, :MESSAGE, NULL)";
 const char* UPDATE_MSG_TXT_SQL  = "UPDATE MCISME_MSG_SET SET MESSAGE=:MESSAGE WHERE ID=:ID";
+const char* ROLLUP_CUR_MSG_SQL  = "UPDATE MCISME_MSG_SET SET STATE=:STATE, SMSC_ID=:SMSC_ID WHERE ID=:ID";
+const char* DROP_TASK_MSGS_SQL  = "DELETE FROM MCISME_MSG_SET WHERE ABONENT=:ABONENT";
+
 const char* LOADUP_MESSAGES_SQL = "SELECT ID, SMSC_ID, MESSAGE FROM MCISME_MSG_SET "
-                                  "WHERE ID>=:ID ORDER BY ID";
+                                  "WHERE ABONENT=:ABONENT AND ID>=:ID ORDER BY ID";
 
 /* ----------------------- Access to current message ids (MCI_CUR_MSG) ----------------------- */
+
 const char* INS_CURRENT_MSG_SQL = "INSERT INTO MCISME_CUR_MSG (ABONENT, ID) VALUES (:ABONENT, :ID)";
 const char* DEL_CURRENT_MSG_SQL = "DELETE FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT";
 const char* GET_CURRENT_MSG_SQL = "SELECT ID FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT"; // check is null
@@ -123,7 +131,8 @@ void Task::loadMessages(Connection* connection/*=0*/)
             if (!getMsgStmt)
                 throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "messages loadup");
 
-            getMsgStmt->setUint64(1, currId);
+            getMsgStmt->setString(1, abonent.c_str());
+            getMsgStmt->setUint64(2, currId);
             std::auto_ptr<ResultSet> rsGuard(getMsgStmt->executeQuery());
             ResultSet* rs = rsGuard.get();
             if (!rs)
@@ -136,7 +145,7 @@ void Task::loadMessages(Connection* connection/*=0*/)
                 std::string msgText   = (rs->isNull(4) ? "":rs->getString(4));
                 
                 // set replace flag in getMessage & nextMessage methods only
-                Message message(msgId, abonent, msgText, msgSmscId, false);
+                Message message(msgId, msgText, msgSmscId, false);
                 messages.Push(message);
             }
         }
@@ -147,17 +156,6 @@ void Task::loadMessages(Connection* connection/*=0*/)
         if (connection && isConnectionGet) ds->freeConnection(connection);
         throw;
     }
-}
-
-bool Task::nextMessage(const char* smsc_id, Message& message)
-{
-    __require__(ds);
-
-    MessageState newState = this->wasUpdated() ? WAIT_RESP:WAIT_RCPT;
-
-    // TODO: implement !
-
-    return false;
 }
 
 void Task::insertNewEvent(Connection* connection, const MissedCallEvent& event, bool setCurrent/*=false*/)
@@ -222,7 +220,6 @@ static const char*  constShortEngMonthesNames[12] = {
 };
 
 static int maxEventsPerMessage = 10; // TODO: do it configurable
-static int maxMessageTextSize = 256; // TODO: do it configurable
 
 int Message::countEvents(const std::string& message)
 {
@@ -233,8 +230,7 @@ int Message::countEvents(const std::string& message)
 }
 bool Message::addEvent(const MissedCallEvent& event, bool force/*=false*/)
 {
-    if (!force && (eventCount >= maxEventsPerMessage || 
-                   message.length() >= maxMessageTextSize)) return false;
+    if (!force && eventCount >= maxEventsPerMessage) return false;
 
     char eventMessage[256];
     tm dt; localtime_r(&event.time, &dt);
@@ -286,6 +282,7 @@ void Task::addEvent(const MissedCallEvent& event)
         throw;
     }
 }
+
 bool Task::getMessage(Message& message)
 {
     bool notEmpty = messages.Count() > 0;
@@ -294,6 +291,100 @@ bool Task::getMessage(Message& message)
         bUpdated = false;
     }
     return notEmpty;
+}
+
+bool Task::nextMessage(const char* smsc_id, Message& message)
+{
+    __require__(ds);
+
+    bool keepCurrent = this->wasUpdated();
+
+    Connection* connection = 0;
+    try
+    {
+        connection = ds->getConnection();
+        if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+
+        Statement* changeStmt = connection->getStatement(ROLLUP_CUR_MSG_ID, ROLLUP_CUR_MSG_SQL);
+        if (!changeStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "change message state");
+
+        changeStmt->setUint64(1, keepCurrent ? WAIT_RESP:WAIT_RCPT);
+        changeStmt->setString(2, smsc_id);
+        changeStmt->executeUpdate();
+
+        if (!keepCurrent) // need to roll current message 
+        {
+            Statement* updateCurrent = connection->getStatement(SET_CURRENT_MSG_ID, SET_CURRENT_MSG_SQL);
+            if (!updateCurrent) 
+                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "roll current message");
+
+            updateCurrent->setString(1, abonent.c_str());
+            updateCurrent->setUint64(2, message.id);
+
+            if (updateCurrent->executeUpdate() <= 0)
+            {
+                Statement* insertCurrent = connection->getStatement(INS_CURRENT_MSG_ID, INS_CURRENT_MSG_SQL);
+                if (!insertCurrent) 
+                    throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "roll current message");
+                
+                insertCurrent->setString(1, abonent.c_str());
+                insertCurrent->setUint64(2, message.id);
+                insertCurrent->executeUpdate();
+            }
+        }
+        
+        connection->commit();
+        ds->freeConnection(connection);
+
+        if (!keepCurrent) messages.Shift(message); // shift current message
+    } 
+    catch (...)
+    {
+        try { if (connection) connection->rollback(); }
+        catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
+        if (connection) ds->freeConnection(connection);
+        throw;
+    }
+
+    return getMessage(message);
+}
+
+void Task::deleteAllMessages()
+{
+    __require__(ds);
+
+    Connection* connection = 0;
+    try
+    {
+        connection = ds->getConnection();
+        if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+
+        Statement* delCurrIdStmt = connection->getStatement(DEL_CURRENT_MSG_ID, DEL_CURRENT_MSG_SQL);
+        if (!delCurrIdStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "task current id delete");
+        delCurrIdStmt->setString(1, abonent.c_str());
+        delCurrIdStmt->executeUpdate();
+
+        Statement* delStmt = connection->getStatement(DROP_TASK_MSGS_ID, DROP_TASK_MSGS_SQL);
+        if (!delStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "task message delete");
+        delStmt->setString(1, abonent.c_str());
+        delStmt->executeUpdate();
+
+        connection->commit();
+        ds->freeConnection(connection);
+
+        messages.Clean();
+        bUpdated = false;
+    } 
+    catch (...)
+    {
+        try { if (connection) connection->rollback(); }
+        catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
+        if (connection) ds->freeConnection(connection);
+        throw;
+    }
 }
 
 }}

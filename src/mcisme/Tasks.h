@@ -102,6 +102,8 @@ namespace smsc { namespace mcisme
         
         bool getMessage(Message& message);
         bool nextMessage(const char* smsc_id, Message& message);
+        //void skipFirstNEvents();
+        void deleteAllMessages();
     };
 
     /* TODO: Implement it ???
