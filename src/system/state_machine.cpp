@@ -1520,6 +1520,8 @@ StateType StateMachine::replace(Tuple& t)
   sms.setNextTime(newsched);
   sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY,t.command->get_replaceSm().registeredDelivery);
 
+  if(sms.hasIntProperty(Tag::SMPP_DATA_SM))sms.setIntProperty(Tag::SMPP_DATA_SM,0);
+
   try{
     //Address addr(t.command->get_replaceSm().sourceAddr.get());
     store->replaceSms(t.msgId,sms);
