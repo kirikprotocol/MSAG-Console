@@ -770,6 +770,16 @@ StateType StateMachine::forward(Tuple& t)
     //TODO!!!: remove task and reschedule
     __trace__("Failed to put delivery command");
     sendNotifyReport(sms,t.msgId,"facility not supported");
+    try{
+      //time_t now=time(NULL);
+      Descriptor d;
+      __trace__("FORWARD: change state to enroute");
+      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
+      smsc->notifyScheduler();
+    }catch(...)
+    {
+      __trace__("FORWARD: failed to change state to enroute");
+    }
     return ENROUTE_STATE;
   }
   return DELIVERING_STATE;
