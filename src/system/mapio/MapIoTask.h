@@ -46,8 +46,6 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::threads::ThreadedTask;
 using smsc::core::synchronization::Event;
 
-#define EINSS7_THREADSAFE 1
-
 extern "C" {
 #include <portss7.h>
 #include <ss7tmc.h>
@@ -599,7 +597,6 @@ public:
     MapDialogContainer::setProxy( &proxy );
   }
   ~MapIoTask() {
-    deinit();
     MapDialogContainer::setProxy( 0 );
   }
 private:
@@ -607,7 +604,7 @@ private:
   bool is_started;
   void dispatcher();
   void init(unsigned timeout=0);
-  void deinit();
+  void deinit(bool connected);
 };
 
 #endif // __header_MAPIO_h__

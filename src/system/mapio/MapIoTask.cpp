@@ -82,7 +82,7 @@ extern "C" {
 
 } // extern "C"
 
-void MapIoTask::deinit( boolean connected )
+void MapIoTask::deinit( bool connected )
 {
   USHORT_T result;
   __map_trace2__("deinitialize");
@@ -131,12 +131,16 @@ void MapIoTask::dispatcher()
   for (;;) {
     MAP_isAlive = true;
     if ( isStopping ) {
-        deinit(connected);
+        deinit(true);
 	return;
     }
     MAP_dispatching = true;
     gettimeofday( &curtime, 0 );
+#if EINSS7_THREADSAFE == 1
     result = EINSS7CpMsgRecv_r(&message,1000);
+#else
+    result = MsgRecvEvent( &message, 0, 0, 1000 );
+#endif
     if ( time_logger.isDebugEnabled() ) gettimeofday( &utime, 0 );
 
     MAP_dispatching = false;
@@ -234,7 +238,9 @@ void MapIoTask::dispatcher()
         delete text;
       }
     }
+#if EINSS7_THREADSAFE == 1
     EINSS7CpReleaseMsgBuffer(&message);
+#endif
     if ( time_logger.isDebugEnabled() ) {
       long usecs;
       gettimeofday( &curtime, 0 );
@@ -312,7 +318,6 @@ int MapIoTask::Execute(){
     __trace2__("signal mapiotask start:%p",startevent);
     startevent->SignalAll();
     dispatcher();
-    //deinit();
   } catch (exception& e) {
     __map_warn2__("exception in mapio: %s",e.what());
   }
