@@ -327,11 +327,11 @@ public:
     //__trace2__("MAP:: XHash link 0x%x",link);
     if(!link)return 0;
     value=link->_keyval._value;
-    char b[256] = {0,};
+    /*char b[256] = {0,};
     int k = 0;
     for ( int i=0; i<sizeof(link->_keyval); ++i){
       k += sprintf(b+k,"%x ",((const unsigned char*)(&link->_keyval))[i]);
-    }
+    }*/
     //__trace2__("MAP:: XHash _value %s",b);
     //__trace2__("MAP:: XHash _value 0x%x",link->_keyval._value);
     //__trace2__("MAP:: XHash value 0x%x",value);
