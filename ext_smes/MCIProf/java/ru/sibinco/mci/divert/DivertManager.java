@@ -239,7 +239,7 @@ public class DivertManager extends Thread
       logger.info("Disconnecting from MSC "+mscHost+":"+mscPort+"...");
       if (os != null && mscSocket.isConnected()) {
         try {
-          writeTelnetLine("EXIT;");  logger.info("Exit sent to MSC");
+          if (os != null) { writeTelnetLine("EXIT;");  logger.info("Exit sent to MSC"); }
           while (is != null && is.available() > 0 && (is.read() != -1)); // skip responce
         } catch (IOException e) { logger.error("MSC is exit error", e); }
       }
