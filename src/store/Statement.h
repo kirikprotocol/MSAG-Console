@@ -549,7 +549,6 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
         
-        SMSId               smsId;
         FullAddressValue    dstAddr;
         int8_t              msgRef;
         
