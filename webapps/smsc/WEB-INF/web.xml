@@ -40,6 +40,17 @@
 		</auth-constraint>
 		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
 	</security-constraint>
+	
+	<security-constraint>
+		<web-resource-collection>
+			<web-resource-name></web-resource-name>
+			<url-pattern>/smsc/locale_resources/*</url-pattern>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>locale_resources</role-name>
+		</auth-constraint>
+		<user-data-constraint><transport-guarantee>NONE</transport-guarantee></user-data-constraint>
+	</security-constraint>
 
 	<security-constraint>
 		<web-resource-collection>
@@ -176,6 +187,9 @@
 	</security-role>
 	<security-role>
 		<role-name>smsc_service</role-name>
+	</security-role>
+	<security-role>
+		<role-name>locale_resources</role-name>
 	</security-role>
 	<security-role>
 		<role-name>perfmon</role-name>

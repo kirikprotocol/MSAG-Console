@@ -6,6 +6,7 @@
 		<role name="aliases"/>
 		<role name="apply"/>
 		<role name="hosts"/>
+		<role name="locale_resources"/>
 		<role name="mscman"/>
 		<role name="perfmon"/>
 		<role name="profiles"/>
@@ -25,6 +26,8 @@
 		<role name="aliases"/>
 		<role name="apply"/>
 		<role name="hosts"/>
+		<role name="locale_resources"/>
+		<role name="mscman"/>
 		<role name="perfmon"/>
 		<role name="profiles"/>
 		<role name="routes"/>
