@@ -21,7 +21,7 @@ using smsc::smeman::SmeSystemId;
 using smsc::sms::Address;
 using smsc::profiler::Profile;
 using smsc::test::core::AliasRegistry;
-using smsc::test::core::PduData;
+using smsc::test::core::SmeAckMonitor;
 using smsc::test::core::PduRegistry;
 using smsc::test::core::RouteRegistry;
 using smsc::test::core::SmeRegistry;
@@ -36,7 +36,7 @@ struct SmppResponseSender
 
 struct SmeAcknowledgementHandler
 {
-	virtual void processSmeAcknowledgement(PduData* pduData,
+	virtual void processSmeAcknowledgement(SmeAckMonitor* monitor,
 		PduDeliverySm &pdu) = NULL;
 };
 
