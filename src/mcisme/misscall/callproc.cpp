@@ -316,7 +316,7 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                  resourceGroup,
                  getCallingNumberDescription(calling).c_str(),
                  getRedirectionInfoDescription(redirectionInfo_sp).c_str(),
-                 getRedirectinNumberDescription(redirecting).c_str(),
+                 getRedirectingNumberDescription(redirecting).c_str(),
                  getOriginalNumberDescription(original).c_str()
                 );
   releaseConnection(isupHead_sp);
@@ -359,14 +359,14 @@ USHORT_T EINSS7_I97IsupReleaseInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                                   EINSS7_I97_OPTPARAMS_T *extraOpts_sp)
 {
   smsc_log_debug(missedCallProcessorLogger,
-                 "ReleaseInd %s %s %s %s %s %s",
+                 "ReleaseInd %s %s %s %s %s %s %s",
                  getHeadDescription(isupHead_sp).c_str(),
                  getResponseIndicatorDescription(responseInd).c_str(),
                  getSourceIndicatorDescription(sourceInd).c_str(),
                  getCauseDescription(cause_sp).c_str(),
                  getAutoCongLevelDescription(autoCongestLevel_p).c_str(),
-                 getRedirectionNumberDescription(redirectionNumb_sp).c_str()
-                 getRedirectionInfoDescription(redirectionInfo_sp).c_str(),
+                 getRedirectionNumberDescription(redirectionNumb_sp).c_str(),
+                 getRedirectionInfoDescription(redirectionInfo_sp).c_str()
                 );
   if (responseInd & 0x01)
   {

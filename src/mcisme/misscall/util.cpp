@@ -268,17 +268,17 @@ std::string getCauseDescription(EINSS7_I97_CAUSE_T *cause_sp)
   }
   switch(cause_sp->codingStd)
   {
-    case EINSS7_I97_ITU_STAND : res += " codingStandard=ITU-T standard";break;
-    case EINSS7_I97_REC_Q_763 : res += " codingStandard=local use";break;
-    case 0x01                 : res += " codingStandard=ISO/IEC standard";break;
-    case 0x02                 : res += " codingStandard=national standard";break;
-    default                   : res += " codingStandard=XXX";break;
+    case 0x00 : res += " codingStandard=ITU-T standard";break;
+    case 0x01 : res += " codingStandard=ISO/IEC standard";break;
+    case 0x02 : res += " codingStandard=national standard";break;
+    case 0x03 : res += " codingStandard=local use";break;
+    default   : res += " codingStandard=XXX";break;
   }
-  if (cause_sp->codingStd == EINSS7_I97_REC_Q_763)
+  if (cause_sp->codingStd == 0x03)
   {
     switch (cause_sp->causeValue)
     {
-      case EINSS7_I97_LC_HARD_BLOCK : res += " cause=Circuit hardware blocked";break;";break;
+      case EINSS7_I97_LC_HARD_BLOCK : res += " cause=Circuit hardware blocked";break;
       case EINSS7_I97_LC_DUAL_SEIZ  : res += " cause=Dual seizure";break;
       case EINSS7_I97_LC_INV_RG     : res += " cause=Invalid Resource Group";break;
       case EINSS7_I97_LC_INV_HSN    : res += " cause=Invalid Hardware Selection Number";break;
@@ -299,7 +299,7 @@ std::string getCauseDescription(EINSS7_I97_CAUSE_T *cause_sp)
       default                       : res += " cause=RESERVED";break;
     }
   }
-  if (cause_sp->codingStd == EINSS7_I97_ITU_STAND)
+  if (cause_sp->codingStd == 0x00)
   {
     switch (cause_sp->causeValue)
     {
