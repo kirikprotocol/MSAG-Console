@@ -167,6 +167,7 @@ public:
 	static void setupRandomCorrectOptionalParams(SmppOptional& opt,
 		uint8_t dataCoding, uint64_t mask = OPT_ALL, bool check = true);
 
+	static SmppHeader* copyPdu(SmppHeader* pdu);
 };
 
 bool operator==(PduAddress& a1, PduAddress& a2);

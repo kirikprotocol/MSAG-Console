@@ -3,6 +3,7 @@
 #include "test/util/TextUtil.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "sms/sms.h"
+#include "util/Exception.hpp"
 #include "util/debug.h"
 #include <algorithm>
 #include <ctime>
@@ -12,6 +13,7 @@ namespace smsc {
 namespace test {
 namespace smpp {
 
+using smsc::util::Exception;
 using smsc::test::conf::TestConfig;
 using smsc::test::util::operator<<;
 using namespace std;
@@ -635,6 +637,19 @@ void SmppUtil::setupRandomCorrectSubmitMultiPdu(PduMultiSm* pdu)
 	//SmppOptional
 }
 */
+
+SmppHeader* SmppUtil::copyPdu(SmppHeader* pdu)
+{
+	__require__(pdu);
+	int sz = calcSmppPacketLength(pdu);
+	char buf[sz];
+	SmppStream s1;
+	assignStreamWith(&s1, buf, sz, false);
+	if (!fillSmppPdu(&s1, pdu)) throw Exception("Failed to fill smpp packet");
+	SmppStream s2;
+	assignStreamWith(&s2, buf, sz, true);
+	return fetchSmppPdu(&s2);
+}
 
 bool operator==(PduAddress& a1, PduAddress& a2)
 {
