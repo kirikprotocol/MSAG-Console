@@ -59,7 +59,7 @@ function viewHost(hostName)
 	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th>name</th>
 	<th>port</th>
-	<th>services ( total / running)</th>
+	<th title="services ( total / running)">services</th>
 </tr>
 </thead>
 <tbody>
@@ -75,7 +75,7 @@ String hostName = (String) i.next();
 	<td class=check><input class=check type=checkbox name=hostIds value="<%=hostName%>" <%=hostIds.contains(hostName) ? "checked" : ""%>></td>
 	<td class=name><a href="#" title="View host info" onClick='return viewHost("<%=hostName%>")'><%=hostName%></a></td>
 	<td class=num><%=bean.getHostPort(hostName)%></td>
-	<td><span class=C00F><%=bean.getServicesTotal(hostName)%></span> / <span class=C080><%=bean.getServicesRunning(hostName)%></span></td>
+	<td><span class=C00F title="total"><%=bean.getServicesTotal(hostName)%></span> / <span class=C080 title="running"><%=bean.getServicesRunning(hostName)%></span></td>
 </tr>
 <%}}%>
 </tbody>

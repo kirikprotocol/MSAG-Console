@@ -33,6 +33,13 @@
     }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAdd",  "Add distribution list",  "Create new distribution list");
+page_menu_button(out, "mbDelete", "Delete distribution list(s)", "Delete selected distribution list(s)");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <div class=content>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>

@@ -8,7 +8,8 @@ function clickSubmit()
 	{  
 		var f;  
 		eval('f=function(){' + this.jbuttonOnclick + '}');  
-		return f();
+		if (f() == false)
+			return false;
 	}  
 	
 	if (opForm.onsubmit() == false)
