@@ -1162,7 +1162,8 @@ StateType StateMachine::submit(Tuple& t)
 
   if(!extractPortsFromUdh(*sms))
   {
-    smsc_log_warn(smsLog,"extractPortsFromUdh failed. sms from %s to %s",
+    smsc_log_warn(smsLog,"extractPortsFromUdh failed. msgId=%lld, from %s to %s",
+                          t.msgId,
                           sms->getOriginatingAddress().toString().c_str(),
                           sms->getDestinationAddress().toString().c_str());
     submitResp(t,sms,Status::INVOPTPARAMVAL);
