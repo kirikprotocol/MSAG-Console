@@ -460,9 +460,8 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                 }
                 else smsc_log_error(logger, "Format message for retry failed for abonent: %s",
                                     message.abonent.c_str());
-                if (!immediate) messageToSend.attempts = message.attempts+1;
                 
-                // do not roll current message here
+                if (!immediate) messageToSend.attempts = message.attempts+1;
             }
             else        // permanent error
             {
@@ -571,7 +570,8 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
     Message message;
     if (Task::getMessage(smsc_id, message)) // in WAIT_RCPT state
     {
-        smsc_log_debug(logger, "Receipt found message with smscId=%s.", smsc_id);
+        smsc_log_debug(logger, "Receipt found message with smscId=%s for abonent: %s.",
+                       smsc_id, message.abonent.c_str());
 
         bool isTaskNew = false;
         TaskAccessor taskAccessor(this);
@@ -586,7 +586,7 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
     }
     else // message by smsc_id not found => wait responce
     {
-        smsc_log_debug(logger, "Receipt waiting responce with smscId=%s.", smsc_id);
+        smsc_log_debug(logger, "Message not found. Receipt waiting responce with smscId=%s.", smsc_id);
 
         if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(delivered, retry)))
             smsc_log_error(logger, "Failed to add receipt data. SMSC id=%lld already used", smsc_id);

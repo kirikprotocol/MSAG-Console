@@ -411,17 +411,18 @@ bool Task::formatMessage(Message& message)
         if (!assignEvtStmt)
             throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "assign event to message");
 
-        for (int i=0; i<events.Count(); i++) // add maximum events from chain to message
+        for (int i=0; i<events.Count() && !message.isFull(); i++) // add maximum events from chain to message
         {
-            if (!message.addEvent(events[i], false)) break;
-            
             events[i].msg_id = currentMessageId;
 
             assignEvtStmt->setUint64(1, events[i].msg_id);
             assignEvtStmt->setUint64(2, events[i].id);
-            if (!assignEvtStmt->executeUpdate())
-                throw Exception("Failed to assign event #%lld to message #%lld",
-                                events[i].id, events[i].msg_id);
+            if (!assignEvtStmt->executeUpdate()) {
+                smsc_log_debug(logger, "Failed to assign event #%lld to message #%lld. "
+                               "Possible event was receipted", events[i].id, events[i].msg_id);
+                events.Delete(i);
+            }
+            else message.addEvent(events[i], true);
         }
 
         connection->commit();
@@ -483,7 +484,15 @@ void Task::doNewCurrent(Connection* connection)
 }
 void Task::doWait(Connection* connection, const char* smsc_id, const MessageState& state)
 {
-    __require__(connection && currentMessageId != 0);
+    __require__(connection);
+    
+    if (!currentMessageId)
+    {
+        smsc_log_debug(logger, "Current message is undefined for abonent: %s (do wait %s). "
+                       "Possible was already receipted",
+                       abonent.c_str(), ((state == WAIT_RESP) ? "responce":"receipt"));
+        return;
+    }
 
     /* UPDATE MCISME_MSG_SET SET STATE=:STATE, SMSC_ID=:SMSC_ID WHERE ID=:ID */
     Statement* updateMsgStmt = connection->getStatement(ROLLUP_CUR_MSG_ID, ROLLUP_CUR_MSG_SQL);
@@ -494,9 +503,10 @@ void Task::doWait(Connection* connection, const char* smsc_id, const MessageStat
     updateMsgStmt->setString(2, smsc_id, (!smsc_id || smsc_id[0]=='\0'));
     updateMsgStmt->setUint64(3, currentMessageId);
 
-    if (!updateMsgStmt->executeUpdate())
-        throw Exception("Current message #%lld not found (%s)", 
-                        currentMessageId, ((state == WAIT_RESP) ? "responce":"receipt"));
+    if (!updateMsgStmt->executeUpdate()) {
+        smsc_log_warn(logger, "Message #%lld not found for abonent: %s (%s). Possible was receipted",
+                      currentMessageId, abonent.c_str(), ((state == WAIT_RESP) ? "responce":"receipt"));
+    }
 }
 void Task::waitResponce(const char* smsc_id)
 {
@@ -615,6 +625,7 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id,
             if (!delCurMsgStmt->executeUpdate())
                 smsc_log_warn(logger, "Failed to remove current message #%lld for abonent: %s",
                               msg_id, abonent.c_str());
+            currentMessageId = 0;
         }
 
         /* DELETE FROM MCISME_MSG_SET WHERE ID=:ID */
