@@ -90,8 +90,8 @@ enum REError{
   //! Reference to undefined named bracket
   errReferenceToUndefinedNamedBracket,
   //! Only fixed length look behind assertions are supported
-  errVariableLengthLookBehind,
-}
+  errVariableLengthLookBehind
+};
 
 //! Used internally
 struct REOpCode;

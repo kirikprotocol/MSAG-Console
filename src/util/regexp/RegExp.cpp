@@ -437,8 +437,8 @@ enum REOp{
 #ifdef RELIB
   opLibCall,
 #endif
-  opRegExpEnd,
-}
+  opRegExpEnd
+};
 
 struct REOpCode{
   int op;
