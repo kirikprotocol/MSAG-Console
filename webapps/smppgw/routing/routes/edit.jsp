@@ -237,8 +237,6 @@
           </sm-ep:properties>
         </td>
       </tr>
-
-      <tr><td colspan="2">&nbsp;</td></tr>
       <tr><td colspan="2"><hr></td></tr>
     </table>
     <table cellpadding="12">
