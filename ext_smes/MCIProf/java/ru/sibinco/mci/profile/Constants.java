@@ -18,8 +18,8 @@ public class Constants
   public final static String VALUE_PREFIX   = "value_";
   public final static String ERROR_PREFIX   = "error_";
 
-  public final static int RELEASE_PREFIXED_STRATEGY = 0x01; // UralTelecom
-  public final static int RELEASE_REDIRECT_STRATEGY = 0x02; // MTS default
+  public final static int RELEASE_PREFIXED_STRATEGY = 0x01;
+  public final static int RELEASE_REDIRECT_STRATEGY = 0x02; // MTS default strategy
   public final static String PAGE_PREFIXED_STRATEGY = "pagePrefixedStrategy";
   public final static String PAGE_REDIRECT_STRATEGY = "pageRedirectStrategy";
 

@@ -147,9 +147,9 @@
   <td>
   <select name=releaseSettings>
     <option value="<%= MCISmeBean.RELEASE_REDIRECT_STRATEGY%>" <%=
-    (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_REDIRECT_STRATEGY) ? "selected":""%>>REDIRECT CALLS ON MSC (MTS default)</option>
+    (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_REDIRECT_STRATEGY) ? "selected":""%>>REDIRECT CALLS ON MSC</option>
     <option value="<%= MCISmeBean.RELEASE_PREFIXED_STRATEGY%>" <%=
-    (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_PREFIXED_STRATEGY) ? "selected":""%>>USE PREFIXED B-NUMBERS (UralTelecom)</option>
+    (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_PREFIXED_STRATEGY) ? "selected":""%>>USE PREFIXED B-NUMBERS</option>
   </select>
   </td>
 </tr>
