@@ -246,7 +246,7 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
   }
 }
 
-typedef vector<pair<uint64_t,uint32_t> > ResVector;
+typedef vector<pair<uint32_t,uint64_t> > ResVector;
 
 void ReadToVector(IntLttChunkFile::ChunkHandle& h,ResVector& v,uint32_t from,uint32_t till)
 {
@@ -254,16 +254,18 @@ void ReadToVector(IntLttChunkFile::ChunkHandle& h,ResVector& v,uint32_t from,uin
   while(h.Read(k))
   {
     if(k.ltt<from || k.ltt>till)continue;
-    v.push_back(make_pair(k.key,k.ltt));
+    v.push_back(make_pair(k.ltt,k.key));
   }
 }
 
+/*
 struct CmpPair{
   bool operator()(const pair<uint64_t,uint32_t>& a,const pair<uint64_t,uint32_t>& b)
   {
     return a.first<b.first;
   }
 };
+*/
 
 int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res)
 {
@@ -351,20 +353,20 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
     while(h.Read(r))
     {
       QueryResult qr;
-      qr.offset=r.key;
-      qr.lastTryTime=r.ltt;
+      qr.offset=r.ltt;
+      qr.lastTryTime=r.key;
       res.Push(qr);
       cnt++;
     }
     return cnt;
   }
   ReadToVector(*sources.front(),rv,fromDate,tillDate);
-  sort(rv.begin(),rv.end(),CmpPair());
+  sort(rv.begin(),rv.end());
   sources.erase(sources.begin());
   while(sources.size()>0)
   {
     ReadToVector(*sources.front(),tmp1,fromDate,tillDate);
-    sort(tmp1.begin(),tmp1.end(),CmpPair());
+    sort(tmp1.begin(),tmp1.end());
     tmp2.resize(0);
     set_intersection(rv.begin(),rv.end(),tmp1.begin(),tmp1.end(),back_inserter(tmp2));
     swap(tmp2,rv);
@@ -374,8 +376,8 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
   for(ResVector::iterator i=rv.begin();i!=rv.end();i++)
   {
     QueryResult qr;
-    qr.offset=i->first;
-    qr.lastTryTime=i->second;
+    qr.offset=i->second;
+    qr.lastTryTime=i->first;
     res.Push(qr);
   }
 

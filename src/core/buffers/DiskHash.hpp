@@ -141,12 +141,13 @@ public:
     h.flags|=inplaceval?flagInplaceValue:0;
     h.hdrcrc32=crc32(0,&h,sizeof(h)-sizeof(uint32_t));
     WriteHeader(h);
-    auto_ptr<char> buf(new char[recsize]);
-    memset(buf.get(),0,recsize);
-    for(int i=0;i<prealloc;i++)
-    {
-      f.Write(buf.get(),recsize);
-    }
+    f.ZeroFill(recsize*prealloc);
+    //auto_ptr<char> buf(new char[recsize]);
+    //memset(buf.get(),0,recsize);
+    //for(int i=0;i<prealloc;i++)
+    //{
+    //  f.Write(buf.get(),recsize);
+    //}
     size=h.size;
     count=0;
     fileopen=true;

@@ -205,11 +205,14 @@ public:
     r.Write(f);
     lastRoot=r;
     ChunkStartItem it;
+    /*
     memset(&it,0,sizeof(it));
     for(int i=0;i<rootSize;i++)
     {
       it.Write(f);
     }
+    */
+    f.ZeroFill(it.Size()*rootSize);
     fileSize=f.Size();
     opened=true;
     readOnly=false;
@@ -295,10 +298,13 @@ public:
         ph.nextPage=0;
         ph.Write(cf.f);
         cf.fileSize+=ph.Size();
+        cf.f.ZeroFill(pageChunks*R::Size());
+        /*
         for(int i=0;i<pageChunks;i++)
         {
           R::WriteBadValue(cf.f);
         }
+        */
         cf.fileSize+=pageChunks*R::Size();
         if(current==last)
         {
@@ -365,12 +371,15 @@ public:
       fileSize+=sizeof(r);
 
       ChunkStartItem it;
+      /*
       it.firstPage=0;
       it.lastPage=0;
       for(uint32_t i=0;i<r.size;i++)
       {
         it.Write(f);
       }
+      */
+      f.ZeroFill(it.Size()*r.size);
       fileSize+=it.Size()*r.size;
 
       f.Seek(lastRootOffset);
@@ -390,10 +399,13 @@ public:
     f.SeekEnd(0);
     ph.Write(f);
     fileSize+=ph.Size();
+    f.ZeroFill(pageChunks*R::Size());
+    /*
     for(int i=0;i<pageChunks;i++)
     {
       R::WriteBadValue(f);
     }
+    */
     fileSize+=pageChunks*R::Size();
     lastRoot.count++;
 

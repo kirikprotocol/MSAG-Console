@@ -44,6 +44,10 @@ public:
   {
     error=errno;
   }
+  FileException(int err,const char* fn):errCode(err),fileName(fn)
+  {
+    error=errno;
+  }
   FileException(const FileException& e)
   {
     errCode=e.errCode;
@@ -60,12 +64,38 @@ public:
   {
     switch(errCode)
     {
-      case errOpenFailed:errbuf="Failed to open file:";errbuf+=strerror(error);return errbuf.c_str();
-      case errReadFailed:errbuf="Failed to read from file:";errbuf+=strerror(error);return errbuf.c_str();
-      case errEndOfFile:return "End of file reached";
-      case errWriteFailed:errbuf="Failed to write to file:";errbuf+=strerror(error);return errbuf.c_str();
-      case errSeekFailed:errbuf="Failed to change file pointer:";errbuf+=strerror(error);return errbuf.c_str();
-      case errFileNotOpened:errbuf="Attempt to make an operation on file that is not opened";return errbuf.c_str();
+      case errOpenFailed:
+        errbuf="Failed to open file";
+        if(fileName.length())errbuf+="("+fileName+")";
+        errbuf+=":";
+        errbuf+=strerror(error);
+        return errbuf.c_str();
+      case errReadFailed:
+        errbuf="Failed to read from file";
+        if(fileName.length())errbuf+="("+fileName+")";
+        errbuf+=":";
+        errbuf+=strerror(error);
+        return errbuf.c_str();
+      case errEndOfFile:
+        if(fileName.length())errbuf+="("+fileName+")";
+        return "End of file reached";
+      case errWriteFailed:
+        errbuf="Failed to write to file";
+        if(fileName.length())errbuf+="("+fileName+")";
+        errbuf+=":";
+        errbuf+=strerror(error);
+        return errbuf.c_str();
+      case errSeekFailed:
+        errbuf="Failed to change file pointer";
+        if(fileName.length())errbuf+="("+fileName+")";
+        errbuf+=":";
+        errbuf+=strerror(error);
+        return errbuf.c_str();
+      case errFileNotOpened:
+        errbuf="Attempt to make an operation on file that is not opened";
+        errbuf+=":";
+        if(fileName.length())errbuf+="("+fileName+")";
+        return errbuf.c_str();
       default: return "Unknown error";
     }
   }
@@ -75,6 +105,7 @@ protected:
   FileException();
   int errCode;
   int error;
+  string fileName;
   mutable string errbuf;
 };
 
@@ -95,35 +126,35 @@ public:
     Close();
     filename=fn;
     f=fopen(fn,"rb");
-    if(f==NULL)throw FileException(FileException::errOpenFailed);
+    if(f==NULL)throw FileException(FileException::errOpenFailed,fn);
   }
   void WOpen(const char* fn)
   {
     Close();
     filename=fn;
     f=fopen(fn,"wb");
-    if(f==NULL)throw FileException(FileException::errOpenFailed);
+    if(f==NULL)throw FileException(FileException::errOpenFailed,fn);
   }
   void RWOpen(const char* fn)
   {
     Close();
     filename=fn;
     f=fopen(fn,"rb+");
-    if(f==NULL)throw FileException(FileException::errOpenFailed);
+    if(f==NULL)throw FileException(FileException::errOpenFailed,fn);
   }
   void RWCreate(const char* fn)
   {
     Close();
     filename=fn;
     f=fopen(fn,"wb+");
-    if(f==NULL)throw FileException(FileException::errOpenFailed);
+    if(f==NULL)throw FileException(FileException::errOpenFailed,fn);
   }
   void Append(const char* fn)
   {
     Close();
     filename=fn;
     f=fopen(fn,"ab");
-    if(f==NULL)throw FileException(FileException::errOpenFailed);
+    if(f==NULL)throw FileException(FileException::errOpenFailed,fn);
   }
   void SetUnbuffered()
   {
@@ -140,9 +171,9 @@ public:
     if(rv!=sz)
     {
       if(ferror(f))
-        throw FileException(FileException::errReadFailed);
+        throw FileException(FileException::errReadFailed,filename.c_str());
       else
-        throw FileException(FileException::errEndOfFile);
+        throw FileException(FileException::errEndOfFile,filename.c_str());
     }
     return rv;
   }
@@ -154,33 +185,46 @@ public:
   void Write(const void* buf,size_t sz)
   {
     Check();
-    if(fwrite(buf,sz,1,f)!=1)throw FileException(FileException::errWriteFailed);
+    if(fwrite(buf,sz,1,f)!=1)throw FileException(FileException::errWriteFailed,filename.c_str());
   }
   template <class T>
   void XWrite(const T& t)
   {
     Write(&t,sizeof(T));
   }
+
+  void ZeroFill(int sz)
+  {
+    char buf[8192]={0,};
+    int blksz;
+    while(sz>0)
+    {
+      blksz=sz>sizeof(buf)?sizeof(buf):sz;
+      Write(buf,blksz);
+      sz-=blksz;
+    }
+  }
+
   void Seek(offset_type off,int whence=SEEK_SET)
   {
     Check();
     if(whence==SEEK_SET)
     {
       fpos_t p(off);
-      if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed);
+      if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed,filename.c_str());
     }else if(whence==SEEK_END)
     {
       fseek(f,0,SEEK_END);
       fpos_t p;
       fgetpos(f,&p);
       p+=off;
-      if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed);
+      if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed,filename.c_str());
     }else if(whence==SEEK_CUR)
     {
       fpos_t p;
       fgetpos(f,&p);
       p+=off;
-      if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed);
+      if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed,filename.c_str());
     }else
     {
       throw runtime_error("invalid whence parameter");
@@ -307,7 +351,7 @@ protected:
   string filename;
   void Check()
   {
-    if(!f)throw FileException(FileException::errFileNotOpened);
+    if(!f)throw FileException(FileException::errFileNotOpened,filename.c_str());
   }
 };
 
