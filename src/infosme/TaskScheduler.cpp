@@ -79,7 +79,7 @@ int TaskScheduler::Execute()
             //printf("Sleepping %ld seconds ...\n", toSleep);
             while (toSleep > 0 && !bNeedExit && !bChanged) 
             {
-                if (toSleep > SERVICE_SLEEP*1000) {
+                if (toSleep > SERVICE_SLEEP) {
                     toSleep -= SERVICE_SLEEP;
                     awake.Wait(SERVICE_SLEEP*1000);
                     MutexGuard guard(schedulesLock);
