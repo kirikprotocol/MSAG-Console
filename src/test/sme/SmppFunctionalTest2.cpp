@@ -209,7 +209,7 @@ bool TestSmeTaskManager::isStopped() const
 }
 
 //SmppFunctionalTest
-int SmppFunctionalTest::delay = 250;
+int SmppFunctionalTest::delay = 500;
 bool SmppFunctionalTest::pause = false;
 SmppFunctionalTest::TaskStatList
 	SmppFunctionalTest::taskStat =
@@ -261,6 +261,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	const string& smscHost, int smscPort)
 {
 	__require__(numSme <= numAddr);
+	__trace__("*** Generating config files ***");
 	smeReg->clear();
 	aliasReg->clear();
 	routeReg->clear();
