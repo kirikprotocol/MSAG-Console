@@ -15,14 +15,16 @@ Mutex StoreManager::mutex;
 ConnectionPool* StoreManager::pool = 0L;
 IDGenerator* StoreManager::generator = 0L;
 StoreManager* StoreManager::instance = 0L;
+log4cpp::Category& StoreManager::log = Logger::getCategory("smsc.store.StoreManager");
 
 MessageStore* StoreManager::startup(const char* db, const char* user,
                                     const char* password, 
                                     unsigned size, unsigned init)
     throw(ConnectionFailedException)
 {
+    log.info("Storage Manager is starting ... ");
     MutexGuard guard(mutex);
-
+    
     if (!instance)
     {
         Connection* connection = 0L; 
@@ -34,7 +36,7 @@ MessageStore* StoreManager::startup(const char* db, const char* user,
         }
         catch (StorageException& exc) 
         {
-            //log.error("Storage Exception : %s\n", exc.what());
+            log.error("Storage Exception : %s\n", exc.what());
             if (pool) 
             {
                 if (connection)
@@ -52,11 +54,14 @@ MessageStore* StoreManager::startup(const char* db, const char* user,
         pool->freeConnection(connection);
         instance = new StoreManager();
     }
+    
+    log.info("Storage Manager was started up.");
     return ((MessageStore *)instance);
 }
         
 void StoreManager::shutdown() 
 {
+    log.info("Storage Manager is shutting down ...");
     MutexGuard guard(mutex);
 
     if (pool) {
@@ -68,6 +73,7 @@ void StoreManager::shutdown()
     if (generator) {
         delete generator; generator = 0L;
     }
+    log.info("Storage Manager was shutdowned.");
 }
 
 const int MAX_TRIES_TO_PROCESS = 3;

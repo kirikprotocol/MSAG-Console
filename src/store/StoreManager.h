@@ -40,15 +40,14 @@ namespace smsc { namespace store
         
         static Mutex mutex;
 
-        static IDGenerator      *generator;
-        static StoreManager     *instance;
-        static ConnectionPool   *pool;
-        log4cpp::Category       &log;
-
+        static IDGenerator          *generator;
+        static StoreManager         *instance;
+        static ConnectionPool       *pool;
+        static log4cpp::Category    &log;
+        
     protected:
         
-        StoreManager() : MessageStore(), 
-            log(Logger::getCategory("smsc.store.StoreManager")) {};
+        StoreManager() : MessageStore() {};
         virtual ~StoreManager() {};
 
     public:    
