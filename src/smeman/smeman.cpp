@@ -6,6 +6,7 @@
 namespace smsc {
 namespace smeman {
 
+using core::synchronization::MutexGuard;
 #define __synchronized__ MutexGuard mguard(lock);
 
 // ---- SmeAdministrator implementation --------------
@@ -19,15 +20,15 @@ __synchronized__
 	record.deleted = false;
 	record.idx = records.size();
 	SmeIndex index = internalLookup(info.systemId);
-	if ( index != INVALID_SME_INDEX ) throw SmeError;
+	if ( index != INVALID_SME_INDEX ) throw SmeError();
 	records.push_back(record);
 }
 
-void SmeManager::deleteSme(const SmeSystemId& systemid)
+void SmeManager::deleteSme(const SmeSystemId& systemId)
 {
 __synchronized__	
-	SmeIndex index = internalLookup(info.systemId);
-	if ( index == INVALID_SME_INDEX ) throw SmeError;
+	SmeIndex index = internalLookup(systemId);
+	if ( index == INVALID_SME_INDEX ) throw SmeError();
 	if ( records[index].proxy )
 	{
 		// ???????	что делать если уже в работе , шутдаунить прокси, как корректно или абортом
@@ -44,14 +45,14 @@ void SmeManager::store()
 {
 }
 
-class SmeIteratorImpl
+class SmeIteratorImpl	 : public SmeIterator
 {
-	RecordsVector::iterator begin;
-	RecordsVector::iterator end;
-	RecordsVector::iterator ptr;
+	Records::iterator begin;
+	Records::iterator end;
+	Records::iterator ptr;
 	bool started;
 public:
-	SmeIteratorImpl(RecordsVector::iterator& begin,RecordsVector::iterator& end):
+	SmeIteratorImpl(const Records::iterator& begin,const Records::iterator& end):
 		begin(begin),end(end),ptr(begin),started(false) {}
 	
 	virtual bool next()
@@ -74,24 +75,24 @@ public:
 	}
 };
 
-SmeIterator SmeManager::iterator()
+SmeIterator* SmeManager::iterator()
 {
 __synchronized__	
-	return SmeIteratorImpl(records.begin(),records.end());
+	return new SmeIteratorImpl(records.begin(),records.end());
 }
 
-void SmeManager::disableSme(const SmeSystemId& systemid)
+void SmeManager::disableSme(const SmeSystemId& systemId)
 {
-	SmeIndex index = internalLookup(info.systemId);
-	if ( index == INVALID_SME_INDEX ) throw SmeError;
+	SmeIndex index = internalLookup(systemId);
+	if ( index == INVALID_SME_INDEX ) throw SmeError();
 	// ???????	что делать если уже в работе , шутдаунить прокси, как корректно или абортом
 	records[index].info.disabled = true;
 }
 
 void SmeManager::enableSme(const SmeSystemId& systemId)
 {
-	SmeIndex index = internalLookup(info.systemId);
-	if ( index != INVALID_SME_INDEX ) throw SmeError;
+	SmeIndex index = internalLookup(systemId);
+	if ( index != INVALID_SME_INDEX ) throw SmeError();
 	// ???????	что делать если уже в работе , шутдаунить прокси, как корректно или абортом
 	records[index].info.disabled = false;
 }
@@ -100,24 +101,24 @@ void SmeManager::enableSme(const SmeSystemId& systemId)
 
 SmeIndex SmeManager::lookup(const SmeSystemId& systemId) const
 {
-	SmeIndex index = internalLookup(info.systemId);
-	if ( index == NVALID_SME_INDEX ) throw SmeError;
+	SmeIndex index = internalLookup(systemId);
+	if ( index == INVALID_SME_INDEX ) throw SmeError();
 	return index;
 }
 
 SmeProxy* SmeManager::getSmeProxy(SmeIndex index) const
 {
 __synchronized__	
-	SmeRecord& record = records.at(index);
-	if ( record.deleted ) throw SmeError;
+	const SmeRecord& record = records.at(index);
+	if ( record.deleted ) throw SmeError();
 	return record.proxy;
 }
 
 SmeInfo SmeManager::getSmeInfo(SmeIndex index) const
 {
 __synchronized__	
-	SmeRecord& record = records.at(index);
-	if ( record.deleted ) throw SmeError;
+	const SmeRecord& record = records.at(index);
+	if ( record.deleted ) throw SmeError();
 	return record.info;
 }
 
@@ -129,9 +130,9 @@ __synchronized__
 
 	__require__ ( smeProxy != NULL );
 
-	SmeIndex index = internalLookup(info.systemId);
-	if ( index == INVALID_SME_INDEX ) throw SmeError;
-	if ( records[index].proxy ) throw SmeError;
+	SmeIndex index = internalLookup(systemId);
+	if ( index == INVALID_SME_INDEX ) throw SmeError();
+	if ( records[index].proxy ) throw SmeError();
 	records[index].proxy = smeProxy;
 	dispatcher.attachSmeProxy(smeProxy);
 }
@@ -142,10 +143,10 @@ SmeProxy* SmeManager::selectSmeProxy()
 	return dispatcher.dispatchIn();
 }
 
-SmeIndex internalLookup(const SmeSystemId& systemId)
+SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
 {
 //__synchronized__ не нужно поскольку вызывается из синхронизированных методов
-	for ( RecordsVector::iterator it = records.begin(); p != records.end(); ++p )
+	for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
 	{
 		if ( p->info.systemId.compare(systemId) == 0 ) return p->idx;
 	}

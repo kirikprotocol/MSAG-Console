@@ -2,13 +2,14 @@
 	$Id$
 */
 
-#include "util/debug.h"
-#include <vector>
 
 #if !defined __Cpp_Header__smeman_smeman_h__
 #define __Cpp_Header__smeman_smeman_h__
 #include <inttypes.h>
+#include <vector>
+#include <list>
 
+#include "util/debug.h"
 #include "smetypes.h"
 #include "smeproxy.h"
 #include "smeinfo.h"
@@ -17,45 +18,42 @@
 #include "smeiter.h"
 #include "smereg.h"
 #include "smedispatch.h"
-#include "core/synchronization/mutex.hpp"
+#include "dispatch.h"
+#include "core/synchronization/Mutex.hpp"
 
 namespace smsc {
 namespace smeman {
+	
+struct SmeRecord
+{
+	SmeInfo info;
+	SmeProxy* proxy;
+	bool deleted;
+	SmeIndex idx;
+};
+	
+using core::synchronization::Mutex;	
+typedef std::vector<SmeRecord> Records;
 
 class SmeManager : 
 	public SmeAdministrator,
 	public SmeTable,
 	public SmeIterator,
 	public SmeRegistrar,
-	public SmeDispatcher
+	public Dispatch
 {
-	Mutex lock;
-	class SmeProxyDispatcher
-	{
-		ProxyMonitor mon;
-	public:
-		SmeProxy* dispatchIn();
-		void attachSmeProxy(SmeProxy* proxy);
-		void detachSmeProxy(SmeProxy* proxy);
-	};
+		
+	mutable Mutex lock;
 	SmeProxyDispatcher dispatcher;
-	struct SmeRecord
-	{
-		SmeInfo info;
-		SmeProxy* proxy;
-		bool deleted;
-		SmeIndex idx;
-	};
-	typedef std::vector<SmeRecord> Records;
 	Records records;
-	SmeIndex internalLookup(const SmeSystemId& systemId);
+	SmeIndex internalLookup(const SmeSystemId& systemId) const;
 public:	
 	//....
 	// SmeAdministrator implementation
 	virtual void addSme(const SmeInfo& info);
 	virtual void deleteSme(const SmeSystemId& systemId);
 	virtual void store();
-	virtual SmeIterator iterator();
+	virtual SmeIterator* iterator(); // client must destroy returned object
 	virtual void disableSme(const SmeSystemId& systemId);
 	virtual void enableSme(const SmeSystemId& systemId);
 
