@@ -29,9 +29,10 @@ public class SmsView
 {
     private static int   MAX_SMS_BODY_LENGTH    = 1500;
     private static byte  INT_TAG_TYPE           = 0;
-    private static short SMPP_SHORT_MESSAGE_TAG = 7;
-    private static short SMPP_DATA_CODING_TAG   = 3;
     private static short SMPP_ESM_CLASS_TAG     = 2;
+    private static short SMPP_DATA_CODING_TAG   = 3;
+    private static short SMPP_SHORT_MESSAGE_TAG = 28;
+
 
     private static short DATA_CODING_DEFAULT    = 0;    // 0
     private static short DATA_CODING_BINARY     = 4;    // BIT(2)
