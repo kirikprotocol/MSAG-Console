@@ -8,13 +8,10 @@ DELETE FROM MCISME_EVT_SET WHERE MSG_ID IN
 -- Detach events from messages
 UPDATE MCISME_EVT_SET SET MSG_ID=NULL;
 
--- Delete messages in WAIT_RCPT state (present on SMSC)
-DELETE FROM MCISME_MSG_SET WHERE STATE=30;
-
--- Set all messages current
+-- Set all messages current by events for distinct abonents
 DELETE FROM MCISME_CUR_MSG;
 INSERT INTO MCISME_CUR_MSG 
-    SELECT ABONENT, MAX(ID) AS ID FROM MCISME_MSG_SET GROUP BY ABONENT;
+    SELECT ABONENT, MAX(ID) AS ID FROM MCISME_EVT_SET GROUP BY ABONENT;
 
 -- Re-populate table MCISME_MSG_SET (with distinct abonents & maximum ids)
 DELETE FROM MCISME_MSG_SET;
