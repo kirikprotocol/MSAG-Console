@@ -13,6 +13,7 @@ using smsc::util::Logger;
 using smsc::util::config::Manager;
 
 const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION = 3;
+const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT = 1000;
 
 Mutex StoreManager::mutex;
 ConnectionPool* StoreManager::pool = 0L;
@@ -26,6 +27,17 @@ void StoreManager::loadMaxTriesCount(Manager& config)
     try 
     {
         maxTriesCount = (unsigned)config.getInt("MessageStore.maxTriesCount");
+        if (!maxTriesCount || 
+            maxTriesCount > SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT)
+        {
+            maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION; 
+            log.warn("Max tries count to process operation on MessageStore "
+                     "is incorrect (should be between 0 and %u) ! "
+                     "Config parameter: <MessageStore.maxTriesCount> "
+                     "Using default: %u",
+                     SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT,
+                     SMSC_MAX_TRIES_TO_PROCESS_OPERATION);
+        }
     } 
     catch (ConfigException& exc) 
     {
@@ -33,7 +45,8 @@ void StoreManager::loadMaxTriesCount(Manager& config)
         log.warn("Max tries count to process operation on MessageStore "
                  "wasn't specified ! "
                  "Config parameter: <MessageStore.maxTriesCount> "
-                 "Using default: %d", maxTriesCount);
+                 "Using default: %d",
+                 SMSC_MAX_TRIES_TO_PROCESS_OPERATION);
     }
 }
 

@@ -20,21 +20,38 @@ using smsc::util::config::ConfigException;
 /* ----------------------------- ConnectionPool ------------------------ */
 
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE = 200;
+const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE_LIMIT = 10000;
+
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE = 10;
+const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT = 10000;
+
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE = 5;
+const unsigned SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE_LIMIT = 10000;
 
 void ConnectionPool::loadMaxSize(Manager& config)
 {
     try 
     {
         size = (unsigned)config.getInt("MessageStore.Connections.max");
+        if (!size || 
+            size > SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT)
+        {
+            size = SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE;
+            log.warn("Maximum ConnectionPool size is incorrect "
+                     "(should be between 0 and %u) ! "
+                     "Config parameter: <MessageStore.Connections.max> "
+                     "Using default: %u",
+                     SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT,
+                     SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE);
+        }
     } 
     catch (ConfigException& exc) 
     {
         size = SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE;
         log.warn("Maximum ConnectionPool size wasn't specified ! "
                  "Config parameter: <MessageStore.Connections.max> "
-                 "Using default: %d", size);
+                 "Using default: %u",
+                 SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE);
     }
 }
 
@@ -43,13 +60,25 @@ void ConnectionPool::loadInitSize(Manager& config)
     try 
     {
         count = (unsigned)config.getInt("MessageStore.Connections.init");
+        if (!count || 
+            count > SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE_LIMIT)
+        {
+            size = SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE;
+            log.warn("Init ConnectionPool size is incorrect "
+                     "(should be positive and less than %u) ! "
+                     "Config parameter: <MessageStore.Connections.init> "
+                     "Using default: %u",
+                     SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE_LIMIT, 
+                     SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE);
+        }
     } 
     catch (ConfigException& exc) 
     {
         count = SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE;
         log.warn("Init ConnectionPool size wasn't specified ! "
                  "Config parameter: <MessageStore.Connections.init> "
-                 "Using default: %d", count);
+                 "Using default: %d",
+                 SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE);
     }
 }
 
@@ -59,6 +88,18 @@ void ConnectionPool::loadMaxQueueSize(Manager& config)
     {
         maxQueueSize = 
             (unsigned)config.getInt("MessageStore.Connections.queue");
+        if (!maxQueueSize || 
+            maxQueueSize > SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE_LIMIT)
+        {
+            size = SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE;
+            log.warn("Maximum count of pending requests to ConnectionPool "
+                     "for connections is incorrect "
+                     "(should be positive and less than %u) ! "
+                     "Config parameter: <MessageStore.Connections.queue> "
+                     "Using default: %u",
+                     SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE_LIMIT, 
+                     SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE);
+        }
     } 
     catch (ConfigException& exc) 
     {
@@ -66,7 +107,8 @@ void ConnectionPool::loadMaxQueueSize(Manager& config)
         log.warn("Maximum count of pending requests to ConnectionPool "
                  "for connections wasn't specified ! "
                  "Config parameter: <MessageStore.Connections.queue> "
-                 "Using default: %d", maxQueueSize);
+                 "Using default: %u",
+                 SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE);
     }
 }
 
