@@ -656,7 +656,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
       unsigned text_len;
       const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
       *pdu_ptr++ = text_len;
-      pdu_ptr += ConvertSMSC7Bit27bit(text,text_len,pdu_ptr);
+      pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
   }else{ // UCS2 || 8BIT
     unsigned text_len;
     const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
