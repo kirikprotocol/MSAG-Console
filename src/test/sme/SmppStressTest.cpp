@@ -70,7 +70,7 @@ int TestSme::Execute()
 	{
 		try
 		{
-			switch (rand1(7))
+			switch (rand1(8))
 			{
 				case 1:
 					tc.invalidBindScenario(RAND_TC);
@@ -92,6 +92,9 @@ int TestSme::Execute()
 					break;
 				case 7:
 					tc.invalidBindStatusScenario(RAND_TC);
+					break;
+				case 8:
+					tc.enquireLinkScenario(RAND_TC);
 					break;
 				default:
 					__unreachable__("Invalid scenario num");

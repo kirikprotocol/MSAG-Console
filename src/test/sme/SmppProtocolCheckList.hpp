@@ -76,6 +76,8 @@ void bindTc()
 		"Если код ошибки ESME_RINVSYSID в поле command_status, то действительно длина поля system_id превышает 15 символов");
 	__reg_tc__("bind.resp.checkCmdStatusInvalidSystemType",
 		"Если код ошибки ESME_RINVSYSTYP в поле command_status, то действительно длина поля system_type превышает 12 символов");
+	__reg_tc__("bind.resp.checkCmdStatusOther",
+		"Прочие коды ошибок соответствуют спецификации");
 }
 
 void unbindTc()
