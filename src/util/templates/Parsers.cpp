@@ -392,7 +392,7 @@ void FloatParser::parse(std::string& input,
         const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         if (!(str && *str) && def) str = def;
-        if ((result = sscanf(str, "%fu%n", &value, &bytes)) == EOF
+        if ((result = sscanf(str, "%f%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning float type. "
                                    "Processing string: '%s'", str);

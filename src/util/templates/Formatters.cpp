@@ -417,7 +417,7 @@ void FloatFormatter::format(std::string& output,
     int precision = 0; // after '.'
     if (pre && (precision = atoi(pre)) >=0)
     {
-        sprintf(format, "%%.%d%%f", precision);
+        sprintf(format, "%%.%df", precision);
     }
     char    buff[128] = "";
     sprintf(buff, format, value);
@@ -460,9 +460,9 @@ void DoubleFormatter::format(std::string& output,
     {
         const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPONENT_OPTION);
         if (exp && strcmp(exp, "yes") == 0) {
-            sprintf(format, "%%.%d%%le", digits);
+            sprintf(format, "%%.%dle", digits);
         } else {
-            sprintf(format, "%%.%d%%lg", digits);
+            sprintf(format, "%%.%dlg", digits);
         }
     }
     char    buff[128] = "";
@@ -506,9 +506,9 @@ void LongDoubleFormatter::format(std::string& output,
     {
         const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPONENT_OPTION);
         if (exp && strcmp(exp, "yes") == 0) {
-            sprintf(format, "%%.%d%%Le", digits);
+            sprintf(format, "%%.%dLe", digits);
         } else {
-            sprintf(format, "%%.%d%%Lg", digits);
+            sprintf(format, "%%.%dLg", digits);
         }
     }
     char    buff[256] = "";
