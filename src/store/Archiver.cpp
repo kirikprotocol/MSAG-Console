@@ -573,8 +573,8 @@ void Archiver::prepareStorageSelectStmt() throw(StorageException)
                               (sb4) sizeof(sms.messageBody.lenght));
     storageSelectStmt->define(i++, SQLT_BIN, (dvoid *) (sms.messageBody.data),
                               (sb4) sizeof(sms.messageBody.data));
-    storageSelectStmt->define(i++, SQLT_BIN, (dvoid *) &(sms.recieptSmsId), 
-                              (sb4) sizeof(sms.recieptSmsId));
+    storageSelectStmt->define(i++, SQLT_BIN, (dvoid *) &(sms.receiptSmsId), 
+                              (sb4) sizeof(sms.receiptSmsId));
     storageSelectStmt->define(i++, SQLT_UIN, (dvoid *) &(sms.esmClass),
                               (sb4) sizeof(sms.esmClass));
     
@@ -689,8 +689,8 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
                             (sb4) sizeof(sms.messageBody.lenght));
     archiveInsertStmt->bind(i++, SQLT_BIN, (dvoid *) (sms.messageBody.data), 
                             (sb4) sizeof(sms.messageBody.data));
-    archiveInsertStmt->bind(i++, SQLT_BIN, (dvoid *) &(sms.recieptSmsId), 
-                            (sb4) sizeof(sms.recieptSmsId));
+    archiveInsertStmt->bind(i++, SQLT_BIN, (dvoid *) &(sms.receiptSmsId), 
+                            (sb4) sizeof(sms.receiptSmsId));
     archiveInsertStmt->bind(i++, SQLT_UIN, (dvoid *) &(sms.esmClass),
                             (sb4) sizeof(sms.esmClass));
 }

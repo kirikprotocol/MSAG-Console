@@ -598,14 +598,14 @@ namespace smsc { namespace sms
         Body        messageBody;    // «акодированное & сжатое тело сообщени€
         EService    eServiceType;   
 
-        SMSId       recieptSmsId;   // id сообщени€ на который идЄт ответ-репорт
+        SMSId       receiptSmsId;   // id сообщени€ на который идЄт ответ-репорт
         uint8_t     esmClass;       // тип сообщени€: нормальное, ответ ...
 
         /**
          * Default конструктор, просто инициализирует поле state как ENROUTE
          */
         SMS() : state(ENROUTE), lastTime(0), nextTime(0),
-                failureCause(0), attempts(0), recieptSmsId(0), esmClass(0)
+                failureCause(0), attempts(0), receiptSmsId(0), esmClass(0)
         {
             eServiceType[0]='\0';
         }; 
@@ -632,7 +632,7 @@ namespace smsc { namespace sms
             failureCause(sms.failureCause),
             attempts(sms.attempts),
             messageBody(sms.messageBody),
-            recieptSmsId(sms.recieptSmsId),
+            receiptSmsId(sms.receiptSmsId),
             esmClass(sms.esmClass)
         {
             strncpy(eServiceType, sms.eServiceType, sizeof(EService));
@@ -662,7 +662,7 @@ namespace smsc { namespace sms
             failureCause = sms.failureCause;
             attempts = sms.attempts; 
             messageBody = sms.messageBody;
-            recieptSmsId = sms.recieptSmsId;
+            receiptSmsId = sms.receiptSmsId;
             esmClass = sms.esmClass;
             
             strncpy(eServiceType, sms.eServiceType, sizeof(EService));
@@ -1236,9 +1236,9 @@ namespace smsc { namespace sms
          * 
          * @param id     идентификационный номер сообщени€
          */
-        inline void setRecieptSmsId(SMSId id) 
+        inline void setReceiptSmsId(SMSId id) 
         {
-            recieptSmsId = id;
+            receiptSmsId = id;
         };
         
         /**
@@ -1247,9 +1247,9 @@ namespace smsc { namespace sms
          * 
          * @return идентификационный номер сообщени€ (MR)
          */
-        inline SMSId getRecieptSmsId() const 
+        inline SMSId getReceiptSmsId() const 
         {
-            return recieptSmsId;
+            return receiptSmsId;
         };
         
         /**

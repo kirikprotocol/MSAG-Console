@@ -351,7 +351,7 @@ void OverwriteStatement::bindSms(SMS& sms)
     bind(i++, SQLT_BIN, (dvoid *) (sms.messageBody.data),
          (sb4) sizeof(sms.messageBody.data));
     
-    rcptId = UINT64_SWAP_LE_BE_CONSTANT(sms.recieptSmsId);
+    rcptId = UINT64_SWAP_LE_BE_CONSTANT(sms.receiptSmsId);
     bind(i++, SQLT_BIN, (dvoid *) &(rcptId), 
          (sb4) sizeof(rcptId));
     bind(i++, SQLT_UIN, (dvoid *) &(sms.esmClass),
@@ -450,7 +450,7 @@ void StoreStatement::bindSms(SMS& sms)
     bind(i++, SQLT_BIN, (dvoid *) (sms.messageBody.data),
          (sb4) sizeof(sms.messageBody.data));
     
-    rcptId = UINT64_SWAP_LE_BE_CONSTANT(sms.recieptSmsId);
+    rcptId = UINT64_SWAP_LE_BE_CONSTANT(sms.receiptSmsId);
     bind(i++, SQLT_BIN, (dvoid *) &(rcptId), 
          (sb4) sizeof(rcptId));
     bind(i++, SQLT_UIN, (dvoid *) &(sms.esmClass),
@@ -628,7 +628,7 @@ void RetriveStatement::getSms(SMS& sms)
     convertOCIDateToDate(&submitTime, &(sms.submitTime));
     convertOCIDateToDate(&validTime, &(sms.validTime));
     
-    sms.recieptSmsId = UINT64_SWAP_LE_BE_CONSTANT(rcptId);
+    sms.receiptSmsId = UINT64_SWAP_LE_BE_CONSTANT(rcptId);
 }
 
 /* --------------------------- DestroyStatement ----------------------- */
