@@ -330,7 +330,7 @@ inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned l
 inline void mkRP_DA_Address( ET96MAP_SM_RP_DA_T *addr, const char *saddr, unsigned len, char type) {
   unsigned i;
   int sz = (len+1)/2;
-  addr->addrLen = len;
+  addr->addrLen = sz+1;
   addr->typeOfAddress = type;
   addr->addr[0] = 0x91; // InterNational, ISDN
   for( i = 0; i < len; i++ ) {
@@ -349,7 +349,7 @@ inline void mkRP_DA_Address( ET96MAP_SM_RP_DA_T *addr, const char *saddr, unsign
 inline void mkRP_OA_Address( ET96MAP_SM_RP_OA_T *addr, const char *saddr, unsigned len, char type) {
   unsigned i;
   int sz = (len+1)/2;
-  addr->addrLen = len;
+  addr->addrLen = sz+1;
   addr->typeOfAddress = type;
   addr->addr[0] = 0x91; // InterNational, ISDN
   for( i = 0; i < len; i++ ) {
