@@ -1039,7 +1039,10 @@ void SmppTransmitterTestCases::processCancelledMonitors(PduCancelSm* pdu,
 		vector<PduData*> cancelPduDataList;
 		while (PduMonitor* m = it->next())
 		{
-			if (m->getType() == DELIVERY_MONITOR && m->getFlag() != PDU_NOT_EXPECTED_FLAG)
+			if (m->getType() == DELIVERY_MONITOR
+				/*&& m->getFlag() != PDU_NOT_EXPECTED_FLAG*/)
+			//могут быть delivery мониторы, которые уже expired, но vliadity_period
+			//еще не наступил и report мониторы required
 			{
 				DeliveryMonitor* monitor = dynamic_cast<DeliveryMonitor*>(m);
 				if (monitor->srcAddr == srcAddr && monitor->destAddr == destAddr &&
