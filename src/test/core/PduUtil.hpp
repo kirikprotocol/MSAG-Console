@@ -140,6 +140,7 @@ public:
 	~SmsPduWrapper() { /* не владелец submitPdu и dataPdu */ }
 
 	bool isSubmitSm() { return (pdu->get_commandId() == SUBMIT_SM); }
+	bool isSubmitMulti() { return (pdu->get_commandId() == SUBMIT_MULTI); }
 	bool isDeliverSm() { return (pdu->get_commandId() == DELIVERY_SM); }
 	bool isDataSm() { return (pdu->get_commandId() == DATA_SM); }
 	
@@ -157,12 +158,6 @@ public:
 	PduPartSm& get_message();
 	PduDataPartSm& get_data();
 	SmppOptional& get_optional();
-
-	bool isAck();
-	bool isNoAck();
-	bool getDef(int& hours);
-	bool getTemplate(const string& name, map<const string, const string>& params);
-	pair<const char*, int> getText();
 };
 
 /**

@@ -128,6 +128,7 @@ SmsPduWrapper::SmsPduWrapper(PduData* _pduData)
 #define __get_wrapper_prop__(filed) \
 	switch (pdu->get_commandId()) { \
 		case SUBMIT_SM: \
+		case SUBMIT_MULTI: \
 		case DELIVERY_SM: \
 			return get_message().get_##filed(); \
 		case DATA_SM: \
@@ -152,6 +153,7 @@ time_t SmsPduWrapper::getWaitTime()
 	switch (pdu->get_commandId())
 	{
 		case SUBMIT_SM:
+		case SUBMIT_MULTI:
 		case DELIVERY_SM:
 			{
 				//если schedule_delivery_time = NULL, то немедленная доставка
@@ -173,6 +175,7 @@ time_t SmsPduWrapper::getValidTime()
 	switch (pdu->get_commandId())
 	{
 		case SUBMIT_SM:
+		case SUBMIT_MULTI:
 		case DELIVERY_SM:
 			{
 				//если validity_period = NULL, то срок валидности по умолчанию
@@ -208,6 +211,8 @@ PduPartSm& SmsPduWrapper::get_message()
 	{
 		case SUBMIT_SM:
 			return reinterpret_cast<PduSubmitSm*>(pdu)->get_message();
+		case SUBMIT_MULTI:
+			return reinterpret_cast<PduMultiSm*>(pdu)->get_message();
 		case DELIVERY_SM:
 			return reinterpret_cast<PduDeliverySm*>(pdu)->get_message();
 		default:
@@ -232,6 +237,8 @@ SmppOptional& SmsPduWrapper::get_optional()
 	{
 		case SUBMIT_SM:
 			return reinterpret_cast<PduSubmitSm*>(pdu)->get_optional();
+		case SUBMIT_MULTI:
+			return reinterpret_cast<PduMultiSm*>(pdu)->get_optional();
 		case DELIVERY_SM:
 			return reinterpret_cast<PduDeliverySm*>(pdu)->get_optional();
 		case DATA_SM:
@@ -526,7 +533,6 @@ DeliveryMonitor::DeliveryMonitor(const Address& _srcAddr, const Address& _destAd
 : ReschedulePduMonitor(waitTime, validTime, pduData, flag),
 	srcAddr(_srcAddr), destAddr(_destAddr), serviceType(_serviceType),
 	msgRef(_msgRef), state(SMPP_ENROUTE_STATE), respTime(0), respStatus(0)
-
 {
 	//__trace2__("monitor created: %s", str().c_str());
 }
