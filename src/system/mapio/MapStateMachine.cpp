@@ -512,6 +512,13 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   }
 }
 
+static inline
+unsigned ParseSemiOctetU(unsigned char v)
+{
+  unsigned result = (v>>4)*10+(v&0x0f);
+  return result;
+}
+
 static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_SM_RP_OA_T *srcAddr)
 {
   __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
@@ -535,11 +542,86 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   __trace2__("MAP:: protocol_id = 0x%x",protocol_id);
   unsigned char user_data_coding = *(unsigned char*)(ud->signalInfo+2+msa_len+1);
   __trace2__("MAP:: user_data_encoding = 0x%x",user_data_coding);
-  unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2);
+  unsigned tpvpLen = (ssfh->tp_vp==0)?0:(ssfh->tp_vp==2)?1:7;
+  unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2);
   __trace2__("MAP:: user_data_len = %d",user_data_len);
-  if ( user_data_len > (ud->signalInfoLen-(2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1) ))
-    throw runtime_error(FormatText("bad user_data_len %d",user_data_len));
-  unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1);
+  if ( user_data_len > (ud->signalInfoLen-(2+tpvpLen+msa_len+2+1) ))
+    throw runtime_error(FormatText("bad user_data_len %d must be <= %d",user_data_len,(ud->signalInfoLen-(2+tpvpLen+msa_len+2+1))));
+  unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2+1);
+  if ( ssfh->tp_vp != 0 )
+  {
+    unsigned char* tvp = *(unsigned char*)(ud->signalInfo+2+msa_len+1+1);
+    __trace__("MAP:%s: TVP = 0x%x , first octet 0x%x",__FUNCTION__,(unsigned)ssfh->tp_vp,(unsigned)*tvp);
+    time_t timeValue = time(0);
+    if ( ssfh->tp_vp == 1 ){
+parse_tvp_scheme1:
+      if ( *tvp <= 143 ) timeValue+=(*tvp+1)*(5*60);
+      else if ( *tvp <= 167 ) timeValue+=(12*60*60)+((*tvp-143)*(30*60));
+      else if ( *tvp <= 196 ) timeValue+=(*tvp-166)*(60*60*24);
+      else /*if ( *tvp <= 255 )*/ timeValue+=(*tvp-192)*(60*60*24*7);
+    }else if (ssfh->tp_vp == 2 ){
+      if (tpvpLen!=7) 
+        throw runtime_error(FormatText("MAP:%s:incorrect tpvp data",__FUNCTION__));
+parse_tvp_scheme2:
+      struct tm dtm;
+      dtm.tm_year = ParseSemiOctetU(tvp[0]);
+      dtm.tm_mon  = ParseSemiOctetU(tvp[1]);
+      dtm.tm_mday = ParseSemiOctetU(tvp[2]);
+      dtm.tm_hour = ParseSemiOctetU(tvp[3]);
+      dtm.tm_min  = ParseSemiOctetU(tvp[4]);
+      dtm.tm_sec  = ParseSemiOctetU(tvp[5]);
+      unsigned tzOctet = ParseSemiOctetU(tvp[6));
+      int timeZoneX = tzOctet&0x080?tzOctet:(0-(int)(tzOctet&0x07f));
+      __trace2__("MAP:%s:TVP: %d:%d:%d:%d:%d:%d:%d",
+        __FUNCTION__,dtm.tm_year,dtm.tm_mon,dtm.tm_mday,dtm.tm_hour,dtm.tm_min,dtm.tm_sec,tzOctet);
+	  	if (!( dtm.tm_mon >= 1 && dtm.tm_mon <= 12 )) throw runtime_error("bad month");
+		  dtm.tm_mon-=1;
+		  if ( !(dtm.tm_year >= 0 && dtm.tm_year <= 99) ) throw runtime_error("bad year");
+		  dtm.tm_year+=100; // year = x-1900
+		  if ( !(dtm.tm_mday >= 1 && dtm.tm_mday <= 31) ) throw runtime_error("bad mday");
+		  if ( !(dtm.tm_hour >= 0 && dtm.tm_hour <= 23) ) throw runtime_error("bad hour");
+		  if ( !(dtm.tm_min >= 0 && dtm.tm_min <= 59) ) throw runtime_error("bad min");
+		  if ( !(dtm.tm_sec >=0 && dtm.tm_sec <= 59) ) throw runtime_error("bad sec");
+  		timeValue = mktime(&dtm);
+	  	if ( !(timeValue != -1) ) throw runtime_error("invalid time");
+      timeValue -= timeZoneX*900;
+  		timeValue -= timezone;
+    }else if (ssfh->tp_vp == 3 ){
+      unsigned char tags = *tvp;
+      unsigned valForm = tags&0x7;
+      unsigned char* dta = tvp;
+      while ( *dta & 0x080 ) { ++dta; if ( dta-tpv == 7 ) throw runtime_error("out of tvp data");
+      __trace2__("MAP:%s: tvp 0x%x dta 0x%x valForm 0x%x",__FUNCTION__,tvp,dta,valForm);
+      switch(valForm)
+      {
+      case 0: 
+        __trace2__("MAP:%s: ext has no validity",__FUNCTION__);
+        goto nene_validity;
+      case 0x1:
+        if ( dta-tvp > 6 ) throw runtime_error("out of tvp data");
+        tvp = dta;
+        goto parse_tvp_scheme1;
+        break;
+      case 0x2:
+        if ( *dta == 0 ) {
+          __trace2__("MAP:%s: ext has relative value 0 assumed as novalidity",__FUNCTION__);
+          goto none_validity;
+        }
+        timeValue+=(unsigned)*dta;
+        break;
+      case 0x3:
+        if ( dta-tvp > 4 ) throw runtime_error("out of tvp data");
+        timeValue+=((unsigned)dta[0])*60*60+((unsigned)dta[1])*60+((unsigned)dta[2]);
+        break;
+      default:
+        throw runtime_error("bad tp_vp ext format");
+      }
+    }
+    __trace2__("MAP:%s: result time: %s ",__FUNCTION__,ctime(&timeValue));
+    __trace2__("MAP:%s: set validity 0x%x (time:0x%x)",__FUNCTION__,timeValue,time(0));
+    sms.setValidTime(timeValue);
+none_validity:
+  }
   unsigned encoding = 0;
   if ( (user_data_coding & 0xc0) == 0 ||  // 00xxxxxx
        (user_data_coding & 0xc0) == 0x40 )  // 01xxxxxx
@@ -1714,7 +1796,7 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
   catch(exception& e)
   {
     __trace2__("#except#MAP::%s# MAP.did 0x%x",__FUNCTION__,dialogueId);
-    __trace2__("   <exception>:%s",e.what());
+    __trace2__("   MAP:<exception>:%s",e.what());
     if ( !open_confirmed ){
       ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
       //MapDialogContainer::getInstance()->dropDialog(dialogueId);
