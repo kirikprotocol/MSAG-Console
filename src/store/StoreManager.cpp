@@ -602,9 +602,8 @@ void StoreManager::changeSmsStateToUndeliverable(SMSId id,
     }
 }
 
-void StoreManager::doChangeSmsStateToExpired(Connection* connection, 
-    SMSId id, uint8_t failureCause)
-        throw(StorageException, NoSuchMessageException)
+void StoreManager::doChangeSmsStateToExpired(Connection* connection, SMSId id)
+    throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
 
@@ -612,8 +611,6 @@ void StoreManager::doChangeSmsStateToExpired(Connection* connection,
         = connection->getToExpiredStatement();
     
     toExpiredStmt->bindId(id);
-    toExpiredStmt->bindFailureCause((dvoid *)&(failureCause),
-                                    (sb4) sizeof(failureCause));
     try 
     {
         connection->check(toExpiredStmt->execute());
@@ -631,7 +628,7 @@ void StoreManager::doChangeSmsStateToExpired(Connection* connection,
     }
     connection->commit();
 }
-void StoreManager::changeSmsStateToExpired(SMSId id, uint8_t failureCause) 
+void StoreManager::changeSmsStateToExpired(SMSId id) 
     throw(StorageException, NoSuchMessageException)
 {
     __require__(pool);
@@ -643,7 +640,7 @@ void StoreManager::changeSmsStateToExpired(SMSId id, uint8_t failureCause)
         try 
         {
             connection = pool->getConnection();
-            doChangeSmsStateToExpired(connection, id, failureCause);
+            doChangeSmsStateToExpired(connection, id);
             archiver->incrementFinalizedCount();
             pool->freeConnection(connection);
             break;

@@ -55,8 +55,7 @@ namespace smsc { namespace store
             const Descriptor& dst, uint8_t failureCause) 
                 throw(StorageException, NoSuchMessageException) = 0; 
         
-        virtual void changeSmsStateToExpired(SMSId id, 
-            uint8_t failureCause) 
+        virtual void changeSmsStateToExpired(SMSId id) 
                 throw(StorageException, NoSuchMessageException) = 0; 
     
         virtual void changeSmsStateToDeleted(SMSId id) 

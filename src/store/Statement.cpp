@@ -205,19 +205,18 @@ bool NeedRejectStatement::needReject()
 
 /* ----------------------- NeedOverwriteStatement ---------------------- */
 const char* NeedOverwriteStatement::sql = (const char*)
-"SELECT NVL(COUNT(*), 0) FROM SMS_MSG WHERE ST=:ENROUTE\
+"SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE\
  AND SVC_TYPE=:SVC_TYPE\
  AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL\
  AND DA_TON=:OA_TON AND DA_NPI=:DA_NPI AND DA_VAL=:DA_VAL";
-
 NeedOverwriteStatement::NeedOverwriteStatement(Connection* connection, 
                                                bool assign)
     throw(StorageException)
-        : Statement(connection, NeedOverwriteStatement::sql, assign)
+        : IdStatement(connection, NeedOverwriteStatement::sql, assign)
 {
     bind(1 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
-    define(1 , SQLT_UIN, (dvoid *) &(count), (sb4) sizeof(count));
+    //define(1 , SQLT_UIN, (dvoid *) &(count), (sb4) sizeof(count));
 }
 
 void NeedOverwriteStatement::bindEServiceType(dvoid* type, sb4 size)
@@ -242,7 +241,34 @@ void NeedOverwriteStatement::bindDestinationAddress(Address& da)
 
 bool NeedOverwriteStatement::needOverwrite()
 {
-    return ((count) ? true:false);
+    return ((indId) ? true:false);
+}
+
+/* ------------------------- OverwriteStatement ---------------------- */
+const char* OverwriteStatement::sql = (const char*)
+"UPDATE SMS_MSG SET MR:=MR,\
+ SRC_MSC=:SRC_MSC, SRC_IMSI=:SRC_IMSI, SRC_SME_N=:SRC_SME_N,\
+ DST_MSC=NULL, DST_IMSI=NULL, DST_SME_N=NULL,\
+ WAIT_TIME=:WAIT_TIME, VALID_TIME=:VALID_TIME,\
+ SUBMIT_TIME=:SUBMIT_TIME, ATTEMPTS=0, LAST_RESULT=0,\
+ LAST_TRY_TIME=NULL, NEXT_TRY_TIME=NULL,\
+ DR=:DR, ARC=:ARC, PRI=:PRI, PID=:PID,\
+ UDHI=:UDHI, DCS=:DCS, UDL=:UDL, UD=:UD\
+ WHERE ID=:ID";
+OverwriteStatement::OverwriteStatement(Connection* connection, bool assign)
+    throw(StorageException)
+        : IdStatement(connection, OverwriteStatement::sql, assign)
+{
+    bind(2 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
+}
+void OverwriteStatement::bindId(SMSId id)
+    throw(StorageException)
+{
+}
+void OverwriteStatement::bindSms(SMS& sms)
+    throw(StorageException)
+{
 }
 
 /* --------------------------- StoreStatement ----------------------- */
@@ -684,8 +710,7 @@ void ToUndeliverableStatement::bindDestinationDescriptor(Descriptor& dst)
 }
 
 const char* ToExpiredStatement::sql = (const char*)
-"UPDATE SMS_MSG SET\
- NEXT_TRY_TIME=NULL, LAST_RESULT=:FCS, ST=:EXPIRED\
+"UPDATE SMS_MSG SET NEXT_TRY_TIME=NULL, ST=:EXPIRED\
  WHERE ID=:ID AND ST=:ENROUTE";
 ToExpiredStatement::ToExpiredStatement(Connection* connection, bool assign)
         throw(StorageException)
@@ -704,11 +729,6 @@ void ToExpiredStatement::bindId(SMSId id)
     setSMSId(id);
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
          SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
-}
-void ToExpiredStatement::bindFailureCause(dvoid* cause, sb4 size)
-    throw(StorageException)
-{
-    bind(1, SQLT_UIN, cause, size);
 }
 
 const char* ToDeletedStatement::sql = (const char*)

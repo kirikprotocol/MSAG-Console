@@ -85,7 +85,7 @@ namespace smsc { namespace store
             SMSId id, const Descriptor& dst, uint8_t failureCause)
                 throw(StorageException, NoSuchMessageException);
         void doChangeSmsStateToExpired(Connection* connection, 
-            SMSId id, uint8_t failureCause)
+            SMSId id)
                 throw(StorageException, NoSuchMessageException);
         void doChangeSmsStateToDeleted(Connection* connection,
             SMSId id) 
@@ -172,8 +172,7 @@ namespace smsc { namespace store
         virtual void changeSmsStateToUndeliverable(SMSId id,
             const Descriptor& dst, uint8_t failureCause) 
                 throw(StorageException, NoSuchMessageException); 
-        virtual void changeSmsStateToExpired(SMSId id, 
-            uint8_t failureCause) 
+        virtual void changeSmsStateToExpired(SMSId id) 
                 throw(StorageException, NoSuchMessageException); 
         virtual void changeSmsStateToDeleted(SMSId id) 
                 throw(StorageException, NoSuchMessageException); 

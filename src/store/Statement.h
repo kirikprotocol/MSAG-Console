@@ -141,12 +141,12 @@ namespace smsc { namespace store
         bool needReject();
     };
     
-    class NeedOverwriteStatement : public Statement
+    class NeedOverwriteStatement : public IdStatement
     {
     static const char* sql;
     protected:
 
-        ub4 count;
+        sb2 indId;
     
     public:
         
@@ -161,13 +161,34 @@ namespace smsc { namespace store
         void bindDestinationAddress(Address& da)
             throw(StorageException);
         
+        void getId(SMSId& id)
+            throw(StorageException) {/*Implement it later*/};
+
         bool needOverwrite();
     };
     
-    class OverwriteStatement : public Statement
+    class OverwriteStatement : public IdStatement
     {
-        OverwriteStatement(Connection* connection, bool assign=true) 
-            : Statement(connection, 0) {};
+    static const char* sql;
+    protected:
+        
+        OCIDate waitTime;
+        OCIDate validTime;
+        OCIDate submitTime;
+
+        char    bHeaderIndicator;
+        char    bNeedArchivate;
+    
+    public:
+
+        OverwriteStatement(Connection* connection, bool assign=true)
+            throw(StorageException);
+        virtual ~OverwriteStatement() {};
+        
+        void bindId(SMSId id)
+            throw(StorageException);
+        void bindSms(SMS& sms)
+            throw(StorageException);
     };
 
     class RetriveStatement : public IdStatement
@@ -361,8 +382,6 @@ namespace smsc { namespace store
             throw(StorageException);
         virtual ~ToExpiredStatement() {};
 
-        void bindFailureCause(dvoid* cause, sb4 size)
-            throw(StorageException);
         void bindId(SMSId id)
             throw(StorageException);
 
