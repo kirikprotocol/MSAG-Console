@@ -124,6 +124,7 @@ SmeProxy* SmeManager::getSmeProxy(SmeIndex index) const
 __synchronized__
   SmeRecord* record = (SmeRecord*)(records.at(index));
   if ( record->deleted ) throw runtime_error("proxy deleted");
+	if ( !record->proxy ) return 0;
   return (SmeProxy*)(record);
 }
 
