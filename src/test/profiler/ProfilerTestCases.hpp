@@ -57,7 +57,7 @@ public:
 	/**
 	 * Работа с менеджером профилей через deliver_sm pdu.
 	 */
-	void putCommand(const Address& addr, int num);
+	void putCommand(const Address& addr, uint8_t dataCoding, int num);
 
 	/**
 	 * Обработка команд поступающих от менеджера профилей.
