@@ -42,10 +42,10 @@ Category& MessageStoreTestCases::getLog()
 
 #define __set_str__(field, len) \
 	auto_ptr<char> tmp_##field = rand_char(len); \
-	sms.set##field(tmp_##field.get()); \
+	p.set##field(tmp_##field.get()); \
 	if (check) { \
 		char res_##field[len + 1]; \
-		sms.get##field(res_##field); \
+		p.get##field(res_##field); \
 		if (strcmp(res_##field, tmp_##field.get())) { \
 			__trace2__("%s: set = %s, get = %s", #field, tmp_##field.get(), res_##field); \
 		} \
@@ -54,20 +54,30 @@ Category& MessageStoreTestCases::getLog()
 #define __set_int_body_tag__(tagName, value) \
 	uint32_t tmp_##tagName = value; \
 	__trace__("set_int_body_tag: " #tagName); \
-	sms.getMessageBody().setIntProperty(Tag::tagName, tmp_##tagName); \
+	p.getMessageBody().setIntProperty(Tag::tagName, tmp_##tagName); \
 	if (check) { \
-		if (sms.getMessageBody().getIntProperty(Tag::tagName) != tmp_##tagName) { \
-			__trace2__("set_int_body_tag: tag = " #tagName ", set = %d, get = %d", tmp_##tagName, sms.getMessageBody().getIntProperty(Tag::tagName)); \
+		if (p.getMessageBody().getIntProperty(Tag::tagName) != tmp_##tagName) { \
+			__trace2__("set_int_body_tag: tag = " #tagName ", set = %d, get = %d", tmp_##tagName, p.getMessageBody().getIntProperty(Tag::tagName)); \
 		} \
 	}
 
 #define __set_str_body_tag__(tagName, len) \
 	auto_ptr<char> tmp_##tagName = rand_char(len); \
 	__trace__("set_str_body_tag: " #tagName); \
-	sms.getMessageBody().setStrProperty(Tag::tagName, tmp_##tagName.get()); \
+	p.getMessageBody().setStrProperty(Tag::tagName, tmp_##tagName.get()); \
 	if (check) { \
-		if (strcmp(sms.getMessageBody().getStrProperty(Tag::tagName).c_str(), tmp_##tagName.get())) { \
-			__trace2__("set_str_body_tag: tag = " #tagName ", set = %s, get = %s", tmp_##tagName.get(), sms.getMessageBody().getStrProperty(Tag::tagName).c_str()); \
+		if (p.getMessageBody().getStrProperty(Tag::tagName) == tmp_##tagName.get()) { \
+			__trace2__("set_str_body_tag: tag = " #tagName ", set = %s, get = %s", tmp_##tagName.get(), p.getMessageBody().getStrProperty(Tag::tagName).c_str()); \
+		} \
+	}
+
+#define __set_str_body_tag2__(tagName, len, value) \
+	string tmp_##tagName(value, len); \
+	__trace__("set_str_body_tag: " #tagName); \
+	p.getMessageBody().setStrProperty(Tag::tagName, tmp_##tagName); \
+	if (check) { \
+		if (p.getMessageBody().getStrProperty(Tag::tagName) == tmp_##tagName) { \
+			__trace2__("set_str_body_tag: tag = " #tagName ", set = %s, get = %s", tmp_##tagName.c_str(), p.getMessageBody().getStrProperty(Tag::tagName).c_str()); \
 		} \
 	}
 
@@ -80,6 +90,7 @@ void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 		try
 		{
 			SMS sms;
+			SMS& p = sms;
 			SmsUtil::setupRandomCorrectSms(&sms, mask, check);
 			switch(s.value())
 			{
@@ -444,6 +455,7 @@ void MessageStoreTestCases::storeAssertSms(int num)
 	TCSelector s(num, 14);
 	__decl_tc__;
 	SMS sms;
+	SMS& p = sms;
 	for (; s.check(); s++)
 	{
 		try
@@ -785,29 +797,32 @@ void MessageStoreTestCases::changeFinalSmsStateToAny(const SMSId id, int num)
 	}
 }
 
+#define __prepare_for_replace_sms__ \
+	int len = rand1(MAX_SM_LENGTH); \
+	uint8_t buf[MAX_SM_LENGTH]; \
+	uint8_t* sm = buf; \
+	rand_uint8_t(len, sm); \
+	uint8_t deliveryReport = rand0(255); \
+	time_t validTime = time(NULL) + 100; \
+	time_t nextTime = time(NULL) + 50;
+
 void MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int num)
 {
 	TCSelector s(num, 6);
 	__decl_tc__;
-	__tc__("replaceCorrectSms"); //to del
-	/*
 	for (; s.check(); s++)
 	{
 		try
 		{
-			Body body;
-			SmsUtil::setupRandomCorrectBody(&body);
-			uint8_t deliveryReport = rand0(255);
-			time_t validTime = time(NULL) + 100;
-			time_t waitTime = time(NULL) + 50;
+			__prepare_for_replace_sms__;
 			switch(s.value())
 			{
 				case 1: //заменить все возможные поля
 					__tc__("replaceCorrectSms.replaceAll");
 					break;
 				case 2: //оставить schedule_delivery_time без изменений
-					__tc__("replaceCorrectSms.waitTimeUnchanged");
-					waitTime = 0;
+					__tc__("replaceCorrectSms.nextTimeUnchanged");
+					nextTime = 0;
 					break;
 				case 3: //оставить validity_period без изменений
 					__tc__("replaceCorrectSms.validTimeUnchanged");
@@ -815,40 +830,36 @@ void MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int num)
 					break;
 				case 4: //пустое тело сообщения
 					__tc__("replaceCorrectSms.smMarginal");
-					body.setData(0, NULL);
+					len = 0;
 					break;
 				case 5: //пустое тело сообщения
-					{
-						__tc__("replaceCorrectSms.smMarginal");
-						uint8_t tmp[] = {0};
-						body.setData(0, tmp);
-					}
+					__tc__("replaceCorrectSms.smMarginal");
+					len = 0;
+					sm = NULL;
 					break;
 				case 6: //тело сообщения максимальной длины
-					{
-						__tc__("replaceCorrectSms.smMarginal");
-						auto_ptr<uint8_t> data = rand_uint8_t(MAX_SM_LENGTH);
-						body.setData(MAX_SM_LENGTH, data.get());
-					}
+					__tc__("replaceCorrectSms.smMarginal");
+					len = MAX_SM_LENGTH;
+					rand_uint8_t(len, sm);
 					break;
 				default:
 					__unreachable__("Invalid num");
 			}
 			msgStore->replaceSms(id, sms->getOriginatingAddress(),
-                body, deliveryReport, validTime, waitTime);
+                sm, len, deliveryReport, validTime, nextTime);
 			__tc_ok__;
 			//данные новые, схема и наличие хедера прежние
-			uint8_t data[MAX_SHORT_MESSAGE_LENGTH];
-			uint8_t len = body.getData(data);
-			sms->getMessageBody().setData(len, data);
+			SMS& p = *sms;
+			__set_str_body_tag2__(SMPP_SHORT_MESSAGE, len, (char*) sm);
+			__set_int_body_tag__(SMPP_SM_LENGTH, len);
 			sms->setDeliveryReport(deliveryReport);
-			if (validTime != 0)
+			if (validTime)
 			{
 				sms->setValidTime(validTime);
 			}
-			if (waitTime != 0)
+			if (nextTime)
 			{
-				sms->setWaitTime(waitTime);
+				sms->setNextTime(nextTime);
 			}
 		}
 		catch(...)
@@ -857,8 +868,6 @@ void MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int num)
 			error();
 		}
 	}
-	*/
-	__tc_fail__(100);
 }
 
 void MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
@@ -870,18 +879,12 @@ void MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 
 	TCSelector s(num, 3);
 	__decl_tc__;
-	__tc__("replaceIncorrectSms"); //to del
-	/*
 	for (; s.check(); s++)
 	{
 		try
 		{
 			Address addr(sms.getOriginatingAddress());
-			Body body;
-			SmsUtil::setupRandomCorrectBody(&body);
-			uint8_t deliveryReport = rand0(255);
-			time_t validTime = time(NULL) + 100;
-			time_t waitTime = time(NULL) + 50;
+			__prepare_for_replace_sms__;
 			switch(s.value())
 			{
 				case 1: //отличие только в TypeOfNumber
@@ -895,7 +898,7 @@ void MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 				case 3: //отличие только в Value
 					{
 						__tc__("replaceIncorrectSms.diffValue");
-						int len = rand1(MAX_ADDRESS_VALUE_LENGTH);
+						int len = rand2(10, MAX_ADDRESS_VALUE_LENGTH);
 						auto_ptr<char> val = rand_char(len);
 						addr.setValue(len, val.get());
 					}
@@ -903,7 +906,7 @@ void MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 				default:
 					__unreachable__("Invalid num");
 			}
-			msgStore->replaceSms(id, addr, body, deliveryReport, validTime, waitTime);
+			msgStore->replaceSms(id, addr, sm, len, deliveryReport, validTime, nextTime);
 			__tc_fail__(s.value());
 		}
 		catch(NoSuchMessageException&)
@@ -916,24 +919,17 @@ void MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 			error();
 		}
 	}
-	*/
-	__tc_fail__(100);
 }
 
 void MessageStoreTestCases::replaceFinalSms(const SMSId id, const SMS& sms)
 {
 	__decl_tc__;
 	__tc__("replaceIncorrectSms.replaceFinalSms");
-	/*
 	try
 	{
-		Body body;
-		SmsUtil::setupRandomCorrectBody(&body);
-		uint8_t deliveryReport = rand0(255);
-		time_t validTime = time(NULL) + 100;
-		time_t waitTime = time(NULL) + 50;
-		msgStore->replaceSms(id, sms.getOriginatingAddress(), body,
-			deliveryReport, validTime, waitTime);
+		__prepare_for_replace_sms__;
+		msgStore->replaceSms(id, sms.getOriginatingAddress(), sm, len,
+			deliveryReport, validTime, nextTime);
 		__tc_fail__(101);
 	}
 	catch(NoSuchMessageException&)
@@ -945,8 +941,6 @@ void MessageStoreTestCases::replaceFinalSms(const SMSId id, const SMS& sms)
 		__tc_fail__(100);
 		error();
 	}
-	*/
-	__tc_fail__(100);
 }
 
 void MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
