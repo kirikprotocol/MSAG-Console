@@ -1,3 +1,4 @@
+<%@page pageEncoding="windows-1251"%><%@page contentType="text/html; charset=windows-1251"%>
 <%@page import="java.util.*,
                 java.net.*,
                 ru.novosoft.smsc.jsp.dbSme.bl.*,
