@@ -18,12 +18,13 @@ import java.net.URLEncoder;
  */
 public class Template extends MCISmeBean
 {
-  private int     templateId   = 0;
-  private String  templateName = "";
-  private String  message      = "";
-  private String  multiRow     = "";
-  private String  singleRow    = "";
-  private boolean group        = false;
+  private int     templateId    = 0;
+  private String  templateName  = "";
+  private String  message       = "";
+  private String  multiRow      = "";
+  private String  singleRow     = "";
+  private String  unknownCaller = "";
+  private boolean group         = false;
 
   private boolean initialized     = false;
   private boolean informTemplate  = false;
@@ -140,12 +141,15 @@ public class Template extends MCISmeBean
     if (informTemplate) {
       config.setBool(prefix + ".group", group);
       config.setString(prefix + ".singleRow", singleRow);
+      config.setString(prefix + ".unknownCaller", unknownCaller);
       if (group) config.setString(prefix + ".multiRow", multiRow);
     }
   }
   private int loadFromConfig(Config config, String name)
   {
     final String prefix = getTemplateSectionPrefix()+'.'+StringEncoderDecoder.encodeDot(name);
+    try { unknownCaller = config.getString(prefix + ".unknownCaller"); }
+    catch(Exception e) { unknownCaller = "<unknown>"; }
     try
     {
       templateId = config.getInt(prefix + ".id");
@@ -210,6 +214,13 @@ public class Template extends MCISmeBean
   }
   public void setSingleRow(String singleRow) {
     this.singleRow = singleRow;
+  }
+
+  public String getUnknownCaller() {
+    return unknownCaller;
+  }
+  public void setUnknownCaller(String unknownCaller) {
+    this.unknownCaller = unknownCaller;
   }
 
   public boolean isGroup() {

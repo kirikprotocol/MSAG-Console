@@ -56,6 +56,10 @@ function checkMultiAndGroupping(show)
 </tr>
 <%if (informTemplate) { %>
 <tr class=row<%=(rowN++)&1%>>
+  <th>Unknown caller label</th>
+  <td><input class=txt name=unknownCaller value="<%=StringEncoderDecoder.encode(bean.getUnknownCaller())%>"></td>
+</tr>
+<tr class=row<%=(rowN++)&1%>>
   <th>Group callers</th>
   <td><input class=check type=checkbox name=group value=true <%=bean.isGroup() ? "checked" : ""%>
              onClick="checkMultiAndGroupping(this.checked);"></td>

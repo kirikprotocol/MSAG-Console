@@ -101,47 +101,51 @@
 	  <section name="Inform">
     	    <param name="default" type="int">3</param>
 
-            <section name="Template 1 (Detailed)">
+            <section name="Detailed">
 	      <param name="group" type="bool">false</param>
 	      <param name="id" type="int">1</param>
               <param name="message" type="string">Вам ($$string arg="abonent"$$) звонили $$int32 arg="total"$$раз:$$string arg="rows"$$ МТС</param>
               <param name="singleRow" type="string"> $$string arg="caller"$$ в $$date arg="date" pattern="HH:mm dd MMMM"$$;</param>
+	      <param name="unknownCaller" type="string">unknown</param>
             </section>
-    	    <section name="Template 2 (Complex)">
+    	    <section name="Complex">
     	      <param name="group" type="bool">true</param>
               <param name="id" type="int">2</param>
               <param name="message" type="string">Вам звонили:$$string arg="rows"$$ МТС</param>
               <param name="multiRow" type="string"> $$string arg="caller"$$ - $$int32 arg="count"$$ вызовов, последний $$date arg="date" pattern="HH:mm dd.MM.yy"$$;</param>
               <param name="singleRow" type="string"> $$string arg="caller"$$ в $$date arg="date" pattern="HH:mm dd.MM.yy"$$;</param>
+	      <param name="unknownCaller" type="string">unknown</param>
             </section>
-            <section name="Template 3 (Custom)">
+            <section name="Custom">
               <param name="group" type="bool">true</param>
               <param name="id" type="int">3</param>
               <param name="message" type="string">Вам звонили:$$string arg="rows"$$ МТС</param>
               <param name="multiRow" type="string"> $$string arg="caller"$$ вызовов $$int32 arg="count"$$, последний вызов $$date arg="date" pattern="HH:mm dd/MM/yy"$$;</param>
               <param name="singleRow" type="string"> $$string arg="caller"$$ вызовов $$int32 arg="count"$$, последний вызов $$date arg="date" pattern="HH:mm dd/MM/yy"$$;</param>
+	      <param name="unknownCaller" type="string">unknown</param>
             </section>
-            <section name="Template 4 (English)">
+            <section name="English">
               <param name="group" type="bool">true</param>
               <param name="id" type="int">4</param>
               <param name="message" type="string">Missed calls ($$int32 arg="total"$$):$$string arg="rows"$$ MTS</param>
               <param name="multiRow" type="string"> $$string arg="caller"$$ ($$int32 arg="count"$$), last at $$date arg="date" pattern="HH:mm dd MMMM"$$;</param>
               <param name="singleRow" type="string"> $$string arg="caller"$$ at $$date arg="date" pattern="HH:mm dd MMMM"$$;</param>
+	      <param name="unknownCaller" type="string">unknown</param>
             </section>
           </section>
 
           <section name="Notify">
             <param name="default" type="int">2</param>
 
-            <section name="Notification 1 (Detailed)">
+            <section name="Detailed">
               <param name="id" type="int">1</param>
               <param name="message" type="string">Добрый день $$string arg="caller"$$! Авонент $$string arg="abonent"$$ доступен в сети. МТС</param>
             </section>
-            <section name="Notification 2 (Custom)">
+            <section name="Custom">
               <param name="id" type="int">2</param>
               <param name="message" type="string">Абонент $$string arg="abonent"$$ доступен. МТС</param>
             </section>
-            <section name="Notification 3 (English)">
+            <section name="English">
               <param name="id" type="int">3</param>
               <param name="message" type="string">Abonent $$string arg="abonent"$$ is online. MTS</param>
             </section>
