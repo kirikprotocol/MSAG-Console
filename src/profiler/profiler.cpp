@@ -285,7 +285,7 @@ int Profiler::Execute()
     len=strlen(body);*/
     len=getSmsText(sms,body);
 
-    __trace2__("Profiler: received %s",body);
+    __trace2__("Profiler: received %s from .%d.%d.%.20s",body,addr.type,addr.plan,addr.value);
 
     int i;
     for(i=0;i<len;i++)body[i]=toupper(body[i]);
