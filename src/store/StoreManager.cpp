@@ -83,8 +83,8 @@ void StoreManager::startup(Manager& config, SchedTimer* sched)
     throw(ConfigException, ConnectionFailedException)
 {
     MutexGuard guard(mutex);
-	if (!log)
-		log = Logger::getInstance("smsc.store.StoreManager");
+  if (!log)
+    log = Logger::getInstance("smsc.store.StoreManager");
 
     if (!instance)
     {
@@ -163,7 +163,7 @@ RemoteStore::RemoteStore(Manager& config, SchedTimer* sched)
     throw(ConfigException, StorageException)
         : Thread(), bStarted(false), bNeedExit(false), billingFile(0), billingInterval(0),
             pool(0), scheduleTimer(sched), maxTriesCount(SMSC_MAX_TRIES_TO_PROCESS_OPERATION),
-			log(Logger::getInstance("smsc.store.RemoteStore"))
+      log(Logger::getInstance("smsc.store.RemoteStore"))
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
     loadMaxTriesCount(config);
@@ -1954,7 +1954,7 @@ CachedStore::CachedStore(Manager& config, SchedTimer* sched)
     throw(ConfigException, StorageException)
         : RemoteStore(config, sched), cache(0),
             maxCacheCapacity(SMSC_MAX_SMS_CACHE_CAPACITY),
-			log(Logger::getInstance("smsc.store.CachedStore"))
+      log(Logger::getInstance("smsc.store.CachedStore"))
 
 {
     loadMaxCacheCapacity(config);
@@ -2137,6 +2137,7 @@ void CachedStore::changeSmsStateToDeleted(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
     smsc_log_debug( log, "Changing to DELETED for smsId = %lld.", id);
+    RemoteStore::changeSmsStateToDeleted(id);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
 }

@@ -89,6 +89,7 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( sms->hasIntProperty(Tag::SMPP_MSG_STATE) )
   {
+    /*
     switch(sms->getIntProperty(Tag::SMPP_MSG_STATE))
     {
       case ENROUTE: optional.set_messageState(1);break;
@@ -97,6 +98,8 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
       case DELETED:optional.set_messageState(4);break;
       case UNDELIVERABLE:optional.set_messageState(5);break;
     };
+    */
+    optional.set_messageState(sms->getIntProperty(Tag::SMPP_MSG_STATE));
   }
 }
 
@@ -278,15 +281,22 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( optional.has_messageState() )
   {
+    /*
     switch(optional.get_messageState())
     {
-      case 0:sms->setIntProperty(Tag::SMPP_MSG_STATE,ENROUTE);break;
-      case 1:sms->setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED);break;
-      case 2:sms->setIntProperty(Tag::SMPP_MSG_STATE,EXPIRED);break;
-      case 3:sms->setIntProperty(Tag::SMPP_MSG_STATE,DELETED);break;
-      case 4:sms->setIntProperty(Tag::SMPP_MSG_STATE,UNDELIVERABLE);break;
-      default: __warning__("UNKNOWN MESSAGE STATE");break;
-    }
+      case 1:sms->setIntProperty(Tag::SMPP_MSG_STATE,ENROUTE);break;
+      case 2:sms->setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED);break;
+      case 3:sms->setIntProperty(Tag::SMPP_MSG_STATE,EXPIRED);break;
+      case 4:sms->setIntProperty(Tag::SMPP_MSG_STATE,DELETED);break;
+      case 5:sms->setIntProperty(Tag::SMPP_MSG_STATE,UNDELIVERABLE);break;
+      case 6://accepted
+      case 7://unknown
+      case 8://rejected
+        //sms->setIntProperty(Tag::SMPP_MSG_STATE,???);
+        break;
+      default: __warning__("UNKNOWN OR UNSUPPORTED MESSAGE STATE");break;
+    }*/
+    sms->setIntProperty(Tag::SMPP_MSG_STATE,optional.get_messageState());
   }
 }
 

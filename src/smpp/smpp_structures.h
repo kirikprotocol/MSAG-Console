@@ -283,6 +283,17 @@ namespace PyloadTypeValue{ /* SMPP v3.4 (5.3.2.10) */
   static const uint8_t WCMP = 1;
 }
 
+namespace SmppMessageState{
+  static const uint8_t ENROUTE      =1;
+  static const uint8_t DELIVERED    =2;
+  static const uint8_t EXPIRED      =3;
+  static const uint8_t DELETED      =4;
+  static const uint8_t UNDELIVERABLE=5;
+  static const uint8_t ACCEPTED     =6;
+  static const uint8_t UNKNOWN      =7;
+  static const uint8_t REJECTED     =8;
+};
+
 namespace MsValidityValue{ /* SMPP v3.4 (5.3.2.27) */
   static const uint8_t STORE_INDEFINITELY          = 0;
   static const uint8_t POWER_DOWN                  = 0x1;
