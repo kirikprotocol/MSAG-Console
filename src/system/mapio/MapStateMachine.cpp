@@ -53,6 +53,8 @@ struct MAPDIALOG_ERROR : public runtime_error
   unsigned code;
   MAPDIALOG_ERROR(unsigned code,const string& s) :
     runtime_error(s),code(code){}
+  MAPDIALOG_ERROR(const string& s) :
+    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,0)){}
 };
 struct MAPDIALOG_BAD_STATE : public MAPDIALOG_ERROR
 {
@@ -579,7 +581,7 @@ USHORT_T Et96MapOpenConf (
           if ( dialog->version != 1 ){
             --dialog->version;
             dialogid_map = RemapDialog(dialog.get());
-            switch ( dialog_state ) {
+            switch ( dialog->state ) {
             case MAPST_RInfoFallBack: 
               dialog->state = MAPST_SendingRInfo;
               SendRInfo(dialog.get());
