@@ -93,6 +93,8 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  __trace2__("Replace if present for message %lld=%d",t.msgId,sms->getIntProperty("SMPP_REPLACE_IF_PRESENT_FLAG"));
+
   try{
     if(sms->getNextTime()<time(NULL))
     {
@@ -188,6 +190,15 @@ StateType StateMachine::forward(Tuple& t)
   }catch(...)
   {
     return UNKNOWN_STATE;
+  }
+  if(sms.getValidTime()<time(NULL))
+  {
+    try{
+      store->changeSmsStateToExpired(t.msgId);
+    }catch(...)
+    {
+    }
+    return EXPIRED_STATE;
   }
   if(sms.getState()!=ENROUTE_STATE)
   {
