@@ -38,7 +38,7 @@
 <tr class=row<%=rowN++&1%>>
   <th>Task ID</th>
   <td><%if (bean.isSmeRunning()) {
-    %><input class=txt name=id value="<%=StringEncoderDecoder.encode(bean.getId())%>"><%
+    %><input class=txt name=id value="<%=StringEncoderDecoder.encode(bean.getId())%>" maxlength="10" validation="id" onkeyup="resetValidation(this)"><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getId())%><%
   }%>
@@ -158,9 +158,9 @@
 <tr class=row<%=rowN++&1%>>
   <th><label for=retryOnFail>Retry on fail (time)</label></th>
   <td><%if (bean.isSmeRunning()) {%>
-    <input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="opForm.all.retryTime.disabled = !this.checked;">
-    <input class=txt name=retryTime id=retryTime value="<%=StringEncoderDecoder.encode(bean.getRetryTime())%>">
-    <script>opForm.all.retryTime.disabled = !opForm.all.retryOnFail.checked;</script><%
+    <input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="opForm.all.retryTime.disabled = opForm.all.retryTimeButton.disabled = !this.checked;">
+    <input class=timeField id=retryTime name=retryTime value="<%=StringEncoderDecoder.encode(bean.getRetryTime())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button id=retryTimeButton onclick="return showTime(retryTime, false, true);">...</button>
+    <script>opForm.all.retryTime.disabled = opForm.all.retryTimeButton.disabled = !opForm.all.retryOnFail.checked;</script><%
   } else {
     if (bean.isRetryOnFail() && bean.getRetryTime() != null && bean.getRetryTime().trim().length() > 0) {
       %>enabled, retry on <%=StringEncoderDecoder.encode(bean.getRetryTime())%> secs<%
@@ -174,7 +174,7 @@
   <th><label for=replaceMessage>Replace message (service type)</label></th>
   <td><%if (bean.isSmeRunning()) {%>
     <input class=check type=checkbox id=replaceMessage name=replaceMessage value=true <%=bean.isReplaceMessage() ? "checked" : ""%> onClick="opForm.all.svcType.disabled = !this.checked;">
-    <input class=txt id=svcType name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>">
+    <input class=txt id=svcType name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>" maxlength=5 validation="id" onkeyup="resetValidation(this)">
     <script>opForm.all.svcType.disabled = !opForm.all.replaceMessage.checked;</script><%
   } else {
     if (bean.isReplaceMessage() && bean.getSvcType() != null && bean.getSvcType().trim().length() > 0) {

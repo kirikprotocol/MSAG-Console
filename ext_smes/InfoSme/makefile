@@ -41,7 +41,7 @@ compile:
 	@cp -f $(DB_OCI_LIB) $(SME_BUILDDIR)/lib/libdb_oci.so
 	@cp -f $(DB_OCI_EXC) $(SME_BUILDDIR)/lib/libdb_exc.so
 	@cp -f $(LOGGER_LIB) $(SME_BUILDDIR)/liblogger.so
-	@cp -f ../../src/infosme/config.xml $(SME_BUILDDIR)/conf/config.xml
+	@cp -f ../../config/infosme/config.xml $(SME_BUILDDIR)/conf/config.xml
 	@cp -f ../../config/configuration.dtd $(SME_BUILDDIR)/conf/configuration.dtd
 	@cp -f ../../config/command.dtd $(SME_BUILDDIR)/conf/command.dtd
 	@cp -f ../../config/response.dtd $(SME_BUILDDIR)/conf/response.dtd

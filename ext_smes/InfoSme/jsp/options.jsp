@@ -31,7 +31,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Service type</th>
-  <td><input class=txt name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>"></td>
+  <td><input class=txt name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>" maxlength="5"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Protocol ID</th>
@@ -55,7 +55,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Tasks task tables prefix</th>
-  <td><input class=txt name=tasksTaskTablesPrefix value="<%=StringEncoderDecoder.encode(bean.getTasksTaskTablesPrefix())%>"></td>
+  <td><input class=txt name=tasksTaskTablesPrefix value="<%=StringEncoderDecoder.encode(bean.getTasksTaskTablesPrefix())%>" maxlength="10"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Tasks switch timeout</th>

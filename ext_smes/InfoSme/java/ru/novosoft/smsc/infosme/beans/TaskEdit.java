@@ -41,6 +41,12 @@ public class TaskEdit extends InfoSmeBean
           logger.error(e);
           return error(e.getMessage());
         }
+      } else {
+        task.setPriority(1);
+        task.setMessagesCacheSize(100);
+        task.setMessagesCacheSleep(1);
+        task.setUncommitedInGeneration(1);
+        task.setUncommitedInProcess(1);
       }
     }
     if (oldTask == null) oldTask = "";
@@ -65,13 +71,16 @@ public class TaskEdit extends InfoSmeBean
   protected int done()
   {
     if (getId() == null || getId().length() == 0)
-      return error("Task section name not specified");
+      return error("Task id not specified");
     if (!create) {
       if (!oldTask.equals(getId())) {
         if (task.isContainsInConfig(getConfig()))
           return error("Task already exists", getId());
         Task.removeTaskFromConfig(getConfig(), oldTask);
       }
+    } else {
+      if (task.isContainsInConfig(getConfig()))
+          return error("Task already exists", getId());
     }
     task.storeToConfig(getConfig());
     getInfoSmeContext().setChangedTasks(true);
