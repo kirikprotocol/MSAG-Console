@@ -1092,6 +1092,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
     sms.setConcatSeqNum(sms.getConcatSeqNum()+1);
     store->changeSmsConcatSequenceNumber(t.msgId,sms.getConcatSeqNum());
+    __trace2__("CONCAT: concatseqnum=%d for msdgId=%lld",sms.getConcatSeqNum(),t.msgId);
     if(sms.getConcatSeqNum()<ci->num)
     {
       ////
