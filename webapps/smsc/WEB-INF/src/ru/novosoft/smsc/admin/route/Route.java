@@ -194,7 +194,7 @@ public class Route
 	public PrintWriter store(PrintWriter out)
 	{
 		out.println("  <route id=\"" + StringEncoderDecoder.encode(getName()) + "\" billing=\"" + isBilling()
-						+ "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority() + "\">");
+						+ "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority() + "\" serviceId=\"" + getServiceId() + "\">");
 		getSources().store(out);
 		getDestinations().store(out);
 		out.println("  </route>");
