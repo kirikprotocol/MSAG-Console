@@ -1,14 +1,14 @@
 #include "RouteUtil.hpp"
 #include "router/route_types.h"
-#include "test/sms/SmsUtil.hpp"
 #include "test/util/Util.hpp"
+#include "test/sms/SmsUtil.hpp"
 
 namespace smsc {
 namespace test {
 namespace core {
 
-using smsc::sms::AddressValue;
 using smsc::test::sms::SmsUtil;
+using smsc::test::sms::operator<<;
 using namespace smsc::router;
 using namespace smsc::test::util;
 
@@ -66,15 +66,11 @@ vector<int> RouteUtil::compareRoutes(const RouteInfo& route1,
 
 ostream& operator<< (ostream& os, const RouteInfo& route)
 {
-	int len;
-	AddressValue tmp;
 	os << "routeId = " << route.routeId;
 	os << ", smeSystemId = " << route.smeSystemId << "(" <<
 		route.smeSystemId.length() << ")";
-	len = route.source.getValue(tmp);
-	os << ", source = " << tmp << "(" << len << ")";
-	len = route.dest.getValue(tmp);
-	os << ", dest = " << tmp << "(" << len << ")";
+	os << ", source = " << route.source;
+	os << ", dest = " << route.dest;
 	os << ", priority = " << route.priority;
 	os << ", billing = " << (route.billing ? "true" : "false");
 	os << ", paid = " << (route.paid ? "true" : "false");
@@ -84,16 +80,19 @@ ostream& operator<< (ostream& os, const RouteInfo& route)
 
 ostream& operator<< (ostream& os, const TestRouteData& data)
 {
-	int len;
-	AddressValue tmp;
 	os << "match = " << (data.match ? "true" : "false");
-	len = data.origAddr.getValue(tmp);
-	os << ", origAddr = " << tmp << "(" << len << ")";
-	len = data.destAddr.getValue(tmp);
-	os << ", destAddr = " << tmp << "(" << len << ")";
+	os << ", origAddr = " << data.origAddr;
+	os << ", destAddr = " << data.destAddr;
 	os << ", origAddrMatch = " << data.origAddrMatch;
 	os << ", destAddrMatch = " << data.destAddrMatch;
-	os << ", proxyId = " << data.proxyId;
+	if (data.proxy)
+	{
+		os << ", proxyId = " << (data.proxy->getUniqueId());
+	}
+	else
+	{
+		os << ", proxy = NULL";
+	}
 	os << ", route = {" << *data.route << "}";
 	return os;
 }
