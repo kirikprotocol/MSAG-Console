@@ -339,6 +339,7 @@ void Scheduler::Init(Smsc* psmsc,smsc::util::config::Manager* cfgman)
 
 int Scheduler::Execute()
 {
+  smsc::logger::Logger* smsLog=smsc::logger::Logger::getInstance("sms.trace");
   mon.Lock();
   try{
     for(int i=0;i<startupCache.Count();i++)
@@ -415,7 +416,7 @@ int Scheduler::Execute()
         }
       }else if(cmd->cmdid==HLRALERT)
       {
-        debug2(log,"HLRALERT for %s",cmd->get_address().toString().c_str());
+        info2(smsLog,"SCALERT:%s",cmd->get_address().toString().c_str());
         Chain* c=GetChain(cmd->get_address());
         if(!c)continue;
         if(c->inProcMap)continue;
