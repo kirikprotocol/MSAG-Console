@@ -27,7 +27,7 @@ import org.apache.log4j.BasicConfigurator;
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 {
-	private Config smscConfig = null;
+	private Config webappConfig = null;
 	private HostsManager hostsManager = null;
 	private UserManager userManager = null;
 	private PerfServer perfServer = null;
@@ -112,26 +112,26 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		{
 			System.out.println("Starting SMSC Administartion Web Apllication **************************************************");
 			initLogger();
-			smscConfig = new Config(new File(configFileName));
-			WebAppFolders.init(smscConfig.getString("system.webapp folder"), smscConfig.getString("system.work folder"), smscConfig.getString("smsc.config folder"));
+			webappConfig = new Config(new File(configFileName));
+			WebAppFolders.init(webappConfig.getString("system.webapp folder"), webappConfig.getString("system.work folder"), webappConfig.getString("smsc.config folder"));
 
 			resourcesManager = new ResourcesManagerImpl();
       loadLocaleMessages();
-			createConnectionPool(smscConfig);
+			createConnectionPool(webappConfig);
 
-			smsc = new Smsc(smscConfig.getString("smsc.host"), smscConfig.getInt("smsc.port"), smscConfig.getString("smsc.config folder"), connectionPool);
+			smsc = new Smsc(webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), webappConfig.getString("smsc.config folder"), connectionPool);
 			smeManager = new SmeManagerImpl(smsc);
 			routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
-      DaemonManager daemonManager = new DaemonManager(smeManager, smscConfig);
+      DaemonManager daemonManager = new DaemonManager(smeManager, webappConfig);
 			ServiceManagerImpl serviceManager = new ServiceManagerImpl();
 			serviceManager.add(smsc);
 			hostsManager = new HostsManager(daemonManager, serviceManager, smeManager, routeSubjectManager);
 
-			File usersConfig = new File(smscConfig.getString("system.users file"));
+			File usersConfig = new File(webappConfig.getString("system.users file"));
 			startConsole();
 			userManager = new UserManager(usersConfig);
       statuses.setRoutesSaved(routeSubjectManager.hasSavedConfiguration());
-			perfServer = new PerfServer(smscConfig);
+			perfServer = new PerfServer(webappConfig);
 			perfServer.start();
 			System.out.println("SMSC Administartion Web Apllication Started  **************************************************");
 		}
@@ -162,7 +162,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		boolean needConsole = false;
 		try
 		{
-			needConsole = smscConfig.getBool("console.enabled");
+			needConsole = webappConfig.getBool("console.enabled");
 		}
 		catch (Exception eee)
 		{ /* do nothing, console disabled by default */
@@ -176,7 +176,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
 	public Config getConfig()
 	{
-		return smscConfig;
+		return webappConfig;
 	}
 
 	public HostsManager getHostsManager()
