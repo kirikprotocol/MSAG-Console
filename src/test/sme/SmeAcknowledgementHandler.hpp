@@ -3,13 +3,17 @@
 
 #include "test/util/BaseTestCases.hpp"
 #include "SmppFixture.hpp"
+#include <vector>
 
 namespace smsc {
 namespace test {
 namespace sme {
 
+using std::vector;
 using log4cpp::Category;
+using smsc::smpp::PduSubmitSm;
 using smsc::smpp::PduDeliverySm;
+using smsc::smeman::SmeInfo;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 using smsc::test::core::PduRegistry;
@@ -22,8 +26,7 @@ using smsc::test::core::SmeAckMonitor;
 class SmeAcknowledgementHandler : public BaseTestCases, public PduHandler
 {
 public:
-	SmeAcknowledgementHandler(SmppFixture* _fixture)
-	: fixture(_fixture), chkList(_fixture->chkList) {}
+	SmeAcknowledgementHandler(SmppFixture* fixture);
 	
 	virtual ~SmeAcknowledgementHandler() {}
 
@@ -38,8 +41,10 @@ public:
 protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
-	
+	const SmeInfo* sme;
+
 	virtual Category& getLog() = NULL;
+	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
 	void updateDeliveryReceiptMonitor(SmeAckMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime);
 };

@@ -9,7 +9,9 @@ namespace test {
 namespace sme {
 
 using log4cpp::Category;
+using smsc::smpp::PduSubmitSm;
 using smsc::smpp::PduDeliverySm;
+using smsc::smeman::SmeInfo;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 using smsc::test::core::DeliveryReceiptMonitor;
@@ -21,8 +23,7 @@ using smsc::test::core::DeliveryReceiptMonitor;
 class DeliveryReceiptHandler : public BaseTestCases, public PduHandler
 {
 public:
-	DeliveryReceiptHandler(SmppFixture* _fixture)
-	: fixture(_fixture), chkList(_fixture->chkList) {}
+	DeliveryReceiptHandler(SmppFixture* fixture);
 	
 	virtual ~DeliveryReceiptHandler() {}
 	
@@ -34,8 +35,10 @@ public:
 protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
+	const SmeInfo* sme;
 
 	virtual Category& getLog() = NULL;
+	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
 };
 
 }

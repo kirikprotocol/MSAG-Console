@@ -4,14 +4,17 @@
 #include "test/util/BaseTestCases.hpp"
 #include "SmppFixture.hpp"
 #include "util/debug.h"
+#include <vector>
 
 namespace smsc {
 namespace test {
 namespace sme {
 
+using std::vector;
 using log4cpp::Category;
 using smsc::smpp::PduSubmitSm;
 using smsc::smpp::PduDeliverySm;
+using smsc::smeman::SmeInfo;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 using smsc::test::core::PduRegistry;
@@ -24,8 +27,7 @@ using smsc::test::core::DeliveryMonitor;
 class NormalSmsHandler : public BaseTestCases, public PduHandler
 {
 public:
-	NormalSmsHandler(SmppFixture* _fixture)
-	: fixture(_fixture), chkList(_fixture->chkList) {}
+	NormalSmsHandler(SmppFixture* fixture);
 	
 	virtual ~NormalSmsHandler() {}
 
@@ -40,8 +42,10 @@ public:
 protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
-	
+	const SmeInfo* sme;
+
 	virtual Category& getLog();
+	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
 	void updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,

@@ -15,6 +15,62 @@ using namespace smsc::test::smpp;
 using namespace smsc::test::core;
 using namespace smsc::test::util;
 
+SmeAcknowledgementHandler::SmeAcknowledgementHandler(SmppFixture* _fixture)
+: fixture(_fixture), chkList(_fixture->chkList)
+{
+	sme = fixture->smeReg->getSme(fixture->systemId);
+	__require__(sme);
+}
+
+vector<int> SmeAcknowledgementHandler::checkRoute(PduSubmitSm& pdu1,
+	PduDeliverySm& pdu2) const
+{
+	vector<int> res;
+	Address origAddr1, destAlias1, origAlias2, destAddr2;
+	SmppUtil::convert(pdu1.get_message().get_source(), &origAddr1);
+	SmppUtil::convert(pdu1.get_message().get_dest(), &destAlias1);
+	SmppUtil::convert(pdu2.get_message().get_source(), &origAlias2);
+	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
+	//правильность destAddr для pdu2
+	if (destAddr2 != origAddr1)
+	{
+		res.push_back(1);
+	}
+	//правильность origAddr для pdu2
+	const RouteHolder* routeHolder = NULL;
+	if (!sme->wantAlias)
+	{
+		const Address destAddr = fixture->aliasReg->findAddressByAlias(destAlias1);
+		if (origAlias2 != destAddr)
+		{
+			res.push_back(2);
+		}
+		else
+		{
+			routeHolder = fixture->routeReg->lookup(origAlias2, destAddr2);
+		}
+	}
+	else if (origAlias2 != destAlias1)
+	{
+		res.push_back(3);
+	}
+	else
+	{
+		const Address origAddr2 = fixture->aliasReg->findAddressByAlias(origAlias2);
+		routeHolder = fixture->routeReg->lookup(origAddr2, destAddr2);
+	}
+	//правильность маршрута
+	if (!routeHolder)
+	{
+		res.push_back(4);
+	}
+	else if (fixture->systemId != routeHolder->route.smeSystemId)
+	{
+		res.push_back(5);
+	}
+	return res;
+}
+
 void SmeAcknowledgementHandler::updateDeliveryReceiptMonitor(SmeAckMonitor* monitor,
 	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime)
 {
@@ -116,8 +172,7 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 			reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
 		//правильность маршрута
 		__tc__("processDeliverySm.smeAck.checkRoute");
-		__tc_fail2__(fixture->routeChecker->checkRouteForAcknowledgementSms(
-			*origPdu, pdu), 0);
+		__tc_fail2__(checkRoute(*origPdu, pdu), 0);
 		__tc_ok_cond__;
 		//проверить содержимое полученной pdu
 		__tc__("processDeliverySm.smeAck.checkFields");

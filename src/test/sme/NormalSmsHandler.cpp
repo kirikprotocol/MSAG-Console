@@ -18,10 +18,64 @@ using namespace smsc::test::smpp;
 using namespace smsc::test::core;
 using namespace smsc::test::util;
 
+NormalSmsHandler::NormalSmsHandler(SmppFixture* _fixture)
+: fixture(_fixture), chkList(_fixture->chkList)
+{
+	sme = fixture->smeReg->getSme(fixture->systemId);
+	__require__(sme);
+}
+
 Category& NormalSmsHandler::getLog()
 {
 	static Category& log = Logger::getCategory("NormalSmsHandler");
 	return log;
+}
+
+vector<int> NormalSmsHandler::checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const
+{
+	vector<int> res;
+	Address origAddr1, destAlias1, origAlias2, destAddr2;
+	SmppUtil::convert(pdu1.get_message().get_source(), &origAddr1);
+	SmppUtil::convert(pdu1.get_message().get_dest(), &destAlias1);
+	SmppUtil::convert(pdu2.get_message().get_source(), &origAlias2);
+	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
+	//правильность destAddr
+	const RouteHolder* routeHolder = NULL;
+	const Address destAddr = fixture->aliasReg->findAddressByAlias(destAlias1);
+	if (destAddr != destAddr2)
+	{
+		res.push_back(1);
+	}
+	else
+	{
+		//правильность маршрута
+		routeHolder = fixture->routeReg->lookup(origAddr1, destAddr2);
+		if (!routeHolder)
+		{
+			res.push_back(2);
+		}
+		else if (fixture->systemId != routeHolder->route.smeSystemId)
+		{
+			res.push_back(3);
+		}
+	}
+	//правильность origAddr
+	if (routeHolder)
+	{
+		if (sme->wantAlias)
+		{
+			const Address origAlias = fixture->aliasReg->findAliasByAddress(origAddr1);
+			if (origAlias != origAlias2)
+			{
+				res.push_back(4);
+			}
+		}
+		else if (origAddr1 != origAlias2)
+		{
+			res.push_back(5);
+		}
+	}
+	return res;
 }
 
 void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu)
@@ -223,7 +277,7 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 			reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
 		//проверить правильность маршрута
 		__tc__("processDeliverySm.normalSms.checkRoute");
-		__tc_fail2__(fixture->routeChecker->checkRouteForNormalSms(*origPdu, pdu), 0);
+		__tc_fail2__(checkRoute(*origPdu, pdu), 0);
 		__tc_ok_cond__;
 		//сравнить поля полученной и оригинальной pdu
 		__tc__("processDeliverySm.normalSms.checkMandatoryFields");

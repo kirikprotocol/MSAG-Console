@@ -1,5 +1,6 @@
 #include "DeliveryReceiptHandler.hpp"
 #include "test/conf/TestConfig.hpp"
+#include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "util/debug.h"
 
@@ -9,12 +10,55 @@ namespace sme {
 
 using smsc::sms::Address;
 using smsc::core::synchronization::MutexGuard;
+using smsc::test::sms::operator!=;
 using smsc::test::conf::TestConfig;
 using smsc::test::smpp::SmppUtil;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::test::core;
 using namespace smsc::test::util;
+
+DeliveryReceiptHandler::DeliveryReceiptHandler(SmppFixture* _fixture)
+: fixture(_fixture), chkList(_fixture->chkList)
+{
+	sme = fixture->smeReg->getSme(fixture->systemId);
+	__require__(sme);
+}
+
+vector<int> DeliveryReceiptHandler::checkRoute(PduSubmitSm& pdu1,
+	PduDeliverySm& pdu2) const
+{
+	vector<int> res;
+	Address origAddr1, origAlias2, destAddr2;
+	SmppUtil::convert(pdu1.get_message().get_source(), &origAddr1);
+	SmppUtil::convert(pdu2.get_message().get_source(), &origAlias2);
+	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
+	//правильность destAddr для pdu2
+	if (destAddr2 != origAddr1)
+	{
+		res.push_back(1);
+	}
+	//правильность маршрута
+	const RouteHolder* routeHolder = NULL;
+	if (sme->wantAlias)
+	{
+		const Address origAddr2 = fixture->aliasReg->findAddressByAlias(origAlias2);
+		routeHolder = fixture->routeReg->lookup(origAddr2, destAddr2);
+	}
+	else
+	{
+		routeHolder = fixture->routeReg->lookup(origAlias2, destAddr2);
+	}
+	if (!routeHolder)
+	{
+		res.push_back(3);
+	}
+	else if (fixture->systemId != routeHolder->route.smeSystemId)
+	{
+		res.push_back(4);
+	}
+	return res;
+}
 
 void DeliveryReceiptHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 {
@@ -81,7 +125,7 @@ void DeliveryReceiptHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		__require__(origPdu);
 		//Сравнить правильность маршрута
 		__tc__("processDeliverySm.deliveryReceipt.checkRoute");
-		__tc_fail2__(fixture->routeChecker->checkRouteForNotificationSms(*origPdu, pdu), 0);
+		__tc_fail2__(checkRoute(*origPdu, pdu), 0);
 		__tc_ok_cond__;
 		//проверка полей pdu
 		pduReg->removeMonitor(monitor);
