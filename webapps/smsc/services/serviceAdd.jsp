@@ -44,11 +44,11 @@ page_menu_end(out);
 <tr class=row0>
 	<td><input class=radio type=radio name=serviceType id=internal value=internal>&nbsp;<label for=internal>Internal</label></td>
 </tr>
-<%--tr class=row1>
-	<td class=name><input type=radio name=serviceType id=external value="external" checked><label for=external>External</label></td>
-</tr--%>
 <tr class=row1>
-	<td><input class=radio type=radio name=serviceType id=external_adm value="external_adm" checked>&nbsp;<label for=external_adm>External&nbsp;Administrable</label></td>
+	<td><input class=radio type=radio name=serviceType id=regular value=internal checked>&nbsp;<label for=external_adm>Regular</label></td>
+</tr>
+<tr class=row0>
+	<td><input class=radio type=radio name=serviceType id=external_adm value="external_adm">&nbsp;<label for=external_adm>External&nbsp;Administrable</label></td>
 </tr>
 </table>
 </div>
