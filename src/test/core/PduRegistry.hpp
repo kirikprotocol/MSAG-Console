@@ -120,7 +120,7 @@ public:
 
 	bool removePdu(const PduData& pduData);
 
-	//vector<PduData*> getExpiredPdu(time_t time);
+	vector<PduData*> getOverduePdu(time_t waitTime);
 
 	PduData* getFirstPendingSubmitSmPdu(time_t waitTime);
 };
