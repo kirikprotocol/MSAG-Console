@@ -208,11 +208,12 @@ public:
         char* sme = 0; SmePerformanceCounter* smeCounter = 0;
         while (smeCounters.Next(sme, smeCounter))
         {
+            // char[MAX_SMESYSID_TYPE_LENGTH+1], null terminated smeId
+            if (sme) strncpy((char *)packet, sme, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
+            packet += smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1;
+            
             for (int i=0; i<SME_PERF_CNT_COUNT; i++)
             {
-                // char[MAX_SMESYSID_TYPE_LENGTH+1], null terminated smeId
-                if (sme) strncpy((char *)packet, sme, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
-                packet += smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1;
                 // uint16_t(2)  xxx counter + avg (hour)
                 *((uint16_t*)packet) = (smeCounter) ? htons(smeCounter->counters[i]):0; packet += sizeof(uint16_t);
                 TimeSlotCounter<int>* cnt = (smeCounter && smeCounter->slots[i]) ? smeCounter->slots[i]:0;
@@ -221,6 +222,7 @@ public:
             if (smeCounter) smeCounter->clear();
         }   
 
+        // uint16_t     Errors count
         *((uint16_t*)packet) = htons((uint16_t)errCounters.Count()); packet += sizeof(uint16_t);
 
         IntHash<SmeErrorCounter*>::Iterator it = errCounters.First();
