@@ -64,6 +64,7 @@
       <fileset dir="${TEMPL_DIR}/${esme_name}/schema" includes="**/*"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+    <jar basedir="${exploded}" jarfile="${DISTR_DIR}/services/${esme_name}.war" compress="9"/>
   </target>
 
   <target name="update" depends="build" description="update existing installation">
