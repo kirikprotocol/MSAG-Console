@@ -839,6 +839,8 @@ int SmppOutputThread::Execute()
   Multiplexer::SockArray error;
   Multiplexer::SockArray tokill;
 
+  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smpp.out");
+
   int i;
   while(!isStopping)
   {
@@ -854,6 +856,7 @@ int SmppOutputThread::Execute()
     int cnt=0;
     mul.clear();
     //trace("check data for output");
+
     for(i=0;i<sockets.Count();i++)
     {
       SmppSocket *ss=sockets[i];
@@ -871,7 +874,15 @@ int SmppOutputThread::Execute()
       {
         SmscCommand cmd=ss->getProxy()->getOutgoingCommand();
 
-        SmppHeader *pdu=cmd.makePdu(smeManager->getSmeInfo(ss->getProxy()->getSmeIndex()).forceDC);
+        SmppHeader *pdu=0;
+        try{
+          pdu=cmd.makePdu(smeManager->getSmeInfo(ss->getProxy()->getSmeIndex()).forceDC);
+        }catch(...)
+        {
+          warn2(log,"Failed to build pdu from command:%d,dlgid=%d",cmd->get_commandId(),cmd->get_dialogId());
+          continue;
+        }
+        if(pdu==0)continue;
         int cmdid=pdu->get_commandId();
         trace2("SmppOutThread: commandId=%x, seq number:%d,socket=%p",
           pdu->get_commandId(),pdu->get_sequenceNumber(),ss->getSocket());

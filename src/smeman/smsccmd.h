@@ -889,7 +889,18 @@ public:
         _cmd->cmdid=QUERY;
         _cmd->dta=new QuerySm(reinterpret_cast<PduQuerySm*>(pdu));
         goto end_construct;
-      //case QUERY_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+    case SmppCommandSet::QUERY_SM_RESP:
+    {
+        _cmd->cmdid=QUERY_RESP;
+        PduQuerySmResp* resp=reinterpret_cast<PduQuerySmResp*>(pdu);
+        uint32_t id=0;
+        if(resp->messageId.size())sscanf(resp->messageId.cstr(),"%lld",&id);
+        time_t findate=0;
+        if(resp->finalDate.size())findate=smppTime2CTime(resp->finalDate);
+        _cmd->dta=new QuerySmResp(resp->get_header().get_commandStatus(),id,findate,resp->get_messageState(),resp->get_errorCode());
+        _cmd->dialogId=resp->get_header().get_sequenceNumber();
+        goto end_construct;
+    }
     case SmppCommandSet::DATA_SM:
       {
         _cmd->cmdid = SUBMIT;
@@ -1254,7 +1265,7 @@ public:
         return reinterpret_cast<SmppHeader*>(pdu.release());
       }
     default:
-      __unreachable__("unknown commandid");
+      throw runtime_error("unknown commandid");
     }
     return 0; // for compiler
   }
