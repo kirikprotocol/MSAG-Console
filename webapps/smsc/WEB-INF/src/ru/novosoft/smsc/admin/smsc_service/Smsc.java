@@ -538,21 +538,23 @@ public class Smsc extends Service
     call(SMSC_COMPONENT_ID, ACL_REMOVE, Type.Types[Type.BooleanType], params);
   }
 
-  public void aclCreate(String name, String description, List addresses) throws AdminException
+  public void aclCreate(String name, String description, List addresses, char cache_type) throws AdminException
   {
     Map params = new HashMap();
     params.put("name", name);
     params.put("description", description);
+    params.put("cache_type", String.valueOf(cache_type));
     params.put("addresses", addresses);
     call(SMSC_COMPONENT_ID, ACL_CREATE, Type.Types[Type.BooleanType], params);
   }
 
-  public void aclUpdateInfo(long aclId, String name, String description) throws AdminException
+  public void aclUpdateInfo(long aclId, String name, String description, char cache_type) throws AdminException
   {
     Map params = new HashMap();
     params.put("id", new Long(aclId));
     params.put("name", name);
     params.put("description", description);
+    params.put("cache_type", String.valueOf(cache_type));
     call(SMSC_COMPONENT_ID, ACL_UPDATE_INFO, Type.Types[Type.BooleanType], params);
   }
 

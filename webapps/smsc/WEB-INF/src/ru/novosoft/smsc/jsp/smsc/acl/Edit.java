@@ -24,6 +24,7 @@ public class Edit extends PageBean
   private long id = -1;
   private String name = "";
   private String description = "";
+  private char cache_type = AclInfo.ACT_UNDEFINED;
   private String[] addresses = new String[0];
 
   private String mbSave = null;
@@ -76,7 +77,7 @@ public class Edit extends PageBean
   {
     if (add) {
       try {
-        aclManager.createAcl(name, description, Arrays.asList(addresses));
+        aclManager.createAcl(name, description, Arrays.asList(addresses), cache_type);
         return RESULT_DONE;
       } catch (AdminException e) {
         logger.error("Couldn't create acl " + id, e);
@@ -84,7 +85,7 @@ public class Edit extends PageBean
       }
     } else {
       try {
-        aclManager.updateAclInfo(id, name, description);
+        aclManager.updateAclInfo(id, name, description, cache_type);
         return RESULT_DONE;
       } catch (AdminException e) {
         logger.error("Couldn't update info for acl #" + id, e);
@@ -171,5 +172,15 @@ public class Edit extends PageBean
   public void setAddresses(String[] addresses)
   {
     this.addresses = addresses;
+  }
+
+  public char getCache_type()
+  {
+    return cache_type;
+  }
+
+  public void setCache_type(char cache_type)
+  {
+    this.cache_type = cache_type;
   }
 }

@@ -79,6 +79,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   Parameters acl_create_params;
   acl_create_params["name"] = Parameter("name", StringType);
   acl_create_params["description"] = Parameter("description", StringType);
+  acl_create_params["cache_type"] = Parameter("cache_type", StringType);
   acl_create_params["addresses"] = Parameter("addresses", StringListType);
   Parameters acl_full_params;
   acl_full_params["id"] = Parameter("id", LongType);
@@ -89,6 +90,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   acl_info_params["id"] = Parameter("id", LongType);
   acl_info_params["name"] = Parameter("name", StringType);
   acl_info_params["description"] = Parameter("description", StringType);
+  acl_info_params["cache_type"] = Parameter("cache_type", StringType);
   Parameters acl_lookup_addresses_params;
   acl_lookup_addresses_params["id"] = Parameter("id", LongType);
   acl_lookup_addresses_params["prefix"] = Parameter("prefix", StringType);
@@ -1390,6 +1392,9 @@ Variant SmscComponent::aclGet(const Arguments & args) throw (AdminException)
     result.appendValueToStringList(buffer);
     result.appendValueToStringList(aclInfo.name);
     result.appendValueToStringList(aclInfo.desctiption);
+    buffer[0] = aclInfo.cache;
+    buffer[1] = 0;
+    result.appendValueToStringList(buffer);
     return result;
   } catch (HashInvalidKeyException &e) {
     throw new AdminException("Parameter id not found");
@@ -1415,6 +1420,8 @@ Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
   try {
     const char * const name = args.Get("name").getStringValue();
     const char * const description = args.Get("description").getStringValue();
+    const char * const cache_type_str = args.Get("cache_type").getStringValue();
+    const bool cache_type_present = (cache_type_str != NULL) && (cache_type_str[0] != 0);
     
     const StringList & addresses(args.Get("addresses").getStringListValue());
     std::vector<AclPhoneNumber> phones;
@@ -1429,7 +1436,10 @@ Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
     }
     
     AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
-    aclmgr->create2(name, description, phones);    
+    if (cache_type_present)
+      aclmgr->create2(name, description, phones, (AclCacheType)(cache_type_str[0]));
+    else
+      aclmgr->create2(name, description, phones);
     
     Variant result("created");
     return result;
@@ -1444,9 +1454,14 @@ Variant SmscComponent::aclUpdateInfo(const Arguments & args) throw (AdminExcepti
     AclIdent aclId = args.Get("id").getLongValue();
     const char * const name = args.Get("name").getStringValue();
     const char * const description = args.Get("description").getStringValue();
+    const char * const cache_type_str = args.Get("cache_type").getStringValue();
+    const bool cache_type_present = (cache_type_str != NULL) && (cache_type_str[0] != 0);
     
     AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
-    aclmgr->updateAclInfo(aclId, name, description);
+    if (cache_type_present)
+      aclmgr->updateAclInfo(aclId, name, description, (AclCacheType)(cache_type_str[0]));
+    else
+      aclmgr->updateAclInfo(aclId, name, description);
     
     Variant result("updated");
     return result;

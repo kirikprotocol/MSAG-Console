@@ -68,6 +68,14 @@ function addAclAddress()
   	<td>description</td>
   	<td><input class=txt name="description" value="<%=bean.getDescription()%>"></td>
   </tr>
+  <tr class=row1>
+    <td>cache type</td>
+    <td><div class=select><select class=txt name="cache_type">
+      <option value='0' <%=bean.getCache_type() == '0' ? "selected" : ""%>>unknown</option>
+      <option value='1' <%=bean.getCache_type() == '1' ? "selected" : ""%>>no cache</option>
+      <option value='2' <%=bean.getCache_type() == '2' ? "selected" : ""%>>full cache</option>
+    </select></div></td>
+  </tr>
   </table>
   <table class=list cellspacing=0 cellspadding=0 id=aclAddresses>
   <col width="15%">

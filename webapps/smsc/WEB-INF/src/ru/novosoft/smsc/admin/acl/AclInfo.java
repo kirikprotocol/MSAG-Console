@@ -13,14 +13,21 @@ import java.util.List;
  */
 public class AclInfo
 {
+  public static final char ACT_UNDEFINED = '0';
+  public static final char ACT_DBSDIRECT = '1';
+  public static final char ACT_FULLCACHE = '2';
+
   private Category logger = Category.getInstance(this.getClass());
 
   protected long id;
   protected String name;
   protected String description;
+  protected char cache_mode;
 
-  public AclInfo(final long id, final String name, final String description)
+
+  public AclInfo(final long id, final String name, final String description, final char cache_mode)
   {
+    this.cache_mode = cache_mode;
     if (name == null) throw new NullPointerException("name is null");
     if (description == null) throw new NullPointerException("description is null");
 
@@ -34,12 +41,14 @@ public class AclInfo
     final String idStr = (String) properties.get(0);
     final String name = (String) properties.get(1);
     final String description = (String) properties.get(2);
+    final String cache_mode_str = (String) properties.get(3);
 
     logger.debug("create AclInfo[" + idStr + ", \"" + name + ", \"" + description + "\"]");
 
     this.id = Long.parseLong(idStr);
     this.name = name;
     this.description = description;
+    this.cache_mode = cache_mode_str != null && cache_mode_str.length() > 0 ? cache_mode_str.charAt(0) : ACT_UNDEFINED;
   }
 
   public AclInfo(final long id, final String name)
@@ -49,6 +58,7 @@ public class AclInfo
     this.id = id;
     this.name = name;
     this.description = null;
+    this.cache_mode = 0;
   }
 
 
@@ -97,5 +107,15 @@ public class AclInfo
   public void setDescription(String description)
   {
     this.description = description;
+  }
+
+  public char getCache_mode()
+  {
+    return cache_mode;
+  }
+
+  public void setCache_mode(char cache_mode)
+  {
+    this.cache_mode = cache_mode;
   }
 }

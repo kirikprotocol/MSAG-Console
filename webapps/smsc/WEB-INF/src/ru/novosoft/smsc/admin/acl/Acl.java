@@ -12,10 +12,10 @@ public class Acl extends AclInfo
 {
   private final Set addresses;
 
-  public Acl(final long id, final String name, final String description, final Set addresses)
+  public Acl(final long id, final String name, final String description, final char cache_mode, final Set addresses)
       throws NullPointerException
   {
-    super(id, name, description);
+    super(id, name, description, cache_mode);
 
     if (addresses == null) throw new NullPointerException("addresses is null");
 
@@ -25,7 +25,7 @@ public class Acl extends AclInfo
   public Acl(List properties)
       throws NumberFormatException
   {
-    super(Long.parseLong((String) properties.get(0)), (String) properties.get(1), (String) properties.get(2));
+    super(Long.parseLong((String) properties.get(0)), (String) properties.get(1), (String) properties.get(2), ((String) properties.get(3)).charAt(0));
     this.addresses = new HashSet();
   }
 

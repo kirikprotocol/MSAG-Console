@@ -68,7 +68,16 @@ MENU0_SELECTION = "MENU0_ACL";
         <td>description</td>
         <td><input class=txt name="description" value="<%=aclInfo.getDescription()%>"></td>
       </tr>
+      <tr class=row1>
+        <td>cache type</td>
+        <td><div class=select><select class=txt name="cache_type">
+          <option value='0' <%=aclInfo.getCache_mode() == '0' ? "selected" : ""%>>unknown</option>
+          <option value='1' <%=aclInfo.getCache_mode() == '1' ? "selected" : ""%>>no cache</option>
+          <option value='2' <%=aclInfo.getCache_mode() == '2' ? "selected" : ""%>>full cache</option>
+        </select></div></td>
+      </tr>
       </table>
+      <hr>
       Addresses prefix <input class=txt name=prefix value="<%=bean.getPrefix()%>">
     </div><%
     page_menu_begin(out);

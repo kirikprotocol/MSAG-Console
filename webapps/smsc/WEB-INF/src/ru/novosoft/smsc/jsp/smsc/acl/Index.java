@@ -41,6 +41,7 @@ public class Index extends SmscBean
   private String[] deleted_address = new String[0];
   private String name = null;
   private String description = null;
+  private char cache_type = AclInfo.ACT_UNDEFINED;
 
 
   protected int init(List errors)
@@ -91,9 +92,11 @@ public class Index extends SmscBean
   private int save()
   {
     try {
-      aclManager.updateAclInfo(lookupedAcl, name, description);
-      aclManager.removeAddresses(lookupedAcl, Arrays.asList(deleted_address));
-      aclManager.addAddresses(lookupedAcl, Arrays.asList(new_address));
+      aclManager.updateAclInfo(lookupedAcl, name, description, cache_type);
+      if (deleted_address != null && deleted_address.length > 0)
+        aclManager.removeAddresses(lookupedAcl, Arrays.asList(deleted_address));
+      if (new_address != null && new_address.length > 0)
+        aclManager.addAddresses(lookupedAcl, Arrays.asList(new_address));
     } catch (AdminException e) {
       logger.debug("Couldn't remove or add acl addresses [id=" + lookupedAcl + "]", e);
       return error(SMSCErrors.error.acl.COULDNT_REMOVE_ADD_ADDRESSES, String.valueOf(lookupedAcl), e);
@@ -121,7 +124,7 @@ public class Index extends SmscBean
   {
     try {
       aclManager.deleteAcl(aclId);
-      return RESULT_OK;
+      return RESULT_DONE;
     } catch (AdminException e) {
       logger.debug("Couldn't delete acl [id=" + aclId + "]", e);
       return error(SMSCErrors.error.acl.COULDNT_DELETE_ACL, String.valueOf(aclId), e);
@@ -289,5 +292,15 @@ public class Index extends SmscBean
   public void setDescription(String description)
   {
     this.description = description;
+  }
+
+  public char getCache_type()
+  {
+    return cache_type;
+  }
+
+  public void setCache_type(char cache_type)
+  {
+    this.cache_type = cache_type;
   }
 }

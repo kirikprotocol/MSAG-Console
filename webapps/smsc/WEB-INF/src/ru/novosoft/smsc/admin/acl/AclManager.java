@@ -35,14 +35,14 @@ public class AclManager
     appContext.getSmsc().aclRemove(aclId);
   }
 
-  public void createAcl(String name, String description, List addresses) throws AdminException
+  public void createAcl(String name, String description, List addresses, char cache_type) throws AdminException
   {
-    appContext.getSmsc().aclCreate(name, description, addresses);
+    appContext.getSmsc().aclCreate(name, description, addresses, cache_type);
   }
 
-  public void updateAclInfo(long aclId, String name, String description) throws AdminException
+  public void updateAclInfo(long aclId, String name, String description, char cache_type) throws AdminException
   {
-    appContext.getSmsc().aclUpdateInfo(aclId, name, description);
+    appContext.getSmsc().aclUpdateInfo(aclId, name, description, cache_type);
   }
 
   public List lookupAddresses(long aclId, String addressPrefix) throws AdminException
