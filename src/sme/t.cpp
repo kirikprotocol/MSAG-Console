@@ -544,17 +544,19 @@ static void gettimeofday(timeval* tv,void* ptr)
   tv->tv_usec=ft/10;
 }
 
+/*
 extern "C" int strncasecmp(const char* str,const char* str2,int n)
 {
   return _strnicmp(str,str2,n);
 }
 
-#undef strcasecmp
 extern "C" int strcasecmp(const char* str,const char* str2)
 {
   return _stricmp(str,str2);
 }
+*/
 #endif
+
 
 void SleepCmd(SmppSession& ss,const string& args)
 {
