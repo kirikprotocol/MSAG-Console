@@ -120,6 +120,7 @@ public :
   // в указатель на прокси записывается прокси для маршрута (может быть 0)
   //
   virtual bool lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx=0,RouteInfo* info=0);
+  virtual bool lookup(int srcidx, const Address& source, const Address& dest, SmeProxy*& proxy, int* idx=0,RouteInfo* info=0);
 
 };
 
