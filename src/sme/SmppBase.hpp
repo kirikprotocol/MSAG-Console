@@ -268,16 +268,16 @@ protected:
 
 class SmppTransmitter{
 public:
-  virtual SmppHeader* sendPdu(SmppHeader* pdu)throw(SmppInvalidBindState)=0;
-  virtual void sendGenericNack(PduGenericNack& pdu)throw(SmppInvalidBindState)=0;
-  virtual void sendDeliverySmResp(PduDeliverySmResp& pdu)throw(SmppInvalidBindState)=0;
-  virtual void sendDataSmResp(PduDataSmResp& pdu)throw(SmppInvalidBindState)=0;
-  virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)throw(SmppInvalidBindState)=0;
-  virtual PduMultiSmResp* submitm(PduMultiSm& pdu)throw(SmppInvalidBindState)=0;
-  virtual PduDataSmResp* data(PduDataSm& pdu)throw(SmppInvalidBindState)=0;
-  virtual PduQuerySmResp* query(PduQuerySm& pdu)throw(SmppInvalidBindState)=0;
-  virtual PduCancelSmResp* cancel(PduCancelSm& pdu)throw(SmppInvalidBindState)=0;
-  virtual PduReplaceSmResp* replace(PduReplaceSm& pdu)throw(SmppInvalidBindState)=0;
+  virtual SmppHeader* sendPdu(SmppHeader* pdu)=0;
+  virtual void sendGenericNack(PduGenericNack& pdu)=0;
+  virtual void sendDeliverySmResp(PduDeliverySmResp& pdu)=0;
+  virtual void sendDataSmResp(PduDataSmResp& pdu)=0;
+  virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
+  virtual PduMultiSmResp* submitm(PduMultiSm& pdu)=0;
+  virtual PduDataSmResp* data(PduDataSm& pdu)=0;
+  virtual PduQuerySmResp* query(PduQuerySm& pdu)=0;
+  virtual PduCancelSmResp* cancel(PduCancelSm& pdu)=0;
+  virtual PduReplaceSmResp* replace(PduReplaceSm& pdu)=0;
 };
 
 class SmppBaseReceiver: public SmppPduEventListener{
@@ -364,7 +364,7 @@ protected:
     virtual ~InnerSyncTransmitter()
     {
     }
-    SmppHeader* sendPdu(SmppHeader* pdu)throw(SmppInvalidBindState)
+    SmppHeader* sendPdu(SmppHeader* pdu)
     {
       if(!session.checkOutgoingValidity(pdu))
       {
@@ -378,55 +378,55 @@ protected:
       return session.getPduResponse(seq);
     };
 
-    void sendGenericNack(PduGenericNack& pdu)throw(SmppInvalidBindState)
+    void sendGenericNack(PduGenericNack& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::GENERIC_NACK);
       //pdu.get_header().set_sequenceNumber(session.getNextSeq());
       session.writer.enqueue((SmppHeader*)&pdu);
     };
-    void sendDeliverySmResp(PduDeliverySmResp& pdu)throw(SmppInvalidBindState)
+    void sendDeliverySmResp(PduDeliverySmResp& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       //pdu.get_header().set_sequenceNumber(session.getNextSeq());
       session.writer.enqueue((SmppHeader*)&pdu);
     };
-    void sendDataSmResp(PduDataSmResp& pdu)throw(SmppInvalidBindState)
+    void sendDataSmResp(PduDataSmResp& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
       //pdu.get_header().set_sequenceNumber(session.getNextSeq());
       session.writer.enqueue((SmppHeader*)&pdu);
     };
-    PduSubmitSmResp* submit(PduSubmitSm& pdu)throw(SmppInvalidBindState)
+    PduSubmitSmResp* submit(PduSubmitSm& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
       return (PduSubmitSmResp*)sendPdu((SmppHeader*)&pdu);
     };
-    PduMultiSmResp* submitm(PduMultiSm& pdu)throw(SmppInvalidBindState)
+    PduMultiSmResp* submitm(PduMultiSm& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::SUBMIT_MULTI);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
       return (PduMultiSmResp*)sendPdu((SmppHeader*)&pdu);
     };
-    PduDataSmResp* data(PduDataSm& pdu)throw(SmppInvalidBindState)
+    PduDataSmResp* data(PduDataSm& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::DATA_SM);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
       return (PduDataSmResp*)sendPdu((SmppHeader*)&pdu);
     };
-    PduQuerySmResp* query(PduQuerySm& pdu)throw(SmppInvalidBindState)
+    PduQuerySmResp* query(PduQuerySm& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::QUERY_SM);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
       return (PduQuerySmResp*)sendPdu((SmppHeader*)&pdu);
     };
-    PduCancelSmResp* cancel(PduCancelSm& pdu)throw(SmppInvalidBindState)
+    PduCancelSmResp* cancel(PduCancelSm& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::CANCEL_SM);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
       return (PduCancelSmResp*)sendPdu((SmppHeader*)&pdu);
     };
-    PduReplaceSmResp* replace(PduReplaceSm& pdu)throw(SmppInvalidBindState)
+    PduReplaceSmResp* replace(PduReplaceSm& pdu)
     {
       pdu.get_header().set_commandId(SmppCommandSet::REPLACE_SM);
       pdu.get_header().set_sequenceNumber(session.getNextSeq());
@@ -444,7 +444,7 @@ protected:
     {
     }
 
-    SmppHeader* sendPdu(SmppHeader* pdu)throw(SmppInvalidBindState)
+    SmppHeader* sendPdu(SmppHeader* pdu)
     {
       if(!session.checkOutgoingValidity(pdu))
       {
