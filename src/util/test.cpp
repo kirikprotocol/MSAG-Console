@@ -11,7 +11,7 @@
 #include "util/smstext.h"
 #include "util/templates/Formatters.h"
 #include "resourcemanager/ResourceManager.hpp"
-#include "system/state_machine.hpp"
+//#include "system/state_machine.hpp"
 #include "util/regexp/RegExp.hpp"
 #include "logger/Logger.h"
 #include <errno.h>
