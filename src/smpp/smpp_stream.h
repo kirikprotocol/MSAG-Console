@@ -90,7 +90,7 @@ inline T& __fetch_x__ (SmppStream* stream, T& data)
   __check_smpp_stream_is_readable__(stream);
   __throw_if_fail__ ( stream->dataOffset+sizeof(T) <= stream->dataLength,
                       BadStreamException );
-  data = *((T*)(stream->buffer+stream->dataOffset));
+  memcpy(&data,stream->buffer+stream->dataOffset,sizeof(T));
   __require__(sizeof(T)>0);
   stream->dataOffset+=sizeof(T);
 //  int wasread = read(stream->chanel,&data,sizeof(T));

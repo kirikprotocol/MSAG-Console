@@ -93,6 +93,7 @@ $(SMSC_BUILDDIR)/obj/$(LIBRARY):
 deps:
 	@echo "make dependencies in $(PACKAGEDIR)"
 	@mkdir -p $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)
+	@mkdir -p $(SMSC_BUILDDIR)/obj/$(LIBRARY)
 	@rm -f $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps
 	@if [ -n "$(SOURCES:.cpp=)" ] ; then \
 	    XXXX="$(SOURCES:.cpp=)"; \
