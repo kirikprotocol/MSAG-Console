@@ -853,7 +853,14 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
       result.appendValueToStringList(profile.hide ? "true":"false");
       result.appendValueToStringList(profile.hideModifiable ? "true":"false");
       result.appendValueToStringList(profile.divert.c_str());
-      result.appendValueToStringList(profile.divertActive ? "true" : "false");
+      char divertActive[6];
+      divertActive[0] = profile.divertActive         ? 'Y' : 'N';
+      divertActive[1] = profile.divertActiveAbsent   ? 'Y' : 'N';
+      divertActive[2] = profile.divertActiveBlocked  ? 'Y' : 'N';
+      divertActive[3] = profile.divertActiveBared    ? 'Y' : 'N';
+      divertActive[4] = profile.divertActiveCapacity ? 'Y' : 'N';
+      divertActive[5] = 0;
+      result.appendValueToStringList(divertActive);
       result.appendValueToStringList(profile.divertModifiable ? "true" : "false");
       result.appendValueToStringList((profile.codepage & 0x80) != 0 ? "true" : "false");
 
@@ -897,7 +904,14 @@ throw (AdminException)
       result.appendValueToStringList(profile.hide ? "true" : "false");
       result.appendValueToStringList(profile.hideModifiable ? "true" : "false");
       result.appendValueToStringList(profile.divert.c_str());
-      result.appendValueToStringList(profile.divertActive ? "true" : "false");
+      char divertActive[6];
+      divertActive[0] = profile.divertActive         ? 'Y' : 'N';
+      divertActive[1] = profile.divertActiveAbsent   ? 'Y' : 'N';
+      divertActive[2] = profile.divertActiveBlocked  ? 'Y' : 'N';
+      divertActive[3] = profile.divertActiveBared    ? 'Y' : 'N';
+      divertActive[4] = profile.divertActiveCapacity ? 'Y' : 'N';
+      divertActive[5] = 0;
+      result.appendValueToStringList(divertActive);
       result.appendValueToStringList(profile.divertModifiable ? "true" : "false");
       result.appendValueToStringList((profile.codepage & 0x80) != 0 ? "true" : "false");
       return result;
@@ -972,7 +986,15 @@ throw (AdminException)
   profile.hideModifiable = (strcmp("true", hideModifiableStr) == 0) ? true:false;
 
   profile.divert = divert;
-  profile.divertActive =     (strcmp("true", divertActive) == 0) ? 1:0;
+
+  if (strlen(divertActive) != 5)
+    throw   AdminException("Unknown divert active options");
+  profile.divertActive         =     ((divertActive[0] == 'Y') || (divertActive[0] == 'y')) ? true : false;
+  profile.divertActiveAbsent   =     ((divertActive[1] == 'Y') || (divertActive[1] == 'y')) ? true : false;
+  profile.divertActiveBlocked  =     ((divertActive[2] == 'Y') || (divertActive[2] == 'y')) ? true : false;
+  profile.divertActiveBared    =     ((divertActive[3] == 'Y') || (divertActive[3] == 'y')) ? true : false;
+  profile.divertActiveCapacity =     ((divertActive[4] == 'Y') || (divertActive[4] == 'y')) ? true : false;
+  
   profile.divertModifiable = (strcmp("true", divertModifiable) == 0) ? 1:0;
   if (strcmp("true", ussd7bit) == 0)
     profile.codepage |= 0x80;
