@@ -88,7 +88,7 @@ void Convert7BitToText(
 }
 
 unsigned ConvertText27bit(
-  const unsigned char* text, int chars, unsigned char* bit7buf)
+  const unsigned char* text, unsigned chars, unsigned char* bit7buf)
 {
   //__require__(chars<=255);
   if ( chars > 160 ){
@@ -788,7 +788,7 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
   state = MAPST_RINFOIND;
   if ( provErrCode_p != 0 ){
     // error hadling
-    __trace2__("MAP::Et96MapV2SendRInfoForSmConf provErrCode_p 0x%hx",provErrCode_p);
+    __trace2__("MAP::Et96MapV2SendRInfoForSmConf provErrCode_p 0x%hx",*provErrCode_p);
     throw runtime_error("MAP::Et96MapV2SendRInfoForSmConf error");
   }
   
