@@ -50,7 +50,7 @@
 </tr>
 </table>
 <%row = 0;%>
-<div class=page_subtitle>Left SME</div>
+<div class=page_subtitle>Left SMSC</div>
 <table class=properties_list cellspacing=0>
 <col width="10%">
 <tr class=row<%=row++&1%>>
@@ -92,7 +92,7 @@
 </tr>
 </table>
 <%row = 0;%>
-<div class=page_subtitle>Right SME</div>
+<div class=page_subtitle>Right SMSC</div>
 <table class=properties_list cellspacing=0>
 <col width="10%">
 <tr class=row<%=row++&1%>>

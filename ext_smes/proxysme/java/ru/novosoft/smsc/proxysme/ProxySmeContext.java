@@ -41,7 +41,7 @@ public class ProxySmeContext {
 
 	public Config loadConfig() throws AdminException, SAXException, ParserConfigurationException, IOException
 	{
-    return config = new Config(new File(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID).getServiceFolder(),
+    return config = new Config(new File(appContext.getHostsManager().getServiceInfo(Constants.PROXY_SME_ID).getServiceFolder(),
 														"conf" + File.separatorChar + "config.xml"));
 	}
 }
