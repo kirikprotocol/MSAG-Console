@@ -29,6 +29,7 @@ public class CCEditJob extends CC
 	public static final String PARAM_Alias = "pAlias";
 	public static final String PARAM_Commit = "pCommit";
 	public static final String PARAM_Function = "pFunction";
+	public static final String PARAM_timeout = "pTimeout";
 
 	public static final String BUTTON_Save = "bSave";
 	public static final String BUTTON_Cancel = "bCancel";
@@ -50,6 +51,7 @@ public class CCEditJob extends CC
 	protected String output = null;
 	protected boolean commit = false;
 	protected boolean function = false;
+	protected int timeout = 0;
 
 	protected boolean isSaveButton = false;
 	protected boolean isCancelButton = false;
@@ -97,6 +99,7 @@ public class CCEditJob extends CC
 			job.setOutput(output);
 			job.setAddress(address);
 			job.setAlias(alias);
+			job.setTimeout(timeout);
 			if (type.equals(SqlJobInfo.JOB_TYPE_Sql))
 			{
 				((SqlJobInfo) job).setQuery(query);
@@ -132,6 +135,7 @@ public class CCEditJob extends CC
 		commit = false;
 		function = false;
 		isCreating = true;
+		timeout = 0;
 		return RESULT_Ok;
 	}
 
@@ -191,6 +195,7 @@ public class CCEditJob extends CC
 				sql = request.getParameter(PARAM_Sql);
 				input = request.getParameter(PARAM_Input);
 				output = request.getParameter(PARAM_Output);
+				setTimeout(request.getParameter(PARAM_timeout));
 
 				if (address == null)
 					address = "";
@@ -206,6 +211,7 @@ public class CCEditJob extends CC
 					output = job.getOutput();
 					address = job.getAddress();
 					alias = job.getAlias();
+					timeout = job.getTimeout();
 					if (type.equals(SqlJobInfo.JOB_TYPE_Sql))
 					{
 						query = ((SqlJobInfo) job).isQuery();
@@ -308,5 +314,25 @@ public class CCEditJob extends CC
 	public MessageSet getMessages() throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return job.getMessages();
+	}
+
+	public String getTimeout()
+	{
+		return String.valueOf(timeout);
+	}
+
+	public void setTimeout(String timeout)
+	{
+		if (timeout == null || timeout.length() == 0)
+			this.timeout = 0;
+		else
+			try
+			{
+				this.timeout = Integer.decode(timeout).intValue();
+			}
+			catch (NumberFormatException e)
+			{
+				this.timeout = 0;
+			}
 	}
 }

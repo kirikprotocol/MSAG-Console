@@ -24,6 +24,7 @@ public class CCEditDatasource extends CC
 	public static final String PARAM_DbUserName = "pDbUserName";
 	public static final String PARAM_DbUserPassword = "pDbUserPassword";
 	public static final String PARAM_Creating = "pCreating";
+	public static final String PARAM_watchdog = "pWatchdog";
 
 	public static final String BUTTON_Save = "bSave";
 	public static final String BUTTON_Cancel = "bCancel";
@@ -40,6 +41,7 @@ public class CCEditDatasource extends CC
 	protected String dbInstance = null;
 	protected String dbUserName = null;
 	protected String dbUserPassword = null;
+	protected boolean watchdog = false;
 	private boolean buttonCreate = false;
 	private boolean buttonSave = false;
 	private boolean buttonCancel = false;
@@ -86,6 +88,7 @@ public class CCEditDatasource extends CC
 			dataSource.setDbInstance(dbInstance);
 			dataSource.setDbUserName(dbUserName);
 			dataSource.setDbUserPassword(dbUserPassword);
+			dataSource.setWatchdog(watchdog);
 			if (!oldProviderName.equals(providerName))
 				config.renameProvider(oldProviderName, providerName);
 		}
@@ -126,6 +129,7 @@ public class CCEditDatasource extends CC
 				dbInstance = request.getParameter(PARAM_DbInstance);
 				dbUserName = request.getParameter(PARAM_DbUserName);
 				dbUserPassword = request.getParameter(PARAM_DbUserPassword);
+				watchdog = Boolean.valueOf(request.getParameter(PARAM_watchdog)).booleanValue();
 
 				if (!creating)
 				{
@@ -148,6 +152,7 @@ public class CCEditDatasource extends CC
 						dbInstance = dataSource.getDbInstance();
 						dbUserName = dataSource.getDbUserName();
 						dbUserPassword = dataSource.getDbUserPassword();
+						watchdog = dataSource.isWatchdog();
 					}
 				}
 			}
@@ -204,5 +209,15 @@ public class CCEditDatasource extends CC
 	public boolean isCreating()
 	{
 		return creating;
+	}
+
+	public boolean isWatchdog()
+	{
+		return watchdog;
+	}
+
+	public void setWatchdog(boolean watchdog)
+	{
+		this.watchdog = watchdog;
 	}
 }

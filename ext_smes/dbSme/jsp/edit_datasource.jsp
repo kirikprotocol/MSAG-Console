@@ -8,11 +8,11 @@ if (result == UC.RESULT_Done)
 {
 	response.sendRedirect("edit_provider.jsp?" + CCEditProvider.PARAM_Name + '=' + URLEncoder.encode(UC.getProviderName()));
 }
-else if (result == UC.RESULT_NotAllParams) 
+else if (result == UC.RESULT_NotAllParams)
 {
 	%><div style="width:100%; font-size:150%; color:Red; text-align:center;">Error: Not all required params defined</div><%
 }
-else if (result == UC.RESULT_Error) 
+else if (result == UC.RESULT_Error)
 {
 	%><div style="width:100%; font-size:150%; color:Red; text-align:center;">Error:</div><%
 }
@@ -69,6 +69,10 @@ else
 <tr>
 	<th>dbUserPassword:</th>
 	<td><input class="edit" type="Text" name="<%=UC.PARAM_DbUserPassword%>" value="<%=StringEncoderDecoder.encode(UC.getDbUserPassword())%>"></td>
+</tr>
+<tr>
+	<th><label for="<%=UC.PARAM_watchdog%>">watchdog:</label></th>
+	<td><input class="edit" type="Checkbox" id="<%=UC.PARAM_watchdog%>" name="<%=UC.PARAM_watchdog%>" value="true" <%=UC.isWatchdog() ? " checked" : ""%>></td>
 </tr>
 </tbody></table>
 <div align="right">

@@ -7,11 +7,11 @@ if (result == UC.RESULT_Done)
 {
 	response.sendRedirect("edit_provider.jsp?" + CCEditProvider.PARAM_Name + '=' + URLEncoder.encode(UC.getProviderName()));
 }
-else if (result == UC.RESULT_NotAllParams) 
+else if (result == UC.RESULT_NotAllParams)
 {
 	%><div style="width:100%; font-size:150%; color:Red; text-align:center;">Error: Not all required params defined</div><%
 }
-else if (result == UC.RESULT_Error) 
+else if (result == UC.RESULT_Error)
 {
 	%><div style="width:100%; font-size:150%; color:Red; text-align:center;">Error:</div><%
 }
@@ -51,7 +51,7 @@ if (UC.isCreating())
 			<option value="<%=PlSqlJobInfo.JOB_TYPE_PlSql%>" <%=PlSqlJobInfo.JOB_TYPE_PlSql.equals(UC.getType()) ? "selected" : ""%>>PL SQL job</option>
 		</select><%
 		} else {
-			%><input readonly class="edit" type="Text" name="<%=UC.PARAM_Type%>" value="<%=StringEncoderDecoder.encode(UC.getType())%>"><%		
+			%><input readonly class="edit" type="Text" name="<%=UC.PARAM_Type%>" value="<%=StringEncoderDecoder.encode(UC.getType())%>"><%
 		}%>
 	</td>
 </tr>
@@ -62,6 +62,10 @@ if (UC.isCreating())
 <tr id="row_<%=UC.PARAM_Alias%>">
 	<th>Alias</th>
 	<td><input class="edit" type="Text" name="<%=UC.PARAM_Alias%>" value="<%=StringEncoderDecoder.encode(UC.getAlias())%>"></td>
+</tr>
+<tr>
+	<th><label for="<%=UC.PARAM_timeout%>">Timeout</label></th>
+	<td><input class="edit" type="Text" name="<%=UC.PARAM_timeout%>" value="<%=UC.getTimeout()%>"></td>
 </tr>
 </table>
 <table class=V1 width="100%" cellpadding=1 cellspacing=1 border="0" id=PARAMS_ROWS_TABLE_SQL_JOB>

@@ -72,4 +72,21 @@ public class DataSourceInfo
 	{
 		config.setString(prefix + ".dbUserPassword", dbUserPassword);
 	}
+
+	public boolean isWatchdog() throws Config.WrongParamTypeException
+	{
+		try
+		{
+			return config.getBool(prefix + ".watchdog");
+		}
+		catch (Config.ParamNotFoundException e)
+		{
+			return false;
+		}
+	}
+
+	public void setWatchdog(boolean watchdog)
+	{
+		config.setBool(prefix + ".watchdog", watchdog);
+	}
 }

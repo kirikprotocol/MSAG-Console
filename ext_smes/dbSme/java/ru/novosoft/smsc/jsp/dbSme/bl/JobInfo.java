@@ -92,4 +92,21 @@ public abstract class JobInfo
 	{
 		config.setString(prefixName + ".alias", alias);
 	}
+
+	public int getTimeout() throws Config.WrongParamTypeException
+	{
+		try
+		{
+			return config.getInt(prefixName + ".timeout");
+		}
+		catch (Config.ParamNotFoundException e)
+		{
+			return 0;
+		}
+	}
+
+	public void setTimeout(int timeout)
+	{
+		config.setInt(prefixName + ".timeout", timeout);
+	}
 }
