@@ -78,6 +78,15 @@ namespace smsc { namespace store
             throw(StorageException);
         virtual ~GetIdStatement() {};
     };
+    
+    class SetIdStatement : public IdStatement
+    {
+    public:
+
+        SetIdStatement(Connection* connection, const char* sql) 
+            throw(StorageException);
+        virtual ~SetIdStatement() {};
+    };
 
     class MessageStatement : public IdStatement
     {
@@ -217,16 +226,6 @@ namespace smsc { namespace store
         };
     };
     
-    class GetMaxIdStatement : public IdStatement
-    {
-    static const char* sql;
-    public:
-        
-        GetMaxIdStatement(Connection* connection)
-            throw(StorageException);
-        virtual ~GetMaxIdStatement() {};
-    };
-
     class StateUpdateStatement : public IdStatement
     {
     static const char* sql;

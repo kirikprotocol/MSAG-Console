@@ -80,8 +80,6 @@ namespace smsc { namespace store
             return (isConnected && !isDead);
         };
 
-        SMSId getMessagesCount()
-            throw(StorageException);
         void store(const SMS &sms, SMSId id) 
             throw(StorageException, DuplicateMessageException);
         void retrive(SMSId id, SMS &sms) 

@@ -127,10 +127,10 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
     }
 }
 
-ConnectionPool::ConnectionPool(Manager& config)
-    throw(ConfigException) 
-        : queueLen(0), head(0L), tail(0L),
-            idleCount(0), idleHead(0L), idleTail(0L),
+ConnectionPool::ConnectionPool(Manager& config) throw(ConfigException) 
+    : queueLen(0), head(0L), tail(0L),
+        idleCount(0), idleHead(0L), idleTail(0L),
+            dbInstance(0L), dbUserName(0L), dbUserPassword(0L),
                 log(Logger::getCategory("smsc.store.ConnectionPool"))
 {
     loadMaxSize(config);
@@ -195,9 +195,9 @@ ConnectionPool::~ConnectionPool()
         if (connection) delete connection;
     }
     
-    delete dbInstance;
-    delete dbUserName;
-    delete dbUserPassword;
+    if (dbInstance) delete dbInstance;
+    if (dbUserName) delete dbUserName;
+    if (dbUserPassword) delete dbUserPassword;
 }
 
 bool ConnectionPool::hasFreeConnections()
@@ -461,21 +461,6 @@ inline void Connection::rollback()
     throw(StorageException)
 {
     checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
-}
-
-SMSId Connection::getMessagesCount()
-    throw(StorageException)
-{
-    MutexGuard  guard(mutex);
-
-    connect();
-
-    SMSId   maxId;
-    GetMaxIdStatement*  GetMaxIdStmt = new GetMaxIdStatement(this);
-    checkErr(GetMaxIdStmt->execute(OCI_DEFAULT));
-    GetMaxIdStmt->getSMSId(maxId);
-    delete GetMaxIdStmt;
-    return maxId;
 }
 
 void Connection::store(const SMS &sms, SMSId id) 

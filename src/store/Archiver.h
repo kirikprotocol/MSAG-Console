@@ -35,38 +35,38 @@ namespace smsc { namespace store
         bool        bStarted;
         Mutex       processLock, startLock;
         
-        static const char*  countSql;
+        static const char*  storageCountSql;
+        static const char*  storageCleanSql;
         static const char*  storageMaxIdSql;
-        static const char*  archiveMaxIdSql;
-
-        static const char*  selectSql;
-        static const char*  insertSql;
-        static const char*  deleteSql;
-        static const char*  lookIdSql;
-
+        static const char*  billingMaxIdSql;
+        
+        static const char*  storageSelectSql;
+        static const char*  storageDeleteSql;
+        static const char*  archiveInsertSql;
+        static const char*  billingInsertSql;
+        
         const char*     storageDBInstance;
         const char*     storageDBUserName;
         const char*     storageDBUserPassword;
         
-        const char*     archiveDBInstance;
-        const char*     archiveDBUserName;
-        const char*     archiveDBUserPassword;
+        const char*     billingDBInstance;
+        const char*     billingDBUserName;
+        const char*     billingDBUserPassword;
         
         Connection*     storageConnection;
-        Connection*     archiveConnection;
+        Connection*     billingConnection;
         
-        Statement*      selectStmt;
-        Statement*      insertStmt;
-        Statement*      deleteStmt;
-        Statement*      lookIdStmt;
+        Statement*      storageSelectStmt;
+        Statement*      storageDeleteStmt;
+        Statement*      archiveInsertStmt;
+        Statement*      billingInsertStmt;
         
         ub4             idCounter; // for lookIdStmt
 
-        SMSId           id;
+        SMSId           id, lastUsedId;
         uint8_t         uState;
         uint8_t         msgReference;
-        uint8_t         msgIdentifier;
-
+        
         uint8_t         oaLenght, oaType, oaPlan;
         uint8_t         daLenght, daType, daPlan;
         AddressValue    oaValue, daValue;
@@ -80,10 +80,8 @@ namespace smsc { namespace store
         uint8_t         protocolIdentifier;
         uint8_t         failureCause;
         
-        char            bStatusReport;
         char            bNeedArchivate;
         char            bHeaderIndicator;
-        char            bRejectDuplicates;
         
         uint8_t         dataScheme;
         uint8_t         dataLenght;
@@ -100,16 +98,26 @@ namespace smsc { namespace store
         void loadMaxFinalizedCount(Manager& config);
         void loadMaxUncommitedCount(Manager& config);
 
-        void prepareSelectStmt() throw(StorageException);
-        void prepareInsertStmt() throw(StorageException);
-        void prepareDeleteStmt() throw(StorageException);
-        void prepareLookIdStmt() throw(StorageException);
+        void prepareStorageSelectStmt() throw(StorageException);
+        void prepareStorageDeleteStmt() throw(StorageException);
+        void prepareArchiveInsertStmt() throw(StorageException);
+        void prepareBillingInsertStmt() throw(StorageException);
+
+        SMSId getMaxUsedId(Connection* connection, const char* sql)
+            throw(StorageException);
+        
+        void cleanStorage(SMSId beforeId)
+            throw(StorageException);
+        void loadStorageFinalizedCount()
+            throw(StorageException);
 
         void connect()
             throw(StorageException); 
         void startup()
             throw(StorageException); 
-        void archivate(bool first)
+        void billing()
+            throw(StorageException); 
+        void archivate()
             throw(StorageException); 
     
     public:
@@ -118,7 +126,7 @@ namespace smsc { namespace store
             throw(ConfigException, StorageException);
         virtual ~Archiver();
     
-        SMSId getMaxId()
+        SMSId getLastUsedId()
             throw(StorageException); 
 
         void incrementFinalizedCount(unsigned count=1);

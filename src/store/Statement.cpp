@@ -142,13 +142,21 @@ void IdStatement::getSMSId(SMSId &_smsId)
     _smsId = UINT64_SWAP_LE_BE_CONSTANT(smsId);
 }
 
-/* ----------------------------- GetIdStatetment ------------------------- */  
-
-GetIdStatement::GetIdStatement(Connection* connection, const char* sql) 
+/* --------------------------- GetIdStatement ----------------------- */
+GetIdStatement::GetIdStatement(Connection* connection, const char* sql)
     throw(StorageException)
         : IdStatement(connection, sql)
 {
-    define(1, SQLT_BIN, (dvoid *) &(smsId),(sb4) sizeof(smsId));
+    define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+}
+
+/* --------------------------- SetIdStatement ----------------------- */
+SetIdStatement::SetIdStatement(Connection* connection, const char* sql)
+    throw(StorageException)
+        : IdStatement(connection, sql)
+{
+    bind((CONST text*)"ID", (sb4) strlen("ID"), SQLT_BIN, 
+         (dvoid *) &(smsId), (sb4) sizeof(smsId));
 }
 
 /* --------------------------- MessageStatetment --------------------- */
@@ -497,17 +505,6 @@ RemoveStatement::RemoveStatement(Connection* connection)
         : IdStatement(connection, RemoveStatement::sql)
 {
     bind(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
-}
-
-/* --------------------------- GetMaxIdStatement ----------------------- */
-const char* GetMaxIdStatement::sql = (const char*)
-"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_MSG";
-
-GetMaxIdStatement::GetMaxIdStatement(Connection* connection)
-    throw(StorageException)
-        : IdStatement(connection, GetMaxIdStatement::sql)
-{
-    define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
 }
 
 /* --------------------------- UpdateStatements ----------------------- */

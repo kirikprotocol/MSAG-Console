@@ -154,9 +154,12 @@ void Archiver::loadMaxUncommitedCount(Manager& config)
     }
 }
 
-Archiver::Archiver(Manager& config)
-    throw(ConfigException, StorageException) 
-        : Thread(), finalizedCount(0), bStarted(false),
+Archiver::Archiver(Manager& config) throw(ConfigException, StorageException) 
+    : Thread(), finalizedCount(0), bStarted(false), 
+        storageSelectStmt(0L), storageDeleteStmt(0L),
+        archiveInsertStmt(0L), billingInsertStmt(0L),
+        storageDBInstance(0L), storageDBUserName(0L), storageDBUserPassword(0L),
+        billingDBInstance(0L), billingDBUserName(0L), billingDBUserPassword(0L),
             log(Logger::getCategory("smsc.store.Archiver"))
 {
     storageDBInstance = 
@@ -165,27 +168,25 @@ Archiver::Archiver(Manager& config)
         loadDBUserName(config, "MessageStore.Storage.dbUserName");
     storageDBUserPassword = 
         loadDBUserPassword(config, "MessageStore.Storage.dbUserPassword");
-    archiveDBInstance =
-        loadDBInstance(config, "MessageStore.Archive.dbInstance");
-    archiveDBUserName =
-        loadDBUserName(config, "MessageStore.Archive.dbUserName");
-    archiveDBUserPassword =
-        loadDBUserPassword(config, "MessageStore.Archive.dbUserPassword");
+    billingDBInstance =
+        loadDBInstance(config, "MessageStore.Billing.dbInstance");
+    billingDBUserName =
+        loadDBUserName(config, "MessageStore.Billing.dbUserName");
+    billingDBUserPassword =
+        loadDBUserPassword(config, "MessageStore.Billing.dbUserPassword");
     
     loadAwakeInterval(config);
     loadMaxFinalizedCount(config);
     loadMaxUncommitedCount(config);
 
     __require__(storageDBInstance && storageDBUserName && storageDBUserPassword);
-    __require__(archiveDBInstance && archiveDBUserName && archiveDBUserPassword);
+    __require__(billingDBInstance && billingDBUserName && billingDBUserPassword);
 
     storageConnection = new Connection(
         storageDBInstance, storageDBUserName, storageDBUserPassword);
     
-    archiveConnection = new Connection(
-        archiveDBInstance, archiveDBUserName, archiveDBUserPassword);
-
-    //this->Start();
+    billingConnection = new Connection(
+        billingDBInstance, billingDBUserName, billingDBUserPassword);
 }
 
 
@@ -198,17 +199,17 @@ Archiver::~Archiver()
     if (storageDBInstance) delete storageDBInstance;
     if (storageDBUserName) delete storageDBUserName;
     if (storageDBUserPassword) delete storageDBUserPassword;
-    if (archiveDBInstance) delete archiveDBInstance;
-    if (archiveDBUserName) delete archiveDBUserName;
-    if (archiveDBUserPassword) delete archiveDBUserPassword;
+    if (billingDBInstance) delete billingDBInstance;
+    if (billingDBUserName) delete billingDBUserName;
+    if (billingDBUserPassword) delete billingDBUserPassword;
 
-    if (selectStmt) delete selectStmt;
-    if (deleteStmt) delete deleteStmt;
-    if (insertStmt) delete insertStmt;
-    if (lookIdStmt) delete lookIdStmt;
+    if (storageSelectStmt) delete storageSelectStmt;
+    if (storageDeleteStmt) delete storageDeleteStmt;
+    if (archiveInsertStmt) delete archiveInsertStmt;
+    if (billingInsertStmt) delete billingInsertStmt;
     
     if (storageConnection) delete storageConnection;
-    if (archiveConnection) delete archiveConnection;
+    if (billingConnection) delete billingConnection;
     
     __trace__("Archiver destructed !");
 }
@@ -229,7 +230,7 @@ void Archiver::Start()
 void Archiver::Stop() 
 {
     MutexGuard  guard(startLock);
-
+    
     if (bStarted)
     {
         exit.Signal();
@@ -238,44 +239,36 @@ void Archiver::Stop()
     }
 }
 
-const char* Archiver::countSql = (const char*)
-"SELECT NVL(COUNT(*), 0) FROM SMS_MSG WHERE NOT ST=:ST";
-
 void Archiver::startup()
     throw(StorageException)
 {
+    MutexGuard  processGuard(processLock);
+    MutexGuard  finalizedGuard(finalizedMutex);  
+
     connect();
     
-    Statement countStmt(storageConnection, Archiver::countSql);
-    countStmt.bind(1 , SQLT_UIN, (dvoid *) &(enrouteState),
-                   (sb4) sizeof(enrouteState));
-    countStmt.define(1 , SQLT_UIN, (dvoid *) &(finalizedCount), 
-                     (sb4) sizeof(finalizedCount));
-    countStmt.checkErr(countStmt.execute());
+    SMSId maxId = getMaxUsedId(billingConnection, 
+                               Archiver::billingMaxIdSql);
+    cleanStorage(maxId);
+    loadStorageFinalizedCount();
 }
+
 
 void Archiver::connect()
     throw(StorageException)
 {
     if (!storageConnection->isAvailable())
     {
-        if (selectStmt) delete selectStmt;
-        if (deleteStmt) delete deleteStmt;
         storageConnection->connect();
-        selectStmt = new Statement(storageConnection, Archiver::selectSql);
-        prepareSelectStmt();
-        deleteStmt = new Statement(storageConnection, Archiver::deleteSql);
-        prepareDeleteStmt();
+        prepareStorageSelectStmt();
+        prepareStorageDeleteStmt();
+        prepareArchiveInsertStmt();
     }
     
-    if (!archiveConnection->isAvailable())
+    if (!billingConnection->isAvailable())
     {
-        if (insertStmt) delete insertStmt;
-        archiveConnection->connect();
-        insertStmt = new Statement(archiveConnection, Archiver::insertSql);
-        prepareInsertStmt();
-        lookIdStmt = new Statement(archiveConnection, Archiver::lookIdSql);
-        prepareLookIdStmt();
+        billingConnection->connect();
+        prepareBillingInsertStmt();
     }
 }
 
@@ -297,24 +290,20 @@ void Archiver::decrementFinalizedCount(unsigned count)
 {
     MutexGuard  guard(finalizedMutex);
     
-    if ((finalizedCount -= count) < 0)
-    {
-        finalizedCount = 0;
-    }
+    finalizedCount -= count;
 }
 
 int Archiver::Execute()
 {
     __trace__("Archiver started !");
-    bool first=true;
     do 
     {
-        job.Wait((first) ? 0:awakeInterval);
+        job.Wait(awakeInterval);
         if (exit.isSignaled()) break;
         try 
         {
             __trace__("Doing archivation job ...");
-            archivate(first); first=false;
+            archivate(); 
             __trace__("Archivation job done !");
         } 
         catch (StorageException& exc) 
@@ -330,7 +319,14 @@ int Archiver::Execute()
     return 0;
 }
 
-void Archiver::archivate(bool first)
+void Archiver::billing()
+    throw(StorageException)
+{
+    // TO DO : Isert more code here ! Actual conversion to SMS_BR
+    billingInsertStmt->checkErr(billingInsertStmt->execute());
+}
+
+void Archiver::archivate()
     throw(StorageException) 
 {
     MutexGuard  guard(processLock);
@@ -341,220 +337,290 @@ void Archiver::archivate(bool first)
     unsigned uncommited = 0;
     try 
     {
-        sword status = selectStmt->execute();
+        sword status = storageSelectStmt->execute();
         if (status == OCI_NO_DATA) return;
-        selectStmt->checkErr(status);
+        storageSelectStmt->checkErr(status);
         do
         {
             if (exit.isSignaled()) break;
-            if (bNeedArchivate)
+            if (bNeedArchivate == 'Y')
             {
-                if (first)
-                {
-                    lookIdStmt->checkErr(lookIdStmt->execute());
-                    if (idCounter == 0)
-                    {
-                        insertStmt->checkErr(insertStmt->execute());    
-                    }
-                } 
-                else 
-                {
-                    insertStmt->checkErr(insertStmt->execute());
-                }
+                archiveInsertStmt->checkErr(archiveInsertStmt->execute());
             }
-            deleteStmt->checkErr(deleteStmt->execute());
+            billing();
+            storageDeleteStmt->checkErr(storageDeleteStmt->execute());
             if (++uncommited >= maxUncommitedCount) 
             {
-                archiveConnection->commit();
+                billingConnection->commit();
                 storageConnection->commit();
                 decrementFinalizedCount(uncommited);
                 uncommited = 0;
             }
         } 
-        while ((status = selectStmt->fetch()) == OCI_SUCCESS ||
+        while ((status = storageSelectStmt->fetch()) == OCI_SUCCESS ||
                status == OCI_SUCCESS_WITH_INFO);
 
         if (status != OCI_NO_DATA)
-            selectStmt->checkErr(status);
+            storageSelectStmt->checkErr(status);
     }
     catch (StorageException& exc)
     {
-        archiveConnection->rollback();
+        billingConnection->rollback();
         storageConnection->rollback();
         throw exc;
     }
 
     if (uncommited)
     {
-        archiveConnection->commit();
+        billingConnection->commit();
         storageConnection->commit();
         decrementFinalizedCount(uncommited);
     }
 }
 
+const char* Archiver::billingMaxIdSql = (const char*)
+"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_BR";
 const char* Archiver::storageMaxIdSql = (const char*)
 "SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_MSG";
-const char* Archiver::archiveMaxIdSql = (const char*)
-"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_ARC";
-SMSId Archiver::getMaxId() 
+SMSId Archiver::getMaxUsedId(Connection* connection, const char* sql)
+    throw(StorageException)
+{
+    SMSId maxId;
+    
+    GetIdStatement maxIdStmt(connection, sql);
+    maxIdStmt.checkErr(maxIdStmt.execute());
+    maxIdStmt.getSMSId(maxId);
+    
+    return maxId;
+}
+
+SMSId Archiver::getLastUsedId()
     throw(StorageException)
 {
     MutexGuard  guard(processLock);
-
-    connect();
-    SMSId storageId, archiveId;
-
-    GetIdStatement storageMaxIdStmt(storageConnection,
-                                    Archiver::storageMaxIdSql);
-    GetIdStatement archiveMaxIdStmt(archiveConnection, 
-                                    Archiver::archiveMaxIdSql);
-
-    storageMaxIdStmt.checkErr(storageMaxIdStmt.execute());
-    storageMaxIdStmt.getSMSId(storageId);
-    archiveMaxIdStmt.checkErr(archiveMaxIdStmt.execute());
-    archiveMaxIdStmt.getSMSId(archiveId);
     
-    return ((storageId > archiveId) ? storageId : archiveId);
+    connect();
+    
+    SMSId storageId = getMaxUsedId(storageConnection, 
+                                   Archiver::storageMaxIdSql);
+    SMSId billingId = getMaxUsedId(billingConnection, 
+                                   Archiver::billingMaxIdSql);
+    
+    return ((storageId > billingId) ? storageId : billingId);
 }
 
-const char* Archiver::selectSql = (const char*)
-"SELECT ID, ST, MR, RM,\
+const char* Archiver::storageCleanSql = (const char*)
+"DELETE FROM SMS_MSG WHERE ID<:ID AND NOT ST=:ST";
+void Archiver::cleanStorage(SMSId beforeId)
+    throw(StorageException)
+{
+    SetIdStatement cleanStmt(storageConnection, Archiver::storageCleanSql);
+    
+    cleanStmt.bind((CONST text *)"ST", (sb4) strlen("ST"), SQLT_UIN, 
+                   (dvoid *) &(enrouteState), (sb4) sizeof(enrouteState));
+    cleanStmt.setSMSId(beforeId);
+    cleanStmt.checkErr(cleanStmt.execute());
+}
+
+const char* Archiver::storageCountSql = (const char*)
+"SELECT NVL(COUNT(*), 0) FROM SMS_MSG WHERE NOT ST=:ST";
+void Archiver::loadStorageFinalizedCount()
+    throw(StorageException)
+{
+    Statement countStmt(storageConnection, Archiver::storageCountSql);
+
+    countStmt.bind(1 , SQLT_UIN, (dvoid *) &(enrouteState),
+                   (sb4) sizeof(enrouteState));
+    countStmt.define(1 , SQLT_UIN, (dvoid *) &(finalizedCount), 
+                     (sb4) sizeof(finalizedCount));
+    countStmt.checkErr(countStmt.execute());
+}
+
+const char* Archiver::storageSelectSql = (const char*)
+"SELECT ID, ST, MR,\
  OA_LEN, OA_TON, OA_NPI, OA_VAL, DA_LEN, DA_TON, DA_NPI, DA_VAL,\
  VALID_TIME, WAIT_TIME, SUBMIT_TIME, DELIVERY_TIME,\
- SRR, RD, ARC, PRI, PID, FCS, DCS, UDHI, UDL, UD FROM SMS_MSG\
+ ARC, PRI, PID, FCS, DCS, UDHI, UDL, UD FROM SMS_MSG\
  WHERE NOT ST=:ST ORDER BY ID ASC";
-void Archiver::prepareSelectStmt() throw(StorageException)
+void Archiver::prepareStorageSelectStmt() throw(StorageException)
 {
-    selectStmt->define(1, SQLT_BIN, (dvoid *) &(id),
-                       (sb4) sizeof(id));
-    selectStmt->define(2 , SQLT_UIN, (dvoid *) &(uState), 
-                       (sb4) sizeof(uState));
-    selectStmt->define(3 , SQLT_UIN, (dvoid *) &(msgReference),
-                       (sb4) sizeof(msgReference));
-    selectStmt->define(4 , SQLT_UIN, (dvoid *) &(msgIdentifier),
-                       (sb4) sizeof(msgIdentifier));
-    selectStmt->define(5 , SQLT_UIN, (dvoid *) &(oaLenght),
-                       (sb4) sizeof(oaLenght));
-    selectStmt->define(6 , SQLT_UIN, (dvoid *) &(oaType),
-                       (sb4) sizeof(oaType));
-    selectStmt->define(7 , SQLT_UIN, (dvoid *) &(oaPlan),
-                       (sb4) sizeof(oaPlan));
-    selectStmt->define(8 , SQLT_STR, (dvoid *) (oaValue),
-                       (sb4) sizeof(oaValue));
-    selectStmt->define(9 , SQLT_UIN, (dvoid *)&(daLenght),
-                       (sb4) sizeof(daLenght));
-    selectStmt->define(10, SQLT_UIN, (dvoid *) &(daType),
-                       (sb4) sizeof(daType));
-    selectStmt->define(11, SQLT_UIN, (dvoid *) &(daPlan),
-                       (sb4) sizeof(daPlan));
-    selectStmt->define(12, SQLT_STR, (dvoid *) (daValue),
-                       (sb4) sizeof(daValue));
-    selectStmt->define(13, SQLT_ODT, (dvoid *) &(validTime),
-                       (sb4) sizeof(validTime));
-    selectStmt->define(14, SQLT_ODT, (dvoid *) &(waitTime),
-                       (sb4) sizeof(waitTime));
-    selectStmt->define(15, SQLT_ODT, (dvoid *) &(submitTime),
-                       (sb4) sizeof(submitTime));
-    selectStmt->define(16, SQLT_ODT, (dvoid *) &(deliveryTime),
-                       (sb4) sizeof(deliveryTime));
-    selectStmt->define(17, SQLT_AFC, (dvoid *) &(bStatusReport),
-                       (sb4) sizeof(bStatusReport));
-    selectStmt->define(18, SQLT_AFC, (dvoid *) &(bRejectDuplicates),
-                       (sb4) sizeof(bRejectDuplicates));
-    selectStmt->define(19, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
-                       (sb4) sizeof(bNeedArchivate));
-    selectStmt->define(20, SQLT_UIN, (dvoid *) &(priority),
-                       (sb4) sizeof(priority));
-    selectStmt->define(21, SQLT_UIN, (dvoid *) &(protocolIdentifier),
-                       (sb4) sizeof(protocolIdentifier));
-    selectStmt->define(22, SQLT_UIN, (dvoid *) &(failureCause),
-                       (sb4) sizeof(failureCause));
-    selectStmt->define(23, SQLT_UIN, (dvoid *) &(dataScheme),
-                       (sb4) sizeof(dataScheme));
-    selectStmt->define(24, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
-                       (sb4) sizeof(bHeaderIndicator));
-    selectStmt->define(25, SQLT_UIN, (dvoid *) &(dataLenght),
-                       (sb4) sizeof(dataLenght));
-    selectStmt->define(26, SQLT_BIN, (dvoid *) (data),
-                       (sb4) sizeof(data));
+    if (storageSelectStmt) delete storageSelectStmt;
+    storageSelectStmt = new Statement(storageConnection, 
+                                      Archiver::storageSelectSql);
     
-    selectStmt->bind(1 , SQLT_UIN, (dvoid *) &(enrouteState),
-                     (sb4) sizeof(enrouteState));
+    storageSelectStmt->define(1, SQLT_BIN, (dvoid *) &(id),
+                              (sb4) sizeof(id));
+    storageSelectStmt->define(2 , SQLT_UIN, (dvoid *) &(uState), 
+                              (sb4) sizeof(uState));
+    storageSelectStmt->define(3 , SQLT_UIN, (dvoid *) &(msgReference),
+                              (sb4) sizeof(msgReference));
+    storageSelectStmt->define(4 , SQLT_UIN, (dvoid *) &(oaLenght),
+                              (sb4) sizeof(oaLenght));
+    storageSelectStmt->define(5 , SQLT_UIN, (dvoid *) &(oaType),
+                              (sb4) sizeof(oaType));
+    storageSelectStmt->define(6 , SQLT_UIN, (dvoid *) &(oaPlan),
+                              (sb4) sizeof(oaPlan));
+    storageSelectStmt->define(7 , SQLT_STR, (dvoid *) (oaValue),
+                              (sb4) sizeof(oaValue));
+    storageSelectStmt->define(8 , SQLT_UIN, (dvoid *)&(daLenght),
+                              (sb4) sizeof(daLenght));
+    storageSelectStmt->define(9 , SQLT_UIN, (dvoid *) &(daType),
+                              (sb4) sizeof(daType));
+    storageSelectStmt->define(10, SQLT_UIN, (dvoid *) &(daPlan),
+                              (sb4) sizeof(daPlan));
+    storageSelectStmt->define(11, SQLT_STR, (dvoid *) (daValue),
+                              (sb4) sizeof(daValue));
+    storageSelectStmt->define(12, SQLT_ODT, (dvoid *) &(validTime),
+                              (sb4) sizeof(validTime));
+    storageSelectStmt->define(13, SQLT_ODT, (dvoid *) &(waitTime),
+                              (sb4) sizeof(waitTime));
+    storageSelectStmt->define(14, SQLT_ODT, (dvoid *) &(submitTime),
+                              (sb4) sizeof(submitTime));
+    storageSelectStmt->define(15, SQLT_ODT, (dvoid *) &(deliveryTime),
+                              (sb4) sizeof(deliveryTime));
+    storageSelectStmt->define(16, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
+                              (sb4) sizeof(bNeedArchivate));
+    storageSelectStmt->define(17, SQLT_UIN, (dvoid *) &(priority),
+                              (sb4) sizeof(priority));
+    storageSelectStmt->define(18, SQLT_UIN, (dvoid *) &(protocolIdentifier),
+                              (sb4) sizeof(protocolIdentifier));
+    storageSelectStmt->define(19, SQLT_UIN, (dvoid *) &(failureCause),
+                              (sb4) sizeof(failureCause));
+    storageSelectStmt->define(20, SQLT_UIN, (dvoid *) &(dataScheme),
+                              (sb4) sizeof(dataScheme));
+    storageSelectStmt->define(21, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
+                              (sb4) sizeof(bHeaderIndicator));
+    storageSelectStmt->define(22, SQLT_UIN, (dvoid *) &(dataLenght),
+                              (sb4) sizeof(dataLenght));
+    storageSelectStmt->define(23, SQLT_BIN, (dvoid *) (data),
+                              (sb4) sizeof(data));
+    
+    storageSelectStmt->bind(1 , SQLT_UIN, (dvoid *) &(enrouteState),
+                            (sb4) sizeof(enrouteState));
 }
 
-const char* Archiver::deleteSql = (const char*)
+const char* Archiver::storageDeleteSql = (const char*)
 "DELETE FROM SMS_MSG WHERE ID=:ID";
-void Archiver::prepareDeleteStmt() throw(StorageException)
+void Archiver::prepareStorageDeleteStmt() throw(StorageException)
 {
-    deleteStmt->bind(1, SQLT_BIN, (dvoid *) &(id), (sb4) sizeof(id));
+    if (storageDeleteStmt) delete storageDeleteStmt;
+    storageDeleteStmt = new Statement(storageConnection, 
+                                      Archiver::storageDeleteSql);
+    storageDeleteStmt->bind(1, SQLT_BIN, (dvoid *) &(id), (sb4) sizeof(id));
 }
 
-const char* Archiver::lookIdSql = (const char*)
-"SELECT NVL(COUNT(*), 0) FROM SMS_ARC WHERE ID=:ID";
-void Archiver::prepareLookIdStmt() throw(StorageException)
-{
-    lookIdStmt->define(1 , SQLT_UIN, (dvoid *) &(idCounter), 
-                       (sb4) sizeof(idCounter));
-    lookIdStmt->bind(1, SQLT_BIN, (dvoid *) &(id), (sb4) sizeof(id));
-}
-
-const char* Archiver::insertSql = (const char*)
-"INSERT INTO SMS_ARC VALUES (:ID, :ST, :MR, :RM,\
+const char* Archiver::archiveInsertSql = (const char*)
+"INSERT INTO SMS_ARC VALUES (:ID, :ST, :MR,\
  :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
  :VALID_TIME, :WAIT_TIME, :SUBMIT_TIME, :DELIVERY_TIME,\
- :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";
-void Archiver::prepareInsertStmt() throw(StorageException)
+ :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";
+void Archiver::prepareArchiveInsertStmt() throw(StorageException)
 {
-    insertStmt->bind(1, SQLT_BIN, (dvoid *) &(id),
-                     (sb4) sizeof(id));
-    insertStmt->bind(2 , SQLT_UIN, (dvoid *) &(uState), 
-                     (sb4) sizeof(uState));
-    insertStmt->bind(3 , SQLT_UIN, (dvoid *) &(msgReference),
-                     (sb4) sizeof(msgReference));
-    insertStmt->bind(4 , SQLT_UIN, (dvoid *) &(msgIdentifier),
-                     (sb4) sizeof(msgIdentifier));
-    insertStmt->bind(5 , SQLT_UIN, (dvoid *) &(oaLenght),
-                     (sb4) sizeof(oaLenght));
-    insertStmt->bind(6 , SQLT_UIN, (dvoid *) &(oaType),
-                     (sb4) sizeof(oaType));
-    insertStmt->bind(7 , SQLT_UIN, (dvoid *) &(oaPlan),
-                     (sb4) sizeof(oaPlan));
-    insertStmt->bind(8 , SQLT_STR, (dvoid *) (oaValue),
-                     (sb4) sizeof(oaValue));
-    insertStmt->bind(9 , SQLT_UIN, (dvoid *)&(daLenght),
-                     (sb4) sizeof(daLenght));
-    insertStmt->bind(10, SQLT_UIN, (dvoid *) &(daType),
-                     (sb4) sizeof(daType));
-    insertStmt->bind(11, SQLT_UIN, (dvoid *) &(daPlan),
-                     (sb4) sizeof(daPlan));
-    insertStmt->bind(12, SQLT_STR, (dvoid *) (daValue),
-                     (sb4) sizeof(daValue));
-    insertStmt->bind(13, SQLT_ODT, (dvoid *) &(validTime),
-                     (sb4) sizeof(validTime));
-    insertStmt->bind(14, SQLT_ODT, (dvoid *) &(waitTime),
-                     (sb4) sizeof(waitTime));
-    insertStmt->bind(15, SQLT_ODT, (dvoid *) &(submitTime),
-                     (sb4) sizeof(submitTime));
-    insertStmt->bind(16, SQLT_ODT, (dvoid *) &(deliveryTime),
-                     (sb4) sizeof(deliveryTime));
-    insertStmt->bind(17, SQLT_AFC, (dvoid *) &(bStatusReport),
-                     (sb4) sizeof(bStatusReport));
-    insertStmt->bind(18, SQLT_AFC, (dvoid *) &(bRejectDuplicates),
-                     (sb4) sizeof(bRejectDuplicates));
-    insertStmt->bind(19, SQLT_UIN, (dvoid *) &(priority),
-                     (sb4) sizeof(priority));
-    insertStmt->bind(20, SQLT_UIN, (dvoid *) &(protocolIdentifier),
-                     (sb4) sizeof(protocolIdentifier));
-    insertStmt->bind(21, SQLT_UIN, (dvoid *) &(failureCause),
-                     (sb4) sizeof(failureCause));
-    insertStmt->bind(22, SQLT_UIN, (dvoid *) &(dataScheme),
-                     (sb4) sizeof(dataScheme));
-    insertStmt->bind(23, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
-                     (sb4) sizeof(bHeaderIndicator));
-    insertStmt->bind(24, SQLT_UIN, (dvoid *) &(dataLenght),
-                     (sb4) sizeof(dataLenght));
-    insertStmt->bind(25, SQLT_BIN, (dvoid *) (data),
-                     (sb4) sizeof(data));
+    if (archiveInsertStmt) delete archiveInsertStmt;
+    archiveInsertStmt = new Statement(storageConnection, 
+                                      Archiver::archiveInsertSql);
+    
+    archiveInsertStmt->bind(1, SQLT_BIN, (dvoid *) &(id),
+                            (sb4) sizeof(id));
+    archiveInsertStmt->bind(2 , SQLT_UIN, (dvoid *) &(uState), 
+                            (sb4) sizeof(uState));
+    archiveInsertStmt->bind(3 , SQLT_UIN, (dvoid *) &(msgReference),
+                            (sb4) sizeof(msgReference));
+    archiveInsertStmt->bind(4 , SQLT_UIN, (dvoid *) &(oaLenght),
+                            (sb4) sizeof(oaLenght));
+    archiveInsertStmt->bind(5 , SQLT_UIN, (dvoid *) &(oaType),
+                            (sb4) sizeof(oaType));
+    archiveInsertStmt->bind(6 , SQLT_UIN, (dvoid *) &(oaPlan),
+                            (sb4) sizeof(oaPlan));
+    archiveInsertStmt->bind(7 , SQLT_STR, (dvoid *) (oaValue),
+                            (sb4) sizeof(oaValue));
+    archiveInsertStmt->bind(8 , SQLT_UIN, (dvoid *)&(daLenght),
+                            (sb4) sizeof(daLenght));
+    archiveInsertStmt->bind(9 , SQLT_UIN, (dvoid *) &(daType),
+                            (sb4) sizeof(daType));
+    archiveInsertStmt->bind(10, SQLT_UIN, (dvoid *) &(daPlan),
+                            (sb4) sizeof(daPlan));
+    archiveInsertStmt->bind(11, SQLT_STR, (dvoid *) (daValue),
+                            (sb4) sizeof(daValue));
+    archiveInsertStmt->bind(12, SQLT_ODT, (dvoid *) &(validTime),
+                            (sb4) sizeof(validTime));
+    archiveInsertStmt->bind(13, SQLT_ODT, (dvoid *) &(waitTime),
+                            (sb4) sizeof(waitTime));
+    archiveInsertStmt->bind(14, SQLT_ODT, (dvoid *) &(submitTime),
+                            (sb4) sizeof(submitTime));
+    archiveInsertStmt->bind(15, SQLT_ODT, (dvoid *) &(deliveryTime),
+                            (sb4) sizeof(deliveryTime));
+    archiveInsertStmt->bind(16, SQLT_UIN, (dvoid *) &(priority),
+                            (sb4) sizeof(priority));
+    archiveInsertStmt->bind(17, SQLT_UIN, (dvoid *) &(protocolIdentifier),
+                            (sb4) sizeof(protocolIdentifier));
+    archiveInsertStmt->bind(18, SQLT_UIN, (dvoid *) &(failureCause),
+                            (sb4) sizeof(failureCause));
+    archiveInsertStmt->bind(19, SQLT_UIN, (dvoid *) &(dataScheme),
+                            (sb4) sizeof(dataScheme));
+    archiveInsertStmt->bind(20, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
+                            (sb4) sizeof(bHeaderIndicator));
+    archiveInsertStmt->bind(21, SQLT_UIN, (dvoid *) &(dataLenght),
+                            (sb4) sizeof(dataLenght));
+    archiveInsertStmt->bind(22, SQLT_BIN, (dvoid *) (data),
+                            (sb4) sizeof(data));
+}
+
+const char* Archiver::billingInsertSql = (const char*)
+"INSERT INTO SMS_BR VALUES (:ID, :ST, :MR,\
+ :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
+ :VALID_TIME, :WAIT_TIME, :SUBMIT_TIME, :DELIVERY_TIME,\
+ :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";
+void Archiver::prepareBillingInsertStmt() throw(StorageException)
+{
+    if (billingInsertStmt) delete billingInsertStmt;
+    billingInsertStmt = new Statement(billingConnection, 
+                                      Archiver::billingInsertSql);
+    
+    billingInsertStmt->bind(1, SQLT_BIN, (dvoid *) &(id),
+                            (sb4) sizeof(id));
+    billingInsertStmt->bind(2 , SQLT_UIN, (dvoid *) &(uState), 
+                            (sb4) sizeof(uState));
+    billingInsertStmt->bind(3 , SQLT_UIN, (dvoid *) &(msgReference),
+                            (sb4) sizeof(msgReference));
+    billingInsertStmt->bind(4 , SQLT_UIN, (dvoid *) &(oaLenght),
+                            (sb4) sizeof(oaLenght));
+    billingInsertStmt->bind(5 , SQLT_UIN, (dvoid *) &(oaType),
+                            (sb4) sizeof(oaType));
+    billingInsertStmt->bind(6 , SQLT_UIN, (dvoid *) &(oaPlan),
+                            (sb4) sizeof(oaPlan));
+    billingInsertStmt->bind(7 , SQLT_STR, (dvoid *) (oaValue),
+                            (sb4) sizeof(oaValue));
+    billingInsertStmt->bind(8 , SQLT_UIN, (dvoid *)&(daLenght),
+                            (sb4) sizeof(daLenght));
+    billingInsertStmt->bind(9 , SQLT_UIN, (dvoid *) &(daType),
+                            (sb4) sizeof(daType));
+    billingInsertStmt->bind(10, SQLT_UIN, (dvoid *) &(daPlan),
+                            (sb4) sizeof(daPlan));
+    billingInsertStmt->bind(11, SQLT_STR, (dvoid *) (daValue),
+                            (sb4) sizeof(daValue));
+    billingInsertStmt->bind(12, SQLT_ODT, (dvoid *) &(validTime),
+                            (sb4) sizeof(validTime));
+    billingInsertStmt->bind(13, SQLT_ODT, (dvoid *) &(waitTime),
+                            (sb4) sizeof(waitTime));
+    billingInsertStmt->bind(14, SQLT_ODT, (dvoid *) &(submitTime),
+                            (sb4) sizeof(submitTime));
+    billingInsertStmt->bind(15, SQLT_ODT, (dvoid *) &(deliveryTime),
+                            (sb4) sizeof(deliveryTime));
+    billingInsertStmt->bind(16, SQLT_UIN, (dvoid *) &(priority),
+                            (sb4) sizeof(priority));
+    billingInsertStmt->bind(17, SQLT_UIN, (dvoid *) &(protocolIdentifier),
+                            (sb4) sizeof(protocolIdentifier));
+    billingInsertStmt->bind(18, SQLT_UIN, (dvoid *) &(failureCause),
+                            (sb4) sizeof(failureCause));
+    billingInsertStmt->bind(19, SQLT_UIN, (dvoid *) &(dataScheme),
+                            (sb4) sizeof(dataScheme));
+    billingInsertStmt->bind(20, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
+                            (sb4) sizeof(bHeaderIndicator));
+    billingInsertStmt->bind(21, SQLT_UIN, (dvoid *) &(dataLenght),
+                            (sb4) sizeof(dataLenght));
+    billingInsertStmt->bind(22, SQLT_BIN, (dvoid *) (data),
+                            (sb4) sizeof(data));
 }
 
 }}
