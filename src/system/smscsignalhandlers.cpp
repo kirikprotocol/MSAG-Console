@@ -25,7 +25,7 @@ void clearThreadSignalMask()
 	};
 }
 
-void sigAbortDispatcher(int sig)
+extern "C" void sigAbortDispatcher(int sig)
 {
 	fprintf(stderr, "Signal %i received, abort\n", sig);
 	if (_smsc != 0)
@@ -41,7 +41,7 @@ void sigAbortDispatcher(int sig)
 	}
 }
 
-void sigDumpDispatcher(int sig)
+extern "C" void sigDumpDispatcher(int sig)
 {
 	fprintf(stderr, "Signal %i received, dump & shutdown\n", sig);
 	if (_smsc != 0)
@@ -55,7 +55,7 @@ void sigDumpDispatcher(int sig)
 	}
 }
 
-void sigShutdownHandler(int signo)
+extern "C" void sigShutdownHandler(int signo)
 {
 	fprintf(stderr, "Signal %i received, shutdown\n", signo);
 	if (_smsc != 0)

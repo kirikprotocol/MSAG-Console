@@ -59,7 +59,7 @@ protected:
 };
 
 
-void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     smsc::util::xml::TerminateXerces();
 	smsc::logger::Logger::Shutdown();

@@ -428,7 +428,7 @@ public:
     };
 };
 
-static void appSignalHandler(int sig)
+extern "C" void appSignalHandler(int sig)
 {
     __trace2__("Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT)
@@ -441,7 +441,7 @@ static void appSignalHandler(int sig)
 
 
 // added by igork
-void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     //sigsend(P_PID, getppid(), SIGCHLD);
     smsc::util::xml::TerminateXerces();

@@ -75,7 +75,7 @@ void shutdown_handler(int a, siginfo_t* info, void* p)
 		main_listener->shutdown();
 }
 
-void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
   smsc::util::xml::TerminateXerces();
 	smsc::logger::Logger::Shutdown();

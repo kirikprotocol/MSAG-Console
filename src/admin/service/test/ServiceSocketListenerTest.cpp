@@ -33,12 +33,12 @@ void clearThreadSignalMask()
 }
 
 ServiceSocketListener* main_listener = 0;
-void sigAbortDispatcher(int signo)
+extern "C" void sigAbortDispatcher(int signo)
 {
 	abort();
 }
 
-void sigShutdownHandler(int signo)
+extern "C" void sigShutdownHandler(int signo)
 {
 	if (main_listener != 0)
 		main_listener->shutdown();

@@ -337,7 +337,7 @@ void ShowHelp(SmppSession& ss,const string& args)
   printf("/ - send last message\n");
 }
 
-char** cmd_completion(const char *text,int start,int end)
+extern "C" char** cmd_completion(const char *text,int start,int end)
 {
   string word(rl_line_buffer+start,rl_line_buffer +end);
   vector<string> found;
