@@ -1438,7 +1438,7 @@ USHORT_T Et96MapOpenConf (
             provErrCode_p?MAP_ERRORS_BASE+*provErrCode_p:MAP_FALURE);*/
           DoProvErrorProcessing(provErrCode_p);
           throw MAPDIALOG_FATAL_ERROR(
-            FormatText("MAP::%s connection opening error , reason %d",__FUNCTION__,refuseReason_p?*refuseReason_p),
+            FormatText("MAP::%s connection opening error, reason %d",__FUNCTION__,refuseReason_p?*refuseReason_p:0),
             refuseReason_p?(MAP_ERRORS_BASE+*refuseReason_p):MAP_FALURE);
         }
       }
