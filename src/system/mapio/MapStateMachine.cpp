@@ -466,8 +466,8 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
         dialogid_map = dialog->dialogid_map;
         __trace2__("MAP::putCommand: Preapre SMSC command");
         dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
-        __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog));
-        mkMapAddress( &dialog->m_msAddr, sms->getDestinationAddress().value, sms->getDestinationAddress().length );
+        __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()));
+        mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
         mkMapAddress( &dialog->m_scAddr, "79029869999", 11 );
         mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
         mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
