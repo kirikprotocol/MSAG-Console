@@ -1378,7 +1378,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
 static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
 {
   dialog->isUSSD = true;
-  __map_trace2__("%s: dialogid 0x%x opened=%s invoke=%d",__func__,dialog->dialogid_map,dialog->id_opened?"true":"false", dialog->invokeId);
+  __map_trace2__("%s: dialogid 0x%x opened=%s invoke=%d ssn=%d",__func__,dialog->dialogid_map,dialog->id_opened?"true":"false", dialog->invokeId, dialog->ssn);
   if( !dialog->id_opened ) {
     bool dlg_found = false;
     istringstream(string(dialog->sms->getDestinationAddress().value))>>dialog->ussdSequence;
