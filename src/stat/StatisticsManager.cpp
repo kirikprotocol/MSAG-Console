@@ -98,12 +98,15 @@ int StatisticsManager::Execute()
 
 void StatisticsManager::stop()
 {
+    __trace__("StatisticsManager::stop() called, started=%d", isStarted);
     ThreadedTask::stop();
     if (isStarted)
     {
         awakeEvent.Signal();
+        __trace__("StatisticsManager::ctop() waiting finish ...");
         exitEvent.Wait();
     }
+    __trace__("StatisticsManager::stop() exited");
 }
 
 void StatisticsManager::flushStatistics() 
