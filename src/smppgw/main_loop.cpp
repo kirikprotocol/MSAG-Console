@@ -43,7 +43,6 @@ void Smsc::mainLoop()
 {
   typedef std::vector<SmscCommand> CmdVector;
   CmdVector frame;
-  SmeIndex smscSmeIdx=smeman.lookup("smscsme");
   Event e;
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.mainLoop");
   thr_setprio(thr_self(),127);
@@ -116,18 +115,7 @@ void Smsc::mainLoop()
       }
       if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
       {
-        if(i->getProxy()->getSmeIndex()==smscSmeIdx)
-        {
-          try{
-            processCommand((*i));
-          }catch(...)
-          {
-            __warning2__("command processing failed:%d",(*i)->get_commandId());
-          }
-        }else
-        {
-          submitCount++;
-        }
+        submitCount++;
       }else
       {
         try{
@@ -158,14 +146,11 @@ void Smsc::mainLoop()
         frame.pop_back();
         if(cmd->get_commandId()==SUBMIT || cmd->get_commandId()==FORWARD)
         {
-          if(cmd.getProxy()->getSmeIndex()!=smscSmeIdx)
+          try{
+            processCommand(cmd);
+          }catch(...)
           {
-            try{
-              processCommand(cmd);
-            }catch(...)
-            {
-              __warning2__("command processing failed:%d",cmd->get_commandId());
-            }
+            __warning2__("command processing failed:%d",cmd->get_commandId());
           }
         }
         continue;
