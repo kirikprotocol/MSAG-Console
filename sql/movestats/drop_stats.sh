@@ -10,4 +10,5 @@ if [ "$2" = "" ] ; then
 fi
 sed -e s/--PERIOD--/$1/ stats_drop_template.sql > stats_drop.sql
 sqlplus $2 @stats_drop.sql
+
 rm -f stats_drop.sql
