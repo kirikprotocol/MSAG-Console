@@ -70,7 +70,7 @@ int TestSme::Execute()
 		SmppProtocolErrorTestCases tc(conf, smeAddr, chkList);
 		while (!isStopping)
 		{
-			switch (rand1(4))
+			switch (rand1(5))
 			{
 				case 1:
 					tc.invalidBindScenario(RAND_TC);
@@ -82,7 +82,10 @@ int TestSme::Execute()
 					tc.equalSequenceNumbersScenario();
 					break;
 				case 4:
-					tc.submitAfterUnbindScenario();
+					tc.submitAfterUnbindScenario(RAND_TC);
+					break;
+				case 5:
+					tc.nullPduScenario(RAND_TC);
 					break;
 				default:
 					__unreachable__("Invalid scenario num");
