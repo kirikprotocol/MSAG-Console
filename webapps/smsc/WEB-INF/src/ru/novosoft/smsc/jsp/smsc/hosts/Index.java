@@ -6,6 +6,8 @@
 package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.daemon.Daemon;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
@@ -86,7 +88,8 @@ public class Index extends SmscBean
 	{
 		try
 		{
-			return serviceManager.getCountServices(hostName);
+			return serviceManager.getCountServices(hostName)
+					- (hostName.equals(smsc.getInfo().getHost()) ? 1 : 0);
 		}
 		catch (AdminException e)
 		{
@@ -99,7 +102,8 @@ public class Index extends SmscBean
 	{
 		try
 		{
-			return serviceManager.getCountRunningServices(hostName);
+			return serviceManager.getCountRunningServices(hostName)
+					- ((hostName.equals(smsc.getInfo().getHost()) && smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) ? 1 : 0);
 		}
 		catch (AdminException e)
 		{

@@ -7,6 +7,7 @@ package ru.novosoft.smsc.admin.service;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.route.SME;
@@ -44,7 +45,7 @@ public class ServiceManager
 	protected static Smsc smsc = null;
 
 	public static ServiceManager getInstance()
-			  throws IsNotInitializedException
+			throws IsNotInitializedException, AdminException
 	{
 		try
 		{
@@ -61,7 +62,7 @@ public class ServiceManager
 	}
 
 	public static void init(ConfigManager cfgManager, Smsc smscenter)
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+			throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		configManager = cfgManager;
 		isInitialized = configManager != null;
@@ -74,7 +75,7 @@ public class ServiceManager
 	}
 
 	public static File getServiceFolder(String serviceId)
-			  throws AdminException
+			throws AdminException
 	{
 		return new File(new File(daemonsFolder, serviceManager.getServiceInfo(serviceId).getHost()), serviceId);
 	}
@@ -85,10 +86,11 @@ public class ServiceManager
 	protected static ConfigManager configManager = null;
 	protected Category logger = Category.getInstance(this.getClass().getName());
 
-	protected ServiceManager()
+	protected ServiceManager() throws AdminException
 	{
 		logger.debug("creating ServiceManager");
 		daemonManager = new DaemonManager(smsc);
+		putService(smsc);
 		Config config = configManager.getConfig();
 		Set daemons = config.getSectionChildSectionNames("daemons");
 		for (Iterator i = daemons.iterator(); i.hasNext();)
@@ -115,19 +117,22 @@ public class ServiceManager
 	}
 
 	protected void addDaemonInternal(String host, int port)
-			  throws AdminException
+			throws AdminException
 	{
 		Daemon d = daemonManager.addDaemon(host, port);
 		Map newServices = d.listServices();
 		for (Iterator i = newServices.keySet().iterator(); i.hasNext();)
 		{
-			ServiceInfo info = (ServiceInfo) newServices.get((String) i.next());
-			putService(new Service(info));
+			ServiceInfo info = (ServiceInfo) newServices.get(i.next());
+			if (info.getId().equals(Constants.SMSC_SME_ID))
+				smsc.setInfo(info);
+			else
+				putService(new Service(info));
 		}
 	}
 
 	public synchronized void addDaemon(String host, int port)
-			  throws AdminException
+			throws AdminException
 	{
 		addDaemonInternal(host, port);
 		Config config = configManager.getConfig();
@@ -148,7 +153,7 @@ public class ServiceManager
 	}
 
 	protected File saveFileToTemp(InputStream in)
-			  throws IOException
+			throws IOException
 	{
 		File tmpFile = File.createTempFile("SMSC_SME_distrib_", ".zip.tmp");
 		OutputStream out = new BufferedOutputStream(new FileOutputStream(tmpFile));
@@ -165,7 +170,7 @@ public class ServiceManager
 	}
 
 	public synchronized AddAdmServiceWizard receiveNewServiceArchive(InputStream in)
-			  throws AdminException
+			throws AdminException
 	{
 		AddAdmServiceWizard wizard = new AddAdmServiceWizard(in);
 		if (services.keySet().contains(wizard.getSystemId()))
@@ -180,7 +185,7 @@ public class ServiceManager
 	}
 
 	public synchronized void addAdmService(AddAdmServiceWizard wizard)
-			  throws AdminException
+			throws AdminException
 	{
 		if (services.containsKey(wizard.getSystemId()))
 			throw new AdminException("Service \"" + wizard.getSystemId() + "\" already exists");
@@ -211,7 +216,7 @@ public class ServiceManager
 															String rangeOfAddress,
 															String password
 															)
-			  throws AdminException
+			throws AdminException
 	{
 		SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion, systemType, password,
 								rangeOfAddress, -1, false, 8);
@@ -239,7 +244,7 @@ public class ServiceManager
 	}
 
 	public synchronized void removeService(String serviceId)
-			  throws AdminException
+			throws AdminException
 	{
 		Service s = getService(serviceId);
 		String host = s.getInfo().getHost();
@@ -249,12 +254,12 @@ public class ServiceManager
 		smsc.getSmes().remove(serviceId);
 		smsc.saveSmesConfig();
 		if (!recursiveDeleteFolder(getServiceFolder(host, serviceId))
-				  || !recursiveDeleteFolder(getServiceJspsFolder(webappFolder, serviceId)))
+				|| !recursiveDeleteFolder(getServiceJspsFolder(webappFolder, serviceId)))
 			throw new AdminException("Service removed, but services files not deleted");
 	}
 
 	public synchronized void removeSme(String smeId)
-		throws AdminException
+			throws AdminException
 	{
 		if (isService(smeId))
 			throw new AdminException("Couldn't remove sme \"" + smeId + "\" becouse it is service");
@@ -263,7 +268,7 @@ public class ServiceManager
 	}
 
 	public synchronized void startService(String serviceId)
-			  throws AdminException
+			throws AdminException
 	{
 		try
 		{
@@ -280,7 +285,7 @@ public class ServiceManager
 	}
 
 	public synchronized void killService(String serviceId)
-			  throws AdminException
+			throws AdminException
 	{
 		Service s = getService(serviceId);
 		Daemon d = getDaemon(s.getInfo().getHost());
@@ -290,14 +295,14 @@ public class ServiceManager
 	}
 
 	public synchronized void shutdownService(String serviceId)
-			  throws AdminException
+			throws AdminException
 	{
 		getDaemon(getService(serviceId).getInfo().getHost()).shutdownService(serviceId);
 	}
 
 	public Object callServiceMethod(String hostName, String serviceId, String componentName,
 											  String methodName, String returnTypeName, Map args)
-			  throws AdminException
+			throws AdminException
 	{
 		Service s = getService(serviceId);
 		if (!s.getInfo().getHost().equals(hostName))
@@ -359,7 +364,7 @@ public class ServiceManager
 	 * @return Service IDs (<code>String</code>s), that registered on specified host
 	 */
 	public synchronized Set getServiceIds(String host)
-			  throws AdminException
+			throws AdminException
 	{
 		if (!getHostNames().contains(host))
 			throw new AdminException("Host \"" + host + "\" not connected");
@@ -375,14 +380,14 @@ public class ServiceManager
 	}
 
 	public synchronized ServiceInfo getServiceInfo(String servoceId)
-			  throws AdminException
+			throws AdminException
 	{
 		Service s = getService(servoceId);
 		return s.getInfo();
 	}
 
 	public synchronized void removeDaemon(String host)
-			  throws AdminException
+			throws AdminException
 	{
 		daemonManager.removeDaemon(host);
 		refreshServices();
@@ -399,7 +404,7 @@ public class ServiceManager
 	}
 
 	public synchronized int getCountRunningServices(String hostName)
-			  throws AdminException
+			throws AdminException
 	{
 		refreshServices();
 		Set serviceIds = getServiceIds(hostName);
@@ -414,27 +419,27 @@ public class ServiceManager
 	}
 
 	public synchronized int getCountServices(String hostName)
-			  throws AdminException
+			throws AdminException
 	{
 		return getServiceIds(hostName).size();
 	}
 
 	public synchronized void setStartupParameters(String serviceId, String host,
 																 /*String serviceName, */int port, String args)
-			  throws AdminException
+			throws AdminException
 	{
 		Service s = getService(serviceId);
 		Daemon d = getDaemon(s.getInfo().getHost());
 		d.setServiceStartupParameters(serviceId, /*serviceName, */port, args);
 		if (s.getInfo().getStatus() == ServiceInfo.STATUS_STOPPED)
 		{
-			replaceService(new Service(new ServiceInfo(serviceId, d.getHost(), port, args, (SME) smsc.getSmes().get(serviceId), s.getInfo().getStatus())));
+			replaceService(new Service(new ServiceInfo(serviceId, d.getHost(), port, args, smsc.getSmes().get(serviceId), s.getInfo().getStatus())));
 		}
 	}
 
 	/************************************ helpers ******************************/
 	public synchronized void refreshServices()
-			  throws AdminException
+			throws AdminException
 	{
 		services.clear();
 		for (Iterator i = daemonManager.getHosts().iterator(); i.hasNext();)
@@ -444,20 +449,28 @@ public class ServiceManager
 			for (Iterator j = infos.values().iterator(); j.hasNext();)
 				putService(new Service((ServiceInfo) j.next()));
 		}
+		putService(smsc);
 	}
 
 	public synchronized void refreshService(String serviceId)
-			  throws AdminException
+			throws AdminException
 	{
 		Service s = getService(serviceId);
 		Daemon d = daemonManager.getDaemon(s.getInfo().getHost());
 		Map infos = d.listServices();
 		for (Iterator j = infos.values().iterator(); j.hasNext();)
-			replaceService(new Service((ServiceInfo) j.next()));
+		{
+			final ServiceInfo info = (ServiceInfo) j.next();
+			logger.debug("Refresh \"" + serviceId + "\" service: \"" + info.getId() + '"');
+			if (!info.getId().equals(Constants.SMSC_SME_ID))
+				replaceService(new Service(info));
+			if (info.getId().equals(serviceId))
+				s.setInfo(info);
+		}
 	}
 
 	protected Service getService(String serviceId)
-			  throws AdminException
+			throws AdminException
 	{
 		Service s = (Service) services.get(serviceId);
 		if (s == null)
@@ -466,7 +479,7 @@ public class ServiceManager
 	}
 
 	protected void putService(Service s)
-			  throws AdminException
+			throws AdminException
 	{
 		if (services.containsKey(s.getInfo().getId()))
 			throw new AdminException("Service \"" + s.getInfo().getId() + "\" already present");
@@ -474,14 +487,14 @@ public class ServiceManager
 	}
 
 	protected void replaceService(Service s)
-			  throws AdminException
+			throws AdminException
 	{
 		services.put(s.getInfo().getId(), s);
 		//refreshService(s.getInfo().getId());
 	}
 
 	protected Daemon getDaemon(String hostName)
-			  throws AdminException
+			throws AdminException
 	{
 		Daemon d = daemonManager.getDaemon(hostName);
 		if (d == null)
@@ -490,7 +503,7 @@ public class ServiceManager
 	}
 
 	protected void putDaemon(Daemon d)
-			  throws AdminException
+			throws AdminException
 	{
 		if (services.containsKey(d.getHost()))
 			throw new AdminException("Host \"" + d.getHost() + "\" already connected");
@@ -525,7 +538,7 @@ public class ServiceManager
 	}
 
 	public void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo)
-			  throws AdminException
+			throws AdminException
 	{
 		String hostName = serviceInfo.getHost();
 		String serviceId = serviceInfo.getId();
@@ -576,7 +589,7 @@ public class ServiceManager
 	}
 
 	protected void unZipFileFromArchive(File folderUnpackTo, String name, ZipInputStream zin)
-			  throws IOException
+			throws IOException
 	{
 		File file = new File(folderUnpackTo, name);
 		file.getParentFile().mkdirs();
@@ -586,7 +599,7 @@ public class ServiceManager
 	}
 
 	protected void unZipArchive(File folderUnpackTo, InputStream in)
-			  throws IOException
+			throws IOException
 	{
 		ZipInputStream zin = new ZipInputStream(in);
 		for (ZipEntry e = zin.getNextEntry(); e != null; e = zin.getNextEntry())

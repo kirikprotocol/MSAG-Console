@@ -22,17 +22,32 @@ char get_filename_result[128];
 const char * const get_filename(const char * const file_to_find)
 throw (smsc::admin::AdminException)
 {
-  if (file_exist(file_to_find)) {
+  if (file_exist(file_to_find))
+  {
     strcpy(get_filename_result, file_to_find);
     return get_filename_result;
-  } else {
+  }
+  else
+  {
     char buf[strlen(file_to_find)+8+1];
     strcpy(buf, "../conf/");
     strcat(buf, file_to_find);
-    if (file_exist(buf)) {
+    if (file_exist(buf))
+    {
       strcpy(get_filename_result, buf);
       return get_filename_result;
     }
+    else
+    {
+      char buf[strlen(file_to_find)+8+1];
+      strcpy(buf, "./conf/");
+      strcat(buf, file_to_find);
+      if (file_exist(buf))
+      {
+        strcpy(get_filename_result, buf);
+        return get_filename_result;
+      }
+    } 
   }
   char message[strlen(file_to_find) + 64];
   sprintf(message, "File \"%s\" not found", file_to_find); 

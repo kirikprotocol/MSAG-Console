@@ -178,6 +178,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
     DOM_Document document = reader.read(filename);
     DOM_Element elem = document.getDocumentElement();
     DOM_NodeList subj_defs = elem.getElementsByTagName("subject_def");
+    // Subjects
     for (unsigned i=0; i<subj_defs.getLength(); i++)
     {
       DOM_Node node(subj_defs.item(i));
@@ -193,6 +194,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       }
     }
 
+    // routes
     DOM_NodeList route_list = elem.getElementsByTagName("route");
     for (unsigned i=0; i<route_list.getLength(); i++)
     {

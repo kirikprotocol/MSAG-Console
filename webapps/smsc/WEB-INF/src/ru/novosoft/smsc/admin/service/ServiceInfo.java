@@ -8,6 +8,7 @@ package ru.novosoft.smsc.admin.service;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.route.SMEList;
 
@@ -46,7 +47,7 @@ public class ServiceInfo
 			throw new AdminException("services name or services system id not specified in response");
 		}
 		sme = smes.get(id);
-		if (sme == null)
+		if (sme == null && !id.equals(Constants.SMSC_SME_ID))
 			throw new AdminException("Unknown SME ID: \"" + id + '"');
 
 		setStatusStr(serviceElement.getAttribute("status"));

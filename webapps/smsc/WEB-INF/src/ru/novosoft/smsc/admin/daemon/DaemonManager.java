@@ -8,9 +8,7 @@ package ru.novosoft.smsc.admin.daemon;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class DaemonManager
@@ -54,5 +52,16 @@ public class DaemonManager
 	public Set getHosts()
 	{
 		return daemons.keySet();
+	}
+
+	public Daemon getSmscDaemon()
+	{
+		for (Iterator i = daemons.values().iterator(); i.hasNext();)
+		{
+			Daemon daemon = (Daemon) i.next();
+			if (daemon.isContainsSmsc())
+				return daemon;
+		}
+		return null;
 	}
 }

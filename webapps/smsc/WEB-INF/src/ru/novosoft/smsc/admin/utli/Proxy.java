@@ -20,8 +20,8 @@ import java.net.Socket;
 
 public class Proxy
 {
-	public final byte StatusConnected = 1;
-	public final byte StatusDisconnected = 0;
+	public static final byte StatusConnected = 1;
+	public static final byte StatusDisconnected = 0;
 
 	protected String host = "localhost";
 	protected int port = 1024;
@@ -36,7 +36,6 @@ public class Proxy
 	protected Proxy(String host, int port)
 			  throws AdminException
 	{
-		logger.debug("Proxy(" + host + ", " + port + ")");
 		this.host = host;
 		this.port = port;
 		status = StatusDisconnected;

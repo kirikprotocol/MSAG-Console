@@ -76,7 +76,15 @@ for(Iterator i = bean.getProfiles().iterator(); i.hasNext(); row++)
 DataItem item = (DataItem) i.next();
 %>
 <tr class=row<%=row&1%>>
-	<td class=name><a href="#" title="Edit profile" onClick='return editProfile("<%=(String)item.getValue("Mask")%>")'><%=StringEncoderDecoder.encode((String)item.getValue("Mask"))%></a></td>
+	<td class=name><%
+		if (bean.isEditAllowed())
+		{
+			%><a href="#" title="Edit profile" onClick='return editProfile("<%=(String)item.getValue("Mask")%>")'><%=StringEncoderDecoder.encode((String)item.getValue("Mask"))%></a><%
+		}
+		else
+		{
+			%><%=StringEncoderDecoder.encode((String)item.getValue("Mask"))%><%
+		}%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Codepage"))%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Report info"))%></td>
 </tr>
@@ -84,8 +92,12 @@ DataItem item = (DataItem) i.next();
 </tbody>
 </table>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
-<div class=secButtons>
-<input class=btn type=submit name=mbAdd value="Add profile" title="Add profile"><br>
-</div>
+<%
+if (bean.isEditAllowed())
+{
+	%><div class=secButtons>
+	<input class=btn type=submit name=mbAdd value="Add profile" title="Add profile">
+	</div><%
+}%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -104,4 +104,10 @@ public class Service extends Proxy
 			throw new AdminException("Error occured: " + r.getDataAsString());
 		info.setComponents(r.getData().getDocumentElement());
 	}
+
+	protected void setInfo(ServiceInfo info)
+	{
+		logger.debug("Set info. Status: " + info.getStatusStr() + " [" + info.getStatus()+']');
+		this.info = info;
+	}
 }

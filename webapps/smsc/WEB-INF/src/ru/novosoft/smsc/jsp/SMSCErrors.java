@@ -77,7 +77,7 @@ public class SMSCErrors
 			public static final String cantDelete = B + "cantDelete";
 			public static final String cantEdit = B + "cantEdit";
 			public static final String subjNotSpecified = B + "subjNotSpecified";
-			public static final String masksNotDefined = B +"masksNotDefined";
+			public static final String masksNotDefined = B + "masksNotDefined";
 		}
 
 		public static class routes
@@ -89,6 +89,7 @@ public class SMSCErrors
 			public static final String nameNotSpecified = B + "nameNotSpecified";
 			public static final String invalidPriority = B + "invalidPriority";
 		}
+
 		public static class users
 		{
 			private static final String B = error.B + "users.";
@@ -97,6 +98,16 @@ public class SMSCErrors
 			public static final String couldntApply = B + "couldntApply";
 			public static final String passwordNotDefined = B + "passwordNotDefined";
 			public static final String passwordNotConfirmed = B + "passwordNotConfirmed";
+		}
+
+		public static class smsc
+		{
+			private static final String B = error.B + "smsc.";
+			public static final String daemonNotFound = B + "daemonNotFound";
+			public static final String couldntRefreshStatus = B + "couldntRefreshStatus";
+			public static final String couldntStart = B + "couldntStart";
+			public static final String couldntStop = B + "couldntStop";
+			public static final String couldntRefreshComponents = B + "couldntRefreshComponents";
 		}
 	}
 

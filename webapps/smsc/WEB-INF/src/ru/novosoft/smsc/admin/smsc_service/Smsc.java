@@ -9,6 +9,9 @@ import org.apache.log4j.Category;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.utli.Proxy;
+import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
@@ -51,20 +54,30 @@ public class Smsc extends Service
 	public Smsc(ConfigManager configManager, NSConnectionPool connectionPool)
 			throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
-		super(new ServiceInfo("SMSC",
+		super(new ServiceInfo(Constants.SMSC_SME_ID,
 									 configManager.getConfig().getString("smsc.host"),
 									 configManager.getConfig().getInt("smsc.port"),
-									 "", null, ServiceInfo.STATUS_RUNNING));
+									 "", null, ServiceInfo.STATUS_STOPPED));
 
 		this.configManager = configManager;
 
-		refreshComponents();
-		smsc_component = (Component) getInfo().getComponents().get("SMSC");
-		apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
-		apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
-		lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
-		update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
+		try
+		{
+			refreshComponents();
+		}
+		catch (AdminException e)
+		{
+			logger.error("Couldn't connect to SMSC", e);
+		}
 
+		if (getStatus() == Proxy.StatusConnected)
+		{
+			smsc_component = (Component) getInfo().getComponents().get("SMSC");
+			apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
+			apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
+			lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
+			update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
+		}
 		try
 		{
 			final File smscConfFolder = getSmscConfFolder();
@@ -164,14 +177,23 @@ public class Smsc extends Service
 	public void applyRoutes()
 			throws AdminException
 	{
+		checkComponents();
 		saveSmesConfig();
 		saveRoutesConfig();
 		call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
 	}
 
+	public void applyProfiles()
+			throws AdminException
+	{
+		/*  todo */
+	}
+
 	public void applyAliases()
 			throws AdminException
 	{
+		checkComponents();
+
 		try
 		{
 			final File smscConfFolder = getSmscConfFolder();
@@ -211,6 +233,8 @@ public class Smsc extends Service
 	public Profile lookupProfile(Mask mask)
 			throws AdminException
 	{
+		checkComponents();
+
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
 		Object result = call(smsc_component, lookup_profile_method, Type.Types[Type.StringType], args);
@@ -223,6 +247,8 @@ public class Smsc extends Service
 	public int updateProfile(Mask mask, Profile newProfile)
 			throws AdminException
 	{
+		checkComponents();
+
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
 		args.put("profile", newProfile.getStringRepresentation());
@@ -282,5 +308,36 @@ public class Smsc extends Service
 	public void processCancelMessages(Collection messageIds)
 			throws AdminException
 	{
+		/* todo */
+	}
+
+	public void flushStatistics()
+			throws AdminException
+	{
+		/*todo*/
+	}
+
+	public void start(Daemon smscDaemon)
+			throws AdminException
+	{
+		smscDaemon.startService(Constants.SMSC_SME_ID);
+	}
+
+	public void stop(Daemon smscDaemon) throws AdminException
+	{
+		smscDaemon.shutdownService(Constants.SMSC_SME_ID);
+	}
+
+	protected void checkComponents() throws AdminException
+	{
+		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null)
+		{
+			refreshComponents();
+			smsc_component = (Component) getInfo().getComponents().get("SMSC");
+			apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
+			apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
+			lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
+			update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
+		}
 	}
 }

@@ -6,6 +6,8 @@
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.utli.Proxy;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
@@ -107,5 +109,9 @@ public class Index extends IndexBean
 	public void setMbEdit(String mbEdit)
 	{
 		this.mbEdit = mbEdit;
+	}
+	public boolean isEditAllowed()
+	{
+		return smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING;
 	}
 }

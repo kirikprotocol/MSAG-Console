@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
@@ -48,6 +49,8 @@ public class HostView extends SmscBean
 		try
 		{
 			services = daemon.listServices();
+			if (daemon.isContainsSmsc())
+				services.remove(Constants.SMSC_SME_ID);
 		}
 		catch (AdminException e)
 		{
@@ -184,7 +187,7 @@ public class HostView extends SmscBean
 		{
 			try
 			{
-				return serviceManager.getCountServices(hostName);
+				return serviceManager.getCountServices(hostName) - (daemon.isContainsSmsc() ? 1 : 0);
 			}
 			catch (AdminException e)
 			{
@@ -200,7 +203,8 @@ public class HostView extends SmscBean
 		{
 			try
 			{
-				return serviceManager.getCountRunningServices(hostName);
+				return serviceManager.getCountRunningServices(hostName)
+						- ((daemon.isContainsSmsc() && smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) ? 1 : 0);
 			}
 			catch (AdminException e)
 			{

@@ -40,9 +40,8 @@ pid_t Service::start()
       {	// child process
         chdir(service_dir.get());
         chmod(service_exe, S_IRWXU | S_IRGRP | S_IXGRP);
-        #ifdef SMSC_DEBUG
-          freopen("smsc_service.err", "a",  stderr);
-        #endif
+        freopen("service.err", "a",  stderr);
+        freopen("service.out", "a",  stdout);
         execv(service_exe, createArguments());
         logger.error("Couldn't start service (\"%s/%s\"), nested: %u: %s",
                      service_dir.get(), service_exe, errno, strerror(errno));

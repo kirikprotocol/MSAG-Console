@@ -12,6 +12,7 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ResourceBundle;
 
 
 public class DtdsEntityResolver implements EntityResolver
@@ -38,7 +39,7 @@ public class DtdsEntityResolver implements EntityResolver
     {
       String filename = "dtds/" + getDtdName(systemId);
       logger.debug("filename: " + filename);
-      InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
+		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
       if (in != null)
         return new InputSource(in);
       else

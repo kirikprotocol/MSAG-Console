@@ -9,6 +9,7 @@ import org.apache.log4j.Category;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.protocol.*;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
@@ -30,9 +31,10 @@ public class Daemon extends Proxy
 	private ResponseReader reader;
 	private Category logger = Category.getInstance(this.getClass().getName());
 	private Smsc smsc = null;
+	private boolean containsSmsc = false;
 
 	public Daemon(String host, int port, Smsc smsc)
-			  throws AdminException
+			throws AdminException
 	{
 		super(host, port);
 		this.smsc = smsc;
@@ -43,7 +45,7 @@ public class Daemon extends Proxy
 	 * @return Process ID (PID) of new services
 	 */
 	public synchronized long startService(String serviceId)
-			  throws AdminException
+			throws AdminException
 	{
 		Response r = runCommand(new CommandStartService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
@@ -61,7 +63,7 @@ public class Daemon extends Proxy
 	}
 
 	public synchronized void addService(ServiceInfo serviceInfo)
-			  throws AdminException
+			throws AdminException
 	{
 		logger.debug("Add services \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
 						 + serviceInfo.getPort() + ")");
@@ -73,7 +75,7 @@ public class Daemon extends Proxy
 	}
 
 	public synchronized void removeService(String serviceId)
-			  throws AdminException
+			throws AdminException
 	{
 		Response r = runCommand(new CommandRemoveService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
@@ -81,7 +83,7 @@ public class Daemon extends Proxy
 	}
 
 	public synchronized void shutdownService(String serviceId)
-			  throws AdminException
+			throws AdminException
 	{
 		Response r = runCommand(new CommandShutdownService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
@@ -89,7 +91,7 @@ public class Daemon extends Proxy
 	}
 
 	public synchronized void killService(String serviceId)
-			  throws AdminException
+			throws AdminException
 	{
 		Response r = runCommand(new CommandKillService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
@@ -101,18 +103,22 @@ public class Daemon extends Proxy
 	 * @return Map: services name -> ServiceInfo
 	 */
 	public synchronized Map listServices()
-			  throws AdminException
+			throws AdminException
 	{
 		Response r = runCommand(new CommandListServices());
 		if (r.getStatus() != Response.StatusOk)
 			throw new AdminException("Couldn't list services, nested:" + r.getDataAsString());
 
 		Map result = new HashMap();
+		containsSmsc = false;
 
 		NodeList list = r.getData().getElementsByTagName("service");
 		for (int i = 0; i < list.getLength(); i++)
 		{
-			ServiceInfo newInfo = new ServiceInfo((Element) list.item(i), host, smsc.getSmes());
+			final Element serviceElement = (Element) list.item(i);
+			String serviceId = serviceElement.getAttribute("id");
+			containsSmsc |= Constants.SMSC_SME_ID.equals(serviceId);
+			ServiceInfo newInfo = new ServiceInfo(serviceElement, host, smsc.getSmes());
 			result.put(newInfo.getId(), newInfo);
 		}
 
@@ -120,10 +126,15 @@ public class Daemon extends Proxy
 	}
 
 	public synchronized void setServiceStartupParameters(String serviceId, /*String serviceName, */int port, String args)
-			  throws AdminException
+			throws AdminException
 	{
 		Response r = runCommand(new CommandSetServiceStartupParameters(serviceId, /*serviceName, */port, args));
 		if (r.getStatus() != Response.StatusOk)
 			throw new AdminException("Couldn't set services startup parameters \"" + serviceId + "\", nested:" + r.getDataAsString());
+	}
+
+	public boolean isContainsSmsc()
+	{
+		return containsSmsc;
 	}
 }
