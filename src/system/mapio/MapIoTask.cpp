@@ -2,7 +2,7 @@
 #define SSN 8
 #define MAXENTRIES 10
  
-#define _CB(a) USHORT_T a() {fprintf(stderr,"MAP::%s callback was called\n",#a);return MSG_OK;}
+#define _CB(a) extern "C" USHORT_T a() {fprintf(stderr,"MAP::%s callback was called\n",#a);return MSG_OK;}
 
 #ifdef USE_MAPIO
 

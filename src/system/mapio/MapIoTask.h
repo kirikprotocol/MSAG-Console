@@ -20,6 +20,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::threads::ThreadedTask;
 using smsc::core::synchronization::Event;
 
+extern "C" {
 #include <portss7.h>
 #include <ss7tmc.h>
 #include <ss7log.h>
@@ -28,6 +29,7 @@ using smsc::core::synchronization::Event;
 #include <et96map_api_types.h>
 #include <et96map_dialogue.h>
 #include <et96map_sms.h>
+}
 
 class hash_func_ET96MAP_DID{
 public:
