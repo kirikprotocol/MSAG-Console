@@ -86,6 +86,14 @@ public:
     if ( ptr == end ) throw runtime_error("out of data");
     return (*ptr)->idx;
   }
+  virtual bool isSmeConnected()const
+  {
+    if ( ptr == end ) throw runtime_error("out of data");
+    (*ptr)->mutex.Lock();
+    bool rv=(*ptr)->proxy!=NULL;
+    (*ptr)->mutex.Unlock();
+    return rv;
+  }
 };
 
 SmeIterator* SmeManager::iterator()

@@ -21,6 +21,7 @@ public:
   virtual SmeProxy* getSmeProxy() const = 0;
   virtual SmeInfo  getSmeInfo() const = 0;
   virtual SmeIndex getSmeIndex() const = 0;
+  virtual bool isSmeConnected()const=0;
 };
 
 
@@ -28,5 +29,3 @@ public:
 }; // namespace smsc
 
 #endif
-
-
