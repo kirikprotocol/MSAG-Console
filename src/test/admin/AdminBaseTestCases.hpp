@@ -17,6 +17,8 @@ using smsc::core::network::Socket;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 
+static const char* shit = "~ !@#$%^&*()-_=+\\|{[}];:'\",<.>?";
+
 #define __m__(mask) v.push_back(mask)
 
 struct Masks
@@ -86,6 +88,7 @@ public:
 	virtual ~AdminBaseTestCases();
 
 	bool login(const char* login, const char* passwd, bool correct);
+	void apply();
 
 	/**
 	 * Выполнение всех тест кейсов.

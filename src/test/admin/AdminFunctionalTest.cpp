@@ -19,16 +19,15 @@ public:
 void AdminFunctionalTest::executeTest()
 {
 	//base
-	baseTc.loginCommands();
+	//baseTc.loginCommands();
 	//baseTc.invalidCommands();
-	baseTc.executeTestCases();
+	//baseTc.executeTestCases();
 	//alias
-	/*
 	aliasTc.loginCommands();
 	aliasTc.incorrectCommands(); //не мен€ют конфигурации
-	aliasTc.correctCommands();
-	aliasTc.executeTestCases();
-	*/
+	//aliasTc.correctCommands();
+	//aliasTc.executeTestCases();
+	aliasTc.apply();
 }
 
 /**
