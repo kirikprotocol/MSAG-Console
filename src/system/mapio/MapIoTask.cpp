@@ -141,7 +141,7 @@ void MapIoTask::dispatcher()
 #else
     result = MsgRecvEvent( &message, 0, 0, 1000 );
 #endif
-    if ( time_logger.isDebugEnabled() ) gettimeofday( &utime, 0 );
+    if ( time_logger->isDebugEnabled() ) gettimeofday( &utime, 0 );
 
     MAP_dispatching = false;
 
@@ -242,7 +242,7 @@ void MapIoTask::dispatcher()
 #if EINSS7_THREADSAFE == 1
     EINSS7CpReleaseMsgBuffer(&message);
 #endif
-    if ( time_logger.isDebugEnabled() ) {
+    if ( time_logger->isDebugEnabled() ) {
       long usecs;
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
