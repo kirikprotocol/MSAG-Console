@@ -103,8 +103,6 @@ public abstract class SmsSource
       }
       stream.close();
 
-      StringBuffer textBuffer = new StringBuffer(text.length);
-      String messagePrefix = "";
       if( text != null && text.length>0 ) {
          if( (esmClass & 0x40) == 0x40 ) {
            if(concatInfo != null) {
@@ -124,9 +122,10 @@ public abstract class SmsSource
          } else {
            convertMessage(textBuffer, text, 0, text.length, false, textEncoding);
          }
+         StringBuffer textBuffer = new StringBuffer(text.length);
+         row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
+         row.setText(textBuffer.toString());
       }
-      row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
-      row.setText(textBuffer.toString());
     }
     catch (IOException exc) {
       System.out.println("SMS Body parsing failed !");
