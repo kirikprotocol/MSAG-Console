@@ -235,11 +235,94 @@ public:
             return false;
         }
         
-        smsc_log_debug(logger, "Sending message '%s' for %s ...", 
-                       message.message.c_str(), message.abonent.c_str());
+        smsc_log_debug(logger, "%s%s message #%lld for %s: %s", (message.replace) ? "Replacing ":"Sending",
+                       (message.replace) ? message.smsc_id.c_str():"", message.id, message.abonent.c_str(),
+                       message.message.c_str());
 
         // TODO: implement message sending 
 
+        Address oa, da;
+        const char* oaStr = processor.getAddress(); // TODO: caller address for notifications
+        if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
+            smsc_log_error(logger, "Invalid originating address '%s'", oaStr ? oaStr:"-");
+            return false;
+        }
+        const char* daStr = message.abonent.c_str();
+        if (!daStr || !convertMSISDNStringToAddress(daStr, da)) {
+            smsc_log_error(logger, "Invalid destination address '%s'", daStr ? daStr:"-");
+            return false;
+        }
+
+        SMS sms; 
+        sms.setOriginatingAddress(oa); sms.setDestinationAddress(da);
+        sms.setArchivationRequested(false); sms.setDeliveryReport(1);
+        
+        // TODO: reschedule table for message.attempts
+        
+        sms.setValidTime(time(NULL)+3600); // TODO: define it
+        sms.setEServiceType(processor.getSvcType());
+        sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
+        sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0); // default mode (not transactional)
+        sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
+        sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
+        
+        const char* out = message.message.c_str();
+        int outLen = message.message.length();
+        char* msgBuf = 0;
+        if(hasHighBit(out,outLen)) {
+            int msgLen = outLen*2;
+            msgBuf = new char[msgLen];
+            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen, CONV_ENCODING_CP1251);
+            sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
+            out = msgBuf; outLen = msgLen;
+        } 
+        else sms.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::LATIN1);
+        
+        try 
+        {
+            if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
+                sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, outLen);
+                sms.setIntProperty(Tag::SMPP_SM_LENGTH, outLen);
+            } else {
+                sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out, 
+                                   (outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ? outLen :  MAX_ALLOWED_PAYLOAD_LENGTH);
+            }
+        } 
+        catch (...) {
+            smsc_log_error(logger, "Something is wrong with message body. Set/Get property failed"); 
+            if (msgBuf) delete msgBuf; msgBuf = 0;
+            return false;
+        }
+        if (msgBuf) delete msgBuf;
+
+        if (message.replace)
+        {
+            /*
+             __cstr_property__(messageId)                // fill
+             __cstr_property__(scheduleDeliveryTime)     // TODO: fill ???
+             __cstr_property__(validityPeriod)           // filled by fillSmppPduFromSms
+             __int_property__(uint8_t,registredDelivery) // filled by fillSmppPduFromSms
+             __int_property__(uint8_t,smDefaultMsgId)    // do not fill        
+            */
+            PduReplaceSm sm;
+            sm.get_header().set_sequenceNumber(seqNumber);
+            sm.get_header().set_commandId(SmppCommandSet::REPLACE_SM);
+            sm.set_messageId(message.smsc_id.c_str());
+            fillSmppPduFromSms((PduXSm*)&sm, &sms);
+            asyncTransmitter->sendPdu(&(sm.get_header()));
+        }
+        else
+        {
+            /*
+             __cstr_property__(scheduleDeliveryTime) // TODO: fill ???
+            */
+            PduSubmitSm  sm;
+            sm.get_header().set_sequenceNumber(seqNumber);
+            sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+            fillSmppPduFromSms((PduXSm*)&sm, &sms);
+            asyncTransmitter->sendPdu(&(sm.get_header()));
+        }
+        
         TrafficControl::incOutgoing();
         return true;
     }
@@ -267,12 +350,83 @@ public:
         asyncTransmitter = transmitter;
     }
     
+    void processResponce(SmppHeader *pdu, bool replace)
+    {
+        if (!pdu) return;
+        
+        int seqNum = pdu->get_sequenceNumber();
+        int status = pdu->get_commandStatus();
+        
+        bool accepted       = (status == Status::OK);
+        bool replace_failed = (replace && (status == Status::REPLACEFAIL));
+        bool retry          = (replace_failed) ? false:(!accepted && !Status::isErrorPermanent(status));
+        
+        bool immediate      = (status == Status::MSGQFUL   ||
+                               status == Status::THROTTLED ||
+                               status == Status::SUBSCRBUSYMT);
+
+        bool trafficst      = (status == Status::MSGQFUL                   ||
+                               status == Status::THROTTLED                 ||
+                               status == Status::MAP_RESOURCE_LIMITATION   ||
+                               status == Status::MAP_NO_RESPONSE_FROM_PEER ||
+                               status == Status::SMENOTCONNECTED           ||
+                               status == Status::SYSFAILURE);
+
+        if (!trafficst) TrafficControl::incIncoming();
+
+        const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
+        std::string msgId = ""; 
+        if (!msgid || msgid[0] == '\0') accepted = false;
+        else msgId = msgid;
+
+        processor.invokeProcessResponce(seqNum, accepted, retry, immediate, replace_failed, msgId);
+    }
+
     void processReceipt (SmppHeader *pdu)
     {
         if (!pdu || !asyncTransmitter) return;
         bool bNeedResponce = true;
 
-        // TODO: implement receipt processing
+        SMS sms;
+        fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
+        bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
+            ((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
+        
+        if (isReceipt && ((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
+        {
+            const char* msgid = ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
+            if (msgid && msgid[0] != '\0')
+            {
+                bool delivered = false;
+                bool retry = false;
+                
+                if (sms.hasIntProperty(Tag::SMPP_MSG_STATE))
+                {
+                    int msgState = sms.getIntProperty(Tag::SMPP_MSG_STATE);
+                    switch (msgState)
+                    {
+                    case SmppMessageState::DELIVERED:
+                        delivered = true;
+                        break;
+                    case SmppMessageState::EXPIRED:
+                    case SmppMessageState::DELETED:
+                        retry = true;
+                        break;
+                    case SmppMessageState::ENROUTE:
+                    case SmppMessageState::UNKNOWN:
+                    case SmppMessageState::ACCEPTED:
+                    case SmppMessageState::REJECTED:
+                    case SmppMessageState::UNDELIVERABLE:
+                        break;
+                    default:
+                        smsc_log_warn(logger, "Invalid state=%d received in reciept !", msgState);
+                        break;
+                    }
+                }
+                
+                bNeedResponce = processor.invokeProcessReceipt(msgid, delivered, retry);
+            }
+        }
 
         if (bNeedResponce)
         {
@@ -282,13 +436,6 @@ public:
             smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
             asyncTransmitter->sendDeliverySmResp(smResp);
         }
-    }
-
-    void processResponce(SmppHeader *pdu)
-    {
-        if (!pdu) return;
-
-        // TODO: implement responce processing
     }
 
     void handleEvent(SmppHeader *pdu)
@@ -303,16 +450,14 @@ public:
 
         switch (pdu->get_commandId())
         {
-        
-        // TODO: Add replace responce processing
-        // case REPLACE_SM_RESP:   processReplaceSmResp(*(PduReplaceSmResp*)pdu);
-        // virtual PduReplaceSmResp* replace(PduReplaceSm& pdu)=0;
-
         case SmppCommandSet::DELIVERY_SM:
             processReceipt(pdu);
             break;
+        case SmppCommandSet::REPLACE_SM_RESP:
+            processResponce(pdu, true);
+            break;
         case SmppCommandSet::SUBMIT_SM_RESP:
-            processResponce(pdu);
+            processResponce(pdu, false);
             break;
         case SmppCommandSet::ENQUIRE_LINK: case SmppCommandSet::ENQUIRE_LINK_RESP:
             break;
@@ -449,11 +594,11 @@ int main(void)
             sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
             sigprocmask(SIG_SETMASK, &set, &old);
             
-            mciSmeWaitEvent.Wait(0);
             while (!isNeedStop() && !isNeedReconnect())
             {
-                // TODO: processor.Run();
-                mciSmeWaitEvent.Wait(100);
+                smsc_log_info(logger, "Running messages send loop...");
+                processor.Run();
+                smsc_log_info(logger, "Message send loop exited.");
             }
             smsc_log_info(logger, "Disconnecting from SMSC ...");
             TrafficControl::stopControl();

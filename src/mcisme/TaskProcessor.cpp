@@ -63,7 +63,7 @@ int EventRunner::Execute()
     switch (method)
     {
     case processResponceMethod:
-        processor.processResponce(seqNum, delivered, retry, immediate, smscId);
+        processor.processResponce(seqNum, delivered, retry, immediate, replace_failed, smscId);
         break;
     case processReceiptMethod:
         processor.processReceipt (smscId, delivered, retry);
@@ -122,7 +122,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     maxInQueueSize  = config->getInt("inputQueueSize");
     maxOutQueueSize = config->getInt("outputQueueSize");
 
-    std::auto_ptr<ConfigView> eventsThreadPoolCfgGuard(config->getSubConfig("EventsThreadPool"));
+    std::auto_ptr<ConfigView> eventsThreadPoolCfgGuard(config->getSubConfig("SMPPThreadPool"));
     eventManager.init(eventsThreadPoolCfgGuard.get()); // loads up thread pool for events
     
     std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("DataSource"));
@@ -169,7 +169,7 @@ void TaskProcessor::Start()
         }
         
         smsc_log_info(logger, "Loading processing tasks ...");
-        tasks = Task::loadupAll();
+        tasks = Task::loadupAll(); // TODO: start active messages sending ...
         smsc_log_info(logger, "Processing tasks loaded.");
 
         openOutQueue();
@@ -352,17 +352,18 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
         TaskAccessor taskAccessor(this);
 
         bool isNewTask = false;
-        Task* task = taskAccessor.getTask(abonent, isNewTask);
+        Task* task = taskAccessor.getTask(abonent, isNewTask); // possible loads task
         if (!task) throw Exception("Failed to obtain task for abonent: %s", abonent);
-        task->addEvent(event);
+        task->addEvent(event); // adds event to task chain & inassigned into DB 
         if (!isNewTask || !task->formatMessage(message)) return;
     }
     putToOutQueue(message);
 }
+
 void TaskProcessor::processMessage(const Message& message)
 {
-    smsc_log_debug(logger, "Sending message #%lld to '%s': %s", 
-                   message.id, message.abonent.c_str(), message.message.c_str());
+    /*smsc_log_debug(logger, "Sending message #%lld to '%s': %s", 
+                   message.id, message.abonent.c_str(), message.message.c_str());*/
 
     MutexGuard msGuard(messageSenderLock);
     if (!messageSender) {
@@ -382,10 +383,9 @@ void TaskProcessor::processMessage(const Message& message)
         }
         MutexGuard respGuard(responceWaitQueueLock);
         responceWaitQueue.Push(ResponceTimer(time(NULL)+responceWaitTime, seqNum));
-        // Add responce waiting. If timeout will be reached => need resend message (Check thread ???)
+        // Add responce waiting. If timeout will be reached => need resend message (TODO: Check thread ???)
     }
 
-    smsc_log_debug(logger, "Sending message #%lld to '%s' ...", message.id, message.abonent.c_str());
     if (!messageSender->send(seqNum, message))
     {
         smsc_log_error(logger, "Failed to send message #%lld to '%s'.", message.id, message.abonent.c_str());
@@ -399,16 +399,16 @@ void TaskProcessor::processMessage(const Message& message)
 /* ------------------------ Main processing ------------------------ */ 
 
 void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool immediate,
-                                    std::string smscId)
+                                    bool replace_failed, std::string smscId)
 {
-    smsc_log_debug(logger, "Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
-                   seqNum, accepted, retry, immediate);
+    smsc_log_debug(logger, "Responce: seqNum=%d, smscId=%s, accepted=%d, retry=%d, immediate=%d, rep_failed=%d",
+                   seqNum, smscId.c_str(), accepted, retry, immediate, replace_failed);
 
     const char* smsc_id = (smscId.length() > 0) ? 0:smscId.c_str();
     SmscIdAccessor smscIdAccessor(this, smsc_id); // lock smsc_id if exists
-    // check accepted here ?
-    
-    Message message;
+    if (smsc_id) smsc_log_debug(logger, "Responce lock smscId=%s", smsc_id);
+
+    Message message; // get message by sequence number assigned in sender
     {   
         Message* messagePtr = 0;
         MutexGuard snGuard(messagesBySeqNumLock);
@@ -435,22 +435,45 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
         {
             if (retry)  // temporal error => keep task & retry with message (possible updated)
             { 
-                if (task->formatMessage(messageToSend)) isMessageToSend = true;
+                if (task->formatMessage(messageToSend)) { 
+                    isMessageToSend = true;
+                    messageToSend.replace = message.replace; // TODO: ???
+                    messageToSend.smsc_id = message.smsc_id; // TODO: ???
+                }
                 else smsc_log_error(logger, "Format message for retry failed for abonent: %s",
                                     message.abonent.c_str());
+                if (!immediate) messageToSend.attempts = message.attempts+1;
                 
-                if (!immediate) messageToSend.attempts++; // TODO: reschedule table in sender
+                // do not roll current message here
             }
             else        // permanent error
             {
-                smsc_log_debug(logger, "Message send error, deleting task for abonent: %s",
-                               message.abonent.c_str());
-                
-                // TODO: line out replace errors in signature & check it here
-                // TODO: check REPLACE_FAILED !!!
-                
-                task->deleteMessages();
-                needKillTask = true;
+                if (replace_failed)
+                {
+                    smsc_log_debug(logger, "Message #%lld (smsc_id=%s) replace error for abonent: %s",
+                                   message.id, smsc_id ? smsc_id:"-",message.abonent.c_str());
+                    
+                    if (smsc_id)
+                    {
+                        // set new current message but keep old task events
+                        task->waitReceipt(0, smsc_id);
+                        // try send more events via submit next message 
+                        if (task->formatMessage(messageToSend)) { 
+                            isMessageToSend = true; 
+                            messageToSend.replace = false;
+                        } 
+                        // if no more events to send => kill task
+                        else needKillTask = true;
+                    }
+                    else needKillTask = true;
+                }
+                else
+                {
+                    smsc_log_debug(logger, "Message #%lld (smsc_id=%s) send error, deleting task for abonent: %s",
+                                   message.id, smsc_id ? smsc_id:"-", message.abonent.c_str());
+                    task->deleteMessages(); // TODO: ???
+                    needKillTask = true;
+                }
             }
         }
         else    // submit|replace was accepted by SMSC
@@ -459,13 +482,12 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
             {
                 if (message.isFull()) // sent message is full
                 {
-                    // make next current message & skip task events for old message
+                    // set new current message & skip task events for old message
                     task->waitReceipt(message.eventCount, smsc_id);
-
                     // try send more events via submit next message 
                     if (task->formatMessage(messageToSend)) { 
-                        messageToSend.replace = false;
                         isMessageToSend = true; 
+                        messageToSend.replace = false;
                     } 
                     // if no more events to send => kill task
                     else needKillTask = true;
@@ -480,15 +502,14 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                         isMessageToSend = true;
                     }
                     else {
-                        smsc_log_error(logger, "Failed to format message #%lld for abonent: %s", 
+                        smsc_log_error(logger, "Failed to extend message #%lld for abonent: %s", 
                                        message.id, message.abonent.c_str());
                         needKillTask = true;
                     }
                 }
             }
-            else // no events were added to task
+            else // no events were added to task => set current message wait receipt & kill task
             {
-                // set current message wait receipt & kill task
                 task->waitReceipt(smsc_id);
                 needKillTask = true;
             }
@@ -507,10 +528,14 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
 void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool retry)
 {
     const char* smsc_id = smscId.c_str();
+    smsc_log_debug(logger, "Receipt: smscId=%s, delivered=%d, retry=%d",
+                   smsc_id ? smsc_id:"-", delivered, retry);
+    
     SmscIdAccessor smscIdAccessor(this, smsc_id); // lock smsc_id
+    if (smsc_id) smsc_log_debug(logger, "Receipt lock smscId=%s", smsc_id);
 
     Message message;
-    if (Task::getMessage(smsc_id, message))
+    if (Task::getMessage(smsc_id, message)) // in WAIT_RCPT state
     {
         bool isTaskNew = false;
         TaskAccessor taskAccessor(this);
@@ -521,11 +546,12 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
         }
 
         processReceipt(task, delivered, retry, smsc_id, message.id);
-        
         if (isTaskNew) taskAccessor.delTask(message.abonent.c_str());
     }
     else // message by smsc_id not found => wait responce
     {
+        smsc_log_debug(logger, "Receipt waiting for responce with smscId=%s.", smsc_id);
+
         if (!putReceiptData(smsc_id, ReceiptData(delivered, retry)))
             smsc_log_error(logger, "Failed to add receipt data. SMSC id=%lld already used", smsc_id);
     }
@@ -534,12 +560,19 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
 void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry, 
                                    const char* smsc_id, uint64_t msg_id/*=0*/)
 {
-    // TODO: process receipt on task here
-
-    // 1) send notification(s) to caller(s)
-    // 2) delete all events assigned to message
-    // 3) delete message
-    // 4) update statistics
+    std::string        abonent = task->getAbonent();
+    Array<std::string> callers = task->finalizeMessage(smsc_id, delivered, retry, msg_id);
+    if (delivered)
+    {
+        for (int i=0; i<callers.Count(); i++)
+        {
+            smsc_log_debug(logger, "Event(s) delivered to %s from %s",
+                           abonent.c_str(), callers[i].c_str());
+            
+            // TODO: send notification(s) to caller(s)
+        }
+    }
+    // do not kill task here !!!
 }
 
 /* ---------------------- Technical: receipts & responces ordering --------------------- */ 

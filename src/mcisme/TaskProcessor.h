@@ -55,7 +55,7 @@ namespace smsc { namespace mcisme
         TaskProcessor&  processor;
 
         int             seqNum;
-        bool            delivered, retry, immediate;
+        bool            delivered, retry, immediate, replace_failed;
         std::string     smscId;
 
     public:
@@ -63,13 +63,15 @@ namespace smsc { namespace mcisme
         virtual const char* taskName() { return "MCISmeEvent"; };
 
         EventRunner(EventMethod method, TaskProcessor& processor, int seqNum,
-                    bool accepted, bool retry, bool immediate, std::string smscId="")
+                    bool accepted, bool retry, bool immediate, bool replace_failed, std::string smscId="")
             : method(method), processor(processor), seqNum(seqNum),
-                delivered(accepted), retry(retry), immediate(immediate), smscId(smscId) {};
-        EventRunner(EventMethod method, TaskProcessor& processor,
-                    std::string smscId, bool delivered, bool retry)
+              delivered(accepted), retry(retry), immediate(immediate), 
+              replace_failed(replace_failed), smscId(smscId) {};
+        EventRunner(EventMethod method, TaskProcessor& processor, std::string smscId,
+                    bool delivered, bool retry)
             : method(method), processor(processor), seqNum(0),
-                delivered(delivered), retry(retry), immediate(false), smscId(smscId) {};
+              delivered(delivered), retry(retry), immediate(false),
+              replace_failed(false), smscId(smscId) {};
 
         virtual ~EventRunner() {};
         virtual int Execute();
@@ -227,8 +229,8 @@ namespace smsc { namespace mcisme
         bool putReceiptData(const char* smsc_id, const ReceiptData& receipt);
 
         friend class EventRunner;
-        virtual void processResponce(int seqNum, bool accepted, bool retry,
-                                     bool immediate, std::string smscId="");
+        virtual void processResponce(int seqNum, bool accepted, bool retry, bool immediate,
+                                     bool replace_failed, std::string smscId="");
         virtual void processReceipt (std::string smscId, bool delivered, bool retry);
 
         void processReceipt(Task* task, bool delivered, bool retry, 
@@ -272,11 +274,11 @@ namespace smsc { namespace mcisme
             putToInQueue(event);
         };
         
-        virtual bool invokeProcessResponce(int seqNum, bool accepted,
-                                           bool retry, bool immediate, std::string smscId="")
+        virtual bool invokeProcessResponce(int seqNum, bool accepted, bool retry, bool immediate,
+                                           bool replace_failed, std::string smscId="")
         {
-            return eventManager.startThread(new EventRunner(processResponceMethod, *this,
-                                                            seqNum, accepted, retry, immediate, smscId));
+            return eventManager.startThread(new EventRunner(processResponceMethod, *this, seqNum,
+                                                            accepted, retry, immediate, replace_failed, smscId));
         };
         virtual bool invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
         {

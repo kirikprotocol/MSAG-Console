@@ -18,39 +18,43 @@ const char* GET_NEXT_SEQID_SQL  = "SELECT MCISME_MSG_SEQ.NEXTVAL FROM DUAL";
 const char* CREATE_NEW_MSG_ID   = "CREATE_NEW_MSG_ID";
 const char* DELETE_ANY_MSG_ID   = "DELETE_ANY_MSG_ID";
 const char* LOADUP_CUR_MSG_ID   = "LOADUP_CUR_MSG_ID";
+const char* SELECT_OLD_MSG_ID   = "SELECT_OLD_MSG_ID";
 const char* ROLLUP_CUR_MSG_ID   = "ROLLUP_CUR_MSG_ID";
 
 const char* CREATE_NEW_MSG_SQL  = "INSERT INTO MCISME_MSG_SET (ID, STATE, ABONENT, SMSC_ID) "
                                   "VALUES (:ID, :STATE, :ABONENT, NULL)";
 const char* DELETE_ANY_MSG_SQL  = "DELETE FROM MCISME_MSG_SET WHERE ID=:ID";
 const char* LOADUP_CUR_MSG_SQL  = "SELECT STATE, SMSC_ID FROM MCISME_MSG_SET WHERE ID=:ID";
+const char* SELECT_OLD_MSG_SQL  = "SELECT ID, STATE, ABONENT FROM MCISME_MSG_SET WHERE SMSC_ID=:SMSC_ID";
 const char* ROLLUP_CUR_MSG_SQL  = "UPDATE MCISME_MSG_SET SET STATE=:STATE, SMSC_ID=:SMSC_ID WHERE ID=:ID";
 
 /* ----------------------- Access to current events set (MCI_EVT_SET) ------------------------ */
 
 const char* LOADUP_MSG_EVT_ID   = "LOADUP_MSG_EVT_ID";
+const char* GET_EVT_CALLER_ID   = "GET_EVT_CALLER_ID";
 const char* CREATE_NEW_EVT_ID   = "CREATE_NEW_EVT_ID";
 const char* UPDATE_MSG_EVT_ID   = "UPDATE_MSG_EVT_ID";
-const char* DELETE_MSG_EVT_ID   = "DELETE_MSG_EVT_ID";
+//const char* DELETE_MSG_EVT_ID   = "DELETE_MSG_EVT_ID";
 const char* DELETE_ALL_EVT_ID   = "DELETE_ALL_EVT_ID";
 
 const char* LOADUP_MSG_EVT_SQL  = "SELECT ID, DT, CALLER, MSG_ID FROM MCISME_EVT_SET "
                                   "WHERE ABONENT=:ABONENT AND (MSG_ID=:MSG_ID OR MSG_ID IS NULL) ORDER BY ID";
+const char* GET_EVT_CALLER_SQL  = "SELECT DISTINCT CALLER FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID";
 const char* CREATE_NEW_EVT_SQL  = "INSERT INTO MCISME_EVT_SET (ID, ABONENT, DT, CALLER, MSG_ID) "
                                   "VALUES (:ID, :ABONENT, :DT, :CALLER, NULL)"; // MSG_ID is not assigned
 const char* UPDATE_MSG_EVT_SQL  = "UPDATE MCISME_EVT_SET SET MSG_ID=:MSG_ID WHERE ID=:ID"; // assigns MSG_ID
-const char* DELETE_MSG_EVT_SQL  = "DELETE FROM MCISME_EVT_SET WHERE ID=:ID";
+//const char* DELETE_MSG_EVT_SQL  = "DELETE FROM MCISME_EVT_SET WHERE ID=:ID";
 const char* DELETE_ALL_EVT_SQL  = "DELETE FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID";
 
 /* ----------------------- Access to current message ids (MCI_CUR_MSG) ----------------------- */
 
 const char* INS_CURRENT_MSG_ID  = "INS_CURRENT_MSG_ID";
-const char* DEL_CURRENT_MSG_ID  = "DEL_CURRENT_MSG_ID";
+//const char* DEL_CURRENT_MSG_ID  = "DEL_CURRENT_MSG_ID";
 const char* GET_CURRENT_MSG_ID  = "GET_CURRENT_MSG_ID";
 const char* SET_CURRENT_MSG_ID  = "SET_CURRENT_MSG_ID";
 
 const char* INS_CURRENT_MSG_SQL = "INSERT INTO MCISME_CUR_MSG (ABONENT, ID) VALUES (:ABONENT, :ID)";
-const char* DEL_CURRENT_MSG_SQL = "DELETE FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT";
+//const char* DEL_CURRENT_MSG_SQL = "DELETE FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT";
 const char* ALL_CURRENT_MSG_SQL = "SELECT ABONENT, ID FROM MCISME_CUR_MSG";
 const char* GET_CURRENT_MSG_SQL = "SELECT ID FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT"; // check is null
 const char* SET_CURRENT_MSG_SQL = "UPDATE MCISME_CUR_MSG SET ID=:ID WHERE ABONENT=:ABONENT";
@@ -109,20 +113,52 @@ uint64_t Task::getNextId(Connection* connection/*=0*/)
     return ++currentId;
 }
 
-bool Task::getMessage(const char* smsc_id, Message& message)
+bool Task::getMessage(const char* smsc_id, Message& message, Connection* connection/*=0*/)
 {
-    // TODO: implement it !!!
-    return false;
+    __require__(smsc_id);
+
+    bool messageExists = false;
+    bool isConnectionGet = false;
+    try
+    {
+        if (!connection) {
+            connection = ds->getConnection();
+            if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+            isConnectionGet = true;
+        }
+    
+        /* SELECT ID, STATE, ABONENT FROM MCISME_MSG_SET WHERE SMSC_ID=:SMSC_ID */
+        Statement* getStmt = connection->getStatement(SELECT_OLD_MSG_ID, SELECT_OLD_MSG_SQL);
+        if (!getStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "message loadup by smsc_id");    
+        getStmt->setString(1, smsc_id);
+        std::auto_ptr<ResultSet> rsGuard(getStmt->executeQuery());
+        ResultSet* rs = rsGuard.get();
+        if (rs && rs->fetchNext())
+        {
+            message.id       = rs->getUint64(1);
+            messageExists    = (rs->getUint8 (2) == WAIT_RCPT);
+            message.abonent  = rs->getString(3);
+            message.attempts = 0; message.eventCount = 0;
+            message.message = ""; message.smsc_id = smsc_id;
+            message.replace = false;
+        }
+
+        if (connection && isConnectionGet) ds->freeConnection(connection);
+    }
+    catch (Exception& exc) {
+        if (connection && isConnectionGet) ds->freeConnection(connection);
+        throw;
+    }
+    return messageExists;
 }
 
 Hash<Task *> Task::loadupAll()
 {
-    __require__(ds);
-
     Hash<Task *> tasks;
     
+    __require__(ds);
     Connection* connection = 0;
-
     try
     {   
         connection = ds->getConnection();
@@ -192,7 +228,7 @@ void Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
         if (!curRs->fetchNext()) 
             throw Exception("Current task message is null for abonent: %s", abonent.c_str());
         
-        uint8_t msgState = curRs->getUint8(1); // TODO: For what ???
+        uint8_t messageState = curRs->getUint8(1); // TODO: For what ???
         const char* smsc_id = (curRs->isNull(2)) ? 0:curRs->getString(2);
         cur_smsc_id = (smsc_id) ? smsc_id:"";
         
@@ -269,7 +305,6 @@ static const char*  constShortEngMonthesNames[12] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
-
 static int maxEventsPerMessage = 10; // TODO: do it configurable
 
 int Message::countEvents(const std::string& message)
@@ -345,9 +380,9 @@ bool Task::formatMessage(Message& message)
 
     __require__(ds);
     
-    message.id = currentMessageId; message.attempts = 0;
+    message.id = 0; message.attempts = 0;
     message.abonent = abonent; message.message = ""; message.smsc_id = "";
-    message.eventCount = 0; message.replace = false; // ???
+    message.eventCount = 0; message.replace = false;
 
     Connection* connection = 0;
     try
@@ -356,9 +391,8 @@ bool Task::formatMessage(Message& message)
         if (!connection)
             throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
         
-        if (currentMessageId == 0) {
-            // TODO: create new current message if not exists !!!
-        }
+        if (currentMessageId==0) doNewCurrent(connection); // makes new current message
+        message.id = currentMessageId;
 
         /* UPDATE MCISME_EVT_SET SET MSG_ID=:MSG_ID WHERE ID=:ID */
         Statement* assignEvtStmt = connection->getStatement(UPDATE_MSG_EVT_ID, UPDATE_MSG_EVT_SQL);
@@ -385,8 +419,6 @@ bool Task::formatMessage(Message& message)
 
         if (bUpdated) connection->commit();
         ds->freeConnection(connection);
-
-        if (message.isFull()) currentMessageId = 0; // TODO: create new current message here ???
     } 
     catch (...)
     {
@@ -398,13 +430,70 @@ bool Task::formatMessage(Message& message)
     return (message.eventCount > 0);
 }
 
-// sets current message WAIT_RESPONCE, SMSC_ID=smsc_id.
+void Task::doNewCurrent(Connection* connection)
+{
+    __require__(connection);
+    
+    uint64_t msgId = Task::getNextId();
+    
+    /* INSERT INTO MCISME_MSG_SET (ID, STATE, ABONENT, SMSC_ID)
+       VALUES (:ID, :STATE, :ABONENT, NULL) */
+    Statement* newMsgStmt = connection->getStatement(CREATE_NEW_MSG_ID, CREATE_NEW_MSG_SQL);
+    if (!newMsgStmt)
+        throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "create new message");
+    
+    newMsgStmt->setUint64(1, msgId);
+    newMsgStmt->setUint8 (2, WAIT_RESP); // or NEW ???
+    newMsgStmt->setString(3, abonent.c_str());
+
+    if (!newMsgStmt->executeUpdate())
+        throw Exception("Failed to create new message #%lld", msgId);
+
+    /* UPDATE MCISME_CUR_MSG SET ID=:ID WHERE ABONENT=:ABONENT */
+    Statement* updateCurStmt = connection->getStatement(SET_CURRENT_MSG_ID, SET_CURRENT_MSG_SQL);
+    if (!updateCurStmt)
+        throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "update current id");
+
+    updateCurStmt->setUint64(1, msgId);
+    updateCurStmt->setString(2, abonent.c_str());
+
+    if (!updateCurStmt->executeUpdate())
+    {
+        /* INSERT INTO MCISME_CUR_MSG (ABONENT, ID) VALUES (:ABONENT, :ID) */
+        Statement* createCurStmt = connection->getStatement(INS_CURRENT_MSG_ID, INS_CURRENT_MSG_SQL);
+        if (!createCurStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "create current id");
+
+        createCurStmt->setString(1, abonent.c_str());
+        createCurStmt->setUint64(2, msgId);
+        
+        if (!createCurStmt->executeUpdate())
+            throw Exception("Failed to set message #%lld current", msgId);
+    }
+    currentMessageId = msgId;
+}
+void Task::doWait(Connection* connection, const char* smsc_id, const MessageState& state)
+{
+    __require__(connection && currentMessageId != 0);
+
+    /* UPDATE MCISME_MSG_SET SET STATE=:STATE, SMSC_ID=:SMSC_ID WHERE ID=:ID */
+    Statement* updateMsgStmt = connection->getStatement(ROLLUP_CUR_MSG_ID, ROLLUP_CUR_MSG_SQL);
+    if (!updateMsgStmt)
+        throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "change message state");
+
+    updateMsgStmt->setUint8 (1, (uint8_t)state);
+    updateMsgStmt->setString(2, smsc_id, (!smsc_id || smsc_id[0]=='\0'));
+    updateMsgStmt->setUint64(3, currentMessageId);
+
+    if (!updateMsgStmt->executeUpdate())
+        throw Exception("Current message #%lld not found (%s)", 
+                        currentMessageId, ((state == WAIT_RESP) ? "responce":"receipt"));
+}
 void Task::waitResponce(const char* smsc_id)
 {
     smsc_log_info(logger, "Wait responce for abonent: %s", abonent.c_str());
 
     __require__(ds);
-
     Connection* connection = 0;
     try
     {
@@ -412,17 +501,7 @@ void Task::waitResponce(const char* smsc_id)
         if (!connection)
             throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
         
-        /* UPDATE MCISME_MSG_SET SET STATE=:STATE, SMSC_ID=:SMSC_ID WHERE ID=:ID */
-        Statement* updateMsgStmt = connection->getStatement(ROLLUP_CUR_MSG_ID, ROLLUP_CUR_MSG_SQL);
-        if (!updateMsgStmt)
-            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "wait responce");
-        
-        updateMsgStmt->setUint8 (1, WAIT_RESP);
-        updateMsgStmt->setString(2, smsc_id, (!smsc_id || smsc_id[0]=='\0'));
-        updateMsgStmt->setUint64(3, currentMessageId);
-
-        if (!updateMsgStmt->executeUpdate())
-            throw Exception("Current message #%lld not found (responce)", currentMessageId);
+        doWait(connection, smsc_id, WAIT_RESP);
         
         connection->commit();
         ds->freeConnection(connection);
@@ -437,17 +516,9 @@ void Task::waitResponce(const char* smsc_id)
 }
 void Task::waitReceipt(const char* smsc_id)
 {
-    // TODO: implement all waitXXX methods via doWait(const char* smsc_id, const MessageState& state)
-}
-void Task::waitReceipt(int eventCount, const char* smsc_id)
-{
     smsc_log_info(logger, "Wait receipt for abonent: %s", abonent.c_str());
-
-    if (events.Count()>0 && eventCount>0) // shifting events
-        events.Delete(0, (events.Count()>=eventCount) ? eventCount:events.Count());
-
+    
     __require__(ds);
-
     Connection* connection = 0;
     try
     {
@@ -455,17 +526,7 @@ void Task::waitReceipt(int eventCount, const char* smsc_id)
         if (!connection)
             throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
         
-        /* UPDATE MCISME_MSG_SET SET STATE=:STATE, SMSC_ID=:SMSC_ID WHERE ID=:ID */
-        Statement* updateMsgStmt = connection->getStatement(ROLLUP_CUR_MSG_ID, ROLLUP_CUR_MSG_SQL);
-        if (!updateMsgStmt)
-            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "wait responce");
-        
-        updateMsgStmt->setUint8 (1, WAIT_RCPT);
-        updateMsgStmt->setString(2, smsc_id, (!smsc_id || smsc_id[0]=='\0'));
-        updateMsgStmt->setUint64(3, currentMessageId);
-
-        if (!updateMsgStmt->executeUpdate())
-            throw Exception("Current message #%lld not found (receipt)", currentMessageId);
+        doWait(connection, smsc_id, WAIT_RCPT);
         
         connection->commit();
         ds->freeConnection(connection);
@@ -477,6 +538,101 @@ void Task::waitReceipt(int eventCount, const char* smsc_id)
         if (connection) ds->freeConnection(connection);
         throw;
     }
+}
+void Task::waitReceipt(int eventCount, const char* smsc_id)
+{
+    smsc_log_info(logger, "Wait receipt & roll for abonent: %s", abonent.c_str());
+
+    __require__(ds);
+    Connection* connection = 0;
+    try
+    {
+        connection = ds->getConnection();
+        if (!connection)
+            throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+        
+        doWait(connection, smsc_id, WAIT_RCPT);
+        doNewCurrent(connection); // makes new current message
+
+        connection->commit();
+        ds->freeConnection(connection);
+    
+        if (events.Count()>0 && eventCount>0) // shifting events
+            events.Delete(0, (events.Count()>=eventCount) ? eventCount:events.Count());
+    } 
+    catch (...)
+    {
+        try { if (connection) connection->rollback(); }
+        catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
+        if (connection) ds->freeConnection(connection);
+        throw;
+    }
+}
+
+Array<std::string> Task::finalizeMessage(const char* smsc_id, 
+                                         bool delivered, bool retry, uint64_t msg_id/*=0*/)
+{
+    Array<std::string> callers;
+    
+    // Delete message (by msg_id if defined, else getMessage(smsc_id)) & all assigned events
+    // Return set of deleted events (for notification(s) processing) by caller
+    
+    __require__(ds);
+    Connection* connection = 0;
+    try
+    {
+        connection = ds->getConnection();
+        if (!connection)
+            throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+
+        if (!msg_id) {
+            Message message;
+            if (!Task::getMessage(smsc_id, message, connection))
+                throw Exception("Message for smsc_id=%s not found", smsc_id);
+            msg_id = message.id;
+        }
+        
+        /* DELETE FROM MCISME_MSG_SET WHERE ID=:ID */
+        Statement* delMsgStmt = connection->getStatement(DELETE_ANY_MSG_ID, DELETE_ANY_MSG_SQL);
+        if (!delMsgStmt) 
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "finalize message");
+        delMsgStmt->setUint64(1, msg_id);
+        if (!delMsgStmt->executeUpdate())
+            throw Exception("Failed to delete message #%lld. Message not found", msg_id);
+
+        /* SELECT DISTINCT(CALLER) FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID */
+        Statement* getEvtStmt = connection->getStatement(GET_EVT_CALLER_ID, GET_EVT_CALLER_SQL);
+        if (!getEvtStmt) 
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "finalize message events");
+        getEvtStmt->setUint64(1, msg_id);
+        std::auto_ptr<ResultSet> rsGuard(getEvtStmt->executeQuery());
+        ResultSet* rs = rsGuard.get();
+        if (!rs)
+            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "finalize message events");
+        while (rs->fetchNext()) {
+            const char* caller = (rs->isNull(1)) ? 0:rs->getString(1);
+            if (caller && caller[0]) callers.Push(caller);
+        }
+
+        /* DELETE FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID */
+        Statement* delEvtStmt = connection->getStatement(DELETE_ALL_EVT_ID, DELETE_ALL_EVT_SQL);
+        if (!delEvtStmt) 
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "finalize message events");
+        delEvtStmt->setUint64(1, msg_id);
+        delEvtStmt->executeUpdate();
+
+        connection->commit();
+        ds->freeConnection(connection);
+    } 
+    catch (...)
+    {
+        try { if (connection) connection->rollback(); }
+        catch (...) { smsc_log_error(logger, ROLLBACK_TRANSACT_ERROR_MESSAGE); }
+        if (connection) ds->freeConnection(connection);
+        throw;
+    }
+    
+    return callers;
 }
 
 }}
