@@ -164,24 +164,25 @@ public:
 bool operator==(PduAddress& a1, PduAddress& a2);
 bool operator!=(PduAddress& a1, PduAddress& a2);
 
-ostream& operator<< (ostream& os, PduXSm& p);
-ostream& operator<< (ostream& os, PduReplaceSm& p);
-ostream& operator<< (ostream& os, PduDataSm& p);
-ostream& operator<< (ostream& os, PduXSmResp& p);
-ostream& operator<< (ostream& os, PduReplaceSmResp& p);
+#define __log_pdu__(Pdu) \
+	ostream& operator<< (ostream& os, Pdu& p); \
+	inline const string str(Pdu& p) { \
+		ostringstream s; \
+		s << p; \
+		return s.str(); \
+	}
 
-ostream& operator<< (ostream& os, SmppHeader& p);
-ostream& operator<< (ostream& os, PduAddress& p);
-ostream& operator<< (ostream& os, PduPartSm& p);
-ostream& operator<< (ostream& os, PduDataPartSm& p);
-ostream& operator<< (ostream& os, SmppOptional& p);
+__log_pdu__(PduXSm)
+__log_pdu__(PduReplaceSm)
+__log_pdu__(PduDataSm)
+__log_pdu__(PduXSmResp)
+__log_pdu__(PduReplaceSmResp)
 
-/*
-const string str(SmppHeader& header);
-const string str(PduAddress& addr);
-const string str(PduPartSm& sm);
-const string str(SmppOptional& opt);
-*/
+__log_pdu__(SmppHeader)
+__log_pdu__(PduAddress)
+__log_pdu__(PduPartSm)
+__log_pdu__(PduDataPartSm)
+__log_pdu__(SmppOptional)
 
 }
 }
