@@ -1364,7 +1364,15 @@ Variant SmscComponent::aclListNames(const Arguments & args) throw (AdminExceptio
   AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
   typedef std::vector<AclNamedIdent> AclNames;
   AclNames resultList;
-  aclmgr->enumerate(resultList);
+  try {
+    aclmgr->enumerate(resultList);
+  } catch (std::exception &e) {
+    throw AdminException("Could not enumerate ACLs, nested: \"%s\"", e.what());
+  } catch (const char * const e) {
+    throw AdminException("Could not enumerate ACLs, nested: \"%s\"", e);
+  } catch (...) {
+    throw AdminException("Could not enumerate ACLs, nested: Unknown exception");
+  }
 
   Variant result(service::StringListType);
   for (AclNames::const_iterator i = resultList.begin(); i != resultList.end(); i++)
@@ -1384,6 +1392,7 @@ Variant SmscComponent::aclGet(const Arguments & args) throw (AdminException)
   try {
     AclIdent aclId = args.Get("id").getLongValue();
     AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+    
     AclInfo aclInfo = aclmgr->getInfo(aclId);
     
     Variant result(service::StringListType);
@@ -1398,6 +1407,12 @@ Variant SmscComponent::aclGet(const Arguments & args) throw (AdminException)
     return result;
   } catch (HashInvalidKeyException &e) {
     throw new AdminException("Parameter id not found");
+  } catch (std::exception &e) {
+    throw AdminException("Could not get ACL info, nested: \"%s\"", e.what());
+  } catch (const char * const e) {
+    throw AdminException("Could not get ACL info, nested: \"%s\"", e);
+  } catch (...) {
+    throw AdminException("Could not get ACL info, nested: Unknown exception");
   }
 }
 
@@ -1406,7 +1421,15 @@ Variant SmscComponent::aclRemove(const Arguments & args) throw (AdminException)
   try {
     AclIdent aclId = args.Get("id").getLongValue();
     AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
-    aclmgr->remove(aclId);
+    try {
+      aclmgr->remove(aclId);
+    } catch (std::exception &e) {
+      throw AdminException("Could not remove ACL, nested: \"%s\"", e.what());
+    } catch (const char * const e) {
+      throw AdminException("Could not remove ACL, nested: \"%s\"", e);
+    } catch (...) {
+      throw AdminException("Could not remove ACL, nested: Unknown exception");
+    }
     
     Variant result("removed");
     return result;
@@ -1435,11 +1458,19 @@ Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
       }
     }
     
+    try {
     AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
-    if (cache_type_present)
-      aclmgr->create2(name, description, phones, (AclCacheType)(cache_type_str[0]));
-    else
-      aclmgr->create2(name, description, phones);
+      if (cache_type_present)
+        aclmgr->create2(name, description, phones, (AclCacheType)(cache_type_str[0]));
+      else
+        aclmgr->create2(name, description, phones);
+    } catch (std::exception &e) {
+      throw AdminException("Could not create ACL, nested: \"%s\"", e.what());
+    } catch (const char * const e) {
+      throw AdminException("Could not create ACL, nested: \"%s\"", e);
+    } catch (...) {
+      throw AdminException("Could not create ACL, nested: Unknown exception");
+    }
     
     Variant result("created");
     return result;
@@ -1457,11 +1488,19 @@ Variant SmscComponent::aclUpdateInfo(const Arguments & args) throw (AdminExcepti
     const char * const cache_type_str = args.Get("cache_type").getStringValue();
     const bool cache_type_present = (cache_type_str != NULL) && (cache_type_str[0] != 0);
     
-    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
-    if (cache_type_present)
-      aclmgr->updateAclInfo(aclId, name, description, (AclCacheType)(cache_type_str[0]));
-    else
-      aclmgr->updateAclInfo(aclId, name, description);
+    try {
+      AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+      if (cache_type_present)
+        aclmgr->updateAclInfo(aclId, name, description, (AclCacheType)(cache_type_str[0]));
+      else
+        aclmgr->updateAclInfo(aclId, name, description);
+    } catch (std::exception &e) {
+      throw AdminException("Could not update ACL info, nested: \"%s\"", e.what());
+    } catch (const char * const e) {
+      throw AdminException("Could not update ACL info, nested: \"%s\"", e);
+    } catch (...) {
+      throw AdminException("Could not update ACL info, nested: Unknown exception");
+    }
     
     Variant result("updated");
     return result;
@@ -1479,8 +1518,16 @@ Variant SmscComponent::aclLookupAddresses(const Arguments & args) throw (AdminEx
     typedef std::vector<AclPhoneNumber> Phones;
     Phones resultPhones;
     
-    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
-    aclmgr->lookupByPrefix(aclId, prefix, resultPhones);
+    try {
+      AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+      aclmgr->lookupByPrefix(aclId, prefix, resultPhones);
+    } catch (std::exception &e) {
+      throw AdminException("Could not lookup addresses, nested: \"%s\"", e.what());
+    } catch (const char * const e) {
+      throw AdminException("Could not lookup addresses, nested: \"%s\"", e);
+    } catch (...) {
+      throw AdminException("Could not lookup addresses, nested: Unknown exception");
+    }
     
     Variant result(service::StringListType);
     for (Phones::const_iterator i = resultPhones.begin(); i != resultPhones.end(); i++) {
@@ -1498,11 +1545,18 @@ Variant SmscComponent::aclRemoveAddresses(const Arguments & args) throw (AdminEx
     AclIdent aclId = args.Get("id").getLongValue();
     const StringList & addresses(args.Get("addresses").getStringListValue());
 
-    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
-    for (StringList::const_iterator i = addresses.begin(); i != addresses.end(); i++)
-    {
-      std::string address(*i);
-      aclmgr->removePhone(aclId, address);
+    try {
+      AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+      for (StringList::const_iterator i = addresses.begin(); i != addresses.end(); i++) {
+        std::string address(*i);
+        aclmgr->removePhone(aclId, address);
+      }
+    } catch (std::exception &e) {
+      throw AdminException("Could not remove addresses, nested: \"%s\"", e.what());
+    } catch (const char * const e) {
+      throw AdminException("Could not remove addresses, nested: \"%s\"", e);
+    } catch (...) {
+      throw AdminException("Could not remove addresses, nested: Unknown exception");
     }
     
     Variant result("removed addresses");
@@ -1518,11 +1572,18 @@ Variant SmscComponent::aclAddAddresses(const Arguments & args) throw (AdminExcep
     AclIdent aclId = args.Get("id").getLongValue();
     const StringList & addresses(args.Get("addresses").getStringListValue());
 
-    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
-    for (StringList::const_iterator i = addresses.begin(); i != addresses.end(); i++)
-    {
-      std::string address(*i);
-      aclmgr->addPhone(aclId, address);
+    try {
+      AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+      for (StringList::const_iterator i = addresses.begin(); i != addresses.end(); i++) {
+        std::string address(*i);
+        aclmgr->addPhone(aclId, address);
+      }
+    } catch (std::exception &e) {
+      throw AdminException("Could not add addresses, nested: \"%s\"", e.what());
+    } catch (const char * const e) {
+      throw AdminException("Could not add addresses, nested: \"%s\"", e);
+    } catch (...) {
+      throw AdminException("Could not add addresses, nested: Unknown exception");
     }
     
     Variant result("added addresses");
