@@ -41,7 +41,7 @@ void CommandProcessor::init(ConfigView* config)
             Address addr(address);
             providers.Insert(addr.value, provider);
             log.info("Loaded DataProvider for section '%s'."
-                     " Bind address is: %s", section, address);
+                     " Bind address is: %s (%s)", section, addr.value, address);
         }
         catch (ConfigException& exc)
         {
