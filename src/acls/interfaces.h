@@ -102,6 +102,7 @@ struct AclAbstractMgr : public AclEditor, public AclLookuper
   //protected:
   virtual ~AclAbstractMgr() {}
   static AclAbstractMgr* Create();
+  static AclAbstractMgr* Create2();
 };
 
 } // acls namespace

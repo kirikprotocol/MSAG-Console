@@ -467,7 +467,7 @@ void Smsc::init(const SmscConfigs& cfg)
   tp2.startTask(statMan);
   smsc_log_info(log, "Statistics manager started" );
 
-  aclmgr = AclAbstractMgr::Create();
+  aclmgr = AclAbstractMgr::Create2();
   aclmgr->LoadUp(dataSource);
 
   distlstman=new DistrListManager(*dataSource,*cfg.cfgman);

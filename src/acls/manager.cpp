@@ -53,21 +53,9 @@ public:
   }
 };
 
-struct AclRecord
-{
-  AclInfo                info;
-  unsigned               usecount;
-  //vector<AclPhoneNumber> granted_cache;
-};
-
 class AclManager : public AclAbstractMgr
 {
-  typedef map<AclInfo,AclRecord> records_t;
-  records_t records_;
   DataSource* datasource_;
-
-  Mutex aclinfo_locker_;
-  //Mutex granted_locker_;
 
 public:
   //struct AclEditor
