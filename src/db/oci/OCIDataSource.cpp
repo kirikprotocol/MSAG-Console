@@ -285,7 +285,7 @@ void OCIStatement::define(ub4 pos, ub2 type,
 }
 void OCIStatement::convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date)
 {
-    tm dt; localtime_r(sms_date, &dt);
+    tm dt; gmtime_r(sms_date, &dt);
 
     OCIDateSetDate(oci_date, (sb2)(1900+dt.tm_year), 
                    (ub1)(1+dt.tm_mon), (ub1)(dt.tm_mday));
@@ -295,15 +295,16 @@ void OCIStatement::convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date)
 
 void OCIStatement::convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date)
 {
-    tm  dt;
     sb2 year;
     ub1 mon, mday, hour, min, sec;
 
     OCIDateGetTime(oci_date, (ub1 *) &hour, (ub1 *) &min, (ub1 *) &sec);
     OCIDateGetDate(oci_date, (sb2 *) &year, (ub1 *) &mon, (ub1 *) &mday);
+
+    tm  dt; dt.tm_isdst = 0;
     dt.tm_year = year - 1900; dt.tm_mon = mon - 1; dt.tm_mday = mday;
     dt.tm_hour = hour; dt.tm_min = min; dt.tm_sec = sec;
-    *sms_date = mktime(&dt);
+    *sms_date = mktime(&dt) - timezone;
 }
 
 ub4 OCIStatement::getRowsAffectedCount()

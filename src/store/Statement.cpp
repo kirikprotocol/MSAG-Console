@@ -124,7 +124,7 @@ ub4 Statement::getRowsAffectedCount()
 
 void Statement::convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date)
 {
-    tm dt; localtime_r(sms_date, &dt);
+    tm dt; gmtime_r(sms_date, &dt);
 
     OCIDateSetDate(oci_date, (sb2)(1900+dt.tm_year), 
                    (ub1)(1+dt.tm_mon), (ub1)(dt.tm_mday));
@@ -133,15 +133,16 @@ void Statement::convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date)
 }
 void Statement::convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date)
 {
-    tm  dt;
     sb2 year;
     ub1 mon, mday, hour, min, sec;
 
     OCIDateGetTime(oci_date, (ub1 *) &hour, (ub1 *) &min, (ub1 *) &sec);
     OCIDateGetDate(oci_date, (sb2 *) &year, (ub1 *) &mon, (ub1 *) &mday);
+    
+    tm dt; dt.tm_isdst = 0;
     dt.tm_year = year - 1900; dt.tm_mon = mon - 1; dt.tm_mday = mday;
     dt.tm_hour = hour; dt.tm_min = min; dt.tm_sec = sec;
-    *sms_date = mktime(&dt);
+    *sms_date = mktime(&dt) - timezone;
 }
 void Statement::check(sword status) 
     throw(StorageException) 
@@ -955,23 +956,23 @@ MinNextTimeStatement::MinNextTimeStatement(Connection* connection,
 {
     __trace2__("%d : MinNextTimeStatement creating ...", stmt);
 
+    indNextTime = OCI_IND_NOTNULL;
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
-    define(1, SQLT_ODT, (dvoid *) &(minNextTime),
-           (sb4) sizeof(minNextTime), &indNextTime);
+    define(1 , SQLT_ODT, (dvoid *) &(minNextTime),
+           (sb4) sizeof(minNextTime), (dvoid *)&indNextTime);
 }
 
 time_t MinNextTimeStatement::getMinNextTime()
     throw(StorageException)
 {
+    time_t minTime = 0L;
     if (indNextTime == OCI_IND_NOTNULL)
     {
-        time_t minTime;
-        convertOCIDateToDate(&minNextTime, &(minTime));
-        return minTime;
+        convertOCIDateToDate(&minNextTime, &minTime);
     }
-    return 0;
+    return minTime;
 }
 
 BodyStatement::BodyStatement(Connection* connection, const char* sql, 
