@@ -1124,16 +1124,14 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
               {
                 MutexGuard ussd_map_guard( ussd_map_lock );
                 USSD_MAP::iterator it = ussd_map.find(sequence);
-                if ( it == ussd_map.end() ) {
-                  SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,0));
+                if ( it == ussd_map.end() ) {                  SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
                   throw MAPDIALOG_FATAL_ERROR(
-                    FormatText("MAP::PutCommand: can't find session %s",s_seq.c_str()));
-                }
+                    FormatText("MAP::PutCommand: can't find session %s",s_seq.c_str()));                }
                 dialogid_map = it->second;
               }
               dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map));
               if ( dialog.isnull() )
-                SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,0));
+                SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
                 throw MAPDIALOG_FATAL_ERROR(
                   FormatText("MAP::putCommand: Opss, here is no dialog with id x%x seq: %s",dialogid_smsc,s_seq.c_str()));
               __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
