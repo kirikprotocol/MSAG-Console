@@ -49,8 +49,9 @@ RECODE_DLL_API int RECODE_DECL Convert7BitToUCS2(const char* bit7buf, int bit7bu
 RECODE_DLL_API int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff_size,
                                      char* bit7buf, int bit7buf_size);
 
-RECODE_DLL_API int RECODE_DECL Transliterate(const char* buf,int len,int encoding,
-                                             char *dest,int destlen);
+RECODE_DLL_API int RECODE_DECL Transliterate(const char* buf,int len,
+                    ConvEncodingEnum encoding,char *dest,int destlen);
+
 
 
 }

@@ -90,7 +90,7 @@ const unsigned char* Translit(unsigned char ch, ConvEncodingEnum encoding, unsig
   }else return res;
 }
 
-int Transliterate(const char* buf,int len,int encoding,char *dest,int destlen)
+int Transliterate(const char* buf,int len,ConvEncodingEnum encoding,char *dest,int destlen)
 {
   int j=0;
   const unsigned char* res;
