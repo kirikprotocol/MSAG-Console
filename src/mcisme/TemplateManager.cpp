@@ -27,14 +27,17 @@ TemplateManager::TemplateManager(ConfigView* config) // throws ConfigException
 
         bool group      = templateConfig->getBool("group");
         std::string messageTemplate = templateConfig->getString("message");
+        std::string unknownCaller   = templateConfig->getString("unknownCaller");
         std::string singleTemplate  = templateConfig->getString("singleRow");
         if (group) {
             std::string multiTemplate = templateConfig->getString("multiRow");
             informTemplates.Insert (templateId, 
-                                    new InformTemplateFormatter(messageTemplate, singleTemplate, multiTemplate));
+                                    new InformTemplateFormatter(messageTemplate, unknownCaller, 
+                                                                singleTemplate, multiTemplate));
         } 
         else informTemplates.Insert(templateId, 
-                                    new InformTemplateFormatter(messageTemplate, singleTemplate));
+                                    new InformTemplateFormatter(messageTemplate, unknownCaller,
+                                                                singleTemplate));
     }
     defaultInformTemplateId = (int32_t)informCfg->getInt("default");
     if (defaultInformTemplateId < 0 || !informTemplates.Exist(defaultInformTemplateId)) 

@@ -56,23 +56,26 @@ namespace smsc { namespace mcisme
     protected:
 
         bool                group;
+        std::string         unknownCaller;
         OutputFormatter*    multiFormatter;
         OutputFormatter*    singleFormatter;
         
     public:
 
-        InformTemplateFormatter(const std::string& messageTemplate, 
+        InformTemplateFormatter(const std::string& messageTemplate,
+                                const std::string& _unknownCaller,
                                 const std::string& singleTemplate) 
             : TemplateFormatter(messageTemplate, INFORM_TEMPLATE_FORMATTER), 
-                group(false), multiFormatter(0), singleFormatter(0)
+                group(false), unknownCaller(_unknownCaller), multiFormatter(0), singleFormatter(0)
         {
             singleFormatter = new OutputFormatter(singleTemplate.c_str());
         };
-        InformTemplateFormatter(const std::string& messageTemplate, 
+        InformTemplateFormatter(const std::string& messageTemplate,
+                                const std::string& _unknownCaller,
                                 const std::string& singleTemplate,
                                 const std::string& multiTemplate) 
             : TemplateFormatter(messageTemplate, INFORM_TEMPLATE_FORMATTER), 
-                group(true), multiFormatter(0), singleFormatter(0)
+                group(true), unknownCaller(_unknownCaller), multiFormatter(0), singleFormatter(0)
         {
             multiFormatter = new OutputFormatter(multiTemplate.c_str());
             singleFormatter = new OutputFormatter(singleTemplate.c_str());
@@ -86,6 +89,9 @@ namespace smsc { namespace mcisme
         inline bool isGroupping() { 
             return group;
         };
+        inline const std::string& getUnknownCaller() {
+            return unknownCaller;
+        }
         inline OutputFormatter* getMultiFormatter() {
             return multiFormatter;
         };

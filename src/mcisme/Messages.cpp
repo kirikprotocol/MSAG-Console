@@ -91,14 +91,17 @@ void MessageFormatter::formatMessage(Message& message)
 
     std::string rows = "";
     ContextEnvironment ctx;
-    OutputFormatter* multiFormatter = formatter->getMultiFormatter();
-    OutputFormatter* singleFormatter = formatter->getSingleFormatter();
-    OutputFormatter* messageFormatter = formatter->getMessageFormatter();
-
+    const std::string unknownCaller = formatter->getUnknownCaller();
+    OutputFormatter*  multiFormatter = formatter->getMultiFormatter();
+    OutputFormatter*  singleFormatter = formatter->getSingleFormatter();
+    OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
+    
     for (int i=0; i<events.Count(); i++)
     {
         MissedCallEvent event = events[i];
         const char* fromStr = (event.from.length() > 0) ? event.from.c_str():UNKNOWN_CALLER;
+        if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
+            fromStr = unknownCaller.c_str();
         uint32_t* recPtr = counters.GetPtr(fromStr);
         
         if (!formatter->isGroupping() || !recPtr || (recPtr && (*recPtr) <= 1))
