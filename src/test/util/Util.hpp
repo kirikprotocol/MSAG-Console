@@ -50,6 +50,8 @@ const int symbolCharsLen = strlen(symbolChars);
 
 inline const char* nvl(const char* str) { return (str ? str : ""); }
 
+int hash(const char* str);
+
 void init_rand();
 
 int rand2(int minValue, int maxValue);

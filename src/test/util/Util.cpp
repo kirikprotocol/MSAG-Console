@@ -11,6 +11,16 @@ namespace util {
 using namespace std;
 using namespace smsc::core::synchronization; //Mutex, MutexGuard
 
+int hash(const char* s)
+{
+	int res = 0;
+	for (; *s; s++)
+	{
+		res += res * 31 + *s;
+	}
+	return res;
+}
+
 void init_rand()
 {
 	static bool inited = false;
