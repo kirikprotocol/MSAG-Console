@@ -13,12 +13,10 @@
 			<td class="list">
 				<select name="host" style="width: 100%;">
           <%
-          boolean isSelected = false;
           for (Iterator i = serviceManager.getHostNames().iterator(); i.hasNext(); )
           {
             String name = StringEncoderDecoder.encode((String) i.next());
-            %><option value="<%=name%>"<%=isSelected ? "" : " selected"%>><%=name%></option><%
-            isSelected = true;
+            %><option value="<%=name%>"<%=host.equals(name) ? " selected" : ""%>><%=name%></option><%
           }
           %>
 				</select>

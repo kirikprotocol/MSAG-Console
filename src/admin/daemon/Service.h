@@ -13,6 +13,7 @@ namespace daemon {
 using smsc::util::cStringCopy;
 using smsc::admin::AdminException;
 using smsc::util::Logger;
+using log4cpp::Category;
 
 //typedef std::vector<char*> ServiceArguments;
 
@@ -21,71 +22,67 @@ class Service
 public:
 	enum Status {stopped, running};
 
-	Service(const char * const serviceName,
-					const char * const serviceCommandLine,
-          const char * const serviceconfigFileName,
+	Service(const char * const services_dir,
+					const char * const serviceId,
+					const char * const serviceName,
 					const in_port_t serviceAdminPort,
 					const char * const serviceArgs,
 					const pid_t servicePID = 0)
+		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
 	{
 //		Logger::getCategory("smsc.admin.daemon.Service").debug("Service(...)");
-		init(serviceName, serviceCommandLine, serviceconfigFileName, serviceAdminPort, serviceArgs,
-				 servicePID);
+		init(services_dir, serviceId, serviceName, serviceAdminPort, serviceArgs, servicePID);
 	}
 
 	Service()
+		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
 	{	
 //		Logger::getCategory("smsc.admin.daemon.Service").debug("Service(0)");
 		init(0, 0, 0, 0, 0, 0);
 	}
 
 	Service(const Service & copy)
+		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
 	{
 //		Logger::getCategory("smsc.admin.daemon.Service").debug("Service(copy)");
-		init(copy.name, copy.command_line, copy.config_file, copy.port, copy.args, copy.pid);
-	}
-
-	~Service()
-	{
-//		Logger::getCategory("smsc.admin.daemon.Service").debug("~Service");
-		deinit();
+		init(copy.service_dir.get(), copy.id.get(), copy.name.get(), copy.port, copy.args.get(), copy.pid);
 	}
 
 	pid_t start() throw (AdminException);
 	void kill() throw (AdminException);
 	void shutdown() throw (AdminException);
 
-	const char * const getName() const {return name;}
-	const char * const getCommandLine() const {return command_line;}
-	const char * const getConfigFileName() const {return config_file;}
+	const char * const getId() const {return id.get();}
+	const char * const getName() const {return name.get();}
 	const pid_t getPid() const {return pid;}
 	void setPid(const pid_t newPid) {pid = newPid;}
 	const Status getStatus() const {return pid == 0 ? stopped : running;}
-	const char * const getArgs() const {return args;}
+	const char * const getArgs() const {return args.get();}
 	const in_port_t getPort() const {return port;}
 
 	Service &operator = (Service &copy)
 	{
-		init(copy.name, copy.command_line, copy.config_file, copy.port, copy.args, copy.pid);
+		init(copy.service_dir.get(), copy.id.get(), copy.name.get(), copy.port, copy.args.get(), copy.pid);
 		return *this;
 	}
 
 protected:
 	char ** createArguments();
-	char * name;
-	char * command_line;
-	char * config_file;
+	std::auto_ptr<char> id;
+	std::auto_ptr<char> name;
 	pid_t pid;
-	char * args;
+	std::auto_ptr<char> args;
 	in_port_t port;
+	static const char * const service_exe;
+	std::auto_ptr<char> service_dir;
+	Category &logger;
 
-	void init(const char * const serviceName,
-					const char * const serviceCommandLine,
-          const char * const serviceconfigFileName,
-					const in_port_t serviceAdminPort,
-					const char * const serviceArgs,
-					const pid_t servicePID = 0);
-	void deinit();
+	void init(const char * const services_dir,
+						const char * const serviceId,
+						const char * const serviceName,
+						const in_port_t serviceAdminPort,
+						const char * const serviceArgs,
+						const pid_t servicePID = 0);
 };
 
 }

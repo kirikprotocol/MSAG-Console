@@ -9,6 +9,7 @@
 
 #include <admin/AdminException.h>
 #include <admin/daemon/DaemonSocketListener.h>
+#include <admin/daemon/config_parameter_names.h>
 #include <admin/service/AdminSocketManager.h>
 #include <admin/util/SignalHandler.h>
 #include <util/config/ConfigException.h>
@@ -18,6 +19,15 @@
 
 using smsc::admin::AdminException;
 using smsc::admin::daemon::DaemonSocketListener;
+using smsc::admin::daemon::CONFIG_HOME_PARAMETER;
+using smsc::admin::daemon::CONFIG_HOST_PARAMETER;
+using smsc::admin::daemon::CONFIG_LOGGER_CONFIG_PARAMETER;
+using smsc::admin::daemon::CONFIG_LOGGER_SECTION;
+using smsc::admin::daemon::CONFIG_PORT_PARAMETER;
+using smsc::admin::daemon::CONFIG_SERVICES_FOLDER_PARAMETER;
+using smsc::admin::daemon::CONFIG_SERVICES_SECTION;
+using smsc::admin::daemon::CONFIG_STDERR_PARAMETER;
+
 using smsc::admin::service::AdminSocketManager;
 using smsc::admin::util::SignalHandler;
 using smsc::util::Logger;
@@ -76,20 +86,20 @@ int main(int argc, char **argv)
 		Manager::init(argv[1]);
 		Manager &manager = Manager::getInstance();
 
-		chdir(manager.getString("admin.daemon.home"));
-		FILE * redirected_stderr = freopen(manager.getString("admin.daemon.stderr"), "w", stderr);
+		chdir(manager.getString(CONFIG_HOME_PARAMETER));
+		FILE * redirected_stderr = freopen(manager.getString(CONFIG_STDERR_PARAMETER), "w", stderr);
 		if (redirected_stderr == 0)
 			throw ConfigException("Couldn't redirect stderr");
 
-		Logger::Init(manager.getString("admin.daemon.logger.configFile"));
+		Logger::Init(manager.getString(CONFIG_LOGGER_CONFIG_PARAMETER));
 		log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon"));
 	
 		logger.info("Starting...");
 		
 		DaemonCommandDispatcher::init(&manager);
 		DaemonSocketListener listener("smsc.admin.daemon.DaemonSocketListener");
-		listener.init(manager.getString("admin.daemon.host"),
-									manager.getInt("admin.daemon.port"));
+		listener.init(manager.getString(CONFIG_HOST_PARAMETER),
+									manager.getInt(CONFIG_PORT_PARAMETER));
 		listener.Start();
 
 		DaemonCommandDispatcher::activateChildSignalHandler();

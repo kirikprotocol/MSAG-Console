@@ -30,15 +30,13 @@ public:
 			DOM_NodeList list = elem.getElementsByTagName("service");
 			if (list.getLength() > 0)
 			{
-				std::vector<CmdArgument> cmd_args;
 				DOM_Node serviceNode = list.item(0);
 				DOM_Element &serviceElem = (DOM_Element&) serviceNode;
-				serviceName = serviceElem.getAttribute("name").transcode();
-				cmdLine = serviceElem.getAttribute("cmd_line").transcode();
-				configFile = serviceElem.getAttribute("config_file").transcode();
+				serviceName.reset(serviceElem.getAttribute("name").transcode());
+				serviceId.reset(serviceElem.getAttribute("id").transcode());
 				std::auto_ptr<char> portStr(serviceElem.getAttribute("port").transcode());
 				port = atol(portStr.get());
-				args = serviceElem.getAttribute("args").transcode();
+				args.reset(serviceElem.getAttribute("args").transcode());
 			}
 		}
 		catch (...)
@@ -47,36 +45,14 @@ public:
 		}
 	}
 
-	~CommandAddService()
-		throw()
+	const char * const getServiceName_() const throw()
 	{
-		if (cmdLine != 0)
-		{
-			delete[] cmdLine;
-		}
-		if (configFile != 0)
-		{
-			delete[] configFile;
-		}
-		if (args != 0)
-		{
-			delete[] args;
-		}
-	}
-
-	const char * const getCmdLine() const throw()
-	{
-		return cmdLine;
-	}
-
-	const char * const getConfigFileName() const throw()
-	{
-		return configFile;
+		return serviceName.get();
 	}
 
 	const char * const getArgs() const throw ()
 	{
-		return args;
+		return args.get();
 	}
 
 	const in_port_t getPort() const throw ()
@@ -84,10 +60,9 @@ public:
 		return port;
 	}
 protected:
-	char* cmdLine;
-	char* configFile;
+	std::auto_ptr<char> serviceName;
 	in_port_t port;
-	char* args;
+	std::auto_ptr<char> args;
 };
 
 }

@@ -1,14 +1,14 @@
 <%@ include file="/common/header.jsp"%>
 <%
 String host = request.getParameter("host");
-String service = request.getParameter("service");
-String old_service = request.getParameter("old_service");
-boolean isRunning = serviceManager.getServiceInfo(old_service).getPid() != 0;
+String name = request.getParameter("serviceName");
+String serviceId = request.getParameter("serviceId");
+boolean isRunning = serviceManager.getServiceInfo(serviceId).getPid() != 0;
 %>
 <h2>Edit service <i><%=old_service%></i>:</h2>
 <% if (isRunning) { %>
 New startup parameters will be applied on next service start.
-<a href="restart_service.jsp?service=<%=service%>&host=<%=host%>">Restart service <I><%=service%></I> now?</a>
+<a href="restart_service.jsp?service=<%=serviceId%>&host=<%=host%>">Restart service <I><%=name%></I> now?</a>
 <% } else { %>
 New startup parameters applied.
 <% }%>

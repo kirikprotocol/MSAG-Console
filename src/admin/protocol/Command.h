@@ -51,7 +51,6 @@ public:
 	}
 	
 	virtual ~Command()
-		throw ()
 	{
 		id = undefined;
 	}

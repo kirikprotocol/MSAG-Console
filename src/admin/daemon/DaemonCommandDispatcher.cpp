@@ -6,6 +6,7 @@
 #include <admin/protocol/CommandAddService.h>
 #include <admin/protocol/CommandRemoveService.h>
 #include <admin/protocol/CommandListServices.h>
+#include <admin/daemon/config_parameter_names.h>
 #include <core/synchronization/Mutex.hpp>
 #include <util/signal.h>
 #include <util/config/Config.h>
@@ -24,6 +25,8 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::util::setExtendedSignalHandler;
 using smsc::util::config::CStrSet;
 using smsc::util::encode;
+using smsc::util::encodeDot;
+using smsc::util::decodeDot;
 using smsc::util::cStringCopy;
 
 ServicesList DaemonCommandDispatcher::services;
@@ -74,12 +77,12 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
 	logger.debug("start service");
 	if (command != 0)
 	{
-		if (command->getServiceName() != 0)
+		if (command->getServiceId() != 0)
 		{
 			pid_t newPid = 0;
 			{
 				MutexGuard guard(servicesListMutex);
-				newPid = services[command->getServiceName()]->start();
+				newPid = services[command->getServiceId()]->start();
 			}
 			char text[sizeof(pid_t)*3 +1];
 			snprintf(text, sizeof(text),  "%lu", (unsigned long) newPid);
@@ -87,8 +90,8 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
 		}
 		else
 		{
-			logger.warn("service name not specified");
-			throw AdminException("service name not specified");
+			logger.warn("service id not specified");
+			throw AdminException("service id not specified");
 		}
 	}
 	else
@@ -104,19 +107,19 @@ Response * DaemonCommandDispatcher::kill_service(const CommandKillService * cons
 	logger.debug("kill service");
 	if (command != 0)
 	{
-		if (command->getServiceName() != 0)
+		if (command->getServiceId() != 0)
 		{
-			logger.debug("kill service \"%s\"", command->getServiceName());
+			logger.debug("kill service \"%s\"", command->getServiceId());
 			{
 				MutexGuard guard(servicesListMutex);
-				services[command->getServiceName()]->kill();
+				services[command->getServiceId()]->kill();
 			}
 			return new Response(Response::Ok, 0);
 		}
 		else
 		{
-			logger.warn("service name not specified");
-			throw AdminException("service name not specified");
+			logger.warn("service id not specified");
+			throw AdminException("service id not specified");
 		}
 	}
 	else
@@ -132,19 +135,19 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
 	logger.debug("shutdown service");
 	if (command != 0)
 	{
-		if (command->getServiceName() != 0)
+		if (command->getServiceId() != 0)
 		{
-			logger.debug("shutdown service \"%s\"", command->getServiceName());
+			logger.debug("shutdown service \"%s\"", command->getServiceId());
 			{
 				MutexGuard guard(servicesListMutex);
-				services[command->getServiceName()]->shutdown();
+				services[command->getServiceId()]->shutdown();
 			}
 			return new Response(Response::Ok, 0);
 		}
 		else
 		{
-			logger.warn("service name not specified");
-			throw AdminException("service name not specified");
+			logger.warn("service id not specified");
+			throw AdminException("service id not specified");
 		}
 	}
 	else
@@ -164,20 +167,19 @@ Response * DaemonCommandDispatcher::add_service(const CommandAddService * const 
 							 command->getConfigFileName());*/
 	if (command != 0)
 	{
-		if (command->getServiceName() != 0 && command->getCmdLine() != 0
-				&& command->getConfigFileName() != 0)
+		if (command->getServiceId() != 0 && command->getServiceName_() != 0)
 		{
 			{
 				MutexGuard guard(servicesListMutex);
-				services.add(new Service(command->getServiceName(), command->getCmdLine(), command->getConfigFileName(), command->getPort(), command->getArgs()));
+				services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), command->getServiceId(), command->getServiceName_(), command->getPort(), command->getArgs()));
 			}
-			putServiceToConfig(command->getServiceName(), command->getPort(), command->getCmdLine(), command->getConfigFileName(), command->getArgs());
+			putServiceToConfig(command->getServiceId(), command->getServiceName_(), command->getPort(), command->getArgs());
 			return new Response(Response::Ok, 0);
 		}
 		else
 		{
-			logger.warn("service name or command line or config file name not specified");
-			throw AdminException("service name or command line not specified");
+			logger.warn("service name or service id not specified");
+			throw AdminException("service name or service id not specified");
 		}
 	}
 	else
@@ -187,28 +189,23 @@ Response * DaemonCommandDispatcher::add_service(const CommandAddService * const 
 	}
 }
 
-void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceName,
+void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId,
+																								 const char * const serviceName,
 																								 const in_port_t servicePort,
-																								 const char * const serviceCmdLine,
-																								 const char * const serviceConfigFileName,
 																								 const char * const serviceArgs)
 {
 	MutexGuard lock(configManagerMutex);
-	std::string serviceSectionName = "services.";
-	std::auto_ptr<char> tmpServiceName(encode(serviceName));
-	serviceSectionName += tmpServiceName.get();
+	std::string serviceSectionName = CONFIG_SERVICES_SECTION;
+	std::auto_ptr<char> tmpServiceId(encodeDot(cStringCopy(serviceId)));
+	serviceSectionName += tmpServiceId.get();
 
 	std::string tmpName = serviceSectionName;
+	tmpName += ".name";
+	configManager->setString(tmpName.c_str(), serviceName);
+	
+	tmpName = serviceSectionName;
 	tmpName += ".port";
 	configManager->setInt(tmpName.c_str(), servicePort);
-
-	tmpName = serviceSectionName;
-	tmpName += ".cmd_line";
-	configManager->setString(tmpName.c_str(), serviceCmdLine);
-
-	tmpName = serviceSectionName;
-	tmpName += ".config";
-	configManager->setString(tmpName.c_str(), serviceConfigFileName);
 
 	tmpName = serviceSectionName;
 	tmpName += ".args";
@@ -221,19 +218,19 @@ Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * 
 {
 	if (command != 0)
 	{
-		if (command->getServiceName() != 0)
+		if (command->getServiceId() != 0)
 		{
 			{
 				MutexGuard guard(servicesListMutex);
-				Service *s = services[command->getServiceName()];
-				logger.debug("remove service \"%s\"", command->getServiceName());
+				Service *s = services[command->getServiceId()];
+				logger.debug("remove service \"%s\"", command->getServiceId());
 				if (s->getStatus() == Service::running)
 				{
 					s->kill();
 				}
-				services.remove(s->getName());
+				services.remove(s->getId());
 			}
-			removeServiceFromConfig(command->getServiceName());
+			removeServiceFromConfig(command->getServiceId());
 			return new Response(Response::Ok, 0);
 		}
 		else
@@ -249,12 +246,12 @@ Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * 
 	}
 }
 
-void DaemonCommandDispatcher::removeServiceFromConfig(const char * const serviceName)
+void DaemonCommandDispatcher::removeServiceFromConfig(const char * const serviceId)
 {
 	MutexGuard lock(configManagerMutex);
-	std::string serviceSectionName = "services.";
+	std::string serviceSectionName = CONFIG_SERVICES_SECTION;
 
-	std::auto_ptr<char> tmpServiceName(encode(serviceName));
+	std::auto_ptr<char> tmpServiceName(encodeDot(cStringCopy(serviceId)));
 	serviceSectionName += tmpServiceName.get();
 	configManager->removeSection(serviceSectionName.c_str());
 	configManager->save();
@@ -348,24 +345,20 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 {
 	try
 	{
-		CStrSet *childs = configManager->getChildSectionNames("services");
+		CStrSet *childs = configManager->getChildSectionNames(CONFIG_SERVICES_SECTION);
 		for (CStrSet::iterator i = childs->begin(); i != childs->end(); i++)
 		{
-			const char * fullServiceName = i->c_str();
-			char * dotpos = strrchr(fullServiceName, '.');
+			const char * fullServiceSection = i->c_str();
+			char * dotpos = strrchr(fullServiceSection, '.');
 			//const size_t serviceNameBufLen = strlen(dotpos+1) +1;
-			std::auto_ptr<char> serviceName(cStringCopy(dotpos+1));
+			std::auto_ptr<char> serviceId(decodeDot(cStringCopy(dotpos+1)));
 		
-			std::string prefix(fullServiceName);
+			std::string prefix(fullServiceSection);
 			prefix += '.';
 		
 			std::string tmp = prefix;
-			tmp += "cmd_line";
-			std::auto_ptr<char> serviceCmdLine(configManager->getString(tmp.c_str()));
-		
-			tmp = prefix;
-			tmp += "config";
-			std::auto_ptr<char> serviceConfigFileName(configManager->getString(tmp.c_str()));
+			tmp += "name";
+			std::auto_ptr<char> serviceName(configManager->getString(tmp.c_str()));
 		
 			tmp = prefix;
 			tmp += "port";
@@ -375,7 +368,7 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 			tmp += "args";
 			std::auto_ptr<char> serviceArgs(configManager->getString(tmp.c_str()));
 			
-			services.add(new Service(serviceName.get(), serviceCmdLine.get(), serviceConfigFileName.get(), servicePort, serviceArgs.get()));
+			services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), serviceId.get(), serviceName.get(), servicePort, serviceArgs.get()));
 		}
 		delete childs;
 	}

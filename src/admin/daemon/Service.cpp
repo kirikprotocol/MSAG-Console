@@ -1,6 +1,7 @@
 #include "Service.h"
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
@@ -14,6 +15,8 @@ using smsc::admin::util::SignalHandler;
 namespace smsc {
 namespace admin {
 namespace daemon {
+
+const char * const Service::service_exe = "bin/service";
 
 pid_t Service::start()
 	throw (AdminException)
@@ -29,10 +32,15 @@ pid_t Service::start()
 	}
 	else
 	{	// child process
+		chdir(service_dir.get());
+		chmod(service_exe, S_IRWXU);
 		#ifdef SMSC_DEBUG
 			freopen("smsc_service.err", "a",  stderr);
 		#endif
-		execv(command_line, createArguments());
+		execv(service_exe, createArguments());
+		logger.error("Couldn't start service (\"%s/%s\"), nested: %u: %s",
+								 service_dir.get(), service_exe, errno, strerror(errno));
+		exit(-1);
 		return 0;
 	}
 }
@@ -90,50 +98,31 @@ void Service::shutdown()
 	}
 }
 
-void Service::init(const char * const serviceName,
-									 const char * const serviceCommandLine,
-									 const char * const serviceconfigFileName,
+void Service::init(const char * const services_dir,
+									 const char * const serviceId,
+									 const char * const serviceName,
 									 const in_port_t serviceAdminPort,
 									 const char * const serviceArgs,
 									 const pid_t servicePID = 0)
 {
-	name = cStringCopy(serviceName);
-	command_line = cStringCopy(serviceCommandLine);
-	config_file = cStringCopy(serviceconfigFileName);
+	service_dir.reset(new char[strlen(services_dir) + 1 + strlen(serviceId) + 1]);
+	strcpy(service_dir.get(), services_dir);
+	strcat(service_dir.get(), "/");
+	strcat(service_dir.get(), serviceId);
+
+	id.reset(cStringCopy(serviceId));
+	name.reset(cStringCopy(serviceName));
 	port = serviceAdminPort;
 	pid = servicePID;
-	args = cStringCopy(serviceArgs);
-/*	#ifdef SMSC_DEBUG
-		Logger::getCategory("smsc.admin.daemon.Service").debug("Initialized service:");
-		Logger::getCategory("smsc.admin.daemon.Service").debug("  name=%s", name == 0 ? "null" : name);
-		Logger::getCategory("smsc.admin.daemon.Service").debug("  command_line=%s", command_line  == 0 ? "null" : command_line);
-		Logger::getCategory("smsc.admin.daemon.Service").debug("  port=%lu", (unsigned long) port);
-		Logger::getCategory("smsc.admin.daemon.Service").debug("  pid=%lu", (unsigned long) pid);
-	#endif
-*/
+	args.reset(cStringCopy(serviceArgs));
 }
 
-void Service::deinit()
+char * substr(const char * from, const char * to)
 {
-//	Logger::getCategory("smsc.admin.daemon.Service").debug("deinit");
-
-	if (name != 0)
-		delete name;
-	name = 0;
-
-	if (command_line != 0)
-		delete command_line;
-	command_line = 0;
-
-	if (config_file != 0)
-		delete config_file;
-	config_file = 0;
-	
-	pid = 0;
-	port = 0;
-
-	if (args != 0)
-		delete[] args;
+	char *tmpbuf = new char[to - from +1];
+	memcpy(tmpbuf, from, to - from);
+	tmpbuf[to - from] = 0;
+	return tmpbuf;
 }
 
 char ** Service::createArguments()
@@ -143,14 +132,31 @@ char ** Service::createArguments()
 	
 	typedef std::vector<char *> chrvec;
 	chrvec args_vector;
-	args_vector.push_back(command_line);
+	args_vector.push_back(cStringCopy(service_exe));
 	args_vector.push_back(port_str);
-	args_vector.push_back(config_file);
 
 	///////////////////////////////////////
 	// parse arguments
 	///////////////////////////////////////
-	args_vector.push_back(args);
+	{
+		const char *p1 = args.get(), *p2 = args.get();
+		while (*p1!= 0)
+		{
+			if (isspace(*p1))
+			{
+				if (p1 == p2)
+				{
+					p2++;
+				} else {
+					args_vector.push_back(substr(p2, p1));
+					p2 = p1+1;
+				}
+			}
+			p1++;
+		}
+		if (*p2 != 0 && p2 != p1)
+			args_vector.push_back(substr(p2, p1));
+	}
 
 	char ** arguments = new (char*)[args_vector.size()+1];
 	for (chrvec::size_type i = 0; i < args_vector.size(); i++)

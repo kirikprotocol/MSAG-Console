@@ -26,14 +26,14 @@ public:
 	{}
 
 	void add(Service *service) throw (AdminException);
-	void remove(const char * const serviceName) throw (AdminException);
-	Service * get(const char * const serviceName);
+	void remove(const char * const serviceId) throw (AdminException);
+	Service * get(const char * const serviceId);
 	char * getText() const;
 
-	Service* operator[](const char * const serviceName)
+	Service* operator[](const char * const serviceId)
 		throw (AdminException)
 	{
-		return get(serviceName);
+		return get(serviceId);
 	}
 
 	void markServiceAsStopped(pid_t old_pid);

@@ -79,12 +79,11 @@ protected:
 	Response * remove_service   (const CommandRemoveService * const command) throw (AdminException);
 	Response * list_services    (const CommandListServices  * const command) throw (AdminException);
 
-	void putServiceToConfig(const char * const serviceName,
+	void putServiceToConfig(const char * const serviceId,
+													const char * const serviceName,
 													const in_port_t servicePort,
-													const char * const serviceCmdLine,
-													const char * const serviceConfigFileName,
 													const char * const serviceArgs);
-	void removeServiceFromConfig(const char * const serviceName);
+	void removeServiceFromConfig(const char * const serviceId);
 };
 
 }

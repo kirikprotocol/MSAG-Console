@@ -27,14 +27,14 @@ using smsc::util::xml::initXerces;
 
 int main (int argc, char *argv[])
 {
-	if (argc < 3)
+	if (argc < 2)
 	{
-		printf("suage: smsc_dumb_service port <full name of config file>\n\r");
+		printf("suage: smsc_dumb_service port \n\r");
 		return -1;
 	}
  	try {
 		int servicePort = atoi(argv[1]);
-		Manager::init(argv[2]);
+		Manager::init("conf/dumbServiceConfig.xml");
 		Manager &config = Manager::getInstance();
 	
 		Logger::Init(config.getString("dumbtest.loggerInitFile"));

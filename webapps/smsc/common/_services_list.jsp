@@ -22,11 +22,12 @@
 			{
 				String serviceId = (String) j.next();
 				String params = "host=" + URLEncoder.encode(hostName) + "&serviceId=" + URLEncoder.encode(serviceId);
-				boolean isRunning = serviceManager.getServiceInfo(serviceId).getPid() != 0;
-        String serviceName = serviceManager.getServiceInfo(serviceId).getName();
+        ServiceInfo info = serviceManager.getServiceInfo(serviceId);
+				boolean isRunning = info.getPid() != 0;
+        String serviceName = info.getName();
 				%>
 				<TR class="list">
-					<TD class="list"><A href="<%=urlPrefix + servicesPrefix%>/view_service.jsp?<%=params%>"><%=serviceName%></a></TD>
+					<TD class="list"><A href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(serviceId)%>"><%=serviceName%></a></TD>
 					<TD class="list"><A href="<%=urlPrefix + hostsPrefix%>/view_host.jsp?<%=params%>"><%=hostName%></a></TD>
 					<TD class="list"><%=(isRunning ? "running" : "stopped")%></TD>
 					<% if (isRunning) { %>

@@ -24,7 +24,7 @@
 			String serviceId = (String) i.next();
 			String serviceName = serviceManager.getServiceInfo(serviceId).getName();
 			String encodedServiceId = URLEncoder.encode(serviceId);
-			%><li><a href="<%=urlPrefix+servicesPrefix%>/view_service.jsp?serviceId=<%=encodedServiceId%>"><%=serviceName%></a></li><%
+			%><li><a href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(serviceId)%>"><%=serviceName%></a></li><%
 		} %>
 	</ul>
 </ul>

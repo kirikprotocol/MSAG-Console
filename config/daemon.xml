@@ -1,15 +1,28 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
+  <section name="services">
+    <section name="TDS v0/2">
+      <param name="args" type="string">qwer+asdf%0D%0Azxcv+fgh</param>
+      <param name="name" type="string">test+Dumb+Service+2</param>
+      <param name="port" type="int">6673</param>
+    </section>
+    <section name="TDS v0/2b">
+      <param name="args" type="string">opoiuyoiu</param>
+      <param name="name" type="string">BlahBlah+service</param>
+      <param name="port" type="int">6671</param>
+    </section>
+  </section>
   <section name="admin">
     <section name="daemon">
       <section name="logger">
-        <param name="configFile" type="string">daemon%2Elogger%2Einit</param>
+        <param name="configFile" type="string">daemon.logger.init</param>
       </section>
-      <param name="stderr" type="string">logs%2Fdaemon%2Eerr</param>
-      <param name="home" type="string">%2Fexport%2Fhome%2Figork%2Fsmsc_bin_daemon</param>
+      <param name="stderr" type="string">logs/daemon.err</param>
+      <param name="home" type="string">/export/home/igork/smsc_bin_daemon</param>
+      <param name="services folder" type="string">services</param>
       <param name="host" type="string">smsc</param>
-      <param name="port" type="int">6681</param>
+      <param name="port" type="int">6680</param>
     </section>
   </section>
 </config>

@@ -337,7 +337,9 @@ void getChildSectionsFromHash(_HashType &hash,
 CStrSet* Config::getChildSectionNames(const char * const sectionName)
 {
 	CStrSet *result = new CStrSet;
-	const size_t sectionNameLen = strlen(sectionName);
+	const size_t sectionNameLen = sectionName[strlen(sectionName)-1] == '.'
+		? strlen(sectionName)-1
+		: strlen(sectionName);
 	
 	getChildSectionsFromHash<intParamsType, intParamsType::Iterator, int32_t>
 		(intParams, sectionName, sectionNameLen, *result);

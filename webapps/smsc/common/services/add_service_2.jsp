@@ -46,7 +46,7 @@ if (port == 0)
 
 
 <%@ include file="/common/header.jsp"%>
-<form action="add_service_3.jsp" method="post">
+<form action="<%=urlPrefix+servicesPrefix%>/add_service_3.jsp" method="post">
 	<input type="hidden" name="service" value="<%=URLEncoder.encode(service)%>">
 	<input type="hidden" name="host" value="<%=URLEncoder.encode(host)%>">
 	<input type="hidden" name="port" value="<%=String.valueOf(port)%>">

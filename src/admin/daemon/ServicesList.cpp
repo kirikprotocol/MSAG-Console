@@ -11,35 +11,35 @@ using smsc::util::encode;
 void ServicesList::add(Service *service) throw (AdminException)
 {
 	log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon.ServicesList"));
-	if (services.Exists(service->getName()))
+	if (services.Exists(service->getId()))
 		throw AdminException("Service already exists in list");
-	services[service->getName()] = service;
+	services[service->getId()] = service;
 	#ifdef SMSC_DEBUG
 		logger.debug("Added service:\n  name=%s\n  cmd=%s\n  port=%u  pid=%u",
-								 (services[service->getName()]->getName() == 0 ? "null" : services[service->getName()]->getName()),
-								 (services[service->getName()]->getCommandLine() == 0 ? "null" : services[service->getName()]->getCommandLine()),
-								 services[service->getName()]->getPort(),
-								 services[service->getName()]->getPid());
+								 (services[service->getId()]->getId() == 0 ? "null" : services[service->getId()]->getId()),
+								 (services[service->getId()]->getName() == 0 ? "null" : services[service->getId()]->getName()),
+								 services[service->getId()]->getPort(),
+								 services[service->getId()]->getPid());
 	#endif
 }
 
-void ServicesList::remove(const char * const serviceName) throw (AdminException)
+void ServicesList::remove(const char * const serviceId) throw (AdminException)
 {
-	if (!services.Exists(serviceName))
+	if (!services.Exists(serviceId))
 		throw AdminException("Service not found");
-	if (services[serviceName]->getStatus() == Service::running)
+	if (services[serviceId]->getStatus() == Service::running)
 	{
-		services[serviceName]->kill();
+		services[serviceId]->kill();
 	}
-	services.Delete(serviceName);
+	services.Delete(serviceId);
 }
 
-Service * ServicesList::get(const char * const serviceName)
+Service * ServicesList::get(const char * const serviceId)
 {
-	if (!services.Exists(serviceName))
+	if (!services.Exists(serviceId))
 		throw AdminException("Service not found");
 
-	return services[serviceName];
+	return services[serviceId];
 }
 
 char * ServicesList::getText() const
@@ -64,21 +64,18 @@ char * ServicesList::getText() const
 		snprintf(pid, sizeof(pid), "%lu", (unsigned long)s->getPid());
 		char port[sizeof(in_port_t)*3 + 1];
 		snprintf(port, sizeof(port), "%lu", (unsigned long)s->getPort());
+		std::auto_ptr<char> tmpServiceId(encode(s->getId()));
 		std::auto_ptr<char> tmpServiceName(encode(s->getName()));
-		std::auto_ptr<char> tmpCmdLine(encode(s->getCommandLine()));
-		std::auto_ptr<char> tmpConfig(encode(s->getConfigFileName()));
 		std::auto_ptr<char> tmpArgs(encode(s->getArgs()));
 		
-		result += "<service name=\"";
+		result += "<service id=\"";
+		result += tmpServiceId.get();
+		result += "\" name=\"";
 		result += tmpServiceName.get();
 		result += "\" pid=\"";
 		result += pid;
-		result += "\" command_line=\"";
-		result += tmpCmdLine.get();
 		result += "\" port=\"";
 		result += port;
-		result += "\" config=\"";
-		result += tmpConfig.get();
 		result += "\" args=\"";
 		result += tmpArgs.get();
 		result += "\"/>\n";

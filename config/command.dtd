@@ -8,9 +8,8 @@
     <!ATTLIST command returnType (string|int|bool) #IMPLIED>
     
 <!ELEMENT service (#PCDATA)>
+    <!ATTLIST service id CDATA #REQUIRED>
     <!ATTLIST service name CDATA #REQUIRED>
-    <!ATTLIST service cmd_line CDATA #REQUIRED>
-    <!ATTLIST service config_file CDATA #REQUIRED>
     <!ATTLIST service port CDATA #REQUIRED>
     <!ATTLIST service args CDATA #REQUIRED>
 

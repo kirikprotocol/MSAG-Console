@@ -4,7 +4,7 @@
 <config>
   <section name="daemons">
     <section name="smsc">
-      <param name="port" type="int">6681</param>
+      <param name="port" type="int">6680</param>
     </section>
   </section>
 </config>

@@ -34,8 +34,10 @@ public class ServiceManager
   protected final static String SYSTEM_ID_PARAM_NAME = "system id";
   protected static ServiceManager serviceManager = null;
   private static boolean isInitialized = false;
-  protected static File workFolder = new File("WEB-INF", "work");
-  protected static File daemonsFolder = new File("WEB-INF", "daemons");
+  protected static File webappFolder = new File("/export/home/igork/cvs/smsc/src/webapp/smsc");
+  protected static File webinfFolder = new File(webappFolder, "WEB-INF");
+  protected static File workFolder = new File(webinfFolder, "work");
+  protected static File daemonsFolder = new File(webinfFolder, "daemons");
 
   public static ServiceManager getInstance()
           throws IsNotInitializedException
@@ -132,15 +134,20 @@ public class ServiceManager
 
       ZipInputStream zin = new ZipInputStream(new BufferedInputStream(new FileInputStream(tmpFile)));
       ZipEntry entry = zin.getNextEntry();
-      while (entry != null && !entry.equals("config.xml"))
+      logger.debug("Receive new service:");
+      while (entry != null && !entry.getName().equals("config.xml")) {
+        logger.debug("  Unzip entry: " + entry.getName());
         entry = zin.getNextEntry();
+      }
       if (entry == null)
         throw new AdminException("/config.xml not found in distributive");
 
       Config serviceConfig = ConfigReader.readConfig(zin);
       String systemId = serviceConfig.getString(SYSTEM_ID_PARAM_NAME);
 
-      tmpFile.renameTo(new File(workFolder, systemId + ".zip"));
+      File renameTo = new File(workFolder, systemId + ".zip");
+      if (!tmpFile.renameTo(renameTo))
+        throw new AdminException("Couldn't rename \"" + tmpFile.getCanonicalPath() + "\" to \"" + renameTo.getCanonicalPath());
       logger.debug("Received new service \"" + systemId + "\"");
       return systemId;
     } catch (Config.ParamNotFoundException e) {
@@ -153,25 +160,24 @@ public class ServiceManager
   }
 
   protected void unZipFileFromArchive(File folderUnpackTo, String name, ZipInputStream zin)
-  throws IOException
+          throws IOException
   {
-      File file = new File(folderUnpackTo, name);
-      file.getParentFile().mkdirs();
-      OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
-      for (int i = 0; (i = zin.read()) != -1; out.write(i));
-      out.close();
+    File file = new File(folderUnpackTo, name);
+    file.getParentFile().mkdirs();
+    OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+    for (int i = 0; (i = zin.read()) != -1; out.write(i)) ;
+    out.close();
   }
 
   protected void unZipArchive(File folderUnpackTo, InputStream in)
-  throws IOException
+          throws IOException
   {
-      ZipInputStream zin = new ZipInputStream(in);
-      for (ZipEntry e = zin.getNextEntry(); e!= null; e = zin.getNextEntry())
-      {
-        unZipFileFromArchive(folderUnpackTo, e.getName(), zin);
-      }
-      zin.close();
-      in.close();
+    ZipInputStream zin = new ZipInputStream(in);
+    for (ZipEntry e = zin.getNextEntry(); e != null; e = zin.getNextEntry()) {
+      unZipFileFromArchive(folderUnpackTo, e.getName(), zin);
+    }
+    zin.close();
+    in.close();
   }
 
   public synchronized void addService(String service,
@@ -189,23 +195,28 @@ public class ServiceManager
   {
     logger.debug("Add service \"" + service + '/' + systemId + "\" (" + host + ':' + port + ")");
     try {
-      unZipArchive(new File(new File(daemonsFolder, host), systemId),
+      File serviceFolder = new File(new File(daemonsFolder, host), systemId);
+      unZipArchive(serviceFolder,
                    new BufferedInputStream(new FileInputStream(new File(workFolder, systemId + ".zip"))));
+      File jspFolder = new File(serviceFolder, "jsp");
+      File newJspFolder = new File(webappFolder, "esme_" + systemId);
+      if (!jspFolder.renameTo(newJspFolder))
+        throw new AdminException("Couldn't deploy JSP's (\"" + jspFolder.getCanonicalPath() + "\") to \"" + newJspFolder.getCanonicalPath() + "\"");
     } catch (IOException e) {
       throw new AdminException("Couldn't unpack service, nested: " + e.getMessage());
     }
 
-      ServiceInfo serviceInfo = new ServiceInfo(service,  systemId, host, port, args);
+    ServiceInfo serviceInfo = new ServiceInfo(service, systemId, host, port, args);
 
-      Daemon d = getDaemon(serviceInfo.getHost());
-      if (services.containsKey(serviceInfo.getId()))
-        throw new AdminException("Service \"" + serviceInfo.getId() + "\" already present");
+    Daemon d = getDaemon(serviceInfo.getHost());
+    if (services.containsKey(serviceInfo.getId()))
+      throw new AdminException("Service \"" + serviceInfo.getId() + "\" already present");
 
-      //logger.debug("checkpoint 1");
-      d.addService(serviceInfo);
-      //logger.debug("checkpoint 2");
-      putService(new Service(serviceInfo));
-      logger.debug("service added");
+    //logger.debug("checkpoint 1");
+    d.addService(serviceInfo);
+    //logger.debug("checkpoint 2");
+    putService(new Service(serviceInfo));
+    logger.debug("service added");
   }
 
   public synchronized void removeService(String serviceName)
@@ -368,10 +379,10 @@ public class ServiceManager
     }
   }
 
-  public synchronized void refreshService(String serviceName)
+  public synchronized void refreshService(String serviceId)
           throws AdminException
   {
-    Service s = getService(serviceName);
+    Service s = getService(serviceId);
     Daemon d = daemonManager.getDaemon(s.getInfo().getHost());
     Map infos = d.listServices();
     for (Iterator j = infos.values().iterator(); j.hasNext();)

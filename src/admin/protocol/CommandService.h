@@ -18,27 +18,21 @@ public:
 	CommandService(Id comId, DOM_Document doc) throw ()
 		: Command(comId)
 	{
-		serviceName = 0;
 		setData(doc);
-		serviceName = doc.getDocumentElement().getAttribute("service").transcode();
+		serviceId.reset(doc.getDocumentElement().getAttribute("service").transcode());
 	}
 
 	virtual ~CommandService()
-		throw()
 	{
-		if (serviceName != 0)
-		{
-			delete serviceName;
-		}
 	}
 
-	const char * const getServiceName() const throw ()
+	const char * const getServiceId() const throw ()
 	{
-		return serviceName;
+		return serviceId.get();
 	}
-
+	
 protected:
-	char * serviceName;
+	std::auto_ptr<char> serviceId;
 };
 
 }
