@@ -416,7 +416,7 @@ static void SendRInfo(MapDialog* dialog)
   if ( !dialog->isQueryAbonentStatus && dialog->sms.get() != 0 && dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 )
     hiPrior = true;
 
-  // õàê !!!!
+  // €Š !!!!
   if ( dialog->version != 2 && dialog->version != 1 ) dialog->version = 2;
   // !!!!!
 
@@ -2454,7 +2454,7 @@ static void NotifyHLR(MapDialog* dialog)
   }
   dialog->id_opened = true;
 
-  // õàê !!!!
+  // €Š !!!!
   if ( dialog->hlrVersion != 2 && dialog->hlrVersion != 1 ) dialog->hlrVersion = 2;
   // !!!!
 
@@ -2462,7 +2462,7 @@ static void NotifyHLR(MapDialog* dialog)
     result = Et96MapV2ReportSmDelStatReq(
       HLR_SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr,deliveryOutcom);
   }else if ( dialog->hlrVersion == 1 ) {
-    // ????? âñåãäà ëè ???????
+    // ????? ‚±…ƒ„€ ‹ˆ ???????
     result = Et96MapV1ReportSmDelStatReq(
       HLR_SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr);
   } else
