@@ -15,15 +15,17 @@ using namespace smsc::smpp::SmppCommandSet;
 SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _systemId,
 	const Address& _smeAddr, SmppResponseSender* respSender,
 	const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
-	const RouteRegistry* _routeReg, CheckList* _chkList)
+	const RouteRegistry* _routeReg, ProfileRegistry* _profileReg,
+	CheckList* _chkList)
 	: config(_config), session(NULL), systemId(_systemId), smeAddr(_smeAddr),
-	smeReg(_smeReg), aliasReg(_aliasReg), routeReg(_routeReg), chkList(_chkList),
-	routeChecker(NULL), pduChecker(NULL)
+	smeReg(_smeReg), aliasReg(_aliasReg), routeReg(_routeReg),
+	profileReg(_profileReg), chkList(_chkList), routeChecker(NULL), pduChecker(NULL)
 {
 	__require__(respSender);
 	__require__(smeReg);
 	//__require__(aliasReg);
 	//__require__(routeReg);
+	//__require__(profileReg);
 	//__require__(chkList);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
 	if (pduReg && aliasReg && routeReg)
@@ -32,11 +34,11 @@ SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _syste
 		pduChecker = new SmppPduChecker(pduReg, routeChecker, chkList);
 	}
 	receiver = new SmppReceiverTestCases(systemId, smeAddr, respSender, smeReg,
-		aliasReg, routeReg, routeChecker, pduChecker, chkList);
+		aliasReg, routeReg, profileReg, routeChecker, pduChecker, chkList);
 	session = new SmppSession(config, receiver);
 	receiver->setSession(session);
 	transmitter = new SmppTransmitterTestCases(session, systemId, smeAddr,
-		smeReg, routeChecker, pduChecker, chkList);
+		smeReg, profileReg, routeChecker, pduChecker, chkList);
 }
 
 SmppTestCases::~SmppTestCases()

@@ -6,6 +6,7 @@
 #include "test/util/BaseTestCases.hpp"
 #include "test/core/SmeRegistry.hpp"
 #include "test/core/PduRegistry.hpp"
+#include "test/core/ProfileRegistry.hpp"
 #include "SmppPduChecker.hpp"
 
 namespace smsc {
@@ -23,7 +24,8 @@ class SmppTransmitterTestCases : BaseTestCases
 public:
 	SmppTransmitterTestCases(SmppSession* session, const SmeSystemId& systemId,
 		const Address& smeAddr, const SmeRegistry* smeReg,
-		RouteChecker* routeChecker, SmppPduChecker* pduChecker, CheckList* chkList);
+		ProfileRegistry* profileReg, RouteChecker* routeChecker,
+		SmppPduChecker* pduChecker, CheckList* chkList);
 	
 	virtual ~SmppTransmitterTestCases() {}
 
@@ -91,6 +93,7 @@ private:
 	const Address smeAddr;
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;
+	ProfileRegistry* profileReg;
 	RouteChecker* routeChecker;
 	SmppPduChecker* pduChecker;
 	CheckList* chkList;

@@ -26,7 +26,8 @@ public:
 	SmppTestCases(const SmeConfig& config, const SmeSystemId& systemId,
 		const Address& smeAddr, SmppResponseSender* respSender,
 		const SmeRegistry* smeReg, const AliasRegistry* aliasReg,
-		const RouteRegistry* routeReg, CheckList* chkList); //throws Exception
+		const RouteRegistry* routeReg, ProfileRegistry* profileReg,
+		CheckList* chkList); //throws Exception
 	
 	virtual ~SmppTestCases();
 
@@ -72,6 +73,7 @@ private:
 	PduRegistry* pduReg;
 	const AliasRegistry* aliasReg;
 	const RouteRegistry* routeReg;
+	ProfileRegistry* profileReg;
 	//internal
 	SmppSession* session;
 	RouteChecker* routeChecker;

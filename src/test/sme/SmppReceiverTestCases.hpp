@@ -8,6 +8,7 @@
 #include "test/core/PduRegistry.hpp"
 #include "test/core/AliasRegistry.hpp"
 #include "test/core/RouteRegistry.hpp"
+#include "test/core/ProfileRegistry.hpp"
 #include "test/core/RouteChecker.hpp"
 #include "SmppPduChecker.hpp"
 #include "SmppResponseSender.hpp"
@@ -33,7 +34,8 @@ public:
 	SmppReceiverTestCases(const SmeSystemId& systemId, const Address& smeAddr,
 		SmppResponseSender* respSender, const SmeRegistry* smeReg,
 		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
-		RouteChecker* routeChecker, SmppPduChecker* pduChecker, CheckList* chkList);
+		const ProfileRegistry* profileReg, RouteChecker* routeChecker,
+		SmppPduChecker* pduChecker, CheckList* chkList);
 
 	virtual ~SmppReceiverTestCases() {}
 
@@ -95,11 +97,13 @@ private:
 	PduRegistry* pduReg;
 	const AliasRegistry* aliasReg;
 	const RouteRegistry* routeReg;
+	const ProfileRegistry* profileReg;
 	RouteChecker* routeChecker;
 	SmppPduChecker* pduChecker;
 	CheckList* chkList;
 
 	bool isAccepted(uint32_t status);
+	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
 };
 
 }

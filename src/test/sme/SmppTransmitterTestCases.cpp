@@ -17,15 +17,19 @@ using namespace smsc::test::sms; //constants
 using namespace smsc::smpp;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
+using namespace smsc::profiler;
 
 SmppTransmitterTestCases::SmppTransmitterTestCases(SmppSession* sess,
 	const SmeSystemId& id, const Address& addr, const SmeRegistry* _smeReg,
-	RouteChecker* _routeChecker, SmppPduChecker* _pduChecker, CheckList* _chkList)
+	ProfileRegistry* _profileReg, RouteChecker* _routeChecker,
+	SmppPduChecker* _pduChecker, CheckList* _chkList)
 	: session(sess), systemId(id), smeAddr(addr), smeReg(_smeReg),
-	routeChecker(_routeChecker), pduChecker(_pduChecker), chkList(_chkList)
+	profileReg(_profileReg), routeChecker(_routeChecker),
+	pduChecker(_pduChecker), chkList(_chkList)
 {
 	__require__(session);
 	__require__(smeReg);
+	//__require__(profileReg);
 	//__require__(routeChecker);
 	//__require__(pduChecker);
 	//__require__(chkList);
@@ -167,10 +171,11 @@ PduData* SmppTransmitterTestCases::getNonReplaceRescheduledEnrotePdu()
 template <class Message>
 void SmppTransmitterTestCases::checkRegisteredDelivery(Message& m)
 {
-	uint8_t regDelivery = m.get_registredDelivery();
-	if ((regDelivery & SMSC_DELIVERY_RECEIPT_BITS) == FINAL_SMSC_DELIVERY_RECEIPT ||
-		(regDelivery & SMSC_DELIVERY_RECEIPT_BITS) == FAILURE_SMSC_DELIVERY_RECEIPT ||
-		(regDelivery & INTERMEDIATE_NOTIFICATION_REQUESTED))
+	//m.get_registredDelivery();
+	Address srcAddr;
+	SmppUtil::convert(m.get_source(), &srcAddr);
+	int reportOptions = profileReg->getProfile(srcAddr).reportoptions;
+	if (reportOptions != ProfileReportOptions::ReportNone)
 	{
 		SmppTime t;
 		time_t waitTime = time(NULL) + rand2(sequentialPduInterval, maxWaitTime);
@@ -225,13 +230,14 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	pduData->deliveryFlag = routeChecker->isDestReachable(
 		pdu->get_message().get_source(), pdu->get_message().get_dest(), false) ?
 		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
-	uint8_t regDelivery = pdu->get_message().get_registredDelivery();
+	//pdu->get_message().get_registredDelivery();
+	Address srcAddr;
+	SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
+	pduData->reportOptions = profileReg->getProfile(srcAddr).reportoptions;
 	pduData->deliveryReceiptFlag =
-		((regDelivery & SMSC_DELIVERY_RECEIPT_BITS) == NO_SMSC_DELIVERY_RECEIPT ?
+		(pduData->reportOptions == ProfileReportOptions::ReportNone ?
 		PDU_NOT_EXPECTED_FLAG : PDU_REQUIRED_FLAG);
-	pduData->intermediateNotificationFlag =
-		((regDelivery & INTERMEDIATE_NOTIFICATION_REQUESTED) ?
-		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG);
+	pduData->intermediateNotificationFlag = PDU_NOT_EXPECTED_FLAG;
 	//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 	//destination address and service_type. Сообщение должно быть в 
 	//ENROTE state.
