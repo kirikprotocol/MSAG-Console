@@ -1,5 +1,4 @@
-# $Id$
-# this file contains binaries definitions
+#binary name        source name	libraries
+-test/runtest        TestRunner
+-test/test            test		-ltest-util
 
-# binary name        source name	libraries         
-test/runtest           TestRunner
