@@ -22,7 +22,7 @@ using std::auto_ptr;
 
 /*SmeProxy* Smsc::routeSms(SMS* sms, int* dest_idx)
 {
-	smeman.getSmeProxy(0)
+  smeman.getSmeProxy(0)
 }*/
 
 void Smsc::mainLoop()
@@ -37,21 +37,22 @@ void Smsc::mainLoop()
     {
     case __CMD__(SUBMIT):
       {
+				__trace__("mainLoop:SUBMIT");
         SMS* sms = cmd->get_sms();
         uint32_t dialogId =  cmd->get_dialogId();
         // route sms
         //SmeProxy* dest_proxy = routeSms(sms,&dest_proxy_index);
-				SmeProxy* dest_proxy = 0;
-				auto_ptr<SmeIterator> it(smeman.iterator());
-				while (it->next())
-				{
-					SmeProxy* proxy = it->getSmeProxy();
-					if ( proxy != src_proxy )
-					{
-						dest_proxy = proxy;
-						break;
-					}
-				}
+        SmeProxy* dest_proxy = 0;
+        auto_ptr<SmeIterator> it(smeman.iterator());
+        while (it->next())
+        {
+          SmeProxy* proxy = it->getSmeProxy();
+          if ( proxy != src_proxy )
+          {
+            dest_proxy = proxy;
+            break;
+          }
+        }
 
         if ( !dest_proxy )
         {
@@ -78,10 +79,12 @@ void Smsc::mainLoop()
         // send responce
         SmscCommand resp2 = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::OK);
         src_proxy->putCommand(resp2);
+				__trace__("mainLoop:SUBMIT:OK");
         break;
       }
     case __CMD__(DELIVERY_RESP):
       {
+				__trace__("mainLoop:DELIVERY_RESP");
         uint32_t status = cmd->get_resp()->get_status();
         uint32_t dialogId = cmd->get_dialogId();
         const char* messageId = cmd->get_resp()->get_messageId();
@@ -94,6 +97,7 @@ void Smsc::mainLoop()
         }
         // update sms state
         //......
+				__trace__("mainLoop:DELIVERY_RESP:OK");
         break;
       }
     default:
