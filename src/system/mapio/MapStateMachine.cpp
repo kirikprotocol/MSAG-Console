@@ -1059,9 +1059,10 @@ USHORT_T Et96MapOpenConf (
           //dialog->state = MAPST_BROKEN;
           //throw MAPDIALOG_BAD_STATE(
           //  FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
-          throw MAPDIALOG_FATAL_ERROR(
+          /*throw MAPDIALOG_FATAL_ERROR(
             FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialogid_map,dialogid_smsc),
-            provErrCode_p?MAP_ERRORS_BASE+*provErrCode_p:MAP_FALURE);
+            provErrCode_p?MAP_ERRORS_BASE+*provErrCode_p:MAP_FALURE);*/
+          DoProvErrorProcessing(provErrCode_p);
         }
       }
       switch(dialog->state){
@@ -1135,6 +1136,26 @@ void DoMTConfErrorProcessor(
 }
 #endif
 
+static inline 
+void DoProvErrorProcessing(ET96MAP_PROV_ERR_T *provErrCode_p )
+{
+  if ( provErrCode_p != 0 ){
+    if ( *provErrCode_p == 0x02 || // unsupported service
+         *provErrCode_p == 0x03 || // mystyped parametor
+         *provErrCode_p == 0x06 || // unexcpected responnse from peer
+         *provErrCode_p == 0x09 || // invalid responce recived
+         (*provErrCode_p > 0x0a && *provErrCode_p <= 0x10)) // unxpected component end other
+      throw MAPDIALOG_FATAL_ERROR(
+        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
+        MAP_ERRORS_BASE+*provErrCode_p);
+    else
+      throw MAPDIALOG_TEMP_ERROR(
+        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
+        MAP_ERRORS_BASE+*provErrCode_p);
+  }
+}
+
+static inline
 void DoRInfoErrorProcessor(
   ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
   ET96MAP_PROV_ERR_T *provErrCode_p )
@@ -1159,20 +1180,7 @@ void DoRInfoErrorProcessor(
                  errorSendRoutingInfoForSm_sp->errorCode),
                  MAP_ERRORS_BASE+errorSendRoutingInfoForSm_sp->errorCode);
   }
-  if ( provErrCode_p != 0 ){
-    if ( *provErrCode_p == 0x02 || // unsupported service
-         *provErrCode_p == 0x03 || // mystyped parametor
-         *provErrCode_p == 0x06 || // unexcpected responnse from peer
-         *provErrCode_p == 0x09 || // invalid responce recived
-         (*provErrCode_p > 0x0a && *provErrCode_p <= 0x10)) // unxpected component end other
-      throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
-        MAP_ERRORS_BASE+*provErrCode_p);
-    else
-      throw MAPDIALOG_TEMP_ERROR(
-        FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p),
-        MAP_ERRORS_BASE+*provErrCode_p);
-  }
+  DoProvErrorProcessing(provErrCode_p);
 }
 
 static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl( 
@@ -1575,9 +1583,10 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
     dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
     //DoMTConfErrorProcessor(errorForwardSMmt_sp,provErrCode_p);
-    if ( provErrCode_p ) {
+    /*if ( provErrCode_p ) {
       throw MAPDIALOG_FATAL_ERROR(FormatText("provErrCode_p == 0x%x",*provErrCode_p),MAP_ERRORS_BASE+*provErrCode_p);
-    }
+    }*/
+    DoProvErrorProcessing(provErrCode_p);
     if ( errorForwardSMmt_sp )
     {
       if ( errorForwardSMmt_sp->errorCode == 5 ||
