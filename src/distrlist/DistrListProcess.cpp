@@ -185,7 +185,8 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
     if ( task->count >= MAX_COUNT ) {
       throw BIG_MULTI();
     }
-    if ( multi->dests[i].dest_flag ){
+    if ( multi->dests[i].dest_flag == 0x02 ){
+      __trace2__(":DPL: distrib list %s",multi->dests[i].value)
       Array<Address> addresses = admin->members(multi->dests[i].value,multi->msg.getOriginatingAddress());
       unsigned count = addresses.Count();
       if ( count+task->count > MAX_COUNT ) {
@@ -201,7 +202,9 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
         ++task->count;
       }
     }
-    else{
+    else if (multi->dests[i].dest_flag == 0x01 ) 
+    {
+     __trace2__(":DPL: distrib addr %d.%d.%s",multi->dests[i].ton,multi->dests[i].npi,multi->dests[i].value);
      task->list[task->count].addr = Address(
        multi->dests[i].value.length(),
        multi->dests[i].ton,
@@ -210,6 +213,10 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
      task->list[task->count].dialogId = 0;
      task->list[task->count].success = false;
       ++task->count;
+    }
+    else
+    {
+      __warning__(":DPL: invalid distflag");
     }
   }
   task->submited_count = 0;
