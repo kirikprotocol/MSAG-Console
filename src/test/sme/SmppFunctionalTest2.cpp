@@ -28,7 +28,6 @@ using smsc::sme::SmeConfig;
 using smsc::smeman::SmeInfo;
 using smsc::alias::AliasInfo;
 using smsc::test::smpp::SmppUtil;
-using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
 using smsc::test::sms::operator==;
 using smsc::test::smeman::SmeManagerTestCases;
@@ -43,6 +42,7 @@ using namespace smsc::sms;
 using namespace smsc::core::synchronization;
 using namespace smsc::core::threads; //ThreadPool, ThreadedTask
 using namespace smsc::profiler;
+using namespace smsc::test::sms;
 using namespace smsc::test::sme;
 using namespace smsc::test::config;
 using namespace smsc::test::util;
@@ -192,7 +192,7 @@ void TestSme::executeCycle()
 #ifdef SIMPLE_TEST
 	seq.push_back(201);
 #else
-	seq.insert(seq.end(), 15, 1);
+	//seq.insert(seq.end(), 15, 1);
 	//seq.insert(seq.end(), 10, 2);
 	seq.insert(seq.end(), 10, 3);
 	seq.insert(seq.end(), 10, 4);
@@ -354,8 +354,10 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	__cfg_str__(abonentInfoSystemId);
 	
 	vector<Address*> addr;
+	vector<Address*> alias;
 	vector<SmeInfo*> smeInfo;
 	addr.reserve(numAddr);
+	alias.reserve(numAlias);
 	smeInfo.reserve(numAddr);
 	//регистрация sme
 	for (int i = 0; i < numAddr; i++)
@@ -363,9 +365,15 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
 		tcSme.addCorrectSme(addr[i], smeInfo[i], RAND_TC);
-		ostringstream os;
-		os << *addr[i];
-		__trace2__("genConfig(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
+		__trace2__("register sme: addr = %s, systemId = %s", str(*addr[i]).c_str(), smeInfo[i]->systemId.c_str());
+	}
+	//регистрация фейковых sme
+	for (int i = 0; i < numAlias; i++)
+	{
+		alias.push_back(new Address());
+		SmeInfo fakeSmeInfo;
+		tcSme.addCorrectSme(alias[i], &fakeSmeInfo, RAND_TC);
+		__trace2__("register fake sme: alias = %s", str(*alias[i]).c_str());
 	}
 	//регистрация profiler
 	SmeInfo profilerInfo;
@@ -386,27 +394,27 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	smeReg->registerSme("+321", abonentProxyInfo, false, true);
 	smeReg->bindSme(abonentProxyInfo.systemId);
 	//регистрация алиасов
-	for (int i = 0; i < numAlias; i++)
+	for (int i = 0; i < numAddr; i++)
 	{
 		for (int j = 0; j < numAlias; j++)
 		{
 			for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
 			{
-				AliasInfo alias;
-				alias.alias = *addr[i];
-				alias.addr = *addr[j];
+				AliasInfo aliasInfo;
+				aliasInfo.addr = *addr[i];
+				aliasInfo.alias = *alias[j];
 				switch (s.value())
 				{
 					case 1:
 					case 2:
 					case 3:
-						tcAlias.addCorrectAliasMatch(&alias, RAND_TC);
+						tcAlias.addCorrectAliasMatch(&aliasInfo, RAND_TC);
 						break;
 					case 4:
-						tcAlias.addCorrectAliasNotMatchAddress(&alias, RAND_TC);
+						tcAlias.addCorrectAliasNotMatchAddress(&aliasInfo, RAND_TC);
 						break;
 					case 5:
-						tcAlias.addCorrectAliasNotMatchAlias(&alias, RAND_TC);
+						tcAlias.addCorrectAliasNotMatchAlias(&aliasInfo, RAND_TC);
 						break;
 					default:
 						__unreachable__("Invalid alias test case");
@@ -414,11 +422,24 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 			}
 		}
 	}
+	//проверка
+	__trace__("*** Checking alias constraint d(a(A)) = A ***");
+	for (int i = 0; i < numAddr; i++)
+	{
+		const Address _alias = aliasReg->findAliasByAddress(*addr[i]);
+		const Address _addr = aliasReg->findAddressByAlias(_alias);
+		__trace2__("addr->alias->addr: %s -> %s -> %s",
+			str(*addr[i]).c_str(), str(_alias).c_str(), str(_addr).c_str());
+		if (_addr != *addr[i])
+		{
+			cout << "Alias constraint d(a(A)) = A violated" << endl;
+		}
+	}
 	//алиас для profiler
 	AliasInfo profilerAliasInfo;
 	profilerAliasInfo.addr = profilerAddr;
 	profilerAliasInfo.alias = profilerAlias;
-	profilerAliasInfo.hide = true;
+	profilerAliasInfo.hide = rand0(2);
 	aliasReg->putAlias(profilerAliasInfo);
 	//tcAlias->commit();
 	//регистрация маршрутов
@@ -498,7 +519,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		smeReg->bindSme(smeInfo[i]->systemId);
 	}
 	//печать таблицы маршрутов между sme
-	__trace__("Route table");
+	__trace__("*** Route table ***");
 	int numRoutes = 0;
 	int numBound = 0;
 	for (int i = 0; i < numAddr; i++)
@@ -571,6 +592,10 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	{
 		delete addr[i];
 		delete smeInfo[i];
+	}
+	for (int i = 0; i < numAlias; i++)
+	{
+		delete alias[i];
 	}
 	return sme;
 }
