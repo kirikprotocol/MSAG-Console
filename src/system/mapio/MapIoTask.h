@@ -626,14 +626,14 @@ public:
     if ( item->abonent.length() != 0 && !item->isUSSD) {
       lock_map.Delete(item->abonent);
     }
-    hash_.Delete(MKDID(dialogueid,ssn));
+    hash_.Delete(MKDID(item->dialogid_map,item->ssn));
     item->state = MAPST_END;
-    item->Release();
-    if(dialogueid < MAX_DIALOGID_POOLED ) {
+    if(item->dialogid_map < MAX_DIALOGID_POOLED ) {
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
     } else {
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_IN);
     }
+    item->Release();
   }
 
   void _dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn){
