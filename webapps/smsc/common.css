@@ -54,6 +54,11 @@ th
 	font-weight : normal;
 	white-space: nowrap;
 }
+hr 
+{
+	color: #C8BE9E;
+	height: 1px;
+}
 
 input.txt
 {
@@ -92,7 +97,8 @@ div.secSmsc
 	background-repeat: no-repeat;
 	color: #308380;
 	padding-left: 19px;
-	margin-left: 8px;
+	margin-left: 0px;
+	margin-bottom: 4px;
 	background-image: url(img/smsc_ico.gif);
 	font-size: small;
 	font-weight: bold;

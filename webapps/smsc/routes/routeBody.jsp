@@ -2,140 +2,422 @@
                  java.util.*"%>
 <div class=content>
 <%int rowN = 0;%>
-<table class=properties_list cellspacing=0 cellpadding=2>
-<col width="1%">
-<col width="98%">
-<tr class=row1><td colspan=3><div class=page_subtitle>Route information</div></td></tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th>name:</th>
-	<td><input class=txtW name=routeId value="<%=bean.getRouteId()%>"></td>
+<script>
+var global_counter = 0;
+function removeRow(tbl, rowId)
+{
+	var rowElem = tbl.rows(rowId);
+	tbl.deleteRow(rowElem.rowIndex);
+}
+function byteToHexStr(bth)
+{
+	if (bth < 10)
+		return String.fromCharCode(0x30 + bth);
+	else
+		return String.fromCharCode(0x41 + bth - 10);
+}			
+function encodeHEX( str ) {
+	var c = 0;						
+	var result = "";
+	for (i = 0; i < str.length; i++) {
+		result += byteToHexStr((str.charCodeAt(i)>>4)&0xF) + byteToHexStr((str.charCodeAt(i))&0xF);
+	}
+	return result;
+}
+</script>
+<div class=page_subtitle>Route information</div>
+<table cellspacing=0 cellpadding=0 _border=1>
+<col width="50%">
+<col width="0%" >
+<col width="50%">
+<tr>
+	<td valign=top><%rowN = 0;%>
+		<table class=properties_list_ cellspacing=0 cellpadding=0>
+		<col width="1%">
+		<col width="98%">
+		<tr class=row<%=(rowN++)&1%>>
+			<th>name</th>
+			<td><input class=txt name=routeId value="<%=bean.getRouteId()%>"></td>
+		</tr>
+		<tr class=row<%=(rowN++)&1%>>
+			<th><label title="integer from 0 to 32767">priority</label></th>
+			<td><input class=txt name=priority value="<%=bean.getPriority()%>" maxlength=5 validation="priority" onkeyup="resetValidation(this)"></td>
+		</tr>
+		<tr class=row<%=(rowN++)&1%>>
+			<th>service ID</th>
+			<td><input class=txt name=serviceId value="<%=bean.getServiceId()%>" maxlength=5 validation="route_serviceId" onkeyup="resetValidation(this)"></td>
+		</tr>
+		<tr class=row<%=(rowN++)&1%>>
+			<th>srcSmeId</th>
+			<td><select name=srcSmeId>
+				<option value="" <%=(bean.getSrcSmeId() == null || bean.getSrcSmeId().length() == 0) ? "selected" : ""%>></option>
+				<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
+				{
+					String smeId = (String) j.next();
+					String encSmeId = StringEncoderDecoder.encode(smeId);
+					%><option value="<%=encSmeId%>" <%=smeId.equals(bean.getSrcSmeId()) ? "selected" : ""%>><%=encSmeId%></option><%
+				}
+				%>
+			</select></td>
+		</tr>		
+		</table>
+	</td>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td valign=top><%rowN = 0;%>
+		<table cellspacing=0 cellpadding=0>
+		<col width=1%>
+		<col width=99%>
+		<tr>
+			<td><input id=active class=check type=checkbox name=active <%=bean.isActive() ? "checked" : ""%>></td>
+			<td><label for=active style="padding-left:4px;">active</label></td>
+		</tr>
+		<tr>
+			<td><input id=permissible class=check type=checkbox name=permissible <%=bean.isPermissible() ? "checked" : ""%>></td>
+			<td><label for=permissible style="padding-left:4px;">allowed</label></td>
+		</tr>
+		<tr>
+			<td><input class=check type=checkbox id=billing name=billing <%=bean.isBilling() ? "checked" : ""%>></td>
+			<td><label for=billing style="padding-left:4px;">billing</label></td>
+		</tr>
+		<tr>
+			<td><input id=archiving class=check type=checkbox name=archiving <%=bean.isArchiving() ? "checked" : ""%>></td>
+			<td><label for=archiving style="padding-left:4px;">archiving</label></td>
+		</tr>
+		<tr>
+			<td><input id=suppressDeliveryReports class=check type=checkbox name=suppressDeliveryReports <%=bean.isSuppressDeliveryReports() ? "checked" : ""%>></td>
+			<td><label for=suppressDeliveryReports style="padding-left:4px;">suppress delivery reports</label></td>
+		</tr>
+		</table>
+	</td>
 </tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th><label title="integer from 0 to 32767">priority:</label></th>
-	<td><input class=txtW name=priority value="<%=bean.getPriority()%>" maxlength=5 validation="priority" onkeyup="resetValidation(this)"></td>
+<tr>
+	<td colspan=3>&nbsp;</td>
 </tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th><br></th>
-	<td><input id=permissible class=check type=checkbox name=permissible <%=bean.isPermissible() ? "checked" : ""%>>&nbsp;<label for=permissible>allowed</label></td>
+<tr><td colspan=3><hr></td></tr>
+<tr>
+	<td valign=top><%rowN = 0;%>
+		<div class=page_subtitle>Sources</div>
+		<table cellspacing=0 cellpadding=0>
+		<col width="50%" align=left>
+		<col width="50%" align=right>
+		<col width="0%" align=left>
+		<!--col width="50%" align=right>
+		<col width="0%"-->
+		<tr valign="middle">
+			<td>Subject</td>
+			<td><select id=srcSubjSelect name="fake_name" class="txt" ><%
+				for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
+				{
+					String name = (String) i.next();
+					if (!bean.isSrcChecked(name)) {
+						String encName = StringEncoderDecoder.encode(name);
+						String hexName = StringEncoderDecoder.encodeHEX(name);
+						%><option value="<%=encName%>"><%=encName%></option><%
+					}
+				}%></select></td>
+			<td><img src="<%=CPATH%>/img/but_add.gif" onclick="addSourceSubj()" style="cursor:hand;"></td>
+		</tr><tr>
+			<td>Mask</td>
+			<td><input id=newSrcMask class=txt name=srcMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
+			<td><img src="<%=CPATH%>/img/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)" style="cursor:hand;"></td>
+		</tr>
+		</table>
+	</td>
+	<td>&nbsp;</td>
+	<td valign=top>
+		<div class=page_subtitle>Destinations</div>
+		<table cellspacing=0 cellpadding=0>
+		<col width="89%">
+		<col width="10%" align=right>
+		<col width="1%">
+		<col width="0%">
+		<tr>
+			<td>Subject</td>
+			<td><select id=dstSubjSelect><%
+				for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
+				{
+					String name = (String) i.next();
+					if (!bean.isDstChecked(name)) {
+						String encName = StringEncoderDecoder.encode(name);
+						String hexName = StringEncoderDecoder.encodeHEX(name);
+						%><option value="<%=encName%>"><%=encName%></option><%
+					}
+				}%></select></td>
+			<td><select id=dstSubjSmeSelect><%
+				for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
+				{
+					String smeId = (String) j.next();
+					String encSmeId = StringEncoderDecoder.encode(smeId);
+					%><option value="<%=encSmeId%>"><%=encSmeId%></option><%
+				}
+				%></select></td>
+			<td><img src="<%=CPATH%>/img/but_add.gif" onclick="addDestSubj()" style="cursor:hand;"></td>
+		</tr>
+		<tr>
+			<td>Mask</td>
+			<td><input id=newDstMask class=txt name=dstMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
+			<td><select name=dst_mask_sme_ id=newDstMaskSme>
+				<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
+				{
+					String smeId = (String) j.next();
+					String encSmeId = StringEncoderDecoder.encode(smeId);
+					%><option value="<%=encSmeId%>" <%=smeId.equals(bean.getDst_mask_sme_()) ? "selected" : ""%>><%=encSmeId%></option><%
+				}
+				%>
+				</select>
+			</td>
+			<td><img src="<%=CPATH%>/img/but_add.gif" onclick="addDestMask()" style="cursor:hand;"></td>
+		</tr>
+		</table>
+	</td>
 </tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th><br></th>
-	<td><input class=check type=checkbox id=billing name=billing <%=bean.isBilling() ? "checked" : ""%>>&nbsp;<label for=billing>billing</label></td>
-</tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th><br></th>
-	<td><input id=archiving class=check type=checkbox name=archiving <%=bean.isArchiving() ? "checked" : ""%>>&nbsp;<label for=archiving>archiving</label></td>
-</tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th>&nbsp;</th>
-	<td><input id=suppressDeliveryReports class=check type=checkbox name=suppressDeliveryReports <%=bean.isSuppressDeliveryReports() ? "checked" : ""%>>&nbsp;<label for=suppressDeliveryReports>suppress delivery reports</label></td>
-</tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th>&nbsp;</th>
-	<td><input id=active class=check type=checkbox name=active <%=bean.isActive() ? "checked" : ""%>>&nbsp;<label for=active>active</label></td>
-</tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th>service ID:</th>
-	<td><input class=txtW name=serviceId value="<%=bean.getServiceId()%>" maxlength=5 validation="route_serviceId" onkeyup="resetValidation(this)"></td>
-</tr>
-<tr class=row<%=(rowN++)&1%>>
-	<th>srcSmeId:</th>
-	<td><select name=srcSmeId>
-		<option value="" <%=(bean.getSrcSmeId() == null || bean.getSrcSmeId().length() == 0) ? "selected" : ""%>></option>
-		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
+<tr>
+	<td valign=top>
+		<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+		<script>
+			function addSourceMask(valueElem) {
+				if (validateField(valueElem)) {
+					var tbl = opForm.all.sources_table;
+					var newRow = tbl.insertRow(tbl.rows.length);
+					newRow.className = "row" + ((tbl.rows.length+1) & 1);
+					newRow.id = "srcRow_" + (global_counter++);
+					newCell = document.createElement("td");
+					newCell.innerHTML = '<img src="<%=CPATH%>/img/mask.gif">';
+					newRow.appendChild(newCell);
+					newCell = document.createElement("td");
+					newCell.innerHTML = valueElem.value + '<input type=hidden name=srcMasks value="' + valueElem.value + '">';
+					newRow.appendChild(newCell);
+					newCell = document.createElement("td");
+					newCell.innerHTML = '<img src="<%=CPATH%>/img/but_del.gif" onClick="removeRow(opForm.all.sources_table, \'' + newRow.id + '\')" style="cursor: hand;">';
+					newRow.appendChild(newCell);
+					valueElem.value = "";
+					valueElem.focus();
+					return true;
+				} else 
+					return false;
+			}
+			function removeSrcSubj(rowId)
+			{
+				var selectElem = opForm.all.srcSubjSelect;
+				var tbl = opForm.all.sources_table;
+				var rowElem = tbl.rows(rowId);
+				var subjValue = rowElem.all.subjSrc.value;
+				var oOption = document.createElement("OPTION");
+				selectElem.options.add(oOption);
+				oOption.innerText = subjValue;
+				oOption.value = subjValue;
+				selectElem.disabled = false;
+				tbl.deleteRow(rowElem.rowIndex);
+			}
+			function addSourceSubj() {
+				var selectElem = opForm.all.srcSubjSelect;
+				if (selectElem.options.length > 0) {
+					var subjValue = selectElem.options[selectElem.selectedIndex].value;
+					var tbl = opForm.all.sources_table;
+					var newRow = tbl.insertRow(tbl.rows.length);
+					newRow.className = "row" + ((tbl.rows.length+1) & 1);
+					newRow.id = "srcRow_" + (global_counter++);
+					newCell = document.createElement("td");
+					newCell.innerHTML = '<img src="<%=CPATH%>/img/subject.gif">';
+					newRow.appendChild(newCell);
+					newCell = document.createElement("td");
+					newCell.innerHTML = subjValue + '<input id=subjSrc type=hidden name=checkedSources value="' + subjValue + '">';
+					newRow.appendChild(newCell);
+					newCell = document.createElement("td");
+					newCell.innerHTML = '<img src="<%=CPATH%>/img/but_del.gif" onClick="removeSrcSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
+					newRow.appendChild(newCell);
+					selectElem.options[selectElem.selectedIndex] = null;
+					selectElem.focus();
+					if (selectElem.options.length == 0)
+						selectElem.disabled = true;
+				}
+			}
+		</script>
+		<hr>
+		<table id=sources_table class=properties_list cellspacing=0 cellpadding=0>
+		<col width="1%">
+		<col width="100%">
+		<%
+		for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
 		{
-			String smeId = (String) j.next();
-			String encSmeId = StringEncoderDecoder.encode(smeId);
-			%><option value="<%=encSmeId%>" <%=smeId.equals(bean.getSrcSmeId()) ? "selected" : ""%>><%=encSmeId%></option><%
+			String name = (String) i.next();
+			String encName = StringEncoderDecoder.encode(name);
+			String rowId = "subjRow_" + StringEncoderDecoder.encodeHEX(name);
+			if (bean.isSrcChecked(name)) {%>
+				<tr class=row<%=(rowN++)&1%> id="<%=rowId%>">
+					<td><img src="<%=CPATH%>/img/subject.gif"></td>
+					<td><%=encName%><input id=subjSrc type=hidden name=checkedSources value="<%=encName%>"></td>
+					<td><img src="<%=CPATH%>/img/but_del.gif" onClick="removeSrcSubj('<%=rowId%>');" style="cursor: hand;"></td>
+				</tr><%
+			}
 		}
-		%>
-	</select></td>
-</tr>
+		for (int i=0; i<bean.getSrcMasks().length; i++)
+		{
+			String rowId = "maskRow_" + StringEncoderDecoder.encodeHEX(bean.getSrcMasks()[i]);
+			%>
+			<tr class=row<%=(rowN++)&1%> id=<%=rowId%>>
+				<td><img src="<%=CPATH%>/img/mask.gif"></td>
+				<td><%=bean.getSrcMasks()[i]%><input type=hidden name=srcMasks value="<%=bean.getSrcMasks()[i]%>"></td>
+				<td><img src="<%=CPATH%>/img/but_del.gif" onClick="removeRow(opForm.all.sources_table, '<%=rowId%>')" style="cursor: hand;"></td>
+			</tr><%
+		}%>
+		</table>
+	</td>
+	<td>&nbsp;</td>
+	<td valign=top><%rowN = 0;%>
+		<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Destinations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+		<script>
+			var smesSelectText = "<select name=fake_dst_mask_sme_ id=newSmesSelect><%
+				for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
+				{
+					String smeId = (String) j.next();
+					String encSmeId = StringEncoderDecoder.encode(smeId);
+					String hexSmeId = StringEncoderDecoder.encodeHEX(smeId);
+					%><option value=\"<%=encSmeId%>\" id=option_<%=hexSmeId%>><%=encSmeId%></option><%
+				}
+				%></select>";
+				
+			function addDestMask() {
+				if (validateField(opForm.all.newDstMask)) {
+					var mask = opForm.all.newDstMask.value;
+					var smeSelect = opForm.all.newDstMaskSme;
+					var sme = smeSelect.options[smeSelect.selectedIndex].value;
+					var tbl = opForm.all.destinations_table;
+					
+					var newRow = tbl.insertRow(tbl.rows.length);
+					newRow.className = "row" + ((tbl.rows.length+1) & 1);
+					newRow.id = "srcRow_" + (global_counter++);
+					
+					newCell = document.createElement("td");
+					newCell.innerHTML = '<img src="<%=CPATH%>/img/mask.gif">';
+					newRow.appendChild(newCell);
+					
+					newCell = document.createElement("td");
+					newCell.innerHTML = mask + '<input type=hidden name=dstMasks value="' + mask + '">';
+					newRow.appendChild(newCell);
+					
+					newCell = document.createElement("td");
+					newCell.innerHTML = smesSelectText;
+					newSelect = newCell.all.newSmesSelect;
+					newSelect.name = "dst_mask_sme_" + encodeHEX(mask);					
+					newSelect.all["option_" + encodeHEX(sme)].selected = true;
+					newRow.appendChild(newCell);
+					
+					newCell = document.createElement("td");
+					newCell.innerHTML = '<img src="<%=CPATH%>/img/but_del.gif" onClick="removeRow(opForm.all.destinations_table, \'' + newRow.id + '\')" style="cursor: hand;">';
+					newRow.appendChild(newCell);
+					opForm.all.newDstMask.value = "";
+					opForm.all.newDstMask.focus();
+					return true;
+				} else
+					return false;
+			}
+			function removeDestSubj(rowId)
+			{
+				var selectElem = opForm.all.dstSubjSelect;	
+				var tbl = opForm.all.destinations_table;
+				var rowElem = tbl.rows(rowId);
+				var subjValue = rowElem.all.subjDst.value;
+				var oOption = document.createElement("OPTION");
+				selectElem.options.add(oOption);
+				oOption.innerText = subjValue;
+				oOption.value = subjValue;
+				selectElem.disabled = false;
+				tbl.deleteRow(rowElem.rowIndex);
+			}
+			function addDestSubj() {
+				var selectElem = opForm.all.dstSubjSelect;
+				if (selectElem.options.length > 0) {
+					var subjValue = selectElem.options[selectElem.selectedIndex].value;
+					var tbl = opForm.all.destinations_table;
+					var smeSelect = opForm.all.dstSubjSmeSelect;
+					var sme = smeSelect.options[smeSelect.selectedIndex].value;
+					var newRow = tbl.insertRow(tbl.rows.length);
+					newRow.className = "row" + ((tbl.rows.length+1) & 1);
+					newRow.id = "srcRow_" + (global_counter++);
+					
+					newCell = document.createElement("td");					
+					newCell.innerHTML = '<img src="<%=CPATH%>/img/subject.gif">';
+					newRow.appendChild(newCell);
+					
+					newCell = document.createElement("td");					
+					newCell.innerHTML = subjValue + '<input id=subjDst type=hidden name=checkedDestinations value="' + subjValue + '">';
+					newRow.appendChild(newCell);
+					
+					newCell = document.createElement("td");
+					newCell.innerHTML = smesSelectText;
+					newSelect = newCell.all.newSmesSelect;
+					newSelect.name = "dst_sme_" + encodeHEX(subjValue);					
+					newSelect.all["option_" + encodeHEX(sme)].selected = true;
+					newRow.appendChild(newCell);
 
-</table>
-<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<table class=properties_list cellspacing=0 cellpadding=0>
-<tr class=row1><td colspan=2><div class=page_subtitle>Sources</div></td></tr>
-<%rowN=0;
-for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
-{
-String name = (String) i.next();
-String encName = StringEncoderDecoder.encode(name);
-String hexName = StringEncoderDecoder.encodeHEX(name);
-%>
-<tr class=row<%=(rowN++)&1%>>
-<td colspan=2><input class=check id="subj_src_<%=hexName%>" type=checkbox name=checkedSources value="<%=encName%>" <%=bean.isSrcChecked(name) ? "checked" : ""%>>&nbsp;<label for="subj_src_<%=hexName%>"><%=encName%></label></td>
-</tr>
-<%}
-for (int i=0; i<bean.getSrcMasks().length; i++)
-{
-%>
-<tr class=row<%=(rowN++)&1%>>
-	<td colspan=2><input class=txtW name=srcMasks value="<%=bean.getSrcMasks()[i]%>" validation="routeMask" onkeyup="resetValidation(this)"></td>
-</tr>
-<%}%>
-<tr class=row<%=(rowN++)&1%>>
-	<td width=100%><input class=txtW name=srcMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
-	<td><%addButton(out, "mbAdd", "Add", "Add new mask to sources");%></td>
-</tr>
-</table>
-<%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Destinations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<table class=properties_list cellspacing=0 cellpadding=0>
-<tr class=row1><td colspan=2><div class=page_subtitle>Destinations</div></td></tr>
-<%rowN=0;
-for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
-{
-String name = (String) i.next();
-String encName = StringEncoderDecoder.encode(name);
-String hexName = StringEncoderDecoder.encodeHEX(name);
-%>
-<tr class=row<%=(rowN++)&1%>>
-	<td><input onclick="document.all.dst_sme_<%=hexName%>.disabled=!this.checked" class=check id="subj_dst_<%=hexName%>" type=checkbox name=checkedDestinations value="<%=encName%>" <%=bean.isDstChecked(name) ? "checked" : ""%>>&nbsp;<label for="subj_dst_<%=hexName%>"><%=encName%></label></td>
-	<td colspan=2><select name=dst_sme_<%=hexName%> <%=!bean.isDstChecked(name) ? "disabled" : ""%>>
-		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
+					newCell = document.createElement("td");
+					newCell.innerHTML = '<img src="<%=CPATH%>/img/but_del.gif" onClick="removeDestSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
+					newRow.appendChild(newCell);
+					selectElem.options[selectElem.selectedIndex] = null;
+					selectElem.focus();
+					if (selectElem.options.length == 0)
+						selectElem.disabled = true;
+				}
+			}
+		</script>
+		<hr>
+		<table class=properties_list cellspacing=0 cellpadding=0 id=destinations_table>
+		<col width="1%">
+		<col width="99%">
+		<col width="1%">
+		<col width="1%">
+		<%rowN=0;
+		for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
 		{
-			String smeId = (String) j.next();
-			String encSmeId = StringEncoderDecoder.encode(smeId);
-			%><option value="<%=encSmeId%>" <%=bean.isSmeSelected(name, smeId) ? "selected" : ""%>><%=encSmeId%></option><%
+			String name = (String) i.next();
+			if (bean.isDstChecked(name)) {
+				String encName = StringEncoderDecoder.encode(name);
+				String hexName = StringEncoderDecoder.encodeHEX(name);
+				String rowId = "subjRow_" + StringEncoderDecoder.encodeHEX(name);
+				%><tr class=row<%=(rowN++)&1%> id=<%=rowId%>>
+					<td><img src="<%=CPATH%>/img/subject.gif"></td>
+					<td><%=encName%><input id=subjDst type=hidden name=checkedDestinations value="<%=encName%>"></td>
+					<td><select name=dst_sme_<%=hexName%>>
+						<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
+						{
+							String smeId = (String) j.next();
+							String encSmeId = StringEncoderDecoder.encode(smeId);
+							%><option value="<%=encSmeId%>" <%=bean.isSmeSelected(name, smeId) ? "selected" : ""%>><%=encSmeId%></option><%
+						}
+						%>
+						</select>
+					</td>
+					<td><img src="<%=CPATH%>/img/but_del.gif" onClick="removeDestSubj('<%=rowId%>');" style="cursor: hand;"></td>
+				</tr><%
+			}
 		}
+		for (int i=0; i<bean.getDstMasks().length; i++)
+		{
+		String dstMask = bean.getDstMasks()[i];
+		String encMask = StringEncoderDecoder.encode(dstMask);
+		String hexMask = StringEncoderDecoder.encodeHEX(dstMask);
+		String rowId = "maskRow_" + StringEncoderDecoder.encodeHEX(dstMask);
 		%>
-		</select>
+		<tr class=row<%=(rowN++)&1%> id="<%=rowId%>">
+			<td><img src="<%=CPATH%>/img/mask.gif"></td>
+			<td><%=encMask%><input type=hidden name=dstMasks value="<%=encMask%>"></td>
+			<td><select name=dst_mask_sme_<%=hexMask%> onkeyup="resetValidation(this)">
+				<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
+				{
+					String smeId = (String) j.next();
+					String encSmeId = StringEncoderDecoder.encode(smeId);
+					%><option value="<%=encSmeId%>" <%=bean.isMaskSmeSelected(dstMask, smeId) ? "selected" : ""%>><%=encSmeId%></option><%
+				}
+				%>
+				</select>
+			</td>
+			<td><img src="<%=CPATH%>/img/but_del.gif" onClick="removeRow(opForm.all.destinations_table, '<%=rowId%>')" style="cursor: hand;"></td>
+		</tr>
+		<%}%>
+		</table>
 	</td>
 </tr>
-<%}
-for (int i=0; i<bean.getDstMasks().length; i++)
-{
-String dstMask = bean.getDstMasks()[i];
-String encMask = StringEncoderDecoder.encode(dstMask);
-String hexMask = StringEncoderDecoder.encodeHEX(dstMask);
-%>
-<tr class=row<%=(rowN++)&1%>>
-	<td width=100%><input class=txtW name=dstMasks value="<%=encMask%>" validation="routeMask"></td>
-	<td colspan=2><select name=dst_mask_sme_<%=hexMask%> onkeyup="resetValidation(this)">
-		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
-		{
-			String smeId = (String) j.next();
-			String encSmeId = StringEncoderDecoder.encode(smeId);
-			%><option value="<%=encSmeId%>" <%=bean.isMaskSmeSelected(dstMask, smeId) ? "selected" : ""%>><%=encSmeId%></option><%
-		}
-		%>
-		</select>
-	</td>
-</tr>
-<%}%>
-<tr class=row<%=(rowN++)&1%>>
-	<td width=100%><input class=txtW name=dstMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
-	<td><select name=dst_mask_sme_>
-		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
-		{
-			String smeId = (String) j.next();
-			String encSmeId = StringEncoderDecoder.encode(smeId);
-			%><option value="<%=encSmeId%>" <%=smeId.equals(bean.getDst_mask_sme_()) ? "selected" : ""%>><%=encSmeId%></option><%
-		}
-		%>
-		</select>
-	</td>
-	<td><%addButton(out, "mbAdd", "Add", "Add new mask to destinations");%></td>
-</tr>
 </table>
+
 </div>
