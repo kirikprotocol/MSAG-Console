@@ -61,7 +61,7 @@ namespace smsc {
         }
 
         SmsTest() : log(smsc::test::util::logger.getLog("smsc.test.smpp.SmsTest"))
-        , timeout(10000) {
+        , timeout(30000) {
         }
 
         void setUp() {

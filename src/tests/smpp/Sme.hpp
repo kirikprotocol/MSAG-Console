@@ -279,8 +279,10 @@ namespace smsc {
 						  isResponse = true;
 						}
                         if(isResponse) { //пришел ответ
+                          queuedSme->log.debug("QueuedSmeListener: processing response, seq=%d", pdu->get_sequenceNumber());
                           queuedSme->responseQueue.processResponse(pdu);
                         } else { //пришла pdu
+                          queuedSme->log.debug("QueuedSmeListener: processing pdu, seq=%d", pdu->get_sequenceNumber());
                           queuedSme->pduQueue.processPdu(pdu);
                         }
 					}
@@ -305,9 +307,15 @@ namespace smsc {
 					}
 				}
 
+                virtual void close() throw() {
+                  BasicSme::close();
+                  pduQueue.clear();
+                  responseQueue.clear();
+				}
+
 				virtual void sendPduAsIs(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) {
-                  BasicSme::sendPduAsIs(pdu);
                   responseQueue.registerPdu(pdu->get_sequenceNumber(), pdu->get_commandId());
+                  BasicSme::sendPduAsIs(pdu);
                 }
 
 				virtual PduHandler receive() {

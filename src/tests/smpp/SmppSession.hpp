@@ -160,7 +160,7 @@ namespace smsc {
 				cfg(config),
 				listener(lst),
 				innerListener(*this),
-				reader(&innerListener,&socket),
+				reader(&innerListener,&socket,config.idleTimeout,config.disconnectTimeout),
 				writer(&innerListener,&socket),
 				seqCounter(0),
 				strans(*this),

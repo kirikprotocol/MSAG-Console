@@ -56,6 +56,7 @@ namespace smsc {
         log.debug("registerPdu: expectedCmd = %x", expectedCmd);
         responseMutex.Lock();
         if(responseMap.Exist(sequence)) {
+          log.debug("registerPdu: error when registering pdu, sequence %d has been already registered", sequence);
           responseMutex.Unlock();
           std::ostringstream sout;
           sout << "ResponseQueueException: error in registerPdu, sequence " << sequence << " has been already registered";
@@ -63,20 +64,25 @@ namespace smsc {
         }
         ResponseHandler resp = new Response();
         resp->expectedCmd = expectedCmd;
+        log.debug("registerPdu: inserting registered pdu, seq=%d", sequence);
         responseMap.Insert(sequence, resp);
         responseMutex.Unlock();
+        log.debug("registerPdu: -- exit");
       }
 
       void ResponseQueue::processResponse(PduHandler pdu) {
-        responseMutex.Lock();
         uint32_t sequence = pdu->get_sequenceNumber();
+        log.debug("processResponse: seq=%d: --- enter", sequence);
+        responseMutex.Lock();
         if(responseMap.Exist(sequence)) {//зарегистрированный ответ
           ResponseHandler resp = responseMap.Get(sequence);
           resp->pdu = pdu;
           resp->event.Signal();
         } else {//левый ответ
+          log.debug("processResponse: unexpected response, dropping it out");
         }
         responseMutex.Unlock();
+        log.debug("processResponse: --- exit");
       }
 
       PduHandler ResponseQueue::receiveResponse(uint32_t sequence) throw(ResponseQueueException) {

@@ -258,12 +258,14 @@ namespace smsc {
 			}
 
 			void BasicSme::sendPduAsIs(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) {
+              log.debug("sendPduAsIs: --- enter");
 			  if(session == 0) {
 				throw IllegalSmeOperation("BasicSme Error: Can't send any PDU when the session is NULL");
 			  }
 			  smsc::sme::SmppTransmitter *atrans = session->getAsyncTransmitter();
 			  atrans->sendPdu(pdu);
 			  listener->checkError();
+              log.debug("sendPduAsIs: --- exit");
 			}
 
             void BasicSme::respondTo(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) {

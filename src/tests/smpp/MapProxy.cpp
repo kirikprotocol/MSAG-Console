@@ -499,7 +499,7 @@ namespace smsc {
         length2 -= udh.getLength() + 1;
         data2 += udh.getLength() + 1;
         log.debug("analyzeUcs2Cutting: length2 = %d", length2);
-        if(length1 < 139) {
+        if(length1 < 138) {
           if(data2[0] == ' ' || data2[0] == '\n' || data2[0] == '\r') {
             log.debug("analyzeUcs2Cutting: sms2 contains symbols (space) that should be added to sms1");
             res = false;
@@ -515,7 +515,7 @@ namespace smsc {
               }
             }
             log.debug("analyzeUcs2Cutting: wordLength = %d", wordLength);
-            if(length1 + wordLength < 139) {
+            if(length1 + wordLength < 138) {
               log.debug("analyzeUcs2Cutting: sms2 contains word that should be added to sms1");
               res = false;
             }

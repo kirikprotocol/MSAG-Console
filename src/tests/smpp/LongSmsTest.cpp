@@ -59,12 +59,13 @@ namespace smsc {
         //char *msg = "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
         char *stopCmd = "stop";
         log.debug("test: original message length = %d", strlen(message.c_str()));
-
-        /*
+        
+        uint32_t sequence = 0;
+        
         // coding binary message 
         sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, smsc::smpp::DataCoding::BINARY);
         sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, message.c_str(), strlen(message.c_str()));
-        uint32_t sequence = sender->sendSubmitSms(sms);//send the message
+        sequence = sender->sendSubmitSms(sms);//send the message
         if(!sender->checkResponse(sequence, timeout)) {
           CPPUNIT_FAIL("test: sender sent binary SMS but did not receive any response");
         }
@@ -86,14 +87,13 @@ namespace smsc {
         if(!sender->checkResponse(sequence, timeout)) {
           CPPUNIT_FAIL("test: sender sent latin1 SMS but did not receive any response");
         }
-        */
         
         // coding ucs2 message 
         Ucs2Text ucs2(message.c_str());
         log.debug("test: ucs2 message length = %d", ucs2.getLength());
         sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING, smsc::smpp::DataCoding::UCS2);
         sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, (char*)ucs2.getUcs2(), 2*ucs2.getLength());
-        uint32_t sequence = sender->sendSubmitSms(sms);//send the message
+        sequence = sender->sendSubmitSms(sms);//send the message
         if(!sender->checkResponse(sequence, timeout)) {
           CPPUNIT_FAIL("test: sender sent ucs2 SMS but did not receive any response");
         }
