@@ -48,6 +48,19 @@
     </user-data-constraint>
   </security-constraint>
 
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>gateway statistics</web-resource-name>
+      <url-pattern>/stat/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>stat</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
   <login-config>
     <auth-method>FORM</auth-method>
     <realm-name>SMSC.SmscRealm</realm-name>
@@ -65,6 +78,9 @@
   </security-role>
   <security-role>
     <role-name>services</role-name>
+  </security-role>
+  <security-role>
+    <role-name>stat</role-name>
   </security-role>
 
   <display-name>SMPP Gateway</display-name>
