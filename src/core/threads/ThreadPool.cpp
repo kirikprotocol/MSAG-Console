@@ -1,6 +1,7 @@
 #include "ThreadPool.hpp"
 #include <exception>
 #include <signal.h>
+#include <time.h>
 
 namespace smsc{
 namespace core{
@@ -100,6 +101,7 @@ void ThreadPool::shutdown()
   }
   trace("all tasks are notified");
   Unlock();
+  time_t sdstart=time(NULL);
   for(;;)
   {
     Lock();
@@ -116,6 +118,7 @@ void ThreadPool::shutdown()
       usedThreads[i]->Kill(16);
     }
     Unlock();
+    if(time(NULL)-sdstart>60)abort();
     Wait();
   }
   Lock();
