@@ -215,8 +215,12 @@
   <td><input class=txt name=mciProfLocation value="<%=StringEncoderDecoder.encode(bean.getMciProfLocation())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>VoiceMail address</th>
-  <td><input class=txt name=voiceMailAddress value="<%=StringEncoderDecoder.encode(bean.getVoiceMailAddress())%>"></td>
+  <th>MCISme address(es)</th>
+  <td><input class=txt name=voiceMailAddress value="<%=StringEncoderDecoder.encode(bean.getMCiSmeAddresses())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>VoiceMail address(es)</th>
+  <td><input class=txt name=voiceMailAddress value="<%=StringEncoderDecoder.encode(bean.getVoiceMailAddresses())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>MSC host</th>

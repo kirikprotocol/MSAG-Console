@@ -166,7 +166,7 @@ public class Index extends IndexProperties
       savePropertiesFile(location, MCI_PROF_DS_FILE, dsProperties, MCI_PROF_DS_COMMENT);
 
       Properties mscProperties = new Properties();
-      mscProperties.setProperty("MCISme.Address"  , config.getString("MCISme.Address"));
+      mscProperties.setProperty("MSC.mcisme"      , config.getString("MCISme.MSC.mcisme"));
       mscProperties.setProperty("MSC.voicemail"   , config.getString("MCISme.MSC.voicemail"));
       mscProperties.setProperty("MSC.host"        , config.getString("MCISme.MSC.host"));
       mscProperties.setProperty("MSC.port"        , ""+config.getInt("MCISme.MSC.port"));
