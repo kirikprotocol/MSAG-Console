@@ -1,4 +1,5 @@
 #include "util/smstext.h"
+#include "util/debug.h"
 #include <memory>
 
 namespace smsc{

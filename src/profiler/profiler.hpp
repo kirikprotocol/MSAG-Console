@@ -6,7 +6,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/threads/ThreadedTask.hpp"
-
+#include "smpp/smpp.h"
 
 namespace smsc{
 namespace db{
@@ -26,7 +26,7 @@ namespace ProfileReportOptions{
 
 namespace ProfileCharsetOptions{
   static const int Default    =0;
-  static const int Ucs2       =1;
+  static const int Ucs2       =smsc::smpp::DataCoding::UCS2;
 };
 
 struct Profile{
