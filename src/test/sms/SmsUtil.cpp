@@ -52,70 +52,6 @@ bool SmsUtil::compareDescriptors(const Descriptor& d1, const Descriptor& d2)
 }
 */
 
-#define __compare_int_body_tag__(tagName, errCode) \
-	if (!mask[pos++]) { \
-		if (_b1->hasIntProperty(Tag::tagName) && !_b2->hasIntProperty(Tag::tagName)) { \
-			__trace2__("%s: %d != NULL", #tagName, _b1->getIntProperty(Tag::tagName)); \
-			res.push_back(errCode); \
-		} else if (!_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName)) { \
-			__trace2__("%s: NULL != %d", #tagName, _b2->getIntProperty(Tag::tagName)); \
-			res.push_back(errCode); \
-		} else if (_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName) && \
-			_b1->getIntProperty(Tag::tagName) != _b2->getIntProperty(Tag::tagName)) { \
-			__trace2__("%s: %d != %d", #tagName, _b1->getIntProperty(Tag::tagName), _b2->getIntProperty(Tag::tagName)); \
-			res.push_back(errCode); \
-		} \
-	}
-
-#define __compare_str_body_tag__(tagName, errCode) \
-	if (!mask[pos++]) { \
-		if (_b1->hasStrProperty(Tag::tagName) && !_b2->hasStrProperty(Tag::tagName)) { \
-			__trace2__("%s: %s != NULL", #tagName, _b1->getStrProperty(Tag::tagName).c_str()); \
-			res.push_back(errCode); \
-		} else if (!_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName)) { \
-			__trace2__("%s: NULL != %s", #tagName, _b2->getStrProperty(Tag::tagName).c_str()); \
-			res.push_back(errCode); \
-		} else if (_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName) && \
-			_b1->getStrProperty(Tag::tagName) != _b2->getStrProperty(Tag::tagName)) { \
-			__trace2__("%s: %s != %s", #tagName, _b1->getStrProperty(Tag::tagName).c_str(), _b2->getStrProperty(Tag::tagName).c_str()); \
-			res.push_back(errCode); \
-		} \
-	}
-
-vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2, uint64_t excludeMask)
-{
-	//return (b1.getBufferLength() == b2.getBufferLength() &&
-	//	memcmp(b1.getBuffer(), b2.getBuffer(), b1.getBufferLength()) == 0);
-	Body* _b1 = const_cast<Body*>(&b1);
-	Body* _b2 = const_cast<Body*>(&b2);
-	__require__(_b1 && _b2);
-	vector<int> res;
-	Mask<uint64_t> mask(excludeMask);
-	int pos = 0;
-	__compare_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, 1);
-	__compare_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, 2);
-	__compare_int_body_tag__(SMPP_ESM_CLASS, 3);
-	__compare_int_body_tag__(SMPP_DATA_CODING, 4);
-	__compare_int_body_tag__(SMPP_SM_LENGTH, 5);
-	__compare_int_body_tag__(SMPP_REGISTRED_DELIVERY, 6);
-	__compare_int_body_tag__(SMPP_PROTOCOL_ID, 7);
-	__compare_str_body_tag__(SMPP_SHORT_MESSAGE, 8);
-	__compare_int_body_tag__(SMPP_PRIORITY, 9);
-	__compare_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE, 10);
-	__compare_int_body_tag__(SMPP_USSD_SERVICE_OP, 11);
-	__compare_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT, 12);
-	__compare_int_body_tag__(SMPP_PAYLOAD_TYPE, 13);
-	__compare_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, 14);
-	__compare_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES, 15);
-	__compare_int_body_tag__(SMPP_USER_RESPONSE_CODE, 16);
-	__compare_int_body_tag__(SMPP_SAR_MSG_REF_NUM, 17);
-	__compare_int_body_tag__(SMPP_LANGUAGE_INDICATOR, 18);
-	__compare_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, 19);
-	__compare_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, 20);
-	__compare_str_body_tag__(SMPP_MESSAGE_PAYLOAD, 21);
-	return res;
-}
-
 #define __compare__(getter, errCode) \
 	if (!mask[pos++] && _sms1->getter() != _sms2->getter()) { \
 		ostringstream s1, s2; \
@@ -132,6 +68,64 @@ vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2, uint64
 		s2 << _sms2->getter(); \
 		__trace2__("%s: %s != %s", #getter, s1.str().c_str(), s2.str().c_str()); \
 		res.push_back(errCode); \
+	}
+
+#define __compare_int_body_tag__(tagName, errCode) \
+	if (!mask[pos++]) { \
+		if (_sms1->hasIntProperty(Tag::tagName) && !_sms2->hasIntProperty(Tag::tagName)) { \
+			__trace2__(#tagName ": %d != NULL", _sms1->getIntProperty(Tag::tagName)); \
+			res.push_back(errCode); \
+		} else if (!_sms1->hasIntProperty(Tag::tagName) && _sms2->hasIntProperty(Tag::tagName)) { \
+			__trace2__(#tagName ": NULL != %d", _sms2->getIntProperty(Tag::tagName)); \
+			res.push_back(errCode); \
+		} else if (_sms1->hasIntProperty(Tag::tagName) && _sms2->hasIntProperty(Tag::tagName) && \
+			_sms1->getIntProperty(Tag::tagName) != _sms2->getIntProperty(Tag::tagName)) { \
+			__trace2__(#tagName ": %d != %d", _sms1->getIntProperty(Tag::tagName), _sms2->getIntProperty(Tag::tagName)); \
+			res.push_back(errCode); \
+		} \
+	}
+
+#define __compare_str_body_tag__(tagName, errCode) \
+	if (!mask[pos++]) { \
+		if (_sms1->hasStrProperty(Tag::tagName) && !_sms2->hasStrProperty(Tag::tagName)) { \
+			__trace2__(#tagName ": %s != NULL", _sms1->getStrProperty(Tag::tagName).c_str()); \
+			res.push_back(errCode); \
+		} else if (!_sms1->hasStrProperty(Tag::tagName) && _sms2->hasStrProperty(Tag::tagName)) { \
+			__trace2__(#tagName ": NULL != %s", _sms2->getStrProperty(Tag::tagName).c_str()); \
+			res.push_back(errCode); \
+		} else if (_sms1->hasStrProperty(Tag::tagName) && _sms2->hasStrProperty(Tag::tagName) && \
+			_sms1->getStrProperty(Tag::tagName) != _sms2->getStrProperty(Tag::tagName)) { \
+			__trace2__(#tagName ": %s != %s", _sms1->getStrProperty(Tag::tagName).c_str(), _sms2->getStrProperty(Tag::tagName).c_str()); \
+			res.push_back(errCode); \
+		} \
+	}
+
+#define __compare_bin_body_tag__(tagName, errCode) \
+	if (!mask[pos++]) { \
+		unsigned len1, len2; \
+		if (_sms1->hasBinProperty(Tag::tagName) && !_sms2->hasBinProperty(Tag::tagName)) { \
+			ostringstream s; \
+			const char* buf1 = _sms1->getBinProperty(Tag::tagName, &len1); \
+			copy(buf1, buf1 + len1, ostream_iterator<int>(s, ",")); \
+			__trace2__(#tagName ": %s != NULL", s.str().c_str()); \
+			res.push_back(errCode); \
+		} else if (!_sms1->hasBinProperty(Tag::tagName) && _sms2->hasBinProperty(Tag::tagName)) { \
+			ostringstream s; \
+			const char* buf2 = _sms2->getBinProperty(Tag::tagName, &len2); \
+			copy(buf2, buf2 + len2, ostream_iterator<int>(s, ",")); \
+			__trace2__(#tagName ": NULL != %s", s.str().c_str()); \
+			res.push_back(errCode); \
+		} else if (_sms1->hasBinProperty(Tag::tagName) && _sms2->hasBinProperty(Tag::tagName)) { \
+			const char* buf1 = _sms1->getBinProperty(Tag::tagName, &len1); \
+			const char* buf2 = _sms2->getBinProperty(Tag::tagName, &len2); \
+			if (len1 != len2 || memcmp(buf1, buf2, len1)) { \
+				ostringstream s1, s2; \
+				copy(buf1, buf1 + len1, ostream_iterator<int>(s1, ",")); \
+				copy(buf2, buf2 + len2, ostream_iterator<int>(s2, ",")); \
+				__trace2__(#tagName ": %s != %s", s1.str().c_str(), s2.str().c_str()); \
+				res.push_back(errCode); \
+			} \
+		} \
 	}
 
 vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t excludeMask)
@@ -168,15 +162,30 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 	__compare__(getBillingRecord, 15);
 	__compare__(getOriginatingDescriptor, 16);
 	__compare__(getDestinationDescriptor, 17);
-
-	vector<int> tmp = compareMessageBodies(sms1.getMessageBody(),
-		sms2.getMessageBody(), excludeMask >> 20);
-	for (int i = 0; i < tmp.size(); i++)
-	{
-		res.push_back(20 + tmp[i]);
-	}
+	//body
+	pos = 20;
+	__compare_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, 21);
+	__compare_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, 22);
+	__compare_int_body_tag__(SMPP_ESM_CLASS, 23);
+	__compare_int_body_tag__(SMPP_DATA_CODING, 24);
+	__compare_int_body_tag__(SMPP_SM_LENGTH, 25);
+	__compare_int_body_tag__(SMPP_REGISTRED_DELIVERY, 26);
+	__compare_int_body_tag__(SMPP_PROTOCOL_ID, 27);
+	__compare_bin_body_tag__(SMPP_SHORT_MESSAGE, 28);
+	__compare_int_body_tag__(SMPP_PRIORITY, 29);
+	__compare_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE, 30);
+	__compare_int_body_tag__(SMPP_USSD_SERVICE_OP, 31);
+	__compare_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT, 32);
+	__compare_int_body_tag__(SMPP_PAYLOAD_TYPE, 33);
+	__compare_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, 34);
+	__compare_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES, 35);
+	__compare_int_body_tag__(SMPP_USER_RESPONSE_CODE, 36);
+	__compare_int_body_tag__(SMPP_SAR_MSG_REF_NUM, 37);
+	__compare_int_body_tag__(SMPP_LANGUAGE_INDICATOR, 38);
+	__compare_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, 39);
+	__compare_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, 40);
+	__compare_bin_body_tag__(SMPP_MESSAGE_PAYLOAD, 41);
 	//bool attach;
-
 	return res;
 }
 
@@ -257,109 +266,69 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 }
 
 #define __set_int_body_tag__(tagName, value) \
-	if (mask & (pos <<= 1)) { \
-		__trace2__("set_int_body_tag: " #tagName ", pos = 0x%llx", pos); \
+	if (mask[pos++]) { \
+		__trace2__("set_int_body_tag: " #tagName ", pos = %d", pos); \
 		uint32_t tmp = value; \
-		body->setIntProperty(Tag::tagName, tmp); \
+		sms->setIntProperty(Tag::tagName, tmp); \
 		if (check) { \
 			intMap[Tag::tagName] = tmp; \
 		} \
 	}
 
 #define __set_str_body_tag__(tagName, length) \
-	if (mask & (pos <<= 1)) { \
-		__trace2__("set_str_body_tag: " #tagName ", pos = 0x%llx", pos); \
-		auto_ptr<char> str = rand_char(length); \
-		body->setStrProperty(Tag::tagName, str.get()); \
+	if (mask[pos++]) { \
+		int len = length; \
+		__trace2__("set_str_body_tag: " #tagName ", pos = %d, length = %d", pos, len); \
+		auto_ptr<char> str = rand_char(len); \
+		sms->setStrProperty(Tag::tagName, str.get()); \
 		if (check) { \
 			strMap.insert(StrMap::value_type(Tag::tagName, str.get())); \
 		} \
 	}
 
+#define __set_bin_body_tag__(tagName, length) \
+	if (mask[pos++]) { \
+		int len = length; \
+		__trace2__("set_bin_body_tag: " #tagName ", pos = %d, length = %d", pos, len); \
+		char* data = new char[len]; \
+		rand_uint8_t(len, (uint8_t*) data); \
+		sms->setBinProperty(Tag::tagName, data, len); \
+		if (check) { \
+			binMap.insert(BinMap::value_type(Tag::tagName, BinData(len, data))); \
+		} else { delete data; } \
+	}
+
 #define __check_int_body_tag__(tagName) \
 	IntMap::const_iterator it_##tagName = intMap.find(Tag::tagName); \
 	if (it_##tagName == intMap.end()) { \
-		__require__(!body->hasIntProperty(Tag::tagName)); \
+		__require__(!sms->hasIntProperty(Tag::tagName)); \
 	} else { \
-		__require__(body->hasIntProperty(Tag::tagName) && \
-			body->getIntProperty(Tag::tagName) == it_##tagName->second); \
+		__require__(sms->hasIntProperty(Tag::tagName) && \
+			sms->getIntProperty(Tag::tagName) == it_##tagName->second); \
 	}
 	
 #define __check_str_body_tag__(tagName) \
 	StrMap::const_iterator it_##tagName = strMap.find(Tag::tagName); \
 	if (it_##tagName == strMap.end()) { \
-		__require__(!body->hasStrProperty(Tag::tagName)); \
+		__require__(!sms->hasStrProperty(Tag::tagName)); \
 	} else { \
-		__require__(body->hasStrProperty(Tag::tagName) && \
-			body->getStrProperty(Tag::tagName) == it_##tagName->second); \
+		__require__(sms->hasStrProperty(Tag::tagName) && \
+			sms->getStrProperty(Tag::tagName) == it_##tagName->second); \
 	}
 	
-void SmsUtil::setupRandomCorrectBody(Body* body, uint64_t mask, bool check)
-{
-	__require__(body);
-	//поля сохраняются в body случайным образом
-	//даже обязательные для sms поля могут не сохраняться в БД
-	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
-	mask &= *((uint64_t*) tmp.get());
-	uint64_t pos = 0x1;
-	__trace2__("mask = 0x%llx", mask);
-
-	typedef map<const string, uint32_t> IntMap;
-	typedef map<const string, const string> StrMap;
-	StrMap strMap;
-	IntMap intMap;
-
-	//set fields
-	int msgLen = rand1(MAX_SM_LENGTH);
-	__set_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, time(NULL) + rand0(24 * 3600));
-	__set_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, rand0(2));
-	__set_int_body_tag__(SMPP_ESM_CLASS, rand0(255));
-	__set_int_body_tag__(SMPP_DATA_CODING, rand0(255));
-	__set_int_body_tag__(SMPP_SM_LENGTH, msgLen);
-	__set_int_body_tag__(SMPP_REGISTRED_DELIVERY, rand0(255));
-	__set_int_body_tag__(SMPP_PROTOCOL_ID, rand0(255));
-	__set_str_body_tag__(SMPP_SHORT_MESSAGE, msgLen);
-	__set_int_body_tag__(SMPP_PRIORITY, rand0(255));
-	__set_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE, rand0(65535));
-	__set_int_body_tag__(SMPP_USSD_SERVICE_OP, rand0(255));
-	__set_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT, rand0(255));
-	__set_int_body_tag__(SMPP_PAYLOAD_TYPE, rand0(255));
-	__set_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, rand1(64));
-	__set_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES, rand0(255));
-	__set_int_body_tag__(SMPP_USER_RESPONSE_CODE, rand0(255));
-	__set_int_body_tag__(SMPP_SAR_MSG_REF_NUM, rand0(65535));
-	__set_int_body_tag__(SMPP_LANGUAGE_INDICATOR, rand0(255));
-	__set_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, rand0(255));
-	__set_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, rand0(255));
-	__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, rand1(MAX_PAYLOAD_LENGTH));
-	//check fileds
-	if (check)
-	{
-		__check_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME);
-		__check_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG);
-		__check_int_body_tag__(SMPP_ESM_CLASS);
-		__check_int_body_tag__(SMPP_DATA_CODING);
-		__check_int_body_tag__(SMPP_SM_LENGTH);
-		__check_int_body_tag__(SMPP_REGISTRED_DELIVERY);
-		__check_int_body_tag__(SMPP_PROTOCOL_ID);
-		__check_str_body_tag__(SMPP_SHORT_MESSAGE);
-		__check_int_body_tag__(SMPP_PRIORITY);
-		__check_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE);
-		__check_int_body_tag__(SMPP_USSD_SERVICE_OP);
-		__check_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT);
-		__check_int_body_tag__(SMPP_PAYLOAD_TYPE);
-		__check_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID);
-		__check_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES);
-		__check_int_body_tag__(SMPP_USER_RESPONSE_CODE);
-		__check_int_body_tag__(SMPP_SAR_MSG_REF_NUM);
-		__check_int_body_tag__(SMPP_LANGUAGE_INDICATOR);
-		__check_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS);
-		__check_int_body_tag__(SMPP_NUMBER_OF_MESSAGES);
-		__check_str_body_tag__(SMPP_MESSAGE_PAYLOAD);
+#define __check_bin_body_tag__(tagName) \
+	BinMap::const_iterator it_##tagName = binMap.find(Tag::tagName); \
+	if (it_##tagName == binMap.end()) { \
+		__require__(!sms->hasBinProperty(Tag::tagName)); \
+	} else { \
+		__require__(sms->hasBinProperty(Tag::tagName)); \
+		unsigned len; \
+		const char* buf = sms->getBinProperty(Tag::tagName, &len); \
+		pair<int, char*> res = it_##tagName->second; \
+		__require__(len == res.first && !memcmp(buf, res.second, len)); \
 	}
-}
-
-void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t mask, bool check)
+	
+void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 {
 	__require__(sms);
 	SMS* p = sms;
@@ -387,7 +356,71 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t mask, bool check)
 	__set_int__(uint8_t, BillingRecord, rand0(3));
 	__set_desc__(OriginatingDescriptor);
 	//setupRandomCorrectDescriptor(sms->getDestinationDescriptor(), check);
-	setupRandomCorrectBody(&sms->getMessageBody(), mask, check);
+
+	//поля сохраняются в body случайным образом
+	//даже обязательные для sms поля могут не сохраняться в БД
+	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
+	uint64_t randomMask = *((uint64_t*) tmp.get());
+	Mask<uint64_t> mask(includeMask & randomMask);
+	int pos = 0;
+	__trace2__("mask = %s", mask.str());
+
+	typedef map<const string, uint32_t> IntMap;
+	typedef map<const string, const string> StrMap;
+	typedef pair<int, char*> BinData;
+	typedef map<const string, BinData> BinMap;
+	IntMap intMap;
+	StrMap strMap;
+	BinMap binMap;
+
+	//set fields
+	int msgLen = rand1(MAX_SM_LENGTH);
+	__set_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, time(NULL) + rand0(24 * 3600));
+	__set_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, rand0(2));
+	__set_int_body_tag__(SMPP_ESM_CLASS, rand0(255));
+	__set_int_body_tag__(SMPP_DATA_CODING, rand0(255));
+	__set_int_body_tag__(SMPP_SM_LENGTH, msgLen);
+	__set_int_body_tag__(SMPP_REGISTRED_DELIVERY, rand0(255));
+	__set_int_body_tag__(SMPP_PROTOCOL_ID, rand0(255));
+	__set_bin_body_tag__(SMPP_SHORT_MESSAGE, msgLen);
+	__set_int_body_tag__(SMPP_PRIORITY, rand0(255));
+	__set_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE, rand0(65535));
+	__set_int_body_tag__(SMPP_USSD_SERVICE_OP, rand0(255));
+	__set_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT, rand0(255));
+	__set_int_body_tag__(SMPP_PAYLOAD_TYPE, rand0(255));
+	__set_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, rand1(64));
+	__set_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES, rand0(255));
+	__set_int_body_tag__(SMPP_USER_RESPONSE_CODE, rand0(255));
+	__set_int_body_tag__(SMPP_SAR_MSG_REF_NUM, rand0(65535));
+	__set_int_body_tag__(SMPP_LANGUAGE_INDICATOR, rand0(255));
+	__set_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, rand0(255));
+	__set_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, rand0(255));
+	__set_bin_body_tag__(SMPP_MESSAGE_PAYLOAD, rand1(MAX_PAYLOAD_LENGTH));
+	//check fileds
+	if (check)
+	{
+		__check_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME);
+		__check_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG);
+		__check_int_body_tag__(SMPP_ESM_CLASS);
+		__check_int_body_tag__(SMPP_DATA_CODING);
+		__check_int_body_tag__(SMPP_SM_LENGTH);
+		__check_int_body_tag__(SMPP_REGISTRED_DELIVERY);
+		__check_int_body_tag__(SMPP_PROTOCOL_ID);
+		__check_bin_body_tag__(SMPP_SHORT_MESSAGE);
+		__check_int_body_tag__(SMPP_PRIORITY);
+		__check_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE);
+		__check_int_body_tag__(SMPP_USSD_SERVICE_OP);
+		__check_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT);
+		__check_int_body_tag__(SMPP_PAYLOAD_TYPE);
+		__check_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID);
+		__check_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES);
+		__check_int_body_tag__(SMPP_USER_RESPONSE_CODE);
+		__check_int_body_tag__(SMPP_SAR_MSG_REF_NUM);
+		__check_int_body_tag__(SMPP_LANGUAGE_INDICATOR);
+		__check_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS);
+		__check_int_body_tag__(SMPP_NUMBER_OF_MESSAGES);
+		__check_bin_body_tag__(SMPP_MESSAGE_PAYLOAD);
+	}
 	//bool attach;
 }
 
@@ -546,13 +579,22 @@ bool operator!=(const Descriptor& d1, const Descriptor& d2)
 	os << endl << #field << " = \"" << buf##field << "\""
 	
 #define __print_int_body_tag__(tagName) \
-	if (sms.getMessageBody().hasIntProperty(Tag::tagName)) { \
-		os << endl << #tagName << " = " << sms.getMessageBody().getIntProperty(Tag::tagName); \
+	if (sms.hasIntProperty(Tag::tagName)) { \
+		os << endl << #tagName << " = " << sms.getIntProperty(Tag::tagName); \
 	}
 
 #define __print_str_body_tag__(tagName) \
-	if (sms.getMessageBody().hasStrProperty(Tag::tagName)) { \
-		os << endl << #tagName << " = \"" << sms.getMessageBody().getStrProperty(Tag::tagName) << "\""; \
+	if (sms.hasStrProperty(Tag::tagName)) { \
+		os << endl << #tagName << " = \"" << sms.getStrProperty(Tag::tagName) << "\""; \
+	}
+
+#define __print_bin_body_tag__(tagName) \
+	if (sms.hasBinProperty(Tag::tagName)) { \
+		ostringstream s; \
+		unsigned len; \
+		const char* buf = sms.getBinProperty(Tag::tagName, &len); \
+		copy(buf, buf + len, ostream_iterator<int>(s, ",")); \
+		os << endl << #tagName << " = \"" << s.str() << "\""; \
 	}
 
 ostream& operator<< (ostream& os, SMS& sms)
@@ -582,7 +624,7 @@ ostream& operator<< (ostream& os, SMS& sms)
 	__print_int_body_tag__(SMPP_SM_LENGTH);
 	__print_int_body_tag__(SMPP_REGISTRED_DELIVERY);
 	__print_int_body_tag__(SMPP_PROTOCOL_ID);
-	__print_str_body_tag__(SMPP_SHORT_MESSAGE);
+	__print_bin_body_tag__(SMPP_SHORT_MESSAGE);
 	__print_int_body_tag__(SMPP_PRIORITY);
 	__print_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE);
 	__print_int_body_tag__(SMPP_USSD_SERVICE_OP);
@@ -595,7 +637,7 @@ ostream& operator<< (ostream& os, SMS& sms)
 	__print_int_body_tag__(SMPP_LANGUAGE_INDICATOR);
 	__print_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS);
 	__print_int_body_tag__(SMPP_NUMBER_OF_MESSAGES);
-	__print_str_body_tag__(SMPP_MESSAGE_PAYLOAD);
+	__print_bin_body_tag__(SMPP_MESSAGE_PAYLOAD);
 	//bool attach;
 }
 
