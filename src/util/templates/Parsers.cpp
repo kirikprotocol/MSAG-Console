@@ -342,7 +342,7 @@ void StringParser::parse(std::string& input,
 
     const char* imp = entity.getOption(SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
     char* impVal = 0;
-    if (imp && ctx.importStr(imp, impVal) && impVal)
+    if (imp && ctx.importStr(imp, impVal) && impVal && impVal[0])
     {
         line += impVal;
     }
