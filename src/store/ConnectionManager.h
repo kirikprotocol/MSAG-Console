@@ -89,9 +89,9 @@ namespace smsc { namespace store
 
         bool    isConnected, isDead;
 
-        const char* dbInstance;
-        const char* dbUserName;
-        const char* dbUserPassword;
+        const char*     dbInstance;
+        const char*     dbUserName;
+        const char*     dbUserPassword;
         
         OCIEnv*         envhp;  // OCI envirounment handle
         OCISvcCtx*      svchp;  // OCI service handle
@@ -242,9 +242,9 @@ namespace smsc { namespace store
     
     protected:
         
-        const char* dbInstance;
-        const char* dbUserName;
-        const char* dbUserPassword;
+        char*   dbInstance;
+        char*   dbUserName;
+        char*   dbUserPassword;
         
         Array<Connection *> connections;
 

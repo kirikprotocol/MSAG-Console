@@ -77,13 +77,13 @@ namespace smsc { namespace store
         static const char*  billingLookIdSql;
         static const char*  billingPutIdSql;
         
-        const char* storageDBInstance;
-        const char* storageDBUserName;
-        const char* storageDBUserPassword;
+        char* storageDBInstance;
+        char* storageDBUserName;
+        char* storageDBUserPassword;
         
-        const char* billingDBInstance;
-        const char* billingDBUserName;
-        const char* billingDBUserPassword;
+        char* billingDBInstance;
+        char* billingDBUserName;
+        char* billingDBUserPassword;
         
         Connection* storageConnection;
         Connection* billingConnection;
@@ -116,11 +116,11 @@ namespace smsc { namespace store
         sb2         indDA, indDstMsc, indDstImsi, indDstSme;
         sb2         indWaitTime, indLastTime;
         
-        const char* loadDBInstance(Manager& config, const char* cat)
+        char* loadDBInstance(Manager& config, const char* cat)
             throw(ConfigException);
-        const char* loadDBUserName(Manager& config, const char* cat)
+        char* loadDBUserName(Manager& config, const char* cat)
             throw(ConfigException);
-        const char* loadDBUserPassword(Manager& config, const char* cat)
+        char* loadDBUserPassword(Manager& config, const char* cat)
             throw(ConfigException);
         
         void loadAwakeInterval(Manager& config);

@@ -765,7 +765,6 @@ void StoreManager::changeSmsStateToDeleted(SMSId id)
 StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
     throw(StorageException) : IdIterator()
 {
-    __trace__("Creating ...");
     connection = StoreManager::pool->getConnection();
     try
     {
@@ -787,15 +786,13 @@ StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
         StoreManager::pool->freeConnection(connection);
         throw;
     }
-    __trace__("Created");
 }
 StoreManager::ReadyIdIterator::~ReadyIdIterator()
 {
-    __trace__("Destruction ...");
     if (readyStmt) delete readyStmt;
     StoreManager::pool->freeConnection(connection);
-    __trace__("Destructed");
 }
+
 bool StoreManager::ReadyIdIterator::getNextId(SMSId &id) 
     throw(StorageException) 
 {
@@ -806,8 +803,10 @@ bool StoreManager::ReadyIdIterator::getNextId(SMSId &id)
         {
             connection->check(status);
             readyStmt->getSMSId(id);
+            __trace2__("Selected id = %llu", id);
             return true;
         }
+        __trace__("Select failed (no ids)");
     }
     return false;
 }

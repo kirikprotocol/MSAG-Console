@@ -9,12 +9,15 @@ namespace smsc { namespace store
 using smsc::core::threads::Thread;
 using namespace smsc::core::synchronization;
 
-const char* Archiver::loadDBInstance(Manager& config, const char* cat)
+char* Archiver::loadDBInstance(Manager& config, const char* cat)
     throw(ConfigException)
 {
     try 
     {
-        return config.getString(cat);   
+        char* tmp = config.getString(cat);   
+        char* instance = new char[strlen(tmp)+1];
+        strcpy(instance, tmp);
+        return instance;
     } 
     catch (ConfigException& exc) 
     {
@@ -23,12 +26,15 @@ const char* Archiver::loadDBInstance(Manager& config, const char* cat)
         throw;
     }
 }
-const char* Archiver::loadDBUserName(Manager& config, const char* cat)
+char* Archiver::loadDBUserName(Manager& config, const char* cat)
     throw(ConfigException)
 {
     try 
     {
-        return config.getString(cat);   
+        char* tmp = config.getString(cat);   
+        char* name = new char[strlen(tmp)+1];
+        strcpy(name, tmp);
+        return name;
     } 
     catch (ConfigException& exc) 
     {
@@ -37,12 +43,15 @@ const char* Archiver::loadDBUserName(Manager& config, const char* cat)
         throw;
     }
 }
-const char* Archiver::loadDBUserPassword(Manager& config, const char* cat)
+char* Archiver::loadDBUserPassword(Manager& config, const char* cat)
     throw(ConfigException)
 {
     try 
     {
-        return config.getString(cat);   
+        char* tmp = config.getString(cat);   
+        char* password = new char[strlen(tmp)+1];
+        strcpy(password, tmp);
+        return password;
     } 
     catch (ConfigException& exc) 
     {

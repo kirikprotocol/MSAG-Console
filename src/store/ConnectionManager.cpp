@@ -87,7 +87,9 @@ void ConnectionPool::loadDBInstance(Manager& config)
 {
     try 
     {
-        dbInstance = config.getString("MessageStore.Storage.dbInstance");   
+        char* tmp = config.getString("MessageStore.Storage.dbInstance");   
+        dbInstance = new char[strlen(tmp)+1];
+        strcpy(dbInstance, tmp);
     } 
     catch (ConfigException& exc) 
     {
@@ -102,7 +104,9 @@ void ConnectionPool::loadDBUserName(Manager& config)
 {
     try 
     {
-        dbUserName = config.getString("MessageStore.Storage.dbUserName");   
+        char* tmp = config.getString("MessageStore.Storage.dbUserName");   
+        dbUserName = new char[strlen(tmp)+1];
+        strcpy(dbUserName, tmp);
     } 
     catch (ConfigException& exc) 
     {
@@ -117,7 +121,9 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
 {
     try 
     {
-        dbUserPassword = config.getString("MessageStore.Storage.dbUserPassword");   
+        char* tmp = config.getString("MessageStore.Storage.dbUserPassword");   
+        dbUserPassword = new char[strlen(tmp)+1];
+        strcpy(dbUserPassword, tmp);
     } 
     catch (ConfigException& exc) 
     {
