@@ -124,6 +124,7 @@ USHORT_T Et96MapV2ForwardSmMTConf (
   ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
   ET96MAP_PROV_ERR_T *provErrCode_p)
 {
+  __trace2__("MAP::Et96MapV2ForwardSmMTConf: did 0x%x",dialogid);
   try{
     MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogid);
     if ( mdci ){

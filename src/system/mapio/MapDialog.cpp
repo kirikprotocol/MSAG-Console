@@ -1187,6 +1187,7 @@ void MapProxy::putCommand(const SmscCommand& cmd)
     //  AbortAndRemoveDialog(SSN,did);
     throw;
   }
+  __trace2__("MAPPROXY::putCommand OK");
   //notifyOutThread();
 #endif
 }
