@@ -137,20 +137,21 @@ public:
   
   static void cleanStoppedWaiters()
   {
+    struct __local__ {
+      static void CheckRemove(WAITERS::value_type& val) {
+        if ( val->isStopped() ) {
+          __trace2__("ChildShutdownWaiter::cleanStoppedWaiters : delete waiter for \"%s\"", val->getServiceId());
+          val->WaitFor();
+          delete val;
+          val = 0;
+        }
+      }
+    };
     __trace__("ChildShutdownWaiter : clean stopped waiters");
     MutexGuard guard(startedWaitersMutex);
-    std::vector<WAITERS::iterator> to_del;
-    for (WAITERS::iterator i = startedWaiters.begin(); i != startedWaiters.end(); i++) {
-      if ((*i)->isStopped()) {
-        __trace2__("ChildShutdownWaiter::cleanStoppedWaiters : delete waiter for \"%s\"", (*i)->getServiceId());
-        (*i)->WaitFor();
-        delete *i;
-        to_del.push_back(i);
-      }
-    }
-    for (std::vector<WAITERS::iterator>::const_iterator i = to_del.begin(); i != to_del.end(); i++) {
-      startedWaiters.erase(*i);
-    }
+    std::for_each(startedWaiters.begin(), startedWaiters.end(), &__local__::CheckRemove);
+    WAITERS::iterator new_end = std::remove(startedWaiters.begin(), startedWaiters.end(), (ChildShutdownWaiter*)0);
+    if ( new_end != startedWaiters.end() ) startedWaiters.erase( new_end, startedWaiters.end() );
     __trace__("ChildShutdownWaiter : clean stopped waiters finished");
   }
   
