@@ -23,6 +23,7 @@ using namespace smsc::smpp::SmppCommandSet;
 DbSmeTestCases::DbSmeTestCases(const SmeConfig& config, SmppFixture* fixture,
 	DbSmeRegistry* _dbSmeReg)
 : SmppProtocolTestCases(config, fixture), dbSmeReg(_dbSmeReg),
+	simpleTc(dbSmeReg, fixture->chkList),
 	dateFormatTc(dbSmeReg, fixture->chkList),
 	otherFormatTc(dbSmeReg, fixture->chkList),
 	insertTc(dbSmeReg, fixture->chkList),
@@ -57,8 +58,11 @@ const string DbSmeTestCases::getToAddress()
 	return addrVal;
 }
 
+#define __delim__ \
+	delim[rand0(delimLen-1)]
+
 #define __print__(name) \
-	if (rec->check##name()) { s << delimiter << rec->get##name(); }
+	if (rec->check##name()) { s << __delim__ << rec->get##name(); }
 /**
  * Порядок аргументов: id, int16, int32, flt, dbl, str, dt
  */
@@ -66,12 +70,16 @@ const string DbSmeTestCases::getCmdText(DbSmeTestRecord* rec,
 	const DateFormatter* df)
 {
 	__require__(rec && rec->checkJob());
-	static const string delim[] = {" ", "\n", "\r"};
-	const string& delimiter = delim[rand0(2)];
-	ostringstream s;
+	static const string delim[] = {" ", "  ", "\n", "\n\n"};
+	static const int delimLen = sizeof(delim) / sizeof(*delim);
 	//установить from-address и to-address
 	rec->setFromAddr(getFromAddress());
 	rec->setToAddr(getToAddress());
+	ostringstream s;
+	if (rand0(1))
+	{
+		s << __delim__;
+	}
 	s << rec->getJob();
 	__print__(Id);
 	__print__(Int8);
@@ -84,12 +92,16 @@ const string DbSmeTestCases::getCmdText(DbSmeTestRecord* rec,
 	__print__(String)
 	if (rec->checkQuotedString())
 	{
-		s << delimiter << "\"" << rec->getQuotedString() << "\"";
+		s << __delim__ << "\"" << rec->getQuotedString() << "\"";
 	}
 	if (rec->checkDate())
 	{
 		__require__(df);
-		s << delimiter << df->format(rec->getDate());
+		s << __delim__ << df->format(rec->getDate());
+	}
+	if (rand0(1))
+	{
+		s << __delim__;
 	}
 	return s.str();
 }
@@ -212,7 +224,7 @@ void DbSmeTestCases::submitCorrectSelectDbSmeCmd(bool sync,
 void DbSmeTestCases::submitCorrectInsertDbSmeCmd(bool sync, uint8_t dataCoding, int num)
 {
 	__decl_tc__;
-	TCSelector s(num, 6);
+	TCSelector s(num, 7);
 	for (; s.check(); s++)
 	{
 		static const DateFormatter& df = insertTc.getDateFormatter();
@@ -225,16 +237,19 @@ void DbSmeTestCases::submitCorrectInsertDbSmeCmd(bool sync, uint8_t dataCoding, 
 			case 2: //InsertJob с uint параметрами
 				rec = insertTc.createUintsJobInput();
 				break;
-			case 3: //InsertJob без параметров
-				rec = insertTc.createDefaultsJobInput();
+			case 3: //InsertJob с int без параметров
+				rec = insertTc.createIntDefaultsJobInput();
 				break;
-			case 4: //InsertJob с нулями
+			case 4: //InsertJob с uint без параметров
+				rec = insertTc.createUintDefaultsJobInput();
+				break;
+			case 5: //InsertJob с нулями
 				rec = insertTc.createZerosJobInput();
 				break;
-			case 5: //InsertJob с нулами
+			case 6: //InsertJob с нулами
 				rec = insertTc.createNullsJobInput();
 				break;
-			case 6: //InsertJob с дублирующимся ключом
+			case 7: //InsertJob с дублирующимся ключом
 				rec = insertTc.createDuplicateKeyJobInput();
 				break;
 			default:
@@ -573,6 +588,41 @@ void DbSmeTestCases::submitIncorrectNumberFormatDbSmeCmd(bool sync,
 	}
 }
 
+void DbSmeTestCases::submitIncorrectParamsDbSmeCmd(bool sync,
+	uint8_t dataCoding, int num)
+{
+	__decl_tc__;
+	TCSelector s(num, 3);
+	for (; s.check(); s++)
+	{
+		string input, output;
+		switch (s.value())
+		{
+			case 1: //отсутствуют обязательные параметры
+				{
+					__tc__("submitDbSmeCmd.incorrect.invalidJob"); __tc_ok__;
+					auto_ptr<char> tmp = rand_char(20);
+					input = tmp.get();
+					output = "Invalid job name";
+				}
+				break;
+			case 2: //отсутствуют обязательные параметры
+				__tc__("submitDbSmeCmd.incorrect.missingParams"); __tc_ok__;
+				input = "InsertJob1";
+				output = "Required parameter is missing";
+				break;
+			case 3: //присутствуют лишние параметры
+				__tc__("submitDbSmeCmd.incorrect.extraParams"); __tc_ok__;
+				input = "DateFormatJob1 1/1/02 12:0:0 AM str";
+				output = "Extra parameters found";
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+		sendDbSmePdu(input, output, sync, dataCoding);
+	}
+}
+
 void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	PduDeliverySm &pdu)
 {
@@ -586,9 +636,6 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	}
 	__require__(monitor);
 	__decl_tc__;
-	__require__(monitor->pduData->objProps.count("dbSmeRec"));
-	DbSmeTestRecord* rec = reinterpret_cast<DbSmeTestRecord*>(monitor->pduData->objProps["dbSmeRec"]);
-	__require__(rec);
 	__tc__("processDbSmeRes.dataCoding");
 	if (pdu.get_message().get_dataCoding() != DATA_CODING_SMSC_DEFAULT)
 	{
@@ -599,6 +646,14 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().size_shortMessage(), pdu.get_message().get_dataCoding());
 	MutexGuard mguard(dbSmeReg->getMutex());
+	if (!monitor->pduData->objProps.count("dbSmeRec"))
+	{
+		simpleTc.processJobOutput(text, NULL, monitor);
+		return;
+	}
+	DbSmeTestRecord* rec = reinterpret_cast<DbSmeTestRecord*>(
+		monitor->pduData->objProps["dbSmeRec"]);
+	__require__(rec);
 	if (rec->getJob().find("DateFormatJob") != string::npos)
 	{
 		dateFormatTc.processJobOutput(text, rec, monitor);
