@@ -25,6 +25,8 @@ public:
 				std::auto_ptr<char> portStr(serviceElem.getAttribute("port").transcode());
 				port = atol(portStr.get());
 				args.reset(serviceElem.getAttribute("args").transcode());
+				std::auto_ptr<char> autostartStr(serviceElem.getAttribute("autostart").transcode());
+				autostart = strcmp("true", autostartStr.get()) == 0;
 			}
 		}
 		catch (...)
@@ -48,11 +50,17 @@ public:
 		return port;
 	}
 
+	const bool isAutostart() const throw ()
+	{
+		return autostart;
+	}
+
 
 protected:
 	/*std::auto_ptr<char> serviceName;*/
 	in_port_t port;
 	std::auto_ptr<char> args;
+	bool autostart;
 };
 
 }

@@ -195,9 +195,9 @@ Response * DaemonCommandDispatcher::add_service(const CommandAddService * const 
 		{
 			{
 				MutexGuard guard(servicesListMutex);
-				services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), command->getServiceId(), /*command->getServiceName(), */command->getPort(), command->getArgs()));
+				services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), command->getServiceId(), command->getPort(), command->getArgs(), command->isAutostart()));
 			}
-			putServiceToConfig(command->getServiceId(), /*command->getServiceName(), */command->getPort(), command->getArgs());
+			putServiceToConfig(command->getServiceId(), command->getPort(), command->getArgs(), command->isAutostart());
 			return new Response(Response::Ok, 0);
 		}
 		else
@@ -256,7 +256,7 @@ Response * DaemonCommandDispatcher::set_service_startup_parameters(const Command
 		{
 			MutexGuard guard(servicesListMutex);
 			Service *s = services[command->getServiceId()];
-			putServiceToConfig(command->getServiceId(), command->getPort(), command->getArgs());
+			putServiceToConfig(command->getServiceId(), command->getPort(), command->getArgs(), command->isAutostart());
 			if (s->getStatus() == Service::stopped)
 			{
 				s->setPort(command->getPort());
@@ -467,24 +467,16 @@ void DaemonCommandDispatcher::updateServiceFromConfig(Service * service)
 	}
 }
 
-void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId, const in_port_t servicePort, const char * const serviceArgs)
+void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId, const in_port_t servicePort, const char * const serviceArgs, const bool autostart)
 {
 	MutexGuard lock(configManagerMutex);
 	std::string serviceSectionName = CONFIG_SERVICES_SECTION;
 	std::auto_ptr<char> tmpServiceId(encodeDot(cStringCopy(serviceId)));
 	serviceSectionName += tmpServiceId.get();
 
-	/*std::string tmpName = serviceSectionName;
-	tmpName += ".name";
-	configManager->setString(tmpName.c_str(), serviceName);*/
-
-	std::string tmpName = serviceSectionName;
-	tmpName += ".port";
-	configManager->setInt(tmpName.c_str(), servicePort);
-
-	tmpName = serviceSectionName;
-	tmpName += ".args";
-	configManager->setString(tmpName.c_str(), serviceArgs);
+	configManager->setInt((serviceSectionName + ".port").c_str(), servicePort);
+	configManager->setString((serviceSectionName + ".args").c_str(), serviceArgs);
+	configManager->setBool((serviceSectionName + ".autostart").c_str(), autostart);
 	configManager->save();
 	logger.debug("new config saved");
 }
@@ -511,7 +503,7 @@ void DaemonCommandDispatcher::startAllServices()
 	services.First();
 	while (services.Next(serviceId, servicePtr) != 0)
 	{
-		if (servicePtr != NULL && servicePtr->getAutostart()) {
+		if (servicePtr != NULL && servicePtr->isAutostart()) {
 			try {
 				servicePtr->start();
 			} catch (...) {

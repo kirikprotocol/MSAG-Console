@@ -78,6 +78,8 @@ char * ServicesList::getText() const
 		result += port;
 		result += "\" args=\"";
 		result += tmpArgs.get();
+		result += "\" autostart=\"";
+		result += s->isAutostart() ? "true" : "false";
     result += "\" status=\"";
     switch (s->getStatus())
     {

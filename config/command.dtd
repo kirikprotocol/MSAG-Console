@@ -12,6 +12,7 @@
     <!ATTLIST service port CDATA #REQUIRED>
     <!ATTLIST service args CDATA #REQUIRED>
     <!ATTLIST service status (stopped|starting|running|stopping|unknown) #REQUIRED>
+    <!ATTLIST service autostart (true|false) #IMPLIED>
 
 <!ELEMENT param (#PCDATA)>
     <!ATTLIST param name CDATA #REQUIRED>

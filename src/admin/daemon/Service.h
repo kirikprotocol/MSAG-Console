@@ -88,7 +88,7 @@ public:
 
   run_status getStatus() {return status;}
   void setStatus(run_status newStatus) { status = newStatus;}
-  bool getAutostart() {return autostart;}
+  bool isAutostart() {return autostart;}
 
 
 protected:
