@@ -66,7 +66,10 @@ protected:
                 sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
                 fillSmppPduFromSms(&sm, &responce);
                 PduSubmitSmResp *resp = transmitter.submit(sm);
-                if (resp) disposePdu((SmppHeader*)resp);
+                if (resp) {
+                    // TODO: get msg_id and update WSmeProc history for msisdn
+                    disposePdu((SmppHeader*)resp);
+                }
             }
         }
         catch (exception& exc)
@@ -81,7 +84,7 @@ protected:
     {
         // TODO: implement it !!!
         std::string in, out;
-        out = processor.processNotification(in);
+        processor.processNotification(in, out);
         processor.processReceipt(in);
         return false;
     };

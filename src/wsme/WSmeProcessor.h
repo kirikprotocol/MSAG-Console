@@ -77,8 +77,6 @@ namespace smsc { namespace wsme
         void loadUpVisitors()
             throw (InitException);
         
-        bool compareMaskAndAddress(const std::string mask, 
-                                   const std::string addr);
     public:
 
         VisitorManager(DataSource& _ds)
@@ -87,18 +85,35 @@ namespace smsc { namespace wsme
 
         bool isVisitor(const std::string msisdn)
             throw (ProcessException);
-   };
+    };
     
     class LangManager
     {
     private:
         
+        struct LangInfo
+        {
+            std::string mask;
+            std::string lang;
+
+            LangInfo() {};
+            LangInfo(std::string _mask, std::string _lang) 
+                : mask(_mask), lang(_lang) {};
+        };
+        
         DataSource& ds;
+        
+        Mutex           langsLock;
+        Array<LangInfo> langs;
+        
+        void loadUpLangs()
+            throw (InitException);
 
     public:
 
-        LangManager(DataSource& _ds) : ds(_ds) {};
-        virtual ~LangManager() {};
+        LangManager(DataSource& _ds)
+            throw (InitException);
+        virtual ~LangManager();
 
         bool getLangCode(const std::string msisdn, std::string& lang)
             throw (ProcessException);
@@ -190,9 +205,13 @@ namespace smsc { namespace wsme
             throw(ConfigException, InitException);
         virtual ~WSmeProcessor();
         
-        virtual std::string processNotification(const std::string in)
+        virtual bool processNotification(const std::string msisdn, 
+                                         std::string& out)
             throw (ProcessException);
-        virtual void processReceipt(const std::string in)
+        virtual void processResponce(const std::string msisdn, 
+                                     const std::string msgid)
+            throw (ProcessException);
+        virtual void processReceipt(const std::string msgid)
             throw (ProcessException);
     };
 

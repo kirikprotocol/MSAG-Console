@@ -69,26 +69,40 @@ WSmeProcessor::~WSmeProcessor()
     if (ds) delete ds;
 }
 
-std::string WSmeProcessor::processNotification(const std::string in)
+bool WSmeProcessor::processNotification(const std::string msisdn, std::string& out)
     throw (ProcessException)
 {
-    /* TODO: implement it
-    
-        1) check whether is Visitor in visitorManager
-        2) get langCode from langManager
-        3) get new/next ad from adManager
-    */
-    return in;
+    __require__(visitorManager && langManager && adManager);
+
+    if (visitorManager->isVisitor(msisdn))
+    {
+        std::string lang;
+        bool isLang = langManager->getLangCode(msisdn, lang);
+        return adManager->getAd(msisdn, lang, out);
+    }
+    return false;
 }
-void WSmeProcessor::processReceipt(const std::string in)
+void WSmeProcessor::processResponce(const std::string msisdn, const std::string msgid)
     throw (ProcessException)
 {
+    __require__(adManager);
+
+    // TODO : update adManager::history.
+}
+
+void WSmeProcessor::processReceipt(const std::string msgid)
+    throw (ProcessException)
+{
+    __require__(adManager);
+
     /* TODO: implement it
         
         1) check whether receipt is valid (???)
         2) get msg_id from receipt
         3) notify adManager to update history by msg_id
     */
+
+    adManager->reportAd(msgid);
 }
 
 
@@ -107,8 +121,7 @@ VisitorManager::~VisitorManager()
     visitors.Clean();
 }
 
-const char* SQL_GET_VISITORS =
-"SELECT MASK FROM WSME_VISITORS";
+const char* SQL_GET_VISITORS = "SELECT MASK FROM WSME_VISITORS";
 void VisitorManager::loadUpVisitors()
     throw (InitException)
 {
@@ -152,8 +165,8 @@ void VisitorManager::loadUpVisitors()
     }
 }
 
-bool VisitorManager::compareMaskAndAddress(const std::string mask, 
-                                           const std::string addr)
+bool compareMaskAndAddress(const std::string mask, 
+                           const std::string addr)
 {
     // TODO: implement check
     return true;
@@ -171,12 +184,74 @@ bool VisitorManager::isVisitor(const std::string msisdn)
     return false;
 }
 
-const char* SQL_GET_LANG =
-"SELECT LANG FROM WSME_LANG WHERE MASK=:MASK";
+LangManager::LangManager(DataSource& _ds)
+    throw (InitException)
+        : ds(_ds)
+{
+    loadUpLangs();
+}
+LangManager::~LangManager()
+{
+    MutexGuard  guard(langsLock);
+    langs.Clean();
+}
+
+const char* SQL_GET_LANGS = "SELECT MASK, LANG FROM WSME_LANGS";
+void LangManager::loadUpLangs()
+    throw (InitException)
+{
+    MutexGuard  guard(langsLock);
+
+    ResultSet* rs = 0;
+    Statement* statement = 0; 
+    Connection* connection = 0;
+    
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection)
+            throw Exception("Get connection failed");
+        
+        if (!connection->isAvailable()) connection->connect();
+
+        statement = connection->createStatement(SQL_GET_LANGS);
+        if (!statement)
+            throw Exception("Create statement failed");
+        
+        ResultSet* rs = statement->executeQuery();
+        if (!rs)
+            throw Exception("Get results failed");
+        
+        while (rs->fetchNext())
+        {
+            LangInfo info(rs->getString(1), rs->getString(2));
+            langs.Push(info);
+        }
+        
+        if (rs) delete rs;
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        if (rs) delete rs;
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+        throw InitException(exc.what());
+    }
+}
 bool LangManager::getLangCode(const std::string msisdn, std::string& lang)
     throw (ProcessException)
 {
-    // if not defined return false
+    MutexGuard  guard(langsLock);
+
+    for (int i=0; i<langs.Count(); i++) {
+        if (compareMaskAndAddress(langs[i].mask, msisdn)) {
+            lang = langs[i].lang;
+            return true;
+        }
+    }
+    
     lang = "";
     return false;
 }
@@ -302,12 +377,6 @@ bool AdManager::getAd(const std::string msisdn, const std::string lang,
                       std::string& ad)
     throw (ProcessException)
 {
-    /*  Process logic:
-        
-        1) Get next ID from adHistory (or it will create new one)
-        2) Get ad from adRepository by ID & LANG
-    */
-    
     __require__(history && repository);
     
     int id = history->getNextId(msisdn);
@@ -318,7 +387,7 @@ void AdManager::reportAd(const std::string msgid)
 {
     __require__(history);
 
-
+    // TODO : implement it
 }
 
 
