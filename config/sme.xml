@@ -21,4 +21,13 @@
 	<param name="addrRange" value="SNYjxzMH0e9sHQZ8Xn35"/>
 	<param name="smeN" value="-1128792064"/>
 </smerecord>
+<smerecord type="smpp" uid="abonentinfo">
+	<param name="typeOfNumber" value="1"/>
+	<param name="numberingPlan" value="1"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="bjXUnJvLEtI2"/>
+	<param name="password" value="Vi"/>
+	<param name="addrRange" value="SNYjxzMH0e9sHQZ8Xn35"/>
+	<param name="smeN" value="-1128792064"/>
+</smerecord>
 </records>
