@@ -570,6 +570,7 @@ int SmppInputThread::Execute()
   {
     killSocket(i);
   }
+  sockets.Clean();
   return 0;
 }
 
@@ -800,6 +801,7 @@ int SmppOutputThread::Execute()
   {
     killSocket(i);
   }
+  sockets.Clean();
   return 0;
 } // Execute
 

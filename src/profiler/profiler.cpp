@@ -165,6 +165,20 @@ int Profiler::update(const Address& address,const Profile& profile)
   }
 }
 
+int Profiler::updatemask(const Address& address,const Profile& profile)
+{
+  MutexGuard g(mtx);
+  profiles->add(address,profile);
+  try{
+    dbUpdate(address,profile);
+  }catch(...)
+  {
+    log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.Profiler");
+    log.error("Database exception during mask profile update");
+  }
+}
+
+
 void Profiler::add(const Address& address,const Profile& profile)
 {
   MutexGuard g(mtx);

@@ -310,7 +310,6 @@ public:
   }
 
 protected:
-  smsc::core::threads::ThreadPool tp;
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
   Mutex routerSwitchMutex;
@@ -349,6 +348,8 @@ protected:
   uint64_t rescheduleCounter;
   string scAddr;
   time_t startTime;
+
+  smsc::core::threads::ThreadPool tp;
 
 };
 

@@ -58,6 +58,7 @@ class ProfilerInterface{
 public:
   virtual Profile& lookup(const Address& address)=0;
   virtual int update(const Address& address,const Profile& profile)=0;
+  virtual int updatemask(const Address& address,const Profile& profile)=0;
   virtual void add(const Address& address,const Profile& profile)=0;
 };//ProfilerInterface
 
@@ -74,6 +75,7 @@ public:
   Profile& lookup(const Address& address);
 
   int update(const Address& address,const Profile& profile);
+  int updatemask(const Address& address,const Profile& profile);
 
   void add(const Address& address,const Profile& profile);
 
