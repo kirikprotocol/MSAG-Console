@@ -18,7 +18,7 @@ import ru.novosoft.smsc.util.xml.Utils;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.util.*;
+import java.util.Iterator;
 
 
 public class RouteSubjectManagerImpl implements RouteSubjectManager
@@ -86,7 +86,7 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
       final File smscConfFolder = WebAppFolders.getSmscConfFolder();
       File config = new File(smscConfFolder, fileName);
 
-      Document routesDoc = Utils.parse(new FileReader(config));
+      Document routesDoc = Utils.parse(config.getAbsolutePath());
       subjects = new SubjectList(routesDoc.getDocumentElement(), smeManager);
       routes = new RouteList(routesDoc.getDocumentElement(), subjects, smeManager);
     } catch (FactoryConfigurationError error) {
@@ -112,8 +112,8 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
     try {
       final File file = new File(WebAppFolders.getSmscConfFolder(), filename);
       final File newFile = Functions.createNewFilenameForSave(file);
-      PrintWriter out = new PrintWriter(new FileWriter(newFile));
-      Functions.storeConfigHeader(out, "routes", "routes.dtd");
+      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), "ANSI1251")); //todo: select correct codepage
+      Functions.storeConfigHeader(out, "routes", "routes.dtd", "ANSI1251");
       subjects.store(out);
       routes.store(out);
       Functions.storeConfigFooter(out, "routes");
