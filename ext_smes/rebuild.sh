@@ -8,4 +8,6 @@ cd ../InfoSme
 make rebuild
 cd ../WSme
 make rebuild
+cd ../MCISme
+make rebuild
 
