@@ -36,28 +36,32 @@ Database::Database(DOM_Element & config_node)
 	}
 }
 
-void Database::setInstance(const char * const newInstance)
+void Database::setDBInstance(const char * const newInstance)
 	throw (DOM_DOMException)
 {
 	node.setAttribute(instance_name, newInstance);
 	replaceString(instance, newInstance);
 }
 
-void Database::setUserName(const char * const newUserName)
+Database::~Database()
+{
+}
+
+void Database::setDBUserName(const char * const newUserName)
 	throw (DOM_DOMException)
 {
 	node.setAttribute(user_name, newUserName);
 	replaceString(user, newUserName);
 }
 
-void Database::setPassword(const char * const newPassword)
+void Database::setDBUserPassword(const char * const newPassword)
 	throw (DOM_DOMException)
 {
 	node.setAttribute(password_name, newPassword);
 	replaceString(password, newPassword);
 }
 
-void Database::setConnectionsMax(int newMax)
+void Database::setMaxConnectionsCount(int newMax)
 	throw (DOM_DOMException)
 {
 	char str[32];
@@ -65,7 +69,7 @@ void Database::setConnectionsMax(int newMax)
 	node.setAttribute(connections_max_name, str);
 }
 
-void Database::setConnectionsInit(int newInit)
+void Database::setInitConnectionsCount(int newInit)
 	throw (DOM_DOMException)
 {
 	char str[32];

@@ -11,9 +11,13 @@
 #include "Log.h"
 #include "ConfigException.h"
 
+#include <store/StoreConfig.h>
+
 namespace smsc   {
 namespace util   {
 namespace config {
+
+using smsc::store::StoreConfig;
 
 /**
  * Класс, отвечающий за чтение и запись конфигурации системы.
@@ -56,19 +60,19 @@ public:
 	 *
 	 * @return Конфигурация базы данных
 	 */
-	Database &getDatabase() const {return *db;};
+	StoreConfig *getDatabase() const {return db;};
 	/**
 	 * Возвращает конфигурацию логгера
 	 *
 	 * @return logger configuration
 	 */
-	Log &getLog() const {return *log;};
+	Log *getLog() const {return log;};
 	/**
 	 * Возвращает настройки протокола MAP
 	 *
 	 * @return MAP protocol configuration
 	 */
-	MapProtocol &getMapProtocol() const {return *map;};
+	MapProtocol *getMapProtocol() const {return map;};
 
 protected:
 	/**

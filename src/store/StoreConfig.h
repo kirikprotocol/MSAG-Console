@@ -1,13 +1,13 @@
 #ifndef STORE_CONFIG_DECLARATIONS
 #define STORE_CONFIG_DECLARATIONS
 
-namespace smsc { namespace store 
+namespace smsc { namespace store
 {
     class StoreConfig
     {
 	public:
 
-        virtual ~StoreConfig();
+        virtual ~StoreConfig() {};
 
         virtual const char* getDBInstance() = 0;
 		virtual const char* getDBUserName() = 0;

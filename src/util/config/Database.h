@@ -5,10 +5,13 @@
 #include <xercesc/dom/DOM_DOMException.hpp>
 #include <log4cpp/Category.hh>
 #include <util/config/ConfigException.h>
+#include <store/StoreConfig.h>
 
 namespace smsc   {
 namespace util   {
 namespace config {
+
+using smsc::store::StoreConfig;
 
 /**
  * Настройки базы данных
@@ -16,20 +19,23 @@ namespace config {
  * @author igork
  * @see Manager
  */
-class Database
+class Database : public StoreConfig
 {
 public:
 	Database(DOM_Element & config_node);
-	const char * const getInstance() const {return instance;};
-	const char * const getUserName() const {return user;};
-	const char * const getPassword() const {return password;};
-	const int getConnectionsMax() const {return max;};
-	const int getConnectionsInit() const {return init;};
-	void setInstance(const char * const newInstance) throw (DOM_DOMException);
-	void setUserName(const char * const newUserName) throw (DOM_DOMException);
-	void setPassword(const char * const newPassword) throw (DOM_DOMException);
-	void setConnectionsMax(int newMax) throw (DOM_DOMException);
-	void setConnectionsInit(int newInit) throw (DOM_DOMException);
+	Database::~Database();
+	virtual const char* getDBInstance()     {return instance;}
+	virtual const char* getDBUserName()     {return user;}
+	virtual const char* getDBUserPassword() {return password;}
+
+	virtual int getMaxConnectionsCount()  {return max;};
+	virtual int getInitConnectionsCount() {return init;};
+	
+	void setDBInstance(const char * const newInstance) throw (DOM_DOMException);
+	void setDBUserName(const char * const newUserName) throw (DOM_DOMException);
+	void setDBUserPassword(const char * const newPassword) throw (DOM_DOMException);
+	void setMaxConnectionsCount(int newMax) throw (DOM_DOMException);
+	void setInitConnectionsCount(int newInit) throw (DOM_DOMException);
 
 private:
 	char *instance;
