@@ -9,32 +9,25 @@ typedef DataSourceFactory* (*getDsfInstanceFn)(void);
 
 using smsc::util::Logger;
 
-/* --------- Abstract Connection Management (ConnectionPool) --------------- */
-
+log4cpp::Category&  DataSourceLoader::logger = Logger::getCategory("smsc.db.DataSourceLoader");
 Array<void *>       DataSourceLoader::handles;
-log4cpp::Category&  DataSourceLoader::log 
-    = Logger::getCategory("smsc.db.DataSourceLoader");
+Mutex               DataSourceLoader::loadupLock;
 
 static DataSourceLoader _dataSourceLoader;
 
 DataSourceLoader::~DataSourceLoader()
 {
-    while (handles.Count())
-    {
-        void* handle=0L;
-        (void) handles.Pop(handle);
-        if (handle) dlclose(handle);
-    }
+    unload();
 }
 
 void DataSourceLoader::loadupDataSourceFactory(
     const char* dlpath, const char* identity)
         throw(LoadupException)
 {
-    log.info("Loading '%s' library, identity is '%s' ...", dlpath, identity);
+    MutexGuard guard(loadupLock);
     
+    logger.info("Loading '%s' library, identity is '%s' ...", dlpath, identity);
     void* dlhandle = dlopen(dlpath, RTLD_LAZY);
-    
     if (dlhandle)
     {
         getDsfInstanceFn fnhandle = 
@@ -48,76 +41,79 @@ void DataSourceLoader::loadupDataSourceFactory(
             }
             else 
             {
-                log.error("Load of '%s' library."
-                          "Call to getDataSourceFactory() failed ! ", dlpath); 
+                logger.error("Load of '%s' library. Call to getDataSourceFactory() failed ! ", dlpath); 
                 dlclose(dlhandle);
                 throw LoadupException();
             }
         }
         else
         {
-            log.error("Load of '%s' library."
-                      "Call to dlsym() failed ! ", dlpath); 
+            logger.error("Load of '%s' library. Call to dlsym() failed ! ", dlpath); 
             dlclose(dlhandle);
             throw LoadupException();
         }
     }
     else
     {
-        log.error("Load of '%s' library."
-                  "Call to dlopen() failed ! ", dlpath); 
+        logger.error("Load of '%s' library. Call to dlopen() failed ! ", dlpath); 
         throw LoadupException();
     }
-    
     (void)handles.Push(dlhandle);
-    log.info("Loading '%s' library done. Identity is '%s'.", dlpath, identity);
+    logger.info("Loading '%s' library done. Identity is '%s'.", dlpath, identity);
 }
 
 void DataSourceLoader::loadup(ConfigView* config)
     throw(ConfigException, LoadupException)
 {
-    __require__(config);
+    __require__(config); // load up libraries by config
     
-    // load up libraries by config
-    ConfigView* driversConfig = config->getSubConfig("DataSourceDrivers");
-    std::set<std::string>* set = driversConfig->getSectionNames();
+    std::auto_ptr<ConfigView> driversConfigGuard(config->getSubConfig("DataSourceDrivers"));
+    ConfigView* driversConfig = driversConfigGuard.get();
+    std::auto_ptr< std::set<std::string> > setGuard(driversConfig->getSectionNames());
+    std::set<std::string>* set = setGuard.get();
     
     for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
     {
         const char* section = (const char *)i->c_str();
-        ConfigView* driverConfig = 
-            driversConfig->getSubConfig(section, true);
-        const char* type = 0;
-        const char* dlpath = 0;
+        std::auto_ptr<ConfigView> driverConfigGuard(driversConfig->getSubConfig(section, true));
+        ConfigView* driverConfig = driverConfigGuard.get();
+
         try
         {
-            log.info("Loading DataSourceDriver for section '%s'.", section);
+            logger.info("Loading DataSourceDriver for section '%s'.", section);
             
-            type = driverConfig->getString("type");
-            dlpath = driverConfig->getString("loadup");
+            std::auto_ptr<char> typeGuard(driverConfig->getString("type"));
+            const char* type = typeGuard.get();
+            std::auto_ptr<char> dlpathGuard(driverConfig->getString("loadup"));
+            const char* dlpath = dlpathGuard.get();
             loadupDataSourceFactory(dlpath, type);
 
-            log.info("Loaded DataSourceDriver for section '%s'."
-                     " Bind type is: %s. Imported library: '%s'",
-                      section, type, dlpath);
+            logger.info("Loaded DataSourceDriver for section '%s'. "
+                        "Bind type is: %s. Imported library: '%s'", section, type, dlpath);
         }
         catch (ConfigException& exc)
         {
-            log.error("Loading of DataSourceDrivers failed !"
-                      " Config exception: %s", exc.what());
-            if (set) delete set;
-            if (type) delete type;
-            if (dlpath) delete dlpath;
-            delete driversConfig;
-            delete driverConfig;
+            logger.error("Loading of DataSourceDrivers failed ! Config exception: %s", exc.what());
             throw;
         }
-        if (type) delete type;
-        if (dlpath) delete dlpath;
-        delete driverConfig;
     }
-    if (set) delete set;
-    delete driversConfig;
+}
+
+void DataSourceLoader::unload()
+{
+   MutexGuard guard(loadupLock);
+   if (!handles.Count()) return;
+
+   DataSourceFactory::unregisterFactories();
+
+   logger.info("Unloading DataSourceDrivers ..."); 
+   while (handles.Count())
+   {
+       void* handle=0L;
+       (void) handles.Pop(handle);
+       if (handle) dlclose(handle);
+   }
+   logger.info("DataSourceDrivers unloaded"); 
 }
 
 }}

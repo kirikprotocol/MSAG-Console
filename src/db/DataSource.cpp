@@ -8,6 +8,7 @@ using smsc::util::Logger;
 /* --------- Abstract Connection Management (ConnectionPool) --------------- */
 
 Hash<DataSourceFactory *>*  DataSourceFactory::registry = 0;
+Mutex                       DataSourceFactory::registryLock;
 
 const unsigned SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE = 10;
 const unsigned SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE_LIMIT = 1000;

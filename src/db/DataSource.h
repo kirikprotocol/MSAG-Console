@@ -398,6 +398,7 @@ namespace smsc { namespace db
     protected:
 
         static Hash<DataSourceFactory *>*   registry;
+        static Mutex                        registryLock;
         
         DataSourceFactory() {};
         virtual ~DataSourceFactory() {};
@@ -408,15 +409,22 @@ namespace smsc { namespace db
 
         static void registerFactory(DataSourceFactory* dsf, const char* key)
         {
-            if (!registry)
-            {
-                registry = new Hash<DataSourceFactory *>();
-            }
+            MutexGuard guard(registryLock);
+
+            if (!registry) registry = new Hash<DataSourceFactory *>();
             registry->Insert(key, dsf);
+        };
+        static void unregisterFactories()
+        {
+            MutexGuard guard(registryLock);
+            
+            if (registry) registry->Empty();
         };
         
         static DataSource* getDataSource(const char* key)
         {
+            MutexGuard guard(registryLock);
+
             DataSourceFactory* dsf = (registry) ? 
                 ((registry->Exists(key)) ? registry->Get(key):0):0;
             return ((dsf) ? dsf->createDataSource():0);

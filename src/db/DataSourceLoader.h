@@ -19,8 +19,9 @@ namespace smsc { namespace db
     {
     private:
 
-        static log4cpp::Category    &log;
+        static log4cpp::Category    &logger;
         static Array<void *>        handles;
+        static Mutex                loadupLock;
 
     public:
 
@@ -29,6 +30,7 @@ namespace smsc { namespace db
 
         static void loadup(ConfigView* config)
             throw(ConfigException, LoadupException);
+        static void unload();
 
         static void loadupDataSourceFactory(
             const char* dlpath, const char* identity)
