@@ -751,7 +751,7 @@ USHORT_T Et96MapCloseInd(
     switch( dialog->state ){
     case MAPST_WaitRInfoClose:
       MapDialogContainer::getInstance()->reAssignDialog(dialogueId);
-      dialogueId = dialog->dialogid;
+      dialogueId = dialog->dialogid_map;
       QueryMcsVersion(dialog.get());
       dialog->state = MAPST_WaitMcsVersion;
       break;
@@ -851,7 +851,7 @@ USHORT_T Et96MapOpenInd (
     __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogueId);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,SSN/*,0*/));
     if ( dialog.isnull() )
-      throw rumtime_error("MAP:: can't create dialog");
+      throw runtime_error("MAP:: can't create dialog");
     __trace2__("MAP:: create dialog with ptr 0x%p, dialogid 0x%x",mdci.get(),dialogId);
     dialog->state = MAPST_WaitSms;
   }
