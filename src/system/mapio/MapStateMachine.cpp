@@ -1045,6 +1045,7 @@ USHORT_T Et96MapDelimiterInd(
       open_confirmed = true;
       break;
     case MAPST_WaitSmsMODelimiter2:
+      reason = ET96MAP_NO_REASON;
       result = Et96MapOpenResp(SSN,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
       if ( result != ET96MAP_E_OK )
         throw runtime_error(
