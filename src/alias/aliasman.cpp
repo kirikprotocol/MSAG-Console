@@ -318,7 +318,7 @@ int addIntoAliasTreeRecurse(TreeNode* node,AliasRecord* rec)
 int addIntoAddrTreeRecurse(TreeNode* node,AliasRecord* rec)
 {
   ENTER;
-  __trace2__("addIntoAddrTree");
+  __trace__("addIntoAddrTree");
   if ( node->addr ) print(*node->addr,"node->addr");
   else __trace__("no addr");
   print(rec->addr,"rec->addr");
@@ -334,7 +334,7 @@ int addIntoAddrTreeRecurse(TreeNode* node,AliasRecord* rec)
       __warning__("duplicate alias, is has not added into aliases set");
       LEAVE_(0);
     }
-    __trace2__("weak equal:")
+    __trace__("weak equal:")
     if (node->addr->defLength > rec->addr.defLength)
     {
       __unreachable__("incorrect tree");
@@ -367,14 +367,14 @@ int addIntoAddrTreeRecurse(TreeNode* node,AliasRecord* rec)
       if ( cmp < 0 )right = ptr-1;
       else left = ptr+1;
     }
-    __trace2__("****add element*****");
+    __trace__("****add element*****");
     TreeNode* newNode = new TreeNode;
     newNode->addr = &rec->addr;
     newNode->alias = &rec->alias;
     node->child.push_back(newNode);
     cmp = 0;
   }
-  __trace2__("^addIntoAddrTree");
+  __trace__("^addIntoAddrTree");
   LEAVE_(cmp);
 }
 

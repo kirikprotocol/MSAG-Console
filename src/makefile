@@ -13,17 +13,16 @@ export CXX
 ifeq ($(CXX),CC)
 AR:=/usr/ccs/bin/ar
 export AR
-XERCES_LIB:=-lxerces-c
 SHARED_OPT:=-G
 else
-XERCES_LIB:=-lxerces-c
 SHARED_OPT:=-shared
 endif
 
 SSL_DIR:=/usr/local/ssl
-#SSL_LIB:=-lssl -lcrypto
-SSL_LIB:=$(SSL_DIR)/lib/libcrypto.a
+SSL_LIB:=$(SSL_DIR)/lib/libcrypto.a -lssl
+#$(SSL_DIR)/lib/libssl.a
 
+XERCES_LIB:=-lxerces-c
 export XERCES_LIB
 export SHARED_OPT
 export SSL_LIB
@@ -59,35 +58,15 @@ export SS7_LIBRARY_NAME
 CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SSL_DIR)/include -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1
 # -DMAP_R12
 
-ifeq ($(LOG4CPP),YES)
-ifeq ($(CXX),CC)
-#LOGGER_LIBRARY := /usr/local/lib/liblog4cpp-CC.a
-LOGGER_LIBRARY := -llog4cpp
-else
-LOGGER_LIBRARY := -llog4cpp
-endif
-export LOGGER_LIBRARY
-CAMMON_INCLUDES := $(CAMMON_INCLUDES) -DLOGGER_LIB_LOG4CPP
-else
-ifeq ($(CXX),CC)
-LOGGER_LIBRARY := /usr/local/lib/liblog4cplus-CC.a
-else
-LOGGER_LIBRARY := -llog4cplus
-endif
-export LOGGER_LIBRARY
-CAMMON_INCLUDES := $(CAMMON_INCLUDES) -DLOGGER_LIB_LOG4CPLUS
-endif
-
-
 CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT
 CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT
 ifeq ($(CXX),CC)
 COMPFLAGS:=-features=extensions  -D_POSIX_PTHREAD_SEMANTICS
 endif
 ifeq ($(CXX),CC)
-LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib/CC -L/usr/local/lib
+LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib/CC -L/usr/local/lib -L$(SSL_DIR)/lib
 else
-LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib
+LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib -L$(SSL_DIR)/lib
 endif
 
 ifneq ($(TRACE),YES)

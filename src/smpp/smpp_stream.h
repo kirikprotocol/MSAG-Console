@@ -148,12 +148,12 @@ inline int8_t& fetchX(SmppStream* s, int8_t& d){return __fetch_x__(s,d);}
 inline uint16_t& fetchX(SmppStream* s,uint16_t& d){__fetch_x__(s,d);d = ntohs(d); return d;}
 inline int16_t& fetchX(SmppStream* s,int16_t& d){__fetch_x__(s,d);d = (int16_t)ntohs((uint16_t)d); return d;}
 inline uint32_t& fetchX(SmppStream* s,uint32_t& d){__fetch_x__(s,d);d = ntohl(d); return d;}
-inline int32_t& fetchX(SmppStream* s,int32_t& d){__fetch_x__(s,d);d = (int16_t)ntohl((uint16_t)d); return d;}
+inline int32_t& fetchX(SmppStream* s,int32_t& d){__fetch_x__(s,d);d = (int32_t)ntohl((uint32_t)d); return d;}
 
 inline void fillX(SmppStream* s,const uint8_t& d){__fill_x__(s,d);}
 inline void fillX(SmppStream* s,const int8_t& d){__fill_x__(s,d);}
 inline void fillX(SmppStream* s,const uint16_t& d){uint16_t x = htons(d); __fill_x__(s,x);}
-inline void fillX(SmppStream* s,const int16_t& d){ int16_t x = (int16_t)htons((uint64_t)d);__fill_x__(s,x);}
+inline void fillX(SmppStream* s,const int16_t& d){ int16_t x = (int16_t)htons((uint16_t)d);__fill_x__(s,x);}
 inline void fillX(SmppStream* s,const uint32_t& d){ uint32_t x = htonl(d); __fill_x__(s,x);}
 inline void fillX(SmppStream* s,const int32_t& d){ int32_t x = (int32_t)htonl((uint32_t)d); __fill_x__(s,x);}
 

@@ -12,13 +12,13 @@ namespace smppio{
 
 enum{
   ssModeRead,
-  ssModeWrite,
+  ssModeWrite
 };
 
 enum{
   ctReceiver,    //channel type
   ctTransmitter,
-  ctTransceiver,
+  ctTransceiver
 };
 
 #define SSOCK_PACKET_SIZE 1024

@@ -345,27 +345,27 @@ namespace DataCoding{
 
 #define __int_property__(type,field) \
   type field;\
-  inline void set_##field(type value) {field = value;} \
+  inline void set_##field(type __value) {field = __value;} \
   inline type get_##field() {return field;}
 #define __ref_property__(type,field) \
   type field;\
-  inline void set_##field(type& value) {field = value;} \
+  inline void set_##field(type& __value) {field = __value;} \
   inline type& get_##field() {return field;}
 #define __ptr_property__(type,field) \
   type* field;\
-  inline void set_##field(type* value) {field = value;} \
+  inline void set_##field(type* __value) {field = __value;} \
   inline type* get_##field() {return field;}
 #define __ptr2_property__(type,field,counter) \
   type* field;\
-  inline void set_##field(type* value,unsigned count) {\
+  inline void set_##field(type* __value,unsigned count) {\
     if ( field && counter != 0 ) delete[] field; \
     field = new type[count]; \
-    for ( unsigned i=0; i<count; ++i ) { field[i] = value[i]; }\
+    for ( unsigned i=0; i<count; ++i ) { field[i] = __value[i]; }\
     counter = count; } \
   inline type* get_##field() {return field;}
 #define __intarr_property__(type,field,size) \
   type field[size];\
-  inline void set_##field(type* value) { __require__(value!=NULL); memcpy(field,value,size*sizeof(type)); } \
+  inline void set_##field(type* __value) { __require__(__value!=NULL); memcpy(field,__value,size*sizeof(type)); } \
   inline const type* get_##field() { return field; }
 #define __cstr_property__(field)\
   COStr field;\

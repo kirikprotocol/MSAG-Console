@@ -484,7 +484,7 @@ struct _SmscCommand
 class SmscCommand
 {
   _SmscCommand* cmd;
-  void unref(_SmscCommand*& cmd)
+  static void unref(_SmscCommand*& cmd)
   {
     //__trace__(__PRETTY_FUNCTION__);
     __require__ ( cmd != 0 );
@@ -502,7 +502,7 @@ class SmscCommand
     }
   }
 
-  _SmscCommand* ref(_SmscCommand* cmd)
+  static _SmscCommand* ref(_SmscCommand* cmd)
   {
     //__trace__(__PRETTY_FUNCTION__);
     //__require__ ( cmd != 0 );

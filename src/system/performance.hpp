@@ -23,7 +23,7 @@ struct PerformanceCounter{
   int average;
   union{
     uint64_t total;
-    struct{
+    struct {
       uint32_t low;
       uint32_t high;
     };
