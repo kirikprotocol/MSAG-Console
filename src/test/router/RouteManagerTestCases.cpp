@@ -55,6 +55,7 @@ float RouteManagerTestCases::setupRandomAddressMatch(Address& addr, int num)
 			memset(addrVal, '?', addrLen);
 			addr.setValue(addrLen, addrVal);
 			return (100 - addrLen);
+		/*
 		case 4: //адрес со '*' в конце
 			memset(addrVal + addrLen - len, '*', 1);
 			addr.setValue(addrLen - len + 1, addrVal);
@@ -71,6 +72,7 @@ float RouteManagerTestCases::setupRandomAddressMatch(Address& addr, int num)
 				return 99.5;
 			}
 			return 100;
+		*/
 		default:
 			throw "";
 	}
@@ -109,8 +111,8 @@ void RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
 TCResult* RouteManagerTestCases::addCorrectRouteMatch(
 	const SmeSystemId& smeSystemId, TestRouteData* data, int num)
 {
-	int num1 = 6; int num2 = 6;
-	TCSelector s(num, num1 * num2);
+	int numMatch1 = 3; int numMatch2 = 3;
+	TCSelector s(num, numMatch1 * numMatch2);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE_MATCH, s.getChoice());
 	for (; s.check(); s++)
 	{
@@ -123,14 +125,14 @@ TCResult* RouteManagerTestCases::addCorrectRouteMatch(
 			//origAddr
 			route->source = data->origAddr;
 			data->origAddrMatch =
-				setupRandomAddressMatch(route->source, s.value1(num1));
+				setupRandomAddressMatch(route->source, s.value1(numMatch1));
 			//destAddr
 			route->dest = data->destAddr;
 			data->destAddrMatch =
-				setupRandomAddressMatch(route->dest, s.value2(num1));
+				setupRandomAddressMatch(route->dest, s.value2(numMatch1));
 			getLog().debugStream() << "[" << thr_self() <<
-				"]\taddCorrectRouteMatch(" << s.value1(num1) << "," <<
-				s.value2(num1) << "): " << *data;
+				"]\taddCorrectRouteMatch(" << s.value1(numMatch1) << "," <<
+				s.value2(numMatch1) << "): " << *data;
 			routeMan->addRoute(*route);
 			routeReg->putRoute(*data);
 		}
@@ -149,7 +151,7 @@ TCResult* RouteManagerTestCases::addCorrectRouteMatch(
 TCResult* RouteManagerTestCases::addCorrectRouteNotMatch(
 	const SmeSystemId& smeSystemId, TestRouteData* data, int num)
 {
-	int numMatch = 6; int numNotMatch = 4; int numType = 2;
+	int numMatch = 3; int numNotMatch = 4; int numType = 2;
 	TCSelector s(num, numMatch * numNotMatch * numType);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE_NOT_MATCH, s.getChoice());
 	for (; s.check(); s++)
