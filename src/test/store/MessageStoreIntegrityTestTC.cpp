@@ -25,11 +25,11 @@ static Category& log = Logger::getCategory("smsc.test.store.IntegrityTest");
 	sms.push_back(new SMS()); \
 	stack.push_back(new TCResultStack());
 	
-void executeIntegrityTest(TCResultFilter* filter, int listSize)
+void executeIntegrityTest(MessageStoreTestCases& tc,
+	TCResultFilter* filter, int listSize)
 {
 	cout << ".";
 	log.debug("*** start ***\n");
-	static MessageStoreTestCases tc; //throws exception
 	vector<SMSId*> id;
 	vector<SMS*> sms;
 	vector<TCResultStack*> stack;
@@ -368,9 +368,10 @@ int main(int argc, char* argv[])
 		StoreManager::startup(Manager::getInstance());
 		StoreManager::stopArchiver();
 		TCResultFilter* filter = new TCResultFilter();
+		MessageStoreTestCases tc(StoreManager::getMessageStore()); //throws exception
 		for (int i = 0; i < numCycles; i++)
 		{
-			executeIntegrityTest(filter, numSms);
+			executeIntegrityTest(tc, filter, numSms);
 		}
 		saveCheckList(filter);
 		delete filter;

@@ -4,6 +4,7 @@
 #include "sms/sms.h"
 #include "store/MessageStore.h"
 #include "test/util/Util.hpp"
+#include "test/util/BaseTestCases.hpp"
 #include <exception>
 #include <vector>
 
@@ -17,6 +18,7 @@ using smsc::sms::SMSId;
 using smsc::sms::SMS;
 using smsc::store::MessageStore;
 using smsc::test::util::TCResult;
+using smsc::test::util::BaseTestCases;
 
 //implemented
 const char* const TC_STORE_CORRECT_SMS = "storeCorrectSms";
@@ -67,14 +69,14 @@ const char* const TC_GET_NON_EXISTENT_SM_DELIVERY_FAILURE_STATISTICS =
  * 
  * @author bryz
  */
-class MessageStoreTestCases
+class MessageStoreTestCases : BaseTestCases
 {
 public:
 	/**
 	 * Инициализирует подсистему Message Store.
 	 * @exception std::exception если инициализация не прошла.
 	 */
-	MessageStoreTestCases();
+	MessageStoreTestCases(MessageStore* msgStore);
 
 	/**
 	 * Деинициализирует подсистему Message Store.
@@ -238,13 +240,11 @@ public:
 	TCResult* getNonExistentSMDeliveryFailureStatistics();
 
 private:
-	static Category& log;
 	MessageStore* msgStore;
 
+	virtual Category& getLog();
 	void compareReadyForRetrySmsList(const vector<SMSId*>& ids, 
 		const vector<SMS*>& sms, time_t time, TCResult* res, int shift);
-	void error();
-	void debug(const TCResult* res);
 };
 
 }
