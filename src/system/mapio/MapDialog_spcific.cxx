@@ -456,3 +456,39 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
     throw runtime_error("MAP::ConvAddrMap2Smc  MAP_SMS_ADDRESS length should be greater than 0");
   }
 }
+
+uint8_t convertCBSDatacoding2SMSC( UCHAR_T dcs, UCHAR_T *udhPresent, UCHAR_T *msgClassMean, UCHAR_T *msgClass ) {
+  *udhPresent = 0;
+  *msgClassMean = 0;
+  *msgClass = 0;
+  int codingGroup = (dcs>>4) & 0xf0;
+  int codingScheme = dcs & 0x0f;
+  if( codingGroup == 0 || codingGroup == 2 || codingGroup == 3 ) {
+    return smsc::smpp::DataCoding::SMSC7BIT;
+  } else if( codingGroup == 1 ) {
+    if( codingScheme == 0 ) return smsc::smpp::DataCoding::SMSC7BIT;
+    else if(codingScheme == 1) return smsc::smpp::DataCoding::UCS2;
+    else {
+      __map_warn2__("Strange CBS datacoding 0x%02X", (int)dcs);
+      return smsc::smpp::DataCoding::SMSC7BIT;
+    }
+  } else if( (codingGroup & 0x0C) == 4 ) { // 7,6 bits of dcs are 01 - general datacoding
+    if( (codingGroup & 0x01) == 0x01 ) {
+      *msgClassMean = 1;
+      *msgClass = codingScheme&0x03;
+    }
+    return codingScheme&0xC;
+  } else if (codingGroup == 9) { // 0x1001 - msg with udhi
+    *udhPresent = 1;
+    *msgClassMean = 1;
+    *msgClass = codingScheme&0x03;
+    return codingScheme&0xC;
+  } else if(codingGroup == 0x0f) {// 0x1111 - dcs/msg handling but we will use it and for UCS2
+    *msgClassMean = 1;
+    *msgClass = codingScheme&0x03;
+    return codingScheme&0xC;
+  } else {
+    __map_warn2__("Strange CBS datacoding 0x%02X", (int)dcs);
+    return smsc::smpp::DataCoding::SMSC7BIT;
+  }
+}

@@ -140,7 +140,8 @@ enum MapState{
   MAPST_WaitSubmitUSSDNotifyCloseConf = 46,
   MAPST_ReadyNextUSSDCmd = 47,
   MAPST_WaitUssdDelimiter = 48,
-  MAPST_WaitUssdImsiReq = 49
+  MAPST_WaitUssdImsiReq = 49,
+  MAPST_MapNoticed = 50
 };
 
 class hash_func_ET96MAP_DID{
@@ -513,6 +514,28 @@ public:
     dlg->lockedAt = time(NULL);
     if ( abonent.length() != 0 ) lock_map.Insert(abonent,dlg);
     __mapdlg_trace2__("new dialog 0x%p for dialogid 0x%x/0x%x",dlg,smsc_did,map_dialog);
+    dlg->AddRef();
+    return dlg;
+  }
+
+  MapDialog* createOrAttachSMSCUSSDDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn, const SmscCommand& cmd){
+    //if ( abonent.length() == 0 )
+    //  throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
+    MutexGuard g(sync);
+    if ( dialogId_pool.size() == 0 ) {
+      smsc_log_warn(smsc::logger::_mapdlg_cat, "Dialog id POOL is empty" );
+      Dump();
+      throw runtime_error("MAP:: POOL is empty");
+    }
+    __mapdlg_trace2__("try to create SMSC USSD dialog on abonent %s",abonent.c_str());
+    ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
+    MapDialog* dlg = new MapDialog(map_dialog,lssn);
+    dialogId_pool.pop_front();
+    dlg->dialogid_smsc = smsc_did;
+    dlg->abonent = abonent;
+    hash_.Insert(MKDID(map_dialog,lssn),dlg);
+    dlg->lockedAt = time(NULL);
+    __mapdlg_trace2__("new USSD dialog 0x%p for dialogid 0x%x/0x%x",dlg,smsc_did,map_dialog);
     dlg->AddRef();
     return dlg;
   }
