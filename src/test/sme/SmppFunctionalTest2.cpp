@@ -14,7 +14,7 @@
 #include <sstream>
 #include <iostream>
 
-#define SIMPLE_TEST
+//#define SIMPLE_TEST
 #ifdef SIMPLE_TEST
 	#undef ASSERT
 #endif
@@ -59,7 +59,7 @@ public:
 	virtual void onStopped();
 
 private:
-	virtual bool sendDeliverySmResp(PduDeliverySm& pdu);
+	virtual uint32_t sendDeliverySmResp(PduDeliverySm& pdu);
 	virtual void updateStat();
 };
 
@@ -199,23 +199,19 @@ void TestSme::onStopped()
 	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
 }
 
-bool TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
+uint32_t TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 {
 #ifdef SIMPLE_TEST
-	tc.getTransmitter().sendDeliverySmRespOk(pdu, rand0(1));
-	return true;
+	return tc.getTransmitter().sendDeliverySmRespOk(pdu, rand0(1));
 #else
 	switch (rand1(3))
 	{
 		case 1:
-			tc.getTransmitter().sendDeliverySmRespErr(pdu, rand0(1), RAND_TC);
-			return false;
+			return tc.getTransmitter().sendDeliverySmRespError(pdu, rand0(1), RAND_TC);
 		case 2:
-			//не посылать респонс
-			return false;
+			return tc.getTransmitter().sendDeliverySmRespRetry(pdu, rand0(1), RAND_TC);
 		default:
-			tc.getTransmitter().sendDeliverySmRespOk(pdu, rand0(1));
-			return true;
+			return tc.getTransmitter().sendDeliverySmRespOk(pdu, rand0(1));
 	}
 #endif //SIMPLE_TEST
 }

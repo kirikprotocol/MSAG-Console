@@ -44,12 +44,12 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	{
 		res.insert(NO_ROUTE);
 	}
-	if (validTime < pduData->submitTime ||
+	if (!validTime || validTime < pduData->submitTime ||
 		validTime > pduData->submitTime + maxValidPeriod)
 	{
 		res.insert(BAD_VALID_TIME);
 	}
-	if (waitTime > validTime)
+	if (!waitTime || (validTime && waitTime > validTime))
 	{
 		res.insert(BAD_WAIT_TIME);
 	}
@@ -77,7 +77,7 @@ void SmppPduChecker::processSubmitSmResp(PduData* pduData,
 	{
 		pduData->smsId = respPdu.get_messageId();
 	}
-	pduData->deliveryStatus = respPdu.get_header().get_commandStatus();
+	pduData->submitStatus = respPdu.get_header().get_commandStatus();
 	processResp(pduData, respPdu, respTime);
 }
 
@@ -97,7 +97,7 @@ void SmppPduChecker::processReplaceSmResp(PduData* pduData,
 	}
 	__tc_ok_cond__;
 	//дальнейшая обработка
-	pduData->deliveryStatus = respPdu.get_header().get_commandStatus();
+	pduData->submitStatus = respPdu.get_header().get_commandStatus();
 	processResp(pduData, respPdu, respTime);
 }
 
