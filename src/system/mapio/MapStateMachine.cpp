@@ -1717,6 +1717,7 @@ USHORT_T Et96MapCloseInd(
     case MAPST_ImsiWaitCloseInd:
       dialog->state = MAPST_END;
       ContinueImsiReq(dialog->associate,dialog->s_imsi,dialog->s_msc);
+      DropMapDialog(dialog.get());
       break;
     default:
       throw MAPDIALOG_BAD_STATE(
