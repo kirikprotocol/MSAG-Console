@@ -54,6 +54,12 @@ StateType StateMachine::submit(Tuple& t)
   int dest_proxy_index;
   // route sms
   //SmeProxy* dest_proxy = 0;
+  Address dst;
+  if(smsc->AliasToAddress(sms->getDestinationAddress(),dst))
+  {
+    sms->setDestinationAddress(dst);
+  }
+
   bool has_route = smsc->routeSms(sms,dest_proxy_index,dest_proxy);
   if ( !has_route )
   {
@@ -123,6 +129,11 @@ StateType StateMachine::submit(Tuple& t)
   }
   try{
     // send delivery
+    Address src;
+    if(smsc->AddressToAlias(sms->getOriginatingAddress(),src))
+    {
+      sms->setOriginatingAddress(src);
+    }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
     dest_proxy->putCommand(delivery);
   }catch(...)
@@ -159,6 +170,12 @@ StateType StateMachine::forward(Tuple& t)
   }
   SmeProxy *dest_proxy=0;
   int dest_proxy_index;
+  Address src;
+  if(smsc->AddressToAlias(sms.getOriginatingAddress(),src))
+  {
+    sms.setOriginatingAddress(src);
+  }
+
   bool has_route = smsc->routeSms(&sms,dest_proxy_index,dest_proxy);
   if ( !has_route )
   {

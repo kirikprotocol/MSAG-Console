@@ -10,6 +10,7 @@
 #include "system/event_queue.h"
 #include "store/MessageStore.h"
 #include "util/config/smeman/SmeManConfig.h"
+#include "alias/aliasman.h"
 
 namespace smsc{
 namespace system{
@@ -38,6 +39,16 @@ public:
   void shutdown();
   TaskContainer tasks;
   bool Smsc::routeSms(SMS* sms, int& dest_idx,SmeProxy*& proxy);
+
+  bool AliasToAddress(const Address& alias,Address& addr)
+  {
+    return aliaser.AliasToAddress(alias,addr);
+  }
+  bool AddressToAlias(const Address& addr,Address& alias)
+  {
+    return aliaser.AddressToAlias(addr,alias);
+  }
+
 protected:
   smsc::core::threads::ThreadPool tp;
   smsc::system::smppio::SmppSocketsManager ssockman;
@@ -45,6 +56,7 @@ protected:
   smsc::router::RouteManager router;
   EventQueue eventqueue;
   smsc::store::MessageStore *store;
+  smsc::alias::AliasManager aliaser;
   bool stopFlag;
   std::string smscHost;
   int smscPort;

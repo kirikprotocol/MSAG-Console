@@ -98,7 +98,6 @@ public:
       if(pdu)
       {
         listener->handleEvent(pdu);
-        disposePdu(pdu);
         pdu=NULL;
       }
     }
@@ -226,26 +225,21 @@ public:
   void handleEvent(SmppHeader *pdu)
   {
     using namespace smsc::smpp::SmppCommandSet;
-    ////
-    // const_cast тут только для компилятора
-    // реально конечно ничего не модифицируется
-    // но getter нельзя сделать константным,
-    // ибо они там генерируются, а возможна ситуация:
-    // pdu->get_header()->set_somethin(value);
-    switch((const_cast<SmppHeader*>(pdu))->get_commandId())
+    switch(pdu->get_commandId())
     {
-      case GENERIC_NACK:      return processGenericNack(*(PduGenericNack*)pdu);
-      case SUBMIT_SM_RESP:    return processSubmitSmResp(*(PduSubmitSmResp*)pdu);
-      case SUBMIT_MULTI_RESP: return processMultiResp(*(PduMultiSmResp*)pdu);
-      case DELIVERY_SM:       return processDeliverySm(*(PduDeliverySm*)pdu);
-      case DATA_SM:           return processDataSm(*(PduDataSm*)pdu);
-      case DATA_SM_RESP:      return processDataSmResp(*(PduDataSmResp*)pdu);
-      case QUERY_SM_RESP:     return processQuerySmResp(*(PduQuerySmResp*)pdu);
-      case CANCEL_SM_RESP:    return processCancelSmResp(*(PduCancelSmResp*)pdu);
-      case REPLACE_SM_RESP:   return processReplaceSmResp(*(PduReplaceSmResp*)pdu);
-      case ALERT_NOTIFICATION:return processAlertNotificatin(*(PduAlertNotification*)pdu);
-      default: handleError(smppErrorInvalidPdu);
+      case GENERIC_NACK:      processGenericNack(*(PduGenericNack*)pdu);break;
+      case SUBMIT_SM_RESP:    processSubmitSmResp(*(PduSubmitSmResp*)pdu);break;
+      case SUBMIT_MULTI_RESP: processMultiResp(*(PduMultiSmResp*)pdu);break;
+      case DELIVERY_SM:       processDeliverySm(*(PduDeliverySm*)pdu);break;
+      case DATA_SM:           processDataSm(*(PduDataSm*)pdu);break;
+      case DATA_SM_RESP:      processDataSmResp(*(PduDataSmResp*)pdu);break;
+      case QUERY_SM_RESP:     processQuerySmResp(*(PduQuerySmResp*)pdu);break;
+      case CANCEL_SM_RESP:    processCancelSmResp(*(PduCancelSmResp*)pdu);break;
+      case REPLACE_SM_RESP:   processReplaceSmResp(*(PduReplaceSmResp*)pdu);break;
+      case ALERT_NOTIFICATION:processAlertNotificatin(*(PduAlertNotification*)pdu);break;
+      default: handleError(smppErrorInvalidPdu);break;
     }
+    disposePdu(pdu);
   }
   virtual void processGenericNack(PduGenericNack& pdu){};
   virtual void processSubmitSmResp(PduSubmitSmResp& pdu){};
