@@ -63,16 +63,23 @@ begin
 		where tbl = 'sms_arc' and action = 'insert';
 	--check
 	begin
-		--last_try_time order
-        select to_number(to_char(:arc.last_try_time, 'yymmddhh24MMss'))
-			into cur_try_time from dual;
-		select value into prev_try_time from results
-			where tbl = 'sms_arc' and msg_type = 'try_time' and action = 'check';
-		if prev_try_time > cur_try_time then
-			raise_application_error(-20201, 'last_try_time order is broken');
+		--state
+		if :arc.st = 0 then
+			raise_application_error(-20201, 'arc.st = ENROTE');
 		end if;
-		update results set value = cur_try_time
-			where tbl = 'sms_arc' and msg_type = 'try_time' and action = 'check';
+		--last_try_time order
+		if :arc.st = 1 or :arc.st = 3 then --DELIVERED, UNDELIVERABLE
+			select to_number(to_char(:arc.last_try_time, 'yymmddsssss'))
+				into cur_try_time from dual;
+			select value into prev_try_time from results
+				where tbl = 'sms_arc' and msg_type = 'try_time' and action = 'check';
+			if prev_try_time > cur_try_time then
+				raise_application_error(-20201, 'last_try_time order is broken: id = ' ||
+					:arc.id || ' (' || prev_try_time || ' > ' || cur_try_time || ')');
+			end if;
+			update results set value = cur_try_time
+				where tbl = 'sms_arc' and msg_type = 'try_time' and action = 'check';
+		end if;
 		--arc = 'Y'
 		select * into msg from sms_msg where id = :arc.id;
 		if msg.arc != 'Y' then
@@ -81,9 +88,6 @@ begin
 		--data
 		if msg.st != :arc.st then
 			raise_application_error(-20201, 'msg.st != arc.st');
-		end if;
-		if :arc.st = 0 then
-			raise_application_error(-20201, 'arc.st = ENROTE');
 		end if;
 		if msg.mr != :arc.mr then
 			raise_application_error(-20201, 'msg.mr != arc.mr');
