@@ -75,17 +75,22 @@ function setSort(sorting)
 	<th><a href="#" <%=bean.getSort().endsWith("hidden")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                           onclick='return setSort("hidden")'       >hidden</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("hidden_mod")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                           onclick='return setSort("hidden_mod")'   >modifiable</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("divert")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert"                           onclick='return setSort("divert")'       >divert</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert_actUnc") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active unconditional flag" onclick='return setSort("divert_actUnc")'>divert active unconditional</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert_actAbs") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active absent flag"        onclick='return setSort("divert_actAbs")'>divert active absent</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert_actBlo") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active blocked flag"       onclick='return setSort("divert_actBlo")'>divert active blocked</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert_actBar") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active barred flag"        onclick='return setSort("divert_actBar")'>divert active barred</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert_actCap") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active capacity flag"      onclick='return setSort("divert_actCap")'>divert active capacity</a></th>
+	<th>divert active</th>
 	<th><a href="#" <%=bean.getSort().endsWith("divert_mod")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert modifiable flag"           onclick='return setSort("divert_mod")'   >divert modifiable</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("ussd7bit")      ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by USSD as 7 bit flag"               onclick='return setSort("ussd7bit")'     >ussd 7 bit</a></th>
 </tr>
 </thead>
 <tbody>
-<%{
+<%! void appendDivertActiveFlag(StringBuffer divertActive, boolean value, String valueTitle)
+{
+  if (value)
+  {
+    if (divertActive.length() >0)
+      divertActive.append(", ");
+    divertActive.append(valueTitle);
+  }
+}
+%><%{
 int row = 0;
 for(Iterator i = bean.getProfiles().iterator(); i.hasNext(); row++)
 {
@@ -94,6 +99,14 @@ final String profileMask = (String)item.getValue("Mask");
 final String encProfileMask = StringEncoderDecoder.encode(profileMask);
 final String divert = (String)item.getValue("divert");
 final String divertEnc = divert == null || divert.length() == 0 ? "&nbsp;" : StringEncoderDecoder.encode(divert);
+StringBuffer divertActive = new StringBuffer();
+appendDivertActiveFlag(divertActive, ((Boolean)item.getValue("divert_actUnc" )).booleanValue(), "unconditional");
+appendDivertActiveFlag(divertActive, ((Boolean)item.getValue("divert_actAbs" )).booleanValue(), "absent");
+appendDivertActiveFlag(divertActive, ((Boolean)item.getValue("divert_actBlo" )).booleanValue(), "blocked");
+appendDivertActiveFlag(divertActive, ((Boolean)item.getValue("divert_actBar" )).booleanValue(), "barred");
+appendDivertActiveFlag(divertActive, ((Boolean)item.getValue("divert_actCap" )).booleanValue(), "capacity");
+if (divertActive.length() == 0)
+  divertActive.append("&nbsp;");
 %>
 <tr class=row<%=row&1%>>
 	<td><input class=check type=checkbox name=checked value="<%=encProfileMask%>" <%=bean.isProfileCheked(profileMask) ? "checked" : ""%>></td>
@@ -112,11 +125,7 @@ final String divertEnc = divert == null || divert.length() == 0 ? "&nbsp;" : Str
   <td align=center><%if (((Boolean)item.getValue("hidden"        )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
   <td align=center><%if (((Boolean)item.getValue("hidden_mod"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
   <td><%=divertEnc%></td>
-  <td align=center><%if (((Boolean)item.getValue("divert_actUnc" )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-  <td align=center><%if (((Boolean)item.getValue("divert_actAbs" )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-  <td align=center><%if (((Boolean)item.getValue("divert_actBlo" )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-  <td align=center><%if (((Boolean)item.getValue("divert_actBar" )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-  <td align=center><%if (((Boolean)item.getValue("divert_actCap" )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td><%=divertActive%></td>
   <td align=center><%if (((Boolean)item.getValue("divert_mod"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 	<td align=center><%if (((Boolean)item.getValue("ussd7bit"      )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 </tr>
