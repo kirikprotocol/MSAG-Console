@@ -113,6 +113,8 @@ public:
 	void registerCorrectSmeProxy(const SmeSystemId& systemId,
 		const SmePassword& password, SmeProxy** proxy);
 
+	static void setupRandomCorrectAddressRange(const Address& addr,
+		SmeInfo* sme, int num);
 	static void setupRandomCorrectSmeInfo(SmeInfo* sme);
 
 protected:

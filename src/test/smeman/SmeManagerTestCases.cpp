@@ -50,6 +50,35 @@ void SmeManagerTestCases::debugSme(const char* tc, const Address& smeAddr,
 	__trace2__("%s(): %s", tc, os.str().c_str());
 }
 
+
+void SmeManagerTestCases::setupRandomCorrectAddressRange(
+	const Address& addr, SmeInfo* sme, int num)
+{
+	TCSelector s(num, 3);
+	AddressValue addrVal;
+	uint8_t addrLen = addr.getValue(addrVal);
+	ostringstream os;
+	//для match адресов надо задавать address value либо полностью
+	//либо address range = ""
+	switch (s.value())
+	{
+		case 1: //пустой address range (любые адреса)
+			//os << "";
+			break;
+		case 2: //любые ton & npi
+			os << "\\.\\d*" << "\\.\\d*" << "\\." << addrVal;
+			break;
+		case 3: //совпадает с адресом
+			os << "\\." << (int) addr.getTypeOfNumber() <<
+				"\\." << (int) addr.getNumberingPlan() <<
+				"\\." << addrVal;
+			break;
+		default:
+			__unreachable__("Invalid num");
+	}
+	sme->rangeOfAddress = os.str();
+}
+
 void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 {
 	//пункт 4.1
@@ -57,8 +86,8 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 	sme->numberingPlan = 0x0;
 	sme->interfaceVersion = 0x34;
 	//addressRange
-	auto_ptr<char> _addressRange = rand_char(rand1(MAX_ADDRESS_RANGE_LENGTH));
-	sme->rangeOfAddress = _addressRange.get();
+	//auto_ptr<char> _addressRange = rand_char(rand1(MAX_ADDRESS_RANGE_LENGTH));
+	//sme->rangeOfAddress = _addressRange.get();
 	//systemType
 	auto_ptr<char> _systemType = rand_char(MAX_SYSTEM_TYPE_LENGTH);
 	sme->systemType = _systemType.get();
@@ -115,7 +144,7 @@ void SmeManagerTestCases::addSme(const char* tc, int num,
 
 void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 {
-	int numAddr = 3; int numSme = 10;
+	int numAddr = 3; int numSme = 8;
 	TCSelector s(num, numAddr * numSme);
 	__decl_tc__;
 	for (; s.check(); s++)
@@ -150,6 +179,7 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 					__unreachable__("Invalid num");
 			}
 			setupRandomCorrectSmeInfo(sme);
+			setupRandomCorrectAddressRange(*smeAddr, sme, RAND_TC);
 			switch(s.value2(numAddr))
 			{
 				case 1: //ничего особенного
@@ -167,6 +197,7 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 					__tc__("addCorrectSme.invalidVersion");
 					sme->interfaceVersion = rand2(0x35, 0xff);
 					break;
+				/*
 				case 5: //пустой addressRange
 					__tc__("addCorrectSme.invalidAddressRangeLength");
 					sme->rangeOfAddress = "";
@@ -179,11 +210,12 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 						sme->rangeOfAddress = _addressRange.get();
 					}
 					break;
-				case 7: //пустой systemType
+				*/
+				case 5: //пустой systemType
 					__tc__("addCorrectSme.invalidSystemTypeLength");
 					sme->systemType = "";
 					break;
-				case 8: //systemType больше макс длины
+				case 6: //systemType больше макс длины
 					{
 						__tc__("addCorrectSme.invalidSystemTypeLength");
 						auto_ptr<char> _systemType =
@@ -191,11 +223,11 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 						sme->systemType = _systemType.get();
 					}
 					break;
-				case 9: //пустой password
+				case 7: //пустой password
 					__tc__("addCorrectSme.invalidPasswordLength");
 					sme->password = "";
 					break;
-				case 10: //password больше макс длины
+				case 8: //password больше макс длины
 					{
 						__tc__("addCorrectSme.invalidPasswordLength");
 						auto_ptr<char> _password =
@@ -236,6 +268,7 @@ void SmeManagerTestCases::addCorrectSmeWithEmptySystemId(Address* smeAddr,
 	{
 		SmsUtil::setupRandomCorrectAddress(smeAddr, 10, 20);
 		setupRandomCorrectSmeInfo(sme);
+		setupRandomCorrectAddressRange(*smeAddr, sme, RAND_TC);
 		sme->systemId = "";
 		addSme("addCorrectSmeWithEmptySystemId", 1, smeAddr, sme);
 		__tc_ok__;
