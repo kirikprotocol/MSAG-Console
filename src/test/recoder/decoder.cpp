@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 		//__trace2__("ch = %d", ch);
 	}
 	//__trace2__("tmp len = %d", tmp.length());
-	const string str = decode(tmp.c_str(), tmp.length(), dataCoding);
+	const string str = decode(tmp.c_str(), tmp.length(), dataCoding, false);
 	cout << "output = \"" << str << "\"" << endl;
 	return 0;
 }

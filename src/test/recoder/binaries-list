@@ -1,4 +1,4 @@
 #binary name	source name	libraries
-test/recoder	recoder		-lutil-recoder-recode_dll
-test/translit	translit		-lutil-recoder-recode_dll
+-test/recoder	recoder		-lutil-recoder-recode_dll
+-test/translit	translit		-lutil-recoder-recode_dll
 test/decoder			decoder				-ltest-util -lutil-recoder-recode_dll
