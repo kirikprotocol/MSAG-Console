@@ -73,6 +73,7 @@ void RouteManagerTest::addRouteMatch(const Address& origAddr, const Address& des
 	route.smeSystemId = sme.systemId;
 	route.source = origAddr;
 	route.dest = destAddr;
+	route.enabling = rand0(2);
 	tcRoute.addCorrectRouteMatch(&route, proxy, routeNum);
 }
 

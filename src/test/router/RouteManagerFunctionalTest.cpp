@@ -104,6 +104,7 @@ RouteInfo RouteManagerFunctionalTest::prepareForNewRoute(
 	route.smeSystemId = sme.back()->systemId;
 	route.source = origAddr;
 	route.dest = destAddr;
+	route.enabling = rand0(2);
 	return route;
 }
 
