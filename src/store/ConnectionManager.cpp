@@ -556,7 +556,7 @@ void Connection::retrive(SMSId id, SMS &_sms)
     sword status;
     if ((status = stmtRetriveAll.execute(errhp, OCI_DEFAULT)) == OCI_NO_DATA)
     {
-        NoSuchMessageException  exc;
+        NoSuchMessageException  exc(id);
         log.error("Storage Exception : %s\n", exc.what());
         throw exc;
     }
@@ -612,7 +612,7 @@ void Connection::remove(SMSId id)
     checkErr(stmtRemove.execute(errhp, OCI_DEFAULT));
     if (!rows) 
     {
-        NoSuchMessageException  exc;
+        NoSuchMessageException  exc(id);
         log.error("Storage Exception : %s\n", exc.what());
         throw exc;
     }
