@@ -244,3 +244,39 @@ unsigned char  lll_7bit_2_8bit[128] = {
 0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77, // 112
 0x78,0x79,0x7a,0xe4,0xf6,0xf1,0xfc,0xe0}; // 120
 
+
+extern void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
+extern void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
+
+void MapProxy::putCommand(const SmscCommand& cmd)
+{
+  MutexGuard g(mutex);
+  uint32_t did = cmd->get_dialogId();
+  __trace2__("MAPPROXY::putCommand");
+  try
+  {
+    if ( did > 0x0ffff ) {
+      __trace2__("MAP::QueueProcessing: external request, now unhendled");
+    }else{
+      __trace2__("MAP::QueueProcessing: response");
+      ET96MAP_DIALOGUE_ID_T dialogid = (ET96MAP_DIALOGUE_ID_T)did;
+      MapDialog* dialog = MapDialogContainer::getInstance()->getDialog(dialogid);
+      __trace2__("MAP:: process to dialog with ptr %x",dialog);
+      if ( dialog == 0 ){
+        __trace2__("MAP::QueueProcessing: Opss, hereis no dialog with id x%x",dialogid);
+        CloseDialog(SSN,dialogid);
+      }else{
+        __trace2__("MAP::QueueProcessing: processing dialog x%x",dialogid);
+        bool close_dlg = dialog->ProcessCmd(cmd);
+        if ( close_dlg ) CloseAndRemoveDialog(SSN,dialogid);
+      }
+    }
+  }
+  catch(...)
+  {
+    CloseAndRemoveDialog(SSN,did);
+    throw;
+  }
+  //notifyOutThread();
+}
+

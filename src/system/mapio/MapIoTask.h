@@ -27,6 +27,8 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::threads::ThreadedTask;
 using smsc::core::synchronization::Event;
 
+#define EINSS7_THREADSAFE 1
+
 extern "C" {
 #include <portss7.h>
 #include <ss7tmc.h>

@@ -1,4 +1,3 @@
-//#define EINSS7_THREADSAFE 1
 
 #include "MapIoTask.h"
 
@@ -15,7 +14,7 @@ struct SMSC_FORWARD_RESPONSE_T {
   ET96MAP_DIALOGUE_ID_T dialogId;
 };
 
-static void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
+void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 {
   USHORT_T res = Et96MapCloseReq (SSN,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
   if ( res != ET96MAP_E_OK ){
@@ -25,7 +24,7 @@ static void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId
   }
 }
 
-static void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
+void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 {
   CloseDialog(lssn,dialogId);
   MapDialogContainer::getInstance()->dropDialog(dialogId);
@@ -179,7 +178,7 @@ void MapIoTask::dispatcher()
   for(;;){
     if ( isStopping ) return;
     
-    try{
+    /*try{
       MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
       while ( proxy->hasOutput() ){
         SmscCommand cmd = proxy->getOutgoingCommand();
@@ -203,9 +202,12 @@ void MapIoTask::dispatcher()
       }
     }catch(...){
     }
+    */
+    //result = MsgRecv_NW(&message);
+    //result = MsgRecv(&message);
+    //result = Et96MAPMsgRecv(&message);
+    result = EINSS7CpMsgRecv_r(&message,1000);
 
-    result = MsgRecv_NW(&message);
-    
     if ( result == MSG_TIMEOUT ) continue;
     if ( result != MSG_OK ) {
       __trace2__("MAP: error at MsgRecv with code x%hx",result);
@@ -216,7 +218,6 @@ void MapIoTask::dispatcher()
                "recver 0x%hx,sender 0x%hx,prim 0x%hx",message.receiver,message.sender,message.primitive);
     
     Et96MapHandleIndication(&message);
-    
   }
 }
 
