@@ -100,15 +100,15 @@ class RouteManager : public RouteAdmin, public RouteTable
   SmeTable* smeTable;
   RouteRecord** table;
   int table_size;
-	int table_ptr;
-	bool sorted;
+        int table_ptr;
+        bool sorted;
   //
 public :
   RouteManager() : table_size(1024), table_ptr(0), sorted(false)
   {
     table=new RouteRecord*[table_size];
   }
-  virtual ~RouteManager(){}
+  virtual ~RouteManager() {}
   void assign(SmeTable* smetable); // for detach call with NULL;
   RouteIterator* iterator();
   // RouteAdministrator implementaion 
@@ -125,7 +125,7 @@ public :
   //    otherwise return false
   // в указатель на прокси записывается прокси для маршрута (может быть 0)
   //
-  virtual bool lookup(const Address& source, const Address& dest, SmeProxy*& proxy, RouteInfo* info=0);
+  virtual bool lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx=0,RouteInfo* info=0);
 
 };
 

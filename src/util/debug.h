@@ -155,7 +155,7 @@
     #define trace2(format,args...) \
       fprintf(TRACE_LOG_STREAM,\
         "*trace*: " format "     (%s):%d\n",\
-        ##args,__PRETTY_FUNCTION__,__LINE__);
+        ##args,/*__PRETTY_FUNCTION__*/"",__LINE__);
   #endif
 #else
   #define watch(expr)
@@ -172,7 +172,7 @@
 #define __trace__(text)     trace(text)
 #define __trace2__(format,args...)     trace2(format,##args)
 #define __trace2_if_fail__(expr,format,args...) \
-	{if (!expr) trace2(format,##args);else;}
+  {if (!expr) trace2(format,##args);}
 namespace smsc{
 namespace util{
 

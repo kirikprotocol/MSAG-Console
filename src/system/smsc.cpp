@@ -1,10 +1,16 @@
 #include "system/smsc.hpp"
 #include "system/smppio/SmppAcceptor.hpp"
-#include "util/config/smeman/SmeManConfig.h"
-
+#include "util/config/smeman/SmeManConfig.h"   
+#include <memory>
 
 namespace smsc{
 namespace system{
+
+using std::auto_ptr;
+using std::string;
+using namespace smsc::sms;
+using namespace smsc::smeman;
+using namespace smsc::router;
 
 Smsc::~Smsc()
 {
@@ -26,7 +32,7 @@ void Smsc::init()
   {
     smsc::util::config::smeman::SmeRecord *rec;
     i.fetchNext(rec);
-    smsc::smeman::SmeInfo si;
+    SmeInfo si;
     /*
     uint8_t typeOfNumber;
     uint8_t numberingPlan;
@@ -61,6 +67,31 @@ void Smsc::init()
       &ssockman
     )
   );
+
+	// initialize router (all->all)
+	auto_ptr<SmeIterator> it(smeman.iterator());
+	while (it->next())
+	{
+		SmeInfo info1 = it->getSmeInfo();
+		Address src_addr(info1.rangeOfAddress.length(),
+										 info1.typeOfNumber,
+										 info1.numberingPlan,
+										 info1.rangeOfAddress.c_str());
+		auto_ptr<SmeIterator> it2(smeman.iterator());
+		while ( it2->next() )
+		{
+			SmeInfo info2 = it->getSmeInfo();
+			Address dest_addr(info2.rangeOfAddress.length(),
+											 info2.typeOfNumber,
+											 info2.numberingPlan,
+											 info2.rangeOfAddress.c_str());
+			RouteInfo rinfo;
+			rinfo.smeSystemId = info2.systemId;
+			rinfo.source = src_addr;
+			rinfo.dest = dest_addr;
+			router.addRoute(rinfo);
+		}
+	}
 }
 
 void Smsc::run()

@@ -20,10 +20,16 @@ using std::auto_ptr;
 
 #define __CMD__(x) smsc::smeman::x
 
-/*SmeProxy* Smsc::routeSms(SMS* sms, int* dest_idx)
+bool Smsc::routeSms(SMS* sms, int& dest_idx,SmeProxy*& proxy)
 {
-  smeman.getSmeProxy(0)
-}*/
+  //smeman.getSmeProxy(0)
+	proxy = 0;
+	bool ok = router.lookup(sms->getOriginatingAddress(),
+													sms->getDestinationAddress(),
+													proxy,
+													&dest_idx);
+	return ok;
+}
 
 void Smsc::mainLoop()
 {
@@ -41,9 +47,9 @@ void Smsc::mainLoop()
         SMS* sms = cmd->get_sms();
         uint32_t dialogId =  cmd->get_dialogId();
         // route sms
-        //SmeProxy* dest_proxy = routeSms(sms,&dest_proxy_index);
         SmeProxy* dest_proxy = 0;
-        auto_ptr<SmeIterator> it(smeman.iterator());
+				bool has_route = routeSms(sms,dest_proxy_index,dest_proxy);
+        /*auto_ptr<SmeIterator> it(smeman.iterator());
         while (it->next())
         {
           SmeProxy* proxy = it->getSmeProxy();
@@ -53,9 +59,9 @@ void Smsc::mainLoop()
             dest_proxy_index = it->getSmeIndex();
             break;
           }
-        }
+        }*/
 
-        if ( !dest_proxy )
+        if ( !has_route )
         {
           //send_no_route;
           SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::ERROR);
@@ -63,6 +69,13 @@ void Smsc::mainLoop()
           __warning__("SUBMIT_SM: no route");
           break;
         }
+				else if ( !dest_proxy )
+				{
+          SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::ERROR);
+          src_proxy->putCommand(resp);
+          __warning__("SUBMIT_SM: SME is not connected");
+          break;
+				}
         // store sms
         // create task
         uint32_t dialogId2 = dest_proxy->getNextSequenceNumber();

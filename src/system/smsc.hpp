@@ -6,11 +6,15 @@
 #include "system/smppio/SmppSocketsManager.hpp"
 #include "smeman/smeman.h"
 #include "task_container.h"
+#include "router/route_manager.h"
 
 namespace smsc{
 namespace system{
+
 using smsc::sms::SMS;
 using smsc::smeman::SmeProxy;
+using smsc::router::RouteManager;
+using smsc::router::RouteInfo;
 
 class Smsc
 {
@@ -21,12 +25,13 @@ public:
   void run();
   void mainLoop();
   TaskContainer tasks;  
-  SmeProxy* routeSms(SMS* sms, int* idex =0);
+	bool Smsc::routeSms(SMS* sms, int& dest_idx,SmeProxy*& proxy);
 protected:
   smsc::core::threads::ThreadPool tp;
   smsc::util::config::Manager* cfgman;
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
+	smsc::router::RouteManager router;
 };
 
 };//system
