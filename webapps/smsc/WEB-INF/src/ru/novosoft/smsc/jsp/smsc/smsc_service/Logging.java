@@ -6,6 +6,7 @@ import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.Comparator_CaseInsensitive;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -29,7 +30,7 @@ public class Logging extends PageBean
       this.name = name;
       this.fullName = fullName;
       this.priority = priority;
-      this.childs = new TreeMap();
+      this.childs = new TreeMap(new Comparator_CaseInsensitive());
     }
 
     public void addChild(String childFullName, String childPriority)

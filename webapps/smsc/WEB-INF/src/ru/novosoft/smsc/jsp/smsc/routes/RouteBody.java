@@ -48,12 +48,12 @@ public class RouteBody extends SmscBean
 
 	public Collection getAllSubjects()
 	{
-		return new SortedList(routeSubjectManager.getSubjects().getNames(), new Comparator_CaseInsensitive());
+		return routeSubjectManager.getSubjects().getNames();
 	}
 
 	public Collection getAllSmes()
 	{
-		return new SortedList(smeManager.getSmeNames(), new Comparator_CaseInsensitive());
+		return new SortedList(smeManager.getSmeNames());
 	}
 
 	public boolean isSmeSelected(String dstName, String smeId)
