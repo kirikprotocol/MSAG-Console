@@ -101,9 +101,23 @@ public class RouteAlterCommand extends RouteGenCommand
 
                         if (action == ACTION_ADD) {
                             newRoute.addSource(src);
-                        } else if (action == ACTION_DEL) {
-                            newRoute.removeSource(src.getName());
-                        } else {
+                        }
+                        else if (action == ACTION_DEL)
+                        {
+                            Source oldSrc = newRoute.getSources().get(src.getName());
+                            if (oldSrc != null) {
+                                if (newRoute.getSources().size() > 1) {
+                                    newRoute.removeDestination(src.getName());
+                                } else {
+                                    ctx.setMessage("Couldn't delete source '"+src.getName()+"' for "+out+". It rest only one.");
+                                    ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                                }
+                            } else {
+                                ctx.setMessage("Source '"+src.getName()+"' not found for "+out);
+                                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                            }
+                        }
+                        else {
                             ctx.setMessage("Unsupported action on "+out+". Allowed ADD & DELETE");
                             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                             return;
@@ -161,7 +175,19 @@ public class RouteAlterCommand extends RouteGenCommand
                                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                                 return;
                             }
-                            newRoute.removeDestination(dstName);
+
+                            Destination oldDst = newRoute.getDestinations().get(dstName);
+                            if (oldDst != null) {
+                                if (newRoute.getDestinations().size() > 1) {
+                                    newRoute.removeDestination(dstName);
+                                } else {
+                                    ctx.setMessage("Couldn't delete destination '"+dstName+"' for "+out+". It rest only one.");
+                                    ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                                }
+                            } else {
+                                ctx.setMessage("Destination '"+dstName+"' not found for "+out);
+                                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                            }
                         }
                         else {
                             ctx.setMessage("Unsupported action on "+out+". Allowed ADD & DELETE");
