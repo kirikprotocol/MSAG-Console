@@ -265,15 +265,15 @@ JobGuard DataProvider::getJob(const char* name)
     return JobGuard(jobsByName.Exists(name) ? jobsByName.Get(name):0);
 }
 
-void DataProvider::registerJob(Job* job, const char* id, const char* address,
+void DataProvider::registerJob(Job* job, const char* _id, const char* address,
                                const char* alias, const char* name)
     throw(ConfigException)
 {
-    __require__(job && id && owner);
+    __require__(job && _id && owner);
 
     MutexGuard guard(jobsLock);
-    if (allJobs.Exists(id))
-        throw ConfigException("Job registration failed! Job with id '%s' already registered.");
+    if (allJobs.Exists(_id))
+        throw ConfigException("Job registration failed! Job with id '%s' already registered.", _id);
 
     if (!name && !alias && !address)
         throw ConfigException("Job registration failed! Neither name, nor address, nor alias "
@@ -307,7 +307,7 @@ void DataProvider::registerJob(Job* job, const char* id, const char* address,
         jobsByName.Insert(upalias.get(), job);
     }
 
-    allJobs.Insert(id, job);
+    allJobs.Insert(_id, job);
 }
 
 void DataProvider::createJob(const char* jobId, ConfigView* jobConfig)

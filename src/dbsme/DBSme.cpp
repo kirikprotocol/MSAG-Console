@@ -466,7 +466,7 @@ private:
     CommandProcessor& processor;
 };
 
-static void appSignalHandler(int sig)
+extern "C" static void appSignalHandler(int sig)
 {
     smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT) {
@@ -477,7 +477,7 @@ static void appSignalHandler(int sig)
 
 
 // added by igork
-void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     //sigsend(P_PID, getppid(), SIGCHLD);
     smsc::util::xml::TerminateXerces();
