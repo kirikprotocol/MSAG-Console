@@ -102,10 +102,10 @@ namespace smsc { namespace store
     
         smsc::logger::Logger*     log;
 
-        Mutex               locationsLock;
         Hash<std::string>   locations;
         std::string         baseDirectory, textDirectory;
-
+        Mutex               locationsLock, directoriesLock;
+        
         ThreadPool      queriesPool;
         
         Socket      serverSocket;
@@ -145,12 +145,12 @@ namespace smsc { namespace store
         inline SmsIndex* getIndexator() {
             return indexator;
         }
-        inline std::string getBaseDirectory() {
-            MutexGuard guard(locationsLock);
+        inline const std::string& getBaseDirectory() {
+            MutexGuard guard(directoriesLock);
             return baseDirectory;
         }
-        inline std::string getTextDirectory() {
-            MutexGuard guard(locationsLock);
+        inline const std::string& getTextDirectory() {
+            MutexGuard guard(directoriesLock);
             return textDirectory;
         }
     };

@@ -68,11 +68,14 @@ void ArchiveProcessor::init(ConfigView* config)
 
     smsc_log_info(log, "Loading locations ...");
 
-    MutexGuard guard(locationsLock);
     std::auto_ptr<ConfigView> locCfgGuard(config->getSubConfig("Locations"));
     ConfigView* locCfg = locCfgGuard.get();
-    baseDirectory = locCfg->getString("baseDestination");
-    textDirectory = locCfg->getString("textDestination");
+    {
+        MutexGuard dLock(directoriesLock);
+        baseDirectory = locCfg->getString("baseDestination");
+        textDirectory = locCfg->getString("textDestination");
+    }
+    MutexGuard guard(locationsLock);
     std::auto_ptr<ConfigView> sourcesCfgGuard(locCfg->getSubConfig("sources"));
     ConfigView* sourcesCfg = sourcesCfgGuard.get();
 
@@ -164,6 +167,7 @@ void ArchiveProcessor::startTransaction()
     
     try
     {
+        //Query::ProcessArchiveGuard archiveGuard;
         smsc_log_debug(log, "Starting transaction...");
         if (indexator) indexator->BeginTransaction();
         bTransactionOpen = true; cleanTransaction();
@@ -183,6 +187,7 @@ void ArchiveProcessor::commitTransaction(bool force /*= false*/)
         if (force || (transactionSmsCount >= maxTransactionSms) ||
             (transactionStartTime>0 && (time(NULL)-transactionStartTime >= maxTransactionTime)))
         {
+            Query::ProcessArchiveGuard archiveGuard;
             smsc_log_debug(log, "Commiting transaction...");
             if (indexator) indexator->EndTransaction();
             smsc_log_debug(log, "Transaction indecies flushed.");
@@ -213,7 +218,7 @@ void ArchiveProcessor::commitTransaction(bool force /*= false*/)
             while (transactionSrcFiles.Next(srcFileNameStr, data))
             {
                 if (!srcFileNameStr || !srcFileNameStr[0]) continue;
-                smsc_log_debug(log, "Deliting source file '%s'", srcFileNameStr);
+                smsc_log_debug(log, "Deleting source file '%s'", srcFileNameStr);
                 FileStorage::deleteFile(srcFileNameStr);
             }
             bTransactionOpen = false; cleanTransaction();
@@ -228,6 +233,7 @@ void ArchiveProcessor::rollbackTransaction()
 {
     if (!bTransactionOpen) return;
     
+    Query::ProcessArchiveGuard archiveGuard;
     smsc_log_debug(log, "Rolling back transaction...");
     if (indexator) indexator->RollBack();
     bTransactionOpen = false; cleanTransaction();
@@ -305,7 +311,7 @@ static bool switchDate(time_t date1, time_t date2, char* destinationFile,
 
 bool ArchiveProcessor::process(const std::string& location, const Array<std::string>& files)
 {
-    Query::ProcessArchiveGuard archiveGuard;
+    //Query::ProcessArchiveGuard archiveGuard;
 
     char destinationFileName[64];
     char destinationDirName[64];
@@ -349,8 +355,11 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
                         if (arcDestination) { delete arcDestination; arcDestination=0; }
                         if (txtDestination) { delete txtDestination; txtDestination=0; }
 
-                        arcLocation  = baseDirectory+'/'+destinationDirName;
-                        txtLocation  = textDirectory+'/'+destinationDirName;
+                        {
+                            MutexGuard dLock(directoriesLock);
+                            arcLocation  = baseDirectory+'/'+destinationDirName;
+                            txtLocation  = textDirectory+'/'+destinationDirName;
+                        }
                         arcFileName  = destinationFileName;
                         txtFileName  = destinationFileName;
                         arcFileName += '.'; arcFileName += SMSC_PREV_ARCHIVE_FILE_EXTENSION;
@@ -382,8 +391,9 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
                         fpos_t* trsArcPosition = 0; fpos_t* trsTxtPosition = 0;
                         if (bNewArcFile) // destination file was switched
                         {
+                            Query::ProcessArchiveGuard archiveGuard;
                             bNewArcFile = false;
-
+                            
                             trsArcPosition = transactionTrsArcFiles.GetPtr(trsArcFileNameStr);
                             if (!trsArcPosition) // check reopened destination arc file
                             {
@@ -434,7 +444,6 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
                         }
                         
                         indexator->IndexateSms(destinationDirName, id, (uint64_t)arcPosition, sms);
-
                         txtDestination->writeRecord(id, sms);
                         txtDestination->getPos(&txtPosition);
                         arcDestination->writeRecord(id, sms);
@@ -507,6 +516,7 @@ Query::ProcessArchiveGuard::~ProcessArchiveGuard()
 Query::ProcessQueryGuard::ProcessQueryGuard()
 {
     MutexGuard rlg(Query::readLock);
+    MutexGuard wlg(Query::writeMonitor);
     Query::activeCounter++;
 }
 Query::ProcessQueryGuard::~ProcessQueryGuard()
@@ -707,7 +717,7 @@ int Query::Execute()
     QueryMessage* query = 0;
 
     SmsIndex* indexator = processor->getIndexator();
-    std::string baseDir = processor->getBaseDirectory();
+    std::string baseDir = processor->getBaseDirectory(); // locks directoriesLock
 
     time_t lastProcessedTime = 0;
     PersistentStorage* source = 0;

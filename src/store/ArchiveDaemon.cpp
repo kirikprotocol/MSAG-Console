@@ -120,10 +120,12 @@ int main(void)
         ArchiveProcessor processor(&apConfig);
         archiveProcessor = &processor;
 
+        bool first = true;
         while (!isNeedStop())
         {
+            if (!first) bServiceWaitEvent.Wait(daemonInterval*1000);
+            else first = false;
             processor.process();
-            bServiceWaitEvent.Wait(daemonInterval*1000);
         }
 
         archiveProcessor = 0;
