@@ -1,51 +1,13 @@
-<%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.jsp.SMSCAppContext"%><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html><head>
-<title><%=(BROWSER_TITLE==null) ? TITLE : BROWSER_TITLE%></title><%--
-ContextPath:<%=request.getContextPath()%>
-PathInfo:<%=request.getPathInfo()%>
-PathTranslated:<%=request.getPathTranslated()%>
-QueryString:<%=request.getQueryString()%>
-RequestURI:<%=request.getRequestURI()%>
-RequestURL:<%=request.getRequestURL()%>
-Scheme:<%=request.getScheme()%>
-ServerName:<%=request.getServerName()%>
-ServerPort:<%=request.getServerPort()%>
-ServletPath:<%=request.getServletPath()%>  --%>
-<base href="<%=request.getScheme()%>://<%=request.getServerName()%>:<%=request.getServerPort() + CPATH%>/">
-<link rel="STYLESHEET" type="text/css" href="/styles/colors.css">
-<link rel="STYLESHEET" type="text/css" href="/styles/common.css">
-<link rel="STYLESHEET" type="text/css" href="/styles/list.css">
-<link rel="STYLESHEET" type="text/css" href="/styles/properties_list.css">
-<link rel="STYLESHEET" type="text/css" href="/styles/main_menu.css">
-<link rel="STYLESHEET" type="text/css" href="/styles/collapsing_tree.css">
-<link rel="STYLESHEET" type="text/css" href="/styles/collapsing_list.css">
-<link rel="STYLESHEET" type="text/css" href="/styles/navbar.css">
-<link rel="STYLESHEET" type="text/css" href="/styles/messages.css">
-<link rel="STYLESHEET" type="text/css" href="/styles/page_menu.css">
-<link rel="STYLESHEET" type="text/css" href="/styles/sme_menu.css">
-<script src="/scripts/scripts.js" type="text/javascript"></script>
-<script>
-function openPerfMon()
-{
-	open("<%=CPATH%>/perfmon/index.jsp", null, "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=420,width=550");
-	return false;
-}
-</script>
-</head>
-<body>
-<%
-if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0))
-{%><%@ include file="/WEB-INF/inc/service_status.jsp"%><%}
-%>
-<%@ include file="/WEB-INF/inc/calendar.jsp"%>
-<table height=100% cellspacing=0 cellpadding=0 class=main_table>
+<%@
+ include file="/WEB-INF/inc/page_menu.jsp"%><%@
+ include file="/WEB-INF/inc/buttons.jsp"
+%><table height="100%" cellspacing=0 cellpadding=0 class=main_table>
 <tr>
 	<td width=50 background="/images/smsc_02.jpg" rowspan=3></td>
 	<td width=30 background="/images/smsc_03.jpg" rowspan=3></td>
-	<td bgcolor=#F3F0E3 style="position: relative; top:0; left:0;">
+	<td bgcolor="#F3F0E3" style="position: relative; top:0; left:0;">
 		<!-- background -->
-		<table cellspacing=0 cellpadding=0 height=100% style="position: absolute; top:0; left:0; z-index: -1;">
+		<table cellspacing=0 cellpadding=0 height="100%" style="position: absolute; top:0; left:0; z-index: -1;">
 		<tr>
 			<td width=12px background="/images/smsc_24.jpg"></td>
 			<td>&nbsp;</td>
@@ -138,7 +100,7 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
       main_menu_submenu_i_fu(out, "/dl/principals.jsp", "MENU0_DL_PRINCIPALS", "Distribution lists - principals");
 			main_menu_end_item(out);
 			%>
-			<td width=100%>&nbsp;</td>
+			<td width="100%">&nbsp;</td>
 			<td><a ID=MENU0_LOGOUT href="logout.jsp">Logout</a></td>
 			<td width=52></td>
 		</tr>
@@ -150,17 +112,5 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 				<td width=80 background="/images/smsc_16.jpg"></td>
 			</tr>
 		</table>
-		<%-- SMSC Status --%>
-		<table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
-		<tr>
-			<th background="/images/smsc_17.jpg" nowrap><%=TITLE%></th>
-			<td >&nbsp;<%if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0){
-				%><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;is&nbsp;<%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"),  ServiceIDForShowStatus)%><%
-			}%></td>
-			<td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
-		</tr>
-		</table>
 		<span id="MENU0_NONE"></span>
 		<script> document.all.<%=MENU0_SELECTION%>.className = 'submenu_sel'; </script>
-<%--tr><td width="100%" class=contentTitle><%=TITLE%>&nbsp;</td></tr--%>
-<%@ include file="/WEB-INF/inc/messages.jsp"%>
