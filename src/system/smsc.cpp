@@ -157,6 +157,11 @@ public:
       d.now=now.tv_sec;
       d.uptime=now.tv_sec-start.tv_sec;
 
+      d.eventQueueSize=equnl;
+      d.inProcessingCount=eqhash-equnl;
+
+      d.inScheduler=smsc->GetSchedulerCount();
+
       perfListener->reportPerformance(&d);
 
       for(i=0;i<performance::performanceCounters;i++)

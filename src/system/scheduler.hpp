@@ -54,6 +54,7 @@ public:
 
   int getSmsCount()
   {
+    MutexGuard g(mon);
     return timeLine.size();
   }
 

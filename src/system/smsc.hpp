@@ -178,6 +178,11 @@ public:
     return scheduler->getSmeCount(idx,time);
   }
 
+  int GetSchedulerCount()
+  {
+    return scheduler->getSmsCount();
+  }
+
   smsc::profiler::Profiler* getProfiler()
   {
     return profiler;
@@ -308,6 +313,15 @@ public:
     cnt[3]=deliverErrTempCounter;
     cnt[4]=deliverErrPermCounter;
     cnt[5]=rescheduleCounter;
+  }
+
+  void getStatData(int& eqsize,int& eqlocked,uint32_t& schedsize)
+  {
+    int hsize,qsize;
+    eventqueue.getStats(hsize,qsize);
+    eqsize=qsize;
+    eqlocked=hsize-qsize;
+    schedsize=scheduler->getSmsCount();
   }
 
   RefferGuard<RouteManager> getRouterInstance()

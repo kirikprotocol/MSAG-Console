@@ -41,11 +41,14 @@ struct PerformanceData{
   PerformanceCounter deliverErrPerm;
   PerformanceCounter rescheduled;
   */
+  uint16_t size;
   uint8_t countersNumber;
   PerformanceCounter counters[performanceCounters];
-  int eventQueueSize;
+  uint32_t eventQueueSize;
   time_t uptime;
   time_t now;
+  uint32_t inProcessingCount;
+  uint32_t inScheduler;
 };
 
 #pragma pack()
@@ -72,6 +75,9 @@ public:
     PerformanceData ld=*data;
     int high,low;
 
+    ld.size=htons(sizeof(ld));
+
+
     for(int i=0;i<performanceCounters;i++)
     {
       ld.counters[i].lastSecond=htonl(ld.counters[i].lastSecond);
@@ -86,6 +92,8 @@ public:
     ld.uptime=htonl(ld.uptime);
     ld.now=htonl(ld.now);
     ld.eventQueueSize=htonl(ld.eventQueueSize);
+    ld.inProcessingCount=htonl(ld.inProcessingCount);
+    ld.inScheduler=htonl(ld.inScheduler);
 
     for(int i=0;i<sockets.Count();i++)
     {
