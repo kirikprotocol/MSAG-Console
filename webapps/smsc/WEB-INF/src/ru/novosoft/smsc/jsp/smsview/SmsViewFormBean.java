@@ -138,6 +138,11 @@ public class SmsViewFormBean extends IndexBean
 	}
 
 	/********************************* query delegeates *********************************/
+    public void refreshQuery() {
+        query = new SmsQuery();
+        setFromDate(null);
+        setTillDate(null);
+    }
 	public void setSort(String by) {
 		sort = by;
 	}
