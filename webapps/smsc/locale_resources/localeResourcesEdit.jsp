@@ -33,132 +33,52 @@ name="bean" property="*"
 			STATUS.append("<span class=CF00>Error</span>");
 			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 	}
-	this.CPATH = CPATH;
-%><%!
-	void createImgButton(JspWriter out, String imgUrl, String onclick, String tooltip) throws IOException
+%><%@
+include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
+	void printAddParam(JspWriter out, Section section) throws IOException
 	{
-		out.print("<a href=\"#\" onclick=\"" + onclick + "\" title=\"" + tooltip + "\"><img src=\""+imgUrl+"\"></a>");
-	}
-	void createInput(JspWriter out, String id) throws IOException
-	{
-		out.print("<input class=txt name=\"" +id + "\" id=\"" + id + "\">");
-	}
-	void createInput(JspWriter out, String id, String value) throws IOException
-	{
-		out.print("<input class=txt name=\"" + id + "\" id=\"" + id + "\" value=\"" + value + "\">");
-	}
-	String CPATH = "";
-	void printAddSectionField(JspWriter out, String sectionFN) throws IOException
-	{
-		final String newSectionInput = "newSectionInput_" + sectionFN;
-		out.print("<table width=100% cellspacing=1 border=0><col/><col width='16px'/>");
-		out.print("<tr><td>");
-		createInput(out, newSectionInput);
-		out.print("</td><td>");
-		createImgButton(out, CPATH + "/img/ico16_checked_g.gif", "addSection('" + sectionFN + "')", "Add new section");
-		out.print("</td></tr>");
-		out.print("</table>");
-	}
-	void printSubSections(JspWriter out, Section section, String sectionFN) throws IOException
-	{
-		for (Iterator i = section.getSectionNames().iterator(); i.hasNext();)
-		{
-			out.print("<tr><th/><td>");
-			printSection(out, section.getSection((String) i.next()));
-			out.print("</td></tr>");
-		}
-	}
-	void printParams(JspWriter out, Section section, String sectionFN) throws IOException
-	{
-		final String newParamName = "newParamName_" + sectionFN;
-		final String newParamValue = "newParamValue_" + sectionFN;
-		final String paramTableID = "paramTable_" + sectionFN;
-		//params
-
-		out.print("<table id=\"" + paramTableID + "\" class=list width=100% cellspacing=1>");
-		out.print("<col width='180px'/>");
-		out.print("<col/>");
-		out.print("<col width='16px'/>");
-		int row = 0;
-		if (section.getParamNames().size() > 0)
-		{
-			for (Iterator i = section.getParamNames().iterator(); i.hasNext();)
-			{
-				final String paramName = (String) i.next();
-				final String paramFN = StringEncoderDecoder.encode(section.getFullName() + Section.NAME_DELIMETER + paramName);
-				final String paramN = StringEncoderDecoder.encode(paramName);
-				final String paramRow = "paramRow_" + paramFN;
-				out.print("<tr class=row" + ((row++) & 1) + " id=\"" + paramRow + "\">");
-				out.print("<th>" + paramN + "</th>");
-				out.print("<td>");
-				createInput(out, paramFN, StringEncoderDecoder.encode(section.getParam(paramName)));
-				out.print("</td><td>");
-				createImgButton(out, CPATH + "/img/ico16_cross.gif", "removeParam('" + sectionFN + "', '" + paramN + "')", "Remove this param");
-				out.print("</td>");
-				out.print("</tr>");
-			}
-		}
+		String sectionFullName = section.getFullName();
 		out.print("<tr class=row" + ((row++) & 1) + ">");
-		out.print("<td>");
-		createInput(out, newParamName);
-		out.print("</td><td>");
-		createInput(out, newParamValue);
-		out.print("</td><td>");
-		createImgButton(out, CPATH + "/img/ico16_checked_g.gif", "addParam('" + sectionFN + "')", "Add new param");
-		out.print("</td>");
+      out.print("<th><input class=txt id=\"newParamName_" + sectionFullName + "\" name=\"newParamName_" + sectionFullName + "\"></th>");
+		out.print("<td width=100% ><input class=txtW id=\"newParamValue_" + sectionFullName + "\" name=\"newParamValue_" + sectionFullName + "\"></td>");
+		out.print("<td><img src=\"" + CPATH + "/img/ico16_checked_g.gif\" onclick=\"addParam('" + sectionFullName + "')\" title='Add new parameter'></td>");
 		out.print("</tr>");
-		out.print("</table>");
 	}
-	void printSectionHeader(JspWriter out, final Section section, final String sectionFN, final String sectionValue) throws IOException
+	void printAddSection(JspWriter out, Section section) throws IOException
 	{
-		final String sectionN = StringEncoderDecoder.encode(section.getName());
-		final String sectionHeader = "sectionHeader_" + sectionFN;
-
-		out.print("<table border=0 cellspacing=0 cellpadding=0 width=100% id=\"" + sectionHeader + "\">");
-		out.print("<col/>");
-		out.print("<col width='16px'/>");
-
-		out.print("<tr>");
-		out.print("<th class=" + (section.getParent() == null ? "secTitleOpened" : "secTitleClosed") + " onclick=\"showhide(this, opForm.all('" + sectionValue + "'))\">");
-		out.print(sectionN);
-		out.print("</th>");
-		if (section.getParent() != null)
-		{
-			out.print("<td class=secTitleOpenedClosedContinue>");
-			createImgButton(out, CPATH + "/img/ico16_cross.gif", "removeSection('" + sectionFN + "')", "Remove this section");
-			out.print("</td>");
+		String sectionFullName = section.getFullName();
+		out.print("<div>");
+		out.print("<input class=txt id=\"newSectionInput_" + sectionFullName + "\" name=\"newSectionInput_" + sectionFullName + "\">");
+		out.print("<img src=\"" + CPATH + "/img/ico16_checked_g.gif\" onclick=\"addSection('" + sectionFullName + "')\" title='Add new section'></div>");
+	}
+	void printResourceSection(JspWriter out, Section section) throws IOException
+	{
+		final String sectionFullName = section.getFullName();
+		startSection(out, sectionFullName, section.getName(), section.getParent() == null,
+						 "<img src=\"" + CPATH + "/img/ico16_cross.gif\" onclick=\"removeSection('" + sectionFullName + "')\" title='Remove this section'>");
+		startParams(out, "paramTable_" + sectionFullName);
+		for (Iterator i = section.getParamNames().iterator(); i.hasNext();) {
+			String paramName = (String) i.next();
+			param(out,
+					paramName,
+					sectionFullName + '.' + paramName,
+					section.getParam(paramName),
+					"paramRow_" + sectionFullName + Section.NAME_DELIMETER + paramName,
+					"<img src=\"" + CPATH + "/img/ico16_cross.gif\" onclick=\"removeParam('" + sectionFullName + "', '" + paramName +"')\" title='Remove this parameter'>");
 		}
-		out.print("</tr>");
-		out.print("</table>");
-	}
-	void printSectionValue(JspWriter out, Section section, String sectionFN, String sectionValue) throws IOException
-	{
-		out.print("<table border=0 cellspacing=0 cellpadding=0 width=100%  id=\"" + sectionValue + "\" " + (section.getParent() == null ? "" : "style=\"display:none\"") + ">");
-		out.print("<col width='20px'/>");
-
-		out.print("<tr><th/><td>");
-		printAddSectionField(out, sectionFN);
-		out.print("</td></tr><tr><th/><td>");
-		printParams(out, section, sectionFN);
-		out.print("</td></tr>");
-		printSubSections(out, section, sectionFN);
-
-		out.print("</table>");
-	}
-	void printSection(JspWriter out, Section section) throws IOException
-	{
-		final String sectionFN = StringEncoderDecoder.encode(section.getFullName());
-		final String sectionValue = "sectionValue_" + sectionFN;
-
-
-		printSectionHeader(out, section,  sectionFN,  sectionValue);
-      printSectionValue(out, section, sectionFN, sectionValue);
+		printAddParam(out, section);
+		finishParams(out);
+		for (Iterator i = section.getSectionNames().iterator(); i.hasNext();) {
+			printResourceSection(out, section.getSection((String) i.next()));
+		}
+		printAddSection(out, section);
+		finishSection(out);
 	}
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <script language="JavaScript">
 function createImgButton(imgUrl, onclickT, tooltipText)
 {
-	return "<a href=\"#\" onclick=\"" + onclickT + "\" title=\"" + tooltipText + "\"><img src=\""+imgUrl+"\"></a>";
+	return "<img src=\""+imgUrl+"\" onclick=\"" + onclickT + "\" title=\"" + tooltipText + "\">";
 }
 function addParam(sectionName)
 {
@@ -177,21 +97,17 @@ function addParam(sectionName)
 	inputElement = document.createElement("input");
 	inputElement.name = sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value;
 	inputElement.value = paramValueElem.value;
-	inputElement.className = "txt";
+	inputElement.className = "txtW";
 	newCell = newRow.insertCell();
 	newCell.appendChild(inputElement);
 
-	buttonElement = document.createElement("a");
-	buttonElement.href = "#";
-	buttonElement.title = "Remove this param";
 	imgElement = document.createElement("img");
 	imgElement.src = "<%=CPATH%>/img/ico16_cross.gif";
 	imgElement.setAttribute('sectionName', sectionName);
 	imgElement.setAttribute('paramName', paramNameElem.value);
-	buttonElement.appendChild(imgElement);
-	buttonElement.attachEvent("onclick", removeParam_Event);
+	imgElement.attachEvent("onclick", removeParam_Event);
 	newCell = newRow.insertCell();
-	newCell.appendChild(buttonElement);
+	newCell.appendChild(imgElement);
 
 	paramNameElem.value = "";
 	paramValueElem.value = "";
@@ -214,6 +130,7 @@ function removeSection(sectionName)
 	sectionElem = opForm.all("sectionValue_" + sectionName);
 	sectionElem.removeNode(true);
 }
+/*
 function showhide_event()
 {
 	showhide(event.srcElement)
@@ -232,39 +149,32 @@ function showhide(helem, velem)
 		velem.style.display = "";
 	}
 }
+*/
 function sectionHeader(sectionName, fullName)
 {
 	var sectionHeader_ = "sectionHeader_" + fullName;
-	var sectionValue_ = "sectionValue_" + fullName;
 	return ""
-		+ "<table border=0 cellspacing=0 cellpadding=0 width=100% id=\"" + sectionHeader_ +  "\">"
-		+ "<col/>"
-		+ "<col width='16px'/>"
-		+ "<tr>"
-		+ "<th class=secTitleClosed onclick=\"showhide(this, opForm.all('" + sectionValue_ + "'))\">"
+		+ "<div class=collapsing_tree_opened id=\"" + sectionHeader_ + "\" onclick=\"collasping_tree_showhide_section('" + fullName + "')\">"
+		+ "<table cellspacing=0><tr><td width=100%>"
 		+ sectionName
-		+ "</th>"
-		+ "<td class=secTitleOpenedClosedContinue>"
+		+ "</td>"
+		+ "<td>"
 		+ createImgButton("<%=CPATH%>/img/ico16_cross.gif", "removeSection('" + fullName + "')", "Remove this section")
 		+ "</td>"
-		+ "</tr>"
-		+ "</table>";
+		+ "</tr></table></div>";
 }
-function createInput(id_)
+function createInput(id_, className)
 {
-	return "<input class=txt name=\"" +id_ + "\" id=\"" + id_ + "\">";
+	return "<input class=" + className + " name=\"" +id_ + "\" id=\"" + id_ + "\">";
 }
 function addSectionField(sectionFN)
 {
 	var newSectionInput = "newSectionInput_" + sectionFN;
 	return ""
-		+ "<table class=list width=100% cellspacing=1><col/><col width='16px'/>"
-		+ "<tr><td>"
-		+ createInput(newSectionInput)
-		+ "</td><td>"
+		+ "<div>"
+		+ createInput(newSectionInput, "txt")
 		+ createImgButton("<%=CPATH%>/img/ico16_checked_g.gif", "addSection('" + sectionFN + "')", "Add new section")
-		+ "</td></tr>"
-		+ "</table>";
+		+ "</div>";
 }
 function addParamField(sectionFN)
 {
@@ -273,15 +183,13 @@ function addParamField(sectionFN)
 	var paramTableID = "paramTable_" + sectionFN;
 
 	return ""
-		+ "<table id=\"" + paramTableID + "\" class=list width=100% cellspacing=1>"
-		+ "<col width='180px'/>"
-		+ "<col/>"
-		+ "<col width='16px'/>"
+		+ "<table class=properties_list cellspacing=0 id=\"" + paramTableID + "\">"
+		+ "<col width=150px>"
 		+ "<tr class=row0>"
 		+   "<td>"
-		+     createInput(newParamName)
+		+     createInput(newParamName, "txt")
 		+   "</td><td>"
-		+     createInput(newParamValue)
+		+     createInput(newParamValue, "txtW")
 		+   "</td><td>"
 		+     createImgButton("<%=CPATH%>/img/ico16_checked_g.gif", "addParam('" + sectionFN + "')", "Add new param")
 		+   "</td>"
@@ -293,24 +201,19 @@ function sectionValue(sectionName, fullName)
 {
 	var sectionValue_ = "sectionValue_" + fullName;
 	return ""
-		+ "<table border=0 cellspacing=0 cellpadding=0 width=100%  id=\"" + sectionValue_ + "\" style=\"display:none\">"
-		+ "<col width='20px'/>"
-		+ "<col/>"
-
+		+ "<table cellspacing=0 id=\"" + sectionValue_ + "\">"
+		+ "<col width='56px'/>"
 		+ "<tr><th/><td>"
-		+ addSectionField(fullName)
-		+ "</td></tr><tr><th/><td>"
 		+ addParamField(fullName)
+		+ addSectionField(fullName)
 		+ "</td></tr>"
-
 		+ "</table>";
 }
 function addSection(parentSectionName)
 {
-	parentSectionNameElem = opForm.all("newSectionInput_" + parentSectionName);
-	newSectionName = parentSectionNameElem.value;
+	newSectionNameElem = opForm.all("newSectionInput_" + parentSectionName);
+	newSectionName = newSectionNameElem.value;
 	fullName = parentSectionName + "<%=Section.NAME_DELIMETER%>" + newSectionName;
-	paramTableID = "sectionValue_" + fullName;
 
 	parentSectionTable = opForm.all("sectionValue_" + parentSectionName);
 
@@ -321,17 +224,29 @@ function addSection(parentSectionName)
 		+ sectionHeader(newSectionName, fullName)
 		+ sectionValue(newSectionName, fullName);
 
-	parentSectionNameElem.value = "";
+	newSectionNameElem.value = "";
 }
 </script>
+<%
+	page_menu_begin(out);
+	page_menu_button(out, "mbSave", "Save", "Save changes and return to locales list");
+   page_menu_button(out, "mbCancel", "Cancel", "Cancel changes and return to locales list");
+	page_menu_space(out);
+	page_menu_end(out);
+%>
+<div class=content>
 <input type=hidden name=locale value="<%=bean.getLocale()%>">
 <input type=hidden name=initialized value=true>
 <h2>Locale "<%=bean.getLocale()%>"</h2>
-<%printSection(out, bean.getSettings());%>
-<%printSection(out, bean.getResources());%>
-<div class=secButtons>
-<input class=btn type=submit name=mbSave value="Save" title="Save changes and return to locales list">
-<input class=btn type=submit name=mbCancel value="Cancel" title="Cancel changes and return to locales list">
+<%printResourceSection(out, bean.getSettings());%>
+<%printResourceSection(out, bean.getResources());%>
 </div>
+<%
+	page_menu_begin(out);
+	page_menu_button(out, "mbSave", "Save", "Save changes and return to locales list");
+   page_menu_button(out, "mbCancel", "Cancel", "Cancel changes and return to locales list");
+	page_menu_space(out);
+	page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

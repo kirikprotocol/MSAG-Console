@@ -25,14 +25,23 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%
+	page_menu_begin(out);
+	page_menu_button(out, "mbEdit", "Edit", "Edit this resource file");
+   page_menu_button(out, "mbDone", "Done", "Return to locales list");
+	page_menu_space(out);
+	page_menu_end(out);
+%>
+<div class=content>
 <input type=hidden name=locale value="<%=bean.getLocale()%>">
-
-<iframe width="100%" height="400px" src="localeResourcesResourceFile.jsp?locale=<%=URLEncoder.encode(bean.getLocale())%>"></iframe>
-
-<div class=secButtons>
-<input class=btn type=submit name=mbEdit value="Edit" title="Edit this resource file">
-<input class=btn type=submit name=mbDone value="Done" title="Return to locales list">
+<iframe width="100%" height="400px" src="<%=CPATH%>/locale_resources/localeResourcesResourceFile.jsp?locale=<%=URLEncoder.encode(bean.getLocale())%>"></iframe>
 </div>
-
+<%
+	page_menu_begin(out);
+	page_menu_button(out, "mbEdit", "Edit", "Edit this resource file");
+   page_menu_button(out, "mbDone", "Done", "Return to locales list");
+	page_menu_space(out);
+	page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

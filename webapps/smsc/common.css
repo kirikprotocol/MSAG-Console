@@ -47,9 +47,13 @@ th
 	white-space: nowrap;
 }
 
-input.txt, select
+input.txt
 {
 	width: 265px;
+}
+input.txtW
+{
+	width: 100%;
 }
 
 input.radio, input.check

@@ -1,7 +1,7 @@
 function collasping_tree_showhide_section(sectionId)
 {
-	var headerElem = opForm.all(sectionId + "_header");
-	var valueElem = opForm.all(sectionId + "_value");
+	var headerElem = opForm.all("sectionHeader_" + sectionId);
+	var valueElem = opForm.all("sectionValue_" + sectionId);
 	if (valueElem.style.display != "none")
 	{
 		headerElem.className = "collapsing_tree_closed";

@@ -23,3 +23,12 @@ table.properties_list th a.down
 	background-image: url(img/ico16_down.gif);
 }
 
+table.properties_list tr.row0
+{
+	background-color: #F2EEDA;
+}
+table.properties_list tr.row1
+{
+
+}
+

@@ -41,6 +41,7 @@ public class Smsc extends Service
 	private Method process_cancel_messages_method = null;
 	private Method apply_smsc_config_method = null;
 	private Method apply_services_method = null;
+	private Method apply_locale_resources_method = null;
 
 	private Method msc_registrate_method = null;
 	private Method msc_unregister_method = null;
@@ -232,6 +233,7 @@ public class Smsc extends Service
 			process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
 			apply_smsc_config_method = (Method) smsc_component.getMethods().get("apply_smsc_config");
 			apply_services_method = (Method) smsc_component.getMethods().get("apply_services");
+			apply_locale_resources_method = (Method) smsc_component.getMethods().get("apply_locale_resources");
 
 			msc_registrate_method = (Method) smsc_component.getMethods().get("msc_registrate");
 			msc_unregister_method = (Method) smsc_component.getMethods().get("msc_unregister");
@@ -489,5 +491,14 @@ public class Smsc extends Service
 			catsList.add(catName + LOGGER_DELIMITER + catPriority);
 		}
 		call(smsc_component, log_set_categories, Type.Types[Type.BooleanType], params);
+	}
+
+	public synchronized void applyLocaleResources() throws AdminException
+	{
+		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+		{
+			refreshComponents();
+			call(smsc_component, apply_locale_resources_method, Type.Types[Type.StringType], new HashMap());
+		}
 	}
 }

@@ -22,6 +22,7 @@ ServletPath:<%=request.getServletPath()%>  --%>
 <link rel="STYLESHEET" type="text/css" href="navbar.css">
 <link rel="STYLESHEET" type="text/css" href="messages.css">
 <link rel="STYLESHEET" type="text/css" href="page_menu.css">
+<link rel="STYLESHEET" type="text/css" href="sme_menu.css">
 <script src="scripts.js" type="text/javascript"></script>
 <script>
 function openPerfMon()
