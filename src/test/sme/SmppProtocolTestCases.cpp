@@ -2991,10 +2991,15 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
 			default:
 				__unreachable__("Invalid num");
 		}
-		//рекурсивный вызов, чтобы предотвратить закрытие smpp сессии
-		if (respPdu.get_header().get_commandStatus() == ESME_RX_P_APPN)
+		//плохие коды ошибок
+		switch (respPdu.get_header().get_commandStatus())
 		{
-			return sendDeliverySmRespError(header, sync, sendDelay, num);
+			case ESME_ROK:
+			case ESME_RX_T_APPN:
+			case ESME_RMSGQFUL:
+			case Status::DELIVERYTIMEDOUT: //ошибка отправки deliver_sm_resp
+			case ESME_RX_P_APPN:
+				return sendDeliverySmRespError(header, sync, sendDelay, num);
 		}
 		fixture->transmitter->sendDeliverySmResp(respPdu, sync, delay);
 		__tc_ok__;
@@ -3161,10 +3166,15 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDataSmRespError(
 			default:
 				__unreachable__("Invalid num");
 		}
-		//рекурсивный вызов, чтобы предотвратить закрытие smpp сессии
-		if (respPdu.get_header().get_commandStatus() == ESME_RX_P_APPN)
+		//плохие коды ошибок
+		switch (respPdu.get_header().get_commandStatus())
 		{
-			return sendDataSmRespError(header, sync, sendDelay, num);
+			case ESME_ROK:
+			case ESME_RX_T_APPN:
+			case ESME_RMSGQFUL:
+			case Status::DELIVERYTIMEDOUT: //ошибка отправки deliver_sm_resp
+			case ESME_RX_P_APPN:
+				return sendDataSmRespError(header, sync, sendDelay, num);
 		}
 		fixture->transmitter->sendDataSmResp(respPdu, sync, delay);
 		__tc_ok__;
@@ -3182,4 +3192,11 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDataSmRespError(
 }
 }
 }
+
+
+							//повторная доставка
+			__unreachable__("Not supported");
+		//все остальные коды ошибок
+		default:
+			return RESP_PDU_ERROR;
 
