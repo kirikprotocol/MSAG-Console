@@ -235,7 +235,7 @@ PduMonitor::PduMonitor(time_t _checkTime, time_t _validTime,
 {
 	__require__(pduData);
 	pduData->ref();
-	if (flag != PDU_REQUIRED_FLAG)
+	if (flag != PDU_REQUIRED_FLAG && flag != PDU_COND_REQUIRED_FLAG)
 	{
 		checkTime = validTime;
 	}
@@ -533,10 +533,10 @@ string DeliveryMonitor::str() const
 	return s.str();
 }
 
-DeliveryReportMonitor::DeliveryReportMonitor(uint16_t _msgRef, time_t checkTime,
-	PduData* pduData, PduFlag flag)
-: PduMonitor(checkTime, 0, pduData, flag), msgRef(_msgRef), state(SMPP_ENROUTE_STATE),
-	deliveryStatus(0)
+DeliveryReportMonitor::DeliveryReportMonitor(uint16_t _msgRef, time_t _checkTime,
+	PduData* _pduData, PduFlag _flag)
+: PduMonitor(_checkTime, 0, _pduData, _flag), msgRef(_msgRef),
+	state(SMPP_ENROUTE_STATE), deliveryStatus(0)
 {
 	__cfg_int__(maxValidPeriod);
 	validTime = checkTime + maxValidPeriod;
