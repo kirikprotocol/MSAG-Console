@@ -457,8 +457,6 @@ bool Task::retryMessage(uint64_t msgId, time_t nextTime)
 {
     logger.debug("retryMessage(): called for id=%lld", msgId);
 
-    if (!info.retryOnFail || info.retryTime <= 0) return false; // TODO : analyse it !
-
     Connection* connection = 0;
     int wdTimerId = -1;
     bool result = false;

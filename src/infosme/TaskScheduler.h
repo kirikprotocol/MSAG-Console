@@ -44,7 +44,8 @@ namespace smsc { namespace infosme
      protected:
 
          friend class EventRunner;
-         virtual void processResponce(int seqNum, bool accepted, bool retry, std::string smscId="") = 0;
+         virtual void processResponce(int seqNum, bool accepted, bool retry, 
+                                      bool immediate, std::string smscId="") = 0;
          virtual void processReceipt (std::string smscId, bool delivered, bool retry) = 0;
 
          TaskProcessorAdapter() {};

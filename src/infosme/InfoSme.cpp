@@ -141,14 +141,17 @@ private:
 
     void waitUnrespondedMessages()
     {
-        // TODO: Fix IT !!!
         int count = 0;
         {
             MutexGuard guard(unrespondedMessagesLock);
-            count = unrespondedMessagesCount++;
+            count = ++unrespondedMessagesCount;
         }
         while (count >= unrespondedMessagesMax && !bInfoSmeIsStopped && bInfoSmeIsConnected)
+        {
             unrespondedMessagesEvent.Wait(unrespondedMessagesSleep);
+            MutexGuard guard(unrespondedMessagesLock);
+            count = unrespondedMessagesCount;
+        }
     }
 
 public:
@@ -361,7 +364,7 @@ public:
         const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
         if (!msgid || msgid[0] == '\0') accepted = false;
 
-        processor.invokeProcessResponce(seqNum, accepted, retry, msgid);
+        processor.invokeProcessResponce(seqNum, accepted, retry, immediate, msgid);
     }
 
     void handleEvent(SmppHeader *pdu)
@@ -377,7 +380,7 @@ public:
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
-            logger.debug("Received DELIVERY_SM Pdu.");
+            //logger.debug("Received DELIVERY_SM Pdu.");
             processReceipt(pdu);
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:

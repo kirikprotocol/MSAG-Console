@@ -89,19 +89,19 @@ namespace smsc { namespace infosme
         TaskProcessorAdapter&  processor;
 
         int             seqNum;
-        bool            delivered, retry;
+        bool            delivered, retry, immediate;
         std::string     smscId;
 
     public:
 
-        EventRunner(EventMethod method, TaskProcessorAdapter& processor, 
-                    int seqNum, bool accepted, bool retry, std::string smscId="")
+        EventRunner(EventMethod method, TaskProcessorAdapter& processor, int seqNum,
+                    bool accepted, bool retry, bool immediate, std::string smscId="")
             : method(method), processor(processor), seqNum(seqNum), 
-                delivered(accepted), retry(retry), smscId(smscId) {};
+                delivered(accepted), retry(retry), immediate(immediate), smscId(smscId) {};
         EventRunner(EventMethod method, TaskProcessorAdapter& processor, 
                     std::string smscId, bool delivered, bool retry)
             : method(method), processor(processor), seqNum(0), 
-                delivered(delivered), retry(retry), smscId(smscId) {};
+                delivered(delivered), retry(retry), immediate(false), smscId(smscId) {};
 
         virtual ~EventRunner() {};
 
@@ -110,7 +110,7 @@ namespace smsc { namespace infosme
             switch (method)
             {
             case processResponceMethod:
-                processor.processResponce(seqNum, delivered, retry, smscId);
+                processor.processResponce(seqNum, delivered, retry, immediate, smscId);
                 break;
             case processReceiptMethod:
                 processor.processReceipt (smscId, delivered, retry);
@@ -245,7 +245,8 @@ namespace smsc { namespace infosme
         void dsInternalCommit(bool force=false);
         
         friend class EventRunner;
-        virtual void processResponce(int seqNum, bool accepted, bool retry, std::string smscId="");
+        virtual void processResponce(int seqNum, bool accepted, 
+                                     bool retry, bool immediate, std::string smscId="");
         virtual void processReceipt (std::string smscId, bool delivered, bool retry);
     
     public:
@@ -287,10 +288,11 @@ namespace smsc { namespace infosme
             taskManager.startThread(new TaskRunner(task, dropAllMessagesMethod));
         };
 
-        virtual void invokeProcessResponce(int seqNum, bool accepted, bool retry, std::string smscId="")
+        virtual void invokeProcessResponce(int seqNum, bool accepted, 
+                                           bool retry, bool immediate, std::string smscId="")
         {
             eventManager.startThread(new EventRunner(processResponceMethod, *this, 
-                                                     seqNum, accepted, retry, smscId));
+                                                     seqNum, accepted, retry, immediate, smscId));
         };
         virtual void invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
         {

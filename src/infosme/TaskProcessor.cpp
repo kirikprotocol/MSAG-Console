@@ -346,11 +346,13 @@ const char* CREATE_ID_MAPPING_STATEMENT_ID = "CREATE_ID_MAPPING_STATEMENT_ID";
 const char* CREATE_ID_MAPPING_STATEMENT_SQL = (const char*)
 "INSERT INTO INFOSME_ID_MAPPING (ID, SMSC_ID, TASK_ID) VALUES (:ID, :SMSC_ID, :TASK_ID)";
 
-void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::string smscId)
+void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, 
+                                    bool immediate, std::string smscId)
 {
     __require__(dsIntConnection);
 
-    logger.debug("Processing resp: seqNum=%d, accepted=%d, retry=%d", seqNum, accepted, retry);
+    logger.debug("Processing resp: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
+                 seqNum, accepted, retry, immediate);
 
     TaskMsgId tmIds;
     
@@ -379,16 +381,17 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
     if (!accepted)
     {
         bool needDelete = true;
-        if (retry && info.retryOnFail && info.retryTime > 0)
+        if (retry && (immediate || (info.retryOnFail && info.retryTime > 0)))
         {
-            time_t nextTime = time(NULL)+info.retryTime;
-            if (info.endDate > 0 && info.endDate >= nextTime) {
+            time_t nextTime = time(NULL)+((immediate) ? 1:info.retryTime);
+            if (info.endDate <= 0 || (info.endDate > 0 && info.endDate >= nextTime))
+            {
                 if (!task->retryMessage(tmIds.msgId, nextTime)) {
                     logger.warn("Message #%lld not found for retry.", tmIds.msgId);
                     statistics->incFailed(tmIds.taskId);
                 } else {
                     needDelete = false;
-                    statistics->incRetried(tmIds.taskId);
+                    if (!immediate) statistics->incRetried(tmIds.taskId);
                 }
             }
             else statistics->incFailed(tmIds.taskId);
