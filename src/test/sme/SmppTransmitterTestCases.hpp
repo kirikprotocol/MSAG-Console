@@ -88,9 +88,9 @@ protected:
 	PduData* registerReplaceSm(PduReplaceSm* pdu, PduData* replacePduData,
 		time_t submitTime, PduData::IntProps* intProps, PduData::StrProps* strProps,
 		PduData::ObjProps* objProps);
-	void processReplaceSmSync(PduData* pduData, PduReplaceSmResp* respPdu,
-		time_t respTime);
-	void processReplaceSmAsync(PduData* pduData);
+	void processReplaceSmSync(PduData* pduData, PduReplaceSm* pdu,
+		PduReplaceSmResp* respPdu, time_t respTime);
+	void processReplaceSmAsync(PduData* pduData, PduReplaceSm* pdu);
 	void processGenericNackSync(time_t submitTime, time_t respTime);
 	void processGenericNackAsync(PduData* pduData);
 };

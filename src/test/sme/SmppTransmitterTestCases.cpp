@@ -171,8 +171,8 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 	PduData* pduData)
 {
 	bool deliveryFlag = false;
-	bool errorReportsFlag = false;
-	bool expiredReportsFlag = false;
+	bool transmitterReportsFlag = false;
+	bool notBoundReportsFlag = false;
 	SmeType destType = fixture->routeChecker->isDestReachable(
 		pdu->get_message().get_source(), pdu->get_message().get_dest());
 	switch (destType)
@@ -181,10 +181,10 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 			//будет респонс с кодом ошибки
 			return;
 		case SME_TRANSMITTER:
-			errorReportsFlag = true;
+			transmitterReportsFlag = true;
 			break;
 		case SME_NOT_BOUND:
-			expiredReportsFlag = true;
+			notBoundReportsFlag = true;
 			break;
 		case SME_RECEIVER:
 		case SME_TRANSCEIVER:
@@ -240,16 +240,22 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
 	{
-		if (errorReportsFlag)
+		if (transmitterReportsFlag)
 		{
+			//intermediate notification
+			IntermediateNotificationMonitor* notifMonitor =
+				new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
+			notifMonitor->state = ENROUTE;
+			notifMonitor->deliveryStatus = ESME_RINVBNDSTS;
+			fixture->pduReg->registerMonitor(notifMonitor);
 			//delivery receipt
 			DeliveryReceiptMonitor* rcptMonitor =
-				new DeliveryReceiptMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
-			rcptMonitor->state = UNDELIVERABLE;
-			rcptMonitor->deliveryStatus = ESME_RX_P_APPN;
+				new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
+			rcptMonitor->state = EXPIRED;
+			rcptMonitor->deliveryStatus = ESME_RINVBNDSTS;
 			fixture->pduReg->registerMonitor(rcptMonitor);
 		}
-		if (expiredReportsFlag)
+		if (notBoundReportsFlag)
 		{
 			//intermediate notification
 			IntermediateNotificationMonitor* notifMonitor =
@@ -607,7 +613,9 @@ PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
 		__require__(replacePduData->pdu->get_commandId() == SUBMIT_SM);
 		PduSubmitSm* replacePdu =
 			reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
-		resPdu = new PduSubmitSm(*replacePdu);
+		resPdu = reinterpret_cast<PduSubmitSm*>(
+			SmppUtil::copyPdu(replacePduData->pdu));
+		__require__(resPdu);
 		if (pdu->get_scheduleDeliveryTime())
 		{
 			resPdu->get_message().set_scheduleDeliveryTime(
@@ -680,12 +688,14 @@ PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
 //обновить sequenceNumber в PduRegistry и проверить pdu
 //требуетс€ внешн€€ синхронизаци€
 void SmppTransmitterTestCases::processReplaceSmSync(PduData* pduData,
-	PduReplaceSmResp* respPdu, time_t respTime)
+	PduReplaceSm* pdu, PduReplaceSmResp* respPdu, time_t respTime)
 {
-	__require__(pduData);
+	__require__(pduData && pdu);
 	__dumpPdu__("processReplaceSmRespSync", fixture->smeInfo.systemId, respPdu);
 	__decl_tc__;
-	__tc__("processReplaceSmRespSync.sync");
+	//обновить sequenceNumber у фейковой pdu
+	pduData->pdu->set_sequenceNumber(pdu->get_header().get_sequenceNumber());
+	__tc__("replaceSm.resp.sync");
 	if (!respPdu)
 	{
 		__tc_fail__(1);
@@ -703,10 +713,13 @@ void SmppTransmitterTestCases::processReplaceSmSync(PduData* pduData,
 }
 
 //обновить sequenceNumber в PduRegistry, требуетс€ внешн€€ синхронизаци€
-void SmppTransmitterTestCases::processReplaceSmAsync(PduData* pduData)
+void SmppTransmitterTestCases::processReplaceSmAsync(PduData* pduData,
+	PduReplaceSm* pdu)
 {
 	__require__(fixture->pduReg);
-	__require__(pduData);
+	__require__(pduData && pdu);
+	//обновить sequenceNumber у фейковой pdu
+	pduData->pdu->set_sequenceNumber(pdu->get_header().get_sequenceNumber());
 	//создать и зарегистрировать респонс монитор
 	ResponseMonitor* monitor =
 		new ResponseMonitor(pduData->pdu->get_sequenceNumber(),
@@ -741,7 +754,7 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 				__dumpReplaceSmPdu__("replaceSmSyncAfter", fixture->smeInfo.systemId, pdu);
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
-					processReplaceSmSync(pduData, respPdu, time(NULL));
+					processReplaceSmSync(pduData, pdu, respPdu, time(NULL));
 				}
 			}
 			else
@@ -755,7 +768,7 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 				__dumpReplaceSmPdu__("replaceSmAsyncAfter", fixture->smeInfo.systemId, pdu);
 				PduData* pduData = registerReplaceSm(pdu, replacePduData,
 					submitTime, intProps, strProps, objProps);
-				processReplaceSmAsync(pduData);
+				processReplaceSmAsync(pduData, pdu);
 			}
 			//pdu life time определ€етс€ PduRegistry
 			//disposePdu(pdu);
