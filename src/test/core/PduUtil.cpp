@@ -1,58 +1,41 @@
 #include "PduUtil.hpp"
-#include "test/TestConfig.hpp"
 #include "util/debug.h"
 
 namespace smsc {
 namespace test {
 namespace core {
 
-using namespace smsc::test;
-
-DeliveryIterator::DeliveryIterator(time_t start, time_t end)
-	: startTime(start), endTime(end), attempt(0), time(start)
-{
-	__require__(start <= end);
-}
-
-DeliveryIterator& DeliveryIterator::operator++()
-{
-	static const int rescheduleSize =
-		sizeof(rescheduleTimes) / sizeof(*rescheduleTimes);
-	if (attempt < rescheduleSize)
-	{
-		time += rescheduleTimes[attempt];
-	}
-	else
-	{
-		time += rescheduleTimes[rescheduleSize - 1];
-	}
-	if (time > endTime)
-	{
-		time = 0;
-	}
-	attempt++;
-	return *this;
-}
-
 void PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff,
 	time_t& nextTime, time_t& calcTime) const
 {
 	__require__(time);
-	DeliveryIterator it(startTime, endTime);
+	attempt = lastAttempt;
 	diff = INT_MAX;
-	for (; it.getTime(); it++)
+	nextTime = lastTime ? lastTime : startTime;
+	for (;; attempt++)
 	{
-		__trace2__("it.getTime() = %ld", it.getTime());
-		time_t curDiff = it.getTime() - time;
+		//__trace2__("eval(): nextTime = %ld", nextTime);
+		time_t curDiff = nextTime - time;
 		if (abs(curDiff) > abs(diff))
 		{
 			break;
 		}
 		diff = curDiff;
-		attempt = it.getAttempt();
-		calcTime = it.getTime();
+		calcTime = nextTime;
+		if (attempt < rescheduleSize)
+		{
+			nextTime += rescheduleTimes[attempt];
+		}
+		else
+		{
+			nextTime += rescheduleTimes[rescheduleSize - 1];
+		}
+		if (nextTime > endTime)
+		{
+			nextTime = 0;
+		}
 	}
-	nextTime = it.getTime();
+	attempt--;
 }
 
 time_t PduReceiptFlag::getNextTime(time_t t) const
@@ -68,10 +51,14 @@ vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
 	vector<int> res;
 	if (recvTime < startTime)
 	{
+		__trace2__("PduReceiptFlag::checkSchedule(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld is less startTime",
+			this, startTime, endTime, recvTime);
 		res.push_back(1);
 	}
 	else if (recvTime > endTime + timeCheckAccuracy)
 	{
+		__trace2__("PduReceiptFlag::checkSchedule(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld is greater endTime",
+			this, startTime, endTime, recvTime);
 		res.push_back(2);
 	}
 	//else if (lastTime && (lastTime < startTime || lastTime > endTime))
@@ -79,7 +66,7 @@ vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
 	{
 		int attempt, lastAttempt = -1;
 		time_t diff, lastDiff = 0;
-		time_t nextTime, calcTime, lastNextTime, lastCalcTime;
+		time_t nextTime, calcTime, lastNextTime = 0, lastCalcTime = 0;
 		eval(recvTime, attempt, diff, nextTime, calcTime);
 		if (lastTime)
 		{

@@ -3,6 +3,7 @@
 
 #include "smpp/smpp_structures.h"
 #include "test/sms/SmsUtil.hpp"
+#include "test/TestConfig.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include <ctime>
 #include <string>
@@ -17,25 +18,12 @@ using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using std::string;
 using std::vector;
+using namespace smsc::test;
 
 static const int PDU_REQUIRED_FLAG = 0x0; //pdu ожидается, но еще не получена
 static const int PDU_MISSING_ON_TIME_FLAG = 0x1; //тоже самое, что PDU_REQUIRED_FLAG, только исключается из проверок на ошибки
 static const int PDU_RECEIVED_FLAG = 0x2; //pdu получена вовремя
 static const int PDU_NOT_EXPECTED_FLAG = 0x3; //данной pdu быть не должно
-
-class DeliveryIterator
-{
-	const time_t startTime;
-	const time_t endTime;
-	int attempt;
-	time_t time;
-public:
-	DeliveryIterator(time_t start, time_t end);
-	DeliveryIterator& operator++();
-	DeliveryIterator& operator++(int) { return operator++(); }
-	time_t getTime() { return time; }
-	int getAttempt() { return attempt; }
-};
 
 //normal sms, delivery receipt
 class PduReceiptFlag
@@ -44,20 +32,18 @@ class PduReceiptFlag
 	time_t startTime; //начало доставки pdu
 	time_t endTime; //окончание доставки pdu
 	time_t lastTime;
+	int lastAttempt;
+	static const int rescheduleSize =
+		sizeof(rescheduleTimes) / sizeof(*rescheduleTimes);
 
 	void eval(time_t time, int& attempt, time_t& diff, time_t& nextTime,
 		time_t& calcTime) const;
 
 public:
 	PduReceiptFlag(int flg, time_t start, time_t end) :
-		flag(flg), startTime(start), endTime(end), lastTime(0) {}
-
-	PduReceiptFlag(const PduReceiptFlag& f) : flag(f.flag),
-		startTime(f.startTime), endTime(f.endTime), lastTime(f.lastTime) {}
+		flag(flg), startTime(start), endTime(end), lastTime(0), lastAttempt(0) {}
 
 	PduReceiptFlag& operator= (int _flag) { flag = _flag; }
-	PduReceiptFlag& operator= (const PduReceiptFlag& f)
-	{ flag = f.flag; startTime = f.startTime; endTime = f.endTime; lastTime = f.lastTime; }
 	
 	bool operator== (int _flag) { return (flag == _flag); }
 	bool operator!= (int _flag) { return (flag != _flag); }
