@@ -4,10 +4,10 @@
 using log4cpp::Category;
 using smsc::util::Logger;
 using smsc::sms::Address;
+using smsc::alias::AliasInfo;
 using smsc::alias::AliasManager;
 using smsc::test::sms::SmsUtil;
 using smsc::test::core::AliasRegistry;
-using smsc::test::core::TestAliasData;
 using smsc::test::alias::AliasManagerTestCases;
 using namespace smsc::test::util;
 
@@ -16,42 +16,47 @@ static Category& log = Logger::getCategory("AliasManagerTest");
 void executeTest()
 {
 /*
-addCorrectAliasNotMatchAddress(4)->
-addCorrectAliasNotMatchAddress(2)->
-addCorrectAliasNotMatchAddress(1)->
+addCorrectAliasException(4)->
+addCorrectAliasException(2)->
 findAliasByAddress(1){100}
 */
 	AliasManager aliasMan;
-	AliasManagerTestCases tc(&aliasMan);
 	AliasRegistry aliasReg;
+	AliasManagerTestCases tc(&aliasMan, &aliasReg);
 
 	Address alias, addr;
 	SmsUtil::setupRandomCorrectAddress(&alias);
 	SmsUtil::setupRandomCorrectAddress(&addr);
 
-	TestAliasData data(alias, addr);
-	cout << *tc.addCorrectAliasNotMatchAddress(&data, 4) << endl;
-	aliasReg.putAlias(data);
+	AliasInfo aliasInfo;
+	aliasInfo.alias = alias;
+	aliasInfo.addr = addr;
+	cout << *tc.addCorrectAliasException(&aliasInfo, 2) << endl;
 
-	TestAliasData data2(alias, addr);
-	cout << *tc.addCorrectAliasNotMatchAddress(&data2, 2) << endl;
-	aliasReg.putAlias(data2);
+	AliasInfo aliasInfo2;
+	aliasInfo2.alias = alias;
+	aliasInfo2.addr = addr;
+	cout << *tc.addCorrectAliasException(&aliasInfo2, 4) << endl;
 
-	TestAliasData data3(alias, addr);
-	cout << *tc.addCorrectAliasNotMatchAddress(&data3, 1) << endl;
-	aliasReg.putAlias(data3);
+	/*
+	AliasInfo aliasInfo3;
+	aliasInfo3.alias = alias;
+	aliasInfo3.addr = addr;
+	cout << *tc.addCorrectAliasException(&aliasInfo3, 4) << endl;
+	*/
 	
-	cout << *tc.findAliasByAddress(aliasReg, addr) << endl;
+	cout << *tc.findAliasByAddress(addr) << endl;
+	//cout << *tc.findAddressByAlias(alias) << endl;
 /*
-	cout << *tc.addCorrectAliasMatch(&data, 1) << endl;
-	cout << *tc.addCorrectAliasNotMatchAddress(&data, 1) << endl;
-	cout << *tc.addCorrectAliasNotMatchAlias(&data, 1) << endl;
-	cout << *tc.addCorrectAliasException(&data, 1) << endl;
+	cout << *tc.addCorrectAliasMatch(&aliasInfo, 1) << endl;
+	cout << *tc.addCorrectAliasNotMatchAddress(&aliasInfo, 1) << endl;
+	cout << *tc.addCorrectAliasNotMatchAlias(&aliasInfo, 1) << endl;
+	cout << *tc.addCorrectAliasException(&aliasInfo, 1) << endl;
 	cout << *tc.addIncorrectAlias() << endl;
 	cout << *tc.deleteAliases() << endl;
-	cout << *tc.findAliasByAddress(aliasReg, addr) << endl;
-	cout << *tc.findAddressByAlias(aliasReg, alias) << endl;
-	cout << *tc.iterateAliases(const AliasRegistry& aliasReg) << endl;
+	cout << *tc.findAliasByAddress(addr) << endl;
+	cout << *tc.findAddressByAlias(alias) << endl;
+	cout << *tc.iterateAliases() << endl;
 */
 
 }

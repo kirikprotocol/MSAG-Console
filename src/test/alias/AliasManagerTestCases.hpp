@@ -16,7 +16,6 @@ using std::vector;
 using log4cpp::Category;
 using smsc::test::util::TCResult;
 using smsc::test::util::BaseTestCases;
-using smsc::test::core::TestAliasData;
 using smsc::test::core::AliasRegistry;
 using smsc::sms::Address;
 using smsc::alias::AliasInfo;
@@ -43,29 +42,29 @@ const char* const TC_ITERATE_ALIASES = "iterateAliases";
 class AliasManagerTestCases : BaseTestCases
 {
 public:
-	AliasManagerTestCases(AliasManager* manager);
+	AliasManagerTestCases(AliasManager* manager, AliasRegistry* aliasReg);
 
 	virtual ~AliasManagerTestCases() {}
 
 	/**
 	 * –егистраци€ алиаса с преобразованием addr->alias и alias->addr.
 	 */
-	TCResult* addCorrectAliasMatch(TestAliasData* data, int num);
+	TCResult* addCorrectAliasMatch(AliasInfo* alias, int num);
 
 	/**
 	 * –егистраци€ алиаса с преобразованием только alias->addr.
 	 */
-	TCResult* addCorrectAliasNotMatchAddress(TestAliasData* data, int num);
+	TCResult* addCorrectAliasNotMatchAddress(AliasInfo* alias, int num);
 
 	/**
 	 * –егистраци€ алиаса с преобразованием только addr->alias.
 	 */
-	TCResult* addCorrectAliasNotMatchAlias(TestAliasData* data, int num);
+	TCResult* addCorrectAliasNotMatchAlias(AliasInfo* alias, int num);
 
 	/**
 	 * –егистраци€ алиаса с переполнением адреса при alias->addr или алиаса при addr->alias.
 	 */
-	TCResult* addCorrectAliasException(TestAliasData* data, int num);
+	TCResult* addCorrectAliasException(AliasInfo* alias, int num);
 
 	/**
 	 * –егистраци€ алиаса с некорректными параметрами.
@@ -80,29 +79,28 @@ public:
 	/**
 	 * ѕоиск алиаса по адресу.
 	 */
-	TCResult* findAliasByAddress(const AliasRegistry& aliasReg,
-		const Address& addr);
+	TCResult* findAliasByAddress(const Address& addr);
 
 	/**
 	 * ѕоиск адреса по алиасу.
 	 */
-	TCResult* findAddressByAlias(const AliasRegistry& aliasReg,
-		const Address& alias);
+	TCResult* findAddressByAlias(const Address& alias);
 
 	/**
 	 * »терирование по списку зарегистрированных алиасов.
 	 */
-	TCResult* iterateAliases(const AliasRegistry& aliasReg);
+	TCResult* iterateAliases();
 
 protected:
 	virtual Category& getLog();
 
 private:
 	AliasManager* aliasMan;
+	AliasRegistry* aliasReg;
 	
-	AliasInfo* newAliasInfo(TestAliasData* data);
-	void setupRandomAliasMatchWithQuestionMarks(TestAliasData* data, int len);
-	void setupRandomAliasMatchWithAsterisk(TestAliasData* data, int adLen, int alLen);
+	void debugAlias(const char* tc, int val, const AliasInfo* alias);
+	void setupRandomAliasMatchWithQuestionMarks(AliasInfo* alias, int len);
+	void setupRandomAliasMatchWithAsterisk(AliasInfo* alias, int adLen, int alLen);
 	void printFindResult(const char* tc, const Address& param, bool found,
 		const Address& result, const AliasRegistry::AliasList& data);
 };
