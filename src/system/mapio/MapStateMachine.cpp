@@ -1979,9 +1979,18 @@ static void NotifyHLR(MapDialog* dialog)
       FormatText("MAP::%s: Et96MapOpenReq error 0x%x",__FUNCTION__,result));
   }
   ET96MAP_DEL_OUTCOME_T deliveryOutcom;
-  if ( dialog->wasDelivered ) deliveryOutcom = ET96MAP_TRANSFER_SUCCESSFUL;
-  else if ( dialog->subscriberAbsent ) deliveryOutcom = ET96MAP_SUBSCRIBER_ABSENT;
-  else if ( dialog->memoryExceeded ) deliveryOutcom = ET96MAP_MEMORY_CAPACITY_OVERRUN;
+  if ( dialog->wasDelivered ) {
+    deliveryOutcom = ET96MAP_TRANSFER_SUCCESSFUL;
+    __trace2__("MAP::%s OK_DELIVERED");
+  }
+  else if ( dialog->subscriberAbsent ) {
+    deliveryOutcom = ET96MAP_SUBSCRIBER_ABSENT;
+    __trace2__("MAP::%s SUBSCRIBER_ABSENT (flag:%s)",__FUNCTION__,dialog->mwdStatus.mnrf);
+  }
+  else if ( dialog->memoryExceeded ) {
+    deliveryOutcom = ET96MAP_MEMORY_CAPACITY_OVERRUN;
+    __trace2__("MAP::%s MEMORY_EXCEEDE (flag:%s)",__FUNCTION__,dialog->mwdStatus.mcef);
+  }
   else {
     __trace2__("MAP::%s no way!",__FUNCTION__);
     //return; // Opps, strange way
