@@ -11,7 +11,7 @@ PACKAGE := storetest
 #__OBJECTS := $(foreach x,nautab.o naeet.o naect.o naedhs.o,$(ORACLE_HOME)/lib/$(x)) \
 #    $(foreach x,ssdbaed.o kpudfo.o,$(ORACLE_HOME)/rdbms/lib/$(x))
 
-__LIBRARIES :=  $(ORACLE_HOME)/lib/libclntsh.so
+__LIBRARIES :=  $(ORACLE_LIB)/libclntsh.so
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

@@ -8,7 +8,7 @@ CXXFLAGS := $(CXXFLAGS) -I/usr/local/include/xercesc -I$(SMSC_SRCDIR)/sms -I$(OR
 PACKAGE := dbsme
 
 __LIBRARIES := $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so
-__OCI_LIB_SO__ :=  $(ORACLE_HOME)/lib/libclntsh.so
+__OCI_LIB_SO__ :=  $(ORACLE_LIB)/libclntsh.so
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

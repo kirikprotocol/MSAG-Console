@@ -1,3 +1,3 @@
 #binary name			source name			libraries
-test/Test			Test				-ltest-smpp -ltest-sms -ltest-util -lsms -lcore-threads -lcore-buffers -lcore-network -lutil-config -lutil-config-smeman -lutil-xml -ladmin-util -lutil -llog4cpp -lxerces-c -lrt -L$(ORACLE_HOME)/lib $(ORACLE_HOME)/lib/libclntsh.so -lthread -lsocket
-test/conv			conv				-ltest-smpp -ltest-sms -ltest-util -lsmpp -lsms -lcore-threads -lcore-buffers -lcore-network -lutil-config -lutil-config-smeman -lutil-xml -ladmin-util -lutil -llog4cpp -lxerces-c -lrt -L$(ORACLE_HOME)/lib $(ORACLE_HOME)/lib/libclntsh.so -lthread -lsocket
+test/Test			Test				-ltest-smpp -ltest-sms -ltest-util -lsms -lcore-threads -lcore-buffers -lcore-network -lutil-config -lutil-config-smeman -lutil-xml -ladmin-util -lutil -llog4cpp -lxerces-c -lrt -L$(ORACLE_LIB) $(ORACLE_LIB)/libclntsh.so -lthread -lsocket
+test/conv			conv				-ltest-smpp -ltest-sms -ltest-util -lsmpp -lsms -lcore-threads -lcore-buffers -lcore-network -lutil-config -lutil-config-smeman -lutil-xml -ladmin-util -lutil -llog4cpp -lxerces-c -lrt -L$(ORACLE_LIB) $(ORACLE_LIB)/libclntsh.so -lthread -lsocket

@@ -7,7 +7,7 @@
 CXXFLAGS := $(CXXFLAGS) -I. -I$(SMSC_SRCDIR)/dbsme -I/usr/local/include/xercesc -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
 PACKAGE := db.oci
 
-__LIBRARIES := $(ORACLE_HOME)/lib/libclntsh.so
+__LIBRARIES := $(ORACLE_LIB)/libclntsh.so
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)
