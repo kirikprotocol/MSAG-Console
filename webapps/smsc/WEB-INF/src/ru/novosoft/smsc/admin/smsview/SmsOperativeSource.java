@@ -130,7 +130,7 @@ public class SmsOperativeSource extends SmsSource
     SmsRow sms = ((RsFileMessage) responce).getSms();
 
     if (needExpression(query.getSmsId())) {
-      if (String.valueOf(sms.getId()).equalsIgnoreCase(query.getSmsId())) return allowed;
+      if (String.valueOf(sms.getId()).equalsIgnoreCase(query.getSmsId())) return false;
     }
     String abAddress = query.getAbonentAddress();
     String smsOrAdd = sms.getOriginatingAddress();
