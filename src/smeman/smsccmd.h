@@ -285,7 +285,7 @@ public:
   const SmscCommand& operator = (const SmscCommand& _cmd)
   {
     // copy(_cmd.cmd);
-    if ( cmd ) unref(cmd);
+    if (cmd) unref(cmd);
     cmd = ref(_cmd.cmd);
     return _cmd;
   }
