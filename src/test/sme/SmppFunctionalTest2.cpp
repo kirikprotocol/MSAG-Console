@@ -192,10 +192,10 @@ void TestSme::executeCycle()
 #ifdef SIMPLE_TEST
 	seq.push_back(201);
 #else
-	//seq.insert(seq.end(), 15, 1);
+	seq.insert(seq.end(), 30, 1);
 	//seq.insert(seq.end(), 10, 2);
-	seq.insert(seq.end(), 10, 3);
-	seq.insert(seq.end(), 10, 4);
+	seq.push_back(3);
+	seq.push_back(4);
 	seq.push_back(5);
 #ifdef ASSERT
 	seq.push_back(101);
@@ -251,12 +251,15 @@ void TestSme::onStopped()
 
 uint32_t TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 {
-	//профайлеру ответить ok
+	//на delivery receipt и сообщение от профайлера ответить ok
 	Address addr;
 	SmppUtil::convert(pdu.get_message().get_source(), &addr);
+	__cfg_addr__(smscAddr);
+	__cfg_addr__(smscAlias);
 	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
-	if (addr == profilerAddr || addr == profilerAlias)
+	if (addr == smscAddr || addr == smscAlias ||
+		addr == profilerAddr || addr == profilerAlias)
 	{
 		return tc.sendDeliverySmRespOk(pdu, rand0(1));
 	}
@@ -336,6 +339,122 @@ void SmppFunctionalTest::printStat()
 	}
 }
 
+void systemSmeConfig()
+{
+	//smsc sme
+	__cfg_addr__(smscAddr);
+	__cfg_addr__(smscAlias);
+	__cfg_str__(smscSystemId);
+	SmeInfo smscSme;
+	smscSme.wantAlias = rand0(1);
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&smscSme);
+	smscSme.systemId = smscSystemId;
+	smeReg->registerSme(smscAddr, smscSme, false, true);
+	smeReg->bindSme(smscSme.systemId);
+	//алиас для smsc sme
+	AliasInfo smscAliasInfo;
+	smscAliasInfo.addr = smscAddr;
+	smscAliasInfo.alias = smscAlias;
+	smscAliasInfo.hide = true; //rand0(2);
+	aliasReg->putAlias(smscAliasInfo);
+	//регистрация profiler
+	__cfg_addr__(profilerAddr);
+	__cfg_addr__(profilerAlias);
+	__cfg_str__(profilerSystemId);
+	SmeInfo profilerSme;
+	profilerSme.wantAlias = false;
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&profilerSme);
+	profilerSme.systemId = profilerSystemId;
+	smeReg->registerSme(profilerAddr, profilerSme, false, true);
+	smeReg->bindSme(profilerSme.systemId);
+	//алиас для profiler
+	AliasInfo profilerAliasInfo;
+	profilerAliasInfo.addr = profilerAddr;
+	profilerAliasInfo.alias = profilerAlias;
+	profilerAliasInfo.hide = true; //rand0(2);
+	aliasReg->putAlias(profilerAliasInfo);
+	//регистрация map proxy
+	__cfg_str__(mapProxySystemId);
+	SmeInfo mapProxySme;
+	mapProxySme.wantAlias = rand0(1);
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&mapProxySme);
+	mapProxySme.systemId = mapProxySystemId;
+	smeReg->registerSme("+123", mapProxySme, false, true);
+	smeReg->bindSme(mapProxySme.systemId);
+	//abonent info прокси
+	__cfg_str__(abonentInfoSystemId);
+	SmeInfo abonentInfoSme;
+	abonentInfoSme.wantAlias = false;
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&abonentInfoSme);
+	abonentInfoSme.systemId = abonentInfoSystemId;
+	smeReg->registerSme("+321", abonentInfoSme, false, true);
+	smeReg->bindSme(abonentInfoSme.systemId);
+}
+
+void checkRoute(const Address& origAddr, const SmeSystemId& origSmeId,
+	const Address& destAlias, int* numRoutes = NULL, int* numBound = NULL)
+{
+	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
+	const RouteHolder* routeHolder = routeReg->lookup(origAddr, destAddr);
+	if (routeHolder)
+	{
+		if (numRoutes)
+		{
+			(*numRoutes)++;
+		}
+		const SmeSystemId& smeId = routeHolder->route.smeSystemId;
+		bool smeBound = smeReg->isSmeBound(smeId);
+		if (smeBound)
+		{
+			if (numBound)
+			{
+				(*numBound)++;
+			}
+		}
+		__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme bound = %s",
+			str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str(), smeId.c_str(),
+			(smeBound ? "yes" : "no"));
+	}
+	else
+	{
+		__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, no route",
+			str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str());
+	}
+}
+
+void checkRoute2(const Address& origAddr, const SmeSystemId& origSmeId,
+	const Address& destAlias)
+{
+	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
+	const RouteHolder* routeHolder1 = routeReg->lookup(origAddr, destAddr);
+	if (routeHolder1)
+	{
+		const SmeSystemId& smeId1 = routeHolder1->route.smeSystemId;
+		bool smeBound1 = smeReg->isSmeBound(smeId1);
+		const RouteHolder* routeHolder2 = routeReg->lookup(destAddr, origAddr);
+		if (routeHolder2)
+		{
+			const SmeSystemId& smeId2 = routeHolder2->route.smeSystemId;
+			bool smeBound2 = smeReg->isSmeBound(smeId2);
+			__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme bound = %s, back route to = %s, sme bound = %s",
+				str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str(),
+				smeId1.c_str(), (smeBound1 ? "yes" : "no"),
+				smeId2.c_str(), (smeBound2 ? "yes" : "no"));
+		}
+		else
+		{
+			__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme bound = %s, no back route",
+				str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str(),
+				smeId1.c_str(), (smeBound1 ? "yes" : "no"));
+		}
+	}
+	else
+	{
+		__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, no route",
+			str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str());
+	}
+}
+
 vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	const string& smscHost, int smscPort)
 {
@@ -348,12 +467,15 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	AliasManagerTestCases tcAlias(NULL, aliasReg, NULL);
 	RouteManagerTestCases tcRoute(NULL, routeReg, NULL);
 
+	__cfg_addr__(smscAddr);
+	__cfg_str__(smscSystemId);
 	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
 	__cfg_str__(profilerSystemId);
-	__cfg_str__(mapProxySystemId);
-	__cfg_str__(abonentInfoSystemId);
 	
+	//системные sme
+	systemSmeConfig();
+
 	vector<Address*> addr;
 	vector<Address*> alias;
 	vector<SmeInfo*> smeInfo;
@@ -379,28 +501,6 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		smeReg->registerAddress(*alias.back());
 		__trace2__("register alias: alias = %s", str(*alias.back()).c_str());
 	}
-	//регистрация profiler
-	SmeInfo profilerInfo;
-	profilerInfo.wantAlias = false;
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&profilerInfo);
-	profilerInfo.systemId = profilerSystemId;
-	smeReg->registerSme(profilerAddr, profilerInfo, false, true);
-	smeReg->bindSme(profilerInfo.systemId);
-	//регистрация map proxy
-	SmeInfo mapProxyInfo;
-	mapProxyInfo.wantAlias = false;
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&mapProxyInfo);
-	mapProxyInfo.systemId = mapProxySystemId;
-	smeReg->registerSme("+123", mapProxyInfo, false, true);
-	smeReg->bindSme(mapProxyInfo.systemId);
-	//abonent info прокси
-	SmeInfo abonentProxyInfo;
-	abonentProxyInfo.wantAlias = false;
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&abonentProxyInfo);
-	abonentProxyInfo.systemId = abonentInfoSystemId;
-	smeReg->registerSme("+321", abonentProxyInfo, false, true);
-	smeReg->bindSme(abonentProxyInfo.systemId);
-	//регистрация алиасов
 	for (int i = 0; i < numAddr; i++)
 	{
 		for (int j = 0; j < numAlias; j++)
@@ -440,14 +540,9 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		if (_addr != *addr[i])
 		{
 			cout << "Alias constraint d(a(A)) = A violated" << endl;
+			break;
 		}
 	}
-	//алиас для profiler
-	AliasInfo profilerAliasInfo;
-	profilerAliasInfo.addr = profilerAddr;
-	profilerAliasInfo.alias = profilerAlias;
-	profilerAliasInfo.hide = rand0(2);
-	aliasReg->putAlias(profilerAliasInfo);
 	//tcAlias->commit();
 	//регистрация маршрутов
 	for (int i = 0; i < numAddr; i++)
@@ -498,15 +593,18 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		route2.enabling = true;
 		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
 	}
+	//маршруты на smsc (delivery receipts)
+	for (int i = 0; i < numAddr; i++)
+	{
+		//smsc -> sme
+		RouteInfo route;
+		route.source = smscAddr;
+		route.dest = *addr[i];
+		route.smeSystemId = smeInfo[i]->systemId;
+		route.enabling = true;
+		tcRoute.addCorrectRouteMatch(&route, NULL, RAND_TC);
+	}
 	//tcRoute->commit();
-	//сохранение конфигов
-	configChkList->reset();
-	SmeConfigGen smeCfg(smeReg, configChkList);
-	AliasConfigGen aliasCfg(aliasReg, configChkList);
-	RouteConfigGen routeCfg(routeReg, configChkList);
-	smeCfg.saveConfig("../conf/sme.xml");
-	aliasCfg.saveConfig("../conf/aliases.xml");
-	routeCfg.saveConfig("../conf/routes.xml");
 	//создание sme
 	vector<TestSme*> sme;
 	for (int i = 0; i < numSme; i++)
@@ -525,68 +623,27 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		sme.push_back(new TestSme(i, config, fixture)); //throws Exception
 		smeReg->bindSme(smeInfo[i]->systemId);
 	}
-	//печать таблицы маршрутов между sme
+	//печать таблицы маршрутов sme->sme
 	__trace__("*** Route table ***");
 	int numRoutes = 0;
 	int numBound = 0;
 	for (int i = 0; i < numAddr; i++)
 	{
-		for (int j = 0; j < numAddr; j++)
+		const vector<const Address*>& addrList = smeReg->getAddressList();
+		for (int j = 0; j < addrList.size(); j++)
 		{
-			Address& origAddr = *addr[i];
-			Address& destAlias = *addr[j];
-			string smeId = "<>";
-			bool smeBound = false;
-			const Address destAddr = aliasReg->findAddressByAlias(destAlias);
-			const RouteHolder* routeHolder =
-				routeReg->lookup(origAddr, destAddr);
-			if (routeHolder)
-			{
-				smeId = routeHolder->route.smeSystemId;
-				smeBound = smeReg->isSmeBound(smeId);
-				numRoutes++;
-				if (smeBound)
-				{
-					numBound++;
-				}
-			}
-			ostringstream os;
-			os << "origAddr = " << origAddr << ", destAlias = " << destAlias;
-			__trace2__("%s, route to = %s, sme bound = %s",
-				os.str().c_str(), smeId.c_str(), (smeBound ? "yes" : "no"));
+			checkRoute(*addr[i], smeInfo[i]->systemId, *addrList[j], &numRoutes, &numBound);
 		}
 	}
-	//печать таблицы маршрутов между sme и профайлером
+	//печать таблицы маршрутов smsc->sme
 	for (int i = 0; i < numSme; i++)
 	{
-		ostringstream os;
-		os << "sme: addr = " << *addr[i] << ", smeId = " << smeInfo[i]->systemId;
-		const Address& _smeAddr = *addr[i];
-		static const Address _profilerAddr = aliasReg->findAddressByAlias(profilerAlias);
-		const RouteHolder* routeHolder1 = routeReg->lookup(_smeAddr, _profilerAddr);
-		if (routeHolder1)
-		{
-			const SmeSystemId& smeId1 = routeHolder1->route.smeSystemId;
-			bool smeBound1 = smeReg->isSmeBound(smeId1);
-			os << ", route to = " << smeId1 << ", bound = " << (smeBound1 ? "yes" : "no");
-			const RouteHolder* routeHolder2 = routeReg->lookup(_profilerAddr, _smeAddr);
-			if (routeHolder2)
-			{
-				const SmeSystemId& smeId2 = routeHolder2->route.smeSystemId;
-				bool smeBound2 = smeReg->isSmeBound(smeId2);
-				os << ", back route to = " << smeId2 << ", bound = " << (smeBound2 ? "yes" : "no");
-				//routeCount++;
-			}
-			else
-			{
-				os << ", no back route";
-			}
-		}
-		else
-		{
-			os << ", no route";
-		}
-		__trace2__("%s", os.str().c_str());
+		checkRoute(smscAddr, smscSystemId, *addr[i]);
+	}
+	//печать таблицы маршрутов sme<->profiler
+	for (int i = 0; i < numSme; i++)
+	{
+		checkRoute2(*addr[i], smeInfo[i]->systemId, profilerAlias);
 	}
 	if (!numBound)
 	{
@@ -595,6 +652,14 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	}
 	cout << "Valid routes: " << numRoutes << endl;
 	cout << "Valid routes with sme: " << numBound << endl;
+	//сохранение конфигов
+	configChkList->reset();
+	SmeConfigGen smeCfg(smeReg, configChkList);
+	AliasConfigGen aliasCfg(aliasReg, configChkList);
+	RouteConfigGen routeCfg(routeReg, configChkList);
+	smeCfg.saveConfig("../conf/sme.xml");
+	aliasCfg.saveConfig("../conf/aliases.xml");
+	routeCfg.saveConfig("../conf/routes.xml");
 	for (int i = 0; i < numAddr; i++)
 	{
 		delete addr[i];
