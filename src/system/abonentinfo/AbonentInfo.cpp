@@ -1,5 +1,6 @@
 #include "system/abonentinfo/AbonentInfo.hpp"
 #include "util/smstext.h"
+#include "util/Logger.h"
 
 namespace smsc{
 namespace system{
@@ -22,7 +23,8 @@ int AbonentInfoSme::Execute()
   s.setValidTime(t);
   s.setDeliveryReport(0);
   s.setArchivationRequested(false);
-  s.setEServiceType("XXX");
+  s.setEServiceType("");
+  log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.AbonentInfoSme");
 
   while(!isStopping)
   {
@@ -34,7 +36,8 @@ int AbonentInfoSme::Execute()
     cmd=getOutgoingCommand();
     if(cmd->cmdid!=smsc::smeman::DELIVERY)
     {
-      __trace2__("Profiler: incorrect command submitted");
+      __trace2__("AbonentInfoSme: incorrect command submitted");
+      log.warn("Incorrect command received");
       continue;
     }
     sms=cmd->get_sms();
@@ -48,7 +51,7 @@ int AbonentInfoSme::Execute()
     Address a(body);
     p=profiler->lookup(a);
     char answ[MAX_SHORT_MESSAGE_LENGTH];
-    sprintf(answ,"%d,%d",1,p.codepage);
+    sprintf(answ,"%s:%d,%d",body,1,p.codepage);
     
     int len=strlen(answ);
     char buf7[MAX_SHORT_MESSAGE_LENGTH];
