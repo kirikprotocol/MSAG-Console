@@ -1228,6 +1228,7 @@ void SmsCache::putSms(SMSId id, SMS* sm)
     if (idCache.Count() == 0) lastId = id;
     if (idCache.Count() >= cacheCapacity)
     {
+        __trace2__("Cache size is %d. Cleaning SMS cache ...", idCache.Count());
         int toDelete = cacheCapacity/10;
         SMSId curId=lastId;
         
@@ -1235,6 +1236,7 @@ void SmsCache::putSms(SMSId id, SMS* sm)
             if (delSms(curId++)) toDelete--;
         
         lastId = curId;
+        __trace2__("Cache size is %d. SMS cache cleaned.", idCache.Count());
     }
     idCache.Insert(id, sm);
 }
