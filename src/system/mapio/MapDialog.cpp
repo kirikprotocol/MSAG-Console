@@ -25,3 +25,14 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   return ET96MAP_E_OK;
 }
 
+void ForwardResponse()
+{
+  USHORT_T result = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
+  if ( result != ET96MAP_E_OK ){
+    __trace2__("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
+   throw runtime_error("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
+  }
+  CloseAndRemoveDialog(SSN,dialogId);
+}
+
+
