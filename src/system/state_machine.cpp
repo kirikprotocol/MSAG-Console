@@ -1382,6 +1382,7 @@ StateType StateMachine::replace(Tuple& t)
   if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
     sms.getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
+    __trace__("REPLACE: droping payload");
   }
 
   try{
