@@ -64,6 +64,16 @@ void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 					pdu2file("submit_sm", id, pdu);
 				}
 				break;
+			case SUBMIT_MULTI:
+				{
+					SmsPduWrapper p(pdu, time(NULL));
+					ss << ", serviceType = " << nvl(p.getServiceType());
+					ss << ", msgRef = " << (int) p.getMsgRef();
+					ss << ", waitTime = " << p.getWaitTime();
+					ss << ", validTime = " << p.getValidTime();
+					pdu2file("submit_multi", id, pdu);
+				}
+				break;
 			case DATA_SM:
 				{
 					SmsPduWrapper p(pdu, time(NULL));
@@ -856,8 +866,11 @@ bool operator!=(PduAddress& a1, PduAddress& a2)
 #define __prop__(prop) \
 	os << "    " #prop " = " << p.get_##prop() << endl;
 
+#define __int_prop__(prop) \
+	os << "    " #prop " = " << dec << p.get_##prop() << endl;
+
 #define __hex_prop__(prop) \
-	os << "    " #prop " = 0x" << p.get_##prop() << endl;
+	os << "    " #prop " = 0x" << hex << p.get_##prop() << endl;
 
 #define __str_prop__(prop) \
 	os << "    " #prop " = " << (p.get_##prop() ? p.get_##prop() : "NULL") << endl; \
@@ -914,6 +927,9 @@ ostream& operator<< (ostream& os, SmppHeader*& p)
 		case DELIVERY_SM_RESP:
 			os << *reinterpret_cast<PduXSmResp*>(p);
 			break;
+		case SUBMIT_MULTI_RESP:
+			os << *reinterpret_cast<PduMultiSmResp*>(p);
+			break;
 		case REPLACE_SM_RESP:
 			os << *reinterpret_cast<PduReplaceSmResp*>(p);
 			break;
@@ -944,11 +960,6 @@ ostream& operator<< (ostream& os, SmppHeader*& p)
 			os << *reinterpret_cast<PduBindTRXResp*>(p);
 			break;
 		//прочее
-		case SUBMIT_MULTI_RESP:
-			os << "PduMultiSmResp {" << endl;
-			os << *p << endl;
-			os << "}";
-			break;
 		case ALERT_NOTIFICATION:
 			os << "PduAlertNotification {" << endl;
 			os << *p << endl;
@@ -1005,8 +1016,8 @@ ostream& operator<< (ostream& os, PduReplaceSm& p)
 	__prop__(source);
 	__str_prop__(scheduleDeliveryTime);
 	__str_prop__(validityPeriod);
-	__prop__(registredDelivery);
-	__prop__(smDefaultMsgId);
+	__int_prop__(registredDelivery);
+	__int_prop__(smDefaultMsgId);
 	__ostr_prop__(shortMessage);
 	os << "}";
 	return os;
@@ -1064,7 +1075,7 @@ ostream& operator<< (ostream& os, PduBindTRX& p)
 	__str_prop__(systemId);
 	__str_prop__(password);
 	__str_prop__(systemType);
-	__prop__(interfaceVersion);
+	__int_prop__(interfaceVersion);
 	__prop__(addressRange);
 	os << "}";
 	return os;
@@ -1089,14 +1100,30 @@ ostream& operator<< (ostream& os, PduXSmResp& p)
 	return os;
 }
 
+ostream& operator<< (ostream& os, PduMultiSmResp& p)
+{
+	os << "PduMultiSmResp {" << endl;
+	os << p.get_header() << endl;
+	__str_prop__(messageId);
+	__int_prop__(noUnsuccess);
+	for (int i = 0; i < p.get_noUnsuccess(); i++)
+	{
+		os << "    unsuccessSme[" << i << "]:" <<
+			" addr = " << p.get_sme()[i].get_addr() <<
+			", errorStatusCode = " << p.get_sme()[i].get_errorStatusCode() << endl;
+	}
+	os << "}";
+	return os;
+}
+
 ostream& operator<< (ostream& os, PduQuerySmResp& p)
 {
 	os << "PduQuerySmResp {" << endl;
 	os << p.get_header() << endl;
 	__str_prop__(messageId);
 	__str_prop__(finalDate);
-	__prop__(messageState);
-	__prop__(errorCode);
+	__int_prop__(messageState);
+	__int_prop__(errorCode);
 	os << "}";
 	return os;
 }
@@ -1162,7 +1189,7 @@ ostream& operator<< (ostream& os, PduBindTRXResp& p)
 	}
 	os << p.get_header() << endl;
 	__str_prop__(systemId);
-	__prop__(scInterfaceVersion);
+	__int_prop__(scInterfaceVersion);
 	os << "}";
 	return os;
 }
@@ -1170,12 +1197,10 @@ ostream& operator<< (ostream& os, PduBindTRXResp& p)
 ostream& operator<< (ostream& os, SmppHeader& p)
 {
 	os << "  SmppHeader {" << endl;
-	__prop__(commandLength);
-	os << hex;
+	__int_prop__(commandLength);
 	__hex_prop__(commandId);
 	__hex_prop__(commandStatus);
-	os << dec;
-	__prop__(sequenceNumber);
+	__int_prop__(sequenceNumber);
 	os << "  }";
 	return os;
 }
@@ -1194,17 +1219,17 @@ ostream& operator<< (ostream& os, PduPartSm& p)
 	__str_prop__(serviceType);
 	__prop__(source);
 	__prop__(dest);
-	__prop__(numberOfDests);
+	__int_prop__(numberOfDests);
 	//__ptr_property__(PduDestAddress,dests)
-	__prop__(esmClass);
-	__prop__(protocolId);
-	__prop__(priorityFlag);
+	__int_prop__(esmClass);
+	__int_prop__(protocolId);
+	__int_prop__(priorityFlag);
 	__str_prop__(scheduleDeliveryTime);
 	__str_prop__(validityPeriod);
-	__prop__(registredDelivery);
-	__prop__(replaceIfPresentFlag);
-	__prop__(dataCoding);
-	__prop__(smDefaultMsgId);
+	__int_prop__(registredDelivery);
+	__int_prop__(replaceIfPresentFlag);
+	__int_prop__(dataCoding);
+	__int_prop__(smDefaultMsgId);
 	__ostr_prop__(shortMessage);
 	os << "  }";
 	return os;
@@ -1216,9 +1241,9 @@ ostream& operator<< (ostream& os, PduDataPartSm& p)
 	__str_prop__(serviceType);
 	__prop__(source);
 	__prop__(dest);
-	__prop__(esmClass);
-	__prop__(registredDelivery);
-	__prop__(dataCoding);
+	__int_prop__(esmClass);
+	__int_prop__(registredDelivery);
+	__int_prop__(dataCoding);
 	os << "  }";
 	return os;
 }

@@ -167,6 +167,7 @@ __log_pdu__(PduDataSm)
 __log_pdu__(PduBindTRX)
 
 __log_pdu__(PduXSmResp)
+__log_pdu__(PduMultiSmResp)
 __log_pdu__(PduWithOnlyHeader)
 __log_pdu__(PduQuerySmResp)
 __log_pdu__(PduDataSmResp)
