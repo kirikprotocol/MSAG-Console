@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!ELEMENT routes (subject_def*, route*)>
+<!ELEMENT route (source+, destination+)>
+<!ATTLIST route
+	id CDATA #REQUIRED
+	billing (true | false) #REQUIRED
+	archiving (true | false) #REQUIRED
+	enabling (true | false) "true"
+>
+<!ELEMENT source (subject | mask)>
+<!ELEMENT destination (subject | mask)>
+<!ATTLIST destination
+	sme CDATA #REQUIRED
+>
+<!ELEMENT subject EMPTY>
+<!ATTLIST subject
+	id CDATA #REQUIRED
+>
+<!ELEMENT subject_def (mask+)>
+<!ATTLIST subject_def
+	id CDATA #REQUIRED
+	defSme CDATA #REQUIRED
+>
+<!ELEMENT mask EMPTY>
+<!ATTLIST mask
+	value CDATA #REQUIRED
+>

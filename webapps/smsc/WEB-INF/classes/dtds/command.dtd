@@ -1,0 +1,18 @@
+<?xml encoding="ISO-8859-1"?>
+
+<!ELEMENT command (service|param*)>
+    <!ATTLIST command name (start_service|shutdown_service|kill_service|add_service|remove_service|list_services|list_components|call|set_service_startup_parameters) #REQUIRED>
+    <!ATTLIST command service CDATA #IMPLIED>
+    <!ATTLIST command component CDATA #IMPLIED>
+    <!ATTLIST command method CDATA #IMPLIED>
+    <!ATTLIST command returnType (string|int|bool) #IMPLIED>
+    
+<!ELEMENT service (#PCDATA)>
+    <!ATTLIST service id CDATA #REQUIRED>
+    <!ATTLIST service name CDATA #REQUIRED>
+    <!ATTLIST service port CDATA #REQUIRED>
+    <!ATTLIST service args CDATA #REQUIRED>
+
+<!ELEMENT param (#PCDATA)>
+    <!ATTLIST param name CDATA #REQUIRED>
+    <!ATTLIST param type (string|int|bool) #REQUIRED>
