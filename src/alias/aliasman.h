@@ -17,7 +17,7 @@ struct AliasInfo
   Address alias;
 };
 
-struct AliasRecord;
+//struct AliasRecord;
 
 struct APattern
 {
@@ -42,8 +42,8 @@ struct APattern
   };
   int length;
   int defLength;
-  bool hasStar;
-  AliasRecord* greatUncertainty;
+  //bool hasStar;
+  //AliasRecord* greatUncertainty;
 };
 
 struct AValue

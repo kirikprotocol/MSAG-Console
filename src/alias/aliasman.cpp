@@ -7,9 +7,12 @@
 #include <vector>
 #include <algorithm>
 
-#define ENTER __trace2__("enter in %s",__PRETTY_FUNCTION__)
-#define LEAVE __trace2__("leave from %s",__PRETTY_FUNCTION__)
-#define LEAVE_(result) {LEAVE; __watch__(result); return result;}
+//#define ENTER __trace2__("enter in %s",__PRETTY_FUNCTION__)
+//#define LEAVE __trace2__("leave from %s",__PRETTY_FUNCTION__)
+//#define LEAVE_(result) {LEAVE; __watch__(result); return result;}
+#define ENTER 
+#define LEAVE 
+#define LEAVE_(result) return result;
 
 extern void __qsort__ (void *const pbase, size_t total_elems, size_t size,int(*cmp)(const void*,const void*));
  
@@ -23,35 +26,29 @@ using namespace std;
 inline 
 void print(const APattern& pattern,char* text)
 {
-__trace2__("#### %s = PATTERN {%s%c(%d/%d), npi: %d, ton: %d}",
+	__trace2__("#### %s = PATTERN {%s(len:%d/def:%d), npi: %d, ton: %d}",
               text, 
               pattern.value,
-              pattern.hasStar?'*':' ',
               pattern.length,
               pattern.defLength,
 							pattern.numberingPlan,
 							pattern.typeOfNumber);
 }
+void print(const AValue& val,char* text)
+{
+	__trace2__("#### %s = VALUE {%s(len:%d), npi: %d, ton: %d}",
+              text, 
+              val.value,
+              val.length,
+							val.numberingPlan,
+							val.typeOfNumber);
+}
 inline 
 int compare_val_pat(const AValue& val, const APattern& pattern,bool& strong)
 {
-  __trace2__("compare Pat:%s%c(%d/%d) ? Val:%s(%d)",
-              pattern.value,
-              pattern.hasStar?'*':' ',
-              pattern.length,
-              pattern.defLength,
-              val.value,
-              val.length);
-  __trace2__("compare Pat(npi):%d ? Val(npi):%d, P:%x,v:%x",
-              pattern.numberingPlan,
-              val.numberingPlan,
-              pattern.num_n_plan,
-              val.num_n_plan);
-  __trace2__("compare Pat(tni):%d ? Val(tni):%d, P:%x,v:%x",
-              pattern.typeOfNumber,
-              val.typeOfNumber,
-              pattern.num_n_plan,
-              val.num_n_plan); 
+	__trace2__("compare (value ? pattern)");
+	print(val,"\tV:");
+	print(pattern,"\tP:");
 #define compare_v(n) \
   ((pattern.mask_32[n]&val.value_32[n]) - pattern.value_32[n])
 #define ifn0goto {if ( result ) goto result_; }
@@ -62,13 +59,13 @@ int compare_val_pat(const AValue& val, const APattern& pattern,bool& strong)
   result = compare_v(2); ifn0goto;
   result = compare_v(3); ifn0goto;
   result = compare_v(4); ifn0goto;
-  result = !pattern.hasStar ? val.length - pattern.length : 0 ; ifn0goto;
-  if ( !pattern.hasStar && pattern.length == pattern.defLength )
-    strong = true;
-  else  
-    strong = false;
+	result = val.length - pattern.length; ifn0goto;
+  if ( pattern.defLength == val.length )
+		strong = true;
+	else
+		strong = false;
 result_:
-  __trace2__(" %c == (%s)%d",result>0?'>':result<0?'<':'0',strong?"strong":"weak",result);
+  __trace2__("result(V%cP)%s%d",result>0?'>':result<0?'<':'=',(result==0)?strong?"(strong)":"(weak)":"",result);
   return (int32_t)result;
 #undef ifn0goto
 #undef compare_v
@@ -77,40 +74,27 @@ static inline int compare_pat_pat( const APattern& pat1,
                                   const APattern& pat2,
                                   bool& strong )
 {
-__trace2__("compare patterna");
-print(pat1,"P1");
-print(pat2,"P2");
+__trace2__("compare (%s)(pattern ? pattern)",strong?"strong":"weak");
+print(pat1,"\tP1");
+print(pat2,"\tP2");
 
-#define compare_v(n) (pat1.value_32[n] - pat2.value_32[n] )
+#define compare_v(n) (pat1.value_32[n]&pat2.mask_32[n] - pat2.value_32[n]&pat1.mask_32[n] )
 #define ifn0goto {if (result) goto result_;}
   int32_t result;
   result = pat1.num_n_plan - pat2.num_n_plan; ifn0goto;
+  if ( strong )
+		{result = pat1.defLength - pat2.defLength; ifn0goto;}
+	else if ( pat1.defLength == pat2.defLength ) strong = true;
   result = compare_v(0); ifn0goto;
   result = compare_v(1); ifn0goto;
   result = compare_v(2); ifn0goto;
   result = compare_v(3); ifn0goto;
   result = compare_v(4); ifn0goto;
-  __trace2__("check_length: %c : P%d ? A%d",
-             pat1.hasStar||pat2.hasStar?'*':' ',
-             pat1.length,
-             pat2.length);
-  if ( pat1.length == pat2.length && 
-       pat1.defLength == pat2.defLength &&
-       pat1.hasStar == pat2.hasStar)
-  {
-    strong == true; 
-  }
-  else
-  {
-    strong = false;
-    if (  pat1.hasStar || pat2.hasStar ) goto result_;
-    result = pat1.length - pat2.length; ifn0goto;
-    result = pat1.defLength - pat2.defLength; ifn0goto;
-  }
+	result = pat1.length - pat2.length; ifn0goto;
 result_:
-  __trace2__("= %c(%s) == %d",result>0?'>':result<0?'<':'0',
-			strong?"strong":"weak",
-		  result);
+  __trace2__("result(P1%cP2)%s%d",result>0?'>':result<0?'<':'=',
+			(result==0)?strong?"(strong)":"(weak)":"",
+		  result); 
   return (int32_t)result;
 #undef if0ngoto
 #undef compare_v
@@ -132,7 +116,7 @@ static TreeNode* findNodeByAliasRecurse(TreeNode* node,AValue& val,int& cmp)
     /*
       fix me here, change to binary search 
     */
-    __watch__(node->child.size());
+    //__watch__(node->child.size());
     for ( int i=0; i<node->child.size(); ++i )
     {
       TreeNode* res = findNodeByAliasRecurse(node->child[i],val,cmp);
@@ -160,7 +144,7 @@ TreeNode* findNodeByAddrRecurse(TreeNode* node,AValue& val, int& cmp)
     /*
       fix me here, change to binary search 
     */
-    __watch__(node->child.size());
+    //__watch__(node->child.size());
     for ( int i=0; i<node->child.size(); ++i )
     {
       TreeNode* res = findNodeByAddrRecurse(node->child[i],val,cmp);
@@ -176,37 +160,26 @@ int addIntoAliasTreeRecurse(TreeNode* node,AliasRecord* rec)
 {
   ENTER;
   __require__(node != 0);
-  bool strong = false;
+	__trace__("addIntoAliasTree");
+	if ( node->alias ) print(*node->alias,"node->alias");
+	else __trace__("no node->alias");
+	print(rec->alias,"rec->alias");
+  
+	bool strong = false;
   int cmp = 0;
-  if ( !node->alias )
-	{
-		goto find_child;
-	}
+  if ( !node->alias ) goto find_child;
   cmp = compare_pat_pat(rec->alias,*(node->alias),strong);
-  if ( strong )
-  {
-    __warning__("duplicate alias, is has not added into aliases set");
-    LEAVE_(0);
-  }
   if ( cmp == 0 )
   {
+		if ( strong )
+		{
+			__warning__("duplicate alias, is has not added into aliases set");
+			LEAVE_(0);
+		}
     __trace2__("weak equal:")
-    print(*node->alias,"node");
-    print(rec->alias,"rec");
-    if ( (node->alias->defLength > rec->alias.defLength) 
-         || ((node->alias->defLength >= rec->alias.defLength) &&
-             (!node->alias->hasStar && rec->alias.hasStar) ))
+    if (node->alias->defLength > rec->alias.defLength) 
     {
-      /*TreeNode* newNode = new TreeNode;
-      newNode->addr = node->addr;
-      newNode->alias = node->alias;
-      newNode->child = node->child;
-      node->child = std::vector<TreeNode*>(0);
-      node->addr = &rec->addr;
-      node->alias = &rec->alias;
-      node->child.push_back(newNode);
-      LEAVE_(0);*/
-			__unreachable__("incorrect");
+			__unreachable__("incorrect tree");
     }
   find_child:
     /*
@@ -217,7 +190,8 @@ int addIntoAliasTreeRecurse(TreeNode* node,AliasRecord* rec)
       cmp = addIntoAliasTreeRecurse(node->child[i],rec);
       if ( cmp == 0 ) LEAVE_(0);
     }
-    TreeNode* newNode = new TreeNode;
+    __trace__("**** add element ****");
+		TreeNode* newNode = new TreeNode;
     newNode->addr = &rec->addr;
     newNode->alias = &rec->alias;
 		node->child.push_back(newNode);
@@ -229,44 +203,26 @@ int addIntoAliasTreeRecurse(TreeNode* node,AliasRecord* rec)
 int addIntoAddrTreeRecurse(TreeNode* node,AliasRecord* rec)
 {
   ENTER;
+	__trace2__("addIntoAddrTree");
+	if ( node->addr ) print(*node->addr,"node->addr");
+	else __trace__("no addr");
+	print(rec->addr,"rec->addr");
   __require__(node != 0);
   bool strong = false;
   int cmp = 0;
-  if ( !node->addr ) 
-	{
-		if ( rec->addr.defLength == 0 && rec->addr.hasStar )
-		{
-			node->addr = &rec->addr;
-			node->alias = &rec->alias;
-			LEAVE_(0);
-		}
-		goto find_child;
-	}
+  if ( !node->addr ) goto find_child;
   cmp = compare_pat_pat(rec->addr,*(node->addr),strong);
-  if ( strong )
-  {
-    __warning__("duplicate alias, is has not added into aliases set");
-    LEAVE_(0);
-  }
   if ( cmp == 0 )
   {
+		if ( strong )
+		{
+			__warning__("duplicate alias, is has not added into aliases set");
+			LEAVE_(0);
+		}
     __trace2__("weak equal:")
-    print(*node->addr,"node");
-    print(rec->addr,"rec");
-    if ( (node->addr->defLength > rec->addr.defLength) 
-         || ((node->addr->defLength >= rec->addr.defLength) &&
-             (!node->addr->hasStar && rec->addr.hasStar) ) )
+    if (node->addr->defLength > rec->addr.defLength)
     {
-      /*TreeNode* newNode = new TreeNode;
-      newNode->addr = node->addr;
-      newNode->alias = node->alias;
-      newNode->child = node->child;
-      node->child = std::vector<TreeNode*>(0);
-      node->addr = &rec->addr;
-      node->alias = &rec->alias;
-      node->child.push_back(newNode);
-      LEAVE_(0);*/
-			__unreachable__("incorrect");
+			__unreachable__("incorrect tree");
     }
 	find_child:
     /*
@@ -274,21 +230,17 @@ int addIntoAddrTreeRecurse(TreeNode* node,AliasRecord* rec)
     */
     for ( int i=0; i<node->child.size(); ++i )
     {
-      //__require__(node->child[i]!=0);
-      if ( node->child[i]!=0 )
-      {
-        __watch__(node->child.size());
-        __watch__(node);
-      }
       cmp = addIntoAddrTreeRecurse(node->child[i],rec);
       if ( cmp == 0 ) LEAVE_(0);
     }
-    TreeNode* newNode = new TreeNode;
+    __trace2__("****add element*****");
+		TreeNode* newNode = new TreeNode;
     newNode->addr = &rec->addr;
     newNode->alias = &rec->alias;
     node->child.push_back(newNode);
     cmp = 0;
   }
+	__trace2__("^addIntoAddrTree");
   LEAVE_(cmp);
 }
 
@@ -369,7 +321,7 @@ static inline void makeAPattern(APattern& pat, const Address& addr)
   pat.defLength = 0;
   pat.length = 0;
   bool undef = false;
-  pat.hasStar = false;
+  //pat.hasStar = false;
   for ( int i=0; i<length; ++i )
   {
     switch(buf[i])
@@ -378,11 +330,12 @@ static inline void makeAPattern(APattern& pat, const Address& addr)
       undef = true;
       ++pat.length;
       break;
-    case '*': // only end of value
-      pat.hasStar = true;
-      goto for_break;
+    case '*': // incorrect symbol
+			throw runtime_error("* is incorrect symbol");
+      //pat.hasStar = true;
+      //goto for_break;
     default:
-      if ( undef ) throw runtime_error("*,? may be only at end of pattern");
+      if ( undef ) throw runtime_error("? may be only at end of pattern");
       ++pat.defLength;
       ++pat.length;
       pat.mask[i] = 0xff;
@@ -412,6 +365,7 @@ bool AliasManager::AddressToAlias(
   const Address& addr, Address& alias)
 {
 __synchronized__
+	__trace__("\n\n*@*@*@*@*@*@*@*@*@*@*@* AddressToAlias *@*@*@*@*@*@*@*@*");
   ENTER;
   AValue val;
   makeAValue(val,addr);
@@ -421,12 +375,15 @@ __synchronized__
   if ( node )
   {
     __trace2__("result node %p ",node);
-    __trace2__("find for Val:%s,length:%d\n\tP:%.20s,Star:%d,length:%d",
+		print(val,"\tvalue:");
+		print(*node->addr,"\taddr:");
+		print(*node->alias,"\talias:");
+    /*__trace2__("find for Val:%s,length:%d\n\tP:%.20s,length:%d",
                val.value,
                val.length,
                node->addr->value,
-               node->addr->hasStar,
-               node->addr->length);
+               node->addr->length);*/
+
     makeAliasFromValueByAddres(*node,val,alias);
   }
   LEAVE;
@@ -437,7 +394,8 @@ bool AliasManager::AliasToAddress(
   const Address& alias, Address& addr)
 {
 __synchronized__
-  ENTER;
+	ENTER;
+	__trace__("\n\n*@*@*@*@*@*@*@*@*@*@*@* AliasToAddress *@*@*@*@*@*@*@*@*");
   AValue val;
   makeAValue(val,alias);
   int cmp;
@@ -446,12 +404,15 @@ __synchronized__
   if ( node )
   {
     __trace2__("result node %p ",node);
-    __trace2__("find for Val:%s,length:%d\n\tP:%.20s,Star:%d,length:%d",
+		print(val,"\tvalue:");
+		print(*node->alias,"\talias:");
+		print(*node->addr,"\taddr:");
+    /*__trace2__("find for Val:%s,length:%d\n\tP:%.20s,Star:%d,length:%d",
                val.value,
                val.length,
                node->alias->value,
                node->alias->hasStar,
-               node->alias->length);
+               node->alias->length);*/
     makeAddressFromValueByAlias(*node,val,addr);
   }
   LEAVE;
@@ -1048,44 +1009,16 @@ __synchronized__
 
 int ali_sort_comparator(const void* pat1,const void* pat2)
 {
-  bool strong;
+  bool strong = true;
 	int cmp = compare_pat_pat((**(AliasRecord**)pat1).alias,
                         (**(AliasRecord**)pat2).alias,strong);
-	if ( cmp == 0 ) 
-	{
-		if ( !strong ) 
-		{
-			cmp =  (**(AliasRecord**)pat1).alias.defLength-
-							(**(AliasRecord**)pat2).alias.defLength;
-			if ( cmp == 0 ) 
-			{
-				cmp = (**(AliasRecord**)pat1).alias.length-
-							(**(AliasRecord**)pat2).alias.length;
-				__require__( cmp != 0 );
-			}
-		}
-	}
 	return cmp;
 }
 int adr_sort_comparator(const void* pat1,const void* pat2)
 {
-	bool strong;
+	bool strong = true;
   int cmp = compare_pat_pat((**(AliasRecord**)pat1).addr,
                         (**(AliasRecord**)pat2).addr,strong);
-	if ( cmp == 0 ) 
-	{
-		if ( !strong ) 
-		{
-			cmp =  (**(AliasRecord**)pat1).addr.defLength-
-							(**(AliasRecord**)pat2).addr.defLength;
-			if ( cmp == 0 ) 
-			{
-				cmp = (**(AliasRecord**)pat1).addr.length-
-							(**(AliasRecord**)pat2).addr.length;
-				__require__( cmp != 0 );
-			}
-		}
-	}
 	return cmp;
 }
 
@@ -1108,12 +1041,28 @@ __synchronized__
 	}
 	__qsort__(tmp_vector,new_aliases_count,sizeof(AliasRecord*),
 						adr_sort_comparator);
+	__trace2__("&---------- BEGIN by Addr --------------&");
+	for ( int i =0; i<new_aliases_count; ++i )
+	{
+		__trace__("\n");
+		print(tmp_vector[i]->addr,"from:");
+		print(tmp_vector[i]->alias,"\tto:");
+	}
+	__trace2__("&---------- END --------------&");
 	for ( int i =0; i<new_aliases_count; ++i )
 	{
 		addIntoAddrTreeRecurse(&addrRootNode,tmp_vector[i]);
 	}
 	__qsort__(tmp_vector,new_aliases_count,sizeof(AliasRecord*),
 						ali_sort_comparator);
+	__trace2__("&---------- BEGIN table by Alias --------------&");
+	for ( int i =0; i<new_aliases_count; ++i )
+	{
+		__trace__("\n");
+		print(tmp_vector[i]->alias,"from: ");
+		print(tmp_vector[i]->addr,"\tto:");
+	}
+	__trace2__("&---------- END --------------&");
 	for ( int i =0; i<new_aliases_count; ++i )
 	{
 		addIntoAliasTreeRecurse(&aliasRootNode,tmp_vector[i]);
