@@ -104,7 +104,9 @@ FormatEntity::FormatEntity(std::string line, bool io, bool type)
 {
     if (type)
     {
-        const char* raw = line.c_str();
+        char* raw = (char *)line.c_str();
+        while (isspace(*raw)) raw++;
+
         int i;
         for (i=0; i<ioEntityTypesNumber-1; i++)
         {
