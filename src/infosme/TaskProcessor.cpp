@@ -299,13 +299,13 @@ bool TaskProcessor::processTask(Task* task)
     {
         MutexGuard icGuard(dsIntConnectionLock);
         if (!task->getNextMessage(dsIntConnection, message)) {
-            //logger.debug("No messages found for task '%s'", info.id.c_str());
+            logger.debug("No messages found for task '%s'", info.id.c_str());
             return false;
         }
     }
 
-    //logger.debug("Sending message #%lld for '%s': %s", 
-    //             message.id, message.abonent.c_str(), message.message.c_str());
+    logger.debug("Sending message #%lld for '%s': %s", 
+                 message.id, message.abonent.c_str(), message.message.c_str());
 
     MutexGuard msGuard(messageSenderLock);
     if (messageSender)
@@ -334,7 +334,7 @@ bool TaskProcessor::processTask(Task* task)
             if (taskIdsBySeqNum.Exist(seqNum)) taskIdsBySeqNum.Delete(seqNum);
             return false;
         }
-        //logger.debug("Sent message #%lld for '%s'", message.id, message.abonent.c_str());
+        logger.debug("Sent message #%lld for '%s'", message.id, message.abonent.c_str());
     }
     else
     {
