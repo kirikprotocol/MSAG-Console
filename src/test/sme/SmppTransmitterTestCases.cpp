@@ -890,7 +890,7 @@ void SmppTransmitterTestCases::sendDataSmPdu(PduDataSm* pdu,
 				pduData = prepareSms(reinterpret_cast<SmppHeader*>(pdu),
 					existentPduData, time(NULL), intProps, strProps, objProps, pduType); //all times, msgRef
 			}
-			__dumpPdu__("dataSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			//__dumpPdu__("dataSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			PduDataSmResp* respPdu =
 				fixture->session->getSyncTransmitter()->data(*pdu);
 			{
@@ -904,7 +904,7 @@ void SmppTransmitterTestCases::sendDataSmPdu(PduDataSm* pdu,
 		{
 			__tc__("dataSm.async"); __tc_ok__;
 			MutexGuard mguard(fixture->pduReg->getMutex());
-			__dumpPdu__("dataSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			//__dumpPdu__("dataSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			time_t dataTime = time(NULL);
 			PduDataSmResp* respPdu =
 				fixture->session->getAsyncTransmitter()->data(*pdu);
@@ -1043,6 +1043,8 @@ SmppHeader* SmppTransmitterTestCases::prepareResultSubmitSm(
 			SmppUtil::time2string(replacePdu.getValidTime(), t, sendTime, __absoluteTime__));
 		resPdu->get_message().set_dataCoding(replacePdu.getDataCoding());
 		//optional
+		resPdu->get_optional() = replacePdu.get_optional();
+		/*
 		int sz = replacePdu.get_optional().size();
 		char buf[sz];
 		SmppStream s1;
@@ -1051,6 +1053,7 @@ SmppHeader* SmppTransmitterTestCases::prepareResultSubmitSm(
 		SmppStream s2;
 		assignStreamWith(&s2, buf, sz, true);
 		fetchSmppOptional(&s2, &resPdu->get_optional());
+		*/
 		//обнулить messagePayload
 		resPdu->get_optional().field_present &= ~SmppOptionalFields::messagePayload;
 		resPdu->get_optional().messagePayload.dispose();
@@ -1230,6 +1233,7 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 	}
 	if (fixture->pduReg)
 	{
+		pdu->get_header().set_commandId(REPLACE_SM); //проставляется в момент отправки replace_sm
 		if (sync)
 		{
 			__tc__("replaceSm.sync"); __tc_ok__;
@@ -1240,7 +1244,7 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 				pduData = prepareReplaceSm(pdu, replacePduData, time(NULL),
 					intProps, strProps, objProps);
 			}
-			__dumpPdu__("replaceSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			//__dumpPdu__("replaceSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			PduReplaceSmResp* respPdu =
 				fixture->session->getSyncTransmitter()->replace(*pdu);
 			__dumpPdu__("replaceSmSyncAfter", fixture->smeInfo.systemId,
@@ -1254,7 +1258,7 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 		{
 			__tc__("replaceSm.async"); __tc_ok__;
 			MutexGuard mguard(fixture->pduReg->getMutex());
-			__dumpPdu__("replaceSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			//__dumpPdu__("replaceSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			time_t submitTime = time(NULL);
 			PduReplaceSmResp* respPdu =
 				fixture->session->getAsyncTransmitter()->replace(*pdu);

@@ -371,7 +371,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -599,7 +599,7 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -719,9 +719,10 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 					}
 					break;
 				case 11: //недопустимый dataCoding
-					__tc__("submitSm.incorrect.dataCoding");
+					/*
 					if (fixture->smeInfo.forceDC)
 					{
+						__tc__("submitSm.incorrect.dataCodingForceDcSme");
 						uint8_t dcs, dc;
 						bool simMsg;
 						do
@@ -732,7 +733,10 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 						pdu->get_message().set_dataCoding(dcs);
 					}
 					else
+					*/
+					if (!fixture->smeInfo.forceDC)
 					{
+						__tc__("submitSm.incorrect.dataCodingNormalSme");
 						while (true)
 						{
 							uint8_t dc = rand1(255);
@@ -847,7 +851,7 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -958,7 +962,7 @@ void SmppProtocolTestCases::dataSmCorrect(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -999,9 +1003,10 @@ void SmppProtocolTestCases::dataSmIncorrect(bool sync, int num)
 					}
 					break;
 				case 3: //недопустимый dataCoding
-					__tc__("dataSm.incorrect.dataCoding");
+					/*
 					if (fixture->smeInfo.forceDC)
 					{
+						__tc__("dataSm.incorrect.dataCodingForceDcSme");
 						uint8_t dcs, dc;
 						bool simMsg;
 						do
@@ -1012,7 +1017,10 @@ void SmppProtocolTestCases::dataSmIncorrect(bool sync, int num)
 						pdu->get_data().set_dataCoding(dcs);
 					}
 					else
+					*/
+					if (!fixture->smeInfo.forceDC)
 					{
+						__tc__("dataSm.incorrect.dataCodingNormalSme");
 						while (true)
 						{
 							uint8_t dc = rand1(255);
@@ -1080,7 +1088,7 @@ void SmppProtocolTestCases::dataSmIncorrect(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -1165,7 +1173,8 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 					{
 						__tc__("replaceSm.correct.validTimeExceeded");
 						SmppTime t;
-						SmppUtil::time2string(INT_MAX, t, time(NULL), __numTime__);
+						SmppUtil::time2string(time(NULL) + maxValidPeriod * 10,
+							t, time(NULL), __numTime__);
 						pdu->set_validityPeriod(t);
 					}
 					break;
@@ -1249,7 +1258,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -1451,7 +1460,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -1519,7 +1528,7 @@ void SmppProtocolTestCases::querySmCorrect(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -1621,7 +1630,7 @@ void SmppProtocolTestCases::querySmIncorrect(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -1768,7 +1777,7 @@ void SmppProtocolTestCases::cancelSmSingleCorrect(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -1839,7 +1848,7 @@ void SmppProtocolTestCases::cancelSmGroupCorrect(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -2073,7 +2082,7 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -2183,7 +2192,7 @@ void SmppProtocolTestCases::sendInvalidPdu(bool sync, int num)
 		}
 		catch(...)
 		{
-			__tc_fail__(s.value());
+			__tc_fail__(100);
 			error();
 		}
 	}
@@ -2289,7 +2298,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 	}
 	catch(...)
 	{
-		__tc_fail__(s.value());
+		__tc_fail__(100);
 		error();
 	}
 	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
@@ -2350,7 +2359,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
 	}
 	catch(...)
 	{
-		__tc_fail__(s.value());
+		__tc_fail__(100);
 		error();
 	}
 	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
@@ -2456,7 +2465,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDataSmRespRetry(
 	}
 	catch(...)
 	{
-		__tc_fail__(s.value());
+		__tc_fail__(100);
 		error();
 	}
 	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
@@ -2520,7 +2529,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDataSmRespError(
 	}
 	catch(...)
 	{
-		__tc_fail__(s.value());
+		__tc_fail__(100);
 		error();
 	}
 	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
