@@ -305,8 +305,8 @@ int SmppInputThread::Execute()
               //ss->getSocket()->setData(SOCKET_SLOT_KILL,1);
             }break;
             case SmppCommandSet::SUBMIT_SM:
-            case SmppCommandSet::SUBMIT_SM_RESP:
-            case SmppCommandSet::DELIVERY_SM:
+            //case SmppCommandSet::SUBMIT_SM_RESP:
+            //case SmppCommandSet::DELIVERY_SM:
             case SmppCommandSet::DELIVERY_SM_RESP:
             {
               try{
