@@ -124,7 +124,7 @@ struct MapDialog{
     }
   }
   
-  void AddRef(){MutexGuard g(mutex);++ref_count;}
+  MapDialog* AddRef(){MutexGuard g(mutex);++ref_count;return this;}
   
   void Clean() {
     MutexGuard g(mutex);
