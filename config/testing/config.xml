@@ -19,9 +19,9 @@
 			<param name="dbUserPassword" type="string">smsc2</param>
 		</section>
 		<section name="Archive">
-			<param name="enabled" type="bool">false</param>
-			<param name="interval" type="int">30000</param>
-			<param name="finalized" type="int">300</param>
+			<param name="enabled" type="bool">true</param>
+			<param name="interval" type="int">20000</param>
+			<param name="finalized" type="int">100</param>
 			<param name="uncommited" type="int">10</param>
 		</section>
 		<section name="Billing">
