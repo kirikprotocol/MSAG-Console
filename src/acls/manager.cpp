@@ -75,6 +75,7 @@ public:
   virtual AclInfo getInfo(AclIdent);  
   virtual void    remove(AclIdent);
   virtual void    create(AclIdent,const char* aclname,const char* descr,const vector<AclPhoneNumber>& phones,AclCacheType act);
+  virtual void    create2(const char* aclname,const char* descr,const vector<AclPhoneNumber>& phones,AclCacheType act);
   virtual void    lookupByPrefix(AclIdent,const char* prefix,vector<AclPhoneNumber>&);
   virtual void    removePhone(AclIdent,const AclPhoneNumber&);
   virtual void    addPhone(AclIdent,const AclPhoneNumber&);
@@ -183,6 +184,21 @@ void AclManager::create(AclIdent aclident,const char* aclname,const char* acldes
     connection->rollback();
     throw;
   }
+}
+
+void AclManager::create2(const char* aclname,const char* acldescr,const vector<AclPhoneNumber>& phones,AclCacheType act)
+{
+  static const char* sql0 = "SELECT SMS_ACLINFO_SEQ.NextVal FROM DUAL";
+
+  ConnectionGuard connection(datasource_);
+  if(!connection.get())throw Exception(ACLMGRPREFIX"Failed to get connection");
+  auto_ptr<Statement> statement(connection->createStatement(sql0));
+  if(!statement.get())throw Exception(ACLMGRPREFIX"Failed to create statement");
+  auto_ptr<ResultSet> rs(statement->executeQuery());
+  if(!rs.get())throw Exception(ACLMGRPREFIX"Failed to make a query to DB");
+  if (!rs->fetchNext())throw Exception(ACLMGRPREFIX"Failed on sequence query to DB");
+  AclIdent ident = rs->getInt32(1);
+  create(ident,aclname,acldescr,phones,act);
 }
 
 void AclManager::lookupByPrefix(AclIdent aclident,const char* prefix,vector<AclPhoneNumber>& result)

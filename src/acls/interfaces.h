@@ -1,5 +1,3 @@
-#ifndef SMSC_ACLS_INTERFACES_H
-#define SMSC_ACLS_INTERFACES_H
 
 #include <string>
 #include <vector>
@@ -39,7 +37,7 @@ struct AclInfo
   AclDescription  desctiption;
   AclCacheType    cache;
 };
-inline AclInfo MakeAclInfo(AclIdent ident,const char * name,const char * desc,AclCacheType cache)
+inline AclInfo MakeAclInfo(AclIdent ident,AclName name,AclDescription desc,AclCacheType cache)
 {
   if (name == NULL)
     name = "";
@@ -57,6 +55,11 @@ struct AclEditor
   virtual void    remove(AclIdent) = 0;
   virtual void    create(
                         AclIdent,
+                        const char* aclname,
+                        const char* descr,
+                        const std::vector<AclPhoneNumber>& phones = std::vector<AclPhoneNumber>(),
+                        AclCacheType act = ACT_DBSDIRECT) = 0;
+  virtual void    create2(
                         const char* aclname,
                         const char* descr,
                         const std::vector<AclPhoneNumber>& phones = std::vector<AclPhoneNumber>(),
@@ -101,5 +104,3 @@ struct AclAbstractMgr : public AclEditor, public AclLookuper
 
 } // acls namespace
 } // smsc namespace
-
-#endif //#ifndef SMSC_ACLS_INTERFACES_H
