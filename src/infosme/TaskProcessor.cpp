@@ -695,6 +695,7 @@ bool TaskProcessor::addTask(std::string taskId)
 
     try
     {
+        Manager::reinit();
         Manager& config = Manager::getInstance();
         char taskSection[1024];
         sprintf(taskSection, "InfoSme.Tasks.%s", task_id);
@@ -753,6 +754,7 @@ bool TaskProcessor::addSchedule(std::string scheduleId)
     Schedule* schedule = 0;
     try
     {
+        Manager::reinit();
         Manager& config = Manager::getInstance();
         char scheduleSection[1024];
         sprintf(scheduleSection, "InfoSme.Schedules.%s", schedule_id);
@@ -786,6 +788,7 @@ bool TaskProcessor::changeSchedule(std::string oldScheduleId, std::string newSch
     Schedule* schedule = 0;
     try
     {
+        Manager::reinit();
         Manager& config = Manager::getInstance();
         char scheduleSection[1024];
         sprintf(scheduleSection, "InfoSme.Schedules.%s", schedule_id);
