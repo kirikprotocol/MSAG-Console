@@ -512,6 +512,7 @@ void Smsc::init(const SmscConfigs& cfg)
     log.warn("Smsc::init exception:unknown");
     throw;
   }
+  scAddr = cfg.cfgman->getString("mapio.scaddr");
   __trace__("Smsc::init completed");
 }
 
@@ -532,7 +533,7 @@ void Smsc::run()
       );
     tp.startTask(acc);
     Event mapiostarted;
-    MapIoTask* mapio = new MapIoTask(&mapiostarted);
+    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr);
     tp.startTask(mapio);
     accstarted.Wait();
     mapiostarted.Wait();

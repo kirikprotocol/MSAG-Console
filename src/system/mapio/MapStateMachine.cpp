@@ -45,7 +45,7 @@ static XMOMAP x_momap;
 
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
 static void PauseOnImsiReq(MapDialog* map);
-static const string& SC_ADDRESS() { static string s("79029869999"); return s;}
+static const string& SC_ADDRESS() { return MapDialogContainer::GetSCAdress(); }
 static bool NeedNotifyHLR(MapDialog* dialog);
 static void ResponseAlertSC(MapDialog* dialog);
 static void SendErrToSmsc(unsigned dialogid,unsigned code);

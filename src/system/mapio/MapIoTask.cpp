@@ -12,6 +12,7 @@ using namespace std;
 
 //#define SMSC_FORWARD_RESPONSE 0x001
 
+
 static unsigned __global_bind_counter = 0;
 static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
@@ -295,6 +296,8 @@ int MapIoTask::Execute(){
   }
   return 0;
 }
+
+string MapDialogContainer::SC_ADRESS_VALUE = "79029869999";
 
 void MapDialogContainer::abort()
 {

@@ -347,7 +347,7 @@ protected:
   uint64_t deliverOkCounter;
   uint64_t deliverErrCounter;
   uint64_t rescheduleCounter;
-
+  string scAddr;
   time_t startTime;
 
 };

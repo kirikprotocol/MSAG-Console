@@ -252,6 +252,7 @@ class MapDialogContainer{
   XHash<const string,MapDialog*,StringHashFunc> lock_map;
   list<unsigned> dialogId_pool;
   friend void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
+  static string SC_ADRESS_VALUE;
   //ET96MAP_DIALOGUE_ID_T allocateDialogueId();
 public:
   static MapDialogContainer* getInstance(){
@@ -265,7 +266,8 @@ public:
     __trace2__("MAP::access to container 0x%p",container);
     return container;
   }
-
+  static string GetSCAdress() { return SC_ADRESS_VALUE; }
+  static void SetSCAdress(const string& scAddr) { SC_ADRESS_VALUE = scAddr; }
   static void dropInstance()
   {
     MutexGuard g(sync_object);
@@ -414,7 +416,10 @@ public:
   virtual int Execute();
   virtual const char* taskName() { return "MapIoTask";}
   bool isStarted() {return is_started;}
-  MapIoTask(Event* startevent) : startevent(startevent),is_started(false) {}
+  MapIoTask(Event* startevent,const string& scAddr) : startevent(startevent),is_started(false) 
+  {
+    MapDialogContainer::SetSCAdress(scAddr);
+  }
   ~MapIoTask() {deinit();}
 private:
   Event* startevent;
