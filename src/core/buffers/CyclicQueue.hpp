@@ -72,17 +72,20 @@ public:
     if(count==0)throw std::runtime_error("CQ: attempt to use Front() on empty queue");
     return *tail;
   }
-  void Pop(T& item)
+  bool Pop(T& item)
   {
-    if(count==0)throw std::runtime_error("CQ: attempt to call Pop() on empty queue");
+    if(count==0)return false;//throw std::runtime_error("CQ: attempt to call Pop() on empty queue");
     item=*tail;
+    *tail=T();
     tail++;
     if(tail==end)tail=data;
     count--;
+    return true;
   }
   void Pop()
   {
     if(count==0)throw std::runtime_error("CQ: attempt to call Pop() on empty queue");
+    *tail=T();
     tail++;
     if(tail==end)tail=data;
     count--;
