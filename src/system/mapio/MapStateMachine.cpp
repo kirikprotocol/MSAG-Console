@@ -677,7 +677,7 @@ USHORT_T  Et96MapV2SendRInfoForSmConf (
     }
     dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()).c_str());
-    DoRInfoErrorProcessor(dialog,errorSendRoutingInfoForSm_sp,provErrCode_p));
+    DoRInfoErrorProcessor(dialog.get(),errorSendRoutingInfoForSm_sp,provErrCode_p);
     switch( dialog->state ){
     case MAPST_WaitRInfoConf:
       {
