@@ -230,8 +230,7 @@ void Smsc::mainLoop()
       }
       case __CMD__(CANCEL):
       {
-        if((cmd->get_cancelSm().messageId.get() && cmd->get_cancelSm().serviceType.get()) ||
-           (!cmd->get_cancelSm().messageId.get() && !cmd->get_cancelSm().serviceType.get()))
+        if((cmd->get_cancelSm().messageId.get() && cmd->get_cancelSm().serviceType.get()))
         {
             src_proxy->putCommand
             (
