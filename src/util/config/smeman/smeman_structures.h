@@ -73,6 +73,7 @@ struct SmppSmeRecord
   bool wantAlias;
   bool forceDC;
   uint32_t timeout;
+	char* receiptSchemeName;
 };
 
 struct Ss7SmeRecord
@@ -103,9 +104,10 @@ struct SmeRecord
     smeUid = cStringCopy(copy.smeUid);
     if (rectype == SMPP_SME)
     {
-      recdata.smppSme.systemType = cStringCopy(copy.recdata.smppSme.systemType);
-      recdata.smppSme.password = cStringCopy(copy.recdata.smppSme.password);
-      recdata.smppSme.addrRange = cStringCopy(copy.recdata.smppSme.addrRange);
+      recdata.smppSme.systemType        = cStringCopy(copy.recdata.smppSme.systemType);
+      recdata.smppSme.password          = cStringCopy(copy.recdata.smppSme.password);
+      recdata.smppSme.addrRange         = cStringCopy(copy.recdata.smppSme.addrRange);
+      recdata.smppSme.receiptSchemeName = cStringCopy(copy.recdata.smppSme.receiptSchemeName);
     } else {
       // !!! not yet implemented
     }
@@ -116,9 +118,10 @@ struct SmeRecord
     if (smeUid != 0) delete[] smeUid;
     if (rectype == SMPP_SME)
     {
-      if (recdata.smppSme.systemType != 0) delete[] recdata.smppSme.systemType;
-      if (recdata.smppSme.password != 0)   delete[] recdata.smppSme.password;
-      if (recdata.smppSme.addrRange != 0)  delete[] recdata.smppSme.addrRange;
+      if (recdata.smppSme.systemType        != 0)  delete[] recdata.smppSme.systemType;
+      if (recdata.smppSme.password          != 0)  delete[] recdata.smppSme.password;
+      if (recdata.smppSme.addrRange         != 0)  delete[] recdata.smppSme.addrRange;
+      if (recdata.smppSme.receiptSchemeName != 0)  delete[] recdata.smppSme.receiptSchemeName;
     } else {
       // !!! not yet implemented
     }

@@ -120,6 +120,9 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             } else if (strcmp(name.get(),"wantAlias") == 0)
             {
               record->recdata.smppSme.wantAlias=!strcmp(value.get(),"yes");
+            } else if (strcmp(name.get(), "receiptSchemeName") == 0)
+            {
+              record->recdata.smppSme.receiptSchemeName = value.release();
             } else {
               logger.warn("unknown param name \"%s\"", name.get());
             }
@@ -192,16 +195,17 @@ SmeManConfig::status SmeManConfig::store(std::ostream &out) const
       if (rec->rectype == SMPP_SME)
       {
         out << "  <smerecord type=\"smpp\" uid=\"" << rec->smeUid << "\">" << std::endl;
-        out << "    <param name=\"priority\"         value=\"" << (uint16_t)rec->priority                         << "\"/>" << std::endl;
-        out << "    <param name=\"typeOfNumber\"     value=\"" << (uint32_t)rec->recdata.smppSme.typeOfNumber     << "\"/>" << std::endl;
-        out << "    <param name=\"numberingPlan\"    value=\"" << (uint32_t)rec->recdata.smppSme.numberingPlan    << "\"/>" << std::endl;
-        out << "    <param name=\"interfaceVersion\" value=\"" << (uint32_t)rec->recdata.smppSme.interfaceVersion << "\"/>" << std::endl;
-        out << "    <param name=\"systemType\"       value=\"" << rec->recdata.smppSme.systemType       << "\"/>" << std::endl;
-        out << "    <param name=\"password\"         value=\"" << rec->recdata.smppSme.password         << "\"/>" << std::endl;
-        out << "    <param name=\"addrRange\"        value=\"" << rec->recdata.smppSme.addrRange        << "\"/>" << std::endl;
-        out << "    <param name=\"smeN\"             value=\"" << (uint32_t)rec->recdata.smppSme.smeN             << "\"/>" << std::endl;
-        out << "    <param name=\"timeout\"          value=\"" << (uint32_t)rec->recdata.smppSme.timeout          << "\"/>" << std::endl;
-        out << "    <param name=\"wantAlias\"        value=\"" << (rec->recdata.smppSme.wantAlias?"yes":"no")     << "\"/>" << std::endl;
+        out << "    <param name=\"priority\"          value=\"" << (uint16_t)rec->priority                              << "\"/>" << std::endl;
+        out << "    <param name=\"typeOfNumber\"      value=\"" << (uint32_t)rec->recdata.smppSme.typeOfNumber          << "\"/>" << std::endl;
+        out << "    <param name=\"numberingPlan\"     value=\"" << (uint32_t)rec->recdata.smppSme.numberingPlan         << "\"/>" << std::endl;
+        out << "    <param name=\"interfaceVersion\"  value=\"" << (uint32_t)rec->recdata.smppSme.interfaceVersion      << "\"/>" << std::endl;
+        out << "    <param name=\"systemType\"        value=\"" <<           rec->recdata.smppSme.systemType            << "\"/>" << std::endl;
+        out << "    <param name=\"password\"          value=\"" <<           rec->recdata.smppSme.password              << "\"/>" << std::endl;
+        out << "    <param name=\"addrRange\"         value=\"" <<           rec->recdata.smppSme.addrRange             << "\"/>" << std::endl;
+        out << "    <param name=\"smeN\"              value=\"" << (uint32_t)rec->recdata.smppSme.smeN                  << "\"/>" << std::endl;
+        out << "    <param name=\"timeout\"           value=\"" << (uint32_t)rec->recdata.smppSme.timeout               << "\"/>" << std::endl;
+        out << "    <param name=\"wantAlias\"         value=\"" <<          (rec->recdata.smppSme.wantAlias?"yes":"no") << "\"/>" << std::endl;
+        out << "    <param name=\"receiptSchemeName\" value=\"" <<           rec->recdata.smppSme.receiptSchemeName     << "\"/>" << std::endl;
         out << "  </smerecord>" << std::endl;
       } else {
         out << "  <smerecord type=\"ss7\" uid=\"" << rec->smeUid << "\">" << std::endl;
