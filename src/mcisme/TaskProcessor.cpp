@@ -191,6 +191,9 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     releaseSettings.otherInform         = releaseSettingsCfg->getBool("Other.inform") ? 1:0;
     
     mciModule = new MCIModule(circuitsMap, releaseSettings, callingMask.c_str(), calledMask.c_str());
+    smsc_log_info(logger, "MCI Module starting...");
+    mciModule->Start();
+    smsc_log_info(logger, "MCI Module started.");
     responcesTracker.init(this, config);
 
     maxInQueueSize  = config->getInt("inputQueueSize");
@@ -271,7 +274,7 @@ void TaskProcessor::Start()
     MutexGuard guard(startLock);
     if (!bStarted)
     {
-        smsc_log_info(logger, "Starting ...");
+        smsc_log_info(logger, "Starting event processing...");
 
         if (!isMessageSenderAssigned()) {
             smsc_log_error(logger, "Failed to start processing. Message sender is undefined.");
@@ -287,7 +290,7 @@ void TaskProcessor::Start()
         if (mciModule) mciModule->Attach(this);
         
         bStarted = true;
-        smsc_log_info(logger, "Started.");
+        smsc_log_info(logger, "Event processing started.");
     }
 }
 void TaskProcessor::Stop()
@@ -295,7 +298,7 @@ void TaskProcessor::Stop()
     MutexGuard  guard(startLock);
     if (bStarted)
     {
-        smsc_log_info(logger, "Stopping ...");
+        smsc_log_info(logger, "Stopping event processing...");
         
         if (mciModule) mciModule->Detach();
         responcesTracker.Stop();
@@ -306,16 +309,22 @@ void TaskProcessor::Stop()
         unloadTasks();
 
         bStarted = false;
-        smsc_log_info(logger, "Stoped.");
+        smsc_log_info(logger, "Event processing stoped.");
     }
 }
 void TaskProcessor::Run()
 {
     static const char* ERROR_MESSAGE = "Failed to process message. Details: %s";
-
+    
+    smsc_log_info(logger, "Message processing loop started.");
     while (bOutQueueOpen)
     {
-        try
+        if (mciModule && !mciModule->isRunning()) {
+            smsc_log_error(logger, "MCI Module is down. Exiting messages send loop");
+            break;
+        }
+
+        try  
         {
             Message message;
             if (!getFromOutQueue(message)) break;
@@ -327,6 +336,7 @@ void TaskProcessor::Run()
             smsc_log_error(logger, ERROR_MESSAGE, "Cause is unknown");
         }
     }
+    smsc_log_info(logger, "Message processing loop exited.");
 }
 
 int EventTask::Execute()

@@ -516,7 +516,7 @@ extern "C" void appSignalHandler(int sig)
     smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT)
     {
-        smsc_log_info(logger, "Stopping ...");
+        smsc_log_info(logger, "Shutting down by signal...");
         if (bAdminListenerInited) adminListener->shutdown();
         setNeedStop(true);
     }
@@ -690,11 +690,11 @@ int main(void)
             }
             smsc_log_info(logger, "Connected.");
             
-            smsc_log_info(logger, "Running messages send loop...");
+            //smsc_log_info(logger, "Running messages send loop...");
             //setShutdownHandler();
             processor.Run();
             clearSignalMask();
-            smsc_log_info(logger, "Message send loop exited");
+            //smsc_log_info(logger, "Message send loop exited");
             
             smsc_log_info(logger, "Disconnecting from SMSC ...");
             TrafficControl::stopControl();

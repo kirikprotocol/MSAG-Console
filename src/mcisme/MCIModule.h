@@ -49,8 +49,8 @@ namespace smsc { namespace mcisme
     #endif
         
         Event   exitedEvent;
-        Mutex   attachLock, exitLock;
-        bool    bAttached, bNeedExit;
+        Mutex   attachLock, exitLock, runningLock;
+        bool    bAttached, bNeedExit, bRunning;
         
         inline void setNeedExit() {
             MutexGuard guard(exitLock);
@@ -60,16 +60,19 @@ namespace smsc { namespace mcisme
             MutexGuard guard(exitLock);
             return bNeedExit;
         }
+        void setRunning(bool running) {
+            MutexGuard guard(runningLock);
+            bRunning = running;
+        }
 
     public:
 
         MCIModule(Hash<Circuits>& circuits, const ReleaseSettings& releaseSettings, 
                   const char* callingMask, const char* calledMask) 
             : Thread(), logger(Logger::getInstance("smsc.mcisme.MCIModule")), 
-                listener(0), bAttached(false), bNeedExit(false)
+                listener(0), bAttached(false), bNeedExit(false), bRunning(false)
         {
-            smsc_log_info(logger, "Starting MCI Module...");
-            
+            smsc_log_info(logger, "Initing MCI Module...");
         #ifndef MCI_MODULE_TEST    
             module = MissedCallProcessor::instance();
             if (!module) throw Exception("Failed to instantiate MCI Module processor.");
@@ -80,9 +83,7 @@ namespace smsc { namespace mcisme
             if (!setCalledMask(calledMask)) 
                 throw Exception("Failed to compile called mask '%s'.", calledMask ? calledMask:"");
         #endif
-            Thread::Start();
-
-            smsc_log_info(logger, "MCI Module started.");
+            smsc_log_info(logger, "MCI Module inited.");
         };
         virtual ~MCIModule()
         { 
@@ -152,18 +153,24 @@ namespace smsc { namespace mcisme
         }
         #endif
         
+        bool isRunning() {
+            MutexGuard guard(runningLock);
+            return bRunning;
+        }
         virtual int Execute()
         {
             clearSignalMask();
 
             while (!isNeedExit())
             {
+                setRunning(true);
                 try
                 {   
         #ifndef MCI_MODULE_TEST
                     int result = 0;
                     if (module && ((result = module->run()) != 0))
                     {
+                        setRunning(false);
                         smsc_log_error(logger, "MCI Module run/init failure. Exit code=%d. Stopping service", result);
                         if (sigsend(P_PID, P_MYID, smsc::system::SHUTDOWN_SIGNAL) != 0) {
                             smsc_log_error(logger, "Failed to send shutdown signal. Cause: %s. Terminating process...",
@@ -173,16 +180,16 @@ namespace smsc { namespace mcisme
                         break;
                     }
         #else                    
-                    test();
+                    test(); setRunning(false);
         #endif
                 } 
                 catch (std::exception& exc) {
                     smsc_log_error(logger, "MCI Module failure. Reason: %s", exc.what());
-                    exitedEvent.Wait(100);
+                    setRunning(false); exitedEvent.Wait(100);
                 }
                 catch (...) {
                     smsc_log_error(logger, "MCI Module failure: Cause is unknown");
-                    exitedEvent.Wait(100);
+                    setRunning(false); exitedEvent.Wait(100);
                 }
             }
             exitedEvent.Signal();
