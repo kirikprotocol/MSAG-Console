@@ -2247,7 +2247,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
     if(
        (
-         sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) &&
+         sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS)
+       ) ||
+       (
          !regdel &&
          sms.getDeliveryReport()!=REPORT_ACK
        ) ||
@@ -2668,13 +2670,14 @@ StateType StateMachine::cancel(Tuple& t)
 
 void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason)
 {
-  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) || sms.getDeliveryReport()==REPORT_NOACK)return;
+  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
+     sms.getDeliveryReport()==REPORT_NOACK ||
+     sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))return;
   bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
               (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==2 ||
               sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
 
-  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && !regdel &&
-     sms.getDeliveryReport()!=REPORT_ACK)return;
+  if(!regdel && sms.getDeliveryReport()!=REPORT_ACK)return;
   if(!(sms.getDeliveryReport() || regdel))return;
   SMS *prpt=new SMS;
   SMS &rpt=*prpt;
@@ -2734,12 +2737,12 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 {
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
      sms.getDeliveryReport()==REPORT_NOACK ||
-     sms.getDeliveryReport()==ProfileReportOptions::ReportFinal)return;
+     sms.getDeliveryReport()==ProfileReportOptions::ReportFinal ||
+     sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))return;
   bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x10)==0x10 ||
               sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
 
-  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && !regdel &&
-     sms.getDeliveryReport()!=REPORT_ACK)return;
+  if(!regdel && sms.getDeliveryReport()!=REPORT_ACK)return;
   if(!(sms.getDeliveryReport() || regdel))return;
   __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
   if(sms.getAttemptsCount()!=0)return;
