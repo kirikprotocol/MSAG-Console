@@ -15,6 +15,11 @@ using namespace smsc::smeman;
 #define TP_VP_ENCH  2
 #define TP_VP_ABS   3
 
+#define MAP_OCTET7BIT_ENCODING 0
+#define MAP_LATIN1_ENCODING 0x3
+#define MAP_8BIT_ENCODING 0x4
+#define MAP_UCS2_ENCODING 0x8
+
 struct MicroString{
   unsigned len;
   char bytes[256];
@@ -317,7 +322,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2);
     __trace2__("MAP::DIALOG::ForwardReaq: user_data_len = %d",user_data_len);
     unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1);
-    if ( user_data_coding == 0 ) // 7bit
+    /*if ( user_data_coding == 0 ) // 7bit
     {
       MicroString ms;
       Convert7BitToText(user_data,user_data_len,&ms);
@@ -327,10 +332,63 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     else if ( user_data_coding & 0x08  ) // UCS2
     {
       sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
-      sms.setIntProperty(Tag::SMPP_DATA_CODING,/*user_data_coding*/0x08);
+      sms.setIntProperty(Tag::SMPP_DATA_CODING,MAP_8BIT_ENCODING);
     }else{
       __trace2__("unsupported encoding 0x%x",user_data_coding);
+    }*/
+    unsigned encoding = 0;
+    if ( user_data_coding & 0xc0 == 0 ||  // 00xxxxxx
+         user_data_coding & 0xc0 == 0x40 )  // 01xxxxxx
+    {
+      if ( user_data_coding&(1<<5) ){
+        __trace2__("MAP::DIALOG::ForwardReq: required compression");
+        throw runtime_error("MAP::DIALOG::ForwardReq: required compression");
+      }
+      encoding = user_data_coding&0x0c;
+      sms.setIntProperty(Tag::MS_VALIDITY,
+                         (user_data_coding & 0xc0 == 0)?0:0x03);
     }
+    else if ( user_data_coding & 0xf0 == 0xc0 ) // 1100xxxx
+    {
+      encoding = MAP_OCTET7BIT_ENCODING;
+      sms.setIntProperty(Tag::MS_VALIDITY,0x3);
+      sms.setIntProperty(Tag::MS_FACILITES,
+                         (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
+    }
+    else if ( user_data_coding & 0xf0 == 0xd0 ) // 1101xxxx
+    {
+      encoding = MAP_OCTET7BIT_ENCODING;
+      sms.setIntProperty(Tag::MS_VALIDITY,0x0);
+      sms.setIntProperty(Tag::MS_FACILITES,
+                         (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
+    }
+    else if ( user_data_coding & 0xf0 == 0xe0 ) // 1110xxxx
+    {
+      encoding = MAP_UCS2_ENCODING;
+      sms.setIntProperty(Tag::MS_VALIDITY,0x0);
+      sms.setIntProperty(Tag::MS_FACILITES,
+                         (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
+    }
+    else if ( user_data_coding & 0xf0 == 0xf0 ) // 1111xxxx
+    {
+      if ( user_data_coding & 0x4 ) encoding = MAP_8BIT_ENCODING;
+      else encoding = MAP_OCTET7BIT_ENCODING;
+      sms.setIntProperty(Tag::MS_DESTADDRSUBUNIT,user_data_coding&0x3);
+    }
+    else{
+      __trace2__("unknown coding scheme 0x%x",user_data_coding);
+      throw runtime_error("unknown coding scheme");
+    }
+    {
+      if (  encoding == MAP_OCTET7BIT_ENCODING ){
+        MicroString ms;
+        Convert7BitToText(user_data,user_data_len,&ms);
+        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
+      }
+      else
+        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
+    }
+    sms.setIntProperty(Tag::SMPP_DATA_CODING,encoding);
     unsigned esm_class = 0;
     esm_class |= (ssfh->udhi?0x40:0);
     esm_class |= (ssfh->reply_path?0x80:0);
@@ -385,11 +443,78 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   unsigned char *pdu_ptr = pdu->signalInfo+1+2+oa_length;
   *pdu_ptr++ = (unsigned char)sms->getIntProperty(Tag::SMPP_PROTOCOL_ID);
   unsigned encoding = sms->getIntProperty(Tag::SMPP_DATA_CODING);
-  if ( encoding == 0 ) *pdu_ptr++ = 0;
-  else if ( encoding == 0x08 ) *pdu_ptr++ = 0x08;
-  else{
+  if ( encoding != 0 && encoding != 0x08 && encoding != 0x3 && encoding != 0x4) 
     __trace2__("MAP::mkDeliverPDU: unsuppprted encoding 0x%x",encoding);
     throw runtime_error("unsupported encoding");
+  }
+  else // make coding scheme
+  {
+    if ( sms->hasIntProperty(MS_DESTADDRSUBUNIT) ){
+      // coding scheme 1111xxxx
+      value = 0xf0;
+      if ( encoding == MAP_UCS2_ENCODING){
+        __trace2__("MAP::mkDeliveryPDU: coding group 1111xxxx could'not has USC2");
+        throw runtime_error("MAP::mkDeliveryPDU: coding group 1111xxxx incompatible with encoding UCS2");
+      }
+      if ( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING )
+        ;//value |=  nothing
+      else // 8bit
+        value |= (1<<2);
+      value |= sms->getIntProperty(MS_DESTADDRSUBUNIT)&0x3;
+    }
+    else
+    {
+      unsigned char value = 0;
+      if ( sms->hasIntProperty(MS_FACILITIES) ){
+        if ( encoding == MA_UCS2_ENCODING ){
+          value = 0xe0;
+          unsigned _val = sms->getIntProperty(MS_FACILITIES);
+          value |= _val&0x3;
+          if ( _val&0x80 )value |= 0x8;
+        }
+        else
+        {
+          if ( !sms->hasIntProperty(MS_VALIDITY) ){
+            __trace2__("MAP::mkDeliveryPDU: Opss, has no ms_validity");
+            throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
+          }
+          unsigned ms_validity = sms->getIntProperty(MS_VALIDITY);
+          if ( ms_validity & 0x3 == 0x3 ){
+            value = 0xc0;
+          }else if ( ms_validity & 0x3 == 0 ){
+            value = 0xd0;
+          }else{
+            __trace2__("MAP::mkDeliveryPDU: Opss, ms_validity = 0x%x but must be 0x0 or 0x3",
+                       ms_validity);
+            throw runtime_error("bad ms_validity value");
+          }
+          unsigned _val = sms->getIntProperty(MS_FACILITIES);
+          value |= _val&0x3;
+          if ( _val&0x80 )value |= 0x8;
+        }
+      }
+      else
+      {
+        if ( !sms->hasIntProperty(MS_VALIDITY) ){
+          __trace2__("MAP::mkDeliveryPDU: Opss, has no ms_validity");
+          throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
+        }
+        unsigned ms_validity = sms->getIntProperty(MS_VALIDITY);
+        if ( ms_validity & 0x3 == 0x3 ){
+          value = 0x40;
+        }else if ( ms_validity & 0x3 == 0 ){
+          value = 0x00;
+        }else{
+          __trace2__("MAP::mkDeliveryPDU: Opss, ms_validity = 0x%x but must be 0x0 or 0x3",
+                     ms_validity);
+          throw runtime_error("bad ms_validity value");
+        }
+        if ( encoding == MAP_UCS2_ENCODING ) val |= 0x8;
+        //if ( encoding == 0 && encoding == 0x3 ) nothing
+        if ( encoding == MAP_8BIT_ENCODING ) val |= 0x4;
+      }
+    }
+    *pdu_ptr++ = value;
   }
   {
     time_t t;
@@ -422,7 +547,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
     *pdu_ptr++ = text_len;
     pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr);
-  }else{ // UCS2
+  }else{ // UCS2 || 8BIT
     unsigned text_len;
     const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
     //unsigned size_x = /*pdu_ptr-(unsigned char*)pdu->signalInfo*;
