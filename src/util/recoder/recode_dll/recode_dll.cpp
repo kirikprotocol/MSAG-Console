@@ -57,6 +57,17 @@ unsigned char ConvertW2C(unsigned short val, ConvEncodingEnum encoding )
       if ( !w2c_convert ) return '?';
       return w2c_convert[val&0xff];
     }
+  case 0x2100:
+    if((val&0xff)==0x16)
+    {
+      switch(encoding)
+      {
+        case CONV_ENCODING_CP1251:return '¹';
+        case CONV_ENCODING_KOI8R:return '¿';
+        case CONV_ENCODING_ANSI:return'î';
+        default:return '?';
+      }
+    }else return '?';
   case 0x0: //ANSI
     return (unsigned char)(val&0xff);
   default: // Unknown
