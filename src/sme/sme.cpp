@@ -79,10 +79,9 @@ SmppHeader* BaseSme::receiveSmpp(int to)
   return fetchSmppPdu(&s);
 }
 
-bool BaseSme::sendSms(smsc::sms::SMS* sms)
+bool BaseSme::sendSms(smsc::sms::SMS* sms,int seq)
 {
   PduXSm pdu;
-  int seq=getNextSeq();
   pdu.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
   pdu.get_header().set_sequenceNumber(seq);
   if(!fillSmppPduFromSms(&pdu,sms))

@@ -17,6 +17,23 @@ public:
   bool processSms(smsc::sms::SMS *sms){return false;}
 };
 
+int cnt=0;
+
+class Monitor:public Thread{
+  bool stopped;
+public:
+  Monitor():stopped(false){}
+  int Execute()
+  {
+    for(;!stopped;)
+    {
+      printf("%d          \r",cnt);fflush(stdout);
+      sleep(1);
+    }
+  }
+  void stop(){stopped=true;}
+};
+
 
 int main(int argc,char* argv[])
 {
@@ -26,11 +43,15 @@ int main(int argc,char* argv[])
     return -1;
   }
   TestSme sme(argv[1],atoi(argv[2]),argv[3]);
+  Monitor m;
+  m.Start();
   try{
     if(!sme.init())throw Exception("connect failed!");
     trace("binding\n");
     sme.bindsme();
     trace("bind ok\n");
+    //sleep(20);
+    //return -1;
     for(;;)
     {
       smsc::smpp::SmppHeader *pdu=sme.receiveSmpp(0);
@@ -51,6 +72,7 @@ int main(int argc,char* argv[])
           trace2("DELIVER: seq=%d",pdu->get_sequenceNumber());
           resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
           sme.sendSmpp(&resp.get_header());
+          cnt++;
         }else
         {
           trace("Ooops.\n");
