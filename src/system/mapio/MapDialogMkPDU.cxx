@@ -112,7 +112,48 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   {
     if ( sms->getIntProperty(Tag::SMSC_FORCE_DC) ) {          
       datacoding = sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
-    }else if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) ){
+    }
+    else if (sms->hasIntProperty(Tag::SMPP_MS_VALIDITY)) {
+      unsigned ms_validity = sms->getIntProperty(Tag::SMPP_MS_VALIDITY);
+      if (sms->hasIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES)) {
+        unsigned ms_wait_facilities = sms->getIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES);
+        if ( ms_validity != 0x03 && ms_validity != 0 ) throw runtime_error("Invalid ms_validity value for MWI control");
+        if ( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING ) {
+          datacoding = 0xc0 
+            |(ms_validity==0x03?0:0x10)
+            |(ms_wait_facilities&0x03)
+            |((ms_wait_facilities&0x80)>>4);
+        }
+        else if ( encoding == MAP_UCS2_ENCODING ) {
+          datacoding = 0xe0 
+            |(ms_wait_facilities&0x03)
+            |((ms_wait_facilities&0x80)>>4);
+        }
+        else throw runtime_error("Invalid encoding for MWI control");
+      }
+      else { // 01xxxxxx
+        unsigned code = encoding;
+        if ( code == MAP_LATIN1_ENCODING ) code = MAP_OCTET7BIT_ENCODING;
+        datacoding = 0x40 | (code & 0x0c);
+        if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) ) 
+          datacoding |= (sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)-1)&0x3;
+      }
+    }
+    else
+    {
+      unsigned code = encoding;
+      if ( code == MAP_LATIN1_ENCODING ) code = MAP_OCTET7BIT_ENCODING;
+      datacoding = code&0x0c;
+      if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) ) {
+        datacoding |= 0xf0;
+        datacoding |= (sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)-1)&0x3;
+      }
+    }
+#if 0
+    if ( sms->getIntProperty(Tag::SMSC_FORCE_DC) ) {          
+      datacoding = sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
+    }
+    else if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) ){
       __map_trace2__("MAP::mkDeliveryPDU: dest_addr_subunit = 0x%x",
                  sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
       // coding scheme 1111xxxx
@@ -194,6 +235,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         }
       }
     }
+#endif
     __map_trace2__("mkDeliveryPDU: user data coding = 0x%x",(unsigned)datacoding);
     if(!isrcpt)
     {
@@ -264,14 +306,14 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
               pdu_ptr+udh_len+1+1,
               x-(udh_len+1)*8);
           else {
-      unsigned tmpX = 0;
-            _7bit_text_len = ConvertText27bit(//text,text_len,pdu_ptr+1,&elen);
+              unsigned tmpX = 0;
+              _7bit_text_len = ConvertText27bit(//text,text_len,pdu_ptr+1,&elen);
               text+1+udh_len,
               symbols,
               pdu_ptr+udh_len+1+1,
-        &tmpX,
+              &tmpX,
               x-(udh_len+1)*8);
-    }
+          }
           *pdu_ptr++ = x/7+symbols;
           pdu_ptr+= udh_len+_7bit_text_len+1;
           __map_trace2__("MAP::mkDeliverPDU: data length symbols %d octets %d",x/7+symbols,udh_len+_7bit_text_len);
@@ -280,10 +322,10 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
           if (encoding == MAP_SMSC7BIT_ENCODING )
             pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
           else
- {
-      unsigned tmpX = 0;
+          {
+            unsigned tmpX = 0;
             pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr,&tmpX);
-    }
+          }
         }
     }else{ // UCS2 || 8BIT
       unsigned text_len;

@@ -16,8 +16,8 @@ using namespace smsc::smeman;
 #define TP_VP_ABS   3
 
 #define MAP_OCTET7BIT_ENCODING 0x0
-#define MAP_SMSC7BIT_ENCODING 0xf0
-#define MAP_LATIN1_ENCODING 0x3
+#define MAP_SMSC7BIT_ENCODING  smsc::smpp::DataCoding::SMSC7BIT
+#define MAP_LATIN1_ENCODING    smsc::smpp::DataCoding::LATIN1
 #define MAP_8BIT_ENCODING 0x4
 #define MAP_UCS2_ENCODING 0x8
 

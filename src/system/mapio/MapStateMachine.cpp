@@ -675,6 +675,13 @@ parse_tvp_scheme2:
 none_validity:;
   }
   unsigned encoding = 0;
+
+// PARSE __DATACODING__
+
+  if () 
+  {
+  }
+
   if ( (user_data_coding & 0xc0) == 0 ||  // 00xxxxxx
        (user_data_coding & 0xc0) == 0x40 )  // 01xxxxxx
   {
@@ -683,8 +690,10 @@ none_validity:;
       throw runtime_error("MAP:: required compression");
     }
     encoding = user_data_coding&0x0c;
-    if ( (user_data_coding & 0xc0) == 0x40 )
+    if ( (user_data_coding & 0xc0) == 0x40 ) // 01xxxxxx
       sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x03);
+    if ( user_data_coding & 0x10 ) // xxx1xxxx
+      sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(user_data_coding&0x3)+1);
   }
   else if ( (user_data_coding & 0xf0) == 0xc0 ) // 1100xxxx
   {
@@ -709,8 +718,12 @@ none_validity:;
   }
   else if ( (user_data_coding & 0xf0) == 0xf0 ) // 1111xxxx
   {
-    if ( user_data_coding & 0x4 ) encoding = MAP_8BIT_ENCODING;
-    else encoding = MAP_OCTET7BIT_ENCODING;
+// ----- changed 25.07.2003
+//    if ( user_data_coding & 0x4 ) encoding = MAP_8BIT_ENCODING;
+//    else encoding = MAP_OCTET7BIT_ENCODING;
+//    sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(user_data_coding&0x3)+1);
+// -----
+    encoding = user_data_coding&0x0c;
     sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(user_data_coding&0x3)+1);
   }
   else{
