@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE ruleset SYSTEM "billing-rules.dtd">
+<ruleset>
+  <rule name="rule1">
+    <if>
+      <addr what="oa" match="/\.0\.1\.\d/"/>
+      <then>
+        <if>
+          <and>
+            <sme what="src" match="/^srcsme$/"/>
+            <sme what="dst" equal="dstsme"/>
+            <or>
+              <route what="id" equal="routeId"/>
+              <route what="serviceId" match="/1|2|3/"/>
+            </or>
+          </and>
+          <then>
+            <bill serviceId="123"/>
+          </then>
+          <else>
+            <nobill/>
+          </else>
+        </if>
+      </then>
+      <else>
+        <bill serviceId="321"/>
+      </else>
+    </if>
+  </rule>
+</ruleset>
