@@ -18,7 +18,7 @@ class SmeAdministrator
 public:
   virtual void addSme(const SmeInfo& info) = 0;
   virtual void deleteSme(const SmeSystemId& systemid) = 0;
-  virtual void store() = 0;
+//  virtual void store() = 0;
   virtual SmeIterator* iterator() = 0;
   virtual void disableSme(const SmeSystemId& systemid) = 0;
   virtual void enableSme(const SmeSystemId& systemId) = 0;

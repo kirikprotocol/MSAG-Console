@@ -17,6 +17,7 @@ class SmeRegistrar
 {
 public:
   virtual void registerSmeProxy(const SmeSystemId& systemId, SmeProxy* smeProxy) = 0;
+  virtual void unregisterSmeProxy(const SmeSystemId& systemId) = 0;
 };
 
 

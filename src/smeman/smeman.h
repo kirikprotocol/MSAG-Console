@@ -51,7 +51,7 @@ public:
   // SmeAdministrator implementation
   virtual void addSme(const SmeInfo& info);
   virtual void deleteSme(const SmeSystemId& systemId);
-  virtual void store();
+//  virtual void store();
   virtual SmeIterator* iterator(); // client must destroy returned object
   virtual void disableSme(const SmeSystemId& systemId);
   virtual void enableSme(const SmeSystemId& systemId);
@@ -70,6 +70,7 @@ public:
 */
   // SmeRegistrar implementation
   virtual void registerSmeProxy(const SmeSystemId& systemId, SmeProxy* smeProxy);
+  virtual void unregisterSmeProxy(const SmeSystemId& systemId);
 
   // SmeDispatcher implementation
   virtual SmeProxy* selectSmeProxy(unsigned long timeout=0,int* idx=0);

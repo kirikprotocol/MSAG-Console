@@ -35,15 +35,15 @@ __synchronized__
     // к примеру так, но тогда , что делает close?
     dispatcher.detachSmeProxy(records[index].proxy);
     records[index].proxy->close();
-    delete records[index].proxy;
+    //delete records[index].proxy;
     records[index].proxy = 0;
   }
   records[index].deleted = true;
 }
 
-void SmeManager::store()
+/*void SmeManager::store()
 {
-}
+}*/
 
 class SmeIteratorImpl  : public SmeIterator
 {
@@ -58,7 +58,7 @@ public:
   virtual bool next()
   {
     if (started&&ptr!=end) ++ptr;
-		started = true;
+    started = true;
     return ptr != end;
   }
 
@@ -84,18 +84,21 @@ __synchronized__
 
 void SmeManager::disableSme(const SmeSystemId& systemId)
 {
-  SmeIndex index = internalLookup(systemId);
+  /*
+	SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX ) throw SmeError();
   // ???????  что делать если уже в работе , шутдаунить прокси, как корректно или абортом
-  records[index].info.disabled = true;
+  records[index].info.disabled = true;*/
+	__warning__("disableSme is not implemented");
 }
 
 void SmeManager::enableSme(const SmeSystemId& systemId)
 {
-  SmeIndex index = internalLookup(systemId);
+  /*SmeIndex index = internalLookup(systemId);
   if ( index != INVALID_SME_INDEX ) throw SmeError();
   // ???????  что делать если уже в работе , шутдаунить прокси, как корректно или абортом
-  records[index].info.disabled = false;
+  records[index].info.disabled = false;*/
+	__warning__("enableSme is not implemented");
 }
 
 // ----- SmeTable implementation ---------------------------
@@ -136,6 +139,19 @@ __synchronized__
   if ( records[index].proxy ) throw SmeError();
   records[index].proxy = smeProxy;
   dispatcher.attachSmeProxy(smeProxy,index);
+}
+
+void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
+{
+__synchronized__
+
+  SmeIndex index = internalLookup(systemId);
+  if ( index == INVALID_SME_INDEX ) throw SmeError();
+  if ( records[index].proxy )
+		dispatcher.detachSmeProxy(records[index].proxy);
+	else
+		__warning__("unregister null proxy");
+  records[index].proxy = 0;
 }
 
 // SmeDispatcher implementation
