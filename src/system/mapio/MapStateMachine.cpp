@@ -3307,7 +3307,7 @@ static void NotifyHLR(MapDialog* dialog)
   }
 
   result = Et96MapOpenReq(
-    HLR_SSN, dialog_id,
+    SSN, dialog_id,
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
@@ -3321,11 +3321,11 @@ static void NotifyHLR(MapDialog* dialog)
 
   if ( dialog->hlrVersion == 2) {
     result = Et96MapV2ReportSmDelStatReq(
-      HLR_SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr,deliveryOutcom);
+      SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr,deliveryOutcom);
   }else if ( dialog->hlrVersion == 1 ) {
     // ????? ‚±…ƒ„€ ‹ˆ ???????
     result = Et96MapV1ReportSmDelStatReq(
-      HLR_SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr);
+      SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr);
   } else
     throw runtime_error(
     FormatText("MAP::%s bad protocol version 0x%x",__FUNCTION__,dialog->hlrVersion));
@@ -3333,7 +3333,7 @@ static void NotifyHLR(MapDialog* dialog)
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::%s: Et96MapV2ReportSmDelStatReq error 0x%x",__FUNCTION__,result));
   }
-  result = Et96MapDelimiterReq(HLR_SSN,dialog->dialogid_map,0,0);
+  result = Et96MapDelimiterReq(SSN,dialog->dialogid_map,0,0);
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::%s: Et96MapDelimiterReq error 0x%x",__FUNCTION__,result));
