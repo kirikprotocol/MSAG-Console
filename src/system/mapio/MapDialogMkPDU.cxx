@@ -84,7 +84,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     if( oa->len%2 != 0 ) oa->val[oa_length-1] |= 0xF0;
   }
   pdu_ptr+=2+oa_length;
-  if(isrcpt)
+  if(!isrcpt)
   {
     *pdu_ptr++ = (unsigned char)sms->getIntProperty(Tag::SMPP_PROTOCOL_ID);
   }
