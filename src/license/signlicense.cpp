@@ -153,7 +153,7 @@ int main(int argc,char* argv[])
 
   RSA *rsa=NULL;
   const unsigned char* p=rsaprivatekey;
-  d2i_RSAPrivateKey(&rsa,&p,sizeof(rsaprivatekey));
+  d2i_RSAPrivateKey(&rsa,(unsigned char**)&p,sizeof(rsaprivatekey));
   if(!rsa)
   {
     fprintf(stderr,"error: read private key failed\n");
