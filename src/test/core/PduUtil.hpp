@@ -79,7 +79,7 @@ public:
 	 */
 	vector<int> update(time_t recvTime, bool accepted);
 
-	bool isPduMissing(time_t checkTime);
+	bool isPduMissing(time_t checkTime) const;
 
 	operator int() const { return flag; }
 };

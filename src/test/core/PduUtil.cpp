@@ -116,7 +116,7 @@ vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted)
 	return res;
 }
 
-bool PduReceiptFlag::isPduMissing(time_t checkTime)
+bool PduReceiptFlag::isPduMissing(time_t checkTime) const
 {
 	if (checkTime < startTime || flag != PDU_REQUIRED_FLAG)
 	{
