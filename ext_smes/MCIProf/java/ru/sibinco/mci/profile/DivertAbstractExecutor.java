@@ -31,12 +31,14 @@ public abstract class DivertAbstractExecutor implements Executor
   public void init(Properties properties) throws ScenarioInitializationException
   {
     divertBundle = (ScenarioResourceBundle) properties.get(DivertScenarioConstants.TAG_DIVERT);
-    try {
+    try
+    {
       reasonBusyStr     = divertBundle.getString(DivertScenarioConstants.REASON_BUSY);
       reasonAbsentStr   = divertBundle.getString(DivertScenarioConstants.REASON_ABSENT);
       reasonNotAvailStr = divertBundle.getString(DivertScenarioConstants.REASON_NOTAVAIL);
       reasonUncondStr   = divertBundle.getString(DivertScenarioConstants.REASON_UNCOND);
-    } catch (ScenarioResourceBundleException e) {
+    }
+    catch (ScenarioResourceBundleException e) {
       logger.error("", e);
     }
     divertManager = DivertManager.getInstance();

@@ -1,8 +1,6 @@
 package ru.sibinco.mci.profile;
 
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.appgw.session.SessionData;
-import ru.aurorisoft.smpp.Message;
 
 import java.util.Properties;
 
@@ -18,13 +16,13 @@ public class DivertPromptPreprocessor implements ru.sibinco.smpp.appgw.scenario.
   public void init(Properties properties) throws ScenarioInitializationException {
   }
 
-  public void process(ScenarioState scenarioState) throws ProcessingException
+  public void process(ScenarioState state) throws ProcessingException
   {
-    String msg = scenarioState.getMessageString();
-    String reason = DivertScenarioConstants.getReason(msg.trim());
-    if (reason == null) {
+    String msg = state.getMessageString();
+    String reason = DivertScenarioConstants.getReason(msg);
+    if (reason == null)
       throw new ProcessingException("Divert reason is unknown for command '"+msg+"'", -1);
-    }
-    scenarioState.setAttribute(DivertScenarioConstants.ATTR_TYPE, reason);
+    state.removeAttribute(DivertScenarioConstants.ATTR_TYPE);
+    state.setAttribute(DivertScenarioConstants.ATTR_TYPE, reason);
   }
 }

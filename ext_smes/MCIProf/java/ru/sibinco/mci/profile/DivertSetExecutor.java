@@ -18,14 +18,18 @@ public class DivertSetExecutor extends DivertAbstractExecutor
 {
   private static Category logger = Category.getInstance(DivertSetExecutor.class);
 
-  private MessageFormat messageFormat = null;
+  private MessageFormat messageOnFormat  = null;
+  private MessageFormat messageOffFormat = null;
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
-    try {
+    try
+    {
       super.init(properties);
-      messageFormat = new MessageFormat(divertBundle.getString(DivertScenarioConstants.TAG_SET));
-    } catch (Exception e) {
+      messageOnFormat  = new MessageFormat(divertBundle.getString(DivertScenarioConstants.TAG_SET_ON));
+      messageOffFormat = new MessageFormat(divertBundle.getString(DivertScenarioConstants.TAG_SET_OFF));
+    }
+    catch (Exception e) {
       logger.error("", e);
       throw new ScenarioInitializationException(e.getMessage());
     }
@@ -33,25 +37,32 @@ public class DivertSetExecutor extends DivertAbstractExecutor
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    try {
+    try
+    {
       String type = (String)state.getAttribute(DivertScenarioConstants.ATTR_TYPE);
-      String msg = state.getMessageString();
+      String msg = state.getMessageString().trim();
+
+      boolean disable = false;
       if (msg.equals("1")) {
         logger.info("Disable divert");
+        disable = true;
       } else if (msg.equals("2")) {
         logger.info("Set divert to MissedCalls");
+        msg = "MissedCalls";
       } else if (msg.equals("3")) {
         logger.info("Set divert to auto responce");
+        msg = "AutoResponce";
       } else {
         logger.info("Set divert to address '"+msg+"'");
       }
+      final String reason = divertBundle.getString(DivertScenarioConstants.REASON_PREFIX + type);
 
-      Object args [] = new Object[] {msg, divertBundle.getString(DivertScenarioConstants.REASON_PREFIX + type)};
-      String msgresp = messageFormat.format(args);
-      Message resp = new Message();
-      resp.setMessageString(msgresp);
+      Object args[] = (disable) ? new Object[]{reason}:new Object[]{msg, reason};
+      String msgresp = (disable) ? messageOffFormat.format(args):messageOnFormat.format(args);
+      Message resp = new Message(); resp.setMessageString(msgresp);
       return new ExecutorResponse(new Message[]{resp}, false);
-    } catch (Exception e) {
+    }
+    catch (Exception e) {
       logger.error("", e);
       throw new ExecutingException(e.getMessage());
     }

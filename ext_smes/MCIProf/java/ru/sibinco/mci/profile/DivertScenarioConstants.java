@@ -11,6 +11,12 @@ import java.util.Hashtable;
  */
 public class DivertScenarioConstants
 {
+  public final static String TAG_DIVERT     = "divert";
+
+  public final static String TAG_SET_ON     = "set_on";
+  public final static String TAG_SET_OFF    = "set_off";
+  public final static String TAG_INFO       = "info";
+
   public final static String REASON_PREFIX  = "reason_";
   public final static String VALUE_PREFIX   = "value_";
   public final static String ERROR_PREFIX   = "error_";
@@ -24,10 +30,6 @@ public class DivertScenarioConstants
   public final static String REASON_ABSENT   = REASON_PREFIX + ABSENT;
   public final static String REASON_NOTAVAIL = REASON_PREFIX + NOTAVAIL;
   public final static String REASON_UNCOND   = REASON_PREFIX + UNCOND;
-
-  public final static String TAG_SET        = "set";
-  public final static String TAG_INFO       = "info";
-  public final static String TAG_DIVERT     = "divert";
 
   public final static String ATTR_TYPE      = "type";
 

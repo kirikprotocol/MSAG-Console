@@ -1,8 +1,6 @@
 package ru.sibinco.mci.profile;
 
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
-import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundleException;
 import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
 
