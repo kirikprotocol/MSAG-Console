@@ -18,8 +18,8 @@ using smsc::core::buffers::Array;
 using smsc::core::network::Socket;
 
 struct PerformanceCounter{
-  int lastSecond;
-  int average;
+  int32_t lastSecond;
+  int32_t average;
   uint64_t total;
 };
 
@@ -76,9 +76,21 @@ public:
       ld.counters[i].lastSecond=htonl(ld.counters[i].lastSecond);
       ld.counters[i].average=htonl(ld.counters[i].average);
 
+      /*
       low=(int)(ld.counters[i].total&0xffffffff);
       high=(int)(ld.counters[i].total>>32);
       ld.counters[i].total=(((uint64_t)htonl(high))<<32) | htonl(low);
+      */
+      uint64_t tmp=ld.counters[i].total;
+      unsigned char *ptr=(unsigned char *)&ld.counters[i].total;
+      ptr[0]=tmp>>56;
+      ptr[1]=(tmp>>48)&0xFF;
+      ptr[2]=(tmp>>40)&0xFF;
+      ptr[3]=(tmp>>32)&0xFF;
+      ptr[4]=(tmp>>24)&0xFF;
+      ptr[5]=(tmp>>16)&0xFF;
+      ptr[6]=(tmp>>8)&0xFF;
+      ptr[7]=tmp&0xFF;
     }
 
     ld.uptime=htonl(ld.uptime);
