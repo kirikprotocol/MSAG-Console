@@ -24,8 +24,8 @@ using smsc::router::RoutePriority;
 using smsc::router::RouteManager;
 using smsc::smeman::SmeSystemId;
 using smsc::smeman::SmeProxy;
-using smsc::test::core::TestRouteData;
 using smsc::test::core::RouteRegistry;
+using smsc::test::core::RouteHolder;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::TCResult;
 
@@ -52,27 +52,23 @@ public:
 	/**
 	 * Добавление корректного рабочего маршрута.
 	 */
-	TCResult* addCorrectRouteMatch(const SmeSystemId& smeSystemId,
-		TestRouteData* data, int num);
+	TCResult* addCorrectRouteMatch(RouteInfo* route, SmeProxy* proxy, int num);
 
 	/**
 	 * Добавление корректного нерабочего маршрута.
 	 */
-	TCResult* addCorrectRouteNotMatch(const SmeSystemId& smeSystemId,
-		TestRouteData* data, int num);
+	TCResult* addCorrectRouteNotMatch(RouteInfo* route, SmeProxy* proxy, int num);
 
 	/**
 	 * Добавление корректного маршрута с неправильными (непроверяемыми)
 	 * значениями.
 	 */
-	TCResult* addCorrectRouteNotMatch2(const SmeSystemId& smeSystemId,
-		TestRouteData* data, int num);
+	TCResult* addCorrectRouteNotMatch2(RouteInfo* route, SmeProxy* proxy, int num);
 
 	/**
 	 * Добавление некорректного маршрута.
 	 */
-	TCResult* addIncorrectRoute(const SmeSystemId& smeSystemId,
-		const RouteInfo& existingRoute, int num);
+	TCResult* addIncorrectRoute(const RouteInfo& existingRoute, int num);
 
 	/**
 	 * Поиск маршрута.
@@ -90,10 +86,11 @@ protected:
 private:
 	RouteManager* routeMan;
 	RouteRegistry* routeReg;
-	float setupRandomAddressMatch(Address& addr, int num);
+	void debugRoute(const char* tc, const RouteInfo* route);
+	void setupRandomAddressMatch(Address& addr, int num);
 	void setupRandomAddressNotMatch(Address& addr, int num);
 	void printLookupResult(const Address& origAddr, const Address& destAddr,
-		const RouteRegistry::RouteList& routeList, bool found, const SmeProxy* proxy);
+		const RouteHolder* routeHolder, bool found, const SmeProxy* proxy);
 };
 
 }
