@@ -196,7 +196,7 @@ const char* insertStatSmeSql = (const char*)
 ")";
 
 const char* insertStatRouteSql = (const char*)
-"INSERT INTO sms_stat_route (period,routeid,accepted,rejected,delivered,temperror,permerror)"
+"INSERT INTO smppgw_stat_route (period,routeid,accepted,rejected,delivered,temperror,permerror)"
 "VALUES (:period,:routeid,:accepted,:rejected,:delivered,:temperror,:permerror)";
 
 const char* insertStatErrSql = (const char*)
