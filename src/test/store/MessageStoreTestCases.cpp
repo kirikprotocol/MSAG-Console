@@ -406,8 +406,8 @@ void MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
 		//Согласно GSM 03.40 пункт 9.2.3.25 должны совпадать: TP-MR, TP-DA, OA.
 		sms.setMessageReference(existentSms.getMessageReference());
 		sms.setOriginatingAddress(existentSms.getOriginatingAddress());
-		//sms.setDestinationAddress(existentSms.getDestinationAddress());
-		sms.setDealiasedDestinationAddress(existentSms.getDealiasedDestinationAddress());
+		sms.setDestinationAddress(existentSms.getDestinationAddress());
+		//sms.setDealiasedDestinationAddress(existentSms.getDealiasedDestinationAddress());
 		SMSId smsId = msgStore->getNextId();
 		__trace2__("storeRejectDuplicateSms(): smsId = %s", str(smsId));
 		msgStore->createSms(sms, smsId, ETSI_REJECT_IF_PRESENT);
