@@ -193,8 +193,8 @@ public class PerformanceGraph extends Canvas {
           if(PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewDeliverEnabled))
           drawGraphLine(g, posy, posx,
                   (int) snap.last[PerfSnap.IDX_DELIVER], (int) prevSnap.last[PerfSnap.IDX_DELIVER],
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) snap.last[PerfSnap.IDX_TEMPERR]:0,
-                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) prevSnap.last[PerfSnap.IDX_TEMPERR]:0,
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) (snap.last[PerfSnap.IDX_TEMPERR]+snap.last[PerfSnap.IDX_DELIVERERR]):0,
+                  (PerfMon.viewMode==PerfMon.VIEWMODE_IO)?(int) (prevSnap.last[PerfSnap.IDX_TEMPERR]+prevSnap.last[PerfSnap.IDX_DELIVERERR]):0,
                   maxheight, colorGraphDeliver);
         }
       }
