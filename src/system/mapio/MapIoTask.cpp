@@ -1,5 +1,5 @@
-
 #include "MapIoTask.h"
+#include "util/Logger.h"
 #include <sys/types.h>
 #include <sys/time.h>
 #include <signal.h>
@@ -12,7 +12,7 @@ using namespace std;
 #ifdef USE_MAP
 
 //#define SMSC_FORWARD_RESPONSE 0x001
-
+log4cpp::Category &time_logger;
 
 static unsigned __global_bind_counter = 0;
 static unsigned __pingPongWaitCounter = 0;
@@ -121,19 +121,13 @@ void MapIoTask::dispatcher()
   INT_T	       eventlist_len = 0;
   
   message.receiver = MY_USER_ID;
-  gettimeofday( &utime, 0 );
   for(;;){
     MAP_isAlive = true;
     if ( isStopping ) return;
     MAP_dispatching = true;
     gettimeofday( &curtime, 0 );
-    fprintf( stderr, "MsgRecv begin: %ld.%ld\n", curtime.tv_sec-utime.tv_sec, curtime.tv_usec-utime.tv_usec );
-    utime=curtime;
     result = EINSS7CpMsgRecv_r(&message,1000);
-    gettimeofday( &curtime, 0 );
-    fprintf( stderr, "MsgRecv end: %ld.%ld\n", curtime.tv_sec-utime.tv_sec, curtime.tv_usec-utime.tv_usec );
-    utime=curtime;
-//    result = MsgRecvEvent( &message, eventlist, &eventlist_len, 1000 );
+    if( time_logger.isDebugEnabled() ) gettimeofday( &utime, 0 );
     MAP_dispatching = false;
 /*    if ( ++timecounter == 60 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
@@ -212,11 +206,21 @@ restart:
      }
     }
     EINSS7CpReleaseMsgBuffer(&message);
+    if( time_logger.isDebugEnabled() ) {
+      char buf[128];
+      long usecs;
+      gettimeofday( &curtime, 0 );
+      usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
+      snprintf( buf, 128, "sec=%ld usec=%ld", curtime.tv_sec-utime.tv_sec, usecs );
+      time_logger.debug( buf );
+    }
+    utime=curtime;
   }
 }
 
 void MapIoTask::init(unsigned timeout)
 {
+  time_logger = smsc::util::Logger::getCategory("map.time");
   USHORT_T err;
   __global_bind_counter = 0;
   __pingPongWaitCounter = 0;
