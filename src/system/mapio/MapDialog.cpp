@@ -458,7 +458,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
       if (  encoding == MAP_OCTET7BIT_ENCODING ){
         if ( ssfh->udhi){
           MicroString ms;
-          auto_ptr<unsigned char> b = new unsigned char[255*2];
+          auto_ptr<unsigned char> b(new unsigned char[255*2]);
           unsigned udh_len = ((unsigned)*user_data)&0x0ff;
           __trace2__("MAP::DIALOG::ForwardReq: ud_length 0x%x",user_data_len);
           __trace2__("MAP::DIALOG::ForwardReq: udh_len 0x%x",udh_len);
