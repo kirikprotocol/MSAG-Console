@@ -1032,6 +1032,12 @@ StateType StateMachine::submit(Tuple& t)
         submitResp(t,sms,Status::SYSERR);
         return ERROR_STATE;
       }
+      if(!newsms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+      {
+        smsLog->warn("smsId=%llf:one more part of concatenated message received, but all parts are collected.",t.msgId);
+        submitResp(t,sms,Status::SUBMITFAIL);
+        return ERROR_STATE;
+      }
       unsigned int newlen;
       unsigned char *newbody=(unsigned char*)newsms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&newlen);
       unsigned int cilen;
