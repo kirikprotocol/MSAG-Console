@@ -46,6 +46,7 @@
     <copy todir="${LIBS_OUT_DIR}" flatten="yes" preservelastmodified="yes" >
       <fileset refid="project_libs"/>
       <fileset dir="${libs_path}" includes="log4j.jar classes12.jar"/>
+      <fileset dir="${java_lib}" includes="${esme_name}.jar"/>
     </copy>
   </target>
 
