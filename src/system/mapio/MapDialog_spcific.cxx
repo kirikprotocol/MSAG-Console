@@ -280,6 +280,7 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
 
 inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_ADDRESS_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {
   addr->ss7AddrLen = 5+(saddr->addressLength+1)/2;
+  __trace2__("MAP::mkSS7GTAddress::adr addr_t.len(%d) ss7addr_len(%d)",saddr->addressLength,addr->ss7AddrLen);
   addr->ss7Addr[0] = 0x12; // SSN & GT
   addr->ss7Addr[1] = ssn;
   addr->ss7Addr[2] = 0;
