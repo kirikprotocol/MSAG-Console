@@ -204,7 +204,7 @@
     <c:set var="smes" value="${fn:join(bean.smeIds, ',')}"/>
     <c:set var="providers" value="${fn:join(bean.providers, ',')}"/>
     <c:set var="providerIds" value="${fn:join(bean.providerIds, ',')}"/>
-    <table>
+    <table cellpadding="5">
       <col width="50%">
       <col width="50%">
       <tr>
@@ -217,33 +217,31 @@
             <sm-ep:list title="source SME ID" name="srcSmeId" values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
             <sm-ep:list title="provider" name="providerId" values="${providerIds}" valueTitles="${providers}"/>
             <sm-ep:list title="billing"  name="billingId"  values="${bean.billingIds}"  valueTitles="${bean.billingIds}"/>
+            <sm-pm:space/>
+            <sm-ep:check head="route" title="active" name="active"/>
+            <sm-ep:check head="options" title="allowed" name="enabling"/>
           </sm-ep:properties>
         </td>
         <td valign="top">
-          <sm-ep:properties title="Route options" noColoredLines="true" noHeaders="true">
-            <sm-ep:check title="active" name="active"/>
-            <sm-ep:check title="allowed" name="enabling"/>
-          </sm-ep:properties>
-        </td>
-      </tr>
-      <tr>
-        <td>
           <sm-ep:properties title="Traffic rules" noColoredLines="true" noHeaders="false">
-            <sm-ep:check title="allow receive" name="trafficRules_allowReceive"/>
-            <sm-ep:check title="allow answer" name="trafficRules_allowAnswer"/>
-            <sm-ep:check title="allow PSSR response" name="trafficRules_allowPssrResp"/>
-            <sm-ep:check title="allow USSR request" name="trafficRules_allowUssrRequest"/>
-            <sm-ep:check title="allow USSD dialog init" name="trafficRules_allowUssdDialogInit"/>
-            <sm-ep:txt   title="send limit" name="trafficRules_sendLimit"/>
-            <sm-ep:txt   title="USSD MI dialog limit" name="trafficRules_ussdMiDialogLimit"/>
-            <sm-ep:txt   title="USSD SI dialog limit" name="trafficRules_ussdSiDialogLimit"/>
+            <sm-ep:check title="allow receive" indent="true" name="trafficRules_allowReceive"/><br>
+            <sm-ep:check title="allow answer" indent="true" name="trafficRules_allowAnswer"/><br>
+            <sm-ep:check title="allow PSSR response" indent="true" name="trafficRules_allowPssrResp"/><br>
+            <sm-ep:check title="allow USSR request" indent="true" name="trafficRules_allowUssrRequest"/><br>
+            <sm-ep:check title="allow USSD dialog init" indent="true" name="trafficRules_allowUssdDialogInit"/><br>
+           </sm-ep:properties>
+          <sm-ep:properties title="" noColoredLines="true" noHeaders="false">
+            <sm-ep:txt   title="send limit" maxlength="5" styleWidth="54px" name="trafficRules_sendLimit"/>
+            <sm-ep:txt   title="USSD MI dialog limit" maxlength="5" styleWidth="54px" name="trafficRules_ussdMiDialogLimit"/>
+            <sm-ep:txt   title="USSD SI dialog limit" maxlength="5" styleWidth="54px" name="trafficRules_ussdSiDialogLimit"/>
           </sm-ep:properties>
         </td>
       </tr>
+
       <tr><td colspan="2">&nbsp;</td></tr>
       <tr><td colspan="2"><hr></td></tr>
     </table>
-    <table>
+    <table cellpadding="12">
       <col width="42">
       <col width="16">
       <col width="42">

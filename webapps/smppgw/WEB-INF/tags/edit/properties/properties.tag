@@ -14,8 +14,8 @@
 <div class=page_subtitle>${fn:escapeXml(title)}</div>
 <table class=properties_list cellspacing=0 cellspadding=0>
 <c:if test="${!SMPPGW_EDIT_PROPERTIES_noHeaders}">
-  <col width="15%">
-  <col width="85%">
+  <col width="15%"> 
+  <col width="100%">
 </c:if>
 <c:set var="prop_rowN" value="0" scope="request"/>
 <jsp:doBody/>
