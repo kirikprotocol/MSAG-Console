@@ -213,7 +213,13 @@ public:
                  cmdid==SUBMIT_MULTI_SM_RESP ||
                  cmdid==CANCEL_RESP ||
                  cmdid==QUERY_RESP ||
-                 cmdid==REPLACE_RESP
+                 cmdid==REPLACE_RESP ||
+                 cmdid==ENQUIRELINK ||
+                 cmdid==ENQUIRELINK_RESP ||
+                 cmdid==UNBIND ||
+                 cmdid==UNBIND_RESP ||
+                 cmdid==GENERIC_NACK ||
+                 cmdid==SMPP_PDU
                );
       }
     }
