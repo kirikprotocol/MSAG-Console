@@ -1138,7 +1138,6 @@ static string RouteToString(MapDialog* dialog)
 }
 
 static bool SendSms(MapDialog* dialog){
-  __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
   CheckLockedByMO(dialog);
   dialog->wasDelivered = false;
 
@@ -1331,7 +1330,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
     memcpy( ussdString.ussdStr, text, text_len );
     ussdEncoding = 0x44;
   }
-  if( smsc::logger::_map_cat->isDebugEnabled() ) {
+/*  if( smsc::logger::_map_cat->isDebugEnabled() ) {
     char *buf = new char[text_len*4+1];
     int k = 0;
     for ( int i=0; i<bytes; i++){
@@ -1349,7 +1348,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
     buf[k]=0;
     __map_trace2__("USSD string ussdenc=0x%02X dump: %s",ussdEncoding,buf);
     delete buf;
-  }
+  }*/
 
   ussdString.ussdStrLen = bytes;
   UCHAR_T result;

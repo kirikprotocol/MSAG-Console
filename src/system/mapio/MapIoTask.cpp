@@ -563,7 +563,7 @@ void MAPSTATS_DumpDialog(MapDialog* dlg)
 
 void MapProxy::checkLogging() {
 #ifdef USE_MAP
-  if ( smsc::logger::Logger::getInstance("map.trace.user1")->isDebugEnabled() ) {
+/*  if ( smsc::logger::Logger::getInstance("map.trace.user1")->isDebugEnabled() ) {
     __map_trace__("Enable trace for system USER01");
     MsgTraceOn( USER01_ID );
   } else {
@@ -584,6 +584,7 @@ void MapProxy::checkLogging() {
     __map_trace__("Disable trace for system TCAP_ID");
     MsgTraceOff( TCAP_ID );
   }
+*/  
 #endif
 }
 
