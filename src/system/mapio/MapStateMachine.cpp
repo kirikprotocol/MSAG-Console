@@ -573,7 +573,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
       case MAPST_WaitHlrVersion:
         dialog->version = version;
         SendRInfo(dialog.get());
-        dialog->state = MAPST_SendingRInfo;
+        dialog->state = MAPST_RInfoFallBack;
         break;
       case MAPST_WaitMcsVersion:
         dialog->version = version;
@@ -586,7 +586,6 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
         throw MAPDIALOG_BAD_STATE(
           FormatText("MAP::%s bad state %d, did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
       }
-      dialog->state  = MAPST_SendingRInfo;
     }
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
@@ -623,7 +622,6 @@ USHORT_T Et96MapOpenConf (
             dialogid_map = RemapDialog(dialog.get());
             switch ( dialog->state ) {
             case MAPST_RInfoFallBack: 
-              dialog->state = MAPST_SendingRInfo;
               SendRInfo(dialog.get());
               break;
             case MAPST_WaitSpecOpenConf:

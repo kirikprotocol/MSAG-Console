@@ -45,7 +45,7 @@ extern "C" {
 enum MapState{
   MAPST_UNKNOWN,
   MAPST_WaitHlrVersion,
-  MAPST_SendingRInfo,
+//  MAPST_SendingRInfo,
   MAPST_RInfoFallBack,
   MAPST_WaitRInfoConf,
   MAPST_WaitRInfoClose,
