@@ -1,4 +1,6 @@
 
+#include <util/debug.h>
+
 #include "Formatters.h"
 
 namespace smsc { namespace dbsme { namespace io
@@ -31,8 +33,8 @@ void OutputFormatter::format(std::string& output, GetAdapter& adapter)
         FormatEntity* entity = entities[i];
         if (entity)
         {
-            printf("Formatting arg of type: %s\n", 
-                   ioEntityTypeStrings[entity->type]); 
+            __trace2__("Formatting arg of type: %s", 
+                       ioEntityTypeStrings[entity->type]); 
             Formatter* formatter = 
                 FormatterRegistry::getFormatter(ioEntityTypeStrings[entity->type]);
             if (formatter && entity)
@@ -198,149 +200,190 @@ void DateTimeFormatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    if (!adapter.isNull(entity.position))
+    tm      tmdt;
+    time_t  date;
+    char    buff[256] = "";
+
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+    const char* pattern = entity.getOption(SMSC_DBSME_IO_FORMAT_PATTERN_OPTION);
+    
+    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
     {
-        char    buff[256] = "";
-        time_t date = adapter.getDateTime(entity.position);
-        const char* pattern = entity.getOption("pattern");
-        
-        if (pattern) // format date by user-desired pattern
+        if (strcmp(def, ioNowString) == 0)
         {
-            tm  tmdt;
-            int curPos = 0;
+            date = time(NULL);
+        }
+        else if (strcmp(def, ioTodayString) == 0)
+        {
+            date = time(NULL);
             localtime_r(&date, &tmdt);
-            
-            while (pattern[curPos])
+            tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
+            date = mktime(&tmdt);
+        }
+        else if (strcmp(def, ioTomorrowString) == 0)
+        {
+            date = time(NULL) + 3600*24;
+            localtime_r(&date, &tmdt);
+            tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
+            date = mktime(&tmdt);
+        }
+        else if (strcmp(def, ioYesterdayString) == 0)
+        {
+            date = time(NULL) - 3600*24;
+            localtime_r(&date, &tmdt);
+            tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
+            date = mktime(&tmdt);
+        }
+        else return;
+    }
+    else if (!adapter.isNull(entity.position))
+    {
+        date = adapter.getDateTime(entity.position);
+    }
+    else return;
+    
+    localtime_r(&date, &tmdt);
+
+    if (pattern) // format date by user-desired pattern
+    {
+        int curPos = 0;
+        bool needAMPM = false;
+        
+        while (pattern[curPos])
+        {
+            switch(pattern[curPos])
             {
-                switch(pattern[curPos])
-                {
-                case 'w':
-                {
+            case 'w':
+            {
+                curPos++;
+                output += ioShortWeekDays[tmdt.tm_wday];
+                continue;
+            }
+            case 'W':
+            {
+                curPos++;
+                output += ioFullWeekDays[tmdt.tm_wday];
+                continue;
+            }
+            case 'h':
+            {
+                if (pattern[++curPos] == 'h') {
                     curPos++;
-                    output += ioShortWeekDays[tmdt.tm_wday];
-                    continue;
-                }
-                case 'W':
-                {
+                    sprintf(buff, "%02d", tmdt.tm_hour%12);
+                } else 
+                    sprintf(buff, "%d", tmdt.tm_hour%12);
+
+                needAMPM = true;
+                output += buff;
+                continue;
+            }
+            case 'H':
+            {
+                if (pattern[++curPos] == 'H') {
                     curPos++;
-                    output += ioFullWeekDays[tmdt.tm_wday];
-                    continue;
-                }
-                case 'h':
+                    sprintf(buff, "%02d", tmdt.tm_hour);
+                } else
+                    sprintf(buff, "%d", tmdt.tm_hour);
+
+                output += buff; needAMPM = false;
+                continue;
+            }
+            case 'm':
+            {
+                if (pattern[++curPos] == 'm') {
+                    curPos++;
+                    sprintf(buff, "%02d", tmdt.tm_min);
+                } else
+                    sprintf(buff, "%d", tmdt.tm_min);
+                
+                output += buff; 
+                continue;
+            }
+            case 's':
+            {
+                if (pattern[++curPos] == 's') {
+                    curPos++;
+                    sprintf(buff, "%02d", tmdt.tm_sec);
+                } else
+                    sprintf(buff, "%d", tmdt.tm_sec);
+                
+                output += buff; 
+                continue;
+            }
+            case 'M':
+            {
+                if (pattern[++curPos] == 'M')
                 {
-                    int val = tmdt.tm_hour%12;
-                    if (pattern[++curPos] == 'h') {
-                        curPos++;
-                        sprintf(buff, ((val<10) ? "0%d":"%d"), val);
-                    } else 
-                        sprintf(buff, "%d", val);
-                    output += buff;
-                    continue;
-                }
-                case 'H':
-                {
-                    int val = tmdt.tm_hour;
-                    if (pattern[++curPos] == 'H') {
-                        curPos++;
-                        sprintf(buff, ((val<10) ? "0%d":"%d"), val);
-                    } else
-                        sprintf(buff, "%d", val);
-                    output += buff;
-                    continue;
-                }
-                case 'm':
-                {
-                    int val = tmdt.tm_min;
-                    if (pattern[++curPos] == 'm') {
-                        curPos++;
-                        sprintf(buff, ((val<10) ? "0%d":"%d"), val);
-                    } else
-                        sprintf(buff, "%d", val);
-                    output += buff;
-                    continue;
-                }
-                case 's':
-                {
-                    int val = tmdt.tm_sec;
-                    if (pattern[++curPos] == 's') {
-                        curPos++;
-                        sprintf(buff, ((val<10) ? "0%d":"%d"), val);
-                    } else
-                        sprintf(buff, "%d", val);
-                    output += buff;
-                    continue;
-                }
-                case 'M':
-                {
-                    int val = tmdt.tm_mon;
                     if (pattern[++curPos] == 'M')
                     {
                         if (pattern[++curPos] == 'M')
                         {
-                            if (pattern[++curPos] == 'M')
-                            {
-                                curPos++;
-                                output += ioFullMonthesNames[val];
-                            }
-                            else
-                                output += ioShortMonthesNames[val];
+                            curPos++;
+                            output += ioFullMonthesNames[tmdt.tm_mon];
                         }
                         else
-                            sprintf(buff, ((val<9) ? "0%d":"%d"), val+1);
+                            output += ioShortMonthesNames[tmdt.tm_mon];
                     }
-                    else 
-                        sprintf(buff, "%d", val+1);
-                    output += buff;
-                    continue;
+                    else
+                        sprintf(buff, "%02d", tmdt.tm_mon+1);
                 }
-                case 'd':
-                {
-                    int val = tmdt.tm_mday;
-                    if (pattern[++curPos] == 'd') {
-                        curPos++;
-                        sprintf(buff, ((val<10) ? "0%d":"%d"), val);
-                    } else
-                        sprintf(buff, "%d", val);
-                    output += buff;
-                    continue;
-                }
-                case 't':
-                {
+                else 
+                    sprintf(buff, "%d", tmdt.tm_mon+1);
+                
+                output += buff;
+                continue;
+            }
+            case 'd':
+            {
+                if (pattern[++curPos] == 'd') {
                     curPos++;
+                    sprintf(buff, "%02d", tmdt.tm_mday);
+                } else
+                    sprintf(buff, "%d", tmdt.tm_mday);
+                
+                output += buff;
+                continue;
+            }
+            case 't':
+            {
+                curPos++;
+                if (needAMPM)
+                {
                     output += ioDayTimeParts[
                         (tmdt.tm_hour>=0 && tmdt.tm_hour<12) ? 0:1];
-                    continue;
                 }
-                case 'y':
+                continue;
+            }
+            case 'y':
+            {
+                if (pattern[curPos+1] == 'y')
                 {
-                    if (pattern[curPos+1] == 'y')
+                    curPos += 2;
+                    if (pattern[curPos] == 'y' && 
+                        pattern[curPos+1] == 'y') 
                     {
                         curPos += 2;
-                        if (pattern[curPos] == 'y' && 
-                            pattern[curPos+1] == 'y') 
-                        {
-                            curPos += 2;
-                            sprintf(buff, "%d", tmdt.tm_year+1900);
-                        }
-                        else
-                            sprintf(buff, "%d", (tmdt.tm_year >= 100) ?
-                                    tmdt.tm_year-100:tmdt.tm_year);
-                        output += buff;
-                        continue;
+                        sprintf(buff, "%04d", tmdt.tm_year+1900);
                     }
-                    // break missed !!!
+                    else
+                        sprintf(buff, "%02d", (tmdt.tm_year >= 100) ?
+                                tmdt.tm_year-100:tmdt.tm_year);
+                    output += buff;
+                    continue;
                 }
-                default:
-                    output += pattern[curPos++];
-                    break;
-                }
+                // break missed !!!
+            }
+            default:
+                output += pattern[curPos++];
+                break;
             }
         }
-        else // format date by default format
-        {
-            ctime_r(&date, buff);   
-            output += buff;
-        }
+    }
+    else // format date by default format
+    {
+        ctime_r(&date, buff);   
+        output += buff;
     }
 }
 

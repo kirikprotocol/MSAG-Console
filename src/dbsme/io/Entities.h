@@ -35,13 +35,20 @@ namespace smsc { namespace dbsme { namespace io
         virtual ~FormatRenderingException() throw() {};
     };
     
-    static const char* SMSC_DBSME_IO_FORMAT_ARGUMENT_NUMBER  = "arg";
+    static const char* SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION  = "arg";
+    static const char* SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION   = "default";
+    static const char* SMSC_DBSME_IO_FORMAT_PATTERN_OPTION   = "pattern";
 
     static const char  SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER = '$';
     static const char  SMSC_DBSME_IO_FORMAT_STRING_DELIMETER = '\"';
     static const char  SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER   = '\\';
     static const char  SMSC_DBSME_IO_FORMAT_OPTION_ASSIGN    = '=';
 
+    static const char*  ioNowString         = "now";
+    static const char*  ioTodayString       = "today";
+    static const char*  ioTomorrowString    = "tomorrow";
+    static const char*  ioYesterdayString   = "yesterday";
+    
     static const char*  ioFullMonthesNames[12] = {
         "January", "February", "March", "April", 
         "May", "June", "July", "August", "September",
@@ -84,7 +91,7 @@ namespace smsc { namespace dbsme { namespace io
         std::string         str;
         int                 position;
 
-        FormatEntity(std::string line, bool type=true)
+        FormatEntity(std::string line, bool io, bool type=true)
             throw(FormatRenderingException);
         virtual ~FormatEntity();
 
@@ -106,7 +113,7 @@ namespace smsc { namespace dbsme { namespace io
 
     public:
 
-        FormatEntityRenderer(const char* format, bool text = false)
+        FormatEntityRenderer(const char* format, bool io)
             throw(FormatRenderingException);
         virtual ~FormatEntityRenderer();
     };

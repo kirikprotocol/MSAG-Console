@@ -1,5 +1,6 @@
 
 #include <ctype.h>
+#include <util/debug.h>
 
 #include "Entities.h"
 
@@ -89,15 +90,16 @@ void FormatEntity::renderOptions(const char* line)
                 value += line[curPos++];
         }
 
-        printf("Result %s=%s\n", name.c_str(), value.c_str());
+        __trace2__("Result %s=%s", name.c_str(), value.c_str());
         options.Insert(name.c_str(), value);
         
         while (isspace(line[curPos])) // skip spaces after 'value'
             curPos++;
     }
 }
-    
-FormatEntity::FormatEntity(std::string line, bool type)
+
+// io == false --> parser, io == true --> formatter
+FormatEntity::FormatEntity(std::string line, bool io, bool type)
     throw(FormatRenderingException)
 {
     if (type)
@@ -106,7 +108,7 @@ FormatEntity::FormatEntity(std::string line, bool type)
         int i;
         for (i=0; i<ioEntityTypesNumber-1; i++)
         {
-            //printf("Checking type: %s\n", entityTypeStrings[i]);
+            //__trace2__("Checking type: %s", ioEntityTypeStrings[i]);
             if (raw == strstr(raw, ioEntityTypeStrings[i]))
             {
                 this->type = (EntityType)i; str = "";
@@ -122,11 +124,27 @@ FormatEntity::FormatEntity(std::string line, bool type)
         }
         renderOptions(raw+strlen(ioEntityTypeStrings[i]));
         
-        const char* arg = getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_NUMBER);
-        if (!arg) 
-            throw FormatRenderingException("Argument number not defined !"
-                                           "Parsing format string: <%s>", raw);
-        position = atoi(arg);
+        const char* arg = getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+        const char* def = getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+        
+        if (io) // formatter
+        {
+            if (arg) position = atoi(arg);
+            else if (def) position = 0;
+            else throw FormatRenderingException(
+                    "Neither '%s' nor '%s' option defined ! "
+                    "Parsing format string: <%s>", 
+                    SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION,
+                    SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION, raw);
+        }
+        else    // parser
+        {
+            if (arg) position = atoi(arg);
+            else throw FormatRenderingException(
+                    "'%s' option wasn't defined ! "
+                    "Parsing format string: <%s>", 
+                    SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION, raw);
+        }
     }
     else 
     {
@@ -137,10 +155,10 @@ FormatEntity::~FormatEntity()
 {
 }
 
-FormatEntityRenderer::FormatEntityRenderer(const char* format, bool text)
+FormatEntityRenderer::FormatEntityRenderer(const char* format, bool io)
     throw(FormatRenderingException)
 {
-    printf("Format for parsing is: '%s'\n", format);
+    __trace2__("Format for parsing is: '%s'", format);
     
     std::string str = "";
     
@@ -177,13 +195,13 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool text)
             {
                 curPos += 2;
                 const char* line = str.c_str();
-                printf("%s line: <%s>\n", (opened) ? "Inner":"Outer", line);
+                __trace2__("%s line: <%s>", (opened) ? "Inner":"Outer", line);
 
-                if (opened || text)
+                if (opened || io)
                 {
                     try
                     {
-                        (void)entities.Push(new FormatEntity(str, opened));
+                        (void)entities.Push(new FormatEntity(str, io, opened));
                     }
                     catch (Exception& exc)
                     {
@@ -205,13 +223,13 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool text)
     }
     
     const char* line = str.c_str();
-    printf("%s line: <%s>\n", (opened) ? "Inner":"Outer", line);
+    __trace2__("%s line: <%s>", (opened) ? "Inner":"Outer", line);
 
-    if (opened || text)
+    if (opened || io)
     {
         try
         {
-            (void)entities.Push(new FormatEntity(str, opened));
+            (void)entities.Push(new FormatEntity(str, io, opened));
         }
         catch (Exception& exc)
         {
