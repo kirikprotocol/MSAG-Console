@@ -46,6 +46,74 @@ USHORT_T Et96MapUAbortInd(ET96MAP_LOCAL_SSN_T lssn,
                           UCHAR_T priorityOrder)
 {
   __trace2__("MAP::Et96MapUAbortInd");
+  const char* szDiag = "<Diag-Unknown>";
+  const char* szReason "<Reason-Unknown>";
+  if ( *reason == ET96MAP_RESOURCE_UNAVAIL )
+  {
+    szReasn = "ET96MAP_RESOURCE_UNAVAIL";
+    switch(*diag){
+    case ET96MAP_SHORT_TERM_PROBLEM: 
+      szDiag = "ET96MAP_SHORT_TERM_PROBLEM";
+      break;
+    case ET96MAP_LONG_TERM_PROBLEM:
+      szDiag = "ET96MAP_LONG_TERM_PROBLEM";
+      break;
+    }
+  }
+  else if ( *reason == ET96MAP_APPL_PROC_CANCEL)
+  {
+    szReason = "ET96MAP_APPL_PROC_CANCEL";
+    switch(*diag){
+    case ET96MAP_HANDOVER_CANCELLATION:
+      szDiag = "ET96MAP_HANDOVER_CANCELLATION";
+      break;
+    case ET96MAP_RADIO_CHANNEL_RELEASED:
+      szDiag = "ET96MAP_RADIO_CHANNEL_RELEASED";
+      break;
+    case ET96MAP_NETWORK_PATH_RELEASED:
+      szDiag = "ET96MAP_NETWORK_PATH_RELEASED";
+      break;
+    case ET96MAP_CALL_RELEASED:
+      szDiag = "ET96MAP_CALL_RELEASED";
+      break;
+    case ET96MAP_ASSOCIATED_PROC_FAILURE:
+      szDiag = "ET96MAP_ASSOCIATED_PROC_FAILURE";
+      break;
+    case ET96MAP_TANDEM_DIALOGUE_RELEASED:
+      szDiag = "ET96MAP_TANDEM_DIALOGUE_RELEASED";
+      break;
+    case ET96MAP_REMOTE_OPERATIONS_FAILURE:
+      szDiag = "ET96MAP_REMOTE_OPERATIONS_FAILURE";
+      break;
+    }
+  }
+  else if ( *reason == ET96MAP_RESOURCE_LIMIT ){
+    szReason = "ET96MAP_RESOURCE_LIMIT";
+  }
+  else if ( *reason == ET96MAP_PROC_ERROR ){
+    szReason = "ET96MAP_PROC_ERROR";
+  }
+  __trace2__("MAP::Et96MapUAbortInd: did 0x%x, reson 0x%x:'%s', diag 0x%x:'%s'",
+             dialogid,
+             *reason,
+             szReason,
+             *diag,
+             szDiag);
+  try{
+    MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogid);
+    if ( mdci ){
+      mdci->Et96MapUAbortInd(ssn,
+                            dialogid,
+                            reason,
+                            diag,
+                            ud,
+                            priorityOrder);
+      MapDialogContainer::getInstance()->dropDialog(dialogid);
+    }
+  }catch(...){
+    __trace2__("MAP::Et96MapCloseInd: catch exception when processing did 0x%x",dialogid);
+    MapDialogContainer::getInstance()->dropDialog(dialogid);
+  }
   return ET96MAP_E_OK;
 }
 
@@ -56,6 +124,39 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
                           UCHAR_T priorityOrder)
 {
   __trace2__("MAP::Et96MapPAbortInd")
+  const char* szReason "<Reason-Unknown>";
+  switch( *reason ){
+  case ET96MAP_RESOURCE_UNAVAIL:
+    szReasn = "ET96MAP_RESOURCE_UNAVAIL";
+    break;
+  case ET96MAP_APPL_PROC_CANCEL:
+    szReason = "ET96MAP_APPL_PROC_CANCEL";
+    break;
+  case ET96MAP_RESOURCE_LIMIT:
+    szReason = "ET96MAP_RESOURCE_LIMIT";
+    break;
+  case ET96MAP_PROC_ERROR:
+    szReason = "ET96MAP_PROC_ERROR";
+    break;
+  }
+  __trace2__("MAP::Et96MapPAbortInd: did 0x%x, reson 0x%x:'%s'",
+             dialogid,
+             *reason,
+             szReason);
+  try{
+    MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogid);
+    if ( mdci ){
+      mdci->Et96MapPAbortInd(ssn,
+                            dialogid,
+                            reason,
+                            source,
+                            priorityOrder);
+      MapDialogContainer::getInstance()->dropDialog(dialogid);
+    }
+  }catch(...){
+    __trace2__("MAP::Et96MapCloseInd: catch exception when processing did 0x%x",dialogid);
+    MapDialogContainer::getInstance()->dropDialog(dialogid);
+  }
   return ET96MAP_E_OK;
 }
 

@@ -432,6 +432,28 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
 #endif
 }
 
+virtual void Et96MapPAbortInd(
+  ET96MAP_LOCAL_SSN_T lssn,
+  ET96MAP_DIALOGUE_ID_T dialogid,
+  ET96MAP_PROV_REASON_T reason,
+  ET96MAP_SOURCE_T source,
+  UCHAR_T priorityOrder)
+{
+  __trace2__("MAP::Dialog::Et96MapPAbortInd");
+  state = MAPST_READY_FOR_CLOSE;
+}
+
+virtual void Et96MapUAbortInd(
+  ET96MAP_LOCAL_SSN_T lssn,
+  ET96MAP_DIALOGUE_ID_T dialogid,
+  ET96MAP_USER_REASON_T *reason,
+  ET96MAP_DIAGNOSTIC_INFO_T* diag,
+  ET96MAP_USERDATA_T *ud,
+  UCHAR_T priorityOrder)
+{
+  __trace2__("MAP::Dialog::Et96MapUAbortInd");
+  state = MAPST_READY_FOR_CLOSE;
+}
 
 bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
                          ET96MAP_DIALOGUE_ID_T,
@@ -444,6 +466,9 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
     state = MAPST_READY_FOR_CLOSE;
     try{
       __trace2__("MAP::Et96MapCloseInd state: REDY_FOR_SEND_SMS");
+
+      MapDialogContainer::getInstance()->reAssingDialog(dialogid);
+
       ET96MAP_APP_CNTX_T appContext;
     	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
     	appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
