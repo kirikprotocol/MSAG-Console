@@ -123,7 +123,7 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 						setReceived();
 						break;
 					case RESP_PDU_ERROR:
-						setNotExpected();
+						setError();
 						break;
 					case RESP_PDU_RESCHED:
 					case RESP_PDU_MISSING:
@@ -151,11 +151,14 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 		case PDU_EXPIRED_FLAG:
 			res.push_back(3);
 			break;
+		case PDU_ERROR_FLAG:
+			res.push_back(4);
+			break;
 		default:
 			__unreachable__("Unknown flag");
 	}
 	__trace2__("update monitor: %s, recvTime = %ld, respFlag = %d, flag: %d -> %d, attempt = %d, calcTime = %ld, diff = %ld",
-		str().c_str(), recvTime, respFlag, flag, prevFlag, attempt, calcTime, diff);
+		str().c_str(), recvTime, respFlag, prevFlag, flag, attempt, calcTime, diff);
 	return res;
 }
 
@@ -285,6 +288,13 @@ void PduMonitor::setExpired()
 	__trace2__("monitor set expired: %s", str().c_str());
 }
 
+void PduMonitor::setError()
+{
+	flag = PDU_ERROR_FLAG;
+	checkTime = validTime;
+	__trace2__("monitor set error: %s", str().c_str());
+}
+
 string PduMonitor::str() const
 {
 	ostringstream s;
@@ -325,6 +335,9 @@ string PduMonitor::str() const
 			break;
 		case PDU_EXPIRED_FLAG:
 			s << ", flag = expired";
+			break;
+		case PDU_ERROR_FLAG:
+			s << ", flag = error";
 			break;
 		default:
 			__unreachable__("Invalid pdu flag");

@@ -183,6 +183,7 @@ void SmppBaseTestCases::checkMissingPdu(time_t checkTime)
 				case PDU_RECEIVED_FLAG:
 				case PDU_NOT_EXPECTED_FLAG:
 				case PDU_EXPIRED_FLAG:
+				case PDU_ERROR_FLAG:
 					__require__(monitor->getCheckTime() == monitor->getValidTime());
 					break;
 				default:
@@ -202,6 +203,7 @@ void SmppBaseTestCases::checkMissingPdu(time_t checkTime)
 					//break;
 				case PDU_NOT_EXPECTED_FLAG:
 				case PDU_EXPIRED_FLAG:
+				case PDU_ERROR_FLAG:
 					__require__(monitor->getCheckTime() == monitor->getValidTime());
 					break;
 				default:
