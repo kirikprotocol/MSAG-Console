@@ -1093,7 +1093,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespOk(
 pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 	PduDeliverySm& pdu, bool sync, int num)
 {
-	__trace__("sendDeliverySmRespRetry()");
+	__trace2__("sendDeliverySmRespRetry(): sme timeout = %d", fixture->smeInfo.timeout);
 	TCSelector s(num, 5);
 	__decl_tc__;
 	try
@@ -1134,8 +1134,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 					respPdu.get_header().set_commandStatus(ESME_ROK);
 					__cfg_int__(sequentialPduInterval);
 					int timeout = 1000 * (fixture->smeInfo.timeout + rand2(1, sequentialPduInterval));
-					__trace2__("sendAfterSmeTimeout(): sme timeout = %d, timeout = %d",
-						fixture->smeInfo.timeout, timeout);
+					__trace2__("sendAfterSmeTimeout(): timeout = %d", timeout);
 					fixture->transmitter->sendDeliverySmResp(respPdu, sync, timeout);
 				}
 				break;
