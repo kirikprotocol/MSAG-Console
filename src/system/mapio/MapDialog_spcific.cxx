@@ -344,9 +344,34 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
     throw runtime_error("MAP::ConvAddrMap2Smc  ET96MAP_SM_RP_OA_T length should be greater than 0");
   }
 }
-inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
-{ConvAddrMSISDN2Smc((ET96MAP_SM_RP_OA_T*)ma,sa);}
 
+inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
+{
+  sa->setTypeOfNumber((ma->addr[0]>>4)&0x7);
+  sa->setNumberingPlan(ma->addr[0]&0xf);
+  if ( ma->addrLen != 0 ){
+    char sa_val[21] = {0,};
+    int i = 0;
+    for ( i=0; i<(ma->addrLen-1)*2;){
+      if ( (ma->addr[(i>>1)+1]&0x0f) == 0xf ) break;
+      sa_val[i]=(ma->addr[(i>>1)+1]&0x0f)+0x30;
+      ++i;
+      if ( i<(ma->addrLen-1)*2 ){
+        if ( (ma->addr[(i>>1)+1]>>4) == 0xf ) break;
+        sa_val[i] = (ma->addr[(i>>1)+1]>>4)+0x30;
+        ++i;
+      }else break;
+    }
+    {
+      char b[256] = {0,};
+      memcpy(b,sa_val,i);
+      __trace2__("MAP::ConvAddrMSISDN2Smc::adr value(%d) %s",(ma->addrLen-1)*2,b);
+    }
+    sa->setValue(i,sa_val);
+  }else{
+    throw runtime_error("MAP::ConvAddrMap2Smc  ET96MAP_SM_RP_OA_T length should be greater than 0");
+  }
+}
 
 extern void CloseDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
 extern void CloseAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
