@@ -1303,6 +1303,7 @@ StateType StateMachine::submit(Tuple& t)
       *sms=newsms;
 
       int status=Status::OK;
+      /*
       try{
         store->createSms(*sms,t.msgId,smsc::store::CREATE_NEW);
       }catch(...)
@@ -1310,6 +1311,7 @@ StateType StateMachine::submit(Tuple& t)
         status=Status::SYSERR;
       }
       smsc->getTempStore().Delete(t.msgId);
+      */
 
       char buf[64];
       sprintf(buf,"%lld",t.msgId);
@@ -1564,7 +1566,7 @@ StateType StateMachine::submit(Tuple& t)
       bool rip=sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)!=0;
       //if(rip || stime>now || )
       //{
-        store->createSms(*sms,t.msgId,smsc::store::SMPP_OVERWRITE_IF_PRESENT);
+        store->createSms(*sms,t.msgId,rip?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
         sms->createdInStore=true;
       //}else
       /*
