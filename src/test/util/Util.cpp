@@ -22,14 +22,20 @@ void init_rand()
 	}
 }
 
+int rand2(int minValue, int maxValue)
+{
+	int tmp = (int) ((maxValue - minValue + 1) * (float) rand() / (RAND_MAX + 1.0));
+	return minValue + tmp;
+}
+
 int rand0(int maxValue)
 {
-	return (int) ((maxValue + 1) * (float) rand() / (RAND_MAX + 1.0));
+	return rand2(0, maxValue);
 }
 
 int rand1(int maxValue)
 {
-	return 1 + (int) (maxValue * (float) rand() / (RAND_MAX + 1.0));
+	return rand2(1, maxValue);
 }
 
 auto_ptr<uint8_t> rand_uint8_t(int length)
