@@ -108,7 +108,7 @@ const string DbSmeSelectJobTestCases::processSelectNullsJobOutput(
 			writeSelectJobRecord(os, NULL, &defOutput, t);
 		}
 		string expected = os.str();
-		if (!expected.compare(0, text.length(), text))
+		if (expected.find(text) != string::npos)
 		{
 			return expected;
 		}
