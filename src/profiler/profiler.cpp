@@ -238,6 +238,7 @@ int Profiler::Execute()
   int status=MAKE_COMMAND_STATUS(CMD_OK,0);
 
 //  char *str=body;
+  int msg;
   while(!isStopping)
   {
     if(!hasOutput())
@@ -287,30 +288,83 @@ int Profiler::Execute()
       {
         if(!strncmp(body+i,"NONE",4))
         {
+          msg=0;
           internal_update(_update_report,addr,ProfileReportOptions::ReportNone);
         }
         else
         if(!strncmp(body+i,"FULL",4))
         {
+          msg=1;
           internal_update(_update_report,addr,ProfileReportOptions::ReportFull);
         }
       }
     }else
-    if(!strncmp(body+i,"UCS2",4))
-    {
-      internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
-
-    }else
     if(!strncmp(body+i,"DEFAULT",4))
     {
+      msg=3;
       internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
     }else
+    if(!strncmp(body+i,"UCS2",4))
     {
-      //
+      msg=2;
+      internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
+    }else
+    {
+      msg=9999;
     }
     resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty("SMPP_RECEIPTED_MESSAGE_ID").c_str(),
                                            cmd->get_dialogId(),status);
     putIncomingCommand(resp);
+    SMS ans;
+    const char *msgstr;
+    switch(msg)
+    {
+      case 0:
+      {
+        msgstr=msgRepNone.c_str();
+      }break;
+      case 1:
+      {
+        msgstr=msgRepFull.c_str();
+      }break;
+      case 2:
+      {
+        msgstr=msgDCDef.c_str();
+      }break;
+      case 3:
+      {
+        msgstr=msgDCUCS2.c_str();
+      }break;
+      default:
+      {
+        msgstr=msgError.c_str();
+      };
+    }
+    ans.setOriginatingAddress(sms->getDestinationAddress());
+    ans.setDestinationAddress(sms->getOriginatingAddress());
+    char msc[]="123";
+    char imsi[]="123";
+    ans.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+    ans.setDeliveryReport(0);
+    ans.setArchivationRequested(false);
+    ans.setEServiceType("XXX");
+
+    Profile pr=lookup(addr);
+    __trace2__("profiler response:%s!",msgstr);
+    if(pr.codepage==ProfileCharsetOptions::Default)
+    {
+      len=ConvertTextTo7Bit(msgstr,strlen(msgstr),body,sizeof(body),CONV_ENCODING_CP1251);
+      ans.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+    }else
+    {
+      ConvertMultibyteToUCS2(msgstr,strlen(msgstr),(short*)body,sizeof(body),CONV_ENCODING_CP1251);
+      ans.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::UCS2);
+      len=strlen(msgstr)*2;
+    }
+    ans.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,body,len);
+    ans.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len);
+    SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
+    putIncomingCommand(answer);
   }
   return 0;
 }

@@ -166,8 +166,9 @@ public:
     static const int INVDST   = 3;
     static const int NOROUTE  = 4;
     static const int DBERROR  = 5;
-    static const int INVALIDSCHEDULE = 6;
-    static const int INVALIDVALIDTIME = 7;
+    static const int INVALIDSCHEDULE   = 6;
+    static const int INVALIDVALIDTIME  = 7;
+    static const int INVALIDDATACODING = 8;
   };
 
   SmeProxy* getProxy(){return cmd->proxy;}
@@ -333,6 +334,7 @@ public:
     case Status::DBERROR : return SmppStatusSet::ESME_RSYSERR;
     case Status::INVALIDSCHEDULE : return SmppStatusSet::ESME_RINVSCHED;
     case Status::INVALIDVALIDTIME : return SmppStatusSet::ESME_RINVEXPIRY;
+    case Status::INVALIDDATACODING : return SmppStatusSet::ESME_RINVDCS;
     default : return SmppStatusSet::ESME_RUNKNOWNERR;
     }
   }
@@ -356,9 +358,9 @@ public:
         xsm->header.set_commandId(SmppCommandSet::DELIVERY_SM);
         xsm->header.set_sequenceNumber(c.get_dialogId());
         fillSmppPduFromSms(xsm.get(),c.get_sms());
-				xsm->message.set_scheduleDeliveryTime("");
-				xsm->message.set_validityPeriod("");
-				xsm->message.set_replaceIfPresentFlag(0);
+        xsm->message.set_scheduleDeliveryTime("");
+        xsm->message.set_validityPeriod("");
+        xsm->message.set_replaceIfPresentFlag(0);
         return reinterpret_cast<SmppHeader*>(xsm.release());
       }
     case SUBMIT_RESP:

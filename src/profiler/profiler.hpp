@@ -158,6 +158,12 @@ public:
 
   void loadFromDB();
 
+  string msgRepNone;
+  string msgRepFull;
+  string msgDCDef;
+  string msgDCUCS2;
+  string msgError;
+
 protected:
   mutable EventMonitor mon;
   smsc::core::buffers::Array<SmscCommand> outQueue;
@@ -166,6 +172,7 @@ protected:
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
   ProfilesTable *profiles;
+
 
   smsc::db::DataSource *ds;
 

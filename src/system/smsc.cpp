@@ -151,7 +151,7 @@ void Smsc::init(const SmscConfigs& cfg)
         rec->aliasTni,
         rec->aliasNpi,
         rec->aliasValue);
-			ai.hide = rec->hide;
+      ai.hide = rec->hide;
       aliaser.addAlias(ai);
     }
     aliaser.commit();
@@ -217,16 +217,22 @@ void Smsc::init(const SmscConfigs& cfg)
     str=dc;
     while((*str=toupper(*str)))str++;
     smsc::profiler::Profile defProfile;
-    if(!strcmp(str,"DEFAULT"))
+    if(!strcmp(dc,"DEFAULT"))
       defProfile.codepage=profiler::ProfileCharsetOptions::Default;
-    else if(!strcmp(str,"UCS2"));
+    else if(!strcmp(dc,"UCS2"));
       defProfile.codepage=profiler::ProfileCharsetOptions::Ucs2;
-    if(!strcmp(str,"NONE"))
+    if(!strcmp(rep,"NONE"))
       defProfile.reportoptions=profiler::ProfileReportOptions::ReportNone;
-    else if(!strcmp(str,"FULL"))
+    else if(!strcmp(rep,"FULL"))
       defProfile.reportoptions=profiler::ProfileReportOptions::ReportFull;
 
     profiler=new smsc::profiler::Profiler(defProfile);
+
+    profiler->msgRepNone=cfg.cfgman->getString("profiler.msgReportNone");
+    profiler->msgRepFull=cfg.cfgman->getString("profiler.msgReportFull");
+    profiler->msgDCDef=cfg.cfgman->getString("profiler.msgDataCodingDefault");
+    profiler->msgDCUCS2=cfg.cfgman->getString("profiler.msgDataCodingUCS2");
+    profiler->msgError=cfg.cfgman->getString("profiler.msgError");
   }
   profiler->loadFromDB();
 

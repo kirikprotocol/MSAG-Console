@@ -64,6 +64,18 @@ StateType StateMachine::submit(Tuple& t)
     __warning__("SUBMIT_SM: invalid schedule");
     return ERROR_STATE;
   }
+  if(sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::DEFAULT &&
+     sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::UCS2)
+  {
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDDATACODING);
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+    }
+    __warning__("SUBMIT_SM: invalid datacoding");
+    return ERROR_STATE;
+  }
   if(sms->getValidTime()==-1)
   {
     SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDVALIDTIME);
@@ -372,7 +384,7 @@ StateType StateMachine::forward(Tuple& t)
       unsigned len;
       int len7;
       const short *msg=(const short*)sms.getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
-      ConvertUCS2To7Bit(msg,len,buf7,len7);
+      len7=ConvertUCS2To7Bit(msg,len,buf7,len7);
       sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf7,len7);
       sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len7);
       sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);

@@ -238,7 +238,7 @@ namespace SmppStatusSet
   static const uint32_t ESME_RINVOPTPARAMVAL      = 0x000000C4;
   static const uint32_t ESME_RDELIVERYFAILURE     = 0x000000FE;
   static const uint32_t ESME_RUNKNOWNERR          = 0x000000FF;
-
+  static const uint32_t ESME_RINVDCS              = 0x00000104;
 
 };
 
@@ -800,7 +800,7 @@ struct PduXSm //: public SmppHeader//public MemoryManagerUnit
     optional.dump(log,align+1);
     dump_text("} //PduXSm");
   }
-	//~PduXSm(){}
+  //~PduXSm(){}
 };
 
 struct PduXSmResp //: public SmppHeader //MemoryManagerUnit

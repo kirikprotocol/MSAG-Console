@@ -23,7 +23,7 @@ public:
       printf("before:");
       for(i=0;i<msglen;i++)
       {
-        printf("%x ",(int)msg[i]);
+        printf("%x ",(int)(unsigned char)msg[i]);
       }
       printf("\n");
       int coding=((PduXSm*)pdu)->get_message().get_dataCoding();
@@ -90,7 +90,8 @@ int main(int argc,char* argv[])
     SMS s;
 //    const char *dst="2";
 //47.44.rymhrwDMy4
-    s.setOriginatingAddress(cfg.sid.length(),1,1,cfg.sid.c_str());
+    Address addr(cfg.sid.c_str());
+    s.setOriginatingAddress(addr);
     char msc[]="123";
     char imsi[]="123";
     s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
@@ -127,7 +128,8 @@ int main(int argc,char* argv[])
         }
         i++;
       }
-      s.setDestinationAddress(strlen((char*)message),1,1,(char*)message);
+      Address dst((char*)message);
+      s.setDestinationAddress(dst);
       printf("Enter message:");fflush(stdout);
       fgets((char*)message,sizeof(message),stdin);
       for(int i=0;message[i];i++)
