@@ -22,9 +22,9 @@ const char* const TC_STORE_ASSERT_SM = "storeAssertSM";
 const char* const TC_SET_CORRECT_SM_STATUS = "setCorrectSMStatus";
 const char* const TC_SET_INCORRECT_SM_STATUS = "setIncorrectSMStatus";
 const char* const TC_SET_NON_EXISTENT_SM_STATUS = "setNonExistentSMStatus";
-const char* const TC_UPDATE_CORRECT_EXISTENT_SM = "updateCorrectExistentSM";
-const char* const TC_UPDATE_INCORRECT_EXISTENT_SM = "updateIncorrectExistentSM";
-const char* const TC_UPDATE_NON_EXISTENT_SM = "updateNonExistentSM";
+const char* const TC_REPLACE_CORRECT_SM = "replaceCorrectSM";
+const char* const TC_REPLACE_INCORRECT_SM = "replaceIncorrectSM";
+const char* const TC_REPLACE_NON_EXISTENT_SM = "replaceNonExistentSM";
 const char* const TC_DELETE_EXISTENT_SM = "deleteExistentSM";
 const char* const TC_DELETE_NON_EXISTENT_SM = "deleteNonExistentSM";
 const char* const TC_DELETE_EXISTENT_WAITING_SM_BY_NUMBER = 
@@ -116,19 +116,19 @@ public:
 	 * Корректное обновление существующего SM.
 	 * Только debug информация должна выводиться в лог.
 	 */
-	TCResult* updateCorrectExistentSM();
+	TCResult* replaceCorrectSM(smsc::sms::SMSId id, smsc::sms::SMS& sms, int num);
 
 	/**
 	 * Обновление существующего SM некорректными данными.
 	 * Диагностика ошибки должна выводиться в лог.
 	 */
-	TCResult* updateIncorrectExistentSM();
+	TCResult* replaceIncorrectSM(smsc::sms::SMSId id, smsc::sms::SMS& sms, int num);
 	
 	/**
 	 * Обновление несуществующего SM.
 	 * Диагностика ошибки должна выводиться в лог.
 	 */
-	TCResult* updateNonExistentSM();
+	TCResult* replaceNonExistentSM(smsc::sms::SMSId id, int num);
 
 	/**
 	 * Удаление существующего SM.

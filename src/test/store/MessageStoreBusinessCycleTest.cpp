@@ -91,13 +91,15 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	doStat(tc.storeCorrectSM(&correctId, &correctSM, RAND_TC));
 	doStat(tc.storeIncorrectSM(correctSM, ALL_TC));
 
-	//создаю SM, сразу читаю и удаляю
+	//создаю SM, сразу читаю, замещаю, читаю и удаляю
 	for (int i = 0; i < 10; i++)
 	{
 		SMSId id;
 		SMS sms;
 		doStat(tc.storeCorrectSM(&id, &sms, RAND_TC));
+		doStat(tc.replaceCorrectSM(id, sms, RAND_TC));
 		doStat(tc.loadExistentSM(id, sms));
+		doStat(tc.replaceIncorrectSM(id, sms, RAND_TC));
 		doStat(tc.deleteExistentSM(id));
 		doStat(tc.deleteNonExistentSM(id, RAND_TC));
 		doStat(tc.loadNonExistentSM(id, RAND_TC));
@@ -105,7 +107,10 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 
 	//создаю и удаляю кривые SM
 	doStat(tc.storeIncorrectSM(correctSM, ALL_TC));
+	doStat(tc.replaceCorrectSM(correctId, correctSM, ALL_TC));
+	doStat(tc.replaceIncorrectSM(correctId, correctSM, ALL_TC));
 	doStat(tc.deleteExistentSM(correctId));
+	doStat(tc.replaceNonExistentSM(correctId, ALL_TC));
 
 	//сначала создаю список, потом читаю этот список, потом удаляю
 	//список большой специально для того, чтобы было большое количество 
@@ -127,10 +132,18 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 		}
 		for (int i = 0; i < listSize; i++)
 		{
+			doStat(tc.replaceCorrectSM(id[i], sms[i], RAND_TC));
+		}
+		doStat(tc.replaceIncorrectSM(id[0], sms[0], RAND_TC));
+		doStat(tc.replaceIncorrectSM(id[listSize - 1], sms[listSize - 1], RAND_TC));
+		for (int i = 0; i < listSize; i++)
+		{
 			doStat(tc.deleteExistentSM(id[i]));
 		}
 		doStat(tc.loadNonExistentSM(id[0], RAND_TC));
+		doStat(tc.replaceNonExistentSM(id[0], RAND_TC));
 		doStat(tc.deleteNonExistentSM(id[0], RAND_TC));
+		doStat(tc.replaceNonExistentSM(id[listSize - 1], RAND_TC));
 		doStat(tc.loadNonExistentSM(id[listSize - 1], RAND_TC));
 		doStat(tc.deleteNonExistentSM(id[listSize - 1], RAND_TC));
 	}

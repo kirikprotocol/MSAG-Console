@@ -245,18 +245,159 @@ TCResult* MessageStoreTestCases::setNonExistentSMStatus()
 	return NULL;
 }
 
-TCResult* MessageStoreTestCases::updateCorrectExistentSM()
+TCResult* MessageStoreTestCases::replaceCorrectSM(SMSId id, SMS& sms, int num)
 {
+	/*
+	TCSelector s(num, 7);
+	TCResult* res = new TCResult(TC_REPLACE_CORRECT_SM, s.getChoice());
+	for (; s.check(); s++)
+	{
+		try
+		{
+			SMS _sms(sms);
+			switch(s.value())
+			{
+				case 1: //без изменений
+					break;
+				case 2:
+					//изменяю все, но реально должно измениться только 
+					//schedule_delivery_time, validity_period,
+					//sm_length, short_message (SMPP v3.4, 4.10.1)
+					setupRandomCorrectSM(_sms);
+					//originatingAddress и id должны быть как у оригинального сообщения
+					_sms.setOriginatingAddress(sms.getOriginatingAddress());
+					sms.setWaitTime(_sms.getWaitTime());
+					sms.setValidTime(_sms.getValidTime());
+					{
+						Body body;
+						const Body& origBody = sms.getMessageBody();
+						const Body& newBody = _sms.getMessageBody();
+						uint8_t* data = new uint8_t[MAX_SHORT_MESSAGE_LENGTH];
+						uint8_t len = newBody.getData(data);
+						body.setData(len, data); //данные новые
+						delete[] data;
+						//схема и наличие хедера прежние
+						body.setCodingScheme(origBody.getCodingScheme()); 
+						body.setHeaderIndicator(origBody.isHeaderIndicator());
+						sms.setMessageBody(body);
+					}
+					break;
+				case 3: //оставить schedule_delivery_time без изменений
+					_sms.setWaitTime(0);
+					break;
+				case 4: //оставить validity_period без изменений
+					_sms.setValidTime(0);
+					break;
+				case 5: //пустое тело сообщения
+					_sms.setMessageBody(0, 20, false, NULL);
+					sms.setMessageBody(_sms.getMessageBody());
+					break;
+				case 6: //пустое тело сообщения
+					_sms.setMessageBody(0, 20, false, rand_uint8_t(1).get());
+					sms.setMessageBody(_sms.getMessageBody());
+					break;
+				case 7: //тело сообщения максимальной длины
+					_sms.setMessageBody(MAX_MSG_BODY_LENGTH, 20, false, 
+						rand_uint8_t(MAX_MSG_BODY_LENGTH).get());
+					sms.setMessageBody(_sms.getMessageBody());
+					break;
+				default:
+					throw s;
+			}
+			msgStore->replace(id, _sms);
+		}
+		catch(...)
+		{
+			res->addFailure(s.value());
+		}
+	}
+	return res;
+	*/
 	return NULL;
 }
 
-TCResult* MessageStoreTestCases::updateIncorrectExistentSM()
+TCResult* MessageStoreTestCases::replaceIncorrectSM(SMSId id, SMS& sms, int num)
 {
+	/*
+	TCSelector s(num, 2);
+	TCResult* res = new TCResult(TC_REPLACE_INCORRECT_SM, s.getChoice());
+	for (; s.check(); s++)
+	{
+		try
+		{
+			SMS _sms(sms);
+			switch(s.value())
+			{
+				case 1: //срок валидности уже закончился
+					_sms.setValidTime(time(NULL) - 1);
+					break;
+				case 2: //waitTime > validTime
+					_sms.setWaitTime(time(NULL) + 200);
+					_sms.setValidTime(time(NULL) + 100);
+					break;
+				default:
+					throw s;
+			}
+			msgStore->replace(id, _sms);
+		}
+		catch (NoSuchMessageException&)
+		{
+			res->addFailure(s.value());
+		}
+		catch(StorageException&)
+		{
+			//ok
+		}
+		catch(...)
+		{
+			res->addFailure(s.value());
+		}
+	}
+	return res;
+	*/
 	return NULL;
 }
 	
-TCResult* MessageStoreTestCases::updateNonExistentSM()
+TCResult* MessageStoreTestCases::replaceNonExistentSM(SMSId id, int num)
 {
+	/*
+	TCSelector s(num, 2);
+	TCResult* res = new TCResult(TC_REPLACE_NON_EXISTENT_SM, s.getChoice());
+	SMS sms;
+	for (; s.check(); s++)
+	{
+		try
+		{
+			setupRandomCorrectSM(sms);
+			switch(s.value())
+			{
+				case 1: //несуществующий id
+					msgStore->replace(0xFFFFFFFF, sms);
+					break;
+				case 2: //неправильный originatingAddress
+					{
+						int addrLen = rand0(MAX_ADDRESS_LENGTH);
+						sms.setOriginatingAddress(addrLen, 20, 30,
+							rand_char(addrLen).get());
+					}
+					msgStore->replace(id, sms);
+					break;
+				default:
+					throw s;
+			}
+			res->addFailure(s.value());
+		}
+		catch (NoSuchMessageException&)
+		{
+			//ok
+		}
+		catch(...)
+		{
+			res->addFailure(s.value());
+		}
+	}
+	return res;
+	*/
 	return NULL;
 }
 

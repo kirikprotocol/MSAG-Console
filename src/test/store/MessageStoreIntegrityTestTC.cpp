@@ -21,32 +21,46 @@ TCResultFilter* executeIntegrityTest()
 	//создаю SM для дальнейшей проверки на создание дублированного SM
 	SMSId correctId;
 	SMS correctSM;
-	delete tc.storeCorrectSM(&correctId, &correctSM, RAND_TC);
-	filter->addResult(tc.storeIncorrectSM(correctSM, RAND_TC));
+	filter->addResult(tc.storeCorrectSM(&correctId, &correctSM, RAND_TC));
+
+	//прочее
+	cout << "Step 1" << endl;
+	for (int i = 0; i < 20; i++)
+	{
+		TCResultStack stack;
+		stack.push_back(tc.storeIncorrectSM(correctSM, RAND_TC));
+		stack.push_back(tc.replaceCorrectSM(correctId, correctSM, RAND_TC));
+		stack.push_back(tc.replaceIncorrectSM(correctId, correctSM, RAND_TC));
+		filter->addResultStack(stack);
+	}
 	
-	//создаю SM, сразу читаю и удаляю
-	cout << "Цикл 1: создание & чтение" << endl;
-	for (int i = 0; i < 10; i++)
+	//создаю SM, затем сразу читаю, замещаю, опять читаю и удаляю
+	cout << "Step 2" << endl;
+	for (int i = 0; i < 100; i++)
 	{
 		SMSId id;
 		SMS sms;
 		TCResultStack stack;
 		stack.push_back(tc.storeCorrectSM(&id, &sms, RAND_TC));
 		stack.push_back(tc.loadExistentSM(id, sms));
+		stack.push_back(tc.replaceCorrectSM(id, sms, RAND_TC));
+		stack.push_back(tc.loadExistentSM(id, sms));
+		stack.push_back(tc.replaceIncorrectSM(id, sms, RAND_TC));
 		stack.push_back(tc.deleteExistentSM(id));
 		stack.push_back(tc.deleteNonExistentSM(id, RAND_TC));
 		stack.push_back(tc.loadNonExistentSM(id, RAND_TC));
 		filter->addResultStack(stack);
 	}
 	
-	//сначала создаю список, потом читаю этот список, потом удаляю
+	//сначала создаю список, потом читаю, замещаю, читаю и удаляю
 	const int listSize = 20;
-	for (int j = 0; j < 5; j++)
+	for (int j = 0; j < 3; j++)
 	{
+		cout << "Step " << (j + 3) << endl;
 		SMSId id[listSize];
 		SMS sms[listSize];
 		TCResultStack stack[listSize];
-		cout << "Цикл 2: создание SM" << endl;
+		//создание SM
 		for (int i = 0; i < listSize; i++)
 		{
 			TCResult* res = tc.storeCorrectSM(&id[i], &sms[i], RAND_TC);
@@ -54,7 +68,7 @@ TCResultFilter* executeIntegrityTest()
 			stack[i].push_back(res);
 			//delete res;
 		}
-		cout << "Цикл 2: чтение SM" << endl;
+		//чтение SM
 		for (int i = 0; i < listSize; i++)
 		{
 			TCResult* res = tc.loadExistentSM(id[i], sms[i]);
@@ -62,7 +76,31 @@ TCResultFilter* executeIntegrityTest()
 			stack[i].push_back(res);
 			//delete res;
 		}
-		cout << "Цикл 2: удаление SM" << endl;
+		//замещение SM
+		for (int i = 0; i < listSize; i++)
+		{
+			TCResult* res = tc.replaceCorrectSM(id[i], sms[i], RAND_TC);
+			filter->addResult(res);
+			stack[i].push_back(res);
+			//delete res;
+		}
+		//чтение SM
+		for (int i = 0; i < listSize; i++)
+		{
+			TCResult* res = tc.loadExistentSM(id[i], sms[i]);
+			filter->addResult(res);
+			stack[i].push_back(res);
+			//delete res;
+		}
+		//некорректное замещение SM
+		for (int i = 0; i < listSize; i++)
+		{
+			TCResult* res = tc.replaceIncorrectSM(id[i], sms[i], RAND_TC);
+			filter->addResult(res);
+			stack[i].push_back(res);
+			//delete res;
+		}
+		//удаление SM
 		for (int i = 0; i < listSize; i++)
 		{
 			TCResult* res = tc.deleteExistentSM(id[i]);
@@ -70,7 +108,7 @@ TCResultFilter* executeIntegrityTest()
 			stack[i].push_back(res);
 			//delete res;
 		}
-		cout << "Цикл 2: чтение несуществующих SM" << endl;
+		//чтение несуществующих SM
 		for (int i = 0; i < listSize; i++)
 		{
 			TCResult* res = tc.loadNonExistentSM(id[i], RAND_TC);
@@ -78,7 +116,7 @@ TCResultFilter* executeIntegrityTest()
 			stack[i].push_back(res);
 			//delete res;
 		}
-		cout << "Цикл 2: удаление несуществующих SM" << endl;
+		//удаление несуществующих SM
 		for (int i = 0; i < listSize; i++)
 		{
 			TCResult* res = tc.deleteNonExistentSM(id[i], RAND_TC);
@@ -86,7 +124,7 @@ TCResultFilter* executeIntegrityTest()
 			stack[i].push_back(res);
 			//delete res;
 		}
-		cout << "Цикл 2: обработка результатов" << endl;
+		//обработка результатов
 		for (int i = 0; i < listSize; i++)
 		{
 			filter->addResultStack(stack[i]);
@@ -96,7 +134,8 @@ TCResultFilter* executeIntegrityTest()
 	//прочее
 	cout << "Прочее" << endl;
 	filter->addResult(tc.storeIncorrectSM(correctSM, ALL_TC));
-#ifdef ASSERT
+	filter->addResult(tc.replaceNonExistentSM(correctId, ALL_TC));
+#ifdef ASSERT_THROW_IF_FAIL
 	filter->addResult(tc.storeAssertSM(ALL_TC));
 #endif
 	return filter;
@@ -122,6 +161,12 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_DELETE_EXISTENT_SM));
 	cl.writeResult("Удаление несуществующего SM",
 		filter->getResults(TC_DELETE_NON_EXISTENT_SM));
+	cl.writeResult("Корректная замена существующего SM",
+		filter->getResults(TC_REPLACE_CORRECT_SM));
+	cl.writeResult("Замена существующего SM некорректными данными",
+		filter->getResults(TC_REPLACE_INCORRECT_SM));
+	cl.writeResult("Замена несуществующего SM",
+		filter->getResults(TC_REPLACE_NON_EXISTENT_SM));
 	
 	//пока еще незаимплементированные test cases
 	cl.writeResult("Корректное изменение статуса SM",
@@ -130,12 +175,6 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_SET_INCORRECT_SM_STATUS));
 	cl.writeResult("Изменение статуса несуществующего SM",
 		filter->getResults(TC_SET_NON_EXISTENT_SM_STATUS));
-	cl.writeResult("Корректное обновление существующего SM",
-		filter->getResults(TC_UPDATE_CORRECT_EXISTENT_SM));
-	cl.writeResult("Обновление существующего SM некорректными данными",
-		filter->getResults(TC_UPDATE_INCORRECT_EXISTENT_SM));
-	cl.writeResult("Обновление несуществующего SM",
-		filter->getResults(TC_UPDATE_NON_EXISTENT_SM));
 	cl.writeResult("Удаление существующих SM ожидающих доставки на определенный номер",
 		filter->getResults(TC_DELETE_EXISTENT_WAITING_SM_BY_NUMBER));
 	cl.writeResult("Удаление несуществующих SM ожидающих доставки на определенный номер",
