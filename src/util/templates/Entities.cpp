@@ -241,14 +241,16 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool io)
             continue;
         }
 
-        const char* line = str.c_str();
-        if (ENTITY_TRACE) __trace2__("%s line: <%s>", (opened) ? "Inner":"Outer", line);
+        if (ENTITY_TRACE) {
+            const char* line = str.c_str();
+            __trace2__("%s line: <%s>", (opened) ? "Inner":"Outer", line);
+        }
         
         if (opened || io)
         {
             try
             {
-                if (str.length() > 0)
+                if (opened || str.length() > 0)
                 {
                     (void)entities.Push(new FormatEntity(str, io, opened));
                 }
