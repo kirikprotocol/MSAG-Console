@@ -28,9 +28,19 @@ int respDelay=0;
 int mode=0;
 
 bool unicode=false;
+bool binmode=false;
 bool dataSm=false;
 bool smsc7bit=false;
 int ussd=0;
+
+int esmclass=0;
+
+int sar_mr=0;
+int sar_num=0;
+int sar_seq=0;
+
+int src_port=0;
+int dst_port=0;
 
 bool ansi1251=false;
 
@@ -53,6 +63,10 @@ Option options[]={
 {"7bit",'b',&smsc7bit},
 {"ussd",'i',&ussd},
 {"ansi1251",'b',&ansi1251},
+{"srcport",'i',&src_port},
+{"dstport",'i',&dst_port},
+{"binmode",'b',&binmode},
+{"esmclass",'i',&esmclass},
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -266,6 +280,32 @@ void SetOption(SmppSession& ss,const string& args)
   printf("Unknown option\n");
 }
 
+void SetSar(SmppSession& ss,const string& args)
+{
+  string mr=args;
+  string num,seq;
+  if(args=="off")
+  {
+    sar_mr=0;
+    sar_num=0;
+    sar_seq=0;
+  }
+  if(!splitString(mr,num))
+  {
+    printf("Usage: sar mr num seq\nor sar off\n to reset sar info");
+    return;
+  }
+  if(!splitString(num,seq))
+  {
+    printf("Usage: sar mr num seq\nor sar off\n to reset sar info");
+    return;
+  }
+  sar_mr=atoi(mr.c_str());
+  sar_num=atoi(num.c_str());
+  sar_seq=atoi(seq.c_str());
+  printf("sar info set to mr=%d, num=%d, seq=%d\n",sar_mr,sar_num,sar_seq);
+}
+
 void ShowHelp(SmppSession& ss,const string& args);
 
 CmdRec commands[]={
@@ -274,6 +314,7 @@ CmdRec commands[]={
 {"replace",ReplaceCmd},
 {"cancel",CancelCmd},
 {"set",SetOption},
+{"sar",SetSar},
 {"help",ShowHelp},
 };
 
@@ -417,6 +458,51 @@ public:
       {
         printf("MsgState:%d\n",s.getIntProperty(Tag::SMPP_MSG_STATE));
       }
+
+      if(s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+      {
+        unsigned char* body;
+        unsigned len;
+        if(s.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+        {
+          body=(unsigned char*)s.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+        }else
+        {
+          body=(unsigned char*)s.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+        }
+        int udhlen=body[0];
+        printf("Udh len: %d\n",udhlen);
+        printf("Udh dump:");
+        for(int i=1;i<=udhlen;i++)
+        {
+          printf(" %02X",(unsigned)body[i]);
+        }
+        printf("\n");
+      }
+      if(s.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::BINARY)
+      {
+        printf("Esm class: %02X\n",s.getIntProperty(Tag::SMPP_ESM_CLASS));
+        unsigned char* body;
+        unsigned len;
+        if(s.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+        {
+          body=(unsigned char*)s.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+        }else
+        {
+          body=(unsigned char*)s.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+        }
+        if(s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+        {
+          len-=body[0]+1;
+          body+=body[0]+1;
+        }
+        printf("Msg dump:");
+        for(int i=0;i<len;i++)
+        {
+          printf(" %02X",(unsigned)body[i]);
+        }
+        printf("\n");
+      }else
       if(getSmsText(&s,buf,sizeof(buf),ansi1251?CONV_ENCODING_CP1251:CONV_ENCODING_KOI8R)==-1)
       {
         int sz=65536;
@@ -753,7 +839,7 @@ int main(int argc,char* argv[])
       char imsi[]="";
       s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
       s.setValidTime(0);
-      s.setIntProperty(Tag::SMPP_ESM_CLASS,mode);
+      s.setIntProperty(Tag::SMPP_ESM_CLASS,(esmclass&(~0x3))|mode);
       s.setDeliveryReport(0);
       s.setArchivationRequested(false);
       s.setEServiceType("XXX");
@@ -770,6 +856,35 @@ int main(int argc,char* argv[])
         __trace__("no ussd");
       }
 
+      if(sar_num!=0)
+      {
+        s.setIntProperty(Tag::SMPP_SAR_MSG_REF_NUM,sar_mr);
+        s.setIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS,sar_num);
+        s.setIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM,sar_seq);
+      }
+
+      if(src_port!=0 && dst_port!=0)
+      {
+        s.setIntProperty(Tag::SMPP_SOURCE_PORT,src_port);
+        s.setIntProperty(Tag::SMPP_DESTINATION_PORT,dst_port);
+      }
+
+      if(binmode)
+      {
+        string tmp;
+        char *ptr=message;
+        for(;;)
+        {
+          int n;
+          int c;
+          if(sscanf(ptr,"%02X%n",&c,&n)!=1)break;
+          tmp.append(1,(char)c);
+          ptr+=n;
+        }
+        s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::BINARY);
+        s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),tmp.length());
+        len=tmp.length();
+      }else
       if(unicode)
       {
         auto_ptr<short> msg(new short[len+1]);
