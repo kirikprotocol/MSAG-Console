@@ -232,7 +232,10 @@ int Profiler::Execute()
 //  char *str=body;
   while(!isStopping)
   {
-    waitFor();
+    if(!hasOutput())
+    {
+      waitFor();
+    }
     if(!hasOutput())continue;
     cmd=getOutgoingCommand();
     if(cmd->cmdid!=smsc::smeman::DELIVERY)
