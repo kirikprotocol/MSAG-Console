@@ -188,7 +188,7 @@ int partitionSms(SMS* sms,int dstdc)
   {
     buf8=auto_ptr<char>(new char[len]);
     short *data=(short*)(msg+udhilen);
-    ConvertUCS2ToMultibyte(data,len/2,buf8.get(),len,CONV_ENCODING_CP1251);
+    ConvertUCS2ToMultibyte(data,len,buf8.get(),len,CONV_ENCODING_CP1251);
     len/=2;
     bufTr=auto_ptr<char>(new char[udhilen+len*3]);
     len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhilen,len*3);
@@ -340,7 +340,7 @@ void extractSmsPart(SMS* sms,int partnum)
   if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
   {
     buf8=auto_ptr<char>(new char[len]);
-    ConvertUCS2ToMultibyte((short*)msg,len/2,buf8.get(),len,CONV_ENCODING_CP1251);
+    ConvertUCS2ToMultibyte((short*)msg,len,buf8.get(),len,CONV_ENCODING_CP1251);
     len/=2;
     bufTr=auto_ptr<char>(new char[len*3]);
     len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get(),len*3);
