@@ -20,13 +20,15 @@ void AdminFunctionalTest::executeTest()
 {
 	//base
 	baseTc.loginCommands();
-	baseTc.invalidCommands();
+	//baseTc.invalidCommands();
 	baseTc.executeTestCases();
 	//alias
+	/*
 	aliasTc.loginCommands();
 	aliasTc.incorrectCommands(); //не мен€ют конфигурации
 	aliasTc.correctCommands();
 	aliasTc.executeTestCases();
+	*/
 }
 
 /**

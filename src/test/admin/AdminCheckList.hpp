@@ -82,7 +82,7 @@ void aliasTc()
 	__reg_tc__("adminConsole.alias.alter.correct",
 		"Правильно введенные данные (существующий алиас и маска адреса длиной от 1 до 20 символов)");
 	//adminConsole.alias.alter.incorrect
-	__reg_tc__("adminConsole.alias.add.incorrect",
+	__reg_tc__("adminConsole.alias.alter.incorrect",
 		"Для неправильно введенных данных выдаются соответствующие сообщения об ошибках");
 	__reg_tc__("adminConsole.alias.alter.incorrect.missingRequiredParam",
 		"Не заданы обязательные параметры (алиас, адрес)");

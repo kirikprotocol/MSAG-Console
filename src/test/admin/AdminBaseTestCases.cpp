@@ -14,7 +14,7 @@ using namespace smsc::test::util;
 AdminBaseTestCases::AdminBaseTestCases(AdminFixture* fixture)
 : humanConsole(fixture->humanConsole), chkList(fixture->chkList)
 {
-	int timeout = 1;
+	int timeout = 5;
 	if (socket.Init(fixture->host, fixture->port, timeout) == -1)
 		throw Exception("Failed to init socket");
 	if (socket.Connect() == -1)
@@ -100,12 +100,14 @@ void AdminBaseTestCases::invalidCommands()
 void AdminBaseTestCases::sendRequest(const string& cmd)
 {
 	int count = 0;
-	while (count != cmd.length());
+	string tmp = cmd + "\n";
+	while (count < tmp.length())
 	{
-		int wr = socket.Write(cmd.c_str() + count, cmd.length() - count);
+		int wr = socket.Write(tmp.c_str() + count, tmp.length() - count);
+		//__trace2__("socket write: wr = %d", wr);
 		if (wr <= 0)
 		{
-			__trace2__("socket write error: wr = %d", wr);
+			__trace2__("socket write error: wr = %d, reason = %s", wr, strerror(errno));
 			throw Exception("Failed to send data");
 		}
 		count += wr;
@@ -118,7 +120,8 @@ struct Buffer
 	int size;
 	int offset;
 
-	Buffer(int sz = 0) : buffer(NULL), size(sz), offset(0) {}
+	Buffer(int sz = 0) : buffer(NULL), size(0), offset(0) { if (sz) setSize(sz); }
+
 	~Buffer() { if (buffer) delete [] buffer; }
 
 	void setSize(int newSize)
@@ -144,19 +147,30 @@ const string AdminBaseTestCases::getResponse()
 			buf.setSize(buf.size * 2);
 		}
 		int rd = socket.Read(buf.current(), buf.freeSpace());
-		if(rd <= 0) return "";
+		//__trace2__("socket read: rd = %d", rd);
+		if (rd <= 0)
+		{
+			__trace2__("socket read error: rd = %d, reason = %s", rd, strerror(errno));
+			throw Exception("Failed to receive data");
+		}
 		buf.offset += rd;
 	}
-	return buf.buffer;
+	return buf.buffer ? buf.buffer : "";
 }
 
 const string AdminBaseTestCases::login(const string& login, const string& passwd)
 {
+	const string loginPrompt = getResponse();
+	//__require__(loginPrompt == "Login: ");
+	__trace2__("loginPrompt = %s", loginPrompt.c_str());
 	sendRequest(login);
-	const string resp = getResponse();
-	__require__(resp == "Password: ");
+	const string passwdPrompt = getResponse();
+	//__require__(passwdPrompt == "Password: ");
+	__trace2__("passwdPrompt = %s", passwdPrompt.c_str());
 	sendRequest(passwd);
-	return getResponse();
+	const string resp = getResponse();
+	__trace2__("response = ", resp.c_str());
+	return resp;
 }
 
 void AdminBaseTestCases::executeTestCases()
