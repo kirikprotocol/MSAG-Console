@@ -20,7 +20,7 @@ public:
                                 const SmePassword& pwd,
                                 SmeProxy* smeProxy) = 0;
   virtual void registerInternallSmeProxy(const SmeSystemId& systemId,
-                                         SmeProxy* smeProxy);
+                                         SmeProxy* smeProxy)=0;
   virtual void unregisterSmeProxy(const SmeSystemId& systemId) = 0;
 };
 

@@ -145,7 +145,7 @@ static uint32_t nextProxyUniqueId()
 }
 // ------ SmeRegistrar implementation --------------------------
 
-virtual void SmeManager::registerInternallSmeProxy(const SmeSystemId& systemId,
+void SmeManager::registerInternallSmeProxy(const SmeSystemId& systemId,
                                 SmeProxy* smeProxy)
 {
 __synchronized__
