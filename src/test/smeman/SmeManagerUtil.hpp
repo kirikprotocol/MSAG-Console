@@ -47,6 +47,7 @@ public:
 	virtual bool attached() { return monitor; }
 	virtual uint32_t getNextSequenceNumber() { return 0; }
 	//virtual uint32_t getUniqueId() const { return 0; }
+	virtual const char* getSystemId() const { return ""; }
 };
 
 class IncorrectSmeProxy : public CorrectSmeProxy

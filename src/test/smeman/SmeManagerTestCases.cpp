@@ -100,6 +100,7 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 	//systemId
 	auto_ptr<char> _systemId = rand_char(MAX_SYSTEM_ID_LENGTH);
 	sme->systemId = _systemId.get();
+	sme->priority = rand2(SmeProxyPriorityMin, SmeProxyPriorityMax);
 	sme->SME_N = rand0(INT_MAX); //реально не используется
 	sme->disabled = !rand0(3); //реально не используется
 	//sme->wantAlias = rand0(1);
