@@ -118,7 +118,7 @@ static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn){
   }
 }
 
-static void TryDestroyDialog(unsigned);
+static void TryDestroyDialog(unsigned,bool send_error=false,unsigned err_code=0);
 static string RouteToString(MapDialog*);
 
 static void QueryHlrVersion(MapDialog*);
@@ -537,12 +537,12 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error = false,unsigned 
     {
       try{
         if ( dialog->isQueryAbonentStatus ){
-          SendAbonentStatusToSmsc(dialog.get(),smsc::smeman::AbonentStatus::UNKNOWN);
+          SendAbonentStatusToSmsc(dialog.get(),/*AbonentStatus::UNKNOWN*/2);
         }else{
           SendErrToSmsc(dialog->dialogid_smsc,err_code);
         }
       }catch(...){
-        __trace2__("MAP::%s: catched exception when send error response to smsc",__FUNCTION_);
+        __trace2__("MAP::%s: catched exception when send error response to smsc",__FUNCTION__);
       }
     }
     switch(dialog->state){
