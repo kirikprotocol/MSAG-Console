@@ -494,6 +494,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   __trace2__("SUBMIT_SM: route found, routeId=%s, smeSystemId=%s",ri.routeId.c_str(),ri.smeSystemId.c_str());
+  __trace2__("SUBMIT_SM: dest_addr_subunit=%d",sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
 
   if(ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
   {
@@ -1464,6 +1465,7 @@ StateType StateMachine::replace(Tuple& t)
   sms.setIntProperty(Tag::SMPP_SM_LENGTH,t.command->get_replaceSm().smLength);
 
   if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03 &&
+     !strcmp(sms.getDestinationSmeId(),"MAP_PROXY") &&
      t.command->get_replaceSm().smLength>140)
   {
     __trace__("REPLACE: das=3, and smLength>140");
