@@ -28,7 +28,7 @@ typedef smsc::core::buffers::Array<SmscCommand> MapIOQueue;
 class MapProxy:public SmeProxy{
 public:
   MapProxy() : seq(0) {
-   time_logger = &smsc::util::Logger::getCategory("map.otime")
+   time_logger = &smsc::util::Logger::getCategory("map.otime");
   }
   virtual ~MapProxy(){}
   virtual void close(){}
