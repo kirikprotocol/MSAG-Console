@@ -247,7 +247,7 @@ void MapIoTask::dispatcher()
         (message.msg_p[orgAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+orgAddrPos):0, // org ss7 addr
         (message.msg_p[destRefPos]>0)?(ET96MAP_IMSI_T*)(message.msg_p+destRefPos):0, // dest ref
         (message.msg_p[orgRefPos]>0)?(ET96MAP_ADDRESS_T*)(message.msg_p+orgRefPos):0, // dest ref
-        (specificInfoLen>0)?specificInfo:0
+        (specificInfo.specificInfoLen>0)?&specificInfo:0
       );
     } else {
       map_result = Et96MapHandleIndication(&message);
