@@ -29,8 +29,9 @@
 <col width="40%">
 <tr class=row<%=rowN++&1%>>
   <th style="text-align:right">Task</th>
-  <td colspan=3><select name=taskId><%
-    for (Iterator i = bean.getAllTasks().iterator(); i.hasNext();) {
+  <td colspan=3><select name=taskId>
+  <option value="<%=StringEncoderDecoder.encode(bean.ALL_TASKS_MARKER)%>">All</option>
+  <%for (Iterator i = bean.getAllTasks().iterator(); i.hasNext();) {
       String taskId = (String) i.next();
       String taskIdEnc = StringEncoderDecoder.encode(taskId);
         %><option value="<%=taskIdEnc%>"><%=StringEncoderDecoder.encode(bean.getTaskName(taskId))%></option><%

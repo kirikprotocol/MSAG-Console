@@ -22,6 +22,7 @@ import java.util.*;
 
 public class TasksStatistics extends InfoSmeBean
 {
+  public final static String ALL_TASKS_MARKER = "-- ALL TASKS --";
   private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
   private Statistics statistics = null;
@@ -144,7 +145,8 @@ public class TasksStatistics extends InfoSmeBean
 
   public void setTaskId(String taskId)
   {
-    query.setTaskId((taskId == null || taskId.length() <= 0) ? taskId : null);
+    query.setTaskId((taskId == null || taskId.length() <= 0 ||
+                     taskId.equals(ALL_TASKS_MARKER)) ? null : taskId);
   }
 
   public String getTaskName(String taskId)
