@@ -4,6 +4,9 @@ $Id$
 
 #include <stdio.h>
 #include <malloc.h>
+#include <memory.h>
+
+using namespace std;
 
 #include "core/buffers/XHash.hpp"
 #include "core/synchronization/Mutex.hpp"
@@ -43,15 +46,6 @@ public:
 */
 class MapDialog{
 public:
-  virtual USHORT_T Et96MapV2ForwardSmReq(
-    ET96MAP_LOCAL_SSN_T localSsn,
-    ET96MAP_DIALOGUE_ID_T dialogueId,
-    ET96MAP_INVOKE_ID_T invokeId,
-    ET96MAP_SM_RP_DA_T *smRpDa_sp,
-    ET96MAP_SM_RP_OA_T *smRpOa_sp,
-    ET96MAP_SM_RP_UI_T *smRpUi_sp,
-    ET96MAP_MMS_T moreMsgsToSend);
-  
   virtual USHORT_T  Et96MapV2ForwardSmMOInd( 
     ET96MAP_LOCAL_SSN_T lssn, 
     ET96MAP_DIALOGUE_ID_T dialogId,
@@ -68,7 +62,7 @@ struct MapDialogCntItem{
   ET96MAP_DIALOGUE_ID_T dialogueId;
   ET96MAP_LOCAL_SSN_T localSsn;
   ET96MAP_INVOKE_ID_T invokeId;
-  //auto_ptr<MapDialog> dialogue;
+  auto_ptr<MapDialog> dialogue;
   MapDialog* dialogue;
 };
 

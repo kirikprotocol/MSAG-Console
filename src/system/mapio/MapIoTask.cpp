@@ -57,8 +57,9 @@ USHORT_T  Et96MapOpenInd(
     MapDialogCntItem* mdci = 
 		  MapDialogContainer::getInstance()->createDialog(dialogId);
   	mdci->localSsn = SSN;
+    Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_OK,ET96MAP_NO_REASON,0,0,0);
   }catch(...){
-    CloseDialog(SSN,dialogId);
+    Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_NOT_OK,ET96MAP_NO_REASON,0,0,0);
   }
   return ET96MAP_E_OK;
 }
@@ -73,50 +74,27 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
 {
 	__trace2__("MAP::Et96MapV2ForwardSmMOInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
   MapDialogCntItem* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
-  if ( !mdci ) CloseDialog(SSN,dialogId);
-	try{
-    mdci->dialogue->Et96MapV2ForwardSmMOInd(
-      SSN,dialogId,invokeId,dstAddr,srcAddr,ud);
-    //ET96MAP_ERROR_FORW_SM_MO_T errcd;
-    //memset(errcd,0,sizeof(errcd));
-    /*USHORT_T err = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
-    if ( err != ET96MAP_E_OK ) {
-      __trace2__("broken response with error 0x%hx",err);
-      throw runtime_error("MAPIO::ERR broken response");
-    }
-    CloseAndRemoveDialog(lssn,dialogId);*/
-    mdci->invokeId = invokeId;
-	}catch(...){
-		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
-    CloseAndRemoveDialog(SSN,dialogId);
-	}
+  if ( !mdci ) {
+    __trace2__("dialog is not present")
+  }else{
+  	try{
+      mdci->invokeId = invokeId;
+      mdci->dialogue->Et96MapV2ForwardSmMOInd(
+        SSN,dialogId,invokeId,dstAddr,srcAddr,ud);
+  	}catch(...){
+  		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
+      CloseAndRemoveDialog(SSN,dialogId);
+  	}
+  }
   return ET96MAP_E_OK;
 }
+
 USHORT_T Et96MapDelimiterInd(
   ET96MAP_LOCAL_SSN_T lssn,
   ET96MAP_DIALOGUE_ID_T dialogId,
   UCHAR_T priorityOrder)
 {
   __trace2__("MAP::Et96MapDelimiterInd lssn 0x%hx, dialogId 0x%hx",lssn,dialogId);
-  MapDialogCntItem* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
-  if ( mdci == 0 ){
-    __trace2__("cant find dialog 0x%hx",dialogId);
-    CloseAndRemoveDialog(SSN,dialogId);
-    throw runtime_error("MAPIO::Et96MapDelimiterInd error");
-  }
-  USHORT_T err = Et96MapV2ForwardSmMOResp(SSN,dialogId,mdci->invokeId,0);
-  if ( err != ET96MAP_E_OK ) {
-    __trace2__("broken response with error 0x%hx",err);
-    throw runtime_error("MAPIO::ERR broken response");
-  }
-  __trace2__("responce Ok");
-  err = Et96MapDelimiterReq(SSN,dialogId,priorityOrder,0);
-  if ( err != ET96MAP_E_OK ) {
-    __trace2__("broken delimiter with error 0x%hx",err);
-    throw runtime_error("MAPIO::ERR broken delimiter");
-  }
-  __trace2__("delimiter Ok");
-  CloseAndRemoveDialog(SSN,dialogId);
   return ET96MAP_E_OK;
 }
 
