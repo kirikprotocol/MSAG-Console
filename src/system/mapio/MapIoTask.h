@@ -106,7 +106,7 @@ struct MapDialog{
   unsigned version;
   string s_imsi;
   string s_msc;
-  MapDialog* assosiace;
+  MapDialog* associate;
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
