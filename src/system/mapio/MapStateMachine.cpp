@@ -96,7 +96,7 @@ static void QueryMcsVersion(MapDialog* dialog)
 {
   USHORT_T result = 
     Et96MapGetACVersionReq(SSN,&dialog->destMscAddr,ET96MAP_SHORT_MSG_MT_RELAY);
-  if ( result != E96MAP_E_OK ) {
+  if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::QueryMcsVersion: error 0x%x when GetAcVersion",result));
   }
@@ -106,22 +106,23 @@ static void QueryMcsVersion(MapDialog* dialog)
 
 static void SendRInfo(MapDialog* dialog)
 {
+  ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
   appContext.version = dialog->version;
   USHORT_T result = Et96MapOpenReq(
-    SSN, dialog->dialogid, 
-    &dialog->appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
+    SSN, dialog->dialogid_map, 
+    &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::MapDialog::ProcessCmdg: Et96MapOpenReq error 0x%x",result));
   }
-  result = Et96MapV2SendRInfoForSmReq(ssn, dialogid, 1, &m_msAddr, ET96MAP_DO_NOT_ATTEMPT_DELIVERY, &m_scAddr );
+  result = Et96MapV2SendRInfoForSmReq(SSN, dialog->dialogid_map, 1, &dialog->m_msAddr, ET96MAP_DO_NOT_ATTEMPT_DELIVERY, &dialog->m_scAddr );
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::MapDialog::Et96MapOpenConf: Et96MapV2SendRInfoForSmReq error 0x%x",result));
   }
   __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapV2SendRInfoForSmReq OK");
-  result = Et96MapDelimiterReq(ssn, dialogid, 0, 0 );
+  result = Et96MapDelimiterReq(SSN, dialog->dialogid_map, 0, 0 );
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::MapDialog::Et96MapOpenConf: Et96MapDelimiterReq error 0x%x",result));
@@ -690,7 +691,7 @@ USHORT_T Et96MapV1SendRInfoForSmConf (
   ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
   ET96MAP_PROV_ERR_T *provErrCode_p)
 {
-  return E96MAP_E_OK;
+  return ET96MAP_E_OK;
 }
 
 extern "C"
