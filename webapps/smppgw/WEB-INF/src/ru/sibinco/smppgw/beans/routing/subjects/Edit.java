@@ -3,6 +3,7 @@ package ru.sibinco.smppgw.beans.routing.subjects;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.route.*;
 import ru.sibinco.lib.backend.sme.Sme;
+import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.smppgw.Constants;
 import ru.sibinco.smppgw.beans.*;
@@ -28,9 +29,9 @@ public class Edit extends EditBean
   protected void load(final String loadId) throws SmppgwJspException
   {
     final Subject subject = (Subject) appContext.getGwRoutingManager().getSubjects().get(loadId);
-    if (subject != null) {
+    if (null != subject) {
       name = subject.getName();
-      defaultSme = subject.getDefaultSme() != null ? subject.getDefaultSme().getId() : null;
+      defaultSme = null != subject.getDefaultSme() ? subject.getDefaultSme().getId() : null;
       masks = new String[subject.getMasks().size()];
       int counter = 0;
       for (Iterator i = subject.getMasks().iterator(); i.hasNext();) {
@@ -43,9 +44,10 @@ public class Edit extends EditBean
 
   protected void save() throws SmppgwJspException
   {
+    masks = Functions.trimStrings(masks);
     final Map subjects = appContext.getGwRoutingManager().getSubjects();
     final Sme defSme = (Sme) appContext.getGwSmeManager().getSmes().get(defaultSme);
-    if (defSme == null)
+    if (null == defSme)
       throw new SmppgwJspException(Constants.errors.routing.subjects.DEFAULT_SME_NOT_FOUND, defaultSme);
 
     if (isAdd()) {

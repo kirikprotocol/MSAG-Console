@@ -28,16 +28,9 @@ public class Edit extends EditBean
   private String[] dstSubjs = new String[0];
   private int priority;
   private boolean enabling;
-  private boolean archiving;
-  private boolean billing;
   private int serviceId;
-  private boolean suppressDeliveryReports;
   private boolean active;
   private String srcSmeId;
-  private String deliveryMode;
-  private String forwardTo;
-  private boolean hide;
-  private boolean forceReplayPath;
   private String notes;
 
   private String provider;
@@ -199,16 +192,9 @@ public class Edit extends EditBean
 
       priority = route.getPriority();
       enabling = route.isEnabling();
-      archiving = route.isArchiving();
-      billing = route.isBilling();
       serviceId = route.getServiceId();
-      suppressDeliveryReports = route.isSuppressDeliveryReports();
       active = route.isActive();
       srcSmeId = route.getSrcSmeId();
-      deliveryMode = route.getDeliveryMode();
-      forwardTo = route.getForwardTo();
-      hide = route.isHide();
-      forceReplayPath = route.isForceReplayPath();
       notes = route.getNotes();
 
       logger.debug("Load route: Provider: " + route.getProvider());
@@ -246,16 +232,13 @@ public class Edit extends EditBean
         if (routes.containsKey(name))
           throw new SmppgwJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, name);
         routes.put(name,
-                   new GwRoute(name, priority, enabling, billing, archiving, suppressDeliveryReports, active, serviceId,
-                               sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath,
-                               notes, providerObj, trafficRules));
+                   new GwRoute(name, priority, enabling, active, serviceId, sources, destinations, srcSmeId, notes, providerObj, trafficRules));
       } else {
         if (!getEditId().equals(name) && routes.containsKey(name))
           throw new SmppgwJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
         routes.remove(getEditId());
-        routes.put(name, new GwRoute(name, priority, enabling, billing, archiving, suppressDeliveryReports, active, serviceId,
-                                     sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath,
-                                     notes, providerObj, trafficRules));
+        routes.put(name,
+                   new GwRoute(name, priority, enabling, active, serviceId, sources, destinations, srcSmeId, notes, providerObj, trafficRules));
       }
     } catch (SibincoException e) {
       logger.error("Could not create new subject", e);
@@ -382,26 +365,6 @@ public class Edit extends EditBean
     this.enabling = enabling;
   }
 
-  public boolean isArchiving()
-  {
-    return archiving;
-  }
-
-  public void setArchiving(final boolean archiving)
-  {
-    this.archiving = archiving;
-  }
-
-  public boolean isBilling()
-  {
-    return billing;
-  }
-
-  public void setBilling(final boolean billing)
-  {
-    this.billing = billing;
-  }
-
   public int getServiceId()
   {
     return serviceId;
@@ -410,16 +373,6 @@ public class Edit extends EditBean
   public void setServiceId(final int serviceId)
   {
     this.serviceId = serviceId;
-  }
-
-  public boolean isSuppressDeliveryReports()
-  {
-    return suppressDeliveryReports;
-  }
-
-  public void setSuppressDeliveryReports(final boolean suppressDeliveryReports)
-  {
-    this.suppressDeliveryReports = suppressDeliveryReports;
   }
 
   public boolean isActive()
@@ -440,46 +393,6 @@ public class Edit extends EditBean
   public void setSrcSmeId(final String srcSmeId)
   {
     this.srcSmeId = srcSmeId;
-  }
-
-  public String getDeliveryMode()
-  {
-    return deliveryMode;
-  }
-
-  public void setDeliveryMode(final String deliveryMode)
-  {
-    this.deliveryMode = deliveryMode;
-  }
-
-  public String getForwardTo()
-  {
-    return forwardTo;
-  }
-
-  public void setForwardTo(final String forwardTo)
-  {
-    this.forwardTo = forwardTo;
-  }
-
-  public boolean isHide()
-  {
-    return hide;
-  }
-
-  public void setHide(final boolean hide)
-  {
-    this.hide = hide;
-  }
-
-  public boolean isForceReplayPath()
-  {
-    return forceReplayPath;
-  }
-
-  public void setForceReplayPath(final boolean forceReplayPath)
-  {
-    this.forceReplayPath = forceReplayPath;
   }
 
   public String getNotes()
@@ -569,7 +482,7 @@ public class Edit extends EditBean
     return new_dstMask;
   }
 
-  public void setNew_dstMask(String new_dstMask)
+  public void setNew_dstMask(final String new_dstMask)
   {
     this.new_dstMask = new_dstMask;
   }
@@ -579,7 +492,7 @@ public class Edit extends EditBean
     return new_dst_mask_sme_;
   }
 
-  public void setNew_dst_mask_sme_(String new_dst_mask_sme_)
+  public void setNew_dst_mask_sme_(final String new_dst_mask_sme_)
   {
     this.new_dst_mask_sme_ = new_dst_mask_sme_;
   }

@@ -214,21 +214,14 @@
             <sm-ep:txt title="notes" name="notes"/>
             <sm-ep:txt title="priority" name="priority"/>
             <sm-ep:txt title="service ID" name="serviceId"/>
-            <sm-ep:list title="delivery mode" name="deliveryMode" values="default,store,forward,datagram" valueTitles="default,store and forward,forward,datagram"/>
             <sm-ep:list title="source SME ID" name="srcSmeId" values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
-            <sm-ep:txt title="forward to" name="forwardTo"/>
             <sm-ep:list title="provider" name="providerId" values="${providerIds}" valueTitles="${providers}"/>
           </sm-ep:properties>
         </td>
         <td>
           <sm-ep:properties title="Route options" noColoredLines="true" noHeaders="true">
             <sm-ep:check title="active" name="active"/>
-            <sm-ep:check title="alloved" name="enabling"/>
-            <sm-ep:check title="billing" name="billing"/>
-            <sm-ep:check title="archiving" name="archiving"/>
-            <sm-ep:check title="suppress delivery reports" name="suppressDeliveryReports"/>
-            <sm-ep:check title="hide" name="hide"/>
-            <sm-ep:check title="force replay path" name="forceReplayPath"/>
+            <sm-ep:check title="allowed" name="enabling"/>
           </sm-ep:properties>
         </td>
       </tr>

@@ -35,13 +35,10 @@ public class GwRoute extends Route
     this.trafficRules = new TrafficRules(routeElem.getAttribute("trafficRules"));
   }
 
-  public GwRoute(final String routeName, final int priority, final boolean isEnabling, final boolean isBilling, final boolean isArchiving,
-                 final boolean isSuppressDeliveryReports, final boolean active, final int serviceId, final Map sources, final Map destinations,
-                 final String srcSmeId, final String deliveryMode, final String forwardTo, final boolean hide, final boolean forceReplayPath,
-                 final String notes, final Provider provider, final TrafficRules trafficRules)
+  public GwRoute(final String routeName, final int priority, final boolean isEnabling, final boolean active, final int serviceId, final Map sources,
+                 final Map destinations, final String srcSmeId, final String notes, final Provider provider, final TrafficRules trafficRules)
   {
-    super(routeName, priority, isEnabling, isBilling, isArchiving, isSuppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode,
-          forwardTo, hide, forceReplayPath, notes);
+    super(routeName, priority, isEnabling, false, false, false, active, serviceId, sources, destinations, srcSmeId, "default", "", false, false, notes);
     this.provider = provider;
     this.trafficRules = trafficRules;
   }
