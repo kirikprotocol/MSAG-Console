@@ -22,12 +22,14 @@
 #include "smpp/smpp_time.h"
 #include "util/Exception.hpp"
 #include <string>
+#include <vector>
 #include "system/status.h"
 
 namespace smsc{
 namespace smeman{
 
 using std::auto_ptr;
+using std::vector;
 using namespace smsc::smpp;
 using smsc::sms::SMS;
 using smsc::sms::SMSId;
@@ -1072,15 +1074,16 @@ public:
           xsmR->header.set_commandStatus(makeSmppStatus(mr->get_status()));
           xsmR->set_messageId(mr->get_messageId());
           if ( mr->no_unsuccess ) {
-            auto_ptr<UnsuccessDeliveries> ud(new UnsuccessDeliveries[mr->no_unsuccess]);
+            vector<UnsuccessDeliveries> ud;
+            ud.resize(mr->no_unsuccess);
             for ( unsigned u=0; u<mr->no_unsuccess; ++u )
             {
-              ud.get()[u].addr.set_numberingPlan(mr->unsuccess[u].addr.getNumberingPlan());
-              ud.get()[u].addr.set_typeOfNumber(mr->unsuccess[u].addr.getTypeOfNumber());
-              ud.get()[u].addr.set_value(mr->unsuccess[u].addr.value);
-              ud.get()[u].errorStatusCode = mr->unsuccess[u].errcode;
+              ud[u].addr.set_numberingPlan(mr->unsuccess[u].addr.getNumberingPlan());
+              ud[u].addr.set_typeOfNumber(mr->unsuccess[u].addr.getTypeOfNumber());
+              ud[u].addr.set_value(mr->unsuccess[u].addr.value);
+              ud[u].errorStatusCode = mr->unsuccess[u].errcode;
             }
-            xsmR->set_sme(ud.get(),mr->no_unsuccess);
+            xsmR->set_sme(&ud[0],mr->no_unsuccess);
             xsmR->set_noUnsuccess(mr->no_unsuccess);
           }
           return reinterpret_cast<SmppHeader*>(xsmR.release());
