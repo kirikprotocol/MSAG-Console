@@ -35,38 +35,22 @@ public:
 		__require__(routeReg);
 		//__require__(chkList);
 	}
-
 	virtual ~RouteConfigGen() {}
-
-	static bool ltSource(const RouteInfo* r1, const RouteInfo* r2);
-	static bool ltDest(const RouteInfo* r1, const RouteInfo* r2);
-	static bool eqSource(const RouteInfo* r1, const RouteInfo* r2);
-	static bool eqDest(const RouteInfo* r1, const RouteInfo* r2);
-
 	virtual void saveConfig(const char* configFileName);
 	
 private:
-	typedef vector<const RouteInfo*> Routes;
-
 	bool checkSubject(const Address& addr);
 	auto_ptr<char> genFakeAddress();
 	bool printFakeMask(ostream& os);
-	void printSubject(ostream& os, const RouteInfo* route, char type,
-		const char* prefix);
-	void printRouteStart(ostream& os, const RouteInfo* route, const char* prefix);
+	void printSubject(ostream& os, const RouteInfo& route, char type);
+	void printRouteStart(ostream& os, const RouteInfo& route);
 	void printRouteEnd(ostream& os);
-	void printSource(ostream& os, const RouteInfo* route,
-		const char* prefix, bool printFake);
-	bool printFakeSource(ostream& os, const RouteInfo* route);
-	void printDest(ostream& os, const RouteInfo* route,
-		const char* prefix, bool printFake);
-	bool printFakeDest(ostream& os, const RouteInfo* route);
-	void printSubjects(ostream& os, const Routes& routes, const char* prefix);
-	void printRoutes(ostream& os, const Routes& routes, const char* prefix);
-	/*
-	template <class Pred>
-	const Routes selectRoutes(Routes& routes, Pred ltPred, Pred eqPred);
-	*/
+	void printSource(ostream& os, const RouteInfo& route);
+	bool printFakeSource(ostream& os, const RouteInfo& route);
+	void printDest(ostream& os, const RouteInfo& route);
+	bool printFakeDest(ostream& os, const RouteInfo& route);
+	void printSubjects(ostream& os);
+	void printRoutes(ostream& os);
 };
 
 }
