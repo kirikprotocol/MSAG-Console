@@ -1,23 +1,42 @@
-#include <stdlib.h>
-#include <string.h>
-
 #include "StoreManager.h"
 
 namespace smsc { namespace store 
 {
+/* ----------------------------- StoreManager -------------------------- */
+using namespace smsc::sms;
 
-StoreConfig::StoreConfig(const char* db, const char* usr, const char* pwd):
+MessageStore* StoreManager::instance = 0L;
+
+MessageStore* StoreManager::getInstance()
+    throw(ResourceAllocationException, AuthenticationException)
 {
-    userName = strdup(usr);
-    userPwd = strdup(pwd);
-    dbName = strdup(db);
+    return ((instance) ? instance : (instance = new StoreManager()));
 }
-StoreConfig::~StoreConfig() 
+
+StoreManager::StoreManager()
+    throw(ResourceAllocationException, AuthenticationException)
 {
-    if (userName) free(userName);
-    if (userPwd) free(userPwd);
-    if (dbName) free(dbName);
+    StoreConfig* config = new StoreConfig("ORCL", "smsc", "smsc");
+    pool = new SingleConnectionPool(config);
 }
+
+StoreManager::~StoreManager()
+{
+    if (pool) delete pool;
+}
+
+SMSId StoreManager::store(SMS* message)
+    throw(ResourceAllocationException)
+{
+    return 0;
+}
+
+SMS* StoreManager::retrive(SMSId id)
+    throw(ResourceAllocationException, NoSuchMessageException)
+{
+    return 0L;
+}
+/* ----------------------------- StoreManager -------------------------- */
 
 }}
 

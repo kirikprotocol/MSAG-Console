@@ -1,23 +1,26 @@
-#ifndef MESSAGE_STORE_DECLARATIONS#define MESSAGE_STORE_DECLARATIONS
+#ifndef MESSAGE_STORE_DECLARATIONS
+#define MESSAGE_STORE_DECLARATIONS
 
-#include <sms/sms.h>#include "StoreExceptions.h"
+#include <sms.h>
+#include "StoreExceptions.h"
 
-namespace smsc { namespace store{
+namespace smsc { namespace store
+{
+    using namespace smsc::sms;
+
     struct MessageStore 
     {
-        virtual void open()             throw(ResourceAllocationException, AuthenticationException) = 0;
-        virtual void close() = 0;
-        virtual sms::SMSId store(sms::SMS* message) 
+        virtual SMSId store(SMS* message) 
             throw(ResourceAllocationException) = 0;
-        virtual sms::SMS* retrive(sms::SMSId id) 
+        
+        virtual SMS* retrive(SMSId id) 
             throw(ResourceAllocationException, NoSuchMessageException) = 0;
 
 	virtual ~MessageStore() {};
 
     protected:
-	MessageStore() {};
+	    MessageStore() {};
    };
-
 }}
 
 #endif

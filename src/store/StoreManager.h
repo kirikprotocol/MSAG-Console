@@ -1,48 +1,39 @@
-#ifndef MESSAGE_MANAGER_DECLARATIONS
-#define MESSAGE_MANAGER_DECLARATIONS
+#ifndef STORE_MANAGER_DECLARATIONS
+#define STORE_MANAGER_DECLARATIONS
+
+#include <oci.h>
 
 #include "MessageStore.h"
+#include "ConnectionManager.h"
 
 namespace smsc { namespace store
 {
-    class StoreConfig
-    {
-    protected:
-        char*   userName;
-        char*   userPwd;
-        char*   dbName;
-
-        StoreConfig(const char* db, const char* usr, const char* pwd);
-
-    public:
-
-        virtual ~StoreConfig();
-
-        inline const char* getUserName() { return userName; };
-        inline const char* getUserPwd() { return userPwd; };
-        inline const char* getDbName() { return dbName; };
-    };
-
+    using namespace smsc::sms;
     
-    class ConnectionPool
-
     class StoreManager : public MessageStore
     {
+    private:
+
+	    static MessageStore* instance;
+	
     protected:
-        StoreConfig* config;
-        MessageStore(StoreConfig* _config) : config(_config) {};
+        
+	    ConnectionPool*	pool;
+
+        StoreManager()
+            throw(ResourceAllocationException, AuthenticationException);
 
     public:    
 
-        virtual ~MessageStore() {};
+        static MessageStore* getInstance()
+            throw(ResourceAllocationException, AuthenticationException);
+        
+        virtual ~StoreManager();
 
-        virtual void open() 
-            throw(ResourceAllocationException, AuthenticationException) = 0;
-        virtual void close() = 0;
-        virtual sms::SMSId store(sms::SMS* message) 
-            throw(ResourceAllocationException) = 0;
-        virtual sms::SMS* retrive(sms::SMSId id) 
-            throw(ResourceAllocationException, NoSuchMessageException) = 0;
+        virtual SMSId store(SMS* message) 
+            throw(ResourceAllocationException);
+        virtual SMS* retrive(SMSId id) 
+            throw(ResourceAllocationException, NoSuchMessageException);
     };
 
 }}

@@ -1,8 +1,11 @@
-#ifndef STRORE_EXCEPTIONS_DECLARATIONS#define STRORE_EXCEPTIONS_DECLARATIONS
+#ifndef STRORE_EXCEPTIONS_DECLARATIONS
+#define STRORE_EXCEPTIONS_DECLARATIONS
 
 #include <exception>
 using std::exception;
-namespace smsc { namespace store {
+
+namespace smsc { namespace store 
+{
     class AuthenticationException : public exception
     {
     public:
