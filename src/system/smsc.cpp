@@ -55,13 +55,18 @@ Smsc::~Smsc()
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
 public:
   SpeedMonitor(EventQueue& eq,performance::PerformanceListener* pl,Smsc* smsc):
-    queue(eq),perfListener(pl),smsc(smsc){}
+    queue(eq),perfListener(pl),smsc(smsc)
+  {
+    start.tv_sec=0;
+    start.tv_nsec=0;
+  }
   int Execute()
   {
     uint64_t cnt,last=0;
-    timespec start,now,lasttime;
+    timespec now,lasttime;
     double ut,tm,rate,avg;
-    clock_gettime(CLOCK_REALTIME,&start);
+    if(start.tv_sec==0)
+      clock_gettime(CLOCK_REALTIME,&start);
     Event ev;
     __trace__("enter SpeedMonitor");
     timeshift=0;
@@ -166,6 +171,11 @@ public:
     }
     return 0;
   }
+  void setStartTime(time_t t)
+  {
+    start.tv_sec=t;
+    start.tv_nsec=0;
+  }
   const char* taskName()
   {
     return "SpeedMonitor";
@@ -175,6 +185,7 @@ protected:
   int perfCnt[5][60];
   int timeshift;
   time_t times[60];
+  timespec start;
   performance::PerformanceListener* perfListener;
   Smsc* smsc;
 };
@@ -340,7 +351,26 @@ void Smsc::init(const SmscConfigs& cfg)
 
   //smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
 
-  tp.startTask(new SpeedMonitor(eventqueue,&perfDataDisp,this));
+  {
+    SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,this);
+    FILE *f=fopen("stats.txt","rt");
+    if(f)
+    {
+      time_t ut;
+      fscanf(f,"%d %lld %lld %lld %lld %lld",
+        &ut,
+        &submitOkCounter,
+        &submitErrCounter,
+        &deliverOkCounter,
+        &deliverErrCounter,
+        &rescheduleCounter
+      );
+      sm->setStartTime(ut);
+      fclose(f);
+      remove("stats.txt");
+    }
+    tp.startTask(sm);
+  }
 
   {
     using namespace smsc::db;
@@ -480,6 +510,7 @@ void Smsc::init(const SmscConfigs& cfg)
 
 void Smsc::run()
 {
+  startTime=time(NULL);
   {
     Event accstarted;
     smppio::SmppAcceptor *acc=new

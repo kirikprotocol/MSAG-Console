@@ -25,6 +25,9 @@
 
 #include "stat/StatisticsManager.h"
 
+#include <sys/types.h>
+#include <signal.h>
+
 
 namespace smsc{
 namespace system{
@@ -215,6 +218,24 @@ public:
     }
   }
 
+  void abortSmsc()
+  {
+    FILE *f=fopen("stats.txt","wt");
+    if(f)
+    {
+      fprintf(f,"%d %lld %lld %lld %lld %lld",time(NULL)-startTime,
+        submitOkCounter,
+        submitErrCounter,
+        deliverOkCounter,
+        deliverErrCounter,
+        rescheduleCounter
+      );
+      fclose(f);
+    }
+    statMan->flushStatistics();
+    kill(getpid(),9);
+  }
+
   void getPerfData(uint64_t *cnt)
   {
     MutexGuard g(perfMutex);
@@ -292,6 +313,8 @@ protected:
   uint64_t deliverOkCounter;
   uint64_t deliverErrCounter;
   uint64_t rescheduleCounter;
+
+  time_t startTime;
 
 };
 
