@@ -40,6 +40,8 @@ void SmeConfigGen::saveConfig(const char* configFileName)
 			sme->rangeOfAddress << "\"/>" << endl;
 		os << "\t<param name=\"smeN\" value=\"" <<
 			sme->SME_N << "\"/>" << endl;
+		os << "\t<param name=\"wantAlias\" value=\"" <<
+			(sme->wantAlias ? "yes" : "no") << "\"/>" << endl;
 		os << "</smerecord>" << endl;
 		__tc_ok__;
 	}
