@@ -9,10 +9,13 @@ package ru.novosoft.smsc.admin.console;
 
 import ru.novosoft.smsc.admin.console.parser.CommandLexer;
 import ru.novosoft.smsc.admin.console.parser.CommandParser;
+import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.util.auth.AuthenticatorProxy;
 
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.security.Principal;
 
 public abstract class Session extends Thread
 {
@@ -25,16 +28,42 @@ public abstract class Session extends Thread
 
     private InputStream  is = null;
     private OutputStream os = null;
+    private Principal  user = null;
 
     public Session(Console owner, Socket socket) {
         this.owner = owner;
         this.socket = socket;
     }
 
+    protected boolean userAuthorized() {
+        return (user != null);
+    }
+    protected boolean authorizeUser(String login, String password) {
+        user = AuthenticatorProxy.getInstance().
+                authenticate(Constants.TomcatRealmName, login, password);
+        return userAuthorized();
+    }
+    protected boolean userInRole(String role) {
+        return (user != null) ? AuthenticatorProxy.getInstance().
+                hasRole(Constants.TomcatRealmName, user, role) : false;
+    }
+    protected boolean commandAllowed(String command) {
+        if (userAuthorized()) {
+            String roles[] = owner.getCommandRoles(command);
+            for (int i=0; roles != null && i<roles.length; i++) {
+                if (roles[i] != null &&
+                        userInRole(roles[i].trim())) return true;
+            }
+        }
+        return false;
+    }
+
     protected void greeting(PrintWriter writer) {};
     protected void farewell(PrintWriter writer) {};
     protected void prompt(PrintWriter writer) {};
 
+    protected abstract boolean authorize(BufferedReader reader, PrintWriter writer)
+            throws Exception;
     protected abstract void display(PrintWriter writer, CommandContext ctx);
 
     private void process()
@@ -43,8 +72,11 @@ public abstract class Session extends Thread
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         PrintWriter writer = new PrintWriter(os);
 
+        if (!authorize(reader, writer)) return;
+
         greeting(writer);
-        while (!isStopping) {
+        while (!isStopping)
+        {
             prompt(writer);
             String input = reader.readLine();
             if (input == null) continue;
@@ -52,12 +84,20 @@ public abstract class Session extends Thread
                 farewell(writer); sleep(100); break;
             }
             CommandContext ctx = new CommandContext(owner.getSmsc());
-            try {
+            try
+            {
                 CommandLexer lexer = new CommandLexer(new StringReader(input));
                 CommandParser parser = new CommandParser(lexer);
-                parser.parse(ctx);
+                Command cmd = parser.parse();
+                if (commandAllowed(cmd.getId())) {
+                    cmd.process(ctx);
+                } else {
+                    ctx.setMessage("Not enough rights to execute specified command");
+                    ctx.setStatus(CommandContext.CMD_AUTH_ERROR);
+                }
             }
             catch (Exception e) {
+                //e.printStackTrace();
                 ctx.setMessage(e.getMessage());
                 ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
             }
@@ -65,8 +105,8 @@ public abstract class Session extends Thread
         }
     }
 
-    Object closeSemaphore = new Object();
-    boolean isStopping = false;
+    protected Object closeSemaphore = new Object();
+    protected boolean isStopping = false;
 
     public void run()
     {

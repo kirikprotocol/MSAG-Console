@@ -25,5 +25,10 @@ public class AliasDeleteCommand implements Command
         ctx.setMessage((ok) ? out+"deleted" : out+"not found");
         ctx.setStatus((ok) ? CommandContext.CMD_OK : CommandContext.CMD_PROCESS_ERROR);
     }
+
+    public String getId() {
+        return "ALIAS_DELETE";
+    }
+
 }
 

@@ -49,4 +49,8 @@ public class AliasAddCommand implements Command
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }
+
+    public String getId() {
+        return "ALIAS_ADD";
+    }
 }

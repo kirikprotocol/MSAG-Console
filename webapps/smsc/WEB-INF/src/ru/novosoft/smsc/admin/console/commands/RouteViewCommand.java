@@ -83,4 +83,9 @@ public class RouteViewCommand implements Command
             return;
         }
     }
+
+    public String getId() {
+        return "ROUTE_VIEW";
+    }
+
 }

@@ -13,12 +13,44 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 
 import java.net.Socket;
 import java.io.PrintWriter;
+import java.io.BufferedReader;
 import java.util.Iterator;
 
 public class ScriptSession extends Session
 {
+    private final static int CONSOLE_AUTH_FAIL_SLEEP = 10000;
+
+    private final static String CONSOLE_AUTH_FAIL   = "Authentication failed. Access denied.";
+    private final static String CONSOLE_AUTH_OK     = "Logged in. Access granted.";
+
     public ScriptSession(Console owner, Socket socket) {
         super(owner, socket);
+    }
+
+    protected boolean authorize(BufferedReader reader, PrintWriter writer)
+            throws Exception
+    {
+        while (!isStopping)
+        {
+            String login = reader.readLine();
+            if (login == null || login.length() == 0) continue;
+            String password = reader.readLine();
+            if (password == null) continue;
+
+            if (authorizeUser(login, password)) {
+                writer.print("+ "+CommandContext.CMD_OK);
+                writer.println(' '+CONSOLE_AUTH_OK+'\r');
+                writer.flush();
+                return true;
+            } else {
+                writer.print("- "+CommandContext.CMD_AUTH_ERROR);
+                writer.println(' '+CONSOLE_AUTH_FAIL+'\r');
+                writer.flush();
+                sleep(CONSOLE_AUTH_FAIL_SLEEP);
+                break;
+            }
+        }
+        return false;
     }
 
     protected void display(PrintWriter writer, CommandContext ctx)

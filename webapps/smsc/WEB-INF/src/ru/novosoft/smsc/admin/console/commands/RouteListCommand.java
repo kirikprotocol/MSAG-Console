@@ -42,4 +42,8 @@ public class RouteListCommand implements Command
         }
     }
 
+    public String getId() {
+        return "ROUTE_LIST";
+    }
+
 }

@@ -7,6 +7,8 @@
  */
 package ru.novosoft.smsc.admin.console;
 
-public interface Command {
+public interface Command
+{
+    public String getId();
     public void process(CommandContext ctx);
 }

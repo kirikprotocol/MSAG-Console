@@ -40,5 +40,10 @@ public class RouteDeleteCommand implements Command
         ctx.setMessage(out+"deleted");
         ctx.setStatus(CommandContext.CMD_OK);
     }
+
+    public String getId() {
+        return "ROUTE_DELETE";
+    }
+
 }
 

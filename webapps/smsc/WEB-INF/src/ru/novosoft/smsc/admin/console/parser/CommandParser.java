@@ -29,22 +29,6 @@ import antlr.collections.AST;
 import antlr.ASTPair;
 import antlr.collections.impl.ASTArray;
 
-import java.io.*;
-
-class Main {
-	public static void main(String[] args) {
-		try {
-			CommandLexer lexer = new CommandLexer(new DataInputStream(System.in));
-			CommandParser parser = new CommandParser(lexer);
-			CommandContext ctx = new CommandContext(null);
-			parser.parse(ctx);
-		} catch(Exception e) {
-			System.err.println("exception: "+e);
-			e.printStackTrace(System.err);   // so we can get stack trace
-		}
-	}
-}
-
 public class CommandParser extends antlr.LLkParser
        implements CommandParserTokenTypes
  {
@@ -72,50 +56,48 @@ public CommandParser(ParserSharedInputState state) {
   tokenNames = _tokenNames;
 }
 
-	public final void parse(
-		CommandContext ctx
-	) throws RecognitionException, TokenStreamException {
+	public final Command  parse() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
 		
 		
 		switch ( LA(1)) {
 		case ACT_ADD:
 		{
 			match(ACT_ADD);
-			add(ctx);
+			cmd=add();
 			break;
 		}
 		case ACT_DELETE:
 		{
 			match(ACT_DELETE);
-			del(ctx);
+			cmd=del();
 			break;
 		}
 		case ACT_ALTER:
 		{
 			match(ACT_ALTER);
-			alt(ctx);
+			cmd=alt();
 			break;
 		}
 		case ACT_LIST:
 		{
 			match(ACT_LIST);
-			lst(ctx);
+			cmd=lst();
 			break;
 		}
 		case ACT_VIEW:
 		{
 			match(ACT_VIEW);
-			view(ctx);
+			cmd=view();
 			break;
 		}
 		case ACT_APPLY:
 		{
 			match(ACT_APPLY);
-			
-					    System.out.println("Apply");
-					    ApplyCommand cmd = new ApplyCommand();
-					    cmd.process(ctx);
-					
+			cmd = new ApplyCommand();
 			break;
 		}
 		default:
@@ -123,48 +105,39 @@ public CommandParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
+		return cmd;
 	}
 	
-	public final void add(
-		CommandContext ctx
-	) throws RecognitionException, TokenStreamException {
+	public final Command  add() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
 		
 		
 		switch ( LA(1)) {
 		case TGT_ROUTE:
 		{
 			match(TGT_ROUTE);
-			
-					    RouteAddCommand cmd = new RouteAddCommand();
-					
-			addroute(ctx, cmd);
+			cmd=addroute();
 			break;
 		}
 		case TGT_ALIAS:
 		{
 			match(TGT_ALIAS);
-			
-					    AliasAddCommand cmd = new AliasAddCommand();
-					
-			addalias(ctx, cmd);
+			cmd=addalias();
 			break;
 		}
 		case TGT_SUBJECT:
 		{
 			match(TGT_SUBJECT);
-			
-					    SubjectAddCommand cmd = new SubjectAddCommand();
-					
-			addsubject(ctx, cmd);
+			cmd=addsubject();
 			break;
 		}
 		case TGT_PROFILE:
 		{
 			match(TGT_PROFILE);
-			
-					    ProfileAddCommand cmd = new ProfileAddCommand();
-					
-			addprofile(ctx, cmd);
+			cmd=addprofile();
 			break;
 		}
 		default:
@@ -172,39 +145,33 @@ public CommandParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
+		return cmd;
 	}
 	
-	public final void del(
-		CommandContext ctx
-	) throws RecognitionException, TokenStreamException {
+	public final Command  del() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
 		
 		
 		switch ( LA(1)) {
 		case TGT_ROUTE:
 		{
 			match(TGT_ROUTE);
-			
-					    RouteDeleteCommand cmd = new RouteDeleteCommand();
-					
-			delroute(ctx, cmd);
+			cmd=delroute();
 			break;
 		}
 		case TGT_ALIAS:
 		{
 			match(TGT_ALIAS);
-			
-					    AliasDeleteCommand cmd = new AliasDeleteCommand();
-					
-			delalias(ctx, cmd);
+			cmd=delalias();
 			break;
 		}
 		case TGT_SUBJECT:
 		{
 			match(TGT_SUBJECT);
-			
-					    SubjectDeleteCommand cmd = new SubjectDeleteCommand();
-					
-			delsubject(ctx, cmd);
+			cmd=delsubject();
 			break;
 		}
 		default:
@@ -212,48 +179,39 @@ public CommandParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
+		return cmd;
 	}
 	
-	public final void alt(
-		CommandContext ctx
-	) throws RecognitionException, TokenStreamException {
+	public final Command  alt() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
 		
 		
 		switch ( LA(1)) {
 		case TGT_ROUTE:
 		{
 			match(TGT_ROUTE);
-			
-					    RouteAlterCommand cmd = new RouteAlterCommand();
-					
-			altroute(ctx, cmd);
+			cmd=altroute();
 			break;
 		}
 		case TGT_ALIAS:
 		{
 			match(TGT_ALIAS);
-			
-					    AliasAlterCommand cmd = new AliasAlterCommand();
-				 	
-			altalias(ctx, cmd);
+			cmd=altalias();
 			break;
 		}
 		case TGT_SUBJECT:
 		{
 			match(TGT_SUBJECT);
-			
-					    SubjectAlterCommand cmd = new SubjectAlterCommand();
-					
-			altsubject(ctx, cmd);
+			cmd=altsubject();
 			break;
 		}
 		case TGT_PROFILE:
 		{
 			match(TGT_PROFILE);
-			
-					    ProfileAlterCommand cmd = new ProfileAlterCommand();
-					
-			altprofile(ctx, cmd);
+			cmd=altprofile();
 			break;
 		}
 		default:
@@ -261,39 +219,33 @@ public CommandParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
+		return cmd;
 	}
 	
-	public final void lst(
-		CommandContext ctx
-	) throws RecognitionException, TokenStreamException {
+	public final Command  lst() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
 		
 		
 		switch ( LA(1)) {
 		case TGT_ROUTE:
 		{
 			match(TGT_ROUTE);
-			
-					    RouteListCommand cmd = new RouteListCommand();
-					
-			lstroute(ctx, cmd);
+			cmd = new RouteListCommand();
 			break;
 		}
 		case TGT_ALIAS:
 		{
 			match(TGT_ALIAS);
-			
-					    AliasListCommand cmd = new AliasListCommand();
-					
-			lstalias(ctx, cmd);
+			cmd = new AliasListCommand();
 			break;
 		}
 		case TGT_SUBJECT:
 		{
 			match(TGT_SUBJECT);
-			
-					    SubjectListCommand cmd = new SubjectListCommand();
-					
-			lstsubject(ctx, cmd);
+			cmd = new SubjectListCommand();
 			break;
 		}
 		default:
@@ -301,48 +253,39 @@ public CommandParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
+		return cmd;
 	}
 	
-	public final void view(
-		CommandContext ctx
-	) throws RecognitionException, TokenStreamException {
+	public final Command  view() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
 		
 		
 		switch ( LA(1)) {
 		case TGT_ROUTE:
 		{
 			match(TGT_ROUTE);
-			
-					    RouteViewCommand cmd = new RouteViewCommand();
-					
-			viewroute(ctx, cmd);
+			cmd=viewroute();
 			break;
 		}
 		case TGT_ALIAS:
 		{
 			match(TGT_ALIAS);
-			
-					    AliasViewCommand cmd = new AliasViewCommand();
-					
-			viewalias(ctx, cmd);
+			cmd=viewalias();
 			break;
 		}
 		case TGT_SUBJECT:
 		{
 			match(TGT_SUBJECT);
-			
-					    SubjectViewCommand cmd = new SubjectViewCommand();
-					
-			viewsubject(ctx, cmd);
+			cmd=viewsubject();
 			break;
 		}
 		case TGT_PROFILE:
 		{
 			match(TGT_PROFILE);
-			
-					    ProfileViewCommand cmd = new ProfileViewCommand();
-					
-			viewprofile(ctx, cmd);
+			cmd=viewprofile();
 			break;
 		}
 		default:
@@ -350,16 +293,19 @@ public CommandParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
+		return cmd;
 	}
 	
-	public final void addroute(
-		CommandContext ctx, RouteAddCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final RouteAddCommand  addroute() throws RecognitionException, TokenStreamException {
+		RouteAddCommand cmd;
 		
 		Token  qname = null;
 		Token  name = null;
 		Token  num = null;
 		Token  pri = null;
+		
+		cmd = new RouteAddCommand();
+		
 		
 		{
 		switch ( LA(1)) {
@@ -383,7 +329,6 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		
 				    String out = (qname == null) ? name.getText():qname.getText();
-				    System.out.println("Add route="+out);
 				    cmd.setRoute(out);
 				
 		addroute_flags(cmd);
@@ -405,32 +350,67 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		route_src(cmd);
 		route_dst(cmd);
-		
-				    cmd.process(ctx);
-				
+		return cmd;
 	}
 	
-	public final void addalias(
-		CommandContext ctx, AliasAddCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final AliasAddCommand  addalias() throws RecognitionException, TokenStreamException {
+		AliasAddCommand cmd;
 		
-		Token  alias = null;
-		Token  val = null;
+		Token  maddr = null;
+		Token  manum = null;
+		Token  aaddr = null;
+		Token  aanum = null;
+		
+		cmd = new AliasAddCommand();
+		
 		
 		{
-		alias = LT(1);
-		match(ADDRESS);
+		switch ( LA(1)) {
+		case ADDRESS:
+		{
+			maddr = LT(1);
+			match(ADDRESS);
+			break;
+		}
+		case NUMBER:
+		{
+			manum = LT(1);
+			match(NUMBER);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    System.out.println("Add alias="+alias.getText());
-				    cmd.setAlias(alias.getText());
+				    String mal = (maddr == null) ? manum.getText():maddr.getText();
+				    cmd.setAlias(mal);
 				
 		{
-		val = LT(1);
-		match(ADDRESS);
+		switch ( LA(1)) {
+		case ADDRESS:
+		{
+			aaddr = LT(1);
+			match(ADDRESS);
+			break;
+		}
+		case NUMBER:
+		{
+			aanum = LT(1);
+			match(NUMBER);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    cmd.setAddress(val.getText());
+				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+				    cmd.setAddress(aal);
 				
 		{
 		switch ( LA(1)) {
@@ -456,19 +436,19 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
-		
-				    cmd.process(ctx);
-				
+		return cmd;
 	}
 	
-	public final void addsubject(
-		CommandContext ctx, SubjectAddCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final SubjectAddCommand  addsubject() throws RecognitionException, TokenStreamException {
+		SubjectAddCommand cmd;
 		
 		Token  qname = null;
 		Token  name = null;
 		Token  qsys = null;
 		Token  isys = null;
+		
+		cmd = new SubjectAddCommand();
+		
 		
 		{
 		switch ( LA(1)) {
@@ -492,7 +472,6 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		
 				    String out = (qname == null) ? name.getText():qname.getText();
-				    System.out.println("Add subject="+out);
 				    cmd.setSubject(out);
 				
 		{
@@ -520,24 +499,41 @@ public CommandParser(ParserSharedInputState state) {
 				    cmd.setDefaultSmeId(smeid);
 				
 		addsubj_masks(cmd);
-		
-				    cmd.process(ctx);
-				
+		return cmd;
 	}
 	
-	public final void addprofile(
-		CommandContext ctx, ProfileAddCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final ProfileAddCommand  addprofile() throws RecognitionException, TokenStreamException {
+		ProfileAddCommand cmd;
 		
-		Token  mask = null;
+		Token  maddr = null;
+		Token  manum = null;
+		
+		cmd = new ProfileAddCommand();
+		
 		
 		{
-		mask = LT(1);
-		match(ADDRESS);
+		switch ( LA(1)) {
+		case ADDRESS:
+		{
+			maddr = LT(1);
+			match(ADDRESS);
+			break;
+		}
+		case NUMBER:
+		{
+			manum = LT(1);
+			match(NUMBER);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    System.out.println("Add profile, mask="+mask.getText());
-				    cmd.setMask(mask.getText());
+				    String mal = (maddr == null) ? manum.getText():maddr.getText();
+				    cmd.setMask(mal);
 				
 		{
 		match(OPT_REPORT);
@@ -599,17 +595,17 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
-		
-				    cmd.process(ctx);
-				
+		return cmd;
 	}
 	
-	public final void delroute(
-		CommandContext ctx, RouteDeleteCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final RouteDeleteCommand  delroute() throws RecognitionException, TokenStreamException {
+		RouteDeleteCommand cmd;
 		
 		Token  qname = null;
 		Token  name = null;
+		
+		cmd = new RouteDeleteCommand();
+		
 		
 		{
 		switch ( LA(1)) {
@@ -633,35 +629,55 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		
 				    String out = (qname == null) ? name.getText():qname.getText();
-				    System.out.println("Delete route="+out);
 				    cmd.setRoute(out);
-				    cmd.process(ctx);
 				
+		return cmd;
 	}
 	
-	public final void delalias(
-		CommandContext ctx, AliasDeleteCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final AliasDeleteCommand  delalias() throws RecognitionException, TokenStreamException {
+		AliasDeleteCommand cmd;
 		
-		Token  alias = null;
+		Token  aaddr = null;
+		Token  aanum = null;
+		
+		cmd = new AliasDeleteCommand();
+		
 		
 		{
-		alias = LT(1);
-		match(ADDRESS);
+		switch ( LA(1)) {
+		case ADDRESS:
+		{
+			aaddr = LT(1);
+			match(ADDRESS);
+			break;
+		}
+		case NUMBER:
+		{
+			aanum = LT(1);
+			match(NUMBER);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    System.out.println("Delete alias="+alias.getText());
-				    cmd.setAlias(alias.getText());
-				    cmd.process(ctx);
+				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+				    cmd.setAlias(aal);
 				
+		return cmd;
 	}
 	
-	public final void delsubject(
-		CommandContext ctx, SubjectDeleteCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final SubjectDeleteCommand  delsubject() throws RecognitionException, TokenStreamException {
+		SubjectDeleteCommand cmd;
 		
 		Token  qname = null;
 		Token  name = null;
+		
+		cmd = new SubjectDeleteCommand();
+		
 		
 		{
 		switch ( LA(1)) {
@@ -685,21 +701,22 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		
 				    String out = (qname == null) ? name.getText():qname.getText();
-				    System.out.println("Delete subject="+out);
 				    cmd.setSubject(out);
-				    cmd.process(ctx);
 				
+		return cmd;
 	}
 	
-	public final void altroute(
-		CommandContext ctx, RouteAlterCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final RouteAlterCommand  altroute() throws RecognitionException, TokenStreamException {
+		RouteAlterCommand cmd;
 		
 		Token  qname = null;
 		Token  name = null;
 		Token  num = null;
 		Token  pri = null;
 		
+		cmd = new RouteAlterCommand();
+		
+		
 		{
 		switch ( LA(1)) {
 		case STRING:
@@ -722,7 +739,6 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		
 				    String out = (qname == null) ? name.getText():qname.getText();
-				    System.out.println("Alter route="+out);
 				    cmd.setRoute(out);
 				
 		altroute_flags(cmd);
@@ -813,32 +829,67 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
-		
-				    cmd.process(ctx);
-				
+		return cmd;
 	}
 	
-	public final void altalias(
-		CommandContext ctx, AliasAlterCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final AliasAlterCommand  altalias() throws RecognitionException, TokenStreamException {
+		AliasAlterCommand cmd;
 		
-		Token  alias = null;
-		Token  val = null;
+		Token  maddr = null;
+		Token  manum = null;
+		Token  aaddr = null;
+		Token  aanum = null;
+		
+		cmd = new AliasAlterCommand();
+		
 		
 		{
-		alias = LT(1);
-		match(ADDRESS);
+		switch ( LA(1)) {
+		case ADDRESS:
+		{
+			maddr = LT(1);
+			match(ADDRESS);
+			break;
+		}
+		case NUMBER:
+		{
+			manum = LT(1);
+			match(NUMBER);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    System.out.println("Alter alias="+alias.getText());
-				    cmd.setAlias(alias.getText());
+				    String mal = (maddr == null) ? manum.getText():maddr.getText();
+				    cmd.setAlias(mal);
 				
 		{
-		val = LT(1);
-		match(ADDRESS);
+		switch ( LA(1)) {
+		case ADDRESS:
+		{
+			aaddr = LT(1);
+			match(ADDRESS);
+			break;
+		}
+		case NUMBER:
+		{
+			aanum = LT(1);
+			match(NUMBER);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    cmd.setAddress(val.getText());
+				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+				    cmd.setAddress(aal);
 				
 		{
 		switch ( LA(1)) {
@@ -864,19 +915,19 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
-		
-				    cmd.process(ctx);
-				
+		return cmd;
 	}
 	
-	public final void altsubject(
-		CommandContext ctx, SubjectAlterCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final SubjectAlterCommand  altsubject() throws RecognitionException, TokenStreamException {
+		SubjectAlterCommand cmd;
 		
 		Token  qname = null;
 		Token  name = null;
 		Token  qsys = null;
 		Token  isys = null;
+		
+		cmd = new SubjectAlterCommand();
+		
 		
 		switch ( LA(1)) {
 		case STRING:
@@ -904,7 +955,6 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			
 					    String out = (qname == null) ? name.getText():qname.getText();
-					    System.out.println("Alter subject="+out);
 					    cmd.setSubject(out);
 					
 			{
@@ -965,9 +1015,6 @@ public CommandParser(ParserSharedInputState state) {
 					    cmd.setDefaultSmeId(smeid);
 					
 			}
-			
-					    cmd.process(ctx);
-					
 			break;
 		}
 		default:
@@ -975,21 +1022,41 @@ public CommandParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
+		return cmd;
 	}
 	
-	public final void altprofile(
-		CommandContext ctx, ProfileAlterCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final ProfileAlterCommand  altprofile() throws RecognitionException, TokenStreamException {
+		ProfileAlterCommand cmd;
 		
-		Token  addr = null;
+		Token  aaddr = null;
+		Token  aanum = null;
+		
+		cmd = new ProfileAlterCommand();
+		
 		
 		{
-		addr = LT(1);
-		match(ADDRESS);
+		switch ( LA(1)) {
+		case ADDRESS:
+		{
+			aaddr = LT(1);
+			match(ADDRESS);
+			break;
+		}
+		case NUMBER:
+		{
+			aanum = LT(1);
+			match(NUMBER);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    System.out.println("Alter profile, addr="+addr.getText());
-				    cmd.setAddress(addr.getText());
+				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+				    cmd.setAddress(aal);
 				
 		{
 		match(OPT_REPORT);
@@ -1051,101 +1118,17 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
-		
-				    cmd.process(ctx);
-				
+		return cmd;
 	}
 	
-	public final void lstroute(
-		CommandContext ctx, RouteListCommand cmd
-	) throws RecognitionException, TokenStreamException {
-		
-		
-		{
-		switch ( LA(1)) {
-		case WS:
-		{
-			match(WS);
-			break;
-		}
-		case EOF:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    System.out.println("List route");
-				    cmd.process(ctx);
-				
-	}
-	
-	public final void lstalias(
-		CommandContext ctx, AliasListCommand cmd
-	) throws RecognitionException, TokenStreamException {
-		
-		
-		{
-		switch ( LA(1)) {
-		case WS:
-		{
-			match(WS);
-			break;
-		}
-		case EOF:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    System.out.println("List alias");
-				    cmd.process(ctx);
-				
-	}
-	
-	public final void lstsubject(
-		CommandContext ctx, SubjectListCommand cmd
-	) throws RecognitionException, TokenStreamException {
-		
-		
-		{
-		switch ( LA(1)) {
-		case WS:
-		{
-			match(WS);
-			break;
-		}
-		case EOF:
-		{
-			break;
-		}
-		default:
-		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		
-				    System.out.println("List subject");
-				    cmd.process(ctx);
-				
-	}
-	
-	public final void viewroute(
-		CommandContext ctx, RouteViewCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final RouteViewCommand  viewroute() throws RecognitionException, TokenStreamException {
+		RouteViewCommand cmd;
 		
 		Token  qname = null;
 		Token  name = null;
+		
+		cmd = new RouteViewCommand();
+		
 		
 		{
 		switch ( LA(1)) {
@@ -1169,35 +1152,55 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		
 				    String out = (qname == null) ? name.getText():qname.getText();
-				    System.out.println("View route="+out);
 				    cmd.setRoute(out);
-				    cmd.process(ctx);
 				
+		return cmd;
 	}
 	
-	public final void viewalias(
-		CommandContext ctx, AliasViewCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final AliasViewCommand  viewalias() throws RecognitionException, TokenStreamException {
+		AliasViewCommand cmd;
 		
-		Token  alias = null;
+		Token  aaddr = null;
+		Token  aanum = null;
+		
+		cmd = new AliasViewCommand();
+		
 		
 		{
-		alias = LT(1);
-		match(ADDRESS);
+		switch ( LA(1)) {
+		case ADDRESS:
+		{
+			aaddr = LT(1);
+			match(ADDRESS);
+			break;
+		}
+		case NUMBER:
+		{
+			aanum = LT(1);
+			match(NUMBER);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    System.out.println("View alias="+alias.getText());
-				    cmd.setAlias(alias.getText());
-				    cmd.process(ctx);
+				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+				    cmd.setAlias(aal);
 				
+		return cmd;
 	}
 	
-	public final void viewsubject(
-		CommandContext ctx, SubjectViewCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final SubjectViewCommand  viewsubject() throws RecognitionException, TokenStreamException {
+		SubjectViewCommand cmd;
 		
 		Token  qname = null;
 		Token  name = null;
+		
+		cmd = new SubjectViewCommand();
+		
 		
 		{
 		switch ( LA(1)) {
@@ -1221,27 +1224,45 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		
 				    String out = (qname == null) ? name.getText():qname.getText();
-				    System.out.println("View subject="+out);
 				    cmd.setSubject(out);
-				    cmd.process(ctx);
 				
+		return cmd;
 	}
 	
-	public final void viewprofile(
-		CommandContext ctx, ProfileViewCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final ProfileViewCommand  viewprofile() throws RecognitionException, TokenStreamException {
+		ProfileViewCommand cmd;
 		
-		Token  addr = null;
+		Token  aaddr = null;
+		Token  aanum = null;
+		
+		cmd = new ProfileViewCommand();
+		
 		
 		{
-		addr = LT(1);
-		match(ADDRESS);
+		switch ( LA(1)) {
+		case ADDRESS:
+		{
+			aaddr = LT(1);
+			match(ADDRESS);
+			break;
+		}
+		case NUMBER:
+		{
+			aanum = LT(1);
+			match(NUMBER);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    System.out.println("View profile, addr="+addr.getText());
-				    cmd.setAddress(addr.getText());
-				    cmd.process(ctx);
+				    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+				    cmd.setAddress(aal);
 				
+		return cmd;
 	}
 	
 	public final void srcdef(
@@ -1250,11 +1271,12 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  qname = null;
 		Token  name = null;
-		Token  val = null;
+		Token  addr = null;
+		Token  anum = null;
+		// Special command required !!!
+		RouteSrcDef def = new RouteSrcDef();
 		
 		
-				    RouteSrcDef def = new RouteSrcDef();
-				
 		{
 		switch ( LA(1)) {
 		case OPT_SUBJ:
@@ -1293,11 +1315,30 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			{
 			match(OPT_MASK);
-			val = LT(1);
-			match(ADDRESS);
+			{
+			switch ( LA(1)) {
+			case ADDRESS:
+			{
+				addr = LT(1);
+				match(ADDRESS);
+				break;
+			}
+			case NUMBER:
+			{
+				anum = LT(1);
+				match(NUMBER);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
 			
+					    String val = (addr == null) ? anum.getText():addr.getText(); 
 					    def.setType(RouteSrcDef.TYPE_MASK); 
-					    def.setSrc(val.getText());
+					    def.setSrc(val);
 					
 			}
 			break;
@@ -1319,13 +1360,14 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  qname = null;
 		Token  name = null;
-		Token  val = null;
+		Token  addr = null;
+		Token  anum = null;
 		Token  qsys = null;
 		Token  isys = null;
+		// Special command required !!!
+		RouteDstDef def = new RouteDstDef();
 		
 		
-				    RouteDstDef def = new RouteDstDef();
-				
 		{
 		switch ( LA(1)) {
 		case OPT_SUBJ:
@@ -1364,11 +1406,30 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			{
 			match(OPT_MASK);
-			val = LT(1);
-			match(ADDRESS);
+			{
+			switch ( LA(1)) {
+			case ADDRESS:
+			{
+				addr = LT(1);
+				match(ADDRESS);
+				break;
+			}
+			case NUMBER:
+			{
+				anum = LT(1);
+				match(NUMBER);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
 			
+					    String val = (addr == null) ? anum.getText():addr.getText(); 
 					    def.setType(RouteDstDef.TYPE_MASK); 
-					    def.setDst(val.getText());
+					    def.setDst(val);
 					
 			}
 			break;
@@ -1413,17 +1474,17 @@ public CommandParser(ParserSharedInputState state) {
 		
 		match(OPT_SRC);
 		{
-		int _cnt20=0;
-		_loop20:
+		int _cnt22=0;
+		_loop22:
 		do {
 			if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 				srcdef(cmd);
 			}
 			else {
-				if ( _cnt20>=1 ) { break _loop20; } else {throw new NoViableAltException(LT(1), getFilename());}
+				if ( _cnt22>=1 ) { break _loop22; } else {throw new NoViableAltException(LT(1), getFilename());}
 			}
 			
-			_cnt20++;
+			_cnt22++;
 		} while (true);
 		}
 	}
@@ -1435,17 +1496,17 @@ public CommandParser(ParserSharedInputState state) {
 		
 		match(OPT_DST);
 		{
-		int _cnt23=0;
-		_loop23:
+		int _cnt25=0;
+		_loop25:
 		do {
 			if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 				dstdef(cmd);
 			}
 			else {
-				if ( _cnt23>=1 ) { break _loop23; } else {throw new NoViableAltException(LT(1), getFilename());}
+				if ( _cnt25>=1 ) { break _loop25; } else {throw new NoViableAltException(LT(1), getFilename());}
 			}
 			
-			_cnt23++;
+			_cnt25++;
 		} while (true);
 		}
 	}
@@ -1615,14 +1676,32 @@ public CommandParser(ParserSharedInputState state) {
 		SubjectGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
 		
-		Token  mask = null;
+		Token  maddr = null;
+		Token  manum = null;
 		
 		{
-		mask = LT(1);
-		match(ADDRESS);
+		switch ( LA(1)) {
+		case ADDRESS:
+		{
+			maddr = LT(1);
+			match(ADDRESS);
+			break;
+		}
+		case NUMBER:
+		{
+			manum = LT(1);
+			match(NUMBER);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    cmd.addMask(mask.getText());
+				    String mal = (maddr == null) ? manum.getText():maddr.getText();	
+				    cmd.addMask(mal);
 				
 	}
 	
@@ -1634,14 +1713,14 @@ public CommandParser(ParserSharedInputState state) {
 		{
 		addsubj_mask(cmd);
 		{
-		_loop67:
+		_loop65:
 		do {
 			if ((LA(1)==COMMA)) {
 				match(COMMA);
 				addsubj_mask(cmd);
 			}
 			else {
-				break _loop67;
+				break _loop65;
 			}
 			
 		} while (true);
@@ -1649,21 +1728,40 @@ public CommandParser(ParserSharedInputState state) {
 		}
 	}
 	
-	public final void delprofile(
-		CommandContext ctx, ProfileDeleteCommand cmd
-	) throws RecognitionException, TokenStreamException {
+	public final ProfileDeleteCommand  delprofile() throws RecognitionException, TokenStreamException {
+		ProfileDeleteCommand cmd;
 		
-		Token  mask = null;
+		Token  maddr = null;
+		Token  manum = null;
+		
+		cmd = new ProfileDeleteCommand();
+		
 		
 		{
-		mask = LT(1);
-		match(ADDRESS);
+		switch ( LA(1)) {
+		case ADDRESS:
+		{
+			maddr = LT(1);
+			match(ADDRESS);
+			break;
+		}
+		case NUMBER:
+		{
+			manum = LT(1);
+			match(NUMBER);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    System.out.println("Delete profile, mask="+mask.getText());
-				    cmd.setMask(mask.getText());
-				    cmd.process(ctx);
+				    String mal = (maddr == null) ? manum.getText():maddr.getText();
+				    cmd.setMask(mal);
 				
+		return cmd;
 	}
 	
 	

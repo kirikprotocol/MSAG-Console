@@ -47,5 +47,10 @@ public class ProfileViewCommand implements Command
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }
+
+    public String getId() {
+        return "PROFILE_VIEW";
+    }
+
 }
 

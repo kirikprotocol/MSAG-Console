@@ -113,5 +113,10 @@ public class RouteAddCommand extends RouteGenCommand
         ctx.setMessage(out+"added");
         ctx.setStatus(CommandContext.CMD_OK);
     }
+
+    public String getId() {
+        return "ROUTE_ADD";
+    }
+
 }
 

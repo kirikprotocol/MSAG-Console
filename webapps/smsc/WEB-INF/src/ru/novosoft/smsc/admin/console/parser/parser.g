@@ -13,6 +13,7 @@ import ru.novosoft.smsc.admin.console.commands.*;
 }
 
 
+/*
 {
 import java.io.*;
 
@@ -30,6 +31,7 @@ class Main {
 	}
 }
 }
+*/
 
 
 class CommandParser extends Parser;
@@ -39,120 +41,93 @@ options {
 }
 
 /* ----------------------- Top level parser ----------------------- */
-parse[CommandContext ctx]
-	:	ACT_ADD add[ctx] 
-	| 	ACT_DELETE del[ctx]
-	| 	ACT_ALTER alt[ctx]
-	| 	ACT_LIST lst[ctx] 
-	| 	ACT_VIEW view[ctx]
-	|	ACT_APPLY {
-		    System.out.println("Apply");
-		    ApplyCommand cmd = new ApplyCommand();
-		    cmd.process(ctx);
-		}
+parse returns [Command cmd] {
+    cmd = null;
+}
+	:	ACT_ADD 	cmd = add 
+	| 	ACT_DELETE 	cmd = del
+	| 	ACT_ALTER 	cmd = alt
+	| 	ACT_LIST 	cmd = lst 
+	| 	ACT_VIEW 	cmd = view
+	|	ACT_APPLY     { cmd = new ApplyCommand(); }
 	;
-
+	
 /* ----------------------- Add action parser ---------------------- */
-add[CommandContext ctx]
-	:	TGT_ROUTE	{
-		    RouteAddCommand cmd = new RouteAddCommand();
-		} addroute[ctx, cmd]
-	|	TGT_ALIAS 	{
-		    AliasAddCommand cmd = new AliasAddCommand();
-		} addalias[ctx, cmd]
-	|	TGT_SUBJECT	{
-		    SubjectAddCommand cmd = new SubjectAddCommand();
-		} addsubject[ctx, cmd]
-	|	TGT_PROFILE	{
-		    ProfileAddCommand cmd = new ProfileAddCommand();
-		} addprofile[ctx, cmd]
+add returns [Command cmd] {
+    cmd = null;
+}
+	:	TGT_ROUTE 	cmd = addroute
+	|	TGT_ALIAS 	cmd = addalias
+	|	TGT_SUBJECT	cmd = addsubject
+	|	TGT_PROFILE	cmd = addprofile
 	;
+	
 /* ----------------------- Del action parser ---------------------- */
-del[CommandContext ctx]
-	:	TGT_ROUTE 	{
-		    RouteDeleteCommand cmd = new RouteDeleteCommand();
-		} delroute[ctx, cmd]
-	|	TGT_ALIAS 	{
-		    AliasDeleteCommand cmd = new AliasDeleteCommand();
-		} delalias[ctx, cmd]
-	|	TGT_SUBJECT	{
-		    SubjectDeleteCommand cmd = new SubjectDeleteCommand();
-		} delsubject[ctx, cmd]
+del returns [Command cmd] {
+    cmd = null;
+}
+	:	TGT_ROUTE 	cmd = delroute
+	|	TGT_ALIAS 	cmd = delalias
+	|	TGT_SUBJECT	cmd = delsubject
 	;
 /* ----------------------- Alt action parser ---------------------- */
-alt[CommandContext ctx]
-	:	TGT_ROUTE   	{
-		    RouteAlterCommand cmd = new RouteAlterCommand();
-		} altroute[ctx, cmd]
-	|	TGT_ALIAS   	{
-		    AliasAlterCommand cmd = new AliasAlterCommand();
-	 	} altalias[ctx, cmd]
-	|	TGT_SUBJECT 	{
-		    SubjectAlterCommand cmd = new SubjectAlterCommand();
-		} altsubject[ctx, cmd]
-	|	TGT_PROFILE 	{
-		    ProfileAlterCommand cmd = new ProfileAlterCommand();
-		} altprofile[ctx, cmd]
+alt returns [Command cmd] {
+    cmd = null;
+}
+	:	TGT_ROUTE   	cmd = altroute
+	|	TGT_ALIAS   	cmd = altalias
+	|	TGT_SUBJECT 	cmd = altsubject
+	|	TGT_PROFILE 	cmd = altprofile
 	;
 /* ----------------------- Lst action parser ---------------------- */
-lst[CommandContext ctx]
-	:	TGT_ROUTE 	{
-		    RouteListCommand cmd = new RouteListCommand();
-		} lstroute[ctx, cmd]
-	|	TGT_ALIAS 	{
-		    AliasListCommand cmd = new AliasListCommand();
-		} lstalias[ctx, cmd]
-	|	TGT_SUBJECT	{
-		    SubjectListCommand cmd = new SubjectListCommand();
-		} lstsubject[ctx, cmd]
+lst returns [Command cmd] {
+    cmd = null;
+}
+	:	TGT_ROUTE 	{ cmd = new RouteListCommand();   }
+	|	TGT_ALIAS 	{ cmd = new AliasListCommand();   }
+	|	TGT_SUBJECT	{ cmd = new SubjectListCommand(); }
 	;
 /* ----------------------- View action parser --------------------- */
-view[CommandContext ctx]
-	:	TGT_ROUTE 	{
-		    RouteViewCommand cmd = new RouteViewCommand();
-		} viewroute[ctx, cmd]
-	|	TGT_ALIAS 	{
-		    AliasViewCommand cmd = new AliasViewCommand();
-		} viewalias[ctx, cmd]
-	|	TGT_SUBJECT	{
-		    SubjectViewCommand cmd = new SubjectViewCommand();
-		} viewsubject[ctx, cmd]
-	|	TGT_PROFILE	{
-		    ProfileViewCommand cmd = new ProfileViewCommand();
-		} viewprofile[ctx, cmd]
+view returns [Command cmd] {
+    cmd = null;
+}
+	:	TGT_ROUTE	cmd = viewroute
+	|	TGT_ALIAS 	cmd = viewalias
+	|	TGT_SUBJECT	cmd = viewsubject
+	|	TGT_PROFILE	cmd = viewprofile
 	;
 	
 /* ----------------------- Common routes parsers ----------------------- */
-srcdef[RouteGenCommand cmd] // Special command required !!!
-	:	{
-		    RouteSrcDef def = new RouteSrcDef();
-		}
-		( (OPT_SUBJ (qname:STRING | name:ID) { 
+srcdef[RouteGenCommand cmd] { // Special command required !!!
+    RouteSrcDef def = new RouteSrcDef();
+}
+	:	( (OPT_SUBJ (qname:STRING | name:ID) { 
 		    String out = (qname == null) ? name.getText():qname.getText();
 		    def.setType(RouteSrcDef.TYPE_SUBJECT);
 		    def.setSrc(out);
 		  }) 
-		| (OPT_MASK val:ADDRESS { 
+		| (OPT_MASK (addr:ADDRESS | anum:NUMBER) {
+		    String val = (addr == null) ? anum.getText():addr.getText(); 
 		    def.setType(RouteSrcDef.TYPE_MASK); 
-		    def.setSrc(val.getText());
+		    def.setSrc(val);
 		  })
 		)
 		{
 		    cmd.addSrcDef(def);
 		}
 	;
-dstdef[RouteGenCommand cmd] // Special command required !!!
-	:	{
-		    RouteDstDef def = new RouteDstDef();
-		}
-		( (OPT_SUBJ (qname:STRING | name:ID) { 
+dstdef[RouteGenCommand cmd] { // Special command required !!!
+    RouteDstDef def = new RouteDstDef();
+}
+	:	( (OPT_SUBJ (qname:STRING | name:ID) { 
 		    String out = (qname == null) ? name.getText():qname.getText();
 		    def.setType(RouteDstDef.TYPE_SUBJECT);
 		    def.setDst(out);
 		  }) 
-		| (OPT_MASK val:ADDRESS { 
+		| (OPT_MASK (addr:ADDRESS | anum:NUMBER) { 
+		    String val = (addr == null) ? anum.getText():addr.getText(); 
 		    def.setType(RouteDstDef.TYPE_MASK); 
-		    def.setDst(val.getText());
+		    def.setDst(val);
 		  })
 		)
 		(qsys:STRING | isys:ID)
@@ -172,11 +147,11 @@ route_dst[RouteGenCommand cmd]
 	:	OPT_DST (dstdef[cmd])+
 	;
 
-addroute[CommandContext ctx, RouteAddCommand cmd]
-	:	(qname:STRING | name:ID) 
-		{
+addroute returns [RouteAddCommand cmd] {
+    cmd = new RouteAddCommand();
+}
+	:	(qname:STRING | name:ID) {
 		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("Add route="+out);
 		    cmd.setRoute(out);
 		}
 		addroute_flags[cmd]
@@ -188,9 +163,6 @@ addroute[CommandContext ctx, RouteAddCommand cmd]
 		})
 		route_src[cmd]
 		route_dst[cmd]
-		{
-		    cmd.process(ctx);
-		}
 	;
 addroute_flags[RouteAddCommand cmd]
 	:	( OPT_BILL   { cmd.setBill(true);   }
@@ -201,21 +173,21 @@ addroute_flags[RouteAddCommand cmd]
 		| OPT_DENY   { cmd.setAllow(false); })
 	;
 
-delroute[CommandContext ctx, RouteDeleteCommand cmd]
+delroute returns [RouteDeleteCommand cmd] {
+    cmd = new RouteDeleteCommand();
+}
 	:	(qname:STRING | name:ID) 
 		{
 		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("Delete route="+out);
 		    cmd.setRoute(out);
-		    cmd.process(ctx);
 		}
 	;
 
-altroute[CommandContext ctx, RouteAlterCommand cmd]
-	:	(qname:STRING | name:ID) 
-		{
+altroute returns [RouteAlterCommand cmd] {
+    cmd = new RouteAlterCommand();
+}
+	:	(qname:STRING | name:ID) {
 		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("Alter route="+out);
 		    cmd.setRoute(out);
 		}
 		altroute_flags[cmd]
@@ -229,9 +201,6 @@ altroute[CommandContext ctx, RouteAlterCommand cmd]
 		| ACT_DELETE { cmd.setAction(RouteAlterCommand.ACTION_DEL); })
 		( route_src[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_SRC); }
 		| route_dst[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_DST); })
-		{
-		    cmd.process(ctx);
-		}
 	;
 altroute_flags[RouteAlterCommand cmd]
 	:	( OPT_BILL   { cmd.setBill(true);   } 
@@ -242,108 +211,93 @@ altroute_flags[RouteAlterCommand cmd]
 		| OPT_DENY   { cmd.setAllow(false); })?
 	;
 
-lstroute[CommandContext ctx, RouteListCommand cmd]
-	:	(WS)?
-		{
-		    System.out.println("List route");
-		    cmd.process(ctx);
-		}
-	;
-
-viewroute[CommandContext ctx, RouteViewCommand cmd]
+viewroute returns [RouteViewCommand cmd] {
+    cmd = new RouteViewCommand();
+}
 	:	(qname:STRING | name:ID) 
 		{
 		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("View route="+out);
 		    cmd.setRoute(out);
-		    cmd.process(ctx);
 		}
 	;
 
 /* ----------------------- Alias command parsers ----------------------- */
 
-addalias[CommandContext ctx, AliasAddCommand cmd]
-	:	(alias:ADDRESS) {
-		    System.out.println("Add alias="+alias.getText());
-		    cmd.setAlias(alias.getText());
+addalias returns [AliasAddCommand cmd] {
+    cmd = new AliasAddCommand();
+}
+	:	(maddr:ADDRESS | manum:NUMBER) {
+		    String mal = (maddr == null) ? manum.getText():maddr.getText();
+		    cmd.setAlias(mal);
 		}
-		(val:ADDRESS) {
-		    cmd.setAddress(val.getText());
-		}
-		( OPT_HIDE   { cmd.setHide(true);  }
-		| OPT_NOHIDE { cmd.setHide(false); })?
-		{
-		    cmd.process(ctx);
-		}
-	;
-delalias[CommandContext ctx, AliasDeleteCommand cmd]
-	:	(alias:ADDRESS) {
-		    System.out.println("Delete alias="+alias.getText());
-		    cmd.setAlias(alias.getText());
-		    cmd.process(ctx);
-		}
-	;
-altalias[CommandContext ctx, AliasAlterCommand cmd]
-	:	(alias:ADDRESS) {
-		    System.out.println("Alter alias="+alias.getText());
-		    cmd.setAlias(alias.getText());
-		}
-		(val:ADDRESS) {
-		    cmd.setAddress(val.getText());
+		(aaddr:ADDRESS | aanum:NUMBER) {
+		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+		    cmd.setAddress(aal);
 		}
 		( OPT_HIDE   { cmd.setHide(true);  }
 		| OPT_NOHIDE { cmd.setHide(false); })?
-		{
-		    cmd.process(ctx);
+	;
+delalias returns [AliasDeleteCommand cmd] {
+    cmd = new AliasDeleteCommand();
+}
+	:	(aaddr:ADDRESS | aanum:NUMBER) {
+		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+		    cmd.setAlias(aal);
 		}
 	;
-lstalias[CommandContext ctx, AliasListCommand cmd]
-	:	(WS)? {
-		    System.out.println("List alias");
-		    cmd.process(ctx);
+altalias returns [AliasAlterCommand cmd] {
+    cmd = new AliasAlterCommand();
+}
+	:	(maddr:ADDRESS | manum:NUMBER) {
+		    String mal = (maddr == null) ? manum.getText():maddr.getText();
+		    cmd.setAlias(mal);
 		}
+		(aaddr:ADDRESS | aanum:NUMBER) {
+		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+		    cmd.setAddress(aal);
+		}
+		( OPT_HIDE   { cmd.setHide(true);  }
+		| OPT_NOHIDE { cmd.setHide(false); })?
 	;
-viewalias[CommandContext ctx, AliasViewCommand cmd]
-	:	(alias:ADDRESS) {
-		    System.out.println("View alias="+alias.getText());
-		    cmd.setAlias(alias.getText());
-		    cmd.process(ctx);
+viewalias returns [AliasViewCommand cmd] {
+    cmd = new AliasViewCommand();
+}
+	:	(aaddr:ADDRESS | aanum:NUMBER) {
+		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+		    cmd.setAlias(aal);
 		}
 	;
 
 /* ----------------------- Subject command parsers --------------------- */
 
 addsubj_mask[SubjectGenCommand cmd]
-	:	(mask:ADDRESS)
-		{
-		    cmd.addMask(mask.getText());
+	:	(maddr:ADDRESS | manum:NUMBER) {
+		    String mal = (maddr == null) ? manum.getText():maddr.getText();	
+		    cmd.addMask(mal);
 		}
 	;
 addsubj_masks[SubjectGenCommand cmd]
 	:	(addsubj_mask[cmd] (COMMA addsubj_mask[cmd])*)
 	;
 
-addsubject[CommandContext ctx, SubjectAddCommand cmd]
-	:	(qname:STRING | name:ID) 
-		{
+addsubject returns [SubjectAddCommand cmd] {
+    cmd = new SubjectAddCommand();
+}
+	:	(qname:STRING | name:ID) {
 		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("Add subject="+out);
 		    cmd.setSubject(out);
 		}
-		(qsys:STRING | isys:ID)
-		{
+		(qsys:STRING | isys:ID)	 {
 		    String smeid = (qsys == null) ? qsys.getText():isys.getText();
 		    cmd.setDefaultSmeId(smeid);
 		}
 		addsubj_masks[cmd]
-		{
-		    cmd.process(ctx);
-		}
 	;
-altsubject[CommandContext ctx, SubjectAlterCommand cmd]
+altsubject returns [SubjectAlterCommand cmd] {
+    cmd = new SubjectAlterCommand();
+}
 	:	(qname:STRING | name:ID) {
 		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("Alter subject="+out);
 		    cmd.setSubject(out);
 		}
 		((ACT_ADD {
@@ -355,72 +309,63 @@ altsubject[CommandContext ctx, SubjectAlterCommand cmd]
 		    String smeid = (qsys == null) ? qsys.getText():isys.getText();
 		    cmd.setDefaultSmeId(smeid);
 		})
-		{
-		    cmd.process(ctx);
-		}
 	;
-delsubject[CommandContext ctx, SubjectDeleteCommand cmd]
+delsubject returns [SubjectDeleteCommand cmd] {
+    cmd = new SubjectDeleteCommand();
+}
 	:	(qname:STRING | name:ID) {
 		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("Delete subject="+out);
 		    cmd.setSubject(out);
-		    cmd.process(ctx);
 		}
 	;
-lstsubject[CommandContext ctx, SubjectListCommand cmd]
-	:	(WS)? {
-		    System.out.println("List subject");
-		    cmd.process(ctx);
-		}
-	;
-viewsubject[CommandContext ctx, SubjectViewCommand cmd]
+viewsubject returns [SubjectViewCommand cmd] {
+    cmd = new SubjectViewCommand();
+}
 	:	(qname:STRING | name:ID) {
 		    String out = (qname == null) ? name.getText():qname.getText();
-		    System.out.println("View subject="+out);
 		    cmd.setSubject(out);
-		    cmd.process(ctx);
 		}
 	;
 
 /* ----------------------- Profile command parsers --------------------- */
 
-addprofile[CommandContext ctx, ProfileAddCommand cmd]
-	:	(mask:ADDRESS) {
-		    System.out.println("Add profile, mask="+mask.getText());
-		    cmd.setMask(mask.getText());
+addprofile returns [ProfileAddCommand cmd] {
+    cmd = new ProfileAddCommand();
+}
+	:	(maddr:ADDRESS | manum:NUMBER) {
+		    String mal = (maddr == null) ? manum.getText():maddr.getText();
+		    cmd.setMask(mal);
 		}
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))
 		(OPT_ENCODE (VAL_GSM7 { cmd.setGsm7Encoding(); }
 			   | VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
-		{
-		    cmd.process(ctx);
-		}
 	;
-altprofile[CommandContext ctx, ProfileAlterCommand cmd]
-	:	(addr:ADDRESS) {
-		    System.out.println("Alter profile, addr="+addr.getText());
-		    cmd.setAddress(addr.getText());
+altprofile returns [ProfileAlterCommand cmd] {
+    cmd = new ProfileAlterCommand();
+}
+	:	(aaddr:ADDRESS | aanum:NUMBER) {
+		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+		    cmd.setAddress(aal);
 		}
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))
 		(OPT_ENCODE (VAL_GSM7 { cmd.setGsm7Encoding(); }
 			   | VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
-		{
-		    cmd.process(ctx);
+	;
+delprofile returns [ProfileDeleteCommand cmd] {
+    cmd = new ProfileDeleteCommand();
+}
+	:	(maddr:ADDRESS | manum:NUMBER) {
+		    String mal = (maddr == null) ? manum.getText():maddr.getText();
+		    cmd.setMask(mal);
 		}
 	;
-delprofile[CommandContext ctx, ProfileDeleteCommand cmd]
-	:	(mask:ADDRESS) {
-		    System.out.println("Delete profile, mask="+mask.getText());
-		    cmd.setMask(mask.getText());
-		    cmd.process(ctx);
-		}
-	;
-viewprofile[CommandContext ctx, ProfileViewCommand cmd]
-	:	(addr:ADDRESS) {
-		    System.out.println("View profile, addr="+addr.getText());
-		    cmd.setAddress(addr.getText());
-		    cmd.process(ctx);
+viewprofile returns [ProfileViewCommand cmd] {
+    cmd = new ProfileViewCommand();
+}
+	:	(aaddr:ADDRESS | aanum:NUMBER) {
+		    String aal = (aaddr == null) ? aanum.getText():aaddr.getText();
+		    cmd.setAddress(aal);
 		}
 	;

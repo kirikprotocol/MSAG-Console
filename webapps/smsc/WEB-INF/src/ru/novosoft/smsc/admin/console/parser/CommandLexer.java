@@ -129,7 +129,7 @@ tryAgain:
 					theRetToken=_returnToken;
 					break;
 				}
-				case '+':  case '.':
+				case '\'':
 				{
 					mADDRESS(true);
 					theRetToken=_returnToken;
@@ -521,6 +521,9 @@ tryAgain:
 		_ttype = ADDRESS;
 		int _saveIndex;
 		
+		_saveIndex=text.length();
+		match('\'');
+		text.setLength(_saveIndex);
 		{
 		switch ( LA(1)) {
 		case '+':
@@ -565,6 +568,12 @@ tryAgain:
 			}
 			break;
 		}
+		case '\'':  case '0':  case '1':  case '2':
+		case '3':  case '4':  case '5':  case '6':
+		case '7':  case '8':  case '9':  case '?':
+		{
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltForCharException((char)LA(1), getFilename(), getLine());
@@ -572,17 +581,15 @@ tryAgain:
 		}
 		}
 		{
-		int _cnt22=0;
 		_loop22:
 		do {
 			if (((LA(1) >= '0' && LA(1) <= '9'))) {
 				mDIGIT(false);
 			}
 			else {
-				if ( _cnt22>=1 ) { break _loop22; } else {throw new NoViableAltForCharException((char)LA(1), getFilename(), getLine());}
+				break _loop22;
 			}
 			
-			_cnt22++;
 		} while (true);
 		}
 		{
@@ -597,6 +604,9 @@ tryAgain:
 			
 		} while (true);
 		}
+		_saveIndex=text.length();
+		match('\'');
+		text.setLength(_saveIndex);
 		if ( _createToken && _token==null && _ttype!=Token.SKIP ) {
 			_token = makeToken(_ttype);
 			_token.setText(new String(text.getBuffer(), _begin, text.length()-_begin));

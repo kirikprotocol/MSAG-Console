@@ -177,5 +177,10 @@ public class RouteAlterCommand extends RouteGenCommand
         ctx.setMessage(out+"altered");
         ctx.setStatus(CommandContext.CMD_OK);
     }
+
+    public String getId() {
+        return "ROUTE_ALTER";
+    }
+
 }
 

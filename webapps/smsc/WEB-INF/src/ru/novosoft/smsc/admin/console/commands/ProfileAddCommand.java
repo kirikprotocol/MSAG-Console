@@ -33,5 +33,10 @@ public class ProfileAddCommand extends ProfileGenCommand
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }
+
+    public String getId() {
+        return "PROFILE_ADD";
+    }
+
 }
 

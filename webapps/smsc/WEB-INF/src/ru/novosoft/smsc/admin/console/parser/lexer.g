@@ -72,7 +72,7 @@ ID
 NUMBER	:	(DIGIT)+
 	;
 
-ADDRESS	:	('+'|('.' (DIGIT)+ '.' (DIGIT)+ '.')) (DIGIT)+ ('?')*
+ADDRESS	:	'\''! ('+'|('.' (DIGIT)+ '.' (DIGIT)+ '.'))? (DIGIT)* ('?')* '\''!
 	;
 
 COMMA	:	','

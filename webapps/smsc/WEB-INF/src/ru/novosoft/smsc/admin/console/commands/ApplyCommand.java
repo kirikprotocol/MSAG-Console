@@ -26,5 +26,10 @@ public class ApplyCommand implements Command
             e.printStackTrace();
         }
     }
+
+    public String getId() {
+        return "APPLY";
+    }
+
 }
 

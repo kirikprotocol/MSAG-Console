@@ -13,13 +13,20 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 
 import java.net.Socket;
 import java.io.PrintWriter;
+import java.io.BufferedReader;
 import java.util.Iterator;
 
 public class HumanSession extends Session
 {
-    private final static String CONSOLE_GREATING = "Welcome to SMSC Remote Console.";
-    private final static String CONSOLE_FAREWELL = "Exited from SMSC Remote Console.";
-    private final static String CONSOLE_PROMPT   = "> ";
+    private final static int CONSOLE_AUTH_FAIL_SLEEP = 10000;
+    private final static int CONSOLE_AUTH_FAIL_TRIES = 3;
+
+    private final static String CONSOLE_LOGIN     = "Login: ";
+    private final static String CONSOLE_PASSWORD  = "Password: ";
+    private final static String CONSOLE_AUTH_FAIL = "Authentication failed. Access denied.";
+    private final static String CONSOLE_GREATING  = "Welcome to SMSC Remote Console.";
+    private final static String CONSOLE_FAREWELL  = "Exited from SMSC Remote Console.";
+    private final static String CONSOLE_PROMPT    = "> ";
 
     protected void greeting(PrintWriter writer) {
         writer.println(CONSOLE_GREATING+'\r');
@@ -32,6 +39,28 @@ public class HumanSession extends Session
     protected void prompt(PrintWriter writer) {
         writer.print("\r\n"+CONSOLE_PROMPT);
         writer.flush();
+    }
+
+    protected boolean authorize(BufferedReader reader, PrintWriter writer)
+        throws Exception
+    {
+        int maxTriesCount = CONSOLE_AUTH_FAIL_TRIES;
+        while (!isStopping)
+        {
+            writer.print(CONSOLE_LOGIN); writer.flush();
+            String login = reader.readLine();
+            if (login == null || login.length() == 0) continue;
+            writer.print(CONSOLE_PASSWORD); writer.flush();
+            String password = reader.readLine();
+            if (password == null) continue;
+            if (authorizeUser(login, password)) return true;
+
+            writer.println("\r\n"+CONSOLE_AUTH_FAIL+"\r\n"); writer.flush();
+            if (--maxTriesCount <= 0) {
+                sleep(CONSOLE_AUTH_FAIL_SLEEP); break;
+            }
+        }
+        return false;
     }
 
     public HumanSession(Console owner, Socket socket) {

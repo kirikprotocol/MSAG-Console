@@ -41,4 +41,9 @@ public class SubjectListCommand implements Command
             return;
         }
     }
+
+    public String getId() {
+        return "SUBJECT_LIST";
+    }
+
 }

@@ -18,6 +18,8 @@ compile:
 	@javac -sourcepath src -classpath $(CLASSPATH) -d classes `find src -name *.java`
 	@native2ascii -encoding windows-1251 <src/locales/messages_en.properties > classes/locales/messages_en.properties
 	@native2ascii -encoding windows-1251 <src/locales/messages_ru.properties > classes/locales/messages_ru.properties
+	@native2ascii -encoding windows-1251 <src/ru/novosoft/smsc/admin/console/commands/roles_en_US.properties > classes/ru/novosoft/smsc/admin/console/commands/roles_en_US.properties
+	@native2ascii -encoding windows-1251 <src/ru/novosoft/smsc/admin/console/commands/roles_ru_RU.properties > classes/ru/novosoft/smsc/admin/console/commands/roles_ru_RU.properties
 	@echo making jar
 	@mkdir -p $(SMSC_BUILDDIR)/jars
 	@jar -cf $(SMSC_BUILDDIR)/jars/smsc_tomcat_server.jar -C classes ru/novosoft/smsc/util/auth/SmscRealm.class

@@ -80,5 +80,10 @@ public class SubjectAlterCommand extends SubjectGenCommand
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }
+
+    public String getId() {
+        return "SUBJECT_ALTER";
+    }
+
 }
 

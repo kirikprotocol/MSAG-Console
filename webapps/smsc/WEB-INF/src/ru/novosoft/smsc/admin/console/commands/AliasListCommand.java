@@ -41,4 +41,9 @@ public class AliasListCommand implements Command
             return;
         }
     }
+
+    public String getId() {
+        return "ALIAS_LIST";
+    }
+
 }

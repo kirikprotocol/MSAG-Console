@@ -14,6 +14,8 @@ import ru.novosoft.smsc.admin.console.script.ScriptGate;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.util.ArrayList;
+import java.util.ResourceBundle;
+import java.util.StringTokenizer;
 import java.io.IOException;
 
 public class Console
@@ -26,6 +28,8 @@ public class Console
 
     private ArrayList sessions = new ArrayList();
 
+    private ResourceBundle commandRolesBundle = null;
+
     public Console(SMSCAppContext context)
         throws IOException, Config.ParamNotFoundException, Config.WrongParamTypeException
     {
@@ -33,6 +37,7 @@ public class Console
             this.smsc = context.getSmsc();
             int humanPort = context.getConfig().getInt("console.humanPort");
             int scriptPort = context.getConfig().getInt("console.scriptPort");
+            commandRolesBundle = ResourceBundle.getBundle("ru.novosoft.smsc.admin.console.commands.roles");
             humanGate = new HumanGate(this, humanPort);
             scriptGate = new ScriptGate(this, scriptPort);
             //this.start();
@@ -71,5 +76,19 @@ public class Console
         synchronized (sessions) {
             sessions.remove(session);
         }
+    }
+    public String[] getCommandRoles(String command)
+    {
+        if (commandRolesBundle == null) return null;
+        String roles = commandRolesBundle.getString(command);
+        if (roles == null) return null;
+
+        StringTokenizer st = new StringTokenizer(roles, ",");
+        String out[] = new String[st.countTokens()];
+        for (int i=0; st.hasMoreTokens(); i++) {
+            out[i] = st.nextToken();
+        }
+
+        return out;
     }
 }
