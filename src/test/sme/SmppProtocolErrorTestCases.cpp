@@ -293,7 +293,7 @@ inline SmppHeader* SmppProtocolErrorScenario::setupUnbindPdu(PduUnbind& pdu)
 inline SmppHeader* SmppProtocolErrorScenario::setupSubmitSmPdu(PduSubmitSm& pdu)
 {
 	__trace2__("setupSubmitSmPdu(): scenario = %p", this);
-	SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, OPT_ALL);
+	SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, rand0(1), false, OPT_ALL);
 	pdu.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
 	pdu.get_header().set_sequenceNumber(sess.getNextSeq());
 	PduAddress addr;

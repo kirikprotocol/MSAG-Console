@@ -372,8 +372,8 @@ PduFlag NormalSmsHandler::compareMapMsgText(DeliveryMonitor* monitor,
 	PduSubmitSm& origPdu, PduDeliverySm& pdu, RespPduFlag respFlag)
 {
 	__require__(monitor);
-	__decl_tc__;
 	__require__(monitor->pduData->objProps.count("map.msg"));
+	__decl_tc__;
 	SmsMsg* msg = dynamic_cast<SmsMsg*>(monitor->pduData->objProps["map.msg"]);
 	if (!msg->valid)
 	{
