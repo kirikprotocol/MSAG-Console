@@ -142,9 +142,9 @@ namespace smsc {
       
       Address(const char* text)
       {
-        char addr_value[21];
+        AddressValue addr_value;
         int iplan,itype;
-        memset(addr_value,0,21);
+        memset(addr_value,0,sizeof(addr_value));
         int scaned = sscanf(text,".%d.%d.%20s",
           &itype,
           &iplan,
@@ -172,7 +172,7 @@ namespace smsc {
         plan = (uint8_t)iplan;
         type = (uint8_t)itype;
         length = strlen(addr_value);
-        memcpy(value,addr_value,length);
+        memcpy(value,addr_value,sizeof(addr_value));
       }
       
       /**
@@ -769,7 +769,7 @@ namespace smsc {
         mutable TemporaryBodyInt temporaryBodyInt;
       public:
       /**
-					 * Default конструктор, просто инициализирует поля нулями
+                     * Default конструктор, просто инициализирует поля нулями
         */
         Body() : buffLen(0) {};
         
@@ -1009,7 +1009,7 @@ namespace smsc {
       };*/
         
       /**
-					 * Default конструктор, просто инициализирует поле state как ENROUTE
+                     * Default конструктор, просто инициализирует поле state как ENROUTE
            * и прочие поля дефолтными значениями
         */
         SMS() : state(ENROUTE), submitTime(0), validTime(0),
