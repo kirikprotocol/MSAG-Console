@@ -90,7 +90,7 @@
     </jar>
   </target>
 
-  <target name="install" depends="update" description="installs the webapp">
+  <target name="install" depends="update" description="copy files to distributive">
   </target>
 
 
