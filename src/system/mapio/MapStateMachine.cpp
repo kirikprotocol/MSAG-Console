@@ -2811,8 +2811,9 @@ USHORT_T Et96MapDelimiterInd(
     case MAPST_WaitUSSDNotifyClose:
       dialog->state = MAPST_WaitSubmitUSSDNotifyConf;
       SendSubmitCommand(dialog.get());
-      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-      DropMapDialog(dialog.get());
+//    HotFix for mobile's bug with unsuccess after NotifyConf and close req
+//      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+//      DropMapDialog(dialog.get());
       break;
     case MAPST_MapNoticed:
       result = Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
