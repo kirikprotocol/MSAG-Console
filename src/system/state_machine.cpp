@@ -389,7 +389,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   __require__(def.LastError()==regexp::errNone);
   RegExp tmpl("/#template=(.*?)#/i");
   __require__(tmpl.LastError()==regexp::errNone);
-  RegExp tmplparam("/\\s*\\{(\\w+)\\}=(\".*?\"|[^{\\s]+)/");
+  RegExp tmplparam("/\\s*\\{(\\w+)\\}=(\".*?\"|[^{\\s]+)/s");
   __require__(tmplparam.LastError()==regexp::errNone);
   RegExp unkdir("/#.*?#/");
   __require__(unkdir.LastError()==regexp::errNone);
@@ -999,8 +999,8 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   if( !isForwardTo ) {
-    //// 
-    // 
+    ////
+    //
     // Override delivery mode if specified in config and default mode in sms
     //
     if( ri.deliveryMode != smsc::sms::SMSC_DEFAULT_MSG_MODE ) {
