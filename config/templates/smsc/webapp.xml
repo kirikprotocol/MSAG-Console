@@ -29,7 +29,7 @@
   <section name="profiler">
     <section name="jdbc">
       <param name="driver" type="string">@jdbc.driver@</param>
-      <param name="source" type="string">@jdb.source@</param>
+      <param name="source" type="string">@jdbc.source@</param>
       <param name="user" type="string">@db.user@</param>
       <param name="password" type="string">@db.password@</param>
     </section>
