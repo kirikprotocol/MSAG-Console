@@ -797,6 +797,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
         smsc->notifyScheduler();
         sendNotifyReport(sms,t.msgId,"subscriber busy");
+        smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
         return UNKNOWN_STATE;
       }break;
       default:
@@ -906,6 +907,7 @@ StateType StateMachine::alert(Tuple& t)
   }
   smsc->notifyScheduler();
   sendNotifyReport(sms,t.msgId,"delivery attempt timed out");
+  smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
   return UNKNOWN_STATE;
 }
 

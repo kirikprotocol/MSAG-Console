@@ -143,6 +143,7 @@ int SmppInputThread::Execute()
         }
         if(s->getData(SOCKET_SLOT_KILL) || ss->isConnectionTimedOut())
         {
+          s->Close();
           killSocket(i);
           i--;
           continue;
@@ -390,7 +391,7 @@ int SmppInputThread::Execute()
                     SmscCommand::makeUnbindResp
                     (
                       pdu->get_sequenceNumber(),
-                      SmppStatusSet::ESME_ROK
+                      SmscCommand::Status::OK
                     )
                   );
                   ss->getProxy()->close();

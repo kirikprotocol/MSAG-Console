@@ -365,10 +365,12 @@ public:
     static const int INVALIDSCHEDULE   = 6;
     static const int INVALIDVALIDTIME  = 7;
     static const int INVALIDDATACODING = 8;
-    static const int REPLACEFAIL = 9;
-    static const int QUERYFAIL = 10;
-    static const int CANCELFAIL = 11;
-    static const int INVALIDBINDSTATE = 12;
+    static const int REPLACEFAIL       = 9;
+    static const int QUERYFAIL         = 10;
+    static const int CANCELFAIL        = 11;
+    static const int INVALIDBINDSTATE  = 12;
+    static const int INVALIDCMDID      = 13;
+    static const int INVALIDMSGID      = 14;
   };
 
   SmeProxy* getProxy(){return cmd->proxy;}
@@ -692,6 +694,8 @@ public:
     case Status::QUERYFAIL :         return SmppStatusSet::ESME_RQUERYFAIL;
     case Status::CANCELFAIL:         return SmppStatusSet::ESME_RCANCELFAIL;
     case Status::INVALIDBINDSTATE:   return SmppStatusSet::ESME_RINVBNDSTS;
+    case Status::INVALIDCMDID:       return SmppStatusSet::ESME_RINVCMDID;
+    case Status::INVALIDMSGID:       return SmppStatusSet::ESME_RINVMSGID;
 
     default : return SmppStatusSet::ESME_RUNKNOWNERR;
     }

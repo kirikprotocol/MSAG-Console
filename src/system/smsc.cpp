@@ -271,9 +271,9 @@ void Smsc::init(const SmscConfigs& cfg)
     }
     aliaser.commit();
   }
-  
+
   auto_ptr<RouteManager> router(new RouteManager());
-  
+
   // initialize router (all->all)
   router->assign(&smeman);
   /*
@@ -359,6 +359,9 @@ void Smsc::init(const SmscConfigs& cfg)
 
     dataSource->init(config);
   }
+  smsc::stat::StatisticsManager *statMan=new smsc::stat::StatisticsManager(*dataSource);
+  tp.startTask(statMan);
+
 
 
   {

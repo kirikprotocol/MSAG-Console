@@ -204,7 +204,7 @@ void Smsc::mainLoop()
             SmscCommand::makeReplaceSmResp
             (
               cmd->get_dialogId(),
-              SmppStatusSet::ESME_RINVMSGID
+              SmscCommand::Status::INVALIDMSGID
             )
           );
         };
@@ -221,7 +221,7 @@ void Smsc::mainLoop()
             SmscCommand::makeQuerySmResp
             (
               cmd->get_dialogId(),
-              SmppStatusSet::ESME_RINVMSGID,
+              SmscCommand::Status::INVALIDMSGID,
               0,0,0,0
             )
           );
@@ -241,7 +241,7 @@ void Smsc::mainLoop()
               SmscCommand::makeCancelSmResp
               (
                 cmd->get_dialogId(),
-                SmppStatusSet::ESME_RINVMSGID
+                SmscCommand::Status::INVALIDMSGID
               )
             );
           };

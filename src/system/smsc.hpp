@@ -23,6 +23,8 @@
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
 
+#include "stat/StatisticsManager.h"
+
 
 namespace smsc{
 namespace system{
@@ -81,8 +83,9 @@ namespace StatEvents{
   const int etSubmitOk     =1;
   const int etSubmitErr    =2;
   const int etDeliveredOk  =3;
-  const int etUndeliverable=4;
-  const int etRescheduled  =5;
+  const int etDeliverErr   =4;
+  const int etUndeliverable=5;
+  const int etRescheduled  =6;
 };
 
 struct SmscConfigs{
@@ -159,6 +162,7 @@ public:
       */
       case etSubmitOk:
       {
+        statMan->updateAccepted(sms->getSourceSmeId());
         MutexGuard g(perfMutex);
         submitCounter++;
       }break;
@@ -169,16 +173,23 @@ public:
       }break;
       case etDeliveredOk:
       {
+        statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),0);
         MutexGuard g(perfMutex);
         successCounter++;
       }break;
+      case etDeliverErr:
+      {
+      }break;
       case etUndeliverable:
       {
+        statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),sms->getLastResult());
         MutexGuard g(perfMutex);
         errorCounter++;
       }break;
       case etRescheduled:
       {
+        statMan->updateScheduled();
+
         MutexGuard g(perfMutex);
         rescheduleCounter++;
       }break;
@@ -206,8 +217,13 @@ public:
     if ( router_ ) router_->Release();
     router_ = new RouteManagerReffer(manager);
   }
-  
+
   void reloadRoutes(const SmscConfigs& cfg);
+
+  void flushStatistics()
+  {
+    statMan->flushStatistics();
+  }
 
 protected:
   smsc::core::threads::ThreadPool tp;
@@ -229,6 +245,8 @@ protected:
   performance::PerformanceDataDispatcher perfDataDisp;
   smsc::db::DataSource *dataSource;
 
+
+  smsc::stat::StatisticsManager *statMan;
 
   Mutex perfMutex;
   uint64_t successCounter;
