@@ -344,7 +344,7 @@ static void CheckLockedByMO(MapDialog* dialog)
 static void QueryHlrVersion(MapDialog* dialog)
 {
   MutexGuard guard(x_map_lock);
-  char text[32];
+  char text[128];
   SS7ToText(&dialog->mshlrAddr,text);
   string s_(text);
   __map_trace2__("QueryHlrVersion: [store %s]=0x%x",s_.c_str(),dialog->dialogid_map);
@@ -361,7 +361,7 @@ static void QueryHlrVersion(MapDialog* dialog)
 static void QueryMcsVersion(MapDialog* dialog)
 {
   MutexGuard guard(x_map_lock);
-  char text[32];
+  char text[128];
   SS7ToText(&dialog->destMscAddr,text);
   string s_(text);
   __map_trace2__("QueryMcsVersion: [store %s]=0x%x",s_.c_str(),dialog->dialogid_map);
@@ -1321,7 +1321,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
   MAP_TRY{
     MAPIO_TaskACVersionNotifier();
     if ( version == 3 ) version = 2;
-    char text[32];
+    char text[128];
     SS7ToText(ss7Address_sp,text);
     string s_key(text);
     __map_trace2__("%s: is exists %s? version %d",__FUNCTION__,s_key.c_str(),version);
