@@ -56,6 +56,7 @@ namespace smsc { namespace stat
         Hash<int>       finalizedByRoute[2];
         
         short   currentIndex;
+        bool    bExternalFlush;
         
         Mutex   stopLock, switchLock, flushLock, smeStatLock;
         Mutex   incomingLock, outgoingLock, scheduleLock;

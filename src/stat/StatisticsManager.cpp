@@ -7,7 +7,7 @@ namespace smsc { namespace stat
 StatisticsManager::StatisticsManager(DataSource& _ds)
     : Statistics(), ThreadedTask(),
         log(Logger::getCategory("smsc.stat.StatisticsManager")),
-            ds(_ds), currentIndex(0), isStarted(false)
+            ds(_ds), currentIndex(0), isStarted(false), bExternalFlush(false)
 {
     resetCounters(0); resetCounters(1);
 }
@@ -78,7 +78,7 @@ void StatisticsManager::updateScheduled()
 int StatisticsManager::Execute()
 {
     __trace2__("StatisticsManager::Execute() started (%d)", isStopping);
-    isStarted = true;
+    isStarted = true; bExternalFlush = false;
     while (!isStopping)
     {
         int toSleep = calculateToSleep();
@@ -87,6 +87,7 @@ int StatisticsManager::Execute()
         __trace__("StatisticsManager::Execute() >> End wait");
 
         flushCounters(switchCounters());
+        bExternalFlush = false;
         doneEvent.Signal();
         __trace__("StatisticsManager::Execute() >> Flushed");
     }
@@ -104,6 +105,7 @@ void StatisticsManager::stop()
     ThreadedTask::stop();
     if (isStarted)
     {
+        bExternalFlush = true; 
         awakeEvent.Signal();
         __trace__("StatisticsManager::ctop() waiting finish ...");
         exitEvent.Wait();
@@ -116,6 +118,7 @@ void StatisticsManager::flushStatistics()
     MutexGuard flushGuard(flushLock);
 
     if (doneEvent.isSignaled()) doneEvent.Wait(0);
+    bExternalFlush = true; 
     awakeEvent.Signal();
     doneEvent.Wait();
 }
@@ -131,7 +134,8 @@ short StatisticsManager::switchCounters()
 
 uint32_t StatisticsManager::calculatePeriod()
 {
-    time_t currTime = time(0) - 3600;
+    time_t currTime = time(0);
+    if (!bExternalFlush) currTime -= 3600;
     tm tmCT; localtime_r(&currTime, &tmCT);
     return  (tmCT.tm_year+1900)*1000000+(tmCT.tm_mon+1)*10000+
             (tmCT.tm_mday)*100+tmCT.tm_hour;
@@ -143,7 +147,7 @@ int StatisticsManager::calculateToSleep() // returns msecs to next hour
     tm tmNT; localtime_r(&nextTime, &tmNT);
     tmNT.tm_sec = 0; tmNT.tm_min = 0;
     nextTime = mktime(&tmNT);
-    return (nextTime-currTime)*1000;
+    return (((nextTime-currTime)*1000)+1);
 }
 
 const char* insertStatSmsSql = (const char*)
@@ -165,6 +169,8 @@ const char* insertStatRouteSql = (const char*)
 void StatisticsManager::flushCounters(short index)
 {
     uint32_t period = calculatePeriod();
+    
+    __trace2__("Flushing statistics for period: %d / %d", period, time(0));
 
     Connection* connection = 0;
 
