@@ -5,6 +5,7 @@
 #include "PduRegistry.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include <map>
+#include <vector>
 
 namespace smsc {
 namespace test {
@@ -20,9 +21,15 @@ using smsc::test::sms::ltAddress;
 class SmeRegistry
 {
 	typedef map<const Address, PduRegistry*, ltAddress> AddressMap;
+	typedef vector<const Address*> AddressList;
 	AddressMap addrMap;
+	AddressList addrList;
+	Address smscAddr;
 
 public:
+	SmeRegistry() {}
+	~SmeRegistry();
+
 	void registerSme(const Address& smeAddr);
 
 	void registerAddressWithNoSme(const Address& addr);
