@@ -104,12 +104,12 @@ java.util.HashMap a = new java.util.HashMap();
 java.util.Hashtable o = new java.util.Hashtable();
 o.put("name", "1");
 o.put("reports", "2");
-o.put("allow", "3");
-o.put("billing", "4");
-o.put("archiving", "5");
-o.put("active", "6");
+o.put("active", "3");
+o.put("allow", "4");
+o.put("billing", "5");
+o.put("archiving", "6");
 %>
-<input:select name="mbFilter" default="0"
+<input:select name="mbFilter" default="1"
     attributes="<%= a %>" options="<%= o %>" />
     &nbsp; Query: &nbsp;<input:text name="mbQuery"  />
 
