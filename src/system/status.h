@@ -1408,7 +1408,7 @@ static const bool errorStatus[1280] = {
 };
 
 /* function return 0 if error is temp, and 1 if perm */
-inline bool isErrorPermanent( int err ) {
+static inline bool isErrorPermanent( int err ) {
   if( err > 0x4ff ) return 1;
   return errorStatus[err];
 }
