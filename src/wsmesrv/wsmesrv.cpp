@@ -17,24 +17,77 @@
 #define USER USER02_ID
 #define PROVIDER TCAP_ID
 
+#define RETURN_VALUE MSG_OK
+
+void Dump(UCHAR_T* buf,int len)
+{
+  for(int i=0;i<len;i++)
+  {
+    fprintf(stderr," %02X",buf[i]);
+  }
+}
+
+USHORT_T EINSS7_I97TBeginInd(   UCHAR_T ssn,
+                                USHORT_T userId,
+                                USHORT_T dialogueId,
+                                UCHAR_T priOrder,
+                                UCHAR_T qualityOfService,
+                                UCHAR_T destAdrLength,
+                                UCHAR_T *destAdr_p,
+                                UCHAR_T orgAdrLength,
+                                UCHAR_T *orgAdr_p,
+                                UCHAR_T compPresent,
+                                UCHAR_T appContextLength,
+                                UCHAR_T *appContext_p,
+                                USHORT_T userInfoLength,
+                                UCHAR_T *userInfo_p)
+{
+  fprintf(stderr,"BeginInd: ac_length=%d\n",appContextLength);
+  fprintf(stderr,"Packet:");
+  Dump(appContext_p,appContextLength);
+  fprintf(stderr,"\n");
+  return RETURN_VALUE;
+}
+
+
+USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T ssn,
+                                USHORT_T userId,
+                                USHORT_T dialogueId,
+                                UCHAR_T invokeId,
+                                UCHAR_T lastComponent,
+                                UCHAR_T linkedIdUsed,
+                                UCHAR_T linkedId,
+                                UCHAR_T operationTag,
+                                USHORT_T operationLength,
+                                UCHAR_T *operationCode_p,
+                                USHORT_T paramLength,
+                                UCHAR_T *parameters_p)
+{
+  fprintf(stderr,"InvokeInd: op_length=%d\n",operationLength);
+  fprintf(stderr,"Packet:");
+  Dump(operationCode_p,operationLength);
+  fprintf(stderr,"\n");
+  return RETURN_VALUE;
+}
+
 int main(int argc, char **argv) {
   MSG_T message;
   USHORT_T result;
   thread_t threadId;
-  
+
 //  sigset( SIGINT, sighandler );
   mmsWaitDelimiter.dialogueId = 0;
   hlrResult.dialogueId = 0;
-  
+
   //thr_create( NULL, 0, cmdThread, NULL, 0, &threadId );
-  
+
   result = MsgInit(MAXENTRIES);
-  
+
   if(result != 0) {
     printf("\nMsgInit Failed with code %d\n",result);
     exit(1);
   }
-  printf( "MsgInit\n" );
+  printf( "MsgInit\n");
   result = MsgOpen(USER);
 
   if(result != 0) {
@@ -49,7 +102,7 @@ int main(int argc, char **argv) {
     printf("\nMsgConn TCAP failed with code %d\n",result);
     exit(3);
   }
-  printf( "MsgConn TCAP\n" );
+  printf( "MsgConn TCAP\n");
 
 /*  result = MsgConn(USER,USER);
   if(result != 0) {
@@ -63,9 +116,9 @@ int main(int argc, char **argv) {
     printf("Bind failed! with code %d\n",result);
     exit(3);
   }
-  
-  printf( "EINSS7_I97TBindReq\n" );
-  
+
+  printf( "EINSS7_I97TBindReq\n");
+
   going = 1;
   message.receiver = USER;
 
@@ -76,17 +129,17 @@ int main(int argc, char **argv) {
     if( result == MSG_TIMEOUT ) {
       continue;
     }
-    printf( "MsgRecv result=%d\n",result );
+    printf( "MsgRecv result=%d\n",result);
 
     if( result != MSG_OK ) going = 0;
     else {
         result = EINSS7_I97THandleInd(&message);
-        printf( "MsgHandle result=%d\n",result );
+        printf( "MsgHandle result=%d\n",result);
         if(result != MSG_OK) going = 0;
     }
-    
+
   }
-  EINSS7_I97TUnBindReq(SSN, USER);  
+  EINSS7_I97TUnBindReq(SSN, USER);
   sleep(2);
   MsgRel(USER,PROVIDER);
   MsgClose(USER);
