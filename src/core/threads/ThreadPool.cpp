@@ -102,6 +102,9 @@ void ThreadPool::shutdown()
   }
   trace("all tasks are notified");
   Unlock();
+#ifdef linux
+      typedef timespec timestruc_t;
+#endif
   timestruc_t tv={0,1000000};
   nanosleep(&tv,0);
   time_t sdstart=time(NULL);
