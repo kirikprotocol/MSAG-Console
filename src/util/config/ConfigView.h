@@ -35,7 +35,9 @@ namespace smsc { namespace util { namespace config
             return category;
         };
         
-        ConfigView* getSubConfig(const char* sub);
+        ConfigView* getSubConfig(const char* sub, bool full=false);
+        CStrSet *getSectionNames()
+            throw (ConfigException);
         
         char* getString(const char* param, const char* error=0)
             throw (ConfigException);
@@ -43,6 +45,7 @@ namespace smsc { namespace util { namespace config
             throw (ConfigException);
         bool getBool(const char* param, const char* error=0)
             throw (ConfigException);
+        
     };
 
 }}}

@@ -37,13 +37,29 @@ ConfigView::~ConfigView()
 {
     if (category) delete category;
 }
-ConfigView* ConfigView::getSubConfig(const char* sub)
+
+ConfigView* ConfigView::getSubConfig(const char* sub, bool full)
 {
-    char* section = prepareSubSection(sub);
-    ConfigView* dsc = new ConfigView(config, section);
-    if (section) delete section;
+    ConfigView* dsc = 0;
+    if (full)
+    {
+        dsc = new ConfigView(config, sub);
+    }
+    else
+    {
+        char* section = prepareSubSection(sub);
+        dsc = new ConfigView(config, section);
+        if (section) delete section;
+    }
     return dsc;
 }
+
+CStrSet* ConfigView::getSectionNames()
+    throw (ConfigException)
+{
+    return config.getChildSectionNames(category);
+}
+
         
 int32_t ConfigView::getInt(const char* param, const char* error)
     throw (ConfigException)
