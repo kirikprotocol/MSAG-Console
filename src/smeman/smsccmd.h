@@ -117,6 +117,7 @@ private:
   uint32_t status;
   Descriptor descriptor;
   bool dataSm;
+  int delay;
 public:
   void set_messageId(const char* msgid)
   {
@@ -136,9 +137,11 @@ public:
   {
     return descriptor;
   }
+  void set_delay(int newdelay){delay=newdelay;}
+  int get_delay(){return delay;}
   void set_dataSm(){dataSm=true;}
   bool get_dataSm(){return dataSm;}
-  SmsResp() : messageId(0), status(0),dataSm(false) {};
+  SmsResp() : messageId(0), status(0),dataSm(false),delay(-1) {};
   ~SmsResp() { if ( messageId ) delete messageId; }
 };
 

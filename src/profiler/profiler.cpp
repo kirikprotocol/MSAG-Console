@@ -391,6 +391,7 @@ int Profiler::Execute()
     ans.setDeliveryReport(0);
     ans.setArchivationRequested(false);
     ans.setEServiceType(serviceType.c_str());
+    ans.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,0);
     ans.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
     ans.setIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE,
       sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));

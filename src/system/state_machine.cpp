@@ -612,11 +612,14 @@ StateType StateMachine::submit(Tuple& t)
       const short*msg=(const short*)sms->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
       len=ConvertUCS2ToMultibyte(msg,len,buf,sizeof(buf),CONV_ENCODING_CP1251);
       int newlen=Transliterate(buf,len,CONV_ENCODING_CP1251,buf8,sizeof(buf8));
+      sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
       sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8,newlen);
       sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
-      sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
+    unsigned bodyLen=0;
+    delivery->get_sms()->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&bodyLen);
+    __trace2__("SUBMIT: delivery.sms.sm_length=%d",bodyLen);
     int prio=ri.priority/1000;
     if(prio<0)prio=0;
     if(prio>=32)prio=31;
@@ -869,7 +872,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
         try{
           Descriptor d;
           __trace__("DELIVERYRESP: change state to enroute");
-          store->changeSmsStateToEnroute(t.msgId,d,GET_STATUS_CODE(t.command->get_resp()->get_status()),time(NULL)+2);
+          time_t rt=time(NULL)+2;
+          if(t.command->get_resp()->get_delay()!=-1)
+          {
+            rt=t.command->get_resp()->get_delay()-2;
+          }
+          store->changeSmsStateToEnroute(t.msgId,d,GET_STATUS_CODE(t.command->get_resp()->get_status()),rt,true);
         }catch(...)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");
@@ -884,7 +892,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
         try{
           Descriptor d;
           __trace__("DELIVERYRESP: change state to enroute");
-          store->changeSmsStateToEnroute(t.msgId,d,GET_STATUS_CODE(t.command->get_resp()->get_status()),rescheduleSms(sms));
+          time_t rt;
+          if(t.command->get_resp()->get_delay()!=-1)
+          {
+            rt=t.command->get_resp()->get_delay();
+          }else
+          {
+            rt=rescheduleSms(sms);
+          }
+          store->changeSmsStateToEnroute(t.msgId,d,GET_STATUS_CODE(t.command->get_resp()->get_status()),rt);
         }catch(...)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");

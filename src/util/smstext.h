@@ -19,9 +19,9 @@ static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize)
 {
   int coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
   //int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
-  __trace2__("getSmsText: dc=%d",coding);
   unsigned len;
   const char *data=sms->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
+  __trace2__("getSmsText: dc=%d, len=%d",coding,len);
   if(coding==DataCoding::UCS2)
   {
     ConvertUCS2ToMultibyte((const short*)data,len,buf,bufsize,CONV_ENCODING_CP1251);
