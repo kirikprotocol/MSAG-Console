@@ -914,7 +914,7 @@ static bool SendSms(MapDialog* dialog){
   CheckLockedByMO(dialog);
 
   if ( !MscManager::getMscStatus().check(dialog->s_msc.c_str()) )
-    throw MAPDIALOG_TEMP_ERROR("MSC BLOCKED",BLOCKEDMSC);
+    throw MAPDIALOG_TEMP_ERROR("MSC BLOCKED",Status::BLOCKEDMSC);
 
   bool mms = dialog->chain.size() != 0;
   //if ( dialog->version < 2 ) mms = false;
