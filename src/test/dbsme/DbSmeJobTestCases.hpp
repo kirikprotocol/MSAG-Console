@@ -22,6 +22,8 @@ using smsc::test::conf::TestConfig;
 using smsc::test::core::SmeAckMonitor;
 using namespace smsc::test::util;
 
+static const string lineSeparator = " "; //ןנמבוכ גלוסעמ \n
+
 #define __set_input_float__(type, typeName) \
 void setInput##typeName(DbSmeTestRecord* rec, type val) { \
 	__decl_tc__; \
