@@ -338,8 +338,7 @@ StateType StateMachine::submit(Tuple& t)
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("SUBMIT_SM: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,
-        RescheduleCalculator::calcNextTryTime(sms->getNextTime(),sms->getAttemptsCount()));
+      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(*sms));
       smsc->notifyScheduler();
     }catch(...)
     {
@@ -357,8 +356,8 @@ StateType StateMachine::submit(Tuple& t)
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("SUBMIT_SM: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,
-        RescheduleCalculator::calcNextTryTime(sms->getNextTime(),sms->getAttemptsCount()));
+      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(*sms));
+      smsc->notifyScheduler();
     }catch(...)
     {
       __trace__("SUBMIT_SM: failed to change state to enroute");
@@ -376,8 +375,8 @@ StateType StateMachine::submit(Tuple& t)
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("SUBMIT_SM: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,
-        RescheduleCalculator::calcNextTryTime(sms->getNextTime(),sms->getAttemptsCount()));
+      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(*sms));
+      smsc->notifyScheduler();
     }catch(...)
     {
       __trace__("SUBMIT_SM: failed to change state to enroute");
@@ -437,9 +436,6 @@ StateType StateMachine::forward(Tuple& t)
     return UNKNOWN_STATE;
   }
   time_t now=time(NULL);
-  time_t nextTryTime=RescheduleCalculator::calcNextTryTime(
-    sms.getNextTime(),sms.getAttemptsCount());
-  if(nextTryTime>sms.getValidTime())nextTryTime=sms.getValidTime();
   if(sms.getValidTime()<=now)
   {
     try{
@@ -470,7 +466,8 @@ StateType StateMachine::forward(Tuple& t)
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,nextTryTime);
+      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
+      smsc->notifyScheduler();
     }catch(...)
     {
       __trace__("FORWARD: failed to change state to enroute");
@@ -484,7 +481,8 @@ StateType StateMachine::forward(Tuple& t)
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,nextTryTime);
+      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
+      smsc->notifyScheduler();
     }catch(...)
     {
       __trace__("FORWARD: failed to change state to enroute");
@@ -495,16 +493,6 @@ StateType StateMachine::forward(Tuple& t)
 
   uint32_t dialogId2;
   try{
-    try{
-      //time_t now=time(NULL);
-      /*Descriptor d;
-      __trace__("FORWARD: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,
-        RescheduleCalculator::calcNextTryTime(sms.getNextTime(),sms.getAttemptsCount()));*/
-    }catch(...)
-    {
-      __trace__("FORWARD: failed to change state to enroute");
-    }
     dialogId2 = dest_proxy->getNextSequenceNumber();
     __trace2__("FORWARD: seq number:%d",dialogId2);
     //Task task((uint32_t)dest_proxy_index,dialogId2);
@@ -587,8 +575,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
         try{
           Descriptor d;
           __trace__("DELIVERYRESP: change state to enroute");
-          store->changeSmsStateToEnroute(t.msgId,d,0,
-            RescheduleCalculator::calcNextTryTime(sms.getNextTime(),sms.getAttemptsCount()));
+          store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
+          smsc->notifyScheduler();
         }catch(...)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");
@@ -688,7 +676,7 @@ StateType StateMachine::alert(Tuple& t)
     Descriptor d;
     SMS sms;
     store->retriveSms((SMSId)t.msgId,sms);
-    store->changeSmsStateToEnroute(t.msgId,d,0,RescheduleCalculator::calcNextTryTime(sms.getNextTime(),sms.getAttemptsCount()));
+    store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
     smsc->notifyScheduler();
   }catch(...)
   {
@@ -734,6 +722,13 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   {
     smsc->submitSms(arr[i]);
   };
+}
+
+time_t StateMachine::rescheduleSms(SMS& sms)
+{
+  time_t nextTryTime=RescheduleCalculator::calcNextTryTime(sms.getNextTime(),sms.getAttemptsCount());
+  if(nextTryTime>sms.getValidTime())nextTryTime=sms.getValidTime();
+  return nextTryTime;
 }
 
 

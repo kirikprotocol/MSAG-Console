@@ -44,6 +44,8 @@ public:
 
   void sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason);
 
+  time_t rescheduleSms(SMS& sms);
+
   const char *taskName(){return "StateMachine";}
 
   time_t maxValidTime;
