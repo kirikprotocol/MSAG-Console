@@ -31,6 +31,23 @@ void SQLQueryJob::init(ConfigView* config)
                                     "Input data format wasn't defined !");
     outputFormat = config->getString("output", 
                                     "Output data format wasn't defined !");
+    
+    dsOperationTimeout = 0; // in seconds
+    try
+    {
+        dsOperationTimeout = config->getInt("timeout", "Operation timeout "
+                                            "on DataSource wasn't defined. "
+                                            "Timeout disabled."); 
+        if (dsOperationTimeout < 0) {
+            __trace2__("Specified operation timeout "
+                       "on DataSource is negative. Timeout disabled.");
+            dsOperationTimeout = 0;
+        }
+    } 
+    catch (ConfigException& exc) { 
+        /* Do nothing, dsOperationTimeout = 0 (disabled) */
+    }
+    
     try 
     {
         parser = new InputParser(inputFormat);
@@ -55,6 +72,9 @@ void SQLJob::process(Command& command, DataSource& ds)
     Connection* connection = ds.getConnection();
     if (!connection) error(SQL_JOB_DS_FAILURE, 
                            "Failed to create DataSource connection!");
+    
+    int wdTimerId = ds.startTimer(connection, dsOperationTimeout);
+
     Statement* stmt = 0;
     try 
     {
@@ -73,6 +93,7 @@ void SQLJob::process(Command& command, DataSource& ds)
     {
         if (stmt) delete stmt;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         throw;
     }
@@ -80,6 +101,7 @@ void SQLJob::process(Command& command, DataSource& ds)
     {
         if (stmt) delete stmt;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         error(SQL_JOB_DS_FAILURE, exc.what());
     }
@@ -87,6 +109,7 @@ void SQLJob::process(Command& command, DataSource& ds)
     {
         if (stmt) delete stmt;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         log.warn("std::exception catched");
         error(SQL_JOB_DS_FAILURE, exc.what());
@@ -95,11 +118,13 @@ void SQLJob::process(Command& command, DataSource& ds)
     {
         if (stmt) delete stmt;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         log.warn("... catched");
         error(SQL_JOB_DS_FAILURE, "");
     }
 
+    ds.stopTimer(wdTimerId);
     ds.freeConnection(connection);
 }
 
@@ -217,6 +242,9 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     Connection* connection = ds.getConnection();
     if (!connection) error(SQL_JOB_DS_FAILURE, 
                            "Failed to create DataSource connection!");
+    
+    int wdTimerId = ds.startTimer(connection, dsOperationTimeout);
+
     Routine* routine = 0;
     try 
     {
@@ -235,6 +263,7 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     {
         if (routine) delete routine;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         throw;
     }
@@ -242,6 +271,7 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     {
         if (routine) delete routine;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         error(SQL_JOB_DS_FAILURE, exc.what());
     }
@@ -249,6 +279,7 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     {
         if (routine) delete routine;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         log.warn("std::exception catched");
         error(SQL_JOB_DS_FAILURE, exc.what());
@@ -257,11 +288,13 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     {
         if (routine) delete routine;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
         log.warn("... catched");
         error(SQL_JOB_DS_FAILURE, "");
     }
 
+    ds.stopTimer(wdTimerId);
     ds.freeConnection(connection);
 }
 

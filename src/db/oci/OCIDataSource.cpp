@@ -113,7 +113,8 @@ void OCIConnection::disconnect()
             (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
         }
         
-        isConnected = false; isDead = false;
+        isConnected = false; isDead = false; 
+        svchp = 0; envhp = 0; errhp = 0;
     }
 }
 
@@ -128,6 +129,17 @@ void OCIConnection::rollback()
 {
     check(OCITransRollback(svchp, errhp, OCI_DEFAULT));
 }
+void OCIConnection::abort() 
+    throw(SQLException)
+{
+    MutexGuard  guard(connectLock);
+    
+    // TODO: check that operation is still active on this connection !!!
+    if (svchp && errhp) {
+        check(OCIBreak(svchp, errhp));
+    }
+}
+
 
 void OCIConnection::check(sword status) 
     throw(SQLException)

@@ -158,5 +158,128 @@ void ConnectionPool::freeConnection(Connection* connection)
     }
 }
 
+/* ------------------- Connection WatchDog (DataSource) ------------------- */
+
+void DataSource::init(ConfigView* config) 
+    throw(ConfigException)
+{
+    bool bWdIsNeeded = false;
+    try 
+    {
+        bWdIsNeeded = config->getBool("watchdog", "WatchDog disabled.");
+    } 
+    catch (ConfigException& exc) {}
+
+    if (bWdIsNeeded) watchDog = new WatchDog();
+}
+
+void WatchDog::Start()
+{
+    MutexGuard  guard(startLock);
+    
+    if (!bStarted)
+    {
+        MutexGuard  tmguard(timersLock);
+        timers.clear();
+        bNeedExit = false;
+        Thread::Start();
+        bStarted = true;
+    }
+}
+void WatchDog::Stop()
+{
+    MutexGuard  guard(startLock);
+
+    if (bStarted)
+    {
+        bNeedExit = true;
+        awake.Signal();
+        exited.Wait();
+        bStarted = false;
+        bNeedExit = false;
+    }
+}
+int WatchDog::Execute()
+{
+    while (!bNeedExit)
+    {
+        timersLock.Lock();
+        awake.Wait(0);
+        if (timers.empty())
+        {
+            timersLock.Unlock();
+            __trace__("DS WatchDog> Idle");
+            awake.Wait(3600*1000); // idle timeout;
+            __trace__("DS WatchDog> Idle quit");
+        }
+        else
+        {
+            TimersIterator it = timers.begin();
+            int timer = it->first;
+            ConnectionDeadline cd = it->second;
+            int32_t left = cd.deadline - time(NULL);
+            if (left <=0)
+            {
+                __trace2__("DS WatchDog> Timer #%u expired for connection %x. "
+                           "Time: left=%d, sleep=%u, current=%u",
+                           timer, cd.connection, left, cd.deadline, time(NULL));
+                try 
+                {
+                    if (cd.connection) cd.connection->abort();
+                    __trace2__("DS WatchDog> DS operation terminated "
+                               "on connection %x. ", cd.connection);
+                }
+                catch (Exception& exc) {
+                    __trace2__("DS WatchDog> Termination of DS operation "
+                               "on connection %x failed! Cause:",
+                               cd.connection, exc.what());
+                }
+                catch (...) {
+                    __trace2__("DS WatchDog> Termination of DS operation "
+                               "on connection %x failed! Unknown reason.",
+                               cd.connection);
+                }
+                timers.erase(timer);
+                timersLock.Unlock();
+            }
+            else
+            {
+                __trace2__("DS WatchDog> Waiting timer #%u for connection %x. "
+                           "Time: left=%d, sleep=%u, current=%u",
+                           timer, cd.connection, left, cd.deadline, time(NULL));
+                timersLock.Unlock();
+                awake.Wait(left*1000);
+            }
+        }
+    }
+    exited.Signal();
+    return 0;
+}
+
+int WatchDog::startTimer(Connection* connection, uint32_t timeout)
+{
+    {
+        MutexGuard  guard(startLock);
+        if (!bStarted || timeout == 0) return -1;
+    }
+    
+    MutexGuard  guard(timersLock);
+    int timer = (timers.empty()) ? 0:(timers.end()->first+1);
+    timers.insert(TimersPair(timer, 
+                    ConnectionDeadline(connection, time(NULL)+timeout)));
+    awake.Signal();
+}
+void WatchDog::stopTimer(int timer)
+{
+    {
+        MutexGuard  guard(startLock);
+        if (!bStarted || timer < 0) return;
+    }
+    
+    MutexGuard  guard(timersLock);
+    timers.erase(timer);
+}
+
+
 }}
 

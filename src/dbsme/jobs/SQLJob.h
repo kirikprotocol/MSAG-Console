@@ -53,10 +53,13 @@ namespace smsc { namespace dbsme
         char*   inputFormat;
         char*   outputFormat;
         
+        uint32_t    dsOperationTimeout;
+        
     public:
 
         SQLQueryJob() : Job(), parser(0), formatter(0),
-            sql(0), inputFormat(0), outputFormat(0) {};
+            sql(0), inputFormat(0), outputFormat(0), 
+                dsOperationTimeout(0) {};
         virtual ~SQLQueryJob();
         
         virtual void init(ConfigView* config)
@@ -67,7 +70,7 @@ namespace smsc { namespace dbsme
     {
     protected:
 
-        bool    isQuery;
+        bool        isQuery;
 
         virtual void process(Command& command, Statement& stmt) 
             throw(CommandProcessException);

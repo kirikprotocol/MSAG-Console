@@ -328,6 +328,8 @@ namespace smsc { namespace db { namespace oci
             throw(SQLException);
         virtual void rollback() 
             throw(SQLException);
+        virtual void abort() 
+            throw(SQLException);
         
         void check(sword status) 
             throw(SQLException);

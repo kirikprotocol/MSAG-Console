@@ -11,13 +11,16 @@
 #include <time.h>
 #include <string.h>
 #include <inttypes.h>
+#include <map>
 
 #include <util/debug.h>
 #include <util/Logger.h>
 #include <util/config/ConfigView.h>
 #include <core/buffers/Array.hpp>
 #include <core/buffers/Hash.hpp>
+#include <core/threads/Thread.hpp>
 #include <core/synchronization/Mutex.hpp>
+#include <core/synchronization/Event.hpp>
 #include <core/synchronization/EventMonitor.hpp>
 
 #include <db/exceptions/DataSourceExceptions.h>
@@ -31,6 +34,10 @@ namespace smsc { namespace db
     using smsc::core::buffers::Array;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
+    
+    using smsc::core::threads::Thread;
+    using smsc::core::synchronization::Event;
+    using smsc::core::synchronization::Mutex;
 
     class GetPosQuery
     {
@@ -279,6 +286,8 @@ namespace smsc { namespace db
             throw(SQLException) = 0;
         virtual void rollback() 
             throw(SQLException) = 0;
+        virtual void abort() 
+            throw(SQLException) = 0;
     };
     
     class DBDriver
@@ -294,31 +303,87 @@ namespace smsc { namespace db
         virtual Connection* newConnection() = 0;
     };
     
+    struct ConnectionDeadline
+    {
+        Connection* connection;
+        time_t      deadline;
+
+        ConnectionDeadline(Connection* _connection=0, time_t _deadline=0)
+            : connection(_connection), deadline(_deadline) {};
+        ConnectionDeadline(const ConnectionDeadline& cd)
+            : connection(cd.connection), deadline(cd.deadline) {};
+        
+        ConnectionDeadline& operator =(const ConnectionDeadline& cd) {
+            connection = cd.connection; deadline = cd.deadline;
+            return (*this);
+        };
+    };
+
+    typedef std::map<int, ConnectionDeadline>  TimersMap;
+    typedef std::pair<int, ConnectionDeadline> TimersPair;
+    typedef TimersMap::iterator                TimersIterator;
+
+    class WatchDog : public Thread
+    {
+    private:
+        
+        Event   awake, exited;
+        bool    bStarted, bNeedExit;
+        Mutex   startLock, timersLock;
+
+        TimersMap   timers;
+
+    public:
+
+        WatchDog() : Thread(), bStarted(false), bNeedExit(false) {};
+        virtual ~WatchDog() { Stop(); };
+
+        virtual int Execute();
+        void Start();
+        void Stop();
+
+        int startTimer(Connection* connection, uint32_t timeout);
+        void stopTimer(int timer);
+    };
+
     class DataSource
     {
     protected:
         
         DBDriver*       driver;
+        WatchDog*       watchDog;
        
-        DataSource() {};
+        DataSource() : driver(0), watchDog(0) {};
     
     public:
 
         virtual ~DataSource() 
         {
+            if (watchDog) delete watchDog;
             if (driver) delete driver;
         };
-
-        virtual void init(ConfigView* config) 
-            throw(ConfigException) = 0;
-        
-        virtual Connection* getConnection() = 0;
-        virtual void freeConnection(Connection* connection) = 0;
         
         inline Connection* newConnection()
         {
             return ((driver) ? driver->newConnection():0);
         };
+
+        int startTimer(Connection* connection, uint32_t timeout)
+        {
+            return (watchDog && timeout > 0) ? 
+                watchDog->startTimer(connection, timeout) : -1;
+        }
+        void stopTimer(int timer)
+        {
+            if (watchDog && timer >= 0)
+                watchDog->stopTimer(timer); 
+        }
+        
+        virtual void init(ConfigView* config) 
+            throw(ConfigException);
+        
+        virtual Connection* getConnection() = 0;
+        virtual void freeConnection(Connection* connection) = 0;
     };
 
     class DataSourceFactory 
@@ -405,13 +470,16 @@ namespace smsc { namespace db
         virtual void init(ConfigView* config)
             throw(ConfigException)
         {
+            DataSource::init(config);
             pool = new ConnectionPool(*((DataSource *)this), config);
+            if (watchDog) watchDog->Start();
         };
 
     public:
 
         virtual ~PoolledDataSource()
         {
+            if (watchDog) watchDog->Stop();
             if (pool) delete pool;
         };
 
