@@ -409,7 +409,7 @@ static void TryDestroyDialog(unsigned dialogid)
       __trace2__("MAP::TryDestroyDialog: has no dialog 0x%x",dialogid);
       return;
     }
-    __trace2__("MAP::%s: 0x%x  (state %s/TRY__DESTROY)",__FUNCTION__,dialog->dialogid_map,dialog->state);
+    __trace2__("MAP::%s: 0x%x  (state %d/TRY__DESTROY)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch(dialog->state){
     /*case MAPST_WaitHlrVersion:
     case MAPST_SendingRInfo:
