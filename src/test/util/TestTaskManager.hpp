@@ -22,8 +22,10 @@ private:
 public:
 	TestTask(int _taskNum)
 		: taskNum(_taskNum), flag(true), stopped(false) {};
+
 	virtual ~TestTask(){}
-	virtual void executeCycle();
+
+	virtual void executeCycle() = 0; //abstract
 
 	virtual int Execute()
 	{
