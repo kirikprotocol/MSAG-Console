@@ -123,12 +123,32 @@ Logger * Logger::getInstanceInternal(const char * const name)
 	return loggers[name];
 }
 
-const Logger::LogLevels & Logger::getLogLevels()
+const Logger::LogLevels * Logger::getLogLevels()
 {
 	MutexGuard guard(static_mutex);
 	if (!initialized) 
 		__loggerError("getCurrentLoggers: Logger not initialized");
-	return logLevels;
+
+  std::auto_ptr<LogLevels> ls(new LogLevels());
+  char *k;
+  LogLevel ll;
+  for (LogLevels::Iterator i = logLevels.getIterator(); i.Next(k, ll); )
+  {
+    ls->Insert(k, ll);
+  }
+  
+  Logger * l;
+  for (LoggersHash::Iterator i = loggers.getIterator(); i.Next(k, l); )
+  {
+    if (!logLevels.Exists(k))
+    {
+      LogLevel levF = findDebugLevel(k);
+      LogLevel levL = l->getLogLevel();
+      ls->Insert(k, levF != levL ? levL : LEVEL_NOTSET);
+    }
+  }
+  
+	return ls.release();
 }
 
 void Logger::setLogLevels(const Logger::LogLevels & _logLevels)
@@ -141,7 +161,8 @@ void Logger::setLogLevels(const Logger::LogLevels & _logLevels)
 			LogLevel l;
 			for (LogLevels::Iterator i = _logLevels.getIterator(); i.Next(k, l); )
 			{
-				logLevels[k] = l;
+        if (_logLevels[k] != LEVEL_NOTSET)
+          logLevels[k] = l;
 			}
 		}
 		{

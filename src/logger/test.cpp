@@ -1,6 +1,7 @@
 #include "logger/Logger.h"
 #include "logger/additional/ConfigReader.h"
 #include "util/Properties.h"
+#include "core/synchronization/Mutex.hpp"
 
 #include <iostream>
 #include <time.h>
@@ -8,6 +9,11 @@
 
 using namespace smsc::logger;
 using namespace smsc::util;
+using namespace smsc::core::synchronization;
+
+unsigned long counterAll = 0;
+unsigned long counterLogged = 0;
+Mutex countersMutex;
 
 void mySleep(int millisecs)
 {
@@ -20,8 +26,25 @@ void mySleep(int millisecs)
 void testLoggers(Logger** loggers, const size_t count, const Logger::LogLevel & logLevel)
 {
 	std::cerr << "***" << std::endl;
-	for (int i = 0; i < count; i++)
+	for (int i = 0; i < count; i++) {
 		loggers[i]->log_(logLevel, "/// %s, %s\\\\\\", Logger::getLogLevel(logLevel), loggers[i]->getName());
+    MutexGuard guard(countersMutex);
+    counterAll++;
+    if (loggers[i]->isLogLevelEnabled(logLevel))
+      counterLogged++;
+  }
+}
+
+void testLoggers(Logger** loggers, const size_t count, const Logger::LogLevel & logLevel, int num)
+{
+	std::cerr << "***" << std::endl;
+	for (int i = 0; i < count; i++) {
+		loggers[i]->log(logLevel, "/// #%6.6u | %s, %s\\\\\\", num, Logger::getLogLevel(logLevel), loggers[i]->getName());
+    MutexGuard guard(countersMutex);
+    counterAll++;
+    if (loggers[i]->isLogLevelEnabled(logLevel))
+      counterLogged++;
+  }
 }
 
 class TestLogThread1 : public smsc::core::threads::Thread
@@ -42,6 +65,7 @@ public:
 				Logger::getInstance("trace"),
 				Logger::getInstance("блах")
 		};
+    int i=0;
 		while (true) {
 			{
 				MutexGuard guard(mutex);
@@ -49,12 +73,13 @@ public:
 					return 0;
 			}
 			std::cerr << "*********************" << std::endl;
-			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_DEBUG);
-			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_INFO);
-			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_WARN);
-			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_ERROR);
-			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_FATAL);
-			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_NOTSET);
+			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_DEBUG, i);
+			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_INFO, i);
+			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_WARN, i);
+			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_ERROR, i);
+			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_FATAL, i);
+			testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_NOTSET, i);
+      i = (i+1) % 0x8000;
 			mySleep(1);
 		}
 	}
@@ -110,7 +135,7 @@ public:
 int main()
 {
 #ifdef SMSC_DEBUG
-	Logger::Init("logger.props");
+	Logger::Init();
 
 	std::cout << "*********************" << std::endl;
 	Logger::printDebugInfo();
@@ -141,10 +166,10 @@ int main()
 	{	/// print log levels
 		std::cout << "*********************" << std::endl;
 		std::cout << "Log levels:" << std::endl;
-		const Logger::LogLevels & levels = Logger::getLogLevels();
+		const Logger::LogLevels * levels = Logger::getLogLevels();
 		char *k;
 		Logger::LogLevel level;
-		for (Logger::LogLevels::Iterator i = levels.getIterator(); i.Next(k, level); )
+		for (Logger::LogLevels::Iterator i = levels->getIterator(); i.Next(k, level); )
 		{
 			std::cout << "  " << k << "->" << Logger::getLogLevel(level) << std::endl;
 		}
@@ -172,9 +197,12 @@ int main()
 		testLoggers(loggersForTest, sizeof(loggersForTest)/sizeof(loggersForTest[0]), Logger::LEVEL_NOTSET);
 	}
 
-/*
+
 	TestLogThread1 threads1[256];
 	TestLogThread2 threads2[4];
+
+  counterAll = 0;
+  counterLogged = 0;
 
 	std::cout << "starting..." << std::endl;
 	for (int i=0; i<sizeof(threads1)/sizeof(threads1[0]); i++)
@@ -187,7 +215,8 @@ int main()
 	}
 
 	std::cout << "started, sleeping..." << std::endl;
-	mySleep(10*60*1000);
+  const int secsToSleep = 5*60;
+	mySleep(secsToSleep*1000);
 
 	std::cout << "stopping..." << std::endl;
 	for (int i=0; i<sizeof(threads1)/sizeof(threads1[0]); i++)
@@ -212,7 +241,9 @@ int main()
 		std::cout << "thread2 " << i << " stopped" << std::endl;
 	}
 	std::cout << "threads finished" << std::endl;
-*/	
+  std::cout << "tryes to log: " << counterAll << ", logged: " << counterLogged << std::endl;
+  std::cout << "tryes to log: " << counterAll/((double)secsToSleep) << " per sec, logged: " << counterLogged/((double)secsToSleep) << " per sec" << std::endl;
+	
 	std::cout << "shutdown" << std::endl;
 	Logger::Shutdown();
 	std::cout << "program done" << std::endl;

@@ -1185,10 +1185,10 @@ void SmscComponent::smeDisconnect(const Arguments & args)
 Variant SmscComponent::logGetCategories(void)
 {
 	Variant result(service::StringListType);
-	const Logger::LogLevels & cats = Logger::getLogLevels();
+	std::auto_ptr<const Logger::LogLevels> cats(Logger::getLogLevels());
 	char * k;
 	Logger::LogLevel level;
-	for (Logger::LogLevels::Iterator i = cats.getIterator(); i.Next(k, level); )
+	for (Logger::LogLevels::Iterator i = cats->getIterator(); i.Next(k, level); )
 	{
 		std::string tmp(k);
 		tmp += ","; 

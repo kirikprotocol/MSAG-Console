@@ -74,7 +74,7 @@ public:
 	/**
 	* Возвращает map CatName -> DebugLevel.
 	*/
-	static const LogLevels & getLogLevels();
+	static const LogLevels * getLogLevels();
 	static void setLogLevels(const LogLevels & newLogCats);
 	static const char * const getLogLevel(const LogLevel level) throw();
 	static const LogLevel getLogLevel(const char * const logLevelName) throw();
