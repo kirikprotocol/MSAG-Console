@@ -5,6 +5,7 @@
 #include "smpp/smpp.h"
 #include "util/recoder/recode_dll.h"
 #include "core/buffers/Array.hpp"
+#include "util/debug.h"
 
 
 namespace smsc{
@@ -18,6 +19,7 @@ static inline int getSmsText(SMS* sms,char* buf)
 {
   int coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
   //int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
+  __trace2__("getSmsText: dc=%d",coding);
   unsigned len;
   const char *data=sms->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
   if(coding==DataCoding::UCS2)
