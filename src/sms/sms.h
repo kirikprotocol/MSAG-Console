@@ -217,7 +217,6 @@ namespace smsc { namespace sms
          * @param _imsiLen   длинна буфера _imsi
          * @param _value значение адреса IMSI
          * @param _sme номер SME
-         
          */
         Descriptor(uint8_t _mscLen, const char* _msc,
                    uint8_t _imsiLen, const char* _imsi, uint32_t _sme)
@@ -783,6 +782,26 @@ namespace smsc { namespace sms
         inline void setOriginatingDescriptor(const Descriptor& descriptor) 
         { // Copies descriptor from 'descriptor' to static structure 
             originatingDescriptor = descriptor;     
+        };
+        
+        /**
+         * Устанавливает дескриптор отправителя
+         * Копирует адрес во внутренние структуры
+         *
+         * @param _mscLen   длинна буфера _msc
+         * @param _value значение адреса MSC
+         * @param _imsiLen   длинна буфера _imsi
+         * @param _value значение адреса IMSI
+         * @param _sme номер SME
+         * 
+         * @see Descriptor
+         */
+        inline void setOriginatingDescriptor(uint8_t _mscLen, const char* _msc,
+                   uint8_t _imsiLen, const char* _imsi, uint32_t _sme) 
+        { // Copies descriptor from 'descriptor' to static structure 
+            originatingDescriptor.setMsc(_mscLen, _msc);
+            originatingDescriptor.setImsi(_imsiLen, _imsi);
+            originatingDescriptor.setSmeNumber(_sme);
         };
         
         /**
