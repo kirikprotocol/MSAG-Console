@@ -332,10 +332,13 @@ Connection::Connection(const char* instance,
                        const char* user, const char* password) 
     : isConnected(false), isDead(false), next(0L),
         dbInstance(instance), dbUserName(user), dbUserPassword(password), 
-            storeStmt(0L), /*removeStmt(0L),*/ retriveStmt(0L), 
-                needRejectStmt(0L), needOverwriteStmt(0L), overwriteStmt(0L), 
-                    envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L), 
-                        log(Logger::getCategory("smsc.store.Connection"))
+            needOverwriteStmt(0L), needRejectStmt(0L), overwriteStmt(0L),
+            storeStmt(0L), retriveStmt(0L), destroyStmt(0L), replaceStmt(0L),
+            replaceVTStmt(0L), replaceWTStmt(0L), replaceVWTStmt(0L), 
+            toEnrouteStmt(0L), toDeliveredStmt(0L), toUndeliverableStmt(0L),
+            toExpiredStmt(0L), toDeletedStmt(0L),
+                envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L), 
+                    log(Logger::getCategory("smsc.store.Connection"))
 {
     __require__(dbInstance && dbUserName && dbUserPassword);
 }
@@ -443,65 +446,6 @@ void Connection::rollback()
 {
     check(OCITransRollback(svchp, errhp, OCI_DEFAULT));
 }
-
-/*
-void Connection::update(SMSId id, const State state, 
-                        time_t operationTime, uint8_t fcs)
-    throw(StorageException, NoSuchMessageException)
-{
-    MutexGuard  guard(mutex);
-    
-    connect();
-    
-    StateUpdateStatement* UpdateStmt;
-
-    switch (state)
-    {
-    case ENROUTE:
-    case UNDELIVERABLE:
-        UpdateStmt = new StateDateFcsUpdateStatement(this);
-        ((StateDateFcsUpdateStatement *)UpdateStmt)->setOpTime(operationTime);
-        ((StateDateFcsUpdateStatement *)UpdateStmt)->setFcs(fcs);
-        break;
-    
-    case DELIVERED:
-        UpdateStmt = new StateDateUpdateStatement(this);
-        ((StateDateUpdateStatement *)UpdateStmt)->setOpTime(operationTime);
-        break;
-
-    case EXPIRED:
-    case DELETED:
-        UpdateStmt = new StateUpdateStatement(this);
-        break;
-    
-    default:
-        return; // throw exception ?
-    }
-
-    UpdateStmt->setState(state);
-    UpdateStmt->setSMSId(id);
-    try 
-    {
-        checkErr(UpdateStmt->execute(OCI_DEFAULT));
-    }
-    catch (StorageException& exc) 
-    {
-        delete UpdateStmt;
-        rollback();
-        throw exc;
-    }
-
-    if (!UpdateStmt->wasUpdated())
-    {
-        delete UpdateStmt;
-        rollback();
-        NoSuchMessageException exc(id);
-        //log.debug(exc.what());
-        throw exc;
-    }
-    delete UpdateStmt;
-    commit();
-}*/
 
 NeedOverwriteStatement* Connection::getNeedOverwriteStatement() 
     throw(ConnectionFailedException) 
