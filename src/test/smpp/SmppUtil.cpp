@@ -337,28 +337,6 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2,
 	return res;
 }
 
-auto_ptr<char> rand_text2(int& length, uint8_t dataCoding, bool udhi,
-	bool hostByteOrder)
-{
-	if (!udhi)
-	{
-		return rand_text(length, dataCoding, hostByteOrder);
-	}
-	int headerLen = rand0(length - 1);
-	__require__(headerLen >= 0);
-	auto_ptr<uint8_t> header = rand_uint8_t(headerLen);
-	int msgLen = length - headerLen - 1;
-	auto_ptr<char> msg = rand_text(msgLen, dataCoding, hostByteOrder);
-	__require__(msgLen >= 0);
-	__require__(headerLen + msgLen + 1 <= length);
-	length = headerLen + msgLen + 1;
-	char* buf = new char[length];
-	*buf = (unsigned char) headerLen;
-	memcpy(buf + 1, header.get(), headerLen);
-	memcpy(buf + headerLen + 1, msg.get(), msgLen);
-	return auto_ptr<char>(buf);
-}
-
 #define __trace_set__(name) \
 	/*__trace__(name ": " #field);*/
 	
@@ -412,6 +390,10 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__require__(pdu);
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxDeliveryPeriod);
+	//пол€ сохран€ютс€ случайным образом
+	auto_ptr<uint8_t> randMask = rand_uint8_t(8);
+	mask &= *((uint64_t*) randMask.get());
+	
 	PduPartSm& p = pdu->get_message();
 	SmppTime tmp;
 	//set & check fields
@@ -440,9 +422,12 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	{
 		pdu->get_message().set_esmClass(
 			pdu->get_message().get_esmClass() & ~ESM_CLASS_UDHI_INDICATOR);
+		udhi = false;
 	}
 	mask &= ~OPT_USER_MSG_REF; //исключить userMessageReference
 	setupRandomCorrectOptionalParams(pdu->get_optional(), dataCoding, udhi, mask, check);
+	__require__(!udhi || pdu->get_message().size_shortMessage() ||
+		pdu->get_optional().has_messagePayload());
 }
 
 void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
@@ -574,9 +559,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	uint8_t dataCoding, bool udhi, uint64_t _mask, bool check)
 {
-	//пол€ сохран€ютс€ случайным образом
-	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
-	Mask<uint64_t> mask(_mask & *((uint64_t*) tmp.get()));
+	Mask<uint64_t> mask(_mask);
 	int pos = 0;
 	//__trace2__("SmppUtil::setupRandomCorrectOptionalParams(): mask = %s", mask.str());
 
