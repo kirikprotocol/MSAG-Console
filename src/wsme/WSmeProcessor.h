@@ -52,10 +52,11 @@ namespace smsc { namespace wsme
     {
     private:
 
-        DataSource& ds;
+        log4cpp::Category&  log;
+        DataSource&         ds;
 
-        Mutex               visitorsLock;
-        Array<std::string>  visitors;
+        Mutex       visitorsLock;
+        Hash<bool>  visitors;
 
         void loadUpVisitors()
             throw (InitException);
@@ -68,8 +69,9 @@ namespace smsc { namespace wsme
 
         bool isVisitor(const std::string msisdn)
             throw (ProcessException);
-        
         void addVisitor(const std::string msisdn)
+            throw (ProcessException);
+        void removeVisitor(const std::string msisdn)
             throw (ProcessException);
     };
     
@@ -77,21 +79,12 @@ namespace smsc { namespace wsme
     {
     private:
         
-        struct LangInfo
-        {
-            std::string mask;
-            std::string lang;
-
-            LangInfo() {};
-            LangInfo(std::string _mask, std::string _lang) 
-                : mask(_mask), lang(_lang) {};
-        };
+        log4cpp::Category&  log;
+        DataSource&         ds;
         
-        DataSource&     ds;
-        
-        std::string     defaultLang;
-        Mutex           langsLock;
-        Array<LangInfo> langs;
+        std::string       defaultLang;
+        Mutex             langsLock;
+        Hash<std::string> langs; // Contains langs by mask
         
         void loadUpLangs()
             throw (InitException);
@@ -105,6 +98,11 @@ namespace smsc { namespace wsme
         std::string getLangCode(const std::string msisdn)
             throw (ProcessException);
         std::string getDefaultLang();
+
+        void addLang(const std::string mask, std::string lang)
+            throw (ProcessException);
+        void removeLang(const std::string mask)
+            throw (ProcessException);
     };
     
     struct AdIdManager
@@ -137,6 +135,11 @@ namespace smsc { namespace wsme
         virtual int getNextId(int id);
         
         bool getAd(int id, const std::string lang, std::string& ad)
+            throw (ProcessException);
+        
+        void addAd(int id, const std::string lang, std::string ad)
+            throw (ProcessException);
+        void removeAd(int id, const std::string lang)
             throw (ProcessException);
     };
     
@@ -205,6 +208,11 @@ namespace smsc { namespace wsme
                        const std::string msgid, bool responded)
             throw (ProcessException);
         void receiptAd(const std::string msgid, bool receipted) 
+            throw (ProcessException);
+
+        void addAd(int id, const std::string lang, std::string ad)
+            throw (ProcessException);
+        void removeAd(int id, const std::string lang)
             throw (ProcessException);
     };
     

@@ -101,32 +101,41 @@ void WSmeProcessor::processReceipt(const std::string msgid, bool receipted)
     __trace__("Processed receipt message.");
 }
 
-// TODO: implement all Admin methods ...
-
 void WSmeProcessor::addVisitor(const std::string msisdn)
     throw (ProcessException)
 {
+    __require__(visitorManager);
+    visitorManager->addVisitor(msisdn);
 }
 void WSmeProcessor::removeVisitor(const std::string msisdn)
     throw (ProcessException)
 {
+    __require__(visitorManager);
+    visitorManager->removeVisitor(msisdn);
 }
 void WSmeProcessor::addLang(const std::string mask, std::string lang)
     throw (ProcessException)
 {
+    __require__(langManager);
+    langManager->addLang(mask, lang);
 }
 void WSmeProcessor::removeLang(const std::string mask)
     throw (ProcessException)
 {
+    __require__(langManager);
+    langManager->removeLang(mask);
 }
 void WSmeProcessor::addAd(int id, const std::string lang, std::string ad)
     throw (ProcessException)
 {
-
+    __require__(adManager);
+    adManager->addAd(id, lang, ad);
 }
 void WSmeProcessor::removeAd(int id, const std::string lang)
     throw (ProcessException)
 {
+    __require__(adManager);
+    adManager->removeAd(id, lang);
 }
 
 /* ------------------------ Managers Implementation ------------------------ */
@@ -134,14 +143,12 @@ void WSmeProcessor::removeAd(int id, const std::string lang)
 /* ------------------------ VisitorManager ------------------------ */
 VisitorManager::VisitorManager(DataSource& _ds, ConfigView* config) 
     throw (InitException)
-        : ds(_ds) 
+        : log(Logger::getCategory("smsc.wsme.WSmeVisitorManager")), ds(_ds) 
 {
     loadUpVisitors();
 }
 VisitorManager::~VisitorManager()
 {
-    MutexGuard  guard(visitorsLock);
-    visitors.Clean();
 }
 
 const char* SQL_GET_VISITORS = "SELECT MASK FROM WSME_VISITORS";
@@ -172,7 +179,9 @@ void VisitorManager::loadUpVisitors()
         
         while (rs->fetchNext())
         {
-            visitors.Push(rs->getString(1));
+            const char* mask = rs->getString(1);
+            if (mask && !visitors.Exists(mask))
+                visitors.Insert(mask, true);
         }
         
         if (rs) delete rs;
@@ -193,29 +202,114 @@ bool VisitorManager::isVisitor(const std::string msisdn)
 { 
     MutexGuard  guard(visitorsLock);
 
-    for (int i=0; i<visitors.Count(); i++) {
-        __trace2__("Checking visitor '%s' by mask '%s'", 
-                   msisdn.c_str(), visitors[i].c_str());
-        if (compareMaskAndAddress(visitors[i], msisdn)) {
-            __trace2__("Visitor '%s' conform with mask '%s'", 
-                       msisdn.c_str(), visitors[i].c_str());
-            return true;
+    visitors.First();
+    char* mask = 0; bool avail = false;
+    while (visitors.Next(mask, avail))
+    {
+        if (mask && mask[0] != '\0')
+        {
+            __trace2__("Checking visitor '%s' by mask '%s'", 
+                       msisdn.c_str(), mask);
+            if (compareMaskAndAddress(mask, msisdn)) {
+                __trace2__("Visitor '%s' conform with mask '%s'", 
+                           msisdn.c_str(), mask);
+                return avail;
+            }
         }
     }
-
     return false;
 }
 
+const char* SQL_ADD_NEW_VISITOR = 
+"INSERT INTO WSME_VISITORS (MASK) VALUES (:MASK)";
 void VisitorManager::addVisitor(const std::string msisdn)
     throw (ProcessException)
 {
-    /* TODO: implement it
-    
-        !!! change visitors container (Array -> Hash)
+    MutexGuard  guard(visitorsLock);
+
+    const char* addr = msisdn.c_str();
+    if (visitors.Exists(addr))
+        throw ProcessException("Visitor '%s' already exists", addr);
+
+    Statement* statement = 0; 
+    Connection* connection = 0;
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection) 
+            throw Exception("Get connection failed");
+        if (!connection->isAvailable()) connection->connect();
+
+        statement = connection->createStatement(SQL_ADD_NEW_VISITOR);
+        if (!statement) 
+            throw Exception("Create statement failed");
         
-        1) add visitor mask into cache (& check that it isn't present)
-        2) insert new visitor record into DB
-    */
+        statement->setString(1, addr);
+        statement->executeUpdate();
+        connection->commit();
+        
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        if (statement) delete statement;
+        if (connection) {
+            try { connection->rollback(); } catch (Exception& eee) {
+                log.error("Rollback failed, Cause: %s", eee.what());
+            }
+            ds.freeConnection(connection);
+        }
+        throw ProcessException(exc.what());
+    }
+    
+    visitors.Insert(addr, true);
+}
+
+const char* SQL_REMOVE_VISITOR = 
+"DELETE FROM WSME_VISITORS WHERE MASK=:MASK";
+void VisitorManager::removeVisitor(const std::string msisdn)
+    throw (ProcessException)
+{
+    MutexGuard  guard(visitorsLock);
+
+    const char* addr = msisdn.c_str();
+    if (!visitors.Exists(addr))
+        throw ProcessException("Visitor '%s' not exists", addr);
+
+    Statement* statement = 0; 
+    Connection* connection = 0;
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection) 
+            throw Exception("Get connection failed");
+        if (!connection->isAvailable()) connection->connect();
+
+        statement = connection->createStatement(SQL_REMOVE_VISITOR);
+        if (!statement) 
+            throw Exception("Create statement failed");
+        
+        statement->setString(1, addr);
+        statement->executeUpdate();
+        connection->commit();
+        
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        if (statement) delete statement;
+        if (connection) {
+            try { connection->rollback(); } catch (Exception& eee) {
+                log.error("Rollback failed, Cause: %s", eee.what());
+            }
+            ds.freeConnection(connection);
+        }
+        throw ProcessException(exc.what());
+    }
+    
+    visitors.Delete(addr);
 }
 
 
@@ -223,7 +317,7 @@ void VisitorManager::addVisitor(const std::string msisdn)
 
 LangManager::LangManager(DataSource& _ds, ConfigView* config)
     throw (InitException)
-        : ds(_ds)
+        : log(Logger::getCategory("smsc.wsme.WSmeLangManager")), ds(_ds)
 {
     ConfigView* langConfig = 0;
     try
@@ -246,7 +340,6 @@ LangManager::LangManager(DataSource& _ds, ConfigView* config)
 LangManager::~LangManager()
 {
     MutexGuard  guard(langsLock);
-    langs.Clean();
 }
 
 void convertStrToUpperCase(const char* str, char* upper)
@@ -261,6 +354,8 @@ const char* SQL_GET_LANGS = "SELECT MASK, LANG FROM WSME_LANGS";
 void LangManager::loadUpLangs()
     throw (InitException)
 {
+    MutexGuard  guard(langsLock);
+
     ResultSet* rs = 0;
     Statement* statement = 0; 
     Connection* connection = 0;
@@ -289,10 +384,9 @@ void LangManager::loadUpLangs()
             if (!mask || mask[0]=='\0' || 
                 !lang || lang[0]=='\0') continue;
             
-            LangInfo info(mask, lang ? lang:"");
-            {
-                MutexGuard  guard(langsLock);
-                langs.Push(info);
+            if (!langs.Exists(mask)) {
+                std::string langStr = lang;
+                langs.Insert(mask, langStr);
             }
         }
         
@@ -313,15 +407,18 @@ std::string LangManager::getLangCode(const std::string msisdn)
 {
     MutexGuard  guard(langsLock);
 
-    for (int i=0; i<langs.Count(); i++)
+    langs.First();
+    char* mask = 0; std::string langStr;
+    while (langs.Next(mask, langStr))
     {
-        if (compareMaskAndAddress(langs[i].mask, msisdn)) {
-            const char* lang = langs[i].lang.c_str();
-            if (lang && lang[0] != '\0') return langs[i].lang;
+        if (mask && mask[0] != '\0' && compareMaskAndAddress(mask, msisdn))
+        {
+            const char* lang = langStr.c_str();
+            if (lang && lang[0] != '\0') return langStr;
             else break;
         }
     }
-        
+    
     return defaultLang;
 }
 std::string LangManager::getDefaultLang()
@@ -331,11 +428,104 @@ std::string LangManager::getDefaultLang()
     return lang;
 }
 
+const char* SQL_ADD_NEW_LANG = 
+"INSERT INTO WSME_LANGS (MASK, LANG) VALUES (:MASK, :LANG)";
+void LangManager::addLang(const std::string mask, std::string lang)
+    throw (ProcessException)
+{
+    MutexGuard  guard(langsLock);
+
+    const char* addr = mask.c_str();
+    if (langs.Exists(addr))
+        throw ProcessException("Mask '%s' already defined", addr);
+    
+    Statement* statement = 0; 
+    Connection* connection = 0;
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection) 
+            throw Exception("Get connection failed");
+        if (!connection->isAvailable()) connection->connect();
+
+        statement = connection->createStatement(SQL_ADD_NEW_LANG);
+        if (!statement) 
+            throw Exception("Create statement failed");
+        
+        statement->setString(1, addr);
+        statement->setString(2, lang.c_str());
+        statement->executeUpdate();
+        connection->commit();
+        
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        if (statement) delete statement;
+        if (connection) {
+            try { connection->rollback(); } catch (Exception& eee) {
+                log.error("Rollback failed, Cause: %s", eee.what());
+            }
+            ds.freeConnection(connection);
+        }
+        throw ProcessException(exc.what());
+    }
+    
+    langs.Insert(addr, lang);
+}
+
+const char* SQL_REMOVE_LANG = 
+"DELETE FROM WSME_LANGS WHERE MASK=:MASK";
+void LangManager::removeLang(const std::string mask)
+    throw (ProcessException)
+{
+    MutexGuard  guard(langsLock);
+
+    const char* addr = mask.c_str();
+    if (!langs.Exists(addr))
+        throw ProcessException("Mask '%s' not defined", addr);
+    
+    Statement* statement = 0; 
+    Connection* connection = 0;
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection) 
+            throw Exception("Get connection failed");
+        if (!connection->isAvailable()) connection->connect();
+
+        statement = connection->createStatement(SQL_REMOVE_LANG);
+        if (!statement) 
+            throw Exception("Create statement failed");
+        
+        statement->setString(1, addr);
+        statement->executeUpdate();
+        connection->commit();
+        
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        if (statement) delete statement;
+        if (connection) {
+            try { connection->rollback(); } catch (Exception& eee) {
+                log.error("Rollback failed, Cause: %s", eee.what());
+            }
+            ds.freeConnection(connection);
+        }
+        throw ProcessException(exc.what());
+    }
+    
+    langs.Delete(addr);
+}
+
 /* ------------------------ AdRepository ------------------------ */
 
 AdRepository::AdRepository(DataSource& _ds, ConfigView* config)
     throw(ConfigException, InitException) 
-        : log(Logger::getCategory("smsc.wsme.AdRepository")), ds(_ds) 
+        : log(Logger::getCategory("smsc.wsme.WSmeAdRepository")), ds(_ds) 
 {
     loadMaxAdId();
 }
@@ -433,11 +623,23 @@ int AdRepository::getNextId(int id)
     return (id+1)%(maxAdId+1);
 }
 
+void AdRepository::addAd(int id, const std::string lang, std::string ad)
+    throw (ProcessException)
+{
+    // TODO: implement it
+}
+void AdRepository::removeAd(int id, const std::string lang)
+    throw (ProcessException)
+{
+    // TODO: implement it
+}
+
+
 /* ------------------------ AdHistory ------------------------ */
 
 AdHistory::AdHistory(DataSource& _ds, ConfigView* config, AdIdManager& idman)
     throw(ConfigException, InitException) 
-        : Thread(), log(Logger::getCategory("smsc.wsme.AdHistory")), 
+        : Thread(), log(Logger::getCategory("smsc.wsme.WSmeAdHistory")), 
             ds(_ds), idManager(idman), bStarted(false)
 
 {
@@ -721,7 +923,7 @@ void AdHistory::receiptAd(const std::string msgid, bool receipted)
 
 AdManager::AdManager(DataSource& _ds, ConfigView* config)
     throw(ConfigException, InitException) 
-        : log(Logger::getCategory("smsc.wsme.AdManager")), ds(_ds),
+        : log(Logger::getCategory("smsc.wsme.WSmeAdManager")), ds(_ds),
             history(0), repository(0)
 {
     MutexGuard  guard(initLock);
@@ -788,6 +990,20 @@ void AdManager::receiptAd(const std::string msgid, bool receipted)
     __require__(history);
     history->receiptAd(msgid, receipted);
 }
+
+void AdManager::addAd(int id, const std::string lang, std::string ad)
+    throw (ProcessException)
+{
+    __require__(repository);
+    repository->addAd(id, lang, ad);
+}
+void AdManager::removeAd(int id, const std::string lang)
+    throw (ProcessException)
+{
+    __require__(repository);
+    repository->removeAd(id, lang);
+}
+
 
 }}
 

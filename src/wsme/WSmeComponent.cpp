@@ -117,8 +117,6 @@ Variant WSmeComponent::call(const Method& method, const Arguments& args)
     }
 }
 
-// TODO: get real methods' args from Arguments
-
 void WSmeComponent::error(const char* method, const char* param)
     throw (ProcessException)
 {
