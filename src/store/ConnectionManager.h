@@ -7,6 +7,8 @@
 #include <core/synchronization/Mutex.hpp>
 #include <core/buffers/Array.hpp>
 #include <sms/sms.h>
+
+#include "StoreConfig.h"
 #include "StoreExceptions.h"
 
 using namespace smsc::core::synchronization;
@@ -14,25 +16,7 @@ using namespace smsc::core::buffers;
 
 namespace smsc { namespace store 
 {
-    class StoreConfig
-    {
-    private:
-        
-        char*   userName;
-        char*   userPwd;
-        char*   dbName;
-
-    public:
-
-        StoreConfig(const char* db, const char* usr, const char* pwd);
-		virtual ~StoreConfig();
-
-        inline const char* getUserName() { return userName; };
-        inline const char* getUserPwd() { return userPwd; };
-        inline const char* getDbName() { return dbName; };
-    };
-    
-    struct Connection;
+	struct Connection;
     class ConnectionPool
 	{
     protected:
@@ -50,7 +34,7 @@ namespace smsc { namespace store
 
 	public:
 	
-	    ConnectionPool(StoreConfig* _config, int max, int init) 
+	    ConnectionPool(StoreConfig* _config) 
 			throw(ConnectionFailedException);
 	    virtual ~ConnectionPool(); 
         

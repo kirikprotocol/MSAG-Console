@@ -11,7 +11,7 @@ namespace smsc { namespace store
 using namespace smsc::sms;
 
 MessageStore* StoreManager::instance = 0L;
-//Manager* StoreManager::config = 0L;
+StoreConfig* StoreManager::config = 0L;
 
 MessageStore* StoreManager::getInstance() 
 	throw(ConnectionFailedException)
@@ -22,10 +22,9 @@ MessageStore* StoreManager::getInstance()
 StoreManager::StoreManager() 
 	throw(ConnectionFailedException)
 {
-    //__require__(StoreManager::config);
+    __require__(StoreManager::config);
 
-	StoreConfig* config = new StoreConfig("ORJP", "smsc", "smsc");
-    pool = new ConnectionPool(config, 100, 10);
+    pool = new ConnectionPool(StoreManager::config); 
 }
 
 StoreManager::~StoreManager()

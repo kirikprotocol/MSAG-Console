@@ -3,6 +3,7 @@
 
 #include <oci.h>
 
+#include "StoreConfig.h"
 #include "MessageStore.h"
 #include "ConnectionManager.h"
 
@@ -14,7 +15,8 @@ namespace smsc { namespace store
     {
     private:
 
-	    static MessageStore* instance;
+	    static MessageStore	*instance;
+		static StoreConfig	*config;
 	
     protected:
         
@@ -24,6 +26,10 @@ namespace smsc { namespace store
 			throw(ConnectionFailedException);
 
     public:    
+		
+		static void init(StoreConfig* config) {
+			StoreManager::config = config;
+		};
 
         static MessageStore* getInstance()
 			throw(ConnectionFailedException);

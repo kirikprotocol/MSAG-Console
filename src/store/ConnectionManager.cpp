@@ -13,28 +13,17 @@ namespace smsc { namespace store
 {
 using namespace smsc::sms;
 
-/* ----------------------------- StoreConfig --------------------------- */
-StoreConfig::StoreConfig(const char* db, const char* usr, const char* pwd) 
-{
-    userName = strdup(usr);
-    userPwd = strdup(pwd);
-    dbName = strdup(db);
-}
-StoreConfig::~StoreConfig() 
-{
-    if (userName) free(userName);
-    if (userPwd) free(userPwd);
-    if (dbName) free(dbName);
-}
-/* ----------------------------- StoreConfig --------------------------- */
-
 /* ----------------------------- ConnectionPool ------------------------ */
-ConnectionPool::ConnectionPool(StoreConfig* _config, int max, int init) 
+ConnectionPool::ConnectionPool(StoreConfig* _config) 
 	throw(ConnectionFailedException)
-		: config(_config), maxConnectionsCount(max), curConnectionsCount(init)
+		: config(_config)
 {
     __require__(config);
-	__require__(max >= init);
+	
+	maxConnectionsCount = config->getMaxConnectionsCount();
+	curConnectionsCount = config->getInitConnectionsCount();
+	
+	__require__(curConnectionsCount <= maxConnectionsCount);
 
     for (int i=0; i<curConnectionsCount; i++)
 	{
@@ -65,7 +54,6 @@ ConnectionPool::~ConnectionPool()
 		(void) dead.Pop(connection);
 		if (connection) delete connection;
 	}
-    if (config) delete config; 
 }
 
 void ConnectionPool::checkErr(sword status, Connection* connection) 
@@ -191,17 +179,6 @@ void ConnectionPool::freeConnection(Connection* connection)
 /* ----------------------------- ConnectionPool ------------------------ */
 
 /* ------------------------------- Connection -------------------------- */
-/*text* Connection::sqlStoreLock = (text *)
-"UPDATE SMS_ID_LOCK SET ID=0 WHERE TGT='SMS_MSG_TABLE'";
-
-text* Connection::sqlStoreMaxId = (text *)
-"SELECT NVL(MAX(ID), 0) FROM SMS_MSG";
-
-text* Connection::sqlStoreInsert = (text *)
-"INSERT INTO SMS_MSG VALUES (:ID, :ST, :MR, :RM,\
- :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
- :VALID_TIME, :WAIT_TIME, :SUBMIT_TIME, :DELIVERY_TIME,\
- :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";*/
 
 text* Connection::sqlStoreInsert = (text *)
 "BEGIN\
@@ -218,16 +195,15 @@ text* Connection::sqlRetriveAll = (text *)
 
 Connection::Connection(ConnectionPool* pool) 
 	throw(ConnectionFailedException) 
-		: owner(pool), envhp(0L), errhp(0L), 
-			svchp(0L), srvhp(0L), sesshp(0L)//, rawUd(0L)
+		: owner(pool), envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L)
 {
     StoreConfig* config = owner->getConfig();
 
 	__require__(config);
 
-	const char* userName = config->getUserName();
-	const char* userPwd = config->getUserPwd();
-	const char* dbName = config->getDbName();
+	const char* dbName = config->getDBInstance();
+	const char* userName = config->getDBUserName();
+	const char* userPwd = config->getDBUserPassword();
 	
 	__require__(userName && userPwd && dbName);
 
@@ -273,37 +249,18 @@ Connection::Connection(ConnectionPool* pool)
 							(ub4) 0, (ub4) OCI_ATTR_FOCBK, errhp));
 	*/
 
-	// allocate statements handles
-	/*checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtStoreLock,
-								OCI_HTYPE_STMT, 0, (dvoid **) 0));
-	checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&stmtStoreMaxId,
-								OCI_HTYPE_STMT, 0, (dvoid **) 0));*/
 	checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&stmtStoreInsert,
 								OCI_HTYPE_STMT, 0, (dvoid **) 0));
 	checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtRetriveAll,
 								OCI_HTYPE_STMT, 0, (dvoid **) 0));
 
 	// prepare statements
-	/*checkConnErr(OCIStmtPrepare(stmtStoreLock, errhp, sqlStoreLock,
-								(ub4)strlen((char *)sqlStoreLock),
-								(ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
-	checkConnErr(OCIStmtPrepare(stmtStoreMaxId, errhp, sqlStoreMaxId,
-								(ub4)strlen((char *)sqlStoreMaxId),
-								(ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));*/
 	checkConnErr(OCIStmtPrepare(stmtStoreInsert, errhp, sqlStoreInsert,
 								(ub4)strlen((char *)sqlStoreInsert),
 								(ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
 	checkConnErr(OCIStmtPrepare(stmtRetriveAll, errhp, sqlRetriveAll,
 								(ub4)strlen((char *)sqlRetriveAll),
 								(ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
-
-	// define placeholder for max(id)
-	/*checkConnErr(OCIDefineByPos(stmtStoreMaxId, &defhp, errhp, (ub4) 1,
-								(dvoid *) &smsId, (sword) sizeof(smsId),
-								SQLT_INT, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-								OCI_DEFAULT));*/
-	/*checkConnErr(OCIRawAssignBytes(envhp, errhp, (ub1 
-*)(sms.messageBody.data), (ub4) sizeof(sms.messageBody.data), &rawUd));*/
 
 	// bind sms placeholder fields for storing
 	checkConnErr(OCIBindByPos(stmtStoreInsert, &bndStoreId, errhp, (ub4) 1,
@@ -695,19 +652,6 @@ SMSId Connection::store(SMS& sms)
 	
 	try 
 	{
-        /*
-		// lock table
-		checkErr(OCIStmtExecute(svchp, stmtStoreLock, errhp, (ub4) 1, (ub4) 0,
-								(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
-								OCI_DEFAULT));
-    
-		// get max(id) into smsId;
-		checkErr(OCIStmtExecute(svchp, stmtStoreMaxId, errhp, (ub4) 1, (ub4) 0,
-								(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
-								OCI_DEFAULT));
-    
-		smsId++; // If no data present in table smsId = 0 (NVL used)
-    	*/
         // insert new sms row into table
 		checkErr(OCIStmtExecute(svchp, stmtStoreInsert, errhp, (ub4) 1, (ub4) 0,
 								(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
