@@ -124,7 +124,7 @@ struct MapDialog{
     associate(0),
     isUSSD(false),
     ssn(lssn),
-    hasIndAddress(false);
+    hasIndAddress(false)
 //    isMOreq(false),
 //    dialogid_req(0)
     {}

@@ -1084,6 +1084,16 @@ USHORT_T Et96MapOpenInd (
   try{
     __trace2__("MAP::%s dialog 0x%x",__FUNCTION__,dialogueId);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,localSsn/*,0*/));
+    dialog->hasIndAddress = false;
+    if ( specificInfo_sp!=0 && specificInfo_sp->specificInfoLen > 4 )
+    {
+      if ( specificInfo_sp->specificData[0] == 0x82 )
+      {
+        __trace2__("MAP::%s parse specific",__FUNCTION__);
+        memcpy(&dialog->m_msAddr,specificInfo_sp->specificData+1,sizeof(dialog->m_msAddr));
+        dialog->hasIndAddress = true;
+      }
+    }
     if ( dialog.isnull() )
       throw runtime_error("MAP:: can't create dialog");
     __trace2__("MAP:: create dialog with ptr 0x%p, dialogid 0x%x",dialog.get(),dialogueId);
@@ -1349,7 +1359,12 @@ static void PauseOnImsiReq(MapDialog* map)
     if ( map->sms.get() == 0 ) 
       throw runtime_error(
         FormatText("MAP::%s has no SMS",__FUNCTION__));
-    mkMapAddress( &dialog->m_msAddr, map->sms->getOriginatingAddress().value, map->sms->getOriginatingAddress().length );
+    if ( !dialog->isUSSD )
+      mkMapAddress( &dialog->m_msAddr, map->sms->getOriginatingAddress().value, map->sms->getOriginatingAddress().length );
+    else {
+      if (!dialog->hasIndAddress )
+        throw runtime_error("MAP::%s MAP.did:{0x%x} has no originating address");
+    }
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
