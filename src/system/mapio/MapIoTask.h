@@ -578,7 +578,6 @@ public:
       hash_.Delete(MKDID(dialogueid,ssn));
       item->state = MAPST_END;
       item->Release();
-      __mapdlg_trace2__("dropped dialog 0x%p for dialogid 0x%x",item,dialogueid);
     }else{
       __mapdlg_trace2__("has no dialog for dialogid 0x%x",dialogueid);
     }

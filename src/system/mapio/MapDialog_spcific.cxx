@@ -78,16 +78,6 @@ inline void Convert7BitToSMSC7Bit(
   }
   text->len = chars;
   text->bytes[chars] = 0;
-  __map_trace2__("7bit(%d)->SMSC7Bit: %s",chars,text->bytes);
-  if( smsc::logger::_map_cat->isDebugEnabled() ) {
-    char b[255*4];
-    unsigned k;
-    unsigned i;
-    for ( i=0,k=0; i<text->len;++i){
-      k += sprintf(b+k,"%x ",text->bytes[i]);
-    }
-    __map_trace2__("latin1(hex): %s",b);
-  }
 }
 
 inline void Convert7BitToText(
@@ -101,23 +91,12 @@ inline void Convert7BitToText(
   }
   text->len = chars;
   text->bytes[chars] = 0;
-  __map_trace2__("7bit(%d)->Text: %s",chars,text->bytes);
-  if( smsc::logger::_map_cat->isDebugEnabled() ){
-    char b[255*4];
-    unsigned k;
-    unsigned i;
-    for ( i=0,k=0; i<text->len;++i){
-      k += sprintf(b+k,"%x ",text->bytes[i]);
-    }
-    __map_trace2__("MAP::latin1(hex): %s",b);
-  }
 }
 
 inline unsigned ConvertText27bit(
   const unsigned char* text, unsigned chars, unsigned char* bit7buf,unsigned* elen,
   unsigned offset=0)
 {
-  __map_trace2__("ConvertText27bit: text %s",text);
   if ( chars > 160 ){
     __map_warn2__("ConvertText27bit: text length(%d) > 160",chars);
     throw runtime_error("text length > 160");
@@ -147,26 +126,6 @@ inline unsigned ConvertText27bit(
 #undef __escape
   }
   unsigned _7bit_len = bit7buf-base+(shift?1:0);
-  __map_trace2__("7bit buffer length: %d",_7bit_len);
-  if( smsc::logger::_map_cat->isDebugEnabled() ){
-    {
-      /*
-      char b[chars+1];
-      memcpy(b,text,chars);
-      b[chars] = 0;
-      __map_trace2__("latin1->7bit: %s",b);
-      */
-    }
-    {
-      char b[255*4];
-      unsigned k;
-      unsigned i;
-      for ( i=0,k=0; i<_7bit_len;++i){
-        k += sprintf(b+k,"%x ",base[i]);
-      }
-      __map_trace2__("7bit(hex): %s",b);
-    }
-  }
   return _7bit_len;
 }
 
