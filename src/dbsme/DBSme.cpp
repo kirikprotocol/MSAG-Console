@@ -333,7 +333,7 @@ static void appSignalHandler(int sig)
     __trace2__("Signal %d handled !\n", sig);
     if (sig==SIGTERM || sig==SIGINT)
     {
-        __trace2__("Stopping ... \n");
+        printf("Stopping ... \n");
         bDBSmeIsStopped = true;
     }
 }
@@ -387,7 +387,7 @@ int main(void)
             DBSmePduListener listener(processor, runner);
             SmppSession      session(cfg, &listener);
 
-            __trace2__("Connecting to SMSC ... ");
+            printf("Connecting to SMSC ... ");
             try
             {
                 session.connect();
@@ -398,25 +398,25 @@ int main(void)
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
-                __trace2__("Connect failed. Cause: %s\n", (msg) ? msg:"unknown");
+                printf("Connect failed. Cause: %s\n", (msg) ? msg:"unknown");
                 bDBSmeIsConnected = false;
                 if (exc.getReason() == 
                     SmppConnectException::Reason::invalidSystemId) throw;
                 sleep(cfg.timeOut);
                 continue;
             }
-            __trace2__("Connected.\n");
+            printf("Connected.\n");
             
             while (!bDBSmeIsStopped && bDBSmeIsConnected) 
             {
                 sleep(2);
-                MutexGuard guard(countersLock);
-                /*__trace2__("\nRequests: %llu processing, %llu processed.\n"
+                /*MutexGuard guard(countersLock);
+                __trace2__("\nRequests: %llu processing, %llu processed.\n"
                            "Failures noticed: %llu\n",
                            requestsProcessingCount, requestsProcessedCount,
                            failuresNoticedCount);*/
             };
-            __trace2__("Disconnecting from SMSC ...\n");
+            printf("Disconnecting from SMSC ...\n");
         };
     }
     catch (exception& exc) 
