@@ -480,7 +480,7 @@ void Connection::store(const SMS &sms, SMSId id)
 
     connect();
     
-    /*IsRejectStmt->setSMS(sms);
+    IsRejectStmt->setSMS(sms);
     try
     {
         checkErr(IsRejectStmt->execute(OCI_DEFAULT));
@@ -492,9 +492,9 @@ void Connection::store(const SMS &sms, SMSId id)
     if (IsRejectStmt->isRejected())
     {
         DuplicateMessageException   exc;
-        log.debug(exc.what());
+        //log.debug(exc.what());
         throw exc;
-    }*/
+    }
 
     StoreStmt->setSMS(sms);
     StoreStmt->setSMSId(id);
