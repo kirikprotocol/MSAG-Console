@@ -349,22 +349,6 @@ void SmppUtil::setupRandomCorrectAddress(PduAddress* addr, bool check)
 	__set_cstr__(value, rand1(MAX_ADDRESS_VALUE_LENGTH));
 }
 
-time_t SmppUtil::adjustValidTime(time_t waitTime, time_t validTime)
-{
-	__cfg_int_arr__(rescheduleTimes);
-	__cfg_int__(timeCheckAccuracy);
-	time_t t = waitTime;
-	for (int i = 0; t <= validTime; i++)
-	{
-		if (validTime <= t + timeCheckAccuracy)
-		{
-			return (t - 1);
-		}
-		t += i < rescheduleTimes.size() ? rescheduleTimes[i] : rescheduleTimes.back();
-	}
-	return validTime;
-}
-
 void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	uint64_t mask, bool check)
 {
@@ -381,9 +365,8 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_int__(uint8_t, esmClass, rand0(255));
 	__set_int__(uint8_t, protocolId, rand0(255));
 	__set_int__(uint8_t, priorityFlag, rand0(255));
-	time_t waitTime = time(NULL) + rand1(maxWaitTime);
-	time_t validTime = adjustValidTime(waitTime,
-		waitTime + rand2(sequentialPduInterval, maxDeliveryPeriod));
+	time_t waitTime = time(NULL) + rand0(maxWaitTime);
+	time_t validTime = waitTime + rand0(maxDeliveryPeriod);
 	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
@@ -408,9 +391,8 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	//set & check fields
 	__set_cstr__(messageId, MAX_MSG_ID_LENGTH);
 	__set_addr__(source);
-	time_t waitTime = time(NULL) + rand1(maxWaitTime);
-	time_t validTime = adjustValidTime(waitTime,
-		waitTime + rand2(sequentialPduInterval, maxDeliveryPeriod));
+	time_t waitTime = time(NULL) + rand0(maxWaitTime);
+	time_t validTime = waitTime + rand0(maxDeliveryPeriod);
 	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
