@@ -31,6 +31,8 @@ void bindTc()
 	//bind.incorrect
 	__reg_tc__("bind.incorrect",
 		"Установление IP соединения с SC и регистрация с неправильными параметрами");
+	__reg_tc__("bind.incorrect.secondBind",
+		"Отправка повторного bind реквеста");
 	__reg_tc__("bind.incorrect.systemIdNotRegistered",
 		"Значение system_id не прописано в конфигурации SC");
 	__reg_tc__("bind.incorrect.invalidPassword",
@@ -40,13 +42,13 @@ void bindTc()
 	__reg_tc__("bind.incorrect.invalidPort",
 		"Установка соединения с недоступным SC (неправильный порт) завершается корректно");
 	__reg_tc__("bind.incorrect.invalidSystemIdLength",
-		"Длина поля system_id в bind pdu больше максимально допустимой");
+		"Длина поля system_id в bind pdu больше максимально допустимой (SmppSession::connect() бросает exception)");
 	__reg_tc__("bind.incorrect.invalidPasswordLength",
-		"Длина поля password в bind pdu больше максимально допустимой");
+		"Длина поля password в bind pdu больше максимально допустимой (SmppSession::connect() бросает exception)");
 	__reg_tc__("bind.incorrect.invalidSystemTypeLength",
-		"Длина поля system_type в bind pdu больше максимально допустимой");
+		"Длина поля system_type в bind pdu больше максимально допустимой (SmppSession::connect() бросает exception)");
 	__reg_tc__("bind.incorrect.invalidAddressRangeLength",
-		"Длина поля address_range в bind pdu больше максимально допустимой");
+		"Длина поля address_range в bind pdu больше максимально допустимой (SmppSession::connect() бросает exception)");
 	//bind.resp
 	__reg_tc__("bind.resp",
 		"На bind реквест SC отправляет соответствующий bind респонс");
@@ -61,9 +63,19 @@ void bindTc()
 	__reg_tc__("bind.resp.checkTime",
 		"Правильное время получения респонса");
 	__reg_tc__("bind.resp.checkHeader",
-		"Правильные значения полей хедера респонса (command_length, sequence_number, command_status = ESME_ROK)");
+		"Правильные значения полей хедера респонса (command_length, sequence_number)");
 	__reg_tc__("bind.resp.checkFields",
 		"Проверка sc_interface_version = 0x34 (system_id не проверяется)");
+	__reg_tc__("bind.resp.checkCmdStatusOk",
+		"При отсутствии кода ошибки в поле command_status, выполняются все условия для нормальной регистрации sme (правильный пароль, зарегистрированный system_id и т.п.)");
+	__reg_tc__("bind.resp.checkCmdStatusAlreadyBound",
+		"Если код ошибки ESME_RALYBND в поле command_status, то действительно sme пытается зарегистрироваться повторно");
+	__reg_tc__("bind.resp.checkCmdStatusInvalidPassword",
+		"Если код ошибки ESME_RINVPASWD в поле command_status, то действительно длина поля password превышает 8 символов");
+	__reg_tc__("bind.resp.checkCmdStatusInvalidSystemId",
+		"Если код ошибки ESME_RINVSYSID в поле command_status, то действительно длина поля system_id превышает 15 символов");
+	__reg_tc__("bind.resp.checkCmdStatusInvalidSystemType",
+		"Если код ошибки ESME_RINVSYSTYP в поле command_status, то действительно длина поля system_type превышает 12 символов");
 }
 
 void unbindTc()
