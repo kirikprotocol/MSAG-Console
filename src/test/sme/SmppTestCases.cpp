@@ -1,4 +1,5 @@
 #include "SmppTestCases.hpp"
+#include "test/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "util/debug.h"
 
@@ -8,6 +9,7 @@ namespace sme {
 
 using smsc::util::Logger;
 using smsc::core::synchronization::MutexGuard;
+using namespace smsc::test; //config constants
 using namespace smsc::smpp::SmppCommandSet;
 
 SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _systemId,
@@ -207,11 +209,11 @@ TCResult* SmppTestCases::bindIncorrectSme(int num)
 #define __checkSummary__(tc) \
 	__trace2__("%s(): found = %d, deleted = %d", tc, found, deleted);
 
-int SmppTestCases::checkSubmitTime()
+int SmppTestCases::checkSubmitTime(time_t checkTime)
 {
 	int res = 0x0;
 	//проверить неполученные респонсы 
-	PduRegistry::PduDataIterator* it = pduReg->getPduBySubmitTime(0, __checkTime__);
+	PduRegistry::PduDataIterator* it = pduReg->getPduBySubmitTime(0, checkTime);
 	int found = 0;
 	int deleted = 0;
 	while (PduData* pduData = it->next())
@@ -236,12 +238,12 @@ int SmppTestCases::checkSubmitTime()
 	return res;
 }
 
-int SmppTestCases::checkWaitTime()
+int SmppTestCases::checkWaitTime(time_t checkTime)
 {
 	int res = 0x0;
 	//проверить неполученные доставки и подтверждения доставки 
 	//на момент waitTime
-	PduRegistry::PduDataIterator* it = pduReg->getPduByWaitTime(0, __checkTime__);
+	PduRegistry::PduDataIterator* it = pduReg->getPduByWaitTime(0, checkTime);
 	int found = 0;
 	int deleted = 0;
 	while (PduData* pduData = it->next())
@@ -254,13 +256,13 @@ int SmppTestCases::checkWaitTime()
 		{
 			continue;
 		}
-		if (pduData->deliveryFlag == PDU_REQUIRED_FLAG)
+		if (pduData->deliveryFlag.isPduMissing(checkTime))
 		{
 			__missingPdu__("SmppTestCases::checkWaitTime", "deliver_sm");
 			res |= 0x2;
 			pduData->deliveryFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
-		if (pduData->deliveryReceiptFlag == PDU_REQUIRED_FLAG)
+		if (pduData->deliveryReceiptFlag.isPduMissing(checkTime))
 		{
 			__missingPdu__("SmppTestCases::checkWaitTime", "delivery_receipt");
 			res |= 0x4;
@@ -284,12 +286,12 @@ int SmppTestCases::checkWaitTime()
 	return res;
 }
 
-int SmppTestCases::checkValidTime()
+int SmppTestCases::checkValidTime(time_t checkTime)
 {
 	int res = 0x0;
 	//проверить неполученные доставки и подтверждения доставки
 	//по окончании validTime
-	PduRegistry::PduDataIterator* it = pduReg->getPduByValidTime(0, __checkTime__);
+	PduRegistry::PduDataIterator* it = pduReg->getPduByValidTime(0, checkTime);
 	int found = 0;
 	int deleted = 0;
 	while (PduData* pduData = it->next())
@@ -302,13 +304,13 @@ int SmppTestCases::checkValidTime()
 		{
 			pduData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
 		}
-		if (pduData->deliveryFlag == PDU_REQUIRED_FLAG)
+		if (pduData->deliveryFlag.isPduMissing(checkTime))
 		{
 			__missingPdu__("SmppTestCases::checkValidTime", "deliver_sm");
 			res |= 0x2;
 			pduData->deliveryFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
-		if (pduData->deliveryReceiptFlag == PDU_REQUIRED_FLAG)
+		if (pduData->deliveryReceiptFlag.isPduMissing(checkTime))
 		{
 			__missingPdu__("SmppTestCases::checkValidTime", "delivery_receipt");
 			res |= 0x4;
@@ -321,7 +323,7 @@ int SmppTestCases::checkValidTime()
 			pduData->intermediateNotificationFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
 		//для pdu с validTime меньше текущего мог быть неполучен респонс
-		if (pduData->submitTime <= __checkTime__)
+		if (pduData->submitTime <= checkTime)
 		{
 			__removedPdu__("SmppTestCases::checkValidTime");
 			deleted++;
@@ -339,7 +341,8 @@ TCResult* SmppTestCases::checkMissingPdu()
 	if (pduReg)
 	{
 		MutexGuard mguard(pduReg->getMutex());
-		int chk = checkSubmitTime() | checkWaitTime() | checkValidTime();
+		time_t checkTime = time(NULL) - timeCheckAccuracy;
+		int chk = checkSubmitTime(checkTime) | checkWaitTime(checkTime) | checkValidTime(checkTime);
 		if (chk & 0x1) //неполученные респонсы
 		{
 			res->addFailure(1);
