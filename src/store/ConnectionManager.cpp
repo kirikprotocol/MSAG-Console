@@ -346,8 +346,8 @@ Connection::Connection(ConnectionPool* pool)
 
     checkConnErr(OCIBindByPos(stmtStoreInsert, &bndOAVal, errhp, (ub4) 8,
                               (dvoid *)(sms.originatingAddress.value),
-                              (sb4) sizeof(sms.originatingAddress.value),
-                              SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+                              (sb4) MAX_ADDRESS_VALUE_LENGTH,
+                              SQLT_CHR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
                               (ub4)0, (ub4 *)0, OCI_DEFAULT));
 
     checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDALen, errhp, (ub4) 9,
@@ -370,8 +370,8 @@ Connection::Connection(ConnectionPool* pool)
 
     checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDAVal, errhp, (ub4) 12,
                               (dvoid *)(sms.destinationAddress.value),
-                              (sb4) sizeof(sms.destinationAddress.value),
-                              SQLT_STR, (dvoid *)0, (ub2 *)0, (ub2 *)0, 
+                              (sb4) MAX_ADDRESS_VALUE_LENGTH,
+                              SQLT_CHR, (dvoid *)0, (ub2 *)0, (ub2 *)0, 
                               (ub4)0, (ub4 *)0, OCI_DEFAULT));
 
     checkConnErr(OCIBindByPos(stmtStoreInsert, &bndVTime, errhp, (ub4) 13,
@@ -488,8 +488,8 @@ Connection::Connection(ConnectionPool* pool)
 
     checkConnErr(OCIDefineByPos(stmtRetriveAll, &defOAVal, errhp, (ub4) 7,
                                 (dvoid *)(sms.originatingAddress.value), 
-                                (sword) sizeof(sms.originatingAddress.value),
-                                SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+                                (sword) MAX_ADDRESS_VALUE_LENGTH,
+                                SQLT_CHR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
                                 OCI_DEFAULT));
 
     checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDALen, errhp, (ub4) 8,
@@ -512,8 +512,8 @@ Connection::Connection(ConnectionPool* pool)
 
     checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDAVal, errhp, (ub4) 11,
                                 (dvoid *)(sms.destinationAddress.value), 
-                                (sword) sizeof(sms.destinationAddress.value),
-                                SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+                                (sword) MAX_ADDRESS_VALUE_LENGTH,
+                                SQLT_CHR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
                                 OCI_DEFAULT));
 
     checkConnErr(OCIDefineByPos(stmtRetriveAll, &defVTime, errhp, (ub4) 12,
