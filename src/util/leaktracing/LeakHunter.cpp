@@ -7,6 +7,7 @@
 #include <new>
 #include <setjmp.h>
 #include <signal.h>
+#include <unistd.h>
 
 
 namespace smsc{
@@ -72,6 +73,7 @@ static void sighandler(int param)
 struct BlockInfo{
   void* addr;
   int size;
+  int id;
   void *trace[TRACESIZE];
 };
 
@@ -85,7 +87,7 @@ public:
   }
 };
 
-const int LH_HASHSIZE=4*1024;
+const int LH_HASHSIZE=16*1024;
 const int LH_DEFAULTBUCKETSIZE=16;
 
 class LeakHunter{
@@ -93,8 +95,15 @@ class LeakHunter{
   int memcounts[LH_HASHSIZE];
   int memsizes[LH_HASHSIZE];
 
+  int *cp;
+  int cpcnt;
+  int cpalloc;
+  int makecp;
+
   int maxmem;
   int alloc;
+
+  int idcnt;
 
   FILE *f;
   int init;
@@ -117,15 +126,23 @@ public:
 
   void DumpTrace(void**);
 
+  void CheckPoint();
 };
 
 
 static LeakHunter* lh=NULL;
 static mutex_t mtx=DEFAULTMUTEX;
 
+static void sigcheckpoint(int param)
+{
+  lh->CheckPoint();
+}
+
+
 void LeakHunter::Init()
 {
   sigset(11,sighandler);
+  sigset(17,sigcheckpoint);
 
   __LH__DummyThread t;
   t.Start();
@@ -139,6 +156,9 @@ void LeakHunter::Init()
   }
   maxmem=0;
   alloc=0;
+  cp=0;
+  idcnt=0;
+  makecp=0;
   init=1;
 }
 
@@ -166,6 +186,77 @@ LeakHunter::~LeakHunter()
   }
   fprintf(f,"---\n");
   fclose(f);
+}
+
+void LeakHunter::CheckPoint()
+{
+  f=fopen("lhcheckpoint.log","wt");
+  if(!f)
+  {
+    fprintf(stderr,"\n\nFailed to open lhcheckpoint.log\n\n");
+    return;
+  }
+  if(!makecp && !m.TryLock())
+  {
+    fclose(f);
+    makecp=1;
+    return;
+  }
+  makecp=0;
+  if(cp)
+  {
+    if(alloc-cpalloc>0)fprintf(f,"Unallocated: %d bytes\n",alloc-cpalloc);
+    for(int i=0;i<LH_HASHSIZE;i++)
+    {
+      for(int j=0;j<memcounts[i];j++)
+      {
+        bool fnd=false;
+        for(int k=0;k<cpcnt;k++)
+        {
+          if(memblocks[i][j].id==cp[k])
+          {
+            fnd=true;
+            break;
+          }
+        }
+        if(!fnd)
+        {
+          BlockInfo *bi=&memblocks[i][j];
+          fprintf(f,"Mem:0x%08X size %d, allocated at\n",(int)bi->addr,bi->size);
+          DumpTrace(bi->trace);
+          fprintf(f,"\n");
+        }
+      }
+    }
+  }
+  int cnt=0;
+  for(int i=0;i<LH_HASHSIZE;i++)
+  {
+    cnt+=memcounts[i];
+  }
+  if(cp)
+  {
+    free(cp);
+    cp=0;
+  }
+  if(!cp)
+  {
+    cp=(int*)malloc(cnt*sizeof(int));
+  }
+  int k=0;
+  //fprintf(f,"Checkpoint created, %d block stored\n",cnt);
+  for(int i=0;i<LH_HASHSIZE;i++)
+  {
+    for(int j=0;j<memcounts[i];j++)
+    {
+      cp[k++]=memblocks[i][j].id;
+      //fprintf(f,"%d\n",memblocks[i][j].id);
+    }
+  }
+  cpcnt=cnt;
+  cpalloc=alloc;
+  fclose(f);
+  m.Unlock();
 }
 
 void LeakHunter::DumpTrace(void** trace)
@@ -196,12 +287,14 @@ void LeakHunter::RegisterAlloc(void* ptr,int size)
 
   bi->addr=ptr;
   bi->size=size;
+  bi->id=idcnt++;
   memcounts[idx]++;
   alloc+=size;
   if(alloc>maxmem)
   {
     maxmem=alloc;
   }
+  if(makecp)CheckPoint();
 }
 
 static void PrintTrace()
@@ -232,6 +325,7 @@ int LeakHunter::RegisterDealloc(void* ptr)
         memcpy(memblocks[idx]+i,memblocks[idx]+i+1,sizeof(BlockInfo)*(memcounts[idx]-1-i));
       }
       memcounts[idx]--;
+      if(makecp)CheckPoint();
       return 1;
     }
   }
