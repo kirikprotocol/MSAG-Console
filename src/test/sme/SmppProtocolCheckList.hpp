@@ -48,16 +48,22 @@ void bindTc()
 	__reg_tc__("bind.incorrect.invalidAddressRangeLength",
 		"Длина поля address_range в bind pdu больше максимально допустимой");
 	//bind.resp
+	__reg_tc__("bind.resp",
+		"На bind реквест SC отправляет соответствующий bind респонс");
 	__reg_tc__("bind.resp.receiver",
 		"На bind_receiver реквест SC отправляет bind_receiver_resp респонс");
 	__reg_tc__("bind.resp.transmitter",
 		"На bind_transmitter реквест SC отправляет bind_transmitter_resp респонс");
 	__reg_tc__("bind.resp.transceiver",
 		"На bind_transceiver реквест SC отправляет bind_transceiver_resp респонс");
-	__reg_tc__("bind.resp.checkCommandStatus",
-		"В bind респонсе значение поля command_status равно ESME_ROK");
-	__reg_tc__("bind.resp.checkInterfaceVersion",
-		"В bind респонсе значение поля sc_interface_version равно 0x34");
+	__reg_tc__("bind.resp.checkDuplicates",
+		"На каждый реквест приходит единственный респонс");
+	__reg_tc__("bind.resp.checkTime",
+		"Правильное время получения респонса");
+	__reg_tc__("bind.resp.checkHeader",
+		"Правильные значения полей хедера респонса (command_length, sequence_number, command_status = ESME_ROK)");
+	__reg_tc__("bind.resp.checkFileds",
+		"Правильные значения полей system_id и sc_interface_version = 0x34");
 }
 
 void unbindTc()
@@ -65,18 +71,18 @@ void unbindTc()
 	__reg_tc__("unbind", "Завершение соединения с SC и unbind тест кейсы");
 	__reg_tc__("unbind.resp",
 		"На unbind реквест SC отправляет unbind_resp респонс");
-	__reg_tc__("unbind.resp.checkCommandStatus",
-		"В unbind респонсе значение поля command_status равно ESME_ROK");
+	__reg_tc__("unbind.resp.checkDuplicates",
+		"На каждый реквест приходит единственный респонс");
+	__reg_tc__("unbind.resp.checkTime",
+		"Правильное время получения респонса");
+	__reg_tc__("unbind.resp.checkPdu",
+		"Правильные значения полей респонса (command_length, sequence_number, command_status = ESME_ROK");
 }
 
 void enquireLinkTc()
 {
 	__reg_tc__("enquireLink",
 		"Отправка enquire_link реквеста");
-	__reg_tc__("enquireLink.sync",
-		"Отправка синхронного enquire_link реквеста");
-	__reg_tc__("enquireLink.async",
-		"Отправка асинхронного enquire_link реквеста");
 	__reg_tc__("enquireLink.receiver",
 		"Отправка enquire_link реквеста с sme зарегистрированной как receiver");
 	__reg_tc__("enquireLink.transmitter",
@@ -90,8 +96,8 @@ void enquireLinkTc()
 		"На каждый реквест приходит единственный респонс");
 	__reg_tc__("enquireLink.resp.checkTime",
 		"Правильное время получения респонса");
-	__reg_tc__("enquireLink.resp.checkCommandStatus",
-		"В enquire_link респонсе значение поля command_status равно ESME_ROK");
+	__reg_tc__("enquireLink.resp.checkPdu",
+		"Правильные значения полей респонса (command_length, sequence_number, command_status = ESME_ROK");
 }
 
 void submitSmTc()

@@ -114,6 +114,11 @@ public:
 	 */
 	void invalidBindStatusScenario(int num);
 
+	/**
+	 * Отправка и получение enquire_link pdu.
+	 */
+	void enquireLinkScenario(int num);
+
 protected:
 	const SmeConfig cfg;
 	const Address smeAddr;

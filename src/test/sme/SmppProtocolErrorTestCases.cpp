@@ -110,21 +110,28 @@ void SmppProtocolErrorScenario::checkBindResp(SmppHeader* pdu)
 	__check__(2, !bound);
 	bound = true;
 	__tc_ok_cond__;
-	__tc__("bind.resp.checkCommandStatus");
-	__check__(1, pdu->get_commandStatus() == ESME_ROK);
+	__tc__("bind.resp.checkHeader");
+	__check__(1, pdu->get_commandLength() >= 22 && pdu->get_commandLength() <= 37);
+	__check__(2, pdu->get_commandStatus() == ESME_ROK);
+	//__check__(3, pdu->get_sequenceNumber() == 1);
 	__tc_ok_cond__;
-	__tc__("bind.resp.checkInterfaceVersion");
-	__check__(1, reinterpret_cast<PduBindTRXResp*>(pdu)->get_scInterfaceVersion() == 0x34);
+	__tc__("bind.resp.checkFields");
+	PduBindTRXResp* bindPdu = reinterpret_cast<PduBindTRXResp*>(pdu);
+	__check__(1, cfg.sid == nvl(bindPdu->get_systemId()));
+	__check__(2, bindPdu->get_scInterfaceVersion() == 0x34);
 	__tc_ok_cond__;
 }
 
 void SmppProtocolErrorScenario::checkUnbindResp(SmppHeader* pdu)
 {
 	__decl_tc__;
-	__tc__("unbind.resp.checkCommandStatus");
-	__check__(1, pdu->get_commandStatus() == ESME_ROK);
-	__check__(2, bound);
+	__tc__("unbind.resp");
+	__check__(1, bound);
 	bound = false;
+	__tc_ok_cond__;
+	__tc__("unbind.resp.checkPdu");
+	__check__(1, pdu->get_commandLength() == 16);
+	__check__(2, pdu->get_commandStatus() == ESME_ROK);
 	__tc_ok_cond__;
 }
 
@@ -148,10 +155,10 @@ inline void SmppProtocolErrorScenario::sendPdu(SmppHeader* pdu)
 
 inline bool SmppProtocolErrorScenario::checkComplete(int timeout)
 {
-	__trace2__("waitComplete(): timeout = %d", timeout);
+	__trace2__("checkComplete(): timeout = %d", timeout);
 	if (timeout)
 	{
-		event.Wait(timeout);
+		event.Wait(timeout * 1000);
 	}
 	return complete;
 }
@@ -361,6 +368,7 @@ public:
 	virtual void execute()
 	{
 		__decl_tc__;
+		__cfg_int__(timeCheckAccuracy);
 		//connect
 		connect();
 		//неправильный bind
@@ -436,10 +444,7 @@ public:
 			*(tmp + 1) = htonl(cmdId);
 		}
 		sess.sendBytes(pb);
-		if (!checkComplete(10000))
-		{
-			__tc_fail__(1);
-		}
+		__check__(1, checkComplete(timeCheckAccuracy));
 		__tc_ok_cond__;
 	}
 	virtual void handleEvent(SmppHeader *pdu)
@@ -509,6 +514,7 @@ public:
 	virtual void execute()
 	{
 		__decl_tc__;
+		__cfg_int__(timeCheckAccuracy);
 		//connect & bind
 		connect();
 		PduBindTRX bindPdu;
@@ -611,10 +617,7 @@ public:
 			}
 		}
 		*/
-		if (!checkComplete(10000))
-		{
-			__tc_fail__(1);
-		}
+		__check__(1, checkComplete(timeCheckAccuracy));
 		__tc_ok_cond__;
 	}
 	virtual void handleEvent(SmppHeader* pdu)
@@ -678,6 +681,7 @@ public:
 	virtual void execute()
 	{
 		__decl_tc__;
+		__cfg_int__(timeCheckAccuracy);
 		__tc__("protocolError.equalSeqNum");
 		//connect & bind
 		connect();
@@ -691,10 +695,7 @@ public:
 			header->set_sequenceNumber(0);
 			sendPdu(header);
 		}
-		if (!checkComplete(10000))
-		{
-			__tc_fail__(1);
-		}
+		__check__(1, checkComplete(timeCheckAccuracy));
 		__tc_ok_cond__;
 	}
 	virtual void handleEvent(SmppHeader* pdu)
@@ -769,6 +770,7 @@ public:
 	virtual void execute()
 	{
 		__decl_tc__;
+		__cfg_int__(timeCheckAccuracy);
 		__tc__("protocolError.submitAfterUnbind");
 		//connect & bind
 		connect();
@@ -777,7 +779,7 @@ public:
 		//unbind
 		PduUnbind unbindPdu;
 		sendPdu(setupUnbindPdu(unbindPdu));
-		if (!checkComplete(10000))
+		if (!checkComplete(timeCheckAccuracy))
 		{
 			__tc_fail__(1);
 			return;
@@ -859,10 +861,7 @@ public:
 			*(tmp + 1) = htonl(cmdId);
 		}
 		sess.sendBytes(pb);
-		if (!checkComplete(10000))
-		{
-			__tc_fail__(1);
-		}
+		__check__(1, checkComplete(timeCheckAccuracy));
 		__tc_ok_cond__;
 	}
 	virtual void handleEvent(SmppHeader* pdu)
@@ -971,7 +970,7 @@ public:
 			}
 			catch (...)
 			{
-				__trace__("Exception when sending pdu: exiting test scenario");
+				__warning__("Exception when sending pdu: exiting test scenario");
 				__tc_fail__(100);
 				disposePdu(pdu);
 				return;
@@ -1022,6 +1021,7 @@ public:
 	virtual void execute()
 	{
 		__decl_tc__;
+		__cfg_int__(timeCheckAccuracy);
 		TCSelector s(num, 3);
 		//connect & bind
 		connect();
@@ -1045,11 +1045,28 @@ public:
 		}
 		sendPdu(setupBindPdu(bindPdu, bindType));
 		__tc_ok__;
+		//bind resp
+		__tc__("bind.resp.checkTime");
+		__check__(1, checkComplete(timeCheckAccuracy));
+		setComplete(false);
+		__tc_ok_cond__;
+		__tc__("bind.resp.checkDuplicates");
+		__check__(1, !checkComplete(timeCheckAccuracy));
+		setComplete(false);
+		__tc_ok_cond__;
 		//unbind
 		__tc__("unbind");
 		PduUnbind unbindPdu;
 		sendPdu(setupUnbindPdu(unbindPdu));
 		__tc_ok__;
+		//unbind resp
+		__tc__("unbind.resp.checkTime");
+		__check__(1, checkComplete(timeCheckAccuracy));
+		setComplete(false);
+		__tc_ok_cond__;
+		__tc__("unbind.resp.checkDuplicates");
+		__check__(1, !checkComplete(timeCheckAccuracy));
+		__tc_ok_cond__;
 	}
 	virtual void handleEvent(SmppHeader* pdu)
 	{
@@ -1060,9 +1077,11 @@ public:
 			case BIND_TRANSMITTER_RESP:
 			case BIND_TRANCIEVER_RESP:
 				checkBindResp(pdu);
+				setComplete(true);
 				break;
 			case UNBIND_RESP:
 				checkUnbindResp(pdu);
+				setComplete(true);
 				break;
 			default:
 				__warning2__("handleEvent(): unexpected pdu with commandId = %x", pdu->get_commandId());
@@ -1100,6 +1119,7 @@ public:
 	virtual void execute()
 	{
 		__decl_tc__;
+		__cfg_int__(timeCheckAccuracy);
 		//connect & bind
 		connect();
 		PduBindTRX bindPdu;
@@ -1126,10 +1146,7 @@ public:
 		sendPdu(pdu);
 		disposePdu(pdu);
 		//дождаться респонса
-		if (!checkComplete(10000))
-		{
-			__tc_fail__(1);
-		}
+		__check__(1, checkComplete(timeCheckAccuracy));
 		__tc_ok_cond__;
 	}
 	virtual void handleEvent(SmppHeader *pdu)
@@ -1173,6 +1190,99 @@ public:
 void SmppProtocolErrorTestCases::invalidBindStatusScenario(int num)
 {
 	InvalidBindStatusScenario scenario(cfg, smeAddr, chkList, num);
+	scenario.execute();
+}
+
+class EnquireLinkScenario : public SmppProtocolErrorScenario
+{
+public:
+	int num;
+	uint32_t cmdId;
+public:
+	EnquireLinkScenario(const SmeConfig& conf, const Address& addr,
+		CheckList* chkList, int _num)
+	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num), cmdId(0)
+	{
+		__trace2__("EnquireLinkScenario(): scenario = %p", this);
+	}
+	~EnquireLinkScenario()
+	{
+		__trace2__("~EnquireLinkScenario(): scenario = %p", this);
+		sess.close(); //иначе может быть pure virtual method called
+	}
+	virtual void execute()
+	{
+		__decl_tc__;
+		__cfg_int__(timeCheckAccuracy);
+		TCSelector s(num, 3);
+		//connect & bind
+		connect();
+		switch (s.value())
+		{
+			case 1:
+				__tc__("enquireLink.receiver");
+				bindType = BindType::Receiver;
+				break;
+			case 2:
+				__tc__("enquireLink.transmitter");
+				bindType = BindType::Transmitter;
+				break;
+			case 3:
+				__tc__("enquireLink.transceiver");
+				bindType = BindType::Transceiver;
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+		//bind
+		PduBindTRX bindPdu;
+		sendPdu(setupBindPdu(bindPdu, bindType));
+		//enquire_link
+		SmppHeader* pdu = createPdu(ENQUIRE_LINK);
+		sendPdu(pdu);
+		disposePdu(pdu);
+		__tc_ok_cond__;
+		//enquire_link_resp
+		__tc__("enquireLink.resp.checkTime");
+		__check__(1, checkComplete(timeCheckAccuracy));
+		__tc_ok_cond__;
+		__tc__("enquireLink.resp.checkDuplicates");
+		setComplete(false);
+		__check__(1, !checkComplete(timeCheckAccuracy));
+		__tc_ok_cond__;
+	}
+	virtual void handleEvent(SmppHeader* pdu)
+	{
+		__trace2__("handleEvent(): scenario = %p, pdu:\n%s", this, str(pdu).c_str());
+		__decl_tc__;
+		__tc__("enquireLink.resp.checkPdu");
+		switch (pdu->get_commandId())
+		{
+			case BIND_RECIEVER_RESP:
+			case BIND_TRANSMITTER_RESP:
+			case BIND_TRANCIEVER_RESP:
+				checkBindResp(pdu);
+				break;
+			case ENQUIRE_LINK_RESP:
+				__check__(1, pdu->get_commandLength() == 16);
+				__check__(2, pdu->get_commandStatus() == ESME_ROK);
+				__tc_ok_cond__;
+				setComplete(true);
+				break;
+			default:
+				__warning2__("handleEvent(): unexpected pdu with commandId = %x", pdu->get_commandId());
+				__tc_fail__(3);
+		}
+	}
+	virtual void handleError(int errorCode)
+	{
+		__warning2__("handleError(): errorCode = %d", errorCode);
+	}
+};
+
+void SmppProtocolErrorTestCases::enquireLinkScenario(int num)
+{
+	EnquireLinkScenario scenario(cfg, smeAddr, chkList, num);
 	scenario.execute();
 }
 
