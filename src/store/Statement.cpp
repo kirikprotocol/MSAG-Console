@@ -578,14 +578,12 @@ void RetriveStatement::getSms(SMS& sms)
 
 /* --------------------------- DestroyStatement ----------------------- */
 const char* DestroyStatement::sql = (const char*)
-"DELETE FROM SMS_MSG WHERE ID=:ID AND ST=:ENROUTE";
+"DELETE FROM SMS_MSG WHERE ID=:ID";
 
 DestroyStatement::DestroyStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, DestroyStatement::sql, assign)
 {
-    bind(2 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
-         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
 }
 void DestroyStatement::bindId(SMSId id)
     throw(StorageException)
