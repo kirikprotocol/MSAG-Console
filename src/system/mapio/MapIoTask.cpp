@@ -405,6 +405,10 @@ void MapIoTask::dispatcher()
       __trace2__("MAP: MsgRecv hatching msg to reset priority order " );
       message.msg_p[6] = 0;
     }
+    else if( message.primitive == 0x8d && message.msg_p[4] >= 0x04 ) {
+      __trace2__("MAP: MsgRecv hatching msg to reset priority order " );
+      message.msg_p[4] = 0;
+    }
     Et96MapHandleIndication(&message);
   }
 }
