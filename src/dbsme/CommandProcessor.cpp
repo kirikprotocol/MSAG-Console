@@ -313,6 +313,7 @@ void DataProvider::createJob(const char* id, ConfigView* jobConfig)
     const char* type  = typeGuard.get();
     std::auto_ptr<char> nameGuard   (jobConfig->getString("name",    0, false));
     const char* name  = nameGuard.get();
+    if(name && strlen(name) == 0) name = 0;
     std::auto_ptr<char> aliasGuard  (jobConfig->getString("alias",   0, false));
     const char* alias = aliasGuard.get();
     if(alias && strlen(alias) == 0) alias = 0;
