@@ -162,15 +162,6 @@ while (i.hasNext()) {
         <tr id="c<%=disNo++%>" style="display:none">
         <td colspan=7>
         <table class=list cellspacing=0 cellpadding=0 border=0>
-          <tr class=row0>
-              <th width="28%"><div align=right>Error Code</div></th>
-              <th width="12%"><div align=right>Count</div></th>
-              <th width="12%">&nbsp;</th>
-              <th width="12%">&nbsp;</th>
-              <th width="12%">&nbsp;</th>
-              <th width="12%">&nbsp;</th>
-              <th width="12%">&nbsp;</th>
-          </tr>
         <%
           Iterator si = errs.iterator();
           while (si.hasNext()) {
@@ -230,15 +221,6 @@ while (i.hasNext()) {
         <tr id="c<%=disNo++%>" style="display:none">
         <td colspan=7>
         <table class=list cellspacing=0 cellpadding=0 border=0>
-          <tr class=row0>
-              <th width="28%"><div align=right>Error Code</div></th>
-              <th width="12%"><div align=right>Count</div></th>
-              <th width="12%">&nbsp;</th>
-              <th width="12%">&nbsp;</th>
-              <th width="12%">&nbsp;</th>
-              <th width="12%">&nbsp;</th>
-              <th width="12%">&nbsp;</th>
-          </tr>
         <%
           Iterator ri = errs.iterator();
           while (ri.hasNext()) {

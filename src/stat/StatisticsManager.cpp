@@ -132,14 +132,12 @@ void StatisticsManager::updateChanged(const char* dstSmeId, const char* routeId,
         SmsStat* stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
         if (stat) {
             if (errcode == 0) stat->delivered++;
-            else {
-                stat->failed++;
-                addError(stat->errors, errcode);
-            }
+            else stat->failed++;
+            addError(stat->errors, errcode);
         }
         else {
             SmsStat newStat(0, 0, (errcode) ? 0:1, (errcode) ? 1:0, 0, 0); // delivered or failed
-            if (errcode != 0) addError(newStat.errors, errcode);
+            addError(newStat.errors, errcode);
             statBySmeId[currentIndex].Insert(dstSmeId, newStat);
         }
     }
@@ -149,14 +147,12 @@ void StatisticsManager::updateChanged(const char* dstSmeId, const char* routeId,
         SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
         if (stat) {
             if (errcode == 0) stat->delivered++;
-            else {
-                stat->failed++;
-                addError(stat->errors, errcode);
-            }
+            else stat->failed++;
+            addError(stat->errors, errcode);
         }
         else {
             SmsStat newStat(0, 0, (errcode) ? 0:1, (errcode) ? 1:0, 0, 0); // delivered or failed
-            if (errcode != 0) addError(newStat.errors, errcode);
+            addError(newStat.errors, errcode);
             statByRoute[currentIndex].Insert(routeId, newStat);
         }
     }
