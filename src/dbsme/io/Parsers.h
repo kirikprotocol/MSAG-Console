@@ -65,7 +65,8 @@ namespace smsc { namespace dbsme { namespace io
         
         Parser(EntityType type) 
         {
-            ParserRegistry::registerParser(entityTypeStrings[type], this);
+            ParserRegistry::registerParser(
+                ioEntityTypeStrings[type], this);
         };
 
     public:

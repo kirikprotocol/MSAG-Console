@@ -104,23 +104,23 @@ FormatEntity::FormatEntity(std::string line, bool type)
     {
         const char* raw = line.c_str();
         int i;
-        for (i=0; i<entityTypesNumber-1; i++)
+        for (i=0; i<ioEntityTypesNumber-1; i++)
         {
             //printf("Checking type: %s\n", entityTypeStrings[i]);
-            if (raw == strstr(raw, entityTypeStrings[i]))
+            if (raw == strstr(raw, ioEntityTypeStrings[i]))
             {
                 this->type = (EntityType)i; str = "";
                 break;
             }
         }
-        if (i >= entityTypesNumber-1 ||
-            !isspace(raw[strlen(entityTypeStrings[i])]))
+        if (i >= ioEntityTypesNumber-1 ||
+            !isspace(raw[strlen(ioEntityTypeStrings[i])]))
         {
             throw FormatRenderingException("FormatRenderingException: "
                                            "Argument type is not supported. "
                                            "Parsing format string: <%s>", raw);
         }
-        renderOptions(raw+strlen(entityTypeStrings[i]));
+        renderOptions(raw+strlen(ioEntityTypeStrings[i]));
         
         const char* arg = getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_NUMBER);
         if (!arg) 

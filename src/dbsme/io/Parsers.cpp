@@ -33,18 +33,19 @@ void InputParser::parse(std::string input, SetAdapter& adapter)
         FormatEntity* entity = entities[i];
         if (entity && entity->type < TEXT)
         {
-            printf("Parsing arg of type: %s\n", entityTypeStrings[entity->type]);
+            printf("Parsing arg of type: %s\n", 
+                   ioEntityTypeStrings[entity->type]);
             Parser* parser = 
-                ParserRegistry::getParser(entityTypeStrings[entity->type]);
+                ParserRegistry::getParser(ioEntityTypeStrings[entity->type]);
             if (parser)
             {
                 parser->parse(input, *entity, adapter);
             }
             else throw ParsingException("Parser for type <%s> not defined !",
-                                         entityTypeStrings[entity->type]);
+                                         ioEntityTypeStrings[entity->type]);
         }
         else throw ParsingException("Type <%s> is invalid !",
-                                    entityTypeStrings[entity->type]);
+                                    ioEntityTypeStrings[entity->type]);
     }
 }
 
@@ -92,7 +93,7 @@ void Int32Parser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning int32 type. "
                                "Processing string: '%s'", str);
-    //adapter.setInt32(entity.position, value);
+    adapter.setInt32(entity.position, value);
     input.erase(0, bytes);
     printf("Pos: %d, Value: %ld, Less: <%s>\n", 
            entity.position, value, input.c_str());
@@ -108,7 +109,7 @@ void Uint8Parser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning uint8 type. "
                                "Processing string: '%s'", str);
-    //adapter.setUint8(entity.position, (uint8_t)value);
+    adapter.setUint8(entity.position, (uint8_t)value);
     input.erase(0, bytes);
     printf("Pos: %d, Value: %hu, Less: <%s>\n", 
            entity.position, value, input.c_str());
@@ -124,7 +125,7 @@ void Uint16Parser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning uint16 type. "
                                "Processing string: '%s'", str);
-    //adapter.setUint16(entity.position, (uint16_t)value);
+    adapter.setUint16(entity.position, (uint16_t)value);
     input.erase(0, bytes);
     printf("Pos: %d, Value: %u, Less: <%s>\n", 
            entity.position, value, input.c_str());
@@ -140,7 +141,7 @@ void Uint32Parser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning uint32 type. "
                                "Processing string: '%s'", str);
-    //adapter.setUint32(entity.position, value);
+    adapter.setUint32(entity.position, value);
     input.erase(0, bytes);
     printf("Pos: %d, Value: %lu, Less: <%s>\n", 
            entity.position, value, input.c_str());
@@ -188,7 +189,7 @@ void FloatParser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning float type. "
                                "Processing string: '%s'", str);
-    //adapter.setFloat(entity.position, value);
+    adapter.setFloat(entity.position, value);
     input.erase(0, bytes);
     printf("Pos: %d, Value: %f, Less: <%s>\n", 
            entity.position, value, input.c_str());
@@ -204,7 +205,7 @@ void DoubleParser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning double type. "
                                "Processing string: '%s'", str);
-    //adapter.setDouble(entity.position, value);
+    adapter.setDouble(entity.position, value);
     input.erase(0, bytes);
     printf("Pos: %d, Value: %le, Less: <%s>\n", 
            entity.position, value, input.c_str());
@@ -220,7 +221,7 @@ void LongDoubleParser::parse(
         || !result || !bytes || bytes<0)
         throw ParsingException("Error scanning long double type. "
                                "Processing string: '%s'", str);
-    //adapter.setLongDouble(entity.position, value);
+    adapter.setLongDouble(entity.position, value);
     input.erase(0, bytes);
     printf("Pos: %d, Value: %Le, Less: <%s>\n", 
            entity.position, value, input.c_str());
@@ -229,7 +230,202 @@ void DateTimeParser::parse(
     std::string& input, FormatEntity& entity, SetAdapter& adapter)
         throw(ParsingException, AdapterException)
 {
-    printf("Parser for date-time type called !\n");
+    char* str = (char *)input.c_str();
+    const char* pattern = entity.getOption("pattern");
+    const char* error = "Error scanning date type. "
+                        "Processing string: '%s' "
+                        "Pattern is: '%s'";
+    tm  tmdt;
+    int strPos = 0;
+    int bytes, result = 0;
+    memset(&tmdt, 0, sizeof(tmdt));
+    
+    if (pattern) // scan date by user-desired pattern
+    {
+        bool    needAMPM = false;
+        bool    AMPM = false;
+        int     curPos = 0;
+        
+        while (pattern[curPos] && str)
+        {
+            
+            while (isspace(str[strPos])) strPos++;
+            while (isspace(pattern[curPos])) curPos++;
+            
+            switch(pattern[curPos])
+            {
+            case 'd':
+            {
+                if ((result = sscanf(&str[strPos], 
+                    (pattern[++curPos] == 'd') ? "%2d%n":"%d%n", 
+                    &tmdt.tm_mday, &bytes)) == EOF ||
+                    !result || !bytes || bytes<0 || 
+                    tmdt.tm_mday<=0 || tmdt.tm_mday>31)
+                    throw ParsingException(error, str, pattern);
+                
+                if (pattern[curPos] == 'd') curPos++;
+                strPos += bytes;
+                continue;
+            }
+            case 'M':
+            {
+                if (pattern[++curPos] == 'M')
+                    if (pattern[++curPos] == 'M')
+                    {
+                        std::string buff = ""; bytes = 0;
+                        while (isalpha(str[strPos])) buff += str[strPos++];
+
+                        printf("Buff is: '%s'\n", buff.c_str());
+
+                        curPos++; int i;
+                        for (i=0; i<12; i++)
+                            if (strcmp(buff.c_str(),
+                                       (pattern[curPos] == 'M') ?
+                                       ioFullMonthesNames[i] :
+                                       ioShortMonthesNames[i]) == 0)
+                            {
+                                tmdt.tm_mon = i+1;
+                                break;
+                            };
+                        
+                        if (i >= 12)
+                            throw ParsingException(error, str, pattern);
+                        
+                        if (pattern[curPos] == 'M') curPos++;
+                    }
+                    else if ((result = sscanf(&str[strPos], "%2d%n", 
+                            &tmdt.tm_mon, &bytes)) == EOF ||
+                            !result || !bytes || bytes<0)
+                            throw ParsingException(error, str, pattern);
+                else if ((result = sscanf(&str[strPos], "%d%n", 
+                        &tmdt.tm_mon, &bytes)) == EOF ||
+                        !result || !bytes || bytes<0)
+                        throw ParsingException(error, str, pattern);
+                     
+                tmdt.tm_mon--;
+                strPos += bytes;
+                continue;
+            }
+            case 'H':
+            {
+                if ((result = sscanf(&str[strPos],
+                    (pattern[++curPos] == 'H') ? "%2d%n":"%d%n", 
+                    &tmdt.tm_hour, &bytes)) == EOF ||
+                    !result || !bytes || bytes<0 || 
+                    tmdt.tm_hour<0 || tmdt.tm_hour>23)
+                    throw ParsingException(error, str, pattern);
+                
+                if (pattern[curPos] == 'H') curPos++;
+                strPos += bytes;
+                continue;
+            }
+            case 'h':
+            {
+                if ((result = sscanf(&str[strPos], 
+                    (pattern[++curPos] == 'h') ? "%2d%n":"%d%n", 
+                    &tmdt.tm_hour, &bytes)) == EOF ||
+                    !result || !bytes || bytes<0 || 
+                    tmdt.tm_hour<=0 || tmdt.tm_hour>12)
+                    throw ParsingException(error, str, pattern);
+                
+                needAMPM = true;
+                if (pattern[curPos] == 'h') curPos++;
+                strPos += bytes;
+                continue;
+            }
+            case 't':
+            {
+                curPos++;
+                std::string buff = "";
+                
+                while (isalpha(str[strPos])) buff += str[strPos++];
+                
+                if (strcmp(buff.c_str(), ioDayTimeParts[0]) == 0) 
+                    AMPM = false;
+                else if (strcmp(buff.c_str(), ioDayTimeParts[1]) == 0)
+                    AMPM = true;
+                else throw ParsingException(error, str, pattern);
+                continue;
+            }
+            case 'm':
+            {
+                if ((result = sscanf(&str[strPos], 
+                    (pattern[++curPos] == 'm') ? "%2d%n":"%d%n", 
+                    &tmdt.tm_min, &bytes)) == EOF ||
+                    !result || !bytes || bytes<0 || 
+                    tmdt.tm_min<0 || tmdt.tm_min>59)
+                    throw ParsingException(error, str, pattern);
+                
+                if (pattern[curPos] == 'm') curPos++;
+                strPos += bytes;
+                continue;
+            }
+            case 's':
+            {
+                if ((result = sscanf(&str[strPos], 
+                    (pattern[++curPos] == 's') ? "%2d%n":"%d%n", 
+                    &tmdt.tm_sec, &bytes)) == EOF ||
+                    !result || !bytes || bytes<0 || 
+                    tmdt.tm_sec<0 || tmdt.tm_sec>61)
+                    throw ParsingException(error, str, pattern);
+                
+                if (pattern[curPos] == 's') curPos++;
+                strPos += bytes;
+                continue;
+            }
+            case 'y':
+            {
+                if (pattern[curPos+1] == 'y')
+                {
+                    curPos += 2;
+                    if ((result = sscanf(&str[strPos], "%d%n", 
+                        &tmdt.tm_year, &bytes)) == EOF ||
+                        !result || !bytes || bytes<0)
+                        throw ParsingException(error, str, pattern);
+                    
+                    if (pattern[curPos] == 'y' && pattern[curPos+1] == 'y') 
+                    {
+                        curPos += 2;
+                        tmdt.tm_year -= 1900;
+                    } 
+                    else
+                    {
+                        tmdt.tm_year = (tmdt.tm_year < 70) ? 
+                            tmdt.tm_year+100 : tmdt.tm_year;
+                    }
+                    strPos += bytes;
+                    continue;
+                }
+                // break missed !!!
+            }
+            default:
+                printf("default '%c' && '%c'\n", 
+                       str[strPos], pattern[curPos]);
+                if (str[strPos] != pattern[curPos])
+                    throw ParsingException(error, str, pattern);
+                strPos++; curPos++;
+                break;
+            }
+        }
+        
+        tmdt.tm_hour += (needAMPM && AMPM && tmdt.tm_hour<12) ? 12:0;
+    } 
+    else // scan date by default format
+    {
+        if ((result = sscanf(str, "%d.%d.%d %d:%d:%d %n", 
+            &tmdt.tm_mday, &tmdt.tm_mon, &tmdt.tm_year,
+            &tmdt.tm_hour, &tmdt.tm_min, &tmdt.tm_sec,
+            &bytes)) == EOF || !result || !bytes || bytes<0)
+            throw ParsingException("Error scanning default date type. "
+                                   "Processing string: '%s'", str);
+        
+        tmdt.tm_mon -= 1; tmdt.tm_year -= 1900; strPos = bytes;
+    }
+    
+    time_t date = mktime(&tmdt);
+    printf("Scanned date is: %s\n", ctime(&date));
+    adapter.setDateTime(entity.position, date);
+    input.erase(0, strPos);
 }
 
 }}}

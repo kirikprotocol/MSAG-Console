@@ -32,19 +32,19 @@ void OutputFormatter::format(std::string& output, GetAdapter& adapter)
         if (entity)
         {
             printf("Formatting arg of type: %s\n", 
-                   entityTypeStrings[entity->type]); 
+                   ioEntityTypeStrings[entity->type]); 
             Formatter* formatter = 
-                FormatterRegistry::getFormatter(entityTypeStrings[entity->type]);
+                FormatterRegistry::getFormatter(ioEntityTypeStrings[entity->type]);
             if (formatter && entity)
             {
                 formatter->format(output, *entity, adapter);
             }
             else throw FormattingException(
                 "Formatter for type <%s> not defined !",
-                entityTypeStrings[entity->type]);
+                ioEntityTypeStrings[entity->type]);
         }
         else throw FormattingException("Type <%s> is invalid !",
-                                       entityTypeStrings[entity->type]);
+                                       ioEntityTypeStrings[entity->type]);
     }
 }
 
@@ -198,38 +198,18 @@ void DateTimeFormatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    static const char*  fullMonthesNames[12] = {
-        "January", "February", "March", "April", 
-        "May", "June", "July", "August", "September",
-        "October", "November", "December"
-    };
-    static const char*  shortMonthesNames[12] = {
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-    };
-    static const char*  fullWeekDays[7] = {
-        "Sunday", "Monday", "Tuesday", "Wednesday",
-        "Thursday", "Friday", "Saturday"
-    };
-    static const char*  shortWeekDays[7] = {
-        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-    };
-    static const char*  dayTimeParts[2] = {
-        "a.m.", "p.m."
-    };
-
     if (!adapter.isNull(entity.position))
     {
         char    buff[256] = "";
         time_t date = adapter.getDateTime(entity.position);
         const char* pattern = entity.getOption("pattern");
-        if (pattern)
+        
+        if (pattern) // format date by user-desired pattern
         {
-            tm tmdt;
-            bool needAMPM = false;
+            tm  tmdt;
             int curPos = 0;
             localtime_r(&date, &tmdt);
-
+            
             while (pattern[curPos])
             {
                 switch(pattern[curPos])
@@ -237,13 +217,13 @@ void DateTimeFormatter::format(
                 case 'w':
                 {
                     curPos++;
-                    output += shortWeekDays[tmdt.tm_wday];
+                    output += ioShortWeekDays[tmdt.tm_wday];
                     continue;
                 }
                 case 'W':
                 {
                     curPos++;
-                    output += fullWeekDays[tmdt.tm_wday];
+                    output += ioFullWeekDays[tmdt.tm_wday];
                     continue;
                 }
                 case 'h':
@@ -267,25 +247,6 @@ void DateTimeFormatter::format(
                         sprintf(buff, "%d", val);
                     output += buff;
                     continue;
-                }
-                case 'y':
-                {
-                    if (pattern[curPos+1] == 'y')
-                    {
-                        curPos += 2;
-                        if (pattern[curPos] == 'y' && 
-                            pattern[curPos+1] == 'y') 
-                        {
-                            curPos += 2;
-                            sprintf(buff, "%d", tmdt.tm_year+1900);
-                        }
-                        else
-                            sprintf(buff, "%d", (tmdt.tm_year >= 100) ?
-                                    tmdt.tm_year-100:tmdt.tm_year);
-                        output += buff;
-                        continue;
-                    }
-                    break;
                 }
                 case 'm':
                 {
@@ -319,10 +280,10 @@ void DateTimeFormatter::format(
                             if (pattern[++curPos] == 'M')
                             {
                                 curPos++;
-                                output += fullMonthesNames[val];
+                                output += ioFullMonthesNames[val];
                             }
                             else
-                                output += shortMonthesNames[val];
+                                output += ioShortMonthesNames[val];
                         }
                         else
                             sprintf(buff, ((val<9) ? "0%d":"%d"), val+1);
@@ -343,13 +304,40 @@ void DateTimeFormatter::format(
                     output += buff;
                     continue;
                 }
+                case 't':
+                {
+                    curPos++;
+                    output += ioDayTimeParts[
+                        (tmdt.tm_hour>=0 && tmdt.tm_hour<12) ? 0:1];
+                    continue;
+                }
+                case 'y':
+                {
+                    if (pattern[curPos+1] == 'y')
+                    {
+                        curPos += 2;
+                        if (pattern[curPos] == 'y' && 
+                            pattern[curPos+1] == 'y') 
+                        {
+                            curPos += 2;
+                            sprintf(buff, "%d", tmdt.tm_year+1900);
+                        }
+                        else
+                            sprintf(buff, "%d", (tmdt.tm_year >= 100) ?
+                                    tmdt.tm_year-100:tmdt.tm_year);
+                        output += buff;
+                        continue;
+                    }
+                    // break missed !!!
+                }
                 default:
                     output += pattern[curPos++];
                     break;
                 }
             }
         }
-        else {
+        else // format date by default format
+        {
             ctime_r(&date, buff);   
             output += buff;
         }

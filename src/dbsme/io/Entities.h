@@ -42,8 +42,28 @@ namespace smsc { namespace dbsme { namespace io
     static const char  SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER   = '\\';
     static const char  SMSC_DBSME_IO_FORMAT_OPTION_ASSIGN    = '=';
 
-    const int entityTypesNumber = 12;
-    static const char* entityTypeStrings[entityTypesNumber]  = 
+    static const char*  ioFullMonthesNames[12] = {
+        "January", "February", "March", "April", 
+        "May", "June", "July", "August", "September",
+        "October", "November", "December"
+    };
+    static const char*  ioShortMonthesNames[12] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+    static const char*  ioFullWeekDays[7] = {
+        "Sunday", "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday"
+    };
+    static const char*  ioShortWeekDays[7] = {
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    };
+    static const char*  ioDayTimeParts[2] = {
+        "AM", "PM"
+    };
+    
+    const int ioEntityTypesNumber = 12;
+    static const char* ioEntityTypeStrings[ioEntityTypesNumber]  = 
     { 
         "int8", "int16", "int32", "uint8", "uint16", "uint32",
         "float", "double", "long-double", "date",

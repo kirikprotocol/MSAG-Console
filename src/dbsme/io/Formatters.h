@@ -65,7 +65,8 @@ namespace smsc { namespace dbsme { namespace io
 
         Formatter(EntityType type) 
         {
-            FormatterRegistry::registerFormatter(entityTypeStrings[type], this);
+            FormatterRegistry::registerFormatter(
+                ioEntityTypeStrings[type], this);
         };
 
     public:
