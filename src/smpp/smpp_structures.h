@@ -190,12 +190,12 @@ namespace SmppCommandSet{ /* SMPP v3.4 (5.1.2.1) */
 
 namespace SmppStatusSet
 {
-	static const uint32_t ESME_ROK										=  0x00000000;
-	static const uint32_t ESME_RSYSERR								=  0x00000008;
-	static const uint32_t ESME_RBINDFALD						  =  0x0000000d;
-	static const uint32_t ESME_RINVSYSID							=  0x0000000f;
-	static const uint32_t ESME_RCANCELFAL							=  0x00000011;
-	static const uint32_t ESME_RREPLACEFAL					  =  0x00000013;
+  static const uint32_t ESME_ROK                    =  0x00000000;
+  static const uint32_t ESME_RSYSERR                =  0x00000008;
+  static const uint32_t ESME_RBINDFALD              =  0x0000000d;
+  static const uint32_t ESME_RINVSYSID              =  0x0000000f;
+  static const uint32_t ESME_RCANCELFAL             =  0x00000011;
+  static const uint32_t ESME_RREPLACEFAL            =  0x00000013;
 };
 
 namespace AddrSubunitValue{ /* SMPP v3.4 (5.3.2.1) */
