@@ -26,7 +26,7 @@ public class Index extends SmscBean
   private AclManager aclManager;
   private List aclNames;
   private AclInfo aclInfo = null;
-  private List addresses = null;
+  private List addresses = new LinkedList();
 
   private String mbLookup = null;
   private String mbAddAcl = null;

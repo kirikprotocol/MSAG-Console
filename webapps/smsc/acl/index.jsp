@@ -85,56 +85,56 @@ MENU0_SELECTION = "MENU0_ACL";
     </div><%
     page_menu_begin(out);
     page_menu_button(out, "mbLookupAddresses",  "Lookup addresses",  "Lookup ACL addresses");
-    if (bean.getAddresses() != null) {
-      page_menu_space(out);
-      page_menu_end(out);
-      %><div class="content">
-      <script>
-      function delAclAddress(rowN)
-      {
-        var tbl = opForm.all.addresses_table;
-        var row = tbl.rows("address_row_"+rowN);
-        if (confirm('Are you sure to remove address "' + row.address + '"?')) {
-          var addressElem = document.createElement("input");
-          addressElem.type = "hidden";
-          addressElem.name = "deleted_address";
-          addressElem.value = row.address;
-          opForm.appendChild(addressElem);
-          tbl.deleteRow(row.rowIndex);
-        }
-        return false;
+    page_menu_space(out);
+    page_menu_end(out);
+    %><div class="content">
+    <script>
+    function delAclAddress(rowN)
+    {
+      var tbl = opForm.all.addresses_table;
+      var row = tbl.rows("address_row_"+rowN);
+      if (confirm('Are you sure to remove address "' + row.address + '"?')) {
+        var addressElem = document.createElement("input");
+        addressElem.type = "hidden";
+        addressElem.name = "deleted_address";
+        addressElem.value = row.address;
+        opForm.appendChild(addressElem);
+        tbl.deleteRow(row.rowIndex);
       }
+      return false;
+    }
 
-      var global_counter = 0;
-      function addAclAddress()
-      {
-        var valueElem = opForm.all.new_address_qweqwe;
-        var addr = valueElem.value;
-        if (addr != null && addr.length > 0) {
-          var tbl = opForm.all.addresses_table;
-          var newRow = tbl.insertRow(tbl.rows.length);
-          newRow.className = "row" + ((tbl.rows.length) & 1);
-          newRow.id = "addrRow_" + (global_counter);
-          newCell = document.createElement("td");
-          newCell.innerHTML = addr + "<input type=hidden name=new_address id=new_address_" + global_counter + " value=\"" + addr + "\">";
-          newRow.appendChild(newCell);
-          newCell = document.createElement("td");
-          newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(opForm.all.addresses_table, \'' + newRow.id + '\')" style="cursor: hand;">';
-          newRow.appendChild(newCell);
-          valueElem.value = "";
-          valueElem.focus();
-          global_counter++;
-          return false;
-        } else
-          return false;
-      }
-      </script>
-      <table class=list cellpadding="0" cellspacing="0" id="addresses_table">
-      <col width="200px">
-      <th>address</th>
-      <th>&nbsp;</th>
-      <%
-      int row = 0;
+    var global_counter = 0;
+    function addAclAddress()
+    {
+      var valueElem = opForm.all.new_address_qweqwe;
+      var addr = valueElem.value;
+      if (addr != null && addr.length > 0) {
+        var tbl = opForm.all.addresses_table;
+        var newRow = tbl.insertRow(tbl.rows.length);
+        newRow.className = "row" + ((tbl.rows.length) & 1);
+        newRow.id = "addrRow_" + (global_counter);
+        newCell = document.createElement("td");
+        newCell.innerHTML = addr + "<input type=hidden name=new_address id=new_address_" + global_counter + " value=\"" + addr + "\">";
+        newRow.appendChild(newCell);
+        newCell = document.createElement("td");
+        newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(opForm.all.addresses_table, \'' + newRow.id + '\')" style="cursor: hand;">';
+        newRow.appendChild(newCell);
+        valueElem.value = "";
+        valueElem.focus();
+        global_counter++;
+        return false;
+      } else
+        return false;
+    }
+    </script>
+    <table class=list cellpadding="0" cellspacing="0" id="addresses_table">
+    <col width="200px">
+    <th>address</th>
+    <th>&nbsp;</th>
+    <%
+    int row = 0;
+    if (bean.getAddresses() != null) {
       for (Iterator i = bean.getAddresses().iterator(); i.hasNext();) {
         String address = (String) i.next();
         %><tr class=row<%=row%2%> id=address_row_<%=row%> address="<%=address%>">
@@ -143,14 +143,14 @@ MENU0_SELECTION = "MENU0_ACL";
         </tr><%
         row++;
       }
-      %>
-        <tr class=row<%=row++%2%>>
-          <td><input class=txt name=new_address id=new_address_qweqwe></td>
-          <td><%addButton(out, "add address", "add address", "add address", "return addAclAddress()");%></td>
-        </tr>
-      </table></div><%
-      page_menu_begin(out);
     }
+    %>
+      <tr class=row<%=row++%2%>>
+        <td><input class=txt name=new_address id=new_address_qweqwe></td>
+        <td><%addButton(out, "add address", "add address", "add address", "return addAclAddress()");%></td>
+      </tr>
+    </table></div><%
+    page_menu_begin(out);
     page_menu_button(out, "mbSave",  "Save changes",  "Save changes");
     page_menu_space(out);
     page_menu_end(out);
