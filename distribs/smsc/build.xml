@@ -148,7 +148,7 @@ Targets:
     <!-- webapps configuration -->
     <copy todir="${DISTR_DIR}/conf" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
-        <include name="tomcat/*"/>
+        <include name="tomcat4/*"/>
       </fileset>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
