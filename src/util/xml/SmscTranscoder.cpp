@@ -9,6 +9,12 @@ namespace xml {
 
 using namespace smsc::util;
 
+#ifdef SPARC
+const char * const ucs2("UCS-2BE");
+#else
+const char * const ucs2("UCS-2LE");
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 /// SmscTranscoder
 ///////////////////////////////////////////////////////////////////////////////
@@ -16,7 +22,6 @@ SmscTranscoder::SmscTranscoder(const XMLCh *const encodingName, const unsigned i
   :XMLTranscoder(encodingName, blockSize, manager)
 {
   std::auto_ptr<const char> enc(XMLString::transcode(encodingName));
-  const char * const ucs2("UCS-2LE");
   iconvHandlerFrom = iconv_open(ucs2, enc.get());
   if (iconvHandlerFrom == (iconv_t)-1)
     throw Exception("Could not open iconv for transcode from \"%s\" to \"%s\", errno:%d", encodingName, ucs2, errno);
