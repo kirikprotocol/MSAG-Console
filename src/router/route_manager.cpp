@@ -637,7 +637,7 @@ __synchronized__
   
   if ( trace_enabled_ )
     trace_.push_back(string("lookup for: ")+AddrToString(source)+"("+
-      (srcidx?sme_table->getSmeInfo(srcidx).systemId:"default")
+      (srcidx?sme_table->getSmeInfo(srcidx).systemId:string("default"))
       +") -> "+AddrToString(dest));
 
   RouteRecord* rec =  findInTree(&root,&source,&dest,trace_enabled_?&trace_:0);
@@ -650,7 +650,8 @@ __synchronized__
   
   if ( trace_enabled_ ) {
     ostringstream ost;
-    ost << "lookup for alternative route with src proxy: '" << sme_table->getSmeInfo(srcidx).systemId << "'";
+    ost << "lookup for alternative route with src proxy: '" << 
+      (srcidx?sme_table->getSmeInfo(srcidx).systemId:string("default")) << "'";
     trace_.push_back(ost.str());
   }
 
