@@ -59,25 +59,40 @@ const char* str(SMSId id)
 #define __set_int_body_tag__(tagName, value) \
 	uint32_t tmp_##tagName = value; \
 	__trace__("set_int_body_tag: " #tagName); \
-	p.getMessageBody().setIntProperty(Tag::tagName, tmp_##tagName); \
+	p.setIntProperty(Tag::tagName, tmp_##tagName); \
 	if (check) { \
-		__require__(p.getMessageBody().getIntProperty(Tag::tagName) == tmp_##tagName); \
+		__require__(p.getIntProperty(Tag::tagName) == tmp_##tagName); \
 	}
 
-#define __set_str_body_tag__(tagName, len) \
-	auto_ptr<char> tmp_##tagName = rand_char(len); \
+#define __set_str_body_tag__(tagName, length) \
+	int len_##tagName = length; \
+	auto_ptr<char> tmp_##tagName = rand_char(len_##tagName); \
 	__trace__("set_str_body_tag: " #tagName); \
-	p.getMessageBody().setStrProperty(Tag::tagName, tmp_##tagName.get()); \
+	p.setStrProperty(Tag::tagName, tmp_##tagName.get()); \
 	if (check) { \
-		__require__(p.getMessageBody().getStrProperty(Tag::tagName) == tmp_##tagName.get()); \
+		__require__(p.getStrProperty(Tag::tagName) == tmp_##tagName.get()); \
 	}
 
-#define __set_str_body_tag2__(tagName, len, value) \
-	string tmp_##tagName(value, len); \
-	__trace__("set_str_body_tag: " #tagName); \
-	p.getMessageBody().setStrProperty(Tag::tagName, tmp_##tagName); \
+#define __set_bin_body_tag__(tagName, length) \
+	int len_##tagName = length; \
+	auto_ptr<uint8_t> tmp_##tagName = rand_uint8_t(len_##tagName); \
+	__trace__("set_bin_body_tag: " #tagName); \
+	p.setBinProperty(Tag::tagName, (char*) tmp_##tagName.get(), len_##tagName); \
 	if (check) { \
-		__require__(p.getMessageBody().getStrProperty(Tag::tagName) == tmp_##tagName); \
+		unsigned len; \
+		const char* val = p.getBinProperty(Tag::tagName, &len); \
+		__require__(len == len_##tagName && !memcmp(val, tmp_##tagName.get(), len)); \
+	}
+
+#define __set_bin_body_tag2__(tagName, length, value) \
+	int len_##tagName = length; \
+	char* val_##tagName  = value; \
+	__trace__("set_bin_body_tag: " #tagName); \
+	p.setBinProperty(Tag::tagName, val_##tagName, len_##tagName); \
+	if (check) { \
+		unsigned len; \
+		const char* val = p.getBinProperty(Tag::tagName, &len); \
+		__require__(len == len_##tagName && !memcmp(val, val_##tagName, len)); \
 	}
 
 void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
@@ -165,8 +180,8 @@ void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 						{
 							__tc__("storeCorrectSms.bodyMaxLength");
 							__set_int_body_tag__(SMPP_SM_LENGTH, MAX_SM_LENGTH);
-							__set_str_body_tag__(SMPP_SHORT_MESSAGE, MAX_SM_LENGTH);
-							__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, MAX_PAYLOAD_LENGTH);
+							__set_bin_body_tag__(SMPP_SHORT_MESSAGE, MAX_SM_LENGTH);
+							__set_bin_body_tag__(SMPP_MESSAGE_PAYLOAD, MAX_PAYLOAD_LENGTH);
 						}
 					}
 					break;
@@ -462,7 +477,7 @@ void MessageStoreTestCases::storeIncorrectSms(int num)
 
 void MessageStoreTestCases::storeAssertSms(int num)
 {
-	TCSelector s(num, 10);
+	TCSelector s(num, 11);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -534,24 +549,24 @@ void MessageStoreTestCases::storeAssertSms(int num)
 						Descriptor(1, "*", MAX_ADDRESS_LENGTH + 1, addr.get(), 1);
 					}
 					break;
+				case 11: //service_type больше максимальной длины
+					{
+						__tc__("storeAssertSms.serviceTypeGreaterMaxLength");
+						__set_str__(EServiceType, MAX_SERVICE_TYPE_LENGTH + 1);
+					}
+					break;
 				/*
 				case 11: //short_message больше максимальной длины
 					{
 						__tc__("storeAssertSms.smGreaterMaxLength");
 						__set_int_body_tag__(SMPP_SM_LENGTH, MAX_SM_LENGTH + 1);
-						__set_str_body_tag__(SMPP_SHORT_MESSAGE, MAX_SM_LENGTH + 1);
+						__set_bin_body_tag__(SMPP_SHORT_MESSAGE, MAX_SM_LENGTH + 1);
 					}
 					break;
 				case 12: //message_payload больше максимальной длины
 					{
 						__tc__("storeAssertSms.payloadGreaterMaxLength");
-						__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, MAX_PAYLOAD_LENGTH + 1);
-					}
-					break;
-				case 13: //service_type больше максимальной длины
-					{
-						__tc__("storeAssertSms.serviceTypeGreaterMaxLength");
-						__set_str__(EServiceType, MAX_SERVICE_TYPE_LENGTH + 1);
+						__set_bin_body_tag__(SMPP_MESSAGE_PAYLOAD, MAX_PAYLOAD_LENGTH + 1);
 					}
 					break;
 				case 14: //receipted_message_id больше максимальной длины
@@ -878,7 +893,7 @@ void MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int num)
 			__tc_ok__;
 			//данные новые, схема и наличие хедера прежние
 			SMS& p = *sms;
-			__set_str_body_tag2__(SMPP_SHORT_MESSAGE, len, (char*) sm);
+			__set_bin_body_tag2__(SMPP_SHORT_MESSAGE, len, (char*) sm);
 			__set_int_body_tag__(SMPP_SM_LENGTH, len);
 			sms->setDeliveryReport(deliveryReport);
 			if (validTime)
