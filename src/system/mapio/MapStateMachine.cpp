@@ -1085,12 +1085,18 @@ USHORT_T Et96MapOpenInd (
     __trace2__("MAP::%s dialog 0x%x",__FUNCTION__,dialogueId);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,localSsn/*,0*/));
     dialog->hasIndAddress = false;
-    if ( specificInfo_sp!=0 && specificInfo_sp->specificInfoLen > 4 )
+    if ( specificInfo_sp!=0 && specificInfo_sp->specificInfoLen >= sizeof(ET96MAP_ADDRESS)+1 )
     {
       if ( specificInfo_sp->specificData[0] == 0x82 )
       {
         __trace2__("MAP::%s parse specific",__FUNCTION__);
-        memcpy(&dialog->m_msAddr,specificInfo_sp->specificData+1,sizeof(dialog->m_msAddr));
+        unsigned x = specificInfo_sp->specificData[1];
+        if ( (((unsigned)specificInfo_sp->specificData[x] >> 4)&0x0f == 0xf ) )
+          x = x*2-1;
+        else 
+          x = x*2;
+        memcpy(&dialog->m_msAddr,specificInfo_sp->specificData+1,sizeof(ET96MAP_ADDRESS));
+        dialog->m_msAddr.addressLength = x;
         dialog->hasIndAddress = true;
       }
     }
