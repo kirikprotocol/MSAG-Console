@@ -9,11 +9,26 @@
     </section>
 </settings>
 <resources>
-    <section name="профилер">
-	<param name="msgОшибк">Какой-то ошипк</param>
+    <section name="profiler">
+	<param name="msgReportFull"></param>
+	<param name="msgReportNone"></param>
+	<param name="msgUCS2"></param>
+	<param name="msgDefault"></param>
+	<param name="msgError">Неизвестная команда</param>
+    </section>
+    <section name="abonentinfo">
+	<param name="mobileFormat"></param>
+	<param name="smeFormat"></param>
     </section>
     <section name="receipt">
-	<param name="доставлено">Мессага для $$string import=dest$$ доставлена $$date import=date$$</param>
+    	<section name="default">
+	    <param name="deliveredFormat">Сообщение для $$string import=dest$$ доставлено в $$date import=date$$</param>
+	    <param name="failedFormat"></param>
+	    <param name="notifyFormat"></param>
+    	</section>
+    </section>
+    <section name="reason">
+    	<param name="0">Ok</param>
     </section>
 </resources>
 </locale_resources>

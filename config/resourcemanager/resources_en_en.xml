@@ -10,10 +10,25 @@
 </settings>
 <resources>
     <section name="profiler">
+	<param name="msgReportFull"></param>
+	<param name="msgReportNone"></param>
+	<param name="msgUCS2"></param>
+	<param name="msgDefault"></param>
 	<param name="msgError">Unrecognized profile management command</param>
     </section>
+    <section name="abonentinfo">
+	<param name="mobileFormat"></param>
+	<param name="smeFormat"></param>
+    </section>
     <section name="receipt">
-	<param name="delivered">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
+    	<section name="default">
+	    <param name="deliveredFormat">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
+	    <param name="failedFormat"></param>
+	    <param name="notifyFormat"></param>
+    	</section>
+    </section>
+    <section name="reason">
+    	<param name="0">Ok</param>
     </section>
 </resources>
 </locale_resources>
