@@ -37,6 +37,91 @@ void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialog
 
 extern "C"{
 
+// Version 1
+
+USHORT_T Et96MapV1ForwardSmMT_MOConf (
+    ET96MAP_LOCAL_SSN_T localSsn,
+    ET96MAP_DIALOGUE_ID_T dialogid,
+    ET96MAP_INVOKE_ID_T invokeId,
+    ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
+    ET96MAP_PROV_ERR_T *provErrCode_p)
+{
+  __trace2__("MAP::Et96MapV1ForwardSmMT_MOConf dlg 0x%x",dialogid);
+  try{
+    DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogid));
+    if ( !mdci.isnull() ){
+      mdci->Et96MapV2ForwardSmMTConf(lssn,
+                                    dialogid,
+                                    invokeId,
+                                    errorForwardSMmt_sp,
+                                    provErrCode_p);
+    }
+  }catch(...){
+    __trace2__("MAP::Et96MapV1ForwardSmMT_MOConf: catch exception when processing did 0x%x",dialogid);
+    //MapDialogContainer::getInstance()->dropDialog(dialogid);
+  }
+  return ET96MAP_E_OK;
+}
+
+USHORT_T Et96MapV1ForwardSmMOInd (
+    ET96MAP_LOCAL_SSN_T localSsn,
+    ET96MAP_DIALOGUE_ID_T dialogId,
+    ET96MAP_INVOKE_ID_T invokeId,
+    ET96MAP_SM_RP_DA_T *smRpDa_sp,
+    ET96MAP_SM_RP_OA_T *smRpOa_sp,
+    ET96MAP_SM_RP_UI_T *smRpUi_sp)
+{
+  __trace2__("MAP::Et96MapV1ForwardSmMOInd dlg 0x%x",dialogId);
+  DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
+  __trace2__("MAP:: dialog with ptr 0x%p, dialogid 0x%x",mdci.get(),dialogId);
+  if ( mdci.isnull() ) {
+    __trace2__("MAP::dialog is not present");
+  }else{
+  	try{
+      __trace2__("MAP::mdci->Et96MapV1ForwardSmMOInd");
+      mdci->Et96MapV1ForwardSmMOInd(
+        SSN,dialogId,invokeId,smRpDa_sp,smRpOa_sp,smRpUi_sp);
+      __trace2__("MAP::mdci->Et96MapV1ForwardSmMOInd OK");
+  	}catch(...){
+  		__trace__("MAP::Et96MapV1ForwardSmMOInd catch exception");
+      CloseAndRemoveDialog(SSN,dialogId);
+  	}
+  }
+  return ET96MAP_E_OK;
+}
+
+USHORT_T Et96MapV1SendRInfoForSmConf (
+    ET96MAP_LOCAL_SSN_T localSsn,
+    ET96MAP_ET96MAP_DIALOGUE_ID_T dialogId,
+    ET96MAP_INVOKE_ID_T invokeId,
+    ET96MAP_IMSI_T *imsi_sp
+    ET96MAP_LOCATION_INFO_T *locationInfo_sp,
+    ET96MAP_LMSI_T *lmsi_sp,
+    ET96MAP_MWD_SETS_T *mwdSet,
+    ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
+    ET96MAP_PROV_ERR_T *provErrCode_p)
+{
+  __trace2__("MAP::Et96MapV1SendRInfoForSmConf dlg 0x%x",dialogueId);
+  DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
+  __trace2__("MAP:: dialog with ptr 0x%p, dialogid 0x%x",mdci.get(),dialogId);
+  if ( mdci.isnull() ) {
+    __trace2__("MAP::dialog is not present");
+  }else{
+  	try{
+      __trace2__("MAP::mdci->Et96MapV1SendRInfoForSmConf");
+      mdci->Et96MapV2SendRInfoForSmConf(
+        SSN,dialogId,invokeId,imsi_sp,locationInfo_sp,lmsi_sp,mwdSet,errorSendRoutingInfoForSm_sp,provErrCode_p);
+      __trace2__("MAP::mdci->Et96MapV1SendRInfoForSmConf OK");
+  	}catch(...){
+  		__trace__("MAP::Et96MapV1SendRInfoForSmConf catch exception");
+      CloseAndRemoveDialog(SSN,dialogId);
+  	}
+  }
+  return ET96MAP_E_OK;
+}
+
+// Version 2
+
 USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
 {
   __trace2__("MAP::Et96MapBindConf confirmation received ssn=%x status=%x\n",lssn,status);
@@ -190,6 +275,8 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
   return ET96MAP_E_OK;
 }
 
+unsigned current_Ctx = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_1;
+
 USHORT_T  Et96MapOpenInd(
 	ET96MAP_LOCAL_SSN_T lssn, 
 	ET96MAP_DIALOGUE_ID_T dialogId, 
@@ -202,6 +289,12 @@ USHORT_T  Et96MapOpenInd(
 {
 	__trace2__("MAP::Et96MapOpenInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
   __trace2__("MAP::Et96MapOpenInd appCtx->type:0x%x, appCtx->version:0x%x ",appCtx->acType,appCtx->version); 
+  if ( appCtx->acType != current_Ctx ){
+    ET96MAP_REFUSE_REASON_T reason = ET96MAP_APP_CONTEXT_NOT_SUPP;
+    USHORT_T result = Et96MapOpenResp(SSN,dialogId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
+    return ET96MAP_E_OK;
+  }
+
   try{
     //char abonent[32] = {0,};
     //mkAbonent(abonent,0/*srcAddr*/);
@@ -347,14 +440,14 @@ USHORT_T  Et96MapCloseInd(ET96MAP_LOCAL_SSN_T ssn,
   try{
     DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
     if ( !mdci.isnull() ){
-    	try{
-	      if ( mdci->Et96MapCloseInd(ssn,
+      try{
+        if ( mdci->Et96MapCloseInd(ssn,
                             dialogId,
                             ud,
                             priorityOrder) )
-	        MapDialogContainer::getInstance()->dropDialog(mdci->GetDialogId());
+          MapDialogContainer::getInstance()->dropDialog(mdci->getDialogId());
       }catch(...){
-				MapDialogContainer::getInstance()->dropDialog(mdci->GetDialogId());
+        MapDialogContainer::getInstance()->dropDialog(mdci->getDialogId()); 
       }
     }
   }catch(...){

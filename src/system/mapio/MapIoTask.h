@@ -86,13 +86,15 @@ class MapDialog{
   ET96MAP_SS7_ADDR_T mshlrAddr;
  	ET96MAP_SM_RP_DA_T smRpDa;
   ET96MAP_SM_RP_OA_T smRpOa;
+  unsigned version;
 public:
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn) : 
     ref_count(1),
     state(MAPST_START), 
     dialogid(dialogid),
     smscDialogId(0),
-    ssn(lssn) 
+    ssn(lssn),
+    version(2)
     {}
   virtual ~MapDialog(){
     __trace2__("MAP::Dialog::~MapDialog 0x%x(0x%x)",dialogid,smscDialogId);
@@ -169,7 +171,6 @@ public:
     ET96MAP_PROV_REASON_T reason,
     ET96MAP_SOURCE_T source,
     UCHAR_T priorityOrder);
-
   virtual void Et96MapUAbortInd(
     ET96MAP_LOCAL_SSN_T lssn,
     ET96MAP_DIALOGUE_ID_T dialogid,
@@ -187,6 +188,30 @@ public:
     ET96MAP_LOCAL_SSN_T lssn,
     ET96MAP_DIALOGUE_ID_T dialogId,
     UCHAR_T priorityOrder);
+// Version 1
+  virtual USHORT_T Et96MapV1ForwardSmMT_MOConf (
+    ET96MAP_LOCAL_SSN_T localSsn,
+    ET96MAP_DIALOGUE_ID_T dialogueId,
+    ET96MAP_INVOKE_ID_T invokeId,
+    ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
+    ET96MAP_PROV_ERR_T *provErrCode_p);
+  virtual USHORT_T Et96MapV1ForwardSmMOInd (
+    ET96MAP_LOCAL_SSN_T localSsn,
+    ET96MAP_DIALOGUE_ID_T dialogueId,
+    ET96MAP_INVOKE_ID_T invokeId,
+    ET96MAP_SM_RP_DA_T *smRpDa_sp,
+    ET96MAP_SM_RP_OA_T *smRpOa_sp,
+    ET96MAP_SM_RP_UI_T *smRpUi_sp);
+  virtual USHORT_T Et96MapV1SendRInfoForSmConf (
+    ET96MAP_LOCAL_SSN_T localSsn,
+    ET96MAP_ET96MAP_DIALOGUE_ID_TdialogueId,
+    ET96MAP_INVOKE_ID_T invokeId,
+    ET96MAP_IMSI_T *imsi_sp
+    ET96MAP_LOCATION_INFO_T *locationInfo_sp,
+    ET96MAP_LMSI_T *lmsi_sp,
+    ET96MAP_MWD_SETS_T *mwdSet,
+    ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
+    ET96MAP_PROV_ERR_T *provErrCode_p);
 };
 
 class DialogRefGuard{
@@ -264,14 +289,14 @@ public:
     else return 0;
   }
   
-  MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn/*,const char* abonent*/){
+  MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn/*,const char* abonent*/,unsigned version=2){
     MutexGuard g(sync);
     /*__trace2__("MAP::createSMSCDialog: try create dialog on abonent %s",abonent);
     if ( lock_map.Exists(abonent) ) {
       __trace2__("MAP::createSMSCDialog: locked");
       return 0;
     }*/
-    MapDialog* dlg = new MapDialog(dialogueid,lssn);
+    MapDialog* dlg = new MapDialog(dialogueid,lssn,version);
     //dlg->setAbonent(abonent);
     hash.Insert(dialogueid,dlg);
     //lock_map.Insert(abonent,1);
