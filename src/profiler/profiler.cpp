@@ -385,8 +385,8 @@ int Profiler::Execute()
     }
     ans.setOriginatingAddress(sms->getDestinationAddress());
     ans.setDestinationAddress(sms->getOriginatingAddress());
-    char msc[]="123";
-    char imsi[]="123";
+    char msc[]="";
+    char imsi[]="";
     ans.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
     ans.setDeliveryReport(0);
     ans.setArchivationRequested(false);

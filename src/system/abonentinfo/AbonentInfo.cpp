@@ -16,8 +16,8 @@ int AbonentInfoSme::Execute()
   SMS *sms;
   Profile p;
   SMS s;
-  char msc[]="123";
-  char imsi[]="123";
+  char msc[]="";
+  char imsi[]="";
   s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
   time_t t=time(NULL)+60;
   s.setValidTime(t);

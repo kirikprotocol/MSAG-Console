@@ -296,8 +296,8 @@ int ProcessMessage(const char *msg,int len)
   sms.setOriginatingAddress(cfg::sourceAddress.c_str());
   string dst=to.substr(0,to.find('@'));
   sms.setDestinationAddress(dst.c_str());
-  char msc[]="123";
-  char imsi[]="123";
+  char msc[]="";
+  char imsi[]="";
   sms.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
   sms.setDeliveryReport(0);
   sms.setArchivationRequested(false);

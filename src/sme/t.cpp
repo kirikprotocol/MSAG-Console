@@ -94,8 +94,8 @@ int main(int argc,char* argv[])
 //47.44.rymhrwDMy4
     Address addr(source.c_str());
     s.setOriginatingAddress(addr);
-    char msc[]="123";
-    char imsi[]="123";
+    char msc[]="";
+    char imsi[]="";
     s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
     //s.setWaitTime(0);
     //time_t t=time(NULL)+60;

@@ -1006,8 +1006,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
         SMS *prpt=new SMS;
         SMS &rpt=*prpt;
         rpt.setOriginatingAddress(scAddress);
-        char msc[]="123";
-        char imsi[]="123";
+        char msc[]="";
+        char imsi[]="";
         rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
         rpt.setValidTime(0);
         rpt.setDeliveryReport(0);
@@ -1316,8 +1316,8 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   SMS *prpt=new SMS;
   SMS &rpt=*prpt;
   rpt.setOriginatingAddress(scAddress);
-  char msc[]="123";
-  char imsi[]="123";
+  char msc[]="";
+  char imsi[]="";
   rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
   rpt.setValidTime(0);
   rpt.setDeliveryReport(0);
@@ -1369,8 +1369,8 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   SMS *prpt=new SMS;
   SMS &rpt=*prpt;
   rpt.setOriginatingAddress(scAddress);
-  char msc[]="123";
-  char imsi[]="123";
+  char msc[]="";
+  char imsi[]="";
   rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
   rpt.setValidTime(0);
   rpt.setDeliveryReport(0);
