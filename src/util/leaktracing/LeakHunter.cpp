@@ -76,7 +76,7 @@ public:
   void Init();
 
   void RegisterAlloc(void* ptr,int size);
-  void RegisterDealloc(void* ptr);
+  int RegisterDealloc(void* ptr);
 
   void DumpTrace(void**);
 
@@ -172,7 +172,7 @@ static void PrintTrace()
   }
 }
 
-void LeakHunter::RegisterDealloc(void* ptr)
+int LeakHunter::RegisterDealloc(void* ptr)
 {
   smsc::core::synchronization::MutexGuard guard(m);
   if(!init)Init();
@@ -189,12 +189,13 @@ void LeakHunter::RegisterDealloc(void* ptr)
         memcpy(memblocks[idx]+i,memblocks[idx]+i+1,sizeof(BlockInfo)*(memcounts[idx]-1-i));
       }
       memcounts[idx]--;
-      return;
+      return 1;
     }
   }
   fprintf(stderr,"Error: Block with address 0x%08X deallocated twice or wasn't allocated!\n",ptr);
   PrintTrace();
-  throw "DELETE UNALLOCATED BLOCK";
+  return 0;
+  //throw "DELETE UNALLOCATED BLOCK";
 }
 }//leaktracing
 }//util
@@ -229,8 +230,10 @@ void operator delete(void* mem)
 {
   if(mem)
   {
-    smsc::util::leaktracing::lh.RegisterDealloc(mem);
-    free(mem);
+    if(smsc::util::leaktracing::lh.RegisterDealloc(mem))
+    {
+      free(mem);
+    }
   }
 }
 
@@ -239,8 +242,10 @@ void operator delete[](void* mem)
   //printf("FREE:%x\n",mem);
   if(mem)
   {
-    smsc::util::leaktracing::lh.RegisterDealloc(mem);
-    free(mem);
+    if(smsc::util::leaktracing::lh.RegisterDealloc(mem))
+    {
+      free(mem);
+    }
   }else
   {
     fprintf(stderr,"FATAL ERROR: delete [] NULL\n");
