@@ -272,6 +272,8 @@ protected:
   SmeRegistrar *smeman;
   Mutex mtx;
 
+  smsc::logger::Logger *log;
+
   IntHash<string> ussdCmdMap;
 
   string systemId;

@@ -80,13 +80,38 @@ static int CalcHash(const HashKey& key)
 }
 };
 
+static string DumpProfile(const Profile& profile)
+{
+  string rv;
+  char buf[64];
+  sprintf(buf,"r=%d;",profile.reportoptions);
+  rv+=buf;
+  sprintf(buf,"dc=%d;",profile.codepage);
+  rv+=buf;
+  sprintf(buf,"l=%s;",profile.locale.c_str());
+  rv+=buf;
+  sprintf(buf,"h=%d;",profile.hide);
+  rv+=buf;
+  sprintf(buf,"hm=%c;",profile.hideModifiable?'Y':'N');
+  rv+=buf;
+  sprintf(buf,"d=%s;",profile.divert.length()?"(NULL)":profile.divert.c_str());
+  rv+=buf;
+  sprintf(buf,"da=%c;",profile.divertActive?'Y':'N');
+  rv+=buf;
+  sprintf(buf,"da=%c;",profile.divertModifiable?'Y':'N');
+  rv+=buf;
+  return rv;
+}
+
 class ProfilesTable: public smsc::core::buffers::XHash<HashKey,Profile,HashFunc>
 {
   Profile defaultProfile;
+  smsc::logger::Logger* log;
 public:
   ProfilesTable(const Profile& pr,int n):XHash<HashKey,Profile,HashFunc>(n)
   {
     defaultProfile=pr;
+    log=smsc::logger::Logger::getInstance("smsc.prof");
   }
   Profile& find(const Address& address,bool& exact)
   {
@@ -97,11 +122,13 @@ public:
     {
       if(!k.defLength)
       {
+        debug2(log,"lookup %s(default profile):%s",address.toString().c_str(),DumpProfile(defaultProfile).c_str());
         return defaultProfile;
       }
       k.defLength--;
     }
     exact=k.defLength==address.length;
+    debug2(log,"lookup %s(%s):%s",exact?"exact":"mask",address.toString().c_str(),DumpProfile(defaultProfile).c_str());
     return *p;
   }
   Profile& findEx(const Address& address,int& matchType,string& matchAddr)
@@ -145,6 +172,7 @@ Profiler::Profiler(const Profile& pr,SmeRegistrar* psmeman,const char* sysId)
   smeman=psmeman;
   seq=1;
   prio=SmeProxyPriorityDefault;
+  log=smsc::logger::Logger::getInstance("smsc.prof");
 }
 
 Profiler::~Profiler()
@@ -181,30 +209,29 @@ int Profiler::update(const Address& address,const Profile& profile)
 {
   MutexGuard g(mtx);
   bool exact;
-#ifndef DISABLE_TRACING
-  char buf[32];
-  address.getText(buf,sizeof(buf));
-#endif
   Profile &prof=profiles->find(address,exact);
-  __trace2__("Profiler: update %s:%d.%d->%d.%d(%s)",buf,prof.codepage,prof.reportoptions,
-    profile.codepage,profile.reportoptions,exact?"exact":"inexact");
+  debug2(log,"update %s:%s->%s",
+     address.toString().c_str(),
+      DumpProfile(prof).c_str(),
+      DumpProfile(profile).c_str(),
+      exact?"exact":"inexact");
   if(prof==profile)return pusUnchanged;
   try{
   if(exact)
   {
     prof.assign(profile);
     dbUpdate(address,prof);
-    __trace2__("Profiler: update %s:%d.%d",buf,profile.codepage,profile.reportoptions);
+    debug2(log,"update %s",address.toString().c_str());
     return pusUpdated;
   }else
   {
     dbInsert(address,profiles->add(address,profile));
-    __trace2__("Profiler: insert %s:%d.%d",buf,profile.codepage,profile.reportoptions);
+    debug2(log,"insert %s",address.toString().c_str());
     return pusInserted;
   }
   }catch(...)
   {
-    smsc_log_error(smsc::logger::Logger::getInstance("smsc.system.Profiler"), "Database exception during profile update/insert");
+    smsc_log_error(log, "Database exception during profile update/insert");
     return pusError;
   }
 }
@@ -227,7 +254,7 @@ int Profiler::updatemask(const Address& address,const Profile& profile)
     }
   }catch(...)
   {
-    smsc_log_error(smsc::logger::Logger::getInstance("smsc.system.Profiler"), "Database exception during mask profile update");
+    smsc_log_error(log, "Database exception during mask profile update");
     return pusError;
   }
 }
@@ -277,7 +304,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   statement->setInt8(2,profile.codepage);
   char addrbuf[30];
   addr.toString(addrbuf,sizeof(addrbuf));
-  __trace2__("profiler: update %s=%d,%d,%s,d=%s",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.divert.c_str());
+  __trace2__("Profiler: dbUpdate %s=%d,%d,%s,%d,%c,%s,%c,%c",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
   statement->setString(3,profile.locale.c_str());
   statement->setInt8(4,profile.hide);
   statement->setString(5,profile.hideModifiable?"Y":"N");
@@ -304,7 +331,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   auto_ptr<Statement> statement(connection->createStatement(sql));
   char addrbuf[30];
   addr.toString(addrbuf,sizeof(addrbuf));
-  __trace2__("profiler: insert %s=%d,%d,%s",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str());
+  __trace2__("Profiler: dbInsert %s=%d,%d,%s,%d,%c,%s,%c,%c",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
   statement->setString(1, addrbuf);
   statement->setInt8(2, profile.reportoptions);
   statement->setInt8(3, profile.codepage);
@@ -776,15 +803,19 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
     Address addr(dta);
     p.reportoptions=rs->getInt8(2);
     p.codepage=rs->getInt8(3);
-    p.locale=rs->getString(4);
+    const char * l=rs->getString(4);
+    p.locale=l?l:"";
     p.hide=rs->getInt8(5);
     const char *hm=rs->getString(6);
     p.hideModifiable=hm?toupper(*hm)=='Y':false;
-    p.divert=rs->getString(7);
+    const char *d=rs->getString(7);
+    debug2(log,"divert.getString=%s",d?d:"NULL");
+    p.divert=d?d:"";
     hm=rs->getString(8);
     p.divertActive=hm?toupper(*hm)=='Y':false;
     hm=rs->getString(9);
     p.divertModifiable=hm?toupper(*hm)=='Y':false;
+    debug2(log,"init:%s=%s",addr.toString().c_str(),DumpProfile(p).c_str());
     profiles->add(addr,p);
   }
 }
