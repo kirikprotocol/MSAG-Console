@@ -3,12 +3,14 @@
   <fail message="Please configure build.properties file" >
     <condition>
       <not>
-        <isset property="BUILD_DIR"/>
-        <isset property="SMSC_DIR"/>
-        <isset property="TEMPLATE_PROPS"/>
-        <isset property="CATALINA_HOME"/>
-        <isset property="CATALINA_BASE"/>
-        <isset property="MAKE_ARGS"/>
+        <and>
+          <isset property="BUILD_DIR"/>
+          <isset property="SMSC_DIR"/>
+          <isset property="TEMPLATE_PROPS"/>
+          <isset property="CATALINA_HOME"/>
+          <isset property="CATALINA_BASE"/>
+          <isset property="MAKE_ARGS"/>
+        </and>
       </not>
     </condition>
   </fail>
