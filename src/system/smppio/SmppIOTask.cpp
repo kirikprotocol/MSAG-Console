@@ -403,7 +403,7 @@ int SmppInputThread::Execute()
                       Status::OK
                     )
                   );
-                  ss->getProxy()->close();
+                  //ss->getProxy()->close();
                   ss->assignProxy(0);
                 }else
                 {
