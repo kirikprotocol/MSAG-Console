@@ -59,7 +59,7 @@ TCSelector::TCSelector(int _val, int _maxVal)
 {
 	if (val < 0)
 	{
-		i = 1 + rand0(maxVal);
+		i = rand1(maxVal);
 	}
 	else if (val == 0)
 	{
