@@ -14,12 +14,12 @@
     <param name="maxTriesCount" type="int">2</param>
 
     <section name="Cleaner">
-	<param name="enabled" type="bool">true</param>
-	<param name="interval" type="int">60</param> <!-- in seconds -->
-	<param name="awake" type="int">10</param>    <!-- in seconds -->
-	<param name="age" type="int">10</param>      <!-- in days -->
+  <param name="enabled" type="bool">true</param>
+  <param name="interval" type="int">60</param> <!-- in seconds -->
+  <param name="awake" type="int">10</param>    <!-- in seconds -->
+  <param name="age" type="int">10</param>      <!-- in days -->
     </section>
-    
+
     <section name="Cache">
       <param name="capacity" type="int">1000</param>
       <param name="enabled" type="bool">true</param>
@@ -67,6 +67,7 @@
     <param name="locales" type="string">en_en, ru_ru</param>
     <param name="protocol_id" type="int">34</param>
     <param name="reschedule_table" type="string">30s,1m,5m,15m,30m,1h,6h,12h,1d</param>
+    <param name="reschedule_limit" type="int">20</param>
     <param name="service_center_address" type="string">123</param>
     <param name="service_type" type="string">SMSC</param>
     <param name="state_machines_count" type="int">5</param>
@@ -125,4 +126,12 @@
     <param name="failureLimit" type="int">1000</param>
   </section>
 
+  <section name="trafficControl">
+    <param name="maxSmsPerSecond" type="int">10</param>
+    <param name="shapeTimeFrame" type="int">1</param>
+    <param name="protectTimeFrame" type="int">10</param>
+    <param name="protectThreshold" type="int">20</param>
+    <param name="allowedDeliveryFailures" type="int">5</param>
+    <param name="lookAheadTime" type="int">5</param>
+  </section>
 </config>
