@@ -18,7 +18,7 @@ SmppTestCases::SmppTestCases(const SmeConfig& config, const SmeSystemId& _system
 	__require__(routeReg);
 	__require__(resultHandler);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
-	routeChecker = new RouteChecker(aliasReg, routeReg);
+	routeChecker = new RouteChecker(systemId, smeAddr, smeReg, aliasReg, routeReg);
 	responseChecker = new SmppResponsePduChecker();
 	receiver = new SmppReceiverTestCases(systemId, smeAddr, smeReg,
 		aliasReg, routeReg, handler, routeChecker, responseChecker);
@@ -125,6 +125,27 @@ TCResult* SmppTestCases::bindNonRegisteredSme(int num)
 TCResult* SmppTestCases::processInvalidSms()
 {
 	TCResult* res = new TCResult(TC_PROCESS_INVALID_SMS);
+	if (pduReg)
+	{
+		vector<PduData*> pduData = pduReg->getOverduePdu(time(NULL) - 5);
+		bool missingResp = false;
+		bool missingDelivery = false;
+		bool missingDeliveryReceipt = false;
+		bool missingIntermediateNotification = false;
+		for (int i = 0; i < pduData.size(); i++)
+		{
+			missingResp |= !pduData[i]->responseFlag;
+			missingDelivery |= !pduData[i]->deliveryFlag;
+			missingDeliveryReceipt |= !pduData[i]->deliveryReceiptFlag;
+			missingIntermediateNotification |= !pduData[i]->intermediateNotificationFlag;
+			pduReg->removePdu(*pduData[i]);
+		}
+		if (missingResp) { res->addFailure(1); }
+		if (missingDelivery) { res->addFailure(2); }
+		if (missingDeliveryReceipt) { res->addFailure(3); }
+		if (missingIntermediateNotification) { res->addFailure(4); }
+	}
+	debug(res);
 	return res;
 }
 
