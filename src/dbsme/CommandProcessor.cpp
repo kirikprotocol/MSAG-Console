@@ -543,7 +543,7 @@ void CommandProcessor::setProviderEnabled(std::string providerId, bool enabled)
     
     {
         ProviderGuard pg = getProvider(providerIdStr);
-        DataProvider* provider = pg.get();
+        provider = pg.get();
     }
     
     if (!provider) 
