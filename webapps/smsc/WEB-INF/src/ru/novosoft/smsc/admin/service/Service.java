@@ -15,6 +15,7 @@ import ru.novosoft.smsc.admin.utli.Proxy;
 import ru.novosoft.smsc.util.xml.Utils;
 
 import java.util.*;
+import java.io.File;
 
 
 public class Service extends Proxy {

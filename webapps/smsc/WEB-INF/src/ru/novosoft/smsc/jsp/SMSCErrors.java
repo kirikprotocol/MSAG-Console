@@ -59,7 +59,8 @@ public class SMSCErrors
 			public static final String portNotSpecifiedOrIncorrect = B + "portNotSpecifiedOrIncorrect";
 			public static final String couldntAddHost = B + "couldntAddHost";
 			public static final String couldntRemoveHost = B + "couldntRemoveHost";
-		}
+      public static final String servicesFolderNotSpecified = B + "servicesFolderNotSpecified";
+    }
 
 		public static class profiles
 		{

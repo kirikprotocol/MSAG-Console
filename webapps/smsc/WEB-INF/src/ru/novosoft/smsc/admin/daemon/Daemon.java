@@ -23,12 +23,14 @@ public class Daemon extends Proxy
 {
 	private Category logger = Category.getInstance(this.getClass().getName());
 	private Map services = new HashMap();
+  private String daemonServicesFolder;
 
-	public Daemon(String host, int port, SmeManager smeManager)
+  public Daemon(String host, int port, SmeManager smeManager, String daemonServicesFolder)
 			throws AdminException
 	{
 		super(host, port);
-		connect(host, port);
+    this.daemonServicesFolder = daemonServicesFolder;
+    connect(host, port);
 		refreshServices(smeManager);
 	}
 
@@ -44,7 +46,7 @@ public class Daemon extends Proxy
 		for (int i = 0; i < list.getLength(); i++)
 		{
 			final Element serviceElement = (Element) list.item(i);
-			ServiceInfo newInfo = new ServiceInfo(serviceElement, host, smeManager);
+			ServiceInfo newInfo = new ServiceInfo(serviceElement, host, smeManager, daemonServicesFolder);
 			services.put(newInfo.getId(), newInfo);
 		}
 		return services;
@@ -201,4 +203,9 @@ public class Daemon extends Proxy
 			removeService(serviceId);
 		}
 	}
+
+  public String getDaemonServicesFolder()
+  {
+    return daemonServicesFolder;
+  }
 }

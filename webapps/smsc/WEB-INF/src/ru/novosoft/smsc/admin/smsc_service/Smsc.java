@@ -32,6 +32,7 @@ import java.util.*;
 
 
 public class Smsc extends Service {
+  private File configFolder = null;
 	private Component smsc_component = null;
 	private Method apply_routes_method = null;
 	private Method apply_aliases_method = null;
@@ -72,13 +73,13 @@ public class Smsc extends Service {
 	private long serviceRefreshTimeStamp = 0;
 	private static final char LOGGER_DELIMITER = ',';
 
-	public Smsc(Config config, NSConnectionPool connectionPool) throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
+	public Smsc(String smscHost, int smscPort, String smscConfFolderString, NSConnectionPool connectionPool) throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
-		super(new ServiceInfo(Constants.SMSC_SME_ID, config.getString("smsc.host"), config.getInt("smsc.port"), "", null, ServiceInfo.STATUS_STOPPED));
+		super(new ServiceInfo(Constants.SMSC_SME_ID, smscHost, smscPort, "", "", null, ServiceInfo.STATUS_STOPPED));
 
 		try {
-			final File smscConfFolder = WebAppFolders.getSmscConfFolder();
-			Document aliasesDoc = Utils.parse(new FileReader(new File(smscConfFolder, "aliases.xml")));
+      this.configFolder = new File(smscConfFolderString);
+			Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
 			aliases = new AliasSet(aliasesDoc.getDocumentElement());
 			profileDataSource = new ProfileDataSource(connectionPool);
 		} catch (FactoryConfigurationError error) {
@@ -523,4 +524,9 @@ public class Smsc extends Service {
 			call(smsc_component, apply_locale_resources_method, Type.Types[Type.StringType], new HashMap());
 		}
 	}
+
+  public File getConfigFolder()
+  {
+    return configFolder;
+  }
 }

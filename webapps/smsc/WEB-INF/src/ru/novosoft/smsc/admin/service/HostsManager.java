@@ -51,9 +51,9 @@ public class HostsManager
 	 * @return new added daemon
 	 * @throws AdminException
 	 */
-	public synchronized Daemon addHost(String host, int port) throws AdminException
+	public synchronized Daemon addHost(String host, int port, String hostServicesFolder) throws AdminException
 	{
-		final Daemon daemon = daemonManager.add(host, port, smeManager);
+		final Daemon daemon = daemonManager.add(host, port, smeManager, hostServicesFolder);
 		for (Iterator i = daemon.getServiceIds(smeManager).iterator(); i.hasNext();)
 		{
 			String serviceId = (String) i.next();
@@ -197,16 +197,17 @@ public class HostsManager
 		if (smeManager.contains(id))
 			throw new AdminException("Couldn't add new service \"" + id + "\": SME with that ID already contained in system.");
 
+    final File serviceFolder = new File(daemonManager.getServiceDaemon(serviceInfo.getHost()).getDaemonServicesFolder(), serviceInfo.getId());
 		try
 		{
-			serviceManager.deployAdministrableService(incomingZip, serviceInfo);
+      serviceManager.deployAdministrableService(incomingZip, serviceInfo, serviceFolder);
 			daemonManager.addService(serviceInfo);
 			smeManager.add(serviceInfo.getSme());
 		}
 		catch (AdminException e)
 		{
 			logger.error("Couldn't deploy administrable service \"" + id + "\"", e);
-			serviceManager.rollbackDeploy(serviceInfo.getHost(), id);
+			serviceManager.rollbackDeploy(serviceInfo.getHost(), id, serviceFolder);
 			if (smeManager.contains(id))
 				smeManager.remove(id);
 		}
@@ -275,6 +276,11 @@ public class HostsManager
 	{
       daemonManager.saveHosts();
 	}
+
+  public synchronized String getDaemonServicesFolder(String hostName) throws AdminException
+  {
+    return daemonManager.get(hostName).getDaemonServicesFolder();
+  }
 
 /*
 	public synchronized Daemon getSmscDaemon()

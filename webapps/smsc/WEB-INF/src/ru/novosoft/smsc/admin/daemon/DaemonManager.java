@@ -35,7 +35,7 @@ public class DaemonManager
 			try
 			{
 				final int port = config.getInt(encodedName + ".port");
-				add(daemonName, port, smeManager);
+				add(daemonName, port, smeManager, config.getString(encodedName + ".services folder"));
 				logger.debug("Daemon \"" + daemonName + ':' + port + "\" added");
 			}
 			catch (AdminException e)
@@ -54,9 +54,9 @@ public class DaemonManager
 		logger.debug("Daemon manager initialized");
 	}
 
-	public Daemon add(String host, int port, SmeManager smeManager) throws AdminException
+	public Daemon add(String host, int port, SmeManager smeManager, String daemonServicesFolder) throws AdminException
 	{
-		final Daemon d = new Daemon(host, port, smeManager);
+		final Daemon d = new Daemon(host, port, smeManager, daemonServicesFolder);
 		daemons.add(d);
 		try
 		{

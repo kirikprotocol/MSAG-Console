@@ -112,13 +112,13 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			System.out.println("Starting SMSC Administartion Web Apllication **************************************************");
 			initLogger();
 			smscConfig = new Config(new File(configFileName));
-			WebAppFolders.init(smscConfig.getString("system.webapp folder"));
+			WebAppFolders.init(smscConfig.getString("system.webapp folder"), smscConfig.getString("system.work folder"), smscConfig.getString("smsc.config folder"));
 
 			resourcesManager = new ResourcesManagerImpl();
       loadLocaleMessages();
 			createConnectionPool(smscConfig);
 
-			smsc = new Smsc(smscConfig, connectionPool);
+			smsc = new Smsc(smscConfig.getString("smsc.host"), smscConfig.getInt("smsc.port"), smscConfig.getString("smsc.config folder"), connectionPool);
 			smeManager = new SmeManagerImpl(smsc);
 			routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
       DaemonManager daemonManager = new DaemonManager(smeManager, smscConfig);
@@ -126,7 +126,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			serviceManager.add(smsc);
 			hostsManager = new HostsManager(daemonManager, serviceManager, smeManager, routeSubjectManager);
 
-			File usersConfig = new File(new File(smscConfig.getString("system.webapp folder"), "WEB-INF"), smscConfig.getString("system.users"));
+			File usersConfig = new File(smscConfig.getString("system.users file"));
 			startConsole();
 			userManager = new UserManager(usersConfig);
       statuses.setRoutesSaved(routeSubjectManager.hasSavedConfiguration());

@@ -13,22 +13,15 @@ public class WebAppFolders
 	protected static File webinfFolder = null;
 	protected static File webinfLibFolder = null;
 	protected static File workFolder = null;
-	protected static File daemonsFolder = null;
-	private static File smscConfFolder;
+  protected static File smscConfFolder = null;
 
-	public static void init(String webappFolder)
+	public static void init(String webappFolder, String workFolder, String smscConfFolder)
 	{
 		WebAppFolders.webappFolder = new File(webappFolder);
 		WebAppFolders.webinfFolder = new File(webappFolder, "WEB-INF");
 		WebAppFolders.webinfLibFolder = new File(webinfFolder, "lib");
-		WebAppFolders.workFolder = new File(webinfFolder, "work");
-		WebAppFolders.daemonsFolder = new File(webinfFolder, "daemons");
-		WebAppFolders.smscConfFolder = new File(webinfFolder, "smsc/conf");
-	}
-
-	public static File getServiceFolder(String host, String serviceId)
-	{
-		return new File(new File(daemonsFolder, host), serviceId);
+		WebAppFolders.workFolder = new File(workFolder);
+    WebAppFolders.smscConfFolder = new File(smscConfFolder);
 	}
 
 	public static File getServiceJspsFolder(String serviceId)
@@ -36,15 +29,9 @@ public class WebAppFolders
 		return new File(webappFolder, "esme_" + serviceId);
 	}
 
-
 	public static File getWebappFolder()
 	{
 		return webappFolder;
-	}
-
-	public static File getWebinfFolder()
-	{
-		return webinfFolder;
 	}
 
 	public static File getWebinfLibFolder()
@@ -57,13 +44,8 @@ public class WebAppFolders
 		return workFolder;
 	}
 
-	public static File getDaemonsFolder()
-	{
-		return daemonsFolder;
-	}
-
-	public static File getSmscConfFolder()
-	{
-		return smscConfFolder;
-	}
+  public static File getSmscConfFolder()
+  {
+    return smscConfFolder;
+  }
 }

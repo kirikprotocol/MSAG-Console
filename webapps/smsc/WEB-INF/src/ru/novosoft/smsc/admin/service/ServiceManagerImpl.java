@@ -7,6 +7,7 @@ package ru.novosoft.smsc.admin.service;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.util.*;
 
 import java.io.*;
@@ -73,9 +74,8 @@ public class ServiceManagerImpl implements ServiceManager
 	{
 		require(serviceId);
 		Service s = get(serviceId);
-		String host = s.getInfo().getHost();
 		services.remove(serviceId);
-		if (!Functions.recursiveDeleteFolder(WebAppFolders.getServiceFolder(host, serviceId))
+		if (!Functions.recursiveDeleteFolder(s.getInfo().getServiceFolder())
 				|| !Functions.recursiveDeleteFolder(WebAppFolders.getServiceJspsFolder(serviceId)))
 			throw new AdminException("Service removed, but services files not deleted");
 		return s;
@@ -109,7 +109,7 @@ public class ServiceManagerImpl implements ServiceManager
 		return services.keySet().contains(smeId);
 	}
 
-	public void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo)
+	public void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo, File serviceFolder)
 			throws AdminException
 	{
 		String hostName = serviceInfo.getHost();
@@ -117,7 +117,6 @@ public class ServiceManagerImpl implements ServiceManager
 		try
 		{
 			/****** deploy files ******/
-			File serviceFolder = WebAppFolders.getServiceFolder(hostName, serviceId);
 			File jspsFolder = WebAppFolders.getServiceJspsFolder(serviceId);
 
 			if (serviceFolder.exists())
@@ -145,19 +144,19 @@ public class ServiceManagerImpl implements ServiceManager
 		}
 		catch (AdminException e)
 		{
-			rollbackDeploy(hostName, serviceId);
+			rollbackDeploy(hostName, serviceId, serviceFolder);
 			logger.error("Couldnt deploy new services", e);
 			throw e;
 		}
 		catch (IOException e)
 		{
-			rollbackDeploy(hostName, serviceId);
+			rollbackDeploy(hostName, serviceId, serviceFolder);
 			logger.error("Couldnt deploy new services", e);
 			throw new AdminException("Couldnt deploy new services, nested: " + e.getMessage());
 		}
 	}
 
-	protected void moveJars(File serviceFolder, File jarsFolder)
+  protected void moveJars(File serviceFolder, File jarsFolder)
 	{
 		File[] jars = serviceFolder.listFiles();
 		if (jars != null)
@@ -187,14 +186,13 @@ public class ServiceManagerImpl implements ServiceManager
 		}
 	}
 
-	public void rollbackDeploy(String hostName, String serviceId)
+	public void rollbackDeploy(String hostName, String serviceId, File serviceFolder)
 	{
 		services.remove(serviceId);
 
-		File serviceFolder = WebAppFolders.getServiceFolder(hostName, serviceId);
-		File jspsFolder = WebAppFolders.getServiceJspsFolder(serviceId);
+     Functions.recursiveDeleteFolder(serviceFolder);
 
-		Functions.recursiveDeleteFolder(serviceFolder);
+    File jspsFolder = WebAppFolders.getServiceJspsFolder(serviceId);
 		Functions.recursiveDeleteFolder(jspsFolder);
 	}
 

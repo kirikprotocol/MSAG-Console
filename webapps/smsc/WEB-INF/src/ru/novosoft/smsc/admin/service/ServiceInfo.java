@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.route.SME;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.io.File;
 
 
 public class ServiceInfo
@@ -32,9 +33,10 @@ public class ServiceInfo
 	protected Map components = new HashMap();
 	protected SME sme = null;
 	protected byte status = STATUS_STOPPED;
+  private File serviceFolder;
 
 
-	public ServiceInfo(Element serviceElement, String serviceHost, SmeManager smeManager) throws AdminException
+  public ServiceInfo(Element serviceElement, String serviceHost, SmeManager smeManager, String daemonServicesFolder) throws AdminException
 	{
 		host = serviceHost;
 		port = Integer.decode(serviceElement.getAttribute("port")).intValue();
@@ -59,9 +61,11 @@ public class ServiceInfo
 		setStatusStr(serviceElement.getAttribute("status"));
 		String pidStr = serviceElement.getAttribute("pid");
 		this.pid = (pidStr != null && pidStr.length() > 0) ? Long.decode(pidStr).longValue() : 0;
+    //? id==folder
+    this.serviceFolder = new File(daemonServicesFolder, id);
 	}
 
-	private ServiceInfo(String id, String host, int port, String args, long pid, SME sme, byte status)
+	private ServiceInfo(String id, String host, int port, String serviceFolder, String args, long pid, SME sme, byte status)
 	{
 		this.host = host;
 		this.port = port;
@@ -70,11 +74,12 @@ public class ServiceInfo
 		this.id = id;
 		this.sme = sme;
 		this.status = status;
+    this.serviceFolder = new File(serviceFolder);
 	}
 
-	public ServiceInfo(String id, String host, int port, String args, SME sme, byte status)
+	public ServiceInfo(String id, String host, int port, String serviceFolder, String args, SME sme, byte status)
 	{
-		this(id, host, port, args, 0, sme, status);
+		this(id, host, port, serviceFolder, args, 0, sme, status);
 	}
 
 
@@ -201,4 +206,9 @@ public class ServiceInfo
 	{
 		this.args = args;
 	}
+
+  public File getServiceFolder()
+  {
+    return serviceFolder;
+  }
 }

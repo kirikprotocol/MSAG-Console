@@ -16,6 +16,7 @@ public class HostAdd extends SmscBean
 {
 	private String hostName = null;
 	private int port = -1;
+  private String hostServicesFolder = null;
 	private String mbSave = null;
 	private String mbCancel = null;
 
@@ -39,9 +40,12 @@ public class HostAdd extends SmscBean
 			if (port <= 0)
 				return error(SMSCErrors.error.hosts.portNotSpecifiedOrIncorrect);
 
+      if (hostServicesFolder == null || hostServicesFolder.length() == 0)
+        return error(SMSCErrors.error.hosts.servicesFolderNotSpecified);
+
 			try
 			{
-				hostsManager.addHost(hostName, port);
+				hostsManager.addHost(hostName, port, hostServicesFolder);
 			}
 			catch (AdminException e)
 			{
@@ -106,4 +110,14 @@ public class HostAdd extends SmscBean
 	{
 		this.mbCancel = mbCancel;
 	}
+
+  public String getHostServicesFolder()
+  {
+    return hostServicesFolder;
+  }
+
+  public void setHostServicesFolder(String hostServicesFolder)
+  {
+    this.hostServicesFolder = hostServicesFolder;
+  }
 }
