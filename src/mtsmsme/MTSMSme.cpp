@@ -73,35 +73,98 @@ extern bool convertMSISDNStringToAddress(const char* string, Address& address)
     return true;
 }
 
-/* 
-TODO:
-1) Add address to alias mapping (Hash)
-2) Add seqNum to request mapping (IntHash)
-3) Locks for it !!!
-*/
+class AliasManager
+{
+private:
+
+    Mutex           aliasLock;
+    Hash<Address>   aliasByAddress;
+
+public:
+    
+    AliasManager(ConfigView* config) throw(ConfigException)
+    {
+        MutexGuard guard(aliasLock);
+
+        // TODO: init alias mapping
+    }
+
+    bool getAliasForAddress(const Address& address, Address& alias)
+    {
+        try
+        {
+            const char* addressStr = address.toString().c_str();
+            if (!addressStr || !addressStr[0]) return false;
+
+            MutexGuard guard(aliasLock);
+            Address* aliasPtr = aliasByAddress.GetPtr(addressStr);
+            if (!aliasPtr) return false;
+            alias = *aliasPtr;
+            return true;
+        } 
+        catch (Exception& exc) {
+            smsc_log_error(logger, "Alias mapping failure");
+            return false;
+        }
+    }
+};
+
+class RequestController
+{
+private:
+
+    Mutex             requestLock;
+    IntHash<Request*> requestBySeqNum;
+
+public:
+    
+    RequestController() {};
+    ~RequestController()
+    {
+        MutexGuard guard(requestLock);
+        // TODO: set error (what ?) for all waiting requests
+    };
+
+    bool setRequest(int seqNum, Request* request)
+    {
+        MutexGuard guard(requestLock);
+        if (requestBySeqNum.Exist(seqNum)) {
+            smsc_log_error(logger, "SMPP sequence number %d already exists "
+                           "in RequestController", seqNum);    
+            return false;
+        }
+        requestBySeqNum.Insert(seqNum, request);
+        return true;
+    }
+    Request* getRequest(int seqNum)
+    {
+        MutexGuard guard(requestLock);
+        // TODO: implement
+        return 0;
+    }
+};
 
 class MTSMSmeRequestSender: public RequestSender
 {
 private:
     
-    SmppSession*    session;
-    Mutex           sendLock;
+    SmppSession*        session;
+    AliasManager&       aliaser;
+    RequestController&  controller;
+    Mutex               sendLock;
 
 public:
     
-    MTSMSmeRequestSender(SmppSession* session) 
-        : RequestSender(), session(session) {};
+    MTSMSmeRequestSender(SmppSession* _session, AliasManager& _aliaser, 
+                         RequestController& _controller) : RequestSender(),
+        session(_session), aliaser(_aliaser), controller(_controller) {};
+
     virtual ~MTSMSmeRequestSender() {
         MutexGuard guard(sendLock);
         session = 0;
     };
 
-    bool getAliasForAddress(const Address& address, Address& alias)
-    {
-        alias = address; // TODO: implement alias mapping 
-        return true;
-    }
-    virtual bool send(const Request* request)
+    virtual bool send(Request* request)
     {
         MutexGuard guard(sendLock);
         
@@ -121,11 +184,13 @@ public:
         
         const SMS* sms = &(request->sms);
         Address da;
-        if (!getAliasForAddress(sms->destinationAddress, da)) {
-            const char* daStr = da.toString().c_str();
+        if (!aliaser.getAliasForAddress(sms->destinationAddress, da)) {
+            const char* daStr = sms->destinationAddress.toString().c_str();
             smsc_log_error(logger, "Invalid destination address '%s'", daStr ? daStr:"-");
+            request->setSendResult(Status::NOROUTE);
             return false;
         }
+        
         PduSubmitSm  sm;
         sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
         fillSmppPduFromSms(&sm, (SMS *)sms);
@@ -135,8 +200,7 @@ public:
         
         // TODO: set transactional mode in ESM_CLASS (by OR) ???
         int seqNum = sm.get_header().get_sequenceNumber();
-        // TODO: insert request to IntHash by seqNum;
-
+        controller.setRequest(seqNum,request);
         asyncTransmitter->sendPdu(&(sm.get_header()));
         return true;
     }
@@ -146,13 +210,15 @@ class MTSMSmePduListener: public SmppPduEventListener
 {
 protected:
     
+    RequestController&  controller;
+
     SmppTransmitter*    syncTransmitter;
     SmppTransmitter*    asyncTransmitter;
 
 public:
     
-    MTSMSmePduListener() 
-        : SmppPduEventListener(), syncTransmitter(0), asyncTransmitter(0) {};
+    MTSMSmePduListener(RequestController& _controller) : SmppPduEventListener(),
+        controller(_controller), syncTransmitter(0), asyncTransmitter(0) {};
     virtual ~MTSMSmePduListener() {};
 
     void setSyncTransmitter(SmppTransmitter *transmitter) {
@@ -169,7 +235,7 @@ public:
         int seqNum = pdu->get_sequenceNumber();
         int status = pdu->get_commandStatus();
 
-        // TODO: Search and report status to Request
+        // TODO: Search and report status to Request via RequestController
     }
     void handleEvent(SmppHeader *pdu)
     {
@@ -324,14 +390,18 @@ int main(void)
         ConfigView smscConfig(manager, "MTSMSme.SMSC");
         MTSMSmeConfig cfg(&smscConfig);
 
+        ConfigView aliasConfig(manager, "MTSMSme.Aliases");
+        AliasManager aliaser(&aliasConfig);
+
         RequestProcessor* processor = RequestProcessor::getInstance();
         // TODO: check processor is not null !!!
 
         while (!isNeedStop())
         {
-            MTSMSmePduListener      listener;
+            RequestController       controller;
+            MTSMSmePduListener      listener(controller);
             SmppSession             session(cfg, &listener);
-            MTSMSmeRequestSender    sender(&session);
+            MTSMSmeRequestSender    sender(&session, aliaser, controller);
             
             smsc_log_info(logger, "Connecting to SMSC ... ");
             try
