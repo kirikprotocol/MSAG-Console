@@ -103,6 +103,8 @@ private:
 	AliasInfo* newAliasInfo(TestAliasData* data);
 	void setupRandomAliasMatchWithQuestionMarks(TestAliasData* data, int len);
 	void setupRandomAliasMatchWithAsterisk(TestAliasData* data, int adLen, int alLen);
+	void printFindResult(const char* tc, const Address& param, bool found,
+		const Address& result);
 };
 
 }
