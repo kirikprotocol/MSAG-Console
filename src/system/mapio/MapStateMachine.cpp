@@ -1036,7 +1036,7 @@ static bool SendSms(MapDialog* dialog){
     segmentation = true;
   }else{
     if ( dialog->version == 2 ) {
-      result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), FALSE);
+      result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), mms?TRUE:FALSE);
     }else if ( dialog->version == 1 ){
       result = Et96MapV1ForwardSmMT_MOReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get());
     }else throw runtime_error(
