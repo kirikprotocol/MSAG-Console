@@ -209,13 +209,13 @@ inline void SmppFunctionalTest::resize(int newSize)
 
 inline void SmppFunctionalTest::onStopped(int taskNum)
 {
-	//MutexGuard(mutex);
+	//MutexGuard guard(mutex);
 	taskStat[taskNum].stopped = true;
 }
 
 bool SmppFunctionalTest::isStopped()
 {
-	//MutexGuard(mutex);
+	//MutexGuard guard(mutex);
 	bool stopped = true;
 	for (int i = 0; i < taskStat.size(); i++)
 	{
