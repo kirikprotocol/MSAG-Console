@@ -134,12 +134,14 @@ TCResult* RouteManagerTestCases::addCorrectRouteMatch(RouteInfo* route,
 			RouteUtil::setupRandomCorrectRouteInfo(route);
 			setupRandomAddressMatch(route->source, s.value1(numMatch1));
 			setupRandomAddressMatch(route->dest, s.value2(numMatch1));
-			char tc[64];
-			sprintf(tc, "addCorrectRouteMatch(%d,%d)",
-				s.value1(numMatch1), s.value2(numMatch1));
-			debugRoute(tc, route);
-			routeMan->addRoute(*route);
-			routeReg->putRoute(*route, proxy);
+			if (routeReg->putRoute(*route, proxy))
+			{
+				char tc[64];
+				sprintf(tc, "addCorrectRouteMatch(%d,%d)",
+					s.value1(numMatch1), s.value2(numMatch1));
+				debugRoute(tc, route);
+				routeMan->addRoute(*route);
+			}
 		}
 		catch(...)
 		{
@@ -188,9 +190,11 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch(RouteInfo* route,
 				default:
 					throw s;
 			}
-			debugRoute(tc, route);
-			routeMan->addRoute(*route);
-			routeReg->putRoute(*route, proxy);
+			if (routeReg->putRoute(*route, proxy))
+			{
+				debugRoute(tc, route);
+				routeMan->addRoute(*route);
+			}
 		}
 		catch(...)
 		{
@@ -231,11 +235,13 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch2(RouteInfo* route,
 				default:
 					throw s;
 			}
-			char tc[64];
-			sprintf(tc, "addCorrectRouteNotMatch2(%d)", s.value());
-			debugRoute(tc, route);
-			routeMan->addRoute(*route);
-			routeReg->putRoute(*route, proxy);
+			if (routeReg->putRoute(*route, proxy))
+			{
+				char tc[64];
+				sprintf(tc, "addCorrectRouteNotMatch2(%d)", s.value());
+				debugRoute(tc, route);
+				routeMan->addRoute(*route);
+			}
 		}
 		catch(...)
 		{
@@ -277,6 +283,9 @@ TCResult* RouteManagerTestCases::addIncorrectRoute(
 				default:
 					throw s;
 			}
+			char tc[64];
+			sprintf(tc, "addIncorrectRoute(%d)", s.value());
+			debugRoute(tc, &route);
 			routeMan->addRoute(route);
 			res->addFailure(101);
 		}
