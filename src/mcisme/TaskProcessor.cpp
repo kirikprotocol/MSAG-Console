@@ -689,8 +689,8 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                     {
                         task->waitCancel(smsc_id);
                         isMessageToSend = true; messageToSend.reset(message.abonent);
+                        messageToSend.id = message.id; messageToSend.smsc_id = smsc_id;
                         messageToSend.cancel = true; messageToSend.notification = false;
-                        messageToSend.smsc_id = smsc_id;
                     }
                 }
                 else // no events were added to task => set current message wait receipt & kill task
