@@ -2,12 +2,18 @@
 #include "util/config/Manager.h"
 #include "store/StoreManager.h"
 #include "smpp/smpp.h"
+#include "util/config/ConfigView.h"
+#include "db/DataSourceLoader.h"
+#include "profiler/profiler.hpp"
 #include <fstream>
 
+using smsc::util::config::ConfigView;
 using namespace smsc::sms;
 using namespace smsc::smpp;
 using namespace smsc::util::config;
 using namespace smsc::store;
+using namespace smsc::profiler;
+using namespace smsc::db;
 using namespace smsc::test::util;
 using namespace std;
 
@@ -25,12 +31,12 @@ using namespace std;
  */
 struct DatabaseMaster
 {
-	const int count;
-	const int shift;
-	
-	DatabaseMaster(int _count, int _shift)
-	: count(_count), shift(_shift) {}
+	DatabaseMaster()
+	{
+		Manager::init("config.xml");
+	}
 
+	void genProfiles(int count, int shift);
 	void genSms();
 	const string str(int i);
 	const string getTonNpi(int i);
@@ -58,9 +64,60 @@ const string DatabaseMaster::getTonNpi(int i)
 	}
 }
 
+void DatabaseMaster::genProfiles(int count, int shift)
+{
+    ConfigView dsConfig(Manager::getInstance(), "StartupLoader");
+    DataSourceLoader::loadup(&dsConfig);
+    DataSource* dataSource = DataSourceFactory::getDataSource("OCI");
+	__require__(dataSource);
+    ConfigView config(Manager::getInstance(), "DataSource");
+    dataSource->init(&config);
+	Profile defProfile;
+	SmeManager smeMan;
+	Profiler profiler(defProfile, &smeMan, "profiler");
+	profiler.loadFromDB(dataSource);
+	for (int i = 0; i < count; i++)
+	{
+		string strAddr;
+		int reportOptions;
+		int codePage;
+		switch (i % 4)
+		{
+			case 0:
+				strAddr = ".0.0.";
+				reportOptions = 1;
+				codePage = 8;
+				break;
+			case 1:
+				strAddr = ".0.1.";
+				reportOptions = 1;
+				codePage = 0;
+				break;
+			case 2:
+				strAddr = ".1.0.";
+				reportOptions = 0;
+				codePage = 8;
+				break;
+			case 3:
+				strAddr = ".1.1.";
+				reportOptions = 0;
+				codePage = 0;
+				break;
+		}
+		strAddr += str(i);
+		Profile profile;
+		profile.codepage = codePage;
+		profile.reportoptions = reportOptions;
+		const Address addr(strAddr.c_str());
+		profiler.update(addr, profile);
+	}
+	profiler.stop();
+}
+
 void DatabaseMaster::genSms()
 {
-	Manager::init("config.xml");
+	int count = 100;
+	int shift = 1;
 	StoreManager::startup(Manager::getInstance());
 	StoreManager::stopArchiver();
 	MessageStore* msgStore = StoreManager::getMessageStore();
@@ -87,6 +144,7 @@ void DatabaseMaster::genSms()
 		sms.setDestinationSmeId(str(i % 16).c_str());
 		sms.setRouteId(str(i % 32).c_str());
 		sms.setArchivationRequested(true);
+		sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0x0);
 		ostringstream os;
 		uint8_t dataCoding;
 		switch (i % 5)
@@ -113,10 +171,11 @@ void DatabaseMaster::genSms()
 				break;
 		}
 		int msgLen;
-		auto_ptr<char> msg = encode(os.str(), dataCoding, msgLen);
+		auto_ptr<char> msg = encode(os.str(), dataCoding, msgLen, true);
 		sms.setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
 		sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
 		sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
+		//sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE, msg.get(), msgLen);
 		//sms_msg
 		SMSId smsId = msgStore->getNextId();
 		msgStore->createSms(sms, smsId, CREATE_NEW);
@@ -149,7 +208,8 @@ void DatabaseMaster::genSms()
 
 int main(int argc, char* argv[])
 {
-	DatabaseMaster gen(100, 1);
+	DatabaseMaster gen;
 	gen.genSms();
+	gen.genProfiles(23, 1);
 	return 0;
 }

@@ -14,7 +14,6 @@ struct ConfigurationMaster
 	void genSmeConfig();
 	void genRouteConfig();
 	void genAliasConfig();
-	void genProfiles();
 	const string str(int i);
 };
 
@@ -108,43 +107,6 @@ void ConfigurationMaster::genAliasConfig()
 	}
 }
 
-void ConfigurationMaster::genProfiles()
-{
-	ofstream os("profile.txt");
-	for (int i = 0; i < count; i++)
-	{
-		const char* addr;
-		int reportInfo;
-		int codeSet;
-		switch (i % 4)
-		{
-			case 0:
-				addr = ".0.0.";
-				reportInfo = 1;
-				codeSet = 8;
-				break;
-			case 1:
-				addr = ".0.1.";
-				reportInfo = 1;
-				codeSet = 0;
-				break;
-			case 2:
-				addr = ".1.0.";
-				reportInfo = 0;
-				codeSet = 8;
-				break;
-			case 3:
-				addr = ".1.1.";
-				reportInfo = 0;
-				codeSet = 0;
-				break;
-		}
-        os << "insert into sms_profile (mask, reportinfo, codeset) values ('" <<
-			addr << str(i) << "', " << reportInfo <<
-			", " << codeSet << ");" << endl;
-	}
-}
-
 int main(int argc, char* argv[])
 {
 	int count = 23;
@@ -163,6 +125,5 @@ int main(int argc, char* argv[])
 	gen.genSmeConfig();
 	gen.genRouteConfig();
 	gen.genAliasConfig();
-	gen.genProfiles();
 	return 0;
 }
