@@ -30,8 +30,8 @@ public:
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
       //printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
-      disposePdu(pdu);
     }
+    disposePdu(pdu);
   }
   void handleError(int errorCode)
   {

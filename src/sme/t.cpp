@@ -59,6 +59,7 @@ public:
     {
       printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
     }
+    disposePdu(pdu);
   }
   void handleError(int errorCode)
   {
