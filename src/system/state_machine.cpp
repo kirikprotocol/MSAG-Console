@@ -74,6 +74,8 @@ struct TaskGuard{
   }
 };
 
+class ExtractPartFailedException{};
+
 
 class ReceiptGetAdapter:public GetAdapter{
 public:
@@ -1144,6 +1146,7 @@ StateType StateMachine::submit(Tuple& t)
     isForwardTo = true;
 
     sms->getMessageBody().dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+    sms->getMessageBody().dropProperty(Tag::SMSC_DC_LIST);
   }
 
   bool generateDeliver=true; // do not generate in case of merge-concat
@@ -1447,6 +1450,12 @@ StateType StateMachine::submit(Tuple& t)
           if(ri.smeSystemId=="MAP_PROXY")
           {
             pres=partitionSms(&newsms,profile.codepage);
+            if(pres==psMultiple)
+            {
+              uint8_t msgref=smsc->getNextMR(dst);
+              sms->setConcatMsgRef(msgref);
+              sms->setConcatSeqNum(0);
+            }
             noPartitionSms=true;
           }
         }else
@@ -1695,7 +1704,7 @@ StateType StateMachine::submit(Tuple& t)
     }
 
 
-    if(pres==psMultiple)
+    if(pres==psMultiple && !noPartitionSms)
     {
       uint8_t msgref=smsc->getNextMR(dst);
       sms->setConcatMsgRef(msgref);
@@ -2145,7 +2154,11 @@ StateType StateMachine::submit(Tuple& t)
 
     if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
     {
-      extractSmsPart(sms,0);
+      if(!extractSmsPart(sms,0))
+      {
+        smsc_log_error(smsLog,"msgId=%lld:failed to extract sms part, aborting.",t.msgId);
+        throw ExtractPartFailedException();
+      };
       sms->setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
     }
 
@@ -2168,19 +2181,23 @@ StateType StateMachine::submit(Tuple& t)
     }catch(InvalidProxyCommandException& e)
     {
       err=Status::INVBNDSTS;
-      sendNotifyReport(*sms,t.msgId,"service rejected");
+      //sendNotifyReport(*sms,t.msgId,"service rejected");
       errstr="invalid bind state";
     }
+  }catch(ExtractPartFailedException& e)
+  {
+    errstr="Failed to extract sms part";
+    err=Status::INVPARLEN;
   }catch(exception& e)
   {
     errstr=e.what();
-    sendNotifyReport(*sms,t.msgId,"system failure");
+    //sendNotifyReport(*sms,t.msgId,"system failure");
     err=Status::THROTTLED;
   }catch(...)
   {
     err=Status::THROTTLED;
     errstr="unknown";
-    sendNotifyReport(*sms,t.msgId,"system failure");
+    //sendNotifyReport(*sms,t.msgId,"system failure");
   }
   if(!deliveryOk)
   {
@@ -2196,19 +2213,26 @@ StateType StateMachine::submit(Tuple& t)
     sms->setOriginatingAddress(srcOriginal);
     sms->setDestinationAddress(dstOriginal);
     sms->setLastResult(err);
-    sendNotifyReport(*sms,t.msgId,"system failure");
+    if(Status::isErrorPermanent(err))
+      sendFailureReport(*sms,t.msgId,err,"system failure");
+    else
+      sendNotifyReport(*sms,t.msgId,"system failure");
+
     if(!isDatagram && !isTransaction)
     {
       try{
         Descriptor d;
-        changeSmsStateToEnroute(*sms,t.msgId,d,Status::THROTTLED,rescheduleSms(*sms));
+        if(Status::isErrorPermanent(err))
+          store->changeSmsStateToUndeliverable(t.msgId,d,err);
+        else
+          changeSmsStateToEnroute(*sms,t.msgId,d,err,rescheduleSms(*sms));
         smsc->notifyScheduler();
       }catch(...)
       {
         __warning__("SUBMIT: failed to change state to enroute");
       }
     }
-    return ENROUTE_STATE;
+    return Status::isErrorPermanent(err)?UNDELIVERABLE_STATE:ENROUTE_STATE;
   }
 
   if(isDatagram || isTransaction)
@@ -2619,7 +2643,10 @@ StateType StateMachine::forward(Tuple& t)
       ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
       if(sms.getConcatSeqNum()<ci->num)
       {
-        extractSmsPart(&sms,sms.getConcatSeqNum());
+        if(!extractSmsPart(&sms,sms.getConcatSeqNum()))
+        {
+          throw ExtractPartFailedException();
+        }
       }else
       {
         __warning__("attempt to forward concatenated message but all parts are delivered!!!");
@@ -2655,6 +2682,12 @@ StateType StateMachine::forward(Tuple& t)
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
     dest_proxy->putCommand(delivery);
   }
+  catch(ExtractPartFailedException& e)
+  {
+    errstatus=Status::INVPARLEN;
+    smsc_log_error(smsLog,"FWDDLV: failed to extract sms part for %lld",t.msgId);
+    errtext="failed to extract sms part";
+  }
   catch(InvalidProxyCommandException& e)
   {
     errstatus=Status::INVBNDSTS;
@@ -2679,12 +2712,19 @@ StateType StateMachine::forward(Tuple& t)
     sms.setDestinationAddress(dstOriginal);
     sms.setLastResult(errstatus);
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
-    sendNotifyReport(sms,t.msgId,errtext);
+//    sendNotifyReport(sms,t.msgId,errtext);
+    if(Status::isErrorPermanent(errstatus))
+      sendFailureReport(sms,t.msgId,errstatus,"system failure");
+    else
+      sendNotifyReport(sms,t.msgId,"system failure");
     try{
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
-      changeSmsStateToEnroute(sms,t.msgId,d,errstatus,rescheduleSms(sms));
+        if(Status::isErrorPermanent(errstatus))
+          store->changeSmsStateToUndeliverable(t.msgId,d,errstatus);
+        else
+          changeSmsStateToEnroute(sms,t.msgId,d,errstatus,rescheduleSms(sms));
       smsc->notifyScheduler();
     }catch(...)
     {
@@ -2692,7 +2732,7 @@ StateType StateMachine::forward(Tuple& t)
     }
     Task t;
     smsc->tasks.findAndRemoveTask(uniqueId,dialogId2,&t);
-    return ENROUTE_STATE;
+    return Status::isErrorPermanent(errstatus)?UNDELIVERABLE_STATE:ENROUTE_STATE;
   }
   smsc_log_debug(smsLog, "FWDDLV: deliver ok msgId=%lld, seq number:%d",t.msgId,dialogId2);
 
@@ -3198,7 +3238,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
         //
         //
-        extractSmsPart(&sms,sms.getConcatSeqNum());
+
+        if(!extractSmsPart(&sms,sms.getConcatSeqNum()))
+        {
+          throw ExtractPartFailedException();
+        }
 
         if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
         {
@@ -3221,6 +3265,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
         dest_proxy->putCommand(delivery);
         tg.active=false;
       }
+      catch(ExtractPartFailedException& e)
+      {
+        errstatus=Status::INVPARLEN;
+        smsc_log_error(smsLog,"FWDDLV: failed to extract sms part for %lld",t.msgId);
+        errtext="failed to extract sms part";
+      }
       catch(InvalidProxyCommandException& e)
       {
         errstatus=Status::INVBNDSTS;
@@ -3238,7 +3288,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
           //time_t now=time(NULL);
           Descriptor d;
           __trace__("CONCAT: change state to enroute");
-          changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
+          //changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
+          sms.setLastResult(errstatus);
+          if(Status::isErrorPermanent(errstatus))
+          {
+            sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
+            store->changeSmsStateToUndeliverable(t.msgId,d,errstatus);
+          }
+          else
+            changeSmsStateToEnroute(sms,t.msgId,d,errstatus,rescheduleSms(sms));
           smsc->notifyScheduler();
         }catch(...)
         {
@@ -3250,7 +3308,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           finalizeSms(t.msgId,sms);
           return UNDELIVERABLE_STATE;
         }
-        return ENROUTE_STATE;
+        return Status::isErrorPermanent(errstatus)?UNDELIVERABLE_STATE:ENROUTE_STATE;
       }
 
       //
