@@ -1,7 +1,10 @@
 #include "ProfilerTestCases.hpp"
 #include "test/core/ProfileUtil.hpp"
 #include "test/sms/SmsUtil.hpp"
+#include "test/util/TextUtil.hpp"
+#include "test/TestConfig.hpp"
 #include "util/debug.h"
+#include "smeman/smsccmd.h"
 #include <algorithm>
 
 namespace smsc {
@@ -9,9 +12,11 @@ namespace test {
 namespace profiler {
 
 using smsc::util::Logger;
+using smsc::smeman::SmsResp;
 using namespace std;
 using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants
+using namespace smsc::test; //config params
 using namespace smsc::test::sms;
 using namespace smsc::test::core; //ProfileUtil, str()
 using namespace smsc::test::util;
@@ -20,7 +25,7 @@ ProfilerTestCases::ProfilerTestCases(Profiler* _profiler,
 	ProfileRegistry* _profileReg, CheckList* _chkList)
 	: profiler(_profiler), profileReg(_profileReg), chkList(_chkList)
 {
-	__require__(profiler);
+	//__require__(profiler);
 	//__require__(profileReg);
 	//__require__(chkList);
 }
@@ -38,6 +43,30 @@ void ProfilerTestCases::fillAddressWithQuestionMarks(Address& addr, int len)
 	uint8_t addrLen = addr.getValue(addrVal);
 	memset(addrVal + addrLen - len, '?', len);
 	addr.setValue(addrLen, addrVal);
+}
+
+bool ProfilerTestCases::updateProfile(const char* tc, int num,
+	const Address& addr, const Profile& profile, bool create)
+{
+	if (profileReg)
+	{
+		if ((create && !profileReg->checkExists(addr)) ||
+			!create && profileReg->checkExists(addr))
+		{
+			if (profiler)
+			{
+				profiler->update(addr, profile);
+			}
+			profileReg->putProfile(addr, profile);
+			return true;
+		}
+	}
+	else if (profiler)
+	{
+		profiler->update(addr, profile);
+		return true;
+	}
+	return false;
 }
 
 void ProfilerTestCases::createProfileMatch(Address& addr, int num)
@@ -66,18 +95,8 @@ void ProfilerTestCases::createProfileMatch(Address& addr, int num)
 				default:
 					__unreachable__("Invalid num");
 			}
-			if (profileReg)
+			if (updateProfile("createProfileMatch", s.value(), addr, profile, true))
 			{
-				if (!profileReg->checkExists(addr))
-				{
-					profiler->update(addr, profile);
-					profileReg->putProfile(addr, profile);
-					__tc_ok__;
-				}
-			}
-			else
-			{
-				profiler->update(addr, profile);
 				__tc_ok__;
 			}
 		}
@@ -144,18 +163,8 @@ void ProfilerTestCases::createProfileNotMatch(Address& addr, int num)
 				default:
 					__unreachable__("Invalid num");
 			}
-			if (profileReg)
+			if (updateProfile("createProfileNotMatch", s.value(), addr, profile, true))
 			{
-				if (!profileReg->checkExists(addr))
-				{
-					profiler->update(addr, profile);
-					profileReg->putProfile(addr, profile);
-					__tc_ok__;
-				}
-			}
-			else
-			{
-				profiler->update(addr, profile);
 				__tc_ok__;
 			}
 		}
@@ -175,18 +184,8 @@ void ProfilerTestCases::updateProfile(const Address& addr)
 	{
 		Profile profile;
 		ProfileUtil::setupRandomCorrectProfile(profile);
-		if (profileReg)
+		if (updateProfile("updateProfile", 1, addr, profile, false))
 		{
-			if (profileReg->checkExists(addr))
-			{
-				profiler->update(addr, profile);
-				profileReg->putProfile(addr, profile);
-				__tc_ok__;
-			}
-		}
-		else
-		{
-			profiler->update(addr, profile);
 			__tc_ok__;
 		}
 	}
@@ -199,6 +198,7 @@ void ProfilerTestCases::updateProfile(const Address& addr)
 
 void ProfilerTestCases::lookup(const Address& addr)
 {
+	__require__(profiler && profileReg);
 	__decl_tc__;
 	__tc__("lookup");
 	try
@@ -218,6 +218,7 @@ void ProfilerTestCases::lookup(const Address& addr)
 
 void ProfilerTestCases::putCommand(const Address& addr, int num)
 {
+	__require__(profiler);
 	TCSelector s(num, 9);
 	__decl_tc__;
 	for (; s.check(); s++)
@@ -228,72 +229,81 @@ void ProfilerTestCases::putCommand(const Address& addr, int num)
 			SmsUtil::setupRandomCorrectSms(&sms);
 			sms.setOriginatingAddress(addr);
 			string text;
-			int codepage = -1;
-			int reportoptions = -1;
+			int cmdType, codepage, reportoptions;
 			switch (s.value())
 			{
 				case 1: //report none
 					__tc__("putCommand.reportNoneMixedCase");
 					text = "RePoRT NoNe";
 					reportoptions = ProfileReportOptions::ReportNone;
+					cmdType = UPDATE_REPORT_OPTIONS;
 					break;
 				case 2: //report none
 					__tc__("putCommand.reportNoneSpaces");
 					text = "  rEpOrt  nOnE  ";
 					reportoptions = ProfileReportOptions::ReportNone;
+					cmdType = UPDATE_REPORT_OPTIONS;
 					break;
 				case 3: //report full
 					__tc__("putCommand.reportFullMixedCase");
 					text = "RePoRT FuLL";
 					reportoptions = ProfileReportOptions::ReportFull;
+					cmdType = UPDATE_REPORT_OPTIONS;
 					break;
 				case 4: //report full
 					__tc__("putCommand.reportFullSpaces");
 					text = "  rEpOrt  fUll  ";
 					reportoptions = ProfileReportOptions::ReportFull;
+					cmdType = UPDATE_REPORT_OPTIONS;
 					break;
 				case 5: //ucs2 codepage
 					__tc__("putCommand.ucs2CodepageMixedCase");
 					text = "uCS2";
 					codepage = ProfileCharsetOptions::Ucs2;
+					cmdType = UPDATE_CODE_PAGE;
 					break;
 				case 6: //usc2 codepage
 					__tc__("putCommand.ucs2CodepageSpaces");
 					text = "  Ucs2  ";
 					codepage = ProfileCharsetOptions::Ucs2;
+					cmdType = UPDATE_CODE_PAGE;
 					break;
 				case 7: //default codepage
 					__tc__("putCommand.defaultCodepageMixedCase");
 					text = "DeFauLT";
 					codepage = ProfileCharsetOptions::Default;
+					cmdType = UPDATE_CODE_PAGE;
 					break;
 				case 8: //default codepage
 					__tc__("putCommand.defaultCodepageSpaces");
 					text = "  dEfAUlt  ";
 					codepage = ProfileCharsetOptions::Default;
+					cmdType = UPDATE_CODE_PAGE;
 					break;
 				case 9: //неправильный текст
 					__tc__("putCommand.incorrectText");
+					cmdType = INCORRECT_COMMAND_TEXT;
 					break;
 				default:
 					__unreachable__("Invalid num");
 			}
 			sms.getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH, text.length());
 			sms.getMessageBody().setStrProperty(Tag::SMPP_SHORT_MESSAGE, text);
-			SmscCommand cmd = SmscCommand::makeSumbmitSm(sms, rand0(INT_MAX));
+			SmscCommand cmd = SmscCommand::makeDeliverySm(sms, rand0(INT_MAX));
 			__trace2__("ProfilerTestCases::putCommand(): sms = %s", str(sms).c_str());
 			if (profileReg)
 			{
 				Profile profile = profileReg->getProfile(addr);
-				if (reportoptions >= 0)
+				if (cmdType == UPDATE_REPORT_OPTIONS)
 				{
 					profile.reportoptions = reportoptions;
 				}
-				if (codepage >= 0)
+				else if (cmdType == UPDATE_CODE_PAGE)
 				{
 					profile.codepage = codepage;
 				}
 				profileReg->putProfile(addr, profile);
+				profileReg->registerDialogId(cmd->get_dialogId(), cmdType);
 			}
 			profiler->putCommand(cmd);
 			__tc_ok__;
@@ -302,6 +312,113 @@ void ProfilerTestCases::putCommand(const Address& addr, int num)
 		{
 			__tc_fail__(100);
 			error();
+		}
+	}
+}
+
+#define __ignore__(field) \
+	sms.set##field(ackSms->get##field());
+
+#define __ignore_bool__(field) \
+	sms.set##field(ackSms->is##field());
+
+void ProfilerTestCases::onSubmit(SmscCommand& cmd)
+{
+	__decl_tc__;
+	SMS* ackSms = cmd->get_sms();
+	__require__(ackSms);
+	int cmdType;
+	__tc__("getCommand.submit.checkDialogId");
+	if (profileReg->unregisterDialogId(cmd->get_dialogId(), cmdType))
+	{
+		__tc_fail__(1);
+	}
+	__tc_ok_cond__;
+	__tc__("getCommand.submit.checkFields");
+	SMS sms;
+	sms.setSubmitTime(time(NULL));
+	sms.setValidTime(sms.getSubmitTime() + maxValidPeriod);
+	sms.setNextTime(sms.getSubmitTime());
+	sms.setOriginatingAddress(smscAddr);
+	//игнорирую поля
+	__ignore__(DestinationAddress);
+	__ignore__(DealiasedDestinationAddress);
+	__ignore__(MessageReference);
+	EService serviceType;
+	ackSms->getEServiceType(serviceType);
+	sms.setEServiceType(serviceType);
+	__ignore_bool__(ArchivationRequested);
+	__ignore__(DeliveryReport);
+	__ignore__(BillingRecord);
+	__ignore__(OriginatingDescriptor);
+	//body
+	Body& body = sms.getMessageBody();
+	body.setIntProperty(Tag::SMPP_SCHEDULE_DELIVERY_TIME, sms.getSubmitTime());
+	body.setIntProperty(Tag::SMPP_ESM_CLASS, 0x10); //ESME Acknowledgement
+	body.setIntProperty(Tag::SMPP_DATA_CODING, DATA_CODING_SMSC_DEFAULT);
+	//поиск по алиасенному srcAddr
+	Profile profile = profileReg->getProfile(ackSms->getOriginatingAddress());
+	string text;
+	if (cmdType == UPDATE_REPORT_OPTIONS)
+	{
+		if (profile.reportoptions == ProfileReportOptions::ReportNone)
+		{
+			text = "Now you will not receive auxillary delivery reports";
+		}
+		else if (profile.reportoptions == ProfileReportOptions::ReportFull)
+		{
+			text = "Now you will receive auxillary delivery reports";
+		}
+	}
+	else if (cmdType == UPDATE_CODE_PAGE)
+	{
+		if (profile.codepage == ProfileCharsetOptions::Default)
+		{
+			text = "Now you will not be able to receive ucs2 encoded messages";
+		}
+		else if (profile.codepage == ProfileCharsetOptions::Ucs2)
+		{
+			text = "Now you will be able to receive ucs2 encoded messages";
+		}
+	}
+	string encText = encode(text.c_str(), DATA_CODING_SMSC_DEFAULT);
+	body.setIntProperty(Tag::SMPP_SM_LENGTH, encText.length());
+	body.setStrProperty(Tag::SMPP_SHORT_MESSAGE, encText);
+	__tc_fail2__(SmsUtil::compareMessages(*ackSms, sms), 0);
+	__tc_ok_cond__;
+}
+
+void ProfilerTestCases::onDeliveryResp(SmscCommand& cmd)
+{
+	__decl_tc__;
+	SmsResp* respSms = cmd->get_resp();
+	__require__(respSms);
+	//const char* respSms->get_messageId();
+	__tc__("getCommand.deliverResp");
+	if (respSms->get_status())
+	{
+		__tc_fail__(1);
+	}
+	__tc_ok_cond__;
+}
+
+void ProfilerTestCases::onCommand()
+{
+	__require__(profiler);
+	__decl_tc__;
+	while (profiler->hasInput())
+	{
+		SmscCommand cmd = profiler->getCommand();
+		switch (cmd->get_commandId())
+		{
+			case SUBMIT:
+				onSubmit(cmd);
+				break;
+			case DELIVERY_RESP:
+				onDeliveryResp(cmd);
+				break;
+			default:
+				__unreachable__("Invalid commandId");
 		}
 	}
 }
