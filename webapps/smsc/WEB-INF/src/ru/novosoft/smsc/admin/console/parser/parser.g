@@ -61,6 +61,10 @@ add returns [Command cmd] {
 	|	TGT_ALIAS 	cmd = addalias
 	|	TGT_SUBJECT	cmd = addsubject
 	|	TGT_PROFILE	cmd = addprofile
+	|	TGT_PRINCIPAL	cmd = addprincipal
+	|	TGT_DL		cmd = adddl
+	|	TGT_DLSUB	cmd = adddlsubmitter
+	|	TGT_DLMEM	cmd = adddlmember
 	;
 	
 /* ----------------------- Del action parser ---------------------- */
@@ -70,6 +74,10 @@ del returns [Command cmd] {
 	:	TGT_ROUTE 	cmd = delroute
 	|	TGT_ALIAS 	cmd = delalias
 	|	TGT_SUBJECT	cmd = delsubject
+	|	TGT_PRINCIPAL	cmd = delprincipal
+	|	TGT_DL		cmd = deldl
+	|	TGT_DLSUB	cmd = deldlsubmitter
+	|	TGT_DLMEM	cmd = deldlmember
 	;
 /* ----------------------- Alt action parser ---------------------- */
 alt returns [Command cmd] {
@@ -79,14 +87,18 @@ alt returns [Command cmd] {
 	|	TGT_ALIAS   	cmd = altalias
 	|	TGT_SUBJECT 	cmd = altsubject
 	|	TGT_PROFILE 	cmd = altprofile
+	|	TGT_PRINCIPAL	cmd = altprincipal
+	|	TGT_DL		cmd = altdl
 	;
 /* ----------------------- Lst action parser ---------------------- */
 lst returns [Command cmd] {
     cmd = null;
 }
-	:	TGT_ROUTE 	{ cmd = new RouteListCommand();   }
-	|	TGT_ALIAS 	{ cmd = new AliasListCommand();   }
-	|	TGT_SUBJECT	{ cmd = new SubjectListCommand(); }
+	:	TGT_ROUTE 	{ cmd = new RouteListCommand();     }
+	|	TGT_ALIAS 	{ cmd = new AliasListCommand();     }
+	|	TGT_SUBJECT	{ cmd = new SubjectListCommand();   }
+	|	TGT_PRINCIPAL	{ cmd = new PrincipalListCommand(); }
+	|	TGT_DL		{ cmd = new DistributionListListCommand(); }
 	;
 /* ----------------------- View action parser --------------------- */
 view returns [Command cmd] {
@@ -96,6 +108,8 @@ view returns [Command cmd] {
 	|	TGT_ALIAS 	cmd = viewalias
 	|	TGT_SUBJECT	cmd = viewsubject
 	|	TGT_PROFILE	cmd = viewprofile
+	|	TGT_PRINCIPAL	cmd = viewprincipal
+	|	TGT_DL		cmd = viewdl
 	;
 /* ----------------------- Show action parser --------------------- */
 show returns [AliasShowCommand cmd] {
@@ -133,7 +147,8 @@ getnameid[String msg] returns [String out] {
 srcdef[RouteGenCommand cmd] { // Special command required !!!
     RouteSrcDef def = new RouteSrcDef();
 }
-	:	( (OPT_SUBJ { 
+	:	( (
+	OPT_SUBJ { 
 		    def.setType(RouteSrcDef.TYPE_SUBJECT);
 		    def.setSrc(getnameid("Subject name"));
 		  }) 
@@ -217,10 +232,12 @@ addroute_flags[RouteAddCommand cmd]
 		| OPT_NOARCH { cmd.setArc(false);   })
 	        ( OPT_ALLOW  { cmd.setAllow(true);  }
 		| OPT_DENY   { cmd.setAllow(false); })
+	        ( OPT_RCPT   { cmd.setReciept(true);  }
+		| OPT_NORCPT { cmd.setReciept(false); })
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny)");
+           throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny) (reciept|noreceipt)");
 	}
 
 delroute returns [RouteDeleteCommand cmd] {
@@ -266,16 +283,18 @@ altroute returns [RouteAlterCommand cmd] {
 		)?
 	;
 altroute_flags[RouteAlterCommand cmd]
-	:	( OPT_BILL   { cmd.setBill(true);   } 
-		| OPT_NOBILL { cmd.setBill(false);  })?
-		( OPT_ARCH   { cmd.setArc(true);    } 
-		| OPT_NOARCH { cmd.setArc(false);   })?
-	        ( OPT_ALLOW  { cmd.setAllow(true);  }
-		| OPT_DENY   { cmd.setAllow(false); })?
+	:	( OPT_BILL   { cmd.setBill(true);     } 
+		| OPT_NOBILL { cmd.setBill(false);    })?
+		( OPT_ARCH   { cmd.setArc(true);      } 
+		| OPT_NOARCH { cmd.setArc(false);     })?
+	        ( OPT_ALLOW  { cmd.setAllow(true);    }
+		| OPT_DENY   { cmd.setAllow(false);   })?
+	        ( OPT_RCPT   { cmd.setReciept(true);  }
+		| OPT_NORCPT { cmd.setReciept(false); })?
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny]");
+           throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny] [reciept|noreceipt]");
 	}
 
 viewroute returns [RouteViewCommand cmd] {
@@ -440,4 +459,167 @@ viewprofile returns [ProfileViewCommand cmd] {
 	catch [RecognitionException ex] {
 	    throw new RecognitionException("Profile address expected");
 	}
-	
+
+/* ------------------ Distribution lists commands parsers ---------------- */
+
+addprincipal returns [PrincipalAddCommand cmd] {
+    cmd = new PrincipalAddCommand();
+}
+	:	(addr:STR  { cmd.setAddress(addr.getText()); })
+		(OPT_NLIST numl:STR {
+		    try {
+			cmd.setMaxLists(Integer.parseInt(numl.getText()));
+		    } catch (NumberFormatException ex) {
+			throw new NumberFormatException("Expecting integer value for <numlist>");
+		    }
+		})
+		(OPT_NELEM nume:STR {
+		    try {
+			cmd.setMaxElements(Integer.parseInt(nume.getText()));
+		    } catch (NumberFormatException ex) {
+			throw new NumberFormatException("Expecting integer value for <numelem>");
+		    }
+		})
+	;
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Principal address expected");
+	}
+
+altprincipal returns [PrincipalAlterCommand cmd] {
+    cmd = new PrincipalAlterCommand();
+}
+	:	(addr:STR  { cmd.setAddress(addr.getText()); })
+		(OPT_NLIST numl:STR {
+		    try {
+			cmd.setMaxLists(Integer.parseInt(numl.getText()));
+		    } catch (NumberFormatException ex) {
+			throw new NumberFormatException("Expecting integer value for <numlist>");
+		    }
+		}) ?
+		(OPT_NELEM nume:STR {
+		    try {
+			cmd.setMaxElements(Integer.parseInt(nume.getText()));
+		    } catch (NumberFormatException ex) {
+			throw new NumberFormatException("Expecting integer value for <numelem>");
+		    }
+		}) ?
+	;
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Principal address expected");
+	}
+
+delprincipal returns [PrincipalDeleteCommand cmd] {
+    cmd = new PrincipalDeleteCommand();
+}
+	:	(addr:STR  { cmd.setAddress(addr.getText()); })
+	;
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Principal address expected");
+	}
+
+viewprincipal returns [PrincipalViewCommand cmd] {
+    cmd = new PrincipalViewCommand();
+}
+	:	(addr:STR  { cmd.setAddress(addr.getText()); })
+	;
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Principal address expected");
+	}
+
+adddl returns [DistributionListAddCommand cmd] {
+    cmd = new DistributionListAddCommand();
+}
+	:	({	
+		    cmd.setName(getnameid("Distribution list name"));
+		})
+		(OPT_OWNER owner:STR { 
+		    cmd.setOwner(owner.getText());
+		}) ?
+		(OPT_NELEM nume:STR  {
+		    try {
+			cmd.setMaxElements(Integer.parseInt(nume.getText()));
+		    } catch (NumberFormatException ex) {
+			throw new NumberFormatException("Expecting integer value for <numelem>");
+		    }
+		})		
+	;
+
+altdl returns [DistributionListAlterCommand cmd] {
+    cmd = new DistributionListAlterCommand();
+}
+	:	({	
+		    cmd.setName(getnameid("Distribution list name"));
+		})
+		(OPT_NELEM nume:STR  {
+		    try {
+			cmd.setMaxElements(Integer.parseInt(nume.getText()));
+		    } catch (NumberFormatException ex) {
+			throw new NumberFormatException("Expecting integer value for <numelem>");
+		    }
+		})		
+	;
+
+
+viewdl returns [DistributionListViewCommand cmd] {
+    cmd = new DistributionListViewCommand();
+}
+	:	({	
+		    cmd.setName(getnameid("Distribution list name"));
+		})
+	;
+
+deldl returns [DistributionListDeleteCommand cmd] {
+    cmd = new DistributionListDeleteCommand();
+}
+	:	({	
+		    cmd.setName(getnameid("Distribution list name"));
+		})
+	;
+
+adddlmember returns [MemberAddCommand cmd] {
+    cmd = new MemberAddCommand();
+}
+	:	({	
+		    cmd.setName(getnameid("Distribution list name"));
+		})
+		(member:STR { 
+		    cmd.setMember(member.getText());
+		})
+	;
+
+deldlmember returns [MemberDeleteCommand cmd] {
+    cmd = new MemberDeleteCommand();
+}
+	:	({	
+		    cmd.setName(getnameid("Distribution list name"));
+		})
+		(member:STR { 
+		    cmd.setMember(member.getText());
+		})
+	;
+
+adddlsubmitter returns [SubmitterAddCommand cmd] {
+    cmd = new SubmitterAddCommand();
+}
+	:	({	
+		    cmd.setName(getnameid("Distribution list name"));
+		})
+		(submitter:STR { 
+		    cmd.setSubmitter(submitter.getText());
+		})
+	;
+
+deldlsubmitter returns [SubmitterDeleteCommand cmd] {
+    cmd = new SubmitterDeleteCommand();
+}
+	:	({	
+		    cmd.setName(getnameid("Distribution list name"));
+		})
+		(submitter:STR { 
+		    cmd.setSubmitter(submitter.getText());
+		})
+	;

@@ -146,6 +146,30 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=addprofile();
 			break;
 		}
+		case TGT_PRINCIPAL:
+		{
+			match(TGT_PRINCIPAL);
+			cmd=addprincipal();
+			break;
+		}
+		case TGT_DL:
+		{
+			match(TGT_DL);
+			cmd=adddl();
+			break;
+		}
+		case TGT_DLSUB:
+		{
+			match(TGT_DLSUB);
+			cmd=adddlsubmitter();
+			break;
+		}
+		case TGT_DLMEM:
+		{
+			match(TGT_DLMEM);
+			cmd=adddlmember();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -178,6 +202,30 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_SUBJECT);
 			cmd=delsubject();
+			break;
+		}
+		case TGT_PRINCIPAL:
+		{
+			match(TGT_PRINCIPAL);
+			cmd=delprincipal();
+			break;
+		}
+		case TGT_DL:
+		{
+			match(TGT_DL);
+			cmd=deldl();
+			break;
+		}
+		case TGT_DLSUB:
+		{
+			match(TGT_DLSUB);
+			cmd=deldlsubmitter();
+			break;
+		}
+		case TGT_DLMEM:
+		{
+			match(TGT_DLMEM);
+			cmd=deldlmember();
 			break;
 		}
 		default:
@@ -220,6 +268,18 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=altprofile();
 			break;
 		}
+		case TGT_PRINCIPAL:
+		{
+			match(TGT_PRINCIPAL);
+			cmd=altprincipal();
+			break;
+		}
+		case TGT_DL:
+		{
+			match(TGT_DL);
+			cmd=altdl();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -252,6 +312,18 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_SUBJECT);
 			cmd = new SubjectListCommand();
+			break;
+		}
+		case TGT_PRINCIPAL:
+		{
+			match(TGT_PRINCIPAL);
+			cmd = new PrincipalListCommand();
+			break;
+		}
+		case TGT_DL:
+		{
+			match(TGT_DL);
+			cmd = new DistributionListListCommand();
 			break;
 		}
 		default:
@@ -292,6 +364,18 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_PROFILE);
 			cmd=viewprofile();
+			break;
+		}
+		case TGT_PRINCIPAL:
+		{
+			match(TGT_PRINCIPAL);
+			cmd=viewprincipal();
+			break;
+		}
+		case TGT_DL:
+		{
+			match(TGT_DL);
+			cmd=viewdl();
 			break;
 		}
 		default:
@@ -537,6 +621,152 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final PrincipalAddCommand  addprincipal() throws RecognitionException, TokenStreamException {
+		PrincipalAddCommand cmd;
+		
+		Token  addr = null;
+		Token  numl = null;
+		Token  nume = null;
+		
+		cmd = new PrincipalAddCommand();
+		
+		
+		{
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Principal address expected");
+				
+		}
+		cmd.setAddress(addr.getText());
+		}
+		{
+		match(OPT_NLIST);
+		numl = LT(1);
+		match(STR);
+		
+				    try {
+					cmd.setMaxLists(Integer.parseInt(numl.getText()));
+				    } catch (NumberFormatException ex) {
+					throw new NumberFormatException("Expecting integer value for <numlist>");
+				    }
+				
+		}
+		{
+		match(OPT_NELEM);
+		nume = LT(1);
+		match(STR);
+		
+				    try {
+					cmd.setMaxElements(Integer.parseInt(nume.getText()));
+				    } catch (NumberFormatException ex) {
+					throw new NumberFormatException("Expecting integer value for <numelem>");
+				    }
+				
+		}
+		return cmd;
+	}
+	
+	public final DistributionListAddCommand  adddl() throws RecognitionException, TokenStreamException {
+		DistributionListAddCommand cmd;
+		
+		Token  owner = null;
+		Token  nume = null;
+		
+		cmd = new DistributionListAddCommand();
+		
+		
+		{
+			
+				    cmd.setName(getnameid("Distribution list name"));
+				
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_OWNER:
+		{
+			match(OPT_OWNER);
+			owner = LT(1);
+			match(STR);
+			
+					    cmd.setOwner(owner.getText());
+					
+			break;
+		}
+		case OPT_NELEM:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		match(OPT_NELEM);
+		nume = LT(1);
+		match(STR);
+		
+				    try {
+					cmd.setMaxElements(Integer.parseInt(nume.getText()));
+				    } catch (NumberFormatException ex) {
+					throw new NumberFormatException("Expecting integer value for <numelem>");
+				    }
+				
+		}
+		return cmd;
+	}
+	
+	public final SubmitterAddCommand  adddlsubmitter() throws RecognitionException, TokenStreamException {
+		SubmitterAddCommand cmd;
+		
+		Token  submitter = null;
+		
+		cmd = new SubmitterAddCommand();
+		
+		
+		{
+			
+				    cmd.setName(getnameid("Distribution list name"));
+				
+		}
+		{
+		submitter = LT(1);
+		match(STR);
+		
+				    cmd.setSubmitter(submitter.getText());
+				
+		}
+		return cmd;
+	}
+	
+	public final MemberAddCommand  adddlmember() throws RecognitionException, TokenStreamException {
+		MemberAddCommand cmd;
+		
+		Token  member = null;
+		
+		cmd = new MemberAddCommand();
+		
+		
+		{
+			
+				    cmd.setName(getnameid("Distribution list name"));
+				
+		}
+		{
+		member = LT(1);
+		match(STR);
+		
+				    cmd.setMember(member.getText());
+				
+		}
+		return cmd;
+	}
+	
 	public final RouteDeleteCommand  delroute() throws RecognitionException, TokenStreamException {
 		RouteDeleteCommand cmd;
 		
@@ -585,6 +815,90 @@ public CommandParser(ParserSharedInputState state) {
 		{
 		
 				    cmd.setSubject(getnameid("Subject name"));
+				
+		}
+		return cmd;
+	}
+	
+	public final PrincipalDeleteCommand  delprincipal() throws RecognitionException, TokenStreamException {
+		PrincipalDeleteCommand cmd;
+		
+		Token  addr = null;
+		
+		cmd = new PrincipalDeleteCommand();
+		
+		
+		{
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Principal address expected");
+				
+		}
+		cmd.setAddress(addr.getText());
+		}
+		return cmd;
+	}
+	
+	public final DistributionListDeleteCommand  deldl() throws RecognitionException, TokenStreamException {
+		DistributionListDeleteCommand cmd;
+		
+		
+		cmd = new DistributionListDeleteCommand();
+		
+		
+		{
+			
+				    cmd.setName(getnameid("Distribution list name"));
+				
+		}
+		return cmd;
+	}
+	
+	public final SubmitterDeleteCommand  deldlsubmitter() throws RecognitionException, TokenStreamException {
+		SubmitterDeleteCommand cmd;
+		
+		Token  submitter = null;
+		
+		cmd = new SubmitterDeleteCommand();
+		
+		
+		{
+			
+				    cmd.setName(getnameid("Distribution list name"));
+				
+		}
+		{
+		submitter = LT(1);
+		match(STR);
+		
+				    cmd.setSubmitter(submitter.getText());
+				
+		}
+		return cmd;
+	}
+	
+	public final MemberDeleteCommand  deldlmember() throws RecognitionException, TokenStreamException {
+		MemberDeleteCommand cmd;
+		
+		Token  member = null;
+		
+		cmd = new MemberDeleteCommand();
+		
+		
+		{
+			
+				    cmd.setName(getnameid("Distribution list name"));
+				
+		}
+		{
+		member = LT(1);
+		match(STR);
+		
+				    cmd.setMember(member.getText());
 				
 		}
 		return cmd;
@@ -954,6 +1268,112 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final PrincipalAlterCommand  altprincipal() throws RecognitionException, TokenStreamException {
+		PrincipalAlterCommand cmd;
+		
+		Token  addr = null;
+		Token  numl = null;
+		Token  nume = null;
+		
+		cmd = new PrincipalAlterCommand();
+		
+		
+		{
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Principal address expected");
+				
+		}
+		cmd.setAddress(addr.getText());
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_NLIST:
+		{
+			match(OPT_NLIST);
+			numl = LT(1);
+			match(STR);
+			
+					    try {
+						cmd.setMaxLists(Integer.parseInt(numl.getText()));
+					    } catch (NumberFormatException ex) {
+						throw new NumberFormatException("Expecting integer value for <numlist>");
+					    }
+					
+			break;
+		}
+		case EOF:
+		case OPT_NELEM:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_NELEM:
+		{
+			match(OPT_NELEM);
+			nume = LT(1);
+			match(STR);
+			
+					    try {
+						cmd.setMaxElements(Integer.parseInt(nume.getText()));
+					    } catch (NumberFormatException ex) {
+						throw new NumberFormatException("Expecting integer value for <numelem>");
+					    }
+					
+			break;
+		}
+		case EOF:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		return cmd;
+	}
+	
+	public final DistributionListAlterCommand  altdl() throws RecognitionException, TokenStreamException {
+		DistributionListAlterCommand cmd;
+		
+		Token  nume = null;
+		
+		cmd = new DistributionListAlterCommand();
+		
+		
+		{
+			
+				    cmd.setName(getnameid("Distribution list name"));
+				
+		}
+		{
+		match(OPT_NELEM);
+		nume = LT(1);
+		match(STR);
+		
+				    try {
+					cmd.setMaxElements(Integer.parseInt(nume.getText()));
+				    } catch (NumberFormatException ex) {
+					throw new NumberFormatException("Expecting integer value for <numelem>");
+				    }
+				
+		}
+		return cmd;
+	}
+	
 	public final RouteViewCommand  viewroute() throws RecognitionException, TokenStreamException {
 		RouteViewCommand cmd;
 		
@@ -1026,6 +1446,44 @@ public CommandParser(ParserSharedInputState state) {
 				
 		}
 		cmd.setAddress(addr.getText());
+		}
+		return cmd;
+	}
+	
+	public final PrincipalViewCommand  viewprincipal() throws RecognitionException, TokenStreamException {
+		PrincipalViewCommand cmd;
+		
+		Token  addr = null;
+		
+		cmd = new PrincipalViewCommand();
+		
+		
+		{
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Principal address expected");
+				
+		}
+		cmd.setAddress(addr.getText());
+		}
+		return cmd;
+	}
+	
+	public final DistributionListViewCommand  viewdl() throws RecognitionException, TokenStreamException {
+		DistributionListViewCommand cmd;
+		
+		
+		cmd = new DistributionListViewCommand();
+		
+		
+		{
+			
+				    cmd.setName(getnameid("Distribution list name"));
+				
 		}
 		return cmd;
 	}
@@ -1309,10 +1767,30 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			}
+			{
+			switch ( LA(1)) {
+			case OPT_RCPT:
+			{
+				match(OPT_RCPT);
+				cmd.setReciept(true);
+				break;
+			}
+			case OPT_NORCPT:
+			{
+				match(OPT_NORCPT);
+				cmd.setReciept(false);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny)");
+			throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny) (reciept|noreceipt)");
 				
 		}
 	}
@@ -1344,6 +1822,8 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NOARCH:
 			case OPT_ALLOW:
 			case OPT_DENY:
+			case OPT_RCPT:
+			case OPT_NORCPT:
 			case OPT_SVCID:
 			case OPT_PRI:
 			{
@@ -1374,6 +1854,8 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_DELETE:
 			case OPT_ALLOW:
 			case OPT_DENY:
+			case OPT_RCPT:
+			case OPT_NORCPT:
 			case OPT_SVCID:
 			case OPT_PRI:
 			{
@@ -1402,6 +1884,36 @@ public CommandParser(ParserSharedInputState state) {
 			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
+			case OPT_RCPT:
+			case OPT_NORCPT:
+			case OPT_SVCID:
+			case OPT_PRI:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_RCPT:
+			{
+				match(OPT_RCPT);
+				cmd.setReciept(true);
+				break;
+			}
+			case OPT_NORCPT:
+			{
+				match(OPT_NORCPT);
+				cmd.setReciept(false);
+				break;
+			}
+			case EOF:
+			case ACT_ADD:
+			case ACT_DELETE:
 			case OPT_SVCID:
 			case OPT_PRI:
 			{
@@ -1416,7 +1928,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny]");
+			throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny] [reciept|noreceipt]");
 				
 		}
 	}
@@ -1443,14 +1955,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop72:
+			_loop74:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop72;
+					break _loop74;
 				}
 				
 			} while (true);
@@ -1504,6 +2016,10 @@ public CommandParser(ParserSharedInputState state) {
 		"\"route\"",
 		"\"profile\"",
 		"\"subject\"",
+		"\"principal\"",
+		"\"dl\"",
+		"\"dlsubmitter\"",
+		"\"dlmember\"",
 		"\"hide\"",
 		"\"nohide\"",
 		"\"bill\"",
@@ -1512,6 +2028,8 @@ public CommandParser(ParserSharedInputState state) {
 		"\"noarc\"",
 		"\"allow\"",
 		"\"deny\"",
+		"\"receipt\"",
+		"\"noreceipt\"",
 		"\"src\"",
 		"\"dst\"",
 		"\"mask\"",
@@ -1525,6 +2043,9 @@ public CommandParser(ParserSharedInputState state) {
 		"\"encoding\"",
 		"\"default\"",
 		"\"ucs2\"",
+		"\"numlist\"",
+		"\"numelem\"",
+		"\"owner\"",
 		"WS",
 		"more input",
 		"quoted string",

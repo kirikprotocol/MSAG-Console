@@ -11,32 +11,41 @@ TGT_ALIAS="alias"=11
 TGT_ROUTE="route"=12
 TGT_PROFILE="profile"=13
 TGT_SUBJECT="subject"=14
-OPT_HIDE="hide"=15
-OPT_NOHIDE="nohide"=16
-OPT_BILL="bill"=17
-OPT_NOBILL="nobill"=18
-OPT_ARCH="arc"=19
-OPT_NOARCH="noarc"=20
-OPT_ALLOW="allow"=21
-OPT_DENY="deny"=22
-OPT_SRC="src"=23
-OPT_DST="dst"=24
-OPT_MASK="mask"=25
-OPT_SUBJ="subj"=26
-OPT_SVCID="serviceid"=27
-OPT_PRI="priority"=28
-OPT_DEFSME="defaultsme"=29
-OPT_REPORT="report"=30
-VAL_FULL="full"=31
-VAL_NONE="none"=32
-OPT_ENCODE="encoding"=33
-VAL_DEF="default"=34
-VAL_UCS2="ucs2"=35
-WS=36
-STR("more input")=37
-QSTR("quoted string")=38
-STR_WS=39
-STR_CHR=40
-COMMA("comma character ','")=41
-ESC=42
-DIGIT=43
+TGT_PRINCIPAL="principal"=15
+TGT_DL="dl"=16
+TGT_DLSUB="dlsubmitter"=17
+TGT_DLMEM="dlmember"=18
+OPT_HIDE="hide"=19
+OPT_NOHIDE="nohide"=20
+OPT_BILL="bill"=21
+OPT_NOBILL="nobill"=22
+OPT_ARCH="arc"=23
+OPT_NOARCH="noarc"=24
+OPT_ALLOW="allow"=25
+OPT_DENY="deny"=26
+OPT_RCPT="receipt"=27
+OPT_NORCPT="noreceipt"=28
+OPT_SRC="src"=29
+OPT_DST="dst"=30
+OPT_MASK="mask"=31
+OPT_SUBJ="subj"=32
+OPT_SVCID="serviceid"=33
+OPT_PRI="priority"=34
+OPT_DEFSME="defaultsme"=35
+OPT_REPORT="report"=36
+VAL_FULL="full"=37
+VAL_NONE="none"=38
+OPT_ENCODE="encoding"=39
+VAL_DEF="default"=40
+VAL_UCS2="ucs2"=41
+OPT_NLIST="numlist"=42
+OPT_NELEM="numelem"=43
+OPT_OWNER="owner"=44
+WS=45
+STR("more input")=46
+QSTR("quoted string")=47
+STR_WS=48
+STR_CHR=49
+COMMA("comma character ','")=50
+ESC=51
+DIGIT=52

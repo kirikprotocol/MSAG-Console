@@ -26,6 +26,10 @@ tokens {
   TGT_ROUTE	= "route"	;
   TGT_PROFILE	= "profile"	;
   TGT_SUBJECT	= "subject"	;
+  TGT_PRINCIPAL	= "principal"	;
+  TGT_DL	= "dl"		;
+  TGT_DLSUB	= "dlsubmitter"	;
+  TGT_DLMEM	= "dlmember"	;
 
   OPT_HIDE	= "hide"	;
   OPT_NOHIDE	= "nohide"	;
@@ -35,6 +39,8 @@ tokens {
   OPT_NOARCH	= "noarc"	;
   OPT_ALLOW     = "allow"	;
   OPT_DENY      = "deny"        ;
+  OPT_RCPT	= "receipt"	;
+  OPT_NORCPT	= "noreceipt"	;
   OPT_SRC	= "src"         ;
   OPT_DST    	= "dst"         ;
   OPT_MASK      = "mask"        ;
@@ -48,6 +54,9 @@ tokens {
   OPT_ENCODE	= "encoding"	;
   VAL_DEF	= "default"	;
   VAL_UCS2	= "ucs2"	;
+  OPT_NLIST	= "numlist"	;
+  OPT_NELEM	= "numelem"	;
+  OPT_OWNER	= "owner"	;
 }
 
 WS    	: 	( STR_WS
