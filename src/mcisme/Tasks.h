@@ -67,16 +67,18 @@ namespace smsc { namespace mcisme
         static Statistics*  statistics;
         static Logger*      logger;
         static uint64_t     currentId, sequenceId; // id generation sequence control
+        static int          maxCallersCount;       // maximum distinct callers
         
         uint64_t            currentMessageId;
         MessageState        currentMessageState;
         std::string         abonent, cur_smsc_id;
         Array<TaskEvent>    events;
-        int                 newEventsCount;
+        int                 newEventsCount, callersCount;
 
         AbonentProfile           abonentProfile;
         InformTemplateFormatter* templateFormatter;
 
+        void loadCallersCount(Connection* connection);
         bool loadup(uint64_t currId, Connection* connection=0); // used from loadup() & loadupAll()
         void doWait(Connection* connection, const char* smsc_id, const MessageState& state);
         void doNewCurrent(Connection* connection);
@@ -86,7 +88,8 @@ namespace smsc { namespace mcisme
 
         static bool         bInformAll, bNotifyAll;
 
-        static void         init(DataSource* _ds, Statistics* _statistics, int rowsPerMessage);
+        static void         init(DataSource* _ds, Statistics* _statistics,
+                                 int rowsPerMessage, int maxCallersCount = -1);
         static uint64_t     getNextId(Connection* connection=0);
         
         static bool         getMessage(const char* smsc_id, Message& message, 
@@ -95,7 +98,7 @@ namespace smsc { namespace mcisme
 
         Task(const std::string& _abonent)  
             : currentMessageId(0), currentMessageState(UNKNOWNST), abonent(_abonent),
-              cur_smsc_id(""), newEventsCount(0), templateFormatter(0) {};
+              cur_smsc_id(""), newEventsCount(0), callersCount(0), templateFormatter(0) {};
         virtual ~Task() {};
         
         void loadup();
@@ -105,6 +108,9 @@ namespace smsc { namespace mcisme
         };
         inline void setTemplateFormatter(InformTemplateFormatter* formatter) {
             templateFormatter = formatter;
+        };
+        inline bool checkCallersCount() {
+            return (Task::maxCallersCount <= 0 || callersCount < Task::maxCallersCount);
         };
 
         inline int getEventsCount() { return events.Count(); };

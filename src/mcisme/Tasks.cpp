@@ -12,6 +12,7 @@ uint64_t    Task::currentId  = 0;
 uint64_t    Task::sequenceId = 0;
 bool        Task::bInformAll   = false;
 bool        Task::bNotifyAll   = false;
+int         Task::maxCallersCount = -1; // Disable callers check
 
 /* ----------------------- Access to message ids generation (MCI_MSG_SEQ) -------------------- */
 
@@ -54,6 +55,7 @@ const char* CREATE_NEW_EVT_ID   = "CREATE_NEW_EVT_ID";
 const char* UPDATE_MSG_EVT_ID   = "UPDATE_MSG_EVT_ID";
 //const char* DELETE_MSG_EVT_ID   = "DELETE_MSG_EVT_ID";
 const char* DELETE_ALL_EVT_ID   = "DELETE_ALL_EVT_ID";
+const char* COUNT_CALLERS_ID    = "COUNT_CALLERS_ID";
 
 const char* LOADUP_MSG_EVT_SQL  = "SELECT ID, DT, CALLER, MSG_ID FROM MCISME_EVT_SET "
                                   "WHERE ABONENT=:ABONENT AND (MSG_ID=:MSG_ID OR MSG_ID IS NULL) ORDER BY ID";
@@ -61,8 +63,11 @@ const char* GET_EVT_CALLER_SQL  = "SELECT DISTINCT CALLER FROM MCISME_EVT_SET WH
 const char* CREATE_NEW_EVT_SQL  = "INSERT INTO MCISME_EVT_SET (ID, ABONENT, DT, CALLER, MSG_ID) "
                                   "VALUES (:ID, :ABONENT, :DT, :CALLER, NULL)"; // MSG_ID is not assigned
 const char* UPDATE_MSG_EVT_SQL  = "UPDATE MCISME_EVT_SET SET MSG_ID=:MSG_ID WHERE ID=:ID"; // assigns MSG_ID
-//const char* DELETE_MSG_EVT_SQL  = "DELETE FROM MCISME_EVT_SET WHERE ID=:ID";
+//const char* DELETE_MSG_EVT_SQL= "DELETE FROM MCISME_EVT_SET WHERE ID=:ID";
 const char* DELETE_ALL_EVT_SQL  = "DELETE FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID";
+
+const char* COUNT_ALL_CALLERS_SQL = "SELECT ABONENT, COUNT(DISTINCT CALLER) FROM MCISME_EVT_SET GROUP BY ABONENT";
+const char* COUNT_CALLERS_SQL     = "SELECT COUNT(DISTINCT CALLER) FROM MCISME_EVT_SET WHERE ABONENT=:ABONENT";
 
 /* ----------------------- Access to current message ids (MCI_CUR_MSG) ----------------------- */
 
@@ -86,12 +91,14 @@ const char* OBTAIN_RESULTSET_ERROR_MESSAGE  = "Failed to obtain result set for %
 
 /* ----------------------- Static part ----------------------- */
 
-void Task::init(DataSource* _ds, Statistics* _statistics, int rowsPerMessage)
+void Task::init(DataSource* _ds, Statistics* _statistics, 
+                int _rowsPerMessage, int _maxCallersCount/*=-1*/)
 {
     Task::logger = Logger::getInstance("smsc.mcisme.Task");
     Task::ds = _ds; Task::statistics = _statistics;
     Task::currentId  = 0; Task::sequenceId = 0;
-    Message::maxRowsPerMessage = rowsPerMessage;
+    Task::maxCallersCount = _maxCallersCount;
+    Message::maxRowsPerMessage = _rowsPerMessage;
 }
 uint64_t Task::getNextId(Connection* connection/*=0*/)
 {
@@ -242,6 +249,7 @@ Hash<Task *> Task::loadupAll()
                     int newEventsCount = task->getNewEventsCount();
                     smsc_log_debug(logger, "Task: loaded for abonent %s (state=%d, events: all=%d new=%d)",
                                    taskAbonent, taskState, eventsCount, newEventsCount);
+                    task->callersCount = 0;
                     if (eventsCount > 0 && 
                         (taskState != WAIT_RCPT || newEventsCount > 0)) tasks.Insert(taskAbonent, task);
                     else delete task;
@@ -289,10 +297,35 @@ Hash<Task *> Task::loadupAll()
             int newEventsCount = task->getNewEventsCount();
             smsc_log_debug(logger, "Task: loaded for abonent %s (state=%d, events: all=%d new=%d)",
                            taskAbonent, taskState, eventsCount, newEventsCount);
+            task->callersCount = 0;
             if (eventsCount > 0 && 
                 (taskState != WAIT_RCPT || newEventsCount > 0)) tasks.Insert(taskAbonent, task);
             else delete task;
             task = 0;
+        }
+
+        if (Task::maxCallersCount > 0) // if distinct callers check enabled
+        {
+            /* SELECT ABONENT, COUNT(DISTINCT CALLER) FROM MCISME_EVT_SET GROUP BY ABONENT */
+            std::auto_ptr<Statement> countCallersStmtGuard(connection->createStatement(COUNT_ALL_CALLERS_SQL));
+            Statement* countCallersStmt = countCallersStmtGuard.get();
+            if (!countCallersStmt)
+                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "all callers count");
+
+            std::auto_ptr<ResultSet> rsGuard(countCallersStmt->executeQuery());
+            ResultSet* rs = rsGuard.get();
+            if (!rs)
+                throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "all callers count");
+
+            while (rs->fetchNext())
+            {
+                const char* taskAbonent = rs->isNull(1) ? 0:rs->getString(1);
+                uint32_t callersCount = rs->isNull(2) ? 0: rs->getUint32(2);
+                if (!taskAbonent || !taskAbonent[0]) continue;
+                Task** taskPtr = tasks.GetPtr(taskAbonent);
+                if (!taskPtr || *taskPtr) continue;
+                else (*taskPtr)->callersCount = callersCount;
+            }
         }
 
         if (connection) ds->freeConnection(connection);
@@ -305,9 +338,9 @@ Hash<Task *> Task::loadupAll()
     }
     
     smsc_log_debug(logger, "Task: All tasks loaded");
-    //abort();
     return tasks;
 }
+
 /*
 Hash<Task *> Task::loadupAll()
 {
@@ -433,6 +466,8 @@ bool Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
             if (event.msg_id <= 0) newEventsCount++;
             events.Push(event);
         }
+
+        loadCallersCount(connection);
         
         if (connection && isConnectionGet) ds->freeConnection(connection);
     }
@@ -443,7 +478,26 @@ bool Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
     }
     
     return true;
-}   
+}
+
+void Task::loadCallersCount(Connection* connection)
+{
+    callersCount = 0;
+    if (Task::maxCallersCount > 0) // if distinct callers check enabled
+    {
+        /* SELECT COUNT(DISTINCT CALLER) FROM MCISME_EVT_SET WHERE ABONENT=:ABONENT */
+        Statement* countCallersStmt = connection->getStatement(COUNT_CALLERS_ID, COUNT_CALLERS_SQL);
+        if (!countCallersStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "count callers (loadup)");
+        
+        std::auto_ptr<ResultSet> countRsGuard(countCallersStmt->executeQuery());
+        ResultSet* countRs = countRsGuard.get();
+        if (!countRs)
+            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "count callers (loadup)");
+        if (countRs->fetchNext() && !(countRs->isNull(1))) 
+            callersCount = countRs->getUint32(1);
+    }
+}
 
 void Task::loadup()
 {
@@ -472,7 +526,9 @@ void Task::loadup()
         } else {
             abonentProfile = AbonentProfiler::getProfile(abonent.c_str(), connection);
             currentMessageId=0; currentMessageState=UNKNOWNST; cur_smsc_id="";
-            events.Clean(); newEventsCount=0;
+            events.Clean(); newEventsCount=0; callersCount = 0;
+            loadCallersCount(connection);
+            // TODO: ??? cleanupOldEvents ???
         }
         
         if (connection) ds->freeConnection(connection);
@@ -509,9 +565,11 @@ void Task::addEvent(const MissedCallEvent& event)
         if (createStmt->executeUpdate() <= 0)
             throw Exception("Failed to insert new event record. To %s From %s #%lld", 
                             newEvent.to.c_str(), newEvent.from.c_str(), newEvent.id);
+        loadCallersCount(connection); // ???
         connection->commit();
         ds->freeConnection(connection);
         newEvent.msg_id = 0; newEventsCount++; 
+        // TODO: Optimize. Inc distinct callers count via events scan !!!
         events.Push(newEvent);
     } 
     catch (Exception& exc)

@@ -190,9 +190,13 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 
     int rowsPerMessage = 5;
     try { rowsPerMessage = config->getInt("maxRowsPerMessage"); } catch (...) { rowsPerMessage = 5;
-        smsc_log_warn(logger, "Parameter <MCISme.maxRowsPerMessage> is invalid. Using default %d", rowsPerMessage);
+        smsc_log_warn(logger, "Parameter <MCISme.maxRowsPerMessage> missed. Using default %d", rowsPerMessage);
     }
-    
+    int maxCallersCount = -1;
+    try { maxCallersCount = config->getInt("maxCallersCount"); } catch (...) { maxCallersCount = -1;
+        smsc_log_warn(logger, "Parameter <MCISme.maxCallersCount> missed. Callers check disabled");
+    }
+
     std::auto_ptr<ConfigView> dsIntCfgGuard(config->getSubConfig("DataSource"));
     initDataSource(dsIntCfgGuard.get());
     
@@ -201,7 +205,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     if (statistics) statistics->Start();
     
     AbonentProfiler::init(ds);
-    Task::init(ds, statistics, rowsPerMessage);
+    Task::init(ds, statistics, rowsPerMessage, maxCallersCount);
     
     smsc_log_info(logger, "Load success.");
 }
@@ -522,7 +526,7 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
     
     AbonentProfile profile = AbonentProfiler::getProfile(abonent);
     if (!checkEventMask(profile.eventMask, event.cause)) {
-        smsc_log_debug(logger, "Event: for abonent %s skipped (userMask=%02X, eventCause=%02X).",
+        smsc_log_debug(logger, "Event: for abonent %s skipped (userMask=%02X, eventCause=%02X)",
                        abonent, profile.eventMask, event.cause);
         return; // skip event if user mask not permit it
     }
@@ -536,6 +540,11 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
         Task* task = taskAccessor.getTask(abonent, isNewTask); 
         if (!task) throw Exception("Event: failed to obtain task for abonent %s", abonent);
 
+        if (!task->checkCallersCount()) {
+            smsc_log_debug(logger, "Event: for abonent %s skipped "
+                           "(distinct callers count constraint)", abonent);
+            return; // skip event if callers count check failed
+        }
         task->addEvent(event); // add new event to task chain (inassigned to message in DB)
         MessageState state = task->getCurrentState();
         smsc_log_debug(logger, "Event: for %s added to %s task (state=%d). Events=%d",
