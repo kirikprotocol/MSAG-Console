@@ -144,6 +144,7 @@ public:
       }
       if(pdu)
       {
+        __trace2__("SmppReader: received pdu, cmdid=%d, seqnum=%d",pdu->get_commandId(),pdu->get_sequenceNumber());
         listener->handleEvent(pdu);
         pdu=NULL;
       }else
@@ -681,6 +682,7 @@ protected:
       case BindType::Receiver:
         switch(pdu->get_commandId())
         {
+          case DATA_SM:
           case DELIVERY_SM:
           case GENERIC_NACK:
           case UNBIND_RESP:
@@ -691,6 +693,7 @@ protected:
       case BindType::Transmitter:
         switch(pdu->get_commandId())
         {
+          case DATA_SM:
           case GENERIC_NACK:
           case SUBMIT_SM_RESP:
           case UNBIND_RESP:
@@ -705,6 +708,7 @@ protected:
       case BindType::Transceiver:
         switch(pdu->get_commandId())
         {
+          case DATA_SM:
           case GENERIC_NACK:
           case SUBMIT_SM_RESP:
           case UNBIND_RESP:
@@ -749,6 +753,7 @@ protected:
       case BindType::Transmitter:
         switch(pdu->get_commandId())
         {
+          case DATA_SM:
           case SUBMIT_SM:
           case GENERIC_NACK:
           case CANCEL_SM:
@@ -763,6 +768,7 @@ protected:
       case BindType::Transceiver:
         switch(pdu->get_commandId())
         {
+          case DATA_SM:
           case SUBMIT_SM:
           case GENERIC_NACK:
           case CANCEL_SM:
@@ -785,6 +791,7 @@ protected:
     using namespace smsc::smpp::SmppCommandSet;
     if(!checkIncomingValidity(pdu))
     {
+      __warning2__("processIncoming: received pdu in invalid bind state (%x,%d)",pdu->get_commandId(),bindType);
       PduGenericNack gnack;
       gnack.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
       atrans.sendGenericNack(gnack);
@@ -845,6 +852,7 @@ protected:
       {
         if(lock.Exist(seq))
         {
+          __trace2__("processIncoming: lock for %d found",seq);
           Lock &l=lock.Get(seq);
           if(l.event)
           {
@@ -859,6 +867,7 @@ protected:
           }
         }else
         {
+          __trace2__("processIncoming: lock for %d not found!!!",seq);
           lockMutex.Unlock();
           disposePdu(pdu);
         }
