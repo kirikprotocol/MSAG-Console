@@ -426,6 +426,11 @@ static void SendRInfo(MapDialog* dialog)
   bool hiPrior = false;
   if ( !dialog->isQueryAbonentStatus && dialog->sms.get() != 0 && dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 )
     hiPrior = true;
+  
+  // хак !!!! 
+  if ( dialog->version != 2 && dialog->version != 1 ) dialog->version = 2;
+  // !!!!!
+  
   if ( dialog->version == 2 ) {
     result = Et96MapV2SendRInfoForSmReq(dialog->ssn, dialog_id, 1, &dialog->m_msAddr,
       hiPrior ? ET96MAP_ATTEMPT_DELIVERY : ET96MAP_DO_NOT_ATTEMPT_DELIVERY,
@@ -2447,15 +2452,7 @@ static void NotifyHLR(MapDialog* dialog)
   SetVersion(appContext,dialog->hlrVersion);
   unsigned dialog_id = dialog->dialogid_map;
   __trace2__("MAP::%s dialogid:0x%x ssn:%d",__FUNCTION__,dialog_id,dialog->ssn);
-  result = Et96MapOpenReq(
-    HLR_SSN, dialog_id,
-    &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
-  if ( result != ET96MAP_E_OK ) {
-    throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::%s: Et96MapOpenReq error 0x%x",__FUNCTION__,result));
-  }
-  dialog->id_opened = true;
-
+  
   ET96MAP_DEL_OUTCOME_T deliveryOutcom;
   if ( dialog->wasDelivered ) {
     deliveryOutcom = ET96MAP_TRANSFER_SUCCESSFUL;
@@ -2474,6 +2471,20 @@ static void NotifyHLR(MapDialog* dialog)
     //return; // Opps, strange way
     throw MAPDIALOG_ERROR(0,"no way");
   }
+
+  result = Et96MapOpenReq(
+    HLR_SSN, dialog_id,
+    &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
+  if ( result != ET96MAP_E_OK ) {
+    throw MAPDIALOG_FATAL_ERROR(
+      FormatText("MAP::%s: Et96MapOpenReq error 0x%x",__FUNCTION__,result));
+  }
+  dialog->id_opened = true;
+
+  // хак !!!!
+  if ( dialog->hlrVersion != 2 && dialog->hlrVersion != 1 ) dialog->hlrVersion = 2;
+  // !!!!
+
   if ( dialog->hlrVersion == 2) {
     result = Et96MapV2ReportSmDelStatReq(
       HLR_SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr,deliveryOutcom);

@@ -92,6 +92,31 @@ inline void Convert7BitToSMSC7Bit(
 #endif
 }
 
+inline void Convert7BitToText(
+  const unsigned char* bit7buf, unsigned chars,
+  MicroString* text,unsigned offset=0)
+{
+  __require__(chars<=255);
+  unsigned shift = offset;
+  for ( unsigned i=0; i< chars; ++i ){
+    text->bytes[i] = lll_7bit_2_8bit[GetChar(bit7buf,shift)&0x7f];
+  }
+  text->len = chars;
+  text->bytes[chars] = 0;
+#if !defined DISABLE_TRACING
+  __trace2__("MAP::7bit(%d)->Text: %s",chars,text->bytes);
+  {
+    char b[255*4];
+    unsigned k;
+    unsigned i;
+    for ( i=0,k=0; i<text->len;++i){
+      k += sprintf(b+k,"%x ",text->bytes[i]);
+    }
+    __trace2__("MAP::latin1(hex): %s",b);
+  }
+#endif
+}
+
 inline unsigned ConvertText27bit(
   const unsigned char* text, unsigned chars, unsigned char* bit7buf,unsigned* elen,
   unsigned offset=0)
@@ -253,31 +278,6 @@ struct MAP_TIMESTAMP{
 
 #pragma pack()
 
-inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
-  sa->setTypeOfNumber(ma->st.ton);
-  sa->setNumberingPlan(ma->st.npi);
-  if ( ma->len != 0 ){
-    char sa_val[21] = {0,};
-    int i = 0;
-    for ( ;i<ma->len;){
-      sa_val[i]=(ma->val[(i>>1)]&0x0f)+0x30;
-      ++i;
-      if ( i < ma->len ){
-        sa_val[i] = (ma->val[(i>>1)]>>4)+0x30;
-        ++i;
-      }else break;
-    }
-    sa->setValue(i,sa_val);
-    {
-      char b[256] = {0,};
-      memcpy(b,sa_val,ma->len);
-      __trace2__("MAP::ConvAddrMap2Smc::adr value(%d) %s",ma->len,b);
-    }
-  }else{
-    throw runtime_error("MAP::ConvAddrMap2Smc  MAP_SMS_ADDRESS length should be greater than 0");
-  }
-}
-
 inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_ADDRESS_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {
   addr->ss7AddrLen = 5+(saddr->addressLength+1)/2;
   addr->ss7Addr[0] = 0x12; // SSN & GT
@@ -377,3 +377,34 @@ extern void CloseDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 extern void CloseAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
 extern void AbortAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
 
+inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
+  sa->setTypeOfNumber(ma->st.ton);
+  sa->setNumberingPlan(ma->st.npi);
+  if ( ma->st.ton == 5 && ma->st.npi == 0 )
+  {
+    MicroString text;
+    Convert7BitToText(ma->val,(ma->len/2)*8/7,&text,0);
+    sa->setValue(text.len,text.bytes);
+  }
+  else
+  if ( ma->len != 0 ){
+    char sa_val[21] = {0,};
+    int i = 0;
+    for ( ;i<ma->len;){
+      sa_val[i]=(ma->val[(i>>1)]&0x0f)+0x30;
+      ++i;
+      if ( i < ma->len ){
+        sa_val[i] = (ma->val[(i>>1)]>>4)+0x30;
+        ++i;
+      }else break;
+    }
+    sa->setValue(i,sa_val);
+    {
+      char b[256] = {0,};
+      memcpy(b,sa_val,ma->len);
+      __trace2__("MAP::ConvAddrMap2Smc::adr value(%d) %s",ma->len,b);
+    }
+  }else{
+    throw runtime_error("MAP::ConvAddrMap2Smc  MAP_SMS_ADDRESS length should be greater than 0");
+  }
+}
