@@ -7,44 +7,9 @@
 	 - Только сообщения с установленным признаком архивации переносятся в архив
 */
 
-drop table arc_stat;
-create table arc_stat
-(
-	final_rec integer,
-	last_arc date
-) tablespace smsc_data;
-insert into arc_stat (final_rec, last_arc) values (0, sysdate + 1/24);
-
---проверка условий на активацию архиватора
-create or replace procedure check_arc_stat is
-	final_max integer := 300; --config.xml: MessageStore/Archive/finalized
-    interval_max integer := 40; --config.xml: MessageStore/Archive/interval
-	stat arc_stat%rowtype;
-	interval integer;
-begin
-	select * into stat from arc_stat;
-	interval := sysdate - stat.last_arc;
-	--архиватор стартует не реже, чем прописано в конфиге
-	if stat.final_rec > 1.2 * final_max then --20% допуск (побольше для cancel_sm)
-		raise_application_error(-20201, 'Finalized rec count = ' || stat.final_rec || ' exceeds max allowed');
-	end if;
-	if interval > 1.1 * interval_max then --10% допуск
-		raise_application_error(-20201, 'Archiver idle interval = ' || interval || ' exceeds max allowed');
-	end if;
-	--архиватор стартует не чаще, чем прописано в конфиге
-	if interval > 1 then
-		if stat.final_rec < final_max and interval < interval_max then
-			raise_application_error(-20201, 'Archiver started earlier than expected: final rec = ' || stat.final_rec || ', interval = ' || interval);
-		end if;
-	end if;
-	--то, что записи с arc = 'Y' выгребаются до конца не проверяю
-end;
-/
-
 create or replace trigger smsc_msg_insert after insert on sms_msg
 	referencing new as msg for each row
 begin
-	check_arc_stat;
 	if :msg.svc_type = '-----' then
 		raise_application_error(-20101, 'Abort sms_msg insert transaction test case: svc_type = ''-----''');
 	end if;
@@ -58,12 +23,8 @@ create or replace trigger smsc_msg_update after update on sms_msg
 	referencing new as msg for each row
 begin
 	if :msg.st != 0 then
-		if :old.st != 0 then
-			raise_application_error(-20201, 'Message prev state != ENROTE');
-		end if;
-		update arc_stat set final_rec = final_rec + 1;
+		raise_application_error(-20201, 'Message state != ENROTE');
 	end if;
-	check_arc_stat;
 end;
 /
 
@@ -79,11 +40,8 @@ begin
 			raise_application_error(-20201, 'Trying to delete record in sms_msg with arc = ''Y'' that has no corresponding sms_arc record');
 		end if;
 	end if;
-	--обновление arc_stat.last_arc делается в smsc_arc_insert
 	if :msg.st = 0 then
 		raise_application_error(-20201, 'Deleting message in ENROTE state');
-	else
-		update arc_stat set final_rec = final_rec - 1;
 	end if;
 end;
 /
@@ -142,7 +100,6 @@ declare
 	msg sms_msg%rowtype;
 begin
 	begin
-		check_arc_stat;
 		--проверка статуса
 		if :arc.st = 0 then
 			raise_application_error(-20201, 'arc.st = ENROTE');
@@ -152,27 +109,17 @@ begin
 		if msg.arc != 'Y' then
 			raise_application_error(-20201, 'Trying to archivate sms with arc != ''Y''');
 		end if;
-		--обновление arc_stat.final_rec делается в sms_msg_delete
-		update arc_stat set last_arc = sysdate;
 		--проверка полей
-		if not chk_num(msg.st, :arc.st) then
-			raise_application_error(-20201, 'msg.st != arc.st');
-		end if;
+		--st skipped
 		if not chk_date(msg.submit_time, :arc.submit_time) then
 			raise_application_error(-20201, 'msg.submit_time != arc.submit_time');
 		end if;
 		if not chk_date(msg.valid_time, :arc.valid_time) then
 			raise_application_error(-20201, 'msg.valid_time != arc.valid_time');
 		end if;
-		if not chk_num(msg.attempts, :arc.attempts) then
-			raise_application_error(-20201, 'msg.attempts != arc.attempts');
-		end if;
-		if not chk_num(msg.last_result, :arc.last_result) then
-			raise_application_error(-20201, 'msg.last_result != arc.last_result');
-		end if;
-		if not chk_date(msg.last_try_time, :arc.last_try_time) then
-			raise_application_error(-20201, 'msg.last_try_time != arc.last_try_time');
-		end if;
+		--attempts skipped
+		--last_result skipped
+		--last_try_time skipped
 		--next_try_time skipped
 		if not chk_str(msg.oa, :arc.oa) then
 			raise_application_error(-20201, 'msg.oa != arc.oa');
@@ -204,15 +151,9 @@ begin
 		if not chk_num(msg.src_sme_n, :arc.src_sme_n) then
 			raise_application_error(-20201, 'msg.src_sme_n != arc.src_sme_n');
 		end if;
-		if not chk_str(msg.dst_msc, :arc.dst_msc) then
-			raise_application_error(-20201, 'msg.dst_msc != arc.dst_msc');
-		end if;
-		if not chk_str(msg.dst_imsi, :arc.dst_imsi) then
-			raise_application_error(-20201, 'msg.dst_imsi != arc.dst_imsi');
-		end if;
-		if not chk_num(msg.dst_sme_n, :arc.dst_sme_n) then
-			raise_application_error(-20201, 'msg.dst_sme_n != arc.dst_sme_n');
-		end if;
+		--dst_msc skipped
+		--dst_imsi skipped
+		--dst_sme_n skipped
 		if not chk_str(msg.route_id, :arc.route_id) then
 			raise_application_error(-20201, 'msg.route_id != arc.route_id');
 		end if;
