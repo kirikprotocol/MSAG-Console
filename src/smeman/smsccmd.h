@@ -74,8 +74,8 @@ struct _SmscCommand
       delete ( (SmsResp*)dta ); break;
     case UNKNOWN:
       //__unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
-			__warning__("uninitialized command");
-			break;
+                        __warning__("uninitialized command");
+                        break;
     default:
       __unreachable__("unprocessed cmdid");
     }
@@ -182,9 +182,9 @@ public:
     return cmd;
   }
   ~SmscCommand() { 
-		__trace__(__PRETTY_FUNCTION__);
-		dispose();
-	}
+                __trace__(__PRETTY_FUNCTION__);
+                dispose();
+        }
   SmscCommand() : cmd (0) {}
   SmscCommand(SmppHeader* pdu) : cmd (0)
   {
@@ -200,8 +200,8 @@ public:
       //case BIND_TRANSMITTER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
       //case QUERY_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
       //case QUERY_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-    case SmppCommandSet::SUBMIT_SM:  _cmd->cmdid = DELIVERY; goto sms_pdu;
-    case SmppCommandSet::DELIVERY_SM: _cmd->cmdid = SUBMIT; goto sms_pdu;
+    case SmppCommandSet::SUBMIT_SM:  _cmd->cmdid = SUBMIT; goto sms_pdu;
+    case SmppCommandSet::DELIVERY_SM: _cmd->cmdid = DELIVERY; goto sms_pdu;
     case SmppCommandSet::SUBMIT_SM_RESP: _cmd->cmdid = SUBMIT_RESP; goto sms_resp;
     case SmppCommandSet::DELIVERY_SM_RESP: _cmd->cmdid = DELIVERY_RESP; goto sms_resp;
       //case DELIVERY_SM: reinterpret_cast<PduDeliverySm*>(_pdu)->dump(log); break;
