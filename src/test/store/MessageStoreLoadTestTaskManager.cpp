@@ -25,9 +25,7 @@ int MessageStoreLoadTestTask::Execute()
 	{
 		SMSId id;
 		SMS sms;
-		ops++;
-
-		for (int maxOps = 200 + ops / 200; ops < maxOps; ops++)
+		for (int maxOps = 200 * (2 + ops / 200); ops < maxOps; ops++)
 		{
 			delete tc.storeCorrectSM(&id, &sms, RAND_TC);
 			//tc.setCorrectSMStatus();
