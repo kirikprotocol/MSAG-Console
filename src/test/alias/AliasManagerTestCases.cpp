@@ -1,6 +1,7 @@
 #include "AliasManagerTestCases.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "util/debug.h"
+#include <algorithm>
 
 namespace smsc {
 namespace test {
@@ -12,6 +13,7 @@ using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
 using smsc::test::sms::operator!=;
 using smsc::test::core::operator<<;
+using namespace std;
 using namespace smsc::sms; //constants
 using namespace smsc::test::util;
 
@@ -105,6 +107,7 @@ bool AliasManagerTestCases::addAlias(const char* tc, int num, const AliasInfo* a
 {
 	if (aliasReg)
 	{
+		//дублированные алиасы не сохраняются
 		if (aliasReg->putAlias(*alias))
 		{
 			debugAlias(tc, num, alias);
@@ -264,14 +267,17 @@ void AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 				}
 				break;
 			case 3: //в адресе отличается addressValue
-				if (minLen > 1)
+				if (minLen > 2)
 				{
-					__tc__("addCorrectAlias.addrNotMatch.diffValue");
-					int len = rand0(minLen - 1);
+					__tc__("addCorrectAlias.allMatchWithQuestionMarks");
+					int len = rand0(minLen - 2);
 					setupRandomAliasMatchWithQuestionMarks(alias, len);
 					alias->addr.getValue(tmp);
-					tmp[rand0(addrLen - len - 1)] = '@';
-					alias->addr.setValue(addrLen, tmp);
+					if (next_permutation(tmp, tmp + addrLen - len))
+					{
+						__tc__("addCorrectAlias.addrNotMatch.diffValue");
+						alias->addr.setValue(addrLen, tmp);
+					}
 				}
 				break;
 			case 4: //в адресе '?' меньше, чем нужно
@@ -362,14 +368,17 @@ void AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 				}
 				break;
 			case 3: //в алиасе отличается addressValue
-				if (minLen > 1)
+				if (minLen > 2)
 				{
-					__tc__("addCorrectAlias.aliasNotMatch.diffValue");
-					int len = rand0(minLen - 1);
+					__tc__("addCorrectAlias.allMatchWithQuestionMarks");
+					int len = rand0(minLen - 2);
 					setupRandomAliasMatchWithQuestionMarks(alias, len);
 					alias->alias.getValue(tmp);
-					tmp[rand0(aliasLen - len - 1)] = '@';
-					alias->alias.setValue(aliasLen, tmp);
+					if (next_permutation(tmp, tmp + aliasLen - len))
+					{
+						__tc__("addCorrectAlias.aliasNotMatch.diffValue");
+						alias->alias.setValue(aliasLen, tmp);
+					}
 				}
 				break;
 			case 4: //в алиасе '?' меньше, чем нужно
