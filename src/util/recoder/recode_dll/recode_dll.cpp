@@ -163,13 +163,15 @@ int Transliterate(const char* buf,int len,ConvEncodingEnum encoding,char *dest,i
 int RECODE_DECL ConvertUCS2ToMultibyte(const short* ucs2, int ucs2buff_size,char* text, int textbuff_size, ConvEncodingEnum encoding)
 {
   int i;
+  short c;
   for ( i = 0; i < ucs2buff_size/2; ++i )
   {
     ensure(textbuff_size>i);
-    if ( (ucs2[i]>>8) == 0 ) {
-      text[i] = (unsigned char)(ucs2[i]&0xff);
+    memcpy(&c,ucs2+i,2);
+    if ((c>>8) == 0 ) {
+      text[i] = (unsigned char)(c&0xff);
     }else{
-      text[i] = ConvertW2C(ucs2[i],encoding);
+      text[i] = ConvertW2C(c,encoding);
     }
   }
   return i;
@@ -178,10 +180,12 @@ int RECODE_DECL ConvertUCS2ToMultibyte(const short* ucs2, int ucs2buff_size,char
 int RECODE_DECL ConvertMultibyteToUCS2(const char* text, int textbuff_size,short* ucs2, int ucs2buff_size, ConvEncodingEnum encoding)
 {
   int i;
+  short c;
   for ( i = 0; i < textbuff_size; ++i )
   {
     ensure(ucs2buff_size>i*2);
-    ucs2[i] = ConvertC2W(text[i],encoding);
+    c = ConvertC2W(text[i],encoding);
+    memcpy(ucs2+i,&c,2);
   }
   return i*2;
 }
