@@ -1073,6 +1073,7 @@ void  MapDialog::Et96MapOpenConf (
 {
 #if defined USE_MAP  
   try{
+    USHORT_T result;
     __trace2__("MAP::MapDialog::Et96MapOpenConf: 0x%x", openResult);
     if ( openResult != ET96MAP_RESULT_OK ){
       __trace2__("MAP::MapDialog::Et96MapOpenConf: Opss, dialog is not opened!");
