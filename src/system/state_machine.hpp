@@ -38,6 +38,18 @@ public:
     time_t date;
     const char* msgId;
     const char* err;
+    int lastResult;
+    int lastResultGsm;
+    const char* msc;
+    void setLastResult(int errcode)
+    {
+      lastResult=errcode;
+      if (errcode >= 1152) lastResultGsm= errcode- 1152;
+      else if(errcode == 1025)  lastResultGsm=134;
+      else if(errcode == 1029)  lastResultGsm=135;
+      else if(errcode == 1027)  lastResultGsm=131;
+      else lastResultGsm = 137;
+    }
   };
 
   void initFormatters(const char* deliver,const char* failed,const char* notify)

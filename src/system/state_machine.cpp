@@ -126,6 +126,9 @@ void StateMachine::formatDeliver(const FormatData& fd,std::string& out)
   ce.exportStr("dest",fd.addr);
   ce.exportDat("date",fd.date);
   ce.exportStr("msgId",fd.msgId);
+  ce.exportInt("lastResult",fd.lastResult);
+  ce.exportInt("lastResultGsm",fd.lastResultGsm);
+  ce.exportStr("msc",fd.msc);
   try{
     ofDelivered->format(out,ga,ce);
   }catch(exception& e)
@@ -142,6 +145,9 @@ void StateMachine::formatFailed(const FormatData& fd,std::string& out)
   ce.exportStr("error",fd.err);
   ce.exportDat("date",fd.date);
   ce.exportStr("msgId",fd.msgId);
+  ce.exportInt("lastResult",fd.lastResult);
+  ce.exportInt("lastResultGsm",fd.lastResultGsm);
+  ce.exportStr("msc",fd.msc);
 
   try{
     ofFailed->format(out,ga,ce);
@@ -160,6 +166,9 @@ void StateMachine::formatNotify(const FormatData& fd,std::string& out)
   ce.exportStr("reason",fd.err);
   ce.exportDat("date",fd.date);
   ce.exportStr("msgId",fd.msgId);
+  ce.exportInt("lastResult",fd.lastResult);
+  ce.exportInt("lastResultGsm",fd.lastResultGsm);
+  ce.exportStr("msc",fd.msc);
 
   try{
     ofNotify->format(out,ga,ce);
@@ -1296,11 +1305,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
         rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
         string out;
         sms.getDestinationAddress().getText(addr,sizeof(addr));
+        const Descriptor& d=sms.getDestinationDescriptor();
         FormatData fd;
         fd.addr=addr;
         fd.date=time(NULL);
         fd.msgId=msgid;
         fd.err="";
+        fd.lastResult=0;
+        fd.msc=d.msc;
         formatDeliver(fd,out);
         rpt.getDestinationAddress().getText(addr,sizeof(addr));
         __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
@@ -1684,10 +1696,13 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   string out;
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   FormatData fd;
+  const Descriptor& d=sms.getDestinationDescriptor();
+  fd.msc=d.msc;
   fd.addr=addr;
   fd.date=sms.getSubmitTime();
   fd.msgId=msgid;
   fd.err=reason;
+  fd.setLastResult(sms.lastResult);
   formatFailed(fd,out);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
   trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
@@ -1744,10 +1759,15 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   string out;
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   FormatData fd;
+  const Descriptor& d=sms.getDestinationDescriptor();
+  fd.msc=d.msc;
   fd.date=sms.getSubmitTime();
   fd.addr=addr;
   fd.msgId=msgid;
   fd.err=reason;
+  fd.setLastResult(sms.lastResult);
+
+
   formatNotify(fd,out);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
   trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
