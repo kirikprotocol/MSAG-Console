@@ -132,6 +132,7 @@ void Smsc::init(const SmscConfigs& cfg)
         si.systemId=rec->smeUid;
         si.timeout = rec->recdata.smppSme.timeout;
         si.wantAlias = rec->recdata.smppSme.wantAlias;
+        __trace2__("INIT: addSme %s(to=%d,wa=%s)",si.systemId.c_str(),si.timeout,si.wantAlias?"true","false");
         //si.hostname=rec->recdata->smppSme.
         si.disabled=false;
         smeman.addSme(si);
