@@ -80,6 +80,13 @@ public:
     if(tail==end)tail=data;
     count--;
   }
+  void Pop()
+  {
+    if(count==0)throw std::runtime_error("CQ: attempt to call Pop() on empty queue");
+    tail++;
+    if(tail==end)tail=data;
+    count--;
+  }
   int Count()const{return count;}
 
 protected:

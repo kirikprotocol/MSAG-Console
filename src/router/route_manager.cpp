@@ -641,7 +641,10 @@ __synchronized__
   // ....
 
   smsc::smeman::SmeInfo src_smeinfo;
-  if ( srcidx ) src_smeinfo = sme_table->getSmeInfo(srcidx);
+  if(trace_enabled_)
+  {
+    if ( srcidx ) src_smeinfo = sme_table->getSmeInfo(srcidx);
+  }
 
   if ( trace_enabled_ )
     trace_.push_back(string("lookup for: ")+AddrToString(source)+"("+

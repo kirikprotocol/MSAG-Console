@@ -313,23 +313,26 @@ SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
 void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
 {
   {
-    __synchronized__
     frames.clear();
-    for ( Records::const_iterator p = records.begin(); p != records.end(); ++p ) {
-      if ( (*p) ) {
+    __synchronized__
+    for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
+    {
+      if ( (*p) )
+      {
         if ( (*p)->deleted || (*p)->proxy==NULL) continue;
-        //if ( (*p)->proxy->hasInput() ) {
-          try {
-            SmscCommand cmd=(*p)->proxy->getCommand();
-            if(cmd.IsOk())
-            {
-              frames.push_back(cmd);
-              frames.back().setProxy((*p));
-            }
-          }catch(exception& e) {
-            __warning2__("exception %s when getting command",e.what());
+
+        try {
+          SmscCommand cmd=(*p)->proxy->getCommand();
+          if(cmd.IsOk())
+          {
+            frames.push_back(cmd);
+            frames.back().setProxy((*p));
           }
-        //}
+        }catch(exception& e)
+        {
+          __warning2__("exception %s when getting command",e.what());
+        }
+
       }
     }
   }

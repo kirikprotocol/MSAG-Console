@@ -984,23 +984,17 @@ public:
   SmscCommand() : cmd (0) {}
   SmscCommand(SmppHeader* pdu,bool forceDC=false) : cmd (0)
   {
-    //if (!pdu) return;
     __require__ ( pdu != NULL );
     auto_ptr<_SmscCommand> _cmd(ref(new _SmscCommand()));
     switch ( pdu->commandId )
     {
-      //case GENERIC_NACK:  reinterpret_cast<PduGenericNack*>(_pdu)->dump(log); break;
-      //case BIND_RECIEVER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
-      //case BIND_RECIEVER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
-      //case BIND_TRANSMITTER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
-      //case BIND_TRANSMITTER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
-    case SmppCommandSet::QUERY_SM:
-        {
-          _cmd->cmdid=QUERY;
-          _cmd->dta=new QuerySm(reinterpret_cast<PduQuerySm*>(pdu));
-          goto end_construct;
-        }
-    case SmppCommandSet::QUERY_SM_RESP:
+      case SmppCommandSet::QUERY_SM:
+      {
+        _cmd->cmdid=QUERY;
+        _cmd->dta=new QuerySm(reinterpret_cast<PduQuerySm*>(pdu));
+        goto end_construct;
+      }
+      case SmppCommandSet::QUERY_SM_RESP:
       {
         _cmd->cmdid=QUERY_RESP;
         PduQuerySmResp* resp=reinterpret_cast<PduQuerySmResp*>(pdu);
@@ -1012,7 +1006,7 @@ public:
         _cmd->dialogId=resp->get_header().get_sequenceNumber();
         goto end_construct;
       }
-    case SmppCommandSet::DATA_SM:
+      case SmppCommandSet::DATA_SM:
       {
         _cmd->cmdid = SUBMIT;
         PduDataSm* dsm = reinterpret_cast<PduDataSm*>(pdu);
@@ -1021,129 +1015,110 @@ public:
         ((SMS*)_cmd->dta)->setIntProperty(Tag::SMPP_DATA_SM,1);
         goto end_construct;
       }
-    case SmppCommandSet::SUBMIT_SM:  _cmd->cmdid = SUBMIT; goto sms_pdu;
-    case SmppCommandSet::DELIVERY_SM: _cmd->cmdid = DELIVERY; goto sms_pdu;
-    case SmppCommandSet::SUBMIT_SM_RESP: _cmd->cmdid = SUBMIT_RESP; goto sms_resp;
-    case SmppCommandSet::DATA_SM_RESP:
-    case SmppCommandSet::DELIVERY_SM_RESP: _cmd->cmdid = DELIVERY_RESP; goto sms_resp;
-      //case DELIVERY_SM: reinterpret_cast<PduDeliverySm*>(_pdu)->dump(log); break;
-      //case DELIVERY_SM_RESP: reinterpret_cast<PduDeliverySmResp*>(_pdu)->dump(log); break;
-      //case UNBIND: reinterpret_cast<PduUnbind*>(_pdu)->dump(log); break;
-      //case UNBIND_RESP: reinterpret_cast<PduUnbindResp*>(_pdu)->dump(log); break;
-    case SmppCommandSet::REPLACE_SM:
+      case SmppCommandSet::SUBMIT_SM:
+      {
+        _cmd->cmdid = SUBMIT;
+        goto sms_pdu;
+      }
+      case SmppCommandSet::DELIVERY_SM:
+      {
+        _cmd->cmdid = DELIVERY;
+        goto sms_pdu;
+      }
+      case SmppCommandSet::SUBMIT_SM_RESP:
+      {
+        _cmd->cmdid = SUBMIT_RESP;
+        goto sms_resp;
+      }
+      case SmppCommandSet::DATA_SM_RESP:
+      case SmppCommandSet::DELIVERY_SM_RESP:
+      {
+        _cmd->cmdid = DELIVERY_RESP;
+        goto sms_resp;
+      }
+      case SmppCommandSet::REPLACE_SM:
       {
         _cmd->cmdid=REPLACE;
         _cmd->dta=new ReplaceSm(reinterpret_cast<PduReplaceSm*>(pdu));
         goto end_construct;
       }
-    case SmppCommandSet::REPLACE_SM_RESP:
+      case SmppCommandSet::REPLACE_SM_RESP:
       {
         _cmd->cmdid=REPLACE_RESP;
         _cmd->status=pdu->get_commandStatus();
         _cmd->dialogId=pdu->get_sequenceNumber();
         goto end_construct;
       }
-    /*case SmppCommandSet::REPLACE_SM_RESP:
-        _cmd->cmdid=REPLACE_RESP;
-        _cmd->dta=(void*)pdu->get_
-        goto end_construct;*/
-    //  return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-    //case SmppCommandSet::REPLACE_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
       case SmppCommandSet::CANCEL_SM:
+      {
         _cmd->cmdid=CANCEL;
         _cmd->dta=new CancelSm(reinterpret_cast<PduCancelSm*>(pdu));
         goto end_construct;
+      }
       case SmppCommandSet::CANCEL_SM_RESP:
+      {
         _cmd->cmdid=CANCEL_RESP;
         _cmd->status=pdu->get_commandStatus();
         _cmd->dialogId=pdu->get_sequenceNumber();
         goto end_construct;
-      //case CANCEL_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-      //case BIND_TRANCIEVER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
-      //case BIND_TRANCIEVER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
-      //case OUTBIND: reinterpret_cast<PduOutBind*>(_pdu)->dump(log); break;
+      }
       case SmppCommandSet::ENQUIRE_LINK:
+      {
         _cmd->cmdid=ENQUIRELINK;
         goto end_construct;
+      }
       case SmppCommandSet::ENQUIRE_LINK_RESP:
+      {
         _cmd->cmdid=ENQUIRELINK_RESP;
         _cmd->dta=(void*)pdu->get_commandStatus();
         goto end_construct;
-      case SmppCommandSet::SUBMIT_MULTI: //reinterpret_cast<PduMultiSm*>(_pdu)->dump(log); break;
+      }
+      case SmppCommandSet::SUBMIT_MULTI:
+      {
+        PduMultiSm* pduX = reinterpret_cast<PduMultiSm*>(pdu);
+        _cmd->cmdid=SUBMIT_MULTI_SM;
+        _cmd->dta=new SubmitMultiSm;
+        SubmitMultiSm& sm=*((SubmitMultiSm*)_cmd->dta);
+        makeSMSBody(&((SubmitMultiSm*)_cmd->dta)->msg,pdu,forceDC);
+        unsigned u = 0;
+        unsigned uu = pduX->message.numberOfDests;
+        for ( ; u < uu; ++u )
         {
-          PduMultiSm* pduX = reinterpret_cast<PduMultiSm*>(pdu);
-          _cmd->cmdid=SUBMIT_MULTI_SM;
-          _cmd->dta=new SubmitMultiSm;
-          makeSMSBody(&((SubmitMultiSm*)_cmd->dta)->msg,pdu,forceDC);
-          unsigned u = 0;
-          unsigned uu = pduX->message.numberOfDests;
-          for ( ; u < uu; ++u ) {
-            ((SubmitMultiSm*)_cmd->dta)->dests[u].dest_flag = (pduX->message.dests[u].flag == 0x02);
-            __trace2__(":SUBMIT_MULTI_COMMAND: dest_flag = %d",pduX->message.dests[u].flag);
-            if ( pduX->message.dests[u].flag == 0x01 ) // SME address
-            {
-              ((SubmitMultiSm*)_cmd->dta)->dests[u].value = pduX->message.dests[u].get_value();
-              ((SubmitMultiSm*)_cmd->dta)->dests[u].ton = pduX->message.dests[u].get_typeOfNumber();
-              ((SubmitMultiSm*)_cmd->dta)->dests[u].npi = pduX->message.dests[u].get_numberingPlan();
-            }
-            else if (pduX->message.dests[u].flag == 0x02)// Distribution list
-            {
-              //__require__((strlen(pduX->message.dests[u].get_value())+1)<=sizeof(((SubmitMultiSm*)_cmd->dta)->dests[u].value));
-              //strcpy(((SubmitMultiSm*)_cmd->dta)->dests[u].el.dl.dl_name,pduX->message.dests[u].get_value());
-              ((SubmitMultiSm*)_cmd->dta)->dests[u].value = pduX->message.dests[u].get_value();
-            }
-            else {
-              __warning2__("submitmulti has invalid address flag 0x%x",pduX->message.dests[u].flag);
-              throw runtime_error("submitmulti has invalid address flag");
-            }
-            //((SubmitMultiSm*)_cmd->dta)->dests[u].dest_flag = pduX->message.dests[u].flag;
+          sm.dests[u].dest_flag = (pduX->message.dests[u].flag == 0x02);
+          __trace2__(":SUBMIT_MULTI_COMMAND: dest_flag = %d",pduX->message.dests[u].flag);
+          if ( pduX->message.dests[u].flag == 0x01 ) // SME address
+          {
+            sm.dests[u].value = pduX->message.dests[u].get_value();
+            sm.dests[u].ton = pduX->message.dests[u].get_typeOfNumber();
+            sm.dests[u].npi = pduX->message.dests[u].get_numberingPlan();
           }
-          ((SubmitMultiSm*)_cmd->dta)->number_of_dests = uu;
+          else if (pduX->message.dests[u].flag == 0x02)// Distribution list
+          {
+            sm.dests[u].value = pduX->message.dests[u].get_value();
+          }
+          else
+          {
+            __warning2__("submitmulti has invalid address flag 0x%x",pduX->message.dests[u].flag);
+            throw runtime_error("submitmulti has invalid address flag");
+          }
         }
+        sm.number_of_dests = uu;
         goto end_construct;
-      //case SUBMIT_MULTI_SM_RESP: reinterpret_cast<PduMultiSmResp*>(_pdu)->dump(log); break;
-      //case ALERT_NOTIFICATION: return reinterpret_cast<Pdu*>(_pdu)->size();
-      //case DATA_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-      //case DATA_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+      }
+      default: throw Exception("Unsupported command id %08X",pdu->commandId);
     }
-    __unreachable__("command id is not processed");
+    //__unreachable__("command id is not processed");
+
     sms_pdu:
     {
-///<<<<<<< smsccmd.h
-      //PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
       _cmd->dta =  new SMS;
       makeSMSBody((SMS*)_cmd->dta,pdu,forceDC);
-      /*fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta),forceDC);
-=======
-      PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
-      (SMS*)_cmd->dta =  new SMS;
-      if(!fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta),forceDC))throw Exception("Invalid data coding");
->>>>>>> 1.90
-      SMS &s=*((SMS*)_cmd->dta);
-      if(s.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
-      {
-        unsigned len;
-        const unsigned char* data;
-        if(s.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
-        {
-          data=(const unsigned char*)s.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-        }else
-        {
-          data=(const unsigned char*)s.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-        }
-        if(len==0 || *data>len)
-        {
-          throw Exception("SmscCommand: Invalid pdu (udhi length > message length)");
-        }
-      }*/
-      //delete (SMS*)_cmd; _cmd = 0;
       goto end_construct;
     }
     sms_resp:
     {
       PduXSmResp* xsm = reinterpret_cast<PduXSmResp*>(pdu);
       _cmd->dta = new SmsResp;
-      //fetchSmsFromSmppPdu(xsm,&_cmd->sms);
       ((SmsResp*)_cmd->dta)->set_messageId(xsm->get_messageId());
       ((SmsResp*)_cmd->dta)->set_status(xsm->header.get_commandStatus());
 
@@ -1167,32 +1142,13 @@ public:
             MAKE_COMMAND_STATUS(CMD_ERR_TEMP,status)
             );
         }
-        /*
-        switch(xsm->header.get_commandStatus())
-        {
-          case :
-          {
-          }break;
-          case SmppStatusSet::ESME_RX_T_APPN:
-          case SmppStatusSet::ESME_RMSGQFUL:
-          case SmppStatusSet::ESME_RTHROTTLED:
-          {
-          }break;
-          default:
-          {
-          }
-        }
-        */
       }
       if(pdu->commandId==SmppCommandSet::DATA_SM_RESP)
       {
         ((SmsResp*)_cmd->dta)->set_dataSm();
       }
-      //delete (*(SmsResp*))_cmd; _cmd = 0;
       goto end_construct;
     }
-    // unreachable
-    //_pdu.release();
     end_construct:
     _cmd->dialogId=pdu->get_sequenceNumber();
     cmd = _cmd.release();

@@ -124,7 +124,7 @@ struct SmscConfigs{
 class Smsc
 {
 public:
-  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser_(0),testRouter_(0)
+  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser_(0),testRouter_(0),mergeCacheTimeouts(4096)
   {
     submitOkCounter=0;
     submitErrCounter=0;
@@ -421,7 +421,7 @@ public:
   {
     return tempStore;
   }
-  
+
   AclAbstractMgr   *getAclMgr()
   {
     return aclmgr;
@@ -473,7 +473,7 @@ protected:
 
   TemporaryStore tempStore;
 
-	AclAbstractMgr   *aclmgr;	
+  AclAbstractMgr   *aclmgr;
   DistrListManager *distlstman;
   DistrListProcess *distlstsme;
 
@@ -532,7 +532,7 @@ protected:
 
   smsc::core::buffers::XHash<MergeCacheItem,SMSId,MergeCacheHashFunc> mergeCache;
   smsc::core::buffers::XHash<SMSId,MergeCacheItem> reverseMergeCache;
-  std::list<std::pair<time_t,SMSId> > mergeCacheTimeouts;
+  smsc::core::buffers::CyclicQueue<std::pair<time_t,SMSId> > mergeCacheTimeouts;
   time_t mergeConcatTimeout;
 
   friend class StatusSme;

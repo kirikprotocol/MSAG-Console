@@ -177,18 +177,18 @@ void Smsc::mainLoop()
     //
     //////
 
-    while(mergeCacheTimeouts.size()>0 && mergeCacheTimeouts.begin()->first<=time(NULL))
+    while(mergeCacheTimeouts.Count()>0 && mergeCacheTimeouts.Front().first<=time(NULL))
     {
-      SMSId id=mergeCacheTimeouts.begin()->second;
+      SMSId id=mergeCacheTimeouts.Front().second;
       MergeCacheItem* pmci=reverseMergeCache.GetPtr(id);
       if(pmci)
       {
-        smsc_log_info(log,"merging expired for msgId=%lld;oa=%s;da=%s;mr=%d",id,pmci->oa.toString().c_str(),pmci->da.toString().c_str(),(int)pmci->mr);
+        info2(log,"merging expired for msgId=%lld;oa=%s;da=%s;mr=%d",id,pmci->oa.toString().c_str(),pmci->da.toString().c_str(),(int)pmci->mr);
         mergeCache.Delete(*pmci);
         reverseMergeCache.Delete(id);
         eventqueue.enqueue(id,SmscCommand::makeCancel(id));
       }
-      mergeCacheTimeouts.erase(mergeCacheTimeouts.begin());
+      mergeCacheTimeouts.Pop();
     }
 
 
@@ -380,17 +380,17 @@ void Smsc::processCommand(SmscCommand& cmd)
             __trace__("first piece");
             sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,1);
             id=store->getNextId();
-            smsc_log_info(log,"create mrcache item msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
+            info2(log,"create mrcache item msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
             mergeCache.Insert(mci,id);
             reverseMergeCache.Insert(id,mci);
             std::pair<time_t,SMSId> to(time(NULL)+mergeConcatTimeout,id);
-            mergeCacheTimeouts.push_back(to);
+            mergeCacheTimeouts.Push(to);
           }else
           {
             __trace__("next piece");
             sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,2);
             id=*pid;
-            smsc_log_info(log,"assign from mrcache msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
+            info2(log,"assign from mrcache msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
           }
         }else
         {
@@ -420,17 +420,17 @@ void Smsc::processCommand(SmscCommand& cmd)
           __trace__("first piece");
           sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,1);
           id=store->getNextId();
-          smsc_log_info(log,"create mrcache item msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
+          info2(log,"create mrcache item msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
           mergeCache.Insert(mci,id);
           reverseMergeCache.Insert(id,mci);
           std::pair<time_t,SMSId> to(time(NULL)+mergeConcatTimeout,id);
-          mergeCacheTimeouts.push_back(to);
+          mergeCacheTimeouts.Push(to);
         }else
         {
           __trace__("next piece");
           sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,2);
           id=*pid;
-          smsc_log_info(log,"assign from mrcache msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
+          info2(log,"assign from mrcache msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
         }
       }else
       {
@@ -585,7 +585,7 @@ void Smsc::processCommand(SmscCommand& cmd)
       SMSId* pid=mergeCache.GetPtr(mci);
       if(pid)
       {
-        smsc_log_info(log,"msgId=%lld: kill mr cache item for %s,%s,%d",*pid,ki.org.toString().c_str(),ki.dst.toString().c_str(),(int)ki.mr);
+        info2(log,"msgId=%lld: kill mr cache item for %s,%s,%d",*pid,ki.org.toString().c_str(),ki.dst.toString().c_str(),(int)ki.mr);
         SMSId id=*pid;
         reverseMergeCache.Delete(id);
         mergeCache.Delete(mci);
