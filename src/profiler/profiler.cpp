@@ -296,7 +296,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:3, hidden=:4, hidden_mod=:5,divert=:6,divert_act=:7,divert_mod=:8 where mask=:9";
+  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:3, hidden=:4, hidden_mod=:5,divert=:6,divert_act=:7,divert_mod=:8, udhconcat=:9 where mask=:10";
   ConnectionGuard connection(ds);
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
@@ -322,7 +322,8 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   div[5]=0;
   statement->setString(7, div);
   statement->setString(8,profile.divertModifiable?"Y":"N");
-  statement->setString(9,addrbuf);
+  statement->setString(9,profile.udhconcat?"Y":"N");
+  statement->setString(10,addrbuf);
   statement->executeUpdate();
   connection->commit();
 }
@@ -333,8 +334,8 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset, locale,hidden,hidden_mod,divert,divert_act,divert_mod)"
-                      " VALUES (:1, :2, :3, :4, :5,:6,:7,:8,:9)";
+  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset, locale,hidden,hidden_mod,divert,divert_act,divert_mod,udhconcat)"
+                      " VALUES (:1, :2, :3, :4, :5,:6,:7,:8,:9,:10)";
 
   ConnectionGuard connection(ds);
 
@@ -362,6 +363,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   div[5]=0;
   statement->setString(8, div);
   statement->setString(9, profile.divertModifiable?"Y":"N");
+  statement->setString(10,profile.udhconcat?"Y":"N");
   statement->executeUpdate();
   connection->commit();
 }
@@ -374,6 +376,7 @@ static const int _update_divert_act=5;
 static const int _update_divert=6;
 static const int _update_charset_ussd=7;
 static const int _update_divert_cond=8;
+static const int _update_udhconcat=9;
 
 static const int update_div_cond_Absent=1;
 static const int update_div_cond_Blocked=2;
@@ -395,7 +398,7 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
   }
   if(flag==_update_charset)
   {
-    profile.codepage=value;
+    profile.codepage=(profile.codepage&ProfileCharsetOptions::UssdIn7Bit)|value;
   }
   if(flag==_update_locale)
   {
@@ -439,6 +442,10 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
       profile.codepage&=~ProfileCharsetOptions::UssdIn7Bit;
     }
   }
+  if(flag==_update_udhconcat)
+  {
+    profile.udhconcat=value;
+  }
   update(addr,profile);
 }
 
@@ -460,8 +467,104 @@ enum{
   msgDivertChanged,
   msgInvalidParam,
   msg7BitUssdOn,
-  msg7BitUssdOff
+  msg7BitUssdOff,
+  msgDivertStatus,
+  msgConcatOn,
+  msgConcatOff
 };
+
+class DummyGetAdapter:public GetAdapter{
+public:
+
+  virtual bool isNull(const char* key)
+      throw(AdapterException)
+  {
+    return false;
+  }
+
+  virtual const char* getString(const char* key)
+      throw(AdapterException)
+  {
+    return "";
+  }
+
+  virtual int8_t getInt8(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int16_t getInt16(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int32_t getInt32(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int64_t getInt64(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual uint8_t getUint8(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint16_t getUint16(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint32_t getUint32(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint64_t getUint64(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual float getFloat(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual double getDouble(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual long double getLongDouble(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual time_t getDateTime(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+};
+
 
 int Profiler::Execute()
 {
@@ -573,43 +676,43 @@ int Profiler::Execute()
             }
           }
         }
-        if(!strncmp(body+i,"REPORT",6))
+        string profCmd,arg1,arg2;
+        profCmd=body+i;
+        if(splitString(profCmd,arg1))
         {
-          i+=7;
-          while(i<len && !isalpha(body[i]))i++;
-          if(i<len)
+          splitString(arg1,arg2);
+        }
+
+        if(profCmd=="REPORT")
+        {
+          if(arg1.length())
           {
-            if(!strncmp(body+i,"NONE",4))
+            if(arg1=="NONE")
             {
               msg=msgReportNone;
               internal_update(_update_report,addr,ProfileReportOptions::ReportNone);
             }
             else
-            if(!strncmp(body+i,"FULL",4))
+            if(arg1=="FULL")
             {
               msg=msgReportFull;
               internal_update(_update_report,addr,ProfileReportOptions::ReportFull);
             }else
-            if(!strncmp(body+i,"FINAL",5))
+            if(arg1=="FINAL")
             {
               msg=msgReportFinal;
               internal_update(_update_report,addr,ProfileReportOptions::ReportFinal);
             }
           }
         }else
-        if(!strncmp(body+i,"LOCALE",6))
+        if(profCmd=="LOCALE")
         {
-          i+=6;
-          while(body[i] && isspace(body[i]))i++;
-          int j=i;
-          while(body[i] && !isspace(body[i]))i++;
-          if(i==j)
+          if(arg1.length()==0)
           {
             msg=-1;
           }else
           {
-            string loc;
-            loc.assign(body+j,i-j);
+            string loc=arg1;
             for(int x=0;x<loc.length();x++)loc.at(x)=tolower(loc.at(x));
             __trace2__("Profiler: new locale %s",loc.c_str());
             if(ResourceManager::getInstance()->isValidLocale(loc))
@@ -622,63 +725,54 @@ int Profiler::Execute()
             }
           }
         }else
-        if(!strncmp(body+i,"DEFAULT",7))
+        if(profCmd=="DEFAULT")
         {
           msg=msgDefault;
           internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
         }else
-        if(!strncmp(body+i,"LATIN1",6))
+        if(profCmd=="LATIN1")
         {
           msg=msgLatin1;
           internal_update(_update_charset,addr,ProfileCharsetOptions::Latin1);
         }else
-        if(!strncmp(body+i,"UCS2ANDLAT",10))
+        if(profCmd=="UCS2ANDLAT")
         {
           msg=msgUCS2AndLat;
           internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2AndLat);
         }else
-        if(!strncmp(body+i,"UCS2",4))
+        if(profCmd=="UCS2")
         {
           msg=msgUCS2;
           internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
         }
-        if(!strncmp(body+i,"USSD7BIT",8))
+        if(profCmd=="USSD7BIT")
         {
-          i+=8;
-          while(body[i]==' ')i++;
-          if(!strcmp(body+i,"ON"))
+          if(arg1=="ON")
           {
             internal_update(_update_charset_ussd,addr,1);
             msg=msg7BitUssdOn;
-          }else if(!strcmp(body+i,"OFF"))
+          }else if(arg1=="OFF")
           {
             internal_update(_update_charset_ussd,addr,0);
             msg=msg7BitUssdOff;
           }
         }
         else
-        if(!strncmp(body+i,"HIDE",4))
+        if(profCmd=="HIDE")
         {
           msg=msgHide;
           internal_update(_update_hide,addr,1);
         }else
-        if(!strncmp(body+i,"UNHIDE",6))
+        if(profCmd=="UNHIDE")
         {
           msg=msgUnhide;
           internal_update(_update_hide,addr,0);
         }else
-        if(!strncmp(body+i,"DIVERT",6))
+        if(profCmd=="DIVERT")
         {
-          i+=6;
-          while(body[i] && isspace(body[i]))i++;
-          int j=i;
-          if(!strncmp(body+j,"TO",2))
+          if(arg1=="TO")
           {
-            while(body[i] && !isspace(body[i]))i++;
-            while(body[i] && isspace(body[i]))i++;
-            j=len-1;
-            while(j>i && isspace(body[j]))j--;
-            string div(body+i,body+j+1);
+            string div=arg2;
             __trace2__("divert address=%s",div.c_str());
             try{
               Address addrCheck(div.c_str());
@@ -694,57 +788,57 @@ int Profiler::Execute()
           }else
           {
             //(abs|absent)|(blk|blocked)|(bar|bared)|(cap|capacity)
-            string arg=body+j,val;
-            string::size_type pos=arg.find(' ');
-            if(pos!=string::npos)
+            if(arg2.length()==0)
             {
-              string::size_type pos0=pos;
-              while(pos<arg.length() && arg[pos]==' ')pos++;
-              val=arg.substr(pos);
-              arg.erase(pos0);
-            }
-            if(val.length()==0)
-            {
-              if(arg=="ON")
+              if(arg1=="ON")
               {
                 msg=msgDivertOn;
                 internal_update(_update_divert_act,addr,true,0);
               }else
-              if(arg=="OFF")
+              if(arg1=="OFF")
               {
                 msg=msgDivertOff;
                 internal_update(_update_divert_act,addr,false,0);
               }
             }else
             {
-              int onbit=val=="ON"?update_div_cond_OnBit:0;
-              if(onbit || val=="OFF")
+              int onbit=arg2=="ON"?update_div_cond_OnBit:0;
+              if(onbit || arg2=="OFF")
               {
-                if(arg=="ABS" || arg=="ABSENT")
+                msg=msgDivertStatus;
+                if(arg1=="ABS" || arg1=="ABSENT")
                 {
-                  msg=onbit?msgDivertOn:msgDivertOff;
                   internal_update(_update_divert_cond,addr,update_div_cond_Absent|onbit,0);
                 }else
-                if(arg=="BLK" || arg=="BLOCKED")
+                if(arg1=="BLK" || arg1=="BLOCKED")
                 {
-                  msg=onbit?msgDivertOn:msgDivertOff;
                   internal_update(_update_divert_cond,addr,update_div_cond_Blocked|onbit,0);
                 }else
-                if(arg=="BAR" || arg=="BARED")
+                if(arg1=="BAR" || arg1=="BARED")
                 {
-                  msg=onbit?msgDivertOn:msgDivertOff;
                   internal_update(_update_divert_cond,addr,update_div_cond_Bared|onbit,0);
                 }else
-                if(arg=="CAP" || arg=="CAPACITY")
+                if(arg1=="CAP" || arg1=="CAPACITY")
                 {
-                  msg=onbit?msgDivertOn:msgDivertOff;
                   internal_update(_update_divert_cond,addr,update_div_cond_Capacity|onbit,0);
                 }
               }
             }
           }
+        }else
+        if(profCmd=="CONCAT")
+        {
+          if(arg1=="ON")
+          {
+            msg=msgConcatOn;
+            internal_update(_update_udhconcat,addr,1,0);
+          }else
+          if(arg1=="OFF")
+          {
+            msg=msgConcatOff;
+            internal_update(_update_udhconcat,addr,0,0);
+          }
         }
-
       }catch(AccessDeniedException& e)
       {
         msg=msgAccessDenied;
@@ -830,6 +924,49 @@ int Profiler::Execute()
         case msg7BitUssdOff:
         {
           msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msg7BitUssdOff");
+        }break;
+        case msgDivertStatus:
+        {
+          string en,dis;
+#define DIV_ST(fld,name) \
+          if(p.fld) \
+          { \
+            if(en.length()>0)en+=','; \
+            en+=ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus." name); \
+          }else \
+          { \
+            if(dis.length()>0)dis+=','; \
+            dis+=ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus." name); \
+          }
+
+          DIV_ST(divertActive,"unconditional");
+          DIV_ST(divertActiveAbsent,"absent");
+          DIV_ST(divertActiveBlocked,"blocked");
+          DIV_ST(divertActiveBared,"bared");
+          DIV_ST(divertActiveCapacity,"capacity");
+#undef DIV_ST
+          try{
+            OutputFormatter *fmt=ResourceManager::getInstance()->getFormatter(p.locale,"profiler.divstatus.msg");
+            if(fmt)
+            {
+              DummyGetAdapter ga;
+              ContextEnvironment ce;
+              ce.exportStr("enabled",en.length()?en.c_str():ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus.none").c_str());
+              ce.exportStr("disabled",dis.length()?dis.c_str():ResourceManager::getInstance()->getString(p.locale,"profiler.divstatus.none").c_str());
+              ce.exportStr("to",p.divert.c_str());
+              fmt->format(msgstr,ga,ce);
+            }
+          }catch(...)
+          {
+          }
+        }break;
+        case msgConcatOn:
+        {
+          msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgConcatOn");
+        }break;
+        case msgConcatOff:
+        {
+          msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgConcatOff");
         }break;
         default:
         {
@@ -920,7 +1057,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
 
-  const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE, HIDDEN, HIDDEN_MOD, DIVERT,DIVERT_ACT,DIVERT_MOD FROM SMS_PROFILE";
+  const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE, HIDDEN, HIDDEN_MOD, DIVERT,DIVERT_ACT,DIVERT_MOD,UDHCONCAT FROM SMS_PROFILE";
   //const char* sql = "SELECT MASK FROM SMS_PROFILE";
 
 
@@ -969,6 +1106,8 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
     }
 
     p.divertModifiable=RsAsBool(rs.get(),9);
+
+    p.udhconcat=RsAsBool(rs.get(),10);
 
 
     //debug2(log,"init:%s=%s",addr.toString().c_str(),DumpProfile(p).c_str());
