@@ -42,7 +42,7 @@ TestConfig::TestConfig()
 	strMap["dbSmeSystemId"] = "dbSme";
 	strMap["dbSmeServiceType"] = "dBsmE";
 	intMap["dbSmeProtocolId"] = 7;
-	strMap["dbSmePassword"] = "dbSmePasswd";
+	strMap["dbSmePassword"] = "dbSmePwd";
 	//map proxy
 	strMap["mapProxySystemId"] = "MAP_PROXY";
 	//abonent info

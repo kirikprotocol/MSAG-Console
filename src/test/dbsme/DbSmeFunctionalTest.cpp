@@ -240,7 +240,7 @@ void TestSme::onStopped()
 
 pair<uint32_t, time_t> TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 {
-	return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
+	return protocolTc.sendDeliverySmRespOk(pdu, rand0(1), 0);
 }
 
 void TestSme::updateStat()
@@ -472,7 +472,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		config.port = smscPort;
 		config.sid = smeInfo[i]->systemId;
 		config.timeOut = 10;
-		//config.password;
+		config.password = smeInfo[i]->password;
 		//config.systemType;
 		//config.origAddr;
 		SmppFixture* fixture = new SmppFixture(*smeInfo[i], *addr[i],
