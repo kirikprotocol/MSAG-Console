@@ -1,5 +1,6 @@
 #include "util/debug.h"
 #include "util/config/Manager.h"
+#include "core/synchronization/Event.hpp"
 #include "store/StoreManager.h"
 #include "MessageStoreTestCases.hpp"
 #include "test/util/TestTaskManager.hpp"
@@ -7,11 +8,13 @@
 #include <map>
 
 using namespace std;
-using namespace smsc::sms;
-using namespace smsc::store;
-using namespace smsc::util::config;
-using namespace smsc::test::store;
 using namespace smsc::test::util;
+using smsc::sms::SMS;
+using smsc::sms::SMSId;
+using smsc::util::config::Manager;
+using smsc::store::StoreManager;
+using smsc::test::store::MessageStoreTestCases;
+using smsc::core::synchronization::Event;
 
 /**
  * Предназначен для стресс тестирования и тестирования бизнес циклов Message 
@@ -76,6 +79,7 @@ private:
 	static TCStatMap tcStat;
 
 public:
+	static int delay;
 	static bool pause;
 
 public:
@@ -94,11 +98,16 @@ MessageStoreBusinessCycleTestTask::MessageStoreBusinessCycleTestTask(int _taskNu
 
 void MessageStoreBusinessCycleTestTask::executeCycle()
 {
-	//проверить тест остановлен
+	//проверить тест остановлен/замедлен
+	static Event evt;
 	if (MessageStoreBusinessCycleTest::pause)
 	{
-		sleep(1);
+		evt.Wait(1000);
 		return;
+	}
+	if (MessageStoreBusinessCycleTest::delay)
+	{
+		evt.Wait(MessageStoreBusinessCycleTest::delay);
 	}
 
 	SMSId id;
@@ -201,6 +210,7 @@ inline bool MessageStoreBusinessCycleTestTaskManager::isStopped() const
 
 //MessageStoreBusinessCycleTest
 bool MessageStoreBusinessCycleTest::pause = false;
+int MessageStoreBusinessCycleTest::delay = 0;
 MessageStoreBusinessCycleTest::TaskStatList
 	MessageStoreBusinessCycleTest::taskStat =
 	MessageStoreBusinessCycleTest::TaskStatList();
@@ -296,20 +306,39 @@ void executeBusinessCycleTest(int numThreads)
 		if (help)
 		{
 			help = false;
-			cout << "start <arc|test> - start <archiver|test>" << endl;
-			cout << "stop <arc|test> - stop <archiver|test>" << endl;
+			cout << "test <pause|resume> - pause/resume test execution" << endl;
+			cout << "arc <start|stop> - start/stop archiver" << endl;
 			cout << "stat - print statistics" << endl;
 			cout << "rtstat - print runtime statistics" << endl;
 			cout << "set pool <newSize> - change pool size" << endl;
+			cout << "set delay <msec> - slow down test cycle execution" << endl;
 			cout << "quit - stop test and quit" << endl;
 		}
 
 		//обработка команд
 		cin >> cmd;
-		if (cmd == "start")
+		if (cmd == "test")
 		{
 			cin >> cmd;
-			if (cmd == "arc")
+			if (cmd == "pause")
+			{
+				MessageStoreBusinessCycleTest::pause = true;
+				cout << "Test paused successfully" << endl;
+			}
+			else if (cmd == "resume")
+			{
+				MessageStoreBusinessCycleTest::pause = false;
+				cout << "Test resumed successfully" << endl;
+			}
+			else
+			{
+				help = true;
+			}
+		}
+		else if (cmd == "arc")
+		{
+			cin >> cmd;
+			if (cmd == "start")
 			{
 				try
 				{
@@ -321,20 +350,7 @@ void executeBusinessCycleTest(int numThreads)
 					cout << "Failed to start archiver" << endl;
 				}
 			}
-			else if (cmd == "test")
-			{
-				MessageStoreBusinessCycleTest::pause = false;
-				cout << "Test resumed successfully" << endl;
-			}
-			else
-			{
-				help = true;
-			}
-		}
-		else if (cmd == "stop")
-		{
-			cin >> cmd;
-			if (cmd == "arc")
+			else if (cmd == "stop")
 			{
 				try
 				{
@@ -345,11 +361,6 @@ void executeBusinessCycleTest(int numThreads)
 				{
 					cout << "Failed to stop archiver" << endl;
 				}
-			}
-			else if (cmd == "test")
-			{
-				MessageStoreBusinessCycleTest::pause = true;
-				cout << "Test stopped successfully" << endl;
 			}
 			else
 			{
@@ -390,6 +401,10 @@ void executeBusinessCycleTest(int numThreads)
 			{
 				StoreManager::setPoolSize(newVal);
 				cout << "Pool size = " << StoreManager::getPoolSize() << endl;
+			}
+			else if (cmd == "delay")
+			{
+				MessageStoreBusinessCycleTest::delay = newVal;
 			}
 			else
 			{
