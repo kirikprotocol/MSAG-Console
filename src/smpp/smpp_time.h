@@ -27,24 +27,24 @@ inline time_t smppTime2CTime(COStr& str)
     sscanf(dta,
   //        YY MM DD hh mm ss t  nn p
           "%2d%2d%2d%2d%2d%2d%1d%2d%c",
-          &dtm->tm_year,
-          &dtm->tm_mon,
-          &dtm->tm_mday,
-          &dtm->tm_hour,
-          &dtm->tm_min,
-          &dtm->tm_sec,
+          &dtm.tm_year,
+          &dtm.tm_mon,
+          &dtm.tm_mday,
+          &dtm.tm_hour,
+          &dtm.tm_min,
+          &dtm.tm_sec,
           &ignore,
           &utc,
           &utcfix);
-  __ret0_if_fail__ ( result == 9 );
-  __ret0_if_fail__ ( dtm->tm_mon >= 1 && dtm->tm_mon <= 12 ); 
-  dtm->tm_mon-1;
-  __ret0_if_fail__ ( dtm->tm_mday >= 1 && dtm->mday <= 31 );
-  __ret0_if_fail__ ( dtm->tm_hour >= 0 && dtm->hour <= 23 );
-  __ret0_if_fail__ ( dtm->tm_min >= 0 && dtm->tm_min <= 59 );
-  __ret0_if_fail__ ( dtm->tm_sec >=0 && dtm->tm_sec <= 59 );
+  __ret0_if_fail__ ( scaned == 9 );
+  __ret0_if_fail__ ( dtm.tm_mon >= 1 && dtm.tm_mon <= 12 ); 
+  dtm.tm_mon-1;
+  __ret0_if_fail__ ( dtm.tm_mday >= 1 && dtm.tm_mday <= 31 );
+  __ret0_if_fail__ ( dtm.tm_hour >= 0 && dtm.tm_hour <= 23 );
+  __ret0_if_fail__ ( dtm.tm_min >= 0 && dtm.tm_min <= 59 );
+  __ret0_if_fail__ ( dtm.tm_sec >=0 && dtm.tm_sec <= 59 );
 
-  resultTime = mktime(dtm);
+  resultTime = mktime(&dtm);
   __ret0_if_fail__ ( resultTime != -1 );
   
   return resultTime;
@@ -54,4 +54,5 @@ inline time_t smppTime2CTime(COStr& str)
 };
 
 #endif
+
 

@@ -11,6 +11,8 @@
 
 #include "util/debug.h"
 #include "smpp_structures.h"
+#include "sms/sms.h"
+#include "smpp_time.h"
 
 namespace smsc{
 namespace smpp{
@@ -18,7 +20,7 @@ namespace smpp{
 using smsc::sms::SMS;
 using smsc::sms::Address;
 
-inline bool fillSmppPduFromSms(PduXsm* pdu,SMS* sms)
+inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
 {
   __require__ ( pdu != NULL );
   __require__ ( sms != NULL );
@@ -32,7 +34,7 @@ inline bool fillSmppPduFromSms(PduXsm* pdu,SMS* sms)
   }
 }
 
-inline bool fetchSmsFromSmppPdu(PduXsm* pdu,SMS* sms)
+inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
 {
   __require__ ( pdu != NULL );
   __require__ ( sms != NULL );
@@ -43,24 +45,33 @@ inline bool fetchSmsFromSmppPdu(PduXsm* pdu,SMS* sms)
   }
   else*/
   {
-    PduPartSm message& pdu->message;
+    PduPartSm& message = pdu->message;
     { // fill address
       PduAddress& source = message.source;
       PduAddress& dest  = message.dest;
-      Address originatingAddr(strlen(source.value.cstr()),
+      /*Address originatingAddr(strlen(source.value.cstr()),
                             source.typeOfNumber,
                             source.numberingPlan,
                             source.value.cstr());
       Address destinationAddr(strlen(dest.value.cstr()),
                             dest.typeOfNumber,
                             dest.numberingPlan,
-                            dest.value.cstr());
-      sms->setOriginatingAddress(oridginatingAddr);
+                            dest.value.cstr());*/
+      Address originatingAddr((int)strlen(source.value.cstr()),
+                            (unsigned char)source.typeOfNumber,
+                            (unsigned char)source.numberingPlan,
+                            (const uint8_t*)source.value.cstr());
+      Address destinationAddr((int)strlen(dest.value.cstr()),
+                            (unsigned char)dest.typeOfNumber,
+                            (unsigned char)dest.numberingPlan,
+                            (const uint8_t*)dest.value.cstr());
+      sms->setOriginatingAddress(originatingAddr);
       sms->setDestinationAddress(destinationAddr);
     }
     
     __require__ ( message.shortMessage.size() == message.smLength );
-    sms->setMessageBody(message.smLenght, message.dataCoding, false, message.shortMessage.cstr());
+//    sms->setMessageBody(message.smLength, message.dataCoding, false, message.shortMessage.cstr());
+    sms->setMessageBody((unsigned char)message.smLength, (unsigned char)message.dataCoding, false, (uint8_t*)message.shortMessage.cstr());
     sms->setProtocolIdentifier(message.protocolId);
     sms->setPriority(message.priorityFlag);
     

@@ -10,6 +10,7 @@
 #if !defined __Cxx_Header__smpp_mandatory_h__
 #define __Cxx_header__smpp_mandatory_h__
 
+#include <memory>
 #include "util/debug.h"
 #include "smpp_structures.h"
 #include "smpp_optional.h"
@@ -20,22 +21,25 @@ namespace smpp{
 
 using std::auto_ptr;
 
-inline void fetchPduAddress(SmppStream* stream,PduAdderss& addr)
+class BadDataException {};
+
+inline void fetchPduAddress(SmppStream* stream,PduAddress& addr)
 {
 	fetchX(stream,addr.typeOfNumber);
 	fetchX(stream,addr.numberingPlan);
 	fetchCOctetStr(stream,addr.value,21);
 }
 
-inline void fillPduAddress(SmppStream* stream,PduAdderss& addr)
+inline void fillPduAddress(SmppStream* stream,PduAddress& addr)
 {
-	fillX(stream,add.typeOfNumber);
+	fillX(stream,addr.typeOfNumber);
 	fillX(stream,addr.numberingPlan);
 	fillCOctetStr(stream,addr.value);
 }
 
 inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
 {
+	using namespace SmppCommandSet;
 	int cmdid = _pdu->commandId;
 	try
 	{
@@ -71,7 +75,7 @@ inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
 		case DELIVERY_SM:
 		case SUBMIT_MULTI:
 		{
-			PduXSm* pdu = reinterpret_cast<PduXsm*>(_pdu);
+			PduXSm* pdu = reinterpret_cast<PduXSm*>(_pdu);
 			fillSmppHeader(stream,pdu->header);
 			PduPartSm& sm = pdu->message;
 			fillCOctetStr(stream,sm.serviceType);
@@ -93,8 +97,9 @@ inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
 						}
 						else 
 						{
-							__warning__ ("flag value %x for dest address is unknown ",sm.dests[i].flag);
-							goto trap;
+							__warning2__ ("flag value %x for dest address is unknown ",sm.dests[i].flag);
+							//goto trap;
+							throw BadDataException();
 						}
 					}
 			}
@@ -112,21 +117,21 @@ inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
 			fillX(stream,sm.dataCoding);
 			fillX(stream,sm.smDefaultMsgId);
 			fillX(stream,sm.smLength);
-			fillOctetStr(stream,sm.shortMessage);
-			fillSmppOptional(stream,pdu->optional);
+			fillX(stream,sm.shortMessage);
+			fillSmppOptional(stream,&pdu->optional);
 			return true;
 		}
 		case SUBMIT_SM_RESP:
 		case DELIVERY_SM_RESP:
 		{
-			PduXsmResp* pdu = reinterpret_cast<PduXsmResp*>(_pdu);
+			PduXSmResp* pdu = reinterpret_cast<PduXSmResp*>(_pdu);
 			fillSmppHeader(stream,pdu->header);
 			fillCOctetStr(stream,pdu->messageId);
 			return true;
 		}
 		case SUBMIT_MULTI_RESP:
 		{
-			PduSubmitMultiResp* pdu = reinterpret_cast<PduSubmitMultiResp*>(_pdu);
+			PduMultiSmResp* pdu = reinterpret_cast<PduMultiSmResp*>(_pdu);
 			fillSmppHeader(stream,pdu->header);
 			fillCOctetStr(stream,pdu->messageId);
 			fillX(stream,pdu->noUnsuccess);
@@ -144,7 +149,7 @@ inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
 		case UNBIND_RESP:
 		case GENERIC_NACK:
 		{
-			fillSmppHeader(stream,_pdu);
+			fillSmppHeader(stream,*_pdu);
 			return true;
 		}
 		case OUTBIND:
@@ -168,10 +173,10 @@ inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
 		case QUERY_SM_RESP:
 			break;
 		}
-		__message__("bad smpp pdu");
+		__warning__("bad smpp pdu");
 		return false;
 	}
-	throw(...)
+	catch(...)
 	{
 		__warning__ ("fill pdu error");
 		throw;
@@ -183,15 +188,16 @@ inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
 */
 inline SmppHeader* fetchSmppPdu(SmppStream* stream)
 {
+	using namespace SmppCommandSet;
 	class StreamGuard
 	{ 
 		SmppStream*& stream;
 	public:
 		StreamGuard(SmppStream* stream):stream(stream){}
-		~StreamGuard(){if (streamHasData(stream)) {__warning__("packet has left data, dropped");dropPdu(stream);}}
+		~StreamGuard(){if (stream->dataOffset < stream->dataLength) {__warning__("packet has left data, dropped");dropPdu(stream);}}
 	};
   __check_smpp_stream_invariant__ ( stream );
-	StreamGuard(stream);
+	StreamGuard guard(stream);
   try
 	{
 		int32_t cmdid = smppCommandId(stream);
@@ -203,9 +209,9 @@ inline SmppHeader* fetchSmppPdu(SmppStream* stream)
 		{
 			auto_ptr<PduBindTRX> pdu(new PduBindTRX());
 			fetchSmppHeader(stream,pdu->header);
-			fetchCOctetStr(stream,pdu->systemId);
-			fetchCOctetStr(stream,pdu->password);
-			fetchCOctetStr(stream,pdu->systemType);
+			fetchCOctetStr(stream,pdu->systemId,16);
+			fetchCOctetStr(stream,pdu->password,9);
+			fetchCOctetStr(stream,pdu->systemType,13);
 			fetchX(stream,pdu->interfaceVersion);
 			fetchPduAddress(stream,pdu->addressRange);
 			return reinterpret_cast<SmppHeader*>(pdu.release());
@@ -214,10 +220,10 @@ inline SmppHeader* fetchSmppPdu(SmppStream* stream)
 		case BIND_RECIEVER_RESP:
 		case BIND_TRANCIEVER_RESP:
 		{
-			auto_ptr<PduBindTRX> pdu(new PduBindTRXResp());
+			auto_ptr<PduBindTRXResp> pdu(new PduBindTRXResp());
 			fetchSmppHeader(stream,pdu->header);
-			fetchCOctetStr(stream,pdu->systemId);
-			if ( streamHasData(stream) )
+			fetchCOctetStr(stream,pdu->systemId,16);
+			if ( stream->dataOffset < stream->dataLength  )
 			{
 				uint16_t tag;
 				uint16_t length;
@@ -232,10 +238,10 @@ inline SmppHeader* fetchSmppPdu(SmppStream* stream)
 		case DELIVERY_SM:
 		case SUBMIT_MULTI:
 		{
-			auto_ptr<PduXSm> pdu(new PduXsm());
+			auto_ptr<PduXSm> pdu(new PduXSm());
 			fetchSmppHeader(stream,pdu->header);
 			PduPartSm& sm = pdu->message;
-			fetchCOctetStr(stream,sm.serviceType);
+			fetchCOctetStr(stream,sm.serviceType,6);
 			fetchPduAddress(stream,sm.source);
 			if ( cmdid == SUBMIT_MULTI )
 			{
@@ -250,11 +256,11 @@ inline SmppHeader* fetchSmppPdu(SmppStream* stream)
 						}
 						else if ( sm.dests[i].flag == 0x02 )
 						{
-							fetchCoctetStr(stream,sm.dests[i].value);
+							fetchCOctetStr(stream,sm.dests[i].value,21);
 						}
 						else 
 						{
-							__warning__ ("flag value %x for dest address is unknown ",sm.dests[i].flag);
+							__warning2__ ("flag value %x for dest address is unknown ",sm.dests[i].flag);
 							goto trap;
 						}
 					}
@@ -266,35 +272,36 @@ inline SmppHeader* fetchSmppPdu(SmppStream* stream)
 			fetchX(stream,sm.esmClass);
 			fetchX(stream,sm.protocolId);
 			fetchX(stream,sm.priorityFlag);
-			fetchX(stream,sm.scheduleDeliveryTime);
-			fetchX(stream,sm.validityPeriod);
+			fetchCOctetStr(stream,sm.scheduleDeliveryTime,17);
+			fetchCOctetStr(stream,sm.validityPeriod,17);
 			fetchX(stream,sm.registredDelivery);
 			fetchX(stream,sm.replaceIfPresentFlag);
 			fetchX(stream,sm.dataCoding);
 			fetchX(stream,sm.smDefaultMsgId);
 			fetchX(stream,sm.smLength);
-			fetchOctetStr(stream,sm.shortMessage);
-			fetchSmppOptional(stream,pdu->optional);
+			fetchOctetStr(stream,sm.shortMessage,254);
+			fetchSmppOptional(stream,&pdu->optional);
 			return reinterpret_cast<SmppHeader*>(pdu.release());
 		}
 		case SUBMIT_SM_RESP:
 		case DELIVERY_SM_RESP:
 		{
-			auto_ptr<PduXsmResp> pdu(new PduXsmResp());
+			auto_ptr<PduXSmResp> pdu(new PduXSmResp());
 			fetchSmppHeader(stream,pdu->header);
-			fetchCOctetStr(stream,pdu->messageId);
+			fetchCOctetStr(stream,pdu->messageId,65);
 			return reinterpret_cast<SmppHeader*>(pdu.release());
 		}
 		case SUBMIT_MULTI_RESP:
 		{
-			auto_ptr<PduSubmitMultiResp> pdu(new PduSubmitMultiResp());
+			auto_ptr<PduMultiSmResp> pdu(new PduMultiSmResp());
 			fetchSmppHeader(stream,pdu->header);
-			fetchCOctetStr(stream,pdu->messageId);
+			fetchCOctetStr(stream,pdu->messageId,65);
 			fetchX(stream,pdu->noUnsuccess);
-			if ( pdu->noUnsuccess )
+			int no = pdu->noUnsuccess;
+			if ( no )
 			{
-				pdu->sme = new[pdu->noUnsuccess](UnsuccessDeliveries);
-				for ( int i=0; i<pdu->noUnsuccess; ++i )
+				pdu->sme = new UnsuccessDeliveries[no];
+				for ( int i=0; i<no; ++i )
 				{
 					fetchPduAddress(stream,pdu->sme[i].addr);
 					fetchX(stream,pdu->sme[i].errorStatusCode);
@@ -306,7 +313,7 @@ inline SmppHeader* fetchSmppPdu(SmppStream* stream)
 		case UNBIND_RESP:
 		case GENERIC_NACK:
 		{
-			auto_ptr<PduWithOnlyHeader> pdu(new PduWidthOnlyHeader);
+			auto_ptr<PduWithOnlyHeader> pdu(new PduWithOnlyHeader);
 			fetchSmppHeader(stream,pdu->header);
 			return reinterpret_cast<SmppHeader*>(pdu.release());
 		}
@@ -314,8 +321,8 @@ inline SmppHeader* fetchSmppPdu(SmppStream* stream)
 		{
 			auto_ptr<PduOutBind> pdu(new PduOutBind);
 			fetchSmppHeader(stream,pdu->header);
-			fetchCOctetStr(stream,pdu->systemId);
-			fetchCOctetStr(stream,pdu->password);
+			fetchCOctetStr(stream,pdu->systemId,16);
+			fetchCOctetStr(stream,pdu->password,9);
 			return reinterpret_cast<SmppHeader*>(pdu.release());
 		}
 		case REPLACE_SM:
@@ -331,8 +338,9 @@ inline SmppHeader* fetchSmppPdu(SmppStream* stream)
 		case QUERY_SM_RESP:
 			goto trap;
 		}
+		__watch__(cmdid);
+		__unreachable__("");
 	}
-	goto trap;
   catch (...)
   {
     dropPdu(stream);

@@ -5,16 +5,16 @@
 #if !defined  __Cxx_Header__smpp_stream_h__
 #define  __Cxx_Header__smpp_stream_h__
 
-#include "util/debug.h"
-#include "smpp_memory.h"
-#include "smpp_structures.h"
-#include "smpp_strings.h"
 #include <algorithm>
 #include <exception>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "util/debug.h"
+#include "smpp_memory.h"
+#include "smpp_structures.h"
+#include "smpp_strings.h"
 
 namespace smsc{
 namespace smpp{
@@ -90,7 +90,7 @@ inline T& __fetch_x__ (SmppStream* stream, T& data)
 	__check_smpp_stream_is_readable__(stream);
   __require__ ( stream->dataOffset+sizeof(T) <= stream->dataLength );
   //data = *((T*)stream->buffer);
-	int wasread = read(stream->chanel,data,sizeof(T));
+	int wasread = read(stream->chanel,&data,sizeof(T));
 	__throw_if_fail__(wasread==sizeof(T),BadStreamException);
   stream->dataOffset+sizeof(T);
   return data;
@@ -112,10 +112,9 @@ inline void __fill_x__ (SmppStream* stream, T& data)
 	__check_smpp_stream_is_writable__(stream);
   __require__ ( stream->dataOffset+sizeof(T) <= stream->dataLength );
   //data = *((T*)stream->buffer);
-	int writen = write(stream->chanel,data,sizeof(T));
+	int writen = write(stream->chanel,&data,sizeof(T));
 	__throw_if_fail__(writen==sizeof(T),BadStreamException);
   stream->dataOffset+sizeof(T);
-  return data;
 #endif
 }
 
@@ -213,13 +212,22 @@ inline int32_t smppCommandId(SmppStream* stream)
 inline void fillCOctetStr(SmppStream* stream,COStr& costr)
 {
   __check_smpp_stream_invariant__ ( stream );
-	__require__ ( costr.cstr() != NULL );
-	const char* text = costr.cstr();
-	const char* endText = text+strlen(text)+1;
-	__require__ ( *(endText-1) == 0 );
-	while ( text != endText ) fillX(stream,*(uint8_t*)(text++));
+	//__require__ ( costr.cstr() != NULL );
+	if ( costr.cstr() != NULL )
+	{
+		const char* text = costr.cstr();
+		const char* endText = text+strlen(text)+1;
+		__require__ ( *(endText-1) == 0 );
+		while ( text != endText ) fillX(stream,*(uint8_t*)(text++));
+	}
+	else
+	{
+		fillX(stream,0);
+	}
   __check_smpp_stream_invariant__ ( stream );
 }
+inline void fillX(SmppStream* s,COStr& str){ fillCOctetStr(s,str); }
+
 /**
   Вытаскиваем из потока строку
   @param stream  поток
@@ -273,12 +281,14 @@ inline void fetchCOctetStr(SmppStream* stream,COStr& costr,int cOctMax)
 inline void fillOctetStr(SmppStream* stream,OStr& ostr)
 {
   __check_smpp_stream_invariant__ ( stream );
-	__require__ ( ostr.cstr() != NULL );
+	__require__ ( ostr.cstr() != NULL || ostr.size()==0 );
+	if ( !ostr.size()) return;
 	const char* text = ostr.cstr();
 	const char* endText = text+ostr.size();
 	while ( text != endText ) fillX(stream,*(uint8_t*)(text++));
   __check_smpp_stream_invariant__ ( stream );
 }
+inline void fillX(SmppStream* s,OStr& str){ fillOctetStr(s,str); }
 
 /**
   Вытаскиваем из потока строку
@@ -315,3 +325,4 @@ inline void fetchOctetStr(SmppStream* stream,OStr& ostr,uint32_t octets)
 };
 
 #endif
+
