@@ -2563,7 +2563,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
       formatDeliver(fd,out);
       rpt.getDestinationAddress().getText(addr,sizeof(addr));
       __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
-      fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
+      if(regdel)
+      {
+        fillSms(&rpt,"",0,CONV_ENCODING_CP1251,profile.codepage,0);
+      }else
+      {
+        fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,0);
+      }
 
       //smsc->submitSms(prpt);
 
@@ -3000,7 +3006,14 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   fd.scheme=si.receiptSchemeName.c_str();
 
   formatFailed(fd,out);
-  fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
+  if(regdel)
+  {
+    fillSms(&rpt,"",0,CONV_ENCODING_CP1251,profile.codepage,0);
+  }else
+  {
+    fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,0);
+  }
+  //fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
   //smsc->submitSms(prpt);
   submitReceipt(rpt);
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
@@ -3065,7 +3078,14 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 
 
   formatNotify(fd,out);
-  fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
+  if(regdel)
+  {
+    fillSms(&rpt,"",0,CONV_ENCODING_CP1251,profile.codepage,0);
+  }else
+  {
+    fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,0);
+  }
+  //fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
   //smsc->submitSms(prpt);
   submitReceipt(rpt);
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
