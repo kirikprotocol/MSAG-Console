@@ -2,7 +2,6 @@
 #include "util/debug.h"
 #include "MessageStoreTestCases.hpp"
 #include "test/sms/SmsUtil.hpp"
-#include "test/util/AutoSync.hpp"
 #include "store/StoreManager.h"
 #include "store/StoreExceptions.h"
 #include <cstdlib>
@@ -60,38 +59,10 @@ Category& MessageStoreTestCases::getLog()
 		__trace2__("set_str_body_tag: tag = " #tagName ", set = %s, get = %s", tmp_##tagName.get(), sms.getMessageBody().getStrProperty(Tag::tagName).c_str()); \
 	}
 
-#define __tc__(tcId) \
-	if (chkList) { tc = chkList->getTc(tcId); }
-
-#define __tc_ok__ \
-	__trace2__("%s: ok", tc->id.c_str()); \
-	if (chkList) { \
-		__require__(tc.get()); \
-		tc->correct++; \
-	}
-
-#define __tc_fail__(errCode) \
-	__trace2__("%s: err = %d", tc->id.c_str(), errCode); \
-	if (chkList) { \
-		__require__(tc.get()); \
-		tc->incorrect++; \
-		tc->errCodes.insert(errCode); \
-	}
-
-#define __tc_fail2__(errList) \
-	{ ostringstream s; \
-		copy(errList.begin(), errList.end(), ostream_iterator<int>(s, ", ")); \
-		__trace2__("%s: err = %s", tc->id.c_str(), s.str().c_str()); } \
-	if (chkList) { \
-		__require__(tc.get()); \
-		tc->incorrect++; \
-		tc->errCodes.insert(errList.begin(), errList.end()); \
-	}
-
 void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 {
 	TCSelector s(num, 15);
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	for (; s.check(); s++)
 	{
 		try
@@ -213,7 +184,7 @@ void MessageStoreTestCases::storeSimilarSms(SMSId* idp, SMS* smsp,
 	const SMSId existentId, const SMS& existentSms, int num)
 {
 	TCSelector s(num, 7);
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	//messageReference
 	uint8_t msgRef = existentSms.getMessageReference();
 	//originatingAddress
@@ -321,7 +292,7 @@ void MessageStoreTestCases::storeSimilarSms(SMSId* idp, SMS* smsp,
 void MessageStoreTestCases::storeDuplicateSms(SMSId* idp, SMS* smsp,
 	const SMSId existentId, const SMS& existentSms)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("storeDuplicateSms");
 	try
 	{
@@ -353,7 +324,7 @@ void MessageStoreTestCases::storeDuplicateSms(SMSId* idp, SMS* smsp,
 
 void MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("storeRejectDuplicateSms");
 	try
 	{
@@ -382,7 +353,7 @@ void MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
 
 void MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existentSms)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("storeReplaceCorrectSms");
 	try
 	{
@@ -414,7 +385,7 @@ void MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existentSms)
 void MessageStoreTestCases::storeReplaceSmsInFinalState(SMSId* idp, SMS* smsp,
 	const SMS& existentSms)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("storeReplaceSmsInFinalState");
 	try
 	{
@@ -443,7 +414,7 @@ void MessageStoreTestCases::storeReplaceSmsInFinalState(SMSId* idp, SMS* smsp,
 
 void MessageStoreTestCases::storeIncorrectSms(int num)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("storeIncorrectSms");
 	//Проверяется вызывающей стороной:
 	//некорректный статус DELIVERED
@@ -458,7 +429,7 @@ void MessageStoreTestCases::storeIncorrectSms(int num)
 void MessageStoreTestCases::storeAssertSms(int num)
 {
 	TCSelector s(num, 14);
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	SMS sms;
 	for (; s.check(); s++)
 	{
@@ -576,7 +547,7 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 	const SMSId id, SMS* sms, int num)
 {
 	TCSelector s(num, 5);
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	for (; s.check(); s++)
 	{
 		try
@@ -654,7 +625,7 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 	const SMSId id, SMS* sms, int num)
 {
 	TCSelector s(num, 9);
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	for (; s.check(); s++)
 	{
 		try
@@ -753,7 +724,7 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 void MessageStoreTestCases::changeFinalSmsStateToAny(const SMSId id, int num)
 {
 	TCSelector s(num, 5);
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	for (; s.check(); s++)
 	{
 		try
@@ -804,7 +775,7 @@ void MessageStoreTestCases::changeFinalSmsStateToAny(const SMSId id, int num)
 void MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int num)
 {
 	TCSelector s(num, 6);
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("replaceCorrectSms"); //to del
 	/*
 	for (; s.check(); s++)
@@ -885,7 +856,7 @@ void MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 	//waitTime > validTime
 
 	TCSelector s(num, 3);
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("replaceIncorrectSms"); //to del
 	/*
 	for (; s.check(); s++)
@@ -938,7 +909,7 @@ void MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 
 void MessageStoreTestCases::replaceFinalSms(const SMSId id, const SMS& sms)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("replaceIncorrectSms.replaceFinalSms");
 	/*
 	try
@@ -967,7 +938,7 @@ void MessageStoreTestCases::replaceFinalSms(const SMSId id, const SMS& sms)
 
 void MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("loadSms.existentSms");
 	try
 	{
@@ -999,7 +970,7 @@ void MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
 
 void MessageStoreTestCases::loadNonExistentSms(const SMSId id)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("loadSms.nonExistentSms");
 	try
 	{
@@ -1020,7 +991,7 @@ void MessageStoreTestCases::loadNonExistentSms(const SMSId id)
 
 void MessageStoreTestCases::deleteExistentSms(const SMSId id)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("deleteSms.existentSms");
 	try
 	{
@@ -1036,7 +1007,7 @@ void MessageStoreTestCases::deleteExistentSms(const SMSId id)
 	
 void MessageStoreTestCases::deleteNonExistentSms(const SMSId id)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("deleteSms.nonExistentSms");
 	try
 	{
@@ -1088,7 +1059,7 @@ void MessageStoreTestCases::checkNextRetryTime(const vector<SMSId*>& ids,
 	const vector<SMS*>& sms, time_t& minNextTime, time_t& middleNextTime,
 	time_t& maxNextTime)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("checkReadyForRetrySms.nextRetryTime");
 	bool found = false;
 	minNextTime = 0;
@@ -1158,7 +1129,7 @@ __trace2__("checkNextRetryTime(): %s", os.str().c_str());
 void MessageStoreTestCases::compareReadyForRetrySmsList(const vector<SMSId*>& ids, 
 	const vector<SMS*>& sms, time_t t, int shift)
 {
-	auto_sync<TestCase> tc;
+	__decl_tc__;
 	__tc__("checkReadyForRetrySms.readyForRetrySmsList");
 	//выбрать и отсортировать ids
 	typedef map<SMSId, time_t> IdMap;
