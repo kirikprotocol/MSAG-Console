@@ -64,7 +64,7 @@ std::string formatCallingNumber(EINSS7_I97_CALLINGNUMB_T* calling)
   char addr[28];
   int pos;
   pos = snprintf(addr,27,".%d.%d.",calling->natureOfAddr,calling->numberPlan);
-  unpack_addr(&addr[pos-1], calling->addrSign_p, calling->noOfAddrSign);
+  unpack_addr(&addr[pos], calling->addrSign_p, calling->noOfAddrSign);
   return &addr[0];
 }
 

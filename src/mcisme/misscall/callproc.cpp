@@ -132,6 +132,7 @@ USHORT_T unblockCurcuits()
 
 bool setCallingMask(const char* rx)
 {
+  smsc::util::regexp::RegExp::InitLocale();
   return maskRx.Compile(rx)!=0;
 }
 
@@ -712,6 +713,7 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
   int n=m.size();
   if(!maskRx.Match(formatCallingNumber(calling).c_str(),&m[0],n))
   {
+    smsc_log_debug(missedCallProcessorLogger, "Calling=%s doesn't match",formatCallingNumber(calling).c_str());
     inform=0;
   }
 
