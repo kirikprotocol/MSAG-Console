@@ -2,6 +2,7 @@ package ru.novosoft.smsc.mcisme.beans;
 
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.mcisme.backend.CountersSet;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -15,32 +16,6 @@ import java.util.Iterator;
  */
 public class Index extends IndexProperties
 {
-  protected int reset()
-  {
-    try {
-      getMCISmeContext().resetConfig();
-    } catch (Throwable e) {
-      logger.debug("Couldn't reload MCI Sme config", e);
-      return error("Could not reload MCI Sme config", e);
-    }
-    return RESULT_DONE;
-  }
-
-  protected int apply()
-  {
-    int result = RESULT_DONE;
-    try {
-      logger.debug("Apply ...");
-      final Config oldConfig = getMCISmeContext().loadCurrentConfig();
-      result = applyGlobalParams(oldConfig);
-
-    } catch (Throwable e) {
-      logger.error("Couldn't save MCI Sme config", e);
-      result = error("Could not save MCI Sme config", e);
-    }
-    return result;
-  }
-
   private int applyGlobalParams(final Config oldConfig)
     throws Config.WrongParamTypeException, IOException, NullPointerException, CloneNotSupportedException
   {
@@ -74,6 +49,34 @@ public class Index extends IndexProperties
       warning("Invalid JDBC parameters");
 
     return message("Changes saved, you should restart MCI Sme to apply changes");
+  }
+
+  protected int reset()
+  {
+    try {
+      getMCISmeContext().resetConfig();
+      getMCISmeContext().setChangedOptions(false);
+      getMCISmeContext().setChangedDrivers(false);
+    } catch (Throwable e) {
+      logger.debug("Couldn't reload MCI Sme config", e);
+      return error("Could not reload MCI Sme config", e);
+    }
+    return RESULT_DONE;
+  }
+
+  protected int apply()
+  {
+    int result = RESULT_DONE;
+    try {
+      logger.debug("Apply ...");
+      final Config oldConfig = getMCISmeContext().loadCurrentConfig();
+      result = applyGlobalParams(oldConfig);
+
+    } catch (Throwable e) {
+      logger.error("Couldn't save MCI Sme config", e);
+      result = error("Could not save MCI Sme config", e);
+    }
+    return result;
   }
 
   protected int start()
