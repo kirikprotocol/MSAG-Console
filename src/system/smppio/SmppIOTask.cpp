@@ -206,7 +206,7 @@ int SmppInputThread::Execute()
 
               char buf[64];
               int size=resppdu.size();
-              __require__(size<sizeof(buf));
+              __require__(size<(int)sizeof(buf));
               SmppStream s;
               assignStreamWith(&s,buf,sizeof(buf),false);
               fillSmppPdu(&s,reinterpret_cast<SmppHeader*>(&resppdu));

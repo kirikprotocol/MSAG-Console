@@ -89,7 +89,7 @@ public:
     managerMonitor=NULL;
     state=VALID;
   }
-  virtual SmeProxyPriority getPriority()const{return 0;}
+  virtual SmeProxyPriority getPriority()const{return SmeProxyPriorityDefault;}
   bool hasInput()const
   {
     MutexGuard g(mutex);
