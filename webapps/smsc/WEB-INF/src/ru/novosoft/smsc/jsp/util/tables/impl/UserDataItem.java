@@ -16,4 +16,21 @@ public class UserDataItem extends AbstractDataItem
 		values.put("lastName", user.getLastName());
 		values.put("dept", user.getDept());
 	}
+
+	public String getLogin()
+	{
+		return (String) values.get("login");
+	}
+	public String getFirstName()
+	{
+		return (String) values.get("firstName");
+	}
+	public String getLastName()
+	{
+		return (String) values.get("lastName");
+	}
+	public String getDept()
+	{
+		return (String) values.get("dept");
+	}
 }
