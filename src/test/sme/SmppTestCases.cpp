@@ -18,11 +18,12 @@ SmppTestCases::SmppTestCases(const SmeConfig& config, const SmeSystemId& _system
 	__require__(routeReg);
 	__require__(resultHandler);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
-	session = new SmppSession(config, this);
 	routeChecker = new RouteChecker(aliasReg, routeReg);
 	responseChecker = new SmppResponsePduChecker();
-	receiver = new SmppReceiverTestCases(session, systemId, smeAddr, smeReg,
+	receiver = new SmppReceiverTestCases(systemId, smeAddr, smeReg,
 		aliasReg, routeReg, handler, routeChecker, responseChecker);
+	session = new SmppSession(config, receiver);
+	receiver->setSession(session);
 	transmitter = new SmppTransmitterTestCases(session, smeAddr,
 		smeReg, responseChecker);
 }
@@ -118,6 +119,12 @@ TCResult* SmppTestCases::bindNonRegisteredSme(int num)
 		}
 	}
 	debug(res);
+	return res;
+}
+
+TCResult* SmppTestCases::processInvalidSms()
+{
+	TCResult* res = new TCResult(TC_PROCESS_INVALID_SMS);
 	return res;
 }
 

@@ -18,6 +18,7 @@ using namespace smsc::test::core; //SmeRegistry, PduRegistry, ...
 //implemented
 const char* const TC_BIND_REGISTERED_SME = "bindRegisteredSme";
 const char* const TC_BIND_NON_REGISTERED_SME = "bindNonRegisteredSme";
+const char* const TC_PROCESS_INVALID_SMS = "processInvalidSms";
 const char* const TC_UNBIND_BOUNDED = "unbindBounded";
 const char* const TC_UNBIND_NON_BOUNDED = "unbindNonBounded";
 
@@ -28,9 +29,9 @@ const char* const TC_UNBIND_NON_BOUNDED = "unbindNonBounded";
 class SmppTestCases : BaseTestCases
 {
 public:
-	SmppTestCases(const SmeConfig& config, const SmeSystemId& _systemId,
-		const Address& addr, const SmeRegistry* _smeReg,
-		const AliasRegistry* _aliasReg, const RouteRegistry* _routeReg,
+	SmppTestCases(const SmeConfig& config, const SmeSystemId& systemId,
+		const Address& smeAddr, const SmeRegistry* smeReg,
+		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
 		ResultHandler* handler); //throws Exception
 	
 	virtual ~SmppTestCases();
@@ -56,7 +57,7 @@ public:
 	TCResult* bindNonRegisteredSme(int num);
 
 	/**
-	 * Проверка неполученых подтверждений доставки, нотификаций и sms от других sme.
+	 * Все подтверждений доставки, нотификации и sms доставляются и не теряются.
 	 */
 	TCResult* processInvalidSms();
 	
