@@ -32,3 +32,6 @@ where stat.sid = ses.sid and stat.statistic# = nam.statistic# and stat.statistic
 ses.machine='smsc' and ses.osuser='bryz'
 group by stat.statistic#, nam.name having sum(stat.value) > 0
 order by stat.statistic#
+
+--Проверка billing и archived атрибутов
+select oa, da, arc, br from sms_msg group by oa, da, arc, br order by oa, da
