@@ -151,8 +151,8 @@ struct RouteInfo
   bool enabling;
   bool suppressDeliveryReports;
   bool hide;
-  ReplyPath replyPath;
   bool forceDelivery;
+  ReplyPath replyPath;
   int serviceId;
   smsc::acls::AclIdent aclId;
   RouteId routeId;
