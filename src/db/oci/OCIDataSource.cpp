@@ -218,7 +218,7 @@ Routine* OCIConnection::createRoutine(const char* call, bool func)
 {
     connect();
 
-    std::string routine = ""; std::string name = "";
+    std::string routine; std::string name = "";
     routine += "BEGIN\n";
     if (func)
     {
@@ -1046,11 +1046,12 @@ OCIRoutine::OCIRoutine(OCIConnection* connection,
     }
     catch (SQLException& exc)
     {
-        if (dschp)
-            check(OCIHandleFree((dvoid *) dschp, (ub4) OCI_HTYPE_DESCRIBE));
+        if (dschp) check(OCIHandleFree((dvoid *) dschp, (ub4) OCI_HTYPE_DESCRIBE));
         cleanupDescriptors();
         throw;
     }
+    
+    if (dschp) check(OCIHandleFree((dvoid *) dschp, (ub4) OCI_HTYPE_DESCRIBE));
 }
 
 bool OCIRoutine::isTextsEqual(text* txt1, ub4 len1, text* txt2, ub4 len2)
