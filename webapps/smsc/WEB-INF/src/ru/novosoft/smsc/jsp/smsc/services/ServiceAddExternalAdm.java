@@ -317,6 +317,11 @@ public class ServiceAddExternalAdm extends SmeBean
 		return Integer.toString(port);
 	}
 
+	public int getPortInt()
+	{
+		return port;
+	}
+
 	public void setPort(String port)
 	{
 		try

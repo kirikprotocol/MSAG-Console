@@ -137,6 +137,12 @@ public class SmeManagerImpl implements SmeManager
 		}
 	}
 
+	public boolean isSmeConnected(String id) throws AdminException
+	{
+		final Boolean connected = (Boolean)smsc.smeIsConnected().get(id);
+		return connected != null && connected.booleanValue();
+	}
+
 	public synchronized SME update(SME newSme) throws AdminException
 	{
 		SME updatedSme = smes.update(newSme);

@@ -69,9 +69,10 @@ namespace smsc {
                 Method msc_clear     ((unsigned)mscClearMethod,      "msc_clear",      msc_params,   StringType);
                 Method msc_list      ((unsigned)mscListMethod,       "msc_list",       empty_params, StringListType);
 
-								Method sme_add       ((unsigned)smeAddMethod,    "sme_add",    sme_params,    BooleanType);
-								Method sme_remove    ((unsigned)smeRemoveMethod, "sme_remove", sme_id_params, BooleanType);
-								Method sme_update    ((unsigned)smeUpdateMethod, "sme_update", sme_params,    BooleanType);
+								Method sme_add         ((unsigned)smeAddMethod,         "sme_add",         sme_params,    BooleanType);
+								Method sme_remove      ((unsigned)smeRemoveMethod,      "sme_remove",      sme_id_params, BooleanType);
+								Method sme_update      ((unsigned)smeUpdateMethod,      "sme_update",      sme_params,    BooleanType);
+								Method sme_isConnected ((unsigned)smeIsConnectedMethod, "sme_isConnected", empty_params,  StringListType);
 
                 methods[apply_routes     .getName()] = apply_routes;
                 methods[apply_aliases    .getName()] = apply_aliases;
@@ -90,9 +91,10 @@ namespace smsc {
                 methods[msc_clear     .getName()] = msc_clear;
                 methods[msc_list      .getName()] = msc_list;
 
-								methods[sme_add   .getName()] = sme_add;
-								methods[sme_remove.getName()] = sme_remove;
-								methods[sme_update.getName()] = sme_update;
+								methods[sme_add        .getName()] = sme_add;
+								methods[sme_remove     .getName()] = sme_remove;
+								methods[sme_update     .getName()] = sme_update;
+								methods[sme_isConnected.getName()] = sme_isConnected;
 
                 smsc_app_runner.reset(0);
             }
@@ -163,6 +165,9 @@ namespace smsc {
 										case smeUpdateMethod:
 										    smeUpdate(args);
 										    return Variant(true);
+
+										case smeIsConnectedMethod:
+												return smeIsConnected(args);
     
                     default:
                         logger.debug("unknown method \"%s\" [%u]", method.getName(), method.getId());
@@ -745,8 +750,20 @@ namespace smsc {
 							fillSmeInfo(smeInfo, args);
 							getSmeAdmin()->updateSmeInfo(smeInfo.systemId, smeInfo);
 						}
-
-        }
+						
+						Variant SmscComponent::smeIsConnected(const Arguments & args)
+						{
+							Variant result(StringListType);
+							for (SmeIterator* i = getSmeAdmin()->iterator(); i != NULL;)
+							{
+								result.appendValueToStringList(((i->getSmeProxy() != 0 ? std::string("+") : std::string("-")) + i->getSmeInfo().systemId).c_str());
+								if (!i->next())
+									break;
+							}
+							return result;
+						}
+        
+				}
     }
 }
 

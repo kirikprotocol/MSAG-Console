@@ -51,6 +51,8 @@ public class Smsc extends Service
 	private Method sme_add_method = null;
 	private Method sme_remove_method = null;
 	private Method sme_update_method = null;
+	private Method sme_isConnected_method = null;
+	private Map smeIsConnectedMap = new HashMap();
 
 
 	private DistributionListAdmin distributionListAdmin = null;
@@ -59,6 +61,7 @@ public class Smsc extends Service
 	private ProfileDataSource profileDataSource = null;
 
 	private Category logger = Category.getInstance(this.getClass());
+	private long serviceRefreshTimeStamp = 0;
 
 	public Smsc(ConfigManager configManager, NSConnectionPool connectionPool) throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
@@ -233,7 +236,7 @@ public class Smsc extends Service
 
 	protected void checkComponents()
 	{
-		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null)
+		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null || sme_isConnected_method == null)
 		{
 			try
 			{
@@ -257,6 +260,7 @@ public class Smsc extends Service
 				sme_add_method = (Method) smsc_component.getMethods().get("sme_add");
 				sme_remove_method = (Method) smsc_component.getMethods().get("sme_remove");
 				sme_update_method = (Method) smsc_component.getMethods().get("sme_update");
+				sme_isConnected_method = (Method) smsc_component.getMethods().get("sme_isConnected");
 			}
 			catch (AdminException e)
 			{
@@ -304,8 +308,11 @@ public class Smsc extends Service
 
 	public synchronized void applyConfig() throws AdminException
 	{
-		checkComponents();
-		call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
+		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+		{
+			checkComponents();
+			call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
+		}
 	}
 
 	public synchronized void mscRegistrate(String msc) throws AdminException
@@ -417,7 +424,7 @@ public class Smsc extends Service
 	{
 		checkComponents();
 		Object result = call(smsc_component, sme_add_method, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
-		if (!(result instanceof Boolean && ((Boolean)result).booleanValue()))
+		if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
 			throw new AdminException("Error in response");
 	}
 
@@ -437,5 +444,28 @@ public class Smsc extends Service
 		Object result = call(smsc_component, sme_update_method, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
 		if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
 			throw new AdminException("Error in response");
+	}
+
+	public Map smeIsConnected() throws AdminException
+	{
+		final long currentTime = System.currentTimeMillis();
+		if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp)
+		{
+			serviceRefreshTimeStamp = currentTime;
+			smeIsConnectedMap.clear();
+			checkComponents();
+			Object result = call(smsc_component, sme_isConnected_method, Type.Types[Type.StringListType], new HashMap());
+			if (!(result instanceof List))
+				throw new AdminException("Error in response");
+
+			for (Iterator i = ((List) result).iterator(); i.hasNext();)
+			{
+				String s = (String) i.next();
+				smeIsConnectedMap.put(s.substring(1), new Boolean(s.charAt(0) == '+'));
+			}
+			return smeIsConnectedMap;
+		}
+		else
+			return smeIsConnectedMap;
 	}
 }

@@ -75,6 +75,8 @@ function editService(serviceId)
 	<th>&nbsp;</th>
 	<th>service</th>
 	<th>host</th>
+	<th>&nbsp;</th>
+	<th>&nbsp;</th>
 	<th>status</th>
 </tr>
 </thead>
@@ -93,23 +95,36 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
 	<td><a  href="#" title="Edit service parameters" onClick="return editService('<%=encodedServiceId%>');">edit</a></td>
-	<%
-	if (bean.isServiceAdministrable(serviceId))
-	{
-		%><td class=name><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td><%
-	}
-		else
-	{
-		%><td class=name><%=encodedServiceId%></td><%
-	}
-	if (bean.isService(serviceId))
-	{
-		%><td class=name><a href="#" title="View host info" onClick="return viewHost('<%=bean.getHost(serviceId)%>');"><%=bean.getHost(serviceId)%></a></td><%
-	} else
-	{
-		%><td class=name>&nbsp;</td><%
-	}%>
-	<td><%=serviceStatus(serviceId, bean.getServiceStatus(serviceId), "STATUS_ELEM_FOR_SERVICE_"+encodedServiceId)%></td>
+	<td class=name><%
+		if (bean.isServiceAdministrable(serviceId))
+		{
+			%><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a><%
+		}
+			else
+		{
+			%><%=encodedServiceId%><%
+		}
+	%></td>
+	<td class=name><%
+		if (bean.isService(serviceId))
+		{
+			%><a href="#" title="View host info" onClick="return viewHost('<%=bean.getHost(serviceId)%>');"><%=bean.getHost(serviceId)%></a><%
+		} else
+		{
+			%>&nbsp;<%
+		}
+	%></td>
+	<td><%=bean.isServiceDisabled(serviceId) ? "<span style=\"color:red\">disabled</span>" : "<span style=\"color:green\">enabled</span>"%></td>
+	<td><%=serviceConnected(serviceId, bean.isServiceConnected(serviceId), "CONNECTION_STATUSERVICE_"+encodedServiceId)%></td>
+	<td><%
+		if (bean.isService(serviceId))
+		{
+			%><%=serviceStatus(serviceId, bean.getServiceStatus(serviceId), "STATUS_ELEM_FOR_SERVICE_"+encodedServiceId)%><%
+		} else
+		{
+			%>&nbsp;<%
+		}
+	%></td>
 </tr>
 <%}}%>
 </tbody>

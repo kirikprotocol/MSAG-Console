@@ -233,6 +233,32 @@ public class Index extends PageBean
 			return ServiceInfo.STATUS_RUNNING;
 	}
 
+	public boolean isServiceDisabled(String serviceId)
+	{
+		try
+		{
+			return appContext.getSmeManager().get(serviceId).isDisabled();
+		}
+		catch (AdminException e)
+		{
+			error(SMSCErrors.error.services.couldntGetServiceInfo, serviceId);
+			return false;
+		}
+	}
+
+	public boolean isServiceConnected(String serviceId)
+	{
+		try
+		{
+			return appContext.getSmeManager().isSmeConnected(serviceId);
+		}
+		catch (AdminException e)
+		{
+			error(SMSCErrors.error.services.couldntGetServiceInfo, serviceId);
+			return false;
+		}
+	}
+
 	/*************************** Properties *******************************/
 
 

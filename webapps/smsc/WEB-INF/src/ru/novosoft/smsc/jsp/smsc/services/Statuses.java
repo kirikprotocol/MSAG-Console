@@ -39,4 +39,17 @@ public class Statuses extends PageBean
 			return ServiceInfo.STATUS_UNKNOWN;
 		}
 	}
+
+	public boolean isServiceConnected(String id)
+	{
+		try
+		{
+			return appContext.getSmeManager().isSmeConnected(id);
+		}
+		catch (AdminException e)
+		{
+			logger.error("Couldn't get service \"" + id + "\" connection status", e);
+			return false;
+		}
+	}
 }
