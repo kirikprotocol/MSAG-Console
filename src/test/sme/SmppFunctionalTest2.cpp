@@ -527,7 +527,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		//config.sid = tmp.get();
 		config.sid = smeInfo[i]->systemId;
 		config.timeOut = 10;
-		//config.password;
+		config.password = smeInfo[i]->password;
 		//config.systemType;
 		//config.origAddr;
 		SmppFixture* fixture = new SmppFixture(*smeInfo[i], *addr[i],
