@@ -627,8 +627,8 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
   ET96MAP_ERROR_PROCESS_UNSTRUCTURED_SS_REQUEST_T error;
   error.errorCode = 34; /*Sytem failure */
-  ET96MAP_USSD_STRING_T ussdString;// = {0,};
-  memset(&ussdString,0,sizeof(ussdString));
+  ET96MAP_USSD_STRING_T ussdString = {0,};
+  //memset(&ussdString,0,sizeof(ussdString));
   if ( dialog->version == 2 ) 
   {
     Et96MapV2ProcessUnstructuredSSRequestResp(
