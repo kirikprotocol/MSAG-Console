@@ -307,7 +307,7 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
           frames.push_back((*p)->getCommand());
           frames.back().setProxy((*p));
         }catch(exception& e) {
-          __warning2__("exception %s when getting command",e.what())
+          __warning2__("exception %s when getting command",e.what());
         }
       }
     }
