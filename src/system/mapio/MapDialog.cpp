@@ -85,7 +85,9 @@ void Convert7BitToText(
 unsigned ConvertText27bit(
   const unsigned char* text, int chars, unsigned char* bit7buf)
 {
-  __require__(chars<=255);
+  //__require__(chars<=255);
+  __trace2__("text length(%d) > 254",chars);
+  throw runtime_error("text length > 254");
   unsigned char* base = bit7buf;
   unsigned shift = 0;
   for ( int i=0; i< chars; ++i ){
