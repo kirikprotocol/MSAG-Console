@@ -678,10 +678,6 @@ none_validity:;
 
 // PARSE __DATACODING__
 
-  if () 
-  {
-  }
-
   if ( (user_data_coding & 0xc0) == 0 ||  // 00xxxxxx
        (user_data_coding & 0xc0) == 0x40 )  // 01xxxxxx
   {
