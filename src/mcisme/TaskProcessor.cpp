@@ -135,12 +135,19 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     if (!tsmStr || !tsmStr[0] || sscanf(tsmStr, "%lx", &tsmLong) != 1)
         throw ConfigException("Parameter <MCISme.Circuits.tsm> value is empty or invalid."
                               " Expecting hex string, found '%s'.", tsmStr ? tsmStr:"null");
-    //smsc_log_debug(logger, "TSM = %lx (%ld)", tsmLong, tsmLong);
     circuits.ts = tsmLong;
     
     std::auto_ptr<ConfigView> releaseSettingsCfgGuard(config->getSubConfig("Reasons"));
     ConfigView* releaseSettingsCfg = releaseSettingsCfgGuard.get();
     ReleaseSettings releaseSettings;
+    try { releaseSettings.strategy = releaseSettingsCfg->getInt ("strategy"); } catch (...) {
+        smsc_log_warn(logger, "Parameter <MCISme.Reasons.strategy> missed. Using default redirect strategy (MTS defualt)");
+        releaseSettings.strategy = REDIRECT_STRATEGY;
+    }
+    if (releaseSettings.strategy != PREFIXED_STRATEGY || 
+        releaseSettings.strategy != REDIRECT_STRATEGY) 
+        throw ConfigException("Parameter <MCISme.Reasons.strategy> value '%d' is invalid.", 
+                              releaseSettings.strategy);
     releaseSettings.busyCause           = releaseSettingsCfg->getInt ("Busy.cause");
     releaseSettings.busyInform          = releaseSettingsCfg->getBool("Busy.inform") ? 1:0;
     releaseSettings.noReplyCause        = releaseSettingsCfg->getInt ("NoReply.cause");
@@ -152,9 +159,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     releaseSettings.otherCause          = releaseSettingsCfg->getInt ("Other.cause");
     releaseSettings.otherInform         = releaseSettingsCfg->getBool("Other.inform") ? 1:0;
     
-    mciModule = new MCIModule(circuits, releaseSettings, 
-                              callingMask.c_str(), calledMask.c_str());
-    
+    mciModule = new MCIModule(circuits, releaseSettings, callingMask.c_str(), calledMask.c_str());
     responcesTracker.init(this, config);
 
     maxInQueueSize  = config->getInt("inputQueueSize");
