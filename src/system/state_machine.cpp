@@ -654,6 +654,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       }
     }
   }
+  __require__(newlen>=0 && newlen<=65535);
   __trace2__("DIRECT: newlen=%d",newlen);
   //#def N# #ack# #noack# #template=name# {name}="value"
   if(newlen>255)
