@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 
+
 public class ProfileDataItem extends AbstractDataItem
 {
   protected ProfileDataItem(final Profile profile) throws AdminException
@@ -17,7 +18,19 @@ public class ProfileDataItem extends AbstractDataItem
     values.put("Codepage", profile.getCodepageString());
     values.put("Report info", profile.getReportOptionsString());
     values.put("locale", profile.getLocale());
-    values.put("alias hide", profile.getAliasHideString());
+    switch (profile.getAliasHide()) {
+      case Profile.ALIAS_HIDE_false:
+        values.put("alias hide", "nohide");
+        break;
+      case Profile.ALIAS_HIDE_true:
+        values.put("alias hide", "hide");
+        break;
+      case Profile.ALIAS_HIDE_substitute:
+        values.put("alias hide", "substitute");
+        break;
+      default:
+        values.put("alias hide", "unknown");
+    }
     values.put("hidden_mod", new Boolean(profile.isAliasModifiable()));
     values.put("divert", profile.getDivert());
     values.put("divert_actAbs", new Boolean(profile.isDivertActiveAbsent()));

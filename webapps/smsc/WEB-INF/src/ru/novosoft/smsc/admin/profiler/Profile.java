@@ -238,9 +238,11 @@ public class Profile
   {
     if (null == aliasHide)
       this.aliasHide = ALIAS_HIDE_false;
-    else if ("true".equalsIgnoreCase(aliasHide) || "hide".equalsIgnoreCase(aliasHide))
+    else if ("false".equalsIgnoreCase(aliasHide) || "N".equalsIgnoreCase(aliasHide))
+      this.aliasHide = ALIAS_HIDE_false;
+    else if ("true".equalsIgnoreCase(aliasHide) || "hide".equalsIgnoreCase(aliasHide) || "Y".equalsIgnoreCase(aliasHide))
       this.aliasHide = ALIAS_HIDE_true;
-    else if ("substitute".equalsIgnoreCase(aliasHide))
+    else if ("substitute".equalsIgnoreCase(aliasHide) || "S".equalsIgnoreCase(aliasHide))
       this.aliasHide = ALIAS_HIDE_substitute;
     else
       this.aliasHide = ALIAS_HIDE_false;
