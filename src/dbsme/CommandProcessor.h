@@ -68,10 +68,13 @@ namespace smsc { namespace dbsme
         
     public:
 
+        CommandProcessor();
         CommandProcessor(ConfigView* config)
             throw(ConfigException);
         virtual ~CommandProcessor();
 
+        void init(ConfigView* config)
+            throw(ConfigException);
         void process(Command& command)
             throw(ServiceNotFoundException, CommandProcessException);
     };

@@ -8,9 +8,20 @@ Hash<JobFactory *>*  JobFactory::registry = 0;
 
 /* ---------------------- Abstract Command Processing ---------------------- */
 
+CommandProcessor::CommandProcessor()
+    : log(Logger::getCategory("smsc.dbsme.CommandProcessor"))
+{
+}
+
 CommandProcessor::CommandProcessor(ConfigView* config)
     throw(ConfigException)
         : log(Logger::getCategory("smsc.dbsme.CommandProcessor"))
+{
+    init(config);
+}
+
+void CommandProcessor::init(ConfigView* config)
+    throw(ConfigException)
 {
     // create Providers by config
     ConfigView* providersConfig = config->getSubConfig("DataProviders");
@@ -181,11 +192,26 @@ DataProvider::~DataProvider()
 void DataProvider::process(Command& command)
     throw(ServiceNotFoundException, CommandProcessException)
 {
-    const char* name = (command.getJobName()) ? 
-                        command.getJobName() : SMSC_DBSME_DEFAULT_JOB_NAME;
+    const char* name = command.getJobName();
+
+    if (!name)
+    {
+        int curPos = 0;
+        const char* input = command.getInData();
+        std::string str = "";
+        
+        while (input && isalnum(input[curPos]))
+            str += input[curPos++];
+        
+        if (!(name = str.c_str()) || name[0] == '\0')
+            name = SMSC_DBSME_DEFAULT_JOB_NAME;
+        else
+            command.setInData(&input[curPos]);
+    }
+    
     if (!jobs.Exists(name))
         throw ServiceNotFoundException(name);
-
+    
     jobs.Get(name)->process(command, *ds);
 }
 
