@@ -414,14 +414,14 @@ int main(void)
         ConfigView ssConfig(manager, "DBSme.SMSC");
         DBSmeConfig cfg(&ssConfig);
         
-        sigset(SIGTERM, appSignalHandler);
-        sigset(SIGINT , appSignalHandler);
-
         while (!bDBSmeIsStopped)
         {
             DBSmeTaskManager runner(&mnConfig);
             DBSmePduListener listener(processor, runner);
             SmppSession      session(cfg, &listener);
+
+            sigset(SIGTERM, appSignalHandler);
+            sigset(SIGINT , appSignalHandler);
 
             log.info("Connecting to SMSC ... ");
             try
