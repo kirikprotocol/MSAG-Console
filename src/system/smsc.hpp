@@ -173,6 +173,11 @@ public:
     return smeman.getSmeInfo(idx);
   }
 
+  smsc::smeman::SmeIndex getSmeIndex(const string& sid)
+  {
+    return smeman.lookup(sid);
+  }
+
   smsc::smeman::SmeInfo getSmeInfo(const string& sid)
   {
     return smeman.getSmeInfo(smeman.lookup(sid));

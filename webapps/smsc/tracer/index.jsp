@@ -1,7 +1,10 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.tracer.Index,
                  ru.novosoft.smsc.admin.smsview.SmsQuery,
-                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
+                 ru.novosoft.smsc.util.StringEncoderDecoder,
+                 java.util.List,
+                 java.util.Hashtable,
+                 java.util.Enumeration"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.tracer.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -31,12 +34,12 @@
   <tr class=row0>
     <th>Destination Address:</th>
     <td nowrap><input class=txt type="text" name="dstAddress"
-                value="<%=StringEncoderDecoder.encode(bean.getDstAddress())%>" size=25 maxlength=25></td>
+                value="<%=StringEncoderDecoder.encode(bean.getDstAddress())%>" validation="mask" size=25 maxlength=25></td>
   </tr>
   <tr class=row1>
     <th>Source Address:</th>
     <td nowrap><input class=txt type="text" name="srcAddress"
-                value="<%=StringEncoderDecoder.encode(bean.getSrcAddress())%>" size=25 maxlength=25></td>
+                value="<%=StringEncoderDecoder.encode(bean.getSrcAddress())%>" validation="mask" size=25 maxlength=25></td>
   </tr>
   <tr class=row0>
     <th>Source System Id:</th>
@@ -50,13 +53,51 @@
   page_menu_button(out, "mbTrace", "Trace route", "Trace route");
   page_menu_space(out);
   page_menu_end(out);
-  String traceResults = bean.getTraceResults();
-  if (traceResults != null) {%>
+
+  String message = bean.getTraceMessage();
+  List   traceResults = bean.getTraceResults();
+  List   routeInfo = bean.getRouteInfo();
+  int rowN = 0;
+  if (message != null || traceResults != null || routeInfo != null) {%>
   <div class=content>
-  <div class=page_subtitle>Tracing results</div>
-    <table class=properties_list cell>
-      <tr class=row0><td nowrap><%=StringEncoderDecoder.encode(traceResults)%></td></tr>
-    </table>
+<%if (message != null) {
+  int mt = bean.getMessageType();%>
+  <table class=properties_list cell>
+  <tr><td>
+  <span class="<%= (mt == bean.TRACE_ROUTE_FOUND) ? "C080":
+                   ((mt == bean.TRACE_ROUTE_NOT_FOUND) ? "C800":"C008")%>">
+    <b><%=StringEncoderDecoder.encode(message)%></b>
+  </span>
+  </td></tr>
+  </table>
+<%}%>
+<%if (routeInfo != null) {%>
+  <br>
+  <div class=page_subtitle>Route info</div>
+  <table class=properties_list cell><%
+    for (int i=0; i<routeInfo.size(); i+=2)
+    {
+      String key = (String)routeInfo.get(i);
+      String val = (String)routeInfo.get(i+1);%>
+      <tr class=row<%=rowN++&1%>>
+        <th width="30%" nowrap><%=(key != null && key.trim().length()>0) ? StringEncoderDecoder.encode(key):"&nbsp;"%></th>
+        <td width="70%" nowrap><%=(val != null && val.trim().length()>0) ? StringEncoderDecoder.encode(val):"&nbsp;"%></td>
+      </tr><%
+    }%>
+  </table>
+<%}%>
+<%if (traceResults != null && traceResults.size() > 0) {%>
+  <br>
+  <div class=page_subtitle>Trace</div>
+  <textarea style="font-family:Courier New;height:300px"><%
+    for (int i=0; i<traceResults.size(); i++) {
+      Object traceObj = traceResults.get(i);
+      if (traceObj != null && traceObj instanceof String) { %><%=
+          StringEncoderDecoder.encode((String)traceObj)+'\n'%><%
+      }
+    }
+  %></textarea>
+<%}%>
   </div>
 <%}%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

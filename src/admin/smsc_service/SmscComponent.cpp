@@ -1,5 +1,10 @@
 #include "SmscComponent.h"
 #include "profiler/profiler.hpp"
+
+#include <system/smsc.hpp>
+
+#include <util/config/Manager.h>
+#include <util/config/route/RouteConfig.h>
 #include <mscman/MscManager.h>
 #include <resourcemanager/ResourceManager.hpp>
 
@@ -7,9 +12,12 @@ namespace smsc {
 namespace admin {
 namespace smsc_service {
 
-
+using namespace smsc::system;
 using namespace smsc::profiler;
 using namespace smsc::core::buffers;
+using namespace smsc::util::config;
+using namespace smsc::util::config::route;
+
 using smsc::mscman::MscManager;
 using smsc::mscman::MscInfo;
 
@@ -66,8 +74,8 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	trace_route_params["dstAddress"] = Parameter("dstAddress", StringType);
 	trace_route_params["srcAddress"] = Parameter("srcAddress", StringType);
 	trace_route_params["srcSysId"  ] = Parameter("srcSysId"  , StringType);
-	Method trace_route           ((unsigned)traceRouteMethod, "trace_route", trace_route_params, StringType);
-	Method load_routes           ((unsigned)loadRoutesMethod, "load_routes", empty_params, StringType);	
+	Method trace_route           ((unsigned)traceRouteMethod, "trace_route", trace_route_params, StringListType);
+	Method load_routes           ((unsigned)loadRoutesMethod, "load_routes", empty_params, StringListType);	
 	
 	Method lookup_profile((unsigned)lookupProfileMethod, "lookup_profile", lookup_params, StringType);
 	Method update_profile((unsigned)updateProfileMethod, "update_profile", update_params, LongType);
@@ -554,23 +562,126 @@ throw (AdminException)
 Variant SmscComponent::loadRoutes(void)
     throw (AdminException)
 {
-    //smsc_app_runner->getApp()->reloadTestRoutes(configs);
-    return Variant("SmscComponent::loadRoutes called");
+    try 
+    {
+        RouteConfig cfg;
+        if (cfg.load("conf/routes_.xml") == RouteConfig::fail)
+            throw AdminException("Load routes config file failed.");
+
+        vector<std::string> traceBuff;
+        smsc_app_runner->getApp()->reloadTestRoutes(cfg);
+        smsc_app_runner->getApp()->getTestRouterInstance()->enableTrace(true);
+        smsc_app_runner->getApp()->getTestRouterInstance()->getTrace(traceBuff);
+        
+        Variant result(service::StringListType);
+        result.appendValueToStringList("Routes successfully loaded");
+
+        for (int i=0; i<traceBuff.size(); i++)
+            result.appendValueToStringList(traceBuff[i].c_str());
+        
+        return result;    
+    }
+    catch (AdminException& aexc) {
+        throw;
+    } 
+    catch (ConfigException& cexc) {
+        throw AdminException("Load routes config file failed. Cause: %s", cexc.what());
+    }
+    catch (std::exception& exc) {
+        throw AdminException("Load routes failed. Cause: %s.", exc.what());
+    }
+    catch (...) {
+        throw AdminException("Load routes failed. Cause is unknown.");
+    }
 }
+
+const char* getStringParameter(const Arguments &args, const char* param)
+{
+    const char* value = args.Get(param).getStringValue();
+    return (value && value[0] == '\0') ? 0:value;
+}
+
 Variant SmscComponent::traceRoute(const Arguments &args)
     throw (AdminException)
 {
-    const char *dstAddr  = args.Get("dstAddress").getStringValue();
-    const char *srcAddr  = args.Get("srcAddress").getStringValue();
-    const char *srcSysId = args.Get("srcSysId")  .getStringValue();
+    const char* dstAddr  = getStringParameter(args, "dstAddress");
+    const char* srcAddr  = getStringParameter(args, "srcAddress");
+    const char* srcSysId = getStringParameter(args, "srcSysId");
 
-    char msg[512];
-    sprintf(msg, "SmscComponent::traceRoute called for dst: %s, src: %s, systemId: %s",
-        (dstAddr)  ? dstAddr  :"null", 
-        (srcAddr)  ? srcAddr  :"null", 
-        (srcSysId) ? srcSysId :"null");
-    
-    return Variant(msg);
+    // 0:   Message (Route found | not found)
+    // 1:   RouteInfo (if any)
+    // 2..: Trace (if any)
+
+    try 
+    {
+        vector<std::string> traceBuff;
+        SmeProxy* proxy = 0;
+        RouteInfo info;
+        bool found = false;
+
+        if (srcSysId)
+        {
+            SmeIndex index = smsc_app_runner->getApp()->getSmeIndex(srcSysId);
+            if (index == -1) 
+                throw AdminException("Trace route failed. Sme for system id '%s' not found", srcSysId);
+            
+            found = smsc_app_runner->getApp()->getTestRouterInstance()->
+                lookup(index, Address(srcAddr), Address(dstAddr), proxy, 0, &info);
+        }
+        else
+        {
+            found = smsc_app_runner->getApp()->getTestRouterInstance()->
+                lookup(Address(srcAddr), Address(dstAddr), proxy, 0, &info);
+        }
+        smsc_app_runner->getApp()->getTestRouterInstance()->getTrace(traceBuff);
+        
+        /*char result_msg[1024];
+        sprintf(result_msg, "Route from:%s (%s) to:%s %s", 
+                (srcAddr) ? srcAddr:"null", (srcSysId) ? srcSysId:"-",
+                (dstAddr) ? dstAddr:"null", (found) ? "found":"not found");*/
+        
+        Variant result(service::StringListType);
+        result.appendValueToStringList((found) ? "Route found":"Route not found");
+
+        if (found)
+        {
+            char routeText[2048];
+            char srcAddressText[64]; char dstAddressText[64];
+            info.source.getText(srcAddressText, sizeof(srcAddressText));
+            info.dest  .getText(dstAddressText, sizeof(dstAddressText));
+            
+            sprintf(routeText, "priority:%u;billing:%s;archiving:%s;enabling:%s;"
+                              "suppress delivery reports:%s;service id:%d;route id:%s;"
+                              "sme system id:%s;source sme system id:%s;"
+                              "source address:%s;destination address:%s", 
+                    info.priority, (info.billing) ? "yes":"no", (info.archived) ? "yes":"no",
+                    (info.enabling) ? "yes":"no", (info.suppressDeliveryReports) ? "yes":"no",
+                    info.serviceId, info.routeId.c_str(), info.smeSystemId.c_str(),
+                    info.srcSmeSystemId.c_str(), srcAddressText, dstAddressText);
+            result.appendValueToStringList(routeText);
+        }
+        else {
+            result.appendValueToStringList("");
+        }
+        
+        
+        for (int i=0; i<traceBuff.size(); i++)
+            result.appendValueToStringList(traceBuff[i].c_str()); 
+        
+        return result;
+    }
+    catch (AdminException& aexc) {
+        throw;
+    }
+    catch (ConfigException& cexc) {
+        throw AdminException("Trace route failed. Cause: %s", cexc.what());
+    }
+    catch (std::exception& exc) {
+        throw AdminException("Trace route failed. Cause: %s.", exc.what());
+    }
+    catch (...) {
+        throw AdminException("Trace route failed. Cause is unknown.");
+    }
 }
 
 void SmscComponent::applyAliases()

@@ -118,23 +118,23 @@ public class Smsc extends Service
 		return out;
 	}
 
-  public synchronized String loadRoutes()
+  public synchronized List loadRoutes()
       throws AdminException
 	{
-		String result = null;
+		List result = null;
     if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
 		{
 			refreshComponents();
-			Object res = call(smsc_component, load_routes_method, Type.Types[Type.StringType], new HashMap());
-      if (res instanceof String) result = (String)res;
+			Object res = call(smsc_component, load_routes_method, Type.Types[Type.StringListType], new HashMap());
+      if (res instanceof List) result = (List)res;
 		}
     return result;
 	}
 
-  public synchronized String traceRoute(String dstAddress, String srcAddress, String srcSysId)
+  public synchronized List traceRoute(String dstAddress, String srcAddress, String srcSysId)
       throws AdminException
 	{
-		String result = null;
+		List result = null;
     if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
 		{
 			refreshComponents();
@@ -142,8 +142,8 @@ public class Smsc extends Service
       args.put("dstAddress", dstAddress);
       args.put("srcAddress", srcAddress);
       args.put("srcSysId", srcSysId);
-			Object res = call(smsc_component, trace_route_method, Type.Types[Type.StringType], args);
-      if (res instanceof String) result = (String)res;
+			Object res = call(smsc_component, trace_route_method, Type.Types[Type.StringListType], args);
+      if (res instanceof List) result = (List)res;
 		}
     return result;
 	}

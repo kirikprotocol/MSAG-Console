@@ -499,6 +499,7 @@ public class SmsView
     if (encoding == DATA_CODING_DEFAULT) {          // ISO-LATIN-1
       message = new String(text, 0, len, "ISO-8859-1");
     } else if (encoding == DATA_CODING_SMSC7BIT) {  // US-ASCII
+      // todo add support for additional symbols here
       message = new String(text, 0, len, "US-ASCII");
     } else if (encoding == DATA_CODING_UCS2) {      // UTF-16
       StringBuffer sb = new StringBuffer();
