@@ -137,11 +137,17 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code)
   __trace2__("Send error to SMSC OK");
 }
 
-static void SendOkToSmsc(unsigned dialogid)
+static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
 {
-  if ( dialogid == 0 ) return;
+  if ( dialog == 0 || dialog->dialogid_smsc == 0 ) return;
   __trace2__("Send OK to SMSC");
-  SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,0);
+  SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialog->dialogid_smsc,0);
+  //Descriptor desc;
+  //string value = ImsiToString(dialog->m_imsi);
+  //desc.setImsi(value.length(),value.c_str());
+  //value = MscToStrring(dialog->m_msc);
+  //desc.setMsc(value.length(),value.c_str());
+  //cmd->setDescriptor(desc);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
   __trace2__("Send OK to SMSC done");
 }
@@ -493,6 +499,7 @@ static bool SendSms(MapDialog* dialog){
       throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::SendSms: Et96MapOpenReq error 0x%x",result));
   }
   
+  dialog->mms = mms;
   dialog->smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
   dialog->smRpOa.addrLen = (dialog->m_scAddr.addressLength+1)/2+1;
   dialog->smRpOa.addr[0] = dialog->m_scAddr.typeOfAddress;
@@ -501,7 +508,7 @@ static bool SendSms(MapDialog* dialog){
   ET96MAP_SM_RP_UI_T* ui;
   dialog->auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
   mkDeliverPDU(dialog->sms.get(),ui,mms);
-  if ( ui->signalInfoLen > 98 && !mms ) {
+  if ( ui->signalInfoLen > 98 || mms ) {
     __trace2__("MAP::SendSMSCToMT: Et96MapDelimiterReq");
     result = Et96MapDelimiterReq( SSN, dialog->dialogid_map, 0, 0 );
     if( result != ET96MAP_E_OK )
@@ -511,7 +518,7 @@ static bool SendSms(MapDialog* dialog){
   }else{
     __trace2__("MAP::SendSMSCToMT: Et96MapVxForwardSmMTReq");
     if ( dialog->version == 2 ) {
-      result = Et96MapV2ForwardSmMTReq( SSN, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), mms);
+      result = Et96MapV2ForwardSmMTReq( SSN, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), FALSE);
     }else if ( dialog->version == 1 ){
       result = Et96MapV1ForwardSmMT_MOReq( SSN, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get());
     }else throw runtime_error(
@@ -527,10 +534,9 @@ static bool SendSms(MapDialog* dialog){
   }
   if ( segmentation == SMS_SEGMENTATION )
     dialog->state = MAPST_WaitSpecOpenConf;
-  else if ( !mms ) 
-    dialog->state = MAPST_WaitOpenConf;
-  else // mms
-    dialog->state = MAPST_WaitSmsConf;
+  else dialog->state = MAPST_WaitOpenConf;
+  //else // mms
+  //  dialog->state = MAPST_WaitSmsConf;
   return segmentation;
 }
 
@@ -552,7 +558,7 @@ static void SendSegmentedSms(MapDialog* dialog)
   USHORT_T result;
   __trace2__("MAP::SendSegmentedSms: Et96MapVxForwardSmMTReq");
   if ( dialog->version == 2 ) {
-    result = Et96MapV2ForwardSmMTReq( SSN, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), FALSE);
+    result = Et96MapV2ForwardSmMTReq( SSN, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), dialog->mms);
   }else if ( dialog->version == 1 ) {
     result = Et96MapV1ForwardSmMT_MOReq( SSN, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get());
   }else throw runtime_error(
