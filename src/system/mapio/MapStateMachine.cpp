@@ -1384,7 +1384,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
       FormatText("%s: Resp return error 0x%x",__func__,result));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
   {
-    MutexGuard ussd_map_guard( ussd_map_lock );
+//    MutexGuard ussd_map_guard( ussd_map_lock );
     __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
     ussd_map.erase(dialog->ussdSequence);
   }
