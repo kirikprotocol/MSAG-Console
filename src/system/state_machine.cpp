@@ -3101,12 +3101,15 @@ void StateMachine::submitReceipt(SMS& sms)
       if(prio>SmeProxyPriorityMax)prio=SmeProxyPriorityMax;
       sms.setPriority(prio);
 
-      sms.setSourceSmeId("smscsme");
+      sms.setSourceSmeId(smscSmeId.c_str());
 
       sms.setDestinationSmeId(ri.smeSystemId.c_str());
       sms.setServiceId(ri.serviceId);
       sms.setArchivationRequested(ri.archived);
       sms.setBillingRecord(ri.billing);
+
+      sms.setEServiceType(serviceType.c_str());
+      sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
 
       Profile profile=smsc->getProfiler()->lookup(dst);
       sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);

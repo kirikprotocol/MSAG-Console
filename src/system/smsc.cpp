@@ -357,6 +357,11 @@ void Smsc::init(const SmscConfigs& cfg)
       m->maxValidTime=maxValidTime;
       Address addr(cfg.cfgman->getString("core.service_center_address"));
       m->scAddress=addr;
+      m->setReceiptInfo(
+        cfg.cfgman->getString("core.service_type"),
+        cfg.cfgman->getInt("core.protocol_id"),
+        cfg.cfgman->getString("core.systemId")
+      );
       tp.startTask(m);
     }
     log.info( "Statemachines started" );
@@ -532,7 +537,7 @@ void Smsc::init(const SmscConfigs& cfg)
   smscsme=new SmscSme("smscsme",&smeman);
   smscsme->servType=cfg.cfgman->getString("core.service_type");
   smscsme->protId=cfg.cfgman->getInt("core.protocol_id");
-  tp2.startTask(smscsme);
+  //tp2.startTask(smscsme);
   try{
     smeman.registerInternallSmeProxy(
       cfg.cfgman->getString("core.systemId"),

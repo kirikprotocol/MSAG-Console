@@ -66,6 +66,13 @@ public:
 
   static void processDirectives(SMS& sms,Profile& p,Profile& srcprof);
 
+  void setReceiptInfo(const std::string& st,int pid,std::string sid)
+  {
+    serviceType=st;
+    protocolId=pid;
+    smscSmeId=sid;
+  }
+
 protected:
 
   EventQueue& eq;
@@ -73,6 +80,10 @@ protected:
   smsc::system::Smsc *smsc;
 
   log4cpp::Category* smsLog;
+
+  std::string serviceType;
+  int protocolId;
+  std::string smscSmeId;
 
   StateType submit(Tuple& t);
   StateType forward(Tuple& t);
