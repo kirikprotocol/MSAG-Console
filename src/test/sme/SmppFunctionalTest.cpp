@@ -19,8 +19,6 @@
 #include <iostream>
 
 #define __print__(val) cout << #val << " = " << (val) << endl
-#define __smscHost__ "smsc"
-#define __smscPort__ 15975
 
 using smsc::sme::SmeConfig;
 using smsc::util::config::Manager;
@@ -49,6 +47,8 @@ class TestSme : public TestTask, ResultHandler
 	int smeNum;
 	SmppTestCases tc;
 	time_t nextCheckTime;
+	bool boundOk;
+	Event evt;
 
 public:
 	TestSme(int smeNum, const SmeConfig& config, const SmeSystemId& systemId,
@@ -57,8 +57,6 @@ public:
 	virtual ~TestSme() {}
 	virtual void executeCycle();
 	virtual void onStopped();
-	void executeInitialTestCases();
-	void executeFinalTestCases();
 
 private:
 	void process(TCResult* res);
@@ -97,6 +95,10 @@ class SmppFunctionalTest
 	static TCStatMap tcStat;
 
 public:
+	static int delay;
+	static bool pause;
+	
+public:
 	static void resize(int newSize);
 	static void onStopped(int taskNum);
 	static bool isStopped();
@@ -110,6 +112,8 @@ public:
 class TestSmsc : public Smsc
 {
 public:
+	TestSmsc(const string& smscHost, int smscPort);
+	~TestSmsc() {}
 	vector<TestSme*> init(int numAddr, int numSme);
 private:
 	vector<TestSme*> config(int numAddr, int numSme);
@@ -133,15 +137,33 @@ TestSme::TestSme(int _smeNum, const SmeConfig& config, const SmeSystemId& system
 	const Address& smeAddr, const SmeRegistry* smeReg,
 	const AliasRegistry* aliasReg, const RouteRegistry* routeReg)
 	: TestTask("TestSme", _smeNum), smeNum(_smeNum), nextCheckTime(0),
-	tc(config, systemId, smeAddr, smeReg, aliasReg, routeReg, this) { }
+	tc(config, systemId, smeAddr, smeReg, aliasReg, routeReg, this),
+	boundOk(false) {}
 
 void TestSme::executeCycle()
 {
+	//проверить тест остановлен/замедлен
+	if (SmppFunctionalTest::pause)
+	{
+		evt.Wait(1000);
+		return;
+	}
+	if (SmppFunctionalTest::delay)
+	{
+		evt.Wait(SmppFunctionalTest::delay);
+	}
 	//debug("*** start ***");
-
+	//Bind sme зарегистрированной в smsc
+	//Bind sme с неправильными параметрами
+	if (!boundOk)
+	{
+		process(tc.bindCorrectSme(RAND_TC));
+		process(tc.bindIncorrectSme(RAND_TC)); //обязательно после bindCorrectSme
+		boundOk = true;
+	}
 	//Синхронная отправка submit_sm pdu другим sme
 	//Асинхронная отправка submit_sm pdu другим sme
-	for (TCSelector s(RAND_SET_TC, 2); s.check(); s++)
+	for (TCSelector s(RAND_SET_TC, 3); s.check(); s++)
 	{
 		switch (s.value())
 		{
@@ -150,6 +172,9 @@ void TestSme::executeCycle()
 				break;
 			case 2:
 				process(tc.getTransmitter().submitSmAsync(RAND_TC));
+				break;
+			case 3:
+				process(tc.getTransmitter().submitSmAssert(RAND_TC));
 				break;
 		}
 	}
@@ -163,21 +188,11 @@ void TestSme::executeCycle()
 
 inline void TestSme::onStopped()
 {
-	executeFinalTestCases();
+	//Unbind для sme соединенной с smsc
+	//Unbind для sme несоединенной с smsc
+	process(tc.unbind());
+	process(tc.unbind());
 	SmppFunctionalTest::onStopped(smeNum);
-}
-
-void TestSme::executeInitialTestCases()
-{
-	process(tc.bindCorrectSme(RAND_TC));
-	process(tc.bindIncorrectSme(RAND_TC)); //обязательно после bindCorrectSme
-	process(tc.getTransmitter().submitSmAssert(RAND_TC));
-}
-
-void TestSme::executeFinalTestCases()
-{
-	process(tc.unbindBounded());
-	process(tc.unbindNonBounded());
 }
 
 inline void TestSme::process(TCResult* res)
@@ -192,6 +207,8 @@ bool TestSmeTaskManager::isStopped() const
 }
 
 //SmppFunctionalTest
+int SmppFunctionalTest::delay = 200;
+bool SmppFunctionalTest::pause = false;
 SmppFunctionalTest::TaskStatList
 	SmppFunctionalTest::taskStat =
 	SmppFunctionalTest::TaskStatList();
@@ -245,6 +262,13 @@ void SmppFunctionalTest::printOpsStatByTC()
 	cout << "-----------------------------" << endl;
 }
 
+//TestSmsc
+TestSmsc::TestSmsc(const string& host, int port)
+{
+	smscHost = host;
+	smscPort = port;
+}
+
 vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 {
 	__require__(numSme <= numAddr);
@@ -260,21 +284,12 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 	addr.reserve(numAddr);
 	smeInfo.reserve(numAddr);
 	//регистрация sme
-	bool emptySystemIdSme = false;
 	for (int i = 0; i < numAddr; i++)
 	{
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
 		SmsUtil::setupRandomCorrectAddress(addr[i]);
-		if (!emptySystemIdSme)
-		{
-			emptySystemIdSme = true;
-			process(tcSme->addCorrectSmeWithEmptySystemId(smeInfo[i]));
-		}
-		else
-		{
-			process(tcSme->addCorrectSme(smeInfo[i], RAND_TC));
-		}
+		process(tcSme->addCorrectSme(smeInfo[i], RAND_TC));
 		if (i < numSme)
 		{
 			smeReg->registerSme(*addr[i], smeInfo[i]->systemId);
@@ -342,8 +357,8 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 	for (int i = 0; i < numSme; i++)
 	{
 		SmeConfig config;
-		config.host = __smscHost__;
-		config.port = __smscPort__;
+		config.host = smscHost;
+		config.port = smscPort;
 		//auto_ptr<char> tmp = rand_char(15); //15 по спецификации
 		//config.sid = tmp.get();
 		config.sid = smeInfo[i]->systemId;
@@ -395,8 +410,6 @@ vector<TestSme*> TestSmsc::init(int numAddr, int numSme)
 	//smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
 	//tp.startTask(new SpeedMonitor(eventqueue));
 	
-	smscHost = cfgMan.getString("smpp.host");
-	smscPort = cfgMan.getInt("smpp.port");
 	return sme;
 }
 
@@ -433,10 +446,8 @@ void saveCheckList()
         filter->getResults(TC_BIND_INCORRECT_SME));
     cl.writeResult("Все подтверждений доставки, нотификации и sms доставляются и не теряются",
         filter->getResults(TC_PROCESS_INVALID_SMS));
-    cl.writeResult("Unbind для sme соединенной с smsc",
-        filter->getResults(TC_UNBIND_BOUNDED));
-    cl.writeResult("Unbind для sme несоединенной с smsc",
-        filter->getResults(TC_UNBIND_NON_BOUNDED));
+    cl.writeResult("Unbind для sme",
+        filter->getResults(TC_UNBIND));
     cl.writeResult("Синхронная отправка submit_sm pdu другим sme",
         filter->getResults(TC_SUBMIT_SM_SYNC));
     cl.writeResult("Асинхронная отправка submit_sm pdu другим sme",
@@ -457,11 +468,12 @@ void saveCheckList()
         filter->getResults(TC_HANDLE_ERROR));
 }
 
-void executeFunctionalTest(int numAddr, int numSme)
+void executeFunctionalTest(int numAddr, int numSme,
+	const string& smscHost, int smscPort)
 {
 	SmppFunctionalTest::resize(numSme);
 	//запуск SMSC
-	TestSmsc *app = new TestSmsc();
+	TestSmsc *app = new TestSmsc(smscHost, smscPort);
 	vector<TestSme*> sme = app->init(numAddr, numSme);
 	ThreadPool pool;
 	pool.startTask(new SmscStarter(app));
@@ -469,7 +481,6 @@ void executeFunctionalTest(int numAddr, int numSme)
 	TestSmeTaskManager tm;
 	for (int i = 0; i < sme.size(); i++)
 	{
-		sme[i]->executeInitialTestCases();
 		tm.addTask(sme[i]);
 	}
 	tm.startTimer();
@@ -482,16 +493,50 @@ void executeFunctionalTest(int numAddr, int numSme)
 		if (help)
 		{
 			help = false;
+			cout << "test <pause|resume> - pause/resume test execution" << endl;
 			cout << "stat - print statistics" << endl;
+			cout << "set delay <msec> - slow down test cycle execution" << endl;
 			cout << "quit - stop test and quit" << endl;
 		}
 
 		//обработка команд
 		cin >> cmd;
-		if (cmd == "stat")
+		if (cmd == "test")
+		{
+			cin >> cmd;
+			if (cmd == "pause")
+			{
+				SmppFunctionalTest::pause = true;
+				cout << "Test paused successfully" << endl;
+			}
+			else if (cmd == "resume")
+			{
+				SmppFunctionalTest::pause = false;
+				cout << "Test resumed successfully" << endl;
+			}
+			else
+			{
+				help = true;
+			}
+		}
+		else if (cmd == "stat")
 		{
 			cout << "Time = " << tm.getExecutionTime() << endl;
 			SmppFunctionalTest::printOpsStatByTC();
+		}
+		else if (cmd == "set")
+		{
+			int newVal;
+			cin >> cmd;
+			cin >> newVal;
+			if (cmd == "delay")
+			{
+				SmppFunctionalTest::delay = newVal;
+			}
+			else
+			{
+				help = true;
+			}
 		}
 		else if (cmd == "quit")
 		{
@@ -511,16 +556,23 @@ void executeFunctionalTest(int numAddr, int numSme)
 
 int main(int argc, char* argv[])
 {
-	if (argc != 3)
+	if (argc < 3)
 	{
-		cout << "Usage: TestSmsc <numAddr> <numSme>" << endl;
+		cout << "Usage: TestSmsc <numAddr> <numSme> [host] [port]" << endl;
 		exit(0);
 	}
 	const int numAddr = atoi(argv[1]);
 	const int numSme = atoi(argv[2]);
+	string smscHost = "smsc";
+	int smscPort = 15975;
+	if (argc == 5)
+	{
+		smscHost = argv[3];
+		smscPort = atoi(argv[4]);
+	}
 	try
 	{
-		executeFunctionalTest(numAddr, numSme);
+		executeFunctionalTest(numAddr, numSme, smscHost, smscPort);
 	}
 	catch (exception& e)
 	{
