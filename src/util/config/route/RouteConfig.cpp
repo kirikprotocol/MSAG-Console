@@ -168,6 +168,8 @@ throw (SubjectNotFoundException)
   std::auto_ptr<char> enabling(elem.getAttribute("enabling").transcode());
   std::auto_ptr<char> suppressDeliveryReports(elem.getAttribute("suppressDeliveryReports").transcode());
   std::auto_ptr<char> active(elem.getAttribute("active").transcode());
+  std::auto_ptr<char> hide(elem.getAttribute("hide").transcode());
+  std::auto_ptr<char> forceRP(elem.getAttribute("forceReplyPath").transcode());
   std::auto_ptr<char> priorityStr(elem.getAttribute("priority").transcode());
   std::auto_ptr<char> serviceIdStr(elem.getAttribute("serviceId").transcode());
   unsigned int priority = atoi(priorityStr.get());
@@ -183,6 +185,8 @@ throw (SubjectNotFoundException)
                                    strcmp("true", enabling.get()) == 0,
                                    strcmp("true", suppressDeliveryReports.get()) == 0,
                                    strcmp("true", active.get()) == 0,
+                                   strcmp("false", hide.get()) != 0,
+                                   strcmp("true", forceRP.get()) == 0,
                                    serviceId,
                    std::string(srcSmeSystemId.get()),
                    strToDeliveryMode(deliveryModeStr.get()),

@@ -58,17 +58,33 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
              src_it.Next(src_key, src);)
         {
           // masks
+          if(dest.isSubject())
+          {
+            rinfo.dstSubj="subj:"+dest.getIdString();
+          }
           const MaskVector& dest_masks = dest.getMasks();
           for (MaskVector::const_iterator dest_mask_it = dest_masks.begin();
                dest_mask_it != dest_masks.end();
                ++dest_mask_it)
           {
             makeAddress(rinfo.dest,*dest_mask_it);
+            if(!dest.isSubject())
+            {
+              rinfo.dstSubj="mask:"+*dest_mask_it;
+            }
             const MaskVector& src_masks = src.getMasks();
+            if(src.isSubject())
+            {
+              rinfo.srcSubj="subj:"+src.getIdString();
+            }
             for(MaskVector::const_iterator src_mask_it = src_masks.begin();
                 src_mask_it != src_masks.end();
                 ++src_mask_it)
             {
+              if(!src.isSubject())
+              {
+                rinfo.srcSubj="mask:"+*src_mask_it;
+              }
               makeAddress(rinfo.source,*src_mask_it);
               rinfo.smeSystemId = dest.getSmeIdString();//dest.smeId;
               rinfo.srcSmeSystemId = route->getSrcSmeSystemId();
@@ -81,6 +97,8 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               rinfo.serviceId=route->getServiceId();
               rinfo.priority=route->getPriority();
               rinfo.suppressDeliveryReports=route->isSuppressDeliveryReports();
+              rinfo.hide=route->isHide();
+              rinfo.forceReplyPath=route->isForceReplyPath();
               rinfo.deliveryMode = route->getDeliveryMode();
               rinfo.forwardTo = route->getForwardTo();
               __trace2__("dest mask: %s",dest_mask_it->c_str());

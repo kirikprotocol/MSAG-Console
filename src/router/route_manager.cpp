@@ -74,7 +74,7 @@ static inline
 string AddrToString(const Address& addr)
 {
   char buff[128] = {0};
-  snprintf(buff,127,".%d.%d.%s\0",addr.type,addr.plan,addr.value);
+  snprintf(buff,127,".%d.%d.%s\x00",addr.type,addr.plan,addr.value);
   return string(buff);
 }
 
@@ -428,20 +428,22 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
           if ( trace_ ) {
             {
               ostringstream ost;
-              ost << "duplicated route "
-                << r0->info.routeId << ": "
+              ost << "duplicated route '"
+                << r0->info.routeId << "': "
                 << AddrToString(r0->info.source) << "(" << r0->info.srcSmeSystemId << ")"
                 << " -> "
-                << AddrToString(r0->info.dest) << "(" << r0->info.smeSystemId << ")";
+                << AddrToString(r0->info.dest) << "(" << r0->info.smeSystemId << ")"
+                << " src(" << r0->info.srcSubj << ") dst(" << r0->info.dstSubj << ")";
               trace_->push_back(ost.str());
             }
             {
               ostringstream ost;
-              ost << "       exists as "
-                << rec->info.routeId << ": "
+              ost << "       exists as '"
+                << rec->info.routeId << "': "
                 << AddrToString(rec->info.source) << "(" << rec->info.srcSmeSystemId << ")"
                 << " -> "
-                << AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId << ")";
+                << AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId << ")"
+                << " src(" << rec->info.srcSubj << ") dst(" << rec->info.dstSubj << ")";
               trace_->push_back(ost.str());
             }
           }

@@ -25,6 +25,8 @@ struct RouteInfo
   bool archived;
   bool enabling;
   bool suppressDeliveryReports;
+  bool hide;
+  bool forceReplyPath;
   int serviceId;
   RouteId routeId;
   smsc::smeman::SmeSystemId smeSystemId;
@@ -33,6 +35,8 @@ struct RouteInfo
   smsc::sms::Address dest;
   uint8_t deliveryMode;
   std::string forwardTo;
+  std::string srcSubj; // for duplucate route debugging purposes only
+  std::string dstSubj;
 };
 
 } // namespace router
