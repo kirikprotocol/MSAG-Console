@@ -202,47 +202,46 @@ void Smsc::mainLoop()
 
     // main "delay" cycle
 
-    int eqsize,equnsize;
-    while(frame.size())
+    int eqsize,equnsize,cntInstant;
+    for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
     {
-      int cntInstant=tcontrol->getTotalCount();
+      cntInstant=tcontrol->getTotalCount();
       eventqueue.getStats(eqsize,equnsize);
-      if(cntInstant+1<=maxsms*stf && equnsize+1<=eventQueueLimit)
+      while(!(cntInstant+1<=maxsms*stf && equnsize+1<=eventQueueLimit))
       {
-        SmscCommand cmd=frame.back();
-        frame.pop_back();
-        if(cmd->get_commandId()==SUBMIT || cmd->get_commandId()==FORWARD)
+        hrtime_t nslStart=gethrtime();
         {
-          try{
-            hrtime_t cmdStart=gethrtime();
-            processCommand(cmd,enqueueVector,findTaskVector);
-            hrtime_t cmdEnd=gethrtime();
-            info2(log,"command %d processing time:%lld",cmd->get_commandId(),cmdEnd-cmdStart);
-            tcontrol->incTotalCount(1);
-          }catch(...)
+          Task task;
+          while ( tasks.getExpired(&task) )
           {
-            __warning2__("command processing failed:%d",cmd->get_commandId());
+            SMSId id = task.messageId;
+            __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
+              task.sequenceNumber,task.proxy_id);
+            generateAlert(id,task.sms);
+            //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
           }
         }
-        continue;
+        timestruc_t tv={0,1000000};
+        nanosleep(&tv,0);
+        cntInstant=tcontrol->getTotalCount();
+        eventqueue.getStats(eqsize,equnsize);
+        hrtime_t nslEnd=gethrtime();
+        info2(log,"nanosleep block time:%lld",nslEnd-nslStart);
       }
-      //__warning2__("count=%d, smooth_cnt=%d",cntInstant,cntSmooth);
-      hrtime_t nslStart=gethrtime();
+      if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
       {
-        Task task;
-        while ( tasks.getExpired(&task) )
+        try{
+          hrtime_t cmdStart=gethrtime();
+          processCommand((*i),enqueueVector,findTaskVector);
+          tcontrol->incTotalCount(1);
+          hrtime_t cmdEnd=gethrtime();
+          info2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
+        }catch(...)
         {
-          SMSId id = task.messageId;
-          __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
-            task.sequenceNumber,task.proxy_id);
-          generateAlert(id,task.sms);
-          //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
+          __warning2__("command processing failed:%d",(*i)->get_commandId());
         }
       }
-      timestruc_t tv={0,1000000};
-      nanosleep(&tv,0);
-      hrtime_t nslEnd=gethrtime();
-      info2(log,"nanosleep block time:%lld",nslEnd-nslStart);
+      //__warning2__("count=%d, smooth_cnt=%d",cntInstant,cntSmooth);
     }
   } // end of main loop
 }
