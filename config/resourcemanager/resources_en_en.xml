@@ -12,6 +12,7 @@
     <section name="profiler">
       <param name="msgDefault">Now you are a default language user</param>
       <param name="msgUCS2">Now you will be able to receive ucs2-encoded messages</param>
+      <param name="msgReportFinal">Now you will receive final delivery reports</param>
       <param name="msgReportFull">Now you will receive auxiliary delivery reports</param>
       <param name="msgReportNone">Now you will receive only requested delivery reports</param>
       <param name="msgLocaleChanged">Your locale settings changed</param>
