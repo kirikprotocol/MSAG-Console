@@ -56,7 +56,7 @@
  				<option value="INFO"   <%="INFO".equalsIgnoreCase(categoryPriority)   ? " selected" : ""%>>INFO</option>
  				<option value="DEBUG"  <%="DEBUG".equalsIgnoreCase(categoryPriority)  ? " selected" : ""%>>DEBUG</option>
  				<option value="NOTSET" <%="NOTSET".equalsIgnoreCase(categoryPriority) ? " selected" : ""%>>not set</option>
-			</td>
+			</select></td>
 		</tr><%
 	}
 %>
