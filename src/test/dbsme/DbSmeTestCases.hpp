@@ -83,7 +83,8 @@ protected:
 	virtual Category& getLog();
 	const string getFromAddress();
 	const string getToAddress();
-	void sendDbSmePdu(DbSmeTestRecord* rec, const DateFormatter* df,
+	const string getCmdText(DbSmeTestRecord* rec, const DateFormatter* df);
+	void sendDbSmePdu(const string& text, DbSmeTestRecord* rec,
 		bool sync, uint8_t dataCoding);
 };
 
