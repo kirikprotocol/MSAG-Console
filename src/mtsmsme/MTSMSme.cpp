@@ -5,7 +5,7 @@
 #include <signal.h>
 
 #include <logger/Logger.h>
-/*#include <util/config/Manager.h>
+#include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 #include <util/recoder/recode_dll.h>
 #include <util/smstext.h>
@@ -19,27 +19,26 @@
 #include <system/status.h>
 
 #include "processor/Processor.h"
-*/
 #include "version.inc"
 
-/*using namespace smsc::sme;
+using namespace smsc::sme;
 using namespace smsc::smpp;
 using namespace smsc::util;
 using namespace smsc::util::config;
 using namespace smsc::core::threads;
 using namespace smsc::core::buffers;
 using namespace smsc::mtsmsme::processor;
-*/
+
 static smsc::logger::Logger *logger = 0;
 
-/*static Event mtsmSmeWaitEvent, mtsmSmeReady;
+static Event mtsmSmeWaitEvent, mtsmSmeReady;
 static Mutex needStopLock, needReconnectLock;
 
 static int   mtsmSmeReadyTimeout  = 60000;
 static bool  bMTSMSmeIsStopped    = false;
 static bool  bMTSMSmeIsConnected  = false;
 static bool  bMTSMSmeIsConnecting = false;
-*/
+
 // TODO: Implement Stop & Reconnect logic !!!
 
 /* 
@@ -48,8 +47,6 @@ static void setNeedStop(bool stop=true) {
     bMCISmeIsStopped = stop;
     if (stop && taskProcessor) taskProcessor->Stop();
 }*/
-
-/*
 static bool isNeedStop() {
     MutexGuard gauard(needStopLock);
     return bMTSMSmeIsStopped;
@@ -413,22 +410,22 @@ struct ShutdownThread : public Thread
         shutdownEvent.Signal();    
     };
 } shutdownThread;
-*/
+
 int main(void)
 {
     smsc::logger::Logger::Init();
     logger = smsc::logger::Logger::getInstance("smsc.mtsmsme.MTSMSme");
     
-/*    atexit(atExitHandler);
+    atexit(atExitHandler);
     clearSignalMask();
 
     shutdownThread.Start();
-*/
+
     int resultCode = 0;
     try 
     {
         smsc_log_info(logger, getStrVersion());
-/*
+
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
         
@@ -483,8 +480,8 @@ int main(void)
             smsc_log_info(logger, "Disconnecting from SMSC ...");
             session.close();
         }
-*/
-/*   } catch (SmppConnectException& exc) {
+
+    } catch (SmppConnectException& exc) {
         if (exc.getReason() == SmppConnectException::Reason::bindFailed)
             smsc_log_error(logger, "Failed to bind MTSMSme. Exiting");
         resultCode = -1;
@@ -493,8 +490,8 @@ int main(void)
         resultCode = -2;
     } catch (Exception& exc) {
         smsc_log_error(logger, "Top level Exception: %s Exiting", exc.what());
-        resultCode = -3;*/
-    } catch (std::exception& exc) {
+        resultCode = -3;
+    } catch (exception& exc) {
         smsc_log_error(logger, "Top level exception: %s Exiting", exc.what());
         resultCode = -4;
     } catch (...) {
@@ -502,7 +499,7 @@ int main(void)
         resultCode = -5;
     }
     
-//    shutdownThread.Stop();
+    shutdownThread.Stop();
     return resultCode;
 }
 
