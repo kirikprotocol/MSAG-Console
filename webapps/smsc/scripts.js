@@ -61,12 +61,17 @@ function validateField_mask(elem)
 		return true;
 	}
 	var pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
-	var pattern1 = pattern_header + "\\d{1,20}\\?{0,19}$";
-	var pattern2 = pattern_header + "(\\d|\\?){1,20}$";
+	var pattern1 = RegExp(pattern_header + "\\d{1,20}\\?{0,19}$");
+	var pattern2 = RegExp(pattern_header + "(\\d|\\?){1,20}$");
+	var special_pattern_header = "^\\.5\\.0\\.";
+	var special_pattern1 = RegExp(special_pattern_header + "[ _\\-0-9A-Za-z]{1,20}\\?{0,19}$");
+	var special_pattern2 = RegExp(special_pattern_header + "([ _\\-0-9A-Za-z]|\\?){1,20}$");
 
-	var r1 = RegExp(pattern1);
-	var r2 = RegExp(pattern2);
-	return elem.value == null || elem.value.match(r1) == null || elem.value.match(r2) == null
+	return elem.value == null 
+		|| (
+			   (elem.value.match(        pattern1) == null || elem.value.match(        pattern2) == null) 
+			&& (elem.value.match(special_pattern1) == null || elem.value.match(special_pattern2) == null)
+		   )
 		? validationError(elem, "Invalid mask")
 		: true;
 }

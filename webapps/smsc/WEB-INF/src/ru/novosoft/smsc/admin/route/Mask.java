@@ -16,6 +16,9 @@ public class Mask
 	private static final String pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
 	private static final String pattern1 = pattern_header + "\\d{1,20}\\?{0,19}$";
 	private static final String pattern2 = pattern_header + "(\\d|\\?){1,20}$";
+	private static final String special_pattern_header = "^\\.5\\.0\\.";
+	private static final String special_pattern1 = special_pattern_header + "[ _\\-0-9A-Za-z]{1,20}\\?{0,19}$";
+	private static final String special_pattern2 = special_pattern_header + "([ _\\-0-9A-Za-z]|\\?){1,20}$";
 
 	private byte tone = 0;
 	private byte npi = 0;
@@ -107,7 +110,9 @@ public class Mask
 		// 	[x]	==> .0.1.[x]
 		// где x - numeric string длиной от 1 до 21
 
-		return maskStr != null && maskStr.trim().length() > 0 && maskStr.matches(pattern1) && maskStr.matches(pattern2);
+		return maskStr != null && maskStr.trim().length() > 0
+				&& (  (maskStr.matches(pattern1) && maskStr.matches(pattern2))
+					|| (maskStr.matches(special_pattern1) && maskStr.matches(special_pattern2)));
 	}
 
 	public int getQuestionsCount()
