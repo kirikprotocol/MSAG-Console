@@ -28,7 +28,7 @@ TestCase* CheckList::registerTc(const char* id, const char* desc)
 	__require__(id);
 	__require__(desc);
 	TestCase* tc = new TestCase(id, desc);
-	__trace2__("registerTc(): id = %s, desc = %s", tc->id.c_str(), tc->desc.c_str());
+	__trace2__("registerTc(): chkList = %p, id = %s, desc = %s", this, tc->id.c_str(), tc->desc.c_str());
 	tcMap[id] = tc;
 	tcList.push_back(tc);
 	return tc;
@@ -40,6 +40,7 @@ void CheckList::hideTc(const string& id)
 	{
 		if (!(*it)->id.compare(0, id.length(), id))
 		{
+			__trace2__("hideTc(): chkList = %p, id = %s", this, id.c_str());
 			it = tcList.erase(it);
 		}
 		else
@@ -52,7 +53,11 @@ void CheckList::hideTc(const string& id)
 TestCase* CheckList::getTc(const char* id) const
 {
 	TcMap::const_iterator it = tcMap.find(id);
-	__require__(it != tcMap.end());
+	if (it == tcMap.end())
+	{
+		__trace2__("getTc(): chkList = %p, id = %s not registered", this, id);
+		__unreachable__("test case not registered");
+	}
 	return it->second;
 }
 

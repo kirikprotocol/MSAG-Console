@@ -545,7 +545,7 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 	}
 	if (monitor->pduData->intProps.count("ussdServiceOp"))
 	{
-		__tc__("reports.intermediateNotification.ussdServiceOp");
+		__tc__("sms.reports.intermediateNotification.ussdServiceOp");
 		__tc_ok__;
 		return;
 	}
@@ -628,7 +628,7 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 		case FAILURE_SMSC_DELIVERY_RECEIPT:
 			if (deliveryStatus == ESME_ROK)
 			{
-				__tc__("reports.deliveryReceipt.failureDeliveryReceipt");
+				__tc__("sms.reports.deliveryReceipt.failureDeliveryReceipt");
 				__tc_ok__;
 				return;
 			}
@@ -638,7 +638,7 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 	}
 	if (monitor->pduData->intProps.count("ussdServiceOp"))
 	{
-		__tc__("reports.deliveryReceipt.ussdServiceOp");
+		__tc__("sms.reports.deliveryReceipt.ussdServiceOp");
 		__tc_ok__;
 		return;
 	}
@@ -657,13 +657,13 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 			state = SMPP_UNDELIVERABLE_STATE;
 			break;
 		case RESP_PDU_RESCHED:
-			__tc__("reports.deliveryReceipt.expiredDeliveryReceipt");
+			__tc__("sms.reports.deliveryReceipt.expiredDeliveryReceipt");
 			__tc_ok__;
 			startTime = monitor->getValidTime();
 			state = SMPP_EXPIRED_STATE;
 			break;
 		case RESP_PDU_MISSING:
-			__tc__("reports.deliveryReceipt.expiredDeliveryReceipt");
+			__tc__("sms.reports.deliveryReceipt.expiredDeliveryReceipt");
 			__tc_ok__;
 			startTime = max(recvTime + (time_t) (fixture->smeInfo.timeout - 1),
 				monitor->getValidTime());

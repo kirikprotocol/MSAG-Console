@@ -321,7 +321,7 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		return;
 	}
 	SmsPduWrapper pdu(header, 0);
-	__require__(pdu.isDataSm());
+	__require__(pdu.isDeliverSm());
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().size_shortMessage(), pdu.getDataCoding(), false);
 	if (!monitor->pduData->objProps.count("profilerTc.output"))

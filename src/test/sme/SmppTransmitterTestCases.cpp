@@ -580,7 +580,15 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 		bool mapDest = routeInfo->smeSystemId == "MAP_PROXY";
 		pduData->objProps[mapDest ? "map.msg" : "sms.msg"] = msg;
 	}
-	pduData->checkRes = fixture->pduChecker->checkSubmitSm(pduData);
+	if (pdu.isSubmitSm())
+	{
+		pduData->checkRes = fixture->pduChecker->checkSubmitSm(pduData);
+	}
+	else
+	{
+		__require__(pdu.isDataSm());
+		pduData->checkRes = fixture->pduChecker->checkDataSm(pduData);
+	}
 	pduData->ref();
 	//проверить наличие ошибок (будет ли респонс с кодом ошибки)
 	if (pduData->checkRes.size())
@@ -1659,7 +1667,7 @@ void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu,
 	{
 		if (sync)
 		{
-			__tc__("deliverySm.resp.sync");
+			__tc__("smsResp.deliverySm.sync");
 			//__dumpPdu__("sendDeliverySmRespSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			fixture->session->getSyncTransmitter()->sendDeliverySmResp(pdu);
 			__dumpPdu__("sendDeliverySmRespSyncAfter", fixture->smeInfo.systemId,
@@ -1667,7 +1675,7 @@ void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu,
 		}
 		else
 		{
-			__tc__("deliverySm.resp.async");
+			__tc__("smsResp.deliverySm.async");
 			//__dumpPdu__("sendDeliverySmRespAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			fixture->session->getAsyncTransmitter()->sendDeliverySmResp(pdu);
 			__dumpPdu__("sendDeliverySmRespAsyncAfter", fixture->smeInfo.systemId,
@@ -1702,7 +1710,7 @@ void SmppTransmitterTestCases::sendDataSmResp(PduDataSmResp& pdu,
 	{
 		if (sync)
 		{
-			__tc__("dataSm.resp.sync");
+			__tc__("smsResp.dataSm.sync");
 			//__dumpPdu__("sendDataSmRespSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			fixture->session->getSyncTransmitter()->sendDataSmResp(pdu);
 			__dumpPdu__("sendDataSmRespSyncAfter", fixture->smeInfo.systemId,
@@ -1710,7 +1718,7 @@ void SmppTransmitterTestCases::sendDataSmResp(PduDataSmResp& pdu,
 		}
 		else
 		{
-			__tc__("dataSm.resp.async");
+			__tc__("smsResp.dataSm.async");
 			//__dumpPdu__("sendDataSmRespAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			fixture->session->getAsyncTransmitter()->sendDataSmResp(pdu);
 			__dumpPdu__("sendDataSmRespAsyncAfter", fixture->smeInfo.systemId,

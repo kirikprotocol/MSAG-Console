@@ -126,7 +126,9 @@ void smscSmeTc()
 {
 	//updateProfile
 	__reg_tc__("submitPduToSmscSme",
-		"Отправка smpp сообщений smsc sme");
+		"Отправка submit_sm на smsc sme");
+	__reg_tc__("dataPduToSmscSme",
+		"Отправка data_sm на smsc sme");
 }
 
 public:

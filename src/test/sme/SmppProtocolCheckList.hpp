@@ -845,7 +845,7 @@ void checkMissingPduTc()
 		"Подтерждения доставки доставляются (не теряются) в интервале с момента доставки оригинального сообщения в течение максимального времени валидности сообщений для SC");
 	__reg_tc__("checkMissingPdu.intermediateNotification",
 		"Промежуточные нотификации доставляются в интервале с submit_time по validity_period");
-	__reg_tc__("checkMissingPdu.sms.smeAcknoledgement",
+	__reg_tc__("checkMissingPdu.smeAcknoledgement",
 		"Ответные сообщения от тестируемых sme доставляются в интервале с момента доставки оригинального сообщения в течение максимального времени валидности сообщений для SC");
 	__reg_tc__("checkMissingPdu.genericNack",
 		"GenericNack pdu доставляются (не теряются) с фиксированной задержкой с момента отправки некорректных pdu");
