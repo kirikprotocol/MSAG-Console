@@ -29,6 +29,7 @@ public class SubjectList
   public SubjectList(Element listElement, SmeManager smeManager)
           throws AdminException
   {
+    try {
     NodeList subjList = listElement.getElementsByTagName("subject_def");
     for (int i = 0; i < subjList.getLength(); i++) {
       Element subjElem = (Element) subjList.item(i);
@@ -49,10 +50,16 @@ public class SubjectList
         notes += Utils.getNodeText(notesList.item(j));
 
       try {
+        logger.debug( "Add subject: "+name);
         add(new Subject(name, masks, defSme, notes));
+        logger.debug( "Added subject: "+name);
       } catch (AdminException e) {
         logger.warn("source skipped", e);
       }
+    }
+    } catch (Throwable ex) {
+      logger.error("Couldn't parse subjects", ex);
+      throw new AdminException("Couldn't parse subjects");
     }
   }
 
