@@ -10,8 +10,8 @@ using namespace std;
 
 void ThreadedTask::getMemoryInfo(int& rawheapsize,int& blocksheapquantum)
 {
-  rawheapsize=MM_DEFAULT_RAWHEAP_SIZE;
-  blocksheapquantum=MM_BLOCKS_HEAP_QUANTUM;
+  rawheapsize=0;//MM_DEFAULT_RAWHEAP_SIZE;
+  blocksheapquantum=0;//MM_BLOCKS_HEAP_QUANTUM;
 };
 
 

@@ -13,7 +13,7 @@ namespace smsc{
 namespace system{
 namespace smppio{
 
-#define SMPP_PROXY_QUEUE_LIMIT 64
+#define SMPP_PROXY_QUEUE_LIMIT 4096
 
 using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
@@ -37,7 +37,7 @@ public:
   {
     trace("put command:enter");
     {
-      MutexGuard g(mutex);
+      MutexGuard g(mutexout);
       if(outqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
       {
         throw ProxyQueueLimitException();
@@ -49,7 +49,7 @@ public:
   }
   virtual SmscCommand getCommand()
   {
-    MutexGuard g(mutex);
+    MutexGuard g(mutexin);
     SmscCommand cmd;
     inqueue.Shift(cmd);
     trace2("get command:%p",*((void**)&cmd));
@@ -58,28 +58,28 @@ public:
 
   void putIncomingCommand(const SmscCommand& cmd)
   {
-    mutex.Lock();
+    mutexin.Lock();
     if(inqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
     {
       mutex.Unlock();
       throw ProxyQueueLimitException();
     }
     inqueue.Push(cmd);
-    mutex.Unlock();
+    mutexin.Unlock();
     managerMonitor->Signal();
   }
   SmscCommand getOutgoingCommand()
   {
-    mutex.Lock();
+    mutexout.Lock();
     SmscCommand cmd;
     outqueue.Shift(cmd);
-    mutex.Unlock();
+    mutexout.Unlock();
     return cmd;
   }
 
   bool hasOutput()
   {
-    MutexGuard g(mutex);
+    MutexGuard g(mutexout);
     return outqueue.Count()!=0;
   }
 
@@ -95,7 +95,7 @@ public:
   virtual SmeProxyPriority getPriority()const{return SmeProxyPriorityDefault;}
   bool hasInput()const
   {
-    MutexGuard g(mutex);
+    MutexGuard g(mutexin);
     return inqueue.Count()!=0;
   }
   virtual void attachMonitor(ProxyMonitor* mon)
@@ -121,7 +121,7 @@ public:
   std::string getId(){return id;}
 
 protected:
-  mutable Mutex mutex;
+  mutable Mutex mutex,mutexin,mutexout;
   std::string id;
   smsc::core::buffers::Array<SmscCommand> inqueue,outqueue;
   int seq;

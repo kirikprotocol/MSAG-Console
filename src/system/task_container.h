@@ -13,7 +13,7 @@ namespace system{
 
 using namespace smsc::core::synchronization;
 
-#define TASK_CONTAINER_MAX_PROCESSED   (200*(8+1)) /* 200 msg/s * 8 sec */
+#define TASK_CONTAINER_MAX_PROCESSED   (2000*(8+1)) /* 200 msg/s * 8 sec */
 #define TASK_CONTAINER_MAX_TIMEOUTS    16
 
 struct Task
