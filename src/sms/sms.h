@@ -580,7 +580,7 @@ public:
           uint16_t len = (uint16_t)value->length()+1; 
           uint16_t tag = tag_hash.getTag(key);
           *(uint16_t*)(buffer+offs) = htons(tag);
-          *(uint16_t*)(buffer+offs) = htons(len);
+          *(uint16_t*)(buffer+offs+2) = htons(len);
           offs+=4;
           __require__(offs+len<=length);
           memcpy(buffer+offs,value->c_str(),len);
@@ -657,7 +657,7 @@ public:
           uint16_t len = 4;
           uint16_t tag = tag_hash.getTag(key);
           *(uint16_t*)(buffer+offs) = htons(tag);
-          *(uint16_t*)(buffer+offs) = htons(4);
+          *(uint16_t*)(buffer+offs+2) = htons(4);
           offs+=4;
           __require__(offs+len<=length);
           //memcpy(buffer+pos,value->c_str(),len);
