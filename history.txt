@@ -10,3 +10,12 @@ New: Добавлен выбор библиотеки логирования.
      Теперь при "make LOG4CPP=YES" собирается с использованием log4cpp, 
      без LOG4CPP=YES - с использованием log4cplus.
 New: Добавлен новый layout для log4cplus - smsc::logger::SmscLayout
+
+Build 1613
+Fix: Убрана попытка достаки в транзакционном режиме. Проблемы с SMPP клиентами 
+     с маленькими таймаутами и синхронной отправкой при посылке абонентам.
+
+Build 1614
+Fix: OCIDataSource memory leak в createRoutine
+Fix: Admin interface. Не очищались сообщения об ошибках в сессионных бинах.
+Fix: Длина SubmitResp с ошибочным статусом на 2 больше чем полагается.
