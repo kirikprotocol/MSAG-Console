@@ -77,6 +77,15 @@ struct MAPDIALOG_HEREISNO_ID : public MAPDIALOG_ERROR
     MAPDIALOG_ERROR(0,s){}
 };
 
+static void SendRescheduleToSmsc(unsigned dialogid)
+{
+  if ( dialogid == 0 ) return;
+  __trace2__("Send RESCHEDULE NOW to SMSC",code);
+  SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,MAKE_ERRCODE(CMD_ERR_RESCHEDULENOW,0));
+  MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+  __trace2__("Send RESCHEDULE NOW to SMSC OK");
+}
+
 static void SendErrToSmsc(unsigned dialogid,unsigned code)
 {
   if ( dialogid == 0 ) return;
@@ -503,7 +512,11 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
                       dialogid_smsc,
                       SSN,
                       string(cmd->get_sms()->getDestinationAddress().value)));
-        if ( dialog.isnull() ) throw MAPDIALOG_TEMP_ERROR("Can't create or attach dialog");
+        if ( dialog.isnull() ) {
+          //throw MAPDIALOG_TEMP_ERROR("Can't create or attach dialog");
+          SendRescheduleToSmsc();
+          return;
+        }
       }catch(exception& e){
         __trace2__("#except#MAP::PutCommand# when create dialog");
         __trace2__("   <exception>:%s",e.what());
