@@ -1959,8 +1959,8 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
       DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
       if ( !dialog.isnull() ) {
         dialog->state = MAPST_ABORTED;
+      	__require__(dialog->ssn==localSsn);
       }
-      __require__(dialog->ssn==localSsn);
       Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
 //      Et96MapDelimiterReq(localSsn,dialogueId,0,0);
     } 
