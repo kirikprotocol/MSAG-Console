@@ -865,12 +865,24 @@ void Archiver::Cleaner::Stop()
         bStarted = false;
     }
 }
+
+const int CLEANER_BASE_AWAKE_INTERVAL = 3600000;
+const int CLEANER_SERVICE_AWAKE_INTERVAL = 1000;
+
 int Archiver::Cleaner::Execute()
 {
     bool first = true;
     while (!bNeedExit)
     {
-        awake.Wait((first) ? 1000:cleanupInterval*1000);
+        int64_t timeLeft = (first) ? 
+            CLEANER_SERVICE_AWAKE_INTERVAL : cleanupInterval*1000;
+        while (timeLeft>0 && !bNeedExit) 
+        {
+            int waitTime = (timeLeft >= CLEANER_BASE_AWAKE_INTERVAL) ?
+                CLEANER_BASE_AWAKE_INTERVAL : (int)timeLeft;
+            awake.Wait(waitTime);
+            timeLeft -= waitTime;
+        }
         if (bNeedExit) break;
         try 
         {
