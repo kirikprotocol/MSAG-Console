@@ -125,7 +125,7 @@ public class Proxy
 			try
 			{
 				socket = new Socket(host, port);
-				socket.setSoTimeout(10000);
+				socket.setSoTimeout(180000);
 				out = socket.getOutputStream();
 				in = socket.getInputStream();
 				writer = new CommandWriter(out);
