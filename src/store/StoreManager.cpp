@@ -922,7 +922,7 @@ void RemoteStore::replaceSms(SMSId id, SMS& sms)
 
 void RemoteStore::doChangeSmsStateToEnroute(StorageConnection* connection,
     SMSId id, const Descriptor& dst, uint32_t failureCause, time_t nextTryTime,
-        bool skipAttempt)
+        uint32_t attempts)
             throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
@@ -935,7 +935,7 @@ void RemoteStore::doChangeSmsStateToEnroute(StorageConnection* connection,
     toEnrouteStmt->bindFailureCause((dvoid *)&(failureCause),
                                     (sb4) sizeof(failureCause));
     toEnrouteStmt->bindDestinationDescriptor((Descriptor &)dst);
-    toEnrouteStmt->bindAttemptsIncrement(skipAttempt ? 0:1);
+    toEnrouteStmt->bindAttempts(attempts);
 
     try
     {
@@ -960,7 +960,7 @@ void RemoteStore::doChangeSmsStateToEnroute(StorageConnection* connection,
 }
 void RemoteStore::changeSmsStateToEnroute(SMSId id,
     const Descriptor& dst, uint32_t failureCause, time_t nextTryTime,
-        bool skipAttempt)
+        uint32_t attempts)
             throw(StorageException, NoSuchMessageException)
 {
     if (scheduleTimer) 
@@ -981,7 +981,7 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
             {
                 __trace2__( "got connection %p for %s", connection, __FUNCTION__);
                 doChangeSmsStateToEnroute(connection, id, dst,
-                                          failureCause, nextTryTime, skipAttempt);
+                                          failureCause, nextTryTime, attempts);
                 pool->freeConnection(connection);
             }
             break;
@@ -1017,7 +1017,7 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
     sms->destinationDescriptor = dst;
     sms->lastResult = failureCause;
     sms->nextTime = nextTryTime;
-    sms->attempts++;
+    sms->attempts = attempts;
 
     //fakeStore.Insert(id, sms);
 
@@ -1737,12 +1737,12 @@ void CachedStore::destroySms(SMSId id)
 
 void CachedStore::changeSmsStateToEnroute(SMSId id, const Descriptor& dst,
                                           uint32_t failureCause,
-                                          time_t nextTryTime, bool skipAttempt)
+                                          time_t nextTryTime, uint32_t attempts)
     throw(StorageException, NoSuchMessageException)
 {
     __trace2__("Changing to ENROUTE for smsId = %lld.", id);
     time_t lastTryTime = time(0);
-    RemoteStore::changeSmsStateToEnroute(id, dst, failureCause, nextTryTime, skipAttempt);
+    RemoteStore::changeSmsStateToEnroute(id, dst, failureCause, nextTryTime, attempts);
 
     SMS* sm = 0;
     {
@@ -1755,7 +1755,7 @@ void CachedStore::changeSmsStateToEnroute(SMSId id, const Descriptor& dst,
             sm->lastResult = failureCause;
             sm->lastTime = lastTryTime;
             sm->nextTime = nextTryTime;
-            if (!skipAttempt) sm->attempts++;
+            sm->attempts = attempts;
             return;
         }
     }

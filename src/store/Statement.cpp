@@ -921,7 +921,7 @@ void ReplaceAllStatement::bindSms(SMS& sms)
 
 /* ------------------------ ChangeStateStatements ----------------------- */
 const char* ToEnrouteStatement::sql = (const char*)
-"UPDATE SMS_MSG SET ATTEMPTS=ATTEMPTS+:ATT, LAST_TRY_TIME=:CT,\
+"UPDATE SMS_MSG SET ATTEMPTS=:ATTEMPTS, LAST_TRY_TIME=:CT,\
  NEXT_TRY_TIME=:NT, LAST_RESULT=:FCS,\
  DST_MSC=:MSC, DST_IMSI=:IMSI, DST_SME_N=:SME_N\
  WHERE ID=:ID";
@@ -938,12 +938,11 @@ void ToEnrouteStatement::bindId(SMSId id)
     bind((CONST text *)"ID", (sb4) 2*sizeof(char),
          SQLT_VNU, (dvoid *)&(smsId), sizeof(smsId));
 }
-void ToEnrouteStatement::bindAttemptsIncrement(uint8_t inc)
+void ToEnrouteStatement::bindAttempts(uint32_t attempts)
     throw(StorageException)
 {
-    attemptsIncrement = inc;
-    bind(1 , SQLT_UIN, (dvoid *)&(attemptsIncrement),
-         (sb4) sizeof(attemptsIncrement));
+    attemptsVal = attempts;
+    bind(1 , SQLT_UIN, (dvoid *)&(attemptsVal), (sb4) sizeof(attemptsVal));
 }
 void ToEnrouteStatement::bindNextTime(time_t nextTryTime)
     throw(StorageException)
