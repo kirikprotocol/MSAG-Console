@@ -1,4 +1,5 @@
 #include "SmsIndex.hpp"
+#include "util/debug.h"
 #include <memory>
 #include <utility>
 #include <algorithm>
@@ -40,6 +41,7 @@ void SmsIndex::Init(ConfigView* cfg_)
 
 void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
 {
+  //hrtime_t idxtime=gethrtime();
   string path=loc;
   if(*path.rbegin()!='/')path+='/';
   path+=dir;
@@ -118,6 +120,7 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
   {
     if(cacheDir==dir)
     {
+      //__trace__("IDX: use cached values");
       idHash=idHashCache;
       srcIdHash=srcIdHashCache;
       dstIdHash=dstIdHashCache;
@@ -132,6 +135,7 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
       routeIdData=routeIdDataCache;
     }else
     {
+      //__warning__("IDX: reopen files");
       idHash=new SmsIdDiskHash;
       srcIdHash=new SmeIdDiskHash;
       dstIdHash=new SmeIdDiskHash;
@@ -245,6 +249,8 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
   );
 #undef IDX
   }
+  //idxtime=gethrtime()-idxtime;
+  //__warning2__("indexed in %lld mcsec",idxtime/1000);
 }
 
 typedef vector<pair<uint32_t,uint64_t> > ResVector;
