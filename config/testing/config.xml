@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+	<section name="logger">
+		<param name="initFile" type="string">log4cpp.init</param>
+	</section>
+	<section name="admin">
+		<param name="host" type="string">smsc</param>
+		<param name="port" type="int">15871</param>
+	</section>
+	<section name="MessageStore">
+	    <param name="maxTriesCount" type="int">3</param>
+	    <section name="Storage">
+    		<param name="dbInstance" type="string">DBSHOCK_ORCL</param>
+		<param name="dbUserName" type="string">smsc</param>
+		<param name="dbUserPassword" type="string">smsc</param>
+	    </section>
+	    <section name="Archive">
+ 		<param name="interval" type="int">100000</param>
+		<param name="finalized" type="int">1000</param>
+		<param name="uncommited" type="int">10</param>
+	    </section>
+	    <section name="Billing">
+    		<param name="dbInstance" type="string">DBSHOCK_ORCL</param>
+		<param name="dbUserName" type="string">smsc</param>
+		<param name="dbUserPassword" type="string">smsc</param>
+	    </section>
+	    <section name="Connections">
+		<param name="max" type="int">3</param>
+		<param name="init" type="int">0</param>
+	    </section>
+	</section>
+	<section name="map">
+	    <param name="hlr" type="string">hlr:address</param>
+	    <param name="vlr" type="string">vlr:address</param>
+	</section>
+	<section name="smpp">
+	    <param name="port" type="int">15971</param>
+	    <param name="host" type="string">smsc</param>
+	</section>
+	<section name="core">
+		<param name="state_machines_count" type="int">5</param>
+		<!-- last time will be repeated until max_valid_time -->
+		<param name="reschedule_table" type="string">30s,20s</param>
+	</section>
+
+	<section name="profiler">
+		<param name="systemId" type="string">profiler</param>
+		<param name="defaultReport" type="string">NONE</param>
+		<param name="defaultDataCoding" type="string">DEFAULT</param>
+		<param name="msgReportNone" type="string">Óâåäîìëåíèÿ äîñòàâêè îòêëþ÷åíû (Delivery reports are disabled)</param>
+		<param name="msgReportFull" type="string">Delivery reports are enabled</param>
+		<param name="msgDataCodingDefault" type="string">Óñòàíîâëåí ðåæèì ïðèåìà ñîîáùåíèé â 7-bit êîäèðîâêå (message character encoding is set to 7-bit)</param>
+		<param name="msgDataCodingUCS2" type="string">Message character encoding is set to ucs2 encoding (now you will be able to receive messages with russian characters in the case your cell phone supports ucs2 messages)</param>
+		<param name="msgError" type="string">Íåïðàâèëüíàÿ êîìàíäà (!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/)</param>
+	</section>
+
+	<section name="sms">
+		<param name="max_valid_time" type="int">150</param>
+	</section>
+
+	<section name="StartupLoader">
+		<section name="DataSourceDrivers">
+			<section name="OCIDataSourceDriver">
+				<param name="type" type="string">OCI</param>
+				<param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+			</section>
+		</section>
+	</section>
+  
+	<section name="DataSource">
+		<param name="type" type="string">OCI</param>
+		<param name="connections" type="int">3</param>
+		<param name="dbInstance" type="string">DBSHOCK_ORCL</param>
+		<param name="dbUserName" type="string">smsc</param>
+		<param name="dbUserPassword" type="string">smsc</param>
+	</section>
+
+</config>
