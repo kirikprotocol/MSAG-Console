@@ -151,7 +151,36 @@ struct MAP_SMS_ADDRESS{
   unsigned char val[10];
 };
 
+struct MAP_TIMESTAMP{
+  struct{
+    unsigned second:4;
+    unsigned first:4;
+  }year;
+  struct{
+    unsigned second:4;
+    unsigned first:4;
+  }mon;
+  struct{
+    unsigned second:4;
+    unsigned first:4;
+  }day;
+  struct{
+    unsigned second:4;
+    unsigned first:4;
+  }hour;
+  struct{
+    unsigned second:4;
+    unsigned first:4;
+  }min;
+  struct{
+    unsigned second:4;
+    unsigned first:4;
+  }sec;
+  unsigned char tz;
+};
+
 #pragma pack()
+
 
 void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
   sa->setTypeOfNumber(ma->st.ton);
@@ -306,34 +335,6 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   return ET96MAP_E_OK;
 }
 
-struct MAP_TIMESTAMP{
-  struct{
-    unsigned second:4;
-    unsigned first:4;
-  }year;
-  struct{
-    unsigned second:4;
-    unsigned first:4;
-  }mon;
-  struct{
-    unsigned second:4;
-    unsigned first:4;
-  }day;
-  struct{
-    unsigned second:4;
-    unsigned first:4;
-  }hour;
-  struct{
-    unsigned second:4;
-    unsigned first:4;
-  }min;
-  struct{
-    unsigned second:4;
-    unsigned first:4;
-  }sec;
-  unsigned char tz;
-};
-
 ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
 {
 #if defined USE_MAP
@@ -376,6 +377,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     time(&t);
     struct tm* tms = gmtime(&t);  
     MAP_TIMESTAMP* pdu_tm = (MAP_TIMESTAMP*)pdu_ptr;
+    __trace2__("MAP::mkDeliverPDU:sizeof(pdu_tm) %d",sizeof(*pdu_tm));
     pdu_tm->year.first  =  ((tms->tm_year)%100)/10;
     pdu_tm->year.second  = tms->tm_year%10;
     __trace2__("MAP::mkDeliverPDU: year: 0x%x, tms_year 0x%x",pdu_tm->year,tms->tm_year);
