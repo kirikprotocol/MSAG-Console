@@ -46,7 +46,7 @@ int main(void)
         command.setToAddress(toAddress);
         //command.setJobName("test-sql-job");
         command.setJobName(0);
-        command.setInData("ProcTest");
+        command.setInData("PrOcTeSt");
         
         printf("\nInput  : '%s'\n",
                (command.getInData() ? command.getInData():""));

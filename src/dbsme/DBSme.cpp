@@ -29,12 +29,12 @@ using namespace smsc::core::buffers;
 
 using namespace smsc::dbsme;
 
-static bool bDBSmeIsStopped = false;
+static bool bDBSmeIsStopped   = false;
+static bool bDBSmeIsConnected = false;
 
 uint64_t    requestsProcessingCount = 0;
 uint64_t    requestsProcessedCount = 0;
 uint64_t    failuresNoticedCount = 0;
-uint64_t    errorsHandledCount = 0;
 
 Mutex       countersLock;
 
@@ -123,6 +123,10 @@ public:
         char* out = (char *)command.getOutData();
         int outLen = (out) ? strlen(out) : 0;
         __trace2__("Output Data '%s'", (out) ? out:"");
+
+        int outPos = -1;
+        while (out && out[++outPos]) 
+            if (out[outPos] == '\r' || out[outPos] == '\n') out[outPos] = ' ';
         
         Array<SMS*> smsarr;
         splitSms(&response, out, outLen, 
@@ -252,11 +256,8 @@ public:
     
     void handleError(int errorCode)
     {
-        {
-            MutexGuard guard(countersLock);
-            if (requestsProcessingCount) requestsProcessingCount--;
-            errorsHandledCount++;
-        }
+        bDBSmeIsConnected = false;
+        printf("Transport error !!!\n");
         log.error("Oops, Error handled! Code is: %d\n", errorCode);
     }
     
@@ -368,29 +369,42 @@ int main(void)
         CommandProcessor processor(&cpConfig);
 
         ConfigView mnConfig(manager, "DBSme.ThreadPool");
-        DBSmeTaskManager runner(&mnConfig);
-        
-        DBSmePduListener listener(processor, runner);
-        
         ConfigView ssConfig(manager, "DBSme.SMSC");
         DBSmeConfig cfg(&ssConfig);
         
-        SmppSession session(cfg, &listener);
-        session.connect();
-        sleep(1);
-        SmppTransmitter *tr = session.getSyncTransmitter();
-        //SmppTransmitter *atr=ss.getAsyncTransmitter();
-        listener.setTrans(tr);
-        
-        while (!bDBSmeIsStopped) 
+        while (!bDBSmeIsStopped)
         {
-            sleep(2);
-            MutexGuard guard(countersLock);
-            printf("\nRequests: %llu processing, %llu processed.\n"
-                   "Failures noticed: %llu\n"
-                   "SMPP transport errors handled: %llu\n",
-                   requestsProcessingCount, requestsProcessedCount,
-                   failuresNoticedCount, errorsHandledCount);
+            DBSmeTaskManager runner(&mnConfig);
+            DBSmePduListener listener(processor, runner);
+            SmppSession      session(cfg, &listener);
+
+            printf("Connecting to SMSC ... ");
+            try
+            {
+                session.connect();
+                sleep(1);
+                listener.setTrans(session.getSyncTransmitter());
+                bDBSmeIsConnected = true;
+            }
+            catch (Exception& exc)
+            {
+                printf("Connect failed.\n");
+                bDBSmeIsConnected = false;
+                sleep(cfg.timeOut);
+                continue;
+            }
+            printf("Connected.\n");
+            
+            while (!bDBSmeIsStopped && bDBSmeIsConnected) 
+            {
+                sleep(2);
+                MutexGuard guard(countersLock);
+                printf("\nRequests: %llu processing, %llu processed.\n"
+                       "Failures noticed: %llu\n",
+                       requestsProcessingCount, requestsProcessedCount,
+                       failuresNoticedCount);
+            };
+            printf("Disconnecting from SMSC ...\n");
         };
     }
     catch (Exception& exc) 

@@ -103,6 +103,16 @@ void CommandProcessor::process(Command& command)
 
 /* --------------------- Command Processing (DataProvider) ----------------- */
 
+char* strToUpperCase(const char* str)
+{
+    if (!str) return 0;
+    char* up = new char[strlen(str)+1];
+    int cur = 0;
+    while (*str) up[cur++] = (char)toupper(*str++);
+    up[cur] = '\0';
+    return up;
+}
+
 DataProvider::DataProvider(ConfigView* config, const MessageSet& set)
     throw(ConfigException) 
         : log(Logger::getCategory("smsc.dbsme.DataProvider")), 
@@ -159,7 +169,18 @@ DataProvider::DataProvider(ConfigView* config, const MessageSet& set)
             if (job)
             {
                 job->init(jobConfig, messages);
-                jobs.Insert(name, job);
+                char* upname = strToUpperCase(name);
+                if (upname)
+                {
+                    jobs.Insert(upname, job);
+                    delete upname;
+                }
+                else
+                {
+                    delete job; job = 0;
+                    throw ConfigException("Job with empty name can't be registered !");
+                }
+                
             }
             else
                 throw ConfigException("Job '%s' wasn't registered !", name);
@@ -221,17 +242,20 @@ void DataProvider::process(Command& command)
         command.setJobName(name);
     }
     
-    if (!jobs.Exists(name)) 
+    char* upname = strToUpperCase(name);
+    Job* job = 0;
+    if (!jobs.Exists(upname) || !(job = jobs.Get(upname))) 
     {
         const char* message = messages.get(JOB_NOT_FOUND);
         log.error("%s Requesting: '%s'",
                   message ? message:JOB_NOT_FOUND, name);
+        if (upname) delete upname;
         throw CommandProcessException(message ? message:JOB_NOT_FOUND);
     }
     
-    jobs.Get(name)->process(command, *ds);
+    if (upname) delete upname;
+    job->process(command, *ds);
 }
-
 
 }}
 
