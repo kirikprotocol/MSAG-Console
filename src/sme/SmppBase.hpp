@@ -694,6 +694,7 @@ protected:
         switch(pdu->get_commandId())
         {
           case DATA_SM:
+          case DATA_SM_RESP:
           case GENERIC_NACK:
           case SUBMIT_SM_RESP:
           case UNBIND_RESP:
@@ -709,6 +710,7 @@ protected:
         switch(pdu->get_commandId())
         {
           case DATA_SM:
+          case DATA_SM_RESP:
           case GENERIC_NACK:
           case SUBMIT_SM_RESP:
           case UNBIND_RESP:
@@ -754,6 +756,7 @@ protected:
         switch(pdu->get_commandId())
         {
           case DATA_SM:
+          case DATA_SM_RESP:
           case SUBMIT_SM:
           case GENERIC_NACK:
           case CANCEL_SM:
@@ -769,6 +772,7 @@ protected:
         switch(pdu->get_commandId())
         {
           case DATA_SM:
+          case DATA_SM_RESP:
           case SUBMIT_SM:
           case GENERIC_NACK:
           case CANCEL_SM:
