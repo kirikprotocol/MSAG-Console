@@ -34,31 +34,49 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 	Address destAlias;
 	SmppUtil::convert(origPdu->get_message().get_dest(), &destAlias);
 	string expected;
-	if (monitor->deliveryFlag == PDU_RECEIVED_FLAG)
+	switch (monitor->deliveryFlag)
 	{
-		static const DateFormatter df("dd MMMM yyyy, HH:mm:ss");
-		for (time_t t = recvTime; t > recvTime - timeCheckAccuracy; t--)
-		{
-			ostringstream s;
-			s << "Your message sent to address ";
-			s << SmsUtil::configString(destAlias);
-			s << " was successfully delivered on ";
-			s << df.format(t);
-			expected = s.str();
-			if (expected == text)
+		case PDU_RECEIVED_FLAG:
+			for (time_t t = recvTime; t > recvTime - timeCheckAccuracy; t--)
 			{
-				break;
+				static const DateFormatter df("dd MMMM yyyy, HH:mm:ss");
+				ostringstream s;
+				s << "Your message sent to address ";
+				s << SmsUtil::configString(destAlias);
+				s << " was successfully delivered on ";
+				s << df.format(t);
+				expected = s.str();
+				if (expected == text)
+				{
+					break;
+				}
 			}
-		}
-	}
-	else if (monitor->deliveryFlag == PDU_NOT_EXPECTED_FLAG)
-	{
-		ostringstream s;
-		s << "Ваше сообщение отправленное по адресу ";
-		s << SmsUtil::configString(destAlias);
-		s << " wasn't delivered, reason: failed"; //failed захардкожено
-		//s << monitor->deliveryStatus;
-		expected = s.str();
+			break;
+		case PDU_NOT_EXPECTED_FLAG:
+		case PDU_EXPIRED_FLAG:
+			for (time_t t = monitor->pduData->submitTime;
+				  t <= monitor->pduData->submitTime + timeCheckAccuracy; t++)
+			{
+				static const DateFormatter df("dd-MMMM-yyyy hh:mm:ss t");
+				ostringstream s;
+				s << "Ваше сообщение отправленное по адресу ";
+				s << SmsUtil::configString(destAlias);
+				s << " sent at " << df.format(t);
+				s << " wasn't delivered, reason: ";
+				if (monitor->deliveryFlag == PDU_NOT_EXPECTED_FLAG)
+				{
+					s << "permanent error"; //захардкожено
+				}
+				else if (monitor->deliveryFlag == PDU_EXPIRED_FLAG)
+				{
+					s << "expired"; //захардкожено
+				}
+				//s << monitor->deliveryStatus;
+				expected = s.str();
+			}
+			break;
+		default:
+			expected = "Unknown";
 	}
 	//профиль
 	Address srcAddr;
@@ -95,14 +113,14 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
-	if (!monitor->pduData->objProps.count("output"))
+	if (!monitor->pduData->objProps.count("smscSmeOutput"))
 	{
 		AckText* ack = getExpectedResponse(monitor, origPdu, text, recvTime);
 		ack->ref();
-		monitor->pduData->objProps["output"] = ack;
+		monitor->pduData->objProps["smscSmeOutput"] = ack;
 	}
 	AckText* ack =
-		dynamic_cast<AckText*>(monitor->pduData->objProps["output"]);
+		dynamic_cast<AckText*>(monitor->pduData->objProps["smscSmeOutput"]);
 	__require__(ack);
 	if (!ack->valid)
 	{
@@ -128,25 +146,33 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 		__tc_fail__(3);
 	}
 	//__compare__(4, get_message().get_dest(), origPdu->get_message().get_source());
+	bool statusReport;
 	switch (origPdu->get_message().get_registredDelivery() & SMSC_DELIVERY_RECEIPT_BITS)
 	{
 		case NO_SMSC_DELIVERY_RECEIPT:
 		case SMSC_DELIVERY_RECEIPT_RESERVED:
-			if (monitor->regDelivery == ProfileReportOptions::ReportFull)
-			{
-				__compare__(4, get_message().get_esmClass(), ESM_CLASS_NORMAL_MESSAGE);
-			}
-			else
-			{
-				__tc_fail__(5);
-			}
+			statusReport = false;
+			break;
+		case FAILURE_SMSC_DELIVERY_RECEIPT:
+			statusReport = monitor->deliveryStatus != ESME_ROK;
 			break;
 		case FINAL_SMSC_DELIVERY_RECEIPT:
-		case FAILURE_SMSC_DELIVERY_RECEIPT:
-			__compare__(6, get_message().get_esmClass(), ESM_CLASS_DELIVERY_RECEIPT);
+			statusReport = true;
 			break;
 		default:
 			__unreachable__("Invalid reg dilivery");
+	}
+	if (statusReport)
+	{
+		__compare__(4, get_message().get_esmClass(), ESM_CLASS_DELIVERY_RECEIPT);
+	}
+	else if (monitor->regDelivery == ProfileReportOptions::ReportFull)
+	{
+		__compare__(5, get_message().get_esmClass(), ESM_CLASS_NORMAL_MESSAGE);
+	}
+	else
+	{
+		__tc_fail__(6);
 	}
 	__compare__(7, get_message().get_protocolId(), smscProtocolId);
 	__compare__(8, get_message().get_priorityFlag(), 0);
@@ -183,26 +209,16 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 			}
 			break;
 		case PDU_NOT_EXPECTED_FLAG:
-			switch (monitor->deliveryStatus)
+			__tc_fail__(4);
+			break;
+		case PDU_EXPIRED_FLAG:
+			opt.set_messageState(SMPP_EXPIRED_STATE);
 			{
-				case ESME_ROK:
-					__tc_fail__(4);
-					break;
-				case ESME_RX_T_APPN:
-				case ESME_RMSGQFUL:
-				case 0xffffffff: //ошибка отправки deliver_sm_resp
-					opt.set_messageState(SMPP_EXPIRED_STATE);
-					break;
-				case ESME_RX_P_APPN:
-					__unreachable__("Not supported");
-				default:
-					{
-						opt.set_messageState(SMPP_REJECTED_STATE);
-						uint8_t errCode[3];
-						*errCode = 3; //GSM
-						*((uint16_t*) (errCode + 1)) = rand0(65535);
-						opt.set_networkErrorCode(errCode);
-					}
+				opt.set_messageState(SMPP_REJECTED_STATE);
+				uint8_t errCode[3];
+				*errCode = 3; //GSM
+				*((uint16_t*) (errCode + 1)) = rand0(65535);
+				opt.set_networkErrorCode(errCode);
 			}
 			break;
 		default:
