@@ -226,9 +226,9 @@ struct SMS_SUMBMIT_FORMAT_HEADER{
       unsigned char tp_vp:2;
       unsigned char reject_dupl:1;
       unsigned char mg_type_ind:2;
-    };
+    }head;
     unsigned char _val_01;
-  };
+  }u;
   unsigned char mr;
 };
 

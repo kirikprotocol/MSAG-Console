@@ -756,18 +756,18 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   unsigned char protocol_id = *(unsigned char*)(ud->signalInfo+2+msa_len);
   unsigned char user_data_coding = *(unsigned char*)(ud->signalInfo+2+msa_len+1);
   sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,user_data_coding);
-  unsigned tpvpLen = (ssfh->tp_vp==0)?0:(ssfh->tp_vp==2)?1:7;
+  unsigned tpvpLen = (ssfh->u.head.tp_vp==0)?0:(ssfh->u.head.tp_vp==2)?1:7;
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2);
 
   if( smsc::logger::_map_cat->isDebugEnabled() )
   {
     __map_trace2__("MR(8) = 0x%x",ssfh->mr);
-    __map_trace2__("MSG_TYPE_IND(2) = 0x%x",ssfh->mg_type_ind);
-    __map_trace2__("MSG_VPF(2) = 0x%x",ssfh->tp_vp);
-    __map_trace2__("MSG_UDHI(1) = %d",ssfh->udhi);
-    __map_trace2__("MSG_REJECT_DUPL(1) = %d",ssfh->reject_dupl);
-    __map_trace2__("MSG_REPLY_PATH(1) = %d",ssfh->reply_path);
-    __map_trace2__("MSG_SRR(1) = %d",ssfh->srr);
+    __map_trace2__("MSG_TYPE_IND(2) = 0x%x",ssfh->u.head.mg_type_ind);
+    __map_trace2__("MSG_VPF(2) = 0x%x",ssfh->u.head.tp_vp);
+    __map_trace2__("MSG_UDHI(1) = %d",ssfh->u.head.udhi);
+    __map_trace2__("MSG_REJECT_DUPL(1) = %d",ssfh->u.head.reject_dupl);
+    __map_trace2__("MSG_REPLY_PATH(1) = %d",ssfh->u.head.reply_path);
+    __map_trace2__("MSG_SRR(1) = %d",ssfh->u.head.srr);
     __map_trace2__("MSA tonpi.va(8):0x%x, ton(3):0x%x, npi(4):0x%x, len(8):%d, msa_len=%d",
                msa->tonpi,msa->st.ton,msa->st.npi,msa->len, msa_len);
     __map_trace2__("protocol_id = 0x%x",protocol_id);
@@ -777,18 +777,18 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   }
   unsigned max_data_len = (ud->signalInfoLen-(2+tpvpLen+msa_len+2+1) );
   unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2+1);
-  if ( ssfh->tp_vp != 0 )
+  if ( ssfh->u.head.tp_vp != 0 )
   {
     unsigned char* tvp = (unsigned char*)(ud->signalInfo+2+msa_len+1+1);
-    __map_trace2__("TVP = 0x%x , first octet 0x%x",(unsigned)ssfh->tp_vp,(unsigned)*tvp);
+    __map_trace2__("TVP = 0x%x , first octet 0x%x",(unsigned)ssfh->u.head.tp_vp,(unsigned)*tvp);
     time_t timeValue = time(0);
-    if ( ssfh->tp_vp == 2 ){
+    if ( ssfh->u.head.tp_vp == 2 ){
 parse_tvp_scheme1:
       if ( *tvp <= 143 ) timeValue+=(*tvp+1)*(5*60);
       else if ( *tvp <= 167 ) timeValue+=(12*60*60)+((*tvp-143)*(30*60));
       else if ( *tvp <= 196 ) timeValue+=(*tvp-166)*(60*60*24);
       else /*if ( *tvp <= 255 )*/ timeValue+=(*tvp-192)*(60*60*24*7);
-    }else if (ssfh->tp_vp == 1 ){
+    }else if (ssfh->u.head.tp_vp == 1 ){
       if (tpvpLen!=7)
         throw runtime_error(FormatText("MAP:%s:incorrect tpvp data",__func__));
 parse_tvp_scheme2:
@@ -815,7 +815,7 @@ parse_tvp_scheme2:
       if ( !(timeValue != -1) ) throw runtime_error("invalid time");
       timeValue -= timeZoneX*900;
       timeValue -= timezone;
-    }else if (ssfh->tp_vp == 3 ){
+    }else if (ssfh->u.head.tp_vp == 3 ){
       unsigned char tags = *tvp;
       unsigned valForm = tags&0x7;
       unsigned char* dta = tvp;
@@ -908,7 +908,7 @@ none_validity:;
     unsigned octet_data_len = (user_data_len+1)*7/8;
     if ( octet_data_len > max_data_len )
       throw runtime_error(FormatText("bad user_data_len %d must be <= %d, PDU len=%d",octet_data_len,max_data_len,ud->signalInfoLen));
-    if ( ssfh->udhi){
+    if ( ssfh->u.head.udhi){
       unsigned udh_len = ((unsigned)*user_data)&0x0ff;
       if ( udh_len >= octet_data_len )
         throw runtime_error(FormatText("MAP:: octet_data_len %d, but udhi_len %d",octet_data_len,udh_len));
@@ -918,7 +918,7 @@ none_validity:;
   {
     if ( user_data_len > max_data_len )
       throw runtime_error(FormatText("bad user_data_len %d must be <= %d, PDU len=%d",user_data_len,max_data_len,ud->signalInfoLen));
-    if ( ssfh->udhi){
+    if ( ssfh->u.head.udhi){
       unsigned udh_len = ((unsigned)*user_data)&0x0ff;
       if ( udh_len >= user_data_len )
         throw runtime_error(FormatText("MAP:: user_data_len %d, but udhi_len %d",user_data_len,udh_len));
@@ -927,7 +927,7 @@ none_validity:;
 
   {
     if (  encoding == MAP_OCTET7BIT_ENCODING ){
-      if ( ssfh->udhi){
+      if ( ssfh->u.head.udhi){
         MicroString ms;
         auto_ptr<unsigned char> b(new unsigned char[255*2]);
         unsigned udh_len = ((unsigned)*user_data)&0x0ff;
@@ -957,7 +957,7 @@ none_validity:;
   }
   {
     unsigned INVALID = (unsigned)-1;
-    if ( ssfh->udhi )
+    if ( ssfh->u.head.udhi )
     {
       unsigned ref = INVALID;
       unsigned msgNum = INVALID;
@@ -1003,13 +1003,13 @@ none_validity:;
     }
   }
   unsigned esm_class = 0;
-  esm_class |= (ssfh->udhi?0x40:0);
-  esm_class |= (ssfh->reply_path?0x80:0);
+  esm_class |= (ssfh->u.head.udhi?0x40:0);
+  esm_class |= (ssfh->u.head.reply_path?0x80:0);
   sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
   //sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
   sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
   sms.setMessageReference(ssfh->mr);
-  if ( ssfh->srr ) sms.setIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST,1);
+  if ( ssfh->u.head.srr ) sms.setIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST,1);
   ConvAddrMSISDN2Smc(srcAddr,&src_addr);
   sms.setOriginatingAddress(src_addr);
   ConvAddrMap2Smc(msa,&dest_addr);
