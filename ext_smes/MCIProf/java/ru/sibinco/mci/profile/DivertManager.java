@@ -39,13 +39,11 @@ public class DivertManager
 
   protected DivertManager() throws ScenarioInitializationException
   {
-    File file = new File(Constants.MCI_PROF_MSC_FILE);
-    if (!file.exists())
+    InputStream is = this.getClass().getClassLoader().getResourceAsStream(Constants.MCI_PROF_MTF_FILE);
+    if (is == null)
       throw new ScenarioInitializationException("Failed to locate commutator properties file");
 
-    InputStream is = null;
     try {
-      is = new FileInputStream(file);
       Properties properties = new Properties();
       properties.load(is);
 

@@ -48,14 +48,13 @@ public class ProfileManager
 
   private ProfileManager() throws ScenarioInitializationException
   {
-    File file = new File(Constants.MCI_PROF_MTF_FILE);
-    if (!file.exists())
+
+    InputStream is = this.getClass().getClassLoader().getResourceAsStream(Constants.MCI_PROF_MTF_FILE);
+    if (is == null)
       throw new ScenarioInitializationException("Failed to locate template properties file");
 
     Properties properties = new Properties();
-    InputStream is = null;
     try {
-      is = new FileInputStream(file);
       properties.load(is);
     } catch(IOException e) {
       throw new ScenarioInitializationException("Failed to load template properties", e);
