@@ -24,10 +24,11 @@ class RouteManagerFunctionalTest
 	RouteManagerTestCases tcRoute;
 	vector<Address*> addr;
 	vector<SmeInfo*> sme;
-	RouteRegistry routeReg;
 	vector<TCResultStack*> stack;
 
 public:
+	RouteManagerFunctionalTest(SmeManager* smeMan, RouteManager* routeMan,
+		RouteRegistry* routeReg);
 	~RouteManagerFunctionalTest();
 	void executeTest(TCResultFilter* filter, int numAddr);
 	void printRoutes();
@@ -38,6 +39,10 @@ private:
 	void executeTestCases(const Address& origAddr, const Address& destAddr);
 	void printRoute(const TestRouteData* routeData);
 };
+
+RouteManagerFunctionalTest::RouteManagerFunctionalTest(SmeManager* smeMan,
+	RouteManager* routeMan, RouteRegistry* routeReg)
+	: tcSme(smeMan), tcRoute(routeMan, routeReg) {}
 
 RouteManagerFunctionalTest::~RouteManagerFunctionalTest()
 {
@@ -62,12 +67,14 @@ void RouteManagerFunctionalTest::printRoute(const TestRouteData* routeData)
 
 void RouteManagerFunctionalTest::printRoutes()
 {
+	/*
 	RouteRegistry::RouteIterator* it = routeReg.iterator();
 	for (; it->hasNext(); (*it)++)
 	{
 		printRoute(**it);
 	}
 	delete it;
+	*/
 }
 
 TestRouteData RouteManagerFunctionalTest::prepareForNewRoute(
@@ -108,7 +115,6 @@ void RouteManagerFunctionalTest::executeTestCases(
 						origAddr, destAddr, true);
 					stack.back()->push_back(tcRoute.addCorrectRouteMatch(
 						sme.back()->systemId, &routeData, RAND_TC));
-					routeReg.putRoute(routeData);
 					if (!existentRoute && routeData.route)
 					{
 						existentRoute = new RouteInfo(*routeData.route);
@@ -121,7 +127,6 @@ void RouteManagerFunctionalTest::executeTestCases(
 						origAddr, destAddr, false);
 					stack.back()->push_back(tcRoute.addCorrectRouteMatch(
 						sme.back()->systemId, &routeData, RAND_TC));
-					routeReg.putRoute(routeData);
 					if (!existentRoute && routeData.route)
 					{
 						existentRoute = new RouteInfo(*routeData.route);
@@ -134,7 +139,6 @@ void RouteManagerFunctionalTest::executeTestCases(
 						origAddr, destAddr, true);
 					stack.back()->push_back(tcRoute.addCorrectRouteNotMatch(
 						sme.back()->systemId, &routeData, RAND_TC));
-					routeReg.putRoute(routeData);
 					if (!existentRoute && routeData.route)
 					{
 						existentRoute = new RouteInfo(*routeData.route);
@@ -147,7 +151,6 @@ void RouteManagerFunctionalTest::executeTestCases(
 						origAddr, destAddr, true);
 					stack.back()->push_back(tcRoute.addCorrectRouteNotMatch2(
 						sme.back()->systemId, &routeData, RAND_TC));
-					routeReg.putRoute(routeData);
 					if (!existentRoute && routeData.route)
 					{
 						existentRoute = new RouteInfo(*routeData.route);
@@ -164,7 +167,7 @@ void RouteManagerFunctionalTest::executeTestCases(
 				break;
 			default: //case 6..7
 				{
-					TCResult* res = tcRoute.lookupRoute(routeReg, origAddr, destAddr);
+					TCResult* res = tcRoute.lookupRoute(origAddr, destAddr);
 					stack.back()->push_back(res);
 				}
 		}
@@ -199,13 +202,13 @@ void RouteManagerFunctionalTest::executeTest(
 		{
 			Address& origAddr = *addr[i];
 			Address& destAddr = *addr[j];
-			TCResult* res = tcRoute.lookupRoute(routeReg, origAddr, destAddr);
+			TCResult* res = tcRoute.lookupRoute(origAddr, destAddr);
 			filter->addResult(res);
 		}
 	}
 
 	//Итерирование по списку маршрутов
-	filter->addResult(tcRoute.iterateRoutes(routeReg));
+	filter->addResult(tcRoute.iterateRoutes());
 
 	/*
 	//Удаление зарегистрированных sme
@@ -276,7 +279,11 @@ int main(int argc, char* argv[])
 		TCResultFilter* filter = new TCResultFilter();
 		for (int i = 0; i < numCycles; i++)
 		{
-			RouteManagerFunctionalTest test;
+			SmeManager smeMan;
+			RouteManager routeMan;
+			routeMan.assign(&smeMan);
+			RouteRegistry routeReg;
+			RouteManagerFunctionalTest test(&smeMan, &routeMan, &routeReg);
 			test.executeTest(filter, numAddr);
 			test.printRoutes();
 		}

@@ -14,12 +14,26 @@ using smsc::smeman::SmeProxy;
 using smsc::test::sms::SmsUtil;
 
 static Category& log = Logger::getCategory("RouteManagerTest");
-SmeManagerTestCases tcSme;
-RouteManagerTestCases tcRoute;
-RouteRegistry routeReg;
 
-void addRouteNotMatch(const Address& origAddr, const Address& destAddr,
-	int smeNum, bool needProxy, int routeNum)
+class RouteManagerTest
+{
+	SmeManagerTestCases tcSme;
+	RouteManagerTestCases tcRoute;
+
+public:
+	RouteManagerTest(SmeManager* smeMan, RouteManager* routeMan,
+		RouteRegistry* routeReg)
+		: tcSme(smeMan), tcRoute(routeMan, routeReg) {}
+
+	void addRouteNotMatch(const Address& origAddr, const Address& destAddr,
+		int smeNum, bool needProxy, int routeNum);
+	void addRouteMatch(const Address& origAddr, const Address& destAddr,
+		int smeNum, bool needProxy, int routeNum);
+	void execute();
+};
+
+void RouteManagerTest::addRouteNotMatch(const Address& origAddr,
+	const Address& destAddr, int smeNum, bool needProxy, int routeNum)
 {
 	SmeInfo sme;
 	SmeProxy* proxy = NULL;
@@ -37,10 +51,9 @@ void addRouteNotMatch(const Address& origAddr, const Address& destAddr,
 	{
 		cout << *tcRoute.addCorrectRouteNotMatch2(sme.systemId, &routeData, routeNum) << endl;
 	}
-	routeReg.putRoute(routeData);
 }
 
-void addRouteMatch(const Address& origAddr, const Address& destAddr,
+void RouteManagerTest::addRouteMatch(const Address& origAddr, const Address& destAddr,
 	int smeNum, bool needProxy, int routeNum)
 {
 	SmeInfo sme;
@@ -52,10 +65,9 @@ void addRouteMatch(const Address& origAddr, const Address& destAddr,
 	}
 	TestRouteData routeData(origAddr, destAddr, proxy);
 	cout << *tcRoute.addCorrectRouteMatch(sme.systemId, &routeData, routeNum) << endl;
-	routeReg.putRoute(routeData);
 }
 
-void executeTest()
+void RouteManagerTest::execute()
 {
 /*
 addCorrectSme(1)->
@@ -73,7 +85,7 @@ lookupRoute(1){103}
 
 	addRouteNotMatch(origAddr, destAddr, 1, true, 32);
 	addRouteMatch(origAddr, destAddr, 2, false, 3);
-	cout << *tcRoute.lookupRoute(routeReg, origAddr, destAddr) << endl;
+	cout << *tcRoute.lookupRoute(origAddr, destAddr) << endl;
 
 /*
 	cout << *tcRoute.addCorrectRouteMatch(sme.systemId, &routeData, 1) << endl;
@@ -91,7 +103,12 @@ int main(int argc, char* argv[])
 	try
 	{
 		//Manager::init("config.xml");
-		executeTest();
+		SmeManager smeMan;
+		RouteManager routeMan;
+		routeMan.assign(&smeMan);
+		RouteRegistry routeReg;
+		RouteManagerTest test(&smeMan, &routeMan, &routeReg);
+		test.execute();
 	}
 	catch (...)
 	{
