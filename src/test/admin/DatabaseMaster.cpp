@@ -125,7 +125,11 @@ void DatabaseMaster::genSms()
 	{
 		Descriptor dst;
 		SMS sms;
-		sms.setSubmitTime(1000000000 + (i % 2 ? 10 : -10) * i);
+		time_t submitTime = 1000000000 + (i % 2 ? 10 : -10) * i;
+		sms.setSubmitTime(submitTime);
+		tm t;
+		char strTime[30];
+		asctime_r(localtime_r(&submitTime, &t), strTime);
 		sms.setValidTime(LONG_MAX);
 		sms.setNextTime(LONG_MAX);
 		//oa
@@ -179,24 +183,33 @@ void DatabaseMaster::genSms()
 		//sms_msg
 		SMSId smsId = msgStore->getNextId();
 		msgStore->createSms(sms, smsId, CREATE_NEW);
+		__trace2__("message created: smsId = %llu, submitTime = %s, state = ENROUTE",
+			smsId, strTime);
 		//sms_arc
+		const char* state;
 		SMSId smsId2 = msgStore->getNextId();
 		msgStore->createSms(sms, smsId2, CREATE_NEW);
 		switch (i % 4)
 		{
 			case 0:
+				state = "DELIVERED";
 				msgStore->changeSmsStateToDelivered(smsId2, dst);
 				break;
 			case 1:
+				state = "UNDELIVERABLE";
 				msgStore->changeSmsStateToUndeliverable(smsId2, dst, 123);
 				break;
 			case 2:
+				state = "EXPIRED";
 				msgStore->changeSmsStateToExpired(smsId2);
 				break;
 			case 3:
+				state = "DELETED";
 				msgStore->changeSmsStateToDeleted(smsId2);
 				break;
 		}
+		__trace2__("message created: smsId = %llu, submitTime = %s, state = %s",
+			smsId2, strTime, state);
 	}
 	StoreManager::startArchiver(); //перенести финализированные записи в архив
 	while (StoreManager::isArchivationInProgress())
