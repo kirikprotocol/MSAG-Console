@@ -11,7 +11,7 @@ import ru.novosoft.smsc.admin.route.Mask;
 public class Profile
 {
 	public static final byte CODEPAGE_Default = 0;
-	public static final byte CODEPAGE_UCS2 = 1;
+	public static final byte CODEPAGE_UCS2 = 8;
 	public static final byte REPORT_OPTION_None = 0;
 	public static final byte REPORT_OPTION_Full = 1;
 
