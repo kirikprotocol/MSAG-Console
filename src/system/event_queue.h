@@ -255,7 +255,7 @@ public:
     if ( StateChecker::stateIsFinal(state) )
     {
       ++counter;
-      if(locker->cmds.size()==0)
+      if(locker->cmds.empty())
       {
         hash.remove(locker->msgId);
         delete locker;

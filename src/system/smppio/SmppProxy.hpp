@@ -436,7 +436,7 @@ protected:
     if(processLimit==0)return;
     MutexGuard g(mutex);
     time_t now=time(NULL);
-    while(limitQueue.size()>0 && limitQueue.begin()->submitTime+processTimeout<now)
+    while(!limitQueue.empty() && limitQueue.begin()->submitTime+processTimeout<now)
     {
       limitHash.Delete(limitQueue.begin()->seqNum);
       limitQueue.erase(limitQueue.begin());
