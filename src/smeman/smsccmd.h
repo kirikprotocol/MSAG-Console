@@ -111,6 +111,10 @@ class SmscCommand
     cmd = ref(const_cast<_SmscCommand*>(&_cmd));
   }
 
+
+	void dispose() // for debuging ;(
+		{ if ( cmd ) delete cmd; }
+
 public:
   
   struct Status
@@ -168,11 +172,12 @@ public:
     _cmd.dialogId = dialogId;
     return cmd;
   }
-  ~SmscCommand() { if ( cmd ) delete cmd; }
-  SmscCommand() : cmd (0) {}
-  SmscCommand(SmppHeader* pdu) : cmd (0)
+	~SmscCommand() { dispose(); }
+  //SmscCommand() : cmd (0) {}
+  SmscCommand(SmppHeader* pdu=0) : cmd (0)
   {
-    __require__ ( pdu != NULL );
+    if (!pdu) return;
+		//__require__ ( pdu != NULL );
     auto_ptr<_SmscCommand> _cmd(ref(new _SmscCommand()));
     switch ( pdu->commandId )
     {
