@@ -311,6 +311,22 @@ int main(int argc,char* argv[])
       {
         break;
       }
+      if(!strcmp((char*)addr,"eq"))
+      {
+        PduEnquireLink eq;
+        eq.get_header().set_commandId(SmppCommandSet::ENQUIRE_LINK);
+        eq.get_header().set_sequenceNumber(ss.getNextSeq());
+        SmppHeader *resp=tr->sendPdu((SmppHeader*)&eq);
+        if(resp)
+        {
+          printf("Enquire link ok\n");
+          disposePdu(resp);
+        }else
+        {
+          printf("No response\n");
+        }
+        continue;
+      }
       if(strcmp(addr,"/"))
       {
         try{
@@ -327,6 +343,7 @@ int main(int argc,char* argv[])
         if(!message)break;
         rl_reset_line_state();
       }
+      if(!message)continue;
       int len=strlen(message);
 
 

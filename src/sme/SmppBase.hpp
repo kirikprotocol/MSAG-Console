@@ -846,11 +846,11 @@ protected:
           lockMutex.Unlock();
         }
       }break;
-      case ENQUIRE_LINK_RESP:
+      /*case ENQUIRE_LINK_RESP:
       {
         lockMutex.Unlock();
         disposePdu(pdu);
-      }break;
+      }break;*/
       case ENQUIRE_LINK:
       {
         lockMutex.Unlock();
@@ -871,6 +871,7 @@ protected:
       case BIND_TRANSMITTER_RESP:
       case BIND_RECIEVER_RESP:
       case UNBIND_RESP:
+      case ENQUIRE_LINK_RESP:
       {
         if(lock.Exist(seq))
         {
