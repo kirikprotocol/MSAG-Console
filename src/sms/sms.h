@@ -99,7 +99,8 @@ namespace smsc { namespace sms
          */
         inline void setValue(uint8_t _len, const char* _value) 
         {
-            __require__(_len && _value && _len<sizeof(AddressValue));
+            __require__(_len && _value && _value[0]
+                        && _len<sizeof(AddressValue));
             
             memcpy(value, _value, _len*sizeof(uint8_t));
             value[lenght = _len] = '\0';
