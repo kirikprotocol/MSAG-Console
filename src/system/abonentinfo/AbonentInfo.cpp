@@ -142,9 +142,10 @@ int AbonentInfoSme::Execute()
 
       s.setOriginatingAddress(as.destAddr);
       s.setDestinationAddress(as.sourceAddr);
+      s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+      s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
       s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,answ,len);
       s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
-      s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
       s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
         as.userMessageReference);
 

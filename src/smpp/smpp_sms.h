@@ -52,6 +52,29 @@ inline void fillOptional(SmppOptional& optional,SMS* sms)
     optional.set_sarTotalSegments(sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS));
   if ( sms->hasIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES) )
     optional.set_numberOfMessages(sms->getIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES));
+
+  if(sms->hasIntProperty(Tag::SMPP_SOURCE_PORT))
+    optional.set_sourcePort(sms->getIntProperty(Tag::SMPP_SOURCE_PORT));
+  if(sms->hasIntProperty(Tag::SMPP_DESTINATION_PORT))
+    optional.set_destinationPort(sms->getIntProperty(Tag::SMPP_DESTINATION_PORT));
+  if(sms->hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM))
+    optional.set_sarSegmentSegnum(sms->getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM));
+  if(sms->hasIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND))
+    optional.set_moreMessagesToSend(sms->getIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND));
+  if(sms->hasIntProperty(Tag::SMPP_DEST_NETWORK_TYPE))
+    optional.set_destNetworkType(sms->getIntProperty(Tag::SMPP_DEST_NETWORK_TYPE));
+  if(sms->hasIntProperty(Tag::SMPP_DEST_BEARER_TYPE))
+    optional.set_destBearerType(sms->getIntProperty(Tag::SMPP_DEST_BEARER_TYPE));
+  if(sms->hasIntProperty(Tag::SMPP_QOS_TIME_TO_LIVE))
+    optional.set_qosTimeToLive(sms->getIntProperty(Tag::SMPP_QOS_TIME_TO_LIVE));
+  if(sms->hasIntProperty(Tag::SMPP_SET_DPF))
+    optional.set_setDpf(sms->getIntProperty(Tag::SMPP_SET_DPF));
+  if(sms->hasIntProperty(Tag::SMPP_SOURCE_NETWORK_TYPE))
+    optional.set_sourceNetworkType(sms->getIntProperty(Tag::SMPP_SOURCE_NETWORK_TYPE));
+  if(sms->hasIntProperty(Tag::SMPP_SOURCE_BEARER_TYPE))
+    optional.set_sourceBearerType(sms->getIntProperty(Tag::SMPP_SOURCE_BEARER_TYPE));
+
+
   if ( sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD) ){
     unsigned len;
     const char * data = sms->getBinProperty(Tag::SMSC_RAW_PAYLOAD,&len);
@@ -202,6 +225,29 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms)
     sms->setIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS,optional.get_sarTotalSegments());
   if ( optional.has_numberOfMessages() )
     sms->setIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES,optional.get_numberOfMessages());
+
+  if(optional.has_sourcePort())
+    sms->setIntProperty(Tag::SMPP_SOURCE_PORT,optional.get_sourcePort());
+  if(optional.has_destinationPort())
+    sms->setIntProperty(Tag::SMPP_DESTINATION_PORT,optional.get_destinationPort());
+  if(optional.has_sarSegmentSegnum())
+    sms->setIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM,optional.get_sarSegmentSegnum());
+  if(optional.has_moreMessagesToSend())
+    sms->setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,optional.get_moreMessagesToSend());
+  if(optional.has_destNetworkType())
+    sms->setIntProperty(Tag::SMPP_DEST_NETWORK_TYPE,optional.get_destNetworkType());
+  if(optional.has_destBearerType())
+    sms->setIntProperty(Tag::SMPP_DEST_BEARER_TYPE,optional.get_destBearerType());
+  if(optional.has_qosTimeToLive())
+    sms->setIntProperty(Tag::SMPP_QOS_TIME_TO_LIVE,optional.get_qosTimeToLive());
+  if(optional.has_setDpf())
+    sms->setIntProperty(Tag::SMPP_SET_DPF,optional.get_setDpf());
+  if(optional.has_sourceNetworkType())
+    sms->setIntProperty(Tag::SMPP_SOURCE_NETWORK_TYPE,optional.get_sourceNetworkType());
+  if(optional.has_sourceBearerType())
+    sms->setIntProperty(Tag::SMPP_SOURCE_BEARER_TYPE,optional.get_sourceBearerType());
+
+
   if ( optional.has_messagePayload() )
     sms->setBinProperty(Tag::SMSC_RAW_PAYLOAD,
                                optional.get_messagePayload(),
