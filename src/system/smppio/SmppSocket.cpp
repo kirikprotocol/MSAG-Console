@@ -1,5 +1,5 @@
 #ifndef DISABLE_TRACING
-#define DISABLE_TRACING
+//#define DISABLE_TRACING
 #endif
 
 #include "system/smppio/SmppSocket.hpp"
@@ -67,7 +67,11 @@ int SmppSocket::receive()
   }
   trace2("packetsize:%d, bufferoffset:%d, toread:%d\n",packetsize,bufferOffset,n);
   int rd=socket->Read(buffer+bufferOffset,n);
-  if(rd<=0)return -1;
+  if(rd<=0)
+  {
+    trace2("SmppSocket: read failed");
+    return -1;
+  }
   bufferOffset+=rd;
 
   if(bufferOffset==packetsize)return 1;

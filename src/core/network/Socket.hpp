@@ -42,6 +42,7 @@ public:
     connected=0;
     inBuffer=0;
     bufPos=0;
+    sock=-1;
   }
   Socket(SOCKET s,const sockaddr_in& saddrin )
   {
