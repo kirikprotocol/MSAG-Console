@@ -237,6 +237,11 @@ int SmppInputThread::Execute()
             case SmppCommandSet::BIND_TRANSMITTER:
             case SmppCommandSet::BIND_TRANCIEVER:
             {
+              if(ss->getProxy() && ss->getProxy()->isOpened())
+              {
+                SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
+                continue;
+              }
               PduBindTRX *bindpdu=
                 reinterpret_cast<smsc::smpp::PduBindTRX*>(pdu);
               SmppProxy *proxy=new SmppProxy(ss);
