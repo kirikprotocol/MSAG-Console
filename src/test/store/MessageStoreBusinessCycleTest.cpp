@@ -8,6 +8,7 @@
 #include <map>
 
 using namespace std;
+using namespace smsc::test::store;
 using namespace smsc::test::util;
 using log4cpp::Category;
 using smsc::util::Logger;
@@ -15,7 +16,6 @@ using smsc::sms::SMS;
 using smsc::sms::SMSId;
 using smsc::util::config::Manager;
 using smsc::store::StoreManager;
-using smsc::test::store::MessageStoreTestCases;
 using smsc::core::synchronization::Event;
 
 /**
@@ -35,6 +35,7 @@ class MessageStoreBusinessCycleTestTask : public TestTask
 private:
 	int taskNum;
 	MessageStoreTestCases tc; //throws exception
+	Event evt;
 
 public:
 	MessageStoreBusinessCycleTestTask(int taskNum);
@@ -92,6 +93,7 @@ public:
 	static void printOpsStatByTask();
 	static void printOpsStatByTC();
 	static int getOps();
+	static int getFinalStateOps();
 };
 
 void debug(const char* str)
@@ -111,7 +113,6 @@ MessageStoreBusinessCycleTestTask::MessageStoreBusinessCycleTestTask(int _taskNu
 void MessageStoreBusinessCycleTestTask::executeCycle()
 {
 	//проверить тест остановлен/замедлен
-	static Event evt;
 	if (MessageStoreBusinessCycleTest::pause)
 	{
 		evt.Wait(1000);
@@ -201,6 +202,7 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	}
 
 	//Перевод sms из ENROUTE в финальное состояние
+	evt.Wait(100 * rand0(30)); //проверка переноса в архив упорядоченно по last_time
 	for (int i = 0; i < id.size(); i++)
 	{
 		process(tc.changeExistentSmsStateEnrouteToFinal(*id[i], sms[i], RAND_TC));
@@ -364,6 +366,21 @@ int MessageStoreBusinessCycleTest::getOps()
 	return totalOps;
 }
 
+int MessageStoreBusinessCycleTest::getFinalStateOps()
+{
+	int storeOps = 0;
+	for (TCStatMap::iterator it = tcStat.begin(); it != tcStat.end(); it++)
+	{
+		const string& tcId = it->first;
+		if (tcId == TC_CHANGE_EXISTENT_SMS_STATE_ENROUTE_TO_FINAL)
+		{
+			int ops = it->second;
+			storeOps += ops;
+		}
+	}
+	return storeOps;
+}
+
 //test body
 void executeBusinessCycleTest(int numThreads)
 {
@@ -389,6 +406,7 @@ void executeBusinessCycleTest(int numThreads)
 			cout << "arc <start|stop> - start/stop archiver" << endl;
 			cout << "stat - print statistics" << endl;
 			cout << "rtstat - print runtime statistics" << endl;
+			cout << "1 - archiver activation statistics" << endl;
 			cout << "set pool <newSize> - change pool size" << endl;
 			cout << "set delay <msec> - slow down test cycle execution" << endl;
 			cout << "quit - stop test and quit" << endl;
@@ -468,7 +486,18 @@ void executeBusinessCycleTest(int numThreads)
 			cout << "Idle connections count = " <<
 				StoreManager::getIdleConnectionsCount() << endl;
 			cout << "Archiver status = " <<
-				StoreManager::isArchiverStarted() << endl;
+				(StoreManager::isArchiverStarted() ? "started" : "stopped") << endl;
+			cout << "Archivation status = " <<
+				(StoreManager::isArchivationInProgress() ? "running" : "idle") 
+				<< endl;
+		}
+		else if (cmd == "1")
+		{
+			cout << "Time = " << tm.getExecutionTime() << endl;
+			cout << "Final messages = " <<
+				MessageStoreBusinessCycleTest::getFinalStateOps() << endl;
+			cout << "Archiver status = " <<
+				(StoreManager::isArchiverStarted() ? "started" : "stopped") << endl;
 			cout << "Archivation status = " <<
 				(StoreManager::isArchivationInProgress() ? "running" : "idle") 
 				<< endl;
