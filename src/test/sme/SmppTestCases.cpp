@@ -7,11 +7,11 @@ namespace sme {
 
 using smsc::util::Logger;
 
-SmppTestCases::SmppTestCases(const SmeConfig& config, const SmeSystemId& _systemId,
+SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _systemId,
 	const Address& addr, const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
 	const RouteRegistry* _routeReg, ResultHandler* handler)
-	: session(NULL), systemId(_systemId), smeAddr(addr), smeReg(_smeReg),
-	aliasReg(_aliasReg), routeReg(_routeReg), resultHandler(handler)
+	: config(_config), session(NULL), systemId(_systemId), smeAddr(addr),
+	smeReg(_smeReg), aliasReg(_aliasReg), routeReg(_routeReg), resultHandler(handler)
 {
 	__require__(smeReg);
 	__require__(aliasReg);
@@ -19,7 +19,7 @@ SmppTestCases::SmppTestCases(const SmeConfig& config, const SmeSystemId& _system
 	__require__(resultHandler);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
 	routeChecker = new RouteChecker(systemId, smeAddr, smeReg, aliasReg, routeReg);
-	responseChecker = new SmppResponsePduChecker();
+	responseChecker = new SmppResponsePduChecker(pduReg, routeChecker);
 	receiver = new SmppReceiverTestCases(systemId, smeAddr, smeReg,
 		aliasReg, routeReg, handler, routeChecker, responseChecker);
 	session = new SmppSession(config, receiver);
@@ -64,10 +64,10 @@ Category& SmppTestCases::getLog()
 	return log;
 }
 
-TCResult* SmppTestCases::bindRegisteredSme(int num)
+TCResult* SmppTestCases::bindCorrectSme(int num)
 {
 	TCSelector s(num, 3);
-	TCResult* res = new TCResult(TC_BIND_REGISTERED_SME, s.getChoice());
+	TCResult* res = new TCResult(TC_BIND_CORRECT_SME, s.getChoice());
 	for (; s.check(); s++)
 	{
 		try
@@ -75,7 +75,11 @@ TCResult* SmppTestCases::bindRegisteredSme(int num)
 			switch(s.value())
 			{
 				case 1: //BIND_RECIEVER
+					res->addFailure(1);
+					break;
 				case 2: //BIND_TRANSMITTER
+					res->addFailure(2);
+					break;
 				case 3: //BIND_TRANCIEVER
 					break;
 				default:
@@ -93,25 +97,80 @@ TCResult* SmppTestCases::bindRegisteredSme(int num)
 	return res;
 }
 
-TCResult* SmppTestCases::bindNonRegisteredSme(int num)
+TCResult* SmppTestCases::bindIncorrectSme(int num)
 {
-	TCSelector s(num, 3);
-	TCResult* res = new TCResult(TC_BIND_NON_REGISTERED_SME, s.getChoice());
+	TCSelector s(num, 4);
+	TCResult* res = new TCResult(TC_BIND_INCORRECT_SME, s.getChoice());
 	for (; s.check(); s++)
 	{
 		try
 		{
 			switch(s.value())
 			{
-				case 1: //BIND_RECIEVER
-				case 2: //BIND_TRANSMITTER
-				case 3: //BIND_TRANCIEVER
+				case 1: //sme не зарегистрирована в SC
+					{
+						SmppSession* sess = NULL;
+						try
+						{
+							SmeConfig conf(config);
+							auto_ptr<char> tmp = rand_char(15); //15 по спецификации
+							conf.sid = tmp.get();
+							SmppSession* sess = new SmppSession(conf, receiver);
+							sess->connect();
+							delete sess;
+						}
+						catch(...)
+						{
+							if (sess) { delete sess; }
+							throw;
+						}
+					}
+					break;
+				case 2: //повторный bind
+					session->connect();
+					break;
+				case 3: //bind на недоступный SC (неизвестный хост)
+					{
+						SmppSession* sess = NULL;
+						try
+						{
+							SmeConfig conf(config);
+							auto_ptr<char> tmp = rand_char(15);
+							conf.host = tmp.get();
+							SmppSession* sess = new SmppSession(conf, receiver);
+							sess->connect();
+							delete sess;
+						}
+						catch(...)
+						{
+							if (sess) { delete sess; }
+							throw;
+						}
+					}
+					break;
+				case 4: //bind на недоступный SC (неправильный порт)
+					{
+						SmppSession* sess = NULL;
+						try
+						{
+							SmeConfig conf(config);
+							auto_ptr<char> tmp = rand_char(15);
+							conf.port += rand1(65535 - conf.port);
+							SmppSession* sess = new SmppSession(conf, receiver);
+							sess->connect();
+							delete sess;
+						}
+						catch(...)
+						{
+							if (sess) { delete sess; }
+							throw;
+						}
+					}
 					break;
 				default:
 					throw s;
 			}
-			session->connect();
-			res->addFailure(101);
+			res->addFailure(s.value());
 		}
 		catch(...)
 		{
@@ -138,7 +197,7 @@ TCResult* SmppTestCases::processInvalidSms()
 			missingDelivery |= !pduData[i]->deliveryFlag;
 			missingDeliveryReceipt |= !pduData[i]->deliveryReceiptFlag;
 			missingIntermediateNotification |= !pduData[i]->intermediateNotificationFlag;
-			pduReg->removePdu(*pduData[i]);
+			pduReg->removePdu(pduData[i]);
 		}
 		if (missingResp) { res->addFailure(1); }
 		if (missingDelivery) { res->addFailure(2); }

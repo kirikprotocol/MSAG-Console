@@ -16,8 +16,8 @@ using namespace smsc::test::util; //TCResult, BaseTestCases
 using namespace smsc::test::core; //SmeRegistry, PduRegistry, ...
 
 //implemented
-const char* const TC_BIND_REGISTERED_SME = "bindRegisteredSme";
-const char* const TC_BIND_NON_REGISTERED_SME = "bindNonRegisteredSme";
+const char* const TC_BIND_CORRECT_SME = "bindCorrectSme";
+const char* const TC_BIND_INCORRECT_SME = "bindIncorrectSme";
 const char* const TC_PROCESS_INVALID_SMS = "processInvalidSms";
 const char* const TC_UNBIND_BOUNDED = "unbindBounded";
 const char* const TC_UNBIND_NON_BOUNDED = "unbindNonBounded";
@@ -47,15 +47,15 @@ public:
 	SmppTransmitterTestCases& getTransmitter();
 	
 	/**
-	 * Bind для sme зарегистрированной в smsc.
+	 * Bind sme зарегистрированной в smsc.
 	 */
-	TCResult* bindRegisteredSme(int num);
+	TCResult* bindCorrectSme(int num);
 
 	/**
-	 * Bind для sme незарегистрированной в smsc.
+	 * Bind sme с неправильными параметрами.
 	 */
-	TCResult* bindNonRegisteredSme(int num);
-
+	TCResult* bindIncorrectSme(int num);
+	
 	/**
 	 * Все подтверждений доставки, нотификации и sms доставляются и не теряются.
 	 */
@@ -75,6 +75,7 @@ protected:
 	virtual Category& getLog();
 
 private:
+	const SmeConfig config;
 	const SmeSystemId systemId;
 	const Address smeAddr;
 	//external
