@@ -45,7 +45,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   int esm=sms->getIntProperty(Tag::SMPP_ESM_CLASS);
   int isrcpt=(esm&4)==4;
   SMS_DELIVERY_FORMAT_HEADER* header = (SMS_DELIVERY_FORMAT_HEADER*)pdu->signalInfo;
-  header->uu.s.mg_type_ind = 0;
+  header->uu.s.mg_type_ind = isrcpt?2:0;
   header->uu.s.mms = 0;
   header->uu.s.reply_path = (esm&0x80)?1:0;;
   header->uu.s.srri = 0;
