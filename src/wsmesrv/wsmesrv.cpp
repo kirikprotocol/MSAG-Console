@@ -7,9 +7,6 @@
 #include "ss7log.h"
 #include "ss7msg.h"
 #include "i97tcapapi.h"
-#include "et96map_api_defines.h"
-#include "et96map_api_types.h"
-#include "et96map_dialogue.h"
 
 #define MAXENTRIES 50
 #define SSN 6
