@@ -63,7 +63,7 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 	auto_ptr<char> _systemId = rand_char(MAX_SYSTEM_ID_LENGTH);
 	sme->systemId = _systemId.get();
 	sme->SME_N = rand0(INT_MAX);
-	sme->disabled = rand0(1);
+	sme->disabled = !rand0(3);
 }
 
 vector<int> SmeManagerTestCases::compareSmeInfo(const SmeInfo& sme1,
@@ -533,7 +533,7 @@ TCResult* SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme, int num)
 					timeout = 0;
 					break;
 				case 2:
-					timeout = rand1(5);
+					timeout = rand1(5000);
 					break;
 				default:
 					throw s;

@@ -15,26 +15,23 @@ using namespace std;
 class TestTask : public smsc::core::threads::ThreadedTask
 {
 private:
-	char* name;
+	char name[100];
 	bool executeFlag;
 
 public:
 	TestTask(const char* _name)
-		: executeFlag(true), name(new char[100])
+		: executeFlag(true)
 	{
 		strcpy(name, _name);
 	}
 
 	TestTask(const char* className, int taskNum)
-		: executeFlag(true), name(new char[100])
+		: executeFlag(true)
 	{
 		sprintf(name, "%s_%d", className, taskNum);
 	}
 
-	virtual ~TestTask()
-	{
-		delete[] name;
-	}
+	virtual ~TestTask() {}
 
 	virtual void executeCycle() = NULL; //abstract
 
