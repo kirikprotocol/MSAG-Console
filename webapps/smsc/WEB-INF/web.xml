@@ -14,7 +14,7 @@
         </servlet-class>
         <init-param>
             <param-name>config</param-name>
-            <param-value>/export/home/igork/cvs/smsc/src/webapp/smsc/WEB-INF/config.xml</param-value>
+            <param-value>/export/home/igork/install/tomcat/webapps/smsc/WEB-INF/config.xml</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>

@@ -55,7 +55,7 @@ public class Command
     //logger.debug("start getText");
     Element doc = document.getDocumentElement();
     return "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n"
-            + "<!DOCTYPE command SYSTEM \"command.dtd\">\n\n"
+            + "<!DOCTYPE command SYSTEM \"file:///command.dtd\">\n\n"
             + getText(doc, "");
   }
 

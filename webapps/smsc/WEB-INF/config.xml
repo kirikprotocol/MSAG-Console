@@ -3,12 +3,9 @@
 
 <config>
   <section name="system">
-    <param name="webapp folder" type="string">/export/home/igork/cvs/smsc/src/webapp/smsc</param>
+    <param name="webapp folder" type="string">/export/home/igork/install/tomcat/webapps/smsc</param>
   </section>
   <section name="daemons">
-    <section name="smsc">
-      <param name="port" type="int">6680</param>
-    </section>
   </section>
   <section name="smsc">
     <param name="host" type="string">smsc</param>
@@ -17,9 +14,9 @@
   <section name="profiler">
     <section name="jdbc">
       <param name="source" type="string">jdbc:oracle:thin:@dbs.novosoft.ru:1521:ORCL</param>
-      <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
       <param name="user" type="string">smsc3</param>
       <param name="password" type="string">smsc3</param>
+      <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
     </section>
   </section>
 </config>

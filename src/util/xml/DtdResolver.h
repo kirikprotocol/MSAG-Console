@@ -14,6 +14,10 @@ namespace xml {
 
 class DtdResolver : public EntityResolver {
 public:
+  DtdResolver()
+    : logger(smsc::util::Logger::getCategory("smsc.util.xml.DtdResolver"))
+  {
+  }
 	/**
 	  * Allow the application to resolve external entities.
 	  *
@@ -50,6 +54,10 @@ public:
 	  */
 	virtual InputSource* resolveEntity(const XMLCh *const publicId, const XMLCh *const systemId)
 	{
+    #ifdef SMSC_DEBUG
+      std::auto_ptr<char> translatedSystemId(XMLString::transcode(systemId));
+      logger.debug("Resolving entity \"%s\"", translatedSystemId.get());
+    #endif
 		if (XMLString::endsWith(systemId, DOMString(".dtd").rawBuffer()))
 		{
 			int idx = XMLString::lastIndexOf(systemId, '/');
@@ -69,10 +77,11 @@ public:
 	}
 
 private:
-	InputSource * createInputSource(const XMLCh * const dtdName)
-	{
+  Category &logger;
+
+  InputSource * tryPrefix(const XMLCh * const dtdName, const char * const prefixChars)
+  {
 		struct stat s;
-		const char prefixChars[] = "../conf/";
 		const size_t prefixLen = strlen(prefixChars);
 		const size_t dtdNameLen = XMLString::stringLen(dtdName);
 		XMLCh tmpDtdName[prefixLen + dtdNameLen + 1];
@@ -81,14 +90,26 @@ private:
 		tmpDtdName[prefixLen + dtdNameLen] = 0;
 		
 		std::auto_ptr<char> dtdNameTranscodedToCallCFunctionStat(XMLString::transcode(tmpDtdName));
-		if (stat(dtdNameTranscodedToCallCFunctionStat.get(), &s) == 0)
-		{
+		if (stat(dtdNameTranscodedToCallCFunctionStat.get(), &s) == 0) {
+      #ifdef SMSC_DEBUG
+        logger.debug("Resolved to \"%s\"", dtdNameTranscodedToCallCFunctionStat.get());
+      #endif
 			return new LocalFileInputSource(tmpDtdName);
-		}
-		else
-		{
-			return new LocalFileInputSource(dtdName);
-		}
+    } else
+      return 0;
+  }
+
+	InputSource * createInputSource(const XMLCh * const dtdName)
+	{
+		const char prefixChars[] = "../conf/";
+		
+    InputSource * result = 0;
+    if (result = tryPrefix(dtdName, "../conf/")) 
+      return result;
+    else if (result = tryPrefix(dtdName, "conf/")) 
+      return result;
+    else
+		  return new LocalFileInputSource(dtdName);
 	}
 };
 
