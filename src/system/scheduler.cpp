@@ -117,6 +117,7 @@ int Scheduler::Execute()
 
 void Scheduler::ChangeSmsSchedule(SMSId id,time_t newtime,SmeIndex idx)
 {
+  __require__(id!=0);
   MutexGuard guard(mon);
   timeLine.insert(TimeIdPair(newtime,Data(id,idx)));
   __trace2__("Scheduler: changesmsschedule %lld -> %d",id,newtime);
@@ -126,6 +127,7 @@ void Scheduler::ChangeSmsSchedule(SMSId id,time_t newtime,SmeIndex idx)
 
 void Scheduler::UpdateSmsSchedule(time_t old,SMSId id,time_t newtime,SmeIndex idx)
 {
+  __require__(id!=0);
   MutexGuard guard(mon);
   std::pair<TimeLineMap::iterator,TimeLineMap::iterator> p;
   p=timeLine.equal_range(old);

@@ -690,7 +690,13 @@ StateType StateMachine::submit(Tuple& t)
   SMS* sms = t.command->get_sms();
   uint32_t dialogId =  t.command->get_dialogId();
 
-  __trace2__("SUBMIT_SM: msgId=%lld, seq=%d, from=%s",t.msgId,dialogId,src_proxy->getSystemId());
+  smsLog->debug("SBM: Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+    t.msgId,dialogId,
+    sms->getOriginatingAddress().toString().c_str(),
+    sms->getDestinationAddress().toString().c_str(),
+    src_proxy->getSystemId()
+  );
+
 
   ////
   //
@@ -714,7 +720,12 @@ StateType StateMachine::submit(Tuple& t)
     {
       __warning__("SUBMIT_SM: failed to put response command");
     }
-    __warning__("SUBMIT_SM: invalid schedule");
+    smsLog->warn("SBM: invalid schedule time Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId()
+    );
     return ERROR_STATE;
   }
 
@@ -737,7 +748,12 @@ StateType StateMachine::submit(Tuple& t)
     {
       __warning__("SUBMIT_SM: failed to put response command");
     }
-    __warning__("SUBMIT_SM: both short_message and payload present!!!");
+    smsLog->warn("SBM: both short_message and payload present Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId()
+    );
     return ERROR_STATE;
   }
 
@@ -761,7 +777,13 @@ StateType StateMachine::submit(Tuple& t)
     {
       __warning__("SUBMIT_SM: failed to put response command");
     }
-    __warning2__("SUBMIT_SM: invalid datacoding %d",sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING));
+    smsLog->warn("SBM: invalid datacoding %d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING),
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId()
+    );
     return ERROR_STATE;
   }
 
@@ -800,7 +822,13 @@ StateType StateMachine::submit(Tuple& t)
       }catch(...)
       {
       }
-      __warning__("SUBMIT_SM: invalid message length");
+      smsLog->warn("SBM: invalid message length for unicode (%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+        len,
+        t.msgId,dialogId,
+        sms->getOriginatingAddress().toString().c_str(),
+        sms->getDestinationAddress().toString().c_str(),
+        src_proxy->getSystemId()
+      );
       return ERROR_STATE;
     }
   }
@@ -822,7 +850,12 @@ StateType StateMachine::submit(Tuple& t)
     }catch(...)
     {
     }
-    __warning__("SUBMIT_SM: invalid valid time");
+    smsLog->warn("SBM: invalid valid time Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId()
+    );
     return ERROR_STATE;
   }
 
@@ -842,11 +875,15 @@ StateType StateMachine::submit(Tuple& t)
       src_proxy->putCommand(resp);
     }catch(...)
     {
+      __warning__("SUBMIT_SM: failed to put response command");
     }
-    char buf[256];
-    sms->getOriginatingAddress().toString(buf,sizeof(buf));
-    __warning2__("SUBMIT_SM: invalid source address:%s(%s)",buf,
-      src_proxy->getSourceAddressRange().c_str());
+    smsLog->warn("SBM: invalid source address for range '%s' Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      src_proxy->getSourceAddressRange().c_str(),
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId()
+    );
     return ERROR_STATE;
   }
 
@@ -857,13 +894,10 @@ StateType StateMachine::submit(Tuple& t)
   // route sms
   //SmeProxy* dest_proxy = 0;
   Address dst;
-  __trace2__("AliasToAddress: %d.%d.%.20s",
-    sms->getDestinationAddress().type,
-    sms->getDestinationAddress().plan,
-    sms->getDestinationAddress().value);
+  __trace2__("AliasToAddress: %s",sms->getDestinationAddress().toString().c_str());
   if(smsc->AliasToAddress(sms->getDestinationAddress(),dst))
   {
-    __trace2__("ALIAS:%20s->%20s",sms->getDestinationAddress().value,dst.value);
+    __trace2__("ALIAS:%s->%s",sms->getDestinationAddress().toString().c_str(),dst.toString().c_str());
   }
   else
   {
@@ -871,8 +905,7 @@ StateType StateMachine::submit(Tuple& t)
   }
   sms->setDealiasedDestinationAddress(dst);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms->getOriginatingAddress());
-  __trace2__("SUBMIT_SM: lookup .%d.%d.%20s, result: %d,%d",sms->getOriginatingAddress().type,
-    sms->getOriginatingAddress().plan,sms->getOriginatingAddress().value,
+  __trace2__("SUBMIT_SM: lookup %s, result: %d,%d",sms->getOriginatingAddress().toString().c_str(),
     profile.reportoptions,profile.codepage);
 
   __trace2__("SUBMIT_SM: profile options=%d",profile.reportoptions);
@@ -927,11 +960,16 @@ StateType StateMachine::submit(Tuple& t)
     char buf2[32];
     sms->getOriginatingAddress().toString(buf1,sizeof(buf2));
     dst.toString(buf2,sizeof(buf2));
-    __warning2__("SUBMIT_SM: no route (%s->%s)",buf1,buf2);
+    smsLog->warn("SBM: no route Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId()
+    );
     return ERROR_STATE;
   }
 
-  __trace2__("SUBMIT_SM: route found, routeId=%s, smeSystemId=%s",ri.routeId.c_str(),ri.smeSystemId.c_str());
+  //__trace2__("SUBMIT_SM: route found, routeId=%s, smeSystemId=%s",ri.routeId.c_str(),ri.smeSystemId.c_str());
 
   sms->setSourceSmeId(t.command->get_sourceId());
 
@@ -1006,6 +1044,13 @@ StateType StateMachine::submit(Tuple& t)
     {
       __trace__("SUBMIT: failed to put response command");
     }
+    smsLog->warn("SBM: invalid schedule time(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      sms->getNextTime(),
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId()
+    );
     return ERROR_STATE;
   }
 
@@ -1037,7 +1082,14 @@ StateType StateMachine::submit(Tuple& t)
       }catch(...)
       {
       }
-      __warning__("SUBMIT_SM: invalid message length");
+      smsLog->warn("SBM: invalid message length(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+        len,
+        t.msgId,dialogId,
+        sms->getOriginatingAddress().toString().c_str(),
+        sms->getDestinationAddress().toString().c_str(),
+        src_proxy->getSystemId(),
+        ri.smeSystemId.c_str()
+      );
       return ERROR_STATE;
     }
 
@@ -1066,7 +1118,14 @@ StateType StateMachine::submit(Tuple& t)
     }
     unsigned int len;
     const char *msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-    __warning2__("SUBMIT_SM: invalid message length:%d",len);
+    smsLog->warn("SBM: invalid message length(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+      len,
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId(),
+      ri.smeSystemId.c_str()
+    );
     return ERROR_STATE;
   }
 
@@ -1087,7 +1146,13 @@ StateType StateMachine::submit(Tuple& t)
     {
       __warning__("SUBMIT_SM: failed to put response command");
     }
-    __warning__("SUBMIT_SM: udhi present in concatenated message!!!");
+    smsLog->warn("SBM: udhi present in concatenated message!!! Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId(),
+      ri.smeSystemId.c_str()
+    );
     return ERROR_STATE;
   }
 
@@ -1108,7 +1173,13 @@ StateType StateMachine::submit(Tuple& t)
     {
       __warning__("SUBMIT_SM: failed to put response command");
     }
-    __warning__("SUBMIT_SM: ussd message too long!!!");
+    smsLog->warn("SBM: ussd message too long!!! Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId(),
+      ri.smeSystemId.c_str()
+    );
     return ERROR_STATE;
   }
 
@@ -1177,7 +1248,7 @@ StateType StateMachine::submit(Tuple& t)
       sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
   }catch(...)
   {
-    __trace2__("failed to create sms with id %lld",t.msgId);
+    __warning2__("failed to create sms with id %lld",t.msgId);
     sms->lastResult=Status::SYSERR;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp
@@ -1201,6 +1272,15 @@ StateType StateMachine::submit(Tuple& t)
   //
   ////
 
+  smsLog->debug("SBM: sms created Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+    t.msgId,dialogId,
+    sms->getOriginatingAddress().toString().c_str(),
+    sms->getDestinationAddress().toString().c_str(),
+    src_proxy->getSystemId(),
+    ri.smeSystemId.c_str()
+  );
+
+
   smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
 
   {
@@ -1220,7 +1300,13 @@ StateType StateMachine::submit(Tuple& t)
       src_proxy->putCommand(resp);
     }catch(...)
     {
-      __trace__("SUBMIT: failed to put response command");
+      smsLog->warn("SBM: failed to put response command SUBMIT_OK Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+        t.msgId,dialogId,
+        sms->getOriginatingAddress().toString().c_str(),
+        sms->getDestinationAddress().toString().c_str(),
+        src_proxy->getSystemId(),
+        ri.smeSystemId.c_str()
+      );
     }
   }
 
@@ -1236,10 +1322,13 @@ StateType StateMachine::submit(Tuple& t)
   if ( !dest_proxy )
   {
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,sms);
-    char bufsrc[64],bufdst[64];
-    sms->getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
-    sms->getDestinationAddress().toString(bufdst,sizeof(bufdst));
-    __warning2__("FORWARD: sme is not connected(%s->%s(%s))",bufsrc,bufdst,ri.smeSystemId.c_str());
+    smsLog->debug("SBM: dest sme not connected Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId(),
+      ri.smeSystemId.c_str()
+    );
     try{
       //time_t now=time(NULL);
       Descriptor d;
@@ -1252,7 +1341,7 @@ StateType StateMachine::submit(Tuple& t)
       smsc->notifyScheduler();
     }catch(...)
     {
-      __trace__("SUBMIT_SM: failed to change state to enroute");
+      __warning__("SUBMIT_SM: failed to change state to enroute");
     }
     return ENROUTE_STATE;
   }
@@ -1272,11 +1361,25 @@ StateType StateMachine::submit(Tuple& t)
     {
       __trace__("SUBMIT_SM: failed to change state to enroute");
     }
+    smsLog->warn("SBM: failed to get seq number Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId(),
+      ri.smeSystemId.c_str()
+    );
     sms->lastResult=Status::SMENOTCONNECTED;
     sendNotifyReport(*sms,t.msgId,"destination unavailable");
     return ENROUTE_STATE;
   }
-  __trace2__("DELIVER: seq:%d",dialogId2);
+  smsLog->debug(": seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+    dialogId2,
+    t.msgId,dialogId,
+    sms->getOriginatingAddress().toString().c_str(),
+    sms->getDestinationAddress().toString().c_str(),
+    src_proxy->getSystemId(),
+    ri.smeSystemId.c_str()
+  );
   //Task task((uint32_t)dest_proxy_index,dialogId2);
   try{
   Task task(dest_proxy->getUniqueId(),dialogId2);
@@ -1293,7 +1396,15 @@ StateType StateMachine::submit(Tuple& t)
     {
       __warning__("SUBMIT_SM: failed to change state to enroute");
     }
-    __warning__("SUBMIT_SM: can't create task");
+
+    smsLog->warn("SBMDLV: failed to create task, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+      dialogId2,
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId(),
+      ri.smeSystemId.c_str()
+    );
 
     sms->lastResult=Status::SYSERR;
     sendNotifyReport(*sms,t.msgId,"system failure");
@@ -1312,7 +1423,14 @@ StateType StateMachine::submit(Tuple& t)
     {
       __warning__("SUBMIT_SM: failed to change state to enroute");
     }
-    __warning__("SUBMIT: failed to create task");
+    smsLog->warn("SBMDLV: failed to create task, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+      dialogId2,
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId(),
+      ri.smeSystemId.c_str()
+    );
     sms->lastResult=Status::SYSERR;
     sendNotifyReport(*sms,t.msgId,"system failure");
     return ENROUTE_STATE;
@@ -1395,7 +1513,6 @@ StateType StateMachine::submit(Tuple& t)
       sms->setDestinationAddress(dstOriginal);
       sms->lastResult=Status::INVBNDSTS;
       sendNotifyReport(*sms,t.msgId,"service rejected");
-      __warning__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
       try{
         Descriptor d;
         changeSmsStateToEnroute(*sms,t.msgId,d,Status::INVBNDSTS,rescheduleSms(*sms));
@@ -1404,11 +1521,26 @@ StateType StateMachine::submit(Tuple& t)
       {
         __warning__("SUBMIT: failed to change state to enroute");
       }
+      smsLog->warn("SBMDLV: Attempt to putCommand for sme in invalid bind state, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+        dialogId2,
+        t.msgId,dialogId,
+        sms->getOriginatingAddress().toString().c_str(),
+        sms->getDestinationAddress().toString().c_str(),
+        src_proxy->getSystemId(),
+        ri.smeSystemId.c_str()
+      );
       return DELIVERING_STATE;
     }
   }catch(exception& e)
   {
-    __warning2__("SUBMIT: failed to put delivery command:%s",e.what());
+    smsLog->warn("SBMDLV: failed to put delivery command, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+      dialogId2,
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId(),
+      ri.smeSystemId.c_str()
+    );
     sms->setOriginatingAddress(srcOriginal);
     sms->setDestinationAddress(dstOriginal);
     sms->lastResult=Status::THROTTLED;
@@ -1421,10 +1553,19 @@ StateType StateMachine::submit(Tuple& t)
     {
       __warning__("SUBMIT: failed to change state to enroute");
     }
-    return DELIVERING_STATE;
+    Task t;
+    smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
+    return ENROUTE_STATE;
   }catch(...)
   {
-    __warning__("SUBMIT: failed to put delivery command");
+    smsLog->warn("SBMDLV: failed to put delivery command, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+      dialogId2,
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId(),
+      ri.smeSystemId.c_str()
+    );
     sms->setOriginatingAddress(srcOriginal);
     sms->setDestinationAddress(dstOriginal);
     sms->lastResult=Status::THROTTLED;
@@ -1437,31 +1578,42 @@ StateType StateMachine::submit(Tuple& t)
     {
       __warning__("SUBMIT: failed to change state to enroute");
     }
-    return DELIVERING_STATE;
+    Task t;
+    smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
+    return ENROUTE_STATE;
   }
-  __trace2__("SUBMIT_SM:OK:%lld",t.msgId);
+  smsLog->debug("SBM: submit ok, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+    dialogId2,
+    t.msgId,dialogId,
+    sms->getOriginatingAddress().toString().c_str(),
+    sms->getDestinationAddress().toString().c_str(),
+    src_proxy->getSystemId(),
+    ri.smeSystemId.c_str()
+  );
   return DELIVERING_STATE;
 }
 
 StateType StateMachine::forward(Tuple& t)
 {
   SMS sms;
-  __trace2__("FORWARD: msgId=%lld",t.msgId);
+  smsLog->debug("FWD: msgId=%lld",t.msgId);
   try{
     store->retriveSms((SMSId)t.msgId,sms);
   }catch(...)
   {
-    __warning2__("FORWARD: failed to retriveSms %d",t.msgId);
+    smsLog->warn("FWD: failed to retriveSms %lld",t.msgId);
     return UNKNOWN_STATE;
   }
   if(sms.getState()==EXPIRED_STATE)
   {
+    smsLog->warn("FWD: sms in expired state msgId=%lld",t.msgId);
     return EXPIRED_STATE;
   }
   time_t now=time(NULL);
   if(sms.getValidTime()<=now && sms.getAttemptsCount()!=0)
   {
     sms.lastResult=Status::EXPIRED;
+    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
     smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
     try{
       store->changeSmsStateToExpired(t.msgId);
@@ -1469,7 +1621,7 @@ StateType StateMachine::forward(Tuple& t)
     {
       __warning__("FORWARD: failed to change state to expired");
     }
-    __trace2__("FORWARD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
+    smsLog->debug("FWD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
 
     sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
 
@@ -1478,12 +1630,12 @@ StateType StateMachine::forward(Tuple& t)
 
   if(sms.getState()!=ENROUTE_STATE)
   {
-    __trace2__("FORWARD: sms is not in enroute (%d)",sms.getState());
+    smsLog->warn("FWD: sms msgId=%lld is not in enroute (%d)",t.msgId,sms.getState());
     return sms.getState();
   }
   if(!t.command->is_reschedulingForward() && sms.getNextTime()>now)
   {
-    __trace2__("FORWARD: nextTime>now (%d>%d)",sms.getNextTime(),now);
+    smsLog->debug("FWD: nextTime>now (%d>%d)",sms.getNextTime(),now);
     SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
     smsc->ChangeSmsSchedule(t.msgId,sms.getNextTime(),idx);
     return sms.getState();
@@ -1576,7 +1728,7 @@ StateType StateMachine::forward(Tuple& t)
     char from[32],to[32];
     sms.getOriginatingAddress().toString(from,sizeof(from));
     sms.getDestinationAddress().toString(to,sizeof(to));
-    __warning2__("FORWARD: No route (%s->%s)",from,to);
+    smsLog->warn("FWD: msgId=%lld, No route (%s->%s)",t.msgId,from,to);
     try{
       sms.lastResult=Status::NOROUTE;
       sendNotifyReport(sms,t.msgId,"destination unavailable");
@@ -1602,7 +1754,7 @@ StateType StateMachine::forward(Tuple& t)
     char bufsrc[64],bufdst[64];
     sms.getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
     sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
-    __warning2__("FORWARD: sme is not connected(%s->%s(%s))",bufsrc,bufdst,ri.smeSystemId.c_str());
+    smsLog->warn("FWD: msgId=%lld sme is not connected(%s->%s(%s))",t.msgId,bufsrc,bufdst,ri.smeSystemId.c_str());
     sms.lastResult=Status::SMENOTCONNECTED;
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     try{
@@ -1628,13 +1780,13 @@ StateType StateMachine::forward(Tuple& t)
   uint32_t dialogId2;
   try{
     dialogId2 = dest_proxy->getNextSequenceNumber();
-    __trace2__("FORWARD: seq number:%d",dialogId2);
+    smsLog->debug("FWDDLV: msgId=%lld, seq number:%d",t.msgId,dialogId2);
     //Task task((uint32_t)dest_proxy_index,dialogId2);
     Task task(dest_proxy->getUniqueId(),dialogId2);
     task.messageId=t.msgId;
     if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
     {
-      __warning__("FORWARD: can't create task");
+      smsLog->warn("FWDDLV: failed to create task msgId=%lld, seq number:%d",t.msgId,dialogId2);
       try{
         sms.lastResult=Status::SYSERR;
         sendNotifyReport(sms,t.msgId,"destination unavailable");
@@ -1655,6 +1807,7 @@ StateType StateMachine::forward(Tuple& t)
     }
   }catch(...)
   {
+    smsLog->warn("FWDDLV: failed to get seqnum msgId=%lld",t.msgId,dialogId2);
     try{
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
@@ -1760,8 +1913,8 @@ StateType StateMachine::forward(Tuple& t)
   }
   if(errstatus)
   {
-    //TODO!!!: remove task and reschedule
-    __trace2__("FORWARD::Err %s",errtext);
+    smsLog->warn("FWDDLV: failed create deliver(%s) msgId=%lld, seq number:%d",errtext,t.msgId,dialogId2);
+
     sms.setOriginatingAddress(srcOriginal);
     sms.setDestinationAddress(dstOriginal);
     sms.lastResult=errstatus;
@@ -1776,18 +1929,22 @@ StateType StateMachine::forward(Tuple& t)
     {
       __warning__("FORWARD: failed to change state to enroute");
     }
+    Task t;
+    smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
     return ENROUTE_STATE;
   }
+  smsLog->debug("FWDDLV: deliver ok msgId=%lld, seq number:%d",t.msgId,dialogId2);
+
   return DELIVERING_STATE;
 }
 
 StateType StateMachine::deliveryResp(Tuple& t)
 {
-  __trace2__("DELIVERYRESP: msgId=%lld,status=%d",t.msgId,t.command->get_resp()->get_status());
+  smsLog->debug("DLVRSP: msgId=%lld;st=%d",t.msgId,t.command->get_resp()->get_status());
   //__require__(t.state==DELIVERING_STATE);
   if(t.state!=DELIVERING_STATE)
   {
-    __warning__("DELIVERYRESP: state of SMS isn't DELIVERING!!!");
+    smsLog->debug("DLVRSP: state of SMS isn't DELIVERING!!! msgId=%lld;st=%d",t.msgId,t.command->get_resp()->get_status());
     return t.state;
   }
   //smsc::sms::Descriptor d;
@@ -1809,7 +1966,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     store->retriveSms((SMSId)t.msgId,sms);
   }catch(exception& e)
   {
-    __warning2__("DELIVERYRESP: failed to retrieve sms:%s",e.what());
+    smsLog->warn("DLVRSP: failed to retrieve sms:%s! msgId=%lld;st=%d",e.what(),t.msgId,t.command->get_resp()->get_status());
     return UNKNOWN_STATE;
   }
   sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
@@ -1899,13 +2056,34 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
+    smsLog->debug("DLVRSP: sms has concatinfo, csn=%d;msgId=%lld",sms.getConcatSeqNum(),t.msgId);
     unsigned int len;
     ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
     if(sms.getConcatSeqNum()<ci->num-1)
     {
       {
         sms.setConcatSeqNum(sms.getConcatSeqNum()+1);
-        store->changeSmsConcatSequenceNumber(t.msgId);
+        try
+        {
+          store->changeSmsConcatSequenceNumber(t.msgId);
+        }catch(...)
+        {
+          __warning2__("DELIVERYRESP: failed to change sms concat seq num:%lld",t.msgId);
+          try{
+            changeSmsStateToEnroute
+            (
+              sms,
+              t.msgId,
+              sms.getDestinationDescriptor(),
+              Status::SYSERR,
+              rescheduleSms(sms)
+            );
+          }catch(...)
+          {
+             __warning2__("DELIVERYRESP: failed to cahnge sms state to enroute:%lld",t.msgId);
+          }
+          return UNKNOWN_STATE;
+        }
         __trace2__("CONCAT: concatseqnum=%d for msdgId=%lld",sms.getConcatSeqNum(),t.msgId);
       }
 
@@ -2039,6 +2217,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     __warning2__("change state to delivered exception:%s",e.what());
     return UNKNOWN_STATE;
   }
+  smsLog->debug("DLVRSP: DELIVERED, msgId=%lld",t.msgId);
   __trace__("DELIVERYRESP: registerStatisticalEvent");
   smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
   try{
@@ -2134,7 +2313,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
 StateType StateMachine::alert(Tuple& t)
 {
-  __trace2__("ALERT: msgId=%lld",t.msgId);
+  smsLog->debug("ALERT: msgId=%lld",t.msgId);
   //time_t now=time(NULL);
   Descriptor d;
   SMS sms;
@@ -2142,13 +2321,13 @@ StateType StateMachine::alert(Tuple& t)
     store->retriveSms((SMSId)t.msgId,sms);
   }catch(...)
   {
-    __trace2__("ALERT: Failed to retrieve sms:%lld",t.msgId);
+    smsLog->warn("ALERT: Failed to retrieve sms:%lld",t.msgId);
     return UNKNOWN_STATE;
   }
   char bufsrc[64],bufdst[64];
   sms.getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
   sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
-  __warning2__("ALERT: delivery timed out(%s->%s)",bufsrc,bufdst);
+  smsLog->warn("ALERT: delivery timed out(%s->%s)",bufsrc,bufdst);
   try{
     changeSmsStateToEnroute(sms,t.msgId,d,Status::DELIVERYTIMEDOUT,rescheduleSms(sms));
   }catch(std::exception& e)
@@ -2613,7 +2792,7 @@ void StateMachine::changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d
                                            uint32_t failureCause,time_t nextTryTime,
                                            bool skipAttempt)
 {
-  store->changeSmsStateToEnroute(id,d,failureCause,nextTryTime,skipAttempt);
+  store->changeSmsStateToEnroute(id,d,failureCause,nextTryTime,sms.getAttemptsCount()+(skipAttempt?0:1));
   sms.setNextTime(nextTryTime);
   SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
   smsc->ChangeSmsSchedule(id,sms.getNextTime(),idx);

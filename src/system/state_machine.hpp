@@ -24,7 +24,10 @@ public:
                eq(q),
                store(st),
                smsc(app)
-               {}
+
+  {
+    smsLog=&smsc::util::Logger::getCategory("sms.trace");
+  }
   virtual ~StateMachine()
   {
   }
@@ -68,6 +71,8 @@ protected:
   EventQueue& eq;
   smsc::store::MessageStore* store;
   smsc::system::Smsc *smsc;
+
+  log4cpp::Category* smsLog;
 
   StateType submit(Tuple& t);
   StateType forward(Tuple& t);
