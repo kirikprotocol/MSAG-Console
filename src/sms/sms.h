@@ -618,7 +618,7 @@
 						{
 							uint16_t tmp16 = htons(tag);;
 							//*(uint16_t*)(buffer+offs) = htons(tag);
-							memcpy(buffer+offs+2,&tmp16,2);
+							memcpy(buffer+offs,&tmp16,2);
 							uint32_t tmp32 = htonl(len);
 							//*(uint32_t*)(buffer+offs+2) = htonl(len);
 							memcpy(buffer+offs+2,&tmp32,4);
