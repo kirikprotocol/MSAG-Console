@@ -468,10 +468,11 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   }
   if(!hasDirectives)return;
   static const char *escchars="[]{}^~\\|";
-  auto_ptr<char> bufptr(new char[len+1]);
+  auto_ptr<char> bufptr(new char[len*2+1]);
   char *buf=bufptr.get();
 
-  len=getSmsText(&sms,buf,len+1);
+  len=getSmsText(&sms,buf,len*2+1);
+  if(((int)len)<0)throw Exception("message too long\n");
 
   Array<Directive> offsets;
   /*
