@@ -52,6 +52,9 @@
   #define __watchdog__(expr) (expr)
   #define __watchdog2__(expr,info) (expr)
 #endif
+  
+#define throw_if_fail(expr) \
+    if ( !__watchdog2__(expr,"failed: "#expr"\n\tthrow runtime_error") ) throw runtime_error("failed: "#expr); else;
 
 #if !defined DISABLE_SOFT_CHECKS
   #define __goto_if_fail__(expr,label) \

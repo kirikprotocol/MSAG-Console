@@ -3,7 +3,7 @@
 */
 
 #if !defined DISABLE_TRACING
-#define DISABLE_TRACING
+//#define DISABLE_TRACING
 #endif
 
 #include "route_manager.h"
@@ -25,7 +25,7 @@ using std::sort;
 
 static inline void printRoute(RouteRecord* record)
 {
-  __trace2__("R(%s:%x->%s:%x)",
+  __trace2__("%%%% R(%s:%x->%s:%x)",
              record->pattern.src_addressPattern,
              record->pattern.src_addressPattern_32[0],
              record->pattern.dest_addressPattern,
@@ -307,6 +307,7 @@ __synchronized__
   {
     __qsort__(table,table_ptr,sizeof(RouteRecord*),route_pattern_compare);
     sorted = true;
+		__trace2__("___ route table, size=%d ___",table_ptr);
     for ( int i=0; i < table_ptr; ++i )
       printRoute(table[i]);
   }

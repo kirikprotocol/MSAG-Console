@@ -79,51 +79,75 @@ static inline void makeAliasFromValueByAddres(
   const AliasRecord& p,const AValue& val,Address &addr)
 {
   ENTER;
-	char buf[21];
-  __require__(p.addr.defLength <= val.length );
-  __require__(p.alias.defLength+val.length-p.addr.defLength < 21);
-  memset(buf,0,21);
+  char buf[21];
+  //__require__(p.addr.defLength <= val.length );
+  //__require__(p.alias.defLength+val.length-p.addr.defLength < 21);
+  
+	memset(buf,0,21);
   int ln = 0;
-  if (!(ln+p.alias.defLength<=21)) 
-		throw runtime_error("incorrect address->alias translation definition, result length > 21");
-	memcpy(buf,p.alias.value,ln+=p.alias.defLength);
-  if (!(ln+(val.length-p.addr.defLength)<=21-p.alias.defLength))
-		throw runtime_error("incorrect address->alias translation definition, result length > 21");
-  memcpy(buf+p.alias.defLength,val.value+p.addr.defLength,
-         ln+=(val.length-p.addr.defLength));
-  __require__(ln < 21 );
+  
+	//if (!p.alias.defLength<=21) 
+  //  throw runtime_error("incorrect address->alias translation definition, result length > 21");
+	throw_if_fail(p.alias.defLength<=21);
+  memcpy(buf,p.alias.value,p.alias.defLength);
+	ln = p.alias.defLength;
+  
+	__require__(val.length-p.addr.defLength >= 0 );
+	//if (!(ln+(val.length-p.addr.defLength)<=21))
+  //  throw runtime_error("incorrect address->alias translation definition, result length > 21");
+  throw_if_fail(ln+(val.length-p.addr.defLength)<=21);
+	if ( val.length-p.addr.defLength != 0 )
+	{
+		memcpy(buf+ln,
+				 val.value+p.addr.defLength,
+         val.length-p.addr.defLength);
+		ln+=(val.length-p.addr.defLength);
+	}
+  
+	__require__(ln < 21 );
   addr.setNumberingPlan(p.alias.numberingPlan);
   addr.setTypeOfNumber(p.alias.typeOfNumber);
   addr.setValue(ln,buf);
-	LEAVE;
+  LEAVE;
 }
 
 static inline void makeAddressFromValueByAlias(
   const AliasRecord& p,const AValue& val,Address &addr)
 {
   ENTER;
-	char buf[21];
-  __require__(p.alias.defLength <= val.length );
-  __require__(p.addr.defLength+val.length-p.alias.defLength < 21);
+  char buf[21];
+  //__require__(p.alias.defLength <= val.length );
+  //__require__(p.addr.defLength+val.length-p.alias.defLength < 21);
   memset(buf,0,21);
-  int ln = 0;
-  if(!(ln+p.addr.defLength<=21))
-		throw runtime_error("incorrect address->alias translation definition, result length > 21");
-  memcpy(buf,p.addr.value,ln+=p.addr.defLength);
-  if(!(ln+(val.length-p.alias.defLength)<=21-p.addr.defLength))
-		throw runtime_error("incorrect address->alias translation definition, result length > 21");
-  memcpy(buf+p.addr.defLength,val.value+p.alias.defLength,
-         ln+=(val.length-p.alias.defLength));
+  int ln;
+  //if(!(ln+p.addr.defLength<=21))
+  //  throw runtime_error("incorrect address->alias translation definition, result length > 21");
+  throw_if_fail(ln+p.addr.defLength<=21);
+	memcpy(buf,p.addr.value,p.addr.defLength);
+	ln = p.addr.defLength;
+
+	__require__( val.length-p.alias.defLength >=0 );
+	//if(!( ln+(val.length-p.alias.defLength) <= 21 ))
+  //  throw runtime_error("incorrect address->alias translation definition, result length > 21");
+	throw_if_fail(ln+(val.length-p.alias.defLength) <= 21);
+  if ( (val.length-p.alias.defLength) != 0 )
+	{
+		memcpy(buf+ln,
+				 val.value+p.alias.defLength,
+         val.length-p.alias.defLength);
+		ln += val.length-p.alias.defLength;
+	}
   __require__(ln < 21 );
+
   addr.setNumberingPlan(p.addr.numberingPlan);
   addr.setTypeOfNumber(p.addr.typeOfNumber);
   addr.setValue(ln,buf);
-	LEAVE;
+  LEAVE;
 }
 
 static inline void makeAPattern(APattern& pat, const Address& addr)
 {
-	ENTER;
+  ENTER;
   char buf[21];
   pat.numberingPlan = addr.getNumberingPlan();
   pat.typeOfNumber = addr.getTypeOfNumber();
@@ -154,18 +178,18 @@ static inline void makeAPattern(APattern& pat, const Address& addr)
   {
     pat.value[i] = buf[i] & pat.mask[i];
   }
-	LEAVE;
+  LEAVE;
 }
 
 static inline void makeAValue(AValue& val, const Address& addr)
 {
   ENTER;
-	val.numberingPlan = addr.getNumberingPlan();
+  val.numberingPlan = addr.getNumberingPlan();
   val.typeOfNumber = addr.getTypeOfNumber();
   int length = addr.getValue((char*)val.value);
   __require__ ( length < 21 );
   val.length = length;
-	LEAVE;
+  LEAVE;
 }
 
 bool AliasManager::AddressToAlias(
@@ -173,7 +197,7 @@ bool AliasManager::AddressToAlias(
 {
 __synchronized__
   ENTER;
-	if ( !table_ptr ) return false;
+  if ( !table_ptr ) return false;
   if (!sorted)
   {
     __qsort__(adr_table,table_ptr,sizeof(AliasRecord*),pattern_compare_adr);
@@ -232,7 +256,7 @@ __synchronized__
     ok_adr = record;
   }
   makeAliasFromValueByAddres(*ok_adr,val,alias);
-	LEAVE;
+  LEAVE;
   return true;
 }
 
@@ -240,7 +264,7 @@ bool AliasManager::AliasToAddress(
   const Address& alias, Address&  addr)
 {
 __synchronized__
-	ENTER;
+  ENTER;
   if ( !table_ptr ) return false;
   if (!sorted)
   {
@@ -300,14 +324,14 @@ __synchronized__
     ok_ali = record;
   }
   makeAddressFromValueByAlias(*ok_ali,val,addr);
-	LEAVE;
+  LEAVE;
   return true;
 }
 
 void AliasManager::addAlias(const AliasInfo& info)
 {
   ENTER;
-	auto_ptr<AliasRecord> rec(new AliasRecord);
+  auto_ptr<AliasRecord> rec(new AliasRecord);
   makeAPattern(rec->alias,info.alias);
   makeAPattern(rec->addr,info.addr);
   if ( table_ptr == table_size )
@@ -324,7 +348,7 @@ void AliasManager::addAlias(const AliasInfo& info)
   adr_table[table_ptr] = ali_table[table_ptr];
   ++table_ptr;
   sorted = false;
-	LEAVE;
+  LEAVE;
 }
 
 void AliasManager::clean()

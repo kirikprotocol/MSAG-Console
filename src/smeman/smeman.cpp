@@ -149,7 +149,11 @@ void SmeManager::registerSmeProxy(const SmeSystemId& systemId, SmeProxy* smeProx
 __synchronized__
 
   __require__ ( smeProxy != NULL );
-
+	{
+		SmeProxyPriority p = smeProxy->getPriority();
+		if (!( p > SmeProxyPriorityMinBr && p < SmeProxyPriorityMaxBr ))
+			throw runtime_error("proxy has incorrect priority");
+	}
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX )
   {
