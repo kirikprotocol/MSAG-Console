@@ -11,7 +11,6 @@ import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.Route;
 import ru.novosoft.smsc.admin.route.Source;
-import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.route.Destination;
 
 import java.util.Iterator;
@@ -24,42 +23,44 @@ public class RouteViewCommand implements Command
         this.route = route;
     }
 
-    private String showRoute(Route smscRoute)
+    private String quoteString(String str) {
+        return (str != null &&
+                (str.indexOf(' ') != -1  ||
+                 str.indexOf('\t') != -1 ||
+                 str.indexOf('\f') != -1)) ? "'"+str+"'" : str;
+    }
+    private void viewRoute(Route smscRoute, CommandContext ctx)
     {
-        String out = "Route '"+smscRoute.getName()+"' Priority: "+smscRoute.getPriority()+
-                     " SvcId: "+smscRoute.getServiceId()+" Options ["+
-                     (smscRoute.isArchiving() ? "Archiving, ": "No archiving, ")+
-                     (smscRoute.isBilling()   ? "Billing, ":"No billing, ")+
-                     (smscRoute.isEnabling()  ? "Allowed":"Denied")+"]";
+        ctx.setMessage("Route info");
+        ctx.setStatus(CommandContext.CMD_LIST);
 
+        ctx.addResult("name : "+smscRoute.getName());
+        ctx.addResult("prio : "+smscRoute.getPriority());
+        ctx.addResult("svcid: "+smscRoute.getServiceId());
+        ctx.addResult("flags: "+
+                        (smscRoute.isArchiving() ? "archiving, ": "no archiving, ")+
+                        (smscRoute.isBilling()   ? "billing, ":"no billing, ")+
+                        (smscRoute.isEnabling()  ? "allowed":"denied"));
+
+        String srcsStr = "";
         Iterator srcs = smscRoute.getSources().iterator();
-        if (srcs.hasNext()) out += " Srcs: ";
         while (srcs.hasNext()) {
             Source src = (Source)srcs.next();
-            out += "<"+src.getName();
-            Iterator masks = src.getMasks().iterator();
-            if (masks.hasNext()) out += " Mask(s): ";
-            while (masks.hasNext()) {
-                out += ((Mask)masks.next()).getMask();
-                if (masks.hasNext()) out += ", ";
-            }
-            out += srcs.hasNext() ? ">, ":">";
+            srcsStr += quoteString(src.getName());
+            if (srcs.hasNext()) srcsStr += ", ";
         }
+        ctx.addResult("srcs : "+srcsStr);
 
+        String dstsStr = "";
         Iterator dsts = smscRoute.getDestinations().iterator();
-        if (dsts.hasNext()) out += " Dsts: ";
         while (dsts.hasNext()) {
             Destination dst = (Destination)dsts.next();
-            out += "<"+dst.getName()+" SME:"+dst.getSme().getId();
-            Iterator masks = dst.getMasks().iterator();
-            if (masks.hasNext()) out += " Mask(s): ";
-            while (masks.hasNext()) {
-                out += ((Mask)masks.next()).getMask();
-                if (masks.hasNext()) out += ", ";
-            }
-            out += dsts.hasNext() ? ">, ":">";
+            dstsStr += quoteString(dst.getName());
+            String smeId = dst.getSme().getId();
+            if (smeId != null) dstsStr += " ("+smeId+")";
+            if (dsts.hasNext()) dstsStr += ", ";
         }
-        return out;
+        ctx.addResult("dsts : "+dstsStr);
     }
 
     public void process(CommandContext ctx)
@@ -73,8 +74,7 @@ public class RouteViewCommand implements Command
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                 return;
             }
-            ctx.setMessage(showRoute(smscRoute));
-            ctx.setStatus(CommandContext.CMD_OK);
+            viewRoute(smscRoute, ctx);
         }
         catch (Exception e) {
             ctx.setMessage("Couldn't view "+out+". Cause: "+e.getMessage());
