@@ -109,7 +109,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               }
               catch(exception& e)
               {
-                __warn2__("[route skiped] : %s",e.what());
+                __warning2__("[route skiped] : %s",e.what());
               }
             }
           }
