@@ -122,7 +122,7 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		//в редких случаях sme ack приходит раньше submit_sm_resp
 		if (!monitor->pduData->valid)
 		{
-			__tc_fail__(3);
+			__tc_fail__(-1);
 			//throw TCException();
 		}
 		__tc_ok_cond__;

@@ -107,7 +107,7 @@ void smscSmeTc()
 
 public:
 	SystemSmeCheckList()
-	: SmppProtocolCheckList("Результаты функционального тестирования Profiler и SmscSme через протокол SMPP", "system_sme.chk")
+	: SmppProtocolCheckList("Результаты функционального тестирования Profiler, AbonentInfo и SmscSme через протокол SMPP", "system_sme.chk")
 	{
 		profilerTc();
 		abonentInfoTc();

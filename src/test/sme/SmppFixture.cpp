@@ -1,4 +1,5 @@
 #include "SmppFixture.hpp"
+#include "test/smpp/SmppUtil.hpp"
 
 namespace smsc {
 namespace test {
@@ -6,6 +7,7 @@ namespace sme {
 
 using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::test::core;
+using namespace smsc::test::smpp;
 
 RespPduFlag PduHandler::isAccepted(uint32_t status)
 {
@@ -17,7 +19,7 @@ RespPduFlag PduHandler::isAccepted(uint32_t status)
 		case ESME_RX_T_APPN:
 		case ESME_RMSGQFUL:
 			return RESP_PDU_RESCHED;
-		case 0xffffffff: //ошибка отправки deliver_sm_resp
+		case DELIVERY_STATUS_NO_RESPONSE: //ошибка отправки deliver_sm_resp
 			return RESP_PDU_MISSING;
 		case ESME_RX_P_APPN:
 			__unreachable__("Not supported");

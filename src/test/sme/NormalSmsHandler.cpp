@@ -170,7 +170,7 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 			switch (monitor->getFlag())
 			{
 				case PDU_REQUIRED_FLAG: //delivery rescheduled
-					if (deliveryStatus == 0xffffffff) //респонс не отослан
+					if (deliveryStatus == DELIVERY_STATUS_NO_RESPONSE) //респонс не отослан
 					{
 						startTime = recvTime + fixture->smeInfo.timeout - 1;
 					}
@@ -192,7 +192,7 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 					flag = PDU_NOT_EXPECTED_FLAG;
 					break;
 				case PDU_EXPIRED_FLAG:
-					if (deliveryStatus == 0xffffffff) //респонс не отослан
+					if (deliveryStatus == DELIVERY_STATUS_NO_RESPONSE) //респонс не отослан
 					{
 						startTime = recvTime + fixture->smeInfo.timeout - 1;
 						flag = startTime < monitor->getValidTime() ?
@@ -264,7 +264,7 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 				case PDU_EXPIRED_FLAG:
 					__tc__("processDeliverySm.deliveryReport.deliveryReceipt.expiredDeliveryReceipt");
 					__tc_ok__;
-					if (deliveryStatus == 0xffffffff) //респонс не отослан
+					if (deliveryStatus == DELIVERY_STATUS_NO_RESPONSE) //респонс не отослан
 					{
 						startTime =
 							max(recvTime + (time_t) (fixture->smeInfo.timeout - 1),
