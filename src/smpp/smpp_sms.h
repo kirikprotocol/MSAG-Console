@@ -110,8 +110,8 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
     }
     
     //__require__ ( message.shortMessage.size() == message.smLength );
-    sms->setMessageBody(message.smLength, message.dataCoding, false, message.shortMessage.cstr());
-//    sms->setMessageBody((unsigned char)message.shortMessage.size(), (unsigned char)message.dataCoding, false, (uint8_t*)message.shortMessage.cstr());
+    //sms->setMessageBody(message.smLength, message.dataCoding, false, message.shortMessage.cstr());
+    sms->setMessageBody((unsigned char)message.shortMessage.size(), (unsigned char)message.dataCoding, false, (uint8_t*)message.shortMessage.cstr());
     sms->setProtocolIdentifier(message.protocolId);
     sms->setPriority(message.priorityFlag);
     
