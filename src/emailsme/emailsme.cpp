@@ -7,9 +7,13 @@
 #include "util/config/Manager.h"
 #include "util/config/ConfigView.h"
 #include "emailsme/statuscodes.h"
+#define NAMEDBRACKETS
 #include "util/regexp/RegExp.cpp"
 #include "core/buffers/Array.hpp"
 #include <signal.h>
+#include "db/DataSource.h"
+#include "db/DataSourceLoader.h"
+
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -24,6 +28,8 @@ using smsc::core::buffers::Array;
 
 using namespace smsc::emailsme;
 
+using namespace std;
+
 namespace cfg{
  string sourceAddress;
  int protocolId;
@@ -34,7 +40,34 @@ namespace cfg{
  string smtpHost;
  int smtpPort=25;
  int retryTime=5;
+ int defaultDailyLimit;
+ int annotationSize;
+ string maildomain;
+ smsc::db::DataSource *dataSource;
 };
+
+class ConnectionGuard{
+  smsc::db::DataSource *ds;
+  smsc::db::Connection *conn;
+public:
+  ConnectionGuard(smsc::db::DataSource *_ds):ds(_ds)
+  {
+    conn=ds->getConnection();
+  }
+  ~ConnectionGuard()
+  {
+    ds->freeConnection(conn);
+  }
+  smsc::db::Connection* operator->()
+  {
+    return conn;
+  }
+  smsc::db::Connection* get()
+  {
+    return conn;
+  }
+};
+
 
 int stopped=0;
 
@@ -53,6 +86,7 @@ namespace ProcessSmsCodes{
 const int INVALIDSMS   =0;
 const int NETERROR     =1;
 const int UNABLETOSEND =2;
+const int NOPROFILE    =3;
 const int OK           =256;
 };
 
@@ -65,14 +99,14 @@ void CheckCode(Socket& s,int code)
   if(code<10)retcode/=100;
   if(retcode!=code)
   {
-    fprintf(stderr,"code %d, expected %d\n",retcode,code);
-    throw Exception("");
+    __warning2__("code %d, expected %d",retcode,code);
+    throw Exception("code %d, expected %d",retcode,code);
   }
 }
 
 string makeFromAddress(const char* fromaddress)
 {
-  return (string)fromaddress+"@smsc.novosoft.ru";
+  return (string)fromaddress+"@"+cfg::maildomain;
 }
 
 bool ismailchar(char c)
@@ -92,6 +126,66 @@ string ExtractEmail(const string& value)
   return res;
 }
 
+int getUsageCount(int id)
+{
+  using namespace smsc::db;
+  const char* sql="select count(*) from EMLSME_HISTORY where user_id=:id";
+  ConnectionGuard connection(cfg::dataSource);
+  if(!connection.get())throw Exception("Failed to get db connection");
+  auto_ptr<Statement> statement(connection->createStatement(sql));
+  if(!statement.get())throw Exception("Failed to prepare statement");
+  statement->setInt32(1,id);
+  auto_ptr<ResultSet> rs(statement->executeQuery());
+  if(!rs.get())throw Exception("Failed to make a query to DB");
+  return rs->getInt32(1);
+}
+
+
+string MapEmailToAddress(const string& username,string& fwd)
+{
+  using namespace smsc::db;
+  const char* sql="select address,forward,daily_limit,(select count(*) from EMLSME_HISTORY where MSG_DATE<=:1 and EMLSME_HISTORY.address=EMLSME_PROFILES.address) from EMLSME_PROFILES where username=:2";
+  ConnectionGuard connection(cfg::dataSource);
+  if(!connection.get())throw Exception("Failed to get db connection");
+  auto_ptr<Statement> statement(connection->createStatement(sql));
+  if(!statement.get())throw Exception("Failed to prepare statement");
+  __trace2__("MapEmailToAddress statement created");
+  time_t now=time(NULL);
+  statement->setDateTime(1,now+24*60*60);
+  statement->setString(2,username.c_str());
+  auto_ptr<ResultSet> rs(statement->executeQuery());
+  __trace__("Execute ok");
+  if(!rs.get())throw Exception("Failed to make a query to DB");
+  if(!rs->fetchNext())throw Exception("Mapping username->address for %s not found",username.c_str());
+  int dailyLimit=rs->isNull(3)?cfg::defaultDailyLimit:rs->getInt32(3);
+  int currentCount=rs->getInt32(4);
+  __trace2__("%s:currentCount=%d, dailyLimit=%d",username.c_str(),currentCount,dailyLimit);
+  if(currentCount>=dailyLimit)
+  {
+    throw Exception("daily limit reached for %s",username.c_str());
+  }
+  fwd=rs->isNull(2)?"":rs->getString(2);
+  __trace2__("Map %s->%s",username.c_str(),rs->getString(1));
+  return rs->getString(1);
+}
+
+string MapAddressToEmail(const string& address)
+{
+  using namespace smsc::db;
+  const char* sql="select username from EMLSME_PROFILES where address=:1";
+  ConnectionGuard connection(cfg::dataSource);
+  if(!connection.get())throw Exception("Failed to get db connection");
+  auto_ptr<Statement> statement(connection->createStatement(sql));
+  if(!statement.get())throw Exception("Failed to prepare statement");
+  statement->setString(1,address.c_str());
+  auto_ptr<ResultSet> rs(statement->executeQuery());
+  if(!rs.get())throw Exception("Failed to make a query to DB");
+  if(!rs->fetchNext())throw Exception("Mapping address->email for %s not found",address.c_str());
+  __trace2__("Map %s->%s",address.c_str(),rs->getString(1));
+  return rs->getString(1);
+}
+
+
 void ReplaceString(string& s,const char* what,const char* to)
 {
   int i=0;
@@ -104,6 +198,48 @@ void ReplaceString(string& s,const char* what,const char* to)
   }
 }
 
+int SendEMail(const string& from,const Array<string>& to,const string& subj,const string& body)
+{
+  Socket s;
+  if(s.Init(cfg::smtpHost.c_str(),cfg::smtpPort,0)==-1)
+  {
+    __warning__("smtp host resolve failed");
+    return ProcessSmsCodes::NETERROR;
+  }
+  if(s.Connect()==-1)
+  {
+    __warning__("smtp connect failed");
+    return ProcessSmsCodes::NETERROR;
+  }
+  CheckCode(s,220);
+  s.Printf("HELO\r\n");
+  CheckCode(s,250);
+  s.Printf("MAIL FROM: %s\r\n",ExtractEmail(from).c_str());
+  CheckCode(s,250);
+  for(int i=0;i<to.Count();i++)
+  {
+    s.Printf("RCPT TO: %s\r\n",ExtractEmail(to[i]).c_str());
+    CheckCode(s,2);
+  }
+  s.Puts("DATA\r\n");
+  CheckCode(s,3);
+  s.Printf("From: %s\r\n",from.c_str());
+  string addr;
+  for(int i=0;i<to.Count();i++)
+  {
+    addr+=to[i];
+    if(i!=to.Count()-1)addr+=',';
+  }
+  s.Printf("To: %s\r\n",addr.c_str());
+  if(subj.length())s.Printf("Subject: %s\r\n",subj.c_str());
+  s.Printf("\r\n");
+  if(s.WriteAll(body.c_str(),body.length())==-1)throw Exception("Failed to write body");
+  s.Puts("\r\n.\r\n");
+  CheckCode(s,250);
+  s.Puts("QUIT\r\n");
+  return ProcessSmsCodes::OK;
+}
+
 int processSms(const char* text,const char* fromaddress)
 {
   Hash<SMatch> h;
@@ -111,6 +247,7 @@ int processSms(const char* text,const char* fromaddress)
   int n=10;
   if(!reParseSms.Match(text,m,n,&h))
   {
+    __trace2__("RegExp match failed:%d",reParseSms.LastError());
     return ProcessSmsCodes::INVALIDSMS;
   }
   string cf,addr,rn,subj,body,from,fromdecor;
@@ -126,7 +263,13 @@ int processSms(const char* text,const char* fromaddress)
 
   ReplaceString(body,"\n.\n","\n..\n");
 
-  from=makeFromAddress(fromaddress);
+  try{
+    from=makeFromAddress(MapAddressToEmail(fromaddress).c_str());
+  }catch(exception& e)
+  {
+    __warning2__("failed to map address to mail:%s",e.what());
+    return ProcessSmsCodes::NOPROFILE;
+  }
   fromdecor=from;
   if(rn.length())
   {
@@ -150,35 +293,14 @@ int processSms(const char* text,const char* fromaddress)
     to.Push(addr.substr(startpos));
   }
 
-  if(s.Init(cfg::smtpHost.c_str(),cfg::smtpPort,0)==-1)
-    return ProcessSmsCodes::NETERROR;
-  if(s.Connect()==-1)return ProcessSmsCodes::NETERROR;
   try{
-    CheckCode(s,220);
-    s.Printf("HELO\r\n");
-    CheckCode(s,250);
-    s.Printf("MAIL FROM: %s\r\n",from.c_str());
-    CheckCode(s,250);
-    for(int i=0;i<to.Count();i++)
-    {
-      s.Printf("RCPT TO: %s\r\n",ExtractEmail(to[i]).c_str());
-      CheckCode(s,2);
-    }
-    s.Puts("DATA\r\n");
-    CheckCode(s,3);
-    s.Printf("From: %s\r\n",fromdecor.c_str());
-    s.Printf("To: %s\r\n",addr.c_str());
-    if(subj.length())s.Printf("Subject: %s\r\n",subj.c_str());
-    s.Printf("\r\n");
-    if(s.WriteAll(body.c_str(),body.length())==-1)throw Exception("");
-    s.Puts("\r\n.\r\n");
-    CheckCode(s,250);
+    int rv=SendEMail(fromdecor,to,subj,body);
+    if(rv!=ProcessSmsCodes::OK)return rv;
   }catch(...)
   {
-    fprintf(stderr,"SMTP session aborted\n");
+    __warning2__("SMTP session aborted");
     return ProcessSmsCodes::UNABLETOSEND;
   }
-  s.Puts("QUIT\r\n");
   return ProcessSmsCodes::OK;
 }
 
@@ -196,15 +318,17 @@ public:
       ((PduXSm*)pdu)->get_message().get_source().get_numberingPlan(),
       ((PduXSm*)pdu)->get_message().get_source().get_value());
       char addrtext[64];
-      addr.getText(addrtext,sizeof(addrtext));
+      addr.toString(addrtext,sizeof(addrtext));
 
       int code=processSms(buf,addrtext);
+      __trace2__("processSms: code=%d",code);
       switch(code)
       {
-        case ProcessSmsCodes::INVALIDSMS:code=SmppStatusSet::ESME_RX_P_APPN;
+        case ProcessSmsCodes::NOPROFILE:
+        case ProcessSmsCodes::INVALIDSMS:code=SmppStatusSet::ESME_RX_P_APPN;break;
         case ProcessSmsCodes::UNABLETOSEND:
-        case ProcessSmsCodes::NETERROR:code=SmppStatusSet::ESME_RX_T_APPN;
-        case ProcessSmsCodes::OK:code=SmppStatusSet::ESME_ROK;
+        case ProcessSmsCodes::NETERROR:code=SmppStatusSet::ESME_RX_T_APPN;break;
+        case ProcessSmsCodes::OK:code=SmppStatusSet::ESME_ROK;break;
       }
       PduDeliverySmResp resp;
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
@@ -238,6 +362,20 @@ bool GetNextLine(const char* text,int maxlen,int& pos,string& line)
   return true;
 }
 
+void IncUsageCounter(const string& address)
+{
+  using namespace smsc::db;
+  __trace2__("inc counter for %s",address.c_str());
+  const char* sql="insert into EMLSME_HISTORY (address,MSG_DATE) values (:1,:2)";
+  ConnectionGuard connection(cfg::dataSource);
+  if(!connection.get())throw Exception("Failed to get db connection");
+  auto_ptr<Statement> statement(connection->createStatement(sql));
+  if(!statement.get())throw Exception("Failed to prepare statement");
+  statement->setString(1,address.c_str());
+  statement->setDateTime(2,time(NULL));
+  statement->executeUpdate();
+  connection->commit();
+}
 
 int ProcessMessage(const char *msg,int len)
 {
@@ -291,10 +429,32 @@ int ProcessMessage(const char *msg,int len)
     text+='#';
   }
   else text+=" ";
-  text+=body;
+
+  if(body.length()<cfg::annotationSize)
+  {
+    text+=body;
+  }else
+  {
+    text+=body.substr(0,cfg::annotationSize);
+  }
+
   SMS sms;
   sms.setOriginatingAddress(cfg::sourceAddress.c_str());
-  string dst=to.substr(0,to.find('@'));
+
+  string fwd;
+  string dst=MapEmailToAddress(to.substr(0,to.find('@')),fwd);
+  if(fwd.length())
+  {
+    try{
+      Array<string> to;
+      to.Push(fwd);
+      SendEMail(from,to,subj,body);
+    }catch(exception& e)
+    {
+      __warning2__("Failed to forward msg to %s:%s",fwd.c_str(),e.what());
+    }
+  }
+
   sms.setDestinationAddress(dst.c_str());
   char msc[]="";
   char imsi[]="";
@@ -304,6 +464,7 @@ int ProcessMessage(const char *msg,int len)
   sms.setEServiceType(cfg::serviceType.c_str());
   sms.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,cfg::protocolId);
 
+  sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,0);
   sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
   sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,text.c_str(),text.length());
   sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,text.length());
@@ -320,6 +481,15 @@ int ProcessMessage(const char *msg,int len)
       case SmppStatusSet::ESME_ROK:rc=StatusCodes::STATUS_CODE_OK;break;
       case SmppStatusSet::ESME_RINVDSTADR:rc=StatusCodes::STATUS_CODE_NOUSER;break;
       default:rc=StatusCodes::STATUS_CODE_UNKNOWNERROR;break;
+    }
+    if(rc==StatusCodes::STATUS_CODE_OK)
+    {
+      try{
+        IncUsageCounter(dst);
+      }catch(exception& e)
+      {
+        __warning2__("failed to inc counter:%s",e.what());
+      }
     }
   }
   if(resp)disposePdu((SmppHeader*)resp);
@@ -383,10 +553,21 @@ int main(int argc,char* argv[])
   try{
 
   using namespace smsc::util;
+  using namespace smsc::db;
   config::Manager::init("config.xml");
   config::Manager& cfgman= config::Manager::getInstance();
 
   config::ConfigView *dsConfig = new config::ConfigView(cfgman, "StartupLoader");
+
+  const char* OCI_DS_FACTORY_IDENTITY = "OCI";
+  DataSourceLoader::loadup(dsConfig);
+
+  cfg::dataSource = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
+  if (!cfg::dataSource) throw Exception("Failed to get DataSource");
+  auto_ptr<ConfigView> config(new ConfigView(cfgman,"DataSource"));
+
+  cfg::dataSource->init(config.get());
+
 
   cfg::smtpHost=cfgman.getString("smtp.host");
   try{
@@ -412,6 +593,11 @@ int main(int argc,char* argv[])
   cfg::serviceType=cfgman.getString("smpp.serviceType");
   cfg::protocolId=cfgman.getInt("smpp.protocolId");
 
+  cfg::maildomain=cfgman.getString("mail.domain");
+
+  cfg::defaultDailyLimit=cfgman.getInt("defaults.dailyLimit");
+  cfg::annotationSize=cfgman.getInt("defaults.annotationSize");
+
   MyListener lst;
   SmppSession ss(cfg,&lst);
   cfg::tr=ss.getSyncTransmitter();
@@ -424,12 +610,12 @@ int main(int argc,char* argv[])
   {
     if(srv.InitServer(cfgman.getString("listener.host"),cfgman.getInt("listener.port"),0)==-1)
     {
-      fprintf(stderr,"emailsme: Failed to init listener\n");
+      __warning2__("emailsme: Failed to init listener");
       return -1;
     };
     if(srv.StartServer()==-1)
     {
-      fprintf(stderr,"Failed to start listener\n");
+      __warning2__("Failed to start listener");
       return -1;
     };
     for(;;)
@@ -459,7 +645,14 @@ int main(int argc,char* argv[])
       buf.setSize(sz);
       if(clnt->ReadAll(buf.buffer,sz)==-1)continue;
       __trace__("Processing message");
-      int retcode=ProcessMessage(buf.buffer,sz);
+      int retcode;
+      try{
+        retcode=ProcessMessage(buf.buffer,sz);
+      }catch(exception& e)
+      {
+        __warning2__("process message failed:%s",e.what());
+        retcode=StatusCodes::STATUS_CODE_UNKNOWNERROR;
+      }
       __trace2__("Processing finished, code=%d",retcode);
       retcode=htonl(retcode);
       clnt->WriteAll(&retcode,4);
@@ -469,11 +662,11 @@ int main(int argc,char* argv[])
   }
   }catch(exception& e)
   {
-    fprintf(stderr,"Top level exception:%s\n",e.what());
+    __warning2__("Top level exception:%s",e.what());
   }
   catch(...)
   {
-    fprintf(stderr,"Top level exception:unknown\n");
+    __warning2__("Top level exception:unknown");
   }
   return 0;
 }

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include "util/regexp/RegExp.hpp"
+#define NAMEDBRACKETS
+#include "util/regexp/RegExp.cpp"
 
 using smsc::util::regexp::RegExp;
 using smsc::util::regexp::SMatch;
