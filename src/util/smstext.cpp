@@ -207,6 +207,94 @@ void transLiterateSms(SMS* sms)
   }
 }
 
+static int CalcExUserDataLen(SMS* sms)
+{
+  if(sms->hasIntProperty(Tag::SMPP_SOURCE_PORT))
+  {
+    if(!sms->hasIntProperty(Tag::SMPP_DESTINATION_PORT))return -1;
+    int rv=1+1;//tag+len
+    if(sms->getIntProperty(Tag::SMPP_SOURCE_PORT)<256 &&
+       sms->getIntProperty(Tag::SMPP_DESTINATION_PORT)<256)
+    {
+      rv+=2; //8 bit ports
+    }else
+    {
+      rv+=4; //16 bit ports
+    }
+    return rv;
+  }
+  return 0;
+}
+
+static bool FillUd(SMS* sms)
+{
+  unsigned char userdata[256];
+  unsigned int len;
+  unsigned int udhilen=0;
+  const char* msg=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+  if(len==0 && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  {
+    msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+  }
+  unsigned int off=1;
+  if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+  {
+    udhilen=1+*((unsigned char*)msg);
+    off=udhilen;
+    memcpy(userdata,msg,off);
+  }
+  bool processed=false;
+  if(sms->hasIntProperty(Tag::SMPP_SOURCE_PORT))
+  {
+    if(sms->getIntProperty(Tag::SMPP_SOURCE_PORT)<256 &&
+       sms->getIntProperty(Tag::SMPP_DESTINATION_PORT)<256)
+    {
+      if(off>255-4)
+      {
+        trace("udh length>255");
+        return false;
+      }
+      userdata[off++]=4;
+      userdata[off++]=2;
+      userdata[off++]=sms->getIntProperty(Tag::SMPP_DESTINATION_PORT);
+      userdata[off++]=sms->getIntProperty(Tag::SMPP_SOURCE_PORT);
+    }else
+    {
+      if(off>255-6)
+      {
+        trace("udh length>255");
+        return false;
+      }
+      userdata[off++]=5;
+      userdata[off++]=4;
+      *((unsigned short*)(userdata+off))=htons(sms->getIntProperty(Tag::SMPP_DESTINATION_PORT));
+      off+=2;
+      *((unsigned short*)(userdata+off))=htons(sms->getIntProperty(Tag::SMPP_SOURCE_PORT));
+      off+=2;
+    }
+    processed=true;
+  }
+  if(processed)
+  {
+    userdata[0]=off-1;
+    char buf[256];
+    memcpy(buf,userdata,off);
+    memcpy(buf+off,msg+udhilen,len-udhilen);
+    len-=udhilen;
+    len+=off;
+    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,buf,len);
+    }else
+    {
+      sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,buf,len);
+    }
+    sms->setIntProperty(Tag::SMPP_SM_LENGTH,len);
+    sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
+  }
+  return true;
+}
+
 int partitionSms(SMS* sms,int dstdc)
 {
   unsigned int len;
@@ -237,10 +325,16 @@ int partitionSms(SMS* sms,int dstdc)
     //len+=udhilen;
   }
   int maxlen=134,maxfulllen=140;
+  int exudhilen=CalcExUserDataLen(sms);
+  if(exudhilen==-1)return psErrorUdhi;
+  if(udhi && exudhilen)return psErrorUdhi;
+
   if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     maxfulllen=160;
   }
+  udhilen=exudhilen;
+  int rv=psErrorUdhi;
   if(dc==DataCoding::DEFAULT)
   {
     int xlen=len;
@@ -261,16 +355,30 @@ int partitionSms(SMS* sms,int dstdc)
     }
     __trace2__("PARTITIONSMS: udhilen=%d, xlen=%d",udhilen,xlen);
     xlen*=7;
-    if(udhilen+xlen/8+(xlen%8?1:0)<=maxfulllen)return psSingle;
+    if(udhilen+xlen/8+(xlen%8?1:0)<=maxfulllen)
+    {
+      rv=psSingle;
+    }
   }else
   if(dc==DataCoding::SMSC7BIT)
   {
     int xlen=len*7;
-    if(udhilen+xlen/8+(xlen%8?1:0)<=maxfulllen)return psSingle;
+    if(udhilen+xlen/8+(xlen%8?1:0)<=maxfulllen)
+    {
+      rv=psSingle;
+    }
   }
   else
   {
-    if(udhilen+len<=maxfulllen)return psSingle;
+    if(udhilen+len<=maxfulllen)
+    {
+      rv=psSingle;
+    }
+  }
+  if(rv==psSingle)
+  {
+    if(!FillUd(sms))return psErrorUdhi;
+    return rv;
   }
   if(udhi)return psErrorUdhi;
   if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))return psErrorUssd;
@@ -278,15 +386,18 @@ int partitionSms(SMS* sms,int dstdc)
   int parts=1;
   uint16_t offsets[256];
   offsets[0]=0;
+  maxlen=140-6-exudhilen;
   if(dc==DataCoding::UCS2)
   {
     int lastword=0;
     int lastpos=0;
+    //maxlen&=~1;
+    maxlen/=2;
     for(int i=0;i<len/2;i++)
     {
       unsigned short c;
       memcpy(&c,msg+i*2,2);
-      if((i-lastpos)>=67)
+      if((i-lastpos)>=maxlen)
       {
         __trace2__("PARTITIONSMS: part=%d, i=%d, lastpos=%d, lastword=%d",parts,i,lastpos,lastword);
         if(c<=32)
@@ -294,7 +405,7 @@ int partitionSms(SMS* sms,int dstdc)
           offsets[parts++]=i*2;
           lastpos=i;
         }else
-        if(i-lastword<67)
+        if(i-lastword<maxlen)
         {
           offsets[parts++]=(lastword+1)*2;
           lastpos=lastword+1;
@@ -320,16 +431,18 @@ int partitionSms(SMS* sms,int dstdc)
     int lastword=0;
     int lastpos=0;
     int l=0,wl=0;
+    maxlen*=8;
+    maxlen/=7;
     for(int i=0;i<=len;i++)
     {
       unsigned char c;
       c=msg[i];
-      if(l>=153)
+      if(l>=maxlen)
       {
         __trace2__("PARTITIONSMS: part=%d, l=%d, wl=%d",parts,l,wl);
-        if(wl<153)
+        if(wl<maxlen)
         {
-          if(i<len-1 && l<=153 && (c==32 || c==10 || c==13))
+          if(i<len-1 && l<=maxlen && (c==32 || c==10 || c==13))
           {
             offsets[parts++]=i;
             lastword=i;
@@ -344,7 +457,7 @@ int partitionSms(SMS* sms,int dstdc)
           l=0;
         }else
         {
-          if(l>153)i--;
+          if(l>maxlen)i--;
           offsets[parts++]=i;
           lastpos=i;
           l=0;
@@ -444,6 +557,7 @@ void extractSmsPart(SMS* sms,int partnum)
   sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
   sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
   sms->setIntProperty(Tag::SMPP_DATA_SM,0);
+  FillUd(sms);
 }
 
 };//util

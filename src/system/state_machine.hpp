@@ -12,6 +12,7 @@ namespace smsc{
 namespace system{
 
 class smsc::system::Smsc;
+using smsc::profiler::Profile;
 
 using namespace smsc::util::templates;
 

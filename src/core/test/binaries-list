@@ -9,4 +9,4 @@
 -core/test/mtx mtx -lcore-threads -lcore-buffers -lthread
 -core/test/multi multi -lcore-network -lsocket -lcore-threads -lthread
 -core/test/map map -lthread -lcore-threads
-core/test/a a -lthread -lcore-threads
+-core/test/a a -lthread -lcore-threads
