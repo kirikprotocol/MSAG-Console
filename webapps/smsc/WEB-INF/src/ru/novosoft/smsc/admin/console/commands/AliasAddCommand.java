@@ -41,7 +41,7 @@ public class AliasAddCommand implements Command
                 ctx.setMessage(out+" added");
                 ctx.setStatus(CommandContext.CMD_OK);
             } else {
-                ctx.setMessage(out+" already exists");
+                ctx.setMessage("Alias '"+alias+"' already exists");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             }
         } catch (Exception e) {
