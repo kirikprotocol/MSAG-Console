@@ -359,7 +359,7 @@ void Smsc::init(const SmscConfigs& cfg)
 
     dataSource->init(config);
   }
-  smsc::stat::StatisticsManager *statMan=new smsc::stat::StatisticsManager(*dataSource);
+  statMan=new smsc::stat::StatisticsManager(*dataSource);
   tp.startTask(statMan);
 
 
