@@ -323,10 +323,6 @@ static bool FillUd(SMS* sms)
 int partitionSms(SMS* sms)
 {
   int dstdc=sms->getIntProperty(Tag::SMSC_DSTCODEPAGE);
-  if(!sms->getIntProperty(Tag::SMSC_TRANSLIT))
-  {
-    dstdc=DataCoding::UCS2;
-  }
   unsigned int len;
   const char* msg=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
   int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);

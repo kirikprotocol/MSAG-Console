@@ -207,6 +207,8 @@ StateMachine::StateMachine(EventQueue& q,
 {
   using namespace smsc::util::regexp;
   smsLog = smsc::logger::Logger::getInstance("sms.trace");
+  dreNoTrans.Compile(AltConcat("notrans",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
+  __throw_if_fail__(dreNoTrans.LastError()==regexp::errNone,RegExpCompilationException);
   dreAck.Compile(AltConcat("ack",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
   __throw_if_fail__(dreAck.LastError()==regexp::errNone,RegExpCompilationException);
   dreNoAck.Compile(AltConcat("noack",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
@@ -570,6 +572,13 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       {
         __trace__("DIRECT: error, hide is not modifiable");
       }
+      offsets.Push(Directive(m[0].start,m[0].end));
+      i=m[0].end;
+    }else
+    if(dreNoTrans.MatchEx(buf,buf+i,buf+len,m,n=10))
+    {
+      __trace__("DIRECT: notrans");
+      sms.setIntProperty(Tag::SMSC_TRANSLIT,0);
       offsets.Push(Directive(m[0].start,m[0].end));
       i=m[0].end;
     }else
@@ -1041,7 +1050,11 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   sms->setIntProperty(Tag::SMSC_HIDE,profile.hide);
-  sms->setIntProperty(Tag::SMSC_TRANSLIT,profile.translit);
+  if(!sms->hasIntProperty(Tag::SMSC_TRANSLIT))
+  {
+    sms->setIntProperty(Tag::SMSC_TRANSLIT,profile.translit);
+    debug2(smsLog,"msgId=%lld, set translit to %d",t.msgId,sms->getIntProperty(Tag::SMSC_TRANSLIT));
+  }
 
   Profile srcprof=profile;
 
@@ -1049,15 +1062,18 @@ StateType StateMachine::submit(Tuple& t)
   std::string profileMatchAddress;
   profile=smsc->getProfiler()->lookupEx(dst,profileMatchType,profileMatchAddress);
 
-  if(profileMatchType!=ProfilerMatchType::mtDefault)
+  if(profileMatchType==ProfilerMatchType::mtExact)
   {
+    debug2(smsLog,"msgId=%lld exact profile match, set translit to 1",t.msgId);
     sms->setIntProperty(Tag::SMSC_TRANSLIT,1);
   }
 
   if(!smsCanBeTransliterated(sms))
   {
+    debug2(smsLog,"msgId=%lld cannot be transliterated, set translit to 0",t.msgId);
     sms->setIntProperty(Tag::SMSC_TRANSLIT,0);
   }
+
 
   bool diverted=false;
 
@@ -1111,6 +1127,7 @@ StateType StateMachine::submit(Tuple& t)
       ddc=profile.codepage;
       __trace2__("divert - downgrade dstdc to %d",ddc);
     }
+
     divertFlags|=(ddc)<<DF_DCSHIFT;
 
     if(divertFlags&DF_UNCOND)profile=p;
@@ -1616,7 +1633,17 @@ StateType StateMachine::submit(Tuple& t)
           newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
           if(ri.smeSystemId=="MAP_PROXY")
           {
-            newsms.setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
+            if(!newsms.hasIntProperty(Tag::SMSC_DSTCODEPAGE))
+            {
+              newsms.setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
+            }
+            if(!newsms.getIntProperty(Tag::SMSC_TRANSLIT) || !smsCanBeTransliterated(&newsms))
+            {
+              if(newsms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+              {
+                newsms.setIntProperty(Tag::SMSC_DSTCODEPAGE,DataCoding::UCS2);
+              }
+            }
             pres=partitionSms(&newsms);
             if(pres==psMultiple)
             {
@@ -1786,6 +1813,23 @@ StateType StateMachine::submit(Tuple& t)
       submitResp(t,sms,Status::SUBMITFAIL);
       return ERROR_STATE;
     }
+
+    if(sms->getIntProperty(Tag::SMSC_TRANSLIT)==0)
+    {
+      if(sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+      {
+        debug2(smsLog,"msgId=%lld translit set to 0, patch dstcodepage",t.msgId);
+        sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,DataCoding::UCS2);
+        if(sms->hasIntProperty(Tag::SMSC_DIVERTFLAGS))
+        {
+          int df=sms->getIntProperty(Tag::SMSC_DIVERTFLAGS);
+          df&=~(0xff<<DF_DCSHIFT);
+          df|=(DataCoding::UCS2)<<DF_DCSHIFT;
+          sms->setIntProperty(Tag::SMSC_DIVERTFLAGS,df);
+        }
+      }
+    }
+
 
     if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
     {
@@ -2326,32 +2370,26 @@ StateType StateMachine::submit(Tuple& t)
            )
           )
         {
-          if(!(!diverted && sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2 &&
-             !sms->getIntProperty(Tag::SMSC_TRANSLIT)))
-          {
-
-
-            try{
-              transLiterateSms(sms,sms->getIntProperty(Tag::SMSC_DSTCODEPAGE));
-              if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
-              {
-                int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
-                int olddc=dc;
-                if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
-                {
-                  dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
-
-                }else if((dc&0xf0)==0xe0)
-                {
-                  dc=0xd0 | (dc&0x0f);
-                }
-                sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
-                __trace2__("SUBMIT: transliterate olddc(%x)->dc(%x)",olddc,dc);
-              }
-            }catch(exception& e)
+          try{
+            transLiterateSms(sms,sms->getIntProperty(Tag::SMSC_DSTCODEPAGE));
+            if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
             {
-              __warning2__("SUBMIT:Failed to transliterate: %s",e.what());
+              int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
+              int olddc=dc;
+              if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+              {
+                dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+
+              }else if((dc&0xf0)==0xe0)
+              {
+                dc=0xd0 | (dc&0x0f);
+              }
+              sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+              __trace2__("SUBMIT: transliterate olddc(%x)->dc(%x)",olddc,dc);
             }
+          }catch(exception& e)
+          {
+            __warning2__("SUBMIT:Failed to transliterate: %s",e.what());
           }
         }
       }
@@ -2830,9 +2868,7 @@ StateType StateMachine::forward(Tuple& t)
            )
           )
         {
-          if(!(!diverted && sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2 &&
-               !sms.getIntProperty(Tag::SMSC_TRANSLIT)))
-          {
+          try{
             transLiterateSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
             if(sms.hasIntProperty(Tag::SMSC_ORIGINAL_DC))
             {
@@ -2849,6 +2885,9 @@ StateType StateMachine::forward(Tuple& t)
               sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
               __trace2__("FORWARD: transliterate olddc(%x)->dc(%x)",olddc,dc);
             }
+          }catch(exception& e)
+          {
+            __warning2__("SUBMIT:Failed to transliterate: %s",e.what());
           }
         }
       }

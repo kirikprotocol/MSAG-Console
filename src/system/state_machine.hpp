@@ -107,6 +107,7 @@ protected:
   smsc::util::regexp::RegExp dreDef;
   smsc::util::regexp::RegExp dreTemplate;
   smsc::util::regexp::RegExp dreTemplateParam;
+  smsc::util::regexp::RegExp dreNoTrans;
   smsc::util::regexp::RegExp dreUnknown;
 
   StateType submit(Tuple& t);
