@@ -35,7 +35,6 @@ void AliasManagerTestCases::debugAlias(const char* tc, int val,
 {
 	ostringstream os;
 	os << tc << "(" << val << "): " << *alias;
-	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
 	__trace2__("%s", os.str().c_str());
 }
 
@@ -45,12 +44,12 @@ void AliasManagerTestCases::commit()
 	try
 	{
 		aliasMan->commit();
-		getLog().debug("[%d]\tCommit successful");
+		__trace__("Commit successful");
 	}
 	catch(...)
 	{
 		error();
-		getLog().error("[%d]\tCommit failed");
+		__trace__("Commit failed");
 	}
 }
 
@@ -102,7 +101,7 @@ void AliasManagerTestCases::setupAliasHide(AliasInfo* alias)
 	alias->hide = (tmp ? false : rand0(3));
 }
 
-void AliasManagerTestCases::addAlias(const char* tc, int num, const AliasInfo* alias)
+bool AliasManagerTestCases::addAlias(const char* tc, int num, const AliasInfo* alias)
 {
 	if (aliasReg)
 	{
@@ -113,13 +112,16 @@ void AliasManagerTestCases::addAlias(const char* tc, int num, const AliasInfo* a
 			{
 				aliasMan->addAlias(*alias);
 			}
+			return true;
 		}
 	}
 	else if (aliasMan)
 	{
 		debugAlias(tc, num, alias);
 		aliasMan->addAlias(*alias);
+		return true;
 	}
+	return false;
 }
 
 void AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
@@ -218,8 +220,10 @@ void AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 				throw s;
 		}
 		setupAliasHide(alias);
-		addAlias("addCorrectAliasMatch", s.value(), alias);
-		__tc_ok__;
+		if (addAlias("addCorrectAliasMatch", s.value(), alias))
+		{
+			__tc_ok__;
+		}
 	}
 	catch(...)
 	{
@@ -314,8 +318,10 @@ void AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 				throw s;
 		}
 		setupAliasHide(alias);
-		addAlias("addCorrectAliasNotMatchAddress", s.value(), alias);
-		__tc_ok__;
+		if (addAlias("addCorrectAliasNotMatchAddress", s.value(), alias))
+		{
+			__tc_ok__;
+		}
 	}
 	catch(...)
 	{
@@ -410,8 +416,10 @@ void AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 				throw s;
 		}
 		setupAliasHide(alias);
-		addAlias("addCorrectAliasNotMatchAlias", s.value(), alias);
-		__tc_ok__;
+		if (addAlias("addCorrectAliasNotMatchAlias", s.value(), alias))
+		{
+			__tc_ok__;
+		}
 	}
 	catch(...)
 	{
@@ -570,7 +578,7 @@ void AliasManagerTestCases::printFindResult(const char* name,
 	{
 		os << "NULL";
 	}
-	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
+	__trace2__("%s", os.str().c_str());
 }
 
 void AliasManagerTestCases::printFindResult(const char* tc,
@@ -583,7 +591,7 @@ void AliasManagerTestCases::printFindResult(const char* tc,
 	{
 		os << ", result = " << result;
 	}
-	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
+	__trace2__("%s", os.str().c_str());
 }
 
 void AliasManagerTestCases::findAliasByAddress(const Address& addr)
