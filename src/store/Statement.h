@@ -102,13 +102,14 @@ namespace smsc { namespace store
         SMSId   rcptId;
 
         OCIDate waitTime;
+        OCIDate nextTime;
         OCIDate validTime;
         OCIDate submitTime;
 
         char    bHeaderIndicator;
         char    bNeedArchivate;
 
-        sb2     indWaitTime, indSvcType;
+        sb2     indWaitTime, indNextTime, indSvcType;
         
     public:
         
@@ -190,13 +191,14 @@ namespace smsc { namespace store
         SMSId   newId, rcptId;
 
         OCIDate waitTime;
+        OCIDate nextTime;
         OCIDate validTime;
         OCIDate submitTime;
 
         char    bHeaderIndicator;
         char    bNeedArchivate;
 
-        sb2     indWaitTime, indSvcType;
+        sb2     indWaitTime, indNextTime, indSvcType;
     
     public:
 

@@ -275,7 +275,7 @@ const char* OverwriteStatement::sql = (const char*)
  DST_MSC=NULL, DST_IMSI=NULL, DST_SME_N=NULL,\
  WAIT_TIME=:WAIT_TIME, VALID_TIME=:VALID_TIME,\
  SUBMIT_TIME=:SUBMIT_TIME, ATTEMPTS=0, LAST_RESULT=0,\
- LAST_TRY_TIME=NULL, NEXT_TRY_TIME=NULL, SVC_TYPE=:SVC,\
+ LAST_TRY_TIME=NULL, NEXT_TRY_TIME=:NEXT_TRY_TIME, SVC_TYPE=:SVC,\
  DR=:DR, ARC=:ARC, PRI=:PRI, PID=:PID,\
  UDHI=:UDHI, DCS=:DCS, UDL=:UDL, UD=:UD,\
  RCPT_ID=:RCPT_ID, ESM_CLASS=:ESM_CLASS\
@@ -328,6 +328,15 @@ void OverwriteStatement::bindSms(SMS& sms)
     bind(i++, SQLT_ODT, (dvoid *) &(submitTime), 
          (sb4) sizeof(submitTime));
     
+    if (sms.nextTime) 
+    {
+        convertDateToOCIDate(&(sms.nextTime), &nextTime);
+        indNextTime = OCI_IND_NOTNULL;
+    } 
+    else indNextTime = OCI_IND_NULL;
+    bind(i++, SQLT_ODT, (dvoid *) &(nextTime), 
+         (sb4) sizeof(nextTime), &indNextTime);
+    
     indSvcType = strlen(sms.eServiceType) ? 
                     OCI_IND_NOTNULL:OCI_IND_NULL;
     bind(i++, SQLT_STR, (dvoid *) (sms.eServiceType),
@@ -369,7 +378,7 @@ const char* StoreStatement::sql = (const char*)
  VALUES (:ID, :ST, :MR,\
  :OA_TON, :OA_NPI, :OA_VAL, :SRC_MSC, :SRC_IMSI, :SRC_SME_N,\
  :DA_TON, :DA_NPI, :DA_VAL,\
- :WAIT_TIME, :VALID_TIME, :SUBMIT_TIME, 0, 0, NULL, NULL,\
+ :WAIT_TIME, :VALID_TIME, :SUBMIT_TIME, 0, 0, NULL, :NEXT_TRY_TIME,\
  :SVC, :DR, :ARC, :PRI, :PID, :UDHI, :DCS, :UDL, :UD, :RCPT_ID, :ESM_CLASS)";
 StoreStatement::StoreStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -425,6 +434,15 @@ void StoreStatement::bindSms(SMS& sms)
     convertDateToOCIDate(&(sms.submitTime), &submitTime);
     bind(i++, SQLT_ODT, (dvoid *) &(submitTime), 
          (sb4) sizeof(submitTime));
+    
+    if (sms.nextTime) 
+    {
+        convertDateToOCIDate(&(sms.nextTime), &nextTime);
+        indNextTime = OCI_IND_NOTNULL;
+    } 
+    else indNextTime = OCI_IND_NULL;
+    bind(i++, SQLT_ODT, (dvoid *) &(nextTime), 
+         (sb4) sizeof(nextTime), &indNextTime);
     
     indSvcType = strlen(sms.eServiceType) ? 
                     OCI_IND_NOTNULL:OCI_IND_NULL;
