@@ -353,8 +353,8 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
     while(h.Read(r))
     {
       QueryResult qr;
-      qr.offset=r.ltt;
-      qr.lastTryTime=r.key;
+      qr.offset=r.key;
+      qr.lastTryTime=r.ltt;
       res.Push(qr);
       cnt++;
     }

@@ -62,11 +62,11 @@ int main(int argc,char* argv[])
     {
       ParamArray p;
       Param p1;
-      p1.type=Param::tDstAddress;
-      p1.sValue=".1.1.79029025800";
+      //p1.type=Param::tDstAddress;
+      //p1.sValue=".1.1.79029025800";
       p.Push(p1);
-      p1.type=Param::tSrcSmeId;
-      p1.sValue="InfoSme";
+      p1.type=Param::tRouteId;
+      p1.sValue="InfoSme -> T2";
       p.Push(p1);
       ResultArray res;
       int c=idx.QuerySms(".",p,res);
