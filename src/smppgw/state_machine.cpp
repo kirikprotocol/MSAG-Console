@@ -985,6 +985,8 @@ void StateMachine::submit(SmscCommand& cmd)
     return;
   }
 
+  debug2(smsLog,"route found:%s",ri.routeId.c_str());
+
   if(!sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
   {
     if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) && sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ)
