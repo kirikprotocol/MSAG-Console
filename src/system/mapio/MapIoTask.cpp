@@ -369,6 +369,9 @@ void MapIoTask::dispatcher()
     result = EINSS7CpMsgRecv_r(&message,1000);
     if ( ++timecounter == 60 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
+      if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
+        result = MSG_BROKEN_CONNECTION;
+      }
       timecounter = 0;
     }
     if ( result == MSG_TIMEOUT ) continue;
@@ -380,13 +383,14 @@ void MapIoTask::dispatcher()
         try{
           deinit();
           init(30);
-          if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
+          timecounter = 0;
+          /*if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
             __trace2__("MAP:: waiting bind confirm");
             sleep(3);
             if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
               throw 0;
             }
-          }
+          }*/
           ok = true;
         }catch(...){
           __trace2__("MAP:: Error reinitialization");
