@@ -244,12 +244,14 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 		if (transmitterReportsFlag)
 		{
 			//intermediate notification
+			__tc__("deliverySm.reports.intermediateNotification.transmitter"); __tc_ok__;
 			IntermediateNotificationMonitor* notifMonitor =
 				new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
 			notifMonitor->state = ENROUTE;
 			notifMonitor->deliveryStatus = ESME_RINVBNDSTS;
 			fixture->pduReg->registerMonitor(notifMonitor);
 			//delivery receipt
+			__tc__("deliverySm.reports.deliveryReceipt.transmitter"); __tc_ok__;
 			DeliveryReceiptMonitor* rcptMonitor =
 				new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
 			rcptMonitor->state = EXPIRED;

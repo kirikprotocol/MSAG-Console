@@ -43,26 +43,26 @@ void profilerTc()
 		"ќтказатьс€ от режима приема сообщений на русском €зыке (текст команды с лишними пробелами)");
 	__reg_tc__("updateProfile.incorrectCmdText",
 		"Ќеправильный текст команды");
-	//processUpdateProfile
-	__reg_tc__("processUpdateProfile",
+	//updateProfile.ack
+	__reg_tc__("updateProfile.ack",
 		"—ообщени€ от менеджера профилей");
-	__reg_tc__("processUpdateProfile.checkFields",
+	__reg_tc__("updateProfile.ack.checkFields",
 		"ѕол€ pdu соответствуют настройкам менеджера профилей");
-	__reg_tc__("processUpdateProfile.checkText",
+	__reg_tc__("updateProfile.ack.checkText",
 		"“ект сообщений правильный");
-	__reg_tc__("processUpdateProfile.multipleMessages",
+	__reg_tc__("updateProfile.ack.multipleMessages",
 		"≈сли в конфигурации менеджера профилей прописаны длинные тексты уведомлений, тогда отправл€етс€ несколько sms");
-	__reg_tc__("processUpdateProfile.reportOptions",
+	__reg_tc__("updateProfile.ack.reportOptions",
 		"ѕодтверждени€ об изменении настроек получени€ уведомлений о доставке");
-	__reg_tc__("processUpdateProfile.reportOptions.dataCoding",
+	__reg_tc__("updateProfile.ack.reportOptions.dataCoding",
 		"ѕри отсутствии в тексте сообщени€ русских символов приходит в 7-bit кодировке, при наличии русских симовлов приходит либо в 7-bit (транслитераци€), либо в UCS2 в зависимости от текущих настроек профил€");
-	__reg_tc__("processUpdateProfile.codePage",
+	__reg_tc__("updateProfile.ack.codePage",
 		"ѕодтверждени€ об изменении настроек режима приема сообщений на русском €зыке");
-	__reg_tc__("processUpdateProfile.codePage.dataCoding",
+	__reg_tc__("updateProfile.ack.codePage.dataCoding",
 		"“екст сообщени€ в новой кодировке");
-	__reg_tc__("processUpdateProfile.incorrectCmdText",
+	__reg_tc__("updateProfile.ack.incorrectCmdText",
 		"”ведомление о неправильном тексте команды");
-	__reg_tc__("processUpdateProfile.incorrectCmdText.dataCoding",
+	__reg_tc__("updateProfile.ack.incorrectCmdText.dataCoding",
 		"ѕри отсутствии в тексте сообщени€ русских символов приходит в 7-bit кодировке, при наличии русских симовлов приходит либо в 7-bit (транслитераци€), либо в UCS2 в зависимости от текущих настроек профил€");
 }
 
