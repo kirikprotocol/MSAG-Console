@@ -23,6 +23,8 @@
             response.sendRedirect("index.jsp");
             return;
         case SmsStatFormBean.RESULT_FILTER:
+            response.sendRedirect("routsdetail.jsp");
+            return;
         case SmsStatFormBean.RESULT_OK:
             break;
         case SmsStatFormBean.RESULT_ERROR:
@@ -197,7 +199,18 @@ while (i.hasNext()) {
 <tr>
     <td colspan=8> <div class=page_subtitle>Traffic by routes</div></td>
 </tr>
-<tr class=row0>
+</table>
+</div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbDetail",  "Routes Statistics Details !",  "Run detail");
+page_menu_space(out);
+page_menu_end(out);
+%>
+
+<div class=content>
+<table class=list cellspacing=0>
+<tr colspan=8 class=row0>
     <th width="23%"><div align=right>Route Id</div></th>
     <th width="11%"><div align=right>Accepted</div></th>
     <th width="11%"><div align=right>Rejected</div></th>
