@@ -68,6 +68,7 @@ public class PerfServer extends Thread {
     }
 
     public void run() {
+      try {
         while (!isStopping) {
             Socket sock = null;
             try {
@@ -79,6 +80,11 @@ public class PerfServer extends Thread {
                     sr.start();
                 } catch (IOException ee) {
                     logger.warn("User connection error", ee);
+                    try {
+                      sock.close();
+                    } catch (IOException ex) {
+                      logger.warn("Can't close client socket", ee);
+                    }
                 }
             } catch (IOException ex) {
                 logger.error("Error accepting connection", ex);
@@ -88,5 +94,8 @@ public class PerfServer extends Thread {
         synchronized (shutSemaphore) {
             shutSemaphore.notifyAll();
         }
+      } catch (Throwable ex) {
+        logger.error("Unexpected exception occured", ex);
+      }
     }
 }
