@@ -11,7 +11,7 @@ namespace test {
 namespace util {
 
 /**
- * Стек для результатов выполнения test case
+ * Стек для результатов выполнения тест кейса
  * 
  * @author bryz
  */
@@ -33,7 +33,7 @@ public:
 };
 
 /**
- * Фильтр для результатов выполнения test cases
+ * Фильтр для результатов выполнения тест кейсов
  * 
  * @author bryz
  */
@@ -43,12 +43,12 @@ public:
 	~TCResultFilter();
 
 	/**
-	 * Добавить результаты тестирования test case
+	 * Добавить результаты тестирования тест кейса
 	 */
 	void addResult(const TCResult* result);
 
 	/**
-	 * Добавить результаты тестирования test case
+	 * Добавить результаты тестирования тест кейса
 	 */
 	void addResultStack(const TCResultStack& stack);
 

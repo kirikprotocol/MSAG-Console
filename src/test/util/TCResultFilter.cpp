@@ -17,7 +17,7 @@ TCResultStack::~TCResultStack()
 
 void TCResultStack::push_back(const TCResult* result)
 {
-	//игнорирую незаимплементированные test cases, которые возвращают NULL
+	//игнорирую незаимплементированные тест кейсы, которые возвращают NULL
 	if (result)
 	{
 		vector<const TCResult*>::push_back(result);
@@ -98,13 +98,13 @@ void TCResultFilter::addResult(const TCResult* result)
 		resmap[tcId] = new TCResultStackList();
 	}
 
-	//проверить является ли переданный результат test case отрицательным 
+	//проверить является ли переданный результат тест кейса отрицательным 
 	if (result->value())
 	{
 		return;
 	}
 
-	//проверить нет ли уже идентичного test case
+	//проверить нет ли уже идентичного тест кейса
 	TCResultStackList& stackList = *(resmap[tcId]);
 	for (int i = 0; i < stackList.size(); i++)
 	{
@@ -124,7 +124,7 @@ void TCResultFilter::addResult(const TCResult* result)
 void TCResultFilter::addResultStack(const TCResultStack& stack)
 {
 	//зарегистрировать результаты и проверить есть ли в переданном стеке
-	//test case с отрицательным результатом
+	//тест кейс с отрицательным результатом
 	int failedTC = -1;
 	for (int i = 0; i < stack.size(); i++)
 	{
@@ -144,8 +144,8 @@ void TCResultFilter::addResultStack(const TCResultStack& stack)
 		return;
 	}
 
-	//проверить нет ли уже идентичного стека test case и
-	//пометить, что результат по test case добавлялся
+	//проверить нет ли уже идентичного стека тест кейса и
+	//пометить, что результат по тест кейса добавлялся
 	const TCResult* failedRes = stack[failedTC];
 	TCResultStackList& stackList = *(resmap[failedRes->getId()]);
 	for (int i = 0; i < stackList.size(); i++)

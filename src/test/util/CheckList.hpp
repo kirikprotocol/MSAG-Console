@@ -36,12 +36,12 @@ public:
 	void startNewGroup(const char* groupName, const char* packageName);
 
 	/**
-	 * Записать результаты тестирования (test case) в текущцю группу/таблицу
+	 * Записать результаты тестирования тест кейсов в текущцю группу/таблицу
 	 */
 	void writeResult(const char* tcDesc, const TCResult* result);
 
 	/**
-	 * Записать результаты тестирования (test case) в текущцю группу/таблицу
+	 * Записать результаты тестирования тест кейсов в текущую группу/таблицу
 	 */
 	void writeResult(const char* tcDesc, const TCResultStackList* stackList);
 
