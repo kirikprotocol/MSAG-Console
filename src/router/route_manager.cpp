@@ -264,7 +264,7 @@ __synchronized__
   __trace2__("found route %s->%s",
              ok_route->pattern.src_addressPattern,
              ok_route->pattern.dest_addressPattern);
-  for (RouteRecord** r = recordX-1; r != table-1; --r )
+	for (RouteRecord** r = recordX-1; r != table-1; --r )
   {
     if ( is_a((*r)->pattern,address) )
     {
@@ -287,11 +287,13 @@ __synchronized__
   {
     while ( ok_route )
     {
+      __require__(ok_route != ok_route->ok_next);
       if ( ok_route->src_pattern_undef < src_undef )
       {
         src_undef = ok_route->src_pattern_undef;
         record = ok_route;
         ok_route = ok_route->ok_next;
+				record->ok_next = 0;
       }
       else if ( ok_route->src_pattern_undef == src_undef )
                         {
@@ -307,11 +309,13 @@ __synchronized__
     record = 0;
     while ( ok_route )
     {
-      if ( ok_route->dest_pattern_undef < dest_undef )
+      __require__(ok_route != ok_route->ok_next);
+			if ( ok_route->dest_pattern_undef < dest_undef )
       {
         dest_undef = ok_route->dest_pattern_undef;
         record = ok_route;
         ok_route = ok_route->ok_next;
+				record->ok_next = 0;
       }
       else if ( ok_route->src_pattern_undef == src_undef )
       {

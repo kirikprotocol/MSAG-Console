@@ -73,80 +73,80 @@ int pattern_compare_adr(const void* pat1,const void* pat2){
                         (**(AliasRecord**)pat1).addr);}
 
 static inline void makeAliasFromValueByAddres(
-	const AliasRecord& p,const AValue& val,Address &addr)
+  const AliasRecord& p,const AValue& val,Address &addr)
 {
-	char buf[21];
-	__require__(p.addr.defLength < val.length );
-	__require__(p.alias.defLength+val.length-p.addr.defLength < 21);
-	memset(buf,0,21);
-	int ln = 0;
-	memcpy(buf,p.alias.value,ln+=p.alias.defLength);
-	memcpy(buf+p.alias.defLength,val.value+p.addr.defLength,
-				 ln+=(val.length-p.addr.defLength));
-	__require__(ln < 21 );
-	addr.setNumberingPlan(p.alias.numberingPlan);
-	addr.setTypeOfNumber(p.alias.typeOfNumber);
-	addr.setValue(ln,buf);
+  char buf[21];
+  __require__(p.addr.defLength < val.length );
+  __require__(p.alias.defLength+val.length-p.addr.defLength < 21);
+  memset(buf,0,21);
+  int ln = 0;
+  memcpy(buf,p.alias.value,ln+=p.alias.defLength);
+  memcpy(buf+p.alias.defLength,val.value+p.addr.defLength,
+         ln+=(val.length-p.addr.defLength));
+  __require__(ln < 21 );
+  addr.setNumberingPlan(p.alias.numberingPlan);
+  addr.setTypeOfNumber(p.alias.typeOfNumber);
+  addr.setValue(ln,buf);
 }
 
 static inline void makeAddressFromValueByAlias(
-	const AliasRecord& p,const AValue& val,Address &addr)
+  const AliasRecord& p,const AValue& val,Address &addr)
 {
-	char buf[21];
-	__require__(p.alias.defLength < val.length );
-	__require__(p.addr.defLength+val.length-p.alias.defLength < 21);
-	memset(buf,0,21);
-	int ln = 0;
-	memcpy(buf,p.addr.value,ln+=p.addr.defLength);
-	memcpy(buf+p.addr.defLength,val.value+p.alias.defLength,
-				 ln+=(val.length-p.alias.defLength));
-	__require__(ln < 21 );
-	addr.setNumberingPlan(p.addr.numberingPlan);
-	addr.setTypeOfNumber(p.addr.typeOfNumber);
-	addr.setValue(ln,buf);
+  char buf[21];
+  __require__(p.alias.defLength < val.length );
+  __require__(p.addr.defLength+val.length-p.alias.defLength < 21);
+  memset(buf,0,21);
+  int ln = 0;
+  memcpy(buf,p.addr.value,ln+=p.addr.defLength);
+  memcpy(buf+p.addr.defLength,val.value+p.alias.defLength,
+         ln+=(val.length-p.alias.defLength));
+  __require__(ln < 21 );
+  addr.setNumberingPlan(p.addr.numberingPlan);
+  addr.setTypeOfNumber(p.addr.typeOfNumber);
+  addr.setValue(ln,buf);
 }
 
 static inline void makeAPattern(APattern& pat, const Address& addr)
 {
-	char buf[21];
-	pat.numberingPlan = addr.getNumberingPlan();
-	pat.typeOfNumber = addr.getTypeOfNumber();
-	int length = addr.getValue(buf);
-	__require__ ( length < 21 );
-	memset(pat.mask,0,21);
-	pat.defLength = 0;
-	pat.length = length;
-	bool undef = false;
+  char buf[21];
+  pat.numberingPlan = addr.getNumberingPlan();
+  pat.typeOfNumber = addr.getTypeOfNumber();
+  int length = addr.getValue(buf);
+  __require__ ( length < 21 );
+  memset(pat.mask,0,21);
+  pat.defLength = 0;
+  pat.length = length;
+  bool undef = false;
   for ( int i=0; i<length; ++i )
   {
     switch(buf[i])
     {
     case '?': // only at end
-			undef = true;
+      undef = true;
       break;
     case '*': // only end of value
       goto for_break;
     default:
-			if ( undef ) throw runtime_error("*,? may be only at end of pattern");
+      if ( undef ) throw runtime_error("*,? may be only at end of pattern");
       ++pat.defLength;
       pat.mask[i] = 0xff;
     }
   }
-	for_break:;
-	memset(pat.value,0,21);
-	for ( int i=0; i<length; ++i)
-	{
-		pat.value[i] = buf[i] & pat.mask[i];
-	}
+  for_break:;
+  memset(pat.value,0,21);
+  for ( int i=0; i<length; ++i)
+  {
+    pat.value[i] = buf[i] & pat.mask[i];
+  }
 }
 
 static inline void makeAValue(AValue& val, const Address& addr)
 {
-	val.numberingPlan = addr.getNumberingPlan();
-	val.typeOfNumber = addr.getTypeOfNumber();
-	int length = addr.getValue((char*)val.value);
-	__require__ ( length < 21 );
-	val.length = length;
+  val.numberingPlan = addr.getNumberingPlan();
+  val.typeOfNumber = addr.getTypeOfNumber();
+  int length = addr.getValue((char*)val.value);
+  __require__ ( length < 21 );
+  val.length = length;
 }
 
 bool AliasManager::AddressToAlias(
@@ -174,6 +174,7 @@ __synchronized__
   AliasRecord* record = *recordX;
   record->ok_next = 0;
   AliasRecord* ok_adr = record;
+	ok_adr->ok_next = 0;
   for (AliasRecord** r = recordX-1; r != ali_table-1; --r )
   {
     if ( compare_patval((*r)->addr,val) == 0 )
@@ -239,6 +240,7 @@ __synchronized__
   AliasRecord* record = *recordX;
   record->ok_next = 0;
   AliasRecord* ok_ali = record;
+	ok_ali->ok_next = 0;
   for (AliasRecord** r = recordX-1; r != ali_table-1; --r )
   {
     if ( compare_patval((*r)->alias,val) == 0 )
