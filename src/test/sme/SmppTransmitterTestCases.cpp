@@ -17,14 +17,14 @@ using namespace smsc::smpp::SmppCommandSet;
 SmppTransmitterTestCases::SmppTransmitterTestCases(SmppSession* sess,
 	const SmeSystemId& id, const Address& addr, const SmeRegistry* _smeReg,
 	RouteChecker* _routeChecker, SmppPduChecker* _pduChecker)
-	: session(sess), systemId(id), smeAddr(addr), smeReg(_smeReg),
+	: session(sess), systemId(id), smeAlias(addr), smeReg(_smeReg),
 	routeChecker(_routeChecker), pduChecker(_pduChecker)
 {
 	__require__(session);
 	__require__(smeReg);
 	__require__(routeChecker);
 	__require__(pduChecker);
-	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
+	pduReg = smeReg->getPduRegistry(smeAlias); //может быть NULL
 }
 
 Category& SmppTransmitterTestCases::getLog()
@@ -138,8 +138,8 @@ vector<int> SmppTransmitterTestCases::submitAndRegisterSmSync(PduSubmitSm* pdu,
 		MutexGuard mguard(pduReg->getMutex());
 		pduData = new PduData(pdu->get_optional().get_userMessageReference(),
 			time(NULL),
-			SmppUtil::string2time(pdu->get_message().get_scheduleDeliveryTime()),
-			SmppUtil::string2time(pdu->get_message().get_validityPeriod()),
+			max(time(NULL), SmppUtil::string2time(pdu->get_message().get_scheduleDeliveryTime(), time(NULL))),
+			SmppUtil::string2time(pdu->get_message().get_validityPeriod(), time(NULL)),
 			reinterpret_cast<SmppHeader*>(pdu));
 		pdu->get_header().set_sequenceNumber(0);
 		fillSubmitSmPduData(pduData, pdu, replacePduData);
@@ -185,8 +185,8 @@ vector<int> SmppTransmitterTestCases::submitAndRegisterSmAsync(PduSubmitSm* pdu,
 	//регистрация pdu
 	PduData* pduData = new PduData(pdu->get_optional().get_userMessageReference(),
 		time(NULL),
-		SmppUtil::string2time(pdu->get_message().get_scheduleDeliveryTime()),
-		SmppUtil::string2time(pdu->get_message().get_validityPeriod()),
+		max(time(NULL), SmppUtil::string2time(pdu->get_message().get_scheduleDeliveryTime(), time(NULL))),
+		SmppUtil::string2time(pdu->get_message().get_validityPeriod(), time(NULL)),
 		reinterpret_cast<SmppHeader*>(pdu));
 	fillSubmitSmPduData(pduData, pdu, replacePduData);
     pduData->responseFlag = PDU_REQUIRED_FLAG;
@@ -213,7 +213,7 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 			pdu->get_message().set_esmClass(
 				pdu->get_message().get_esmClass() & 0xc3); //Default message Type (i.e. normal message)
 			PduAddress addr;
-			SmppUtil::convert(smeAddr, &addr);
+			SmppUtil::convert(smeAlias, &addr);
 			pdu->get_message().set_source(addr);
 			//случайный dest адрес без алиасинга и проверки наличия маршрутов
 			PduAddress destAddr;
@@ -240,21 +240,24 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 				case 2: //доставка уже должна была начаться
 					{
 						SmppTime t;
-						SmppUtil::time2string(time(NULL) - rand1(60), t, __absoluteTime__);
+						SmppUtil::time2string(
+							time(NULL) - rand1(60), t, time(NULL), __absoluteTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
 					}
 					break;
 				case 3: //срок валидности уже закончился
 					{
 						SmppTime t;
-						SmppUtil::time2string(time(NULL) - rand1(60), t, __absoluteTime__);
+						SmppUtil::time2string(
+							time(NULL) - rand1(60), t, time(NULL), __absoluteTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
 				case 4: //срок валидности больше максимального
 					{
 						SmppTime t;
-						SmppUtil::time2string(__maxValidPeriod__ + 1, t, __numTime__);
+						SmppUtil::time2string(
+							time(NULL) + __maxValidPeriod__ + 1, t, time(NULL), __numTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
@@ -263,9 +266,9 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 						SmppTime t;
 						time_t validTime = time(NULL) + rand1(60);
 						time_t waitTime = validTime + rand1(60);
-						SmppUtil::time2string(waitTime, t, __numTime__);
+						SmppUtil::time2string(waitTime, t, time(NULL), __numTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
-						SmppUtil::time2string(validTime, t, __numTime__);
+						SmppUtil::time2string(validTime, t, time(NULL), __numTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
@@ -355,9 +358,8 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 								replacePdu->get_message().get_dest());
 							//замещенное сообщение будет доставляться раньше оригинального
 							SmppTime tmp;
-							time_t waitTime = SmppUtil::string2time(
-								replacePdu->get_message().get_scheduleDeliveryTime());
-							SmppUtil::time2string(waitTime - rand1(10), tmp, __numTime__);
+							SmppUtil::time2string(replacePduData->waitTime - rand1(10),
+								tmp, time(NULL), __numTime__);
 							pdu->get_message().set_scheduleDeliveryTime(tmp);
 							pdu->get_message().set_replaceIfPresentFlag(1);
 						}
