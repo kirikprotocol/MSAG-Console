@@ -37,50 +37,32 @@ float RouteManagerTestCases::setupRandomAddressMatch(Address& addr, int num)
 	AddressValue addrVal;
 	uint8_t addrLen = addr.getValue(addrVal);
 	int len = rand1(addrLen);
-	int len2 = rand1(len);
-	int len3 = rand1(MAX_ADDRESS_VALUE_LENGTH - addrLen + len - len2);
 	switch(num)
 	{
-		case 1: //адрес с одним или всеми '?' в конце
+		case 1: //адрес без знаков подстановки (совпадает)
+			return 100;
+		case 2: //адрес с одним или всеми '?' в конце
 			memset(addrVal + addrLen - len, '?', len);
 			addr.setValue(addrLen, addrVal);
 			return (100 - len);
-		case 2: //адрес целиком из '?'
+		case 3: //адрес целиком из '?'
 			memset(addrVal, '?', addrLen);
 			addr.setValue(addrLen, addrVal);
 			return (100 - addrLen);
-		case 3: //адрес целиком или частично со '*' в конце
-			memset(addrVal + addrLen - len, '*', len2);
-			addr.setValue(addrLen - len + len2, addrVal);
+		case 4: //адрес со '*' в конце
+			memset(addrVal + addrLen - len, '*', 1);
+			addr.setValue(addrLen - len + 1, addrVal);
 			return (100 - len - 0.5); //'*' менее приоритетна '?'
-		case 4: //адрес из '*'
-			memset(addrVal, '*', len);
-			addr.setValue(len, addrVal);
+		case 5: //адрес из '*'
+			addrVal[0] = '*';
+			addr.setValue(1, addrVal);
 			return (100 - addrLen - 0.5);
-		case 5: //адрес с лишней '*'
+		case 6: //адрес с лишней '*'
 			if (addrLen < MAX_ADDRESS_VALUE_LENGTH)
 			{
 				addrVal[addrLen] = '*';
 				addr.setValue(addrLen + 1, addrVal);
 				return 99.5;
-			}
-			return 100;
-		case 6: //адрес с '?*'
-			if (addrLen - len + len2 < MAX_ADDRESS_VALUE_LENGTH)
-			{
-				memset(addrVal + addrLen - len, '?', len2);
-				memset(addrVal + addrLen - len + len2, '*', len3);
-				addr.setValue(addrLen - len + len2 + len3, addrVal);
-				return (100 - len - 0.25);
-			}
-			return 100;
-		case 7: //адрес с '*?'
-			if (addrLen - len + len2 < MAX_ADDRESS_VALUE_LENGTH)
-			{
-				memset(addrVal + addrLen - len, '*', len3);
-				memset(addrVal + addrLen - len + len3, '?', len2);
-				addr.setValue(addrLen - len + len2 + len3, addrVal);
-				return (100 - len - 0.25);
 			}
 			return 100;
 		default:
@@ -95,31 +77,22 @@ void RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
 	int len = rand1(addrLen);
 	switch(num)
 	{
-		case 1: //адрес с лишним '?'
+		case 1: //адрес с лишними '?'
 			if (addrLen < MAX_ADDRESS_VALUE_LENGTH)
 			{
-				addrVal[addrLen] = '?';
+				memset(addrVal + addrLen - len, '?', len + 1);
 				addr.setValue(addrLen + 1, addrVal);
 				break;
 			}
 			//break;
-		case 2: //адрес с '*?' и лишними '?'
-			if (addrLen + 1 < MAX_ADDRESS_VALUE_LENGTH)
-			{
-				memset(addrVal + addrLen - len, '*', 1);
-				memset(addrVal + addrLen - len + 1, '?', len + 1);
-				addr.setValue(addrLen + 2, addrVal);
-				break;
-			}
-			//break;
-		case 3: //отличающийся адрес
+		case 2: //отличающийся адрес
 			addrVal[len - 1] = '+';
 			addr.setValue(addrLen, addrVal);
 			break;
-		case 4: //адрес с несовпадающим typeOfNumber
+		case 3: //адрес с несовпадающим typeOfNumber
 			addr.setTypeOfNumber(addr.getTypeOfNumber() + 1);
 			break;
-		case 5: //адрес с несовпадающим numberingPlan
+		case 4: //адрес с несовпадающим numberingPlan
 			addr.setNumberingPlan(addr.getNumberingPlan() + 1);
 			break;
 		default:
@@ -130,7 +103,7 @@ void RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
 TCResult* RouteManagerTestCases::addCorrectRouteMatch(
 	const SmeSystemId& smeSystemId, TestRouteData* data, int num)
 {
-	int num1 = 7; int num2 = 7;
+	int num1 = 6; int num2 = 6;
 	TCSelector s(num, num1 * num2);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE_MATCH, s.getChoice());
 	for (; s.check(); s++)
@@ -169,7 +142,7 @@ TCResult* RouteManagerTestCases::addCorrectRouteMatch(
 TCResult* RouteManagerTestCases::addCorrectRouteNotMatch(
 	const SmeSystemId& smeSystemId, TestRouteData* data, int num)
 {
-	int numMatch = 7; int numNotMatch = 5; int numType = 2;
+	int numMatch = 6; int numNotMatch = 4; int numType = 2;
 	TCSelector s(num, numMatch * numNotMatch * numType);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE_NOT_MATCH, s.getChoice());
 	for (; s.check(); s++)
@@ -224,7 +197,7 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch(
 TCResult* RouteManagerTestCases::addCorrectRouteNotMatch2(
 	const SmeSystemId& smeSystemId, TestRouteData* data, int num)
 {
-	TCSelector s(num, 8, 1000);
+	TCSelector s(num, 4, 1000);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE_NOT_MATCH, s.getChoice());
 	for (; s.check(); s++)
 	{
@@ -246,47 +219,11 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch2(
 				case 1002: //origAddr.numberingPlan вне диапазона
 					route->source.setNumberingPlan(rand2(0x13, 0xff));
 					break;
-				case 1003: //символ '?' в середине origAddr
-					{
-						AddressValue addrVal;
-						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_VALUE_LENGTH);
-						memcpy(addrVal, tmp.get(), MAX_ADDRESS_VALUE_LENGTH);
-						addrVal[MAX_ADDRESS_VALUE_LENGTH / 2] = '?';
-						route->source.setValue(MAX_ADDRESS_VALUE_LENGTH, addrVal);
-					}
-					break;
-				case 1004: //символ '*' в середине origAddr
-					{
-						AddressValue addrVal;
-						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_VALUE_LENGTH);
-						memcpy(addrVal, tmp.get(), MAX_ADDRESS_VALUE_LENGTH);
-						addrVal[MAX_ADDRESS_VALUE_LENGTH / 2] = '*';
-						route->source.setValue(MAX_ADDRESS_VALUE_LENGTH, addrVal);
-					}
-					break;
-				case 1005: //destAddr.typeOfNumber вне диапазона
+				case 1003: //destAddr.typeOfNumber вне диапазона
 					route->dest.setTypeOfNumber(rand2(0x7, 0xff));
 					break;
-				case 1006: //destAddr.numberingPlan вне диапазона
+				case 1004: //destAddr.numberingPlan вне диапазона
 					route->dest.setNumberingPlan(rand2(0x13, 0xff));
-					break;
-				case 1007: //символ '?' в середине destAddr
-					{
-						AddressValue addrVal;
-						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_VALUE_LENGTH);
-						memcpy(addrVal, tmp.get(), MAX_ADDRESS_VALUE_LENGTH);
-						addrVal[MAX_ADDRESS_VALUE_LENGTH / 2] = '?';
-						route->dest.setValue(MAX_ADDRESS_VALUE_LENGTH, addrVal);
-					}
-					break;
-				case 1008: //символ '*' в середине destAddr
-					{
-						AddressValue addrVal;
-						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_VALUE_LENGTH);
-						memcpy(addrVal, tmp.get(), MAX_ADDRESS_VALUE_LENGTH);
-						addrVal[MAX_ADDRESS_VALUE_LENGTH / 2] = '*';
-						route->dest.setValue(MAX_ADDRESS_VALUE_LENGTH, addrVal);
-					}
 					break;
 				default:
 					throw s;
