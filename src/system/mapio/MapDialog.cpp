@@ -23,7 +23,7 @@ using namespace smsc::smeman;
 
 //#define MAKE_ERRORCODE(klass,code) (klass)
 #define MAKE_ERRORCODE(klass,code) MAKE_COMMAND_STATUS(klass,code)
-#define MAP_NETWORK_ERROR 1
+#define MAP_NETWORKERROR 1
 
 struct MicroString{
   unsigned len;
