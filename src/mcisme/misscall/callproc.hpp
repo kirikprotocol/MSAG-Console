@@ -34,7 +34,12 @@ struct Circuits {
   int  spn;
   long ts;
 };
+
+static const uint8_t PREFIXED_STRATEGY = 0x01;
+static const uint8_t REDIRECT_STRATEGY = 0x02;
+
 struct ReleaseSettings {
+  int strategy;
   int busyCause, busyInform;
   int noReplyCause, noReplyInform;
   int unconditionalCause, unconditionalInform;
