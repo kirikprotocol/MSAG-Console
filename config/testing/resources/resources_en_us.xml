@@ -16,7 +16,7 @@
 			<param name="msgReportFull">Отчеты доставки разрешены</param>
 			<param name="msgLocaleChanged">Locale is successfully changed</param>
 			<param name="msgLocaleUnknown">Unknown locale</param>
-			<param name="msgError">Неправильная команда (!@#$%^&*( )_+-=|\\:;'<,>.?/)</param>
+			<param name="msgError">Неправильная команда (!@#$%^&amp;*( )_+-=|\\:;'&lt;,&gt;.?/)</param>
 		</section>
 		<section name="abonentinfo">
 			<param name="mobileFormat">Абонент $$string import="abonent"$$: статус $$string import="status"$$, msc $$string import="msc"$$</param>
@@ -24,10 +24,10 @@
 		</section>
 		<section name="receipt">
 			<section name="default">
-				<param name="deliveredFormat" type="string">*Your message sent to $$string import="dest"$$ was successfully delivered on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$</param>
-				<param name="failedFormat" type="string">*Message to $$string import="dest"$$ sent on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$ failed: $$string import="reason"$$. Resend the message to $$string import="dest"$$ once again and maybe you will have luck next time. Sincerely, smsc sme.</param>
+				<param name="deliveredFormat">*Your message sent to $$string import="dest"$$ was successfully delivered on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$</param>
+				<param name="failedFormat">*Message to $$string import="dest"$$ sent on $$date pattern="dd MMMM yyyy, HH:mm:ss" import="date"$$ failed: $$string import="reason"$$. Resend the message to $$string import="dest"$$ once again and maybe you will have luck next time. Sincerely, smsc sme.</param>
 				<param name="deletedFormat">#Сообщение на $$string import="dest"$$ от $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ удалено</param>
-				<param name="notifyFormat" type="string">$Сообщение на $$string import="dest"$$ от $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ обломалось: $$string import="reason"$$</param>
+				<param name="notifyFormat">$Сообщение на $$string import="dest"$$ от $$date pattern="dd-MM-yy HH:mm:ss" import="date"$$ обломалось: $$string import="reason"$$</param>
 			</section>
 		</section>
 		<section name="reason">
