@@ -13,6 +13,15 @@ DataSourceFactory*  getDataSourceFactory(void)
     return &_ociDataSourceFactory;
 }
 
+
+#ifndef SPARC
+#define UINT64_SWAP_LE_BE_CONSTANT(val)   ((uint64_t) ( \
+     ((uint64_t)((uint64_t)(val) << 32)&0xffffffff00000000) |     \
+     ((uint64_t)((uint64_t)(val) >> 32)&0x00000000ffffffff)     ))
+#else
+#define UINT64_SWAP_LE_BE_CONSTANT(val)   ((uint64_t) (val))
+#endif
+
 namespace smsc { namespace db { namespace oci
 {
 
@@ -513,18 +522,7 @@ void OCIStatement::setInt32(int pos, int32_t val, bool null)
 void OCIStatement::setInt64(int pos, int64_t val, bool null)
     throw(SQLException)
 {
-    OCIDataDescriptor* descriptor =
-        setField(pos, SQLT_INT, sizeof(int64_t), null);
-
-    if (!null)
-    {
-        check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
-                               (uword)sizeof(int64_t),
-                               (uword)OCI_NUMBER_SIGNED,
-                               (OCINumber *)&(descriptor->number)));
-    }
-    bind(pos, descriptor->type, descriptor->data,
-         descriptor->size, (dvoid *) &descriptor->ind);
+    setUint64(pos, val, null);
 }
 void OCIStatement::setUint8(int pos, uint8_t val, bool null)
     throw(SQLException)
@@ -582,6 +580,7 @@ void OCIStatement::setUint64(int pos, uint64_t val, bool null)
 
     if (!null)
     {
+        val = UINT64_SWAP_LE_BE_CONSTANT(val);
         check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
                                (uword)sizeof(uint64_t),
                                (uword)OCI_NUMBER_UNSIGNED,
@@ -793,7 +792,7 @@ int64_t OCIResultSet::getInt64(int pos)
                                 (uword) sizeof(int64_t),
                                 (uword)OCI_NUMBER_SIGNED,
                                 (dvoid *) &result));
-    return result;
+    return UINT64_SWAP_LE_BE_CONSTANT(result);
 }
 uint8_t OCIResultSet::getUint8(int pos)
     throw(SQLException, InvalidArgumentException)
@@ -841,7 +840,7 @@ uint64_t OCIResultSet::getUint64(int pos)
                                 (uword) sizeof(uint64_t),
                                 (uword)OCI_NUMBER_UNSIGNED,
                                 (dvoid *) &result));
-    return result;
+    return UINT64_SWAP_LE_BE_CONSTANT(result);
 }
 float OCIResultSet::getFloat(int pos)
     throw(SQLException, InvalidArgumentException)
@@ -1193,6 +1192,7 @@ int32_t OCIRoutine::getInt32(const char* key)
 void OCIRoutine::setInt64(const char* key, int64_t val, bool null)
     throw(SQLException, InvalidArgumentException)
 {
+    val = UINT64_SWAP_LE_BE_CONSTANT(val);
     defineSetInt(key, val, true, null);
 }
 int64_t OCIRoutine::getInt64(const char* key)
@@ -1208,7 +1208,7 @@ int64_t OCIRoutine::getInt64(const char* key)
                          (uword) sizeof(int64_t),
                          (uword)OCI_NUMBER_SIGNED,
                          (dvoid *) &result));
-    return result;
+    return UINT64_SWAP_LE_BE_CONSTANT(result);
 }
 void OCIRoutine::setUint8(const char* key, uint8_t val, bool null)
     throw(SQLException, InvalidArgumentException)
@@ -1253,6 +1253,7 @@ uint32_t OCIRoutine::getUint32(const char* key)
 void OCIRoutine::setUint64(const char* key, uint64_t val, bool null)
     throw(SQLException, InvalidArgumentException)
 {
+    val = UINT64_SWAP_LE_BE_CONSTANT(val);
     defineSetInt(key, val, false, null);
 }
 uint64_t OCIRoutine::getUint64(const char* key)
@@ -1268,7 +1269,7 @@ uint64_t OCIRoutine::getUint64(const char* key)
                          (uword) sizeof(uint64_t),
                          (uword)OCI_NUMBER_UNSIGNED,
                          (dvoid *) &result));
-    return result;
+    return UINT64_SWAP_LE_BE_CONSTANT(result);
 }
 
 #define defineSetFloat(key, val, null)                                  \
