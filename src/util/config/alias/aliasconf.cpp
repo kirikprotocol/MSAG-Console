@@ -115,8 +115,8 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       //record->alias = attrs.getNameItem("alias").getNodeValue().transcode();
       {
         DOM_Node hide_attr_node = attrs.getNamedItem("hide");
-				record->hide=!hide_attr_node.isNull() && !strcmp(node.getNodeValue().transcode(),"true");
-				__trace2__("record->hide: %s",record->hide?"true":"false");
+		record->hide=!hide_attr_node.isNull() && !strcmp(hide_attr_node.getNodeValue().transcode(),"true");
+		__trace2__("record->hide: %s",record->hide?"true":"false");
         char* dta = attrs.getNamedItem("alias").getNodeValue().transcode();
         record->aliasValue = new char[21]; memset(record->aliasValue,0,21);
         int scaned = sscanf(dta,".%d.%d.%20s",
