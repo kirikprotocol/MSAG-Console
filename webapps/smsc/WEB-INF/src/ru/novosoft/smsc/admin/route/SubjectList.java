@@ -14,6 +14,7 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectQuery;
 import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.xml.Utils;
 
 import java.io.PrintWriter;
 import java.util.*;
@@ -41,8 +42,14 @@ public class SubjectList
       SME defSme = smeManager.get(subjElem.getAttribute("defSme"));
       if (defSme == null)
         throw new AdminException("Unknown SME \"" + subjElem.getAttribute("defSme") + '"');
+
+      String notes = "";
+      NodeList notesList = subjElem.getElementsByTagName("notes");
+      for (int j=0; i < notesList.getLength(); i++)
+        notes += Utils.getNodeText(notesList.item(j));
+
       try {
-        add(new Subject(name, masks, defSme));
+        add(new Subject(name, masks, defSme, notes));
       } catch (AdminException e) {
         logger.warn("source skipped", e);
       }

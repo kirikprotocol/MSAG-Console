@@ -67,6 +67,22 @@ function addFilterMask()
   fme.value = "";
   fme.focus();
 }
+
+function clickClickable(headId, bodyId)
+{
+  var _head = document.all(headId);
+  var _body = document.all(bodyId);
+  if (_body.runtimeStyle.display == 'none' || _body.runtimeStyle.display == '')
+  {
+    _head.className = 'collapsing_list_opened';
+    _body.runtimeStyle.display = 'block';
+  }
+  else
+  {
+    _head.className = 'collapsing_list_closed';
+    _body.runtimeStyle.display = 'none';
+  }
+}
 </script>
 <div class=page_subtitle>Filter masks</div>
 <table id=filterMasksTable>
@@ -159,19 +175,26 @@ final int MASKS_HEADER_SIZE = 1;
 int row = 0;
 for(Iterator i = bean.getSubjects().iterator(); i.hasNext(); row++)
 {
-DataItem item = (DataItem) i.next();
-String name = (String)item.getValue("Name");
-String defSme = (String)item.getValue("Default SME");
-Vector masks = (Vector)item.getValue("Masks");
-String encName = StringEncoderDecoder.encode(name);
-String encDefSme = StringEncoderDecoder.encode(defSme);
-String hexName = StringEncoderDecoder.encodeHEX(name);
+  DataItem item = (DataItem) i.next();
+  String name = (String)item.getValue("Name");
+  String defSme = (String)item.getValue("Default SME");
+  Vector masks = (Vector)item.getValue("Masks");
+  String encName = StringEncoderDecoder.encode(name);
+  String encDefSme = StringEncoderDecoder.encode(defSme);
+  String hexName = StringEncoderDecoder.encodeHEX(name);
+  String notes = (String) item.getValue("notes");
+  if (notes == null)
+    notes = "";
+
+  String encNotes = StringEncoderDecoder.encode(notes);
+  String rowId = "ROUTE_ID_" + StringEncoderDecoder.encodeHEX(name);
+  String onClick = encNotes.length() > 0 ? " class=clickable onClick='clickClickable(\""+rowId+"_HEAD\", \"" + rowId + "_BODY\")'" : "";
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=checkedSubjects value="<%=encName%>" <%=bean.isSubjectChecked(name) ? "checked" : ""%>></td>
-	<td class=name><a href="#" title="Edit subject" onClick='return edit("<%=encName%>")'><%=encName%></a></td>
-	<td><%=encDefSme%></td>
-	<td><%
+	<td <%=onClick%>><div id=<%=rowId%>_HEAD <%=encNotes.length() > 0 ? "class=collapsing_list_closed" : "class=collapsing_list_empty"%>><a href="#" title="Edit subject" onClick='return edit("<%=encName%>")'><%=encName%></a></div></td>
+	<td <%=onClick%>><%=encDefSme%></td>
+	<td rowspan=2><%
     if (masks.size() > 0)
     {
       if (masks.size() > MASKS_HEADER_SIZE) {
@@ -204,6 +227,10 @@ String hexName = StringEncoderDecoder.encodeHEX(name);
       out.print("none");
     }
   %></td>
+</tr>
+<tr class=row<%=row&1%> id=<%=rowId%>_BODY style="display:none">
+  <td>&nbsp;</td>
+  <td colspan=2><%=encNotes%></td>
 </tr>
 <%}}%>
 </tbody>

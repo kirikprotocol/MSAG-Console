@@ -20,7 +20,8 @@ public class SubjectAddCommand extends SubjectGenCommand
         try {
             SME sme = ctx.getSmeManager().get(defaultSmeId);
             if (sme != null) {
-                Subject smscSubject = new Subject(subject, masks, sme);
+                //todo notes param
+                Subject smscSubject = new Subject(subject, masks, sme, "");
                 ctx.getRouteSubjectManager().getSubjects().add(smscSubject);
                 ctx.setMessage(out+" added");
                 ctx.setStatus(CommandContext.CMD_OK);

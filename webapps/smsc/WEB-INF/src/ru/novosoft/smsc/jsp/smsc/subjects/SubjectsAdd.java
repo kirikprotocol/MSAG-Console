@@ -23,6 +23,7 @@ public class SubjectsAdd extends SmscBean
   protected String name = null;
   protected String defSme = null;
   protected String[] masks = null;
+  protected String notes = "";
 
   protected int init(List errors)
   {
@@ -66,7 +67,7 @@ public class SubjectsAdd extends SmscBean
         return error(SMSCErrors.error.subjects.masksNotDefined);
       }
       try {
-        routeSubjectManager.getSubjects().add(new Subject(name, masks, smeManager.get(defSme)));
+        routeSubjectManager.getSubjects().add(new Subject(name, masks, smeManager.get(defSme), notes));
         journalAppend(SubjectTypes.TYPE_subject, name, Actions.ACTION_ADD);
         appContext.getStatuses().setSubjectsChanged(true);
         return RESULT_DONE;
@@ -130,5 +131,15 @@ public class SubjectsAdd extends SmscBean
   public void setMasks(String[] masks)
   {
     this.masks = masks;
+  }
+
+  public String getNotes()
+  {
+    return notes;
+  }
+
+  public void setNotes(String notes)
+  {
+    this.notes = notes;
   }
 }

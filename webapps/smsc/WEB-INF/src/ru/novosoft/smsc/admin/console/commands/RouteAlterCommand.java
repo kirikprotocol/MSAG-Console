@@ -66,14 +66,14 @@ public class RouteAlterCommand extends RouteGenCommand
         return;
       }
 
-      //todo implement hide & forceReplayPath flags
+      //todo implement hide & forceReplayPath flags, notes
       Route newRoute = new Route(route,
               oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
               oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
               oldRoute.isActive() , oldRoute.getServiceId(),
               oldRoute.getSources(), oldRoute.getDestinations(),
               oldRoute.getSrcSmeId(), oldRoute.getDeliveryMode(), oldRoute.getForwardTo(),
-              true, false);
+              true, false, "");
 
       if (target == TARGET_SRC)
       {

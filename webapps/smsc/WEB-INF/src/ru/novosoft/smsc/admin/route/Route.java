@@ -6,10 +6,12 @@
 package ru.novosoft.smsc.admin.route;
 
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.xml.Utils;
 
 import java.io.PrintWriter;
 import java.util.Iterator;
@@ -33,8 +35,9 @@ public class Route
   private String forwardTo = null;
   private boolean hide = false;
   private boolean forceReplayPath = false;
+  private String notes = "";
 
-	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId, String deliveryMode, String forwardTo, boolean hide, boolean forceReplayPath)
+	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId, String deliveryMode, String forwardTo, boolean hide, boolean forceReplayPath, String notes)
 	{
 		if (routeName == null)
 			throw new NullPointerException("Route name is null");
@@ -60,6 +63,7 @@ public class Route
     this.forwardTo = forwardTo;
     this.hide = hide;
     this.forceReplayPath = forceReplayPath;
+    this.notes = notes;
 	}
 
 	public Route(String routeName)
@@ -84,6 +88,7 @@ public class Route
     forwardTo = "";
     hide = true;
     forceReplayPath = false;
+    notes = "";
 	}
 
 	public Route(Element routeElem, SubjectList subjects, SmeManager smeManager) throws AdminException
@@ -107,6 +112,10 @@ public class Route
     forwardTo = routeElem.getAttribute("forwardTo");
     hide = routeElem.getAttribute("hide").length() > 0 ? routeElem.getAttribute("hide").equalsIgnoreCase("true") : true;
     forceReplayPath = routeElem.getAttribute("forceReplayPath").equalsIgnoreCase("true");
+    notes = "";
+    NodeList notesList = routeElem.getElementsByTagName("notes");
+    for (int i=0; i < notesList.getLength(); i++)
+      notes += Utils.getNodeText(notesList.item(i));
 	}
 
 	public String getName()
@@ -240,6 +249,8 @@ public class Route
                 + "\" forceReplayPath=\"" + (isForceReplayPath() ? "true" : "false")
                 + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
                 + "\">");
+    if (notes != null)
+      out.println("    <notes>" + notes + "</notes>");
 		getSources().store(out);
 		getDestinations().store(out);
 		out.println("  </route>");
@@ -334,5 +345,15 @@ public class Route
   public void setForceReplayPath(boolean forceReplayPath)
   {
     this.forceReplayPath = forceReplayPath;
+  }
+
+  public String getNotes()
+  {
+    return notes;
+  }
+
+  public void setNotes(String notes)
+  {
+    this.notes = notes;
   }
 }

@@ -17,10 +17,12 @@ public class Subject
 	private String name = null;
 	private SME defaultSme = null;
 	private MaskList masks = null;
+  private String notes = "";
 
-	public Subject(String name, String[] masksStrings, SME defaultSME) throws AdminException
+	public Subject(String name, String[] masksStrings, SME defaultSME, String notes) throws AdminException
 	{
-		if (name == null)
+    this.notes = notes;
+    if (name == null)
 			throw new NullPointerException("Name is null");
 		if (masksStrings == null)
 			throw new NullPointerException("Masks is null");
@@ -34,9 +36,10 @@ public class Subject
 		this.defaultSme = defaultSME;
 	}
 
-	public Subject(String name, Collection masksStrings, SME defaultSME)
+	public Subject(String name, Collection masksStrings, SME defaultSME, String notes)
 	{
-		if (name == null)
+    this.notes = notes;
+    if (name == null)
 			throw new NullPointerException("Name is null");
 		if (masksStrings == null)
 			throw new NullPointerException("Masks is null");
@@ -78,8 +81,20 @@ public class Subject
 	public PrintWriter store(PrintWriter out)
 	{
 		out.println("  <subject_def id=\"" + StringEncoderDecoder.encode(getName()) + "\" defSme=\"" + StringEncoderDecoder.encode(getDefaultSme().getId()) + "\">");
+    if (notes != null)
+      out.println("    <notes>" + notes + "</notes>");
 		getMasks().store(out);
 		out.println("  </subject_def>");
 		return out;
 	}
+
+  public String getNotes()
+  {
+    return notes;
+  }
+
+  public void setNotes(String notes)
+  {
+    this.notes = notes;
+  }
 }

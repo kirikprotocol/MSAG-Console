@@ -37,6 +37,7 @@ public class RouteBody extends SmscBean
   protected String forwardTo = null;
   protected boolean hide = false;
   protected boolean forceReplayPath = false;
+  protected String notes = "";
 
 	public boolean isSrcChecked(String srcName)
 	{
@@ -292,5 +293,15 @@ public class RouteBody extends SmscBean
   public void setForceReplayPath(boolean forceReplayPath)
   {
     this.forceReplayPath = forceReplayPath;
+  }
+
+  public String getNotes()
+  {
+    return notes;
+  }
+
+  public void setNotes(String notes)
+  {
+    this.notes = notes;
   }
 }

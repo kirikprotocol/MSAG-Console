@@ -23,6 +23,7 @@ public class SubjectsEdit extends SmscBean
   protected String mbCancel = null;
 
   protected String name = null;
+  protected String notes = "";
   protected String defSme = null;
   protected String[] masks = null;
 
@@ -39,6 +40,7 @@ public class SubjectsEdit extends SmscBean
       Subject s = routeSubjectManager.getSubjects().get(name);
       defSme = s.getDefaultSme().getId();
       masks = (String[]) s.getMasks().getNames().toArray(new String[0]);
+      notes = s.getNotes();
     }
 
     masks = Functions.trimStrings(masks);
@@ -76,6 +78,7 @@ public class SubjectsEdit extends SmscBean
         return error(SMSCErrors.error.subjects.defaultSmeNotFound, defSme);
       s.setDefaultSme(defaultSme);
       s.setMasks(new MaskList(masks));
+      s.setNotes(notes);
       journalAppend(SubjectTypes.TYPE_subject, name, Actions.ACTION_MODIFY);
       appContext.getStatuses().setSubjectsChanged(true);
       return RESULT_DONE;
@@ -139,5 +142,15 @@ public class SubjectsEdit extends SmscBean
   public void setMasks(String[] masks)
   {
     this.masks = masks;
+  }
+
+  public String getNotes()
+  {
+    return notes;
+  }
+
+  public void setNotes(String notes)
+  {
+    this.notes = notes;
   }
 }

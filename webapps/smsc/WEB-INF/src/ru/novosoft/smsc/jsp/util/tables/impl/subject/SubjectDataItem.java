@@ -25,5 +25,6 @@ public class SubjectDataItem extends AbstractDataItem
 		}
 		Collections.sort(masks);
 		values.put("Masks", masks);
+    values.put("notes", subj.getNotes());
 	}
 }
