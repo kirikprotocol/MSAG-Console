@@ -28,9 +28,9 @@ public class Index extends SmscBean
 	private String mbReset = null;
 	private Map params = new HashMap();
 
-	public int process(SMSCAppContext appContext, List errors, HttpServletRequest request)
+	public int process(SMSCAppContext appContext, List errors, HttpServletRequest request, java.security.Principal loginedPrincipal)
 	{
-		int result = super.process(appContext, errors);
+		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 

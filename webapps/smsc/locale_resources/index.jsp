@@ -4,7 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Resources";
-switch(bean.process(appContext, errorMessages))
+switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");

@@ -48,11 +48,11 @@ public class Index extends IndexBean
 		return RESULT_OK;
 	}
 
-	public int process(SMSCAppContext appContext, List errors)
+	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
 		routes = new NullResultSet();
 
-		int result = super.process(appContext, errors);
+		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 

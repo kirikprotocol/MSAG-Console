@@ -12,6 +12,7 @@ if (FORM_URI == null)
 String MENU0_SELECTION = "MENU0_HOME";
 String FORM_ENCTYPE = "application/x-www-form-urlencoded";
 final String CPATH = request.getContextPath() + "/smsc";
+final java.security.Principal loginedUserPrincipal = request.getUserPrincipal();
 ru.novosoft.smsc.jsp.SMSCAppContext appContext = (ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext");
 {
 %><%@ page import="java.util.*, 

@@ -4,7 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Add subject";
-int beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages);
+int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
 switch(beanResult)
 {
 	case SubjectsAdd.RESULT_DONE:

@@ -14,7 +14,7 @@
     MENU0_SELECTION = "MENU0_MSCMAN";
 
     int beanResult = mscManagerFormBean.RESULT_OK;
-    switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+    switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
     {
         case MscManagerFormBean.RESULT_DONE:
             response.sendRedirect("index.jsp");

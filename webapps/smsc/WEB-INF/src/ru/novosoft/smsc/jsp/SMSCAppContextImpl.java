@@ -37,9 +37,9 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
 	private Smsc smsc = null;
 	private NSConnectionPool connectionPool = null;
-	private UserPreferences userPreferences = new UserPreferences();
+	private Map userPreferences = new HashMap();
 	private Statuses statuses = new StatusesImpl();
-  private LocaleMessages localeMessages = null;
+	private LocaleMessages localeMessages = null;
 
 	private Console console = null;
 
@@ -156,7 +156,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
 	private void loadLocaleMessages()
 	{
-    localeMessages = new LocaleMessages();
+		localeMessages = new LocaleMessages();
 	}
 
 	private void startConsole() throws Exception
@@ -211,9 +211,21 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		return connectionPool;
 	}
 
-	public UserPreferences getUserPreferences()
+	public UserPreferences getUserPreferences(java.security.Principal loginedPrincipal)
 	{
-		return userPreferences;
+		if (loginedPrincipal == null)
+			return new UserPreferences();
+		else
+			synchronized (userPreferences)
+			{
+				UserPreferences prefs = (UserPreferences) userPreferences.get(loginedPrincipal);
+				if (prefs == null)
+				{
+					prefs = new UserPreferences();
+					userPreferences.put(loginedPrincipal, prefs);
+				}
+				return prefs;
+			}
 	}
 
 	public Statuses getStatuses()
@@ -232,9 +244,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		perfServer.shutdown();
 	}
 
-  public String getLocaleString(Locale locale, String key ) {
-    return localeMessages.getString( locale, key );
-  }
+	public String getLocaleString(Locale locale, String key)
+	{
+		return localeMessages.getString(locale, key);
+	}
 
 /*
 	public LocaleMessages getLocaleMessages()

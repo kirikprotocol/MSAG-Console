@@ -4,7 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Resource view";
-switch(bean.process(appContext, errorMessages))
+switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case LocaleResourcesView.RESULT_DONE:
 		response.sendRedirect("index.jsp");

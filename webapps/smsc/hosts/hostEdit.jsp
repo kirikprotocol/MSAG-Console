@@ -4,7 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Host \""+bean.getHostName()+":"+bean.getPort()+"\" edit";
-switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case HostEdit.RESULT_ERROR:
 		break;

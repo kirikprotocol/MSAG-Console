@@ -56,9 +56,9 @@ public class HostView extends SmscBean
 		return RESULT_OK;
 	}
 
-	public int process(SMSCAppContext appContext, List errorMessages)
+	public int process(SMSCAppContext appContext, List errorMessages, java.security.Principal loginedPrincipal)
 	{
-		int result = super.process(appContext, errorMessages);
+		int result = super.process(appContext, errorMessages, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 

@@ -49,9 +49,9 @@ public class RoutesAdd extends RouteBody
 		return result;
 	}
 
-	public int process(SMSCAppContext appContext, List errors, Map requestParameters)
+	public int process(SMSCAppContext appContext, List errors, Map requestParameters, java.security.Principal loginedPrincipal)
 	{
-		int result = super.process(appContext, errors);
+		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 

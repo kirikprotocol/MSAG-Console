@@ -7,7 +7,7 @@ TITLE = "Edit distribution list";
 MENU0_SELECTION = "MENU0_DL";
 final boolean isEditing = true;
 
-switch (bean.process(appContext, errorMessages))
+switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case dlEdit.RESULT_DONE:
 		response.sendRedirect("index.jsp");

@@ -4,7 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Edit subject";
-int beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages);
+int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
 switch(beanResult)
 {
 	case SubjectsEdit.RESULT_DONE:

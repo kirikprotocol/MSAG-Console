@@ -36,7 +36,7 @@ public class ProfilesFilter extends SmscBean
 		if (result != RESULT_OK)
 			return result;
 
-		filter = appContext.getUserPreferences().getProfilesFilter();
+		filter = preferences.getProfilesFilter();
 
 		if (codepage == -2 && reportinfo == -2)
 		{
@@ -67,9 +67,9 @@ public class ProfilesFilter extends SmscBean
 		return RESULT_OK;
 	}
 
-	public int process(SMSCAppContext appContext, List errors)
+	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
-		int result = super.process(appContext, errors);
+		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 

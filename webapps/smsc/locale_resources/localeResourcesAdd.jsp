@@ -12,7 +12,7 @@ MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("m
 if (multi != null)
 	request = multi;
 %><jsp:setProperty name="bean" property="*"/><%
-switch(bean.process(multi, appContext, errorMessages))
+switch(bean.process(multi, appContext, errorMessages, loginedUserPrincipal))
 {
 	case LocaleResourcesAdd.RESULT_DONE:
 		response.sendRedirect(CPATH+"/locale_resources/index.jsp");

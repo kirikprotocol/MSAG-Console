@@ -32,7 +32,7 @@ public class AliasesFilter extends SmscBean
 		if (result != RESULT_OK)
 			return result;
 
-		filter = appContext.getUserPreferences().getAliasesFilter();
+		filter = preferences.getAliasesFilter();
 
 		if (hide == AliasFilter.HIDE_UNKNOWN)
 		{
@@ -65,9 +65,9 @@ public class AliasesFilter extends SmscBean
 		return RESULT_OK;
 	}
 
-	public int process(SMSCAppContext appContext, List errors)
+	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
-		int result = super.process(appContext, errors);
+		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 

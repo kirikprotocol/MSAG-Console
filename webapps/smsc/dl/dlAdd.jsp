@@ -7,7 +7,7 @@ TITLE = "Create distribution list";
 MENU0_SELECTION = "MENU0_DL";
 final boolean isEditing = false;
 
-switch (bean.process(appContext, errorMessages))
+switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case dlAdd.RESULT_DONE:
 		response.sendRedirect("index.jsp");

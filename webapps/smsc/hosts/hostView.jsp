@@ -4,8 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%@page import="ru.novosoft.smsc.jsp.smsc.hosts.HostView, ru.novosoft.smsc.admin.service.ServiceInfo"%>
 <%
-TITLE = "Host \""+bean.getHostName()+":"+bean.getPort()+"\" view";
-switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case HostView.RESULT_OK:
 		STATUS.append("Services: " + bean.getServicesRunning() + " of " + bean.getServicesTotal() + " is running");
@@ -33,7 +32,7 @@ switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("
 		STATUS.append("Error");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 }
-
+TITLE = "Host \""+bean.getHostName()+":"+bean.getPort()+"\" view";
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_HOSTS";
 

@@ -4,7 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Filter users";
-switch(bean.process(appContext, errorMessages))
+switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case UsersFilter.RESULT_DONE:
 		response.sendRedirect("index.jsp");

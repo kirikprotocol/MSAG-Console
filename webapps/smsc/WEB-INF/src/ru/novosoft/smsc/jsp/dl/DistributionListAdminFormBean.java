@@ -39,11 +39,8 @@ public class DistributionListAdminFormBean extends IndexBean
 		if (result != RESULT_OK)
 			return result;
 
-		//?
 		if (this.admin == null)
-		{
 			admin = appContext.getSmsc().getDistributionListAdmin();
-		}
 
 		if (pageSize == 0)
 			pageSize = 20;
@@ -56,9 +53,9 @@ public class DistributionListAdminFormBean extends IndexBean
 		return RESULT_OK;
 	}
 
-	public int process(SMSCAppContext appContext, List errors)
+	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
-		int result = super.process(appContext, errors);
+		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 
@@ -66,7 +63,7 @@ public class DistributionListAdminFormBean extends IndexBean
 		//query names
 		try
 		{
-			dls = admin.list(appContext.getUserPreferences().getDlFilter());
+			dls = admin.list(preferences.getDlFilter());
 		}
 		catch (AdminException e)
 		{

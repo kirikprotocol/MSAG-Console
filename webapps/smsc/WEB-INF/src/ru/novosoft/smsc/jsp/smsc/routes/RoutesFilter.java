@@ -42,7 +42,7 @@ public class RoutesFilter extends SmscBean
 		if (result != RESULT_OK)
 			return result;
 
-		filter = appContext.getUserPreferences().getRoutesFilter();
+		filter = preferences.getRoutesFilter();
 
 		if (srcMasks == null || dstMasks == null)
 		{
@@ -53,8 +53,8 @@ public class RoutesFilter extends SmscBean
 			smeChks = filter.getSmeIds();
 
 			strict = filter.isIntersection();
-			showSrc = appContext.getUserPreferences().isRouteShowSrc();
-			showDst = appContext.getUserPreferences().isRouteShowDst();
+			showSrc = preferences.isRouteShowSrc();
+			showDst = preferences.isRouteShowDst();
 		}
 
 		if (srcChks == null) srcChks = new String[0];
@@ -88,9 +88,9 @@ public class RoutesFilter extends SmscBean
 		return RESULT_OK;
 	}
 
-	public int process(SMSCAppContext appContext, List errors)
+	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
-		int result = super.process(appContext, errors);
+		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 
@@ -116,8 +116,8 @@ public class RoutesFilter extends SmscBean
 			filter.setDestinationSubjectNames(dstChks);
 			filter.setSmeIds(smeChks);
 			filter.setIntersection(strict);
-			appContext.getUserPreferences().setRouteShowSrc(showSrc);
-			appContext.getUserPreferences().setRouteShowDst(showDst);
+			preferences.setRouteShowSrc(showSrc);
+			preferences.setRouteShowDst(showDst);
 			return RESULT_DONE;
 		}
 		else if (mbClear != null)

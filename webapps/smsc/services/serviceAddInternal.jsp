@@ -4,7 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Add service: step 2";
-switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case ServiceAddInternal.RESULT_DONE:
 		response.sendRedirect("index.jsp");

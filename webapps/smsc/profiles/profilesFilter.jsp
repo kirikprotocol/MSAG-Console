@@ -5,7 +5,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Profiles filter";
-switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case ProfilesFilter.RESULT_DONE:
 		response.sendRedirect("index.jsp");

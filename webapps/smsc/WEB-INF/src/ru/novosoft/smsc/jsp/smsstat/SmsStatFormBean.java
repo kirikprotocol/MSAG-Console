@@ -39,7 +39,7 @@ public class SmsStatFormBean extends IndexBean
         return RESULT_OK;
     }
 
-    public int process(SMSCAppContext appContext, List errors)
+    public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
     {
         if (this.appContext == null && appContext instanceof SMSCAppContext)
         {

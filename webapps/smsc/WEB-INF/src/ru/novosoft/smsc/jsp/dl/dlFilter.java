@@ -1,11 +1,9 @@
 package ru.novosoft.smsc.jsp.dl;
 
-import ru.novosoft.smsc.jsp.*;
-import ru.novosoft.smsc.admin.route.MaskList;
-import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.util.List;
-import java.util.Arrays;
 
 /**
  * Created by igork
@@ -27,16 +25,16 @@ public class dlFilter extends PageBean
 			return result;
 
 		if (names == null)
-			names = appContext.getUserPreferences().getDlFilter().getNames();
+			names = preferences.getDlFilter().getNames();
 
 		names = trimStrings(names);
 
 		return result;
 	}
 
-	public int process(SMSCAppContext appContext, List errors)
+	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
-		int result = super.process(appContext, errors);
+		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 
@@ -58,7 +56,7 @@ public class dlFilter extends PageBean
 
 	private int apply()
 	{
-		appContext.getUserPreferences().getDlFilter().setNames(names);
+		preferences.getDlFilter().setNames(names);
 		return RESULT_DONE;
 	}
 

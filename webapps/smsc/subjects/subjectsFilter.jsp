@@ -5,7 +5,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Filter subjects";
-switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case SubjectsFilter.RESULT_DONE:
 		response.sendRedirect("index.jsp");

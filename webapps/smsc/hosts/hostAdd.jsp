@@ -4,7 +4,7 @@
 <%try {%><jsp:setProperty name="bean" property="*"/><%} catch (Throwable t){}%>
 <%
 TITLE = "Add new host";
-switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case HostEdit.RESULT_ERROR:
 		break;

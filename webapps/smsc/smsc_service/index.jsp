@@ -8,7 +8,7 @@
 <%
 FORM_METHOD = "POST";
 TITLE = "SMSC";
-switch(bean.process(appContext, errorMessages, request))
+switch(bean.process(appContext, errorMessages, request, loginedUserPrincipal))
 {
 	case Index.RESULT_DONE:
 		response.sendRedirect("index.jsp");

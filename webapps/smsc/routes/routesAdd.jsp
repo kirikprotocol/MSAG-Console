@@ -4,7 +4,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Add route";
-switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages, request.getParameterMap()))
+switch(bean.process(appContext, errorMessages, request.getParameterMap(), loginedUserPrincipal))
 {
 	case RoutesAdd.RESULT_DONE:
 		response.sendRedirect("index.jsp");

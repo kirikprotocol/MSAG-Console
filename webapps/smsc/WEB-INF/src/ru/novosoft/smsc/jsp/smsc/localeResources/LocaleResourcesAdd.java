@@ -25,9 +25,9 @@ public class LocaleResourcesAdd extends PageBean
 		return RESULT_OK;
 	}
 
-	public int process(MultipartServletRequest multi, SMSCAppContext appContext, List errors)
+	public int process(MultipartServletRequest multi, SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
-		int result = super.process(appContext, errors);
+		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 

@@ -1,9 +1,9 @@
-<jsp:useBean id="errorMessages" class="java.util.ArrayList"/><%@ 
+<jsp:useBean id="errorMessages" class="java.util.ArrayList"/><%@
 page import="ru.novosoft.smsc.jsp.*"
 %><%
 /*	java.util.ResourceBundle messages = null;
 	if (appContext != null)
-		messages = appContext.getLocaleMessages(appContext.getUserPreferences().getLocale());
+		messages = appContext.getLocaleMessages(preferences.getLocale());
 	public static final java.util.ResourceBundle messages = appContext.getLocaleMessages(request.getLocale());
 	static
 	{

@@ -42,13 +42,13 @@ public class MscManagerFormBean extends IndexBean
         mbBlock = null; mbClear = null;
         mscNum = ""; mscKey = "";
     }
-    public int process(SMSCAppContext appContext, List errors)
+    public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
     {
         if (this.appContext == null && appContext instanceof SMSCAppContext) {
             manager.setSmsc(appContext.getSmsc());
         }
 
-        int result = super.process(appContext, errors);
+        int result = super.process(appContext, errors, loginedPrincipal);
         if (result != RESULT_OK) {
             clearBeenProperties();
             return result;

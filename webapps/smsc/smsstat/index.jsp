@@ -16,7 +16,7 @@
     MENU0_SELECTION = "MENU0_SMSSTAT";
 
     int beanResult = SmsStatFormBean.RESULT_OK;
-    switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+    switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
     {
         case SmsStatFormBean.RESULT_DONE:
             response.sendRedirect("index.jsp");

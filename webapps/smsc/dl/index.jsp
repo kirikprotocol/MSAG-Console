@@ -7,7 +7,7 @@
     MENU0_SELECTION = "MENU0_DL";
 
     int beanResult = bean.RESULT_OK;
-    switch(beanResult = bean.process(appContext, errorMessages))
+    switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
     {
         case DistributionListAdminFormBean.RESULT_DONE:
             response.sendRedirect("index.jsp");

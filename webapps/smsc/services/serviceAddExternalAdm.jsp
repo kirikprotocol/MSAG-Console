@@ -12,7 +12,7 @@ if (bean.getStage() == 2 && request.getParameter("jsp") != null)
 bean.setWantAlias(request.getParameter("wantAlias") != null);
 bean.setForceDC(request.getParameter("forceDC") != null);
 
-switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case ServiceAddExternalAdm.RESULT_DONE:
 		response.sendRedirect("index.jsp");

@@ -63,9 +63,9 @@ public class dlBody extends IndexBean
 		return RESULT_OK;
 	}
 
-	public int process(SMSCAppContext appContext, List errors)
+	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
-		int result = super.process(appContext, errors);
+		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 
@@ -100,14 +100,14 @@ public class dlBody extends IndexBean
 	private int processMembers() throws AdminException
 	{
 		if (pageSize == 0)
-			pageSize = appContext.getUserPreferences().getDlPageSize();
+			pageSize = preferences.getDlPageSize();
 		else
-			appContext.getUserPreferences().setDlPageSize(pageSize);
+			preferences.setDlPageSize(pageSize);
 
 		if (sort == null || sort.length() == 0)
-			sort = appContext.getUserPreferences().getDlSortOrder();
+			sort = preferences.getDlSortOrder();
 		else
-			appContext.getUserPreferences().setDlSortOrder(sort);
+			preferences.setDlSortOrder(sort);
 
 		sort(fullMembersList, sort);
 

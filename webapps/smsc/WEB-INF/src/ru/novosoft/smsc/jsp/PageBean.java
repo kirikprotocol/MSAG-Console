@@ -24,7 +24,8 @@ public abstract class PageBean
 	protected SMSCAppContext appContext = null;
 	protected HostsManager hostsManager = null;
 	public static final int MAX_PRIORITY = 0x7FFF;
-	protected UserPreferences preferences;
+	protected java.security.Principal loginedPrincipal = null;
+	protected UserPreferences preferences = null;
 
 
 	public SMSCAppContext getAppContext()
@@ -32,7 +33,7 @@ public abstract class PageBean
 		return appContext;
 	}
 
-	public int process(SMSCAppContext appContext, List errors)
+	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
 		this.errors = errors;
 		if (errors == null)
@@ -45,13 +46,16 @@ public abstract class PageBean
 			return error(SMSCErrors.error.appContextNotInitialized);
 
 		this.appContext = appContext;
+		this.loginedPrincipal = loginedPrincipal;
+		if (this.appContext != null)
+			this.preferences = this.appContext.getUserPreferences(this.loginedPrincipal);
+
 		return init(errors);
 	}
 
 	protected int init(List errors)
 	{
 		hostsManager = appContext.getHostsManager();
-		preferences = appContext.getUserPreferences();
 
 		if (hostsManager == null)
 			return error(SMSCErrors.error.serviceManagerNotInitialized);

@@ -4,7 +4,7 @@
 <%@page import="ru.novosoft.smsc.jsp.smsc.hosts.Index"%>
 <%
 TITLE = "Hosts";
-switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case Index.RESULT_OK:
 		STATUS.append("hosts:").append(bean.getHostNames().size());
