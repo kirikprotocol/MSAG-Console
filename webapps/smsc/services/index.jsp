@@ -131,10 +131,11 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 </table>
 <div class=secButtons>
 <input class=btn type=submit name=mbAddService value="Add service" title="Add service">
-<input class=btn type=submit name=mbDelete value="Delete service(s)" title="Delete selected services">
+<input class=btn type=submit name=mbDelete value="Delete service(s)" title="Delete selected services" onclick="return confirm('Are you sure to delete all selected services?')">
 &nbsp;&nbsp;&nbsp;&nbsp;
 <input class=btn type=submit name=mbStartService value="Start service(s)" title="Start selected services">
 <input class=btn type=submit name=mbStopService value="Stop service(s)" title="Stop selected services">
+<input class=btn type=submit name=mbDisconnectServices value="Disconnect service(s)" title="Disconnect all selected services" onclick="return confirm('Are you sure to disconnect all selected services?')" <%=bean.isSmscAlive() ? "" : "disabled"%>>
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

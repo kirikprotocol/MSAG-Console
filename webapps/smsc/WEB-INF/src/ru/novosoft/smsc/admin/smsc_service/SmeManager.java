@@ -33,4 +33,6 @@ public interface SmeManager
 	void save() throws AdminException;
 
 	boolean isSmeConnected(String id) throws AdminException;
+
+	void disconnectSmes(List list) throws AdminException;
 }

@@ -71,6 +71,7 @@ protected:
 	void smeRemove(const Arguments & args);
 	void smeUpdate(const Arguments & args);
 	Variant smeIsConnected(const Arguments & args);
+	void smeDisconnect(const Arguments & args);
 
 
   SmscConfigs &configs;
@@ -79,7 +80,7 @@ protected:
     flushStatisticsMethod, processCancelMessagesMethod, applySmscConfigMethod,
     applyServicesMethod,
     mscRegistrateMethod, mscUnregisterMethod, mscBlockMethod, mscClearMethod, mscListMethod,
-		smeAddMethod, smeRemoveMethod, smeUpdateMethod, smeIsConnectedMethod};
+		smeAddMethod, smeRemoveMethod, smeUpdateMethod, smeIsConnectedMethod, smeDisconnectMethod};
 
   smsc::core::synchronization::Mutex mutex;
   bool isStopping;

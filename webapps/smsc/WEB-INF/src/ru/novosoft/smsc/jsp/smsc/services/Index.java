@@ -30,6 +30,7 @@ public class Index extends PageBean
 	protected String mbView = null;
 	protected String mbViewHost = null;
 	protected String mbEdit = null;
+	protected String mbDisconnectServices = null;
 
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
@@ -39,33 +40,21 @@ public class Index extends PageBean
 			return result;
 
 		if (mbAddService != null)
-		{
 			return RESULT_ADD;
-		}
 		else if (mbDelete != null)
-		{
 			return deleteServices();
-		}
 		else if (mbStartService != null)
-		{
 			return startServices();
-		}
 		else if (mbStopService != null)
-		{
 			return stopServices();
-		}
 		else if (mbView != null)
-		{
 			return RESULT_VIEW;
-		}
 		else if (mbViewHost != null)
-		{
 			return RESULT_VIEW_HOST;
-		}
 		else if (mbEdit != null)
-		{
 			return RESULT_EDIT;
-		}
+		else if (mbDisconnectServices != null)
+			return disconnectServices();
 		else
 			return RESULT_OK;
 	}
@@ -77,7 +66,8 @@ public class Index extends PageBean
 			error("Service Manager is null!!!");
 			return new LinkedList();
 		}
-		else {
+		else
+		{
 			List smeIds = hostsManager.getSmeIds();
 			smeIds.remove(Constants.SMSC_SME_ID);
 			return smeIds;
@@ -200,6 +190,29 @@ public class Index extends PageBean
 		return result;
 	}
 
+	private int disconnectServices()
+	{
+		logger.debug("disconnectServices: " + (serviceIds != null ? serviceIds.length : 0));
+
+		int result = RESULT_OK;
+
+		if (serviceIds.length == 0)
+			return error(SMSCErrors.warning.hosts.noServicesSelected);
+
+		try
+		{
+			appContext.getSmeManager().disconnectSmes(Arrays.asList(serviceIds));
+		}
+		catch (AdminException e)
+		{
+			result = error(SMSCErrors.error.hosts.couldntStopService, serviceId);
+			logger.error("Couldn't disconnect services \"" + serviceIds + '"', e);
+		}
+		serviceIds = new String[0];
+		return result;
+	}
+
+
 	public String getHost(String sId)
 	{
 		try
@@ -255,6 +268,19 @@ public class Index extends PageBean
 		catch (AdminException e)
 		{
 			error(SMSCErrors.error.services.couldntGetServiceInfo, serviceId);
+			return false;
+		}
+	}
+
+	public boolean isSmscAlive()
+	{
+		try
+		{
+			return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING;
+		}
+		catch (AdminException e)
+		{
+			error(SMSCErrors.error.services.couldntGetServiceInfo, Constants.SMSC_SME_ID);
 			return false;
 		}
 	}
@@ -360,5 +386,15 @@ public class Index extends PageBean
 	public void setMbEdit(String mbEdit)
 	{
 		this.mbEdit = mbEdit;
+	}
+
+	public String getMbDisconnectServices()
+	{
+		return mbDisconnectServices;
+	}
+
+	public void setMbDisconnectServices(String mbDisconnectServices)
+	{
+		this.mbDisconnectServices = mbDisconnectServices;
 	}
 }

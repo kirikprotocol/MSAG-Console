@@ -65,9 +65,9 @@ Variant::Variant()
 
 void appendStringList(StringList * stringList, const char * const value)
 {
-  std::auto_ptr<char> buffer(new char[strlen(value)]);
+  std::auto_ptr<char> buffer(new char[strlen(value)+1]);
   char * bptr = buffer.get();
-  for (const char * ptr = value; ptr != 0; ptr++)
+  for (const char * ptr = value; *ptr != 0; ptr++)
   {
     if (*(ptr) == ',')
     {

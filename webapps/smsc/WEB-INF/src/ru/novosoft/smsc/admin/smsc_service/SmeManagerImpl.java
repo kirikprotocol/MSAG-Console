@@ -151,4 +151,9 @@ public class SmeManagerImpl implements SmeManager
 			smsc.smeUpdate(updatedSme);
 		return updatedSme;
 	}
+
+	public void disconnectSmes(List smeIdsToDisconnect) throws AdminException
+	{
+		smsc.disconnectSmes(smeIdsToDisconnect);
+	}
 }

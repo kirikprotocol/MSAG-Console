@@ -52,6 +52,8 @@ public class Smsc extends Service
 	private Method sme_remove_method = null;
 	private Method sme_update_method = null;
 	private Method sme_isConnected_method = null;
+	private Method sme_disconnect = null;
+
 	private Map smeIsConnectedMap = new HashMap();
 
 
@@ -236,7 +238,7 @@ public class Smsc extends Service
 
 	protected void checkComponents()
 	{
-		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null || sme_isConnected_method == null)
+		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null || sme_isConnected_method == null || sme_disconnect == null)
 		{
 			try
 			{
@@ -261,6 +263,7 @@ public class Smsc extends Service
 				sme_remove_method = (Method) smsc_component.getMethods().get("sme_remove");
 				sme_update_method = (Method) smsc_component.getMethods().get("sme_update");
 				sme_isConnected_method = (Method) smsc_component.getMethods().get("sme_isConnected");
+				sme_disconnect = (Method) smsc_component.getMethods().get("sme_disconnect");
 			}
 			catch (AdminException e)
 			{
@@ -467,5 +470,15 @@ public class Smsc extends Service
 		}
 		else
 			return smeIsConnectedMap;
+	}
+
+	public void disconnectSmes(List smeIdsToDisconnect) throws AdminException
+	{
+		checkComponents();
+		Map params = new HashMap();
+		params.put("ids", smeIdsToDisconnect);
+		Object result = call(smsc_component, sme_disconnect, Type.Types[Type.BooleanType], params);
+		if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
+			throw new AdminException("Error in response");
 	}
 }
