@@ -64,6 +64,8 @@ TextTable::TextTable()
 
 	t["latin.quoted-printable"] = "`1234567890-=3D\\\tqwertyuiop[]asdfghjkl;'zxcvbnm,./";
 
+	t["rus.windows-1251.8bit"] = t["rus"];
+	t["rus2.windows-1251.8bit"] = t["rus2"];
 	t["rus.windows-1251.quoted-printable"] = "=B81234567890-=3D\\\t=E9=F6=F3=EA=E5=ED=E3=F8=F9=E7=F5=FA=F4=FB=E2=E0=EF=F0=EE=EB=E4=E6=FD=FF=F7=F1=EC=E8=F2=FC=E1=FE.";
 	t["rus2.windows-1251.quoted-printable"] = "=A8!\"=B9;%:?*()_+/\t=C9=D6=D3=CA=C5=CD=C3=D8=D9=C7=D5=DA=D4=DB=C2=C0=CF=D0=CE=CB=C4=C6=DD=DF=D7=D1=CC=C8=D2=DC=C1=DE,";
 	
