@@ -713,6 +713,11 @@ bool SmppUtil::extractDataCoding(uint8_t dcs, uint8_t& dc)
 	//00xxxxxx и 01xxxxxx
 	if (!b[7])
 	{
+		if (b[4] && b[1] && !b[0]) //message class is set & dest_addr_subunit = (U)SIM specific message
+		{
+			dc = BINARY; //транслитерацию не производить, игнорируя значение пофиля абонента
+			return true;
+		}
 		if (b[5]) //text is compressed
 		{
 			return false;
@@ -733,12 +738,18 @@ bool SmppUtil::extractDataCoding(uint8_t dcs, uint8_t& dc)
 			return true;
 		}
 	}
+	else if (b[7] && !b[6]) //Reserved coding groups
+	{
+		dc = BINARY;
+		return true;
+	}
 	else if (b[7] && b[6])
 	{
 		//1111xxxx
 		if (b[5] && b[4])
 		{
 			dc = b[2] ? BINARY : SMSC7BIT;
+			//(U)SIM-specific message игнорирую, т.к. транслитерация в этом случае невозможна
 			return true;
 		}
 		else
