@@ -73,7 +73,9 @@ struct _SmscCommand
     case SUBMIT_RESP:
       delete ( (SmsResp*)dta ); break;
     case UNKNOWN:
-      __unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
+      //__unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
+			__warning__("uninitialized command");
+			break;
     default:
       __unreachable__("unprocessed cmdid");
     }
@@ -98,6 +100,7 @@ class SmscCommand
       cmd = 0;
     }
   }
+
   _SmscCommand* ref(_SmscCommand* cmd)
   {
     __trace__(__PRETTY_FUNCTION__);
