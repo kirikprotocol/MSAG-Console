@@ -516,8 +516,6 @@ void cancelSmTc()
 		"Заданы правильные source_addr и dest_addr и нулевые message_id и service_type");
 	__reg_tc__("cancelSm.correct.destAddrWithServiceType",
 		"Заданы правильные source_addr, dest_addr и service_type и нулевой message_id");
-	__reg_tc__("cancelSm.correct.noSms",
-		"Заданы source_addr, dest_addr и service_type и нулевой message_id, но нет сообщений в БД удовлетворяющих условиям запроса");
 	//cancelSm.incorrect
 	__reg_tc__("cancelSm.incorrect",
 		"Отправка cancel_sm реквеста с неправильными значениями полей");
@@ -527,6 +525,12 @@ void cancelSmTc()
 		"Задан message_id существующего сообщения в ENROUTE состоянии, dest_addr и service_type нулевые, но source_addr не совпадает");
 	__reg_tc__("cancelSm.incorrect.destAddr",
 		"Задан message_id существующего сообщения в ENROUTE состоянии, совпадающий source_addr, нулевой service_type и несовпадающий dest_addr");
+	__reg_tc__("cancelSm.incorrect.sourceAddrOnly",
+		"Задан только source_addr, а message_id, dest_addr и service_type нулевые");
+	__reg_tc__("cancelSm.incorrect.destAddrOnly",
+		"Задан только dest_addr, а message_id, source_addr и service_type нулевые");
+	__reg_tc__("cancelSm.incorrect.messageIdOnly",
+		"Задан только message_id, а source_addr, dest_addr и service_type нулевые");
 	__reg_tc__("cancelSm.incorrect.emptyFields",
 		"Задан правильный source_addr и  пустые message_id, dest_addr и service_type");
 	__reg_tc__("cancelSm.incorrect.serviceTypeWithoutDestAddr",
@@ -537,6 +541,8 @@ void cancelSmTc()
 		"Заданы все поля message_id, source_addr, dest_addr и service_type для существующего сообщения в ENROUTE состоянии");
 	__reg_tc__("cancelSm.incorrect.cancelFinal",
 		"Задан message_id существующего сообщения в финальном состоянии, source_addr совпадает, dest_addr и service_type нулевые");
+	__reg_tc__("cancelSm.incorrect.noSms",
+		"Заданы правильные source_addr, dest_addr и service_type и нулевой message_id, но нет сообщений в БД удовлетворяющих условиям запроса");
 	//cancelSm.resp
 	__reg_tc__("cancelSm.resp",
 		"Получение cancel_sm_resp pdu");
@@ -552,16 +558,18 @@ void cancelSmTc()
 		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
 	__reg_tc__("cancelSm.resp.checkCmdStatusOk",
 		"При отсутствии кода ошибки в поле command_status реквест cancel_sm действительно не содержит ошибок (сообщение существует и находится в ENROUTE состоянии, адреса source_addr и dest_addr заданы правильно и т.п.)");
+	/*
 	__reg_tc__("cancelSm.resp.checkCmdStatusInvalidSourceAddr",
 		"Если код ошибки ESME_RINVSRCADR в поле command_status, то source_addr действительно не соответствует source_addr оригинального сообщения в БД");
 	__reg_tc__("cancelSm.resp.checkCmdStatusInvalidDestAddr",
 		"Если код ошибки ESME_RINVDSTADR в поле command_status, то dest_addr действительно не соответствует dest_addr оригинального сообщения в БД");
+	*/
 	__reg_tc__("cancelSm.resp.checkCmdStatusInvalidBindStatus",
 		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
 	__reg_tc__("cancelSm.resp.checkCmdStatusInvalidMsgId",
 		"Если код ошибки ESME_RINVMSGID в поле command_status, то действительно message_id задан неправильно");
 	__reg_tc__("cancelSm.resp.checkCmdStatusCancelFailed",
-		"Если код ошибки ESME_RCANCELFAIL в поле command_status, то действительно сообщение находится в финальном состоянии");
+		"Если код ошибки ESME_RCANCELFAIL в поле command_status, то действительно либо реквест неправильный (source_addr или dest_addr не совпадает с оригинальным сообщением и т.п.), либо нет сообщений удовлетворяющих условиям (нет сообщений, сообщение в финальном состоянии и т.п.)");
 	__reg_tc__("cancelSm.resp.checkCmdStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
 }

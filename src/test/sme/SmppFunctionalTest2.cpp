@@ -189,7 +189,7 @@ int TestSmeFunc::Execute()
 	//seq.insert(seq.end(), 5, 5);
 	//seq.insert(seq.end(), 5, 6);
 	seq.insert(seq.end(), 1, 7);
-	seq.insert(seq.end(), 2, 8);
+	seq.insert(seq.end(), 5, 8);
 	seq.push_back(51);
 	seq.push_back(52);
 	seq.push_back(53);
