@@ -685,7 +685,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
         unpack_addr(cdaddr+1, called->addrSign_p, called->noOfAddrSign);
       }
       event.to = cdaddr;
-      smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s",event.from.c_str(),event.to.c_str());
+      smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s type=%x",event.from.c_str(),event.to.c_str(),event.cause);
       MissedCallProcessor::instance()->fireMissedCallEvent(event);
     }
   }
@@ -759,7 +759,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_ORIGINALNUMB_T 
         unpack_addr(cdaddr+1, called->addrSign_p, called->noOfAddrSign);
       }
       event.to = cdaddr;
-      smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s",event.from.c_str(),event.to.c_str());
+      smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s type=%x",event.from.c_str(),event.to.c_str(),event.cause);
       MissedCallProcessor::instance()->fireMissedCallEvent(event);
     }
   }
