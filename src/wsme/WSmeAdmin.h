@@ -30,26 +30,16 @@ namespace smsc { namespace wsme
         virtual void removeVisitor(const std::string msisdn)
             throw (ProcessException) = 0;
         
-        virtual void addLang(const std::string msisdn, 
-                             std::string lang, bool isLang=true)
+        virtual void addLang(const std::string mask, std::string lang)
             throw (ProcessException) = 0;
-        virtual void removeLang(const std::string msisdn, 
-                                std::string lang, bool isLang=true)
-            throw (ProcessException) = 0;
-        virtual std::string getDefaultLang()
+        virtual void removeLang(const std::string mask)
             throw (ProcessException) = 0;
        
-        virtual void addAd(int id, const std::string lang, bool isLang, 
-                           std::string ad)
+        virtual void addAd(int id, const std::string lang, std::string ad)
             throw (ProcessException) = 0;
-        virtual void removeAd(int id, const std::string lang, bool isLang)
+        virtual void removeAd(int id, const std::string lang)
             throw (ProcessException) = 0;
         
-        virtual void cleanHistory()
-            throw (ProcessException) = 0;
-        virtual void changeHistoryKeepPeriod(int newPeriod)
-            throw (ProcessException) = 0;
-
     protected:
 
         virtual ~WSmeAdmin() {};

@@ -208,7 +208,7 @@ namespace smsc { namespace wsme
             throw (ProcessException);
     };
     
-    class WSmeProcessor
+    class WSmeProcessor : public WSmeAdmin
     {
     private:
         
@@ -231,6 +231,8 @@ namespace smsc { namespace wsme
             throw(ConfigException, InitException);
         virtual ~WSmeProcessor();
         
+        /* ------------------------ Smsc interface ------------------------ */ 
+
         virtual bool processNotification(const std::string msisdn, 
                                          std::string& out) 
             throw (ProcessException);
@@ -239,6 +241,23 @@ namespace smsc { namespace wsme
             throw (ProcessException);
 
         virtual void processReceipt(const std::string msgid, bool receipted)
+            throw (ProcessException);
+        
+        /* ------------------------ Admin interface ------------------------ */ 
+
+        virtual void addVisitor(const std::string msisdn)
+            throw (ProcessException);
+        virtual void removeVisitor(const std::string msisdn)
+            throw (ProcessException);
+        
+        virtual void addLang(const std::string mask, std::string lang)
+            throw (ProcessException);
+        virtual void removeLang(const std::string mask)
+            throw (ProcessException);
+       
+        virtual void addAd(int id, const std::string lang, std::string ad)
+            throw (ProcessException);
+        virtual void removeAd(int id, const std::string lang)
             throw (ProcessException);
     };
 

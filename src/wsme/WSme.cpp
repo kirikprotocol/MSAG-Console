@@ -19,7 +19,12 @@
 #include <sms/sms.h>
 #include <util/xml/init.h>
 
+#include <admin/service/Component.h>
+#include <admin/service/ComponentManager.h>
+#include <admin/service/ServiceSocketListener.h>
+
 #include "WSmeProcessor.h"
+#include "WSmeComponent.h"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -27,6 +32,9 @@ using namespace smsc::util;
 using namespace smsc::util::config;
 using namespace smsc::core::threads;
 using namespace smsc::core::buffers;
+
+using namespace smsc::admin;
+using namespace smsc::admin::service;
 
 using namespace smsc::wsme;
 
@@ -407,6 +415,8 @@ void atExitHandler(void)
 
 int main(void) 
 {
+    int resultCode = 0;
+
     using smsc::db::DataSourceLoader;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
@@ -415,6 +425,8 @@ int main(void)
     //added by igork
     atexit(atExitHandler);
     
+    smsc::admin::service::ServiceSocketListener adminListener; 
+
     try 
     {
         Manager::init("config.xml");
@@ -425,6 +437,14 @@ int main(void)
 
         ConfigView cpConfig(manager, "WSme");
         WSmeProcessor processor(&cpConfig);
+
+        ConfigView adminConfig(manager, "WSme.Admin");
+        WSmeComponent wsmeAdmin(processor);                   
+        // TODO: Нужно ли заводить ComponentManager ????
+        ComponentManager::registerComponent(&wsmeAdmin); 
+        adminListener.init(adminConfig.getString("host"), 
+                           adminConfig.getInt("port"));               
+        adminListener.Start();                                     
 
         ConfigView mnConfig(manager, "WSme.ThreadPool");
         ConfigView ssConfig(manager, "WSme.SMSC");
@@ -471,12 +491,15 @@ int main(void)
     catch (ConfigException& exc) 
     {
         log.error("Configuration invalid. Details: %s\n", exc.what());
-        return -2;
+        resultCode = -2;
     }
     catch (exception& exc) 
     {
         log.error("Top level exception: %s\n", exc.what());
-        return -1;
+        resultCode = -1;
     }
-    return 0;
+    
+    adminListener.WaitFor();
+    return resultCode;
 }
+

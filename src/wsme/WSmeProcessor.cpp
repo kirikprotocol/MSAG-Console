@@ -8,7 +8,7 @@ namespace smsc { namespace wsme
 
 WSmeProcessor::WSmeProcessor(ConfigView* config)
     throw(ConfigException, InitException)
-        : log(Logger::getCategory("smsc.wsme.WSmeProcessor")),
+        : WSmeAdmin(), log(Logger::getCategory("smsc.wsme.WSmeProcessor")),
             ds(0), visitorManager(0), langManager(0), adManager(0)
 {
     try
@@ -101,6 +101,33 @@ void WSmeProcessor::processReceipt(const std::string msgid, bool receipted)
     __trace__("Processed receipt message.");
 }
 
+// TODO: implement all Admin methods ...
+
+void WSmeProcessor::addVisitor(const std::string msisdn)
+    throw (ProcessException)
+{
+}
+void WSmeProcessor::removeVisitor(const std::string msisdn)
+    throw (ProcessException)
+{
+}
+void WSmeProcessor::addLang(const std::string mask, std::string lang)
+    throw (ProcessException)
+{
+}
+void WSmeProcessor::removeLang(const std::string mask)
+    throw (ProcessException)
+{
+}
+void WSmeProcessor::addAd(int id, const std::string lang, std::string ad)
+    throw (ProcessException)
+{
+
+}
+void WSmeProcessor::removeAd(int id, const std::string lang)
+    throw (ProcessException)
+{
+}
 
 /* ------------------------ Managers Implementation ------------------------ */
 
@@ -761,7 +788,6 @@ void AdManager::receiptAd(const std::string msgid, bool receipted)
     __require__(history);
     history->receiptAd(msgid, receipted);
 }
-
 
 }}
 
