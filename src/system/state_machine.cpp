@@ -356,8 +356,8 @@ StateType StateMachine::submit(Tuple& t)
       {
       }
       __warning__("SUBMIT_SM: invalid message length");
+      return ERROR_STATE;
     }
-    return ERROR_STATE;
   }
 
 
