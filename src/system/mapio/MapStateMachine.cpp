@@ -1973,7 +1973,7 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
         dialogueId,
         invokeId,
         &moResp);
-    }else if ( dialog->version == 1 ) {
+    }else if ( version == 1 ) {
         Et96MapV1ForwardSmMOResp(
         localSsn,
         dialogueId,
