@@ -74,6 +74,10 @@ public:
 // ThreadedTask
   virtual int Execute();
   virtual const char* taskName();
+
+  string serviceType;
+  int protocolId;
+
 protected:
   void putIncomingCommand(const SmscCommand& cmd);
   SmscCommand getOutgoingCommand();
@@ -83,6 +87,7 @@ protected:
   void SubmitResp(SmscCommand& cmd);
   void SendSubmitResp(ListTask* task);
   void CheckTimeouts();
+  void Submit();
   //Smsc *smsc;
 };
 

@@ -404,6 +404,8 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
 
   string tmplname;
 
+  int tmplstart,tmpllen;
+
   while(i<len && buf[i]=='#')
   {
     int n=10;
@@ -521,6 +523,8 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
         j=m[0].end;
       }
       Directive d(i,j-i);
+      tmplstart=i;
+      tmpllen=j-i;
       offsets.Push(d);
       i=j;
     }else
@@ -579,9 +583,11 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     OutputFormatter *f=ResourceManager::getInstance()->getFormatter(p.locale,tmplname);
     if(!f)
     {
-      throw Exception("Unknown template name");
+      newtext.assign(body,tmplstart,tmpllen);
+    }else
+    {
+      f->format(newtext,ga,ce);
     }
-    f->format(newtext,ga,ce);
     udhi=false;
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x40));
   }
@@ -2133,6 +2139,12 @@ StateType StateMachine::forward(Tuple& t)
     errstatus=Status::INVBNDSTS;
     errtext="service rejected";
   }
+  catch(exception& e)
+  {
+    smsLog->warn("FWDDLV: failed create deliver, exception:%s",e.what());
+    errstatus=Status::THROTTLED;
+    errtext="SME busy";
+  }
   catch(...)
   {
     errstatus=Status::THROTTLED;
@@ -2140,7 +2152,7 @@ StateType StateMachine::forward(Tuple& t)
   }
   if(errstatus)
   {
-    smsLog->warn("FWDDLV: failed create deliver(%s) msgId=%lld, seq number:%d",errtext,t.msgId,dialogId2);
+    smsLog->warn("FWDDLV: failed create deliver(%s) srcSme=%s msgId=%lld, seq number:%d",errtext,sms.getSourceSmeId(),t.msgId,dialogId2);
 
     sms.setOriginatingAddress(srcOriginal);
     sms.setDestinationAddress(dstOriginal);

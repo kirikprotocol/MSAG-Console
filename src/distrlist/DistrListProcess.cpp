@@ -2,6 +2,7 @@
 
 #include "DistrListProcess.h"
 #include "../system/status.h"
+#include "util/smstext.h"
 #define DLP_TIMEOUT 1000
 #define WAIT_SUBMISSION (8)
 
@@ -120,10 +121,247 @@ int DistrListProcess::Execute()
         cmd.getProxy()->putCommand(cmdR);
       }
     }
-    else if ( cmd->get_commandId() == SUBMIT )
+    else if ( cmd->get_commandId() == DELIVERY )
     {
-      // NOTHING
-      __warning2__(":DLP: unknown SUBMIT (isn't implemented yet)");
+      SMS &sms=*cmd->get_sms();
+      {
+        SmscCommand resp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),Status::OK);
+        putIncomingCommand(resp);
+      }
+      string s;
+      smsc::util::getSmsText(&sms,s);
+      string::size_type sppos=s.find(' ');
+      string arg;
+      string arg2;
+      string::size_type argend=string::npos;
+      string cmd;
+      if(sppos!=string::npos)
+      {
+        cmd.assign(s,0,sppos);
+        string::size_type i=sppos+1;
+        while(i<s.length() && s.at(i)==' ')i++;
+        string::size_type j=i;
+        while(i<s.length() && s.at(i)!=' ')i++;
+        arg.assign(s,j,i-j);
+        argend=i==s.length()?i:i+1;
+        if(argend!=s.length())
+        {
+          arg2.assign(s,argend,string::npos);
+        }
+      }else
+      {
+        cmd=s;
+      }
+      string answer;
+      string tmpl;
+      string reason;
+      char addr[32];
+      sms.getOriginatingAddress().getValue(addr);
+      string fullarg=addr;
+      fullarg+='/';
+      fullarg+=arg;
+      try{
+        if(cmd!="send" && arg.find('/')!=string::npos)
+        {
+          tmpl="dl.invalidcmdparam";
+          reason="prefix unexpected";
+        }else
+        if(cmd=="add")
+        {
+          try{
+            tmpl="dl.adderr";
+            admin->addDistrList(fullarg,sms.getOriginatingAddress());
+            tmpl="dl.addok";
+          }catch(ListAlreadyExistsException& e)
+          {
+            reason="list already exists";
+          }catch(PrincipalNotExistsException& e)
+          {
+            reason="principal not exists";
+          }catch(ListCountExceededException& e)
+          {
+            reason="list count exceeded";
+          }
+        }else
+        if(cmd=="del")
+        {
+          tmpl="dl.delerr";
+          admin->deleteDistrList(fullarg);
+          tmpl="dl.delok";
+        }else
+        if(cmd=="list")
+        {
+          if(arg.length()>0)
+          {
+            Array<Address> m;
+            try{
+              m=admin->members(fullarg,sms.getOriginatingAddress());
+            }catch(IllegalSubmitterException& e)
+            {
+              tmpl="dl.mlistmerr";
+              reason="not allowed to list members";
+            }
+            if(m.Count()==0)
+            {
+              tmpl="dl.mlistempty";
+            }else
+            {
+              char buf[32];
+              for(int i=0;i<m.Count();i++)
+              {
+                m[i].getText(buf,sizeof(buf));
+                if(i!=0)answer+=',';
+                answer+=buf;
+              }
+            }
+          }else
+          {
+            try{
+              Array<DistrList> lst=admin->list(sms.getOriginatingAddress());
+              if(lst.Count()==0)
+              {
+                tmpl="dl.listempty";
+              }else
+              {
+                for(int i=0;i<lst.Count();i++)
+                {
+                  if(i!=0)answer+=',';
+                  answer+=lst[i].name;
+                }
+              }
+            }catch(PrincipalNotExistsException& e)
+            {
+              tmpl="dl.listerr";
+              reason="you are not registered as list owner";
+            }
+          }
+        }else
+        if(cmd=="addm")
+        {
+          Address member(arg2.c_str());
+          try{
+            tmpl="dl.madderr";
+            admin->addMember(fullarg,member);
+            tmpl="dl.maddok";
+          }catch(MemberAlreadyExistsException& e)
+          {
+            reason="member already exists";
+          }
+          catch(MemberCountExceededException& e)
+          {
+            reason="members count limit exceeded";
+          }
+        }else
+        if(cmd=="delm")
+        {
+          Address member(arg2.c_str());
+          try{
+            tmpl="dl.mdelerr";
+            admin->deleteMember(fullarg,member);
+            tmpl="dl.mdelok";
+          }catch(MemberNotExistsException& e)
+          {
+            reason="member doesn't exists";
+          }
+        }else
+        if(cmd=="send")
+        {
+          Array<Address> m;
+          try{
+            tmpl="dl.senderr";
+            m=admin->members(fullarg,sms.getOriginatingAddress());
+            tmpl="dl.sendok";
+            SMS newsms=sms;
+            if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+            {
+              unsigned len;
+              const char* msg=sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+              if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+              {
+                newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msg+argend*2,len-argend*2);
+              }else
+              {
+                newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msg+argend,len-argend);
+              }
+            }else
+            {
+              unsigned len;
+              const char* msg=sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+              if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+              {
+                newsms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg+argend*2,len-argend*2);
+              }else
+              {
+                newsms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg+argend,len-argend);
+              }
+            }
+            for(int i=0;i<m.Count();i++)
+            {
+              newsms.setDestinationAddress(m[i]);
+              SmscCommand snd=SmscCommand::makeSumbmitSm(newsms,GetNextDialogId());
+              putIncomingCommand(snd);
+            }
+            char buf[32];
+            sprintf(buf,"%d",m.Count());
+            arg2=buf;
+          }catch(IllegalSubmitterException& e)
+          {
+            reason="access denied";
+          }
+        }
+      }catch(SQLException& e)
+      {
+        reason="database error";
+      }catch(ListNotExistsException& e)
+      {
+        reason="list doesn't exists";
+      }catch(exception& e)
+      {
+        reason=e.what();
+      }catch(...)
+      {
+        reason="unknown";
+      }
+      SMS ans;
+      ans.setOriginatingAddress(sms.getDestinationAddress());
+      ans.setDestinationAddress(sms.getOriginatingAddress());
+      char msc[]="";
+      char imsi[]="";
+      ans.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+      ans.setDeliveryReport(0);
+      ans.setArchivationRequested(false);
+      ans.setEServiceType(serviceType.c_str());
+      ans.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,0);
+      ans.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
+      ans.setIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE,
+        sms.getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
+      if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==1)
+      {
+        ans.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,17);
+        // clear 0,1 bits and set them to datagram mode
+        ans.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,
+            (ans.getIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS)&~0x03)|0x01);
+      }
+      if(answer.length()==0)
+      {
+        arg=fullarg;
+        string::size_type pos=arg.find('"');
+        while(pos!=string::npos)
+        {
+          arg.at(pos)=' ';
+          pos=arg.find('"',pos);
+        }
+        pos=arg2.find('"');
+        while(pos!=string::npos)
+        {
+          arg2.at(pos)=' ';
+          pos=arg2.find('"',pos);
+        }
+        answer="#template="+tmpl+"#{reason}=\""+reason+"\" {arg1}=\""+arg+"\" {arg2}=\""+arg2+"\"";
+      }
+      smsc::util::fillSms(&ans,answer.c_str(),answer.length(),CONV_ENCODING_CP1251,DataCoding::UCS2|DataCoding::LATIN1);
+      SmscCommand cmdAnswer=SmscCommand::makeSumbmitSm(ans,GetNextDialogId());
+      putIncomingCommand(cmdAnswer);
     }
     else if ( cmd->get_commandId() == SUBMIT_RESP )
     {
