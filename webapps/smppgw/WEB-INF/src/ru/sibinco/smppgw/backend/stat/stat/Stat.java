@@ -154,14 +154,16 @@ public class Stat
       throws SQLException, Exception
   {
     HashMap countersForSme = new HashMap();
-    PreparedStatement stmt = getQuery(connection, query, prepareTotalQuery(query), true);
-    ResultSet rs = stmt.executeQuery();
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
 
     try
     {
-      DateCountersSet dateCounters = null;
       int oldPeriod = 0;
+      DateCountersSet dateCounters = null;
 
+      stmt = getQuery(connection, query, prepareTotalQuery(query), true);
+      rs = stmt.executeQuery();
       while (rs.next())
       {
           int newPeriod = rs.getInt(1);
@@ -183,12 +185,11 @@ public class Stat
           oldPeriod = newPeriod;
       }
       if (dateCounters != null) stat.addDateStat(dateCounters);
-      rs.close(); stmt.close();
+      rs.close(); rs = null; stmt.close(); stmt = null;
 
       stmt = getQuery(connection, query, prepareSmeQuery(query), true);
       rs = stmt.executeQuery();
-      while (rs.next())
-      {
+      while (rs.next()) {
         String smeId = rs.getString(1);
         if (rs.wasNull() || smeId == null) continue;
         countersForSme.put(smeId,
@@ -196,12 +197,11 @@ public class Stat
                                  rs.getLong(7), rs.getLong(8), rs.getLong(9), rs.getLong(10), rs.getLong(11),
                                  rs.getLong(12), rs.getLong(13), rs.getLong(14), rs.getLong(15), smeId));
       }
-      rs.close(); stmt.close();
+      rs.close(); rs = null; stmt.close(); stmt = null;
 
       stmt = getQuery(connection, query, prepareSmeStateQuery(query), false);
       rs = stmt.executeQuery();
-      while (rs.next())
-      {
+      while (rs.next()) {
         String smeId = rs.getString(1);
         if (rs.wasNull() || smeId == null) continue;
         Object obj = countersForSme.get(smeId);
@@ -217,7 +217,7 @@ public class Stat
     }
 
     Collection counters = countersForSme.values();
-    if (counters != null) stat.addSmeIdCollection(counters);
+    if (counters != null && counters.size() > 0) stat.addSmeIdCollection(counters);
   }
 
   private void processRouteQuery(Connection connection, StatQuery query)
@@ -229,7 +229,7 @@ public class Stat
 
     try
     {
-      stmt = getQuery(connection, query, prepareRouteQuery(query), true);
+      stmt = getQuery(connection, query, prepareRouteQuery(query), true);;
       rs = stmt.executeQuery();
       while (rs.next()) {
         String routeId = rs.getString(1);
@@ -238,7 +238,7 @@ public class Stat
             new RouteIdCountersSet(rs.getLong(2), rs.getLong(3), rs.getLong(4), rs.getLong(5), rs.getLong(6),
                                    routeId));
       }
-      rs.close(); stmt.close();
+      rs.close(); rs = null; stmt.close(); stmt = null;
 
       stmt = getQuery(connection, query, prepareRouteStateQuery(query), false);
       rs = stmt.executeQuery();
@@ -258,7 +258,7 @@ public class Stat
     }
 
     Collection counters = countersForRoute.values();
-    if (counters != null) stat.addRouteIdCollection(counters);
+    if (counters != null && counters.size() > 0) stat.addRouteIdCollection(counters);
   }
 
   private static final String PERIOD_DATE_FORMAT = "yyyyMMddHH";
