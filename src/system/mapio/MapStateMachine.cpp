@@ -493,7 +493,20 @@ static void SendRInfo(MapDialog* dialog)
   //unsigned dialog_id = dialog->isMOreq?dialog->dialogid_req:dialog->dialogid_map;
   require ( dialog->ssn == SSN );
   unsigned dialog_id = dialog->dialogid_map;
-  __map_trace2__("MAP::%s dialogid:0x%x ssn:%d",__FUNCTION__,dialog_id,dialog->ssn);
+  bool hiPrior = false;
+
+  if ( !dialog->isQueryAbonentStatus ) {
+    if( dialog->sms.get() != 0 
+/*      &&
+       (dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ||
+        dialog->sms->getNextTime() > dialog->sms->getSubmitTime() + ((dialog->sms->getValidTime() - dialog->sms->getSubmitTime())/2)
+       )*/
+      )
+    {
+      hiPrior = true;
+    }
+  }
+  __map_trace2__("MAP::%s dialogid:0x%x ssn:%d hiprior:%s",__FUNCTION__,dialog_id,dialog->ssn,hiPrior?"true":"false");
   USHORT_T result = Et96MapOpenReq(
     SSN, dialog_id,
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
@@ -502,18 +515,6 @@ static void SendRInfo(MapDialog* dialog)
       FormatText("MAP::SendRInfo: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
   }
   dialog->id_opened = true;
-  bool hiPrior = false;
-
-  if ( !dialog->isQueryAbonentStatus ) {
-/*    if( dialog->sms.get() != 0 &&
-       (dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ||
-        dialog->sms->getNextTime() > dialog->sms->getSubmitTime() + ((dialog->sms->getValidTime() - dialog->sms->getSubmitTime())/2)
-       )
-      )
-    {*/
-      hiPrior = true;
-/*    }*/
-  }
 
   // €Š !!!!
   if ( dialog->version != 2 && dialog->version != 1 ) dialog->version = 2;
@@ -3172,6 +3173,32 @@ USHORT_T Et96MapV2InformSCInd (
     __require__(dialog->ssn==localSsn);
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__FUNCTION__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
+    if( msisdnAlert_sp && smsc::util::_map_cat->isDebugEnabled() )
+    {
+       int len = (msisdnAlert_sp->addressLength+1)/2+2;
+       char *text = new char[len*4+1];
+       unsigned char* buf = (unsigned char*)msisdnAlert_sp;
+       int k = 0;
+       for ( int i=0; i<len; i++) {
+	   k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
+       }
+       text[k]=0;
+       __log2__(smsc::util::_map_cat,log4cpp::Priority::DEBUG, "msisdnAlert_s: %s",text);
+       delete text;
+    }
+    if( mwdStatus_sp && smsc::util::_map_cat->isDebugEnabled() )
+    {
+       int len = sizeof(ET96MAP_MWD_STATUS_T);
+       char *text = new char[len*4+1];
+       unsigned char* buf = (unsigned char*)mwdStatus_sp;
+       int k = 0;
+       for ( int i=0; i<len; i++){
+	   k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
+       }
+       text[k]=0;
+       __log2__(smsc::util::_map_cat,log4cpp::Priority::DEBUG, "mwdStatus_s: %s",text);
+       delete text;
+    }
     switch( dialog->state ){
     case MAPST_WaitRInfoClose:
       RememberMwdStatus(dialog.get(),msisdnAlert_sp,mwdStatus_sp);
