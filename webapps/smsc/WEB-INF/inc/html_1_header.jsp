@@ -28,7 +28,7 @@ ServletPath:<%=request.getServletPath()%>  --%>
 <script>
 function openPerfMon()
 {
-	open("<%=CPATH%>/perfmon/index.jsp", null, "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=420,width=530");
+	open("<%=CPATH%>/perfmon/index.jsp", null, "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=420,width=550");
 	return false;
 }
 </script>
