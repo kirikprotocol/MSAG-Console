@@ -13,6 +13,7 @@
 #include <signal.h>
 
 #include <db/DataSourceLoader.h>
+#include <core/synchronization/EventMonitor.hpp>
 
 #include <system/smscsignalhandlers.h>
 #include <sme/SmppBase.hpp>
@@ -42,16 +43,10 @@ using namespace smsc::admin::service;
 
 using namespace smsc::infosme;
 using smsc::util::TimeSlotCounter;
+using smsc::core::synchronization::EventMonitor;
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
-
-static int   unrespondedMessagesSleep = 1000;
-static int   unrespondedMessagesMax   = 100;
-static TimeSlotCounter<int> outgoingTraffic(1, 10);
-static TimeSlotCounter<int> incomingTraffic(1, 10);
-static Event trafficControlEvent; 
-static Mutex trafficControlLock;
 
 static smsc::logger::Logger *logger = 0;
 
@@ -104,6 +99,63 @@ extern bool convertMSISDNStringToAddress(const char* string, Address& address)
     }
     return true;
 };
+
+static int   unrespondedMessagesSleep = 10;
+static int   unrespondedMessagesMax   = 3;
+
+class TrafficControl
+{
+    static EventMonitor   trafficMonitor; 
+    static TimeSlotCounter<int> incoming;
+    static TimeSlotCounter<int> outgoing;
+    static bool                 stopped; 
+
+public:
+
+    static void incOutgoing()
+    {
+        MutexGuard guard(trafficMonitor);
+        outgoing.Inc(); 
+        if (stopped) return;
+
+        int out = outgoing.Get();
+        int inc = incoming.Get();
+        int difference = out-inc;
+        
+        if (difference >= unrespondedMessagesMax) {
+            smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)", 
+                           difference, difference*unrespondedMessagesSleep, out, inc);
+            trafficMonitor.wait(difference*unrespondedMessagesSleep);
+        } else {
+            smsc_log_debug(logger, "nowait");
+        }
+    };
+    static void incIncoming()
+    {
+        MutexGuard guard(trafficMonitor);
+        incoming.Inc();
+        if (stopped) return;
+        if ((outgoing.Get()-incoming.Get()) < unrespondedMessagesMax) {
+            trafficMonitor.notifyAll();
+        }
+    };
+    static void stopControl()
+    {
+        MutexGuard guard(trafficMonitor);
+        TrafficControl::stopped = true;
+        trafficMonitor.notifyAll();
+    };
+    static void startControl()
+    {
+        MutexGuard guard(trafficMonitor);
+        TrafficControl::stopped = false;
+    };
+};
+
+EventMonitor         TrafficControl::trafficMonitor;
+TimeSlotCounter<int> TrafficControl::incoming(10, 100);
+TimeSlotCounter<int> TrafficControl::outgoing(10, 100);
+bool                 TrafficControl::stopped = false;
 
 class InfoSmeConfig : public SmeConfig
 {
@@ -168,20 +220,6 @@ private:
     TaskProcessor&  processor;
     SmppSession*    session;
     Mutex           sendLock;
-
-    void waitUnrespondedMessages()
-    {
-        int difference = 0;
-        {
-            MutexGuard guard(trafficControlLock);
-            outgoingTraffic.Inc();
-            difference = outgoingTraffic.Get() - incomingTraffic.Get();
-        }
-        if (difference >= unrespondedMessagesMax) {
-            // slow down sending after 10% limit reached
-            trafficControlEvent.Wait(difference*unrespondedMessagesSleep);
-        }
-    }
 
 public:
     
@@ -279,7 +317,7 @@ public:
         fillSmppPduFromSms(&sm, &sms);
         asyncTransmitter->sendPdu(&(sm.get_header()));
         
-        waitUnrespondedMessages();
+        TrafficControl::incOutgoing();
         return true;
     }
 };
@@ -292,15 +330,6 @@ protected:
     
     SmppTransmitter*    syncTransmitter;
     SmppTransmitter*    asyncTransmitter;
-
-    void acceptMessage()
-    {
-        MutexGuard guard(trafficControlLock);
-        incomingTraffic.Inc();
-        if ((outgoingTraffic.Get()-incomingTraffic.Get()) < unrespondedMessagesMax) {
-            trafficControlEvent.Signal();
-        }
-    }
 
 public:
     
@@ -387,6 +416,7 @@ public:
         int seqNum = pdu->get_sequenceNumber();
         int status = pdu->get_commandStatus();
         bool accepted =  (status == Status::OK);
+
         bool retry    =  (status == Status::SYSERR                      ||  // 8     08h
                           status == Status::MSGQFUL                     ||  // 20    14h
                           status == Status::SUBMITFAIL                  ||  // 69    45h
@@ -401,11 +431,19 @@ public:
                           status == Status::SUBSCRBUSYMT                ||  // 1183  49fh
                           status == Status::SMDELIFERYFAILURE           ||  // 1184  4a0h
                           status == Status::SYSFAILURE);                    // 1186  4a2h
+        
         bool immediate = (status == Status::MSGQFUL   ||
                           status == Status::THROTTLED ||
                           status == Status::SUBSCRBUSYMT);
-        
-        if (accepted) acceptMessage();
+
+        bool trafficst = (status == Status::MSGQFUL                   ||
+                          status == Status::THROTTLED                 ||
+                          status == Status::MAP_RESOURCE_LIMITATION   ||
+                          status == Status::MAP_NO_RESPONSE_FROM_PEER ||
+                          status == Status::SMENOTCONNECTED           ||
+                          status == Status::SYSFAILURE);
+
+        if (!trafficst) TrafficControl::incIncoming();
 
         const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
         std::string msgId = ""; 
@@ -573,7 +611,7 @@ int main(void)
                 }*/
             }
             smsc_log_info(logger, "Disconnecting from SMSC ...");
-            trafficControlEvent.Signal();
+            TrafficControl::stopControl();
             processor.Stop();
             processor.assignMessageSender(0);
             session.close();

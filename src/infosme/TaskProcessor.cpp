@@ -273,12 +273,14 @@ int TaskProcessor::Execute()
             if (!bNeedExit)
             {
                 Task* task = taskGuard->get();
-                if (task && !task->isFinalizing() &&
+                if (task && !task->isFinalizing() && task->isEnabled() &&
                     task->currentPriorityFrameCounter < task->getPriority())
                 {
                     task->currentPriorityFrameCounter++;
-                    if (!processTask(task))
+                    if (!processTask(task)) {
                         task->currentPriorityFrameCounter = task->getPriority();
+                        if (!task->isEnabled()) task->setEnabled(false); // to reset inProcess
+                    }
                     else processed++;
                 }
             }
@@ -829,14 +831,14 @@ bool TaskProcessor::startTask(std::string taskId)
     TaskGuard taskGuard = getTask(taskId);
     Task* task = taskGuard.get();
     if (!task) return false; 
-    return (task->isInGeneration()) ? true:invokeBeginGeneration(task);
+    return  (task->isInGeneration()) ? true:invokeBeginGeneration(task);
 }
 bool TaskProcessor::stopTask(std::string taskId)
 {
     TaskGuard taskGuard = getTask(taskId);
     Task* task = taskGuard.get();
     if (!task) return false; 
-    return (task->isInGeneration()) ? true:invokeEndGeneration(task);
+    return (task->isInGeneration()) ? invokeEndGeneration(task):true;
 }
 Array<std::string> TaskProcessor::getGeneratingTasks()
 {

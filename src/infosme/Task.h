@@ -153,7 +153,7 @@ namespace smsc { namespace infosme
         long        usersCount;
         
         Mutex       finalizingLock;
-        bool        bFinalizing;
+        bool        bFinalizing, bSelectedAll;
 
     protected:
 
@@ -252,6 +252,7 @@ namespace smsc { namespace infosme
         }
         inline bool setEnabled(bool enabled=true) {
             MutexGuard guard(enableLock);
+            if (!enabled) setInProcess(false);
             return info.enabled = enabled;
         }
         inline const TaskInfo& getInfo() {

@@ -48,7 +48,7 @@ int parseTime(const char* str)
 
 Task::Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
-        usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
+        usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(dsOwn), dsInt(dsInt), 
             bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
                 lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
@@ -60,7 +60,7 @@ Task::Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt)
 Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
      DataSource* dsOwn, DataSource* dsInt)
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
-        usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
+        usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(dsOwn), dsInt(dsInt), 
             bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
                 lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
@@ -859,24 +859,28 @@ bool Task::getNextMessage(Connection* connection, Message& message)
 {
     smsc_log_debug(logger, "getNextMessage method called on task '%s'",
                  info.id.c_str());
-    
     __require__(connection);
-    
+
+    if (!isEnabled())
+        return setInProcess(false);
+
     {
         MutexGuard guard(messagesCacheLock);
         if (messagesCache.Count() > 0) {
             messagesCache.Shift(message);
-            return setInProcess(true);
+            setInProcess(isEnabled());
+            return true;
         }
     }
-
+    
     if (info.trackIntegrity && !isGenerationSucceeded())
         return setInProcess(false);
 
     time_t currentTime = time(NULL);
     if (currentTime-lastMessagesCacheEmpty > info.messagesCacheSleep)
         lastMessagesCacheEmpty = currentTime;
-    else if (!isInGeneration()) return setInProcess(false);
+    else if (bSelectedAll && !isInGeneration()) 
+        return setInProcess(false);
     
     int wdTimerId = -1;
     try
@@ -927,6 +931,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
                 uncommited = 0;
             }
         }
+        bSelectedAll = (fetched < info.messagesCacheSize);
         if (uncommited > 0) connection->commit();
     }
     catch (Exception& exc)
@@ -953,9 +958,13 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     MutexGuard guard(messagesCacheLock);
     if (messagesCache.Count() > 0) {
         messagesCache.Shift(message);
-        return setInProcess(true);
+        setInProcess(isEnabled());
+        return true;
     } 
-    else lastMessagesCacheEmpty = time(NULL);
+    else {
+        lastMessagesCacheEmpty = time(NULL);
+        bSelectedAll = true;
+    }
     return setInProcess(false);
 }
 
