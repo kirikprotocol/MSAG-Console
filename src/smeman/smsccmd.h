@@ -103,7 +103,7 @@ class SmscCommand
     __trace__(__PRETTY_FUNCTION__);
     __require__ ( cmd != 0 );
     __require__ ( cmd->ref_count >= 0 );
-		++(cmd->ref_count);
+    ++(cmd->ref_count);
     return cmd;
   }
   
@@ -117,9 +117,9 @@ class SmscCommand
 
   void dispose() // for debuging ;(
     { 
-			__trace__(__PRETTY_FUNCTION__);
-			if (cmd) unref(cmd); 
-		}
+      __trace__(__PRETTY_FUNCTION__);
+      if (cmd) unref(cmd); 
+    }
 
 public:
   
@@ -292,7 +292,7 @@ public:
    // copy(_cmd.cmd);
    // if ( cmd ) unref(cmd);
     __trace2__("%s(_cmd)",__PRETTY_FUNCTION__);
-		__watch__(_cmd);
+    __watch__((void*)_cmd.cmd);
     cmd = ref(_cmd.cmd);
   }
 
@@ -300,8 +300,8 @@ public:
   {
     // copy(_cmd.cmd);
     __trace2__("%s(_cmd)",__PRETTY_FUNCTION__);
-		__watch__(_cmd);
-		__watch__(cmd);
+    __watch__((void*)_cmd.cmd);
+    __watch__((void*)cmd);
     if (cmd) unref(cmd);
     cmd = ref(_cmd.cmd);
     return _cmd;
