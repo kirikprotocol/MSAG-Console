@@ -78,7 +78,7 @@ function setSort(sorting)
 	return false;
 }
 
-function clickFilter()
+function clickFilterSelect()
 {
 	document.all.jbutton.name = "filterSelect";
 	opForm.submit();
@@ -135,7 +135,7 @@ o.put("Show Dest list", "8");
 <input:select name="filterSelect" default="1"
     attributes="<%= as %>" options="<%= o %>"  />
     &nbsp; Query: &nbsp;<input:text name="query"  />
-    &nbsp;&nbsp;<%button(out, "but_filter.gif", "filterSelect", "Quick Filter", "Quick Filter", "return clickFilterSelect()");%>
+    &nbsp;&nbsp;<%button(out, "but_filter.gif", "filterSelect", "Filter", "Filter", "return clickFilterSelect()");%>
 <br>
 <table class=list cellspacing=0 cellpadding=0 id=ROUTE_LIST_TABLE>
 <col width="1%">
