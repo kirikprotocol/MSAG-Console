@@ -2620,7 +2620,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       subsystem = GetUSSDSubsystem(ms.bytes,ms.len);
       string ussdStr = GetUSSDRequestString(ms.bytes, ms.len);
       sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdStr.c_str(),ussdStr.length());
-      sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
+      sms.setIntProperty(Tag::SMPP_SM_LENGTH,ussdStr.length());
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }
     __map_trace2__("%s: dialogid 0x%x request encoding 0x%x length %d subsystem %s",__FUNCTION__,dialogueId,ussdDataCodingScheme,ussdString_s.ussdStrLen,subsystem.c_str());
