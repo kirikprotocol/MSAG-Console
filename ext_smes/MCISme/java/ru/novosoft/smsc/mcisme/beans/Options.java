@@ -30,6 +30,8 @@ public class Options extends MCISmeBean
   private int maxRowsPerMessage=0;
   private boolean forceInform = false;
   private boolean forceNotify = false;
+  private boolean enabledCallers = false;
+  private int maxCallersCount = -1;
 
   private int smppThreadPoolMax = 0;
   private int smppThreadPoolInit = 0;
@@ -107,6 +109,12 @@ public class Options extends MCISmeBean
         maxRowsPerMessage = getConfig().getInt("MCISme.maxRowsPerMessage");
         forceInform = getConfig().getBool("MCISme.forceInform");
         forceNotify = getConfig().getBool("MCISme.forceNotify");
+
+        try { maxCallersCount = getConfig().getInt("MCISme.maxCallersCount"); } catch (Throwable th) {
+          maxCallersCount = -1;
+          logger.warn("Parameter 'MCISme.maxCallersCount' wasn't specified. Callers check disabled");
+        }
+        enabledCallers = (maxCallersCount > 0);
 
         try {
           mciProfLocation = getConfig().getString(MCI_PROF_LOCATION_PARAM);
@@ -212,6 +220,8 @@ public class Options extends MCISmeBean
     getConfig().setInt   ("MCISme.maxRowsPerMessage", maxRowsPerMessage);
     getConfig().setBool  ("MCISme.forceInform", forceInform);
     getConfig().setBool  ("MCISme.forceNotify", forceNotify);
+    getConfig().setInt   ("MCISme.maxCallersCount",
+                          (!enabledCallers || maxCallersCount < 0) ? -1:maxCallersCount);
 
     getConfig().setString(MCI_PROF_LOCATION_PARAM, mciProfLocation);
     if (mciProfLocation != null && mciProfLocation.trim().length() > 0) {
@@ -900,4 +910,34 @@ public class Options extends MCISmeBean
   public void setMciSmeAddresses(String mciSmeAddresses) {
     this.mciSmeAddresses = mciSmeAddresses;
   }
+
+  public int getMaxCallersCountInt() {
+    return maxCallersCount;
+  }
+  public void setCallersCountInt(int maxCallersCount) {
+    this.maxCallersCount = maxCallersCount;
+    this.enabledCallers = (maxCallersCount > 0);
+  }
+  public String getMaxCallersCount() {
+    return (maxCallersCount < 0 || !this.enabledCallers) ? "":String.valueOf(maxCallersCount);
+  }
+  public void setMaxCallersCount(String maxCallersCount)
+  {
+    if (maxCallersCount == null || maxCallersCount.trim().length() <= 0) this.maxCallersCount = -1;
+    else {
+      try {
+        this.maxCallersCount = Integer.decode(maxCallersCount).intValue();
+      } catch (NumberFormatException e) {
+        logger.debug("Invalid int MCISme.maxCallersCount parameter value: " + maxCallersCount + '"', e);
+      }
+    }
+  }
+
+  public boolean isEnabledCallers() {
+    return enabledCallers;
+  }
+  public void setEnabledCallers(boolean enabledCallers) {
+    this.enabledCallers = enabledCallers;
+  }
+
 }

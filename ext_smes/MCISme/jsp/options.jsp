@@ -73,6 +73,16 @@
   <td><input class=txt name=maxRowsPerMessage value="<%=StringEncoderDecoder.encode(bean.getMaxRowsPerMessage())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th><label for=enableCallers>Enable max callers constraint</label></th>
+  <td><input class=check type=checkbox name=enabledCallers
+             id=enableCallers value=true <%=bean.isEnabledCallers() ? "checked" : ""%> onClick="switchEnableCallers();"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th id=maxCallersCountLabel>Max distinct callers for abonent</th>
+  <td><input class=txt name=maxCallersCount id=maxCallersCount
+             value="<%=StringEncoderDecoder.encode(bean.getMaxCallersCount())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th><label for=inform>Force inform</label></th>
   <td><input class=check type=checkbox name=forceInform id=inform value=true <%=bean.isForceInform() ? "checked" : ""%>></td>
 </tr>
@@ -154,6 +164,14 @@
   </td>
 </tr>
 </table>
+<script>
+function switchEnableCallers() {
+  opForm.all.maxCallersCount.disabled = !(opForm.all.enableCallers.checked);
+  opForm.all.maxCallersCountLabel.disabled = !(opForm.all.enableCallers.checked);
+  if (!opForm.all.enableCallers.checked) opForm.all.maxCallersCount.value = '';
+}
+switchEnableCallers();
+</script>
 <table class=properties_list cellspacing=0  width="100%">
 <col width="39%">
 <col width="1%">
