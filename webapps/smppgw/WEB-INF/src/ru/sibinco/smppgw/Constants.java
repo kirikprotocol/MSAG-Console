@@ -55,6 +55,17 @@ public class Constants
         public static final Constants COULD_NOT_CREATE_MASK = new Constants("error.routing.routes.could_not_create_mask");
         public static final Constants COULD_NOT_CREATE_DESTINATION_MASK = new Constants("error.routing.routes.could_not_create_destination_mask");
       }
+      public interface tracer
+      {
+        public static final Constants TRANSPORT_ERROR = new Constants("error.routing.tracer.transport_error_invalid_responce");
+        public static final Constants COULD_NOT_CREATE = new Constants("error.routing.tracer.subjects.could_not_create");
+        public static final Constants DEFAULT_SME_NOT_FOUND = new Constants("error.routing.tracer.subjects.default_sme_not_found");
+        public static final Constants COULD_NOT_SET_MASKS = new Constants("error.routing.tracer.subjects.could_not_set_masks");
+        public static final Constants srcAddressIsAlias =new Constants("error.routing.tracer.srcAddressIsAlias");
+        public static final Constants dstAddressIsAlias =new Constants("error.routing.tracer.dstAddressIsAlias");
+        public static final Constants TraceRouteFailed =new Constants("error.routing.tracer.TraceRouteFailed");
+        public static final Constants LoadAndCheckFailed=new Constants("error.routing.tracer.LoadAndCheckFailed");
+      }
     }
 
 

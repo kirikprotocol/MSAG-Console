@@ -49,7 +49,7 @@ public class SmppGWFilter implements Filter
     if (logger == null) logger = Logger.getLogger(this.getClass());
 
     if (logger.isDebugEnabled())
-      logger.debug("Request: " + req.getScheme() + " from " + req.getRemoteHost() + ':' + req.getRemotePort());
+      logger.debug("Request: " + req.getScheme() + " from " + req.getRemoteHost() + ':'/* + req.getRemotePort()*/);
 
     if (config == null) {
       logger.fatal("Not initialized");

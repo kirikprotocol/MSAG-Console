@@ -7,7 +7,6 @@ import ru.sibinco.lib.backend.daemon.Daemon;
 import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.util.conpool.NSConnectionPool;
-import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.smppgw.backend.resources.ResourceManager;
 import ru.sibinco.smppgw.backend.routing.BillingManager;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
@@ -48,8 +47,8 @@ public class SmppGWAppContext
   private final Statuses statuses;
   private final DataSource connectionPool;
   private final BillingManager billingManager;
- // private Journal journal = new Journal();
-  // private Smppgw smppgw = null;
+  private Journal journal = new Journal();
+  private Smppgw smppgw = null;
 
   private SmppGWAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
                                                                 Config.ParamNotFoundException, SibincoException
@@ -66,7 +65,7 @@ public class SmppGWAppContext
       gwSmeManager.init();
       smscsManager = new SmscsManager(gwConfig);
       resourceManager = new ResourceManager(new File(config.getString("gw_config_folder")));
-     // smppgw = new Smppgw(config.getString("gw daemon.host"), (int)config.getInt("gw daemon.port"), config.getString("gw_config_folder"), this);
+      smppgw = new Smppgw(config.getString("gw daemon.host"), (int)config.getInt("gw daemon.port"), config.getString("gw_config_folder"), this);
       billingManager = new BillingManager(new File(config.getString("gw_config_folder"), "billing-rules.xml"));
       gwRoutingManager = new GwRoutingManager(new File(config.getString("gw_config_folder")), gwSmeManager, providerManager, billingManager);
       gwRoutingManager.init();
@@ -176,7 +175,7 @@ public class SmppGWAppContext
     return connectionPool;
   }
 
-/*  public Journal getJournal()
+  public Journal getJournal()
   {
     return journal;
   }
@@ -184,5 +183,5 @@ public class SmppGWAppContext
   public Smppgw getSmppgw()
   {
     return smppgw;
-  }*/
+  }
 }

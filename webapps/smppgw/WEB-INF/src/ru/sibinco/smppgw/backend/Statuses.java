@@ -12,7 +12,8 @@ public class Statuses
   private boolean smscsChanged = false;
   private boolean providersChanged = false;
   private boolean billingChanged = false;
-
+  private boolean aliasesChanged = false;
+  private boolean routesLoaded = false;
   public boolean isConfigChanged()
   {
     return configChanged;
@@ -71,5 +72,25 @@ public class Statuses
   public void setBillingChanged(final boolean billingChanged)
   {
     this.billingChanged = billingChanged;
+  }
+
+  public boolean isAliasesChanged()
+  {
+    return aliasesChanged;
+  }
+
+  public void setAliasesChanged(boolean aliasesChanged)
+  {
+    this.aliasesChanged = aliasesChanged;
+  }
+
+  public boolean isRoutesLoaded()
+  {
+    return routesLoaded;
+  }
+
+  public void setRoutesLoaded(boolean routesLoaded)
+  {
+    this.routesLoaded = routesLoaded;
   }
 }
