@@ -1,4 +1,5 @@
 #include "TextUtil.hpp"
+#include "profiler/profiler.hpp"
 #include "util/debug.h"
 
 namespace smsc {
@@ -6,6 +7,7 @@ namespace test {
 namespace util {
 
 using namespace std;
+using namespace smsc::profiler;
 
 /*
 std::auto_ptr<char> rand_text(int length, uint8_t dataCoding)
@@ -72,7 +74,7 @@ void rand_text(int& length, char* buf, uint8_t dataCoding)
 
 auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen)
 {
-	int len = text.length() * 2;
+	int len = text.length() * 2 + 1;
 	char* msg = new char[len];
 	switch (dataCoding)
 	{
@@ -82,7 +84,7 @@ auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen)
 			break;
 		case DATA_CODING_UCS2:
 			msgLen = ConvertMultibyteToUCS2(text.c_str(), text.length(),
-				(short*) msg, len / sizeof(short), CONV_ENCODING_CP1251);
+				(short*) msg, len, CONV_ENCODING_CP1251);
 			break;
 		default:
 			__unreachable__("Invalid dataCoding");
@@ -100,8 +102,7 @@ const string decode(const char* text, int len, uint8_t dataCoding)
 			bufLen = Convert7BitToText(text, len, buf, sizeof(buf));
 			return buf;
 		case DATA_CODING_UCS2:
-			__require__(len % 2 == 0);
-			bufLen = ConvertUCS2ToMultibyte((const short*) text, len / 2,
+			bufLen = ConvertUCS2ToMultibyte((const short*) text, len,
 				buf, sizeof(buf), CONV_ENCODING_CP1251);
 			return buf;
 		default:
@@ -148,8 +149,8 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 	//DATA_CODING_SMSC_DEFAULT -> DATA_CODING_UCS2
 	else if (dc1 == DATA_CODING_SMSC_DEFAULT && dc2 == DATA_CODING_UCS2)
 	{
-		short ucs2Buf[len1];
-		int ucs2Len = Convert7BitToUCS2(str1, len1, ucs2Buf, sizeof(ucs2Buf));
+		char ucs2Buf[2 * len1 + 1];
+		int ucs2Len = Convert7BitToUCS2(str1, len1, (short*) ucs2Buf, sizeof(ucs2Buf));
 		if (ucs2Len != len2)
 		{
 			res.push_back(5);
@@ -162,9 +163,8 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 	//DATA_CODING_UCS2 -> DATA_CODING_SMSC_DEFAULT (в транслит)
 	else if (dc1 == DATA_CODING_UCS2 && dc2 == DATA_CODING_SMSC_DEFAULT)
 	{
-		__require__(len1 % 2 == 0);
-		char bit7Buf[len1];
-		int bit7Len = ConvertUCS2To7Bit((const short*) str1, len1 / 2,
+		char bit7Buf[len1 + 1];
+		int bit7Len = ConvertUCS2To7Bit((const short*) str1, len1,
 			bit7Buf, sizeof(bit7Buf));
 		if (bit7Len != len2)
 		{
@@ -189,9 +189,9 @@ uint8_t getDataCoding(int num)
 	{
 		case RAND_TC:
 			return dataCodings[rand0(1)];
-		case 1:
+		case ProfileCharsetOptions::Default:
 			return DATA_CODING_SMSC_DEFAULT;
-		case 2:
+		case ProfileCharsetOptions::Ucs2:
 			return DATA_CODING_UCS2;
 		default:
 			__unreachable__("Invalid num");
