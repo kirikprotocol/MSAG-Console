@@ -232,7 +232,7 @@ OCIDataDescriptor::OCIDataDescriptor(ub2 _type, sb4 _size)
         size = sizeof(OCIDate);
         type = SQLT_ODT;
         break;
-    case SQLT_CHR: case SQLT_STR: case SQLT_VST:
+    case SQLT_CHR: case SQLT_STR: case SQLT_VST: case SQLT_AFC: case SQLT_AVC:
         if (_size == 0) _size = MAX_DB_CHAR_STR_LENGTH;
         data = (dvoid *)(new uint8_t[size = _size+1]);
         ((char *)data)[0] = '\0';
