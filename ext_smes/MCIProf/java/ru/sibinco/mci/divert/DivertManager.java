@@ -224,10 +224,12 @@ public class DivertManager extends Thread
       }
     }
     str = readTelnetLine();
+    logger.debug("Auth last string: "+str);
     if (str == null || str.length() <= 0)
       throw new IOException("Got empty responce from MSC");
-    if (checkQuery(AUTH_FAILED, str)) throw new IOException("Autentification failed, responce: "+str);
-    else readTelnetString(ESC_PROMPT);
+    if (checkQuery(AUTH_FAILED, str))
+      throw new IOException("Autentification failed, responce: "+str);
+    else if (!str.equalsIgnoreCase(""+ESC_PROMPT)) readTelnetString(ESC_PROMPT);
   }
   private void disconnect()
   {
