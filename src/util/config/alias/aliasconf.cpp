@@ -81,31 +81,67 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       {
         char* dta = attrs.getNamedItem("addr").getNodeValue().transcode();
         record->addrValue = new char[21]; memset(record->addrValue,0,21);
-        int scaned = sscanf(dta,"tni:%d,npi:%d,val:%20s",
+        int scaned = sscanf(dta,".%d.%d.%20s",
              &record->addrTni,
              &record->addrNpi,
              record->addrValue);
-        delete dta;
         if ( scaned != 3 )
         {
-          logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
-          continue;
+          scaned = sscanf(dta,"+%[0123456789]20s",record->addrValue);
+          if ( scaned )
+          {
+            record->addrNpi = 1;//ISDN
+            record->addrTni = 1;//INTERNATIONAL
+          }
+          else
+          {
+            scaned = sscanf(dta,"%[0123456789]20s",record->addrValue);
+            if ( !scaned )
+            {
+              logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
+            }
+            else
+            {
+              record->addrNpi = 1;//ISDN
+              record->addrTni = 2;//NATIONAL
+            }
+          }
         }
+        delete dta;
+        continue;
       }
       //record->alias = attrs.getNameItem("alias").getNodeValue().transcode();
       {
-        char* dta = attrs.getNamedItem("alias").getNodeValue().transcode();
+        char* dta = attrs.getNamedItem("addr").getNodeValue().transcode();
         record->aliasValue = new char[21]; memset(record->aliasValue,0,21);
-        int scaned = sscanf(dta,"tni:%d,npi:%d,val:%20s",
+        int scaned = sscanf(dta,".%d.%d.%20s",
              &record->aliasTni,
              &record->aliasNpi,
              record->aliasValue);
-        delete dta;
         if ( scaned != 3 )
         {
-          logger.warn("incorrect format of 'alias =  \"%20s\"'", dta);
-          continue;
+          scaned = sscanf(dta,"+%[0123456789]20s",record->aliasValue);
+          if ( scaned )
+          {
+            record->aliasNpi = 1;//ISDN
+            record->aliasTni = 1;//INTERNATIONAL
+          }
+          else
+          {
+            scaned = sscanf(dta,"%[0123456789]20s",record->aliasValue);
+            if ( !scaned )
+            {
+              logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
+            }
+            else
+            {
+              record->aliasNpi = 1;//ISDN
+              record->aliasTni = 2;//NATIONAL
+            }
+          }
         }
+        delete dta;
+        continue;
       }
       DOM_NodeList childs = node.getChildNodes();
       records.push_back(record.release());
@@ -125,13 +161,21 @@ AliasConfig::status AliasConfig::store(const char * const filename) const
     out << "<aliases>" << std::endl;
     for (SRVector::const_iterator i = records.begin(); i != records.end(); i++)
     {
-      out << "  <record "\
-        "addr=\"tni:" << (*i)->addrTni <<
-        ",npi:" << (*i)->addrNpi <<
-        ",val:" << (*i)->addrValue << "\" "\
-        "alias=\"tni:" << (*i)->aliasTni <<
-        ",npi:" << (*i)->addrNpi <<
-        ",val:" << (*i)->addrValue << "\"/>" << std::endl;
+      out << "  <record ";
+      out << "addr=\"";
+      if ( (*i)->addrNpi != 1 || ((*i)->addrTni !=1 && (*i)->addrTni !=2))
+      {
+          out << "." << (*i)->addrTni << 
+          "." << (*i)->addrNpi << "."; 
+      }
+      out << (*i)->addrValue << "\" ";
+      out << "alias=\"";
+      if ( (*i)->aliasNpi != 1 || ((*i)->aliasTni !=1 && (*i)->aliasTni !=2))
+      {
+          out << "." << (*i)->aliasTni << 
+          "." << (*i)->aliasNpi << "."; 
+      }
+      out << (*i)->aliasValue << "\" />";
     }
     out << "</aliases>" << std::endl;
   } catch (...) {
@@ -150,3 +194,4 @@ AliasConfig::RecordIterator AliasConfig::getRecordIterator() const
 }
 }
 }
+

@@ -153,7 +153,6 @@ public:
     static const int NOALIAS  = 2;
     static const int NOROUTE  = 3;
     static const int DBERROR  = 4;
-
   };
 
   SmeProxy* getProxy(){return cmd->proxy;}
@@ -306,6 +305,19 @@ public:
     cmd = _cmd.release();
     return;
   }
+	
+	uint32_t makeSmppStatus(uint32_t status)
+	{
+		switch(status)
+		{
+		case Status::OK : return SmppStatusSet::ESME_ROK;
+		case Status::SYSERROR : return SmppStatusSet::ESME_RSYSERR;
+		case Status::NOALIAS : return SmppStatusSet::ESME_RINVDSTADR;
+		case Status::NOROUTE : return SmppStatusSet::ESME_RINVDSTADR;
+		case Status::DBERROR : return SmppStatusSet::ESME_RSYSERR;
+		default : return SmppStatusSet::ESME_RUNKNOWNERR;
+		}
+	}
 
   SmppHeader* makePdu()
   {
@@ -333,7 +345,7 @@ public:
         auto_ptr<PduXSmResp> xsm(new PduXSmResp);
         xsm->header.set_commandId(SmppCommandSet::SUBMIT_SM_RESP);
         xsm->header.set_sequenceNumber(c.get_dialogId());
-        xsm->header.set_commandStatus(c.get_resp()->get_status());
+        xsm->header.set_commandStatus(makeSmppStatus(c.get_resp()->get_status()));
         xsm->set_messageId(c.get_resp()->get_messageId());
         return reinterpret_cast<SmppHeader*>(xsm.release());
       }
@@ -342,7 +354,7 @@ public:
         auto_ptr<PduXSmResp> xsm(new PduXSmResp);
         xsm->header.set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
         xsm->header.set_sequenceNumber(c.get_dialogId());
-        xsm->header.set_commandStatus(c.get_resp()->get_status());
+        xsm->header.set_commandStatus(makeSmppStatus(c.get_resp()->get_status()));
         xsm->set_messageId(c.get_resp()->get_messageId());
         return reinterpret_cast<SmppHeader*>(xsm.release());
       }
