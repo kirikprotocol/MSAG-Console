@@ -1760,6 +1760,7 @@ USHORT_T Et96MapCloseInd(
           MapDialogContainer::getInstance()->reAssignDialog(dialogueId,dialog->ssn,localSsn);
           dialog->id_opened = false;
           dialogueId = dialog->dialogid_map;
+          dialogid_map = dialog->dialogid_map;
           dialog->state = MAPST_WaitMcsVersion;
           QueryMcsVersion(dialog.get());
         }else{
