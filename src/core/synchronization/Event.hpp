@@ -62,7 +62,7 @@ public:
       return 0;
     }
     timestruc_t tv;
-    tv.tv_sec=timeout/1000;
+    tv.tv_sec=time(NULL)+timeout/1000;
     tv.tv_nsec=(timeout%1000)*1000000L;
     int retval=cond_timedwait(&event,&mutex.mutex,&tv);
     mutex.Unlock();
