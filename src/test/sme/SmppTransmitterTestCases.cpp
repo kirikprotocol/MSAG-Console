@@ -534,16 +534,21 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduData* pduData)
 		{
 			__unreachable__("Invalid template name");
 		}
-		//сохранить ucs2 кодировку
+		//сохранить оригинальную ucs2 кодировку
 		uint8_t dc = p.second;
 		if (p.second != UCS2 && pdu.getDataCoding() == UCS2 &&
 			recipientData->profile.codepage == ProfileCharsetOptions::Ucs2)
 		{
 			dc = UCS2;
 		}
+		//сохранить оригинальную smsc7bit кодировку
+		if (p.second == DEFAULT && pdu.getDataCoding() == SMSC7BIT)
+		{
+			dc = SMSC7BIT;
+		}
 		int msgLen;
 		auto_ptr<char> msg = encode(p.first, p.second, msgLen, false);
-		return new SmsMsg(false, msg.get(), msgLen, p.second, recipientData->validProfile);
+		return new SmsMsg(false, msg.release(), msgLen, p.second, recipientData->validProfile);
 	}
 	//сконвертировать текст
 	__require__(pduData->intProps.count("dataCoding"));

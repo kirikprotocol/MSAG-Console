@@ -81,13 +81,15 @@ void SmppBaseTestCases::bindIncorrectSme(int num)
 			{
 				case 1: //sme не зарегистрирована в SC
 					__tc__("bind.incorrect.systemIdNotRegistered");
-					reason = SmppConnectException::Reason::bindFailed;
+					//reason = SmppConnectException::Reason::bindFailed;
+					reason = SmppConnectException::Reason::unknown;
 					rand_char(15, tmp); //15 по спецификации
 					conf.sid = tmp;
 					break;
 				case 2: //неправильный пароль
 					__tc__("bind.incorrect.invalidPassword");
-					reason = SmppConnectException::Reason::bindFailed;
+					//reason = SmppConnectException::Reason::bindFailed;
+					reason = SmppConnectException::Reason::unknown;
 					rand_char(8, tmp); //8 по спецификации
 					conf.password = tmp;
 					break;

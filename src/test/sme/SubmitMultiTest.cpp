@@ -2,7 +2,8 @@
 #include "test/util/Util.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "util/debug.h"
-#include <iostream>
+#include "readline/readline.h"
+#include "readline/history.h"
 
 using namespace std;
 using namespace smsc::sme;
@@ -11,6 +12,39 @@ using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::test::smpp;
 using namespace smsc::test::util;
+
+/*
+ * Конфигурация теста.
+ * Список sme:
+ * <ul>
+ * <li>smeId=sme1, addr=111, alias=1110 - базовая sme, только эта sme отправляет
+ * submit_multi, * все остальные получают deliver_sm и отправляют deliver_sm_resp
+ * с command_status = ESME_ROK
+ * <li>smeId=sme0, addr=000, alias=0000 - sme не забинтована вообще
+ * <li>smeId=sme2, addr=222, alias=2220 - transmitter
+ * <li>smeId=sme3, addr = 333, alias=3330 - transceiver
+ * <li>smeId=sme4, addr = 444, alias=4440 - transceiver
+ * <li>smeId=MAP_PROXY, addr = 555, alias=5550 - transceiver, map proxy
+ * </ul>
+ *
+ * Список маршрутов:
+ * <ul>
+ * <li>111 -X-> 000 - маршрут не прописан
+ * <li>111 ---> 222 на sme2
+ * <li>111 ---> 333 на sme3
+ * <li>111 ---> 444 на sme4
+ * <li>111 ---> 555 на MAP_PROXY
+ * </ul>
+ *
+ * Списки рассылки:
+ * <ul>
+ * <li>list0: несуществующий список рассылки
+ * <li>list1: members={3330, 0000}, submitters={111}
+ * <li>list2: members={4440, 2220}, submitters={111}
+ * <li>list3: members={пусто}, submitters={111}
+ * <li>list4: members={пусто}, submitters={пусто, нет прав на submit}
+ * </ul>
+*/
 
 class SessionListener : public SmppPduEventListener
 {
@@ -253,8 +287,13 @@ int main(int argc, char* argv[])
 	test.submitMultiSeveralDistLists();
 	while (true)
 	{
-		string cmd;
-		cin >> cmd;
+		//обработка команд
+		const string cmd = readline(">");
+		if (!cmd.length())
+		{
+			continue;
+		}
+		add_history(cmd.c_str());
 		if (cmd == "quit")
 		{
 			exit(0);

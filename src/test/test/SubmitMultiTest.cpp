@@ -8,6 +8,9 @@ using namespace smsc::util;
 
 void check(SmppHeader* pdu)
 {
+	__trace__("original pdu");
+	reinterpret_cast<PduMultiSm*>(pdu)->dump(TRACE_LOG_STREAM);
+
 	//serialize
 	__trace__("serialization started");
 	int sz = calcSmppPacketLength(pdu);
@@ -22,7 +25,10 @@ void check(SmppHeader* pdu)
     assignStreamWith(&s2, buf, sz, true);
     SmppHeader* header = fetchSmppPdu(&s2);
 	__trace__("deserialization finished");
-    __trace2__("commandId = %x", header->get_commandId());
+	__require__(header->get_commandId() == SUBMIT_MULTI);
+
+    __trace__("deserialized pdu");
+	reinterpret_cast<PduMultiSm*>(header)->dump(TRACE_LOG_STREAM);
 }
 
 PduAddress& getAddr(uint8_t ton, uint8_t npi, const char* val)
