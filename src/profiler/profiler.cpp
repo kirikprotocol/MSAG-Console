@@ -331,6 +331,7 @@ int Profiler::Execute()
     for(i=0;i<len;i++)body[i]=toupper(body[i]);
     i=0;
     while(!isalpha(body[i]) && i<len)i++;
+    msg=-1;
     if(!strncmp(body+i,"REPORT",6))
     {
       i+=7;
@@ -378,9 +379,6 @@ int Profiler::Execute()
     {
       msg=3;
       internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
-    }else
-    {
-      msg=9999;
     }
     resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
                                            cmd->get_dialogId(),status);
