@@ -345,7 +345,7 @@ public:
     if ( hash.Get(dialogueid,item) ){
       __trace2__("MAP:: drop dialog 0x%p for dialogid 0x%x",item,dialogueid);
       if ( item->abonent.length() != 0 ) {
-        __trace2__("MAP:: unlock dialog 0x%x for abonent %s",dialogueid,item->abonent);
+        __trace2__("MAP:: unlock dialog 0x%x for abonent %s",dialogueid,item->abonent.c_str());
         lock_map.Delete(item->abonent);
       }
       hash.Delete(dialogueid);

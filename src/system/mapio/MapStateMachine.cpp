@@ -1935,8 +1935,6 @@ USHORT_T Et96MapV2InformSCInd (
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitRInfoClose:
-      MapDialogContainer::getInstance()->reAssignDialog(dialogueId,localSsn);
-      dialogueId = dialog->dialogid_map;
       RememberMwdStatus(dialog.get(),msisdnAlert_sp,mwdStatus_sp);
       break;
     default:
