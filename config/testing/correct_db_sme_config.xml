@@ -12,6 +12,21 @@
 
 	<section name="DBSme">
 
+		<section name="MessageSet">
+			<param name="PROVIDER_NOT_FOUND" type="string">Адрес не найден (DataProvider not found)</param>
+			<param name="JOB_NOT_FOUND" type="string">Задача не найдена (Job not found)</param>
+			<param name="DS_FAILURE" type="string">Ошибка выполнения запроса (Problem with DataSource)</param>
+			<param name="DS_CONNECTION_LOST" type="string">Ошибка соединения (Connection to DataSource lost)</param>
+			<param name="DS_STATEMENT_FAIL" type="string">Ошибка SQL (Failed to create SQL statement)</param>
+			<param name="QUERY_NULL" type="string">Нулевой результат запроса (Query result is NULL)</param>
+			<param name="INPUT_PARSE" type="string">Ошибка во входных параметрах (Input parsing error)</param>
+			<param name="OUTPUT_FORMAT" type="string">Ошибка форматирования результата (Output formatting error)</param>
+			<param name="INVALID_CONFIG" type="string">Ошибка конфигурации (Configuration is invalid)</param>
+		</section>
+
+		<param name="SvcType" type="string">dBsmE</param>
+		<param name="ProtocolId" type="int">23</param>
+
 		<section name="ThreadPool">
 			<param name="max" type="int">15</param>
 			<param name="init" type="int">5</param>
@@ -40,9 +55,6 @@
 
 				<section name="Jobs">
 
-					<!-- tc1: ???????? ?? input ?????????? ? ????? ? output ????? export-import -->
-					<!-- tc2: ?????? ???? ?1, ???????? ?? ????????? now ? input,
-					???? ? ???? ????????? ????????? ???????? -->
 					<section name="DateFormatJob1">
 						<param name="name" type="string">DateFormatJob1</param>
 						<param name="type" type="string">sql-job</param>
@@ -54,12 +66,10 @@ select * from dual
 $$date pattern = "d/M/yy h:m:s t" export = "dt" default = "now" $$
 						</param>
 <param name="output" type="string">
-Date: $$date pattern = "!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMHwwyyHHWyyyyHHHWWyyyyyydHHHHyyyyyyyyddshdddsshhddddssshhhMsssshhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt" import = "dt" $$
+Date: $$date pattern = "!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/yyyyyywMMMMMMMwwdddWhhhMMMMHHHWWmmmMMMssstyyyyMMddhhHHmmssttyyyyyyyyMMMMMMMMddddhhhhHHHHmmmmssssMMMMMyyMMMMMMdhHmsM" import = "dt" $$
 </param>
 					</section>
 
-					<!-- tc2: ?????? ???? ?2, ???????? ?? ????????? today ? input,
-					???? ? ???? ????????? ???????? ????????? -->
 					<section name="DateFormatJob2">
 						<param name="name" type="string">DateFormatJob2</param>
 						<param name="type" type="string">sql-job</param>
@@ -71,12 +81,10 @@ select * from dual
 $$date  pattern  =  "dd.MM.yyyy hh-mm-ss t"  export  =  "dt"  default  =  "today"  $$
 						</param>
 <param name="output" type="string">
-Date: $$date  pattern  =  "!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMHwwyyHHWyyyyHHHWWyyyyyydHHHHyyyyyyyyddshdddsshhddddssshhhMsssshhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"  import  =  "dt"  $$
+Date: $$date  pattern  =  "!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/yyyyyywMMMMMMMwwdddWhhhMMMMHHHWWmmmMMMssstyyyyMMddhhHHmmssttyyyyyyyyMMMMMMMMddddhhhhHHHHmmmmssssMMMMMyyMMMMMMdhHmsM"  import  =  "dt"  $$
 </param>
 					</section>
 
-					<!-- tc2: ?????? ???? ?3, ???????? ?? ????????? yesterday ? input,
-					???? ? ???? ????????? ????????? ??????????? -->
 					<section name="DateFormatJob3">
 						<param name="name" type="string">DateFormatJob3</param>
 						<param name="type" type="string">sql-job</param>
@@ -88,12 +96,10 @@ select * from dual
 $$date	pattern	=	"d-MMM-yy H m s"	export	=	"dt"	default	=	"yesterday"	$$
 						</param>
 <param name="output" type="string">
-Date: $$date	pattern	=	"!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMHwwyyHHWyyyyHHHWWyyyyyydHHHHyyyyyyyyddshdddsshhddddssshhhMsssshhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"	import	=	"dt"	$$
+Date: $$date	pattern	=	"!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/yyyyyywMMMMMMMwwdddWhhhMMMMHHHWWmmmMMMssstyyyyMMddhhHHmmssttyyyyyyyyMMMMMMMMddddhhhhHHHHmmmmssssMMMMMyyMMMMMMdhHmsM"	import	=	"dt"	$$
 </param>
 					</section>
 
-					<!-- tc2: ?????? ???? ?4, ???????? ?? ????????? tomorrow ? input,
-					???? ? ???? ????????? ???????? ???????????? -->
 					<section name="DateFormatJob4">
 						<param name="name" type="string">DateFormatJob4</param>
 						<param name="type" type="string">sql-job</param>
@@ -105,7 +111,22 @@ select * from dual
 $$date		pattern		=		"dd MMMM yyyy HH.mm.ss"		export		=		"dt"		default		=		"tomorrow"		$$
 						</param>
 <param name="output" type="string">
-Date: $$date		pattern		=		"!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/wMMMMMMMMHwwyyHHWyyyyHHHWWyyyyyydHHHHyyyyyyyyddshdddsshhddddssshhhMsssshhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"		import		=		"dt"		$$
+Date: $$date		pattern		=		"!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/yyyyyywMMMMMMMwwdddWhhhMMMMHHHWWmmmMMMssstyyyyMMddhhHHmmssttyyyyyyyyMMMMMMMMddddhhhhHHHHmmmmssssMMMMMyyMMMMMMdhHmsM"		import		=		"dt"		$$
+</param>
+					</section>
+
+					<section name="DateFormatJob5">
+						<param name="name" type="string">DateFormatJob5</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">true</param>
+						<param name="sql" type="string">
+select * from dual
+						</param>
+						<param name="input" type="string">
+$$date pattern="ddMMyyhhmmsst" export="dt" default="today"$$
+						</param>
+<param name="output" type="string">
+Date: $$date pattern="!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/yyyyyywMMMMMMMwwdddWhhhMMMMHHHWWmmmMMMssstyyyyMMddhhHHmmssttyyyyyyyyMMMMMMMMddddhhhhHHHHmmmmssssMMMMMyyMMMMMMdhHmsM" import="dt"$$
 </param>
 					</section>
 
