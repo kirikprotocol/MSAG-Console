@@ -376,7 +376,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
       sms.setIntProperty(Tag::MS_DESTADDRSUBUNIT,user_data_coding&0x3);
     }
     else{
-      __trace2__("unknown coding scheme 0x%x",user_data_coding);
+      __trace2__("MAP::DIALOG::ForwardReq: unknown coding scheme 0x%x",user_data_coding);
       throw runtime_error("unknown coding scheme");
     }
     {
