@@ -1306,7 +1306,7 @@ static void DoUSSRUserResponceError(SmscCommand& cmd , MapDialog* dialog)
   error.errorCode = 34; /*Sytem failure */
   error.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
   ET96MAP_USSD_STRING_T ussdString = {0,};
-  unsigned char text[256];
+  char text[256];
   if( cmd.IsOk() ) {
     if( cmd->get_commandId() == SUBMIT_RESP ) {
       sprintf( text, "Rejected %d", cmd->get_resp()->get_status() );
@@ -1319,7 +1319,7 @@ static void DoUSSRUserResponceError(SmscCommand& cmd , MapDialog* dialog)
   }
   unsigned text_len = strlen(text);
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 
-    fillUSSDString(encoding,text,text_len, &ussdString);
+    fillUSSDString(encoding,(unsigned char*)text,text_len, &ussdString);
   UCHAR_T result;
   if ( dialog->version == 2 )
   {
