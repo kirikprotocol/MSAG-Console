@@ -90,6 +90,7 @@ int main(int argc,char* argv[])
     //s.setProtocolIdentifier(0);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
+    s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
     //unsigned char message[]="SME test message";
     SmppTransmitter *tr=ss.getSyncTransmitter();
     //SmppTransmitter *atr=ss.getAsyncTransmitter();
@@ -160,7 +161,7 @@ int main(int argc,char* argv[])
                 qresp->get_header().get_commandStatus(),
                 qresp->get_messageState(),
                 qresp->get_errorCode(),
-                qresp->get_finalDate()
+                qresp->get_finalDate()?qresp->get_finalDate():"NULL"
               );
             disposePdu((SmppHeader*)qresp);
           }
@@ -183,7 +184,7 @@ int main(int argc,char* argv[])
                 qresp->get_header().get_commandStatus(),
                 qresp->get_messageState(),
                 qresp->get_errorCode(),
-                qresp->get_finalDate()
+                qresp->get_finalDate()?qresp->get_finalDate():"NULL"
               );
               disposePdu((SmppHeader*)qresp);
             }

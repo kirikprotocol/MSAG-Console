@@ -88,6 +88,7 @@ int main(int argc,char* argv[])
     //s.setSubmitTime(0);
     //s.setPriority(0);
     //s.setProtocolIdentifier(0);
+    s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
     //unsigned char message[]="SME test message";
@@ -153,7 +154,7 @@ int main(int argc,char* argv[])
           r.get_source().set_typeOfNumber(addr.type);
           r.get_source().set_numberingPlan(addr.plan);
           r.get_source().set_value(addr.value);
-          char *msg="REPLACE!";
+          char *msg="";
           r.shortMessage.copy(msg,strlen(msg));
           PduReplaceSmResp *replresp=tr->replace(r);
           if(replresp)
