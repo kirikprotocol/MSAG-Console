@@ -6,7 +6,7 @@
     %> <b>Total&nbsp;messages&nbsp;found&nbsp;</b><%=
       formBean.getRowsCount()
     %> <b>, displayed </b><%= firstIndex
-    %><% if (firstIndex != lastIndex) {%> ... <%= lastIndex%><%}
+    %><% if (firstIndex != lastIndex) {%>&nbsp;...&nbsp;<%= lastIndex%><%}
     } else {
     %><b>No messages matched, try to process another query.</b><%
     } %>
