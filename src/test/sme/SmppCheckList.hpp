@@ -67,9 +67,9 @@ public:
 			"Дублированное сообщение (совпадают source_addr, dest_addr и service_type) с замещением уже доставленного");
 		__reg_tc__("submitSm.replaceRepeatedDeliveryEnrote",
 			"Дублированное сообщение (совпадают source_addr, dest_addr и service_type) с замещением существующего, находящегося в очереди повторной доставки");
-		__reg_tc__("submitSm.sync"
+		__reg_tc__("submitSm.sync",
 			"Отправка синхронного submit_sm pdu");
-		__reg_tc__("submitSm.async"
+		__reg_tc__("submitSm.async",
 			"Отправка асинхронного submit_sm pdu");
 		//submitSmAssert
 		__reg_tc__("submitSmAssert",
@@ -101,9 +101,9 @@ public:
 			"Замещение уже доставленного сообщения");
 		__reg_tc__("replaceSm.replaceRepeatedDeliveryEnrote",
 		   "Замещение сообщения находящегося в очереди повторной доставки");
-		__reg_tc__("replaceSm.sync"
+		__reg_tc__("replaceSm.sync",
 			"Отправка синхронного replace_sm pdu");
-		__reg_tc__("replaceSm.async"
+		__reg_tc__("replaceSm.async",
 			"Отправка асинхронного replace_sm pdu");
 		//processSubmitSmResp
 		__reg_tc__("processSubmitSmResp",
