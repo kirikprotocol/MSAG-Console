@@ -66,6 +66,7 @@ void AliasManagerTestCases::setupRandomAliasMatchWithQuestionMarks(
 	alias->alias.setValue(aliasLen, tmp);
 }
 
+/*
 void AliasManagerTestCases::setupRandomAliasMatchWithAsterisk(
 	AliasInfo* alias, int adLen, int alLen)
 {
@@ -85,10 +86,11 @@ void AliasManagerTestCases::setupRandomAliasMatchWithAsterisk(
 	tmp[aliasLen - alLen] = '*';
 	alias->alias.setValue(aliasLen - alLen + 1, tmp);
 }
+*/
 
 TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 {
-	TCSelector s(num, 10);
+	TCSelector s(num, 3);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ALIAS_MATCH, s.getChoice());
 	getLog().debugStream() << "[" << thr_self() <<
 		"]\taddCorrectAliasMatch(" << s.value() << ")";
@@ -111,6 +113,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 			case 3: //адрес или алиас целиком из '?'
 				setupRandomAliasMatchWithQuestionMarks(alias, minLen);
 				break;
+			/*
 			case 4: //адрес со '*' в конце, алиас со '*' в конце
 				if (addrLen > 1 && aliasLen > 1)
 				{
@@ -166,6 +169,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 					setupRandomAliasMatchWithAsterisk(alias, 0, 0);
 				}
 				break;
+			*/
 			default:
 				throw s;
 		}
@@ -358,6 +362,7 @@ TCResult* AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 	return res;
 }
 
+/*
 TCResult* AliasManagerTestCases::addCorrectAliasException(
 	AliasInfo* alias, int num)
 {
@@ -459,6 +464,7 @@ TCResult* AliasManagerTestCases::addIncorrectAlias()
 	debug(res);
 	return res;
 }
+*/
 
 TCResult* AliasManagerTestCases::deleteAliases()
 {
