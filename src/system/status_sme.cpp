@@ -1,5 +1,6 @@
 #include "system/status_sme.hpp"
 #include "util/smstext.h"
+#include "system/version.h"
 
 namespace smsc{
 namespace system{
@@ -147,6 +148,9 @@ int StatusSme::Execute()
           strprintf(answer,"sms scheduled to %u",sc);
         }
       }
+    }else if(request=="ver")
+    {
+      answer=getStrVersion();
     }
     else
     {
