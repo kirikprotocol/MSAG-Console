@@ -1,246 +1,155 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.admin.smsview.*"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsview.*"%>
-
-<jsp:useBean id="formBean" scope="session"
-             class="ru.novosoft.smsc.jsp.smsview.SmsViewFormBean" />
+<jsp:useBean id="bean" scope="session" class="ru.novosoft.smsc.jsp.smsview.SmsViewFormBean" />
 <%
-if (request.getParameter("prev") != null) {
-    formBean.moveToPrev();
-} else if (request.getParameter("next") != null) {
-    formBean.moveToNext();
-} else if (request.getParameter("first") != null) {
-    formBean.moveToFirst();
-} else if (request.getParameter("last") != null) {
-    formBean.moveToLast();
-}
-
-String pageCountString = (String)request.getParameter("page");
-if (pageCountString != null) formBean.moveToPage(pageCountString);
-
-if (request.getMethod().equals("POST"))
-{
+bean.setTillDateEnabled(false);
+bean.setFromDateEnabled(false);
 %>
-  <jsp:setProperty name="formBean" property="*" />
+<jsp:setProperty name="bean" property="*"/>
 <%
-  String fde = (String)request.getParameter("fromDateEnabled");
-  formBean.setFromDateEnabled(fde != null && fde.equalsIgnoreCase("on"));
-  String tde = (String)request.getParameter("tillDateEnabled");
-  formBean.setTillDateEnabled(tde != null && tde.equalsIgnoreCase("on"));
-  if (formBean.getAppContext() == null) {
-    formBean.setAppContext(request.getAttribute("appContext"));
-  }
-  if (request.getParameter("delete") != null) {
-    formBean.processDeleteAll();
-  } else {
-    formBean.processQuery();
-  }
-}
-
 TITLE="SMSC SmsView utilite";
 MENU0_SELECTION = "MENU0_SMSVIEW";
-FORM_URI = CPATH+"/smsview/index.jsp";
-FORM_METHOD="POST";
+
+int beanResult = SmsViewFormBean.RESULT_OK;
+switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
+{
+	case SmsViewFormBean.RESULT_DONE:
+		response.sendRedirect("index.jsp");
+		return;
+	case SmsViewFormBean.RESULT_OK:
+		STATUS.append("Ok");
+		break;
+	case SmsViewFormBean.RESULT_ERROR:
+		STATUS.append("<span class=CF00>Error</span>");
+		break;
+	default:
+		STATUS.append("<span class=CF00>Error "+beanResult+"</span>");
+		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
+}
 %>
-
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<center>
-<table width="95%" cellpadding=2 cellspacing=2 border=0>
-<tr>
-    	<td colspan=4 align=left>
-    	<b>Source&nbsp;&nbsp;storage:&nbsp;&nbsp;</b>
-    	<input type="radio" name="storageType" value="<%=
-        SmsQuery.SMS_ARCHIVE_STORAGE_TYPE%>" <%=
-          (formBean.getStorageType()==SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) ?
-              "checked":""%>>Archive&nbsp;&nbsp;
-      <input type="radio" name="storageType" value="<%=
-        SmsQuery.SMS_OPERATIVE_STORAGE_TYPE%>" <%=
-          (formBean.getStorageType()==SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
-              "checked":""%>>Operative&nbsp;&nbsp;
-      </td>
+<%
+{%>
+<div class=secQuestion>Search parameters</div>
+<table class=secRep width="100%">
+<tr class=row0>
+	<th class=label>Storage:</th>
+	<td nowrap><input class=radio type="radio" name="storageType" id=storageTypeArchive value="<%=
+			SmsQuery.SMS_ARCHIVE_STORAGE_TYPE%>" <%=
+			(bean.getStorageType()==SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) ?
+			"checked":""%>><label for=storageTypeArchive>Archive</label></td>
+	<td nowrap><input 
+			class=radio type="radio" name="storageType" id=storageTypeOperative value="<%=
+			SmsQuery.SMS_OPERATIVE_STORAGE_TYPE%>" <%=
+			(bean.getStorageType()==SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
+			"checked":""%>><label for=storageTypeOperative>Operative</label>
+	</td>
+	<td>&nbsp;</td>
+	</td>
 </tr>
-<tr></tr>
-<tr>
-    	<td colspan=1>
-      <b>Source&nbsp;address:</b><br>
-    	<input type="text" name="fromAddress"  value="<%=
-        formBean.getFromAddress()%>" size=25 maxlength=25>
-      </td>
-
-      <td colspan=1>
-      <b>Source&nbsp;SME&nbsp;id:</b><br>
-    	<input type="text" name="srcSmeId"  value="<%=
-        formBean.getSrcSmeId()%>" size=17 maxlength=15>
-      </td>
-
-      <td colspan=1>
-      <b>SMS&nbsp;id:</b><br>
-    	<input type="text" name="smsId"  value="<%=
-        formBean.getSmsId()%>" size=16 maxlength=16>
-      </td>
-
-      <td colspan=1>
-    	<b>Sort&nbsp;results&nbsp;by:</b><br>
-      <select name="sortBy">
-	      <option value="Date" <%=
-          (formBean.getSortBy().equalsIgnoreCase("Date")) ? "selected":""%>>Date</option>
-	      <option value="Status" <%=
-          (formBean.getSortBy().equalsIgnoreCase("Status")) ? "selected":""%>>Status</option>
-	      <option value="From" <%=
-          (formBean.getSortBy().equalsIgnoreCase("From")) ? "selected":""%>>From</option>
-	      <option value="To" <%=
-          (formBean.getSortBy().equalsIgnoreCase("To")) ? "selected":""%>>To</option>
-	      <option value="Id" <%=
-          (formBean.getSortBy().equalsIgnoreCase("Id")) ? "selected":""%>>Id</option>
-      </select>
-	    </td>
+<tr class=row1>
+	<th class=label>Source Address:</th>
+	<td><input class=txtW type="text" name="fromAddress"  value="<%=bean.getFromAddress()%>" size=25 maxlength=25></td>
+	<th class=label>Source SME Id:</th>
+	<td><input class=txtW type="text" name="srcSmeId"  value="<%=bean.getSrcSmeId()%>" size=17 maxlength=15></td>
 </tr>
-<tr>
-      <td colspan=1>
-    	<b>Destination&nbsp;address:</b><br>
-    	<input type="text" name="toAddress" value="<%=
-        formBean.getToAddress()%>" size=25 maxlength=25>
-      </td>
-
-      <td colspan=1>
-      <b>Destination&nbsp;SME&nbsp;id:</b><br>
-    	<input type="text" name="dstSmeId"  value="<%=
-        formBean.getDstSmeId()%>" size=17 maxlength=15>
-      </td>
-
-      <td colspan=1>
-      <b>Route&nbsp;id:</b><br>
-    	<input type="text" name="routeId"  value="<%=
-        formBean.getRouteId()%>" size=20 maxlength=20>
-      </td>
-
-      <td colspan=1>
-      <b>Rows&nbsp;Max&nbsp;/&nbsp;Per&nbsp;page:</b><br>
-      <select name="rowsMaximum"><%
-        int rowsMaximum = formBean.getRowsMaximum();%>
-	      <option value="100" <%= (rowsMaximum  <= 100) ?   "selected":""%>>100</option>
-	      <option value="200" <%= (rowsMaximum == 200) ? "selected":""%>>200</option>
-	      <option value="300" <%= (rowsMaximum == 300) ? "selected":""%>>300</option>
-	      <option value="400" <%= (rowsMaximum == 400) ? "selected":""%>>400</option>
-	      <option value="500" <%= (rowsMaximum == 500) ? "selected":""%>>500</option>
-	      <option value="1000" <%= (rowsMaximum == 1000) ? "selected":""%>>1000</option>
-        <option value="2000" <%= (rowsMaximum == 2000) ? "selected":""%>>2000</option>
-        <option value="5000" <%= (rowsMaximum >= 5000) ? "selected":""%>>5000</option>
-	    </select>
-      <b>/</b>
-      <select name="rowsToDisplay"><%
-        int rowsToDisplay = formBean.getRowsToDisplay();%>
-	      <option value="5" <%= (rowsToDisplay < 10) ?   "selected":""%>>5</option>
-	      <option value="10" <%= (rowsToDisplay == 10) ? "selected":""%>>10</option>
-	      <option value="20" <%= (rowsToDisplay == 20) ? "selected":""%>>20</option>
-	      <option value="30" <%= (rowsToDisplay == 30) ? "selected":""%>>30</option>
-	      <option value="40" <%= (rowsToDisplay == 40) ? "selected":""%>>40</option>
-	      <option value="50" <%= (rowsToDisplay == 50) ? "selected":""%>>50</option>
-	      <option value="-1" <%= (rowsToDisplay < 0 ||
-                                rowsToDisplay > 50) ?  "selected":""%>>All</option>
-	    </select>
-      </td>
+<tr class=row1>
+	<th class=label>Destination Address:</th>
+	<td><input class=txtW type="text" name="toAddress" value="<%=bean.getToAddress()%>" size=25 maxlength=25></td>
+	<th class=label>Destination SME Id:</th>
+	<td><input class=txtW type="text" name="dstSmeId"  value="<%=bean.getDstSmeId()%>" size=17 maxlength=15></td>
 </tr>
-<tr>
-      <td colspan=2>
-      <b>Select&nbsp;from&nbsp;date:</b><br>
-      <input type="checkbox" name="fromDateEnabled" <%=
-        (formBean.getFromDateEnabled()) ? "checked":""%>>
-      <input type="text" name="fromDateDay" style="width:16pt;" value="<%=
-        formBean.getFromDateDay()%>" size=2 maxlength=2>
-      <select name="fromDateMonth">
-      <%int fromDateMonth = formBean.getFromDateMonth();
-      for (int fdm=0; fdm<12; fdm++) {
-      %><option value="<%= fdm%>" <%=
-          (fdm == fromDateMonth) ? "selected":""%>><%=
-            SmsViewFormBean.monthesNames[fdm] %></option><%
-      }%>
-	    </select>
-      <select name="fromDateYear">
-      <% int fromDateYear = formBean.getFromDateYear();
-      for (int fdy=SmsViewFormBean.START_YEAR_COUNTER;
-               fdy<=SmsViewFormBean.FINISH_YEAR_COUNTER; fdy++) {
-      %><option value="<%= fdy%>" <%=
-          (fdy == fromDateYear) ? "selected":""%>><%= fdy%></option><%
-      }%>
-      </select>&nbsp;
-      <input type="text" name="fromDateHour" style="width:16pt;" value="<%=
-        formBean.getFromDateHour()%>" size=2 maxlength=2>
-      <b>:</b>
-      <input type="text" name="fromDateMinute" style="width:16pt;" value="<%=
-        formBean.getFromDateMinute()%>" size=2 maxlength=2>
-      </td>
-
-      <td colspan=2>
-    	<b>Till&nbsp;date:</b><br>
-      <input type="checkbox" name="tillDateEnabled" <%=
-        (formBean.getTillDateEnabled()) ? "checked":""%>>
-      <input type="text" name="toDateDay" style="width:16pt;" value="<%=
-        formBean.getToDateDay()%>" size=2 maxlength=2>
-      <select name="toDateMonth">
-      <% int toDateMonth = formBean.getToDateMonth();
-      for (int fdm=0; fdm<12; fdm++) {
-      %><option value="<%= fdm%>" <%=
-        (fdm == toDateMonth) ? "selected":""%>><%=
-          SmsViewFormBean.monthesNames[fdm]%></option><%
-      }%>
-      </select>
-      <select name="toDateYear">
-      <% int toDateYear = formBean.getToDateYear();
-      for (int tdy=SmsViewFormBean.START_YEAR_COUNTER;
-               tdy<=SmsViewFormBean.FINISH_YEAR_COUNTER; tdy++) {
-      %><option value="<%= tdy%>" <%=
-          (tdy == toDateYear) ? "selected":""%>><%= tdy%></option><%
-      }%>
-	    </select>&nbsp;
-      <input type="text" name="toDateHour" style="width:16pt;" value="<%=
-        formBean.getToDateHour()%>" size=2 maxlength=2>
-      <b>:</b>
-      <input type="text" name="toDateMinute" style="width:16pt;" value="<%=
-        formBean.getToDateMinute()%>" size=2 maxlength=2>
-      </td>
+<tr class=row0>
+	<th class=label>SMS Id:</th>
+	<td><input class=txtW type="text" name="smsId"  value="<%=bean.getSmsId()%>" size=16 maxlength=16></td>
+	<th class=label>Route Id:</th>
+	<td><input class=txtW type="text" name="routeId"  value="<%=bean.getRouteId()%>" size=20 maxlength=20></td>
 </tr>
-<tr></tr>
-<tr>
-      <td colspan=4 align=center>
-      <input type="submit" name="query" value="Query !">
-      </td>
+<tr class=row1>
+	<th class=label>From Date:</th>
+	<td nowrap><input class=check type="checkbox" name="fromDateEnabled" <%=(bean.getFromDateEnabled()) ? "checked":""%>>
+		<input class=txt type="text" name="fromDate" value="<%=bean.getFromDate()%>">
+	</td>
+	<th class=label>Till Date:</th>
+	<td nowrap><input class=check type="checkbox" name="tillDateEnabled" <%=(bean.getTillDateEnabled()) ? "checked":""%>>
+		<input class=txt type="text" name="tillDate" value="<%=bean.getTillDate()%>">
+	</td>
 </tr>
 </table>
-
+<%}%>
+<div class=secButtons>Rows max:<select name="rowsMaximum"><%int rowsMaximum = bean.getRowsMaximum();%>
+		<option value="100" <%= (rowsMaximum  <= 100) ?   "selected":""%>>100</option>
+		<option value="200" <%= (rowsMaximum == 200) ? "selected":""%>>200</option>
+		<option value="300" <%= (rowsMaximum == 300) ? "selected":""%>>300</option>
+		<option value="400" <%= (rowsMaximum == 400) ? "selected":""%>>400</option>
+		<option value="500" <%= (rowsMaximum == 500) ? "selected":""%>>500</option>
+		<option value="1000" <%= (rowsMaximum == 1000) ? "selected":""%>>1000</option>
+		<option value="2000" <%= (rowsMaximum == 2000) ? "selected":""%>>2000</option>
+		<option value="5000" <%= (rowsMaximum >= 5000) ? "selected":""%>>5000</option>
+	</select>
+Per page:<select name="pageSize"><%int rowsToDisplay = bean.getPageSize();%>
+		<option value="5" <%= (rowsToDisplay < 10) ?   "selected":""%>>5</option>
+		<option value="10" <%= (rowsToDisplay == 10) ? "selected":""%>>10</option>
+		<option value="20" <%= (rowsToDisplay == 20) ? "selected":""%>>20</option>
+		<option value="30" <%= (rowsToDisplay == 30) ? "selected":""%>>30</option>
+		<option value="40" <%= (rowsToDisplay == 40) ? "selected":""%>>40</option>
+		<option value="50" <%= (rowsToDisplay == 50) ? "selected":""%>>50</option>
+		<option value="-1" <%= (rowsToDisplay < 0 || rowsToDisplay > 50) ?  "selected":""%>>All</option>
+	</select>
+<input class=btn type="submit" name="mbQuery" value="Query !"></div>
 <%
-int firstIndex = formBean.getRowIndex()+1;
-int lastIndex = formBean.getRowIndex()+formBean.getRowsToDisplay();
-if (lastIndex >= formBean.getRowsCount() ||
-    formBean.getRowsToDisplay() < 0) lastIndex = formBean.getRowsCount();
-%>
-<%@include file="indexBody.jsp"%>
-<%if (formBean.getRowsCount()>0) {%>
-<table width="95%" cellpadding=1 cellspacing=1 border=1>
+if (bean.getTotalSize()>0) {%>
+<input type=hidden name=sort>
+<input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
+<script>
+function setSort(sorting)
+{
+	if (sorting == "<%=bean.getSort()%>")
+		opForm.sort.value = "-<%=bean.getSort()%>";
+	else
+		opForm.sort.value = sorting;
+		
+	opForm.submit();
+	return false;
+}
+</script>
+<br>
+<div class=secView>Search results</div>
+<table class=secRep cellspacing=1 width="100%">
 <thead>
-<tr>
-  <th>SMS id</th>
-  <th>Date</th>
-  <th>From</th>
-  <th>To</th>
-  <th>Status</th>
-  <th>Message</th>
-</tr></thead><tbody><%
-for (int cnt=firstIndex; cnt<=lastIndex; cnt++) {
-  SmsRow row = formBean.getRow(cnt-1);
-%><tr>
+<tr class=row0>
+  <th><a href="#" title="Sort by SMS Id" onclick='return setSort("Name")'>SMS id</a></th>
+  <th><a href="#" title="Sort by Date" onclick='return setSort("Name")'>Date</a></th>
+  <th><a href="#" title="Sort by From address" onclick='return setSort("Name")'>From</a></th>
+  <th><a href="#" title="Sort by To address" onclick='return setSort("Name")'>To</a></th>
+  <th><a href="#" title="Sort by delivery status" onclick='return setSort("Name")'>Status</a></th>
+</tr></thead>
+<tbody><%
+int firstIndex = bean.getStartPosition()+1;
+int lastIndex = bean.getStartPosition()+bean.getPageSize();
+if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0) 
+	lastIndex = bean.getTotalSize();
+
+{int rowN=0; for (int cnt=firstIndex; cnt<=lastIndex; cnt++, rowN++) {
+  SmsRow row = bean.getRow(cnt-1);
+%><tr class=row<%=rowN&1%>0>
       <td><%= row.getIdString()%></td>
       <td><%= row.getDate()%></td>
       <td><%= row.getFrom().trim()%></td>
       <td><%= row.getTo().trim()%></td>
       <td><%= row.getStatus()%></td>
-      <td><%= "#"+cnt+" "+row.getText()%></td>
+  </tr>
+  <tr class=row<%=rowN&1%>1>
+      <td colspan=5><%= "#"+cnt+" "+row.getText()%></td>
   </tr><%
-} %></tbody>
+}} 
+%></tbody>
 </table>
-<%@include file="indexBody.jsp"%>
-<input type="submit" name="delete" value="Delete All selected rows">
+<%@ include file="/WEB-INF/inc/navbar.jsp"%>
+<div class=secButtons>
+<input class=btn type="submit" name="mbDelete" value="Delete All selected rows">
+</div>
 <% } %>
-</center>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
