@@ -286,7 +286,7 @@ namespace smsc { namespace store
          * Реализация метода MessageStore
          * @see MessageStore
          */
-        virtual int getConcatMessageReference(Address& dda)
+        virtual int getConcatMessageReference(const Address& dda)
                 throw(StorageException);
         
         /**

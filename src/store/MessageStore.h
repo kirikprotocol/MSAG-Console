@@ -305,7 +305,7 @@ namespace smsc { namespace store
          *                   возникает при ошибке хранилища физической природы,
          *                   т.н когда хранилище недоступно.
          */
-        virtual int getConcatMessageReference(Address& dda)
+        virtual int getConcatMessageReference(const Address& dda)
                 throw(StorageException) = 0;
         
         /**

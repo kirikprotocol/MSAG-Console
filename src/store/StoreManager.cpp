@@ -1561,7 +1561,7 @@ IdIterator* RemoteStore::getReadyForCancel(const Address& oa,
     return (new CancelIdIterator(pool, oa, da, svcType));
 }
 
-int RemoteStore::getConcatMessageReference(Address& dda)
+int RemoteStore::getConcatMessageReference(const Address& dda)
     throw(StorageException)
 {
     int msgRef = -1;

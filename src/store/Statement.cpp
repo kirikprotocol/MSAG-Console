@@ -1200,7 +1200,7 @@ ConcatDataStatement::ConcatDataStatement(Connection* connection, bool assign)
     dstAddr[0] = '\0'; msgRef = 0;
     define(1, SQLT_UIN, (dvoid *) &(msgRef), (sb4) sizeof(msgRef));
 }
-void ConcatDataStatement::setDestination(Address& dda)
+void ConcatDataStatement::setDestination(const Address& dda)
 {
     convertAddressToString(dda, dstAddr);   
     bind(1, SQLT_STR, (dvoid *) (dstAddr), (sb4) sizeof(dstAddr));
