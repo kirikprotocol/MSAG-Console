@@ -180,31 +180,13 @@ void MapIoTask::dispatcher()
     }
     if( message.primitive == 0x88 ) {
       // MapOpenInd
-      if ( smsc::logger::_map_cat->isDebugEnabled() ) {
-        {
-          char *text = new char[message.size*4+1];
-          int k = 0;
-          for ( int i=0; i<message.size; i++) {
-            k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
-          }
-          text[k]=0;
-      __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "Decoding openInd: %s",text);
-          delete text;
-        }
-      }
-      //
       const int destAddrPos = 6;
       const int destRefPos = destAddrPos+message.msg_p[destAddrPos]+1;
-      __map_trace2__("destRefPos = %d", destRefPos);
       const int orgAddrPos = destRefPos+message.msg_p[destRefPos]+1;
-      __map_trace2__("orgAddrPos = %d", orgAddrPos);
       const int orgRefPos = orgAddrPos+message.msg_p[orgAddrPos]+1;
-      __map_trace2__("orgRefPos = %d", orgRefPos);
       const int specificInfoLenPos = orgRefPos+(message.msg_p[orgRefPos]+1)/2+1+(message.msg_p[orgRefPos]?1:0);
-      __map_trace2__("specificInfoLenPos = %d", specificInfoLenPos);
       ET96MAP_USERDATA_T specificInfo;
       specificInfo.specificInfoLen = ((USHORT_T)message.msg_p[specificInfoLenPos])|(((USHORT_T)message.msg_p[specificInfoLenPos+1])<<8);
-      __map_trace2__("specificInfo.specificInfoLen = %d", specificInfo.specificInfoLen);
       if( specificInfo.specificInfoLen > 0 ) {
         memcpy(specificInfo.specificData, message.msg_p+specificInfoLenPos+2, specificInfo.specificInfoLen );
       }
