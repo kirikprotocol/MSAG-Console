@@ -41,6 +41,7 @@
 <tr class=row<%=(rowN++)&1%>>
 	<th>srcSmeId:</th>
 	<td><select name=srcSmeId>
+		<option value="" <%=(bean.getSrcSmeId() == null || bean.getSrcSmeId().length() == 0) ? "selected" : ""%>></option>
 		<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
 		{
 			String smeId = (String) j.next();
