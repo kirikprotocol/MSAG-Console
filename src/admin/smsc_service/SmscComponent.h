@@ -60,6 +60,7 @@ protected:
 	void applyAliases() throw (AdminException);
 	void applySmscConfig() throw (AdminException);
 	void applyServices() throw (AdminException);
+	Variant applyLocaleResource();
 	void reloadConfigsAndRestart() throw (AdminException);
 	void reReadConfigs() throw (AdminException);
 
@@ -84,7 +85,7 @@ protected:
 	Methods methods;
 	enum
 	{
-		applyRoutesMethod, applyAliasesMethod, applyServicesMethod, applySmscConfigMethod,
+		applyRoutesMethod, applyAliasesMethod, applyServicesMethod, applySmscConfigMethod, applyLocaleResourceMethod,
 		lookupProfileMethod, updateProfileMethod, 
 		flushStatisticsMethod, 
 		processCancelMessagesMethod,

@@ -18,6 +18,18 @@ table.list tr.row1
 {
 	
 }
+
+table.list tr.row0 td,
+table.list tr.row0 th
+{
+	border-bottom : 1px solid #E4E0CE;
+}
+table.list tr.row1 td,
+table.list tr.row1 th
+{
+	border-bottom : 1px solid #E6E3D8;
+}
+
 table.list th a,
 table.list th a:visited,
 table.list th a:hover
@@ -27,14 +39,14 @@ table.list th a:hover
 	background-repeat: no-repeat;
 	padding-left:20px;
 	color: #161E49;
-	height: 16px; /*!!! for ico16_up/down */
+	background-position: left;
 }
 table.list th a.up
 {
-	background-image: url(img/ico16_up.gif);
+	background-image: url(img/sort_up.gif);
 }
 table.list th a.down
 {
-	background-image: url(img/ico16_down.gif);
+	background-image: url(img/sort_down.gif);
 }
 

@@ -127,7 +127,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 			%>&nbsp;<%
 		}
 	%></td>
-	<td class=name><%=bean.isServiceDisabled(serviceId) ? "<span style=\"color:red\">disabled</span>" : "<span style=\"color:green\">enabled</span>"%></td>
+	<td class=name><%=bean.isServiceDisabled(serviceId) ? "<img src=\"" + CPATH + "/img/ic_disable.gif\" title='disabled'>" : "<img src=\"" + CPATH + "/img/ic_enable.gif\" title='enabled'>"%></td>
 	<td class=name><%=smeStatus(serviceId)%></td>
 	<td class=name><%
 		if (bean.isService(serviceId))

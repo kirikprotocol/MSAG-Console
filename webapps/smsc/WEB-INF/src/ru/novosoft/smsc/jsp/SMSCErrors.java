@@ -156,6 +156,7 @@ public class SMSCErrors
 			public static final String couldntReceiveFile = B + "couldntReceiveFile";
 			public static final String couldntCreateFile = B + "couldntCreateFile";
 			public static final String couldntStoreFile = B + "couldntStoreFile";
+			public static final String couldntApplyResources = B + "couldntApplyResources";
 		}
 
 		public static class dl

@@ -56,10 +56,11 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	Parameters log_cats;
 	log_cats["categories"] = Parameter("categories", StringListType);
 
-	Method apply_routes     ((unsigned)applyRoutesMethod,     "apply_routes",      empty_params, StringType);
-	Method apply_aliases    ((unsigned)applyAliasesMethod,    "apply_aliases",     empty_params, StringType);
-	Method apply_smsc_config((unsigned)applySmscConfigMethod, "apply_smsc_config", empty_params, StringType);
-	Method apply_services   ((unsigned)applyServicesMethod,   "apply_services",    empty_params, StringType);
+	Method apply_routes          ((unsigned)applyRoutesMethod,         "apply_routes",          empty_params, StringType);
+	Method apply_aliases         ((unsigned)applyAliasesMethod,        "apply_aliases",         empty_params, StringType);
+	Method apply_smsc_config     ((unsigned)applySmscConfigMethod,     "apply_smsc_config",     empty_params, StringType);
+	Method apply_services        ((unsigned)applyServicesMethod,       "apply_services",        empty_params, StringType);
+	Method apply_locale_resource ((unsigned)applyLocaleResourceMethod, "apply_locale_resources",empty_params, StringType);
 
 	Method lookup_profile((unsigned)lookupProfileMethod, "lookup_profile", lookup_params, StringType);
 	Method update_profile((unsigned)updateProfileMethod, "update_profile", update_params, LongType);
@@ -82,10 +83,11 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	Method log_get_categories((unsigned)logGetCategoriesMethod, "log_get_categories",  empty_params, StringListType);
 	Method log_set_categories((unsigned)logSetCategoriesMethod, "log_set_categories",  log_cats, BooleanType);
 
-	methods[apply_routes     .getName()] = apply_routes;
-	methods[apply_aliases    .getName()] = apply_aliases;
-	methods[apply_smsc_config.getName()] = apply_smsc_config;
-	methods[apply_services   .getName()] = apply_services;
+	methods[apply_routes         .getName()] = apply_routes;
+	methods[apply_aliases        .getName()] = apply_aliases;
+	methods[apply_smsc_config    .getName()] = apply_smsc_config;
+	methods[apply_services       .getName()] = apply_services;
+	methods[apply_locale_resource.getName()] = apply_locale_resource;
 
 	methods[lookup_profile.getName()] = lookup_profile;
 	methods[update_profile.getName()] = update_profile;
@@ -152,6 +154,9 @@ throw (AdminException)
 			case applyServicesMethod:
 				applyServices();
 				return Variant("");
+			case applyLocaleResourceMethod:
+				return applyLocaleResource();
+				
 
 			case mscRegistrateMethod:
 				mscRegistrate(args);
@@ -933,6 +938,15 @@ void SmscComponent::logSetCategories(const Arguments & args)
 	{
 		setLogCat(*i);
 	}
+}
+
+Variant SmscComponent::applyLocaleResource()
+{
+	if (isSmscRunning())
+	{
+		smsc::resourcemanager::ResourceManager::reload();
+	}
+	return Variant("");
 }
 
 }

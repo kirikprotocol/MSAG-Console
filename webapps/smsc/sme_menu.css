@@ -1,0 +1,10 @@
+table.sme_menu
+{
+	background-color: white;
+	color: black;
+}
+
+table.sme_menu td a
+{
+	padding: 0px 5px 0px 5px;
+}

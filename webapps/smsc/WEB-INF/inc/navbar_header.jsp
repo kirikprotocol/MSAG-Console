@@ -22,16 +22,16 @@ function clickFilter()
 </script>
 <table class=navbar cellspacing=1 cellpadding=0>
 <tr>
-<td class=first onclick="return <%=jscript%>(0)" title="First page">&nbsp;</td>
+<td class=first onclick="return <%=jscript%>(0)" title="First page"><a href="#">&nbsp;</a></td>
 <%if(pageCurrent > 0){%>
-<td class=prev onclick="return <%=jscript%>(<%=pageCurrent-1%>)" title="Previous page">&nbsp;</td>
+<td class=prev onclick="return <%=jscript%>(<%=pageCurrent-1%>)" title="Previous page"><a href="#">&nbsp;</a></td>
 <%}
 for(int pageNum=pageFirst;pageNum<=pageLast;pageNum++)
 {%>
 <td class=<%=pageNum==pageCurrent ? "current":"page"%> onclick="return <%=jscript%>(<%=pageNum%>)" title="Page <%=pageNum+1%>"><%=pageNum+1%></td>
 <%}%>
 <%if(pageCurrent+1 < pageTotal){%>
-<td class=next title="Next page" onclick="return <%=jscript%>(<%=pageCurrent+1%>)">&nbsp;</td>
+<td class=next title="Next page" onclick="return <%=jscript%>(<%=pageCurrent+1%>)"><a href="#">&nbsp;</a></td>
 <%}%>
-<td class=last onclick="return <%=jscript%>(<%=pageTotal > 0 ? pageTotal-1 : 0%>)" title="Last page">&nbsp;</td>
+<td class=last onclick="return <%=jscript%>(<%=pageTotal > 0 ? pageTotal-1 : 0%>)" title="Last page"><a href="#">&nbsp;</a></td>
 <td class=total>total:<%=itemsTotal%> items</td>

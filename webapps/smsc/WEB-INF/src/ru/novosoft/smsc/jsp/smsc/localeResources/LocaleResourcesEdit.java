@@ -1,21 +1,31 @@
 package ru.novosoft.smsc.jsp.smsc.localeResources;
 
-import org.w3c.dom.*;
-import ru.novosoft.smsc.jsp.*;
-import ru.novosoft.smsc.util.xml.Utils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.xml.Utils;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.Principal;
-import java.util.*;
-import java.io.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by igork
  * Date: 12.05.2003
  * Time: 18:39:59
  */
-public class LocaleResourcesEdit extends PageBean
-{
+public class LocaleResourcesEdit extends PageBean {
 	private final String SETTINGS_SECTION_NAME = "settings";
 	private final String RESOURCES_SECTION_NAME = "resources";
 	private String locale = null;
@@ -32,26 +42,20 @@ public class LocaleResourcesEdit extends PageBean
 		if (result != RESULT_OK)
 			return result;
 
-		if (!initialized)
-		{
+		if (!initialized) {
 			Document localeDom = null;
-			try
-			{
+			try {
 				localeDom = Utils.parse(appContext.getResourcesManager().getResource(locale));
-			}
-			catch (Throwable e)
-			{
+			} catch (Throwable e) {
 				logger.error("Couldn't parse locale \"" + locale + "\"", e);
 			}
 			Element rootElement = localeDom.getDocumentElement();
 			NodeList settingsNodeList = rootElement.getElementsByTagName("settings");
-			for (int i = 0; i < settingsNodeList.getLength(); i++)
-			{
+			for (int i = 0; i < settingsNodeList.getLength(); i++) {
 				parseSection(settings, (Element) settingsNodeList.item(i));
 			}
 			NodeList resourcesNodeList = rootElement.getElementsByTagName("resources");
-			for (int i = 0; i < resourcesNodeList.getLength(); i++)
-			{
+			for (int i = 0; i < resourcesNodeList.getLength(); i++) {
 				parseSection(resources, (Element) resourcesNodeList.item(i));
 			}
 		}
@@ -61,24 +65,20 @@ public class LocaleResourcesEdit extends PageBean
 	private void parseSection(Section section, Element sectionElem)
 	{
 		NodeList childNodes = sectionElem.getChildNodes();
-		for (int i = 0; i < childNodes.getLength(); i++)
-		{
+		for (int i = 0; i < childNodes.getLength(); i++) {
 			Node childNode = childNodes.item(i);
-			if (childNode.getNodeType() == Node.ELEMENT_NODE)
-			{
+			if (childNode.getNodeType() == Node.ELEMENT_NODE) {
 				Element childElement = (Element) childNode;
-				if ("section".equalsIgnoreCase(childElement.getTagName()))
-				{
+				if ("section".equalsIgnoreCase(childElement.getTagName())) {
 					String subSectionName = childElement.getAttribute("name");
 					Section subSection = section.findSection(subSectionName);
 					parseSection(subSection, childElement);
-				}
-				else if ("param".equalsIgnoreCase(childElement.getTagName()))
-				{
-					String paramName = childElement.getAttribute("name");
-					String paramValue = Utils.getNodeText(childElement);
-					section.setParam(paramName, paramValue);
-				}
+				} else
+					if ("param".equalsIgnoreCase(childElement.getTagName())) {
+						String paramName = childElement.getAttribute("name");
+						String paramValue = Utils.getNodeText(childElement);
+						section.setParam(paramName, paramValue);
+					}
 			}
 		}
 	}
@@ -92,16 +92,16 @@ public class LocaleResourcesEdit extends PageBean
 		processDataParams(params);
 		if (mbCancel != null)
 			return RESULT_DONE;
-		else if (mbSave != null)
-			return save();
+		else
+			if (mbSave != null)
+				return save();
 
 		return RESULT_OK;
 	}
 
-	private int save()
+	private int save_resource_file()
 	{
-		try
-		{
+		try {
 			File tempFile = File.createTempFile("new_locale_", ".xml.tmp");
 			PrintWriter out = new PrintWriter(new FileWriter(tempFile));
 			out.println("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>");
@@ -118,24 +118,35 @@ public class LocaleResourcesEdit extends PageBean
 			out.flush();
 			out.close();
 			return appContext.getResourcesManager().add(locale, tempFile) ? RESULT_DONE : error(SMSCErrors.error.localeResources.couldntCreateFile);
+		} catch (IOException e) {
+			return error(SMSCErrors.error.localeResources.couldntStoreFile, e);
 		}
-		catch (IOException e)
-		{
-         return error(SMSCErrors.error.localeResources.couldntStoreFile, e);
-		}
+	}
+
+	private int save()
+	{
+		int result = save_resource_file();
+		if (result == RESULT_DONE)
+			try {
+				appContext.getSmsc().applyLocaleResources();
+				return RESULT_DONE;
+			} catch (AdminException e) {
+				logger.debug("Couldn't apply locale resources: " + e.getMessage(), e);
+				return error(SMSCErrors.error.localeResources.couldntApplyResources, e);
+			}
+		else
+			return result;
 	}
 
 	private void storeSection(Section section, PrintWriter out, String prefix)
 	{
-		for (Iterator i = section.getSectionNames().iterator(); i.hasNext();)
-		{
+		for (Iterator i = section.getSectionNames().iterator(); i.hasNext();) {
 			String sectionName = (String) i.next();
 			out.println(prefix + "<section name=\"" + StringEncoderDecoder.encode(sectionName) + "\">");
 			storeSection(section.getSection(sectionName), out, prefix + "   ");
 			out.println(prefix + "</section>");
 		}
-		for (Iterator i = section.getParamNames().iterator(); i.hasNext();)
-		{
+		for (Iterator i = section.getParamNames().iterator(); i.hasNext();) {
 			String paramName = ((String) i.next()).trim();
 			String paramValue = section.getParam(paramName).trim();
 			if (paramValue != null && paramValue.length() > 0)
@@ -147,45 +158,39 @@ public class LocaleResourcesEdit extends PageBean
 
 	private void processDataParams(Map params)
 	{
-		for (Iterator i = params.keySet().iterator(); i.hasNext();)
-		{
+		for (Iterator i = params.keySet().iterator(); i.hasNext();) {
 			String paramName = (String) i.next();
 			Object param = params.get(paramName);
 			if (param instanceof String)
 				processDataParam(paramName, (String) param);
-			else if (param instanceof String[])
-			{
-				final String[] paramValues = (String[]) param;
-				for (int j = 0; j < paramValues.length; j++)
-					processDataParam(paramName, paramValues[j]);
-			}
 			else
-			{
-				//skip this strange param
-				//logger.debug("processDataParams: skip param: \"" + paramName + "\"=\"" + param + "\"");
-			}
+				if (param instanceof String[]) {
+					final String[] paramValues = (String[]) param;
+					for (int j = 0; j < paramValues.length; j++)
+						processDataParam(paramName, paramValues[j]);
+				} else {
+					//skip this strange param
+					//logger.debug("processDataParams: skip param: \"" + paramName + "\"=\"" + param + "\"");
+				}
 		}
 	}
 
 	private void processDataParam(String fullName, String paramValue)
 	{
 		int dotPos = fullName.indexOf(Section.NAME_DELIMETER);
-		if (dotPos > 0)
-		{
+		if (dotPos > 0) {
 			String rootSectionName = fullName.substring(0, dotPos);
 			String fullParamName = fullName.substring(dotPos + 1);
 			if (rootSectionName.equals(SETTINGS_SECTION_NAME))
 				aaa(fullParamName, paramValue, settings);
-			else if (rootSectionName.equals(RESOURCES_SECTION_NAME))
-				aaa(fullParamName, paramValue, resources);
 			else
-			{
-				//logger.debug("processDataParam: skip param: \"" + fullName + "\"=\"" + paramValue + "\"");
-				//skip strange values
-			}
-		}
-		else
-		{
+				if (rootSectionName.equals(RESOURCES_SECTION_NAME))
+					aaa(fullParamName, paramValue, resources);
+				else {
+					//logger.debug("processDataParam: skip param: \"" + fullName + "\"=\"" + paramValue + "\"");
+					//skip strange values
+				}
+		} else {
 			//logger.debug("processDataParam: skip misformatted param: \"" + fullName + "\"=\"" + paramValue + "\"");
 			//skip strange values
 		}
@@ -196,13 +201,10 @@ public class LocaleResourcesEdit extends PageBean
 		int dotPos = fullParamName.lastIndexOf(Section.NAME_DELIMETER);
 		Section section;
 		String paramName;
-		if (dotPos >= 0)
-		{
+		if (dotPos >= 0) {
 			section = rootSection.findSection(fullParamName.substring(0, dotPos));
 			paramName = fullParamName.substring(dotPos + 1);
-		}
-		else
-		{
+		} else {
 			section = rootSection;
 			paramName = fullParamName;
 		}

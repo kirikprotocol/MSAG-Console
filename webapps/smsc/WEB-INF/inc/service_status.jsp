@@ -21,19 +21,51 @@ String serviceStatus(String serviceId)
 	} catch (AdminException e)
 	{}
 	String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
-	switch (status)
+	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">";
+	if (isServiceStatusColored)
 	{
-		case ServiceInfo.STATUS_RUNNING:
-			return "<span id=\"" + elem_id + "\" " + (isServiceStatusColored ? "class=C080 " : "") + "datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">running</span>";
-		case ServiceInfo.STATUS_STOPPING:
-			return "<span id=\"" + elem_id + "\" " + (isServiceStatusColored ? "class=C008 " : "") + "datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">stopping</span>";
-		case ServiceInfo.STATUS_STOPPED:
-			return "<span id=\"" + elem_id + "\" " + (isServiceStatusColored ? "class=C800 " : "") + "datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">stopped</span>";
-		case ServiceInfo.STATUS_STARTING:
-			return "<span id=\"" + elem_id + "\" " + (isServiceStatusColored ? "class=C0F0 " : "") + "datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">starting</span>";
-		default:
-			return "<span id=\"" + elem_id + "\" " + (isServiceStatusColored ? "class=C000 " : "") + "datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">unknown</span>";
+		switch (status)
+		{
+			case ServiceInfo.STATUS_RUNNING:
+				result += "<img src=\"" + CPATH + "/img/ic_running.gif\" title='running'></span>";
+				break;
+			case ServiceInfo.STATUS_STOPPING:
+				result += "<img src=\"" + CPATH + "/img/ic_stopping.gif\" title='stopping'>";
+				break;
+			case ServiceInfo.STATUS_STOPPED:
+				result += "<img src=\"" + CPATH + "/img/ic_stopped.gif\" title='stopped'>";
+				break;
+			case ServiceInfo.STATUS_STARTING:
+				result += "<img src=\"" + CPATH + "/img/ic_starting.gif\" title='starting'>";
+				break;
+			default:
+				result += "<img src=\"" + CPATH + "/img/ic_unknown.gif\" title='unknown'>";
+				break;
+		}
 	}
+	else
+	{
+		switch (status)
+		{
+			case ServiceInfo.STATUS_RUNNING:
+				result += "running";
+				break;
+			case ServiceInfo.STATUS_STOPPING:
+				result += "stopping";
+				break;
+			case ServiceInfo.STATUS_STOPPED:
+				result += "stopped";
+				break;
+			case ServiceInfo.STATUS_STARTING:
+				result += "starting";
+				break;
+			default:
+				result += "unknown";
+				break;
+		}
+	}
+	result += "</span>";
+	return result;
 }
 %><OBJECT id="tdcStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
 	<PARAM NAME="DataURL" VALUE="<%=CPATH%>/services/statuses.jsp?colored=<%=isServiceStatusColored%>">

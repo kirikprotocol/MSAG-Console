@@ -16,17 +16,25 @@ table.navbar td
 
 
 table.navbar td.first,
+table.navbar td.first a,
 table.navbar td.prev,
+table.navbar td.prev a,
 table.navbar td.page,
 table.navbar td.current,
 table.navbar td.next,
+table.navbar td.next a,
 table.navbar td.last,
+table.navbar td.last a,
 table.navbar td.filter
 {
 	width: 12px;
-	cursor: hand;
 }
 
+table.navbar td.page,
+table.navbar td.current
+{
+	cursor: hand;
+}
 table.navbar td.current
 {
 	background-color: Lime;
@@ -42,27 +50,47 @@ table.navbar td.filter
 {
 	background-color: #D3D3D3;
 }
-table.navbar td.first,
-table.navbar td.prev,
-table.navbar td.next,
-table.navbar td.last
+table.navbar td.first a,
+table.navbar td.prev a,
+table.navbar td.next a,
+table.navbar td.last a
 {
-	background-position: center;
+	background-position: left;
 	background-repeat: no-repeat;
+	text-decoration: none;
 }
-table.navbar td.first
+table.navbar td.first a
 {
-	background-image: url(img/first.gif);
+	background-image: url(img/nav_first.gif);
 }
-table.navbar td.prev
+table.navbar td.first a:hover
 {
-	background-image: url(img/prev.gif);
+	background-image: url(img/nav_first_over.gif);
 }
-table.navbar td.next
+
+table.navbar td.prev a
 {
-	background-image: url(img/next.gif);
+	background-image: url(img/nav_prev.gif);
 }
-table.navbar td.last
+table.navbar td.prev a:hover
 {
-	background-image: url(img/last.gif);
+	background-image: url(img/nav_prev_over.gif);
+}
+
+table.navbar td.next a
+{
+	background-image: url(img/nav_next.gif);
+}
+table.navbar td.next a:hover
+{
+	background-image: url(img/nav_next_over.gif);
+}
+
+table.navbar td.last a
+{
+	background-image: url(img/nav_last.gif);
+}
+table.navbar td.last a:hover
+{
+	background-image: url(img/nav_last_over.gif);
 }

@@ -41,7 +41,7 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 		out.print("<tr class=row" + ((row++) & 1) + ">");
       out.print("<th><input class=txt id=\"newParamName_" + sectionFullName + "\" name=\"newParamName_" + sectionFullName + "\"></th>");
 		out.print("<td width=100% ><input class=txtW id=\"newParamValue_" + sectionFullName + "\" name=\"newParamValue_" + sectionFullName + "\"></td>");
-		out.print("<td><img src=\"" + CPATH + "/img/ico16_checked_g.gif\" onclick=\"addParam('" + sectionFullName + "')\" title='Add new parameter'></td>");
+		out.print("<td><img src=\"" + CPATH + "/img/but_add.gif\" onclick=\"addParam('" + sectionFullName + "')\" title='Add new parameter'></td>");
 		out.print("</tr>");
 	}
 	void printAddSection(JspWriter out, Section section) throws IOException
@@ -49,7 +49,7 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 		String sectionFullName = section.getFullName();
 		out.print("<div>");
 		out.print("<input class=txt id=\"newSectionInput_" + sectionFullName + "\" name=\"newSectionInput_" + sectionFullName + "\">");
-		out.print("<img src=\"" + CPATH + "/img/ico16_checked_g.gif\" onclick=\"addSection('" + sectionFullName + "')\" title='Add new section'></div>");
+		out.print("<img src=\"" + CPATH + "/img/but_add.gif\" onclick=\"addSection('" + sectionFullName + "')\" title='Add new section' style='position:relative;top:4px'></div>");
 	}
 	void printResourceSection(JspWriter out, Section section) throws IOException
 	{
@@ -130,26 +130,6 @@ function removeSection(sectionName)
 	sectionElem = opForm.all("sectionValue_" + sectionName);
 	sectionElem.removeNode(true);
 }
-/*
-function showhide_event()
-{
-	showhide(event.srcElement)
-}
-function showhide(helem, velem)
-{
-	if (velem.style.display != "none")
-	{
-		helem.className = "secTitleClosed";
-		//elem.style.borderBottom = "1px solid #888888";
-		velem.style.display="none";
-	}
-	else
-	{
-		helem.className = "secTitleOpened";
-		velem.style.display = "";
-	}
-}
-*/
 function sectionHeader(sectionName, fullName)
 {
 	var sectionHeader_ = "sectionHeader_" + fullName;
@@ -173,7 +153,7 @@ function addSectionField(sectionFN)
 	return ""
 		+ "<div>"
 		+ createInput(newSectionInput, "txt")
-		+ createImgButton("<%=CPATH%>/img/ico16_checked_g.gif", "addSection('" + sectionFN + "')", "Add new section")
+		+ createImgButton("<%=CPATH%>/img/but_add.gif", "addSection('" + sectionFN + "')", "Add new section")
 		+ "</div>";
 }
 function addParamField(sectionFN)
@@ -191,7 +171,7 @@ function addParamField(sectionFN)
 		+   "</td><td>"
 		+     createInput(newParamValue, "txtW")
 		+   "</td><td>"
-		+     createImgButton("<%=CPATH%>/img/ico16_checked_g.gif", "addParam('" + sectionFN + "')", "Add new param")
+		+     createImgButton("<%=CPATH%>/img/but_add.gif", "addParam('" + sectionFN + "')", "Add new param")
 		+   "</td>"
 		+ "</tr>"
 		+ "</table>";

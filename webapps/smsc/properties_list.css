@@ -29,6 +29,16 @@ table.properties_list tr.row0
 }
 table.properties_list tr.row1
 {
+}
 
+table.properties_list tr.row0 td,
+table.properties_list tr.row0 th
+{
+	border-bottom : 1px solid #E4E0CE;
+}
+table.properties_list tr.row1 td,
+table.properties_list tr.row1 th
+{
+	border-bottom : 1px solid #E6E3D8;
 }
 
