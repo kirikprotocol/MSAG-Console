@@ -35,8 +35,15 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    String pageResp = pageFormat.format(new Object[] {});
-    Message resp = new Message(); resp.setMessageString(pageResp);
+    DivertManagerException exc = (DivertManagerException)state.getAttribute(Constants.ATTR_ERROR);
+    Message resp = new Message();
+    if (exc != null) {
+      logger.warn("Got stored exception", exc);
+      state.removeAttribute(Constants.ATTR_ERROR);
+      resp.setMessageString(errorFormat.format(new Object [] {getErrorMessage(exc)}));
+      return new ExecutorResponse(new Message[]{resp}, true);
+    }
+    resp.setMessageString(pageFormat.format(new Object[] {}));
     return new ExecutorResponse(new Message[]{resp}, false);
   }
 }

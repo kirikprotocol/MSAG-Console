@@ -47,10 +47,10 @@ public class DivertManagerPreprocessor extends DivertManagerState implements Sce
             else if (reason.equals(DivertInfo.NOTAVAIL)) info.setNotavail(value);
             else if (reason.equals(DivertInfo.UNCOND))   info.setUncond(value);
             setDivertInfo(state, info);
-          } catch (IOException e) {
-            final String err = "Communication with MSC error";
-            logger.error(err, e);
-            throw new ProcessingException(err, e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+            state.removeAttribute(Constants.ATTR_ERROR);
+          } catch (DivertManagerException exc) {
+            state.setAttribute(Constants.ATTR_ERROR, exc);
+            logger.warn("MSC exception was stored in session");
           }
         }
       }

@@ -6,7 +6,6 @@ import ru.aurorisoft.smpp.Message;
 
 import java.util.Properties;
 import java.text.MessageFormat;
-import java.io.IOException;
 
 import org.apache.log4j.Category;
 
@@ -29,15 +28,13 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
-    try
-    {
+    try {
       super.init(properties);
       pageFormat = new MessageFormat(Transliterator.translit(divertBundle.getString(Constants.PAGE_INFO)));
       valueOff = Transliterator.translit(divertBundle.getString(Constants.VALUE_OFF));
       valueService = Transliterator.translit(divertBundle.getString(Constants.VALUE_SERVICE));
       valueVoicemail = Transliterator.translit(divertBundle.getString(Constants.VALUE_VOICEMAIL));
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       final String err = "Executor init error";
       logger.error(err, e);
       throw new ScenarioInitializationException(err, e);
@@ -55,16 +52,23 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
     DivertInfo info = null;
-    try {
-      info = getDivertInfo(state);
-    } catch (IOException e) {
-      final String err = "Communication with MSC error";
-      logger.error(err, e);
-      throw new ExecutingException(err, e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+    DivertManagerException exc = (DivertManagerException)state.getAttribute(Constants.ATTR_ERROR);
+    if (exc == null) {
+      try { info = getDivertInfo(state); }
+      catch (DivertManagerException e) { exc = e; }
+    }
+    else {
+      logger.warn("Got stored exception", exc);
+      state.removeAttribute(Constants.ATTR_ERROR);
+    }
+
+    Message resp = new Message();
+    if (exc != null) {
+      resp.setMessageString(errorFormat.format(new Object[] {getErrorMessage(exc)}));
+      return new ExecutorResponse(new Message[]{resp}, true);
     }
     Object[] args = new Object[] {getValue(info.getBusy()), getValue(info.getAbsent()),
                                   getValue(info.getNotavail()), getValue(info.getUncond())};
-    Message resp = new Message();
     resp.setMessageString(pageFormat.format(args));
     return new ExecutorResponse(new Message[]{resp}, false);
   }

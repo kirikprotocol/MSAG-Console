@@ -61,19 +61,11 @@ public class DivertManager
 
     } catch(Exception e) {
       final String err = "Failed to load commutator properties";
-      logger.error("Failed to load commutator properties", e);
-      throw new ScenarioInitializationException("Failed to load commutator properties", e);
+      logger.error(err, e);
+      throw new ScenarioInitializationException(err, e);
     } finally {
       try { is.close(); } catch (Throwable th) {}
     }
-
-    /*
-    try {
-      synchronized(mscSocketLock) { connect(); } // estabilish connection to MSC
-    } catch (IOException e) {
-      throw new ScenarioInitializationException("Connection to commutator '"+mscHost+":"+mscPort+"' failed", e);
-    }
-    */
   }
 
   private final static int ESC_IAC = 255;
@@ -160,30 +152,35 @@ public class DivertManager
   private final static int ESC_SEMI   = ':';
   private final static int ESC_PROMPT = '<';
 
-  private void connect() throws IOException
+  private void connect() throws DivertManagerException, IOException
   {
     if (mscSocket == null || !(mscSocket.isConnected()))
     {
-      if (mscSocket != null) {
-        if (is != null) is.close(); if (os != null) os.close();
-        mscSocket.close(); mscSocket = null;
-      }
-      logger.info("Connecting to MSC "+mscHost+":"+mscPort+"...");
-      mscSocket = new Socket(mscHost, mscPort);
-      is = mscSocket.getInputStream(); os = mscSocket.getOutputStream();
+      try {
+        if (mscSocket != null) {
+          if (is != null) is.close(); if (os != null) os.close();
+          mscSocket.close(); mscSocket = null;
+        }
+        logger.info("Connecting to MSC "+mscHost+":"+mscPort+"...");
+        mscSocket = new Socket(mscHost, mscPort);
+        is = mscSocket.getInputStream(); os = mscSocket.getOutputStream();
 
-      // login using params MSC.nvtIODevice, MSC.USERCODE, MSC.PASSWORD
-      logger.info("Connected Ok");
-      readTelnetString(ESC_SEMI); writeTelnetLine(mscNvtIODevice);
-      readTelnetString(ESC_SEMI); writeTelnetLine(mscUserCode);
-      readTelnetString(ESC_SEMI); writeTelnetLine(mscUserPassword);
-      readTelnetString(ESC_PROMPT);
-      logger.info("Autentificated user="+mscUserCode);
+        // login using params MSC.nvtIODevice, MSC.USERCODE, MSC.PASSWORD
+        logger.info("Connected Ok");
+        readTelnetString(ESC_SEMI); writeTelnetLine(mscNvtIODevice);
+        readTelnetString(ESC_SEMI); writeTelnetLine(mscUserCode);
+        readTelnetString(ESC_SEMI); writeTelnetLine(mscUserPassword);
+        readTelnetString(ESC_PROMPT);
+        logger.info("Autentificated user="+mscUserCode);
+      } catch (IOException exc) {
+        logger.error("Connect to MSC "+mscHost+":"+mscPort+" error", exc);
+        throw new DivertManagerException(exc, DivertManagerException.CONNECT);
+      }
     }
     else if (is.available() > 0)
     {
-      while (is.available() > 0 && (is.read() != -1)); // Skip TIME OUT string
-      writeTelnetLine(""); readTelnetString(ESC_PROMPT);
+        while (is.available() > 0 && (is.read() != -1)); // Skip TIME OUT string
+        writeTelnetLine(""); readTelnetString(ESC_PROMPT);
     }
   }
 
@@ -200,9 +197,8 @@ public class DivertManager
   private final static String RESPONCE_OK   = "EXECUTED";
   private final static String RESPONCE_FAIL = "NOT ACCEPTED";
 
-
   // set divert for abonent=msisdn for reason=ss to address
-  private void set(String msisdn, String ss, String address) throws IOException
+  private void set(String msisdn, String ss, String address) throws DivertManagerException, IOException
   {
     // HGSSI:MSISDN=msisdn,SS=ss,FNUM=address;
     String command = COMMAND_SET + MSISDN_STR + checkAndConvertAddress(msisdn) +
@@ -213,10 +209,10 @@ public class DivertManager
     String responce = readTelnetString(ESC_PROMPT);
     logger.info("Got responce: "+responce);
     if (responce == null || responce.length() <= 0 || !responce.startsWith(RESPONCE_OK))
-      throw new IOException("Set divert settings failed. Details: "+responce);
+      throw new DivertManagerException("Set divert settings failed", DivertManagerException.NOT_ACCEPTED);
   }
   // clear divert for abonent=msisdn for reason=ss
-  private void del(String msisdn, String ss) throws IOException
+  private void del(String msisdn, String ss) throws DivertManagerException, IOException
   {
     // HGSSE:MSISDN=msisdn,SS=ss,KEEP;
     String command = COMMAND_DEL + MSISDN_STR + checkAndConvertAddress(msisdn) +
@@ -227,7 +223,7 @@ public class DivertManager
     String responce = readTelnetString(ESC_PROMPT);
     logger.info("Got responce: "+responce);
     if (responce == null || responce.length() <= 0 || !responce.startsWith(RESPONCE_OK))
-      throw new IOException("Del divert settings failed. Details: "+responce);
+      throw new DivertManagerException("Del divert settings failed", DivertManagerException.NOT_ACCEPTED);
   }
 
   private final static String SSD_STR       = "SUPPLEMENTARY SERVICE DATA";
@@ -257,73 +253,89 @@ public class DivertManager
     return (address.startsWith("+")) ? address.substring(1):address;
   }
 
-  public DivertInfo getDivertInfo(String abonent) throws IOException
+  public DivertInfo getDivertInfo(String abonent) throws DivertManagerException
   {
     synchronized(mscSocketLock)
     {
-      connect();
-      String command = COMMAND_GET + MSISDN_STR + checkAndConvertAddress(abonent) + ",SSDA;";
-
-      logger.info("Sending command: "+command);
-      writeTelnetLine(command);
-      logger.info("Command sent");
-      String responce = readTelnetString(ESC_PROMPT);
-      logger.info("Got responce: "+responce);
-      if (responce == null || responce.length() <= 0 || responce.trim().startsWith(RESPONCE_FAIL))
-        throw new IOException("Get divert settings failed. Details: "+responce);
-
-      int index = responce.indexOf(SSD_STR);
-      if (index < 0)
-        throw new IOException("Failed to locate SS data in responce: "+responce);
-      responce = responce.substring(index + SSD_STR.length()).trim();
-
-      DivertInfo info = new DivertInfo();
-      StringTokenizer st = new StringTokenizer(responce, "\r\n");
-      while (st.hasMoreTokens())
+      try
       {
-        String line = st.nextToken();
-        StringTokenizer linest = new StringTokenizer(line);
-        if (linest.countTokens() > 2)
+        connect();
+        String command = COMMAND_GET + MSISDN_STR + checkAndConvertAddress(abonent) + ",SSDA;";
+
+        logger.info("Sending command: "+command);
+        writeTelnetLine(command);
+        logger.info("Command sent");
+        String responce = readTelnetString(ESC_PROMPT);
+        logger.info("Got responce: "+responce);
+        if (responce == null || responce.length() <= 0 || responce.trim().startsWith(RESPONCE_FAIL))
+          throw new DivertManagerException("Get divert settings failed", DivertManagerException.NOT_ACCEPTED);
+
+        int index = responce.indexOf(SSD_STR);
+        if (index < 0)
+          throw new IOException("Failed to locate SS data in responce: "+responce);
+        responce = responce.substring(index + SSD_STR.length()).trim();
+
+        DivertInfo info = new DivertInfo();
+        StringTokenizer st = new StringTokenizer(responce, "\r\n");
+        while (st.hasMoreTokens())
         {
-          String ss = linest.nextToken();      // ss
-          String status = linest.nextToken();  // status
-          if (!status.startsWith(ACTIVE_OP_STR)) continue;
-          String address = linest.nextToken(); // fnum (forwarded to address)
-          if      (ss.startsWith(REASON_BUSY))      info.setBusy(divertToLocal(address));
-          else if (ss.startsWith(REASON_UNCOND))    info.setUncond(divertToLocal(address));
-          else if (ss.startsWith(REASON_ABSENT))    info.setAbsent(divertToLocal(address));
-          else if (ss.startsWith(REASON_NOT_AVAIL)) info.setNotavail(divertToLocal(address));
+          String line = st.nextToken();
+          StringTokenizer linest = new StringTokenizer(line);
+          if (linest.countTokens() > 2)
+          {
+            String ss = linest.nextToken();      // ss
+            String status = linest.nextToken();  // status
+            if (!status.startsWith(ACTIVE_OP_STR)) continue;
+            String address = linest.nextToken(); // fnum (forwarded to address)
+            if      (ss.startsWith(REASON_BUSY))      info.setBusy(divertToLocal(address));
+            else if (ss.startsWith(REASON_UNCOND))    info.setUncond(divertToLocal(address));
+            else if (ss.startsWith(REASON_ABSENT))    info.setAbsent(divertToLocal(address));
+            else if (ss.startsWith(REASON_NOT_AVAIL)) info.setNotavail(divertToLocal(address));
+          }
         }
+        return new DivertInfo(info);
       }
-      return new DivertInfo(info);
+      catch (IOException exc) {
+        logger.error("Communication with MSC error", exc);
+        throw new DivertManagerException(exc, DivertManagerException.COMMUNICATION);
+      }
     }
   }
 
-  private void setDivert(String abonent, String ss, String divert) throws IOException
+  private void setDivert(String abonent, String ss, String divert)
+      throws DivertManagerException, IOException
   {
     if (divert == null || divert.equalsIgnoreCase(Constants.OFF)) del(abonent, ss);
     else set(abonent, ss, localToDivert(divert));
   }
-  public void setDivertInfo(String abonent, DivertInfo info) throws IOException
+  public void setDivertInfo(String abonent, DivertInfo info)
+      throws DivertManagerException
   {
     synchronized(mscSocketLock)
     {
-      connect();
-      if (info.isAbsentChanged()) {
-        setDivert(abonent, REASON_ABSENT, info.getAbsent());
-        info.clearAbsent();
+      try
+      {
+        connect();
+        if (info.isAbsentChanged()) {
+          setDivert(abonent, REASON_ABSENT, info.getAbsent());
+          info.clearAbsent();
+        }
+        if (info.isBusyChanged()) {
+          setDivert(abonent, REASON_BUSY, info.getBusy());
+          info.clearBusy();
+        }
+        if (info.isNotavailChanged()) {
+          setDivert(abonent, REASON_NOT_AVAIL, info.getNotavail());
+          info.clearNotavail();
+        }
+        if (info.isUncondChanged()) {
+          setDivert(abonent, REASON_UNCOND, info.getUncond());
+          info.clearUncond();
+        }
       }
-      if (info.isBusyChanged()) {
-        setDivert(abonent, REASON_BUSY, info.getBusy());
-        info.clearBusy();
-      }
-      if (info.isNotavailChanged()) {
-        setDivert(abonent, REASON_NOT_AVAIL, info.getNotavail());
-        info.clearNotavail();
-      }
-      if (info.isUncondChanged()) {
-        setDivert(abonent, REASON_UNCOND, info.getUncond());
-        info.clearUncond();
+      catch (IOException exc) {
+        logger.error("Communication with MSC error", exc);
+        throw new DivertManagerException(exc, DivertManagerException.COMMUNICATION);
       }
     }
   }

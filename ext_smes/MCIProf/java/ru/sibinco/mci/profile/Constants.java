@@ -16,12 +16,14 @@ public class Constants
 
   public final static String PAGE_PREFIX    = "page_";
   public final static String VALUE_PREFIX   = "value_";
+  public final static String ERROR_PREFIX   = "error_";
 
   public final static String PAGE_MAIN = PAGE_PREFIX + "main";
   public final static String PAGE_EXIT = PAGE_PREFIX + "exit";
   public final static String PAGE_INFO = PAGE_PREFIX + "info";
   public final static String PAGE_SET  = PAGE_PREFIX + "set";
   public final static String PAGE_MAN  = PAGE_PREFIX + "man";
+  public final static String PAGE_ERR  = PAGE_PREFIX + "err";
 
   public final static String OFF        = "off";
   public final static String SERVICE    = "service";
@@ -41,13 +43,19 @@ public class Constants
   public final static String VALUE_INFORM     = VALUE_PREFIX + INFORM;
   public final static String VALUE_NOTIFY     = VALUE_PREFIX + NOTIFY;
 
+  public final static String ERROR_COMMUNICATION = ERROR_PREFIX + "communication";
+  public final static String ERROR_NOT_ACCEPTED  = ERROR_PREFIX + "not_accepted";
+  public final static String ERROR_CONNECT       = ERROR_PREFIX + "connect";
+  public final static String ERROR_UNKNOWN       = ERROR_PREFIX + "unknown";
+
   public final static String ATTR_MAIN    = "MAIN";
+  public final static String ATTR_ERROR   = "ERROR";
   public final static String ATTR_DIVERT  = "DIVERT";
   public final static String ATTR_PROFILE = "PROFILE";
   public final static String ATTR_REASON  = "REASON";
   public final static String ATTR_FORMATS = "FORMATS";
 
-  public final static String OPTION_EXIT = "0";
+  public final static String OPTION_EXIT  = "0";
 
   public final static String MCI_PROF_MTF_FILE    = "templates.properties";
   public final static String MCI_PROF_MSC_FILE    = "commutator.properties";

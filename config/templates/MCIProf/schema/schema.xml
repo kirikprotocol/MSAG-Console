@@ -23,10 +23,12 @@
     <page id="divert_mgr" question="0">
       <!-- if (!MAIN attr && !"0") set divert & remove MAIN attribute -->
       <pagePreProcessor class="ru.sibinco.mci.profile.DivertManagerPreprocessor">
+        <bundle name="system"/>
         <bundle name="divert"/>
       </pagePreProcessor>
       <!-- Query & show divert info in resons dialog -->
       <pageExecutor class="ru.sibinco.mci.profile.DivertManagerExecutor">
+        <bundle name="system"/>
         <bundle name="divert"/>
       </pageExecutor>
       <command name="1" target="divert_set"/>   <!-- занят       -->
@@ -38,10 +40,12 @@
     <page id="divert_set" question="0">
       <!-- Set divert reason attribute (занят/отсутств./не доступен/безусл.) -->
       <pagePreProcessor class="ru.sibinco.mci.profile.DivertSetPreprocessor">
+        <bundle name="system"/>
         <bundle name="divert"/>
       </pagePreProcessor>
       <!-- Show alternatives for select divert value -->
       <pageExecutor class="ru.sibinco.mci.profile.DivertSetExecutor">
+        <bundle name="system"/>
         <bundle name="divert"/>
       </pageExecutor>
       <command name="(**)" target="divert_mgr"/>
