@@ -63,7 +63,10 @@ Targets:
     <mkdir dir="${DISTR_DIR}/daemon/bin"/>
     <mkdir dir="${DISTR_DIR}/webapps"/>
     <mkdir dir="${DISTR_DIR}/tomcat"/>
-    <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat5.tar.gz" dest="${DISTR_DIR}/tomcat"/>
+    <mkdir dir="${DISTR_DIR}/tomcat/common/lib"/>
+    <mkdir dir="${DISTR_DIR}/tomcat/server/lib"/>
+    <mkdir dir="${DISTR_DIR}/tomcat/shared/lib"/>
+    <mkdir dir="${DISTR_DIR}/tomcat/shared/classes"/>
   </target>
 
   <target name="create_distr_tree" depends="create_distr_tree_update" >
@@ -180,6 +183,7 @@ Targets:
   </target>
 
   <target name="create_distr" depends="create_distr_tree, update">
+    <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat5.tar.gz" dest="${DISTR_DIR}/tomcat"/>
   </target>
 
   <target name="distr" depends="create_distr, extra_libs, configure">
