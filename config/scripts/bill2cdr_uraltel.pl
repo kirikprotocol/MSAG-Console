@@ -4,6 +4,7 @@ use Text::CSV_XS;
 use IO::File;
 use strict;
 use File::Copy;
+use Time::Local qw(timegm timelocal);
 
 my @OUT_FIELDS;
 
@@ -86,6 +87,15 @@ for(@dir)
   $ofn=~s/_//;
   $ofn=~/(\d+)/;
   my $timestamp=$1;
+  {
+    $timestamp=~/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/;
+    my $t1=timegm($6,$5,$4,$3,$2-1,$1-1900);
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($t1);
+
+    $year+=1900;
+    $mon++;
+    $timestamp="$year$mon$mday$hour$min$sec";
+  }
   my $tmpfile=$tmpdir.$ofn;
   my $outfile=$outdir.$ofn;
   $header="90$timestamp".(' 'x81).'0'.(' 'x7).'90'.(' 'x17).'0'.(' 'x385);
@@ -147,7 +157,12 @@ sub datetotimestamp{
   my $date=shift;
   if($date=~/(\d+).(\d+).(\d+)\s+(\d+):(\d+):(\d+)/)
   {
-    return "$3$2$1$4$5$6";
+    my $t1=timegm($6,$5,$4,$1,$2-1,$3-1900);
+    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($t1);
+
+    $year+=1900;
+    $mon++;
+    return "$year$mon$mday$hour$min$sec";
   }else
   {
     die "Failed to parse input date:$date";
