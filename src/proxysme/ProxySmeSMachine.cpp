@@ -94,6 +94,7 @@ unsigned SMachine::ProcessCommands(SMachineNotifier& notifier)
     }
     MicroSleep();
   }
+  stopIt_ = IS_STOPPED;
   return END_PROCESSING;
 }
 

@@ -126,6 +126,7 @@ bool LoadConfig(ProxyConfig& pconf)
 #if !defined _WIN32
 static SMachine* machine = 0;
 void Stopper() {
+  smsc::util::Logger::getCategory("smsc.proxysme").info("stop signal");
   if ( machine ) machine->Stop();
 }
 void SetStopper(SMachine* m){
