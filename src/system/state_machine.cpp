@@ -1109,6 +1109,44 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  bool aclCheck=false;
+  std::string aclAddr;
+
+  {
+    bool fromMap=!strcmp(src_proxy->getSystemId(),"MAP_PROXY");
+    bool toMap=!strcmp(dest_proxy->getSystemId(),"MAP_PROXY");
+    if((fromMap || toMap) && !(fromMap && toMap))
+    {
+      char buf[MAX_ADDRESS_VALUE_LENGTH];
+      if(fromMap)
+      {
+        sms->getOriginatingAddress().getText(buf,sizeof(buf));
+      }else
+      {
+        sms->getDestinationAddress().getText(buf,sizeof(buf));
+      }
+      aclAddr=buf;
+      aclCheck=true;
+    }
+  }
+
+  if(aclCheck && ri.aclId!=-1 && !smsc->getAclMgr()->isGranted(ri.aclId,aclAddr))
+  {
+    submitResp(t,sms,Status::NOROUTE);
+    char buf1[32];
+    char buf2[32];
+    sms->getOriginatingAddress().toString(buf1,sizeof(buf2));
+    dst.toString(buf2,sizeof(buf2));
+    smsc_log_warn(smsLog, "SBM: acl access denied (aclId=%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      ri.aclId,
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId()
+    );
+    return ERROR_STATE;
+  }
+
   if(smsc->getSmeInfo(dest_proxy_index).interfaceVersion==99)
   {
     sms->setStrProperty(Tag::SMSC_SUPPORTED_LOCALE,orgprofile.locale.c_str());

@@ -6,6 +6,7 @@
 #define __Cpp_Header__router_types_h__
 
 #include "smeman/smetypes.h"
+#include "acls/interfaces.h"
 #include <string>
 #include "sms/sms.h"
 
@@ -149,7 +150,9 @@ struct RouteInfo
   bool suppressDeliveryReports;
   bool hide;
   bool forceReplyPath;
+  bool forceDelivery;
   int serviceId;
+  smsc::acls::AclIdent aclId;
   RouteId routeId;
   smsc::smeman::SmeSystemId smeSystemId;
   smsc::smeman::SmeSystemId srcSmeSystemId;
