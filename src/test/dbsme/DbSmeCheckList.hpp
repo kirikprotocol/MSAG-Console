@@ -30,6 +30,10 @@ void correctJobTc()
 		"Выполнение delete записей из таблицы");
 	__reg_tc__("submitDbSmeCmd.correct.job.select",
 		"Выполнение select записей из таблицы");
+	__reg_tc__("submitDbSmeCmd.correct.job.procedure",
+		"Вызов хранимой процедуры на PL/SQL");
+	__reg_tc__("submitDbSmeCmd.correct.job.function",
+		"Вызов функции на PL/SQL");
 }
 
 void correctInputTc()
@@ -236,6 +240,12 @@ void processDbSmeRes()
 		"При невозможности удаления записей db sme отправляет сообщение об ошибке");
 	__reg_tc__("processDbSmeRes.delete.recordsAffected",
 		"Количество удаленных записей подсчитывается правильно");
+	__reg_tc__("processDbSmeRes.procedure",
+		"Вызов хранимых PL/SQL процедур с in/out параметрами");
+	__reg_tc__("processDbSmeRes.function",
+		"Вызов PL/SQL функций с in/out параметрами");
+	__reg_tc__("processDbSmeRes.exception",
+		"Обработка PL/SQL процедур и функций возвращающих exception выполняется корректно");
 	//processDbSmeRes.errors
 	__reg_tc__("processDbSmeRes.errors",
 		"Для неправильных команд db sme отправляет соответствующие сообщения об ошибках");

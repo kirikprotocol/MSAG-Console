@@ -7,6 +7,7 @@
 #include "DbSmeFormatJobTestCases.hpp"
 #include "DbSmeModifyJobTestCases.hpp"
 #include "DbSmeSelectJobTestCases.hpp"
+#include "DbSmePlSqlJobTestCases.hpp"
 #include <string>
 
 namespace smsc {
@@ -61,6 +62,11 @@ public:
 	void submitCorrectDeleteDbSmeCmd(bool sync, uint8_t dataCoding);
 
 	/**
+	 * Отправка правильной команды db sme на вызов хранимых PL/SQL процедур и функций.
+	 */
+	void submitCorrectPlSqlDbSmeCmd(bool sync, uint8_t dataCoding, int num);
+
+	/**
 	 * Отправка команды db sme с неправильным форматом даты.
 	 */
 	void submitIncorrectDateFormatDbSmeCmd(bool sync, uint8_t dataCoding, int num);
@@ -83,12 +89,15 @@ public:
 
 protected:
 	DbSmeRegistry* dbSmeReg;
+	typedef map<const string, DbSmeJobTestCases*> HandlersMap;
+	HandlersMap handlers;
 	DbSmeDateFormatJobTestCases dateFormatTc;
 	DbSmeOtherFormatJobTestCases otherFormatTc;
 	DbSmeInsertJobTestCases insertTc;
 	DbSmeUpdateJobTestCases updateTc;
 	DbSmeDeleteJobTestCases deleteTc;
 	DbSmeSelectJobTestCases selectTc;
+	DbSmePlSqlJobTestCases plsqlTc;
 
 	virtual Category& getLog();
 	const Address getFromAddress();
@@ -103,7 +112,6 @@ protected:
 		bool sync, uint8_t dataCoding);
 	void sendDbSmePdu(const Address& addr, const string& input,
 		const string& output, bool sync, uint8_t dataCoding);
-	const string processJobFirstOutput(const string& text, DbSmeTestRecord* rec);
 	AckText* getExpectedResponse(SmeAckMonitor* monitor, PduDeliverySm& pdu,
 		const string& text, time_t recvTime);
 };

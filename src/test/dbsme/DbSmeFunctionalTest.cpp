@@ -200,6 +200,8 @@ void TestSme::executeCycle()
 		*/
 		dbSmeTc.submitIncorrectParamsDbSmeCmd(rand0(1),
 			getDataCoding(RAND_TC), ALL_TC);
+		dbSmeTc.submitCorrectPlSqlDbSmeCmd(rand0(1),
+			getDataCoding(RAND_TC), ALL_TC);
 	}
 	idx = idx < seq.size() ? idx : 0;
 	switch (seq[idx++])
