@@ -17,6 +17,7 @@
   <param name="priority" value="16384"/>
   <param name="disabled" value="true"/>
   <param name="mode" value="tx"/>
+  <param name="proclimit" value="5"/>
 </smerecord>
 <smerecord type="smpp" uid="2">
   <param name="typeOfNumber" value="0"/>
