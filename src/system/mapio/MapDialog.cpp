@@ -368,7 +368,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   else if ( encoding == 0x08 ) *pdu_ptr++ = 0x04;
   else{
     __trace2__("MAP::mkDeliverPDU: unsuppprted encoding 0x%x",encoding);
-    throw runtime_exception("unsupported encoding");
+    throw runtime_error("unsupported encoding");
   }
   {
     time_t t;
@@ -392,13 +392,13 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   }
   if ( encoding == 0 ){ // 7bit
     unsigned text_len;
-    const unsigned char* text = (unsigned char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+    const unsigned char* text = (const unsigned char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
     *pdu_ptr++ = text_len;
     pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr);
     
   }else{ // UCS2
   }
-  pdu->signalInfo = pdu_ptr-(unsigned char*)pdu+;
+  pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
   return pdu.release();
 #else
   return 0;
