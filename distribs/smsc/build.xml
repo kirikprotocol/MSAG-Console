@@ -30,10 +30,15 @@
     <echo>
 SMS Center build script
 Targets:
-      rmbuild
+      rmbuild (run deps target after it)
+      deps
       distr
       update
     </echo>
+  </target>
+
+  <target name="makedeps">
+    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="deps"/>
   </target>
 
   <target name="makesmsc">
