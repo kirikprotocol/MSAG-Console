@@ -296,7 +296,8 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
                smscDialogId,
                state);
     //throw "";
-    return true; // drop dialog
+    //return true; // drop dialog
+    return false;
   }
 }
 

@@ -70,6 +70,34 @@ USHORT_T  Et96MapOpenInd(
   return ET96MAP_E_OK;
 }
 																															    
+USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
+				       ET96MAP_DIALOGUE_ID_T dialogId,
+				       ET96MAP_INVOKE_ID_T invokeId,
+				       ET96MAP_IMSI_T *imsi_sp,
+				       ET96MAP_ADDRESS_T *mscNumber_sp,
+				       ET96MAP_LMSI_T *lmsi_sp,
+				       ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
+				       ET96MAP_PROV_ERR_T *provErrCode_p )
+{
+	__trace2__("MAP::Et96MapV2SendRInfoForSmConf ssn 0x%x, dalogid 0x%x",lssn,dialogId);
+  MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
+  __trace2__("MAP:: dialog with ptr %x, dialogid 0x%x",mdci,dialogId);
+  if ( !mdci ) {
+    __trace2__("MAP::dialog is not present");
+  }else{
+  	try{
+      __trace2__("MAP::mdci->Et96MapV2SendRInfoForSmConf");
+      mdci->Et96MapV2SendRInfoForSmConf(
+        SSN,dialogId,invokeId,imsi_sp,mscNumber_sp,lmsi_sp,errorSendRoutingInfoForSm_sp,provErrCode_p);
+      __trace2__("MAP::mdci->Et96MapV2SendRInfoForSmConf OK");
+  	}catch(...){
+  		__trace__("MAP::Et96MapV2SendRInfoForSmConf catch exception");
+      CloseAndRemoveDialog(SSN,dialogId);
+  	}
+  }
+  return ET96MAP_E_OK;
+}
+
 USHORT_T  Et96MapV2ForwardSmMOInd( 
 	ET96MAP_LOCAL_SSN_T lssn, 
 	ET96MAP_DIALOGUE_ID_T dialogId,
