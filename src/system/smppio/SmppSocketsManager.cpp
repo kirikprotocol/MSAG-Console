@@ -16,8 +16,8 @@ void SmppSocketsManager::registerSocket(Socket* sock)
     if(intasks[i]->socketsCount()<SM_SOCK_PER_THREAD)
     {
       sock->setData(0,(void*)2);
-      outtasks[i]->addSocket(sock);
-      intasks[i]->addSocket(sock);
+      outtasks[i]->addSocket(sock,socketTimeOut);
+      intasks[i]->addSocket(sock,socketTimeOut);
       intasks[i]->notify();
       outtasks[i]->notify();
 
@@ -27,13 +27,16 @@ void SmppSocketsManager::registerSocket(Socket* sock)
   SmppOutputThread *out=new SmppOutputThread;
   SmppInputThread *in=new SmppInputThread(smeManager);
 
+  in->setInactivityTime(inactivityTime);
+  out->setInactivityTime(inactivityTime);
+
   out->assignIn(in);
   in->assignOut(out);
 
   sock->setData(0,(void*)2);
 
-  in->addSocket(sock);
-  out->addSocket(sock);
+  in->addSocket(sock,socketTimeOut);
+  out->addSocket(sock,socketTimeOut);
 
   intasks.Push(in);
   outtasks.Push(out);

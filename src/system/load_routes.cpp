@@ -35,39 +35,7 @@ static inline void print(RouteInfo& info,const char* ppp= "")
 
 static inline void makeAddress(Address& addr,const string& mask)
 {
-  int npi,tni;
-  char value[21];
-  memset(value,0,21);
-  int scaned = sscanf(mask.c_str(),".%d.%d.%20s",
-        &tni,
-        &npi,
-        value);
-   if ( scaned != 3 )
-   {
-     scaned = sscanf(mask.c_str(),"+%[0123456789?]20s",value);
-     if ( scaned )
-     {
-       npi = 1;//ISDN
-       tni = 1;//INTERNATIONAL
-     }
-     else
-     {
-       scaned = sscanf(mask.c_str(),"%[0123456789?]20s",value);
-       if ( !scaned )
-       {
-         __trace2__("incorrect format of 'addr = \"%20s\"'",  mask.c_str());
-         throw runtime_error("incorrect format");
-       }
-       else
-       {
-         npi = 1;//ISDN
-         tni = 2;//NATIONAL
-       }
-     }
-   }
-  addr.setValue(strlen(value),value);
-  addr.setTypeOfNumber((uint8_t)tni);
-  addr.setNumberingPlan((uint8_t)npi);
+  addr=Address(mask.c_str());
 }
 
 void loadRoutes(RouteManager* rm,RouteConfig& rc)

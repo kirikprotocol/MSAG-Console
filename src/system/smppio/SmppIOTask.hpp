@@ -25,7 +25,7 @@ public:
   {
     return sockets.Count();
   }
-  virtual void addSocket(Socket* sock)=0;
+  virtual void addSocket(Socket* sock,int to)=0;
   virtual void removeSocket(Socket *sock)=0;
 
   void notify()
@@ -34,10 +34,15 @@ public:
     mon.notify();
     mon.Unlock();
   }
+  void setInactivityTime(int ina)
+  {
+    inactivityTime=ina;
+  }
 protected:
   Multiplexer mul;
   EventMonitor mon;
   Array<SmppSocket*> sockets;
+  int inactivityTime;
 };
 
 class SmppInputThread:public SmppIOTask{
@@ -45,7 +50,7 @@ public:
   SmppInputThread(smsc::smeman::SmeManager* manager):
     smeManager(manager){}
   virtual ~SmppInputThread();
-  virtual void addSocket(Socket* sock);
+  virtual void addSocket(Socket* sock,int to);
   virtual void removeSocket(Socket *sock);
   void killSocket(int idx);
   virtual int Execute();
@@ -60,7 +65,7 @@ protected:
 class SmppOutputThread:public SmppIOTask{
 public:
   virtual ~SmppOutputThread();
-  virtual void addSocket(Socket* sock);
+  virtual void addSocket(Socket* sock,int to);
   virtual void removeSocket(Socket *sock);
   void killSocket(int idx);
   virtual int Execute();

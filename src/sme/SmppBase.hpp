@@ -672,6 +672,8 @@ protected:
       case BIND_TRANSMITTER_RESP:
       case BIND_RECIEVER_RESP:
       case BIND_TRANCIEVER_RESP:
+      case ENQUIRE_LINK:
+      case ENQUIRE_LINK_RESP:
         return true;
     }
     switch(bindType)
@@ -727,6 +729,8 @@ protected:
       case BIND_TRANSMITTER:
       case BIND_RECIEVER:
       case BIND_TRANCIEVER:
+      case ENQUIRE_LINK:
+      case ENQUIRE_LINK_RESP:
         return true;
     }
     switch(bindType)
@@ -783,7 +787,7 @@ protected:
     {
       PduGenericNack gnack;
       gnack.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-      strans.sendGenericNack(gnack);
+      atrans.sendGenericNack(gnack);
       return;
     }
     lockMutex.Lock();
@@ -813,6 +817,21 @@ protected:
           disposePdu(pdu);
           lockMutex.Unlock();
         }
+      }break;
+      case ENQUIRE_LINK_RESP:
+      {
+        lockMutex.Unlock();
+        disposePdu(pdu);
+      }break;
+      case ENQUIRE_LINK:
+      {
+        lockMutex.Unlock();
+        PduEnquireLinkResp resp;
+        resp.get_header().set_commandId(ENQUIRE_LINK_RESP);
+        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        resp.get_header().set_commandStatus(0);
+        atrans.sendPdu((SmppHeader*)&resp);
+        disposePdu(pdu);
       }break;
       case SUBMIT_SM_RESP:
       case DATA_SM_RESP:

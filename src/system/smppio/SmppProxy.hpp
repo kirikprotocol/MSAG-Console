@@ -122,6 +122,22 @@ public:
       smppSocket->notifyOutThread();
       return;
     }
+    if(cmd->get_commandId()==ENQUIRELINK)
+    {
+      MutexGuard g(mutexout);
+      if(!opened)return;
+      outqueue.Push
+      (
+        SmscCommand::makeCommand
+        (
+          ENQUIRELINK_RESP,
+          cmd->get_dialogId(),
+          SmscCommand::Status::OK
+        )
+        ,
+        SmscCommandDefaultPriority
+      );
+    }else
     {
       MutexGuard g(mutexin);
       if(!opened)
@@ -213,14 +229,22 @@ protected:
 
 bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
 {
+  switch(cmd->get_commandId())
+  {
+    case ENQUIRELINK:
+    case ENQUIRELINK_RESP:
+    case UNBIND:
+    case UNBIND_RESP:
+    case GENERIC_NACK:
+      return true;
+  }
+
   switch(proxyType)
   {
     case proxyReceiver:
       switch(cmd->get_commandId())
       {
         case DELIVERY:
-        case GENERIC_NACK:
-        case UNBIND_RESP:
           return true;
         default:
           return false;
@@ -228,13 +252,10 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
     case proxyTranmitter:
       switch(cmd->get_commandId())
       {
-        case GENERIC_NACK:
         case SUBMIT_RESP:
-        case UNBIND_RESP:
         case CANCEL_RESP:
         case QUERY_RESP:
         case REPLACE_RESP:
-        case UNBIND:
           return true;
         default:
           return false;
@@ -242,13 +263,10 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
     case proxyTransceiver:
       switch(cmd->get_commandId())
       {
-        case GENERIC_NACK:
         case SUBMIT_RESP:
-        case UNBIND_RESP:
         case CANCEL_RESP:
         case QUERY_RESP:
         case REPLACE_RESP:
-        case UNBIND:
         case DELIVERY:
           return true;
         default:
@@ -260,15 +278,21 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
 
 bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
 {
+  switch(cmd->get_commandId())
+  {
+    case ENQUIRELINK:
+    case ENQUIRELINK_RESP:
+    case UNBIND:
+    case UNBIND_RESP:
+    case GENERIC_NACK:
+      return true;
+  }
   switch(proxyType)
   {
     case proxyReceiver:
       switch(cmd->get_commandId())
       {
-        case UNBIND:
-        case UNBIND_RESP:
         case DELIVERY_RESP:
-        case GENERIC_NACK:
           return true;
         default:
           return false;
@@ -277,12 +301,9 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
       switch(cmd->get_commandId())
       {
         case SUBMIT:
-        case GENERIC_NACK:
         case CANCEL:
         case REPLACE:
         case QUERY:
-        case UNBIND:
-        case UNBIND_RESP:
           return true;
         default:
           return false;
@@ -291,12 +312,9 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
       switch(cmd->get_commandId())
       {
         case SUBMIT:
-        case GENERIC_NACK:
         case CANCEL:
         case REPLACE:
         case QUERY:
-        case UNBIND:
-        case UNBIND_RESP:
         case DELIVERY_RESP:
           return true;
         default:

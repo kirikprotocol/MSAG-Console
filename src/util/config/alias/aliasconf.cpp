@@ -11,6 +11,7 @@
 #include <util/debug.h>
 #include <memory>
 #include "util/debug.h"
+#include "sms/sms.h"
 
 namespace smsc {
 namespace util {
@@ -18,6 +19,7 @@ namespace config {
 namespace alias{
 
 using namespace std;
+using namespace smsc::sms;
 
 AliasConfig::RecordIterator::RecordIterator(SRVector const &records_vector)
 {
@@ -83,79 +85,49 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       record->addrValue = 0;
       //record->addr = attrs.getNamedItem("addr").getNodeValue().transcode();
       {
-				char* dta = attrs.getNamedItem("addr").getNodeValue().transcode();
+        char* dta = attrs.getNamedItem("addr").getNodeValue().transcode();
         record->addrValue = new char[21]; memset(record->addrValue,0,21);
-        int scaned = sscanf(dta,".%d.%d.%20s",
-             &record->addrTni,
-             &record->addrNpi,
-             record->addrValue);
-        if ( scaned != 3 )
+        Address tmpAddr;
+        try{
+          tmpAddr=Address(dta);
+        }catch(...)
         {
-          scaned = sscanf(dta,"+%[0123456789?]20s",record->addrValue);
-          if ( scaned )
-          {
-            record->addrNpi = 1;//ISDN
-            record->addrTni = 1;//INTERNATIONAL
-          }
-          else
-          {
-            scaned = sscanf(dta,"%[0123456789?]20s",record->addrValue);
-            if ( !scaned )
-            {
-              logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
-              continue;
-            }
-            else
-            {
-              record->addrNpi = 1;//ISDN
-              record->addrTni = 2;//NATIONAL
-            }
-          }
+          delete dta;
+          logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
+          continue;
         }
+        record->addrTni=tmpAddr.type;
+        record->addrNpi=tmpAddr.plan;
+        memcpy(record->addrValue,tmpAddr.value,tmpAddr.length);
         delete dta;
         //continue;
       }
       //record->alias = attrs.getNameItem("alias").getNodeValue().transcode();
       {
         DOM_Node hide_attr_node = attrs.getNamedItem("hide");
-		record->hide=!hide_attr_node.isNull() && !strcmp(hide_attr_node.getNodeValue().transcode(),"true");
-		__trace2__("record->hide: %s",record->hide?"true":"false");
+        record->hide=!hide_attr_node.isNull() && !strcmp(hide_attr_node.getNodeValue().transcode(),"true");
+        __trace2__("record->hide: %s",record->hide?"true":"false");
         char* dta = attrs.getNamedItem("alias").getNodeValue().transcode();
         record->aliasValue = new char[21]; memset(record->aliasValue,0,21);
-        int scaned = sscanf(dta,".%d.%d.%20s",
-             &record->aliasTni,
-             &record->aliasNpi,
-             record->aliasValue);
-        if ( scaned != 3 )
+        Address tmpAddr;
+        try{
+          tmpAddr=Address(dta);
+        }catch(...)
         {
-          scaned = sscanf(dta,"+%[0123456789?]20s",record->aliasValue);
-          if ( scaned )
-          {
-            record->aliasNpi = 1;//ISDN
-            record->aliasTni = 1;//INTERNATIONAL
-          }
-          else
-          {
-            scaned = sscanf(dta,"%[0123456789?]20s",record->aliasValue);
-            if ( !scaned )
-            {
-              logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
-              continue;
-            }
-            else
-            {
-              record->aliasNpi = 1;//ISDN
-              record->aliasTni = 2;//NATIONAL
-            }
-          }
+          delete dta;
+          logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
+          continue;
         }
+        record->aliasTni=tmpAddr.type;
+        record->aliasNpi=tmpAddr.plan;
+        memcpy(record->aliasValue,tmpAddr.value,tmpAddr.length);
         delete dta;
         //continue;
       }
       DOM_NodeList childs = node.getChildNodes();
       //logger.info("record added");
-			__trace2__("npi:%d,tni:%d,value:%20s", 
-								 record->aliasNpi,record->aliasTni,record->aliasValue);
+      __trace2__("npi:%d,tni:%d,value:%20s",
+                 record->aliasNpi,record->aliasTni,record->aliasValue);
       records.push_back(record.release());
     }
   } catch (DOMTreeReader::ParseException &e) {

@@ -23,9 +23,19 @@ public:
     tp(newtp),smeManager(manager){}
   void registerSocket(Socket* sock);
   void removeSocket(Socket* sock);
+  void setSmppSocketTimeout(int to)
+  {
+    socketTimeOut=to;
+  }
+  void setInactivityTime(int tm)
+  {
+    inactivityTime=tm;
+  }
 protected:
   Array<SmppIOTask*> intasks,outtasks;
   ThreadPool *tp;
+  int socketTimeOut;
+  int inactivityTime;
   smsc::smeman::SmeManager* smeManager;
   Mutex mtxAdd,mtxRemove;
 };//SocketsManager

@@ -33,10 +33,10 @@ SmppInputThread::~SmppInputThread()
   }
 }
 
-void SmppInputThread::addSocket(Socket* sock)
+void SmppInputThread::addSocket(Socket* sock,int to)
 {
   MutexGuard g(mon);
-  SmppSocket *s=new SmppSocket(ssModeRead,sock);
+  SmppSocket *s=new SmppSocket(ssModeRead,sock,to);
   s->assignTasks(this,outTask);
   sock->setData(SOCKET_SLOT_INPUTSMPPSOCKET,0);
   sock->setData(SOCKET_SLOT_INPUTMULTI,0);
@@ -146,6 +146,21 @@ int SmppInputThread::Execute()
           killSocket(i);
           i--;
           continue;
+        }
+        if(time(NULL)-ss->getLastUpdate()>inactivityTime)
+        {
+          if(ss->getProxy())
+          {
+            ss->getProxy()->putIncomingCommand
+            (
+              SmscCommand::makeCommand
+              (
+                ENQUIRELINK,
+                ss->getProxy()->getNextSequenceNumber(),
+                0
+              )
+            );
+          }
         }
         s->setData(SOCKET_SLOT_INPUTMULTI,(void*)1);
       }
@@ -393,6 +408,9 @@ int SmppInputThread::Execute()
             {
               __trace__("SmppInputThread: received gnack");
             }break;
+            case SmppCommandSet::ENQUIRE_LINK_RESP:
+            {
+            }break;
             case SmppCommandSet::SUBMIT_SM:
             //case SmppCommandSet::SUBMIT_SM_RESP:
             //case SmppCommandSet::DELIVERY_SM:
@@ -402,6 +420,7 @@ int SmppInputThread::Execute()
             case SmppCommandSet::DATA_SM:
             case SmppCommandSet::DATA_SM_RESP:
             case SmppCommandSet::CANCEL_SM:
+            case SmppCommandSet::ENQUIRE_LINK:
             {
               try{
                 SmscCommand cmd(pdu);
@@ -474,10 +493,10 @@ SmppOutputThread::~SmppOutputThread()
 }
 
 
-void SmppOutputThread::addSocket(Socket* sock)
+void SmppOutputThread::addSocket(Socket* sock,int to)
 {
   mon.Lock();
-  SmppSocket *s=new SmppSocket(ssModeWrite,sock);
+  SmppSocket *s=new SmppSocket(ssModeWrite,sock,to);
   s->assignTasks(inTask,this);
   sock->setData(SOCKET_SLOT_OUTPUTSMPPSOCKET,s);
   sock->setData(SOCKET_SLOT_OUTPUTMULTI,0);

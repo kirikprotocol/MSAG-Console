@@ -39,23 +39,25 @@ const int SmscCommandDefaultPriority=16;
 
 enum CommandId
 {
-  UNKNOWN,       //0
-  DELIVERY,      //1
-  DELIVERY_RESP, //2
-  SUBMIT,        //3
-  SUBMIT_RESP,   //4
-  FORWARD,       //5
-  ALERT,         //6
-  GENERIC_NACK,  //7
-  QUERY,         //8
-  QUERY_RESP,    //9
-  UNBIND,        //10
-  UNBIND_RESP,   //11
-  REPLACE,       //12
-  REPLACE_RESP,  //13
-  CANCEL,        //14
-  CANCEL_RESP,   //15
-  HLRALERT,      //16
+  UNKNOWN,         //0
+  DELIVERY,        //1
+  DELIVERY_RESP,   //2
+  SUBMIT,          //3
+  SUBMIT_RESP,     //4
+  FORWARD,         //5
+  ALERT,           //6
+  GENERIC_NACK,    //7
+  QUERY,           //8
+  QUERY_RESP,      //9
+  UNBIND,          //10
+  UNBIND_RESP,     //11
+  REPLACE,         //12
+  REPLACE_RESP,    //13
+  CANCEL,          //14
+  CANCEL_RESP,     //15
+  HLRALERT,        //16
+  ENQUIRELINK,     //17
+  ENQUIRELINK_RESP,//18
 };
 
 
@@ -534,6 +536,18 @@ public:
     return cmd;
   }
 
+  static SmscCommand makeCommand(CommandId cmdId,uint32_t dialogId,uint32_t status)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=cmdId;
+    _cmd.dta=(void*)status;
+    _cmd.dialogId=dialogId;
+    return cmd;
+  }
+
   ~SmscCommand() {
      //__trace__(__PRETTY_FUNCTION__);
      dispose();
@@ -592,8 +606,13 @@ public:
       //case BIND_TRANCIEVER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
       //case BIND_TRANCIEVER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
       //case OUTBIND: reinterpret_cast<PduOutBind*>(_pdu)->dump(log); break;
-      //case ENQUIRE_LINK: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-      //case ENQUIRE_LINK_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+      case SmppCommandSet::ENQUIRE_LINK:
+        _cmd->cmdid=ENQUIRELINK;
+        goto end_construct;
+      case SmppCommandSet::ENQUIRE_LINK_RESP:
+        _cmd->cmdid=ENQUIRELINK_RESP;
+        _cmd->dta=(void*)pdu->get_commandStatus();
+        goto end_construct;
       //case SUBMIT_MULTI: reinterpret_cast<PduMultiSm*>(_pdu)->dump(log); break;
       //case SUBMIT_MULTI_RESP: reinterpret_cast<PduMultiSmResp*>(_pdu)->dump(log); break;
       //case ALERT_NOTIFICATION: return reinterpret_cast<Pdu*>(_pdu)->size();
@@ -783,6 +802,22 @@ public:
         repl->header.set_sequenceNumber(c.get_dialogId());
         repl->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
         return reinterpret_cast<SmppHeader*>(repl.release());
+      }
+    case ENQUIRELINK:
+      {
+        auto_ptr<PduEnquireLink> pdu(new PduEnquireLink);
+        pdu->header.set_commandId(SmppCommandSet::ENQUIRE_LINK);
+        pdu->header.set_sequenceNumber(c.get_dialogId());
+        pdu->header.set_commandStatus(0);
+        return reinterpret_cast<SmppHeader*>(pdu.release());
+      }
+    case ENQUIRELINK_RESP:
+      {
+        auto_ptr<PduEnquireLink> pdu(new PduEnquireLinkResp);
+        pdu->header.set_commandId(SmppCommandSet::ENQUIRE_LINK_RESP);
+        pdu->header.set_sequenceNumber(c.get_dialogId());
+        pdu->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
+        return reinterpret_cast<SmppHeader*>(pdu.release());
       }
     default:
       __unreachable__("unknown commandid");

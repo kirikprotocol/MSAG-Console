@@ -25,9 +25,10 @@ class SmppIOTask;
 
 class SmppSocket{
 public:
-  SmppSocket(int sockmode,Socket* sock):
+  SmppSocket(int sockmode,Socket* sock,int timeOut):
     mode(sockmode),
-    socket(sock)
+    socket(sock),
+    timeOut(timeOut)
   {
     proxy=NULL;
     inThread=NULL;
@@ -71,8 +72,10 @@ public:
 
   bool isConnectionTimedOut()
   {
-    return bufferOffset>0 && time(NULL)-lastUpdate>60;
+    return bufferOffset>0 && time(NULL)-lastUpdate>timeOut;
   }
+
+  time_t getLastUpdate(){return lastUpdate;}
 
   char* getBuffer(int length);
 
@@ -88,6 +91,7 @@ protected:
   int mode;
   time_t lastUpdate;
   smsc::core::network::Socket* socket;
+  int timeOut;
   SmppIOTask *inThread,*outThread;
   SmppProxy *proxy;
 };//smppioSocket
