@@ -2644,6 +2644,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }
   }
 
+  bool skipFinalizing=false;
+
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
     smsLog->debug("DLVRSP: sms has concatinfo, csn=%d;msgId=%lld",sms.getConcatSeqNum(),t.msgId);
@@ -2877,72 +2879,82 @@ StateType StateMachine::deliveryResp(Tuple& t)
       ////
 
 
-      return DELIVERING_STATE;
-    }
-  }
-
-  if(dgortr)
-  {
-    sms.state=DELIVERED;
-    smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
-    if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
-    {
-      SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
-      if(src_proxy)
+      if(!sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
       {
-        char msgId[64];
-        sprintf(msgId,"%lld",t.msgId);
-        SmscCommand resp=SmscCommand::makeSubmitSmResp
-                         (
-                           msgId,
-                           sms.dialogId,
-                           sms.lastResult,
-                           sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
-                         );
-        try{
-          src_proxy->putCommand(resp);
-        }catch(...)
-        {
-          sms.state=UNDELIVERABLE;
-          try{
-            store->createFinalizedSms(t.msgId,sms);
-          }catch(...)
-          {
-            __warning2__("DELRESP: failed to finalize sms with msgId=%lld",t.msgId);
-            return UNDELIVERABLE_STATE;
-          }
-          return UNDELIVERABLE_STATE;
-        }
+        return DELIVERING_STATE;
+      }else
+      {
+        skipFinalizing=true;
       }
     }
-    try{
-      store->createFinalizedSms(t.msgId,sms);
-    }catch(...)
-    {
-      __warning2__("DELRESP: failed to finalize sms with msgId=%lld",t.msgId);
-      return UNDELIVERABLE_STATE;
-    }
-    return DELIVERED_STATE;
-  }else if(!finalized)
+  }
+
+  if(!skipFinalizing)
   {
 
-
-    try{
-      __trace__("change state to delivered");
-
-      store->changeSmsStateToDelivered(t.msgId,t.command->get_resp()->getDescriptor());
-
-      __trace__("change state to delivered: ok");
-    }catch(std::exception& e)
+    if(dgortr)
     {
-      __warning2__("change state to delivered exception:%s",e.what());
-      return UNKNOWN_STATE;
-    }
-  }
-  smsLog->debug("DLVRSP: DELIVERED, msgId=%lld",t.msgId);
-  __trace__("DELIVERYRESP: registerStatisticalEvent");
+      sms.state=DELIVERED;
+      smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
+      if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
+      {
+        SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
+        if(src_proxy)
+        {
+          char msgId[64];
+          sprintf(msgId,"%lld",t.msgId);
+          SmscCommand resp=SmscCommand::makeSubmitSmResp
+                           (
+                             msgId,
+                             sms.dialogId,
+                             sms.lastResult,
+                             sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
+                           );
+          try{
+            src_proxy->putCommand(resp);
+          }catch(...)
+          {
+            sms.state=UNDELIVERABLE;
+            try{
+              store->createFinalizedSms(t.msgId,sms);
+            }catch(...)
+            {
+              __warning2__("DELRESP: failed to finalize sms with msgId=%lld",t.msgId);
+              return UNDELIVERABLE_STATE;
+            }
+            return UNDELIVERABLE_STATE;
+          }
+        }
+      }
+      try{
+        store->createFinalizedSms(t.msgId,sms);
+      }catch(...)
+      {
+        __warning2__("DELRESP: failed to finalize sms with msgId=%lld",t.msgId);
+        return UNDELIVERABLE_STATE;
+      }
+      return DELIVERED_STATE;
+    }else if(!finalized)
+    {
 
-  smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
+
+      try{
+        __trace__("change state to delivered");
+
+        store->changeSmsStateToDelivered(t.msgId,t.command->get_resp()->getDescriptor());
+
+        __trace__("change state to delivered: ok");
+      }catch(std::exception& e)
+      {
+        __warning2__("change state to delivered exception:%s",e.what());
+        return UNKNOWN_STATE;
+      }
+    }
+    smsLog->debug("DLVRSP: DELIVERED, msgId=%lld",t.msgId);
+    __trace__("DELIVERYRESP: registerStatisticalEvent");
+
+    smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
+  }
 
   try{
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
@@ -3040,7 +3052,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   {
     __trace2__("DELIVERY_RESP:failed to submit receipt");
   }
-  return DELIVERED_STATE;
+  return skipFinalizing?DELIVERING_STATE:DELIVERED_STATE;
 }
 
 StateType StateMachine::alert(Tuple& t)
