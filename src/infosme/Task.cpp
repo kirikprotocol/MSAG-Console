@@ -1070,8 +1070,9 @@ bool Task::getNextMessage(Connection* connection, Message& message)
 
 bool Task::isReady(time_t time, bool checkActivePeriod)
 {
-    if (!isEnabled() || isFinalizing() || 
-        (info.endDate>0 && time>=info.endDate)) return false;
+    if ( !isEnabled() || isFinalizing() || 
+        (info.endDate>0 && time>=info.endDate) ||
+        (info.validityDate>0 && time>=info.validityDate) ) return false;
 
     if (checkActivePeriod && info.activePeriodStart > 0 && info.activePeriodEnd > 0)
     {
