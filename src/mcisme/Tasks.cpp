@@ -336,7 +336,8 @@ bool Message::addEvent(const MissedCallEvent& event, bool force/*=false*/)
     char eventMessage[256];
     tm dt; localtime_r(&event.time, &dt);
     sprintf(eventMessage, "%s\n%s at %02d %s %02d:%02d", (eventCount > 0) ? "":"Missed call(s):", 
-            event.from.c_str(), dt.tm_mday, constShortEngMonthesNames[dt.tm_mon], dt.tm_hour, dt.tm_min);
+            (event.from.length()>0) ? event.from.c_str():"<unknown>", dt.tm_mday,
+            constShortEngMonthesNames[dt.tm_mon], dt.tm_hour, dt.tm_min);
     message += eventMessage; eventCount++;
     return true;
 }
