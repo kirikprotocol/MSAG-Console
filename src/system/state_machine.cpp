@@ -259,12 +259,14 @@ StateType StateMachine::submit(Tuple& t)
        sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
     {
       char buf7[200];
+      char buf8[200];
       unsigned len;
       int len7;
       const short *msg=(const short*)sms->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
       len7=ConvertUCS2To7Bit(msg,len,buf7,sizeof(buf7));
-      sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf7,len7);
-      sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len7);
+      Convert7BitToText(buf7,len7,buf8,sizeof(buf8));
+      sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8,len);
+      sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len);
       sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);

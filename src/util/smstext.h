@@ -17,8 +17,8 @@ static inline int getSmsText(SMS* sms,char* buf)
   const char *data=sms->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
   if(coding==DataCoding::DEFAULT)
   {
-    Convert7BitToText(data,len,buf,MAX_SHORT_MESSAGE_LENGTH);
-    len=strlen(buf);
+    memcpy(buf,data,len);
+    buf[len]=0;
   }else if(coding==DataCoding::UCS2)
   {
     ConvertUCS2ToMultibyte((const short*)data,len,buf,MAX_SHORT_MESSAGE_LENGTH,CONV_ENCODING_ANSI);

@@ -301,12 +301,12 @@ int Profiler::Execute()
     }else
     if(!strncmp(body+i,"DEFAULT",4))
     {
-      msg=3;
+      msg=2;
       internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
     }else
     if(!strncmp(body+i,"UCS2",4))
     {
-      msg=2;
+      msg=3;
       internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
     }else
     {
@@ -353,7 +353,9 @@ int Profiler::Execute()
     __trace2__("profiler response:%s!",msgstr);
     if(pr.codepage==ProfileCharsetOptions::Default)
     {
-      len=ConvertTextTo7Bit(msgstr,strlen(msgstr),body,sizeof(body),CONV_ENCODING_CP1251);
+      //len=ConvertTextTo7Bit(msgstr,strlen(msgstr),body,sizeof(body),CONV_ENCODING_CP1251);
+      len=strlen(msgstr);
+      memcpy(body,msgstr,len);
       ans.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
     }else
     {

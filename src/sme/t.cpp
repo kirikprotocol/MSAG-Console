@@ -30,15 +30,16 @@ public:
       printf("datacoding=%d\n",coding);
       if(coding==DataCoding::DEFAULT)
       {
-        msglen=Convert7BitToText(msg,msglen,buf,sizeof(buf));
+        //msglen=Convert7BitToText(msg,msglen,buf,sizeof(buf));
+        memcpy(buf,msg,msglen);
       }else if(coding==DataCoding::UCS2)
       {
         char bufx[256];
         //len=msglen/2;
         int l7=ConvertUCS2To7Bit((const short*)msg,msglen,bufx,sizeof(bufx));
-        msglen=Convert7BitToText(bufx,l7,buf,sizeof(bufx));
+        Convert7BitToText(bufx,l7,buf,sizeof(bufx));
       }
-      bug[msglen]=0;
+      buf[msglen]=0;
       printf("after:");
       for(i=0;i<msglen;i++)
       {
@@ -113,7 +114,7 @@ int main(int argc,char* argv[])
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
     while(!stopped)
     {
-      unsigned char message[512];
+      char message[512];
       printf("Enter destination:");fflush(stdout);
       fgets((char*)message,sizeof(message),stdin);
       if(!strcmp((char*)message,"quit\n"))
@@ -139,12 +140,12 @@ int main(int argc,char* argv[])
         if(message[i]<32)message[i]=0;
       }
       int len=strlen((char*)message);
-      char buf7[256];
-      int len7=ConvertTextTo7Bit((char*)message,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
+      //char buf7[256];
+      //int len7=ConvertTextTo7Bit((char*)message,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
 
       //s.setMessageBody(len,1,false,message);
-      s.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf7,len7);
-      s.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len7);
+      s.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,message,len);
+      s.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len);
       s.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
 
       fillSmppPduFromSms(&sm,&s);
