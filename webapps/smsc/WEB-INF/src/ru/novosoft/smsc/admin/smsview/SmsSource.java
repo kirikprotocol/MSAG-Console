@@ -21,10 +21,12 @@ public abstract class SmsSource
   private static byte INT_TAG_TYPE = 0;
   private static byte STR_TAG_TYPE = 1;
   private static byte BIN_TAG_TYPE = 2;
-  private static short SMPP_ESM_CLASS_TAG = 2;
-  private static short SMPP_DATA_CODING_TAG = 3;
-  private static short SMPP_SHORT_MESSAGE_TAG = 28;
+
+  private static short SMPP_ESM_CLASS_TAG       = 2;
+  private static short SMPP_DATA_CODING_TAG     = 3;
+  private static short SMPP_SHORT_MESSAGE_TAG   = 28;
   private static short SMPP_MESSAGE_PAYLOAD_TAG = 29;
+  private static short SMPP_CONCAT_INFO_TAG     = 40;
 
   private static short DATA_CODING_DEFAULT = 0;    // 0
   private static short DATA_CODING_LATIN1  = 3;    // 11
@@ -50,6 +52,7 @@ public abstract class SmsSource
     int esmClass = 0;
     int textLen = 0;
     byte text[] = null;
+    byte concatInfo[] = null;
 
     //System.out.println("Parsing SMS body ...");
     try {
@@ -68,6 +71,10 @@ public abstract class SmsSource
           stream.read(msgText, 0, textLen);
           text = msgText;
           row.addBodyParameter(tag, msgText);
+        } else if (tag == SMPP_CONCAT_INFO_TAG) {
+          concatInfo = new byte[len];
+          stream.read(concatInfo, 0, len);
+          row.addBodyParameter(tag, concatInfo);
         } else if (tag == SMPP_DATA_CODING_TAG) {
           textEncoding = stream.readInt();
           row.addBodyParameter(tag, new Integer(textEncoding));
@@ -96,32 +103,30 @@ public abstract class SmsSource
       }
       stream.close();
 
+      StringBuffer textBuffer = new StringBuffer(text.length);
       String messagePrefix = "";
-      if (text != null && text.length>0 && (esmClass & 0x40) == 0x40)
-      {
-        int headerLen = ((int)text[0])&0xff;  // convert negative byte to int
-        if( headerLen > textLen-1 ) {
-          text = new String("UDH len greater then message len "+headerLen+"/"+(textLen-1)).getBytes();
-          textEncoding = DATA_CODING_LATIN1;
-          textLen = text.length;
-        } else {
-          textLen = textLen-headerLen-1;
-          if( textLen > 0 ) {
-            byte msgText[] = new byte[textLen];
-            System.arraycopy(text,  headerLen+1, msgText, 0, textLen);
-            text = msgText;
-          } else {
-            text = null;
-          }
-          messagePrefix += "<< UDH "+headerLen+" bytes >> ";
-        }
+      if( text != null && text.length>0 ) {
+         if( (esmClass & 0x40) == 0x40 ) {
+           if(concatInfo != null) {
+             int partsCount = concatInfo.length/2;
+             for( int i = 0; i < partsCount; i++ ) {
+               int offset = ((((int)concatInfo[i*2])&0xFF)<<8)|(((int)concatInfo[i*2+1])&0xFF);
+               int len = text.length-offset;
+               if( i < partsCount-1) {
+                 int offset_next = ((((int)concatInfo[(i+1)*2])&0xFF)<<8)|(((int)concatInfo[(i+1)*2+1])&0xFF);
+                 len = offset_next-offset;
+               }
+               convertMessage(textBuffer, text, offset, len, true, textEncoding);
+             }
+           } else {
+             convertMessage(textBuffer, text, 0, text.length, true, textEncoding);
+           }
+         } else {
+           convertMessage(textBuffer, text, 0, text.length, false, textEncoding);
+         }
       }
-
-      if (textEncoding == DATA_CODING_UCS2)
-        messagePrefix = StringEncoderDecoder.encode(messagePrefix);
-
       row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
-      row.setText(messagePrefix + ((text!=null)?decodeMessage(text, textLen, textEncoding):""));
+      row.setText(textBuffer.toString());
     }
     catch (IOException exc) {
       System.out.println("SMS Body parsing failed !");
@@ -129,6 +134,24 @@ public abstract class SmsSource
     }
     //System.out.println("SMS body parsed.");
   }
+
+  private static void convertMessage( StringBuffer sb, byte text[], int start, int len, boolean udh, int encoding ) throws UnsupportedEncodingException {
+    if( udh ) {
+      int headerLen = ((int)text[0])&0xff;  // convert negative byte to int
+      if( headerLen > len-1 ) {
+        sb.append(StringEncoderDecoder.encode("<< UDH len greater then message len "+headerLen+"/"+(len-1)+">>"));
+      } else {
+        sb.append( StringEncoderDecoder.encode("<< UDH "+headerLen+" bytes >> ") );
+        int textLen = len-headerLen-1;
+        if( textLen > 0 ) {
+          byte msgText[] = new byte[textLen];
+          System.arraycopy(text,  headerLen+1, msgText, 0, textLen);
+          sb.append( decodeMessage(msgText, textLen, encoding) );
+        }
+      }
+    }
+  }
+
 
   private static String decodeMessage(byte text[], int len, int encoding)
       throws UnsupportedEncodingException
