@@ -34,9 +34,9 @@ class Manager
 public:
 	static void init(const char * const configurationFileName)
 	{
-		manager = 0;
 		config_filename = new char[strlen(configurationFileName)+1];
 		strcpy(config_filename, configurationFileName);
+		manager = new Manager();
 	}
 
 	/**
@@ -44,10 +44,6 @@ public:
 	 */
 	static Manager & getInstance()
 	{
-		if (manager == 0)
-		{
-			manager = new Manager();
-		}
 		return *manager;
 	}
 
