@@ -3169,7 +3169,7 @@ StateType StateMachine::alert(Tuple& t)
       store->createSms(sms,t.msgId,smsc::store::CREATE_NEW);
     }catch(...)
     {
-      smsc_log_warn(smsLog, "DLVRSP: failed to createSms %lld",t.msgId);
+      smsc_log_warn(smsLog, "ALERT: failed to createSms %lld",t.msgId);
       status=Status::SYSERR;
     }
     SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
@@ -3190,7 +3190,7 @@ StateType StateMachine::alert(Tuple& t)
         src_proxy->putCommand(resp);
       }catch(...)
       {
-        __warning__("SUBMIT_SM: failed to put response command");
+        __warning__("ALERT: failed to put response command");
       }
     }
   }else
@@ -3865,7 +3865,8 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
 {
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)//forward mode (transaction)
   {
-    smsc->registerStatisticalEvent(sms.lastResult==0?StatEvents::etSubmitOk:StatEvents::etSubmitErr,&sms);
+    //smsc->registerStatisticalEvent(sms.lastResult==0?StatEvents::etSubmitOk:StatEvents::etSubmitErr,&sms);
+    smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
     SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
     if(src_proxy)
     {
