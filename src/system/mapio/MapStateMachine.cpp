@@ -169,7 +169,7 @@ static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
   Descriptor desc;
   desc.setImsi(dialog->s_imsi.length(),dialog->s_imsi.c_str());
   desc.setMsc(dialog->s_msc.length(),dialog->s_msc.c_str());
-  cmd->setDescriptor(desc);
+  cmd->get_resp()->setDescriptor(desc);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
   __trace2__("Send OK to SMSC done");
 }
