@@ -3083,7 +3083,7 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
     SMS& sms = *_sms.get();
     SMS* old_sms = dialog->sms.get();
     Address originator = old_sms->getOriginatingAddress();
-    __map_trace2__("%s: dialogid 0x%x notify confirmation subsystem %s",__func__,originator.toString().c_str());
+    __map_trace2__("%s: dialogid 0x%x notify confirmation subsystem %s",__func__,dialogueId, originator.toString().c_str());
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
