@@ -101,7 +101,7 @@ public:
         case SUBMIT:
           errresp=SmscCommand::makeSubmitSmResp("",cmd->get_dialogId(),Status::INVBNDSTS);
           break;
-        case SUBMIT_MULTI:
+        case SUBMIT_MULTI_SM:
           errresp=SmscCommand::makeSubmitMultiResp("",cmd->get_dialogId(),Status::INVBNDSTS);
           break;
         case QUERY:
@@ -288,7 +288,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
       switch(cmd->get_commandId())
       {
         case SUBMIT_RESP:
-        case SUBMIT_MULTI_RESP:
+        case SUBMIT_MULTI_SM_RESP:
         case CANCEL_RESP:
         case QUERY_RESP:
         case REPLACE_RESP:
@@ -300,7 +300,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
       switch(cmd->get_commandId())
       {
         case SUBMIT_RESP:
-        case SUBMIT_MULTI_RESP:
+        case SUBMIT_MULTI_SM_RESP:
         case CANCEL_RESP:
         case QUERY_RESP:
         case REPLACE_RESP:
@@ -339,7 +339,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
       switch(cmd->get_commandId())
       {
         case SUBMIT:
-        case SUBMIT_MULTI:
+        case SUBMIT_MULTI_SM:
         case CANCEL:
         case REPLACE:
         case QUERY:
@@ -351,7 +351,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
       switch(cmd->get_commandId())
       {
         case SUBMIT:
-        case SUBMIT_MULTI:
+        case SUBMIT_MULTI_SM:
         case CANCEL:
         case REPLACE:
         case QUERY:

@@ -106,7 +106,7 @@ int DistrListProcess::Execute()
     }
     if(!hasOutput())continue;
     cmd=getOutgoingCommand();
-    if ( cmd->get_commandId() == SUBMIT_MULTI )
+    if ( cmd->get_commandId() == SUBMIT_MULTI_SM )
     {
       try{
         SubmitMulti(cmd);

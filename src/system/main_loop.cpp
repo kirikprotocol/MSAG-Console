@@ -300,7 +300,7 @@ void Smsc::mainLoop()
         abonentInfoProxy->putCommand(cmd);
         continue;
       }
-      case __CMD__(SUBMIT_MULTI):
+      case __CMD__(SUBMIT_MULTI_SM):
       {
         distlstsme->putCommand(cmd);
         continue;
