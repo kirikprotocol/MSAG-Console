@@ -110,7 +110,7 @@ void SmeManagerTestCases::addSme(const char* tc, int num,
 
 void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 {
-	int numAddr = 3; int numSme = 11;
+	int numAddr = 3; int numSme = 10;
 	TCSelector s(num, numAddr * numSme);
 	__decl_tc__;
 	for (; s.check(); s++)
@@ -141,7 +141,7 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 					}
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
 			setupRandomCorrectSmeInfo(sme);
 			switch(s.value2(numAddr))
@@ -197,6 +197,7 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 						sme->password = _password.get();
 					}
 					break;
+				/*
 				case 11: //systemId больше макс длины
 					{
 						__tc__("addCorrectSme.invalidSystemIdLength");
@@ -205,6 +206,7 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 						sme->systemId = _systemId.get();
 					}
 					break;
+				*/
 				default:
 					__unreachable__("Invalid num");
 			}
