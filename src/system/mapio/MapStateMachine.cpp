@@ -18,7 +18,7 @@ string ImsiToString(const ET96MAP_IMSI_T* imsi)
   unsigned n = imsi->imsiLen;
   ostringstream ost;
   unsigned i = 0;
-  while ( i < n ) { 
+  for ( ;i < n; ++i ) { 
     unsigned x0 = ((unsigned int)imsi->imsi[i])&0x0f;
     unsigned x1 = (((unsigned int)imsi->imsi[i])>>4)&0x0f;
     if ( x0 <= 9 ) ost << x0;
@@ -33,7 +33,16 @@ string ImsiToString(const ET96MAP_IMSI_T* imsi)
 
 string MscToString(const ET96MAP_ADDRESS_T* msc)
 {
-  return "xxxxx";
+  unsigned bytes = (msc->addressLength+1)/2;  
+  ostringstream ost;
+  for ( unsigned i=0; i<bytes; ++i) {
+    unsigned x0 = ((unsigned int)msc->address[i])&0x0f;
+    unsigned x1 = (((unsigned int)msc->address[i])>>4)&0x0f;
+    if ( x0 <= 9 ) ost << x0;
+    else break;
+    if ( x1 <= 9 ) ost << x1;
+    else break;
+  }
 }
 
 static string FormatText(const char* format,...)
@@ -164,11 +173,13 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code)
 static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
 {
   if ( dialog == 0 || dialog->dialogid_smsc == 0 ) return;
-  __trace2__("Send OK to SMSC");
+  __trace2__("MAP::Send OK to SMSC");
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialog->dialogid_smsc,0);
   Descriptor desc;
   desc.setImsi(dialog->s_imsi.length(),dialog->s_imsi.c_str());
+  __trace2__("MAP::Send OK to SMSC: IMSI = %s",dialog->s_imsi.c_str());
   desc.setMsc(dialog->s_msc.length(),dialog->s_msc.c_str());
+  __trace2__("MAP::Send OK to SMSC: MSC = %s",dialog->s_msc.c_str());
   cmd->get_resp()->setDescriptor(desc);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
   __trace2__("Send OK to SMSC done");
