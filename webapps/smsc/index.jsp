@@ -22,6 +22,11 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 }
 MENU0_SELECTION = "MENU0_NONE";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<br>
+<br>
+<br>
+<br>
+<br>
 <%
 page_menu_begin(out);
 page_menu_space(out);

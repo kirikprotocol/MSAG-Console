@@ -298,3 +298,9 @@ function findPosHeight(o)
 	return x;
 }
 
+function clickFilter()
+{
+	document.all.jbutton.name = "mbFilter";
+	opForm.submit();
+	return false;
+}
