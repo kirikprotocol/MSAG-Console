@@ -19,7 +19,7 @@ public class Alias
 			throws AdminException
 	{
 		if (address.getQuestionsCount() != alias.getQuestionsCount())
-			throw new AdminException("incorrect alias - question signs count not matches in alias and address");
+			throw new AdminException("alias incorrect - question marks in alias and address do not match");
 		this.address = address;
 		this.alias = alias;
 		this.hide = hide;
