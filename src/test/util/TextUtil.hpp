@@ -20,10 +20,8 @@ using std::pair;
 const uint8_t DATA_CODING_SMSC_DEFAULT = 0x0;
 const uint8_t DATA_CODING_UCS2 = 0x8;
 
-/*
-std::auto_ptr<char> rand_text(int length, uint8_t dataCoding = DATA_CODING_SMSC_DEFAULT);
-void rand_text(int length, char* buf, uint8_t dataCoding = DATA_CODING_SMSC_DEFAULT);
-*/
+auto_ptr<char> rand_text(int& length, uint8_t dataCoding = DATA_CODING_SMSC_DEFAULT);
+void rand_text(int& length, char* buf, uint8_t dataCoding = DATA_CODING_SMSC_DEFAULT);
 
 auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen);
 const string decode(const char* text, int len, uint8_t dataCoding);

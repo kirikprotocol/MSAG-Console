@@ -11,24 +11,8 @@ using namespace std;
 using namespace smsc::profiler;
 using namespace smsc::util;
 
-/*
-std::auto_ptr<char> rand_text(int length, uint8_t dataCoding)
+auto_ptr<char> rand_text(int& length, uint8_t dataCoding)
 {
-	switch (dataCoding)
-	{
-		case DATA_CODING_SMSC_DEFAULT:
-			auto_ptr<char> str = rand_char(length, RAND_LAT + RAND_RUS + RAND_NUM + RAND_SYM);
-			break;
-		case DATA_CODING_UCS2:
-			rand_char(length / 2, RAND_LAT + RAND_RUS + RAND_NUM + RAND_SYM)
-			break;
-		default:
-			__unreachable__("Invalid dataCoding");
-	}
-	return text;
-
-
-
 	char* buf = new char[length + 1];
 	rand_text(length, buf, dataCoding);
 	return auto_ptr<char>(buf);
@@ -36,43 +20,28 @@ std::auto_ptr<char> rand_text(int length, uint8_t dataCoding)
 
 void rand_text(int& length, char* buf, uint8_t dataCoding)
 {
-	__require__(dataCoding == DATA_CODING_SMSC_DEFAULT);
-	rand_char(length, buf);
-
-	int len = 0;
-	char tmp[12];
-	while (len <= length)
+	switch (dataCoding)
 	{
-		switch ()
-		{
-			case 1:
-				rand_char(rand1(8), tmp, RAND_LAT);
-				break;
-			case 2:
-				RAND_RUS
-				break;
-			case 3:
-				RAND_NUM
-				break;
-			case 4:
-				RAND_LAT + RAND_RUS + RAND_NUM + RAND_SYM
-			default:
-				RAND_SYM
-		}
-		switch (dataCoding)
-		{
-			case DATA_CODING_SMSC_DEFAULT:
-				auto_ptr<char> str = rand_char(length, RAND_LAT + RAND_RUS + RAND_NUM + RAND_SYM);
-				break;
-			case DATA_CODING_UCS2:
-				rand_char(length / 2, RAND_LAT + RAND_RUS + RAND_NUM + RAND_SYM)
-				break;
-			default:
-				__unreachable__("Invalid dataCoding");
-		}
+		case DATA_CODING_SMSC_DEFAULT:
+			for (int i = 0; i < length; i++)
+			{
+				buf[i] = rand0(127);
+			}
+			break;
+		case DATA_CODING_UCS2:
+			{
+				char tmp[length / 2];
+				rand_uint8_t(length / 2, (uint8_t*) tmp);
+				int len = ConvertMultibyteToUCS2(tmp, sizeof(tmp),
+					(short*) buf, length, CONV_ENCODING_CP1251);
+				__require__(length/2 - len/2  == 0);
+				length = len;
+			}
+			break;
+		default:
+			__unreachable__("Invalid dataCoding");
 	}
 }
-*/
 
 auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen)
 {
@@ -206,15 +175,16 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 	else if (dc1 == DATA_CODING_UCS2 && dc2 == DATA_CODING_SMSC_DEFAULT)
 	{
 		char defBuf[len1 + 1];
-		//int defLen = ConvertUCS2To7Bit((const short*) str1, len1,
-		//	defBuf, sizeof(defBuf));
+		char transBuf[len1 + 1];
 		int defLen = ConvertUCS2ToMultibyte((const short*) str1, len1,
 			defBuf, sizeof(defBuf), CONV_ENCODING_CP1251);
-		if (defLen != len2)
+		int transLen = Transliterate(defBuf, defLen,
+			CONV_ENCODING_CP1251, transBuf, sizeof(transBuf));
+		if (transLen != len2)
 		{
 			res.push_back(7);
 		}
-		else if (memcmp(defBuf, str2, len2))
+		else if (memcmp(transBuf, str2, len2))
 		{
 			res.push_back(8);
 		}
