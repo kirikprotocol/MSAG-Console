@@ -443,6 +443,13 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       offsets.Push(d);
       i+=8;
     }else
+    if(!strncasecmp(buf+i,"#flash#",7))
+    {
+      if(!sms.hasIntProperty(Tag::SMSC_FORCE_DC))
+      {
+        sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,3);
+      }
+    }else
     if(def.MatchEx(buf,buf+i,buf+len,m,n))
     {
       int t=atoi(buf+m[1].start);
@@ -1439,7 +1446,10 @@ StateType StateMachine::forward(Tuple& t)
   bool has_route = smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri);
   if ( !has_route )
   {
-    __warning__("FORWARD: No route");
+    char from[32],to[32];
+    sms.getOriginatingAddress().toString(from,sizeof(from));
+    sms.getDestinationAddress().toString(to,sizeof(to));
+    __warning2__("FORWARD: No route (%s->%s)",from,to);
     try{
       sms.lastResult=Status::NOROUTE;
       sendNotifyReport(sms,t.msgId,"destination unavailable");
@@ -1457,6 +1467,7 @@ StateType StateMachine::forward(Tuple& t)
     {
       __trace__("FORWARD: failed to change state to enroute");
     }
+    smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     return ERROR_STATE;
   }
   if(!dest_proxy)
