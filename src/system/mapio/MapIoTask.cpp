@@ -70,7 +70,7 @@ USHORT_T  Et96MapOpenInd(
   return ET96MAP_E_OK;
 }
 																															    
-USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
+USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T lssn,
 				       ET96MAP_DIALOGUE_ID_T dialogId,
 				       ET96MAP_INVOKE_ID_T invokeId,
 				       ET96MAP_IMSI_T *imsi_sp,
