@@ -81,11 +81,28 @@ public:
     {
       MutexGuard g(mutexout);
       if(!opened)return;
-      if(cmd->get_commandId()!=SUBMIT_RESP && outqueue.Count()>=totalLimit)
+      bool ussdSession=false;
+      if(cmd->get_commandId()==DELIVERY)
+      {
+        SMS& sms=*cmd->get_sms();
+        if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+        {
+          if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
+             !(
+               sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
+               sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
+              )
+            )
+          {
+            ussdSession=true;
+          }
+        }
+      }
+      if(!ussdSession && cmd->get_commandId()!=SUBMIT_RESP && outqueue.Count()>=totalLimit)
       {
         throw ProxyQueueLimitException(outqueue.Count(),totalLimit);
       }
-      if(cmd->get_commandId()==DELIVERY)
+      if(!ussdSession && cmd->get_commandId()==DELIVERY)
       {
         checkProcessLimit(cmd);//can throw ProxyQueueLimitException
       }
@@ -180,7 +197,22 @@ public:
         }
         if(cmd->get_commandId()==SUBMIT)
         {
-          if(submitCount>submitLimit)
+          bool ussdSession=false;
+          SMS& sms=*cmd->get_sms();
+          if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+          {
+            if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
+               !(
+                 sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
+                 sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
+                )
+              )
+            {
+              ussdSession=true;
+            }
+          }
+
+          if(!ussdSession && submitCount>submitLimit)
           {
             throw ProxyQueueLimitException(submitCount,submitLimit);
           }

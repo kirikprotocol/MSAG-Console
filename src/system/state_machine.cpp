@@ -988,6 +988,7 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  if(sms->originatingDescriptor.mscLength || sms->originatingDescriptor.imsiLength)
   {
     char buf[MAX_ADDRESS_VALUE_LENGTH+MAX_ADDRESS_VALUE_LENGTH+12];
     sprintf(buf,"Org: %s/%s",sms->originatingDescriptor.msc,sms->originatingDescriptor.imsi);
@@ -1894,7 +1895,20 @@ StateType StateMachine::submit(Tuple& t)
     // Traffic Control
     //
 
-    if(!smsc->allowCommandProcessing(t.command))
+    bool ussdSession=false;
+    if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+    {
+      if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
+         !(
+           sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
+           sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
+          )
+        )
+      {
+        ussdSession=true;
+      }
+    }
+    if(!ussdSession && !smsc->allowCommandProcessing(t.command))
     {
       submitResp(t,sms,Status::THROTTLED);
       warn2(smsLog, "SBM: traffic control denied message Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
@@ -2992,6 +3006,22 @@ StateType StateMachine::deliveryResp(Tuple& t)
   // register deliveryresp in traffic control
   //
 
+  /*
+  bool ussdSession=false;
+  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+  {
+    if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
+       !(
+         sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
+         sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
+        )
+      )
+    {
+      ussdSession=true;
+    }
+  }
+  */
+
   smsc->allowCommandProcessing(t.command);
 
   //
@@ -3075,9 +3105,21 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
   {
     char buf[MAX_ADDRESS_VALUE_LENGTH*4+12];
-    sprintf(buf,"Org: %s/%s, Dst:%s/%s",sms.originatingDescriptor.msc,sms.originatingDescriptor.imsi,
-                       sms.destinationDescriptor.msc,sms.destinationDescriptor.imsi
-                      );
+    if(sms.originatingDescriptor.mscLength && sms.originatingDescriptor.imsiLength &&
+       sms.destinationDescriptor.mscLength && sms.destinationDescriptor.imsiLength)
+    {
+      sprintf(buf,"Org: %s/%s, Dst:%s/%s",sms.originatingDescriptor.msc,sms.originatingDescriptor.imsi,
+                         sms.destinationDescriptor.msc,sms.destinationDescriptor.imsi
+                        );
+    }else if(sms.originatingDescriptor.mscLength && sms.originatingDescriptor.imsiLength)
+    {
+      sprintf(buf,"Org: %s/%s",sms.originatingDescriptor.msc,sms.originatingDescriptor.imsi);
+    }else if(sms.destinationDescriptor.mscLength && sms.destinationDescriptor.imsiLength)
+    {
+      sprintf(buf,"Dst:%s/%s",sms.destinationDescriptor.msc,sms.destinationDescriptor.imsi);
+    }
+
+
     sms.setStrProperty(Tag::SMSC_DESCRIPTORS,buf);
   }
 
