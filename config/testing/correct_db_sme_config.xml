@@ -20,7 +20,7 @@
 		<section name="SMSC">
 			<param name="host" type="string">smsc</param>
 			<param name="port" type="int">15971</param>
-			<param name="sid" type="string"></param>
+			<param name="sid" type="string">dbSme</param>
 			<param name="timeout" type="int">10</param>
 			<param name="password" type="string"></param>
 		</section>
@@ -28,7 +28,7 @@
 		<section name="DataProviders">
 
 			<section name="TestDataProvider">
-				<param name="address" type="string">.2.3.9664jgch</param>
+				<param name="address" type="string">+dbSmeAddr123</param>
 
 				<section name="DataSource">
 					<param name="type" type="string">OCI</param>
@@ -51,10 +51,10 @@
 select * from dual
 						</param>
 						<param name="input" type="string">
-$$ date pattern = "d/M/yy h:m:s t" export = "dt" default = "now" $$
+$$date pattern = "d/M/yy h:m:s t" export = "dt" default = "now" $$
 						</param>
 						<param name="output" type="string">
-Date: $$ date pattern = "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy yyyy yyyyy h hh hhh m mm mmm t tt" import = "dt" $$
+Date: $$date pattern = "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy yyyy yyyyy h hh hhh m mm mmm t tt" import = "dt" $$
 						</param>
 					</section>
 
@@ -68,10 +68,10 @@ Date: $$ date pattern = "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy y
 select * from dual
 						</param>
 						<param name="input" type="string">
-$$  date  pattern  =  "dd.MM.yyyy hh-mm-ss t"  export  =  "dt"  default  =  "today"  $$
+$$date  pattern  =  "dd.MM.yyyy hh-mm-ss t"  export  =  "dt"  default  =  "today"  $$
 						</param>
 						<param name="output" type="string">
-Date: $$  date  pattern  =  "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy yyyy yyyyy h hh hhh m mm mmm t tt"  import  =  "dt"  $$
+Date: $$date  pattern  =  "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy yyyy yyyyy h hh hhh m mm mmm t tt"  import  =  "dt"  $$
 						</param>
 					</section>
 
@@ -85,10 +85,10 @@ Date: $$  date  pattern  =  "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy y
 select * from dual
 						</param>
 						<param name="input" type="string">
-$$	date	pattern	=	"d-MMM-yy H m s"	export	=	"dt"	default	=	"yesterday"	$$
+$$date	pattern	=	"d-MMM-yy H m s"	export	=	"dt"	default	=	"yesterday"	$$
 						</param>
 						<param name="output" type="string">
-Date: $$	date	pattern	=	"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)yyyy))yyyyy h hh hhh m mm mmm t tt"	import	=	"dt"	$$
+Date: $$date	pattern	=	"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)yyyy))yyyyy h hh hhh m mm mmm t tt"	import	=	"dt"	$$
 						</param>
 					</section>
 
@@ -102,10 +102,10 @@ Date: $$	date	pattern	=	"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)
 select * from dual
 						</param>
 						<param name="input" type="string">
-$$		date		pattern		=		"dd MMMM yyyy HH.mm.ss"		export		=		"dt"		default		=		"tomorrow"		$$
+$$date		pattern		=		"dd MMMM yyyy HH.mm.ss"		export		=		"dt"		default		=		"tomorrow"		$$
 						</param>
 						<param name="output" type="string">
-Date: $$		date		pattern		=		"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)yyyy))yyyyy h hh hhh m mm mmm t tt"		import		=		"dt"		$$
+Date: $$date		pattern		=		"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)yyyy))yyyyy h hh hhh m mm mmm t tt"		import		=		"dt"		$$
 						</param>
 					</section>
 
@@ -179,7 +179,7 @@ rows-affected: $$int32 arg=1$$
 						<param name="query" type="bool">false</param>
 						<param name="sql" type="string">
 update db_sme_test set int16 = :1, int32 = :2, flt = :3, dbl = :4,
-dt = :5, str = :6 || ' from ' || :7
+dt = :5, str = :6 || ' from ' || :7 where mod(id, 2) = 0
 						</param>
 						<param name="input" type="string">
 $$string arg=7 import="from-address"$$
@@ -228,10 +228,10 @@ rows-affected: $$int32 arg=1$$
 						<param name="type" type="string">sql-job</param>
 						<param name="query" type="bool">true</param>
 						<param name="sql" type="string">
-select int16, int32, flt, dbl, dt, str from db_sme_test where str like :1
+select int16, int32, flt, dbl, dt, str from db_sme_test where mod(id, 2) = 0
 						</param>
 						<param name="input" type="string">
-$$string arg=1 export="str" default="%"$$
+empty
 						</param>
 						<param name="output" type="string">
 SelectJob:
