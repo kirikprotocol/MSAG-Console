@@ -1213,7 +1213,7 @@ USHORT_T Et96MapUAbortInd (
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __trace2__("MAP::%s dialog 0x%x",__FUNCTION__,dialogid_map);
+    __trace2__("MAP::%s dialog 0x%x , userReason: 0x%x",__FUNCTION__,dialogid_map,userReason_p?*userReason_p:-1);
     throw runtime_error("UABORT");
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
@@ -1229,7 +1229,7 @@ USHORT_T Et96MapPAbortInd(
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __trace2__("MAP::%s dialog 0x%x",__FUNCTION__,dialogid_map);
+    __trace2__("MAP::%s dialog 0x%x provReason: 0x%x",__FUNCTION__,dialogid_map,provReason);
     throw runtime_error("PABORT");
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
