@@ -306,7 +306,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
   //if ( pdu->signalInfoLen > 140 ) header->uu.s.mms = 1;
   __map_trace2__("mkDeliverPDU: signalInfoLen %d",pdu->signalInfoLen);
-  if( smsc::util::_map_cat.isDebugEnabled() ) {
+  if( smsc::util::_map_cat->isDebugEnabled() ) {
     char text[sizeof(*pdu)*4] = {0,};
     int k = 0;
     for ( int i=0; i<pdu->signalInfoLen; ++i){

@@ -531,7 +531,7 @@ unsigned ParseSemiOctetU(unsigned char v)
 static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_SM_RP_OA_T *srcAddr)
 {
   __map_trace2__("%s:dialog 0x%x received PDU: signalInfoLen 0x%x", __FUNCTION__, dialog->dialogid_map, ud->signalInfoLen);
-  if( smsc::util::_map_cat.isDebugEnabled() )
+  if( smsc::util::_map_cat->isDebugEnabled() )
   {
     char text[sizeof(*ud)*4] = {0,};
     int k = 0;
@@ -553,7 +553,7 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,user_data_coding);
   unsigned tpvpLen = (ssfh->tp_vp==0)?0:(ssfh->tp_vp==2)?1:7;
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2);
-  if( smsc::util::_map_cat.isDebugEnabled() )
+  if( smsc::util::_map_cat->isDebugEnabled() )
   {
     __map_trace2__("MR(8) = 0x%x",ssfh->mr);
     __map_trace2__("MSG_TYPE_IND(2) = 0x%x",ssfh->mg_type_ind);
@@ -895,7 +895,7 @@ static string RouteToString(MapDialog* dialog)
 #define MAP_TRY  try {
 #define MAP_CATCH(__dialogid_map,__dialogid_smsc)     \
 }catch(MAPDIALOG_HEREISNO_ID& x){\
-  __map_warn2__("%s: here is no dialogid 0x%x/0x%x <exception>:%s",__FUNCTION__,__dialogid_map,__dialogid_smsc,x.what());
+  __map_warn2__("%s: here is no dialogid 0x%x/0x%x <exception>:%s",__FUNCTION__,__dialogid_map,__dialogid_smsc,x.what());\
 }catch(MAPDIALOG_ERROR& err){\
   __map_trace2__("%s: error dialogid 0x%x/0x%x <exception>:%s",__FUNCTION__,__dialogid_map,__dialogid_smsc,err.what());\
   TryDestroyDialog(__dialogid_map,true,err.code);\
@@ -1568,7 +1568,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
         dialog->smRpDa.addrLen = imsi_sp->imsiLen;
         memcpy( dialog->smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
 //#if !defined DISABLE_TRACING
-        if( smsc::util::_map_cat.isDebugEnabled() ) {
+        if( smsc::util::_map_cat->isDebugEnabled() ) {
           {
             auto_ptr<char> b(new char[imsi_sp->imsiLen*4+1]);
             memset(b.get(),0,imsi_sp->imsiLen*4+1);

@@ -196,7 +196,7 @@ restart:
       message.msg_p[4] = 0;
     }
     map_result = Et96MapHandleIndication(&message);
-    if( map_result != ET96MAP_E_OK && smsc::util::_map_cat.isWarnEnabled() ) {
+    if( map_result != ET96MAP_E_OK && smsc::util::_map_cat->isWarnEnabled() ) {
      {
       char *text = new char[message.size*4+1];
       int k = 0;
@@ -234,7 +234,7 @@ void MapIoTask::init(unsigned timeout)
   __map_trace2__("MAP:: continue self initialization");
 //  err = MsgConn(USER01_ID,USER01_ID);
 //  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn on self, code 0x%hx",err); throw runtime_error("MsgInit error"); }
-  if( smsc::util::_map_cat.isDebugEnabled() ) {
+  if( smsc::util::_map_cat->isDebugEnabled() ) {
     MsgTraceOn( MY_USER_ID );
     MsgTraceOn( ETSIMAP_ID );
     MsgTraceOn( TCAP_ID );
