@@ -88,7 +88,8 @@ static inline void makeAliasFromValueByAddres(
   
 	//if (!p.alias.defLength<=21) 
   //  throw runtime_error("incorrect address->alias translation definition, result length > 21");
-	throw_if_fail(p.alias.defLength<=21);
+	throw_if_fail(p.alias.defLength<=21 && p.alias.defLength >= 0);
+	if ( p.alias.defLength != 0 )
   memcpy(buf,p.alias.value,p.alias.defLength);
 	ln = p.alias.defLength;
   
@@ -105,6 +106,8 @@ static inline void makeAliasFromValueByAddres(
 	}
   
 	__require__(ln < 21 );
+	throw_if_fail( ln >= 0 );
+	if ( ln == 0 ) throw runtime_error("result alias has zero length");
   addr.setNumberingPlan(p.alias.numberingPlan);
   addr.setTypeOfNumber(p.alias.typeOfNumber);
   addr.setValue(ln,buf);
@@ -122,8 +125,9 @@ static inline void makeAddressFromValueByAlias(
   int ln;
   //if(!(ln+p.addr.defLength<=21))
   //  throw runtime_error("incorrect address->alias translation definition, result length > 21");
-  throw_if_fail(ln+p.addr.defLength<=21);
-	memcpy(buf,p.addr.value,p.addr.defLength);
+  throw_if_fail(p.addr.defLength<=21 && p.addr.defLength >= 0);
+	if ( p.addr.defLength != 0 )
+		memcpy(buf,p.addr.value,p.addr.defLength);
 	ln = p.addr.defLength;
 
 	__require__( val.length-p.alias.defLength >=0 );
@@ -138,8 +142,10 @@ static inline void makeAddressFromValueByAlias(
 		ln += val.length-p.alias.defLength;
 	}
   __require__(ln < 21 );
-
-  addr.setNumberingPlan(p.addr.numberingPlan);
+	throw_if_fail( ln >= 0 );
+	if ( ln == 0 ) throw runtime_error("result address has zero length");
+  
+	addr.setNumberingPlan(p.addr.numberingPlan);
   addr.setTypeOfNumber(p.addr.typeOfNumber);
   addr.setValue(ln,buf);
   LEAVE;
