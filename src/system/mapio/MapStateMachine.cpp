@@ -470,6 +470,7 @@ static void SendSubmitCommand(MapDialog* dialog)
     Address src_addr;
     ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
     dialog->sms->setOriginatingAddress(src_addr);
+    istringstream(src_addr.value)>>dialog->ussdSequence;
     __trace2__("MAP::%s:USSD request %s",__FUNCTION__,RouteToString(dialog).c_str());
   }
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
@@ -691,7 +692,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
         if ( cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) )
         {
           unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP );
-          string s_seq = "";//cmd->get_sms()->getStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+          string s_seq(cmd->get_sms()->getDestinationAddress().value)// = "";//cmd->get_sms()->getStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
           if (s_seq.length()==0) throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: empty user_message_reference");
           long long sequence;
           istringstream(s_seq) >> sequence;
@@ -1592,11 +1593,11 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     dialog->state = MAPST_WaitSmsMODelimiter2;
     dialog->ussdSequence = NextSequence();
     dialog->sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
-    {
-      ostringstream  ost;
-      ost << dialog->ussdSequence;
-      //dialog->sms->setStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,message_reference.str());
-    }
+    //{
+    //  ostringstream  ost;
+    //  ost << dialog->ussdSequence;
+    //  //dialog->sms->setStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,message_reference.str());
+    //}
     //SendSubmitCommand (dialog.get());
   }MAP_CATCH(__dialogid_map,0);
   return ET96MAP_E_OK;
