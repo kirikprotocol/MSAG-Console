@@ -842,6 +842,10 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 		resPdu = reinterpret_cast<PduSubmitSm*>(
 			SmppUtil::copyPdu(replacePduData->pdu));
 		__require__(resPdu);
+		//обнулить messagePayload
+		resPdu->get_optional().field_present &= ~SmppOptionalFields::messagePayload;
+		resPdu->get_optional().messagePayload.dispose();
+		//scheduleDeliveryTime
 		if (pdu->get_scheduleDeliveryTime())
 		{
 			resPdu->get_message().set_scheduleDeliveryTime(
@@ -855,6 +859,7 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 			resPdu->get_message().set_scheduleDeliveryTime(
 				SmppUtil::time2string(waitTime, t, submitTime, __absoluteTime__));
 		}
+		//validityPeriod
 		if (pdu->get_validityPeriod())
 		{
 			resPdu->get_message().set_validityPeriod(pdu->get_validityPeriod());
@@ -1022,6 +1027,10 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 			break;
 		default:
 			__unreachable__("Invalid pdu type");
+	}
+	if (replacePduData && replacePduData->intProps.count("map.msg"))
+	{
+		__tc__("replaceSm.map"); __tc_ok__;
 	}
 	if (fixture->pduReg)
 	{
