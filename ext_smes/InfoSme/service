@@ -22,7 +22,7 @@ if [ ! -L logs ]; then
   ln -s ../../../../../../logs logs
 fi
 
-chmod +x bin/infosme
+chmod +x bin/InfoSme
 
 echo $$ >pid
 if [ -f logs/infosme.err ]; then
@@ -30,7 +30,7 @@ if [ -f logs/infosme.err ]; then
 fi
 while true;
 do
-./bin/infosme 1>/dev/null 2>>logs/infosme.err&
+./bin/InfoSme 1>/dev/null 2>>logs/infosme.err&
 PID=$!
 export PID
 trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
@@ -44,6 +44,6 @@ if [ -f core ]; then
     mv logs/infosme.err.old "$DATE"
   fi
   mv logs/infosme.log* "$DATE"
-  cp -p ./bin/infosme "$DATE"
+  cp -p ./bin/InfoSme "$DATE"
 fi
 done
