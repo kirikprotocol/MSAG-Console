@@ -137,7 +137,7 @@ TABLESPACE SMSC_IDX;
 
 drop table sms_profile;
 CREATE TABLE sms_profile (
-  mask varchar(30) primary key,
+  mask varchar(30),
   reportinfo NUMBER(3),
   codeset NUMBER(3)
 );
