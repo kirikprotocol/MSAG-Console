@@ -16,13 +16,14 @@
 
   <available file="${libs_path}/antlr.jar" property="CLASSPATH_OK" value="yes"/>
   <fail unless="CLASSPATH_OK" message="No antlr.jar found"/>
-  <fileset id="common_libs" dir="${libs_path}" >
-    <include name="log4j.jar, antlr.jar, nsjsp.jar, classes12.jar"/>
-  </fileset>
+  <available file="${libs_path}/log4j.jar" property="CLASSPATH_OK" value="yes"/>
+  <fail unless="CLASSPATH_OK" message="No log4j.jar found"/>
+  <fileset id="common_libs" dir="${libs_path}" includes="log4j.jar antlr.jar nsjsp.jar classes12.jar"/>
 
   <path id="classpath">
-    <pathelement path="${servlet_jar}"/>
+    <pathelement path="${java_out}"/>
     <fileset refid="common_libs"/>
+    <pathelement path="${servlet_jar}"/>
   </path>
   <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet.jar"/>
 
@@ -35,7 +36,7 @@
 
 
   <target name="compile" depends="init" description="compile the sources">
-    <javac srcdir="${java_src}" destdir="${java_out}" classpathref="classpath" debug="yes" verbose="yes" />
+    <javac srcdir="${java_src}" destdir="${java_out}" classpathref="classpath" debug="yes"/>
     <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
     <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet"/>
     <native2ascii encoding="Cp1251" src="${topmon_src}/applet" dest="${topmon_out}/applet"/>
