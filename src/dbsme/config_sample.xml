@@ -30,18 +30,49 @@
 		        
 			<section name="DefautJob">
 			    <param name="id" type="string">default</param>
+			    <param name="query" type="bool">true</param>
 			    <param name="sql" type="string">blah-blah-blah</param>
 			    <param name="input" type="string">blah-blah-blah</param>
 			    <param name="output" type="string">blah-blah-blah</param>
-			    <param name="query" type="bool">true</param>
 			</section>
 			
 			<section name="SampleJob1">
-			    <param name="id" type="string">sample1</param>
-			    <param name="sql" type="string">blah-blah-blah</param>
-			    <param name="input" type="string">blah-blah-blah</param>
-			    <param name="output" type="string">blah-blah-blah</param>
+			    <param name="id" type="string">sql-job</param>
 			    <param name="query" type="bool">true</param>
+			    <param name="sql" type="string">
+				select temp, str, dt from sms_test where temp=:1 or str=:2 or dt=:3
+			    </param>
+			    <!--param name="input" type="string">
+				$$int8 arg=2    	$$
+				$$int16 arg=1   	$$
+				$$int32 arg=3   	$$
+				$$uint8 arg="4" 	$$
+				$$uint16 arg="5"	$$
+				$$uint32 arg="6"	$$
+				$$string arg="7"	$$
+				$$string arg="8"	$$
+				$$float arg=9   	$$
+				$$double arg=10		$$
+				$$long-double arg=11	$$
+				$$date arg=3 
+				  pattern="dd/mm/yy hh:mm::ss"$$
+			    </param-->
+			    <param name="input" type="string">
+				$$string arg=2  nnn="\\\""$$
+				$$int16 arg="1"    	$$
+				$$date arg=3 pattern="dd MMMM, yyyy hh:mm t" default="now"$$
+			    </param>
+<param name="output" type="string">
+ Int32 value   :  $$uint32 arg=1 $$ 
+ String right  : '$$string arg=2 length=30 align="right"$$'
+ String center : '$$string arg=2 length=30 align="center"$$'
+ String left   : '$$string arg=2 length=30 align="left"$$'
+ Date/Time by system format 	   :  $$date arg=3 $$
+ Date/Time by user-desired pattern :  $$date arg=3 pattern="W, MMMM dd, yyyy hh:mm:ss (t)" default="now"$$
+ Date/Time today 		   :  $$date pattern="w, dd-MMM-yyyy HH:mm:ss" default="today"$$
+ That's all!
+ \$\$ \\
+</param>
 			</section>
 			
 			<section name="Job3">
