@@ -215,8 +215,24 @@
   <td><input class=txt name=mciProfLocation value="<%=StringEncoderDecoder.encode(bean.getMciProfLocation())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Add more options...</th>
-  <td>&nbsp;</td>
+  <th>MSC host</th>
+  <td><input class=txt name=mciHost value="<%=StringEncoderDecoder.encode(bean.getMciHost())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>MSC port</th>
+  <td><input class=txt name=mciPort value="<%=StringEncoderDecoder.encode(bean.getMciPort())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>MSC NWT</th>
+  <td><input class=txt name=mciNwt value="<%=StringEncoderDecoder.encode(bean.getMciNwt())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>MSC usercode</th>
+  <td><input class=txt name=mciUsercode value="<%=StringEncoderDecoder.encode(bean.getMciUsercode())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>MSC userpassword</th>
+  <td><input class=txt name=mciUserpassword value="<%=StringEncoderDecoder.encode(bean.getMciUserpassword())%>"></td>
 </tr>
 </table>
 </div><%

@@ -69,7 +69,11 @@ public class Options extends MCISmeBean
   private String  dataSourceJdbcSource = "";
 
   private String  mciProfLocation = "";
-  // TODO: add MSC settings params
+  private String  mciHost = "";
+  private int     mciPort = 0;
+  private String  mciNwt = "";
+  private String  mciUsercode = "";
+  private String  mciUserpassword = "";
 
   private boolean initialized = false;
 
@@ -100,7 +104,13 @@ public class Options extends MCISmeBean
 
         try {
           mciProfLocation = getConfig().getString(MCI_PROF_LOCATION_PARAM);
-          // TODO: init bean properties for MSC settings
+          if (mciProfLocation != null && mciProfLocation.length() > 0) {
+            mciHost         = getConfig().getString("MCISme.MSC.host");
+            mciPort         = getConfig().getInt   ("MCISme.MSC.port");
+            mciNwt          = getConfig().getString("MCISme.MSC.NWT");
+            mciUsercode     = getConfig().getString("MCISme.MSC.usercode");
+            mciUserpassword = getConfig().getString("MCISme.MSC.userpassword");
+          }
         } catch (Throwable th) {
           logger.warn("Parameter '"+MCI_PROF_LOCATION_PARAM+"' wasn't specified");
         }
@@ -178,7 +188,13 @@ public class Options extends MCISmeBean
     getConfig().setBool  ("MCISme.forceNotify", forceNotify);
 
     getConfig().setString(MCI_PROF_LOCATION_PARAM, mciProfLocation);
-    // TODO: set MSC settings from bean properties
+    if (mciProfLocation != null && mciProfLocation.trim().length() > 0) {
+      getConfig().setString("MCISme.MSC.host", mciHost);
+      getConfig().setInt   ("MCISme.MSC.port", mciPort);
+      getConfig().setString("MCISme.MSC.NWT" , mciNwt);
+      getConfig().setString("MCISme.MSC.usercode", mciUsercode);
+      getConfig().setString("MCISme.MSC.userpassword", mciUserpassword);
+    }
 
     getConfig().setInt   ("MCISme.SMPPThreadPool.max", smppThreadPoolMax);
     getConfig().setInt   ("MCISme.SMPPThreadPool.init", smppThreadPoolInit);
@@ -758,4 +774,43 @@ public class Options extends MCISmeBean
     this.dataSourceJdbcSource = dataSourceJdbcSource;
   }
 
+  public String getMciHost() {
+    return mciHost;
+  }
+  public void setMciHost(String mciHost) {
+    this.mciHost = mciHost;
+  }
+  public int getMciPortInt() {
+    return mciPort;
+  }
+  public String getMciPort() {
+    return String.valueOf(mciPort);
+  }
+  public void setMciPortInt(int mciPort) {
+    this.mciPort = mciPort;
+  }
+  public void setMciPort(String mciPort) {
+    try { this.mciPort = Integer.decode(mciPort).intValue(); } catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.MSC.port parameter value: \"" + mciPort + '"', e);
+    }
+  }
+  public String getMciNwt() {
+    return mciNwt;
+  }
+  public void setMciNwt(String mciNwt) {
+    this.mciNwt = mciNwt;
+  }
+  public String getMciUsercode() {
+    return mciUsercode;
+  }
+  public void setMciUsercode(String mciUsercode) {
+    this.mciUsercode = mciUsercode;
+  }
+  public String getMciUserpassword() {
+    return mciUserpassword;
+  }
+  public void setMciUserpassword(String mciUserpassword) {
+    this.mciUserpassword = mciUserpassword;
+  }
+  
 }

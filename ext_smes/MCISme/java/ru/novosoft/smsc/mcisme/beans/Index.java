@@ -162,8 +162,12 @@ public class Index extends IndexProperties
       savePropertiesFile(location, MCI_PROF_DS_FILE, dsProperties, MCI_PROF_DS_COMMENT);
 
       Properties mscProperties = new Properties();
-      mscProperties.setProperty("MCISme.Address", config.getString("MCISme.Address"));
-      // TODO: add more MSC settings form MCI_PROF_MSCSET_SECTION
+      mscProperties.setProperty("MCISme.Address"  , config.getString("MCISme.Address"));
+      mscProperties.setProperty("MSC.host"        , config.getString("MCISme.MSC.host"));
+      mscProperties.setProperty("MSC.port"        , ""+config.getInt("MCISme.MSC.port"));
+      mscProperties.setProperty("MSC.NWT"         , config.getString("MCISme.MSC.NWT"));
+      mscProperties.setProperty("MSC.usercode"    , config.getString("MCISme.MSC.usercode"));
+      mscProperties.setProperty("MSC.userpassword", config.getString("MCISme.MSC.userpassword"));
       savePropertiesFile(location, MCI_PROF_MSC_FILE, mscProperties, MCI_PROF_MSC_COMMENT);
 
       Properties mtfProperties = new Properties();

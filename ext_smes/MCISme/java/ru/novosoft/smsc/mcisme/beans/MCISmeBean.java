@@ -44,7 +44,6 @@ public class MCISmeBean extends PageBean
   public final static String MCI_PROF_MSC_COMMENT = "MCI Profile MSC settings";
 
   public final static String MCI_PROF_LOCATION_PARAM = "MCISme.MCIProfLocation";
-  public final static String MCI_PROF_MSCSET_SECTION = "MCISme.MSCSettings";
 
   private String mbMenu = null;
 
