@@ -262,6 +262,26 @@ void MAPIO_QueryMscVersionInternal()
   }
 }
 
+static void CheckLockedByMO(MapDialog* dialog)
+{
+  MutexGuard guard(x_momap_lock);
+  XMOMAP::iterator it = x_momap.find(dialog->m_msAddr);
+  if ( it != x_momap.end() )
+  {
+    if ( it->second.startTime+GetMOLockTimeout() <= time(0) )
+    {
+      __map_trace2__("UDHI:%s time expired, unlocked, recv(%d)",__func__,it->second.parts);
+      x_momap.erase(it);
+    }
+    else{
+      dialog->dropChain = true;
+      __map_trace2__("MAP:UDHI:%s locked, reschedule NOW! recv(%d)",__func__,it->second.parts);
+      throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,Status::LOCKEDBYMO),
+                            "MAP:: Locked by MO: reschedule NOW!");
+    }
+  }
+}
+
 static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
 {
   dialog->wasDelivered = false;
@@ -420,26 +440,6 @@ static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
   cmd->get_resp()->setDescriptor(desc);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
   __map_trace2__("Sent OK to SMSC: MSC = %s, IMSI = %s",dialog->s_msc.c_str(), dialog->s_imsi.c_str());
-}
-
-static void CheckLockedByMO(MapDialog* dialog)
-{
-  MutexGuard guard(x_momap_lock);
-  XMOMAP::iterator it = x_momap.find(dialog->m_msAddr);
-  if ( it != x_momap.end() )
-  {
-    if ( it->second.startTime+GetMOLockTimeout() <= time(0) )
-    {
-      __map_trace2__("UDHI:%s time expired, unlocked, recv(%d)",__func__,it->second.parts);
-      x_momap.erase(it);
-    }
-    else{
-      dialog->dropChain = true;
-      __map_trace2__("MAP:UDHI:%s locked, reschedule NOW! recv(%d)",__func__,it->second.parts);
-      throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,Status::LOCKEDBYMO),
-                            "MAP:: Locked by MO: reschedule NOW!");
-    }
-  }
 }
 
 static void QueryHlrVersion(MapDialog* dialog)
