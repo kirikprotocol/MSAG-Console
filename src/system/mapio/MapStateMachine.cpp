@@ -1372,7 +1372,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     dialog->ussdMrRef = MakeMrRef();
     ET96MAP_APP_CNTX_T appContext;
     appContext.acType = ET96MAP_NETWORK_UNSTRUCTURED_SS_CONTEXT;
-    appContext.version = dialog->version;
+    setVersion(appContext, dialog->version);
     ET96MAP_USERDATA_T specificInfo;
     specificInfo.specificInfoLen=3+(dialog->m_msAddr.addressLength+1)/2;
     specificInfo.specificData[0] = 0x82;
@@ -2157,7 +2157,7 @@ USHORT_T Et96MapCloseInd(
             MapDialogContainer::getInstance()->reAssignDialog(dialogueId,dialog->ssn,USSD_SSN);
             int serviceOp = dialog->sms.get()->getIntProperty( Tag::SMPP_USSD_SERVICE_OP );
             if( serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ ) {
-              DoUSSRUserRequest(dialog.get());
+              DoUSSDRequestOrNotifyReq(dialog.get());
             } else {
               throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::USSD_SERVICE_OP=%d not allowed to create dialog",serviceOp),Status::INVOPTPARAMVAL);
             }
@@ -2195,7 +2195,7 @@ USHORT_T Et96MapCloseInd(
       break;
     case MAPST_WaitUSSDNotifyClose:
     case MAPST_WaitUSSDReqDelim:
-      SendSubmitCommand(dialog.get())
+      SendSubmitCommand(dialog.get());
       DropMapDialog(dialog.get());
       break;
     case MAPST_ImsiWaitCloseInd:
@@ -2636,7 +2636,7 @@ USHORT_T Et96MapDelimiterInd(
       DropMapDialog(dialog.get());
       break;
     case MAPST_WaitUSSDReqDelim:
-      SendSubmitCommand(dialog.get())
+      SendSubmitCommand(dialog.get());
       break;
     default:
       throw MAPDIALOG_BAD_STATE(
