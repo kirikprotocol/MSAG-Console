@@ -141,6 +141,15 @@ refreshStartStopButtonsStatus();
         param(out, "capacity", "MessageStore.Cache.capacity", bean.getIntParam("MessageStore.Cache.capacity"));
       finishParams(out);
     finishSection(out);
+  //~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.LocalStore ~~~~~~~~~~~~~~~~~~~~~~~~
+    startSection(out, "MessageStore.LocalStore", "LocalStore", false);
+      startParams(out);
+        param(out, "filename", "MessageStore.LocalStore.filename", bean.getStringParam("MessageStore.LocalStore.filename"));
+        param(out, "maxStoreSize", "MessageStore.LocalStore.maxStoreSize", bean.getIntParam("MessageStore.LocalStore.maxStoreSize"));
+        param(out, "minRollTime", "MessageStore.LocalStore.minRollTime", bean.getIntParam("MessageStore.LocalStore.minRollTime"));
+        param(out, "msgidfile", "MessageStore.LocalStore.msgidfile", bean.getStringParam("MessageStore.LocalStore.msgidfile"));
+      finishParams(out);
+    finishSection(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Connections ~~~~~~~~~~~~~~~~~~~~~~~~
     startSection(out, "MessageStore.Connections", "Connections", false);
       startParams(out);
