@@ -370,6 +370,14 @@ void Smsc::init(const SmscConfigs& cfg)
     billing::InitBillingInterface(cfg.cfgman->getString("billing.module"));
   }
 
+  try{
+    ussdTransactionTimeout=cfg.cfgman->getInt("core.ussdTransactionTimeout");
+  }catch(...)
+  {
+    __warning__("ussdTransactionTimeout set to default(10min)");
+    ussdTransactionTimeout=10*60;
+  }
+
 
   {
     smsc_log_info(log, "Starting statemachines" );

@@ -319,6 +319,8 @@ public:
     return gwSmeMap[uid];
   }
 
+  int ussdTransactionTimeout;
+
 protected:
 
   void processCommand(SmscCommand& cmd);

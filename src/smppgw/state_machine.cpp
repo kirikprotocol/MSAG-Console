@@ -903,7 +903,7 @@ void StateMachine::submit(SmscCommand& cmd)
   sms.setDestinationSmeId(dst_proxy->getSystemId());
 
   billing::TransactionIdType trId=billing::InvalidTransactionId;
-  TransactionMonitor::TrSmsStatus st=tmon.RegisterS2C(sms,stat::StatInfo(src_proxy,ri),32,ri.trafRules,trId);
+  TransactionMonitor::TrSmsStatus st=tmon.RegisterS2C(sms,stat::StatInfo(src_proxy,ri),smsc->ussdTransactionTimeout,ri.trafRules,trId);
 
   smsc_log_info(smsLog,"SBM: trstate for sms from %s to %s=%s",sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),TransactionMonitor::getStatusName(st));
 
@@ -1173,7 +1173,7 @@ void StateMachine::delivery(SmscCommand& cmd)
   sms.setDestinationSmeId(dst_proxy->getSystemId());
 
 
-  TransactionMonitor::TrSmsStatus st=tmon.RegisterC2S(sms,stat::StatInfo(dst_proxy,ri),32,ri.trafRules);
+  TransactionMonitor::TrSmsStatus st=tmon.RegisterC2S(sms,stat::StatInfo(dst_proxy,ri),smsc->ussdTransactionTimeout,ri.trafRules);
 
   smsc_log_info(smsLog,"DLV: trstate for sms from %s to %s=%s",sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),TransactionMonitor::getStatusName(st));
 

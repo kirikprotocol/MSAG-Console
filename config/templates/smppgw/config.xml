@@ -29,6 +29,7 @@
     <param name="eventQueueLimit" type="int">1000</param>
     <param name="protocol_id" type="int">34</param>
     <param name="state_machines_count" type="int">10</param>
+    <param name="ussdTransactionTimeout" type="int">600</param>
 
     <section name="performance">
       <param name="host" type="string">@listen.host@</param>
@@ -59,4 +60,3 @@
     <param name="last used provider id" type="int">0</param>
   </section>
 </config>
-
