@@ -160,6 +160,10 @@ o.put("SMEs", "5");
 <td align="left" with="10%">    SMEs: &nbsp;</td><td with="40%" align="left"><input:text name="querySMEs" default="<%=bean.getQuerySMEs()%>"/>  </td>
 <td align="left" with="10%">    Mask: &nbsp;</td><td with="40%" align="left"><input:text name="queryMask" default="<%=bean.getQueryMask()%>"/>  </td>
 </tr>
+<tr>
+<td align="left" with="10%">    Providers: &nbsp;</td><td with="40%" align="left"><input:text name="queryProvider" default="<%=bean.getQueryProvider()%>"/>  </td>
+<td align="left" with="10%">    Categories: &nbsp;</td><td with="40%" align="left"><input:text name="queryCategory" default="<%=bean.getQueryCategory()%>"/>  </td>
+</tr>
 <tr><td colspan="2">  &nbsp;&nbsp;
 
 <%--button(out, "but_filter.gif", "filterSelect", "Apply", "Filter", "return clickFilterSelect()"); --%>

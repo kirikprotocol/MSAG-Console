@@ -2,8 +2,7 @@
 <%@ page import="ru.novosoft.smsc.jsp.smsc.routes.Index,
                  ru.novosoft.smsc.jsp.util.tables.DataItem,
 				 ru.novosoft.smsc.admin.route.SourceList,
-				 ru.novosoft.smsc.admin.route.DestinationList
-                 ,
+				 ru.novosoft.smsc.admin.route.DestinationList,
                  java.net.URLEncoder,
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  ru.novosoft.smsc.jsp.SMSCErrors"%>
@@ -31,8 +30,7 @@ switch(bean.process(request))
 	case Index.RESULT_EDIT:
 		response.sendRedirect("usersEdit.jsp?login="+URLEncoder.encode(bean.getEditUserLogin()));
 		return;
-	default:
-
+default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%

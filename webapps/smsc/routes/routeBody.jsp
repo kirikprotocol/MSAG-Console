@@ -1,7 +1,9 @@
 <%@ page import="ru.novosoft.smsc.util.*,
                  java.util.*,
                  ru.novosoft.smsc.admin.acl.AclInfo,
-                 ru.novosoft.smsc.admin.route.Route"%>
+                 ru.novosoft.smsc.admin.route.Route,
+                 ru.novosoft.smsc.admin.provider.Provider,
+                 ru.novosoft.smsc.admin.category.Category"%>
 <div class=content>
 <%int rowN = 0;%>
 <script>
@@ -57,6 +59,38 @@ function srcSmeIdChanged()
 					String smeId = (String) j.next();
 					String encSmeId = StringEncoderDecoder.encode(smeId);
 					%><option value="<%=encSmeId%>" <%=smeId.equals(bean.getSrcSmeId()) ? "selected" : ""%>><%=encSmeId%></option><%
+				}
+				%>
+			</select></td>
+		</tr>
+    <tr class=row<%=(rowN++)&1%>>
+			<th>Providers&nbsp;</th>
+			<td><select name=providerIdStr id=providerId >
+				<option value="" <%=(bean.getProviderId() == -1 ) ? "selected" : ""%>></option>
+				<%for (Iterator iprov = bean.getProviders().iterator(); iprov.hasNext(); )
+				{
+					Provider provider = (Provider) iprov.next();
+					String ProviderName=provider.getName();
+          long ProviderId=provider.getId();
+          String ProviderIdStr=String.valueOf(ProviderId);
+          String encProviderName = StringEncoderDecoder.encode(ProviderName);
+					%><option value="<%=ProviderIdStr%>" <%=(ProviderId==bean.getProviderId()) ? "selected" : ""%>><%=encProviderName%></option><%
+				}
+				%>
+			</select></td>
+		</tr>
+    <tr class=row<%=(rowN++)&1%>>
+			<th>Categories&nbsp;</th>
+			<td><select name=categoryIdStr id=categoryId >
+				<option value="" <%=(bean.getCategoryId() == -1) ? "selected" : ""%>></option>
+				<%for (Iterator jcat = bean.getCategories().iterator(); jcat.hasNext(); )
+				{
+				 Category category = (Category) jcat.next();
+          long CategoryId=category.getId();
+          String CategoryIdStr=String.valueOf(CategoryId);
+					String CategoryName =category.getName();
+          String encCategoryName = StringEncoderDecoder.encode(CategoryName);
+					%><option value="<%=CategoryIdStr%>" <%=(CategoryId==bean.getCategoryId()) ? "selected" : ""%>><%=encCategoryName%></option><%
 				}
 				%>
 			</select></td>

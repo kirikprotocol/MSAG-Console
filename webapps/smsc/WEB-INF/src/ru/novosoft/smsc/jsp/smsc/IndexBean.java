@@ -23,6 +23,7 @@ public abstract class IndexBean extends SmscBean
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
+    
     if (result != RESULT_OK)
       return result;
 

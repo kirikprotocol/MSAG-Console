@@ -137,6 +137,7 @@ public class SMSCErrors
       public static final String srcAddressIsAlias = B + "srcAddressIsAlias";
       public static final String dstAddressIsAlias = B + "dstAddressIsAlias";
       public static final String CantUpdateFilter = B + "CantUpdateFilter";
+
     }
 
 
@@ -151,7 +152,27 @@ public class SMSCErrors
       public static final String loginNotDefined = B + "loginNotDefined";
     }
 
+    public static class providers
+    {
+      private static final String B = error.B + "providers.";
+      public static final String providerNotFound = B + "providerNotFound";
+      public static final String providerAlreadyExists = B + "providerAlreadyExists";
+      public static final String couldntApply = B + "couldntApply";
+      public static final String nameNotDefined = B + "nameNotDefined";
+      public static final String provider_not_found = B + "Provider not found";
 
+    }
+
+    public static class categories
+    {
+      private static final String B = error.B + "categories.";
+      public static final String categoryNotFound = B + "categoryNotFound";
+      public static final String categoryAlreadyExists = B + "categoryAlreadyExists";
+      public static final String couldntApply = B + "couldntApply";
+      public static final String nameNotDefined = B + "nameNotDefined";
+      public static final String category_not_found = B + "Category not found";
+
+    }
     public static class smsc
     {
       private static final String B = error.B + "smsc.";

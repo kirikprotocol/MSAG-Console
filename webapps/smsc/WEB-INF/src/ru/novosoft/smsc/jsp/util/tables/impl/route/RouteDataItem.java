@@ -14,6 +14,8 @@ public class RouteDataItem extends AbstractDataItem
 	protected RouteDataItem(Route r)
 	{
 		values.put("Route ID", r.getName());
+    values.put("providerId", new Long(r.getProviderId()));
+    values.put("categoryId", new Long(r.getCategoryId()));
 		values.put("sources", r.getSources());
 		values.put("destinations", r.getDestinations());
 		values.put("isEnabling", new Boolean(r.isEnabling()));

@@ -124,6 +124,8 @@ page_menu_end(out);
   if (request.isUserInRole("hosts"))         printOptionsString(out, request, bean.getJournalHosts(), rowN++, "hosts", bean.isHostsChanged(), "Hosts");
 //if (request.isUserInRole("services"))      printOptionsString(out, request, bean.getJournalServices(), rowN++, "services", bean.isServicesChanged(), "Services");
   if (request.isUserInRole("users"))         printOptionsString(out, request, bean.getJournalUsers(), rowN++, "users", bean.isUsersChanged(), "Users");
+  if (request.isUserInRole("providers"))     printOptionsString(out, request, bean.getJournalProviders(), rowN++, "providers", bean.isProvidersChanged(), "Providers");
+  if (request.isUserInRole("categories"))    printOptionsString(out, request, bean.getJournalCategories(), rowN++, "categories", bean.isCategoriesChanged(), "Categories");
   if (request.isUserInRole("smsc_service"))  printOptionsString(out, request, bean.getJournalSmsc(), rowN++, "smsc", bean.isSmscChanged(), "SMS Center");
 %>
 </tbody>

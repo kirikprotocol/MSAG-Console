@@ -43,4 +43,8 @@ public interface Statuses
 
   boolean isWebXmlChanged();
   void setWebXmlChanged(boolean webXmlChanged);
+  boolean isProvidersChanged();
+  void setProvidersChanged(boolean providersChanged);
+  boolean isCategoriesChanged();
+  void setCategoriesChanged(boolean providersChanged);
 }

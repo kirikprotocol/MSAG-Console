@@ -94,16 +94,14 @@ public class Index extends IndexBean
     return RESULT_OK;
   }
 
-  public boolean isLoginChecked(String login)
-  {
-    return checkedUserLoginsSet.contains(login);
-  }
-
-
   /******************************** properties **************************************/
   public QueryResultSet getUsers()
   {
     return users;
+  }
+  public boolean isLoginChecked(String login)
+  {
+    return checkedUserLoginsSet.contains(login);
   }
 
   public String[] getCheckedUserLogins()

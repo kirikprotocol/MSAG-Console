@@ -6,6 +6,10 @@
 package ru.novosoft.smsc.jsp.util.tables.impl.route;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.category.Category;
+import ru.novosoft.smsc.admin.provider.ProviderManager;
+import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
@@ -21,6 +25,8 @@ public class RouteFilter implements Filter
   private MaskList dst_masks = null;
   private List smes = null;
   private List names = null;
+  private List providers = null;
+  private List categories = null;
   private int intersection = 2; //Soft Filter ( old boolean intersection=false )
   private static final int ALLOWED = 0;
   private static final int NOT_ALLOWED = 1;
@@ -30,6 +36,8 @@ public class RouteFilter implements Filter
   public  static final int SOFT= 2;
   public  static final int Subj= 1;
   public  static final int Mask= 2;
+  protected ProviderManager providerManager = null;
+  protected CategoryManager categoryManager = null;
 
 
   public RouteFilter()
@@ -40,6 +48,8 @@ public class RouteFilter implements Filter
     dst_masks = new MaskList();
     smes = new Vector();
     names = new Vector();
+    providers = new Vector();
+    categories = new Vector();
   }
 
   public RouteFilter(int Intersection,
@@ -47,7 +57,7 @@ public class RouteFilter implements Filter
                      String src_masks,
                      Set destination_selected,
                      String dst_masks,
-                     List smes,List names)
+                     List smes,List names, List providers,List categories)
   {
     intersection = Intersection;
     // get sources
@@ -60,13 +70,40 @@ public class RouteFilter implements Filter
 
     this.smes = smes;
     this.names = names;
+    this.providers = providers;
+    this.categories = categories;
   }
+
+  public RouteFilter(int Intersection,
+                       Set source_selected,
+                       String src_masks,
+                       Set destination_selected,
+                       String dst_masks,
+                       List smes,List names, List providers,List categories,ProviderManager providerManager,CategoryManager categoryManager)
+    {
+      intersection = Intersection;
+      // get sources
+      this.src_subjects = source_selected;
+      this.src_masks = new MaskList(src_masks);
+
+      // get destinations
+      this.dst_subjects = destination_selected;
+      this.dst_masks = new MaskList(dst_masks);
+
+      this.smes = smes;
+      this.names = names;
+      this.providers = providers;
+      this.categories = categories;
+      this.providerManager = providerManager;
+      this.categoryManager = categoryManager;
+
+    }
 
   public boolean isEmpty()
   {
     return this.src_subjects.isEmpty() && this.src_masks.isEmpty()
             && this.dst_subjects.isEmpty() && this.dst_masks.isEmpty()
-            && this.smes.isEmpty()&& this.names.isEmpty();
+            && this.smes.isEmpty()&& this.names.isEmpty()&& this.providers.isEmpty()&& this.categories.isEmpty();
   }
 
   protected static int isSubjectAllowed(Set subjects, String subj)
@@ -232,11 +269,50 @@ public class RouteFilter implements Filter
     }
     return NOT_ALLOWED;
   }
+  protected int isProvidersAllowed(Long providerId)
+    {
+      if (providers.isEmpty())
+        return UNKNOWN;
+      if (providerId.longValue()==-1)
+           return UNKNOWN;
+       Provider provider = providerManager.getProvider(providerId);
+       String name=provider.getName();
+      if (providers.contains(name) || providers.contains(name.toLowerCase()) || names.contains(name.toUpperCase()) )
+        return ALLOWED;
+
+      for (Iterator j = providers.iterator(); j.hasNext();) {
+        String subject =  (String) j.next();
+        if (name.toLowerCase().indexOf(subject.toLowerCase()) != -1)
+          return ALLOWED;
+      }
+      return NOT_ALLOWED;
+    }
+  protected int isCategoriesAllowed(Long categoryId)
+    {
+      if (categories.isEmpty())
+        return UNKNOWN;
+      if (categoryId.longValue()==-1)
+           return UNKNOWN;
+       Category category = categoryManager.getCategory(categoryId);
+       String name=category.getName();
+      if (categories.contains(name) || categories.contains(name.toLowerCase()) || categories.contains(name.toUpperCase()) )
+        return ALLOWED;
+
+      for (Iterator j = categories.iterator(); j.hasNext();) {
+        String subject =  (String) j.next();
+        if (name.toLowerCase().indexOf(subject.toLowerCase()) != -1)
+          return ALLOWED;
+      }
+      return NOT_ALLOWED;
+    }
+
   public boolean isItemAllowed(DataItem item)
   {
     if (isEmpty())
       return true;
     String name =(String)item.getValue("Route ID");
+    Long providerId =(Long)item.getValue("providerId");
+    Long categoryId =(Long)item.getValue("categoryId");
     SourceList srcs = (SourceList) item.getValue("sources");
     DestinationList dsts = (DestinationList) item.getValue("destinations");
 
@@ -255,7 +331,9 @@ public class RouteFilter implements Filter
                 && ( src_masks.isEmpty()|| isSourcesAllowed(srcs,Mask) == ALLOWED
                 || isDestinationsAllowed(dsts,Mask) == ALLOWED )
                 && ( smes.isEmpty() ||  isSMEsAllowed(dsts) == ALLOWED)
-                && ( names.isEmpty() || isNamesAllowed(name) == ALLOWED);
+                && ( names.isEmpty() || isNamesAllowed(name) == ALLOWED)
+                && ( providers.isEmpty() || isProvidersAllowed(providerId) == ALLOWED)
+                && ( categories.isEmpty() || isCategoriesAllowed(categoryId) == ALLOWED);
 
       case 2:
 
@@ -301,7 +379,14 @@ public class RouteFilter implements Filter
   {
     return (String[]) names.toArray(new String[0]);
   }
-
+  public String[] getProviders()
+  {
+    return (String[]) providers.toArray(new String[0]);
+  }
+  public String[] getCategories()
+  {
+    return (String[]) categories.toArray(new String[0]);
+  }
   public int getIntersection()
   {
     return intersection;
@@ -339,6 +424,14 @@ public class RouteFilter implements Filter
   {
     this.names = Arrays.asList(names);
   }
+   public void setProviders(String[] providers)
+  {
+    this.providers = Arrays.asList(providers);
+  }
+   public void setCategories(String[] categories)
+  {
+    this.categories = Arrays.asList(categories);
+  }
   public void setSelectSmes(String[] names)
   {
     this.names = Arrays.asList(names);
@@ -348,5 +441,13 @@ public class RouteFilter implements Filter
     this.intersection = intersection;
   }
 
+  public void setCategoryManager(CategoryManager categoryManager)
+  {
+    this.categoryManager = categoryManager;
+  }
 
+  public void setProviderManager(ProviderManager providerManager)
+  {
+    this.providerManager = providerManager;
+  }
 }

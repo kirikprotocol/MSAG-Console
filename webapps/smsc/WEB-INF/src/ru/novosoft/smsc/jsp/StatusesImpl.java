@@ -19,6 +19,8 @@ public class StatusesImpl implements Statuses
 	private boolean usersChanged = false;
 	private boolean smscChanged = false;
   private boolean webXmlChanged = false;
+  private boolean providersChanged = false;
+  private boolean categoriesChanged = false;
 
 	public boolean isRoutesChanged() {
 		return routesChanged;
@@ -117,6 +119,25 @@ public class StatusesImpl implements Statuses
   {
     return webXmlChanged;
   }
+
+  public void setProvidersChanged(boolean providersChanged)
+  {
+    this.providersChanged = providersChanged;
+  }
+
+  public void setCategoriesChanged(boolean categoriesChanged) {
+    this.categoriesChanged = categoriesChanged;
+  }
+
+  public boolean isProvidersChanged()
+  {
+    return providersChanged;
+  }
+
+  public boolean isCategoriesChanged()
+   {
+     return categoriesChanged;
+   }
 
   public void setWebXmlChanged(boolean webXmlChanged)
   {

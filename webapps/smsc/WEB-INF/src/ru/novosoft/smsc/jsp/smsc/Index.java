@@ -10,6 +10,7 @@ import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.Statuses;
+import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -27,7 +28,7 @@ public class Index extends SmscBean
 
 
   Statuses statuses = null;
-
+   private Config webappConfig = null;
   private String mbApply = null;
   private String[] checks = null;
   private Journal journal;
@@ -40,7 +41,7 @@ public class Index extends SmscBean
 
     statuses = appContext.getStatuses();
     journal = appContext.getJournal();
-
+    webappConfig=appContext.getConfig();
     if (checks == null)
       checks = new String[0];
 
@@ -72,6 +73,10 @@ public class Index extends SmscBean
 //			result = applyServices();
       else if ("users".equalsIgnoreCase(check))
         result = applyUsers();
+      else if ("providers".equalsIgnoreCase(check))
+        result = applyProviders();
+      else if ("categories".equalsIgnoreCase(check))
+        result = applyCategories();
       else if ("smsc".equalsIgnoreCase(check))
         result = applySmsc();
     }
@@ -203,6 +208,34 @@ public class Index extends SmscBean
     }
   }
 
+  private int applyProviders()
+  {
+    try {
+      if (statuses.isProvidersChanged()) {
+        appContext.getProviderManager().apply();
+        statuses.setProvidersChanged(false);
+        journal.clear(SubjectTypes.TYPE_provider);
+      }
+      return RESULT_OK;
+    } catch (Exception e) {
+      logger.error("Couldn't apply providers", e);
+      return error(SMSCErrors.error.providers.couldntApply, e);
+    }
+  }
+  private int applyCategories()
+  {
+    try {
+      if (statuses.isCategoriesChanged()) {
+        appContext.getCategoryManager().apply();
+        statuses.setCategoriesChanged(false);
+        journal.clear(SubjectTypes.TYPE_category);
+      }
+       return RESULT_OK;
+    } catch (Exception e) {
+      logger.error("Couldn't apply categories", e);
+      return error(SMSCErrors.error.categories.couldntApply, e);
+    }
+  }
   public boolean isRoutesChanged()
   {
     return statuses.isRoutesChanged();
@@ -240,6 +273,14 @@ public class Index extends SmscBean
     return statuses.isUsersChanged();
   }
 
+   public boolean isProvidersChanged()
+  {
+    return statuses.isProvidersChanged();
+  }
+   public boolean isCategoriesChanged()
+  {
+    return statuses.isCategoriesChanged();
+  }
   public boolean isSmscChanged()
   {
     return statuses.isSmscChanged();
@@ -285,11 +326,19 @@ public class Index extends SmscBean
     return journal.getActions(SubjectTypes.TYPE_host);
   }
 
-  public List getJournalUsers()
-  {
-    return journal.getActions(SubjectTypes.TYPE_user);
-  }
 
+  public List getJournalUsers()
+   {
+     return journal.getActions(SubjectTypes.TYPE_user);
+   }
+     public List getJournalProviders()
+   {
+     return journal.getActions(SubjectTypes.TYPE_provider);
+   }
+   public List getJournalCategories()
+   {
+     return journal.getActions(SubjectTypes.TYPE_category);
+   }
   public List getJournalSmsc()
   {
     return journal.getActions(smscSubjectTypes);

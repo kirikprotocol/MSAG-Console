@@ -14,6 +14,10 @@ import ru.novosoft.smsc.admin.service.HostsManager;
 import ru.novosoft.smsc.admin.service.ServiceManagerImpl;
 import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.users.UserManager;
+import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.category.Category;
+import ru.novosoft.smsc.admin.provider.ProviderManager;
+import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.topmon.TopServer;
 import ru.novosoft.smsc.util.LocaleMessages;
@@ -27,6 +31,7 @@ import javax.sql.DataSource;
 import java.io.*;
 import java.sql.SQLException;
 import java.util.*;
+import java.security.Principal;
 
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
@@ -40,6 +45,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   private SmeManager smeManager = null;
   private RouteSubjectManager routeSubjectManager = null;
   private ResourcesManager resourcesManager = null;
+  private Provider provider = null;
+  private Category category = null;
+  private ProviderManager providerManager = null;
+  private CategoryManager categoryManager = null;
   private AclManager aclManager = null;
 
   private Smsc smsc = null;
@@ -106,6 +115,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       System.out.println("Starting SMSC Administartion Web Apllication **************************************************");
       initLogger();
       webappConfig = new Config(new File(configFileName));
+      System.out.println("webappConfig = "+configFileName+" **************************************************");
       WebAppFolders.init(webappConfig.getString("system.webapp folder"), webappConfig.getString("system.work folder"), webappConfig.getString("smsc.config folder"));
 
       try {
@@ -131,6 +141,8 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       File usersConfig = new File(webappConfig.getString("system.users file"));
       startConsole();
       userManager = new UserManager(usersConfig);
+      providerManager = new ProviderManager(webappConfig);
+      categoryManager = new CategoryManager(webappConfig);
       statuses.setRoutesSaved(routeSubjectManager.hasSavedConfiguration());
       perfServer = new PerfServer(webappConfig);
       perfServer.start();
@@ -201,6 +213,24 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     return resourcesManager;
   }
 
+  public Provider getProvider() {
+    return provider;
+  }
+
+  public Category getCategory() {
+    return category;
+  }
+
+  public ProviderManager getProviderManager()
+  {
+    return providerManager;
+  }
+
+   public CategoryManager getCategoryManager()
+  {
+    return categoryManager;
+  }
+
   public DataSource getConnectionPool()
   {
     return connectionPool;
@@ -209,19 +239,19 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   public UserPreferences getUserPreferences(java.security.Principal loginedPrincipal)
   {
     if (loginedPrincipal == null)
-      return new UserPreferences();
+      return new UserPreferences(this);
     else
       synchronized (userPreferences) {
         UserPreferences prefs = (UserPreferences) userPreferences.get(loginedPrincipal);
         if (prefs == null) {
-          prefs = new UserPreferences();
+          prefs = new UserPreferences(this);
           userPreferences.put(loginedPrincipal, prefs);
         }
         return prefs;
       }
   }
 
-  public Statuses getStatuses()
+   public Statuses getStatuses()
   {
     return statuses;
   }

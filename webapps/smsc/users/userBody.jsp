@@ -39,7 +39,9 @@
 		<input class=check type=checkbox name=roles id=role17 value="profiles"          <%=bean.isUserInRole("profiles")          ? "checked" : ""%>>&nbsp;<label for=role17>Profiles</label><br>
 		<input class=check type=checkbox name=roles id=role18 value="hosts"             <%=bean.isUserInRole("hosts")             ? "checked" : ""%>>&nbsp;<label for=role18>Hosts</label><br>
 		<input class=check type=checkbox name=roles id=role19 value="service_operator"  <%=bean.isUserInRole("service_operator")  ? "checked" : ""%>>&nbsp;<label for=role19>Service operator</label><br>
-		<input class=check type=checkbox name=roles id=role20 value="services"          <%=bean.isUserInRole("services")          ? "checked" : ""%>>&nbsp;<label for=role20>Services</label>
+		<input class=check type=checkbox name=roles id=role20 value="services"          <%=bean.isUserInRole("services")          ? "checked" : ""%>>&nbsp;<label for=role20>Services</label><br>
+    <input class=check type=checkbox name=roles id=role21 value="providers"         <%=bean.isUserInRole("providers")         ? "checked" : ""%>>&nbsp;<label for=role21>Providers</label><br>
+    <input class=check type=checkbox name=roles id=role22 value="categories"        <%=bean.isUserInRole("categories")        ? "checked" : ""%>>&nbsp;<label for=role22>Categories</label><br>
     <%
       if (bean.getServiceRoles().size() > 0)
         out.print("<br>");
