@@ -1245,9 +1245,11 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               DoUSSRUserResponce(cmd,dialog.get());
               return;
             }
-            else
+            else {
+              SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
               throw MAPDIALOG_FATAL_ERROR(
                 FormatText("MAP::PutCommand: invaid USSD code 0x%x",serviceOp));
+            }
           }
           catch(...)
           {
