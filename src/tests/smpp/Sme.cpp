@@ -23,9 +23,9 @@ namespace smsc {
 					} else {
 						throw SmeConfigurationException("Error: Can't find a creator for identifier=" + smeId);
 					}
-				} catch (SmeConfigurationException ex) {
+				} catch (SmeConfigurationException &ex) {
 					throw;
-				} catch (std::runtime_error ex) {
+				} catch (std::runtime_error &ex) {
 					throw SmeConfigurationException(ex.what());
 				}
 			}
@@ -126,7 +126,7 @@ namespace smsc {
 						subCtx = ctx->firstSubcontext("timeout");
 						log.debug("Context \"timeout\" has been found");
 						cfg.timeOut = atoi(subCtx->getValue().c_str());
-					} catch (smsc::test::util::ObjectNotFoundException ex) {
+					} catch (smsc::test::util::ObjectNotFoundException &ex) {
 						log.warn(ex.what());
 						cfg.timeOut = 10000;
 					}
@@ -134,12 +134,12 @@ namespace smsc {
 						subCtx = ctx->firstSubcontext("system-type");
 						log.debug("Context \"system-type\" has been found");
 						cfg.systemType = subCtx->getValue();
-					} catch (smsc::test::util::ObjectNotFoundException ex) {
+					} catch (smsc::test::util::ObjectNotFoundException &ex) {
 						log.warn(ex.what());
 					}
 
 					log.debug("BasicSme::init ***exit***");
-				} catch (std::runtime_error ex) {
+				} catch (std::runtime_error &ex) {
 					throw SmeConfigurationException(ex.what());
 				}
 			}
@@ -194,11 +194,11 @@ namespace smsc {
 				listener->checkError();
 				//listener->releaseError();
 
-			  } catch (smsc::sme::SmppConnectException& ex) {
+			  } catch (smsc::sme::SmppConnectException &ex) {
 				  std::ostringstream msg;
 				  msg << "PduListenerException: smsc::sme::SmppConnectException #" << ex.getReason() << ", " << ex.getTextReason();
 				  throw PduListenerException(msg.str(), ex.getReason());
-			  } catch (std::exception& ex) {
+			  } catch (std::exception &ex) {
 				log.error("BasicSme#bind(): Unknown std::exception when binding, %s, type=%s", ex.what(), typeid(ex).name());
 				//throw PduListenerException("PduListenerException: Unknown std::exception when binding", 0);
 			  } catch (...) {
@@ -229,11 +229,11 @@ namespace smsc {
 			  try {
 				listener->checkError();
 				//listener->releaseError();
-			  } catch (smsc::sme::SmppConnectException ex) {
+			  } catch (smsc::sme::SmppConnectException &ex) {
 				  std::ostringstream msg;
 				  msg << "PduListenerException: smsc::sme::SmppConnectException #" << ex.getReason() << ", " << ex.getTextReason();
 				  throw PduListenerException(msg.str(), ex.getReason());
-			  } catch (std::exception ex) {
+			  } catch (std::exception &ex) {
 				log.error("BasicSme#unbind(): Unknown std::exception when unbinding\n, %s", ex.what());
 			  } catch (...) {
 				log.error("BasicSme#unbind(): Unknown exception when unbinding");
@@ -256,6 +256,28 @@ namespace smsc {
 			  atrans->sendPdu((smsc::smpp::SmppHeader*)&pdu);
 			  listener->checkError();
 			  return sequence;
+			}
+
+			uint32_t BasicSme::sendPdu(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) {
+			  if(session == 0) {
+				throw IllegalSmeOperation("BasicSme Error: Can't send any PDU when the session is NULL");
+			  }
+			  uint32_t sequence = session->getNextSeq();
+			  pdu->set_sequenceNumber(sequence);
+			  pdu->set_commandStatus(smsc::smpp::SmppStatusSet::ESME_ROK);
+			  smsc::sme::SmppTransmitter *atrans = session->getAsyncTransmitter();
+			  atrans->sendPdu(pdu);
+			  listener->checkError();
+			  return sequence;
+			}
+
+			void BasicSme::sendPduAsIs(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) {
+			  if(session == 0) {
+				throw IllegalSmeOperation("BasicSme Error: Can't send any PDU when the session is NULL");
+			  }
+			  smsc::sme::SmppTransmitter *atrans = session->getAsyncTransmitter();
+			  atrans->sendPdu(pdu);
+			  listener->checkError();
 			}
 
 			///////////////////////////////////////////

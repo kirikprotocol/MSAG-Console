@@ -45,7 +45,7 @@ namespace smsc {
 						<< "        " << failure->sourceLine().fileName() << ":" << failure->sourceLine().lineNumber() << std::endl;
 					}
 
-					for ( int testNumber = 0; testNumber < tests.size(); ++testNumber ) {
+					for ( unsigned int testNumber = 0; testNumber < tests.size(); ++testNumber ) {
 						CppUnit::Test *test = tests[testNumber];
 						if ( failedTests.find( test ) == failedTests.end() ) {
 							out << test->getName() << ", Passed, " << std::endl;

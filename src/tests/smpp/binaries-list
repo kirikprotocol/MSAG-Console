@@ -1,1 +1,2 @@
 tests/smpp/BindTest BindTest -ltests-util -ltests-smpp -lcppunit -llog4cpp -lxerces-c -lcore-network -lutil -lsms -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES)
+tests/smpp/SmsTest SmsTest -ltests-util -ltests-smpp -lcppunit -llog4cpp -lxerces-c -lcore-network -lutil -lsms -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES)

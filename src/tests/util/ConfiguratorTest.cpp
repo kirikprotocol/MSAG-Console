@@ -29,14 +29,14 @@ namespace smsc {
 					try {
 						config->loadContext();
 						//config.loadContext("test.xml");
-					} catch (ConfigurationException ex) {
+					} catch (ConfigurationException &ex) {
 						std::cout <<  std::endl << ex.what();
 						CPPUNIT_FAIL("ConfigurationException has occured");
 					}
 					try {
 						ContextHandler root = config->getContext("default_context");
 						std::cout << root->toString();
-					} catch (ObjectNotFoundException ex) {
+					} catch (ObjectNotFoundException &ex) {
 						std::cout <<  std::endl << ex.what();
 						CPPUNIT_FAIL("ObjectNotFoundException has occured");
 					}

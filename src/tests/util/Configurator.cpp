@@ -68,7 +68,7 @@ namespace smsc {
 						snprintf(exceptionMsg, sizeof(exceptionMsg), "An %d errors occured during parsing \"%s\"", errorCount, filename.c_str());
 						throw ConfigurationException(exceptionMsg);
 					}
-				} catch (const XMLException& e) {
+				} catch (const XMLException &e) {
 					char * message = DOMString(e.getMessage()).transcode();
 					XMLExcepts::Codes code = e.getCode();
 					const char *srcFile = e.getSrcFile();
@@ -77,7 +77,7 @@ namespace smsc {
 					snprintf(exceptionMsg, sizeof(exceptionMsg), "An error occured during parsing \"%s\" at file \"%s\" on line %d. Nested: %d: %s", filename.c_str(), srcFile, line, code, message);
 					delete[] message;
 					throw ConfigurationException(exceptionMsg);
-				} catch (const DOM_DOMException& e) {
+				} catch (const DOM_DOMException &e) {
 					char msg[1024];
 					snprintf(msg, sizeof(msg), "A DOM error occured during parsing\"%s\". DOMException code: %i", filename.c_str(), e.code);
 					throw ConfigurationException(msg);
@@ -101,7 +101,7 @@ namespace smsc {
 				DIR *dirDescr = opendir(dirname.c_str());
 				if (dirDescr) {	// каталог найден и успешно открыт
 					bool found = false;
-					for (dirent *entry; entry = readdir(dirDescr);) {
+					for (dirent *entry; (entry = readdir(dirDescr));) {
 						string filename = entry->d_name;
 						string::size_type pos = filename.rfind(".xml");
 						if ( (pos != string::npos) && (pos == (filename.length() - 4)) ) {
@@ -136,7 +136,7 @@ namespace smsc {
 					} else {
 						contexts.insert(std::make_pair(filename, rootContext));
 					}
-				} catch (ConfigurationException ex) {
+				} catch (ConfigurationException &ex) {
 					throw;
 				}
 			}
@@ -149,7 +149,7 @@ namespace smsc {
 
 				// копируем аттрибуты
 				DOM_NamedNodeMap attrs = el.getAttributes();
-				for (int i=0; i<attrs.getLength(); i++) {
+				for (unsigned int i=0; i<attrs.getLength(); i++) {
 					DOM_Node attr = attrs.item(i);
 					char *attrname = attr.getNodeName().transcode();
 					char *attrvalue = attr.getNodeValue().transcode();
@@ -165,7 +165,7 @@ namespace smsc {
 
 				// просматриваем содержимое
 				DOM_NodeList subels = el.getChildNodes();
-				for (int i=0; i<subels.getLength(); i++) {
+				for (unsigned int i=0; i<subels.getLength(); i++) {
 					DOM_Node node = subels.item(i);
 					if(node.getNodeType() == DOM_Node::ELEMENT_NODE) {
 					  // рекурсивно добавляем subcontext

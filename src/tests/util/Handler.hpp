@@ -88,7 +88,7 @@ namespace smsc {
 				}
 
 				Handler(const Handler<T, CheckingPolicy, DisposePolicy> &handler) {
-					if (handler != 0) {
+					if (handler.objectPtr != 0) {
 						objectPtr = handler.objectPtr;
 						referenceCount = handler.referenceCount;
 						++(*referenceCount);
@@ -100,7 +100,7 @@ namespace smsc {
 
 				template <typename T1>
 				Handler(Handler<T1, CheckingPolicy, DisposePolicy> &handler) {
-					if (handler != 0) {
+					if (handler.objectPtr != 0) {
 						objectPtr = static_cast<T*>(handler.getObjectPtr());
 						referenceCount = handler.getReferenceCountPtr();
 						++(*referenceCount);

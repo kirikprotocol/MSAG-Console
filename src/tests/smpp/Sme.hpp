@@ -141,6 +141,8 @@ namespace smsc {
 				virtual uint32_t bind(const int bindType) throw(PduListenerException, IllegalSmeOperation) = 0;
 				virtual uint32_t unbind() throw(PduListenerException, IllegalSmeOperation) = 0;
 				virtual uint32_t sendEquireLink() throw(PduListenerException, IllegalSmeOperation) = 0;
+				virtual uint32_t sendPdu(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) = 0;
+				virtual void sendPduAsIs(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) = 0;
 				// виртуальный деструктор для производных классов
 				virtual ~GenericSme() {}
 			};
@@ -216,7 +218,7 @@ namespace smsc {
 							session = new SmppSession(cfg, listener.getObjectPtr());
 							try {
 								session->connect();
-							} catch (smsc::sme::SmppConnectException ex) {
+							} catch (smsc::sme::SmppConnectException &ex) {
 								std::ostringstream sout;
 								sout << "Smpp connection error #" << ex.getReason() << ", " << ex.getTextReason();
 								throw SmppException(sout.str(), ex.getReason());
@@ -239,6 +241,8 @@ namespace smsc {
 				virtual uint32_t bind(const int bindType) throw(PduListenerException, IllegalSmeOperation);
 				virtual uint32_t unbind() throw(PduListenerException, IllegalSmeOperation);
 				virtual uint32_t sendEquireLink() throw(PduListenerException, IllegalSmeOperation);
+				virtual uint32_t sendPdu(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation);
+				virtual void sendPduAsIs(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation);
 			};
 
 			class QueuedSme;
@@ -281,7 +285,22 @@ namespace smsc {
 						int sequence = pduHandler->get_sequenceNumber();
 						queuedSme->log.debug("QueuedSmeListener: SequenceNumber = %i", sequence);
 						queuedSme->maxSequence = (queuedSme->maxSequence < sequence)?sequence:queuedSme->maxSequence;
-						if (queuedSme->sequenceLocks.Exist(sequence)) {
+						bool isResponse = false;
+						switch (pduHandler->get_commandId()) {
+						case smsc::smpp::SmppCommandSet::SUBMIT_SM_RESP:
+						case smsc::smpp::SmppCommandSet::SUBMIT_MULTI_RESP:
+						case smsc::smpp::SmppCommandSet::DATA_SM_RESP:
+						case smsc::smpp::SmppCommandSet::QUERY_SM_RESP:
+						case smsc::smpp::SmppCommandSet::CANCEL_SM_RESP:
+						case smsc::smpp::SmppCommandSet::REPLACE_SM_RESP:
+						case smsc::smpp::SmppCommandSet::BIND_TRANCIEVER_RESP:
+						case smsc::smpp::SmppCommandSet::BIND_TRANSMITTER_RESP:
+						case smsc::smpp::SmppCommandSet::BIND_RECIEVER_RESP:
+						case smsc::smpp::SmppCommandSet::UNBIND_RESP:
+						case smsc::smpp::SmppCommandSet::ENQUIRE_LINK_RESP:
+						  isResponse = true;
+						}
+						if (isResponse && queuedSme->sequenceLocks.Exist(sequence)) {
 							queuedSme->log.debug("QueuedSmeListener: signaling for sequence waiters");
 							MutexEventHandler event = queuedSme->sequenceLocks.Get(sequence);
 							event->Signal();
@@ -421,7 +440,7 @@ namespace smsc {
 					return pdu;
 				}
 			private:
-				PduHandler findPduWithSequence(int sequence) {
+				PduHandler findPduWithSequence(uint32_t sequence) {
 					PduHandler pdu;
 					if (!queue.empty() && sequence <= maxSequence) {
 					  log.debug("findPduWithSequence: searching pdu with sequence %d", sequence);
