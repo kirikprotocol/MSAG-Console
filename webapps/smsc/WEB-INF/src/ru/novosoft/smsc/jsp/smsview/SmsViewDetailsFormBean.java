@@ -11,7 +11,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.smsview.SmsDetailedRow;
 import ru.novosoft.smsc.admin.smsview.SmsQuery;
 import ru.novosoft.smsc.admin.smsview.SmsView;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 
@@ -28,14 +27,14 @@ public class SmsViewDetailsFormBean extends IndexBean
 
   public int process(HttpServletRequest request)
   {
-    if (this.appContext == null && appContext instanceof SMSCAppContext) {
-      view.setDataSource(appContext.getConnectionPool());
-      view.setSmsc(appContext.getSmsc());
-    }
-
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
+
+    if (view.getSmsc() == null) {
+      view.setDataSource(appContext.getConnectionPool());
+      view.setSmsc(appContext.getSmsc());
+    }
 
     if (mbView != null) result = processSmsQuery();
 

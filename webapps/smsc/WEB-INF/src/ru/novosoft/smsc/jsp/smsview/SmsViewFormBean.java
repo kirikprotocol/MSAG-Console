@@ -5,7 +5,6 @@ import ru.novosoft.smsc.admin.smsview.SmsQuery;
 import ru.novosoft.smsc.admin.smsview.SmsRow;
 import ru.novosoft.smsc.admin.smsview.SmsSet;
 import ru.novosoft.smsc.admin.smsview.SmsView;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 
