@@ -56,6 +56,7 @@ public:
     }
     reflist=0;
     reflistsize=0;
+    return *this;
   }
 
   explicit IntHash(int n)
