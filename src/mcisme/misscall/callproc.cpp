@@ -6,6 +6,9 @@
 #include "logger/Logger.h"
 #include "sms/sms.h"
 #include "util/regexp/RegExp.hpp"
+#include "core/buffers/Hash.hpp"
+#include "core/buffers/IntHash.hpp"
+
 
 using namespace std;
 void mts(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp);
@@ -128,12 +131,6 @@ static int checkTimer(Timer *timer)
  * --> LINKUP -> UNBLOCKING -> WORKING
  */
 
-static UCHAR_T UBL[]={0x00/*HSN*/, 0x00/*SPN*/, 0xFE, 0xFF, 0xFE, 0xFF/*TS MASK*/,0x00/*NO FORCE*/};
-
-USHORT_T unblockCurcuits()
-{
-  return EINSS7_MgmtApiSendOrderReq(USER,MGMT_ID,ISUP_ID,0x0B/*UNBLOCK CURCUITS*/,sizeof(UBL),UBL,NO_WAIT);
-}
 
 bool setCallingMask(const char* rx)
 {
@@ -145,17 +142,115 @@ bool setCalledMask(const char* rx) {
   return calledMaskRx.Compile(rx)!=0;
 }
 
+struct Connection {
+  Circuits cics;
+  State status; /* INIT -> ISUPBOUND -> UNBLOCKING -> WORKING */
+  Timer timer;
+  Connection()
+  {
+    status = INIT;
+  }
+  void start()
+  {
+    status = ISUPBOUND;
+    setTimer(&timer,120000); /* max wait for MTP_RESUME */
+  }
+  void tick()
+  {
+    switch(status)
+    {
+      case ISUPBOUND:
+        if (checkTimer(&timer))
+        {
+          smsc_log_error(missedCallProcessorLogger,
+                         "Resource group availability timer for span=%d is expired",
+                         cics.spn);
+          cancelTimer(&timer);
+          status = ISUPBINDERROR;
+        }
+        break;
+      case UNBLOCKING:
+        if (checkTimer(&timer))
+        {
+          smsc_log_error(missedCallProcessorLogger,
+                         "Unblock confirmation timer for span=%d is expired",
+                         cics.spn);
+          cancelTimer(&timer);
+          status = ISUPBINDERROR;
+        }
+        break;
+    }
+  }
+  void unblock()
+  {
+
+    UCHAR_T UBL[]={0x00/*HSN*/,
+                   0x00/*SPN*/,
+                   0xFE,
+                   0xFF,
+                   0xFE,
+                   0xFF/*TS MASK*/,
+                   0x00/*NO FORCE*/};
+
+    UBL[0] = cics.hsn;
+    UBL[1] = cics.spn;
+    UBL[2] = cics.ts & 0xFF;
+    UBL[3] = cics.ts >> 8 & 0xFF;
+    UBL[4] = cics.ts >> 16 & 0xFF;
+    UBL[5] = cics.ts >> 24 & 0xFF;
+
+    status = UNBLOCKING;
+
+    USHORT_T result;
+    result = EINSS7_MgmtApiSendOrderReq(
+               USER,
+               MGMT_ID,
+               ISUP_ID,
+               0x0B/*UNBLOCK CURCUITS*/,
+               sizeof(UBL),
+               UBL,
+               NO_WAIT);
+
+    if( result != EINSS7_MGMTAPI_REQUEST_OK )
+    {
+      smsc_log_error(missedCallProcessorLogger,
+                     "EINSS7_MgmtApiSendOrderReq() unblocking span=%d failed with code %d(%s)",
+                     cics.spn,result,getReturnCodeDescription(result));
+      status = ISUPBINDERROR;
+    }
+    else
+    {
+      setTimer(&timer,120000); /* max wait for success unblocking */
+    }
+  }
+  void finish(int ublstatus)
+  {
+    if (ublstatus)
+    {
+      cancelTimer(&timer);
+      status = WORKING;
+      smsc_log_debug(missedCallProcessorLogger,
+                     "MissedCallProcessor: span %d is %s",
+                         cics.spn,getStateDescription(status).c_str());
+    }
+    else
+    {
+      cancelTimer(&timer);
+      status = ISUPBINDERROR;
+    }
+  }
+};
+
+static IntHash<Connection> connections;
+
 void MissedCallProcessor::setCircuits(Hash<Circuits>& circuits)
 {
   Circuits cics; char* circuitsMsc = 0; circuits.First();
-  if (circuits.Next(circuitsMsc, cics))
+  while (circuits.Next(circuitsMsc, cics))
   {
-      UBL[0] = cics.hsn;
-      UBL[1] = cics.spn;
-      UBL[2] = cics.ts & 0xFF;
-      UBL[3] = cics.ts >> 8 & 0xFF;
-      UBL[4] = cics.ts >> 16 & 0xFF;
-      UBL[5] = cics.ts >> 24 & 0xFF;
+    Connection conn;
+    conn.cics = cics;
+    connections.Insert(cics.spn,conn);
   }
 }
 
@@ -170,13 +265,13 @@ static ReleaseSettings relCauses = {
 /* skip uca */ false
 };
 
-                                                     
+
 static void (*strategy)(EINSS7_I97_ISUPHEAD_T *head,
                         EINSS7_I97_CALLINGNUMB_T *calling,
                         EINSS7_I97_CALLEDNUMB_T *called,
                         EINSS7_I97_ORIGINALNUMB_T *original,
-				                EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp) = mts;
-						     
+                        EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp) = mts;
+
 void MissedCallProcessor::setReleaseSettings(ReleaseSettings params)
 {
   relCauses = params;
@@ -338,30 +433,31 @@ int MissedCallProcessor::run()
         }
         break;
       case ISUPBOUND:
-        if (checkTimer(&stacktimer))
         {
-          smsc_log_error(missedCallProcessorLogger,
-                         "Resource group availability timer is expired",
-                         result,getReturnCodeDescription(result));
-          result = MCIERROR;
-          goto unbindisup;
+          int linkup = 0;
+          Connection *conn = 0;
+          int span;
+          IntHash<Connection>::Iterator it=connections.First();
+          while (it.Next(span, conn))
+          {
+            if(conn)
+            {
+              conn->tick();
+              linkup |= (conn->status == WORKING);
+            }
+          }
+
+          if(linkup) cancelTimer(&stacktimer);
+          if (checkTimer(&stacktimer))
+          {
+            smsc_log_error(missedCallProcessorLogger,
+                           "Resource group availability timer is expired",
+                           result,getReturnCodeDescription(result));
+            result = MCIERROR;
+            goto unbindisup;
+          }
+          break;
         }
-        break;
-      case LINKUP:
-        result = unblockCurcuits();
-        if( result != EINSS7_MGMTAPI_REQUEST_OK )
-        {
-          smsc_log_error(missedCallProcessorLogger,
-                         "EINSS7_I97IsupBindReg() failed with code %d(%s)",
-                         result,getReturnCodeDescription(result));
-          goto unbindisup;
-        }
-        else
-        {
-          changeState(UNBLOCKING);
-          setTimer(&conftimer,MAXCONFTIME);
-        }
-        break;
 
       /*
        * Timer events
@@ -389,15 +485,6 @@ int MissedCallProcessor::run()
         {
           smsc_log_error(missedCallProcessorLogger,
                          "EINSS7_MgmtApiSendMgmtReq() confirmation timer is expired");
-          result = MCIERROR;
-          goto unbindmgmt;
-        }
-        break;
-      case UNBLOCKING:
-        if (checkTimer(&conftimer))
-        {
-          smsc_log_error(missedCallProcessorLogger,
-                         "EINSS7_MgmtApiSendOrderReq() confirmation timer is expired");
           result = MCIERROR;
           goto unbindmgmt;
         }
@@ -524,11 +611,13 @@ using smsc::misscall::waitstacktimer;
 using smsc::misscall::relCauses;
 using smsc::misscall::NONE;
 using smsc::misscall::ABSENT;
-using smsc::misscall::BUSY; 
-using smsc::misscall::NOREPLY; 
-using smsc::misscall::UNCOND; 
-using smsc::misscall::DETACH; 
+using smsc::misscall::BUSY;
+using smsc::misscall::NOREPLY;
+using smsc::misscall::UNCOND;
+using smsc::misscall::DETACH;
 using smsc::misscall::strategy;
+using smsc::misscall::Connection;
+using smsc::misscall::connections;
 using namespace smsc::misscall::util;
 using smsc::sms::MAX_FULL_ADDRESS_VALUE_LENGTH;
 
@@ -566,7 +655,14 @@ USHORT_T EINSS7_I97IsupBindConf(USHORT_T isupUserID,UCHAR_T result)
         result == EINSS7_I97_SAME_CC_BOUND)
     {
       changeState(ISUPBOUND);
-      setTimer(&stacktimer,120000); /* max wait for MTP_RESUME */
+      Connection *conn = 0;
+      int span;
+      IntHash<Connection>::Iterator it=connections.First();
+      while (it.Next(span, conn))
+      {
+        if(conn) conn->start();
+      }
+      setTimer(&stacktimer,120000); /* wait at least one span workinfg */
     }
     else
     {
@@ -736,7 +832,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_ORIGINALNUMB_T 
   {
     return;
   }
-  if (called && 
+  if (called &&
       called->noOfAddrSign > 0 &&
       called->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH)
   {
@@ -793,7 +889,7 @@ void taif(
       eventType  = DETACH;
       inform     = relCauses.detachInform;
     }
-    
+
     /* prefix 22 means absent subscriber */
     if (strncmp(prefix,"22",2) == 0 )
     {
@@ -801,7 +897,7 @@ void taif(
       eventType  = ABSENT;
       inform     = relCauses.absentInform;
     }
-    
+
     /* prefix 23 means busy */
     if (strncmp(prefix,"23",2) == 0 )
     {
@@ -809,7 +905,7 @@ void taif(
       eventType  = BUSY;
       inform     = relCauses.busyInform;
     }
-  }  
+  }
   releaseConnection(head,causeValue);
   if (inform)
   {
@@ -817,14 +913,14 @@ void taif(
     UCHAR_T tmpcdaddr[32] = {0};
     unpack_addr(cdaddr, called->addrSign_p, called->noOfAddrSign);
     pack_addr(tmpcdaddr, cdaddr + 2, strlen(cdaddr) - 2);
-    
+
     EINSS7_I97_CALLEDNUMB_T tmpcalled;
     tmpcalled.natureOfAddr = called->natureOfAddr;
     tmpcalled.numberPlan = called->numberPlan;
     tmpcalled.internalNetwNumb = called->internalNetwNumb;
     tmpcalled.noOfAddrSign = strlen(cdaddr) - 2 ;
     tmpcalled.addrSign_p = tmpcdaddr;
-      
+
     registerEvent(calling,&tmpcalled,eventType);
   }
 }
@@ -981,7 +1077,6 @@ USHORT_T EINSS7_I97IsupReleaseInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
 using smsc::misscall::util::getResultDescription;
 using smsc::misscall::util::getStackStatusDescription;
 using smsc::misscall::util::getModuleName;
-using smsc::misscall::unblockCurcuits;
 USHORT_T EINSS7_MgmtApiHandleBindConf(UCHAR_T length,
                                       UCHAR_T result,
                                       UCHAR_T mmState,
@@ -1020,26 +1115,21 @@ USHORT_T EINSS7_MgmtApiHandleOrderConf(USHORT_T moduleId,
                                        UCHAR_T orderResult,
                                        UCHAR_T resultInfo,
                                        UCHAR_T lengthOfInfo,
-                                       UCHAR_T *orderInfo_p)
+                                       UCHAR_T *orderInfo)
 {
   smsc_log_debug(missedCallProcessorLogger,
                  "MgmtOrderConf %s ORDER %d %s",
                  getModuleName(moduleId),
                  orderId,
                  getResultDescription(orderResult));
-  if ( state == UNBLOCKING &&
-       moduleId == ISUP_ID &&
+  if ( moduleId == ISUP_ID &&
        orderId == 0x0B /*UNBLOCK CURCUITS*/)
   {
-    cancelTimer(&conftimer);
-    if (orderResult == 0) /* Success */
-    {
-      changeState(WORKING);
-    }
-    else
-    {
-      changeState(ISUPBINDERROR);
-    }
+    int span = orderInfo[1];
+     Connection *conn = 0;
+     conn = connections.GetPtr(span);
+     if(conn)
+       conn->finish(orderResult == 0); /* Success */
   }
   return EINSS7_MGMTAPI_RETURN_OK;
 }
@@ -1072,10 +1162,13 @@ USHORT_T EINSS7_I97IsupResourceInd(USHORT_T resourceGroup,
                                    UCHAR_T rgstate)
 {
   smsc_log_debug(missedCallProcessorLogger, "ResourceInd RG=%d is %s",resourceGroup,rgstate?"available":"unavailable");
-  if ( state == ISUPBOUND && rgstate )
+  if ( rgstate )
   {
-    cancelTimer(&stacktimer);
-    changeState(LINKUP);
+    int span = resourceGroup;
+     Connection *conn = 0;
+     conn = connections.GetPtr(span);
+     if(conn)
+       conn->unblock(); /* Success */
   }
   return EINSS7_I97_REQUEST_OK;
 }
