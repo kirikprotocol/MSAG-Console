@@ -4,8 +4,6 @@
 #include "sms.h"
 #include "util/smstext.h"
 
-#define __FUNCTION__ __func__
-
 namespace smsc {
 namespace sms{
 
