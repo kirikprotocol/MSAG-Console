@@ -27,7 +27,7 @@ public class Journal
     logger.info("Journal created");
   }
 
-  public synchronized void append(final Action action)
+/*  public synchronized void append(final Action action)
   {
     assert Actions.ACTION_UNKNOWN != action.getAction()
            && SubjectTypes.TYPE_UNKNOWN != action.getSubjectType()
@@ -38,7 +38,7 @@ public class Journal
     journalLogger.info(action.toJournalString());
     logger.debug("APPEND " + actionStr);
   }
-
+  */
   public synchronized void append(final String userName, final String sessionId, final byte subjectType, final String subjectId, final byte action)
   {
     append(userName, sessionId, subjectType, subjectId, action, null);

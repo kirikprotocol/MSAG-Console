@@ -48,7 +48,7 @@ public class SmppGWAppContext
   private final Statuses statuses;
   private final DataSource connectionPool;
   private final BillingManager billingManager;
-  private Journal journal = new Journal();
+ // private Journal journal = new Journal();
    private Smppgw smppgw = null;
 
   private SmppGWAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
@@ -176,11 +176,11 @@ public class SmppGWAppContext
     return connectionPool;
   }
 
-  public Journal getJournal()
+/*  public Journal getJournal()
   {
     return journal;
   }
-
+  */
   public Smppgw getSmppgw()
   {
     return smppgw;
