@@ -119,6 +119,7 @@ void StatisticsManager::Stop()
     if (bStarted)
     {
         logger.info("Stopping ...");
+        bExternalFlush = true;
         bNeedExit = true;
         awakeEvent.Signal();
         exitEvent.Wait();
