@@ -21,6 +21,9 @@ using namespace smsc::smeman;
 #define MAP_8BIT_ENCODING 0x4
 #define MAP_UCS2_ENCODING 0x8
 
+#define MAKE_ERRORCODE(klass,code) (klass)
+#define MAP_NETWORK_ERROR 1
+
 struct MicroString{
   unsigned len;
   char bytes[256];
@@ -46,8 +49,11 @@ inline char GetChar(const unsigned char*& ptr,unsigned& shift){
   return val;
 }
 
-inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit){
+class VeryLongText{};
+
+inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit,unsigned char* ptr_end){
   //__trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,*ptr);
+  if ( ptr >= ptr_end ) throw VeryLongText;
   unsigned char val = val8bit;
   //char val = (*ptr >> shift)&0x7f;
   *ptr = *ptr | (val << shift);
@@ -63,7 +69,7 @@ inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit){
   //__trace2__("MAP: 7bit : %x",val);
 }
 
-void Convert7BitToText(
+/*void Convert7BitToText(
   const unsigned char* bit7buf, unsigned chars,
   MicroString* text)
 {
@@ -86,14 +92,14 @@ void Convert7BitToText(
     __trace2__("MAP::latin1(hex): %s",b);
   }
 #endif
-}
+}*/
 
 void Convert7BitToSMSC7Bit(
   const unsigned char* bit7buf, unsigned chars,
-  MicroString* text)
+  MicroString* text,unsigned offset=0)
 {
   __require__(chars<=255);
-  unsigned shift = 0;
+  unsigned shift = offset;
   for ( unsigned i=0; i< chars; ++i ){
     text->bytes[i] = GetChar(bit7buf,shift);
   }
@@ -114,7 +120,8 @@ void Convert7BitToSMSC7Bit(
 }
 
 unsigned ConvertText27bit(
-  const unsigned char* text, unsigned chars, unsigned char* bit7buf,unsigned* elen)
+  const unsigned char* text, unsigned chars, unsigned char* bit7buf,unsigned* elen,
+  unsigned offset=0)
 {
   //__require__(chars<=255);
   if ( chars > 160 ){
@@ -122,10 +129,11 @@ unsigned ConvertText27bit(
     throw runtime_error("text length > 160");
   }
   unsigned char* base = bit7buf;
-  unsigned shift = 0;
+  unsigned char* bit7buf_end = base+140;
+  unsigned shift = offset;
   (*elen) = 0;
   for ( unsigned i=0; i< chars; ++i ){
-#define __pchar(x) PutChar(bit7buf,shift,x)
+#define __pchar(x) PutChar(bit7buf,shift,x,bit7buf_end)
 #define __escape(x) __pchar(0x1b); __pchar(x); (*elen) += 2;
     switch(text[i]){
 		case '^': __escape(0x14); break;
@@ -138,7 +146,7 @@ unsigned ConvertText27bit(
 		case '~': __escape(0x3d); break;
 		case '\\':__escape(0x2f); break;
 		default:
-      PutChar(bit7buf,shift,lll_8bit_2_7bit[text[i]]);
+      PutChar(bit7buf,shift,lll_8bit_2_7bit[text[i]],bit7buf_end);
       (*elen) += 1;
     }
 #undef __pchar
@@ -167,7 +175,8 @@ unsigned ConvertText27bit(
 }
 
 unsigned ConvertSMSC7bit27bit(
-  const unsigned char* text, unsigned chars, unsigned char* bit7buf)
+  const unsigned char* text, unsigned chars, unsigned char* bit7buf,
+  unsigned offset=0)
 {
   //__require__(chars<=255);
   if ( chars > 160 ){
@@ -175,9 +184,10 @@ unsigned ConvertSMSC7bit27bit(
     throw runtime_error("text length > 160");
   }
   unsigned char* base = bit7buf;
-  unsigned shift = 0;
+  unsigned char* bit7buf_end = base+140;
+  unsigned shift = offset;
   for ( unsigned i=0; i< chars; ++i ){
-     PutChar(bit7buf,shift,text[i]);
+    PutChar(bit7buf,shift,text[i],bit7buf_end);
   }
 #if !defined DISABLE_TRACING
   {
@@ -401,20 +411,6 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2);
     __trace2__("MAP::DIALOG::ForwardReaq: user_data_len = %d",user_data_len);
     unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1);
-    /*if ( user_data_coding == 0 ) // 7bit
-    {
-      MicroString ms;
-      Convert7BitToText(user_data,user_data_len,&ms);
-      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
-      sms.setIntProperty(Tag::SMPP_DATA_CODING,0x0); // default
-    }
-    else if ( user_data_coding & 0x08  ) // UCS2
-    {
-      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
-      sms.setIntProperty(Tag::SMPP_DATA_CODING,MAP_8BIT_ENCODING);
-    }else{
-      __trace2__("unsupported encoding 0x%x",user_data_coding);
-    }*/
     unsigned encoding = 0;
     if ( (user_data_coding & 0xc0) == 0 ||  // 00xxxxxx
          (user_data_coding & 0xc0) == 0x40 )  // 01xxxxxx
@@ -460,10 +456,29 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     }
     {
       if (  encoding == MAP_OCTET7BIT_ENCODING ){
-        MicroString ms;
-        //Convert7BitToText(user_data,user_data_len,&ms);
-        Convert7BitToSMSC7Bit(user_data,user_data_len,&ms);
-        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
+        if ( ssfh->udhi){
+          MicroString ms;
+          auto_ptr<unsigned char> b = new unsigned char[255*2];
+          unsigned udh_len = ((unsigned)*user_data)&0x0ff;
+          __trace2__("MAP::DIALOG::ForwardReq: ud_length 0x%x",user_data_len);
+          __trace2__("MAP::DIALOG::ForwardReq: udh_len 0x%x",udh_len);
+          unsigned x = (udh_len+1)*8;
+          if ( x%7 != 0 ) x+=7-(x%7);
+          symbols = user_data_len-x/7;
+          __trace2__("MAP::DIALOG::ForwardReq: text symbols 0x%x",symbols);
+          __trace2__("MAP::DIALOG::ForwardReq: text bit offset 0x%x",x-(udh_len+1)*8);
+          Convert7BitToSMSC7Bit(user_data+udh_len+1,symbols,&ms,x-(udh_len+1)*8);
+          memcpy(b.get(),user_data,udh_len+1);
+          memcpy(b.get()+udh_len+1,ms.bytes,ms.len);
+          sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,b.get(),udh_len+1+symbols);
+          sms.setBinProperty(Tag::SMPP_SM_LENGTH,udh_len+1+symbols);
+        }else{
+          MicroString ms;
+          //Convert7BitToText(user_data,user_data_len,&ms);
+          Convert7BitToSMSC7Bit(user_data,user_data_len,&ms,0);
+          sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
+          sms.setBinProperty(Tag::SMPP_SM_LENGTH,ms.len);
+        }
         sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
       }
       else{
@@ -660,8 +675,26 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   }else if ( encoding == MAP_SMSC7BIT_ENCODING  ){ // 7bit
       unsigned text_len;
       const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
-      *pdu_ptr++ = text_len;
-      pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
+      if ( header->uu.s.udhi ){
+        unsigned udh_len = (unsigned)*text;
+        __trace2__("MAP::mkDeliverPDU: udh_len 0x%x",udh_len);
+        memcpy(pdu_ptr+1,text,udh_len+1);
+        unsigned x = (udh_len+1)*8;
+        if ( x%7 != 0 ) x+=7-(x%7);
+        symbols = user_data_len-x/7;
+        __trace2__("MAP::mkDeliverPDU: text symbols 0x%x",symbols);
+        __trace2__("MAP::mkDeliverPDU: text bit offset 0x%x",x-(udh_len+1)*8);
+        unsigned _7bit_text_len = ConvertSMSC7bit27bit(
+          text,
+          text_len,
+          pdu_ptr+udh_len+1+1,
+          x-(udh_len+1)*8);
+        *pdu_ptr++ = x/7+text_len+1;
+        pdu_ptr+= udh_len+_7bit_text_len+1;
+      }else{
+        *pdu_ptr++ = text_len;
+        pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
+      }
   }else{ // UCS2 || 8BIT
     unsigned text_len;
     const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
@@ -808,14 +841,19 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
       }
       //return true;// :) optimization
       return false;
+    }catch(VeryLongText&){
+      __trace2__("MAP::Et96MapCloseInd VeryLongText");
+      SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_FATAL,MAP_NETWORKERROR));
+      MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+      return true;
     }catch(exception& e){
       __trace2__("MAP::Et96MapCloseInd exception %s",e.what());
-      SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_FATAL);
+      SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_FATAL,MAP_NETWORKERROR));
       MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
       return true;
     }catch(...){
       __trace2__("MAP::Et96MapCloseInd unknown exception");
-      SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_FATAL);
+      SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_FATAL,MAP_NETWORKERROR));
       MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
       return true;
     }
@@ -867,9 +905,9 @@ void MapDialog::Et96MapV2ForwardSmMTConf (
     }
     SmscCommand cmd;
     if ( fatal ) {
-      cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_FATAL);
+      cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_FATAL,MAP_NETWORKERROR));
     }else{
-      cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_TEMP);
+      cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_NETWORKERROR));
     }
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
     __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x/0x%x was send %s to SMSC",dialogid,smscDialogId, 
@@ -877,11 +915,11 @@ void MapDialog::Et96MapV2ForwardSmMTConf (
   }else if (provErrCode_p){
     __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x/0x%x *provErrCode_p 0x%x",dialogid,smscDialogId,*provErrCode_p);
     SmscCommand cmd;
-    cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_TEMP);
+    cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_NETWORKERROR));
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
     __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x/0x%x was send CMD_ERR_TEMP to SMSC",dialogid,smscDialogId);
   }else{
-    SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_OK);
+    SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_OK,0));
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
     __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x/0x%x was send OK to SMSC",dialogid,smscDialogId);
   }
