@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 {
 	if (argc < 3)
 	{
-		cout << "Usage: test <dataCoding> <bytes> [-t]" << endl;
+		cout << "Usage: test <dataCoding> <bytes> [-t] [-c]" << endl;
 		return 0;
 	}
 	uint8_t dataCoding = atoi(argv[1]);

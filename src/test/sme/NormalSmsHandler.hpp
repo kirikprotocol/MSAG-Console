@@ -52,9 +52,11 @@ protected:
 
 	PduFlag checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 		SmppHeader* header, RespPduFlag respFlag, uint8_t dataCoding,
-		SmsMsg* msg, int concatRefNum, int concatMaxNum, int concatSeqNum);
+		const char* sm, int smLen, int extraUdhLen, SmsMsg* msg,
+		int concatRefNum, int concatMaxNum, int concatSeqNum);
 	PduFlag checkSimpleMapMsgText(DeliveryMonitor* monitor, SmppHeader* header,
-		RespPduFlag respFlag, uint8_t dataCoding, SmsMsg* msg);
+		RespPduFlag respFlag, uint8_t dataCoding, const char* sm,
+		int smLen, int extraUdhLen, SmsMsg* msg);
 	PduFlag checkMapMsgText(DeliveryMonitor* monitor, SmppHeader* header,
 		RespPduFlag respFlag);
 

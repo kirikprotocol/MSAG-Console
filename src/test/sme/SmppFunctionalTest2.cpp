@@ -226,13 +226,20 @@ int TestSmeFunc::Execute()
 	seq.insert(seq.end(), 20, 1);
 	seq.insert(seq.end(), 20, 2);
 	seq.insert(seq.end(), 15, 3);
+	seq.insert(seq.end(), 15, 4);
+	seq.insert(seq.end(), 10, 5);
+	seq.insert(seq.end(), 10, 6);
+	
 	seq.insert(seq.end(), 5, 11);
 	seq.insert(seq.end(), 5, 12);
+	
 	seq.insert(seq.end(), 5, 21);
 	seq.insert(seq.end(), 5, 22);
+	
 	seq.insert(seq.end(), 1, 31);
 	seq.insert(seq.end(), 1, 32);
 	seq.insert(seq.end(), 7, 33);
+	
 	seq.insert(seq.end(), 20, 41);
 	seq.insert(seq.end(), 10, 42);
 	//*/
@@ -247,6 +254,7 @@ int TestSmeFunc::Execute()
 	///*
 	seq.push_back(111);
 	seq.push_back(112);
+	
 	seq.push_back(121);
 	seq.push_back(122);
 	//*/
@@ -304,6 +312,12 @@ void TestSmeFunc::executeCycle()
 			break;
 		case 4: //спец sms на map proxy
 			protocolTc.submitSmMapSpecial(rand0(1), RAND_TC);
+			break;
+		case 5:
+			protocolTc.submitSmMapSpecial(rand0(1), 8);
+			break;
+		case 6:
+			protocolTc.submitSmMapSpecial(rand0(1), 9);
 			break;
 			
 		case 11:

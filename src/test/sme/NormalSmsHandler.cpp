@@ -264,13 +264,13 @@ void NormalSmsHandler::checkNotMapMsgText(DeliveryMonitor* monitor,
 
 //проверка: тип pdu, text
 PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
-	SmppHeader* header, RespPduFlag respFlag, uint8_t dataCoding,
-	SmsMsg* msg, int concatRefNum, int concatMaxNum, int concatSeqNum)
+	SmppHeader* header, RespPduFlag respFlag, uint8_t dataCoding, const char* sm,
+	int smLen, int extraUdhLen, SmsMsg* msg, int concatRefNum, int concatMaxNum, int concatSeqNum)
 {
 	__decl_tc__;
 	SmsPduWrapper pdu(header, 0);
 	__require__(pdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR);
-	__require__(pdu.isDeliverSm() && pdu.get_message().size_shortMessage() >= 6);
+	__require__(pdu.isDeliverSm() && smLen >= 6);
 	__trace2__("segmented message received: refNum = %d, maxNum = %d, seqNum = %d",
 		concatRefNum, concatMaxNum, concatSeqNum);
 
@@ -278,9 +278,9 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 	__check__(1, pdu.isDeliverSm());
 	__tc_ok_cond__;
 
-	int udhLen = 1 + *(unsigned char*) pdu.get_message().get_shortMessage();
-	const char* sm = pdu.get_message().get_shortMessage() + udhLen;
-	int smLen = pdu.get_message().size_shortMessage() - udhLen;
+	int udhLen = 1 + *(unsigned char*) sm;
+	sm += udhLen;
+	smLen -= udhLen;
 
 	if (dataCoding == msg->dataCoding)
 	{
@@ -313,6 +313,7 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 	int sz = msg->len - msg->offset;
 	if (msg->dataCoding == DEFAULT || msg->dataCoding == SMSC7BIT)
 	{
+		int maxLen = (134 - extraUdhLen) * 8/7;
 		int len1 = 0, len2 = 0, prevLen1 = 0, prevLen2 = 0, ext = 0;
 		bool prevWhiteSpace = true;
 		for (int i = 0; i < sz; i++)
@@ -335,7 +336,7 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 				}
 			}
 			//текст без пробелов
-			if (!len1 && !len2 && i + ext >= 153)
+			if (!len1 && !len2 && i + ext >= maxLen)
 			{
 				len1 = len2 = i;
 				break;
@@ -362,34 +363,35 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 					}
 					prevWhiteSpace = false;
 			}
-			if (len2 + ext >= 153)
+			if (len2 + ext >= maxLen)
 			{
 				break;
 			}
 		}
-		if (sz + ext <= 153)
+		if (sz + ext <= maxLen)
 		{
 			len1 = len2 = sz;
 		}
-		else if (len1 + ext <= 153 && len2 + ext > 153)
+		else if (len1 + ext <= maxLen && len2 + ext > maxLen)
 		{
-			len2 = 153 - ext;
+			len2 = maxLen - ext;
 		}
-		else if (len1 + ext > 153)
+		else if (len1 + ext > maxLen)
 		{
 			len1 = prevLen1;
 			len2 = prevLen2;
 		}
-		__require__(len1 <= len2 && len2 + ext <= 153);
+		__require__(len1 <= len2 && len2 + ext <= maxLen);
 		if (smLen < len1 || smLen > len2)
 		{
-			__trace2__("check segment len: seqNum = %d, maxNum = %d, len1 = %d, len2 = %d, ext = %d, msg offset = %d, msg len = %d",
-				concatSeqNum, concatMaxNum, len1, len2, ext, msg->offset, msg->len);
+			__trace2__("check segment len: seqNum = %d, maxNum = %d, smLen = %d, len1 = %d, len2 = %d, ext = %d, msg offset = %d, msg len = %d",
+				concatSeqNum, concatMaxNum, smLen, len1, len2, ext, msg->offset, msg->len);
 			__tc_fail__(5);
 		}
 	}
 	else if (msg->dataCoding == UCS2)
 	{
+		int maxLen = 134 - extraUdhLen - extraUdhLen % 2;
 		int len1 = 0, len2 = 0, prevLen1 = 0, prevLen2 = 0, ext = 0;
 		bool prevWhiteSpace = true;
 		for (int i = 0; i < sz; i += 2)
@@ -398,7 +400,7 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 			memcpy(&ch, msg->msg + msg->offset + i, 2);
 			ch = ntohs(ch);
 			//текст без пробелов
-			if (!len1 && !len2 && i >= 134)
+			if (!len1 && !len2 && i >= maxLen)
 			{
 				len1 = len2 = i;
 				break;
@@ -425,25 +427,25 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 					}
 					prevWhiteSpace = false;
 			}
-			if (len2 >= 134)
+			if (len2 >= maxLen)
 			{
 				break;
 			}
 		}
-		if (sz <= 134)
+		if (sz <= maxLen)
 		{
 			len1 = len2 = sz;
 		}
-		else if (len1 <= 134 && len2 > 134)
+		else if (len1 <= maxLen && len2 > maxLen)
 		{
-			len2 = 134;
+			len2 = maxLen;
 		}
-		else if (len1 > 134)
+		else if (len1 > maxLen)
 		{
 			len1 = prevLen1;
 			len2 = prevLen2;
 		}
-		__require__(len1 <= len2 && len2 <= 134);
+		__require__(len1 <= len2 && len2 <= maxLen);
 		if (smLen % 2)
 		{
 			__tc_fail__(6);
@@ -457,7 +459,7 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 	}
 	else
 	{
-		if (smLen + udhLen != 140 && smLen != sz)
+		if (smLen + udhLen + extraUdhLen != 140 && smLen != sz)
 		{
 			__tc_fail__(8);
 		}
@@ -492,7 +494,8 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 
 //проверка: тип pdu, text
 PduFlag NormalSmsHandler::checkSimpleMapMsgText(DeliveryMonitor* monitor,
-	SmppHeader* header, RespPduFlag respFlag, uint8_t dataCoding, SmsMsg* msg)
+	SmppHeader* header, RespPduFlag respFlag, uint8_t dataCoding, const char* sm,
+	int smLen, int extraUdhLen, SmsMsg* msg)
 {
 	__decl_tc__;
 	SmsPduWrapper pdu(header, 0);
@@ -519,6 +522,8 @@ PduFlag NormalSmsHandler::checkSimpleMapMsgText(DeliveryMonitor* monitor,
 		__tc__("sms.normalSms.map.shortSms.checkDiffDataCoding");
 	}
 	//проверка на длину сообщения <= MAX_MAP_SM_LENGTH делается в SmppPduChecker
+	
+	int udhi = pdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
 	if (pdu.isDeliverSm())
 	{
 		if (pdu.get_message().size_shortMessage() &&
@@ -526,49 +531,24 @@ PduFlag NormalSmsHandler::checkSimpleMapMsgText(DeliveryMonitor* monitor,
 		{
 			__tc_fail__(1);
 		}
-		else if (pdu.get_message().size_shortMessage())
+		else if (smLen != msg->len)
 		{
-			if (pdu.get_message().size_shortMessage() != msg->len)
-			{
-				__tc_fail__(2);
-			}
-			else if (memcmp(pdu.get_message().get_shortMessage(), msg->msg, msg->len))
-			{
-				__tc_fail__(3);
-			}
+			__tc_fail__(2);
 		}
-		else if (pdu.get_optional().has_messagePayload())
+		else if (memcmp(sm, msg->msg, msg->len))
 		{
-			if (pdu.get_optional().size_messagePayload() != msg->len)
-			{
-				__tc_fail__(4);
-			}
-			else if (memcmp(pdu.get_optional().get_messagePayload(), msg->msg, msg->len))
-			{
-				__tc_fail__(5);
-			}
-		}
-		else if (msg->len)
-		{
-			__tc_fail__(6);
+			__tc_fail__(3);
 		}
 	}
 	else if (pdu.isDataSm())
 	{
-		if (pdu.get_optional().has_messagePayload())
+		if (smLen != msg->len)
 		{
-			if (pdu.get_optional().size_messagePayload() != msg->len)
-			{
-				__tc_fail__(11);
-			}
-			else if (memcmp(pdu.get_optional().get_messagePayload(), msg->msg, msg->len))
-			{
-				__tc_fail__(12);
-			}
+			__tc_fail__(4);
 		}
-		else if (msg->len)
+		else if (memcmp(sm, msg->msg, msg->len))
 		{
-			__tc_fail__(13);
+			__tc_fail__(5);
 		}
 	}
 	__tc_ok_cond__;
@@ -619,34 +599,58 @@ PduFlag NormalSmsHandler::checkMapMsgText(DeliveryMonitor* monitor,
 		}
 	}
 	
-	if (udhi && pdu.isDeliverSm() && pdu.get_message().size_shortMessage())
+	const char* sm = NULL;
+	int smLen = 0;
+	int extraUdhLen = 0;
+	if (pdu.isDeliverSm() && pdu.get_message().size_shortMessage())
 	{
-		unsigned char* sm = (unsigned char*) pdu.get_message().get_shortMessage();
-		int udhLen = 1 + *sm;
-		
+		sm = pdu.get_message().get_shortMessage();
+		smLen = pdu.get_message().size_shortMessage();
+	}
+	else if (pdu.isDeliverSm() && pdu.get_optional().has_messagePayload())
+	{
+		sm = pdu.get_optional().get_messagePayload();
+		smLen = pdu.get_optional().size_messagePayload();
+	}
+	else if (pdu.isDataSm() && pdu.get_optional().has_messagePayload())
+	{
+		sm = pdu.get_optional().get_messagePayload();
+		smLen = pdu.get_optional().size_messagePayload();
+	}
+	
+	if (udhi && sm)
+	{
+		char* newSm = new char[smLen]; //вырезать специфичные таги теги
+		int pos = 1; //Первый байт - размер udh
+		int udhLen = 1 + *(unsigned char*) sm;
 		for (int i = 1; i < udhLen; )
 		{
 			//ie - informational element
-			int ieId = sm[i++];
-			int ieLen = sm[i++];
+			int ieId = sm[i];
+			int ieLen = sm[i + 1]; //размер без номера тага и длины
+			int ieSize = ieLen + 2; //полный размер тага
 			if (ieId == 0) //Concatenated short messages, 8-bit reference number
 			{
 				__require__(ieLen == 3);
 				segmentedMsg = true;
-				concatRefNum = sm[i++];
-				concatMaxNum = sm[i++];
-				concatSeqNum = sm[i++];
-				continue;
+				concatRefNum = sm[i + 2];
+				concatMaxNum = sm[i + 3];
+				concatSeqNum = sm[i + 4];
 			}
 			else if (ieId == 0x04) //application port, 8 bit address
 			{
 				__require__(ieLen == 2);
 				__tc__("sms.normalSms.map.checkMobileEquipment");
+				uint16_t destPort = (unsigned char) sm[i + 2];
+				uint16_t srcPort = (unsigned char) sm[i + 3];
 				__check__(1, mobileEquipment8BitPorts);
-				__check__(2, origPdu.get_optional().get_destinationPort() == sm[i++]);
-				__check__(3, origPdu.get_optional().get_sourcePort() == sm[i++]);
+				__check__(2, origPdu.get_optional().get_destinationPort() == destPort);
+				__check__(3, origPdu.get_optional().get_sourcePort() == srcPort);
 				__tc_ok_cond__;
 				mobileEquipment8BitPorts = false;
+				//вырезать таг
+				i += ieSize;
+				extraUdhLen += ieSize;
 				continue;
 			}
 			else if (ieId == 0x05) //application port, 16 bit address
@@ -654,17 +658,35 @@ PduFlag NormalSmsHandler::checkMapMsgText(DeliveryMonitor* monitor,
 				__require__(ieLen == 4);
 				__tc__("sms.normalSms.map.checkMobileEquipment");
 				uint16_t srcPort, destPort;
-				memcpy(&destPort, sm + i, 2); i += 2; destPort = ntohs(destPort);
-				memcpy(&srcPort, sm + i, 2); i += 2; srcPort = ntohs(srcPort);
+				memcpy(&destPort, sm + i + 2, 2); destPort = ntohs(destPort);
+				memcpy(&srcPort, sm + i + 4, 2); srcPort = ntohs(srcPort);
 				__check__(5, mobileEquipment16BitPorts);
 				__check__(6, destPort == origPdu.get_optional().get_destinationPort());
 				__check__(7, srcPort == origPdu.get_optional().get_sourcePort());
 				__tc_ok_cond__;
 				mobileEquipment16BitPorts = false;
+				//вырезать таг
+				i += ieSize;
+				extraUdhLen += ieSize;
 				continue;
 			}
-			i += ieLen;
+			memcpy(newSm + pos, sm + i, ieSize); //скопировать таг
+			pos += ieSize;
+			i += ieSize;
 		}
+		if (pos > 1)
+		{
+			newSm[0] = pos - 1;
+			memcpy(newSm + pos, sm + udhLen, smLen - udhLen);
+			smLen = pos + smLen - udhLen;
+		}
+		else
+		{
+			memcpy(newSm, sm + udhLen, smLen - udhLen);
+			smLen = smLen - udhLen;
+		}
+		delete sm;
+		sm = newSm;
 	}
 	
 	__tc__("sms.normalSms.map.checkMobileEquipment");
@@ -675,11 +697,12 @@ PduFlag NormalSmsHandler::checkMapMsgText(DeliveryMonitor* monitor,
 	if (segmentedMsg)
 	{
 		return checkSegmentedMapMsgText(monitor, header, respFlag, dataCoding,
-			msg, concatRefNum, concatMaxNum, concatSeqNum);
+			sm, smLen, extraUdhLen, msg, concatRefNum, concatMaxNum, concatSeqNum);
 	}
 	else
 	{
-		return checkSimpleMapMsgText(monitor, header, respFlag, dataCoding, msg);
+		return checkSimpleMapMsgText(monitor, header, respFlag, dataCoding,
+			sm, smLen, extraUdhLen, msg);
 	}
 }
 
