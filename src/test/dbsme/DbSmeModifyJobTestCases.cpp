@@ -175,7 +175,8 @@ const string DbSmeInsertJobTestCases::processJobFirstOutput(const string& text,
 	if (dbSmeReg->getRecord(rec->getId()))
 	{
 		__tc__("processDbSmeRes.insert.duplicateKey"); __tc_ok__;
-		return "Duplicate key";
+		__cfg_str__(dbSmeRespDsFailure);
+		return dbSmeRespDsFailure;
 	}
 	else if (rec->getJob() == "InsertJob1")
 	{
@@ -304,7 +305,8 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 		if (dbSmeReg->size() > 1)
 		{
 			__tc__("processDbSmeRes.update.duplicateKey"); __tc_ok__;
-			return "Duplicate key";
+			__cfg_str__(dbSmeRespDsFailure);
+			return dbSmeRespDsFailure;
 		}
 		else
 		{

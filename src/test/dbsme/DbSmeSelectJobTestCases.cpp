@@ -194,12 +194,14 @@ const string DbSmeSelectJobTestCases::processSelectNoDefaultsJobOutput()
 	if (!res)
 	{
 		__tc__("processDbSmeRes.select.nullsNoDefaults"); __tc_ok__;
-		return "No default";
+		__cfg_str__(dbSmeRespOutputFormat);
+		return dbSmeRespOutputFormat;
 	}
 	else if	(!count)
 	{
 		__tc__("processDbSmeRes.select.noRecordNoDefaults"); __tc_ok__;
-		return "No records, no defaults";
+		__cfg_str__(dbSmeRespQueryNull);
+		return dbSmeRespQueryNull;
 	}
 	return os.str();
 }
