@@ -53,4 +53,17 @@ public class Gateway extends Proxy
     if (Response.StatusOk != response.getStatus())
       throw new SibincoException("Couldn't update sme info, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
   }
+  public void loadRoutes(final String subject) throws SibincoException
+   {
+     final Response response = super.runCommand(new LoadRoutes(subject));
+     if (Response.StatusOk != response.getStatus())
+       throw new SibincoException("Couldn't load active routes configuration, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+   }
+ public void TraceRoute(final String subject) throws SibincoException
+   {
+     final Response response = super.runCommand(new TraceRoute(subject));
+     if (Response.StatusOk != response.getStatus())
+       throw new SibincoException("Couldn't trace route , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+   }
+
 }
