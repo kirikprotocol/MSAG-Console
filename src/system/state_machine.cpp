@@ -1052,7 +1052,7 @@ StateType StateMachine::forward(Tuple& t)
 
 StateType StateMachine::deliveryResp(Tuple& t)
 {
-  __trace2__("DELIVERYRESP: msgId=%lld",t.msgId);
+  __trace2__("DELIVERYRESP: msgId=%lld,status=%d",t.msgId,t.command->get_resp()->get_status());
   //__require__(t.state==DELIVERING_STATE);
   if(t.state!=DELIVERING_STATE)
   {
