@@ -5,8 +5,8 @@
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 
-#include "DataSource.h"
-#include "oci/OCIDataSource.h"
+#include <db/DataSource.h>
+#include <db/oci/OCIDataSource.h>
 
 const char* OCI_DS_FACTORY_IDENTITY = "OCI";
 
@@ -18,7 +18,9 @@ int main(void)
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
-    using namespace smsc::dbsme;
+    
+    using namespace smsc::db;
+    using namespace smsc::db::oci;
 
     OCIDataSourceFactory ociDSFactory;
     DataSourceFactory::registerFactory(&ociDSFactory, OCI_DS_FACTORY_IDENTITY);
