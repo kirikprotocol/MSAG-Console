@@ -284,6 +284,11 @@ int partitionSms(SMS* sms,int dstdc)
       if((i-lastpos)>=67)
       {
         __trace2__("PARTITIONSMS: part=%d, i=%d, lastpos=%d, lastword=%d",parts,i,lastpos,lastword);
+        if(c<=32)
+        {
+          offsets[parts++]=i*2;
+          lastpos=i;
+        }else
         if(i-lastword<67)
         {
           offsets[parts++]=(lastword+1)*2;
@@ -321,7 +326,7 @@ int partitionSms(SMS* sms,int dstdc)
         {
           if(i<len-1 && (c==32 || c==10 || c==13))
           {
-            offsets[parts++]=i;
+            offsets[parts++]=i-1;
             lastword=i+1;
             wl=0;
           }else
@@ -341,6 +346,7 @@ int partitionSms(SMS* sms,int dstdc)
         __trace2__("PARTITIONSMS: part=%d, off=%d",parts-1,offsets[parts-1]);
         if(parts>=256)return psErrorLength;
       }
+      c=msg[i];
       wl++;
       l++;
       if(c==32 || c==10 || c==13)
