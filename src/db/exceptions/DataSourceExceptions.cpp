@@ -4,7 +4,7 @@
 namespace smsc { namespace db
 {
 
-SQLException::SQLException(int _code=-1, int _status=0) 
+SQLException::SQLException(int _code, int _status) 
     : Exception(""), code(_code) 
 {
 }
@@ -13,7 +13,7 @@ SQLException::SQLException(const SQLException& exc)
         code(exc.getErrorCode()), status(exc.getErrorStatus())
 {
 }
-SQLException::SQLException(const char* _cause, int _code=-1, int _status=0) 
+SQLException::SQLException(const char* _cause, int _code, int _status) 
     : Exception("Code: %d Status: %d, Failure cause: %s", 
             _code, _status, _cause), code(_code), status(_status) 
 {
