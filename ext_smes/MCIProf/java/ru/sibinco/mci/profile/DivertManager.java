@@ -5,6 +5,7 @@ import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
 import java.io.*;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.net.Socket;
 
 import org.apache.log4j.Category;
@@ -33,14 +34,25 @@ public class DivertManager
   private String mscUserCode      = null;
   private String mscUserPassword  = null;
   private String mscNvtIODevice   = null;
-  private String mciSmeAddress    = null;
-  private String voiceMailAddress = null;
+  private Vector mciSmeAddresses    = null;
+  private Vector voiceMailAddresses = null;
 
   private InputStream  is = null;
   private OutputStream os = null;
   private Socket mscSocket = null;
   private Object mscSocketLock = new Object();
 
+  private Vector parseAddresses(String addresses)
+  {
+    if (addresses == null) return null;
+    Vector result = new Vector();
+    StringTokenizer st = new StringTokenizer(addresses, " ,;:");
+    while (st.hasMoreTokens()) {
+      String address = st.nextToken();
+      if (address != null) result.add(address.trim());
+    }
+    return ((result.size() > 0) ? result : null);
+  }
   protected DivertManager() throws ScenarioInitializationException
   {
     InputStream is = this.getClass().getClassLoader().getResourceAsStream(Constants.MCI_PROF_MSC_FILE);
@@ -56,8 +68,12 @@ public class DivertManager
       mscNvtIODevice   = properties.getProperty("MSC.nvtIODevice");
       mscUserCode      = properties.getProperty("MSC.usercode");
       mscUserPassword  = properties.getProperty("MSC.userpassword");
-      voiceMailAddress = properties.getProperty("MSC.voicemail");
-      mciSmeAddress    = properties.getProperty("MCISme.Address");
+      mciSmeAddresses    = parseAddresses(properties.getProperty("MSC.mcisme"));
+      if (mciSmeAddresses == null)
+        throw new Exception("Shuold be at least one MCISme address specified");
+      voiceMailAddresses = parseAddresses(properties.getProperty("MSC.voicemail"));
+      if (voiceMailAddresses == null)
+        throw new Exception("Shuold be at least one VoiceMail address specified");
 
     } catch(Exception e) {
       final String err = "Failed to load commutator properties";
@@ -229,21 +245,28 @@ public class DivertManager
   private final static String SSD_STR       = "SUPPLEMENTARY SERVICE DATA";
   private final static String ACTIVE_OP_STR = "ACTIVE-OP";
 
+  private boolean checkService(Vector addresses, String divert)
+  {
+    String _divert = "+"+divert;
+    for (int i=0; i<addresses.size(); i++) {
+      String address = (String)addresses.get(i);
+      if (address != null && address.length() > 0 &&
+          (address.equalsIgnoreCase(divert) || address.equalsIgnoreCase(_divert))) return true;
+    }
+    return false;
+  }
   private String divertToLocal(String divert)
   {
     if (divert == null || divert.length() <= 0) return Constants.OFF;
     divert = divert.trim();
-    if (divert.equalsIgnoreCase(mciSmeAddress)) return Constants.SERVICE;
-    if (divert.equalsIgnoreCase(voiceMailAddress)) return Constants.VOICEMAIL;
-    String _divert = "+"+divert;
-    if (_divert.equalsIgnoreCase(mciSmeAddress)) return Constants.SERVICE;
-    if (_divert.equalsIgnoreCase(voiceMailAddress)) return Constants.VOICEMAIL;
+    if (checkService(mciSmeAddresses, divert)) return Constants.SERVICE;
+    if (checkService(voiceMailAddresses, divert)) return Constants.VOICEMAIL;
     return divert;
   }
   private String localToDivert(String local)  throws IOException
   {
-    if (local.equalsIgnoreCase(Constants.SERVICE)) local = mciSmeAddress;
-    else if (local.equalsIgnoreCase(Constants.VOICEMAIL)) local = voiceMailAddress;
+    if (local.equalsIgnoreCase(Constants.SERVICE)) local = (String)(mciSmeAddresses.get(0));
+    else if (local.equalsIgnoreCase(Constants.VOICEMAIL)) local = (String)(voiceMailAddresses.get(0));
     return checkAndConvertAddress(local);
   }
   private String checkAndConvertAddress(String address) throws IOException
