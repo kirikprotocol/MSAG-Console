@@ -189,7 +189,7 @@ private:
 	vector<int> checkReadyForCancelSms(const Address& oa, 
 		const Address& da, const char* svcType, const vector<SMSId*>& ids,
 		const vector<SMS*>& sms);
-	void rand_text(SMS* sms, char* sm, int len);
+	void rand_text(SMS* sms, char* sm, int& len);
 };
 
 }

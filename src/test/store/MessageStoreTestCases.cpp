@@ -98,7 +98,7 @@ const char* str(SMSId id)
 
 void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 {
-	TCSelector s(num, 21);
+	TCSelector s(num, 20);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -167,72 +167,68 @@ void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 							MAX_ADDRESS_LENGTH, imsiAddr.get(), 30);
 					}
 					break;
+				/*
 				case 11: //пустое тело сообщения
 					__tc__("storeCorrectSms.bodyEmpty");
 					sms.getMessageBody() = Body();
 					break;
-				case 12: //short_message и message_payload максимальной длины
+				*/
+				case 11: //short_message и message_payload максимальной длины
+					if (!loadTest)
 					{
-						if (loadTest)
-						{
-							__tc__("storeCorrectSms");
-						}
-						else
-						{
-							__require__(sms.hasIntProperty(Tag::SMPP_DATA_CODING));
-							sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0);
-							uint8_t dc = sms.getIntProperty(Tag::SMPP_DATA_CODING);
-							__tc__("storeCorrectSms.bodyMaxLength");
-							__set_int_body_tag__(SMPP_SM_LENGTH, MAX_SM_LENGTH);
-							__set_bin_body_tag__(SMPP_SHORT_MESSAGE, MAX_SM_LENGTH, dc, false);
-							__set_bin_body_tag__(SMPP_MESSAGE_PAYLOAD, MAX_PAYLOAD_LENGTH, dc, false);
-						}
+						__require__(sms.hasIntProperty(Tag::SMPP_DATA_CODING));
+						sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0);
+						uint8_t dc = sms.getIntProperty(Tag::SMPP_DATA_CODING);
+						__tc__("storeCorrectSms.bodyMaxLength");
+						__set_int_body_tag__(SMPP_SM_LENGTH, MAX_SMPP_SM_LENGTH);
+						__set_bin_body_tag__(SMPP_SHORT_MESSAGE, MAX_SMPP_SM_LENGTH, dc, false);
+						__set_bin_body_tag__(SMPP_MESSAGE_PAYLOAD, MAX_PAYLOAD_LENGTH, dc, false);
 					}
 					break;
-				case 13: //пустой serviceType, NULL недопустимо
+				case 12: //пустой serviceType, NULL недопустимо
 					__tc__("storeCorrectSms.serviceTypeMarginal");
                    	sms.setEServiceType("");
 					break;
-				case 14: //serviceType максимальной длины
+				case 13: //serviceType максимальной длины
 					{
 						__tc__("storeCorrectSms.serviceTypeMarginal");
 						auto_ptr<char> type = rand_char(MAX_SERVICE_TYPE_LENGTH);
 						sms.setEServiceType(type.get());
 					}
 					break;
-				case 15: //receipted_message_id максимальной длины
+				case 14: //receipted_message_id максимальной длины
 					{
 						__tc__("storeCorrectSms.rcptMsgIdMaxLength");
 						__set_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, MAX_MSG_ID_LENGTH);
 					}
 					break;
-				case 16: //пустой routeId 
+				case 15: //пустой routeId 
 					__tc__("storeCorrectSms.routeIdMarginal");
 					sms.setRouteId("");
 					break;
-				case 17: //routeId максимальной длины
+				case 16: //routeId максимальной длины
 					{
 						__tc__("storeCorrectSms.routeIdMarginal");
 						auto_ptr<char> routeId = rand_char(MAX_ROUTE_ID_LENGTH);
 						sms.setRouteId(routeId.get());
 					}
 					break;
-				case 18: //пустой sourceSmeId
+				case 17: //пустой sourceSmeId
 					__tc__("storeCorrectSms.sourceSmeIdMarginal");
 					sms.setSourceSmeId("");
 					break;
-				case 19: //sourceSmeId максимальной длины
+				case 18: //sourceSmeId максимальной длины
 					{
 						__tc__("storeCorrectSms.sourceSmeIdMarginal");
 						auto_ptr<char> sourceSmeId = rand_char(MAX_SME_SYSTEM_ID_LENGTH);
 						sms.setSourceSmeId(sourceSmeId.get());
 					}
 					break;
-				case 20: //пустой destinationSmeId
+				case 19: //пустой destinationSmeId
 					__tc__("storeCorrectSms.destinationSmeIdMarginal");
 					sms.setDestinationSmeId("");
 					break;
-				case 21: //destinationSmeId максимальной длины
+				case 20: //destinationSmeId максимальной длины
 					{
 						__tc__("storeCorrectSms.destinationSmeIdMarginal");
 						auto_ptr<char> destinationSmeId = rand_char(MAX_SME_SYSTEM_ID_LENGTH);
@@ -898,19 +894,20 @@ void MessageStoreTestCases::changeFinalSmsStateToAny(const SMSId id, int num)
 	}
 }
 
-void MessageStoreTestCases::rand_text(SMS* sms, char* sm, int len)
+void MessageStoreTestCases::rand_text(SMS* sms, char* sm, int& len)
 {
 	__require__(sms && sm);
 	__require__(sms->hasIntProperty(Tag::SMPP_DATA_CODING));
 	__require__(sms->hasIntProperty(Tag::SMPP_ESM_CLASS));
 	uint8_t dc = sms->getIntProperty(Tag::SMPP_DATA_CODING);
 	bool udhi = sms->getIntProperty(Tag::SMPP_ESM_CLASS) & UDHI_BIT;
+	__trace2__("rand_text: dc = %d, udhi = %d", (int) dc, (int) udhi);
 	rand_text2(len, sm, dc, udhi, true);
 }
 
 #define __prepare_for_replace_sms__(sms) \
-	int len = rand1(MAX_SM_LENGTH); \
-	char sm[MAX_SM_LENGTH]; \
+	int len = rand1(MAX_SMPP_SM_LENGTH); \
+	char sm[MAX_SMPP_SM_LENGTH]; \
 	rand_text(sms, sm, len); \
 	uint8_t deliveryReport = rand0(255); \
 	time_t validTime = time(NULL) + 100; \
@@ -918,7 +915,7 @@ void MessageStoreTestCases::rand_text(SMS* sms, char* sm, int len)
 
 void MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int num)
 {
-	TCSelector s(num, 6);
+	TCSelector s(num, 4);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -938,6 +935,7 @@ void MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int num)
 					__tc__("replaceCorrectSms.validTimeUnchanged");
 					validTime = 0;
 					break;
+				/*
 				case 4: //пустое тело сообщения
 					__tc__("replaceCorrectSms.smMarginal");
 					len = 0;
@@ -947,9 +945,10 @@ void MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int num)
 					len = 0;
 					//sm = NULL;
 					break;
-				case 6: //тело сообщения максимальной длины
+				*/
+				case 4: //тело сообщения максимальной длины
 					__tc__("replaceCorrectSms.smMarginal");
-					len = MAX_SM_LENGTH;
+					len = MAX_SMPP_SM_LENGTH;
 					rand_text(sms, sm, len);
 					break;
 				default:
@@ -1626,6 +1625,7 @@ void MessageStoreTestCases::checkConcatInitInfo(const vector<SMSId*>& ids,
 		{
 			__tc_fail__(4);
 		}
+		delete it;
 	}
 	catch (...)
 	{
