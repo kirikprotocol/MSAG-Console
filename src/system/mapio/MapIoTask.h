@@ -226,14 +226,17 @@ public:
   
   MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd){
     if ( abonent.length() == 0 )
-      throw runtime_error("can't create MT dialog without abonent");
+      throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
     MutexGuard g(sync);
-    __trace2__("MAP::createSMSCDialog: try create SMSC dialog on abonent %s",abonent.c_str());
+    __trace2__("MAP::createOrAttachSMSCDialog: try create SMSC dialog on abonent %s",abonent.c_str());
     if ( lock_map.Exists(abonent) ) {
       __trace2__("MAP::createSMSCDialog: locked");
       MapDialog* item = lock_map[abonent];
-      if ( dlg == 0 ) throw runtime_error("MAP::%s dialog for abonent %s is not present!",__FUNCTION__,abonent);
-      __trace2__("MAP::createSMSCDialog: chain size %d",item->chain.size());
+      if ( dlg == 0 ) {
+        __trace2__("MAP::%s dialog for abonent %s is not present!",__FUNCTION__,abonent);
+        throw runtime_error("MAP::createOrAttachSMSCDialog: has no dialog for abonent ");
+      }
+      __trace2__("MAP::createOrAttachSMSCDialog: chain size %d",item->chain.size());
       item->chain.push_back(cmd);
       return 0;
     }
@@ -244,7 +247,7 @@ public:
     dlg->abonent = abonent;
     hash.Insert(map_dialog,dlg);
     lock_map.Insert(abonent,dlg);
-    __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
+    __trace2__("MAP::createOrAttachSMSCDialog: new dialog 0x%p for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
     dlg->AddRef();
     return dlg;
   }
