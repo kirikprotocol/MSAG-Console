@@ -28,7 +28,7 @@ public class RouteViewCommand implements Command
     {
         String out = "Route '"+smscRoute.getName()+"' Priority: "+smscRoute.getPriority()+
                      " SvcId: "+smscRoute.getServiceId()+" Options ["+
-                     (smscRoute.isArchiving() ? "Archiving, ": "No arciving, ")+
+                     (smscRoute.isArchiving() ? "Archiving, ": "No archiving, ")+
                      (smscRoute.isBilling()   ? "Billing, ":"No billing, ")+
                      (smscRoute.isEnabling()  ? "Allowed":"Denied")+"]";
 
@@ -38,7 +38,7 @@ public class RouteViewCommand implements Command
             Source src = (Source)srcs.next();
             out += "<"+src.getName();
             Iterator masks = src.getMasks().iterator();
-            out += " Mask(s): ";
+            if (masks.hasNext()) out += " Mask(s): ";
             while (masks.hasNext()) {
                 out += ((Mask)masks.next()).getMask();
                 if (masks.hasNext()) out += ", ";
@@ -52,7 +52,7 @@ public class RouteViewCommand implements Command
             Destination dst = (Destination)dsts.next();
             out += "<"+dst.getName()+" SME:"+dst.getSme().getId();
             Iterator masks = dst.getMasks().iterator();
-            out += " Mask(s): ";
+            if (masks.hasNext()) out += " Mask(s): ";
             while (masks.hasNext()) {
                 out += ((Mask)masks.next()).getMask();
                 if (masks.hasNext()) out += ", ";
