@@ -27,7 +27,8 @@ void AliasConfigGen::saveConfig(const char* configFileName)
 		auto_ptr<char> addr = SmsUtil::configString(aliasInfo.addr);
 		auto_ptr<char> alias = SmsUtil::configString(aliasInfo.alias);
 		os << "\t<record addr=\"" << addr.get() <<
-			"\" alias=\"" << alias.get() << "\"/>" << endl;
+			"\" alias=\"" << alias.get() <<
+			"\" hide=\"" << (aliasInfo.hide ? "true" : "false") << "\"/>" << endl;
 	}
 	delete it;
 	os << "</aliases>" << endl;
