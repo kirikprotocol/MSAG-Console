@@ -107,7 +107,7 @@ public class Smppgw  extends Service
           throw new SibincoException("Unknown result type");
       }
    }
-  public synchronized List loadRoutes(final GwRoutingManager gwRoutingManager, Gateway gateway)
+  public synchronized List loadRoutes(final GwRoutingManager gwRoutingManager)
           throws SibincoException
   {
     gwRoutingManager.trace();
