@@ -240,6 +240,14 @@ refreshStartStopButtonsStatus();
         param(out, "translit off",                                "profiler.ussdOpsMapping.TRANSLIT OFF",          bean.getIntParam("profiler.ussdOpsMapping.TRANSLIT OFF"));
       finishParams(out);
     finishSection(out);
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~ profiler.notify ~~~~~~~~~~~~~~~~~~~~~~~~~
+    startSection(out, "profiler.notify", "Profile changes notification", false);
+      startParams(out);
+        param(out, "Agent host",                                "profiler.notify.host",         	       bean.getIntParam("profiler.notify.host"));
+        param(out, "Agent port",                                "profiler.notify.port",         	       bean.getIntParam("profiler.notify.port"));
+        param(out, "Cache directory",                           "profiler.notify.dir",         	               bean.getIntParam("profiler.notify.dir"));
+      finishParams(out);
+    finishSection(out);
   finishSection(out);
   //################################## abonentinfo #############################
   startSection(out, "abonentinfo", "Abonent info", false);
