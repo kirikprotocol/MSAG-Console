@@ -17,6 +17,14 @@ using std::vector;
 using smsc::core::synchronization::Mutex;
 using smsc::test::core::PduDataObject;
 
+typedef enum
+{
+	DT_NOW = 0x0,
+	DT_TODAY = 0x1,
+	DT_YESTERDAY = 0x2,
+	DT_TOMORROW = 0x3
+} DateType;
+
 #define __field__(idx, type, name) \
 	type __##name; \
 	type get##name() const { return __##name; } \
@@ -32,12 +40,15 @@ struct DbSmeTestRecord : public PduDataObject
 	__field__(3, int, Int32)
 	__field__(4, double, Float)
 	__field__(5, double, Double)
-	__field__(6, time_t, Date)
-	__field__(7, string, String)
-	__field__(8, string, QuotedString)
-	__field__(9, string, FromAddr)
+	__field__(6, DateType, DateType)
+	__field__(7, time_t, Date)
+	__field__(8, string, String)
+	__field__(9, string, QuotedString)
+	__field__(10, string, FromAddr)
+	DbSmeTestRecord* defInput;
 
-	DbSmeTestRecord() : mask(10, false) {}
+	DbSmeTestRecord() : mask(11, false), defInput(NULL) {}
+	virtual ~DbSmeTestRecord() { if (defInput) { delete defInput; } }
 };
 
 class DbSmeRegistry
