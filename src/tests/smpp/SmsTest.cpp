@@ -51,11 +51,11 @@ namespace smsc {
         // adding test cases
         static CppUnit::Test * suite() {
           CppUnit::TestSuite *suiteOfTests = new CppUnit::TestSuite( "SmsTest" );
-          //suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_sms_for_transmitter_receiver_itself, &SmsTest::testSmsForTransmitterReceiverItself));
-          //suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_sms_for_transmitter_receiver, &SmsTest::testSmsForTransmitterReceiver));
-          //suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_sms_for_transceiver_itself, &SmsTest::testSmsForTransceiverItself));
-          //suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_smpp_profiler, &SmsTest::testSmppProfiler));
-          //suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_data_coding, &SmsTest::testDataCoding));
+          suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_sms_for_transmitter_receiver_itself, &SmsTest::testSmsForTransmitterReceiverItself));
+          suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_sms_for_transmitter_receiver, &SmsTest::testSmsForTransmitterReceiver));
+          suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_sms_for_transceiver_itself, &SmsTest::testSmsForTransceiverItself));
+          suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_smpp_profiler, &SmsTest::testSmppProfiler));
+          suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_data_coding, &SmsTest::testDataCoding));
           suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_long_sms, &SmsTest::testLongSms));
           return suiteOfTests;
         }

@@ -138,6 +138,10 @@ namespace smsc {
                 }
                 break;
               }
+            default: {
+                log.debug("check: Wrong data coding received DataCoding=%d", dataCoding);
+                res = false;
+              }
             }
           }
         }
@@ -338,6 +342,11 @@ namespace smsc {
     
       bool MapProxy::analyzeSmsc7bitCutting(SmsHandler sms1, SmsHandler sms2) {
         log.debug("analyzeSmsc7bitCutting: --- enter");
+
+        //Smsc7BitText sm7(" \n\r");
+        Smsc7BitText sm7("[]{");
+        log.debug("analyzeSmsc7bitCutting: length=%d, latin1= %d, %d, %d, smsc7bit = %d, %d, %d", sm7.getLength(), ' ', '\n', '\r', sm7.getSmsc7Bit()[0], sm7.getSmsc7Bit()[1], sm7.getSmsc7Bit()[2]);
+       
         bool res = true;
         //extracting SMS message1
         unsigned length1 = sms1->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
@@ -361,7 +370,7 @@ namespace smsc {
         length2 -= udh.getLength() + 1;
         data2 += udh.getLength() + 1;
         log.debug("analyzeSmsc7bitCutting: length2 = %d", length2);
-        if(length1 < 140) {
+        if(length1 < 159) {
           if(data2[0] == ' ' || data2[0] == '\n' || data2[0] == '\r') {
             log.debug("analyzeSmsc7bitCutting: sms2 contains symbols (space) that should be added to sms1");
             res = false;
@@ -377,10 +386,28 @@ namespace smsc {
               }
             }
             log.debug("analyzeSmsc7bitCutting: wordLength = %d", wordLength);
-            if(length1 + wordLength < 140) {
+            if(length1 + wordLength < 159) {
               log.debug("analyzeSmsc7bitCutting: sms2 contains word that should be added to sms1");
               res = false;
             }
+          }
+        }
+
+        if(res) {// checking how escape symbols are cut
+          UDH udh1(data1);
+          length1 -= udh1.getLength() + 1;
+          data1 += udh1.getLength() + 1;
+          int escapeCount = 0;
+          for(int i=length1-1; i>=0 ; i--) {
+            if(data1[i] == 27) {
+              escapeCount++;
+            } else {
+              break;
+            }
+          }
+          if(escapeCount%2 != 0) {
+            log.debug("analyzeSmsc7bitCutting: sms1 contains escape symbol that was cut");
+            res = false;
           }
         }
 
@@ -392,18 +419,63 @@ namespace smsc {
           std::string s2(data2, length2);
           log.debug("analyzeLatin1Cutting: string1 = %s",  s1.c_str());
           log.debug("analyzeLatin1Cutting: string2 = %s",  s2.c_str());*/
-          log.debug("analyzeLatin1Cutting: --- exit, res = %d",  res);
+          log.debug("analyzeSmsc7bitCutting: --- exit, res = %d",  res);
         }
         return res;
       }
 
       bool MapProxy::checkUcs2(const char * const message, SmsArrayHandler sah) {
+        log.debug("checkUcs2: --- enter");
+        Ucs2Text ucs2(message);
+        log.debug("checkUcs2: ucs2 length = %d", ucs2.getLength());
         bool res = true;
+        uint32_t lengthSum = 0;
+        char messageSum[ucs2.getLength()*2 + 1];
+        messageSum[ucs2.getLength()*2] = 0;
+        for(int i=0; i<sah->getSize(); i++) {
+          //extracting SMS message
+          unsigned length = (*sah)[i]->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
+          const char *data;
+          if(length != 0) {//сообщение в body
+            data = (*sah)[i]->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, &length);
+          } else {//payload
+            data = (*sah)[i]->getBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, &length);
+          }
+          UDH udh(data);
+          length -= udh.getLength() + 1;
+          data += udh.getLength() + 1;
+
+          lengthSum += length;
+          if(lengthSum < ucs2.getLength()*2 + 1) {
+            memcpy(messageSum + (lengthSum - length), data, length);
+          } else {
+            log.error("checkUcs2: error, lengthSum >= ucs2.getLength()*2 + 1, lengthSum = %d, size = %d", lengthSum, ucs2.getLength()*2);
+          }
+        }
+        log.debug("checkUcs2: lengthSum = %d", lengthSum);
+        res = compare((char*)ucs2.getUcs2(), ucs2.getLength()*2, messageSum, lengthSum);
+        if(res) {
+          log.debug("checkUcs2: checking message pairs, total messages=%d",sah->getSize());
+          for(int i=0; i<sah->getSize() -1; i++) {
+            log.debug("checkUcs2: analyzing cutting for %d and %d messages", i, i+1);
+            if(!analyzeUcs2Cutting((*sah)[i], (*sah)[i+1])) {
+              log.debug("checkUcs2: analyze ucs2 cutting is FALSE, i=%d", i);
+              res = false;
+              break;
+            }
+          }
+        }
+        log.debug("checkUcs2: --- exit, res = %d", res);
         return res;
       }
 
       bool MapProxy::analyzeUcs2Cutting(SmsHandler sms1, SmsHandler sms2) {
-        log.debug("analyzeBinaryCutting: --- enter");
+        log.debug("analyzeUcs2Cutting: --- enter");
+
+        //Smsc7BitText sm7(" \n\r");
+        Ucs2Text ucs2(" \n\r");
+        log.debug("analyzeUcs2Cutting: length=%d, latin1= %d, %d, %d, ucs2 = %d, %d, %d, %d, %d, %d", ucs2.getLength(), ' ', '\n', '\r', ((char*)ucs2.getUcs2())[0], ((char*)ucs2.getUcs2())[1], ((char*)ucs2.getUcs2())[2], ((char*)ucs2.getUcs2())[3], ((char*)ucs2.getUcs2())[4], ((char*)ucs2.getUcs2())[5]);
+       
         bool res = true;
         //extracting SMS message1
         unsigned length1 = sms1->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
@@ -413,42 +485,63 @@ namespace smsc {
         } else {//payload
           data1 = sms1->getBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, &length1);
         }
-        log.debug("analyzeBinaryCutting: length1 = %d", length1);
-        if(length1 < 159) {
-          //extracting SMS message2
-          unsigned length2 = sms2->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
-          const char *data2;
-          if(length2 != 0) {//сообщение в body
-            data2 = sms2->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, &length2);
-          } else {//payload
-            data2 = sms2->getBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, &length2);
-          }
-          UDH udh(data2);
-          length2 -= udh.getLength() + 1;
-          data2 += udh.getLength() + 1;
-          log.debug("analyzeBinaryCutting: length2 = %d", length2);
-          if(data2[0] == 32 || data2[0] == 10 || data2[0] == 13) {
-            log.debug("analyzeBinaryCutting: sms2 contains symbols (space) that should be added to sms1");
+        log.debug("analyzeUcs2Cutting: length1 = %d", length1);
+        unsigned length2;
+        const char *data2;
+        //extracting SMS message2
+        length2 = sms2->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
+        if(length2 != 0) {//сообщение в body
+          data2 = sms2->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, &length2);
+        } else {//payload
+          data2 = sms2->getBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, &length2);
+        }
+        UDH udh(data2);
+        length2 -= udh.getLength() + 1;
+        data2 += udh.getLength() + 1;
+        log.debug("analyzeUcs2Cutting: length2 = %d", length2);
+        if(length1 < 139) {
+          if(data2[0] == ' ' || data2[0] == '\n' || data2[0] == '\r') {
+            log.debug("analyzeUcs2Cutting: sms2 contains symbols (space) that should be added to sms1");
             res = false;
-          } else if(data1[length1 -1] != 32 && data1[length1 -1] != 10 && data1[length1 -1] != 13) {
-            log.debug("analyzeBinaryCutting: sms2 contains symbols (not space) that should be added to sms1");
+          } else if(data1[length1 -2] != ' ' && data1[length1 -2] != '\n' && data1[length1 -2] != '\r') {
+            log.debug("analyzeUcs2Cutting: sms2 contains symbols (not space) that should be added to sms1");
             res = false;
           } else {
-            int wordLength = 0;
+            int wordLength = length2;
             for(int i=0; i<length2; i++) {
-              if(data2[0] == 32 || data2[0] == 10 || data2[0] == 13) {
+              if(data2[0] == ' ' || data2[0] == '\n' || data2[0] == '\r') {
                 wordLength = i;
+                break;
               }
             }
-            log.debug("analyzeBinaryCutting: wordLength = %d", wordLength);
-            if(length1 + wordLength <= 140) {
-              log.debug("analyzeBinaryCutting: sms2 contains word that should be added to sms1");
+            log.debug("analyzeUcs2Cutting: wordLength = %d", wordLength);
+            if(length1 + wordLength < 139) {
+              log.debug("analyzeUcs2Cutting: sms2 contains word that should be added to sms1");
               res = false;
             }
           }
         }
 
-        log.debug("analyzeBinaryCutting: --- exit, res = %d",  res);
+        if(res) {// checking that ucs2 contains even bites
+          UDH udh1(data1);
+          length1 -= udh1.getLength() + 1;
+          data1 += udh1.getLength() + 1;
+          if(length1%2 != 0) {
+            log.debug("analyzeUcs2Cutting: ucs2 message contains odd bites");
+            res = false;
+          }
+        }
+
+        if(log.isDebugEnabled()) {
+          /*UDH udh(data1);
+          length1 -= udh.getLength() + 1;
+          data1 += udh.getLength() + 1;
+          std::string s1(data1, length1);
+          std::string s2(data2, length2);
+          log.debug("analyzeLatin1Cutting: string1 = %s",  s1.c_str());
+          log.debug("analyzeLatin1Cutting: string2 = %s",  s2.c_str());*/
+          log.debug("analyzeUcs2Cutting: --- exit, res = %d",  res);
+        }
         return res;
       }
 
