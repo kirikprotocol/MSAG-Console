@@ -1574,14 +1574,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
                 throw MAPDIALOG_FATAL_ERROR( FormatText("MAP::putCommand: Opss, here is no dialog with id x%x seq: %s",dialogid_smsc,s_seq.c_str()));
               }
-              if (dialog->state == MAPST_WaitSubmitCmdConf) {
-                // Seems PSSR_RESP goes earlier than submitResp
-                __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
-                dialog->chain.insert(dialog->chain.begin(), cmd);
-                return;
-              } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce )) {
-                throw MAPDIALOG_BAD_STATE(FormatText("MAP::%s ussd resp bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
-              }
               {
                 unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
                 if ( dialog->ussdMrRef != mr ) {
@@ -1591,6 +1583,14 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                       mr,dialog->ussdMrRef));
                 }
               }
+              if (dialog->state == MAPST_WaitSubmitCmdConf) {
+                // Seems PSSR_RESP goes earlier than submitResp
+                __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
+                dialog->chain.insert(dialog->chain.begin(), cmd);
+                return;
+              } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce )) {
+                throw MAPDIALOG_BAD_STATE(FormatText("MAP::%s ussd resp bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+              }
               dialog->dialogid_smsc = dialogid_smsc;
               dialog->isQueryAbonentStatus = false;
               dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
@@ -1598,6 +1598,15 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               return;
             } else if(serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ) {
               if( dlg_found ) {
+                {
+                  unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
+                  if ( dialog->ussdMrRef != mr ) {
+                    SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
+                    throw MAPDIALOG_FATAL_ERROR(
+                      FormatText("MAP::putCommand: Opss, bad message_reference 0x%x must be 0x%x",
+                        mr,dialog->ussdMrRef));
+                  }
+                }
                 dialog->id_opened = true;
                 dialog->dialogid_smsc = dialogid_smsc;
                 if (dialog->state == MAPST_WaitSubmitCmdConf) {
@@ -1608,15 +1617,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce)) {
                   throw MAPDIALOG_BAD_STATE(
                     FormatText("MAP::%s ussd req/notify bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
-                }
-                {
-                  unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
-                  if ( dialog->ussdMrRef != mr ) {
-                    SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
-                    throw MAPDIALOG_FATAL_ERROR(
-                      FormatText("MAP::putCommand: Opss, bad message_reference 0x%x must be 0x%x",
-                        mr,dialog->ussdMrRef));
-                  }
                 }
                 dialog->isQueryAbonentStatus = false;
                 dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
