@@ -43,6 +43,7 @@ extern "C" {
 #define SSN 8
 
 enum MapState{
+  MAPST_UNKNOWN,
   MAPST_WaitHlrVersion,
   MAPST_SendingRInfo,
   MAPST_RInfoFallBack,
@@ -60,6 +61,7 @@ enum MapState{
   MAPST_WaitSmsMODelimiter,
   MAPST_WaitSubmitCmdConf,
   MAPST_WaitSmsMODelimiter2,
+  MAPST_START,
   MAPST_CLOSED,
   MAPST_ABORTED,
   MAPST_BROKEN

@@ -406,7 +406,7 @@ static void SendSegmentedSms(MapDialog* dialog)
       FormatText("MAP::SendSMSCToMT:Et96MapDelimiterReq error 0x%x",result));
 }
 
-void MAPIO_PutCommand(const SmscCommad& cmd )
+void MAPIO_PutCommand(const SmscCommand& cmd )
 {
   unsigned dialogid_smsc = cmd->get_dialogId();
   unsigned dialogid_map = 0;
