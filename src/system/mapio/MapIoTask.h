@@ -203,7 +203,13 @@ public:
   
   USHORT_T reAssignDialog(unsigned did){
     MutexGuard g(sync);
-    MapDialog* dlg = getDialog(did);
+     __trace2__("MAP:: reassign dialog");
+    MapDialog* dlg = 0;
+    hash.Get(did,dlg);
+    if ( dlg == 0 ){
+      __trace2__("MAP:: reassign dialog: here is no did 0x%x",did);
+      throw runtime_error("MAP:: reassign dialog: here is no did");
+    }
     ET96MAP_DIALOGUE_ID_T map_dialogid = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     dialogId_pool.push_back(did);
     dlg->setDialogId (map_dialogid);

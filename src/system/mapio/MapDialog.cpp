@@ -468,7 +468,8 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
       __trace2__("MAP::Et96MapCloseInd state: REDY_FOR_SEND_SMS");
 
       MapDialogContainer::getInstance()->reAssignDialog(dialogid);
-
+      __trace2__("MAP::Et96MapCloseInd state: 0x%x",dialogid);
+      
       ET96MAP_APP_CNTX_T appContext;
     	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
     	appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
@@ -509,6 +510,11 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
       return false;
     }catch(exception& e){
       __trace2__("MAP::Et96MapCloseInd exception %s",e.what());
+      SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_FATAL);
+      MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+      return true;
+    }catch(...){
+      __trace2__("MAP::Et96MapCloseInd unknown exception");
       SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_FATAL);
       MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
       return true;
