@@ -14,17 +14,23 @@ public class WSmeAdsFilter
 {
   private String[] langs = {};
 
-  synchronized public List getLangList()
+  public List getLangList()
   {
-    List langList = new ArrayList();
-    for (int i=0; i<langs.length; i++)
-      langList.add(langs[i]);
-    return langList;
+    synchronized(langs) {
+      List langList = new ArrayList();
+      for (int i=0; i<langs.length; i++)
+        langList.add(langs[i]);
+      return langList;
+    }
   }
-  synchronized public String[] getLangs() {
-    return langs;
+  public String[] getLangs() {
+    synchronized(langs) {
+      return langs;
+    }
   }
-  synchronized public void setLangs(String[] langs) {
-    this.langs = langs;
+  public void setLangs(String[] langs) {
+    synchronized(langs) {
+      this.langs = langs;
+    }
   }
 }

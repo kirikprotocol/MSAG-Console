@@ -12,11 +12,11 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.wsme.WSmeErrors;
 import ru.novosoft.smsc.wsme.WSmePreferences;
-import ru.novosoft.smsc.wsme.AdRow;
-import ru.novosoft.smsc.wsme.LangRow;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.security.Principal;
 
 public class WSmeVisitorsFormBean extends WSmeBaseFormBean
@@ -28,8 +28,15 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
   public int process(List errors, Principal loginedUserPrincipal)
   {
     int result = super.process(errors, loginedUserPrincipal);
+
     pageSize = (wsmePreferences != null) ?
         wsmePreferences.getVisitorsPageSize():WSmePreferences.DEFAULT_visitorsPageSize;
+    if (sort == null)
+      sort = (wsmePreferences != null) ?
+        wsmePreferences.getVisitorsSortOrder():WSmePreferences.DEFAULT_visitorsSortOrder;
+    else if (wsmePreferences != null)
+        wsmePreferences.setVisitorsSortOrder(sort);
+
     if (result != RESULT_OK && result != RESULT_VISITORS) return result;
     result = RESULT_OK;
 
@@ -52,7 +59,6 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
 
   protected int addNewVisitor()
   {
-    System.out.println("WSmeVisitors::addNewVisitor() called");
     try {
       newVisitor = (new Mask(newVisitor)).getNormalizedMask().trim();
     } catch (AdminException exc) {
@@ -69,7 +75,6 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
   }
   protected int delVisitors()
   {
-    System.out.println("WSmeVisitors::delVisitor() called");
     int result = RESULT_OK;
     try {
       for (int i=0; i<selectedRows.length; i++)
@@ -81,11 +86,39 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
     return result;
   }
 
+  private int processSort()
+  {
+    if (sort != null && sort.length() > 0)
+    {
+      final boolean isNegativeSort = sort.startsWith("-");
+      final String sortField = isNegativeSort ? sort.substring(1) : sort;
+
+      if (visitors != null)
+      {
+        Collections.sort(visitors, new Comparator()
+        {
+          public int compare(Object o1, Object o2)
+          {
+            int result = 0;
+            String r1 = (String) o1;
+            String r2 = (String) o2;
+            if (sortField.equalsIgnoreCase("mask"))
+              result = r1.compareTo(r2);
+
+            return isNegativeSort ? -result : result;
+          }
+        });
+      }
+    }
+    return RESULT_OK;
+  }
+
   public int loadVisitors()
   {
     int result = RESULT_OK;
     try {
       visitors = wsme.getVisitors();
+      result = processSort();
       MaskList maskList = wsmePreferences.getVisitorsFilter().getMaskList();
       visitors = getPaginatedList(getMaskFilteredList(visitors, maskList));
     }

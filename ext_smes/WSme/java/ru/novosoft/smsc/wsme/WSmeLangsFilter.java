@@ -18,34 +18,46 @@ public class WSmeLangsFilter
   private String[] masks = {};
   private String[] langs = {};
 
-  synchronized public MaskList getMaskList() throws AdminException
+  public MaskList getMaskList() throws AdminException
   {
-    MaskList maskList = null;
-    try {
-      maskList = new MaskList(masks);
-    } catch (Exception e) {
-      throw new AdminException("WSmeVisitorsFilter: failed to obtain mask list, cause: "+e.getMessage());
+    synchronized(masks) {
+      MaskList maskList = null;
+      try {
+        maskList = new MaskList(masks);
+      } catch (Exception e) {
+        throw new AdminException("WSmeVisitorsFilter: failed to obtain mask list, cause: "+e.getMessage());
+      }
+      return maskList;
     }
-    return maskList;
   }
-  synchronized public String[] getMasks() {
-    return masks;
+  public String[] getMasks() {
+    synchronized(masks) {
+      return masks;
+    }
   }
-  synchronized public void setMasks(String[] masks) {
-    this.masks = masks;
+  public void setMasks(String[] masks) {
+    synchronized(masks) {
+      this.masks = masks;
+    }
   }
 
-  synchronized public List getLangList()
+  public List getLangList()
   {
-    List langList = new ArrayList();
-    for (int i=0; i<langs.length; i++)
-      langList.add(langs[i]);
-    return langList;
+    synchronized(langs) {
+      List langList = new ArrayList();
+      for (int i=0; i<langs.length; i++)
+        langList.add(langs[i]);
+      return langList;
+    }
   }
-  synchronized public String[] getLangs() {
-    return langs;
+  public String[] getLangs() {
+    synchronized(langs) {
+      return langs;
+    }
   }
-  synchronized public void setLangs(String[] langs) {
-    this.langs = langs;
+  public void setLangs(String[] langs) {
+    synchronized(langs) {
+      this.langs = langs;
+    }
   }
 }

@@ -16,6 +16,8 @@ import ru.novosoft.smsc.wsme.LangRow;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.security.Principal;
 
 public class WSmeLangsFormBean extends WSmeBaseFormBean
@@ -28,8 +30,15 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
   public int process(List errors, Principal loginedUserPrincipal)
   {
     int result = super.process(errors, loginedUserPrincipal);
+
     pageSize = (wsmePreferences != null) ?
         wsmePreferences.getLangsPageSize():WSmePreferences.DEFAULT_langsPageSize;
+    if (sort == null)
+      sort = (wsmePreferences != null) ?
+        wsmePreferences.getLangsSortOrder():WSmePreferences.DEFAULT_langsSortOrder;
+    else if (wsmePreferences != null)
+        wsmePreferences.setLangsSortOrder(sort);
+
     if (result != RESULT_OK && result != RESULT_LANGS) return result;
     result = RESULT_OK;
 
@@ -80,11 +89,41 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
     return result;
   }
 
+  private int processSort()
+  {
+    if (sort != null && sort.length() > 0)
+    {
+      final boolean isNegativeSort = sort.startsWith("-");
+      final String sortField = isNegativeSort ? sort.substring(1) : sort;
+
+      if (langs != null)
+      {
+        Collections.sort(langs, new Comparator()
+        {
+          public int compare(Object o1, Object o2)
+          {
+            int result = 0;
+            LangRow r1 = (LangRow) o1;
+            LangRow r2 = (LangRow) o2;
+            if (sortField.equalsIgnoreCase("mask"))
+              result = r1.mask.compareTo(r2.mask);
+            if (sortField.equalsIgnoreCase("lang"))
+              result = r1.lang.compareTo(r2.lang);
+
+            return isNegativeSort ? -result : result;
+          }
+        });
+      }
+    }
+    return RESULT_OK;
+  }
+
   public int loadLangs()
   {
     int result = RESULT_OK;
     try {
       langs = wsme.getLangs();
+      result = processSort();
       langs = getMaskFilteredList(langs, wsmePreferences.getLangsFilter().getMaskList());
       langs = getLangFilteredList(langs, wsmePreferences.getLangsFilter().getLangList());
       langs = getPaginatedList(langs);
@@ -97,6 +136,12 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
   }
   public List getLangs() {
     return langs;
+  }
+
+  public void setSort(String sort) {
+    super.setSort(sort);
+    if (wsmePreferences != null)
+      wsmePreferences.setLangsSortOrder(sort);
   }
 
   public String getNewLang() {

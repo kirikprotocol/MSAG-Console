@@ -14,20 +14,26 @@ public class WSmeVisitorsFilter
 {
   private String[] masks = {};
 
-  synchronized public MaskList getMaskList() throws AdminException
+  public MaskList getMaskList() throws AdminException
   {
-    MaskList maskList = null;
-    try {
-      maskList = new MaskList(masks);
-    } catch (Exception e) {
-      throw new AdminException("WSmeVisitorsFilter: failed to obtain mask list, cause: "+e.getMessage());
+    synchronized(masks) {
+      MaskList maskList = null;
+      try {
+        maskList = new MaskList(masks);
+      } catch (Exception e) {
+        throw new AdminException("WSmeVisitorsFilter: failed to obtain mask list, cause: "+e.getMessage());
+      }
+      return maskList;
     }
-    return maskList;
   }
-  synchronized public String[] getMasks() {
-    return masks;
+  public String[] getMasks() {
+    synchronized(masks) {
+      return masks;
+    }
   }
-  synchronized public void setMasks(String[] masks) {
-    this.masks = masks;
+  public void setMasks(String[] masks) {
+    synchronized(masks) {
+      this.masks = masks;
+    }
   }
 }

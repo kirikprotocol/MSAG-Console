@@ -6,6 +6,16 @@ function clickMenu(menuSelection)
     opForm.submit();
     return false;
 }
+function setSort(sorting)
+{
+	if (sorting == "<%=bean.getSort()%>")
+		opForm.sort.value = "-<%=bean.getSort()%>";
+	else
+		opForm.sort.value = sorting;
+
+	opForm.submit();
+	return false;
+}
 </script>
 
 <table>

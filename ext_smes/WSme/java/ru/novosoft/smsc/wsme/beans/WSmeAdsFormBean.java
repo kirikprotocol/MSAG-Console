@@ -10,9 +10,12 @@ package ru.novosoft.smsc.wsme.beans;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.wsme.WSmeErrors;
 import ru.novosoft.smsc.wsme.WSmePreferences;
+import ru.novosoft.smsc.wsme.AdRow;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.security.Principal;
 
 public class WSmeAdsFormBean extends WSmeBaseFormBean
@@ -28,8 +31,15 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
   public int process(List errors, Principal loginedUserPrincipal)
   {
     int result = super.process(errors, loginedUserPrincipal);
+
     pageSize = (wsmePreferences != null) ?
         wsmePreferences.getAdsPageSize():WSmePreferences.DEFAULT_adsPageSize;
+    if (sort == null)
+      sort = (wsmePreferences != null) ?
+        wsmePreferences.getAdsSortOrder():WSmePreferences.DEFAULT_adsSortOrder;
+    else if (wsmePreferences != null)
+        wsmePreferences.setAdsSortOrder(sort);
+
     if (result != RESULT_OK && result != RESULT_ADS) return result;
     result = RESULT_OK;
 
@@ -88,11 +98,44 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     return result;
   }
 
+  private int processSort()
+  {
+    if (sort != null && sort.length() > 0)
+    {
+      final boolean isNegativeSort = sort.startsWith("-");
+      final String sortField = isNegativeSort ? sort.substring(1) : sort;
+
+      if (ads != null)
+      {
+        Collections.sort(ads, new Comparator()
+        {
+          public int compare(Object o1, Object o2)
+          {
+            int result = 0;
+            AdRow r1 = (AdRow) o1;
+            AdRow r2 = (AdRow) o2;
+            if (sortField.equalsIgnoreCase("id")) {
+              String id1 = Integer.toString(r1.id);
+              String id2 = Integer.toString(r2.id);
+              result = id1.compareTo(id2);
+            }
+            if (sortField.equalsIgnoreCase("lang"))
+              result = r1.lang.compareTo(r2.lang);
+
+            return isNegativeSort ? -result : result;
+          }
+        });
+      }
+    }
+    return RESULT_OK;
+  }
+
   public int loadAds()
   {
     int result = RESULT_OK;
     try {
       ads = wsme.getAds();
+      result = processSort();
       ads = getLangFilteredList(ads, wsmePreferences.getAdsFilter().getLangList());
       ads = getPaginatedList(ads);
     }
@@ -104,6 +147,12 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
   }
   public List getAds() {
     return ads;
+  }
+
+  public void setSort(String sort) {
+    super.setSort(sort);
+    if (wsmePreferences != null)
+      wsmePreferences.setAdsSortOrder(sort);
   }
 
   public String getNewId() {

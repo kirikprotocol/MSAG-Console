@@ -17,6 +17,14 @@ public class WSmePreferences
   private int langsPageSize = DEFAULT_langsPageSize;
   private int adsPageSize = DEFAULT_adsPageSize;
 
+  public final static String DEFAULT_visitorsSortOrder = "mask";
+  public final static String DEFAULT_langsSortOrder = "mask";
+  public final static String DEFAULT_adsSortOrder = "id";
+
+  private String visitorsSortOrder = DEFAULT_visitorsSortOrder;
+  private String langsSortOrder = DEFAULT_langsSortOrder;
+  private String adsSortOrder = DEFAULT_adsSortOrder;
+
   private WSmeVisitorsFilter visitorsFilter = new WSmeVisitorsFilter();
   private WSmeLangsFilter langsFilter = new WSmeLangsFilter();
   private WSmeAdsFilter adsFilter = new WSmeAdsFilter();
@@ -38,6 +46,25 @@ public class WSmePreferences
   }
   synchronized public void setAdsPageSize(int adsPageSize) {
     this.adsPageSize = adsPageSize;
+  }
+
+  synchronized public String getVisitorsSortOrder() {
+    return visitorsSortOrder;
+  }
+  synchronized public void setVisitorsSortOrder(String visitorsSortOrder) {
+    this.visitorsSortOrder = visitorsSortOrder;
+  }
+  synchronized public String getLangsSortOrder() {
+    return langsSortOrder;
+  }
+  synchronized public void setLangsSortOrder(String langsSortOrder) {
+    this.langsSortOrder = langsSortOrder;
+  }
+  synchronized public String getAdsSortOrder() {
+    return adsSortOrder;
+  }
+  synchronized public void setAdsSortOrder(String adsSortOrder) {
+    this.adsSortOrder = adsSortOrder;
   }
 
   synchronized public WSmeVisitorsFilter getVisitorsFilter() {

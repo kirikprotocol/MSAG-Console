@@ -50,8 +50,8 @@
 <table class=secRep cellspacing=1 width="100%">
 <thead>
 <tr class=row0>
-  <th>Mask</th>
-  <th>Language</th>
+  <th><a href="#" <%=bean.getSort().endsWith("mask")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Mask" onclick='return setSort("mask")'>Mask</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("lang")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Language" onclick='return setSort("lang")'>Language</a></th>
 </tr>
 </thead>
 <tbody>
@@ -76,6 +76,7 @@
 </tbody>
 </table>
 
+<input type=hidden name=sort value="<%=bean.getSort()%>">
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=pageSize value=<%=bean.getPageSize()%>>
