@@ -14,7 +14,7 @@ using namespace smsc::smeman;
 #pragma pack(1)
 
 struct MicroString{
-  unsigned char len;
+  unsigned len;
   char bytes[256];
 };
 
@@ -161,7 +161,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   __trace2__("MAP::DIALOG::ForwardReaq: user_data_encoding = 0x%x",user_data_coding);
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2);
   __trace2__("MAP::DIALOG::ForwardReaq: user_data_len = %d",user_data_len);
-  unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+2);
+  unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1);
   if ( user_data_coding == 0 ) // 7bit
   {
     MicroString ms;
