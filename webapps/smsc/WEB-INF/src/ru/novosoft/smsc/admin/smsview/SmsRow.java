@@ -22,7 +22,7 @@ public class SmsRow
     "ENROUTE", "DELIVERED", "EXPIRED", "UNDELIVERABLE", "DELETED"
   };
 
-  private byte    id[];
+  private long    id;
   private Date    submitTime = new Date();
   private Date    validTime;
   private int     attempts;
@@ -56,29 +56,11 @@ public class SmsRow
 
   private boolean marked = false;
 
-  public void setId(byte _id[]) { id = _id; };
-  public byte[] getId() { return id; };
-
-  public long getIdLong() {
-    return   ((((long)id[0])&0xff)<<56)
-            |((((long)id[1])&0xff)<<48)
-            |((((long)id[2])&0xff)<<40)
-            |((((long)id[3])&0xff)<<32)
-            |((((long)id[4])&0xff)<<24)
-            |((((long)id[5])&0xff)<<16)
-            |((((long)id[6])&0xff)<<8)
-            |((((long)id[7])&0xff));
-  }
+  public void setId(long id) { this.id = id; };
+  public long getId() { return id; };
 
   public String getIdString() {
-    StringBuffer str = new StringBuffer();
-    for (int i=0; i<id.length; i++) {
-      int k = (((int)id[i])>>4)&0xf;
-      str.append( (char)(k<10?k+48:k+55) );
-      k = ((int)id[i])&0xf;
-      str.append( (char)(k<10?k+48:k+55) );
-    }
-    return str.toString();
+    return Long.toHexString(id).toUpperCase();
   };
 
   public String getOriginatingAddress() { return originatingAddress; }

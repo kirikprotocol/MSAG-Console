@@ -69,13 +69,16 @@ public class SmsView
             throw new AdminException("Failed to obtain connection to DB");
         String sql = BASE_SQL_QUERY +
             ((storage == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ? "SMS_MSG":"SMS_ARC");
-        sql += " WHERE ID=?";
+        sql += " WHERE ID="+id;
+        System.out.println( sql+", storage: "+storage);
         stmt = connection.prepareStatement(sql);
-        stmt.setString(1, id);
-        ResultSet rs = stmt.executeQuery(); rs.next();
+        ResultSet rs = stmt.executeQuery();
+        if (!rs.next())
+          throw new AdminException("Sms #"+id+" no longer exists");
         InputStream is = fetchRowFeilds(rs, row);
         if (is != null) parseBody(is, row);
-      } catch (Exception exc) {
+      }
+      catch (Exception exc) {
         System.out.println("Operation with DB failed !");
         exc.printStackTrace();
         throw new AdminException(exc.getMessage());
@@ -152,7 +155,7 @@ public class SmsView
         for (int i=0; i<set.getRowsCount(); i++) {
           SmsRow row = set.getRow(i);
           if (row != null) {
-            stmt.setBytes(1, row.getId());
+            stmt.setLong(1, row.getId());
             deleted += stmt.executeUpdate();
             connection.commit();
           }
@@ -299,7 +302,7 @@ public class SmsView
     throws SQLException, AdminException
   {
     int pos=1;
-    byte id[] = rs.getBytes(pos++);
+    long id = rs.getLong(pos++);
     row.setId(id);
     row.setStatus(rs.getInt(pos++));
     GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
@@ -352,7 +355,7 @@ public class SmsView
       try {
         String selectLargeBody = "SELECT BODY FROM SMS_ATCH WHERE ID=?";
         lbstmt = rs.getStatement().getConnection().prepareStatement(selectLargeBody);
-        lbstmt.setBytes(1, row.getId());
+        lbstmt.setLong(1, row.getId());
         lbrs = lbstmt.executeQuery(); lbrs.next();
         Blob blob = lbrs.getBlob(1);
         body = blob.getBytes(1, bodyLen); // 1 or 0 ???

@@ -5,11 +5,11 @@
                  java.util.Hashtable,
                  java.util.Enumeration"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsview.*"%>
-<jsp:useBean id="smsViewBean" scope="session" class="ru.novosoft.smsc.jsp.smsview.SmsViewFormBean" />
+<jsp:useBean id="smsViewDetailsBean" scope="page" class="ru.novosoft.smsc.jsp.smsview.SmsViewDetailsFormBean" />
 <%
-	SmsViewFormBean bean = smsViewBean;
+	SmsViewDetailsFormBean bean = smsViewDetailsBean;
 %>
-<jsp:setProperty name="smsViewBean" property="*"/>
+<jsp:setProperty name="smsViewDetailsBean" property="*"/>
 <%
 TITLE="SMS Detailed View";
 
@@ -40,7 +40,7 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
     SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMMM, yyyy HH:mm:ss");
     int rowN=0;
   %>
-<div class=secView>SMS #<%= row.getIdLong()%></div>
+<div class=secView>SMS #<%= row.getId()%></div>
 <table class=secRep cellspacing=1 width="100%">
 <tbody>
   <tr class=row<%=rowN++&1%>0>

@@ -6,7 +6,7 @@
 <jsp:useBean id="smsViewBean" scope="session" class="ru.novosoft.smsc.jsp.smsview.SmsViewFormBean" />
 <%
 	SmsViewFormBean bean = smsViewBean;
-	bean.refreshQuery();
+	//bean.refreshQuery();
 %>
 <jsp:setProperty name="smsViewBean" property="*"/>
 <%
@@ -144,13 +144,13 @@ if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
   for (int cnt=firstIndex; cnt<=lastIndex; cnt++, rowN++) {
     SmsRow row = bean.getRow(cnt-1);
     if (row == null) { rowN--; continue; }
-    long smsRowId = row.getIdLong();
+    long smsRowId = row.getId();
 %><tr class=row<%=rowN&1%>0>
       <td nowrap valign=top>
         <input class=check type=checkbox name=checkedRows value="<%= smsRowId%>" <%=bean.isRowChecked(smsRowId) ? "checked" : ""%>>
       </td>
       <td nowrap valign=top style="text-align: right">
-        <a href="view.jsp?smsId=<%= row.getIdString()%>&storageType=<%= bean.getStorageType()%>&mbView=show" title="Detailed view"><%= smsRowId%></a><br>
+        <a href="view.jsp?smsId=<%= smsRowId%>&storageType=<%= bean.getStorageType()%>&mbView=show" title="Detailed view"><%= smsRowId%></a><br>
         <!--%= row.getAttempts()%-->
       </td>
       <td nowrap style="padding-left: 5px; border-left:dotted 1px #C0C0C0;">
