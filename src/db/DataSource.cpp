@@ -38,6 +38,10 @@ Statement* Connection::getStatement(const char* id)
     Statement** statementPtr = statementsRegistry.GetPtr(id);
     return ((statementPtr) ? *statementPtr:0);
 }
+void Connection::disconnect()
+{
+    unregisterAllStatements();
+}
 
 void ConnectionPool::loadPoolSize(ConfigView* config)
 {

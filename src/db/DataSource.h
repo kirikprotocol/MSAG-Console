@@ -288,7 +288,7 @@ namespace smsc { namespace db
         
         virtual void connect() 
             throw(SQLException) = 0;
-        virtual void disconnect() = 0;
+        virtual void disconnect();
         
         virtual void commit() 
             throw(SQLException) = 0;
