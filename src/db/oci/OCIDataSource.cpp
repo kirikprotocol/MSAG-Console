@@ -51,6 +51,8 @@ void OCIConnection::connect()
         
         if (!isConnected)
         {
+            envhp=0L; svchp=0L; srvhp=0L; errhp=0L; sesshp=0L;
+
             // open connection to DB and begin user session 
             check(OCIEnvCreate(&envhp, OCI_OBJECT|OCI_ENV_NO_MUTEX,
                                (dvoid *)0, 0, 0, 0, (size_t) 0, (dvoid **)0));
@@ -258,7 +260,7 @@ OCIDataDescriptor::~OCIDataDescriptor()
 
 OCIQuery::OCIQuery(OCIConnection* connection, const char* query) 
     throw(SQLException)
-        : owner(connection)
+        : owner(connection), stmt(0L)
 {
     __require__(owner && query);
 
@@ -274,7 +276,7 @@ OCIQuery::OCIQuery(OCIConnection* connection, const char* query)
 }
 OCIQuery::~OCIQuery()
 {
-    (void) OCIHandleFree(stmt, OCI_HTYPE_STMT);
+    if (stmt) (void) OCIHandleFree(stmt, OCI_HTYPE_STMT);
     if (sqlquery) delete sqlquery;
 }
 

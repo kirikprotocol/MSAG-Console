@@ -37,7 +37,7 @@ namespace smsc { namespace store
 
 Statement::Statement(Connection* connection, const char* sql, bool assign) 
     throw(StorageException)
-        : owner(connection)
+        : owner(connection), stmt(0L)
 {
     __require__(owner);
     
@@ -53,7 +53,9 @@ Statement::Statement(Connection* connection, const char* sql, bool assign)
 
 Statement::~Statement()
 {
-    (void) OCIHandleFree(stmt, OCI_HTYPE_STMT);
+    if (stmt) {
+        (void) OCIHandleFree(stmt, OCI_HTYPE_STMT);
+    }
 }
 
 void Statement::bind(ub4 pos, ub2 type, 
@@ -62,7 +64,7 @@ void Statement::bind(ub4 pos, ub2 type,
 {
     __trace2__("%p : BindByPos called, pos=%d", stmt, pos);
 
-    OCIBind *bind;
+    OCIBind *bind = 0;
     check(OCIBindByPos(stmt, &bind, errhp, pos, 
                        placeholder, size, type, indp,
                        (ub2 *) 0, (ub2 *) 0, (ub4) 0, (ub4 *) 0,
@@ -75,7 +77,7 @@ void Statement::bind(CONST text* name, sb4 name_len, ub2 type,
 {
     __trace2__("%p : BindByName called, name=%s", stmt, name);
 
-    OCIBind *bind;
+    OCIBind *bind = 0;
     check(OCIBindByName(stmt, &bind, errhp, name, name_len,
                         placeholder, size, type, indp,
                         (ub2 *) 0, (ub2 *) 0, (ub4) 0, (ub4 *) 0,
@@ -88,7 +90,7 @@ void Statement::define(ub4 pos, ub2 type,
 {
     __trace2__("%p : DefineByPos called, pos=%d", stmt, pos);
 
-    OCIDefine*  define;
+    OCIDefine*  define = 0;
     check(OCIDefineByPos(stmt, &define, errhp, pos, 
                          placeholder, size, type, indp,
                          (ub2 *) 0, (ub2 *) 0, OCI_DEFAULT));
