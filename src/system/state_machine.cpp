@@ -1015,7 +1015,7 @@ StateType StateMachine::submit(Tuple& t)
                   (profile.divertActiveCapacity?DF_CAPAC:0);
   if(divertFlags && profile.divert.length()!=0 && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
-    smsc_log_info(smsLog, "divert for %s found",dst.toString().c_str());
+    smsc_log_debug(smsLog, "divert for %s found",dst.toString().c_str());
     Address divDst;
     try{
       divDst=Address(profile.divert.c_str());
@@ -1027,7 +1027,7 @@ StateType StateMachine::submit(Tuple& t)
     Address tmp;
     if(smsc->AliasToAddress(divDst,tmp))
     {
-      smsc_log_info(smsLog, "Divert address dealiased:%s->%s",divDst.toString().c_str(),tmp.toString().c_str());
+      smsc_log_debug(smsLog, "Divert address dealiased:%s->%s",divDst.toString().c_str(),tmp.toString().c_str());
       divDst=tmp;
     }
     smsc::router::RouteInfo ri2;
@@ -1965,7 +1965,7 @@ StateType StateMachine::submit(Tuple& t)
     {
       smsc->registerStatisticalEvent(StatEvents::etDeliverErr,sms);
     }
-    smsc_log_debug(smsLog, "SBM: dest sme not connected Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+    smsc_log_info(smsLog, "SBM: dest sme not connected Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
       t.msgId,dialogId,
       sms->getOriginatingAddress().toString().c_str(),
       sms->getDestinationAddress().toString().c_str(),
@@ -2240,7 +2240,7 @@ StateType StateMachine::submit(Tuple& t)
     tg.active=false;
   }
   sms->lastResult=Status::OK;
-  smsc_log_debug(smsLog, "SBM: submit ok, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+  smsc_log_info(smsLog, "SBM: submit ok, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
     dialogId2,
     t.msgId,dialogId,
     sms->getOriginatingAddress().toString().c_str(),
@@ -2254,7 +2254,6 @@ StateType StateMachine::submit(Tuple& t)
 StateType StateMachine::forward(Tuple& t)
 {
   SMS sms;
-  smsc_log_debug(smsLog, "FWD: msgId=%lld",t.msgId);
   if(smsc->getTempStore().Get(t.msgId,sms))
   {
     __trace2__("FWD: sms %lld found in temp store... need to create it",t.msgId);
@@ -2302,7 +2301,7 @@ StateType StateMachine::forward(Tuple& t)
     {
       __warning__("FORWARD: failed to change state to expired");
     }
-    smsc_log_debug(smsLog, "FWD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
+    smsc_log_info(smsLog, "FWD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
 
     sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
 
@@ -2734,7 +2733,7 @@ StateType StateMachine::forward(Tuple& t)
     smsc->tasks.findAndRemoveTask(uniqueId,dialogId2,&t);
     return Status::isErrorPermanent(errstatus)?UNDELIVERABLE_STATE:ENROUTE_STATE;
   }
-  smsc_log_debug(smsLog, "FWDDLV: deliver ok msgId=%lld, seq number:%d",t.msgId,dialogId2);
+  smsc_log_info(smsLog, "FWDDLV: deliver ok msgId=%lld, seq number:%d",t.msgId,dialogId2);
 
   return DELIVERING_STATE;
 }
@@ -2794,7 +2793,7 @@ StateType StateMachine::DivertProcessing(Tuple& t,SMS& sms)
 StateType StateMachine::deliveryResp(Tuple& t)
 {
   int sttype=GET_STATUS_TYPE(t.command->get_resp()->get_status());
-  smsc_log_debug(smsLog, "DLVRSP: msgId=%lld;class=%s;st=%d",t.msgId,
+  smsc_log_info(smsLog, "DLVRSP: msgId=%lld;class=%s;st=%d",t.msgId,
     sttype==CMD_OK?"OK":
     sttype==CMD_ERR_RESCHEDULENOW?"RESCHEDULEDNOW":
     sttype==CMD_ERR_TEMP?"TEMP ERROR":"PERM ERROR",
@@ -3006,7 +3005,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   // other parts MUST be delivered to the same address.
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_COND))
   {
-    smsc_log_info(smsLog,"DLVRESP: msgId=%lld - delivered first part of multipart sms with conditional divert.",t.msgId);
+    smsc_log_debug(smsLog,"DLVRESP: msgId=%lld - delivered first part of multipart sms with conditional divert.",t.msgId);
     // first part was delivered to diverted address!
     if(t.command->get_resp()->get_diverted())
     {
