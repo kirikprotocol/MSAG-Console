@@ -258,6 +258,7 @@ void Archiver::connect()
     if (!storageConnection->isAvailable())
     {
         storageConnection->connect();
+        
         prepareStorageSelectStmt();
         prepareStorageDeleteStmt();
         prepareArchiveInsertStmt();
@@ -266,6 +267,7 @@ void Archiver::connect()
     if (!billingConnection->isAvailable())
     {
         billingConnection->connect();
+        
         prepareBillingPutIdStmt();
         prepareBillingLookIdStmt();
         prepareBillingInsertStmt();
@@ -493,7 +495,7 @@ void Archiver::count()
 }
 
 const char* Archiver::storageSelectSql = (const char*)
-"SELECT ID, ST, MR, OA, DA, DDA\
+"SELECT ID, ST, MR, OA, DA, DDA,\
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
  VALID_TIME, SUBMIT_TIME,\
  ATTEMPTS, LAST_RESULT, LAST_TRY_TIME,\
@@ -582,7 +584,7 @@ const char* Archiver::archiveInsertSql = (const char*)
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
  VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT,\
  LAST_TRY_TIME, DR, BR, BODY, BODY_LEN)\
- VALUES (:ID, :ST, :MR, :OA, :DA, :DDA\
+ VALUES (:ID, :ST, :MR, :OA, :DA, :DDA,\
  :SRC_MSC, :SRC_IMSI, :SRC_SME_N, :DST_MSC, :DST_IMSI, :DST_SME_N,\
  :WAIT_TIME, :VALID_TIME, :SUBMIT_TIME, :ATTEMPTS, :LAST_RESULT,\
  :LAST_TRY_TIME, :DR, :BR, :BODY, :BODY_LEN)";
@@ -603,7 +605,7 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
     archiveInsertStmt->bind(i++, SQLT_STR, (dvoid *) (oa), (sb4) sizeof(oa));
     archiveInsertStmt->bind(i++, SQLT_STR, (dvoid *) (da), (sb4) sizeof(da));
     archiveInsertStmt->bind(i++, SQLT_STR, (dvoid *) (dda), (sb4) sizeof(dda));
-    
+
     archiveInsertStmt->bind(i++, SQLT_STR, 
                             (dvoid *) (sms.originatingDescriptor.msc),
                             (sb4) sizeof(sms.originatingDescriptor.msc),
@@ -642,8 +644,9 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
                             (sb4) sizeof(sms.deliveryReport));
     archiveInsertStmt->bind(i++, SQLT_UIN, (dvoid *) &(sms.billingRecord), 
                             (sb4) sizeof(sms.billingRecord));
+
     archiveInsertStmt->bind(i++, SQLT_BIN, (dvoid *) bodyBuffer,
-                            (sb4) bodyBufferLen, &indBody);
+                            (sb4) sizeof(bodyBuffer), &indBody);
     archiveInsertStmt->bind(i++, SQLT_UIN, (dvoid *)&(bodyBufferLen),
                             (sb4) sizeof(bodyBufferLen));
 }
