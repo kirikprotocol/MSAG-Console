@@ -23,8 +23,8 @@ ProfileRegistry::~ProfileRegistry()
 
 void ProfileRegistry::putProfile(const Address& addr, const Profile& profile)
 {
-	__trace2__("putProfile(): addr = %s, profile.codepage = %d, profile.reportoptions = %d",
-		str(addr).c_str(), profile.codepage, profile.reportoptions);
+	__trace2__("putProfile(): addr = %s, codepage = %d, reportoptions = %d, locale = %s",
+		str(addr).c_str(), profile.codepage, profile.reportoptions, profile.locale.c_str());
 	ProfileMap::iterator it = profileMap.find(addr);
 	if (it != profileMap.end())
 	{

@@ -2,6 +2,7 @@
 #include "test/conf/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
+#include "system/status.h"
 #include "util/debug.h"
 
 namespace smsc {
@@ -17,6 +18,7 @@ using smsc::test::smpp::operator==;
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::smpp::DataCoding;
+using namespace smsc::system;
 using namespace smsc::test::sms; //constants
 using namespace smsc::test::smpp;
 using namespace smsc::test::core; //constants
@@ -2296,7 +2298,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespOk(
 		__tc_fail__(100);
 		error();
 	}
-	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+	return make_pair(Status::DELIVERYTIMEDOUT,
 		time(NULL) + fixture->smeInfo.timeout);
 }
 
@@ -2364,7 +2366,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 		__tc_fail__(100);
 		error();
 	}
-	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+	return make_pair(Status::DELIVERYTIMEDOUT,
 		time(NULL) + fixture->smeInfo.timeout);
 }
 
@@ -2425,7 +2427,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
 		__tc_fail__(100);
 		error();
 	}
-	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+	return make_pair(Status::DELIVERYTIMEDOUT,
 		time(NULL) + fixture->smeInfo.timeout);
 }
 
@@ -2460,7 +2462,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDataSmRespOk(
 		__tc_fail__(100);
 		error();
 	}
-	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+	return make_pair(Status::DELIVERYTIMEDOUT,
 		time(NULL) + fixture->smeInfo.timeout);
 }
 
@@ -2531,7 +2533,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDataSmRespRetry(
 		__tc_fail__(100);
 		error();
 	}
-	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+	return make_pair(Status::DELIVERYTIMEDOUT,
 		time(NULL) + fixture->smeInfo.timeout);
 }
 
@@ -2595,7 +2597,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDataSmRespError(
 		__tc_fail__(100);
 		error();
 	}
-	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+	return make_pair(Status::DELIVERYTIMEDOUT,
 		time(NULL) + fixture->smeInfo.timeout);
 }
 

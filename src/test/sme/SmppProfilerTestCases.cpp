@@ -1,4 +1,5 @@
 #include "SmppProfilerTestCases.hpp"
+#include "ProfilerMessages.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
@@ -33,15 +34,16 @@ Category& SmppProfilerTestCases::getLog()
 	return log;
 }
 
-void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
+void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 	PduData::IntProps* intProps, PduData::StrProps* strProps,
 	PduData::ObjProps* objProps, bool sync, uint8_t dataCoding)
 {
 	__decl_tc__;
 	__cfg_addr__(profilerAlias);
+	string text(_text);
 	try
 	{
-		//текст сообщения
+		//кодировка текста сообщения
 		switch (dataCoding)
 		{
 			case DEFAULT:
@@ -56,6 +58,16 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 			default:
 				__unreachable__("Invalid data coding");
 		}
+		//модификации текста
+		__tc__("updateProfile.cmdTextMixedCase"); __tc_ok__;
+		mixedCase(text);
+		__tc__("updateProfile.cmdTextExtraWhiteSpaces"); __tc_ok__;
+		//static const char whiteSpace[] = {' ', '\n'};
+		//static const int whiteSpaceSize = sizeof(whiteSpace);
+		text.insert(0, string(rand0(2), ' '));
+		text.replace(text.find(' '), 1, string(rand1(2), ' ')); //первый пробел
+		text.append(string(rand0(2), ' '));
+		//перекодирование
 		int msgLen;
 		auto_ptr<char> msg = encode(text, dataCoding, msgLen, false);
 		//submit_sm
@@ -98,19 +110,22 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 		__tc_ok__;
 		//обновить профиль, ответные сообщения от профайлера и
 		//подтверждения доставки  уже по новым настройкам
-		if (fixture->profileReg && intProps)
+		if (fixture->profileReg)
 		{
 			time_t t;
 			Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
-			if (intProps->count("profilerTc.reportOptions"))
+			if (intProps && intProps->count("profilerTc.reportOptions"))
 			{
-				__require__(!intProps->count("profilerTc.codePage"));
 				profile.reportoptions = (*intProps)["profilerTc.reportOptions"];
 			}
-			if (intProps->count("profilerTc.codePage"))
+			if (intProps && intProps->count("profilerTc.codePage"))
 			{
-				__require__(!intProps->count("profilerTc.reportOptions"));
 				profile.codepage = (*intProps)["profilerTc.codePage"];
+			}
+			if (strProps && strProps->count("profilerTc.locale") &&
+				(*strProps)["profilerTc.locale"].length())
+			{
+				profile.locale = (*strProps)["profilerTc.locale"];
 			}
 			fixture->profileReg->putProfile(fixture->smeAddr, profile);
 		}
@@ -132,7 +147,7 @@ void SmppProfilerTestCases::updateReportOptionsCorrect(bool sync,
 	{
 		return;
 	}
-	TCSelector s(num, 4);
+	TCSelector s(num, 2);
 	for (; s.check(); s++)
 	{
 		try
@@ -142,26 +157,14 @@ void SmppProfilerTestCases::updateReportOptionsCorrect(bool sync,
 			switch (s.value())
 			{
 				case 1: //report none
-					__tc__("updateProfile.reportOptions.reportNoneMixedCase");
-					text = "RePoRT NoNe";
+					__tc__("updateProfile.reportOptions.reportNone");
+					text = "report none";
 					intProps["profilerTc.reportOptions"] =
 						ProfileReportOptions::ReportNone;
 					break;
-				case 2: //report none
-					__tc__("updateProfile.reportOptions.reportNoneSpaces");
-					text = "  rEpOrt  nOnE  ";
-					intProps["profilerTc.reportOptions"] =
-						ProfileReportOptions::ReportNone;
-					break;
-				case 3: //report full
-					__tc__("updateProfile.reportOptions.reportFullMixedCase");
-					text = "RePoRT FuLL";
-					intProps["profilerTc.reportOptions"] =
-						ProfileReportOptions::ReportFull;
-					break;
-				case 4: //report full
-					__tc__("updateProfile.reportOptions.reportFullSpaces");
-					text = "  rEpOrt  fUll  ";
+				case 2: //report full
+					__tc__("updateProfile.reportOptions.reportFull");
+					text = "report full";
 					intProps["profilerTc.reportOptions"] =
 						ProfileReportOptions::ReportFull;
 					break;
@@ -188,7 +191,7 @@ void SmppProfilerTestCases::updateCodePageCorrect(bool sync,
 	{
 		return;
 	}
-	TCSelector s(num, 4);
+	TCSelector s(num, 2);
 	for (; s.check(); s++)
 	{
 		try
@@ -198,23 +201,13 @@ void SmppProfilerTestCases::updateCodePageCorrect(bool sync,
 			switch (s.value())
 			{
 				case 1: //ucs2 codepage
-					__tc__("updateProfile.dataCoding.ucs2CodepageMixedCase");
-					text = "uCS2";
+					__tc__("updateProfile.dataCoding.ucs2");
+					text = "ucs2";
 					intProps["profilerTc.codePage"] = ProfileCharsetOptions::Ucs2;
 					break;
-				case 2: //usc2 codepage
-					__tc__("updateProfile.dataCoding.ucs2CodepageSpaces");
-					text = "  Ucs2  ";
-					intProps["profilerTc.codePage"] = ProfileCharsetOptions::Ucs2;
-					break;
-				case 3: //default codepage
-					__tc__("updateProfile.dataCoding.defaultCodepageMixedCase");
-					text = "DeFauLT";
-					intProps["profilerTc.codePage"] = ProfileCharsetOptions::Default;
-					break;
-				case 4: //default codepage
-					__tc__("updateProfile.dataCoding.defaultCodepageSpaces");
-					text = "  dEfAUlt  ";
+				case 2: //default codepage
+					__tc__("updateProfile.dataCoding.default");
+					text = "default";
 					intProps["profilerTc.codePage"] = ProfileCharsetOptions::Default;
 					break;
 				default:
@@ -231,7 +224,63 @@ void SmppProfilerTestCases::updateCodePageCorrect(bool sync,
 	}
 }
 
-void SmppProfilerTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding)
+void SmppProfilerTestCases::updateLocaleCorrect(bool sync,
+	uint8_t dataCoding, int num)
+{
+	__decl_tc__;
+	//убрать нарезку длинных ответных сообщений от профайлера для map proxy
+	if (fixture->smeInfo.systemId == "MAP_PROXY")
+	{
+		return;
+	}
+	TCSelector s(num, 4);
+	for (; s.check(); s++)
+	{
+		try
+		{
+			string text;
+			PduData::StrProps strProps;
+			switch (s.value())
+			{
+				case 1: //ru_ru
+					__tc__("updateProfile.locale.existentLocale");
+					text = "locale ru_ru";
+					strProps["profilerTc.locale"] = "ru_ru";
+					break;
+				case 2: //en_us
+					__tc__("updateProfile.locale.existentLocale");
+					text = "locale en_us";
+					strProps["profilerTc.locale"] = "en_us";
+					break;
+				case 3: //en_gb
+					__tc__("updateProfile.locale.existentLocale");
+					text = "locale en_gb";
+					strProps["profilerTc.locale"] = "en_gb";
+					break;
+				case 4: //не существующий
+					__tc__("updateProfile.locale.nonExistentLocale");
+					text = "locale qu_qu";
+					strProps["profilerTc.locale"] = "";
+					break;
+				default:
+					__unreachable__("Invalid num");
+			}
+			sendUpdateProfilePdu(text, NULL, &strProps, NULL, sync, dataCoding);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(100);
+			error();
+		}
+	}
+}
+
+template<typename T, int size>
+inline int sz(T (&)[size]) { return size; }
+
+void SmppProfilerTestCases::updateProfileIncorrect(bool sync,
+	uint8_t dataCoding, int num)
 {
 	__decl_tc__;
 	//убрать нарезку длинных ответных сообщений от профайлера для map proxy
@@ -240,33 +289,55 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding
 		return;
 	}
 	__tc__("updateProfile.incorrectCmdText");
-	try
+	TCSelector s(num, 4);
+	for (; s.check(); s++)
 	{
-		PduData::IntProps intProps;
-		intProps["profilerTc.incorrectCmdText"] = 1;
-		auto_ptr<char> tmp = rand_char(rand0(5));
-		sendUpdateProfilePdu(tmp.get(), &intProps, NULL, NULL, sync, dataCoding);
-		__tc_ok__;
-
-	}
-	catch(...)
-	{
-		__tc_fail__(100);
-		error();
+		try
+		{
+			static const string invalidReportCmd[] =
+			{
+				"report", "report non", "report none2", "report ful", "report full2",
+				"repor none", "report2 none"
+			};
+			static const string invalidDcCmd[] =
+			{
+				"ucs", "ucs1", "ucs22", "defaul", "default2"
+			};
+			static const string invalidLocaleCmd[] =
+			{
+				"locale", "local en_us", "locale2 en_us"
+			};
+			string text;
+			switch (s.value())
+			{
+				case 1: //случайный текст
+					{
+						auto_ptr<char> tmp = rand_char(rand0(5));
+						text = tmp.get();
+					}
+					break;
+				case 2: //report options
+					text = invalidReportCmd[rand0(sz(invalidReportCmd) - 1)];
+					break;
+				case 3: //data coding
+					text = invalidDcCmd[rand0(sz(invalidDcCmd) - 1)];
+					break;
+				case 4: //locale
+					text = invalidLocaleCmd[rand0(sz(invalidLocaleCmd) - 1)];
+					break;
+				default:
+					__unreachable__("Invalid num");
+			}
+			sendUpdateProfilePdu(text, NULL, NULL, NULL, sync, dataCoding);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(100);
+			error();
+		}
 	}
 }
-
-#define __get_resp__(param, codepage, valid) \
-	switch (codepage) { \
-		case ProfileCharsetOptions::Default: { \
-			static const pair<string, uint8_t> p = convert(param, codepage); \
-			return new AckText(p.first, p.second, valid); \
-		} case ProfileCharsetOptions::Ucs2: { \
-			static const pair<string, uint8_t> p = convert(param, codepage); \
-			return new AckText(p.first, p.second, valid); \
-		} default: \
-			__unreachable__("Invalid codepage"); \
-	}
 
 AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	SmppHeader* header, time_t recvTime)
@@ -282,52 +353,29 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	//проверка profiler reportOptions
 	if (monitor->pduData->intProps.count("profilerTc.reportOptions"))
 	{
-		__require__(!monitor->pduData->intProps.count("profilerTc.codePage"));
 		__tc__("updateProfile.ack.reportOptions.dataCoding"); __tc_ok__;
-		__cfg_str__(profilerRespReportNone);
-		__cfg_str__(profilerRespReportFull);
-		switch (monitor->pduData->intProps["profilerTc.reportOptions"])
-		{
-			case ProfileReportOptions::ReportNone:
-				__get_resp__(profilerRespReportNone, profile.codepage, valid);
-				//break;
-			case ProfileReportOptions::ReportFull:
-				__get_resp__(profilerRespReportFull, profile.codepage, valid);
-				//break;
-			default:
-				__unreachable__("Invalid reportoptions");
-		}
+		const pair<string, uint8_t> p = ProfilerReportMessage::format(profile);
+		return new AckText(p.first, p.second, true /*valid*/);
 	}
 	//проверка profiler codePage
 	if (monitor->pduData->intProps.count("profilerTc.codePage"))
 	{
-		__require__(!monitor->pduData->intProps.count("profilerTc.reportOptions"));
 		__tc__("updateProfile.ack.codePage.dataCoding"); __tc_ok__;
-		__cfg_str__(profilerRespDataCodingDefault);
-		__cfg_str__(profilerRespDataCodingUcs2);
-		switch (monitor->pduData->intProps["profilerTc.codePage"])
-		{
-			case ProfileCharsetOptions::Default:
-				__get_resp__(profilerRespDataCodingDefault,
-					ProfileCharsetOptions::Default, true);
-				//break;
-			case ProfileCharsetOptions::Ucs2:
-				__get_resp__(profilerRespDataCodingUcs2,
-					ProfileCharsetOptions::Ucs2, true);
-				//break;
-			default:
-				__unreachable__("Invalid codepage");
-		}
+		const pair<string, uint8_t> p = ProfilerCodepageMessage::format(profile);
+		return new AckText(p.first, p.second, true /*valid*/);
+	}
+	//проверка profiler locale
+	if (monitor->pduData->strProps.count("profilerTc.locale"))
+	{
+		__tc__("updateProfile.ack.locale.dataCoding"); __tc_ok__;
+		const pair<string, uint8_t> p = ProfilerLocaleMessage::format(profile,
+			monitor->pduData->strProps["profilerTc.locale"]);
+		return new AckText(p.first, p.second, true /*valid*/);
 	}
 	//неправильный текст команды
-	if (monitor->pduData->intProps.count("profilerTc.incorrectCmdText"))
-	{
-		__tc__("updateProfile.ack.incorrectCmdText.dataCoding"); __tc_ok__;
-		__cfg_str__(profilerRespInvalidCmdText);
-		__get_resp__(profilerRespInvalidCmdText, profile.codepage, valid);
-		//return ...;
-	}
-	__unreachable__("Invalid sms was sent to profiler");
+	__tc__("updateProfile.ack.incorrectCmdText.dataCoding"); __tc_ok__;
+	const pair<string, uint8_t> p = ProfilerErrorMessage::format(profile);
+	return new AckText(p.first, p.second, true /*valid*/);
 }
 
 #define __check__(errCode, cond) \

@@ -1,4 +1,5 @@
 #include "AbonentInfoTestCases.hpp"
+#include "AbonentInfoMessages.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/core/PduUtil.hpp"
@@ -24,14 +25,14 @@ AbonentInfoTestCases::AbonentInfoTestCases(SmppFixture* fixture)
 	TestConfig::getStrParam("abonentInfoServiceType"),
 	TestConfig::getIntParam("abonentInfoProtocolId"))
 {
-	__cfg_addr__(abonentInfoAddrSmpp);
-	__cfg_addr__(abonentInfoAddrMap);
-	__cfg_addr__(abonentInfoAliasSmpp);
-	__cfg_addr__(abonentInfoAliasMap);
-	addSmeAddr(abonentInfoAddrSmpp);
-	addSmeAddr(abonentInfoAddrMap);
-	addSmeAlias(abonentInfoAliasSmpp);
-	addSmeAlias(abonentInfoAliasMap);
+	__cfg_addr__(abonentInfoAddrSme);
+	__cfg_addr__(abonentInfoAddrMobile);
+	__cfg_addr__(abonentInfoAliasSme);
+	__cfg_addr__(abonentInfoAliasMobile);
+	addSmeAddr(abonentInfoAddrSme);
+	addSmeAddr(abonentInfoAddrMobile);
+	addSmeAlias(abonentInfoAliasSme);
+	addSmeAlias(abonentInfoAliasMobile);
 }
 
 Category& AbonentInfoTestCases::getLog()
@@ -44,8 +45,8 @@ AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
 	const Address& smeAddr, time_t submitTime)
 {
 	__decl_tc__;
-	__cfg_addr__(abonentInfoAliasSmpp);
-	__cfg_addr__(abonentInfoAliasMap);
+	__cfg_addr__(abonentInfoAliasSme);
+	__cfg_addr__(abonentInfoAliasMobile);
 	__cfg_int__(timeCheckAccuracy);
 	try
 	{
@@ -67,23 +68,21 @@ AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
 		time_t t;
 		const Profile& profile = fixture->profileReg->getProfile(destAddr, t);
 		bool valid = t + timeCheckAccuracy <= submitTime;
-		ostringstream s;
-		if (smeAddr == abonentInfoAliasSmpp)
+		if (smeAddr == abonentInfoAliasSme)
 		{
-			s << input << ":" << status << "," << profile.codepage << ",";
+			const pair<string, uint8_t> p =
+				AbonentInfoSmeMessage::format(profile, input, status, "");
+			__trace2__("getExpectedResponse(): input = %s, output = %s", input.c_str(), p.first.c_str());
+			return new AckText(p.first, p.second, valid);
 		}
-		else if (smeAddr == abonentInfoAliasMap)
+		else if (smeAddr == abonentInfoAliasMobile)
 		{
-			s << "Abonent " << input << " is " << (status ? "Online" : "Offline") <<
-				". msc unknown";
+			const pair<string, uint8_t> p =
+				AbonentInfoMobileMessage::format(profile, input, status, "");
+			__trace2__("getExpectedResponse(): input = %s, output = %s", input.c_str(), p.first.c_str());
+			return new AckText(p.first, p.second, valid);
 		}
-		else
-		{
-			__unreachable__("Invalid address");
-		}
-		AckText* ack = new AckText(s.str(), DEFAULT, valid);
-		__trace2__("getExpectedResponse(): input = %s, ack = %p", input.c_str(), ack);
-		return ack;
+		__unreachable__("Invalid address");
 	}
 	catch (...)
 	{
@@ -116,18 +115,18 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 		int msgLen;
 		auto_ptr<char> msg = encode(input, dataCoding, msgLen, false);
 		//адрес
-		__cfg_addr__(abonentInfoAliasSmpp);
-		__cfg_addr__(abonentInfoAliasMap);
+		__cfg_addr__(abonentInfoAliasSme);
+		__cfg_addr__(abonentInfoAliasMobile);
 		Address abonentInfoAlias;
 		switch (rand1(2))
 		{
 			case 1:
 				__tc__("queryAbonentInfo.smppAddr"); __tc_ok__;
-				abonentInfoAlias = abonentInfoAliasSmpp;
+				abonentInfoAlias = abonentInfoAliasSme;
 				break;
 			case 2:
 				__tc__("queryAbonentInfo.mapAddr"); __tc_ok__;
-				abonentInfoAlias = abonentInfoAliasMap;
+				abonentInfoAlias = abonentInfoAliasMobile;
 				break;
 			default:
 				__unreachable__("Invalid address");
@@ -136,10 +135,10 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 		PduData::StrProps strProps;
 		strProps["abonentInfoTc.input"] = input;
 		PduData::ObjProps objProps;
-		AckText* ack = NULL;
+		//на всякий случай всегда вычислять
+		AckText* ack = getExpectedResponse(input, abonentInfoAlias, time(NULL));
 		if (correct)
 		{
-			ack = getExpectedResponse(input, abonentInfoAlias, time(NULL));
 			__require__(ack);
 		}
 		if (ack)

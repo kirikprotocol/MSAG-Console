@@ -1,4 +1,5 @@
 #include "SmscSmeTestCases.hpp"
+#include "SmscSmeMessages.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/core/PduUtil.hpp"
@@ -92,13 +93,8 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 		case SMPP_DELIVERED_STATE:
 			for (time_t t = recvTime; t > recvTime - timeCheckAccuracy; t--)
 			{
-				static const DateFormatter df("dd MMMM yyyy, HH:mm:ss");
-				ostringstream s;
-				s << "*Your message sent to ";
-				s << SmsUtil::configString(destAlias);
-				s << " was successfully delivered on ";
-				s << df.format(t);
-				const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
+				const pair<string, uint8_t> p =
+					SmscSmeDeliveredReceipt::format(profile, destAlias, t);
 				__trace2__("getExpectedResponse(): %s", p.first.c_str());
 				if (p.first.find(text) != string::npos)
 				{
@@ -118,23 +114,12 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 					sendTime = pduData->replacePdu->sendTime;
 					pduData = pduData->replacePdu;
 				}
+				int status = monitor->state == SMPP_EXPIRED_STATE ?
+					Status::EXPIRED : monitor->deliveryStatus;
 				for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 				{
-					static const DateFormatter df("ddMMyyHHmmss");
-					ostringstream s;
-					s << "*Подтв ";
-					s << SmsUtil::configString(destAlias) << " ";
-					s << df.format(t) << ": ";
-					if (monitor->state == SMPP_UNDELIVERABLE_STATE)
-					{
-						s << "permanent error"; //захардкожено
-					}
-					else if (monitor->state == SMPP_EXPIRED_STATE)
-					{
-						s << "expired"; //захардкожено
-					}
-					//s << monitor->deliveryStatus;
-					const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
+					const pair<string, uint8_t> p =
+						SmscSmeFailedReceipt::format(profile, destAlias, t, status);
 					__trace2__("getExpectedResponse(): %s", p.first.c_str());
 					if (p.first.find(text) != string::npos)
 					{
@@ -173,32 +158,8 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 	}
 	for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 	{
-		static const DateFormatter df("ddMMyyHHmmss");
-		ostringstream s;
-		s << "$Notif ";
-		s << SmsUtil::configString(destAlias) << " ";
-		s << df.format(t) << ": ";
-		switch (monitor->deliveryStatus)
-		{
-			case ESME_ROK:
-				__unreachable__("Invalid delivery status");
-				//break;
-			case ESME_RX_T_APPN:
-			case ESME_RMSGQFUL:
-				s << "subscriber busy";
-				break;
-			case ESME_RX_P_APPN:
-				__unreachable__("Not supported");
-			case DELIVERY_STATUS_NO_RESPONSE: //ошибка отправки deliver_sm_resp
-				s << "delivery attempt timed out";
-				break;
-			case DELIVERY_STATUS_DEST_TRANSMITTER:
-				s << "facility not supported";
-				break; 
-			default: //все остальные коды ошибок
-				s << "destination unavailable";
-		}
-		const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
+		const pair<string, uint8_t> p =
+			SmscSmeNotification::format(profile, destAlias, t, monitor->deliveryStatus);
 		__trace2__("getExpectedResponse(): %s", p.first.c_str());
 		if (p.first.find(text) != string::npos)
 		{

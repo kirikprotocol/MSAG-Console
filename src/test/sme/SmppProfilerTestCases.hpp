@@ -38,9 +38,14 @@ public:
 	void updateCodePageCorrect(bool sync, uint8_t dataCoding, int num);
 
 	/**
+	 * ќбновление настроек локали.
+	 */
+	void updateLocaleCorrect(bool sync, uint8_t dataCoding, int num);
+
+	/**
 	 * ќбновление профил€ некорректными данными.
 	 */
-	void updateProfileIncorrect(bool sync, uint8_t dataCoding);
+	void updateProfileIncorrect(bool sync, uint8_t dataCoding, int num);
 
 	/**
 	 * ќтветные сообщение от profiler доставл€ютс€ правильно.

@@ -4,6 +4,7 @@
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
+#include "system/status.h"
 #include "util/Exception.hpp"
 
 namespace smsc {
@@ -19,6 +20,7 @@ using namespace smsc::profiler; //constants, Profile
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
 using namespace smsc::smpp::DataCoding; //constants
+using namespace smsc::system;
 using namespace smsc::test::smpp; //constants, SmppUtil
 using namespace smsc::test::core; //constants
 using namespace smsc::test::sms; //constants
@@ -271,22 +273,22 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(PduData* pduDat
 		if (reports)
 		{
 			//intermediate notification
-			__tc__("deliverySm.reports.intermediateNotification.transmitter");
+			__tc__("sms.reports.intermediateNotification.transmitter");
 			__tc_ok__;
 			IntermediateNotificationMonitor* notifMonitor =
 				new IntermediateNotificationMonitor(pdu.getMsgRef(),
 					pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
 			notifMonitor->state = SMPP_ENROUTE_STATE;
-			notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
+			notifMonitor->deliveryStatus = ESME_RINVBNDSTS;
 			fixture->pduReg->registerMonitor(notifMonitor);
 			//delivery receipt
-			__tc__("deliverySm.reports.deliveryReceipt.transmitter");
+			__tc__("sms.reports.deliveryReceipt.transmitter");
 			__tc_ok__;
 			DeliveryReceiptMonitor* rcptMonitor =
 				new DeliveryReceiptMonitor(pdu.getMsgRef(), pdu.getValidTime(),
 					pduData, PDU_REQUIRED_FLAG);
 			rcptMonitor->state = SMPP_EXPIRED_STATE;
-			rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
+			rcptMonitor->deliveryStatus = ESME_RINVBNDSTS;
 			fixture->pduReg->registerMonitor(rcptMonitor);
 		}
 	}
@@ -325,22 +327,22 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(PduData* pduData)
 		if (reports)
 		{
 			//intermediate notification
-			__tc__("deliverySm.reports.intermediateNotification.notBound");
+			__tc__("sms.reports.intermediateNotification.notBound");
 			__tc_ok__;
 			IntermediateNotificationMonitor* notifMonitor =
 				new IntermediateNotificationMonitor(pdu.getMsgRef(),
 					pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
 			notifMonitor->state = SMPP_ENROUTE_STATE;
-			notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
+			notifMonitor->deliveryStatus = Status::SMENOTCONNECTED;
 			fixture->pduReg->registerMonitor(notifMonitor);
 			//delivery receipt
-			__tc__("deliverySm.reports.deliveryReceipt.notBound");
+			__tc__("sms.reports.deliveryReceipt.notBound");
 			__tc_ok__;
 			DeliveryReceiptMonitor* rcptMonitor =
 				new DeliveryReceiptMonitor(pdu.getMsgRef(), pdu.getValidTime(),
 					pduData, PDU_REQUIRED_FLAG);
 			rcptMonitor->state = SMPP_EXPIRED_STATE;
-			rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
+			rcptMonitor->deliveryStatus = Status::SMENOTCONNECTED;
 			fixture->pduReg->registerMonitor(rcptMonitor);
 		}
 	}

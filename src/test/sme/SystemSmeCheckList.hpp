@@ -27,26 +27,28 @@ void profilerTc()
 		"Текст команды в 7bit кодировке SC");
 	__reg_tc__("updateProfile.cmdTextUcs2",
 		"Текст команды в кодировке UCS2");
+	__reg_tc__("updateProfile.cmdTextMixedCase",
+		"Текст команды в смешанном регистре");
+	__reg_tc__("updateProfile.cmdTextExtraWhiteSpaces",
+		"Текст команды с лишними пробелами (в начале, середине, конце)");
 	__reg_tc__("updateProfile.reportOptions",
 		"Изменение опций уведомления о доставке");
-	__reg_tc__("updateProfile.reportOptions.reportNoneMixedCase",
-		"Отказаться от уведомления о доставке (текст команды в смешанном регистре)");
-	__reg_tc__("updateProfile.reportOptions.reportNoneSpaces",
-		"Отказаться от уведомления о доставке (текст команды с лишними пробелами)");
-	__reg_tc__("updateProfile.reportOptions.reportFullMixedCase",
-		"Установить прием уведомлений о доставке (текст команды в смешанном регистре)");
-	__reg_tc__("updateProfile.reportOptions.reportFullSpaces",
-		"Установить прием уведомлений о доставке (текст команды с лишними пробелами)");
+	__reg_tc__("updateProfile.reportOptions.reportNone",
+		"Отказаться от уведомления о доставке (report none)");
+	__reg_tc__("updateProfile.reportOptions.reportFull",
+		"Установить прием уведомлений о доставке (report full)");
 	__reg_tc__("updateProfile.dataCoding",
 		"Изменение режима приема сообщений");
-	__reg_tc__("updateProfile.dataCoding.ucs2CodepageMixedCase",
-		"Установить режим приема сообщений на русском языке (кодировка ucs2, текст команды в смешанном регистре)");
-	__reg_tc__("updateProfile.dataCoding.ucs2CodepageSpaces",
-		"Установить режим приема сообщений на русском языке (кодировка ucs2, текст команды с лишними пробелами)");
-	__reg_tc__("updateProfile.dataCoding.defaultCodepageMixedCase",
-		"Отказаться от режима приема сообщений на русском языке (текст команды в смешанном регистре)");
-	__reg_tc__("updateProfile.dataCoding.defaultCodepageSpaces",
-		"Отказаться от режима приема сообщений на русском языке (текст команды с лишними пробелами)");
+	__reg_tc__("updateProfile.dataCoding.ucs2",
+		"Установить режим приема сообщений на русском языке (ucs2)");
+	__reg_tc__("updateProfile.dataCoding.default",
+		"Отказаться от режима приема сообщений на русском языке (default)");
+	__reg_tc__("updateProfile.locale",
+		"Изменение настроек локали");
+	__reg_tc__("updateProfile.locale.existentLocale",
+		"Правильно заданная локаль (en_us, en_gb, ru_ru)");
+	__reg_tc__("updateProfile.locale.nonExistentLocale",
+		"Заданная локаль не прописана в списке локалей поддерживаемых SC");
 	__reg_tc__("updateProfile.incorrectCmdText",
 		"Неправильный текст команды");
 	//updateProfile.ack
@@ -59,11 +61,15 @@ void profilerTc()
 	__reg_tc__("updateProfile.ack.reportOptions",
 		"Подтверждения об изменении настроек получения уведомлений о доставке");
 	__reg_tc__("updateProfile.ack.reportOptions.dataCoding",
-		"При отсутствии в тексте сообщения русских символов приходит в 7-bit кодировке, при наличии русских симовлов приходит либо в 7-bit (транслитерация), либо в UCS2 в зависимости от текущих настроек профиля");
+		"При отсутствии в тексте сообщения русских символов приходит в default кодировке, при наличии русских симовлов приходит либо в default (транслитерация), либо в ucs2 в зависимости от текущих настроек профиля");
 	__reg_tc__("updateProfile.ack.codePage",
 		"Подтверждения об изменении настроек режима приема сообщений на русском языке");
 	__reg_tc__("updateProfile.ack.codePage.dataCoding",
-		"Текст сообщения в новой кодировке");
+		"Текст сообщения в новой кодировке (ucs2 или default)");
+	__reg_tc__("updateProfile.ack.locale",
+		"Подтверждения об изменении настроек локали");
+	__reg_tc__("updateProfile.ack.locale.dataCoding",
+		"При отсутствии в тексте сообщения русских символов приходит в default кодировке, при наличии русских симовлов приходит либо в default (транслитерация), либо в ucs2 в зависимости от текущих настроек профиля");
 	__reg_tc__("updateProfile.ack.incorrectCmdText",
 		"Уведомление о неправильном тексте команды");
 	__reg_tc__("updateProfile.ack.incorrectCmdText.dataCoding",
