@@ -93,10 +93,9 @@ namespace smsc { namespace store
         uint32_t        storageInterval;
         char            storageFileName[256];
 
+        bool create(bool bill, bool roll=false);
         virtual void initialize(bool flag) = 0;
-        bool create(bool bill);
-        void roll(bool bill);
-
+        
         RollingStorage() : FileStorage(), storageInterval(0) {};
 
     public:
@@ -118,7 +117,7 @@ namespace smsc { namespace store
     protected:
 
         virtual void initialize(bool flag) { this->create(); };
-        void create();
+        void create(bool roll=false);
 
     public:
 
@@ -126,7 +125,7 @@ namespace smsc { namespace store
         virtual ~BillingStorage() {};
 
         void init(Manager& config)  { RollingStorage::init(config, true); };
-        void roll()                 { RollingStorage::roll(true); };
+        void roll();
 
         void createRecord(SMSId id, SMS& sms);
     };
@@ -136,7 +135,7 @@ namespace smsc { namespace store
     protected:
 
         virtual void initialize(bool flag) { this->create(); };
-        void create();
+        void create(bool roll=false);
         
     public:
         
@@ -144,7 +143,7 @@ namespace smsc { namespace store
         virtual ~ArchiveStorage() {};
 
         void init(Manager& config)  { RollingStorage::init(config, false); };
-        void roll()                 { RollingStorage::roll(false); };
+        void roll();
 
         void createRecord(SMSId id, SMS& sms);
     };

@@ -44,6 +44,10 @@ const char* SMSC_PERSIST_DIR_NAME_PATTERN  = "%04d%02d%02d";
 
 const uint16_t SMSC_ARCHIVE_VERSION_INFO = 0x0001;
 const char*    SMSC_ARCHIVE_HEADER_TEXT  = "SMSC.ARC";
+const char*    SMSC_BILLING_HEADER_TEXT  =
+    "MSG_ID,RECORD_TYPE,MEDIA_TYPE,BEARER_TYPE,SUBMIT,FINALIZED,STATUS,"
+    "SRC_ADDR,SRC_IMSI,SRC_MSC,SRC_SME_ID,DST_ADDR,DST_IMSI,DST_MSC,DST_SME_ID,"
+    "DIVERTED_FOR,ROUTE_ID,SERVICE_ID,USER_MSG_REF,DATA_LENGTH\n";
 
 using smsc::core::buffers::TmpBuf;
 
@@ -278,49 +282,87 @@ void RollingStorage::init(Manager& config, bool bill)
     }
 }
 
-bool RollingStorage::create(bool bill)
+bool RollingStorage::create(bool bill, bool roll/*=false*/)
 {
-    if (storageFile) return false;
+    if (storageFile) {
+        if (!roll) return false;
+        fpos_t fpos = 0; FileStorage::getPos(&fpos);
+        int headerPos = ((bill) ? strlen(SMSC_BILLING_HEADER_TEXT):
+            (strlen(SMSC_ARCHIVE_HEADER_TEXT) + sizeof(SMSC_ARCHIVE_VERSION_INFO)))+2;
+        if (fpos <= headerPos) return false; // file is empty => no rolling 
+    }
 
     time_t current = time(NULL);
     tm dt; gmtime_r(&current, &dt);
-    sprintf(storageFileName, bill ? SMSC_BILLING_FILE_NAME_PATTERN:SMSC_ARCHIVE_FILE_NAME_PATTERN,
+    char storageNewFileName[256];
+    sprintf(storageNewFileName, bill ? SMSC_BILLING_FILE_NAME_PATTERN:SMSC_ARCHIVE_FILE_NAME_PATTERN,
             dt.tm_year+1900, dt.tm_mon+1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec);
 
     std::string fullFilePath = storageLocation;
-    fullFilePath += '/'; fullFilePath += (const char*)storageFileName; fullFilePath += '.';
+    fullFilePath += '/'; fullFilePath += (const char*)storageNewFileName; fullFilePath += '.';
     fullFilePath += (bill ? SMSC_LAST_BILLING_FILE_EXTENSION:SMSC_LAST_ARCHIVE_FILE_EXTENSION);
     const char* fullFilePathStr = fullFilePath.c_str();
-    storageFile = fopen(fullFilePathStr, "r");
-
-    bool needFile = true;
-    if (storageFile) { // file exists
-        fclose(storageFile); storageFile = 0;
-        needFile = false;
+    
+    FILE* storageNewFile = fopen(fullFilePathStr, "r");
+    if (storageNewFile) { // file already exists (was opened for reading)
+        fclose(storageNewFile); storageNewFile = 0;
+        Exception exc("Failed to create new %s file '%s'. File already exists!",
+                      (bill ? "billing":"archive"), fullFilePathStr);
+        throw StorageException(exc.what());
     }
 
-    storageFile = fopen(fullFilePathStr, needFile ? "ab+":"rb+");
-    if (!storageFile) {
-        Exception exc("Failed to create %s file '%s'. Details: %s",
+    storageNewFile = fopen(fullFilePathStr, "ab+");
+    if (!storageNewFile) {
+        Exception exc("Failed to create new %s file '%s'. Details: %s",
                       (bill ? "billing":"archive"), fullFilePathStr, strerror(errno));
         throw StorageException(exc.what());
     }
-    if (fseek(storageFile, 0, SEEK_END)) {
-        int error = ferror(storageFile);
+    if (fseek(storageNewFile, 0, SEEK_END)) {
+        int error = ferror(storageNewFile);
         Exception exc("Failed to seek EOF. Details: %s", strerror(error));
-        fclose(storageFile); storageFile = 0;
+        fclose(storageNewFile); storageNewFile = 0;
         throw StorageException(exc.what());
     }
 
-    return needFile;
+    if (storageFile) { // close old file & roll extension if needed
+        fclose(storageFile); storageFile = 0;
+        if (roll) {
+            try { FileStorage::rollFileExtension(storageLocation, storageFileName, bill); }
+            catch (StorageException& exc) {
+                fclose(storageNewFile); storageNewFile = 0; throw;
+            }
+        }
+    }
+    
+    storageFile = storageNewFile;
+    strcpy(storageFileName, storageNewFileName);
+    return true;
 }
 
-void RollingStorage::roll(bool bill)
+void BillingStorage::roll()
 {
     MutexGuard guard(storageFileLock);
-    if (storageFile) {
-        fclose(storageFile); storageFile = 0;
-        FileStorage::rollFileExtension(storageLocation, storageFileName, bill);
+    if (storageFile) BillingStorage::create(true);
+}
+void BillingStorage::create(bool roll/*=false*/)
+{
+    if (RollingStorage::create(true, roll)) {
+        write(SMSC_BILLING_HEADER_TEXT, strlen(SMSC_BILLING_HEADER_TEXT));
+        flush();
+    }
+}
+void ArchiveStorage::roll()
+{
+    MutexGuard guard(storageFileLock);
+    if (storageFile) ArchiveStorage::create(true);
+}
+void ArchiveStorage::create(bool roll/*=false*/)
+{
+    if (RollingStorage::create(false, roll)) {
+        write(SMSC_ARCHIVE_HEADER_TEXT, strlen(SMSC_ARCHIVE_HEADER_TEXT));
+        uint16_t version = htons(SMSC_ARCHIVE_VERSION_INFO);
+        write(&version, sizeof(SMSC_ARCHIVE_VERSION_INFO));
+        flush();
     }
 }
 
@@ -734,27 +776,6 @@ bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) 
     }
 
     return true;
-}
-
-void BillingStorage::create()
-{
-    static const char* SMSC_BILLING_HEADER_TEXT =
-        "MSG_ID,RECORD_TYPE,MEDIA_TYPE,BEARER_TYPE,SUBMIT,FINALIZED,STATUS,"
-        "SRC_ADDR,SRC_IMSI,SRC_MSC,SRC_SME_ID,DST_ADDR,DST_IMSI,DST_MSC,DST_SME_ID,"
-        "DIVERTED_FOR,ROUTE_ID,SERVICE_ID,USER_MSG_REF,DATA_LENGTH\n";
-    if (RollingStorage::create(true)) {
-        write( SMSC_BILLING_HEADER_TEXT, strlen(SMSC_BILLING_HEADER_TEXT));
-        flush();
-    }
-}
-void ArchiveStorage::create()
-{
-    if (RollingStorage::create(false)) {
-        write( SMSC_ARCHIVE_HEADER_TEXT , strlen(SMSC_ARCHIVE_HEADER_TEXT));
-        uint16_t version = htons(SMSC_ARCHIVE_VERSION_INFO);
-        write(&version, sizeof(SMSC_ARCHIVE_VERSION_INFO));
-        flush();
-    }
 }
 
 void ArchiveStorage::createRecord(SMSId id, SMS& sms)
