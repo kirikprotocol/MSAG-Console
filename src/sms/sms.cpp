@@ -293,8 +293,44 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
         unsigned len;
         const char* orig = prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].getBin(&len);
         if ( len > 0 ){
+
           buffer = auto_ptr<char>(new char[len]);
-          UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
+
+          if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet)
+          {
+            char *bufptr=buffer.get();
+            uint8_t *dcl=0;
+            if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet)
+            {
+              dcl=(uint8_t*)prop.properties[unType(Tag::SMSC_DC_LIST)].getBin(0);
+            }
+
+            smsc::util::ConcatInfo *ci=(smsc::util::ConcatInfo*)prop.properties[unType(Tag::SMSC_CONCATINFO)].getBin(0);
+
+            int esm=prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt();
+            for(int i=0;i<ci->num;i++)
+            {
+              int dc=dcl?dcl[i]:encoding;
+
+              int off=ci->getOff(i);
+              int partlen=i==ci->num-1?len-off:ci->getOff(i+1)-off;
+
+              if(dc==8)
+              {
+                UCS_ntohs(bufptr,orig+off,partlen,esm);
+              }else
+              {
+                memcpy(bufptr,orig+off,partlen);
+              }
+              bufptr+=partlen;
+            }
+
+            prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
+          }else
+          {
+            UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
+          }
+
           //const_cast<Body*>(this)->setBinProperty(Tag::SMPP_SHORT_MESSAGE,buffer.get(),len);
           const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_SHORT_MESSAGE)].setBin(buffer.get(),len);
         }else{
@@ -318,7 +354,40 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
         const char* orig = prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].getBin(&len);
         if ( len > 0 ){
           buffer = auto_ptr<char>(new char[len]);
-          UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
+          if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet)
+          {
+            char *bufptr=buffer.get();
+            uint8_t *dcl=0;
+            if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet)
+            {
+              dcl=(uint8_t*)prop.properties[unType(Tag::SMSC_DC_LIST)].getBin(0);
+            }
+
+            smsc::util::ConcatInfo *ci=(smsc::util::ConcatInfo*)prop.properties[unType(Tag::SMSC_CONCATINFO)].getBin(0);
+
+            int esm=prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt();
+            for(int i=0;i<ci->num;i++)
+            {
+              int dc=dcl?dcl[i]:encoding;
+
+              int off=ci->getOff(i);
+              int partlen=i==ci->num-1?len-off:ci->getOff(i+1)-off;
+
+              if(dc==8)
+              {
+                UCS_ntohs(bufptr,orig+off,partlen,esm);
+              }else
+              {
+                memcpy(bufptr,orig+off,partlen);
+              }
+              bufptr+=partlen;
+            }
+
+            prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
+          }else
+          {
+            UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
+          }
           //const_cast<Body*>(this)->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,buffer.get(),len);
           const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_MESSAGE_PAYLOAD)].setBin(buffer.get(),len);
         }else{
