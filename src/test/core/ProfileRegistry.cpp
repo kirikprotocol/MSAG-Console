@@ -70,6 +70,7 @@ const Profile& ProfileRegistry::getProfile(const Address& addr, time_t& t) const
 		}
 		*/
 	}
+	t = time(NULL);
 	return defProfile;
 }
 
