@@ -59,17 +59,17 @@ TCSelector::TCSelector(int _val, int _maxVal, int _base) : pos(0)
 	switch (_val)
 	{
 		case ALL_TC:
-			val = new int[_maxVal];
-			for (int i = 0; i < _maxVal; i++)
+			size = _maxVal;
+			val = new int[size];
+			for (int i = 0; i < size; i++)
 			{
 				val[i] = _base + i + 1;
 			}
-			size = _maxVal;
 			choice = ALL_TC;
 			break;
 		case RAND_TC:
-			val = new int(rand1(_maxVal));
 			size = 1;
+			val = new int(_base + rand1(_maxVal));
 			choice = *val;
 			break;
 		case RAND_SET_TC:
@@ -85,9 +85,9 @@ TCSelector::TCSelector(int _val, int _maxVal, int _base) : pos(0)
 			choice = RAND_SET_TC;
 			break;
 		default:
-			val = new int(_val);
 			size = 1;
-			choice = _val;
+			val = new int(_val);
+			choice = *val;
 	}
 }
 
