@@ -1018,16 +1018,17 @@ StateType StateMachine::submit(Tuple& t)
 
   sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
 
-  if(profile.codepage&smsc::profiler::ProfileCharsetOptions::UssdIn7Bit)
+  if(ri.smeSystemId=="MAP_PROXY" && sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
-    if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+    if(profile.codepage&smsc::profiler::ProfileCharsetOptions::UssdIn7Bit)
     {
       sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,smsc::profiler::ProfileCharsetOptions::Default);
     }else
     {
-      sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage&(~smsc::profiler::ProfileCharsetOptions::UssdIn7Bit));
+      sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,smsc::profiler::ProfileCharsetOptions::Ucs2);
     }
   }
+  sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage&(~smsc::profiler::ProfileCharsetOptions::UssdIn7Bit));
 
   int pres=psSingle;
 
