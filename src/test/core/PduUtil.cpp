@@ -240,6 +240,21 @@ void PduData::unref()
 	}
 }
 
+string PduData::str() const
+{
+	ostringstream s;
+	s << "pduData = " << (void*) this;
+	s << ", pdu = " << (void*) pdu;
+	s << ", msgRef = " << msgRef;
+	s << ", smsId = " << smsId;
+	s << ", submitTime = " << submitTime;
+	s << ", valid = " << (valid ? "true" : "false");
+	s << ", replacePdu = " << (void*) replacePdu;
+	s << ", replacedByPdu = " << (void*) replacedByPdu;
+	s << ", count = " << count;
+	return s.str();
+}
+
 PduMonitor::PduMonitor(time_t _checkTime, time_t _validTime,
 	PduData* _pduData, PduFlag _flag)
 : checkTime(_checkTime), validTime(_validTime), pduData(_pduData), flag(_flag)
@@ -424,6 +439,7 @@ void DeliveryReceiptMonitor::reschedule(time_t _startTime)
 		case PDU_REQUIRED_FLAG:
 		case PDU_MISSING_ON_TIME_FLAG:
 			startTime = _startTime;
+			checkTime = startTime;
 			validTime = startTime + maxValidPeriod;
 			flag = PDU_REQUIRED_FLAG;
 			break;

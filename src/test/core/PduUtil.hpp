@@ -93,6 +93,7 @@ public:
 	
 	void ref();
 	void unref();
+	string str() const;
 };
 
 /**
