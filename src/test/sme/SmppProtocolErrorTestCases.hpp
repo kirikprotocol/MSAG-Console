@@ -15,7 +15,6 @@ using smsc::sms::Address;
 using smsc::sme::SmeConfig;
 using smsc::sme::SmppPduEventListener;
 using smsc::test::smpp::TestSmppSession;
-using smsc::test::util::TestCase;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 using smsc::core::synchronization::Event;
@@ -27,8 +26,6 @@ using namespace smsc::smpp; //constants, pdu
 class SmppProtocolErrorScenario : public SmppPduEventListener
 {
 protected:
-	TestCase* tc;
-	bool isOk;
 	TestSmppSession sess;
 	const SmeConfig cfg;
 	const Address smeAddr;
@@ -41,8 +38,8 @@ protected:
 public:
 	SmppProtocolErrorScenario(const SmeConfig& conf, const Address& addr,
 		CheckList* _chkList)
-	: tc(NULL), isOk(true), sess(this), cfg(conf), smeAddr(addr),
-		bindType(0), bound(false), complete(false), chkList(_chkList) {}
+	: sess(this), cfg(conf), smeAddr(addr), bindType(0), bound(false),
+		complete(false), chkList(_chkList) {}
 	virtual ~SmppProtocolErrorScenario() {}
 
 	void connect();
