@@ -1,6 +1,10 @@
 BUILD_DIR=/home/serge/build
 SMSC_DIR=/home/serge/smsc
-MAKE_ARGS="CXX=CC DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES"
+MAKE_ARGS=CXX=CC DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES
 CATALINA_HOME=/home/serge/build/distr/tomcat
 CATALINA_BASE=/home/serge/build/distr
 TEMPLATE_PROPS=/home/serge/smsc/distribs/smsc/smsc.properties
+; set SNMP_MOD_NAME to snmp if SNMP=YES
+SNMP_MOD_NAME=
+; for 64 bit set to lib64
+ORALIB_SUBDIR=lib32
