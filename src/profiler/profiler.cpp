@@ -420,6 +420,15 @@ int Profiler::Execute()
         continue;
       };
 
+      if(sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
+      {
+        __warning2__("Profiler: received receipt!!!");
+        status=Status::OK;
+        resp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),status);
+        putIncomingCommand(resp);
+        continue;
+      }
+
       if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) && sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=1)
       {
         __warning2__("Profiler: ussd service op != 1");
