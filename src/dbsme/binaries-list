@@ -3,6 +3,6 @@
 
 # binary name source name libraries         
 #dbsme/DBDriverTest   DBDriverTest	 -ldl -ldb -lutil-config -lutil-xml -lutil -llog4cpp -lcore-threads -lthread -lxerces-c1_5_2 -lxerces-c $(__LIBRARIES) -lrt
-dbsme/ComProcTest    CommandProcessorTest -ldl -lutil-templates -ldbsme-jobs -lutil-templates -ldbsme -ldb -lutil-config -lutil-xml -lutil -llog4cpp -lcore-threads -lthread -lxerces-c1_5_2 -lxerces-c $(__LIBRARIES) -lrt
+dbsme/ComProcTest    CommandProcessorTest -ldl -lutil-templates -ldbsme-jobs -lutil-templates -ldbsme -ldb -lutil-config -lutil-xml -lutil -llog4cpp -lcore-threads -lthread -lxerces-c $(__LIBRARIES) -lrt
 #dbsme/LobTest        LobTest		 -ldl  -lsocket $(__OCI_LIB_SO__) -lrt
-dbsme/DBSme   	     DBSme		 -ldl -lsocket -lcore-network -lutil-templates -ldbsme-jobs -lsms -lutil-templates -lcore-buffers -lcore-threads -lcore-buffers -ldbsme -ldb -lutil-config -lutil-xml -lutil -llog4cpp -lcore-threads -lthread -lxerces-c1_5_2 -lxerces-c $(__LIBRARIES) -lrt
+dbsme/DBSme   	     DBSme		 -ldl -lsocket -lcore-network -lutil-templates -ldbsme-jobs -lsms -lutil-templates -lcore-buffers -lcore-threads -lcore-buffers -ldbsme -ldb -lutil-config -lutil-xml -lutil -llog4cpp -lcore-threads -lthread -lxerces-c $(__LIBRARIES) -lrt
