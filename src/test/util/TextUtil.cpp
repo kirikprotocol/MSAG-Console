@@ -53,7 +53,8 @@ void rand_text(int& length, char* buf, uint8_t dataCoding)
 	}
 }
 
-auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen)
+auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen,
+	bool hostByteOrder)
 {
 	char* msg;
 	switch (dataCoding)
@@ -70,13 +71,22 @@ auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen)
 			{
 				int len = text.length() * 2 + 1;
 				msg = new char[len];
+				short* _msg = (short*) msg;
 				msgLen = ConvertMultibyteToUCS2(text.c_str(), text.length(),
-					(short*) msg, len, CONV_ENCODING_CP1251);
+					_msg, len, CONV_ENCODING_CP1251);
+				if (!hostByteOrder)
+				{
+					//установить сетевой порядок
+					for (int i = 0; i < msgLen / 2; i++)
+					{
+						*(_msg + i) = htons(*(_msg + i));
+					}
+				}
 			}
 			break;
 		case SMSC7BIT:
 			{
-				int len = text.length() + 1;
+				int len = 2 * text.length() + 1;
 				msg = new char[len];
 				msgLen = ConvertLatin1ToSMSC7Bit(text.c_str(), text.length(), msg);
 			}
@@ -87,7 +97,8 @@ auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen)
 	return auto_ptr<char>(msg);
 }
 
-const string decode(const char* text, int len, uint8_t dataCoding)
+const string decode(const char* text, int len, uint8_t dataCoding,
+	bool hostByteOrder)
 {
 	switch (dataCoding)
 	{
@@ -97,8 +108,30 @@ const string decode(const char* text, int len, uint8_t dataCoding)
 		case UCS2:
 			{
 				char buf[len + 1];
-				int bufLen = ConvertUCS2ToMultibyte((const short*) text, len,
-					buf, sizeof(buf), CONV_ENCODING_CP1251);
+				int bufLen;
+				if (hostByteOrder)
+				{
+					bufLen = ConvertUCS2ToMultibyte((const short*) text, len,
+						buf, sizeof(buf), CONV_ENCODING_CP1251);
+				}
+				else
+				{
+					//перекодировать из сетевого порядока
+					short tmp[len / 2];
+					memcpy(tmp, text, len);
+					for (int i = 0; i < len / 2; i++)
+					{
+						*(tmp + i) = ntohs(*(tmp + i));
+					}
+					bufLen = ConvertUCS2ToMultibyte(tmp, len,
+						buf, sizeof(buf), CONV_ENCODING_CP1251);
+				}
+				return string(buf, bufLen);
+			}
+		case SMSC7BIT:
+			{
+				char buf[len];
+				int bufLen = ConvertSMSC7BitToLatin1(text, len, buf);
 				return string(buf, bufLen);
 			}
 		default:

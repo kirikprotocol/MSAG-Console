@@ -23,8 +23,10 @@ void rand_text(int& length, char* buf, uint8_t dataCoding = DEFAULT);
 
 string& mixedCase(string& str);
 
-auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen);
-const string decode(const char* text, int len, uint8_t dataCoding);
+auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen,
+	bool hostByteOrder = false);
+const string decode(const char* text, int len, uint8_t dataCoding,
+	bool hostByteOrder = false);
 const pair<string, uint8_t> convert(const string& text, int profileCodePage);
 
 vector<int> compare(uint8_t dc1, const char* str1, int len1,
