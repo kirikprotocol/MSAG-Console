@@ -42,6 +42,7 @@ public:
 /// класс призвод€щий прием отправку SMPP пакетов
 /// и управл€ющий трансмиттерами
 class Mixer { 
+  const ProxyConfig&      config_;
   log4cpp::Category&      log_;
   Queue&                  que_;           /// очереь событий
   PduListener             listen_left_;   /// листенер левого трансмиттера
@@ -49,7 +50,7 @@ class Mixer {
   auto_ptr<SmppSession>   left_;          /// левый трансмиттер
   auto_ptr<SmppSession>   right_;         /// правый трансмиттер
 public:
-  Mixer(Queue& que);
+  Mixer(Queue& que,const ProxyConfig&);
   ~Mixer();
   bool Connect();
   bool Disconnect();

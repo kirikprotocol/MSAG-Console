@@ -67,7 +67,7 @@ public:
   /// удаляет команду из очереди и уничтожает обьект - команду
   bool Pop(); 
 
-  Queue();
+  Queue(const ProxyConfig&);
   ~Queue();
 
 };

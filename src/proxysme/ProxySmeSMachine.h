@@ -29,13 +29,14 @@ using namespace smsc::core::synchronization;
 class SMachine //: public smsc::core::threads::Thread
 {
   enum THSTATE { IS_STOPPED, IS_RUNNING, IS_STOPPING };
-  Queue& que_;
-  Mixer& mixer_;
-  THSTATE stopIt_;
+  const ProxyConfig&  config_;
+  Queue&              que_;
+  Mixer&              mixer_;
+  THSTATE             stopIt_;
 public:
   void Stop();
 //  void Start();
-  SMachine(Queue&,Mixer&);
+  SMachine(Queue&,Mixer&,const ProxyConfig&);
   virtual ~SMachine();
 //  virtual int Execute();
   void ProcessCommands();

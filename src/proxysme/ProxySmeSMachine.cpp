@@ -35,7 +35,8 @@ void SMachine::Stop()
 //  stopIt_ = IS_STOPPED;
 //}
 
-SMachine::SMachine(Queue& que,Mixer& mixer) : que_(que), mixer_(mixer)
+SMachine::SMachine(Queue& que,Mixer& mixer,const ProxyConfig& pconf) 
+:config_(pconf), que_(que), mixer_(mixer)
 {
   stopIt_ = IS_STOPPED;
 }

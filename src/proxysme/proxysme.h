@@ -1,0 +1,40 @@
+//
+// $Id$
+//
+// SMSC project
+//  Sme Proxy
+//  Copyright (c) Aurorisoft.com
+//  Author Alexey Chen (hedgehog@aurorisoft.com)
+//  Created (2003/07/21)
+//
+
+#ifdef _MSC_VER
+#pragma warning(disable:4355)//'this' : used in base member initializer list
+#endif
+
+#if !defined SMSC_PROXYSME_MAIN_HEADER
+#define SMSC_PROXYSME_MAIN_HEADER
+
+#define SMSC_SMEPROXY_BEGIN namespace smsc { namespace proxysme {
+#define SMSC_SMEPROXY_END }}
+#define SMSC_SMEPROXY_SPACE smsc::proxysme
+
+namespace smsc { 
+  namespace proxysme {
+    // definition
+  }
+}
+
+#include "../logger/Logger.h"
+#include "../sme/SmppBase.hpp"
+
+using smsc::sme::SmeConfig;
+
+struct ProxyConfig {
+  SmeConfig left,right;
+  int quelimit;
+};
+
+#endif
+
+

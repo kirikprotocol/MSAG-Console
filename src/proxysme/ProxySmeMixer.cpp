@@ -23,15 +23,15 @@ static string ToString(DIRECTION d) {
    "IVALID_DIRECTION";
 }
 
-Mixer::Mixer(Queue& que) : 
+Mixer::Mixer(Queue& que,const ProxyConfig& pconf) : 
+config_(pconf),
 que_(que), 
 log_(Logger::getCategory("smsc.proxysme.mixer")),
 listen_left_(LEFT_TO_RIGHT,que,log_), listen_right_(RIGHT_TO_LEFT,que,log_)
 {
   log_.info("Mixer::ctor");
-  SmeConfig bind_info;
-  left_  = auto_ptr<SmppSession>(new SmppSession(bind_info,&listen_left_));
-  right_ = auto_ptr<SmppSession>(new SmppSession(bind_info,&listen_right_));
+  left_  = auto_ptr<SmppSession>(new SmppSession(config_.left,&listen_left_));
+  right_ = auto_ptr<SmppSession>(new SmppSession(config_.right,&listen_right_));
 }
 
 Mixer::~Mixer()
@@ -85,12 +85,12 @@ PduListener::~PduListener()
 
 void PduListener::handleEvent(SmppHeader *pdu)
 {
-  log_.info("PduListener::handleEvent: %s",ToString(incom_dirct_));
+  log_.info("PduListener::handleEvent: %s",ToString(incom_dirct_).c_str());
 }
 
 void PduListener::handleError(int errorCode)
 {
-  log_.info("PduListener::handleError: %s",ToString(incom_dirct_));
+  log_.info("PduListener::handleError: %s",ToString(incom_dirct_).c_str());
 }
 
 

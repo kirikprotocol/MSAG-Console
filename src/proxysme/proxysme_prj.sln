@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "proxysme_prj", "proxysme_prj.vcproj", "{099CB07A-8E42-4308-AE43-09D7DBD7AC43}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2E62FDCE-D99B-47F1-95E4-D7949325EB0A} = {2E62FDCE-D99B-47F1-95E4-D7949325EB0A}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "log4cpp", "..\..\..\log4cpp\log4cpp-0.3.3\msvc6\log4cpp\log4cpp.vcproj", "{2E62FDCE-D99B-47F1-95E4-D7949325EB0A}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{099CB07A-8E42-4308-AE43-09D7DBD7AC43}.Debug.ActiveCfg = Debug|Win32
+		{099CB07A-8E42-4308-AE43-09D7DBD7AC43}.Debug.Build.0 = Debug|Win32
+		{099CB07A-8E42-4308-AE43-09D7DBD7AC43}.Release.ActiveCfg = Release|Win32
+		{099CB07A-8E42-4308-AE43-09D7DBD7AC43}.Release.Build.0 = Release|Win32
+		{2E62FDCE-D99B-47F1-95E4-D7949325EB0A}.Debug.ActiveCfg = Debug|Win32
+		{2E62FDCE-D99B-47F1-95E4-D7949325EB0A}.Debug.Build.0 = Debug|Win32
+		{2E62FDCE-D99B-47F1-95E4-D7949325EB0A}.Release.ActiveCfg = Release|Win32
+		{2E62FDCE-D99B-47F1-95E4-D7949325EB0A}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

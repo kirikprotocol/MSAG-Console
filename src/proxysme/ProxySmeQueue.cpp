@@ -65,7 +65,10 @@ bool Queue::Pop()
   return true;
 }
 
-Queue::Queue() {}
+Queue::Queue(const ProxyConfig& pconfig) 
+{
+  SetLimit(pconfig.quelimit);
+}
 
 static inline void Dispose(QCommand*& qc) {delete qc; qc = 0;}
 
