@@ -326,7 +326,7 @@ int SmppInputThread::Execute()
                 if(ss->getProxy())
                 {
                   __trace__("UNBINDRESP sent");
-                  ss->getProxy()->putIncomingCommand
+                  ss->getProxy()->putCommand
                   (
                     SmscCommand::makeUnbindResp
                     (
