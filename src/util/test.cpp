@@ -185,10 +185,12 @@ Test tst[]={
   {bin9,sizeof(bin9),240,240},
 };
 
+#define __ __FILE__,__LINE__
 
 int main(int argc, char** argv)
 {
   smsc::util::regexp::RegExp::InitLocale();
+  Logger::Init("log4cpp.properties");
   const char *locales="en_us, en_gb, ru_ru";
   const char *defloc="en_us";
 
@@ -199,6 +201,56 @@ int main(int argc, char** argv)
     printf("res=%s\n",s.c_str());
   }
 */
+  {
+    const char srcbin[]="#template=test_tmpl#";
+    int l=sizeof(srcbin)-1;
+    SMS s;
+    s.setIntProperty(Tag::SMPP_ESM_CLASS,2);
+    s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
+    //s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,17);
+    s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,srcbin,l);
+    char buf[256];
+    getSmsText(&s,buf,sizeof(buf));
+    char *p=buf;
+    printf("%s\n",p);
+    for(;*p;p++)
+    {
+      printf("%02X ",(int)*p);
+    }
+    printf("\n");
+  }
+
+  {
+    SMS s;
+    s.setIntProperty(Tag::SMSC_MERGE_CONCAT,1);
+    s.messageBody.dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+    if(s.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+    {
+      printf("FUUUUUUUUUUUUUCKKKKKKKKKKKK!!!\n");
+    }
+    /*
+    PduSubmitSm sm;
+    sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+    s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
+    s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+    string str="hello world";
+    s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,str.c_str(),str.length());
+    if(!s.Invalidate(__))
+    {
+      printf("FUCKKKK!\n");
+    }
+    fillSmppPduFromSms(&sm,&s,false);
+    SMS d;
+    fetchSmsFromSmppPdu(&sm,&d,false);
+    if(!d.Invalidate(__))
+    {
+       printf("FUCK\n");
+       return -1;
+    }
+    */
+  }
+  return 1;
+
   {
     OutputFormatter* f=new OutputFormatter("$$string import=abonent$$:$$int32 import=status$$,$$int32 import=encoding$$,$$string import=msc$$");
 
@@ -228,7 +280,7 @@ int main(int argc, char** argv)
     p.codepage=8;
     p.locale="ru_ru";
     try{
-      StateMachine::processDirectives(s,p,p);
+      //processDirectives(s,p,p);
     }catch(...)
     {
       printf("processDirectives FAILED!!!\n");
@@ -252,7 +304,7 @@ int main(int argc, char** argv)
 
     smsc::profiler::Profile p;
     p.codepage=0;
-    StateMachine::processDirectives(s,p,p);
+    //StateMachine::processDirectives(s,p,p);
 
     if(partitionSms(&s,tst[t].dstdc)==psMultiple)
     {
