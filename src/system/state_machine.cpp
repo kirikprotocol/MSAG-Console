@@ -415,7 +415,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     if(!strncasecmp(buf+i,"#hide#",6))
     {
       __trace__("DIRECT: hide");
-      if(p.hideModifiable)
+      if(srcprof.hideModifiable)
         sms.setIntProperty(Tag::SMSC_HIDE,1);
       else
       {
@@ -428,7 +428,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     if(!strncasecmp(buf+i,"#unhide#",8))
     {
       __trace__("DIRECT: unhide");
-      if(p.hideModifiable)
+      if(srcprof.hideModifiable)
         sms.setIntProperty(Tag::SMSC_HIDE,0);
       else
       {
