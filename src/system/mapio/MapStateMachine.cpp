@@ -511,12 +511,12 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
     map<string,unsigned>::iterator it = x_map.find(s_);
     if ( it == x_map.end() ){
       //throw MAPDIALOG_FATAL_ERROR("MAP::Et96MapGetACVersionConf has no address for AC resolving");
-      throw MAPDIALOG_ERROR("MAP::Et96MapGetACVersionConf has no address for AC resolving");
+      throw runtime_error(,"MAP::Et96MapGetACVersionConf has no address for AC resolving");
     }
     dialogid_map = it->second;
     x_map.erase(it);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
-    if ( mdci.isnull() ) {
+    if ( dialog.isnull() ) {
       throw MAPDIALOG_HEREISNO_ID(
         FormatText("MAP::dialog 0x%x is not present",dialogid_map));
     }
@@ -562,7 +562,7 @@ USHORT_T Et96MapOpenConf (
   MAP_TRY{
     __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogueId);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
-    if ( mdci.isnull() ) {throw 
+    if ( dialog.isnull() ) {throw 
       MAPDIALOG_HEREISNO_ID(
         FormatText("MAP::dialog 0x%x is not present",dialogid_map));}
     __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog));
@@ -663,7 +663,7 @@ USHORT_T  Et96MapV2SendRInfoForSmConf (
   MAP_TRY{
     __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
-    if ( mdci.isnull() ) {
+    if ( dialog.isnull() ) {
       unsigned _di = dialogid_map;
       dialogid_map = 0;
       throw MAPDIALOG_ERROR(
@@ -735,7 +735,7 @@ USHORT_T Et96MapCloseInd(
   MAP_TRY{
     __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
-    if ( mdci.isnull() ) {
+    if ( dialog.isnull() ) {
       unsigned _di = dialogid_map;
       dialogid_map = 0;
       throw MAPDIALOG_HEREISNO_ID(
@@ -773,7 +773,7 @@ USHORT_T Et96MapDelimiterInd(
   MAP_TRY{
     __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
-    if ( mdci.isnull() ) {
+    if ( dialog.isnull() ) {
       unsigned _di = dialogid_map;
       dialogid_map = 0;
       throw MAPDIALOG_ERROR(
@@ -874,7 +874,7 @@ USHORT_T Et96MapV2ForwardSmMOInd (
   try{
     __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
-    if ( mdci.isnull() ) {
+    if ( dialog.isnull() ) {
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__PRETTY_FUNCTION__,dialogueId));
     }
@@ -921,7 +921,7 @@ USHORT_T Et96MapDelimiterInd(
   try{
     __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
-    if ( mdci.isnull() ) {
+    if ( dialog.isnull() ) {
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__PRETTY_FUNCTION__,dialogueId));
     }
