@@ -61,9 +61,10 @@ public class SmsViewFormBean extends IndexBean
 
     if (mbRemove != null)
       result = processDeleteSelected();
-    else if (mbDelete != null)
-      result = processDeleteSet(rows);
-    else if (mbQuery != null)
+    else if (mbDelete != null) {      if( rows != null ) {
+        result = processDeleteSet(rows);      } else {        result = processQuery();
+      }
+    } else if (mbQuery != null)
       result = processQuery();
     else if (mbClear != null)
       result = clearQuery();
