@@ -16,6 +16,7 @@
 #include "util/config/ConfigView.h"
 #include "system/mapio/MapIoTask.h"
 #include "system/abonentinfo/AbonentInfo.hpp"
+#include "mscman/MscManager.h"
 
 //#define ENABLE_MAP_SYM
 
@@ -411,6 +412,7 @@ void Smsc::init(const SmscConfigs& cfg)
   tp.startTask(statMan);
 
 
+  smsc::mscman::MscManager::startup(*dataSource,*cfg.cfgman);
 
   {
     char *rep=cfg.cfgman->getString("profiler.defaultReport");
@@ -614,6 +616,8 @@ void Smsc::shutdown()
     MapDialogContainer::getInstance()->unregisterSelf(&smeman);
     MapDialogContainer::dropInstance();
   }
+
+  smsc::mscman::MscManager::shutdown();
 
   smsc::store::StoreManager::shutdown();
   if(dataSource)delete dataSource;

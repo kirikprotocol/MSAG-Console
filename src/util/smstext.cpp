@@ -273,8 +273,8 @@ int partitionSms(SMS* sms,int dstdc)
         __trace2__("PARTITIONSMS: part=%d, l=%d, wl=%d",parts,l,wl);
         if(wl<153)
         {
-          offsets[parts++]=lastword+1;
-          lastpos=lastword+1;
+          offsets[parts++]=lastword+(wl==0?0:1);
+          lastpos=offsets[parts-1];
           i=lastpos+1;
           l=0;
         }else
@@ -353,9 +353,11 @@ void extractSmsPart(SMS* sms,int partnum)
   }
   unsigned int cilen;
   ConcatInfo *ci=(ConcatInfo *)sms->getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
+  __require__(partnum<ci->num);
   int off=ci->off[partnum];
   int newlen=ci->num==partnum+1?len-off:ci->off[partnum+1]-off;
   __trace2__("extractSmsPart: newlen=%d, part=%d/%d, maxlen=%d, off=%d, partlen=%d",len,partnum,(int)ci->num,maxlen,off,newlen);
+  __require__(newlen<=160);
   if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
   {
     sms->setIntProperty(Tag::SMPP_DATA_CODING,dstdc);

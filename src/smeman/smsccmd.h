@@ -190,8 +190,10 @@ struct ReplaceSm{
       throw Exception("REPLACE: non empty messageId required");
     }
     fillSmppAddr(sourceAddr,repl->get_source());
-    scheduleDeliveryTime=smppTime2CTime(repl->scheduleDeliveryTime);
-    validityPeriod=smppTime2CTime(repl->validityPeriod);
+    scheduleDeliveryTime=
+      repl->scheduleDeliveryTime.size()?smppTime2CTime(repl->scheduleDeliveryTime):0;
+    validityPeriod=
+      repl->validityPeriod?smppTime2CTime(repl->validityPeriod):0;
     registeredDelivery=repl->get_registredDelivery();
     smDefaultMsgId=repl->get_smDefaultMsgId();
     smLength=repl->shortMessage.size();

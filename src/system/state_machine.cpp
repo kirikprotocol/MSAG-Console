@@ -1334,8 +1334,30 @@ StateType StateMachine::replace(Tuple& t)
     }
     return UNKNOWN_STATE;
   }
-  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO) && sms.getConcatSeqNum()>0)
+  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
+    if(sms.getConcatSeqNum()>0)
+    {
+      __trace__("REPLACE: replace of concatenated message");
+      try{
+        t.command.getProxy()->putCommand
+        (
+          SmscCommand::makeReplaceSmResp
+          (
+            t.command->get_dialogId(),
+            Status::REPLACEFAIL
+          )
+        );
+      }catch(...)
+      {
+      }
+      return UNKNOWN_STATE;
+    }
+    sms.getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
+  }
+  if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  {
+    __trace__("REPLACE: repalce of message with payload");
     try{
       t.command.getProxy()->putCommand
       (
@@ -1350,6 +1372,34 @@ StateType StateMachine::replace(Tuple& t)
     }
     return UNKNOWN_STATE;
   }
+
+  if(!strcmp(sms.getDestinationSmeId(),"MAP_PROXY"))
+  {
+    sms.setBinProperty
+    (
+      Tag::SMPP_SHORT_MESSAGE,
+      t.command->get_replaceSm().shortMessage.get(),
+      t.command->get_replaceSm().smLength
+    );
+    if(partitionSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE))!=psSingle)
+    {
+      __trace__("REPLACE: attempt to replace message with message that require concatenation");
+      try{
+        t.command.getProxy()->putCommand
+        (
+          SmscCommand::makeReplaceSmResp
+          (
+            t.command->get_dialogId(),
+            Status::REPLACEFAIL
+          )
+        );
+      }catch(...)
+      {
+      }
+      return UNKNOWN_STATE;
+    }
+  }
+
 
   if(t.command->get_replaceSm().validityPeriod==-1)
   {
@@ -1387,16 +1437,15 @@ StateType StateMachine::replace(Tuple& t)
   }
   try{
     Address addr(t.command->get_replaceSm().sourceAddr.get());
-    store->replaceSms(t.msgId,addr,
+    store->replaceSms
+    (
+      t.msgId,addr,
       (uint8_t*)t.command->get_replaceSm().shortMessage.get(),
       t.command->get_replaceSm().smLength,
       t.command->get_replaceSm().registeredDelivery,
-      t.command->get_replaceSm().validityPeriod!=(time_t)-1?
-        t.command->get_replaceSm().validityPeriod:0,
-      t.command->get_replaceSm().scheduleDeliveryTime!=(time_t)-1?
-        t.command->get_replaceSm().scheduleDeliveryTime:0
-
-      );
+      t.command->get_replaceSm().validityPeriod,
+      t.command->get_replaceSm().scheduleDeliveryTime
+    );
     smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
 //  }catch(NoSuchMessageException& e)
 //  {
