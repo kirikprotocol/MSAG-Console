@@ -10,7 +10,7 @@ namespace core {
 using namespace std;
 using smsc::test::sms::operator<<;
 using smsc::test::sms::operator==;
-using smsc::test::sms::SmsUtil;
+using namespace smsc::test::sms;
 using namespace smsc::test::util;
 
 SmeRegistry::~SmeRegistry()
@@ -29,6 +29,8 @@ bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme, bool p
 	addrMap[smeAddr] = smeData;
 	smeIdMap[sme.systemId] = smeData;
 	addrList.push_back(new Address(smeAddr));
+	__trace2__("SmeRegistry::registerSme(): smeAddr = %s, smeId = %s, pduReg = %p",
+		str(smeAddr).get(), sme.systemId.c_str(), smeData->pduReg);
 	return true;
 }
 
@@ -61,6 +63,7 @@ void SmeRegistry::bindSme(const SmeSystemId& smeId)
 	SmeIdMap::iterator it = smeIdMap.find(smeId);
 	__require__(it != smeIdMap.end());
 	it->second->bound = true;
+	__trace2__("SmeRegistry::bindSme(): smeId = %s", smeId.c_str());
 }
 
 void SmeRegistry::clear()
