@@ -25,15 +25,28 @@ MessageStore* StoreManager::startup(const char* db, const char* user,
 
     if (!instance)
     {
-        pool = new ConnectionPool(db, user, password, size, init);
-        Connection* connection = pool->getConnection();
-        try
+        Connection* connection = 0L; 
+        try 
         {
+            pool = new ConnectionPool(db, user, password, size, init);
+            connection = pool->getConnection();
             generator = new IDGenerator(connection->getMessagesCount());
         }
         catch (StorageException& exc) 
         {
-            pool->freeConnection(connection);
+            //log.error("Storage Exception : %s\n", exc.what());
+            if (pool) 
+            {
+                if (connection)
+                {
+                    pool->freeConnection(connection);
+                }
+                delete pool; pool = 0L;
+            }
+            if (generator)
+            {
+                delete generator; generator = 0L;
+            }
             throw ConnectionFailedException(exc);
         }
         pool->freeConnection(connection);
@@ -133,6 +146,46 @@ void StoreManager::retrive(SMSId id, SMS &sms)
         }
     }
 }
+
+void StoreManager::remove(SMSId id) 
+    throw(StorageException, NoSuchMessageException)
+{
+    __require__(pool);
+    
+    int iteration=1;
+    while (true)
+    {
+        Connection* connection = 0L;
+        try 
+        {
+            connection = pool->getConnection();
+            connection->remove(id);
+            pool->freeConnection(connection);
+            break;
+        }
+        catch (ConnectionFailedException& exc) {
+            if (connection) pool->freeConnection(connection);
+            throw;
+        }
+        catch (NoSuchMessageException& exc) {
+            if (connection) pool->freeConnection(connection);
+            throw;
+        }
+        catch (StorageException& exc) 
+        {
+            if (connection) pool->freeConnection(connection);
+            log.debug("Storage Exception : %s\n", exc.what());
+            if (iteration < MAX_TRIES_TO_PROCESS) 
+            {
+                iteration++;
+                continue;
+            }
+            log.warn("Max tries count exceeded !\n");
+            throw;
+        }
+    }
+}
+
 /* ----------------------------- StoreManager -------------------------- */
 
 }}

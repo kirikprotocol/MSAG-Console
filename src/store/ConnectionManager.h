@@ -97,6 +97,7 @@ namespace smsc { namespace store
         static text*    sqlGetMessagesCount;
         static text*    sqlStoreInsert;
         static text*    sqlRetriveAll;
+        static text*    sqlRemove;
         
         ConnectionPool* owner;
 
@@ -110,6 +111,7 @@ namespace smsc { namespace store
         OCIStmt*        stmtGetMessagesCount;
         OCIStmt*        stmtStoreInsert;
         OCIStmt*        stmtRetriveAll;
+        OCIStmt*        stmtRemove;
 
         OCIBind         *bndSt, *bndMsgRef, *bndMsgInd;
         OCIBind         *bndOALen, *bndOATon, *bndOANpi, *bndOAVal;
@@ -125,6 +127,9 @@ namespace smsc { namespace store
         OCIDefine       *defSrr, *defRd, *defMsgPri, *defMsgPid;
         OCIDefine       *defFcs, *defDcs, *defUdhi, *defUdl, *defUd;
         OCIBind         *bndStoreId, *bndRetriveId;
+        
+        OCIBind         *bndRemoveId;
+        OCIDefine       *defRemoveRes;
 
         SMS             sms;
         SMSId           smsId;
@@ -162,8 +167,9 @@ namespace smsc { namespace store
 
         void store(const SMS &sms, SMSId id) 
             throw(StorageException);
-
         void retrive(SMSId id, SMS &sms) 
+            throw(StorageException, NoSuchMessageException);
+        void remove(SMSId id) 
             throw(StorageException, NoSuchMessageException);
     };
     

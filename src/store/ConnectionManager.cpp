@@ -184,6 +184,9 @@ text* Connection::sqlRetriveAll = (text *)
  DA_NPI, DA_VAL, VALID_TIME, WAIT_TIME, SUBMIT_TIME, DELIVERY_TIME,\
  SRR, RD, PRI, PID, FCS, DCS, UDHI, UDL, UD FROM SMS_MSG WHERE ID=:ID";
 
+text* Connection::sqlRemove = (text *)
+"DELETE FROM SMS_MSG WHERE ID=:ID";
+
 Connection::Connection(ConnectionPool* pool) 
     throw(ConnectionFailedException) 
         : owner(pool), envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L)
@@ -228,21 +231,14 @@ Connection::Connection(ConnectionPool* pool)
                             (dvoid *)sesshp, (ub4) 0,
                             (ub4) OCI_ATTR_SESSION, errhp));
 
-    /*
-    // initialize the context by 'this'
-    failover.fo_ctx = (dvoid *)this;
-    failover.callback_function = 
-        &(smsc::store::Connection::_failoverCallback);
-    // do the registration
-    checkConnErr(OCIAttrSet(srvhp, (ub4) OCI_HTYPE_SERVER, (dvoid *) &failover, 
-                            (ub4) 0, (ub4) OCI_ATTR_FOCBK, errhp));
-    */
-
+    // allocate statements handles
     checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtGetMessagesCount,
                                 OCI_HTYPE_STMT, 0, (dvoid **) 0));
     checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtStoreInsert,
                                 OCI_HTYPE_STMT, 0, (dvoid **) 0));
     checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtRetriveAll,
+                                OCI_HTYPE_STMT, 0, (dvoid **) 0));
+    checkConnErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmtRemove,
                                 OCI_HTYPE_STMT, 0, (dvoid **) 0));
 
     // prepare statements
@@ -255,6 +251,19 @@ Connection::Connection(ConnectionPool* pool)
     checkConnErr(OCIStmtPrepare(stmtRetriveAll, errhp, sqlRetriveAll,
                                 (ub4)strlen((char *)sqlRetriveAll),
                                 (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
+    checkConnErr(OCIStmtPrepare(stmtRemove, errhp, sqlRemove,
+                                (ub4)strlen((char *)sqlRemove),
+                                (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
+    
+    // define placeholder for removing
+    checkConnErr(OCIBindByPos(stmtRemove, &bndRemoveId, errhp, (ub4) 1,
+                              (dvoid *) &smsId, (sb4) sizeof(smsId),
+                              SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+                              (ub4)0, (ub4 *)0, OCI_DEFAULT));
+    checkConnErr(OCIDefineByPos(stmtRemove, &defRemoveRes, errhp, (ub4) 1,
+                                (dvoid *) &(smsId), (sword) sizeof(smsId), 
+                                SQLT_UIN, (dvoid *) 0, (ub2 *)0, 
+                                (ub2 *)0, OCI_DEFAULT));
     
     // define placeholder for max(id)
     checkConnErr(OCIDefineByPos(stmtGetMessagesCount, &defMaxId, errhp, (ub4) 1,
@@ -306,8 +315,8 @@ Connection::Connection(ConnectionPool* pool)
 
     checkConnErr(OCIBindByPos(stmtStoreInsert, &bndOAVal, errhp, (ub4) 8,
                               (dvoid *)(sms.originatingAddress.value),
-                              (sb4) MAX_ADDRESS_VALUE_LENGTH,
-                              SQLT_CHR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+                              (sb4) sizeof(sms.originatingAddress.value),
+                              SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
                               (ub4)0, (ub4 *)0, OCI_DEFAULT));
 
     checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDALen, errhp, (ub4) 9,
@@ -330,8 +339,8 @@ Connection::Connection(ConnectionPool* pool)
 
     checkConnErr(OCIBindByPos(stmtStoreInsert, &bndDAVal, errhp, (ub4) 12,
                               (dvoid *)(sms.destinationAddress.value),
-                              (sb4) MAX_ADDRESS_VALUE_LENGTH,
-                              SQLT_CHR, (dvoid *)0, (ub2 *)0, (ub2 *)0, 
+                              (sb4) sizeof(sms.destinationAddress.value),
+                              SQLT_STR, (dvoid *)0, (ub2 *)0, (ub2 *)0, 
                               (ub4)0, (ub4 *)0, OCI_DEFAULT));
 
     checkConnErr(OCIBindByPos(stmtStoreInsert, &bndVTime, errhp, (ub4) 13,
@@ -407,8 +416,8 @@ Connection::Connection(ConnectionPool* pool)
                               (ub4 *)0, OCI_DEFAULT));
     
     checkConnErr(OCIBindByPos(stmtStoreInsert, &bndUd, errhp, (ub4) 25,
-                              (dvoid *) &sms.messageBody.data,
-                              (sb4) sizeof(sms.messageBody.data), 
+                              (dvoid *) (sms.messageBody.data),
+                              (sb4) sizeof(SMSData), 
                               SQLT_BIN, (dvoid *)0, (ub2 *)0, (ub2 *)0,
                               (ub4)0, (ub4 *)0, OCI_DEFAULT));
 
@@ -448,8 +457,8 @@ Connection::Connection(ConnectionPool* pool)
 
     checkConnErr(OCIDefineByPos(stmtRetriveAll, &defOAVal, errhp, (ub4) 7,
                                 (dvoid *)(sms.originatingAddress.value), 
-                                (sword) MAX_ADDRESS_VALUE_LENGTH,
-                                SQLT_CHR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+                                (sword) sizeof(sms.originatingAddress.value),
+                                SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
                                 OCI_DEFAULT));
 
     checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDALen, errhp, (ub4) 8,
@@ -472,8 +481,8 @@ Connection::Connection(ConnectionPool* pool)
 
     checkConnErr(OCIDefineByPos(stmtRetriveAll, &defDAVal, errhp, (ub4) 11,
                                 (dvoid *)(sms.destinationAddress.value), 
-                                (sword) MAX_ADDRESS_VALUE_LENGTH,
-                                SQLT_CHR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+                                (sword) sizeof(sms.destinationAddress.value),
+                                SQLT_STR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
                                 OCI_DEFAULT));
 
     checkConnErr(OCIDefineByPos(stmtRetriveAll, &defVTime, errhp, (ub4) 12,
@@ -537,8 +546,8 @@ Connection::Connection(ConnectionPool* pool)
                                 (dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
     
     checkConnErr(OCIDefineByPos(stmtRetriveAll, &defUd, errhp, (ub4) 24,
-                                (dvoid *) sms.messageBody.data, 
-                                (sb4) sizeof(sms.messageBody.data), 
+                                (dvoid *) (sms.messageBody.data), 
+                                (sb4) sizeof(SMSData), 
                                 SQLT_BIN, (dvoid *)0, (ub2 *)0, 
                                 (ub2 *)0, OCI_DEFAULT));
 
@@ -678,11 +687,17 @@ void Connection::retrive(SMSId id, SMS &_sms)
     _sms = sms;
 }
 
-sb4 Connection::failoverCallback(
-    dvoid *svchp, dvoid *envhp, dvoid *fo_ctx, ub4 fo_type, ub4 fo_event)
+void Connection::remove(SMSId id) 
+    throw(StorageException, NoSuchMessageException)
 {
-    printf("Failover ocured !!!\n");
-    return 0;
+    smsId = id;
+    checkErr(OCIStmtExecute(svchp, stmtRemove, errhp, (ub4) 1, (ub4) 0,
+                            (CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
+                            OCI_DEFAULT));
+    if (!smsId) {
+        throw NoSuchMessageException();
+    }
+    checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
 }
 
 void Connection::checkConnErr(sword status) 
@@ -701,8 +716,7 @@ void Connection::checkConnErr(sword status)
 void Connection::checkErr(sword status) 
     throw(StorageException)
 {
-    OCIError*   errhp;
-    text        errbuf[512];
+    text        errbuf[1024];
     ub4         buflen, errcode;
     
     switch (status)

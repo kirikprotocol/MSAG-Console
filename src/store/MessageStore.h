@@ -15,6 +15,9 @@ namespace smsc { namespace store
         
         virtual void retrive(SMSId id, SMS &sms) 
             throw(StorageException, NoSuchMessageException) = 0;
+        
+        virtual void remove(SMSId id) 
+            throw(StorageException, NoSuchMessageException) = 0;
 
     protected:
 
