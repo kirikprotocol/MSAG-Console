@@ -1,6 +1,6 @@
 #include "system/smsc.hpp"
 #include "system/scheduler.hpp"
-#include <thread.h>
+#include <sched.h>
 
 namespace smsc{
 namespace system{
@@ -139,7 +139,7 @@ int Scheduler::Execute()
       }
     }
     mon.Unlock();
-    thr_yield();
+    sched_yield();
     mon.Lock();;
   }
   mon.Unlock();

@@ -19,7 +19,7 @@
 #include "emailsme/util/PipedChild.hpp"
 
 #include <signal.h>
-#include <thread.h>
+#include <pthread.h>
 
 
 using namespace smsc::sms;
@@ -449,7 +449,7 @@ public:
   }
   void handleError(int errorCode)
   {
-    thr_kill(cfg::mainId,16);
+    pthread_kill(cfg::mainId,16);
   }
 
   void setTrans(SmppTransmitter *t)
@@ -711,7 +711,7 @@ extern "C"  void disp(int sig)
 extern "C"  void ctrlc(int sig)
 {
   cfg::stopSme=1;
-  thr_kill(cfg::mainId,16);
+  pthread_kill(cfg::mainId,16);
 }
 
 
@@ -730,7 +730,7 @@ int main(int argc,char* argv[])
   sigset(SIGINT,ctrlc);
   sigset(SIGTERM,ctrlc);
 
-  cfg::mainId=thr_self();
+  cfg::mainId=pthread_self();
 
   RegExp::InitLocale();
   reParseSms.Compile(

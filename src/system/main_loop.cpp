@@ -5,7 +5,9 @@
 #include "smsc.hpp"
 #include <memory>
 #include <vector>
+#ifndef linux
 #include <thread.h>
+#endif
 
 #include <exception>
 
@@ -149,7 +151,9 @@ void Smsc::mainLoop()
   SmeIndex smscSmeIdx=smeman.lookup("smscsme");
   Event e;
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.mainLoop");
+#ifndef linux
   thr_setprio(thr_self(),127);
+#endif
   for(;;)
   {
     do

@@ -2,7 +2,7 @@
 #include <system/smsc.hpp>
 #include <admin/smsc_service/SmscComponent.h>
 #include <admin/service/ServiceSocketListener.h>
-#include <thread.h>
+#include <pthread.h>
 
 namespace smsc {
 namespace system {
@@ -21,7 +21,7 @@ void clearThreadSignalMask()
   sigemptyset(&set);
   for(int i=1;i<=37;i++)if(i!=SIGQUIT && i!=SIGPROF)sigaddset(&set,i);
 
-  if(thr_sigsetmask(SIG_SETMASK,&set,NULL)!=0)
+  if(pthread_sigmask(SIG_SETMASK,&set,NULL)!=0)
   {
     __warning__("failed to set thread signal mask!");
   };
@@ -89,7 +89,7 @@ void registerSignalHandlers_internal()
 //  sigaddset(&set,SIGQUIT);
 //#endif
 
-  if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0)
+  if(pthread_sigmask(SIG_UNBLOCK,&set,NULL)!=0)
   {
     __warning__("Faield to update signal mask");
   }

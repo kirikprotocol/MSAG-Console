@@ -55,7 +55,7 @@ $(warning set CVSROOT = $(CVSROOT))
 export CVSROOT
 endif
 
-OS=`uname`
+OS=$(shell uname)
 
 ifeq ($(OS),Linux)
 export SOCKETLIB=

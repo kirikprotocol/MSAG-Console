@@ -1,6 +1,6 @@
 #include <iostream>
 #include <signal.h>
-#include <thread.h>
+#include <pthread.h>
 #include <admin/service/ComponentManager.h>
 #include <admin/service/AdminSocketManager.h>
 #include <admin/service/ServiceSocketListener.h>
@@ -27,7 +27,7 @@ void clearThreadSignalMask()
   sigset_t set;
   sigemptyset(&set);
   for(int i=1;i<=37;i++)if(i!=SIGQUIT)sigaddset(&set,i);
-  if(thr_sigsetmask(SIG_SETMASK,&set,NULL)!=0)
+  if(pthread_sigmask(SIG_SETMASK,&set,NULL)!=0)
   {
     __warning__("failed to set thread signal mask!");
   };
@@ -63,7 +63,7 @@ void registerSignalHandlers(ServiceSocketListener * listener)
 //  sigaddset(&set,SIGQUIT);
 //#endif
 
-  if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0)
+  if(pthread_sigmask(SIG_UNBLOCK,&set,NULL)!=0)
   {
     __warning__("Faield to update signal mask");
   }

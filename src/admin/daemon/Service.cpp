@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
-#include <thread.h>
+#include <pthread.h>
 #include <errno.h>
 #include <unistd.h>
 #include <vector>
@@ -65,7 +65,7 @@ pid_t Service::start()
   sigaddset(&set, SIGSEGV);
   sigaddset(&set, SIGALRM);
   sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
-  if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0) {
+  if(pthread_sigmask(SIG_UNBLOCK,&set,NULL)!=0) {
           __warning__("Faield to update signal mask");
   }
         execv(service_exe, createArguments());
