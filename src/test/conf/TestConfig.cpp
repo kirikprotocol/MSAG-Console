@@ -35,23 +35,25 @@ TestConfig::TestConfig()
 	intMap["dbSmeProtocolId"] = 23;
 	//map proxy
 	strMap["mapProxySystemId"] = "MAP_PROXY";
+	//abonent info
+	strMap["abonentInfoSystemId"] = "abonentinfo";
 	//респонсы профайлера
 	strMap["profilerRespReportNone"] = 
-		"Уведомления доставки отключены (Delivery reports disabled)";
+		"Уведомления доставки отключены (Delivery reports are disabled)";
 	strMap["profilerRespReportFull"] =
-		"Уведомления доставки включены (Delivery reports enabled)";
+		"Delivery reports are enabled";
 	strMap["profilerRespDataCodingDefault"] =
-		"Установлена 7-bit кодировка сообщений (7-bit encoding set)";
+		"Установлен режим приема сообщений в 7-bit кодировке (message character encoding is set to 7-bit)";
 	strMap["profilerRespDataCodingUcs2"] =
-		"Установлена ucs2 кодировка сообщений (ucs2 encoding set)";
+		"Message character encoding is set to ucs2 encoding (now you will be able to receive messages with russian characters in the case your cell phone supports ucs2 messages)";
 	strMap["profilerRespInvalidCmdText"] =
-		"Неправильная команда (Invalid command)";
+		"Неправильная команда (!@#$%^&*( )_+-=|\\:;'<,>.?/)";
 	//респонсы db sme
-	strMap["dbSmeRespProviderNoFound"] = "Адрес не найден (DataProvider not found)";
-	strMap["dbSmeRespJobNotFound"] = "Задача не найдена (Job not found)";
-	strMap["dbSmeRespDsFailure"] = "Ошибка выполнения запроса (Problem with DataSource)";
-	strMap["dbSmeRespDsConnLost"] = "Ошибка соединения (Connection to DataSource lost)";
-	strMap["dbSmeRespDsStmtFailed"] = "Ошибка SQL (Failed to create SQL statement)";
+	strMap["dbSmeRespProviderNoFound"] = "Адрес получателя не зарегистрирован";
+	strMap["dbSmeRespJobNotFound"] = "Job not found";
+	strMap["dbSmeRespDsFailure"] = "Ошибка выполнения запроса (дублирующийся ключ, пустой набор данных, внутренние ошибки сервера базы данных)";
+	strMap["dbSmeRespDsConnLost"] = "Connection to data source is lost (this may be caused by internal database server errors, network problems, all the other possible and impossible errors all around the world)";
+	strMap["dbSmeRespDsStmtFailed"] = "Ошибка в SQL запросе (!@#$%^&*( )_+-=|\\:;'<,>.?/)";
 	strMap["dbSmeRespQueryNull"] = "Нулевой результат запроса (Query result is NULL)";
 	strMap["dbSmeRespInputParse"] = "Ошибка во входных параметрах (Input parsing error)";
 	strMap["dbSmeRespOutputFormat"] = "Ошибка форматирования результата (Output formatting error)";
