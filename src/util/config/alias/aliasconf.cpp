@@ -88,7 +88,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
              record->addrValue);
         if ( scaned != 3 )
         {
-          scaned = sscanf(dta,"+%[0123456789]20s",record->addrValue);
+          scaned = sscanf(dta,"+%[0123456789?]20s",record->addrValue);
           if ( scaned )
           {
             record->addrNpi = 1;//ISDN
@@ -96,7 +96,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
           }
           else
           {
-            scaned = sscanf(dta,"%[0123456789]20s",record->addrValue);
+            scaned = sscanf(dta,"%[0123456789?]20s",record->addrValue);
             if ( !scaned )
             {
               logger.warn("incorrect format of 'addr = \"%20s\"'",  dta);
