@@ -18,10 +18,12 @@
   <property name="auth_path" value="${smsc_package_path}/util/auth"/>
 
   <fileset id="common_libs" dir="${libs_path}" includes="log4j.jar antlr.jar nsjsp.jar classes12.jar"/>
+  <fileset id="webapps_libs" dir="${basedir}/WEB-INF/lib" includes="taglibs-input.jar"/>
 
   <path id="classpath">
     <pathelement path="${java_out}"/>
     <fileset refid="common_libs"/>
+    <fileset refid="webapps_libs"/>
     <fileset dir="${CATALINA_HOME}/common/lib" includes="servlet.jar"/>
     <fileset dir="${CATALINA_HOME}/server/lib" includes="catalina.jar"/>
   </path>
@@ -93,6 +95,7 @@
     </copy>
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
       <fileset refid="common_libs" />
+      <fileset refid="webapps_libs" />
     </copy>
   </target>
 
