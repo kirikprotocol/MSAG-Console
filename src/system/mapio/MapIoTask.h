@@ -176,6 +176,7 @@ struct MapDialog{
   ET96MAP_DIALOGUE_ID_T dialogid_map;
   unsigned dialogid_smsc;
   ET96MAP_INVOKE_ID_T invokeId;
+  ET96MAP_INVOKE_ID_T origInvokeId;
   string abonent;
   auto_ptr<SMS> sms;
   auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
@@ -224,6 +225,7 @@ struct MapDialog{
     version(version),
     associate(0),
     invokeId(0),
+    origInvokeId(0),
     ssn(lssn),
     ussdSequence(0),
     ussdMrRef(0),

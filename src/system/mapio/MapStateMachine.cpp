@@ -1265,7 +1265,7 @@ static void DoUSSRUserResponceError(const SmscCommand* cmd , MapDialog* dialog)
   if ( dialog->version == 2 )
   {
     result = Et96MapV2ProcessUnstructuredSSRequestResp(
-      dialog->ssn,dialog->dialogid_map,++(dialog->invokeId),
+      dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
       &ussdEncoding,
       &ussdString,
       &error);
@@ -1354,7 +1354,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
   if ( dialog->version == 2 )
   {
     result = Et96MapV2ProcessUnstructuredSSRequestResp(
-      dialog->ssn,dialog->dialogid_map,0,
+      dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
       &ussdEncoding,
       &ussdString,
       0);
@@ -3022,6 +3022,8 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     __require__(dialog->ssn==localSsn);
     dialog->isUSSD = true;
     __dialogid_map = dialogueId;
+    dialog->invokeId = invokeId;
+    dialog->origInvokeId = invokeId;
     if( msisdn_sp != 0 ) {
       dialog->m_msAddr.addressLength = msisdn_sp->addressLength;
       dialog->m_msAddr.typeOfAddress = msisdn_sp->typeOfAddress;
