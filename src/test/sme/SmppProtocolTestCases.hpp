@@ -48,7 +48,32 @@ public:
 	 * Заполнение и отправка replace_sm pdu с недопустимыми значениями полей.
 	 */
 	void replaceSmAssert(int num);
-	
+
+	/**
+	 * Запрос статуса существующего sms.
+	 */
+	void querySmCorrect(bool sync, int num);
+
+	/**
+	 * Запрос статуса несуществующего sms.
+	 */
+	void querySmIncorrect(bool sync, int num);
+
+	/**
+	 * Отмена существующего sms.
+	 */
+	void cancelSmCorrect(bool sync, int num);
+
+	/**
+	 * Отмена несуществующего sms.
+	 */
+	void cancelSmIncorrect(bool sync, int num);
+
+	/**
+	 * Отправка ошибки.
+	 */
+	void genericNack(bool sync);
+
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp со статусом ok.
 	 */
@@ -67,6 +92,8 @@ public:
 	 */
 	pair<uint32_t, time_t> sendDeliverySmRespError(PduDeliverySm& pdu,
 		bool sync, int num);
+
+	void sendInvalidPdu(bool sync, int num);
 
 protected:
 	SmppFixture* fixture;

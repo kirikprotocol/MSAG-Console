@@ -41,7 +41,13 @@ public:
 
 	void sendReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData, bool sync);
 
+	void sendQuerySmPdu(PduQuerySm* pdu, bool sync);
+
+	void sendCancelSmPdu(PduCancelSm* pdu, bool sync);
+
 	void sendDeliverySmResp(PduDeliverySmResp& pdu, bool sync, int delay = 0);
+
+	void sendInvalidPdu(PduWithOnlyHeader* pdu, bool sync);
 
 	/*
 		virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
@@ -78,6 +84,9 @@ protected:
 	void processReplaceSmSync(PduData* pduData, PduReplaceSmResp* respPdu,
 		time_t respTime);
 	void processReplaceSmAsync(PduData* pduData);
+	void processGenericNackSync(PduData* pduData, PduGenericNack* respPdu,
+		time_t respTime);
+	void processGenericNackAsync(PduData* pduData);
 };
 
 class DeliverySmRespTask : public PduTask

@@ -748,6 +748,72 @@ void SmppProtocolTestCases::replaceSm(bool sync, int num)
 	}
 }
 
+void SmppProtocolTestCases::querySmCorrect(bool sync, int num)
+{
+}
+
+void SmppProtocolTestCases::querySmIncorrect(bool sync, int num)
+{
+}
+
+void SmppProtocolTestCases::sendInvalidPdu(bool sync, int num)
+{
+	TCSelector s(num, 3);
+	__decl_tc__;
+	__cfg_int__(maxWaitTime);
+	__cfg_int__(maxValidPeriod);
+	__cfg_int__(maxDeliveryPeriod);
+	__cfg_int__(timeCheckAccuracy);
+	for (; s.check(); s++)
+	{
+		try
+		{
+			PduWithOnlyHeader* pdu = new PduWithOnlyHeader();
+			uint32_t commandId;
+			for (bool flag = true; flag; )
+			{
+				switch (s.value())
+				{
+					case 1: //0x00000000 - 0x00000015
+						__tc__("sendInvalidPdu.request");
+						commandId = rand0(0x15);
+						break;
+					case 2: //0x80000000 - 0x80000015 (респонсы)
+						__tc__("sendInvalidPdu.response");
+						commandId = 0x80000000 + (uint32_t) rand0(0x15);
+						break;
+					case 3: //все остальное
+						__tc__("sendInvalidPdu.invalidCommandId");
+						commandId = rand0(INT_MAX);
+						break;
+					default:
+						__unreachable__("Invalid num");
+				}
+				switch (commandId)
+				{
+					case UNBIND:
+					case GENERIC_NACK:
+					case ENQUIRE_LINK:
+					case ENQUIRE_LINK_RESP:
+						break;
+					default:
+						flag = false;
+				}
+			}
+			pdu->get_header().set_commandId(commandId);
+			pdu->get_header().set_commandStatus(rand0(1));
+			//отправить и зарегистрировать pdu
+			fixture->transmitter->sendInvalidPdu(pdu, sync);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(s.value());
+			error();
+		}
+	}
+}
+
 int SmppProtocolTestCases::getRandomRespDelay()
 {
 	__cfg_int__(timeCheckAccuracy);

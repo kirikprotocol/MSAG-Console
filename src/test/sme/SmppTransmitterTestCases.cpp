@@ -222,8 +222,7 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 void SmppTransmitterTestCases::processSubmitSmSync(PduData* pduData,
 	PduSubmitSmResp* respPdu, time_t respTime)
 {
-	__require__(pduData && respPdu && pduData->pdu->get_sequenceNumber() ==
-		respPdu->get_header().get_sequenceNumber());
+	__require__(pduData);
 	__dumpPdu__("processSubmitSmRespSync", fixture->smeInfo.systemId, respPdu);
 	__decl_tc__;
 	__tc__("processSubmitSmResp.sync");
@@ -421,8 +420,7 @@ PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
 void SmppTransmitterTestCases::processReplaceSmSync(PduData* pduData,
 	PduReplaceSmResp* respPdu, time_t respTime)
 {
-	__require__(pduData && respPdu && pduData->pdu->get_sequenceNumber() ==
-		respPdu->get_header().get_sequenceNumber());
+	__require__(pduData);
 	__dumpPdu__("processReplaceSmRespSync", fixture->smeInfo.systemId, respPdu);
 	__decl_tc__;
 	__tc__("processReplaceSmRespSync.sync");
@@ -525,6 +523,16 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 	}
 }
 
+void SmppTransmitterTestCases::sendQuerySmPdu(PduQuerySm* pdu, bool sync)
+{
+	__unreachable__("sendQuerySmPdu()");
+}
+
+void SmppTransmitterTestCases::sendCancelSmPdu(PduCancelSm* pdu, bool sync)
+{
+	__unreachable__("sendCancelSmPdu()");
+}
+
 void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu,
 	bool sync, int delay)
 {
@@ -552,6 +560,118 @@ void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu,
 			//__dumpPdu__("sendDeliverySmRespAsyncBefore", fixture->smeInfo.systemId, pdu);
 			fixture->session->getAsyncTransmitter()->sendDeliverySmResp(pdu);
 			__dumpPdu__("sendDeliverySmRespAsyncAfter", fixture->smeInfo.systemId, &pdu);
+		}
+		__tc_ok__;
+	}
+	catch (...)
+	{
+		__tc_fail__(100);
+		//error();
+		throw;
+	}
+}
+
+//требуется внешняя синхронизация
+void SmppTransmitterTestCases::processGenericNackSync(PduData* pduData,
+	PduGenericNack* respPdu, time_t respTime)
+{
+	__require__(pduData);
+	__dumpPdu__("processGenericNackSync", fixture->smeInfo.systemId, respPdu);
+	__decl_tc__;
+	__tc__("processGenericNack.sync");
+	if (!respPdu)
+	{
+		__tc_fail__(1);
+	}
+	else
+	{
+		//создать, но не регистрировать монитор
+		GenericNackMonitor monitor(pduData->pdu->get_sequenceNumber(),
+			pduData, PDU_REQUIRED_FLAG);
+		fixture->pduChecker->processGenericNack(&monitor, *respPdu, respTime);
+		delete respPdu; //disposePdu
+	}
+	__tc_ok_cond__;
+	pduData->unref();
+}
+
+//обновить sequenceNumber в PduRegistry, требуется внешняя синхронизация
+void SmppTransmitterTestCases::processGenericNackAsync(PduData* pduData)
+{
+	__require__(fixture->pduReg);
+	__require__(pduData);
+	//создать и зарегистрировать респонс монитор
+	GenericNackMonitor* monitor = new GenericNackMonitor(
+		pduData->pdu->get_sequenceNumber(), pduData, PDU_REQUIRED_FLAG);
+	fixture->pduReg->registerMonitor(monitor);
+	pduData->unref();
+}
+
+void SmppTransmitterTestCases::sendInvalidPdu(PduWithOnlyHeader* pdu, bool sync)
+{
+	__decl_tc__;
+	try
+	{
+		if (fixture->pduReg)
+		{
+			if (sync)
+			{
+				__tc__("sendInvalidPdu.sync");
+				PduData* pduData;
+				{
+					MutexGuard mguard(fixture->pduReg->getMutex());
+					time_t submitTime = time(NULL);
+					pdu->get_header().set_sequenceNumber(0); //не известен
+					pduData = new PduData(reinterpret_cast<SmppHeader*>(pdu), submitTime, 0);
+				}
+				//__dumpPdu__("sendInvalidPduSyncBefore", fixture->smeInfo.systemId, pdu);
+				SmppHeader* respPdu = fixture->session->getSyncTransmitter()->sendPdu(
+					reinterpret_cast<SmppHeader*>(pdu));
+				time_t respTime = time(NULL);
+				__dumpPdu__("sendInvalidPduSyncAfter", fixture->smeInfo.systemId, pdu);
+				{
+					__require__(respPdu && respPdu->get_commandId() == GENERIC_NACK);
+					MutexGuard mguard(fixture->pduReg->getMutex());
+					processGenericNackSync(pduData,
+						reinterpret_cast<PduGenericNack*>(respPdu), respTime);
+				}
+			}
+			else
+			{
+				__tc__("sendInvalidPdu.async");
+				MutexGuard mguard(fixture->pduReg->getMutex());
+				//__dumpPdu__("sendInvalidPduAsyncBefore", fixture->smeInfo.systemId, pdu);
+				time_t submitTime = time(NULL);
+				SmppHeader* respPdu =
+					fixture->session->getAsyncTransmitter()->sendPdu(
+						reinterpret_cast<SmppHeader*>(pdu));
+				__dumpPdu__("sendInvalidPduAsyncAfter", fixture->smeInfo.systemId, pdu);
+				PduData* pduData = new PduData(reinterpret_cast<SmppHeader*>(pdu), submitTime, 0);
+				processGenericNackAsync(pduData);
+			}
+			//pdu life time определяется PduRegistry
+			//disposePdu(pdu);
+		}
+		else
+		{
+			if (sync)
+			{
+				__tc__("sendInvalidPdu.sync");
+				SmppHeader* respPdu =
+					fixture->session->getSyncTransmitter()->sendPdu(
+						reinterpret_cast<SmppHeader*>(pdu));
+				if (respPdu)
+				{
+					delete respPdu; //disposePdu
+				}
+			}
+			else
+			{
+				__tc__("sendInvalidPdu.async");
+				fixture->session->getAsyncTransmitter()->sendPdu(
+					reinterpret_cast<SmppHeader*>(pdu));
+			}
+			delete pdu; //disposePdu
 		}
 		__tc_ok__;
 	}
