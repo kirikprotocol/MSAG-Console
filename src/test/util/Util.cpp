@@ -32,11 +32,12 @@ auto_ptr<uint8_t> rand_uint8_t(int length)
 
 auto_ptr<char> rand_char(int length)
 {
-	char* res = new char[length];
+	char* res = new char[length + 1];
 	for (int i = 0; i < length; i++)
 	{
 		res[i] = 64 + rand1(26);
 	}
+	res[length] = 0;
 	return auto_ptr<char>(res);
 }
 
