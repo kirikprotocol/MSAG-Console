@@ -191,7 +191,10 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code)
 
 static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
 {
-  if ( dialog == 0 || dialog->dialogid_smsc == 0 ) return;
+  if ( dialog == 0 || dialog->dialogid_smsc == 0 ) {
+    __trace2__("MAP::Send OK to SMSC: no smscid or no dialog exists");
+    return;
+  }
   __trace2__("MAP::Send OK to SMSC");
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialog->dialogid_smsc,0);
   Descriptor desc;
@@ -748,6 +751,14 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
               if ( dialog->state != MAPST_USSDWaitResponce )
                 throw MAPDIALOG_BAD_STATE(
                   FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+              {
+                unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
+                if ( dialog->ussdMrRef != mr )
+                  throw MAPDIALOG_FATAL_ERROR(
+                    FormatText("MAP::putCommand: Opss, bad message_reference 0x%x must be 0x%x",
+                      mr,dialog->ussdMrRef));
+              }
+              dialog->dialogid_smsc = dialogid_smsc;
               DoUSSRUserResponce(cmd,dialog.get());
               return;
             }
@@ -1574,6 +1585,11 @@ static string GetUSSDSubsystem(
   return string(sBegin,sEnd);
 }
 
+static unsigned makeMrRef()
+{
+  return time(0)%0x0ffff;
+}
+
 extern "C"
 USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
   ET96MAP_LOCAL_SSN_T localSsn,
@@ -1615,8 +1631,10 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     sms.setDestinationAddress(dest_addr);
     dialog->sms = _sms;
     dialog->state = MAPST_WaitSmsMODelimiter2;
-    dialog->ussdSequence = NextSequence();
+    //dialog->ussdSequence = NextSequence();
+    dialog->ussdMrRef = MakeMrRef();
     dialog->sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
+    dialog->sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,dialog->ussdMrRef);
     //{
     //  ostringstream  ost;
     //  ost << dialog->ussdSequence;

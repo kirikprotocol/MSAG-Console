@@ -115,6 +115,7 @@ struct MapDialog{
   ET96MAP_LOCAL_SSN_T ssn;
   bool hasIndAddress;
   long long ussdSequence;
+  unsigned ussdMrRef;
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
@@ -128,7 +129,8 @@ struct MapDialog{
     isUSSD(false),
     ssn(lssn),
     hasIndAddress(false),
-    ussdSequence(0)
+    ussdSequence(0),
+    ussdMrRef(0)
 //    isMOreq(false),
 //    dialogid_req(0)
     {}
