@@ -80,8 +80,8 @@ struct MAPDIALOG_HEREISNO_ID : public MAPDIALOG_ERROR
 static void SendRescheduleToSmsc(unsigned dialogid)
 {
   if ( dialogid == 0 ) return;
-  __trace2__("Send RESCHEDULE NOW to SMSC",code);
-  SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,MAKE_ERRCODE(CMD_ERR_RESCHEDULENOW,0));
+  __trace2__("Send RESCHEDULE NOW to SMSC");
+  SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,0));
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
   __trace2__("Send RESCHEDULE NOW to SMSC OK");
 }
