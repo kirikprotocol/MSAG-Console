@@ -24,33 +24,41 @@ public class Daemon extends Proxy
   private String daemonServicesFolder;
 
   public Daemon(final String host, final int port, final SmeManager smeManager, final String daemonServicesFolder)
-      throws AdminException
   {
     super(host, port);
     this.daemonServicesFolder = daemonServicesFolder;
-    connect(host, port);
-    refreshServices(smeManager);
+    try {
+      connect(host, port);
+      refreshServices(smeManager);
+    } catch (AdminException e) {
+      e.printStackTrace();
+      logger.error("Couldn't add daemon \"" + host + "\"", e);
+      //To change body of catch statement use File | Settings | File Templates.
+    }
   }
 
   protected Map refreshServices(final SmeManager smeManager) throws AdminException
   {
-    final Response r = runCommand(new CommandListServices());
-    if (Response.StatusOk != r.getStatus())
-      throw new AdminException("Couldn't list services, nested:" + r.getDataAsString());
+    if (super.getStatus() == StatusDisconnected) connect(host, port);
+    if (super.getStatus() == StatusConnected) {
+      final Response r = runCommand(new CommandListServices());
+      if (Response.StatusOk != r.getStatus())
+        throw new AdminException("Couldn't list services, nested:" + r.getDataAsString());
 
-    services.clear();
+      services.clear();
 
-    final NodeList list = r.getData().getElementsByTagName("service");
-    for (int i = 0; i < list.getLength(); i++) {
-      final Element serviceElement = (Element) list.item(i);
-      final ServiceInfo newInfo = new ServiceInfo(serviceElement, host, smeManager, daemonServicesFolder);
-      services.put(newInfo.getId(), newInfo);
+      final NodeList list = r.getData().getElementsByTagName("service");
+      for (int i = 0; i < list.getLength(); i++) {
+        final Element serviceElement = (Element) list.item(i);
+        final ServiceInfo newInfo = new ServiceInfo(serviceElement, host, smeManager, daemonServicesFolder);
+        services.put(newInfo.getId(), newInfo);
+      }
     }
     return services;
   }
 
   public void startService(final String serviceId)
-      throws AdminException
+          throws AdminException
   {
     requireService(serviceId);
 
@@ -71,7 +79,7 @@ public class Daemon extends Proxy
   }
 
   public void addService(final ServiceInfo serviceInfo)
-      throws AdminException
+          throws AdminException
   {
     final String id = serviceInfo.getId();
     if (services.containsKey(id))
@@ -87,7 +95,7 @@ public class Daemon extends Proxy
   }
 
   public void removeService(final String serviceId)
-      throws AdminException
+          throws AdminException
   {
     requireService(serviceId);
     final Response r = runCommand(new CommandRemoveService(serviceId));
@@ -98,7 +106,7 @@ public class Daemon extends Proxy
   }
 
   public void shutdownService(final String serviceId)
-      throws AdminException
+          throws AdminException
   {
     requireService(serviceId);
     final Response r = runCommand(new CommandShutdownService(serviceId));
@@ -110,7 +118,7 @@ public class Daemon extends Proxy
   }
 
   public void killService(final String serviceId)
-      throws AdminException
+          throws AdminException
   {
     requireService(serviceId);
     final Response r = runCommand(new CommandKillService(serviceId));
@@ -129,7 +137,7 @@ public class Daemon extends Proxy
   }
 
   public void setServiceStartupParameters(final String serviceId, final int port, final String args)
-      throws AdminException
+          throws AdminException
   {
     requireService(serviceId);
     final Response r = runCommand(new CommandSetServiceStartupParameters(serviceId, port, args));

@@ -145,7 +145,10 @@ public class ProviderManager extends AbstractDataSourceImpl implements DataSourc
 
   public synchronized Provider createProvider(final String name)
   {
-    return new Provider(++lastUsedId, name);
+    final Provider provider = new Provider(++lastUsedId, name);
+    providers.put(new Long(provider.getId()), provider);
+    super.add(new ProviderDataItem(provider));
+    return provider;
   }
 
   public synchronized void setProviderName(final long id, final String name) throws NullPointerException
