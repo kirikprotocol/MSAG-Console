@@ -72,6 +72,7 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 	sme->systemId = _systemId.get();
 	sme->SME_N = rand0(INT_MAX); //реально не используетс€
 	sme->disabled = !rand0(3); //реально не используетс€
+	//sme->wantAlias = rand0(1);
 }
 
 #define __compare__(field, errCode) \
@@ -117,7 +118,8 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 	{
 		try
 		{
-			SmsUtil::setupRandomCorrectAddress(smeAddr, 10, 20);
+			SmsUtil::setupRandomCorrectAddress(smeAddr,
+				MAX_ADDRESS_VALUE_LENGTH/2, MAX_ADDRESS_VALUE_LENGTH);
 			switch (s.value1(numAddr))
 			{
 				case 1: //по умолчанию случайные ton и npi
@@ -126,12 +128,18 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 					{
 						smeAddr->setTypeOfNumber(1);
 						smeAddr->setNumberingPlan(1);
+						int len = rand2(MAX_ADDRESS_VALUE_LENGTH/2, MAX_ADDRESS_VALUE_LENGTH);
+						auto_ptr<char> val = rand_char(len, RAND_NUM);
+						smeAddr->setValue(len, val.get());
 					}
 					break;
 				case 3: //ton = 2 и npi = 1 соответствует 8902986...
 					{
 						smeAddr->setTypeOfNumber(2);
 						smeAddr->setNumberingPlan(1);
+						int len = rand2(MAX_ADDRESS_VALUE_LENGTH/2, MAX_ADDRESS_VALUE_LENGTH);
+						auto_ptr<char> val = rand_char(len, RAND_NUM);
+						smeAddr->setValue(len, val.get());
 					}
 					break;
 				default:
