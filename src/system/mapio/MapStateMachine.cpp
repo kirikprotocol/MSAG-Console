@@ -893,11 +893,21 @@ none_validity:;
     unsigned octet_data_len = (user_data_len+1)*7/8;
     if ( octet_data_len > max_data_len )
       throw runtime_error(FormatText("bad user_data_len %d must be <= %d, PDU len=%d",octet_data_len,max_data_len,ud->signalInfoLen));
+    if ( ssfh->udhi){
+      unsigned udh_len = ((unsigned)*user_data)&0x0ff;
+      if ( udh_len >= octet_data_len )
+        throw runtime_error(FormatText("MAP:: octet_data_len %d, but udhi_len %d",octet_data_len,udh_len));
+    }
   }
   else
   {
     if ( user_data_len > max_data_len )
       throw runtime_error(FormatText("bad user_data_len %d must be <= %d, PDU len=%d",user_data_len,max_data_len,ud->signalInfoLen));
+    if ( ssfh->udhi){
+      unsigned udh_len = ((unsigned)*user_data)&0x0ff;
+      if ( udh_len >= user_data_len )
+        throw runtime_error(FormatText("MAP:: user_data_len %d, but udhi_len %d",user_data_len,udh_len));
+    }
   }
 
   {
@@ -906,8 +916,6 @@ none_validity:;
         MicroString ms;
         auto_ptr<unsigned char> b(new unsigned char[255*2]);
         unsigned udh_len = ((unsigned)*user_data)&0x0ff;
-        if ( udh_len >= user_data_len )
-          throw runtime_error(FormatText("MAP:: user_data_len %d, but udhi_len %d",user_data_len,udh_len));
         __map_trace2__("ud_length 0x%x udh_len 0x%x",user_data_len,udh_len);
         unsigned x = (udh_len+1)*8;
         if ( x%7 != 0 ) x+=7-(x%7);
