@@ -193,6 +193,7 @@ void Smsc::init(const SmscConfigs& cfg)
   smsc::util::regexp::RegExp::InitLocale();
   log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.init");
   try{
+  InitLicense(*cfg.licconfig);
   tp.preCreateThreads(15);
   //smsc::util::config::Manager::init("config.xml");
   //cfgman=&cfgman->getInstance();
@@ -458,11 +459,13 @@ void Smsc::init(const SmscConfigs& cfg)
   smsc::mscman::MscManager::startup(*dataSource,*cfg.cfgman);
   log.info( "MSC manager started" );
 
+  /*
   smsc::resourcemanager::ResourceManager::init
   (
     cfg.cfgman->getString("core.locales"),
     cfg.cfgman->getString("core.default_locale")
   );
+  */
   log.info( "Resource manager configured" );
 
   log.info( "Starting profiler" );
@@ -618,6 +621,11 @@ void Smsc::init(const SmscConfigs& cfg)
     tccfg.smsc=this;
     tccfg.store=store;
     tccfg.maxSmsPerSecond=cfg.cfgman->getInt("trafficControl.maxSmsPerSecond");
+    if(tccfg.maxSmsPerSecond>license.maxsms)
+    {
+      log.warn("maxSmsPerSecond in configuration is greater than license limit, adjusting\n");
+      tccfg.maxSmsPerSecond=license.maxsms;
+    }
     tccfg.shapeTimeFrame=cfg.cfgman->getInt("trafficControl.shapeTimeFrame");
     tccfg.protectTimeFrame=cfg.cfgman->getInt("trafficControl.protectTimeFrame");
     tccfg.protectThreshold=cfg.cfgman->getInt("trafficControl.protectThreshold");

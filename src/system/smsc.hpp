@@ -115,6 +115,7 @@ struct SmscConfigs{
   smsc::util::config::smeman::SmeManConfig* smemanconfig;
   smsc::util::config::alias::AliasConfig* aliasconfig;
   smsc::util::config::route::RouteConfig* routesconfig;
+  Hash<string> *licconfig;
 };
 
 class Smsc
@@ -130,6 +131,8 @@ public:
     rescheduleCounter=0;
     startTime=0;
     tcontrol=0;
+    license.maxsms=0;
+    license.expdate=0;
   };
   ~Smsc();
   void init(const SmscConfigs& cfg);
@@ -368,6 +371,24 @@ public:
     return tcontrol->processCommand(cmd);
   }
 
+  void InitLicense(const Hash<string>& lic)
+  {
+    license.maxsms=atoi(lic["MaxSmsThroughput"].c_str());
+    int y,m,d;
+    sscanf(lic["LicenseExpirationDate"].c_str(),"%d-%d-%d",&y,&m,&d);
+    struct tm t={0,};
+    t.tm_year=y;
+    t.tm_mon=m;
+    t.tm_mday=d;
+    license.expdate=mktime(&t);
+    long hostid;
+    sscanf(lic["Hostid"].c_str(),"%x",&hostid);
+    if(hostid!=gethostid())
+    {
+      throw runtime_error("");
+    }
+  }
+
 
 protected:
 
@@ -402,6 +423,11 @@ protected:
   smsc::stat::StatisticsManager *statMan;
 
   SmeProxy* mapProxy;
+
+  struct LicenseInfo{
+    int maxsms;
+    time_t expdate;
+  }license;
 
   MessageReferenceCache mrCache;
 

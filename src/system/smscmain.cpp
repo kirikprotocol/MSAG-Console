@@ -23,6 +23,9 @@ bool file_exist(const char * const filename)
   return stat(filename, &buf) == 0;
 }
 
+extern bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic);
+
+
 char get_filename_result[128];
 const char * const get_filename(const char * const file_to_find)
 throw (smsc::admin::AdminException)
@@ -119,6 +122,19 @@ int main(int argc,char* argv[])
       fprintf(stderr, "WARNING: parameter \"logger.initFile\" not found in config - logger initialized by default\n");
     }
     log4cpp::Category& logger = Logger::getCategory("smscmain");
+
+    Hash<string> lic;
+    {
+      string lf=get_filename("license.ini");
+      string sig=get_filename("license.sig");
+      if(!CheckLicense(lf.c_str(),sig.c_str(),lic))
+      {
+        logger.error("Invalid license\n");
+        return -1;
+      }
+    }
+
+    cfgs.licconfig=&lic;
     logger.info( "Starting up SMSC" );
     smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
     logger.info( "Locale resources loaded" );
