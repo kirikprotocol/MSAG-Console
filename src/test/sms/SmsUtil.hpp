@@ -65,12 +65,10 @@ public:
 	static auto_ptr<char> configString(const Address& addr);
 };
 
-/*
 struct ltAddress
 {
 	bool operator() (const Address& a1, const Address& a2) const;
 };
-*/
 
 ostream& operator<< (ostream& os, const Address& a);
 bool operator== (const Address& a1, const Address& a2);

@@ -384,27 +384,10 @@ auto_ptr<char> SmsUtil::configString(const Address& addr)
 	return auto_ptr<char>(tmp);
 }
 
-/*
 bool ltAddress::operator() (const Address& a1, const Address& a2) const
 {
-	if (a1.getTypeOfNumber() != a2.getTypeOfNumber())
-	{
-		return a1.getTypeOfNumber() < a2.getTypeOfNumber();
-	}
-	if (a1.getNumberingPlan() != a2.getNumberingPlan())
-	{
-		return a1.getNumberingPlan() < a2.getNumberingPlan();
-	}
-	if (a1.getLenght() != a2.getLenght())
-	{
-		return a1.getLenght() < a2.getLenght();
-	}
-	AddressValue val1, val2;
-	a1.getValue(val1);
-	a2.getValue(val2);
-	return memcmp(val1, val2, a1.getLenght()) < 0;
+	return a1 < a2;
 }
-*/
 
 ostream& operator<< (ostream& os, const Address& a)
 {
