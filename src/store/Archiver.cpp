@@ -586,7 +586,7 @@ const char* Archiver::archiveInsertSql = (const char*)
  LAST_TRY_TIME, DR, BR, BODY, BODY_LEN)\
  VALUES (:ID, :ST, :MR, :OA, :DA, :DDA,\
  :SRC_MSC, :SRC_IMSI, :SRC_SME_N, :DST_MSC, :DST_IMSI, :DST_SME_N,\
- :WAIT_TIME, :VALID_TIME, :SUBMIT_TIME, :ATTEMPTS, :LAST_RESULT,\
+ :VALID_TIME, :SUBMIT_TIME, :ATTEMPTS, :LAST_RESULT,\
  :LAST_TRY_TIME, :DR, :BR, :BODY, :BODY_LEN)";
 void Archiver::prepareArchiveInsertStmt() throw(StorageException)
 {
