@@ -46,7 +46,7 @@ public class SmsRow
   public void setTo(String address) { to = address; }
   public String getDateString() {
     SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-    return formatter.format(date);
+    return formatter.format(DateConvertor.convertGMTToLocal(date));
   }
 	public Date getDate()
 	{

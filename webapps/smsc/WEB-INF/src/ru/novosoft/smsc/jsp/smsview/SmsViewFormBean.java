@@ -198,7 +198,7 @@ public class SmsViewFormBean extends IndexBean
 		if (query.getFromDateEnabled())
 		{
 			SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-			return formatter.format(query.getFromDate());
+			return formatter.format(DateConvertor.convertGMTToLocal(query.getFromDate()));
 		}
 		else
 		{
@@ -206,7 +206,7 @@ public class SmsViewFormBean extends IndexBean
 		}
 	}
 
-	public void setFromDate(String dateString)
+    public void setFromDate(String dateString)
 	{
 		final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
 		query.setFromDateEnabled(dateEnabled);
@@ -215,7 +215,8 @@ public class SmsViewFormBean extends IndexBean
 			try
 			{
 				SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-				query.setFromDate(formatter.parse(dateString));
+                Date date = formatter.parse(dateString);
+				query.setFromDate(DateConvertor.convertLocalToGMT(date));
 			}
 			catch (ParseException e)
 			{
@@ -230,7 +231,7 @@ public class SmsViewFormBean extends IndexBean
 		if (query.getTillDateEnabled())
 		{
 			SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-			return formatter.format(query.getTillDate());
+			return formatter.format(DateConvertor.convertGMTToLocal(query.getTillDate()));
 		}
 		else
 		{
@@ -247,7 +248,8 @@ public class SmsViewFormBean extends IndexBean
 			try
 			{
 				SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-				query.setTillDate(formatter.parse(dateString));
+                Date date = formatter.parse(dateString);
+				query.setTillDate(DateConvertor.convertLocalToGMT(date));
 			}
 			catch (ParseException e)
 			{
