@@ -120,9 +120,10 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 				switch (respFlag)
 				{
 					case RESP_PDU_OK:
-					case RESP_PDU_ERROR:
 						setReceived();
-						lastTime = recvTime;
+						break;
+					case RESP_PDU_ERROR:
+						setNotExpected();
 						break;
 					case RESP_PDU_RESCHED:
 					case RESP_PDU_MISSING:
@@ -134,21 +135,11 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 						{
 							checkTime = nextTime;
 						}
-						lastTime = recvTime;
 						break;
-					/*
-					case RESP_PDU_MISSING:
-						//lastTime и nextTime с учетом 8 секундного timeout
-						if (!nextTime || nextTime + 8 > validTime)
-						{
-							flag = PDU_RECEIVED_FLAG;
-						}
-						lastTime = recvTime + 8;
-						break;
-					*/
 					default:
 						__unreachable__("Unknown resp flag");
 				}
+				lastTime = recvTime;
 			}
 			break;
 		case PDU_RECEIVED_FLAG:
