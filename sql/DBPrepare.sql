@@ -136,25 +136,25 @@ DROP SEQUENCE SMS_BILL_SEQ;
 CREATE SEQUENCE SMS_BILL_SEQ INCREMENT BY 1 START WITH 1 CACHE 20;
 
 CREATE OR REPLACE PROCEDURE DO_FINALIZE_SMS 
-  (id IN NUMBER, st IN NUMBER, submitTime IN DATE, validTime IN DATE,
-   attempts IN NUMBER, lastResult IN NUMBER, 
-   lastTryTime IN DATE, nextTryTime IN DATE,
-   oa IN VARCHAR2, oaVal IN VARCHAR2, oaTon IN NUMBER, oaNpi IN NUMBER,
-   da IN VARCHAR2, daVal IN VARCHAR2, daTon IN NUMBER, daNpi IN NUMBER,
-   dda IN VARCHAR2,
-   mr IN NUMBER, svcType IN VARCHAR2, dr IN NUMBER, br IN NUMBER,
-   srcMsc IN VARCHAR2, srcImsi IN VARCHAR2, srcSmeN IN NUMBER,
-   dstMsc IN VARCHAR2, dstImsi IN VARCHAR2, dstSmeN IN NUMBER,
-   routeId IN VARCHAR2, svcId IN NUMBER, prty IN NUMBER, 
-   srcSmeId IN VARCHAR2, dstSmeId VARCHAR2, txtLength IN NUMBER,
-   bodyLen IN NUMBER, body IN RAW, arc IN NUMBER, bill IN NUMBER)
+  (A_id IN NUMBER, A_st IN NUMBER, A_submitTime IN DATE, A_validTime IN DATE,
+   A_attempts IN NUMBER, A_lastResult IN NUMBER, 
+   A_lastTryTime IN DATE, A_nextTryTime IN DATE,
+   A_oa IN VARCHAR2, A_oaVal IN VARCHAR2, A_oaTon IN NUMBER, A_oaNpi IN NUMBER,
+   A_da IN VARCHAR2, A_daVal IN VARCHAR2, A_daTon IN NUMBER, A_daNpi IN NUMBER,
+   A_dda IN VARCHAR2,
+   A_mr IN NUMBER, A_svcType IN VARCHAR2, A_dr IN NUMBER, A_br IN NUMBER,
+   A_srcMsc IN VARCHAR2, A_srcImsi IN VARCHAR2, A_srcSmeN IN NUMBER,
+   A_dstMsc IN VARCHAR2, A_dstImsi IN VARCHAR2, A_dstSmeN IN NUMBER,
+   A_routeId IN VARCHAR2, A_svcId IN NUMBER, A_prty IN NUMBER, 
+   A_srcSmeId IN VARCHAR2, A_dstSmeId VARCHAR2, A_txtLength IN NUMBER,
+   A_bodyLen IN NUMBER, A_body IN RAW, A_arc IN NUMBER, A_bill IN NUMBER)
 IS
    billId            NUMBER;
 BEGIN
    
-   DELETE FROM SMS_MSG WHERE ID=id;
+   DELETE FROM SMS_MSG WHERE ID=A_id;
    
-   IF arc != 0 THEN
+   IF A_arc != 0 THEN
     INSERT INTO SMS_ARC
 	(ID, ST, SUBMIT_TIME, VALID_TIME, ATTEMPTS, LAST_RESULT,
 	 LAST_TRY_TIME, NEXT_TRY_TIME, OA, DA, DDA, MR, SVC_TYPE, DR, BR, 
@@ -162,14 +162,14 @@ BEGIN
 	 ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID, 
 	 TXT_LENGTH, BODY_LEN, BODY) 
     VALUES
-	(id, st, submitTime, validTime, attempts, lastResult,
-	 lastTryTime, nextTryTime, oa, da, dda, mr, svcType, dr, br,
-	 srcMsc, srcImsi, srcSmeN, dstMsc, dstImsi, dstSmeN,
-	 routeId, svcId, prty, srcSmeId, dstSmeId, 
-	 txtLength, bodyLen, body);
+	(A_id, A_st, A_submitTime, A_validTime, A_attempts, A_lastResult,
+	 A_lastTryTime, A_nextTryTime, A_oa, A_da, A_dda, A_mr, A_svcType, A_dr, A_br,
+	 A_srcMsc, A_srcImsi, A_srcSmeN, A_dstMsc, A_dstImsi, A_dstSmeN,
+	 A_routeId, A_svcId, A_prty, A_srcSmeId, A_dstSmeId, 
+	 A_txtLength, A_bodyLen, A_body);
    END IF;
    
-   IF bill != 0 THEN
+   IF A_bill != 0 THEN
    	SELECT SMS_BILL_SEQ.NEXTVAL INTO billId FROM DUAL;
    	INSERT INTO SMS_BILL 
             (ID, MSG_ID, CALL_DIRECTION, RECORD_TYPE, SUBMIT, FINALIZED, STATUS,
@@ -177,10 +177,10 @@ BEGIN
              OTHER_ADDR, OTHER_TON, OTHER_NPI,
              ROUTE_ID, SERVICE_CODE, TXT_LENGTH) 
 	VALUES 
-            (billId, id, 'O', 10, submitTime, lastTryTime, st, 
-      	     oaVal, oaTon, oaNpi, srcImsi, srcMsc,
-             daVal, daTon, daNpi, 
-             routeId, svcId, txtLength);
+            (billId, A_id, 'O', 10, A_submitTime, A_lastTryTime, A_st, 
+      	     A_oaVal, A_oaTon, A_oaNpi, A_srcImsi, A_srcMsc,
+             A_daVal, A_daTon, A_daNpi, 
+             A_routeId, A_svcId, A_txtLength);
    
         SELECT SMS_BILL_SEQ.NEXTVAL INTO billId FROM DUAL;
         INSERT INTO SMS_BILL 
@@ -189,10 +189,10 @@ BEGIN
              OTHER_ADDR, OTHER_TON, OTHER_NPI, 
              ROUTE_ID, SERVICE_CODE, TXT_LENGTH) 
         VALUES 
-            (billId, id, 'I', 20, submitTime, lastTryTime, st, 
-             daVal, daTon, daNpi, dstImsi, dstMsc,
-             oaVal, oaTon, oaNpi, 
-             routeId, svcId, txtLength);
+            (billId, A_id, 'I', 20, A_submitTime, A_lastTryTime, A_st, 
+             A_daVal, A_daTon, A_daNpi, A_dstImsi, A_dstMsc,
+             A_oaVal, A_oaTon, A_oaNpi, 
+             A_routeId, A_svcId, A_txtLength);
    END IF;    	    
 
 END DO_FINALIZE_SMS;
