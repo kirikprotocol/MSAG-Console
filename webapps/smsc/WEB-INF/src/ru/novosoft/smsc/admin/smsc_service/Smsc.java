@@ -35,6 +35,8 @@ public class Smsc extends Service
 	private Component smsc_component = null;
 	private Method apply_routes_method = null;
 	private Method apply_aliases_method = null;
+  private Method load_routes_method = null;
+  private Method trace_route_method = null;
 	private Method lookup_profile_method = null;
 	private Method update_profile_method = null;
 	private Method flush_statistics_method = null;
@@ -116,7 +118,35 @@ public class Smsc extends Service
 		return out;
 	}
 
-	// todo add testRoutes() method
+  public synchronized String loadRoutes()
+      throws AdminException
+	{
+		String result = null;
+    if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+		{
+			refreshComponents();
+			Object res = call(smsc_component, load_routes_method, Type.Types[Type.StringType], new HashMap());
+      if (res instanceof String) result = (String)res;
+		}
+    return result;
+	}
+
+  public synchronized String traceRoute(String dstAddress, String srcAddress, String srcSysId)
+      throws AdminException
+	{
+		String result = null;
+    if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+		{
+			refreshComponents();
+      HashMap args = new HashMap();
+      args.put("dstAddress", dstAddress);
+      args.put("srcAddress", srcAddress);
+      args.put("srcSysId", srcSysId);
+			Object res = call(smsc_component, trace_route_method, Type.Types[Type.StringType], args);
+      if (res instanceof String) result = (String)res;
+		}
+    return result;
+	}
 
   public synchronized void applyRoutes(RouteSubjectManager routeSubjectManager) throws AdminException
 	{
@@ -228,8 +258,12 @@ public class Smsc extends Service
 		{
 			smsc_component = (Component) getInfo().getComponents().get("SMSC");
 			apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
-			apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
-			lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
+
+      apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
+      load_routes_method = (Method) smsc_component.getMethods().get("load_routes");
+      trace_route_method = (Method) smsc_component.getMethods().get("trace_route");
+
+      lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
 			update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
 			flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
 			process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");

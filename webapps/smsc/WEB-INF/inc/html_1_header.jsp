@@ -114,6 +114,7 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 			main_menu_submenu_item(out, "/subjects", "MENU0_SUBJECTS", "Subjects");
 			main_menu_submenu_item(out, "/routes",   "MENU0_ROUTES",   "Routes");
 			main_menu_submenu_item(out, "/profiles", "MENU0_PROFILES", "Profiles");
+      main_menu_submenu_item(out, "/tracer",   "MENU0_TRACER",   "Routes tracing");
 			main_menu_end_item(out);
 
 			main_menu_begin_item(out, "MENU0_Services_menu", "MENU0_Services_submenu", "Services");

@@ -62,6 +62,13 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	Method apply_services        ((unsigned)applyServicesMethod,       "apply_services",        empty_params, StringType);
 	Method apply_locale_resource ((unsigned)applyLocaleResourceMethod, "apply_locale_resources",empty_params, StringType);
 
+	Parameters trace_route_params;
+	trace_route_params["dstAddress"] = Parameter("dstAddress", StringType);
+	trace_route_params["srcAddress"] = Parameter("srcAddress", StringType);
+	trace_route_params["srcSysId"  ] = Parameter("srcSysId"  , StringType);
+	Method trace_route           ((unsigned)traceRouteMethod, "trace_route", trace_route_params, StringType);
+	Method load_routes           ((unsigned)loadRoutesMethod, "load_routes", empty_params, StringType);	
+	
 	Method lookup_profile((unsigned)lookupProfileMethod, "lookup_profile", lookup_params, StringType);
 	Method update_profile((unsigned)updateProfileMethod, "update_profile", update_params, LongType);
 
@@ -109,6 +116,9 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 
 	methods[log_get_categories.getName()] = log_get_categories;
 	methods[log_set_categories.getName()] = log_set_categories;
+	
+	methods[load_routes.getName()] = load_routes;
+	methods[trace_route.getName()] = trace_route;
 
 	smsc_app_runner.reset(0);
 }
@@ -192,6 +202,10 @@ throw (AdminException)
 			case logSetCategoriesMethod:
 				logSetCategories(args);
 				return Variant(true);
+			case loadRoutesMethod:
+                return loadRoutes();
+			case traceRouteMethod:
+                return traceRoute(args);
 
 			default:
 				logger.debug("unknown method \"%s\" [%u]", method.getName(), method.getId());
@@ -535,6 +549,28 @@ throw (AdminException)
 	configs.routesconfig->reload();
 	configs.smemanconfig->reload();
 	smsc_app_runner->getApp()->reloadRoutes(configs);
+}
+
+Variant SmscComponent::loadRoutes(void)
+    throw (AdminException)
+{
+    //smsc_app_runner->getApp()->reloadTestRoutes(configs);
+    return Variant("SmscComponent::loadRoutes called");
+}
+Variant SmscComponent::traceRoute(const Arguments &args)
+    throw (AdminException)
+{
+    const char *dstAddr  = args.Get("dstAddress").getStringValue();
+    const char *srcAddr  = args.Get("srcAddress").getStringValue();
+    const char *srcSysId = args.Get("srcSysId")  .getStringValue();
+
+    char msg[512];
+    sprintf(msg, "SmscComponent::traceRoute called for dst: %s, src: %s, systemId: %s",
+        (dstAddr)  ? dstAddr  :"null", 
+        (srcAddr)  ? srcAddr  :"null", 
+        (srcSysId) ? srcSysId :"null");
+    
+    return Variant(msg);
 }
 
 void SmscComponent::applyAliases()

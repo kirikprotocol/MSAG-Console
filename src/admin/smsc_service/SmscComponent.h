@@ -80,6 +80,8 @@ protected:
 	Variant logGetCategories(void);
 	void logSetCategories(const Arguments & args);
 
+    Variant loadRoutes(void) throw (AdminException);
+    Variant traceRoute(const Arguments &args) throw (AdminException);
 
 	SmscConfigs &configs;
 	Methods methods;
@@ -91,7 +93,7 @@ protected:
 		processCancelMessagesMethod,
 		mscRegistrateMethod, mscUnregisterMethod, mscBlockMethod, mscClearMethod, mscListMethod,
 		smeAddMethod, smeRemoveMethod, smeUpdateMethod, smeStatusMethod, smeDisconnectMethod,
-		logGetCategoriesMethod, logSetCategoriesMethod
+		logGetCategoriesMethod, logSetCategoriesMethod, traceRouteMethod, loadRoutesMethod
 	};
 
 	smsc::core::synchronization::Mutex mutex;
