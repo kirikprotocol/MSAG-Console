@@ -49,34 +49,32 @@ void SQLJob::process(Command& command, DataSource& ds)
     throw(CommandProcessException)
 {
     Connection* connection = ds.getConnection();
-    if (connection)
+    if (!connection) throw CommandProcessException();
+    Statement* stmt = 0;
+    
+    try 
     {
-        try 
+        stmt = connection->createStatement(sql);
+        if (stmt)
         {
-            Statement* stmt = connection->createStatement(sql);
-            if (stmt)
-            {
-                process(command, *stmt);
-                if (!isQuery) connection->commit();
-                delete stmt;
-            }
-            else
-            {
-                ds.freeConnection(connection);
-                throw CommandProcessException();
-            }
+            process(command, *stmt);
+            if (!isQuery) connection->commit();
+            delete stmt;
         }
-        catch(SQLException& exc)
+        else
         {
-            if (!isQuery) connection->rollback();
             ds.freeConnection(connection);
             throw CommandProcessException();
         }
     }
-    else
+    catch(Exception& exc)
     {
-        throw CommandProcessException();
+        if (stmt) delete stmt;
+        connection->rollback();
+        ds.freeConnection(connection);
+        throw CommandProcessException(exc);
     }
+
     ds.freeConnection(connection);
 }
 
@@ -125,7 +123,7 @@ void SQLJob::process(Command& command, Statement& stmt)
             catch (Exception& exc)
             {
                 if (rs) delete rs;
-                throw;
+                throw CommandProcessException(exc);
             }
         }
         else
