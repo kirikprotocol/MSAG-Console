@@ -4,6 +4,7 @@
 #include "File.hpp"
 #include "util/crc32.h"
 #include <string>
+#include "util/debug.h"
 
 namespace smsc{
 namespace core{
@@ -125,6 +126,7 @@ protected:
 
   void Rehash()
   {
+    __warning2__("disk hash rehashing %d/%d",count,size);
     File g;
     g.RWCreate((name+".tmp").c_str());
     DiskHashHeader h;
@@ -182,6 +184,7 @@ protected:
     remove(name.c_str());
     rename((name+".tmp").c_str(),name.c_str());
     f.RWOpen(name.c_str());
+    __warning__("rehashing finished");
   }
 
 public:
