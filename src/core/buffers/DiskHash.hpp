@@ -236,9 +236,15 @@ public:
     if(!fileopen)RTERROR("Attempt to insert into not opened hash file");
     if(!inplacekey || !inplaceval)RTERROR("Non inplace kv not implemented yet");
     int attempt=0;
+
+    if(count>=size*3/4)
+    {
+      Rehash();
+    }
+
     for(;;attempt++)
     {
-      if(attempt>=size/4)
+      if(attempt>=size/10)
       {
         Rehash();
         attempt=0;
