@@ -282,59 +282,63 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     ET96MAP_SM_RP_UI_T* ud )
 {
 #if defined USE_MAP
-  __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd dta len %d",ud->signalInfoLen);
-  setInvokeId(invokeId);
-  SMS sms;
-  Address src_addr;
-  Address dest_addr;
-  SMS_SUMBMIT_FORMAT_HEADER* ssfh = (SMS_SUMBMIT_FORMAT_HEADER*)ud->signalInfo;
-  __trace2__("MAP::DIALOG::ForwardReaq: MR(8) = 0x%x",ssfh->mr);
-  __trace2__("MAP::DIALOG::ForwardReaq: MSG_TYPE_IND(2) = 0x%x",ssfh->mg_type_ind);
-  __trace2__("MAP::DIALOG::ForwardReaq: MSG_VPF(2) = 0x%x",ssfh->tp_vp);
-  __trace2__("MAP::DIALOG::ForwardReaq: MSG_UDHI(1) = %d",ssfh->udhi);
-  __trace2__("MAP::DIALOG::ForwardReaq: MSG_REJECT_DUPL(1) = %d",ssfh->reject_dupl);
-  __trace2__("MAP::DIALOG::ForwardReaq: MSG_REPLY_PATH(1) = %d",ssfh->reply_path);
-  __trace2__("MAP::DIALOG::ForwardReaq: MSG_SRR(1) = %d",ssfh->srr);
-  MAP_SMS_ADDRESS* msa = (MAP_SMS_ADDRESS*)(ud->signalInfo+2);
-  __trace2__("MAP::DIALOG::ForwardReaq: MSA tonpi.va(8):0x%x, ton(3):0x%x, npi(4):0x%x, len(8):%d",
-             msa->tonpi,msa->st.ton,msa->st.npi,msa->len);
-  //__trace2__("MAP::DIALOG::ForwardReaq: user_data_len = user_data_len");
-  unsigned msa_len = msa->len/2+msa->len%2+2;
-  unsigned char protocol_id = *(unsigned char*)(ud->signalInfo+2+msa_len);
-  __trace2__("MAP::DIALOG::ForwardReaq: protocol_id = 0x%x",protocol_id);
-  unsigned char user_data_coding = *(unsigned char*)(ud->signalInfo+2+msa_len+1);
-  __trace2__("MAP::DIALOG::ForwardReaq: user_data_encoding = 0x%x",user_data_coding);
-  unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2);
-  __trace2__("MAP::DIALOG::ForwardReaq: user_data_len = %d",user_data_len);
-  unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1);
-  if ( user_data_coding == 0 ) // 7bit
-  {
-    MicroString ms;
-    Convert7BitToText(user_data,user_data_len,&ms);
-    sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
-    sms.setIntProperty(Tag::SMPP_DATA_CODING,0x0); // default
+  try{
+    __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd dta len %d",ud->signalInfoLen);
+    setInvokeId(invokeId);
+    SMS sms;
+    Address src_addr;
+    Address dest_addr;
+    SMS_SUMBMIT_FORMAT_HEADER* ssfh = (SMS_SUMBMIT_FORMAT_HEADER*)ud->signalInfo;
+    __trace2__("MAP::DIALOG::ForwardReaq: MR(8) = 0x%x",ssfh->mr);
+    __trace2__("MAP::DIALOG::ForwardReaq: MSG_TYPE_IND(2) = 0x%x",ssfh->mg_type_ind);
+    __trace2__("MAP::DIALOG::ForwardReaq: MSG_VPF(2) = 0x%x",ssfh->tp_vp);
+    __trace2__("MAP::DIALOG::ForwardReaq: MSG_UDHI(1) = %d",ssfh->udhi);
+    __trace2__("MAP::DIALOG::ForwardReaq: MSG_REJECT_DUPL(1) = %d",ssfh->reject_dupl);
+    __trace2__("MAP::DIALOG::ForwardReaq: MSG_REPLY_PATH(1) = %d",ssfh->reply_path);
+    __trace2__("MAP::DIALOG::ForwardReaq: MSG_SRR(1) = %d",ssfh->srr);
+    MAP_SMS_ADDRESS* msa = (MAP_SMS_ADDRESS*)(ud->signalInfo+2);
+    __trace2__("MAP::DIALOG::ForwardReaq: MSA tonpi.va(8):0x%x, ton(3):0x%x, npi(4):0x%x, len(8):%d",
+               msa->tonpi,msa->st.ton,msa->st.npi,msa->len);
+    //__trace2__("MAP::DIALOG::ForwardReaq: user_data_len = user_data_len");
+    unsigned msa_len = msa->len/2+msa->len%2+2;
+    unsigned char protocol_id = *(unsigned char*)(ud->signalInfo+2+msa_len);
+    __trace2__("MAP::DIALOG::ForwardReaq: protocol_id = 0x%x",protocol_id);
+    unsigned char user_data_coding = *(unsigned char*)(ud->signalInfo+2+msa_len+1);
+    __trace2__("MAP::DIALOG::ForwardReaq: user_data_encoding = 0x%x",user_data_coding);
+    unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2);
+    __trace2__("MAP::DIALOG::ForwardReaq: user_data_len = %d",user_data_len);
+    unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1);
+    if ( user_data_coding == 0 ) // 7bit
+    {
+      MicroString ms;
+      Convert7BitToText(user_data,user_data_len,&ms);
+      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
+      sms.setIntProperty(Tag::SMPP_DATA_CODING,0x0); // default
+    }
+    else if ( (user_data_coding & 0x06) == 0x04  ) // UCS2
+    {
+      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
+      sms.setIntProperty(Tag::SMPP_DATA_CODING,/*user_data_coding*/0x08);
+    }
+    unsigned esm_class = 0;
+    esm_class |= (ssfh->udhi?0x40:0);
+    esm_class |= (ssfh->reply_path?0x80:0);
+    sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
+    sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
+    sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
+    sms.setMessageReference(ssfh->mr);
+    ConvAddrMSISDN2Smc(srcAddr,&src_addr);
+    sms.setOriginatingAddress(src_addr);
+    ConvAddrMap2Smc(msa,&dest_addr);
+    sms.setDestinationAddress(dest_addr);
+    MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
+    SmscCommand cmd = SmscCommand::makeSumbmitSm(sms,((uint32_t)dialogId)&0xffff);
+    proxy->putIncomingCommand(cmd);
+    state = MAPST_WAIT_SUBMIT_RESPONSE;
+    __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd OK");
+  }catch(...){
+    __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd exception catched");
   }
-  else if ( (user_data_coding & 0x06) == 0x04  ) // UCS2
-  {
-    sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
-    sms.setIntProperty(Tag::SMPP_DATA_CODING,/*user_data_coding*/0x08);
-  }
-  unsigned esm_class = 0;
-  esm_class |= (ssfh->udhi?0x40:0);
-  esm_class |= (ssfh->reply_path?0x80:0);
-  sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
-  sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
-  sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
-  sms.setMessageReference(ssfh->mr);
-  ConvAddrMSISDN2Smc(srcAddr,&src_addr);
-  sms.setOriginatingAddress(src_addr);
-  ConvAddrMap2Smc(msa,&dest_addr);
-  sms.setDestinationAddress(dest_addr);
-  MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
-  SmscCommand cmd = SmscCommand::makeSumbmitSm(sms,((uint32_t)dialogId)&0xffff);
-  proxy->putIncomingCommand(cmd);
-  state = MAPST_WAIT_SUBMIT_RESPONSE;
-  __trace2__("MAP::MapDialog::Et96MapV2ForwardSmMOInd OK");
 #endif
   return ET96MAP_E_OK;
 }
@@ -436,45 +440,51 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
   __trace2__("MAP::Et96MapCloseInd state: 0x%x",state);
   if ( state == MAPST_READY_FOR_SENDSMS ){
     state = MAPST_READY_FOR_CLOSE;
-    __trace2__("MAP::Et96MapCloseInd state: REDY_FOR_SEND_SMS");
-    ET96MAP_APP_CNTX_T appContext;
-  	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
-  	appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
-
-    USHORT_T result;
-    
-    result = Et96MapOpenReq(ssn, dialogid, &appContext, &destMscAddr, &scAddr, 0, 0, 0 );
-    if ( result != ET96MAP_E_OK ) {
-      __trace2__("MAP::MapDialog::Et96MapCloseInd Et96MapOpenReq error 0x%x",result);
-      throw 0;
-    }
-
-    ET96MAP_SM_RP_OA_T smRpOa;
-	  smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
-	  smRpOa.addrLen = (m_scAddr.addressLength+1)/2+1;
-	  smRpOa.addr[0] = m_scAddr.typeOfAddress;
-	  memcpy( smRpOa.addr+1, m_scAddr.address, (m_scAddr.addressLength+1)/2 );
-
-    //auto_ptr<ET96MAP_SM_RP_UI_T> ui(mkDeliverPDU(sms.get()));// = mkDeliverPDU( oaddress, message ); 
-    ET96MAP_SM_RP_UI_T* ui;
-    auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
-    mkDeliverPDU(sms.get(),ui);
-
-    __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
-	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, ui, FALSE);
-	  if( result != ET96MAP_E_OK ) {
-      __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq error 0x%x",result);
-	  }
-    __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq OK");
-  	result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
-    __trace2__("MAP::send response to SMSC");
-    {
-      SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,0);
+    try{
+      __trace2__("MAP::Et96MapCloseInd state: REDY_FOR_SEND_SMS");
+      ET96MAP_APP_CNTX_T appContext;
+    	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
+    	appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
+  
+      USHORT_T result;
+      
+      result = Et96MapOpenReq(ssn, dialogid, &appContext, &destMscAddr, &scAddr, 0, 0, 0 );
+      if ( result != ET96MAP_E_OK ) {
+        __trace2__("MAP::MapDialog::Et96MapCloseInd Et96MapOpenReq error 0x%x",result);
+        throw 0;
+      }
+  
+      ET96MAP_SM_RP_OA_T smRpOa;
+  	  smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
+  	  smRpOa.addrLen = (m_scAddr.addressLength+1)/2+1;
+  	  smRpOa.addr[0] = m_scAddr.typeOfAddress;
+  	  memcpy( smRpOa.addr+1, m_scAddr.address, (m_scAddr.addressLength+1)/2 );
+  
+      //auto_ptr<ET96MAP_SM_RP_UI_T> ui(mkDeliverPDU(sms.get()));// = mkDeliverPDU( oaddress, message ); 
+      ET96MAP_SM_RP_UI_T* ui;
+      auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
+      mkDeliverPDU(sms.get(),ui);
+  
+      __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
+  	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, ui, FALSE);
+  	  if( result != ET96MAP_E_OK ) {
+        __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq error 0x%x",result);
+  	  }
+      __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq OK");
+    	result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
+      __trace2__("MAP::send response to SMSC");
+      {
+        SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,0);
+        MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+      }
+      __trace2__("MAP::send response to SMSC OK");
+      //return true;// :) optimization
+      return false;
+    }catch(...){
+      SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_FATAL);
       MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+      return true;
     }
-    __trace2__("MAP::send response to SMSC OK");
-    //return true;// :) optimization
-    return false;
   }
   else if (state == MAPST_READY_FOR_CLOSE)
   {
