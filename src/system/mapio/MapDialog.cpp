@@ -697,7 +697,7 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
                    sms->getOriginatingAddress().value,
                    sms->getDestinationAddress().getTypeOfNumber(),
                    sms->getDestinationAddress().getNumberingPlan(),
-                   sms->getDestinationAddress().value,
+                   sms->getDestinationAddress().value);
       }
 
 	    mkMapAddress( &m_msAddr, sms->getDestinationAddress().value, sms->getDestinationAddress().length );
