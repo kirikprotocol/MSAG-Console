@@ -221,16 +221,16 @@ void CheckList::saveHtml(bool printErrorCodes,
 		}
 		if (printErrorCodes)
 		{
-			os << "<td align=\"left\">";
 			if (tc->errCodes.size())
 			{
+				os << "<td align=\"left\" bgcolor=\"#ff8040\">";
 				copy(tc->errCodes.begin(), tc->errCodes.end(), ostream_iterator<int>(os, ", "));
+				os << "</td>" << endl;
 			}
 			else
 			{
-				os << "&nbsp;";
+				os << "<td align=\"left\">&nbsp;</td>" << endl;
 			}
-			os << "</td>" << endl;
 		}
 		if (printTcIds)
 		{
