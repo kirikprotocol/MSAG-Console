@@ -4,6 +4,8 @@
  
 #define _CB(a) USHORT_T a() {fprintf(stderr,"MAP::%s callback was called\n",#a);return MSG_OK;}
 
+#ifdef USE_MAPIO
+
 static void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 {
   Et96MapCloseReq (lssn,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
@@ -193,6 +195,24 @@ void MapIoTask::init()
   throw_if(Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK);
 }
 
+#else
+void MapIoTask::deinit()
+{
+  __trace2__("MapIoTask::deinit: no map stack on this platform");
+}
+
+void MapIoTask::dispatcher()
+{
+  Event e;
+  __trace2__("MapIoTask::dispatcher: no map stack on this platform");
+  e.Wait();
+}
+
+void MapIoTask::init()
+{
+  __trace2__("MapIoTask::init: no map stack on this platform");
+}
+#endif
 
 MapIoTask::MapDialogContainer* container = 0;
 MapIoTask::Mutex sync_object;
