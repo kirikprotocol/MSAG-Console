@@ -4,12 +4,15 @@
 #include "smpp/smpp_structures.h"
 #include "test/sms/SmsUtil.hpp"
 #include "util/debug.h"
+#include <string>
+#include <sstream>
 
 namespace smsc {
 namespace test {
 namespace smpp {
 
 using std::string;
+using std::ostringstream;
 using smsc::sms::Address;
 using smsc::sms::SMSId;
 using namespace smsc::smpp;
@@ -37,11 +40,12 @@ void dumpPdu(const char* tc, const string& id, Pdu* pdu)
 {
 	if (pdu)
 	{
+		ostringstream os;
+		os << *pdu;
 		time_t lt = time(NULL); tm t; char buf[30];
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, system time = %s",
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, system time = %s, pdu:\n%s",
 			tc, id.c_str(), pdu->get_header().get_sequenceNumber(),
-			asctime_r(localtime_r(&lt, &t), buf));
-		pdu->dump(TRACE_LOG_STREAM);
+			asctime_r(localtime_r(&lt, &t), buf), os.str().c_str());
 	}
 	else
 	{
@@ -159,6 +163,25 @@ public:
 
 bool operator==(PduAddress& a1, PduAddress& a2);
 bool operator!=(PduAddress& a1, PduAddress& a2);
+
+ostream& operator<< (ostream& os, PduXSm& p);
+ostream& operator<< (ostream& os, PduReplaceSm& p);
+ostream& operator<< (ostream& os, PduDataSm& p);
+ostream& operator<< (ostream& os, PduXSmResp& p);
+ostream& operator<< (ostream& os, PduReplaceSmResp& p);
+
+ostream& operator<< (ostream& os, SmppHeader& p);
+ostream& operator<< (ostream& os, PduAddress& p);
+ostream& operator<< (ostream& os, PduPartSm& p);
+ostream& operator<< (ostream& os, PduDataPartSm& p);
+ostream& operator<< (ostream& os, SmppOptional& p);
+
+/*
+const string str(SmppHeader& header);
+const string str(PduAddress& addr);
+const string str(PduPartSm& sm);
+const string str(SmppOptional& opt);
+*/
 
 }
 }

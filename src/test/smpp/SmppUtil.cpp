@@ -13,22 +13,26 @@ namespace test {
 namespace smpp {
 
 using smsc::test::conf::TestConfig;
+using smsc::test::util::operator<<;
 using namespace std;
 using namespace smsc::sms; //constants
 using namespace smsc::test::util;
 //using smsc::test::sms::SmsUtil;
 
+static const int MAX_OSTR_PRINT_SIZE = 50;
+
 void dumpSubmitSmPdu(const char* tc, const string& id, PduSubmitSm* pdu)
 {
 	if (pdu)
 	{
+		ostringstream os;
+		os << *pdu;
 		time_t lt = time(NULL); tm t; char buf[30];
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s",
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s, pdu:\n%s",
 			tc, id.c_str(), pdu->get_header().get_sequenceNumber(),
 			SmppUtil::getWaitTime(pdu->get_message().get_scheduleDeliveryTime(), time(NULL)),
 			SmppUtil::getValidTime(pdu->get_message().get_validityPeriod(), time(NULL)),
-			asctime_r(localtime_r(&lt, &t), buf));
-		pdu->dump(TRACE_LOG_STREAM);
+			asctime_r(localtime_r(&lt, &t), buf), os.str().c_str());
 	}
 	else
 	{
@@ -40,13 +44,14 @@ void dumpReplaceSmPdu(const char* tc, const string& id, PduReplaceSm* pdu)
 {
 	if (pdu)
 	{
+		ostringstream os;
+		os << *pdu;
 		time_t lt = time(NULL); tm t; char buf[30];
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s",
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s, pdu:\n%s",
 			tc, id.c_str(), pdu->get_header().get_sequenceNumber(),
 			SmppUtil::getWaitTime(pdu->get_scheduleDeliveryTime(), time(NULL)),
 			SmppUtil::getValidTime(pdu->get_validityPeriod(), time(NULL)),
-			asctime_r(localtime_r(&lt, &t), buf));
-		pdu->dump(TRACE_LOG_STREAM); \
+			asctime_r(localtime_r(&lt, &t), buf), os.str().c_str());
 	}
 	else
 	{
@@ -637,6 +642,204 @@ bool operator==(PduAddress& a1, PduAddress& a2)
 bool operator!=(PduAddress& a1, PduAddress& a2)
 {
 	return !operator==(a1, a2);
+}
+
+#define __prop__(prop) \
+	os << "    " #prop " = " << p.get_##prop() << endl;
+
+#define __str_prop__(prop) \
+	os << "    " #prop " = " << (p.get_##prop() ? p.get_##prop() : "NULL") << endl; \
+	
+#define __ostr_prop__(prop) \
+	os << "    " #prop ": length = " << p.size_##prop() << endl; \
+	os << hex; \
+	const unsigned char* val_##prop = (const unsigned char*) p.get_##prop(); \
+	for (int i = 0; i < p.size_##prop() && i < MAX_OSTR_PRINT_SIZE; i++) { \
+		os << (unsigned int) *(val_##prop + i) << " "; \
+	} \
+	os << dec; \
+	os << (p.size_##prop() < MAX_OSTR_PRINT_SIZE ? "" : "...") << endl;
+
+ostream& operator<< (ostream& os, PduXSm& p)
+{
+	os << "PduXSm {" << endl;
+	os << p.get_header() << endl;
+	os << p.get_message() << endl;
+	os << p.get_optional() << endl;
+	os << "}";
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduReplaceSm& p)
+{
+	os << "PduReplaceSm {" << endl;
+	os << p.get_header() << endl;
+	__str_prop__(messageId);
+	__prop__(source);
+	__str_prop__(scheduleDeliveryTime);
+	__str_prop__(validityPeriod);
+	__prop__(registredDelivery);
+	__prop__(smDefaultMsgId);
+	__ostr_prop__(shortMessage);
+	os << "}";
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduDataSm& p)
+{
+	os << "PduDataSm {" << endl;
+	os << p.get_header() << endl;
+	os << p.get_data() << endl;
+	os << p.get_optional() << endl;
+	os << "}";
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduXSmResp& p)
+{
+	os << "PduXSmResp {" << endl;
+	os << p.get_header() << endl;
+	__str_prop__(messageId);
+	os << "}";
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduReplaceSmResp& p)
+{
+	os << "PduReplaceSmResp {" << endl;
+	os << p.get_header() << endl;
+	os << "}";
+	return os;
+}
+
+ostream& operator<< (ostream& os, SmppHeader& p)
+{
+	os << "  SmppHeader {" << endl;
+	__prop__(commandLength);
+	__prop__(commandId);
+	__prop__(commandStatus);
+	__prop__(sequenceNumber);
+	os << "  }";
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduAddress& addr)
+{
+    os << "." << addr.get_typeOfNumber() <<
+		"." << addr.get_numberingPlan() <<
+		"." << addr.get_value();
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduPartSm& p)
+{
+    os << "  PduPartSm {" << endl;
+	__str_prop__(serviceType);
+	__prop__(source);
+	__prop__(dest);
+	__prop__(numberOfDests);
+	//__ptr_property__(PduDestAddress,dests)
+	__prop__(esmClass);
+	__prop__(protocolId);
+	__prop__(priorityFlag);
+	__str_prop__(scheduleDeliveryTime);
+	__str_prop__(validityPeriod);
+	__prop__(registredDelivery);
+	__prop__(replaceIfPresentFlag);
+	__prop__(dataCoding);
+	__prop__(smDefaultMsgId);
+	__ostr_prop__(shortMessage);
+	os << "  }";
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduDataPartSm& p)
+{
+    os << "  PduPartSm {" << endl;
+	__str_prop__(serviceType);
+	__prop__(source);
+	__prop__(dest);
+	__prop__(esmClass);
+	__prop__(registredDelivery);
+	__prop__(dataCoding);
+	os << "  }";
+	return os;
+}
+
+#define __opt_prop__(prop) \
+	if (p.has_##prop()) { \
+		__prop__(prop); \
+	}
+
+#define __opt_str_prop__(prop) \
+	if (p.has_##prop()) { \
+		__str_prop__(prop); \
+	}
+
+#define __opt_ostr_prop__(prop) \
+	if (p.has_##prop()) { \
+		__ostr_prop__(prop); \
+	}
+
+#define __opt_int_arr_prop__(prop, size) \
+	if (p.has_##prop()) { \
+		os << "    " #prop " = "; \
+		os << hex; \
+		for (int i = 0; i < size; i++) { \
+			os << (unsigned int) p.get_##prop()[i] << " "; \
+		} \
+		os << dec; \
+	}
+
+ostream& operator<< (ostream& os, SmppOptional& p)
+{
+	os << "  SmppOptional {" << endl;
+	__opt_prop__(destAddrSubunit);
+	__opt_prop__(sourceAddrSubunit);
+	__opt_prop__(destNetworkType);
+	__opt_prop__(sourceNetworkType);
+	__opt_prop__(destBearerType);
+	__opt_prop__(sourceBearerType);
+	__opt_prop__(destTelematicsId);
+	__opt_prop__(sourceTelematicsId);
+	__opt_prop__(qosTimeToLive);
+	__opt_prop__(payloadType);
+	__opt_str_prop__(additionalStatusInfoText);
+	__opt_str_prop__(receiptedMessageId);
+	__opt_prop__(msMsgWaitFacilities);
+	__opt_prop__(privacyIndicator);
+	__opt_ostr_prop__(sourceSubaddress);
+	__opt_ostr_prop__(destSubaddress);
+	__opt_prop__(userMessageReference);
+	__opt_prop__(userResponseCode);
+	__opt_prop__(languageIndicator);
+	__opt_prop__(sourcePort);
+	__opt_prop__(destinationPort);
+	__opt_prop__(sarMsgRefNum);
+	__opt_prop__(sarTotalSegments);
+	__opt_prop__(sarSegmentSegnum);
+	__opt_prop__(scInterfaceVersion);
+	__opt_prop__(displayTime);
+	__opt_prop__(msValidity);
+	__opt_prop__(dpfResult);
+	__opt_prop__(setDpf);
+	__opt_prop__(msAvailableStatus);
+	__opt_int_arr_prop__(networkErrorCode, 3);
+	__opt_ostr_prop__(messagePayload);
+	__opt_prop__(deliveryFailureReason);
+	__opt_prop__(moreMessagesToSend);
+	__opt_prop__(messageState);
+	__opt_ostr_prop__(callbackNum);
+	__opt_prop__(callbackNumPresInd);
+	__opt_ostr_prop__(callbackNumAtag);
+	__opt_prop__(numberOfMessages);
+	__opt_prop__(smsSignal);
+	__opt_prop__(itsReplyType);
+	__opt_int_arr_prop__(itsSessionInfo, 2);
+	__opt_prop__(ussdServiceOp);
+	__opt_prop__(alertOnMessageDelivery);
+	os << "  }";
+	return os;
 }
 
 }
