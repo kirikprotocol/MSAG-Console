@@ -208,7 +208,7 @@
       <col width="50%">
       <col width="50%">
       <tr>
-        <td>
+        <td valign="top">
           <sm-ep:properties title="Route information" noColoredLines="true">
             <sm-ep:txt title="name" name="name" readonly="${!bean.add}" validation="nonEmpty"/>
             <sm-ep:txt title="notes" name="notes"/>
@@ -218,7 +218,7 @@
             <sm-ep:list title="provider" name="providerId" values="${providerIds}" valueTitles="${providers}"/>
           </sm-ep:properties>
         </td>
-        <td>
+        <td valign="top">
           <sm-ep:properties title="Route options" noColoredLines="true" noHeaders="true">
             <sm-ep:check title="active" name="active"/>
             <sm-ep:check title="allowed" name="enabling"/>
