@@ -21,6 +21,8 @@
 
   <section name="mail">
     <param name="domain" type="string">smsc.office.aurorisoft.com</param>
+    <param name="stripper" type="string">./mailreaper.pl</param>
+    <param name="format" type="string">#template=emailsmenotify#{from}="$$string import=from$$" {to}="$$string import=to$$" {subj}="$$string import=subj$$" {body}="$$string import=body$$"</param>
   </section>
 
   <section name="smtp">
@@ -30,6 +32,7 @@
 
   <section name="defaults">
     <param name="dailyLimit" type="int">20</param>
+    <param name="annotationSize" type="int">460</param>
   </section>
 
   <section name="StartupLoader">
