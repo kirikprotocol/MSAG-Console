@@ -6,7 +6,6 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.proxysme.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-	//ServiceIDForShowStatus = Constants.INFO_SME_ID;
 	TITLE="Proxy SME Administration";
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";

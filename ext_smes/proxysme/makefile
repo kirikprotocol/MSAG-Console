@@ -30,7 +30,9 @@ compile:
 	@mkdir -p $(SME_BUILDDIR)/conf
 	@mkdir -p $(SME_BUILDDIR)/jsp
 	@mkdir -p $(SME_BUILDDIR)/lib
-	@cp -f $(SMSC_BUILDDIR)/bin/proxysme/proxysme $(SME_BUILDDIR)/bin/service
+	@cp -f service $(SME_BUILDDIR)/bin
+	@cp -f log4cpp.properties $(SME_BUILDDIR)/log4cpp.properties
+	@cp -f $(SMSC_BUILDDIR)/bin/proxysme/proxysme $(SME_BUILDDIR)/bin/
 	@cp -f $(SMSC_BUILDDIR)/jars/proxysme.jar  $(SME_BUILDDIR)/lib/proxysme.jar
 #	@cp -f log4cpp.properties $(SME_BUILDDIR)/log4cpp.properties
 	@cp -f ../../config/proxysme/config.xml $(SME_BUILDDIR)/conf/config.xml
