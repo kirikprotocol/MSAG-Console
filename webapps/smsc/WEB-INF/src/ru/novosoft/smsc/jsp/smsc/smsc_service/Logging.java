@@ -40,8 +40,7 @@ public class Logging extends PageBean
         final int dotPos = childFullName.indexOf('.');
         if (dotPos > 0) {
           final String childName = childFullName.substring(0, dotPos);
-          final int dotPos2 = childFullName.indexOf('.', dotPos + 1);
-          LoggerCategoryInfo child = getOrCreateChild(childName, dotPos2 < 0 ? childFullName : childFullName.substring(0, dotPos2), "NOTSET");
+          LoggerCategoryInfo child = getOrCreateChild(childName, childName, "NOTSET");
           child.addChild(childFullName, childPriority);
         } else {
           childs.put(childFullName, new LoggerCategoryInfo(childFullName, childFullName, childPriority));
@@ -55,7 +54,7 @@ public class Logging extends PageBean
             LoggerCategoryInfo child = getOrCreateChild(childName, childFullName.substring(0, endIndex), "NOTSET");
             child.addChild(childFullName, childPriority);
           } else {
-            LoggerCategoryInfo child = getOrCreateChild(childName, childFullName, "NOTSET");
+            LoggerCategoryInfo child = getOrCreateChild(childName, childFullName, childPriority);
             child.priority = childPriority;
           }
         } else {
