@@ -43,7 +43,7 @@
 		<section name="DataProviders">
 
 			<section name="TestDataProvider">
-				<param name="address" type="string">+1597534682</param>
+				<param name="address" type="string">+333333333333</param>
 
 				<section name="DataSource">
 					<param name="type" type="string">OCI</param>
@@ -328,7 +328,7 @@ SelectJob:
 $$date arg=8 pattern="d/M/yy h:m:s t" default="now"$$
 $$date arg=8 pattern="dd.MM.yyyy hh-mm-ss t" default="today"$$
 $$date arg=8 pattern="d-MMM-yy H m s" default="yesterday"$$
-$$date arg=8 pattern="dd MMMM yyyy HH.mm.ss" default="tomoroow"$$
+$$date arg=8 pattern="dd MMMM yyyy HH.mm.ss" default="tomorrow"$$
 $$int8 arg=1 default=80$$
 $$int16 arg=2 default=160$$
 $$int32 arg=3 default=320$$
@@ -355,7 +355,7 @@ SelectJob:
 $$date arg=8 pattern="d/M/yy h:m:s t" default="now"$$
 $$date arg=8 pattern="dd.MM.yyyy hh-mm-ss t" default="today"$$
 $$date arg=8 pattern="d-MMM-yy H m s" default="yesterday"$$
-$$date arg=8 pattern="dd MMMM yyyy HH.mm.ss" default="tomoroow"$$
+$$date arg=8 pattern="dd MMMM yyyy HH.mm.ss" default="tomorrow"$$
 $$int8 arg=1 default=80$$
 $$int16 arg=2 default=160$$
 $$int32 arg=3 default=320$$
