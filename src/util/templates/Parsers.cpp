@@ -80,7 +80,7 @@ void Int8Parser::parse(std::string& input,
     if (exp) ctx.exportInt(exp, (int64_t)value);
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setInt8(arg, (int8_t)value);
+    if (arg) adapter.setInt8(arg, (int8_t)value);
     
     __trace2__("Arg-Pos: %s, Value: %d, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
@@ -112,7 +112,7 @@ void Int16Parser::parse(std::string& input,
     if (exp) ctx.exportInt(exp, (int64_t)value);
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setInt16(arg, (int16_t)value);
+    if (arg) adapter.setInt16(arg, (int16_t)value);
     
     __trace2__("Arg-Pos: %s, Value: %d, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
@@ -144,7 +144,7 @@ void Int32Parser::parse(std::string& input,
     if (exp) ctx.exportInt(exp, (int64_t)value);
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setInt32(arg, (int32_t)value);
+    if (arg) adapter.setInt32(arg, (int32_t)value);
     
     __trace2__("Arg-Pos: %s, Value: %ld, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
@@ -176,7 +176,7 @@ void Int64Parser::parse(std::string& input,
     if (exp) ctx.exportInt(exp, (int64_t)value);
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setInt64(arg, (int64_t)value);
+    if (arg) adapter.setInt64(arg, (int64_t)value);
     
     __trace2__("Arg-Pos: %s, Value: %lld, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
@@ -208,7 +208,7 @@ void Uint8Parser::parse(std::string& input,
     if (exp) ctx.exportInt(exp, (int64_t)value);
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setUint8(arg, (uint8_t)value);
+    if (arg) adapter.setUint8(arg, (uint8_t)value);
     
     __trace2__("Arg-Pos: %s, Value: %u, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
@@ -240,7 +240,7 @@ void Uint16Parser::parse(std::string& input,
     if (exp) ctx.exportInt(exp, (int64_t)value);
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setUint16(arg, (uint16_t)value);
+    if (arg) adapter.setUint16(arg, (uint16_t)value);
     
     __trace2__("Arg-Pos: %s, Value: %u, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
@@ -272,7 +272,7 @@ void Uint32Parser::parse(std::string& input,
     if (exp) ctx.exportInt(exp, (int64_t)value);
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setUint32(arg, (uint32_t)value);
+    if (arg) adapter.setUint32(arg, (uint32_t)value);
     
     __trace2__("Arg-Pos: %s, Value: %lu, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
@@ -304,7 +304,7 @@ void Uint64Parser::parse(std::string& input,
     if (exp) ctx.exportInt(exp, (int64_t)value);
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setUint64(arg, (uint64_t)value);
+    if (arg) adapter.setUint64(arg, (uint64_t)value);
     
     __trace2__("Arg-Pos: %s, Value: %llu, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
@@ -359,7 +359,7 @@ void StringParser::parse(std::string& input,
     if (exp) ctx.exportStr(exp, line.c_str());
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setString(arg, line.c_str());
+    if (arg) adapter.setString(arg, line.c_str());
     
     __trace2__("Arg-Pos: %s, Value: %s, Less: <%s>", 
                (arg) ? arg:"-", line.c_str(), input.c_str());
@@ -391,7 +391,7 @@ void FloatParser::parse(std::string& input,
     if (exp) ctx.exportFlt(exp, value);
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setFloat(arg, value);
+    if (arg) adapter.setFloat(arg, value);
     
     __trace2__("Arg-Pos: %s, Value: %f, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
@@ -423,7 +423,7 @@ void DoubleParser::parse(std::string& input,
     if (exp) ctx.exportDbl(exp, value);
 
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setDouble(arg, value);
+    if (arg) adapter.setDouble(arg, value);
     
     __trace2__("Arg-Pos: %s, Value: %le, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
@@ -455,7 +455,7 @@ void LongDoubleParser::parse(std::string& input,
     if (exp) ctx.exportLdl(exp, value);
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setLongDouble(arg, value);
+    if (arg) adapter.setLongDouble(arg, value);
     
     __trace2__("Arg-Pos: %s, Value: %Le, Less: <%s>", 
                (arg) ? arg:"-", value, input.c_str());
@@ -728,7 +728,8 @@ void DateTimeParser::parse(std::string& input,
     }
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-    adapter.setDateTime(arg, date);
+    if (arg) adapter.setDateTime(arg, date);
+
     if (!def) input.erase(0, strPos);
     __trace2__("Arg-Pos: %s, Date: %s, Less: <%s>", 
                (arg) ? arg:"-", ctime(&date), input.c_str());

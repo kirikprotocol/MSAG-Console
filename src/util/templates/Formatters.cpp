@@ -69,9 +69,9 @@ void Int8Formatter::format(std::string& output,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         
-        if ((!arg || adapter.isNull(arg)) && def)
+        if (!arg || adapter.isNull(arg))
         {
-            output += def;
+            if (def) output += def;
             return;
         }
         else if (!adapter.isNull(arg))
@@ -102,9 +102,9 @@ void Int16Formatter::format(std::string& output,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         
-        if ((!arg || adapter.isNull(arg)) && def)
+        if (!arg || adapter.isNull(arg))
         {
-            output += def;
+            if (def) output += def;
             return;
         }
         else if (!adapter.isNull(arg))
@@ -135,9 +135,9 @@ void Int32Formatter::format(std::string& output,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         
-        if ((!arg || adapter.isNull(arg)) && def)
+        if (!arg || adapter.isNull(arg))
         {
-            output += def;
+            if (def) output += def;
             return;
         }
         else if (!adapter.isNull(arg))
@@ -168,9 +168,9 @@ void Int64Formatter::format(std::string& output,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         
-        if ((!arg || adapter.isNull(arg)) && def)
+        if (!arg || adapter.isNull(arg))
         {
-            output += def;
+            if (def) output += def;
             return;
         }
         else if (!adapter.isNull(arg))
@@ -201,9 +201,9 @@ void Uint8Formatter::format(std::string& output,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         
-        if ((!arg || adapter.isNull(arg)) && def)
+        if (!arg || adapter.isNull(arg))
         {
-            output += def;
+            if (def) output += def;
             return;
         }
         else if (!adapter.isNull(arg))
@@ -234,9 +234,9 @@ void Uint16Formatter::format(std::string& output,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         
-        if ((!arg || adapter.isNull(arg)) && def)
+        if (!arg || adapter.isNull(arg))
         {
-            output += def;
+            if (def) output += def;
             return;
         }
         else if (!adapter.isNull(arg))
@@ -267,9 +267,9 @@ void Uint32Formatter::format(std::string& output,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         
-        if ((!arg || adapter.isNull(arg)) && def)
+        if (!arg || adapter.isNull(arg))
         {
-            output += def;
+            if (def) output += def;
             return;
         }
         else if (!adapter.isNull(arg))
@@ -300,9 +300,9 @@ void Uint64Formatter::format(std::string& output,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         
-        if ((!arg || adapter.isNull(arg)) && def)
+        if (!arg || adapter.isNull(arg))
         {
-            output += def;
+            if (def) output += def;
             return;
         }
         else if (!adapter.isNull(arg))
@@ -332,9 +332,10 @@ void StringFormatter::format(std::string& output,
     {
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
-        if ((!arg || adapter.isNull(arg)) && def)
+        
+        if (!arg || adapter.isNull(arg))
         {
-            str = def;
+            str = (def) ? def:0;
         }
         else if (!adapter.isNull(arg))
         {
@@ -399,9 +400,9 @@ void FloatFormatter::format(std::string& output,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         
-        if ((!arg || adapter.isNull(arg)) && def)
+        if (!arg || adapter.isNull(arg))
         {
-            output += def;
+            if (def) output += def;
             return;
         }
         else if (!adapter.isNull(arg))
@@ -440,9 +441,9 @@ void DoubleFormatter::format(std::string& output,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         
-        if ((!arg || adapter.isNull(arg)) && def)
+        if (!arg || adapter.isNull(arg))
         {
-            output += def;
+            if (def) output += def;
             return;
         }
         else if (!adapter.isNull(arg))
@@ -486,9 +487,9 @@ void LongDoubleFormatter::format(std::string& output,
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
         const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         
-        if ((!arg || adapter.isNull(arg)) && def)
+        if (!arg || adapter.isNull(arg))
         {
-            output += def;
+            if (def) output += def;
             return;
         }
         else if (!adapter.isNull(arg))
@@ -562,6 +563,10 @@ void DateTimeFormatter::format(std::string& output,
             output += def;
             return;
         }
+    }
+    else if (!def && !arg)
+    {
+        return;
     }
     else if (!adapter.isNull(arg))
     {
