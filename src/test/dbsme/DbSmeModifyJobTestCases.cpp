@@ -183,18 +183,18 @@ const string DbSmeInsertJobTestCases::processJobFirstOutput(const string& text,
 		ostringstream os;
 		bool res = true;
 		__tc__("processDbSmeRes.insert.ok"); __tc_ok__;
-		os << endl << "InsertJob1:" << endl;
-		os << "string: " << getOutputString(rec, NULL, res) << endl;
-		os << "date: " << getOutputDate(rec, NULL, dateFmt, res) << endl;
-		os << "float: " << getOutputFloat(rec, NULL, fltFmt, res) << endl;
-		os << "double: " << getOutputDouble(rec, NULL, dblFmt, res) << endl;
-		os << "long-double: " << getOutputLongDouble(rec, NULL, ldblFmt, res) << endl;
-		os << "int8: " << (int) getOutputInt8(rec, NULL, res) << endl;
-		os << "int16: " << (int) getOutputInt16(rec, NULL, res) << endl;
-		os << "int32: " << (int) getOutputInt32(rec, NULL, res) << endl;
-		os << "int64: " << (int) getOutputInt64(rec, NULL, res) << endl;
-		os << "id: " << rec->getId() << endl;
-		os << "rows-affected: 1" << endl;
+		os << lineSeparator << "InsertJob1:" << lineSeparator;
+		os << "string: " << getOutputString(rec, NULL, res) << lineSeparator;
+		os << "date: " << getOutputDate(rec, NULL, dateFmt, res) << lineSeparator;
+		os << "float: " << getOutputFloat(rec, NULL, fltFmt, res) << lineSeparator;
+		os << "double: " << getOutputDouble(rec, NULL, dblFmt, res) << lineSeparator;
+		os << "long-double: " << getOutputLongDouble(rec, NULL, ldblFmt, res) << lineSeparator;
+		os << "int8: " << (int) getOutputInt8(rec, NULL, res) << lineSeparator;
+		os << "int16: " << (int) getOutputInt16(rec, NULL, res) << lineSeparator;
+		os << "int32: " << (int) getOutputInt32(rec, NULL, res) << lineSeparator;
+		os << "int64: " << (int) getOutputInt64(rec, NULL, res) << lineSeparator;
+		os << "id: " << rec->getId() << lineSeparator;
+		os << "rows-affected: 1" << lineSeparator;
 		__require__(res);
 		dbSmeReg->putRecord(rec);
 		return os.str();
@@ -205,18 +205,18 @@ const string DbSmeInsertJobTestCases::processJobFirstOutput(const string& text,
 		bool res = true;
 		__tc__("processDbSmeRes.insert.ok"); __tc_ok__;
 		static const DateFormatter df("dd-MM-yyyy HH:mm:ss");
-		os << endl << "InsertJob2:" << endl;
-		os << "string: " << getOutputString(rec, NULL, res) << endl;
-		os << "date: " << getOutputDate(rec, NULL, dateFmt, res) << endl;
-		os << "float: " << getOutputFloat(rec, NULL, fltFmt, res) << endl;
-		os << "double: " << getOutputDouble(rec, NULL, dblFmt, res) << endl;
-		os << "long-double: " << getOutputLongDouble(rec, NULL, ldblFmt, res) << endl;
-		os << "uint8: " << (int) getOutputUint8(rec, NULL, res) << endl;
-		os << "uint16: " << (int) getOutputUint16(rec, NULL, res) << endl;
-		os << "uint32: " << (int) getOutputUint32(rec, NULL, res) << endl;
-		os << "uint64: " << (int) getOutputUint64(rec, NULL, res) << endl;
-		os << "id: " << rec->getId() << endl;
-		os << "rows-affected: 1" << endl;
+		os << lineSeparator << "InsertJob2:" << lineSeparator;
+		os << "string: " << getOutputString(rec, NULL, res) << lineSeparator;
+		os << "date: " << getOutputDate(rec, NULL, dateFmt, res) << lineSeparator;
+		os << "float: " << getOutputFloat(rec, NULL, fltFmt, res) << lineSeparator;
+		os << "double: " << getOutputDouble(rec, NULL, dblFmt, res) << lineSeparator;
+		os << "long-double: " << getOutputLongDouble(rec, NULL, ldblFmt, res) << lineSeparator;
+		os << "uint8: " << (int) getOutputUint8(rec, NULL, res) << lineSeparator;
+		os << "uint16: " << (int) getOutputUint16(rec, NULL, res) << lineSeparator;
+		os << "uint32: " << (int) getOutputUint32(rec, NULL, res) << lineSeparator;
+		os << "uint64: " << (int) getOutputUint64(rec, NULL, res) << lineSeparator;
+		os << "id: " << rec->getId() << lineSeparator;
+		os << "rows-affected: 1" << lineSeparator;
 		__require__(res);
 		dbSmeReg->putRecord(rec);
 		return os.str();
@@ -226,14 +226,14 @@ const string DbSmeInsertJobTestCases::processJobFirstOutput(const string& text,
 		ostringstream os;
 		bool res = true;
 		__tc__("processDbSmeRes.insert.ok"); __tc_ok__;
-		os << endl << "InsertJob3:" << endl;
-		os << "id: " << rec->getId() << endl;
-		os << "rows-affected: 1" << endl;
+		os << lineSeparator << "InsertJob3:" << lineSeparator;
+		os << "id: " << rec->getId() << lineSeparator;
+		os << "rows-affected: 1" << lineSeparator;
 		__require__(res);
 		dbSmeReg->putRecord(rec);
 		return os.str();
 	}
-	return "";
+	__unreachable__("Invalid insert job");
 }
 
 const DateFormatter& DbSmeUpdateJobTestCases::getDateFormatter()
@@ -281,11 +281,11 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 		__tc__("processDbSmeRes.input.fromAddress"); __tc_ok__;
 		bool res = true;
 		ostringstream os;
-		os << endl << "UpdateJob1:" << endl;
-		os << "job-name: " << getOutputJobName(rec) << endl;
-		os << "from-address: " << getOutputFromAddress(rec) << endl;
-		os << "to-address: " << getOutputToAddress(rec) << endl;
-		os << "id: " << rec->getId() << endl;
+		os << lineSeparator << "UpdateJob1:" << lineSeparator;
+		os << "job-name: " << getOutputJobName(rec) << lineSeparator;
+		os << "from-address: " << getOutputFromAddress(rec) << lineSeparator;
+		os << "to-address: " << getOutputToAddress(rec) << lineSeparator;
+		os << "id: " << rec->getId() << lineSeparator;
 		int rowsAffected = 0;
 		DbSmeTestRecord* r = dbSmeReg->getRecord(rec->getId());
 		if (r)
@@ -296,7 +296,7 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 				" to " + rec->getToAddr());
 		}
 		__tc__("processDbSmeRes.update.recordsAffected"); __tc_ok__;
-		os << "rows-affected: " << rowsAffected << endl;
+		os << "rows-affected: " << rowsAffected << lineSeparator;
 		__require__(res);
 		return os.str();
 	}
@@ -312,8 +312,8 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 		{
 			__tc__("processDbSmeRes.update.ok"); __tc_ok__;
 			ostringstream os;
-			os << endl << "UpdateJob2:" << endl;
-			os << "id:" << rec->getId() << endl;
+			os << lineSeparator << "UpdateJob2:" << lineSeparator;
+			os << "id:" << rec->getId() << lineSeparator;
 			DbSmeRegistry::DbSmeTestRecordIterator* it = dbSmeReg->getRecords();
 			while (DbSmeTestRecord* r = it->next())
 			{
@@ -325,11 +325,11 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 			}
 			delete it;
 			__tc__("processDbSmeRes.update.recordsAffected"); __tc_ok__;
-			os << "rows-affected: " << dbSmeReg->size() << endl;
+			os << "rows-affected: " << dbSmeReg->size() << lineSeparator;
 			return os.str();
 		}
 	}
-	return "";
+	__unreachable__("Invalid update job");
 }
 
 DbSmeTestRecord* DbSmeDeleteJobTestCases::createDeleteAllJobInput()
@@ -349,9 +349,9 @@ const string DbSmeDeleteJobTestCases::processJobFirstOutput(const string& text,
 	__decl_tc__;
 	ostringstream os;
 	__tc__("processDbSmeRes.delete.ok"); __tc_ok__;
-	os << endl << "DeleteJob:" << endl;
+	os << lineSeparator << "DeleteJob:" << lineSeparator;
 	__tc__("processDbSmeRes.delete.recordsAffected"); __tc_ok__;
-	os << "rows-affected: " << dbSmeReg->size() << endl;
+	os << "rows-affected: " << dbSmeReg->size() << lineSeparator;
 	dbSmeReg->clear();
 	return os.str();
 }

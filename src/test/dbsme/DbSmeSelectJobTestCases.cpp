@@ -49,28 +49,28 @@ void DbSmeSelectJobTestCases::writeSelectJobRecord(ostream& os,
 	static const DoubleFormatter ldblFmt(6, false);
 
 	bool res = true;
-	os << endl << "SelectJob:" << endl;
+	os << lineSeparator << "SelectJob:" << lineSeparator;
 	defOutput->setDateType(DT_NOW);
 	defOutput->setDate(now);
-	os << getOutputDate(rec, defOutput, dateFmt1, res) << endl;
+	os << getOutputDate(rec, defOutput, dateFmt1, res) << lineSeparator;
 	defOutput->setDateType(DT_TODAY);
 	defOutput->setDate(getDate(DT_TODAY));
-	os << getOutputDate(rec, defOutput, dateFmt2, res) << endl;
+	os << getOutputDate(rec, defOutput, dateFmt2, res) << lineSeparator;
 	defOutput->setDateType(DT_YESTERDAY);
 	defOutput->setDate(getDate(DT_YESTERDAY));
-	os << getOutputDate(rec, defOutput, dateFmt3, res) << endl;
+	os << getOutputDate(rec, defOutput, dateFmt3, res) << lineSeparator;
 	defOutput->setDateType(DT_TOMORROW);
 	defOutput->setDate(getDate(DT_TOMORROW));
-	os << getOutputDate(rec, defOutput, dateFmt4, res) << endl;
+	os << getOutputDate(rec, defOutput, dateFmt4, res) << lineSeparator;
 
-	os << (int) getOutputInt8(rec, defOutput, res) << endl;
-	os << (int) getOutputInt16(rec, defOutput, res) << endl;
-	os << (int) getOutputInt32(rec, defOutput, res) << endl;
-	os << (int) getOutputInt64(rec, defOutput, res) << endl;
-	os << getOutputFloat(rec, defOutput, fltFmt, res) << endl;
-	os << getOutputDouble(rec, defOutput, dblFmt, res) << endl;
-	os << getOutputLongDouble(rec, defOutput, ldblFmt, res) << endl;
-	os << getOutputString(rec, defOutput, res) << endl;
+	os << (int) getOutputInt8(rec, defOutput, res) << lineSeparator;
+	os << (int) getOutputInt16(rec, defOutput, res) << lineSeparator;
+	os << (int) getOutputInt32(rec, defOutput, res) << lineSeparator;
+	os << (int) getOutputInt64(rec, defOutput, res) << lineSeparator;
+	os << getOutputFloat(rec, defOutput, fltFmt, res) << lineSeparator;
+	os << getOutputDouble(rec, defOutput, dblFmt, res) << lineSeparator;
+	os << getOutputLongDouble(rec, defOutput, ldblFmt, res) << lineSeparator;
+	os << getOutputString(rec, defOutput, res) << lineSeparator;
 	__require__(res);
 }
 
@@ -90,6 +90,7 @@ const string DbSmeSelectJobTestCases::processSelectNullsJobOutput(
 	defOutput.setString("Empty");
 	//defOutput.setDate(...);
 	__cfg_int__(timeCheckAccuracy);
+	string expected;
 	for (time_t t = time(NULL); t >= time(NULL) - timeCheckAccuracy; t--)
 	{
 		ostringstream os;
@@ -112,13 +113,13 @@ const string DbSmeSelectJobTestCases::processSelectNullsJobOutput(
 			return dbSmeRespQueryNull;
 		}
 		__tc__("processDbSmeRes.select.multipleRecords"); __tc_ok__;
-		string expected = os.str();
+		expected = os.str();
 		if (expected.find(text) != string::npos)
 		{
 			return expected;
 		}
 	}
-	return "";
+	return expected;
 }
 
 const string DbSmeSelectJobTestCases::processSelectValuesJobOutput()
@@ -174,16 +175,16 @@ const string DbSmeSelectJobTestCases::processSelectNoDefaultsJobOutput()
 	{
 		__require__(r->checkId());
 		count++;
-		os << endl << "SelectJob:" << endl;
-		os << getOutputDate(r, NULL, dateFmt, res) << endl;
-		os << (int) getOutputInt8(r, NULL, res) << endl;
-		os << (int) getOutputInt16(r, NULL, res) << endl;
-		os << (int) getOutputInt32(r, NULL, res) << endl;
-		os << (int) getOutputInt64(r, NULL, res) << endl;
-		os << getOutputFloat(r, NULL, fltFmt, res) << endl;
-		os << getOutputDouble(r, NULL, dblFmt, res) << endl;
-		os << getOutputLongDouble(r, NULL, ldblFmt, res) << endl;
-		os << getOutputString(r, NULL, res) << endl;
+		os << lineSeparator << "SelectJob:" << lineSeparator;
+		os << getOutputDate(r, NULL, dateFmt, res) << lineSeparator;
+		os << (int) getOutputInt8(r, NULL, res) << lineSeparator;
+		os << (int) getOutputInt16(r, NULL, res) << lineSeparator;
+		os << (int) getOutputInt32(r, NULL, res) << lineSeparator;
+		os << (int) getOutputInt64(r, NULL, res) << lineSeparator;
+		os << getOutputFloat(r, NULL, fltFmt, res) << lineSeparator;
+		os << getOutputDouble(r, NULL, dblFmt, res) << lineSeparator;
+		os << getOutputLongDouble(r, NULL, ldblFmt, res) << lineSeparator;
+		os << getOutputString(r, NULL, res) << lineSeparator;
 		if (!res)
 		{
 			break;
@@ -220,7 +221,7 @@ const string DbSmeSelectJobTestCases::processJobFirstOutput(const string& text,
 	{
 		return processSelectNoDefaultsJobOutput();
 	}
-	return "";
+	__unreachable__("Invalid select job");
 }
 
 }

@@ -83,11 +83,11 @@ const string DbSmeDateFormatJobTestCases::processJobFirstOutput(const string& te
 	__decl_tc__;
 	__tc__("processDbSmeRes.select.singleRecord"); __tc_ok__;
 	static const DateFormatter df("!@#$%^&*( )_+-=|\\:;\'<,>.?/yyyyyywMMMMMMMwwdddWhhhMMMMHHHWWmmmMMMssstyyyyMMddhhHHmmssttyyyyyyyyMMMMMMMMddddhhhhHHHHmmmmssssMMMMMyyMMMMMMdhHmsM");
-	static const string prefix("\nDate: ");
+	static const string prefix = lineSeparator + "Date: ";
 	int jobNum;
 	if (!sscanf(rec->getJob().c_str(), "DateFormatJob%d", &jobNum))
 	{
-		return "";
+		__unreachable__("Invalid date format job");
 	}
 	bool match = false;
 	string expected;
@@ -97,7 +97,7 @@ const string DbSmeDateFormatJobTestCases::processJobFirstOutput(const string& te
 		__require__(rec->getDefInput() && rec->getDefInput()->checkDate());
 		while (rec->getDefInput()->getDate() <= time(NULL))
 		{
-			expected = prefix + getOutputDate(rec, NULL, df, res) + "\n";
+			expected = prefix + getOutputDate(rec, NULL, df, res) + lineSeparator;
 			__require__(res);
 			if (expected.find(text) != string::npos)
 			{
@@ -119,11 +119,11 @@ const string DbSmeDateFormatJobTestCases::processJobFirstOutput(const string& te
 			default:
 				__unreachable__("Invalid jobNum");
 		}
-		expected = prefix + getOutputDate(rec, NULL, df, res) + "\n";
+		expected = prefix + getOutputDate(rec, NULL, df, res) + lineSeparator;
 		__require__(res);
 		return expected;
 	}
-	return "";
+	__unreachable__("Invalid date format job");
 }
 
 DbSmeTestRecord* DbSmeOtherFormatJobTestCases::newDefInput()
@@ -180,11 +180,11 @@ const string DbSmeOtherFormatJobTestCases::processJobFirstOutput(const string& t
 	__tc__("processDbSmeRes.select.singleRecord"); __tc_ok__;
 	bool res = true;
 	ostringstream os;
-	os << endl << "job-name: '" << getOutputJobName(rec) << "'" << endl;
-	os << "from-address: /" << getOutputFromAddress(rec) << "/" << endl;
-	os << "to-address: \\" << getOutputToAddress(rec) << "\\" << endl;
+	os << lineSeparator << "job-name: '" << getOutputJobName(rec) << "'" << lineSeparator;
+	os << "from-address: /" << getOutputFromAddress(rec) << "/" << lineSeparator;
+	os << "to-address: \\" << getOutputToAddress(rec) << "\\" << lineSeparator;
 	string str = getOutputString(rec, NULL, res);
-	os << "string: \"" << str << "\"," << endl;
+	os << "string: \"" << str << "\"," << lineSeparator;
 	__tc__("processDbSmeRes.output.string.left"); __tc_ok__;
 	__tc__("processDbSmeRes.output.string.right"); __tc_ok__;
 	__tc__("processDbSmeRes.output.string.center"); __tc_ok__;
@@ -192,29 +192,29 @@ const string DbSmeOtherFormatJobTestCases::processJobFirstOutput(const string& t
 	if (str.length() < fieldLen)
 	{
 		os << "string_right : _" << string(fieldLen - str.length(), ' ') <<
-			str << ";" << endl;
+			str << ";" << lineSeparator;
 		int tmp = (fieldLen - str.length()) / 2;
 		os << "string_center: -" << string(tmp, ' ') << str <<
-			string(fieldLen - tmp - str.length(), ' ') << "." << endl;
+			string(fieldLen - tmp - str.length(), ' ') << "." << lineSeparator;
 		os << "string_left  : +" << str <<
-			string(fieldLen - str.length(), ' ') << "?" << endl;
+			string(fieldLen - str.length(), ' ') << "?" << lineSeparator;
 	}
 	else
 	{
-		os << "string_right : _" << str << ";" << endl;
-		os << "string_center: -" << str << "." << endl;
-		os << "string_left  : +" << str << "?" << endl;
+		os << "string_right : _" << str << ";" << lineSeparator;
+		os << "string_center: -" << str << "." << lineSeparator;
+		os << "string_left  : +" << str << "?" << lineSeparator;
 	}
-	os << "int8: $" << (int) getOutputInt8(rec, NULL, res) << "!" << endl;
-	os << "int16: <" << (int) getOutputInt16(rec, NULL, res) << "@" << endl;
-	os << "int32: >" << (int) getOutputInt32(rec, NULL, res) << "#" << endl;
-	os << "int64: (" << (int) getOutputInt64(rec, NULL, res) << ")" << endl;
+	os << "int8: $" << (int) getOutputInt8(rec, NULL, res) << "!" << lineSeparator;
+	os << "int16: <" << (int) getOutputInt16(rec, NULL, res) << "@" << lineSeparator;
+	os << "int32: >" << (int) getOutputInt32(rec, NULL, res) << "#" << lineSeparator;
+	os << "int64: (" << (int) getOutputInt64(rec, NULL, res) << ")" << lineSeparator;
 	static const FloatFormatter ff(1);
 	static const DoubleFormatter df(3, true);
 	static const DoubleFormatter ldf(2, false);
-	os << "float: *" << getOutputFloat(rec, NULL, ff, res) << "%" << endl;
-	os << "double: &" << getOutputDouble(rec, NULL, df, res) << "|" << endl;
-	os << "long-double: =" << getOutputLongDouble(rec, NULL, ldf, res) << "^" << endl;
+	os << "float: *" << getOutputFloat(rec, NULL, ff, res) << "%" << lineSeparator;
+	os << "double: &" << getOutputDouble(rec, NULL, df, res) << "|" << lineSeparator;
+	os << "long-double: =" << getOutputLongDouble(rec, NULL, ldf, res) << "^" << lineSeparator;
 	__require__(res);
 	return os.str();
 }
