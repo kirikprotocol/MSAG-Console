@@ -104,7 +104,6 @@ getnameid[String msg] returns [String out] {
 }	:	(qname:QSTR {
 		    out = qname.getText().trim();
 		    out = out.substring(1,out.length()-1);
-		    System.out.println("NAME: "+out);
 		}) 
 		|(name:STR {
 		    out = name.getText();
@@ -236,10 +235,10 @@ altroute returns [RouteAlterCommand cmd] {
 			throw new NumberFormatException("Expecting integer value for <priority>");
 		    }
 		}) ?
-		( ACT_ADD    { cmd.setAction(RouteAlterCommand.ACTION_ADD); }
+		(( ACT_ADD   { cmd.setAction(RouteAlterCommand.ACTION_ADD); }
 		| ACT_DELETE { cmd.setAction(RouteAlterCommand.ACTION_DEL); })
 		( route_src[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_SRC); }
-		| route_dst[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_DST); })
+		| route_dst[cmd] { cmd.setTarget(RouteAlterCommand.TARGET_DST); }))?
 	;
 altroute_flags[RouteAlterCommand cmd]
 	:	( OPT_BILL   { cmd.setBill(true);   } 

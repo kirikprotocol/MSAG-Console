@@ -588,6 +588,7 @@ public CommandParser(ParserSharedInputState state) {
 					
 			break;
 		}
+		case EOF:
 		case ACT_ADD:
 		case ACT_DELETE:
 		case OPT_PRI:
@@ -616,6 +617,7 @@ public CommandParser(ParserSharedInputState state) {
 					
 			break;
 		}
+		case EOF:
 		case ACT_ADD:
 		case ACT_DELETE:
 		{
@@ -630,35 +632,52 @@ public CommandParser(ParserSharedInputState state) {
 		{
 		switch ( LA(1)) {
 		case ACT_ADD:
-		{
-			match(ACT_ADD);
-			cmd.setAction(RouteAlterCommand.ACTION_ADD);
-			break;
-		}
 		case ACT_DELETE:
 		{
-			match(ACT_DELETE);
-			cmd.setAction(RouteAlterCommand.ACTION_DEL);
+			{
+			switch ( LA(1)) {
+			case ACT_ADD:
+			{
+				match(ACT_ADD);
+				cmd.setAction(RouteAlterCommand.ACTION_ADD);
+				break;
+			}
+			case ACT_DELETE:
+			{
+				match(ACT_DELETE);
+				cmd.setAction(RouteAlterCommand.ACTION_DEL);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_SRC:
+			{
+				route_src(cmd);
+				cmd.setTarget(RouteAlterCommand.TARGET_SRC);
+				break;
+			}
+			case OPT_DST:
+			{
+				route_dst(cmd);
+				cmd.setTarget(RouteAlterCommand.TARGET_DST);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
 			break;
 		}
-		default:
+		case EOF:
 		{
-			throw new NoViableAltException(LT(1), getFilename());
-		}
-		}
-		}
-		{
-		switch ( LA(1)) {
-		case OPT_SRC:
-		{
-			route_src(cmd);
-			cmd.setTarget(RouteAlterCommand.TARGET_SRC);
-			break;
-		}
-		case OPT_DST:
-		{
-			route_dst(cmd);
-			cmd.setTarget(RouteAlterCommand.TARGET_DST);
 			break;
 		}
 		default:
@@ -975,7 +994,6 @@ public CommandParser(ParserSharedInputState state) {
 				
 						    out = qname.getText().trim();
 						    out = out.substring(1,out.length()-1);
-						    System.out.println("NAME: "+out);
 						
 				}
 				break;
@@ -1257,6 +1275,7 @@ public CommandParser(ParserSharedInputState state) {
 				cmd.setBill(false);
 				break;
 			}
+			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
 			case OPT_ARCH:
@@ -1288,6 +1307,7 @@ public CommandParser(ParserSharedInputState state) {
 				cmd.setArc(false);
 				break;
 			}
+			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
 			case OPT_ALLOW:
@@ -1317,6 +1337,7 @@ public CommandParser(ParserSharedInputState state) {
 				cmd.setAllow(false);
 				break;
 			}
+			case EOF:
 			case ACT_ADD:
 			case ACT_DELETE:
 			case OPT_SVCID:
@@ -1360,14 +1381,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop66:
+			_loop67:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop66;
+					break _loop67;
 				}
 				
 			} while (true);
