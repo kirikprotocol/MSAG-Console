@@ -113,6 +113,8 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 		{
 			PduSubmitSm* pdu = new PduSubmitSm();
 			SmppUtil::setupRandomCorrectSubmitSmPdu(pdu);
+			pdu->get_message().set_esmClass(
+				pdu->get_message().get_esmClass() & 0xc3); //Default message Type (i.e. normal message)
 			PduAddress addr;
 			SmppUtil::convert(smeAddr, &addr);
 			pdu->get_message().set_source(addr);
