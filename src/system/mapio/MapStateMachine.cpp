@@ -2272,6 +2272,10 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
 {
   Address addr;
   ConvAddrMSISDN2Smc(mapAddr,&addr);
+  mkMapAddress( &dialog->m_msAddr, addr.value, addr.length );
+  mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
+  mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
+  mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
   SmscCommand cmd = SmscCommand::makeHLRAlert(addr);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
 }
@@ -2305,6 +2309,7 @@ USHORT_T Et96MapVxAlertSCInd_Impl(
 {
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
+  dialog->version = version;
   MAP_TRY{
     __trace2__("MAP::%s dialog 0x%x",__FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
