@@ -70,9 +70,7 @@ public class PerfMon extends Applet implements Runnable {
 
         Thread thr = new Thread(this);
         thr.start();
-        Dimension sz = getSize();
-        setSize(sz.width - 1, sz.height - 1);
-        invalidate();
+        validate();
     }
 
     protected void gotFirstSnap(PerfSnap snap) {
@@ -139,9 +137,7 @@ public class PerfMon extends Applet implements Runnable {
         gbc.weighty = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         add(lg, gbc);
-        Dimension sz = getSize();
-        setSize(sz.width + 1, sz.height + 1);
-        invalidate();
+        validate();
     }
 
     boolean isStopping = false;
