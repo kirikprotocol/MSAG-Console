@@ -72,8 +72,8 @@ static inline void print(RouteRecord* record,const char* ppp= "")
 static inline 
 string AddrToString(Address& addr)
 {
-  char buff[128];
-  snprintf(buff,"%d.%d.%s\0",addr.plan,addr.type,addr.value);
+  char buff[128] = {0};
+  snprintf(buff,127,"%d.%d.%s\0",addr.plan,addr.type,addr.value);
   return string(buff);
 }
 

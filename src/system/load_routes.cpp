@@ -38,7 +38,7 @@ static inline void makeAddress(Address& addr,const string& mask)
   addr=Address(mask.c_str());
 }
 
-void loadRoutes(RouteManager* rm,RouteConfig& rc)
+void loadRoutes(RouteManager* rm,const RouteConfig& rc)
 {
   try
   {

@@ -183,7 +183,7 @@ protected:
 
 Smsc* SpeedMonitor::smsc=NULL;
 
-extern void loadRoutes(RouteManager* rm,smsc::util::config::route::RouteConfig& rc);
+extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteConfig& rc);
 
 void Smsc::init(const SmscConfigs& cfg)
 {

@@ -3,6 +3,7 @@
 
 #include "core/threads/ThreadPool.hpp"
 #include "util/config/Manager.h"
+#include "util/config/route/RouteConfig.h"
 #include "system/smppio/SmppSocketsManager.hpp"
 #include "smeman/smeman.h"
 #include "task_container.h"
@@ -42,6 +43,7 @@ using smsc::router::RouteManager;
 using smsc::router::RouteInfo;
 using smsc::distrlist::DistrListManager;
 using smsc::distrlist::DistrListProcess;
+using smsc::util::config::route::RouteConfig;
 //class smsc::store::MessageStore;
 
 template<class T>
