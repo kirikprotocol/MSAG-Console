@@ -2806,6 +2806,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   vector<unsigned char> umrList; //umrs of parts of merged message
   int umrIndex=-1;//index of current umr
   bool umrLast=true;//need to generate receipts for the rest of umrs
+  int savedCsn=sms.getConcatSeqNum();
 
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
@@ -3077,7 +3078,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       unsigned len;
       unsigned char* lst=(unsigned char*)sms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
       umrList.insert(umrList.end(),lst,lst+len);
-      umrIndex=sms.hasBinProperty(Tag::SMSC_CONCATINFO)?sms.getConcatSeqNum():0;
+      umrIndex=sms.hasBinProperty(Tag::SMSC_CONCATINFO)?savedCsn:0;
     }
   }
 
