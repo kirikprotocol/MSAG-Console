@@ -7,7 +7,9 @@
 
 #if !defined (HEADER_A_PTR_H)
 #define HEADER_A_PTR_H
+#ifdef _WIN32
 #pragma warning(disable:4284)
+#endif
 /**
   \class a_ptr
   \brief —торож динамически распределенной пам€ти.
@@ -56,6 +58,8 @@ private:
   mutable T* arr;
   void operator = (const a_ptr_arr&) {}
 };
+#ifdef _WIN32
 #pragma warning(default:4284)
+#endif
 
 #endif //HEADER_A_PTR_H

@@ -26,6 +26,7 @@ unsigned char* GetW2CRussionTable(ConvEncodingEnum encoding)
     return w2c_8859_5_table;
   default:
     FatalError(__FILE__,__LINE__,"unsupported encoding %d",encoding);
+    return NULL;
   }
 }
 
@@ -43,6 +44,7 @@ unsigned short* GetC2WTable(ConvEncodingEnum encoding)
     return c2w_8859_5_table;
   default:
     FatalError(__FILE__,__LINE__,"unsupported encoding %d",encoding);
+    return NULL;
   }
 }
 

@@ -15,7 +15,7 @@ using namespace smsc::sms;
 using namespace smsc::smpp;
 using namespace smsc::core::buffers;
 
-static inline int getSmsText(SMS* sms,char* buf,int bufsize)
+static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize)
 {
   int coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
   //int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
@@ -41,7 +41,7 @@ static inline int getSmsText(SMS* sms,char* buf,int bufsize)
   return len;
 }
 
-static inline int getPduText(PduXSm* pdu,char* buf,int bufsize)
+static inline int getPduText(PduXSm* pdu,char* buf,unsigned bufsize)
 {
   int coding=pdu->get_message().get_dataCoding();
   unsigned len=pdu->get_message().get_smLength();

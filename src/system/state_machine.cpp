@@ -7,6 +7,7 @@
 #include "util/recoder/recode_dll.h"
 #include "core/buffers/Hash.hpp"
 #include "util/smstext.h"
+#include "util/Logger.h"
 
 namespace smsc{
 namespace system{
@@ -624,6 +625,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
   }catch(std::exception& e)
   {
     __trace2__("change state to delivered exception:%s",e.what());
+    log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.StateMachine");
+    log.error("Failed to change state to delivered for sms %lld",t.msgId);
     return DELIVERED_STATE;
   }
   try{
@@ -648,7 +651,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setMessageReference(sms.getMessageReference());
       rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
         sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-      rpt.setIntProperty(Tag::SMPP_MSG_STATE,sms.getState());
+      rpt.setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED_STATE);
       char addr[64];
       sms.getDestinationAddress().getText(addr,sizeof(addr));
       rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
