@@ -192,9 +192,9 @@ public:
     }
   }
 
-  void updateCounter(int counter, const char* srcSmeId, const char* routeId,int errorCode=0)
+  void updateCounter(int counter, smsc::smppgw::stat::StatInfo& si,int errorCode=0)
   {
-    statMan->updateCounter(counter, srcSmeId,  routeId,errorCode);
+    statMan->updateCounter(counter, si,errorCode);
   }
 
   void SaveStats()
@@ -230,7 +230,6 @@ public:
   void getPerfData(uint64_t *cnt)
   {
     MutexGuard g(perfMutex);
-    __trace2__("getPerfData: acceptedCounter=%lld",acceptedCounter);
     cnt[0]=acceptedCounter;
     cnt[1]=rejectedCounter;
     cnt[2]=deliveredCounter;

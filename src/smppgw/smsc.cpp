@@ -90,7 +90,6 @@ public:
       uint64_t perf[smsc::smppgw::performance::performanceCounters];
       // success, error, reschedule
       smsc->getPerfData(perf);
-      __trace2__("perf[0]=%lld",perf[0]);
       smsc::smppgw::performance::PerformanceData d;
       d.countersNumber=smsc::smppgw::performance::performanceCounters;
       for(i=0;i<smsc::smppgw::performance::performanceCounters;i++)
