@@ -138,21 +138,21 @@ void transLiterateSms(SMS* sms)
   if(udhi)
   {
     unsigned char* data=(unsigned char*)msg;
-    udhiDataLen=*data;
-    memcpy(udhiData,data,udhiDataLen+1);
-    msg=(short*)(data+udhiDataLen+1);
+    udhiDataLen=*data+1;
+    memcpy(udhiData,data,udhiDataLen);
+    msg=(short*)(data+udhiDataLen);
     len-=udhiDataLen;
   }
 
   buf=auto_ptr<char>(new char[len*2]);
   len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
-  buf8=auto_ptr<char>(new char[udhiDataLen+1+len*3+1]);
-  int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen+1,len*3);
+  buf8=auto_ptr<char>(new char[udhiDataLen+len*3+1]);
+  int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen,len*3);
   sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
   __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
   if(udhi)
   {
-    memcpy(buf8.get(),udhiData,udhiDataLen+1);
+    memcpy(buf8.get(),udhiData,udhiDataLen);
     newlen+=udhiDataLen;
   }
   if(pl)
