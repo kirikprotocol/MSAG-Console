@@ -1,27 +1,15 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE routes SYSTEM "routes.dtd">
 <routes>
-	<subject_def id="MTS_numbers"><mask value="+7902912????"/></subject_def>
-	<subject_def id="MTS_numbers 2"><mask value="+7902914????"/><mask value="+7902915????"/></subject_def>
-	<route id="Mobile to Mobile" billing="true" archiving="false" enabling="true">
+	<subject_def id="MTS_numbers" defSme="sme1">
+		<mask value="+7902912????"/>
+	</subject_def>
+	<route id="Mobile to Mobile" billing="true" archiving="false">
 		<source>
 			<subject id="MTS_numbers"/>
 		</source>
-		<destination sme="Mail SME">
+		<destination sme="sme1">
 			<subject id="MTS_numbers"/>
 		</destination>
-	</route>
-	<route id="Mobile to Mobile 2" billing="false" archiving="false" enabling="false">
-		<source><subject id="MTS_numbers"/></source>
-		<source><mask value="+7902999????"/></source>
-		<destination sme="Mail SME"><subject id="MTS_numbers"/></destination>
-	</route>
-	<route id="Mobile to Mobile 3" billing="true" archiving="true" enabling="false">
-		<source>
-			<subject id="MTS_numbers"/>
-		</source>
-		<destination sme="Mail SME"><mask value="+7902999????"/></destination>
-		<destination sme="Mail SME"><subject id="MTS_numbers"/></destination>
-		<destination sme="Mail SME"><subject id="MTS_numbers 2"/></destination>
 	</route>
 </routes>

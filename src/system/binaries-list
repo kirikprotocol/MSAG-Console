@@ -1,2 +1,2 @@
 system/smsc smscmain -L$(ORACLE_HOME)/lib -lutil-config-alias -lalias -lstore -lrouter -lsystem -lsystem -lprofiler -lsystem-smppio -lcore-threads -lthread -lsocket -lcore-buffers -lcore-network -lsystem -lsystem-smppio -lutil-config -llog4cpp -lxerces-c -lutil -lutil-xml -lsmeman -lutil-config-smeman -lutil-config-alias -lrt -ladmin-util -lutil -lstore $(__OBJECTS) $(__LIBRARIES)
-
+system/load_routes load_routes -lrouter -lsmeman -lsms -lutil-config-route -lutil-config -llog4cpp -lxerces-c -lutil -lutil-xml -lrt

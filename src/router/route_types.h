@@ -23,6 +23,7 @@ struct RouteInfo
   bool billing;
   bool paid;
   bool archived;
+	bool enabling;
   RouteId routeId;
   smsc::smeman::SmeSystemId smeSystemId;
   smsc::sms::Address source;
