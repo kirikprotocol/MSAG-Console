@@ -26,7 +26,8 @@ public:
 	~SmppPduChecker() {}
 	
 	set<uint32_t> checkSubmitSm(PduData* pduData);
-	set<uint32_t> checkReplaceSm(PduData* pduData, PduData* replacePduData);
+	set<uint32_t> checkReplaceSm(PduData* pduData, PduData* replacePduData,
+		PduFlag replacePduFlag);
 	void processSubmitSmResp(ResponseMonitor* monitor, PduSubmitSmResp& respPdu,
 		time_t respTime);
 	void processReplaceSmResp(ResponseMonitor* monitor, PduReplaceSmResp& respPdu,

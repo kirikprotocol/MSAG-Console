@@ -88,7 +88,7 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 }
 
 set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
-	PduData* replacePduData)
+	PduData* replacePduData, PduFlag replacePduFlag)
 {
 	__require__(pduData && pduData->pdu->get_commandId() == SUBMIT_SM);
 	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
@@ -131,6 +131,10 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 		if (pdu->get_message().get_source() != replacePdu->get_message().get_source())
 		{
 			res.insert(ESME_RINVSRCADR);
+		}
+		if (replacePduFlag != PDU_REQUIRED_FLAG)
+		{
+			res.insert(ESME_RREPLACEFAIL);
 		}
 	}
 	if (fixture->smeInfo.rangeOfAddress.length() && fixture->smeAddr != srcAddr)
@@ -315,6 +319,10 @@ void SmppPduChecker::processReplaceSmResp(ResponseMonitor* monitor,
 		case ESME_RINVMSGID:
 			__tc__("replaceSm.resp.checkCmdStatusInvalidMsgId");
 			__check__(1, checkRes.count(ESME_RINVMSGID));
+			break;
+		case ESME_RREPLACEFAIL:
+			__tc__("replaceSm.resp.checkCmdStatusReplaceFiled");
+			__check__(1, checkRes.count(ESME_RREPLACEFAIL));
 			break;
 		default:
 			__tc__("replaceSm.resp.checkCmdStatusOther");

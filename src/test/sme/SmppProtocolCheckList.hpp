@@ -18,7 +18,7 @@ class SmppProtocolCheckList : public CheckList
 void bindTc()
 {
 	__reg_tc__("bind",
-		"”становление IP соединени€ с SC и регистраци€");
+		"”становление IP соединени€ с SC и bind тест кейсы");
 	//bind.correct
 	__reg_tc__("bind.correct",
 		"”становление IP соединени€ с SC и регистраци€ с правильными параметрами");
@@ -56,7 +56,7 @@ void bindTc()
 
 void unbindTc()
 {
-	__reg_tc__("unbind", "«авершение соединени€ с SC");
+	__reg_tc__("unbind", "«авершение соединени€ с SC и unbind тест кейсы");
 	__reg_tc__("unbind.resp.checkCommandStatus",
 		"¬ unbind респонсе значение пол€ command_status равно ESME_ROK");
 	__reg_tc__("unbind.resp.checkSocketClose",
@@ -228,10 +228,6 @@ void replaceSmTc()
 		"ѕравильное врем€ получени€ респонса");
 	__reg_tc__("replaceSm.resp.checkHeader",
 		"ѕравильные значени€ полей хедера респонса (command_length, command_id, sequence_number)");
-	__reg_tc__("replaceSm.resp.checkTime",
-		"ѕравильное врем€ получени€ респонса");
-	__reg_tc__("replaceSm.resp.checkDuplicates",
-		"Ќа каждый реквест приходит единственный респонс");
 	__reg_tc__("replaceSm.resp.checkCmdStatusOk",
 		"ѕри отсутствии кода ошибки в поле command_status, выполн€ютс€ все услови€ дл€ нормальной доставки сообщени€ (пол€ реквеста заданы корректно, существует маршрут и т.п.)");
 	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidWaitTime",
@@ -246,6 +242,8 @@ void replaceSmTc()
 		"≈сли код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
 	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidMsgId",
 		"≈сли код ошибки ESME_RINVMSGID в поле command_status, то действительно message_id задан неправильно");
+	__reg_tc__("replaceSm.resp.checkCmdStatusReplaceFiled",
+		"≈сли код ошибки ESME_RREPLACEFAIL в поле command_status, то действительно замещаемое сообщение находитс€ в финальном состо€нии");
 	__reg_tc__("replaceSm.resp.checkCmdStatusOther",
 		"ѕрочие коды ошибок соответствуют спецификации");
 }
