@@ -159,6 +159,10 @@ public class Index extends IndexProperties
       dsProperties.setProperty("jdbc.source"  , config.getString("MCISme.DataSource.jdbc.source"));
       dsProperties.setProperty("jdbc.user"    , config.getString("MCISme.DataSource.dbUserName"));
       dsProperties.setProperty("jdbc.password", config.getString("MCISme.DataSource.dbUserPassword"));
+      dsProperties.setProperty("Pool.Size"                 , "5");
+      dsProperties.setProperty("Pool.getConnection.timeout", "30");
+      dsProperties.setProperty("Pool.getConnection.check"  , "true");
+      dsProperties.setProperty("Pool.fill.factor"          , "0");
       savePropertiesFile(location, MCI_PROF_DS_FILE, dsProperties, MCI_PROF_DS_COMMENT);
 
       Properties mscProperties = new Properties();
