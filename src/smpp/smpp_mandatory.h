@@ -25,43 +25,120 @@ inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
 	int cmdid = _pdu->commandId;
 	try
 	{
+		calcSmppPacketLength(_pdu);
 		switch( cmdid )
 		{
 		case BIND_RECIEVER:
 		case BIND_TRANSMITTER:
 		case BIND_TRANCIEVER:
 		{
+			PduBindTRX* pdu = reinterpret_cast<PduBindTRX*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillCOctetStr(stream,pdu->systemId);
+			fillCOctetStr(stream,pdu->password);
+			fillCOctetStr(stream,pdu->systemType);
+			fillX(stream,pdu->interfaceVersion);
+			fillPduAddress(stream,pdu->addressRange);
 			return true;
 		}
 		case BIND_TRANSMITTER_RESP:
 		case BIND_RECIEVER_RESP:
 		case BIND_TRANCIEVER_RESP:
 		{
+			PduBindTRXResp* pdu = reinterpret_cast<PduBindTRXResp*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillCOctetStr(stream,pdu->systemId);
+			fillX(stream,SmppOptionalTags::scInterfaceVersion);
+			fillX(stream,1);
+			fillX(stream,pdu->scInterfaceVersion);
 			return true;
 		}
 		case SUBMIT_SM:
 		case DELIVERY_SM:
 		case SUBMIT_MULTI:
 		{
+			PduXSm* pdu = reinterpret_cast<PduXsm*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			PduPartSm& sm = pdu->message;
+			fillCOctetStr(stream,sm.serviceType);
+			fillPduAddress(stream,sm.source);
+			if ( cmdid == SUBMIT_MULTI )
+			{
+				fillX(stream, sm.numberOfDests);
+				if ( sm.numberOfDests )
+					for ( int i=0; i < sm.numberOfDests; ++i )
+					{
+						fillX(stream,sm.dests[i].flag);
+						if ( sm.dests[i].flag == 0x01 )
+						{
+							fillPduAddress(stream,sm.dests[i]);
+						}
+						else if ( sm.dests[i].flag == 0x02 )
+						{
+							fillCOctetStr(stream,sm.dests[i].value);
+						}
+						else 
+						{
+							__warning__ ("flag value %x for dest address is unknown ",sm.dests[i].flag);
+							goto trap;
+						}
+					}
+			}
+			else
+			{
+				fillPduAddress(stream,sm.dest);
+			}
+			fillX(stream,sm.esmClass);
+			fillX(stream,sm.protocolId);
+			fillX(stream,sm.priorityFlag);
+			fillX(stream,sm.scheduleDeliveryTime);
+			fillX(stream,sm.validityPeriod);
+			fillX(stream,sm.registredDelivery);
+			fillX(stream,sm.replaceIfPresentFlag);
+			fillX(stream,sm.dataCoding);
+			fillX(stream,sm.smDefaultMsgId);
+			fillX(stream,sm.smLength);
+			fillOctetStr(stream,sm.shortMessage);
+			fillSmppOptional(stream,pdu->optional);
 			return true;
 		}
 		case SUBMIT_SM_RESP:
 		case DELIVERY_SM_RESP:
 		{
+			PduXsmResp* pdu = reinterpret_cast<PduXsmResp*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillCOctetStr(stream,pdu->messageId);
 			return true;
 		}
 		case SUBMIT_MULTI_RESP:
 		{
+			PduSubmitMultiResp* pdu = reinterpret_cast<PduSubmitMultiResp*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillCOctetStr(stream,pdu->messageId);
+			fillX(stream,pdu->noUnsuccess);
+			if ( pdu->noUnsuccess )
+			{
+				for ( int i=0; i<pdu->noUnsuccess; ++i )
+				{
+					fillPduAddress(stream,pdu->sme[i].addr);
+					fillX(stream,pdu->sme[i].errorStatusCode);
+				}
+			}
 			return true;
 		}
 		case UNBIND:
 		case UNBIND_RESP:
 		case GENERIC_NACK:
 		{
+			fillSmppHeader(stream,_pdu);
 			return true;
 		}
 		case OUTBIND:
 		{
+			PduOutBind* pdu = reinterpret_cast<PduOutBind*>(_pdu);
+			fillSmppHeader(stream,pdu->header);
+			fillCOctetStr(stream,pdu->systemId);
+			fillCOctetStr(stream,pdu->password);
 			return true;
 		}
 		case REPLACE_SM:

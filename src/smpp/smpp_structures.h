@@ -13,6 +13,149 @@
 namespace smsc{
 namespace smpp{
 
+
+namespace SmppOptionalTags{
+  static const uint16_t destAddrSubunit  /*dest_addr_subunit(5.3.2.1)*/ = 0x05;
+	static const uint16_t destNetworkType  /*dest_network_type(5.3.2.3)*/ = 0x06;
+	static const uint16_t dsetBearerType   /*dest_bearer_type(5.3.2.5)*/ = 0x07;
+	static const uint16_t destTelematicsId /*dest_telematics_id(5.3.2.7)*/ = 0x08;
+	static const uint16_t sourceAddrSubunit /*source_addr_subunit(5.3.2.2)*/ = 0x0d;
+	static const uint16_t sourceNetworkType /*source_network_type(5.3.2.4)*/ = 0x0e;
+	static const uint16_t sourceBearerType  /*source_bearer_type(5.3.2.6)*/  = 0x0f;
+	static const uint16_t sourceTelematicsId/*source_telematics_id(5.3.2.8)*/ = 0x010;
+	static const uint16_t qosTimeToLive     /*qos_time_to_live(5.3.2.9)*/ = 0x017;
+	static const uint16_t pyloadType        /*payload_type(5.3.2.10)*/ = 0x019;
+	static const uint16_t additionalStatisInfoText /*additional_status_info_text(5.3.2.11)*/ = 0x01d;
+	static const uint16_t receiptedMessageId /*receipted_message_id(5.3.2.12)*/ = 0x01;
+	static const uint16_t msMsgWaitFacilities/*ms_msg_wait_facilities(5.3.2.13)*/ = 0x030;
+	static const uint16_t privacyIndicator   /*privacy_indicator(5.3.2.14)*/ = 0x0201;
+	static const uint16_t sourceSubaddress   /*source_subaddress(5.3.2.15)*/ = 0x0202;
+	static const uint16_t destSubaddress     /*dest_subaddress(5.3.2.16)*/ = 0x0203;
+  static const uint16_t userMessageReference /*user_message_reference(5.3.2.17)*/ = 0x0204;
+	static const uint16_t userResponseCode   /*user_response_code(5.3.2.18)*/  = 0x0205;
+	static const uint16_t sourcePort         /*source_port(5.3.2.20)*/ = 0x020a;
+	static const uint16_t destinationPort    /*destination_port(5.3.2.21)*/ = 0x020b;
+	static const uint16_t sarMsgRefNum       /*sar_msg_ref_num(5.3.2.22)*/ = 0x020c;
+	static const uint16_t languageIndicator  /*language_indecator(5.3.2.19)*/ = 0x020d;
+	static const uint16_t sarTotalSegments   /*sar_total_segments(5.3.2.23)*/ = 0x020e;
+	static const uint16_t sarSegmentSegnum   /*sar_segment_seqnum(5.3.2.24)*/ = 0x020f;
+	static const uint16_t scInterfaceVersion /*sc_interface_version(5.3.2.25)*/ = 0x0210;
+	static const uint16_t callbackNumPressInd /*callback_num_pres_ind(5.3.2.37)*/ = 0x0302;
+	static const uint16_t callbackNumAtag     /*callback_num_atag(5.3.2.38)*/ = 0x0303;
+	static const uint16_t numberOfMessages    /*number_of_messages(5.3.2.39)*/ = 0x0304;
+  static const uint16_t callbackNum         /*callback_num(5.3.2.36)*/  = 0x0381;
+	static const uint16_t dpfRequit           /*dpf_result(5.3.2.28)*/  = 0x0420;
+	static const uint16_t setDpf              /*set_dpf(5.3.2.29)*/ = 0x0421;
+	static const uint16_t msAvilableStatus    /*ms_available_status(5.3.2.30)*/ = 0x0422;
+	static const uint16_t networkErrCode      /*network_error_code(5.3.2.31)*/ = 0x0423;
+	static const uint16_t messagePyload       /*message_payload(5.3.2.32)*/ = 0x0424;
+	static const uint16_t deliveryFailureReason /*delivery_failure_reason(5.3.2.33)*/ = 0x0425;
+	static const uint16_t moreMessagesToSend  /*more_messages_to_send(5.3.2.34)*/ = 0x0426;
+	static const uint16_t messageState        /*message_state(5.3.2.35)*/ = 0x0427;
+  static const uint16_t ussdServiceOp       /*ussd_service_op(5.3.2.44)*/ = 0x0501;
+	static const uint16_t displayTime         /*display_time(5.3.2.26)*/ = 0x1201;
+	static const uint16_t smsSignal           /*sms_signal(5.3.2.40)*/ = 0x1203;
+	static const uint16_t msVakidity          /*ms_validity(5.3.2.27)*/ = 0x1204;
+	static const uint16_t alertOnMessageDelivery /*alert_on_message_delivery(5.3.2.41)*/ = 0x130c;
+  static const uint16_t itsReplayType 			/*its_reply_type(5.3.2.42)*/ = 0x1380;
+  static const uint16_t itsSessionInfo    /*its_session_info(5.3.2.43)*/ = 0x1383;
+};
+
+namespace SmppOptionalLength{
+  static const uint16_t destAddrSubunit  /*dest_addr_subunit(5.3.2.1)*/ = 1;
+	static const uint16_t destNetworkType  /*dest_network_type(5.3.2.3)*/ = 1;
+	static const uint16_t dsetBearerType   /*dest_bearer_type(5.3.2.5)*/ = 1;
+	static const uint16_t destTelematicsId /*dest_telematics_id(5.3.2.7)*/ = 2;
+	static const uint16_t sourceAddrSubunit /*source_addr_subunit(5.3.2.2)*/ = 1;
+	static const uint16_t sourceNetworkType /*source_network_type(5.3.2.4)*/ = 1;
+	static const uint16_t sourceBearerType  /*source_bearer_type(5.3.2.6)*/  = 1;
+	static const uint16_t sourceTelematicsId/*source_telematics_id(5.3.2.8)*/ = 1;
+	static const uint16_t qosTimeToLive     /*qos_time_to_live(5.3.2.9)*/ = 4;
+	static const uint16_t pyloadType        /*payload_type(5.3.2.10)*/ = 1;
+	static const uint16_t additionalStatisInfoText /*additional_status_info_text(5.3.2.11)*/ = 256;
+	static const uint16_t receiptedMessageId /*receipted_message_id(5.3.2.12)*/ = 65;
+	static const uint16_t msMsgWaitFacilities/*ms_msg_wait_facilities(5.3.2.13)*/ = 1;
+	static const uint16_t privacyIndicator   /*privacy_indicator(5.3.2.14)*/ = 1;
+	static const uint16_t sourceSubaddress   /*source_subaddress(5.3.2.15)*/ = 23;
+	static const uint16_t destSubaddress     /*dest_subaddress(5.3.2.16)*/ = 23;
+  static const uint16_t userMessageReference /*user_message_reference(5.3.2.17)*/ = 2;
+	static const uint16_t userResponseCode   /*user_response_code(5.3.2.18)*/  = 1;
+	static const uint16_t sourcePort         /*source_port(5.3.2.20)*/ = 2;
+	static const uint16_t destinationPort    /*destination_port(5.3.2.21)*/ = 2;
+	static const uint16_t sarMsgRefNum       /*sar_msg_ref_num(5.3.2.22)*/ = 2;
+	static const uint16_t languageIndicator  /*language_indecator(5.3.2.19)*/ = 1;
+	static const uint16_t sarTotalSegments   /*sar_total_segments(5.3.2.23)*/ = 1;
+	static const uint16_t sarSegmentSegnum   /*sar_segment_seqnum(5.3.2.24)*/ = 1;
+	static const uint16_t scInterfaceVersion /*sc_interface_version(5.3.2.25)*/ = 1;
+	static const uint16_t callbackNumPressInd /*callback_num_pres_ind(5.3.2.37)*/ = 1;
+	static const uint16_t callbackNumAtag     /*callback_num_atag(5.3.2.38)*/ = 65;
+	static const uint16_t numberOfMessages    /*number_of_messages(5.3.2.39)*/ = 1;
+  static const uint16_t callbackNum         /*callback_num(5.3.2.36)*/  = 19;
+	static const uint16_t dpfRequit           /*dpf_result(5.3.2.28)*/  = 1;
+	static const uint16_t setDpf              /*set_dpf(5.3.2.29)*/ = 1;
+	static const uint16_t msAvilableStatus    /*ms_available_status(5.3.2.30)*/ = 1;
+	static const uint16_t networkErrCode      /*network_error_code(5.3.2.31)*/ = 3;
+	static const uint16_t messagePyload       /*message_payload(5.3.2.32)*/ = 0xffff;
+	static const uint16_t deliveryFailureReason /*delivery_failure_reason(5.3.2.33)*/ = 1;
+	static const uint16_t moreMessagesToSend  /*more_messages_to_send(5.3.2.34)*/ = 1;
+	static const uint16_t messageState        /*message_state(5.3.2.35)*/ = 1;
+  static const uint16_t ussdServiceOp       /*ussd_service_op(5.3.2.44)*/ = 1;
+	static const uint16_t displayTime         /*display_time(5.3.2.26)*/ = 1;
+	static const uint16_t smsSignal           /*sms_signal(5.3.2.40)*/ = 2;
+	static const uint16_t msVakidity          /*ms_validity(5.3.2.27)*/ = 1;
+	static const uint16_t alertOnMessageDelivery /*alert_on_message_delivery(5.3.2.41)*/ = 0;
+  static const uint16_t itsReplayType 			/*its_reply_type(5.3.2.42)*/ = 1;
+  static const uint16_t itsSessionInfo    /*its_session_info(5.3.2.43)*/ = 2;
+};
+
+namespace SmppOptionalFields{
+#define BIT(x) ((uint64_t)1<<(x))
+	static const uint64_t destAddrSubunit  /*dest_addr_subunit(5.3.2.1)*/ = BIT(0);
+	static const uint64_t destNetworkType  /*dest_network_type(5.3.2.3)*/ = BIT(1);
+	static const uint64_t dsetBearerType   /*dest_bearer_type(5.3.2.5)*/ = BIT(2);
+	static const uint64_t destTelematicsId /*dest_telematics_id(5.3.2.7)*/ = BIT(3);
+	static const uint64_t sourceAddrSubunit /*source_addr_subunit(5.3.2.2)*/ = BIT(4);
+	static const uint64_t sourceNetworkType /*source_network_type(5.3.2.4)*/ = BIT(5);
+	static const uint64_t sourceBearerType  /*source_bearer_type(5.3.2.6)*/  = BIT(6);
+	static const uint64_t sourceTelematicsId/*source_telematics_id(5.3.2.8)*/ = BIT(7);
+	static const uint64_t qosTimeToLive     /*qos_time_to_live(5.3.2.9)*/ = BIT(8);
+	static const uint64_t pyloadType        /*payload_type(5.3.2.10)*/ = BIT(9);
+	static const uint64_t additionalStatisInfoText /*additional_status_info_text(5.3.2.11)*/ = BIT(10);
+	static const uint64_t receiptedMessageId /*receipted_message_id(5.3.2.12)*/ = BIT(11);
+	static const uint64_t msMsgWaitFacilities/*ms_msg_wait_facilities(5.3.2.13)*/ = BIT(12);
+	static const uint64_t privacyIndicator   /*privacy_indicator(5.3.2.14)*/ = BIT(13);
+	static const uint64_t sourceSubaddress   /*source_subaddress(5.3.2.15)*/ = BIT(14);
+	static const uint64_t destSubaddress     /*dest_subaddress(5.3.2.16)*/ = BIT(15);
+  static const uint64_t userMessageReference /*user_message_reference(5.3.2.17)*/ = BIT(16);
+	static const uint64_t userResponseCode   /*user_response_code(5.3.2.18)*/  = BIT(17);
+	static const uint64_t sourcePort         /*source_port(5.3.2.20)*/ = BIT(18);
+	static const uint64_t destinationPort    /*destination_port(5.3.2.21)*/ = BIT(19);
+	static const uint64_t sarMsgRefNum       /*sar_msg_ref_num(5.3.2.22)*/ = BIT(20);
+	static const uint64_t languageIndicator  /*language_indecator(5.3.2.19)*/ = BIT(21);
+	static const uint64_t sarTotalSegments   /*sar_total_segments(5.3.2.23)*/ = BIT(22);
+	static const uint64_t sarSegmentSegnum   /*sar_segment_seqnum(5.3.2.24)*/ = BIT(23);
+	static const uint64_t scInterfaceVersion /*sc_interface_version(5.3.2.25)*/ = BIT(24);
+	static const uint64_t callbackNumPressInd /*callback_num_pres_ind(5.3.2.37)*/ = BIT(25);
+	static const uint64_t callbackNumAtag     /*callback_num_atag(5.3.2.38)*/ = BIT(26);
+	static const uint64_t numberOfMessages    /*number_of_messages(5.3.2.39)*/ = BIT(27);
+  static const uint64_t callbackNum         /*callback_num(5.3.2.36)*/  = BIT(28);
+	static const uint64_t dpfRequit           /*dpf_result(5.3.2.28)*/  = BIT(29);
+	static const uint64_t setDpf              /*set_dpf(5.3.2.29)*/ = BIT(30);
+	static const uint64_t msAvilableStatus    /*ms_available_status(5.3.2.30)*/ = BIT(31);
+	static const uint64_t networkErrCode      /*network_error_code(5.3.2.31)*/ = BIT(32);
+	static const uint64_t messagePyload       /*message_payload(5.3.2.32)*/ = BIT(33);
+	static const uint64_t deliveryFailureReason /*delivery_failure_reason(5.3.2.33)*/ = BIT(34);
+	static const uint64_t moreMessagesToSend  /*more_messages_to_send(5.3.2.34)*/ = BIT(35);
+	static const uint64_t messageState        /*message_state(5.3.2.35)*/ = BIT(36);
+  static const uint64_t ussdServiceOp       /*ussd_service_op(5.3.2.44)*/ = BIT(37);
+	static const uint64_t displayTime         /*display_time(5.3.2.26)*/ = BIT(38);
+	static const uint64_t smsSignal           /*sms_signal(5.3.2.40)*/ = BIT(39);
+	static const uint64_t msVakidity          /*ms_validity(5.3.2.27)*/ = BIT(40);
+	static const uint64_t alertOnMessageDelivery /*alert_on_message_delivery(5.3.2.41)*/ = BIT(41);
+  static const uint64_t itsReplayType 			/*its_reply_type(5.3.2.42)*/ = BIT(42);
+  static const uint64_t itsSessionInfo    /*its_session_info(5.3.2.43)*/ = BIT(43);
+};
+
 namespace SmppComandSet{ /* SMPP v3.4 (5.1.2.1) */
   static const int32_t GENERIC_NACK                 = 0x80000000;
   static const int32_t BIND_RECIEVER                = 0x00000001;
@@ -104,27 +247,53 @@ namespace UssdServiceOpValue{/* SMPP v3.4 (5.3.2.44) */
   static const USSN_CONFIRM           = 19;
 };
 
+#define __int_property__(type,field) \
+	type field;\
+	inline void set_##field(type value) {field = value;} \
+	inline type get_##field() {return field;}
+#define __ref_property__(type,field) \
+	type field;\
+	inline void set_##field(type& value) {field = value;} \
+	inline type& get_##field() {return field;}
+#define __ptr_property__(type,field) \
+	type* field;\
+	inline void set_##field(type* value) {field = value;} \
+	inline type* get_##field() {return field;}
+#define __intarr_property__(type,field,size) \
+	type field[size];\
+	inline void set_##field(type* value) { __require__(value!=NULL); memcpy(field,value,size*sizeof(type)); } \
+	inline const type* get_##field() { return field; }
+#define __cstr_property__(field)\
+	COStr field;\
+	inline void set_##field(const char* value) { __require__(value!=NULL); field.copy(vale); } \
+	inline const char* get_##field() { return field.cstr(); }
+#define __ostr_property__(field)\
+	OStr field;\
+	inline void set_##field(const char* value,int len) { __require__(value!=NULL); field.copy(vale,len); } \
+	inline const char* get_##field() { return field.cstr(); } \
+	inline int size_##field() { return field.size(); }
+
 struct SmppHeader : public MemoryManagerUnit
 {
-  uint32_t commandLength;
-  int32_t commandId;
-  int32_t commandStatus;
-  uint32_t sequenceNumber;
+  __int_property__(uint32_t,commandLength)
+  __int_property__(int32_t,commandId)
+  __int_property__(int32_t,commandStatus)
+  __int_property__(uint32_t,sequenceNumber)
 };
 
 struct PduAddress : public MemoryManagerUnit
 {
-  uint8_t typeOfNumber;
-  uint8_t numberingPlan;
-  COStr value;
+  __int_property__(uint8_t,typeOfNumber)
+  __int_property__(uint8_t,numberingPlan)
+  __cstr_property__(value)
   PduAddr() :
-    ton(0),
+    typeOfNumber(0),
     numberingPlan(0) {};
 };
 
 struct PduDestAddress : public PduAddress
 {
-	uint8_t flag;
+	__int_property__(uint8_t,flag)
   PduDestAddress() :
     flag(0),
     addrTon(0),
@@ -133,86 +302,113 @@ struct PduDestAddress : public PduAddress
 
 struct SmppOptional : public MemoryManagerUnit
 {
-  uint8_t   destAddrSubunit;
-  uint8_t   sourceAddrSubunit;
-  uint8_t   destNetworkType;
-  uint8_t   sourceNetworkType;
-  uint8_t   destBearerType;
-  uint8_t   sourceBearerType;
-  uint16_t  destTelematicsId;
-  uint8_t   sourceTelematicsId;
-  uint32_t  qosTimeToLive;
-  uint8_t   payloadType;
-  COStr     additionalStatusInfoText;
-  COStr     receiptedMessageId;
-  uint8_t   msMsgWaitFacilities;
-  uint8_t   privacyIndicator;
-  OStr      sourceSubaddress;
-  Ostr      destSubaddress;
-  uint16_t  userMessageReference;
-  uint8_t   userResponseCode;
-  uint8_t   languageIndicator;
-  uint16_t  sourcePort;
-  uint16_t  destinationPort;
-  uint16_t  sarMsgRefNum;
-  uint8_t   sarTotalSegments;
-  uint8_t   sarSegmentSegnum;
-  uint8_t   scInterfaceVersion;
-  uint8_t   displayTime;
-  uint8_t   msValidity;
-  uint8_t   dpfResult;
-  uint8_t   setDpf;
-  uint8_t   msAvilabilityStatus;
-  uint8_t   networkErrorCode[3];
-  OStr      messagePyload;
-  uint8_t   deliveryFailureReason;
-  uint8_t   moreMessagesToSend;
-  uint8_t   messageState;
-  OStr      callbackNum;
-  uint8_t   callbackNumPresInd;
-  OStr      callbackNumAtag;
-  uint8_t   numberOfMessages;
-  uint16_t  smsSignal;
-  bool      alertOnMessageDelivery;
-  uint8_t   itsReplyType;
-  uint8_t   itsSessionInfo[2];
-  uint8_t   ussdServiceOp;
+  uint64_t fields_present;
+#define _o_int_property__(type,field) \
+	type field;\
+	inline bool has_##field(){ return field_present |= SmppOptionalFields::#field; } \
+	inline void set_##field(type value) {field_present |= SmppOptionalFields::##field; field = value; } \
+	inline type get_##field() { ret0_if_fail(has_##field()); return field; }
+#define _o_intarr_property__(type,field,size)\
+	type field[size];\
+	inline bool has_##field(){ return field_present |= SmppOptionalFields::#field; } \
+	inline void set_##field(type* value) { __require__(value!=NULL); field_present |= SmppOptionalFields::##field; memcpy(field,value,size); } \
+	inline const type* get_##field() { ret0_if_fail(has_##field()); return field; }
+#define _o_cstr_property__(field)\
+	COStr field;\
+	inline bool has_##field(){ return field_present |= SmppOptionalFields::#field; } \
+	inline void set_##field(const char* value) { __require__(value!=NULL); field_present |= SmppOptionalFields::##field; field.copy(vale); } \
+	inline const char* get_##field() { ret0_if_fail(has_##field()); return field.cstr(); }
+#define _o_ostr_property__(field)\
+	OStr field;\
+	inline bool has_##field(){ return field_present |= SmppOptionalFields::#field; } \
+	inline void set_##field(const char* value,int len) { __require__(value!=NULL); field_present |= SmppOptionalFields::##field; field.copy(vale,len); } \
+	inline const char* get_##field() { ret0_if_fail(has_##field()); return field.cstr(); } \
+	inline int size_##field() { ret0_if_fail(has_##field()); return field.size(); }
+
+	_o_int_property__(uint8_t,destAddrSubunit)
+  _o_int_property__(uint8_t,destNetworkType)
+  _o_int_property__(uint8_t,sourceNetworkType)
+  _o_int_property__(uint8_t,destBearerType)
+  _o_int_property__(uint8_t,sourceBearerType)
+  _o_int_property__(uint16_t,destTelematicsId)
+  _o_int_property__(uint8_t,sourceTelematicsId)
+  _o_int_property__(uint32_t,qosTimeToLive)
+  _o_int_property__(uint8_t,payloadType)
+  _o_cstr_property__(additionalStatusInfoText)
+  _o_cstr_property__(receiptedMessageId)
+  _o_int_property__(uint8_t,msMsgWaitFacilities)
+  _o_int_property__(uint8_t,privacyIndicator)
+  _o_ostr_property__(sourceSubaddress)
+  _o_ostr_property__(destSubaddress)
+  _o_int_property__(uint16_t,userMessageReference)
+  _o_int_property__(uint8_t,userResponseCode)
+  _o_int_property__(uint8_t,languageIndicator)
+  _o_int_property__(uint16_t,sourcePort)
+  _o_int_property__(uint16_t,destinationPort)
+  _o_int_property__(uint16_t,sarMsgRefNum)
+  _o_int_property__(uint8_t,sarTotalSegments)
+  _o_int_property__(uint8_t,sarSegmentSegnum)
+  _o_int_property__(uint8_t,scInterfaceVersion)
+  _o_int_property__(uint8_t,displayTime)
+  _o_int_property__(uint8_t,msValidity)
+  _o_int_property__(uint8_t,dpfResult)
+  _o_int_property__(uint8_t,setDpf)
+  _o_int_property__(uint8_t,msAvilabilityStatus)
+  _o_intarr_property__(uint8_t,networkErrorCode,3)
+  _o_ostr_property__(messagePyload)
+  _o_int_property__(uint8_t,deliveryFailureReason)
+  _o_int_property__(uint8_t,moreMessagesToSend)
+  _o_int_property__(uint8_t,messageState)
+  _o_ostr_property(callbackNum)
+  _o_int_property__(uint8_t,callbackNumPresInd)
+  _o_ostr_property__(callbackNumAtag)
+  _o_int_property__(uint8_t,numberOfMessages)
+  _o_int_property__(uint16_t,smsSignal)
+  _o_int_property__(uint8_t,itsReplyType)
+  _o_intarr_property__(uint8_t,itsSessionInfo,2)
+  _o_int_property__(uint8_t,ussdServiceOp)
+  _o_int_property__(bool,alertOnMessageDelivery)
+#undef _o_int_property__
+#undef _o_intarr_property__
+#undef _o_cstr_property__
+#undef _o_ostr_property__
 };
 
 
 struct PduOutBind : public MemoryManagerUnit
 {
-  SmppHeader header;
-  COStr systemId;
-  COStr password;
+  __ref_property__(SmppHeader,header);
+  __cstr_property__(systemId);
+  __cstr_property__(password);
 };
 
 struct PduWithOnlyHeader : public MemoryManagerUnit
 {
-  SmppHeader header;
-}
+  __SmppHeader_property__(header);
+};
+
 typedef PduWithOnlyHeader PduUnbind;
 typedef PduWithOnlyHeader PduUnbindResp;
 typedef PduWithOnlyHeader PduGenericNack;
 
 struct PduPartSm : public MemoryManagerUnit
 {
-  COStr serviceType;
-  PduAddress source;
-  PduAddress dest;
-  uint8_t numberOfDests;
-  PduDestAddress* dests;
-  uint8_t esmClass;
-  uint8_t protocolId;
-  uint8_t priorityFlag;
-  COStr scheduleDeliveryTime;
-  COStr validityPeriod;
-  uint8_t registredDelivery;
-  uint8_t replaceIfPresentFlag;
-  uint8_t dataCoding;
-  uint8_t smDefaultMsgId;
-  uint8_t smLength;
-  OStr shortMessage;
+  __cstr_property__(serviceType)
+  __ref_property__(PduAddress,source)
+  __ref_property__(PduAddress,dest)
+  __int_property__(uint8_t,numberOfDests)
+  __ptr_property__(PduDestAddress,dests)
+  __int_property__(uint8_t,esmClass)
+  __int_property__(uint8_t,protocolId)
+  __int_property__(uint8_t,priorityFlag)
+  __cstr_property__(scheduleDeliveryTime)
+  __cstr_property__(validityPeriod)
+  __int_property__(uint8_t,registredDelivery)
+  __int_property__(uint8_t,replaceIfPresentFlag)
+  __int_property__(uint8_t,dataCoding)
+  __int_property__(uint8_t,smDefaultMsgId)
+  __int_property__(uint8_t,smLength)
+  __ostr_property__(shortMessage)
   PduPartSm() :
     numberOfDest(0),
     dests(0),
@@ -224,19 +420,19 @@ struct PduPartSm : public MemoryManagerUnit
     dataCoding(0),
     smDefaultMsgId(0),
     smLength(0) {}
-}
+};
 
 struct PduXSm : public MemoryManagerUnit
 {
-  SmppHeader   header;
-  PduPartSm    message;
-  SmppOptional optional;
+  __ref_property__(SmppHeader,header)
+  __ref_property__(PduPartSm,message)
+  __ref_property__(SmppOptional,optional)
 };
 
 struct PduXSmResp : public MemoryManagerUnit
 {
-  SmppHeader   header;
-  COStr        messageId;
+  __ref_property__(SmppHeader,header)
+  __cstr_property__(messageId)
 };
 
 typedef PduXSm  PduSubmitSm;
@@ -248,36 +444,36 @@ typedef PduXSmResp  PduDeliverySmResp;
 
 struct UnsuccessDeliveries : public MemoryManagerUnit
 {
-  PduAddress addr;
-  uint32_t errorStatusCode;
+  __ref_property_(PduAddress,addr)
+  __int_property__(uint32_t,errorStatusCode)
 };
 
 struct PduSubmitMultiResp : public MemoryManagerUnit
 {
-  SmppHeader   header;
-  COStr        messageId;
-  uint8_t      noUnsuccess;
-  UnsuccessDeliveries* sme;
+  __ref_property_(SmppHeader,header)
+  __cstr_property__(messageId)
+  __int_property__(uint8_t,noUnsuccess)
+  __ptr_property(UnsuccessDeliveries,sme)
 };
 
 
 
 struct PduBindTRX : public MemoryManagerUnit
 {
-  SmppHeader header;
-  COStr systemId;
-  COStr password;
-  COStr systemType;
-  uint8_t interfaceVersion;
-  PduAddress addressRange;
+  __ref_property__(SmppHeader,header)
+  __cstr_property__(systemId)
+  __cstr_property__(password)
+  __cstr_property__(systemType)
+  __int_property__(uint8_t,interfaceVersion)
+  __ref_property__(PduAddress,addressRange)
 };
 
 struct PduBindTRXResp : public MemoryManagerUnit
 {
-  SmppHeader header;
-  COStr systemId;
+  __ref_property__(SmppHeader,header)
+  __cstr_property__(systemId)
 //optional
-  int8_t scInterfaceVersion;
+  __int_property__(int8_t,scInterfaceVersion)
   PduBindTRXResp() :
     scInterfaceVersion(0) {};
 };
@@ -294,6 +490,13 @@ inline bool smppPduHasSms(SmppHeader* pdu)
   }
   return false;
 }
+
+#undef __int_property__
+#undef __ref_property__
+#undef __ptr_property__
+#undef __intarr_property__
+#undef __cstr_property__
+#undef __ostr_property__
 
 };
 };

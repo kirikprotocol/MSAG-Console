@@ -1,3 +1,8 @@
+/*
+	$id$
+*/
+
+
 #include "util/debug.h"
 #include "smpp_memory.h"
 #include "smpp_structures.h"
@@ -8,6 +13,113 @@
 
 namespace smsc{
 namespace smpp{
+
+inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
+{
+  __check_smpp_stream_invariant__ ( stream );
+	__require__(opt != NULL);
+
+#define macroFillField(field) \
+	if ( opt->has_##field() ){ \
+		__require__ (sizeof(opt->##field)==SmppOptionalLength::##field); \
+		fillX(stream,SmppOptionalTags::##field); \
+		fillX(stream,SmppOptionalLength::##field); \
+		fillX(stream,opt->##field);\
+	}
+
+#define macroFillOctetStr(field,maxlen) \
+	if ( opt->has_##field()&& opt->get_##field() != NULL){ \
+		int str_length = opt->size_##field(); \
+		__throw_if_fail__(((str_length<=maxlen)||(maxlen==-1))),VeryLargOctetStringException);\
+		fillX(stream,SmppOptionalTags::##field); \
+		fillX(stream,str_length); \
+		const char* text = opt->get_##field();\
+		for ( int k=0; k<str_length; ++k )\
+			fillX(stream,text[k]);\
+	}
+
+#define macroFillCOctetStr(field,maxlen) \
+	if ( opt->has_##field() && opt->get_##field() != NULL) \
+		const char* text = opt->get_##field();\
+		int str_length = strlen(text);\
+		__throw_if_fail__(((str_length<=maxlen)||(maxlen==-1))),VeryLargOctetStringException);\
+		fillX(stream,SmppOptionalTags::##field); \
+		fillX(stream,str_length+1); \
+		for ( int k=0; k<=str_length; ++k )\
+			fillX(stream,text[k]);\
+	}
+  
+	/*dest_addr_subunit(5.3.2.1)*/      macroFillField(destAddrSubunit);
+  /*dest_network_type(5.3.2.3)*/      macroFillField(destNetworkType);
+  /*dest_bearer_type(5.3.2.5)*/       macroFillField(dsetBearerType);
+  /*dest_telematics_id(5.3.2.7)*/     macroFillField(destTelematicsId);
+  /*source_addr_subunit(5.3.2.2)*/    macroFillField(sourceAddrSubunit);
+  /*source_network_type(5.3.2.4)*/    macroFillField(sourceNetworkType);
+  /*source_bearer_type(5.3.2.6)*/     macroFillField(sourceBearerType);
+  /*source_telematics_id(5.3.2.8)*/   macroFillField(sourceTelematicsId);
+  /*qos_time_to_live(5.3.2.9)*/       macroFillField(qosTimeToLive);
+  /*payload_type(5.3.2.10)*/          macroFillField(pyloadType);
+  /*additional_status_info_text(5.3.2.11)*/ 
+	                                    macroFillCOctetStr(additionalStatisInfoText,256);
+  /*receipted_message_id(5.3.2.12)*/  macroFillCOctetStr(receiptedMessageId,65);
+  /*ms_msg_wait_facilities(5.3.2.13)*/macroFillField(msMsgWaitFacilities);
+	/*privacy_indicator(5.3.2.14)*/     macroFillField(privacyIndicator);
+  /*source_subaddress(5.3.2.15)*/     macroFillOctetStr(sourceSubaddress,23);
+  /*dest_subaddress(5.3.2.16)*/       macroFillOctetStr(destSubaddress,23);
+	/*user_message_reference(5.3.2.17)*/macroFillField(userMessageReference);
+  /*user_response_code(5.3.2.18)*/    macroFillField(userResponseCode);
+  /*source_port(5.3.2.20)*/           macroFillField(sourcePort);
+  /*destination_port(5.3.2.21)*/      macroFillField(destinationPort);
+  /*sar_msg_ref_num(5.3.2.22)*/       macroFillField(sarMsgRefNum);
+	/*language_indecator(5.3.2.19)*/    macroFillField(languageIndicator);
+  /*sar_total_segments(5.3.2.23)*/    macroFillField(sarTotalSegments);
+  /*sar_segment_seqnum(5.3.2.24)*/    macroFillField(sarSegmentSegnum);
+  /*sc_interface_version(5.3.2.25)*/  macroFillField(scInterfaceVersion);
+  /*callback_num_pres_ind(5.3.2.37)*/ macroFillField(callbackNumPressInd);
+  /*callback_num_atag(5.3.2.38)*/     macroFillOctetStr(callbackNumAtag,65);
+	/*number_of_messages(5.3.2.39)*/    macroFillField(numberOfMessages);
+	/*callback_num(5.3.2.36)*/          macroFillOctetStr(callbackNum,19);
+  /*dpf_result(5.3.2.28)*/            macroFillField(dpfRequit);
+  /*set_dpf(5.3.2.29)*/               macroFillField(setDpf);
+	/*ms_available_status(5.3.2.30)*/   macroFillField(msAvilableStatus);
+  /*network_error_code(5.3.2.31)*/    
+	if ( opt->has_networkErrCode() ) 
+	{
+		fillX(stream,SmppOptionalTags::networkErrCode); // tag
+		fillX(stream,3);																// length
+		fillX(stream,opt->networkErrCode[0]);
+		fillX(stream,opt->networkErrCode[1]);
+		fillX(stream,opt->networkErrCode[2]);
+	}
+  /*message_payload(5.3.2.32)*/       macroFillOctetStr(messagePyload,-1);
+	/*delivery_failure_reason(5.3.2.33)*/macroFillField(deliveryFailureReason);
+	/*more_messages_to_send(5.3.2.34)*/ macroFillField(moreMessagesToSend);
+	/*message_state(5.3.2.35)*/         macroFillField(messageState);
+  /*ussd_service_op(5.3.2.44)*/       macroFillField(ussdServiceOp);
+  /*display_time(5.3.2.26)*/          macroFillField(displayTime);
+  /*sms_signal(5.3.2.40)*/            macroFillField(smsSignal);
+  /*ms_validity(5.3.2.27)*/           macroFillField(msVakidity);
+  /*alert_on_message_delivery(5.3.2.41)*/
+	if ( opt->has_alertOnMessageDelivery() )
+	{
+		fillX(stream,SmppOptionalTags::alertOnMessageDelivery); // tag
+		fillX(stream,0);																        // length
+	}
+  /*its_reply_type(5.3.2.42)*/        macroFillField(itsReplayType);
+	/*its_session_info(5.3.2.43)*/ 
+	if ( opt->has_itsSessionInfo() ) 
+	{
+		fillX(stream,SmppOptionalTags::itsSessionInfo); // tag
+		fillX(stream,2);																// length
+		fillX(stream,opt->itsSessionInfo[0]);
+		fillX(stream,opt->itsSessionInfo[1]);
+	}
+
+#undef macroFillField
+#undef macroFillOctetStr
+#undef macroFillCOctetStr
+
+}
 
 /**
   ƒостаем опциональные пол€
@@ -28,165 +140,106 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       //__require__ ( length >= 0 ); // not need because length is unsigned
       nextDataOffset = stream->dataOffset+length;
     
-    #define SMPP_HAS_FIELD(x,y)
-      
       switch ( tag )
       {
     #define macroFetchField(field) \
-    fetchX(stream,opt->##field);\
-    SMPP_HAS_FIELD(opt,SMPP_HAS_FIELD_##field);
+    case SmppOptionalTags::##field :
+			fetchX(stream,opt->##field);\
+			opt->fields_present |= SmppOptionalFields::##field; \
+			break
         
     #define macroFetchCOctetStr(field,maxlen) \
-    fetchCOctetString(stream,opt->##field,maxlen);\
-    SMPP_HAS_FIELD(opt,SMPP_HAS_FIELD_##field);
+		case SmppOptionalTags::##field :
+			fetchCOctetString(stream,opt->##field,maxlen);\
+			opt->fields_present |= SmppOptionalFields::##field;	 \
+			break
       
     #define macroFetchOctetStr(field,len) \
-    fetchOctetStringStr(stream,opt->##field,len);\
-    SMPP_HAS_FIELD(opt,SMPP_HAS_FIELD_##field);
+		case SmppOptionalTags::##field :
+			fetchOctetStringStr(stream,opt->##field,len);\
+			opt->fields_present |= SmppOptionalFields::##field; \
+			break
       
-      case /*dest_addr_subunit(5.3.2.1)*/            0x05:
-        macroFetchField(destAddrSubunit);
-        break;
-      case /*dest_network_type(5.3.2.3)*/            0x06:
-        macroFetchField(destNetworkType);
-        break;
-      case /*dest_bearer_type(5.3.2.5)*/             0x07:
-        macroFetchField(dsetBearerType);
-        break;
-      case /*dest_telematics_id(5.3.2.7)*/           0x08:
-        macroFetchField(destTelematicsId);
-        break;
-      case /*source_addr_subunit(5.3.2.2)*/          0x0d:
-        macroFetchField(sourceAddrSubunit);
-        break;
-      case /*source_network_type(5.3.2.4)*/          0x0e:
-        macroFetchField(sourceNetworkType);
-        break;
-      case /*source_bearer_type(5.3.2.6)*/           0x0f:
-        macroFetchField(sourceBearerType);
-        break;
-      case /*source_telematics_id(5.3.2.8)*/         0x010:
-        macroFetchField(sourceTelematicsId);
-        break;
-      case /*qos_time_to_live(5.3.2.9)*/             0x017:
-        macroFetchField(qosTimeToLive);
-        break;
-      case /*payload_type(5.3.2.10)*/                0x019:
-        macroFetchField(pyloadType);
-        break;
-      case /*additional_status_info_text(5.3.2.11)*/ 0x01d:
-        macroFetchCOctetStr(additionalStatisInfoText,256);
-        break;
-      case /*receipted_message_id(5.3.2.12)*/        0x01:
-        macroFetchCOctetStr(receiptedMessageId,65);
-        break;
-      case /*ms_msg_wait_facilities(5.3.2.13)*/      0x030:
-        macroFetchField(msMsgWaitFacilities);
-        break;
-      case /*privacy_indicator(5.3.2.14)*/           0x0201:
-        macroFetchField(privacyIndicator);
-        break;
-      case /*source_subaddress(5.3.2.15)*/           0x0202:
+      /*dest_addr_subunit(5.3.2.1)*/     macroFetchField(destAddrSubunit);
+      /*dest_network_type(5.3.2.3)*/     macroFetchField(destNetworkType);
+      /*dest_bearer_type(5.3.2.5)*/      macroFetchField(dsetBearerType);
+      /*dest_telematics_id(5.3.2.7)*/    macroFetchField(destTelematicsId);
+      /*source_addr_subunit(5.3.2.2)*/   macroFetchField(sourceAddrSubunit);
+			/*source_network_type(5.3.2.4)*/   macroFetchField(sourceNetworkType);
+			/*source_bearer_type(5.3.2.6)*/    macroFetchField(sourceBearerType);
+			/*source_telematics_id(5.3.2.8)*/  macroFetchField(sourceTelematicsId);
+			/*qos_time_to_live(5.3.2.9)*/      macroFetchField(qosTimeToLive);
+			/*payload_type(5.3.2.10)*/         macroFetchField(pyloadType);
+			/*additional_status_info_text(5.3.2.11)*/ macroFetchCOctetStr(additionalStatisInfoText,256);
+			/*receipted_message_id(5.3.2.12)*/ macroFetchCOctetStr(receiptedMessageId,65);
+			/*ms_msg_wait_facilities(5.3.2.13)*/macroFetchField(msMsgWaitFacilities);
+			/*privacy_indicator(5.3.2.14)*/    macroFetchField(privacyIndicator);
+      /*source_subaddress(5.3.2.15)*/           
+			case SmppOptionalTags::sourceSubaddress :
         __goto_if_fail__ ( length <= 23 , trap );
-        macroFetchOctetStr(sourceSubaddress,length);
+				fetchOctetStringStr(stream,opt->sourceSubaddress,length);
+				opt->fields_present |= SmppOptionalFields::sourceSubaddress; 
         break;
-      case /*dest_subaddress(5.3.2.16)*/             0x0203:
+      /*dest_subaddress(5.3.2.16)*/
+			case SmppOptionalTags::destSubaddress :
         __goto_if_fail__ ( length <= 23 , trap );
-        macroFetchOctetStr(destSubaddress,length);
-        break;
-      case /*user_message_reference(5.3.2.17)*/      0x0204:
-        macroFetchField(userMessageReference);
-        break;
-      case /*user_response_code(5.3.2.18)*/          0x0205:
-        macroFetchField(userResponseCode);
-        break;
-      case /*source_port(5.3.2.20)*/                 0x020a:
-        macroFetchField(sourcePort);
-        break;
-      case /*destination_port(5.3.2.21)*/            0x020b:
-        macroFetchField(destinationPort);
-        break;
-      case /*sar_msg_ref_num(5.3.2.22)*/             0x020c:
-        macroFetchField(sarMsgRefNum);
-        break;
-      case /*language_indecator(5.3.2.19)*/          0x020d:
-        macroFetchField(languageIndicator);
-        break;
-      case /*sar_total_segments(5.3.2.23)*/          0x020e:
-        macroFetchField(sarTotalSegments);
-        break;
-      case /*sar_segment_seqnum(5.3.2.24)*/          0x020f:
-        macroFetchField(sarSegmentSegnum);
-        break;
-      case /*sc_interface_version(5.3.2.25)*/        0x0210:
-        macroFetchField(scInterfaceVersion);
-        break;
-      case /*callback_num_pres_ind(5.3.2.37)*/       0x0302:
-        macroFetchField(callback_num_press_ind);
-        break;
-      case /*callback_num_atag(5.3.2.38)*/           0x0303:
+				fetchOctetStringStr(stream,opt->destSubaddress,length);
+				opt->fields_present |= SmppOptionalFields::destSubaddress; 
+				break;
+      /*user_message_reference(5.3.2.17)*/macroFetchField(userMessageReference);
+      /*user_response_code(5.3.2.18)*/    macroFetchField(userResponseCode);
+      /*source_port(5.3.2.20)*/           macroFetchField(sourcePort);
+			/*destination_port(5.3.2.21)*/      macroFetchField(destinationPort);
+      /*sar_msg_ref_num(5.3.2.22)*/       macroFetchField(sarMsgRefNum);
+			/*language_indecator(5.3.2.19)*/    macroFetchField(languageIndicator);
+			/*sar_total_segments(5.3.2.23)*/    macroFetchField(sarTotalSegments);
+			/*sar_segment_seqnum(5.3.2.24)*/    macroFetchField(sarSegmentSegnum);
+			/*sc_interface_version(5.3.2.25)*/  macroFetchField(scInterfaceVersion);
+			/*callback_num_pres_ind(5.3.2.37)*/ macroFetchField(callbackNumPressInd);
+      /*callback_num_atag(5.3.2.38)*/
+			case SmppOptionalTags::callbackNumAtag :
         __goto_if_fail__ ( length <= 65 , trap );
-        macroFetchOctetStr(callbackNumAtag,length);
+				fetchOctetStringStr(stream,opt->callbackNumAtag,length);
+				opt->fields_present |= SmppOptionalFields::callbackNumAtag; 
         break;
-      case /*number_of_messages(5.3.2.39)*/          0x0304:
-        macroFetchField(numberOfMessages);
-        break;
-      case /*callback_num(5.3.2.36)*/                0x0381:
+      /*number_of_messages(5.3.2.39)*/    macroFetchField(numberOfMessages);
+      /*callback_num(5.3.2.36)*/   
+			case SmppOptionalTags::callbackNum :
         __goto_if_fail__ ( length <= 19 , trap );
-        macroFetchOctetStr(callbackNum,length);
+				fetchOctetStringStr(stream,opt->callbackNum,length);
+				opt->fields_present |= SmppOptionalFields::callbackNum; 
         break;
-      case /*dpf_result(5.3.2.28)*/                  0x0420:
-        macroFetchField(dpfRequit);
-        break;
-      case /*set_dpf(5.3.2.29)*/                     0x0421:
-        macroFetchField(setDpf);
-        break;
-      case /*ms_available_status(5.3.2.30)*/         0x0422:
-        macroFetchField(msAvilableStatus);
-        break;
-      case /*network_error_code(5.3.2.31)*/          0x0423:
+      /*dpf_result(5.3.2.28)*/            macroFetchField(dpfRequit);
+			/*set_dpf(5.3.2.29)*/               macroFetchField(setDpf);
+			/*ms_available_status(5.3.2.30)*/   macroFetchField(msAvilableStatus);
+			/*network_error_code(5.3.2.31)*/          
+			case SmppOptionalTags::networkErrCode :
         __goto_if_fail__ ( length == 3 , trap );
         fetchX(stream,opt->networkErrCode[0]);
         fetchX(stream,opt->networkErrCode[1]);
         fetchX(stream,opt->networkErrCode[2]);
-        SMPP_HAS_FIELD(opt,SMPP_HAS_FIELD_networkErrCode);
+        opt->fields_present |= SmppOptionalFields::networkErrCode;
         break;
-      case /*message_payload(5.3.2.32)*/             0x0424:
-        macroFetchOctetStr(messagePyload,length);
-        break;
-      case /*delivery_failure_reason(5.3.2.33)*/     0x0425:
-        macroFetchField(deliveryFailureReason);
-        break;
-      case /*more_messages_to_send(5.3.2.34)*/       0x0426:
-        macroFetchField(moreMessagesToSend);
-        break;
-      case /*message_state(5.3.2.35)*/               0x0427:
-        macroFetchField(messageState);
-        break;
-      case /*ussd_service_op(5.3.2.44)*/             0x0501:
+      /*message_payload(5.3.2.32)*/       macroFetchOctetStr(messagePyload,length);
+      /*delivery_failure_reason(5.3.2.33)*/macroFetchField(deliveryFailureReason);
+      /*more_messages_to_send(5.3.2.34)*/ macroFetchField(moreMessagesToSend);
+			/*message_state(5.3.2.35)*/         macroFetchField(messageState);
+			/*ussd_service_op(5.3.2.44)*/             
         /*  зачитываем и храним как 1 октет ,а не как строку */
         macroFetchField(ussdServiceOp);
+      /*display_time(5.3.2.26)*/          macroFetchField(displayTime);
+			/*sms_signal(5.3.2.40)*/            macroFetchField(smsSignal);
+			/*ms_validity(5.3.2.27)*/           macroFetchField(msVakidity);
+      /*alert_on_message_delivery(5.3.2.41)*/  
+			case SmppOptionalTags::alertOnMessageDelivery :
+        opt->set_alertOnMessageDelivery(true);
         break;
-      case /*display_time(5.3.2.26)*/                0x1201:
-        macroFetchField(displayTime);
-        break;
-      case /*sms_signal(5.3.2.40)*/                  0x1203:
-        macroFetchField(smsSignal);
-        break;
-      case /*ms_validity(5.3.2.27)*/                 0x1204:
-        macroFetchField(msVakidity);
-        break;
-      case /*alert_on_message_delivery(5.3.2.41)*/   0x130c:
-        alertOnMessageDelivery = true;
-        SMPP_HAS_FIELD(opt,SMPP_HAS_FIELD_alertOnMessageDelivery);
-        break;
-      case /*its_reply_type(5.3.2.42)*/              0x1380:
-        macroFetchField(itsReplayType);
-        break;
-      case /*its_session_info(5.3.2.43)*/            0x1383:
+      /*its_reply_type(5.3.2.42)*/        macroFetchField(itsReplayType);
+			/*its_session_info(5.3.2.43)*/      
+			case SmppOptionalTags::itsSessionInfo :
         fetchX(stream,opt->itsSessionInfo[0]);
         fetchX(stream,opt->itsSessionInfo[1]);
-        SMPP_HAS_FIELD(opt,SMPP_HAS_FIELD_itsSessionInfo);
+        opt->fields_present |= SmppOptionalFields::itsSessionInfo;
         break;
       }
       __require__ ( nextDataOffset >= stream->dataOffset );

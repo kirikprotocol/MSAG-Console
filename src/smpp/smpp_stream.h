@@ -24,6 +24,7 @@ struct SmppStream
 #else
   int chanel;
 #endif
+	bool readable;
 };
 
 class BadStreamException : public exception
@@ -32,7 +33,7 @@ public:
   const char* what() {return "bad stream" } const;
 };
 
-inline  __check_stream_invariant__ (SmppStream* stream)
+inline  __check_smpp_stream_invariant__ (SmppStream* stream)
 {
 #if defined SMPP_USE_BUFFER
   __require__ ( stream->buffer != NULL ); 
@@ -50,12 +51,25 @@ inline  __check_stream_invariant__ (SmppStream* stream)
 #endif /*SMPP_USE_BUFFER*/
 }
 
+inline  __check_smpp_stream_is_readable__ (SmppStream* stream)
+{
+	__require__ ( stream != NULL );
+	__require__ ( stream->readable );
+}
+
+inline  __check_smpp_stream_is_writable__ (SmppStream* stream)
+{
+	__require__ ( stream != NULL );
+	__require__ ( !stream->readable );
+}
+
 
 template<class T>
 inline T& __fetch_x__ (SmppStream* stream, T& data)
 {
 #if defined SMPP_USE_BUFFER 
   __check_smpp_stream_invariant__ ( stream );
+	__check_smpp_stream_is_readable__(stream);
   __require__ ( stream->dataOffset+sizeof(T) <= stream->dataLength );
   data = *((T*)stream->buffer);
   stream->dataOffset+sizeof(T);
@@ -63,10 +77,33 @@ inline T& __fetch_x__ (SmppStream* stream, T& data)
 #else
 //#error "undefined rules of fetchX"
   __check_smpp_stream_invariant__ ( stream );
+	__check_smpp_stream_is_readable__(stream);
   __require__ ( stream->dataOffset+sizeof(T) <= stream->dataLength );
   //data = *((T*)stream->buffer);
 	int wasread = read(stream->chanel,data,sizeof(T));
 	__throw_if_fail__(wasread==sizeof(T),BadStreamException);
+  stream->dataOffset+sizeof(T);
+  return data;
+#endif
+}
+
+template<class T>
+inline void __fill_x__ (SmppStream* stream, T& data)
+{
+#if defined SMPP_USE_BUFFER 
+  __check_smpp_stream_invariant__ ( stream );
+	__check_smpp_stream_is_writable__(stream);
+  __require__ ( stream->dataOffset+sizeof(T) <= stream->dataLength );
+  *((T*)stream->buffer) = data;
+  stream->dataOffset+sizeof(T);
+#else
+//#error "undefined rules of fetchX"
+  __check_smpp_stream_invariant__ ( stream );
+	__check_smpp_stream_is_writable__(stream);
+  __require__ ( stream->dataOffset+sizeof(T) <= stream->dataLength );
+  //data = *((T*)stream->buffer);
+	int writen = write(stream->chanel,data,sizeof(T));
+	__throw_if_fail__(writen==sizeof(T),BadStreamException);
   stream->dataOffset+sizeof(T);
   return data;
 #endif
@@ -78,6 +115,13 @@ inline uint16_t& fetchX(SmppStream* s,uint16_t& d){__fetch_x__(s,d);d = ntohs(d)
 inline int16_t& fetchX(SmppStream* s,int16_t& d){__fetch_x__(s,d);d = (int16_t)ntohs((uint16_t)d); return d;}
 inline uint32_t& fetchX(SmppStream* s,uint32_t& d){__fetch_x__(s,d);d = ntohl(d); return d;}
 inline int32_t& fetchX(SmppStream* s,int32_t& d){__fetch_x__(s,d);d = (int16_t)ntohl((uint16_t)d); return d;}
+
+inline void fillX(SmppStream* s,uint8_t& d){__fill_x__(s,d);}
+inline void fillX(SmppStream* s,int8_t& d){__fill_x__(s,d);}
+inline void fillX(SmppStream* s,uint16_t& d){__fill_x__(s,htons(d));}
+inline void fillX(SmppStream* s,int16_t& d){__fill_x__(s,htons((uint64_t)d));}
+inline void fillX(SmppStream* s,uint32_t& d){__fill_x__(s,htonl(d));}
+inline void fillX(SmppStream* s,int32_t& d){__fill_x__(s,htonl((uint32_t)d));}
 
 
 inline dropPdu(SmppStream* stream)
@@ -99,9 +143,9 @@ inline dropPdu(SmppStream* stream)
 }
 
 #if defined SMPP_USE_BUFFER
-inline void assignStreamWith(SmppStream* stream,void* buffer,int bufferSize)
+inline void assignStreamWith(SmppStream* stream,void* buffer,int bufferSize,bool readable)
 #else
-inline void assignStreamWith(SmppStream* stream,int chanel)
+inline void assignStreamWith(SmppStream* stream,int chanel, bool readable)
 #endif
 {
   __require__ ( buffer != NULL );
@@ -109,24 +153,45 @@ inline void assignStreamWith(SmppStream* stream,int chanel)
   __require__ ( bufferSize >= 16 );
 #if defined SMPP_USE_BUFFER
   stream->buffer = buffer;
+  stream->bufferSize = bufferSize;
 #else
   strem->chanel = chanel;
 	__require__ ( chanel > 0 );
 #endif  
   stream->dataOffset = 0;
-  stream->bufferSize = bufferSize;
-  stream->dataLength = 4;
-  fetchX(stream,stream->header.commandLength);
-  stream->dataLength = header.commandLength;
-  fetchX(stream,stream->header.commandId);
-  fetchX(stream,stream->header.commandStatus);
-  fetchX(stream,stream->header.sequenceNumber);
+  if ( readable )
+	{
+		stream->dataLength = 4;
+		fetchX(stream,stream->header.commandLength);
+		stream->dataLength = header.commandLength;
+		fetchX(stream,stream->header.commandId);
+		fetchX(stream,stream->header.commandStatus);
+		fetchX(stream,stream->header.sequenceNumber);
+	}
+	else
+		stream->dataLength = 0;
+	stream->readable = readable;
 }
 
 inline void fetchSmppHeader(SmppStream* stream,SmppHeader& header)
 {
   __check_smpp_stream_invariant__ ( stream );
+	__check_smpp_stream_is_readable__(stream);
   header = stream->header;
+}
+
+inline void fillSmppHeader(SmppStream* stream,SmppHeader& header)
+{
+  __check_smpp_stream_invariant__ ( stream );
+	__check_smpp_stream_is_writable__(stream);
+  stream->header = header;
+  stream->dataOffset = 0;
+  stream->dataLength = header->commandLength;
+	fillX(stream,header.commandLength);
+	fillX(stream,header.commandId);
+	fillX(stream,header.commandStatus);
+	fillX(stream,header.sequenceNumber);
+  __check_smpp_stream_invariant__ ( stream );
 }
 
 inline int32_t smppCommandId(SmppStream* stream)
