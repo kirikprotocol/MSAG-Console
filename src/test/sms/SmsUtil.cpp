@@ -194,7 +194,6 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 	__compare_int_body_tag__(SMSC_DISCHARGE_TIME, 125);
 	__compare_str_body_tag__(SMSC_RECIPIENTADDRESS, 126);
 	__compare_int_body_tag__(SMSC_STATUS_REPORT_REQUEST, 127);
-	__compare_int_body_tag__(SMSC_USSD_OP, 128);
 	//bool attach;
 	return res;
 }
@@ -453,7 +452,6 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__set_int_body_tag__(SMSC_DISCHARGE_TIME, rand0(INT_MAX));
 	__set_str_body_tag__(SMSC_RECIPIENTADDRESS, rand1(30));
 	__set_int_body_tag__(SMSC_STATUS_REPORT_REQUEST, rand0(255));
-	__set_int_body_tag__(SMSC_USSD_OP, rand0(255));
 	//check fileds
 	if (check)
 	{
@@ -484,7 +482,6 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 		__check_int_body_tag__(SMSC_DISCHARGE_TIME);
 		__check_str_body_tag__(SMSC_RECIPIENTADDRESS);
 		__check_int_body_tag__(SMSC_STATUS_REPORT_REQUEST);
-        __check_int_body_tag__(SMSC_USSD_OP);
 	}
 	//bool attach;
 	for (BinMap::iterator it = binMap.begin(); it != binMap.end(); it++)
@@ -727,7 +724,6 @@ ostream& operator<< (ostream& os, SMS& sms)
 	__print_int_body_tag__(SMSC_DISCHARGE_TIME);
 	__print_str_body_tag__(SMSC_RECIPIENTADDRESS);
 	__print_int_body_tag__(SMSC_STATUS_REPORT_REQUEST);
-    __print_int_body_tag__(SMSC_USSD_OP);
 
 	//bool attach;
 }

@@ -101,6 +101,8 @@ void abonentInfoTc()
 		"Недопустимые символы в строке адреса");
 	__reg_tc__("queryAbonentInfo.incorrect.extraWords",
 		"В тексте команды лишние слова (должен быть только адрес)");
+	__reg_tc__("queryAbonentInfo.incorrect.tonNpi",
+		"Неправильные ton и/или npi в адресе");
 	//queryAbonentInfo.ack
 	__reg_tc__("queryAbonentInfo.ack",
 		"Ответные сообщения от abonent info sme");
