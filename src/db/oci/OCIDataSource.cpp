@@ -196,12 +196,19 @@ Routine* OCIConnection::createRoutine(const char* call, bool func)
     connect();
     
     std::string routine; std::string name = "";
-    routine += "BEGIN\n"; routine += call; routine += "\nEND;";
+    routine += "BEGIN\n"; 
+    if (func) 
+    {
+        routine += ":"; routine += FUNCTION_RETURN_ATTR_NAME; routine += " := ";
+    }
+    routine += call; 
+    routine += "\nEND;";
     
     int curPos = 0;
     while (call && isspace(call[curPos])) curPos++;
     while (call && isalnum(call[curPos])) name += call[curPos++];
     
+    __trace2__("Call:\n%s", routine.c_str());
     return new OCIRoutine(this, routine.c_str(), name.c_str(), func);
 }
 
@@ -275,7 +282,7 @@ void OCIQuery::bind(ub4 pos, ub2 type,
     throw(SQLException)
 {
     __trace2__("Bind by pos: %d, type %d", pos, type);
-    OCIBind *bind;
+    OCIBind *bind = 0;
     check(OCIBindByPos(stmt, &bind, errhp, pos, 
                        placeholder, size, type, indp,
                        (ub2 *) 0, (ub2 *) 0, (ub4) 0, (ub4 *) 0,
@@ -287,7 +294,7 @@ void OCIQuery::bind(CONST text* name, sb4 name_len, ub2 type,
     throw(SQLException)
 {
     __trace2__("Bind by name: %s, type %d", name, type);
-    OCIBind *bind;
+    OCIBind *bind = 0;
     check(OCIBindByName(stmt, &bind, errhp, name, name_len,
                         placeholder, size, type, indp,
                         (ub2 *) 0, (ub2 *) 0, (ub4) 0, (ub4 *) 0,
@@ -298,7 +305,7 @@ void OCIQuery::define(ub4 pos, ub2 type,
                           dvoid* placeholder, sb4 size, dvoid* indp)
     throw(SQLException)
 {
-    OCIDefine*  define;
+    OCIDefine*  define = 0;
     check(OCIDefineByPos(stmt, &define, errhp, pos, 
                          placeholder, size, type, indp,
                          (ub2 *) 0, (ub2 *) 0, OCI_DEFAULT));
@@ -844,8 +851,9 @@ OCIRoutine::OCIRoutine(OCIConnection* connection,
                                          FUNCTION_MAX_ARGUMENTS_COUNT);
     for (int x=0; x<bndFound; x++)
     {
-        __trace2__("Bind: name '%s' size %d", 
-                   (bndBvnp[x]) ? (const char *)bndBvnp[x]:"-", bndBvnl[x]);
+        std::string bndstr(bndBvnp[x] ? (const char *)bndBvnp[x]:
+                            "", bndBvnp[x] ? bndBvnl[x]:0);
+        __trace2__("#%02d Bind variable '%s'", x+1, bndstr.c_str());
     }
     
     OCIParam    *parmh  = 0;    // parameter handle 
@@ -876,7 +884,8 @@ OCIRoutine::OCIRoutine(OCIConnection* connection,
         __trace2__("Num-args is %d", numargs);
 
         // For procedure, begin with 1 for function, begin with 0. 
-        for (ub4 i=((func) ? 0:1); i<=numargs; i++) 
+        ub1 shift = ((func) ? 0:1);
+        for (ub4 i=shift; i<numargs+shift; i++) 
         {
             text*       atr; 
             ub4         atrlen;
@@ -904,7 +913,7 @@ OCIRoutine::OCIRoutine(OCIConnection* connection,
                     throw SQLException("RecordSet type is not supported for use "
                                        "in context of PL/SQL calls!");
 
-                std::string argstr((const char *)atr, atrlen);
+                std::string argstr(atr ? (const char *)atr:"", atr ? atrlen:0);
                 __trace2__("Arg #%d: '%s'", i, argstr.c_str());
 
                 if (i == 0)
@@ -912,8 +921,9 @@ OCIRoutine::OCIRoutine(OCIConnection* connection,
                     OCIDataDescriptor* descriptor = new OCIDataDescriptor(type, size);
                     descriptors.Insert(FUNCTION_RETURN_ATTR_NAME, descriptor);
                     descriptor->ind = OCI_IND_NULL;
-                    bind((ub4) 0, descriptor->type, descriptor->data,
+                    bind((ub4) 1, descriptor->type, descriptor->data,
                          descriptor->size, (dvoid *) &descriptor->ind);
+                    ++bndCurrent;
                 }
                 else if (bndCurrent < bndFound && 
                         isTextsEqual(bndBvnp[bndCurrent], bndBvnl[bndCurrent],
@@ -922,8 +932,9 @@ OCIRoutine::OCIRoutine(OCIConnection* connection,
                     OCIDataDescriptor* descriptor = new OCIDataDescriptor(type, size);
                     descriptors.Insert(argstr.c_str(), descriptor);
                     descriptor->ind = OCI_IND_NULL;
-                    bind((ub4) ++bndCurrent, descriptor->type, descriptor->data,
-                         descriptor->size, (dvoid *) &descriptor->ind);
+                    bind(atr, atrlen, descriptor->type, 
+                         descriptor->data, descriptor->size, (dvoid *) &descriptor->ind);
+                    ++bndCurrent;
                 }
                 else
                 {
