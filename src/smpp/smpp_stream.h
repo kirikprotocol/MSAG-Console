@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <exception>
 #include <stdexcept>
+#include "util/int.h"
 #ifdef _WIN32
 #include <winsock2.h>
 #else
@@ -273,7 +274,7 @@ inline void fetchCOctetStr(SmppStream* stream,COStr& costr,int cOctMax)
   int maxLength;
   __check_smpp_stream_invariant__ ( stream );
 
-  maxLength = std::min ( stream->dataLength-stream->dataOffset, (uint32_t)cOctMax );
+  maxLength = std::min( stream->dataLength-stream->dataOffset,(uint32_t)cOctMax);
 
 //#if defined SMPP_SHARE_BUFFER_MEMORY
 //{

@@ -7,6 +7,7 @@
 #include "smpp_memory.h"
 #include "smpp_structures.h"
 #include "smpp_stream.h"
+#include "util/int.h"
 
 #if !defined __Cxx_Header__smpp_optional_h__
 #define __Cxx_Header__smpp_optional_h__
