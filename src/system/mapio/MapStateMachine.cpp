@@ -290,14 +290,16 @@ static void CheckLockedByMO(MapDialog* dialog)
   XMOMAP::iterator it = x_momap.find(dialog->s_imsi);
   if ( it != x_momap.end() )
   {
-    __trace2__("MAP::%s locked, recv(%d)",__FUNCTION__,it->second.parts);
+    __trace2__("MAP:UDHI:%s locked, recv(%d)",__FUNCTION__,it->second.parts);
     if ( it->second.startTime+GetMOLockTimeout() <= time(0) )
     {
       x_momap.erase(it);
     }
-    else
+    else{
+      __trace2__("MAP:UDHI:%s locked, reschedule NOW!",__FUNCTION__);
       throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,0),
                             "MAP:: Locked by MO: reschedule NOW!");
+    }
   }
 }
 
@@ -443,10 +445,11 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   if ( dialog->udhiRef != INVALID )
   {
     XMOMAPLocker* locker;
+    __trace2__("MAP:UDHI:%s: find locked imsi %s",__FUNCTION__,dialog->s_imsi);
     XMOMAP::iterator it = x_momap.find(dialog->s_imsi);
     if ( it == x_momap.end() )
     {
-      __trace2__("MAP:%s: create locker",__FUNCTION__);
+      __trace2__("MAP:UDHI:%s: create locker",__FUNCTION__);
       XMOMAPLocker lockerX;
       lockerX.imsi = dialog->s_imsi;
       lockerX.ref = INVALID;
@@ -456,11 +459,11 @@ void ResponseMO(MapDialog* dialog,unsigned status)
     else locker = &it->second;
     if ( locker->ref == dialog->udhiRef )
     {
-      __trace2__("MAP:%s: update locker part %d/%d",__FUNCTION__,dialog->udhiMsgNum,dialog->udhiMsgCount);
+      __trace2__("MAP:UDHI:%s: update locker part %d/%d",__FUNCTION__,dialog->udhiMsgNum,dialog->udhiMsgCount);
       ++locker->parts;
       if ( locker->parts >= dialog->udhiMsgCount ){
         x_momap.erase(dialog->s_imsi);
-        __trace2__("MAP:%s: unlock part ",__FUNCTION__);
+        __trace2__("MAP:UDHI:%s: unlock part ",__FUNCTION__);
       }else
         locker->startTime = time(0);
     }
@@ -607,6 +610,7 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
       dialog->udhiRef = ref;
       dialog->udhiMsgNum = msgNum;
       dialog->udhiMsgCount = msgCount;
+      __trace2__(":MAP:UDHI: ref %x, msgNum %d, msgCont %d ",ref,msgNum.msgCount);
     }
   }
   unsigned esm_class = 0;
@@ -1647,7 +1651,11 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
     __trace2__("   <exception>:%s",e.what());
     if ( !open_confirmed ){
       ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-      MapDialogContainer::getInstance()->dropDialog(dialogueId);
+      //MapDialogContainer::getInstance()->dropDialog(dialogueId);
+      DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId));
+      if ( !dialog.isnull() ) {
+        dialog->state = MAPST_ABORTED;
+      }
       Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
       Et96MapDelimiterReq(localSsn,dialogueId,0,0);
     }
@@ -1838,6 +1846,11 @@ USHORT_T Et96MapDelimiterInd(
     if ( !open_confirmed ){
       ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
       //MapDialogContainer::getInstance()->dropDialog(dialogueId);
+      DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId));
+      if ( !dialog.isnull() ) {
+        dialog->state = MAPST_ABORTED;
+      }
+      
       Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
       Et96MapDelimiterReq(localSsn,dialogueId,0,0);
     }
