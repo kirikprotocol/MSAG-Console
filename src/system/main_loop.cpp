@@ -42,6 +42,36 @@ bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProx
   return ok;
 }
 
+bool isUSSDSessionSms(SMS* sms)
+{
+  return sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+}
+
+void Smsc::RejectSms(const SmscCommand& cmd)
+{
+  SmeProxy* src_proxy=cmd.getProxy();
+  try{
+    SMS* sms=cmd->get_sms();
+    sms->setSourceSmeId(src_proxy->getSystemId());
+    sms->setLastResult(Status::LICENSELIMITREJECT);
+    registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+
+    src_proxy->putCommand
+    (
+      SmscCommand::makeSubmitSmResp
+      (
+        "0",
+        cmd->get_dialogId(),
+        Status::THROTTLED,
+        sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+      )
+    );
+  }catch(...)
+  {
+    __warning__("Failed to send reject response to sme");
+  }
+}
+
 void Smsc::mainLoop()
 {
   typedef std::vector<SmscCommand> CmdVector;
@@ -74,7 +104,7 @@ void Smsc::mainLoop()
       hrtime_t gfStart=gethrtime();
       smeman.getFrame(frame,WAIT_DATA_TIMEOUT);
       hrtime_t gfEnd=gethrtime();
-      info2(log,"getFrame time:%lld",gfEnd-gfStart);
+      if(frame.size()>0)info2(log,"getFrame time:%lld",gfEnd-gfStart);
       now = time(NULL);
       if ( stopFlag ) return;
       Task task;
@@ -197,17 +227,23 @@ void Smsc::mainLoop()
     }
 
     int stf=tcontrol->getConfig().shapeTimeFrame;
-    int smt=tcontrol->getConfig().smoothTimeFrame;
+    //int smt=tcontrol->getConfig().smoothTimeFrame;
     int maxsms=tcontrol->getConfig().maxSmsPerSecond;
 
-    // main "delay" cycle
+
+    int maxScaled=1000*maxsms*stf;
+    maxScaled+=maxScaled/4;
+
+    int perSlot=1000*maxsms/(1000/tcontrol->getTotalCounter().getSlotRes());
+
+    // main "delay/reject" cycle
 
     int eqsize,equnsize,cntInstant;
     for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
     {
       cntInstant=tcontrol->getTotalCount();
       eventqueue.getStats(eqsize,equnsize);
-      while(!(cntInstant+1<=maxsms*stf && equnsize+1<=eventQueueLimit))
+      while(equnsize+1>eventQueueLimit)
       {
         hrtime_t nslStart=gethrtime();
         {
@@ -223,17 +259,28 @@ void Smsc::mainLoop()
         }
         timestruc_t tv={0,1000000};
         nanosleep(&tv,0);
-        cntInstant=tcontrol->getTotalCount();
         eventqueue.getStats(eqsize,equnsize);
         hrtime_t nslEnd=gethrtime();
-        info2(log,"nanosleep block time:%lld",nslEnd-nslStart);
+        info2(log,"eqlimit(%d/%d) nanosleep block time:%lld",equnsize+1,eventQueueLimit,nslEnd-nslStart);
       }
       if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
       {
         try{
+          if((*i)->get_commandId()==SUBMIT && !isUSSDSessionSms((*i)->get_sms()))
+          {
+            if(tcontrol->getTotalCount()>maxScaled)
+            {
+              info2(log,"Sms %s->%s rejected: %d/%d",
+              (*i)->get_sms()->getOriginatingAddress().toString().c_str(),
+              (*i)->get_sms()->getDestinationAddress().toString().c_str(),
+              tcontrol->getTotalCount(),maxScaled);
+              RejectSms(*i);
+              continue;
+            }
+          }
           hrtime_t cmdStart=gethrtime();
           processCommand((*i),enqueueVector,findTaskVector);
-          tcontrol->incTotalCount(1);
+          tcontrol->getTotalCounter().IncDistr(1000,perSlot);
           hrtime_t cmdEnd=gethrtime();
           info2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
         }catch(...)
