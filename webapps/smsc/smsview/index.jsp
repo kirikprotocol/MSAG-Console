@@ -119,7 +119,7 @@ function setSort(sorting)
 <%
   SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
 %>
-<div class=secView>Search results</div>
+<div class=secView>Search results: <%= bean.getTotalRowsCount()%> rows matched by query</div>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
 <table class=secRep cellspacing=1 width="100%">
 <thead>
