@@ -89,6 +89,7 @@ class PduData
 	//не трогать count
 	PduData(const PduData&) {}
 	PduData& operator=(const PduData&) { return *this; }
+	Mutex mutex;
 
 public:
 	typedef map<const string, int> IntProps;

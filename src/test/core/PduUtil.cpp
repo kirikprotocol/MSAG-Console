@@ -7,10 +7,10 @@ namespace smsc {
 namespace test {
 namespace core {
 
-using namespace smsc::sms;
 using smsc::test::conf::TestConfig;
 using smsc::test::sms::operator<<;
 using smsc::test::util::operator<<;
+using namespace smsc::sms;
 using namespace std;
 
 Mutex PduMonitor::mutex = Mutex();
@@ -18,6 +18,7 @@ uint32_t PduMonitor::counter = 1;
 
 void PduDataObject::ref()
 {
+	//без mutex
 	count++;
 	//__trace2__("PduDataObject::ref(): this = %p, count = %d", this, count);
 }
@@ -25,6 +26,7 @@ void PduDataObject::unref()
 {
 	//__trace2__("PduDataObject::unref(): this = %p, count = %d", this, count);
 	__require__(count > 0);
+	//без mutex
 	count--;
 	if (!count)
 	{
@@ -77,12 +79,14 @@ PduData::~PduData()
 void PduData::ref()
 {
 	//__trace2__("PduData::ref(): this = %p, count = %d", this, count);
+	MutexGuard mguard(mutex);
 	count++;
 }
 void PduData::unref()
 {
 	//__trace2__("PduData::unref(): this = %p, count = %d", this, count);
 	__require__(count > 0);
+	mutex.Lock();
 	count--;
 	if (!count)
 	{
