@@ -273,6 +273,7 @@ public:
   TrSmsStatus RegisterS2C(SMS& sms,const stat::StatInfo& si,time_t timeOut,TrafficRules& r,billing::TransactionIdType& idptr)
   {
     TrSmsStatus st=getS2CSmsStatus(sms,r);
+    __trace2__("S2C:%s",getStatusName(st));
     if((st&trDeniedBase) || (st&trInvalid))
     {
       return st;
@@ -302,7 +303,7 @@ public:
       backMapping.insert(std::make_pair(makeKey(sms),lit));
       return st;
     }
-    if(st==trSmeUssdBillBegin || trScUssdBillBegin)
+    if(st==trSmeUssdBillBegin || st==trScUssdBillBegin)
     {
       MutexGuard mg(mtx);
       TransactionMap::iterator it=trMap.find(makeKey(sms));
@@ -453,7 +454,7 @@ public:
     }
   };
 
-  bool FinishBilling(const TransactionKey& key,bool ok)
+  bool FinishBilling(const TransactionKey& key,bool ok,smsc::smppgw::Smsc* smsc)
   {
     billing::TransactionIdType trId;
     {
@@ -469,6 +470,9 @@ public:
     }
     if(trId!=billing::InvalidTransactionId)
     {
+      smsc->updatePerformance(ok?performance::Counters::cntTransOk:performance::Counters::cntTransFail);
+      //int cnt=
+      //smsc->updateCounter(ok?stat::Counters::cntUssdTrFromScOk:stat::Counters::cntUssdTrFromScFailed,rd.si,st);
       if(ok)
       {
         GetBillingInterface()->CommitTransaction(trId);
@@ -476,6 +480,9 @@ public:
       {
         GetBillingInterface()->RollbackTransaction(trId);
       }
+    }else
+    {
+
     }
 
     return true;
@@ -648,7 +655,7 @@ protected:
     bool ussd;
     stat::StatInfo si;
     smsc::smppgw::billing::TransactionIdType trId;
-    TransactionInfo(bool u,TrDir d):trLen(0),ussd(u),dir(d)
+    TransactionInfo(bool u,TrDir d):trLen(0),ussd(u),dir(d),trId(billing::InvalidTransactionId)
     {
     }
   };
@@ -728,7 +735,7 @@ public:
       {
         if(rd.finishTransaction==RegistryData::tfmFinishBilling)
         {
-          tmon.FinishBilling(rd.trKey,false);
+          tmon.FinishBilling(rd.trKey,false,smsc);
         }else
         {
           tmon.FinishTransaction(rd.trKey,false);
@@ -1068,7 +1075,7 @@ void StateMachine::submitResp(SmscCommand& cmd)
             }
           }else if(rd.finishTransaction==RespRegistry::RegistryData::tfmFinishBilling)
           {
-            tmon.FinishBilling(rd.trKey,st==0);
+            tmon.FinishBilling(rd.trKey,st==0,smsc);
           }
         }
 
@@ -1287,7 +1294,7 @@ void StateMachine::deliveryResp(SmscCommand& cmd)
           }
         }else
         {
-          tmon.FinishBilling(rd.trKey,st==0);
+          tmon.FinishBilling(rd.trKey,st==0,smsc);
         }
       }
     }catch(...)
