@@ -2,7 +2,7 @@
 #define TEST_SME_SMPP_TRANSMITTER_TEST_CASES
 
 #include "sme/SmppBase.hpp"
-#include "smpp/smpp_structures.h"
+#include "smpp/smpp.h"
 #include "test/util/BaseTestCases.hpp"
 #include "test/core/SmeRegistry.hpp"
 #include "test/core/PduRegistry.hpp"
