@@ -1006,6 +1006,7 @@ public:
             nextTime(sms.nextTime),
             originatingAddress(sms.originatingAddress),
             destinationAddress(sms.destinationAddress), 
+						dealiasedDestinationAddress(sms.dealiasedDestinationAddress),
             messageReference(sms.messageReference),
             needArchivate(sms.needArchivate),
             deliveryReport(sms.deliveryReport),
@@ -1070,6 +1071,7 @@ public:
             nextTime = sms.nextTime;
             originatingAddress = sms.originatingAddress;
             destinationAddress = sms.destinationAddress;
+						dealiasedDestinationAddress = sms.dealiasedDestinationAddress;
             messageReference = sms.messageReference;
             needArchivate = sms.needArchivate;
             deliveryReport = sms.deliveryReport;
