@@ -126,7 +126,7 @@ int ArchiveProcessor::Execute()
     while (!bNeedExit)
     {
         // Accept server socket here & process queries on ThreadPool
-        smsc_log_debug(log, "Waiting query socket ...");
+        //smsc_log_debug(log, "Waiting query socket ...");
         if (Socket *newSocket = serverSocket.Accept()) {
             smsc_log_info(log, "Query socket accepted.");
             queriesPool.startTask(new Query(this, newSocket));
