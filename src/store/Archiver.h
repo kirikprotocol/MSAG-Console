@@ -161,7 +161,6 @@ namespace smsc { namespace store
          * @exception ConfigException
          *                   возникает в случае некорректности и/или
          *                   неполноты набора конфигурационных параметров.
-         * @exception ConfigException
          * @see Connection
          */
         Archiver(Manager& config)
@@ -235,7 +234,6 @@ namespace smsc { namespace store
         void Stop();
 
         /**
-         * 
          * @return Возвращает признак, запущена ли подсистема архивации
          *         и создания биллинговых записей в настоящее время.
          */
@@ -244,7 +242,6 @@ namespace smsc { namespace store
         }
         
         /**
-         * 
          * @return Возвращает признак, работает ли реально процесс архивации
          *         и создания биллинговых записей в настоящее время.
          */
