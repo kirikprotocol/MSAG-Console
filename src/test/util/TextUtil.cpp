@@ -11,6 +11,15 @@ using namespace std;
 using namespace smsc::profiler;
 using namespace smsc::util;
 
+string& mixedCase(string& str)
+{
+	for (int i = 0; i < str.length(); i++)
+	{
+		str[i] = rand0(1) ? toupper(str[i]) : tolower(str[i]);
+	}
+	return str;
+}
+
 auto_ptr<char> rand_text(int& length, uint8_t dataCoding)
 {
 	char* buf = new char[length + 1];
