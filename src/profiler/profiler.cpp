@@ -267,7 +267,7 @@ int Profiler::Execute()
 //  int coding;
 
 //  char *str=body;
-  int msg;
+  int msg=-1;
   while(!isStopping)
   {
     if(!hasOutput())
