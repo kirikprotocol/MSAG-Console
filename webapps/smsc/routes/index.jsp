@@ -103,8 +103,8 @@ java.util.HashMap a = new java.util.HashMap();
 
 java.util.Hashtable o = new java.util.Hashtable();
 o.put("name", "1");
-o.put("reports", "2");
-o.put("active", "3");
+o.put("active", "2");
+o.put("reports", "3");
 o.put("allow", "4");
 o.put("billing", "5");
 o.put("archiving", "6");
