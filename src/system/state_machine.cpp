@@ -1163,7 +1163,7 @@ StateType StateMachine::submit(Tuple& t)
     }
   }
 
-  if(smsc->getSmeInfo(dest_proxy_index).interfaceVersion==99)
+  if(smsc->getSmeInfo(dest_proxy_index).interfaceVersion==0x99)
   {
     sms->setStrProperty(Tag::SMSC_SUPPORTED_LOCALE,orgprofile.locale.c_str());
     sms->setIntProperty(Tag::SMSC_SUPPORTED_CODESET,orgprofile.codepage);
