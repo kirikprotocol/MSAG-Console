@@ -30,16 +30,9 @@ static const uint32_t _cf_version=0x00010000;
   ChunkRecordsCount  //number of records in chunk
 */
 
-struct DefaultChunkFileData{
-  enum{
-    RootChunks=1024,
-    ChunkRecordsCount=1024
-  };
-};
-
 typedef File::offset_type ChunkId;
 
-template <class R,class P=DefaultChunkFileData>
+template <class R>
 class ChunkFile{
 protected:
 
@@ -155,6 +148,7 @@ protected:
   File::offset_type fileSize;
   File::offset_type lastRootOffset;
   RootRecord lastRoot;
+  int rootSize;
 
   ChunkFile(const ChunkFile&);
   void operator=(const ChunkFile&);
@@ -187,12 +181,14 @@ public:
     lastRootOffset=h.lastRootOffset;
     f.Seek(lastRootOffset);
     lastRoot.Read(f);
+    rootSize=lastRoot.size;
     opened=true;
     readOnly=readonly;
   }
-  void Create(const char* file)
+  void Create(const char* file,int rsz=1024)
   {
     if(File::Exists(file))RTERROR("chunk file already exists");
+    rootSize=rsz;
     f.RWCreate(file);
     f.SetUnbuffered();
     FileHeader h;
@@ -202,7 +198,7 @@ public:
     h.lastRootOffset=h.Size();
     h.Write(f);
     RootRecord r;
-    r.size=P::RootChunks;
+    r.size=rootSize;
     r.count=0;
     r.nextPage=0;
     lastRootOffset=f.Size();
@@ -210,7 +206,7 @@ public:
     lastRoot=r;
     ChunkStartItem it;
     memset(&it,0,sizeof(it));
-    for(int i=0;i<P::RootChunks;i++)
+    for(int i=0;i<rootSize;i++)
     {
       it.Write(f);
     }
@@ -294,16 +290,16 @@ public:
         File::offset_type off=cf.fileSize;
         cf.f.SeekEnd(0);
         ph.magic=_cf_ch_magic;
-        ph.size=P::ChunkRecordsCount;
+        ph.size=pageChunks;
         ph.count=0;
         ph.nextPage=0;
         ph.Write(cf.f);
         cf.fileSize+=ph.Size();
-        for(int i=0;i<P::ChunkRecordsCount;i++)
+        for(int i=0;i<pageChunks;i++)
         {
           R::WriteBadValue(cf.f);
         }
-        cf.fileSize+=P::ChunkRecordsCount*R::Size();
+        cf.fileSize+=pageChunks*R::Size();
         if(current==last)
         {
           current.nextPage=off;
@@ -349,10 +345,11 @@ public:
     uint32_t readCount;
     File::offset_type lastPageOffset;
     ChunkPageHeader first,current,last;
+    int pageChunks;
     friend class ChunkFile;
   };
 
-  ChunkHandle* CreateChunk()
+  ChunkHandle* CreateChunk(int pageChunks=1024)
   {
     if(readOnly)RTERROR("Attempt to create chunk in readonly chunk file");
     if(lastRoot.count==lastRoot.size)
@@ -360,7 +357,7 @@ public:
       File::offset_type newPageOffset=fileSize;
       lastRoot.nextPage=newPageOffset;
       RootRecord r;
-      r.size=P::RootChunks;
+      r.size=rootSize;
       r.count=0;
       r.nextPage=0;
       f.Seek(fileSize);
@@ -387,17 +384,17 @@ public:
     it.lastPage=fileSize;
     ChunkPageHeader ph;
     ph.magic=_cf_ch_magic;
-    ph.size=P::ChunkRecordsCount;
+    ph.size=pageChunks;
     ph.count=0;
     ph.nextPage=0;
     f.SeekEnd(0);
     ph.Write(f);
     fileSize+=ph.Size();
-    for(int i=0;i<P::ChunkRecordsCount;i++)
+    for(int i=0;i<pageChunks;i++)
     {
       R::WriteBadValue(f);
     }
-    fileSize+=P::ChunkRecordsCount*R::Size();
+    fileSize+=pageChunks*R::Size();
     lastRoot.count++;
 
     f.Seek(id);
@@ -411,6 +408,7 @@ public:
     ret->current=ph;
     ret->last=ph;
     ret->lastPageOffset=it.lastPage;
+    ret->pageChunks=pageChunks;
 
     return ret;
   }

@@ -8,6 +8,34 @@ namespace smsc{
 namespace store{
 namespace index{
 
+void SmsIndex::Init(ConfigView* cfg_)
+{
+  if(!cfg_)throw std::runtime_error("SmeIndex::Init : ConfigView is NULL!!!");
+  ConfigView& cfg=*cfg_;
+  config.smsIdHashSize=cfg.getInt("smsIdHashSize");
+  config.smeIdHashSize=cfg.getInt("smeIdHashSize");
+  config.routeIdHashSize=cfg.getInt("routeIdHashSize");
+  config.addrHashSize=cfg.getInt("addrHashSize");
+
+  config.smeIdRootSize=cfg.getInt("smeIdRootSize");
+  config.smeIdChunkSize=cfg.getInt("smeIdChunkSize");
+  config.routeIdRootSize=cfg.getInt("routeIdRootSize");
+  config.routeIdChunkSize=cfg.getInt("routeIdChunkSize");
+  config.addrRootSize=cfg.getInt("addrRootSize");
+  config.defAddrChunkSize=cfg.getInt("defAddrChunkSize");
+
+  using smsc::util::config::CStrSet;
+  ConfigView *smeConfig=cfg.getSubConfig("smeAddrChunkSize");
+  if(smeConfig)
+  {
+    auto_ptr<CStrSet> params(cfg.getIntParamNames());
+    CStrSet::iterator i=params->begin();
+    for(;i!=params->end();i++)
+    {
+      config.smeAddrChunkSize.Insert(i->c_str(),cfg.getInt(i->c_str()));
+    }
+  }
+}
 
 void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
 {
@@ -69,22 +97,22 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
 
 
 
-    idHash->Create((path+"smsid.idx").c_str(),300*1024);//!!!!!!!!!!!!!!!!!!!!!
+    idHash->Create((path+"smsid.idx").c_str(),config.smsIdHashSize);//!!!!!!!!!!!!!!!!!!!!!
 
-    srcIdHash->Create((path+"srcsmeid.idx").c_str(),256);
-    srcIdData->Create((path+"srcsmeid.dat").c_str());
+    srcIdHash->Create((path+"srcsmeid.idx").c_str(),config.smeIdHashSize);
+    srcIdData->Create((path+"srcsmeid.dat").c_str(),config.smeIdRootSize);
 
-    dstIdHash->Create((path+"dstsmeid.idx").c_str(),256);
-    dstIdData->Create((path+"dstsmeid.dat").c_str());
+    dstIdHash->Create((path+"dstsmeid.idx").c_str(),config.smeIdHashSize);
+    dstIdData->Create((path+"dstsmeid.dat").c_str(),config.smeIdRootSize);
 
-    routeIdHash->Create((path+"routeid.idx").c_str(),256);
-    routeIdData->Create((path+"routeid.dat").c_str());
+    routeIdHash->Create((path+"routeid.idx").c_str(),config.routeIdHashSize);
+    routeIdData->Create((path+"routeid.dat").c_str(),config.routeIdRootSize);
 
-    srcAddrHash->Create((path+"srcaddr.idx").c_str(),300*1024);
-    srcAddrData->Create((path+"srcaddr.dat").c_str());
+    srcAddrHash->Create((path+"srcaddr.idx").c_str(),config.addrHashSize);
+    srcAddrData->Create((path+"srcaddr.dat").c_str(),config.addrRootSize);
 
-    dstAddrHash->Create((path+"dstaddr.idx").c_str(),300*1024);
-    dstAddrData->Create((path+"dstaddr.dat").c_str());
+    dstAddrHash->Create((path+"dstaddr.idx").c_str(),config.addrHashSize);
+    dstAddrData->Create((path+"dstaddr.dat").c_str(),config.addrRootSize);
   }else
   {
     if(cacheDir==dir)
@@ -141,46 +169,79 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
 
   if(cacheDir==dir)
   {
-#define IDX(field,storage) \
+#define IDX1(field,storage,sz) \
   if(storage##Cache.Exists(sms.field)) \
   { \
-    uint64_t k=storage##Cache.Get(sms.field);\
-    h=AutoChunkHandle(storage##Data->OpenChunk(k)); \
+    h=storage##Cache.Get(sms.field);\
   }else \
   { \
-    h=AutoChunkHandle(storage##Data->CreateChunk()); \
+    h=storage##Data->CreateChunk(sz); \
+    storage##Hash->Insert(sms.field,h->GetId()); \
+    storage##Cache.Insert(sms.field,h); \
+  } \
+  h->Write(IdLttKey(offset,sms.lastTime));
+
+#define IDX2(field,storage,sz) \
+  if(storage##Cache.Exists(sms.field)) \
+  { \
+    ChunkId ci=storage##Cache.Get(sms.field);\
+    h=storage##Data->OpenChunk(ci);\
+  }else \
+  { \
+    h=storage##Data->CreateChunk(sz); \
     storage##Hash->Insert(sms.field,h->GetId()); \
     storage##Cache.Insert(sms.field,h->GetId()); \
   } \
   h->Write(IdLttKey(offset,sms.lastTime));
 
-  IDX(srcSmeId,srcId);
-  IDX(dstSmeId,dstId);
-  IDX(routeId,routeId);
-  IDX(originatingAddress.toString().c_str(),srcAddr);
-  IDX(destinationAddress.toString().c_str(),dstAddr);
+
+  IDX1(srcSmeId,srcId,config.smeIdChunkSize);
+  IDX1(dstSmeId,dstId,config.smeIdChunkSize);
+  IDX1(routeId,routeId,config.routeIdChunkSize);
+  IDX2
+  (
+    originatingAddress.toString().c_str(),srcAddr,
+    config.smeAddrChunkSize.Exists(sms.srcSmeId)?
+      config.smeAddrChunkSize.Get(sms.srcSmeId):config.defAddrChunkSize
+  );
+  IDX2
+  (
+    destinationAddress.toString().c_str(),dstAddr,
+    config.smeAddrChunkSize.Exists(sms.dstSmeId)?
+      config.smeAddrChunkSize.Get(sms.dstSmeId):config.defAddrChunkSize
+  );
 
 #undef IDX
 
   }else
   {
 
-#define IDX(field,storage) \
+#define IDX(field,storage,sz) \
   if(storage##Hash->LookUp(sms.field,v)) \
   { \
     h=AutoChunkHandle(storage##Data->OpenChunk(v.key)); \
   }else \
   { \
-    h=AutoChunkHandle(storage##Data->CreateChunk()); \
+    h=AutoChunkHandle(storage##Data->CreateChunk(sz)); \
     storage##Hash->Insert(sms.field,h->GetId()); \
   } \
   h->Write(IdLttKey(offset,sms.lastTime));
 
-  IDX(srcSmeId,srcId);
-  IDX(dstSmeId,dstId);
-  IDX(routeId,routeId);
-  IDX(originatingAddress.toString().c_str(),srcAddr);
-  IDX(destinationAddress.toString().c_str(),dstAddr);
+  IDX(srcSmeId,srcId,config.smeIdChunkSize);
+  IDX(dstSmeId,dstId,config.smeIdChunkSize);
+  IDX(routeId,routeId,config.routeIdChunkSize);
+  IDX
+  (
+    originatingAddress.toString().c_str(),srcAddr,
+    config.smeAddrChunkSize.Exists(sms.srcSmeId)?
+      config.smeAddrChunkSize.Get(sms.srcSmeId):config.defAddrChunkSize
+  );
+  IDX
+  (
+    destinationAddress.toString().c_str(),dstAddr,
+    config.smeAddrChunkSize.Exists(sms.dstSmeId)?
+      config.smeAddrChunkSize.Get(sms.dstSmeId):config.defAddrChunkSize
+  );
 #undef IDX
   }
 }

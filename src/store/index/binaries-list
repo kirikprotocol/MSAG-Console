@@ -1,1 +1,1 @@
-idxtest/idxtest idxtest $(__LIBRARIES) -lsms -lutil -lstore-index -lutil
+idxtest/idxtest idxtest $(__LIBRARIES) $(XERCES_LIB) -lsms -lutil -lstore-index -lutil -lutil-config -lutil-xml

@@ -13,13 +13,16 @@
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/XHash.hpp"
 
-#include "RefPtr.hpp"
+#include "util/config/ConfigView.h"
+
+#include "core/buffers/RefPtr.hpp"
 
 namespace smsc{
 namespace store{
 namespace index{
 
 using namespace smsc::sms;
+using smsc::util::config::ConfigView;
 
 static const uint8_t T_SMS_ID      = 10;
 static const uint8_t T_FROM_DATE   = 20;
@@ -64,16 +67,9 @@ typedef DiskHash<StrKey<15>,Int64Key> SmeIdDiskHash;
 typedef DiskHash<StrKey<32>,Int64Key> RouteIdDiskHash;
 typedef DiskHash<StrKey<28>,Int64Key> AddrDiskHash;
 
-struct ChunkFileData{
-  enum{
-    RootChunks=1024,
-    ChunkRecordsCount=32
-  };
-};
 
-
-typedef ChunkFile<IdLttKey,ChunkFileData> IntLttChunkFile;
-typedef std::auto_ptr<IntLttChunkFile::ChunkHandle> AutoChunkHandle;
+typedef ChunkFile<IdLttKey> IntLttChunkFile;
+typedef RefPtr<IntLttChunkFile::ChunkHandle> AutoChunkHandle;
 
 
 class SmsIndex{
@@ -82,13 +78,30 @@ public:
   {
     loc=location;
   }
+  void Init(ConfigView*);
   void IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms);
   int QuerySms(const char* dir,const ParamArray& params,ResultArray& res);
 protected:
   std::string loc;
 
+  struct IndexConfig{
+    int smsIdHashSize;
+    int smeIdHashSize;
+    int routeIdHashSize;
+    int addrHashSize;
+
+    int smeIdRootSize;
+    int smeIdChunkSize;
+    int routeIdRootSize;
+    int routeIdChunkSize;
+    int addrRootSize;
+    int defAddrChunkSize;
+    Hash<int> smeAddrChunkSize;
+  }config;
+
   std::string cacheDir;
-  Hash<uint64_t> srcIdCache,dstIdCache,routeIdCache,srcAddrCache,dstAddrCache;
+  Hash<AutoChunkHandle> srcIdCache,dstIdCache,routeIdCache;
+  Hash<uint64_t> srcAddrCache,dstAddrCache;
 
   RefPtr<SmsIdDiskHash> idHashCache;
   RefPtr<SmeIdDiskHash> srcIdHashCache;
