@@ -54,7 +54,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
     }
     {
       char msg[256];
-      smsc::sms::Body& sms_body = sms->getMessageBody();
+      const smsc::sms::Body& sms_body = sms->getMessageBody();
       int msg_length = sms_body.getData((uint8_t*)msg);
       __require__(msg_length <= sizeof(msg));
       message.set_shortMessage(msg,msg_length);
@@ -67,9 +67,9 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
     {
       char smpp_time[SMPP_TIME_BUFFER_LENGTH];
       if ( cTime2SmppTime(sms->getWaitTime(),smpp_time) )
-				message.set_scheduleDeliveryTime(smpp_time);
+        message.set_scheduleDeliveryTime(smpp_time);
       if ( cTime2SmppTime(sms->getValidTime(),smpp_time) )
-				message.set_validityPeriod(smpp_time);
+        message.set_validityPeriod(smpp_time);
     }
   }
 }
