@@ -82,6 +82,7 @@ struct Ss7SmeRecord
 struct SmeRecord
 {
   RecordType rectype;
+  int priority;
   char* smeUid;
   union
   {

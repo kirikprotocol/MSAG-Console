@@ -3,6 +3,7 @@
 
 <records>
 <smerecord type="smpp" uid="1">
+  <param name="priority" value="16536"/>
   <param name="typeOfNumber" value="0"/>
   <param name="numberingPlan" value="0"/>
   <param name="interfaceVersion" value="0x34"/>
@@ -15,6 +16,7 @@
   <param name="timeout" value="8"/>
 </smerecord>
 <smerecord type="smpp" uid="profiler">
+  <param name="priority" value="16536"/>
   <param name="typeOfNumber" value="1"/>
   <param name="numberingPlan" value="1"/>
   <param name="interfaceVersion" value="52"/>
@@ -26,6 +28,7 @@
   <param name="timeout" value="8"/>
 </smerecord>
 <smerecord type="smpp" uid="abonentinfo">
+  <param name="priority" value="16536"/>
   <param name="typeOfNumber" value="1"/>
   <param name="numberingPlan" value="1"/>
   <param name="interfaceVersion" value="52"/>
@@ -37,6 +40,7 @@
   <param name="timeout" value="8"/>
 </smerecord>
 <smerecord type="smpp" uid="smscsme">
+  <param name="priority" value="16536"/>
   <param name="typeOfNumber" value="1"/>
   <param name="numberingPlan" value="1"/>
   <param name="interfaceVersion" value="52"/>

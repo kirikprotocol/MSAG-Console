@@ -6,6 +6,7 @@
 	billing (true | false) #REQUIRED
 	archiving (true | false) #REQUIRED
 	enabling (true | false) "true"
+	priority CDATA #REQUIRED
 >
 <!ELEMENT source (subject | mask)>
 <!ELEMENT destination (subject | mask)>

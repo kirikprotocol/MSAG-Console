@@ -103,6 +103,7 @@ class smsc::util::config::route::RouteConfig;
 class Route {
 private:
   std::string id;
+  int priority;
   SourceHash sources;
   DestinationHash destinations;
   bool billing;
@@ -113,14 +114,14 @@ private:
 
 public:
   Route()
-    : id(), sources(), destinations(), billing(false), archiving(false), enabling(true)
+    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true)
   {}
   Route(const Route &r)
-    : id(r.id), sources(r.sources), destinations(r.destinations),
+    : id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),
       billing(r.billing), archiving(r.archiving), enabling(r.enabling)
   {}
-  Route(const std::string & rid, bool isBilling, bool isArchiving, bool isEnabling)
-    : id(rid), sources(), destinations(),
+  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling)
+    : id(rid), priority(prior), sources(), destinations(),
       billing(isBilling), archiving(isArchiving), enabling(isEnabling)
   {}
 
@@ -136,6 +137,7 @@ public:
   const bool isArchiving() const {return archiving;}
   const bool isEnabling() const {return enabling;}
   const char * const getId() const {return id.c_str();}
+  int getPriority() {return priority;}
   const std::string & getIdString() const {return id;}
 };
 //typedef std::vector<Route> RouteVector;

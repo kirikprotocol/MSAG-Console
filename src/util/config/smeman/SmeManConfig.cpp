@@ -90,6 +90,9 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             if (strcmp(name.get(), "typeOfNumber") == 0)
             {
               record->recdata.smppSme.typeOfNumber = strtoll(value.get(), (char**)0, 0);
+            } else if (strcmp(name.get(), "priority") == 0)
+            {
+              record->priority = strtoll(value.get(), (char**)0, 0);
             } else if (strcmp(name.get(), "numberingPlan") == 0)
             {
               record->recdata.smppSme.numberingPlan = strtoll(value.get(), (char**)0, 0);
@@ -186,6 +189,7 @@ SmeManConfig::status SmeManConfig::store(std::ostream &out) const
       if (rec->rectype == SMPP_SME)
       {
         out << "  <smerecord type=\"smpp\" uid=\"" << rec->smeUid << "\">" << std::endl;
+        out << "    <param name=\"priority\"         value=\"" << (uint16_t)rec->priority                         << "\"/>" << std::endl;
         out << "    <param name=\"typeOfNumber\"     value=\"" << (uint32_t)rec->recdata.smppSme.typeOfNumber     << "\"/>" << std::endl;
         out << "    <param name=\"numberingPlan\"    value=\"" << (uint32_t)rec->recdata.smppSme.numberingPlan    << "\"/>" << std::endl;
         out << "    <param name=\"interfaceVersion\" value=\"" << (uint32_t)rec->recdata.smppSme.interfaceVersion << "\"/>" << std::endl;
