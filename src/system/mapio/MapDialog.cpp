@@ -4,6 +4,7 @@
 #include <memory>
 #include <list>
 #include <time.h>
+#include <stdexcept>
 
 using namespace std;
 using namespace smsc::sms;
@@ -347,7 +348,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   oa->st.ton = sms->getOriginatingAddress().getTypeOfNumber();
   oa->st.npi = sms->getOriginatingAddress().getNumberingPlan();
   oa->len = sms->getOriginatingAddress().getLength();
-  oa_length = (oa->len+1)/2; 
+  unsigned oa_length = (oa->len+1)/2; 
   {
     char* sval = sms->getOriginatingAddress().value;
     for ( int i=0; i<oa->len; ++i ){
@@ -372,7 +373,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   {
     time_t t;
     time(&t);
-    struct tm* tms = gtime(&t);  
+    struct tm* tms = gmtime(&t);  
     MAP_TIMESTAMP* pdu_tm = (MAP_TIMESTAMP*)pdu_ptr;
     pdu_tm->year.first  =  ((tms->tm_year)%100)/10;
     pdu_tm->year.second  = tms->tm_year%10;
