@@ -738,6 +738,16 @@ StateType StateMachine::forward(Tuple& t)
       sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
       sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
     }
+    if(t.command->is_reschedulingForward())
+    {
+      try{
+        Descriptor d;
+        store->changeSmsStateToEnroute(t.msgId,d,0,time(NULL));
+      }catch(...)
+      {
+        __trace__("FORWARD: failed to reschedule sms to now");
+      }
+    }
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
     dest_proxy->putCommand(delivery);
   }catch(...)

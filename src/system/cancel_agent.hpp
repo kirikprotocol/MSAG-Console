@@ -36,7 +36,7 @@ public:
       if(queue.Count()==0)mon.wait();
       if(queue.Count()==0)continue;
       SmscCommand cmd;
-      queue.Pop(cmd);
+      queue.Shift(cmd);
       mon.Unlock();
       ////
       // processing here

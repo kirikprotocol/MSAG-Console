@@ -41,7 +41,25 @@ public:
       ////
       // processing here
 
-
+      try{
+        smsc::store::IdIterator *it=store->getReadyForDelivery(cmd->get_address());
+        SMSId id;
+        while(it->getNextId(id))
+        {
+          ids.Push(id);
+        }
+        delete it;
+        __trace2__("AlertAgent: found %d messages");
+        for(int i=0;i<ids.Count();i++)
+        {
+          SmscCommand cmd=SmscCommand::makeForward(true);
+          eventQueue.enqueue(ids[i],cmd);
+        }
+        ids.Clean();
+      }catch(...)
+      {
+        __trace__("AlertAgent: database exception");
+      }
 
       // end of processing
       ////
