@@ -41,13 +41,16 @@ enum CommandId
   SUBMIT,        //3
   SUBMIT_RESP,   //4
   FORWARD,       //5
-  QUERY,         //6
-  ALERT,         //7
-  GENERIC_NACK,  //8
-  UNBIND_RESP,   //9
-  REPLACE,       //10
-  REPLACE_RESP,  //11
-  QUERY_RESP,    //12
+  ALERT,         //6
+  GENERIC_NACK,  //7
+  QUERY,         //8
+  QUERY_RESP,    //9
+  UNBIND,        //10
+  UNBIND_RESP,   //11
+  REPLACE,       //12
+  REPLACE_RESP,  //13
+  CANCEL,        //14
+  CANCEL_RESP,   //15
 };
 
 
@@ -101,6 +104,16 @@ static inline void fillField(auto_ptr<char>& field,const char* text,int length=-
   field.get()[length]=0;
 }
 
+static inline void fillSmppAddr(auto_ptr<char>& field,PduAddress& addr)
+{
+  char buf[64];
+  int len=sprintf(buf,".%d.%d.%.20s",
+    (int)addr.get_typeOfNumber(),
+    (int)addr.get_numberingPlan(),
+    addr.get_value());
+  fillField(field,buf,len);
+}
+
 struct ReplaceSm{
   auto_ptr<char> messageId;
   auto_ptr<char> sourceAddr;
@@ -114,12 +127,7 @@ struct ReplaceSm{
   ReplaceSm(PduReplaceSm* repl)
   {
     fillField(messageId,repl->get_messageId());
-    char addr[64];
-    int len=sprintf(addr,".%d.%d.%.20s",
-      (int)repl->get_source().get_typeOfNumber(),
-      (int)repl->get_source().get_numberingPlan(),
-      repl->get_source().get_value());
-    fillField(sourceAddr,addr,len);
+    fillSmppAddr(sourceAddr,repl->get_source());
     scheduleDeliveryTime=smppTime2CTime(repl->scheduleDeliveryTime);
     validityPeriod=smppTime2CTime(repl->validityPeriod);
     registeredDelivery=repl->get_registredDelivery();
@@ -135,12 +143,7 @@ struct QuerySm{
   QuerySm(PduQuerySm* q)
   {
     fillField(messageId,q->get_messageId());
-    char addr[64];
-    int len=sprintf(addr,".%d.%d.%.20s",
-      (int)q->get_source().get_typeOfNumber(),
-      (int)q->get_source().get_numberingPlan(),
-      q->get_source().get_value());
-    fillField(sourceAddr,addr,len);
+    fillSmppAddr(sourceAddr,q->get_source());
   }
 };
 
@@ -169,12 +172,27 @@ struct QuerySmResp{
   }
   void fillPdu(PduQuerySmResp* pdu)
   {
-    pdu->get_header().set_commandStatus(commandStatus);
     pdu->set_messageId(messageId.get());
     pdu->set_finalDate(finalDate.get());
     pdu->set_messageState(messageState);
     pdu->set_errorCode(networkCode);
   }
+};
+
+struct CancelSm{
+  auto_ptr<char> serviceType;
+  auto_ptr<char> messageId;
+  auto_ptr<char> sourceAddr;
+  auto_ptr<char> destAddr;
+
+  CancelSm(PduCancelSm* pdu)
+  {
+    fillField(serviceType,pdu->get_serviceType());
+    fillField(messageId,pdu->get_messageId());
+    fillSmppAddr(sourceAddr,pdu->get_source());
+    fillSmppAddr(destAddr,pdu->get_dest());
+  }
+
 };
 
 class SmeProxy;
@@ -212,6 +230,10 @@ struct _SmscCommand
       delete ( (QuerySm*)dta);
       break;
 
+    case CANCEL:
+      delete ( (CancelSm*)dta);
+      break;
+
     case UNKNOWN:
     case FORWARD:
     case ALERT:
@@ -219,6 +241,7 @@ struct _SmscCommand
     case UNBIND_RESP:
     case REPLACE_RESP:
     case QUERY_RESP:
+    case CANCEL_RESP:
       // nothing to delete
       break;
     default:
@@ -297,6 +320,7 @@ public:
     static const int INVALIDDATACODING = 8;
     static const int REPLACEFAIL = 9;
     static const int QUERYFAIL = 10;
+    static const int CANCELFAIL = 11;
   };
 
   SmeProxy* getProxy(){return cmd->proxy;}
@@ -429,6 +453,19 @@ public:
     return cmd;
   }
 
+  static SmscCommand makeCancelSmResp(uint32_t dialogId,uint32_t status)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=CANCEL_RESP;
+    _cmd.dta=(void*)status;
+    _cmd.dialogId=dialogId;
+    return cmd;
+  }
+
+
 
   ~SmscCommand() {
      //__trace__(__PRETTY_FUNCTION__);
@@ -470,7 +507,10 @@ public:
         goto end_construct;*/
     //  return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
     //case SmppCommandSet::REPLACE_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-      //case CANCEL_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+      case SmppCommandSet::CANCEL_SM:
+        _cmd->cmdid=CANCEL;
+        (CancelSm*)_cmd->dta=new CancelSm(reinterpret_cast<PduCancelSm*>(pdu));
+        goto end_construct;
       //case CANCEL_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
       //case BIND_TRANCIEVER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
       //case BIND_TRANCIEVER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
@@ -536,17 +576,19 @@ public:
   {
     switch(status)
     {
-    case Status::OK : return SmppStatusSet::ESME_ROK;
-    case Status::SYSERROR : return SmppStatusSet::ESME_RSYSERR;
-    case Status::INVSRC: return SmppStatusSet::ESME_RINVSRCADR;
-    case Status::INVDST: return SmppStatusSet::ESME_RINVDSTADR;
-    case Status::NOROUTE : return SmppStatusSet::ESME_RINVDSTADR;
-    case Status::DBERROR : return SmppStatusSet::ESME_RSYSERR;
-    case Status::INVALIDSCHEDULE : return SmppStatusSet::ESME_RINVSCHED;
-    case Status::INVALIDVALIDTIME : return SmppStatusSet::ESME_RINVEXPIRY;
+    case Status::OK :                return SmppStatusSet::ESME_ROK;
+    case Status::SYSERROR :          return SmppStatusSet::ESME_RSYSERR;
+    case Status::INVSRC:             return SmppStatusSet::ESME_RINVSRCADR;
+    case Status::INVDST:             return SmppStatusSet::ESME_RINVDSTADR;
+    case Status::NOROUTE :           return SmppStatusSet::ESME_RINVDSTADR;
+    case Status::DBERROR :           return SmppStatusSet::ESME_RSYSERR;
+    case Status::INVALIDSCHEDULE :   return SmppStatusSet::ESME_RINVSCHED;
+    case Status::INVALIDVALIDTIME :  return SmppStatusSet::ESME_RINVEXPIRY;
     case Status::INVALIDDATACODING : return SmppStatusSet::ESME_RINVDCS;
-    case Status::REPLACEFAIL : return SmppStatusSet::ESME_RREPLACEFAIL;
-    case Status::QUERYFAIL : return SmppStatusSet::ESME_RQUERYFAIL;
+    case Status::REPLACEFAIL :       return SmppStatusSet::ESME_RREPLACEFAIL;
+    case Status::QUERYFAIL :         return SmppStatusSet::ESME_RQUERYFAIL;
+    case Status::CANCELFAIL:         return SmppStatusSet::ESME_RCANCELFAIL;
+
     default : return SmppStatusSet::ESME_RUNKNOWNERR;
     }
   }
@@ -598,7 +640,7 @@ public:
         auto_ptr<PduGenericNack> gnack(new PduGenericNack);
         gnack->header.set_commandId(SmppCommandSet::GENERIC_NACK);
         gnack->header.set_sequenceNumber(c.get_dialogId());
-        gnack->header.set_commandStatus((uint32_t)c.dta);
+        gnack->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
         return reinterpret_cast<SmppHeader*>(gnack.release());
       }
     case UNBIND_RESP:
@@ -606,7 +648,7 @@ public:
         auto_ptr<PduUnbindResp> unb(new PduUnbindResp);
         unb->header.set_commandId(SmppCommandSet::UNBIND_RESP);
         unb->header.set_sequenceNumber(c.get_dialogId());
-        unb->header.set_commandStatus((uint32_t)c.dta);
+        unb->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
         return reinterpret_cast<SmppHeader*>(unb.release());
       }
     case REPLACE_RESP:
@@ -614,7 +656,7 @@ public:
         auto_ptr<PduReplaceSmResp> repl(new PduReplaceSmResp);
         repl->header.set_commandId(SmppCommandSet::REPLACE_SM_RESP);
         repl->header.set_sequenceNumber(c.get_dialogId());
-        repl->header.set_commandStatus((uint32_t)c.dta);
+        repl->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
         return reinterpret_cast<SmppHeader*>(repl.release());
       }
     case QUERY_RESP:
@@ -623,7 +665,22 @@ public:
         qresp->header.set_commandId(SmppCommandSet::QUERY_SM_RESP);
         qresp->header.set_sequenceNumber(c.get_dialogId());
         ((QuerySmResp*)c.dta)->fillPdu(qresp.get());
+        qresp->get_header().set_commandStatus
+        (
+          makeSmppStatus
+          (
+            ((QuerySmResp*)c.dta)->commandStatus
+          )
+        );
         return reinterpret_cast<SmppHeader*>(qresp.release());
+      }
+    case CANCEL_RESP:
+      {
+        auto_ptr<PduReplaceSmResp> repl(new PduReplaceSmResp);
+        repl->header.set_commandId(SmppCommandSet::CANCEL_SM_RESP);
+        repl->header.set_sequenceNumber(c.get_dialogId());
+        repl->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
+        return reinterpret_cast<SmppHeader*>(repl.release());
       }
     default:
       __unreachable__("unknown commandid");

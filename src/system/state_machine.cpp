@@ -903,7 +903,7 @@ StateType StateMachine::query(Tuple& t)
         0
       )
     );
-    return UNKNOWN_STATE;
+    return t.state;
   }
   int state=7;
   switch(sms.getState())
@@ -926,6 +926,12 @@ StateType StateMachine::query(Tuple& t)
       0
     )
   );
+  return t.state;
+}
+
+StateType StateMachine::cancel(Tuple& t)
+{
+  //
 }
 
 

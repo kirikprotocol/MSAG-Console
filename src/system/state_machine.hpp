@@ -69,6 +69,7 @@ protected:
   StateType alert(Tuple& t);
   StateType replace(Tuple& t);
   StateType query(Tuple& t);
+  StateType cancel(Tuple& t);
 };
 
 };//system
