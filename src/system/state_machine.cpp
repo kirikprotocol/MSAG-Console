@@ -4576,7 +4576,7 @@ void StateMachine::submitReceipt(SMS& sms,int type)
   sms.setNextTime(now);
   sms.setValidTime(now+maxValidTime);
 
-  if(sms.hasIntProperty(Tag::SMPP_ESM_CLASS))
+  if(!sms.hasIntProperty(Tag::SMPP_ESM_CLASS))
   {
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,0);
   }
