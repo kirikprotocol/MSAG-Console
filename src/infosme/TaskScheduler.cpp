@@ -99,7 +99,7 @@ int TaskScheduler::Execute()
                         logger.error("Task '%s' not found.", task_name);
                         continue;
                     }
-                    if (!task->isInProcess())
+                    if (task->isEnabled() && !task->isInProcess())
                         processor->getTaskInvokeAdapter().invokeBeginProcess(task);
                 }
         } 

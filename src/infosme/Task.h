@@ -47,18 +47,21 @@ namespace smsc { namespace infosme
     {
         std::string name;
         std::string dsId;
-        int         priority;
-
+        bool enabled;
+        int priority;
+        
         TaskInfo()
-            : name(""), dsId(""), priority(0) {};
+            : name(""), dsId(""), enabled(true), priority(0) {};
         TaskInfo(const TaskInfo& info) 
-            : name(info.name), dsId(info.dsId), priority(info.priority) {}; 
+            : name(info.name), dsId(info.dsId), 
+                enabled(info.enabled), priority(info.priority) {}; 
         virtual ~TaskInfo() {};
         
         TaskInfo& operator=(const TaskInfo& info)
         {
             name = info.name;
             dsId = info.dsId;
+            enabled = info.enabled;
             priority = info.priority;
             return *this;
         };
@@ -90,6 +93,12 @@ namespace smsc { namespace infosme
         }
         inline std::string getName() {
             return info.name;
+        }
+        inline bool isEnabled() {
+            return info.enabled;
+        }
+        inline bool setEnabled(bool enabled=true) {
+            return info.enabled = enabled;
         }
         
         void init(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt)
