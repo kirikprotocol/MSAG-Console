@@ -79,8 +79,9 @@ protected:
     bool process(SMS& request, SMS& responce) 
         throw (ProcessException)
     {
+        // TODO: implement it !!!
         std::string in, out;
-        processor.processNotification(in, out);
+        out = processor.processNotification(in);
         processor.processReceipt(in);
         return false;
     };

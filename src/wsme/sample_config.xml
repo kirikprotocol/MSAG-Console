@@ -20,6 +20,14 @@
             <param name="max" type="int">15</param>
             <param name="init" type="int">5</param>
         </section>  
+
+        <section name="DataSource">
+            <param name="type" type="string">OCI</param>
+            <param name="connections" type="int">5</param>
+            <param name="dbInstance" type="string">DBS_ORCL</param>
+            <param name="dbUserName" type="string">smsc</param>
+            <param name="dbUserPassword" type="string">smsc</param>
+        </section>
             
         <section name="SMSC">
             <param name="host" type="string">smsc</param>
@@ -28,6 +36,14 @@
             <param name="timeout" type="int">10</param>
             <param name="password" type="string">3</param>
         </section>  
+	
+	<section name="AdManager">
+	    <section name="History">
+		<param name="period" type="int">10</param>
+	    </section>
+	    <section name="Repository">
+	    </section>
+	</section>
 
     </section>
 
