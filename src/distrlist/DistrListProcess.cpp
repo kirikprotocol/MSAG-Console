@@ -175,7 +175,11 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
   multi->msg.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,0);
   if ( multi->number_of_dests == 0 ) {
     __trace__(":DPL: empty multisubmit");
-    return;
+    //return;
+    SmscCommand cmd2 = SmscCommand::makeSubmitMultiResp("",task->cmd->get_dialogId(),Status::INVNUMDESTS);
+    cmd2->get_MultiResp()->set_unsuccessCount(0);
+    SmeProxy* srcproxy =  task->cmd.getProxy();
+    srcproxy->putCommand(cmd2);
   }
   auto_ptr<ListTask> task(new ListTask());
   task->count = 0;
