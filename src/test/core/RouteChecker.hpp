@@ -23,12 +23,12 @@ using smsc::smpp::PduDeliverySm;
 class RouteChecker
 {
 	const string systemId;
-	const Address smeAddr;
+	const Address smeAlias;
 	const SmeRegistry* smeReg;
 	const AliasRegistry* aliasReg;
 	const RouteRegistry* routeReg;
 public:
-	RouteChecker(const string& systemId, const Address& smeAddr,
+	RouteChecker(const string& systemId, const Address& smeAlias,
 		const SmeRegistry* smeReg, const AliasRegistry* aliasReg,
 		const RouteRegistry* routeReg);
 

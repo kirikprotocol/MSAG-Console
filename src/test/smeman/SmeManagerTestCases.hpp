@@ -57,12 +57,12 @@ public:
 	/**
 	 * Регистрация sme с корректными параметрами.
 	 */
-	TCResult* addCorrectSme(Address* smeAddr, SmeInfo* sme, int num);
+	TCResult* addCorrectSme(Address* smeAlias, SmeInfo* sme, int num);
 	
 	/**
 	 * Регистрация sme с пустым systemId.
 	 */
-	TCResult* addCorrectSmeWithEmptySystemId(Address* smeAddr, SmeInfo* sme);
+	TCResult* addCorrectSmeWithEmptySystemId(Address* smeAlias, SmeInfo* sme);
 
 	/**
 	 * Регистрация sme с некорректными параметрами.
@@ -130,7 +130,8 @@ private:
 	
 	void setupRandomCorrectSmeInfo(SmeInfo* sme);
 	vector<int> compareSmeInfo(const SmeInfo& sme1, const SmeInfo& sme2);
-	void debugSme(const char* tc, SmeInfo& sme);
+	void debugSme(const char* tc, const SmeInfo& sme);
+	void addSme(const char* tc, int num, const Address* smeAlias, const SmeInfo* sme);
 };
 
 }

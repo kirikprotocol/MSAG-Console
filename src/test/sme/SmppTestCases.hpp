@@ -29,7 +29,7 @@ class SmppTestCases : BaseTestCases
 {
 public:
 	SmppTestCases(const SmeConfig& config, const SmeSystemId& systemId,
-		const Address& smeAddr, const SmeRegistry* smeReg,
+		const Address& smeAlias, const SmeRegistry* smeReg,
 		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
 		ResultHandler* handler); //throws Exception
 	
@@ -71,7 +71,7 @@ protected:
 private:
 	const SmeConfig config;
 	const SmeSystemId systemId;
-	const Address smeAddr;
+	const Address smeAlias;
 	//external
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;

@@ -104,8 +104,8 @@ RouteInfo RouteManagerFunctionalTest::prepareForNewRoute(
 {
 	//Для каждого маршрута - отдельная sme (для идентификации)
 	sme.push_back(new SmeInfo());
-	Address smeAddr;
-	stack.back()->push_back(tcSme.addCorrectSme(&smeAddr, sme.back(), RAND_TC));
+	Address smeAlias;
+	stack.back()->push_back(tcSme.addCorrectSme(&smeAlias, sme.back(), RAND_TC));
 	if (createProxy)
 	{
 		SmeProxy* p;

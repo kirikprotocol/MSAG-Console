@@ -38,8 +38,8 @@ void RouteManagerTest::addRouteNotMatch(const Address& origAddr,
 {
 	SmeInfo sme;
 	SmeProxy* proxy = NULL;
-	Address smeAddr;
-	cout << *tcSme.addCorrectSme(&smeAddr, &sme, smeNum) << endl;
+	Address smeAlias;
+	cout << *tcSme.addCorrectSme(&smeAlias, &sme, smeNum) << endl;
 	if (needProxy)
 	{
 		cout << *tcSme.registerCorrectSmeProxy(sme.systemId, &proxy) << endl;
@@ -63,8 +63,8 @@ void RouteManagerTest::addRouteMatch(const Address& origAddr, const Address& des
 {
 	SmeInfo sme;
 	SmeProxy* proxy = NULL;
-	Address smeAddr;
-	cout << *tcSme.addCorrectSme(&smeAddr, &sme, smeNum) << endl;
+	Address smeAlias;
+	cout << *tcSme.addCorrectSme(&smeAlias, &sme, smeNum) << endl;
 	if (needProxy)
 	{
 		cout << *tcSme.registerCorrectSmeProxy(sme.systemId, &proxy) << endl;

@@ -26,7 +26,7 @@ class SmppTransmitterTestCases : BaseTestCases
 {
 public:
 	SmppTransmitterTestCases(SmppSession* session, const SmeSystemId& systemId,
-		const Address& smeAddr, const SmeRegistry* smeReg,
+		const Address& smeAlias, const SmeRegistry* smeReg,
 		RouteChecker* routeChecker, SmppPduChecker* pduChecker);
 	
 	virtual ~SmppTransmitterTestCases() {}
@@ -65,7 +65,7 @@ protected:
 private:
 	SmppSession* session;
 	const SmeSystemId systemId;
-	const Address smeAddr;
+	const Address smeAlias;
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;
 	RouteChecker* routeChecker;

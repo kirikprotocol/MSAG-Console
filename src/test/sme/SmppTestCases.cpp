@@ -13,21 +13,21 @@ using namespace smsc::smpp::SmppCommandSet;
 SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _systemId,
 	const Address& addr, const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
 	const RouteRegistry* _routeReg, ResultHandler* handler)
-	: config(_config), session(NULL), systemId(_systemId), smeAddr(addr),
+	: config(_config), session(NULL), systemId(_systemId), smeAlias(addr),
 	smeReg(_smeReg), aliasReg(_aliasReg), routeReg(_routeReg), resultHandler(handler)
 {
 	__require__(smeReg);
 	__require__(aliasReg);
 	__require__(routeReg);
 	__require__(resultHandler);
-	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
-	routeChecker = new RouteChecker(systemId, smeAddr, smeReg, aliasReg, routeReg);
+	pduReg = smeReg->getPduRegistry(smeAlias); //может быть NULL
+	routeChecker = new RouteChecker(systemId, smeAlias, smeReg, aliasReg, routeReg);
 	pduChecker = new SmppPduChecker(pduReg, routeChecker);
-	receiver = new SmppReceiverTestCases(systemId, smeAddr, smeReg,
+	receiver = new SmppReceiverTestCases(systemId, smeAlias, smeReg,
 		aliasReg, routeReg, handler, routeChecker, pduChecker);
 	session = new SmppSession(config, receiver);
 	receiver->setSession(session);
-	transmitter = new SmppTransmitterTestCases(session, systemId, smeAddr,
+	transmitter = new SmppTransmitterTestCases(session, systemId, smeAlias,
 		smeReg, routeChecker, pduChecker);
 }
 
@@ -320,9 +320,13 @@ int SmppTestCases::checkValidTime()
 			res |= 0x8;
 			pduData->intermediateNotificationFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
-		__removedPdu__("SmppTestCases::checkValidTime");
-		deleted++;
-		pduReg->removePdu(pduData);
+		//для pdu с validTime меньше текущего мог быть неполучен респонс
+		if (pduData->submitTime <= __checkTime__)
+		{
+			__removedPdu__("SmppTestCases::checkValidTime");
+			deleted++;
+			pduReg->removePdu(pduData);
+		}
 	}
 	delete it;
 	__checkSummary__("SmppTestCases::checkValidTime");
