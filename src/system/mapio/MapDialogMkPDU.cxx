@@ -100,7 +100,9 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   }
   else // make coding scheme
   {
-    if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) ){
+    if ( sms->getIntProperty(Tag::SMSC_FORCE_DC) ) {          
+      datacoding = sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
+    }else if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) ){
       __trace2__("MAP::mkDeliveryPDU: dest_addr_subunit = 0x%x",
                  sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
       // coding scheme 1111xxxx

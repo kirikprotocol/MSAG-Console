@@ -2,6 +2,7 @@
 #include "MapIoTask.h"
 #include <sys/types.h>
 #include <signal.h>
+#include <time.h>
 
 #define MAXENTRIES 10
 #define MY_USER_ID USER01_ID
@@ -107,21 +108,34 @@ void MapIoTask::dispatcher()
 {
   MSG_T message;
   USHORT_T result;
+  USHORT_T map_result;
   unsigned timecounter = 0;
+  time_t last_msg;
+  time_t cur_time;
+  APP_EVENT_T *eventlist = NULL;
+  INT_T	       eventlist_len = 0;
+  
   message.receiver = MY_USER_ID;
   for(;;){
     MAP_isAlive = true;
     if ( isStopping ) return;
     MAP_dispatching = true;
-    result = EINSS7CpMsgRecv_r(&message,1000);
+//  result = EINSS7CpMsgRecv_r(&message,1000);
+    result = MsgRecvEvent( &message, eventlist, &eventlist_len, 1000 );
     MAP_dispatching = false;
     if ( ++timecounter == 60 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
-      if ( __pingPongWaitCounter > 0 )  {
+      time( &cur_time );
+      if( cur_time-last_msg > 120 ) {
         result = MSG_BROKEN_CONNECTION;
         kill(getpid(),17);
-        __trace2__("MAP:: ping-pong failed");
+        __trace2__("MAP:: no messages received in 2 minutes");
       }
+//      if ( __pingPongWaitCounter > 0 )  {
+//        result = MSG_BROKEN_CONNECTION;
+//        kill(getpid(),17);
+//        __trace2__("MAP:: ping-pong failed");
+//      }
       else{
         try{
           MAPIO_QueryMscVersionInternal();
@@ -129,7 +143,7 @@ void MapIoTask::dispatcher()
           result = MSG_BROKEN_CONNECTION;
         }
       }
-      ++__pingPongWaitCounter;
+//      ++__pingPongWaitCounter;
 
       if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
         result = MSG_BROKEN_CONNECTION;
@@ -192,7 +206,11 @@ restart:
       __trace2__("MAP: MsgRecv hatching msg to reset priority order " );
       message.msg_p[4] = 0;
     }
-    Et96MapHandleIndication(&message);
+    time( &last_msg );
+    map_result = Et96MapHandleIndication(&message);
+    if( map_result != ET96MAP_E_OK ) {
+      __trace2__("MAP: WARN: error at Et96MapHandleIndication with code x%hx",map_result);
+    }
   }
 }
 
