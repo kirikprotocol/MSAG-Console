@@ -2727,10 +2727,8 @@ USHORT_T Et96MapDelimiterInd(
     case MAPST_WaitUSSDNotifyClose:
       dialog->state = MAPST_WaitSubmitUSSDNotifyConf;
       SendSubmitCommand(dialog.get());
-      result = Et96MapCloseReq(dialog->ssn, dialog->dialogid_map, ET96MAP_NORMAL_RELEASE, 0, 0, 0 );
-      if ( result != ET96MAP_E_OK )
-        throw runtime_error(
-          FormatText("MAP::Et96MapDelimiterInd: ussd dialog close after notify error 0x%x",result));
+      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+      DropMapDialog(dialog.get());
       break;
     default:
       throw MAPDIALOG_BAD_STATE(
