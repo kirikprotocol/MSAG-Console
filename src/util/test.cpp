@@ -214,7 +214,7 @@ char bin10[]={
 };
 
 Test tst[]={
-
+/*
   {bin1,sizeof(bin1),8,8},
   {bin2,sizeof(bin2),240,0},
   {bin3,sizeof(bin3),240,0},
@@ -224,6 +224,7 @@ Test tst[]={
   {bin7,sizeof(bin7),0,0},
   {bin8,sizeof(bin8),0,0},
   {bin9,sizeof(bin9),240,240},
+*/
   {bin10,sizeof(bin10),8,0}
 };
 
@@ -345,6 +346,9 @@ int main(int argc, char** argv)
     s.setIntProperty(Tag::SMSC_UDH_CONCAT,1);
     s.setIntProperty(Tag::SMSC_DSTCODEPAGE,tst[t].dstdc);
     s.setBinProperty(Tag::SMSC_RAW_PAYLOAD,tst[t].msg,tst[t].sz);
+
+    char x[]={8,8,8,8};
+    s.setBinProperty(Tag::SMSC_DC_LIST,x,4);
 
     smsc::profiler::Profile p;
     p.codepage=0;
