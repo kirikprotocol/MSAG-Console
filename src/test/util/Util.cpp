@@ -121,6 +121,60 @@ TCSelector::TCSelector(int _val, int _maxVal, int _base)
 	}
 }
 
+TCSelector::~TCSelector()
+{
+	if (val)
+	{
+		delete[] val;
+	}
+}
+
+bool TCSelector::check() const
+{
+	return (pos < size);
+}
+	
+TCSelector& TCSelector::operator++ (int)
+{
+	pos++;
+	return *this;
+}
+
+int TCSelector::getChoice() const
+{
+	return choice;
+}
+
+int TCSelector::value() const
+{
+	return val[pos];
+}
+
+int TCSelector::value1(int num1) const
+{
+	return 1 + (value() - 1) % num1;
+}
+
+int TCSelector::value2(int num1) const
+{
+	return 1 + (value() - 1) / num1;
+}
+
+int TCSelector::value1(int num1, int num2) const
+{
+	return 1 + ((value() - 1) % (num1 * num2)) % num1;
+}
+
+int TCSelector::value2(int num1, int num2) const
+{
+	return 1 + ((value() - 1) % (num1 * num2)) / num1;
+}
+
+int TCSelector::value3(int num1, int num2) const
+{
+	return 1 + (value() - 1) / (num1 * num2);
+}
+
 }
 }
 }

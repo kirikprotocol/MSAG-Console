@@ -2,6 +2,7 @@
 #define TEST_UTIL_UTIL
 
 #include <ostream>
+#include <sstream>
 #include <vector>
 
 namespace smsc {
@@ -51,6 +52,25 @@ struct Deletor
 	}
 };
 
+template <class T>
+class Mask
+{
+	T mask;
+public:
+	Mask(T val) : mask(val) {}
+	bool operator[](int index) const
+	{
+		__require__(index < sizeof(T));
+		return ((mask >> index) & 0x1);
+	}
+	const char* str() const
+	{
+		std::ostringstream s;
+		s << std::hex << mask;
+		return s.str().c_str();
+	}
+};
+
 /**
  * ѕозвол€ет выбрать нужную или все процедуры в тест кейсе в зависимости от 
  * параметров.
@@ -76,61 +96,6 @@ public:
 	int value2(int num1, int num2) const;
 	int value3(int num1, int num2) const;
 };
-
-//TCSelector inline member functions definitions
-inline TCSelector::~TCSelector()
-{
-	if (val)
-	{
-		delete[] val;
-	}
-}
-
-inline bool TCSelector::check() const
-{
-	return (pos < size);
-}
-	
-inline TCSelector& TCSelector::operator++ (int)
-{
-	pos++;
-	return *this;
-}
-
-inline int TCSelector::getChoice() const
-{
-	return choice;
-}
-
-inline int TCSelector::value() const
-{
-	return val[pos];
-}
-
-inline int TCSelector::value1(int num1) const
-{
-	return 1 + (val[pos] - 1) % num1;
-}
-
-inline int TCSelector::value2(int num1) const
-{
-	return 1 + (val[pos] - 1) / num1;
-}
-
-inline int TCSelector::value1(int num1, int num2) const
-{
-	return 1 + ((val[pos] - 1) % (num1 * num2)) % num1;
-}
-
-inline int TCSelector::value2(int num1, int num2) const
-{
-	return 1 + ((val[pos] - 1) % (num1 * num2)) / num1;
-}
-
-inline int TCSelector::value3(int num1, int num2) const
-{
-	return 1 + (val[pos] - 1) / (num1 * num2);
-}
 
 }
 }
