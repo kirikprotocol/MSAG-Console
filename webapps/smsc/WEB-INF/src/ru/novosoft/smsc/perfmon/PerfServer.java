@@ -82,6 +82,7 @@ public class PerfServer extends Thread {
                     logger.warn("User connection socket error "+ee.getMessage());
                 } catch (IOException ee) {
                     logger.warn("User connection error", ee);
+                } finally {
                     try {
                       sock.close();
                     } catch (IOException ex) {
