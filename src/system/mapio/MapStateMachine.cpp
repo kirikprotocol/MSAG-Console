@@ -776,7 +776,7 @@ USHORT_T Et96MapOpenConf (
         if ( refuseReason_p && *refuseReason_p == ET96MAP_APP_CONTEXT_NOT_SUPP ){
           if ( dialog->version != 1 ){
             --dialog->version;
-            dialogid_map = RemapDialog(dialog.get());
+            dialogid_map = RemapDialog(dialog.get(),localSsn);
             switch ( dialog->state ) {
             case MAPST_RInfoFallBack: 
             case MAPST_ImsiWaitOpenConf:
@@ -1011,7 +1011,7 @@ USHORT_T Et96MapCloseInd(
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitRInfoClose:
-      MapDialogContainer::getInstance()->reAssignDialog(dialogueId,lssn);
+      MapDialogContainer::getInstance()->reAssignDialog(dialogueId,locaSsn);
       dialogueId = dialog->dialogid_map;
       dialog->state = MAPST_WaitMcsVersion;
       QueryMcsVersion(dialog.get());
@@ -1324,7 +1324,7 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
   {
     dialog->state = MAPST_WaitSubmitCmdConf;
     ResponseMO(dialog,9);
-    CloseMapDialog(dialog->dialogid_map);
+    CloseMapDialog(dialog->dialogid_map,dialog->ssn);
     DropMapDialog(dialog);
   }
   else
