@@ -32,10 +32,15 @@ public class TagLibFunctions
     return bean.isChecked(id);
   }
 
-  public static final boolean isBoolean(Object obj)
+  public static final boolean isString(Object obj)
   {
-    return obj instanceof Boolean;
+    return obj instanceof String;
   }
+
+  public static final boolean isBoolean(Object obj)
+   {
+     return obj instanceof Boolean;
+   }
 
   public static final String concat(String s1, String s2)
   {

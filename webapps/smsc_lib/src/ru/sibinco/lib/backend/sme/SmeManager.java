@@ -5,6 +5,7 @@ import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.Functions;
+import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.util.xml.Utils;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -21,7 +22,6 @@ public class SmeManager
 
   private final Map smes = Collections.synchronizedMap(new HashMap());
   private final String configFilename;
-
   public SmeManager(final String configFilename)
   {
     this.configFilename = configFilename;
@@ -66,6 +66,11 @@ public class SmeManager
   public Map getSmes()
   {
     return smes;
+  }
+
+   public synchronized List getSmeNames()
+  {
+    return new SortedList(smes.keySet());
   }
 
   public void store() throws SibincoException

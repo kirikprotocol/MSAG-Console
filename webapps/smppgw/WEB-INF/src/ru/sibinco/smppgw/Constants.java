@@ -9,7 +9,7 @@ package ru.sibinco.smppgw;
 public class Constants
 {
   private final String id;
-
+   public static final String SMPPGW_SME_ID = "SMPPGW";
 
   public interface errors
   {
@@ -88,6 +88,15 @@ public class Constants
       public static final Constants COULDNT_DELETE = new Constants("error.sme.couldnt_delete");
     }
 
+     public interface services
+    {
+      public static final Constants SME_NOT_FOUND = new Constants("error.services.sme_not_found");
+      public static final Constants SME_ID_NOT_SPECIFIED = new Constants("error.services.sme_id_not_specified");
+      public static final Constants SME_ALREADY_EXISTS = new Constants("error.services.sme_already_exists");
+      public static final Constants COULDNT_APPLY = new Constants("error.services.couldnt_apply");
+      public static final Constants notAuthorizedForDeletingService = new Constants("error.services.notAuthorizedForDeletingService");
+      public static final Constants couldntGetServiceInfo = new Constants("error.services.couldntGetServiceInfo");
+     }
 
     public interface providers
     {

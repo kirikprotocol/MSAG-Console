@@ -20,6 +20,12 @@
     <function-signature>boolean checked(ru.sibinco.lib.bean.TabledBean, java.lang.String)</function-signature>
   </function>
   <function>
+    <description>Checks if obj is String.</description>
+    <name>isString</name>
+    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
+    <function-signature>boolean isString(java.lang.Object)</function-signature>
+    </function>
+  <function>
     <description>Checks if obj is boolean.</description>
     <name>isBoolean</name>
     <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>

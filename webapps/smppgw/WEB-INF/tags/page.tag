@@ -222,6 +222,7 @@
 
         <sm-mm:section menuId="MENU0_Services_menu" submenuId="MENU0_Services_submenu" name="Services">
           <sm-mm:item url="services/sme" name="SME's" title=""/>
+          <sm-mm:item url="services/services" name="Services" title=""/>
         </sm-mm:section>
       </sm-mm:menu>
 

@@ -17,12 +17,12 @@ public class Response
   {
     Status(String name, byte status)
     {
-      this.status = status;
       this.name = name;
+      this.status = status;
     }
-
-    byte status = 0;
+    
     String name = null;
+    byte status = 0;
   }
 
 
