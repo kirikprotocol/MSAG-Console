@@ -711,7 +711,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
                     FormatText("MAP::PutCommand: can't find session %s",s_seq.c_str()));
                 dialogid_map = it->second;
               }
-              dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_smsc));
+              dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map));
               if ( dialog.isnull() )
                 throw MAPDIALOG_FATAL_ERROR(
                   FormatText("MAP::putCommand: Opss, here is no dialog with id x%x seq: %s",dialogid_smsc,s_seq.c_str()));
