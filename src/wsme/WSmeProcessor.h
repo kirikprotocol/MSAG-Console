@@ -31,6 +31,9 @@
 
 #include <db/DataSource.h>
 
+#include "WSmeExceptions.h"
+#include "WSmeAdmin.h"
+
 namespace smsc { namespace wsme
 {
     using namespace smsc::db;
@@ -44,34 +47,6 @@ namespace smsc { namespace wsme
     using smsc::core::threads::Thread;
     using smsc::core::synchronization::Event;
     using smsc::core::synchronization::Mutex;
-
-    class InitException : public Exception
-    {
-    public:
-
-        InitException(const char* fmt,...)
-            : Exception() 
-        { 
-            SMSC_UTIL_EX_FILL(fmt);
-        };
-        InitException(const Exception& exc)
-            : Exception(exc.what()) {};
-        virtual ~InitException() throw() {};
-    };
-    
-    class ProcessException : public Exception
-    {
-    public:
-
-        ProcessException(const char* fmt,...)
-            : Exception() 
-        { 
-            SMSC_UTIL_EX_FILL(fmt);
-        };
-        ProcessException(const Exception& exc)
-            : Exception(exc.what()) {};
-        virtual ~ProcessException() throw() {};
-    };
 
     class VisitorManager
     {
@@ -92,6 +67,9 @@ namespace smsc { namespace wsme
         virtual ~VisitorManager();
 
         bool isVisitor(const std::string msisdn)
+            throw (ProcessException);
+        
+        void addVisitor(const std::string msisdn)
             throw (ProcessException);
     };
     

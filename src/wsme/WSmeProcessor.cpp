@@ -180,6 +180,19 @@ bool VisitorManager::isVisitor(const std::string msisdn)
     return false;
 }
 
+void VisitorManager::addVisitor(const std::string msisdn)
+    throw (ProcessException)
+{
+    /* TODO: implement it
+    
+        !!! change visitors container (Array -> Hash)
+        
+        1) add visitor mask into cache (& check that it isn't present)
+        2) insert new visitor record into DB
+    */
+}
+
+
 /* ------------------------ LangManager ------------------------ */
 
 LangManager::LangManager(DataSource& _ds)
