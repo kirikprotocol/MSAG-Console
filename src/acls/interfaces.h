@@ -47,11 +47,34 @@ struct AclEditor
                         const char* aclname,
                         const char* acldesc,
                         AclCacheType act = ACT_UNKNOWN) = 0;
+protected:
+  AclEditor() {}
+  virtual ~AclEditor() {}
+private:
+  AclEditor(const AclEditor&);
+  AclEditor& operator = (const AclEditor&);
 };
 
 struct AclLookuper
 {
   virtual bool isGranted(AclIdent aclid,const AclPhoneNumber& phone) = 0;
+protected:
+  AclLookuper() {}
+  virtual ~AclLookuper() {}
+private:
+  AclLookuper(const AclLookuper&);
+  AclLookuper& operator = (const AclLookuper&);
+};
+
+struct AclAbstractMgr : public AclEditor, public AclLookuper
+{  
+  //virtual void AddRef() = 0;
+  //virtual void Release() = 0;
+  virtual void LoadUp() = 0;
+  //virtual void Relax() = 0;
+  //protected:
+  virtual ~AclAbstractMgr() {}
+  static AclAbstractMgr* Create();
 };
 
 } // acls namespace
