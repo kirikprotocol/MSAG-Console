@@ -166,7 +166,7 @@ restart:
       __trace2__("MAP: error at MsgRecv with code x%hx",result);
       //return;
 //      goto restart;
-	abort();
+	    abort();
     }
     
     __trace2__("MAP: MsgRecv receive msg with "

@@ -164,6 +164,7 @@ void MAPIO_QueryMscVersionInternal()
 static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
 {
   __trace2__("MAP::%s: ",__FUNCTION__);
+  dialog->dropChain = false;
   if ( !dialog->isQueryAbonentStatus ) {
     __trace2__("MAP:%s: Preapre SMSC command",__FUNCTION__);
     dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
@@ -223,13 +224,23 @@ static void DropMapDialog_(unsigned dialogid){
       }
     }
     __trace2__("MAP::%s: - restart on next in chain - ",__FUNCTION__);
-    //if ( dialog->wasDelivered ) {
+    if ( dialog->dropChain ) {
+      for (;!dialog->chain.empty();dialog->chain.pop_front())
+      {
+        try{
+          SmscCommand cmd = dialog->chain.front();
+          SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,0));
+        }catch(exception& e){
+          __trace2__("MAP::%s: exception %s",__FUNCTION__,e.what());
+        }catch(...){
+        }
+      }
+    }else{
       SmscCommand cmd = dialog->chain.front();
       dialog->chain.pop_front();
       dialog->Clean();
       MAPIO_PutCommand(cmd, dialog.get());
-    //}else{
-    //}
+    }
   }
 }
 
@@ -682,6 +693,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error = false,unsigned 
     __trace2__("MAP::%s: 0x%x  (state %d/TRY__DESTROY)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     if ( send_error )
     {
+      dialog->dropChain = true;
       try{
         if ( dialog->isQueryAbonentStatus ){
           int status;
@@ -1005,6 +1017,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
           dialogid_map = dialog->dialogid_map;
           dialogid_map = MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,SSN);
           dialog->dialogid_smsc = dialogid_smsc;
+          dialog->dropChain = false;
         }
       }catch(exception& e){
         __trace2__("#except#MAP::PutCommand# when create dialog");
@@ -1023,6 +1036,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
           if ( dialog->QueryAbonentCommand->get_abonentStatus().addr.getLenght() == 0 )
             throw MAPDIALOG_FATAL_ERROR("incorrect address");
         }
+        dialog->dropChain = false;
         dialog->wasDelivered = false;
         dialog->hlrWasNotified = false;
         dialog->state = MAPST_START;
