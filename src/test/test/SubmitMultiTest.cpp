@@ -1,10 +1,67 @@
-#include "smpp/smpp.h"
+#include "sme/SmppBase.hpp"
 #include "util/Exception.hpp"
 #include "util/debug.h"
+#include "readline/readline.h"
+#include "readline/history.h"
 
 using namespace smsc::smpp;
 using namespace smsc::smpp::SmppCommandSet;
+using namespace smsc::smpp::SmppStatusSet;
+using namespace smsc::sme;
 using namespace smsc::util;
+
+const char* smscHost = "smsc";
+const int smscPort = 15971;
+
+void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
+{
+	__trace2__("%s: systemId = %s", tc, id.c_str());
+	switch (pdu->get_commandId())
+	{
+		case SUBMIT_MULTI:
+			reinterpret_cast<PduMultiSm*>(pdu)->dump(TRACE_LOG_STREAM);
+			break;
+		case DELIVERY_SM:
+			reinterpret_cast<PduDeliverySm*>(pdu)->dump(TRACE_LOG_STREAM);
+			break;
+		case SUBMIT_MULTI_RESP:
+			reinterpret_cast<PduMultiSmResp*>(pdu)->dump(TRACE_LOG_STREAM);
+			break;
+		case DELIVERY_SM_RESP:
+			reinterpret_cast<PduDeliverySmResp*>(pdu)->dump(TRACE_LOG_STREAM);
+			break;
+		default:
+			__trace2__("commandId = %d", pdu->get_commandId());
+	}
+}
+
+class SessionListener : public SmppPduEventListener
+{
+	const string systemId;
+	SmppSession* session;
+
+public:
+	SessionListener(const string& _systemId) : systemId(_systemId) {}
+	void setSession(SmppSession* _session) { session = _session; }
+	virtual void handleEvent(SmppHeader* pdu)
+	{
+		dumpPdu("handleEvent", systemId, pdu);
+		if (pdu->get_commandId() == DELIVERY_SM)
+		{
+			PduDeliverySmResp respPdu;
+			respPdu.get_header().set_commandStatus(ESME_ROK);
+			respPdu.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+			session->getAsyncTransmitter()->sendDeliverySmResp(respPdu);
+			dumpPdu("sendResp", systemId, reinterpret_cast<SmppHeader*>(&respPdu));
+		}
+	}
+	virtual void handleError(int errorCode)
+	{
+		__warning2__("handleError(): systemId = %s, errorCode = %d",
+			systemId.c_str(), errorCode);
+		exit(-1);
+	}
+};
 
 void check(SmppHeader* pdu)
 {
@@ -31,13 +88,37 @@ void check(SmppHeader* pdu)
 	reinterpret_cast<PduMultiSm*>(header)->dump(TRACE_LOG_STREAM);
 }
 
-PduAddress& getAddr(uint8_t ton, uint8_t npi, const char* val)
+PduAddress& makeAddr(uint8_t ton, uint8_t npi, const char* val)
 {
 	static PduAddress addr;
 	addr.set_typeOfNumber(ton);
 	addr.set_numberingPlan(npi);
 	addr.set_value(val);
 	return addr;
+}
+
+SmppSession* bind(const string& systemId, const string& passwd, int bindType = BindType::Transceiver)
+{
+	SmeConfig config;
+	config.host = smscHost;
+	config.port = smscPort;
+	config.sid = systemId;
+	config.timeOut = 8;
+	config.password = passwd;
+	try
+	{
+		SessionListener* listener = new SessionListener(systemId);
+		SmppSession* session = new SmppSession(config, listener);
+		listener->setSession(session);
+		session->connect(bindType);
+		__trace2__("session %s connected: bindType = %d", systemId.c_str(), bindType);
+		return session;
+	}
+	catch (SmppConnectException& e)
+	{
+		__warning2__("session %s connect failed: %s", systemId.c_str(), e.what());
+		exit(-1);
+	}
 }
 
 void test()
@@ -48,7 +129,7 @@ void test()
 
     //message
 	pdu.get_message().set_serviceType("EOz88");
-	pdu.get_message().set_source(getAddr(0, 1, "111"));
+	pdu.get_message().set_source(makeAddr(0, 1, "111"));
 	PduDestAddress dests[2];
 	dests[0].set_flag(2); //Distribution List Name
 	dests[0].set_value("list1");
@@ -58,8 +139,8 @@ void test()
 	pdu.get_message().set_esmClass(103);
 	pdu.get_message().set_protocolId(223);
 	pdu.get_message().set_priorityFlag(109);
-	pdu.get_message().set_scheduleDeliveryTime("030317135735000+");
-	pdu.get_message().set_validityPeriod("030317135827000+");
+	pdu.get_message().set_scheduleDeliveryTime("");
+	pdu.get_message().set_validityPeriod("");
 	pdu.get_message().set_registredDelivery(133);
 	pdu.get_message().set_replaceIfPresentFlag(0);
 	pdu.get_message().set_dataCoding(0);
@@ -87,7 +168,21 @@ void test()
     pdu.get_optional().set_setDpf(45);
     pdu.get_optional().set_moreMessagesToSend(70);
 
-    check(reinterpret_cast<SmppHeader*>(&pdu));
+    //check(reinterpret_cast<SmppHeader*>(&pdu));
+	const string smeId = "sme1";
+	SmppSession* session = bind(smeId, "sme1");
+	session->getAsyncTransmitter()->submitm(pdu);
+	dumpPdu("submitMultiAfter", smeId, reinterpret_cast<SmppHeader*>(&pdu));
+
+	const char* cmd;
+	while (cmd = readline(">"))
+	{
+		if (cmd && strcmp(cmd, "q") == 0)
+		{
+			break;
+		}
+	}
+	delete session;
 }
 
 int main(int argc, char* argv[])
