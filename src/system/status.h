@@ -58,6 +58,7 @@ static const int NOROUTE=1025; //No route defined for given source and destinati
 static const int EXPIRED=1026; //Message expired
 static const int DELIVERYTIMEDOUT=1027; //Delivery attempt timed out
 static const int SMENOTCONNECTED=1028; //Sme is not connected
+static const int BLOCKEDMSC=1029; //Msc is blocked
 static const int UNKSUBSCRIBER=1153; //Unknown subscriber
 static const int UNDEFSUBSCRIBER=1157; //Unidentified subscriber
 static const int ILLEGALSUBSCRIBER=1161; //Illegal subscriber
