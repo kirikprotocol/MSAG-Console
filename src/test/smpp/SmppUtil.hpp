@@ -156,6 +156,7 @@ bool operator!=(PduAddress& a1, PduAddress& a2);
 		return s.str(); \
 	}
 
+__log_pdu__(SmppHeader*)
 __log_pdu__(PduXSm)
 __log_pdu__(PduReplaceSm)
 __log_pdu__(PduDataSm)

@@ -36,15 +36,26 @@ void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 			case SUBMIT_SM:
 				{
 					PduSubmitSm* p = reinterpret_cast<PduSubmitSm*>(pdu);
-					os << ", scheduleDeliveryTime = " << SmppUtil::getWaitTime(p->get_message().get_scheduleDeliveryTime(), time(NULL));
-					os << ", validityPeriod = " << SmppUtil::getValidTime(p->get_message().get_validityPeriod(), time(NULL));
+					os << ", serviceType = " << nvl(p->get_message().get_serviceType());
+					__require__(p->get_optional().has_userMessageReference());
+					os << ", msgRef = " << (int) p->get_optional().get_userMessageReference();
+					os << ", waitTime = " << SmppUtil::getWaitTime(p->get_message().get_scheduleDeliveryTime(), time(NULL));
+					os << ", validTime = " << SmppUtil::getValidTime(p->get_message().get_validityPeriod(), time(NULL));
+				}
+				break;
+			case DELIVERY_SM:
+				{
+					PduDeliverySm* p = reinterpret_cast<PduDeliverySm*>(pdu);
+					os << ", serviceType = " << nvl(p->get_message().get_serviceType());
+					__require__(p->get_optional().has_userMessageReference());
+					os << ", msgRef = " << (int) p->get_optional().get_userMessageReference();
 				}
 				break;
 			case REPLACE_SM:
 				{
 					PduReplaceSm* p = reinterpret_cast<PduReplaceSm*>(pdu);
-					os << ", scheduleDeliveryTime = " << SmppUtil::getWaitTime(p->get_scheduleDeliveryTime(), time(NULL));
-					os << ", validityPeriod = " << SmppUtil::getValidTime(p->get_validityPeriod(), time(NULL));
+					os << ", waitTime = " << SmppUtil::getWaitTime(p->get_scheduleDeliveryTime(), time(NULL));
+					os << ", validTime = " << SmppUtil::getValidTime(p->get_validityPeriod(), time(NULL));
 				}
 				break;
 		}
@@ -52,7 +63,8 @@ void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 		tm t;
 		char buf[30];
 		os << ", system time = " << asctime_r(localtime_r(&lt, &t), buf) <<
-			", pdu:" << endl << *pdu;
+			", pdu:" << endl << pdu;
+		__trace2__("%s", os.str().c_str());
 	}
 	else
 	{
@@ -689,6 +701,63 @@ bool operator!=(PduAddress& a1, PduAddress& a2)
 		os << string(str_##prop, 0, MAX_OSTR_PRINT_SIZE) << "...)" << endl; \
 	} \
 */
+
+ostream& operator<< (ostream& os, SmppHeader*& p)
+{
+	switch (p->get_commandId())
+	{
+		//реквесты
+		case SUBMIT_SM:
+		case DELIVERY_SM:
+		case SUBMIT_MULTI:
+			os << *reinterpret_cast<PduXSm*>(p);
+			break;
+		case REPLACE_SM:
+			os << *reinterpret_cast<PduReplaceSm*>(p);
+			break;
+		case DATA_SM:
+			os << *reinterpret_cast<PduDataSm*>(p);
+			break;
+		case QUERY_SM:
+			os << *reinterpret_cast<PduQuerySm*>(p);
+			break;
+		case CANCEL_SM:
+		case ENQUIRE_LINK:
+			os << *p;
+			break;
+		//респонсы
+		case SUBMIT_SM_RESP:
+		case DELIVERY_SM_RESP:
+			os << *reinterpret_cast<PduXSmResp*>(p);
+			break;
+		case REPLACE_SM_RESP:
+			os << *reinterpret_cast<PduReplaceSmResp*>(p);
+			break;
+		case DATA_SM_RESP:
+		case QUERY_SM_RESP:
+		case CANCEL_SM_RESP:
+		case ENQUIRE_LINK_RESP:
+		case SUBMIT_MULTI_RESP:
+		case GENERIC_NACK:
+		case ALERT_NOTIFICATION:
+			os << *p;
+			break;
+		//bind & unbind
+		case BIND_RECIEVER:
+		case BIND_RECIEVER_RESP:
+		case BIND_TRANSMITTER:
+		case BIND_TRANSMITTER_RESP:
+		case BIND_TRANCIEVER:
+		case BIND_TRANCIEVER_RESP:
+		case UNBIND:
+		case UNBIND_RESP:
+		case OUTBIND:
+			os << *p;
+			break;
+		default:
+			__unreachable__("Invalid pdu");
+	}
+}
 
 ostream& operator<< (ostream& os, PduXSm& p)
 {
