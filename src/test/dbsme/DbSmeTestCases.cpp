@@ -771,23 +771,23 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		return;
 	}
 	__tc__("processDbSmeRes.checkFields");
+	SmppOptional opt;
+	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
+	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 0);
+	__tc_ok_cond__;
+	__tc__("processDbSmeRes.output");
 	__check__(1, dataCoding, ack->dataCoding);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
 		__tc_fail__(2);
 	}
-    SmppOptional opt;
-	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
-	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
-	__tc_ok_cond__;
-	__tc__("processDbSmeRes.output");
 	bool check;
 	int pos = findPos(text, ack->text, getMaxChars(ack->dataCoding), check);
 	__trace2__("db sme cmd: pos = %d, input:\n%s\noutput:\n%s\nexpected:\n%s\n",
 		pos, monitor->pduData->strProps["dbSmeInput"].c_str(), text.c_str(), ack->text.c_str());
 	if (pos == string::npos)
 	{
-		__tc_fail__(1);
+		__tc_fail__(3);
 		monitor->setReceived();
 	}
 	else
