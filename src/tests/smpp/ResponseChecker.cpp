@@ -47,7 +47,7 @@ namespace smsc {
 				expectedCommandId = smsc::smpp::SmppCommandSet::ENQUIRE_LINK_RESP;
 				break;
 			  }
-			  PduHandler pdu = sme->receiveWithSequence(sequence, timeout);
+			  PduHandler pdu = sme->receiveResponse(sequence, timeout);
 			  if (pdu != 0) {
 				  if (log.isDebugEnabled()) {
 					  log.debug("checkResponse: Received response");
@@ -90,7 +90,7 @@ namespace smsc {
 					bindTypeMsg = "Receiver";
 					break;
 				}
-				PduHandler pdu = sme->receiveWithSequence(sequence, timeout);
+				PduHandler pdu = sme->receiveResponse(sequence, timeout);
 				if (pdu != 0) {
 					if (log.isDebugEnabled()) {
 						log.debug("checkBind: Received response for binding for %s", bindTypeMsg.c_str());
@@ -118,7 +118,7 @@ namespace smsc {
 			//проверка ответов на запросы unbind
 			bool ResponseChecker::checkUnbind(uint32_t sequence, QueuedSmeHandler sme, uint32_t timeout) {
 				bool res = false;
-				PduHandler pdu = sme->receiveWithSequence(sequence, timeout);
+				PduHandler pdu = sme->receiveResponse(sequence, timeout);
 				if (pdu != 0) {
 					if (log.isDebugEnabled()) {
 						log.debug("checkUnbind: Received response for unbinding");
@@ -144,7 +144,7 @@ namespace smsc {
 			//проверка ответов на запросы enquire_link
 			bool ResponseChecker::checkEnquireLink(uint32_t sequence, QueuedSmeHandler sme, uint32_t timeout) {
 				bool res = false;
-				PduHandler pdu = sme->receiveWithSequence(sequence, timeout);
+				PduHandler pdu = sme->receiveResponse(sequence, timeout);
 				if (pdu != 0) {
 					if (log.isDebugEnabled()) {
 						log.debug("checkEnquireLink: Received response for enquire_link");

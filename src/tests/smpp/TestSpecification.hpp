@@ -12,6 +12,7 @@ namespace smsc {
 		static const int SMS_TEST_test_sms_for_transmitter_receiver_itself = 100;
 		static const int SMS_TEST_test_sms_for_transmitter_receiver = 101;
 		static const int SMS_TEST_test_sms_for_transceiver_itself = 102;
+		static const int SMS_TEST_test_data_coding = 103;
 	  };
 	} //namespace smpp
   } // namespace test
