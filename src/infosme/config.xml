@@ -18,6 +18,8 @@
         <param name="ProtocolId" type="int">111</param>
 	<param name="unrespondedMessagesMax" type="int">100</param>
 	<param name="unrespondedMessagesSleep" type="int">1000</param>
+	<param name="responceWaitTime" type="string">00:00:10</param>
+	<param name="receiptWaitTime" type="string">00:20:00</param>
 	
         <section name="TasksThreadPool">
             <param name="max" type="int">15</param>
