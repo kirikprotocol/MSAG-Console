@@ -22,6 +22,7 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
 
   public int process(List errors)
   {
+    pageSize = 10;
     int result = super.process(errors);
     if (result != RESULT_OK && result != RESULT_VISITORS) return result;
     result = RESULT_OK;
@@ -78,11 +79,12 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
   {
     int result = RESULT_OK;
     try {
-       visitors = wsme.getVisitors();
+      visitors = wsme.getVisitors();
+      visitors = getPaginatedList(visitors);
     }
     catch (AdminException exc) {
-       visitors.clear();
-       result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
+      clearPaginatedList(visitors);
+      result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
     }
     return result;
   }

@@ -25,8 +25,10 @@
     case WSmeFormBean.RESULT_DONE:
       response.sendRedirect("index.jsp");
       return;
+    case WSmeFormBean.RESULT_FILTER:
     case WSmeFormBean.RESULT_ADS:
-      response.sendRedirect("ads.jsp");
+      response.sendRedirect("ads.jsp?startPosition="+bean.getStartPosition()+
+          "&pageSize="+bean.getPageSize());
       break;
     case WSmeFormBean.RESULT_OK:
       STATUS.append("Ok");
@@ -76,7 +78,13 @@
 </tbody>
 </table>
 
+<input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
+<input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
+<input type=hidden name=pageSize value=<%=bean.getPageSize()%>>
+<%@ include file="/WEB-INF/inc/navbar.jsp"%>
+
 <%if (bean.isWSmeStarted()) {%>
+<br>
 <div class=secQuestion>Manage messages</div>
 <table class=secRep cellspacing=0 cellspadding=1 width="100%">
 <thead>
@@ -89,11 +97,11 @@
 </tr>
 <tr class=row1>
 	<th class=label>Language:</th>
-	<td><input class=txtW type="text" name=newLang  value="<%= bean.getNewLang()%>" size=25 maxlength=25></td>
+	<td><input class=txtW type="text" name=newLang  value="<%= StringEncoderDecoder.encode(bean.getNewLang())%>" size=25 maxlength=25></td>
 </tr>
 <tr class=row0>
 	<th class=label>Message:</th>
-	<td><input class=txtW type="text" name=newAd  value="<%= bean.getNewAd()%>" size=25 maxlength=25></td>
+	<td><input class=txtW type="text" name=newAd  value="<%= StringEncoderDecoder.encode(bean.getNewAd())%>" size=25 maxlength=25></td>
 </tr>
 </table>
 

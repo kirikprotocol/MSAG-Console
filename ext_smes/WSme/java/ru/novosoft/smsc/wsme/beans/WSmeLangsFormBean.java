@@ -23,6 +23,7 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
 
   public int process(List errors)
   {
+    pageSize = 10;
     int result = super.process(errors);
     if (result != RESULT_OK && result != RESULT_LANGS) return result;
     result = RESULT_OK;
@@ -78,11 +79,12 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
   {
     int result = RESULT_OK;
     try {
-       langs = wsme.getLangs();
+      langs = wsme.getLangs();
+      langs = getPaginatedList(langs);
     }
     catch (AdminException exc) {
-       langs.clear();
-       result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
+      clearPaginatedList(langs);
+      result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
     }
     return result;
   }

@@ -25,6 +25,7 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
 
   public int process(List errors)
   {
+    pageSize = 10;
     int result = super.process(errors);
     if (result != RESULT_OK && result != RESULT_ADS) return result;
     result = RESULT_OK;
@@ -79,7 +80,7 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
       result = error(WSmeErrors.error.admin.ParseError, exc.getMessage());
     }
     catch (AdminException exc) {
-       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
+      result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
@@ -88,10 +89,11 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
   {
     int result = RESULT_OK;
     try {
-       ads = wsme.getAds();
+      ads = wsme.getAds();
+      ads = getPaginatedList(ads);
     }
     catch (AdminException exc) {
-       ads.clear();
+       clearPaginatedList(ads);
        result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
     }
     return result;

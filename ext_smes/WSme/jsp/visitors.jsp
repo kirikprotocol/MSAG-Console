@@ -25,8 +25,10 @@
     case WSmeFormBean.RESULT_DONE:
       response.sendRedirect("index.jsp");
       return;
+    case WSmeFormBean.RESULT_FILTER:
     case WSmeFormBean.RESULT_VISITORS:
-      response.sendRedirect("visitors.jsp");
+      response.sendRedirect("visitors.jsp?startPosition="+bean.getStartPosition()+
+          "&pageSize="+bean.getPageSize());
       return;
     case WSmeFormBean.RESULT_OK:
       STATUS.append("Ok");
@@ -68,7 +70,13 @@
 </tbody>
 </table>
 
+<input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
+<input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
+<input type=hidden name=pageSize value=<%=bean.getPageSize()%>>
+<%@ include file="/WEB-INF/inc/navbar.jsp"%>
+
 <%if (bean.isWSmeStarted()) {%>
+<br>
 <div class=secQuestion>Manage visitors</div>
 <table class=secRep cellspacing=0 cellspadding=1 width="100%">
 <thead>
@@ -77,7 +85,7 @@
 </thead>
 <tr class=row0>
 	<th class=label>Mask:</th>
-	<td><input class=txtW type="text" name=newVisitor  value="<%= bean.getNewVisitor()%>" size=25 maxlength=25></td>
+	<td><input class=txtW type="text" name=newVisitor  value="<%= bean.getNewVisitor()%>" validation="mask" onkeyup="resetValidation(this)" size=25 maxlength=25></td>
 </tr>
 </table>
 

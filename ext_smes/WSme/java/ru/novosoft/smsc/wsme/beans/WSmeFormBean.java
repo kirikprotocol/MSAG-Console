@@ -301,6 +301,21 @@ public class WSmeFormBean extends IndexBean
     return result;
   }
 
+  protected List getPaginatedList(List list)
+  {
+    totalSize = list.size();
+    if (startPosition+1>totalSize) startPosition -= pageSize;
+    if (startPosition < 0) startPosition = 0;
+    int endPosition = startPosition+pageSize;
+    if (endPosition > totalSize) endPosition = totalSize;
+    return list.subList(startPosition, endPosition);
+  }
+  protected void clearPaginatedList(List list)
+  {
+    totalSize = 0; startPosition = 0;
+    list.clear();
+  }
+
   public void setStringParam(String paramName, String paramValue) {
     params.put(paramName, paramValue);
   }
