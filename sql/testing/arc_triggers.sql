@@ -125,6 +125,7 @@ begin
 		if msg.last_try_time != :arc.last_try_time then
 			raise_application_error(-20201, 'msg.last_try_time != arc.last_try_time');
 		end if;
+		--next_try_time skipped
 		if msg.oa != :arc.oa then
 			raise_application_error(-20201, 'msg.oa != arc.oa');
 		end if;
@@ -163,6 +164,24 @@ begin
 		end if;
 		if msg.dst_sme_n != :arc.dst_sme_n then
 			raise_application_error(-20201, 'msg.dst_sme_n != arc.dst_sme_n');
+		end if;
+		if msg.route_id != :arc.route_id then
+			raise_application_error(-20201, 'msg.route_id != arc.route_id');
+		end if;
+		if msg.svc_id != :arc.svc_id then
+			raise_application_error(-20201, 'msg.svc_id != arc.svc_id');
+		end if;
+		if msg.prty != :arc.prty then
+			raise_application_error(-20201, 'msg.prty != arc.prty');
+		end if;
+		if msg.src_sme_id != :arc.src_sme_id then
+			raise_application_error(-20201, 'msg.src_sme_id != arc.src_sme_id');
+		end if;
+		if msg.dst_sme_id != :arc.dst_sme_id then
+			raise_application_error(-20201, 'msg.dst_sme_id != arc.dst_sme_id');
+		end if;
+		if msg.txt_length != :arc.txt_length then
+			raise_application_error(-20201, 'msg.txt_length != arc.txt_length');
 		end if;
 		if msg.body_len != :arc.body_len then
 			raise_application_error(-20201, 'msg.body_len != arc.body_len');
