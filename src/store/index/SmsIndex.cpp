@@ -207,7 +207,7 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
   );
   IDX2
   (
-    destinationAddress.toString().c_str(),dstAddr,
+    dealiasedDestinationAddress.toString().c_str(),dstAddr,
     config.smeAddrChunkSize.Exists(sms.dstSmeId)?
       config.smeAddrChunkSize.Get(sms.dstSmeId):config.defAddrChunkSize
   );
@@ -239,7 +239,7 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
   );
   IDX
   (
-    destinationAddress.toString().c_str(),dstAddr,
+    dealiasedDestinationAddress.toString().c_str(),dstAddr,
     config.smeAddrChunkSize.Exists(sms.dstSmeId)?
       config.smeAddrChunkSize.Get(sms.dstSmeId):config.defAddrChunkSize
   );
