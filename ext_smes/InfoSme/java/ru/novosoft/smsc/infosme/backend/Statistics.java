@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.infosme.backend;
 
 import java.util.Vector;
+import java.util.Collection;
 
 /**
  * Created by IntelliJ IDEA.
@@ -12,12 +13,16 @@ import java.util.Vector;
 
 public class Statistics
 {
-    private CountersSet counters = new CountersSet();
+  private CountersSet counters = new CountersSet();
+  private Vector      countersByDates = new Vector(); // contains DateCountersSet
 
-    public CountersSet getCounters() {
-        return counters;
-    }
-    public void addDateStat(DateCountersSet set) {
-        counters.increment(set);
-    }
+  public CountersSet getCounters() {
+    return counters;
+  }
+  public void addDateStat(DateCountersSet set) {
+    counters.increment(set);
+  }
+  public Collection getCountersByDates() {
+    return countersByDates;
+  }
 }
