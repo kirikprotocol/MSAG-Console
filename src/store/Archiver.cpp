@@ -874,8 +874,10 @@ int Archiver::Cleaner::Execute()
     bool first = true;
     while (!bNeedExit)
     {
-        int64_t timeLeft = (first) ? 
-            CLEANER_SERVICE_AWAKE_INTERVAL : cleanupInterval*1000;
+        int64_t timeLeft = 1000;
+        if (first) timeLeft = CLEANER_SERVICE_AWAKE_INTERVAL;
+        else timeLeft *= (int64_t)cleanupInterval;
+        
         while (timeLeft>0 && !bNeedExit) 
         {
             int waitTime = (timeLeft >= CLEANER_BASE_AWAKE_INTERVAL) ?
