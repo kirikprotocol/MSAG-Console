@@ -1078,6 +1078,7 @@ static void SendNextMMS(MapDialog* dialog)
       } else {
         __map_trace__("SendNextMMS: no messages in chain. Waiting long message next part");
         dialog->state = MAPST_WaitNextMMS;
+        return;
       }
     } else throw runtime_error("MAP::SendNextMMS: has no messages to send");
   }
