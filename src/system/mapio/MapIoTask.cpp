@@ -350,6 +350,7 @@ void MapIoTask::dispatcher()
 
     if ( result == MSG_TIMEOUT ) continue;
     if ( result == MSG_BROKEN_CONNECTION ){
+      __trace2__("MAP: Broken connection");
       warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
       result = MsgConn(USER01_ID,ETSIMAP_ID);
       if ( result != MSG_OK ) { 

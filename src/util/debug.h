@@ -41,7 +41,7 @@ using std::runtime_error;
   smsc::util::warningImpl(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
 
 #define warning_if(expr) \
-  {if (expr) smsc::util::warningImpl("Warning when %expr",__FILE__,__PRETTY_FUNCTION__,__LINE__);}
+  {if (expr) smsc::util::warningImpl("Warning when '"#expr"'",__FILE__,__PRETTY_FUNCTION__,__LINE__);}
 
 #if defined ENABLE_FILE_NAME
 #define __warning2__(text,arg...) fprintf(TRACE_LOG_STREAM,"*WARNING*: "text"\n\t%s(%s):%d\n",##arg,file,__PRETTY_FUNCTION__,__LINE__)

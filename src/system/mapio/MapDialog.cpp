@@ -691,6 +691,15 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
     case DELIVERY: {
       USHORT_T result;
       sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
+      {
+        __trace2__("MAP::DELIVERY_SM %d.%d.%20s->%d.%d.%20s",
+                   sms->getOriginatingAddress().getTypeOfNumber(),
+                   sms->getOriginatingAddress().getNumberingPlan(),
+                   sms->getOriginatingAddress().value,
+                   sms->getDestinationAddress().getTypeOfNumber(),
+                   sms->getDestinationAddress().getNumberingPlan(),
+                   sms->getDestinationAddress().value,
+      }
 
 	    mkMapAddress( &m_msAddr, sms->getDestinationAddress().value, sms->getDestinationAddress().length );
 	    mkMapAddress( &m_scAddr, "79029869999", 11 );
