@@ -507,7 +507,8 @@ extern "C" void clearSignalMask(void)
 {
     sigset_t set;
     sigemptyset(&set);
-    for(int i=1;i<=37;i++)if(i!=SIGQUIT)sigaddset(&set,i);
+    for(int i=1;i<=37;i++)
+        if(i!=SIGQUIT && i!=SIGBUS) sigaddset(&set,i);
     if(!thr_sigsetmask(SIG_SETMASK, &set, NULL)) {
         if (logger) smsc_log_error(logger, "Failed to clear signal mask");
     }
