@@ -14,10 +14,10 @@ import java.io.PrintWriter;
 public class Mask
 {
 	private static final String pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
-	private static final String pattern1 = pattern_header + "\\d{1,20}\\?{0,19}$";
+	private static final String pattern1 = pattern_header + "\\d{0,20}\\?{0,20}$";
 	private static final String pattern2 = pattern_header + "(\\d|\\?){1,20}$";
 	private static final String special_pattern_header = "^\\.5\\.0\\.";
-	private static final String special_pattern1 = special_pattern_header + "[ _\\-0-9A-Za-z]{1,20}\\?{0,19}$";
+	private static final String special_pattern1 = special_pattern_header + "[ _\\-0-9A-Za-z]{0,20}\\?{0,20}$";
 	private static final String special_pattern2 = special_pattern_header + "([ _\\-0-9A-Za-z]|\\?){1,20}$";
 
 	private byte tone = 0;

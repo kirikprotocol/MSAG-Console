@@ -63,12 +63,12 @@ function validateField_mask(elem)
 	//var pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
 	//var pattern1 = RegExp(pattern_header + "\\d{1,20}\\?{0,19}$");
 	//var pattern2 = RegExp(pattern_header + "(\\d|\\?){1,20}$");
-	var pattern1 = /^((\.[0-6]\.(0|1|3|4|6|8|9|10|14|18)\.)|(\+))?\d{1,20}\?{0,19}$/;
+	var pattern1 = /^((\.[0-6]\.(0|1|3|4|6|8|9|10|14|18)\.)|(\+))?\d{0,20}\?{0,20}$/;
     var pattern2 = /^((\.[0-6]\.(0|1|3|4|6|8|9|10|14|18)\.)|(\+))?(\d|\?){1,20}$/;
 	//var special_pattern_header = "^\\.5\\.0\\.";
 	//var special_pattern1 = RegExp(special_pattern_header + "[ _\\-0-9A-Za-z]{1,20}\\?{0,19}$");
 	//var special_pattern2 = RegExp(special_pattern_header + "([ _\\-0-9A-Za-z]|\\?){1,20}$");
-    var special_pattern1 = /^\.5\.0\.[ _\-0-9A-Za-z]{1,20}\?{0,19}$/;
+    var special_pattern1 = /^\.5\.0\.[ _\-0-9A-Za-z]{0,20}\?{0,20}$/;
     var special_pattern2 = /^\.5\.0\.([ _\-0-9A-Za-z]|\?){1,20}$/;
 
 	return elem.value == null
