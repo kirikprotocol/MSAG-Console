@@ -71,12 +71,13 @@ unsigned SMachine::ProcessCommands(SMachineNotifier& notifier)
   stopIt_ = IS_RUNNING;
   while (stopIt_ == IS_RUNNING) {
     if ( notifier.SMachineBreak_()) return BREAK_PROCESSING;
-    while ( !mixer_.IsConnected() ) {
+    if ( !mixer_.IsConnected() ) {
       if ( mixer_.IsUnrecoverable() ) return END_PROCESSING;
       if ( !mixer_.Connect() ) {
         smsc::util::Logger::getCategory("smsc.proxysme").error("can't connect left/right smscs");
         MacroSleep();
       }
+      continue;
     }
     auto_ptr<QCommand> qcmd ( que_.Next() );
     if ( qcmd.get() ) {
