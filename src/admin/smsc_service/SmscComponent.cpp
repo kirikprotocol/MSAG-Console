@@ -23,7 +23,6 @@ using smsc::mscman::MscInfo;
 
 const char PROFILE_PARAMS_DELIMITER = ',';
 
-
 SmscComponent::SmscComponent(SmscConfigs &all_configs)
 : configs(all_configs),isStopping(false),
 		  logger(Logger::getCategory("smsc.admin.smsc_service.SmscComponent"))
@@ -76,6 +75,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	trace_route_params["srcSysId"  ] = Parameter("srcSysId"  , StringType);
 	Method trace_route           ((unsigned)traceRouteMethod, "trace_route", trace_route_params, StringListType);
 	Method load_routes           ((unsigned)loadRoutesMethod, "load_routes", empty_params, StringListType);	
+    bTemporalRoutesManagerConfigLoaded = false;
 	
 	Method lookup_profile((unsigned)lookupProfileMethod, "lookup_profile", lookup_params, StringType);
 	Method update_profile((unsigned)updateProfileMethod, "update_profile", update_params, LongType);
@@ -564,6 +564,7 @@ Variant SmscComponent::loadRoutes(void)
 {
     try 
     {
+        bTemporalRoutesManagerConfigLoaded = false;
         RouteConfig cfg;
         if (cfg.load("conf/routes_.xml") == RouteConfig::fail)
             throw AdminException("Load routes config file failed.");
@@ -582,6 +583,7 @@ Variant SmscComponent::loadRoutes(void)
         for (int i=0; i<traceBuff.size(); i++)
             result.appendValueToStringList(traceBuff[i].c_str());
         
+        bTemporalRoutesManagerConfigLoaded = true;
         return result;    
     }
     catch (AdminException& aexc) {
@@ -613,6 +615,9 @@ Variant SmscComponent::traceRoute(const Arguments &args)
 
     try 
     {
+        if (!bTemporalRoutesManagerConfigLoaded)
+            throw AdminException("Trace route failed. Routes configuration wasn't loaded");
+
         SmeProxy* proxy = 0;
         RouteInfo info;
         bool found = false;

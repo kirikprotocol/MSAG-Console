@@ -97,6 +97,7 @@ protected:
 	};
 
 	smsc::core::synchronization::Mutex mutex;
+    bool bTemporalRoutesManagerConfigLoaded;
 	bool isStopping;
 
 private:
