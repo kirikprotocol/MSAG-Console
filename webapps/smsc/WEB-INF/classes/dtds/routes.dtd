@@ -9,6 +9,7 @@
 	priority CDATA #REQUIRED
 	serviceId CDATA #REQUIRED
 	suppressDeliveryReports (true|false) "false"
+	active (true|false) #REQUIRED
 >
 <!ELEMENT source (subject | mask)>
 <!ELEMENT destination (subject | mask)>
