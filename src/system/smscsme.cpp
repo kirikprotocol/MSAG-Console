@@ -16,7 +16,17 @@ int SmscSme::Execute()
   {
     waitFor();
     if(isStopping)break;
-    while(hasOutput())cmd=getOutgoingCommand();
+    while(hasOutput())
+    {
+      cmd=getOutgoingCommand();
+      if(cmd->get_commandId()==DELIVERY)
+      {
+        putIncomingCommand(
+          SmscCommand::makeDeliverySmResp("0",cmd->get_dialogId(),
+            MAKE_COMMAND_STATUS(CMD_ERR_PERM,ESME_RX_P_APPN))
+        );
+      }
+    }
 
     SMS *s;
     while((s=getSms()))
