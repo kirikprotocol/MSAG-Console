@@ -73,5 +73,52 @@ void DataSourceLoader::loadupDataSourceFactory(
     log.info("Loading '%s' library done. Identity is '%s'.", dlpath, identity);
 }
 
+void DataSourceLoader::loadup(ConfigView* config)
+    throw(ConfigException, LoadupException)
+{
+    __require__(config);
+    
+    // load up libraries by config
+    ConfigView* driversConfig = config->getSubConfig("DataSourceDrivers");
+    std::set<std::string>* set = driversConfig->getSectionNames();
+    
+    for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
+    {
+        const char* section = (const char *)i->c_str();
+        ConfigView* driverConfig = 
+            driversConfig->getSubConfig(section, true);
+        const char* type = 0;
+        const char* dlpath = 0;
+        try
+        {
+            log.info("Loading DataSourceDriver for section '%s'.", section);
+            
+            type = driverConfig->getString("type");
+            dlpath = driverConfig->getString("loadup");
+            loadupDataSourceFactory(dlpath, type);
+
+            log.info("Loaded DataSourceDriver for section '%s'."
+                     " Bind type is: %s. Imported library: '%s'",
+                      section, type, dlpath);
+        }
+        catch (ConfigException& exc)
+        {
+            log.error("Loading of DataSourceDrivers failed !"
+                      " Config exception: %s", exc.what());
+            if (set) delete set;
+            if (type) delete type;
+            if (dlpath) delete dlpath;
+            delete driversConfig;
+            delete driverConfig;
+            throw;
+        }
+        if (type) delete type;
+        if (dlpath) delete dlpath;
+        delete driverConfig;
+    }
+    if (set) delete set;
+    delete driversConfig;
+}
+
 }}
 

@@ -12,31 +12,32 @@
 
 int main(void) 
 {
-    using namespace smsc::db;
     using namespace smsc::dbsme;
 
+    using smsc::db::DataSourceLoader;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
-
+    
     const char* OCI_DS_FACTORY_IDENTITY = "OCI";
     const char* DEFAULT_JOB_IDENTITY = "default";
     const char* SAMPLE_JOB_IDENTITY = "sample1";
     
-    DataSourceLoader::loadupDataSourceFactory(
-        "../db/oci/libdb_oci.so", OCI_DS_FACTORY_IDENTITY);
-
     SampleJobFactory _sampleJobFactory;
     JobFactory::registerFactory(&_sampleJobFactory, SAMPLE_JOB_IDENTITY);
     JobFactory::registerFactory(&_sampleJobFactory, DEFAULT_JOB_IDENTITY);
 
-    ConfigView* config;
+    ConfigView  *dsConfig, *cpConfig;
     try 
     {
         Manager::init("config.xml");
-        config = new ConfigView(Manager::getInstance(), "Applications.DBSme");
+        Manager& manager = Manager::getInstance();
         
-        CommandProcessor processor(config);
+        dsConfig = new ConfigView(manager, "StartupLoader");
+        DataSourceLoader::loadup(dsConfig);
+
+        cpConfig = new ConfigView(manager, "Applications.DBSme");
+        CommandProcessor processor(cpConfig);
         Command command;
         
         const char* toAddressStr = "1111111";
@@ -48,11 +49,13 @@ int main(void)
     } 
     catch (Exception& exc) 
     {
-        if (config) delete config;
+        if (dsConfig) delete dsConfig;
+        if (cpConfig) delete cpConfig;
         printf("Exception : %s\n", exc.what());
         return -1;
     }
     
-    if (config) delete config;
+    if (dsConfig) delete dsConfig;
+    if (cpConfig) delete cpConfig;
     return 0;
 }

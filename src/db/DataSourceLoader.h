@@ -27,6 +27,9 @@ namespace smsc { namespace db
         DataSourceLoader() {};
         virtual ~DataSourceLoader();
 
+        static void loadup(ConfigView* config)
+            throw(ConfigException, LoadupException);
+
         static void loadupDataSourceFactory(
             const char* dlpath, const char* identity)
                 throw(LoadupException);
