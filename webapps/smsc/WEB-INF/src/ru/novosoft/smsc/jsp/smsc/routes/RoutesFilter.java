@@ -25,7 +25,7 @@ public class RoutesFilter extends SmscBean
   protected String[] dstChks = null;
   protected String[] dstMasks = null;
   protected String[] smeChks = null;
-
+  
   protected boolean strict = false;
   protected boolean showSrc = false;
   protected boolean showDst = false;
@@ -37,6 +37,8 @@ public class RoutesFilter extends SmscBean
   protected String mbApply = null;
   protected String mbClear = null;
   protected String mbCancel = null;
+
+  protected boolean initialized = false;
 
   protected int init(List errors)
   {
@@ -52,7 +54,7 @@ public class RoutesFilter extends SmscBean
       dstChks = filter.getDestinationSubjectNames();
       dstMasks = filter.getDestinationMaskStrings();
       smeChks = filter.getSmeIds();
-
+      
       strict = filter.isIntersection();
       showSrc = preferences.isRouteShowSrc();
       showDst = preferences.isRouteShowDst();
@@ -101,6 +103,7 @@ public class RoutesFilter extends SmscBean
 
       return RESULT_OK;
     } else if (result == RESULT_OK && mbApply != null) {
+     initialized = true;
       try {
         filter.setSourceMaskStrings(srcMasks);
       } catch (AdminException e) {
@@ -114,7 +117,11 @@ public class RoutesFilter extends SmscBean
       filter.setSourceSubjectNames(srcChks);
       filter.setDestinationSubjectNames(dstChks);
       filter.setSmeIds(smeChks);
-      filter.setIntersection(strict);
+
+       int strict1;
+      if (strict) strict1=0;
+       else strict1=2;
+      filter.setIntersection(strict1);
       preferences.setRouteShowSrc(showSrc);
       preferences.setRouteShowDst(showDst);
       return RESULT_DONE;
