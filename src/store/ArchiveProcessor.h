@@ -96,32 +96,15 @@ namespace smsc { namespace store
         };
     };
     
-    struct Location
-    {
-        bool        enabled;
-        std::string location;
-
-        Location(const std::string location="", bool enabled=false)
-            : location(location), enabled(enabled) {};
-        Location(const Location& loc)
-            : location(loc.location), enabled(loc.enabled) {};
-        
-        Location& operator=(const Location& loc) {
-            location = loc.location;
-            enabled  = loc.enabled;
-            return (*this);
-        };
-    };
-
     class ArchiveProcessor : public Thread
     {
     private:
     
         smsc::logger::Logger*     log;
 
-        Mutex           locationsLock;
-        Hash<Location>  locations;
-        std::string     directory;
+        Mutex               locationsLock;
+        Hash<std::string>   locations;
+        std::string         directory;
 
         ThreadPool      queriesPool;
         

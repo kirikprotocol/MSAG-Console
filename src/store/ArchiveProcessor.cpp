@@ -58,7 +58,10 @@ void ArchiveProcessor::init(ConfigView* config)
     std::auto_ptr<ConfigView> locCfgGuard(config->getSubConfig("Locations"));
     ConfigView* locCfg = locCfgGuard.get();
     directory = locCfg->getString("destination");
-    std::auto_ptr< std::set<std::string> > setGuard(locCfg->getShortSectionNames());
+    std::auto_ptr<ConfigView> sourcesCfgGuard(locCfg->getSubConfig("sources"));
+    ConfigView* sourcesCfg = sourcesCfgGuard.get();
+
+    std::auto_ptr< std::set<std::string> > setGuard(sourcesCfg->getStrParamNames());
     std::set<std::string>* set = setGuard.get();
     for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
     {
@@ -66,19 +69,17 @@ void ArchiveProcessor::init(ConfigView* config)
         {
             const char* locId = (const char *)i->c_str();
             if (!locId || locId[0] == '\0')
-                throw ConfigException("Location id is empty or wasn't specified");
+                throw ConfigException("Source location id is empty or wasn't specified");
             
-            std::auto_ptr<ConfigView> locConfigGuard(locCfg->getSubConfig(locId));
-            ConfigView* locConfig = locConfigGuard.get();
-            const char* locDir = locConfig->getString("dir");
+            const char* locDir = sourcesCfg->getString(locId);
             if (!locDir || locDir[0] == '\0')
-                throw ConfigException("parameter 'dir' empty or wasn't specified for '%s' location", locId);
+                throw ConfigException("Source location value '%s' empty or wasn't specified", locId);
             
-            Location location(locDir, locConfig->getBool("enabled"));
+            std::string location = locDir;
             locations.Insert(locId, location);
         }
         catch (ConfigException& exc) {
-            smsc_log_error(log, "Load of locations failed ! Config exception: %s", exc.what());
+            smsc_log_error(log, "Load of source locations failed ! Config exception: %s", exc.what());
             throw;
         }
     }
@@ -140,22 +141,22 @@ void ArchiveProcessor::process()
     MutexGuard guard(locationsLock);
     
     smsc_log_debug(log, "Processing ...");
-    char* locId = 0; Location* location = 0;  
+    char* locId = 0; std::string* location = 0;  
     locations.First();
     while (locations.Next(locId, location))
     {
-        if (!location || !location->enabled) continue;
+        if (!location) continue;
 
         try 
         {
             Array<std::string> files;
-            FileStorage::findFiles(location->location, SMSC_PREV_ARCHIVE_FILE_EXTENSION, files);
+            FileStorage::findFiles(*location, SMSC_PREV_ARCHIVE_FILE_EXTENSION, files);
             if (files.Count() <= 0) {
-                smsc_log_debug(log, "No archive files found in '%s'", location->location.c_str());
+                smsc_log_debug(log, "No archive files found in '%s'", location->c_str());
                 continue;
             }
             
-            process(location->location, files);
+            process(*location, files);
 
         } catch (std::exception& exc) {
           smsc_log_error(log, "Error processing archive files. Details: %s", exc.what());

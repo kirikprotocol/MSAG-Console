@@ -19,13 +19,8 @@
   
     <section name="Locations">
 	<param name="destination" type="string">arc</param>
-	<section name="arc1">
-	    <param name="enabled" type="bool">true</param>
-	    <param name="dir" type="string">/usr/home/makarov/install/daemon/services/SMSC/arc</param>
-	</section>
-	<section name="arc2">
-	    <param name="enabled" type="bool">false</param>
-	    <param name="dir" type="string">arc</param>
+	<section name="sources">
+	    <param name="src_dir1" type="string">/usr/home/makarov/install/daemon/services/SMSC/arc</param>
 	</section>
     </section>
 

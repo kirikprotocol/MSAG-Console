@@ -16,7 +16,7 @@
 template <bool cnd> struct StaticCheck {}; 
 template <>  struct StaticCheck<true>  {}; 
 template <>  struct StaticCheck<false> { private: StaticCheck(); }; 
-static StaticCheck< sizeof(fpos_t)==8 > staticChec; 
+static StaticCheck< sizeof(fpos_t)==8 > staticCheck; 
 
 namespace smsc { namespace store
 {
