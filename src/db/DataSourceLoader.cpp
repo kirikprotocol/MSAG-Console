@@ -17,7 +17,7 @@ static DataSourceLoader _dataSourceLoader;
 
 DataSourceLoader::~DataSourceLoader()
 {
-    unload();
+    //unload();
 }
 
 void DataSourceLoader::loadupDataSourceFactory(

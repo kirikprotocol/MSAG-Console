@@ -595,5 +595,7 @@ int main(void)
         adminListener.shutdown();
         adminListener.WaitFor();
     }
+
+    DataSourceLoader::unload();
     return resultCode;
 }

@@ -613,5 +613,6 @@ int main(void)
         adminListener.WaitFor();
     }
 
+    DataSourceLoader::unload();
     return resultCode;
 }
