@@ -5,10 +5,12 @@
 #include <orl.h>
 
 #include <core/synchronization/Mutex.hpp>
+#include <core/buffers/Array.hpp>
 #include <sms/sms.h>
 #include "StoreExceptions.h"
 
 using namespace smsc::core::synchronization;
+//using namespace smsc::core::buffers;
 
 namespace smsc { namespace store 
 {
@@ -35,10 +37,16 @@ namespace smsc { namespace store
 	{
     protected:
 
-	    StoreConfig*	config;
-	    Connection*		conn;
-	    Mutex*        	mutex;
-        
+        StoreConfig*	config;
+		
+		int   			connectionsCount;
+		Mutex			connectionsLock;
+		Mutex			idleLock;
+
+		Array<Connection*>	idle;
+		Array<Connection*>	busy;
+		Array<Connection*>	dead;
+
 	public:
 	
 	    ConnectionPool(StoreConfig* _config) 
@@ -60,9 +68,9 @@ namespace smsc { namespace store
 
 	class Connection
     {
-    protected:
+	protected:
 		
-		static text* 	sqlStoreLock;
+        static text* 	sqlStoreLock;
 		static text* 	sqlStoreMaxId;
         static text* 	sqlStoreInsert;
 		static text* 	sqlRetriveAll;
@@ -73,6 +81,7 @@ namespace smsc { namespace store
 		OCIEnv*         envhp;  // OCI envirounment handle
         OCISvcCtx*      svchp;  // OCI service handle
         OCIServer*      srvhp;  // OCI server handle
+		OCIError*       errhp;  // OCI error handle
         OCISession*     sesshp; // OCI session handle
         
 		// OCI prepared 'store' statements
@@ -80,30 +89,49 @@ namespace smsc { namespace store
 		OCIStmt* 		stmtStoreMaxId;
         OCIStmt* 		stmtStoreInsert;
 		OCIStmt* 		stmtRetriveAll;
-        
-		SMS				sms;
+
+		OCIDefine	*defhp;
+		OCIBind		*bndSt, *bndMsgRef, *bndMsgInd;
+		OCIBind		*bndOALen, *bndOATon, *bndOANpi, *bndOAVal;
+		OCIBind		*bndDALen, *bndDATon, *bndDANpi, *bndDAVal;
+		OCIBind		*bndVTime, *bndWTime, *bndSTime, *bndDTime;
+		OCIBind		*bndSrr, *bndRd, *bndMsgPri, *bndMsgPid;
+		OCIBind		*bndFcs, *bndDcs, *bndUdhi, *bndUdl, *bndUd;
+
+		OCIDefine	*defSt, *defMsgRef, *defMsgInd;
+		OCIDefine   *defOALen, *defOATon, *defOANpi, *defOAVal;
+		OCIDefine	*defDALen, *defDATon, *defDANpi, *defDAVal;
+		OCIDefine	*defVTime, *defWTime, *defSTime, *defDTime;
+		OCIDefine	*defSrr, *defRd, *defMsgPri, *defMsgPid;
+		OCIDefine	*defFcs, *defDcs, *defUdhi, *defUdl, *defUd;
+		OCIBind		*bndRetriveId;
+		OCIBind		*bndStoreId;
+
+        SMS				sms;
 		SMSId			smsId;
         
 		OCIDate			waitTime;
 		OCIDate     	validTime;
 		OCIDate			submitTime;
 		OCIDate     	deliveryTime;
+		OCIRaw*			rawUd;	
 
+		uint8_t			uState;
 		char			bStatusReport;
 		char			bRejectDuplicates;
 		char			bHeaderIndicator;
 		
+		Mutex        	mutex;
+
 		void checkErr(sword status) 
 			throw(StoreException);
 
-		void setSMS(SMS& _sms);
-		SMS& getSMS();
+		void setSMS(SMS& _sms) throw(StoreException);
+		SMS& getSMS() throw(StoreException);
 
 	public:
 
-		OCIError*       errhp;  // OCI error handle
-
-		Connection(ConnectionPool* pool, int _id = 0)
+        Connection(ConnectionPool* pool, int _id = 0)
 			throw(StoreException);
 		virtual ~Connection();
 
@@ -112,7 +140,8 @@ namespace smsc { namespace store
 
         virtual SMS& retrive(SMSId id) 
             throw(StoreException);
-	
+
+		friend class ConnectionPool;
     };
     
 }}

@@ -18,7 +18,7 @@ MessageStore* StoreManager::getInstance() throw(StoreException)
 
 StoreManager::StoreManager() throw(StoreException)
 {
-    StoreConfig* config = new StoreConfig("ORCL", "smsc", "smsc");
+    StoreConfig* config = new StoreConfig("ORJP", "smsc", "smsc");
     pool = new ConnectionPool(config);
 }
 
