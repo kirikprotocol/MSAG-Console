@@ -353,6 +353,7 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	if (!replacePduData || !smsId.length())
 	{
 		res.insert(ESME_RINVMSGID);
+		res.insert(ESME_RREPLACEFAIL);
 	}
 	else
 	{

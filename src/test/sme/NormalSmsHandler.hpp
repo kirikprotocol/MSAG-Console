@@ -36,7 +36,7 @@ public:
 		__unreachable__("Use processPdu(SmppHeader*, const Address, time_t)");
 	}
 
-	virtual void processPdu(SmppHeader* header, const Address origAddr,
+	virtual void processPdu(SmppHeader* header, const Address& origAddr,
 		time_t recvTime);
 
 protected:

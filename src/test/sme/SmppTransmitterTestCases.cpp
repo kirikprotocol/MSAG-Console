@@ -390,11 +390,10 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduData* pduData,
 			//data_sm с теми же source address, destination address и
 			//service_type замещать не должны!!!
 			SmsPduWrapper existentPdu(existentPduData->pdu, existentPduData->sendTime);
-			if (!strcmp(nvl(pdu.getServiceType()), nvl(existentPdu.getServiceType())) &&
-				pdu.getSource() == existentPdu.getSource() &&
-				pdu.getDest() == existentPdu.getDest())
+			if (!strcmp(nvl(pdu.getServiceType()), nvl(existentPdu.getServiceType())))
 			{
-				if (pdu.isSubmitSm() &&
+				if (pdu.isSubmitSm() && pdu.getSource() == existentPdu.getSource() &&
+					pdu.getDest() == existentPdu.getDest() &&
 					pdu.get_message().get_replaceIfPresentFlag() == 1)
 				{
 					existentPduData->ref();
@@ -406,6 +405,8 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduData* pduData,
 				}
 				else
 				{
+					//даже если source и dest не совпадают,
+					//чтобы избежать дальнейших пересечений по service_type
 					pduData->intProps["hasSmppDuplicates"] = 1;
 					existentPduData->intProps["hasSmppDuplicates"] = 1;
 				}

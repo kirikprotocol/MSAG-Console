@@ -772,7 +772,7 @@ void NormalSmsHandler::registerDeliveryReportMonitors(const DeliveryMonitor* mon
 		__tc_fail__(failureCode); \
 	}
 
-void NormalSmsHandler::processPdu(SmppHeader* header, const Address origAddr,
+void NormalSmsHandler::processPdu(SmppHeader* header, const Address& origAddr,
 	time_t recvTime)
 {
 	__require__(header);

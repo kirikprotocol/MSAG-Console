@@ -173,9 +173,12 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm& pdu)
 	//обработать deliver_sm pdu
 	if (fixture->pduReg)
 	{
-		Address origAlias;
-		SmppUtil::convert(pdu.get_message().get_source(), &origAlias);
-		const Address origAddr = fixture->aliasReg->findAddressByAlias(origAlias);
+		Address origAddr;
+		SmppUtil::convert(pdu.get_message().get_source(), &origAddr);
+		if (fixture->smeInfo.wantAlias)
+		{
+			origAddr = fixture->aliasReg->findAddressByAlias(origAddr);
+		}
 		//проверить тип sme
 		PduHandlerMap::iterator it = fixture->pduHandler.find(origAddr);
 		if (it == fixture->pduHandler.end())
