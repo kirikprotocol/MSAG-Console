@@ -110,6 +110,8 @@ namespace smsc { namespace store
                 throw(StorageException);
             virtual int  getAttempts()
                 throw(StorageException);
+            virtual time_t getValidTime()
+                throw(StorageException);
         };
 
         class CancelIdIterator : public IdIterator

@@ -1029,7 +1029,7 @@ void ConcatDataStatement::setDestination(const Address& dda)
 /* --------------------- Sheduler's statements -------------------- */
 
 const char* ReadyByNextTimeStatement::sql_raw = (const char*)
-"SELECT ID, NEXT_TRY_TIME, LAST_RESULT, DST_SME_ID,DDA,ATTEMPTS FROM SMS_MSG WHERE\
+"SELECT ID, NEXT_TRY_TIME, LAST_RESULT, DST_SME_ID,DDA,ATTEMPTS,VALID_TIME FROM SMS_MSG WHERE\
  NEXT_TRY_TIME<=:RT ORDER BY NEXT_TRY_TIME ASC";
 const char* ReadyByNextTimeStatement::sql_immediate = (const char*)
 "SELECT ID, NEXT_TRY_TIME, LAST_RESULT, DST_SME_ID FROM SMS_MSG WHERE\
@@ -1053,6 +1053,7 @@ ReadyByNextTimeStatement::ReadyByNextTimeStatement(Connection* connection,
     define(4, SQLT_STR, (dvoid *) (dstSmeId), (sb4) sizeof(dstSmeId), &indDstSmeId);
     define(5, SQLT_STR, (dvoid *) (dda), (sb4) sizeof(dda), &indDda);
     define(6, SQLT_UIN, (dvoid *) &(attempts), (sb4) sizeof(attempts));
+    define(7, SQLT_ODT, (dvoid *) &(validTime), (sb4) sizeof(validTime),(dvoid*)&indValidTime);
 }
 void ReadyByNextTimeStatement::bindRetryTime(time_t retryTime)
     throw(StorageException)
@@ -1092,6 +1093,14 @@ bool ReadyByNextTimeStatement::getDda(char* buffer)
 int ReadyByNextTimeStatement::getAttempts()
 {
   return attempts;
+}
+
+time_t ReadyByNextTimeStatement::getValidTime()
+{
+  if(indValidTime!=OCI_IND_NOTNULL)return 0;
+  time_t rv=0;
+  convertOCIDateToDate(&validTime,&rv);
+  return rv;
 }
 
 

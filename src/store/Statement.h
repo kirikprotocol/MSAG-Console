@@ -505,8 +505,8 @@ namespace smsc { namespace store
     static const char* sql_immediate;
     private:
 
-        OCIDate         rTime, nextTime;
-        sb2             indNextTime, indDstSmeId,indDda;
+        OCIDate         rTime, nextTime,validTime;
+        sb2             indNextTime, indDstSmeId,indDda,indValidTime;
         uint32_t        lastResult,attempts;
         SmeSystemIdType dstSmeId;
         FullAddressValue dda;
@@ -526,6 +526,7 @@ namespace smsc { namespace store
         bool getDda(char* buffer)
             throw(StorageException);
         int getAttempts();
+        time_t getValidTime();
     };
 
     class CancelIdsStatement : public IdStatement

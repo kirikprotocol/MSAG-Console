@@ -61,6 +61,8 @@ namespace smsc { namespace store
             throw(StorageException) = 0;
         virtual int getAttempts()
             throw(StorageException) = 0;
+        virtual time_t getValidTime()
+            throw(StorageException) = 0;
     };
 
     /**

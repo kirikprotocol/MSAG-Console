@@ -1396,6 +1396,14 @@ int RemoteStore::ReadyIdIterator::getAttempts()
     return 0;
 }
 
+time_t RemoteStore::ReadyIdIterator::getValidTime()
+    throw(StorageException)
+{
+    if (!isNull && readyStmt && connection && connection->isAvailable()) {
+        return readyStmt->getValidTime();
+    }
+    return 0;
+}
 
 
 TimeIdIterator* RemoteStore::getReadyForRetry(time_t retryTime, bool immediate)
