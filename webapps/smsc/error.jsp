@@ -7,6 +7,7 @@
   if (exception != null) {
     java.io.PrintWriter pw = new java.io.PrintWriter( out );
     exception.printStackTrace( pw );
+    exception.printStackTrace( new java.io.PrintStream(System.err) );
   }
 %></pre></div></div><%@
  include file="/WEB-INF/inc/html_1_footer.jsp"%><%@
