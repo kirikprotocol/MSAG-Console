@@ -43,13 +43,15 @@ namespace smsc { namespace infosme
     extern time_t parseDate(const char* str);
     extern int    parseTime(const char* str);
     
-    static const uint8_t MESSAGE_NEW_STATE          = 0;
-    static const uint8_t MESSAGE_ENROUTE_STATE      = 10;
-    static const uint8_t MESSAGE_DELIVERED_STATE    = 20;
-    static const uint8_t MESSAGE_FAILED_STATE       = 30;
+    static const uint8_t MESSAGE_NEW_STATE          = 0;  // Новое или перешедуленное сообщение
+    static const uint8_t MESSAGE_WAIT_STATE         = 10; // Ожидает submitResponce
+    static const uint8_t MESSAGE_ENROUTE_STATE      = 20; // В процессе доставки, ожидает deliveryReciept
+    static const uint8_t MESSAGE_DELIVERED_STATE    = 30; // Доставленно
+    static const uint8_t MESSAGE_FAILED_STATE       = 40; // Ошибка или отказ в доставке 
 
     typedef enum {
         NEW         = MESSAGE_NEW_STATE,
+        WAIT        = MESSAGE_WAIT_STATE,
         ENROUTE     = MESSAGE_ENROUTE_STATE,
         DELIVERED   = MESSAGE_DELIVERED_STATE,
         FAILED      = MESSAGE_FAILED_STATE
@@ -141,7 +143,7 @@ namespace smsc { namespace infosme
         
         Mutex       finalizingLock;
         bool        bFinalizing;
-    
+
     protected:
 
         TaskInfo        info;
@@ -151,16 +153,13 @@ namespace smsc { namespace infosme
         Event       processEndEvent;
         Event       inProcessEvent;
         Mutex       inProcessLock;
-        Mutex       statementLock;
         Mutex       createTableLock;
         bool        bInProcess, bTableCreated;
         
         void createTable();
         char* prepareSqlCall(const char* sql);
-        Statement* getStatement(Connection* connection, const char* id, const char* sql);
 
         virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
-
         virtual ~Task();
 
     public:
@@ -168,6 +167,9 @@ namespace smsc { namespace infosme
         Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt);
         Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
              DataSource* dsOwn, DataSource* dsInt);
+        
+        static Statement* getStatement(Connection* connection, 
+                                       const char* id, const char* sql);
         
         void finalize()
         {
@@ -231,35 +233,15 @@ namespace smsc { namespace infosme
         void dropAllMessages();
         
         /**
-         * Производит обработку отчёта о доставке сообщения. Если сообщение было 
-         * доставлено, то меняет его состояние на DELIVERED, иначе, если установлен
-         * флаг retryOnFail & retryTime, то переводит сообщение в состояние NEW и
-         * выставляет новое значение в поле SEND_DATE, чистит поле MESSAGE_ID.
-         * Если же флаг не выставлен, то переводит сообщение в состояние FAILED.
-         *
-         * @param smscId        номер присвоенный smsc
-         * @param delivered     признак, доставленно ли сообщение
+         * Используется для восстановления сообщения из состояния WAIT в случае,
+         * если submitResponce не пришёл при обрыве соединения с SMSC.
+         * Выполняется при старте TaskProcessor'а.
          */
-        void doReceiptMessage(std::string smscId, bool delivered);
-
-        /**
-         * Производит обработку непосредственного ответа на отправленное сообщение.
-         * Если сообщение не было принято в обработку серсис центром, то его состояние
-         * меняется на FAILED, иначе сообщению присваивается номер пришедший от
-         * серсис центра и сообщение ставится на ожидание в состоянии ENROUTE.
-         * Выполняется в основном потоке TaskProcessor'а
-         *
-         * @param connection    основной connection TaskProcessor'а
-         *                      из внутреннего источника данных. (оптимизация)
-         * @param msgId         идентификатор сообщения в таблице задачи 
-         * @param smscId        номер присвоенный smsc
-         * @param acepted       признак, принято ли сообщение к доставке.
-         */
-        void doRespondMessage(Connection* connection, uint64_t msgId, 
-                              bool acepted, std::string smscId="");
+        void resetWaiting();
 
         /**
          * Возвращает следующее сообщение для отправки из спец.таблицы задачи
+         * Изменяет состояние выбранного сообщения на WAIT.
          * Выполняется в основном потоке TaskProcessor'а
          *
          * @param connection    основной connection TaskProcessor'а
@@ -268,6 +250,59 @@ namespace smsc { namespace infosme
          * @return              false если сообщений нет.
          */
         bool getNextMessage(Connection* connection, Message& message);
+        
+        /**
+         * Переводит сообщение в состояние NEW по получению deliveryReport Failed
+         * или submitResponce Failed с временной ошибкой,
+         * если в задаче стоит retryOnFail и установленно retryTime 
+         * (сообщение должно быть в состоянии ENROUTE или WAIT).
+         * Если установлено время завершения задачи и следующая попытка
+         * должна произойти позже, то сообщение переводиться в состояние FAILED.
+         * 
+         * @param connection    основной connection TaskProcessor'а
+         *                      из внутреннего источника данных. (оптимизация)
+         * @param msgId         идентификатор сообщения в таблице задачи.
+         * @return true         если сообщение найдено и изменено 
+         */
+        bool doRetry(Connection* connection, uint64_t msgId);
+
+        /**
+         * Переводит сообщение в состояние ENROUTE по получению submitResponce Ok
+         * Сообщение должно быть в состоянии WAIT.
+         * Выполняется из TaskProcessor'а
+         * 
+         * @param connection    основной connection TaskProcessor'а
+         *                      из внутреннего источника данных. (оптимизация)
+         * @param msgId         идентификатор сообщения в таблице задачи.
+         * @return true         если сообщение найдено и изменено 
+         */
+        bool doEnroute(Connection* connection, uint64_t msgId);
+        
+        /**
+         * Переводит сообщение в состояние FAILED по получению submitResponce Failed
+         * или deliveryReport Failed.
+         * Сообщение должно быть в состоянии WAIT или ENROUTE.
+         * Выполняется из TaskProcessor'а
+         * 
+         * @param connection    основной connection TaskProcessor'а
+         *                      из внутреннего источника данных. (оптимизация)
+         * @param msgId         идентификатор сообщения в таблице задачи.
+         * @return true         если сообщение найдено и изменено 
+         */
+        bool doFailed(Connection* connection, uint64_t msgId);
+        
+        /**
+         * Переводит сообщение в состояние DELIVERED по получению submitResponce Ok
+         * Сообщение должно быть в состоянии ENROUTE.
+         * Выполняется из TaskProcessor'а
+         * 
+         * @param connection    основной connection TaskProcessor'а
+         *                      из внутреннего источника данных. (оптимизация)
+         * @param msgId         идентификатор сообщения в таблице задачи.
+         * @return true         если сообщение найдено и изменено 
+         */
+        bool doDelivered(Connection* connection, uint64_t msgId);
+        
     };
     
     class TaskGuard
@@ -302,7 +337,6 @@ namespace smsc { namespace infosme
         virtual void invokeEndProcess(Task* task) = 0;
         virtual void invokeBeginProcess(Task* task) = 0;
         virtual void invokeDropAllMessages(Task* task) = 0;
-        virtual void invokeDoReceiptMessage(Task* task, std::string smscId, bool delivered) = 0;
         
         virtual ~TaskInvokeAdapter() {};
 

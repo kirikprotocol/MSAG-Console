@@ -38,13 +38,180 @@ using namespace smsc::admin::service;
 
 using namespace smsc::infosme;
 
-static bool bInfoSmeIsStopped = false;
-static bool bInfoIsConnected  = false;
+static bool bInfoSmeIsStopped   = false;
+static bool bInfoSmeIsConnected = false;
 
 static log4cpp::Category& logger = Logger::getCategory("smsc.infosme.InfoSme");
 
 static smsc::admin::service::ServiceSocketListener adminListener; 
 static bool bAdminListenerInited = false;
+
+class InfoSmeEventHandler : public ThreadedTask
+{
+protected:
+
+    SmppHeader*         pdu;
+    TaskProcessor&      processor;
+    SmppTransmitter&    transmitter;
+
+    void process()
+    {
+        {
+            // Send DeliverySmResp here for accepted DeliverySm
+            PduDeliverySmResp smResp;
+            smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+            smResp.set_messageId("");
+            smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+            transmitter.sendDeliverySmResp(smResp);
+        }
+        
+        try 
+        {
+            SMS request;
+            fetchSmsFromSmppPdu((PduXSm*)pdu, &request);
+            bool isReceipt = (request.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
+                ((request.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
+
+            logger.debug("SMPP_ESM_CLASS=%d", request.getIntProperty(Tag::SMPP_ESM_CLASS));
+            
+            if (isReceipt)
+            {
+                logger.debug("Got receipt");
+                if (((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
+                {
+                    const char* msgid = 
+                        ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
+                    if (msgid && msgid[0] != '\0') {
+                        logger.debug("Got receipt, msgid=%s", msgid);
+                        //processor.processReceipt(msgid, true);
+                    }
+                        
+                    // ??? TODO: check receipted or not
+                } 
+                return;
+            }
+        }
+        catch (exception& exc) {
+            logger.error("Error handled: %s", exc.what());
+        }
+        catch (...) {
+            logger.error("Unknown error handled.");
+        }
+    };
+    
+public:
+    
+    InfoSmeEventHandler(SmppHeader* pdu, TaskProcessor& tp, SmppTransmitter& trans) 
+        : ThreadedTask(), pdu(pdu), processor(tp), transmitter(trans) {};
+    virtual ~InfoSmeEventHandler() {};
+
+    virtual const char* taskName() {
+        return "InfoSmeEventHandler";
+    };
+
+    virtual int Execute()
+    {
+        __require__(pdu);
+        logger.debug("InfoSmeEventHandler: Processing PDU.");
+        
+        switch (pdu->get_commandId())
+        {
+        case SmppCommandSet::DELIVERY_SM:
+            logger.debug("Received DELIVERY_SM Pdu.");
+            process();
+            break;
+        case SmppCommandSet::SUBMIT_SM_RESP:
+            logger.debug("Received SUBMIT_SM_RESP Pdu.");
+            break;
+        default:
+            logger.debug("Received unsupported Pdu !");
+            break;
+        }
+        
+        disposePdu(pdu); pdu=0;
+        return 0;
+    };
+};
+
+class InfoSmeEventManager 
+{
+private:
+
+    ThreadPool          pool;
+    
+public:
+
+    InfoSmeEventManager() {};
+    InfoSmeEventManager(ConfigView* config)
+        throw(ConfigException) 
+    {
+        init(config);
+    };
+    
+    virtual ~InfoSmeEventManager() {
+        logger.debug("InfoSme: deinit InfoSmeEventManager\n");
+        shutdown();
+    };
+    void shutdown() {
+        pool.shutdown();
+    }
+
+    void init(ConfigView* config)
+        throw(ConfigException)
+    {
+        try 
+        {
+            int maxThreads = config->getInt("max");
+            pool.setMaxThreads(maxThreads);
+            logger.debug("Max threads count: %d\n", maxThreads);
+        }
+        catch (ConfigException& exc) {
+            logger.warn("Maximum thread pool size wasn't specified !");
+        }
+
+        try
+        {
+            int initThreads = config->getInt("init");
+            pool.preCreateThreads(initThreads);
+            logger.debug("Precreated threads count: %d\n", initThreads);
+        }
+        catch (ConfigException& exc) {
+            logger.warn("Precreated threads count in pool wasn't specified !");
+        }
+    };
+    
+    void startHandler(InfoSmeEventHandler* handler) {
+        pool.startTask(handler);
+    };
+};
+
+class InfoSmePduListener: public SmppPduEventListener
+{
+protected:
+    
+    TaskProcessor&          processor;
+    InfoSmeEventManager&    manager;
+    SmppTransmitter*        trans;
+
+public:
+    
+    InfoSmePduListener(TaskProcessor& proc, InfoSmeEventManager& man)
+        : SmppPduEventListener(), processor(proc), manager(man), trans(0) {};
+
+    void handleEvent(SmppHeader *pdu) {
+        logger.debug("InfoSme: pdu received. Starting task...\n");
+        manager.startHandler(new InfoSmeEventHandler(pdu, processor, *trans));
+    }
+    
+    void handleError(int errorCode) {
+        bInfoSmeIsConnected = false;
+        logger.error("Oops, transport error handled! Code is: %d\n", errorCode);
+    }
+    
+    void setTrans(SmppTransmitter *t) {
+        trans=t;
+    }
+};
 
 class InfoSmeConfig : public SmeConfig
 {
@@ -104,10 +271,10 @@ public:
 
 static void appSignalHandler(int sig)
 {
-    __trace2__("Signal %d handled !", sig);
+    logger.debug("Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT)
     {
-        __trace__("Stopping ...");
+        logger.info("Stopping ...");
         if (bAdminListenerInited) adminListener.shutdown();
         bInfoSmeIsStopped = true;
     }
@@ -140,12 +307,49 @@ int main(void)
         ConfigView tpConfig(manager, "InfoSme");
         TaskProcessor processor(&tpConfig);
         
+        ConfigView emanConfig(manager, "WSme.EventsThreadPool");
         ConfigView smscConfig(manager, "WSme.SMSC");
         InfoSmeConfig cfg(&smscConfig);
         
-        processor.Start();
+        while (!bInfoSmeIsStopped)
+        {
+            InfoSmeEventManager runner(&emanConfig);
+            InfoSmePduListener  listener(processor, runner);
+            SmppSession         session(cfg, &listener);
+
+            logger.info("Connecting to SMSC ... ");
+            try
+            {
+                listener.setTrans(session.getSyncTransmitter());
+                session.connect();
+                processor.assignMessageSender(0); // TODO: implement message sender
+                processor.Start();
+                bInfoSmeIsConnected = true;
+            }
+            catch (SmppConnectException& exc)
+            {
+                const char* msg = exc.what(); 
+                logger.error("Connect to SMSC failed. Cause: %s\n", (msg) ? msg:"unknown");
+                bInfoSmeIsConnected = false;
+                if (exc.getReason() == 
+                    SmppConnectException::Reason::bindFailed) throw exc;
+                sleep(cfg.timeOut);
+                session.close();
+                runner.shutdown();
+                continue;
+            }
+            logger.info("Connected.\n");
+            
+            while (!bInfoSmeIsStopped && bInfoSmeIsConnected) sleep(2);
+            logger.info("Disconnecting from SMSC ...\n");
+            processor.Stop();
+            session.close();
+            runner.shutdown();
+        };
+        
+        /*processor.Start();
         Event aaa;
-        aaa.Wait(100000);
+        aaa.Wait(100000);*/
     }
     catch (SmppConnectException& exc)
     {

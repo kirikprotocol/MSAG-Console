@@ -39,30 +39,8 @@ namespace smsc { namespace infosme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
-    class TaskContainer : public TaskContainerAdapter
-    {
-    private:
-        
-        Hash<Task *>    tasks;
-        Mutex           tasksLock;
-        int             prioritySum;
-
-    public:
-        
-        TaskContainer() : TaskContainerAdapter(), prioritySum(0) {};
-        virtual ~TaskContainer();
-
-        virtual bool addTask(Task* task);
-        virtual bool removeTask(std::string taskId);
-        virtual bool hasTask(std::string taskId);
-        
-        virtual TaskGuard getTask(std::string taskId);
-        virtual TaskGuard getNextTask();
-    };
-
     typedef enum {
-      beginProcessMethod, endProcessMethod, 
-      dropAllMessagesMethod, doReceiptMessageMethod
+      beginProcessMethod, endProcessMethod, dropAllMessagesMethod
     } TaskMethod;
 
     class TaskRunner : public TaskGuard, public ThreadedTask // for task method execution 
@@ -70,18 +48,11 @@ namespace smsc { namespace infosme
     private:
         
         TaskMethod    method;
-        Connection*   connection;
-        
-        std::string   smscId;
-        bool          delivered;
         
     public:
         
-        TaskRunner(Task* task, TaskMethod method, Connection* connection=0)
-            : TaskGuard(task), ThreadedTask(), method(method), connection(connection) {};
-        TaskRunner(Task* task, TaskMethod method, std::string smscId, bool delivered)
-            : TaskGuard(task), ThreadedTask(), method(method), connection(0),
-                   smscId(smscId), delivered(delivered) {};
+        TaskRunner(Task* task, TaskMethod method)
+            : TaskGuard(task), ThreadedTask(), method(method) {};
 
         virtual ~TaskRunner() {};
         
@@ -99,9 +70,6 @@ namespace smsc { namespace infosme
                 break;
             case dropAllMessagesMethod:
                 task->dropAllMessages();
-                break;
-            case doReceiptMessageMethod:
-                task->doReceiptMessage(smscId, delivered);
                 break;
             default:
                 __trace2__("Invalid method '%d' invoked on task.", method);
@@ -160,22 +128,58 @@ namespace smsc { namespace infosme
         virtual void invokeBeginProcess(Task* task) {
             pool.startTask(new TaskRunner(task, beginProcessMethod));
         };
-        virtual void invokeDoReceiptMessage(Task* task, std::string smscId, bool delivered) {
-            pool.startTask(new TaskRunner(task, doReceiptMessageMethod, smscId, delivered));
-        };
         virtual void invokeDropAllMessages(Task* task) {
             pool.startTask(new TaskRunner(task, dropAllMessagesMethod));
         };
     };
     
+    class TaskContainer : public TaskContainerAdapter
+    {
+    private:
+        
+        Hash<Task *>    tasks;
+        Mutex           tasksLock;
+        int             prioritySum;
+
+    public:
+        
+        TaskContainer() : TaskContainerAdapter(), prioritySum(0) {};
+        virtual ~TaskContainer();
+
+        virtual bool addTask(Task* task);
+        virtual bool removeTask(std::string taskId);
+        virtual bool hasTask(std::string taskId);
+        
+        virtual TaskGuard getTask(std::string taskId);
+        virtual TaskGuard getNextTask();
+
+        void resetWaitingTasks();
+    };
+
     struct MessageSender
     {
-        virtual bool sendMessage(std::string abonent, std::string message, std::string& msgid) = 0;
+        virtual int sendMessage(std::string abonent, std::string message, TaskInfo info) = 0;
         virtual ~MessageSender() {};
 
     protected:
         
         MessageSender() {};
+    };
+
+    struct TaskMsgId
+    {
+        std::string taskId;
+        uint64_t    msgId;
+
+        TaskMsgId(std::string taskId="", uint64_t msgId=0) 
+            : taskId(taskId), msgId(msgId) {};
+        TaskMsgId(const TaskMsgId& tmi) 
+            : taskId(tmi.taskId), msgId(tmi.msgId) {};
+        
+        TaskMsgId& operator=(const TaskMsgId& tmi) {
+            taskId = tmi.taskId; msgId = tmi.msgId;
+            return *this;
+        }
     };
 
     class TaskProcessor : public TaskProcessorAdapter, public Thread
@@ -197,11 +201,16 @@ namespace smsc { namespace infosme
         const char* taskTablesPrefix;
         const char* dsInternalName;
         DataSource* dsInternal;
+        Connection* dsIntConnection;
+        Mutex       dsIntConnectionLock;
 
         MessageSender*  messageSender;
-        Mutex           messageSenderLock;       
-        
-        void MainLoop(Connection* connection);
+        Mutex           messageSenderLock;
+
+        IntHash<TaskMsgId> taskIdsBySeqNum;
+        Mutex              taskIdsBySeqNumLock;
+
+        void MainLoop();
 
     public:
 
@@ -234,6 +243,9 @@ namespace smsc { namespace infosme
             MutexGuard guard(messageSenderLock);
             messageSender = sender;
         }
+
+        void processResponce(int seqNum, bool accepted, bool retry, std::string smscId="");
+        void precessReceipt (std::string smscId, bool delivered);
 
     };
 
