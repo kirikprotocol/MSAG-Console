@@ -239,18 +239,25 @@ void ArchiveProcessor::process()
     while (locations.Next(locId, location) && !bNeedExit)
     {
         if (!location) continue;
+        smsc_log_debug(log, "Processing location '%s' ...", location->c_str());
 
         try
         {
-            Array<std::string> files;
-            FileStorage::findFiles(*location, SMSC_PREV_ARCHIVE_FILE_EXTENSION, files);
-            skipProcessedFiles(*location, files); // filter out already processed files
-            if (files.Count() <= 0) {
-                smsc_log_debug(log, "No new archive files found in '%s'", location->c_str());
-                continue;
+            bool bProcessSuccess = false;
+            while (!bProcessSuccess)
+            {
+                Array<std::string> files;
+                FileStorage::findFiles(*location, SMSC_PREV_ARCHIVE_FILE_EXTENSION, files);
+                skipProcessedFiles(*location, files); // filter out already processed files
+                if (files.Count() > 0) {
+                    startTransaction();
+                    bProcessSuccess = process(*location, files);
+                    if (!bProcessSuccess) rollbackTransaction();
+                } else {
+                    smsc_log_debug(log, "No new archive files found in '%s'", location->c_str());
+                    break;
+                }
             }
-            startTransaction();
-            process(*location, files);
 
         } catch (std::exception& exc) {
           smsc_log_error(log, "Error processing archive files. Details: %s", exc.what());
@@ -283,7 +290,7 @@ static bool switchDate(time_t date1, time_t date2, char* destinationFile,
     return result;
 }
 
-void ArchiveProcessor::process(const std::string& location, const Array<std::string>& files)
+bool ArchiveProcessor::process(const std::string& location, const Array<std::string>& files)
 {
     Query::ProcessArchiveGuard archiveGuard;
 
@@ -291,15 +298,14 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
     char destinationDirName[64];
     time_t lastProcessedTime = 0;
 
-    smsc_log_debug(log, "Processing location '%s' ...", location.c_str());
     for (int i=0; i<files.Count() && !bNeedExit; i++)
     {
         std::string file = files[i];
+        smsc_log_debug(log, "Processing archive file '%s' ...", file.c_str());
+
         std::string srcFileName = location+"/"+file;
         const char* srcFileNameStr = srcFileName.c_str();
         if (!srcFileNameStr || !srcFileNameStr[0]) continue;
-        
-        smsc_log_debug(log, "Processing archive file '%s' ...", file.c_str());
         
         PersistentStorage*  arcDestination = 0;
         TextDumpStorage*    txtDestination = 0;
@@ -398,15 +404,16 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                     }
                 } // while all records from source file will not be fetched
 
-                commitTransaction(false); // flush transactional indecies
-                
                 if (arcDestination) { delete arcDestination; arcDestination=0; }
                 if (txtDestination) { delete txtDestination; txtDestination=0; }
             }
             prtime=gethrtime()-prtime;
             double tmInSec=(double)prtime/1000000000.0L;
-            smsc_log_info(log,"Processed file '%s' in %lld msec, %lld sms found, processing speed %lf sms/sec",
-                          file.c_str(),prtime/1000000,count,(double)count/tmInSec);
+            smsc_log_info(log,"Processed file '%s' in %lld msec, %lld sms found (%lld in transaction), "
+                          "processing speed %lf sms/sec", file.c_str(), prtime/1000000, 
+                          count, transactionSmsCount, (double)count/tmInSec);
+            
+            commitTransaction(false); // flush transactional indecies
 
         } catch (std::exception& exc) {
           smsc_log_error(log, "Error processing archive file '%s'. Details: %s", file.c_str(), exc.what());
@@ -414,20 +421,21 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
-          rollbackTransaction();
           if (arcDestination) { delete arcDestination; arcDestination=0; }
           if (txtDestination) { delete txtDestination; txtDestination=0; }
+          return false;
         } catch (...) {
           smsc_log_error(log, "Error processing archive file '%s'. Reason is unknown", file.c_str());
           try {
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
-          rollbackTransaction();
           if (arcDestination) { delete arcDestination; arcDestination=0; }
           if (txtDestination) { delete txtDestination; txtDestination=0; }
+          return false;
         }
     }
+    return true;
 }
 
 /* -------------------------- Query Implementation ------------------------- */

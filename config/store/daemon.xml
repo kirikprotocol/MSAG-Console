@@ -16,6 +16,11 @@
 	<param name="init" type="int">1</param>
 	<param name="max" type="int">5</param>    
     </section>
+
+    <section name="Transactions">
+      <param name="maxSmsCount" type="int">20000</param>
+      <param name="maxTimeInterval" type="int">60</param>
+    </section>
   
     <section name="Locations">
 	<param name="baseDestination" type="string">arc</param>

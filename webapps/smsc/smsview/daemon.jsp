@@ -132,6 +132,13 @@ function delParam(sectionName, paramName)
         param(out, "initial", "ArchiveDaemon.Queries.init", bean.getIntParam("ArchiveDaemon.Queries.init"));
       finishParams(out);
     finishSection(out);
+    //################################## Transactions ##########################
+    startSection(out, "Transactions", "Transactions", false);
+      startParams(out);
+        param(out, "maximum transaction size (sms)", "ArchiveDaemon.Transactions.maxSmsCount",     bean.getIntParam("ArchiveDaemon.Transactions.maxSmsCount"));
+        param(out, "maximum transaction time (sec)", "ArchiveDaemon.Transactions.maxTimeInterval", bean.getIntParam("ArchiveDaemon.Transactions.maxTimeInterval"));
+      finishParams(out);
+    finishSection(out);
     //################################## Locations #############################
     startSection(out, "Locations", "Locations", true);
       startParams(out);

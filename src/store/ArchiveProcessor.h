@@ -127,7 +127,7 @@ namespace smsc { namespace store
         void rollbackTransaction();
 
         void skipProcessedFiles(const std::string& location, Array<std::string>& files);
-        void process(const std::string& location, const Array<std::string>& files);
+        bool process(const std::string& location, const Array<std::string>& files);
 
     public:
     
