@@ -3,69 +3,38 @@
 <resources>
 
   <bundle name="system">
+    <str name="error_internal"    value="ошибка сервиса"/>
+    <str name="page_main">
+Настройки звонков:
+1>Переадресация
+2>Сервис пропущенных вызовов
+3>SMS-Помощь
+    </str>
   </bundle>
 
   <bundle name="divert">
-    <str name="reason_busy"       value="занят"/>
-    <str name="reason_absent"     value="отсутствует"/>
-    <str name="reason_notavail"   value="не доступен"/>
-    <str name="reason_uncond"     value="безусловно"/>
-    <str name="value_off"         value="выключено"/>
-    <str name="value_unknown"     value="не известно"/>
-    <str name="error_msc_no_resp" value="нет ответа от коммутатора"/>
-    <str name="error_msc_fail"    value="сбой коммутатора"/>
-    <str name="error_internal"    value="ошибка сервиса"/>
-    <str name="info">
+    <str name="value_off"         value="выкл"/>
+    <str name="value_service"     value="сервис"/>
+    <str name="value_voicemail"   value="голос.почта"/>
+
+    <str name="page_info">
 Переадресация:
-{0} > {4}
-{1} > {5}
-{2} > {6}
-{3} > {7}
+0>назад
+1>занят {0}
+2>отсутствует {1}
+3>не доступен {2}
+4>безусловно {3}
     </str>
-    <str name="set_on">
-Установлена переадресация на {0} для причины {1}.
-    </str>
-    <str name="set_off">
-Переадресация отключена для причины {1}.
+    <str name="page_set">
+Введите тел.номер или:
+0>назад
+1>сервис
+2>выключить
+3>голос.почта
     </str>
   </bundle>
 
   <bundle name="profile">
-    <str name="value_inform"        value="Информировать"/>
-    <str name="value_notify"        value="Нотифицировать"/>
-    <str name="value_no_inform"     value="Не информировать"/>
-    <str name="value_no_notify"     value="Не нотифицировать"/>
-    <str name="value_granted"       value="Разрешено"/>
-    <str name="value_denied"        value="Запрещено"/>
-    <str name="value_messages"      value="сообщения"/>
-    <str name="value_notifications" value="нотификации"/>
-    <str name="value_for_abonent"   value="абоненту"/>
-    <str name="value_for_callers"   value="звонившим"/>
-    <str name="info">
-Уст-ки профиля:
-{0} абонента
-{1} звонившего
-Тип сообщения {2}
-Тип нотификации {3}
-    </str>
-    <str name="change">
-Изменить профиль:          
-1> {0} абонента
-2> {1} звонившего
-3> Cообщения
-4> Нотификации
-    </str>
-    <str name="flags">
-{0} посылать {1} {2}
-    </str>
-    <str name="select_format"> <!-- Вставить выбор формата сообщений/нотификаций -->
-Тип {0}:
-0> Не менять
-{1}
-    </str>
-    <str name="show_format">
-Установлен новый тип {0}: {1}
-    </str>
   </bundle>
 
 </resources>

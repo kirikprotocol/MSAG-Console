@@ -4,113 +4,67 @@
   <scenario id="0" active="1" sms="1" ussd="2" resources="resources.xml">
 
     <page id="MAIN_PAGE" question="0">
-      <segment>
-        <data>
-Ваши настройки:
-1> Переадресация
-2> Изм. переадресацию
-3> Профиль
-4> Изм. профиль
-        </data>
-      </segment>
-      <command name="1" target="divert_info"/>
-      <command name="2" target="divert_mgr"/>
-      <command name="3" target="profile_info"/>
-      <command name="4" target="profile_mgr"/>
+      <!-- Show MAIN dialog & set MAIN attribute -->
+      <pageExecutor class="ru.sibinco.mci.profile.MainExecutor">
+        <bundle name="system"/>
+      </pageExecutor>
+      <command name="1" target="divert_mgr"/>
+      <command name="2" target="profile_mgr"/>
+      <command name="3" target="smshelp_mgr"/>
       <command name="(**)" target="MAIN_PAGE"/>
     </page>
 
-    <page id="divert_info" question="0">
-      <pageExecutor class="ru.sibinco.mci.profile.DivertViewExecutor">
+    <page id="divert_mgr" question="0">
+      <!-- 1) if (!MAIN attr && !"0") set divert value for option (выкл/сервис/голос.почта/тел.номер)
+           2) remove MAIN attribute -->
+      <pagePreProcessor class="ru.sibinco.mci.profile.DivertManagerPreprocessor">
+        <bundle name="divert"/>
+      </pagePreProcessor>
+      <!-- 1) Query divert info
+           2) Show divert info & resons dialog -->
+      <pageExecutor class="ru.sibinco.mci.profile.DivertManagerExecutor">
         <bundle name="divert"/>
       </pageExecutor>
+      <command name="1" target="divert_set"/>   <!-- занят       -->
+      <command name="2" target="divert_set"/>   <!-- отсутств.   -->
+      <command name="3" target="divert_set"/>   <!-- не доступен -->
+      <command name="4" target="divert_set"/>   <!-- безусл.     -->
       <command name="(**)" target="MAIN_PAGE"/>
-    </page>
-    <page id="divert_mgr" question="0">
-      <segment>
-        <data>
-Установить переадресацию:
-1> Занято
-2> Отсутствует
-3> Не доступен
-4> Безусловно
-        </data>
-      </segment>
-      <command name="1" target="divert_prompt"/>
-      <command name="2" target="divert_prompt"/>
-      <command name="3" target="divert_prompt"/>
-      <command name="4" target="divert_prompt"/>
-      <command name="(**)" target="MAIN_PAGE"/>
-    </page>
-    <page id="divert_prompt" question="0" >
-      <pagePreProcessor class="ru.sibinco.mci.profile.DivertPromptPreprocessor"/>
-      <segment>
-        <data>
-Введите номер телефона или
-1> Выключить
-2> Миссед Колс
-3> Автоответчик
-4> Назад
-        </data>
-      </segment>
-      <command name="1" target="divert_set"/>
-      <command name="2" target="divert_set"/>
-      <command name="3" target="divert_set"/>
-      <command name="4" target="diver_mgr"/>
-      <command name="(**)" target="divert_set"/>
     </page>
     <page id="divert_set" question="0">
+      <!-- Set divert reason attribute (занят/отсутств./не доступен/безусл.) -->
+      <pagePreProcessor class="ru.sibinco.mci.profile.DivertSetPreprocessor"/>
+      <!-- Show alternatives for select divert value -->
       <pageExecutor class="ru.sibinco.mci.profile.DivertSetExecutor">
         <bundle name="divert"/>
       </pageExecutor>
-      <command name="(**)" target="divert_mgr"/>
+      <command name="0" target="divert_mgr"/>    <!-- назад       -->
+      <command name="1" target="divert_mgr"/>    <!-- выкл        -->
+      <command name="2" target="divert_mgr"/>    <!-- сервис      -->
+      <command name="3" target="divert_mgr"/>    <!-- голос.почта -->
+      <command name="(**)" target="divert_mgr"/> <!-- тел.номер -->
     </page>
 
-
-    <page id="profile_info" question="0">
-      <!-- Lokup & show info only (depends on user's profile) -->
-      <pageExecutor class="ru.sibinco.mci.profile.ProfileViewExecutor">
-        <bundle name="profile"/>
-      </pageExecutor>
-      <command name="(**)" target="MAIN_PAGE"/>
-    </page>
     <page id="profile_mgr" question="0">
-      <!-- Lokup profile & show prepared menu with alternatives -->
-      <pageExecutor class="ru.sibinco.mci.profile.ProfileChangeExecutor">
-        <bundle name="profile"/>
-      </pageExecutor>
-      <command name="1" target="profile_flags"/>    <!-- change inform flag -->
-      <command name="2" target="profile_flags"/>    <!-- change notify flag -->
-      <command name="3" target="profile_messages"/> <!-- change inform message format -->
-      <command name="4" target="profile_messages"/> <!-- change notify message format -->
+      <segment>
+        <data>
+Profile:
+Not implemented yet
+        </data>
+      </segment>
       <command name="(**)" target="MAIN_PAGE"/>
     </page>
-    <page id="profile_flags" question="0">
-      <!-- Set inform/notify option -->
-      <pagePreProcessor class="ru.sibinco.mci.profile.ProfileChangePreprocessor"/>
-      <!-- Get inform/notify option & switch profile flag -->
-      <pageExecutor class="ru.sibinco.mci.profile.ProfileChangeFlagsExecutor">
-        <bundle name="profile"/>
-      </pageExecutor>
-      <command name="(**)" target="profile_mgr"/>
+
+    <page id="smshelp_mgr" question="0">
+      <segment>
+        <data>
+SMS-Help:
+Not implemented yet
+        </data>
+      </segment>
+      <command name="(**)" target="MAIN_PAGE"/>
     </page>
-    <page id="profile_messages" question="0">
-      <!-- Set inform/notify option -->
-      <pagePreProcessor class="ru.sibinco.mci.profile.ProfileChangePreprocessor"/>
-      <!-- Get inform/notify option & show the set of profile message formats -->
-      <pageExecutor class="ru.sibinco.mci.profile.ProfileMessagesExecutor">
-        <bundle name="profile"/>
-      </pageExecutor>
-      <command name="0"    target="profile_mgr"/>
-      <command name="(**)" target="profile_messages_change"/>
-    </page>
-    <page id="profile_messages_change" question="0">
-      <!-- Get inform/notify option & show selected profile message format -->
-      <pageExecutor class="ru.sibinco.mci.profile.ProfileChangeMessagesExecutor">
-        <bundle name="profile"/>
-      </pageExecutor>
-      <command name="(**)" target="profile_mgr"/>
-    </page>
-    
+
+
   </scenario>
 </scenarios>

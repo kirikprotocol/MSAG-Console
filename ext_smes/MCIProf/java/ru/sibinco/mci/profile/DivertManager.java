@@ -23,7 +23,10 @@ public class DivertManager
   public DivertInfo getDivertInfo(String abonent)
   {
     // TODO: implement query to MSC
-    return new DivertInfo(DivertScenarioConstants.BUSY, DivertScenarioConstants.ABSENT,
-                          DivertScenarioConstants.NOTAVAIL, DivertScenarioConstants.UNCOND);
+    return new DivertInfo(Constants.VOICEMAIL, Constants.OFF, "+79139254896", null);
+  }
+  public void setDivertInfo(String abonent, DivertInfo info)
+  {
+    // TODO: implement set on MSC
   }
 }

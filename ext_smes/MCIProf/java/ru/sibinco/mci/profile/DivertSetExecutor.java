@@ -1,6 +1,7 @@
 package ru.sibinco.mci.profile;
 
 import ru.sibinco.smpp.appgw.scenario.*;
+import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.aurorisoft.smpp.Message;
 
 import java.util.Properties;
@@ -14,20 +15,18 @@ import org.apache.log4j.Category;
  * Date: 06.09.2004
  * Time: 16:20:11
  */
-public class DivertSetExecutor extends DivertAbstractExecutor
+public class DivertSetExecutor extends DivertManagerState implements Executor
 {
   private static Category logger = Category.getInstance(DivertSetExecutor.class);
 
-  private MessageFormat messageOnFormat  = null;
-  private MessageFormat messageOffFormat = null;
+  private MessageFormat pageFormat = null;
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
     try
     {
       super.init(properties);
-      messageOnFormat  = new MessageFormat(divertBundle.getString(DivertScenarioConstants.TAG_SET_ON));
-      messageOffFormat = new MessageFormat(divertBundle.getString(DivertScenarioConstants.TAG_SET_OFF));
+      pageFormat = new MessageFormat(Transliterator.translit(divertBundle.getString(Constants.PAGE_SET)));
     }
     catch (Exception e) {
       logger.error("", e);
@@ -37,34 +36,8 @@ public class DivertSetExecutor extends DivertAbstractExecutor
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    try
-    {
-      String type = (String)state.getAttribute(DivertScenarioConstants.ATTR_TYPE);
-      String msg = state.getMessageString().trim();
-
-      boolean disable = false;
-      if (msg.equals("1")) {
-        logger.info("Disable divert");
-        disable = true;
-      } else if (msg.equals("2")) {
-        logger.info("Set divert to MissedCalls");
-        msg = "MissedCalls";
-      } else if (msg.equals("3")) {
-        logger.info("Set divert to auto responce");
-        msg = "AutoResponce";
-      } else {
-        logger.info("Set divert to address '"+msg+"'");
-      }
-      final String reason = divertBundle.getString(DivertScenarioConstants.REASON_PREFIX + type);
-
-      Object args[] = (disable) ? new Object[]{reason}:new Object[]{msg, reason};
-      String msgresp = (disable) ? messageOffFormat.format(args):messageOnFormat.format(args);
-      Message resp = new Message(); resp.setMessageString(msgresp);
-      return new ExecutorResponse(new Message[]{resp}, false);
-    }
-    catch (Exception e) {
-      logger.error("", e);
-      throw new ExecutingException(e.getMessage());
-    }
+    String pageResp = pageFormat.format(new Object[] {});
+    Message resp = new Message(); resp.setMessageString(pageResp);
+    return new ExecutorResponse(new Message[]{resp}, false);
   }
 }

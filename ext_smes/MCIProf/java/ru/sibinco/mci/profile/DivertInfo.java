@@ -9,6 +9,11 @@ package ru.sibinco.mci.profile;
  */
 public class DivertInfo
 {
+  public final static String BUSY     = "busy";
+  public final static String ABSENT   = "absent";
+  public final static String NOTAVAIL = "notavail";
+  public final static String UNCOND   = "uncond";
+
   protected String busy     = null;
   protected String absent   = null;
   protected String notavail = null;
