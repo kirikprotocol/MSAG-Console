@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE config SYSTEM "configuration.dtd">
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
 <config>
 	
 	<section name="logger">
@@ -23,10 +23,10 @@
 			<param name="interval" type="int">40000</param>
 			<param name="finalized" type="int">300</param>
 			<param name="uncommited" type="int">10</param>
-		</section>
-		<section name="Cleaner">
-			<param name="enabled" type="bool">true</param>
-			<param name="interval" type="int">30</param>
+			<section name="Cleaner">
+				<param name="enabled" type="bool">true</param>
+				<param name="interval" type="int">30</param>
+			</section>
 		</section>
 		<section name="Billing">
 			<param name="dbInstance" type="string">smscdb</param>
@@ -69,7 +69,7 @@
 		
 		<section name="performance">
 			<param name="host" type="string">smsc</param>
-			<param name="port" type="int">9003</param>
+			<param name="port" type="int">15171</param>
 		</section>
 	</section>
 
@@ -100,7 +100,7 @@
 		<section name="DataSourceDrivers">
 			<section name="OCIDataSourceDriver">
 				<param name="type" type="string">OCI</param>
-				<param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+				<param name="loadup" type="string">/export/home/bryz/install/smsc/db/oci/libdb_oci.so</param>
 			</section>
 		</section>
 	</section>
