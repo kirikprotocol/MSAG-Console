@@ -78,6 +78,7 @@ struct SmppSmeRecord
   char* receiptSchemeName;
   bool disabled;
   ModeType mode;
+  signed long providerId;
 };
 
 struct Ss7SmeRecord

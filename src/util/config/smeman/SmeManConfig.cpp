@@ -136,6 +136,8 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
               } else {
                 smsc_log_warn(logger, "unknown mode value \"%s\"", value.c_str());
               }
+            } else if (strcmp(name.c_str(), "providerId") == 0) {
+              record->recdata.smppSme.providerId = strtoll(value.c_str(), (char**)0, 0);
             } else {
               smsc_log_warn(logger, "unknown param name \"%s\"", name.c_str());
             }
