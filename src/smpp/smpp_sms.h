@@ -339,6 +339,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
           return false;
         }
         encoding = user_data_coding&0x0c;
+        if(encoding==0)encoding==DataCoding::SMSC7BIT;
         if ( (user_data_coding & 0xc0) == 0x40 )
           sms->setIntProperty(Tag::SMPP_MS_VALIDITY,0x03);
         sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(user_data_coding&0x03)+1);

@@ -1373,6 +1373,32 @@ StateType StateMachine::replace(Tuple& t)
     return UNKNOWN_STATE;
   }
 
+  if(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+  {
+    if(
+        t.command->get_replaceSm().smLength==0 ||
+        *((uint8_t*)t.command->get_replaceSm().shortMessage.get())+1 >
+        t.command->get_replaceSm().smLength
+      )
+    {
+      __trace__("REPLACE: invalid length of/for UDHI");
+      try{
+        t.command.getProxy()->putCommand
+        (
+          SmscCommand::makeReplaceSmResp
+          (
+            t.command->get_dialogId(),
+            Status::REPLACEFAIL
+          )
+        );
+      }catch(...)
+      {
+        __trace__("REPLACE: failed to put response command");
+      }
+      return UNKNOWN_STATE;
+    }
+  }
+
   if(!strcmp(sms.getDestinationSmeId(),"MAP_PROXY"))
   {
     sms.setBinProperty
