@@ -129,6 +129,7 @@ public class Index extends IndexProperties
 
   private int applyScheds(Config oldConfig, Config newConfig)
   {
+    int result = RESULT_DONE;
     try {
       logger.debug("applyScheds");
       Set oldSchedules = oldConfig.getSectionChildShortSectionNames(ScheduleDataSource.SCHEDULES_PREFIX);
@@ -145,50 +146,100 @@ public class Index extends IndexProperties
         if (!scheduleChanged(schedId, oldConfig, newConfig))
           toChange.remove(schedId);
       }
-      if (toAdd.size() > 0) addScheds(oldConfig, newConfig, toAdd);
-      if (toDelete.size() > 0) deleteScheds(oldConfig, toDelete);
-      if (toChange.size() > 0) changeScheds(oldConfig, newConfig, toChange);
+      int r = RESULT_DONE;
+      if (toAdd.size() > 0) r = addScheds(oldConfig, newConfig, toAdd);
+      result = result == RESULT_DONE ? r : result;
+      if (toDelete.size() > 0) r = deleteScheds(oldConfig, toDelete);
+      result = result == RESULT_DONE ? r : result;
+      if (toChange.size() > 0) r = changeScheds(oldConfig, newConfig, toChange);
+      result = result == RESULT_DONE ? r : result;
+
       getInfoSmeContext().setChangedSchedules(false);
+      return result;
+    } catch (AdminException e) {
+      logger.error("Could not apply schedules", e);
+      return error("Could not apply schedules", e);
     } catch (Throwable e) {
       logger.error("Could not apply schedules", e);
       return error("Could not apply schedules", e);
     }
-    return RESULT_DONE;
   }
 
-  private void changeScheds(Config oldConfig, Config newConfig, Set toChange) throws AdminException, Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException, IOException
+  private int changeScheds(Config oldConfig, Config newConfig, Set toChange) throws AdminException, Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException, IOException
   {
+    int result = RESULT_DONE;
     for (Iterator i = toChange.iterator(); i.hasNext();) {
       String schedId = (String) i.next();
       Schedule schedule = Schedule.getInstance(schedId, newConfig);
-      schedule.storeToConfig(oldConfig);
+      try {
+        Config backup = (Config) oldConfig.clone();
+        schedule.storeToConfig(oldConfig);
+        oldConfig.save();
+        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+          try {
+            getInfoSmeContext().getInfoSme().changeSchedule(schedId);
+          } catch (AdminException e) {
+            logger.error("Could not change schedule \"" + schedId + '"', e);
+            result = error("Could not change schedule", schedId, e);
+            backup.save();
+          }
+        }
+      } catch (CloneNotSupportedException e) {
+        logger.fatal("Internal error", e);
+      }
     }
-    oldConfig.save();
-    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-      getInfoSmeContext().getInfoSme().changeSchedules(toChange);
+    return result;
   }
 
-  private void deleteScheds(Config oldConfig, Set toDelete) throws AdminException, IOException, Config.WrongParamTypeException
+  private int deleteScheds(Config oldConfig, Set toDelete) throws IOException, Config.WrongParamTypeException
   {
+    int result = RESULT_DONE;
     for (Iterator i = toDelete.iterator(); i.hasNext();) {
       String schedId = (String) i.next();
-      Schedule.removeScheduleFromConfig(schedId, oldConfig);
+      try {
+        Config backup = (Config) oldConfig.clone();
+        Schedule.removeScheduleFromConfig(schedId, oldConfig);
+        oldConfig.save();
+        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+          try {
+            getInfoSmeContext().getInfoSme().removeSchedule(schedId);
+          } catch (AdminException e) {
+            logger.error("Could not delete schedule \"" + schedId + '"', e);
+            result = error("Could not delete schedule", schedId, e);
+            backup.save();
+          }
+        }
+      } catch (CloneNotSupportedException e) {
+        logger.fatal("Internal error", e);
+      }
     }
-    oldConfig.save();
-    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-      getInfoSmeContext().getInfoSme().removeSchedules(toDelete);
+    return result;
   }
 
-  private void addScheds(Config oldConfig, Config newConfig, Collection toAdd) throws AdminException, Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException, IOException
+  private int addScheds(Config oldConfig, Config newConfig, Collection toAdd) throws AdminException, Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException, IOException
   {
+    int result = RESULT_DONE;
     for (Iterator i = toAdd.iterator(); i.hasNext();) {
       String schedId = (String) i.next();
       Schedule schedule = Schedule.getInstance(schedId, newConfig);
-      schedule.storeToConfig(oldConfig);
+      try {
+        Config backup = (Config) oldConfig.clone();
+        schedule.storeToConfig(oldConfig);
+        oldConfig.save();
+        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+          try {
+            getInfoSmeContext().getInfoSme().addSchedule(schedId);
+          } catch (AdminException e) {
+            logger.error("Could not add schedule \"" + schedId + '"', e);
+            result = error("Could not add schedule", schedId, e);
+            backup.save();
+          }
+        }
+      } catch (CloneNotSupportedException e) {
+        logger.fatal("Internal error", e);
+      }
     }
-    oldConfig.save();
-    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-      getInfoSmeContext().getInfoSme().addSchedules(toAdd);
+    return result;
   }
 
   private boolean scheduleChanged(String schedId, Config oldConfig, Config newConfig) throws AdminException, Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException
@@ -200,6 +251,7 @@ public class Index extends IndexProperties
 
   private int applyTasks(Config oldConfig, Config newConfig)
   {
+    int result = RESULT_DONE;
     try {
       logger.debug("applyTasks");
       Set oldTasks = oldConfig.getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX);
@@ -217,52 +269,104 @@ public class Index extends IndexProperties
           toChange.remove(taskId);
       }
 
-      if (toAdd.size() > 0) addTasks(oldConfig, newConfig, toAdd);
-      if (toDelete.size() > 0) deleteTasks(oldConfig, toDelete);
-      if (toChange.size() > 0) changeTasks(oldConfig, newConfig, toChange);
+      int r = RESULT_DONE;
+      if (toAdd.size() > 0) r = addTasks(oldConfig, newConfig, toAdd);
+      result = result == RESULT_DONE ? r : result;
+      if (toDelete.size() > 0) r = deleteTasks(oldConfig, toDelete);
+      result = result == RESULT_DONE ? r : result;
+      if (toChange.size() > 0) r = changeTasks(oldConfig, newConfig, toChange);
+      result = result == RESULT_DONE ? r : result;
 
       getInfoSmeContext().setChangedTasks(false);
-      applyScheds(oldConfig, newConfig);
+      if (result == RESULT_DONE)
+        return applyScheds(oldConfig, newConfig);
+      else
+        return warning("Not all tasks applied properly, so schedules not tried to apply.");
+    } catch (AdminException e) {
+      logger.error("Could not apply tasks", e);
+      return error("Could not apply tasks", e);
     } catch (Throwable e) {
       logger.error("Could not apply tasks", e);
       return error("Could not apply tasks", e);
     }
-    return RESULT_DONE;
   }
 
-  private void changeTasks(Config oldConfig, Config newConfig, Collection toChange) throws AdminException, Config.WrongParamTypeException, Config.ParamNotFoundException, IOException
+  private int changeTasks(Config oldConfig, Config newConfig, Collection toChange) throws Config.WrongParamTypeException, Config.ParamNotFoundException, IOException
   {
+    int result = RESULT_DONE;
     for (Iterator i = toChange.iterator(); i.hasNext();) {
       String taskId = (String) i.next();
       Task task = new Task(newConfig, taskId);
-      task.storeToConfig(oldConfig);
+      try {
+        Config backup = (Config) oldConfig.clone();
+        task.storeToConfig(oldConfig);
+        oldConfig.save();
+        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+          try {
+            getInfoSme().changeTask(taskId);
+          } catch (AdminException e) {
+            logger.error("Could not change task \"" + taskId + '"', e);
+            result = error("Could not change task", taskId, e);
+            backup.save();
+          }
+        }
+      } catch (CloneNotSupportedException e) {
+        logger.fatal("Internal error", e);
+      }
     }
-    oldConfig.save();
-    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-      getInfoSme().changeTasks(toChange);
+    return result;
   }
 
-  private void deleteTasks(Config config, Collection toDelete) throws AdminException, Config.WrongParamTypeException, IOException
+  private int deleteTasks(Config config, Collection toDelete) throws Config.WrongParamTypeException, IOException
   {
+    int result = RESULT_DONE;
     for (Iterator i = toDelete.iterator(); i.hasNext();) {
       String taskId = (String) i.next();
-      Task.removeTaskFromConfig(config, taskId);
+      try {
+        Config backup = (Config) config.clone();
+        Task.removeTaskFromConfig(config, taskId);
+        config.save();
+        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+          try {
+            getInfoSmeContext().getInfoSme().removeTask(taskId);
+          } catch (AdminException e) {
+            logger.error("Could not delete task \"" + taskId + '"', e);
+            result = error("Could not delete task", taskId, e);
+            backup.save();
+          }
+        }
+      } catch (CloneNotSupportedException e) {
+        logger.fatal("Internal error", e);
+      }
     }
-    config.save();
-    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-      getInfoSmeContext().getInfoSme().removeTasks(toDelete);
+    return result;
   }
 
-  private void addTasks(Config oldConfig, Config newConfig, Collection toAdd) throws AdminException, Config.WrongParamTypeException, IOException, Config.ParamNotFoundException
+  private int addTasks(Config oldConfig, Config newConfig, Collection toAdd) throws AdminException, Config.WrongParamTypeException, IOException, Config.ParamNotFoundException
   {
+    int result = RESULT_DONE;
     for (Iterator i = toAdd.iterator(); i.hasNext();) {
       String taskId = (String) i.next();
       Task task = new Task(newConfig, taskId);
-      task.storeToConfig(oldConfig);
+      try {
+        Config backup = (Config) oldConfig.clone();
+        task.storeToConfig(oldConfig);
+        oldConfig.save();
+        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+          try {
+            getInfoSmeContext().getInfoSme().addTask(taskId);
+          } catch (AdminException e) {
+            logger.error("Could not add task \"" + taskId + '"', e);
+            result = error("Could not add task", taskId, e);
+            backup.save();
+            throw e;
+          }
+        }
+      } catch (CloneNotSupportedException e) {
+        logger.fatal("Internal error", e);
+      }
     }
-    oldConfig.save();
-    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-      getInfoSmeContext().getInfoSme().addTasks(toAdd);
+    return result;
   }
 
   private boolean taskChanged(String taskId, Config oldConfig, Config newConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException
