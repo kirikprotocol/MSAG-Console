@@ -19,8 +19,11 @@ SHARED_OPT:=-shared
 endif
 
 SSL_DIR:=/usr/local/ssl
+ifeq ($(CXX),CC)
 SSL_LIB:=$(SSL_DIR)/lib/libcrypto.a -lssl
-#$(SSL_DIR)/lib/libssl.a
+else
+SSL_LIB:=-lcrypto -lssl
+endif
 
 XERCES_LIB:=-lxerces-c
 export XERCES_LIB
@@ -61,7 +64,7 @@ CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SSL_DIR)/include -I$
 CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT
 CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT
 ifeq ($(CXX),CC)
-COMPFLAGS:=-features=extensions  -D_POSIX_PTHREAD_SEMANTICS
+COMPFLAGS:=-features=extensions -xmemalign=4s -mt -D_POSIX_PTHREAD_SEMANTICS
 endif
 ifeq ($(CXX),CC)
 LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib/CC -L/usr/local/lib -L$(SSL_DIR)/lib
