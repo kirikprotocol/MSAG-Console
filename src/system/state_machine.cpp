@@ -913,6 +913,56 @@ StateType StateMachine::alert(Tuple& t)
 StateType StateMachine::replace(Tuple& t)
 {
   __trace2__("REPLACE:msgid=%lld",t.msgId);
+  SMS sms;
+  try{
+    store->retriveSms((SMSId)t.msgId,sms);
+  }catch(...)
+  {
+    __trace2__("REPLACE: Failed to retrieve sms:%lld",t.msgId);
+    try{
+      t.command.getProxy()->putCommand
+      (
+        SmscCommand::makeReplaceSmResp
+        (
+          t.command->get_dialogId(),
+          SmscCommand::Status::REPLACEFAIL
+        )
+      );
+    }catch(...)
+    {
+    }
+    return UNKNOWN_STATE;
+  }
+  if(t.command->get_replaceSm().validityPeriod==-1)
+  {
+    try{
+      t.command.getProxy()->putCommand
+      (
+        SmscCommand::makeReplaceSmResp
+        (
+          t.command->get_dialogId(),
+          SmscCommand::Status::INVALIDVALIDTIME
+        )
+      );
+    }catch(...)
+    {
+    }
+  }
+  if(t.command->get_replaceSm().scheduleDeliveryTime==-1)
+  {
+    try{
+      t.command.getProxy()->putCommand
+      (
+        SmscCommand::makeReplaceSmResp
+        (
+          t.command->get_dialogId(),
+          SmscCommand::Status::INVALIDSCHEDULE
+        )
+      );
+    }catch(...)
+    {
+    }
+  }
   try{
     Address addr(t.command->get_replaceSm().sourceAddr.get());
     store->replaceSms(t.msgId,addr,
@@ -931,24 +981,32 @@ StateType StateMachine::replace(Tuple& t)
   }catch(...)
   {
     //
+    try{
+      t.command.getProxy()->putCommand
+      (
+        SmscCommand::makeReplaceSmResp
+        (
+          t.command->get_dialogId(),
+          SmscCommand::Status::REPLACEFAIL
+        )
+      );
+    }catch(...)
+    {
+    }
+    return UNKNOWN_STATE;
+  }
+  try{
     t.command.getProxy()->putCommand
     (
       SmscCommand::makeReplaceSmResp
       (
         t.command->get_dialogId(),
-        SmscCommand::Status::REPLACEFAIL
+        SmscCommand::Status::OK
       )
     );
-    return UNKNOWN_STATE;
+  }catch(...)
+  {
   }
-  t.command.getProxy()->putCommand
-  (
-    SmscCommand::makeReplaceSmResp
-    (
-      t.command->get_dialogId(),
-      SmscCommand::Status::OK
-    )
-  );
   smsc->notifyScheduler();
   return ENROUTE;
 }

@@ -368,6 +368,10 @@ void Smsc::init(const SmscConfigs& cfg)
   cancelAgent=new CancelAgent(eventqueue,store);
   tp.startTask(cancelAgent);
 
+  alertAgent=new AlertAgent(eventqueue,store);
+  tp.startTask(alertAgent);
+
+
   smscHost=cfg.cfgman->getString("smpp.host");
   smscPort=cfg.cfgman->getInt("smpp.port");
 

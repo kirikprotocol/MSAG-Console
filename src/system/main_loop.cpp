@@ -199,19 +199,56 @@ void Smsc::mainLoop()
       }
       case __CMD__(REPLACE):
       {
-        sscanf(cmd->get_replaceSm().messageId.get(),"%lld",&id);
+        int pos;
+        if(sscanf(cmd->get_replaceSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
+           cmd->get_replaceSm().messageId.get()[pos]!=0)
+        {
+          src_proxy->putCommand
+          (
+            SmscCommand::makeReplaceSmResp
+            (
+              cmd->get_dialogId(),
+              SmppStatusSet::ESME_RINVMSGID
+            )
+          );
+        };
         break;
       }
       case __CMD__(QUERY):
       {
-        sscanf(cmd->get_querySm().messageId.get(),"%lld",&id);
+        int pos;
+        if(sscanf(cmd->get_querySm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
+           cmd->get_querySm().messageId.get()[pos]!=0)
+        {
+          src_proxy->putCommand
+          (
+            SmscCommand::makeQuerySmResp
+            (
+              cmd->get_dialogId(),
+              SmppStatusSet::ESME_RINVMSGID,
+              0,0,0,0
+            )
+          );
+        };
         break;
       }
       case __CMD__(CANCEL):
       {
         if(cmd->get_cancelSm().messageId.get())
         {
-          sscanf(cmd->get_cancelSm().messageId.get(),"%lld",&id);
+          int pos;
+          if(sscanf(cmd->get_cancelSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
+             cmd->get_cancelSm().messageId.get()[pos]!=0)
+          {
+            src_proxy->putCommand
+            (
+              SmscCommand::makeCancelSmResp
+              (
+                cmd->get_dialogId(),
+                SmppStatusSet::ESME_RINVMSGID
+              )
+            );
+          };
         }else
         {
           cancelAgent->putCommand(cmd);

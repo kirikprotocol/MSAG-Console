@@ -17,6 +17,7 @@
 #include "profiler/profiler.hpp"
 #include "system/smscsme.hpp"
 #include "system/cancel_agent.hpp"
+#include "system/alert_agent.hpp"
 #include "system/performance.hpp"
 
 #include "db/DataSource.h"
@@ -156,6 +157,7 @@ protected:
   int smscPort;
   SmscSme *smscsme;
   CancelAgent *cancelAgent;
+  AlertAgent *alertAgent;
   performance::PerformanceDataDispatcher perfDataDisp;
   smsc::db::DataSource *dataSource;
 

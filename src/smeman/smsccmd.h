@@ -297,6 +297,8 @@ struct _SmscCommand
   const char* get_sourceId(){return sourceId.c_str();}
   const Address& get_address() { return *(Address*)dta; }
   void set_address(const Address& addr) { *(Address*)dta = addr; }
+
+  bool is_reschedulingForward(){return dta!=0;}
 };
 
 class SmscCommand
@@ -445,14 +447,14 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeForward()
+  static SmscCommand makeForward(bool reschedule=false)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = FORWARD;
-    _cmd.dta = 0;
+    _cmd.dta = reschedule?((void*)0xffffffff):0;
     _cmd.dialogId = 0;
     return cmd;
   }
