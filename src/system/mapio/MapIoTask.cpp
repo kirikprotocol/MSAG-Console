@@ -21,35 +21,12 @@ static bool MAP_aborting = false;
   #define CORRECT_BIND_COUNTER 2
   #define MAX_BIND_TIMEOUT 15
 
-//struct SMSC_FORWARD_RESPONSE_T {
-//  ET96MAP_DIALOGUE_ID_T dialogId;
-//};
 
 void MAPIO_TaskACVersionNotifier()
 {
   __pingPongWaitCounter = 0;
 }
 extern void MAPIO_QueryMscVersionInternal();
-
-/*
-void CloseDialog( ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
-{
-  MAPSTATS_Update(MAPSTATS_GSMDIALOG_CLOSE);
-  USHORT_T res = Et96MapCloseReq (SSN,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
-  if ( res != ET96MAP_E_OK ){
-    __map_trace2__("close error, code 0x%hx",res);
-  }else{
-    __map_trace2__("dialog closed");
-  }
-}
-
-void CloseAndRemoveDialog(  ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
-{
-  CloseDialog(lssn,dialogId);
-  MapDialogContainer::getInstance()->dropDialog(dialogId);
-  __trace2__("MAP::dialog 0x%hx destroed",dialogId);
-}
-*/
 
 extern "C" {
 
@@ -358,24 +335,15 @@ void MapDialogContainer::registerSelf(SmeManager* smeman)
 {
   proxy->init();
   __map_trace__("register MAP_PROXY");
-//#if defined USE_MAP // !!!! temporary !!!!!
-//  smeman->registerSmeProxy("MAP_PROXY",proxy);
-//#else
   smeman->registerInternallSmeProxy("MAP_PROXY",proxy);
   proxy->assignSmeRegistrar(smeman);
-//#endif
   __map_trace__("register MAP_PROXY OK");
 }
 
 void MapDialogContainer::unregisterSelf(SmeManager* smeman)
 {
-  //proxy.init();
   __map_trace__("unregister MAP_PROXY");
-//#if defined USE_MAP // !!!! temporary !!!!!
-//  smeman->registerSmeProxy("MAP_PROXY",&proxy);
-//#else
   smeman->unregisterSmeProxy("MAP_PROXY");
-//#endif
   __map_trace__("unregister MAP_PROXY OK");
 }
 
@@ -407,7 +375,8 @@ int MAPSTATS_open_out[3] = {0,0,0};
 int MAPSTATS_close_in[3] = {0,0,0};
 int MAPSTATS_close_out[3] = {0,0,0};
 int MAPSTATS_recv[3] = {0,0,0};
-int MAPSTATS_dialogs_no = 0;
+int MAPSTATS_dialogs_in = 0;
+int MAPSTATS_dialogs_out = 0;
 int MAPSTATS_reassign[3] = {0,0,0};
 
 enum {
@@ -439,12 +408,13 @@ void MAPSTATS_Flush(unsigned x,bool dump)
     case MAPSTATS__SEC:
       {
         smsc::logger::Logger* log = MAPSTATS_GetLoggerSec();
-        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d, rcv %d",
+        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d/%d, rcv %d",
                   MAPSTATS_open_in[0],
                   MAPSTATS_open_out[0],
                   MAPSTATS_close_in[0],
                   MAPSTATS_close_out[0],
-                  MAPSTATS_dialogs_no,
+                  MAPSTATS_dialogs_in,
+                  MAPSTATS_dialogs_out,
                   MapDialogContainer::getInstance()->getDialogCount(),
                   MAPSTATS_recv[0]
                  );
@@ -453,12 +423,14 @@ void MAPSTATS_Flush(unsigned x,bool dump)
     case MAPSTATS__MIN:
       {
         smsc::logger::Logger* log = MAPSTATS_GetLoggerMin();
-        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
+        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d/%d, rcv %d",
                   MAPSTATS_open_in[1],
                   MAPSTATS_open_out[1],
                   MAPSTATS_close_in[1],
                   MAPSTATS_close_out[1],
-                  MAPSTATS_dialogs_no,
+                  MAPSTATS_dialogs_in,
+                  MAPSTATS_dialogs_out,
+                  MapDialogContainer::getInstance()->getDialogCount(),
                   MAPSTATS_recv[1]
                  );
       }
@@ -466,12 +438,14 @@ void MAPSTATS_Flush(unsigned x,bool dump)
     case MAPSTATS__HOUR:
       {
         smsc::logger::Logger* log = MAPSTATS_GetLoggerHour();
-        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
+        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d/%d, rcv %d",
                   MAPSTATS_open_in[2],
                   MAPSTATS_open_out[2],
                   MAPSTATS_close_in[2],
                   MAPSTATS_close_out[2],
-                  MAPSTATS_dialogs_no,
+                  MAPSTATS_dialogs_in,
+                  MAPSTATS_dialogs_out,
+                  MapDialogContainer::getInstance()->getDialogCount(),
                   MAPSTATS_recv[2]
                  );
       }
@@ -506,8 +480,10 @@ void MAPSTATS_Update_(MAPSTATS stats)
   case MAPSTATS_GSMDIALOG_CLOSEIN:  ++MAPSTATS_close_in[0]; break;
   case MAPSTATS_GSMDIALOG_CLOSEOUT: ++MAPSTATS_close_out[0]; break;
   case MAPSTATS_GSMRECV:            ++MAPSTATS_recv[0]; break;
-  case MAPSTATS_DISPOSEDIALOG:      --MAPSTATS_dialogs_no; break;
-  case MAPSTATS_NEWDIALOG:          ++MAPSTATS_dialogs_no; break;
+  case MAPSTATS_DISPOSEDIALOG_IN:   --MAPSTATS_dialogs_in; break;
+  case MAPSTATS_NEWDIALOG_IN:       ++MAPSTATS_dialogs_in; break;
+  case MAPSTATS_DISPOSEDIALOG_OUT:  --MAPSTATS_dialogs_out; break;
+  case MAPSTATS_NEWDIALOG_OUT:      ++MAPSTATS_dialogs_out; break;
   default:; // nothing
   }
 }
@@ -522,6 +498,8 @@ void MAPSTATS_Restart()
   MAPSTATS_last_time_sec = cur_time;
   MAPSTATS_last_time_min = cur_time;
   MAPSTATS_last_time_hour = cur_time;
+  MAPSTATS_dialogs_in = 0;
+  MAPSTATS_dialogs_out = 0;
 }
 
 void MAPSTATS_Update(MAPSTATS stats)

@@ -40,39 +40,19 @@ class MapProxy:public SmeProxy{
 public:
   MapProxy() : seq(0),smereg(0) {
    time_logger = smsc::logger::Logger::getInstance("map.otime");
-   setPerformanceLimits(45, 100);
   }
   virtual ~MapProxy()
   {
     if(smereg)smereg->unregisterSmeProxy("MAP_PROXY");
   }
-  void setPerformanceLimits(int newTimeOut,int newProcLimit)
-  {
-    __mapproxy_trace2__("Setting proccessing limits on map proxy timeout=%d, limit=%d", newTimeOut, newProcLimit);
-    processTimeout=newTimeOut+newTimeOut/4;
-    processLimit=newProcLimit;
-  }
   virtual void close(){}
   void notifyOutThread(){}
   void checkLogging();
   virtual void updateSmeInfo(const SmeInfo& smeInfo){
-    MutexGuard g(mutex);
-    setPerformanceLimits(smeInfo.timeout, smeInfo.proclimit);
+    MapDialogContainer::getInstance()->setPerformanceLimits(smeInfo.timeout, smeInfo.proclimit);
   }
   virtual void putCommand(const SmscCommand& cmd)
   {
-//#if defined USE_MAP
-    {
-      if(cmd->get_commandId()==DELIVERY)
-      {
-        if( cmd->get_sms() != NULL && cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) && cmd->get_sms()->getIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP) == 17 ) {
-          // do nothing
-        } else {
-          MutexGuard g(mutex);
-          checkProcessLimit(cmd);
-        }
-      }
-    }
     struct timeval utime, curtime;
     if( time_logger->isDebugEnabled() ) gettimeofday( &utime, 0 );
     ::MAPIO_PutCommand(cmd);
@@ -82,7 +62,6 @@ public:
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
       smsc_log_debug(time_logger, "cmdid=%d s=%ld us=%ld", cmd->get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
     }
-//#endif
   }
   virtual SmscCommand getCommand()
   {
@@ -102,10 +81,6 @@ public:
       {
         __mapproxy_trace__("putIncomingCommand: proxy queue limit exceded");
         throw ProxyQueueLimitException();
-      }
-      if(cmd->get_commandId()==DELIVERY_RESP)
-      {
-        processResponse(cmd);
       }
       inqueue.Push(cmd);
     }
@@ -159,7 +134,6 @@ public:
   uint32_t getNextSequenceNumber()
   {
     MutexGuard g(mutex);
-//    __mapproxy_trace2__("getNextSequenceNumber next number 0x%x",seq);
     if (seq <  0x40000) seq = 0x40000;
     return seq++;
   }
@@ -189,43 +163,6 @@ protected:
   ProxyMonitor *managerMonitor;
   smsc::logger::Logger* time_logger;
   SmeRegistrar *smereg;
-
-  struct ControlItem{
-    time_t submitTime;
-    int seqNum;
-  };
-
-  std::list<ControlItem> limitQueue;
-  smsc::core::buffers::IntHash<std::list<ControlItem>::iterator> limitHash;
-  int processLimit;
-  int processTimeout;
-
-  void checkProcessLimit(const SmscCommand& cmd)
-  {
-    if(processLimit==0)return;
-    //MutexGuard g(mutex);
-    time_t now=time(NULL);
-    while(limitQueue.size()>0 && limitQueue.begin()->submitTime+processTimeout<now)
-    {
-      limitHash.Delete(limitQueue.begin()->seqNum);
-      limitQueue.erase(limitQueue.begin());
-    }
-    if(limitQueue.size()==processLimit)throw ProxyQueueLimitException(processLimit,limitQueue.size());
-    ControlItem ci={now,cmd->get_dialogId()};
-    limitQueue.push_back(ci);
-    limitHash.Insert(ci.seqNum,--limitQueue.end());
-  }
-
-  void processResponse(const SmscCommand& cmd)
-  {
-    if(processLimit==0)return;
-    if(limitHash.Exist(cmd->get_dialogId()))
-    {
-      limitQueue.erase(limitHash.Get((int)cmd->get_dialogId()));
-      limitHash.Delete(cmd->get_dialogId());
-    }
-  }
-
 };
 
 }//mappio
