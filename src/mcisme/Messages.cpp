@@ -100,9 +100,9 @@ void MessageFormatter::formatMessage(Message& message)
     {
         MissedCallEvent event = events[i];
         const char* fromStr = (event.from.length() > 0) ? event.from.c_str():UNKNOWN_CALLER;
+        uint32_t* recPtr = counters.GetPtr(fromStr);
         if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
             fromStr = unknownCaller.c_str();
-        uint32_t* recPtr = counters.GetPtr(fromStr);
         
         if (!formatter->isGroupping() || !recPtr || (recPtr && (*recPtr) <= 1))
         {
