@@ -83,7 +83,7 @@ namespace smsc { namespace store
         void findDirsByQuery(QueryMessage* query, const std::string& location, 
                              Array<DirEntry>& dirs);
         void findFilesByQuery(QueryMessage* query, const std::string& location, 
-                              uint64_t dirCode, Array<std::string>& files); 
+                              uint64_t dirCode, Array<uint8_t>& files); 
     
     public:
         

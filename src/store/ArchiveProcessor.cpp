@@ -408,7 +408,7 @@ void Query::findDirsByQuery(QueryMessage* query, const std::string& location,
     }
 }
 void Query::findFilesByQuery(QueryMessage* query, const std::string& location,
-                             uint64_t dirCode, Array<std::string>& files)
+                             uint64_t dirCode, Array<uint8_t>& files)
 {
     Array<std::string> allFiles;
     FileStorage::findFiles(location, SMSC_PREV_ARCHIVE_FILE_EXTENSION, allFiles);
@@ -426,7 +426,7 @@ void Query::findFilesByQuery(QueryMessage* query, const std::string& location,
     for (int i=0; i<allFiles.Count(); i++)
     {
         std::string file = allFiles[i];
-        int32_t hour;
+        uint8_t hour;
         if (sscanf(file.c_str(), "%02d.arc", &hour) != 1) {
             smsc_log_warn(log, "Invalid archive file name format '%s'", file.c_str());
             continue;
@@ -435,7 +435,7 @@ void Query::findFilesByQuery(QueryMessage* query, const std::string& location,
         if (fd > 0 && dd < fd) continue;
         if (td > 0 && dd > td) continue;
 
-        files.Push(file);
+        files.Push(hour);
     }
 }
 
@@ -628,16 +628,32 @@ int Query::Execute()
             }
             else
             {
-                Array<std::string> scanFiles;
+                Array<uint8_t> scanFiles;
                 findFilesByQuery(query, location, dir.code, scanFiles);
+                char arcFileName[64]; char trsFileName[64];
                 for (int j=0; j<scanFiles.Count() && moreMessagesToSend; j++)
                 {
-                    smsc_log_info(log, "Scanning file: %s", scanFiles[j].c_str());
-                    PersistentStorage file(location, scanFiles[j]);
+                    sprintf(arcFileName, "%02d.%s", scanFiles[j], SMSC_PREV_ARCHIVE_FILE_EXTENSION);
+                    sprintf(trsFileName, "%02d.%s", scanFiles[j], SMSC_TRNS_ARCHIVE_FILE_EXTENSION);
+
+                    smsc_log_info(log, "Scanning file: %s", arcFileName);
+                    PersistentStorage  arcFile(location, arcFileName);
+                    TransactionStorage trsFile(location, trsFileName);
+                    bool isTrans = false; fpos_t position = 0; fpos_t trans_position = 0; 
+                    isTrans = trsFile.getTransactionData(&trans_position);
+                    arcFile.openRead(0);
                     while (moreMessagesToSend)
                     {
                         SMSId id = 0; SMS sms;
-                        if (!file.readRecord(id, sms)) break;
+                        if (isTrans) {
+                            arcFile.getPos(&position);
+                            if (position > trans_position) {
+                                smsc_log_warn(log, "EOF reached in file '%s' (cur_pos=%lld, trans_pos=%lld)",
+                                              arcFileName, position, trans_position);
+                                break;
+                            }
+                        }
+                        if (!arcFile.readRecord(id, sms)) break;
                         if (!checkMessage(query, id, sms)) continue;
                         totalMessages++;
                         if (query->type == Message::COUNT) continue;

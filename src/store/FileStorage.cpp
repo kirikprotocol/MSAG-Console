@@ -995,28 +995,27 @@ void TextDumpStorage::writeRecord(SMSId id, SMS& sms)
     flush();
 }
 
-bool TransactionStorage::open()
+bool TransactionStorage::open(bool create)
 {
     bool fileExists = true;
     if (!storageFile)
     {
-        fileExists = false;
         const char* fullFilePathStr = storageFileName.c_str();
-        
-        storageFile = fopen(fullFilePathStr, "r");
-        if (storageFile)  { // opened for reading => exist
-            fclose(storageFile); storageFile = 0;
-            fileExists = true;
-        } 
-        
-        storageFile = fopen(fullFilePathStr, fileExists ? "rb+":"ab+");
-        if (!storageFile) {
-            Exception exc("Failed to open/create transactional file '%s'. Details: %s", 
-                          fullFilePathStr, strerror(errno));
-            throw StorageException(exc.what());
+        storageFile = fopen(fullFilePathStr, "rb+");
+        if (!storageFile)
+        {
+            fileExists = false;
+            if (create) {
+                storageFile = fopen(fullFilePathStr, "ab+");
+                if (!storageFile) {
+                    Exception exc("Failed to create transactional file '%s'. Details: %s", 
+                                  fullFilePathStr, strerror(errno));
+                    throw StorageException(exc.what());
+                }
+            }
         }
     }
-    if (fseek(storageFile, 0, SEEK_SET)) {
+    if (storageFile && fseek(storageFile, 0, SEEK_SET)) {
         int error = ferror(storageFile);
         Exception exc("Failed to seek BOF. Details: %s", strerror(error));
         fclose(storageFile); storageFile = 0;
@@ -1030,9 +1029,10 @@ bool TransactionStorage::getTransactionData(fpos_t* pos)
     __require__(pos);
 
     MutexGuard guard(storageFileLock);
-    if (!this->open()) return false;
+    if (!this->open(false)) return false;
     uint64_t value = 0;
     bool result = FileStorage::read((void *)&value, sizeof(value));
+    if (!result) { fclose(storageFile); storageFile = 0; }
     *pos = (result) ? ((fpos_t)Uint64Converter::toHostOrder(value)):-1;
     return result;
 }
@@ -1041,7 +1041,7 @@ void TransactionStorage::setTransactionData(const fpos_t* pos)
     __require__(pos);
 
     MutexGuard guard(storageFileLock);
-    this->open();
+    this->open(true);
     uint64_t value = Uint64Converter::toNetworkOrder((uint64_t)(*pos));
     FileStorage::write((const void *)&value, sizeof(value));
     FileStorage::flush();

@@ -194,10 +194,12 @@ namespace smsc { namespace store
         
         std::string storageFileName;
     
-        bool open();
+        bool open(bool create);
 
     public:
 
+        TransactionStorage(const std::string& location, const std::string& filename)
+            : FileStorage(), storageFileName(location+"/"+filename) { storageLocation = location; }; 
         TransactionStorage(const std::string& fullFileName)
             : FileStorage(), storageFileName(fullFileName) {};
         virtual ~TransactionStorage() {};
