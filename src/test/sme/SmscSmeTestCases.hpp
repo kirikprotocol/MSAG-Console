@@ -2,6 +2,7 @@
 #define TEST_SME_SMSC_SME_TEST_CASES
 
 #include "DeliveryReceiptHandler.hpp"
+#include "SmppTransmitterTestCases.hpp"
 
 namespace smsc {
 namespace test {
@@ -18,6 +19,11 @@ public:
 	: DeliveryReceiptHandler(fixture) {}
 	
 	virtual ~SmscSmeTestCases() {}
+
+	/**
+	 * Отправка submit_sm pdu smscsme.
+	 */
+	void submitSm(bool sync);
 
 protected:
 	virtual Category& getLog();

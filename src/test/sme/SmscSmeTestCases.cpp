@@ -25,6 +25,25 @@ Category& SmscSmeTestCases::getLog()
 	return log;
 }
 
+void SmscSmeTestCases::submitSm(bool sync)
+{
+	__decl_tc__;
+	__tc__("submitPduToSmscSme");
+	try
+	{
+		PduSubmitSm* pdu = new PduSubmitSm();
+		__cfg_addr__(smscAlias);
+		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, smscAlias);
+		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, NULL, NULL, NULL, PDU_NULL);
+		__tc_ok__;
+	}
+	catch(...)
+	{
+		__tc_fail__(100);
+		error();
+	}
+}
+
 AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 	PduSubmitSm* origPdu, const string& text, time_t recvTime)
 {
