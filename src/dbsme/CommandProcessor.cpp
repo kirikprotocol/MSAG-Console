@@ -236,9 +236,9 @@ void DataProvider::createJob(ConfigView* jobConfig)
         type = jobConfig->getString("type");
         name = jobConfig->getString("name", 0, false);
         alias = jobConfig->getString("alias", 0, false);
-        if( strlen( alias ) == 0 ) alias = 0;
+        if( alias && strlen( alias ) == 0 ) alias = 0;
         address = jobConfig->getString("address", 0, false);
-        if( strlen( address ) == 0 ) address = 0;
+        if( address && strlen( address ) == 0 ) address = 0;
         
         Job* job = JobFactory::getJob(type);
         if (!job) 
