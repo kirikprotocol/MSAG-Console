@@ -1082,7 +1082,7 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
 
 void MAPIO_PutCommand(const SmscCommand& cmd ){ 
   if ( MapDialogContainer::getInstance()->getNumberOfDialogs() > MAP_DIALOGS_LIMIT )
-    SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_TEMP,THROTTLED));
+    SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED));
   else MAPIO_PutCommand(cmd, 0 ); 
 }
 
