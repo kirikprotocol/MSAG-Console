@@ -149,7 +149,8 @@ public class ServiceManager
 
 	public synchronized Set getHostNames()
 	{
-		return daemonManager.getHosts();
+		return daemonManager.getHosts();
+
 	}
 
 	protected File saveFileToTemp(InputStream in)
@@ -450,13 +451,15 @@ public class ServiceManager
 			throws AdminException
 	{
 		services.clear();
-		for (Iterator i = daemonManager.getHosts().iterator(); i.hasNext();)
+		for (Iterator i = daemonManager.getHosts().iterator(); i.hasNext();)
+
 		{
 			Daemon d = daemonManager.getDaemon((String) i.next());
 			Map infos = d.listServices();
 			for (Iterator j = infos.values().iterator(); j.hasNext();)
 				putService(new Service((ServiceInfo) j.next()));
 		}
+		logger.debug("Refresh services: " + services.size() + " services found");
 		//putService(smsc);
 	}
 

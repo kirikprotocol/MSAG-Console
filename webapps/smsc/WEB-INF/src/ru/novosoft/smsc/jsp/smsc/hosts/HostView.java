@@ -20,6 +20,7 @@ public class HostView extends SmscBean
 	public static final int RESULT_VIEW = PRIVATE_RESULT;
 	public static final int RESULT_EDIT = PRIVATE_RESULT + 1;
 	public static final int RESULT_ADD_SERVICE = PRIVATE_RESULT + 2;
+	public static final int RESULT_EDIT_SERVICE = PRIVATE_RESULT + 3;
 
 	protected String hostName = null;
 	protected String serviceIds[] = new String[0];
@@ -35,6 +36,7 @@ public class HostView extends SmscBean
 	protected String mbDelete = null;
 	protected String mbStartService = null;
 	protected String mbStopService = null;
+	protected String mbEditService = null;;
 
 	protected int init(List errors)
 	{
@@ -101,6 +103,10 @@ public class HostView extends SmscBean
 		else if (mbStopService != null)
 		{
 			return stopServices();
+		}
+		else if (mbEditService != null)
+		{
+			return RESULT_EDIT_SERVICE;
 		}
 		else if (mbView != null)
 		{
@@ -323,5 +329,15 @@ public class HostView extends SmscBean
 	public void setServiceId(String serviceId)
 	{
 		this.serviceId = serviceId;
+	}
+
+	public String getMbEditService()
+	{
+		return mbEditService;
+	}
+
+	public void setMbEditService(String mbEditService)
+	{
+		this.mbEditService = mbEditService;
 	}
 }

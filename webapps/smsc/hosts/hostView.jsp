@@ -25,6 +25,9 @@ switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("
 	case HostView.RESULT_ADD_SERVICE:
 		response.sendRedirect(CPATH+"/services/serviceAdd.jsp?hostName="+bean.getHostName());
 		return;
+	case HostView.RESULT_EDIT_SERVICE:
+		response.sendRedirect(CPATH+"/services/serviceEditSme.jsp?serviceId="+URLEncoder.encode(bean.getServiceId()));
+		return;
 	default:
 		STATUS.append("Error");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
@@ -44,6 +47,13 @@ MENU0_SELECTION = "MENU0_HOSTS";
 function viewService(serviceId)
 {
 	document.all.jbutton.name = "mbView";
+	opForm.serviceId.value = serviceId;
+	opForm.submit();
+	return false;
+}
+function editService(serviceId)
+{
+	document.all.jbutton.name = "mbEditService";
 	opForm.serviceId.value = serviceId;
 	opForm.submit();
 	return false;
@@ -71,11 +81,12 @@ function viewService(serviceId)
 <div class=secList>Host Services</div>
 <table class=secRep cellspacing=1 width="100%">
 <col width="1%">
-<col width="60%" align=left>
-<col width="20%" align=left>
-<col width="20%" align=center>
+<col width="1%">
+<col width="70%" align=left>
+<col width="28%" align=left>
 <thead>
 <tr>
+	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th>&nbsp;</th>
 	<th>service</th>
 	<th>status</th>
@@ -93,6 +104,7 @@ String serviceControl = (row == 0) ? "start" : "stop";
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=StringEncoderDecoder.encode(serviceId)%>" <%=checkedServices.contains(serviceId) ? "checked" : ""%>></td>
+	<td><a  href="#" title="Edit service parameters" onClick="return editService('<%=StringEncoderDecoder.encode(serviceId)%>');">edit</a></td>
 	<td class=name><a href="#" title="View service info" onClick="return viewService('<%=StringEncoderDecoder.encode(serviceId)%>');"><%=StringEncoderDecoder.encode(serviceId)%></a></td>
 	<td><%=serviceStatus(serviceId, service.getStatus())%></td>
 </tr>

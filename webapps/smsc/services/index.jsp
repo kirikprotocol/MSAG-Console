@@ -25,6 +25,9 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 	case Index.RESULT_ADD:
 		response.sendRedirect("serviceAdd.jsp" + (bean.getHostId() != null ? ("?hostName=" + bean.getHostId()) : ""));
 		return;
+	case Index.RESULT_EDIT:
+		response.sendRedirect(CPATH+"/services/serviceEditSme.jsp?serviceId="+URLEncoder.encode(bean.getServiceId()));
+		return;
 	default:
 		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
@@ -47,6 +50,13 @@ function viewHost(hostId)
 function viewService(serviceId)
 {
 	document.all.jbutton.name = "mbView";
+	opForm.serviceId.value = serviceId;
+	opForm.submit();
+	return false;
+}
+function editService(serviceId)
+{
+	document.all.jbutton.name = "mbEdit";
 	opForm.serviceId.value = serviceId;
 	opForm.submit();
 	return false;
@@ -82,7 +92,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
-	<td><a href="serviceEditSme.jsp?serviceId=<%=encodedServiceId%>">edit</a></td>
+	<td><a  href="#" title="Edit service parameters" onClick="return editService('<%=encodedServiceId%>');">edit</a></td>
 	<%
 	if (bean.isServiceAdministrable(serviceId))
 	{

@@ -21,6 +21,7 @@ public class Index extends PageBean
 	public static final int RESULT_VIEW = PRIVATE_RESULT;
 	public static final int RESULT_VIEW_HOST = PRIVATE_RESULT + 1;
 	public static final int RESULT_ADD = PRIVATE_RESULT + 2;
+	public static final int RESULT_EDIT = PRIVATE_RESULT + 3;
 
 	protected String serviceId = null;
 	protected String hostId = null;
@@ -32,6 +33,7 @@ public class Index extends PageBean
 	protected String mbStopService = null;
 	protected String mbView = null;
 	protected String mbViewHost = null;
+	protected String mbEdit = null;
 
 
 	public int process(SMSCAppContext appContext, List errors)
@@ -72,6 +74,10 @@ public class Index extends PageBean
 		else if (mbViewHost != null)
 		{
 			return RESULT_VIEW_HOST;
+		}
+		else if (mbEdit != null)
+		{
+			return RESULT_EDIT;
 		}
 		else
 			return RESULT_OK;
@@ -338,5 +344,15 @@ public class Index extends PageBean
 	public void setMbViewHost(String mbViewHost)
 	{
 		this.mbViewHost = mbViewHost;
+	}
+
+	public String getMbEdit()
+	{
+		return mbEdit;
+	}
+
+	public void setMbEdit(String mbEdit)
+	{
+		this.mbEdit = mbEdit;
 	}
 }
