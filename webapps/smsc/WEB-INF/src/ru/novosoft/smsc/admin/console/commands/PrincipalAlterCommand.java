@@ -46,7 +46,7 @@ public class PrincipalAlterCommand implements Command
                 admin.alterPrincipal(new Principal(address, maxLists, maxElements),
                                      setMaxLists, setMaxElements);
                 ctx.setMessage(out+" altered");
-                ctx.setStatus(ctx.CMD_OK);
+                ctx.setStatus(CommandContext.CMD_OK);
             } catch (PrincipalNotExistsException e) {
                 ctx.setMessage(out+" not exists");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
