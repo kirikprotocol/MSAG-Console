@@ -305,22 +305,22 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	}
 	//проверить и обновить профиль
 	__tc__("processUpdateProfile.checkFields");
+    SmppOptional opt;
+	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
+	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 0);
+	__tc_ok_cond__;
+	__tc__("processUpdateProfile.checkText");
 	__check__(1, dataCoding, ack->dataCoding);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
 		__tc_fail__(2);
 	}
-    SmppOptional opt;
-	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
-	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
-	__tc_ok_cond__;
-	__tc__("processUpdateProfile.checkText");
 	int pos = ack->text.find(text);
 	__trace2__("profiler ack: pos = %d, received:\n%s\nexpected:\n%s\n",
 		pos, text.c_str(), ack->text.c_str());
 	if (pos == string::npos)
 	{
-		__tc_fail__(1);
+		__tc_fail__(3);
 		monitor->setReceived();
 	}
 	else

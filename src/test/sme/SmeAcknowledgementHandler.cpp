@@ -85,41 +85,6 @@ vector<int> SmeAcknowledgementHandler::checkRoute(PduSubmitSm& pdu1,
 	return res;
 }
 
-void SmeAcknowledgementHandler::updateDeliveryReceiptMonitor(SmeAckMonitor* monitor,
-	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime)
-{
-	__require__(monitor && pduReg);
-	__require__(deliveryStatus == ESME_ROK);
-	__decl_tc__;
-	DeliveryReceiptMonitor* rcptMonitor = pduReg->getDeliveryReceiptMonitor(
-		monitor->pduData->msgRef);
-	__require__(rcptMonitor);
-	//проверить если delivery receipt пришел раньше sme ack
-	if (rcptMonitor->getFlag() == PDU_RECEIVED_FLAG)
-	{
-		return;
-	}
-	pduReg->removeMonitor(rcptMonitor);
-	switch (rcptMonitor->regDelivery)
-	{
-		case NO_SMSC_DELIVERY_RECEIPT:
-		case SMSC_DELIVERY_RECEIPT_RESERVED:
-			__require__(rcptMonitor->getFlag() == PDU_NOT_EXPECTED_FLAG);
-			break;
-		case FINAL_SMSC_DELIVERY_RECEIPT:
-			rcptMonitor->reschedule(recvTime);
-			break;
-		case FAILURE_SMSC_DELIVERY_RECEIPT:
-			rcptMonitor->setNotExpected();
-			break;
-		default:
-			__unreachable__("Invalid registered delivery flag");
-	}
-	rcptMonitor->deliveryFlag = monitor->getFlag();
-	rcptMonitor->deliveryStatus = deliveryStatus;
-	pduReg->registerMonitor(rcptMonitor);
-}
-
 #define __compare__(errCode, field, value) \
 	if (value != field) { __tc_fail__(errCode); }
 
@@ -192,7 +157,7 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		__tc__("processDeliverySm.smeAck.checkFields");
 		//поля header проверяются в processDeliverySm()
 		//поля message проверяются в ackHandler->processSmeAcknowledgement()
-		//правильность адресов проверяется в fixture->routeChecker->checkRouteForAcknowledgementSms()
+		//правильность адресов проверяется в checkRoute()
 		__compare__(1, nvl(pdu.get_message().get_serviceType()), smeServiceType);
 		__compare__(2, pdu.get_message().get_esmClass(), ESM_CLASS_NORMAL_MESSAGE);
 		Address srcAlias;
@@ -244,12 +209,11 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		}
 		__tc_ok_cond__;
 		//отправить респонс, только ESME_ROK разрешено
+		//отправка должна быть без задержек
 		pair<uint32_t, time_t> deliveryResp =
 			fixture->respSender->sendDeliverySmResp(pdu);
 		__require__(deliveryResp.first == ESME_ROK);
-		RespPduFlag respFlag = isAccepted(deliveryResp.first);
-		//обновить статус delivery receipt монитора
-		updateDeliveryReceiptMonitor(monitor, pduReg, deliveryResp.first, recvTime);
+		__require__(abs(deliveryResp.second - time(NULL)) <= 1);
 	}
 	catch (TCException&)
 	{

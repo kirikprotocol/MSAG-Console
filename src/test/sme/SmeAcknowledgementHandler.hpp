@@ -52,8 +52,6 @@ protected:
 
 	virtual Category& getLog() = NULL;
 	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
-	void updateDeliveryReceiptMonitor(SmeAckMonitor* monitor,
-		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime);
 };
 
 }

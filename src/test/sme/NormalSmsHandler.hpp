@@ -46,7 +46,14 @@ protected:
 	virtual Category& getLog();
 	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
-	void updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
+
+	void registerIntermediateNotificationMonitor(DeliveryMonitor* monitor,
+		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,
+		time_t respTime);
+	void registerDeliveryReceiptMonitor(DeliveryMonitor* monitor,
+		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,
+		time_t respTime);
+	void registerDeliveryReportMonitors(DeliveryMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,
 		time_t respTime);
 };

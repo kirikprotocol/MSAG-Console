@@ -290,28 +290,44 @@ void processNormalSmsTc()
 		"Корректная работа механизма повторной доставки (правильное время, нет пропусков между повторными доставками, отсутствие дублей)");
 }
 
-void processDeliveryReceiptTc()
+void processDeliveryReportTc()
 {
-	__reg_tc__("processDeliverySm.deliveryReceipt",
-		"Подтверждение доставки");
-	__reg_tc__("processDeliverySm.deliveryReceipt.checkAllowed",
-		"Проверка правомерности получения подтверждения доставки");
-	__reg_tc__("processDeliverySm.deliveryReceipt.checkRoute",
+	__reg_tc__("processDeliverySm.deliveryReport",
+		"Отчеты о доставке (подтверждения доставки и промежуточные нотификации)");
+	__reg_tc__("processDeliverySm.deliveryReport.checkRoute",
 		"Проверка правильности маршрута (определение sme по адресу отправителя и адресу SC)");
-	__reg_tc__("processDeliverySm.deliveryReceipt.checkFields",
+	__reg_tc__("processDeliverySm.deliveryReport.checkFields",
 		"Общая проверка правильности полей");
-	__reg_tc__("processDeliverySm.deliveryReceipt.checkStatus",
-		"Информации о статусе доставленной pdu (состояние, коде ошибки) является корректной");
-	__reg_tc__("processDeliverySm.deliveryReceipt.checkText",
-		"Текст сообщения соответствует шаблону");
-	__reg_tc__("processDeliverySm.deliveryReceipt.multipleMessages",
+	__reg_tc__("processDeliverySm.deliveryReport.multipleMessages",
 		"Длинный текст сообщения о доставки разбивается на несколько sms");
-	__reg_tc__("processDeliverySm.deliveryReceipt.recvTimeChecks",
-		"Подтверждения доставки доставляются сразу после окончания повторных доставок оригинального сообщения");
-	__reg_tc__("processDeliverySm.deliveryReceipt.failureDeliveryReceipt",
+	//deliveryReceipt
+	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt",
+		"Подтверждения доставки");
+	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.checkAllowed",
+		"Проверка правомерности получения подтверждений доставки (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз по окончании доставки оригинальной pdu)");
+	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.failureDeliveryReceipt",
 		"Подтверждение доставки на ошибку не доставляется в случае успешной доставки оригинального сообщения");
-	__reg_tc__("processDeliverySm.deliveryReceipt.expiredDeliveryReceipt",
+	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.expiredDeliveryReceipt",
 		"Подтверждение доставки на ошибку при истечении срока валидности доставляется в момент времени validity period");
+	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.recvTimeChecks",
+		"Подтверждения доставки приходят в момент окончании доставки оригинальной pdu");
+	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.checkStatus",
+		"Информации о статусе доставленной pdu (состояние, код ошибки) является корректной");
+	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.checkText",
+		"Текст сообщения соответствует настройкам SC");
+	//intermediateNotification
+	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification",
+		"Промежуточные нотификации");
+	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.checkAllowed",
+		"Проверка правомерности получения промежуточных нотификаций (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз после первой зарешедуленой попытки доставки)");
+	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.noRescheduling",
+		"Промежуточная нотификация не доставляется в случае, если sms не была зарешедулена");
+	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.recvTimeChecks",
+		"Промежуточные нотификации приходят в момент времени первой зарешедуленой попытки доставки оригинальной pdu");
+	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.checkStatus",
+		"Информации о статусе pdu (состояние, код ошибки) является корректной");
+	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.checkText",
+		"Текст сообщения соответствует настройкам SC");
 }
 
 void processSmeAckTc()
@@ -394,7 +410,7 @@ void allProtocolTc()
 	processRespTc();
 	processDeliverySmTc();
 	processNormalSmsTc();
-	processDeliveryReceiptTc();
+	processDeliveryReportTc();
 	processSmeAckTc();
 	processGenericNackTc();
 	//processIntermediateNotificationTc();

@@ -1,4 +1,5 @@
 #include "NormalSmsHandler.hpp"
+#include "SmppTransmitterTestCases.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/core/PduUtil.hpp"
@@ -147,61 +148,60 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu)
 	}
 }
 
-void NormalSmsHandler::updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
-	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime, time_t respTime)
+void NormalSmsHandler::registerIntermediateNotificationMonitor(
+	DeliveryMonitor* monitor, PduRegistry* pduReg, uint32_t deliveryStatus,
+	time_t recvTime, time_t respTime)
 {
 	__require__(monitor && pduReg);
 	__decl_tc__;
-	DeliveryReceiptMonitor* rcptMonitor = pduReg->getDeliveryReceiptMonitor(
-		monitor->pduData->msgRef);
-	__require__(rcptMonitor);
-	__cfg_int__(timeCheckAccuracy);
-	pduReg->removeMonitor(rcptMonitor);
-	switch (rcptMonitor->regDelivery)
+	uint8_t regDelivery =
+		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData);
+	time_t startTime;
+	PduFlag flag;
+	switch (regDelivery)
 	{
 		case NO_SMSC_DELIVERY_RECEIPT:
 		case SMSC_DELIVERY_RECEIPT_RESERVED:
-			__require__(rcptMonitor->getFlag() == PDU_NOT_EXPECTED_FLAG);
+			startTime = monitor->getValidTime();
+			flag = PDU_NOT_EXPECTED_FLAG;
 			break;
 		case FINAL_SMSC_DELIVERY_RECEIPT:
 		case FAILURE_SMSC_DELIVERY_RECEIPT:
 			switch (monitor->getFlag())
 			{
-				case PDU_REQUIRED_FLAG:
-					rcptMonitor->reschedule(monitor->getCheckTime());
+				case PDU_REQUIRED_FLAG: //delivery rescheduled
+					if (deliveryStatus == 0xffffffff) //респонс не отослан
+					{
+						startTime = recvTime + fixture->smeInfo.timeout - 1;
+					}
+					else
+					{
+						startTime = respTime;
+					}
+					flag = PDU_REQUIRED_FLAG;
 					break;
 				case PDU_MISSING_ON_TIME_FLAG:
+				case PDU_NOT_EXPECTED_FLAG:
 					__unreachable__("Invalid monitor state");
 					//break;
 				case PDU_RECEIVED_FLAG:
-					if (rcptMonitor->regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
-					{
-						__tc__("processDeliverySm.deliveryReceipt.failureDeliveryReceipt");
-						__tc_ok__;
-						rcptMonitor->setNotExpected();
-					}
-					else
-					{
-						__require__(rcptMonitor->regDelivery == FINAL_SMSC_DELIVERY_RECEIPT);
-						rcptMonitor->reschedule(respTime);
-					}
-					break;
 				case PDU_ERROR_FLAG:
-					rcptMonitor->reschedule(respTime);
-					break;
-				case PDU_NOT_EXPECTED_FLAG:
-					__require__(rcptMonitor->getFlag() == PDU_NOT_EXPECTED_FLAG);
-				case PDU_EXPIRED_FLAG:
-					__tc__("processDeliverySm.deliveryReceipt.expiredDeliveryReceipt");
+					__tc__("processDeliverySm.deliveryReport.intermediateNotification.noRescheduling");
 					__tc_ok__;
+					startTime = monitor->getValidTime();
+					flag = PDU_NOT_EXPECTED_FLAG;
+					break;
+				case PDU_EXPIRED_FLAG:
 					if (deliveryStatus == 0xffffffff) //респонс не отослан
 					{
-						time_t waitTime = recvTime + fixture->smeInfo.timeout - 1;
-						rcptMonitor->reschedule(max(monitor->getValidTime(), waitTime));
+						startTime = recvTime + fixture->smeInfo.timeout - 1;
+						flag = startTime < monitor->getValidTime() ?
+							PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
 					}
 					else
 					{
-						rcptMonitor->reschedule(monitor->getValidTime());
+						startTime = respTime;
+						flag = PDU_REQUIRED_FLAG;
 					}
 					break;
 				default:
@@ -211,9 +211,99 @@ void NormalSmsHandler::updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
 		default:
 			__unreachable__("Invalid registered delivery flag");
 	}
-	rcptMonitor->deliveryFlag = monitor->getFlag();
-	rcptMonitor->deliveryStatus = deliveryStatus;
-	pduReg->registerMonitor(rcptMonitor);
+	IntermediateNotificationMonitor* m =
+		new IntermediateNotificationMonitor(startTime, monitor->pduData, flag);
+	m->deliveryFlag = monitor->getFlag();
+	m->deliveryStatus = deliveryStatus;
+	pduReg->registerMonitor(m);
+}
+
+void NormalSmsHandler::registerDeliveryReceiptMonitor(DeliveryMonitor* monitor,
+	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime, time_t respTime)
+{
+	__require__(monitor && pduReg);
+	__decl_tc__;
+	uint8_t regDelivery =
+		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData);
+	time_t startTime = 0;
+	PduFlag flag;
+	switch (regDelivery)
+	{
+		case NO_SMSC_DELIVERY_RECEIPT:
+		case SMSC_DELIVERY_RECEIPT_RESERVED:
+			break;
+		case FINAL_SMSC_DELIVERY_RECEIPT:
+		case FAILURE_SMSC_DELIVERY_RECEIPT:
+			switch (monitor->getFlag())
+			{
+				case PDU_REQUIRED_FLAG:
+					//не регистрировать монитор, продолжение повторных доставок
+					break;
+				case PDU_MISSING_ON_TIME_FLAG:
+				case PDU_NOT_EXPECTED_FLAG:
+					__unreachable__("Invalid monitor state");
+					//break;
+				case PDU_RECEIVED_FLAG:
+					startTime = respTime;
+					if (regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
+					{
+						__tc__("processDeliverySm.deliveryReport.deliveryReceipt.failureDeliveryReceipt");
+						__tc_ok__;
+						flag = PDU_NOT_EXPECTED_FLAG;
+					}
+					else
+					{
+						__require__(regDelivery == FINAL_SMSC_DELIVERY_RECEIPT);
+						flag = PDU_REQUIRED_FLAG;
+					}
+					break;
+				case PDU_ERROR_FLAG:
+					startTime = respTime;
+					flag = PDU_REQUIRED_FLAG;
+					break;
+				case PDU_EXPIRED_FLAG:
+					__tc__("processDeliverySm.deliveryReport.deliveryReceipt.expiredDeliveryReceipt");
+					__tc_ok__;
+					if (deliveryStatus == 0xffffffff) //респонс не отослан
+					{
+						startTime =
+							max(recvTime + (time_t) (fixture->smeInfo.timeout - 1),
+								monitor->getValidTime());
+					}
+					else
+					{
+						startTime = monitor->getValidTime();
+					}
+					flag = PDU_REQUIRED_FLAG;
+					break;
+				default:
+					__unreachable__("Invalid monitor flag");
+			}
+			break;
+		default:
+			__unreachable__("Invalid registered delivery flag");
+	}
+	if (startTime)
+	{
+		DeliveryReceiptMonitor* m =
+			new DeliveryReceiptMonitor(startTime, monitor->pduData, flag);
+		m->deliveryFlag = monitor->getFlag();
+		m->deliveryStatus = deliveryStatus;
+		pduReg->registerMonitor(m);
+	}
+}
+
+void NormalSmsHandler::registerDeliveryReportMonitors(DeliveryMonitor* monitor,
+	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime, time_t respTime)
+{
+	//intermediate notification monitor: первая попытка доставки с rescheduling
+	if (!monitor->getLastAttempt())
+	{
+		registerIntermediateNotificationMonitor(monitor, pduReg, deliveryStatus,
+			recvTime, respTime);
+	}
+	registerDeliveryReceiptMonitor(monitor, pduReg, deliveryStatus,
+		recvTime, respTime);
 }
 
 #define __compare__(failureCode, field) \
@@ -323,9 +413,9 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		__tc_fail2__(monitor->update(recvTime, respFlag), 0);
 		pduReg->registerMonitor(monitor);
 		__tc_ok_cond__;
-		//обновить статус delivery receipt монитора
-		updateDeliveryReceiptMonitor(monitor, pduReg, deliveryResp.first, recvTime,
-			deliveryResp.second);
+		//зарегистрировать delivery report мониторы
+		registerDeliveryReportMonitors(monitor, pduReg, deliveryResp.first,
+			recvTime, deliveryResp.second);
 	}
 	catch (TCException&)
 	{

@@ -61,6 +61,7 @@ public:
 	virtual PduCancelSmResp* cancel(PduCancelSm& pdu)=0;
 		virtual PduReplaceSmResp* replace(PduReplaceSm& pdu)=0;
 	*/
+	static uint8_t getRegisteredDelivery(PduData* pduData);
 	
 protected:
 	SmppFixture* fixture;
@@ -73,6 +74,12 @@ protected:
 	bool hasIntermediateNotification(Message& m, Profile& profile);
 	template <class Message>
 	void checkRegisteredDelivery(Message& m);
+	void registerNormalSmeMonitors(PduSubmitSm* pdu, PduData* existentPduData,
+		bool destReachble, time_t waitTime, time_t validTime, PduData* pduData);
+	void registerExtSmeMonitors(PduSubmitSm* pdu, bool destReachble,
+		time_t waitTime, time_t validTime, PduData* pduData);
+	void registerNullSmeMonitors(PduSubmitSm* pdu, bool destReachble,
+		time_t waitTime, time_t validTime, PduData* pduData);
 	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,
 		time_t submitTime, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType);

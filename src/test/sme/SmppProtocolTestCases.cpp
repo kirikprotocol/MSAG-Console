@@ -857,12 +857,17 @@ int SmppProtocolTestCases::getRandomRespDelay()
 }
 
 pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespOk(
-	PduDeliverySm& pdu, bool sync)
+	PduDeliverySm& pdu, bool sync, bool sendDelay)
 {
 	__decl_tc__;
-	int delay = 0; //getRandomRespDelay();
-	time_t sendTime = time(NULL) + delay / 1000;
-	//__tc__("sendDeliverySmResp.delay"); __tc_ok__;
+	int delay = 0;
+	time_t sendTime = time(NULL);
+	if (sendDelay)
+	{
+		__tc__("sendDeliverySmResp.delay"); __tc_ok__;
+		delay = getRandomRespDelay();
+		sendTime += delay / 1000;
+	}
 	__trace2__("sendDeliverySmRespOk(): delay = %d", delay);
 	try
 	{
@@ -946,12 +951,17 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 }
 
 pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
-	PduDeliverySm& pdu, bool sync, int num)
+	PduDeliverySm& pdu, bool sync, bool sendDelay, int num)
 {
 	__decl_tc__;
-	int delay = 0; //getRandomRespDelay();
-	time_t sendTime = time(NULL) + delay / 1000;
-	//__tc__("sendDeliverySmResp.delay"); __tc_ok__;
+	int delay = 0;
+	time_t sendTime = time(NULL);
+	if (sendDelay)
+	{
+		__tc__("sendDeliverySmResp.delay"); __tc_ok__;
+		delay = getRandomRespDelay();
+		sendTime += delay / 1000;
+	}
 	__trace2__("sendDeliverySmRespError(): delay = %d", delay);
 	TCSelector s(num, 3);
 	try
@@ -986,7 +996,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
 		//рекурсивный вызов, чтобы предотвратить закрытие smpp сессии
 		if (respPdu.get_header().get_commandStatus() == ESME_RX_P_APPN)
 		{
-			return sendDeliverySmRespError(pdu, sync, num);
+			return sendDeliverySmRespError(pdu, sync, sendDelay, num);
 		}
 		fixture->transmitter->sendDeliverySmResp(respPdu, sync, delay);
 		__tc_ok__;

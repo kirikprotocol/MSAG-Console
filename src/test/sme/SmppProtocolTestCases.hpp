@@ -77,7 +77,8 @@ public:
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp со статусом ok.
 	 */
-	pair<uint32_t, time_t> sendDeliverySmRespOk(PduDeliverySm& pdu, bool sync);
+	pair<uint32_t, time_t> sendDeliverySmRespOk(PduDeliverySm& pdu,
+		bool sync, bool sendDelay);
 
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp с кодом ошибки
@@ -91,7 +92,7 @@ public:
 	 * и последующем прекращением доставки.
 	 */
 	pair<uint32_t, time_t> sendDeliverySmRespError(PduDeliverySm& pdu,
-		bool sync, int num);
+		bool sync, bool sendDelay, int num);
 
 	void sendInvalidPdu(bool sync, int num);
 

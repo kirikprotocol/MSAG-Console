@@ -297,20 +297,20 @@ pair<uint32_t, time_t> TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 	SmppUtil::convert(pdu.get_message().get_source(), &addr);
 	if (fixture->pduHandler.count(addr))
 	{
-		return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
+		return protocolTc.sendDeliverySmRespOk(pdu, rand0(1), false);
 	}
 	//на остальное ответить как придется
 #ifdef LOAD_TEST
-	return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
+	return protocolTc.sendDeliverySmRespOk(pdu, rand0(1), false);
 #else
 	switch (rand1(3))
 	{
 		case 1:
-			return protocolTc.sendDeliverySmRespError(pdu, rand0(1), RAND_TC);
+			return protocolTc.sendDeliverySmRespError(pdu, rand0(1), false, RAND_TC);
 		case 2:
 			return protocolTc.sendDeliverySmRespRetry(pdu, rand0(1), RAND_TC);
 		default:
-			return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
+			return protocolTc.sendDeliverySmRespOk(pdu, rand0(1), false);
 	}
 #endif //LOAD_TEST
 }
