@@ -390,7 +390,7 @@ static void SendAbonentStatusToSmsc(MapDialog* dialog,int status/*=AbonentStatus
 static void SendErrToSmsc(unsigned dialogid,unsigned code)
 {
   if ( dialogid == 0 ) return;
-  __map_trace2__("Send error 0x%x to SMSC",code);
+  __map_trace2__("Send error 0x%x to SMSC dialogid=%x",code,dialogid);
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,code);
   if ( GET_STATUS_CODE(code) == Status::SUBSCRBUSYMT ){
     __map_trace2__("Set Busy delay %d",GetBusyDelay());
@@ -1469,7 +1469,6 @@ void MAPIO_PutCommand(const SmscCommand& cmd ){
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
 {
-  //__map_trace2__("MAP::%s MAP.did:{0x%x}",__func__,dialog->dialogid_map);
   unsigned dialogid_smsc = cmd->get_dialogId();
   unsigned dialogid_map = 0;
   unsigned dialog_ssn = 0;
@@ -1492,38 +1491,42 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           istringstream(s_seq) >> sequence;
           if ( sequence == 0 )
             throw MAPDIALOG_FATAL_ERROR(
-              FormatText("MAP::PutCommand: invaid sequence %s",s_seq.c_str()));
+              FormatText("MAP::PutCommand: invalid sequence %s",s_seq.c_str()));
           try
           {
-            if ( serviceOp == USSD_PSSR_RESP )
+            bool dlg_found = false;
             {
-              {
-                MutexGuard ussd_map_guard( ussd_map_lock );
-                USSD_MAP::iterator it = ussd_map.find(sequence);
-                if ( it == ussd_map.end() ) {
-                  SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
-                  throw MAPDIALOG_FATAL_ERROR(
-                    FormatText("MAP::PutCommand: can't find session %s",s_seq.c_str()));
-                }
+              MutexGuard ussd_map_guard( ussd_map_lock );
+              USSD_MAP::iterator it = ussd_map.find(sequence);
+              if ( it != ussd_map.end() ) {
                 dialogid_map = it->second;
                 dialog_ssn = USSD_SSN;
+                __map_trace2__("%s: ussd lock found for %lld dialogid 0x%x ssn %d  (state %d)",__func__,sequence,dialogid_map,dialog_ssn);
+                dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
+                if( !dialog.isnull() ) {
+                  if ( !dialog->isUSSD )
+                    throw MAPDIALOG_FATAL_ERROR(
+                      FormatText("MAP::putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq.c_str()));
+                  __require__(dialog->ssn == dialog_ssn);
+                  __map_trace2__("state %d for dlg 0x%p", dialog->state, dialog.get() );
+                  dlg_found = true;
+                }
               }
-              dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
-              if ( dialog.isnull() ) {
+            }
+            if ( serviceOp == USSD_PSSR_RESP )
+            {
+              if ( !dlg_found ) {
                 SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
-
-                throw MAPDIALOG_FATAL_ERROR(
-                  FormatText("MAP::putCommand: Opss, here is no dialog with id x%x seq: %s",dialogid_smsc,s_seq.c_str()));
-
+                throw MAPDIALOG_FATAL_ERROR( FormatText("MAP::putCommand: Opss, here is no dialog with id x%x seq: %s",dialogid_smsc,s_seq.c_str()));
               }
-              __require__(dialog->ssn == dialog_ssn);
-              __map_trace2__("%s: dialogid 0x%x  (state %d)",__func__,dialog->dialogid_map,dialog->state);
-              if ( !dialog->isUSSD )
-                throw MAPDIALOG_FATAL_ERROR(
-                  FormatText("MAP::putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq.c_str()));
-              if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce ))
-                throw MAPDIALOG_BAD_STATE(
-                  FormatText("MAP::%s ussd resp bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+              if (dialog->state == MAPST_WaitSubmitCmdConf) {
+                // Seems PSSR_RESP goes earlier than submitResp
+                __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
+                dialog->chain.insert(dialog->chain.begin(), cmd);
+                return;
+              } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce )) {
+                throw MAPDIALOG_BAD_STATE(FormatText("MAP::%s ussd resp bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+              }
               {
                 unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
                 if ( dialog->ussdMrRef != mr ) {
@@ -1538,32 +1541,18 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               DoUSSRUserResponce(cmd,dialog.get());
               return;
             } else if(serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ) {
-              bool dlg_found = false;
-              {
-                MutexGuard ussd_map_guard( ussd_map_lock );
-                USSD_MAP::iterator it = ussd_map.find(sequence);
-                if ( it != ussd_map.end() ) {
-                  dialogid_map = it->second;
-                  dialog_ssn = USSD_SSN;
-                  __map_trace2__("%s: ussd lock found for %lld dialogid 0x%x ssn %d  (state %d)",__func__,sequence,dialogid_map,dialog_ssn);
-                  dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
-                  if( !dialog.isnull() ) {
-                    __require__(dialog->ssn == dialog_ssn);
-                    __map_trace2__("state %d for dlg 0x%p", dialog->state, dialog.get() );
-                    dlg_found = true;
-                  }
-                }
-              }
               if( dlg_found ) {
                 dialog->id_opened = true;
                 dialog->dialogid_smsc = dialogid_smsc;
-                __map_trace2__("%s: dialogid 0x%x  (state %d)",__func__,dialog->dialogid_map,dialog->state);
-                if ( !dialog->isUSSD )
-                  throw MAPDIALOG_FATAL_ERROR(
-                    FormatText("MAP::putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq.c_str()));
-                if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce))
+                if (dialog->state == MAPST_WaitSubmitCmdConf) {
+                  // Seems deliver goes earlier than submitResp
+                  __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
+                  dialog->chain.insert(dialog->chain.begin(), cmd);
+                  return;
+                } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce)) {
                   throw MAPDIALOG_BAD_STATE(
                     FormatText("MAP::%s ussd req/notify bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+                }
                 {
                   unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
                   if ( dialog->ussdMrRef != mr ) {
@@ -1747,18 +1736,21 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           __map_trace2__("%s processing USSD submit response", __func__);
           if ( cmd->get_resp()->get_status() != 0 )
           {
-            __map_trace2__("%s delivery error: %d", __func__, cmd->get_resp()->get_status());
             DoUSSRUserResponceError(&cmd,dialog.get());
             {
               MutexGuard ussd_map_guard( ussd_map_lock );
               ussd_map.erase(dialog->ussdSequence);
             }
+            dialog->dropChain = true;
             CloseMapDialog(dialog->dialogid_map,dialog->ssn);
             DropMapDialog(dialog.get());
-          }
-          else
-          {
-            __map_trace2__("%s delivery ok", __func__);
+          } else {
+            if( dialog->chain.size() > 0 ) {
+              SmscCommand &cmd_c = dialog->chain.front();
+              dialog->chain.pop_front();
+              __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
+              MAPIO_PutCommand(cmd_c, 0);
+            }
           }
         }
         else
@@ -1775,11 +1767,17 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             MutexGuard ussd_map_guard( ussd_map_lock );
             ussd_map.erase(dialog->ussdSequence);
           }
+          dialog->dropChain = true;
           CloseMapDialog(dialog->dialogid_map,dialog->ssn);
           DropMapDialog(dialog.get());
         } else {
           dialog->state = MAPST_ReadyNextUSSDCmd;
-          __map_trace2__("set state %d for dlg 0x%p", dialog->state, dialog.get() );
+          if( dialog->chain.size() > 0 ) {
+            SmscCommand &cmd_c = dialog->chain.front();
+            dialog->chain.pop_front();
+            __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
+            MAPIO_PutCommand(cmd_c, 0);
+          }
         }
       }else if(dialog->state == MAPST_WaitSubmitUSSDRequestCloseConf) {
         __map_trace2__("%s processing USSD Request closed submit response", __func__);
@@ -1796,11 +1794,17 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             MutexGuard ussd_map_guard( ussd_map_lock );
             ussd_map.erase(dialog->ussdSequence);
           }
+          dialog->dropChain = true;
           CloseMapDialog(dialog->dialogid_map,dialog->ssn);
           DropMapDialog(dialog.get());
         } else {
           dialog->state = MAPST_ReadyNextUSSDCmd;
-          __map_trace2__("set state %d for dlg 0x%p", dialog->state, dialog.get() );
+          if( dialog->chain.size() > 0 ) {
+            SmscCommand &cmd_c = dialog->chain.front();
+            dialog->chain.pop_front();
+            __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
+            MAPIO_PutCommand(cmd_c, 0);
+          }
         }
       }else if(dialog->state == MAPST_WaitSubmitUSSDNotifyCloseConf) {
         __map_trace2__("%s processing USSD Notify close submit response", __func__);

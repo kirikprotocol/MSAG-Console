@@ -146,6 +146,8 @@ inline unsigned ConvertText27bit(
 #undef __pchar
 #undef __escape
   }
+  unsigned _7bit_len = bit7buf-base+(shift?1:0);
+  __map_trace2__("7bit buffer length: %d",_7bit_len);
   if( smsc::logger::_map_cat->isDebugEnabled() ){
     {
       /*
@@ -159,14 +161,12 @@ inline unsigned ConvertText27bit(
       char b[255*4];
       unsigned k;
       unsigned i;
-      for ( i=0,k=0; i<chars;++i){
-        k += sprintf(b+k,"%x ",text[i]);
+      for ( i=0,k=0; i<_7bit_len;++i){
+        k += sprintf(b+k,"%x ",base[i]);
       }
       __map_trace2__("7bit(hex): %s",b);
     }
   }
-  unsigned _7bit_len = bit7buf-base+(shift?1:0);
-  __map_trace2__("7bit buffer length: %d",_7bit_len);
   return _7bit_len;
 }
 

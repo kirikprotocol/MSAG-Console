@@ -233,7 +233,6 @@ struct MapDialog{
     maked_at_mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
   }
   virtual ~MapDialog(){
-    __mapdlg_trace2__("~MapDialog 0x%x(0x%x)",dialogid_map,dialogid_smsc);
     require ( ref_count == 0 );
     require ( chain.size() == 0 );
 //    if ( dialogid_smsc != 0 && dialogid_map != 0){
@@ -402,13 +401,11 @@ public:
     MutexGuard g(sync);
     MapDialog* dlg = 0;
     if ( hash_.Get(MKDID(dialogueid,lssn),dlg) ) {
-      __mapdlg_trace2__("found dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
       dlg->AddRef();
       return dlg;
     }
     else
     {
-      __mapdlg_trace2__("dialog not found for dialogid 0x%x",dialogueid);
       return 0;
     }
   }

@@ -235,7 +235,7 @@ void MapIoTask::dispatcher()
           k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
         }
         text[k]=0;
-    __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
+        __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
         delete text;
       }
     }
