@@ -307,47 +307,38 @@ void ConnectionPool::setSize(unsigned new_size)
     if (new_size < size)
     {
         unsigned counter = size - new_size;
-        while(counter--)
+        while(counter-- && idle.Count())
         {
             Connection* connection = 0L;
-            if (idle.Count())
-            {
-                (void) idle.Pop(connection);
-                delete connection;
-                count--;
-            }
-            else break;
+            (void) idle.Pop(connection);
+            delete connection;
+            count--;
         }
     } 
     else
     {
         unsigned counter = new_size - size;
-        while (counter--)
+        while (head && counter--)
         {
             Connection* connection = 
                     new Connection(dbInstance, dbUserName, dbUserPassword);
-            if (head)
-            {   // Notify waiting threads & give them new connections
-                ConnectionQueue *queue = head;
-                head = head->next;
-                if (!head) tail = 0L;
-                queueLen--; count++;
-                (void) busy.Push(connection);
-                queue->connection = connection;
-                monitor.notify(&(queue->condition));
-            }
-            else break;
-            /*else 
-            {
-                (void) idle.Push(connection);
-                count++;
-            }*/
+            
+            // Notify waiting threads & give them new connections
+            ConnectionQueue *queue = head;
+            head = head->next;
+            if (!head) tail = 0L;
+            queueLen--; count++;
+            (void) busy.Push(connection);
+            queue->connection = connection;
+            monitor.notify(&(queue->condition));
         }
     }
     size = new_size;
 }
 
 /* ------------------------------- Connection -------------------------- */
+
+Mutex Connection::connectLock;
 
 Connection::Connection(const char* instance, 
                        const char* user, const char* password) 
@@ -373,6 +364,7 @@ void Connection::connect()
     
     if (!isConnected)
     {
+        MutexGuard  guard(connectLock);
         try
         {
             // open connection to DB and begin user session 
@@ -441,6 +433,8 @@ void Connection::connect()
 
 void Connection::disconnect() 
 {
+    MutexGuard  guard(connectLock);
+    
     if (isConnected)
     {
         if (ReplaceStmt) {

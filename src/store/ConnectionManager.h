@@ -29,6 +29,8 @@ namespace smsc { namespace store
     friend class Statement;
     private:
 
+        static Mutex connectLock;
+
         bool    isConnected, isDead;
         log4cpp::Category      &log;
         
