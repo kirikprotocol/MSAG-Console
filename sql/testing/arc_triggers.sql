@@ -88,6 +88,54 @@ begin
 end;
 /
 
+create or replace function chk_num(val1 in number, val2 in number) return boolean is
+begin
+    if (val1 is null) and (val2 is null) then
+ 	   return true;
+    elsif (val1 is not null) and (val2 is not null) and (val1 = val2) then
+ 	   return true;
+    else
+ 	   return false;
+    end if;
+end;
+/
+
+create or replace function chk_date(val1 in date, val2 in date) return boolean is
+begin
+    if (val1 is null) and (val2 is null) then
+ 	   return true;
+    elsif (val1 is not null) and (val2 is not null) and (val1 = val2) then
+ 	   return true;
+    else
+ 	   return false;
+    end if;
+end;
+/
+
+create or replace function chk_str(val1 in varchar2, val2 in varchar2) return boolean is
+begin
+    if (val1 is null) and (val2 is null) then
+ 	   return true;
+    elsif (val1 is not null) and (val2 is not null) and (val1 = val2) then
+ 	   return true;
+    else
+ 	   return false;
+    end if;
+end;
+/
+
+create or replace function chk_raw(val1 in raw, val2 in raw) return boolean is
+begin
+    if (val1 is null) and (val2 is null) then
+ 	   return true;
+    elsif (val1 is not null) and (val2 is not null) and (val1 = val2) then
+ 	   return true;
+    else
+ 	   return false;
+    end if;
+end;
+/
+
 create or replace trigger smsc_arc_insert after insert on sms_arc
 	referencing new as arc for each row
 declare
@@ -107,86 +155,86 @@ begin
 		--обновление arc_stat.final_rec делается в sms_msg_delete
 		update arc_stat set last_arc = sysdate;
 		--проверка полей
-		if msg.st != :arc.st then
+		if not chk_num(msg.st, :arc.st) then
 			raise_application_error(-20201, 'msg.st != arc.st');
 		end if;
-		if msg.submit_time != :arc.submit_time then
+		if not chk_date(msg.submit_time, :arc.submit_time) then
 			raise_application_error(-20201, 'msg.submit_time != arc.submit_time');
 		end if;
-		if msg.valid_time != :arc.valid_time then
+		if not chk_date(msg.valid_time, :arc.valid_time) then
 			raise_application_error(-20201, 'msg.valid_time != arc.valid_time');
 		end if;
-		if msg.attempts != :arc.attempts then
+		if not chk_num(msg.attempts, :arc.attempts) then
 			raise_application_error(-20201, 'msg.attempts != arc.attempts');
 		end if;
-		if msg.last_result != :arc.last_result then
+		if not chk_num(msg.last_result, :arc.last_result) then
 			raise_application_error(-20201, 'msg.last_result != arc.last_result');
 		end if;
-		if msg.last_try_time != :arc.last_try_time then
+		if not chk_date(msg.last_try_time, :arc.last_try_time) then
 			raise_application_error(-20201, 'msg.last_try_time != arc.last_try_time');
 		end if;
 		--next_try_time skipped
-		if msg.oa != :arc.oa then
+		if not chk_str(msg.oa, :arc.oa) then
 			raise_application_error(-20201, 'msg.oa != arc.oa');
 		end if;
-		if msg.da != :arc.da then
+		if not chk_str(msg.da, :arc.da) then
 			raise_application_error(-20201, 'msg.da != arc.da');
 		end if;
-		if msg.dda != :arc.dda then
+		if not chk_str(msg.dda, :arc.dda) then
 			raise_application_error(-20201, 'msg.dda != arc.dda');
 		end if;
-		if msg.mr != :arc.mr then
+		if not chk_num(msg.mr, :arc.mr) then
 			raise_application_error(-20201, 'msg.mr != arc.mr');
 		end if;
-		if msg.svc_type != :arc.svc_type then
+		if not chk_str(msg.svc_type, :arc.svc_type) then
 			raise_application_error(-20201, 'msg.svc_type != arc.svc_type');
 		end if;
-		if msg.dr != :arc.dr then
+		if not chk_num(msg.dr, :arc.dr) then
 			raise_application_error(-20201, 'msg.dr != arc.dr');
 		end if;
-		if msg.br != :arc.br then
+		if not chk_num(msg.br, :arc.br) then
 			raise_application_error(-20201, 'msg.br != arc.br');
 		end if;
-		if msg.src_msc != :arc.src_msc then
+		if not chk_str(msg.src_msc, :arc.src_msc) then
 			raise_application_error(-20201, 'msg.src_msc != arc.src_msc');
 		end if;
-		if msg.src_imsi != :arc.src_imsi then
+		if not chk_str(msg.src_imsi, :arc.src_imsi) then
 			raise_application_error(-20201, 'msg.src_imsi != arc.src_imsi');
 		end if;
-		if msg.src_sme_n != :arc.src_sme_n then
+		if not chk_num(msg.src_sme_n, :arc.src_sme_n) then
 			raise_application_error(-20201, 'msg.src_sme_n != arc.src_sme_n');
 		end if;
-		if msg.dst_msc != :arc.dst_msc then
+		if not chk_str(msg.dst_msc, :arc.dst_msc) then
 			raise_application_error(-20201, 'msg.dst_msc != arc.dst_msc');
 		end if;
-		if msg.dst_imsi != :arc.dst_imsi then
+		if not chk_str(msg.dst_imsi, :arc.dst_imsi) then
 			raise_application_error(-20201, 'msg.dst_imsi != arc.dst_imsi');
 		end if;
-		if msg.dst_sme_n != :arc.dst_sme_n then
+		if not chk_num(msg.dst_sme_n, :arc.dst_sme_n) then
 			raise_application_error(-20201, 'msg.dst_sme_n != arc.dst_sme_n');
 		end if;
-		if msg.route_id != :arc.route_id then
+		if not chk_str(msg.route_id, :arc.route_id) then
 			raise_application_error(-20201, 'msg.route_id != arc.route_id');
 		end if;
-		if msg.svc_id != :arc.svc_id then
+		if not chk_num(msg.svc_id, :arc.svc_id) then
 			raise_application_error(-20201, 'msg.svc_id != arc.svc_id');
 		end if;
-		if msg.prty != :arc.prty then
+		if not chk_num(msg.prty, :arc.prty) then
 			raise_application_error(-20201, 'msg.prty != arc.prty');
 		end if;
-		if msg.src_sme_id != :arc.src_sme_id then
+		if not chk_str(msg.src_sme_id, :arc.src_sme_id) then
 			raise_application_error(-20201, 'msg.src_sme_id != arc.src_sme_id');
 		end if;
-		if msg.dst_sme_id != :arc.dst_sme_id then
+		if not chk_str(msg.dst_sme_id, :arc.dst_sme_id) then
 			raise_application_error(-20201, 'msg.dst_sme_id != arc.dst_sme_id');
 		end if;
-		if msg.txt_length != :arc.txt_length then
+		if not chk_num(msg.txt_length, :arc.txt_length) then
 			raise_application_error(-20201, 'msg.txt_length != arc.txt_length');
 		end if;
-		if msg.body_len != :arc.body_len then
+		if not chk_num(msg.body_len, :arc.body_len) then
 			raise_application_error(-20201, 'msg.body_len != arc.body_len');
 		end if;
-		if msg.body != :arc.body then
+		if not chk_raw(msg.body, :arc.body) then
 			raise_application_error(-20201, 'msg.body != arc.body');
 		end if;
 	exception
