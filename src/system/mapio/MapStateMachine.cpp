@@ -1124,7 +1124,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
       }
     }
   }catch(std::exception &e){
-    __map_warn__("TryDestroyDialog: catched exception: %s", e.what());
+    __map_warn2__("TryDestroyDialog: catched exception: %s", e.what());
   }catch(...){
     __map_warn__("TryDestroyDialog: catched unexpected exception");
   }
