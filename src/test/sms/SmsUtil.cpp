@@ -214,7 +214,7 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms)
 	//sms->setFailureCause();
 	//sms->setAttemptsCount();
 	setupRandomCorrectBody(&sms->getMessageBody());
-	sms->setEServiceType(rand_char(rand1(MAX_ESERVICE_TYPE_LENGTH)).get());
+	sms->setEServiceType(rand_char(rand0(MAX_ESERVICE_TYPE_LENGTH)).get());
 }
 
 void SmsUtil::clearSms(SMS* sms)
@@ -237,7 +237,7 @@ void SmsUtil::clearSms(SMS* sms)
 	//sms->setFailureCause();
 	//sms->setAttemptsCount();
 	sms->setMessageBody(0, 0, false, NULL);
-	sms->setEServiceType(NULL);
+	sms->setEServiceType("");
 }
 
 }
