@@ -71,7 +71,11 @@ void SmppInputThread::killSocket(int idx)
   m->removeSocket(s);
   if(ss->getProxy())
   {
-    smeManager->unregisterSmeProxy(ss->getProxy()->getId());
+    try{
+      smeManager->unregisterSmeProxy(ss->getProxy()->getId());
+    }catch(...)
+    {
+    }
     delete ss->getProxy();
   }
 }
