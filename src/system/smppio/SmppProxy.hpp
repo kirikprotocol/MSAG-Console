@@ -351,6 +351,7 @@ public:
   bool getPeers(char* in,char* out)
   {
     MutexGuard mg(mutex);
+    if(!opened)return false;
     if(!smppReceiverSocket && !smppTransmitterSocket)return false;
     if(smppReceiverSocket)smppReceiverSocket->getSocket()->GetPeer(in);
     else in[0]=0;
