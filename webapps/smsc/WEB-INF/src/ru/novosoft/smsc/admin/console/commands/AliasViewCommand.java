@@ -12,8 +12,6 @@ import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.alias.Alias;
 
-import java.util.Iterator;
-
 public class AliasViewCommand implements Command
 {
     private String alias;
@@ -24,9 +22,9 @@ public class AliasViewCommand implements Command
 
     private String showAlias(Alias alias)
     {
-        return "Alias '"+alias.getAlias().getMask()+"'"+
-               " = Address '"+alias.getAddress().getMask()+"'"+
-               " ("+((alias.isHide()) ? "hide":"nohide")+")";
+        return "Alias '"+alias.getAlias().getMask()+"' "+
+               "Address '"+alias.getAddress().getMask()+"' "+
+               "("+((alias.isHide()) ? "hide":"nohide")+")";
     }
     public void process(CommandContext ctx)
     {
