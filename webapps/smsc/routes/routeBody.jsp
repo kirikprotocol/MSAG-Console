@@ -92,6 +92,14 @@ function srcSmeIdChanged()
 			<td><input id=suppressDeliveryReports class=check type=checkbox name=suppressDeliveryReports <%=bean.isSuppressDeliveryReports() ? "checked" : ""%>></td>
 			<td><label for=suppressDeliveryReports style="padding-left:4px;">suppress delivery reports</label></td>
 		</tr>
+		<tr>
+			<td><input id=hide class=check type=checkbox name=hide <%=bean.isHide() ? "checked" : ""%>></td>
+			<td><label for=hide style="padding-left:4px;">hide</label></td>
+		</tr>
+		<tr>
+			<td><input id=forceReplayPath class=check type=checkbox name=forceReplayPath <%=bean.isForceReplayPath() ? "checked" : ""%>></td>
+			<td><label for=forceReplayPath style="padding-left:4px;">force replay path</label></td>
+		</tr>
 		</table>
 	</td>
 </tr>

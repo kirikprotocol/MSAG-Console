@@ -133,7 +133,7 @@ public class RoutesAdd extends RouteBody
       if (destinations.isEmpty())
         return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
-      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo));
+      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath));
       journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_ADD);
       appContext.getStatuses().setRoutesChanged(true);
       return RESULT_DONE;

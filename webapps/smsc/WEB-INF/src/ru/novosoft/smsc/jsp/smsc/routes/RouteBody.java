@@ -35,6 +35,8 @@ public class RouteBody extends SmscBean
 	protected Map selectedMaskSmes = new HashMap();
   protected String deliveryMode = null;
   protected String forwardTo = null;
+  protected boolean hide = false;
+  protected boolean forceReplayPath = false;
 
 	public boolean isSrcChecked(String srcName)
 	{
@@ -270,5 +272,25 @@ public class RouteBody extends SmscBean
   public void setForwardTo(String forwardTo)
   {
     this.forwardTo = forwardTo;
+  }
+
+  public boolean isHide()
+  {
+    return hide;
+  }
+
+  public void setHide(boolean hide)
+  {
+    this.hide = hide;
+  }
+
+  public boolean isForceReplayPath()
+  {
+    return forceReplayPath;
+  }
+
+  public void setForceReplayPath(boolean forceReplayPath)
+  {
+    this.forceReplayPath = forceReplayPath;
   }
 }

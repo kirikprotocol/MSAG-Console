@@ -31,8 +31,10 @@ public class Route
 	private String srcSmeId;
   private String deliveryMode = null;
   private String forwardTo = null;
+  private boolean hide = false;
+  private boolean forceReplayPath = false;
 
-	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId, String deliveryMode, String forwardTo)
+	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId, String deliveryMode, String forwardTo, boolean hide, boolean forceReplayPath)
 	{
 		if (routeName == null)
 			throw new NullPointerException("Route name is null");
@@ -56,6 +58,8 @@ public class Route
 		this.srcSmeId = srcSmeId;
     this.deliveryMode = deliveryMode;
     this.forwardTo = forwardTo;
+    this.hide = hide;
+    this.forceReplayPath = forceReplayPath;
 	}
 
 	public Route(String routeName)
@@ -78,6 +82,8 @@ public class Route
 		srcSmeId = "";
     deliveryMode = "default";
     forwardTo = "";
+    hide = true;
+    forceReplayPath = false;
 	}
 
 	public Route(Element routeElem, SubjectList subjects, SmeManager smeManager) throws AdminException
@@ -99,6 +105,8 @@ public class Route
 		srcSmeId = routeElem.getAttribute("srcSmeId");
     deliveryMode = routeElem.getAttribute("deliveryMode");
     forwardTo = routeElem.getAttribute("forwardTo");
+    hide = routeElem.getAttribute("hide").length() > 0 ? routeElem.getAttribute("hide").equalsIgnoreCase("true") : true;
+    forceReplayPath = routeElem.getAttribute("forceReplayPath").equalsIgnoreCase("true");
 	}
 
 	public String getName()
@@ -228,6 +236,8 @@ public class Route
                 + "\" serviceId=\"" + getServiceId() + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports()
                 + "\" active=\"" + isActive() + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
                 + "\" deliveryMode=\"" + StringEncoderDecoder.encode(getDeliveryMode())
+                + "\" hide=\"" + (isHide() ? "true" : "false")
+                + "\" forceReplayPath=\"" + (isForceReplayPath() ? "true" : "false")
                 + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
                 + "\">");
 		getSources().store(out);
@@ -304,5 +314,25 @@ public class Route
   public void setForwardTo(String forwardTo)
   {
     this.forwardTo = forwardTo;
+  }
+
+  public boolean isHide()
+  {
+    return hide;
+  }
+
+  public void setHide(boolean hide)
+  {
+    this.hide = hide;
+  }
+
+  public boolean isForceReplayPath()
+  {
+    return forceReplayPath;
+  }
+
+  public void setForceReplayPath(boolean forceReplayPath)
+  {
+    this.forceReplayPath = forceReplayPath;
   }
 }

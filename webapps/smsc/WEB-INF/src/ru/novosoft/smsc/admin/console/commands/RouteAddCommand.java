@@ -101,8 +101,9 @@ public class RouteAddCommand extends RouteGenCommand
           }
       }
 
+      //todo implement hide & forceReplayPath flags
       smscRoute = new Route(route, priority, allow, bill, arc, !receipt,
-                            active, serviceid, srcList, dstList, srcSmeId, deliveryMode, forwardTo);
+                            active, serviceid, srcList, dstList, srcSmeId, deliveryMode, forwardTo, true, false);
 
       if (priority < 0 || priority > 32000)
           throw new Exception("Priority value should be between 0 and 32000");
