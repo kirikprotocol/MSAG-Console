@@ -7,7 +7,7 @@ void button(JspWriter out, String srcImgUrl, String name, String value, String t
 void button(JspWriter out, String srcImgUrl, String name, String value, String title, String onclick) throws IOException
 {
 	out.print("<img src=\"" + CPATH + "/img/" + srcImgUrl + "\" class=button jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\" title=\"" + title + "\"" 
-				+ (onclick != null && onclick.length() > 0 ? " onclick=\"" + onclick + "\"" : "") + ">");
+				+ (onclick != null && onclick.length() > 0 ? " jbuttonOnclick=\"" + onclick + "\"" : "") + ">");
 }
 void addButton(JspWriter out, String name, String value, String title) throws IOException
 {
