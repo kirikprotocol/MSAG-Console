@@ -41,8 +41,7 @@ public class ProxySmeContext {
 
 	public Config loadConfig() throws AdminException, SAXException, ParserConfigurationException, IOException
 	{
-		return config = new Config(new File(ru.novosoft.smsc.util.WebAppFolders.getServiceFolder(appContext.getHostsManager().getServiceInfo(Constants.PROXY_SME_ID).getHost(),
-																															  Constants.PROXY_SME_ID),
+    return config = new Config(new File(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID).getServiceFolder(),
 														"conf" + File.separatorChar + "config.xml"));
 	}
 }
