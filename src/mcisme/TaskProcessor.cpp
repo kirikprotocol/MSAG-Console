@@ -329,8 +329,10 @@ void TaskProcessor::loadupTasks()
         MessageState state = task->getCurrentState();
         int allEventsCount = task->getEventsCount();
         int newEventsCount = task->getNewEventsCount();
-        smsc_log_debug(logger, "Loadup: task for abonent %s loaded (state=%d). Events: all=%d, new=%d", 
-                       abonent, (int)state, allEventsCount, newEventsCount);
+        int dtCallersCount = task->getCallersCount();
+        smsc_log_debug(logger, "Loadup: task for abonent %s loaded (state=%d). "
+                       "Events: all=%d, new=%d, callers=%d", abonent,
+                       (int)state, allEventsCount, newEventsCount, dtCallersCount);
         {
             AbonentProfile profile = task->getAbonentProfile();
             task->setTemplateFormatter((templateManager) ? 
@@ -429,8 +431,8 @@ Task* TaskProcessor::getTask(const char* abonent, bool& newone)
     tasks.Insert(abonent, task);
     newone = true;
 
-    smsc_log_debug(logger, "Task for abonent %s created (state=%d). Events=%d",
-                   abonent, (int)(task->getCurrentState()), task->getEventsCount());
+    smsc_log_debug(logger, "Task for abonent %s created (state=%d). Events=%d, callers=%d",
+                   abonent, (int)(task->getCurrentState()), task->getEventsCount(), task->getCallersCount());
 
     return task;
 }

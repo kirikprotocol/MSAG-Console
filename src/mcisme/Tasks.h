@@ -109,8 +109,12 @@ namespace smsc { namespace mcisme
         inline void setTemplateFormatter(InformTemplateFormatter* formatter) {
             templateFormatter = formatter;
         };
+        
         inline bool checkCallersCount() {
             return (Task::maxCallersCount <= 0 || callersCount < Task::maxCallersCount);
+        };
+        inline int getCallersCount() {
+            return callersCount;
         };
 
         inline int getEventsCount() { return events.Count(); };
