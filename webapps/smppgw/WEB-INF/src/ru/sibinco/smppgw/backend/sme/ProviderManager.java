@@ -10,7 +10,7 @@ import java.util.*;
  */
 public class ProviderManager
 {
-  private final Map providers = Collections.synchronizedMap(new HashMap());
+  private final Map providers = Collections.synchronizedMap(new TreeMap());
   private long lastUsedId;
   private static final String SECTION_NAME_providers = "providers";
   private static final String PARAM_NAME_last_used_id = "last used provider id";
