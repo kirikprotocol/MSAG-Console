@@ -112,21 +112,29 @@ public:
 	
 	static PduAddress* convert(const Address& smsAddr, PduAddress* smppAddr);
 	static Address* convert(PduAddress& smppAddr, Address* smsAddr);
+	/*
 	static SMSId convert(const char* id);
 	static MessageId& convert(const SMSId& smsId, MessageId& smppId);
+	*/
 	static const char* time2string(time_t t, char* str, time_t base, int num);
 	static time_t string2time(const char* str, time_t base);
 
-	static bool compareAddresses(PduAddress& a1, PduAddress& a2);
+	//static bool compareAddresses(PduAddress& a1, PduAddress& a2);
+	
+	//Использую вместо vector<int> operator==(SmppOptional&, SmppOptional&)
+	//для возможности добавления параметра compareFlag
 	static vector<int> compareOptional(SmppOptional& opt1, SmppOptional& opt2);
 
-	static int setupRandomCorrectShortMessage(ShortMessage* msg);
+	static void setupRandomCorrectAddress(PduAddress* addr);
 	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu);
 	static void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu);
 	static void setupRandomCorrectOptionalParams(SmppOptional& opt,
 		uint64_t mask = 0xffffffffffffffff);
 
 };
+
+bool operator==(PduAddress& a1, PduAddress& a2);
+bool operator!=(PduAddress& a1, PduAddress& a2);
 
 }
 }
