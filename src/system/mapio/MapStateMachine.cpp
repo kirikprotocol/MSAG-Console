@@ -12,6 +12,7 @@ using namespace std;
 #include "MapDialogMkPDU.cxx"
 
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
+static void PauseOnImsiReq(MapDialog* map);
 
 string ImsiToString(const ET96MAP_IMSI_T* imsi)
 {
@@ -1327,7 +1328,7 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
   }
 }
 
-void PauseOnImsiReq(MapDialog* map)
+static void PauseOnImsiReq(MapDialog* map)
 {
   unsigned dialogid_map = 0;
   bool success = false;
