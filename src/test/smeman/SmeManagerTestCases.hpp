@@ -63,7 +63,7 @@ public:
 	/**
 	 * Регистрация sme с пустым systemId.
 	 */
-	TCResult* addCorrectSmeWithEmptySystemId(SmeInfo* info);
+	TCResult* addCorrectSmeWithEmptySystemId(SmeInfo* sme);
 
 	/**
 	 * Регистрация sme с некорректными параметрами.
@@ -129,8 +129,8 @@ protected:
 private:
 	SmeManager* smeMan;
 	
-	void setupRandomCorrectSmeInfo(SmeInfo* info);
-	vector<int> compareSmeInfo(const SmeInfo& info1, const SmeInfo& info2);
+	void setupRandomCorrectSmeInfo(SmeInfo* sme);
+	vector<int> compareSmeInfo(const SmeInfo& sme1, const SmeInfo& sme2);
 	void checkSelectSmeStat(const vector<SmeInfo*>& sme,
 		const map<uint32_t, int>& statMap, TCResult* res);
 	void debugSme(SmeInfo& sme);
