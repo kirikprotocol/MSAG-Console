@@ -225,7 +225,7 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2)
 	p.set_##field(tmp_##field); \
 	if (check) { __require__(p.get_##field() == tmp_##field); }
 
-void SmppUtil::setupRandomCorrectAddress(PduAddress* addr)
+void SmppUtil::setupRandomCorrectAddress(PduAddress* addr, bool check)
 {
 	__require__(addr);
 	PduAddress& p = *addr;
@@ -368,7 +368,7 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 {
 	//поля сохраняются случайным образом
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
-	Mask mask(_mask & *((uint64_t*) tmp.get()));
+	Mask<uint64_t> mask(_mask & *((uint64_t*) tmp.get()));
 	int pos = 0;
 	__trace2__("SmppUtil::setupRandomCorrectOptionalParams(): mask = %s", mask.str());
 
