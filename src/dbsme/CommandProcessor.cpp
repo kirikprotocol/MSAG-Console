@@ -221,6 +221,8 @@ void DataProvider::process(Command& command)
             name = SMSC_DBSME_DEFAULT_JOB_NAME;
         else
             command.setInData(&input[curPos]);
+
+        command.setJobName(name);
     }
     
     if (!jobs.Exists(name))
