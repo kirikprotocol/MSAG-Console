@@ -177,13 +177,16 @@ void TCResultFilter::addResultStack(const TCResultStack& stack)
 	}
 
 	//добавить стек в список стеков
-	TCResultStack* _stack = new TCResultStack();
-	for (int i = 0; i <= failedTC; i++)
+	if (failedTC > 0)
 	{
-		const TCResult* res = stack[i];
-		_stack->push_back(new TCResult(*res));
+		TCResultStack* _stack = new TCResultStack();
+		for (int i = 0; i <= failedTC; i++)
+		{
+			const TCResult* res = stack[i];
+			_stack->push_back(new TCResult(*res));
+		}
+		stackList.push_back(_stack);
 	}
-	stackList.push_back(_stack);
 }
 
 const TCResultStackList* TCResultFilter::getResults(const char* tcId)
