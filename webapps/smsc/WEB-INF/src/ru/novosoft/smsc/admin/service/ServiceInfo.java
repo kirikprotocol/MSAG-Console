@@ -55,7 +55,6 @@ public class ServiceInfo
 	}
 
 	private ServiceInfo(String id, String host, int port, String args, long pid, SME sme, byte status)
-			  throws AdminException
 	{
 		this.host = host;
 		this.port = port;
@@ -67,7 +66,6 @@ public class ServiceInfo
 	}
 
 	public ServiceInfo(String id, String host, int port, String args, SME sme, byte status)
-			  throws AdminException
 	{
 		this(id, host, port, args, 0, sme, status);
 	}

@@ -18,6 +18,8 @@ import ru.novosoft.smsc.util.config.ConfigManager;
 
 import java.io.*;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 
 public class ServiceManager
@@ -248,6 +250,15 @@ public class ServiceManager
 		if (!recursiveDeleteFolder(getServiceFolder(host, serviceId))
 				  || !recursiveDeleteFolder(getServiceJspsFolder(webappFolder, serviceId)))
 			throw new AdminException("Service removed, but services files not deleted");
+	}
+
+	public synchronized void removeSme(String smeId)
+		throws AdminException
+	{
+		if (isService(smeId))
+			throw new AdminException("Couldn't remove sme \"" + smeId + "\" becouse it is service");
+
+		smsc.getSmes().remove(smeId);
 	}
 
 	public synchronized void startService(String serviceId)
@@ -510,5 +521,146 @@ public class ServiceManager
 	public DaemonManager getDaemonManager()
 	{
 		return daemonManager;
+	}
+
+	public void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo)
+			  throws AdminException
+	{
+		String hostName = serviceInfo.getHost();
+		String serviceId = serviceInfo.getId();
+		try
+		{
+			/****** deploy files ******/
+			File daemonFolder = new File(daemonsFolder, hostName);
+			File serviceFolder = new File(daemonFolder, serviceId);
+			File jspsFolder = getServiceJspsFolder(webappFolder, serviceId);
+
+			if (serviceFolder.exists())
+				throw new AdminException("Service already exists in filesystem");
+			if (jspsFolder.exists())
+				throw new AdminException("Jps pages for new services already exists");
+
+			unZipArchive(serviceFolder,
+							 new BufferedInputStream(new FileInputStream(incomingZip)));
+
+			File incomingJsps = new File(serviceFolder, "jsp");
+			if (!incomingJsps.renameTo(jspsFolder))
+				throw new AdminException("Couldn't deploy JSP's (\"" + incomingJsps.getCanonicalPath() + "\") to \"" + jspsFolder.getCanonicalPath() + "\"");
+
+			File newLogFolder = new File(serviceFolder, "log");
+			newLogFolder.mkdir();
+			moveJars(new File(serviceFolder, "lib"), webinfLibFolder);
+
+			File deploy_config = new File(serviceFolder, "config.xml");
+			if (deploy_config.exists() && deploy_config.isFile())
+				deploy_config.delete();
+
+			/****** register new sme *****/
+			putService(new Service(serviceInfo));
+			smsc.getSmes().add(serviceInfo.getSme());
+			smsc.saveSmesConfig();
+		}
+		catch (AdminException e)
+		{
+			rollbackDeploy(hostName, serviceId, daemonsFolder, webappFolder, webinfLibFolder);
+			logger.error("Couldnt deploy new services", e);
+			throw e;
+		}
+		catch (IOException e)
+		{
+			rollbackDeploy(hostName, serviceId, daemonsFolder, webappFolder, webinfLibFolder);
+			logger.error("Couldnt deploy new services", e);
+			throw new AdminException("Couldnt deploy new services, nested: " + e.getMessage());
+		}
+	}
+
+	protected void unZipFileFromArchive(File folderUnpackTo, String name, ZipInputStream zin)
+			  throws IOException
+	{
+		File file = new File(folderUnpackTo, name);
+		file.getParentFile().mkdirs();
+		OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+		for (int i = 0; (i = zin.read()) != -1; out.write(i)) ;
+		out.close();
+	}
+
+	protected void unZipArchive(File folderUnpackTo, InputStream in)
+			  throws IOException
+	{
+		ZipInputStream zin = new ZipInputStream(in);
+		for (ZipEntry e = zin.getNextEntry(); e != null; e = zin.getNextEntry())
+		{
+			if (!e.isDirectory())
+				unZipFileFromArchive(folderUnpackTo, e.getName(), zin);
+		}
+		zin.close();
+		in.close();
+	}
+
+	protected void moveJars(File serviceFolder, File jarsFolder)
+	{
+		File[] jars = serviceFolder.listFiles();
+		if (jars != null)
+		{
+			for (int i = 0; i < jars.length; i++)
+			{
+				if (jars[i].isFile() && jars[i].getName().endsWith(".jar"))
+				{
+					File newName = new File(jarsFolder, jars[i].getName());
+					try
+					{
+						if (!jars[i].renameTo(newName))
+							logger.error("couldn't rename \"" + jars[i].getCanonicalPath() + "\" to \"" + newName.getCanonicalPath() + '"');
+					}
+					catch (Exception e)
+					{
+						try
+						{
+							logger.error("couldn't rename \"" + jars[i].getCanonicalPath() + "\" to \"" + newName.getCanonicalPath() + '"');
+						}
+						catch (IOException e1)
+						{
+						}
+					}
+				}
+			}
+		}
+	}
+
+	protected void rollbackDeploy(String hostName, String serviceId, File daemonsFolder, File webappFolder, File webinfLibFolder)
+	{
+		File daemonFolder = new File(daemonsFolder, hostName);
+		File serviceFolder = new File(daemonFolder, serviceId);
+		File jspsFolder = ServiceManager.getServiceJspsFolder(webappFolder, serviceId);
+
+		deleteFolder(serviceFolder);
+		deleteFolder(jspsFolder);
+	}
+
+	protected void deleteFolder(File folder)
+	{
+		if (folder.exists())
+		{
+			File files[] = folder.listFiles();
+			for (int i = 0; i < files.length; i++)
+			{
+				if (files[i].isDirectory())
+					deleteFolder(files[i]);
+				else
+					files[i].delete();
+			}
+			folder.delete();
+		}
+	}
+
+	public boolean isServiceAdministarble(String serviceId)
+	{
+		if (isService(serviceId))
+		{
+			final File jspsFolder = getServiceJspsFolder(webappFolder, serviceId);
+			return jspsFolder.exists() && jspsFolder.isDirectory();
+		}
+		else
+			return false;
 	}
 }

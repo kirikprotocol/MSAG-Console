@@ -48,7 +48,7 @@ public class Alias
 		if (obj instanceof Alias)
 		{
 			Alias a = (Alias) obj;
-			return hide == a.hide && address.equals(a.address) && alias.equals(a.alias);
+			return address.equals(a.address) && alias.equals(a.alias);
 		}
 		else
 		{

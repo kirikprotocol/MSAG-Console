@@ -49,7 +49,7 @@ public class DaemonManager
 	}
 
 	/**
-	 * @return hostnames
+	 * @return host names
 	 */
 	public Set getHosts()
 	{

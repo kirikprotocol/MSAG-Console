@@ -77,4 +77,9 @@ public class AliasSet
 		}
 		return dataSource.query(query);
 	}
+
+	public boolean contains(Alias a)
+	{
+		return aliases.contains(a);
+	}
 }

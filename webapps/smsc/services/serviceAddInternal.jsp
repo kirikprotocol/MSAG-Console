@@ -19,22 +19,21 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
+<h1>Add service: step 2</h1>
 <%@ include file="/WEB-INF/inc/messages.jsp"%>
 
-
-<h1>Add service: step 2</h1>
-Select service type:<br>
-
-<table cellspacing="0" border=1>
-<tr>
+<table class=frm0 cellspacing=0 width="100%">
+<col width="15%" align=right>
+<col width="85%">
+<tr class=row0>
 	<th>System Id</th>
 	<td><input type="text" name="serviceId" value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>" style="width: 100%;"></td>
 </tr>
-<tr>
+<tr class=row0>
 	<th>System Type</th>
 	<td><input type="text" name="systemType" value="<%=StringEncoderDecoder.encode(bean.getSystemType())%>" maxlength="13" style="width: 100%;" onblur="checkSystemType(this)"></td>
 </tr>
-<tr>
+<tr class=row0>
 	<th>Type of number</th>
 	<td>
 		<select name="typeOfNumber" style="width: 100%;">
@@ -48,7 +47,7 @@ Select service type:<br>
 		</select>
 	</td>
 </tr>
-<tr>
+<tr class=row0>
 	<th>Numbering plan</th>
 	<td>
 		<select name="numberingPlan" style="width: 100%;">
@@ -65,15 +64,15 @@ Select service type:<br>
 		</select>
 	</td>
 </tr>
-<tr>
+<tr class=row0>
 	<th>Interface version</th>
 	<td><input type="text" name="interfaceVersion" value="3.4" readonly style="width: 100%;"></td>
 </tr>
-<tr>
+<tr class=row0>
 	<th>Range of Address</th>
 	<td><input maxlength="41" type="text" name="rangeOfAddress" value="<%=StringEncoderDecoder.encode(bean.getRangeOfAddress())%>" style="width: 100%;"></td>
 </tr>
-<tr>
+<tr class=rowLast>
 	<th>Password</th>
 	<td><input maxlength="41" type="text" name="password" value="<%=StringEncoderDecoder.encode(bean.getPassword())%>" style="width: 100%;"></td>
 </tr>

@@ -84,10 +84,16 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
 	<%
-	if (bean.isService(serviceId))
+	if (bean.isServiceAdministrable(serviceId))
 	{
-		%><td class=name><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td>
-		<td class=name><a href="#" title="View host info" onClick="return viewHost('<%=bean.getHost(serviceId)%>');"><%=bean.getHost(serviceId)%></a></td><%
+		%><td class=name><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td><%
+		if (bean.isService(serviceId))
+		{
+			%><td class=name><a href="#" title="View host info" onClick="return viewHost('<%=bean.getHost(serviceId)%>');"><%=bean.getHost(serviceId)%></a></td><%
+		} else
+		{
+			%><td class=name>&nbsp;</td><%
+		}
 	}
 		else
 	{

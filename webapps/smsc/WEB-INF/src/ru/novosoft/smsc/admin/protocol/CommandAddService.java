@@ -19,7 +19,7 @@ public class CommandAddService extends Command
 		logger.debug("Add services \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
 						 + serviceInfo.getPort() + ")");
 
-		Element serviceElem = document.createElement("services");
+		Element serviceElem = document.createElement("service");
 		//serviceElem.setAttribute("name", StringEncoderDecoder.encode(serviceInfo.getName()));
 		serviceElem.setAttribute("id", StringEncoderDecoder.encode(serviceInfo.getId()));
 		serviceElem.setAttribute("port", StringEncoderDecoder.encode(String.valueOf(serviceInfo.getPort())));

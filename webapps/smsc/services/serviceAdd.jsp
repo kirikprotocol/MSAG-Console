@@ -11,13 +11,13 @@ if (request.getParameter("mbCancel") != null)
 } else if (request.getParameter("mbNext") != null)
 {
 	if ("internal".equals(request.getParameter("serviceType"))) {
-		response.sendRedirect("serviceAddInternal.jsp" + (hostName != null ? ("?hostName="+hostName) : ""));
+		response.sendRedirect("serviceAddInternal.jsp?mbNext=next" + (hostName != null ? ("&hostName="+hostName) : ""));
 		return;
 	} else if ("external".equals(request.getParameter("serviceType"))) {
-		response.sendRedirect("serviceAddExternal.jsp" + (hostName != null ? ("?hostName="+hostName) : ""));
+		response.sendRedirect("serviceAddExternal.jsp?mbNext=next" + (hostName != null ? ("&hostName="+hostName) : ""));
 		return;
 	} else if ("external_adm".equals(request.getParameter("serviceType"))) {
-		response.sendRedirect("serviceAddExternalAdm.jsp" + (hostName != null ? ("?hostName="+hostName) : ""));
+		response.sendRedirect("serviceAddExternalAdm.jsp?mbNext=next&stage=0" + (hostName != null ? ("&hostName="+hostName) : ""));
 		return;
 	}
 }

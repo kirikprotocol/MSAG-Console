@@ -84,6 +84,11 @@ public class Index extends PageBean
 		return serviceManager.isService(smeId);
 	}
 
+	public boolean isServiceAdministrable(String smeId)
+	{
+		return serviceManager.isServiceAdministarble(smeId);
+	}
+
 	/************************ Command handlers ****************************/
 
 	protected int deleteServices()
@@ -94,7 +99,10 @@ public class Index extends PageBean
 			String id = serviceIds[i];
 			try
 			{
-				serviceManager.removeService(id);
+				if (serviceManager.isService(id))
+					serviceManager.removeService(id);
+				else
+					serviceManager.removeSme(id);
 			}
 			catch (Throwable e)
 			{

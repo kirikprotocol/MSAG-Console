@@ -15,7 +15,7 @@ public class CommandSetServiceStartupParameters extends ServiceCommand
 	{
 		super("set_service_startup_parameters", serviceId);
 
-		Element serviceElem = document.createElement("services");
+		Element serviceElem = document.createElement("service");
 		//serviceElem.setAttribute("name", StringEncoderDecoder.encode(serviceName));
 		serviceElem.setAttribute("id", StringEncoderDecoder.encode(serviceId));
 		serviceElem.setAttribute("port", StringEncoderDecoder.encode(String.valueOf(port)));

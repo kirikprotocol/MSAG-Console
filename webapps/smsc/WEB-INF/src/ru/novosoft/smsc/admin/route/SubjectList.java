@@ -7,6 +7,7 @@ package ru.novosoft.smsc.admin.route;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.SubjectDataSource;
@@ -23,6 +24,7 @@ public class SubjectList
 {
 	private Map subjects = new HashMap();
 	private SubjectDataSource dataSource = new SubjectDataSource();
+	private Category logger = Category.getInstance(this.getClass());
 
 	public SubjectList(Element listElement, SMEList smes)
 			  throws AdminException
@@ -42,16 +44,24 @@ public class SubjectList
 			SME defSme = smes.get(subjElem.getAttribute("defSme"));
 			if (defSme == null)
 				throw new AdminException("Unknown SME \"" + subjElem.getAttribute("defSme") + '"');
-			add(new Subject(name, masks, defSme));
+			try
+			{
+				add(new Subject(name, masks, defSme));
+			}
+			catch (AdminException e)
+			{
+				logger.warn("source skipped", e);
+			}
 		}
 	}
 
 	public void add(Subject s)
+		throws AdminException
 	{
 		if (s == null)
 			throw new NullPointerException("Source is null");
 		if (subjects.containsKey(s.getName()))
-			throw new IllegalArgumentException("Source already contained");
+			throw new AdminException("Source \"" + s.getName() + "\" already contained");
 
 		dataSource.add(s);
 		subjects.put(s.getName(), s);

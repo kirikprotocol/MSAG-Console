@@ -3,6 +3,7 @@ package ru.novosoft.smsc.jsp;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
+import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
 import ru.novosoft.util.conpool.NSConnectionPool;
@@ -14,12 +15,13 @@ import java.util.Properties;
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 {
-	ConfigManager configManager = null;
-	ServiceManager serviceManager = null;
-	DaemonManager daemonManager = null;
+	private ConfigManager configManager = null;
+	private ServiceManager serviceManager = null;
+	private DaemonManager daemonManager = null;
 
-	Smsc smsc = null;
-	NSConnectionPool connectionPool = null;
+	private Smsc smsc = null;
+	private NSConnectionPool connectionPool = null;
+	private UserPreferences userPreferences = new UserPreferences();
 
 	public SMSCAppContextImpl(String configFileName)
 	{
@@ -71,6 +73,11 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	public DaemonManager getDaemonManager()
 	{
 		return daemonManager;
+	}
+
+	public UserPreferences getUserPreferences()
+	{
+		return userPreferences;
 	}
 }
 

@@ -33,7 +33,7 @@ function checkFile(field)
 		</tr>
 	</table>
 	<div align="right">
-		<input type=submit value="Next page">
+		<input type=submit name=mbNext value="Next page">
 	</div>
 </form>
 <%@ include file="/common/footer.jsp"%>

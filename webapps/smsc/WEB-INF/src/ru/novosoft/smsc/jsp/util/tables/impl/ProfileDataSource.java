@@ -17,21 +17,10 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ProfileDataSource implements DataSource
 {
 	private static final String[] columnNames = {"Mask", "Codepage", "Report info"};
-	private static final Map sortColumnNames;
-
-	static
-	{
-		sortColumnNames = new HashMap();
-		sortColumnNames.put("Mask", "mask");
-		sortColumnNames.put("Codepage", "codeset");
-		sortColumnNames.put("Report info", "reportinfo");
-	}
 
 	NSConnectionPool connectionPool = null;
 
@@ -61,22 +50,23 @@ public class ProfileDataSource implements DataSource
 		{
 			String sortOrder;
 			if (!sort.equalsIgnoreCase("mask"))
-				sortOrder = ((String) sortColumnNames.get(sort)) + (isNegativeSort ? " desc" : " asc") + ", mask asc";
+				sortOrder = sort + (isNegativeSort ? " desc" : " asc") + ", mask asc";
 			else
-				sortOrder = ((String) sortColumnNames.get(sort)) + (isNegativeSort ? " desc" : " asc");
+				sortOrder = sort + (isNegativeSort ? " desc" : " asc");
 
 			// open connection to SQL server and run query
 			connection = connectionPool.getConnection();
 			statement = connection.createStatement();
 
-			sqlResultSet = statement.executeQuery("select mask, reportinfo, codeset from sms_profile order by " + sortOrder);
+			sqlResultSet = statement.executeQuery("select mask, reportinfo, codeset from sms_profile " + createWhereStatement((ProfileFilter) query_to_run.getFilter()) + " order by " + sortOrder);
 
+			int totalCount = 0;
 			// skip lines to start position
-			for (int i = 0; i < query_to_run.getStartPosition() && sqlResultSet.next(); i++) ;
+			for (int i = 0; i < query_to_run.getStartPosition() && sqlResultSet.next(); i++, totalCount++) ;
 
 			// retrieve data
 			results = new QueryResultSetImpl(columnNames, query_to_run.getSortOrder());
-			for (int i = 0; i < query_to_run.getExpectedResultsQuantity() && sqlResultSet.next(); i++)
+			for (int i = 0; i < query_to_run.getExpectedResultsQuantity() && sqlResultSet.next(); i++, totalCount++)
 			{
 				//System.out.println("Query: ");
 				String maskString = sqlResultSet.getString("mask");
@@ -87,6 +77,15 @@ public class ProfileDataSource implements DataSource
 				//System.out.println("codeset = " + codeset);
 				results.add(new ProfileDataItem(new Profile(new Mask(maskString), codeset, reportinfo)));
 			}
+
+			boolean isLast = true;
+			while (sqlResultSet.next())
+			{
+				totalCount++;
+				isLast = false;
+			}
+			results.setTotalSize(totalCount);
+			results.setLast(isLast);
 		}
 		catch (SQLException e)
 		{
@@ -130,5 +129,31 @@ public class ProfileDataSource implements DataSource
 			  throws AdminException
 	{
 		return query((ProfileQuery) query_to_run);
+	}
+
+	private String createWhereStatement(ProfileFilter filter)
+	{
+		if (filter.isEmpty())
+			return "";
+		else
+		{
+			String result = "";
+			if (filter.getMasks().length > 0)
+			{
+				result += '(';
+				for (int i = 0; i < filter.getMasks().length; i++)
+				{
+					String mask = filter.getMasks()[i];
+					result += (i == 0 ? "" : " or ") + "mask like '" + mask + "%'";
+				}
+				result += ')';
+			}
+			if (filter.getCodepage() >= 0)
+				result += (result.length() > 0 ? " and " : "") + "codeset = " + filter.getCodepage();
+			if (filter.getReportinfo() >= 0)
+				result += (result.length() > 0 ? " and " : "") + "reportinfo = " + filter.getReportinfo();
+
+			return (result.length() > 0 ? ("where " + result) : "");
+		}
 	}
 }

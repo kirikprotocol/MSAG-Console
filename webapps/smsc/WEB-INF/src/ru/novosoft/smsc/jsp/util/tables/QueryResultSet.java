@@ -6,15 +6,22 @@
 package ru.novosoft.smsc.jsp.util.tables;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Vector;
 
 
 public interface QueryResultSet
 {
-  int size();
-  DataItem get(int index);
-  Iterator iterator();
-  String[] getColumns();
-  Vector getSortOrder();
+	int size();
+
+	int getTotalSize();
+
+	DataItem get(int index);
+
+	Iterator iterator();
+
+	String[] getColumns();
+
+	Vector getSortOrder();
+
+	boolean isLast();
 }

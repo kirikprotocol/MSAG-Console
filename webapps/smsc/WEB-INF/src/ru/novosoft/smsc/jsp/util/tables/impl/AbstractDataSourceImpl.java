@@ -8,10 +8,7 @@ package ru.novosoft.smsc.jsp.util.tables.impl;
 import ru.novosoft.smsc.jsp.util.tables.*;
 import ru.novosoft.smsc.util.SortedVector;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 
 abstract class AbstractDataSourceImpl implements DataSource
@@ -61,34 +58,6 @@ abstract class AbstractDataSourceImpl implements DataSource
 		}
 	}
 
-	private int findPositionAfterFiltering(Vector dataVector, Filter filter, int position)
-	{
-		int count = position;
-		int i = 0;
-		while (i < dataVector.size() && count > 0)
-		{
-			if (filter.isItemAllowed((DataItem) dataVector.get(i++)))
-				count--;
-		}
-		while (i < dataVector.size() && !filter.isItemAllowed((DataItem) dataVector.get(i)))
-			i++;
-		return i;
-	}
-
-	private int findPositionAfterFilteringBackward(Vector dataVector, Filter filter, int position)
-	{
-		int count = position;
-		int i = dataVector.size() - 1;
-		while (i >= 0 && count > 0)
-		{
-			if (filter.isItemAllowed((DataItem) dataVector.get(i--)))
-				count--;
-		}
-		while (i >= 0 && !filter.isItemAllowed((DataItem) dataVector.get(i)))
-			i--;
-		return i;
-	}
-
 	public QueryResultSet query(Query query_to_run)
 	{
 		String sort = (String) query_to_run.getSortOrder().get(0);
@@ -108,17 +77,50 @@ abstract class AbstractDataSourceImpl implements DataSource
 		QueryResultSetImpl results = new QueryResultSetImpl(columnNames, query_to_run.getSortOrder());
 
 		Filter filter = query_to_run.getFilter();
-		int count = query_to_run.getExpectedResultsQuantity();
-		for (int i = isNegativeSort
-				  ? findPositionAfterFilteringBackward(srcVector, filter, query_to_run.getStartPosition())
-				  : findPositionAfterFiltering(srcVector, filter, query_to_run.getStartPosition());
-			  i >= 0 && i < srcVector.size() && results.size() < count;
-			  i = isNegativeSort ? i - 1 : i + 1)
+
+      if (isNegativeSort)
 		{
-			DataItem item = (DataItem) srcVector.get(i);
-			if (filter.isItemAllowed(item))
-				results.add(item);
+			Vector reversedSrcVector = new Vector(srcVector);
+			Collections.reverse(reversedSrcVector);
+			srcVector = reversedSrcVector;
 		}
+
+		Iterator i = srcVector.iterator();
+		final int start_position = query_to_run.getStartPosition();
+		int totalCount = 0;
+		for (int count_to_skip = 0; i.hasNext() && count_to_skip < start_position;)
+		{
+			DataItem item = (DataItem) i.next();
+			if (filter.isItemAllowed(item))
+			{
+				count_to_skip++;
+				totalCount++;
+			}
+
+		}
+
+		final int quantity = query_to_run.getExpectedResultsQuantity();
+		for (int count = 0; i.hasNext() && count < quantity;)
+		{
+			DataItem item = (DataItem) i.next();
+			if (filter.isItemAllowed(item))
+			{
+				count++;
+				totalCount++;
+				results.add(item);
+			}
+		}
+
+		results.setLast(true);
+		for (; i.hasNext();)
+		{
+			if (filter.isItemAllowed((DataItem) i.next()))
+			{
+				results.setLast(false);
+				totalCount++;
+			}
+		}
+		results.setTotalSize(totalCount);
 
 		return results;
 	}

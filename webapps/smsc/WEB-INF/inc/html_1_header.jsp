@@ -13,8 +13,8 @@
 	%><a ID=MENU0_HOME href="<%=CPATH%>">status</a><%
 	%><a ID=MENU0_ROUTES href="<%=CPATH%>/routes">routes</a><%
 	%><a ID=MENU0_SUBJECTS href="<%=CPATH%>/routes">subjects</a><%
-	%><a ID=MENU0_ALIASES href="<%=CPATH%>/routes">aliases</a><%
-	%><a ID=MENU0_RPOFILES href="<%=CPATH%>/routes">profiles</a><%
+	%><a ID=MENU0_ALIASES href="<%=CPATH%>/aliases/index.jsp">aliases</a><%
+	%><a ID=MENU0_PROFILES href="<%=CPATH%>/profiles/index.jsp">profiles</a><%
 	%><%
 	%><a ID=MENU0_HOSTS href="<%=CPATH%>/hosts/index.jsp">hosts</a><%
 	%><a ID=MENU0_SERVICES href="<%=CPATH%>/services/index.jsp">services</a><%

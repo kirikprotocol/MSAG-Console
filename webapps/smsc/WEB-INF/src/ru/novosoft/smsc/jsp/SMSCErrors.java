@@ -44,6 +44,22 @@ public class SMSCErrors
 			public static final String couldntAddHost = B + "couldntAddHost";
 			public static final String couldntRemoveHost = B + "couldntRemoveHost";
 		}
+
+		public static class profiles
+		{
+			private static final String B = error.B + "profiles.";
+			public static final String queryError = B + "queryError";
+			public static final String identicalToDefault = B + "identicalToDefault";
+			public static final String couldntAdd = B + "couldntAdd";
+			public static final String profileNotSpecified = B + "profileNotSpecified";
+			public static final String couldntLookup = B + "couldntLookup";
+		}
+
+		public static class aliases
+		{
+			private static final String B = error.B + "aliases.";
+			public static final String alreadyExists = B + "alreadyExists";
+		}
 	}
 
 	public static class warning

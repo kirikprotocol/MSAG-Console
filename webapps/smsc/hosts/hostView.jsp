@@ -20,7 +20,7 @@ switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("
 		response.sendRedirect("hostEdit.jsp?hostName="+bean.getHostName());
 		return;
 	case HostView.RESULT_VIEW:
-		response.sendRedirect(CPATH+"/services/index.jsp?serviceId="+bean.getServiceId());
+		response.sendRedirect(CPATH+"/esme_"+URLEncoder.encode(bean.getServiceId())+"/index.jsp");
 		return;
 	case HostView.RESULT_ADD_SERVICE:
 		response.sendRedirect(CPATH+"/services/serviceAdd.jsp?hostName="+bean.getHostName());

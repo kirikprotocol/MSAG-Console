@@ -25,6 +25,15 @@ public class MaskList
 		}
 	}
 
+	public MaskList(String[] masks)
+	{
+		for (int i = 0; i < masks.length; i++)
+		{
+			String mask = masks[i];
+			add(new Mask(mask));
+		}
+	}
+
 	public MaskList(Mask mask)
 	{
 		add(mask);

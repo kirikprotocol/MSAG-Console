@@ -5,25 +5,52 @@
  */
 package ru.novosoft.smsc.jsp.util.tables.impl;
 
-import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 
 public class ProfileFilter implements Filter
 {
-  private boolean empty = true;
+	private String[] masks = new String[0];
+	private byte codepage = -1;
+	private byte reportinfo = -1;
 
-  public ProfileFilter()
-  {
-    empty = true;
-  }
+	public boolean isEmpty()
+	{
+		return masks.length == 0 && codepage < 0 && reportinfo < 0;
+	}
 
-  public boolean isEmpty()
-  {
-    return empty;
-  }
+	public boolean isItemAllowed(DataItem item)
+	{
+		return true;
+	}
 
-  public boolean isItemAllowed(DataItem item)
-  {
-    return true;
-  }
+	public String[] getMasks()
+	{
+		return masks;
+	}
+
+	public void setMasks(String[] masks)
+	{
+		this.masks = masks;
+	}
+
+	public byte getCodepage()
+	{
+		return codepage;
+	}
+
+	public void setCodepage(byte codepage)
+	{
+		this.codepage = codepage;
+	}
+
+	public byte getReportinfo()
+	{
+		return reportinfo;
+	}
+
+	public void setReportinfo(byte reportinfo)
+	{
+		this.reportinfo = reportinfo;
+	}
 }
