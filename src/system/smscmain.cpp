@@ -12,6 +12,7 @@
 #include <admin/smsc_service/SmscShutdownHandler.h>
 #include <util/signal.hpp>
 #include <util/xml/init.h>
+#include <resourcemanager/ResourceManager.hpp>
 
 bool file_exist(const char * const filename)
 {
@@ -67,6 +68,7 @@ void atExitHandler(void)
     smsc::util::xml::TerminateXerces();
 }
 
+
 int main(int argc,char* argv[])
 {
   {
@@ -92,6 +94,7 @@ int main(int argc,char* argv[])
     {
       fprintf(stderr, "WARNING: parameter \"logger.initFile\" not found in config - logger initialized by default\n");
     }
+		smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
     smsc::util::config::smeman::SmeManConfig smemancfg;
     smemancfg.load(get_filename("sme.xml"));
     cfgs.smemanconfig=&smemancfg;

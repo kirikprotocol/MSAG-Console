@@ -10,19 +10,15 @@ namespace resourcemanager{
 
 class LocaleResources{
 public:
-	LocaleResources()
-	{
-	}
-
-	LocaleResources(const std::string &filename);
+	LocaleResources(const std::string &filename) throw ();
 
   // возвращает строку из сетингов для ключа.
-  std::string getSetting(const std::string & key );
+  std::string getSetting(const std::string & key ) const throw ();
   // возвращает строку из ресурса для ключа.
-  std::string getString(const std::string& key);
+  std::string getString(const std::string& key) const throw ();
 
 	#ifdef SMSC_DEBUG
-	void dump(std::ostream & outStream);
+	void dump(std::ostream & outStream) const;
 	#endif //#ifdef SMSC_DEBUG
 
 private:
@@ -30,7 +26,7 @@ private:
 	_stringmap settings;
 	_stringmap resources;
 
-	void processParams(const DOM_Element &elem, _stringmap & settings, const std::string &prefix);
+	void processParams(const DOM_Element &elem, _stringmap & settings, const std::string &prefix) throw ();
 };
 
 };//resourcemanager

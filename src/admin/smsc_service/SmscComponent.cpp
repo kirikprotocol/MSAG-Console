@@ -1,6 +1,7 @@
 #include "SmscComponent.h"
 #include "profiler/profiler.hpp"
 #include <mscman/MscManager.h>
+#include <resourcemanager/ResourceManager.hpp>
 
 namespace smsc {
 	namespace admin {
@@ -424,6 +425,7 @@ namespace smsc {
 				__trace2__("reinit smsc config\n");
 				configs.cfgman->reinit();
 				configs.cfgman = & smsc::util::config::Manager::getInstance();
+				smsc::resourcemanager::ResourceManager::init(configs.cfgman->getString("core.locales"), configs.cfgman->getString("core.default_locale"));
 				__trace2__("config reinitialized\n");
 				configs.aliasconfig->reload();
 				configs.routesconfig->reload();

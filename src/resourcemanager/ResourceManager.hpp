@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <list>
 #include <resourcemanager/LocaleResources.hpp>
 #include <util/Exception.hpp>
 
@@ -13,30 +14,33 @@ namespace resourcemanager{
 
 class ResourceManager{
 public:
-	~ResourceManager();
+	~ResourceManager() throw ();
 
   // возвращает строку из сетингов для определленой локали и ключа.
-  std::string getSetting(const std::string& locale,const std::string& key);
+  std::string getSetting(const std::string& locale,const std::string& key) const throw();
   // возвращает строку из сетингов для дефолтной локали и ключа.
-  std::string getSetting(const std::string& key );
+  std::string getSetting(const std::string& key ) const throw();
   // возвращает строку из ресурса для определленой локали и ключа.
-  std::string getString(const std::string& locale, const std::string& key);
+  std::string getString(const std::string& locale, const std::string& key) const throw();
   // возвращает строку из ресурса для дефолтной локали и ключа.
-  std::string getString(const std::string& key);
+  std::string getString(const std::string& key) const throw();
 
-  static ResourceManager& getInstance();
+  static const ResourceManager& getInstance() throw();
+	static void init(const char * const localesString, const char * const defaultLocaleStr) throw();
+	static void reload() throw();
 
 	#ifdef SMSC_DEBUG
-	void dump(std::ostream & outStream);
+	void dump(std::ostream & outStream) const;
 	#endif //#ifdef SMSC_DEBUG
 
 private:
 	static std::auto_ptr<ResourceManager> instance;
-	static const std::string defaultLocale;
+	static std::string defaultLocale;
 	typedef std::map<std::string, LocaleResources*> _LocalesMap;
 	_LocalesMap locales;
 
-	ResourceManager() throw (Exception);
+	static void init(const std::list<std::string> & localeNames, const std::string & defaultLocaleName) throw();
+	ResourceManager() throw ();
 };
 
 };//resourcemanager
