@@ -27,7 +27,10 @@ public:
   void removeSocket(Socket *sock);
   void notify()
   {
+    trace("output thread notify");
+    mon.Lock();
     mon.notify();
+    mon.Unlock();
   }
 protected:
   EventMonitor mon;

@@ -32,22 +32,21 @@ public:
   }
   virtual void putCommand(const SmscCommand& cmd)
   {
-    mutex.Lock();
+    trace("put command:enter");
+    MutexGuard g(mutex);
     if(outqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
     {
-      mutex.Unlock();
       throw ProxyQueueLimitException();
     }
     outqueue.Push(cmd);
+    trace("put command");
     smppSocket->notifyOutThread();
-    mutex.Unlock();
   }
   virtual SmscCommand getCommand()
   {
-    mutex.Lock();
+    MutexGuard g(mutex);
     SmscCommand cmd;
     inqueue.Shift(cmd);
-    mutex.Unlock();
     return cmd;
   }
 
@@ -72,6 +71,12 @@ public:
     return cmd;
   }
 
+  bool hasOutput()
+  {
+    MutexGuard g(mutex);
+    return outqueue.Count()!=0;
+  }
+
   virtual SmeProxyState getState()const
   {
     return state;
@@ -84,10 +89,8 @@ public:
   virtual SmeProxyPriority getPriority()const{}
   bool hasInput()const
   {
-    mutex.Lock();
-    int retval=inqueue.Count();
-    mutex.Unlock();
-    return retval;
+    MutexGuard g(mutex);
+    return inqueue.Count()!=0;
   }
   virtual void attachMonitor(ProxyMonitor* mon)
   {

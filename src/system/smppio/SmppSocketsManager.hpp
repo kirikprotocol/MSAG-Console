@@ -21,6 +21,10 @@ public:
     tp(newtp),smeManager(manager){}
   void registerSocket(Socket* sock);
   void removeSocket(Socket* sock);
+  void printtp()
+  {
+    trace2("tp:(%p)%p\n",this,tp);
+  }
 protected:
   Array<SmppIOTask*> intasks,outtasks;
   ThreadPool *tp;

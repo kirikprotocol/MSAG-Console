@@ -29,6 +29,9 @@ public:
     mode(sockmode),
     socket(sock)
   {
+    proxy=NULL;
+    inThread=NULL;
+    outThread=NULL;
     if(sockmode==ssModeRead)
     {
       buffer=new char[SSOCK_INIT_READ_BUFFER];
@@ -38,6 +41,7 @@ public:
     {
       buffer=NULL;
       bufferSize=0;
+      dataLength=0;
       bufferOffset=0;
     }
   }
@@ -50,14 +54,20 @@ public:
   SmppProxy* getProxy(){return proxy;}
   int receive();
   smsc::smpp::SmppHeader* decode();
+  bool hasData(){return bufferOffset!=bufferSize;}
+
   int send();
-  int send(char *newbuffer,int newbuffersize);
+  void send(int length);
+
+  char* getBuffer(int length);
+
   Socket* getSocket(){return socket;}
 
   void notifyOutThread();
 
 protected:
   char* buffer;
+  int dataLength;
   int bufferSize;
   int bufferOffset;
   int mode;

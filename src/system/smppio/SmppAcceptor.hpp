@@ -6,28 +6,25 @@
 #include "core/threads/ThreadedTask.hpp"
 #include "system/smppio/SmppSocketsManager.hpp"
 #include <string.h>
-#include <exception>
+#include "util/Exception.hpp"
+#include "util/debug.h"
+
 
 namespace smsc{
 namespace system{
 namespace smppio{
 
-class SmppAcceptorException:public std::exception{
-public:
-  SmppAcceptorException(const char* msg):message(msg){}
-  virtual const char* what(){return message;}
-protected:
-  const char* message;
-};
+using smsc::util::Exception;
 
 class SmppAcceptor:public smsc::core::threads::ThreadedTask{
 public:
   SmppAcceptor(const char* host,int srvport,SmppSocketsManager* sockman):
     port(srvport),sm(sockman)
   {
+    sm->printtp();
     if(strlen(host)>sizeof(server))
     {
-      throw SmppAcceptorException("too long host name");
+      throw Exception("too long host name");
     }
     strcpy(server,host);
   }

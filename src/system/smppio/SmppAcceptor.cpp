@@ -9,10 +9,12 @@ using namespace smsc::core::network;
 int SmppAcceptor::Execute()
 {
   Socket srv;
+  trace2("wtf?");
+  sm->printtp();
   if(srv.InitServer(server,port,0)==-1)
-    throw SmppAcceptorException("Failed to init smpp server socket");
+    throw Exception("Failed to init smpp server socket");
   if(srv.StartServer()==-1)
-    throw SmppAcceptorException("Failed to start smpp server socket");
+    throw Exception("Failed to start smpp server socket");
   Socket *clnt;
   for(;;)
   {

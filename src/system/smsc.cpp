@@ -12,7 +12,7 @@ Smsc::~Smsc()
 
 void Smsc::init()
 {
-  tp.preCreateThreads(50);
+  tp.preCreateThreads(5);
   smsc::util::config::Manager::init("config.xml");
   cfgman=&cfgman->getInstance();
 
@@ -48,6 +48,7 @@ void Smsc::init()
       si.rangeOfAddress=rec->recdata.smppSme.addrRange;
       si.systemType=rec->recdata.smppSme.systemType;
       si.password=rec->recdata.smppSme.password;
+      si.systemId=rec->smeUid;
       //si.hostname=rec->recdata->smppSme.
       si.disabled=false;
       smeman.addSme(si);
@@ -64,9 +65,9 @@ void Smsc::init()
 
 void Smsc::run()
 {
-  // некоторые действия до основного цикла 
-  mainLoop();
-  // и после него 
+  // некоторые действия до основного цикла
+  for(;;)mainLoop();
+  // и после него
 }
 
 };//system
