@@ -1218,8 +1218,8 @@ namespace smsc {
           serviceId(sms.serviceId),
           priority(sms.priority)
         {
-          strncpy(eServiceType, sms.eServiceType, MAX_ESERVICE_TYPE_LENGTH);
-          strncpy(routeId, sms.routeId, MAX_ROUTE_ID_TYPE_LENGTH);
+          strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
+          strncpy(routeId, sms.routeId, sizeof(routeId));
         };
 
         /**
@@ -1252,8 +1252,8 @@ namespace smsc {
           serviceId = sms.serviceId;
           priority = sms.priority;
 
-          strncpy(eServiceType, sms.eServiceType, MAX_ESERVICE_TYPE_LENGTH);
-          strncpy(routeId, sms.routeId, MAX_ROUTE_ID_TYPE_LENGTH);
+          strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
+          strncpy(routeId, sms.routeId, sizeof(routeId));
           return (*this);
         };
 
@@ -1727,6 +1727,7 @@ namespace smsc {
         inline void getEServiceType(char* type) const
         {
           __require__(type);
+          type[0]='\0';
           strncpy(type, eServiceType, MAX_ESERVICE_TYPE_LENGTH);
           type[MAX_ESERVICE_TYPE_LENGTH]='\0';
         };
@@ -1794,6 +1795,7 @@ namespace smsc {
         inline void getRouteId(char* route) const
         {
           __require__(route);
+          route[0]='\0';
           strncpy(route, routeId, MAX_ROUTE_ID_TYPE_LENGTH);
           route[MAX_ROUTE_ID_TYPE_LENGTH]='\0';
         };
