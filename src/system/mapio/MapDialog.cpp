@@ -1080,7 +1080,7 @@ void  MapDialog::Et96MapOpenConf (
       bool fatal = false;
       if ( provErrCode_p != 0 ){
         __trace2__("MAP::MapDialog::Et96MapOpenConf: provErrCode 0x%x",*provErrCode_p);
-        fatal = fatal || provErrCodeFatal(*provErrCode_p){
+        fatal = provErrCodeFatal(*provErrCode_p);
       }
       if ( refuseReason_p ) {
         const char* reason = "<Unknown-reason>"
