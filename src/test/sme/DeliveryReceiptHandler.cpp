@@ -37,13 +37,14 @@ void DeliveryReceiptHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		//получить оригинальную pdu
 		MutexGuard mguard(pduReg->getMutex());
 		DeliveryReceiptMonitor* monitor = pduReg->getDeliveryReceiptMonitor(
-			pdu.get_optional().get_userMessageReference(),
-			pdu.get_optional().get_receiptedMessageId());
+			pdu.get_optional().get_userMessageReference());
 		//для user_message_reference из полученной pdu
 		//нет соответствующего оригинального pdu
 		if (!monitor)
 		{
 			__tc_fail__(2);
+			__trace2__("getDeliveryReceiptMonitor(): pduReg = %p, userMessageReference = %d, monitor = NULL",
+				pduReg, pdu.get_optional().get_userMessageReference());
 			throw TCException();
 		}
 		if (!monitor->pduData->valid)

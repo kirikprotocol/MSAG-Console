@@ -104,7 +104,7 @@ void NormalSmsHandler::updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
 	__require__(monitor && pduReg);
 	__decl_tc__;
 	DeliveryReceiptMonitor* rcptMonitor = pduReg->getDeliveryReceiptMonitor(
-		monitor->pduData->msgRef, monitor->pduData);
+		monitor->pduData->msgRef);
 	__require__(rcptMonitor);
 	__cfg_int__(timeCheckAccuracy);
 	RespPduFlag respFlag = isAccepted(deliveryStatus);
@@ -200,19 +200,22 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		//получить оригинальную pdu
 		MutexGuard mguard(pduReg->getMutex());
 		DeliveryMonitor* monitor = pduReg->getDeliveryMonitor(
-			pdu.get_optional().get_userMessageReference(),
-			pdu.get_message().get_serviceType());
+			pdu.get_optional().get_userMessageReference());
 		//для user_message_reference из полученной pdu
 		//нет соответствующего оригинального pdu
 		if (!monitor)
 		{
 			__tc_fail__(2);
+			__trace2__("getDeliveryMonitor(): pduReg = %p, userMessageReference = %d, monitor = NULL",
+				pduReg, pdu.get_optional().get_userMessageReference());
 			throw TCException();
 		}
+		//в редких случаях delivery_sm приходит раньше submit_sm_resp
+		//никак это не отслеживаю
 		if (!monitor->pduData->valid)
 		{
 			__tc_fail__(3);
-			throw TCException();
+			//throw TCException();
 		}
 		__tc_ok_cond__;
 		__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);

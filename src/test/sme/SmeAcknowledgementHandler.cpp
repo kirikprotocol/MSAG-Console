@@ -22,7 +22,7 @@ void SmeAcknowledgementHandler::updateDeliveryReceiptMonitor(SmeAckMonitor* moni
 	__require__(deliveryStatus == ESME_ROK);
 	__decl_tc__;
 	DeliveryReceiptMonitor* rcptMonitor = pduReg->getDeliveryReceiptMonitor(
-		monitor->pduData->msgRef, monitor->pduData);
+		monitor->pduData->msgRef);
 	__require__(rcptMonitor);
 	//проверить если delivery receipt пришел раньше sme ack
 	if (rcptMonitor->getFlag() == PDU_RECEIVED_FLAG)
@@ -84,6 +84,7 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 				pduReg, pdu.get_optional().get_userMessageReference());
 			throw TCException();
 		}
+		//в редких случаях sme ack приходит раньше submit_sm_resp
 		if (!monitor->pduData->valid)
 		{
 			__tc_fail__(3);
