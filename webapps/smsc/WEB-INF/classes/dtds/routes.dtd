@@ -16,7 +16,7 @@
 	hide CDATA #IMPLIED
 	forceReplayPath CDATA #IMPLIED
 >
-<!ELEMENT notes #CDATA>
+<!ELEMENT notes (#CDATA)>
 <!ELEMENT source (subject | mask)>
 <!ELEMENT destination (subject | mask)>
 <!ATTLIST destination
