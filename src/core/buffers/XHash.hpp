@@ -210,12 +210,12 @@ private:
 
   Link* FindLink(const KT& key)const
   {
-    if(!_bucketsnum)return NULL;
+    if(_count==0)return NULL;
     return _buckets[((unsigned int)HF::CalcHash(key)) % _bucketsnum].Find(key);
   }
   Link* FindLinkEx(const KT& key,unsigned &index)
   {
-    if(!_bucketsnum)return NULL;
+    if(_count==0)return NULL;
     index=((unsigned int)HF::CalcHash(key)) % _bucketsnum;
     return _buckets[index].Find(key);
   }
@@ -271,6 +271,7 @@ public:
   int Exists(const KT& key){ return FindLink(key)!=NULL;}
   int Delete(const KT& key)
   {
+    if(_count==0)return 0;
     unsigned index=((unsigned int)HF::CalcHash(key)) % _bucketsnum;
     if(_buckets[index].Remove(key))
     {
