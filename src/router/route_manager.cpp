@@ -37,14 +37,19 @@ static inline void print(RouteRecord* record,const char* ppp= "")
 {
 	if ( record )
 	{
-		__trace2__("%s={SRC::%20s(%d/?%d)}{DST::%20s(%d/?%d)}",
+		__trace2__("%s={SRC::%20s(%d/?%d),n:%d,t:%d}{DST::%20s(%d/?%d),n:%d,t:%d}",
 						 ppp,
 						 record->info.source.value,
 						 record->info.source.lenght,
 						 record->src_def,
+						 record->info.source.plan,
+						 record->info.source.type,
 						 record->info.dest.value,
 						 record->info.dest.lenght,
-	 				   record->dest_def);
+	 				   record->dest_def,
+						 record->info.dest.plan,
+						 record->info.dest.type
+							 );
 	}
 	else
 	{
@@ -60,25 +65,25 @@ print(pat1,"\tP1");
 print(pat2,"\tP2");
 #define ifn0goto {if (result) goto result_;}
   int32_t result;
-  result = pat1->info.dest.type - pat2->info.dest.type; ifn0goto;
-  result = pat1->info.dest.plan - pat2->info.dest.plan; ifn0goto;
-  result = pat1->info.dest.lenght - pat2->info.dest.lenght; ifn0goto;
+  result = (int32_t)pat1->info.dest.type - (int32_t)pat2->info.dest.type; ifn0goto;
+  result = (int32_t)pat1->info.dest.plan - (int32_t)pat2->info.dest.plan; ifn0goto;
+  result = (int32_t)pat1->info.dest.lenght - (int32_t)pat2->info.dest.lenght; ifn0goto;
   result = 
     strncmp((char*)pat1->info.dest.value,
             (char*)pat2->info.dest.value,
             min(pat1->dest_def,pat2->dest_def));
   ifn0goto;
-  result = pat1->dest_def - pat2->dest_def; ifn0goto;
+  result = (int32_t)pat1->dest_def - (int32_t)pat2->dest_def; ifn0goto;
 //---------------------------------------------------------------------//
-  result = pat1->info.source.type - pat2->info.source.type; ifn0goto;
-  result = pat1->info.source.plan - pat2->info.source.plan; ifn0goto;
-  result = pat1->info.source.lenght - pat2->info.source.lenght; ifn0goto;
+  result = (int32_t)pat1->info.source.type - (int32_t)pat2->info.source.type; ifn0goto;
+  result = (int32_t)pat1->info.source.plan - (int32_t)pat2->info.source.plan; ifn0goto;
+  result = (int32_t)pat1->info.source.lenght - (int32_t)pat2->info.source.lenght; ifn0goto;
   result = 
     strncmp((char*)pat1->info.dest.value,
             (char*)pat2->info.dest.value,
             min(pat1->src_def,pat2->src_def));
   ifn0goto;
-  result = pat1->src_def - pat2->src_def; ifn0goto;
+  result = (int32_t)pat1->src_def - (int32_t)pat2->src_def; ifn0goto;
 result_:
   __trace2__("(sort)result(P1%cP2)%d",result>0?'>':result<0?'<':'=',
       result); 
@@ -198,7 +203,10 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& cmp
       RouteRecord* rec;
       int left = 1;
       int right = node->child.size();
-      if ( right > 0 ) for(;;)
+			
+			for ( int i=0; i < right; ++i ) print(node->child[i]->record,"@SRC@");
+      
+			if ( right > 0 ) for(;;)
       {
         int ptr = (right+left) >> 1;
         rec = findInSrcTreeRecurse(node->child[ptr-1],r,cmp);
@@ -237,7 +245,10 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& cmp )
       RouteRecord* rec;
       int left = 1;
       int right = node->child.size();
-      if ( right > 0 ) for(;;)
+			
+			for ( int i=0; i < right; ++i ) print(node->child[i]->record,"@DST@");
+      
+			if ( right > 0 ) for(;;)
       {
         int ptr = (right+left) >> 1;
         rec = findInTreeRecurse(node->child[ptr-1],r,cmp);
@@ -247,7 +258,7 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& cmp )
           if ( cmp < 0 )right = ptr-1;
           else left = ptr+1;
         }
-        return 0; // not found
+        else return 0; // not found
       }
 			else // strong
 			{
@@ -262,6 +273,7 @@ find_by_source:
       RouteRecord* rec;
       int left = 1;
       int right = node->sources.size();
+			for ( int i=0; i < right; ++i ) print(node->sources[i]->record,"@SRC@");
       if ( right > 0 ) for(;;)
       {
         int ptr = (right+left) >> 1;
@@ -429,11 +441,18 @@ void RouteManager::commit()
     r = r->next;
   }
   __qsort__(table.get(),count,sizeof(RouteRecord*),compare_patterns);
+
   {__synchronized__
     root.clean();
+
+		for ( int i=0; i < count; ++i )
+		{
+			print(table.get()[i],"@@@");
+		}
+
     for ( int i=0; i < count; ++i )
     {
-      addRouteIntoTree(&root,table.get()[i]);
+      if ( table.get()[i] != 0 ) addRouteIntoTree(&root,table.get()[i]);
     }
     while ( first_record )
     {
