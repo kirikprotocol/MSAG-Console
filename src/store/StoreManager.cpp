@@ -163,7 +163,7 @@ SMSId RemoteStore::getNextId()
             try
             {
                 connection = (StorageConnection *)pool->getConnection();
-                if (!connection) throw StorageException("Failed to obtain DB connection !");
+                if (!connection) throw StorageException("Failed to obtain DB connection!");
                 smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
                 GetSeqIdStatement* nextIdStmt = connection->getNextSeqIdStatement();
                 if (!nextIdStmt) throw StorageException("Failed to obtain nextId statement!");
@@ -177,7 +177,7 @@ SMSId RemoteStore::getNextId()
             {
                 if (connection) pool->freeConnection(connection);
                 if (iteration++ >= maxTriesCount) {
-                    smsc_log_warn(log, "Max tries count to get next message id exceeded !");
+                    smsc_log_warn(log, "Max tries count to get next message id exceeded!");
                     throw;
                 }
             }
@@ -355,8 +355,7 @@ SMSId RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount)
             {
-                smsc_log_warn(log, "Max tries count to store message "
-                              "#%lld exceeded !\n", id);
+                smsc_log_warn(log, "Max tries count to store message #%lld exceeded!", id);
                 throw;
             }
         }
@@ -455,8 +454,7 @@ void RemoteStore::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
             if (iteration++ >= maxTriesCount)
             {
                 smsc_log_warn(log, "Max tries count to change "
-                              "sequence number in concatenneted message "
-                              "#%lld exceeded !\n", id);
+                              "sequence number in concatenneted message #%lld exceeded!", id);
                 throw;
             }
         }
@@ -546,8 +544,7 @@ void RemoteStore::retriveSms(SMSId id, SMS &sms)
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount)
             {
-                smsc_log_warn(log, "Max tries count to retrive message "
-                              "#%lld exceeded !\n", id);
+                smsc_log_warn(log, "Max tries count to retrive message #%lld exceeded!", id);
                 throw;
             }
         }
@@ -622,7 +619,7 @@ void RemoteStore::destroySms(SMSId id)
         {
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount) {
-                smsc_log_warn(log, "Max tries count to remove message #%lld exceeded !\n", id);
+                smsc_log_warn(log, "Max tries count to remove message #%lld exceeded!", id);
                 throw;
             }
         }
@@ -763,7 +760,7 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
         {
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount) {
-                smsc_log_warn(log, "Max tries count to replace message #%lld exceeded !\n", id);
+                smsc_log_warn(log, "Max tries count to replace message #%lld exceeded!", id);
                 throw;
             }
         }
@@ -889,7 +886,7 @@ void RemoteStore::replaceSms(SMSId id, SMS& sms)
         {
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount) {
-                smsc_log_warn(log, "Max tries count to replace message #%lld exceeded !\n", id);
+                smsc_log_warn(log, "Max tries count to replace message #%lld exceeded!", id);
                 throw;
             }
         }
@@ -979,7 +976,7 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
         {
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount) {
-                smsc_log_warn(log, "Max tries count to update message state #%lld exceeded !\n", id);
+                smsc_log_warn(log, "Max tries count to update message state #%lld exceeded!", id);
                 throw;
             }
         }
@@ -1124,7 +1121,7 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
         {
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount) {
-                smsc_log_warn(log, "Max tries count to finalize message #%lld exceeded !\n", id);
+                smsc_log_warn(log, "Max tries count to finalize message #%lld exceeded!", id);
                 throw;
             }
         }

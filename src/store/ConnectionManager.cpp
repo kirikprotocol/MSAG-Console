@@ -403,6 +403,8 @@ void Connection::connect()
         disconnect();    
         throw ConnectionFailedException(exc);
     }
+    
+    smsc_log_debug(log, "DB connection %p created.", this);
 }
 
 void Connection::disconnect() 
@@ -411,20 +413,23 @@ void Connection::disconnect()
     
     if (isConnected)
     {
+        smsc_log_debug(log, "Deleting statements on connection %p ...", this);
         while (statements.Count())
         {
             Statement* statement=0L;
             (void) statements.Pop(statement);
+            //smsc_log_debug(log, "Deleting statement %p", statement);
             if (statement) delete statement;
         }
+        smsc_log_debug(log, "Statements deleted on connection %p.", this);
         
-        if (errhp && svchp) {
-        // logoff from database server
-            (void) OCILogoff(svchp, errhp);
+        if (errhp && svchp) {   // logoff from database server
+            sword status = OCILogoff(svchp, errhp);
+            smsc_log_debug(log, "Connection %p. Logoff status: %d", this, status);
         }
-        if (envhp) {
-        // free envirounment handle, all derrived handles will be freed too
-            (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
+        if (envhp) {            // free envirounment handle, all derrived handles will be freed too
+            sword status = OCIHandleFree(envhp, OCI_HTYPE_ENV);
+            smsc_log_debug(log, "Connection %p. Handle free status: %d", this, status);
         }
         
         isConnected = false; isDead = false;

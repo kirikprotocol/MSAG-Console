@@ -39,7 +39,8 @@ Statement::Statement(Connection* connection, const char* sql, bool assign)
 Statement::~Statement()
 {
     if (stmt) {
-        (void) OCIHandleFree(stmt, OCI_HTYPE_STMT);
+        sword status = OCIHandleFree(stmt, OCI_HTYPE_STMT);
+        __trace2__("%p : Handle free status: %d", stmt, status);
     }
 }
 
