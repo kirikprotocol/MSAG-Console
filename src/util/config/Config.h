@@ -81,7 +81,12 @@ public:
     int32_t getInt(const char * const paramName) const
         throw (HashInvalidKeyException)
     {
+      if (intParams.Exists(paramName))
+      {
         return intParams.Get(paramName);
+      }
+      else
+        throw HashInvalidKeyException();
     }
 
     /**
@@ -96,7 +101,12 @@ public:
     char * getString(const char * const paramName) const
         throw (HashInvalidKeyException)
     {
+      if (strParams.Exists(paramName))
+      {
         return strParams.Get(paramName);
+      }
+      else
+        throw HashInvalidKeyException();
     }
 
     /**
@@ -111,7 +121,12 @@ public:
     bool getBool(const char * const paramName) const
         throw (HashInvalidKeyException)
     {
+      if (boolParams.Exists(paramName))
+      {
         return boolParams.Get(paramName);
+      }
+      else
+        throw HashInvalidKeyException();
     }
 
     void setInt(const char * const paramName, int32_t value)

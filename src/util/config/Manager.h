@@ -50,6 +50,7 @@ public:
     }
 
     static void reinit()
+      throw (ConfigException)
     {
         std::auto_ptr<char> filename;
         filename = config_filename;

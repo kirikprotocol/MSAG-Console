@@ -40,8 +40,17 @@ pid_t Service::start()
       {	// child process
         chdir(service_dir.get());
         chmod(service_exe, S_IRWXU | S_IRGRP | S_IXGRP);
-        freopen("service.err", "a",  stderr);
-        freopen("service.out", "a",  stdout);
+        FILE* tmpStream;
+        tmpStream = freopen("service.err", "a",  stderr);
+        if (!tmpStream)
+        {
+          logger.error("reopen stderr error : %s",strerror(errno));
+        }
+        tmpStream = freopen("service.out", "a",  stdout);
+        if (!tmpStream)
+        {
+          logger.error("reopen stdout error : %s",strerror(errno));
+        }
         execv(service_exe, createArguments());
         logger.error("Couldn't start service (\"%s/%s\"), nested: %u: %s",
                      service_dir.get(), service_exe, errno, strerror(errno));

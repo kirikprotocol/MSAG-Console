@@ -51,9 +51,22 @@ namespace smsc {
       throw (AdminException)
       {
         logger.info("applying new config...");
-        stopSmsc();
-        reReadConfigs();
-        runSmsc();
+        try
+        {
+          stopSmsc();
+          reReadConfigs();
+          runSmsc();
+        }
+        catch (std::exception &e)
+        {
+          logger.error("Couldn't apply new config: %s", e.what());
+          return;
+        }
+        catch (...)
+        {
+          logger.error("Couldn't apply new config: unknown exception");
+          return;
+        }
         logger.info("new config applied.");
       }
 

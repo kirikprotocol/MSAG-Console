@@ -17,7 +17,9 @@ void Config::parse(const DOM_Element &element)
 	throw (ConfigException)
 {
 	try {
+    fprintf(stderr, "parse config\n");
 		processNode(element,"");	
+    fprintf(stderr, "parsed %i strings, %i integers, %i booleans\n", strParams.GetCount(), intParams.GetCount(), boolParams.GetCount());
 	}
 	catch (DOM_DOMException &e)
 	{

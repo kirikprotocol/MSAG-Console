@@ -55,13 +55,20 @@ public class DaemonManager
 	}
 
 	public Daemon getSmscDaemon()
+		throws AdminException
 	{
+		Daemon smscDaemon = null;
 		for (Iterator i = daemons.values().iterator(); i.hasNext();)
 		{
 			Daemon daemon = (Daemon) i.next();
 			if (daemon.isContainsSmsc())
-				return daemon;
+			{
+				if (smscDaemon != null)
+					throw new AdminException("more than one daemon contains SMSC");
+				else
+					smscDaemon = daemon;
+			}
 		}
-		return null;
+		return smscDaemon;
 	}
 }
