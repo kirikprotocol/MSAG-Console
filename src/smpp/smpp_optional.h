@@ -32,14 +32,14 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
   }
 
 #define macroFillOctetStr(field,maxlen) \
-  if ( opt->has_##field()&& opt->get_##field() != NULL){ \
-    int str_length = opt->size_##field(); \
-    __throw_if_fail__(((str_length<=maxlen)||(maxlen==-1)),VeryLargOctetStringException);\
-    fillX(stream,SmppOptionalTags::field); \
-    fillX(stream,(uint16_t)str_length); \
-    const char* text = opt->get_##field();\
-    for ( int k=0; k<str_length; ++k )\
-      fillX(stream,(uint8_t)text[k]);\
+  if ( opt->has_##field() && opt->get_##field() != NULL ) {\
+			int str_length = opt->size_##field(); \
+			__throw_if_fail__(((str_length<=maxlen)||(maxlen==-1)),VeryLargOctetStringException);\
+			fillX(stream,SmppOptionalTags::field); \
+			fillX(stream,(uint16_t)str_length); \
+			const char* text = opt->get_##field();\
+			for ( int k=0; k<str_length; ++k )\
+				fillX(stream,(uint8_t)text[k]);\
   }
 
 #define macroFillCOctetStr(field,maxlen) \

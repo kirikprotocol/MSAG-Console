@@ -466,12 +466,12 @@ struct SmppOptional //: public MemoryManagerUnit
   inline const type* get_##field() { __ret0_if_fail__(has_##field()); return field; }
 #define _o_cstr_property__(field)\
   COStr field;\
-  inline bool has_##field(){ return field_present & SmppOptionalFields::field; } \
+  inline bool has_##field(){ return (field_present & SmppOptionalFields::field) && (get_##field() != 0 ); } \
   inline void set_##field(const char* value) { __require__(value!=NULL); field_present |= SmppOptionalFields::field; field.copy(value); } \
   inline const char* get_##field() { __ret0_if_fail__(has_##field()); return field.cstr(); }
 #define _o_ostr_property__(field)\
   OStr field;\
-  inline bool has_##field(){ return field_present & SmppOptionalFields::field; } \
+  inline bool has_##field(){ return (field_present & SmppOptionalFields::field) && (get_##filed()!=0); } \
   inline void set_##field(const char* value,int len) { __require__(value!=NULL); field_present |= SmppOptionalFields::field; field.copy(value,len); } \
   inline const char* get_##field() { __ret0_if_fail__(has_##field()); return field.cstr(); } \
   inline int size_##field() { __ret0_if_fail__(has_##field()); return field.size(); }
