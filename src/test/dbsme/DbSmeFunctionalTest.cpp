@@ -58,7 +58,7 @@ class TestSme : public TestTask, SmppResponseSender
 {
 	int smeNum;
 	SmppFixture* fixture;
-	SmppSession session;
+	SmppSession* session; //удаляется в fixture
 	SmppBaseTestCases baseTc;
 	SmppTransmitterTestCases transmitterTc;
 	SmppReceiverTestCases receiverTc;
@@ -133,10 +133,11 @@ public:
 TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* fixture)
 	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
 	baseTc(config, fixture), receiverTc(fixture), transmitterTc(fixture),
-	session(config, &receiverTc), smscSmeTc(fixture), protocolTc(fixture),
-	profilerTc(fixture), dbSmeTc(fixture, dbSmeReg), boundOk(false), idx(0)
+	smscSmeTc(fixture), protocolTc(fixture), profilerTc(fixture),
+	dbSmeTc(fixture, dbSmeReg), boundOk(false), idx(0)
 {
-	fixture->session = &session;
+	session = new SmppSession(config, &receiverTc);
+	fixture->session = session;
 	fixture->respSender = this;
 }
 
@@ -391,7 +392,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	}
 	//регистрация db sme
 	SmeInfo dbSmeInfo;
-	dbSmeInfo.wantAlias = false;
+	dbSmeInfo.wantAlias = true;
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&dbSmeInfo);
 	dbSmeInfo.systemId = dbSmeSystemId;
 	smeReg->registerSme(dbSmeAddr, dbSmeInfo, false, true);
