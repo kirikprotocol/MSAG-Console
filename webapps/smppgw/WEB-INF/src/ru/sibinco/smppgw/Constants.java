@@ -70,6 +70,7 @@ public class Constants
       public static final Constants SME_NOT_FOUND = new Constants("error.sme.sme_not_found");
       public static final Constants SME_ID_NOT_SPECIFIED = new Constants("error.sme.sme_id_not_specified");
       public static final Constants SME_ALREADY_EXISTS = new Constants("error.sme.sme_already_exists");
+      public static final Constants COULDNT_APPLY = new Constants("error.sme.couldnt_apply");
     }
 
 

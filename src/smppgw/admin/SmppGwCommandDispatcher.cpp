@@ -10,6 +10,7 @@
 #include "core/threads/Thread.hpp"
 #include "smppgw/smsc.hpp"
 #include "core/synchronization/Mutex.hpp"
+#include "CommandUpdateSmeInfo.h"
 
 namespace smsc {
 namespace smppgw {
@@ -159,6 +160,8 @@ Response * SmppGwCommandDispatcher::handle(const Command * const command) throw 
     {
     case CommandIds::apply:
       return apply((CommandApply*)command);
+    case CommandIds::updateSmeInfo:
+      return updateSmeInfo((CommandUpdateSmeInfo*)command);
     default:
       return new Response(Response::Error, "Unknown command");
     }
@@ -174,6 +177,21 @@ Response * SmppGwCommandDispatcher::handle(const Command * const command) throw 
 void SmppGwCommandDispatcher::shutdown()
 {
   stopGw();
+}
+
+Response * SmppGwCommandDispatcher::updateSmeInfo(CommandUpdateSmeInfo* command)
+{
+  try
+  {
+    runner->getApp()->getSmeAdmin()->updateSmeInfo(command->getSmeInfo().systemId, command->getSmeInfo());
+    return new Response(Response::Ok, "none");
+  } catch (AdminException &e) {
+    return new Response(Response::Error, e.what());
+  } catch (const char * const e) {
+    return new Response(Response::Error, e);
+  } catch (...) {
+    return new Response(Response::Error, "Unknown exception");
+  }
 }
 
 Response * SmppGwCommandDispatcher::apply(CommandApply* command)

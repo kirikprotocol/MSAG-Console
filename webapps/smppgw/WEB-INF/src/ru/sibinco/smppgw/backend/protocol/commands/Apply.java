@@ -16,11 +16,7 @@ public class Apply extends Command
   {
     super("apply", "file:///command_gw.dtd");
     this.applyTarget = applyTarget;
-    final Element element = document.createElement("param");
-    element.setAttribute("name", "subj");
-    element.setAttribute("type", "string");
-    element.appendChild(document.createTextNode(applyTarget));
-    document.getDocumentElement().appendChild(element);
+    createStringParam("subj", this.applyTarget);
   }
 
   public String getApplyTarget()

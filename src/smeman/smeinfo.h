@@ -34,6 +34,7 @@ struct SmeInfo
   uint32_t timeout;
   uint32_t proclimit;
   uint32_t schedlimit;
+  uint32_t providerId;
   ~SmeInfo(){}
   SmeInfo(){}
 };

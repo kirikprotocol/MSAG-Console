@@ -3,6 +3,7 @@ package ru.sibinco.smppgw.beans.gw.status;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.daemon.Daemon;
 import ru.sibinco.lib.backend.daemon.ServiceInfo;
+import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.smppgw.Constants;
 import ru.sibinco.smppgw.beans.SmppgwBean;
@@ -120,7 +121,8 @@ public class Index extends SmppgwBean
     try {
       appContext.getGwRoutingManager().apply();
       appContext.getGwSmeManager().apply();
-      appContext.getGateway().apply("routes");
+      if (Proxy.StatusConnected == appContext.getGateway().getStatus())
+        appContext.getGateway().apply("routes");
       appContext.getStatuses().setRoutesChanged(false);
     } catch (SibincoException e) {
       logger.debug("Couldn't apply routes", e);
@@ -135,7 +137,8 @@ public class Index extends SmppgwBean
       appContext.getProviderManager().store(appContext.getGwConfig());
       appContext.getGwSmeManager().apply();
       appContext.getGwConfig().save();
-      appContext.getGateway().apply("config");
+      if (Proxy.StatusConnected == appContext.getGateway().getStatus())
+        appContext.getGateway().apply("config");
       appContext.getStatuses().setConfigChanged(false);
     } catch (SibincoException e) {
       logger.debug("Couldn't apply config", e);

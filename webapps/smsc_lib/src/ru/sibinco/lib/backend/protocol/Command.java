@@ -5,9 +5,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
+import ru.sibinco.lib.backend.util.Functions;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.util.Collection;
 
 
 /**
@@ -21,13 +23,13 @@ public class Command
   protected final Logger logger = Logger.getLogger(this.getClass());
   private final String systemId;
 
-  public Command(String commandName, String systemId) throws SibincoException
+  public Command(final String commandName, final String systemId) throws SibincoException
   {
     try {
       this.systemId = systemId;
-      DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+      final DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       document = builder.newDocument();
-      Element elem = document.createElement("command");
+      final Element elem = document.createElement("command");
       elem.setAttribute("name", StringEncoderDecoder.encode(commandName));
       document.appendChild(elem);
     } catch (Throwable e) {
@@ -36,7 +38,7 @@ public class Command
     }
   }
 
-  protected Command(String commandName) throws SibincoException
+  protected Command(final String commandName) throws SibincoException
   {
     this(commandName, "file:///command.dtd");
   }
@@ -49,5 +51,34 @@ public class Command
   public String getSystemId()
   {
     return systemId;
+  }
+
+  protected void createStringParam(final String name, final String value)
+  {
+    createParam(name, "string", value);
+  }
+
+  protected void createIntParam(final String name, final long value)
+  {
+    createParam(name, "int", String.valueOf(value));
+  }
+
+  protected void createBoolParam(final String name, final boolean value)
+  {
+    createParam(name, "bool", String.valueOf(value));
+  }
+
+  protected void createStringListParam(final String name, final Collection value)
+  {
+    createParam(name, "stringlist", Functions.collectionToString(value, ","));
+  }
+
+  private void createParam(final String name, final String type, final String value)
+  {
+    final Element element = document.createElement("param");
+    element.setAttribute("name", name);
+    element.setAttribute("type", type);
+    element.appendChild(document.createTextNode(value));
+    document.getDocumentElement().appendChild(element);
   }
 }

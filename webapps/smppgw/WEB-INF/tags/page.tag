@@ -113,10 +113,10 @@
           <sm-mm:item url="gw/config"                name="Configuration"   title=""/>
           <sm-mm:item url="gw/providers"             name="Providers"       title=""/>
           <sm-mm:item url="gw/smscs"                 name="Service centers" title=""/>
-          <sm-mm:item url="smsc_service/logging.jsp" name="Logging"         title=""/>
+          <!--sm-mm:item url="smsc_service/logging.jsp" name="Logging"         title=""/-->
           <sm-mm:item url="gw/users"                 name="Users"           title=""/>
-          <sm-mm:item url="gw/resources"             name="Resources"       title=""/>
-          <sm-mm:item url="journal"                  name="Journal"         title=""/>
+          <!--sm-mm:item url="gw/resources"             name="Resources"       title=""/-->
+          <!--sm-mm:item url="journal"                  name="Journal"         title=""/-->
         </sm-mm:section>
 
         <sm-mm:section menuId="MENU0_Statistics_menu" submenuId="MENU0_Statistics_submenu" name="Statistics">

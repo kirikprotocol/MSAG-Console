@@ -5,6 +5,8 @@ import ru.sibinco.lib.backend.daemon.ServiceInfo;
 import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.protocol.Response;
 import ru.sibinco.smppgw.backend.protocol.commands.Apply;
+import ru.sibinco.smppgw.backend.protocol.commands.UpdateSmeInfo;
+import ru.sibinco.smppgw.backend.sme.GwSme;
 
 
 /**
@@ -23,7 +25,14 @@ public class Gateway extends Proxy
   public void apply(final String subject) throws SibincoException
   {
     final Response response = super.runCommand(new Apply(subject));
-    if (response.getStatus() != Response.StatusOk)
+    if (Response.StatusOk != response.getStatus())
+      throw new SibincoException("Couldn't apply, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+  }
+
+  public void updateSmeInfo(final GwSme gwSme) throws SibincoException
+  {
+    final Response response = super.runCommand(new UpdateSmeInfo(gwSme));
+    if (Response.StatusOk != response.getStatus())
       throw new SibincoException("Couldn't apply, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
   }
 

@@ -1,7 +1,10 @@
 package ru.sibinco.smppgw.beans.services.sme;
 
+import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.sme.Sme;
 import ru.sibinco.smppgw.Constants;
+import ru.sibinco.smppgw.backend.Gateway;
 import ru.sibinco.smppgw.backend.sme.*;
 import ru.sibinco.smppgw.beans.*;
 
@@ -77,14 +80,23 @@ public class Edit extends EditBean
     if (smes.containsKey(id) && (isAdd() || !id.equals(getEditId())))
       throw new SmppgwJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
     smes.remove(getEditId());
+    final GwSme newGwSme;
     if (this.smsc) {
-      smes.put(id,
-               new GwSme(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, timeout, receiptSchemeName,
-                         disabled, mode, proclimit, (SmscInfo) appContext.getSmscsManager().getSmscs().get(id)));
+      newGwSme = new GwSme(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, timeout, receiptSchemeName,
+                           disabled, mode, proclimit, (SmscInfo) appContext.getSmscsManager().getSmscs().get(id));
+      smes.put(id, newGwSme);
     } else {
-      smes.put(id,
-               new GwSme(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, timeout, receiptSchemeName,
-                         disabled, mode, proclimit, (Provider) appContext.getProviderManager().getProviders().get(new Long(this.providerId))));
+      newGwSme = new GwSme(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, timeout, receiptSchemeName,
+                           disabled, mode, proclimit, (Provider) appContext.getProviderManager().getProviders().get(new Long(this.providerId)));
+      smes.put(id, newGwSme);
+    }
+    final Gateway gateway = appContext.getGateway();
+    try {
+      gateway.updateSmeInfo(newGwSme);
+    } catch (SibincoException e) {
+      if (Proxy.StatusConnected == gateway.getStatus()) {
+        throw new SmppgwJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
+      }
     }
     throw new DoneException();
   }

@@ -17,7 +17,8 @@ namespace admin {
 namespace CommandIds {
   enum IDS {
     unknown = smsc::admin::protocol::Command::undefined,
-    apply
+    apply,
+    updateSmeInfo
   };
 }
 

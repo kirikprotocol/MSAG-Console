@@ -17,6 +17,7 @@
 #include "smppgw/smsc.hpp"
 #include "smppgw/admin/SmppGwCommandReader.h"
 #include "smppgw/admin/CommandApply.h"
+#include "CommandUpdateSmeInfo.h"
 
 namespace smsc {
 namespace smppgw {
@@ -47,6 +48,8 @@ protected:
   Response * apply(CommandApply*);
   Response * applyConfig();
   Response * applyRoutes();
+  
+  Response * updateSmeInfo(CommandUpdateSmeInfo*);
   
 private:
   static const SmscConfigs* configs;
