@@ -2055,7 +2055,12 @@ StateType StateMachine::forward(Tuple& t)
 
 StateType StateMachine::deliveryResp(Tuple& t)
 {
-  smsLog->debug("DLVRSP: msgId=%lld;st=%d",t.msgId,t.command->get_resp()->get_status());
+  int sttype=GET_STATUS_TYPE(t.command->get_resp()->get_status());
+  smsLog->debug("DLVRSP: msgId=%lld;class=%s;st=%d",t.msgId,
+    sttype==CMD_OK?"OK":
+    sttype==CMD_ERR_RESCHEDULENOW?"RESCHEDULEDNOW":
+    sttype==CMD_ERR_TEMP?"TEMP ERROR":"PERM ERROR",
+    GET_STATUS_CODE(t.command->get_resp()->get_status()));
   //__require__(t.state==DELIVERING_STATE);
   if(t.state!=DELIVERING_STATE)
   {
@@ -2563,7 +2568,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       formatDeliver(fd,out);
       rpt.getDestinationAddress().getText(addr,sizeof(addr));
       __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
-      if(regdel)
+      if(sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
       {
         fillSms(&rpt,"",0,CONV_ENCODING_CP1251,profile.codepage,0);
       }else
@@ -3006,7 +3011,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   fd.scheme=si.receiptSchemeName.c_str();
 
   formatFailed(fd,out);
-  if(regdel)
+  if(sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
   {
     fillSms(&rpt,"",0,CONV_ENCODING_CP1251,profile.codepage,0);
   }else
@@ -3078,7 +3083,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 
 
   formatNotify(fd,out);
-  if(regdel)
+  if(sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
   {
     fillSms(&rpt,"",0,CONV_ENCODING_CP1251,profile.codepage,0);
   }else
