@@ -43,6 +43,7 @@ void rand_text(int& length, char* buf, uint8_t dataCoding, bool hostByteOrder)
 				short* _buf = (short*) buf;
 				length = ConvertMultibyteToUCS2(msg, len,
 					_buf, length, CONV_ENCODING_CP1251);
+				__require__(length % 2 == 0);
 				if (!hostByteOrder)
 				{
 					//установить сетевой порядок
@@ -64,9 +65,18 @@ void rand_text(int& length, char* buf, uint8_t dataCoding, bool hostByteOrder)
 auto_ptr<char> rand_text2(int& length, uint8_t dataCoding, bool udhi,
 	bool hostByteOrder)
 {
+	char* buf = new char[length + 1];
+	rand_text2(length, buf, dataCoding, udhi, hostByteOrder);
+	return auto_ptr<char>(buf);
+}
+
+void rand_text2(int& length, char* buf, uint8_t dataCoding, bool udhi,
+	bool hostByteOrder)
+{
 	if (!udhi)
 	{
-		return rand_text(length, dataCoding, hostByteOrder);
+		rand_text(length, buf, dataCoding, hostByteOrder);
+		return;
 	}
 	int headerLen = rand0(length - 1);
 	__require__(headerLen >= 0);
@@ -76,11 +86,9 @@ auto_ptr<char> rand_text2(int& length, uint8_t dataCoding, bool udhi,
 	__require__(msgLen >= 0);
 	__require__(headerLen + msgLen + 1 <= length);
 	length = headerLen + msgLen + 1;
-	char* buf = new char[length];
 	*buf = (unsigned char) headerLen;
 	memcpy(buf + 1, header.get(), headerLen);
 	memcpy(buf + headerLen + 1, msg.get(), msgLen);
-	return auto_ptr<char>(buf);
 }
 
 auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen,

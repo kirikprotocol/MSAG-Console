@@ -25,6 +25,8 @@ void rand_text(int& length, char* buf, uint8_t dataCoding,
 
 auto_ptr<char> rand_text2(int& length, uint8_t dataCoding, bool udhi,
 	bool hostByteOrder);
+void rand_text2(int& length, char* buf, uint8_t dataCoding, bool udhi,
+	bool hostByteOrder);
 
 string& mixedCase(string& str);
 
