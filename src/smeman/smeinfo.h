@@ -12,10 +12,6 @@
 namespace smsc {
 namespace smeman {
 
-enum SmeBindMode{
-  smeRX,smeTX,smeTRX
-};
-
 struct SmeInfo
 {
   uint8_t typeOfNumber;
@@ -32,6 +28,7 @@ struct SmeInfo
   bool  disabled;
   bool wantAlias;
   bool forceDC;
+  bool internal;
   SmeBindMode bindMode;
   std::string receiptSchemeName;
   uint32_t timeout;

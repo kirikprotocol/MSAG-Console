@@ -17,13 +17,14 @@ namespace smppio{
 
 #define SMPP_PROXY_QUEUE_LIMIT 4096
 
-const int proxyTranmitter=1;
-const int proxyReceiver=2;
-const int proxyTransceiver=3;
-
 using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
 using smsc::util::Exception;
+
+const int proxyTranmitter=smeTX;
+const int proxyReceiver=smeRX;
+const int proxyTransceiver=smeTRX;
+
 
 class SmppSocket;
 
@@ -249,6 +250,20 @@ public:
   bool getForceDC()
   {
     return forceDC;
+  }
+
+  int getBindMode()
+  {
+    return proxyType;
+  }
+
+  bool getPeers(char* in,char* out)
+  {
+    MutexGuard mg(mutex);
+    if(!smppSocket || !smppSocket->getSocket())return false;
+    smppSocket->getSocket()->GetPeer(in);
+    smppSocket->getSocket()->GetPeer(out);
+    return in[0]!=0;
   }
 
 protected:

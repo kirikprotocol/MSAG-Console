@@ -3,7 +3,9 @@
 
 #ifdef _WIN32
 #include <winsock.h>
+typedef int socklen_t;
 #else
+#include <stdio.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -100,6 +102,19 @@ public:
     timeOut=newto;
     return old;
   }
+  void GetPeer(char* buf)
+  {
+    sockaddr_in addr;
+    socklen_t len=sizeof(addr);
+    if(getpeername(sock,(sockaddr*)&addr,&len)==SOCKET_ERROR)
+    {
+      buf[0]=0;
+    }
+    unsigned char *a=(unsigned char*)&addr.sin_addr.S_un.S_addr;
+    sprintf(buf,"%d.%d.%d.%d:%d",(int)a[0],(int)a[1],(int)a[2],(int)a[3],addr.sin_port);
+  }
+
+
 };//Socket
 
 };//network

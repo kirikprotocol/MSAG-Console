@@ -19,6 +19,11 @@ enum SmeProxyState
   INVALID
 };
 
+enum SmeBindMode{
+  smeRX,smeTX,smeTRX
+};
+
+
 typedef int SmeProxyPriority;
 const int SmeProxyPriorityMinBr = 0;
 const int SmeProxyPriorityMin = 1;
@@ -63,6 +68,18 @@ public:
   virtual unsigned long getPreferredTimeout() { return 8; }
   virtual const std::string& getSourceAddressRange(){return nullstr;};
   virtual const char * getSystemId() const = 0;
+
+  virtual int getBindMode(){return smeTRX;}
+
+  // in and out MUST BE AT LEAST 32 BYTES!!!
+  // return false if unfilled
+  // port of peer is optional
+  virtual bool getPeers(char* in,char* out)
+  {
+    strcpy(in,"127.0.0.1");
+    strcpy(out,"127.0.0.1");
+    return true;
+  };
 
   virtual void disconnect(){};
 };

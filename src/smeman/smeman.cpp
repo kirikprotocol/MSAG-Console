@@ -21,6 +21,7 @@ void SmeManager::addSme(const SmeInfo& info)
 __synchronized__
   auto_ptr<SmeRecord> record(new SmeRecord);
   record->info = info;
+  record->info.internal=false;
   record->proxy = 0;
   record->deleted = false;
   record->idx = records.size();
@@ -183,6 +184,7 @@ __synchronized__
     smeProxy->setPriority(records[index]->info.priority);
     records[index]->proxy = smeProxy;
     records[index]->uniqueId = nextProxyUniqueId();
+    records[index]->info.internal=true;
   }
   dispatcher.attachSmeProxy(smeProxy,index);
 }

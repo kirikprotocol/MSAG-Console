@@ -295,6 +295,9 @@ inline void fetchCOctetStr(SmppStream* stream,COStr& costr,int cOctMax)
       if ( fetchX(stream,costr.text[length]) == 0 ) goto success;
     }
     throw BadStreamException();
+  }else
+  {
+    costr.copy("");
   }
   //else
   //{
