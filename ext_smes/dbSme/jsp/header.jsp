@@ -12,6 +12,8 @@
 <table width="100%" cellpadding=0 cellspacing=0 border=0>
 <tr>
 <td width="100%" class=h1>DB SME config</td>
+<td nowrap class=h1b><a href="../index.jsp">SMSC</a></td>
+<td nowrap class=h1>&nbsp;</td>
 <td nowrap class=h1b><a href="index.jsp">home</a></td>
 <td nowrap class=h1b><a href="show_config.jsp">summary</a></td>
 <td nowrap class=h1>&nbsp;</td>
