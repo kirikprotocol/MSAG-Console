@@ -344,7 +344,10 @@ public:
     MapDialog* item = 0;
     if ( hash.Get(dialogueid,item) ){
       __trace2__("MAP:: drop dialog 0x%p for dialogid 0x%x",item,dialogueid);
-      if ( item->abonent.length() != 0 ) lock_map.Delete(item->abonent);
+      if ( item->abonent.length() != 0 ) {
+        __trace2__("MAP:: unlock dialog 0x%x for abonent %s",dialogueid,item->abonent);
+        lock_map.Delete(item->abonent);
+      }
       hash.Delete(dialogueid);
       item->state = MAPST_END;
       item->Release();

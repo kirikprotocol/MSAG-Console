@@ -170,8 +170,8 @@ static void DropMapDialog_(unsigned dialogid){
             __trace2__("MAP::%s <exception> %s",__FUNCTION__,e.what());
           }
         }
-        MapDialogContainer::getInstance()->dropDialog(dialogid);
-        __trace2__("MAP::%s: 0x%x - closed and droped - ",__FUNCTION__,__dialogid_map);
+        MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map);
+        __trace2__("MAP::%s: 0x%x - closed and droped - ",__FUNCTION__,dialog->dialogid_map);
         return;
       }
     }
