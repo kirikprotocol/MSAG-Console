@@ -299,7 +299,7 @@ inline void fetchCOctetStr(SmppStream* stream,COStr& costr,int cOctMax)
     costr.text[0] = oct;
     for ( ;length < maxLength; ++length)
     {
-      if ( fetchX(stream,costr.text[length]) == 0 ) goto success;
+      if ( fetchX(stream,(uint8_t&)costr.text[length]) == 0 ) goto success;
     }
     throw BadStreamException();
   }else
@@ -354,7 +354,7 @@ inline void fetchOctetStr(SmppStream* stream,OStr& ostr,uint32_t octets)
                 ostr.text = new char[octets];
     for ( ;length < octets; ++length)
     {
-      fetchX(stream,ostr.text[length]);
+      fetchX(stream,(uint8_t&)ostr.text[length]);
     }
 //#endif
   }
