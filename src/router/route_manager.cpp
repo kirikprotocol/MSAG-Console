@@ -171,7 +171,7 @@ __synchronized__
   length = routeInfo.source.getValue(addrVal);
 	record->pattern.src_length = length;
   //__require__( length < 21 );
-	if ( length < 21 ) throw runtime_error("assertoin 'source addr length < 21' failed");
+	if ( length >= 21 ) throw runtime_error("assertoin 'source addr length < 21' failed");
   memset(addrPattern,0,sizeof(addrPattern));
 	record->pattern.src_hasStar = false;
   for ( int i=0; i<length; ++i )
@@ -202,7 +202,7 @@ __synchronized__
 	length = routeInfo.dest.getValue(addrVal);
 	record->pattern.dest_length = length;
   //__require__( length < 21 );
-	if ( length < 21 ) throw runtime_error("assertoin 'dest addr length < 21' failed");
+	if ( length >= 21 ) throw runtime_error("assertoin 'dest addr length < 21' failed");
   memset(addrPattern,0,sizeof(addrPattern));
 	record->pattern.dest_hasStar = false;
   for ( int i=0; i<20; ++i )
