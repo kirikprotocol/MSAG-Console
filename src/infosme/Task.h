@@ -25,6 +25,7 @@
 
 #include "DataProvider.h"
 #include "Statistics.h"
+#include "DateTime.h"
 
 namespace smsc { namespace infosme 
 {
@@ -40,10 +41,6 @@ namespace smsc { namespace infosme
 
     using namespace smsc::util::templates;
 
-    extern time_t parseDateTime(const char* str);
-    extern time_t parseDate(const char* str);
-    extern int    parseTime(const char* str);
-    
     static const uint8_t MESSAGE_NEW_STATE          =  0; // Новое или перешедуленное сообщение
     static const uint8_t MESSAGE_WAIT_STATE         = 10; // Ожидает submitResponce
     static const uint8_t MESSAGE_ENROUTE_STATE      = 20; // В процессе доставки, ожидает deliveryReciept
@@ -86,6 +83,8 @@ namespace smsc { namespace infosme
         time_t  validityDate;       // full date/time
         time_t  activePeriodStart;  // only HH:mm:ss in seconds
         time_t  activePeriodEnd;    // only HH:mm:ss in seconds
+        
+        WeekDaysSet activeWeekDays; // Mon, Thu ...
 
         std::string dsId;
         std::string tablePrefix;
@@ -101,7 +100,7 @@ namespace smsc { namespace infosme
               retryOnFail(false), replaceIfPresent(false), 
               trackIntegrity(false), transactionMode(false), keepHistory(false),
               endDate(-1), retryTime(-1), validityPeriod(-1), validityDate(-1),
-              activePeriodStart(-1), activePeriodEnd(-1),
+              activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
               dsId(""), tablePrefix(""), querySql(""), msgTemplate(""), svcType(""),
               dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1), 
               messagesCacheSize(100), messagesCacheSleep(0) {};
@@ -112,6 +111,7 @@ namespace smsc { namespace infosme
               keepHistory(info.keepHistory), endDate(info.endDate), retryTime(info.retryTime), 
               validityPeriod(info.validityPeriod), validityDate(info.validityDate),
               activePeriodStart(info.activePeriodStart), activePeriodEnd(info.activePeriodEnd),
+              activeWeekDays(info.activeWeekDays),
               dsId(info.dsId), tablePrefix(info.tablePrefix), querySql(info.querySql), 
               msgTemplate(info.msgTemplate), svcType(info.svcType), dsTimeout(info.dsTimeout),
               dsUncommitedInProcess(info.dsUncommitedInProcess),
@@ -130,6 +130,7 @@ namespace smsc { namespace infosme
             validityPeriod = info.validityPeriod; validityDate = info.validityDate;
             activePeriodStart = info.activePeriodStart; 
             activePeriodEnd = info.activePeriodEnd;
+            activeWeekDays = info.activeWeekDays;
             dsId = info.dsId; tablePrefix = info.tablePrefix; querySql = info.querySql;
             msgTemplate = info.msgTemplate; svcType = info.svcType;
             dsTimeout = info.dsTimeout;

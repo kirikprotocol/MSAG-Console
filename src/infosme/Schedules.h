@@ -123,67 +123,21 @@ namespace smsc { namespace infosme
         virtual time_t calulateNextTime();
     };
     
-    class WeekDaysParser
-    {
-    protected:
-        
-        bool  weekDaysSet[7];
-        
-    public:
-        
-        WeekDaysParser() {
-            memset(&weekDaysSet, 0, sizeof(weekDaysSet));
-        };
-        WeekDaysParser(std::string weekDays) {
-            initWeekDays(weekDays);
-        };
-        virtual ~WeekDaysParser() {};
-
-        bool initWeekDays(std::string weekDays); // ',' separated list Mon, Thu, ...
-    } ;
-
-    struct WeeklySchedule : public Schedule, public WeekDaysParser
+    struct WeeklySchedule : public Schedule, public WeekDaysSet
     {
         int         everyNWeeks;
         
         WeeklySchedule(std::string id)
-            : Schedule(id, WEEKLY), WeekDaysParser(), everyNWeeks(0) {};
+            : Schedule(id, WEEKLY), WeekDaysSet(), everyNWeeks(0) {};
         
         WeeklySchedule(std::string id, time_t startDateTime,
                        int everyNWeeks, std::string weekDays,
                        time_t endDateTime=-1)
             : Schedule(id, WEEKLY, startDateTime, endDateTime),
-              WeekDaysParser(weekDays), everyNWeeks(everyNWeeks) {};
+              WeekDaysSet(weekDays), everyNWeeks(everyNWeeks) {};
         
         virtual void init(ConfigView* config);
         virtual time_t calulateNextTime();
-    };
-    
-    class MonthesNamesParser
-    {
-    protected:
-        
-        int  weekDayN, weekDay;
-        bool monthesNamesSet[12];
-        
-    public:
-        
-        MonthesNamesParser() : weekDayN(0), weekDay(0)
-        {
-            memset(&monthesNamesSet, 0, sizeof(monthesNamesSet));
-        };
-        MonthesNamesParser(std::string _weekDay, std::string _weekDayN, std::string _monthesNames)
-            : weekDayN(0), weekDay(0)
-        {
-            initWeekDay(_weekDay);
-            initWeekDayN(_weekDayN);
-            initMonthesNames(_monthesNames);
-        };
-        virtual ~MonthesNamesParser() {};
-
-        bool initWeekDay(std::string weekDay); // Mon | Thu | ...
-        bool initWeekDayN(std::string weekDayN); // second | third | fourth | last.
-        bool initMonthesNames(std::string monthesNames); // ',' separated list Jan, Feb, ...
     };
     
     struct MonthlySchedule : public Schedule, public MonthesNamesParser

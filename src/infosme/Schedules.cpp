@@ -118,72 +118,6 @@ time_t DailySchedule::calulateNextTime()
     return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
 }
 
-static const char*  constFullEngMonthesNames[12] = {
-    "January", "February", "March", "April",
-    "May", "June", "July", "August", "September",
-    "October", "November", "December"
-};
-static const char*  constShortEngMonthesNames[12] = {
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-};
-static const char*  constFullEngWeekDays[7] = {
-    "Monday", "Tuesday", "Wednesday", "Thursday", 
-    "Friday", "Saturday", "Sunday"
-};
-static const char*  constShortEngWeekDays[7] = {
-    "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
-};
-static const char*  constFullEngWeekDayN[5] = {
-    "first", "second", "third", "fourth", "last"
-};
-
-int scanMonthName(const char* str)
-{
-    if (!str || str[0] == '\0') return -1;
-    for (int i=0; i<12; i++)
-        if (strcmp(constFullEngMonthesNames[i], str) == 0 ||
-            strcmp(constShortEngMonthesNames[i], str) == 0) return i;
-    return -1;    
-}
-int scanWeekDay(const char* str)
-{
-    if (!str || str[0] == '\0') return -1;
-    for (int i=0; i<7; i++)
-        if (strcmp(constFullEngWeekDays[i], str) == 0 ||
-            strcmp(constShortEngWeekDays[i], str) == 0) return i;
-    return -1;    
-}
-int scanWeekDayN(const char* str)
-{
-    if (!str || str[0] == '\0') return -1;
-    for (int i=0; i<5; i++)
-        if (strcmp(constFullEngWeekDayN[i], str) == 0) return i;
-    return -1;    
-}
-
-bool WeekDaysParser::initWeekDays(std::string weekDays)
-{
-    // ',' separated list Mon, Tue, ...
-    memset(&weekDaysSet, 0, sizeof(weekDaysSet));
-
-    const char* str = weekDays.c_str();
-    if (!str || str[0] == '\0') return false;
-    
-    std::string weekDay = "";
-    do
-    {
-        if (*str == ',' || *str == '\0') {
-            int day = scanWeekDay(weekDay.c_str());
-            if (day < 0 || day > 6) return false;
-            weekDaysSet[day] = true;
-            weekDay = "";
-        } 
-        else if (!isspace(*str)) weekDay += *str;
-    } 
-    while (*str++);
-    return true;
-}
 void WeeklySchedule::init(ConfigView* config)
 {
     Schedule::init(config, true);
@@ -191,7 +125,7 @@ void WeeklySchedule::init(ConfigView* config)
     everyNWeeks = config->getInt("everyNWeeks");
     if (everyNWeeks <= 0)
         throw ConfigException("Invalid everyNWeeks parameter, should be positive.");
-    if (!initWeekDays(config->getString("weekDays")))
+    if (!setWeekDays(config->getString("weekDays")))
         throw ConfigException("Invalid weekDays parameter, should be "
                               "',' separated list of week days.");
 }
@@ -223,7 +157,7 @@ time_t WeeklySchedule::calulateNextTime()
             dt.tm_isdst = -1;
             st = mktime(&dt);
             //printf("Scanning %s", ctime(&st));
-            if (weekDaysSet[(dt.tm_wday == 0) ? 6:(dt.tm_wday-1)] &&
+            if (isWeekDay((dt.tm_wday == 0) ? 6:(dt.tm_wday-1)) &&
                 st > ct && st >= startDateTime) {
                 return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
             }
@@ -236,49 +170,6 @@ time_t WeeklySchedule::calulateNextTime()
     }
     
     return -1;
-}
-
-bool MonthesNamesParser::initWeekDay(std::string weekDayStr)
-{
-    // Monday | Tuesday |  ...
-    weekDay = scanWeekDay(weekDayStr.c_str());
-    if (weekDay < 0 || weekDay > 6) {
-        weekDay = 0;
-        return false;
-    }
-    return true;
-}
-bool MonthesNamesParser::initWeekDayN(std::string weekDayNStr)
-{
-    // first | second | third | fourth | last.
-    weekDayN = scanWeekDayN(weekDayNStr.c_str());
-    if (weekDayN < 0 || weekDayN > 4) {
-        weekDayN = 0;
-        return false;
-    }
-    return true;
-}
-bool MonthesNamesParser::initMonthesNames(std::string monthesNames)
-{
-    // ',' separated list Jan, Feb, ...
-    memset(&monthesNamesSet, 0, sizeof(monthesNamesSet));
-
-    const char* str = monthesNames.c_str();
-    if (!str || str[0] == '\0') return false;
-    
-    std::string monthName = "";
-    do
-    {
-        if (*str == ',' || *str == '\0') {
-            int month = scanMonthName(monthName.c_str());
-            if (month < 0 || month > 11) return false;
-            monthesNamesSet[month] = true;
-            monthName = "";
-        } 
-        else if (!isspace(*str)) monthName += *str;
-    } 
-    while (*str++);
-    return true;
 }
 
 void MonthlySchedule::init(ConfigView* config)
@@ -302,15 +193,6 @@ void MonthlySchedule::init(ConfigView* config)
     if (!initMonthesNames(config->getString("monthes")))
         throw ConfigException("Invalid monthes parameter, should be "
                               "',' separated list of monthes names.");
-}
-int getLastMonthDay(tm dt)
-{
-    for (int i=27; i<33; i++) {
-        dt.tm_mday = i; dt.tm_isdst = -1;
-        (void) mktime(&dt);
-        if (dt.tm_mday != i) return i-1;
-    }
-    return -1;
 }
 time_t MonthlySchedule::calulateNextTime()
 {

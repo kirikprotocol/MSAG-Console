@@ -7,45 +7,6 @@ extern bool isMSISDNAddress(const char* string);
 namespace smsc { namespace infosme 
 {
 
-time_t parseDateTime(const char* str)
-{
-    int year, month, day, hour, minute, second;
-    if (!str || str[0] == '\0' ||
-        sscanf(str, "%02d.%02d.%4d %02d:%02d:%02d", 
-                    &day, &month, &year, &hour, &minute, &second) != 6) return -1;
-    
-    tm  dt; dt.tm_isdst = -1;
-    dt.tm_year = year - 1900; dt.tm_mon = month - 1; dt.tm_mday = day;
-    dt.tm_hour = hour; dt.tm_min = minute; dt.tm_sec = second;
-
-    //printf("%02d.%02d.%04d %02d:%02d:%02d = %ld\n", day, month, year, hour, minute, second, time);
-    return mktime(&dt);
-}
-time_t parseDate(const char* str)
-{
-    int year, month, day;
-    if (!str || str[0] == '\0' ||
-        sscanf(str, "%02d.%02d.%4d", 
-                    &day, &month, &year) != 3) return -1;
-    
-    tm  dt; dt.tm_isdst = -1;
-    dt.tm_year = year - 1900; dt.tm_mon = month - 1; dt.tm_mday = day;
-    dt.tm_hour = 0; dt.tm_min = 0; dt.tm_sec = 0;
-    
-    //printf("%02d:%02d:%04d = %ld\n", day, month, year, time);
-    return mktime(&dt);
-}
-int parseTime(const char* str)
-{
-    int hour, minute, second;
-    if (!str || str[0] == '\0' ||
-        sscanf(str, "%02d:%02d:%02d", 
-                    &hour, &minute, &second) != 3) return -1;
-    
-    //printf("%02d:%02d:%02d = %ld\n", hour, minute, second, time);
-    return hour*3600+minute*60+second;
-}
-
 const char* USER_QUERY_STATEMENT_ID           = "%s_USER_QUERY_STATEMENT_ID";   // Own
 
 const char* DELETE_GENERATING_STATEMENT_ID    = "DELETE_GENERATING_STATEMENT_ID";
@@ -180,6 +141,20 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
         (info.activePeriodStart >= 0 && info.activePeriodEnd >= 0 && 
          info.activePeriodStart >= info.activePeriodEnd))
         throw ConfigException("Task active period specified incorrectly."); 
+    
+    const char* awd = 0;
+    try { awd = config->getString("activeWeekDays"); } 
+    catch (...) { 
+        smsc_log_warn(logger, "<activeWeekDays> parameter missed for task '%s'. "
+                              "Using default: Mon,Tue,Wed,Thu,Fri", info.id.c_str());
+        info.activeWeekDays.weekDays = 0x7c; awd = 0;
+    }
+    if (awd && awd[0]) {
+        if (!info.activeWeekDays.setWeekDays(awd))
+            throw ConfigException("Task active week days set listed incorrectly."); 
+    }
+    else info.activeWeekDays.weekDays = 0;
+
     const char* query_sql = config->getString("query");
     if (!query_sql || query_sql[0] == '\0')
         throw ConfigException("Sql query for task empty or wasn't specified.");
@@ -1074,27 +1049,32 @@ bool Task::isReady(time_t time, bool checkActivePeriod)
         (info.endDate>0 && time>=info.endDate) ||
         (info.validityDate>0 && time>=info.validityDate) ) return false;
 
-    if (checkActivePeriod && info.activePeriodStart > 0 && info.activePeriodEnd > 0)
+    if (checkActivePeriod) 
     {
-        if (info.activePeriodStart > info.activePeriodEnd) return false;
-        
         tm dt; localtime_r(&time, &dt);
-        
-        dt.tm_isdst = -1;
-        dt.tm_hour = info.activePeriodStart/3600;
-        dt.tm_min  = (info.activePeriodStart%3600)/60;
-        dt.tm_sec  = (info.activePeriodStart%3600)%60;
-        time_t apst = mktime(&dt);
 
-        dt.tm_isdst = -1;
-        dt.tm_hour = info.activePeriodEnd/3600;
-        dt.tm_min  = (info.activePeriodEnd%3600)/60;
-        dt.tm_sec  = (info.activePeriodEnd%3600)%60;
-        time_t apet = mktime(&dt);
+        if (!info.activeWeekDays.isWeekDay((dt.tm_wday == 0) ? 6:(dt.tm_wday-1)))
+            return false;
 
-        if (time < apst || time > apet) return false;
+        if (info.activePeriodStart > 0 && info.activePeriodEnd > 0)
+        {
+            if (info.activePeriodStart > info.activePeriodEnd) return false;
+
+            dt.tm_isdst = -1;
+            dt.tm_hour = info.activePeriodStart/3600;
+            dt.tm_min  = (info.activePeriodStart%3600)/60;
+            dt.tm_sec  = (info.activePeriodStart%3600)%60;
+            time_t apst = mktime(&dt);
+
+            dt.tm_isdst = -1;
+            dt.tm_hour = info.activePeriodEnd/3600;
+            dt.tm_min  = (info.activePeriodEnd%3600)/60;
+            dt.tm_sec  = (info.activePeriodEnd%3600)%60;
+            time_t apet = mktime(&dt);
+
+            if (time < apst || time > apet) return false;
+        }
     }
-
     return true;
 }
 
