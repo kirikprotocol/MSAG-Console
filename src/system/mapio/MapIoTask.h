@@ -483,7 +483,7 @@ public:
           if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) )
             throw NextMMSPartWaiting("Waiting next part of concat message");
           if( item->sms.get()->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() )
-            throw NextMMSPartWaiting("Waiting next part of other concat message");
+            throw NextMMSPartWaiting("Waiting next part of other concat message: %d != %d",item->sms.get()->getConcatMsgRef(),cmd->get_sms()->getConcatMsgRef());
           if( item->state == MAPST_WaitNextMMS ) {
             item->state = MAPST_SendNextMMS;
             item->dialogid_smsc = smsc_did;
