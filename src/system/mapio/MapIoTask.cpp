@@ -134,10 +134,18 @@ void MapIoTask::dispatcher()
   message.receiver = USER01_ID;
 
   for(;;){
-    if (MsgRecv(&message)!=MSG_OK) return;
+    result = MsgRecv(&message);
+    if ( result != MSG_OK ) {
+      __trace2__("MAP: error at MsgRecv with code x%hx",result);
+      return;
+    }
     //if (EINSS7CpMsgRecv_r(&message,MSG_INFTIM)!=MSG_OK) return;
     if ( isStopping ) return;
-    if(!Et96MapHandleIndication(&message)) return;
+    result = Et96MapHandleIndication(&message);
+    if ( result != MSG_OK ) {
+      __trace2__("MAP: error at Et96MapHandleIndication with code x%hx",result);
+      return;
+    }
   }
 }
 
