@@ -98,6 +98,7 @@ struct PduData
 	const time_t waitTime;
 	const time_t validTime;
 	SmppHeader* pdu;
+	uint32_t submitStatus;
 	uint32_t deliveryStatus;
 	int responseFlag; //флаг получения респонса
 	PduReceiptFlag deliveryFlag; //флаг получения сообщения получателем
@@ -113,7 +114,7 @@ struct PduData
 		time_t _validTime, SmppHeader* _pdu, const string _smsId = "")
 		: smsId(_smsId), msgRef(_msgRef), submitTime(_submitTime),
 		waitTime(_waitTime), validTime(_validTime), pdu(_pdu),
-		deliveryStatus(0), responseFlag(PDU_REQUIRED_FLAG),
+		submitStatus(0), deliveryStatus(0), responseFlag(PDU_REQUIRED_FLAG),
 		deliveryFlag(PDU_REQUIRED_FLAG, waitTime, validTime),
 		deliveryReceiptFlag(PDU_REQUIRED_FLAG, waitTime, validTime),
 		intermediateNotificationFlag(PDU_REQUIRED_FLAG),
