@@ -570,6 +570,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");
         }
+        smsc->notifyScheduler();
         return UNKNOWN_STATE;
       }break;
       case CMD_ERR_TEMP:
@@ -583,6 +584,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");
         }
+        smsc->notifyScheduler();
         return UNKNOWN_STATE;
       }break;
       default:
@@ -609,6 +611,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           rpt.setEServiceType("SMSC");
           rpt.setIntProperty(Tag::SMPP_ESM_CLASS,4);
           rpt.setDestinationAddress(sms.getOriginatingAddress());
+          rpt.setMessageReference(rpt.getMessageReference());
           rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
             sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
           rpt.setIntProperty(Tag::SMPP_MSG_STATE,sms.getState());
@@ -657,6 +660,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setEServiceType("SMSC");
       rpt.setIntProperty(Tag::SMPP_ESM_CLASS,4);
       rpt.setDestinationAddress(sms.getOriginatingAddress());
+      rpt.setMessageReference(rpt.getMessageReference());
       rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
         sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
       rpt.setIntProperty(Tag::SMPP_MSG_STATE,sms.getState());
