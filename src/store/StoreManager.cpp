@@ -325,6 +325,7 @@ SMSId RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
                 retId = doCreateSms(connection, sms, id, flag);
                 pool->freeConnection(connection);
             }
@@ -423,6 +424,7 @@ void RemoteStore::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
                 doChangeSmsConcatSequenceNumber(connection, id, inc);
                 pool->freeConnection(connection);
             }
@@ -514,6 +516,7 @@ void RemoteStore::retriveSms(SMSId id, SMS &sms)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
                 doRetrieveSms(connection, id, sms);
                 pool->freeConnection(connection);
             }
@@ -592,6 +595,7 @@ void RemoteStore::destroySms(SMSId id)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
                 doDestroySms(connection, id);
                 pool->freeConnection(connection);
             }
@@ -741,6 +745,7 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
                 doReplaceSms(connection, id, oa, newMsg, newMsgLen,
                              deliveryReport, validTime, waitTime);
                 pool->freeConnection(connection);
@@ -877,6 +882,7 @@ void RemoteStore::replaceSms(SMSId id, SMS& sms)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
                 doReplaceSms(connection, id, sms);
                 pool->freeConnection(connection);
             }
@@ -973,6 +979,7 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
                 doChangeSmsStateToEnroute(connection, id, dst,
                                           failureCause, nextTryTime, skipAttempt);
                 pool->freeConnection(connection);
@@ -1031,6 +1038,7 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
                 try
                 {
                     ToFinalStatement* toFinalStatement
@@ -1216,6 +1224,7 @@ RemoteStore::ReadyIdIterator::ReadyIdIterator(
     if (!connection) return;
     try
     {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
         if (connection && !connection->isAvailable())
             connection->connect();
 
@@ -1299,6 +1308,7 @@ time_t RemoteStore::getNextRetryTime()
     Connection* connection = pool->getConnection();
     if (connection)
     {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
         MinNextTimeStatement* minTimeStmt = 0L;
         try
         {
@@ -1350,6 +1360,7 @@ RemoteStore::DeliveryIdIterator::DeliveryIdIterator(
     if (!connection) return;
     try
     {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
         if (connection && !connection->isAvailable())
             connection->connect();
 
@@ -1427,6 +1438,7 @@ RemoteStore::CancelIdIterator::CancelIdIterator(StorageConnectionPool* _pool,
     if (!connection) return;
     try
     {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
         if (connection && !connection->isAvailable())
             connection->connect();
 
@@ -1504,6 +1516,7 @@ int RemoteStore::getConcatMessageReference(const Address& dda)
 
     try
     {
+                __trace2__( "got connection %p for %s", connection, __FUNCTION__);
         if (connection && !connection->isAvailable())
             connection->connect();
 
