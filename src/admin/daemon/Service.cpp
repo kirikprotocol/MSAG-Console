@@ -100,7 +100,7 @@ void Service::shutdown()
 
 void Service::init(const char * const services_dir,
 									 const char * const serviceId,
-									 const char * const serviceName,
+									 //const char * const serviceName,
 									 const in_port_t serviceAdminPort,
 									 const char * const serviceArgs,
 									 const pid_t servicePID = 0)
@@ -111,7 +111,7 @@ void Service::init(const char * const services_dir,
 	strcat(service_dir.get(), serviceId);
 
 	id.reset(cStringCopy(serviceId));
-	name.reset(cStringCopy(serviceName));
+	//name.reset(cStringCopy(serviceName));
 	port = serviceAdminPort;
 	pid = servicePID;
 	args.reset(cStringCopy(serviceArgs));

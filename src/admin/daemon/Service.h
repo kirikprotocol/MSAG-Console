@@ -22,28 +22,28 @@ class Service
 public:
 	Service(const char * const services_dir,
 					const char * const serviceId,
-					const char * const serviceName,
+					//const char * const serviceName,
 					const in_port_t serviceAdminPort,
 					const char * const serviceArgs,
 					const pid_t servicePID = 0)
 		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
 	{
 //		Logger::getCategory("smsc.admin.daemon.Service").debug("Service(...)");
-		init(services_dir, serviceId, serviceName, serviceAdminPort, serviceArgs, servicePID);
+		init(services_dir, serviceId, /*serviceName, */serviceAdminPort, serviceArgs, servicePID);
 	}
 
 	Service()
 		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
 	{	
 //		Logger::getCategory("smsc.admin.daemon.Service").debug("Service(0)");
-		init(0, 0, 0, 0, 0, 0);
+		init(0, 0, /*0, */0, 0, 0);
 	}
 
 	Service(const Service & copy)
 		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
 	{
 //		Logger::getCategory("smsc.admin.daemon.Service").debug("Service(copy)");
-		init(copy.service_dir.get(), copy.id.get(), copy.name.get(), copy.port, copy.args.get(), copy.pid);
+		init(copy.service_dir.get(), copy.id.get(), /*copy.name.get(), */copy.port, copy.args.get(), copy.pid);
 	}
 
 	pid_t start() throw (AdminException);
@@ -51,7 +51,7 @@ public:
 	void shutdown() throw (AdminException);
 
 	const char * const getId() const {return id.get();}
-	const char * const getName() const {return name.get();}
+	//const char * const getName() const {return name.get();}
 	const pid_t getPid() const {return pid;}
 	void setPid(const pid_t newPid) {pid = newPid;}
 	const bool isRunning() const {return pid != 0;}
@@ -60,18 +60,18 @@ public:
 
 	Service &operator = (Service &copy)
 	{
-		init(copy.service_dir.get(), copy.id.get(), copy.name.get(), copy.port, copy.args.get(), copy.pid);
+		init(copy.service_dir.get(), copy.id.get(), /*copy.name.get(), */copy.port, copy.args.get(), copy.pid);
 		return *this;
 	}
 
-	void setName(const char * const serviceName) throw (AdminException)
+	/*void setName(const char * const serviceName) throw (AdminException)
 	{
 		if (isRunning())
 		{
 			throw AdminException("Changing service name not permitted: service is running");
 		}
 		name.reset(cStringCopy(serviceName));
-	}
+	}*/
 
 	void setPort(const in_port_t serviceAdminPort) throw (AdminException)
 	{
@@ -95,7 +95,7 @@ public:
 protected:
 	char ** createArguments();
 	std::auto_ptr<char> id;
-	std::auto_ptr<char> name;
+	//std::auto_ptr<char> name;
 	pid_t pid;
 	std::auto_ptr<char> args;
 	in_port_t port;
@@ -105,7 +105,7 @@ protected:
 
 	void init(const char * const services_dir,
 						const char * const serviceId,
-						const char * const serviceName,
+						//const char * const serviceName,
 						const in_port_t serviceAdminPort,
 						const char * const serviceArgs,
 						const pid_t servicePID = 0);

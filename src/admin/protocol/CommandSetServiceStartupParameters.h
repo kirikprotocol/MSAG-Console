@@ -20,7 +20,7 @@ public:
 			{
 				DOM_Node serviceNode = list.item(0);
 				DOM_Element &serviceElem = (DOM_Element&) serviceNode;
-				serviceName.reset(serviceElem.getAttribute("name").transcode());
+				//serviceName.reset(serviceElem.getAttribute("name").transcode());
 				serviceId.reset(serviceElem.getAttribute("id").transcode());
 				std::auto_ptr<char> portStr(serviceElem.getAttribute("port").transcode());
 				port = atol(portStr.get());
@@ -33,10 +33,10 @@ public:
 		}
 	}
 
-	const char * const getServiceName() const throw()
+	/*const char * const getServiceName() const throw()
 	{
 		return serviceName.get();
-	}
+	}*/
 
 	const char * const getArgs() const throw ()
 	{
@@ -50,7 +50,7 @@ public:
 
 
 protected:
-	std::auto_ptr<char> serviceName;
+	/*std::auto_ptr<char> serviceName;*/
 	in_port_t port;
 	std::auto_ptr<char> args;
 };

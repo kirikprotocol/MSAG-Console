@@ -19,6 +19,7 @@
 <!ELEMENT subject_def (mask+)>
 <!ATTLIST subject_def
 	id CDATA #REQUIRED
+	defSme CDATA #REQUIRED
 >
 <!ELEMENT mask EMPTY>
 <!ATTLIST mask
