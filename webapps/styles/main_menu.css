@@ -29,7 +29,8 @@ table.main_menu a:hover
 	cursor: hand;
 }
 
-table.main_menu table.submenu, table.main_menu div.hiddenLayer
+table.main_menu table.submenu,
+table.main_menu iframe.hiddenLayer
 {
 	position:absolute;
 	top: 25px;
@@ -58,7 +59,7 @@ table.main_menu table.submenu td a:hover
 {
 	color: white;
 }
-table.main_menu div.hiddenLayer
+table.main_menu iframe.hiddenLayerl
 {
   z-index: 3;
 	visibility: hidden;

@@ -31,7 +31,7 @@
       out.print("document.all." + submenuId + "_h.runtimeStyle.height="+submenuId+".offsetHeight;");
       out.print("' onMouseOut='" + submenuId + ".runtimeStyle.visibility=\"hidden\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"hidden\";'>");
 			out.print("<a ID=" + menuId + ">" + name + "</a>");
-      out.print("<div height=50px id=" + submenuId + "_h2 class=hiddenLayer><iframe id=" + submenuId + "_h src='/images/blank.html' width='100%' height='100%'></iframe></div>");
+      out.print("<iframe id=" + submenuId + "_h class=hiddenLayer src='/images/blank.html' width='100%' height='0px'></iframe>");
 			out.print("<table class=submenu cellspacing=0 cellpadding=0 id=" + submenuId);
 			out.print(" onMouseOver='" + submenuId + ".runtimeStyle.visibility=\"visible\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"visible\";");
       out.print("document.all." + submenuId + "_h.runtimeStyle.width="+submenuId+".offsetWidth;");
