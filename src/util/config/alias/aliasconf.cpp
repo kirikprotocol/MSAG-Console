@@ -85,9 +85,9 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       record->addrValue = 0;
       //record->addr = attrs.getNamedItem("addr").getNodeValue().transcode();
       {
-				std::auto_ptr<char> dta(attrs.getNamedItem("addr").getNodeValue().transcode());
+        std::auto_ptr<char> dta(attrs.getNamedItem("addr").getNodeValue().transcode());
         smsc::sms::Address a(dta.get());
-        record->addrValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH]; 
+        record->addrValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH];
         a.getValue(record->addrValue);
         record->addrNpi = a.getNumberingPlan();
         record->addrTni = a.getTypeOfNumber();
@@ -95,10 +95,10 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       }
       //record->alias = attrs.getNameItem("alias").getNodeValue().transcode();
       {
-				std::auto_ptr<char> dta(attrs.getNamedItem("alias").getNodeValue().transcode());
+        std::auto_ptr<char> dta(attrs.getNamedItem("alias").getNodeValue().transcode());
         smsc::sms::Address a(dta.get());
-        record->aliasValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH]; 
-        a.getValue(record->addrValue);
+        record->aliasValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH];
+        a.getValue(record->aliasValue);
         record->aliasNpi = a.getNumberingPlan();
         record->aliasTni = a.getTypeOfNumber();
         DOM_Node hide_attr_node = attrs.getNamedItem("hide");
