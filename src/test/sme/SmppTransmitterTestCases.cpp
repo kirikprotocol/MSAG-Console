@@ -71,8 +71,62 @@ uint8_t SmppTransmitterTestCases::getRegisteredDelivery(PduData* pduData)
 	}
 }
 
+pair<SmppTransmitterTestCases::LockType, time_t>
+SmppTransmitterTestCases::checkActionLocked(
+	DeliveryMonitor* monitor, time_t checkTime)
+{
+	__require__(monitor);
+	__cfg_int__(timeCheckAccuracy);
+	__cfg_int__(scCmdTimeout);
+	if (monitor->getFlag() == PDU_NOT_EXPECTED_FLAG)
+	{
+		return make_pair(NOT_LOCKED, checkTime);
+	}
+	//если доставлен хоть один кусочек конкатенированного map сообщения,
+	//то оно считается в delivering state и не канселится
+	MapMsg* msg = NULL;
+	if (monitor->pduData->objProps.count("map.msg"))
+	{
+		msg = dynamic_cast<MapMsg*>(monitor->pduData->objProps["map.msg"]);
+	}
+	//если сообщение в delivering state, то оно залочено
+	if (checkTime < monitor->getCheckTime() - timeCheckAccuracy)
+	{
+		//нумерация сегментов с 1
+		return (msg && msg->seqNum > 1 ?
+			make_pair(CHANGE_LOCKED, (time_t) 0) : make_pair(NOT_LOCKED, checkTime));
+	}
+	else if (monitor->getLastTime() && checkTime > monitor->getLastTime())
+	{
+		__require__(monitor->getLastTime() <= monitor->respTime);
+		if (checkTime > monitor->respTime + timeCheckAccuracy)
+		{
+			//нумерация сегментов с 1
+			return (msg && msg->seqNum > 1 ?
+				make_pair(CHANGE_LOCKED, (time_t) 0) : make_pair(NOT_LOCKED, checkTime));
+		}
+		else if (checkTime > monitor->respTime - scCmdTimeout + timeCheckAccuracy)
+		{
+			return make_pair(ALL_LOCKED, monitor->respTime);
+		}
+		else if (abs(checkTime < monitor->respTime - scCmdTimeout) <= timeCheckAccuracy)
+		{
+			return make_pair(ALL_COND_LOCKED, monitor->respTime);
+		}
+		else if (checkTime < monitor->respTime - scCmdTimeout - timeCheckAccuracy)
+		{
+			return make_pair(ALL_LOCKED, 0);
+		}
+		__unreachable__("Invalid check time");
+	}
+	else
+	{
+		__unreachable__("Invalid monitor selected");
+	}
+}
+
 void SmppTransmitterTestCases::cancelMonitor(PduMonitor* monitor,
-	time_t cancelTime, bool forceRemoveMonitor)
+	time_t cancelTime, bool condRequired, bool forceRemoveMonitor)
 {
 	__require__(monitor);
 	__cfg_int__(timeCheckAccuracy);
@@ -82,7 +136,8 @@ void SmppTransmitterTestCases::cancelMonitor(PduMonitor* monitor,
 		case PDU_COND_REQUIRED_FLAG:
 		case PDU_MISSING_ON_TIME_FLAG:
 			fixture->pduReg->removeMonitor(monitor);
-			if (abs(monitor->getCheckTime() - cancelTime) <= timeCheckAccuracy)
+			if (condRequired ||
+				abs(monitor->getCheckTime() - cancelTime) <= timeCheckAccuracy)
 			{
 				__require__(!forceRemoveMonitor);
 				monitor->setCondRequired();
@@ -112,9 +167,10 @@ void SmppTransmitterTestCases::cancelMonitor(PduMonitor* monitor,
 	}
 }
 
-uint16_t SmppTransmitterTestCases::cancelPduMonitors(PduData* pduData,
-	time_t cancelTime, bool forceRemoveMonitors, State state)
+SmppTransmitterTestCases::CancelResult SmppTransmitterTestCases::cancelPduMonitors(
+	PduData* pduData, time_t cancelTime, bool forceRemoveMonitors, State state)
 {
+	__decl_tc__;
 	__require__(pduData && pduData->pdu->get_commandId() == SUBMIT_SM);
 	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 	__require__(pdu->get_optional().has_userMessageReference());
@@ -122,17 +178,43 @@ uint16_t SmppTransmitterTestCases::cancelPduMonitors(PduData* pduData,
 	//delivery monitor
 	DeliveryMonitor* deliveryMonitor = fixture->pduReg->getDeliveryMonitor(msgRef);
 	__require__(deliveryMonitor);
+	//проверка локов
+	bool condRequired = false;
+	pair<LockType, time_t> lockInfo = checkActionLocked(deliveryMonitor, cancelTime);
+	switch (lockInfo.first)
+	{
+		case NOT_LOCKED:
+			break;
+		case CHANGE_LOCKED: //канселить уже нельзя
+			__tc__("lockedSm.segmentedMap"); __tc_ok__;
+			__require__(lockInfo.second == cancelTime);
+			return CancelResult(msgRef, cancelTime, CancelResult::CANCEL_FAILED);
+		case ALL_LOCKED:
+			if (!lockInfo.second) //команда протухнет прежде, чем освободится лок
+			{
+				__tc__("lockedSm.deliveringState"); __tc_ok__;
+				return CancelResult(msgRef, 0, CancelResult::CANCEL_FAILED);
+			}
+			break;
+		case ALL_COND_LOCKED:
+			condRequired = true;
+			break;
+		default:
+			__unreachable__("Unknown lock type");
+	}
 	deliveryMonitor->state = state;
-	cancelMonitor(deliveryMonitor, cancelTime, forceRemoveMonitors);
+	cancelMonitor(deliveryMonitor, cancelTime, condRequired, forceRemoveMonitors);
 	//delivery receipt monitor
 	DeliveryReceiptMonitor* rcptMonitor =
 		fixture->pduReg->getDeliveryReceiptMonitor(msgRef);
 	if (rcptMonitor)
 	{
 		//если есть delivery receipt monitor, то pdu уже финализировалась
-		__require__(deliveryMonitor->getFlag() == PDU_NOT_EXPECTED_FLAG);
+		//либо полная неизвестность относительно delivery и delivery receipt
+		__require__(deliveryMonitor->getFlag() == PDU_NOT_EXPECTED_FLAG ||
+			deliveryMonitor->getFlag() == PDU_COND_REQUIRED_FLAG);
 		rcptMonitor->state = state;
-		cancelMonitor(rcptMonitor, cancelTime, forceRemoveMonitors);
+		cancelMonitor(rcptMonitor, cancelTime, condRequired, forceRemoveMonitors);
 	}
 	//intermediate notification monitor
 	IntermediateNotificationMonitor* notifMonitor =
@@ -140,9 +222,10 @@ uint16_t SmppTransmitterTestCases::cancelPduMonitors(PduData* pduData,
 	if (notifMonitor)
 	{
 		notifMonitor->state = state;
-		cancelMonitor(notifMonitor, cancelTime, forceRemoveMonitors);
+		cancelMonitor(notifMonitor, cancelTime, condRequired, forceRemoveMonitors);
 	}
-	return msgRef;
+	return CancelResult(msgRef, lockInfo.second, condRequired ?
+		CancelResult::CANCEL_COND : CancelResult::CANCEL_OK);
 }
 
 void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef,
@@ -284,9 +367,9 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 					existentPduData->ref();
 					deliveryMonitor->pduData->replacePdu = existentPduData;
 					existentPduData->replacedByPdu = pduData;
-					uint16_t cancelMsgRef =
+					CancelResult res =
 						cancelPduMonitors(existentPduData, pduData->sendTime, false, ENROUTE);
-					__trace2__("replaced pdu:\n\tuserMessageReference = %d", (int) cancelMsgRef);
+					__trace2__("replaced pdu:\n\tuserMessageReference = %d", (int) res.msgRef);
 				}
 				else
 				{
@@ -414,6 +497,10 @@ MapMsg* SmppTransmitterTestCases::getMapMsg(PduSubmitSm* pdu)
 			pdu->get_optional().size_messagePayload(),
 			dataCoding, msg, len, profile.codepage, false);
 	}
+	else
+	{
+		return new MapMsg(false, NULL, 0, dataCoding, 0, valid);
+	}
 	if (dataCoding == DEFAULT || dataCoding == SMSC7BIT)
 	{
 		int msgLen = len;
@@ -440,7 +527,6 @@ MapMsg* SmppTransmitterTestCases::getMapMsg(PduSubmitSm* pdu)
 	{
 		numSegments = (len + 133) / 134;
 	}
-
 	return new MapMsg(udhi, msg, len, dataCoding, numSegments, valid);
 }
 
@@ -478,6 +564,8 @@ PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
 	if (routeInfo && routeInfo->smeSystemId == "MAP_PROXY")
 	{
 		MapMsg* msg = getMapMsg(pdu);
+		__trace2__("map msg registered: this = %p, udhi = %s, len = %d, dataCoding = %d, numSegments = %d, valid = %s",
+			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, msg->numSegments, msg->valid ? "true" : "false");
 		msg->ref();
 		pduData->objProps["map.msg"] = msg;
 	}
@@ -712,9 +800,9 @@ void SmppTransmitterTestCases::registerReplaceMonitors(PduSubmitSm* resPdu,
 		default: //SME_NO_ROUTE
 			__unreachable__("Invalid sme type");
 	}
-	uint16_t cancelMsgRef =
+	CancelResult res =
 		cancelPduMonitors(replacePduData, pduData->sendTime, true, ENROUTE);
-	__trace2__("replaced pdu:\n\tuserMessageReference = %d", (int) cancelMsgRef);
+	__trace2__("replaced pdu:\n\tuserMessageReference = %d", (int) res.msgRef);
 	//delivery monitor
 	if (deliveryFlag)
 	{
@@ -1151,9 +1239,8 @@ void SmppTransmitterTestCases::processCancelledMonitors(PduCancelSm* pdu,
 	{
 		__require__(!pdu->get_serviceType());
 		__require__(cancelPduData);
-		uint16_t cancelMsgRef =
-			cancelPduMonitors(cancelPduData, cancelTime, false, DELETED);
-		__trace2__("cancelled pdu:\n\tuserMessageReference = %d", (int) cancelMsgRef);
+		CancelResult res = cancelPduMonitors(cancelPduData, cancelTime, false, DELETED);
+		__trace2__("cancelled pdu:\n\tuserMessageReference = %d", (int) res.msgRef);
 	}
 	else
 	{
@@ -1182,9 +1269,9 @@ void SmppTransmitterTestCases::processCancelledMonitors(PduCancelSm* pdu,
 		__trace__("cancelled pdus:\n");
 		for (int i = 0; i < cancelPduDataList.size(); i++)
 		{
-			uint16_t cancelMsgRef =
+			CancelResult res =
 				cancelPduMonitors(cancelPduDataList[i], cancelTime, false, DELETED);
-			__trace2__("\tuserMessageReference = %d\n", (int) cancelMsgRef);
+			__trace2__("\tuserMessageReference = %d\n", (int) res.msgRef);
 		}
 	}
 }

@@ -68,11 +68,33 @@ protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
 
+	typedef enum
+	{
+		NOT_LOCKED = 1, //не залочено
+		CHANGE_LOCKED = 2, //залочено на изменение, но можно читать (query_sm)
+		ALL_LOCKED = 3, //залочено на чтение & изменение
+		ALL_COND_LOCKED = 4 //аналогично ALL_LOCKED, но возможно для выполняемого действия не будет разлоченно вообще
+	} LockType;
+
+	struct CancelResult
+	{
+		static const int CANCEL_OK = 1;
+		static const int CANCEL_FAILED = 2;
+		static const int CANCEL_COND = 3;
+		uint16_t msgRef;
+		time_t cancelTime;
+		int status;
+		CancelResult(uint16_t _msgRef, time_t _cancelTime, bool _status)
+			: msgRef(_msgRef), cancelTime(_cancelTime), status(_status) {}
+	};
+
 	virtual Category& getLog();
 	//общие манипуляции с мониторами
+	pair<LockType, time_t> checkActionLocked(DeliveryMonitor* monitor,
+		time_t checkTime);
 	void cancelMonitor(PduMonitor* monitor, time_t cancelTime,
-		bool forceRemoveMonitor);
-	uint16_t cancelPduMonitors(PduData* pduData, time_t cancelTime,
+		bool condRequired, bool forceRemoveMonitor);
+	CancelResult cancelPduMonitors(PduData* pduData, time_t cancelTime,
 		bool forceRemoveMonitors, State state);
 	void registerTransmitterReportMonitors(uint16_t msgRef, time_t waitTime,
 		time_t validTime, PduData* pduData);
