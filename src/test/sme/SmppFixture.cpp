@@ -52,8 +52,8 @@ SmppFixture::SmppFixture(const SmeSystemId& _systemId, const Address& _smeAddr,
 
 SmppFixture::~SmppFixture()
 {
-	if (pduChecker) { delete pduChecker; }
-	if (routeChecker) { delete routeChecker; }
+	if (pduChecker) { delete pduChecker; pduChecker = NULL; }
+	if (routeChecker) { delete routeChecker; routeChecker = NULL; }
 	if (session)
 	{
 		try
@@ -65,6 +65,7 @@ SmppFixture::~SmppFixture()
 			//nothing
 		}
 		delete session;
+		session = NULL;
 	}
 }
 
