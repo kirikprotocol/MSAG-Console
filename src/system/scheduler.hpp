@@ -802,25 +802,22 @@ public:
 
     Chain* Pop(Scheduler* sc)
     {
-      for(;;)
+      if(tmap.size()==0)
       {
-        if(tmap.size()==0)
-        {
-          debug1(Scheduler::log,"Sc: pop return 0, tmap is empty");
-          return 0;
-        }
-        TimeMap::iterator i=tmap.begin();
-        MultiChain* mc=i->second;
-        Chain* rv=mc->Pop();
-        if(rv)
-        {
-          debug2(Scheduler::log,"TimeLine::Pop %d/%p (headTime=%d,now=%d)",i->first,i->second,rv->headTime,time(NULL));
-          return rv;
-        }
-        debug1(Scheduler::log,"Sc: deleting empty multichain");
-        sc->deleteMultiChain(mc);
-        tmap.erase(i);
+        debug1(Scheduler::log,"Sc: pop return 0, tmap is empty");
+        return 0;
       }
+      TimeMap::iterator i=tmap.begin();
+      MultiChain* mc=i->second;
+      Chain* rv=mc->Pop();
+      if(rv)
+      {
+        debug2(Scheduler::log,"TimeLine::Pop %d/%p (headTime=%d,now=%d)",i->first,i->second,rv->headTime,time(NULL));
+        return rv;
+      }
+      debug1(Scheduler::log,"Sc: deleting empty multichain");
+      sc->deleteMultiChain(mc);
+      tmap.erase(i);
     }
 
     void RemoveChain(Chain* c)
