@@ -41,7 +41,7 @@ MessageId* SmppUtil::convert(const SMSId& smsId, MessageId* smppId)
 	return smppId;
 }
 
-const char* SmppUtil::time2string(time_t lt, char* str, int num)
+const char* SmppUtil::time2string(time_t lt, char* str, time_t base, int num)
 {
 	switch (num)
 	{
@@ -55,12 +55,14 @@ const char* SmppUtil::time2string(time_t lt, char* str, int num)
 			{
 				int len = strftime(str, MAX_SMPP_TIME_LENGTH,
 					"%y%m%d%H%M%S0", localtime(&lt));
-				sprintf(str + len, "%02d+", timezone / 900);
+				int tz = timezone / 900;
+				//для Новосибирка export TZ=NSD-6, а timezone = -21600
+				sprintf(str + len, "%02d%c", abs(tz), tz < 0 ? '+' : '-');
 			}
 			break;
 		case 3: //Relative time format
 			{
-				time_t df = lt - time(NULL);
+				time_t df = lt - base;
 				__require__(df >= 0);
 				tm t;
 				t.tm_year = (df / 31104000);
@@ -80,7 +82,7 @@ const char* SmppUtil::time2string(time_t lt, char* str, int num)
 	return str;
 }
 
-time_t SmppUtil::string2time(const char* str)
+time_t SmppUtil::string2time(const char* str, time_t base)
 {
 	int tz;
 	char p;
@@ -91,12 +93,15 @@ time_t SmppUtil::string2time(const char* str)
 	switch (p)
 	{
 		case '+':
+			t.tm_year += 100;
+			t.tm_mon -= 1;
+			return (mktime(&t) + timezone + tz * 900);
 		case '-':
 			t.tm_year += 100;
 			t.tm_mon -= 1;
-			return (mktime(&t) - timezone + tz * 900);
+			return (mktime(&t) + timezone - tz * 900);
 		case 'R':
-			return (time(NULL) + t.tm_year * 31104000 + t.tm_mon * 2592000 +
+			return (base + t.tm_year * 31104000 + t.tm_mon * 2592000 +
 				t.tm_mday * 86400 + t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec);
 		default:
 			__unreachable__("Invalid time format");
@@ -141,9 +146,9 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu)
 	time_t waitTime = time(NULL) + rand1(60);
 	time_t validTime = waitTime + rand1(60);
 	pdu->get_message().set_scheduleDeliveryTime(
-		time2string(waitTime, tmp, __numTime__));
+		time2string(waitTime, tmp, time(NULL), __numTime__));
 	pdu->get_message().set_validityPeriod(
-		time2string(validTime, tmp, __numTime__));
+		time2string(validTime, tmp, time(NULL), __numTime__));
 	pdu->get_message().set_registredDelivery(rand0(255));
 	pdu->get_message().set_replaceIfPresentFlag(!rand0(10));
 	ShortMessage msg;
