@@ -87,7 +87,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       {
         std::auto_ptr<char> dta(attrs.getNamedItem("addr").getNodeValue().transcode());
         smsc::sms::Address a(dta.get());
-        record->addrValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH];
+        record->addrValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+1];
         a.getValue(record->addrValue);
         record->addrNpi = a.getNumberingPlan();
         record->addrTni = a.getTypeOfNumber();
@@ -97,7 +97,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       {
         std::auto_ptr<char> dta(attrs.getNamedItem("alias").getNodeValue().transcode());
         smsc::sms::Address a(dta.get());
-        record->aliasValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH];
+        record->aliasValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+1];
         a.getValue(record->aliasValue);
         record->aliasNpi = a.getNumberingPlan();
         record->aliasTni = a.getTypeOfNumber();
