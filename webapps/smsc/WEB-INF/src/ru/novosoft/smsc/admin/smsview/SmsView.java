@@ -28,7 +28,6 @@ import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsc_service.CancelMessageData;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.*;
-import org.apache.log4j.Category;
 
 public class SmsView
 {
@@ -244,12 +243,6 @@ public class SmsView
     int pos = 1;
     if (needExpression(query.getSmsId())) {
       try {
-        /*long id = Long.valueOf( query.getSmsId() ).longValue();
-        String ids = Long.toHexString(id);
-        StringBuffer sb = new StringBuffer(16);
-        for( int i = 0; i < 16-ids.length(); i++ ) sb.append( '0' );
-        sb.append( ids.toUpperCase() );
-        stmt.setString(pos++, sb.toString());*/
         stmt.setLong(pos++, Long.valueOf(query.getSmsId()).longValue());
       } catch (NumberFormatException ex) {
         throw new SQLException("Invalid numeric format for sms id");
@@ -268,16 +261,10 @@ public class SmsView
 
     GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
     if (query.getFromDateEnabled()) {
-      //java.util.Date fromDate = DateConvertor.convertLocalToGMT(query.getFromDate());
-      //stmt.setTimestamp(pos++, new java.sql.Timestamp(fromDate.getTime()));
-      stmt.setTimestamp(pos++,
-                        new java.sql.Timestamp(query.getFromDate().getTime()), cal);
+      stmt.setTimestamp(pos++, new java.sql.Timestamp(query.getFromDate().getTime()), cal);
     }
     if (query.getTillDateEnabled()) {
-      //java.util.Date tillDate = DateConvertor.convertLocalToGMT(query.getTillDate());
-      //stmt.setTimestamp(pos++, new java.sql.Timestamp(tillDate.getTime()));
-      stmt.setTimestamp(pos++,
-                        new java.sql.Timestamp(query.getTillDate().getTime()), cal);
+      stmt.setTimestamp(pos++, new java.sql.Timestamp(query.getTillDate().getTime()), cal);
     }
   }
 
@@ -326,7 +313,7 @@ public class SmsView
     if (query.getFromDateEnabled()) list.add("SUBMIT_TIME >=?");
     if (query.getTillDateEnabled()) list.add("SUBMIT_TIME <=?");
 
-    String where = (list.size() > 0) ? " WHERE " : "";
+    String where = (list.size() > 0) ? " WHERE " : " WHERE ID>0";
     for (int i = 0; i < list.size(); i++) {
       where += (String) list.get(i);
       if (i < list.size() - 1) where += " AND ";
