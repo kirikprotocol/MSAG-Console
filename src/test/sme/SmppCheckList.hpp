@@ -210,6 +210,12 @@ public:
 			"Проверка правильности маршрута (определение sme по адресу отправителя и алиасу получателя)");
 		__reg_tc__("processDeliverySm.normalSms.checkMandatoryFields",
 			"Сравнение обязательных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm) pdu");
+		__reg_tc__("processDeliverySm.normalSms.checkDataCoding",
+			"Кодировка текста sms соответствует настройкам профиля получателя");
+		__reg_tc__("processDeliverySm.normalSms.checkTextEqualDataCoding",
+			"Для одинаковых кодировок в профилях отправителя и получателя текст sms совпадает");
+		__reg_tc__("processDeliverySm.normalSms.checkTextDiffDataCoding",
+			"Для различных кодировок в профилях отправителя и получателя текст sms правильно преобразуется из одной кодировки в другую");
 		__reg_tc__("processDeliverySm.normalSms.checkOptionalFields",
 			"Сравнение опциональных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm) pdu");
 		__reg_tc__("processDeliverySm.normalSms.scheduleChecks",
@@ -225,6 +231,8 @@ public:
 			"Проверка правильности маршрута (определение sme по адресу отправителя и адресу SC)");
 		__reg_tc__("processDeliverySm.deliveryReceipt.checkFields",
 			"Общая проверка правильности полей");
+		__reg_tc__("processDeliverySm.deliveryReceipt.checkProfile",
+			"Проверка соответствия настройкам профиля");
 		__reg_tc__("processDeliverySm.deliveryReceipt.checkStatus",
 			"Информации о доставленной pdu является корректной");
 		__reg_tc__("processDeliverySm.deliveryReceipt.scheduleChecks",
@@ -238,6 +246,8 @@ public:
 			"Проверка правильности маршрута (определение sme по адресу отправителя и адресу SC)");
 		__reg_tc__("processDeliverySm.intermediateNotification.checkFields",
 			"Общая проверка правильности полей");
+		__reg_tc__("processDeliverySm.intermediateNotification.checkProfile",
+			"Проверка соответствия настройкам профиля");
 		__reg_tc__("processDeliverySm.intermediateNotification.checkStatus",
 			"Информации о состоянии отправленной pdu является корректной");
 		__reg_tc__("processDeliverySm.intermediateNotification.checkTime",
