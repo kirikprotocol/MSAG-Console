@@ -253,8 +253,8 @@ int partitionSms(SMS* sms,int dstdc)
   }else
   if(dc==DataCoding::SMSC7BIT)
   {
-    len*=7;
-    if(udhilen+len/8+(len%8?1:0)<=maxfulllen)return psSingle;
+    int xlen=len*7;
+    if(udhilen+xlen/8+(xlen%8?1:0)<=maxfulllen)return psSingle;
   }
   else
   {
