@@ -542,7 +542,7 @@ int MapTracker::Execute(){
   for(;;){
     time_t t = time(0);
     while(time(0)<(t+15)&&!isStopping){
-      time_t xx = tome(0);
+      time_t xx = time(0);
       if ( xx > t+15 ) break;
       e.Wait(1000*(t-xx+15));
     }
