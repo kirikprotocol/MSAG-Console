@@ -186,7 +186,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
       throw BIG_MULTI();
     }
     if ( multi->dests[i].dest_flag == 0x02 ){
-      __trace2__(":DPL: distrib list %s",multi->dests[i].value)
+      __trace2__(":DPL: distrib list %s",multi->dests[i].value.c_str())
       Array<Address> addresses = admin->members(multi->dests[i].value,multi->msg.getOriginatingAddress());
       unsigned count = addresses.Count();
       if ( count+task->count > MAX_COUNT ) {
@@ -204,7 +204,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
     }
     else if ( multi->dests[i].dest_flag == 0x01 ) 
     {
-     __trace2__(":DPL: distrib addr %d.%d.%s",multi->dests[i].ton,multi->dests[i].npi,multi->dests[i].value);
+     __trace2__(":DPL: distrib addr %d.%d.%s",multi->dests[i].ton,multi->dests[i].npi,multi->dests[i].value.c_str());
      task->list[task->count].addr = Address(
        multi->dests[i].value.length(),
        multi->dests[i].ton,
