@@ -16,30 +16,29 @@ SignalHandler * SignalHandler::shutdownHandler = 0;
 
 void atExitHandler(void)
 {
-	sigsend(P_PID, getppid(), SIGCHLD);
-	smsc::util::xml::TerminateXerces();
+  sigsend(P_PID, getppid(), SIGCHLD);
+  smsc::util::xml::TerminateXerces();
 }
 
 void SignalHandler::registerShutdownHandler(SignalHandler * handler) throw()
 {
-	smsc::core::synchronization::MutexGuard guard(shutdownLock);
-	shutdownHandler = handler;
-	if (handler != 0)
-	{
-		smsc::util::setSignalHandler(SHUTDOWN_SIGNAL, shutdownSignalHandler);
-		smsc::util::setSignalHandler(SIGINT, shutdownSignalHandler);
-		atexit(atExitHandler);
-	}
+  smsc::core::synchronization::MutexGuard guard(shutdownLock);
+  shutdownHandler = handler;
+  if (handler != 0)
+  {
+    //smsc::util::setSignalHandler(SHUTDOWN_SIGNAL, shutdownSignalHandler);
+    smsc::util::setSignalHandler(SIGINT, shutdownSignalHandler);
+    atexit(atExitHandler);
+  }
 }
 
 void SignalHandler::shutdownSignalHandler(int signo)
 {
-	smsc::core::synchronization::MutexGuard guard(shutdownLock);
-	if (shutdownHandler != 0)
-		shutdownHandler->handleSignal();
+  smsc::core::synchronization::MutexGuard guard(shutdownLock);
+  if (shutdownHandler != 0)
+    shutdownHandler->handleSignal();
 }
 
 }
 }
 }
-

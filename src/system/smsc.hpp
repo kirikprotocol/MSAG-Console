@@ -195,7 +195,7 @@ public:
       }break;
       case etUndeliverable:
       {
-        statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),sms->getLastResult());
+        statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),1000);//sms->getLastResult());
         MutexGuard g(perfMutex);
         deliverErrCounter++;
       }break;
