@@ -45,6 +45,8 @@ pack:
 	@echo zipping archive
 #	@cd $(SME_BUILDDIR); zip -9 -r $(SMSC_BUILDDIR)/ext_smes/dbsme bin conf jsp lib config.xml
 	@jar -cfM $(SMSC_BUILDDIR)/ext_smes/proxysme.war -C $(SME_BUILDDIR) .
+	@cp -f config_fdc.xml $(SME_BUILDDIR)/config.xml
+	@jar -cfM $(SMSC_BUILDDIR)/ext_smes/proxyfdc.war -C $(SME_BUILDDIR) .
 
 clean:
 	@echo Clean
