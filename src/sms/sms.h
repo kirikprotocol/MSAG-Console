@@ -23,12 +23,21 @@
 #endif
 #include <memory>
 
+#ifdef _WIN32
+#ifndef _MSC_VER
+#define __FUNCTION__ __FUNC__
+#endif
+#endif
+
+
 #include <util/debug.h>
 #include "sms/sms_const.h"
 #include "sms/sms_tags.h"
 
 namespace smsc {
 namespace sms  {
+
+
 
 extern void UCS_htons(char* buffer, const char* orig, unsigned len, unsigned esm_class);
 extern void UCS_ntohs(char* buffer, const char* orig, unsigned len, unsigned esm_class);
