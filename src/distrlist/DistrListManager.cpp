@@ -910,8 +910,8 @@ void DistrListManager::addMember(string dlName, const Address& member)
         if (!checkMember)        
             throw SQLException(FAILED_TO_CREATE_STATEMENT);
         
-        checkMember->setString(1, memberStr);
-        checkMember->setString(2, dlNameStr);
+        checkMember->setString(1, dlNameStr);
+        checkMember->setString(2, memberStr);
         
         std::auto_ptr<ResultSet> checkMemberRsGuard(checkMember->executeQuery());
         ResultSet* checkMemberRs = checkMemberRsGuard.get();
