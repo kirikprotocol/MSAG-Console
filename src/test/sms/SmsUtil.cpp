@@ -1,6 +1,7 @@
 #include "SmsUtil.hpp"
 #include "test/util/Util.hpp"
 #include <cstring>
+#include <map>
 
 namespace smsc {
 namespace test {
@@ -48,23 +49,26 @@ bool SmsUtil::compareDescriptors(const Descriptor& d1, const Descriptor& d2)
 }
 
 #define __compare_int_body_tag__(tagName, errCode) \
-	if ((b1.hasIntProperty(Tag::tagName) && !b2.hasIntProperty(Tag::tagName)) || \
-		(!b1.hasIntProperty(Tag::tagName) && b2.hasIntProperty(Tag::tagName)) || \
-		(b1.hasIntProperty(Tag::tagName) && b2.hasIntProperty(Tag::tagName) && \
-		b1.getIntProperty(Tag::tagName) != b2.getIntProperty(Tag::tagName))) \
+	if ((_b1->hasIntProperty(Tag::tagName) && !_b2->hasIntProperty(Tag::tagName)) || \
+		(!_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName)) || \
+		(_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName) && \
+		_b1->getIntProperty(Tag::tagName) != _b2->getIntProperty(Tag::tagName))) \
 	{ res.push_back(errCode); }
 
 #define __compare_str_body_tag__(tagName, errCode) \
-	if ((b1.hasStrProperty(Tag::tagName) && !b2.hasStrProperty(Tag::tagName)) || \
-		(!b1.hasStrProperty(Tag::tagName) && b2.hasStrProperty(Tag::tagName)) || \
-		(b1.hasStrProperty(Tag::tagName) && b2.hasStrProperty(Tag::tagName) && \
-		b1.getStrProperty(Tag::tagName) != b2.getStrProperty(Tag::tagName))) \
+	if ((_b1->hasStrProperty(Tag::tagName) && !_b2->hasStrProperty(Tag::tagName)) || \
+		(!_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName)) || \
+		(_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName) && \
+		_b1->getStrProperty(Tag::tagName) != _b2->getStrProperty(Tag::tagName))) \
 	{ res.push_back(errCode); }
 
-vector<int> SmsUtil::compareMessageBodies(Body& b1, Body& b2)
+vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 {
 	//return (b1.getBufferLength() == b2.getBufferLength() &&
 	//	memcmp(b1.getBuffer(), b2.getBuffer(), b1.getBufferLength()) == 0);
+	Body* _b1 = const_cast<Body*>(&b1);
+	Body* _b2 = const_cast<Body*>(&b2);
+	__require__(_b1 && _b2);
 	vector<int> res;
 	__compare_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, 1);
 	__compare_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, 2);
@@ -91,16 +95,19 @@ vector<int> SmsUtil::compareMessageBodies(Body& b1, Body& b2)
 }
 
 #define __compare__(getter, errCode) \
-	if (sms1.getter() != sms2.getter()) { res.push_back(errCode); }
+	if (_sms1->getter() != _sms2->getter()) { res.push_back(errCode); }
 
 #define __compare_addr__(getter, errCode) \
-	if (!compareAddresses(sms1.getter(), sms2.getter())) { res.push_back(errCode); }
+	if (!compareAddresses(_sms1->getter(), _sms2->getter())) { res.push_back(errCode); }
 	
 #define __compare_desc__(getter, errCode) \
-	if (!compareDescriptors(sms1.getter(), sms2.getter())) { res.push_back(errCode); }
+	if (!compareDescriptors(_sms1->getter(), _sms2->getter())) { res.push_back(errCode); }
 
-vector<int> SmsUtil::compareMessages(SMS& sms1, SMS& sms2, SmsCompareFlag flag)
+vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, SmsCompareFlag flag)
 {
+	SMS* _sms1 = const_cast<SMS*>(&sms1);
+	SMS* _sms2 = const_cast<SMS*>(&sms2);
+	__require__(_sms1 && _sms2);
 	vector<int> res;
 	__compare__(getState, 1);
 	__compare__(getSubmitTime, 2);
@@ -173,6 +180,7 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 #define __set_int_body_tag__(tagName, value) \
 	if ((mask >>= 1) & 0x1) { \
 		__trace__("set_int_body_tag: " #tagName); \
+		intMap[Tag::tagName] = value; \
 		body->setIntProperty(Tag::tagName, value); \
 	}
 
@@ -180,17 +188,41 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 	if ((mask >>= 1) & 0x1) { \
 		__trace__("set_str_body_tag: " #tagName); \
 		auto_ptr<char> str = rand_char(len); \
+		strMap.insert(StrMap::value_type(Tag::tagName, str.get())); \
 		body->setStrProperty(Tag::tagName, str.get()); \
 	}
 
+#define __check_int_body_tag__(tagName) \
+	IntMap::const_iterator it_##tagName = intMap.find(Tag::tagName); \
+	if (it_##tagName == intMap.end()) { \
+		__require__(!body->hasIntProperty(Tag::tagName)); \
+	} else { \
+		__require__(body->hasIntProperty(Tag::tagName) && \
+			body->getIntProperty(Tag::tagName) == it_##tagName->second); \
+	}
+	
+#define __check_str_body_tag__(tagName) \
+	StrMap::const_iterator it_##tagName = strMap.find(Tag::tagName); \
+	if (it_##tagName == strMap.end()) { \
+		__require__(!body->hasStrProperty(Tag::tagName)); \
+	} else { \
+		__require__(body->hasStrProperty(Tag::tagName) && \
+			body->getStrProperty(Tag::tagName) == it_##tagName->second); \
+	}
+	
 void SmsUtil::setupRandomCorrectBody(Body* body)
 {
 	//поля сохраняются в body случайным образом
 	//даже обязательные для sms поля могут не сохраняться в БД
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
 	uint64_t mask = *((uint64_t*) tmp.get());
-	int msgLen = rand1(MAX_SHORT_MESSAGE_LENGTH);
 
+	typedef map<const string, int> IntMap;
+	typedef map<const string, const string> StrMap;
+	StrMap strMap;
+	IntMap intMap;
+
+	int msgLen = rand1(MAX_SM_LENGTH);
 	__set_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, time(NULL) + rand0(24 * 3600));
 	__set_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, rand0(2));
 	__set_int_body_tag__(SMPP_ESM_CLASS, rand0(255));
@@ -211,34 +243,81 @@ void SmsUtil::setupRandomCorrectBody(Body* body)
 	__set_int_body_tag__(SMPP_LANGUAGE_INDICATOR, rand0(255));
 	__set_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, rand0(255));
 	__set_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, rand0(255));
-	__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, rand1(65535));
+	__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, rand1(MAX_PAYLOAD_LENGTH));
+
+	//checks
+	__check_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME);
+	__check_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG);
+	__check_int_body_tag__(SMPP_ESM_CLASS);
+	__check_int_body_tag__(SMPP_DATA_CODING);
+	__check_int_body_tag__(SMPP_SM_LENGTH);
+	__check_int_body_tag__(SMPP_REGISTRED_DELIVERY);
+	__check_int_body_tag__(SMPP_PROTOCOL_ID);
+	__check_str_body_tag__(SMPP_SHORT_MESSAGE);
+	__check_int_body_tag__(SMPP_PRIORITY);
+	__check_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE);
+	__check_int_body_tag__(SMPP_USSD_SERVICE_OP);
+	__check_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT);
+	__check_int_body_tag__(SMPP_PAYLOAD_TYPE);
+	__check_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID);
+	__check_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES);
+	__check_int_body_tag__(SMPP_USER_RESPONSE_CODE);
+	__check_int_body_tag__(SMPP_SAR_MSG_REF_NUM);
+	__check_int_body_tag__(SMPP_LANGUAGE_INDICATOR);
+	__check_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS);
+	__check_int_body_tag__(SMPP_NUMBER_OF_MESSAGES);
+	__check_str_body_tag__(SMPP_MESSAGE_PAYLOAD);
 }
 
+#define __set_sms__(type, field, value) \
+	type tmp##field = value; \
+	sms->set##field(tmp##field); \
+	__require__(sms->get##field() == value);
+
+#define __set_addr_sms__(field) \
+	Address tmp##field; \
+	setupRandomCorrectAddress(&tmp##field); \
+	sms->set##field(tmp##field); \
+	__require__(compareAddresses(sms->get##field(), tmp##field));
+
+#define __set_desc_sms__(field) \
+	Descriptor tmp##field; \
+	setupRandomCorrectDescriptor(&tmp##field); \
+	sms->set##field(tmp##field); \
+	__require__(compareDescriptors(sms->get##field(), tmp##field));
+	
 void SmsUtil::setupRandomCorrectSms(SMS* sms)
 {
 	//sms->setState(...);
-	sms->setSubmitTime(time(NULL) + rand2(-3600, 0));
-	sms->setValidTime(time(NULL) + rand0(24 * 3600));
+	__set_sms__(time_t, SubmitTime, time(NULL) + rand2(-3600, 0));
+	__set_sms__(time_t, ValidTime, time(NULL) + rand0(24 * 3600));
 	//sms->setAttemptsCount(...);
 	//sms->setLastResult(...);
 	//sms->setLastTime(...);
-	sms->setNextTime(time(NULL) + rand0(24 * 3600));
-	setupRandomCorrectAddress(&sms->getOriginatingAddress());
-	setupRandomCorrectAddress(&sms->getDestinationAddress());
-	setupRandomCorrectAddress(&sms->getDealiasedDestinationAddress());
-	sms->setMessageReference(rand0(65535));
+	__set_sms__(time_t, NextTime, time(NULL) + rand0(24 * 3600));
+	__set_addr_sms__(OriginatingAddress);
+	__set_addr_sms__(DestinationAddress);
+	__set_addr_sms__(DealiasedDestinationAddress);
+	__set_sms__(uint16_t, MessageReference, rand0(65535));
+	//eServiceType
 	auto_ptr<char> serviceType = rand_char(MAX_ESERVICE_TYPE_LENGTH);
 	sms->setEServiceType(serviceType.get());
-	sms->setArchivationRequested(rand0(3));
+	EService _serviceType;
+	sms->getEServiceType(_serviceType);
+	__require__(!strcmp(_serviceType, serviceType.get()));
+	//needArchivate
+	bool arc = rand0(3);
+	sms->setArchivationRequested(arc);
+	__require__(sms->isArchivationRequested() == arc);
 	//SMPP v3.4, пункт 5.2.17
 	//xxxxxx00 - No SMSC Delivery Receipt requested (default)
 	//xxxxxx01 - SMSC Delivery Receipt requested where final delivery
 	//			outcome is delivery success or failure
 	//xxxxxx10 - SMSC Delivery Receipt requested where the final
 	//			delivery outcome is delivery failure
-	sms->setDeliveryReport(rand0(255));
-	sms->setBillingRecord(rand0(3));
-	setupRandomCorrectDescriptor(&sms->getOriginatingDescriptor());
+	__set_sms__(uint8_t, DeliveryReport, rand0(255));
+	__set_sms__(uint8_t, BillingRecord, rand0(3));
+	__set_desc_sms__(OriginatingDescriptor);
 	//setupRandomCorrectDescriptor(sms->getDestinationDescriptor());
 	setupRandomCorrectBody(&sms->getMessageBody());
 	//bool attach;
