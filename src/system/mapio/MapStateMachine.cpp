@@ -1499,13 +1499,13 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
            errorForwardSMmt_sp->errorCode == 27 )
       {
         dialog->subscriberAbsent = true;
-        throw MAPDIALOG_TEMP_ERROR("absent subscriber");
+        throw MAPDIALOG_TEMP_ERROR("MAP::absent subscriber");
       }
       if ( errorForwardSMmt_sp->errorCode == 32 && 
         errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_MEM_CAPACITY_EXCEEDED )
       {
         dialog->memoryExceeded = true;
-        throw MAPDIALOG_TEMP_ERROR("memory exceeded");
+        throw MAPDIALOG_TEMP_ERROR("MAP::memory exceeded");
       }
       throw MAPDIALOG_FATAL_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode));
     }
