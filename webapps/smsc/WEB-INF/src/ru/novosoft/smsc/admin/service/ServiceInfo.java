@@ -42,13 +42,19 @@ public class ServiceInfo
 		id = serviceElement.getAttribute("id");
 
 		args = serviceElement.getAttribute("args");
-		if (/*name.equals("") ||*/ id.equals(""))
+		if (id.equals(""))
 		{
 			throw new AdminException("services name or services system id not specified in response");
 		}
-		sme = smes.get(id);
-		if (sme == null && !id.equals(Constants.SMSC_SME_ID))
-			throw new AdminException("Unknown SME ID: \"" + id + '"');
+		if (id.equals(Constants.SMSC_SME_ID))
+		{
+			if (smes.contains(id))
+				throw new AdminException("Couldn't add new SMSC - already presented");
+			sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0);
+		}  else
+		{
+			sme = smes.get(id);
+		}
 
 		setStatusStr(serviceElement.getAttribute("status"));
 		String pidStr = serviceElement.getAttribute("pid");
