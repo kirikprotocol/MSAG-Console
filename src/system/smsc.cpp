@@ -608,7 +608,15 @@ void Smsc::shutdown()
 {
   __trace__("shutting down");
   tp.shutdown();
+
+  if(mapProxy)
+  {
+    MapDialogContainer::getInstance()->unregisterSelf(&smeman);
+    MapDialogContainer::dropInstance();
+  }
+
   smsc::store::StoreManager::shutdown();
+  if(dataSource)delete dataSource;
 }
 
 void Smsc::reloadRoutes(const SmscConfigs& cfg)

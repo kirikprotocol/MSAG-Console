@@ -206,6 +206,7 @@ void Smsc::mainLoop()
               Status::INVMSGID
             )
           );
+          continue;
         };
         break;
       }
@@ -224,6 +225,7 @@ void Smsc::mainLoop()
               0,0,0,0
             )
           );
+          continue;
         };
         break;
       }

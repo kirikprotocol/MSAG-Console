@@ -114,12 +114,12 @@ struct MapDialog{
   string abonent;
   auto_ptr<SMS> sms;
   auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
-  ET96MAP_ADDRESS_T m_msAddr;	
-  ET96MAP_ADDRESS_T m_scAddr;	
+  ET96MAP_ADDRESS_T m_msAddr;
+  ET96MAP_ADDRESS_T m_scAddr;
   ET96MAP_SS7_ADDR_T scAddr;
   ET96MAP_SS7_ADDR_T destMscAddr;
   ET96MAP_SS7_ADDR_T mshlrAddr;
- 	ET96MAP_SM_RP_DA_T smRpDa;
+  ET96MAP_SM_RP_DA_T smRpDa;
   ET96MAP_SM_RP_OA_T smRpOa;
   list<SmscCommand> chain;
   unsigned version;
@@ -138,7 +138,7 @@ struct MapDialog{
   unsigned udhiMsgCount;
 //  bool isMOreq;
 //  unsigned dialogid_req;
-  MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
+  MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) :
     isUSSD(false),
     mms(false),
     hasIndAddress(false),
@@ -148,7 +148,7 @@ struct MapDialog{
     memoryExceeded(false),
     hlrWasNotified(false),
     ref_count(1),
-    state(MAPST_START), 
+    state(MAPST_START),
     dialogid_map(dialogid),
     dialogid_smsc(0),
     version(version),
@@ -179,9 +179,9 @@ struct MapDialog{
       delete this;
     }
   }
-  
+
   MapDialog* AddRef(){MutexGuard g(mutex);++ref_count;return this;}
-  
+
   void Clean() {
     MutexGuard g(mutex);
     state = MAPST_START;
@@ -191,8 +191,8 @@ struct MapDialog{
     //string abonent;
     sms = auto_ptr<SMS>(0);
     auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(0);
-    //ET96MAP_ADDRESS_T m_msAddr;	
-    //ET96MAP_ADDRESS_T m_scAddr;	
+    //ET96MAP_ADDRESS_T m_msAddr;
+    //ET96MAP_ADDRESS_T m_scAddr;
     //ET96MAP_SS7_ADDR_T scAddr;
     //ET96MAP_SS7_ADDR_T destMscAddr;
     //ET96MAP_SS7_ADDR_T mshlrAddr;
@@ -256,11 +256,18 @@ public:
     __trace2__("MAP::access to container 0x%p",container);
     return container;
   }
-  
+
+  static void dropInstance()
+  {
+    MutexGuard g(sync_object);
+    if(container) delete container;
+    container=NULL;
+  }
+
   MapProxy* getProxy() {
     return &proxy;
   }
-  
+
   MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
     MutexGuard g(sync);
     MapDialog* dlg = 0;
@@ -272,7 +279,7 @@ public:
     }
     else return 0;
   }
-  
+
   MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn/*,const char* abonent*/,unsigned version=2){
     MutexGuard g(sync);
     MapDialog* dlg = new MapDialog(dialogueid,lssn,version);
@@ -281,7 +288,7 @@ public:
     dlg->AddRef();
     return dlg;
   }
-  
+
   MapDialog* createDialogImsiReq(ET96MAP_LOCAL_SSN_T lssn,MapDialog* associate){
     MutexGuard g(sync);
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
@@ -293,7 +300,7 @@ public:
     dlg->associate = associate->AddRef();
     return dlg;
   }
-  
+
   MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd){
     //if ( abonent.length() == 0 )
     //  throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
@@ -324,7 +331,7 @@ public:
     dlg->AddRef();
     return dlg;
   }
-  
+
   USHORT_T reAssignDialog(unsigned did,unsigned ssn){
     MutexGuard g(sync);
      __trace2__("MAP:: reassign dialog");
@@ -344,8 +351,8 @@ public:
     __trace2__("MAP:: reassign dialog 0x%x->0x%x",did,dialogid_map);
     return dialogid_map;
   }
-  
-  
+
+
   void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
     MutexGuard g(sync);
     MapDialog* item = 0;
@@ -362,8 +369,9 @@ public:
       __trace2__("MAP::dropDialog: has no dialog for dialogid 0x%x",dialogueid);
     }
   }
-  
+
   void registerSelf(SmeManager* smeman);
+  void unregisterSelf(SmeManager* smeman);
 };
 
 inline
@@ -396,5 +404,3 @@ private:
   void init(unsigned timeout=0);
   void deinit();
 };
-
-

@@ -4,7 +4,7 @@
 #include <signal.h>
 
 #define MAXENTRIES 10
-#define MY_USER_ID USER01_ID 
+#define MY_USER_ID USER01_ID
 using namespace std;
 
 #ifdef USE_MAP
@@ -27,7 +27,7 @@ void MAPIO_TaskACVersionNotifier()
 }
 extern void MAPIO_QueryMscVersionInternal();
 
-void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
+void CloseDialog( ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 {
   USHORT_T res = Et96MapCloseReq (SSN,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
   if ( res != ET96MAP_E_OK ){
@@ -37,7 +37,7 @@ void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
   }
 }
 
-void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
+void CloseAndRemoveDialog(  ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 {
   CloseDialog(lssn,dialogId);
   MapDialogContainer::getInstance()->dropDialog(dialogId);
@@ -54,11 +54,11 @@ USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
 }
 
 USHORT_T Et96MapStateInd (
-	ET96MAP_LOCAL_SSN_T lssn,
-	UCHAR_T userState,
-	UCHAR_T affectedSSN,
-	ULONG_T affectedSPC,
-	ULONG_T localSPC) 
+  ET96MAP_LOCAL_SSN_T lssn,
+  UCHAR_T userState,
+  UCHAR_T affectedSSN,
+  ULONG_T affectedSPC,
+  ULONG_T localSPC)
 {
   __trace2__("MAP::Et96MapStateInd received ssn=%x user state=%x affected SSN=%d affected SPC=%ld local SPC=%ld\n",lssn,userState,affectedSSN,affectedSPC,localSPC);
   return ET96MAP_E_OK;
@@ -163,9 +163,9 @@ restart:
       }
       continue;
       /*result = MsgConn(USER01_ID,ETSIMAP_ID);
-       ( result != MSG_OK ) { 
-        __trace2__("MAP: Error at MsgConn, code 0x%hx",result); 
-        throw runtime_error("MAP::MapIoTask: MsgConn error"); 
+       ( result != MSG_OK ) {
+        __trace2__("MAP: Error at MsgConn, code 0x%hx",result);
+        throw runtime_error("MAP::MapIoTask: MsgConn error");
       }
       continue;*/
     }
@@ -173,9 +173,9 @@ restart:
       __trace2__("MAP: error at MsgRecv with code x%hx",result);
       //return;
 //      goto restart;
-	    abort();
+      abort();
     }
-    
+
     __trace2__("MAP: MsgRecv receive msg with "
                "recver 0x%hx,sender 0x%hx,prim 0x%hx, size %d",message.receiver,message.sender,message.primitive,message.size);
     if( message.primitive == 0x8b && message.msg_p[6] >= 0x04 ) {
@@ -296,4 +296,14 @@ void MapDialogContainer::registerSelf(SmeManager* smeman)
   __trace2__("MAP::register MAP_PROXY OK");
 }
 
-
+void MapDialogContainer::unregisterSelf(SmeManager* smeman)
+{
+  proxy.init();
+  __trace2__("MAP::register MAP_PROXY");
+//#if defined USE_MAP // !!!! temporary !!!!!
+//  smeman->registerSmeProxy("MAP_PROXY",&proxy);
+//#else
+  smeman->unregisterSmeProxy("MAP_PROXY");
+//#endif
+  __trace2__("MAP::register MAP_PROXY OK");
+}
