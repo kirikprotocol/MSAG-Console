@@ -1193,13 +1193,22 @@ int32_t OCIRoutine::getInt32(const char* key)
 void OCIRoutine::setInt64(const char* key, int64_t val, bool null)
     throw(SQLException, InvalidArgumentException)
 {
-    int32_t value = (int32_t)val;
-    defineSetInt(key, value, true, null);
+    defineSetInt(key, val, true, null);
 }
 int64_t OCIRoutine::getInt64(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return (int64_t)getInt32(key);
+    boolean     ok = FALSE;
+    int64_t     result = 0;
+
+    OCINumber*  number = (OCINumber*)getField(key);
+    check(OCINumberIsInt(errhp, (CONST OCINumber *)number, &ok));
+    if (ok != TRUE) throw InvalidArgumentException();
+    check(OCINumberToInt(errhp, (CONST OCINumber *)number,
+                         (uword) sizeof(int64_t),
+                         (uword)OCI_NUMBER_SIGNED,
+                         (dvoid *) &result));
+    return result;
 }
 void OCIRoutine::setUint8(const char* key, uint8_t val, bool null)
     throw(SQLException, InvalidArgumentException)
@@ -1244,13 +1253,22 @@ uint32_t OCIRoutine::getUint32(const char* key)
 void OCIRoutine::setUint64(const char* key, uint64_t val, bool null)
     throw(SQLException, InvalidArgumentException)
 {
-    uint32_t value = (uint32_t)val;
-    defineSetInt(key, value, false, null);
+    defineSetInt(key, val, false, null);
 }
 uint64_t OCIRoutine::getUint64(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return (uint64_t)getUint32(key);
+    boolean     ok = FALSE;
+    uint64_t    result = 0;
+
+    OCINumber*  number = (OCINumber*)getField(key);
+    check(OCINumberIsInt(errhp, (CONST OCINumber *)number, &ok));
+    if (ok != TRUE) throw InvalidArgumentException();
+    check(OCINumberToInt(errhp, (CONST OCINumber *)number,
+                         (uword) sizeof(uint64_t),
+                         (uword)OCI_NUMBER_UNSIGNED,
+                         (dvoid *) &result));
+    return result;
 }
 
 #define defineSetFloat(key, val, null)                                  \
