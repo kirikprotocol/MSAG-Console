@@ -887,8 +887,8 @@ ToDeletedStatement::ToDeletedStatement(Connection* connection, bool assign)
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
     bind((CONST text *)"DELETED", (sb4) 7*sizeof(char),
-         SQLT_UIN, (dvoid *) &(SMSC_BYTE_EXPIRED_STATE),
-         (sb4) sizeof(SMSC_BYTE_EXPIRED_STATE));
+         SQLT_UIN, (dvoid *) &(SMSC_BYTE_DELETED_STATE),
+         (sb4) sizeof(SMSC_BYTE_DELETED_STATE));
 }
 void ToDeletedStatement::bindId(SMSId id)
     throw(StorageException)
