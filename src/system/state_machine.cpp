@@ -1157,7 +1157,10 @@ StateType StateMachine::submit(Tuple& t)
   if ( !dest_proxy )
   {
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,sms);
-    __warning__("SUBMIT_SM: SME is not connected");
+    char bufsrc[64],bufdst[64];
+    sms->getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
+    sms->getDestinationAddress().toString(bufdst,sizeof(bufdst));
+    __warning2__("FORWARD: sme is not connected(%s->%s(%s))",bufsrc,bufdst,ri.smeSystemId.c_str());
     try{
       //time_t now=time(NULL);
       Descriptor d;
@@ -1424,7 +1427,8 @@ StateType StateMachine::forward(Tuple& t)
   SmeProxy *dest_proxy=0;
   int dest_proxy_index;
 
-  bool has_route = smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,NULL);
+  smsc::router::RouteInfo ri;
+  bool has_route = smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri);
   if ( !has_route )
   {
     __warning__("FORWARD: No route");
@@ -1449,7 +1453,10 @@ StateType StateMachine::forward(Tuple& t)
   }
   if(!dest_proxy)
   {
-    __trace__("FORWARD: no proxy");
+    char bufsrc[64],bufdst[64];
+    sms.getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
+    sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
+    __warning2__("FORWARD: sme is not connected(%s->%s(%s))",bufsrc,bufdst,ri.smeSystemId.c_str());
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     try{
       sms.lastResult=Status::SMENOTCONNECTED;
