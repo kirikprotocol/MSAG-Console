@@ -33,17 +33,22 @@ public class SmsOperativeSource extends SmsSource
     int len = configPath.lastIndexOf("\\");
     String absolutePath = configPath.substring(0, len);
     Config config = smsc.getSmscConfig();
-
+    String path="";
     try {
-      smsstorePath = config.getString(SECTION_NAME_LocalStore + '.' + PARAM_NAME_filename);
+       smsstorePath = config.getString(SECTION_NAME_LocalStore + '.' + PARAM_NAME_filename);
     } catch (Config.ParamNotFoundException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     } catch (Config.WrongParamTypeException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     }
     if (smsstorePath.indexOf("/") == 0)
-      smsstorePath = absolutePath + smsstorePath;
-
+      path = absolutePath + smsstorePath;
+     try {  FileInputStream input = null;
+      input = new FileInputStream(path);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+    smsstorePath=absolutePath+"/"+smsstorePath;
+    }
   }
 
   protected void load(File file) throws IOException
@@ -64,6 +69,7 @@ public class SmsOperativeSource extends SmsSource
       input = new FileInputStream(smsstorePath);
     } catch (FileNotFoundException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+
     }
     // QueryMessage request = new QueryMessage(query);
     Message responce;
