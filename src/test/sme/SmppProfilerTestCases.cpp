@@ -61,7 +61,7 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 				__unreachable__("Invalid data coding");
 		}
 		int msgLen;
-		auto_ptr<char> msg = encode(text, dataCoding, msgLen);
+		auto_ptr<char> msg = encode(text, dataCoding, msgLen, false);
 		pdu->get_message().set_shortMessage(msg.get(), msgLen);
 		pdu->get_message().set_dataCoding(dataCoding);
 		//отправить pdu
@@ -303,7 +303,7 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		return;
 	}
 	const string text = decode(pdu.get_message().get_shortMessage(),
-		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
+		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding(), false);
 	if (!monitor->pduData->objProps.count("profilerTc.output"))
 	{
 		AckText* ack = getExpectedResponse(monitor, pdu, recvTime);
