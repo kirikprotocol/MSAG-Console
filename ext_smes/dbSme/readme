@@ -1,0 +1,1 @@
+перед тем, как собирать dbSme надо собрать сам вебапп (CVS/src/webapp/smsc/WEB-INF/makefile) - там создаётся необходимый $(SMSC_BUILDDIR)/jars/smsc.jar
