@@ -33,7 +33,7 @@ DbSmeTestRecord* DbSmeSelectJobTestCases::createSelectNoDefaultsJobInput()
 	__tc__("submitDbSmeCmd.correct.job.select"); __tc_ok__;
 	__tc__("submitDbSmeCmd.correct.input.noParams"); __tc_ok__;
 	DbSmeTestRecord* rec = new DbSmeTestRecord();
-	rec->setJob("SelectJob2");
+	rec->setJob("SelectJob3");
 	return rec;
 }
 
@@ -75,6 +75,7 @@ const string DbSmeSelectJobTestCases::processSelectNullsJobOutput(
 	const string& text)
 {
 	__require__(dbSmeReg);
+	__decl_tc__;
 	DbSmeTestRecord defOutput;
 	defOutput.setInt8(80);
 	defOutput.setInt16(160);
@@ -102,7 +103,11 @@ const string DbSmeSelectJobTestCases::processSelectNullsJobOutput(
 			}
 		}
 		delete it;
-		if (!count)
+		if (count)
+		{
+			__tc__("processDbSmeRes.select.multipleRecords"); __tc_ok__;
+		}
+		else
 		{
 			//нет записей удовлетворяющих условиям
 			writeSelectJobRecord(os, NULL, &defOutput, t);

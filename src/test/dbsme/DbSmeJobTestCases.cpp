@@ -14,11 +14,12 @@ DbSmeJobTestCases::DbSmeJobTestCases(DbSmeRegistry* _dbSmeReg, CheckList* _chkLi
 void DbSmeJobTestCases::processJobOutput(const string& text, DbSmeTestRecord* rec,
 	SmeAckMonitor* monitor)
 {
-	__require__(rec && monitor);
+	__require__(monitor);
 	__require__(dbSmeReg);
 	__decl_tc__;
 	if (!monitor->pduData->strProps.count("output"))
 	{
+		__require__(rec);
 		monitor->pduData->strProps["output"] =
 			processJobFirstOutput(text, rec);
 	}
@@ -41,10 +42,12 @@ void DbSmeJobTestCases::processJobOutput(const string& text, DbSmeTestRecord* re
 	}
 	else
 	{
+		__tc_ok__;
+		__tc__("processDbSmeRes.longOutput");
 		//pdu порезана на куски по 200 байт
 		if (pos + text.length() < expected.length() && text.length() != 200)
 		{
-			__tc_fail__(2);
+			__tc_fail__(1);
 		}
 		expected.erase(pos, text.length());
 		if (!expected.length())
