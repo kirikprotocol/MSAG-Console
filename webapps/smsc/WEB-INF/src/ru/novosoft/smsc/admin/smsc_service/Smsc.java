@@ -341,13 +341,13 @@ public class Smsc extends Service
 		call(smsc_component, flush_statistics_method, Type.Types[Type.StringType], new HashMap());
 	}
 
-	public synchronized void start(Daemon smscDaemon)
+	public void start(Daemon smscDaemon)
 			throws AdminException
 	{
 		smscDaemon.startService(Constants.SMSC_SME_ID);
 	}
 
-	public synchronized void stop(Daemon smscDaemon) throws AdminException
+	public void stop(Daemon smscDaemon) throws AdminException
 	{
 		smscDaemon.shutdownService(Constants.SMSC_SME_ID);
 	}
