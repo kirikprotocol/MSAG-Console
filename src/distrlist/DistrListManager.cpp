@@ -28,8 +28,9 @@ DistrListManager::~DistrListManager()
     // Do nothing ?
 }
 
-const char* CHECK_DL_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE LIST=:LIST";
-const char* LIST_DL_SQL =  "SELECT LIST, OWNER, MAX_EL FROM DL_SET";
+const char* CHECK_DL_SQL    = "SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE LIST=:LIST";
+const char* LIST_DL_SQL     = "SELECT LIST, OWNER, MAX_EL FROM DL_SET";
+const char* LIST_OWN_DL_SQL = "SELECT LIST, OWNER, MAX_EL FROM DL_SET WHERE OWNER=:OWNER";
 const char* ADD_DL_SQL =   "INSERT INTO DL_SET (LIST, MAX_EL, OWNER) VALUES (:LIST, :MAX_EL, :OWNER)";
 const char* GET_DL_SQL =   "SELECT OWNER, MAX_EL FROM DL_SET WHERE LIST=:LIST";
 
@@ -302,6 +303,86 @@ DistrList DistrListManager::getDistrList(string dlName)
     
     if (connection) ds.freeConnection(connection);
     return list;
+}
+
+Array<DistrList> DistrListManager::list(const Address& dlOwner)
+    throw(SQLException, PrincipalNotExistsException)
+{
+    Array<DistrList> lists(0);
+    
+    string dlOwnerStdStr = dlOwner.toString();
+    const char* dlOwnerStr = dlOwnerStdStr.c_str();
+    logger.debug("DistrListManager: list() called for owner '%s'", dlOwnerStr);
+    
+    Connection* connection = 0;
+    try
+    {
+        if (!(connection = ds.getConnection())) 
+            throw SQLException(FAILED_TO_OBTAIN_CONNECTION);
+        
+        std::auto_ptr<Statement> selectListGuard(connection->createStatement(LIST_OWN_DL_SQL));
+        Statement* selectList = selectListGuard.get();
+        if (!selectList)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
+
+        selectList->setString(1, dlOwnerStr);
+
+        std::auto_ptr<ResultSet> selectListRsGuard(selectList->executeQuery());
+        ResultSet* selectListRs = selectListRsGuard.get();
+        if (!selectList) 
+            throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+
+        while (selectListRs->fetchNext())
+        {
+            const char* name = selectListRs->getString(1);
+            if (!name || name[0] == '\0') continue;
+            int maxEl = selectListRs->getInt32(3);
+            if (selectListRs->isNull(2)) {
+                lists.Push(DistrList(name, maxEl));
+            } else {
+                const char* owner = selectListRs->getString(2);
+                if (!owner || owner[0] == '\0') continue;
+                lists.Push(DistrList(Address(owner), name, maxEl));
+            }
+        }
+
+        if (lists.Count() <= 0) // Check principal existence
+        {
+            std::auto_ptr<Statement> checkPrincipalGuard(connection->createStatement(CHECK_PRINCIPAL_SQL));
+            Statement* checkPrincipal = checkPrincipalGuard.get();
+            if (!checkPrincipal)        
+                throw SQLException(FAILED_TO_CREATE_STATEMENT);
+
+            checkPrincipal->setString(1, dlOwnerStr);
+
+            std::auto_ptr<ResultSet> checkRsGuard(checkPrincipal->executeQuery());
+            ResultSet* checkRs = checkRsGuard.get();
+            if (!checkRs || !checkRs->fetchNext()) 
+                throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+            if (!checkRs->getUint32(1))
+                throw PrincipalNotExistsException("Principal for address '%s' bot exists",
+                                                  dlOwnerStr);
+        }
+    }
+    catch(Exception& exc) {
+        if (connection) ds.freeConnection(connection);
+        logger.error("%s", exc.what());
+        throw;
+    }
+    catch(std::exception& exc) {
+        if (connection) ds.freeConnection(connection);
+        logger.error("%s", exc.what());
+        throw;
+    }
+    catch(...) {
+        if (connection) ds.freeConnection(connection);
+        Exception exc("... exception handled");
+        logger.error("%s", exc.what());
+        throw exc;
+    }
+    
+    if (connection) ds.freeConnection(connection);
+    return lists;
 }
 
 Array<DistrList> DistrListManager::list()
