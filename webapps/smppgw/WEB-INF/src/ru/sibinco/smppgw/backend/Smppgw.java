@@ -83,7 +83,7 @@ public class Smppgw  extends Service
         }
 
 
-  }
+  } /*
    public Object loadRoutes(final String subject) throws SibincoException
    {
      final Response response = super.runCommand(new LoadRoutes(subject));
@@ -116,7 +116,7 @@ public class Smppgw  extends Service
     final Object res =loadRoutes(LOAD_ROUTES_METHOD_ID);
     return res instanceof List ? (List) res : null;
   }
-
+ /*
   public  Object traceRoute(final String subject,final Map args) throws SibincoException
      {
       //final Response response = super.runCommand(new CommandCall(TRACE_ROUTE_METHOD_ID, TRACE_ROUTE_METHOD_ID, Type.Types[Type.StringListType], args));
@@ -158,7 +158,7 @@ public class Smppgw  extends Service
        call(SMPPGW_COMPONENT_ID, APPLY_ROUTES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
      }
    }
-
+   */
    public synchronized void applyAliases() throws SibincoException
    {
      try {
