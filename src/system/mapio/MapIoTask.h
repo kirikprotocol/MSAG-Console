@@ -223,7 +223,7 @@ public:
     return dlg;
   }*/
 
-  MapDialog* createOrAtachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent){
+  MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent){
     if ( abonent.length() == 0 )
       throw runtime_error("can't create MT dialog without abonent");
     MutexGuard g(sync);
