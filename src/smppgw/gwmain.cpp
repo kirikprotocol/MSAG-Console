@@ -8,7 +8,7 @@
 #include "util/config/route/RouteConfig.h"
 #include <admin/service/ComponentManager.h>
 #include <admin/service/ServiceSocketListener.h>
-#include <admin/smsc_service/SmscComponent.h>
+//#include <admin/smsc_service/SmscComponent.h>
 #include <util/signal.hpp>
 #include <util/xml/init.h>
 #include <util/findConfigFile.h>

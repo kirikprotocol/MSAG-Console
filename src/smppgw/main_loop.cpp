@@ -38,108 +38,6 @@ bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProx
   return ok;
 }
 
-#if 0
-void Smsc::mainLoop()
-{
-  int src_proxy_index;
-  int dest_proxy_index;
-  SmeProxy* src_proxy;
-
-  for(;;)
-  {
-
-    do
-    {
-      src_proxy = smeman.selectSmeProxy(WAIT_DATA_TIMEOUT,&src_proxy_index);
-      if ( stopFlag ) return;
-    }
-    while(!src_proxy);
-
-    SmscCommand cmd = src_proxy->getCommand();
-    try
-    {
-      switch ( cmd->get_commandId() )
-      {
-      case __CMD__(SUBMIT):
-        {
-          __trace__("mainLoop:SUBMIT");
-          SMS* sms = cmd->get_sms();
-          uint32_t dialogId =  cmd->get_dialogId();
-          // route sms
-          SmeProxy* dest_proxy = 0;
-          bool has_route = routeSms(sms,dest_proxy_index,dest_proxy);
-          if ( !has_route )
-          {
-            //send_no_route;
-            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::NOROUTE);
-            src_proxy->putCommand(resp);
-            __warning__("SUBMIT_SM: no route");
-            break;
-          }
-          else if ( !dest_proxy )
-          {
-            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::SYSERR);
-            src_proxy->putCommand(resp);
-            __warning__("SUBMIT_SM: SME is not connected");
-            break;
-          }
-          // store sms
-          // create task
-          uint32_t dialogId2 = dest_proxy->getNextSequenceNumber();
-          //Task task((uint32_t)dest_proxy_index,dialogId2);
-          smsc::system::Task task(dest_proxy->getUniqueId(),dialogId2);
-          if ( !tasks.createTask(task) )
-          {
-            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::SYSERR);
-            src_proxy->putCommand(resp);
-            __warning__("SUBMIT_SM: can't create task");
-            break;
-          }
-          // send delivery
-          SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
-          dest_proxy->putCommand(delivery);
-          // send responce
-          SmscCommand resp2 = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::OK);
-          src_proxy->putCommand(resp2);
-          __trace__("mainLoop:SUBMIT:OK");
-          break;
-        }
-      case __CMD__(DELIVERY_RESP):
-        {
-          __trace__("mainLoop:DELIVERY_RESP");
-          //uint32_t status = cmd->get_resp()->get_status();
-          uint32_t dialogId = cmd->get_dialogId();
-          //const char* messageId = cmd->get_resp()->get_messageId();
-          smsc::system::Task task;
-          // find and remove task
-          if (!tasks.findAndRemoveTask(src_proxy->getUniqueId(),dialogId,&task))
-          {
-            __warning__("responce on unpresent task");
-            break;
-          }
-          // update sms state
-          //......
-          __trace__("mainLoop:DELIVERY_RESP:OK");
-          break;
-        }
-      default:
-        __warning__("received unsupported command");
-        // drop command
-      }
-    }
-    catch (exception& e)
-    {
-      __warning__(e.what());
-    }
-    catch (...)
-    {
-      __warning__("unknown exception catched");
-    }
-  }
-}
-#endif
-
-
 
 void Smsc::mainLoop()
 {
@@ -157,20 +55,11 @@ void Smsc::mainLoop()
 
       smeman.getFrame(frame,WAIT_DATA_TIMEOUT);
       if ( stopFlag ) return;
-      smsc::system::Task task;
-      while ( tasks.getExpired(&task) )
-      {
-        SMSId id = task.messageId;
-        __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
-          task.sequenceNumber,task.proxy_id);
-        //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
-        generateAlert(id,task.sms);
-      }
 
       time_t now=time(NULL);
       if(now-lastKillTrCmd>2)
       {
-        eventqueue.enqueue(0,SmscCommand::makeKillExpiredTransactions());
+        eventqueue.enqueue(SmscCommand::makeKillExpiredTransactions());
         lastKillTrCmd=now;
       }
 
@@ -255,35 +144,15 @@ void Smsc::mainLoop()
       continue; //start cycle from start
     }
 
-    //int stf=tcontrol->getConfig().shapeTimeFrame;
-    //int smt=tcontrol->getConfig().smoothTimeFrame;
-    //int maxsms=tcontrol->getConfig().maxSmsPerSecond;
-
     // main "delay" cycle
 
     while(frame.size())
     {
-      //int cntInstant=tcontrol->getTotalCount();
-      //int cntSmooth=tcontrol->getTotalCountLong();
-      /*if(cntInstant+1>maxsms && cntSmooth+1000<=maxsms*smt*1000)
-      {
-        __info2__(log,"cnt=%d, smooth_cnt=%d, submitCnt=%d",cntInstant,cntSmooth,submitCount);
-      }*/
 
-      int eqsize,equnsize;
-      eventqueue.getStats(eqsize,equnsize);
-      /*
-      if(
-          (cntInstant+1<=maxsms*stf ||
-            (
-              cntSmooth+1000<=maxsms*smt*1000 &&
-              cntInstant+1<=maxsms*stf+maxsms*stf*20/100
-            )
-          ) &&
-          eqsize+1<=eventQueueLimit
-        )
-        */
-      if(/*cntInstant+1<=maxsms*stf && */equnsize+1<=eventQueueLimit)
+      int equnsize;
+      eventqueue.getStats(equnsize);
+
+      if(equnsize+1<=eventQueueLimit)
       {
         SmscCommand cmd=frame.back();
         frame.pop_back();
@@ -293,7 +162,6 @@ void Smsc::mainLoop()
           {
             try{
               processCommand(cmd);
-              //tcontrol->incTotalCount(1);
             }catch(...)
             {
               __warning2__("command processing failed:%d",cmd->get_commandId());
@@ -302,81 +170,29 @@ void Smsc::mainLoop()
         }
         continue;
       }
-      //__warning2__("count=%d, smooth_cnt=%d",cntInstant,cntSmooth);
-      {
-        smsc::system::Task task;
-        while ( tasks.getExpired(&task) )
-        {
-          SMSId id = task.messageId;
-          __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
-            task.sequenceNumber,task.proxy_id);
-          generateAlert(id,task.sms);
-          //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
-        }
-      }
+
       timestruc_t tv={0,1000000};
       nanosleep(&tv,0);
     }
 
-
-    /*
-    for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
-    {
-      if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
-      {
-        if(i->getProxy()->getSmeIndex()!=smscSmeIdx)
-        {
-          try{
-            processCommand((*i));
-          }catch(...)
-          {
-            __warning2__("command processing failed:%d",(*i)->get_commandId());
-          }
-        }
-      }
-    }
-    */
   } // end of main loop
 }
 
 
-void Smsc::generateAlert(SMSId id,SMS* sms)
+void Smsc::generateAlert(SMS* sms)
 {
-  eventqueue.enqueue(id,SmscCommand::makeAlert(sms));
+  eventqueue.enqueue(SmscCommand::makeAlert(sms));
 }
 
 
 void Smsc::processCommand(SmscCommand& cmd)
 {
-  SMSId id=0;
   switch(cmd->get_commandId())
   {
-    case __CMD__(SUBMIT):
-    {
-      //SMS &sms=*cmd->get_sms();
-      static int idCounter=1;
-      id=idCounter++;//NEW ID!!!
-      __trace2__("main loop submit: seq=%d, id=%lld",cmd->get_dialogId(),id);
-      break;
-    }
-    case __CMD__(DELIVERY_RESP):
-    {
-      smsc::system::Task task;
-      uint32_t dialogId = cmd->get_dialogId();
-
-      if (!tasks.findAndRemoveTask(cmd.getProxy()->getUniqueId(),dialogId,&task))
-      {
-        __warning2__("task not found for delivery response. Sid=%s, did=%d",cmd.getProxy()->getSystemId(),dialogId);
-        return; //jump to begin of for
-      }
-      __trace2__("delivery response received. seqnum=%d,msgId=%lld,sms=%p",dialogId,task.messageId,task.sms);
-      cmd->get_resp()->set_sms(task.sms);
-      id=task.messageId;
-      break;
-    }
     case __CMD__(REPLACE):
     {
       int pos;
+      SMSId id;
       if(sscanf(cmd->get_replaceSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
          cmd->get_replaceSm().messageId.get()[pos]!=0)
       {
@@ -395,6 +211,7 @@ void Smsc::processCommand(SmscCommand& cmd)
     case __CMD__(QUERY):
     {
       int pos;
+      SMSId id;
       if(sscanf(cmd->get_querySm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
          cmd->get_querySm().messageId.get()[pos]!=0)
       {
@@ -413,6 +230,7 @@ void Smsc::processCommand(SmscCommand& cmd)
     }
     case __CMD__(CANCEL):
     {
+      SMSId id;
       if((cmd->get_cancelSm().messageId.get() && cmd->get_cancelSm().serviceType.get()))
       {
           cmd.getProxy()->putCommand
@@ -444,33 +262,23 @@ void Smsc::processCommand(SmscCommand& cmd)
         };
       }else
       {
-        if(!cmd->get_cancelSm().sourceAddr.get() || !cmd->get_cancelSm().sourceAddr.get()[0] ||
-           !cmd->get_cancelSm().destAddr.get() || !cmd->get_cancelSm().destAddr.get()[0])
-        {
-          cmd.getProxy()->putCommand
+        //multicancel not supported
+        cmd.getProxy()->putCommand
+        (
+          SmscCommand::makeCancelSmResp
           (
-            SmscCommand::makeCancelSmResp
-            (
-              cmd->get_dialogId(),
-              smsc::system::Status::CANCELFAIL
-            )
-          );
-          return;
-        }
-        //cancelAgent->putCommand(cmd); //TODO!!!
+            cmd->get_dialogId(),
+            smsc::system::Status::CANCELFAIL
+          )
+        );
         return;
       }
       break;
     }
     case __CMD__(SMEALERT):return;
-    case __CMD__(FORWARD):
-    {
-      id=cmd->get_forwardMsgId();
-      break;
-    }
     default:;
   }
-  eventqueue.enqueue(id,cmd);
+  eventqueue.enqueue(cmd);
 }
 
 

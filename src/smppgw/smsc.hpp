@@ -8,7 +8,7 @@
 #include "smeman/smeman.h"
 #include "system/task_container.h"
 #include "router/route_manager.h"
-#include "system/event_queue.h"
+#include "smppgw/event_queue.h"
 #include "util/config/smeman/SmeManConfig.h"
 #include "alias/aliasman.h"
 #include "util/config/alias/aliasconf.h"
@@ -145,7 +145,7 @@ public:
 
   void cancelSms(SMSId id,const Address& oa,const Address& da)
   {
-    eventqueue.enqueue(id,SmscCommand::makeCancel(id,oa,da));
+    eventqueue.enqueue(SmscCommand::makeCancel(id,oa,da));
   }
 
   smsc::smeman::SmeInfo getSmeInfo(smsc::smeman::SmeIndex idx)
@@ -223,12 +223,9 @@ public:
     cnt[5]=rescheduleCounter;
   }
 
-  void getStatData(int& eqsize,int& eqlocked)
+  void getStatData(int& eqsize)
   {
-    int hsize,qsize;
-    eventqueue.getStats(hsize,qsize);
-    eqsize=qsize;
-    eqlocked=hsize-qsize;
+    eventqueue.getStats(eqsize);
   }
 
   RefferGuard<RouteManager> getRouterInstance()
@@ -311,7 +308,7 @@ protected:
 
   void processCommand(SmscCommand& cmd);
 
-  void generateAlert(SMSId id,SMS* sms);
+  void generateAlert(SMS* sms);
 
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
@@ -320,7 +317,7 @@ protected:
   Reffer<RouteManager>* router_;
   Reffer<RouteManager>* testRouter_;
   Reffer<AliasManager>* aliaser_;
-  smsc::system::EventQueue eventqueue;
+  EventQueue eventqueue;
   bool stopFlag;
   std::string smscHost;
   int smscPort;

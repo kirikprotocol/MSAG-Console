@@ -1,7 +1,7 @@
 #include "smppgw/smscsignalhandlers.h"
 
 #include "smppgw/smsc.hpp"
-#include "admin/smsc_service/SmscComponent.h"
+//#include "admin/smsc_service/SmscComponent.h"
 #include "admin/service/ServiceSocketListener.h"
 
 namespace smsc {

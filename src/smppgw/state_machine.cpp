@@ -18,6 +18,7 @@
 #include <map>
 #include <set>
 #include "smppgw/gwsme.hpp"
+#include "smppgw/billing/bill.hpp"
 
 
 // строчка по русски, что б сработал autodetect :)
@@ -27,7 +28,6 @@ namespace smppgw{
 
 using namespace smsc::smeman;
 using namespace smsc::sms;
-using namespace smsc::system::StateTypeValue;
 using namespace smsc::smpp;
 using namespace util;
 using namespace smsc::resourcemanager;
@@ -40,9 +40,7 @@ using smsc::system::Task;
 
 using smsc::router::TrafficRules;
 
-using smsc::system::StateType;
-using smsc::system::Tuple;
-
+using billing::GetBillingInterface;
 
 smsc::db::DataSource* StateMachine::dataSource;
 
@@ -54,6 +52,8 @@ public:
     trDeniedByRule,
     trDeniedByLimit,
     trDeniedByUssdLimit,
+    trDeniedByBilling,
+    trTransactionInProgress,
 
     trInvalid=0x1000,
 
@@ -84,6 +84,8 @@ public:
     TMON_NAME_TO_STR(trDeniedByRule)
     TMON_NAME_TO_STR(trDeniedByLimit)
     TMON_NAME_TO_STR(trDeniedByUssdLimit)
+    TMON_NAME_TO_STR(trDeniedByBilling)
+    TMON_NAME_TO_STR(trTransactionInProgress)
 
     TMON_NAME_TO_STR(trSmeGenerated)
 
@@ -266,21 +268,38 @@ public:
     return trScInvalid;
   }
 
-  TrSmsStatus RegisterS2C(SMS& sms,time_t timeOut,TrafficRules& r,const char* sysId,const char* routeId)
+  std::pair<TrSmsStatus,billing::TransactionIdType> RegisterS2C(SMS& sms,time_t timeOut,TrafficRules& r)
   {
     TrSmsStatus st=getS2CSmsStatus(sms,r);
-    if((st&trDeniedBase) || (st&trInvalid))return st;
+    if((st&trDeniedBase) || (st&trInvalid))
+    {
+      return std::make_pair(st,billing::InvalidTransactionId);
+    }
     if(st==trSmeUssdInit)
     {
       __trace__("TMon: init ussd S2C");
       MutexGuard mg(mtx);
+
+      if(trMap.find(makeKey(sms))!=trMap.end())
+      {
+        return std::make_pair(trTransactionInProgress,billing::InvalidTransactionId);
+      }
+
+
       TransactionInfo ti(true,TransactionInfo::S2C);
-      ti.sysId=sysId;
-      ti.routeId=routeId;
+      ti.sysId=sms.getSourceSmeId();
+      ti.routeId=sms.getRouteId();
+      ti.trId=billing::GetBillingInterface()->BeginTransaction(sms,true);
+      if(ti.trId==billing::InvalidTransactionId)
+      {
+        __trace__("TMon: billing denied transaction");
+        return std::make_pair(trDeniedByBilling,billing::InvalidTransactionId);
+      }
       pair<TransactionMap::iterator,bool> pit=trMap.insert(std::make_pair(makeKey(sms),ti));
       timeList.push_back(make_pair(time(NULL)+timeOut,pit.first));
       TimeList::iterator lit=--timeList.end();
       backMapping.insert(std::make_pair(makeKey(sms),lit));
+      return std::make_pair(st,ti.trId);
     }
     if(st==trSmeUssdEnd || st==trSmeAnswerEnd)
     {
@@ -289,22 +308,34 @@ public:
       if(it==trMap.end())
       {
         __warning__("trmon: fuck, transaction not found :-/\n");
-        return st;
+        return std::make_pair(st,billing::InvalidTransactionId);
       }
+
+      GetBillingInterface()->CommitTransaction(it->second.trId);
+
       trMap.erase(it);
       BackMapping::iterator bit=backMapping.find(makeKey(sms));
       timeList.erase(bit->second);
       backMapping.erase(bit);
     }
-    if(st==trSmeGenerated && r.limitType!=TrafficRules::limitNoLimit)
+    if(st==trSmeGenerated)
     {
-      MutexGuard mg(mtx);
-      incRouteCount(sms.getRouteId());
+      if(r.limitType!=TrafficRules::limitNoLimit)
+      {
+        MutexGuard mg(mtx);
+        incRouteCount(sms.getRouteId());
+      }
+      billing::TransactionIdType trId=billing::GetBillingInterface()->BeginTransaction(sms,true);
+      if(trId==billing::InvalidTransactionId)
+      {
+        return std::make_pair(trDeniedByBilling,billing::InvalidTransactionId);
+      }
+      return std::make_pair(st,trId);
     }
-    return st;
+    return std::make_pair(st,billing::InvalidTransactionId);
   }
 
-  TrSmsStatus RegisterC2S(SMS& sms,time_t timeOut,TrafficRules& r,const char* sysId,const char* routeId)
+  TrSmsStatus RegisterC2S(SMS& sms,time_t timeOut,TrafficRules& r)
   {
     TrSmsStatus st=getC2SSmsStatus(sms,r);
     if((st&trDeniedBase) || (st&trInvalid))return st;
@@ -312,10 +343,23 @@ public:
     {
       __trace__("TMon: init ussd C2S");
       MutexGuard mg(mtx);
+
+      if(trMap.find(makeKey(sms))!=trMap.end())
+      {
+        return trTransactionInProgress;
+      }
+
       TransactionInfo ti(st==trScUssdInit,TransactionInfo::C2S);
-      ti.sysId=sysId;
-      ti.routeId=routeId;
+      ti.sysId=sms.getDestinationSmeId();
+      ti.routeId=sms.getRouteId();
+      ti.trId=GetBillingInterface()->BeginTransaction(sms,false);
+      if(ti.trId==billing::InvalidTransactionId)
+      {
+        __trace__("TMon: billing denied transaction");
+        return trDeniedByBilling;
+      }
       pair<TransactionMap::iterator,bool> pit=trMap.insert(std::make_pair(makeKey(sms),ti));
+
       timeList.push_back(make_pair(time(NULL)+timeOut,pit.first));
       TimeList::iterator lit=--timeList.end();
       backMapping.insert(std::make_pair(makeKey(sms),lit));
@@ -357,6 +401,10 @@ public:
       }else
       {
         stat->updateCounter(stat::Counters::cntSmsTrFailed,ti.sysId.c_str(),ti.routeId.c_str(),smsc::system::Status::TRANSACTIONTIMEDOUT);
+      }
+      if(ti.trId!=billing::InvalidTransactionId)
+      {
+        GetBillingInterface()->RollbackTransaction(ti.trId);
       }
       backMapping.erase(timeList.front().second->first);
       trMap.erase(timeList.front().second);
@@ -456,6 +504,7 @@ protected:
     bool ussd;
     std::string sysId;
     std::string routeId;
+    smsc::smppgw::billing::TransactionIdType trId;
     TransactionInfo(bool u,TrDir d):trLen(0),ussd(u),dir(d)
     {
     }
@@ -519,9 +568,10 @@ public:
     int seq;
     std::string smeId;
     std::string routeId;
-    RegistryData():sme(0),seq(0){}
-    RegistryData(SmeProxy* smeVal,int seqVal,const std::string& smeIdVal,const std::string& routeIdVal):
-      sme(smeVal),seq(seqVal),smeId(smeIdVal),routeId(routeIdVal)
+    billing::TransactionIdType trId;
+    RegistryData():sme(0),seq(0),trId(billing::InvalidTransactionId){}
+    RegistryData(SmeProxy* smeVal,int seqVal,const std::string& smeIdVal,const std::string& routeIdVal,billing::TransactionIdType trIdVal=billing::InvalidTransactionId):
+      sme(smeVal),seq(seqVal),smeId(smeIdVal),routeId(routeIdVal),trId(trIdVal)
     {
     }
   };
@@ -534,6 +584,10 @@ public:
     while(timeList.size()>0 && timeList.front().first<=now)
     {
       __trace2__("RR: response timed out:%d/%d",timeList.front().second->first.first,timeList.front().second->first.second);
+      if(timeList.front().second->second.trId!=billing::InvalidTransactionId)
+      {
+        GetBillingInterface()->RollbackTransaction(timeList.front().second->second.trId);
+      }
       backMapping.erase(timeList.front().second->first);
       mapping.erase(timeList.front().second);
       timeList.pop_front();
@@ -570,8 +624,11 @@ protected:
 
 static RespRegistry submitRegistry;
 static RespRegistry deliverRegistry;
+static RespRegistry replaceRegistry;
+static RespRegistry queryRegistry;
+static RespRegistry cancelRegistry;
 
-StateMachine::StateMachine(smsc::system::EventQueue& q,
+StateMachine::StateMachine(EventQueue& q,
                Smsc *app):
                eq(q),
                smsc(app)
@@ -590,31 +647,30 @@ void StateMachine::KillExpiredTrans()
 
 int StateMachine::Execute()
 {
-  smsc::system::Tuple t;
-  StateType st;
+  SmscCommand cmd;
   for(;;)
   {
-    eq.selectAndDequeue(t,&isStopping);
+    eq.selectAndDequeue(cmd,&isStopping);
     if(isStopping)break;
     try{
-      switch(t.command->cmdid)
+      switch(cmd->cmdid)
       {
-        case SUBMIT:st=submit(t);break;
-        case SUBMIT_RESP:st=submitResp(t);break;
-        case DELIVERY:st=delivery(t);break;
-        case DELIVERY_RESP:st=deliveryResp(t);break;
-        case ALERT:st=alert(t);break;
-        case REPLACE:st=replace(t);break;
-        case QUERY:st=query(t);break;
-        case CANCEL:st=cancel(t);break;
-        case KILLEXPIREDTRANSACTIONS:KillExpiredTrans();st=UNDELIVERABLE_STATE;break;
+        case SUBMIT:submit(cmd);break;
+        case SUBMIT_RESP:submitResp(cmd);break;
+        case DELIVERY:delivery(cmd);break;
+        case DELIVERY_RESP:deliveryResp(cmd);break;
+        case ALERT:alert(cmd);break;
+        case REPLACE:replace(cmd);break;
+        case REPLACE_RESP:replaceResp(cmd);break;
+        case QUERY:query(cmd);break;
+        case QUERY_RESP:queryResp(cmd);break;
+        case CANCEL:cancel(cmd);break;
+        case CANCEL_RESP:cancelResp(cmd);break;
+        case KILLEXPIREDTRANSACTIONS:KillExpiredTrans();UNDELIVERABLE_STATE;break;
         default:
-          __warning2__("UNKNOWN COMMAND:%d",t.command->cmdid);
-          st=ERROR_STATE;
+          __warning2__("UNKNOWN COMMAND:%d",cmd->cmdid);
           break;
       }
-      __trace2__("change state for %lld to %d",t.msgId,st);
-      eq.changeState(t.msgId,st);
     }catch(exception& e)
     {
       __warning2__("StateMachine::exception %s",e.what());
@@ -628,13 +684,13 @@ int StateMachine::Execute()
   return 0;
 }
 
-StateType StateMachine::submit(Tuple& t)
+void StateMachine::submit(SmscCommand& cmd)
 {
   RouteInfo ri;
-  SMS& sms=*t.command->get_sms();
-  SmeProxy *src_proxy=t.command.getProxy();
+  SMS& sms=*cmd->get_sms();
+  SmeProxy *src_proxy=cmd.getProxy();
   SmeProxy *dst_proxy;
-  uint32_t dialogId =  t.command->get_dialogId();
+  uint32_t dialogId =  cmd->get_dialogId();
   int dst_index;
   bool routeFound=smsc->routeSms(sms.getOriginatingAddress(),sms.getDestinationAddress(),dst_index,dst_proxy,&ri,src_proxy->getSmeIndex());
   if(!routeFound)
@@ -649,7 +705,7 @@ StateType StateMachine::submit(Tuple& t)
                      );
     src_proxy->putCommand(resp);
     smsc->getStatistics()->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),0,smsc::system::Status::NOROUTE);
-    return ERROR_STATE;
+    return;
   }
   if(!dst_proxy)
   {
@@ -661,7 +717,7 @@ StateType StateMachine::submit(Tuple& t)
                        sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
                      );
     src_proxy->putCommand(resp);
-    return ERROR_STATE;
+    return;
   }
 
   if(!sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
@@ -671,7 +727,12 @@ StateType StateMachine::submit(Tuple& t)
     sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,newmr);
   }
 
-  TransactionMonitor::TrSmsStatus st=tmon.RegisterS2C(sms,32,ri.trafRules,src_proxy->getSystemId(),ri.routeId.c_str());
+  sms.setRouteId(ri.routeId.c_str());
+  sms.setSourceSmeId(src_proxy->getSystemId());
+  sms.setDestinationSmeId(dst_proxy->getSystemId());
+
+  std::pair<TransactionMonitor::TrSmsStatus,billing::TransactionIdType> trpair=tmon.RegisterS2C(sms,32,ri.trafRules);
+  TransactionMonitor::TrSmsStatus st=trpair.first;
 
   smsc_log_info(smsLog,"SBM: trstate for sms from %s to %s=%s",sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),TransactionMonitor::getStatusName(st));
 
@@ -686,7 +747,7 @@ StateType StateMachine::submit(Tuple& t)
                        sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
                      );
     src_proxy->putCommand(resp);
-    return ERROR_STATE;
+    return;
   }
 
   if(st==TransactionMonitor::trSmeAnswerEnd)
@@ -699,14 +760,27 @@ StateType StateMachine::submit(Tuple& t)
 
   int newdid=dst_proxy->getNextSequenceNumber();
 
-  submitRegistry.Register(newdid,dst_index,RespRegistry::RegistryData(src_proxy,dialogId,src_proxy->getSystemId(),ri.routeId.c_str()),dst_proxy->getPreferredTimeout());
+  submitRegistry.Register
+  (
+    newdid,
+    dst_index,
+    RespRegistry::RegistryData
+    (
+      src_proxy,
+      dialogId,
+      src_proxy->getSystemId(),
+      ri.routeId.c_str(),
+      st==TransactionMonitor::trSmeGenerated?trpair.second:billing::InvalidTransactionId
+    ),
+    dst_proxy->getPreferredTimeout()
+  );
 
-  t.command->set_dialogId(newdid);
+  cmd->set_dialogId(newdid);
 
   bool ok=false;
 
   try{
-    dst_proxy->putCommand(t.command);
+    dst_proxy->putCommand(cmd);
     ok=true;
   }catch(exception& e)
   {
@@ -727,38 +801,42 @@ StateType StateMachine::submit(Tuple& t)
                        sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
                      );
     src_proxy->putCommand(resp);
-    return ERROR_STATE;
+    return;
   }
 
   //smsc->getStatistics()->updateCounter(stat::Counters::cntAccepted,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::OK);
 
-  return ENROUTE_STATE;
+  return;
 }
 
-StateType StateMachine::submitResp(Tuple& t)
+void StateMachine::submitResp(SmscCommand& cmd)
 {
   debug1(smsLog,"submit resp");
-  SmeProxy* src_proxy=t.command.getProxy();
+  SmeProxy* src_proxy=cmd.getProxy();
   SmeProxy* dst_proxy;
   int dlgId;
 
   RespRegistry::RegistryData rd;
 
-  if(submitRegistry.Get(t.command->get_dialogId(),src_proxy->getSmeIndex(),rd))
+  if(submitRegistry.Get(cmd->get_dialogId(),src_proxy->getSmeIndex(),rd))
   {
     dlgId=rd.seq;
     dst_proxy=rd.sme;
     debug1(smsLog,"record for submit resp found");
-    t.command->set_dialogId(dlgId);
-    int st=t.command->get_resp()->get_status();
+    cmd->set_dialogId(dlgId);
+    int st=cmd->get_resp()->get_status();
     uint64_t id=0;
     if(st==0)
     {
-      const char* msgid=t.command->get_resp()->get_messageId();
+      const char* msgid=cmd->get_resp()->get_messageId();
       sscanf(msgid,"%lld",&id);
       id<<=8;
     }
 
+    if(rd.trId!=billing::InvalidTransactionId)
+    {
+      GetBillingInterface()->CommitTransaction(rd.trId);
+    }
 
     using smsc::smeman::SmeRecord;
     SmeRecord* smerec=dynamic_cast<SmeRecord*>(src_proxy);
@@ -767,7 +845,7 @@ StateType StateMachine::submitResp(Tuple& t)
     {
       warn1(smsLog,"SBMRESP: incorrect command direction (submit response to to gatewaysme)");
       smsc->getStatistics()->updateCounter(stat::Counters::cntRejected,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::RX_R_APPN);
-      return ERROR_STATE;
+      return;
     }
     GatewaySme *gwsme=0;
     MutexGuard g(smerec->mutex);
@@ -780,9 +858,9 @@ StateType StateMachine::submitResp(Tuple& t)
       id|=gwsme->getPrefix()&0xFF;
       char buf[64];
       sprintf(buf,"%lld",id);
-      t.command->get_resp()->set_messageId(buf);
+      cmd->get_resp()->set_messageId(buf);
       try{
-        dst_proxy->putCommand(t.command);
+        dst_proxy->putCommand(cmd);
         smsc->getStatistics()->updateCounter(st==0?stat::Counters::cntAccepted:stat::Counters::cntRejected,rd.smeId.c_str(),rd.routeId.c_str(),st);
       }catch(...)
       {
@@ -793,24 +871,24 @@ StateType StateMachine::submitResp(Tuple& t)
     {
       warn1(smsLog,"SBMRESP: incorrect command direction (submit response to to gatewaysme)");
       smsc->getStatistics()->updateCounter(stat::Counters::cntRejected,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::RX_R_APPN);
-      return ERROR_STATE;
+      return;
     }
   }else
   {
     debug1(smsLog,"record for submit resp not found");
   }
 
-  return DELIVERED_STATE;
+  return;
 }
 
 
-StateType StateMachine::delivery(smsc::system::Tuple& t)
+void StateMachine::delivery(SmscCommand& cmd)
 {
   RouteInfo ri;
-  SMS& sms=*t.command->get_sms();
-  SmeProxy *src_proxy=t.command.getProxy();
+  SMS& sms=*cmd->get_sms();
+  SmeProxy *src_proxy=cmd.getProxy();
   SmeProxy *dst_proxy;
-  uint32_t dialogId =  t.command->get_dialogId();
+  uint32_t dialogId =  cmd->get_dialogId();
   int dst_index;
   bool routeFound=smsc->routeSms(sms.getOriginatingAddress(),sms.getDestinationAddress(),dst_index,dst_proxy,&ri,src_proxy->getSmeIndex());
   if(!routeFound)
@@ -828,7 +906,7 @@ StateType StateMachine::delivery(smsc::system::Tuple& t)
     {
     }
     smsc->getStatistics()->updateCounter(stat::Counters::cntPerm,src_proxy->getSystemId(),0,smsc::system::Status::RX_P_APPN);
-    return ERROR_STATE;
+    return;
   }
 
   if(!dst_proxy)
@@ -841,7 +919,7 @@ StateType StateMachine::delivery(smsc::system::Tuple& t)
                      );
     src_proxy->putCommand(resp);
     smsc->getStatistics()->updateCounter(stat::Counters::cntTemp,src_proxy->getSystemId(),0,smsc::system::Status::RX_T_APPN);
-    return ERROR_STATE;
+    return;
   }
 
   if(!sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
@@ -854,7 +932,12 @@ StateType StateMachine::delivery(smsc::system::Tuple& t)
     debug2(smsLog,"DLV: already have mr=%d",sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
   }
 
-  TransactionMonitor::TrSmsStatus st=tmon.RegisterC2S(sms,32,ri.trafRules,dst_proxy->getSystemId(),ri.routeId.c_str());
+  sms.setRouteId(ri.routeId.c_str());
+  sms.setSourceSmeId(src_proxy->getSystemId());
+  sms.setDestinationSmeId(dst_proxy->getSystemId());
+
+
+  TransactionMonitor::TrSmsStatus st=tmon.RegisterC2S(sms,32,ri.trafRules);
 
   smsc_log_info(smsLog,"DLV: trstate for sms from %s to %s=%s",sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),TransactionMonitor::getStatusName(st));
 
@@ -867,7 +950,7 @@ StateType StateMachine::delivery(smsc::system::Tuple& t)
                        smsc::system::Status::RX_P_APPN
                      );
     src_proxy->putCommand(resp);
-    return ERROR_STATE;
+    return;
   }
 
   if(st==TransactionMonitor::trSmeUssdEnd)
@@ -880,48 +963,48 @@ StateType StateMachine::delivery(smsc::system::Tuple& t)
   //deliverRegistry.Register(newdid,dst_index,dialogId,src_proxy,dst_proxy->getPreferredTimeout());
   deliverRegistry.Register(newdid,dst_index,RespRegistry::RegistryData(src_proxy,dialogId,src_proxy->getSystemId(),ri.routeId.c_str()),dst_proxy->getPreferredTimeout());
 
-  t.command->set_dialogId(newdid);
+  cmd->set_dialogId(newdid);
 
 
   try{
-    dst_proxy->putCommand(t.command);
+    dst_proxy->putCommand(cmd);
     Task task(dst_proxy->getUniqueId(),newdid,0);
     smsc->tasks.createTask(task,dst_proxy->getPreferredTimeout());
   }catch(exception& e)
   {
     warn2(smsLog,"DLV: failed to put command to dest proxy:%s",e.what());
-    return ERROR_STATE;
+    return;
   }catch(...)
   {
     warn2(smsLog,"DLV: failed to put command to dest proxy:%s","unknown");
-    return ERROR_STATE;
+    return;
   }
 
-  return ENROUTE_STATE;
+  return;
 }
 
 
-StateType StateMachine::deliveryResp(Tuple& t)
+void StateMachine::deliveryResp(SmscCommand& cmd)
 {
   debug1(smsLog,"submit resp");
-  SmeProxy* src_proxy=t.command.getProxy();
+  SmeProxy* src_proxy=cmd.getProxy();
   SmeProxy* dst_proxy;
   int dlgId;
 
   RespRegistry::RegistryData rd;
-  if(deliverRegistry.Get(t.command->get_dialogId(),src_proxy->getSmeIndex(),rd))
+  if(deliverRegistry.Get(cmd->get_dialogId(),src_proxy->getSmeIndex(),rd))
   {
     dlgId=rd.seq;
     dst_proxy=rd.sme;
-    int st=t.command->get_resp()->get_status();
+    int st=cmd->get_resp()->get_status();
     smsc->getStatistics()->updateCounter(st==0?stat::Counters::cntDelivered:
       smsc::system::Status::isErrorPermanent(st)?stat::Counters::cntPerm:stat::Counters::cntTemp
       ,dst_proxy->getSystemId(),rd.routeId.c_str(),st);
     debug1(smsLog,"record for delivery resp found");
-    t.command->set_dialogId(dlgId);
-    t.command->get_resp()->set_messageId("0");
+    cmd->set_dialogId(dlgId);
+    cmd->get_resp()->set_messageId("0");
     try{
-      dst_proxy->putCommand(t.command);
+      dst_proxy->putCommand(cmd);
     }catch(...)
     {
       warn2(smsLog,"DLVRESP: failed to put command to %s",dst_proxy->getSystemId());
@@ -931,45 +1014,182 @@ StateType StateMachine::deliveryResp(Tuple& t)
     debug1(smsLog,"record for delivery resp not found");
   }
 
-  return DELIVERED_STATE;
+  return;
 }
 
-StateType StateMachine::alert(Tuple& t)
+void StateMachine::alert(SmscCommand& cmd)
 {
-  return ENROUTE_STATE;
+  return;
 }
 
-StateType StateMachine::replace(Tuple& t)
+void StateMachine::replace(SmscCommand& cmd)
 {
-  debug2(smsLog,"REPLACE: msgId=%lld",t.msgId);
-  uint64_t msgId=t.msgId;
-  uint8_t uid=msgId&0xff;
+  uint64_t msgId=cmd->get_replaceSm().getMessageId();
+  debug2(smsLog,"REPLACE: msgId=%lld",msgId);
+  uint8_t uid=(uint8_t)(msgId&0xff);
   GatewaySme *gwsme=smsc->getGwSme(uid);
   if(gwsme==0)
   {
     warn2(smsLog,"REPLACE: invalid uid=%d!",(int)uid);
-    return ERROR_STATE;
+    return;
   }
 
   msgId>>=8;
-  sprintf(t.command->get_replaceSm().messageId.get(),"%lld",msgId);
+  sprintf(cmd->get_replaceSm().messageId.get(),"%lld",msgId);
   try{
-    gwsme->putCommand(t.command);
+    int newdid=gwsme->getNextSequenceNumber();
+    replaceRegistry.Register(newdid,gwsme->getSmeIndex(),
+       RespRegistry::RegistryData(
+         cmd.getProxy(),
+         cmd->get_dialogId(),
+         "",
+         ""),gwsme->getPreferredTimeout()
+       );
+    cmd->set_dialogId(newdid);
+    gwsme->putCommand(cmd);
   }catch(...)
   {
     warn1(smsLog,"REPLACE: failed to put relace command");
   }
-  return ENROUTE_STATE;
+  return;
 }
 
-StateType StateMachine::query(Tuple& t)
+void StateMachine::replaceResp(SmscCommand& cmd)
 {
-  return ENROUTE_STATE;
+  debug1(smsLog,"REPLACE_RESP");
+  RespRegistry::RegistryData rd;
+  SmeProxy* src_proxy=cmd.getProxy();
+  if(replaceRegistry.Get(cmd->get_dialogId(),src_proxy->getSmeIndex(),rd))
+  {
+    int dlgId=rd.seq;
+    SmeProxy* dst_proxy=rd.sme;
+    int st=cmd->get_status();
+    debug2(smsLog,"record for replace resp found, dlgId=%d",dlgId);
+    cmd->set_dialogId(dlgId);
+    try{
+      dst_proxy->putCommand(cmd);
+    }catch(...)
+    {
+      warn2(smsLog,"REPLACE_RESP: failed to put command to %s",dst_proxy->getSystemId());
+    }
+  }else
+  {
+    warn1(smsLog,"REPLACE_RESP: timed out or invalid");
+  }
+  return;
 }
 
-StateType StateMachine::cancel(Tuple& t)
+
+void StateMachine::query(SmscCommand& cmd)
 {
-  return ENROUTE_STATE;
+  uint64_t msgId=cmd->get_querySm().getMessageId();
+  debug2(smsLog,"QUERY: msgId=%lld",msgId);
+  uint8_t uid=(uint8_t)(msgId&0xff);
+  GatewaySme *gwsme=smsc->getGwSme(uid);
+  if(gwsme==0)
+  {
+    warn2(smsLog,"QUERY: invalid uid=%d!",(int)uid);
+    return;
+  }
+
+  msgId>>=8;
+  sprintf(cmd->get_querySm().messageId.get(),"%lld",msgId);
+  try{
+    int newdid=gwsme->getNextSequenceNumber();
+    queryRegistry.Register(newdid,gwsme->getSmeIndex(),
+       RespRegistry::RegistryData(
+         cmd.getProxy(),
+         cmd->get_dialogId(),
+         "",
+         ""),gwsme->getPreferredTimeout()
+       );
+    cmd->set_dialogId(newdid);
+    gwsme->putCommand(cmd);
+  }catch(...)
+  {
+    warn1(smsLog,"QUERY: failed to put relace command");
+  }
+  return;
+}
+
+void StateMachine::queryResp(SmscCommand& cmd)
+{
+  debug1(smsLog,"QUERY_RESP");
+  RespRegistry::RegistryData rd;
+  SmeProxy* src_proxy=cmd.getProxy();
+  if(queryRegistry.Get(cmd->get_dialogId(),src_proxy->getSmeIndex(),rd))
+  {
+    int dlgId=rd.seq;
+    SmeProxy* dst_proxy=rd.sme;
+    int st=cmd->get_status();
+    debug2(smsLog,"record for quesy resp found, dlgId=%d",dlgId);
+    cmd->set_dialogId(dlgId);
+    try{
+      dst_proxy->putCommand(cmd);
+    }catch(...)
+    {
+      warn2(smsLog,"QUERY_RESP: failed to put command to %s",dst_proxy->getSystemId());
+    }
+  }else
+  {
+    warn1(smsLog,"QUERY_RESP: timed out or invalid");
+  }
+  return;
+}
+
+void StateMachine::cancel(SmscCommand& cmd)
+{
+  uint64_t msgId=cmd->get_cancelSm().getMessageId();
+  debug2(smsLog,"CANCEL: msgId=%lld",msgId);
+  uint8_t uid=(uint8_t)(msgId&0xff);
+  GatewaySme *gwsme=smsc->getGwSme(uid);
+  if(gwsme==0)
+  {
+    warn2(smsLog,"CANCEL: invalid uid=%d!",(int)uid);
+    return;
+  }
+
+  msgId>>=8;
+  sprintf(cmd->get_cancelSm().messageId.get(),"%lld",msgId);
+  try{
+    int newdid=gwsme->getNextSequenceNumber();
+    cancelRegistry.Register(newdid,gwsme->getSmeIndex(),
+       RespRegistry::RegistryData(
+         cmd.getProxy(),
+         cmd->get_dialogId(),
+         "",
+         ""),gwsme->getPreferredTimeout()
+       );
+    cmd->set_dialogId(newdid);
+    gwsme->putCommand(cmd);
+  }catch(...)
+  {
+    warn1(smsLog,"CANCEL: failed to put relace command");
+  }
+}
+
+void StateMachine::cancelResp(SmscCommand& cmd)
+{
+  debug1(smsLog,"CANCEL_RESP");
+  RespRegistry::RegistryData rd;
+  SmeProxy* src_proxy=cmd.getProxy();
+  if(cancelRegistry.Get(cmd->get_dialogId(),src_proxy->getSmeIndex(),rd))
+  {
+    int dlgId=rd.seq;
+    SmeProxy* dst_proxy=rd.sme;
+    int st=cmd->get_status();
+    debug2(smsLog,"record for cancel resp found, dlgId=%d",dlgId);
+    cmd->set_dialogId(dlgId);
+    try{
+      dst_proxy->putCommand(cmd);
+    }catch(...)
+    {
+      warn2(smsLog,"CANCEL_RESP: failed to put command to %s",dst_proxy->getSystemId());
+    }
+  }else
+  {
+    warn1(smsLog,"CANCEL_RESP: timed out or invalid");
+  }
 }
 
 

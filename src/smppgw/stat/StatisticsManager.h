@@ -59,6 +59,7 @@ namespace stat {
 
     struct ServiceStat
     {
+      int DeniedByBilling;
       int SmsTrOk;
       int SmsTrFailed;
       int SmsTrBilled;

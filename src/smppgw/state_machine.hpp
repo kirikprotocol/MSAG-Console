@@ -3,7 +3,7 @@
 
 #include "smppgw/smsc.hpp"
 #include "core/threads/ThreadedTask.hpp"
-#include "system/event_queue.h"
+#include "smppgw/event_queue.h"
 #include "util/templates/Formatters.h"
 #include <string>
 #include "profiler/profiler.hpp"
@@ -30,7 +30,7 @@ public:
 
 class StateMachine:public smsc::core::threads::ThreadedTask{
 public:
-  StateMachine(smsc::system::EventQueue& q,
+  StateMachine(EventQueue& q,
                smsc::smppgw::Smsc *app);
   virtual ~StateMachine()
   {
@@ -47,7 +47,7 @@ public:
 
 protected:
 
-  smsc::system::EventQueue& eq;
+  EventQueue& eq;
   smsc::smppgw::Smsc *smsc;
 
   smsc::logger::Logger* smsLog;
@@ -57,14 +57,17 @@ protected:
   std::string smscSmeId;
 
 
-  smsc::system::StateType submit(smsc::system::Tuple& t);
-  smsc::system::StateType submitResp(smsc::system::Tuple& t);
-  smsc::system::StateType delivery(smsc::system::Tuple& t);
-  smsc::system::StateType deliveryResp(smsc::system::Tuple& t);
-  smsc::system::StateType alert(smsc::system::Tuple& t);
-  smsc::system::StateType replace(smsc::system::Tuple& t);
-  smsc::system::StateType query(smsc::system::Tuple& t);
-  smsc::system::StateType cancel(smsc::system::Tuple& t);
+  void submit(SmscCommand& cmd);
+  void submitResp(SmscCommand& cmd);
+  void delivery(SmscCommand& cmd);
+  void deliveryResp(SmscCommand& cmd);
+  void alert(SmscCommand& cmd);
+  void replace(SmscCommand& cmd);
+  void replaceResp(SmscCommand& cmd);
+  void query(SmscCommand& cmd);
+  void queryResp(SmscCommand& cmd);
+  void cancel(SmscCommand& cmd);
+  void cancelResp(SmscCommand& cmd);
 
   void KillExpiredTrans();
 

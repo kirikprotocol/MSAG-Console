@@ -16,6 +16,7 @@ namespace stat {
 
           cntServiceBase=0x1000,
 
+          cntDeniedByBilling,
           cntSmsTrOk,
           cntSmsTrFailed,
           cntSmsTrBilled,

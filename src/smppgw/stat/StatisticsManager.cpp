@@ -85,6 +85,7 @@ void GWStatisticsManager::updateCounter(int counter,const char* srcSmeId, const 
       if(srvSt)srvSt->name++; \
       break;
 
+    UPDATE_SRV_STAT_CNT(DeniedByBilling)
     UPDATE_SRV_STAT_CNT(SmsTrOk)
     UPDATE_SRV_STAT_CNT(SmsTrFailed)
     UPDATE_SRV_STAT_CNT(SmsTrBilled)

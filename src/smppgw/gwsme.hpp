@@ -59,8 +59,9 @@ public:
   SmscCommand getCommand()
   {
     MutexGuard g(mutexin);
-    if(inqueue.Count()==0)throw Exception("SmppProxy::getCommand: no commands in input queue");
     SmscCommand cmd;
+    if(inqueue.Count()==0)return cmd;
+    //throw Exception("SmppProxy::getCommand: no commands in input queue");
     inqueue.Pop(cmd);
     return cmd;
   }
@@ -116,8 +117,15 @@ public:
 
   void setId(const std::string& newid,SmeIndex idx)
   {
+    __trace2__("setId:%s/%d",newid.c_str(),idx);
     id=newid;
     smeIndex=idx;
+  }
+
+  virtual SmeIndex getSmeIndex()
+  {
+    __trace2__("setIdx:%d",smeIndex);
+    return smeIndex;
   }
 
   const char * getSystemId() const

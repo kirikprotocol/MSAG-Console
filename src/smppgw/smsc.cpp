@@ -13,6 +13,7 @@
 #include "resourcemanager/ResourceManager.hpp"
 #include <typeinfo>
 #include "gwsme.hpp"
+#include "smppgw/billing/bill.hpp"
 
 namespace smsc{
 namespace system{
@@ -40,7 +41,7 @@ Smsc::~Smsc()
 
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
 public:
-  SpeedMonitor(smsc::system::EventQueue& eq,smsc::system::performance::PerformanceListener* pl,Smsc* psmsc):
+  SpeedMonitor(EventQueue& eq,smsc::system::performance::PerformanceListener* pl,Smsc* psmsc):
     queue(eq),perfListener(pl)
   {
     start.tv_sec=0;
@@ -74,7 +75,7 @@ public:
       while(now.tv_sec==time(NULL))ev.Wait(10);
       cnt=queue.getCounter();
       int eqhash,equnl;
-      queue.getStats(eqhash,equnl);
+      queue.getStats(equnl);
       clock_gettime(CLOCK_REALTIME,&now);
       ut=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
          (start.tv_sec*1000.0+start.tv_nsec/1000000.0))/1000.0;
@@ -82,7 +83,7 @@ public:
          (lasttime.tv_sec*1000.0+lasttime.tv_nsec/1000000.0))/1000;
       rate=(cnt-last)/tm;
       avg=cnt/ut;
-      printf("UT:%.3lf AVG:%.3lf LAST:%.3lf (%llu)[%d,%d]         \r",ut,avg,rate,cnt,eqhash,equnl);
+      printf("UT:%.3lf AVG:%.3lf LAST:%.3lf (%llu)[%d]         \r",ut,avg,rate,cnt,equnl);
       fflush(stdout);
       last=cnt;
       lasttime=now;
@@ -152,7 +153,7 @@ public:
       d.uptime=now.tv_sec-start.tv_sec;
 
       d.eventQueueSize=equnl;
-      d.inProcessingCount=eqhash-equnl;
+      d.inProcessingCount=0;
 
       perfListener->reportGenPerformance(&d);
 
@@ -173,7 +174,7 @@ public:
     return "SpeedMonitor";
   }
 protected:
-  smsc::system::EventQueue& queue;
+  EventQueue& queue;
   int perfCnt[smsc::system::performance::performanceCounters][60];
   int timeshift;
   time_t times[60];
@@ -364,7 +365,13 @@ void Smsc::init(const SmscConfigs& cfg)
     smsc_log_info(log, "Datasource configured" );
   }
 
+
   StateMachine::dataSource=dataSource;
+
+  {
+    billing::InitBillingInterface(cfg.cfgman->getString("billing.module"));
+  }
+
 
   {
     smsc_log_info(log, "Starting statemachines" );
