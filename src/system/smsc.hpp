@@ -206,6 +206,8 @@ public:
     if ( router_ ) router_->Release();
     router_ = new RouteManagerReffer(manager);
   }
+  
+  void reloadRoutes(const SmscConfigs& cfg);
 
 protected:
   smsc::core::threads::ThreadPool tp;

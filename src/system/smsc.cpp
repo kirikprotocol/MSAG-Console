@@ -308,7 +308,7 @@ void Smsc::init(const SmscConfigs& cfg)
     __warning__("Failed to load routes");
   }
 
-  ResetRouteManager(router.release())
+  ResetRouteManager(router.release());
 
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
   store=smsc::store::StoreManager::getMessageStore();
@@ -519,6 +519,19 @@ void Smsc::shutdown()
   __trace__("shutting down");
   tp.shutdown();
   smsc::store::StoreManager::shutdown();
+}
+
+void Smsc::reloadRoutes(const SmscConfigs& cfg)
+{
+  auto_ptr<RouteManager> router(new RouteManager());
+  router->assign(&smeman);
+  try{
+    loadRoutes(router.get(),*cfg.routesconfig);
+  }catch(...)
+  {
+    __warning__("Failed to load routes");
+  }
+  ResetRouteManager(router.release());
 }
 
 };//system
