@@ -51,21 +51,20 @@
       <fileset refid="project_libs"/>
     </copy>
     <jar destfile="${mciprof_out}/mciprof.war">
+      <fileset file="${basedir}/config.xml"/>
       <zipfileset file="${basedir}/service" prefix="bin"/>
       <zipfileset dir="${mciprof_lib}"      prefix="lib"/>
+      <zipfileset dir="${basedir}/jsp"      prefix="jsp"/>
       <zipfileset dir="${basedir}/config"   prefix="config"/>
       <zipfileset dir="${basedir}/schema"   prefix="schema"/>
     </jar>
   </target>
 
-  <target name="cvs_update" description="udate files from cvs">
-    <cvs command="update" quiet="yes" failonerror="yes" compressionlevel="9"/>
-  </target>
-
-  <target name="update" depends="cvs_update, build" description="make update package">
+  <target name="update" depends="build" description="make update package">
     <!-- должен сделать зип с jar'ами, schema.xml, resources.xml -->
     <zip destfile="${mciprof_out}/mciprof.zip">
       <zipfileset dir="${mciprof_lib}"    prefix="lib"/>
+      <zipfileset dir="${basedir}/jsp"    prefix="jsp"/>
       <zipfileset dir="${basedir}/schema" prefix="schema"/>
     </zip>
   </target>
