@@ -301,7 +301,7 @@ public class Route
                 + "\" allowBlocked=\"" + isAllowBlocked()
                 + "\">");
     if (notes != null)
-      out.println("    <notes>" + notes + "</notes>");
+      out.println("    <notes>" + StringEncoderDecoder.encode(notes) + "</notes>");
     getSources().store(out);
     getDestinations().store(out);
     out.println("  </route>");
