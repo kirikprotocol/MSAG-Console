@@ -16,6 +16,8 @@ public:
   string getString(const string& locale, const string& key);
   // возвращает строку из ресурса для дефолтной локали и ключа.
   string getString(const string& key);
+
+  static ResourceManager& getInstance();
 };
 
 };//resourcemanager
