@@ -36,10 +36,10 @@ namespace smsc { namespace store
         OCIError    *errhp;
         OCIStmt     *stmt;
         
-        void convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date);
-        void convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date);
-
     public:
+        
+        static void convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date);
+        static void convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date);
         
         Statement(Connection* connection, const char* sql, 
                   bool assign=false) 
