@@ -39,7 +39,7 @@ class DistrListProcess : public ThreadedTask, public SmeProxy{
     SmscCommand cmd;          // исходная команда
   };
   typedef pair<ListTask*,unsigned> TPAIR;
-  typedef map<unsigned,TPAIR> MAPTYPE;
+  typedef std::map<unsigned,TPAIR> MAPTYPE;
   typedef list<ListTask*> LISTTYPE;
   MAPTYPE task_map;       // маппинг диалог <-> {задача,индекс элемента}
   LISTTYPE task_sheduler; // список задач упорядоченый по таймаутам
