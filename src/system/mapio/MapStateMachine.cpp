@@ -736,7 +736,9 @@ unsigned ParseSemiOctetU(unsigned char v)
 
 static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_SM_RP_OA_T *srcAddr)
 {
-  __map_trace2__("%s:dialog 0x%x received PDU: signalInfoLen 0x%x", __func__, dialog->dialogid_map, ud->signalInfoLen);
+  Address src_addr;
+  ConvAddrMSISDN2Smc(srcAddr,&src_addr);
+  __map_trace2__("%s:dialog 0x%x received PDU from: %s signalInfoLen 0x%x", __func__, dialog->dialogid_map, src_addr.toString().c_str(), ud->signalInfoLen);
   if( smsc::logger::_map_cat->isDebugEnabled() )
   {
     char text[sizeof(*ud)*4] = {0,};
@@ -754,7 +756,6 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   auto_ptr<SMS> _sms ( new SMS() );
   SMS& sms = *_sms.get();
   sms.setBinProperty(Tag::SMSC_MO_PDU, (const char *)ud->signalInfo, ud->signalInfoLen );
-  Address src_addr;
   Address dest_addr;
   SMS_SUMBMIT_FORMAT_HEADER* ssfh = (SMS_SUMBMIT_FORMAT_HEADER*)ud->signalInfo;
   MAP_SMS_ADDRESS* msa = (MAP_SMS_ADDRESS*)(ud->signalInfo+2);
@@ -1017,7 +1018,6 @@ none_validity:;
   sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
   sms.setMessageReference(ssfh->mr);
   if ( ssfh->u.head.srr ) sms.setIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST,1);
-  ConvAddrMSISDN2Smc(srcAddr,&src_addr);
   sms.setOriginatingAddress(src_addr);
   ConvAddrMap2Smc(msa,&dest_addr);
   sms.setDestinationAddress(dest_addr);
