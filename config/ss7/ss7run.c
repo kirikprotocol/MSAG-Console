@@ -27,7 +27,7 @@ modesc moduledesc[] = {{"TCAP",   4    },
                        {"ETSIMAP",107  },
                        {"",       65535}};
 
-enum {UNBOUND,BOUND,SIDLE,SINIT,SRUN} status;
+enum {UNBOUND,BOUND,SIDLE,SINIT,SRUN,LINKRUN} status;
 
 void usage() {
   printf("Usage:   ss7run cfgname modname [modname...]\n");
@@ -129,7 +129,7 @@ int ss7run(char* cfg, USHORT_T modnum, char* argv[]) {
                                   MGMT_ID,
                                   9 /*Stack State Query (SSQ)*/,
                                   0, 
-                                  0,
+                                  NULL,
                                   WAIT);
 
   if (res != EINSS7_MGMTAPI_RETURN_OK) {
@@ -168,6 +168,7 @@ int ss7run(char* cfg, USHORT_T modnum, char* argv[]) {
   }
 
   if (status != SINIT) {
+    fprintf(stderr, "FAILED: ss7 stack init.\n");
     return -1 ;
   }
 
@@ -181,6 +182,24 @@ int ss7run(char* cfg, USHORT_T modnum, char* argv[]) {
   }
 
   if (status != SRUN) {
+    fprintf(stderr, "FAILED: ss7 stack start.\n");
+    return -1 ;
+  }
+  res = EINSS7_MgmtApiSendOrderReq(USERID, /*senderID*/
+                                   MGMT_ID, /*receiverID*/
+                                   6, /*moduleID = MTPL3*/
+                                   11, /*orderID = start all links*/
+                                   0, /*lengthOfInfo*/
+                                   NULL, /* orderInfo_p*/
+                                   WAIT);
+
+  if (res != EINSS7_MGMTAPI_RETURN_OK) {
+    fprintf(stderr, "FAILED: start all links. code %hu\n", res);
+    return res ;
+  }
+
+  if (status != LINKRUN) {
+    fprintf(stderr, "FAILED: start all links.\n");
     return -1 ;
   }
 }
@@ -285,7 +304,21 @@ USHORT_T EINSS7_MgmtApiHandleOrderConf(USHORT_T moduleId,
                                        UCHAR_T lengthOfInfo,
                                        UCHAR_T *orderInfo_p)
 {
-  printf("EINSS7_MgmtApiHandleOrderConf\n");
+/*
+  UCHAR_T* buf = hexDump(orderInfo_p,lengthOfInfo);
+  printf("ORDER module=%d orderid=%d result=%s resinfo=%d len=%d data:%s\n",
+          moduleId,
+          orderId,
+          getResultDescription(orderResult),
+          resultInfo,
+          lengthOfInfo,
+          buf);
+  free(buf);
+*/
+  if (status == SRUN && 
+      orderId == 11  && 
+      orderResult == 0) status = LINKRUN;
+  return MSG_OK;
 }
 
                                               
