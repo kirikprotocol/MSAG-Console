@@ -21,6 +21,7 @@ providerId CDATA "-1"
 	forceDelivery (true|false) "false"
 	aclId CDATA "-1"
   allowBlocked (true|false) "false"
+  billingId CDATA ""
 >
 <!ELEMENT notes (#PCDATA)>
 <!ELEMENT source (subject | mask)>
