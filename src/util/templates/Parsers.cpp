@@ -602,7 +602,8 @@ void DateTimeParser::parse(std::string& input,
                         &tmdt.tm_hour, &bytes)) == EOF ||
                         !result || !bytes || bytes<0 || 
                         tmdt.tm_hour<0 || tmdt.tm_hour>23)
-                        throw ParsingException(error, "24-based hour number expected",
+                        throw ParsingException(error, 
+                                               "[0,23] hour number expected",
                                                str, pattern);
 
                     if (pattern[curPos] == 'H') curPos++;
@@ -618,7 +619,8 @@ void DateTimeParser::parse(std::string& input,
                         &tmdt.tm_hour, &bytes)) == EOF ||
                         !result || !bytes || bytes<0 || 
                         tmdt.tm_hour<=0 || tmdt.tm_hour>12)
-                        throw ParsingException(error, "12-based hour number expected",
+                        throw ParsingException(error, 
+                                               "[1,12] hour number expected",
                                                str, pattern);
 
                     if (pattern[curPos] == 'h') curPos++;
@@ -725,7 +727,10 @@ void DateTimeParser::parse(std::string& input,
             {
                 if (isAMPM)
                 {
-                    tmdt.tm_hour += (AMPM && tmdt.tm_hour<12) ? 12:0;
+                    if (!AMPM && tmdt.tm_hour>0 && tmdt.tm_hour<12) 
+                        tmdt.tm_hour += 12; 
+                    else if (AMPM && tmdt.tm_hour==12) 
+                        tmdt.tm_hour = 0; 
                 }
                 else throw ParsingException(error, "AM/PM qualifer missed",
                                             str, pattern);

@@ -603,14 +603,17 @@ void DateTimeFormatter::format(std::string& output,
             }
             case 'h':
             {
+                char str[16];
+                strftime(str, sizeof(str), "%I", &tmdt);
+                sscanf(str, "%d", &tmdt.tm_hour);
+
                 if (pattern[++curPos] == 'h') {
                     curPos++;
-                    sprintf(buff, "%02d", tmdt.tm_hour%12);
+                    sprintf(buff, "%02d", tmdt.tm_hour);
                 } else 
-                    sprintf(buff, "%d", tmdt.tm_hour%12);
+                    sprintf(buff, "%d", tmdt.tm_hour);
 
-                needAMPM = true;
-                output += buff;
+                output += buff; needAMPM = true;
                 continue;
             }
             case 'H':
