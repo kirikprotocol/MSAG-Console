@@ -97,40 +97,39 @@ public class SmsStat
         try
         {
             connection = ds.getConnection();
-            if (connection == null) return stat;
 
             processSmsQuery(connection, query);
             processSmeQuery(connection, query);
             processStateQuery(connection, query);
             processRouteQuery(connection, query);
-
-            connection.close();
         }
-        catch (Exception exc)
-        {
-          try { if (connection != null) connection.close(); }
-          catch (Exception cexc) { cexc.printStackTrace(); }
-          System.out.println("Operation with DB failed !");
-          exc.printStackTrace();
+        catch (Exception exc) {
+            System.out.println("Operation with DB failed !");
+            exc.printStackTrace();
+        } finally {
+            try { if (connection != null) connection.close(); }
+            catch (Exception cexc) { cexc.printStackTrace(); }
         }
         return stat;
     }
 
-    private ResultSet processQuery(Connection connection, StatQuery query, String sql)
+    private PreparedStatement getQuery(Connection connection, StatQuery query, String sql)
         throws SQLException
     {
         PreparedStatement stmt = connection.prepareStatement(sql);
         bindPeriodPart(stmt, query);
-        return stmt.executeQuery();
+        return stmt;
     }
     private void processSmsQuery(Connection connection, StatQuery query)
         throws SQLException
     {
         int oldPeriod = 0;
         DateCountersSet dateCounters = null;
-        ResultSet rs = processQuery(connection, query, prepareSmsQuery(query));
+        PreparedStatement stmt = getQuery(connection, query, prepareSmsQuery(query));
+        ResultSet rs = stmt.executeQuery();
 
-        try {
+        try
+        {
             while (rs.next())
             {
                 int newPeriod = rs.getInt(1);
@@ -150,19 +149,21 @@ public class SmsStat
                 oldPeriod = newPeriod;
             }
 
-            if (dateCounters != null) {
-                stat.addDateStat(dateCounters);
-            }
+            if (dateCounters != null) stat.addDateStat(dateCounters);
+
         } catch (SQLException ex) {
             throw ex;
         } finally {
             if (rs != null) rs.close();
+            if (stmt != null) stmt.close();
         }
     }
     private void processSmeQuery(Connection connection, StatQuery query)
         throws SQLException
     {
-        ResultSet rs = processQuery(connection, query, prepareSmeQuery(query));
+        PreparedStatement stmt = getQuery(connection, query, prepareSmeQuery(query));
+        ResultSet rs = stmt.executeQuery();
+
         try {
             while (rs.next()) {
                 stat.addSmeIdStat(new SmeIdCountersSet(
@@ -172,12 +173,15 @@ public class SmsStat
             throw ex;
         } finally {
             if (rs != null) rs.close();
+            if (stmt != null) stmt.close();
         }
     }
     private void processStateQuery(Connection connection, StatQuery query)
         throws SQLException
     {
-        ResultSet rs = processQuery(connection, query, prepareStateQuery(query));
+        PreparedStatement stmt = getQuery(connection, query, prepareStateQuery(query));
+        ResultSet rs = stmt.executeQuery();
+
         try {
             while (rs.next()) {
                 stat.addErrorStat(new ErrorCounterSet(
@@ -187,12 +191,15 @@ public class SmsStat
             throw ex;
         } finally {
             if (rs != null) rs.close();
+            if (stmt != null) stmt.close();
         }
     }
     private void processRouteQuery(Connection connection, StatQuery query)
         throws SQLException
     {
-        ResultSet rs = processQuery(connection, query, prepareRouteQuery(query));
+        PreparedStatement stmt = getQuery(connection, query, prepareRouteQuery(query));
+        ResultSet rs = stmt.executeQuery();
+
         try {
             while (rs.next()) {
                 stat.addRouteIdStat(new RouteIdCountersSet(
@@ -202,6 +209,7 @@ public class SmsStat
             throw ex;
         } finally {
             if (rs != null) rs.close();
+            if (stmt != null) stmt.close();
         }
     }
 
