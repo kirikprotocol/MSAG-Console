@@ -73,7 +73,8 @@ void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
   sa->setNumberingPlan(ma->addr[0]&0xf);
   if ( ma->addrLen != 0 ){
     char sa_val[21] = {0,};
-    for ( int i=0; i<(ma->addrLen-1)*2;){
+    int i = 0;
+    for ( i=0; i<(ma->addrLen-1)*2;){
       if ( (ma->addr[(i>>1)+1]&0x0f) == 0xf ) break;
       sa_val[i]=(ma->addr[(i>>1)+1]&0x0f)+0x30;
       ++i;
@@ -85,10 +86,10 @@ void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
     }
     {
       char b[256] = {0,};
-      memcpy(b,sa_val,(ma->addrLen-1)*2);
+      memcpy(b,sa_val,i);
       __trace2__("MAP::ConvAddrMSISDN2Smc::adr value(%d) %s",(ma->addrLen-1)*2,b);
     }
-    sa->setValue(ma->addrLen*2,sa_val);
+    sa->setValue(i,sa_val);
   }else{
     char c = 0;
     sa->setValue(0,&c);
