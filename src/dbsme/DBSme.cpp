@@ -121,34 +121,29 @@ public:
                             userMessageReference);
         
         char* out = (char *)command.getOutData();
+        int outLen = (out) ? strlen(out) : 0;
         __trace2__("Output Data '%s'", (out) ? out:"");
-
-        int   outLen = (out) ? strlen(out) : 0;
-        //char  buff[MAX_ALLOWED_MESSAGE_LENGTH+1];
-        PduSubmitSmResp* dlResp = 0;
-        while (outLen > 0)
+        
+        Array<SMS*> smsarr;
+        splitSms(&response, out, outLen, 
+                 CONV_ENCODING_CP1251, hasHighBit(out, outLen) ? 
+                 DataCoding::UCS2 : DataCoding::DEFAULT, smsarr);
+        
+        for (int i=0; i<smsarr.Count(); i++)
         {
-            int strLen = (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) ?
-                          outLen : MAX_ALLOWED_MESSAGE_LENGTH;
-            
-            /*int convLen = ConvertTextTo7Bit(out, strLen, buff, sizeof(buff), 
-                                            CONV_ENCODING_CP1251);
-            body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, buff, convLen);
-            body.setIntProperty(Tag::SMPP_SM_LENGTH, convLen);*/
-            body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, strLen);
-            body.setIntProperty(Tag::SMPP_SM_LENGTH, strLen);
-            
             PduSubmitSm sm;
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-            fillSmppPduFromSms(&sm, &response);
-            dlResp = transmitter.submit(sm);
-            if (dlResp) disposePdu((SmppHeader*)dlResp); dlResp = 0;
-
-            out += strLen; outLen -= strLen;
+            fillSmppPduFromSms(&sm, smsarr[i]);
+            PduSubmitSmResp *resp = transmitter.submit(sm);
+            
+            if (resp && resp->get_header().get_commandStatus()==0)
+                __trace2__("Response #%d accepted\n", i);
+            else
+                __trace2__("Response wasn't accepted\n");
+            
+            if (resp) disposePdu((SmppHeader*)resp);
         }
 
-        /*printf((dlResp && dlResp->get_header().get_commandStatus()==0) ?
-               "Responce sent !\n" : "Responce wasn't send !\n");*/
         {
             MutexGuard guard(countersLock);
             if (requestsProcessingCount) requestsProcessingCount--;
