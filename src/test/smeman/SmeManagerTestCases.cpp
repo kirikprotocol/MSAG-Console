@@ -46,8 +46,7 @@ void SmeManagerTestCases::debugSme(const char* tc, const Address& smeAddr,
 {
 	ostringstream os;
 	os << "smeAddr = " << smeAddr << ", sme = " << sme;
-	getLog().debug("[%d]\t%s(): %s", thr_self(), tc, os.str().c_str());
-	//__trace2__("%s(): %s", tc, os.str().c_str());
+	__trace2__("%s(): %s", tc, os.str().c_str());
 }
 
 void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
@@ -582,12 +581,8 @@ void SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& systemId,
 		smeReg->bindSme(systemId);
 		SmeIndex index = smeMan->lookup(systemId);
 		*proxy = smeMan->getSmeProxy(index);
-		getLog().debug("[%d]\tregisterCorrectSmeProxy(): systemId = %s, proxyId = %u",
-			thr_self(), systemId.c_str(), (*proxy)->getUniqueId());
-		/*
 		__trace2__("registerCorrectSmeProxy(): systemId = %s, proxyId = %u",
 			systemId.c_str(), (*proxy)->getUniqueId());
-		*/
 		__tc_ok__;
 	}
 	catch(...)
