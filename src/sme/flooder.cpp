@@ -108,6 +108,8 @@ int main(int argc,char* argv[])
     delay=atoi(argv[7]);
   }
 
+  Event slev;
+
   SmppSession ss(cfg,&lst);
   try{
     ss.connect();
@@ -157,7 +159,7 @@ int main(int argc,char* argv[])
         }*/
         cnt++;
       }
-      usleep(delay*1000);
+      slev.Wait(delay);
       if((cnt%500)==0 || time(NULL)-lasttime>5)
       {
         printf("%d/%d/%d                       \r",rcnt,scnt,cnt);
