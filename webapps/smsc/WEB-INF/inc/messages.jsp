@@ -7,7 +7,12 @@ if (errorMessages.size() > 0)
 	{
 		SMSCJspException exc = (SMSCJspException) it.next();
 		String code = exc.getMessage();
-		String msg = (String) messages.get(code);
+		String msg = null;
+		if (messages != null)
+		{
+			try { msg = messages.getString(code);}
+			catch (Throwable t) {}
+		}
 		if(code.startsWith("error."))
 		{
 			%><div class=err><%=(msg == null) ? code : msg%></div><%
