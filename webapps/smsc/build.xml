@@ -66,7 +66,7 @@
       <fileset dir="." includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc" excludes="**/build.xml" />
     </copy>
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
-      <fileset refid="classpath" />
+      <fileset refid="common_libs" />
     </copy>
   </target>
 
