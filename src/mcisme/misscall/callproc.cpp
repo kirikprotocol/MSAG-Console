@@ -63,14 +63,14 @@ void MissedCallProcessor::fireMissedCallEvent(MissedCallEvent& event)
       MutexGuard g(lock);
       if (listener) listener->missed(event);
     }
-    smsc_log_debug(missedCallProcessorLogger, "was event: %s->%s",event.from.toString().c_str(),event.to.toString().c_str());
+    smsc_log_debug(missedCallProcessorLogger, "was event: %s->%s",event.from.c_str(),event.to.c_str());
   }
 }
 void MissedCallProcessor::stop()
 {
   going = 0;
 }
-void MissedCallProcessor::run()
+int MissedCallProcessor::run()
 {
   USHORT_T result;
   
@@ -156,6 +156,7 @@ failed_msgopen:
   MsgExit();
 failed_msginit:
   smsc_log_debug(missedCallProcessorLogger,"MissedCallProcessor is down");
+  return result;
 }
 }//namespace misscall
 }//namespace smsc

@@ -23,7 +23,7 @@ class MissedCallListener{
 class MissedCallProcessor{
   public:
     static MissedCallProcessor* instance();
-    void run();
+    int  run();
     void stop();
     void addMissedCallListener(MissedCallListener* listener);
     void removeMissedCallListener();
