@@ -235,4 +235,4 @@ override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@)
 	fi
 
 webapp.newbuild:
-	@cd webapp;perl $(SMSC_SRCDIR)/conf/newbuild.pl webapp
+	@cd ../webapps/smsc;perl $(SMSC_SRCDIR)/conf/newbuild.pl webapp
