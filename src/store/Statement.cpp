@@ -601,7 +601,12 @@ void RetriveStatement::getSms(SMS& sms)
 
     sms.attach = (bodyBufferLen > MAX_BODY_LENGTH);
     if (indBody != OCI_IND_NOTNULL) sms.messageBody.setBuffer(0,0);
-    else sms.messageBody.setBuffer(bodyBuffer, bodyBufferLen);
+    else 
+    {
+        uint8_t* setBuff = new uint8_t[bodyBufferLen];
+        memcpy(setBuff, bodyBuffer, bodyBufferLen);
+        sms.messageBody.setBuffer(setBuff, bodyBufferLen);
+    }
 }
 
 /* --------------------------- DestroyStatement ----------------------- */
