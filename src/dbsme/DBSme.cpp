@@ -82,6 +82,9 @@ public:
 
         std::string input = body.getStrProperty(Tag::SMPP_SHORT_MESSAGE);
         __trace2__("Input Data for DBSme '%s'", input.c_str());
+        int bodyLen = body.getIntProperty(Tag::SMPP_SM_LENGTH);
+        input.erase(bodyLen);
+        __trace2__("Input Data for DBSme (improved) '%s'", input.c_str());
         command.setInData(input.c_str());
         
         try 
