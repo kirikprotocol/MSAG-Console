@@ -87,10 +87,7 @@ int main(int argc,char* argv[])
 
   string source=argv[1];
 
-  cfg.host=host;
-  cfg.port=port;
   cfg.sid=source;
-  cfg.timeOut=10;
   cfg.password=cfg.sid;
   MyListener lst;
 
@@ -145,6 +142,9 @@ int main(int argc,char* argv[])
     }
   }
 
+  cfg.host=host;
+  cfg.port=port;
+  cfg.timeOut=10;
 
   SmppSession ss(cfg,&lst);
   try{
