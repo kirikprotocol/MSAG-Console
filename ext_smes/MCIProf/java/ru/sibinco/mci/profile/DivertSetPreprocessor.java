@@ -32,7 +32,7 @@ public class DivertSetPreprocessor extends DivertManagerState implements Scenari
     }
     msg = msg.trim();
     if      (msg.equals("1")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.BUSY);
-    else if (msg.equals("2")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.ABSENT);
+    else if (msg.equals("2")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.NOREPLY);
     else if (msg.equals("3")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.NOTAVAIL);
     else if (msg.equals("4")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.UNCOND);
     else {

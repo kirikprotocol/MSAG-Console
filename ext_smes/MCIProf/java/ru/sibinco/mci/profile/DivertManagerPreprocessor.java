@@ -41,8 +41,8 @@ public class DivertManagerPreprocessor extends DivertManagerState implements Sce
 
           try {
             DivertInfo info = getDivertInfo(state);
-            if (reason.equals(DivertInfo.BUSY))          info.setBusy(value);
-            else if (reason.equals(DivertInfo.ABSENT))   info.setAbsent(value);
+            if      (reason.equals(DivertInfo.BUSY))     info.setBusy(value);
+            else if (reason.equals(DivertInfo.NOREPLY))  info.setNoreply(value);
             else if (reason.equals(DivertInfo.NOTAVAIL)) info.setNotavail(value);
             else if (reason.equals(DivertInfo.UNCOND))   info.setUncond(value);
             setDivertInfo(state, info);

@@ -206,10 +206,10 @@ public class DivertManager
   private final static String COMMAND_DEL = "HGSSE";
   private final static String COMMAND_GET = "HGSDP";
 
-  private final static String REASON_NOT_AVAIL = "CFNRC";
-  private final static String REASON_ABSENT    = "CFNRY";
-  private final static String REASON_UNCOND    = "CFU";
-  private final static String REASON_BUSY      = "CFB";
+  private final static String REASON_NOTAVAIL = "CFNRC";
+  private final static String REASON_NOREPLY  = "CFNRY";
+  private final static String REASON_UNCOND   = "CFU";
+  private final static String REASON_BUSY     = "CFB";
 
   private final static String MSISDN_STR    = ":MSISDN=";
   private final static String RESPONCE_OK   = "EXECUTED";
@@ -320,10 +320,10 @@ public class DivertManager
             String status = linest.nextToken();  // status
             if (!status.startsWith(ACTIVE_OP_STR)) continue;
             String address = linest.nextToken(); // fnum (forwarded to address)
-            if      (ss.startsWith(REASON_BUSY))      info.setBusy(divertToLocal(address));
-            else if (ss.startsWith(REASON_UNCOND))    info.setUncond(divertToLocal(address));
-            else if (ss.startsWith(REASON_ABSENT))    info.setAbsent(divertToLocal(address));
-            else if (ss.startsWith(REASON_NOT_AVAIL)) info.setNotavail(divertToLocal(address));
+            if      (ss.startsWith(REASON_BUSY))     info.setBusy(divertToLocal(address));
+            else if (ss.startsWith(REASON_UNCOND))   info.setUncond(divertToLocal(address));
+            else if (ss.startsWith(REASON_NOREPLY))  info.setNoreply(divertToLocal(address));
+            else if (ss.startsWith(REASON_NOTAVAIL)) info.setNotavail(divertToLocal(address));
           }
         }
         return new DivertInfo(info);
@@ -349,16 +349,16 @@ public class DivertManager
       try
       {
         connect();
-        if (info.isAbsentChanged()) {
-          setDivert(abonent, REASON_ABSENT, info.getAbsent());
-          info.clearAbsent();
+        if (info.isNoreplyChanged()) {
+          setDivert(abonent, REASON_NOREPLY, info.getNoreply());
+          info.clearNoreply();
         }
         if (info.isBusyChanged()) {
           setDivert(abonent, REASON_BUSY, info.getBusy());
           info.clearBusy();
         }
         if (info.isNotavailChanged()) {
-          setDivert(abonent, REASON_NOT_AVAIL, info.getNotavail());
+          setDivert(abonent, REASON_NOTAVAIL, info.getNotavail());
           info.clearNotavail();
         }
         if (info.isUncondChanged()) {

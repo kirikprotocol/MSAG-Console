@@ -68,7 +68,7 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
       resp.setMessageString(Transliterator.translit(msg));
       return new ExecutorResponse(new Message[]{resp}, true);
     }
-    Object[] args = new Object[] {getValue(info.getBusy()), getValue(info.getAbsent()),
+    Object[] args = new Object[] {getValue(info.getBusy()), getValue(info.getNoreply()),
                                   getValue(info.getNotavail()), getValue(info.getUncond())};
     final String msg = pageFormat.format(args);
     resp.setMessageString(Transliterator.translit(msg));
