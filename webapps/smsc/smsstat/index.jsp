@@ -153,7 +153,7 @@ while (i.hasNext()) {
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=4><div class=secView>SMS delivery state</div></td>
+    <td colspan=4><div class=page_subtitle>SMS delivery state</div></td>
 </tr>
 <tr class=row0>
     <th width="25%"><div align=right>Error Code</div></th>

@@ -23,7 +23,7 @@ MENU0_SELECTION = "MENU0_SUBJECTS";
 <%boolean isNew = true;%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbSave",  "Add alias",  "Add new alias");
+page_menu_button(out, "mbSave",  "Add subject",  "Add new subject");
 page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
