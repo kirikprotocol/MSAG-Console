@@ -734,7 +734,10 @@ public:
         Body(const Body& body) 
             : buffLen(0)
         {
-            setBuffer(body.getBuffer(), body.getBufferLength());
+          int len = body.getBufferLength();
+					uint8_t* b = new uint8_t[len];
+					memcpy(b,body.getBuffer(),len);
+          setBuffer(b, len);
         };
 
         /**
@@ -746,8 +749,11 @@ public:
          */
         Body& operator =(const Body& body) 
         {
-            setBuffer(body.getBuffer(), body.getBufferLength());
-            return (*this);
+          int len = body.getBufferLength();
+					uint8_t* b = new uint8_t[len];
+					memcpy(b,body.getBuffer(),len);
+          setBuffer(b, len);
+          return (*this);
         };
 
         /**
