@@ -194,6 +194,9 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 );
 static void DropMapDialog_(unsigned dialogid){
   if ( dialogid == 0 ) return;
   DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid));
+  if ( dialog.isnull() ) {
+    __trace2__( ":MAP:%s: <ERROR> dialog(0x%x) is null",__FUNCTION__,dialogid);
+  }
   __trace2__(":MAP:%s chain size %d , dropChain %d",__FUNCTION__,dialog->chain.size(),dialog->dropChain);
   
   if ( !dialog.isnull() ){
