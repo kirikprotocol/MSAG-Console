@@ -111,6 +111,17 @@ public class Smsc extends Service
 		}
 	}
 
+	public boolean isSmeUsed(String smeId)
+	{
+	   for (Iterator i = routes.iterator(); i.hasNext();)
+		{
+			Route route = (Route) i.next();
+			if (route.getDestinations().isSmeUsed(smeId))
+				return true;
+		}
+		return false;
+	}
+
 	public synchronized RouteList getRoutes()
 	{
 		return routes;

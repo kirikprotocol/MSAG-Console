@@ -137,7 +137,7 @@ public class Index extends SmscBean
 						}
 						catch (NumberFormatException e)
 						{
-							logger.error("Invalid integer parameter: "+s+"="+parameter);
+							logger.error("Invalid integer parameter: " + s + "=" + parameter);
 							result = error(SMSCErrors.error.smsc.invalidIntParameter, s);
 						}
 					}
@@ -169,38 +169,48 @@ public class Index extends SmscBean
 
 	private int processStart()
 	{
-		try
+		if (getStatus() != ServiceInfo.STATUS_RUNNING)
 		{
-			Daemon smscDaemon = daemonManager.getSmscDaemon();
-			if (smscDaemon == null)
-				return error(SMSCErrors.error.smsc.daemonNotFound);
-			smsc.start(smscDaemon);
-			serviceManager.refreshService(Constants.SMSC_SME_ID);
+			try
+			{
+				Daemon smscDaemon = daemonManager.getSmscDaemon();
+				if (smscDaemon == null)
+					return error(SMSCErrors.error.smsc.daemonNotFound);
+				smsc.start(smscDaemon);
+				serviceManager.refreshService(Constants.SMSC_SME_ID);
+				return RESULT_OK;
+			}
+			catch (Throwable e)
+			{
+				logger.error("Couldn't start SMSC", e);
+				return error(SMSCErrors.error.smsc.couldntStart, e);
+			}
+		}
+		else
 			return RESULT_OK;
-		}
-		catch (Throwable e)
-		{
-			logger.error("Couldn't start SMSC", e);
-			return error(SMSCErrors.error.smsc.couldntStart, e);
-		}
 	}
 
 	private int processStop()
 	{
-		try
+		if (getStatus() != ServiceInfo.STATUS_STOPPED)
 		{
-			Daemon smscDaemon = daemonManager.getSmscDaemon();
-			if (smscDaemon == null)
-				return error(SMSCErrors.error.smsc.daemonNotFound);
-			smsc.stop(smscDaemon);
-			serviceManager.refreshService(Constants.SMSC_SME_ID);
+			try
+			{
+				Daemon smscDaemon = daemonManager.getSmscDaemon();
+				if (smscDaemon == null)
+					return error(SMSCErrors.error.smsc.daemonNotFound);
+				smsc.stop(smscDaemon);
+				serviceManager.refreshService(Constants.SMSC_SME_ID);
+				return RESULT_OK;
+			}
+			catch (Throwable e)
+			{
+				logger.error("Couldn't stop SMSC", e);
+				return error(SMSCErrors.error.smsc.couldntStop, e);
+			}
+		}
+		else
 			return RESULT_OK;
-		}
-		catch (Throwable e)
-		{
-			logger.error("Couldn't stop SMSC", e);
-			return error(SMSCErrors.error.smsc.couldntStop, e);
-		}
 	}
 
 	public byte getStatus()

@@ -131,4 +131,15 @@ public class DestinationList
 		}
 		return false;
 	}
+
+	public boolean isSmeUsed(String smeId)
+	{
+		for (Iterator i = destinations.values().iterator(); i.hasNext();)
+		{
+			Destination destination = (Destination) i.next();
+			if (destination.getSme().getId().equals(smeId))
+				return true;
+		}
+		return false;
+	}
 }

@@ -248,6 +248,9 @@ public class ServiceManager
 	public synchronized void removeService(String serviceId)
 			throws AdminException
 	{
+		if (smsc.isSmeUsed(serviceId))
+			throw new AdminException("Couldn't remove service \"" + serviceId + "\" becouse it is used by routes");
+
 		Service s = getService(serviceId);
 		String host = s.getInfo().getHost();
 		Daemon d = getDaemon(host);
@@ -265,6 +268,9 @@ public class ServiceManager
 	{
 		if (isService(smeId))
 			throw new AdminException("Couldn't remove sme \"" + smeId + "\" becouse it is service");
+
+		if (smsc.isSmeUsed(smeId))
+			throw new AdminException("Couldn't remove sme \"" + smeId + "\" becouse it is used by routes");
 
 		smsc.getSmes().remove(smeId);
 	}
