@@ -20,6 +20,7 @@ static const RoutePriority RoutePriorityMin = 0;
 typedef enum {ReplyPathPass, ReplyPathForce, ReplyPathSuppress} ReplyPath;
 
 typedef std::string RouteId;
+typedef std::string BillingId;
 
 struct TrafficRules{
   enum{
@@ -167,6 +168,7 @@ struct RouteInfo
   TrafficRules trafRules;
   bool allowBlocked;
   signed long providerId;
+  BillingId billingId;
 };
 
 } // namespace router

@@ -106,6 +106,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               rinfo.aclId=route->getAclId();
               rinfo.allowBlocked=route->isAllowBlocked();
               rinfo.providerId=route->getProviderId();
+              rinfo.billingId=route->getBillingRuleId();
 //              __trace2__("dest mask: %s",dest_mask_it->c_str());
 //              __trace2__("src mask: %s",src_mask_it->c_str());
 //              print(rinfo);

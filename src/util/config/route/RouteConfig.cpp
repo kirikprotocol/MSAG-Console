@@ -198,6 +198,7 @@ throw (SubjectNotFoundException)
   XmlStr forceDelivery(elem.getAttribute(XmlStr("forceDelivery")));
   XmlStr allowBlocked(elem.getAttribute(XmlStr("allowBlocked")));
   const signed long providerId = atol(XmlStr(elem.getAttribute(XmlStr("providerId"))));
+  XmlStr billingRuleId(elem.getAttribute(XmlStr("billingId")));
   
 
   std::auto_ptr<Route> r(new Route(std::string(id),
@@ -217,7 +218,8 @@ throw (SubjectNotFoundException)
                                    aclId,
                                    strcmp("true", forceDelivery) == 0,
                                    strcmp("true", allowBlocked) == 0,
-                                   providerId)
+                                   providerId,
+                                   (const char * const)billingRuleId)
                          );
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));
@@ -334,6 +336,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       << "\" forceDelivery=\"" << (r->isForceDelivery() ? "true" : "false")
       << "\" replyPath=\""     << replyPathToStr(r->getReplyPath())
       << "\" allowBlocked=\""  << (r->isAllowBlocked() ? "true" : "false")
+      << "\" billingId=\""     << encode(r->getBillingRuleId().c_str())
       << "\">" << std::endl;
 
       Source src;
