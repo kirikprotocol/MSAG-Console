@@ -140,7 +140,7 @@ void transLiterateSms(SMS* sms)
     unsigned char* data=(unsigned char*)msg;
     udhiDataLen=*data;
     memcpy(udhiData,data,udhiDataLen);
-    msg=(short*)data+udhiDataLen;
+    msg=(short*)(data+udhiDataLen+1);
     len-=udhiDataLen;
   }
 
