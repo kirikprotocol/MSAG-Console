@@ -3107,7 +3107,7 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     // послать ок на USSDRequestReq
     SendOkToSmsc(dialog.get());
 
-    if( smsc::logger::_map_cat->isDebugEnabled() ) {
+    if( smsc::logger::_map_cat->isDebugEnabled() && ussdString_sp) {
      {
       char *text = new char[ussdString_sp->ussdStrLen*4+1];
       int k = 0;
@@ -3125,22 +3125,27 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     SMS* old_sms = dialog->sms.get();
     Address originator = old_sms->getOriginatingAddress();
     UCHAR_T udhPresent, msgClassMean, msgClass;
-    unsigned dataCoding = (unsigned)convertCBSDatacoding2SMSC(*ussdDataCodingScheme_p, &udhPresent, &msgClassMean, &msgClass);
-    if( dataCoding == smsc::smpp::DataCoding::SMSC7BIT )
-    {
-      MicroString ms;
-      unsigned chars = ussdString_sp->ussdStrLen*8/7;
-      Convert7BitToSMSC7Bit(ussdString_sp->ussdStr,chars,&ms,0);
-      __map_trace2__("ussd str len=%d/%d: %s", ms.len, strlen(ms.bytes), ms.bytes );
-      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ms.bytes,ms.len);
-      sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
-      sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
+    if( ussdDataCodingScheme_p && ussdString_sp ) {
+      unsigned dataCoding = (unsigned)convertCBSDatacoding2SMSC(*ussdDataCodingScheme_p, &udhPresent, &msgClassMean, &msgClass);
+      if( dataCoding == smsc::smpp::DataCoding::SMSC7BIT )
+      {
+        MicroString ms;
+        unsigned chars = ussdString_sp->ussdStrLen*8/7;
+        Convert7BitToSMSC7Bit(ussdString_sp->ussdStr,chars,&ms,0);
+        __map_trace2__("ussd str len=%d/%d: %s", ms.len, strlen(ms.bytes), ms.bytes );
+        sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ms.bytes,ms.len);
+        sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
+        sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
+      } else {
+        sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(const char*)(ussdString_sp->ussdStr),ussdString_sp->ussdStrLen);
+        sms.setIntProperty(Tag::SMPP_SM_LENGTH,ussdString_sp->ussdStrLen);
+        sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
+      }
+      __map_trace2__("%s: dialogid 0x%x request dcs 0x%x encoding 0x%x length %d subsystem %s",__func__,dialogueId,*ussdDataCodingScheme_p,dataCoding,ussdString_sp->ussdStrLen,originator.toString().c_str());
     } else {
-      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(const char*)(ussdString_sp->ussdStr),ussdString_sp->ussdStrLen);
-      sms.setIntProperty(Tag::SMPP_SM_LENGTH,ussdString_sp->ussdStrLen);
-      sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
+      sms.setIntProperty(Tag::SMPP_SM_LENGTH,0);
+      sms.setIntProperty(Tag::SMPP_DATA_CODING,smsc::smpp::DataCoding::SMSC7BIT);
     }
-    __map_trace2__("%s: dialogid 0x%x request dcs 0x%x encoding 0x%x length %d subsystem %s",__func__,dialogueId,*ussdDataCodingScheme_p,dataCoding,ussdString_sp->ussdStrLen,originator.toString().c_str());
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
