@@ -490,10 +490,10 @@ int main(void)
         resultCode = -1;
     } catch (ConfigException& exc) {
         smsc_log_error(logger, "Configuration invalid. Details: %s Exiting", exc.what());
-        resultCode = -2;*/
+        resultCode = -2;
     } catch (Exception& exc) {
         smsc_log_error(logger, "Top level Exception: %s Exiting", exc.what());
-        resultCode = -3;
+        resultCode = -3;*/
     } catch (exception& exc) {
         smsc_log_error(logger, "Top level exception: %s Exiting", exc.what());
         resultCode = -4;
