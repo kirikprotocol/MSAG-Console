@@ -3028,7 +3028,7 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
     sms.setMessageReference(0);
     sms.setDestinationAddress(originator);
-    sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_USSR_CONF);
+    sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_USSN_CONF);
     sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,dialog->ussdMrRef);
     dialog->sms = _sms;
     dialog->state = MAPST_WaitUSSDNotifyClose;
