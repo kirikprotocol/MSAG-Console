@@ -1,10 +1,13 @@
 <project name="SMPP gateway" default="install">
 
   <target name="set_properties">
+    <property file="build.properties"/>
+    <fail unless="${BUILD_DIR}" message="BUILD_DIR property not specified please configure build.properties file"/>
+    <fail unless="${CVS_DIR}" message="BUILD_DIR property not specified please configure build.properties file"/> 
     <property environment="env"/>
-    <property name="sibinco.cvs" location="../../"/>
+    <property name="sibinco.cvs" location="${CVS_DIR}"/>
     <property name="sibinco.src" location="${sibinco.cvs}/src"/>
-    <property name="sibinco.build" location="${env.HOME}/build"/> <!--todo: ask-->
+    <property name="sibinco.build" location="${BUILD_DIR}"/>
     <property name="sibinco.exploded" location="${sibinco.build}/exploded"/>
     <property name="sibinco.dist" location="${sibinco.build}/dist"/>
     <property name="gw.exploded" location="${sibinco.exploded}/smppgw.host"/>
