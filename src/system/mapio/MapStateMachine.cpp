@@ -2432,7 +2432,7 @@ USHORT_T Et96MapOpenInd (
 {
   try{
     __map_trace2__("%s: dialog 0x%x ctx=%d ver=%d dstref=%p orgref=%p",__func__,dialogueId,appContext_sp->acType,appContext_sp->version,destRef_sp,origRef_sp );
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,localSsn/*,0*/));
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,localSsn,appContext_sp->version));
     __require__(dialog->ssn==localSsn);
     dialog->hasIndAddress = false;
     if ( specificInfo_sp!=0 && specificInfo_sp->specificInfoLen >= 3 )
