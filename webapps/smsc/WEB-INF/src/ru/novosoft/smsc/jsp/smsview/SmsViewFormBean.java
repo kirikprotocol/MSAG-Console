@@ -15,8 +15,10 @@ public class SmsViewFormBean extends IndexBean
 	private SmsQuery query = new SmsQuery();
 	private SmsSet rows = null;
 	private SmsView view = new SmsView();
+  private SmsDetailedRow detailedRow;
+
 	private int deletedRowsCount = 0;
-    private int totalRowsCount = 0;
+  private int totalRowsCount = 0;
 
 	public static String monthesNames[] = {
 		"Jan", "Feb", "Mar", "Apr",
@@ -24,7 +26,8 @@ public class SmsViewFormBean extends IndexBean
 		"Oct", "Nov", "Dec"
 	};
 
-	private String mbRemove = null;
+	private String mbView = null;
+  private String mbRemove = null;
   private String mbDelete = null;
 	private String mbQuery = null;
   private String mbClear = null;
@@ -59,19 +62,15 @@ public class SmsViewFormBean extends IndexBean
 		if (result != RESULT_OK)
 			return result;
 
-    if (mbRemove != null)
-      result = processDeleteSelected();
-		else if (mbDelete != null)
-			result = processDeleteSet(rows);
-		else if (mbQuery != null)
-			result = processQuery();
-    else if (mbClear != null)
-      result = clearQuery();
-		else
-			result = processResortAndNavigate(false);
+    if      (mbRemove != null) result = processDeleteSelected();
+		else if (mbDelete != null) result = processDeleteSet(rows);
+		else if (mbQuery != null)  result = processQuery();
+    else if (mbClear != null)  result = clearQuery();
+    else if (mbView != null)   result = processSmsQuery();
+		else                       result = processResortAndNavigate(false);
 
-		mbRemove = null; mbDelete = null;
-		mbQuery = null;  mbClear = null;
+		mbRemove = null; mbDelete = null;	mbQuery = null;
+    mbClear = null; mbView = null;
 
 		return result;
 	}
@@ -129,6 +128,18 @@ public class SmsViewFormBean extends IndexBean
       return error(SMSCErrors.error.smsview.QueryFailed, ex.getMessage());
     }
 	}
+
+  public int processSmsQuery()
+  {
+    checkedRows.removeAllElements();
+    try {
+      detailedRow = view.getSms(query.getSmsId(), query.getStorageType());
+      return RESULT_OK;
+    } catch (AdminException ex) {
+      ex.printStackTrace();
+      return error(SMSCErrors.error.smsview.QueryFailed, ex.getMessage());
+    }
+  }
 
   public int clearQuery()
   {
@@ -303,6 +314,8 @@ public class SmsViewFormBean extends IndexBean
 	public void setMbQuery(String mbQuery) { this.mbQuery = mbQuery; }
   public String getMbClear() { return mbClear; }
   public void setMbClear(String mbClear) { this.mbClear = mbClear; }
+  public String getMbView() { return mbView; }
+  public void setMbView(String mbView) { this.mbView = mbView; }
 
   public String[] getCheckedRows() {
     return (checkedRows == null) ?
@@ -319,4 +332,7 @@ public class SmsViewFormBean extends IndexBean
         false : checkedRows.contains(Long.toString(id));
   }
 
+  public SmsDetailedRow getDetailedRow() {
+    return detailedRow;
+  }
 }

@@ -54,7 +54,6 @@ public class SmsRow
   private int     status  = 0;
   private String  text = "Message text ";
 
-
   private boolean marked = false;
 
   public void setId(byte _id[]) { id = _id; };
