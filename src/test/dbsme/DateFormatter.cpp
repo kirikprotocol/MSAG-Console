@@ -26,6 +26,7 @@ const string DateFormatter::format(time_t t) const
 	localtime_r(&t, &lt);
 	string::const_iterator it_begin = fmt.begin();
 	char str[16];
+	int hour;
 	for (string::const_iterator it = fmt.begin(); it != fmt.end(); it++)
 	{
 		switch (*it)
@@ -85,7 +86,21 @@ const string DateFormatter::format(time_t t) const
 				}
 				break;
 			case 'h':
+				strftime(str, sizeof(str), "%I", &lt); //1-12
+				sscanf(str, "%d", &hour);
 				switch (count(it, 'h', 2))
+				{
+					case 1:
+						res << hour; 
+						break;
+					case 2:
+						res << (hour < 10 ? "0" : "");
+						res << hour;
+						break;
+				}
+				break;
+			case 'H':
+				switch (count(it, 'H', 2))
 				{
 					case 1:
 						res << lt.tm_hour;
