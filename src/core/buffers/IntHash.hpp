@@ -117,6 +117,7 @@ public:
 
   int Exist(int key)
   {
+    if(!count)return 0;
     unsigned int idx;
     int attempt=0;
     do{

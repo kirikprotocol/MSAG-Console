@@ -545,6 +545,7 @@ protected:
     Lock l;
     int key;
     time_t now=time(NULL);
+    __require__(!lock.Exist(seq));
     while(i.Next(key,l))
     {
       if(l.timeOut<now)

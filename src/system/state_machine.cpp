@@ -578,6 +578,12 @@ StateType StateMachine::forward(Tuple& t)
     {
       __trace__("FORWARD: failed to change state to enroute");
     }
+    try{
+      sendNotifyReport(sms,t.msgId,"destination unavialable");
+    }catch(...)
+    {
+      __trace__("FORWARD: failed to send intermediate notification");
+    }
     return ERROR_STATE;
   }
   if(!dest_proxy)
@@ -593,6 +599,12 @@ StateType StateMachine::forward(Tuple& t)
     {
       __trace__("FORWARD: failed to change state to enroute");
     }
+    try{
+      sendNotifyReport(sms,t.msgId,"destination unavialable");
+    }catch(...)
+    {
+      __trace__("FORWARD: failed to send intermediate notification");
+    }
     return ENROUTE_STATE;
   }
   // create task
@@ -607,6 +619,12 @@ StateType StateMachine::forward(Tuple& t)
     if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
     {
       __warning__("FORWARD: can't create task");
+      try{
+        sendNotifyReport(sms,t.msgId,"destination unavialable");
+      }catch(...)
+      {
+        __trace__("FORWARD: failed to send intermediate notification");
+      }
       return ENROUTE_STATE;
     }
   }catch(...)
@@ -693,7 +711,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           __trace__("DELIVERYRESP: failed to change state to enroute");
         }
         smsc->notifyScheduler();
-        sendNotifyReport(sms,t.msgId,"subscriper busy");
+        sendNotifyReport(sms,t.msgId,"subscriber busy");
         return UNKNOWN_STATE;
       }break;
       default:
@@ -880,6 +898,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   rpt.setMessageReference(sms.getMessageReference());
   rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
     sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+  rpt.setIntProperty(Tag::SMPP_MSG_STATE,ENROUTE);
   char addr[64];
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);

@@ -69,6 +69,8 @@ int AbonentInfoSme::Execute()
       s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,answ,len);
       s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
       s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+      s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
+        sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
 
 
       resp=SmscCommand::makeSumbmitSm(s,getNextSequenceNumber());
