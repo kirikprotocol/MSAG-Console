@@ -11,7 +11,7 @@ using namespace std;
 #include "MapDialog_spcific.cxx"
 #include "MapDialogMkPDU.cxx"
 
-const void ContinueImsiReq(MapDialog* dialog,string s_imsi,string s_msc);
+const void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
 
 string ImsiToString(const ET96MAP_IMSI_T* imsi)
 {
@@ -139,7 +139,7 @@ static void DropMapDialog_(unsigned dialogid){
         if ( dialog->associate != 0 && dialog->state != MAPST_END )
         {
           //Et96MapPAbortInd(SSN,dialog->associate->dialogid_map,0,0,0);
-          ContimueImsiReq(dialog->associate,0);
+          ContinueImsiReq(dialog->associate,0);
         }
         MapDialogContainer::getInstance()->dropDialog(dialogid);
         __trace2__("MAP::%s: 0x%x - closed and droped - ",__FUNCTION__,__dialogid_map);
@@ -252,7 +252,7 @@ static void SendRInfo(MapDialog* dialog)
   appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
   SetVersion(appContext,dialog->version);
   //unsigned dialog_id = dialog->isMOreq?dialog->dialogid_req:dialog->dialogid_map;
-  unsigned dialog_id = dialog->dialog_map;
+  unsigned dialog_id = dialog->dialogid_map;
   USHORT_T result = Et96MapOpenReq(
     SSN, dialog_id, 
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
@@ -719,7 +719,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
               dialog->state = MAPST_WaitOpenConf;*/
             break;
           case MAPST_ImsiWaitACVersion:
-            dialog-version = version;
+            dialog->version = version;
             dialog->state = MAPST_ImsiWaitOpenConf;
             SendRInfo(dialog.get());
           default:
@@ -1332,7 +1332,7 @@ void PauseOnImsiReq(MapDialog* map)
     if (dialog.isnull()) throw runtime_error("MAP::%s can't create dialog",__FUNCTION__);
     QueryHlrVersion(dialog.get());
     success = true;
-  }MAP_CATCH(dialog_map,0);
+  }MAP_CATCH(dialogid_map,0);
   if ( !success )
   {
     ContinueImsiReq(map,"","");

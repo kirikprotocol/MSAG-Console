@@ -248,7 +248,7 @@ public:
     MapDialog* dlg = new MapDialog(map_dialog,lssn,2);
     dialogId_pool.pop_front();
     hash.Insert(map_dialog,dlg);
-    __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
+    __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x",dlg,map_dialog);
     dlg->AddRef();
     dlg->associate = associate->AddRef();
     return dlg;
