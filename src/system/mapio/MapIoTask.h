@@ -292,7 +292,7 @@ public:
     return dlg;
   }
   
-  USHORT_T reAssignDialog(unsigned did){
+  USHORT_T reAssignDialog(unsigned did,unsigned ssn){
     MutexGuard g(sync);
      __trace2__("MAP:: reassign dialog");
     MapDialog* dlg = 0;
@@ -304,6 +304,7 @@ public:
     ET96MAP_DIALOGUE_ID_T dialogid_map = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     dialogId_pool.push_back(did);
     dlg->dialogid_map = dialogid_map;
+    dlg->ssn = ssn;
     dialogId_pool.pop_front();
     hash.Delete(did);
     hash.Insert(dialogid_map,dlg);
