@@ -370,7 +370,7 @@ void MapIoTask::dispatcher()
     MAP_isAlive = true;
     if ( isStopping ) return;
     MAP_dispatching = true;
-    result = EINSS7CpMsgRecv_r(&message,100+100+10);
+    result = EINSS7CpMsgRecv_r(&message,100*1000);
     MAP_dispatching = false;
     if ( ++timecounter == 300 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
