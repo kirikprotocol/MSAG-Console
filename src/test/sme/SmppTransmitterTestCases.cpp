@@ -317,7 +317,7 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 					pdu->get_header().set_sequenceNumber(0); //не известен
 					pduData = registerSubmitSm(pdu, existentPduData, time(NULL)); //all times, msgRef
 				}
-				__dumpSubmitSmPdu__("submitSmSyncBefore", systemId, pdu);
+				//__dumpSubmitSmPdu__("submitSmSyncBefore", systemId, pdu);
 				PduSubmitSmResp* respPdu = session->getSyncTransmitter()->submit(*pdu);
 				__dumpSubmitSmPdu__("submitSmSyncAfter", systemId, pdu);
 				{
@@ -329,7 +329,7 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 			{
 				__tc__("submitSm.async");
 				MutexGuard mguard(pduReg->getMutex());
-				__dumpSubmitSmPdu__("submitSmAsyncBefore", systemId, pdu);
+				//__dumpSubmitSmPdu__("submitSmAsyncBefore", systemId, pdu);
 				time_t submitTime = time(NULL);
 				PduSubmitSmResp* respPdu = session->getAsyncTransmitter()->submit(*pdu);
 				__dumpSubmitSmPdu__("submitSmAsyncAfter", systemId, pdu);

@@ -236,14 +236,17 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2)
 	return res;
 }
 
+#define __trace_set__(name) \
+	/*__trace__(name ": " #field);*/
+	
 #define __set_int__(type, field, value) \
-	__trace__("set_int: " #field); \
+	__trace_set__("set_int"); \
 	type tmp_##field = value; \
 	p.set_##field(tmp_##field); \
 	if (check) { __require__(p.get_##field() == tmp_##field); }
 
 #define __set_ostr__(field, length) \
-	__trace__("set_ostr: " #field); \
+	__trace_set__("set_ostr"); \
 	int len_##field = length; \
 	auto_ptr<char> str_##field = rand_char(len_##field); \
 	p.set_##field(str_##field.get(), len_##field); \
@@ -251,19 +254,19 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2)
 		!strncmp(p.get_##field(), str_##field.get(), len_##field)); }
 
 #define __set_cstr__(field, length) \
-	__trace__("set_cstr: " #field); \
+	__trace_set__("set_cstr"); \
 	auto_ptr<char> str_##field = rand_char(length); \
 	if (check) { p.set_##field(str_##field.get()); \
 	__require__(!strcmp(p.get_##field(), str_##field.get())); }
 
 #define __set_cstr2__(field, value) \
-	__trace__("set_cstr2: " #field); \
+	__trace_set__("set_cstr2"); \
 	const char* val_##field = value; \
 	p.set_##field(val_##field); \
 	if (check) { __require__(!strcmp(p.get_##field(), val_##field)); }
 	
 #define __set_addr__(field) \
-	__trace__("set_addr: " #field); \
+	__trace_set__("set_addr"); \
 	PduAddress tmp_##field; \
 	setupRandomCorrectAddress(&tmp_##field); \
 	p.set_##field(tmp_##field); \
@@ -322,9 +325,12 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	__set_ostr__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
 }
 
+#define __trace_set_optional__(name) \
+	/*__trace2__(name "[%d]: " #field, pos - 1);*/
+	
 #define __set_optional_int__(type, field, value) \
 	if (mask[pos++]) { \
-		__trace2__("set_optional_int[%d]: " #field, pos - 1); \
+		__trace_set_optional__("set_optional_int"); \
 		type tmp_##field = value; \
 		opt.set_##field(tmp_##field); \
 		if (check) { intMap.insert(IntMap::value_type(#field, tmp_##field)); } \
@@ -333,7 +339,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 #define __set_optional_intarr__(field, value, length) \
 	if (mask[pos++]) { \
 		__require__(length <= 4); \
-		__trace2__("set_optional_intarr[%d]: " #field, pos - 1); \
+		__trace_set_optional__("set_optional_intarr"); \
 		uint8_t* tmp_##field = value; \
 		opt.set_##field(tmp_##field); \
 		if (check) { \
@@ -345,7 +351,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 
 #define __set_optional_ostr__(field, length) \
 	if (mask[pos++]) { \
-		__trace2__("set_optional_ostr[%d]: " #field, pos - 1); \
+		__trace_set_optional__("set_optional_ostr"); \
 		int len_##field = length; \
 		auto_ptr<char> str_##field = rand_char(len_##field); \
 		opt.set_##field(str_##field.get(), len_##field); \
@@ -358,7 +364,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 
 #define __set_optional_cstr__(field, length) \
 	if (mask[pos++]) { \
-		__trace2__("set_optional_cstr[%d]: " #field, pos - 1); \
+		__trace_set_optional__("set_optional_cstr"); \
 		auto_ptr<char> str_##field = rand_char(length); \
 		opt.set_##field(str_##field.get()); \
 		if (check) { \
@@ -415,7 +421,7 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
 	Mask<uint64_t> mask(_mask & *((uint64_t*) tmp.get()));
 	int pos = 0;
-	__trace2__("SmppUtil::setupRandomCorrectOptionalParams(): mask = %s", mask.str());
+	//__trace2__("SmppUtil::setupRandomCorrectOptionalParams(): mask = %s", mask.str());
 
 	typedef map<const string, uint32_t> IntMap;
 	typedef map<const string, COStr> CStrMap;

@@ -109,7 +109,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 			PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 			pduChecker->processSubmitSmResp(pduData, pdu, respTime);
 			//pduReg->updatePdu(pduData);
-			__dumpPdu__("processSubmitSmRespAfter", systemId, &pdu);
+			//__dumpPdu__("processSubmitSmRespAfter", systemId, &pdu);
 		}
 	}
 	catch(...)
@@ -146,7 +146,7 @@ void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 			PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 			pduChecker->processReplaceSmResp(pduData, pdu, respTime);
 			//pduReg->updatePdu(pduData);
-			__dumpPdu__("processReplaceSmRespAfter", systemId, &pdu);
+			//__dumpPdu__("processReplaceSmRespAfter", systemId, &pdu);
 		}
 	}
 	catch(...)
@@ -203,7 +203,7 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 	{
 		respSender->sendDeliverySmResp(pdu);
 	}
-	__dumpPdu__("processDeliverySmAfter", systemId, &pdu);
+	//__dumpPdu__("processDeliverySmAfter", systemId, &pdu);
 }
 
 void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime)

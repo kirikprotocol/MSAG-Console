@@ -18,7 +18,12 @@ using namespace smsc::test::sms; //constants
 #define __numTime__ rand1(3)
 #define __absoluteTime__ rand1(2)
 
-#define __dumpSubmitSmPdu__(tc, id, pdu) \
+#ifdef DISABLE_TRACING
+	#define __dumpSubmitSmPdu__(tc, id, pdu) 
+	#define __dumpReplaceSmPdu__(tc, id, pdu)
+	#define __dumpPdu__(tc, id, pdu)
+#else
+	#define __dumpSubmitSmPdu__(tc, id, pdu) \
 	if (pdu) { \
 		time_t lt = time(NULL); tm t; char buf[30]; \
 		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
@@ -26,14 +31,12 @@ using namespace smsc::test::sms; //constants
 			SmppUtil::getWaitTime((pdu)->get_message().get_scheduleDeliveryTime(), time(NULL)), \
 			SmppUtil::getValidTime((pdu)->get_message().get_validityPeriod(), time(NULL)), \
 			asctime_r(localtime_r(&lt, &t), buf)); \
-	#ifndef DISABLE_TRACING
 		(pdu)->dump(TRACE_LOG_STREAM); \
-	#endif //DISABLE_TRACING
 	} else { \
 		__trace2__("%s(): pdu = NULL", tc); \
 	}
 
-#define __dumpReplaceSmPdu__(tc, id, pdu) \
+	#define __dumpReplaceSmPdu__(tc, id, pdu) \
 	if (pdu) { \
 		time_t lt = time(NULL); tm t; char buf[30]; \
 		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
@@ -41,25 +44,22 @@ using namespace smsc::test::sms; //constants
 			SmppUtil::getWaitTime((pdu)->get_scheduleDeliveryTime(), time(NULL)), \
 			SmppUtil::getValidTime((pdu)->get_validityPeriod(), time(NULL)), \
 			asctime_r(localtime_r(&lt, &t), buf)); \
-	#ifndef DISABLE_TRACING
 		(pdu)->dump(TRACE_LOG_STREAM); \
-	#endif //DISABLE_TRACING
 	} else { \
 		__trace2__("%s(): pdu = NULL", tc); \
 	}
 
-#define __dumpPdu__(tc, id, pdu) \
+	#define __dumpPdu__(tc, id, pdu) \
 	if (pdu) { \
 		time_t lt = time(NULL); tm t; char buf[30]; \
 		__trace2__("%s(): systemId = %s, sequenceNumber = %u, system time = %s", \
 			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
 			asctime_r(localtime_r(&lt, &t), buf)); \
-	#ifndef DISABLE_TRACING
 		(pdu)->dump(TRACE_LOG_STREAM); \
-	#endif //DISABLE_TRACING
 	} else { \
 		__trace2__("%s(): pdu = NULL", tc); \
 	}
+#endif //DISABLE_TRACING
 
 typedef enum
 { 

@@ -123,14 +123,14 @@ void TestSme::executeCycle()
 		nextCheckTime = time(NULL) + 10;
 	}
 	//проверить тест остановлен/замедлен
-	__trace2__("TestSme::executeCycle(): SmppFunctionalTest::pause = %d", SmppFunctionalTest::pause);
+	//__trace2__("TestSme::executeCycle(): SmppFunctionalTest::pause = %d", SmppFunctionalTest::pause);
 	if (SmppFunctionalTest::pause)
 	{
 		evt.Wait(1000);
 		__trace__("TestSme paused. Returned.");
 		return;
 	}
-	__trace__("TestSme active. Continued.");
+	//__trace__("TestSme active. Continued.");
 	if (SmppFunctionalTest::delay)
 	{
 		evt.Wait(SmppFunctionalTest::delay);
