@@ -122,12 +122,17 @@ public:
         int out = outgoing.Get();
         int inc = incoming.Get();
         int difference = out-inc;
-        bool trafficLimitReached = (out/10 >= maxMessagesPerSecond);
+        bool trafficLimitReached = (out >= maxMessagesPerSecond);
         
         if (difference >= unrespondedMessagesMax || trafficLimitReached) {
-            smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)", 
-                           difference, difference*unrespondedMessagesSleep, out, inc);
-            trafficMonitor.wait((trafficLimitReached) ? unrespondedMessagesSleep:
+            if (trafficLimitReached) {
+                smsc_log_debug(logger, "wait limit (out=%d, max=%d)", 
+                               out, maxMessagesPerSecond);
+            } else {
+                smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)", 
+                               difference, difference*unrespondedMessagesSleep, out, inc);
+            }
+            trafficMonitor.wait((trafficLimitReached) ? 1000/maxMessagesPerSecond:
                                  difference*unrespondedMessagesSleep);
         } else {
             smsc_log_debug(logger, "nowait");
@@ -138,7 +143,11 @@ public:
         MutexGuard guard(trafficMonitor);
         incoming.Inc();
         if (TrafficControl::stopped) return;
-        if ((outgoing.Get()-incoming.Get()) < unrespondedMessagesMax) {
+        int out = outgoing.Get(); int inc = incoming.Get();
+        int difference = out-inc;
+        bool trafficLimitOk = (out < maxMessagesPerSecond);
+        
+        if ((difference < unrespondedMessagesMax) && trafficLimitOk) {
             trafficMonitor.notifyAll();
         }
     };
@@ -156,8 +165,8 @@ public:
 };
 
 EventMonitor         TrafficControl::trafficMonitor;
-TimeSlotCounter<int> TrafficControl::incoming(10, 10);
-TimeSlotCounter<int> TrafficControl::outgoing(10, 10);
+TimeSlotCounter<int> TrafficControl::incoming(1, 1);
+TimeSlotCounter<int> TrafficControl::outgoing(1, 1);
 bool                 TrafficControl::stopped = false;
 
 class InfoSmeConfig : public SmeConfig
