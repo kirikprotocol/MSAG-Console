@@ -1682,7 +1682,7 @@ void CachedStore::retriveSms(SMSId id, SMS &sms)
         cache->putSms(id, sm);
 
         SMS* sm1 = cache->getSms(id);
-        __debug2__((&log),"smsId = %lld concat check=%d", id, sm1.hasBinProperty(Tag::SMSC_CONCATINFO));
+        __debug2__((&log),"smsId = %lld concat check=%d", id, sm1->hasBinProperty(Tag::SMSC_CONCATINFO));
     }
 }
 
