@@ -1,5 +1,8 @@
 package ru.novosoft.smsc.util;
 
+import ru.novosoft.smsc.jsp.SMSCAppContext;
+
+import javax.servlet.http.HttpServletRequest;
 import java.io.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -90,5 +93,10 @@ public class Functions
 	{
 		out.println("</" + docType + ">");
 		return out;
+	}
+
+	public static SMSCAppContext getAppContext(HttpServletRequest request)
+	{
+		return (SMSCAppContext) request.getAttribute("appContext");
 	}
 }
