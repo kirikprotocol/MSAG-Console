@@ -201,12 +201,15 @@ void SmppTestCases::bindIncorrectSme(int num)
 }
 
 #define __checkPdu__(tc) \
-	__trace2__("%s(): checking pdu with msgRef = %u, submitTime = %ld, waitTime = %ld, validTime = %ld", \
-	tc, (uint32_t) pduData->msgRef, pduData->submitTime, pduData->waitTime, pduData->validTime)
+	{  time_t lt = time(NULL); tm t; char buf[30]; \
+	__trace2__("%s(): checking pdu systemId = %s, sequenceNumber = %u, submitTime = %ld, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
+	tc, systemId.c_str(), pduData->pdu->get_sequenceNumber(), pduData->submitTime, pduData->waitTime, pduData->validTime, asctime_r(localtime_r(&lt, &t), buf)); }
 
 #define __missingPdu__(tc, pduName) \
-	__trace2__("%s(): missing %s for msgRef = %u, submitTime = %ld, waitTime = %ld, validTime = %ld", \
-	tc, pduName, (uint32_t) pduData->msgRef, pduData->submitTime, pduData->waitTime, pduData->validTime)
+	{  time_t lt = time(NULL); tm t; char buf[30]; \
+	__trace2__("%s(): missing %s for systemId = %s, sequenceNumber = %u, submitTime = %ld, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
+	tc, pduName, systemId.c_str(), pduData->pdu->get_sequenceNumber(), pduData->submitTime, pduData->waitTime, pduData->validTime, asctime_r(localtime_r(&lt, &t), buf)); }
+
 	/*
 	static const char* fmt = "%Y-%m-%d %H:%M:%S"; \
 	tm t;
@@ -219,8 +222,8 @@ void SmppTestCases::bindIncorrectSme(int num)
 	*/
 
 #define __removedPdu__(tc) \
-	__trace2__("%s(): removed pdu data with msgRef = %u", \
-	tc, (uint32_t) pduData->msgRef)
+	__trace2__("%s(): removed pdu systemId = %s, sequenceNumber = %u", \
+	tc, systemId.c_str(), pduData->pdu->get_sequenceNumber())
 	
 #define __checkSummary__(tc) \
 	__trace2__("%s(): found = %d, deleted = %d", tc, found, deleted);
