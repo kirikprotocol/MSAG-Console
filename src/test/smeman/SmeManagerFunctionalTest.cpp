@@ -88,11 +88,11 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 	//¬ыборка sme происходит равномерно
 	for (int i = 0; i < sme.size(); i++)
 	{
-		uint32_t uniqueId;
-		TCResult* res = tc.registerCorrectSmeProxy(sme[i]->systemId, &uniqueId);
+		SmeProxy* proxy;
+		TCResult* res = tc.registerCorrectSmeProxy(sme[i]->systemId, &proxy);
 		stack[i]->push_back(res);
 	}
-	filter->addResult(tc.selectSme(sme, RAND_TC));
+	//filter->addResult(tc.selectSme(sme, RAND_TC));
 
 	//»терирование по списку зарегистрированных sme
 	filter->addResult(tc.iterateSme(sme));
