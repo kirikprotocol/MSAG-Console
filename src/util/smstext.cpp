@@ -326,15 +326,16 @@ int partitionSms(SMS* sms,int dstdc)
         {
           if(i<len-1 && (c==32 || c==10 || c==13))
           {
-            offsets[parts++]=i-1;
+            offsets[parts++]=i;
             lastword=i+1;
             wl=0;
+            lastpos=i;
           }else
           {
             offsets[parts++]=lastword+(wl==0?0:1);
+            lastpos=offsets[parts-1];
+            i=lastpos+1;
           }
-          lastpos=offsets[parts-1];
-          i=lastpos+1;
           l=0;
         }else
         {

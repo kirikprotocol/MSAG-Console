@@ -347,7 +347,7 @@ int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff_size,
 unsigned RECODE_DECL ConvertSMSC7BitToLatin1(const char* in, unsigned chars,char* out){
   unsigned k = 0;
   for(unsigned i=0; i<chars; ++i){
-    if ( in[i]&0x7f == 0x1b ) {
+    if ( (in[i]&0x7f) == 0x1b ) {
       if ( ++i>=chars ) throw runtime_error("incorrect input buffer");
       switch(in[i]&0x7f){
         case 0x0a: // page break

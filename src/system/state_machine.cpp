@@ -579,6 +579,8 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
       }
     }
   }
+  __trace2__("DIRECT: newlen=%d",newlen);
+  //#def N# #ack# #noack# #template=name# {name}="value"
   if(newlen>255)
   {
     sms.getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
