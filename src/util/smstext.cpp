@@ -94,8 +94,10 @@ int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
         b[trimLen/2-2]=d[0];
         b[trimLen/2-3]=d[0];
       }
+    }else
+    {
+      datalen=length*2;
     }
-    datalen=length*2;
   }else
   {
     do{
