@@ -61,7 +61,7 @@ void Smsc::mainLoop()
       now = time(NULL);
       if ( stopFlag ) return;
       Task task;
-      if( now > last_tm ) 
+      if( now > last_tm )
       {
         while ( tasks.getExpired(&task) )
         {
@@ -112,7 +112,7 @@ void Smsc::mainLoop()
     {
       try{
         __trace2__("mainLoop: %s.priority=%d",i->getProxy()->getSystemId(),i->getProxy()->getPriority());
-        int prio=i->getProxy()->getPriority()/1024;
+        int prio=i->getProxy()->getPriority()/1000;
         if(prio<0)prio=0;
         if(prio>=32)prio=31;
         (*i)->set_priority(prio);
