@@ -1295,6 +1295,7 @@ StateType StateMachine::submit(Tuple& t)
         }else
         {
           newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
+          newsms.setIntProperty(Tag::SMPP_ESM_CLASS,newsms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
         }
       }else
       {
