@@ -9,7 +9,9 @@
 #pragma comment(lib,"ws2_32.lib")
 #else
 #include <sys/ioctl.h>
+#ifndef LINUX
 #include <sys/filio.h>
+#endif
 #endif
 
 namespace smsc{
@@ -97,26 +99,28 @@ void Socket::Abort()
   Close();
 }
 
-int Socket::canRead()
+int Socket::canRead(int to)
 {
   if(!connected)return -1;
   if(bufPos<inBuffer)return 1;
-  if(timeOut==0)return 1;
+  if(to==0)to=timeOut;
+  if(to==0)return 1;
   FD_ZERO(&fd);
   FD_SET(sock,&fd);
-  tv.tv_sec=timeOut;
+  tv.tv_sec=to;
   tv.tv_usec=0;
   int retval=select(FD_SETSIZE,&fd,NULL,NULL,&tv);
   return retval;
 }
 
-int Socket::canWrite()
+int Socket::canWrite(int to)
 {
   if(!connected)return -1;
-  if(timeOut==0)return 1;
+  if(to==0)to=timeOut;
+  if(to==0)return 1;
   FD_ZERO(&fd);
   FD_SET(sock,&fd);
-  tv.tv_sec=timeOut;
+  tv.tv_sec=to;
   tv.tv_usec=0;
   return select(FD_SETSIZE,NULL,&fd,NULL,&tv);
 }
