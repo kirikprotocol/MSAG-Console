@@ -264,18 +264,21 @@ int StatisticsManager::calculateToSleep() // returns msecs to next hour
 const char* insertStatSmsSql = (const char*)
 "INSERT INTO sms_stat_sms (period, accepted, rejected, delivered, rescheduled, temporal) "
 "VALUES (:period, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal)";
-
 const char* insertStatSmeSql = (const char*)
 "INSERT INTO sms_stat_sme (period, systemid, accepted, rejected, delivered, rescheduled, temporal)\
  VALUES (:period, :systemid, :accepted, :rejected, :delivered, :rescheduled, :temporal)";
-
 const char* insertStatRouteSql = (const char*)
 "INSERT INTO sms_stat_route (period, routeid, accepted, rejected, delivered, rescheduled, temporal)\
  VALUES (:period, :routeid, :accepted, :rejected, :delivered, :rescheduled, :temporal)";
-
 const char* insertStatStateSql = (const char*)
 "INSERT INTO sms_stat_state (period, errcode, counter) "
 "VALUES (:period, :errcode, :counter)";
+const char* insertStatSmeStateSql = (const char*)
+"INSERT INTO sms_stat_sme_state (period, systemid, errcode, counter) "
+"VALUES (:period, :systemid, :errcode, :counter)";
+const char* insertStatRouteStateSql = (const char*)
+"INSERT INTO sms_stat_route_state (period, routeid, errcode, counter) "
+"VALUES (:period, :routeid, :errcode, :counter)";
 
 void StatisticsManager::flushCounters(short index)
 {
@@ -288,7 +291,9 @@ void StatisticsManager::flushCounters(short index)
     Statement* insertStatSmeStmt    = 0;
     Statement* insertStatSmsStmt    = 0;
     Statement* insertStatRouteStmt  = 0;
-    Statement* insertStatStateStmt  = 0;
+    Statement* insertStatStateStmt       = 0;
+    Statement* insertStatSmeStateStmt    = 0;
+    Statement* insertStatRouteStateStmt  = 0;
 
     try
     {
@@ -298,10 +303,12 @@ void StatisticsManager::flushCounters(short index)
         insertStatSmsStmt   = connection->createStatement(insertStatSmsSql);
         insertStatSmeStmt   = connection->createStatement(insertStatSmeSql);
         insertStatRouteStmt = connection->createStatement(insertStatRouteSql);
-        insertStatStateStmt = connection->createStatement(insertStatStateSql);
+        insertStatStateStmt      = connection->createStatement(insertStatStateSql);
+        insertStatSmeStateStmt   = connection->createStatement(insertStatSmeStateSql);
+        insertStatRouteStateStmt = connection->createStatement(insertStatRouteStateSql);
 
-        if (!insertStatSmeStmt || !insertStatSmsStmt ||
-            !insertStatRouteStmt || !insertStatStateStmt)
+        if (!insertStatSmeStmt || !insertStatSmsStmt || !insertStatRouteStmt || 
+            !insertStatStateStmt || !insertStatSmeStateStmt || !insertStatRouteStateStmt)
             throw SQLException("Statistics: Failed to create service statements!");
 
         insertStatSmsStmt->setUint32(1, period);
@@ -315,15 +322,16 @@ void StatisticsManager::flushCounters(short index)
 
         insertStatStateStmt->setUint32(1, period);
         IntHash<int>::Iterator it = statGeneral[index].errors.First();
-        int fbeError, fbeCounter;
-        while (it.Next(fbeError, fbeCounter))
+        int ecError, eCounter;
+        while (it.Next(ecError, eCounter))
         {
-            insertStatStateStmt->setInt32(2, fbeError);
-            insertStatStateStmt->setInt32(3, fbeCounter);
+            insertStatStateStmt->setInt32(2, ecError);
+            insertStatStateStmt->setInt32(3, eCounter);
             insertStatStateStmt->executeUpdate();
         }
 
         insertStatRouteStmt->setUint32(1, period);
+        insertStatRouteStateStmt->setUint32(1, period);
         statByRoute[index].First();
         char* routeId = 0; SmsStat routeStat;
         while (statByRoute[index].Next(routeId, routeStat))
@@ -338,10 +346,19 @@ void StatisticsManager::flushCounters(short index)
             insertStatRouteStmt->setInt32 (8, routeStat.temporal);
             insertStatRouteStmt->executeUpdate();
 
-            // TODO: Add errors set flush here
+            insertStatRouteStateStmt->setString(2, routeId);
+            IntHash<int>::Iterator rit = routeStat.errors.First();
+            int recError, reCounter;
+            while (rit.Next(recError, reCounter))
+            {
+                insertStatRouteStateStmt->setInt32(3, recError);
+                insertStatRouteStateStmt->setInt32(4, reCounter);
+                insertStatRouteStateStmt->executeUpdate();
+            }
         }
 
         insertStatSmeStmt->setUint32(1, period);
+        insertStatSmeStateStmt->setUint32(1, period);
         statBySmeId[index].First();
         char* smeId = 0; SmsStat smeStat;
         while (statBySmeId[index].Next(smeId, smeStat))
@@ -356,7 +373,15 @@ void StatisticsManager::flushCounters(short index)
             insertStatSmeStmt->setInt32 (8, smeStat.temporal);
             insertStatSmeStmt->executeUpdate();
 
-            // TODO: Add errors set flush here
+            insertStatSmeStateStmt->setString(2, smeId);
+            IntHash<int>::Iterator sit = smeStat.errors.First();
+            int secError, seCounter;
+            while (sit.Next(secError, seCounter))
+            {
+                insertStatSmeStateStmt->setInt32(3, secError);
+                insertStatSmeStateStmt->setInt32(4, seCounter);
+                insertStatSmeStateStmt->executeUpdate();
+            }
         }
 
         connection->commit();
@@ -367,10 +392,12 @@ void StatisticsManager::flushCounters(short index)
         logger.error(exc.what());
     }
 
-    if (insertStatSmeStmt) delete insertStatSmeStmt;
-    if (insertStatSmsStmt) delete insertStatSmsStmt;
+    if (insertStatSmeStmt)   delete insertStatSmeStmt;
+    if (insertStatSmsStmt)   delete insertStatSmsStmt;
     if (insertStatRouteStmt) delete insertStatRouteStmt;
-    if (insertStatStateStmt) delete insertStatStateStmt;
+    if (insertStatStateStmt)      delete insertStatStateStmt;
+    if (insertStatSmeStateStmt)   delete insertStatSmeStateStmt;
+    if (insertStatRouteStateStmt) delete insertStatRouteStateStmt;
     if (connection) ds.freeConnection(connection);
 
     resetCounters(index);
