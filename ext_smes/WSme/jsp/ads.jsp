@@ -72,7 +72,7 @@
       <td nowrap valign=top>
         <%= StringEncoderDecoder.encode(ad.lang)%>
       </td>
-      <td nowrap valign=top>
+      <td wordwrap valign=top>
         <%= StringEncoderDecoder.encode(ad.ad)%>
       </td>
     </tr>
@@ -106,7 +106,7 @@
 </tr>
 <tr class=row0>
 	<th>Message:</th>
-	<td><input class=txt type="text" name=newAd  value="<%= StringEncoderDecoder.encode(bean.getNewAd())%>" size=25 maxlength=25></td>
+	<td><input class=txt type="text" name=newAd  value="<%= StringEncoderDecoder.encode(bean.getNewAd())%>" size=256 maxlength=256></td>
 </tr>
 </table>
 <%}%>

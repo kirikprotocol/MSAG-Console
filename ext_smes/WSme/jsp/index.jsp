@@ -121,9 +121,9 @@
 		startSection(out, "WSme.AdManager", "Advertise Messages Manager", false);
 			startSection(out, "WSme.AdManager.History", "History", true);
 				startParams(out);
-					param(out, "age",               "WSme.AdManager.History.age",         bean.getIntParam("WSme.AdManager.History.age"));
-					param(out, "cleanup timeout",   "WSme.AdManager.History.cleanup",     bean.getIntParam("WSme.AdManager.History.cleanup"));
-					param(out, "message life time", "WSme.AdManager.History.messageLife", bean.getIntParam("WSme.AdManager.History.messageLife"));
+					param(out, "age (in days)",                  "WSme.AdManager.History.age",         bean.getIntParam("WSme.AdManager.History.age"));
+					param(out, "cleanup timeout (in seconds)",   "WSme.AdManager.History.cleanup",     bean.getIntParam("WSme.AdManager.History.cleanup"));
+					param(out, "message life time (in seconds)", "WSme.AdManager.History.messageLife", bean.getIntParam("WSme.AdManager.History.messageLife"));
 				finishParams(out);
 			finishSection(out);
 		finishSection(out);
