@@ -1697,12 +1697,22 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
               __map_trace2__("IMSI: %s",b.get());
             }
             {
-              auto_ptr<char> b(new char[mscNumber_sp->addressLength*4+1]);
-              memset(b.get(),0,mscNumber_sp->addressLength*4+1);
-              for ( int i=0,k=0; i < (mscNumber_sp->addressLength+1)/2; ++i ) {
-                k += sprintf(b.get()+k,"%02x ",mscNumber_sp->address[i]);
+              if( mscnumber ) {
+                auto_ptr<char> b(new char[mscNumber_sp->addressLength*4+1]);
+                memset(b.get(),0,mscNumber_sp->addressLength*4+1);
+                for ( int i=0,k=0; i < (mscNumber_sp->addressLength+1)/2; ++i ) {
+                  k += sprintf(b.get()+k,"%02x ",mscNumber_sp->address[i]);
+                }
+                __map_trace2__("MSCNUMBER: %s",b.get());
               }
-              __map_trace2__("MSCNUMBER: %s",b.get());
+              if( locationInfo_sp ) {
+                auto_ptr<char> b(new char[locationInfo_sp->addressLength*4+1]);
+                memset(b.get(),0,locationInfo_sp->addressLength*4+1);
+                for ( int i=0,k=0; i < (locationInfo_sp->addressLength+1)/2; ++i ) {
+                  k += sprintf(b.get()+k,"%02x ",locationInfo_sp->address[i]);
+                }
+                __map_trace2__("LOCINFO: %s",b.get());
+              }
             }
           }
   //#endif
