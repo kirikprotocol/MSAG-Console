@@ -635,12 +635,6 @@ __synchronized__
   __require__(sme_table);
   // ....
   
-  if ( trace_enabled_ ) {
-    ostringstream ost;
-    ost << srcidx;
-    trace_.push_back(ost.str());
-  }
-  
   if ( trace_enabled_ )
     trace_.push_back(string("lookup for: ")+AddrToString(source)+"("+
       (srcidx?sme_table->getSmeInfo(srcidx).systemId:string("default"))
@@ -655,14 +649,12 @@ __synchronized__
   RouteRecord* rec0 = 0;
   
   if ( trace_enabled_ ) {
-    ostringstream ost;
-    ost << "lookup for alternative route with src proxy: '" << srcidx << ":";  
+    string s("lookup for alternative route with src proxy: '");
     if ( srcidx ) 
-      ost << sme_table->getSmeInfo(srcidx).systemId;
+      s += sme_table->getSmeInfo(srcidx).systemId + "'";
     else 
-      ost << "default";
-    ost << "'";
-    trace_.push_back(ost.str());
+      s += "default'";
+    trace_.push_back(s);
   }
 
   for ( ; rec != 0 ; rec = rec->alternate_pair ) {
@@ -682,7 +674,7 @@ __synchronized__
     }
     if ( rec->srcProxyIdx == 0 ) {
       if ( trace_enabled_ )
-        trace_.push_back("found default src proxy (zero) for route");
+        trace_.push_back("found default src proxy for route");
       rec0 = rec;
     }
   }
