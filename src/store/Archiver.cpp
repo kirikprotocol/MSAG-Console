@@ -277,7 +277,7 @@ void Archiver::incrementFinalizedCount(unsigned count)
 
     if ((finalizedCount += count) >= maxFinalizedCount) 
     {
-        if (!job.isSignaled()) 
+        if (!job.isSignaled() && !bArchivation) 
         {
             job.Signal();
             __trace2__("Signal sent, Finalized count is : %d !", 
