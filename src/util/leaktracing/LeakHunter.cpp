@@ -1,92 +1,62 @@
-#ifdef __GNUC__
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "core/synchronization/Mutex.hpp"
-#include "core/threads/Thread.hpp"
 #include "util/debug.h"
 #include <new>
-#include <setjmp.h>
-#include <signal.h>
 #include <unistd.h>
-
+#include <ucontext.h>
+#include <sys/frame.h>
+#include <signal.h>
 
 namespace smsc{
 namespace util{
 namespace leaktracing{
 
-const int TRACESIZE=20;
+static const int MAXTRACESIZE=20;
 
-static void* threadstart=NULL;
+#if defined(sparc) || defined(__sparc)
+#define FRAME_PTR_REGISTER REG_SP
+#endif
 
-static int inbacktrace=0;
-static sigjmp_buf j;
+#if defined(i386) || defined(__i386)
+#define FRAME_PTR_REGISTER EBP
+#endif
 
-static void sighandler(int);
-
-static void BackTrace(void** trace)
+static void BackTrace(void** dump)
 {
-  inbacktrace=1;
-  sigsetjmp(j,0);
-  if(!inbacktrace)
+  int counter=0;
+
+  ucontext_t u;
+  getcontext(&u);
+  frame* fp=(frame*)u.uc_mcontext.gregs[FRAME_PTR_REGISTER];
+
+  void* savpc;
+  frame* savfp;
+
+  while(
+    ((int)fp)>0x1000 &&
+    (savpc = ((void*)fp->fr_savpc)) &&
+    counter < MAXTRACESIZE
+  )
   {
-    sigset(11,sighandler);
-    return;
+    dump[counter]=savpc;
+    fp = (::frame*)fp->fr_savfp;
+    ++counter;
   }
-#define TRACE_BACK(n) \
-  trace[n]=0;\
-  trace[n]=__builtin_return_address(n+2);\
-  if(!trace[n]){inbacktrace=0;return;}\
-  if(trace[n]==threadstart){inbacktrace=0;trace[n]=0;return;}
-  TRACE_BACK(0)
-  TRACE_BACK(1)
-  TRACE_BACK(2)
-  TRACE_BACK(3)
-  TRACE_BACK(4)
-  TRACE_BACK(5)
-  TRACE_BACK(6)
-  TRACE_BACK(7)
-  TRACE_BACK(8)
-  TRACE_BACK(9)
-  TRACE_BACK(10)
-  TRACE_BACK(11)
-  TRACE_BACK(12)
-  TRACE_BACK(13)
-  TRACE_BACK(14)
-  TRACE_BACK(15)
-  TRACE_BACK(16)
-  TRACE_BACK(17)
-  TRACE_BACK(18)
-  TRACE_BACK(19)
+  if(counter!=MAXTRACESIZE)dump[counter]=0;
 }
 
-static void sighandler(int param)
-{
-  if(inbacktrace)
-  {
-    inbacktrace=0;
-    siglongjmp(j,1);
-  }
-  abort();
-}
 
 
 struct BlockInfo{
   void* addr;
   int size;
   int id;
-  void *trace[TRACESIZE];
+  void *trace[MAXTRACESIZE];
 };
 
 
-class __LH__DummyThread:public smsc::core::threads::Thread{
-public:
-  virtual int Execute()
-  {
-    threadstart=__builtin_return_address(0);
-    return 0;
-  }
-};
 
 const int LH_HASHSIZE=16*1024;
 const int LH_DEFAULTBUCKETSIZE=16;
@@ -142,12 +112,8 @@ static void sigcheckpoint(int param)
 
 void LeakHunter::Init()
 {
-  sigset(11,sighandler);
   sigset(17,sigcheckpoint);
 
-  __LH__DummyThread t;
-  t.Start();
-  t.WaitFor();
   int i;
   for(i=0;i<LH_HASHSIZE;i++)
   {
@@ -262,7 +228,7 @@ void LeakHunter::CheckPoint()
 
 void LeakHunter::DumpTrace(void** trace)
 {
-  for(int i=0;i<TRACESIZE;i++)
+  for(int i=0;i<MAXTRACESIZE;i++)
   {
     if(!trace[i])break;
     fprintf(f,"{0x%08X}\n",(int)trace[i]);
@@ -300,9 +266,9 @@ void LeakHunter::RegisterAlloc(void* ptr,int size)
 
 static void PrintTrace()
 {
-  void* trace[TRACESIZE];
+  void* trace[MAXTRACESIZE];
   smsc::util::leaktracing::BackTrace(trace);
-  for(int i=0;i<TRACESIZE;i++)
+  for(int i=0;i<MAXTRACESIZE;i++)
   {
     if(!trace[i])break;
     fprintf(stderr,"l *0x%08X\n",(int)trace[i]);
@@ -490,4 +456,3 @@ void operator delete[](void* mem)
     smsc::util::leaktracing::PrintTrace();
   }
 }
-#endif
