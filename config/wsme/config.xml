@@ -6,7 +6,7 @@
         <section name="DataSourceDrivers">
             <section name="OCIDataSourceDriver">
                 <param name="type" type="string">OCI</param>
-                <param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+                <param name="loadup" type="string">libdb_oci.so</param>
             </section>
         </section>
     </section>
@@ -24,7 +24,7 @@
         <section name="DataSource">
             <param name="type" type="string">OCI</param>
             <param name="connections" type="int">5</param>
-            <param name="dbInstance" type="string">DBS_ORCL</param>
+            <param name="dbInstance" type="string">Please change</param>
             <param name="dbUserName" type="string">smsc</param>
             <param name="dbUserPassword" type="string">smsc</param>
         </section>
@@ -44,7 +44,7 @@
         	<section name="jdbc">
 		    <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
 		    <param name="password" type="string">smsc</param>
-		    <param name="source" type="string">jdbc:oracle:thin:@dbs.novosoft.ru:1521:ORCL</param>
+		    <param name="source" type="string">Please change: (Example: jdbc:oracle:thin:@localhost:1521:ORCL)</param>
 		    <param name="user" type="string">smsc</param>
 	        </section>
 	     </section>
