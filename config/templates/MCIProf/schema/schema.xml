@@ -5,11 +5,13 @@
 
     <page id="MAIN" question="0">
       <segment>
-        Ваши настройки:
-        1> Просмотр переадресации
-        2> Управление переадресацией
-        3> Просмотр профиля
-        4> Управление профилем
+        <data>
+Ваши настройки:
+1> Просмотр переадресации
+2> Управление переадресацией
+3> Просмотр профиля
+4> Управление профилем
+        </data>
       </segment>
       <command name="1" target="divert_info"/>
       <command name="2" target="divert_mgr"/>
@@ -27,11 +29,13 @@
 
     <page id="divert_mgr" question="0">
       <segment>
-        Установить переадресацию:
-        1> Занято
-        2> Отсутствует
-        3> Не доступен
-        4> Безусловно
+        <data>
+Установить переадресацию:
+1> Занято
+2> Отсутствует
+3> Не доступен
+4> Безусловно
+        </data>
       </segment>
       <command name="1" target="divert_prompt"/>
       <command name="2" target="divert_prompt"/>
@@ -42,11 +46,13 @@
     <page id="divert_prompt" question="0" >
       <pagePreProcessor class="ru.sibinco.mci.profile.DivertPromptPreprocessor"/>
       <segment>
-        Введите номер телефона или
-        1> выключить
-        2> миссед колс
-        3> автоответчик
-        4> назад
+        <data>
+Введите номер телефона или
+1> выключить
+2> миссед колс
+3> автоответчик
+4> назад
+        </data>
       </segment>
       <command name="1" target="divert_set"/>
       <command name="2" target="divert_set"/>
