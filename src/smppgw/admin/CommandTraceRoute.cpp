@@ -68,9 +68,9 @@ CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * doc)
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
 
-      if (::strcmp("srcAddr", name) == 0)
+      if (::strcmp("srcAddress", name) == 0)
         srcAddr = value.get();
-      if (::strcmp("dstAddr", name) == 0)
+      if (::strcmp("dstAddress", name) == 0)
         dstAddr = value.get();
       if (::strcmp("srcSysId", name) == 0) 
         srcSysId = value.get();
@@ -90,9 +90,13 @@ smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Sm
 {
 
 
-  const char* _dstAddr  = (char *)&dstAddr;
-  const char* _srcAddr  = (char *)&srcAddr;
-  const char* _srcSysId = (char *)&srcSysId;
+  const char* _srcAddr  = srcAddr.data();
+  const char* _dstAddr  = dstAddr.data();
+  const char* _srcSysId = srcSysId.data();
+
+  
+  fprintf(stderr,"---- Command parameters: %s,%s,%s\n",srcAddr.data(),dstAddr.data(),srcSysId.data());
+
 
   try
   {
