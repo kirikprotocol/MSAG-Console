@@ -31,7 +31,8 @@ public:
 protected:
 	virtual Category& getLog();
 	
-	AckText* getExpectedResponse(const string& input, time_t submitTime);
+	AckText* getExpectedResponse(const string& input,
+		const Address& smeAddr, time_t submitTime);
 	void sendAbonentInfoPdu(const string& input, bool sync, uint8_t dataCoding);
 	AckText* getExpectedResponse(SmeAckMonitor* monitor,
 		const string& text, time_t recvTime);

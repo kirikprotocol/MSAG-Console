@@ -24,10 +24,14 @@ AbonentInfoTestCases::AbonentInfoTestCases(SmppFixture* fixture)
 	TestConfig::getStrParam("abonentInfoServiceType"),
 	TestConfig::getIntParam("abonentInfoProtocolId"))
 {
-	__cfg_addr__(abonentInfoAddr);
-	__cfg_addr__(abonentInfoAlias);
-	addSmeAddr(abonentInfoAddr);
-	addSmeAlias(abonentInfoAlias);
+	__cfg_addr__(abonentInfoAddrSmpp);
+	__cfg_addr__(abonentInfoAddrMap);
+	__cfg_addr__(abonentInfoAliasSmpp);
+	__cfg_addr__(abonentInfoAliasMap);
+	addSmeAddr(abonentInfoAddrSmpp);
+	addSmeAddr(abonentInfoAddrMap);
+	addSmeAlias(abonentInfoAliasSmpp);
+	addSmeAlias(abonentInfoAliasMap);
 }
 
 Category& AbonentInfoTestCases::getLog()
@@ -37,22 +41,50 @@ Category& AbonentInfoTestCases::getLog()
 }
 
 AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
-	time_t submitTime)
+	const Address& smeAddr, time_t submitTime)
 {
 	__decl_tc__;
+	__cfg_addr__(abonentInfoAliasSmpp);
+	__cfg_addr__(abonentInfoAliasMap);
 	__cfg_int__(timeCheckAccuracy);
 	try
 	{
-		Address alias(input.c_str());
-		const Address addr = fixture->aliasReg->findAddressByAlias(alias);
+		Address destAlias(input.c_str());
+		const Address destAddr = fixture->aliasReg->findAddressByAlias(destAlias);
+		//status
+		int status = 0;
+		const RouteHolder* routeHolder = fixture->routeReg->lookup(
+			fixture->smeAddr, destAddr);
+		if (routeHolder)
+		{
+			SmeType smeType = fixture->smeReg->getSmeBindType(
+				routeHolder->route.smeSystemId);
+			switch (smeType)
+			{
+				case SME_RECEIVER:
+				case SME_TRANSMITTER:
+				case SME_TRANSCEIVER:
+					status = 1;
+					break;
+			}
+		}
 		//profile
 		time_t t;
-		const Profile& profile = fixture->profileReg->getProfile(addr, t);
+		const Profile& profile = fixture->profileReg->getProfile(destAddr, t);
 		bool valid = t + timeCheckAccuracy <= submitTime;
 		ostringstream s;
-		__tc__("processAbonentInfo.checkText");
-		__tc_fail__(-1); //статус абонента всегда 1
-		s << input << ":1," << profile.codepage;
+		if (smeAddr == abonentInfoAliasSmpp)
+		{
+			s << input << ":" << status << "," << profile.codepage;
+		}
+		else if (smeAddr == abonentInfoAliasMap)
+		{
+			s << "Abonent " << input << " is " << (status ? "Online" : "Offline");
+		}
+		else
+		{
+			__unreachable__("Invalid address");
+		}
 		AckText* ack = new AckText(s.str(), DEFAULT, valid);
 		__trace2__("getExpectedResponse(): input = %s, ack = %p", input.c_str(), ack);
 		return ack;
@@ -67,12 +99,28 @@ AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
 void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 	bool sync, uint8_t dataCoding)
 {
-	__decl_tc__;
+	__decl_tc12__;
 	try
 	{
 		//создать pdu
 		PduSubmitSm* pdu = new PduSubmitSm();
-		__cfg_addr__(abonentInfoAlias);
+		__cfg_addr__(abonentInfoAliasSmpp);
+		__cfg_addr__(abonentInfoAliasMap);
+		Address abonentInfoAlias;
+		switch (rand1(2))
+		{
+			case 1:
+				__tc1__("queryAbonentInfo.smppAddr");
+				abonentInfoAlias = abonentInfoAliasSmpp;
+				break;
+			case 2:
+				__tc1__("queryAbonentInfo.mapAddr");
+				abonentInfoAlias = abonentInfoAliasMap;
+				break;
+			default:
+				__unreachable__("Invalid address");
+		}
+
 		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, abonentInfoAlias,
 			OPT_ALL & ~OPT_MSG_PAYLOAD); //отключить messagePayload
 		//установить немедленную доставку
@@ -82,10 +130,10 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 		switch (dataCoding)
 		{
 			case DEFAULT:
-				__tc__("queryAbonentInfo.cmdTextDefault");
+				__tc2__("queryAbonentInfo.cmdTextDefault");
 				break;
 			case UCS2:
-				__tc__("queryAbonentInfo.cmdTextUcs2");
+				__tc2__("queryAbonentInfo.cmdTextUcs2");
 				break;
 			default:
 				__unreachable__("Invalid data coding");
@@ -98,7 +146,7 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 		PduData::StrProps strProps;
 		strProps["abonentInfoTc.input"] = input;
 		PduData::ObjProps objProps;
-		AckText* ack = getExpectedResponse(input, time(NULL));
+		AckText* ack = getExpectedResponse(input, abonentInfoAlias, time(NULL));
 		if (ack)
 		{
 			ack->ref();
@@ -108,11 +156,11 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 		PduType pduType = ack ? PDU_EXT_SME : PDU_NULL_OK;
 		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync,
 			NULL, &strProps, &objProps, pduType);
-		__tc_ok__;
+		__tc12_ok__;
 	}
 	catch(...)
 	{
-		__tc_fail__(100);
+		__tc12_fail__(100);
 		error();
 		//throw;
 	}
@@ -238,14 +286,14 @@ void AbonentInfoTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		return;
 	}
 	//проверить содержимое полученной pdu
-	__tc__("processAbonentInfo.checkFields");
+	__tc__("queryAbonentInfo.ack.checkFields");
 	__compare__(1, get_message().get_dataCoding(), ack->dataCoding);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
 		__tc_fail__(2);
 	}
 	__tc_ok_cond__;
-	__tc__("processAbonentInfo.checkText");
+	__tc__("queryAbonentInfo.ack.checkText");
 	__trace2__("abonent info cmd: input:\n%s\noutput:\n%s\nexpected:\n%s\n",
 		monitor->pduData->strProps["abonentInfoTc.input"].c_str(), text.c_str(), ack->text.c_str());
 	if (text != ack->text)
