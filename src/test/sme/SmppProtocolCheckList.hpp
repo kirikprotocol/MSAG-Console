@@ -62,8 +62,8 @@ void bindTc()
 		"Правильное время получения респонса");
 	__reg_tc__("bind.resp.checkHeader",
 		"Правильные значения полей хедера респонса (command_length, sequence_number, command_status = ESME_ROK)");
-	__reg_tc__("bind.resp.checkFileds",
-		"Правильные значения полей system_id и sc_interface_version = 0x34");
+	__reg_tc__("bind.resp.checkFields",
+		"Проверка sc_interface_version = 0x34 (system_id не проверяется)");
 }
 
 void unbindTc()

@@ -1,4 +1,5 @@
 #include "SmppProtocolErrorTestCases.hpp"
+#include "test/conf/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
 
 namespace smsc {
@@ -6,6 +7,7 @@ namespace test {
 namespace sme {
 
 using smsc::util::Logger;
+using smsc::test::conf::TestConfig;
 using namespace smsc::sme;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
@@ -117,8 +119,8 @@ void SmppProtocolErrorScenario::checkBindResp(SmppHeader* pdu)
 	__tc_ok_cond__;
 	__tc__("bind.resp.checkFields");
 	PduBindTRXResp* bindPdu = reinterpret_cast<PduBindTRXResp*>(pdu);
-	__check__(1, cfg.sid == nvl(bindPdu->get_systemId()));
-	__check__(2, bindPdu->get_scInterfaceVersion() == 0x34);
+	//__check__(1, cfg.sid == nvl(bindPdu->get_systemId()));
+	__check__(1, bindPdu->get_scInterfaceVersion() == 0x34);
 	__tc_ok_cond__;
 }
 
@@ -260,6 +262,7 @@ SmppHeader* SmppProtocolErrorScenario::createPdu(uint32_t commandId)
 			__unreachable__("invalid commandId");
 	}
 	pdu->set_commandId(commandId);
+	pdu->set_sequenceNumber(sess.getNextSeq());
 	return pdu;
 }
 

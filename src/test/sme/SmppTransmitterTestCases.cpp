@@ -112,7 +112,7 @@ void SmppTransmitterTestCases::cancelMonitor(PduMonitor* monitor,
 }
 
 void SmppTransmitterTestCases::cancelPduMonitors(PduData* pduData,
-	time_t cancelTime, bool forceRemoveMonitors)
+	time_t cancelTime, bool forceRemoveMonitors, State state)
 {
 	__require__(pduData && pduData->pdu->get_commandId() == SUBMIT_SM);
 	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
@@ -121,6 +121,7 @@ void SmppTransmitterTestCases::cancelPduMonitors(PduData* pduData,
 	//delivery monitor
 	DeliveryMonitor* deliveryMonitor = fixture->pduReg->getDeliveryMonitor(msgRef);
 	__require__(deliveryMonitor);
+	deliveryMonitor->state = state;
 	cancelMonitor(deliveryMonitor, cancelTime, forceRemoveMonitors);
 	//delivery receipt monitor
 	DeliveryReceiptMonitor* rcptMonitor =
@@ -129,6 +130,7 @@ void SmppTransmitterTestCases::cancelPduMonitors(PduData* pduData,
 	{
 		//если есть delivery receipt monitor, то pdu уже финализировалась
 		__require__(deliveryMonitor->getFlag() == PDU_NOT_EXPECTED_FLAG);
+		rcptMonitor->state = state;
 		cancelMonitor(rcptMonitor, cancelTime, forceRemoveMonitors);
 	}
 	//intermediate notification monitor
@@ -136,6 +138,7 @@ void SmppTransmitterTestCases::cancelPduMonitors(PduData* pduData,
 		fixture->pduReg->getIntermediateNotificationMonitor(msgRef);
 	if (notifMonitor)
 	{
+		notifMonitor->state = state;
 		cancelMonitor(notifMonitor, cancelTime, forceRemoveMonitors);
 	}
 }
@@ -251,7 +254,7 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 					existentPduData->ref();
 					deliveryMonitor->pduData->replacePdu = existentPduData;
 					existentPduData->replacedByPdu = pduData;
-					cancelPduMonitors(existentPduData, pduData->sendTime, false);
+					cancelPduMonitors(existentPduData, pduData->sendTime, false, ENROUTE);
 				}
 				else
 				{
@@ -571,7 +574,7 @@ void SmppTransmitterTestCases::registerReplaceMonitors(PduSubmitSm* resPdu,
 		default: //SME_NO_ROUTE
 			__unreachable__("Invalid sme type");
 	}
-	cancelPduMonitors(replacePduData, pduData->sendTime, true);
+	cancelPduMonitors(replacePduData, pduData->sendTime, true, ENROUTE);
 	//delivery monitor
 	if (deliveryFlag)
 	{
@@ -982,7 +985,7 @@ void SmppTransmitterTestCases::processCancelledMonitors(PduCancelSm* pdu,
 	{
 		__require__(!pdu->get_serviceType());
 		__require__(cancelPduData);
-		cancelPduMonitors(cancelPduData, cancelTime, false);
+		cancelPduMonitors(cancelPduData, cancelTime, false, DELETED);
 	}
 	else
 	{
@@ -1007,7 +1010,7 @@ void SmppTransmitterTestCases::processCancelledMonitors(PduCancelSm* pdu,
 		delete it;
 		for (int i = 0; i < cancelPduDataList.size(); i++)
 		{
-			cancelPduMonitors(cancelPduDataList[i], cancelTime, false);
+			cancelPduMonitors(cancelPduDataList[i], cancelTime, false, DELETED);
 		}
 	}
 }

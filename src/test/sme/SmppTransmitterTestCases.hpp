@@ -73,7 +73,7 @@ protected:
 	void cancelMonitor(PduMonitor* monitor, time_t cancelTime,
 		bool forceRemoveMonitor);
 	void cancelPduMonitors(PduData* pduData, time_t cancelTime,
-		bool forceRemoveMonitors);
+		bool forceRemoveMonitors, State state);
 	void registerTransmitterReportMonitors(uint16_t msgRef, time_t waitTime,
 		time_t validTime, PduData* pduData);
 	void registerNotBoundReportMonitors(uint16_t msgRef, time_t waitTime,
