@@ -23,6 +23,7 @@ class RouteChecker
 {
 	const string systemId;
 	const Address smeAddr;
+	bool wantAlias;
 	const SmeRegistry* smeReg;
 	const AliasRegistry* aliasReg;
 	const RouteRegistry* routeReg;

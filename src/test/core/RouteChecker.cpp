@@ -11,6 +11,7 @@ namespace core {
 using std::vector;
 using smsc::sms::Address;
 using smsc::sms::AddressValue;
+using smsc::smeman::SmeInfo;
 using smsc::test::sms::operator!=;
 using smsc::test::sms::str;
 using smsc::test::smpp::SmppUtil;
@@ -25,6 +26,9 @@ RouteChecker::RouteChecker(const string& id, const Address& addr,
 	__require__(smeReg);
 	__require__(aliasReg);
 	__require__(routeReg);
+	const SmeInfo* smeInfo = smeReg->getSme(systemId);
+	__require__(smeInfo);
+	wantAlias = smeInfo->wantAlias;
 }
 
 vector<int> RouteChecker::checkRouteForNormalSms(PduDeliverySm& pdu1,
@@ -37,7 +41,7 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduDeliverySm& pdu1,
 	SmppUtil::convert(pdu2.get_message().get_source(), &origAlias2);
 	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
 	//правильность destAddr
-	bool destOk = false;
+	const RouteHolder* routeHolder = NULL;
 	const Address destAddr = aliasReg->findAddressByAlias(destAlias1);
 	if (destAddr != destAddr2)
 	{
@@ -45,30 +49,33 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduDeliverySm& pdu1,
 	}
 	else
 	{
-		destOk = true;
-	}
-	//правильность origAddr
-	bool origOk = false;
-	const Address origAlias = aliasReg->findAliasByAddress(origAddr1);
-	if (origAlias != origAlias2)
-	{
-		res.push_back(2);
-	}
-	else
-	{
-		origOk = true;
-	}
-	//правильность маршрута
-	if (destOk && origOk)
-	{
-		const RouteHolder* routeHolder = routeReg->lookup(origAddr1, destAddr2);
+		//правильность маршрута
+		routeHolder = routeReg->lookup(origAddr1, destAddr2);
 		if (!routeHolder)
 		{
-			res.push_back(3);
+			res.push_back(2);
 		}
 		else if (systemId != routeHolder->route.smeSystemId)
 		{
-			res.push_back(4);
+			res.push_back(3);
+		}
+	}
+	//правильность origAddr
+	if (routeHolder)
+	{
+		const SmeInfo* smeInfo = smeReg->getSme(routeHolder->route.smeSystemId);
+		__require__(smeInfo);
+		if (smeInfo->wantAlias)
+		{
+			const Address origAlias = aliasReg->findAliasByAddress(origAddr1);
+			if (origAlias != origAlias2)
+			{
+				res.push_back(4);
+			}
+		}
+		else if (origAddr1 != origAlias2)
+		{
+			res.push_back(5);
 		}
 	}
 	return res;
@@ -84,34 +91,41 @@ vector<int> RouteChecker::checkRouteForAcknowledgementSms(PduDeliverySm& pdu1,
 	SmppUtil::convert(pdu2.get_message().get_source(), &origAlias2);
 	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
 	//правильность destAddr для pdu2
-	bool destOk = true;
 	if (destAddr2 != origAddr1)
 	{
 		res.push_back(1);
-		destOk = false;
 	}
 	//правильность origAddr для pdu2
-	bool origOk = true;
-	if (origAlias2 != destAlias1)
+	const RouteHolder* routeHolder = NULL;
+	if (!wantAlias)
 	{
-		res.push_back(2);
-		origOk = false;
+		const Address destAddr = aliasReg->findAddressByAlias(destAlias1);
+		if (origAlias2 != destAddr)
+		{
+			res.push_back(2);
+		}
+		else
+		{
+			routeHolder = routeReg->lookup(origAlias2, destAddr2);
+		}
+	}
+	else if (origAlias2 != destAlias1)
+	{
+		res.push_back(3);
+	}
+	else
+	{
+		const Address origAddr2 = aliasReg->findAddressByAlias(origAlias2);
+		routeHolder = routeReg->lookup(origAddr2, destAddr2);
 	}
 	//правильность маршрута
-	if (destOk && origOk)
+	if (!routeHolder)
 	{
-		const Address origAddr2 =
-			aliasReg->findAddressByAlias(origAlias2);
-		const RouteHolder* routeHolder =
-			routeReg->lookup(origAddr2, destAddr2);
-		if (!routeHolder)
-		{
-			res.push_back(3);
-		}
-		else if (systemId != routeHolder->route.smeSystemId)
-		{
-			res.push_back(4);
-		}
+		res.push_back(4);
+	}
+	else if (systemId != routeHolder->route.smeSystemId)
+	{
+		res.push_back(5);
 	}
 	return res;
 }
