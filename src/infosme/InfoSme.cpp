@@ -177,22 +177,9 @@ private:
             outgoingTraffic.Inc();
             difference = outgoingTraffic.Get() - incomingTraffic.Get();
         }
-        
-        if (difference >= unrespondedMessagesMax)
-        {
-            // stop sending while diff >= unrespondedMessagesMax
-            while (!isNeedStop() && !isNeedReconnect())
-            {
-                trafficControlEvent.Wait(unrespondedMessagesSleep);
-                MutexGuard guard(trafficControlLock);
-                difference = outgoingTraffic.Get() - incomingTraffic.Get();
-                if (difference < unrespondedMessagesMax) break;
-            }
-        } 
-        else if (difference >= unrespondedMessagesMax/10) {
-            // slow down after 10% limit reached
-            trafficControlEvent.Wait((unrespondedMessagesMax*difference)
-                                     /(10*unrespondedMessagesSleep));
+        if (difference >= unrespondedMessagesMax) {
+            // slow down sending after 10% limit reached
+            trafficControlEvent.Wait(difference*unrespondedMessagesSleep);
         }
     }
 
@@ -506,15 +493,23 @@ int main(void)
         ConfigView tpConfig(manager, "InfoSme");
         try { unrespondedMessagesMax = tpConfig.getInt("unrespondedMessagesMax"); } catch (...) {};
         if (unrespondedMessagesMax <= 0) {
-            unrespondedMessagesMax = 100;
+            unrespondedMessagesMax = 1;
             smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
-                        unrespondedMessagesMax);
+                          unrespondedMessagesMax);
+        }
+        if (unrespondedMessagesMax > 500) {
+            smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value '%d' is too big. "
+                          "The preffered max value is 500", unrespondedMessagesMax);
         }
         try { unrespondedMessagesSleep = tpConfig.getInt("unrespondedMessagesSleep"); } catch (...) {};
         if (unrespondedMessagesSleep <= 0) {
-            unrespondedMessagesSleep = 1000;
-            smsc_log_warn(logger, "'unrespondedMessagesSleep' value is invalid. Using default %d",
-                        unrespondedMessagesSleep);
+            unrespondedMessagesSleep = 100;
+            smsc_log_warn(logger, "'unrespondedMessagesSleep' value is invalid. Using default %dms",
+                          unrespondedMessagesSleep);
+        }
+        if (unrespondedMessagesSleep > 500) {
+            smsc_log_warn(logger, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
+                          "The preffered max value is 500ms", unrespondedMessagesSleep);
         }
         TaskProcessor processor(&tpConfig);
         
