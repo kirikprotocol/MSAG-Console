@@ -16,6 +16,8 @@ TCResultFilter* newFilter()
 		"—охранение правильного SM");
 	filter->registerTC(TC_STORE_INCORRECT_SM,
 		"—охранение неправильного SM");
+	filter->registerTC(TC_STORE_ASSERT_SM,
+		"—охранение неправильного SM, проверка на assert");
 	filter->registerTC(TC_SET_CORRECT_SM_STATUS,
 		" орректное изменение статуса SM");
 	filter->registerTC(TC_SET_INCORRECT_SM_STATUS,
@@ -38,7 +40,7 @@ TCResultFilter* newFilter()
 		"”даление несуществующих SM ожидающих доставки на определенный номер");
 	filter->registerTC(TC_LOAD_EXISTENT_SM,
 		"„тение существующего SM");
-	filter->registerTC(TC_LOAD_NONEXISTENT_SM,
+	filter->registerTC(TC_LOAD_NON_EXISTENT_SM,
 		"„тение несуществующего SM");
 	filter->registerTC(TC_LOAD_EXISTENT_WAITING_SM_BY_DESTINATION_NUMBER,
 		"«агрузка непустого списка SM ожидающих доставки на определенный номер");
@@ -87,6 +89,7 @@ cout << "i = " << i << endl;
 	}
 	filter->addResult(*tc.storeIncorrectSM(sms, ALL_TC));
 	filter->addResult(*tc.loadNonExistentSM());
+	filter->addResult(*tc.storeAssertSM(ALL_TC));
 	
 	//сохранить checklist
 cout << "Save checklist" << endl;

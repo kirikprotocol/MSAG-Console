@@ -13,8 +13,12 @@ namespace store {
 
 using namespace smsc::test::util;
 
+const int MAX_ADDRESS_LENGTH = 21;
+const int MAX_MSG_BODY_LENGTH = 254;
+
 const std::string TC_STORE_CORRECT_SM = "storeCorrectSM";
 const std::string TC_STORE_INCORRECT_SM = "storeIncorrectSM";
+const std::string TC_STORE_ASSERT_SM = "storeAssertSM";
 const std::string TC_SET_CORRECT_SM_STATUS = "setCorrectSMStatus";
 const std::string TC_SET_INCORRECT_SM_STATUS = "setIncorrectSMStatus";
 const std::string TC_SET_NON_EXISTENT_SM_STATUS = "setNonExistentSMStatus";
@@ -28,7 +32,7 @@ const std::string TC_DELETE_EXISTENT_WAITING_SM_BY_NUMBER =
 const std::string TC_DELETE_NON_EXISTENT_WAITING_SM_BY_NUMBER = 
 	"deleteNonExistentWaitingSMByNumber";
 const std::string TC_LOAD_EXISTENT_SM = "loadExistentSM";
-const std::string TC_LOAD_NONEXISTENT_SM = "loadNonExistentSM";
+const std::string TC_LOAD_NON_EXISTENT_SM = "loadNonExistentSM";
 const std::string TC_LOAD_EXISTENT_WAITING_SM_BY_DESTINATION_NUMBER = 
 	"loadExistentWaitingSMByDestinationNumber";
 const std::string TC_LOAD_NON_EXISTENT_WAITING_SM_BY_DESTINATION_NUMBER = 
@@ -77,6 +81,11 @@ public:
 	 * Диагностика ошибки должна выводиться в лог.
 	 */
 	TCResult* storeIncorrectSM(smsc::sms::SMS& existentSMS, int num);
+
+	/**
+	 * Сохранение неправильного SM с проверкой на assert.
+	 */
+	TCResult* storeAssertSM(int num);
 
 	/**
 	 * Корректное изменение статуса SM.

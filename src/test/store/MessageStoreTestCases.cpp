@@ -1,6 +1,7 @@
 #include "MessageStoreTestCases.hpp"
 #include "store/StoreManager.h"
 #include "store/StoreExceptions.h"
+#include "util/debug.h"
 #include <cstdlib>
 #include <ctime>
 #include <string>
@@ -13,6 +14,7 @@ using namespace std;
 using namespace smsc::test::util;
 using namespace smsc::store;
 using namespace smsc::sms;
+using namespace smsc::util;
 
 MessageStoreTestCases::MessageStoreTestCases()
 	throw (smsc::store::StoreException)
@@ -24,8 +26,9 @@ MessageStoreTestCases::MessageStoreTestCases()
 void MessageStoreTestCases::setupRandomCorrectSM(SMS& sms)
 {
 	sms.setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED
-	sms.setOriginatingAddress(10, 20, 30, rand_uint8_t(10).get());
-	sms.setDestinationAddress(10, 20, 30, rand_uint8_t(10).get());
+	int addrLength = rand1(MAX_ADDRESS_LENGTH); //задаем случайную длину адреса
+	sms.setOriginatingAddress(addrLength, 20, 30, rand_char(addrLength).get());
+	sms.setDestinationAddress(addrLength, 20, 30, rand_char(addrLength).get());
 	sms.setWaitTime(time(NULL));
 	sms.setValidTime(time(NULL) + 24 * 3600);
 	sms.setSubmitTime(time(NULL) - 1);
@@ -37,8 +40,7 @@ void MessageStoreTestCases::setupRandomCorrectSM(SMS& sms)
 	sms.setStatusReportRequested(true);
 	sms.setRejectDuplicates(true);
 	sms.setFailureCause(55);
-	//задаем случайную длину тела сообщения
-	int msgLen = 1 + rand0(160);
+    int msgLen = rand1(MAX_MSG_BODY_LENGTH); //задаем случайную длину тела сообщения
 	sms.setMessageBody(msgLen, 20, false, rand_uint8_t(msgLen).get());
 }
 
@@ -50,30 +52,29 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 	SMS sms;
 	for (; s.check(); s++)
 	{
-		setupRandomCorrectSM(sms);
-		switch(s.value())
-		{
-			case 1: //пустой originatingAddress
-				sms.setOriginatingAddress(0, 20, 30, rand_uint8_t(1).get());
-				break;
-			case 2: //пустой destinationAddress
-				sms.setDestinationAddress(0, 20, 30, rand_uint8_t(1).get());
-				break;
-			case 3: //пустое тело сообщения
-				sms.setMessageBody(0, 20, false, rand_uint8_t(1).get());
-				break;
-			case 4: //длинное тело сообщения
-				sms.setMessageBody(256, 20, false, rand_uint8_t(256).get());
-				break;
-			default:
-				res->addFailure(s.value());
-				return res;
-		}
 		try
 		{
+			setupRandomCorrectSM(sms);
+			switch(s.value())
+			{
+				case 1: //ничего особенного
+					break;
+				case 2: //пустой originatingAddress
+					sms.setOriginatingAddress(0, 20, 30, rand_char(1).get());
+					break;
+				case 3: //пустое тело сообщения
+					sms.setMessageBody(0, 20, false, rand_uint8_t(1).get());
+					break;
+				case 4: //длинное тело сообщения
+					sms.setMessageBody(MAX_MSG_BODY_LENGTH, 20, false, 
+						rand_uint8_t(MAX_MSG_BODY_LENGTH).get());
+					break;
+				default:
+					__require__(false);
+			}
 			smsId = msgStore->store(sms);
 		}
-		catch(exception& e)
+		catch(...)
 		{
 			res->addFailure(s.value());;
 		}
@@ -88,54 +89,42 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 
 TCResult* MessageStoreTestCases::storeIncorrectSM(SMS& existentSMS, int num)
 {
-	TCSelector s(num, 10);
+	TCSelector s(num, 7);
 	TCResult* res = new TCResult(TC_STORE_INCORRECT_SM, s.getChoice());
 	SMS sms;
 	for (; s.check(); s++)
 	{
-		setupRandomCorrectSM(sms);
-		switch(s.value())
-		{
-			case 1: //некорректный статус
-				sms.setState(DELIVERED);
-				break;
-			case 2: //некорректный статус
-				sms.setState(EXPIRED);
-				break;
-			case 3: //некорректный статус
-				sms.setState(UNDELIVERABLE);
-				break;
-			case 4: //некорректный статус
-				sms.setState(DELETED);
-				break;
-			case 5: //сшишком длинный originatingAddress
-				sms.setOriginatingAddress(11, 20, 30, rand_uint8_t(11).get());
-				break;
-			case 6: //destinationAddress длиннее 11 символов
-				sms.setDestinationAddress(11, 20, 30, rand_uint8_t(11).get());
-				break;
-			case 7: //срок валидности уже закончился
-				sms.setValidTime(time(NULL) - 1);
-				break;
-			case 8: //waitTime > validTime
-				sms.setWaitTime(time(NULL) + 200);
-				sms.setValidTime(time(NULL) + 100);
-				break;
-			case 9: //дублированное сообщение
-				sms.setMessageReference(existentSMS.getMessageReference());
-				sms.setRejectDuplicates(true);
-				break;
-			case 10: //слишком длинное message body
-				sms.setMessageBody(257, 20, false, rand_uint8_t(257).get());
-				break;
-			case 100: //корректное сообщение
-				break;
-			default:
-				res->addFailure(s.value());
-				return res;
-		}
 		try
 		{
+			setupRandomCorrectSM(sms);
+			switch(s.value())
+			{
+				case 1: //некорректный статус
+					sms.setState(DELIVERED);
+					break;
+				case 2: //некорректный статус
+					sms.setState(EXPIRED);
+					break;
+				case 3: //некорректный статус
+					sms.setState(UNDELIVERABLE);
+					break;
+				case 4: //некорректный статус
+					sms.setState(DELETED);
+					break;
+				case 5: //срок валидности уже закончился
+					sms.setValidTime(time(NULL) - 1);
+					break;
+				case 6: //waitTime > validTime
+					sms.setWaitTime(time(NULL) + 200);
+					sms.setValidTime(time(NULL) + 100);
+					break;
+				case 7: //дублированное сообщение
+					sms.setMessageReference(existentSMS.getMessageReference());
+					sms.setRejectDuplicates(true);
+					break;
+				default:
+					__require__(false);
+			}
 			SMSId smsId = msgStore->store(sms);
 			res->addFailure(s.value());
 		}
@@ -143,7 +132,54 @@ TCResult* MessageStoreTestCases::storeIncorrectSM(SMS& existentSMS, int num)
 		{
 			continue;
 		}
-		catch(exception& e)
+		catch(...)
+		{
+			res->addFailure(s.value());;
+		}
+	}
+	return res;
+}
+
+TCResult* MessageStoreTestCases::storeAssertSM(int num)
+{
+	TCSelector s(num, 4);
+	TCResult* res = new TCResult(TC_STORE_ASSERT_SM, s.getChoice());
+	SMS sms;
+	int bigAddrLength = MAX_ADDRESS_LENGTH + 1;
+	int msgBodyLength = MAX_MSG_BODY_LENGTH + 1;
+	for (; s.check(); s++)
+	{
+		try
+		{
+			setupRandomCorrectSM(sms);
+			switch(s.value())
+			{
+				case 1: //пустой destinationAddress
+					sms.setDestinationAddress(0, 20, 30, rand_char(1).get());
+					break;
+				case 2: //originatingAddress больше максимальной длины
+					sms.setOriginatingAddress(bigAddrLength, 20, 30,
+						rand_char(bigAddrLength).get());
+					break;
+				case 3: //destinationAddress больше максимальной длины
+					sms.setDestinationAddress(bigAddrLength, 20, 30,
+						rand_char(bigAddrLength).get());
+					break;
+				case 4: //message body больше максимальной длины
+					sms.setMessageBody(msgBodyLength, 20, false,
+						rand_uint8_t(msgBodyLength).get());
+					break;
+				default:
+					__require__(false);
+			}
+			SMSId smsId = msgStore->store(sms);
+			res->addFailure(s.value());
+		}
+		catch(AssertException e)
+		{
+			continue;
+		}
+		catch(...)
 		{
 			res->addFailure(s.value());;
 		}
@@ -268,7 +304,7 @@ TCResult* MessageStoreTestCases::loadExistentSM(SMSId id, SMS& sms)
 			}
 		}
 	}
-	catch(StoreException& e)
+	catch(...)
 	{
 		res->addFailure(100);
 	}
@@ -277,7 +313,7 @@ TCResult* MessageStoreTestCases::loadExistentSM(SMSId id, SMS& sms)
 
 TCResult* MessageStoreTestCases::loadNonExistentSM()
 {
-	TCResult* res = new TCResult(TC_LOAD_NONEXISTENT_SM, 1);
+	TCResult* res = new TCResult(TC_LOAD_NON_EXISTENT_SM, 1);
 	try
 	{
 		SMSId id = 0xFFFFFFFF;
@@ -288,7 +324,7 @@ TCResult* MessageStoreTestCases::loadNonExistentSM()
 	{
 		//Ok
 	}
-	catch(StoreException& e)
+	catch(...)
 	{
 		res->addFailure(101);
 	}
