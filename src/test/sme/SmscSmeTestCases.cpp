@@ -110,11 +110,13 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 		case SMPP_EXPIRED_STATE:
 			{
 				time_t sendTime = monitor->pduData->sendTime;
-				PduData* replacePduData = monitor->pduData->replacePdu;
-				while (replacePduData)
+				PduData* pduData = monitor->pduData;
+				//для replace_sm не меняется время submitTime
+				while (pduData && pduData->intProps.count("replaceSm"))
 				{
-					sendTime = replacePduData->sendTime;
-					replacePduData = replacePduData->replacePdu;
+					__require__(pduData->replacePdu);
+					sendTime = pduData->replacePdu->sendTime;
+					pduData = pduData->replacePdu;
 				}
 				for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 				{
@@ -161,11 +163,13 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 	Address destAlias;
 	SmppUtil::convert(origPdu.getDest(), &destAlias);
 	time_t sendTime = monitor->pduData->sendTime;
-	PduData* replacePduData = monitor->pduData->replacePdu;
-	while (replacePduData)
+	PduData* pduData = monitor->pduData;
+	//для replace_sm не меняется время submitTime
+	while (pduData && pduData->intProps.count("replaceSm"))
 	{
-		sendTime = replacePduData->sendTime;
-		replacePduData = replacePduData->replacePdu;
+		__require__(pduData->replacePdu);
+		sendTime = pduData->replacePdu->sendTime;
+		pduData = pduData->replacePdu;
 	}
 	for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 	{
