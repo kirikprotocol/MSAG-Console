@@ -129,7 +129,7 @@ function validateField_positive(elem)
 {
 	var intValue = elem.value/1;
 	return isNaN(intValue) || intValue <= 0
-		? validationError(elem, "value must be an integer and positive")
+		? validationError(elem, "value must be a positive integer")
 		: true;
 }
 
@@ -139,7 +139,7 @@ function validateField_int_range(elem)
 	var intMin = elem.range_min == null ? (1/0) : (elem.range_min/1);
 	var intMax = elem.range_max == null ? (1/0) : (elem.range_max/1);
 	return isNaN(intValue) || ((!isNaN(intMin)) && intValue < intMin) || ((!isNaN(intMax)) && intValue > intMax)
-		? validationError(elem, "value must be an integer and positive")
+		? validationError(elem, "value must be an integer in range ["+elem.range_min+", "+elem.range_max+"]")
 		: true;
 }
 
@@ -213,6 +213,23 @@ function validateField_reschedule(elem)
 		: true;
 }
 
+var release_causes = [1,2,3,4,5,8,9,16,17,18,19,20,21,22,27,28,29,31,34,38,41,42,43,44,46,47,
+                      50,53,55,57,58,62,63,65,69,70,79,87,88,90,91,95,97,99,102,103,110,111,127];
+function validateField_release_cause(elem)
+{
+	if (elem.value == null || elem.value.length == 0)
+		return validationError(elem, "Invalid release cause: value is null");
+
+	var intValue = elem.value/1;
+	if (isNaN(intValue) || intValue <= 0)
+		return validationError(elem, "Release cause value must be a positive integer");
+
+  for (var e in release_causes)
+    if (intValue == release_causes[e]) return true;
+
+  return validationError(elem, "Invalid release cause: value '"+intValue+"' is undefined");
+}
+
 function validateField(elem)
 {
 	switch(elem.validation)
@@ -232,6 +249,7 @@ function validateField(elem)
 		case "id" : return validateField_id(elem);
 		case "unsigned": return validateField_unsigned(elem);
 		case "reschedule": return validateField_reschedule(elem);
+		case "release_cause": return validateField_release_cause(elem);
 	}
 	alert("unknown validation type:"+elem.validation);
 	return false;
