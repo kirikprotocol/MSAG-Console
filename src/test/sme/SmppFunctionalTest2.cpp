@@ -9,6 +9,7 @@
 #include "test/config/RouteConfigGen.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include "SmppCheckList.hpp"
+#include "test/config/ConfigGenCheckList.hpp"
 #include "util/debug.h"
 #include <vector>
 #include <sstream>
@@ -36,7 +37,8 @@ using namespace smsc::test::util;
 SmeRegistry* smeReg = new SmeRegistry();
 AliasRegistry* aliasReg = new AliasRegistry();
 RouteRegistry* routeReg = new RouteRegistry();
-CheckList* chkList = new SmppCheckList();
+CheckList* smppChkList = new SmppCheckList();
+CheckList* configChkList = new ConfigGenCheckList();
 
 /**
  * Тестовая sme.
@@ -53,7 +55,7 @@ public:
 	TestSme(int smeNum, const SmeConfig& config, const SmeSystemId& systemId,
 		const Address& addr, const SmeRegistry* smeReg,
 		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
-		CheckList* chkList);
+		CheckList* smppChkList);
 	virtual ~TestSme() {}
 	virtual void executeCycle();
 	virtual void onStopped();
@@ -109,9 +111,9 @@ public:
 //TestSme
 TestSme::TestSme(int _smeNum, const SmeConfig& config, const SmeSystemId& systemId,
 	const Address& smeAddr, const SmeRegistry* smeReg,
-	const AliasRegistry* aliasReg, const RouteRegistry* routeReg, CheckList* chkList)
+	const AliasRegistry* aliasReg, const RouteRegistry* routeReg, CheckList* smppChkList)
 	: TestTask("TestSme", _smeNum), smeNum(_smeNum), nextCheckTime(0),
-	tc(config, systemId, smeAddr, this, smeReg, aliasReg, routeReg, chkList),
+	tc(config, systemId, smeAddr, this, smeReg, aliasReg, routeReg, smppChkList),
 	boundOk(false) {}
 
 void TestSme::executeCycle()
@@ -364,9 +366,14 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	}
 	//tcRoute->commit();
 	//сохранение конфигов
-	SmeConfigGen smeCfg(smeReg);
-	AliasConfigGen aliasCfg(aliasReg);
-	RouteConfigGen routeCfg(routeReg);
+	if (configChkList)
+	{
+		delete configChkList;
+	}
+	configChkList = new ConfigGenCheckList();
+	SmeConfigGen smeCfg(smeReg, configChkList);
+	AliasConfigGen aliasCfg(aliasReg, configChkList);
+	RouteConfigGen routeCfg(routeReg, configChkList);
 	smeCfg.saveConfig("../system/sme.xml");
 	aliasCfg.saveConfig("../system/aliases.xml");
 	routeCfg.saveConfig("../system/routes.xml");
@@ -384,7 +391,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		//config.systemType;
 		//config.origAddr;
 		sme.push_back(new TestSme(i, config, smeInfo[i]->systemId, *addr[i],
-			smeReg, aliasReg, routeReg, chkList)); //throws Exception
+			smeReg, aliasReg, routeReg, smppChkList)); //throws Exception
 		smeReg->bindSme(smeInfo[i]->systemId);
 	}
 	//печать таблицы маршрутов
@@ -514,8 +521,9 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		}
 		else if (cmd == "chklist")
 		{
-			chkList->save();
-			cout << "Checklist saved" << endl;
+			smppChkList->saveHtml();
+			configChkList->saveHtml();
+			cout << "Checklists saved" << endl;
 		}
 		else if (cmd == "dump")
 		{
@@ -546,7 +554,8 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		}
 		else if (cmd == "quit")
 		{
-			//chkList->save();
+			//smppChkList->saveHtml();
+			//configChkList->saveHtml();
 			//cout << "Checklist saved" << endl;
 			tm.stopTasks();
 			cout << "Total time = " << tm.getExecutionTime() << endl;
@@ -588,7 +597,8 @@ int main(int argc, char* argv[])
 	delete smeReg;
 	delete aliasReg;
 	delete routeReg;
-	delete chkList;
+	delete smppChkList;
+	delete configChkList;
 	return 0;
 }
 
