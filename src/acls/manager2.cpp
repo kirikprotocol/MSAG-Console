@@ -35,7 +35,8 @@ inline uint64_t AclPhoneToInt64(const AclPhoneNumber& phone)
 {
   uint64_t result;
   if ( 1 != sscanf(phone.c_str(),"+%lld",&result) )
-    throw std::runtime_error(string("AclPhoneToInt64 broken on '")+phone+"'");
+    if (1 != sscanf(phone.c_str(),"%lld",&result) )
+      throw std::runtime_error(string("AclPhoneToInt64 broken on '")+phone+"'");
   return result;
 }
 
