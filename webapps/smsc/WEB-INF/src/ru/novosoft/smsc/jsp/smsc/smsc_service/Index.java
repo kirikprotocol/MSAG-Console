@@ -127,12 +127,17 @@ public class Index extends SmscBean
 				{
 					if (oldValue instanceof Integer)
 					{
+						String parameter = request.getParameter(s);
 						try
 						{
-							params.put(s, Integer.decode(request.getParameter(s)));
+							if (parameter != null && parameter.trim().length() > 0)
+								params.put(s, Integer.decode(parameter.trim()));
+							else
+								params.put(s, new Integer(0));
 						}
 						catch (NumberFormatException e)
 						{
+							logger.error("Invalid integer parameter: "+s+"="+parameter);
 							result = error(SMSCErrors.error.smsc.invalidIntParameter, s);
 						}
 					}

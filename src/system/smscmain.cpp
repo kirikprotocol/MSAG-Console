@@ -11,6 +11,7 @@
 #include <admin/smsc_service/SmscComponent.h>
 #include <admin/smsc_service/SmscShutdownHandler.h>
 #include <util/signal.hpp>
+#include <util/xml/init.h>
 
 bool file_exist(const char * const filename)
 {
@@ -59,9 +60,19 @@ void alarmHandler(int signo)
   abort();
 }
 
+// added by igork
+void atExitHandler(void)
+{
+    sigsend(P_PID, getppid(), SIGCHLD);
+    smsc::util::xml::TerminateXerces();
+}
+
 int main(int argc,char* argv[])
 {
   {
+    //added by igork
+    atexit(atExitHandler);
+    
     sigset_t set;
     sigemptyset(&set);
     for(int i=1;i<=37;i++)sigaddset(&set,i);
