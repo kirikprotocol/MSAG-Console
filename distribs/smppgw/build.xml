@@ -31,11 +31,11 @@ Targets:
     <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
   </target>
 
-  <target name="clean_distr_tree" depends="distr_properties">
+  <target name="rmdistr" depends="distr_properties">
     <delete dir="${DISTR_DIR}"/>
   </target>
 
-  <target name="create_distr_tree_update" depends="clean_distr_tree" >
+  <target name="create_distr_tree_update" depends="rmdistr" >
     <mkdir dir="${DISTR_DIR}"/>
     <mkdir dir="${DISTR_DIR}/conf"/>
     <mkdir dir="${DISTR_DIR}/lib"/>
@@ -53,6 +53,7 @@ Targets:
     <mkdir dir="${DISTR_DIR}/logs"/>
     <mkdir dir="${DISTR_DIR}/work"/>
     <mkdir dir="${DISTR_DIR}/services/smppgw/conf"/>
+    <mkdir dir="${DISTR_DIR}/daemon/conf"/>
 
     <symlink resource="${SERVICE2HOME_PATH}/lib" link="${DISTR_DIR}/services/smppgw"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/smppgw"/>
