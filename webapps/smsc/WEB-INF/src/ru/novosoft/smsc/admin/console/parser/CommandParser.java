@@ -2589,7 +2589,7 @@ public CommandParser(ParserSharedInputState state) {
 			case VAL_DEF:
 			{
 				match(VAL_DEF);
-				cmd.setDeliveryMode("deafult");
+				cmd.setDeliveryMode("default");
 				break;
 			}
 			case VAL_STORE:

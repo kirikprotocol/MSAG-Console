@@ -231,7 +231,7 @@ catch [RecognitionException ex] {
 }
 
 route_dm[RouteGenCommand cmd]
-	: (VAL_DEF      { cmd.setDeliveryMode("deafult");  }
+	: (VAL_DEF      { cmd.setDeliveryMode("default");  }
 	  |VAL_STORE    { cmd.setDeliveryMode("store");    }
 	  |VAL_FORWARD  { cmd.setDeliveryMode("forward");  }
 	  |VAL_DATAGRAM { cmd.setDeliveryMode("datagram"); })
