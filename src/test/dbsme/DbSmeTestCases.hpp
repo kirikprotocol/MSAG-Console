@@ -111,6 +111,7 @@ protected:
 		bool sync, uint8_t dataCoding);
 	void sendDbSmePdu(const string& text, const string& output,
 		bool sync, uint8_t dataCoding);
+	bool checkPdu(PduDeliverySm &pdu);
 };
 
 }
