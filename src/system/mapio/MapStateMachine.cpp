@@ -1952,7 +1952,6 @@ USHORT_T Et96MapOpenConf (
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __map_trace2__("%s dialogid 0x%x",__func__,dialogueId);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn));
     if ( dialog.isnull() ) {
       throw MAPDIALOG_HEREISNO_ID( FormatText("MAP::dialog 0x%x is not present",dialogid_map));
@@ -2076,7 +2075,6 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __map_trace2__("%s: dialogid 0x%x",__func__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn));
     if ( dialog.isnull() ) {
       unsigned _di = dialogid_map;
@@ -2227,7 +2225,6 @@ USHORT_T Et96MapCloseInd(
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __map_trace2__("%s: dialogid 0x%x",__func__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn));
     if ( dialog.isnull() ) {
       unsigned _di = dialogid_map;

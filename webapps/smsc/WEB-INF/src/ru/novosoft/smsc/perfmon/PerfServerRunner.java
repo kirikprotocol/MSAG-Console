@@ -170,6 +170,14 @@ public class PerfServerRunner extends Thread {
     snap.avg[PerfSnap.IDX_RETRY] = (long) readNetworkInt(inbuf);
     snap.total[PerfSnap.IDX_RETRY] = readNetworkLong(inbuf);
 
+    System.out.println("totals="
+            +snap.total[PerfSnap.IDX_SUBMIT]+"/"
+            +snap.total[PerfSnap.IDX_SUBMITERR]+"/"
+            +snap.total[PerfSnap.IDX_DELIVER]+"/"
+            +snap.total[PerfSnap.IDX_TEMPERR]+"/"
+            +snap.total[PerfSnap.IDX_DELIVERERR]+"/"
+            +snap.total[PerfSnap.IDX_RETRY]);
+
     snap.queueSize = readNetworkInt(inbuf);
     snap.uptime = readNetworkInt(inbuf);
     snap.sctime = readNetworkInt(inbuf);
