@@ -7,23 +7,24 @@ namespace core {
 
 PduRegistry::~PduRegistry()
 {
-	__trace2__("~PduRegistry(): size = %d", seqNumMap.size());
-	for (SeqNumMap::iterator it = seqNumMap.begin(); it != seqNumMap.end(); it++)
-	{
-		PduData* pduData = it->second;
-		disposePdu(pduData->pdu);
-		delete pduData;
-	}
+	__trace2__("~PduRegistry(): size = %d", msgRefMap.size());
+	clear();
 }
 
-void PduRegistry::putPdu(PduData& data)
+void PduRegistry::registerPdu(PduData* pduData)
 {
-	__require__(data.pdu && data.pdu->get_sequenceNumber());
-	PduData* pduData = new PduData(data);
-	seqNumMap[pduData->pdu->get_sequenceNumber()] = pduData;
+	__require__(pduData && pduData->pdu);
+	__trace2__("PduRegistry::registerPdu(): pduReg = 0x%x, msgRef = %d, waitTime = %d, validTime = %d, seqNum = %u",
+		this, pduData->msgRef, pduData->waitTime, pduData->validTime, pduData->pdu->get_sequenceNumber());
+	MsgRefMap::const_iterator it = msgRefMap.find(msgRef);
+	__require__(msgRef && it == msgRefMap.end()); //registerPdu() первый раз для данной pdu
 	if (pduData->smsId)
 	{
 		idMap[pduData->smsId] = pduData;
+	}
+	if (pduData->pdu->get_sequenceNumber())
+	{
+		seqNumMap[pduData->pdu->get_sequenceNumber()] = pduData;
 	}
 	if (pduData->msgRef)
 	{
@@ -31,25 +32,48 @@ void PduRegistry::putPdu(PduData& data)
 	}
 	if (pduData->submitTime)
 	{
-		submitTimeMap[TimeKey(pduData->submitTime, pduData->pdu->get_sequenceNumber())] = pduData;
+		submitTimeMap[TimeKey(pduData->submitTime, pduData->msgRef)] = pduData;
 	}
 	if (pduData->waitTime)
 	{
-		waitTimeMap[TimeKey(pduData->waitTime, pduData->pdu->get_sequenceNumber())] = pduData;
+		waitTimeMap[TimeKey(pduData->waitTime, pduData->msgRef)] = pduData;
 	}
 	if (pduData->validTime)
 	{
-		validTimeMap[TimeKey(pduData->validTime, pduData->pdu->get_sequenceNumber())] = pduData;
+		validTimeMap[TimeKey(pduData->validTime, pduData->msgRef)] = pduData;
 	}
 }
 
-void PduRegistry::updateSmsId(PduData* pduData)
+void PduRegistry::updatePdu(PduData* pduData)
 {
-	__require__(pduData);
+	__require__(pduData && pduData->pdu);
+	__trace2__("PduRegistry::updatePdu(): pduReg = 0x%x, msgRef = %d, seqNum = %u, smsId = %u, pdu = 0x%x, replacePdu = 0x%x, replacedByPdu = 0x%x",
+		this, pduData->msgRef, pduData->pdu->get_sequenceNumber(), (uint32_t) pduData->smsId, pduData->pdu, pduData->replacePdu, pduData->replacedByPdu);
 	if (pduData->smsId)
 	{
 		idMap[pduData->smsId] = pduData;
 	}
+	if (pduData->pdu->get_sequenceNumber())
+	{
+		seqNumMap[pduData->pdu->get_sequenceNumber()] = pduData;
+	}
+}
+
+void PduRegistry::clear()
+{
+	__trace2__("PduRegistry::clear(): pduReg = 0x%x", this);
+	for (MsgRefMap::iterator it = msgRefMap.begin(); it != msgRefMap.end(); it++)
+	{
+		PduData* pduData = it->second;
+		disposePdu(pduData->pdu);
+		delete pduData;
+	}
+	idMap.clear();
+	seqNumMap.clear();
+	msgRefMap.clear();
+	submitTimeMap.clear();
+	waitTimeMap.clear();
+	validTimeMap.clear();
 }
 
 PduData* PduRegistry::getPdu(uint16_t msgRef)
@@ -70,35 +94,52 @@ PduData* PduRegistry::getPdu(const SMSId smsId)
 	return (it != idMap.end() ? NULL : it->second);
 }
 
-bool PduRegistry::removePdu(PduData* pduData)
+void PduRegistry::removePdu(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu);
-	__trace2__("PduRegistry::removePdu(): sequenceNumber = %u",
-		pduData->pdu->get_sequenceNumber());
-	seqNumMap.erase(pduData->pdu->get_sequenceNumber());
+	__trace2__("PduRegistry::removePdu(): pduReg = 0x%x, msgRef = %d, seqNum = %u, smsId = %u, pdu = 0x%x, replacePdu = 0x%x, replacedByPdu = 0x%x",
+		this, pduData->msgRef, pduData->pdu->get_sequenceNumber(), (uint32_t) pduData->smsId, pduData->pdu, pduData->replacePdu, pduData->replacedByPdu);
+	//разорвать связь с замещающей и замещаемой pdu
+	if (pduData->replacePdu)
+	{
+		pduData->replacePdu->replacedByPdu = NULL;
+	}
+	if (pduData->replacedByPdu)
+	{
+		pduData->replacedByPdu->replacePdu = NULL;
+	}
 	if (pduData->smsId)
 	{
-		idMap.erase(pduData->smsId);
+		int res = idMap.erase(pduData->smsId);
+		__require__(res);
 	}
 	if (pduData->msgRef)
 	{
-		msgRefMap.erase(pduData->msgRef);
+		int res = msgRefMap.erase(pduData->msgRef);
+		__require__(res);
+	}
+	if (pduData->pdu->get_sequenceNumber())
+	{
+		int res = seqNumMap.erase(pduData->pdu->get_sequenceNumber());
+		__require__(res);
 	}
 	if (pduData->submitTime)
 	{
-		submitTimeMap.erase(TimeKey(pduData->submitTime, pduData->pdu->get_sequenceNumber()));
+		int res = submitTimeMap.erase(TimeKey(pduData->submitTime, pduData->msgRef));
+		__require__(res);
 	}
 	if (pduData->waitTime)
 	{
-		waitTimeMap.erase(TimeKey(pduData->waitTime, pduData->pdu->get_sequenceNumber()));
+		int res = waitTimeMap.erase(TimeKey(pduData->waitTime, pduData->msgRef));
+		__require__(res);
 	}
 	if (pduData->validTime)
 	{
-		validTimeMap.erase(TimeKey(pduData->validTime, pduData->pdu->get_sequenceNumber()));
+		int res = validTimeMap.erase(TimeKey(pduData->validTime, pduData->msgRef));
+		__require__(res);
 	}
 	disposePdu(pduData->pdu);
 	delete pduData;
-	return true;
 }
 
 PduRegistry::PduDataIterator* PduRegistry::getPduBySubmitTime(time_t t1, time_t t2)
@@ -148,10 +189,11 @@ void PduRegistry::dump(FILE* log)
 		fprintf(log, ", submitTime = %s, waitTime = %s, validTime = %s",
 			submitTime, waitTime, validTime);
 		fprintf(log, ", responseFlag = %d, deliveryFlag = %d",
-			(int) data->responseFlag, (int) data->deliveryFlag);
+			data->responseFlag, data->deliveryFlag);
 		fprintf(log, ", deliveryReceiptFlag = %d, intermediateNotificationFlag = %d",
-			(int) data->deliveryReceiptFlag, (int) data->intermediateNotificationFlag);
-		fprintf(log, ", pdu = 0x%x, replacePdu = 0x%x}\n", data->pdu, data->replacePdu);
+			data->deliveryReceiptFlag, data->intermediateNotificationFlag);
+		fprintf(log, ", pdu = 0x%x, replacePdu = 0x%x, replacedByPdu = 0x%x}\n",
+			data->pdu, data->replacePdu, data->replacedByPdu);
 		switch (data->pdu->get_commandId())
 		{
 			case SUBMIT_SM:

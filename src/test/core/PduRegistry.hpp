@@ -19,6 +19,13 @@ using smsc::sms::SMSId;
 using smsc::sms::Address;
 using smsc::smpp::SmppHeader;
 using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
+
+static const int PDU_REQUIRED_FLAG = 0x0; //pdu ожидаетс€, но еще не получена
+static const int PDU_RECEIVED_FLAG = 0x1; //pdu получена воврем€
+//pdu получена вне ожидаемого интервала или вообще не получена
+static const int PDU_MISSING_ON_TIME_FLAG = 0x2;
+static const int PDU_NOT_EXPECTED_FLAG = 0x3; //данной pdu быть не должно
 
 /**
  * —труктура дл€ хранени€ данных pdu.
@@ -26,22 +33,26 @@ using smsc::core::synchronization::Mutex;
 struct PduData
 {
 	SMSId smsId;
-	uint16_t msgRef;
-	time_t submitTime;
-	time_t waitTime;
-	time_t validTime;
+	const uint16_t msgRef;
+	const time_t submitTime;
+	const time_t waitTime;
+	const time_t validTime;
 	SmppHeader* pdu;
-	bool responseFlag; //флаг получени€ респонса
-	bool deliveryFlag; //флаг получени€ сообщени€ плучателем
-	bool deliveryReceiptFlag; //флаг получени€ подтверждени€ доставки
-	bool intermediateNotificationFlag; //флаг получени€ всех нотификаций
+	int responseFlag; //флаг получени€ респонса
+	int deliveryFlag; //флаг получени€ сообщени€ плучателем
+	int deliveryReceiptFlag; //флаг получени€ подтверждени€ доставки
+	int intermediateNotificationFlag; //флаг получени€ всех нотификаций
 	PduData* replacePdu; //pdu, котора€ должна быть заменена текущей pdu
+	PduData* replacedByPdu; //pdu, котора€ замещает текущую pdu
 
-	PduData(SmppHeader* _pdu)
-		: smsId(0), msgRef(0), submitTime(0), waitTime(0), validTime(0),
-		pdu(_pdu), responseFlag(false), deliveryFlag(false),
-		deliveryReceiptFlag(false), intermediateNotificationFlag(false),
-		replacePdu(NULL) {};
+	PduData(uint16_t _msgRef, time_t _submitTime, time_t _waitTime,
+		time_t _validTime, SmppHeader* _pdu)
+		: smsId(0), msgRef(_msgRef), submitTime(_submitTime),
+		waitTime(_waitTime), validTime(_validTime),
+		pdu(_pdu), responseFlag(PDU_REQUIRED_FLAG),
+		deliveryFlag(PDU_REQUIRED_FLAG), deliveryReceiptFlag(PDU_REQUIRED_FLAG),
+		intermediateNotificationFlag(PDU_REQUIRED_FLAG), replacePdu(NULL),
+		replacedByPdu(NULL) {}
 
 	PduData(const PduData& data)
 		: smsId(data.smsId), msgRef(data.msgRef), submitTime(data.submitTime),
@@ -50,7 +61,7 @@ struct PduData
 		deliveryFlag(data.deliveryFlag),
 		deliveryReceiptFlag(data.deliveryReceiptFlag),
 		intermediateNotificationFlag(data.intermediateNotificationFlag),
-		replacePdu(data.replacePdu) {}
+		replacePdu(data.replacePdu), replacedByPdu(data.replacedByPdu) {}
 
 	~PduData()
 	{
@@ -77,11 +88,11 @@ class PduRegistry
 	struct TimeKey
 	{
 		time_t time;
-		uint32_t seqNum;
-		TimeKey(time_t t, uint32_t num) : time(t), seqNum(num) {}
+		uint16_t msgRef;
+		TimeKey(time_t t, uint16_t _msgRef) : time(t), msgRef(_msgRef) {}
 		bool operator< (const TimeKey& key) const
 		{
-			return (time == key.time ? (seqNum < key.seqNum) : (time < key.time));
+			return (time == key.time ? (msgRef < key.msgRef) : (time < key.time));
 		}
 	};
 	typedef map<const TimeKey, PduData*> TimeMap;
@@ -109,7 +120,7 @@ public:
 		}
 	};
 
-	PduRegistry() : msgRef(1) {}
+	PduRegistry() : msgRef(0) {}
 	~PduRegistry();
 
 	Mutex& getMutex()
@@ -119,16 +130,15 @@ public:
 
 	uint16_t nextMsgRef()
 	{
-		return msgRef++;
+		MutexGuard guard(mutex);
+		return ++msgRef;
 	}
 
-	/**
-	 * –егистраци€ pdu. ѕовторна€ перерегистраци€ pdu не допускаетс€.
-	 * ¬ последнем случае обновл€ютс€ таблицы поиска по ключевым пол€м.
-	 */
-	void putPdu(PduData& pduData);
+	void registerPdu(PduData* pduData);
 
-	void updateSmsId(PduData* pduData);
+	void updatePdu(PduData* pduData);
+
+	void clear();
 
 	/**
 	 * ѕоиск оригинального pdu при получении его на стороне получател€.
@@ -153,7 +163,7 @@ public:
 	 */
 	PduData* getPdu(const SMSId smsId);
 
-	bool removePdu(PduData* pduData);
+	void removePdu(PduData* pduData);
 
 	PduDataIterator* getPduBySubmitTime(time_t t1, time_t t2);
 	
