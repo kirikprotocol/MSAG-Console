@@ -519,7 +519,10 @@ StateType StateMachine::submit(Tuple& t)
       sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
-    delivery->set_priority(ri.priority);
+    int prio=ri.priority/1000;
+    if(prio<0)prio=0;
+    if(prio>=32)prio=31;
+    delivery->set_priority(prio);
     dest_proxy->putCommand(delivery);
   }catch(...)
   {
