@@ -129,7 +129,9 @@ void processDbSmeRes()
 	__reg_tc__("processDbSmeRes.input",
 		"Значения параметров правильно зачитываются из input");
 	__reg_tc__("processDbSmeRes.input.int",
-		"Параметры типа int8, int16, int32, int64, uint8, uint16, uint32 и uint64");
+		"Параметры типа int8, int16, int32 и int64");
+	__reg_tc__("processDbSmeRes.input.uint",
+		"Параметры типа uint8, uint16, uint32 и uint64");
 	__reg_tc__("processDbSmeRes.input.float",
 		"Параметры типа float, double и long double с учетом формата");
 	__reg_tc__("processDbSmeRes.input.string",
