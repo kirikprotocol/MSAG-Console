@@ -689,34 +689,120 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
 
 bool TaskProcessor::addTask(std::string taskId)
 {
+    const char* task_id = taskId.c_str();
+    if (!task_id || task_id[0] == '\0') return false;
+
+    try
+    {
+        Manager& config = Manager::getInstance();
+        char taskSection[1024];
+        sprintf(taskSection, "InfoSme.Tasks.%s", task_id);
+        ConfigView taskConfig(config, taskSection);
+        
+        const char* ds_id = taskConfig.getString("dsId");
+        if (!ds_id || ds_id[0] == '\0')
+            throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
+                                  task_id);
+        DataSource* taskDs = provider.getDataSource(ds_id);
+        if (!taskDs)
+            throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
+                                  ds_id, task_id);
+        if (!addTask(new Task(&taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal)))
+            throw ConfigException("Failed to add task. Task with id '%s' already registered.",
+                                  task_id);
+        return true;
+    }
+    catch (Exception& exc) {
+        logger.error("Failed to add task '%s'. Details: %s", task_id, exc.what());
+    }
+    catch (...) {}
     return false;
 }
 bool TaskProcessor::removeTask(std::string taskId)
 {
-    return false;
+    return deleteTask(taskId);
 }
 bool TaskProcessor::startTask(std::string taskId)
 {
-    return false;
+    TaskGuard taskGuard = getTask(taskId);
+    Task* task = taskGuard.get();
+    if (!task) return false; 
+    return (task->isInProcess()) ? true:invokeBeginProcess(task);
 }
 bool TaskProcessor::stopTask(std::string taskId)
 {
-    return false;
+    TaskGuard taskGuard = getTask(taskId);
+    Task* task = taskGuard.get();
+    if (!task) return false; 
+    return (task->isInProcess()) ? true:invokeEndProcess(task);
 }
 bool TaskProcessor::setTaskEnabled(std::string taskId, bool enabled)
 {
-    return false;
+    TaskGuard taskGuard = getTask(taskId);
+    Task* task = taskGuard.get();
+    if (!task) return false; 
+    task->setEnabled();
+    return true;
 }
 bool TaskProcessor::addSchedule(std::string scheduleId)
 {
+    const char* schedule_id = scheduleId.c_str();
+    if (!schedule_id || schedule_id[0] == '\0') return false;
+
+    Schedule* schedule = 0;
+    try
+    {
+        Manager& config = Manager::getInstance();
+        char scheduleSection[1024];
+        sprintf(scheduleSection, "InfoSme.Schedules.%s", schedule_id);
+        ConfigView scheduleConfig(config, scheduleSection);
+        
+        schedule = Schedule::create(&scheduleConfig, scheduleId);
+        bool result = scheduler.addSchedule(schedule);
+        if (!result && schedule) delete schedule;
+        return result;
+    }
+    catch (Exception& exc) {
+        if (schedule) delete schedule;
+        logger.error("Failed to add schedule '%s'. Details: %s", schedule_id, exc.what());
+    }
+    catch (...) {
+        if (schedule) delete schedule;
+    }
     return false;
 }
 bool TaskProcessor::removeSchedule(std::string scheduleId)
 {
-    return false;
+    return scheduler.removeSchedule(scheduleId);
 }
 bool TaskProcessor::changeSchedule(std::string oldScheduleId, std::string newScheduleId)
 {
+    const char* old_schedule_id = oldScheduleId.c_str();
+    const char* schedule_id = newScheduleId.c_str();
+    if (!old_schedule_id || old_schedule_id[0] == '\0'
+         || !schedule_id || schedule_id[0] == '\0') return false;
+
+    Schedule* schedule = 0;
+    try
+    {
+        Manager& config = Manager::getInstance();
+        char scheduleSection[1024];
+        sprintf(scheduleSection, "InfoSme.Schedules.%s", schedule_id);
+        ConfigView scheduleConfig(config, scheduleSection);
+        
+        schedule = Schedule::create(&scheduleConfig, newScheduleId);
+        bool result = scheduler.changeSchedule(oldScheduleId, schedule);
+        if (!result && schedule) delete schedule;
+        return result;
+    }
+    catch (Exception& exc) {
+        if (schedule) delete schedule;
+        logger.error("Failed to change schedule '%s' to '%s'. Details: %s", 
+                     old_schedule_id, schedule_id, exc.what());
+    }
+    catch (...) {
+        if (schedule) delete schedule;
+    }
     return false;
 }
 

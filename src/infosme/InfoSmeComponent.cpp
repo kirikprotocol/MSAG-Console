@@ -235,7 +235,8 @@ void InfoSmeComponent::setTaskEnabled(const Arguments& args)
     if (arg.getType() != BooleanType) 
         error("setTaskEnabled", ARGUMENT_NAME_ENABLED);
 
-    admin.setTaskEnabled(taskId, arg.getBooleanValue());
+    if (!admin.setTaskEnabled(taskId, arg.getBooleanValue()))
+        throw AdminException("Failed to shange enabled state for task '%s'", taskId);
 }
 void InfoSmeComponent::addSchedule(const Arguments& args)
 {
