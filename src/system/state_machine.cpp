@@ -1201,11 +1201,11 @@ StateType StateMachine::submit(Tuple& t)
     sms->setStrProperty( Tag::SMSC_FORWARD_MO_TO, ri.forwardTo.c_str());
 
     // force forward(transaction) mode
-    sms->setIntProperty( Tag::SMPP_ESM_CLASS, sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x02 );
+    //sms->setIntProperty( Tag::SMPP_ESM_CLASS, sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x02 );
     isForwardTo = true;
 
-    sms->getMessageBody().dropIntProperty(Tag::SMSC_MERGE_CONCAT);
-    sms->getMessageBody().dropProperty(Tag::SMSC_DC_LIST);
+    //sms->getMessageBody().dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+    //sms->getMessageBody().dropProperty(Tag::SMSC_DC_LIST);
   }
 
   bool generateDeliver=true; // do not generate in case of merge-concat
@@ -1269,6 +1269,7 @@ StateType StateMachine::submit(Tuple& t)
         const char *body=sms->getBinProperty(Tag::SMSC_MO_PDU,&len);
         tmp.assign(body,len);
         sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::BINARY);
+        dc=DataCoding::BINARY;
       }
       sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),tmp.length());
       sms->getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
@@ -1292,9 +1293,12 @@ StateType StateMachine::submit(Tuple& t)
 
       if(sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
       {
-        vector<unsigned char> umrlist(num);
-        umrlist[idx-1]=sms->getMessageReference();
-        sms->setBinProperty(Tag::SMSC_UMR_LIST,(const char*)&umrlist[0],num);
+        char buf[256];
+        memset(buf,0,sizeof(buf));
+        buf[idx-1]=sms->getMessageReference();
+        sms->setBinProperty(Tag::SMSC_UMR_LIST,buf,num);
+        buf[idx-1]=1;
+        sms->setBinProperty(Tag::SMSC_UMR_LIST_MASK,buf,num);
       }
 
       char buf[64];
@@ -1345,49 +1349,51 @@ StateType StateMachine::submit(Tuple& t)
         return ERROR_STATE;
       }
       unsigned int newlen;
-      unsigned char *newbody=(unsigned char*)newsms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&newlen);
+      unsigned char *newbody;
       unsigned int cilen;
       ConcatInfo *ci=(ConcatInfo*)newsms.getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
-      __require__(ci!=NULL);
-      for(int i=0;i<ci->num;i++)
+      if(!isForwardTo)
       {
-        uint16_t mr0;
-        uint8_t idx0,num0;
-        bool havemoreudh0;
-        smsc::util::findConcatInfo(newbody+ci->getOff(i),mr0,idx0,num0,havemoreudh0);
-        if(idx0==idx || num0!=num || mr0!=mr)
+        newbody=(unsigned char*)newsms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&newlen);
+        __require__(ci!=NULL);
+        for(int i=0;i<ci->num;i++)
         {
-          //submitResp(t,sms,Status::INVOPTPARAMVAL);
-
-          sms->setLastResult(Status::DUPLICATECONCATPART);
-          smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-          char buf[64];
-          sprintf(buf,"%lld",t.msgId);
-          SmscCommand resp = SmscCommand::makeSubmitSmResp
-                               (
-                                 buf,
-                                 t.command->get_dialogId(),
-                                 Status::OK,
-                                 sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                               );
-          try{
-            t.command.getProxy()->putCommand(resp);
-          }catch(...)
+          uint16_t mr0;
+          uint8_t idx0,num0;
+          bool havemoreudh0;
+          smsc::util::findConcatInfo(newbody+ci->getOff(i),mr0,idx0,num0,havemoreudh0);
+          if(idx0==idx || num0!=num || mr0!=mr)
           {
-            __warning__("SUBMIT_SM: failed to put response command");
+            //submitResp(t,sms,Status::INVOPTPARAMVAL);
+
+            sms->setLastResult(Status::DUPLICATECONCATPART);
+            smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+            char buf[64];
+            sprintf(buf,"%lld",t.msgId);
+            SmscCommand resp = SmscCommand::makeSubmitSmResp
+                                 (
+                                   buf,
+                                   t.command->get_dialogId(),
+                                   Status::OK,
+                                   sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                                 );
+            try{
+              t.command.getProxy()->putCommand(resp);
+            }catch(...)
+            {
+              __warning__("SUBMIT_SM: failed to put response command");
+            }
+
+
+            smsc_log_warn(smsLog, "Duplicate or invalid concatenated message part for id=%lld(idx:%d-%d,num:%d-%d,mr:%d-%d)",t.msgId,idx0,idx,num0,num,mr0,mr);
+            if(smsptr)delete smsptr;
+            return ENROUTE_STATE;
           }
-
-
-          smsc_log_warn(smsLog, "Duplicate or invalid concatenated message part for id=%lld(idx:%d-%d,num:%d-%d,mr:%d-%d)",t.msgId,idx0,idx,num0,num,mr0,mr);
-          if(smsptr)delete smsptr;
-          return ENROUTE_STATE;
         }
-      }
-
-
-      if(isForwardTo)
+      }else
       {
-        body=(unsigned char*)sms->getBinProperty(Tag::SMSC_MO_PDU,&len);
+        body=(unsigned char*)sms->getBinProperty(Tag::SMSC_MO_PDU,&newlen);
+        dc=DataCoding::BINARY;
       }
       /*
       if(!isForwardTo && sms->getIntProperty(Tag::SMPP_DATA_CODING)!=newsms.getIntProperty(Tag::SMPP_DATA_CODING))
@@ -1408,6 +1414,18 @@ StateType StateMachine::submit(Tuple& t)
         {
           umrList[idx-1]=sms->getMessageReference();
           newsms.setBinProperty(Tag::SMSC_UMR_LIST,(const char*)umrList,len);
+
+          if(newsms.hasBinProperty(Tag::SMSC_UMR_LIST_MASK))
+          {
+            unsigned mlen;
+            char* mask=(char*)newsms.getBinProperty(Tag::SMSC_UMR_LIST_MASK,&mlen);
+            if(idx<=len)
+            {
+              mask[idx-1]=1;
+              sms->setBinProperty(Tag::SMSC_UMR_LIST_MASK,mask,mlen);
+            }
+          }
+
         }
       }
 
@@ -1442,62 +1460,65 @@ StateType StateMachine::submit(Tuple& t)
         bool differentDc=false;
         bool haveBinDc=sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::BINARY;
 
-        unsigned char* dcList=0;
-        unsigned dcListLen=0;
-
-        if(newsms.hasBinProperty(Tag::SMSC_DC_LIST))
+        if(!isForwardTo)
         {
-          dcList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_DC_LIST,&dcListLen);
-        }
+          unsigned char* dcList=0;
+          unsigned dcListLen=0;
 
-        for(int i=0;i<ci->num;i++)
-        {
-          uint16_t mr0;
-          uint8_t idx0,num0;
-          bool havemoreudh0;
-          smsc::util::findConcatInfo((unsigned char*)tmp.c_str()+ci->getOff(i),mr0,idx0,num0,havemoreudh0);
-          __trace2__("SUBMIT_SM: merge check order %d:%d",i,idx0);
-          totalMoreUdh=totalMoreUdh || havemoreudh0;
-          order.push_back(idx0);
-          rightOrder=rightOrder && idx0==i+1;
-
-          if(dcList)
+          if(newsms.hasBinProperty(Tag::SMSC_DC_LIST))
           {
-            if(i>0)
-            {
-              differentDc=differentDc || dcList[i-1]!=dcList[i];
-            }
-            haveBinDc=haveBinDc || dcList[i]==DataCoding::BINARY;
+            dcList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_DC_LIST,&dcListLen);
           }
-        }
-        if(!rightOrder)
-        {
-          __trace__("SUBMIT_SM: not right order - need to reorder");
-          //average number of parts is 2-3. so, don't f*ck mind with quick sort and so on.
-          //maximum is 255.  65025 comparisons. not very good, but not so bad too.
-          string newtmp;
-          uint16_t newci[256];
 
-          for(unsigned i=1;i<=num;i++)
-          {
-            for(unsigned j=0;j<num;j++)
-            {
-              if(order[j]==i)
-              {
-                int partlen=j==num-1?tmp.length()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
-                newci[i-1]=newtmp.length();
-                newtmp.append(tmp.c_str()+ci->getOff(j),partlen);
-
-              }
-            }
-          }
-          //memcpy(ci->off,newci,ci->num*2);
           for(int i=0;i<ci->num;i++)
           {
-            ci->setOff(i,newci[i]);
+            uint16_t mr0;
+            uint8_t idx0,num0;
+            bool havemoreudh0;
+            smsc::util::findConcatInfo((unsigned char*)tmp.c_str()+ci->getOff(i),mr0,idx0,num0,havemoreudh0);
+            __trace2__("SUBMIT_SM: merge check order %d:%d",i,idx0);
+            totalMoreUdh=totalMoreUdh || havemoreudh0;
+            order.push_back(idx0);
+            rightOrder=rightOrder && idx0==i+1;
+
+            if(dcList)
+            {
+              if(i>0)
+              {
+                differentDc=differentDc || dcList[i-1]!=dcList[i];
+              }
+              haveBinDc=haveBinDc || dcList[i]==DataCoding::BINARY;
+            }
           }
-          tmp=newtmp;
-        }
+          if(!rightOrder)
+          {
+            __trace__("SUBMIT_SM: not right order - need to reorder");
+            //average number of parts is 2-3. so, don't f*ck mind with quick sort and so on.
+            //maximum is 255.  65025 comparisons. not very good, but not so bad too.
+            string newtmp;
+            uint16_t newci[256];
+
+            for(unsigned i=1;i<=num;i++)
+            {
+              for(unsigned j=0;j<num;j++)
+              {
+                if(order[j]==i)
+                {
+                  int partlen=j==num-1?tmp.length()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
+                  newci[i-1]=newtmp.length();
+                  newtmp.append(tmp.c_str()+ci->getOff(j),partlen);
+
+                }
+              }
+            }
+            //memcpy(ci->off,newci,ci->num*2);
+            for(int i=0;i<ci->num;i++)
+            {
+              ci->setOff(i,newci[i]);
+            }
+            tmp=newtmp;
+          }
+        }//isForwardTo
         newsms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3); // final state
         if(!totalMoreUdh && !differentDc && !haveBinDc)//make single text message
         {
@@ -1528,7 +1549,10 @@ StateType StateMachine::submit(Tuple& t)
         }else
         {
           newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
-          newsms.setIntProperty(Tag::SMPP_ESM_CLASS,newsms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
+          if(!isForwardTo)
+          {
+            newsms.setIntProperty(Tag::SMPP_ESM_CLASS,newsms.getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
+          }
         }
       }else
       {
@@ -3114,12 +3138,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }
   }
 
-  bool skipFinalizing=false;
+  //bool skipFinalizing=false;
 
   vector<unsigned char> umrList; //umrs of parts of merged message
-  int umrIndex=-1;//index of current umr
-  bool umrLast=true;//need to generate receipts for the rest of umrs
-  int savedCsn=sms.getConcatSeqNum();
+  //int umrIndex=-1;//index of current umr
+  //bool umrLast=true;//need to generate receipts for the rest of umrs
+  //int savedCsn=sms.getConcatSeqNum();
 
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
@@ -3391,6 +3415,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       ////
 
 
+      /*
       if(!sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
       {
         return DELIVERING_STATE;
@@ -3399,23 +3424,40 @@ StateType StateMachine::deliveryResp(Tuple& t)
         skipFinalizing=true;
       }
       umrLast=false;
+      */
+      return DELIVERING_STATE;
     }
   }
 
-  if(sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
+  //if(sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
+  //{
+  if(sms.hasBinProperty(Tag::SMSC_UMR_LIST))
   {
-    if(sms.hasBinProperty(Tag::SMSC_UMR_LIST))
+    unsigned len;
+    unsigned char* lst=(unsigned char*)sms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
+    if(!sms.hasBinProperty(Tag::SMSC_UMR_LIST_MASK))
     {
-      unsigned len;
-      unsigned char* lst=(unsigned char*)sms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
       umrList.insert(umrList.end(),lst,lst+len);
-      umrIndex=sms.hasBinProperty(Tag::SMSC_CONCATINFO)?savedCsn:0;
+      //umrIndex=sms.hasBinProperty(Tag::SMSC_CONCATINFO)?savedCsn:0;
+    }else
+    {
+      unsigned mlen;
+      const char* mask=sms.getBinProperty(Tag::SMSC_UMR_LIST_MASK,&mlen);
+      if(mlen<len)mlen=len;
+      for(int i=0;i<mlen;i++)
+      {
+        if(mask[i])
+        {
+          umrList.push_back(lst[i]);
+        }
+      }
     }
   }
+  //}
 
 
-  if(!skipFinalizing)
-  {
+  //if(!skipFinalizing)
+  //{
 
     if(dgortr)
     {
@@ -3473,14 +3515,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }catch(std::exception& e)
       {
         __warning2__("change state to delivered exception:%s",e.what());
-        return UNKNOWN_STATE;
+        //return UNKNOWN_STATE;
       }
     }
     smsc_log_debug(smsLog, "DLVRSP: DELIVERED, msgId=%lld",t.msgId);
     __trace__("DELIVERYRESP: registerStatisticalEvent");
 
     smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
-  }
+  //}
 
   try{
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
@@ -3527,11 +3569,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setMessageReference(sms.getMessageReference());
       rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
         sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-      if(umrIndex!=-1 && umrIndex<umrList.size())
+      if(umrList.size())
       {
-        rpt.setMessageReference(umrList[umrIndex]);
+        rpt.setMessageReference(umrList[0]);
+        rpt.setIntProperty(Tag::SMSC_RECEIPT_MR,umrList[0]);
       }
-      __trace2__("RECEIPT: set mr[%d]=%d",umrIndex,rpt.getMessageReference());
+      __trace2__("RECEIPT: set mr[0]=%d",rpt.getMessageReference());
       rpt.setIntProperty(Tag::SMPP_MSG_STATE,SmppMessageState::DELIVERED);
       char addr[64];
       sms.getDestinationAddress().getText(addr,sizeof(addr));
@@ -3584,15 +3627,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
       submitReceipt(rpt,0x4);
 
-      if(umrLast && umrIndex!=-1)
       {
-        umrIndex++;
-        while(umrIndex<umrList.size())
+        for(int i=1;i<umrList.size();i++)
         {
-          rpt.setMessageReference(umrList[umrIndex]);
-          __trace2__("RECEIPT: set mr[%d]=%d",umrIndex,rpt.getMessageReference());
+          rpt.setMessageReference(umrList[i]);
+          rpt.setIntProperty(Tag::SMSC_RECEIPT_MR,umrList[i]);
+          __trace2__("RECEIPT: set mr[i]=%d",i,rpt.getMessageReference());
           submitReceipt(rpt,0x4);
-          umrIndex++;
         }
       }
 
@@ -3607,7 +3648,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
   {
     __trace__("DELIVERY_RESP:failed to submit receipt");
   }
-  return skipFinalizing?DELIVERING_STATE:DELIVERED_STATE;
+  //return skipFinalizing?DELIVERING_STATE:DELIVERED_STATE;
+  return DELIVERED_STATE;
 }
 
 StateType StateMachine::alert(Tuple& t)
