@@ -5,6 +5,7 @@
 #include "system/smppio/SmppIOTask.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "smeman/smeman.h"
+#include "core/synchronization/Mutex.hpp"
 
 #define SM_SOCK_PER_THREAD 16
 
@@ -14,6 +15,7 @@ namespace smppio{
 
 using smsc::core::buffers::Array;
 using smsc::core::threads::ThreadPool;
+using namespace smsc::core::synchronization;
 
 class SmppSocketsManager{
 public:
@@ -21,14 +23,11 @@ public:
     tp(newtp),smeManager(manager){}
   void registerSocket(Socket* sock);
   void removeSocket(Socket* sock);
-  void printtp()
-  {
-    trace2("tp:(%p)%p\n",this,tp);
-  }
 protected:
   Array<SmppIOTask*> intasks,outtasks;
   ThreadPool *tp;
   smsc::smeman::SmeManager* smeManager;
+  Mutex m;
 };//SocketsManager
 
 };//smppio

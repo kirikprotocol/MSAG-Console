@@ -3,6 +3,7 @@
 
 #include "core/network/Socket.hpp"
 #include "core/buffers/Array.hpp"
+#include <poll.h>
 
 namespace smsc{
 namespace core{
@@ -11,6 +12,8 @@ namespace network{
 using smsc::core::buffers::Array;
 
 class Multiplexer{
+protected:
+  enum{STATE_MODE_READ=0,STATE_MODE_WRITE=1};
 public:
   typedef Array<Socket*> SockArray;
   Multiplexer(){}
@@ -20,6 +23,8 @@ public:
   {
     if(exists(sock))return 0;
     sockets.Push(sock);
+    int i=sockets.Count()-1;
+    fds[i].fd=sock->getSocket();
     return 1;
   }
   int remove(Socket* sock)
@@ -29,6 +34,7 @@ public:
       if(sockets[i]==sock)
       {
         sockets.Delete(i);
+        fds.Delete(i);
         return 1;
       }
     }
@@ -45,26 +51,22 @@ public:
   void clear()
   {
     sockets.Clean();
+    fds.Clean();
   }
-  int canRead(SockArray& ready,int timeout=-1)
+  int canRead(SockArray& ready,SockArray& error,int timeout=-1)
   {
-    return checkState(0,ready,timeout);
+    return checkState(STATE_MODE_READ,ready,error,timeout);
   }
-  int canWrite(SockArray& ready,int timeout=-1)
+  int canWrite(SockArray& ready,SockArray& error,int timeout=-1)
   {
-    return checkState(1,ready,timeout);
+    return checkState(STATE_MODE_WRITE,ready,error,timeout);
   }
 
 protected:
   SockArray sockets;
-  Array<int> selected;
+  Array<pollfd> fds;
 
-  /**
-   * mode==0 - check for reading
-   * mode==1 - check for writing
-   * mode==2 - check for error
-   */
-  int checkState(int mode,SockArray& ready,int timeout);
+  int checkState(int mode,SockArray& ready,SockArray& error,int timeout);
 };
 
 };//network

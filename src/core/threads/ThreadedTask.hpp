@@ -11,7 +11,7 @@ using namespace smsc::core::buffers;
 
 class ThreadedTask{
 public:
-  ThreadedTask():isStopping(false),heap(NULL){}
+  ThreadedTask():heap(NULL),isStopping(false){}
   virtual ~ThreadedTask(){}
   virtual int Execute()=0;
   virtual const char* taskName()=0;

@@ -6,6 +6,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "smeman/smeman.h"
+#include "core/network/Multiplexer.hpp"
 
 namespace smsc{
 namespace system{
@@ -14,6 +15,7 @@ namespace smppio{
 using smsc::core::buffers::Array;
 using smsc::core::network::Socket;
 using namespace smsc::core::synchronization;
+using core::network::Multiplexer;
 
 class SmppSocket;
 
@@ -24,7 +26,8 @@ public:
     return sockets.Count();
   }
   virtual void addSocket(Socket* sock)=0;
-  void removeSocket(Socket *sock);
+  virtual void removeSocket(Socket *sock)=0;
+
   void notify()
   {
     trace("output thread notify");
@@ -33,6 +36,7 @@ public:
     mon.Unlock();
   }
 protected:
+  Multiplexer mul;
   EventMonitor mon;
   Array<SmppSocket*> sockets;
 };
@@ -42,6 +46,8 @@ public:
   SmppInputThread(smsc::smeman::SmeManager* manager):
     smeManager(manager){}
   virtual void addSocket(Socket* sock);
+  virtual void removeSocket(Socket *sock);
+  void killSocket(int idx);
   virtual int Execute();
   virtual char* taskName(){return "SmppInputThread";}
   void assignOut(SmppIOTask *out){outTask=out;}
@@ -54,6 +60,8 @@ protected:
 class SmppOutputThread:public SmppIOTask{
 public:
   virtual void addSocket(Socket* sock);
+  virtual void removeSocket(Socket *sock);
+  void killSocket(int idx);
   virtual int Execute();
   virtual char* taskName(){return "SmppOutputThread";}
   void assignIn(SmppIOTask *in){inTask=in;}

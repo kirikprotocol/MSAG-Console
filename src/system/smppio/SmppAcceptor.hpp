@@ -21,7 +21,6 @@ public:
   SmppAcceptor(const char* host,int srvport,SmppSocketsManager* sockman):
     port(srvport),sm(sockman)
   {
-    sm->printtp();
     if(strlen(host)>sizeof(server))
     {
       throw Exception("too long host name");

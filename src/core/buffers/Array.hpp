@@ -30,7 +30,7 @@ protected:
   {
     if(newsize<=_size)return;
     newsize=Increment(newsize);
-    T* newdata=(T*)new char[sizeof(T)*newsize];
+    T* newdata=(T*)new T[newsize];
     int i;
     for(i=0;i<_count;i++)
     {
@@ -68,7 +68,7 @@ public:
   Array(int n){_data=new T[n];_count=0;_size=n;_empty=0;}
   Array(const Array<T>& src)
   {
-    _data=(T*)new char[sizeof(T)*src.Count()];
+    _data=(T*)new T[src.Count()];
     int i;
     for(i=0;i<src.Count();i++)
     {
@@ -87,7 +87,7 @@ public:
   {
     if(this==&src)return;
     Clean();
-    _data=(T*)new char[sizeof(T)*src.Count()];
+    _data=(T*)new T[src.Count()];
     int i;
     for(i=0;i<src.Count();i++)
     {
@@ -235,7 +235,7 @@ public:
   void Reverse()
   {
     int i;
-    T* newdata=(T*)new char[sizeof(T)*_size];
+    T* newdata=(T*)new T[_size];
     for(i=0;i<_count;i++)
     {
       new(newdata+i)T(_data[_count-1-i]);

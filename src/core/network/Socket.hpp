@@ -21,7 +21,7 @@ namespace smsc{
 namespace core{
 namespace network{
 
-#define SOCKET_MAX_KEY 4
+#define SOCKET_MAX_KEY 8
 
 class Socket{
 private:

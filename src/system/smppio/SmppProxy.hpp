@@ -7,6 +7,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "system/smppio/SmppSocket.hpp"
 #include "smeman/smsccmd.h"
+#include <string>
 
 namespace smsc{
 namespace system{
@@ -26,6 +27,7 @@ public:
     smppSocket->assignProxy(this);
     seq=1;
   }
+  virtual ~SmppProxy(){}
   virtual void close()
   {
 
@@ -38,8 +40,8 @@ public:
     {
       throw ProxyQueueLimitException();
     }
+    trace2("put command:%p",*((void**)&cmd));
     outqueue.Push(cmd);
-    trace("put command");
     smppSocket->notifyOutThread();
   }
   virtual SmscCommand getCommand()
@@ -47,6 +49,7 @@ public:
     MutexGuard g(mutex);
     SmscCommand cmd;
     inqueue.Shift(cmd);
+    trace2("get command:%p",*((void**)&cmd));
     return cmd;
   }
 
@@ -86,7 +89,7 @@ public:
     managerMonitor=NULL;
     state=VALID;
   }
-  virtual SmeProxyPriority getPriority()const{}
+  virtual SmeProxyPriority getPriority()const{return 0;}
   bool hasInput()const
   {
     MutexGuard g(mutex);
@@ -107,8 +110,16 @@ public:
     return seq++;
   }
 
+  void setId(const std::string newid)
+  {
+    id=newid;
+  }
+
+  std::string getId(){return id;}
+
 protected:
   mutable Mutex mutex;
+  std::string id;
   smsc::core::buffers::Array<SmscCommand> inqueue,outqueue;
   int seq;
   SmeProxyState state;

@@ -7,13 +7,20 @@ namespace smppio{
 
 void SmppSocketsManager::registerSocket(Socket* sock)
 {
+  MutexGuard g(m);
   int i;
+  sock->setData(0,0);
+  sock->setData(1,this);
   for(i=0;i<intasks.Count();i++)
   {
     if(intasks[i]->socketsCount()<SM_SOCK_PER_THREAD)
     {
       intasks[i]->addSocket(sock);
       outtasks[i]->addSocket(sock);
+      sock->setData(0,(void*)2);
+      intasks[i]->notify();
+      outtasks[i]->notify();
+
       return;
     }
   }
@@ -22,6 +29,8 @@ void SmppSocketsManager::registerSocket(Socket* sock)
 
   out->assignIn(in);
   in->assignOut(out);
+
+  sock->setData(0,(void*)2);
 
   in->addSocket(sock);
   out->addSocket(sock);
@@ -32,6 +41,16 @@ void SmppSocketsManager::registerSocket(Socket* sock)
   tp->startTask(out);
   tp->startTask(in);
 
+}
+
+void SmppSocketsManager::removeSocket(Socket* sock)
+{
+  MutexGuard g(m);
+  int x=(int)sock->getData(0);
+  x--;
+  sock->setData(0,(void*)x);
+  if(sock->getData(0))return;
+  delete sock;
 }
 
 };//smppio

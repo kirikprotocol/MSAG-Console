@@ -81,6 +81,7 @@ public:
   virtual int Execute()
   {
     threadstart=__builtin_return_address(0);
+    return 0;
   }
 };
 
@@ -158,7 +159,7 @@ LeakHunter::~LeakHunter()
     for(int j=0;j<memcounts[i];j++)
     {
       BlockInfo *bi=&memblocks[i][j];
-      fprintf(f,"Mem:0x%08X size %d, allocated at\n",bi->addr,bi->size);
+      fprintf(f,"Mem:0x%08X size %d, allocated at\n",(int)bi->addr,bi->size);
       DumpTrace(bi->trace);
       fprintf(f,"\n");
     }
@@ -172,7 +173,7 @@ void LeakHunter::DumpTrace(void** trace)
   for(int i=0;i<TRACESIZE;i++)
   {
     if(!trace[i])break;
-    fprintf(f,"{0x%08X}\n",trace[i]);
+    fprintf(f,"{0x%08X}\n",(int)trace[i]);
   }
 }
 
@@ -210,7 +211,7 @@ static void PrintTrace()
   for(int i=0;i<TRACESIZE;i++)
   {
     if(!trace[i])break;
-    fprintf(stderr,"{0x%08X}\n",trace[i]);
+    fprintf(stderr,"{0x%08X}\n",(int)trace[i]);
   }
 }
 
@@ -234,7 +235,7 @@ int LeakHunter::RegisterDealloc(void* ptr)
       return 1;
     }
   }
-  fprintf(stderr,"Error: Block with address 0x%08X deallocated twice or wasn't allocated!\n",ptr);
+  fprintf(stderr,"Error: Block with address 0x%08X deallocated twice or wasn't allocated!\n",(int)ptr);
   PrintTrace();
   return 0;
   //throw "DELETE UNALLOCATED BLOCK";
@@ -278,7 +279,7 @@ void* operator new(unsigned int size)
   }
   if(getenv("LHFULLREPORT"))
   {
-    fprintf(stderr,"new:0x%08x(%d)\n",mem,size);
+    fprintf(stderr,"new:0x%08x(%d)\n",(int)mem,size);
     smsc::util::leaktracing::PrintTrace();
   }
   smsc::util::leaktracing::lh->RegisterAlloc(mem,size);
@@ -296,7 +297,7 @@ void* operator new[](unsigned int size)
   }
   if(getenv("LHFULLREPORT"))
   {
-    fprintf(stderr,"new[]:0x%08x(%d)\n",mem,size);
+    fprintf(stderr,"new[]:0x%08x(%d)\n",(int)mem,size);
     smsc::util::leaktracing::PrintTrace();
   }
   smsc::util::leaktracing::lh->RegisterAlloc(mem,size);
@@ -310,7 +311,7 @@ void operator delete(void* mem)
   {
     if(getenv("LHFULLREPORT"))
     {
-      fprintf(stderr,"delete:0x%08x\n",mem);
+      fprintf(stderr,"delete:0x%08x\n",(int)mem);
       smsc::util::leaktracing::PrintTrace();
     }
     if(smsc::util::leaktracing::lh->RegisterDealloc(mem))
@@ -328,7 +329,7 @@ void operator delete[](void* mem)
   {
     if(getenv("LHFULLREPORT"))
     {
-      fprintf(stderr,"delete[]:0x%08x\n",mem);
+      fprintf(stderr,"delete[]:0x%08x\n",(int)mem);
       smsc::util::leaktracing::PrintTrace();
     }
     if(smsc::util::leaktracing::lh->RegisterDealloc(mem))

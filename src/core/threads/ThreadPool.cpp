@@ -15,13 +15,13 @@ int PooledThread::Execute()
 {
   int rawheapsize;
   int blocksheapquantum;
-  trace2("Pooled thread %08X ready for tasks\n",this);
+  trace2("Pooled thread %p ready for tasks\n",this);
   if(!task)owner->releaseThread(this);
   for(;;)
   {
-    trace2("Thread %08X waiting for task\n",this);
+    trace2("Thread %p waiting for task\n",this);
     taskEvent.Wait();
-    trace2("Thread %08X got a task\n",this);
+    trace2("Thread %p got a task\n",this);
     if(task==NULL)return 0;
     task->getMemoryInfo(rawheapsize,blocksheapquantum);
     if(rawheapsize!=0 || blocksheapquantum!=0)
@@ -131,7 +131,7 @@ void ThreadPool::startTask(ThreadedTask* task)
 
 void ThreadPool::releaseThread(PooledThread* thread)
 {
-  trace2("Releasing thread %08X",thread);
+  trace2("Releasing thread %8p",thread);
   Lock();
   int i;
   for(i=0;i<usedThreads.Count();i++)

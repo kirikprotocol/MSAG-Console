@@ -25,7 +25,7 @@ class ThreadPool;
 
 class PooledThread:public Thread{
 public:
-  PooledThread(ThreadPool* newowner):owner(newowner),task(NULL),Thread(){}
+  PooledThread(ThreadPool* newowner):Thread(),owner(newowner),task(NULL){}
 
   virtual int Execute();
 
