@@ -156,7 +156,12 @@ void SQLJob::process(Command& command, Statement& stmt)
     try 
     {
         SQLSetAdapter setAdapter(&stmt);
-        parser->parse(input, setAdapter, ctx); 
+        
+        try {    
+            parser->parse(input, setAdapter, ctx); 
+        } catch (ParsingWarning& wng) {
+            log.warn("%s", wng.what());
+        }
     }
     catch (ParsingException& exc) 
     {
@@ -326,7 +331,11 @@ void PLSQLJob::process(Command& command, Routine& routine)
     try 
     {
         SQLRoutineAdapter routineAdapter(&routine);
-        parser->parse(input, routineAdapter, ctx); 
+        try {
+            parser->parse(input, routineAdapter, ctx); 
+        } catch (ParsingWarning& wng) {
+            log.warn("%s", wng.what());
+        }
         routine.execute();
         formatter->format(output, routineAdapter, ctx);
     }
