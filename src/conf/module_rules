@@ -9,6 +9,7 @@ RANLIB=ranlib
 
 ifndef PACKAGEDIR
 PACKAGEDIR = $(subst .,/,$(PACKAGE))
+#$(warning $(PACKAGEDIR))
 endif
 
 SOURCES := $(subst $(SMSC_SRCDIR)/$(PACKAGEDIR)/,,$(wildcard $(SMSC_SRCDIR)/$(PACKAGEDIR)/*.cpp))
@@ -56,18 +57,24 @@ $(SMSC_BUILDDIR)/obj/$(LIBRARY):
 deps:	
 	@echo "make dependencies in $(PACKAGEDIR)"
 	@mkdir -p $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)
-	@rm -rf .deps
-	@if [ -n "$(SOURCE:.cpp=)" ] ; then \
-	    for i in "$(SOURCES:.cpp=)" ; do \
-		gcc -MM $(SMSC_SRCDIR)/$(PACKAGEDIR)/$$i.cpp -o$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$$i.o >>\
+	@rm -f $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps
+	@if [ -n "$(SOURCES:.cpp=)" ] ; then \
+	    XXXX="$(SOURCES:.cpp=)"; \
+	    for i in $$XXXX ; do \
+		gcc -MM $(CXXFLAGS) $(SMSC_SRCDIR)/$(PACKAGEDIR)/$$i.cpp -o$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$$i.o >>\
 		      $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps; \
 	    done; \
 	fi
+	@rm -f $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
 	@cat binaries-list 2>>/dev/null | awk '/^[^\#-]/{print "$(SMSC_BUILDDIR)/bin/"$$1" : $(SMSC_BUILDDIR)/obj/$(LIBRARY)/"$$2".o\n"\
 	    "\tmkdir -p `dirname $$@`\n"\
 	    "\t@echo linking $$@\n"\
 	    "\t$$(CXX) $$(CXXFLAGS) -o $$@ $$< $$(LDFLAGS) "$$3"\n"}' \
 	    > $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
+	@if [ -n "$(MODULES)" ] ; then \
+	    XXXX="$(MODULES)" ;\
+	    for i in $$XXXX  ; do cd $$i ; make deps; done ; \
+	fi
 
 -include $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps
 -include $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
