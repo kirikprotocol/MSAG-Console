@@ -66,7 +66,7 @@ public:
 
 protected:
   smsc::core::buffers::MemoryHeap *heap;
-  bool isStopping;
+  volatile bool isStopping;
 };//ThreadedTask
 
 }//threads
