@@ -351,11 +351,9 @@ TCResult* MessageStoreTestCases::storeIncorrectSms(int num)
 
 TCResult* MessageStoreTestCases::storeAssertSms(int num)
 {
-	TCSelector s(num, 5);
+	TCSelector s(num, 10);
 	TCResult* res = new TCResult(TC_STORE_ASSERT_SMS, s.getChoice());
 	SMS sms;
-	int bigAddrLength = MAX_ADDRESS_LENGTH + 1;
-	int msgBodyLength = MAX_MSG_BODY_LENGTH + 1;
 	for (; s.check(); s++)
 	{
 		try
@@ -371,20 +369,50 @@ TCResult* MessageStoreTestCases::storeAssertSms(int num)
 					break;
 				case 3: //originatingAddress больше максимальной длины
 					{
-						auto_ptr<char> addr = rand_char(bigAddrLength);
-						sms.setOriginatingAddress(bigAddrLength, 20, 30, addr.get());
+						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
+						sms.setOriginatingAddress(MAX_ADDRESS_LENGTH + 1, 20, 30, addr.get());
 					}
 					break;
 				case 4: //destinationAddress больше максимальной длины
 					{
-						auto_ptr<char> addr = rand_char(bigAddrLength);
-						sms.setDestinationAddress(bigAddrLength, 20, 30, addr.get());
+						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
+						sms.setDestinationAddress(MAX_ADDRESS_LENGTH + 1, 20, 30, addr.get());
 					}
 					break;
-				case 5: //message body больше максимальной длины
+				case 5: //msc адрес в originatingDescriptor больше максимальной длины
 					{
-						auto_ptr<uint8_t> msgBody = rand_uint8_t(msgBodyLength);
-						sms.setMessageBody(msgBodyLength, 20, false, msgBody.get());
+						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
+						sms.setOriginatingDescriptor(MAX_ADDRESS_LENGTH + 1, addr.get(), 1, "*", 1);
+					}
+					break;
+				case 6: //imsi адрес в originatingDescriptor больше максимальной длины
+					{
+						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
+						sms.setOriginatingDescriptor(1, "*", MAX_ADDRESS_LENGTH + 1, addr.get(), 1);
+					}
+					break;
+				case 7: //msc адрес в Descriptor больше максимальной длины
+					{
+						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
+						Descriptor(MAX_ADDRESS_LENGTH + 1, addr.get(), 1, "*", 1);
+					}
+					break;
+				case 8: //imsi адрес в Descriptor больше максимальной длины
+					{
+						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
+						Descriptor(1, "*", MAX_ADDRESS_LENGTH + 1, addr.get(), 1);
+					}
+					break;
+				case 9: //message body больше максимальной длины
+					{
+						auto_ptr<uint8_t> msgBody = rand_uint8_t(MAX_MSG_BODY_LENGTH + 1);
+						sms.setMessageBody(MAX_MSG_BODY_LENGTH + 1, 20, false, msgBody.get());
+					}
+					break;
+				case 10: //serviceType больше максимальной длины
+					{
+						auto_ptr<char> type = rand_char(MAX_SERVICE_TYPE_LENGTH + 1);
+						sms.setEServiceType(type.get());
 					}
 					break;
 				default:
