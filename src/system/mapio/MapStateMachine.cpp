@@ -573,12 +573,16 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   Address dest_addr;
   SMS_SUMBMIT_FORMAT_HEADER* ssfh = (SMS_SUMBMIT_FORMAT_HEADER*)ud->signalInfo;
   MAP_SMS_ADDRESS* msa = (MAP_SMS_ADDRESS*)(ud->signalInfo+2);
+  if( msa->len > 20 ) throw runtime_error( "Address length is invalid in received PDU" );
   unsigned msa_len = msa->len/2+msa->len%2+2;
   unsigned char protocol_id = *(unsigned char*)(ud->signalInfo+2+msa_len);
   unsigned char user_data_coding = *(unsigned char*)(ud->signalInfo+2+msa_len+1);
   sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,user_data_coding);
   unsigned tpvpLen = (ssfh->tp_vp==0)?0:(ssfh->tp_vp==2)?1:7;
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2);
+  if( 2+tpvpLen+msa_len+2+user_data_len+1 != ud->signalInfoLen )
+    throw runtime_error( "Calculated length of received PDU is not equal specified signalInfoLen" );
+
   if( smsc::util::_map_cat->isDebugEnabled() )
   {
     __map_trace2__("MR(8) = 0x%x",ssfh->mr);
