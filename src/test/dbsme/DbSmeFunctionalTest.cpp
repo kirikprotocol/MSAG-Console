@@ -153,6 +153,8 @@ void TestSme::executeCycle()
 			cout << "Bound failed" << endl;
 			exit(-1);
 		}
+		//установить профиль
+		tc.updateCodePageCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 		//подготовить последовательност команд
 		seq.insert(seq.end(), 5, 1); //format
 		seq.insert(seq.end(), 5, 2); //insert
@@ -166,8 +168,8 @@ void TestSme::executeCycle()
 	}
 	static int count = 0;
 	//каждый 10-ый цикл
-	if (count % 10 == 0)
-	//if (false)
+	//if (count % 10 == 0)
+	if (false)
 	{
 		count++;
 		tc.submitIncorrectDateFormatDbSmeCmd(rand0(1),
@@ -291,6 +293,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	__cfg_addr__(profilerAlias);
 	__cfg_str__(profilerSystemId);
 	__cfg_str__(mapProxySystemId);
+	__cfg_str__(abonentInfoSystemId);
 
 	vector<Address*> addr;
 	vector<SmeInfo*> smeInfo;
@@ -323,6 +326,12 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	mapProxyInfo.systemId = mapProxySystemId;
 	smeReg->registerSme("+123", mapProxyInfo, false, true);
 	smeReg->bindSme(mapProxyInfo.systemId);
+	//abonent info прокси
+	SmeInfo abonentProxyInfo;
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&abonentProxyInfo);
+	abonentProxyInfo.systemId = abonentInfoSystemId;
+	smeReg->registerSme("+321", abonentProxyInfo, false, true);
+	smeReg->bindSme(abonentProxyInfo.systemId);
 	//регистрация алиасов (самая простая схема)
 	for (int i = 0; i < numSme; i++)
 	{
@@ -379,7 +388,6 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		SmeConfig config;
 		config.host = smscHost;
 		config.port = smscPort;
-		//config.sid = tmp.get();
 		config.sid = smeInfo[i]->systemId;
 		config.timeOut = 10;
 		//config.password;
@@ -392,6 +400,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	}
 	//печать таблицы маршрутов
 	__trace__("Route table");
+	int routeCount = 0;
 	for (int i = 0; i < numSme; i++)
 	{
 		ostringstream os;
@@ -410,6 +419,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 				const SmeSystemId& smeId2 = routeHolder2->route.smeSystemId;
 				bool smeBound2 = smeReg->isSmeBound(smeId2);
 				os << ", back route to = " << smeId2 << ", bound = " << (smeBound2 ? "yes" : "no");
+				routeCount++;
 			}
 			else
 			{
@@ -422,6 +432,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		}
 		__trace2__("%s", os.str().c_str());
 	}
+	__require__(routeCount);
 	for (int i = 0; i < numSme; i++)
 	{
 		delete addr[i];
