@@ -4,6 +4,8 @@
 #include "ss7msg.h"
 #include "i97tcapapi.h"
 
+#define RETURN_VALUE MSG_OK
+
 extern "C"{
 
 USHORT_T EINSS7_I97TBindConf(   UCHAR_T ssn,
