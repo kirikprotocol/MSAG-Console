@@ -24,7 +24,7 @@ __synchronized__
   record.deleted = false;
   record.idx = records.size();
   SmeIndex index = internalLookup(info.systemId);
-  if ( index != INVALID_SME_INDEX ) throw SmeError();
+  if ( index != INVALID_SME_INDEX ) throw runtime_error("Already exists");
   records.push_back(record);
 }
 
@@ -112,7 +112,7 @@ void SmeManager::enableSme(const SmeSystemId& systemId)
 SmeIndex SmeManager::lookup(const SmeSystemId& systemId) const
 {
   SmeIndex index = internalLookup(systemId);
-  if ( index == INVALID_SME_INDEX ) throw SmeError();
+  if ( index == INVALID_SME_INDEX ) throw runtime_error("can't find");
   return index;
 }
 
@@ -120,7 +120,7 @@ SmeProxy* SmeManager::getSmeProxy(SmeIndex index) const
 {
 __synchronized__
   const SmeRecord* record = &(records.at(index));
-  if ( record->deleted ) throw SmeError();
+  if ( record->deleted ) throw runtime_error("proxy deleted");
   return const_cast<SmeProxy*>((const SmeProxy*)record);
 }
 
@@ -128,7 +128,7 @@ SmeInfo SmeManager::getSmeInfo(SmeIndex index) const
 {
 __synchronized__
   const SmeRecord& record = records.at(index);
-  if ( record.deleted ) throw SmeError();
+  if ( record.deleted ) throw runtime_error("proxy deleted");
   return record.info;
 }
 
@@ -171,7 +171,7 @@ void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
   {
     __synchronized__
     index = internalLookup(systemId);
-    if ( index == INVALID_SME_INDEX ) throw SmeError();
+    if ( index == INVALID_SME_INDEX ) throw runtime_error("is not registred");
   }
 
   {
@@ -188,9 +188,9 @@ void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
 SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
 {
   int _idx;
-	SmeProxy* proxy = dispatcher.dispatchIn(timeout,&_idx);
+  SmeProxy* proxy = dispatcher.dispatchIn(timeout,&_idx);
   if ( idx ) *idx = _idx;
-	if ( proxy )
+  if ( proxy )
   {
   __synchronized__
     return (SmeProxy*)&(records[_idx]);

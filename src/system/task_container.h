@@ -58,9 +58,21 @@ public:
   }
   ~TaskContainer() {}
 
-  bool createTask(const Task& t)
+  bool getExpired(Task* t)
+	{
+    unsigned long _time = time(NULL);
+    if ( timeout_link_begin && timeout_link_begin->timeout < _time )
+		{
+      *t = *timeout_link_begin;
+			__findAndRemove(timeout_link_begin);
+			return true;
+		}
+		return false;
+	}
+
+	bool createTask(const Task& t)
   {
-    checkTimeout();
+    //checkTimeout();
     if ( !first_task ) return false;
     Task* task = first_task;
     first_task = first_task->next;
@@ -80,14 +92,14 @@ public:
     return true;
   }
 
-  void checkTimeout()
+  /*void checkTimeout(&Task)
   {
     unsigned long _time = time(NULL);
-    while ( timeout_link_begin && timeout_link_begin->timeout < _time )
-    {
+    //while ( timeout_link_begin && timeout_link_begin->timeout < _time )
+    //{
       __findAndRemove(timeout_link_begin);
-    }
-  }
+    //}
+  }*/
 
   bool findAndRemoveTask(uint32_t proxy_idx,uint32_t sequenceNumber,Task *res)
   {

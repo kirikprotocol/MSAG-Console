@@ -205,6 +205,19 @@ public:
     _cmd.dialogId = dialogId;
     return cmd;
   }
+	
+	static SmscCommand makeAlert()
+	{
+		SmscCommand cmd;
+		cmd.cmd = new _SmscCommand;
+		_SmscCommand& _cmd = *cmd.cmd;
+		_cmd.ref_count = 1;
+		_cmd.cmdid = ALERT;
+		_cmd.dta = 0;
+		_cmd.dialogId = 0;
+		return cmd;
+	}
+
   ~SmscCommand() {
      //__trace__(__PRETTY_FUNCTION__);
      dispose();

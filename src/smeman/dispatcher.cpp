@@ -35,7 +35,7 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long timeout,int* idx)
           if ( unit->prev )
 					{ 
 						unit->prev->next = unit->next; // remove from list
-						if ( unit->next ) uint->next->prev = unit->prev;
+						if ( unit->next ) unit->next->prev = unit->prev;
 					}
           else
           {
@@ -161,7 +161,7 @@ __synchronized__
     }
     unit = unit->next;
   }
-  throw SmeError();
+  throw runtime_error("is not attached");
 }
 
 }; // namespace smeman

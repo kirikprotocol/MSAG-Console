@@ -145,6 +145,12 @@ void Smsc::mainLoop()
       // !!!TODO: taskcontainer expiration checks
       src_proxy = smeman.selectSmeProxy(WAIT_DATA_TIMEOUT,&src_proxy_index);
       if ( stopFlag ) return;
+			Task task;
+			while ( tasks.getExpired(&task) )
+			{
+				SMSId id = task.messageId;
+				eventqueue.enqueue(id,SmscCommand::makeAlert());
+			}
     }
     while(!src_proxy);
 
