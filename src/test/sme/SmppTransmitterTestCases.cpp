@@ -157,7 +157,7 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef
 		IntermediateNotificationMonitor* notifMonitor =
 			new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
 		notifMonitor->state = ENROUTE;
-		notifMonitor->deliveryStatus = ESME_RINVBNDSTS;
+		notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
 		fixture->pduReg->registerMonitor(notifMonitor);
 		//delivery receipt
 		__tc__("deliverySm.reports.deliveryReceipt.transmitter");
@@ -165,7 +165,7 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef
 		DeliveryReceiptMonitor* rcptMonitor =
 			new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
 		rcptMonitor->state = EXPIRED;
-		rcptMonitor->deliveryStatus = ESME_RINVBNDSTS;
+		rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
 		fixture->pduReg->registerMonitor(rcptMonitor);
 	}
 }
@@ -184,7 +184,7 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(uint16_t msgRef,
 		IntermediateNotificationMonitor* notifMonitor =
 			new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
 		notifMonitor->state = ENROUTE;
-		notifMonitor->deliveryStatus = ESME_RSYSERR;
+		notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
 		fixture->pduReg->registerMonitor(notifMonitor);
 		//delivery receipt
 		__tc__("deliverySm.reports.deliveryReceipt.notBound");
@@ -192,7 +192,7 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(uint16_t msgRef,
 		DeliveryReceiptMonitor* rcptMonitor =
 			new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
 		rcptMonitor->state = EXPIRED;
-		rcptMonitor->deliveryStatus = ESME_RSYSERR;
+		rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
 		fixture->pduReg->registerMonitor(rcptMonitor);
 	}
 }
@@ -426,10 +426,9 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 	PduData* existentPduData, bool sync, PduData::IntProps* intProps,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType)
 {
-	__decl_tc__;
-	if (fixture->smeType != SME_TRANSMITTER && fixture->smeType != SME_TRANSCEIVER)
+	if (fixture->smeType == SME_RECEIVER)
 	{
-		__require__(fixture->smeType == SME_RECEIVER);
+		__decl_tc__;
 		try
 		{
 			__tc__("submitSm.receiver");
@@ -450,13 +449,25 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 		}
 		throw Exception("Missing invalid bind exception");
 	}
+	__decl_tc12__;
 	try
 	{
+		switch (fixture->smeType)
+		{
+			case SME_TRANSMITTER:
+				__tc1__("submitSm.transmitter");
+				break;
+			case SME_TRANSCEIVER:
+				__tc1__("submitSm.transceiver");
+				break;
+			default:
+				__unreachable__("Invalid sme type");
+		}
 		if (fixture->pduReg)
 		{
 			if (sync)
 			{
-				__tc__("submitSm.sync");
+				__tc2__("submitSm.sync");
 				PduData* pduData;
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
@@ -471,19 +482,12 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 					MutexGuard mguard(fixture->pduReg->getMutex());
 					__dumpPdu__("submitSmSyncAfter", fixture->smeInfo.systemId,
 						reinterpret_cast<SmppHeader*>(pdu));
-					if (respPdu)
-					{
-						processSubmitSmSync(pduData, respPdu, time(NULL));
-					}
-					else
-					{
-						__tc_fail__(1);
-					}
+					processSubmitSmSync(pduData, respPdu, time(NULL));
 				}
 			}
 			else
 			{
-				__tc__("submitSm.async");
+				__tc2__("submitSm.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
 				//__dumpPdu__("submitSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 				time_t submitTime = time(NULL);
@@ -504,7 +508,7 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 		{
 			if (sync)
 			{
-				__tc__("submitSm.sync");
+				__tc2__("submitSm.sync");
 				PduSubmitSmResp* respPdu =
 					fixture->session->getSyncTransmitter()->submit(*pdu);
 				if (respPdu)
@@ -514,16 +518,16 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 			}
 			else
 			{
-				__tc__("submitSm.async");
+				__tc2__("submitSm.async");
 				fixture->session->getAsyncTransmitter()->submit(*pdu);
 			}
 			delete pdu; //disposePdu
 		}
-		__tc_ok_cond__;
+		__tc12_ok_cond__;
 	}
 	catch (...)
 	{
-		__tc_fail__(100);
+		__tc12_fail__(100);
 		//error();
 		throw;
 	}
@@ -737,10 +741,9 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 	PduData* replacePduData, bool sync, PduData::IntProps* intProps,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps)
 {
-	__decl_tc__;
-	if (fixture->smeType != SME_TRANSMITTER && fixture->smeType != SME_TRANSCEIVER)
+	if (fixture->smeType == SME_RECEIVER)
 	{
-		__require__(fixture->smeType == SME_RECEIVER);
+		__decl_tc__;
 		try
 		{
 			__tc__("replaceSm.receiver");
@@ -761,13 +764,25 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 		}
 		throw Exception("Missing invalid bind exception");
 	}
+	__decl_tc12__;
 	try
 	{
+		switch (fixture->smeType)
+		{
+			case SME_TRANSMITTER:
+				__tc1__("replaceSm.transmitter");
+				break;
+			case SME_TRANSCEIVER:
+				__tc1__("replaceSm.transceiver");
+				break;
+			default:
+				__unreachable__("Invalid pdu type");
+		}
 		if (fixture->pduReg)
 		{
 			if (sync)
 			{
-				__tc__("replaceSm.sync");
+				__tc2__("replaceSm.sync");
 				PduData* pduData;
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
@@ -787,7 +802,7 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 			}
 			else
 			{
-				__tc__("replaceSm.async");
+				__tc2__("replaceSm.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
 				//__dumpPdu__("replaceSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 				time_t submitTime = time(NULL);
@@ -805,7 +820,7 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 		{
 			if (sync)
 			{
-				__tc__("replaceSm.sync");
+				__tc2__("replaceSm.sync");
 				PduReplaceSmResp* respPdu =
 					fixture->session->getSyncTransmitter()->replace(*pdu);
 				if (respPdu)
@@ -815,16 +830,16 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 			}
 			else
 			{
-				__tc__("replaceSm.async");
+				__tc2__("replaceSm.async");
 				fixture->session->getAsyncTransmitter()->replace(*pdu);
 			}
 			delete pdu; //disposePdu
 		}
-		__tc_ok__;
+		__tc12_ok__;
 	}
 	catch (...)
 	{
-		__tc_fail__(100);
+		__tc12_fail__(100);
 		//error();
 		throw;
 	}
@@ -882,10 +897,9 @@ void SmppTransmitterTestCases::sendQuerySmPdu(PduQuerySm* pdu,
 	PduData* origPduData, bool sync, PduData::IntProps* intProps,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps)
 {
-	__decl_tc__;
-	if (fixture->smeType != SME_TRANSMITTER && fixture->smeType != SME_TRANSCEIVER)
+	if (fixture->smeType == SME_RECEIVER)
 	{
-		__require__(fixture->smeType == SME_RECEIVER);
+		__decl_tc__;
 		try
 		{
 			__tc__("querySm.receiver");
@@ -906,13 +920,25 @@ void SmppTransmitterTestCases::sendQuerySmPdu(PduQuerySm* pdu,
 		}
 		throw Exception("Missing invalid bind exception");
 	}
+	__decl_tc12__;
 	try
 	{
+		switch (fixture->smeType)
+		{
+			case SME_TRANSMITTER:
+				__tc1__("querySm.transmitter");
+				break;
+			case SME_TRANSCEIVER:
+				__tc1__("querySm.transceiver");
+				break;
+			default:
+				__unreachable__("Invalid sme type");
+		}
 		if (fixture->pduReg)
 		{
 			if (sync)
 			{
-				__tc__("querySm.sync");
+				__tc2__("querySm.sync");
 				PduData* pduData;
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
@@ -932,7 +958,7 @@ void SmppTransmitterTestCases::sendQuerySmPdu(PduQuerySm* pdu,
 			}
 			else
 			{
-				__tc__("querySm.async");
+				__tc2__("querySm.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
 				//__dumpPdu__("querySmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 				time_t queryTime = time(NULL);
@@ -951,7 +977,7 @@ void SmppTransmitterTestCases::sendQuerySmPdu(PduQuerySm* pdu,
 		{
 			if (sync)
 			{
-				__tc__("querySm.sync");
+				__tc2__("querySm.sync");
 				PduQuerySmResp* respPdu =
 					fixture->session->getSyncTransmitter()->query(*pdu);
 				if (respPdu)
@@ -961,16 +987,16 @@ void SmppTransmitterTestCases::sendQuerySmPdu(PduQuerySm* pdu,
 			}
 			else
 			{
-				__tc__("querySm.async");
+				__tc2__("querySm.async");
 				fixture->session->getAsyncTransmitter()->query(*pdu);
 			}
 			delete pdu; //disposePdu
 		}
-		__tc_ok__;
+		__tc12_ok__;
 	}
 	catch (...)
 	{
-		__tc_fail__(100);
+		__tc12_fail__(100);
 		//error();
 		throw;
 	}
@@ -1092,10 +1118,9 @@ void SmppTransmitterTestCases::sendCancelSmPdu(PduCancelSm* pdu,
 	PduData* cancelPduData, bool sync, PduData::IntProps* intProps,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps)
 {
-	__decl_tc__;
-	if (fixture->smeType != SME_TRANSMITTER && fixture->smeType != SME_TRANSCEIVER)
+	if (fixture->smeType == SME_RECEIVER)
 	{
-		__require__(fixture->smeType == SME_RECEIVER);
+		__decl_tc__;
 		try
 		{
 			__tc__("cancelSm.receiver");
@@ -1116,13 +1141,25 @@ void SmppTransmitterTestCases::sendCancelSmPdu(PduCancelSm* pdu,
 		}
 		throw Exception("Missing invalid bind exception");
 	}
+	__decl_tc12__;
 	try
 	{
+		switch (fixture->smeType)
+		{
+			case SME_TRANSMITTER:
+				__tc1__("cancelSm.transmitter");
+				break;
+			case SME_TRANSCEIVER:
+				__tc1__("cancelSm.transceiver");
+				break;
+			default:
+				__unreachable__("Invalid sme type");
+		}
 		if (fixture->pduReg)
 		{
 			if (sync)
 			{
-				__tc__("cancelSm.sync");
+				__tc2__("cancelSm.sync");
 				PduData* pduData;
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
@@ -1142,7 +1179,7 @@ void SmppTransmitterTestCases::sendCancelSmPdu(PduCancelSm* pdu,
 			}
 			else
 			{
-				__tc__("cancelSm.async");
+				__tc2__("cancelSm.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
 				//__dumpPdu__("cancelSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 				time_t submitTime = time(NULL);
@@ -1160,7 +1197,7 @@ void SmppTransmitterTestCases::sendCancelSmPdu(PduCancelSm* pdu,
 		{
 			if (sync)
 			{
-				__tc__("cancelSm.sync");
+				__tc2__("cancelSm.sync");
 				PduCancelSmResp* respPdu =
 					fixture->session->getSyncTransmitter()->cancel(*pdu);
 				if (respPdu)
@@ -1170,16 +1207,16 @@ void SmppTransmitterTestCases::sendCancelSmPdu(PduCancelSm* pdu,
 			}
 			else
 			{
-				__tc__("cancelSm.async");
+				__tc2__("cancelSm.async");
 				fixture->session->getAsyncTransmitter()->cancel(*pdu);
 			}
 			delete pdu; //disposePdu
 		}
-		__tc_ok__;
+		__tc12_ok__;
 	}
 	catch (...)
 	{
-		__tc_fail__(100);
+		__tc12_fail__(100);
 		//error();
 		throw;
 	}

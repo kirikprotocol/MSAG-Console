@@ -183,9 +183,6 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		__compare__(5, pdu.get_message().get_priorityFlag(), 0);
 		__compare__(6, pdu.get_message().get_registredDelivery(), 0);
 		__tc_ok_cond__;
-		pduReg->removeMonitor(monitor);
-		processSmeAcknowledgement(monitor, pdu, recvTime);
-		pduReg->registerMonitor(monitor); //тест кейсы на финализированные pdu
 		//для sme acknoledgement не проверяю повторную доставку
 		__tc__("deliverySm.smeAck.recvTimeChecks");
 		__cfg_int__(timeCheckAccuracy);
@@ -198,6 +195,9 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 			__tc_fail__(2);
 		}
 		__tc_ok_cond__;
+		pduReg->removeMonitor(monitor);
+		processSmeAcknowledgement(monitor, pdu, recvTime);
+		pduReg->registerMonitor(monitor); //тест кейсы на финализированные pdu
 		//отправить респонс, только ESME_ROK разрешено
 		//отправка должна быть без задержек
 		pair<uint32_t, time_t> deliveryResp =
