@@ -616,7 +616,7 @@ namespace smsc {
             __require__(value!=0);
             size+=value->length()+4+1+2;
           }
-          __trace2__("TemporaryBodyStr size: %d",size);
+//          __trace2__("TemporaryBodyStr size: %d",size);
           return size;
         }
 
@@ -657,7 +657,7 @@ namespace smsc {
               memcpy(buffer+offs+2,&tmp32,4);
             }
             offs+=4+2;
-            __trace2__("Senc: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
+//            __trace2__("Senc: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
             __require__(offs+len<=(unsigned)length);
             memcpy(buffer+offs,value->c_str(),len);
             offs+=len;
@@ -680,7 +680,7 @@ namespace smsc {
             pos+=4+2;
             __require__(pos+len<=(unsigned)length);
             string* key = tag_hash.getStrKeyForString(tag);
-            __trace2__("Sdec: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
+//            __trace2__("Sdec: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
             if ( key )
             {
               __require__(*(buffer+pos+len-1) == 0);
@@ -707,7 +707,7 @@ namespace smsc {
             //size+=value->length();
             size+=4+4+2;
           }
-          __trace2__("TemporaryBodyInt size: %d",size);
+//          __trace2__("TemporaryBodyInt size: %d",size);
           return size;
         }
 
@@ -746,7 +746,7 @@ namespace smsc {
               memcpy(buffer+offs+2,&temp32,4);
             }
             offs+=4+2;
-            __trace2__("Ienc: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key:"NULL",len,offs,length,*value);
+//            __trace2__("Ienc: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key:"NULL",len,offs,length,*value);
             __require__(offs+len<=(unsigned)length);
             //memcpy(buffer+pos,value->c_str(),len);
             {
@@ -779,7 +779,7 @@ namespace smsc {
               uint32_t tmp;
               memcpy(&tmp,buffer+pos,4);
               hash[key->c_str()] = ntohl(tmp);
-              __trace2__("Idec: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key->c_str():"NULL",len,pos,length,ntohl(tmp));
+//              __trace2__("Idec: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key->c_str():"NULL",len,pos,length,ntohl(tmp));
             }
             pos+=len;
           }
@@ -826,7 +826,7 @@ namespace smsc {
             __require__(value!=0);
             size+=value->length()+4+2;
           }
-          __trace2__("TemporaryBodyBin size: %d",size);
+//          __trace2__("TemporaryBodyBin size: %d",size);
           return size;
         }
 
@@ -867,7 +867,7 @@ namespace smsc {
               memcpy(buffer+offs+2,&tmp32,4);
             }
             offs+=4+2;
-            __trace2__("Benc: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
+//            __trace2__("Benc: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
             __require__(offs+len<=(unsigned)length);
             memcpy(buffer+offs,value->dat(),len);
             offs+=len;
@@ -890,7 +890,7 @@ namespace smsc {
             pos+=4+2;
             __require__(pos+len<=(unsigned)length);
             string* key = tag_hash.getStrKeyForBin(tag);
-            __trace2__("Bdec: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
+//            __trace2__("Bdec: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
             if ( key )
             {
               //__require__(*(buffer+pos+len) == 0);
@@ -1018,7 +1018,7 @@ namespace smsc {
           int size = temporaryBodyStr.getRequiredBufferSize()+
             temporaryBodyInt.getRequiredBufferSize()+
             temporaryBodyBin.getRequiredBufferSize();
-          __trace2__("RequiredBufferSize: %d",size);
+//          __trace2__("RequiredBufferSize: %d",size);
           return size;
         };
 
