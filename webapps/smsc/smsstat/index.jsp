@@ -65,7 +65,7 @@ if (stat != null) {
 %>
 <script language="JavaScript">
   function showErrTable(id) {
-    Object obj = document.all("disNo"+id);
+    var obj = document.all("disNo"+id);
     if( obj.style.display != 'none' )
       obj.style.display='none';
     else
