@@ -1312,6 +1312,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         fd.msgId=msgid;
         fd.err="";
         fd.lastResult=0;
+        fd.lastResultGsm=0;
         fd.msc=d.msc;
         formatDeliver(fd,out);
         rpt.getDestinationAddress().getText(addr,sizeof(addr));
