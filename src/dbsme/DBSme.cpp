@@ -274,8 +274,12 @@ public:
     virtual ~DBSmeTaskManager() 
     {
         __trace2__("DBSME: deinit DBSmeTaskManager\n");
-        pool.shutdown();
+        shutdown();
     };
+
+    void shutdown() {
+        pool.shutdown();
+    }
 
     void init(ConfigView* config)
         throw(ConfigException)
@@ -456,7 +460,7 @@ int main(void)
             DBSmePduListener listener(processor, runner);
             SmppSession      session(cfg, &listener);
 
-        sigset_t set;
+            sigset_t set;
             sigemptyset(&set);
             sigaddset(&set,SIGINT);
 //            sigset(SIGTERM, appSignalHandler);
@@ -478,6 +482,8 @@ int main(void)
                 if (exc.getReason() == 
                     SmppConnectException::Reason::bindFailed) throw;
                 sleep(cfg.timeOut);
+                session.close();
+                runner.shutdown();
                 continue;
             }
             log.info("Connected.\n");
@@ -492,6 +498,8 @@ int main(void)
                            failuresNoticedCount);*/
             };
             log.info("Disconnecting from SMSC ...\n");
+            session.close();
+            runner.shutdown();
         };
     }
     catch (ConfigException& exc) 
