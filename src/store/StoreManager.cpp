@@ -233,7 +233,9 @@ SMSId RemoteStore::doCreateSms(StorageConnection* connection,
             }
             catch (StorageException& exc)
             {
-                connection->rollback();
+                try { connection->rollback(); } catch (...) {
+                    log.error("Failed to rollback");
+                }
                 throw exc;
             }
             return retId;
@@ -279,7 +281,9 @@ SMSId RemoteStore::doCreateSms(StorageConnection* connection,
     }
     catch (StorageException& exc)
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw exc;
     }
 
@@ -369,13 +373,17 @@ void RemoteStore::doChangeSmsConcatSequenceNumber(
     }
     catch (StorageException& exc)
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw exc;
     }
 
     if (!seqNumStmt->wasUpdated())
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw NoSuchMessageException(id);
     }
     connection->commit();
@@ -542,7 +550,9 @@ void RemoteStore::doDestroySms(StorageConnection* connection, SMSId id)
     }
     catch (StorageException& exc)
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw;
     }
 
@@ -680,13 +690,17 @@ void RemoteStore::doReplaceSms(StorageConnection* connection,
     }
     catch (StorageException& exc)
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw;
     }
 
     if (!replaceStmt->wasReplaced())
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw NoSuchMessageException(id);
     }
     connection->commit();
@@ -813,13 +827,17 @@ void RemoteStore::doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms
     }
     catch (StorageException& exc)
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw;
     }
 
     if (!replaceStmt->wasReplaced())
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw NoSuchMessageException(id);
     }
     connection->commit();
@@ -901,13 +919,17 @@ void RemoteStore::doChangeSmsStateToEnroute(StorageConnection* connection,
     }
     catch (StorageException& exc)
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw exc;
     }
 
     if (!toEnrouteStmt->wasUpdated())
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw NoSuchMessageException(id);
     }
     connection->commit();
@@ -992,13 +1014,17 @@ void RemoteStore::doChangeSmsStateToDelivered(StorageConnection* connection,
     }
     catch (StorageException& exc)
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw exc;
     }
 
     if (!toDeliveredStmt->wasUpdated())
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw NoSuchMessageException(id);
     }
     connection->commit();
@@ -1080,13 +1106,17 @@ void RemoteStore::doChangeSmsStateToUndeliverable(
     }
     catch (StorageException& exc)
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw exc;
     }
 
     if (!toUndeliverableStmt->wasUpdated())
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw NoSuchMessageException(id);
     }
     connection->commit();
@@ -1165,13 +1195,17 @@ void RemoteStore::doChangeSmsStateToExpired(
     }
     catch (StorageException& exc)
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw exc;
     }
 
     if (!toExpiredStmt->wasUpdated())
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw NoSuchMessageException(id);
     }
     connection->commit();
@@ -1248,13 +1282,17 @@ void RemoteStore::doChangeSmsStateToDeleted(
     }
     catch (StorageException& exc)
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw exc;
     }
 
     if (!toDeletedStmt->wasUpdated())
     {
-        connection->rollback();
+        try { connection->rollback(); } catch (...) {
+            log.error("Failed to rollback");
+        }
         throw NoSuchMessageException(id);
     }
     connection->commit();
