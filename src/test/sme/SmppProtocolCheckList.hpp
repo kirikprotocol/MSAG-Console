@@ -652,6 +652,8 @@ void protocolError()
 		"Отправка pdu с command_id отличным от bind_transmitter, bind_receiver и bind_transceiver");
 	__reg_tc__("protocolError.invalidBind.cmdId.allowedCmdId",
 		"Правильная pdu с command_id разрешенным для отправки со стороны sme");
+	__reg_tc__("protocolError.invalidBind.cmdId.unbindBeforeBind",
+		"Отправка unbind реквеста");
 	__reg_tc__("protocolError.invalidBind.cmdId.notAllowedCmdId",
 		"Правильная pdu с command_id разрешенным для отправки исключительно со стороны SC");
 	__reg_tc__("protocolError.invalidBind.cmdId.nonExistentCmdId",
@@ -704,6 +706,8 @@ void protocolError()
 		"Отправка pdu с command_id отличным от bind_transmitter, bind_receiver и bind_transceiver");
 	__reg_tc__("protocolError.submitAfterUnbind.cmdId.allowedCmdId",
 		"Правильная pdu с command_id разрешенным для отправки со стороны sme");
+	__reg_tc__("protocolError.submitAfterUnbind.cmdId.duplicateUnbind",
+		"Повторный unbind реквест");
 	__reg_tc__("protocolError.submitAfterUnbind.cmdId.notAllowedCmdId",
 		"Правильная pdu с command_id разрешенным для отправки исключительно со стороны SC");
 	__reg_tc__("protocolError.submitAfterUnbind.cmdId.nonExistentCmdId",

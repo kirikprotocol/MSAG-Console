@@ -363,7 +363,7 @@ public:
 		//connect
 		connect();
 		//неправильный bind
-		TCSelector s(num, 8);
+		TCSelector s(num, 9);
 		SmppHeader* pdu = NULL;
 		int size;
 		uint32_t cmdId;
@@ -418,13 +418,19 @@ public:
 				pdu = createPdu(cmdId);
 				invalidCmdId = true;
 				break;
-			case 7: //неправильный commandId
+			case 7: //unbind
+				__tc__("protocolError.submitAfterUnbind.cmdId.unbindBeforeBind");
+				cmdId = UNBIND;
+				pdu = createPdu(cmdId);
+				invalidCmdId = true;
+				break;
+			case 8: //неправильный commandId
 				__tc__("protocolError.invalidBind.cmdId.notAllowedCmdId");
 				cmdId = notAllowedCmdIds[rand0(notAllowedCmdIdsSize - 1)];
 				pdu = createPdu(cmdId);
 				invalidCmdId = true;
 				break;
-			case 8:  //несуществующий commandId
+			case 9:  //несуществующий commandId
 				__tc__("protocolError.invalidBind.cmdId.nonExistentCmdId");
 				cmdId = rand2(0xa, INT_MAX);
 				pdu = createPdu(bindCmdIds[rand0(bindCmdIdsSize - 1)]);
@@ -806,7 +812,7 @@ public:
 		}
 		setComplete(false);
 		//произвольные pdu
-		TCSelector s(num, 12);
+		TCSelector s(num, 13);
 		SmppHeader* pdu = NULL;
 		int size;
 		uint32_t cmdId;
@@ -891,13 +897,19 @@ public:
 				pdu = createPdu(cmdId);
 				invalidCmdId = true;
 				break;
-			case 11: //неправильный commandId
+			case 11: //повторный unbind
+				__tc__("protocolError.submitAfterUnbind.cmdId.duplicateUnbind");
+				cmdId = UNBIND;
+				pdu = createPdu(cmdId);
+				invalidCmdId = true;
+				break;
+			case 12: //неправильный commandId
 				__tc__("protocolError.submitAfterUnbind.cmdId.notAllowedCmdId");
 				cmdId = notAllowedCmdIds[rand0(notAllowedCmdIdsSize - 1)];
 				pdu = createPdu(cmdId);
 				invalidCmdId = true;
 				break;
-			case 12:  //несуществующий commandId
+			case 13:  //несуществующий commandId
 				__tc__("protocolError.submitAfterUnbind.cmdId.nonExistentCmdId");
 				cmdId = rand2(0xa, INT_MAX);
 				pdu = createPdu(bindCmdIds[rand0(bindCmdIdsSize - 1)]);
