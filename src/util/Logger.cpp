@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "Logger.h"
 #include <log4cpp/SimpleConfigurator.hh>
 #include <log4cpp/BasicLayout.hh>
@@ -36,7 +37,8 @@ void Logger::Init(const std::string &configFileName)
 		isInitialized = false;
 		log4cpp::Category::getRoot().removeAllAppenders();
 		log4cpp::SimpleConfigurator::configure(configFileName);
-	} catch (...) {
+	} catch (log4cpp::ConfigureFailure& exception) {
+		fprintf( stderr, "Exception occured during configuration log4cpp: %s\n", exception.what() );
 		log4cpp::Appender* appender = new log4cpp::FileAppender("FileAppender", "smsc.log");
 		appender->setLayout(new log4cpp::BasicLayout());
 		log4cpp::Category & cat = log4cpp::Category::getRoot();
