@@ -58,8 +58,15 @@ USHORT_T  Et96MapOpenInd(
 		  MapDialogContainer::getInstance()->createDialog(dialogId);
   	mdci->localSsn = SSN;
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-    Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_OK,&reason,0,0,0);
+    USHORT_T result = Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_OK,&reason,0,0,0)!=ET96_E_OK)
+    if ( result != ET96MAP_E_OK )
+    {
+      __trace2__("MAP::Et96MapOpenInd dialog opened error 0x%x",result);
+      throw 0;                                    
+    }
+    __trace2__("MAP::Et96MapOpenInd dialog opened");
   }catch(...){
+    __trace2__("MAP::Et96MapOpenInd error open connection");
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
     Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
   }
@@ -83,6 +90,11 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
       mdci->invokeId = invokeId;
       mdci->dialogue->Et96MapV2ForwardSmMOInd(
         SSN,dialogId,invokeId,dstAddr,srcAddr,ud);
+      USHORT_T result = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
+      if ( result != ET96MAP_E_OK ){
+        __trace2__("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
+        throw 0;
+      }
   	}catch(...){
   		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
       CloseAndRemoveDialog(SSN,dialogId);
