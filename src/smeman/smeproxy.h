@@ -24,7 +24,7 @@ const int SmeProxyPriorityMinBr = 0;
 const int SmeProxyPriorityMin = 1;
 const int SmeProxyPriorityDefault = 16000;
 const int SmeProxyPriorityMax = 32000;
-const int SmeProxyPriorityMaxBr = SmeProxyPriorityMaxBr+1;
+const int SmeProxyPriorityMaxBr = SmeProxyPriorityMax+1;
 typedef smsc::core::synchronization::Event ProxyMonitor;
 
 class ProxyQueueLimitException : public std::exception

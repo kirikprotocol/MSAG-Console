@@ -171,7 +171,8 @@
 #define __watchtext__(expr) watchtext(expr)
 #define __trace__(text)     trace(text)
 #define __trace2__(format,args...)     trace2(format,##args)
-
+#define __trace2_if_fail__(expr,format,args...) \
+	{if (!expr) trace2(format,##args);else;}
 namespace smsc{
 namespace util{
 
@@ -283,7 +284,7 @@ namespace util{
             func,line);
   }
   
-	inline void watchImpl(unsigned int e, const char* expr,
+  inline void watchImpl(unsigned int e, const char* expr,
                         const char* file, const char* func, int line)
   {
     fprintf(WATCH_LOG_STREAM,"*watch*: %s = %d     %s(%s):%d\n",
