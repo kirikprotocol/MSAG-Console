@@ -43,9 +43,9 @@ class TimeSlotCounter{
 public:
   TimeSlotCounter(int nsec,int msecres=100)
   {
-    slotSize=nsec*1000/msecres;
+    slotsCount=nsec*1000/msecres;
     slotRes=msecres;
-    slot=new T[slotSize];
+    slot=new T[slotsCount];
     lastTime=0;
     first=0;
     last=0;
@@ -68,7 +68,7 @@ public:
       return;
     }
     lastTime=now;
-    if(diff>slotSize)
+    if(diff>slotsCount)
     {
       first=0;
       last=0;
@@ -79,12 +79,12 @@ public:
       while(diff--)
       {
         last++;
-        if(last>=slotSize)last=0;
+        if(last>=slotsCount)last=0;
         if(first==last)
         {
           count-=slot[first];
           first++;
-          if(first>=slotSize)first=0;
+          if(first>=slotsCount)first=0;
         }
         slot[last]=init_v;
       }
@@ -98,6 +98,10 @@ public:
     Inc(0);
     int l=last;
     count+=inc;
+    if(count>maxperslot*slotsCount)
+    {
+      maxperslot=count/slotsCount;
+    }
     while(inc>0)
     {
       using namespace std;
@@ -108,7 +112,7 @@ public:
         inc-=v;
       }
       l--;
-      if(l<0)l=slotSize-1;
+      if(l<0)l=slotsCount-1;
       if(l==first)break;
     }
     //count-=inc;
@@ -117,7 +121,7 @@ public:
 
   void IncEven(T inc)
   {
-    int mps=inc/slotSize;
+    int mps=inc/slotsCount;
     if(mps==0)mps=1;
     IncDistr(inc,mps);
   }
@@ -131,15 +135,20 @@ public:
   T Avg(int timeDiff=1000)
   {
     Inc(0);
-    int used=(last-first+slotSize)%slotSize;
+    int used=(last-first+slotsCount)%slotsCount;
     if(used==0)return 0;
     return count*timeDiff/(used*slotRes);
+  }
+
+  int getSlotRes()
+  {
+    return slotRes;
   }
 
 protected:
   T *slot;
   T count;
-  int first,last,slotSize;
+  int first,last,slotsCount;
   int slotRes; // slot resolution
   hrtime_t lastTime;
 
