@@ -99,7 +99,7 @@ int TaskScheduler::Execute()
                         processor->getTaskContainerAdapter().getTask(task_name);
                     Task* task = taskGuard.get();
                     if (!task) { 
-                        logger.error("Task '%s' not found.", task_name);
+                        logger.warn("Task '%s' not found.", task_name);
                         continue;
                     }
                     
@@ -195,8 +195,8 @@ Schedule* TaskScheduler::getNextSchedule(time_t& scheduleTime)
         time_t time = schedule->calulateNextTime();
         if (time < 0) continue;
         
-        printf("Schedule %s\t Next time: %s", 
-               schedule ? schedule->id.c_str():"-", ctime(&time));
+        //printf("Schedule %s\t Next time: %s", 
+        //       schedule ? schedule->id.c_str():"-", ctime(&time));
         
         if (minimalTime < 0 || time < minimalTime) {
             minimalTime = time;
@@ -216,6 +216,7 @@ bool TaskScheduler::addSchedule(Schedule* schedule)
     if (!scheduleId || scheduleId[0] == '\0' || 
         schedules.Exists(scheduleId)) return false;
     schedules.Insert(scheduleId, schedule);
+    awake.Signal();
     return true;
 }
 bool TaskScheduler::changeSchedule(std::string id, Schedule* schedule)
@@ -231,6 +232,7 @@ bool TaskScheduler::changeSchedule(std::string id, Schedule* schedule)
     if (old) delete old;
     schedules.Delete(scheduleId);
     schedules.Insert(newId, schedule);
+    awake.Signal();
     return true;
 }
 bool TaskScheduler::removeSchedule(std::string id)
@@ -243,6 +245,7 @@ bool TaskScheduler::removeSchedule(std::string id)
     Schedule* old = schedules.Get(scheduleId);
     if (old) delete old;
     schedules.Delete(scheduleId);
+    awake.Signal();
     return true;
 }
 
