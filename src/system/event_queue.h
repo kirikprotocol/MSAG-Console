@@ -178,7 +178,7 @@ public:
 
   void getStats(int& hcnt,int& qcnt)
   {
-    __synchronized__
+//    __synchronized__
     hcnt=hash.getCount();
     qcnt=queue.Count();
   }

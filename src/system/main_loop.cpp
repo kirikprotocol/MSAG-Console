@@ -202,6 +202,8 @@ void Smsc::mainLoop()
 
     // main "delay" cycle
 
+    int eqsize,equnsize;
+    eventqueue.getStats(eqsize,equnsize);
     while(frame.size())
     {
       int cntInstant=tcontrol->getTotalCount();
@@ -211,8 +213,6 @@ void Smsc::mainLoop()
         __info2__(log,"cnt=%d, smooth_cnt=%d, submitCnt=%d",cntInstant,cntSmooth,submitCount);
       }*/
 
-      int eqsize,equnsize;
-      eventqueue.getStats(eqsize,equnsize);
       /*
       if(
           (cntInstant+1<=maxsms*stf ||
@@ -244,6 +244,7 @@ void Smsc::mainLoop()
         continue;
       }
       //__warning2__("count=%d, smooth_cnt=%d",cntInstant,cntSmooth);
+      hrtime_t nslStart=gethrtime();
       {
         Task task;
         while ( tasks.getExpired(&task) )
@@ -257,6 +258,8 @@ void Smsc::mainLoop()
       }
       timestruc_t tv={0,1000000};
       nanosleep(&tv,0);
+      hrtime_t nslEnd=gethrtime();
+      info2(log,"nanosleep block time:%lld",nslEnd-nslStart);
     }
   } // end of main loop
 }
