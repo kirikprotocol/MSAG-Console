@@ -29,16 +29,12 @@
       <sm-ep:list title="numbering plan" name="numberingPlan" values="0,1,3,4,6,8,9,10,14,18" valueTitles="Unknown,ISDN (E163/E164),Data (X.121),Telex (F.69),Land Mobile (E.212),National,Private,ERMES,Internet (IP),WAP Client Id (to be defined by WAP Forum)"/>
       <sm-ep:const title="interface version" name="interfaceVersion" value="3.4"/>
       <sm-ep:txt title="range of addres" name="addrRange" validation="nonEmpty"/>
-      <sm-ep:check title="is want alias" name="wantAlias"/>
-      <sm-ep:check title="force data coding" name="forceDC"/>
       <sm-ep:txt title="timeout" name="timeout" validation="unsigned"/>
       <sm-ep:txt title="password" name="password"/>
       <sm-ep:txt title="receipt scheme name" name="receiptSchemeName"/>
       <sm-ep:check title="disabled" name="disabled"/>
       <sm-ep:list title="mode" name="mode" values="1,2,3" valueTitles="TX,RX,TRX"/>
       <sm-ep:txt title="proclimit" name="proclimit" validation="unsigned"/>
-      <sm-ep:txt title="schedlimit" name="schedlimit" validation="unsigned"/>
-      <sm-ep:txt title="smeN" name="smeN"/>
     </sm-ep:properties>
   </jsp:body>
 </sm:page>

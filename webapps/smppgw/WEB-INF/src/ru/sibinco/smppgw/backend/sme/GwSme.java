@@ -37,25 +37,23 @@ public class GwSme extends Sme
   }
 
   public GwSme(final String id, final int priority, final byte type, final int typeOfNumber, final int numberingPlan, final int interfaceVersion,
-               final String systemType, final String password, final String addrRange, final int smeN, final boolean wantAlias, final boolean forceDC,
-               final int timeout, final String receiptSchemeName, final boolean disabled, final byte mode, final int proclimit, final int schedlimit,
-               final Provider provider)
+               final String systemType, final String password, final String addrRange, final int timeout, final String receiptSchemeName,
+               final boolean disabled, final byte mode, final int proclimit, final Provider provider)
       throws NullPointerException
   {
-    super(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout,
-          receiptSchemeName, disabled, mode, proclimit, schedlimit);
+    super(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, 0, false, false, timeout,
+          receiptSchemeName, disabled, mode, proclimit, 0);
     this.provider = provider;
     this.smscInfo = null;
   }
 
   public GwSme(final String id, final int priority, final byte type, final int typeOfNumber, final int numberingPlan, final int interfaceVersion,
-               final String systemType, final String password, final String addrRange, final int smeN, final boolean wantAlias, final boolean forceDC,
-               final int timeout, final String receiptSchemeName, final boolean disabled, final byte mode, final int proclimit, final int schedlimit,
-               final SmscInfo smscInfo)
+               final String systemType, final String password, final String addrRange, final int timeout, final String receiptSchemeName,
+               final boolean disabled, final byte mode, final int proclimit, final SmscInfo smscInfo)
       throws NullPointerException
   {
-    super(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout,
-          receiptSchemeName, disabled, mode, proclimit, schedlimit);
+    super(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, 0, false, false, timeout,
+          receiptSchemeName, disabled, mode, proclimit, 0);
     this.provider = null;
     this.smscInfo = smscInfo;
   }

@@ -22,15 +22,11 @@ public class Edit extends EditBean
   protected String systemType = null;
   protected String password = null;
   protected String addrRange = null;
-  protected int smeN = 0;
-  protected boolean wantAlias = false;
   protected int timeout = 0;
-  protected boolean forceDC = false;
   protected String receiptSchemeName = null;
   protected boolean disabled = false;
   protected byte mode = Sme.MODE_TRX;
   protected int proclimit = 0;
-  protected int schedlimit = 0;
   protected boolean smsc = false;
   protected long providerId = -1;
 
@@ -43,7 +39,7 @@ public class Edit extends EditBean
   protected void load(final String loadId) throws SmppgwJspException
   {
     final GwSme sme = (GwSme) appContext.getGwSmeManager().getSmes().get(loadId);
-    if (sme == null)
+    if (null == sme)
       throw new SmppgwJspException(Constants.errors.sme.SME_NOT_FOUND, loadId);
 
     this.id = sme.getId();
@@ -55,15 +51,11 @@ public class Edit extends EditBean
     this.systemType = sme.getSystemType();
     this.password = sme.getPassword();
     this.addrRange = sme.getAddrRange();
-    this.smeN = sme.getSmeN();
-    this.wantAlias = sme.isWantAlias();
     this.timeout = sme.getTimeout();
-    this.forceDC = sme.isForceDC();
     this.receiptSchemeName = sme.getReceiptSchemeName();
     this.disabled = sme.isDisabled();
     this.mode = sme.getMode();
     this.proclimit = sme.getProclimit();
-    this.schedlimit = sme.getSchedlimit();
     if (sme.isSmsc()) {
       this.smsc = true;
       this.providerId = -1;
@@ -75,10 +67,10 @@ public class Edit extends EditBean
 
   protected void save() throws SmppgwJspException
   {
-    if (id == null || id.length() == 0 || (!isAdd() && (getEditId() == null || getEditId().length() == 0)))
+    if (null == id || 0 == id.length() || (!isAdd() && (null == getEditId() || 0 == getEditId().length())))
       throw new SmppgwJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
 
-    if (password == null)
+    if (null == password)
       password = "";
 
     final Map smes = appContext.getGwSmeManager().getSmes();
@@ -86,15 +78,13 @@ public class Edit extends EditBean
       throw new SmppgwJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
     smes.remove(getEditId());
     if (this.smsc) {
-      smes.put(id, new GwSme(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType,
-                             password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName,
-                             disabled, mode, proclimit, schedlimit,
-                             (SmscInfo) appContext.getSmscsManager().getSmscs().get(id)));
+      smes.put(id,
+               new GwSme(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, timeout, receiptSchemeName,
+                         disabled, mode, proclimit, (SmscInfo) appContext.getSmscsManager().getSmscs().get(id)));
     } else {
-      smes.put(id, new GwSme(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType,
-                             password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName,
-                             disabled, mode, proclimit, schedlimit,
-                             (Provider) appContext.getProviderManager().getProviders().get(new Long(this.providerId))));
+      smes.put(id,
+               new GwSme(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, timeout, receiptSchemeName,
+                         disabled, mode, proclimit, (Provider) appContext.getProviderManager().getProviders().get(new Long(this.providerId))));
     }
     throw new DoneException();
   }
@@ -185,26 +175,6 @@ public class Edit extends EditBean
     this.addrRange = addrRange;
   }
 
-  public int getSmeN()
-  {
-    return smeN;
-  }
-
-  public void setSmeN(final int smeN)
-  {
-    this.smeN = smeN;
-  }
-
-  public boolean isWantAlias()
-  {
-    return wantAlias;
-  }
-
-  public void setWantAlias(final boolean wantAlias)
-  {
-    this.wantAlias = wantAlias;
-  }
-
   public int getTimeout()
   {
     return timeout;
@@ -213,16 +183,6 @@ public class Edit extends EditBean
   public void setTimeout(final int timeout)
   {
     this.timeout = timeout;
-  }
-
-  public boolean isForceDC()
-  {
-    return forceDC;
-  }
-
-  public void setForceDC(final boolean forceDC)
-  {
-    this.forceDC = forceDC;
   }
 
   public String getReceiptSchemeName()
@@ -265,16 +225,6 @@ public class Edit extends EditBean
     this.proclimit = proclimit;
   }
 
-  public int getSchedlimit()
-  {
-    return schedlimit;
-  }
-
-  public void setSchedlimit(final int schedlimit)
-  {
-    this.schedlimit = schedlimit;
-  }
-
   public boolean isSmsc()
   {
     return smsc;
@@ -298,7 +248,7 @@ public class Edit extends EditBean
   public String[] getProviderIds()
   {
     final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-    final ArrayList result = new ArrayList(providers.size());
+    final List result = new ArrayList(providers.size());
     for (Iterator i = providers.keySet().iterator(); i.hasNext();) {
       result.add(String.valueOf(((Long) i.next()).longValue()));
     }
@@ -308,7 +258,7 @@ public class Edit extends EditBean
   public String[] getProviderTitles()
   {
     final Map providers = new TreeMap(appContext.getProviderManager().getProviders());
-    final ArrayList result = new ArrayList(providers.size());
+    final List result = new ArrayList(providers.size());
     for (Iterator i = providers.values().iterator(); i.hasNext();) {
       result.add(((Provider) i.next()).getName());
     }
