@@ -2934,6 +2934,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }
     __map_trace2__("%s: dialogid 0x%x request encoding 0x%x length %d subsystem %s",__FUNCTION__,dialogueId,ussdDataCodingScheme,ussdString_s.ussdStrLen,subsystem.c_str());
+    subsystem.insert(0, ".5.0.ussd:");
     Address dest_addr = Address(subsystem.c_str());
     dest_addr.type = 0;
     dest_addr.plan = 1;
