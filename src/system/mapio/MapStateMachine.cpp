@@ -1546,7 +1546,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 if ( !dialog->isUSSD )
                   throw MAPDIALOG_FATAL_ERROR(
                     FormatText("MAP::putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq.c_str()));
-                if ( dialog->state != MAPST_ReadyNextUSSDCmd )
+                if ( dialog->state != MAPST_ReadyNextUSSDCmd || dialog->state != MAPST_USSDWaitResponce)
                   throw MAPDIALOG_BAD_STATE(
                     FormatText("MAP::%s ussd req/notify bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
                 {
