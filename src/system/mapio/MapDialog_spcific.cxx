@@ -287,6 +287,19 @@ inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_ADDRESS_T *s
   }
 }
 
+inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_LOCATION_INFO_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {
+  addr->ss7AddrLen = 5+(saddr->addressLength+1)/2;
+  addr->ss7Addr[0] = 0x12; // SSN & GT
+  addr->ss7Addr[1] = ssn;
+  addr->ss7Addr[2] = 0;
+  addr->ss7Addr[3] = (saddr->typeOfAddress<<4)|(saddr->addressLength%2==0?0x02:0x01); // NP & GT coding
+  addr->ss7Addr[4] = 0x04 | (saddr->addressLength%2==0?0x80:0x00); //
+  memcpy( addr->ss7Addr+5, saddr->address, (saddr->addressLength+1)/2 );
+  if( saddr->addressLength%2!=0 ) {
+    addr->ss7Addr[5+(saddr->addressLength+1)/2-1] &= 0x0f;
+  }
+}
+
 inline void SS7ToText(  const ET96MAP_SS7_ADDR_T *addr , char* text ){
   unsigned k = 0;
   for ( int i=0; i < addr->ss7AddrLen; ++i ){

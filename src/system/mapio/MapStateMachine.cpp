@@ -95,6 +95,24 @@ string MscToString(const ET96MAP_ADDRESS_T* msc)
   return result;
 }
 
+string LocationInfoToString(const ET96MAP_LOCATION_INFO_T* msc)
+{
+  unsigned bytes = (msc->addressLength+1)/2;
+  ostringstream ost;
+  for ( unsigned i=0; i<bytes; ++i) {
+    unsigned x0 = ((unsigned int)msc->address[i])&0x0f;
+    unsigned x1 = (((unsigned int)msc->address[i])>>4)&0x0f;
+    if ( x0 <= 9 ) ost << x0;
+    else break;
+    if ( x1 <= 9 ) ost << x1;
+    else break;
+  }
+  string result = ost.str();
+//  __map_trace2__("MSC: %s",result.c_str());
+  return result;
+}                                       
+
+
 static string FormatText(const char* format,...)
 {
   auto_ptr<char> b(new char[1024]);
@@ -1608,9 +1626,6 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    if ( version == 1 )
-      throw runtime_error(
-        FormatText("MAP::%s unsupported protocol version %d",__FUNCTION__,version));
     __map_trace2__("%s: dialogid 0x%x",__FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn));
     if ( dialog.isnull() ) {
@@ -1625,13 +1640,14 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
 
     dialog->routeErr = 0;
 
-//    if ( dialog->state == MAPST_WaitRInfoConf )
-//    {
       if ( errorSendRoutingInfoForSm_sp &&
         (errorSendRoutingInfoForSm_sp->errorCode == 27 ) )
       {
         __map_trace2__("%s: absent subscriber",__FUNCTION__);
         dialog->subscriberAbsent = true;
+        if( version == 1 && mwdSet && *mwdSet == ET96MAP_ADDRESS_ALREADY_IN_FILE ) {
+           dialog->mwdStatus.mnrf = 1;
+        }
         dialog->routeErr = MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_ERRORS_BASE+27);
       }else{
         try {
@@ -1641,8 +1657,6 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
           dialog->routeErr = e.code;
         }
       }
-//    }
-//    else DoRInfoErrorProcessor(errorSendRoutingInfoForSm_sp,provErrCode_p);
     __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitRInfoConf:
@@ -1659,9 +1673,16 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
           break;
         }
         else {
+          // extract msc number
+          if( version == 1 ) {
+            dialog->s_msc = LocationInfoToString(locationInfo_sp);
+            __map_trace2__( "LocationInfo addr type: %s address: %s", locationInfo_sp->typeOfNumber==0x01?"roaming":"msc", dialog->s_msc );
+            mkSS7GTAddress( &dialog->destMscAddr, locationInfo_sp, 8 );
+          } else {
+            dialog->s_msc = MscToString(mscNumber_sp);
+            mkSS7GTAddress( &dialog->destMscAddr, mscNumber_sp, 8 );
+          }
           dialog->s_imsi = ImsiToString(imsi_sp);
-          dialog->s_msc = MscToString(mscNumber_sp);
-          mkSS7GTAddress( &dialog->destMscAddr, mscNumber_sp, 8 );
           dialog->smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
           dialog->smRpDa.addrLen = imsi_sp->imsiLen;
           memcpy( dialog->smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
@@ -2535,7 +2556,7 @@ static bool NeedNotifyHLR(MapDialog* dialog)
   return
     !dialog->isUSSD &&
     !dialog->hlrWasNotified && dialog->hlrVersion != 0 &&
-    ((!dialog->wasDelivered && !dialog->routeErr &&
+    ((!dialog->wasDelivered &&
       ( ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
         ((unsigned)dialog->memoryExceeded != (unsigned)dialog->mwdStatus.mcef )
       ))
