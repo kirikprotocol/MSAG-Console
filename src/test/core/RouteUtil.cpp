@@ -15,10 +15,10 @@ using namespace smsc::test::util;
 void RouteUtil::setupRandomCorrectRouteInfo(RouteInfo* route)
 {
 	route->priority = rand2(RoutePriorityMin, RoutePriorityMax);
-	route->billing = rand0(1);
-	route->paid = rand0(1);
-	route->archived = rand0(1);
-	route->routeId = (RouteId) rand0(INT_MAX);
+	route->billing = rand0(10);
+	route->paid = rand0(10);
+	route->archived = rand0(10);
+	route->routeId = (RouteId) rand1(INT_MAX);
 	//route->smeSystemId = ...
 	//route->source = ...
 	//route->dest = ...
