@@ -124,13 +124,14 @@ int AbonentInfoSme::Execute()
         sprintf
         (
           answ,
-          "Abonent %s is %s%s",
+          "Abonent %s is %s. %s",
             as.originalAddr.c_str(),
             as.status==AbonentStatus::ONLINE? "Online":
             as.status==AbonentStatus::OFFLINE?"Offline":
                                               "Unknown",
             as.status==AbonentStatus::UNKNOWNVALUE?"":
-            (". msc +"+as.msc).c_str()
+            as.msc.length()?("msc +"+as.msc).c_str():
+            "msc unknown"
         );
       }else
       {
