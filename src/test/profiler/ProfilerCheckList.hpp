@@ -42,7 +42,7 @@ public:
 		__reg_tc__("updateProfile", "Обновление уже существующего профиля");
 		__reg_tc__("lookup", "Поиск профиля для заданного адреса");
 		//putCommand
-		__reg_tc__("putCommand", "Работа с профилем через submit_sm pdu");
+		__reg_tc__("putCommand", "Управление менеджером профилей через deliver_sm pdu");
 		__reg_tc__("putCommand.reportNoneMixedCase",
 			"Отказаться от уведомления о доставке (текст команды в смешанном регистре)");
 		__reg_tc__("putCommand.reportNoneSpaces",
@@ -61,6 +61,16 @@ public:
 			"Отказаться от режима приема сообщений на русском языке (текст команды с лишними пробелами)");
 		__reg_tc__("putCommand.incorrectText",
 			"Неправильный текст команды");
+		//getCommand
+		__reg_tc__("getCommand", "Получение ответов от менеджера профилей");
+		__reg_tc__("getCommand.submit",
+			"Получение submit_sm pdu со статусом выполнения операции обновления профиля");
+		__reg_tc__("getCommand.submit.checkDialogId",
+			"Правильное значение dialogId");
+		__reg_tc__("getCommand.submit.checkFields",
+			"Правильные значения полей sms (включая текст сообщения)");
+		__reg_tc__("getCommand.deliverResp",
+			"Получение deliver_sm_resp pdu в ответ на submit_sm");
 	}
 };
 
