@@ -106,6 +106,10 @@ private:
 	PduData* getReplaceEnrotePdu();
 	PduData* getNonReplaceRescheduledEnrotePdu();
 	template <class Message>
+	bool hasDeliveryReceipt(Message& m, Profile& profile);
+	template <class Message>
+	bool hasIntermediateNotification(Message& m, Profile& profile);
+	template <class Message>
 	void checkRegisteredDelivery(Message& m);
 	void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu, const Address* destAlias);
 	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,

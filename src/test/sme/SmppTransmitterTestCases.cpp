@@ -119,7 +119,7 @@ PduData* SmppTransmitterTestCases::getNonReplaceEnrotePdu()
 	{
 		if (!data->replacedByPdu && !data->replacePdu &&
 			data->smsId.length() && data->deliveryFlag == PDU_REQUIRED_FLAG &&
-			!data->intProps.size())
+			!data->intProps.size() && !data->strProps.size())
 		{
 			pduData = data;
 			break;
@@ -141,7 +141,7 @@ PduData* SmppTransmitterTestCases::getReplaceEnrotePdu()
 	{
 		if (!data->replacedByPdu && data->replacePdu &&
 			data->smsId.length() && data->deliveryFlag == PDU_REQUIRED_FLAG &&
-			!data->intProps.size())
+			!data->intProps.size() && !data->strProps.size())
 		{
 			pduData = data;
 			break;
@@ -162,7 +162,7 @@ PduData* SmppTransmitterTestCases::getNonReplaceRescheduledEnrotePdu()
 	{
 		if (!data->replacedByPdu && data->smsId.length() &&
 			data->deliveryFlag == PDU_REQUIRED_FLAG &&
-			!data->intProps.size() &&
+			!data->intProps.size() && !data->strProps.size() &&
 			data->deliveryFlag.getNextTime(time(NULL)) >=
 			time(NULL) + sequentialPduInterval)
 		{
@@ -172,6 +172,21 @@ PduData* SmppTransmitterTestCases::getNonReplaceRescheduledEnrotePdu()
 	}
 	delete it;
 	return pduData;
+}
+
+template <class Message>
+bool SmppTransmitterTestCases::hasDeliveryReceipt(Message& m, Profile& profile)
+{
+	uint8_t regDelivery = m.get_registredDelivery();
+	return (profile.reportoptions != ProfileReportOptions::ReportNone) ||
+		(regDelivery & SMSC_DELIVERY_RECEIPT_BITS) == FINAL_SMSC_DELIVERY_RECEIPT ||
+		(regDelivery & SMSC_DELIVERY_RECEIPT_BITS) == FAILURE_SMSC_DELIVERY_RECEIPT;
+}
+
+template <class Message>
+bool SmppTransmitterTestCases::hasIntermediateNotification(Message& m, Profile& profile)
+{
+	return false;
 }
 
 template <class Message>
@@ -186,9 +201,9 @@ void SmppTransmitterTestCases::checkRegisteredDelivery(Message& m)
 	Address srcAddr;
 	SmppUtil::convert(m.get_source(), &srcAddr);
 	time_t t;
-	int reportOptions = profileReg->getProfile(srcAddr, t).reportoptions;
-	if (reportOptions != ProfileReportOptions::ReportNone ||
-		time(NULL) <= t + timeCheckAccuracy)
+	Profile profile = profileReg->getProfile(srcAddr, t);
+	__require__(t <= time(NULL)); //с точностью до секунды
+	if (hasDeliveryReceipt(m, profile) || hasIntermediateNotification(m, profile))
 	{
 		SmppTime t;
 		time_t waitTime = time(NULL) + rand2(sequentialPduInterval, maxWaitTime);
@@ -256,11 +271,15 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	Address srcAddr;
 	SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
 	time_t t; //профиль нужно брать именно тот, что в profileReg, игнорируя profileUpdateTime
-	pduData->reportOptions = profileReg->getProfile(srcAddr, t).reportoptions;
+	Profile profile = profileReg->getProfile(srcAddr, t);
+	__require__(t <= time(NULL)); //с точностью до секунды
+	pduData->reportOptions = profile.reportoptions;
 	pduData->deliveryReceiptFlag =
-		(pduData->reportOptions == ProfileReportOptions::ReportNone ?
-		PDU_NOT_EXPECTED_FLAG : PDU_REQUIRED_FLAG);
-	pduData->intermediateNotificationFlag = PDU_NOT_EXPECTED_FLAG;
+		hasDeliveryReceipt(pdu->get_message(), profile) ?
+		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
+	pduData->intermediateNotificationFlag =
+		hasIntermediateNotification(pdu->get_message(), profile) ?
+		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
 	//опциональные проперти
 	if (intProps)
 	{
