@@ -6,9 +6,7 @@
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.utli.Proxy;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
@@ -71,7 +69,7 @@ public class Index extends IndexBean
 			return error(SMSCErrors.error.profiles.queryError, e);
 		}
 
-		return RESULT_OK;
+		return isEditAllowed() ? RESULT_OK : error(SMSCErrors.error.profiles.smscNotConnected);
 	}
 
 	public QueryResultSet getProfiles()

@@ -14,6 +14,8 @@ import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.jsp.AppContext;
 
 import javax.sql.DataSource;
+import java.util.ResourceBundle;
+import java.util.Locale;
 
 
 public interface SMSCAppContext extends AppContext
@@ -34,5 +36,7 @@ public interface SMSCAppContext extends AppContext
 
 	public Statuses getStatuses();
 
-    public void destroy();
+	public void destroy();
+
+	public ResourceBundle getLocaleMessages(Locale locale);
 }

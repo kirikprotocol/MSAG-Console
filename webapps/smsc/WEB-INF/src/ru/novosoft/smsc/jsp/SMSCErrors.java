@@ -57,6 +57,7 @@ public class SMSCErrors
 			public static final String profileNotSpecified = B + "profileNotSpecified";
 			public static final String couldntLookup = B + "couldntLookup";
 			public static final String invalidMask = B + "invalidMask";
+			public static final String smscNotConnected = B + "smscNotConnected";
 		}
 
 		public static class aliases

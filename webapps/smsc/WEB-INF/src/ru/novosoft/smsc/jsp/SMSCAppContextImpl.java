@@ -5,16 +5,15 @@ import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.users.UserManager;
-import ru.novosoft.smsc.util.auth.XmlAuthenticator;
+import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
-import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.util.conpool.NSConnectionPool;
 import ru.novosoft.util.jsp.AppContextImpl;
 
 import javax.sql.DataSource;
 import java.io.File;
-import java.util.Properties;
+import java.util.*;
 
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
@@ -23,12 +22,13 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	private ServiceManager serviceManager = null;
 	private DaemonManager daemonManager = null;
 	private UserManager userManager = null;
-    private PerfServer  perfServer = null;
+	private PerfServer perfServer = null;
 
 	private Smsc smsc = null;
 	private NSConnectionPool connectionPool = null;
 	private UserPreferences userPreferences = new UserPreferences();
 	private Statuses statuses = new StatusesImpl();
+	private Map localeMessages = new HashMap();
 
 	public SMSCAppContextImpl(String configFileName)
 	{
@@ -51,8 +51,12 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			System.out.println("SMSCAppContextImpl.SMSCAppContextImpl **************************************************");
 			File usersConfig = new File(new File(configManager.getConfig().getString("system.webapp folder"), "WEB-INF"), configManager.getConfig().getString("system.users"));
 			userManager = new UserManager(usersConfig);
-            perfServer = new PerfServer(configManager.getConfig());
-            perfServer.start();
+			perfServer = new PerfServer(configManager.getConfig());
+			perfServer.start();
+			Locale locale = new Locale("ru");
+			localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
+			locale = new Locale("en");
+			localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
 		}
 		catch (Exception e)
 		{
@@ -101,9 +105,14 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		return userManager;
 	}
 
-    public void destroy() {
-        perfServer.shutdown();
-    }
+	public void destroy()
+	{
+		perfServer.shutdown();
+	}
 
+	public ResourceBundle getLocaleMessages(Locale locale)
+	{
+		return (ResourceBundle)localeMessages.get(locale);
+	}
 }
 

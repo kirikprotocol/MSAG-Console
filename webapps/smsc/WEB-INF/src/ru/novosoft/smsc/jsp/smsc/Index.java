@@ -82,8 +82,6 @@ public class Index extends SmscBean
 			smsc.applyAliases();
 			statuses.setAliasesChanged(false);
 
-			// !!!
-			statuses.setProfilesChanged(false);
 			return RESULT_OK;
 		}
 		catch (Throwable t)
@@ -95,6 +93,8 @@ public class Index extends SmscBean
 
 	private int applyProfiles()
 	{
+		// todo
+		statuses.setProfilesChanged(false);
 		return error("not yet implemented");
 	}
 
@@ -133,8 +133,6 @@ public class Index extends SmscBean
 			statuses.setServicesChanged(false);
 			statuses.setHostsChanged(false);
 
-			// !!!
-			statuses.setProfilesChanged(false);
 			return RESULT_OK;
 		}
 		catch (Throwable t)
