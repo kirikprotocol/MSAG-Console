@@ -3,9 +3,17 @@
 
 #include <string>
 #include "util/int.h"
+#include "core/buffers/DiskHash.hpp"
+#include "core/buffers/ChunkFile.hpp"
+#include "util/crc32.h"
+
 
 #include <sms/sms.h>
 #include "core/buffers/Array.hpp"
+#include "core/buffers/Hash.hpp"
+#include "core/buffers/XHash.hpp"
+
+#include "RefPtr.hpp"
 
 namespace smsc{
 namespace store{
@@ -44,6 +52,30 @@ struct QueryResult{
 typedef Array<Param> ParamArray;
 typedef Array<QueryResult> ResultArray;
 
+
+using namespace std;
+using namespace smsc::core::buffers;
+using smsc::util::crc32;
+
+#include "SmsKeys.hpp"
+
+typedef DiskHash<Int64Key,IdLttKey> SmsIdDiskHash;
+typedef DiskHash<StrKey<15>,Int64Key> SmeIdDiskHash;
+typedef DiskHash<StrKey<32>,Int64Key> RouteIdDiskHash;
+typedef DiskHash<StrKey<28>,Int64Key> AddrDiskHash;
+
+struct ChunkFileData{
+  enum{
+    RootChunks=1024,
+    ChunkRecordsCount=32
+  };
+};
+
+
+typedef ChunkFile<IdLttKey,ChunkFileData> IntLttChunkFile;
+typedef std::auto_ptr<IntLttChunkFile::ChunkHandle> AutoChunkHandle;
+
+
 class SmsIndex{
 public:
   SmsIndex(const char* location)
@@ -54,6 +86,22 @@ public:
   int QuerySms(const char* dir,const ParamArray& params,ResultArray& res);
 protected:
   std::string loc;
+
+  std::string cacheDir;
+  Hash<uint64_t> srcIdCache,dstIdCache,routeIdCache,srcAddrCache,dstAddrCache;
+
+  RefPtr<SmsIdDiskHash> idHashCache;
+  RefPtr<SmeIdDiskHash> srcIdHashCache;
+  RefPtr<SmeIdDiskHash> dstIdHashCache;
+  RefPtr<RouteIdDiskHash> routeIdHashCache;
+  RefPtr<AddrDiskHash> srcAddrHashCache;
+  RefPtr<AddrDiskHash> dstAddrHashCache;
+
+  RefPtr<IntLttChunkFile> srcIdDataCache;
+  RefPtr<IntLttChunkFile> dstIdDataCache;
+  RefPtr<IntLttChunkFile> srcAddrDataCache;
+  RefPtr<IntLttChunkFile> dstAddrDataCache;
+  RefPtr<IntLttChunkFile> routeIdDataCache;
 };
 
 }//namespace index

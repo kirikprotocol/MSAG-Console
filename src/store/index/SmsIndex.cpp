@@ -1,7 +1,4 @@
 #include "SmsIndex.hpp"
-#include "core/buffers/DiskHash.hpp"
-#include "core/buffers/ChunkFile.hpp"
-#include "util/crc32.h"
 #include <memory>
 #include <utility>
 #include <algorithm>
@@ -11,163 +8,6 @@ namespace smsc{
 namespace store{
 namespace index{
 
-using namespace smsc::core::buffers;
-using smsc::util::crc32;
-using namespace std;
-
-struct Int64Key{
-  uint64_t key;
-
-  Int64Key():key(0){}
-  Int64Key(uint64_t key):key(key){}
-  Int64Key(const Int64Key& src)
-  {
-    key=src.key;
-  }
-  Int64Key& operator=(const Int64Key& src)
-  {
-    key=src.key;
-    return *this;
-  }
-  uint64_t Get()const{return key;}
-
-  static uint32_t Size(){return 8;}
-  void Read(File& f)
-  {
-    key=f.ReadNetInt64();
-  }
-  void Write(File& f)const
-  {
-    f.WriteNetInt64(key);
-  }
-  uint32_t HashCode(uint32_t attempt)const
-  {
-    return crc32(attempt,&key,sizeof(key));
-  }
-  bool operator==(const Int64Key& cmp)
-  {
-    return key==cmp.key;
-  }
-};
-
-template <int N>
-class StrKey{
-protected:
-  char str[N+1];
-  uint8_t len;
-public:
-  StrKey()
-  {
-    memset(str,0,N+1);
-    len=0;
-  }
-  StrKey(const char* s)
-  {
-    int l=strlen(s);
-    strncpy(str,s,N);
-    str[N]=0;
-    len=l>N?N:l;
-  }
-  StrKey(const StrKey& src)
-  {
-    strcpy(str,src.str);
-    len=src.len;
-  }
-  StrKey& operator=(const StrKey& src)
-  {
-    strcpy(str,src.str);
-    len=src.len;
-    return *this;
-  }
-
-  bool operator==(const StrKey& cmp)
-  {
-    return cmp.len==len && !strcmp(cmp.str,str);
-  }
-
-  const char* toString(){return str;}
-  static uint32_t Size(){return N+1;}
-  void Read(File& f)
-  {
-    f.XRead(len);
-    f.Read(str,N);
-    str[len]=0;
-  }
-  void Write(File& f)const
-  {
-    f.XWrite(len);
-    f.Write(str,N);
-  }
-  uint32_t HashCode(uint32_t attempt)const
-  {
-    return crc32(attempt,str,len);
-  }
-};
-
-struct IdLttKey{
-  uint64_t key;
-  uint32_t ltt;
-
-  IdLttKey():key(0),ltt(0){}
-  IdLttKey(uint64_t key,uint32_t ltt):key(key),ltt(ltt){}
-  IdLttKey(const IdLttKey& src)
-  {
-    key=src.key;
-    ltt=src.ltt;
-  }
-  IdLttKey& operator=(const IdLttKey& src)
-  {
-    key=src.key;
-    ltt=src.ltt;
-    return *this;
-  }
-
-  static uint32_t Size(){return 12;}
-  void Read(File& f)
-  {
-    key=f.ReadNetInt64();
-    ltt=f.ReadNetInt32();
-  }
-  void Write(File& f)const
-  {
-    f.WriteNetInt64(key);
-    f.WriteNetInt32(ltt);
-  }
-  static void WriteBadValue(File& f)
-  {
-    uint64_t a=~0;
-    uint32_t b=~0;
-    f.WriteInt64(a);
-    f.WriteInt32(b);
-  }
-  uint32_t HashCode(uint32_t attempt)const
-  {
-    uint32_t rv=crc32(attempt,&key,sizeof(key));
-    return crc32(rv,&ltt,sizeof(ltt));
-  }
-  bool operator==(const IdLttKey& cmp)
-  {
-    return key==cmp.key && ltt==cmp.ltt;
-  }
-};
-
-
-
-typedef DiskHash<Int64Key,IdLttKey> SmsIdDiskHash;
-typedef DiskHash<StrKey<15>,Int64Key> SmeIdDiskHash;
-typedef DiskHash<StrKey<32>,Int64Key> RouteIdDiskHash;
-typedef DiskHash<StrKey<28>,Int64Key> AddrDiskHash;
-
-struct ChunkFileData{
-  enum{
-    RootChunks=1024,
-    ChunkRecordsCount=32
-  };
-};
-
-
-typedef ChunkFile<IdLttKey,ChunkFileData> IntLttChunkFile;
-typedef std::auto_ptr<IntLttChunkFile::ChunkHandle> AutoChunkHandle;
 
 void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
 {
@@ -176,156 +16,174 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
   path+=dir;
   path+='/';
 
-  SmsIdDiskHash idHash;
-  SmeIdDiskHash srcIdHash;
-  SmeIdDiskHash dstIdHash;
-  RouteIdDiskHash routeIdHash;
-  AddrDiskHash srcAddrHash;
-  AddrDiskHash dstAddrHash;
+  RefPtr<SmsIdDiskHash> idHash;
+  RefPtr<SmeIdDiskHash> srcIdHash;
+  RefPtr<SmeIdDiskHash> dstIdHash;
+  RefPtr<RouteIdDiskHash> routeIdHash;
+  RefPtr<AddrDiskHash> srcAddrHash;
+  RefPtr<AddrDiskHash> dstAddrHash;
 
-  IntLttChunkFile srcIdData;
-  IntLttChunkFile dstIdData;
-  IntLttChunkFile srcAddrData;
-  IntLttChunkFile dstAddrData;
-  IntLttChunkFile routeIdData;
+  RefPtr<IntLttChunkFile> srcIdData;
+  RefPtr<IntLttChunkFile> dstIdData;
+  RefPtr<IntLttChunkFile> srcAddrData;
+  RefPtr<IntLttChunkFile> dstAddrData;
+  RefPtr<IntLttChunkFile> routeIdData;
+
 
 
   if(!File::Exists((path+"smsid.idx").c_str()))
   {
-    idHash.Create((path+"smsid.idx").c_str(),300*1024);//!!!!!!!!!!!!!!!!!!!!!
+    srcIdCache.Empty();
+    dstIdCache.Empty();
+    routeIdCache.Empty();
+    srcAddrCache.Empty();
+    dstAddrCache.Empty();
 
-    srcIdHash.Create((path+"srcsmeid.idx").c_str(),256);
-    srcIdData.Create((path+"srcsmeid.dat").c_str());
+    cacheDir=dir;
 
-    dstIdHash.Create((path+"dstsmeid.idx").c_str(),256);
-    dstIdData.Create((path+"dstsmeid.dat").c_str());
+    idHashCache=new SmsIdDiskHash;
+    srcIdHashCache=new SmeIdDiskHash;
+    dstIdHashCache=new SmeIdDiskHash;
+    routeIdHashCache=new RouteIdDiskHash;
+    srcAddrHashCache=new AddrDiskHash;
+    dstAddrHashCache=new AddrDiskHash;
 
-    routeIdHash.Create((path+"routeid.idx").c_str(),256);
-    routeIdData.Create((path+"routeid.dat").c_str());
+    srcIdDataCache=new IntLttChunkFile;
+    dstIdDataCache=new IntLttChunkFile;
+    srcAddrDataCache=new IntLttChunkFile;
+    dstAddrDataCache=new IntLttChunkFile;
+    routeIdDataCache=new IntLttChunkFile;
 
-    srcAddrHash.Create((path+"srcaddr.idx").c_str(),100*1024);
-    srcAddrData.Create((path+"srcaddr.dat").c_str());
+    idHash=idHashCache;
+    srcIdHash=srcIdHashCache;
+    dstIdHash=dstIdHashCache;
+    routeIdHash=routeIdHashCache;
+    srcAddrHash=srcAddrHashCache;
+    dstAddrHash=dstAddrHashCache;
 
-    dstAddrHash.Create((path+"dstaddr.idx").c_str(),100*1024);
-    dstAddrData.Create((path+"dstaddr.dat").c_str());
+    srcIdData=srcIdDataCache;
+    dstIdData=dstIdDataCache;
+    srcAddrData=srcAddrDataCache;
+    dstAddrData=dstAddrDataCache;
+    routeIdData=routeIdDataCache;
+
+
+
+    idHash->Create((path+"smsid.idx").c_str(),300*1024);//!!!!!!!!!!!!!!!!!!!!!
+
+    srcIdHash->Create((path+"srcsmeid.idx").c_str(),256);
+    srcIdData->Create((path+"srcsmeid.dat").c_str());
+
+    dstIdHash->Create((path+"dstsmeid.idx").c_str(),256);
+    dstIdData->Create((path+"dstsmeid.dat").c_str());
+
+    routeIdHash->Create((path+"routeid.idx").c_str(),256);
+    routeIdData->Create((path+"routeid.dat").c_str());
+
+    srcAddrHash->Create((path+"srcaddr.idx").c_str(),300*1024);
+    srcAddrData->Create((path+"srcaddr.dat").c_str());
+
+    dstAddrHash->Create((path+"dstaddr.idx").c_str(),300*1024);
+    dstAddrData->Create((path+"dstaddr.dat").c_str());
   }else
   {
-    idHash.Open((path+"smsid.idx").c_str(),false);
+    if(cacheDir==dir)
+    {
+      idHash=idHashCache;
+      srcIdHash=srcIdHashCache;
+      dstIdHash=dstIdHashCache;
+      routeIdHash=routeIdHashCache;
+      srcAddrHash=srcAddrHashCache;
+      dstAddrHash=dstAddrHashCache;
 
-    srcIdHash.Open((path+"srcsmeid.idx").c_str(),false);
-    srcIdData.Open((path+"srcsmeid.dat").c_str(),false);
+      srcIdData=srcIdDataCache;
+      dstIdData=dstIdDataCache;
+      srcAddrData=srcAddrDataCache;
+      dstAddrData=dstAddrDataCache;
+      routeIdData=routeIdDataCache;
+    }else
+    {
+      idHash=new SmsIdDiskHash;
+      srcIdHash=new SmeIdDiskHash;
+      dstIdHash=new SmeIdDiskHash;
+      routeIdHash=new RouteIdDiskHash;
+      srcAddrHash=new AddrDiskHash;
+      dstAddrHash=new AddrDiskHash;
 
-    dstIdHash.Open((path+"dstsmeid.idx").c_str(),false);
-    dstIdData.Open((path+"dstsmeid.dat").c_str(),false);
+      srcIdData=new IntLttChunkFile;
+      dstIdData=new IntLttChunkFile;
+      srcAddrData=new IntLttChunkFile;
+      dstAddrData=new IntLttChunkFile;
+      routeIdData=new IntLttChunkFile;
 
-    routeIdHash.Open((path+"routeid.idx").c_str(),false);
-    routeIdData.Open((path+"routeid.dat").c_str(),false);
+      idHash->Open((path+"smsid.idx").c_str(),false);
 
-    srcAddrHash.Open((path+"srcaddr.idx").c_str(),false);
-    srcAddrData.Open((path+"srcaddr.dat").c_str(),false);
+      srcIdHash->Open((path+"srcsmeid.idx").c_str(),false);
+      srcIdData->Open((path+"srcsmeid.dat").c_str(),false);
 
-    dstAddrHash.Open((path+"dstaddr.idx").c_str(),false);
-    dstAddrData.Open((path+"dstaddr.dat").c_str(),false);
+      dstIdHash->Open((path+"dstsmeid.idx").c_str(),false);
+      dstIdData->Open((path+"dstsmeid.dat").c_str(),false);
+
+      routeIdHash->Open((path+"routeid.idx").c_str(),false);
+      routeIdData->Open((path+"routeid.dat").c_str(),false);
+
+      srcAddrHash->Open((path+"srcaddr.idx").c_str(),false);
+      srcAddrData->Open((path+"srcaddr.dat").c_str(),false);
+
+      dstAddrHash->Open((path+"dstaddr.idx").c_str(),false);
+      dstAddrData->Open((path+"dstaddr.dat").c_str(),false);
+    }
   }
-  idHash.Insert(id,IdLttKey(offset,sms.lastTime));
+  idHash->Insert(id,IdLttKey(offset,sms.lastTime));
 
   Int64Key v;
   AutoChunkHandle h;
 
+  if(cacheDir==dir)
+  {
 #define IDX(field,storage) \
-  if(storage##Hash.LookUp(sms.field,v)) \
+  if(storage##Cache.Exists(sms.field)) \
   { \
-    h=AutoChunkHandle(storage##Data.OpenChunk(v.key)); \
+    uint64_t k=storage##Cache.Get(sms.field);\
+    h=AutoChunkHandle(storage##Data->OpenChunk(k)); \
   }else \
   { \
-    h=AutoChunkHandle(storage##Data.CreateChunk()); \
-    storage##Hash.Insert(sms.field,h->GetId()); \
+    h=AutoChunkHandle(storage##Data->CreateChunk()); \
+    storage##Hash->Insert(sms.field,h->GetId()); \
+    storage##Cache.Insert(sms.field,h->GetId()); \
   } \
-  h->Write(IdLttKey(id,sms.lastTime));
+  h->Write(IdLttKey(offset,sms.lastTime));
 
   IDX(srcSmeId,srcId);
   IDX(dstSmeId,dstId);
   IDX(routeId,routeId);
   IDX(originatingAddress.toString().c_str(),srcAddr);
   IDX(destinationAddress.toString().c_str(),dstAddr);
-}
 
-template <class T>
-class RefPtr{
-protected:
-  struct RefPtrData{
-    RefPtrData():refCount(0),ptr(0)
-    {
-    }
-    int refCount;
-    T  *ptr;
-    void Lock(){}
-    void Unlock(){}
-  };
-public:
-  explicit RefPtr(T* ptr=NULL)
+#undef IDX
+
+  }else
   {
-    data=new RefPtrData;
-    data->ptr=ptr;
-    Ref();
+
+#define IDX(field,storage) \
+  if(storage##Hash->LookUp(sms.field,v)) \
+  { \
+    h=AutoChunkHandle(storage##Data->OpenChunk(v.key)); \
+  }else \
+  { \
+    h=AutoChunkHandle(storage##Data->CreateChunk()); \
+    storage##Hash->Insert(sms.field,h->GetId()); \
+  } \
+  h->Write(IdLttKey(offset,sms.lastTime));
+
+  IDX(srcSmeId,srcId);
+  IDX(dstSmeId,dstId);
+  IDX(routeId,routeId);
+  IDX(originatingAddress.toString().c_str(),srcAddr);
+  IDX(destinationAddress.toString().c_str(),dstAddr);
+#undef IDX
   }
-  RefPtr(const RefPtr& src)
-  {
-    data=src.data;
-    Ref();
-  }
-  ~RefPtr()
-  {
-    Unref();
-  }
-  RefPtr& operator=(const RefPtr& src)
-  {
-    Unref();
-    data=src.data;
-    Ref();
-    return *this;
-  }
-  RefPtr& operator=(T* ptr)
-  {
-    Unref();
-    data=new RefPtrData;
-    data->ptr=ptr;
-    Ref();
-    return *this;
-  }
-  T& operator*()
-  {
-    return *data->ptr;
-  }
-  T* operator->()
-  {
-    return data->ptr;
-  }
-  T* Get()
-  {
-    return data->ptr;
-  }
-protected:
-  void Ref()
-  {
-    data->Lock();
-    data->refCount++;
-    data->Unlock();
-  }
-  void Unref()
-  {
-    if(!data || !data->refCount)return;
-    data->Lock();
-    int count=--data->refCount;
-    data->Unlock();
-    if(!count)
-    {
-      if(data->ptr)delete data->ptr;
-      delete data;
-    }
-  }
-  RefPtrData *data;
-};//RefPtr
+}
 
 typedef vector<pair<uint64_t,uint32_t> > ResVector;
 
