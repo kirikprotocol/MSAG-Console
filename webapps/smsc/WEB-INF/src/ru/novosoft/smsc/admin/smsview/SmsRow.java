@@ -25,6 +25,7 @@ public class SmsRow
   private String to   = "to";
   private String toDealiased   = "toDealiased";
   private int status  = 0;
+  private int lastResult = 0;
   private String text = "Message text ";
   private boolean marked = false;
 
@@ -61,10 +62,14 @@ public class SmsRow
 		return date;
 	}
   public void setDate(Date date){ this.date = date; }
-  public String getStatus(){
-    return (status >= 0 && status < numStates) ? states[status]:"UNKNOUN";
+  public String getStatus() {
+    String state = (status >= 0 && status < numStates) ? states[status]:"UNKNOUN";
+    return state + " ("+lastResult+")";
   }
   public void setStatus(int status){ this.status = status; }
+  public int getLastResult() { return lastResult; }
+  public void setLastResult(int lastResult) { this.lastResult = lastResult; }
+
   public String getText(){ return text; }
   public void setText(String text){ this.text = text; }
 
