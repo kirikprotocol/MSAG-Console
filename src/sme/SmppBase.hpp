@@ -504,7 +504,7 @@ protected:
   void processIncoming(SmppHeader* pdu)
   {
     using namespace smsc::smpp::SmppCommandSet;
-    MutexGuard g(lockMutex);
+    lockMutex.Lock();
     int seq=pdu->get_sequenceNumber();
     switch(pdu->get_commandId())
     {
@@ -521,8 +521,9 @@ protected:
             disposePdu(pdu);
           }else
           {
-            listener->handleEvent(pdu);
             lock.Delete(seq);
+            lockMutex.Unlock();
+            listener->handleEvent(pdu);
           }
         }
       }break;
@@ -543,8 +544,9 @@ protected:
             l.event->Signal();
           }else
           {
-            listener->handleEvent(pdu);
             lock.Delete(seq);
+            lockMutex.Unlock();
+            listener->handleEvent(pdu);
           }
         }else
         {
@@ -556,8 +558,13 @@ protected:
       case DATA_SM:
       case ALERT_NOTIFICATION:
       {
+        lockMutex.Unlock();
         listener->handleEvent(pdu);
       }break;
+      default:
+      {
+        lockMutex.Unlock();
+      }
     }
   }
 };
