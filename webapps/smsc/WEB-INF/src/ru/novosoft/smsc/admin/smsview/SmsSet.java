@@ -11,7 +11,9 @@ package ru.novosoft.smsc.admin.smsview;
 
 public class SmsSet
 {
+  private int rowsCount = 101;
 
-  public SmsSet() {
+  public int getRowsCount() {
+    return rowsCount;
   }
 }

@@ -22,7 +22,6 @@ public class SmsQuery
   private String toAddress = "***";
   private Date   fromDate = new Date();
   private Date   tillDate = new Date();
-  private int    rowsCount = 101;
   private String sortBy = "Date";
 
   public int getStorageType() {
@@ -66,9 +65,6 @@ public class SmsQuery
   };
   public void setSortBy(String by){
     sortBy = by;
-  };
-  public int getRowsCount(){
-    return rowsCount;
   };
 
 };
