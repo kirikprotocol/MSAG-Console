@@ -217,6 +217,8 @@ void processRespTc()
 		"Если код ошибки ESME_RINVSRCADR в поле command_status, то адрес отправителя действительно не соответствует address range для данной sme в конфигурации sme.xml SC");
 	__reg_tc__("processResp.checkCmdStatusSystemError",
 		"Если код ошибки ESME_RSYSERR в поле command_status, то на стороне SC действительно возникла неустранимая ошибка (transaction rollback при сохранении сообщения)");
+	__reg_tc__("processResp.checkCmdStatusInvalidBindStatus",
+		"Если код ошибки INVALID_BIND_STATUS в поле command_status, то действительно sme зарегистрированная как receiver отправляет реквесты (submit_sm, replace_sm, cancel_sm и т.п.)");
 	__reg_tc__("processResp.checkCmdStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
 }
