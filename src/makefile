@@ -66,6 +66,8 @@ endif
 
 ifeq ($(SNMP),YES)
 CXXFLAGS := $(CXXFLAGS) -DSNMP
+SNMP_LIBS := -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -lsnmp
+export SNMP_LIBS
 endif
 
 ifdef WARNINGS
