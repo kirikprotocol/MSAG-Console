@@ -2496,8 +2496,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
   if(dgortr)
   {
     sms=*t.command->get_resp()->get_sms();
+    sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
   }else if(smsc->getTempStore().Get(t.msgId,sms))
   {
+    sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
     smsc->getTempStore().Delete(t.msgId);
     int status=Status::OK;
     if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK ||
@@ -2559,8 +2561,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
       smsLog->warn("DLVRSP: failed to retrieve sms:%s! msgId=%lld;st=%d",e.what(),t.msgId,t.command->get_resp()->get_status());
       return UNKNOWN_STATE;
     }
+    sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
   }
-  sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
     switch(GET_STATUS_TYPE(t.command->get_resp()->get_status()))
