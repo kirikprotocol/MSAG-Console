@@ -116,7 +116,7 @@ public:
     {
         MutexGuard guard(trafficMonitor);
         outgoing.Inc(); 
-        if (stopped) return;
+        if (TrafficControl::stopped) return;
 
         int out = outgoing.Get();
         int inc = incoming.Get();
@@ -134,7 +134,7 @@ public:
     {
         MutexGuard guard(trafficMonitor);
         incoming.Inc();
-        if (stopped) return;
+        if (TrafficControl::stopped) return;
         if ((outgoing.Get()-incoming.Get()) < unrespondedMessagesMax) {
             trafficMonitor.notifyAll();
         }
@@ -568,6 +568,7 @@ int main(void)
                 
                 bInfoSmeIsConnecting = true;
                 infoSmeReady.Wait(0);
+                TrafficControl::startControl();
                 setNeedReconnect(false);
                 session.connect();
                 processor.assignMessageSender(&sender);
