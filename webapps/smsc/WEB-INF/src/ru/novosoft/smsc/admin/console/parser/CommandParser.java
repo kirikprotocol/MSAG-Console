@@ -302,8 +302,8 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
-	public final Command  show() throws RecognitionException, TokenStreamException {
-		Command cmd;
+	public final AliasShowCommand  show() throws RecognitionException, TokenStreamException {
+		AliasShowCommand cmd;
 		
 		Token  addr = null;
 		
@@ -318,12 +318,12 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-				    throw new RecognitionException("Target address expected");
+				    throw new RecognitionException("Target address for aliases expected");
 				
 		}
 		
-				    //cmd = new AliasShowCommand();
-				    //cmd.setAddress(addr.getText());   
+				    cmd = new AliasShowCommand();
+				    cmd.setAddress(addr.getText());   
 				
 		}
 		return cmd;
