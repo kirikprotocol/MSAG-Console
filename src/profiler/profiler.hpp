@@ -76,7 +76,7 @@ const int pusError=4;
 class ProfilerInterface{
 public:
   virtual Profile& lookup(const Address& address)=0;
-  virtual Profile& lookupEx(const Address& address,int matchType,std::string& matchAddr)=0;
+  virtual Profile& lookupEx(const Address& address,int& matchType,std::string& matchAddr)=0;
   virtual int update(const Address& address,const Profile& profile)=0;
   virtual int updatemask(const Address& address,const Profile& profile)=0;
   virtual void add(const Address& address,const Profile& profile)=0;
@@ -95,7 +95,7 @@ public:
 
   /* from ProfilerInterface */
   Profile& lookup(const Address& address);
-  Profile& lookupEx(const Address& address,int matchType,std::string& matchAddr);
+  Profile& lookupEx(const Address& address,int& matchType,std::string& matchAddr);
 
   int update(const Address& address,const Profile& profile);
   int updatemask(const Address& address,const Profile& profile);

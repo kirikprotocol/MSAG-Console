@@ -101,7 +101,7 @@ public:
     exact=k.defLength==address.length;
     return *p;
   }
-  Profile& findEx(const Address& address,int matchType,string& matchAddr)
+  Profile& findEx(const Address& address,int& matchType,string& matchAddr)
   {
     HashKey k(address);
     matchType=ProfilerMatchType::mtDefault;
@@ -161,7 +161,7 @@ Profile& Profiler::lookup(const Address& address)
   return profiles->find(address,exact);
 }
 
-Profile& Profiler::lookupEx(const Address& address,int matchType,std::string& matchAddr)
+Profile& Profiler::lookupEx(const Address& address,int& matchType,std::string& matchAddr)
 {
   MutexGuard g(mtx);
   return profiles->findEx(address,matchType,matchAddr);
