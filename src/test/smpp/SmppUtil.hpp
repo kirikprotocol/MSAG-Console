@@ -130,8 +130,6 @@ public:
 	*/
 	static time_t string2time(const char* str, time_t base, bool check = true);
 	static const char* time2string(time_t t, char* str, time_t base, int num, bool check = true);
-	static time_t getWaitTime(const char* str, time_t submitTime);
-	static time_t getValidTime(const char* str, time_t submitTime);
 
 	//static bool compareAddresses(PduAddress& a1, PduAddress& a2);
 	

@@ -87,8 +87,8 @@ void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 			case REPLACE_SM:
 				{
 					PduReplaceSm* p = reinterpret_cast<PduReplaceSm*>(pdu);
-					ss << ", waitTime = " << SmppUtil::getWaitTime(p->get_scheduleDeliveryTime(), time(NULL));
-					ss << ", validTime = " << SmppUtil::getValidTime(p->get_validityPeriod(), time(NULL));
+					ss << ", waitTime = " << SmppUtil::string2time(p->get_scheduleDeliveryTime(), time(NULL));
+					ss << ", validTime = " << SmppUtil::string2time(p->get_validityPeriod(), time(NULL));
 					pdu2file("replace_sm", id, pdu);
 				}
 				break;
@@ -243,25 +243,6 @@ time_t SmppUtil::string2time(const char* str, time_t base, bool check)
 	}
 }
 
-time_t SmppUtil::getWaitTime(const char* str, time_t submitTime)
-{
-	//если schedule_delivery_time = NULL, то немедленная доставка
-	time_t waitTime = str && strlen(str) ?
-		SmppUtil::string2time(str, submitTime) : submitTime;
-	return waitTime;
-}
-
-time_t SmppUtil::getValidTime(const char* str, time_t submitTime)
-{
-	//если validity_period = NULL, то срок валидности по умолчанию
-	__cfg_int__(maxValidPeriod);
-	time_t validTime = str && strlen(str) ?
-		SmppUtil::string2time(str, submitTime) : submitTime + maxValidPeriod;
-	//если validity_period > maxValidPeriod, то maxValidPeriod
-	validTime = min(validTime, submitTime + maxValidPeriod);
-	return validTime;
-}
-
 /*
 bool SmppUtil::compareAddresses(PduAddress& a1, PduAddress& a2)
 {
@@ -399,6 +380,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	bool useShortMessage, bool forceDc, uint64_t mask, bool check)
 {
 	__require__(pdu);
+	__cfg_int__(timeCheckAccuracy);
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
 	//поля сохраняются случайным образом
@@ -417,7 +399,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_int__(uint8_t, protocolId, rand0(255));
 	__set_int__(uint8_t, priorityFlag, rand0(255));
 	time_t waitTime = time(NULL) + rand0(maxWaitTime);
-	time_t validTime = rand2(waitTime, time(NULL) + maxValidPeriod);
+	time_t validTime = rand2(waitTime + timeCheckAccuracy, time(NULL) + maxValidPeriod);
 	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, t, time(NULL), __numTime__));
 	__set_cstr2__(validityPeriod, time2string(validTime, t, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
@@ -507,15 +489,16 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	uint8_t dataCoding, bool udhi, uint64_t mask, bool check)
 {
 	__require__(pdu);
+	__cfg_int__(timeCheckAccuracy);
 	__cfg_int__(maxWaitTime);
-	__cfg_int__(maxDeliveryPeriod);
+	__cfg_int__(maxValidPeriod);
 	PduReplaceSm& p = *pdu;
 	SmppTime t;
 	//set & check fields
 	__set_cstr__(messageId, MAX_MSG_ID_LENGTH);
 	__set_addr__(source);
 	time_t waitTime = time(NULL) + rand0(maxWaitTime);
-	time_t validTime = waitTime + rand0(maxDeliveryPeriod);
+	time_t validTime = rand2(waitTime + timeCheckAccuracy, time(NULL) + maxValidPeriod);
 	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, t, time(NULL), __numTime__));
 	__set_cstr2__(validityPeriod, time2string(validTime, t, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
@@ -793,6 +776,11 @@ bool SmppUtil::extractDataCoding(uint8_t dcs, uint8_t& dc, bool& simMsg)
 		else if (b[3] && !b[2])
 		{
 			dc = UCS2;
+			return true;
+		}
+		else if (b[3] && b[2]) //reserved
+		{
+			dc = BINARY;
 			return true;
 		}
 	}
