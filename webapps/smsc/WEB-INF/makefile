@@ -8,7 +8,7 @@ TOMCAT_DIR := /export/home/smsc/tomcat
 SERVLET_JAR := $(TOMCAT_DIR)/common/lib/servlet.jar
 CATALINA_JAR := $(TOMCAT_DIR)/server/lib/catalina.jar
 
-CLASSPATH := lib/classes12.jar:lib/jakarta-log4j-1.0.4-class.jar:lib/nsjsp.jar:$(SERVLET_JAR):$(CATALINA_JAR)
+CLASSPATH := lib/classes12.jar:lib/jakarta-log4j-1.0.4-class.jar:lib/nsjsp.jar:$(SERVLET_JAR):$(CATALINA_JAR):lib/antlr.jar
 
 all: compile
 rebuild: clean compile
