@@ -1376,7 +1376,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       }
     }
     if(dlg_found) {
-      __map_trace2__("%s: dialogid 0x%x, ussd dialog already exists for %s",__func__,dialog->dialogid_map,dialog->abonent);
+      __map_trace2__("%s: dialogid 0x%x, ussd dialog already exists for %s",__func__,dialog->dialogid_map,dialog->abonent.c_str());
       SendErrToSmsc(dialog->dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SUBSCRBUSYMT));
       dialog->state = MAPST_END;
       DropMapDialog(dialog);
@@ -2795,7 +2795,7 @@ USHORT_T Et96MapDelimiterInd(
         throw runtime_error(
           FormatText("MAP::Et96MapDelimiterInd: dialog closereq error 0x%x",result));
       dialog->state = MAPST_END;
-      DropMapDialog(dialog);
+      DropMapDialog(dialog.get());
       break;
     default:
       throw MAPDIALOG_BAD_STATE(
@@ -3005,7 +3005,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     SMS& sms = *_sms.get();
 
     UCHAR_T udhPresent, msgClassMean, msgClass;
-    unsigned dataCoding = (unsigned)convertCBSDatacoding2SMSC(*ussdDataCodingScheme_p, &udhPresent, &msgClassMean, &msgClass);
+    unsigned dataCoding = (unsigned)convertCBSDatacoding2SMSC(ussdDataCodingScheme, &udhPresent, &msgClassMean, &msgClass);
     if( dataCoding == smsc::smpp::DataCoding::SMSC7BIT )
     {
       MicroString ms;
@@ -3094,7 +3094,7 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
     } else {
-      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ussdString_sp->ussdStr,ussdString_sp->ussdStrLen);
+      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(const char*)(ussdString_sp->ussdStr),ussdString_sp->ussdStrLen);
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,ussdString_sp->ussdStrLen);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,dataCoding);
     }
@@ -3458,9 +3458,9 @@ USHORT_T Et96MapNoticeInd (
   ET96MAP_DIAGNOSTIC_PROBLEM_T diagProblem,
   ET96MAP_RETURNED_OPERATION_T *retOperation_sp) 
 {
-  __map_trace2_("%s: dialogid 0x%x relDialogid 0x%x diagProblem %d retop 0x%x", __func__,
+  __map_trace2__("%s: dialogid 0x%x relDialogid 0x%x diagProblem %d retop 0x%x", __func__,
                 dialogueId,relDialogueId,diagProblem,retOperation_sp );
-  DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn));
+  DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
   if ( !dialog.isnull() ) {
     if( dialog->state == MAPST_WaitSms ) {
       dialog->state = MAPST_MapNoticed;
