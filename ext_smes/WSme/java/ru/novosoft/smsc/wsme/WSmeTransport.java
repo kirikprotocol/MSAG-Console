@@ -54,7 +54,7 @@ public class WSmeTransport extends Service
       throws AdminException
   {
     Map args = new HashMap();
-    args.put("msisdn", msisdn);
+    args.put("msisdn", msisdn.trim());
     refreshComponents();
     call(wsme_component, add_visitor_method, Type.Types[Type.StringType], args);
   }
@@ -62,7 +62,7 @@ public class WSmeTransport extends Service
       throws AdminException
   {
     Map args = new HashMap();
-    args.put("msisdn", msisdn);
+    args.put("msisdn", msisdn.trim());
     refreshComponents();
     call(wsme_component, remove_visitor_method, Type.Types[Type.StringType], args);
   }
@@ -71,8 +71,8 @@ public class WSmeTransport extends Service
       throws AdminException
   {
     Map args = new HashMap();
-    args.put("mask", mask);
-    args.put("lang", lang);
+    args.put("mask", mask.trim());
+    args.put("lang", lang.trim());
     refreshComponents();
     call(wsme_component, add_lang_method, Type.Types[Type.StringType], args);
   }
@@ -80,7 +80,7 @@ public class WSmeTransport extends Service
       throws AdminException
   {
     Map args = new HashMap();
-    args.put("mask", mask);
+    args.put("mask", mask.trim());
     refreshComponents();
     call(wsme_component, remove_lang_method, Type.Types[Type.StringType], args);
   }
@@ -90,8 +90,8 @@ public class WSmeTransport extends Service
   {
     Map args = new HashMap();
     args.put("id", new Long(id));
-    args.put("lang", lang);
-    args.put("ad", ad);
+    args.put("lang", lang.trim());
+    args.put("ad", ad.trim());
     refreshComponents();
     call(wsme_component, add_ad_method, Type.Types[Type.StringType], args);
   }
@@ -100,7 +100,7 @@ public class WSmeTransport extends Service
   {
     Map args = new HashMap();
     args.put("id", new Long(id));
-    args.put("lang", lang);
+    args.put("lang", lang.trim());
     refreshComponents();
     call(wsme_component, remove_ad_method, Type.Types[Type.StringType], args);
   }

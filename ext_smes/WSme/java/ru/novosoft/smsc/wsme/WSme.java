@@ -129,7 +129,7 @@ public class WSme extends WSmeTransport
       stmt = connection.prepareStatement(GET_VISITORS_SQL);
       rs = stmt.executeQuery();
       while (rs.next())
-        visitors.add(rs.getString(1));
+        visitors.add(rs.getString(1).trim());
     }
     catch (Exception exc)
     {
@@ -175,7 +175,7 @@ public class WSme extends WSmeTransport
       stmt = connection.prepareStatement(GET_LANGS_SQL);
       rs = stmt.executeQuery();
       while (rs.next())
-        langs.add(new LangRow(rs.getString(1), rs.getString(2)));
+        langs.add(new LangRow(rs.getString(1).trim(), rs.getString(2).trim()));
     }
     catch (Exception exc)
     {
@@ -218,7 +218,7 @@ public class WSme extends WSmeTransport
       stmt = connection.prepareStatement(GET_ADS_SQL);
       rs = stmt.executeQuery();
       while (rs.next())
-        ads.add(new AdRow(rs.getInt(1), rs.getString(2), rs.getString(3)));
+        ads.add(new AdRow(rs.getInt(1), rs.getString(2).trim(), rs.getString(3).trim()));
     }
     catch (Exception exc)
     {
