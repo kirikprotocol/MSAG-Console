@@ -668,6 +668,12 @@ StateType StateMachine::forward(Tuple& t)
   {
     __warning__("FORWARD: No route");
     try{
+      sendNotifyReport(sms,t.msgId,"destination unavialable");
+    }catch(...)
+    {
+      __trace__("FORWARD: failed to send intermediate notification");
+    }
+    try{
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
@@ -676,12 +682,6 @@ StateType StateMachine::forward(Tuple& t)
     }catch(...)
     {
       __trace__("FORWARD: failed to change state to enroute");
-    }
-    try{
-      sendNotifyReport(sms,t.msgId,"destination unavialable");
-    }catch(...)
-    {
-      __trace__("FORWARD: failed to send intermediate notification");
     }
     return ERROR_STATE;
   }
@@ -689,6 +689,12 @@ StateType StateMachine::forward(Tuple& t)
   {
     __trace__("FORWARD: no proxy");
     try{
+      sendNotifyReport(sms,t.msgId,"destination unavialable");
+    }catch(...)
+    {
+      __trace__("FORWARD: failed to send intermediate notification");
+    }
+    try{
       //time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
@@ -697,12 +703,6 @@ StateType StateMachine::forward(Tuple& t)
     }catch(...)
     {
       __trace__("FORWARD: failed to change state to enroute");
-    }
-    try{
-      sendNotifyReport(sms,t.msgId,"destination unavialable");
-    }catch(...)
-    {
-      __trace__("FORWARD: failed to send intermediate notification");
     }
     return ENROUTE_STATE;
   }
