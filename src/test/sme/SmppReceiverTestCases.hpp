@@ -98,6 +98,8 @@ private:
 	RouteChecker* routeChecker;
 	SmppPduChecker* pduChecker;
 	CheckList* chkList;
+
+	bool isAccepted(uint32_t status);
 };
 
 }

@@ -206,6 +206,22 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 	//__dumpPdu__("processDeliverySmAfter", systemId, &pdu);
 }
 
+bool SmppReceiverTestCases::isAccepted(uint32_t status)
+{
+	switch (status)
+	{
+		//повторная доставка
+		case ESME_RX_T_APPN:
+		case ESME_RMSGQFUL:
+		case 0xffffffff: //ошибка отправки deliver_sm_resp
+			return false;
+		case ESME_RX_P_APPN:
+			__unreachable__("Not supported");
+		//ESME_ROK, все остальные коды ошибок
+		default:
+			return true;
+	}
+}
 void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime)
 {
 	__trace__("processNormalSms()");
@@ -314,7 +330,8 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 					__tc_fail2__(pduData->deliveryFlag.checkSchedule(recvTime), 0);
 					__tc_ok_cond__;
 					//отправить респонс
-					bool accepted = respSender->sendDeliverySmResp(pdu);
+					pduData->deliveryStatus = respSender->sendDeliverySmResp(pdu);
+					bool accepted = isAccepted(pduData->deliveryStatus);
 					//обновить статус
 					__tc__("processDeliverySm.normalSms.checkAllowed");
 					__tc_fail2__(pduData->deliveryFlag.update(recvTime, accepted), 0);
@@ -535,7 +552,8 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 				__tc_fail2__(pduData->deliveryReceiptFlag.checkSchedule(recvTime), 0);
 				__tc_ok_cond__;
 				//отправить респонс
-				bool accepted = respSender->sendDeliverySmResp(pdu);
+				uint32_t deliveryStatus = respSender->sendDeliverySmResp(pdu);
+				bool accepted = isAccepted(deliveryStatus);
 				//обновить статус
 				__tc__("processDeliverySm.deliveryReceipt.checkAllowed");
 				__tc_fail2__(pduData->deliveryReceiptFlag.update(recvTime, accepted), 0);
@@ -632,7 +650,8 @@ void SmppReceiverTestCases::processIntermediateNotification(
 				}
 				__tc_ok_cond__;
 				//отправить респонс
-				bool accepted = respSender->sendDeliverySmResp(pdu);
+				uint32_t deliveryStatus = respSender->sendDeliverySmResp(pdu);
+				bool accepted = isAccepted(deliveryStatus);
 				//разрешена ли доставка pdu
 				__tc__("processDeliverySm.intermediateNotification.checkAllowed");
 				switch (pduData->intermediateNotificationFlag)
