@@ -332,7 +332,7 @@ void Archiver::billing(bool check)
     {
         billingPutIdStmt->check(billingPutIdStmt->execute());
         // TO DO : Isert more code here ! Actual conversion to SMS_BR
-        //billingInsertStmt->check(billingInsertStmt->execute());
+        billingInsertStmt->check(billingInsertStmt->execute());
     }
 }
 
@@ -426,11 +426,6 @@ SMSId Archiver::getLastUsedId()
                                    Archiver::storageMaxIdSql);
     SMSId archiveId = getMaxUsedId(storageConnection, 
                                    Archiver::archiveMaxIdSql);
-    /*SMSId billingId = getMaxUsedId(billingConnection, 
-                                   Archiver::billingMaxIdSql);*/
-    
-    //storageId = (storageId > archiveId) ? storageId : archiveId;
-    //return ((storageId > billingId) ? storageId : billingId);
     return ((storageId > archiveId) ? storageId : archiveId);
 }
 
@@ -597,12 +592,12 @@ const char* Archiver::archiveInsertSql = (const char*)
  OA_TON, OA_NPI, OA_VAL, SRC_MSC, SRC_IMSI, SRC_SME_N,\
  DA_TON, DA_NPI, DA_VAL, DST_MSC, DST_IMSI, DST_SME_N,\
  WAIT_TIME, VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT,\
- LAST_TRY_TIME, RD, ARC, PRI, PID, UDHI, DCS, UDL, UD)\
+ LAST_TRY_TIME, DR, PRI, PID, UDHI, DCS, UDL, UD)\
  VALUES (:ID, :ST, :MR,\
  :OA_TON, :OA_NPI, :OA_VAL, :SRC_MSC, :SRC_IMSI, :SRC_SME_N,\
  :DA_TON, :DA_NPI, :DA_VAL, :DST_MSC, :DST_IMSI, :DST_SME_N,\
  :WAIT_TIME, :VALID_TIME, :SUBMIT_TIME, :ATTEMPTS, :LAST_RESULT,\
- :LAST_TRY_TIME, :RD, :ARC, :PRI, :PID, :UDHI, :DCS, :UDL, :UD)";
+ :LAST_TRY_TIME, :DR, :PRI, :PID, :UDHI, :DCS, :UDL, :UD)";
 void Archiver::prepareArchiveInsertStmt() throw(StorageException)
 {
     archiveInsertStmt = new Statement(storageConnection, 
@@ -673,19 +668,17 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
                             (sb4) sizeof(lastTime), &indLastTime);
     archiveInsertStmt->bind(22, SQLT_UIN, (dvoid *) &(sms.deliveryReport), 
                             (sb4) sizeof(sms.deliveryReport));
-    archiveInsertStmt->bind(23, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
-                            (sb4) sizeof(bNeedArchivate));
-    archiveInsertStmt->bind(24, SQLT_UIN, (dvoid *) &(sms.priority), 
+    archiveInsertStmt->bind(23, SQLT_UIN, (dvoid *) &(sms.priority), 
                             (sb4) sizeof(sms.priority));
-    archiveInsertStmt->bind(25, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier), 
+    archiveInsertStmt->bind(24, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier), 
                             (sb4) sizeof(sms.protocolIdentifier));
-    archiveInsertStmt->bind(26, SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
+    archiveInsertStmt->bind(25, SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
                             (sb4) sizeof(bHeaderIndicator));
-    archiveInsertStmt->bind(27, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme), 
+    archiveInsertStmt->bind(26, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme), 
                             (sb4) sizeof(sms.messageBody.scheme));
-    archiveInsertStmt->bind(28, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
+    archiveInsertStmt->bind(27, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
                             (sb4) sizeof(sms.messageBody.lenght));
-    archiveInsertStmt->bind(29, SQLT_BIN, (dvoid *) (sms.messageBody.data), 
+    archiveInsertStmt->bind(28, SQLT_BIN, (dvoid *) (sms.messageBody.data), 
                             (sb4) sizeof(sms.messageBody.data));
 }
 
