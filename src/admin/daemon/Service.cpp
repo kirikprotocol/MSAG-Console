@@ -46,6 +46,18 @@ pid_t Service::start()
         {
           logger.error("reopen stdout error : %s",strerror(errno));
         }
+	sigset_t set;
+	sigemptyset(&set);
+	sigaddset(&set,17);
+	sigaddset(&set, SIGBUS);
+	sigaddset(&set, SIGFPE);
+	sigaddset(&set, SIGILL);
+	sigaddset(&set, SIGSEGV);
+	sigaddset(&set, SIGALRM);
+	sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+	if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0) {
+        	__warning__("Faield to update signal mask");
+	}
         execv(service_exe, createArguments());
         logger.error("Couldn't start service (\"%s/%s\"), nested: %u: %s",
                      service_dir.get(), service_exe, errno, strerror(errno));
