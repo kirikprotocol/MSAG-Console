@@ -14,6 +14,7 @@ namespace smsc {
 		static const int SMS_TEST_test_sms_for_transceiver_itself = 102;
 		static const int SMS_TEST_test_data_coding = 103;
 		static const int SMS_TEST_test_smpp_profiler = 104;
+		static const int SMS_TEST_test_long_sms = 105;
 	  };
 	} //namespace smpp
   } // namespace test

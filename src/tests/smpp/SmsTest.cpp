@@ -15,9 +15,9 @@
 #include "Sme.hpp"
 #include "CsvOutputter.hpp"
 #include "TestSpecification.hpp"
-#include "ResponseChecker.hpp"
 #include "SmppProfileManager.hpp"
 #include "DataCodingTest.hpp"
+#include "LongSmsTest.hpp"
 
 namespace smsc {
   namespace test {
@@ -54,8 +54,9 @@ namespace smsc {
           //suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_sms_for_transmitter_receiver_itself, &SmsTest::testSmsForTransmitterReceiverItself));
           //suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_sms_for_transmitter_receiver, &SmsTest::testSmsForTransmitterReceiver));
           //suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_sms_for_transceiver_itself, &SmsTest::testSmsForTransceiverItself));
-          suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_data_coding, &SmsTest::testDataCoding));
           //suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_smpp_profiler, &SmsTest::testSmppProfiler));
+          //suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_data_coding, &SmsTest::testDataCoding));
+          suiteOfTests->addTest(createTestCaller(TestSpecification::SMS_TEST_test_long_sms, &SmsTest::testLongSms));
           return suiteOfTests;
         }
 
@@ -153,6 +154,29 @@ namespace smsc {
           log.error("testDataCoding: ---> exit");
         }
 
+        void testLongSms() {
+          log.error("testLongSms: ---> enter");
+          try {
+            // creating map proxy sme
+            QueuedSmeHandler mapProxySme = createSmeByName("smsc.sme.map-proxy");
+            // creating sender
+            QueuedSmeHandler sender = createSmeByName("smsc.sme.sender");
+
+            LongSmsTest test(sender, mapProxySme, 1000);
+            test.testLongSms();
+
+          } catch (CppUnit::Exception &ex) {
+            throw;
+          } catch (SmppException &ex) {
+            log.error("testLongSms: SmppException : %s", ex.what());
+            CPPUNIT_FAIL("Test Error: SmppException in testLongSms()");
+          } catch (std::exception &ex) {
+            log.error("testLongSms: std::exception : %s, type=%s", ex.what(), typeid(ex).name());
+            CPPUNIT_FAIL("Test Error: std::exception in testLongSms()");
+          }
+          log.error("testLongSms: ---> exit");
+        }
+
         void testSmsForTransmitterReceiver() {
           log.error("testSmsForTransmitterReceiver: ---> enter, sms=%s", message.c_str());
           try {
@@ -162,12 +186,12 @@ namespace smsc {
             receiver->connect();
             // binding as transmitter
             uint32_t sequence = sender->bind(smsc::sme::BindType::Transmitter);
-            if (ResponseChecker::checkBind(sequence, smsc::sme::BindType::Transmitter, sender, timeout)== false) {
+            if (sender->checkResponse(sequence, timeout)== false) {
               CPPUNIT_FAIL("testSmsForTransmitterReceiver: error in response for transmitter bind pdu");
             }
             // binding as receiver
             sequence = receiver->bind(smsc::sme::BindType::Receiver);
-            if (ResponseChecker::checkBind(sequence, smsc::sme::BindType::Receiver, receiver, timeout)== false) {
+            if (receiver->checkResponse(sequence, timeout)== false) {
               CPPUNIT_FAIL("testSmsForTransmitterReceiver: error in response for receiver bind pdu");
             }
 
@@ -176,12 +200,12 @@ namespace smsc {
 
             // unbinding transmitter
             sequence = sender->unbind();
-            if (ResponseChecker::checkUnbind(sequence, sender, timeout)== false) {
+            if (sender->checkResponse(sequence, timeout)== false) {
               CPPUNIT_FAIL("testSmsForTransmitterReceiver: error when sender unbinding");
             }
             // unbinding receiver
             sequence = receiver->unbind();
-            if (ResponseChecker::checkUnbind(sequence, receiver, timeout)== false) {
+            if (receiver->checkResponse(sequence, timeout)== false) {
               CPPUNIT_FAIL("testSmsForTransmitterReceiver: error when receiver unbinding");
             }
 
@@ -206,12 +230,12 @@ namespace smsc {
             receiver->connect();
             // binding as transmitter
             uint32_t sequence = sender->bind(smsc::sme::BindType::Transmitter);
-            if (ResponseChecker::checkBind(sequence, smsc::sme::BindType::Transmitter, sender, timeout)== false) {
+            if (sender->checkResponse(sequence, timeout)== false) {
               CPPUNIT_FAIL("testSmsForTransmitterReceiver: error in response for transmitter bind pdu");
             }
             // binding as receiver
             sequence = receiver->bind(smsc::sme::BindType::Receiver);
-            if (ResponseChecker::checkBind(sequence, smsc::sme::BindType::Receiver, receiver, timeout)== false) {
+            if (receiver->checkResponse(sequence, timeout)== false) {
               CPPUNIT_FAIL("testSmsForTransmitterReceiver: error in response for receiver bind pdu");
             }
 
@@ -220,12 +244,12 @@ namespace smsc {
 
             // unbinding transmitter
             sequence = sender->unbind();
-            if (ResponseChecker::checkUnbind(sequence, sender, timeout)== false) {
+            if (sender->checkResponse(sequence, timeout)== false) {
               CPPUNIT_FAIL("testSmsForTransmitterReceiver: error when sender unbinding");
             }
             // unbinding receiver
             sequence = receiver->unbind();
-            if (ResponseChecker::checkUnbind(sequence, receiver, timeout)== false) {
+            if (receiver->checkResponse(sequence, timeout)== false) {
               CPPUNIT_FAIL("testSmsForTransmitterReceiver: error when receiver unbinding");
             }
 
@@ -339,7 +363,7 @@ namespace smsc {
               }
 
               // sender checks response from SMSC
-              if (ResponseChecker::checkResponse(sequence, smsc::smpp::SmppCommandSet::SUBMIT_SM, sender, timeout) == false) {
+              if (sender->checkResponse(sequence, timeout) == false) {
                 CPPUNIT_FAIL("testSmsForTransmitterReceiver: error in response for submit_sm sent");
               }
             }
@@ -362,7 +386,7 @@ namespace smsc {
             trx->connect();
             // binding as transceiver
             uint32_t sequence = trx->bind(smsc::sme::BindType::Transceiver);
-            if (ResponseChecker::checkBind(sequence, smsc::sme::BindType::Transceiver, trx, timeout)== false) {
+            if (trx->checkResponse(sequence, timeout)== false) {
               CPPUNIT_FAIL("testSmsForTransceiverItself: error in response for transceiver bind pdu");
             }
 
@@ -371,7 +395,7 @@ namespace smsc {
 
             // unbinding transceiver
             sequence = trx->unbind();
-            if (ResponseChecker::checkUnbind(sequence, trx, timeout)== false) {
+            if (trx->checkResponse(sequence, timeout)== false) {
               CPPUNIT_FAIL("testSmsForTransceiverItself: error when transceiver unbinding");
             }
 

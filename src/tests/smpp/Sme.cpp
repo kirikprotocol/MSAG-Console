@@ -266,11 +266,122 @@ namespace smsc {
 			  listener->checkError();
 			}
 
+            void BasicSme::respondTo(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) {
+              switch(pdu->get_commandId()) {
+              case smsc::smpp::SmppCommandSet::DELIVERY_SM: {
+                  PduDeliverySmResp resp;
+                  resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+                  resp.set_messageId("");
+                  resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+                  sendDeliverySmResp(resp);
+                  break;
+                }
+              case smsc::smpp::SmppCommandSet::DATA_SM: {
+                  PduDataSmResp resp;
+                  resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
+                  resp.set_messageId("");
+                  resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+                  sendDataSmResp(resp);
+                  break;
+                }
+              default: {
+                  std::ostringstream sout;
+                  sout << "Couldn't respond to pdu with commandId=" << pdu->get_commandId();
+                  throw IllegalSmeOperation(sout.str());
+                }
+              }
+            }
+
 			///////////////////////////////////////////
 			// QueuedSme
 			//////////////////////////////////////////
 			QueuedSme::Registrator QueuedSme::reg;
 
-		}	//namespace smpp
+            void QueuedSme::receiveSms(smsc::sms::SMS &sms) throw(PduListenerException, IllegalSmeOperation) {
+              PduHandler pdu;
+              for(;;) {
+                pdu = receive();
+                if(pdu != 0) {
+                  if(pdu->get_commandId() == smsc::smpp::SmppCommandSet::DELIVERY_SM ||
+                     pdu->get_commandId() == smsc::smpp::SmppCommandSet::DATA_SM) {
+                    // send response
+                    respondTo(pdu.getObjectPtr());
+                    // check PDU received
+                    smsc::smpp::PduXSm *pduXSM = (smsc::smpp::PduXSm*) pdu.getObjectPtr();
+                    smsc::smpp::fetchSmsFromSmppPdu(pduXSM, &sms);
+                    break;
+                  }
+                }
+              }
+            }
+
+            bool QueuedSme::receiveSms(uint32_t timeout, smsc::sms::SMS &sms) throw(PduListenerException, IllegalSmeOperation) {
+              bool res = false;
+              PduHandler pdu;
+              for(;;) {
+                timestruc_t time;
+                clock_gettime(CLOCK_REALTIME,&time);
+                pdu = receive(timeout);
+                if(pdu != 0) {
+                  if(pdu->get_commandId() == smsc::smpp::SmppCommandSet::DELIVERY_SM) {
+                      log.debug("receiveSms: received SMS with delivery_sm pdu");
+                      // send response
+                      respondTo(pdu.getObjectPtr());
+                      // check PDU received
+                      smsc::smpp::PduXSm *pduXSM = (smsc::smpp::PduXSm*) pdu.getObjectPtr();
+                      smsc::smpp::fetchSmsFromSmppPdu(pduXSM, &sms);
+                      res = true;
+                      break;
+                  } else if (pdu->get_commandId() == smsc::smpp::SmppCommandSet::DATA_SM) {
+                    log.debug("receiveSms: received SMS with data_sm pdu");
+                    // send response
+                    respondTo(pdu.getObjectPtr());
+                    // check PDU received
+                    smsc::smpp::PduDataSm *pduDataSm = (smsc::smpp::PduDataSm*) pdu.getObjectPtr();
+                    smsc::smpp::fetchSmsFromDataSmPdu(pduDataSm, &sms);
+                    res = true;
+                    break;
+                  } else {//unexpected pdu
+                    log.error("receiveSms: received unexpected PDU");
+                    timestruc_t time1;
+                    clock_gettime(CLOCK_REALTIME,&time1);
+                    uint32_t interval = (time1.tv_sec - time.tv_sec)*1000 + (time1.tv_nsec - time.tv_nsec)/1000000;
+                    if(interval < timeout) {
+                      timeout -= interval;
+                    } else {
+                      break;
+                    }
+                  }
+                } else {
+                  break;
+                }
+              }
+
+              return res;
+            }
+
+            uint32_t QueuedSme::sendSubmitSms(smsc::sms::SMS &sms) throw(PduListenerException, IllegalSmeOperation) {
+              smsc::smpp::PduSubmitSm submit;
+              submit.get_header().set_commandId(smsc::smpp::SmppCommandSet::SUBMIT_SM);
+              smsc::smpp::fillSmppPduFromSms(&submit, &sms);
+              return sendPdu((smsc::smpp::SmppHeader*)&submit);
+            }
+
+            uint32_t QueuedSme::sendDataSms(smsc::sms::SMS &sms) throw(PduListenerException, IllegalSmeOperation) {
+              smsc::smpp::PduDataSm dsm;
+              dsm.get_header().set_commandId(smsc::smpp::SmppCommandSet::DATA_SM);
+              smsc::smpp::fillDataSmFromSms(&dsm, &sms);
+              return sendPdu((smsc::smpp::SmppHeader*)&dsm);
+            }
+		
+            bool QueuedSme::checkResponse(uint32_t sequence, uint32_t timeout) {
+              return responseQueue.checkResponse(sequence, timeout);
+            }
+
+            bool QueuedSme::checkAllResponses() {
+              return responseQueue.checkAllResponses();
+            }
+
+        }	//namespace smpp
 	}	//namespace test
 }	//namespace smsc

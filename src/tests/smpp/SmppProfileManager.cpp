@@ -3,7 +3,6 @@
 #include <util/recoder/recode_dll.h>
 
 #include "SmppProfileManager.hpp"
-#include "ResponseChecker.hpp"
 
 namespace smsc {
   namespace test {
@@ -45,7 +44,7 @@ namespace smsc {
         sme->connect();
         // binding as transceiver
         uint32_t sequence = sme->bind(smsc::sme::BindType::Transceiver);
-        if(ResponseChecker::checkBind(sequence, smsc::sme::BindType::Transceiver, sme, timeout)== false) {
+        if(sme->checkResponse(sequence, timeout)== false) {
           CPPUNIT_FAIL("SmppProfileManager: error in response for transceiver bind pdu");
         }
       }
@@ -53,7 +52,7 @@ namespace smsc {
       SmppProfileManager::~SmppProfileManager() {
         // unbinding transceiver
         uint32_t sequence = sme->unbind();
-        if(ResponseChecker::checkUnbind(sequence, sme, timeout)== false) {
+        if(sme->checkResponse(sequence, timeout)== false) {
           CPPUNIT_FAIL("SmppProfileManager: error when sme unbinding");
         }
       }
@@ -111,7 +110,7 @@ namespace smsc {
         smsc::smpp::fillSmppPduFromSms(&submit, &sms);
         uint32_t sequence = sme->sendPdu((smsc::smpp::SmppHeader*)&submit);
         // checking response from SMSC
-        res = ResponseChecker::checkResponse(sequence, smsc::smpp::SmppCommandSet::SUBMIT_SM, sme, timeout);
+        res = sme->checkResponse(sequence, timeout);
         // receive SMS from profiler
         log.debug("setProfile: receiving SMS from profile");
         PduHandler pdu = sme->receive(timeout);

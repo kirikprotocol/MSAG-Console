@@ -5,6 +5,7 @@
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 #include <core/buffers/IntHash.hpp>
+#include <tests/util/Configurator.hpp>
 #include "TypeDefs.hpp"
 
 namespace smsc {
@@ -19,6 +20,7 @@ namespace smsc {
       struct Response {
         smsc::core::synchronization::Event event;
         PduHandler pdu;
+        uint32_t expectedCmd;
       };
 
       using smsc::core::buffers::IntHash;
@@ -26,13 +28,17 @@ namespace smsc {
       class ResponseQueue {
         typedef smsc::test::util::Handler<Response> ResponseHandler;
 
+        log4cpp::Category& log;
         smsc::core::synchronization::Mutex responseMutex;
         IntHash<ResponseHandler> responseMap;
       public:
-        void registerPdu(uint32_t sequence) throw(ResponseQueueException);
+        ResponseQueue() : log(smsc::test::util::logger.getLog("smsc.test.smpp.ResponseQueue")) {}
+        void registerPdu(uint32_t sequence, uint32_t cmdId) throw(ResponseQueueException);
         void processResponse(PduHandler pdu);
         PduHandler receiveResponse(uint32_t sequence) throw(ResponseQueueException);
         PduHandler receiveResponse(uint32_t sequence, uint32_t timeout) throw(ResponseQueueException);
+        bool checkResponse(uint32_t sequence, uint32_t timeout) throw(ResponseQueueException);
+        bool checkAllResponses() throw(ResponseQueueException);
         void clear();
       };
     }//namespace test

@@ -90,6 +90,12 @@ namespace smsc {
           setSmsc7Bit(latin1);
         }
 
+        Smsc7BitText(const char * const smsc7bit, int length) {
+          this->smsc7bit = new char[length];
+          this->length = length;
+          memcpy(this->smsc7bit, smsc7bit, length);
+        }
+
         Smsc7BitText(const Latin1Text &latin1) {
           setSmsc7Bit(latin1);
         }

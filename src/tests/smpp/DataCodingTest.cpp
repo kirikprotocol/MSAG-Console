@@ -3,7 +3,6 @@
 
 #include <util/smstext.h>
 #include "DataCodingTest.hpp"
-#include "ResponseChecker.hpp"
 
 namespace smsc {
   namespace test {
@@ -23,57 +22,61 @@ namespace smsc {
         SmppProfileManager::CP_UCS2
       };
 
-      const char *DataCodingTest::symbols = "ÀÁÂ";
+      const char *DataCodingTest::symbols = "`1234567890-=\\qwertyuiop[]asdfghjkl;\'zxcvbnm,./~!@#$%^&*()_+|QWERTYUIOP{}ASDFGHJKL:\"ZXCVBNM<>?¸¹/éöóêåíãøùçõúôûâàïðîëäæýÿ÷ñìèòüáþÉÖÓÊÅÍÃØÙÇÕÚÔÛÂÀÏÐÎËÄÆÝß×ÑÌÈÒÜÁÞ";
+      //const char *DataCodingTest::symbols = "{}";
+      //const char *DataCodingTest::symbols = "ÀÁÂ";
 
       void DataCodingTest::testDataCoding() {
         log.debug("testDataCoding: --- enter");
         // binding as transmitter
         uint32_t sequence = sender->bind(smsc::sme::BindType::Transmitter);
-        if(ResponseChecker::checkBind(sequence, smsc::sme::BindType::Transmitter, sender, timeout)== false) {
+        if(sender->checkResponse(sequence, timeout)== false) {
           CPPUNIT_FAIL("testDataCoding: error in response for transmitter bind pdu");
         }
         // binding as receiver
         sequence = receiver->bind(smsc::sme::BindType::Receiver);
-        if(ResponseChecker::checkBind(sequence, smsc::sme::BindType::Receiver, receiver, timeout)== false) {
+        if(receiver->checkResponse(sequence, timeout)== false) {
           CPPUNIT_FAIL("testDataCoding: error in response for receiver bind pdu");
         }
 
-        // test
+        // test with transmitter and receiver
+        log.debug("\n\n ********* testDataCoding: test with transmitter and receiver");
         test();
 
         // unbinding transmitter
         sequence = sender->unbind();
-        if(ResponseChecker::checkUnbind(sequence, sender, timeout)== false) {
+        if(sender->checkResponse(sequence, timeout)== false) {
           CPPUNIT_FAIL("testDataCoding: error when sender unbinding");
         }
         // unbinding receiver
         sequence = receiver->unbind();
-        if(ResponseChecker::checkUnbind(sequence, receiver, timeout)== false) {
+        if(receiver->checkResponse(sequence, timeout)== false) {
           CPPUNIT_FAIL("testDataCoding: error when receiver unbinding");
         }
 
         // binding as transceiver
         sequence = sender->bind(smsc::sme::BindType::Transceiver);
-        if(ResponseChecker::checkBind(sequence, smsc::sme::BindType::Transceiver, sender, timeout)== false) {
+        if(sender->checkResponse(sequence, timeout)== false) {
           CPPUNIT_FAIL("testDataCoding: error in response for transceiver bind pdu");
         }
         // binding as transceiver
         sequence = receiver->bind(smsc::sme::BindType::Transceiver);
-        if(ResponseChecker::checkBind(sequence, smsc::sme::BindType::Transceiver, receiver, timeout)== false) {
+        if(receiver->checkResponse(sequence, timeout)== false) {
           CPPUNIT_FAIL("testDataCoding: error in response for transceiver bind pdu");
         }
 
-        //test
+        // test with two transceivers
+        log.debug("\n\n ********* testDataCoding: test with two transceivers");
         test();
 
         // unbinding sender
         sequence = sender->unbind();
-        if(ResponseChecker::checkUnbind(sequence, sender, timeout)== false) {
+        if(sender->checkResponse(sequence, timeout)== false) {
           CPPUNIT_FAIL("testDataCoding: error when sender unbinding");
         }
         // unbinding receiver
         sequence = receiver->unbind();
-        if(ResponseChecker::checkUnbind(sequence, receiver, timeout)== false) {
+        if(receiver->checkResponse(sequence, timeout)== false) {
           CPPUNIT_FAIL("testDataCoding: error when receiver unbinding");
         }
         log.debug("testDataCoding: --- exit");
@@ -133,8 +136,6 @@ namespace smsc {
           }
           // sender sends SMS to receiver
           log.debug("test: sending SMS to receiver");
-          smsc::smpp::PduSubmitSm submit;
-          submit.get_header().set_commandId(smsc::smpp::SmppCommandSet::SUBMIT_SM);
           smsc::sms::SMS sms;
           try {
             smsc::sms::Address origAddr(sender->getConfig().origAddr.c_str());
@@ -162,7 +163,7 @@ namespace smsc {
             }
             break;
           case smsc::smpp::DataCoding::LATIN1: {
-              log.debug("test: DataCoding::LATIN1");
+              log.debug("test: DataCoding::LATIN1, length=%d, dc=%d", latin1Msg->getLength(), dataCoding);
               sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, latin1Msg->getLatin1(), latin1Msg->getLength());
             }
             break;
@@ -176,58 +177,52 @@ namespace smsc {
             }
             break;
           }
-          smsc::smpp::fillSmppPduFromSms(&submit, &sms);
-          uint32_t sequence = sender->sendPdu((smsc::smpp::SmppHeader*)&submit);
+          uint32_t submitSeq = sender->sendSubmitSms(sms);
+          uint32_t dataSeq = sender->sendDataSms(sms);
 
           // receive SMS
           bool isEqual = false;
           log.debug("test: receiving SMS from sender");
-          PduHandler pdu = receiver->receive(timeout);
-          if(pdu != 0) {
-            if(pdu->get_commandId() == smsc::smpp::SmppCommandSet::DELIVERY_SM) {
-              // send deliver_sm_resp
-              PduDeliverySmResp resp;
-              resp.get_header().set_commandId(smsc::smpp::SmppCommandSet::DELIVERY_SM_RESP);
-              resp.set_messageId("");
-              resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-              resp.get_header().set_commandStatus(smsc::smpp::SmppStatusSet::ESME_ROK);
-              receiver->sendDeliverySmResp(resp);
-
-              // check PDU received
-              smsc::sms::SMS receivedSms;
-              smsc::smpp::PduXSm *pduXSM = (smsc::smpp::PduXSm*) pdu.getObjectPtr();
-              smsc::smpp::fetchSmsFromSmppPdu(pduXSM, &receivedSms);
-              if(log.isDebugEnabled()) {
-                log.debug("test: SMS originating address = %s", receivedSms.getOriginatingAddress().toString().c_str());
-                log.debug("test: SMS destination address = %s", receivedSms.getDestinationAddress().toString().c_str());
-                log.debug("test: SMS data coding = %d", receivedSms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING));
-                log.debug("test: SMS user message reference = %d", receivedSms.getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
-                // SMS messages
-                log.debug("test: smsc::sms::Tag::SMPP_SM_LENGTH=%d", receivedSms.getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH));
-                unsigned int msgLen;
-                receivedSms.getBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, &msgLen);
-                log.debug("test: smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD length=%d", msgLen);
-              }
-              //extracting SMS message
-              unsigned length = receivedSms.getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
-              const char *data;
-              if(length != 0) {//ñîîáùåíèå â body
-                data = receivedSms.getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, &length);
-              } else {//payload
-                data = receivedSms.getBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, &length);
-              }
-              isEqual = compare(dataCoding, profileDataCoding, data, length);
-            } else {
-              log.debug("test: receiver received unexpected PDU with commandId=%x", pdu->get_commandId());
-              CPPUNIT_FAIL("test: receiver received unexpected PDU");
-            }
+          smsc::sms::SMS receivedSms;
+          if(!receiver->receiveSms(timeout, receivedSms)) {
+            log.debug("test: receiver did not receive any SMS");
+            CPPUNIT_FAIL("test: receiver did not receive any SMS");
           } else {
-            CPPUNIT_FAIL("test: receiver did not receive delivery_sm");
+            //extracting SMS message
+            unsigned length = receivedSms.getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
+            const char *data;
+            if(length != 0) {//ñîîáùåíèå â body
+              data = receivedSms.getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, &length);
+            } else {//payload
+              data = receivedSms.getBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, &length);
+            }
+            isEqual = compare(dataCoding, profileDataCoding, data, length);
           }
 
-          // sender checks response from SMSC
-          if(ResponseChecker::checkResponse(sequence, smsc::smpp::SmppCommandSet::SUBMIT_SM, sender, timeout) == false) {
+          smsc::sms::SMS receivedSms1;
+          if(!receiver->receiveSms(timeout, receivedSms1)) {
+            log.debug("test: receiver did not receive the second SMS");
+            CPPUNIT_FAIL("test: receiver did not receive the second SMS");
+          } else {
+            //extracting SMS message
+            unsigned length = receivedSms1.getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
+            const char *data;
+            if(length != 0) {//ñîîáùåíèå â body
+              data = receivedSms1.getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE, &length);
+            } else {//payload
+              data = receivedSms1.getBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, &length);
+            }
+            isEqual = compare(dataCoding, profileDataCoding, data, length);
+          }
+
+          // sender checks responses from SMSC
+          if(sender->checkResponse(submitSeq, timeout) == false) {
             CPPUNIT_FAIL("test: error in response for submit_sm sent");
+          }
+
+          // sender checks responses from SMSC
+          if(sender->checkResponse(dataSeq, timeout) == false) {
+            CPPUNIT_FAIL("test: error in response for data_sm sent");
           }
 
           if(!isEqual) {
@@ -253,13 +248,10 @@ namespace smsc {
             }
             break;
           case SmppProfileManager::CP_LATIN1:
-            if(dataCoding == smsc::smpp::DataCoding::LATIN1) {
-              res = compare(buf, size, latin1Msg->getLatin1(), latin1Msg->getLength());
-            } else if(dataCoding == smsc::smpp::DataCoding::SMSC7BIT) {
+            if(dataCoding == smsc::smpp::DataCoding::SMSC7BIT) {
               res = compare(buf, size, smsc7bitMsg->getSmsc7Bit(), smsc7bitMsg->getLength());
-            } else if(dataCoding == smsc::smpp::DataCoding::UCS2) {
-              Smsc7BitText smsc7bit(*ucs2Msg);
-              res = compare(buf, size, smsc7bit.getSmsc7Bit(), smsc7bit.getLength());
+            } else {
+              res = compare(buf, size, latin1Msg->getLatin1(), latin1Msg->getLength());
             }
             break;
           case SmppProfileManager::CP_UCS2:

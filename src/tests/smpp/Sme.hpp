@@ -131,6 +131,8 @@ namespace smsc {
 				virtual void sendGenerickNack(smsc::smpp::PduGenericNack& pdu) throw(PduListenerException, IllegalSmeOperation)=0;
 				virtual void sendDeliverySmResp(smsc::smpp::PduDeliverySmResp& pdu) throw(PduListenerException, IllegalSmeOperation)=0;				
 				virtual void sendDataSmResp(smsc::smpp::PduDataSmResp& pdu) throw(PduListenerException, IllegalSmeOperation)=0;
+                //посылает response на данную pdu
+                virtual void respondTo(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation)=0;
 				// виртуальный деструктор для производных классов
 				virtual ~GenericSme() {}
 			};
@@ -234,12 +236,12 @@ namespace smsc {
 				virtual void sendGenerickNack(smsc::smpp::PduGenericNack& pdu) throw(PduListenerException, IllegalSmeOperation);
 				virtual void sendDeliverySmResp(smsc::smpp::PduDeliverySmResp& pdu) throw(PduListenerException, IllegalSmeOperation);				
 				virtual void sendDataSmResp(smsc::smpp::PduDataSmResp& pdu) throw(PduListenerException, IllegalSmeOperation);
+                virtual void respondTo(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation);
 			};
 
 			class QueuedSme;
 
 			class QueuedSme : public BasicSme {
-
 				class Registrator {
 				public:
 					Registrator() {
@@ -305,7 +307,7 @@ namespace smsc {
 
 				virtual void sendPduAsIs(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) {
                   BasicSme::sendPduAsIs(pdu);
-                  responseQueue.registerPdu(pdu->get_sequenceNumber());
+                  responseQueue.registerPdu(pdu->get_sequenceNumber(), pdu->get_commandId());
                 }
 
 				virtual PduHandler receive() {
@@ -323,6 +325,15 @@ namespace smsc {
 				virtual PduHandler receiveResponse(uint32_t sequence, uint32_t timeout) {
                   return responseQueue.receiveResponse(sequence, timeout);
 				}
+
+                virtual void receiveSms(smsc::sms::SMS &sms) throw(PduListenerException, IllegalSmeOperation);
+                virtual bool receiveSms(uint32_t timeout, smsc::sms::SMS &sms) throw(PduListenerException, IllegalSmeOperation);
+                virtual uint32_t sendSubmitSms(smsc::sms::SMS &sms) throw(PduListenerException, IllegalSmeOperation);
+                virtual uint32_t sendDataSms(smsc::sms::SMS &sms) throw(PduListenerException, IllegalSmeOperation);
+                
+                //проверка ответов на запросы
+                virtual bool checkResponse(uint32_t sequence, uint32_t timeout);
+                virtual bool checkAllResponses();
 
 				/*virtual PduHandler receiveNoWait() {
 					PduHandler pdu;
