@@ -6,7 +6,7 @@
 
 PACKAGE := acls
 
-__LIBRARIES :=-L$(SMSC_BUILDDIR)/bin -llogger
+__LIBRARIES :=-L$(SMSC_BUILDDIR)/bin -llogger -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

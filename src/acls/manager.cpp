@@ -239,7 +239,7 @@ void AclManager::addPhone(AclIdent aclident,const AclPhoneNumber& phone)
   try 
   {
     vector<char> query(256);
-    snprintf(&query[0],query.size(),sql,AclPhoneAsString(phone).c_str());
+    snprintf(&query[0],query.size(),sql,aclident,AclPhoneAsString(phone).c_str());
     auto_ptr<Statement> statement(connection->createStatement(&query[0]));
     if(!statement.get())throw Exception(ACLMGRPREFIX"Failed to create statement");
     statement->executeUpdate();
