@@ -10,30 +10,37 @@
 	<li><a href="<%=urlPrefix+hostsPrefix%>/index.jsp">Hosts</a></li>
 	<ul compact>
 		<%
-		Set hosts = serviceManager.getHostNames();
-		for (Iterator i = hosts.iterator(); i.hasNext(); )
+		if (serviceManager != null)
 		{
-			String hostName = (String) i.next();
-			%><li><a href="<%=urlPrefix+hostsPrefix%>/view_host.jsp?host=<%=URLEncoder.encode(hostName)%>"><%=StringEncoderDecoder.encode(hostName)%></a></li><%
-		} %>
+			Set hosts = serviceManager.getHostNames();
+			for (Iterator i = hosts.iterator(); i.hasNext(); )
+			{
+				String hostName = (String) i.next();
+				%><li><a href="<%=urlPrefix+hostsPrefix%>/view_host.jsp?host=<%=URLEncoder.encode(hostName)%>"><%=StringEncoderDecoder.encode(hostName)%></a></li><%
+			}
+		}
+		%>
 	</ul>
 	<li><a href="<%=urlPrefix+servicesPrefix%>/index.jsp">Services</a></li>
 	<ul compact>
 		<%
-		List smes = serviceManager.getSmeIds();
-		for (Iterator i = smes.iterator(); i.hasNext(); )
+		if (serviceManager != null)
 		{
-			String smeId = (String) i.next();
-			String encodedSmeId = URLEncoder.encode(smeId);
-			if (serviceManager.isService(smeId))
+			List smes = serviceManager.getSmeIds();
+			for (Iterator i = smes.iterator(); i.hasNext(); )
 			{
-				%><li><a href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(smeId)%>"><%=StringEncoderDecoder.encode(smeId)%></a></li><%
+				String smeId = (String) i.next();
+				String encodedSmeId = URLEncoder.encode(smeId);
+				if (serviceManager.isService(smeId))
+				{
+					%><li><a href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(smeId)%>"><%=StringEncoderDecoder.encode(smeId)%></a></li><%
+				}
+				else
+				{
+					%><li><%=StringEncoderDecoder.encode(smeId)%></li><%
+				}
 			}
-			else
-			{
-				%><li><%=StringEncoderDecoder.encode(smeId)%></li><%
-			}
-		} %>
+		}%>
 	</ul>
 </ul>
 <%}%>
