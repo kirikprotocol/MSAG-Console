@@ -66,9 +66,11 @@ CFLAGS := $(CFLAGS) -DASSERT_THROW_IF_FAIL
 CXXFLAGS := $(CFLAGS) -DASSERT_THROW_IF_FAIL
 endif
 
+ifne ($(NOMAP),YES)
 ifeq ($(HOSTTYPE),sparc)
 CXXFLAGS := $(CXXFLAGS) -DSPARC
 CFLAGS := $(CFLAGS) -DSPARC
+endif
 endif
 
 CXXFLAGS := $(CXXFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public
