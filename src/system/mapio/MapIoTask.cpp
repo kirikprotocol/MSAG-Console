@@ -58,7 +58,7 @@ USHORT_T  Et96MapOpenInd(
 		  MapDialogContainer::getInstance()->createDialog(dialogId);
   	mdci->localSsn = SSN;
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-    USHORT_T result = Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_OK,&reason,0,0,0)!=ET96_E_OK)
+    USHORT_T result = Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_OK,&reason,0,0,0)!=ET96MAP_E_OK)
     if ( result != ET96MAP_E_OK )
     {
       __trace2__("MAP::Et96MapOpenInd dialog opened error 0x%x",result);
