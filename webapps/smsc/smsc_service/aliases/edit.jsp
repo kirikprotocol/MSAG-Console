@@ -24,7 +24,6 @@ String alias   = isEdit ? StringEncoderDecoder.encode(request.getParameter("Alia
   </table>
   <input type="Hidden" name="old_address" value="<%=address%>">
   <input type="Hidden" name="old_alias"   value="<%=alias  %>">
-  <input type="Hidden" name="<%=isEdit ? "is_edit" : "is_add"%>" value="true">
   <input type="Submit">
 </form>
 <%@ include file="/sketches/footer.jsp"%>
