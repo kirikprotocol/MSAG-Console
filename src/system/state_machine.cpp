@@ -304,6 +304,280 @@ bool checkSourceAddress(const std::string& pattern,const Address& src)
   return re->Match(buf,m,n);
 }
 
+struct Directive{
+  int start;
+  int end;
+  Directive():start(0),end(0){}
+  Directive(int st,int len):start(st),end(st+len){}
+  Directive(const Directive& d):start(d.start),end(d.end){}
+};
+
+
+void StateMachine::processDirectives(SMS& sms,Profile& p)
+{
+  const char *body="";
+  unsigned int len=0;
+  int dc=sms.getIntProperty(Tag::SMPP_DATA_CODING);
+  bool udhi=(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)==0x40;
+  int udhiLen=0;
+  if(sms.getIntProperty(Tag::SMPP_SM_LENGTH))
+  {
+    body=sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+  }else
+  {
+    if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      body=sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    }
+  }
+  unsigned int olen=len;
+  if(udhi)
+  {
+    udhiLen=(*(const unsigned char*)body)+1;
+    len-=udhiLen;
+    body+=udhiLen;
+  }
+  if(len==0)return;
+  bool hasDirectives=false;
+  switch(sms.getIntProperty(Tag::SMPP_DATA_CODING))
+  {
+    case DataCoding::SMSC7BIT:
+    case DataCoding::DEFAULT:
+      hasDirectives=*body=='#';
+      break;
+    case DataCoding::UCS2:
+      hasDirectives=*((unsigned short*)body)=='#';
+      break;
+  }
+  if(!hasDirectives)return;
+  char *escchars="[]{}^~\\|";
+  auto_ptr<char> bufptr(new char[len+1]);
+  char *buf=bufptr.get();
+
+  len=getSmsText(&sms,buf,len+1);
+
+  Array<Directive> offsets;
+  int i=0;
+  RegExp def("/#def\\s+(\\d{1,2})#/");
+  __require__(def.LastError()==regexp::errNone);
+  RegExp tmpl("/#template=(.*?)#/");
+  __require__(tmpl.LastError()==regexp::errNone);
+  RegExp tmplparam("/\\{(\\w+)\\}=(\".*?\"|\\S+)/");
+  __require__(tmplparam.LastError()==regexp::errNone);
+  RegExp unkdir("/#.*?#/");
+  __require__(unkdir.LastError()==regexp::errNone);
+  SMatch m[10];
+
+  ContextEnvironment ce;
+  ReceiptGetAdapter ga;
+
+  string tmplname;
+
+  while(i<len && buf[i]=='#')
+  {
+    int n=10;
+    if(!strncasecmp(buf+i,"#ack#",5))
+    {
+      __trace__("DIRECT: ack found");
+      sms.setDeliveryReport(2);
+      Directive d(i,5);
+      offsets.Push(d);
+      i+=5;
+    }else
+    if(!strncasecmp(buf+i,"#noack#",7))
+    {
+      __trace__("DIRECT: noack found");
+      sms.setDeliveryReport(255);
+      Directive d(i,7);
+      offsets.Push(d);
+      i+=7;
+    }else
+    if(def.MatchEx(buf,buf+i,buf+len,m,n))
+    {
+      int t=atoi(buf+m[1].start);
+      __trace2__("DIRECT: %*s, t=%d",m[0].end-m[0].start,buf+m[0].start,t);
+      sms.setNextTime(time(NULL)+t*60*60);
+      Directive d(i,m[0].end-m[0].start);
+      offsets.Push(d);
+      i+=m[0].end-m[0].start;
+    }else
+    if(tmpl.MatchEx(buf,buf+i,buf+len,m,n))
+    {
+      tmplname.assign(buf+m[1].start,m[1].end-m[1].start);
+      __trace2__("DIRECT: template=%s",tmplname.c_str());
+      int j=m[0].end;
+      n=10;
+      string name,value;
+      while(tmplparam.MatchEx(buf,buf+j,buf+len,m,n))
+      {
+        name.assign(buf+m[1].start,m[1].end-m[1].start);
+        value.assign
+        (
+          buf+m[2].start+(buf[m[2].start]=='"'?1:0),
+          m[2].end-m[2].start-(buf[m[2].start]=='"'?2:0)
+        );
+        __trace2__("DIRECT: found template param %s=%s",name.c_str(),value.c_str());
+        ce.exportStr(name.c_str(),value.c_str());
+        j=m[0].end;
+      }
+      Directive d(i,j-i);
+      offsets.Push(d);
+      i=j;
+    }else
+    if(unkdir.MatchEx(buf,buf+i,buf+len,m,n))
+    {
+      i=m[0].end;
+    }else
+    {
+      break;
+    }
+  }
+  if(offsets.Count()==0)return;
+  if(tmplname.length() && i<len)
+  {
+    Directive d(i,len-i);
+    offsets.Push(d);
+  }
+  if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::SMSC7BIT)
+  {
+    int pos=0;
+    int fix=0;
+    for(int i=0;i<len;i++)
+    {
+      if(offsets[pos].start==i)
+      {
+        offsets[pos].start+=fix;
+      }
+      if(offsets[pos].end==i)
+      {
+        offsets[pos].end+=fix;
+        pos++;
+        if(pos==offsets.Count())break;
+      }
+      if(strchr(escchars,buf[i]))fix++;
+    }
+  }
+  if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+  {
+    for(i=0;i<offsets.Count();i++)
+    {
+      offsets[i].start*=2;
+      offsets[i].end*=2;
+    }
+  }
+  for(i=offsets.Count()-1;i>=0;i--)
+  {
+    if(offsets[i-1].end==offsets[i].start)
+    {
+      offsets[i-1].end=offsets[i].end;
+      offsets.Delete(i);
+    }
+  }
+  string newtext;
+  if(tmplname.length())
+  {
+    OutputFormatter *f=ResourceManager::getInstance()->getFormatter(p.locale,tmplname);
+    try{
+      f->format(newtext,ga,ce);
+    }catch(exception& e)
+    {
+      __trace2__("DIRECT: exception : %s",e.what());
+    }catch(...)
+    {
+      __trace2__("DIRECT: exception : unknown");
+    }
+  }
+
+  auto_ptr<char> newBodyPtr(new char[olen*3+newtext.length()*3]);
+  char* newBody=newBodyPtr.get();
+  char *ptr=newBody;
+  if(udhi)
+  {
+    memcpy(ptr,body-udhiLen,udhiLen);
+    ptr+=udhiLen;
+  }
+  memcpy(ptr,body,offsets[0].start);
+  ptr+=offsets[0].start;
+  for(i=0;i<offsets.Count()-1;i++)
+  {
+    memcpy(ptr,body+offsets[i].end,offsets[i+1].start-offsets[i].end);
+    ptr+=offsets[i+1].start-offsets[i].end;
+  }
+  memcpy(ptr,body+offsets[i].end,olen-udhiLen-offsets[i].end);
+  int newlen=(ptr-newBody)+olen-udhiLen-offsets[i].end;
+  if(newtext.length())
+  {
+    bool hb=hasHighBit(newtext.c_str(),newtext.length());
+    if(dc!=DataCoding::UCS2 && hb)
+    {
+      if(dc==DataCoding::DEFAULT)
+      {
+        auto_ptr<short> b(new short[newlen-udhiLen]);
+        ConvertMultibyteToUCS2(newBody+udhiLen,newlen-udhiLen,b.get(),(newlen-udhiLen)*2,CONV_ENCODING_CP1251);
+        memcpy(newBody+udhiLen,b.get(),(newlen-udhiLen)*2);
+      }else //SMSC7BIT
+      {
+        auto_ptr<char> x(new char[newlen-udhiLen+1]);
+        int cvtlen=ConvertSMSC7BitToLatin1(newBody+udhiLen,newlen-udhiLen,x.get());
+        ConvertMultibyteToUCS2
+        (
+          x.get(),
+          cvtlen,
+          (short*)newBody+udhiLen,
+          (newlen-udhiLen)*2,
+          CONV_ENCODING_CP1251
+        );
+      }
+      sms.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::UCS2);
+      dc=DataCoding::UCS2;
+      newlen=2*newlen-udhiLen;
+    }
+    if(hb)
+    {
+      auto_ptr<short> nt(new short[newtext.length()+1]);
+      __trace2__("DIRECT: newtext=%s, newtext.length=%d, nt.get()=%p",newtext.c_str(),newtext.length(),nt.get());
+      ConvertMultibyteToUCS2
+      (
+        newtext.c_str(),
+        newtext.length(),
+        nt.get(),
+        newtext.length()*2,
+        CONV_ENCODING_CP1251
+      );
+      memcpy(newBody+newlen,nt.get(),newtext.length()*2);
+      newlen+=newtext.length()*2;
+    }else
+    {
+      if(dc==DataCoding::DEFAULT)
+      {
+        memcpy(newBody+newlen,newtext.c_str(),newtext.length());
+        newlen+=newtext.length();
+      }else
+      {
+        auto_ptr<char> nt(new char[newtext.length()*2]);
+        int cvtlen=ConvertLatin1ToSMSC7Bit(newtext.c_str(),newtext.length(),nt.get());
+        memcpy(newBody+newlen,nt.get(),cvtlen);
+        newlen+=cvtlen;
+      }
+    }
+  }
+  if(newlen>255)
+  {
+    sms.getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
+    sms.setIntProperty(Tag::SMPP_SM_LENGTH,0);
+    sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,newBody,newlen);
+  }else
+  {
+    if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,newBody,newlen);
+    }else
+    {
+      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,newBody,newlen);
+      sms.setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
+    }
+  }
+}
 
 
 StateType StateMachine::submit(Tuple& t)
@@ -541,38 +815,6 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   __trace2__("SUBMIT_SM: route found, routeId=%s, smeSystemId=%s",ri.routeId.c_str(),ri.smeSystemId.c_str());
-  __trace2__("SUBMIT_SM: dest_addr_subunit=%d",sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
-
-  if(ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
-  {
-    unsigned len=sms->getIntProperty(Tag::SMPP_SM_LENGTH);
-    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
-    {
-      sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-    }
-    __trace2__("SUBMIT_SM: sim specific, len=%d",len);
-    if(len>140)
-    {
-      sms->lastResult=Status::INVMSGLEN;
-      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-      SmscCommand resp = SmscCommand::makeSubmitSmResp
-                         (
-                           /*messageId*/"0",
-                           dialogId,
-                           Status::INVMSGLEN,
-                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                         );
-      try{
-        src_proxy->putCommand(resp);
-      }catch(...)
-      {
-      }
-      __warning__("SUBMIT_SM: invalid message length");
-      return ERROR_STATE;
-    }
-
-  }
-
 
   sms->setSourceSmeId(t.command->get_sourceId());
 
@@ -615,6 +857,42 @@ StateType StateMachine::submit(Tuple& t)
   profile=smsc->getProfiler()->lookup(dst);
   sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
   int pres=psSingle;
+
+  processDirectives(*sms,profile);
+  __trace2__("SUBMIT_SM: after processDirectives - delrep=%d, sdt=%d",(int)sms->getDeliveryReport(),sms->getNextTime());
+
+  __trace2__("SUBMIT_SM: dest_addr_subunit=%d",sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
+
+  if(ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
+  {
+    unsigned len=sms->getIntProperty(Tag::SMPP_SM_LENGTH);
+    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    }
+    __trace2__("SUBMIT_SM: sim specific, len=%d",len);
+    if(len>140)
+    {
+      sms->lastResult=Status::INVMSGLEN;
+      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           Status::INVMSGLEN,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+      }
+      __warning__("SUBMIT_SM: invalid message length");
+      return ERROR_STATE;
+    }
+
+  }
+
   if(ri.smeSystemId=="MAP_PROXY")
   {
     pres=partitionSms(sms,profile.codepage);
@@ -1347,70 +1625,76 @@ StateType StateMachine::deliveryResp(Tuple& t)
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
     __trace2__("DELIVERYRESP: suppdelrep=%d, delrep=%d, regdel=%d, srr=%d",
       sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS),
-      sms.getDeliveryReport(),
+      (int)sms.getDeliveryReport(),
       sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY),
       sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST));
 
-    if(!sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) && !sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))
+    if(
+        sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
+        sms.getDeliveryReport()==255 ||
+        (
+          sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) &&
+          sms.getDeliveryReport()!=2
+        )
+      )return DELIVERED_STATE;
+    if(
+        sms.getDeliveryReport() ||
+        (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1  ||
+        sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)
+      )
     {
-      if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
-         sms.getDeliveryReport() ||
-         (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1  ||
-         sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
-      {
-        SMS *prpt=new SMS;
-        SMS &rpt=*prpt;
-        rpt.setOriginatingAddress(scAddress);
-        char msc[]="";
-        char imsi[]="";
-        rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
-        rpt.setValidTime(0);
-        rpt.setDeliveryReport(0);
-        rpt.setArchivationRequested(false);
-        rpt.setIntProperty(Tag::SMPP_ESM_CLASS,
-          sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) ||
-          (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1?4:0);
-        rpt.setDestinationAddress(sms.getOriginatingAddress());
-        rpt.setMessageReference(sms.getMessageReference());
-        rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
-          sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-        rpt.setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED_STATE);
-        char addr[64];
-        sms.getDestinationAddress().getText(addr,sizeof(addr));
-        rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
-        rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
-        char msgid[60];
-        sprintf(msgid,"%lld",t.msgId);
-        rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
-        string out;
-        sms.getDestinationAddress().getText(addr,sizeof(addr));
-        const Descriptor& d=sms.getDestinationDescriptor();
-        __trace2__("RECEIPT: msc=%s, imsi=%s",d.msc,d.imsi);
-        FormatData fd;
-        fd.addr=addr;
-        fd.date=time(NULL);
-        fd.msgId=msgid;
-        fd.err="";
-        fd.lastResult=0;
-        fd.lastResultGsm=0;
-        fd.msc=d.msc;
-        string loc=sms.getStrProperty(Tag::SMSC_RECEIPT_LOCALE);
-        fd.locale=loc.c_str();
-        smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
-        fd.scheme=si.receiptSchemeName.c_str();
+      SMS *prpt=new SMS;
+      SMS &rpt=*prpt;
+      rpt.setOriginatingAddress(scAddress);
+      char msc[]="";
+      char imsi[]="";
+      rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+      rpt.setValidTime(0);
+      rpt.setDeliveryReport(0);
+      rpt.setArchivationRequested(false);
+      rpt.setIntProperty(Tag::SMPP_ESM_CLASS,
+        sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) ||
+        (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1?4:0);
+      rpt.setDestinationAddress(sms.getOriginatingAddress());
+      rpt.setMessageReference(sms.getMessageReference());
+      rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
+        sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+      rpt.setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED_STATE);
+      char addr[64];
+      sms.getDestinationAddress().getText(addr,sizeof(addr));
+      rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
+      rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
+      char msgid[60];
+      sprintf(msgid,"%lld",t.msgId);
+      rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
+      string out;
+      sms.getDestinationAddress().getText(addr,sizeof(addr));
+      const Descriptor& d=sms.getDestinationDescriptor();
+      __trace2__("RECEIPT: msc=%s, imsi=%s",d.msc,d.imsi);
+      FormatData fd;
+      fd.addr=addr;
+      fd.date=time(NULL);
+      fd.msgId=msgid;
+      fd.err="";
+      fd.lastResult=0;
+      fd.lastResultGsm=0;
+      fd.msc=d.msc;
+      string loc=sms.getStrProperty(Tag::SMSC_RECEIPT_LOCALE);
+      fd.locale=loc.c_str();
+      smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
+      fd.scheme=si.receiptSchemeName.c_str();
 
-        formatDeliver(fd,out);
-        rpt.getDestinationAddress().getText(addr,sizeof(addr));
-        __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
-        smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-        trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
-        smsc->submitSms(prpt);
-        /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
-        for(int i=0;i<arr.Count();i++)
-        {
-          smsc->submitSms(arr[i]);
-        };*/
-      }
+      formatDeliver(fd,out);
+      rpt.getDestinationAddress().getText(addr,sizeof(addr));
+      __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
+      smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+      trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
+      smsc->submitSms(prpt);
+      /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
+      for(int i=0;i<arr.Count();i++)
+      {
+        smsc->submitSms(arr[i]);
+      };*/
     }
   }catch(std::exception& e)
   {
@@ -1745,6 +2029,8 @@ StateType StateMachine::cancel(Tuple& t)
 
 void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason)
 {
+  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) || sms.getDeliveryReport()==255)return;
+  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && sms.getDeliveryReport()!=2)return;
   if(!(
         sms.getDeliveryReport() ||
         (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
@@ -1752,8 +2038,6 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
         sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)
       )
     )return;
-  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))return;
-  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))return;
   SMS *prpt=new SMS;
   SMS &rpt=*prpt;
   rpt.setOriginatingAddress(scAddress);
@@ -1811,6 +2095,8 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
 
 void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 {
+  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) || sms.getDeliveryReport()==255)return;
+  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && sms.getDeliveryReport()!=2)return;
   if(!(
         sms.getDeliveryReport() ||
         (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
@@ -1820,8 +2106,6 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     )return;
   __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
   if(sms.getAttemptsCount()!=0)return;
-  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))return;
-  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))return;
   SMS *prpt=new SMS;
   SMS &rpt=*prpt;
   rpt.setOriginatingAddress(scAddress);

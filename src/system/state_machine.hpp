@@ -52,13 +52,6 @@ public:
     }
   };
 
-  void formatDeliver(const FormatData&,std::string& out);
-  void formatFailed(const FormatData&,std::string& out);
-  void formatNotify(const FormatData&,std::string& out);
-
-  void sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason);
-  void sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason);
-
   time_t rescheduleSms(SMS& sms);
 
   const char *taskName(){return "StateMachine";}
@@ -79,6 +72,15 @@ protected:
   StateType replace(Tuple& t);
   StateType query(Tuple& t);
   StateType cancel(Tuple& t);
+
+  void formatDeliver(const FormatData&,std::string& out);
+  void formatFailed(const FormatData&,std::string& out);
+  void formatNotify(const FormatData&,std::string& out);
+
+  void sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason);
+  void sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason);
+
+  void processDirectives(SMS& sms,smsc::profiler::Profile& p);
 };
 
 };//system
