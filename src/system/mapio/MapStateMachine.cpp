@@ -588,7 +588,7 @@ static string RouteToString(MapDialog* dialog)
 }catch(exception& e){\
   __trace2__("#except#MAP::%s# MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,__dialogid_map,__dialogid_smsc);\
   __trace2__("   <exception>:%s",e.what());\
-  TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_FATAL,0)));\
+  TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_FATAL,0));\
 }
 
 static bool SendSms(MapDialog* dialog){
