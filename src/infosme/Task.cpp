@@ -246,73 +246,79 @@ const char* NEW_TABLE_STATEMENT_SQL =
 const char* NEW_SD_INDEX_STATEMENT_SQL = 
 "CREATE INDEX %s_SD_IDX ON %s (STATE, SEND_DATE)";
 
-bool Task::createTable()
+void Task::createTable()
 {
-    logger.debug("createTable method called on task '%s'",
-                 info.id.c_str());
+    logger.debug("createTable method called on task '%s'", info.id.c_str());
     
     MutexGuard guard(createTableLock);
     
-    bool result = false;
     Connection* connection = 0;
-    Statement* statement = 0;
     try
     {
         connection = dsInt->getConnection();
         if (!connection)
             throw Exception("Failed to obtain connection to internal data source.");
 
-        std::auto_ptr<char> createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
-        statement = connection->createStatement(createTableSql.get());
-        if (!statement) 
-            throw Exception("Failed to create table statement.");
-        statement->execute();
-        delete statement;
-
-        std::auto_ptr<char> createIndexSql(prepareDoubleSqlCall(NEW_SD_INDEX_STATEMENT_SQL));
-        statement = connection->createStatement(createIndexSql.get());
-        if (!statement) 
-            throw Exception("Failed to create index statement.");
-        statement->execute();
+        {
+            std::auto_ptr<char> createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
+            std::auto_ptr<Statement> statementGuard(connection->createStatement(createTableSql.get()));
+            Statement* statement = statementGuard.get();
+            if (!statement) 
+                throw Exception("Failed to create table statement.");
+            statement->execute();  
+        } 
+        {
+            std::auto_ptr<char> createIndexSql(prepareDoubleSqlCall(NEW_SD_INDEX_STATEMENT_SQL));
+            std::auto_ptr<Statement> statementGuard(connection->createStatement(createIndexSql.get()));
+            Statement* statement = statementGuard.get();
+            if (!statement) 
+                throw Exception("Failed to create index statement.");
+            statement->execute();
+        }
 
         connection->commit();
-        result = true;
     } 
     catch (Exception& exc)
     {
-        try { if (connection) connection->rollback(); }
-        catch (...) {
+        try { 
+            if (connection) { 
+                connection->rollback();
+                dsInt->freeConnection(connection);
+            }
+        } catch (...) {
             logger.error("Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Failed to create internal table. "
-                     "Details: %s", info.id.c_str(), exc.what());
+        Exception eee("Task '%s'. Failed to create internal table. Details: %s",
+                       info.id.c_str(), exc.what());
+        logger.error("%s", eee.what());
+        throw eee;
     }
     catch (...) {
-        try { if (connection) connection->rollback(); }
-        catch (...) {
+        try { 
+            if (connection) { 
+                connection->rollback();
+                dsInt->freeConnection(connection);
+            }
+        } catch (...) {
             logger.error("Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Failed to create internal table.",
-                     info.id.c_str());
+        Exception eee("Task '%s'. Failed to create internal table. Cause is unknown.",
+                       info.id.c_str());
+        logger.error("%s", eee.what());
+        throw eee;
     }
-    if (statement) delete statement;
     if (connection) dsInt->freeConnection(connection);
-
-    return result;
 }
 
 const char* DROP_TABLE_STATEMENT_SQL = "DROP TABLE %s";
 
-bool Task::dropTable()
+void Task::dropTable()
 {
-    logger.debug("dropTable method called on task '%s'",
-                 info.id.c_str());
+    logger.debug("dropTable method called on task '%s'", info.id.c_str());
     
     MutexGuard guard(createTableLock);
     
-    bool result = false;
     Connection* connection = 0;
-    Statement* statement = 0;
     try
     {
         connection = dsInt->getConnection();
@@ -322,34 +328,43 @@ bool Task::dropTable()
         trackIntegrity(true, false, connection); // delete flag only
 
         std::auto_ptr<char> dropTableSql(prepareSqlCall(DROP_TABLE_STATEMENT_SQL));
-        statement = connection->createStatement(dropTableSql.get());
+        std::auto_ptr<Statement> statementGuard(connection->createStatement(dropTableSql.get()));
+        Statement* statement = statementGuard.get();
         if (!statement) 
             throw Exception("Failed to create table statement.");
         statement->execute();
         connection->commit();
-        result = true;
     } 
     catch (Exception& exc)
     {
-        try { if (connection) connection->rollback(); }
-        catch (...) {
+        try { 
+            if (connection) { 
+                connection->rollback();
+                dsInt->freeConnection(connection);
+            }
+        } catch (...) {
             logger.error("Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Failed to drop internal table. "
-                     "Details: %s", info.id.c_str(), exc.what());
+        Exception eee("Task '%s'. Failed to drop internal table. Details: %s",
+                       info.id.c_str(), exc.what());
+        logger.error("%s", eee.what());
+        throw eee;
     }
     catch (...) {
-        try { if (connection) connection->rollback(); }
-        catch (...) {
+        try { 
+            if (connection) { 
+                connection->rollback();
+                dsInt->freeConnection(connection);
+            }
+        } catch (...) {
             logger.error("Failed to roolback transaction on internal data source.");
         }
-        logger.error("Task '%s'. Failed to drop internal table.",
-                     info.id.c_str());
+        Exception eee("Task '%s'. Failed to drop internal table. Cause is unknown.",
+                       info.id.c_str());
+        logger.error("%s", eee.what());
+        throw eee;
     }
-    if (statement) delete statement;
     if (connection) dsInt->freeConnection(connection);
-
-    return result;
 }
 
 const char* USER_QUERY_STATEMENT_ID = "%s_USER_QUERY_STATEMENT_ID";

@@ -206,12 +206,13 @@ namespace smsc { namespace infosme
         Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
              DataSource* dsOwn, DataSource* dsInt);
         
-        bool createTable();
-        bool dropTable();
+        void createTable(); // throws Exception
+        void dropTable();   // throws Exception
 
         bool destroy() {
             doFinalization();
-            bool result = dropTable();
+            bool result = true;
+            try { dropTable(); } catch (...) { result = false; }
             delete this;
             return result;
         }

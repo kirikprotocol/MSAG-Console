@@ -146,9 +146,10 @@ bool TaskProcessor::putTask(Task* task)
 bool TaskProcessor::addTask(Task* task)
 {
     __require__(task);
-    bool result = putTask(task);
-    if (result) result = task->createTable();
-    return result;
+    
+    if (hasTask(task->getId())) return false;
+    task->createTable(); // throws Exception
+    return putTask(task);
 }
 bool TaskProcessor::remTask(std::string taskId)
 {
@@ -300,7 +301,7 @@ bool TaskProcessor::processTask(Task* task)
     {
         MutexGuard icGuard(dsIntConnectionLock);
         if (!task->getNextMessage(dsIntConnection, message)) {
-            logger.debug("No messages found for task '%s'", info.id.c_str());
+            //logger.debug("No messages found for task '%s'", info.id.c_str());
             return false;
         }
     }
