@@ -40,6 +40,8 @@ public class ProfileManager
   private HashMap informFormats = new HashMap(); // TODO: synchronize it ???
   private HashMap notifyFormats = new HashMap(); // TODO: synchronize it ???
 
+  private final static String DEFAULT_INFORM = "defaultInform";
+  private final static String DEFAULT_NOTIFY = "defaultNotify";
   private final static String DEFAULT_INFORM_ID = "defaultInformId";
   private final static String DEFAULT_NOTIFY_ID = "defaultNotifyId";
   private final static String INFORM_TEMPLATE_PREFIX = "informTemplate.";
@@ -58,6 +60,19 @@ public class ProfileManager
       throw new ScenarioInitializationException("Failed to load template properties", e);
     } finally {
       try { is.close(); } catch (Throwable th) {}
+    }
+
+    try {
+      DEFAULT_PROFILE_INFO.inform = Boolean.getBoolean(properties.getProperty(DEFAULT_INFORM));
+    } catch (Exception e) {
+      DEFAULT_PROFILE_INFO.inform = true;
+      logger.warn("Parameter '"+DEFAULT_INFORM+"' missed. Default flag is on");
+    }
+    try {
+      DEFAULT_PROFILE_INFO.notify = Boolean.getBoolean(properties.getProperty(DEFAULT_NOTIFY));
+    } catch (Exception e) {
+      DEFAULT_PROFILE_INFO.notify = false;
+      logger.warn("Parameter '"+DEFAULT_NOTIFY+"' missed. Default flag is off");
     }
 
     int defaultInformId = -1; int defaultNotifyId = -1;
@@ -125,20 +140,23 @@ public class ProfileManager
       stmt = connection.prepareStatement(GET_PROFILE_SQL);
       stmt.setString(1, abonent);
       rs = stmt.executeQuery();
-      if (rs == null || !rs.next()) return DEFAULT_PROFILE_INFO;
+
+      if (rs == null || !rs.next())
+        return new ProfileInfo(DEFAULT_PROFILE_INFO);
 
       ProfileInfo info = new ProfileInfo();
       int pos = 1;
       String result = rs.getString(pos++);
-      info.inform = !(rs.wasNull() || result == null || result.length() <= 0 || result.trim().equals("N"));
+      if (rs.wasNull()) info.inform = DEFAULT_PROFILE_INFO.inform;
+      else info.inform = !(result == null || result.length() <= 0 || result.trim().equalsIgnoreCase("N"));
       result = rs.getString(pos++);
-      info.notify = !(rs.wasNull() || result == null || result.length() <= 0 || result.trim().equals("N"));
-      long informId = rs.getLong(pos++); if (rs.wasNull()) informId = DEFAULT_PROFILE_INFO.informFormat.getId();
-      long notifyId = rs.getLong(pos++); if (rs.wasNull()) notifyId = DEFAULT_PROFILE_INFO.notifyFormat.getId();
-      int eventMask = rs.getInt(pos++);  if (rs.wasNull()) eventMask = ProfileInfo.MASK_ALL;
+      if (rs.wasNull()) info.notify = DEFAULT_PROFILE_INFO.notify;
+      else info.notify = !(result == null || result.length() <= 0 || result.trim().equalsIgnoreCase("N"));
+      long informId  = rs.getLong(pos++); if (rs.wasNull()) informId = DEFAULT_PROFILE_INFO.informFormat.getId();
+      long notifyId  = rs.getLong(pos++); if (rs.wasNull()) notifyId = DEFAULT_PROFILE_INFO.notifyFormat.getId();
+      info.eventMask = rs.getInt (pos++); if (rs.wasNull()) info.eventMask = ProfileInfo.MASK_ALL;
       info.informFormat = getFormatType(informId, true);
       info.notifyFormat = getFormatType(notifyId, false);
-      info.eventMask = eventMask;
       return info;
     }
     catch (Exception exc) {
@@ -146,12 +164,9 @@ public class ProfileManager
       throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
     }
     finally {
-      try { if (rs != null) rs.close(); }
-      catch (Throwable th) { logger.error(th); }
-      try { if (stmt != null) stmt.close(); }
-      catch (Throwable th) { logger.error(th); }
-      try { if (connection != null) connection.close(); }
-      catch (Throwable th) { logger.error(th); }
+      try { if (rs != null) rs.close(); } catch (Throwable th) { logger.error(th); }
+      try { if (stmt != null) stmt.close(); } catch (Throwable th) { logger.error(th); }
+      try { if (connection != null) connection.close(); } catch (Throwable th) { logger.error(th); }
     }
   }
 
@@ -187,16 +202,13 @@ public class ProfileManager
       connection.commit();
     }
     catch (Exception exc) {
-      try { if (connection != null) connection.rollback(); }
-      catch (Throwable th) { logger.error("", th); }
+      try { if (connection != null) connection.rollback(); } catch (Throwable th) { logger.error("", th); }
       logger.error("Update/Insert to DB failed", exc);
       throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
     }
     finally {
-      try { if (stmt != null) stmt.close(); }
-      catch (Throwable th) { logger.error("", th); }
-      try { if (connection != null) connection.close(); }
-      catch (Throwable th) { logger.error("", th); }
+      try { if (stmt != null) stmt.close(); } catch (Throwable th) { logger.error("", th); }
+      try { if (connection != null) connection.close(); }  catch (Throwable th) { logger.error("", th); }
     }
   }
 
@@ -213,16 +225,13 @@ public class ProfileManager
       connection.commit();
     }
     catch (Exception exc) {
-      try { if (connection != null) connection.rollback(); }
-      catch (Throwable th) { logger.error("", th); }
+      try { if (connection != null) connection.rollback(); } catch (Throwable th) { logger.error("", th); }
       logger.error("Delete form DB failed", exc);
       throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
     }
     finally {
-      try { if (stmt != null) stmt.close(); }
-      catch (Throwable th) { logger.error("", th); }
-      try { if (connection != null) connection.close(); }
-      catch (Throwable th) { logger.error("", th); }
+      try { if (stmt != null) stmt.close(); } catch (Throwable th) { logger.error("", th); }
+      try { if (connection != null) connection.close(); } catch (Throwable th) { logger.error("", th); }
     }
   }
 

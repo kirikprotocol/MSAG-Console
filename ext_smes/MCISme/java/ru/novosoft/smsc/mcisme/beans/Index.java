@@ -183,12 +183,14 @@ public class Index extends IndexProperties
       savePropertiesFile(location, MCI_PROF_MSC_FILE, mscProperties, MCI_PROF_MSC_COMMENT);
 
       Properties mtfProperties = new Properties();
+      mtfProperties.setProperty("defaultInform", ""+config.getBool("MCISme.defaultInform"));
       mtfProperties.setProperty("defaultInformId", ""+config.getInt(INFORM_TEMPLATES_SECTION_NAME+".default"));
       for (Iterator i = config.getSectionChildShortSectionNames(INFORM_TEMPLATES_SECTION_NAME).iterator(); i.hasNext();) {
         String templateName = (String)i.next();
         int id = config.getInt(INFORM_TEMPLATES_SECTION_NAME+'.'+templateName+".id");
         mtfProperties.setProperty("informTemplate."+id, templateName);
       }
+      mtfProperties.setProperty("defaultNotify", ""+config.getBool("MCISme.defaultNotify"));
       mtfProperties.setProperty("defaultNotifyId", ""+config.getInt(NOTIFY_TEMPLATES_SECTION_NAME+".default"));
       for (Iterator i = config.getSectionChildShortSectionNames(NOTIFY_TEMPLATES_SECTION_NAME).iterator(); i.hasNext();) {
         String templateName = (String)i.next();

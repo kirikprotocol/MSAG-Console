@@ -22,7 +22,12 @@ public class ProfileInfo
   protected FormatType informFormat = new FormatType();
   protected FormatType notifyFormat = new FormatType();
 
-  public ProfileInfo() {
+  public ProfileInfo() {}
+  public ProfileInfo(ProfileInfo info)
+  {
+    this.eventMask = info.eventMask;
+    this.inform = info.inform;  this.notify = info.notify;
+    this.informFormat = info.informFormat; this.notifyFormat = info.notifyFormat;
   }
   public ProfileInfo(FormatType informFormat, FormatType notifyFormat,
                      boolean inform, boolean notify, int eventMask)
