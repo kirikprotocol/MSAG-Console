@@ -15,6 +15,7 @@
 	Profile profile = smsc.lookupProfile(address);
 %>
 <form method="post" action="update.jsp">
+	<input type="Hidden" name="isAdd" value="<%=isAdd%>">
 	<h2>Profile: <%=profile.getMask().getMask()%></h2>
 	<table class="list" cellspacing="0">
 		<tr class="list">

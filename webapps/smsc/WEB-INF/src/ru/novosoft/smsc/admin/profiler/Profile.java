@@ -63,7 +63,7 @@ public class Profile
 			case CODEPAGE_UCS2:
 				return "UCS2";
 			default:
-				throw new AdminException("Codepage is not initialized");
+				throw new AdminException("Unknown codepage: " + codepage);
 		}
 	}
 

@@ -8,14 +8,17 @@ package ru.novosoft.smsc.jsp;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.util.conpool.NSConnectionPool;
 import ru.novosoft.util.jsp.AppContext;
 
 
 public interface SMSCAppContext extends AppContext
 {
-  Config getConfig();
+	public Config getConfig();
 
-  ServiceManager getServiceManager();
+	public ServiceManager getServiceManager();
 
-  Smsc getSmsc();
+	public Smsc getSmsc();
+
+	public NSConnectionPool getConnectionPool();
 }

@@ -214,13 +214,13 @@ public class Smsc extends Service
 			throw new AdminException("Error in response");
 	}
 
-	public void updateProfile(Mask mask, Profile newProfile)
+	public int updateProfile(Mask mask, Profile newProfile)
 			  throws AdminException
 	{
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
 		args.put("profile", newProfile.getStringRepresentation());
-		call(smsc_component, update_profile_method, Type.Types[Type.BooleanType], args);
+		return ((Long)call(smsc_component, update_profile_method, Type.Types[Type.IntType], args)).intValue();
 	}
 
 	public QueryResultSet queryProfiles(ProfileQuery query)

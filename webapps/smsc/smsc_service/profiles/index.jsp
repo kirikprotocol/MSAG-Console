@@ -22,7 +22,7 @@
 	if (startPosition == Integer.MIN_VALUE)
 		startPosition = 0;
 
-  showTable(out, smsc.queryProfiles(new ProfileQuery(pagesize, filter, sortOrder, startPosition)));
+  showTable(out, smsc.queryProfiles(new ProfileQuery(pagesize, filter, sortOrder, startPosition)), true);
   
   if (startPosition > 0)
   {%><a href="?sort=<%=sort%>&startPosition=<%=startPosition - pagesize%>">prev</a><%}

@@ -42,7 +42,7 @@ public:
     Method lookup_profile((unsigned)lookupProfileMethod, "lookup_profile",
                           lookup_params, StringType);
     Method update_profile((unsigned)updateProfileMethod, "update_profile",
-                          update_params, BooleanType);
+                          update_params, LongType);
 
 		methods[apply_routes.getName()] = apply_routes;
 		methods[apply_aliases.getName()] = apply_aliases;
@@ -74,8 +74,8 @@ public:
 	void stopSmsc() throw (AdminException);
 
 protected:
-    void updateProfile(const Arguments &args);
-    std::string lookupProfile(const Arguments &args) throw (AdminException);
+  int updateProfile(const Arguments &args);
+  std::string lookupProfile(const Arguments &args) throw (AdminException);
 	
 	bool isSmscRunning() throw() {return smsc_app_runner.get() != 0;}
 	void applyRoutes() throw (AdminException);

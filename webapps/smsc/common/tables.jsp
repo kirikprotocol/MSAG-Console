@@ -6,6 +6,12 @@
 void showTable(JspWriter out, QueryResultSet results)
   throws java.io.IOException
 {
+	showTable(out, results, false);
+}
+
+void showTable(JspWriter out, QueryResultSet results, boolean notShowDeleteButton)
+  throws java.io.IOException
+{
   String[] columns = results.getColumns();
   String sort = (String)results.getSortOrder().get(0);
   if (sort == null) sort = "";
@@ -59,8 +65,9 @@ void showTable(JspWriter out, QueryResultSet results)
 				  + '&';
       }
     }
-    out.println("  <td class=\"list\"><a href=\"edit.jsp" + params + "\">Edit</a>"
-	            + "&nbsp;<a href=\"delete.jsp" + params + "\">Delete</a></td>");
+    out.print("  <td class=\"list\"><a href=\"edit.jsp" + params + "\">Edit</a>");
+	if (!notShowDeleteButton)
+		out.println("&nbsp;<a href=\"delete.jsp" + params + "\">Delete</a></td>");
     out.println("  </tr>");
   }
   out.println("</table>");

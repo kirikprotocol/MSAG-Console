@@ -13,23 +13,22 @@ const char PROFILE_PARAMS_DELIMITER = ',';
 Variant SmscComponent::call(const Method & method, const Arguments & args)
 	throw (AdminException)
 {
-	switch (method.getId())
-	{
-	case applyRoutesMethod:
-		applyRoutes();
-		return Variant("");
-	case applyAliasesMethod:
-		applyAliases();
-		return Variant("");
-    case lookupProfileMethod:
-        return Variant(lookupProfile(args).c_str());
-    case updateProfileMethod:
-        updateProfile(args);
-        return Variant(true);
-	default:
-		throw AdminException("Unknown method \"%s\"", method.getName());
-	}
-	return Variant("");
+  switch (method.getId())
+  {
+  case applyRoutesMethod:
+    applyRoutes();
+    return Variant("");
+  case applyAliasesMethod:
+    applyAliases();
+    return Variant("");
+  case lookupProfileMethod:
+    return Variant(lookupProfile(args).c_str());
+  case updateProfileMethod:
+    return Variant((long)updateProfile(args));
+  default:
+    throw AdminException("Unknown method \"%s\"", method.getName());
+  }
+  return Variant("");
 }
 
 void SmscComponent::runSmsc()
@@ -159,7 +158,7 @@ void setProfileFromString(Profile &profile, const char * const profileString)
         throw AdminException("profile options misformatted");
 }
 
-void SmscComponent::updateProfile(const Arguments & args) 
+int SmscComponent::updateProfile(const Arguments & args) 
 {
     try
     {
@@ -171,14 +170,14 @@ void SmscComponent::updateProfile(const Arguments & args)
         if (isSmscRunning() && (app = smsc_app_runner->getApp()) && (profiler = app->getProfiler())) 
         {
             Address address(addressString);
-            #ifdef SMSC_DEBUG
-              char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+1];
-              address.getValue(addr_str);
-              logger.debug("Update Profile:\n  %s: Address: \"%s\"[%u], numebring plan:%u, type of number:%u, ", addressString, addr_str, address.getLength(), address.getNumberingPlan(), address.getTypeOfNumber());
-            #endif
             Profile profile;
             setProfileFromString(profile, profileString);
-            profiler->update(address, profile);
+            #ifdef SMSC_DEBUG
+              char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+9];
+              address.toString(addr_str, sizeof(addr_str)/sizeof(addr_str[0]));
+              logger.debug("Update Profile:\n  %s: Address: \"%s\", codepage:%u, report options:%u, ", addressString, addr_str, profile.codepage, profile.reportoptions);
+            #endif
+            return profiler->update(address, profile);
         }
         else
             throw AdminException("SMSC is not running");
