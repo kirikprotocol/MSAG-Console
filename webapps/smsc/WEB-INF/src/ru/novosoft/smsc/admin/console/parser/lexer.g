@@ -62,6 +62,7 @@ tokens {
   OPT_DM    	= "dm"	 	 ;
   OPT_FWD    	= "fwd"		 ;
   OPT_SRCSME    = "srcsme"	 ;
+  OPT_SET       = "set"	         ;
 
   VAL_FULL	= "full"	 ;
   VAL_NONE	= "none"	 ;

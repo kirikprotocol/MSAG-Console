@@ -20,6 +20,8 @@ public abstract class ProfileGenCommand implements Command
   protected boolean divertActive = false;
   protected boolean divertModifiable = false;
 
+  protected boolean isAliasOptions = false;
+  protected boolean isDivertOptions = false;
   protected boolean isReport = false;
   protected boolean isCodepage = false;
   protected boolean isAliasHide = false;
@@ -54,12 +56,19 @@ public abstract class ProfileGenCommand implements Command
     this.aliasModifiable = aliasModifiable; isAliasModifiable = true;
   }
   public void setDivert(String divert) {
-    this.divert = divert; isDivert = true;
+    this.divert = divert; isDivert = true; isDivertOptions = true;
   }
   public void setDivertActive(boolean divertActive) {
     this.divertActive = divertActive; isDivertActive = true;
   }
   public void setDivertModifiable(boolean divertModifiable) {
     this.divertModifiable = divertModifiable; isDivertModifiable = true;
+  }
+
+  public void setAliasOptions(boolean aliasOptions) {
+    isAliasOptions = aliasOptions;
+  }
+  public void setDivertOptions(boolean divertOptions) {
+    isDivertOptions = divertOptions;
   }
 }

@@ -418,8 +418,6 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  num = null;
 		Token  pri = null;
-		Token  sme = null;
-		Token  fwd = null;
 		
 		cmd = new RouteAddCommand();
 		
@@ -459,38 +457,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DM:
 		{
 			match(OPT_DM);
-			{
-			switch ( LA(1)) {
-			case VAL_DEF:
-			{
-				match(VAL_DEF);
-				cmd.setDeliveryMode("deafult");
-				break;
-			}
-			case VAL_STORE:
-			{
-				match(VAL_STORE);
-				cmd.setDeliveryMode("store");
-				break;
-			}
-			case VAL_FORWARD:
-			{
-				match(VAL_FORWARD);
-				cmd.setDeliveryMode("forward");
-				break;
-			}
-			case VAL_DATAGRAM:
-			{
-				match(VAL_DATAGRAM);
-				cmd.setDeliveryMode("datagram");
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
+			route_dm(cmd);
 			break;
 		}
 		case OPT_SRC:
@@ -510,9 +477,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_SRCSME:
 		{
 			match(OPT_SRCSME);
-			sme = LT(1);
-			match(STR);
-			cmd.setSrcSmeId(sme.getText());
+			cmd.setSrcSmeId(getnameid("srcSmeId value"));
 			break;
 		}
 		case OPT_SRC:
@@ -531,9 +496,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FWD:
 		{
 			match(OPT_FWD);
-			fwd = LT(1);
-			match(STR);
-			cmd.setForwardTo(fwd.getText());
+			cmd.setForwardTo(getnameid("forwardTo value"));
 			break;
 		}
 		case OPT_SRC:
@@ -636,7 +599,6 @@ public CommandParser(ParserSharedInputState state) {
 		ProfileAddCommand cmd;
 		
 		Token  mask = null;
-		Token  divert = null;
 		
 		cmd = new ProfileAddCommand();
 		
@@ -726,58 +688,7 @@ public CommandParser(ParserSharedInputState state) {
 		case TGT_ALIAS:
 		{
 			match(TGT_ALIAS);
-			{
-			switch ( LA(1)) {
-			case OPT_HIDE:
-			{
-				match(OPT_HIDE);
-				cmd.setAliasHide(true);
-				break;
-			}
-			case OPT_NOHIDE:
-			{
-				match(OPT_NOHIDE);
-				cmd.setAliasHide(false);
-				break;
-			}
-			case EOF:
-			case OPT_DIVERT:
-			case OPT_MODIFIABLE:
-			case OPT_NOTMODIFIABLE:
-			{
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
-			{
-			switch ( LA(1)) {
-			case OPT_MODIFIABLE:
-			{
-				match(OPT_MODIFIABLE);
-				cmd.setAliasModifiable(true);
-				break;
-			}
-			case OPT_NOTMODIFIABLE:
-			{
-				match(OPT_NOTMODIFIABLE);
-				cmd.setAliasModifiable(false);
-				break;
-			}
-			case EOF:
-			case OPT_DIVERT:
-			{
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
+			profile_alias_opt(cmd);
 			break;
 		}
 		case EOF:
@@ -796,61 +707,11 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DIVERT:
 		{
 			match(OPT_DIVERT);
+			cmd.setDivertOptions(true);
 			{
-			divert = LT(1);
-			match(STR);
-			cmd.setDivert(divert.getText());
+			cmd.setDivert(getnameid("Divert value"));
 			}
-			{
-			switch ( LA(1)) {
-			case OPT_ACTIVE:
-			{
-				match(OPT_ACTIVE);
-				cmd.setDivertActive(true);
-				break;
-			}
-			case OPT_INACTIVE:
-			{
-				match(OPT_INACTIVE);
-				cmd.setDivertActive(false);
-				break;
-			}
-			case EOF:
-			case OPT_MODIFIABLE:
-			case OPT_NOTMODIFIABLE:
-			{
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
-			{
-			switch ( LA(1)) {
-			case OPT_MODIFIABLE:
-			{
-				match(OPT_MODIFIABLE);
-				cmd.setDivertModifiable(true);
-				break;
-			}
-			case OPT_NOTMODIFIABLE:
-			{
-				match(OPT_NOTMODIFIABLE);
-				cmd.setDivertModifiable(false);
-				break;
-			}
-			case EOF:
-			{
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
+			profile_divert_opt(cmd);
 			break;
 		}
 		case EOF:
@@ -1224,8 +1085,6 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  num = null;
 		Token  pri = null;
-		Token  sme = null;
-		Token  fwd = null;
 		
 		cmd = new RouteAlterCommand();
 		boolean addAction = true;
@@ -1305,38 +1164,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DM:
 		{
 			match(OPT_DM);
-			{
-			switch ( LA(1)) {
-			case VAL_DEF:
-			{
-				match(VAL_DEF);
-				cmd.setDeliveryMode("deafult");
-				break;
-			}
-			case VAL_STORE:
-			{
-				match(VAL_STORE);
-				cmd.setDeliveryMode("store");
-				break;
-			}
-			case VAL_FORWARD:
-			{
-				match(VAL_FORWARD);
-				cmd.setDeliveryMode("forward");
-				break;
-			}
-			case VAL_DATAGRAM:
-			{
-				match(VAL_DATAGRAM);
-				cmd.setDeliveryMode("datagram");
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
+			route_dm(cmd);
 			break;
 		}
 		case EOF:
@@ -1358,9 +1186,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_SRCSME:
 		{
 			match(OPT_SRCSME);
-			sme = LT(1);
-			match(STR);
-			cmd.setSrcSmeId(sme.getText());
+			cmd.setSrcSmeId(getnameid("srcSmeId value"));
 			break;
 		}
 		case EOF:
@@ -1381,9 +1207,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_FWD:
 		{
 			match(OPT_FWD);
-			fwd = LT(1);
-			match(STR);
-			cmd.setForwardTo(fwd.getText());
+			cmd.setForwardTo(getnameid("forwardTo value"));
 			break;
 		}
 		case EOF:
@@ -1595,7 +1419,6 @@ public CommandParser(ParserSharedInputState state) {
 		ProfileAlterCommand cmd;
 		
 		Token  addr = null;
-		Token  divert = null;
 		
 		cmd = new ProfileAlterCommand();
 		
@@ -1720,58 +1543,7 @@ public CommandParser(ParserSharedInputState state) {
 		case TGT_ALIAS:
 		{
 			match(TGT_ALIAS);
-			{
-			switch ( LA(1)) {
-			case OPT_HIDE:
-			{
-				match(OPT_HIDE);
-				cmd.setAliasHide(true);
-				break;
-			}
-			case OPT_NOHIDE:
-			{
-				match(OPT_NOHIDE);
-				cmd.setAliasHide(false);
-				break;
-			}
-			case EOF:
-			case OPT_DIVERT:
-			case OPT_MODIFIABLE:
-			case OPT_NOTMODIFIABLE:
-			{
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
-			{
-			switch ( LA(1)) {
-			case OPT_MODIFIABLE:
-			{
-				match(OPT_MODIFIABLE);
-				cmd.setAliasModifiable(true);
-				break;
-			}
-			case OPT_NOTMODIFIABLE:
-			{
-				match(OPT_NOTMODIFIABLE);
-				cmd.setAliasModifiable(false);
-				break;
-			}
-			case EOF:
-			case OPT_DIVERT:
-			{
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
+			profile_alias_opt(cmd);
 			break;
 		}
 		case EOF:
@@ -1790,20 +1562,20 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_DIVERT:
 		{
 			match(OPT_DIVERT);
+			cmd.setDivertOptions(true);
 			{
 			switch ( LA(1)) {
-			case STR:
+			case OPT_SET:
 			{
-				divert = LT(1);
-				match(STR);
-				cmd.setDivert(divert.getText());
+				match(OPT_SET);
+				cmd.setDivert(getnameid("Divert value"));
 				break;
 			}
 			case EOF:
 			case OPT_ACTIVE:
 			case OPT_INACTIVE:
-			case OPT_MODIFIABLE:
-			case OPT_NOTMODIFIABLE:
+			case OPT_MODIF:
+			case OPT_NOTMODIF:
 			{
 				break;
 			}
@@ -1813,56 +1585,7 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			}
-			{
-			switch ( LA(1)) {
-			case OPT_ACTIVE:
-			{
-				match(OPT_ACTIVE);
-				cmd.setDivertActive(true);
-				break;
-			}
-			case OPT_INACTIVE:
-			{
-				match(OPT_INACTIVE);
-				cmd.setDivertActive(false);
-				break;
-			}
-			case EOF:
-			case OPT_MODIFIABLE:
-			case OPT_NOTMODIFIABLE:
-			{
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
-			{
-			switch ( LA(1)) {
-			case OPT_MODIFIABLE:
-			{
-				match(OPT_MODIFIABLE);
-				cmd.setDivertModifiable(true);
-				break;
-			}
-			case OPT_NOTMODIFIABLE:
-			{
-				match(OPT_NOTMODIFIABLE);
-				cmd.setDivertModifiable(false);
-				break;
-			}
-			case EOF:
-			{
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
+			profile_divert_opt(cmd);
 			break;
 		}
 		case EOF:
@@ -2325,6 +2048,52 @@ public CommandParser(ParserSharedInputState state) {
 		}
 	}
 	
+	public final void route_dm(
+		RouteGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		
+		try {      // for error handling
+			{
+			switch ( LA(1)) {
+			case VAL_DEF:
+			{
+				match(VAL_DEF);
+				cmd.setDeliveryMode("deafult");
+				break;
+			}
+			case VAL_STORE:
+			{
+				match(VAL_STORE);
+				cmd.setDeliveryMode("store");
+				break;
+			}
+			case VAL_FORWARD:
+			{
+				match(VAL_FORWARD);
+				cmd.setDeliveryMode("forward");
+				break;
+			}
+			case VAL_DATAGRAM:
+			{
+				match(VAL_DATAGRAM);
+				cmd.setDeliveryMode("datagram");
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("Route delivery mode expected. Syntax: (default|store|forward|datagram)");
+				
+		}
+	}
+	
 	public final void addroute_flags(
 		RouteAddCommand cmd
 	) throws RecognitionException, TokenStreamException {
@@ -2676,6 +2445,139 @@ public CommandParser(ParserSharedInputState state) {
 		}
 	}
 	
+	public final void profile_divert_opt(
+		ProfileGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		
+		try {      // for error handling
+			{
+			switch ( LA(1)) {
+			case OPT_ACTIVE:
+			{
+				match(OPT_ACTIVE);
+				cmd.setDivertActive(true);
+				break;
+			}
+			case OPT_INACTIVE:
+			{
+				match(OPT_INACTIVE);
+				cmd.setDivertActive(false);
+				break;
+			}
+			case EOF:
+			case OPT_MODIF:
+			case OPT_NOTMODIF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_MODIF:
+			{
+				match(OPT_MODIF);
+				cmd.setDivertModifiable(true);
+				break;
+			}
+			case OPT_NOTMODIF:
+			{
+				match(OPT_NOTMODIF);
+				cmd.setDivertModifiable(false);
+				break;
+			}
+			case EOF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("Profile devert options expected. Syntax: [active|inactive] [modifiable|notmodifiable]");
+				
+		}
+	}
+	
+	public final void profile_alias_opt(
+		ProfileGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		
+		cmd.setAliasOptions(true);
+		
+		
+		try {      // for error handling
+			{
+			switch ( LA(1)) {
+			case OPT_HIDE:
+			{
+				match(OPT_HIDE);
+				cmd.setAliasHide(true);
+				break;
+			}
+			case OPT_NOHIDE:
+			{
+				match(OPT_NOHIDE);
+				cmd.setAliasHide(false);
+				break;
+			}
+			case EOF:
+			case OPT_MODIF:
+			case OPT_NOTMODIF:
+			case OPT_DIVERT:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_MODIF:
+			{
+				match(OPT_MODIF);
+				cmd.setAliasModifiable(true);
+				break;
+			}
+			case OPT_NOTMODIF:
+			{
+				match(OPT_NOTMODIF);
+				cmd.setAliasModifiable(false);
+				break;
+			}
+			case EOF:
+			case OPT_DIVERT:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("Profile alias options expected. Syntax: [hide|nohide] [modifiable|notmodifiable]");
+				
+		}
+	}
+	
 	public final ProfileDeleteCommand  delprofile() throws RecognitionException, TokenStreamException {
 		ProfileDeleteCommand cmd;
 		
@@ -2751,6 +2653,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"dm\"",
 		"\"fwd\"",
 		"\"srcsme\"",
+		"\"set\"",
 		"\"full\"",
 		"\"none\"",
 		"\"ucs2\"",
@@ -2765,9 +2668,7 @@ public CommandParser(ParserSharedInputState state) {
 		"STR_CHR",
 		"comma character ','",
 		"ESC",
-		"DIGIT",
-		"OPT_MODIFIABLE",
-		"OPT_NOTMODIFIABLE"
+		"DIGIT"
 	};
 	
 	

@@ -200,6 +200,16 @@ route_dst[RouteGenCommand cmd, boolean needSmeId]
 	    "Route dstdef missed or invalid. Syntax: dst (subj <subject_name>|mask <mask>"+
 	    ((needSmeId) ? " <systemid>)+":")+"));
 	}
+route_dm[RouteGenCommand cmd]
+	:	(VAL_DEF      { cmd.setDeliveryMode("deafult");  }
+		|VAL_STORE    { cmd.setDeliveryMode("store");    }
+		|VAL_FORWARD  { cmd.setDeliveryMode("forward");  }
+		|VAL_DATAGRAM { cmd.setDeliveryMode("datagram"); })
+	;
+	exception
+	catch [RecognitionException ex] {
+           throw new RecognitionException("Route delivery mode expected. Syntax: (default|store|forward|datagram)");
+	}
 
 addroute returns [RouteAddCommand cmd] {
     cmd = new RouteAddCommand();
@@ -222,15 +232,13 @@ addroute returns [RouteAddCommand cmd] {
 			throw new NumberFormatException("Expecting integer value for <priority>");
 		    }
 		})
-		(OPT_DM (VAL_DEF      { cmd.setDeliveryMode("deafult");  }
-			|VAL_STORE    { cmd.setDeliveryMode("store");    }
-			|VAL_FORWARD  { cmd.setDeliveryMode("forward");  }
-			|VAL_DATAGRAM { cmd.setDeliveryMode("datagram"); } ))?
-		(OPT_SRCSME sme:STR { cmd.setSrcSmeId(sme.getText());  } )?
-		(OPT_FWD    fwd:STR { cmd.setForwardTo(fwd.getText()); } )?
+		(OPT_DM route_dm[cmd])?
+		(OPT_SRCSME { cmd.setSrcSmeId(getnameid("srcSmeId value"));   } )?
+		(OPT_FWD    { cmd.setForwardTo(getnameid("forwardTo value")); } )?
 		route_src[cmd]
 		route_dst[cmd, true]
 	;
+
 addroute_flags[RouteAddCommand cmd]
 	:	( OPT_ACTIVE 	{ cmd.setActive(true);  }
 		| OPT_INACTIVE	{ cmd.setActive(false);	})?
@@ -278,12 +286,9 @@ altroute returns [RouteAlterCommand cmd] {
 			throw new NumberFormatException("Expecting integer value for <priority>");
 		    }
 		}) ?
-		(OPT_DM (VAL_DEF      { cmd.setDeliveryMode("deafult");  }
-			|VAL_STORE    { cmd.setDeliveryMode("store");    }
-			|VAL_FORWARD  { cmd.setDeliveryMode("forward");  }
-			|VAL_DATAGRAM { cmd.setDeliveryMode("datagram"); } ))?
-		(OPT_SRCSME sme:STR { cmd.setSrcSmeId(sme.getText());  } )?
-		(OPT_FWD    fwd:STR { cmd.setForwardTo(fwd.getText()); } )?
+		(OPT_DM route_dm[cmd])?
+		(OPT_SRCSME { cmd.setSrcSmeId(getnameid("srcSmeId value"));   } )?
+		(OPT_FWD    { cmd.setForwardTo(getnameid("forwardTo value")); } )?
 		(
 		((ACT_ADD    { cmd.setAction(RouteAlterCommand.ACTION_ADD); addAction=true;  })
 		|(ACT_DELETE { cmd.setAction(RouteAlterCommand.ACTION_DEL); addAction=false; }))
@@ -430,6 +435,30 @@ viewsubject returns [SubjectViewCommand cmd] {
 
 /* ----------------------- Profile command parsers --------------------- */
 
+profile_divert_opt[ProfileGenCommand cmd]
+	:	(OPT_ACTIVE   { cmd.setDivertActive(true);  }
+		|OPT_INACTIVE { cmd.setDivertActive(false); })?
+		(OPT_MODIF    { cmd.setDivertModifiable(true);  }
+		|OPT_NOTMODIF { cmd.setDivertModifiable(false); })?		
+	;
+	exception
+	catch [RecognitionException ex] {
+           throw new RecognitionException("Profile devert options expected. Syntax: [active|inactive] [modifiable|notmodifiable]");
+	}
+
+profile_alias_opt[ProfileGenCommand cmd] {
+    cmd.setAliasOptions(true);
+}
+	:	(OPT_HIDE     { cmd.setAliasHide(true);  } 
+		|OPT_NOHIDE   { cmd.setAliasHide(false); })?
+		(OPT_MODIF    { cmd.setAliasModifiable(true);  }
+		|OPT_NOTMODIF { cmd.setAliasModifiable(false); })?
+	;
+	exception
+	catch [RecognitionException ex] {
+           throw new RecognitionException("Profile alias options expected. Syntax: [hide|nohide] [modifiable|notmodifiable]");
+	}
+
 addprofile returns [ProfileAddCommand cmd] {
     cmd = new ProfileAddCommand();
 }
@@ -441,15 +470,10 @@ addprofile returns [ProfileAddCommand cmd] {
 		})
 		(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding(); }
 			    |VAL_UCS2 { cmd.setUcs2Encoding(); }) )?
-		(TGT_ALIAS  (OPT_HIDE   { cmd.setAliasHide(true);  } 
-			    |OPT_NOHIDE { cmd.setAliasHide(false); })?
-			    (OPT_MODIFIABLE    { cmd.setAliasModifiable(true);  }
-			    |OPT_NOTMODIFIABLE { cmd.setAliasModifiable(false); })? )?
-		(OPT_DIVERT (divert:STR { cmd.setDivert(divert.getText()); }) 
-			    (OPT_ACTIVE   { cmd.setDivertActive(true);  }
-			    |OPT_INACTIVE { cmd.setDivertActive(false); })?
-			    (OPT_MODIFIABLE    { cmd.setDivertModifiable(true);  }
-			    |OPT_NOTMODIFIABLE { cmd.setDivertModifiable(false); })? )?
+		(TGT_ALIAS  profile_alias_opt[cmd]  )?
+		(OPT_DIVERT  { cmd.setDivertOptions(true); }
+			    ({ cmd.setDivert(getnameid("Divert value")); })
+			    profile_divert_opt[cmd] )?
 	;
 	exception[mask]
 	catch [RecognitionException ex] {
@@ -466,16 +490,11 @@ altprofile returns [ProfileAlterCommand cmd] {
 		    cmd.setLocale(getnameid("Locale name"));
 		})?
 		(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding(); }
-			   | VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
-		(TGT_ALIAS  (OPT_HIDE   { cmd.setAliasHide(true);  } 
-			    |OPT_NOHIDE { cmd.setAliasHide(false); })?
-			    (OPT_MODIFIABLE    { cmd.setAliasModifiable(true);  }
-			    |OPT_NOTMODIFIABLE { cmd.setAliasModifiable(false); })? )?
-		(OPT_DIVERT (divert:STR { cmd.setDivert(divert.getText()); })? 
-			    (OPT_ACTIVE   { cmd.setDivertActive(true);  }
-			    |OPT_INACTIVE { cmd.setDivertActive(false); })?
-			    (OPT_MODIFIABLE    { cmd.setDivertModifiable(true);  }
-			    |OPT_NOTMODIFIABLE { cmd.setDivertModifiable(false); })? )?
+			    |VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
+		(TGT_ALIAS  profile_alias_opt[cmd]  )?
+		(OPT_DIVERT { cmd.setDivertOptions(true); }
+			    (OPT_SET { cmd.setDivert(getnameid("Divert value")); })?
+			     profile_divert_opt[cmd] )?
 	;
 	exception[addr]
 	catch [RecognitionException ex] {

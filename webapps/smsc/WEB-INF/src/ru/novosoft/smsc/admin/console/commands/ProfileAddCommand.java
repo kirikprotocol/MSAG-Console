@@ -22,6 +22,20 @@ public class ProfileAddCommand extends ProfileGenCommand
   public void process(CommandContext ctx)
   {
     String out = "Profile for mask '" + mask + "'";
+
+    if (isAliasOptions && !isAliasHide && !isAliasModifiable) {
+      ctx.setMessage("expecting alias option(s). "+
+                     "Syntax: alias [hide|nohide] [modifiable|notmodifiable]");
+      ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
+      return;
+    }
+    if (isDivertOptions && !isDivert && !isDivertActive && !isDivertModifiable) {
+      ctx.setMessage("expecting divert option(s). "+
+                     "Syntax: divert <string> [active|inactive] [modifiable|notmodifiable]");
+      ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
+      return;
+    }
+
     try {
       Mask profileMask = new Mask(mask);
       if (!ctx.getSmsc().isLocaleRegistered(locale))

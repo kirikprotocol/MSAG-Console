@@ -25,7 +25,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
         if (!isCodepage && !isReport && !isLocale && !isAliasHide && !isAliasModifiable &&
             !isDivert && !isDivertActive && !isDivertModifiable)
         {
-            ctx.setMessage("expecting 'encoding', 'report', 'locale', 'alias' or 'divert' option. "+
+            ctx.setMessage("expecting 'encoding', 'report', 'locale', 'alias', 'divert' option(s). "+
                            "Syntax: alter profile <profile_address> "+
                            "[report (full|none)] [locale <locale_name>] [encoding (ucs2|default)] "+
                            "[alias [hide|nohide] [modifiable|notmodifiable]] "+
