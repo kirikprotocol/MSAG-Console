@@ -135,10 +135,10 @@ public class ProfileShortcutExecutor extends ProfileManagerState implements Exec
                                    ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     activeReasons = activeReasons.toUpperCase();
     String errorReason = null; // check allowed reasons
-    if (cause == ProfileInfo.MASK_BUSY && activeReasons.indexOf('B') < 0) errorReason = valueBusy;
+    if (cause == ProfileInfo.MASK_BUSY    && activeReasons.indexOf('B') < 0) errorReason = valueBusy;
     if (cause == ProfileInfo.MASK_NOREPLY && activeReasons.indexOf('N') < 0) errorReason = valueNoreply;
-    if (cause == ProfileInfo.MASK_ABSENT && activeReasons.indexOf('A') < 0) errorReason = valueAbsent;
-    if (cause == ProfileInfo.MASK_NOREPLY && activeReasons.indexOf('U') < 0) errorReason = valueUncond;
+    if (cause == ProfileInfo.MASK_ABSENT  && activeReasons.indexOf('A') < 0) errorReason = valueAbsent;
+    if (cause == ProfileInfo.MASK_UNCOND  && activeReasons.indexOf('U') < 0) errorReason = valueUncond;
     if (errorReason != null) return pageShortcutErr.format(new Object[] {errorReason});
 
     ProfileInfo info = null;
