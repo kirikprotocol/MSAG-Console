@@ -10,7 +10,7 @@ CXXFLAGS := $(CXXFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/pub
 
 __LIBRARIES := $(ORACLE_LIB)/libclntsh.so $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so 
 ifeq ("$(MACHTYPE)","sparc-sun-solaris") 
-__LIBRARIES := $(__LIBRARIES) -L/opt/EINss7166/lib -leinss7
+__LIBRARIES := $(__LIBRARIES) -L/opt/EINss7166/lib -leinss7 -lsystem-mapio.a
 CXXFLAGS := $(CXXFLAGS) -DUSE_MAPIO
 endif
 ifndef SMSC_SRCDIR
