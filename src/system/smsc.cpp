@@ -65,7 +65,7 @@ public:
     __trace__("enter SpeedMonitor");
     timeshift=0;
     time_t perfStart=start.tv_sec;
-    times[0]=start.tv_sec;
+    for(int i=0;i<60;i++)times[i]=start.tv_sec;
     int lastscnt=0;
     memset(perfCnt,0,sizeof(perfCnt));
     uint64_t lastPerfCnt[performance::performanceCounters]={0,};
@@ -108,6 +108,7 @@ public:
 
       int scnt=(now.tv_sec-perfStart)/60;
       //__trace2__("SpeedMonitor: scnt=%d",scnt);
+      if(scnt<0)scnt=0;
       if(scnt>=60)
       {
         timeshift++;

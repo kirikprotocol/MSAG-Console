@@ -23,12 +23,17 @@ public:
     return CodesTable.GetPtr(c1)==CodesTable.GetPtr(c2);
   }
 
+
 protected:
 
   typedef Array<time_t> TimeArray;
 
+  static void ParseTimeLine(const char* timestring,RescheduleCalculator::TimeArray& arr,int& limit);
+
   static TimeArray RescheduleTable;
+  static int DefaultAttemptsLimit;
   static IntHash<TimeArray*> CodesTable;
+  static IntHash<int> AttemptsLimits;
 
 };//RescheduleCalculator
 
