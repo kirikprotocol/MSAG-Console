@@ -64,7 +64,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
     message.set_protocolId(sms->getProtocolIdentifier());
     message.set_priorityFlag(sms->getPriority());
     message.set_registredDelivery(/*sms->isStatusReportRequested()*/
-				sms->getDeliveryReport());
+        sms->getDeliveryReport());
     {
       char smpp_time[SMPP_TIME_BUFFER_LENGTH];
       if ( cTime2SmppTime(sms->getWaitTime(),smpp_time) )
@@ -73,6 +73,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
         message.set_validityPeriod(smpp_time);
     }
   }
+	return true;
 }
 
 inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
@@ -128,6 +129,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
 
     sms->setDeliveryReport(message.registredDelivery);
   }
+	return true;
 }
 
 };
