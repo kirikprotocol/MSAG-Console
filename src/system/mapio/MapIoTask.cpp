@@ -9,6 +9,10 @@ using namespace std;
 
 #define SMSC_FORWARD_RESPONSE 0x001
 
+static unsigned __global_bind_counter = 0;
+
+#define CORRECT_BIND_COUNTER 2
+
 struct SMSC_FORWARD_RESPONSE_T {
   ET96MAP_DIALOGUE_ID_T dialogId;
 };
@@ -372,6 +376,13 @@ void MapIoTask::dispatcher()
         try{
           deinit();
           init();
+          if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
+            __trace2__("MAP:: waiting bind confirm");
+            sleep(3);
+            if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
+              throw 0;
+            }
+          }
           ok = true;
         }catch(...){
           __trace2__("MAP:: Error reinitialization");
@@ -440,6 +451,7 @@ USHORT_T  Et96MapOpenConf (
 void MapIoTask::init()
 {
   USHORT_T err;
+  __global_bind_counter = 0;
   err = MsgInit(MAXENTRIES);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
 	err = MsgOpen(MY_USER_ID);
