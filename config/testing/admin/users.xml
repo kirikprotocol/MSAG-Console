@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE users SYSTEM "file://users.dtd">
+
+<users>
+	<user login="superadmin" password="123" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
+		<role name="services"/>
+		<role name="aliases"/>
+		<role name="smsView"/>
+		<role name="apply"/>
+		<role name="hosts"/>
+		<role name="profiles"/>
+		<role name="routes"/>
+		<role name="users"/>
+		<role name="subjects"/>
+		<role name="perfmon"/>
+	</user>
+	<user login="bryz" password="123" firstName="Vit" lastName="Bryz" dept="novosoft" workPhone="123" homePhone="123" cellPhone="123" email="bryz@novosoft.ru">
+		<role name="apply"/>
+		<role name="perfmon"/>
+		<role name="smsView"/>
+		<role name="users"/>
+		<role name="routes"/>
+		<role name="subjects"/>
+		<role name="aliases"/>
+		<role name="profiles"/>
+		<role name="hosts"/>
+		<role name="services"/>
+	</user>
+	<user login="user00" password="pass00" firstName="first03" lastName="last05" dept="dept07" workPhone="123" homePhone="123" cellPhone="123" email="user00@mail.ru">
+	</user>
+	<user login="user01" password="pass01" firstName="first04" lastName="last06" dept="dept08" workPhone="123" homePhone="123" cellPhone="123" email="user01@mail.ru">
+	</user>
+	<user login="user02" password="pass02" firstName="first05" lastName="last07" dept="dept09" workPhone="123" homePhone="123" cellPhone="123" email="user02@mail.ru">
+	</user>
+	<user login="user03" password="pass03" firstName="first06" lastName="last08" dept="dept10" workPhone="123" homePhone="123" cellPhone="123" email="user03@mail.ru">
+	</user>
+	<user login="user04" password="pass04" firstName="first07" lastName="last09" dept="dept11" workPhone="123" homePhone="123" cellPhone="123" email="user04@mail.ru">
+	</user>
+	<user login="user05" password="pass05" firstName="first08" lastName="last10" dept="dept12" workPhone="123" homePhone="123" cellPhone="123" email="user05@mail.ru">
+	</user>
+	<user login="user06" password="pass06" firstName="first09" lastName="last11" dept="dept13" workPhone="123" homePhone="123" cellPhone="123" email="user06@mail.ru">
+	</user>
+	<user login="user07" password="pass07" firstName="first10" lastName="last12" dept="dept14" workPhone="123" homePhone="123" cellPhone="123" email="user07@mail.ru">
+	</user>
+	<user login="user08" password="pass08" firstName="first11" lastName="last13" dept="dept15" workPhone="123" homePhone="123" cellPhone="123" email="user08@mail.ru">
+	</user>
+	<user login="user09" password="pass09" firstName="first12" lastName="last14" dept="dept16" workPhone="123" homePhone="123" cellPhone="123" email="user09@mail.ru">
+	</user>
+	<user login="user10" password="pass10" firstName="first13" lastName="last15" dept="dept17" workPhone="123" homePhone="123" cellPhone="123" email="user10@mail.ru">
+	</user>
+	<user login="user11" password="pass11" firstName="first14" lastName="last16" dept="dept18" workPhone="123" homePhone="123" cellPhone="123" email="user11@mail.ru">
+	</user>
+	<user login="user12" password="pass12" firstName="first15" lastName="last17" dept="dept19" workPhone="123" homePhone="123" cellPhone="123" email="user12@mail.ru">
+	</user>
+	<user login="user13" password="pass13" firstName="first16" lastName="last18" dept="dept20" workPhone="123" homePhone="123" cellPhone="123" email="user13@mail.ru">
+	</user>
+	<user login="user14" password="pass14" firstName="first17" lastName="last19" dept="dept21" workPhone="123" homePhone="123" cellPhone="123" email="user14@mail.ru">
+	</user>
+	<user login="user15" password="pass15" firstName="first18" lastName="last20" dept="dept22" workPhone="123" homePhone="123" cellPhone="123" email="user15@mail.ru">
+	</user>
+	<user login="user16" password="pass16" firstName="first19" lastName="last21" dept="dept00" workPhone="123" homePhone="123" cellPhone="123" email="user16@mail.ru">
+	</user>
+	<user login="user17" password="pass17" firstName="first20" lastName="last22" dept="dept01" workPhone="123" homePhone="123" cellPhone="123" email="user17@mail.ru">
+	</user>
+	<user login="user18" password="pass18" firstName="first21" lastName="last00" dept="dept02" workPhone="123" homePhone="123" cellPhone="123" email="user18@mail.ru">
+	</user>
+	<user login="user19" password="pass19" firstName="first22" lastName="last01" dept="dept03" workPhone="123" homePhone="123" cellPhone="123" email="user19@mail.ru">
+	</user>
+	<user login="user20" password="pass20" firstName="first00" lastName="last02" dept="dept04" workPhone="123" homePhone="123" cellPhone="123" email="user20@mail.ru">
+	</user>
+	<user login="user21" password="pass21" firstName="first01" lastName="last03" dept="dept05" workPhone="123" homePhone="123" cellPhone="123" email="user21@mail.ru">
+	</user>
+	<user login="user22" password="pass22" firstName="first02" lastName="last04" dept="dept06" workPhone="123" homePhone="123" cellPhone="123" email="user22@mail.ru">
+	</user>
+</users>

@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE routes SYSTEM "routes.dtd">
+<routes>
+<subject_def id="subj00" defSme="sme03">
+	<mask value="05???"/>
+	<mask value="+07???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj01" defSme="sme04">
+	<mask value="06???"/>
+	<mask value="+08???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj02" defSme="sme05">
+	<mask value="07???"/>
+	<mask value="+09???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj03" defSme="sme06">
+	<mask value="08???"/>
+	<mask value="+10???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj04" defSme="sme07">
+	<mask value="09???"/>
+	<mask value="+11???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj05" defSme="sme08">
+	<mask value="10???"/>
+	<mask value="+12???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj06" defSme="sme09">
+	<mask value="11???"/>
+	<mask value="+13???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj07" defSme="sme10">
+	<mask value="12???"/>
+	<mask value="+14???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj08" defSme="sme11">
+	<mask value="13???"/>
+	<mask value="+15???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj09" defSme="sme12">
+	<mask value="14???"/>
+	<mask value="+16???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj10" defSme="sme13">
+	<mask value="15???"/>
+	<mask value="+17???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj11" defSme="sme14">
+	<mask value="16???"/>
+	<mask value="+18???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj12" defSme="sme15">
+	<mask value="17???"/>
+	<mask value="+19???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj13" defSme="sme16">
+	<mask value="18???"/>
+	<mask value="+20???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj14" defSme="sme17">
+	<mask value="19???"/>
+	<mask value="+21???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj15" defSme="sme18">
+	<mask value="20???"/>
+	<mask value="+22???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj16" defSme="sme19">
+	<mask value="21???"/>
+	<mask value="+00???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj17" defSme="sme20">
+	<mask value="22???"/>
+	<mask value="+01???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj18" defSme="sme21">
+	<mask value="00???"/>
+	<mask value="+02???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj19" defSme="sme22">
+	<mask value="01???"/>
+	<mask value="+03???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj20" defSme="sme00">
+	<mask value="02???"/>
+	<mask value="+04???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj21" defSme="sme01">
+	<mask value="03???"/>
+	<mask value="+05???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<subject_def id="subj22" defSme="sme02">
+	<mask value="04???"/>
+	<mask value="+06???"/>
+	<mask value=".2.1.789"/>
+</subject_def>
+<route id="route00" billing="false" archiving="false" enabling="false" priority="0" serviceId="0">
+	<source>
+		<subject id="subj00"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme00">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme00">
+		<subject id="subj00"/>
+	</destination>
+</route>
+<route id="route01" billing="true" archiving="true" enabling="true" priority="1" serviceId="1">
+	<source>
+		<subject id="subj01"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme01">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme01">
+		<subject id="subj01"/>
+	</destination>
+</route>
+<route id="route02" billing="false" archiving="false" enabling="false" priority="2" serviceId="2">
+	<source>
+		<subject id="subj02"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme02">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme02">
+		<subject id="subj02"/>
+	</destination>
+</route>
+<route id="route03" billing="true" archiving="true" enabling="true" priority="3" serviceId="3">
+	<source>
+		<subject id="subj03"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme03">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme03">
+		<subject id="subj03"/>
+	</destination>
+</route>
+<route id="route04" billing="false" archiving="false" enabling="false" priority="4" serviceId="4">
+	<source>
+		<subject id="subj04"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme04">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme04">
+		<subject id="subj04"/>
+	</destination>
+</route>
+<route id="route05" billing="true" archiving="true" enabling="true" priority="5" serviceId="5">
+	<source>
+		<subject id="subj05"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme05">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme05">
+		<subject id="subj05"/>
+	</destination>
+</route>
+<route id="route06" billing="false" archiving="false" enabling="false" priority="6" serviceId="6">
+	<source>
+		<subject id="subj06"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme06">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme06">
+		<subject id="subj06"/>
+	</destination>
+</route>
+<route id="route07" billing="true" archiving="true" enabling="true" priority="7" serviceId="7">
+	<source>
+		<subject id="subj07"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme07">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme07">
+		<subject id="subj07"/>
+	</destination>
+</route>
+<route id="route08" billing="false" archiving="false" enabling="false" priority="8" serviceId="8">
+	<source>
+		<subject id="subj08"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme08">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme08">
+		<subject id="subj08"/>
+	</destination>
+</route>
+<route id="route09" billing="true" archiving="true" enabling="true" priority="9" serviceId="9">
+	<source>
+		<subject id="subj09"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme09">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme09">
+		<subject id="subj09"/>
+	</destination>
+</route>
+<route id="route10" billing="false" archiving="false" enabling="false" priority="10" serviceId="10">
+	<source>
+		<subject id="subj10"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme10">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme10">
+		<subject id="subj10"/>
+	</destination>
+</route>
+<route id="route11" billing="true" archiving="true" enabling="true" priority="11" serviceId="11">
+	<source>
+		<subject id="subj11"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme11">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme11">
+		<subject id="subj11"/>
+	</destination>
+</route>
+<route id="route12" billing="false" archiving="false" enabling="false" priority="12" serviceId="12">
+	<source>
+		<subject id="subj12"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme12">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme12">
+		<subject id="subj12"/>
+	</destination>
+</route>
+<route id="route13" billing="true" archiving="true" enabling="true" priority="13" serviceId="13">
+	<source>
+		<subject id="subj13"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme13">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme13">
+		<subject id="subj13"/>
+	</destination>
+</route>
+<route id="route14" billing="false" archiving="false" enabling="false" priority="14" serviceId="14">
+	<source>
+		<subject id="subj14"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme14">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme14">
+		<subject id="subj14"/>
+	</destination>
+</route>
+<route id="route15" billing="true" archiving="true" enabling="true" priority="15" serviceId="15">
+	<source>
+		<subject id="subj15"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme15">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme15">
+		<subject id="subj15"/>
+	</destination>
+</route>
+<route id="route16" billing="false" archiving="false" enabling="false" priority="16" serviceId="16">
+	<source>
+		<subject id="subj16"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme16">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme16">
+		<subject id="subj16"/>
+	</destination>
+</route>
+<route id="route17" billing="true" archiving="true" enabling="true" priority="17" serviceId="17">
+	<source>
+		<subject id="subj17"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme17">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme17">
+		<subject id="subj17"/>
+	</destination>
+</route>
+<route id="route18" billing="false" archiving="false" enabling="false" priority="18" serviceId="18">
+	<source>
+		<subject id="subj18"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme18">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme18">
+		<subject id="subj18"/>
+	</destination>
+</route>
+<route id="route19" billing="true" archiving="true" enabling="true" priority="19" serviceId="19">
+	<source>
+		<subject id="subj19"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme19">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme19">
+		<subject id="subj19"/>
+	</destination>
+</route>
+<route id="route20" billing="false" archiving="false" enabling="false" priority="20" serviceId="20">
+	<source>
+		<subject id="subj20"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme20">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme20">
+		<subject id="subj20"/>
+	</destination>
+</route>
+<route id="route21" billing="true" archiving="true" enabling="true" priority="21" serviceId="21">
+	<source>
+		<subject id="subj21"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme21">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme21">
+		<subject id="subj21"/>
+	</destination>
+</route>
+<route id="route22" billing="false" archiving="false" enabling="false" priority="22" serviceId="22">
+	<source>
+		<subject id="subj22"/>
+	</source>
+	<source>
+		<mask value="123????"/>
+	</source>
+	<destination sme="sme22">
+		<mask value="+456????"/>
+	</destination>
+	<destination sme="sme22">
+		<subject id="subj22"/>
+	</destination>
+</route>
+</routes>

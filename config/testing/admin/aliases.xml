@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE aliases SYSTEM "AliasRecords.dtd">
+<aliases>
+	<record addr="+00" alias="03" hide="false"/>
+	<record addr="+01" alias="04" hide="true"/>
+	<record addr="+02" alias="05" hide="false"/>
+	<record addr="+03" alias="06" hide="true"/>
+	<record addr="+04" alias="07" hide="false"/>
+	<record addr="+05" alias="08" hide="true"/>
+	<record addr="+06" alias="09" hide="false"/>
+	<record addr="+07" alias="10" hide="true"/>
+	<record addr="+08" alias="11" hide="false"/>
+	<record addr="+09" alias="12" hide="true"/>
+	<record addr="+10" alias="13" hide="false"/>
+	<record addr="+11" alias="14" hide="true"/>
+	<record addr="+12" alias="15" hide="false"/>
+	<record addr="+13" alias="16" hide="true"/>
+	<record addr="+14" alias="17" hide="false"/>
+	<record addr="+15" alias="18" hide="true"/>
+	<record addr="+16" alias="19" hide="false"/>
+	<record addr="+17" alias="20" hide="true"/>
+	<record addr="+18" alias="21" hide="false"/>
+	<record addr="+19" alias="22" hide="true"/>
+	<record addr="+20" alias="00" hide="false"/>
+	<record addr="+21" alias="01" hide="true"/>
+	<record addr="+22" alias="02" hide="false"/>
+</aliases>

@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE records SYSTEM "SmeRecords.dtd">
+<records>
+<smerecord type="smpp" uid="MAP_PROXY">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="2RnITsrGJV7d"/>
+	<param name="password" value="S"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-926875648"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="22"/>
+	<param name="priority" value="12007"/>
+</smerecord>
+<smerecord type="smpp" uid="abonentinfo">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="ftxDIsKifum2"/>
+	<param name="password" value="fELb"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-245170176"/>
+	<param name="wantAlias" value="no"/>
+	<param name="timeout" value="12"/>
+	<param name="priority" value="4811"/>
+</smerecord>
+<smerecord type="smpp" uid="profiler">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="TFlW7saGMNgN"/>
+	<param name="password" value="zCFT3U5t"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-360316928"/>
+	<param name="wantAlias" value="no"/>
+	<param name="timeout" value="22"/>
+	<param name="priority" value="23595"/>
+</smerecord>
+<smerecord type="smpp" uid="smscsme">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value="aRyXOSrIHm3q"/>
+	<param name="password" value="1Tb"/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="-1263206400"/>
+	<param name="wantAlias" value="no"/>
+	<param name="timeout" value="16"/>
+	<param name="priority" value="4609"/>
+</smerecord>
+<smerecord type="smpp" uid="sme00">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme01">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme02">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme03">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme04">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme05">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme06">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme07">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme08">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme09">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme10">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme11">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme12">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme13">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme14">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme15">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme16">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme17">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme18">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme19">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme20">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme21">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+<smerecord type="smpp" uid="sme22">
+	<param name="typeOfNumber" value="0"/>
+	<param name="numberingPlan" value="0"/>
+	<param name="interfaceVersion" value="52"/>
+	<param name="systemType" value=""/>
+	<param name="password" value=""/>
+	<param name="addrRange" value=""/>
+	<param name="smeN" value="0"/>
+	<param name="wantAlias" value="yes"/>
+	<param name="timeout" value="10"/>
+	<param name="priority" value="32"/>
+</smerecord>
+</records>
