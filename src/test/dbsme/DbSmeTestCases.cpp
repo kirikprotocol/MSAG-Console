@@ -1,5 +1,4 @@
 #include "DbSmeTestCases.hpp"
-#include "DateFormatter.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
 #include "test/conf/TestConfig.hpp"
@@ -174,7 +173,7 @@ void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
 	time_t t;
 	const Profile& profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
 	const pair<string, uint8_t> p = convert(output, profile.codepage);
-	DbSmeAck* ack = new DbSmeAck(p.first, p.second);
+	AckText* ack = new AckText(p.first, p.second);
 	ack->ref();
 	PduData::ObjProps objProps;
 	objProps["output"] = ack;
@@ -691,10 +690,11 @@ const string DbSmeTestCases::processJobFirstOutput(const string& text,
 	__unreachable__("Unsupported job");
 }
 
-DbSmeAck* DbSmeTestCases::getExpectedResponse(SmeAckMonitor* monitor,
-	PduDeliverySm &pdu, const string& text)
+AckText* DbSmeTestCases::getExpectedResponse(SmeAckMonitor* monitor,
+	PduDeliverySm &pdu, const string& text, time_t recvTime)
 {
 	__require__(monitor->pduData->objProps.count("dbSmeRec"));
+	__cfg_int__(timeCheckAccuracy);
 	MutexGuard mguard(dbSmeReg->getMutex());
 	DbSmeTestRecord* rec = dynamic_cast<DbSmeTestRecord*>(
 		monitor->pduData->objProps["dbSmeRec"]);
@@ -704,14 +704,15 @@ DbSmeAck* DbSmeTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	time_t t;
 	const Profile& profile = fixture->profileReg->getProfile(addr, t);
 	const pair<string, uint8_t> p = convert(expected, profile.codepage);
-	return new DbSmeAck(p.first, p.second);
+	bool valid = t + timeCheckAccuracy <= recvTime;
+	return new AckText(p.first, p.second, valid);
 }
 
 #define __check__(errorCode, field, value) \
 	if (value != pdu.get_message().get_##field()) { __tc_fail__(errorCode); }
 
 void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
-	PduDeliverySm &pdu)
+	PduDeliverySm &pdu, time_t recvTime)
 {
 	__decl_tc__;
 	__cfg_addr__(profilerAddr);
@@ -730,7 +731,7 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	if ((sme->wantAlias && srcAlias == profilerAlias) ||
 		(!sme->wantAlias && srcAlias == profilerAddr))
 	{
-		SmppProfilerTestCases::processSmeAcknowledgement(monitor, pdu);
+		SmppProfilerTestCases::processSmeAcknowledgement(monitor, pdu, recvTime);
 		return;
 	}
 	if (!dbSmeReg)
@@ -738,21 +739,22 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		return;
 	}
 	__require__(monitor);
-	if (monitor->getFlag() != PDU_REQUIRED_FLAG)
-	{
-		return;
-	}
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().size_shortMessage(), pdu.get_message().get_dataCoding());
 	if (!monitor->pduData->objProps.count("output"))
 	{
-		DbSmeAck* ack = getExpectedResponse(monitor, pdu, text);
+		AckText* ack = getExpectedResponse(monitor, pdu, text);
 		ack->ref();
 		monitor->pduData->objProps["output"] = ack;
 	}
-	DbSmeAck* ack =
-		dynamic_cast<DbSmeAck*>(monitor->pduData->objProps["output"]);
+	AckText* ack =
+		dynamic_cast<AckText*>(monitor->pduData->objProps["output"]);
 	__require__(ack);
+	if (!ack->valid)
+	{
+		monitor->setReceived();
+		return;
+	}
 	__tc__("processDbSmeRes.checkFields");
 	__check__(1, serviceType, dbSmeServiceType);
 	if (sme->wantAlias && srcAlias != dbSmeAlias)
@@ -763,14 +765,13 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	{
 		__tc_fail__(3);
 	}
-	__check__(4, dataCoding, ack->dataCoding);
-	__check__(5, protocolId, dbSmeProtocolId);
-	__check__(6, priorityFlag, 0);
-	__check__(7, registredDelivery, 0);
-	__check__(8, replaceIfPresentFlag, 0);
+	__check__(4, protocolId, dbSmeProtocolId);
+	__check__(5, priorityFlag, 0);
+	__check__(6, registredDelivery, 0);
+	__check__(7, dataCoding, ack->dataCoding);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
-		__tc_fail__(9);
+		__tc_fail__(8);
 	}
     SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
