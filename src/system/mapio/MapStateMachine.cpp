@@ -97,7 +97,7 @@ static void SendOkToSmsc(unsigned dialogid)
 
 static void QueryHlrVersion(MapDialog* dialog)
 {
-  const char text[32];
+  char text[32];
   SS7ToText(&dialog->mshlrAddr,text);
   string s_(text);
   __trace2__("MAP::QueryHlrVersion: [store %s]=0x%x",s_.c_str(),dialog->dialogid_map);
@@ -113,7 +113,7 @@ static void QueryHlrVersion(MapDialog* dialog)
 
 static void QueryMcsVersion(MapDialog* dialog)
 {
-  const char text[32];
+  char text[32];
   SS7ToText(&dialog->mshlrAddr,text);
   string s_(text);
   __trace2__("MAP::QueryMcsVersion: [store %s]=0x%x",s_.c_str(),dialog->dialogid_map);
@@ -549,7 +549,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
   unsigned dialogid_smsc = 0;
   MAP_TRY{
     __trace2__("MAP::%s ",__FUNCTION__);
-    const char text[32];
+    char text[32];
     SS7ToText(&dialog->mshlrAddr,text);
     string s_(text);
     __trace2__("MAP::%s: [exists %s]?",__FUNCTION__,s_.c_str());
