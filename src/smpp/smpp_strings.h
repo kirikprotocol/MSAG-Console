@@ -36,9 +36,9 @@ struct OStr //: public MemoryManagerUnit
     __require__ ( src != NULL );
     //length = 0;
     //if ( text ) smartFree(text);
-		//if ( text ) delete text;
+    //if ( text ) delete text;
     //text = 0;
-		dispose();
+    dispose();
     
     if ( !src_length  ) return;
 
@@ -48,6 +48,15 @@ struct OStr //: public MemoryManagerUnit
     memcpy(text,src,src_length);
     length = src_length;
   }
+	OStr(const OStr& ostr) : text(0), length(0)
+	{
+		copy(ostr.text, ostr.length);
+	}
+	OStr& operator =(const OStr& ostr)
+	{
+		copy(ostr.text, ostr.length);
+		return *this;
+	}
 };
 
 
@@ -70,17 +79,26 @@ struct COStr //: public MemoryManagerUnit
   {
     __require__ ( src != NULL );
     //if ( text ) smartFree(text);
-		//if ( text ) delete text;
-		dispose();
+    //if ( text ) delete text;
+    dispose();
     
     int length = strlen(src);
     if ( !length  ) return;
     //text = (char*)smartMalloc(length+1);
-		text = new char[length+1];
+    text = new char[length+1];
     __require__ ( text != NULL );
     memcpy(text,src,length+1);
     text[length]=0;
   }
+	COStr(const COStr& ostr) : text(0)
+	{
+		copy(ostr.text);
+	}
+	COStr& operator =(const COStr& ostr)
+	{
+		copy(ostr.text);
+		return *this;
+	}
 };
 
 

@@ -793,6 +793,7 @@ struct PduXSm //: public SmppHeader//public MemoryManagerUnit
     optional.dump(log,align+1);
     dump_text("} //PduXSm");
   }
+	~PduXSm(){}
 };
 
 struct PduXSmResp //: public SmppHeader //MemoryManagerUnit
