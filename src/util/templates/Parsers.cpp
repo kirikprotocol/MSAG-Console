@@ -7,7 +7,7 @@
 namespace smsc { namespace util { namespace templates
 {
     
-Hash<Parser *>  ParserRegistry::parsers;
+ParserRegistry::FakeHash ParserRegistry::parsers;
 
 InputParser::InputParser(const char* format)
     throw(FormatRenderingException)

@@ -42,8 +42,31 @@ namespace smsc { namespace util { namespace templates
     {
     private:
         
-        static Hash<Parser *>  parsers;
-    
+        class FakeHash
+        {
+            Hash<Parser *>& GetInstance() {
+                static Hash<Parser *>  parsers;
+                return parsers;
+            }
+
+        public:
+
+            operator Hash<Parser *> () { 
+                return GetInstance(); 
+            }
+            int Exists(const char* key) { 
+                return GetInstance().Exists(key); 
+            }
+            int Insert(const char* key, Parser* &value) {
+                return GetInstance().Insert(key, value);
+            }
+            Parser*& Get(const char* key) {
+                return GetInstance().Get(key);
+            }
+        };
+
+        static FakeHash parsers;
+
     public:
 
         static void registerParser(const char* key, Parser* parser)
