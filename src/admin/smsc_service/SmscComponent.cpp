@@ -21,8 +21,6 @@ using namespace smsc::util::config::route;
 using smsc::mscman::MscManager;
 using smsc::mscman::MscInfo;
 
-const char PROFILE_PARAMS_DELIMITER = ',';
-
 SmscComponent::SmscComponent(SmscConfigs &all_configs)
 : configs(all_configs),isStopping(false),
 		  logger(Logger::getCategory("smsc.admin.smsc_service.SmscComponent"))
@@ -33,7 +31,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	lookup_params["address"] = Parameter("address", StringType);
 	Parameters update_params;
 	update_params["address"] = Parameter("address", StringType);
-	update_params["profile"] = Parameter("profile", StringType);
+	update_params["profile"] = Parameter("profile", StringListType);
 	Parameters cancelMessage_params;
 	cancelMessage_params["ids"] = Parameter("ids", StringType);
 	cancelMessage_params["sources"] = Parameter("sources", StringType);
@@ -829,6 +827,9 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
 			result.appendValueToStringList(profile.locale.c_str());
 			result.appendValueToStringList(profile.hide ? "true":"false");
 			result.appendValueToStringList(profile.hideModifiable ? "true":"false");
+			result.appendValueToStringList(profile.divert.c_str());
+			result.appendValueToStringList(profile.divertActive ? "true" : "false");
+			result.appendValueToStringList(profile.divertModifiable ? "true" : "false");
 
 			result.appendValueToStringList(getProfileMatchTypeStr(matchType));
 			result.appendValueToStringList(matchAddress.c_str());
@@ -867,8 +868,11 @@ throw (AdminException)
 			result.appendValueToStringList(getProfileCodepageStr(profile.codepage));
 			result.appendValueToStringList(getProfileReportoptionsStr(profile.reportoptions));
 			result.appendValueToStringList(profile.locale.c_str());
-			result.appendValueToStringList(profile.hide ? "true":"false");
-			result.appendValueToStringList(profile.hideModifiable ? "true":"false");
+			result.appendValueToStringList(profile.hide ? "true" : "false");
+			result.appendValueToStringList(profile.hideModifiable ? "true" : "false");
+			result.appendValueToStringList(profile.divert.c_str());
+			result.appendValueToStringList(profile.divertActive ? "true" : "false");
+			result.appendValueToStringList(profile.divertModifiable ? "true" : "false");
 			return result;
 		}
 		else
@@ -880,27 +884,21 @@ throw (AdminException)
 	}
 }
 
-void setProfileFromString(Profile &profile, const char * const profileString)
+void setProfileFromString(Profile &profile, const StringList& profileStrings)
 throw (AdminException)
 {
-	const int PARAM_NUMBER = 5;
+	StringList::const_iterator i = profileStrings.begin();
+	const char* codepageStr       = *i++;
+	const char* reportStr         = *i++;
+	const char* localeStr         = *i++;
+	const char* hideStr           = *i++;
+	const char* hideModifiableStr = *i++;
+	const char* divert            = *i++;
+	const char* divertActive      = *i++;
+	const char* divertModifiable  = *i;
 
-	const size_t length = (profileString) ? strlen(profileString):0;
-	if (length <= 0)
-		throw AdminException("profile options misformatted");
-
-	char profileStr[length+1]; strcpy(profileStr, profileString);
-	char delimeterStr[2]; char* currToken = 0;
-	delimeterStr[0] = PROFILE_PARAMS_DELIMITER; delimeterStr[1] = 0;
-
-	char* codepageStr       = strtok_r(profileStr, delimeterStr, &currToken); 
-	char* reportStr         = strtok_r(NULL, delimeterStr, &currToken);
-	char* localeStr         = strtok_r(NULL, delimeterStr, &currToken);
-	char* hideStr           = strtok_r(NULL, delimeterStr, &currToken);
-	char* hideModifiableStr = strtok_r(NULL, delimeterStr, &currToken);
-
-	if (!codepageStr || !reportStr || !localeStr || 
-		 !hideStr || !hideModifiableStr)
+	if (!codepageStr || !reportStr || !localeStr || !hideStr || !hideModifiableStr 
+		|| !divert || !divertActive || !divertModifiable)
 		throw AdminException("profile options misformatted");
 
 	/*__trace2__("%s,%s,%s,%s,%s", 
@@ -942,10 +940,12 @@ throw (AdminException)
 
 	profile.locale = localeStr;
 
-	profile.hide = 
-			  (strcmp("true", hideStr) == 0) ? 1:0;
-	profile.hideModifiable = 
-			  (strcmp("true", hideModifiableStr) == 0) ? true:false;
+	profile.hide = 			 (strcmp("true", hideStr) == 0) ? 1:0;
+	profile.hideModifiable = (strcmp("true", hideModifiableStr) == 0) ? true:false;
+
+	profile.divert = divert;
+	profile.divertActive =     (strcmp("true", divertActive) == 0) ? 1:0;
+	profile.divertModifiable = (strcmp("true", divertModifiable) == 0) ? 1:0;
 }
 
 bool isMask(const Address & address)
@@ -963,7 +963,7 @@ int SmscComponent::profileUpdate(const Arguments & args)
 	try
 	{
 		const char * const addressString = args.Get("address").getStringValue();
-		const char * const profileString = args.Get("profile").getStringValue();
+		const StringList& profileStrings = args.Get("profile").getStringListValue();
 
 		Smsc * app;
 		ProfilerInterface * profiler;
@@ -971,7 +971,7 @@ int SmscComponent::profileUpdate(const Arguments & args)
 		{
 			Address address(addressString);
 			Profile profile;
-			setProfileFromString(profile, profileString);
+			setProfileFromString(profile, profileStrings);
 #ifdef SMSC_DEBUG
 			char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+9];
 			address.toString(addr_str, sizeof(addr_str)/sizeof(addr_str[0]));
