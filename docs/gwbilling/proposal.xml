@@ -1,0 +1,38 @@
+<ruleset>
+  <if>
+    <addr what="oa" match="regex_pattern">
+    <then>
+      <if>
+        <and>
+          <sme what="src" matches="regex pattern">
+          <sme what="dst" matches="...">
+          <or>
+            <addr what="dda" matches...>
+            <route matches...>
+          </or>
+        </and>
+        <then>
+          <nobill/>
+        </then>
+        <else>
+          <bill serviceId="123"/>
+        </else>
+      </if>
+    </then>
+    <else>
+  </if>
+</ruleset>
+
+
+<!ENTITY % elements "(if | (bill|nobill))*">
+<!ELEMENT ruleset %elements;>
+<!ENTITY % conditions "(addr | sme | or | and)">
+<!ELEMENT if (%conditions;,then,else)>
+<!ELEMENT addr EMPTY>
+<!ATTLIST addr (what (oa|da|dda) #REQUIRED match CDATA #REQUIRED>
+<!ELEMENT sme EMPTY>
+<!ATTLIST sme (what (src|dst) #REQUIRED match CDATA #REQUIRED>
+<!ELEMENT and (%conditions;)*>
+<!ELEMENT or (%conditions;)*>
+<!ELEMENT bill EMPTY>
+<!ATTLIST bill (serviceId CDATA)>  /*integer if not specified svcid from route*/
