@@ -2398,7 +2398,7 @@ StateType StateMachine::forward(Tuple& t)
 
   bool diverted=false;
   bool doRepartition=false;
-  if(t.command->get_forwardAllowDivert() && sms.getIntProperty(Tag::SMSC_DIVERTFLAGS))
+  if(t.command->get_forwardAllowDivert() && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_COND))
   {
     try{
       dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
@@ -2970,6 +2970,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     if(t.command->get_resp()->get_diverted())
     {
       // switch to unconditional divert.
+      smsc_log_debug(smsLog,"deliver to divert address");
       int df=sms.getIntProperty(Tag::SMSC_DIVERTFLAGS);
       sms.setIntProperty(Tag::SMSC_UDH_CONCAT,df&DF_UDHCONCAT);
       int dc=(df<<DF_DCSHIFT)&0xFF;
@@ -2982,6 +2983,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }else // first part was delivered to original address
     {
       // turn off divert
+      smsc_log_debug(smsLog,"deliver to original address");
       sms.getMessageBody().dropIntProperty(Tag::SMSC_DIVERTFLAGS);
     }
     try{
@@ -3051,7 +3053,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       int dest_proxy_index;
 
       Address dst=sms.getDealiasedDestinationAddress();
-      if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
+      if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&(DF_COND|DF_UNCOND)))
       {
         dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
       }
