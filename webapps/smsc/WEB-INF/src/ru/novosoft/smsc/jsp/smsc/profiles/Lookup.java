@@ -68,9 +68,9 @@ public class Lookup extends PageBean
       try {
         final Mask profileMask = new Mask(profile);
         final AliasSet aliases = appContext.getSmsc().getAliases();
-        Alias alias = aliases.getAddressByAlias(profileMask);
+        Mask alias = aliases.dealias(profileMask);
         if (alias != null)
-          profileDealiased = alias.getAddress().getMask();
+          profileDealiased = alias.getMask();
         ProfileEx p = appContext.getSmsc().profileLookupEx(profileDealiased != null ? new Mask(profileDealiased) : profileMask);
         if (p.getMatchType() == ProfileEx.MATCH_EXACT) {
           Alias aliased = aliases.getAliasByAddress(p.getMatchAddress());

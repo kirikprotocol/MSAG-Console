@@ -161,4 +161,20 @@ public class AliasSet
     }
     return result;
   }
+
+  public Mask dealias(Mask alias) throws AdminException
+  {
+    Alias addressCandidat = getAddressByAlias(alias);
+    if (addressCandidat != null) {
+      Mask result = addressCandidat.getAddress();
+      final int questionsCount = result.getQuestionsCount();
+      if (questionsCount > 0) {
+        final String mask = result.getMask();
+        final String sourceMask = alias.getMask();
+        return new Mask(mask.substring(0, mask.length() - questionsCount) + sourceMask.substring(sourceMask.length() - questionsCount));
+      } else
+        return result;
+    } else
+      return null;
+  }
 }
