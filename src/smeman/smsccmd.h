@@ -64,8 +64,8 @@ enum CommandId
   QUERYABONENTSTATUS,     //19
   QUERYABONENTSTATUS_RESP,//20
   SMPP_PDU,               //21
-  SUBMIT_MULTI,           //22
-  SUBMIT_MULTI_RESP,      //23
+  SUBMIT_MULTI_SM,        //22
+  SUBMIT_MULTI_SM_RESP,   //23
   ALERT_NOTIFICATION,     //24
 };
 
@@ -353,10 +353,10 @@ struct _SmscCommand
       delete ( (SMS*)dta );
       break;
 
-    case SUBMIT_MULTI:
+    case SUBMIT_MULTI_SM:
       delete ( (SubmitMultiSm*)dta );
       break;
-    case SUBMIT_MULTI_RESP:
+    case SUBMIT_MULTI_SM_RESP:
       delete ( (SubmitMultiResp*)dta );
       break;
 
@@ -862,10 +862,10 @@ public:
         _cmd->cmdid=ENQUIRELINK_RESP;
         _cmd->dta=(void*)pdu->get_commandStatus();
         goto end_construct;
-      case SmppCommandSet::SUBMIT_MULTI: //reinterpret_cast<PduMultiSm*>(_pdu)->dump(log); break;
+      case SmppCommandSet::SUBMIT_MULTI_SM: //reinterpret_cast<PduMultiSm*>(_pdu)->dump(log); break;
         {
           PduMultiSm* pduX = reinterpret_cast<PduMultiSm*>(pdu);
-          _cmd->cmdid=SUBMIT_MULTI;
+          _cmd->cmdid=SUBMIT_MULTI_SM;
           _cmd->dta=new SubmitMultiSm;
           makeSMSBody(&((SubmitMultiSm*)_cmd->dta)->msg,pdu,forceDC);
           unsigned u = 0;
@@ -889,7 +889,7 @@ public:
           ((SubmitMultiSm*)_cmd->dta)->number_of_dests = uu;
         }
         goto end_construct;
-      //case SUBMIT_MULTI_RESP: reinterpret_cast<PduMultiSmResp*>(_pdu)->dump(log); break;
+      //case SUBMIT_MULTI_SM_RESP: reinterpret_cast<PduMultiSmResp*>(_pdu)->dump(log); break;
       //case ALERT_NOTIFICATION: return reinterpret_cast<Pdu*>(_pdu)->size();
       //case DATA_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
       //case DATA_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
@@ -1057,7 +1057,7 @@ public:
           return reinterpret_cast<SmppHeader*>(xsm.release());
         }
       }
-    case SUBMIT_MULTI_RESP:
+    case SUBMIT_MULTI_SM_RESP:
       {
         {
           auto_ptr<PduMultiSmResp> xsmR(new PduMultiSmResp);
