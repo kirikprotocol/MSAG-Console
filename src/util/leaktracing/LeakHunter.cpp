@@ -5,22 +5,30 @@
 #include "core/threads/Thread.hpp"
 #include "util/debug.h"
 #include <new>
+#include <setjmp.h>
+#include <signal.h>
 
-#define TRACESIZE 10
 
 namespace smsc{
 namespace util{
 namespace leaktracing{
 
+const int TRACESIZE=20;
+
 static void* threadstart=NULL;
 
+static int inbacktrace=0;
+static sigjmp_buf j;
 
-void BackTrace(void** trace)
+static void BackTrace(void** trace)
 {
+  inbacktrace=1;
+  if(sigsetjmp(j,0))return;
 #define TRACE_BACK(n) \
+  trace[n]=0;\
   trace[n]=__builtin_return_address(n+2);\
-  if(!trace[n])return;\
-  if(trace[n]==threadstart){trace[n]=0;return;}
+  if(!trace[n]){inbacktrace=0;return;}\
+  if(trace[n]==threadstart){inbacktrace=0;trace[n]=0;return;}
   TRACE_BACK(0)
   TRACE_BACK(1)
   TRACE_BACK(2)
@@ -31,6 +39,22 @@ void BackTrace(void** trace)
   TRACE_BACK(7)
   TRACE_BACK(8)
   TRACE_BACK(9)
+  TRACE_BACK(10)
+  TRACE_BACK(11)
+  TRACE_BACK(12)
+  TRACE_BACK(13)
+  TRACE_BACK(14)
+  TRACE_BACK(15)
+  TRACE_BACK(16)
+  TRACE_BACK(17)
+  TRACE_BACK(19)
+  TRACE_BACK(19)
+}
+
+static void sighandler(int param)
+{
+  if(inbacktrace)siglongjmp(j,1);
+  abort();
 }
 
 
@@ -41,7 +65,7 @@ struct BlockInfo{
 };
 
 
-class DummyThread:public smsc::core::threads::Thread{
+class __LH__DummyThread:public smsc::core::threads::Thread{
 public:
   virtual int Execute()
   {
@@ -89,7 +113,9 @@ static mutex_t mtx=DEFAULTMUTEX;
 
 void LeakHunter::Init()
 {
-  DummyThread t;
+  sigset(11,sighandler);
+
+  __LH__DummyThread t;
   t.Start();
   t.WaitFor();
   int i;
