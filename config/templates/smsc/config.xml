@@ -97,6 +97,7 @@
     <param name="h" type="string">hide</param>
     <param name="nh" type="string">unhide</param>
     <param name="f" type="string">flash</param>
+    <param name="nt" type="string">notrans</param>
   </section>
 
   <section name="map">
@@ -129,6 +130,8 @@
       <param name="UNHIDE" type="int">6</param>
       <param name="USSD7BIT ON" type="int">7</param>
       <param name="USSD7BIT OFF" type="int">8</param>
+      <param name="TRANSLIT ON" type="int">9</param>
+      <param name="TRANSLIT OFF" type="int">10</param>
       <param name="DIVERT ON" type="int">30</param>
       <param name="DIVERT OFF" type="int">31</param>
       <param name="DIVERT TO" type="int">40</param>
