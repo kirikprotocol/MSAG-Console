@@ -575,7 +575,7 @@ public class SmsView
       String messagePrefix = "";
       if (text != null && text.length>0 && (esmClass & 0x40) == 0x40)
       {
-        int headerLen = text[0];
+        int headerLen = ((int)text[0])&0xff;  // convert negative byte to int
         if( headerLen >= textLen-1 ) {
           text = null; textLen = 0;
         } else {
