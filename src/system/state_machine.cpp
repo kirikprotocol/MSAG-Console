@@ -1363,7 +1363,7 @@ StateType StateMachine::forward(Tuple& t)
   {
     Descriptor d;
     try{
-      store->changeSmsStateToUndeliverable(t.msgId,d,0);
+      store->changeSmsStateToExpired(t.msgId);
     }catch(...)
     {
       __trace__("FORWARD: Failed to change state of USSD request to undeliverable");
@@ -1587,12 +1587,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
       case CMD_ERR_RESCHEDULENOW:
       {
         try{
-          __trace__("DELIVERYRESP: change state to enroute");
           time_t rt=time(NULL)+2;
           if(t.command->get_resp()->get_delay()!=-1)
           {
-            rt=t.command->get_resp()->get_delay()-2;
+            rt+=t.command->get_resp()->get_delay()-2;
           }
+          __trace2__("DELIVERYRESP: change state to enroute (reschedule now=%d)",rt);
           store->changeSmsStateToEnroute
           (
             t.msgId,
