@@ -473,13 +473,16 @@ void DateTimeFormatter::format(
                         else
                             output += ioShortMonthesNames[tmdt.tm_mon];
                     }
-                    else
+                    else {
                         sprintf(buff, "%02d", tmdt.tm_mon+1);
+                        output += buff;
+                    }
                 }
-                else 
+                else {
                     sprintf(buff, "%d", tmdt.tm_mon+1);
+                    output += buff;
+                }
                 
-                output += buff;
                 continue;
             }
             case 'd':

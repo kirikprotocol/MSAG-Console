@@ -91,7 +91,7 @@ public:
         {
             {
                 MutexGuard guard(countersLock);
-                requestsProcessingCount--;
+                if (requestsProcessingCount) requestsProcessingCount--;
                 failuresNoticedCount++;
             }
             command.setOutData("Error processing SMS !");
@@ -129,7 +129,7 @@ public:
                "Responce sent !\n" : "Responce wasn't send !\n");
         {
             MutexGuard guard(countersLock);
-            requestsProcessingCount--;
+            if (requestsProcessingCount) requestsProcessingCount--;
             requestsProcessedCount++;
         }
     };
@@ -230,7 +230,7 @@ public:
     {
         {
             MutexGuard guard(countersLock);
-            requestsProcessingCount--;
+            if (requestsProcessingCount) requestsProcessingCount--;
             errorsHandledCount++;
         }
         log.error("Oops, Error handled! Code is: %d\n", errorCode);
