@@ -9,54 +9,70 @@ using std::exception;
 
 namespace smsc { namespace store
 {
-    class StoreException : public exception
+    const int MAX_MESSAGE_LENGTH = 1024;
+
+	class StoreException : public exception
     {
-	private:
+	protected:
 		
-		int	  code;
-		char  cause[512];
+        char  cause[MAX_MESSAGE_LENGTH];
+		
+		StoreException() {};
 
 	public:
 		
-		StoreException(int _code, const char* _cause) : code(_code) {
-			//cause = strdup(_cause);
-			sprintf(cause, "Code - %d, Cause - %s", _code, _cause);
+		StoreException(const char* _cause) {
+            sprintf(cause, "Failure cause - %s", _cause);
 		};
         
-		virtual ~StoreException() throw() {
-			//if (cause) free(cause);
-		};
+		virtual ~StoreException() throw() {};
        
         virtual const char* what() const throw() {
             return cause;
         };
 		
+    };
+	
+	class StorageException : public StoreException
+    {
+    protected:
+		
+		int	  code;
+		
+		StorageException(int _code=-1) 
+			: StoreException(), code(_code) {};
+
+	public:
+        
+        StorageException(const char* _cause, int _code=-1) 
+			: StoreException(), code(_code) 
+		{
+            sprintf(cause, "Code - %d, Failure cause - %s", _code, _cause);
+		};
+        virtual ~StorageException() throw() {};
+		
 		inline int getErrorCode() {
 			return code;
 		};
-    };
-    
-	class AuthenticationException : public StoreException
+	};
+	
+	class ConnectFailureException : public StorageException
     {
-    public:
-        AuthenticationException() : StoreException(-1, 
-			"Unable to authenticate user to DB !") {};
-        virtual ~AuthenticationException() throw() {};
-    };
-   
-    class ResourceAllocationException : public StoreException
-    {
-    public:
-        ResourceAllocationException() : StoreException(-1, 
-			"Unable to allocate resources for DB !") {};
-		virtual ~ResourceAllocationException() throw() {};
-    };
+	public:
+		
+		ConnectFailureException(StorageException& exc) 
+			: StorageException(exc.getErrorCode())
+		{
+			strcpy(cause, exc.what());
+		};
+		virtual ~ConnectFailureException() throw() {};
+	};
     
     class NoSuchMessageException : public StoreException
     {
     public:
-        NoSuchMessageException() : StoreException(-1, 
-			"Unable to find message with such id in DB !") {};
+        NoSuchMessageException() 
+			: StoreException("Unable to find message with such id in DB !") {};
 		virtual ~NoSuchMessageException() throw() {};
     };
 

@@ -11,10 +11,10 @@ namespace smsc { namespace store
     struct MessageStore 
     {
         virtual SMSId store(SMS& sms) 
-            throw(StoreException) = 0;
+            throw(StorageException) = 0;
         
         virtual SMS& retrive(SMSId id) 
-            throw(StoreException) = 0;
+            throw(StorageException, NoSuchMessageException) = 0;
 
 		virtual ~MessageStore() {};
 

@@ -25,7 +25,7 @@ namespace smsc { namespace store
     public:
 
         StoreConfig(const char* db, const char* usr, const char* pwd);
-        virtual ~StoreConfig();
+		virtual ~StoreConfig();
 
         inline const char* getUserName() { return userName; };
         inline const char* getUserPwd() { return userPwd; };
@@ -37,20 +37,21 @@ namespace smsc { namespace store
 	{
     protected:
 
-        StoreConfig*	config;
-		
-		int   			connectionsCount;
-		Mutex			connectionsLock;
-		Mutex			idleLock;
+        int 	maxConnectionsCount;
+		int		curConnectionsCount;
+		Mutex	connectionsLock;
+		Mutex	idleLock;
 
-		Array<Connection*>	idle;
+		StoreConfig*	config;
+		
+        Array<Connection*>	idle;
 		Array<Connection*>	busy;
 		Array<Connection*>	dead;
 
 	public:
 	
-	    ConnectionPool(StoreConfig* _config) 
-			throw(StoreException);
+	    ConnectionPool(StoreConfig* _config, int max, int init) 
+			throw(ConnectFailureException);
 	    virtual ~ConnectionPool(); 
         
 	    inline StoreConfig*	getConfig() {
@@ -58,16 +59,27 @@ namespace smsc { namespace store
 		};
 
 		void checkErr(sword status, Connection* conn) 
-			throw(StoreException);
+			throw(StorageException);
 
-		virtual Connection* getConnection();
-	    virtual void freeConnection(Connection* connection);
+		Connection* getConnection() 
+			throw(ConnectFailureException);
+	    void freeConnection(Connection* connection);
     };
 	
     using namespace smsc::sms;
 
 	class Connection
     {
+	private:
+
+	static sb4 _failoverCallback(dvoid *svchp, dvoid *envhp,
+						 dvoid *fo_ctx, ub4 fo_type, ub4 fo_event) 
+	{
+		printf("Connection failure !!!\n");
+		return ((fo_ctx) ? (((Connection *)fo_ctx)->failoverCallback(
+			svchp, envhp, fo_ctx, fo_type, fo_event)) : ((sb4) 0));
+	};
+	
 	protected:
 		
         static text* 	sqlStoreLock;
@@ -75,8 +87,7 @@ namespace smsc { namespace store
         static text* 	sqlStoreInsert;
 		static text* 	sqlRetriveAll;
 	    
-		int				id;
-		ConnectionPool*	owner;
+        ConnectionPool*	owner;
 
 		OCIEnv*         envhp;  // OCI envirounment handle
         OCISvcCtx*      svchp;  // OCI service handle
@@ -90,22 +101,22 @@ namespace smsc { namespace store
         OCIStmt* 		stmtStoreInsert;
 		OCIStmt* 		stmtRetriveAll;
 
-		OCIDefine	*defhp;
-		OCIBind		*bndSt, *bndMsgRef, *bndMsgInd;
-		OCIBind		*bndOALen, *bndOATon, *bndOANpi, *bndOAVal;
-		OCIBind		*bndDALen, *bndDATon, *bndDANpi, *bndDAVal;
-		OCIBind		*bndVTime, *bndWTime, *bndSTime, *bndDTime;
-		OCIBind		*bndSrr, *bndRd, *bndMsgPri, *bndMsgPid;
-		OCIBind		*bndFcs, *bndDcs, *bndUdhi, *bndUdl, *bndUd;
+		OCIDefine		*defhp;
+		OCIBind			*bndSt, *bndMsgRef, *bndMsgInd;
+		OCIBind			*bndOALen, *bndOATon, *bndOANpi, *bndOAVal;
+		OCIBind			*bndDALen, *bndDATon, *bndDANpi, *bndDAVal;
+		OCIBind			*bndVTime, *bndWTime, *bndSTime, *bndDTime;
+		OCIBind			*bndSrr, *bndRd, *bndMsgPri, *bndMsgPid;
+		OCIBind			*bndFcs, *bndDcs, *bndUdhi, *bndUdl, *bndUd;
 
-		OCIDefine	*defSt, *defMsgRef, *defMsgInd;
-		OCIDefine   *defOALen, *defOATon, *defOANpi, *defOAVal;
-		OCIDefine	*defDALen, *defDATon, *defDANpi, *defDAVal;
-		OCIDefine	*defVTime, *defWTime, *defSTime, *defDTime;
-		OCIDefine	*defSrr, *defRd, *defMsgPri, *defMsgPid;
-		OCIDefine	*defFcs, *defDcs, *defUdhi, *defUdl, *defUd;
-		OCIBind		*bndRetriveId;
-		OCIBind		*bndStoreId;
+		OCIDefine		*defSt, *defMsgRef, *defMsgInd;
+		OCIDefine   	*defOALen, *defOATon, *defOANpi, *defOAVal;
+		OCIDefine		*defDALen, *defDATon, *defDANpi, *defDAVal;
+		OCIDefine		*defVTime, *defWTime, *defSTime, *defDTime;
+		OCIDefine		*defSrr, *defRd, *defMsgPri, *defMsgPid;
+		OCIDefine		*defFcs, *defDcs, *defUdhi, *defUdl, *defUd;
+		OCIBind			*bndRetriveId;
+		OCIBind			*bndStoreId;
 
         SMS				sms;
 		SMSId			smsId;
@@ -123,23 +134,32 @@ namespace smsc { namespace store
 		
 		Mutex        	mutex;
 
+		void checkConnErr(sword status) 
+			throw(ConnectFailureException);
+		
 		void checkErr(sword status) 
-			throw(StoreException);
+			throw(StorageException);
 
-		void setSMS(SMS& _sms) throw(StoreException);
-		SMS& getSMS() throw(StoreException);
+		void setSMS(SMS& _sms) 
+			throw(StorageException);
+		SMS& getSMS() 
+			throw(StorageException);
+        
+        OCIFocbkStruct failover;
+		sb4 failoverCallback(dvoid *svchp, dvoid *envhp,
+							 dvoid *fo_ctx, ub4 fo_type, ub4 fo_event);
 
 	public:
 
-        Connection(ConnectionPool* pool, int _id = 0)
-			throw(StoreException);
+        Connection(ConnectionPool* pool)
+			throw(ConnectFailureException);
 		virtual ~Connection();
 
         virtual SMSId store(SMS& sms) 
-            throw(StoreException);
+            throw(StorageException);
 
         virtual SMS& retrive(SMSId id) 
-            throw(StoreException);
+            throw(StorageException, NoSuchMessageException);
 
 		friend class ConnectionPool;
     };

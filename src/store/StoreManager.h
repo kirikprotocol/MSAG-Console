@@ -21,19 +21,19 @@ namespace smsc { namespace store
 	    ConnectionPool*	pool;
 
         StoreManager()
-			throw(StoreException);
+			throw(ConnectFailureException);
 
     public:    
 
         static MessageStore* getInstance()
-			throw(StoreException);
+			throw(ConnectFailureException);
         
         virtual ~StoreManager();
 
         virtual SMSId store(SMS& sms)  
-			throw(StoreException);
+			throw(StorageException);
         virtual SMS& retrive(SMSId id)
-			throw(StoreException);
+			throw(StorageException, NoSuchMessageException);
     };
 
 }}
