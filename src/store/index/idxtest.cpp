@@ -16,6 +16,10 @@ int main(int argc,char* argv[])
 
       for(int i=0;i<30000;i++)
       {
+        if((i%1000)==0)
+        {
+          printf("%d\n",i);
+        }
         if((i%3)==0)
           s.setRouteId("route");
         else if((i%3)==1)
