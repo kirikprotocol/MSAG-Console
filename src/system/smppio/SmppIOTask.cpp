@@ -924,7 +924,7 @@ int SmppOutputThread::Execute()
 
           SmppHeader *pdu=0;
           try{
-            pdu=cmd.makePdu(smeManager->getSmeInfo(ss->getProxy()->getSmeIndex()).forceDC);
+            pdu=cmd.makePdu(ss->getProxy()->getForceDc());
           }catch(...)
           {
             warn2(log,"Failed to build pdu from command:%d,dlgid=%d",cmd->get_commandId(),cmd->get_dialogId());
