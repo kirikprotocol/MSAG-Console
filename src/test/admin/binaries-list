@@ -1,5 +1,5 @@
 #binary name			source name		libraries
 test/ConfigurationMaster	ConfigurationMaster
-test/DatabaseMaster		DatabaseMaster		-ltest-util -lprofiler -lsmeman -lstore -ldb -lsmpp -lsms -lutil-config -lutil-recoder-recode_dll -lcore-threads -lcore-buffers -lutil-xml -lutil -L$(__LIBS)
+test/DatabaseMaster		DatabaseMaster		-ltest-util -lprofiler -lsmeman -lresourcemanager -lstore -ldb -lsmpp -lsms -lutil-config -lutil-recoder-recode_dll -lutil-templates -lcore-threads -lcore-buffers -lutil-xml -lutil -L$(__LIBS)
 test/AdminFunctionalTest AdminFunctionalTest -ltest-admin -ltest-util -lcore-network -lutil-regexp -lutil -llog4cpp -lthread -lsocket
-test/SimpleSmppTest		SimpleSmppTest -ltest-smpp -ltest-sms -ltest-conf -ltest-util -lsme -lsmpp -lsms -lutil-recoder-recode_dll -lcore-network -lcore-threads -lreadline -lhistory -ltermcap -lthread -lsocket -lrt
+test/SimpleSmppTest		SimpleSmppTest -ltest-smpp -ltest-sms -ltest-conf -ltest-core -ltest-util -lsme -lsmpp -lsms -lutil-recoder-recode_dll -lcore-network -lcore-threads -lutil-regexp -lreadline -lhistory -ltermcap -lthread -lsocket -lrt

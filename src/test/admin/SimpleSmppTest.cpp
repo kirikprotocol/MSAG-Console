@@ -1,4 +1,5 @@
 #include "sme/SmppBase.hpp"
+#include "util/regexp/RegExp.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
 #include "readline/readline.h"
@@ -7,6 +8,8 @@
 #include <iostream>
 
 using smsc::sms::Address;
+using smsc::util::regexp::RegExp;
+using smsc::util::regexp::SMatch;
 using namespace std;
 using namespace smsc::sme;
 using namespace smsc::smpp::SmppCommandSet;
@@ -18,13 +21,17 @@ class SimpleSmppListener : public SmppPduEventListener
 {
 	const string systemId;
 	SmppSession* session;
+	bool forceDc;
 	uint32_t respCommandStatus;
+	int respDelay;
 
 public:
-	SimpleSmppListener(const string& _systemId)
-		: systemId(_systemId), respCommandStatus(0x0) {}
+	SimpleSmppListener(const string& _systemId) : systemId(_systemId),
+		forceDc(false), respCommandStatus(0x0), respDelay(0) {}
 	void setSession(SmppSession* _session) { session = _session; }
-	void setDeliveryResp(uint32_t commandStatus) { respCommandStatus = commandStatus; }
+	bool getForceDc() { return forceDc; }
+	void setForceDc(bool _forceDc) { forceDc = _forceDc; }
+	void setDeliveryResp(uint32_t commandStatus, int delay) { respCommandStatus = commandStatus; respDelay = delay; }
 	virtual void handleEvent(SmppHeader* pdu);
 	virtual void handleError(int errorCode);
 };
@@ -46,14 +53,14 @@ class SimpleSmppTest
 public:
 	SimpleSmppTest(const string& _host, int _port)
 		: host(_host), port(_port) {}
-	void bind(int mode, const string& systemId, const string& passwd);
+	void bind(int mode, const string& systemId, const string& passwd, bool forceDc);
 	void select(const string& systemId);
 	const string& getSelected() { return selectedId; }
 	void list();
 	void unbind();
 	void submit(const string& src, const string& dest,
 		uint8_t registeredDelivery, bool ussd);
-	void setDeliveryResp(uint32_t commandStatus);
+	void setDeliveryResp(uint32_t commandStatus, int delay);
 };
 
 #define __check_exception__ \
@@ -61,30 +68,32 @@ public:
 	catch (...) { cout << "unknown exception" << endl; }
 
 void SimpleSmppTest::bind(int mode, const string& systemId,
-	const string& passwd)
+	const string& passwd, bool forceDc)
 {
+	cout << "bind: host = " << host << ", port = " << port <<
+		", systemId = " << systemId << ", password = " << passwd <<
+		", mode = " << mode << ", forceDc = " << (forceDc ? "yes" : "no") << endl;
 	SmeConfig config;
 	config.host = host;
 	config.port = port;
 	config.sid = systemId;
 	config.timeOut = 8;
 	config.password = passwd;
-	__trace2__("bind(): host = %s, port = %d, systemId = %s, password = %s",
-		host.c_str(), port, systemId.c_str(), passwd.c_str());
 	try
 	{
 		SessionData* data = new SessionData();
 		data->listener = new SimpleSmppListener(systemId);
 		data->session = new SmppSession(config, data->listener);
 		data->listener->setSession(data->session);
+		data->listener->setForceDc(forceDc);
 		data->session->connect(mode);
 		sessions[systemId] = data;
-		cout << "connected successfully" << endl;
+		cout << "bind successful" << endl;
 		select(systemId);
 	}
 	catch (SmppConnectException& e)
 	{
-		cout << "connect exception: " << e.what() << endl;
+		cout << "bind failed: " << e.what() << endl;
 	}
 	__check_exception__
 }
@@ -138,8 +147,9 @@ void SimpleSmppTest::submit(const string& src, const string& dest,
 	__check_selected__;
 	try
 	{
+		bool forceDc = data->listener->getForceDc();
 		PduSubmitSm pdu;
-		SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, true, false,
+		SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, true, forceDc,
 			OPT_ALL & ~OPT_USSD_SERVICE_OP);
 		PduAddress addr;
 		const Address srcAddr(src.c_str());
@@ -164,6 +174,11 @@ void SimpleSmppTest::submit(const string& src, const string& dest,
 			", msgRef = " << dec << (int) pdu.get_optional().get_userMessageReference() <<
 			", ussd = " << (ussd ? "yes" : "no") <<
 			", dc = " << (int) dc;
+		if (forceDc)
+		{
+			bool simMsg;
+			SmppUtil::extractDataCoding(dc, dc, simMsg);
+		}
 		if (dc == DEFAULT || dc == UCS2 || dc == SMSC7BIT)
 		{
 			bool udhi = pdu.get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
@@ -179,10 +194,10 @@ void SimpleSmppTest::submit(const string& src, const string& dest,
 	__check_exception__
 }
 
-void SimpleSmppTest::setDeliveryResp(uint32_t commandStatus)
+void SimpleSmppTest::setDeliveryResp(uint32_t commandStatus, int delay)
 {
 	__check_selected__;
-	data->listener->setDeliveryResp(commandStatus);
+	data->listener->setDeliveryResp(commandStatus, delay);
 }
 
 void SimpleSmppListener::handleEvent(SmppHeader* pdu)
@@ -210,6 +225,11 @@ void SimpleSmppListener::handleEvent(SmppHeader* pdu)
 				cout << "handle deliver_sm: sme = " << systemId <<
 					", msgRef = " << dec << (int) msgRef <<
 					", dc = " << (int) dc;
+				if (forceDc)
+				{
+					bool simMsg;
+					SmppUtil::extractDataCoding(dc, dc, simMsg);
+				}
 				if (dc == DEFAULT || dc == UCS2 || dc == SMSC7BIT)
 				{
 					bool udhi = p->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
@@ -221,6 +241,7 @@ void SimpleSmppListener::handleEvent(SmppHeader* pdu)
 						", sm = " << decode(text, len, dc, false);
 				}
 				cout << endl;
+				sleep(respDelay);
 				PduDeliverySmResp respPdu;
 				respPdu.get_header().set_commandStatus(respCommandStatus);
 				respPdu.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
@@ -243,6 +264,40 @@ void SimpleSmppListener::handleError(int errorCode)
 		", errorCode = " << dec << errorCode << endl;
 }
 
+bool isCmd(const string& cmd, const string& name)
+{
+	RegExp regExp;
+	char regExpStr[64];
+	sprintf(regExpStr, "/^%s(\\s+|$)/", name.c_str());
+	int regExpOk = regExp.Compile(regExpStr);
+	__require__(regExpOk);
+	int matchCount = 5;
+	SMatch match[matchCount];
+	return regExp.Match(cmd.c_str(), match, matchCount);
+}
+
+const string getParam(const string& cmd, const string& name)
+{
+	RegExp regExp;
+	char regExpStr[64];
+	sprintf(regExpStr, "/.*%s\\s*=\\s*(\\w+)/", name.c_str());
+	int regExpOk = regExp.Compile(regExpStr);
+	__require__(regExpOk);
+	int matchCount = 5;
+	SMatch match[matchCount];
+	if (regExp.Match(cmd.c_str(), match, matchCount))
+	{
+		__require__(matchCount > 1);
+		int len = match[1].end - match[1].start;
+		__require__(len >= 0);
+		char tmp[len + 1];
+		memcpy(tmp, cmd.c_str() + match[1].start, len);
+		tmp[len] = 0;
+		return tmp;
+	}
+	return "";
+}
+
 void executeTest(const string& smscHost, int smscPort)
 {
 	SimpleSmppTest test(smscHost, smscPort);
@@ -254,79 +309,75 @@ void executeTest(const string& smscHost, int smscPort)
 		if (help)
 		{
 			help = false;
-			cout << "bind <mode> <systemId> <password> - bind sme" << endl;
-			cout << "select <systemId> - select sme" << endl;
+			cout << "bind <id=smeId> [passwd=password] [mode=trx|rx|tx|] [forceDc=no|yes]- bind sme" << endl;
+			cout << "select <id=smeId> - select sme" << endl;
 			cout << "list - list sessions" << endl;
 			cout << "unbind - unbind selected sme" << endl;
-			cout << "submit <src> <dest> [report=none|full|failure] [ussd=no|yes] - submit sms" << endl;
-			cout << "set resp [commandStatus=0] - set delivery_sm_resp command status" << endl;
+			cout << "submit <src=srcAddr> <dest=destAddr> [report=none|full|failure] [ussd=no|yes] - submit sms" << endl;
+			cout << "set resp [status=0] [delay=0] - set delivery_sm_resp command status and delay" << endl;
 			cout << "quit - quit test" << endl;
 			continue;
 		}
 		string prompt = test.getSelected() + ">";
-		const char* cmdLine = readline(prompt.c_str());
-		if (!cmdLine)
+		const char* cmd = readline(prompt.c_str());
+		if (!cmd)
 		{
 			return;
 		}
-		add_history(cmdLine);
-		istringstream is(cmdLine);
-		string cmd;
-		is >> cmd;
-		if (cmd == "bind")
+		add_history(cmd);
+		if (isCmd(cmd, "bind"))
 		{
-			string strMode;
-			string systemId;
-			string passwd;
-			is >> strMode;
-			is >> systemId;
-			is >> passwd;
-			if (strMode == "rx" && systemId.length())
+			string systemId = getParam(cmd, "id");
+			string passwd = getParam(cmd, "passwd");
+			string strMode = getParam(cmd, "mode");
+			string strForceDc = getParam(cmd, "forceDc");
+			int mode = BindType::Transceiver;
+			if (strMode == "rx")
 			{
-				test.bind(BindType::Receiver, systemId, passwd);
-				continue;
+				mode = BindType::Receiver;
 			}
-			else if (strMode == "tx" && systemId.length())
+			else if (strMode == "tx")
 			{
-				test.bind(BindType::Transmitter, systemId, passwd);
-				continue;
+				mode = BindType::Transmitter;
 			}
-			else if (strMode == "trx" && systemId.length())
+			bool forceDc = false;
+			if (strForceDc == "yes")
 			{
-				test.bind(BindType::Transceiver, systemId, passwd);
+				forceDc = true;
+			}
+			if (systemId.length())
+			{
+				test.bind(mode, systemId, passwd, forceDc);
 				continue;
 			}
 		}
-		else if (cmd == "select")
+		else if (isCmd(cmd, "select"))
 		{
-			string systemId;
-			is >> systemId;
+			string systemId = getParam(cmd, "id");
 			if (systemId.length())
 			{
 				test.select(systemId);
 				continue;
 			}
 		}
-		else if (cmd == "list")
+		else if (isCmd(cmd, "list"))
 		{
 			test.list();
 			continue;
 		}
-		else if (cmd == "unbind")
+		else if (isCmd(cmd, "unbind"))
 		{
 			test.unbind();
 			continue;
 		}
-		else if (cmd == "submit")
+		else if (isCmd(cmd, "submit"))
 		{
-			string src, dest, report, ussd;
-			is >> src;
-			is >> dest;
-			is >> report;
-			is >> ussd;
-			uint8_t registeredDelivery;
-			bool ussdFlag;
+			string src = getParam(cmd, "src");
+			string dest = getParam(cmd, "dest");
+			string report = getParam(cmd, "report");
+			string ussd = getParam(cmd, "ussd");
 			//report
+			uint8_t registeredDelivery;
 			if (report == "" || report == "none")
 			{
 				registeredDelivery = NO_SMSC_DELIVERY_RECEIPT;
@@ -345,6 +396,7 @@ void executeTest(const string& smscHost, int smscPort)
 				continue;
 			}
 			//ussd
+			bool ussdFlag;
 			if (ussd == "" || ussd == "no")
 			{
 				ussdFlag = false;
@@ -361,18 +413,14 @@ void executeTest(const string& smscHost, int smscPort)
 			test.submit(src, dest, registeredDelivery, ussdFlag);
 			continue;
 		}
-		else if (cmd == "set")
+		else if (isCmd(cmd, "set resp"))
 		{
-			is >> cmd;
-			if (cmd == "resp")
-			{
-				uint32_t commandStatus = 0x0;
-				is >> commandStatus;
-				test.setDeliveryResp(commandStatus);
-				continue;
-			}
+			uint32_t commandStatus = atoi(getParam(cmd, "status").c_str());
+			int delay = atoi(getParam(cmd, "delay").c_str());
+			test.setDeliveryResp(commandStatus, delay);
+			continue;
 		}
-		else if (cmd == "quit")
+		else if (isCmd(cmd, "quit"))
 		{
 			return;
 		}
@@ -395,6 +443,7 @@ int main(int argc, char* argv[])
 		smscPort = atoi(argv[2]);
 	}
     using_history();
+	RegExp::InitLocale();
 	executeTest(smscHost, smscPort);
 }
 
