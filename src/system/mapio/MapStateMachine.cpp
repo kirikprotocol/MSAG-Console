@@ -127,13 +127,22 @@ static void QueryMcsVersion(MapDialog*);
 static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
 {
   __trace2__("MAP::%s: ",__FUNCTION__);
-  __trace2__("MAP:%s: Preapre SMSC command",__FUNCTION__);
-  dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
-  __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog).c_str());
-  mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
-  mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
-  mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
-  mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
+  if ( !dialog->isQueryAbonentStatus ) {
+    __trace2__("MAP:%s: Preapre SMSC command",__FUNCTION__);
+    dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
+    __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog).c_str());
+    mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
+    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
+    mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
+    mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
+  }else{
+    __trace2__("MAP:%s: Preapre Abonent Status command",__FUNCTION__);
+    AbonentStatus& as = dialog->QueryAbonentCommand->get_abonentStatus();
+    mkMapAddress( &dialog->m_msAddr, as.addr.value, as.addr.length );
+    mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
+    mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
+    mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
+  }
   __trace2__("MAP::%s: Query HLR AC version",__FUNCTION__);
   dialog->state = MAPST_WaitHlrVersion;
   QueryHlrVersion(dialog);
@@ -866,7 +875,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
         if ( dialog->isQueryAbonentStatus )
         {
           dialog->QueryAbonentCommand = cmd;
-          __require__ (dialog->QueryAbonentCommand->get_abonentStatus() != 0);
+          if ( dialog->QueryAbonentCommand->get_abonentStatus().addr.getLenght() == 0 )
+            throw MAPDIALOG_FATAL_ERROR("incorrect address");
         }
         dialog->wasDelivered = false;
         dialog->hlrWasNotified = false;
