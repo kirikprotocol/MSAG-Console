@@ -70,7 +70,7 @@ public class UserManager implements DataSource
 				{
 					UserDataItem u1 = (UserDataItem) o1;
 					UserDataItem u2 = (UserDataItem) o2;
-					int result = ((String) u1.getValue(sort)).compareTo((String) u2.getValue(sort));
+					int result = ((String) u1.getValue(sort)).compareToIgnoreCase((String) u2.getValue(sort));
 					return isNegativeSort
 							? -result
 							: result;

@@ -11,6 +11,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter;
 import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.SortedList;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;

@@ -2,7 +2,9 @@
 <%@ page import="ru.novosoft.smsc.jsp.smsc.services.Index,
                  java.net.URLEncoder,
                  ru.novosoft.smsc.jsp.SMSCJspException,
-                 ru.novosoft.smsc.jsp.SMSCErrors"%>
+                 ru.novosoft.smsc.jsp.SMSCErrors,
+                 java.util.*,
+                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -104,8 +106,6 @@ for(Iterator i = bean.getSmeIds().iterator(); i.hasNext(); row++)
 String serviceId = (String) i.next();
 String encodedServiceId = StringEncoderDecoder.encode(serviceId);
 
-String serviceControl = (row == 0) ? "start" : "stop";
-String serviceStatus = (row == 0) ? "<span class='C800'>stopped</span>" : "<span class='C080'>runned</span>";
 List serviceIds = Arrays.asList(bean.getServiceIds());
 %>
 <tr class=row<%=row&1%>>

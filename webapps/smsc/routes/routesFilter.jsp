@@ -1,6 +1,8 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.routes.RoutesFilter,
-					  ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter"%>
+                 ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter,
+                 java.util.*,
+                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.routes.RoutesFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%

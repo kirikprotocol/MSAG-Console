@@ -4,7 +4,9 @@
                  java.net.URLEncoder,
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  ru.novosoft.smsc.jsp.SMSCErrors,
-                 ru.novosoft.smsc.jsp.PageBean"%>
+                 ru.novosoft.smsc.jsp.PageBean,
+                 java.util.*,
+                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.aliases.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%

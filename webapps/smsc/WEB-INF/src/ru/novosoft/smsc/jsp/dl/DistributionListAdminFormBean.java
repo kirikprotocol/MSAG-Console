@@ -96,9 +96,9 @@ public class DistributionListAdminFormBean extends IndexBean
           DistributionList d1 = (DistributionList) o1;
           DistributionList d2 = (DistributionList) o2;
           return sortByName
-                  ? d1.getName().compareTo(d2.getName())
+                  ? d1.getName().compareToIgnoreCase(d2.getName())
                   : (d1.getOwner() != null
-                  ? (d2.getOwner() != null ? d1.getOwner().compareTo(d2.getOwner()) : 1)
+                  ? (d2.getOwner() != null ? d1.getOwner().compareToIgnoreCase(d2.getOwner()) : 1)
                   : (d2.getOwner() == null ? 0 : -1)
                   );
         } else

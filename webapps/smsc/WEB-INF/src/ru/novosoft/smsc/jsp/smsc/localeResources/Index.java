@@ -3,6 +3,7 @@ package ru.novosoft.smsc.jsp.smsc.localeResources;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.util.SortedList;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -49,7 +50,7 @@ public class Index extends IndexBean
     else
       sort = preferences.getLocaleResourcesSortOrder();
 
-    locales = appContext.getResourcesManager().list();
+    locales = new SortedList(appContext.getResourcesManager().list());
     reverseLocales.addAll(locales);
     Collections.reverse(reverseLocales);
 

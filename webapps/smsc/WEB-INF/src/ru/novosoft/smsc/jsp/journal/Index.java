@@ -67,26 +67,26 @@ public class Index extends IndexBean
           case SORT_timestamp:
             return a1.getTimestamp().compareTo(a2.getTimestamp());
           case SORT_user:
-            return a1.getUser().compareTo(a2.getUser());
+            return a1.getUser().compareToIgnoreCase(a2.getUser());
           case SORT_sessionId:
-            return a1.getSessionId().compareTo(a2.getSessionId());
+            return a1.getSessionId().compareToIgnoreCase(a2.getSessionId());
           case SORT_subjectType:
             return a1.getSubjectType() - a2.getSubjectType();
           case SORT_subjectId:
-            return a1.getSubjectId().compareTo(a2.getSubjectId());
+            return a1.getSubjectId().compareToIgnoreCase(a2.getSubjectId());
           case SORT_action:
             return a1.getAction() - a2.getAction();
 
           case -SORT_timestamp:
             return -a1.getTimestamp().compareTo(a2.getTimestamp());
           case -SORT_user:
-            return -a1.getUser().compareTo(a2.getUser());
+            return -a1.getUser().compareToIgnoreCase(a2.getUser());
           case -SORT_sessionId:
-            return -a1.getSessionId().compareTo(a2.getSessionId());
+            return -a1.getSessionId().compareToIgnoreCase(a2.getSessionId());
           case -SORT_subjectType:
             return -(a1.getSubjectType() - a2.getSubjectType());
           case -SORT_subjectId:
-            return -a1.getSubjectId().compareTo(a2.getSubjectId());
+            return -a1.getSubjectId().compareToIgnoreCase(a2.getSubjectId());
           case -SORT_action:
             return -(a1.getAction() - a2.getAction());
 
