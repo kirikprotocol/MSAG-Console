@@ -38,9 +38,9 @@ static const int REPORT_NOACK=255;
 static const int DF_UNCOND=1;
 static const int DF_ABSENT=2;
 static const int DF_BLOCK =4;
-static const int DF_BARED =8;
+static const int DF_BARRED =8;
 static const int DF_CAPAC =16;
-static const int DF_COND  =DF_ABSENT|DF_BLOCK|DF_BARED|DF_CAPAC;
+static const int DF_COND  =DF_ABSENT|DF_BLOCK|DF_BARRED|DF_CAPAC;
 
 static const int DF_UDHCONCAT=128;
 
@@ -1009,7 +1009,7 @@ StateType StateMachine::submit(Tuple& t)
   int divertFlags=(profile.divertActive        ?DF_UNCOND:0)|
                   (profile.divertActiveAbsent  ?DF_ABSENT:0)|
                   (profile.divertActiveBlocked ?DF_BLOCK:0) |
-                  (profile.divertActiveBared   ?DF_BARED:0) |
+                  (profile.divertActiveBarred   ?DF_BARRED:0) |
                   (profile.divertActiveCapacity?DF_CAPAC:0);
   if(divertFlags && profile.divert.length()!=0 && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
@@ -1036,8 +1036,13 @@ StateType StateMachine::submit(Tuple& t)
 
     Profile p=smsc->getProfiler()->lookup(dst);
 
-    divertFlags|=profile.udhconcat?DF_UDHCONCAT:0;
-    divertFlags|=(profile.codepage)<<DF_DCSHIFT;
+    divertFlags|=p.udhconcat?DF_UDHCONCAT:0;
+    int ddc=p.codepage;
+    if(!(profile.codepage&DataCoding::UCS2) && (ddc&DataCoding::UCS2))
+    {
+      ddc=profile.codepage;
+    }
+    divertFlags|=(ddc)<<DF_DCSHIFT;
 
     if(divertFlags&DF_UNCOND)profile=p;
 
@@ -2377,6 +2382,7 @@ StateType StateMachine::forward(Tuple& t)
   Address dst=sms.getDealiasedDestinationAddress();
 
   bool diverted=false;
+  bool doRepartition=false;
   if(t.command->get_forwardAllowDivert() && sms.getIntProperty(Tag::SMSC_DIVERTFLAGS))
   {
     try{
@@ -2388,7 +2394,13 @@ StateType StateMachine::forward(Tuple& t)
       diverted=true;
       int df=sms.getIntProperty(Tag::SMSC_DIVERTFLAGS);
       sms.setIntProperty(Tag::SMSC_UDH_CONCAT,df&DF_UDHCONCAT);
-      sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,(df<<DF_DCSHIFT)&0xFF);
+      int olddc=sms.getIntProperty(Tag::SMSC_DSTCODEPAGE);
+      int newdc=(df<<DF_DCSHIFT)&0xFF;
+      sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,newdc);
+      if(olddc!=newdc && sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+      {
+        doRepartition=true;
+      }
     }catch(...)
     {
       smsc_log_warn(smsLog,"FWD: failed to construct address for cond divert %s",sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str());
@@ -2438,6 +2450,9 @@ StateType StateMachine::forward(Tuple& t)
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     return ERROR_STATE;
   }
+
+
+
   if(!dest_proxy)
   {
     char bufsrc[64],bufdst[64];
@@ -2465,6 +2480,18 @@ StateType StateMachine::forward(Tuple& t)
     return ENROUTE_STATE;
   }
   // create task
+
+
+  if(doRepartition && ri.smeSystemId=="MAP_PROXY" && !sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+  {
+    sms.getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
+    int pres=partitionSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
+    if(pres!=psSingle && pres!=psMultiple)
+    {
+      smsc_log_debug(smsLog,"FWD: divert failed - cannot concat, msgId=%lld",t.msgId);
+      return UNKNOWN_STATE;
+    }
+  }
 
   uint32_t dialogId2;
   uint32_t uniqueId=dest_proxy->getUniqueId();
@@ -2683,7 +2710,7 @@ StateType StateMachine::DivertProcessing(Tuple& t,SMS& sms)
      )
      ||
      (
-       (divertFlags&DF_BARED) &&
+       (divertFlags&DF_BARRED) &&
        (
          status==Status::CALLBARRED
        )
@@ -2921,11 +2948,20 @@ StateType StateMachine::deliveryResp(Tuple& t)
   // other parts MUST be delivered to the same address.
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_COND))
   {
+    smsc_log_info(smsLog,"DLVRESP: msgId=%lld - delivered first part of multipart sms with conditional divert.",t.msgId);
     // first part was delivered to diverted address!
     if(t.command->get_resp()->get_diverted())
     {
       // switch to unconditional divert.
-      sms.setIntProperty(Tag::SMSC_DIVERTFLAGS,sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)|DF_UNCOND);
+      int df=sms.getIntProperty(Tag::SMSC_DIVERTFLAGS);
+      sms.setIntProperty(Tag::SMSC_UDH_CONCAT,df&DF_UDHCONCAT);
+      int dc=(df<<DF_DCSHIFT)&0xFF;
+      sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,dc);
+      sms.setIntProperty(Tag::SMSC_DIVERTFLAGS,df|DF_UNCOND);
+
+      sms.getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
+      partitionSms(&sms,dc);
+
     }else // first part was delivered to original address
     {
       // turn off divert
