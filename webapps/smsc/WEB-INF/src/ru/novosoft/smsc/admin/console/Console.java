@@ -23,6 +23,17 @@ public class Console extends Thread
 {
     private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
 
+    private final static String COMMAND_APPLY = "apply";
+    private final static String COMMAND_ALIAS = "alias";
+    private final static String COMMAND_ROUTE = "route";
+    private final static String COMMAND_PROFILE = "profile";
+    private final static String COMMAND_SUBJECT = "subject";
+
+    private final static String ACTION_ADD = "add";
+    private final static String ACTION_VIEW = "view";
+    private final static String ACTION_EDIT = "edit";
+    private final static String ACTION_DELETE = "delete";
+
     private Smsc smsc = null;
     private int port = 12401;
     private ServerSocket serverSocket = null;
@@ -46,33 +57,33 @@ public class Console extends Thread
         commands = new CommandGroup();
 
         CommandGroup alias = new CommandGroup();
-        alias.register("add", new AliasAddCommand());
-        alias.register("delete", new AliasDeleteCommand());
-        alias.register("edit", new AliasEditCommand());
-        alias.register("view", new AliasViewCommand());
-        commands.register("alias", alias);
+        alias.register(ACTION_ADD, new AliasAddCommand());
+        alias.register(ACTION_DELETE, new AliasDeleteCommand());
+        alias.register(ACTION_EDIT, new AliasEditCommand());
+        alias.register(ACTION_VIEW, new AliasViewCommand());
+        commands.register(COMMAND_ALIAS, alias);
 
         CommandGroup profile = new CommandGroup();
-        profile.register("add", new ProfileAddCommand());
-        profile.register("delete", new ProfileDeleteCommand());
-        profile.register("edit", new ProfileEditCommand());
-        commands.register("profile", profile);
+        profile.register(ACTION_ADD, new ProfileAddCommand());
+        profile.register(ACTION_DELETE, new ProfileDeleteCommand());
+        profile.register(ACTION_EDIT, new ProfileEditCommand());
+        commands.register(COMMAND_PROFILE, profile);
 
         CommandGroup subject = new CommandGroup();
-        subject.register("add", new SubjectAddCommand());
-        subject.register("delete", new SubjectDeleteCommand());
-        subject.register("view", new SubjectViewCommand());
-        subject.register("edit", new SubjectEditCommand());
-        commands.register("subject", subject);
+        subject.register(ACTION_ADD, new SubjectAddCommand());
+        subject.register(ACTION_DELETE, new SubjectDeleteCommand());
+        subject.register(ACTION_VIEW, new SubjectViewCommand());
+        subject.register(ACTION_EDIT, new SubjectEditCommand());
+        commands.register(COMMAND_SUBJECT, subject);
 
         CommandGroup route = new CommandGroup();
-        route.register("add", new RouteAddCommand());
-        route.register("delete", new RouteDeleteCommand());
-        route.register("edit", new RouteEditCommand());
-        commands.register("route", route);
+        route.register(ACTION_ADD, new RouteAddCommand());
+        route.register(ACTION_DELETE, new RouteDeleteCommand());
+        route.register(ACTION_EDIT, new RouteEditCommand());
+        commands.register(COMMAND_ROUTE, route);
 
         ApplyCommand apply = new ApplyCommand(smsc);
-        commands.register("apply", apply);
+        commands.register(COMMAND_APPLY, apply);
     }
 
     public String processCommand(String command) {
@@ -84,7 +95,7 @@ public class Console extends Thread
 
     public void run()
     {
-        logger.debug("CONSOLE: Starting listening on port "+port);
+        logger.debug("Starting listening on port "+port);
         while(!isStopping)
         {
             Socket socket = null;
@@ -105,7 +116,7 @@ public class Console extends Thread
         synchronized(closeSemaphore) {
             closeSemaphore.notifyAll();
         }
-        logger.debug("CONSOLE: Closed");
+        logger.debug("Console closed");
     }
 
     public void close()
@@ -125,7 +136,6 @@ public class Console extends Thread
         while(sessions.size() > 0) {
             ((Session)sessions.get(0)).close();
         }
-        //sessions.clear();
     }
 
     public Smsc getSmsc() {

@@ -19,17 +19,7 @@ public class Session extends Thread
     private final static String CONSOLE_FAREWELL = "Exited from SMSC Remote Console.";
     private final static String CONSOLE_SIGN = "> ";
 
-    private final static String COMMANMD_QUIT = "quit";
-    /*private final static String COMMANMD_APPLY = "apply";
-    private final static String COMMANMD_ALIAS = "alias";
-    private final static String COMMANMD_ROUTE = "route";
-    private final static String COMMANMD_PROFILE = "profile";
-    private final static String COMMANMD_SUBJECT = "subject";
-
-    private final static String ACTION_ADD = "add";
-    private final static String ACTION_VIEW = "view";
-    private final static String ACTION_EDIT = "edit";
-    private final static String ACTION_DELETE = "delete";*/
+    private final static String COMMAND_QUIT = "quit";
 
     private Socket socket;
     private Console owner;
@@ -38,7 +28,6 @@ public class Session extends Thread
     private OutputStream os = null;
 
     public Session(Console owner, Socket socket) {
-        super();
         this.owner = owner;
         this.socket = socket;
     }
@@ -54,7 +43,7 @@ public class Session extends Thread
             writer.print(CONSOLE_SIGN); writer.flush();
             String input = reader.readLine();
             if (input != null) {
-                if (input.equalsIgnoreCase(COMMANMD_QUIT)) {
+                if (input.equalsIgnoreCase(COMMAND_QUIT)) {
                     writer.println(CONSOLE_FAREWELL+'\r');
                     writer.flush(); sleep(1000);
                     break;
