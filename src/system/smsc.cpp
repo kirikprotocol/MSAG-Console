@@ -693,7 +693,7 @@ void Smsc::reloadTestRoutes(const RouteConfig& rcfg)
 {
   auto_ptr<RouteManager> router(new RouteManager());
   router->assign(&smeman);
-  loadRoutes(router.get(),rcfg);
+  loadRoutes(router.get(),rcfg,true);
   ResetTestRouteManager(router.release());
 }
 
