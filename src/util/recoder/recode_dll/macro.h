@@ -23,7 +23,8 @@ extern void Log_WinErrorMessage(const char* expr,const char* file, int line);
 #else
 #include "util/debug.h"
 #define ensure __require__
-#define XMessage(x) __trace2__ x
+//#define XMessage(x) __trace2__ x
+#define XMessage(x)
 extern void FatalError(const char* file,int lineno);
 extern void FatalError(const char* file,int lineno,const char* format,...);
 #endif
