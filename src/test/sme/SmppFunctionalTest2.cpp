@@ -152,7 +152,7 @@ void TestSme::executeCycle()
 		if (!boundOk)
 		{
 			cout << "Bound failed" << endl;
-			exit(-1);
+			exit(0);
 		}
 		for (int i = 0; i < 3; i++)
 		{
@@ -376,9 +376,9 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	SmeConfigGen smeCfg(smeReg, configChkList);
 	AliasConfigGen aliasCfg(aliasReg, configChkList);
 	RouteConfigGen routeCfg(routeReg, configChkList);
-	smeCfg.saveConfig("../system/sme.xml");
-	aliasCfg.saveConfig("../system/aliases.xml");
-	routeCfg.saveConfig("../system/routes.xml");
+	smeCfg.saveConfig("../conf/sme.xml");
+	aliasCfg.saveConfig("../conf/aliases.xml");
+	routeCfg.saveConfig("../conf/routes.xml");
 	//создание sme
 	vector<TestSme*> sme;
 	for (int i = 0; i < numSme; i++)

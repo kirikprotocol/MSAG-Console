@@ -83,6 +83,7 @@ protected:
 	PduData* getNonReplaceEnrotePdu();
 	PduData* getReplaceEnrotePdu();
 	PduData* getNonReplaceRescheduledEnrotePdu();
+	PduData* getFinalPdu();
 };
 
 }

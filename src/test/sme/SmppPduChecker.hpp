@@ -17,6 +17,7 @@ using std::vector;
 using smsc::test::core::PduRegistry;
 using smsc::test::core::RouteChecker;
 using smsc::test::core::PduData;
+using smsc::test::core::ResponseMonitor;
 using smsc::test::util::CheckList;
 using namespace smsc::smpp; //pdu
 
@@ -28,9 +29,9 @@ public:
 	~SmppPduChecker() {}
 	
 	set<int> checkSubmitSm(PduData* pduData);
-	void processSubmitSmResp(PduData* pduData, PduSubmitSmResp& respPdu,
+	void processSubmitSmResp(ResponseMonitor* monitor, PduSubmitSmResp& respPdu,
 		time_t respTime);
-	void processReplaceSmResp(PduData* pduData, PduReplaceSmResp& respPdu,
+	void processReplaceSmResp(ResponseMonitor* monitor, PduReplaceSmResp& respPdu,
 		time_t respTime);
 
 private:
@@ -39,7 +40,7 @@ private:
 	CheckList* chkList;
 
 	template <class Resp>
-	void processResp(PduData* pduData, Resp& respPdu, time_t respTime);
+	void processResp(ResponseMonitor* monitor, Resp& respPdu, time_t respTime);
 };
 
 }

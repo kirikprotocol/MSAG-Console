@@ -112,17 +112,18 @@ PduData* SmppProtocolTestCases::getNonReplaceEnrotePdu()
 {
 	__require__(fixture->pduReg);
 	__cfg_int__(sequentialPduInterval);
-	PduRegistry::PduDataIterator* it = fixture->pduReg->getPduByWaitTime(
+	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(
 		time(NULL) + sequentialPduInterval, LONG_MAX);
 	//ищу корректную незамещающую и незамещенную ранее pdu
 	PduData* pduData = NULL;
-	while (PduData* data = it->next())
+	while (PduMonitor* m = it->next())
 	{
-		if (!data->replacedByPdu && !data->replacePdu &&
-			data->smsId.length() && data->deliveryFlag == PDU_REQUIRED_FLAG &&
-			!data->intProps.size() && !data->strProps.size())
+		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
+			!m->pduData->replacePdu && m->pduData->valid &&
+			m->getFlag() == PDU_REQUIRED_FLAG &&
+			!m->pduData->intProps.size() && !m->pduData->strProps.size())
 		{
-			pduData = data;
+			pduData = m->pduData;
 			break;
 		}
 	}
@@ -134,17 +135,18 @@ PduData* SmppProtocolTestCases::getReplaceEnrotePdu()
 {
 	__require__(fixture->pduReg);
 	__cfg_int__(sequentialPduInterval);
-	PduRegistry::PduDataIterator* it = fixture->pduReg->getPduByWaitTime(
+	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(
 		time(NULL) + sequentialPduInterval, LONG_MAX);
 	//ищу замещающую и незамещенную ранее pdu
 	PduData* pduData = NULL;
-	while (PduData* data = it->next())
+	while (PduMonitor* m = it->next())
 	{
-		if (!data->replacedByPdu && data->replacePdu &&
-			data->smsId.length() && data->deliveryFlag == PDU_REQUIRED_FLAG &&
-			!data->intProps.size() && !data->strProps.size())
+		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
+			m->pduData->replacePdu && m->pduData->valid &&
+			m->getFlag() == PDU_REQUIRED_FLAG &&
+			!m->pduData->intProps.size() && !m->pduData->strProps.size())
 		{
-			pduData = data;
+			pduData = m->pduData;
 			break;
 		}
 	}
@@ -156,18 +158,43 @@ PduData* SmppProtocolTestCases::getNonReplaceRescheduledEnrotePdu()
 {
 	__require__(fixture->pduReg);
 	__cfg_int__(sequentialPduInterval);
-	PduRegistry::PduDataIterator* it = fixture->pduReg->getPduByWaitTime(0, time(NULL));
+	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(
+		time(NULL) + sequentialPduInterval, LONG_MAX);
 	//ищу незамещенную ранее pdu
 	PduData* pduData = NULL;
-	while (PduData* data = it->next())
+	while (PduMonitor* m = it->next())
 	{
-		if (!data->replacedByPdu && data->smsId.length() &&
-			data->deliveryFlag == PDU_REQUIRED_FLAG &&
-			!data->intProps.size() && !data->strProps.size() &&
-			data->deliveryFlag.getNextTime(time(NULL)) >=
-			time(NULL) + sequentialPduInterval)
+		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
+			m->pduData->valid && m->getFlag() == PDU_REQUIRED_FLAG &&
+			!m->pduData->intProps.size() && !m->pduData->strProps.size())
 		{
-			pduData = data;
+			DeliveryMonitor* monitor = dynamic_cast<DeliveryMonitor*>(m);
+			__require__(monitor);
+			//была попытка доставки
+			if (monitor->getLastTime())
+			{
+				pduData = monitor->pduData;
+				break;
+			}
+		}
+	}
+	delete it;
+	return pduData;
+}
+
+PduData* SmppProtocolTestCases::getFinalPdu()
+{
+	__require__(fixture->pduReg);
+	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(0, LONG_MAX);
+	//ищу незамещенную ранее pdu
+	PduData* pduData = NULL;
+	while (PduMonitor* m = it->next())
+	{
+		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
+			m->pduData->valid && m->getFlag() == PDU_RECEIVED_FLAG &&
+			!m->pduData->intProps.size() && !m->pduData->strProps.size())
+		{
+			pduData = m->pduData;
 			break;
 		}
 	}
@@ -384,7 +411,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					if (fixture->pduReg)
 					{
 						MutexGuard mguard(fixture->pduReg->getMutex());
-						PduData* finalPduData = fixture->pduReg->getLastRemovedPdu();
+						PduData* finalPduData = getFinalPdu();
 						if (finalPduData)
 						{
 							__require__(finalPduData->pdu &&
@@ -674,7 +701,7 @@ void SmppProtocolTestCases::replaceSm(bool sync, int num)
 					if (fixture->pduReg)
 					{
 						MutexGuard mguard(fixture->pduReg->getMutex());
-						PduData* finalPduData = fixture->pduReg->getLastRemovedPdu();
+						PduData* finalPduData = getFinalPdu();
 						if (finalPduData)
 						{
 							__tc__("replaceSm.replaceFinal");

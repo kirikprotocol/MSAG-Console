@@ -15,6 +15,7 @@ using log4cpp::Category;
 using smsc::sme::SmppBaseReceiver;
 using smsc::test::util::BaseTestCases;
 using smsc::test::core::RespPduFlag;
+using smsc::test::core::DeliveryMonitor;
 using smsc::test::util::CheckList;
 using namespace smsc::smpp; //pdu
 
@@ -85,6 +86,8 @@ protected:
 	virtual Category& getLog();
 	RespPduFlag isAccepted(uint32_t status);
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
+	void updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
+		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime);
 };
 
 }

@@ -66,12 +66,12 @@ protected:
 		PduData::StrProps* strProps, bool normalSms);
 	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu,
 		time_t respTime);
-	void processSubmitSmAsync(PduData* pduData, PduSubmitSmResp* respPdu);
+	void processSubmitSmAsync(PduData* pduData);
 	PduData* registerReplaceSm(PduReplaceSm* pdu, PduData* replacePduData,
 		time_t submitTime);
 	void processReplaceSmSync(PduData* pduData, PduReplaceSmResp* respPdu,
 		time_t respTime);
-	void processReplaceSmAsync(PduData* pduData, PduReplaceSmResp* respPdu);
+	void processReplaceSmAsync(PduData* pduData);
 };
 
 }

@@ -55,9 +55,7 @@ private:
 	SmppFixture* fixture;
 	CheckList* chkList;
 
-	void checkSubmitTime(time_t checkTime);
-	void checkWaitTime(time_t checkTime);
-	void checkValidTime(time_t checkTime);
+	void checkMissingPdu(time_t checkTime);
 
 	struct FakeReceiver : public SmppPduEventListener
 	{

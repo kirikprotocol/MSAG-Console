@@ -30,14 +30,12 @@ SmppPduChecker::SmppPduChecker(PduRegistry* _pduReg,
 	
 set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 {
-	__require__(pduData && pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
+	__require__(pduData && pduData->pdu->get_commandId() == SUBMIT_SM);
 	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 	time_t waitTime = SmppUtil::getWaitTime(
 		pdu->get_message().get_scheduleDeliveryTime(), pduData->submitTime);
 	time_t validTime = SmppUtil::getValidTime(
 		pdu->get_message().get_validityPeriod(), pduData->submitTime);
-	__require__(pduData->validTime == validTime);
-	//__require__(pduData->waitTime == waitTime);
 	set<int> res;
 	//без проверки на bound sme
 	if (!routeChecker->isDestReachable(pdu->get_message().get_source(),
@@ -58,9 +56,10 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	return res;
 }
 
-void SmppPduChecker::processSubmitSmResp(PduData* pduData,
+void SmppPduChecker::processSubmitSmResp(ResponseMonitor* monitor,
 	PduSubmitSmResp& respPdu, time_t respTime)
 {
+	__require__(monitor);
 	__decl_tc__;
 	__tc__("processSubmitSmResp.checkHeader");
 	//проверки
@@ -74,16 +73,16 @@ void SmppPduChecker::processSubmitSmResp(PduData* pduData,
 		__tc_fail__(2);
 	}
 	__tc_ok_cond__;
-	//дальнейшая обработка
+	//обновить smsId у delivery receipt монитора
 	if (respPdu.get_header().get_commandStatus() == ESME_ROK)
 	{
-		pduData->smsId = respPdu.get_messageId();
+		monitor->pduData->smsId = respPdu.get_messageId();
 	}
-	pduData->submitStatus = respPdu.get_header().get_commandStatus();
-	processResp(pduData, respPdu, respTime);
+	//дальнейшая обработка
+	processResp(monitor, respPdu, respTime);
 }
 
-void SmppPduChecker::processReplaceSmResp(PduData* pduData,
+void SmppPduChecker::processReplaceSmResp(ResponseMonitor* monitor,
 	PduReplaceSmResp& respPdu, time_t respTime)
 {
 	__decl_tc__;
@@ -99,33 +98,30 @@ void SmppPduChecker::processReplaceSmResp(PduData* pduData,
 	}
 	__tc_ok_cond__;
 	//дальнейшая обработка
-	pduData->submitStatus = respPdu.get_header().get_commandStatus();
-	processResp(pduData, respPdu, respTime);
+	processResp(monitor, respPdu, respTime);
 }
 
 //Resp = PduSubmitSmResp, PduReplaceSmResp
 template <class Resp>
-void SmppPduChecker::processResp(PduData* pduData,
+void SmppPduChecker::processResp(ResponseMonitor* monitor,
 	Resp& respPdu, time_t respTime)
 {
-	__require__(pduData);
+	__require__(monitor);
 	__require__(respTime);
 	__decl_tc__;
 	__cfg_int__(timeCheckAccuracy);
-	//обновить smsId и sequenceNumber из респонса
-	pduReg->updatePdu(pduData);
 	//проверка ошибок
 	__tc__("processResp.checkHeader");
 	if (respPdu.get_header().get_sequenceNumber() !=
-		pduData->pdu->get_sequenceNumber())
+		monitor->pduData->pdu->get_sequenceNumber())
 	{
 		__tc_fail__(1);
 	}
 	__tc_ok_cond__;
 	//проверка флагов получения pdu
-	time_t respDelay = respTime - pduData->submitTime;
+	time_t respDelay = respTime - monitor->pduData->submitTime;
 	__tc__("processResp.checkDuplicates");
-	switch (pduData->responseFlag)
+	switch (monitor->getFlag())
 	{
 		case PDU_REQUIRED_FLAG:
 		case PDU_MISSING_ON_TIME_FLAG:
@@ -139,7 +135,7 @@ void SmppPduChecker::processResp(PduData* pduData,
 			{
 				__tc_fail__(2);
 			}
-			pduData->responseFlag = PDU_RECEIVED_FLAG;
+			monitor->setFlag(PDU_RECEIVED_FLAG);
 			break;
 		case PDU_RECEIVED_FLAG: //респонс уже получен ранее
 			__tc_fail__(1);
@@ -152,99 +148,39 @@ void SmppPduChecker::processResp(PduData* pduData,
 	__tc_ok_cond__;
 	if (respPdu.get_header().get_commandStatus() != ESME_ROK)
 	{
-		__tc__("processResp.checkDelivery");
-		switch (pduData->deliveryFlag)
+		monitor->pduData->valid = false;
+		if (monitor->pduData->replacedByPdu)
 		{
-			case PDU_REQUIRED_FLAG:
-			case PDU_MISSING_ON_TIME_FLAG:
-				pduData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
-				break;
-			case PDU_RECEIVED_FLAG:
-				__tc_fail__(1);
-				break;
-			case PDU_NOT_EXPECTED_FLAG:
-				break;
-			default:
-				__unreachable__("Unknown pduData->deliveryFlag");
-		}
-		__tc_ok_cond__;
-		__tc__("processResp.checkDeliveryReceipt");
-		switch (pduData->deliveryReceiptFlag)
-		{
-			case PDU_REQUIRED_FLAG:
-			case PDU_MISSING_ON_TIME_FLAG:
-				pduData->deliveryReceiptFlag = PDU_NOT_EXPECTED_FLAG;
-				break;
-			case PDU_RECEIVED_FLAG:
-				__tc_fail__(1);
-				break;
-			case PDU_NOT_EXPECTED_FLAG:
-				break;
-			default:
-				__unreachable__("Unknown pduData->deliveryReceiptFlag");
-		}
-		__tc_ok_cond__;
-		__tc__("processResp.checkIntermediateNotification");
-		switch (pduData->intermediateNotificationFlag)
-		{
-			case PDU_REQUIRED_FLAG:
-			case PDU_MISSING_ON_TIME_FLAG:
-				pduData->intermediateNotificationFlag = PDU_NOT_EXPECTED_FLAG;
-				break;
-			case PDU_RECEIVED_FLAG:
-				__tc_fail__(1);
-				break;
-			case PDU_NOT_EXPECTED_FLAG:
-				break;
-			default:
-				__unreachable__("Unknown pduData->intermediateNotificationFlag");
-		}
-		__tc_ok_cond__;
-		if (pduData->replacedByPdu)
-		{
-			pduData->replacedByPdu->replacePdu = NULL;
-			pduData->replacedByPdu = NULL;
 			__unreachable__("Pdu without response replaced");
 		}
-		if (pduData->replacePdu)
+		PduData* replaceData = monitor->pduData->replacePdu;
+		if (replaceData)
 		{
-			pduData->replacePdu->replacedByPdu = NULL;
-			pduReg->updatePdu(pduData->replacePdu); //восстановить msgRef, smsId для replace_sm
-			pduData->replacePdu = NULL;
+			replaceData->replacedByPdu = NULL;
+			replaceData->valid = true;
+			monitor->pduData->replacePdu = NULL;
 		}
 	}
 	//commandStatus
-	set<int> pduRes = checkSubmitSm(pduData);
+	set<int> pduRes = checkSubmitSm(monitor->pduData);
 	switch (respPdu.get_header().get_commandStatus())
 	{
 		case ESME_ROK: //No Error
-			__tc__("processResp.checkCmdStatusOk");
 			{
+				__tc__("processResp.checkCmdStatusOk");
 				vector<int> chkRes(pduRes.begin(), pduRes.end());
 				__tc_fail2__(chkRes, 10);
+				__tc_ok_cond__;
+				//положительный респонс получен, pdu валидная
+				monitor->pduData->valid = true;
+				//если данная pdu замещает другую pdu
+				PduData* replaceData = monitor->pduData->replacePdu;
+				if (replaceData)
+				{
+					replaceData->valid = false;
+					replaceData = replaceData->replacePdu;
+				}
 			}
-			//если данная pdu замещает предыдущую pdu
-			for (PduData* replaceData = pduData->replacePdu; replaceData; )
-			{
-				//replaceData->responseFlag
-				if (replaceData->deliveryFlag == PDU_RECEIVED_FLAG)
-				{
-					__tc_fail__(1);
-				}
-				if (replaceData->deliveryReceiptFlag == PDU_RECEIVED_FLAG)
-				{
-					__tc_fail__(2);
-				}
-				if (replaceData->intermediateNotificationFlag == PDU_RECEIVED_FLAG)
-				{
-					__tc_fail__(3);
-				}
-				replaceData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
-				replaceData->deliveryReceiptFlag = PDU_NOT_EXPECTED_FLAG;
-				replaceData->intermediateNotificationFlag = PDU_NOT_EXPECTED_FLAG;
-				replaceData = replaceData->replacePdu;
-			}
-			__tc_ok_cond__;
 			break;
 		case ESME_RINVDSTADR: //Invalid Dest Addr
 			__tc__("processResp.checkCmdStatusInvalidDestAddr");

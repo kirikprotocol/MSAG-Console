@@ -165,12 +165,6 @@ void processRespTc()
 		"Правильное время получения респонса");
 	__reg_tc__("processResp.checkDuplicates",
 		"На каждый реквест приходит единственный респонс");
-	__reg_tc__("processResp.checkDelivery",
-		"При наличии кода ошибки в поле command_status, доставки deliver_sm не происходит");
-	__reg_tc__("processResp.checkDeliveryReceipt",
-		"При наличии кода ошибки в поле command_status, подтверждение доставки не происходит");
-	__reg_tc__("processResp.checkIntermediateNotification",
-		"При наличии кода ошибки в поле command_status, промежуточные нотификации не происходят");
 	__reg_tc__("processResp.checkCmdStatusOk",
 		"При отсутствии кода ошибки в поле command_status, выполняются все условия для нормальной доставки сообщения (поля реквеста заданы корректно, существует маршрут и т.п.)");
 	__reg_tc__("processResp.checkCmdStatusInvalidDestAddr",
@@ -243,8 +237,6 @@ void processNormalSmsTc()
 		"Сравнение опциональных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm) pdu");
 	__reg_tc__("processDeliverySm.normalSms.scheduleChecks",
 		"Корректная работа механизма повторной доставки (правильное время, нет пропусков между повторными доставками, отсутствие дублей)");
-	__reg_tc__("processDeliverySm.normalSms.checkDeliveryReceipt",
-		"Подтверждение доставки доставляется не раньше самой sms");
 }
 
 void processDeliveryReceiptTc()
@@ -263,6 +255,12 @@ void processDeliveryReceiptTc()
 		"Информации о статусе доставленной pdu является корректной");
 	__reg_tc__("processDeliverySm.deliveryReceipt.checkErrorCode",
 		"Информации о коде ошибке в случае недоставки pdu является корректной");
+	__reg_tc__("processDeliverySm.deliveryReceipt.deliveryRescheduled",
+		"Подтверждение доставки доставляется сразу после окончания повторных доставок оригинального сообщения");
+	__reg_tc__("processDeliverySm.deliveryReceipt.failureDeliveryReceipt",
+		"Подтверждение доставки на ошибку не доставляется в случае успешной доставки оригинального сообщения");
+	__reg_tc__("processDeliverySm.deliveryReceipt.expiredDeliveryReceipt",
+		"Подтверждение доставки на ошибку при истечении срока валидности доставляется в момент времени validity period");
 	__reg_tc__("processDeliverySm.deliveryReceipt.scheduleChecks",
 		"Корректная работа механизма повторной доставки (правильное время, нет пропусков между повторными доставками, отсутствие дублей)");
 }
@@ -277,8 +275,8 @@ void processSmeAckTc()
 		"Проверка правильности маршрута (определение sme по адресу отправителя и адресу внутренней sme SC)");
 	__reg_tc__("processDeliverySm.smeAck.checkFields",
 		"Общая проверка правильности полей");
-	__reg_tc__("processDeliverySm.smeAck.scheduleChecks",
-		"Корректная работа механизма повторной доставки (правильное время, нет пропусков между повторными доставками, отсутствие дублей)");
+	__reg_tc__("processDeliverySm.smeAck.recvTimeChecks",
+		"Правильное время получения сообщений");
 }
 
 void processIntermediateNotificationTc()
@@ -308,42 +306,30 @@ void checkMissingPduTc()
 	//response
 	__reg_tc__("checkMissingPdu.response",
 		"На все реквесты приходят респонсы (не теряются) с фиксированной задержкой с момента отправки реквеста");
-	//delivery
 	__reg_tc__("checkMissingPdu.delivery",
 		"Сообщения доставляются (не теряются) в интервале с schedule_delivery_time по validity_period с фиксированной задержкой");
-	__reg_tc__("checkMissingPdu.delivery.waitTime",
-		"Сообщения с отложенной доставкой и доступным получателем доставляются (не теряются) в момент времени schedule_delivery_time");
-	__reg_tc__("checkMissingPdu.delivery.validTime",
-		"При недоступном получателе повторная доставка сообщения продолжается вплоть до момент времени validity_period");
-	//deliveryReceipt
 	__reg_tc__("checkMissingPdu.deliveryReceipt",
-		"Подтерждения доставки доставляются (не теряются) в интервале с schedule_delivery_time по validity_period с фиксированной задержкой");
-	__reg_tc__("checkMissingPdu.deliveryReceipt.waitTime",
-		"Подтерждения доставки при доступном получателе сообщения доставляются (не теряются) в момент времени schedule_delivery_time");
-	__reg_tc__("checkMissingPdu.deliveryReceipt.validTime",
-		"При недоступном получателе подтерждение доставки (недоставки) сообщения доставляется отправителю в момент времени validity_period");
-	//intermediateNotification
+		"Подтерждения доставки доставляются (не теряются) в интервале с момента доставки оригинального сообщения в течение максимального времени валидности сообщений для SC");
 	__reg_tc__("checkMissingPdu.intermediateNotification",
-		"Промежуточные нотификации доставляются в интервале с submit_time по validity_period с фиксированной задержкой");
-	__reg_tc__("checkMissingPdu.intermediateNotification.waitTime",
-		"При доступном получателе сообщения на момент времени schedule_delivery_time должна доставляться промежуточная нотификация");
-	__reg_tc__("checkMissingPdu.intermediateNotification.validTime",
-		"При недоступном получателе промежуточные нотификации доставляются вплоть до момента времени validity_period");
+		"Промежуточные нотификации доставляются в интервале с submit_time по validity_period");
+	__reg_tc__("checkMissingPdu.smeAcknoledgement",
+		"Ответные сообщения от тестируемых sme доставляются в интервале с момента доставки оригинального сообщения в течение максимального времени валидности сообщений для SC");
 }
 
 void notImplementedTc()
 {
-	__reg_tc__("processGenericNack", "Получение generic_nack pdu");
-	__reg_tc__("submitMulti", "Отправка submit_multi pdu");
-	__reg_tc__("processMultiResp", "Получение submit_multi_resp pdu");
-	__reg_tc__("dataSm", "Отправка data_sm pdu");
-	__reg_tc__("processDataSm", "Получение data_sm pdu");
-	__reg_tc__("processDataSmResp", "Получение data_sm_resp pdu");
-	__reg_tc__("querySm", "Отправка query_sm pdu");
-	__reg_tc__("processQuerySmResp", "Получение query_sm_resp pdu");
-	__reg_tc__("cancelSm", "Отправка cancel_sm pdu");
-	__reg_tc__("processCancelSmResp", "Получение cancel_sm_resp pdu");
-	__reg_tc__("processAlertNotification", "Получение alert_notification pdu");
+	__reg_tc__("notImplemented", "Не имплементированные тест кейсы");
+	__reg_tc__("notImplemented.processGenericNack", "Получение generic_nack pdu");
+	__reg_tc__("notImplemented.submitMulti", "Отправка submit_multi pdu");
+	__reg_tc__("notImplemented.processMultiResp", "Получение submit_multi_resp pdu");
+	__reg_tc__("notImplemented.dataSm", "Отправка data_sm pdu");
+	__reg_tc__("notImplemented.processDataSm", "Получение data_sm pdu");
+	__reg_tc__("notImplemented.processDataSmResp", "Получение data_sm_resp pdu");
+	__reg_tc__("notImplemented.querySm", "Отправка query_sm pdu");
+	__reg_tc__("notImplemented.processQuerySmResp", "Получение query_sm_resp pdu");
+	__reg_tc__("notImplemented.cancelSm", "Отправка cancel_sm pdu");
+	__reg_tc__("notImplemented.processCancelSmResp", "Получение cancel_sm_resp pdu");
+	__reg_tc__("notImplemented.processAlertNotification", "Получение alert_notification pdu");
 }
 
 void allProtocolTc()

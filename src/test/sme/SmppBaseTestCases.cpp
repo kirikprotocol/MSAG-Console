@@ -135,172 +135,89 @@ void SmppBaseTestCases::bindIncorrectSme(int num)
 	}
 }
 
-#define __checkPdu__(tc) \
-	__trace2__("%s(): checking pdu with msgRef = %u, submitTime = %ld, waitTime = %ld, validTime = %ld", \
-	tc, (uint32_t) pduData->msgRef, pduData->submitTime, pduData->waitTime, pduData->validTime)
-
-#define __missingPdu__(tc, pduName) \
-	__trace2__("%s(): missing %s for msgRef = %u, submitTime = %ld, waitTime = %ld, validTime = %ld", \
-	tc, pduName, (uint32_t) pduData->msgRef, pduData->submitTime, pduData->waitTime, pduData->validTime)
-	/*
-	static const char* fmt = "%Y-%m-%d %H:%M:%S"; \
-	tm t;
-	char __submitTime[20]; char __waitTime[20]; char __validTime[20]; \
-	strftime(__submitTime, 20, fmt, localtime_r(&pduData->submitTime, &t)); \
-	strftime(__waitTime, 20, fmt, localtime_r(&pduData->waitTime, &t)); \
-	strftime(__validTime, 20, fmt, localtime_r(&pduData->validTime, &t)); \
-	__trace2__("%s(): missing %s for sequenceNumber = %u, submitTime = %s, waitTime = %s, validTime = %s", \
-	tc, pduName, pduData->pdu->get_sequenceNumber(), __submitTime, __waitTime, __validTime)
-	*/
-
-#define __removedPdu__(tc) \
-	__trace2__("%s(): removed pdu data with msgRef = %u", \
-	tc, (uint32_t) pduData->msgRef)
-	
-#define __checkSummary__(tc) \
-	__trace2__("%s(): found = %d, deleted = %d", tc, found, deleted);
-
-void SmppBaseTestCases::checkSubmitTime(time_t checkTime)
-{
-	__decl_tc__;
-	//проверить неполученные респонсы 
-	PduRegistry::PduDataIterator* it = fixture->pduReg->getPduBySubmitTime(0, checkTime);
-	int found = 0;
-	int deleted = 0;
-	while (PduData* pduData = it->next())
-	{
-		__checkPdu__("checkSubmitTime");
-		found++;
-		__tc__("checkMissingPdu.response");
-		if (pduData->responseFlag == PDU_REQUIRED_FLAG)
-		{
-			__missingPdu__("checkSubmitTime", "response");
-			__tc_fail__(1);
-			pduData->responseFlag = PDU_MISSING_ON_TIME_FLAG;
-		}
-		__tc_ok_cond__;
-		/*
-		if (pduData->complete())
-		{
-			 __removedPdu__("checkSubmitTime");
-			deleted++;
-			fixture->pduReg->removePdu(pduData);
-		}
-		*/
-	}
-	delete it;
-	__checkSummary__("checkSubmitTime");
-}
-
-void SmppBaseTestCases::checkWaitTime(time_t checkTime)
-{
-	__decl_tc__;
-	//проверить неполученные доставки и подтверждения доставки 
-	//на момент waitTime
-	PduRegistry::PduDataIterator* it = fixture->pduReg->getPduByWaitTime(0, checkTime);
-	int found = 0;
-	int deleted = 0;
-	while (PduData* pduData = it->next())
-	{
-		__checkPdu__("checkWaitTime");
-		found++;
-		__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
-		PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-		if (!fixture->routeChecker->isDestReachable(
-			pdu->get_message().get_source(), pdu->get_message().get_dest(), true))
-		{
-			continue;
-		}
-		__tc__("checkMissingPdu.delivery.waitTime");
-		if (pduData->deliveryFlag.isPduMissing(checkTime))
-		{
-			__missingPdu__("checkWaitTime", "deliver_sm");
-			__tc_fail__(1);
-			pduData->deliveryFlag = PDU_MISSING_ON_TIME_FLAG;
-		}
-		__tc_ok_cond__;
-		__tc__("checkMissingPdu.deliveryReceipt.waitTime");
-		if (pduData->deliveryReceiptFlag.isPduMissing(checkTime))
-		{
-			__missingPdu__("checkWaitTime", "delivery_receipt");
-			__tc_fail__(1);
-			pduData->deliveryReceiptFlag = PDU_MISSING_ON_TIME_FLAG;
-		}
-		__tc_ok_cond__;
-		__tc__("checkMissingPdu.intermediateNotification.waitTime");
-		if (pduData->intermediateNotificationFlag == PDU_REQUIRED_FLAG)
-		{
-			__missingPdu__("checkWaitTime", "intermediate_notification");
-			__tc_fail__(1);
-			pduData->intermediateNotificationFlag = PDU_MISSING_ON_TIME_FLAG;
-		}
-		__tc_ok_cond__;
-		/*
-		if (pduData->complete())
-		{
-			__removedPdu__("checkWaitTime");
-			deleted++;
-			fixture->pduReg->removePdu(pduData);
-		}
-		*/
-	}
-	delete it;
-	__checkSummary__("checkWaitTime");
-}
-
-void SmppBaseTestCases::checkValidTime(time_t checkTime)
+void SmppBaseTestCases::checkMissingPdu(time_t checkTime)
 {
 	__decl_tc__;
 	//проверить неполученные доставки и подтверждения доставки
 	//по окончании validTime
-	PduRegistry::PduDataIterator* it = fixture->pduReg->getPduByValidTime(0, checkTime);
+	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(0, checkTime);
 	int found = 0;
+	int moved = 0;
 	int deleted = 0;
-	while (PduData* pduData = it->next())
+	while (PduMonitor* monitor = it->next())
 	{
-		__checkPdu__("checkValidTime");
 		found++;
-		__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
-		PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-		if (!fixture->routeChecker->isDestReachable(
-			pdu->get_message().get_source(), pdu->get_message().get_dest(), true))
+		switch (monitor->getType())
 		{
-			pduData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
+			case RESPONSE_MONITOR:
+				__tc__("checkMissingPdu.response");
+				break;
+			case DELIVERY_MONITOR:
+				__tc__("checkMissingPdu.delivery");
+				break;
+			case DELIVERY_RECEIPT_MONITOR:
+				__tc__("checkMissingPdu.deliveryReceipt");
+				break;
+			case SME_ACK_MONITOR:
+				__tc__("checkMissingPdu.smeAcknoledgement");
+				break;
+			case INTERMEDIATE_NOTIFICATION_MONITOR:
+				__tc__("checkMissingPdu.intermediateNotification");
+				//break;
+			default:
+				__unreachable__("Invalid monitor type");
 		}
-		__tc__("checkMissingPdu.delivery.validTime");
-		if (pduData->deliveryFlag.isPduMissing(checkTime))
+		fixture->pduReg->removeMonitor(monitor);
+		//респонсы считаются валидными всегда
+		if (monitor->pduData->valid || monitor->getType() == RESPONSE_MONITOR)
 		{
-			__missingPdu__("checkValidTime", "deliver_sm");
-			__tc_fail__(1);
-			pduData->deliveryFlag = PDU_MISSING_ON_TIME_FLAG;
+			switch (monitor->getFlag())
+			{
+				case PDU_REQUIRED_FLAG:
+					__tc_fail__(1);
+					monitor->setMissingOnTime();
+					break;
+				case PDU_MISSING_ON_TIME_FLAG:
+				case PDU_RECEIVED_FLAG:
+				case PDU_NOT_EXPECTED_FLAG:
+					__require__(monitor->getCheckTime() == monitor->getValidTime());
+					break;
+				default:
+					__unreachable__("Invalid flag");
+			}
+		}
+		else
+		{
+			switch (monitor->getFlag())
+			{
+				case PDU_REQUIRED_FLAG:
+				case PDU_MISSING_ON_TIME_FLAG:
+					monitor->setNotExpected();
+					break;
+				case PDU_RECEIVED_FLAG:
+					__tc_fail__(2);
+					//break;
+				case PDU_NOT_EXPECTED_FLAG:
+					__require__(monitor->getCheckTime() == monitor->getValidTime());
+					break;
+				default:
+					__unreachable__("Invalid flag");
+			}
 		}
 		__tc_ok_cond__;
-		__tc__("checkMissingPdu.deliveryReceipt.validTime");
-		if (pduData->deliveryReceiptFlag.isPduMissing(checkTime))
+		if (monitor->getValidTime() < checkTime)
 		{
-			__missingPdu__("checkValidTime", "delivery_receipt");
-			__tc_fail__(1);
-			pduData->deliveryReceiptFlag = PDU_MISSING_ON_TIME_FLAG;
-		}
-		__tc_ok_cond__;
-		__tc__("checkMissingPdu.intermediateNotification.validTime");
-		if (pduData->intermediateNotificationFlag == PDU_REQUIRED_FLAG)
-		{
-			__missingPdu__("checkValidTime", "intermediate_notification");
-			__tc_fail__(1);
-			pduData->intermediateNotificationFlag = PDU_MISSING_ON_TIME_FLAG;
-		}
-		__tc_ok_cond__;
-		//для pdu с validTime меньше текущего мог быть неполучен респонс
-		if (pduData->submitTime <= checkTime)
-		{
-			__removedPdu__("checkValidTime");
 			deleted++;
-			fixture->pduReg->removePdu(pduData);
+			delete monitor;
+		}
+		else
+		{
+			moved++;
+			fixture->pduReg->registerMonitor(monitor);
 		}
 	}
 	delete it;
-	__checkSummary__("checkValidTime");
+	__trace2__("checkMissingPdu(): found = %d, moved = %d, deleted = %d", found, moved, deleted);
 }
 
 void SmppBaseTestCases::checkMissingPdu()
@@ -310,9 +227,7 @@ void SmppBaseTestCases::checkMissingPdu()
 		MutexGuard mguard(fixture->pduReg->getMutex());
 		__cfg_int__(timeCheckAccuracy);
 		time_t checkTime = time(NULL) - timeCheckAccuracy;
-		checkSubmitTime(checkTime);
-		checkWaitTime(checkTime);
-		checkValidTime(checkTime);
+		checkMissingPdu(checkTime);
 		__trace2__("checkMissingPdu(): pduReg size = %d", fixture->pduReg->size());
 	}
 }
