@@ -193,16 +193,19 @@ Hash<Task *> Task::loadupAll()
         while (rs->fetchNext())
         {
             const char* abonent = rs->getString(1);
-            if (!tasks.Exists(abonent)) {
+            if (abonent && !tasks.Exists(abonent)) {
                 Task* task = new Task(abonent);
                 task->loadup(rs->getUint64(2), connection);
                 MessageState state = task->getCurrentState();
                 int eventsCount = task->getEventsCount();
                 int newEventsCount = task->getNewEventsCount();
+                smsc_log_debug(logger, "Task: loaded for abonent %s (state=%d, events: all=%d new=%d)",
+                               abonent, (int)state, eventsCount, newEventsCount);
                 if (eventsCount > 0 && (state != WAIT_RCPT || newEventsCount > 0)) tasks.Insert(abonent, task);
                 else delete task;
             }
-            else smsc_log_error(logger, "Task: duplicate current message found for abonent %s");
+            else smsc_log_error(logger, "Task: duplicate current message found for abonent %s", 
+                                abonent ? abonent:"-");
         }
         
         if (connection) ds->freeConnection(connection);
