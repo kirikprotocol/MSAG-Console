@@ -140,9 +140,8 @@ uint64_t Task::getNextId(Connection* connection/*=0*/)
 
 bool Task::getMessage(const char* smsc_id, Message& message, Connection* connection/*=0*/)
 {
-    __require__(smsc_id);
-
-    smsc_log_info(logger, "Get message by smscId=%s", smsc_id);
+    smsc_log_info(logger, "Get message by smscId=%s", smsc_id ? smsc_id:"-");
+    if (!smsc_id || !smsc_id[0]) return false;
 
     bool messageExists = false;
     bool isConnectionGet = false;

@@ -516,8 +516,8 @@ void TaskProcessor::processNotificationResponce(Message& message,
                    smsc_id ? smsc_id:"-", accepted, retry, immediate);
     
     ReceiptData receipt; // check waiting receipt existance
-    if (smsc_id && smsc_id[0] && responcesTracker.popReceiptData(smsc_id, receipt))
-        smsc_log_warn(logger, "Got receipt for notification message with smscId=%s", smsc_id);
+    if (responcesTracker.popReceiptData(smsc_id, receipt))
+        smsc_log_warn(logger, "Got receipt for notification message with smscId=%s", smsc_id ? smsc_id:"-");
     
     if (!accepted) 
     {
@@ -564,9 +564,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
     }
     
     ReceiptData receipt; // check waiting receipt existance
-    bool bWasReceipted = false;
-    if (smsc_id && smsc_id[0])
-        bWasReceipted = responcesTracker.popReceiptData(smsc_id, receipt);
+    bool bWasReceipted = responcesTracker.popReceiptData(smsc_id, receipt);
     
     bool  needKillTask = false;
     bool  isMessageToSend = false;
@@ -709,7 +707,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
 
         if (bWasReceipted) //  process receipt waiting for responce on this smsc_id
         {
-            smsc_log_debug(logger, "Processing waiting receipt for smscId=%s.", smsc_id);
+            smsc_log_debug(logger, "Processing waiting receipt for smscId=%s.", smsc_id ? smsc_id:"");
             processReceipt(task, receipt.delivered, receipt.retry, smsc_id);
         }
         
@@ -729,22 +727,22 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
     if (smsc_id) smsc_log_debug(logger, "Receipt lock smscId=%s", smsc_id);
 
     ReceiptData receipt; // check responce or another receipt processing
-    if (smsc_id && smsc_id[0] && responcesTracker.popReceiptData(smsc_id, receipt))
+    if (responcesTracker.popReceiptData(smsc_id, receipt))
     {
         if (delivered || receipt.delivered || receipt.retry)
             smsc_log_warn (logger, "Invalid receipt waiting on smscId=%s (d=%d, rd=%d, rr=%d)",
-                           smsc_id, delivered, receipt.delivered, receipt.retry);
+                           smsc_id ? smsc_id:"-", delivered, receipt.delivered, receipt.retry);
         else
-            smsc_log_debug(logger, "Receipt for cancelled message (smscId=%s) skipped", smsc_id);
+            smsc_log_debug(logger, "Receipt for cancelled message (smscId=%s) skipped", 
+                           smsc_id ? smsc_id:"-");
         return;
     }
     
     Message message; message.cancel = false;
-    if (smsc_id && smsc_id[0] && 
-        Task::getMessage(smsc_id, message) && !message.cancel) // Try get message by smsc_id
+    if (Task::getMessage(smsc_id, message) && !message.cancel) // Try get message by smsc_id
     {
         smsc_log_debug(logger, "Receipt found message with smscId=%s for abonent: %s.",
-                       smsc_id, message.abonent.c_str());
+                       smsc_id ? smsc_id:"-", message.abonent.c_str());
         
         bool isTaskNew = false;
         TaskAccessor taskAccessor(this);
@@ -761,7 +759,7 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
         smsc_log_debug(logger, "Receipt not found message for smscId=%s. Receipt waiting %s responce.",
                        smsc_id ? smsc_id:"-", message.cancel ? "cancel":"submit");
 
-        if (smsc_id && smsc_id[0] && !responcesTracker.putReceiptData(smsc_id, ReceiptData(delivered, retry)))
+        if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(delivered, retry)))
             smsc_log_error(logger, "Failed to add receipt data (on receipt). smscId=%s already used", 
                            smsc_id ? smsc_id:"-");
     }
@@ -881,16 +879,18 @@ int ResponcesTracker::Execute()
             {
                 receiptWaitQueue.Pop(rcptTimer);
                 const char* smsc_id = rcptTimer.smscId.c_str();
-                ReceiptData* receipt = receipts.GetPtr(smsc_id);
+                ReceiptData* receipt = (smsc_id) ? receipts.GetPtr(smsc_id):0;
                 if (receipt)
                 {
-                    if (smsc_id && smsc_id[0] && smscIds.Exists(smsc_id)) {
-                        smsc_log_debug(logger, "Responce for receipted smscId=%s rescheduled. Waiting.", smsc_id);
+                    if (smscIds.Exists(smsc_id)) {
+                        smsc_log_debug(logger, "Responce for receipted smscId=%s rescheduled. Waiting.", 
+                                       smsc_id ? smsc_id:"-");
                         receiptWaitQueue.Push(ReceiptTimer(time(NULL)+responceWaitTime, smsc_id));
                         responcesMonitor.wait(TRACKER_SERVICE_SLEEP/100);
                     } else {
-                        smsc_log_warn(logger, "Responce for receipted smscId=%s is timed out. Deleting.", smsc_id);
-                        receipts.Delete(smsc_id);
+                        smsc_log_warn(logger, "Responce for receipted smscId=%s is timed out. Deleting.",
+                                      smsc_id ? smsc_id:"-");
+                        if (smsc_id) receipts.Delete(smsc_id);
                     }
                 } 
                 else responcesMonitor.wait(TRACKER_SERVICE_SLEEP/100);
@@ -935,6 +935,7 @@ bool ResponcesTracker::popResponceData(int seqNum, Message& message)
 
 bool ResponcesTracker::putReceiptData(const char* smsc_id, const ReceiptData& receipt)            
 {
+    if (!smsc_id || !smsc_id[0]) return false;
     MutexGuard guard(responcesMonitor);
     ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
     if (receiptPtr) return false;
@@ -944,6 +945,7 @@ bool ResponcesTracker::putReceiptData(const char* smsc_id, const ReceiptData& re
 }
 bool ResponcesTracker::popReceiptData(const char* smsc_id, ReceiptData& receipt)            
 {
+    if (!smsc_id || !smsc_id[0]) return false;
     MutexGuard guard(responcesMonitor);
     ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
     if (!receiptPtr) return false;
