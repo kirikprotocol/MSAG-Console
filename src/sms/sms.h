@@ -695,7 +695,7 @@ public:
   {
       if( hasIntProperty(Tag::SMPP_SM_LENGTH) ) {
           return getIntProperty(Tag::SMPP_SM_LENGTH);
-      } else if( hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) {
+      } else if( hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) ) {
           unsigned len = 0;
           getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, &len);
           return len;
