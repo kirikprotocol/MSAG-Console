@@ -93,6 +93,11 @@ namespace smsc { namespace store
             __require__(pool);
             return pool->getIdleConnectionsCount();
         }
+        static unsigned getPendingQueueLength() {
+            __require__(pool);
+            return pool->getPendingQueueLength();
+        }
+
 
         virtual SMSId store(const SMS &sms)  
             throw(StorageException);

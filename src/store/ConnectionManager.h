@@ -141,6 +141,9 @@ namespace smsc { namespace store
         inline unsigned getIdleConnectionsCount() {
             return idle.Count();
         }
+        inline unsigned getPendingQueueLength() {
+            return queueLen;
+        }
         
         bool hasFreeConnections();
         
