@@ -221,6 +221,7 @@ void convert(bool udhi, uint8_t dc1, const char* str1, int len1,
 	__require__(str1 && str2 && len2);
 	if (dc1 == UCS2 && profileCodePage == ProfileCharsetOptions::Default)
 	{
+		dc2 = DEFAULT;
 		//udh проходит без изменений
 		int udhLen = udhi ? 1 + (unsigned char) *str1 : 0;
 		__require__(len2 > udhLen);
@@ -255,6 +256,7 @@ void convert(bool udhi, uint8_t dc1, const char* str1, int len1,
 	}
 	else
 	{
+		dc2 = dc1;
 		__require__(len2 >= len1);
 		memcpy(str2, str1, len1);
 		len2 = len1;
