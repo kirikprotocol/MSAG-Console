@@ -120,7 +120,7 @@ public:
     matchAddr=buf;
     for(int i=k.defLength;i<address.length;i++)
     {
-      matchAddr.at(i)='?';
+      matchAddr.at(matchAddr.length()-address.length+i)='?';
     }
     return *p;
   }
