@@ -79,7 +79,8 @@ void SmppProtocolTestCases::submitSmAssert(int num)
 				default:
 					__unreachable__("Invalid num");
 			}
-			__dumpPdu__("SmppProtocolTestCases::submitSmAssert", fixture->smeInfo.systemId, &pdu);
+			__dumpPdu__("submitSmAssert", fixture->smeInfo.systemId,
+				reinterpret_cast<SmppHeader*>(&pdu));
 			__tc_fail__(s.value());
 		}
 		catch (...)
@@ -733,8 +734,9 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 					{
 						__tc__("replaceSm.correct.waitTimeNull");
 						SmppTime t;
-						SmppUtil::time2string(waitTime + timeCheckAccuracy, t,
-							time(NULL), __numTime__);
+						SmppUtil::time2string(
+							max(waitTime, time(NULL)) + timeCheckAccuracy,
+							t, time(NULL), __numTime__);
 						pdu->set_scheduleDeliveryTime("");
 						pdu->set_validityPeriod(t);
 					}

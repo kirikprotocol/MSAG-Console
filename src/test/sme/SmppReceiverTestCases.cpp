@@ -27,7 +27,8 @@ Category& SmppReceiverTestCases::getLog()
 
 void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 {
-	__dumpPdu__("processSubmitSmRespBefore", fixture->smeInfo.systemId, &pdu);
+	__dumpPdu__("processSubmitSmRespBefore", fixture->smeInfo.systemId,
+		reinterpret_cast<SmppHeader*>(&pdu));
 	time_t respTime = time(NULL);
 	if (!fixture->pduReg)
 	{
@@ -53,7 +54,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 			fixture->pduReg->removeMonitor(monitor);
 			fixture->pduChecker->processSubmitSmResp(monitor, pdu, respTime);
 			//fixture->pduReg->registerMonitor(monitor);
-			//__dumpPdu__("processSubmitSmRespAfter", fixture->smeInfo.systemId, &pdu);
+			//__dumpPdu__("processSubmitSmRespAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 		}
 		__tc_ok_cond__;
 	}
@@ -66,7 +67,8 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 
 void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 {
-	__dumpPdu__("processReplaceSmRespBefore", fixture->smeInfo.systemId, &pdu);
+	__dumpPdu__("processReplaceSmRespBefore", fixture->smeInfo.systemId,
+		reinterpret_cast<SmppHeader*>(&pdu));
 	time_t respTime = time(NULL);
 	if (!fixture->pduReg)
 	{
@@ -91,7 +93,7 @@ void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 			//по данным из респонса
 			fixture->pduReg->removeMonitor(monitor);
 			fixture->pduChecker->processReplaceSmResp(monitor, pdu, respTime);
-			//__dumpPdu__("processReplaceSmRespAfter", fixture->smeInfo.systemId, &pdu);
+			//__dumpPdu__("processReplaceSmRespAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 		}
 		__tc_ok_cond__;
 	}
@@ -107,7 +109,8 @@ void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 
 void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 {
-	__dumpPdu__("processDeliverySmBefore", fixture->smeInfo.systemId, &pdu);
+	__dumpPdu__("processDeliverySmBefore", fixture->smeInfo.systemId,
+		reinterpret_cast<SmppHeader*>(&pdu));
 	__require__(fixture->session);
 	__decl_tc__;
 	__tc__("deliverySm.checkFields");
@@ -150,12 +153,13 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 	{
 		fixture->respSender->sendDeliverySmResp(pdu);
 	}
-	//__dumpPdu__("processDeliverySmAfter", fixture->smeInfo.systemId, &pdu);
+	//__dumpPdu__("processDeliverySmAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 }
 
 void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp &pdu)
 {
-	__dumpPdu__("processQuerySmRespBefore", fixture->smeInfo.systemId, &pdu);
+	__dumpPdu__("processQuerySmRespBefore", fixture->smeInfo.systemId,
+		reinterpret_cast<SmppHeader*>(&pdu));
 	time_t respTime = time(NULL);
 	if (!fixture->pduReg)
 	{
@@ -178,7 +182,7 @@ void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp &pdu)
 		{
 			fixture->pduReg->removeMonitor(monitor);
 			fixture->pduChecker->processQuerySmResp(monitor, pdu, respTime);
-			//__dumpPdu__("processQuerySmRespAfter", fixture->smeInfo.systemId, &pdu);
+			//__dumpPdu__("processQuerySmRespAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 		}
 		__tc_ok_cond__;
 	}
@@ -191,7 +195,8 @@ void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp &pdu)
 
 void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
 {
-	__dumpPdu__("processGenericNackBefore", fixture->smeInfo.systemId, &pdu);
+	__dumpPdu__("processGenericNackBefore", fixture->smeInfo.systemId,
+		reinterpret_cast<SmppHeader*>(&pdu));
 	time_t respTime = time(NULL);
 	if (!fixture->pduReg)
 	{
@@ -213,7 +218,7 @@ void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
 		else
 		{
 			fixture->pduChecker->processGenericNack(monitor, pdu, respTime);
-			//__dumpPdu__("processGenericNackAfter", fixture->smeInfo.systemId, &pdu);
+			//__dumpPdu__("processGenericNackAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 		}
 		__tc_ok_cond__;
 	}
@@ -226,7 +231,7 @@ void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
 
 void SmppReceiverTestCases::processDataSm(PduDataSm &pdu)
 {
-	//__dumpPdu__("processDataSm", fixture->smeInfo.systemId, &pdu);
+	//__dumpPdu__("processDataSm", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 	__decl_tc__;
 	__tc__("notImplemented.processDataSm");
 	__tc_fail__(100);
@@ -234,7 +239,7 @@ void SmppReceiverTestCases::processDataSm(PduDataSm &pdu)
 
 void SmppReceiverTestCases::processMultiResp(PduMultiSmResp &pdu)
 {
-	//__dumpPdu__("processMultiResp", fixture->smeInfo.systemId, &pdu);
+	//__dumpPdu__("processMultiResp", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 	__decl_tc__;
 	__tc__("notImplemented.processMultiResp");
 	__tc_fail__(100);
@@ -242,7 +247,7 @@ void SmppReceiverTestCases::processMultiResp(PduMultiSmResp &pdu)
 
 void SmppReceiverTestCases::processDataSmResp(PduDataSmResp &pdu)
 {
-	//__dumpPdu__("processDataSmResp", fixture->smeInfo.systemId, &pdu);
+	//__dumpPdu__("processDataSmResp", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 	__decl_tc__;
 	__tc__("notImplemented.processDataSmResp");
 	__tc_fail__(100);
@@ -250,7 +255,7 @@ void SmppReceiverTestCases::processDataSmResp(PduDataSmResp &pdu)
 
 void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp &pdu)
 {
-	//__dumpPdu__("processCancelSmResp", fixture->smeInfo.systemId, &pdu);
+	//__dumpPdu__("processCancelSmResp", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 	__decl_tc__;
 	__tc__("notImplemented.processCancelSmResp");
 	__tc_fail__(100);
@@ -258,7 +263,7 @@ void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp &pdu)
 
 void SmppReceiverTestCases::processAlertNotification(PduAlertNotification &pdu)
 {
-	//__dumpPdu__("processAlertNotification", fixture->smeInfo.systemId, &pdu);
+	//__dumpPdu__("processAlertNotification", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 	__decl_tc__;
 	__tc__("notImplemented.processAlertNotification");
 	__tc_fail__(100);
