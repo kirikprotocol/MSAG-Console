@@ -103,8 +103,8 @@ USHORT_T Et96MapDelimiterInd(
   UCHAR_T priorityOrder)
 {
   __trace2__("MAP::Et96MapDelimiterInd lssn 0x%hx, dialogId 0x%hx",lssn,dialogId);
-  USHORT_T result = Et96MapCloseReq( SSN, dialogId, ET96MAP_NORMAL_RELEASE, 0, priorityOrder, 0 );
-  if( result != ET96MAP_E_OK ) return result;
+  //USHORT_T result = Et96MapCloseReq( SSN, dialogId, ET96MAP_NORMAL_RELEASE, 0, priorityOrder, 0 );
+  //if( result != ET96MAP_E_OK ) return result;
   return ET96MAP_E_OK;
 }
 
