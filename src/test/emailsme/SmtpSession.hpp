@@ -1,5 +1,5 @@
-#ifndef TEST_EMAIL_SMTP_SESSION
-#define TEST_EMAIL_SMTP_SESSION
+#ifndef TEST_EMAIL_SME_SMTP_SESSION
+#define TEST_EMAIL_SME_SMTP_SESSION
 
 #include "MimeMessage.hpp"
 #include "core/network/Socket.hpp"
@@ -39,5 +39,5 @@ public:
 }
 }
 
-#endif /* TEST_EMAIL_SMTP_SESSION */
+#endif /* TEST_EMAIL_SME_SMTP_SESSION */
 
