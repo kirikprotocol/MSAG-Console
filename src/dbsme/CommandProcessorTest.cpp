@@ -18,9 +18,9 @@ int main(int argc, char* argv[])
     {
         printf("%d: %s\n", x, argv[x]);
     }*/
-    if (argc != 2)
+    if (argc != 3)
     {
-        printf("Usage: ComProcTest \"<command>\"\n");
+        printf("Usage: ComProcTest <destination_address> \"<command>\"\n");
         return -1;
     }
     
@@ -52,12 +52,10 @@ int main(int argc, char* argv[])
         // --------------------- Command Processing --------------------
 
         Command command;
-        Address toAddress("+333333333333");
+        Address toAddress(argv[1]);
         command.setToAddress(toAddress);
-        //command.setJobName("test-sql-job");
         command.setJobName(0);
-        //command.setInData("PrOcTeSt");
-        command.setInData(argv[1]);
+        command.setInData(argv[2]);
         
         printf("\nInput  : '%s'\n",
                (command.getInData() ? command.getInData():""));
