@@ -226,7 +226,7 @@ struct MapDialog{
     mutex.Lock();
     x = --ref_count;
     mutex.Unlock();
-    if ( ref_count == 0 ){
+    if ( x == 0 ){
       delete this;
     }
   }
