@@ -311,10 +311,10 @@ MapProxy* MapDialogContainer::proxy = 0;
 void MapDialogContainer::abort()
 {
 #ifdef USE_MAP
-  MAP_aborting = true;
+/*  MAP_aborting = true;
   MsgClose(MY_USER_ID);
   MsgExit();
-  EINSS7CpMsgClean();
+  EINSS7CpMsgClean();*/
 #endif
 }
 
