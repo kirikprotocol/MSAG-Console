@@ -23,4 +23,5 @@ namespace smsc { namespace store
    };
 }}
 
-#endif
+#endif
+
