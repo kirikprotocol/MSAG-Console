@@ -19,6 +19,7 @@
       <param name="msgLocaleUnknown">Unknown locale</param>
       <param name="msgHide">Hidden</param>
       <param name="msgUnhide">Not Hidden</param>
+      <param name="msgModificationDenied">This command is prohibited for your profile</param>
       <param name="msgError">Unrecognized profile management command</param>
     </section>
     <section name="abonentinfo">
