@@ -354,15 +354,6 @@ public:
         bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
             ((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
         
-        const int SMSC_SMPP_INT_ENROUTE_STATE       = 1;
-        const int SMSC_SMPP_INT_DELIVERED_STATE     = 2;
-        const int SMSC_SMPP_INT_EXPIRED_STATE       = 3;
-        const int SMSC_SMPP_INT_DELETED_STATE       = 4;
-        const int SMSC_SMPP_INT_UNDELIVERABLE_STATE = 5;
-        const int SMSC_SMPP_INT_ACCEPTED_STATE      = 6;
-        const int SMSC_SMPP_INT_UNKNOWN_STATE       = 7;
-        const int SMSC_SMPP_INT_REJECTED_STATE      = 8;
-
         if (isReceipt && ((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
         {
             const char* msgid = ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
@@ -376,18 +367,18 @@ public:
                     int msgState = sms.getIntProperty(Tag::SMPP_MSG_STATE);
                     switch (msgState)
                     {
-                    case SMSC_SMPP_INT_DELIVERED_STATE:
+                    case SmppMessageState::DELIVERED:
                         delivered = true;
                         break;
-                    case SMSC_SMPP_INT_EXPIRED_STATE:
-                    case SMSC_SMPP_INT_DELETED_STATE:
+                    case SmppMessageState::EXPIRED:
+                    case SmppMessageState::DELETED:
                         retry = true;
                         break;
-                    case SMSC_SMPP_INT_ENROUTE_STATE:
-                    case SMSC_SMPP_INT_ACCEPTED_STATE:
-                    case SMSC_SMPP_INT_UNKNOWN_STATE:
-                    case SMSC_SMPP_INT_REJECTED_STATE:
-                    case SMSC_SMPP_INT_UNDELIVERABLE_STATE:
+                    case SmppMessageState::ENROUTE:
+                    case SmppMessageState::UNKNOWN:
+                    case SmppMessageState::ACCEPTED:
+                    case SmppMessageState::REJECTED:
+                    case SmppMessageState::UNDELIVERABLE:
                         break;
                     default:
                         smsc_log_warn(logger, "Invalid state=%d received in reciept !", msgState);
