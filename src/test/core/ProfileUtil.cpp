@@ -1,10 +1,12 @@
 #include "ProfileUtil.hpp"
 #include "test/util/Util.hpp"
+#include <sstream>
 
 namespace smsc {
 namespace test {
 namespace core {
 
+using namespace std;
 using namespace smsc::test::util;
 
 void ProfileUtil::setupRandomCorrectProfile(Profile& profile)
@@ -22,6 +24,18 @@ vector<int> ProfileUtil::compareProfiles(const Profile& p1, const Profile& p2)
 	__compare__(1, codepage);
 	__compare__(2, reportoptions);
 	return res;
+}
+
+ostream& operator<< (ostream& os, const Profile& p)
+{
+	os << "codepage = " << p.codepage << ", reportoptions = " << p.reportoptions;
+}
+
+const string str(const Profile& p)
+{
+	ostringstream os;
+	os << p;
+	return os.str();
 }
 
 }
