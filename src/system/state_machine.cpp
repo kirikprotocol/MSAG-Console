@@ -10,6 +10,7 @@ namespace system{
 using namespace smsc::smeman;
 using namespace smsc::sms;
 using namespace StateTypeValue;
+using namespace smsc::smpp;
 
 int StateMachine::Execute()
 {
@@ -93,7 +94,7 @@ StateType StateMachine::submit(Tuple& t)
     sms->setValidTime(now+maxValidTime);
   }
 
-  __trace2__("Valid time for sms %lld=%u\n",t.msgId,sms->getValidTime());
+  __trace2__("Valid time for sms %lld=%u\n",t.msgId,(unsigned int)sms->getValidTime());
 
   if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
   {
@@ -107,6 +108,8 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   __trace2__("Replace if present for message %lld=%d",t.msgId,sms->getIntProperty("SMPP_REPLACE_IF_PRESENT_FLAG"));
+
+  time_t stime=sms->getNextTime();
 
   try{
     if(sms->getNextTime()<now)
@@ -142,7 +145,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   __trace2__("Sms scheduled to %d, now %d",(int)sms->getNextTime(),(int)now);
-  if(sms->getNextTime()>now)
+  if(stime>now)
   {
     smsc->notifyScheduler();
     return ENROUTE_STATE;
@@ -225,10 +228,11 @@ StateType StateMachine::forward(Tuple& t)
   {
     __warning__("FORWARD: No route");
     try{
-      time_t now=time(NULL);
+      //time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,RescheduleCalculator::calcNextTryTime(now,sms.getAttemptsCount()));
+      store->changeSmsStateToEnroute(t.msgId,d,0,
+        RescheduleCalculator::calcNextTryTime(sms.getNextTime(),sms.getAttemptsCount()));
     }catch(...)
     {
       __trace__("FORWARD: failed to change state to enroute");
@@ -239,10 +243,11 @@ StateType StateMachine::forward(Tuple& t)
   {
     __trace__("FORWARD: no proxy");
     try{
-      time_t now=time(NULL);
+      //time_t now=time(NULL);
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
-      store->changeSmsStateToEnroute(t.msgId,d,0,RescheduleCalculator::calcNextTryTime(now,sms.getAttemptsCount()));
+      store->changeSmsStateToEnroute(t.msgId,d,0,
+        RescheduleCalculator::calcNextTryTime(sms.getNextTime(),sms.getAttemptsCount()));
     }catch(...)
     {
       __trace__("FORWARD: failed to change state to enroute");
@@ -253,6 +258,16 @@ StateType StateMachine::forward(Tuple& t)
 
   uint32_t dialogId2;
   try{
+    try{
+      //time_t now=time(NULL);
+      Descriptor d;
+      __trace__("FORWARD: change state to enroute");
+      store->changeSmsStateToEnroute(t.msgId,d,0,
+        RescheduleCalculator::calcNextTryTime(sms.getNextTime(),sms.getAttemptsCount()));
+    }catch(...)
+    {
+      __trace__("FORWARD: failed to change state to enroute");
+    }
     dialogId2 = dest_proxy->getNextSequenceNumber();
     __trace2__("FORWARD: seq number:%d",dialogId2);
     //Task task((uint32_t)dest_proxy_index,dialogId2);
@@ -290,6 +305,40 @@ StateType StateMachine::deliveryResp(Tuple& t)
   __trace2__("delivering resp for :%lld",t.msgId);
   __require__(t.state==DELIVERING_STATE);
   smsc::sms::Descriptor d;
+/*  if(t.command->get_status()!=SmppStatusSet::ESME_ROK)
+  {
+    switch(t.command->get_status())
+    {
+      case SmppStatusSet::ESME_RX_T_APPN:
+      case SmppStatusSet::ESME_RMSGQFUL:
+      {
+        try{
+          time_t now=time(NULL);
+          Descriptor d;
+          __trace__("DELIVERYRESP: change state to enroute");
+          store->changeSmsStateToEnroute(t.msgId,d,0,
+            RescheduleCalculator::calcNextTryTime(sms.getNextTime(),sms.getAttemptsCount()));
+        }catch(...)
+        {
+          __trace__("DELIVERYRESP: failed to change state to enroute");
+        }
+      }break;
+      default:
+      {
+        try{
+          time_t now=time(NULL);
+          Descriptor d;
+          __trace__("DELIVERYRESP: change state to enroute");
+          store->changeSmsStateToUndeliverable(t.msgId,d,0);
+        }catch(...)
+        {
+          __trace__("DELIVERYRESP: failed to change state to enroute");
+        }
+        
+      }
+
+    }
+  }*/
   try{
     __trace__("change state to delivered");
     store->changeSmsStateToDelivered(t.msgId,d);

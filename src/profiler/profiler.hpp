@@ -79,8 +79,22 @@ public:
     outQueue.Push(cmd);
   }
 
-  //Profiler will never generate a command
-  SmscCommand getCommand(){SmscCommand cmd;return cmd;};
+  SmscCommand getCommand()
+  {
+    MutexGuard g(mon);
+    SmscCommand cmd;
+    inQueue.Shift(cmd);
+    return cmd;
+  };
+
+  void putIncomingCommand(const SmscCommand& cmd)
+  {
+    mon.Lock();
+    inQueue.Push(cmd);
+    mon.Unlock();
+    managerMonitor->Signal();
+  }
+
 
   //Used by profiler to retrieve commands sent by smsc
   SmscCommand getOutgoingCommand()
@@ -123,7 +137,8 @@ public:
   //Profiler will never generate a command
   bool hasInput()const
   {
-    return false;
+    MutexGuard g(mon);
+    return inQueue.Count()!=0;
   }
 
   void attachMonitor(ProxyMonitor* mon)
@@ -146,6 +161,7 @@ public:
 protected:
   mutable EventMonitor mon;
   smsc::core::buffers::Array<SmscCommand> outQueue;
+  smsc::core::buffers::Array<SmscCommand> inQueue;
   int seq;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;

@@ -174,6 +174,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   statement->setInt8(2,profile.codepage);
   char addrbuf[30];
   sprintf(addrbuf,"%d.%d.%s",addr.type,addr.plan,addr.value);
+  __trace2__("profiler: update %s",addrbuf);
   statement->setString(3,addrbuf);
   statement->executeUpdate();
 }
@@ -193,6 +194,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   auto_ptr<Statement> statement(connection->createStatement(sql));
   char addrbuf[30];
   sprintf(addrbuf,"%d.%d.%s",addr.type,addr.plan,addr.value);
+  __trace2__("profiler: insert %s",addrbuf);
   statement->setString(1, addrbuf);
   statement->setInt8(2, profile.reportoptions);
   statement->setInt8(3, profile.codepage);
@@ -221,17 +223,19 @@ void Profiler::internal_update(int flag,const Address& addr,int value)
 
 int Profiler::Execute()
 {
-  SmscCommand cmd;
+  SmscCommand cmd,resp;
   SMS *sms;
   int len;
   char body[MAX_SHORT_MESSAGE_LENGTH];
-  char *str=body;
+  int status=MAKE_COMMAND_STATUS(CMD_OK,0);
+
+//  char *str=body;
   while(!isStopping)
   {
     waitFor();
     if(!hasOutput())continue;
     cmd=getOutgoingCommand();
-    if(cmd->cmdid!=smsc::smeman::SUBMIT)
+    if(cmd->cmdid!=smsc::smeman::DELIVERY)
     {
       __trace2__("Profiler: incorrect command submitted");
       continue;
@@ -243,6 +247,7 @@ int Profiler::Execute()
    	len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
    	int i;
    	for(i=0;i<len;i++)body[i]=toupper(body[i]);
+   	i=0;
    	while(!isalpha(body[i]) && i<len)i++;
     if(!strncmp(body,"REPORT",6))
     {
@@ -269,7 +274,13 @@ int Profiler::Execute()
     if(!strncmp(body,"DEFAULT",4))
     {
       internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
+    }else
+    {
+      //
     }
+    resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty("SMPP_RECEIPTED_MESSAGE_ID").c_str(),
+                                           cmd->get_dialogId(),status);
+    putIncomingCommand(resp);
   }
   return 0;
 }
