@@ -2137,12 +2137,19 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
           // normal situation no error
         } else {
           try {
-            DoMAPErrorProcessor(errorSendRoutingInfoForSm_sp?errorSendRoutingInfoForSm_sp->errorCode:0,provErrCode_p);
+            DoMAPErrorProcessor(errorSendRoutingInfoForSm_sp->errorCode,0);
           }catch(MAPDIALOG_ERROR& e){
             __map_trace2__("%s: was error %s",__func__,e.what());
             dialog->routeErr = e.code;
           }
         }
+      }
+    } else if( provErrCode_p ) {
+      try {
+        DoMAPErrorProcessor(0,provErrCode_p);
+      }catch(MAPDIALOG_ERROR& e){
+        __map_trace2__("%s: was error %s",__func__,e.what());
+        dialog->routeErr = e.code;
       }
     }
     switch( dialog->state ){
