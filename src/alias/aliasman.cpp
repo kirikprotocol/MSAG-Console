@@ -404,8 +404,10 @@ static inline void makeAliasFromValueByAddres(
   __require__(ln < 21 );
   throw_if_fail( ln >= 0 );
   if ( ln == 0 ) throw runtime_error("result alias has zero length");
-  addr.setNumberingPlan(p.alias->numberingPlan);
-  addr.setTypeOfNumber(p.alias->typeOfNumber);
+  //addr.setNumberingPlan(p.alias->numberingPlan);
+  //addr.setTypeOfNumber(p.alias->typeOfNumber);
+  addr.setNumberingPlan(p.alias->num_n_plan&0xFF);
+  addr.setTypeOfNumber((p.alias->num_n_plan>>8)&0xFF);
   addr.setValue(ln,buf);
   LEAVE;
 }
@@ -437,8 +439,10 @@ static inline void makeAddressFromValueByAlias(
   throw_if_fail( ln >= 0 );
   if ( ln == 0 ) throw runtime_error("result address has zero length");
 
-  addr.setNumberingPlan(p.addr->numberingPlan);
-  addr.setTypeOfNumber(p.addr->typeOfNumber);
+  //addr.setNumberingPlan(p.addr->numberingPlan);
+  //addr.setTypeOfNumber(p.addr->typeOfNumber);
+  addr.setNumberingPlan(p.addr->num_n_plan&0xFF);
+  addr.setTypeOfNumber((p.addr->num_n_plan>>8)&0xFF);
   addr.setValue(ln,buf);
   LEAVE;
 }
@@ -448,8 +452,9 @@ static inline void makeAPattern(APattern& pat, const Address& addr)
   ENTER;
   char buf[21];
   char pat_mask[21];
-  pat.numberingPlan = addr.getNumberingPlan();
-  pat.typeOfNumber = addr.getTypeOfNumber();
+  //pat.numberingPlan = addr.getNumberingPlan();
+  //pat.typeOfNumber = addr.getTypeOfNumber();
+  pat.num_n_plan = (((uint16_t) addr.getTypeOfNumber())<<8) | addr.getNumberingPlan();
   int length = addr.getValue(buf);
   __require__ ( length < 21 );
   memset(pat_mask,0,21);
@@ -488,8 +493,9 @@ static inline void makeAPattern(APattern& pat, const Address& addr)
 static inline void makeAValue(AValue& val, const Address& addr)
 {
   ENTER;
-  val.numberingPlan = addr.getNumberingPlan();
-  val.typeOfNumber = addr.getTypeOfNumber();
+  //val.numberingPlan = addr.getNumberingPlan();
+  //val.typeOfNumber = addr.getTypeOfNumber();
+  val.num_n_plan = (((uint16_t) addr.getTypeOfNumber())<<8) | addr.getNumberingPlan();
   int length = addr.getValue((char*)val.value);
   __require__ ( length < 21 );
   val.length = length;

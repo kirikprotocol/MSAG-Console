@@ -17,7 +17,7 @@ char get_filename_result[1024];
 const size_t filename_result_maxlen = sizeof(get_filename_result)/sizeof(get_filename_result[0]);
 
 const char * const findConfigFile(const char * const file_to_find)
-	throw (Exception)
+  throw (Exception)
 {
   if (file_exist(file_to_find))
   {
@@ -39,12 +39,12 @@ const char * const findConfigFile(const char * const file_to_find)
     else
     {
       //char buf[strlen(file_to_find)+8+1];
-      TmpBuf<char,1024> buf(strlen(file_to_find)+8+1);
-      strcpy(buf, "./conf/");
-      strcat(buf, file_to_find);
-      if (file_exist(buf))
+      TmpBuf<char,1024> buf2(strlen(file_to_find)+8+1);
+      strcpy(buf2, "./conf/");
+      strcat(buf2, file_to_find);
+      if (file_exist(buf2))
       {
-        strcpy(get_filename_result, buf);
+        strcpy(get_filename_result, buf2);
         return get_filename_result;
       }
     }

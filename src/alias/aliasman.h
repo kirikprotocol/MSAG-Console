@@ -23,6 +23,7 @@ struct AliasInfo
 
 struct APattern
 {
+/*
 #pragma pack(1)
   union
   {
@@ -34,6 +35,8 @@ struct APattern
     int16_t num_n_plan;
   };
 #pragma pack()
+*/
+  int16_t num_n_plan;
   /*union
   {
     uint8_t mask[21];
@@ -55,9 +58,12 @@ struct APattern
 
 struct AValue
 {
+  /*
 #pragma pack(1)
+
   union
   {
+
     struct
     {
       uint8_t typeOfNumber;
@@ -66,6 +72,8 @@ struct AValue
     int16_t num_n_plan;
   };
 #pragma pack()
+*/
+  uint16_t num_n_plan;
   union
   {
     uint8_t value[21];
