@@ -61,7 +61,7 @@ public class Index extends IndexBean
         appContext.getStatuses().setRoutesSaved(true);
       }
 
-      traceResults = appContext.getSmsc().loadRoutes();
+      traceResults = appContext.getSmsc().loadRoutes(routeSubjectManager);
       if (traceResults == null || traceResults.size() <= 0)
         throw new AdminException("Transport error, invalid responce.");
       message = (String)traceResults.get(0);
@@ -86,7 +86,6 @@ public class Index extends IndexBean
       int idx = pair.indexOf(":");
       list.add(pair.substring(0, idx));
       list.add(pair.substring(idx+1));
-
     }
     return list;
   }

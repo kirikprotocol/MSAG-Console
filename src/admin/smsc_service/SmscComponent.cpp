@@ -566,7 +566,7 @@ Variant SmscComponent::loadRoutes(void)
     {
         bTemporalRoutesManagerConfigLoaded = false;
         RouteConfig cfg;
-        if (cfg.load("conf/routes_.xml") == RouteConfig::fail)
+        if (cfg.load("conf/routes__.xml") == RouteConfig::fail)
             throw AdminException("Load routes config file failed.");
 
         vector<std::string> traceBuff;

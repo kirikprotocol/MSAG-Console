@@ -28,8 +28,9 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
 	private Category logger = Category.getInstance(this.getClass());
   private SmeManager smeManager = null;
 
-  private final static String SMSC_ROUTES_PRIMARY_CONFIG  = "routes.xml";
+  private final static String SMSC_ROUTES_PRIMARY_CONFIG = "routes.xml";
   private final static String SMSC_ROUTES_TEMPORAL_CONFIG = "routes_.xml";
+  private final static String SMSC_ROUTES_TRACEABLE_CONFIG = "routes__.xml";
 
 	public RouteSubjectManagerImpl(SmeManager smeManager) throws AdminException
 	{
@@ -113,12 +114,12 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
     }
   }
 
-  synchronized public void save() throws AdminException
+  private void saveToFile(String file) throws AdminException
   {
     try
     {
       PrintWriter out = new PrintWriter(new FileOutputStream(
-          new File(WebAppFolders.getSmscConfFolder(), SMSC_ROUTES_TEMPORAL_CONFIG)), true);
+          new File(WebAppFolders.getSmscConfFolder(), file)), true);
       Functions.storeConfigHeader(out, "routes", "routes.dtd");
       subjects.store(out);
       routes.store(out);
@@ -129,6 +130,13 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
     {
       throw new AdminException("Couldn't save new routes settings: Couldn't write to destination config file: " + e.getMessage());
     }
+  }
+
+  synchronized public void test() throws AdminException {
+    saveToFile(SMSC_ROUTES_TRACEABLE_CONFIG);
+  }
+  synchronized public void save() throws AdminException {
+    saveToFile(SMSC_ROUTES_TEMPORAL_CONFIG);
   }
 
   synchronized public void apply() throws AdminException

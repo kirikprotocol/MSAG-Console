@@ -17,6 +17,7 @@ public interface RouteSubjectManager
 
 	void load() throws AdminException;
   void save() throws AdminException;
+  void test() throws AdminException;
 
   void apply() throws AdminException;
 

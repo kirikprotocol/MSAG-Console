@@ -118,10 +118,11 @@ public class Smsc extends Service
 		return out;
 	}
 
-  public synchronized List loadRoutes()
+  public synchronized List loadRoutes(RouteSubjectManager routeSubjectManager)
       throws AdminException
 	{
-		List result = null;
+		routeSubjectManager.test();
+    List result = null;
     if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
 		{
 			refreshComponents();
