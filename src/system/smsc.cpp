@@ -505,6 +505,10 @@ void Smsc::init(const SmscConfigs& cfg)
     {
       smsc_log_warn(log, "Profiler:Unrecognized default data coding");
     }
+
+    if(cfg.cfgman->getBool("profiler.defaultUssdIn7Bit"))
+      defProfile.codepage|=profiler::ProfileCharsetOptions::UssdIn7Bit;
+
     if(!strcmp(rep,"NONE"))
       defProfile.reportoptions=profiler::ProfileReportOptions::ReportNone;
     else if(!strcmp(rep,"FULL"))
