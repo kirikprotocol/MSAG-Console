@@ -177,13 +177,13 @@ const unsigned char* c2t_Cp1251_table[] = {
 (const unsigned char*)"",
 (const unsigned char*)"",
 (const unsigned char*)"",
+(const unsigned char*)"*JO\0Jo", //¨ 168
 (const unsigned char*)"",
 (const unsigned char*)"",
 (const unsigned char*)"",
 (const unsigned char*)"",
 (const unsigned char*)"",
-(const unsigned char*)"",
-(const unsigned char*)"",
+(const unsigned char*)"jo", //¸ 184
 (const unsigned char*)"",
 (const unsigned char*)"",
 (const unsigned char*)"",
@@ -200,7 +200,7 @@ const unsigned char* c2t_Cp1251_table[] = {
 (const unsigned char*)"*ZH\0Zh",//Æ 198
 (const unsigned char*)"Z",//Ç 199
 (const unsigned char*)"I",//È 200
-(const unsigned char*)"j",//É 201
+(const unsigned char*)"J",//É 201
 (const unsigned char*)"K",//Ê 202
 (const unsigned char*)"L",//Ë 203
 (const unsigned char*)"M",//Ì 204
@@ -215,8 +215,8 @@ const unsigned char* c2t_Cp1251_table[] = {
 (const unsigned char*)"H",//Õ 213
 (const unsigned char*)"C",//Ö 214
 (const unsigned char*)"*CH\0Ch",//× 215
-(const unsigned char*)"S",//Ø 216
-(const unsigned char*)"S",//Ù 217
+(const unsigned char*)"*SH\0Sh",//Ø 216
+(const unsigned char*)"*SCH\0Sch",//Ù 217
 (const unsigned char*)"'",//Ú 218
 (const unsigned char*)"Y",//Û 219
 (const unsigned char*)"'",//Ü 220
