@@ -95,7 +95,7 @@ void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
   }else{
     char c = 0;
     sa->setValue(0,&c);
-  }*/
+  }
 }
 
 USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd( 
