@@ -11,6 +11,8 @@
 	suppressDeliveryReports (true|false) "false"
 	active (true|false) "true"
 	srcSmeId CDATA #IMPLIED
+	deliveryMode CDATA #REQUIRED
+	forwardTo CDATA #IMPLIED
 >
 <!ELEMENT source (subject | mask)>
 <!ELEMENT destination (subject | mask)>
