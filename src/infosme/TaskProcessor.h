@@ -83,23 +83,21 @@ namespace smsc { namespace infosme
         
         virtual int Execute()
         {
+            __require__(task);
+
             switch (method)
             {
-            case beginProcessMethod:
-                __require__(task && connection);
-                task->beginProcess(connection);
-                break;
             case endProcessMethod:
-                __require__(task);
                 task->endProcess();
                 break;
-            case doNotifyMessageMethod:
-                __require__(task);
-                task->doNotifyMessage(info);
+            case beginProcessMethod:
+                task->beginProcess();
                 break;
             case dropAllMessagesMethod:
-                __require__(task && connection);
-                task->dropAllMessages(connection);
+                task->dropAllMessages();
+                break;
+            case doNotifyMessageMethod:
+                task->doNotifyMessage(info);
                 break;
             default:
                 __trace2__("Invalid method '%d' invoked on task.", method);
@@ -155,14 +153,14 @@ namespace smsc { namespace infosme
         virtual void invokeEndProcess(Task* task) {
             pool.startTask(new TaskRunner(task, endProcessMethod));
         };
-        virtual void invokeBeginProcess(Task* task, Connection* connection) {
-            pool.startTask(new TaskRunner(task, beginProcessMethod, connection));
+        virtual void invokeBeginProcess(Task* task) {
+            pool.startTask(new TaskRunner(task, beginProcessMethod));
         };
         virtual void invokeDoNotifyMessage(Task* task, const StateInfo& info) {
             pool.startTask(new TaskRunner(task, doNotifyMessageMethod, info));
         };
-        virtual void invokeDropAllMessages(Task* task, Connection* connection) {
-            pool.startTask(new TaskRunner(task, dropAllMessagesMethod, connection));
+        virtual void invokeDropAllMessages(Task* task) {
+            pool.startTask(new TaskRunner(task, dropAllMessagesMethod));
         };
     };
     
@@ -207,12 +205,6 @@ namespace smsc { namespace infosme
             return bStarted;
         };
         
-        virtual DataProvider& getDataProvider() {
-            return provider;
-        }
-        virtual DataSource* getInternalDataSource() {
-            return dsInternal;
-        }
         virtual TaskInvokeAdapter& getTaskInvokeAdapter() {
             return manager;
         }

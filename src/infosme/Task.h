@@ -35,8 +35,6 @@ namespace smsc { namespace infosme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
-    class Task;
-
     struct Message
     {
 
@@ -66,13 +64,103 @@ namespace smsc { namespace infosme
         };
     };
 
+    /* 
+        TODO: 1) Задать наконец структуры StateInfo && Message
+              2) Имплементить общую логику
+    */                                                      
+    class Task
+    {
+    private:
+    protected:
+        
+        TaskInfo        info;
+        DataSource*     dsOwn;
+        DataSource*     dsInt;
+        
+        Task() : dsOwn(0), dsInt(0) {};
+
+        virtual void init(ConfigView* config) = 0;
+
+    public:
+        
+        virtual ~Task() {};
+
+        inline int getPriority() {
+            return info.priority;
+        }
+        inline std::string getName() {
+            return info.name;
+        }
+        
+        void init(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt)
+        {
+            __require__(dsOwn && dsInt);
+            this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
+        };
+        
+        void init(ConfigView* config, DataSource* dsOwn, DataSource* dsInt)
+        {
+            __require__(config);
+
+            TaskInfo taskInfo;
+            // TODO: fill taskInfo from config here !!
+            
+            init(taskInfo, dsOwn, dsInt);
+            init(config);
+        };
+        
+        virtual bool isInProcess() = 0;
+
+        /**
+         * Запускает процесс генерации сообщений для отправки в спец.таблицу задачи.
+         * Выполняестся на ThreadPool'е по команде от Scheduler'а
+         * Использует два connection'а: один из своего,а другой внутреннего источника данных.
+         */
+        virtual void beginProcess() = 0;
+        /**
+         * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи.
+         * Выполняестся на ThreadPool'е по команде от Scheduler'а или TaskProcessor'а.
+         * Выставляет Event для завершения beginProcess() и ждёт завершения.
+         */
+        virtual void endProcess() = 0;
+        
+        /**
+         * Меняет состояние отправленного сообщения из спец.таблицы задачи.
+         * Состояния: accepted, delivered, expired, ... ???
+         * Выполняется из потока SmppTransport на ThreadPool'е по получению
+         * submitResponce или deliveryReceipt.
+         * Использует connection из внутреннего источника данных.
+         *
+         * @param info
+         */
+        virtual void doNotifyMessage(StateInfo& info) = 0;
+
+        /**
+         * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи
+         * посредством endProcess(). Удаляет все сгенерированные сообщения.
+         * Использует connection из внутреннего источника данных.
+         */
+        virtual void dropAllMessages() = 0;
+        
+        /**
+         * Возвращает следующее сообщение для отправки из спец.таблицы задачи
+         * Выполняется в основном потоке TaskProcessor'а
+         *
+         * @param connection    основной connection TaskProcessor'а
+         *                      из внутреннего источника данных. (оптимизация)
+         * @param message       следующее сообщение для отправки
+         * @return              false если сообщений нет.
+         */
+        virtual bool getNextMessage(Connection* connection, Message& message) = 0;
+    };
+    
     struct TaskInvokeAdapter
     {
         virtual void invokeEndProcess(Task* task) = 0;
-        virtual void invokeBeginProcess(Task* task, Connection* connection) = 0;
+        virtual void invokeBeginProcess(Task* task) = 0;
+        virtual void invokeDropAllMessages(Task* task) = 0;
         virtual void invokeDoNotifyMessage(Task* task, const StateInfo& info) = 0;
-        virtual void invokeDropAllMessages(Task* task, Connection* connection) = 0;
-    
+        
         virtual ~TaskInvokeAdapter() {};
 
     protected:
@@ -90,109 +178,6 @@ namespace smsc { namespace infosme
     protected:
         
         TaskContainerAdapter() {};
-    };
-    struct TaskProcessorAdapter
-    {
-        virtual TaskInvokeAdapter& getTaskInvokeAdapter() = 0;
-        virtual TaskContainerAdapter& getTaskContainerAdapter() = 0;
-        virtual DataProvider& getDataProvider() = 0;
-        virtual DataSource* getInternalDataSource() = 0;
-    
-        virtual ~TaskProcessorAdapter() {};
-
-     protected:
-
-        TaskProcessorAdapter() {};
-    };
-    
-    /* 
-        TODO: 1) Разобраться на что ссылается таска, на DataProvider со своим DS
-              и/или на DS, шареный с TaskProcessor'ом ??? 
-              2) Вообще, нужно-ли ссылаться на них а не получать готовые извне ???
-              3) Пересмотреть сигнатуру методов и соответственно поменять TaskRunner
-              4) Предусмотреть загрузку таски из конфига (+ позволить это делать виртуально) 
-              5) Задать наконец структуры StateInfo && Message
-              5) Нужен ли таске интерфейс TaskProcessor'а ???
-    */                                                      
-    class Task
-    {
-    private:
-    protected:
-        
-        TaskInfo                info;
-        TaskProcessorAdapter*   processor;
-
-        Task() : processor(0) {};
-
-    public:
-        
-        virtual ~Task() {};
-
-        inline int getId() {
-            return info.id;
-        }
-        inline int getPriority() {
-            return info.priority;
-        }
-        inline std::string getName() {
-            return info.name;
-        }
-        inline std::string getDSId() {
-            return info.dsId;
-        }
-
-        /**
-         * Initializes Task
-         * 
-         * @param info
-         * @param processor
-         */
-        virtual void init(TaskInfo& info, TaskProcessorAdapter* processor) {
-            __require__(processor);
-            this->info = info;
-            this->processor = processor;
-        };
-
-        /**
-         * Запускает процесс генерации сообщений для отправки в спец.таблицу задачи.
-         * Выполняестся на ThreadPool'е по команде от Scheduler'а
-         *
-         * @param connection из DS DataProvider'а 
-         */
-        virtual void beginProcess(Connection* connection) = 0;
-        /**
-         * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи.
-         * Выполняестся на ThreadPool'е по команде от Scheduler'а 
-         */
-        virtual void endProcess() = 0;
-        
-        /**
-         * Меняет состояние отправленного сообщения из спец.таблицы задачи.
-         * Состояния: accepted, delivered, expired, ... ???
-         * Выполняется из потока SmppTransport на ThreadPool'е по получению
-         * submitResponce или deliveryReceipt.
-         *
-         * @param info
-         */
-        virtual void doNotifyMessage(StateInfo& info) = 0;
-
-        /**
-         * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи.
-         * Удаляет все сгенерированные записи.
-         *
-         * @param connection основной connection TaskProcessor'а
-         */
-        virtual void dropAllMessages(Connection* connection) = 0;
-        
-        /**
-         * Возвращает следующее сообщение для отправки из спец.таблицы задачи
-         * Выполняется в основном потоке TaskProcessor'а
-         *
-         * @param connection основной connection TaskProcessor'а
-         * @param message
-         * @return 
-         */
-        virtual bool getNextMessage(Connection* connection, Message& message) = 0;
     };
     
     class TaskFactory

@@ -99,7 +99,8 @@ int TaskScheduler::Execute()
                         logger.error("Task '%s' not found.", task_name);
                         continue;
                     }
-                    //processor->getTaskInvokeAdapter().invokeBeginProcess(task, ???);
+                    if (!task->isInProcess())
+                        processor->getTaskInvokeAdapter().invokeBeginProcess(task);
                 }
         } 
         catch (std::exception& exc) 

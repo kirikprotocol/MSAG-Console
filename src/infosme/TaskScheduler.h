@@ -28,6 +28,18 @@ namespace smsc { namespace infosme
     
     using smsc::util::Logger;
     
+    struct TaskProcessorAdapter
+    {
+        virtual TaskInvokeAdapter& getTaskInvokeAdapter() = 0;
+        virtual TaskContainerAdapter& getTaskContainerAdapter() = 0;
+    
+        virtual ~TaskProcessorAdapter() {};
+
+     protected:
+
+        TaskProcessorAdapter() {};
+    };
+    
     class TaskScheduler : public Thread
     {
     private:
