@@ -228,7 +228,13 @@ int AbonentInfoSme::Execute()
                                                                   "Unknown");
           ce.exportStr("msc",as.msc.length()?as.msc.c_str():"unknown");
           OutputFormatter* f=ResourceManager::getInstance()->getFormatter(p.locale,"abonentinfo.mobileFormat");
-          f->format(answ,ga,ce);
+          if(!f)
+          {
+            answ="Unknown formatter abonentinfo.mobileFormat for locale "+p.locale;
+          }else
+          {
+            f->format(answ,ga,ce);
+          }
         }else
         {
           FakeGetAdapter ga;
@@ -239,7 +245,13 @@ int AbonentInfoSme::Execute()
           ce.exportStr("msc",as.msc.length()?("+"+as.msc).c_str():"");
           OutputFormatter* f=ResourceManager::getInstance()->getFormatter(p.locale,"abonentinfo.smeFormat");
           __trace2__("AbonentInfo: formatter=%p",f);
-          f->format(answ,ga,ce);
+          if(!f)
+          {
+            answ="Unknown formatter abonentinfo.smeFormat for locale "+p.locale;
+          }else
+          {
+            f->format(answ,ga,ce);
+          }
         }
       }catch(std::exception& e)
       {

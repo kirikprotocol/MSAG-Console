@@ -218,7 +218,7 @@ OutputFormatter* ResourceManager::getFormatter(const std::string& locale, const 
     else
     {
       __trace2__("RM: formatter not found for locale=%s, key=%s",locale.c_str(),key.c_str());
-      return &nullFmt;
+      return 0;
     }
   }
 }
@@ -232,7 +232,7 @@ OutputFormatter* ResourceManager::getFormatter(const std::string& key) const thr
   else
   {
     __trace2__("RM: formatter not found for locale=%s, key=%s",defaultLocale.c_str(),key.c_str());
-    return &nullFmt;
+    return 0;
   }
 
 }

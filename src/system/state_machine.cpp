@@ -140,12 +140,18 @@ void StateMachine::formatDeliver(const FormatData& fd,std::string& out)
   __trace2__("RECEIPT: get formatter for key=%s",key.c_str());
 
   OutputFormatter* ofDelivered=ResourceManager::getInstance()->getFormatter(fd.locale,key);
+  if(!ofDelivered)
+  {
+    out="Unknown formatter "+key+" for locale "+fd.locale;
+    return;
+  }
 
   try{
     ofDelivered->format(out,ga,ce);
   }catch(exception& e)
   {
     __trace2__("FORMATTER: %s",e.what());
+    out="Invalid formatter "+key+" for locale "+fd.locale;
   }
 }
 void StateMachine::formatFailed(const FormatData& fd,std::string& out)
@@ -179,6 +185,11 @@ void StateMachine::formatFailed(const FormatData& fd,std::string& out)
 
 
   OutputFormatter* ofFailed=ResourceManager::getInstance()->getFormatter(fd.locale,key);
+  if(!ofFailed)
+  {
+    out="Unknown formatter "+key+" for locale "+fd.locale;
+    return;
+  }
 
 
   try{
@@ -186,6 +197,7 @@ void StateMachine::formatFailed(const FormatData& fd,std::string& out)
   }catch(exception& e)
   {
     __trace2__("FORMATTER: %s",e.what());
+    out="Invalid formatter "+key+" for locale "+fd.locale;
   }
 }
 
@@ -214,13 +226,18 @@ void StateMachine::formatNotify(const FormatData& fd,std::string& out)
 
 
   OutputFormatter* ofNotify=ResourceManager::getInstance()->getFormatter(fd.locale,key);
-
+  if(!ofNotify)
+  {
+    out="Unknown formatter "+key+" for locale "+fd.locale;
+    return;
+  }
 
   try{
     ofNotify->format(out,ga,ce);
   }catch(exception& e)
   {
     __trace2__("FORMATTER: %s",e.what());
+    out="Invalid formatter "+key+" for locale "+fd.locale;
   }
 }
 
@@ -479,17 +496,11 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
   if(tmplname.length())
   {
     OutputFormatter *f=ResourceManager::getInstance()->getFormatter(p.locale,tmplname);
-    try{
-      f->format(newtext,ga,ce);
-    }catch(exception& e)
+    if(!f)
     {
-      __trace2__("DIRECT: exception : %s",e.what());
-      newtext="";
-    }catch(...)
-    {
-      __trace2__("DIRECT: exception : unknown");
-      newtext="";
+      throw Exception("Unknown template name");
     }
+    f->format(newtext,ga,ce);
     udhi=false;
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x40));
   }
@@ -837,7 +848,28 @@ StateType StateMachine::submit(Tuple& t)
   sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
   int pres=psSingle;
 
-  processDirectives(*sms,profile);
+  try{
+    processDirectives(*sms,profile);
+  }catch(...)
+  {
+    __trace__("Failed to process directives due to exception");
+    sms->lastResult=Status::SUBMITFAIL;
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           Status::SUBMITFAIL,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+      __trace__("SUBMIT: failed to put response command");
+    }
+    return ERROR_STATE;
+  }
 
   if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
   {
@@ -1731,14 +1763,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
       fd.lastResultGsm=0;
       fd.msc=d.msc;
       string loc=sms.getStrProperty(Tag::SMSC_RECEIPT_LOCALE);
-      fd.locale=loc.c_str();
+      smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+      fd.locale=profile.locale.c_str();
       smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
       fd.scheme=si.receiptSchemeName.c_str();
 
       formatDeliver(fd,out);
       rpt.getDestinationAddress().getText(addr,sizeof(addr));
       __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
-      smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
       trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
       smsc->submitSms(prpt);
       /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
@@ -2128,13 +2160,12 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   fd.msgId=msgid;
   fd.err=reason;
   fd.setLastResult(sms.lastResult);
-  string loc=sms.getStrProperty(Tag::SMSC_RECEIPT_LOCALE);
-  fd.locale=loc.c_str();
+  smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+  fd.locale=profile.locale.c_str();
   smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
   fd.scheme=si.receiptSchemeName.c_str();
 
   formatFailed(fd,out);
-  smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
   trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
   smsc->submitSms(prpt);
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
@@ -2196,14 +2227,13 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   fd.msgId=msgid;
   fd.err=reason;
   fd.setLastResult(sms.lastResult);
-  string loc=sms.getStrProperty(Tag::SMSC_RECEIPT_LOCALE);
-  fd.locale=loc.c_str();
+  smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+  fd.locale=profile.locale.c_str();
   smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
   fd.scheme=si.receiptSchemeName.c_str();
 
 
   formatNotify(fd,out);
-  smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
   trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
   smsc->submitSms(prpt);
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
