@@ -4,6 +4,7 @@
 #include "MessageStoreTestCases.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include <iostream>
+#include <map>
 
 using namespace std;
 using namespace smsc::sms;
@@ -11,8 +12,6 @@ using namespace smsc::store;
 using namespace smsc::util::config;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
-
-class MessageStoreBusinessCycleTestTaskHolder;
 
 /**
  * Предназначен для стресс тестирования и тестирования бизнес циклов Message 
@@ -29,80 +28,84 @@ class MessageStoreBusinessCycleTestTaskHolder;
 class MessageStoreBusinessCycleTestTask : public TestTask
 {
 private:
-	MessageStoreBusinessCycleTestTaskHolder* holder;
+	int taskNum;
 	MessageStoreTestCases tc; //throws exception
 
 public:
-	MessageStoreBusinessCycleTestTask(
-		MessageStoreBusinessCycleTestTaskHolder* _holder);
+	MessageStoreBusinessCycleTestTask(int taskNum);
 	virtual ~MessageStoreBusinessCycleTestTask() {}
 	virtual void executeCycle();
 	virtual void onStopped();
-};
 
-/**
- * Holder для самого таска.
- */
-class MessageStoreBusinessCycleTestTaskHolder
-{
-public:
-	char* taskName;
-	MessageStoreBusinessCycleTestTask* task;
-	bool stopped;
-	int ops;
-
-public:
-	MessageStoreBusinessCycleTestTaskHolder(int taskNum);
-	virtual ~MessageStoreBusinessCycleTestTaskHolder()
-	{
-		delete[] taskName;
-	}
-	void stopTask()
-	{
-		task->stop();
-	}
+private:
+	void doStat(const TCResult* res);
 };
 
 /**
  * Таск менеджер.
  */
 class MessageStoreBusinessCycleTestTaskManager
-	: public TestTaskManager<MessageStoreBusinessCycleTestTaskHolder>
+	: public TestTaskManager<MessageStoreBusinessCycleTestTask>
 {
 public:
 	MessageStoreBusinessCycleTestTaskManager() {}
-	void printStatus();
+	virtual bool isStopped() const;
+	void printOpsStatByTask();
+	void printOpsStatByTC();
 	int getOps();
 };
 
+/**
+ * Статистика по таскам.
+ */
+struct MessageStoreBusinessCycleTestTaskStat
+{
+	int ops;
+	boolean stopped;
+	MessageStoreBusinessCycleTestTaskStat()
+		: ops(0), stopped(false) {}
+};
+
+/**
+ * Хранилище статистики всего теста.
+ */
+class MessageStoreBusinessCycleTestStat
+{
+public:
+	typedef vector<MessageStoreBusinessCycleTestTaskStat> TaskStatList;
+	typedef map<const string, int> TCStatMap;
+
+	static TaskStatList taskStat;
+	static TCStatMap tcStat;
+};
+
 //MessageStoreBusinessCycleTestTask methods
-MessageStoreBusinessCycleTestTask::MessageStoreBusinessCycleTestTask(
-	MessageStoreBusinessCycleTestTaskHolder* _holder)
-	: TestTask(_holder->taskName), holder(_holder) {}
+MessageStoreBusinessCycleTestTask::MessageStoreBusinessCycleTestTask(int _taskNum)
+	: TestTask("BusinessCycleTask", _taskNum), taskNum(_taskNum) {}
 
 void MessageStoreBusinessCycleTestTask::executeCycle()
 {
 	//создаю SM для попытки дальнейшего создание дублированного SM
 	SMSId correctId;
 	SMS correctSM;
-	delete tc.storeCorrectSM(&correctId, &correctSM, RAND_TC); holder->ops++;
-	delete tc.storeIncorrectSM(correctSM, ALL_TC); holder->ops++;
+	doStat(tc.storeCorrectSM(&correctId, &correctSM, RAND_TC));
+	doStat(tc.storeIncorrectSM(correctSM, ALL_TC));
 
 	//создаю SM, сразу читаю и удаляю
 	for (int i = 0; i < 10; i++)
 	{
 		SMSId id;
 		SMS sms;
-		delete tc.storeCorrectSM(&id, &sms, RAND_TC); holder->ops++;
-		delete tc.loadExistentSM(id, sms); holder->ops++;
-		delete tc.deleteExistentSM(id); holder->ops++;
-		delete tc.deleteNonExistentSM(id, RAND_TC); holder->ops++;
-		delete tc.loadNonExistentSM(id, RAND_TC); holder->ops++;
+		doStat(tc.storeCorrectSM(&id, &sms, RAND_TC));
+		doStat(tc.loadExistentSM(id, sms));
+		doStat(tc.deleteExistentSM(id));
+		doStat(tc.deleteNonExistentSM(id, RAND_TC));
+		doStat(tc.loadNonExistentSM(id, RAND_TC));
 	}
 
 	//создаю и удаляю кривые SM
-	delete tc.storeIncorrectSM(correctSM, ALL_TC); holder->ops++;
-	delete tc.deleteExistentSM(correctId); holder->ops++;
+	doStat(tc.storeIncorrectSM(correctSM, ALL_TC));
+	doStat(tc.deleteExistentSM(correctId));
 
 	//сначала создаю список, потом читаю этот список, потом удаляю
 	//список большой специально для того, чтобы было большое количество 
@@ -116,20 +119,20 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 		SMS sms[listSize];
 		for (int i = 0; i < listSize; i++)
 		{
-			delete tc.storeCorrectSM(&id[i], &sms[i], RAND_TC); holder->ops++;
+			doStat(tc.storeCorrectSM(&id[i], &sms[i], RAND_TC));
 		}
 		for (int i = 0; i < listSize; i++)
 		{
-			delete tc.loadExistentSM(id[i], sms[i]); holder->ops++;
+			doStat(tc.loadExistentSM(id[i], sms[i]));
 		}
 		for (int i = 0; i < listSize; i++)
 		{
-			delete tc.deleteExistentSM(id[i]); holder->ops++;
+			doStat(tc.deleteExistentSM(id[i]));
 		}
-		delete tc.loadNonExistentSM(id[0], RAND_TC); holder->ops++;
-		delete tc.deleteNonExistentSM(id[0], RAND_TC); holder->ops++;
-		delete tc.loadNonExistentSM(id[listSize - 1], RAND_TC); holder->ops++;
-		delete tc.deleteNonExistentSM(id[listSize - 1], RAND_TC); holder->ops++;
+		doStat(tc.loadNonExistentSM(id[0], RAND_TC));
+		doStat(tc.deleteNonExistentSM(id[0], RAND_TC));
+		doStat(tc.loadNonExistentSM(id[listSize - 1], RAND_TC));
+		doStat(tc.deleteNonExistentSM(id[listSize - 1], RAND_TC));
 	}
 	//tc.setCorrectSMStatus(); ops++;
 	//tc.createBillingRecord(); ops++;
@@ -138,48 +141,91 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 
 inline void MessageStoreBusinessCycleTestTask::onStopped()
 {
-	holder->stopped = true;
+	MessageStoreBusinessCycleTestStat::taskStat[taskNum].stopped = true;
 }
 
-//MessageStoreBusinessCycleTestTaskHolder methods
-MessageStoreBusinessCycleTestTaskHolder::MessageStoreBusinessCycleTestTaskHolder(int taskNum)
-	: stopped(false), ops(0)
+void MessageStoreBusinessCycleTestTask::doStat(const TCResult* res)
 {
-	taskName = new char[25];
-	sprintf(taskName, "BusinessCycleTask_%d", taskNum);
-	task = new MessageStoreBusinessCycleTestTask(this);
+	(MessageStoreBusinessCycleTestStat::taskStat[taskNum].ops)++;
+	(MessageStoreBusinessCycleTestStat::tcStat[res->getId()])++;
+	delete res;
 }
 
 //MessageStoreBusinessCycleTestTaskManager methods
-void MessageStoreBusinessCycleTestTaskManager::printStatus()
+bool MessageStoreBusinessCycleTestTaskManager::isStopped() const
 {
-	for (int i = 0; i < taskHolders.size(); i++)
+	MessageStoreBusinessCycleTestStat::TaskStatList& taskStat = 
+		MessageStoreBusinessCycleTestStat::taskStat;
+	bool stopped = true;
+	for (int i = 0; stopped && (i < taskStat.size()); i++)
 	{
-		const char* taskName = taskHolders[i]->taskName;
-		int ops = taskHolders[i]->ops;
-		cout << taskName << ": ops = " << ops << endl;
+		stopped &= taskStat[i].stopped;
 	}
+	return stopped;
+}
+
+void MessageStoreBusinessCycleTestTaskManager::printOpsStatByTask()
+{
+	MessageStoreBusinessCycleTestStat::TaskStatList& taskStat = 
+		MessageStoreBusinessCycleTestStat::taskStat;
+	int totalOps = 0;
+	for (int i = 0; i < taskStat.size(); i++)
+	{
+		int ops = taskStat[i].ops;
+		totalOps += ops;
+		cout << "BusinessTestTask_" << i << ": ops = " << ops << endl;
+	}
+	cout << "Total ops = " << totalOps << endl;
+	cout << "-----------------------------" << endl;
+}
+
+void MessageStoreBusinessCycleTestTaskManager::printOpsStatByTC()
+{
+	MessageStoreBusinessCycleTestStat::TCStatMap& tcStat =
+		MessageStoreBusinessCycleTestStat::tcStat;
+	int totalOps = 0;
+	for (MessageStoreBusinessCycleTestStat::TCStatMap::iterator it =
+		 tcStat.begin(); it != tcStat.end(); it++)
+	{
+		const string& tcId = it->first;
+		int ops = it->second;
+		totalOps += ops;
+		cout << tcId << ": ops = " << ops << endl;
+	}
+	cout << "Total ops = " << totalOps << endl;
+	cout << "-----------------------------" << endl;
 }
 
 int MessageStoreBusinessCycleTestTaskManager::getOps()
 {
-	int ops = 0;
-	for (int i = 0; i < taskHolders.size(); i++)
+	MessageStoreBusinessCycleTestStat::TaskStatList& taskStat = 
+		MessageStoreBusinessCycleTestStat::taskStat;
+	int totalOps = 0;
+	for (int i = 0; i < taskStat.size(); i++)
 	{
-		ops += taskHolders[i]->ops;
+		totalOps += taskStat[i].ops;
 	}
-	return ops;
+	return totalOps;
 }
+
+//MessageStoreBusinessCycleTestStat
+MessageStoreBusinessCycleTestStat::TaskStatList
+	MessageStoreBusinessCycleTestStat::taskStat =
+	MessageStoreBusinessCycleTestStat::TaskStatList();
+MessageStoreBusinessCycleTestStat::TCStatMap
+	MessageStoreBusinessCycleTestStat::tcStat =
+	MessageStoreBusinessCycleTestStat::TCStatMap();
 
 //test body
 void executeBusinessCycleTest(int numThreads)
 {
+	MessageStoreBusinessCycleTestStat::taskStat.resize(numThreads);
 	MessageStoreBusinessCycleTestTaskManager tm;
 	for (int i = 0; i < numThreads; i++)
 	{
-		MessageStoreBusinessCycleTestTaskHolder* taskHolder =
-			new MessageStoreBusinessCycleTestTaskHolder(i);
-		tm.addTask(taskHolder);
+		MessageStoreBusinessCycleTestTask* task =
+			new MessageStoreBusinessCycleTestTask(i);
+		tm.addTask(task);
 	}
 	tm.startTimer();
 
@@ -196,7 +242,8 @@ void executeBusinessCycleTest(int numThreads)
 				return;
 			case 's':
 				cout << "Time = " << tm.getExecutionTime() << endl;
-				tm.printStatus();
+				tm.printOpsStatByTask();
+				tm.printOpsStatByTC();
 				break;
 			default:
 				cout << "Time = " << tm.getExecutionTime() << endl;
