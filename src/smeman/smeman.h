@@ -122,12 +122,7 @@ public:
   }
   virtual const char* getSystemId()const
   {
-    MutexGuard guard(mutex);
-    if ( proxy )
-    {
-      return proxy->getSystemId();
-    }
-    else throw runtime_error("proxy unregistred");
+    return info.systemId.c_str();
   }
   virtual SmeIndex getSmeIndex()
   {

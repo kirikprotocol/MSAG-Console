@@ -327,10 +327,7 @@ int SmppInputThread::Execute()
               if(!err)
               {
                 si=smeManager->getSmeInfo(proxyIndex);
-                int prio=si.priority/1024;
-                if(prio<0)prio=0;
-                if(prio>=32)prio=31;
-                if(!proxy)proxy=new SmppProxy(ss,totalLimit,prio);
+                if(!proxy)proxy=new SmppProxy(ss,totalLimit,si.timeout);
                 switch(pdu->get_commandId())
                 {
                   case SmppCommandSet::BIND_RECIEVER:
@@ -594,9 +591,13 @@ int SmppInputThread::Execute()
                   fillSmppPdu(&s,reinterpret_cast<SmppHeader*>(&pduresp));
                   ss->getSocket()->WriteAll(buf,pduresp.size());
                 }
-              }catch(...)
+              }catch(exception& e)
               {
-                __trace__("SmppInput: exception in putCommand, proxy limit or proxy died");
+                __warning2__("SmppInput: exception in putCommand[%s]:%s",ss->getProxy()?ss->getProxy()->getSystemId():"unknown",e.what());
+              }
+              catch(...)
+              {
+                __warning2__("SmppInput: exception in putCommand[%s]:unknown",ss->getProxy()?ss->getProxy()->getSystemId():"unknown");
               }
             }break;
             case SmppCommandSet::SUBMIT_SM:
@@ -628,7 +629,7 @@ int SmppInputThread::Execute()
                     }
                   }catch(ProxyQueueLimitException& e)
                   {
-                    __warning__("SmppInput: exception in putIncomingCommand, proxy limit or proxy died");
+                    __warning2__("SmppInput: exception in putCommand[%s]:%s",ss->getProxy()?ss->getProxy()->getSystemId():"unknown",e.what());
                     SmscCommand answer;
                     bool haveAnswer=true;
                     switch(cmd->get_commandId())

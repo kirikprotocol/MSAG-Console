@@ -76,7 +76,7 @@ public:
   }
   static bool commandHasTimeout(CommandType cmd)
   {
-    return cmd->cmdid!=ALERT && cmd->cmdid!=DELIVERY_RESP;
+    return cmd->cmdid!=ALERT && cmd->cmdid!=DELIVERY_RESP && cmd->cmdid!=FORWARD;
   }
   static bool stateIsFinal(StateType state)
   {

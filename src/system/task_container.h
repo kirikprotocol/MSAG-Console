@@ -14,7 +14,7 @@ namespace system{
 using namespace smsc::core::synchronization;
 
 #define TASK_CONTAINER_MAX_PROCESSED   (2000*(8+1)) /* 200 msg/s * 8 sec */
-#define TASK_CONTAINER_MAX_TIMEOUTS    16
+#define TASK_CONTAINER_MAX_TIMEOUTS    64
 
 struct Task
 {
@@ -56,7 +56,11 @@ class TaskContainer
   };
   TimeOutList toList[TASK_CONTAINER_MAX_TIMEOUTS];
   int toCount;
+
+  int tasksCount;
+
   Mutex mutex;
+  friend class StatusSme;
 public:
   TaskContainer()
   {
@@ -68,6 +72,7 @@ public:
     pool[TASK_CONTAINER_MAX_PROCESSED-1].next = 0;
     first_task = pool;
     memset(hash,0,sizeof(hash));
+    tasksCount=0;
   }
   ~TaskContainer() {}
 
@@ -108,6 +113,7 @@ public:
     {
       idx=toCount;
       toCount++;
+      __require__(toCount<TASK_CONTAINER_MAX_TIMEOUTS);
       toList[idx].timeout_link_begin=0;
       toList[idx].timeout_link_end=0;
       toList[idx].timeout=preferred_timeout;
@@ -129,6 +135,7 @@ public:
     __trace2__("TASK::createTask 0x%x:0x%x timeout 0x%lx",
                task->sequenceNumber,task->proxy_id,
                preferred_timeout);
+    tasksCount++;
     return true;
   }
 
@@ -233,6 +240,7 @@ public:
 
     task->next = first_task;
     first_task = task;
+    tasksCount--;
   }
 };
 

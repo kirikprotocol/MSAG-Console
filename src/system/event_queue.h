@@ -100,6 +100,7 @@ class EventQueue
       //!__trace2__("try to select command for %p(%lld)",this,msgId);
       while(*cmd)
       {
+        /*
         if ( StateChecker::commandHasTimeout((*cmd)->command) )
         {
           if ( t > ((*cmd)->timeout) )
@@ -112,6 +113,7 @@ class EventQueue
             continue;
           }
         }
+        */
         //!__trace2__("getnextcommand(%lld): %d,%d",msgId,state,(*cmd)->command->get_commandId());
         if ( StateChecker::commandIsValid(state,(*cmd)->command) )
         {

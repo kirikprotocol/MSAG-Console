@@ -16,6 +16,10 @@ using namespace smsc::util;
 
 int stopped=0;
 
+int temperrProb=0;
+int dontrespProb=0;
+int permErrProb=0;
+
 class MyListener:public SmppPduEventListener{
 public:
   void handleEvent(SmppHeader *pdu)
@@ -23,6 +27,33 @@ public:
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM  ||
        pdu->get_commandId()==SmppCommandSet::DATA_SM)
     {
+      int rnd=rand()%100;
+      if(rnd<temperrProb)
+      {
+        PduDeliverySmResp resp;
+        resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+        resp.set_messageId("");
+        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        resp.get_header().set_commandStatus(SmppStatusSet::ESME_RMSGQFUL);
+        trans->sendDeliverySmResp(resp);
+        disposePdu(pdu);
+        return;
+      }
+      if(rnd<temperrProb+permErrProb)
+      {
+        PduDeliverySmResp resp;
+        resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+        resp.set_messageId("");
+        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        resp.get_header().set_commandStatus(SmppStatusSet::ESME_RX_P_APPN);
+        trans->sendDeliverySmResp(resp);
+        disposePdu(pdu);
+        return;
+      }else if(rnd<temperrProb+permErrProb+dontrespProb)
+      {
+        disposePdu(pdu);
+        return;
+      }
       char buf[256];
       SMS s;
       fetchSmsFromSmppPdu((PduXSm*)pdu,&s);
@@ -100,7 +131,11 @@ int main(int argc,char* argv[])
            "\t -p password (default == sid)\n"
            "\t -t bind type (tx,rx,trx)\n"
            "\t -u send messages in unicode\n"
-           "\t -d send messages as DATA_SM\n");
+           "\t -d send messages as DATA_SM\n"
+           "\t -e N probability of answer with temp error\n"
+           "\t -r N probability of answer with perm error\n"
+           "\t -n N probability of not answering at all\n"
+           );
     return -1;
   }
   Logger::Init("log4cpp.t");
@@ -178,6 +213,18 @@ int main(int argc,char* argv[])
           return -1;
         }
       }break;
+      case 'e':
+      {
+        temperrProb=atoi(optarg);
+      }break;
+      case 'r':
+      {
+        permErrProb=atoi(optarg);
+      }break;
+      case 'n':
+      {
+        dontrespProb=atoi(optarg);
+      }break;
       default:
       {
         fprintf(stderr,"Unknown option:%s\n",opt);
@@ -191,6 +238,9 @@ int main(int argc,char* argv[])
   cfg.timeOut=10;
 
   SmppSession ss(cfg,&lst);
+  SmppTransmitter *tr=ss.getSyncTransmitter();
+
+  lst.setTrans(tr);
   try{
     ss.connect(bindType);
     PduSubmitSm sm;
@@ -225,9 +275,6 @@ int main(int argc,char* argv[])
 
     s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,1234);
 
-    SmppTransmitter *tr=ss.getSyncTransmitter();
-
-    lst.setTrans(tr);
     s.setEServiceType("XXX");
     char *addr=NULL;
     char *message=NULL;
@@ -242,19 +289,22 @@ int main(int argc,char* argv[])
       {
         break;
       }
-      try{
-        Address dst((char*)addr);
-        s.setDestinationAddress(dst);
-      }catch(...)
+      if(strcmp(addr,"/"))
       {
-        printf("Invalid address\n");
-        continue;
+        try{
+          Address dst((char*)addr);
+          s.setDestinationAddress(dst);
+        }catch(...)
+        {
+          printf("Invalid address\n");
+          continue;
+        }
+        if(message)free(message);
+        message=NULL;
+        message=readline("Enter message:");
+        if(!message)break;
+        rl_reset_line_state();
       }
-      if(message)free(message);
-      message=NULL;
-      message=readline("Enter message:");
-      if(!message)break;
-      rl_reset_line_state();
       int len=strlen(message);
 
 
@@ -299,7 +349,7 @@ int main(int argc,char* argv[])
         printf("Accepted:%d bytes\n",len);fflush(stdout);
       }else
       {
-        printf("Wasn't accepted: %08X\n",resp->get_commandStatus());fflush(stdout);
+        printf("Wasn't accepted: %08X\n",resp?resp->get_commandStatus():-1);fflush(stdout);
       }
       if(resp)disposePdu(resp);
     }

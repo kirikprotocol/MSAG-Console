@@ -62,6 +62,11 @@ int StatusSme::Execute()
       char buf[128];
       sprintf(buf,"cnt=%d, locked=%d, unlocked=%d",cnt,eqhash,equnl);
       answer=buf;
+    }else if (request=="tasks")
+    {
+      char buf[64];
+      sprintf(buf,"%d tasks in task container",smsc->tasks.tasksCount);
+      answer=buf;
     }else if (request=="tc" || request.substr(0,3)=="tc ")
     {
       int pos=request.find(" ");

@@ -34,11 +34,27 @@ typedef smsc::core::synchronization::Event ProxyMonitor;
 
 class ProxyQueueLimitException : public std::exception
 {
-  virtual const char* what() const throw() {return "Proxy Queue limit";}
+protected:
+  int cur,mx;
+  mutable char msg[32];
+public:
+  ProxyQueueLimitException():cur(-1),mx(-1)
+  {
+
+  }
+  ProxyQueueLimitException(int c,int m):cur(c),mx(m)
+  {
+  }
+  virtual const char* what() const throw()
+  {
+    sprintf(msg,"PXLimit:%d/%d",cur,mx);
+    return msg;
+  }
 };
 
 class InvalidProxyCommandException: public std::exception
 {
+public:
   virtual const char* what() const throw() {return "Invalid bind state";}
 };
 

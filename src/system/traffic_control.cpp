@@ -81,7 +81,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
 
         if(deliveryCount-responseCount>cfg.protectThreshold)
         {
-          __info2__(log,"TC: deny - protect threshold limit for %s: %d-%d",dest_proxy->getSystemId(),deliveryCount,responseCount);
+          __info2__(log,"TC: deny - protect threshold limit for %s: %d/%d",dest_proxy->getSystemId(),responseCount,deliveryCount);
           break;
         }
 
@@ -91,8 +91,12 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
 
           double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
 
-          if(deliveryCount-responseCount<=cfg.allowedDeliveryFailures &&
-             speed>1 && speed<scount)
+          if(deliveryCount-responseCount>=cfg.allowedDeliveryFailures)
+          {
+            __info2__(log,"TC: deny - protect task container limit for %s: %d - %d",dest_proxy->getSystemId(),deliveryCount,responseCount);
+            break;
+          }
+          if(speed>1 && speed<scount)
           {
             __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",dest_proxy->getSystemId(),speed,scount);
             break;
@@ -125,8 +129,11 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
             int scount=cfg.smsc->GetSmeScheduleCount(idx,lookAhead);
             double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
 
-            if(deliveryCount-responseCount<=cfg.allowedDeliveryFailures &&
-               speed>1 && speed<scount)
+            if(deliveryCount-responseCount>=cfg.allowedDeliveryFailures)
+            {
+              __info2__(log,"TC: deny - receipt protect task container limit for %s: %d/%d",src_proxy->getSystemId(),responseCount,deliveryCount);
+            }
+            if(speed>1 && speed<scount)
             {
               __info2__(log,"TC: deny - receipt protect schedule limit for %s: %lf - %d",src_proxy->getSystemId(),speed,scount);
               break;

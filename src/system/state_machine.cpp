@@ -1151,7 +1151,7 @@ StateType StateMachine::submit(Tuple& t)
     {
       __warning__("SUBMIT_SM: failed to put response command");
     }
-    __warning__("SUBMIT_SM: traffic control denied msg creation!!!");
+    //__warning2__("SUBMIT_SM: traffic control denied msg creation!!!");
     return ERROR_STATE;
   }
 
@@ -1511,7 +1511,7 @@ StateType StateMachine::forward(Tuple& t)
   {
     sms.lastResult=Status::THROTTLED;
     Descriptor d;
-    __trace__("FORWARD: traffic control denied forward");
+    //__trace__("FORWARD: traffic control denied forward");
     try{
       changeSmsStateToEnroute(sms,t.msgId,d,Status::THROTTLED,rescheduleSms(sms));
     }catch(...)

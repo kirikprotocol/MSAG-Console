@@ -239,13 +239,14 @@ void Smsc::mainLoop()
     {
       int cntInstant=tcontrol->getTotalCount();
       int cntSmooth=tcontrol->getTotalCountLong();
-      if(cntInstant+1>maxsms && cntSmooth+1000<=maxsms*smt*1000)
+      /*if(cntInstant+1>maxsms && cntSmooth+1000<=maxsms*smt*1000)
       {
         __info2__(log,"cnt=%d, smooth_cnt=%d, submitCnt=%d",cntInstant,cntSmooth,submitCount);
-      }
+      }*/
 
       int eqsize,equnsize;
       eventqueue.getStats(eqsize,equnsize);
+      /*
       if(
           (cntInstant+1<=maxsms*stf ||
             (
@@ -255,6 +256,8 @@ void Smsc::mainLoop()
           ) &&
           eqsize+1<=eventQueueLimit
         )
+        */
+      if(cntInstant+1<=maxsms*stf && eqsize+1<=eventQueueLimit)
       {
         SmscCommand cmd=frame.back();
         frame.pop_back();
@@ -273,7 +276,7 @@ void Smsc::mainLoop()
         }
         continue;
       }
-      __warning2__("count=%d, smooth_cnt=%d",cntInstant,cntSmooth);
+      //__warning2__("count=%d, smooth_cnt=%d",cntInstant,cntSmooth);
       {
         Task task;
         while ( tasks.getExpired(&task) )

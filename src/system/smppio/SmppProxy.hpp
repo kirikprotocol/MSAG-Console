@@ -26,7 +26,7 @@ const int proxyTransceiver=smeTRX;
 
 class SmppProxy:public SmeProxy{
 public:
-  SmppProxy(SmppSocket* sock,int limit,int prio):smppReceiverSocket(sock),smppTransmitterSocket(sock)
+  SmppProxy(SmppSocket* sock,int limit,int timeout):smppReceiverSocket(sock),smppTransmitterSocket(sock)
   {
     smppReceiverSocket->assignProxy(this);
     seq=1;
@@ -34,8 +34,9 @@ public:
     managerMonitor=NULL;
     proxyType=proxyTransceiver;
     opened=true;
-    totalLimit=limit;
-    submitLimit=limit*(5+20*(prio-1)/31)/100;
+    if(timeout==0)timeout=8;
+    totalLimit=limit*timeout;
+    submitLimit=totalLimit/2;
     submitCount=0;
   }
   virtual ~SmppProxy(){}
@@ -75,7 +76,7 @@ public:
       if(!opened)return;
       if(cmd->get_commandId()!=SUBMIT_RESP && outqueue.Count()>=totalLimit)
       {
-        throw ProxyQueueLimitException();
+        throw ProxyQueueLimitException(outqueue.Count(),totalLimit);
       }
       trace2("put command:total %d commands",outqueue.Count());
       outqueue.Push(cmd,cmd->get_priority());
@@ -171,14 +172,14 @@ public:
       {
         if(submitCount>submitLimit)
         {
-          throw ProxyQueueLimitException();
+          throw ProxyQueueLimitException(submitCount,submitLimit);
         }
         submitCount++;
       }
       else
       if(inqueue.Count()>=totalLimit)
       {
-        throw ProxyQueueLimitException();
+        throw ProxyQueueLimitException(inqueue.Count(),totalLimit);
       }
       inqueue.Push(cmd);
     }

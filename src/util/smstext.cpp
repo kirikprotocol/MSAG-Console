@@ -347,6 +347,7 @@ int partitionSms(SMS* sms,int dstdc)
     dc=DataCoding::LATIN1;
     //len+=udhilen;
   }
+  __require__(len>=0 && len<=65535);
   int maxlen=134;;
   int exudhilen=CalcExUserDataLen(sms);
   if(exudhilen==-1)return psErrorUdhi;
