@@ -1058,7 +1058,31 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
     __trace2__("MAP::MapDialog::ProcessCmd: 0x%x",cmd->get_commandId());
     switch ( cmd->get_commandId() ){
     case SUBMIT_RESP: {
-      USHORT_T result = Et96MapV2ForwardSmMOResp(ssn,dialogid,invokeId,0);
+      ET96MAP_ERROR_FORW_SM_MO_T err;
+      memset(&err,0,sizeof(ET96MAP_ERROR_FORW_SM_MO_T));
+      switch ( cmd->get_resp()->get_status())
+      { 
+      case SmsCommand::Status::OK: break;  
+      case SmsCommand::Status::SYSERROR:
+        err.errorCode = 32;
+        break;
+      case SmsCommand::Status::INVSRC:
+      case SmsCommand::Status::INVDST:
+      case SmsCommand::Status::NOROTE:
+        err.errorCode = 9;
+        break;
+      case SmsCommand::Status::DBERROR:
+      case SmsCommand::Status::INVALIDSCHEDULE:
+        err.errorCode = 32;
+        break;
+      case SmsCommand::Status::INVALIDVALIDTIME:
+      case SmsCommand::Status::INVALIDDATACODING:
+      default:
+        err.errorCode = 36;
+        break;
+      };
+      USHORT_T result = Et96MapV2ForwardSmMOResp(ssn,dialogid,invokeId,
+           (cmd->get_resp()->get_status()!=SmscCommand::Status::OK)?&err:0);
       if ( result != ET96MAP_E_OK ) {
         __trace2__("MAP::MapDialog::ProcessCmd: Et96MapV2ForwardSmMOResp return error 0x%hx",result);
       }else{
