@@ -340,6 +340,7 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 							__unreachable__("Invalid flag");
 					}
 					__tc_ok_cond__;
+					break;
 				}
 			}
 			if (origAddr == origAlias)
