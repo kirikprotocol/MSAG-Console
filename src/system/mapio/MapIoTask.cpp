@@ -297,7 +297,7 @@ int MapIoTask::Execute(){
 void MapDialogContainer::abort()
 {
 #ifdef USE_MAP
-  EINSS7CpMsgInitNoSig();
+  EINSS7CpMsgClean();
 #endif
 }
 
