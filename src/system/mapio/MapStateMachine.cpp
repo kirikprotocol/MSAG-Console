@@ -686,28 +686,30 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
     if ( dialogid_smsc > 0xffff ) { // SMSC dialog
       if ( cmd->get_commandId() != DELIVERY )
         throw MAPDIALOG_BAD_STATE("MAP::putCommand: must be SMS DELIVERY");
-      try{
+      try
+      {
         if ( cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) )
         {
           unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP );
-          if ( serviceOp == USSD_PSSR /*_RESPONSE*/ ) 
+          string s_seq = "";//cmd->get_sms()->getStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+          if (s_seq.length()==0) throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: empty user_message_reference");
+          long long sequence;
+          istringstream(s_seq) >> sequence;
+          if ( sequence == 0 )
+            throw MAPDIALOG_FATAL_ERROR(
+              FormatText("MAP::PutCommand: invaid USSD code 0x%llx",s_seq.c_str()));
+          try 
           {
-            string s_seq = "";//cmd->get_sms()->getStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-            if (s_seq.length()==0) throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: empty user_message_reference");
-            long long sequence;
-            istringstream(s_seq) >> sequence;
-            if ( sequence == 0 )
-              throw MAPDIALOG_FATAL_ERROR(
-                FormatText("MAP::PutCommand: invaid USSD code 0x%llx",s_seq.c_str()));
+            if ( serviceOp == USSD_PSSR_RESP ) 
             {
-              MutexGuard ussd_map_guard( ussd_map_lock );
-              USSD_MAP::iterator it = ussd_map.find(sequence);
-              if ( it == ussd_map.end() )
-                throw MAPDIALOG_FATAL_ERROR(
-                  FormatText("MAP::PutCommand: can't find session %s",s_seq.c_str()));
-              dialogid_map = it->second;
-            }
-            try {
+              {
+                MutexGuard ussd_map_guard( ussd_map_lock );
+                USSD_MAP::iterator it = ussd_map.find(sequence);
+                if ( it == ussd_map.end() )
+                  throw MAPDIALOG_FATAL_ERROR(
+                    FormatText("MAP::PutCommand: can't find session %s",s_seq.c_str()));
+                dialogid_map = it->second;
+              }
               dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_smsc));
               if ( dialog.isnull() )
                 throw MAPDIALOG_FATAL_ERROR(
@@ -721,17 +723,17 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
                   FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
               DoUSSRUserResponce(cmd,dialog.get());
             }
-            catch(...)
+            else
             {
-              MutexGuard ussd_map_guard( ussd_map_lock );
-              ussd_map.erase(sequence);
-              throw;
+              throw MAPDIALOG_FATAL_ERROR(
+                FormatText("MAP::PutCommand: invaid USSD code 0x%x",serviceOp));
             }
           }
-          else
+          catch(...)
           {
-            throw MAPDIALOG_FATAL_ERROR(
-              FormatText("MAP::PutCommand: invaid USSD code 0x%x",serviceOp));
+            MutexGuard ussd_map_guard( ussd_map_lock );
+            ussd_map.erase(sequence);
+            throw;
           }
         }
         if ( !dialog2  ) {
@@ -1228,8 +1230,8 @@ USHORT_T Et96MapOpenInd (
 #if !defined DISABLE_TRACING        
         {
           ostringstream ost;
-          unsigned dlen = specificInfo_sp->specificData[1];
-          for (unsigned i=0;i<dlen;++i) 
+          unsigned x = specificInfo_sp->specificData[1]-1;
+          for (unsigned i=0;i<x;++i) 
             ost << hex << setfill('0') << setw(2) << (((unsigned)(dialog->m_msAddr.address[i]))&0x0ff) << " ";
           __trace2__("MAP::%s::adr(%d):%s",__FUNCTION__,dialog->m_msAddr.addressLength,ost.str().c_str());
         }
@@ -1270,7 +1272,6 @@ USHORT_T Et96MapV2ForwardSmMOInd (
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__FUNCTION__,dialogueId));
     }
-    __trace2__("MAP::%s: %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitSms:
@@ -1286,6 +1287,7 @@ USHORT_T Et96MapV2ForwardSmMOInd (
     }
     dialog->invokeId = invokeId;
     AttachSmsToDialog(dialog.get(),smRpUi_sp,smRpOa_sp);
+    __trace2__("MAP::%s: %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
   }
   catch(exception& e)
   {
@@ -1588,7 +1590,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     dialog->sms = _sms;
     dialog->state = MAPST_WaitSmsMODelimiter2;
     dialog->ussdSequence = NextSequence();
-    dialog->sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_USSR);
+    dialog->sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
     {
       ostringstream  ost;
       ost << dialog->ussdSequence;

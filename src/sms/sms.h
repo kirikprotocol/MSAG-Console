@@ -90,9 +90,14 @@ namespace smsc {
     using std::runtime_error;
     using std::auto_ptr;
 
-    const int USSD_PSSR = 1;
-    const int USSD_USSR = 2;
-    const int USSD_USSN = 3;
+    const int USSD_PSSD_IND   = 0;
+    const int USSD_PSSR_IND   = 1;
+    const int USSD_USSR_REQ   = 2;
+    const int USSD_USSN_REQ   = 3;
+    const int USSD_PSSD_RESP  = 16;
+    const int USSD_PSSR_RESP  = 17;
+    const int USSD_USSR_CONF  = 18;
+    const int USSD_USSN_CONF  = 19;
 
     const int MAX_ESERVICE_TYPE_LENGTH = 5;
     const int MAX_SMESYSID_TYPE_LENGTH = 15;
