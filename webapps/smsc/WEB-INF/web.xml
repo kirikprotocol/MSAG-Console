@@ -236,6 +236,19 @@
   <security-constraint>
     <web-resource-collection>
       <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/services/index.jsp</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>service_operator</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
       <url-pattern>/smsc/topmon/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
@@ -315,5 +328,9 @@
   <security-role>
     <role-name>acls</role-name>
     <description>Access Control List manager</description>
+  </security-role>
+  <security-role>
+    <role-name>service_operator</role-name>
+    <description>Can start/stop/disconnect service, service parameters editing prohibited</description>
   </security-role>
 </web-app>

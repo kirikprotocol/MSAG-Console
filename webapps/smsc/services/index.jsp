@@ -83,18 +83,18 @@ function editService(serviceId)
 
 <table class=list cellspacing=1 width="100%">
 <col width="1%" align=center>
-<col width="1%">
+<%if (request.isUserInRole("services")) {%><col width="1%"><%}%>
 <col align=left>
-<col width="1%" align=left>
+<%if (request.isUserInRole("services")) {%><col width="1%" align=left><%}%>
 <col width="1%" align=center>
 <col width="1%" align=center>
 <col width="1%" align=center>
 <thead>
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th>&nbsp;</th>
+	<%if (request.isUserInRole("services")) {%><th>&nbsp;</th><%}%>
 	<th>service</th>
-	<th>host</th>
+	<%if (request.isUserInRole("services")) {%><th>host</th><%}%>
 	<th colspan="3">status</th>
 </tr>
 </thead>
@@ -110,9 +110,9 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
-	<td class=name><a  href="#" title="Edit service parameters" onClick="return editService('<%=encodedServiceId%>');">edit</a></td>
+	<%if (request.isUserInRole("services")) {%><td class=name><a  href="#" title="Edit service parameters" onClick="return editService('<%=encodedServiceId%>');">edit</a></td><%}%>
 	<td class=name><%
-		if (bean.isServiceAdministrable(serviceId))
+		if (bean.isServiceAdministrable(serviceId) && request.isUserInRole("services"))
 		{
 			%><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a><%
 		}
@@ -121,7 +121,8 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 			%><%=encodedServiceId%><%
 		}
 	%></td>
-	<td class=name><%
+	<%if (request.isUserInRole("services")) {
+    %><td class=name><%
 		if (bean.isService(serviceId))
 		{
 			%><a href="#" title="View host info" onClick="return viewHost('<%=bean.getHost(serviceId)%>');"><%=bean.getHost(serviceId)%></a><%
@@ -129,7 +130,8 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 		{
 			%>&nbsp;<%
 		}
-	%></td>
+  	%></td>
+  <%}%>
 	<td class=name><%=bean.isServiceDisabled(serviceId) ? "<img src=\"/images/ic_disable.gif\" width=10 height=10 title='disabled'>" : "<img src=\"/images/ic_enable.gif\" width=10 height=10 title='enabled'>"%></td>
 	<td class=name><%=smeStatus(bean.getAppContext(), serviceId)%></td>
 	<td class=name><%
@@ -148,8 +150,10 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAddService",  "Add",  "Add service");
-page_menu_button(out, "mbDelete", "Delete", "Delete selected services", "return confirm('Are you sure to delete all selected services?');");
+if (request.isUserInRole("services")) {
+  page_menu_button(out, "mbAddService",  "Add",  "Add service");
+  page_menu_button(out, "mbDelete", "Delete", "Delete selected services", "return confirm('Are you sure to delete all selected services?');");
+}
 page_menu_space(out);
 page_menu_button(out, "mbDisconnectServices",  "Disconnect",  "Disconnect all selected services", "return confirm('Are you sure to disconnect all selected services?')", bean.isSmscAlive());
 page_menu_button(out, "mbStartService",  "Start",  "Start selected services");

@@ -7,8 +7,8 @@ package ru.novosoft.smsc.jsp.smsc.services;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.route.SmeStatus;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.PageBean;
@@ -16,6 +16,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+
 
 public class Index extends PageBean
 {
@@ -46,9 +47,12 @@ public class Index extends PageBean
 
     if (mbAddService != null)
       return RESULT_ADD;
-    else if (mbDelete != null)
-      return deleteServices();
-    else if (mbStartService != null)
+    else if (mbDelete != null) {
+      if (request.isUserInRole("services"))
+        return deleteServices();
+      else
+        return error(SMSCErrors.error.services.notAuthorizedForDeletingService);
+    } else if (mbStartService != null)
       return startServices();
     else if (mbStopService != null)
       return stopServices();
@@ -86,7 +90,9 @@ public class Index extends PageBean
     return hostsManager.isServiceAdministarble(smeId);
   }
 
-  /************************ Command handlers ****************************/
+  /**
+   * ********************* Command handlers ***************************
+   */
 
   protected int deleteServices()
   {
@@ -283,7 +289,9 @@ public class Index extends PageBean
     }
   }
 
-  /*************************** Properties *******************************/
+  /**
+   * ************************ Properties ******************************
+   */
 
 
   public String getServiceId()

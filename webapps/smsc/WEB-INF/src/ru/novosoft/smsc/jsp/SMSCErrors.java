@@ -49,6 +49,7 @@ public class SMSCErrors
       public static final String incorrectPortValue = B + "incorrectPortValue";
       public static final String couldntSaveWebXml = B + "couldntSaveWebXml";
       public static final String somethingGlobalIsChanged = B + "somethingGlobalIsChanged";
+      public static final String notAuthorizedForDeletingService = B + "notAuthorizedForDeletingService";
     }
 
 
