@@ -31,24 +31,26 @@ void InputParser::parse(std::string& input,
     SetAdapter& adapter, ContextEnvironment& ctx)
         throw(ParsingException, AdapterException)
 {
-    __trace2__("Command arguments count: %d", entities.Count());
+    int bytes = 0;
+    const char* str = input.c_str();
+    while (str && isspace(str[bytes])) bytes++; 
+    if (bytes) input.erase(0, bytes);
+    
     for (int i=0; i<entities.Count(); i++)
     {
         FormatEntity* entity = entities[i];
         if (entity && entity->type < TEXT)
         {
-            __trace2__("Parsing arg of type: %s", 
-                   ioEntityTypeStrings[entity->type]);
+            __trace2__("Parsing arg of type: %s", ioEntityTypeStrings[entity->type]);
             Parser* parser = 
                 ParserRegistry::getParser(ioEntityTypeStrings[entity->type]);
             if (parser)
             {
-                int bytes = 0;
-                const char* str = input.c_str();
+                parser->parse(input, *entity, adapter, ctx);
+
+                bytes = 0; str = input.c_str();
                 while (str && isspace(str[bytes])) bytes++; 
                 if (bytes) input.erase(0, bytes);
-                
-                parser->parse(input, *entity, adapter, ctx);
             }
             else throw ParsingException("Parser for type <%s> not defined !",
                                          ioEntityTypeStrings[entity->type]);
@@ -56,6 +58,10 @@ void InputParser::parse(std::string& input,
         else throw ParsingException("Type <%s> is invalid !",
                                     ioEntityTypeStrings[entity->type]);
     }
+
+    if (input.length() > 0) 
+        throw ParsingException("Unexpected paramenters left in input : '%s'",
+                               input.c_str());
 }
 
 void Int8Parser::parse(std::string& input,
@@ -725,7 +731,7 @@ void DateTimeParser::parse(std::string& input,
                         (pattern[++curPos] == 's') ? "%2d%n":"%d%n", 
                         &tmdt.tm_sec, &bytes)) == EOF ||
                         !result || !bytes || bytes<0 || 
-                        tmdt.tm_sec<0 || tmdt.tm_sec>61)
+                        tmdt.tm_sec<0 || tmdt.tm_sec>59)
                         throw ParsingException(error, "Seconds number expected",
                                                str, pattern);
 
