@@ -120,7 +120,7 @@ TaskProcessor::~TaskProcessor()
         MutexGuard guard(tasksLock);
         char* key = 0; Task* task = 0; tasks.First();
         while (tasks.Next(key, task))
-            if (task) task->finalize();
+            if (task) task->shutdown();
         tasks.Empty();
     }
 
@@ -163,7 +163,7 @@ bool TaskProcessor::remTask(std::string taskId)
         if (!task) return false;
         awake.Signal();
     }
-    if (task) task->finalize();
+    if (task) task->shutdown();
     return true;
 }
 bool TaskProcessor::delTask(std::string taskId)

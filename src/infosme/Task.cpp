@@ -214,6 +214,55 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     if (info.messagesCacheSleep <= 0) info.messagesCacheSleep = 1;
 }
 
+void Task::doFinalization()
+{
+    {
+        MutexGuard guard(finalizingLock);
+        bFinalizing = true;
+    }
+    endGeneration();
+
+    while (true) {
+        usersCountEvent.Wait(10);
+        MutexGuard guard(usersCountLock);
+        if (usersCount <= 0) break;
+    }
+}
+void Task::finalize()
+{
+    doFinalization();
+    delete this;
+}
+bool Task::destroy()
+{
+    doFinalization();
+    bool result = false;
+    try { dropTable(); result = true;
+    } catch (std::exception& exc) {
+        smsc_log_error(logger, "Drop table failed for task '%s'. Reason: %s",
+                       info.id.c_str(), exc.what());
+    } catch (...) {
+        smsc_log_error(logger, "Drop table failed for task '%s'. Reason is unknown",
+                       info.id.c_str());
+    }
+    delete this;
+    return result;
+}
+bool Task::shutdown()
+{
+    doFinalization(); bool result = false;
+    try { resetWaiting(); result = true;
+    } catch (std::exception& exc) {
+        smsc_log_error(logger, "Reset waiting failed for task '%s'. Reason: %s",
+                       info.id.c_str(), exc.what());
+    } catch (...) {
+        smsc_log_error(logger, "Reset waiting failed for task '%s'. Reason is unknown",
+                       info.id.c_str());
+    }
+    delete this;
+    return result;
+}
+
 char* Task::prepareSqlCall(const char* sql)
 {
     if (!sql || sql[0] == '\0') return 0;
@@ -234,7 +283,7 @@ char* Task::prepareDoubleSqlCall(const char* sql)
 void Task::trackIntegrity(bool clear, bool del, Connection* connection)
 {
     smsc_log_debug(logger, "trackIntegrity method called on task '%s'",
-                 info.id.c_str());
+                   info.id.c_str());
     
     if (!info.trackIntegrity) return;
 

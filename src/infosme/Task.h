@@ -170,27 +170,13 @@ namespace smsc { namespace infosme
         Array<Message>  messagesCache;
         time_t          lastMessagesCacheEmpty;
         
+        void  doFinalization();
         char* prepareSqlCall(const char* sql);
         char* prepareDoubleSqlCall(const char* sql);
         void  trackIntegrity(bool clear=true, bool del=true, Connection* connection=0);
 
         virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
         virtual ~Task();
-        
-        void doFinalization()
-        {
-            {
-                MutexGuard guard(finalizingLock);
-                bFinalizing = true;
-            }
-            endGeneration();
-            
-            while (true) {
-                usersCountEvent.Wait(10);
-                MutexGuard guard(usersCountLock);
-                if (usersCount <= 0) break;
-            }
-        }
 
         inline bool setInProcess(bool inProcess) {
             MutexGuard guard(inProcessLock);
@@ -209,17 +195,10 @@ namespace smsc { namespace infosme
         void createTable(); // throws Exception
         void dropTable();   // throws Exception
 
-        bool destroy() {
-            doFinalization();
-            bool result = true;
-            try { dropTable(); } catch (...) { result = false; }
-            delete this;
-            return result;
-        }
-        void finalize() {
-            doFinalization();
-            delete this;
-        }
+        void finalize(); // Wait usages & delete task
+        bool shutdown(); // Wait usages, cleanup waiting & delete task
+        bool destroy();  // Wait usages, drop entire table & delete task
+
         inline bool isFinalizing() {
             MutexGuard guard(finalizingLock);
             return bFinalizing;
