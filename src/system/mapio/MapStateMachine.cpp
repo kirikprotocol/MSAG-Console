@@ -1085,7 +1085,7 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog){  _
       bytes = ConvertText27bit(text,text_len,ussdString.ussdStr,&elen);
     }
     // if buffer have trailing 7 unfilled bits place <cr> there
-    if( bytes*8-text_len*7 == 7 ) ussdString.ussdStr[bytes-1] |= 0x0D;
+    if( bytes*8-text_len*7 == 7 ) ussdString.ussdStr[bytes-1] |= (0x0D<<1);
     ussdEncoding = 0x0f;
   } else { //8 bit
     bytes = text_len;
