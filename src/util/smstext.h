@@ -201,7 +201,7 @@ struct ConcatInfo{
 #pragma pack()
 
 int partitionSms(SMS* sms,int dstdc);
-void extractSmsPart(SMS* sms,int partnum);
+bool extractSmsPart(SMS* sms,int partnum);
 
 }
 }

@@ -360,7 +360,10 @@ int partitionSms(SMS* sms,int dstdc)
     }
     //len+=udhilen;
   }
-  __require__(len>=0 && len<=65535);
+  if(!(len>=0 && len<=65535))
+  {
+    return psErrorLength;
+  }
   int maxlen=133;
   int exudhilen=CalcExUserDataLen(sms);
   //if(udhi && exudhilen)return psErrorUdhi;
@@ -574,16 +577,16 @@ int partitionSms(SMS* sms,int dstdc)
   return psMultiple;
 }
 
-void extractSmsPart(SMS* sms,int partnum)
+bool extractSmsPart(SMS* sms,int partnum)
 {
-  if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO))return;
+  if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO))return false;
   int dstdc=sms->getIntProperty(Tag::SMSC_DSTCODEPAGE);
   int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
   if(sms->hasBinProperty(Tag::SMSC_DC_LIST))
   {
-    unsigned dcLen;
-    unsigned char* dcList=(unsigned char*)sms->getBinProperty(Tag::SMSC_DC_LIST,&dcLen);
-    if(partnum<dcLen)
+    unsigned len;
+    unsigned char* dcList=(unsigned char*)sms->getBinProperty(Tag::SMSC_DC_LIST,&len);
+    if(partnum<len)
     {
       dc=dcList[partnum];
     }
@@ -622,11 +625,15 @@ void extractSmsPart(SMS* sms,int partnum)
     }
     unsigned int cilen;
     ConcatInfo *ci=(ConcatInfo *)sms->getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
-    __require__(partnum<ci->num);
+    if(!(partnum<ci->num))return false;
     int off=ci->getOff(partnum);
     int newlen=ci->num==partnum+1?len-off:ci->getOff(partnum+1)-off;
     __trace2__("extractSmsPart: newlen=%d, part=%d/%d, maxlen=%d, off=%d, partlen=%d",len,partnum,(int)ci->num,maxlen,off,newlen);
-    __require__(newlen>0 && newlen<=160);
+    if(!(newlen>0 && newlen<=160))
+    {
+      __warning2__("INVALID PART LEN=%d",newlen);
+      return false;
+    }
     if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
     {
       if(dstdc==DataCoding::UCS2|DataCoding::LATIN1)dstdc=DataCoding::LATIN1;
@@ -775,6 +782,7 @@ void extractSmsPart(SMS* sms,int partnum)
       FillUd(sms);
     }
   }
+  return true;
 }
 
 }//util
