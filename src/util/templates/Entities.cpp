@@ -156,7 +156,7 @@ FormatEntity::FormatEntity(std::string line, bool io, bool type)
     }
     else 
     {
-        this->type = TEXT; int curPos = 0; bool escape = false;
+        this->type = ET_TEXT; int curPos = 0; bool escape = false;
         // Replace all \\->\, \" -> "
         while (raw && raw[curPos] != '\0')
         {
@@ -248,7 +248,10 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool io)
         {
             try
             {
-                (void)entities.Push(new FormatEntity(str, io, opened));
+                if (str.length() > 0)
+                {
+                    (void)entities.Push(new FormatEntity(str, io, opened));
+                }
             }
             catch (Exception& exc)
             {

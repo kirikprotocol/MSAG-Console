@@ -81,7 +81,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Int8Formatter() : Formatter(INT8) {};
+        Int8Formatter() : Formatter(ET_INT8) {};
         virtual ~Int8Formatter() {};
         
         virtual void format(std::string& output,
@@ -93,7 +93,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Int16Formatter() : Formatter(INT16) {};
+        Int16Formatter() : Formatter(ET_INT16) {};
         virtual ~Int16Formatter() {};
         
         virtual void format(std::string& output,
@@ -105,7 +105,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Int32Formatter() : Formatter(INT32) {};
+        Int32Formatter() : Formatter(ET_INT32) {};
         virtual ~Int32Formatter() {};
         
         virtual void format(std::string& output,
@@ -117,7 +117,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Int64Formatter() : Formatter(INT64) {};
+        Int64Formatter() : Formatter(ET_INT64) {};
         virtual ~Int64Formatter() {};
         
         virtual void format(std::string& output,
@@ -129,7 +129,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Uint8Formatter() : Formatter(UINT8) {};
+        Uint8Formatter() : Formatter(ET_UINT8) {};
         virtual ~Uint8Formatter() {};
         
         virtual void format(std::string& output,
@@ -141,7 +141,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Uint16Formatter() : Formatter(UINT16) {};
+        Uint16Formatter() : Formatter(ET_UINT16) {};
         virtual ~Uint16Formatter() {};
         
         virtual void format(std::string& output,
@@ -153,7 +153,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Uint32Formatter() : Formatter(UINT32) {};
+        Uint32Formatter() : Formatter(ET_UINT32) {};
         virtual ~Uint32Formatter() {};
         
         virtual void format(std::string& output,
@@ -165,7 +165,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Uint64Formatter() : Formatter(UINT64) {};
+        Uint64Formatter() : Formatter(ET_UINT64) {};
         virtual ~Uint64Formatter() {};
         
         virtual void format(std::string& output,
@@ -177,7 +177,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        StringFormatter() : Formatter(STRING) {};
+        StringFormatter() : Formatter(ET_STRING) {};
         virtual ~StringFormatter() {};
         
         virtual void format(std::string& output,
@@ -189,7 +189,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        TextFormatter() : Formatter(TEXT) {};
+        TextFormatter() : Formatter(ET_TEXT) {};
         virtual ~TextFormatter() {};
         
         virtual void format(std::string& output,
@@ -201,7 +201,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        FloatFormatter() : Formatter(FLOAT) {};
+        FloatFormatter() : Formatter(ET_FLOAT) {};
         virtual ~FloatFormatter() {};
         
         virtual void format(std::string& output,
@@ -213,7 +213,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        DoubleFormatter() : Formatter(DOUBLE) {};
+        DoubleFormatter() : Formatter(ET_DOUBLE) {};
         virtual ~DoubleFormatter() {};
         
         virtual void format(std::string& output,
@@ -225,7 +225,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        LongDoubleFormatter() : Formatter(LDOUBLE) {};
+        LongDoubleFormatter() : Formatter(ET_LDOUBLE) {};
         virtual ~LongDoubleFormatter() {};
         
         virtual void format(std::string& output,
@@ -237,7 +237,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        DateTimeFormatter() : Formatter(DATE) {};
+        DateTimeFormatter() : Formatter(ET_DATE) {};
         virtual ~DateTimeFormatter() {};
         
         virtual void format(std::string& output,

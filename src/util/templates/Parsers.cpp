@@ -39,7 +39,7 @@ void InputParser::parse(std::string& input,
     for (int i=0; i<entities.Count(); i++)
     {
         FormatEntity* entity = entities[i];
-        if (entity && entity->type < TEXT)
+        if (entity && entity->type < ET_TEXT)
         {
             __trace2__("Parsing arg of type: %s", ioEntityTypeStrings[entity->type]);
             Parser* parser = 

@@ -36,11 +36,9 @@ void OutputFormatter::format(std::string& output,
     for (int i=0; i<entities.Count(); i++)
     {
         FormatEntity* entity = entities[i];
-        if (entity)
+        if (entity && entity->type >= 0 && entity->type < ioEntityTypesNumber)
         {
-            const char* entityTypeStr = 
-                (entity->type >= 0 && entity->type < ioEntityTypesNumber) ? 
-                    ioEntityTypeStrings[entity->type] : "";
+            const char* entityTypeStr = ioEntityTypeStrings[entity->type];
             __trace2__("Formatting arg of type %d '%s'", 
                        entity->type, entityTypeStr); 
             Formatter* formatter = FormatterRegistry::getFormatter(entityTypeStr);

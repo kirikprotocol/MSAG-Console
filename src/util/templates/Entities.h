@@ -118,10 +118,10 @@ namespace smsc { namespace util { namespace templates
     };
     
     typedef enum { 
-        INT8 = 0, INT16 = 1, INT32 = 2, INT64 = 3,
-        UINT8 = 4, UINT16 = 5, UINT32 = 6, UINT64 = 7,
-        FLOAT = 8, DOUBLE = 9, LDOUBLE = 10, DATE = 11,
-        STRING = 12, TEXT = 13
+        ET_INT8 = 0, ET_INT16 = 1, ET_INT32 = 2, ET_INT64 = 3,
+        ET_UINT8 = 4, ET_UINT16 = 5, ET_UINT32 = 6, ET_UINT64 = 7,
+        ET_FLOAT = 8, ET_DOUBLE = 9, ET_LDOUBLE = 10, ET_DATE = 11,
+        ET_STRING = 12, ET_TEXT = 13
     } EntityType;
     
     struct FormatEntity

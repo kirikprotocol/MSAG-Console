@@ -81,7 +81,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Int8Parser() : Parser(INT8) {};
+        Int8Parser() : Parser(ET_INT8) {};
         virtual ~Int8Parser() {};
         
         virtual void parse(std::string& input,
@@ -93,7 +93,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Int16Parser() : Parser(INT16) {};
+        Int16Parser() : Parser(ET_INT16) {};
         virtual ~Int16Parser() {};
         
         virtual void parse(std::string& input,
@@ -105,7 +105,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Int32Parser() : Parser(INT32) {};
+        Int32Parser() : Parser(ET_INT32) {};
         virtual ~Int32Parser() {};
         
         virtual void parse(std::string& input,
@@ -117,7 +117,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Int64Parser() : Parser(INT64) {};
+        Int64Parser() : Parser(ET_INT64) {};
         virtual ~Int64Parser() {};
         
         virtual void parse(std::string& input,
@@ -129,7 +129,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Uint8Parser() : Parser(UINT8) {};
+        Uint8Parser() : Parser(ET_UINT8) {};
         virtual ~Uint8Parser() {};
         
         virtual void parse(std::string& input,
@@ -141,7 +141,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Uint16Parser() : Parser(UINT16) {};
+        Uint16Parser() : Parser(ET_UINT16) {};
         virtual ~Uint16Parser() {};
         
         virtual void parse(std::string& input,
@@ -153,7 +153,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Uint32Parser() : Parser(UINT32) {};
+        Uint32Parser() : Parser(ET_UINT32) {};
         virtual ~Uint32Parser() {};
         
         virtual void parse(std::string& input,
@@ -165,7 +165,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        Uint64Parser() : Parser(UINT64) {};
+        Uint64Parser() : Parser(ET_UINT64) {};
         virtual ~Uint64Parser() {};
         
         virtual void parse(std::string& input,
@@ -177,7 +177,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        StringParser() : Parser(STRING) {};
+        StringParser() : Parser(ET_STRING) {};
         virtual ~StringParser() {};
         
         virtual void parse(std::string& input,
@@ -189,7 +189,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        FloatParser() : Parser(FLOAT) {};
+        FloatParser() : Parser(ET_FLOAT) {};
         virtual ~FloatParser() {};
         
         virtual void parse(std::string& input,
@@ -201,7 +201,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        DoubleParser() : Parser(DOUBLE) {};
+        DoubleParser() : Parser(ET_DOUBLE) {};
         virtual ~DoubleParser() {};
         
         virtual void parse(std::string& input,
@@ -213,7 +213,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        LongDoubleParser() : Parser(LDOUBLE) {};
+        LongDoubleParser() : Parser(ET_LDOUBLE) {};
         virtual ~LongDoubleParser() {};
         
         virtual void parse(std::string& input,
@@ -225,7 +225,7 @@ namespace smsc { namespace util { namespace templates
     {
     public:
         
-        DateTimeParser() : Parser(DATE) {};
+        DateTimeParser() : Parser(ET_DATE) {};
         virtual ~DateTimeParser() {};
         
         virtual void parse(std::string& input,
