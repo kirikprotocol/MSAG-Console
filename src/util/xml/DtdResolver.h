@@ -95,10 +95,7 @@ private:
 		
 		std::auto_ptr<char> dtdNameTranscodedToCallCFunctionStat(XMLString::transcode(tmpDtdName));
 		if (stat(dtdNameTranscodedToCallCFunctionStat.get(), &s) == 0) {
-      #ifdef SMSC_DEBUG
-        logger.debug("Resolved to \"%s\"", dtdNameTranscodedToCallCFunctionStat.get());
-      #endif
-      __trace2__("DTD Resolved to \"%s\"", dtdNameTranscodedToCallCFunctionStat.get());
+        logger.debug("DTD Resolved to \"%s\"", dtdNameTranscodedToCallCFunctionStat.get());
 			return new LocalFileInputSource(tmpDtdName);
     } else
       return 0;
