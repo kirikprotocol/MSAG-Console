@@ -187,6 +187,13 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     try { Task::bNotifyAll = config->getBool("forceNotify"); } catch (...) { Task::bNotifyAll = false;
         smsc_log_warn(logger, "Parameter <MCISme.forceNotify> missed. Force notify for all abonents is off");
     }
+    bool bDefaultInform, bDefaultNotify;
+    try { bDefaultInform = config->getBool("defaultInform"); } catch (...) { bDefaultInform = true;
+        smsc_log_warn(logger, "Parameter <MCISme.defaultInform> missed. Defaul profile inform flag is on");
+    }
+    try { bDefaultNotify = config->getBool("defaultNotify"); } catch (...) { bDefaultNotify = false;
+        smsc_log_warn(logger, "Parameter <MCISme.defaultNotify> missed. Defaul profile notify flag is off");
+    }
 
     int rowsPerMessage = 5;
     try { rowsPerMessage = config->getInt("maxRowsPerMessage"); } catch (...) { rowsPerMessage = 5;
@@ -204,7 +211,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     statistics = new StatisticsManager(dsStatConnection);
     if (statistics) statistics->Start();
     
-    AbonentProfiler::init(ds);
+    AbonentProfiler::init(ds, bDefaultInform, bDefaultNotify);
     Task::init(ds, statistics, rowsPerMessage, maxCallersCount);
     
     smsc_log_info(logger, "Load success.");

@@ -257,11 +257,15 @@ Hash<Task *> Task::loadupAll()
                 }
                 
                 // loadup profile for task
-                AbonentProfile profile;
-                const char* infStr = rs->isNull(3) ? 0:rs->getString(3);
-                const char* notStr = rs->isNull(4) ? 0:rs->getString(4);
-                profile.inform   = (infStr && (infStr[0]=='Y' || infStr[0]=='y'));
-                profile.notify   = (notStr && (notStr[0]=='Y' || notStr[0]=='y'));
+                AbonentProfile profile; // default profile used if not defined for abonent
+                if (!rs->isNull(3)) {
+                    const char* infStr = rs->getString(3);
+                    profile.inform     = (infStr && (infStr[0]=='Y' || infStr[0]=='y'));
+                } 
+                if (!rs->isNull(4)) {
+                    const char* notStr = rs->getString(4);
+                    profile.notify   = (notStr && (notStr[0]=='Y' || notStr[0]=='y'));
+                }
                 profile.informTemplateId = rs->isNull(5) ?   -1:rs->getUint32(5);
                 profile.notifyTemplateId = rs->isNull(6) ?   -1:rs->getUint32(6);
                 profile.eventMask        = rs->isNull(7) ? 0xFF:rs->getUint8 (7);

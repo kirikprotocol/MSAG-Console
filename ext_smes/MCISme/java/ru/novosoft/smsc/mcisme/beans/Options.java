@@ -30,6 +30,8 @@ public class Options extends MCISmeBean
   private int maxRowsPerMessage=0;
   private boolean forceInform = false;
   private boolean forceNotify = false;
+  private boolean defaultInform = false;
+  private boolean defaultNotify = false;
   private boolean enabledCallers = false;
   private int maxCallersCount = -1;
 
@@ -109,7 +111,14 @@ public class Options extends MCISmeBean
         maxRowsPerMessage = getConfig().getInt("MCISme.maxRowsPerMessage");
         forceInform = getConfig().getBool("MCISme.forceInform");
         forceNotify = getConfig().getBool("MCISme.forceNotify");
-
+        try { defaultInform = getConfig().getBool("MCISme.defaultInform"); }  catch (Throwable th) {
+          defaultInform = true;
+          logger.warn("Parameter 'MCISme.defaultInform' wasn't specified. Defaul profile inform flag is on");
+        }
+        try { defaultNotify = getConfig().getBool("MCISme.defaultNotify"); }  catch (Throwable th) {
+          defaultNotify = false;
+          logger.warn("Parameter 'MCISme.defaultNotify' wasn't specified. Defaul profile notify flag is off");
+        }
         try { maxCallersCount = getConfig().getInt("MCISme.maxCallersCount"); } catch (Throwable th) {
           maxCallersCount = -1;
           logger.warn("Parameter 'MCISme.maxCallersCount' wasn't specified. Callers check disabled");
@@ -220,6 +229,8 @@ public class Options extends MCISmeBean
     getConfig().setInt   ("MCISme.maxRowsPerMessage", maxRowsPerMessage);
     getConfig().setBool  ("MCISme.forceInform", forceInform);
     getConfig().setBool  ("MCISme.forceNotify", forceNotify);
+    getConfig().setBool  ("MCISme.defaultInform", defaultInform);
+    getConfig().setBool  ("MCISme.defaultNotify", defaultNotify);
     getConfig().setInt   ("MCISme.maxCallersCount",
                           (!enabledCallers || maxCallersCount < 0) ? -1:maxCallersCount);
 
@@ -533,6 +544,18 @@ public class Options extends MCISmeBean
   }
   public void setForceNotify(boolean forceNotify) {
     this.forceNotify = forceNotify;
+  }
+  public boolean isDefaultInform() {
+    return defaultInform;
+  }
+  public void setDefaultInform(boolean defaultInform) {
+    this.defaultInform = defaultInform;
+  }
+  public boolean isDefaultNotify() {
+    return defaultNotify;
+  }
+  public void setDefaultNotify(boolean defaultNotify) {
+    this.defaultNotify = defaultNotify;
   }
 
   public String getResponceWaitTime() {

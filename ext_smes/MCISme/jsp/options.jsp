@@ -83,12 +83,22 @@
              value="<%=StringEncoderDecoder.encode(bean.getMaxCallersCount())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=inform>Force inform</label></th>
-  <td><input class=check type=checkbox name=forceInform id=inform value=true <%=bean.isForceInform() ? "checked" : ""%>></td>
+  <th>Inform abonents</th>
+  <td>
+    <label for=informDefault>On in default profile</label>
+    <input class=check type=checkbox name=defaultInform id=informDefault value=true <%=bean.isDefaultInform() ? "checked" : ""%>>
+    <label for=informForce>&nbsp;&nbsp;Force</label>
+    <input class=check type=checkbox name=forceInform id=informForce value=true <%=bean.isForceInform() ? "checked" : ""%>>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=notify>Force notify</label></th>
-  <td><input class=check type=checkbox name=forceNotify id=notify value=true <%=bean.isForceNotify() ? "checked" : ""%>></td>
+  <th>Notify callers</th>
+  <td>
+    <label for=notifyDefault>On in default profile</label>
+    <input class=check type=checkbox name=defaultNotify id=notifyDefault value=true <%=bean.isDefaultNotify() ? "checked" : ""%>>
+    <label for=informForce>&nbsp;&nbsp;Force</label>
+    <input class=check type=checkbox name=forceNotify id=notifyForce value=true <%=bean.isForceNotify() ? "checked" : ""%>>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Tasks thread pool max</th>

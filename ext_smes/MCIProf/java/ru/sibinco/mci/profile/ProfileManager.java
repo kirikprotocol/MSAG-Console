@@ -141,7 +141,7 @@ public class ProfileManager
       stmt.setString(1, abonent);
       rs = stmt.executeQuery();
 
-      if (rs == null || !rs.next())
+      if (rs == null || !rs.next()) 
         return new ProfileInfo(DEFAULT_PROFILE_INFO);
 
       ProfileInfo info = new ProfileInfo();

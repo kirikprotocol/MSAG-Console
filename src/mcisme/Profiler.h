@@ -17,6 +17,24 @@ namespace smsc { namespace mcisme
     using namespace smsc::db;
     using smsc::logger::Logger;
 
+    class AbonentProfile;
+    class AbonentProfiler
+    {
+    private: 
+        
+        static DataSource*  ds;
+        static Logger*  logger;
+        
+    public:
+
+        static bool bDefaultInform, bDefaultNotify;
+        static void init(DataSource* _ds, bool defaultInform=true, bool defaultNotify=false);
+
+        static bool delProfile(const char* abonent, Connection* connection=0);
+        static void setProfile(const char* abonent, const AbonentProfile& profile, Connection* connection=0);
+        static AbonentProfile getProfile(const char* abonent, Connection* connection=0);
+    };
+
     struct AbonentProfile
     {
         uint8_t eventMask;
@@ -24,7 +42,9 @@ namespace smsc { namespace mcisme
         int32_t informTemplateId, notifyTemplateId; // if -1 => default
         
         AbonentProfile() 
-            : eventMask(0xFF), inform(true), notify(false), informTemplateId(-1), notifyTemplateId(-1) {};
+            : eventMask(0xFF), 
+              inform(AbonentProfiler::bDefaultInform), notify(AbonentProfiler::bDefaultNotify),
+              informTemplateId(-1), notifyTemplateId(-1) {};
         AbonentProfile(const AbonentProfile& pro) 
             : eventMask(pro.eventMask), inform(pro.inform), notify(pro.notify), 
               informTemplateId(pro.informTemplateId), notifyTemplateId(pro.notifyTemplateId) {};
@@ -35,22 +55,7 @@ namespace smsc { namespace mcisme
             return (*this);
         };
     };
-    
-    class AbonentProfiler
-    {
-    private: 
-        
-        static DataSource*  ds;
-        static Logger*  logger;
-    
-    public:
 
-        static void init(DataSource* _ds);
-
-        static bool delProfile(const char* abonent, Connection* connection=0);
-        static void setProfile(const char* abonent, const AbonentProfile& profile, Connection* connection=0);
-        static AbonentProfile getProfile(const char* abonent, Connection* connection=0);
-    };
 }}
 
 #endif // SMSC_MCI_SME_PROFILER
