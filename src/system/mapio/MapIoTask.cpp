@@ -29,11 +29,11 @@ USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
   else if ( status == 1 ){
     __trace__("MAP: Unbind");
     Et96MapUnbindReq(SSN);
-    //__trace__("MAP: Bind ");
-    //if ( Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK ){
-    return MSG_ERR;
-    //}
-    //return 0;
+    __trace__("MAP: Bind ");
+    if ( Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK ){
+      return 0;
+    }
+    return ET96MAP_E_OK;
   }else{
     return status;
   }
@@ -57,35 +57,9 @@ USHORT_T  Et96MapOpenInd(
   }catch(...){
     CloseDialog(lssn,dialogId);
   }
-  return MSG_OK;
+  return ET96MAP_E_OK;
 }
 																															    
-/*USHORT_T  Et96MapV2ForwardSmInd( 
-	ET96MAP_LOCAL_SSN_T lssn, 
-	ET96MAP_DIALOGUE_ID_T dialogId,
-	ET96MAP_INVOKE_ID_T invokeId, 
-	ET96MAP_SM_RP_DA_T* dstAddr, 
-	ET96MAP_SM_RP_OA_T* srcAddr,  
-	ET96MAP_SM_RP_UI_T* ud ) 
-{
-	__trace2__("MAP::Et96MapV2ForwardSmMOInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
-  MapDialogCntItem* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
-  if ( !mdci ) CloseDialog(lssn,dialogId);
-	try{
-    mdci->dialogue->Et96MapV2ForwardSmMOInd(
-      lssn,dialogId,invokeId,dstAddr,srcAddr,ud);
-    USHORT_T err = Et96MapV2ForwardSmResp(lssn,dialogId,invokeId,0);
-    if ( err != MSG_OK ) {
-      __trace2__("broken response with error 0x%hx",err);
-      throw runtime_error("MAPIO::ERR broken response");
-    }
-	}catch(...){
-		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
-    CloseAndRemoveDialog(lssn,dialogId);
-	}
-  return MSG_OK;
-} */
-
 USHORT_T  Et96MapV2ForwardSmMOInd( 
 	ET96MAP_LOCAL_SSN_T lssn, 
 	ET96MAP_DIALOGUE_ID_T dialogId,
@@ -100,8 +74,9 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
 	try{
     mdci->dialogue->Et96MapV2ForwardSmMOInd(
       lssn,dialogId,invokeId,dstAddr,srcAddr,ud);
+    
     USHORT_T err = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
-    if ( err != MSG_OK ) {
+    if ( err != ET96MAP_E_OK ) {
       __trace2__("broken response with error 0x%hx",err);
       throw runtime_error("MAPIO::ERR broken response");
     }
@@ -110,7 +85,14 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
 		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
     CloseAndRemoveDialog(lssn,dialogId);
 	}
-  return MSG_OK;
+  return ET96MAP_E_OK;
+}
+USHORT_T Et96MapDelimiterInd(
+  ET96MAP_LOCAL_SSN_T lssn,
+  ET96MAP_DIALOGUE_ID_T dialogId,
+  UCHAR_T priorityOrder prior)
+{
+  __trace2__("MAP::Et96MapDelimiterInd lssn 0x%hx, dialogId 0x%hx",lssn,dialogId);
 }
 
 USHORT_T Et96MapStateInd (
@@ -121,16 +103,16 @@ USHORT_T Et96MapStateInd (
 	ULONG_T localSPC) 
 {
   __trace2__("MAP::Et96MapStateInd received ssn=%x user state=%x affected SSN=%d affected SPC=%ld local SPC=%ld\n",lssn,userState,affectedSSN,affectedSPC,localSPC);
-  return MSG_OK;
+  return ET96MAP_E_OK;
 }
 
 } // extern "C"
 
 void MapIoTask::deinit()
 {
-  warning_if(!Et96MapUnbindReq(SSN));  
-  warning_if(!MsgRel(USER01_ID,ETSIMAP_ID));
-  warning_if(!MsgClose(USER01_ID));
+  warning_if(Et96MapUnbindReq(SSN)!=ET96MAP_E_OK);  
+  warning_if(MsgRel(USER01_ID,ETSIMAP_ID)!=MSG_OK);
+  warning_if(MsgClose(USER01_ID)!=MSG_OK);
   MsgExit();
 }
 
