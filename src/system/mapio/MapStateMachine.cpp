@@ -245,8 +245,8 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
         if ( dialog->associate != 0 && dialog->state != MAPST_END )
         {
           //Et96MapPAbortInd(SSN,dialog->associate->dialogid_map,0,0,0);
-          dialog->state = MAPST_END;
           ContinueImsiReq(dialog->associate,"","");
+          dialog->state = MAPST_END;
         }
         else if ( NeedNotifyHLR(dialog.get()) && !dialog->isUSSD )
         {
@@ -1234,11 +1234,12 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
               {
                 unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
-                if ( dialog->ussdMrRef != mr )
+                if ( dialog->ussdMrRef != mr ) {
                   SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
                   throw MAPDIALOG_FATAL_ERROR(
                     FormatText("MAP::putCommand: Opss, bad message_reference 0x%x must be 0x%x",
                       mr,dialog->ussdMrRef));
+                }
               }
               dialog->dialogid_smsc = dialogid_smsc;
               dialog->isQueryAbonentStatus = false;
@@ -1788,8 +1789,8 @@ USHORT_T Et96MapCloseInd(
       DropMapDialog(dialog.get());
       break;
     case MAPST_ImsiWaitCloseInd:
-      dialog->state = MAPST_END;
       ContinueImsiReq(dialog->associate,dialog->s_imsi,dialog->s_msc);
+      dialog->state = MAPST_END;
       DropMapDialog(dialog.get());
       break;
     default:
@@ -1846,7 +1847,7 @@ USHORT_T Et96MapPAbortInd(
       __require__(dialog->ssn==localSsn);
       dialogid_smsc = dialog->dialogid_smsc;
       dialog->id_opened = false;
-      throw MAPDIALOG_TEMP_ERROR("PABORT",MAP_ERRORS_BASE+provReason);
+      throw MAPDIALOG_TEMP_ERROR("PABORT",MAP_PROVIDER_ERR_BASE+provReason);
     }
   }MAP_CATCH(dialogid_map,dialogid_smsc,localSsn);
   return ET96MAP_E_OK;
