@@ -9,12 +9,14 @@ namespace test {
 namespace sme {
 
 using smsc::util::Logger;
+using smsc::sme::SmppTransmitter;
 using namespace smsc::sms; //constants
 using namespace smsc::test; //config constants
 using namespace smsc::test::smpp; //constants, SmppUtil
 using namespace smsc::test::sms; //constants
 using namespace smsc::smpp;
 using namespace smsc::smpp::SmppCommandSet;
+using namespace smsc::smpp::SmppStatusSet;
 
 SmppTransmitterTestCases::SmppTransmitterTestCases(SmppSession* sess,
 	const SmeSystemId& id, const Address& addr, const SmeRegistry* _smeReg,
@@ -868,6 +870,124 @@ void SmppTransmitterTestCases::replaceSm(bool sync, int num)
 			__tc12_fail__(s.value());
 			error();
 		}
+	}
+}
+
+void SmppTransmitterTestCases::sendDeliverySmRespOk(PduDeliverySm& pdu, int num)
+{
+	TCSelector s(num, 2);
+	__decl_tc12__;
+	try
+	{
+		//выбрать синхронный или асинхронный трансмитер
+		bool sync;
+		SmppTransmitter* transmitter;
+		switch (s.value())
+		{
+			case 1:
+				__tc1__("sendDeliverySmResp.sync");
+				transmitter = session->getSyncTransmitter();
+				sync = true;
+				break;
+			case 2:
+				__tc1__("sendDeliverySmResp.async");
+				transmitter = session->getAsyncTransmitter();
+				sync = false;
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+		//отправить респонс
+		PduDeliverySmResp respPdu;
+		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
+		respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
+		__tc2__("sendDeliverySmResp.sendOk");
+		__trace2__("sendDeliverySmResp%sBeforeOk", (sync ? "Sync" : "Async"));
+		transmitter->sendDeliverySmResp(respPdu);
+		__trace2__("sendDeliverySmResp%sAfterOk", (sync ? "Sync" : "Async"));
+		__tc12_ok__;
+	}
+	catch(...)
+	{
+		__tc12_fail__(s.value());
+		error();
+	}
+}
+
+void SmppTransmitterTestCases::sendDeliverySmRespErr(PduDeliverySm& pdu, int num)
+{
+	int numTransmitter = 2; int numResp = 6;
+	TCSelector s(num, numTransmitter * numResp);
+	__decl_tc12__;
+	try
+	{
+		//выбрать синхронный или асинхронный трансмитер
+		bool sync;
+		SmppTransmitter* transmitter;
+		switch (s.value1(numTransmitter))
+		{
+			case 1:
+				__tc1__("sendDeliverySmResp.sync");
+				transmitter = session->getSyncTransmitter();
+				sync = true;
+				break;
+			case 2:
+				__tc1__("sendDeliverySmResp.async");
+				transmitter = session->getAsyncTransmitter();
+				sync = false;
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+		//отправить респонс
+		PduDeliverySmResp respPdu;
+		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
+		switch (s.value2(numTransmitter))
+		{
+			case 1: //не отправлять респонс
+				__tc2__("sendDeliverySmResp.notSend");
+				__trace__("sendDeliverySmRespNo");
+				break;
+			case 2: //отправить респонс с кодом ошибки 0x1-0xff
+				__tc2__("sendDeliverySmResp.sendWithErrCode");
+				respPdu.get_header().set_commandStatus(rand1(0xff));
+				__trace2__("sendDeliverySmResp%sBeforeErr1", (sync ? "Sync" : "Async"));
+				transmitter->sendDeliverySmResp(respPdu);
+				__trace2__("sendDeliverySmResp%sAfterErr1", (sync ? "Sync" : "Async"));
+				break;
+			case 3: //отправить респонс с кодом ошибки:
+				//0x100-0x3ff - Reserved for SMPP extension
+				//0x400-0x4ff - Reserved for SMSC vendor specific
+				__tc2__("sendDeliverySmResp.sendWithErrCode");
+				respPdu.get_header().set_commandStatus(rand2(0x100, 0x4ff));
+				__trace2__("sendDeliverySmResp%sBeforeErr2", (sync ? "Sync" : "Async"));
+				transmitter->sendDeliverySmResp(respPdu);
+				__trace2__("sendDeliverySmResp%sAfterErr2", (sync ? "Sync" : "Async"));
+				break;
+			case 4: //отправить респонс с кодом ошибки >0x500 - Reserved
+				__tc2__("sendDeliverySmResp.sendWithErrCode");
+				respPdu.get_header().set_commandStatus(rand2(0x500, INT_MAX));
+				__trace2__("sendDeliverySmResp%sBeforeErr3", (sync ? "Sync" : "Async"));
+				transmitter->sendDeliverySmResp(respPdu);
+				__trace2__("sendDeliverySmResp%sAfterErr3", (sync ? "Sync" : "Async"));
+				break;
+			case 5: //отправить респонс с неправильным sequence_number
+				__tc2__("sendDeliverySmResp.sendInvalidSequenceNumber");
+				respPdu.get_header().set_sequenceNumber(INT_MAX);
+				respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
+				__trace2__("sendDeliverySmResp%sBeforeInvalidSeqNum", (sync ? "Sync" : "Async"));
+				transmitter->sendDeliverySmResp(respPdu);
+				__trace2__("sendDeliverySmResp%sAfterInvalidSeqNum", (sync ? "Sync" : "Async"));
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+		__tc12_ok__;
+	}
+	catch(...)
+	{
+		__tc12_fail__(s.value());
+		error();
 	}
 }
 

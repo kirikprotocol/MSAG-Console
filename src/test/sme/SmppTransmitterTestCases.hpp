@@ -47,6 +47,16 @@ public:
 	 */
 	void replaceSmAssert(int num);
 	
+	/**
+	 * Отправка синхронного или асинхронного deliver_sm_resp со статусом ok.
+	 */
+	void sendDeliverySmRespOk(PduDeliverySm& pdu, int num);
+
+	/**
+	 * Отправка синхронного или асинхронного deliver_sm_resp с кодом ошибки.
+	 */
+	void sendDeliverySmRespErr(PduDeliverySm& pdu, int num);
+
 	/*
 		virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
 	virtual SmppHeader* sendPdu(SmppHeader& pdu)=0;
