@@ -68,6 +68,7 @@ static const int INCOMPLETECONCATMSG=1033; //not all parts of concatenated messa
 static const int DUPLICATECONCATPART=1034; //duplicate part of concatenated message !
 static const int TRANSACTIONTIMEDOUT=1035; //
 static const int LOCKEDBYMO=1036; //MT should wait MO
+static const int LICENSELIMITREJECT=1037;//sms rejected due to license limit
 
 static const int MAP_UR_NO_REASON=1109;
 static const int MAP_USER_REASON_BASE=1110;
