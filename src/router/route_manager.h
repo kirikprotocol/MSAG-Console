@@ -108,7 +108,15 @@ public :
   {
     table=new RouteRecord*[table_size];
   }
-  virtual ~RouteManager() {}
+  
+	virtual ~RouteManager() 
+	{
+		for (int i=0; i<table_ptr; ++i) {
+			if (table[i]) delete table[i];
+		}
+		delete table;
+	}
+
   void assign(SmeTable* smetable); // for detach call with NULL;
   RouteIterator* iterator();
   // RouteAdministrator implementaion 
