@@ -32,9 +32,11 @@ class SmeRegistry
 		const Address smeAddr;
 		const SmeInfo sme;
 		PduRegistry* pduReg;
+		bool externalSme;
 		bool bound;
 		SmeData(const Address& _smeAddr, const SmeInfo& _sme, PduRegistry* _pduReg)
-			: smeAddr(_smeAddr), sme(_sme), pduReg(_pduReg), bound(false) {}
+		: smeAddr(_smeAddr), sme(_sme), pduReg(_pduReg), externalSme(false),
+			bound(false) {}
 		~SmeData()
 		{
 			if (pduReg)
@@ -68,7 +70,8 @@ public:
 	SmeRegistry() {}
 	~SmeRegistry();
 
-	bool registerSme(const Address& smeAddr, const SmeInfo& sme, bool pduReg = true);
+	bool registerSme(const Address& smeAddr, const SmeInfo& sme,
+		bool pduReg = true, bool externalSme = false);
 
 	void deleteSme(const SmeSystemId& smeId);
 
@@ -79,6 +82,8 @@ public:
 	int size();
 
 	const SmeInfo* getSme(const SmeSystemId& smeId) const;
+
+	bool isExternalSme(const Address& smeAddr) const;
 	
 	PduRegistry* getPduRegistry(const Address& smeAddr) const;
 

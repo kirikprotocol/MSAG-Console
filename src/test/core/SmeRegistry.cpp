@@ -18,7 +18,8 @@ SmeRegistry::~SmeRegistry()
 	clear();
 }
 
-bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme, bool pduReg)
+bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme,
+	bool pduReg, bool externalSme)
 {
 	if (addrMap.find(smeAddr) != addrMap.end() ||
 		smeIdMap.find(sme.systemId) != smeIdMap.end())
@@ -26,11 +27,12 @@ bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme, bool p
 		return false;
 	}
 	SmeData* smeData = new SmeData(smeAddr, sme, pduReg ? new PduRegistry() : NULL);
+	smeData->externalSme = externalSme;
 	addrMap[smeAddr] = smeData;
 	smeIdMap[sme.systemId] = smeData;
 	addrList.push_back(new Address(smeAddr));
-	__trace2__("SmeRegistry::registerSme(): smeAddr = %s, smeId = %s, pduReg = %p",
-		str(smeAddr).c_str(), sme.systemId.c_str(), smeData->pduReg);
+	__trace2__("SmeRegistry::registerSme(): smeAddr = %s, smeId = %s, pduReg = %p, externalSme = %s",
+		str(smeAddr).c_str(), sme.systemId.c_str(), smeData->pduReg, smeData->externalSme ? "true" : "false");
 	return true;
 }
 
@@ -94,6 +96,12 @@ const SmeInfo* SmeRegistry::getSme(const SmeSystemId& smeId) const
 {
 	SmeIdMap::const_iterator it = smeIdMap.find(smeId);
 	return (it == smeIdMap.end() ? NULL : &it->second->sme);
+}
+
+bool SmeRegistry::isExternalSme(const Address& smeAddr) const
+{
+	AddressMap::const_iterator it = addrMap.find(smeAddr);
+	return (it == addrMap.end() ? false : it->second->externalSme);
 }
 
 PduRegistry* SmeRegistry::getPduRegistry(const Address& smeAddr) const
