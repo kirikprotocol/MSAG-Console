@@ -49,9 +49,15 @@ public class dlAdd extends dlBody
 		if (mbSave != null)
 			return save();
 		else if (mbCancel != null)
-			return RESULT_DONE;
+			return cancel();
 
 		return RESULT_OK;
+	}
+
+	private int cancel()
+	{
+		clear();
+		return RESULT_DONE;
 	}
 
 	protected void clear()
@@ -90,6 +96,7 @@ public class dlAdd extends dlBody
 					return error(SMSCErrors.error.dl.wildcardsNotAllowedInAddress);
 				admin.addMember(name, mask.getNormalizedMask());
 			}
+			clear();
 			return RESULT_DONE;
 		}
 		catch (ListAlreadyExistsException e)

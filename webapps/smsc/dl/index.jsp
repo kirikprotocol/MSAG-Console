@@ -1,7 +1,4 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%--@ page import="ru.novosoft.smsc.admin.dl.*,
-                 ru.novosoft.smsc.jsp.smsview.SmsViewFormBean,
-                 ru.novosoft.smsc.jsp.smsc.IndexBean"--%>
 <%@ page import="ru.novosoft.smsc.jsp.dl.*"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.dl.DistributionListAdminFormBean" />
 <jsp:setProperty name="bean" property="*"/>
@@ -22,6 +19,8 @@
 			response.sendRedirect("dlAdd.jsp");
 			return;
         case DistributionListAdminFormBean.RESULT_FILTER:
+			response.sendRedirect("dlFilter.jsp");
+			return;
         case DistributionListAdminFormBean.RESULT_OK:
             STATUS.append("Ok");
             break;
@@ -63,7 +62,7 @@ function edit(dlName)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" <%=bean.getSort().endsWith("name") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("name")'>alias</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("name") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("name")'>name</a></th>
 </tr>
 </thead>
 <tbody><%

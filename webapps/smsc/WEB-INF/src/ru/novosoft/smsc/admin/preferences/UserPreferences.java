@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.admin.preferences;
 
 import ru.novosoft.smsc.jsp.util.tables.impl.*;
+import ru.novosoft.smsc.jsp.util.tables.impl.dl.DlFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
@@ -46,6 +47,7 @@ public class UserPreferences
 	private int localeResourcesPageSize = 20;
 	private String localeResourcesSortOrder = "locale";
 
+	private DlFilter dlFilter = new DlFilter();
 	private int dlPageSize = 20;
 	private String dlSortOrder = "address";
 
@@ -228,5 +230,15 @@ public class UserPreferences
 	public void setDlSortOrder(String dlSortOrder)
 	{
 		this.dlSortOrder = dlSortOrder;
+	}
+
+	public DlFilter getDlFilter()
+	{
+		return dlFilter;
+	}
+
+	public void setDlFilter(DlFilter dlFilter)
+	{
+		this.dlFilter = dlFilter;
 	}
 }

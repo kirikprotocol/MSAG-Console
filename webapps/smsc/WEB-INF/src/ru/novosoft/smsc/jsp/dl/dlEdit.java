@@ -20,7 +20,6 @@ public class dlEdit extends dlBody
 	private String mbSave = null;
 	private String mbCancel = null;
 	private DistributionListAdmin admin = null;
-	private boolean initialized = false;
 
 	private DistributionList getDistributionList(String name)
 	{
@@ -122,7 +121,6 @@ public class dlEdit extends dlBody
 		super.clear();
 		mbSave = mbCancel = null;
 		//admin = null;
-		initialized = false;
 	}
 
 	private int save()

@@ -9,6 +9,7 @@ package ru.novosoft.smsc.admin.dl;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.dl.exceptions.*;
+import ru.novosoft.smsc.jsp.util.tables.impl.dl.DlFilter;
 
 import java.util.List;
 
@@ -139,6 +140,15 @@ public interface DistributionListAdmin
      */
     public List list()
         throws AdminException;
+	/**
+	 * Returns filtered list of registered distribution lists (as DistributionLists)
+	 *
+	 * @return List of DistributionList
+	 * @throws AdminException
+	 */
+	public List list(DlFilter filter)
+			throws AdminException;
+
     /**
      * Creates new distribution list
      *

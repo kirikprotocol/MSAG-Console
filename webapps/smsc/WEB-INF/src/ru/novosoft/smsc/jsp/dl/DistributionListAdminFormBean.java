@@ -66,7 +66,7 @@ public class DistributionListAdminFormBean extends IndexBean
 		//query names
 		try
 		{
-			dls = admin.list();
+			dls = admin.list(appContext.getUserPreferences().getDlFilter());
 		}
 		catch (AdminException e)
 		{

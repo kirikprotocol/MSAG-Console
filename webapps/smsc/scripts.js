@@ -133,8 +133,9 @@ function validateField_address(elem)
 	{
 		return true;
 	}
-	var r = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
-	return elem.value == null || elem.value.match(r) == null
+	var r1 = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
+	var r2 = RegExp("^\\.5\\.0\\.[ _\\-0-9A-Za-z]{1,20}$");
+	return elem.value == null || (elem.value.match(r1) == null && elem.value.match(r2) == null)
 		? validationError(elem, "Invalid address")
 		: true;
 }

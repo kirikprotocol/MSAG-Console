@@ -25,6 +25,7 @@ public class dlBody extends IndexBean
 	protected List fullSubmittersList = null;
 	private Set oldMembers = null;
 	private Set oldSubmitters = null;
+	protected boolean initialized = false;
 
 	private void processAddresses(List fullList, Set oldSet, String[] newList) throws AdminException
 	{
@@ -202,5 +203,6 @@ public class dlBody extends IndexBean
 		fullMembersList = fullSubmittersList = null;
 		oldMembers = oldSubmitters = null;
 		maxElements = 0;
+		initialized = false;
 	}
 }
