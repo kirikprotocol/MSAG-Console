@@ -12,12 +12,12 @@ using namespace std;
 
 int rand0(int maxValue)
 {
-	return (int) ((maxValue + 1) * rand() / (RAND_MAX + 1.0));
+	return (int) ((maxValue + 1) * (float) rand() / (RAND_MAX + 1.0));
 }
 
 int rand1(int maxValue)
 {
-	return 1 + (int) (maxValue * rand() / (RAND_MAX + 1.0));
+	return 1 + (int) (maxValue * (float) rand() / (RAND_MAX + 1.0));
 }
 
 auto_ptr<uint8_t> rand_uint8_t(int length)
