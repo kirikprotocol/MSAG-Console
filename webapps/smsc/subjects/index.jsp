@@ -1,6 +1,11 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.subjects.Index,
-                 ru.novosoft.smsc.jsp.util.tables.DataItem"%>
+                 ru.novosoft.smsc.jsp.util.tables.DataItem,
+                 ru.novosoft.smsc.util.StringEncoderDecoder,
+                 java.util.*,
+                 ru.novosoft.smsc.jsp.SMSCJspException,
+                 ru.novosoft.smsc.jsp.SMSCErrors,
+                 java.net.URLEncoder"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.subjects.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -32,17 +37,63 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SUBJECTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<div class=content>
+<script>
+function removeFilterMask(rowId)
+{
+  var t = opForm.all.filterMasksTable;
+  var r = t.rows(rowId);
+  if (r != null)
+    t.deleteRow(r.rowIndex);
+}
+
+var rowCounter = 0;
+
+function addFilterMask()
+{
+  var fme = opForm.all.newFilterMask;
+  var fm = fme.value;
+  if (fm == null || fm == "")
+    return false;
+
+  var t = opForm.all.filterMasksTable;
+  var r = t.insertRow(t.rows.length -1);
+  r.id = "row_FilterMask_" + rowCounter++;
+  var c1 = r.insertCell();
+  c1.innerHTML = "<input class=txt name=filter_masks value=\"" + fm + "\" validation=\"mask\" onkeyup=\"resetValidation(this)\">";
+  var c2 = r.insertCell();
+  c2.innerHTML = "<img src=\"<%=CPATH%>/img/but_del.gif\" onclick=\"removeFilterMask('" + r.id + "')\" style=\"cursor:hand;\">";
+
+  fme.value = "";
+  fme.focus();
+}
+</script>
+<div class=page_subtitle>Filter masks</div>
+<table id=filterMasksTable>
+<col width="1%">
+<col width="1%">
+<col width="98%">
+<%
+  for (int i = 0; i < bean.getFilter_masks().length; i++) {
+    final String filterMask = bean.getFilter_masks()[i];
+    final String filterMaskHex = StringEncoderDecoder.encodeHEX(filterMask);
+    %><tr id=filterMaskRow_<%=filterMaskHex%>>
+      <td><input class=txt name=filter_masks value="<%=StringEncoderDecoder.encode(filterMask)%>" validation="mask" onkeyup="resetValidation(this)"></td>
+      <td><img src="<%=CPATH%>/img/but_del.gif" onclick="removeFilterMask('filterMaskRow_<%=filterMaskHex%>')" style="cursor:hand;"></td>
+      <td>&nbsp;</td>
+    </tr><%
+  }
+%>
+<tr>
+  <td><input class=txt name=filter_masks value="" id=newFilterMask validation="mask" onkeyup="resetValidation(this)"></td>
+  <td><img src="<%=CPATH%>/img/but_add.gif" onclick="addFilterMask()" style="cursor:hand;"></td>
+  <td>&nbsp;</td>
+</tr>
+</table>
+</div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add subject",  "Add new subject");
-page_menu_button(out, "mbDelete", "Delete subject(s)", "Delete selected subject(s)");
-if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged())
-  if (!appContext.getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbSave", "Save current", "Save current routing configuration");
-if (appContext.getStatuses().isRoutesSaved() && !appContext.getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbRestore", "Load saved", "Load saved routing configuration");
-if (appContext.getStatuses().isRoutesChanged() || appContext.getStatuses().isSubjectsChanged())
-    page_menu_button(out, "mbLoad", "Restore applied", "Restore applied routing configuration");
+page_menu_button(out, "mbQuery",  "Query",  "Query subjects");
 page_menu_space(out);
 page_menu_end(out);%>
 <div class=content>
@@ -50,6 +101,7 @@ page_menu_end(out);%>
 <input type=hidden name=editName>
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
+<input type=hidden name=initialized value=true>
 
 <script>
 function edit(name_to_edit)
@@ -75,12 +127,24 @@ function navigate(direction)
 	opForm.submit();
 	return false;
 }
+function clickMasks(idSuffix)
+{
+  var h = opForm.all("masks_header_" + idSuffix);
+  var b = opForm.all("masks_body_"   + idSuffix);
+  if (h.className == "collapsing_list_closed") {
+    h.className = "collapsing_list_opened";
+    b.runtimeStyle.display = "block";
+  } else {
+    h.className = "collapsing_list_closed";
+    b.runtimeStyle.display = "none";
+  }
+}
 </script>
 <table class=list cellspacing=1 width="100%">
 <col width="1%">
-<col width="60%" align=left>
 <col width="20%" align=left>
 <col width="20%" align=left>
+<col width="59%" align=left>
 <thead>
 <tr>
 	<th>&nbsp;</th>
@@ -91,6 +155,7 @@ function navigate(direction)
 </thead>
 <tbody>
 <%{
+final int MASKS_HEADER_SIZE = 1;
 int row = 0;
 for(Iterator i = bean.getSubjects().iterator(); i.hasNext(); row++)
 {
@@ -100,20 +165,45 @@ String defSme = (String)item.getValue("Default SME");
 Vector masks = (Vector)item.getValue("Masks");
 String encName = StringEncoderDecoder.encode(name);
 String encDefSme = StringEncoderDecoder.encode(defSme);
+String hexName = StringEncoderDecoder.encodeHEX(name);
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=checkedSubjects value="<%=encName%>" <%=bean.isSubjectChecked(name) ? "checked" : ""%>></td>
 	<td class=name><a href="#" title="Edit subject" onClick='return edit("<%=encName%>")'><%=encName%></a></td>
 	<td><%=encDefSme%></td>
 	<td><%
-	for (Iterator j = masks.iterator(); j.hasNext(); ) 
-	{
-		String mask = (String) j.next();
-		String encMask = StringEncoderDecoder.encode(mask);
-		out.print(encMask);
-		if (j.hasNext())
-			out.print("<br>");
-	}%></td>
+    if (masks.size() > 0)
+    {
+      if (masks.size() > MASKS_HEADER_SIZE) {
+        %><div class=collapsing_list_closed id="masks_header_<%=hexName%>" onClick="clickMasks('<%=hexName%>')"><%
+      }
+      final int header_length = Math.min(MASKS_HEADER_SIZE, masks.size());
+      for (int j = 0; j < header_length; j++) {
+        String mask = (String) masks.elementAt(j);
+        String encMask = StringEncoderDecoder.encode(mask);
+        out.print(encMask);
+        if (j < header_length-1)
+          out.print(", ");
+      }
+      if (masks.size() > MASKS_HEADER_SIZE) {
+        %>, ...</div><div id="masks_body_<%=hexName%>" class=collapsing_list_empty style="display: none;"><%
+      }
+
+      for (int j = MASKS_HEADER_SIZE; j < masks.size(); j++) {
+        String mask = (String) masks.elementAt(j);
+        String encMask = StringEncoderDecoder.encode(mask);
+        out.print(encMask);
+        if (j < masks.size()-1)
+          out.print("<br>");
+      }
+
+      if (masks.size() > MASKS_HEADER_SIZE) {
+        %></div><%
+      }
+    } else {
+      out.print("none");
+    }
+  %></td>
 </tr>
 <%}}%>
 </tbody>

@@ -15,25 +15,28 @@ import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.*;
 
-public class Index extends IndexBean
+public final class Index extends IndexBean
 {
 	public static final int RESULT_ADD = IndexBean.PRIVATE_RESULT + 0;
 	public static final int RESULT_EDIT = IndexBean.PRIVATE_RESULT + 1;
 	public static final int PRIVATE_RESULT = IndexBean.PRIVATE_RESULT + 2;
 
-	protected QueryResultSet subjects = null;
+	private QueryResultSet subjects = null;
 
-	protected String editName = null;
+	private String editName = null;
 
-	protected String[] checkedSubjects = new String[0];
-	protected Set checkedSubjectsSet = new HashSet();
+	private String[] checkedSubjects = new String[0];
+	private Set checkedSubjectsSet = new HashSet();
+  private String[] filter_masks = new String[0];
+  private boolean initialized = false;
 
-	protected String mbAdd = null;
-	protected String mbDelete = null;
-	protected String mbEdit = null;
-  protected String mbSave = null;
-  protected String mbLoad = null;
-  protected String mbRestore = null;
+	private String mbAdd = null;
+	private String mbDelete = null;
+	private String mbEdit = null;
+  private String mbSave = null;
+  private String mbLoad = null;
+  private String mbRestore = null;
+  private String mbQuery = null;
 
 	protected int init(List errors)
 	{
@@ -46,6 +49,17 @@ public class Index extends IndexBean
 			preferences.getSubjectsSortOrder().set(0, sort);
 		else
 			sort = (String) preferences.getSubjectsSortOrder().get(0);
+
+    filter_masks = trimStrings(filter_masks);
+    if (initialized)
+      try {
+        preferences.getSubjectsFilter().setMasks(filter_masks);
+      } catch (AdminException e) {
+        logger.error("Incorrect filter mask(s)", e);
+        return error("Incorrect filter mask(s)", e);
+      }
+    else
+      filter_masks = (String[]) preferences.getSubjectsFilter().getMaskStrings().toArray(new String[0]);
 
 		return RESULT_OK;
 	}
@@ -219,4 +233,34 @@ public class Index extends IndexBean
 	public void setSubjects(QueryResultSet subjects) {
 		this.subjects = subjects;
 	}
+
+  public String getMbQuery()
+  {
+    return mbQuery;
+  }
+
+  public void setMbQuery(String mbQuery)
+  {
+    this.mbQuery = mbQuery;
+  }
+
+  public String[] getFilter_masks()
+  {
+    return filter_masks;
+  }
+
+  public void setFilter_masks(String[] filter_masks)
+  {
+    this.filter_masks = filter_masks;
+  }
+
+  public boolean isInitialized()
+  {
+    return initialized;
+  }
+
+  public void setInitialized(boolean initialized)
+  {
+    this.initialized = initialized;
+  }
 }
