@@ -2,4 +2,4 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-wsme/WSme   	     WSme -ldl -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin -lcore-network -lutil-templates -lutil-templates -lcore-buffers -lcore-threads -lcore-buffers -lwsme -ldb -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -llog4cpp -lcore-threads -lthread -lxerces-c -lsms $(__LIBRARIES) -lrt
+wsme/WSme   	     WSme -ldl -ladmin-util -ladmin-protocol -ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin -lcore-network -lutil-templates -lutil-templates -lcore-buffers -lcore-threads -lcore-buffers -lwsme -ldb -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -llog4cpp -lcore-threads -lthread -lxerces-c -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger
