@@ -22,32 +22,29 @@ struct AbonentInfoSmeMessage
 		const string& abonent, const Profile& abonentProfile, SmeType abonentStatus,
 		const string& msc)
 	{
-		//если задана пустая строка, то берется из базовой локали
-		/*
 		if (profile.locale == "en_us" || profile.locale == "en_gb")
 		{
+			ostringstream s;
+			s << "Abonent " << abonent;
+			switch (abonentStatus)
+			{
+				case SME_RECEIVER:
+				case SME_TRANSMITTER:
+				case SME_TRANSCEIVER:
+					s << ": status 1";
+					break;
+				default:
+					s << ": status 0";
+			}
+			s << ", encoding " << abonentProfile.codepage;
+			s << ", msc " << msc;
+			return convert(s.str(), profile.codepage);
 		}
 		if (profile.locale == "ru_ru")
 		{
 			return convert("", profile.codepage);
 		}
 		__unreachable__("Invalid locale options");
-		*/
-		ostringstream s;
-		s << "Abonent " << abonent;
-		switch (abonentStatus)
-		{
-			case SME_RECEIVER:
-			case SME_TRANSMITTER:
-			case SME_TRANSCEIVER:
-				s << ": status 1";
-				break;
-			default:
-				s << ": status 0";
-		}
-		s << ", encoding " << abonentProfile.codepage;
-		s << ", msc " << msc;
-		return convert(s.str(), profile.codepage);
 	}
 };
 

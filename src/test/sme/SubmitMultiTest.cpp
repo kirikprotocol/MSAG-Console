@@ -45,6 +45,8 @@ struct SessionData
 	PduAddress addr;
 	SmppSession* session;
 	SessionListener* listener;
+
+	SessionData() : session(NULL), listener(NULL) {}
 };
 
 class SubmitMultiTest
@@ -62,6 +64,11 @@ public:
 		: host(_host), port(_port), sme(NULL) {}
 	void bindAllSme();
 	void submitMultiSeveralDistLists();
+	void submitMultiSeveralAddresses();
+	void submitMultiEmptyDistList();
+	void submitMultiNotPrincipalDistList();
+	void submitMultiNonExistentDistList();
+	void submitMultiMap();
 };
 
 SessionData* SubmitMultiTest::bindSme(const string& addr, const string& systemId,
@@ -95,7 +102,7 @@ SessionData* SubmitMultiTest::bindSme(const string& addr, const string& systemId
 void SubmitMultiTest::bindAllSme()
 {
 	sme = bindSme("111", "sme1", "sme1", BindType::Transceiver);
-	
+
 	smeList.push_back(bindSme("222", "sme2", "sme2", BindType::Transmitter));
 	smeList.push_back(bindSme("333", "sme3", "sme3", BindType::Transceiver));
 	smeList.push_back(bindSme("444", "sme4", "sme4", BindType::Transceiver));
@@ -150,22 +157,83 @@ void SubmitMultiTest::submitMulti(PduMultiSm& pdu)
 void SubmitMultiTest::submitMultiSeveralDistLists()
 {
 	PduMultiSm pdu;
-	SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, false, false, OPT_ALL & ~OPT_MSG_PAYLOAD);
+	SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, rand0(1), false);
 	PduDestAddress dests[2];
 	dests[0].set_flag(2); //Distribution List Name
 	dests[0].set_value("list1");
 	dests[1].set_flag(2); //Distribution List Name
 	dests[1].set_value("list2");
-	pdu.get_message().set_dests(dests);
-	pdu.get_message().set_numberOfDests(2);
+	pdu.get_message().set_dests(dests, 2);
 	submitMulti(pdu);
 }
 
-//несколько адресов
+//несколько адресов (не map)
+void SubmitMultiTest::submitMultiSeveralAddresses()
+{
+	PduAddress tmp;
+	PduMultiSm pdu;
+	SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, rand0(1), false);
+	PduDestAddress dests[3];
+	dests[0].set_flag(1); //SME Address
+	static_cast<PduAddress&>(dests[0]) = *SmppUtil::convert("000", &tmp);
+	dests[1].set_flag(1); //SME Address
+	static_cast<PduAddress&>(dests[1]) = *SmppUtil::convert("222", &tmp);
+	dests[2].set_flag(1); //SME Address
+	static_cast<PduAddress&>(dests[2]) = *SmppUtil::convert("333", &tmp);
+	pdu.get_message().set_dests(dests, 3);
+	submitMulti(pdu);
+}
+
 //пустой список рассылки
+void SubmitMultiTest::submitMultiEmptyDistList()
+{
+	PduMultiSm pdu;
+	SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, rand0(1), false);
+	PduDestAddress dest;
+	dest.set_flag(2); //Distribution List Name
+	dest.set_value("list3");
+	pdu.get_message().set_dests(&dest, 1);
+	submitMulti(pdu);
+}
+
+//нет прав отправлять на список рассылки
+void SubmitMultiTest::submitMultiNotPrincipalDistList()
+{
+	PduMultiSm pdu;
+	SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, rand0(1), false);
+	PduDestAddress dest;
+	dest.set_flag(2); //Distribution List Name
+	dest.set_value("list4");
+	pdu.get_message().set_dests(&dest, 1);
+	submitMulti(pdu);
+}
+
 //несуществующий список рассылки
+void SubmitMultiTest::submitMultiNonExistentDistList()
+{
+	PduMultiSm pdu;
+	SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, rand0(1), false);
+	PduDestAddress dest;
+	dest.set_flag(2); //Distribution List Name
+	dest.set_value("list5");
+	pdu.get_message().set_dests(&dest, 1);
+	submitMulti(pdu);
+}
+
 //длинное сообщение на map с udhi
 //длинное сообщение на map c разрезанием
+void SubmitMultiTest::submitMultiMap()
+{
+	PduAddress tmp;
+	PduMultiSm pdu;
+	SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, rand0(1), false);
+	//PduDestAddress dests[2];
+	PduDestAddress dest;
+	dest.set_flag(1); //SME Address
+	static_cast<PduAddress&>(dest) = *SmppUtil::convert("555", &tmp);
+	pdu.get_message().set_dests(&dest, 1);
+	submitMulti(pdu);
+}
 
 int main(int argc, char* argv[])
 {
