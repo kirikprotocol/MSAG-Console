@@ -371,9 +371,7 @@ tryAgain:
 		_ttype = QSTR;
 		int _saveIndex;
 		
-		_saveIndex=text.length();
 		match('"');
-		text.setLength(_saveIndex);
 		{
 		int _cnt9=0;
 		_loop9:
@@ -384,32 +382,28 @@ tryAgain:
 				mESC(false);
 				break;
 			}
-			case '!':  case '#':  case '$':  case '%':
-			case '*':  case '+':  case '-':  case '.':
-			case '/':  case '0':  case '1':  case '2':
-			case '3':  case '4':  case '5':  case '6':
-			case '7':  case '8':  case '9':  case '?':
-			case 'A':  case 'B':  case 'C':  case 'D':
-			case 'E':  case 'F':  case 'G':  case 'H':
-			case 'I':  case 'J':  case 'K':  case 'L':
-			case 'M':  case 'N':  case 'O':  case 'P':
-			case 'Q':  case 'R':  case 'S':  case 'T':
-			case 'U':  case 'V':  case 'W':  case 'X':
-			case 'Y':  case 'Z':  case '_':  case 'a':
-			case 'b':  case 'c':  case 'd':  case 'e':
-			case 'f':  case 'g':  case 'h':  case 'i':
-			case 'j':  case 'k':  case 'l':  case 'm':
-			case 'n':  case 'o':  case 'p':  case 'q':
-			case 'r':  case 's':  case 't':  case 'u':
-			case 'v':  case 'w':  case 'x':  case 'y':
-			case 'z':
+			case '\t':  case '\n':  case '\u000c':  case '\r':
+			case ' ':  case '!':  case '#':  case '$':
+			case '%':  case '\'':  case '*':  case '+':
+			case ',':  case '-':  case '.':  case '/':
+			case '0':  case '1':  case '2':  case '3':
+			case '4':  case '5':  case '6':  case '7':
+			case '8':  case '9':  case '?':  case 'A':
+			case 'B':  case 'C':  case 'D':  case 'E':
+			case 'F':  case 'G':  case 'H':  case 'I':
+			case 'J':  case 'K':  case 'L':  case 'M':
+			case 'N':  case 'O':  case 'P':  case 'Q':
+			case 'R':  case 'S':  case 'T':  case 'U':
+			case 'V':  case 'W':  case 'X':  case 'Y':
+			case 'Z':  case '_':  case 'a':  case 'b':
+			case 'c':  case 'd':  case 'e':  case 'f':
+			case 'g':  case 'h':  case 'i':  case 'j':
+			case 'k':  case 'l':  case 'm':  case 'n':
+			case 'o':  case 'p':  case 'q':  case 'r':
+			case 's':  case 't':  case 'u':  case 'v':
+			case 'w':  case 'x':  case 'y':  case 'z':
 			{
-				mSTR_CHR(false);
-				break;
-			}
-			case '\t':  case '\u000c':  case ' ':
-			{
-				mSTR_WS(false);
+				matchNot('"');
 				break;
 			}
 			default:
@@ -420,9 +414,7 @@ tryAgain:
 			_cnt9++;
 		} while (true);
 		}
-		_saveIndex=text.length();
 		match('"');
-		text.setLength(_saveIndex);
 		if ( _createToken && _token==null && _ttype!=Token.SKIP ) {
 			_token = makeToken(_ttype);
 			_token.setText(new String(text.getBuffer(), _begin, text.length()-_begin));
@@ -563,7 +555,7 @@ tryAgain:
 	
 	private static final long _tokenSet_0_data_[] = { -8935163401827516416L, 576460745995190270L, 0L, 0L };
 	public static final BitSet _tokenSet_0 = new BitSet(_tokenSet_0_data_);
-	private static final long _tokenSet_1_data_[] = { -8935163380352675328L, 576460746263625726L, 0L, 0L };
+	private static final long _tokenSet_1_data_[] = { -8935145238410807808L, 576460746263625726L, 0L, 0L };
 	public static final BitSet _tokenSet_1 = new BitSet(_tokenSet_1_data_);
 	
 	}

@@ -966,18 +966,29 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		try {      // for error handling
-			{
 			switch ( LA(1)) {
 			case QSTR:
 			{
+				{
 				qname = LT(1);
 				match(QSTR);
+				
+						    out = qname.getText().trim();
+						    out = out.substring(1,out.length()-1);
+						    System.out.println("NAME: "+out);
+						
+				}
 				break;
 			}
 			case STR:
 			{
+				{
 				name = LT(1);
 				match(STR);
+				
+						    out = name.getText();
+						
+				}
 				break;
 			}
 			default:
@@ -985,14 +996,11 @@ public CommandParser(ParserSharedInputState state) {
 				throw new NoViableAltException(LT(1), getFilename());
 			}
 			}
-			}
-			
-					    out = (qname == null) ? name.getText():qname.getText();
-					
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException(msg+" expected");
+			throw new RecognitionException(ex.getMessage()+". "+
+								  msg+" expected. ");
 				
 		}
 		return out;
@@ -1102,17 +1110,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SRC);
 			{
-			int _cnt21=0;
-			_loop21:
+			int _cnt22=0;
+			_loop22:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt21>=1 ) { break _loop21; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt22>=1 ) { break _loop22; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt21++;
+				_cnt22++;
 			} while (true);
 			}
 			}
@@ -1133,17 +1141,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_DST);
 			{
-			int _cnt25=0;
-			_loop25:
+			int _cnt26=0;
+			_loop26:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd);
 				}
 				else {
-					if ( _cnt25>=1 ) { break _loop25; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt26>=1 ) { break _loop26; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt25++;
+				_cnt26++;
 			} while (true);
 			}
 			}
@@ -1352,14 +1360,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop65:
+			_loop66:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop65;
+					break _loop66;
 				}
 				
 			} while (true);

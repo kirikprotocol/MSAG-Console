@@ -101,13 +101,19 @@ view returns [Command cmd] {
 /* ----------------------- Common names parser ------------------------- */
 getnameid[String msg] returns [String out] {
     out = null; 
-}	:	(qname:QSTR | name:STR) {
-		    out = (qname == null) ? name.getText():qname.getText();
-		}
+}	:	(qname:QSTR {
+		    out = qname.getText().trim();
+		    out = out.substring(1,out.length()-1);
+		    System.out.println("NAME: "+out);
+		}) 
+		|(name:STR {
+		    out = name.getText();
+		})
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException(msg+" expected");
+           throw new RecognitionException(ex.getMessage()+". "+
+					  msg+" expected. ");
 	}
 
 /* ----------------------- Common routes parsers ----------------------- */

@@ -70,7 +70,7 @@ QSTR
 options {
   paraphrase = "quoted string";
 }
-	:	'"'! (ESC | STR_CHR | STR_WS)+ '"'!
+	:	'"' (ESC | ~'"')+ '"'
 	;
 
 protected
