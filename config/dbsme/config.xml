@@ -28,6 +28,18 @@
             <param name="timeout" type="int">10</param>
             <param name="password" type="string"></param>
         </section>  
+	
+	<section name="MessagesSet">
+	    <param name="PROVIDER_NOT_FOUND" type="string">Provider not found!</param>
+	    <param name="JOB_NOT_FOUND" type="string">Job not found!</param>
+	    <param name="DS_FAILURE" type="string">DataSource failure!</param>
+	    <param name="DS_CONNECTION_LOST" type="string">Connection to DataSource lost !</param>
+	    <param name="DS_STATEMENT_FAIL" type="string">DataSource failure!</param>
+	    <param name="QUERY_NULL" type="string">Result of query execution is NULL!</param>
+	    <param name="INPUT_PARSE" type="string">Input data parse error!</param>
+	    <param name="OUTPUT_FORMAT" type="string">Output data format error!</param>
+	    <param name="INVALID_CONFIG" type="string">Invalid configuration!</param>
+	</section>
 
         <section name="DataProviders">
         
@@ -44,7 +56,7 @@
             
                 <section name="Jobs">
                 
-                    <section name="ProcTestJob">
+                    <!--section name="ProcTestJob">
                         <param name="name" type="string">ProcTest</param>
                         <param name="type" type="string">pl/sql-job</param>
                         <param name="function" type="bool">false</param>
@@ -78,7 +90,7 @@ Account is: $$int32 arg="ArG3" default="hz"$$
 $$string import="job-name"$$ PL/SQL Job called!
 Account is: $$int32 arg="rEtUrN" default="hz"$$
 </param>
-		    </section>
+		    </section-->
 		    
 		    <section name="DefautJob">
                         <param name="name" type="string">default</param>
