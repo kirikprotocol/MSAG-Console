@@ -110,7 +110,11 @@ class SmscCommand
   {
     //__trace__(__PRETTY_FUNCTION__);
     //__require__ ( cmd != 0 );
-		if ( !cmd ) return 0;
+    if ( !cmd )
+		{
+			__warning__("cmd is zero");
+			return 0;
+		}
     MutexGuard guard(cmd->mutex);
     __require__ ( cmd->ref_count >= 0 );
     ++(cmd->ref_count);
