@@ -183,6 +183,11 @@ public:
       }
       delete pb.buf;
     }
+    while(queue.Count())
+    {
+      queue.Pop(pb);
+      delete pb.buf;
+    }
     __trace2__("Exiting smppwriter");
     mon.Unlock();
     return 0;
@@ -459,6 +464,7 @@ public:
     socket.Close();
     reader.WaitFor();
     writer.WaitFor();
+    lock.Empty();
     closed=true;
   }
 
