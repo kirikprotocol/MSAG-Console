@@ -35,7 +35,10 @@ cp $SMSC_BUILDDIR/bin/system/smsc $DISTR_DIR/services/SMSC/bin
 echo Copying web administration files
 ORGDIR=`pwd`
 cd $DISTR_DIR
-tar -xf $SMSC_SRCDIR/../config/tomcat/tomcat.tar
+cp $SMSC_SRCDIR/../config/tomcat/tomcat.tar.gz .
+gzip -d tomcat.tar.gz
+tar -ixf tomcat.tar
+rm tomcat.tar
 cd $ORGDIR
 cp $SMSC_SRCDIR/webapp/smsc/WEB-INF/lib/*.jar $DISTR_DIR/webapps/smsc/WEB-INF/lib
 cp $SMSC_BUILDDIR/jars/smsc.jar $DISTR_DIR/webapps/smsc/WEB-INF/lib
