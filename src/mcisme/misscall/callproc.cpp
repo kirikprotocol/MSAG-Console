@@ -145,14 +145,18 @@ bool setCalledMask(const char* rx) {
   return calledMaskRx.Compile(rx)!=0;
 }
 
-void MissedCallProcessor::setCircuits(Circuits cics)
+void MissedCallProcessor::setCircuits(Hash<Circuits>& circuits)
 {
-  UBL[0] = cics.hsn;
-  UBL[1] = cics.spn;
-  UBL[2] = cics.ts & 0xFF;
-  UBL[3] = cics.ts >> 8 & 0xFF;
-  UBL[4] = cics.ts >> 16 & 0xFF;
-  UBL[5] = cics.ts >> 24 & 0xFF;
+  Circuits cics; char* circuitsMsc = 0; circuits.First();
+  if (circuits.Next(circuitsMsc, cics))
+  {
+      UBL[0] = cics.hsn;
+      UBL[1] = cics.spn;
+      UBL[2] = cics.ts & 0xFF;
+      UBL[3] = cics.ts >> 8 & 0xFF;
+      UBL[4] = cics.ts >> 16 & 0xFF;
+      UBL[5] = cics.ts >> 24 & 0xFF;
+  }
 }
 
 static ReleaseSettings relCauses = {
