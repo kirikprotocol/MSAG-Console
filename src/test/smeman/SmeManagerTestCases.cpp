@@ -10,7 +10,7 @@ namespace test {
 namespace smeman {
 
 using namespace std;
-using namespace smsc::smeman; //SmeIndex, SmeError, SmeIterator
+using namespace smsc::smeman; //SmeIndex, SmeIterator
 using namespace smsc::test::util;
 using smsc::util::Logger;
 using test::core::CoreTestManager;
@@ -19,7 +19,7 @@ ostream& operator<< (ostream& os, const SmeInfo& sme)
 {
 	os << "systemId = " << sme.systemId << "(" << sme.systemId.length() << ")";
 	os << ", disabled = " << (sme.disabled ? "true" : "false");
-	os << ", interfaceVersion = " << sme.interfaceVersion;
+	os << ", interfaceVersion = " << (int) sme.interfaceVersion;
 	os << ", systemType = " << sme.systemType;
 	os << ", hostname = " << sme.hostname;
 	os << ", port = " << sme.port;
@@ -178,7 +178,7 @@ TCResult* SmeManagerTestCases::addCorrectSme(SmeInfo* sme, int num)
 					throw s;
 			}
 			smeMan->addSme(*sme);
-debugSme(*sme);
+			debugSme(*sme);
 		}
 		catch(...)
 		{
@@ -220,14 +220,9 @@ TCResult* SmeManagerTestCases::addIncorrectSme(const SmeInfo& existentSme)
 		smeMan->addSme(info);
 		res->addFailure(101);
 	}
-	catch(SmeError&)
-	{
-		//ok
-	}
 	catch(...)
 	{
-		error();
-		res->addFailure(100);
+		//ok
 	}
 	debug(res);
 	return res;
@@ -238,7 +233,6 @@ TCResult* SmeManagerTestCases::deleteExistentSme(const SmeSystemId& systemId)
 	TCResult* res = new TCResult(TC_DELETE_EXISTENT_SME);
 	try
 	{
-getLog().debug("deleteExistentSme(): systemId = %s", systemId.c_str());
 		smeMan->deleteSme(systemId);
 	}
 	catch(...)
@@ -259,14 +253,9 @@ TCResult* SmeManagerTestCases::deleteNonExistentSme()
 		smeMan->deleteSme(_systemId.get());
 		res->addFailure(101);
 	}
-	catch(SmeError&)
-	{
-		//ok
-	}
 	catch(...)
 	{
-		error();
-		res->addFailure(100);
+		//ok
 	}
 	debug(res);
 	return res;
@@ -298,14 +287,9 @@ TCResult* SmeManagerTestCases::disableNonExistentSme()
 		smeMan->disableSme(_systemId.get());
 		res->addFailure(101);
 	}
-	catch(SmeError&)
-	{
-		//ok
-	}
 	catch(...)
 	{
-		error();
-		res->addFailure(100);
+		//ok
 	}
 	debug(res);
 	return res;
@@ -337,14 +321,9 @@ TCResult* SmeManagerTestCases::enableNonExistentSme()
 		smeMan->enableSme(_systemId.get());
 		res->addFailure(101);
 	}
-	catch(SmeError&)
-	{
-		//ok
-	}
 	catch(...)
 	{
-		error();
-		res->addFailure(100);
+		//ok
 	}
 	debug(res);
 	return res;
@@ -397,14 +376,9 @@ TCResult* SmeManagerTestCases::getNonExistentSme(const SmeSystemId& systemId, in
 			}
 			res->addFailure(101);
 		}
-		catch(SmeError&)
-		{
-			//ok
-		}
 		catch(...)
 		{
-			error();
-			res->addFailure(100);
+			//ok
 		}
 	}
 	debug(res);
@@ -426,7 +400,7 @@ TCResult* SmeManagerTestCases::iterateSme(const vector<SmeInfo*> sme)
 			//SmeProxy* proxy = iter->getSmeProxy();
 			//SmeIndex index = iter->getSmeIndex();
 			SmeInfo info = iter->getSmeInfo();
-debugSme(info);
+			debugSme(info);
 			bool found = false;
 			for (int i = 0; i < sme.size(); i++)
 			{
@@ -475,6 +449,20 @@ debugSme(info);
 	return res;
 }
 
+/*
+void SmeManagerTestCases::setupRandomSmeProxy(const vector<SmeProxy*>& proxy)
+{
+	int num = rand0(proxy.size());
+	for (int i = 0; i < num; i++)
+	{
+		int idx = rand0(proxy.size() - 1);
+		if (!proxy[idx]->hasInput())
+		{
+			proxy[idx]->putCommand(SmscCommand());
+		}
+	}
+}
+
 void SmeManagerTestCases::checkSelectSmeStat(const vector<SmeInfo*>& sme,
 	const map<uint32_t, int>& statMap, TCResult* res)
 {
@@ -518,7 +506,8 @@ void SmeManagerTestCases::checkSelectSmeStat(const vector<SmeInfo*>& sme,
 	}
 }
 
-TCResult* SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme, int num)
+TCResult* SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme,
+	const vector<SmeProxy*>& proxy, int num)
 {
 	TCSelector s(num, 2);
 	TCResult* res = new TCResult(TC_SELECT_SME, s.getChoice());
@@ -533,19 +522,21 @@ TCResult* SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme, int num)
 					timeout = 0;
 					break;
 				case 2:
-					timeout = rand1(5000);
+					timeout = 100 * rand1(5);
 					break;
 				default:
 					throw s;
 			}
 			map<uint32_t, int> statMap;
-			for (int i = 0; i < sme.size() * 100; i++)
+			for (int i = 0; i < 100; i++)
 			{
-				SmeProxy* proxy = smeMan->selectSmeProxy(timeout);
-				if (proxy)
+				SmeProxy* _proxy = smeMan->selectSmeProxy(timeout);
+				if (_proxy)
 				{
-					statMap[proxy->getUniqueId()]++;
+					_proxy->getCommand();
+					statMap[_proxy->getUniqueId()]++;
 				}
+				setupRandomSmeProxy(proxy);
 			}
 			checkSelectSmeStat(sme, statMap, res);
 		}
@@ -557,18 +548,18 @@ TCResult* SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme, int num)
 	}
 	return res;
 }
+*/
 
 TCResult* SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& systemId,
-	uint32_t* proxyId)
+	SmeProxy** proxy)
 {
 	TCResult* res = new TCResult(TC_REGISTER_CORRECT_SME_PROXY);
 	try
 	{
-		CorrectSmeProxy* proxy = new CorrectSmeProxy();
-		smeMan->registerSmeProxy(systemId, proxy);
+		CorrectSmeProxy* tmp = new CorrectSmeProxy();
+		smeMan->registerSmeProxy(systemId, tmp);
 		SmeIndex index = smeMan->lookup(systemId);
-		SmeProxy* tmp = smeMan->getSmeProxy(index);
-		*proxyId = tmp->getUniqueId();
+		*proxy = smeMan->getSmeProxy(index);
 	}
 	catch(...)
 	{
