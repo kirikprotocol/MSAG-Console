@@ -1020,7 +1020,7 @@ static bool SendSms(MapDialog* dialog){
   bool segmentation = false;
 
 //  if ( mms )  { __map_trace2__("MAP::%s: MMS flag is set",__FUNCTION__); }
-  __map_trace2__("%s: chain size is %d mms=%d",__FUNCTION__,dialog->chain.size(),mms);
+  __map_trace2__("%s: chain size is %d mms=%d dlg->mms=",__FUNCTION__,dialog->chain.size(),mms,dialog->mms);
 
   dialog->state = MAPST_WaitSmsConf;
   if ( !dialog->mms ) {
@@ -1039,7 +1039,7 @@ static bool SendSms(MapDialog* dialog){
   ET96MAP_SM_RP_UI_T* ui;
   dialog->auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
   mkDeliverPDU(dialog->sms.get(),ui,mms);
-  if ( dialog->version > 1 && (ui->signalInfoLen > 98 || (mms && !dialog->mms)) ) {
+  if ( dialog->version > 1 && !dialog->mms && (ui->signalInfoLen > 98 || mms ) ) {
     result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
     if( result != ET96MAP_E_OK )
       throw MAPDIALOG_FATAL_ERROR(
