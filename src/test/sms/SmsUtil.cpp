@@ -180,8 +180,9 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 #define __set_int_body_tag__(tagName, value) \
 	if ((mask >>= 1) & 0x1) { \
 		__trace__("set_int_body_tag: " #tagName); \
-		intMap[Tag::tagName] = value; \
-		body->setIntProperty(Tag::tagName, value); \
+		uint32_t tmp = value; \
+		intMap[Tag::tagName] = tmp; \
+		body->setIntProperty(Tag::tagName, tmp); \
 	}
 
 #define __set_str_body_tag__(tagName, len) \
@@ -217,7 +218,7 @@ void SmsUtil::setupRandomCorrectBody(Body* body)
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
 	uint64_t mask = *((uint64_t*) tmp.get());
 
-	typedef map<const string, int> IntMap;
+	typedef map<const string, uint32_t> IntMap;
 	typedef map<const string, const string> StrMap;
 	StrMap strMap;
 	IntMap intMap;
@@ -272,7 +273,7 @@ void SmsUtil::setupRandomCorrectBody(Body* body)
 #define __set_sms__(type, field, value) \
 	type tmp##field = value; \
 	sms->set##field(tmp##field); \
-	__require__(sms->get##field() == value);
+	__require__(sms->get##field() == tmp##field);
 
 #define __set_addr_sms__(field) \
 	Address tmp##field; \
