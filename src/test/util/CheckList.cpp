@@ -12,10 +12,12 @@ using namespace std;
 
 CheckList::~CheckList()
 {
-	for (TcList::iterator it = tcList.begin(); it != tcList.end(); it++)
+	for (TcMap::iterator it = tcMap.begin(); it != tcMap.end(); it++)
 	{
-		delete *it;
+		delete it->second;
 	}
+	tcMap.clear();
+	tcList.clear();
 }
 
 TestCase* CheckList::registerTc(const char* id, const char* desc)
@@ -30,6 +32,21 @@ TestCase* CheckList::registerTc(const char* id, const char* desc)
 	tcMap[id] = tc;
 	tcList.push_back(tc);
 	return tc;
+}
+
+void CheckList::hideTc(const string& id)
+{
+	for (TcList::iterator it = tcList.begin(); it != tcList.end(); )
+	{
+		if (!(*it)->id.compare(0, id.length(), id))
+		{
+			it = tcList.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
 }
 
 TestCase* CheckList::getTc(const char* id) const

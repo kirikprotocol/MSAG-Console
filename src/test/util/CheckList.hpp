@@ -195,6 +195,11 @@ public:
 	TestCase* registerTc(const char* id, const char* desc);
 
 	/**
+	 * Убрать вывод тест кейса в checklist.
+	 */
+	void hideTc(const string& id);
+
+	/**
 	 * Если тест кейс id незарегистрирован, кидается exception.
 	 */
 	TestCase* getTc(const char* id) const;
