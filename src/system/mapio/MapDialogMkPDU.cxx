@@ -203,7 +203,12 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
       fillPduTime((MAP_TIMESTAMP*)pdu_ptr,&tms);
       pdu_ptr+=sizeof(MAP_TIMESTAMP);
       //!!!TODO!!! expired
-      *pdu_ptr++=sms->getIntProperty(Tag::SMPP_MSG_STATE)?0x63:0; //TP-Status
+      switch(sms->getIntProperty(Tag::SMPP_MSG_STATE))
+      {
+        case DELIVERED: *pdu_ptr++=0;break; //ok
+        case EXPIRED: *pdu_ptr++=0x46;break; //expired
+        default: *pdu_ptr++=0x63;break; //failed
+      }
       //*pdu_ptr++=0;//0x6; //TP-Parameter-Indicator 0110
       //*pdu_ptr++=datacoding;
     }
