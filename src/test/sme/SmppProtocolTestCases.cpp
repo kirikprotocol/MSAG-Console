@@ -191,7 +191,7 @@ PduData* SmppProtocolTestCases::getFinalPdu(bool deliveryReports)
 		{
 			DeliveryMonitor* monitor = dynamic_cast<DeliveryMonitor*>(m);
 			__require__(monitor);
-			if (monitor->state == DELIVERED) //беру заведомо хорошие sms
+			if (monitor->state == SMPP_DELIVERED_STATE) //беру заведомо хорошие sms
 			{
 				res.push_back(monitor->pduData);
 				//break;
@@ -202,13 +202,13 @@ PduData* SmppProtocolTestCases::getFinalPdu(bool deliveryReports)
 	return res.size() ? res[rand0(res.size() - 1)] : NULL;
 }
 
-PduData* SmppProtocolTestCases::getPduByState(State state)
+PduData* SmppProtocolTestCases::getPduByState(SmppState state)
 {
 	__require__(fixture->pduReg);
 	__cfg_int__(timeCheckAccuracy);
 	PduFlag flag;
 	PduRegistry::PduMonitorIterator* it;
-	if (state == ENROUTE)
+	if (state == SMPP_ENROUTE_STATE)
 	{
 		flag = PDU_REQUIRED_FLAG;
 		it = fixture->pduReg->getMonitors(time(NULL) + timeCheckAccuracy + 3, LONG_MAX);
@@ -326,17 +326,15 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						pdu->get_message().set_shortMessage(tmp.get(), len);
 					}
 					break;
-				case 10: //messagePayload максимальной длины
+				case 10: //messagePayload максимальной длины (заодно будет отсекаться на map proxy)
 					if (!pdu->get_message().size_shortMessage())
 					{
 						__tc__("submitSm.correct.messagePayloadLengthMarginal");
+						pdu->get_message().set_esmClass(0);
+						pdu->get_message().set_dataCoding(DEFAULT);
 						int len = MAX_PAYLOAD_LENGTH;
-						bool udhi = pdu->get_message().get_esmClass() &
-							ESM_CLASS_UDHI_INDICATOR;
-						auto_ptr<char> tmp = rand_text2(len,
-							pdu->get_message().get_dataCoding(), udhi, false);
+						auto_ptr<char> tmp = rand_text2(len, DEFAULT, false, false);
 						pdu->get_optional().set_messagePayload(tmp.get(), len);
-
 					}
 					break;
 				case 11: //ussd запрос
@@ -1210,23 +1208,23 @@ void SmppProtocolTestCases::querySmCorrect(bool sync, int num)
 				{
 					case 1:
 						__tc__("querySm.correct.enroute");
-						pduData = getPduByState(ENROUTE);
+						pduData = getPduByState(SMPP_ENROUTE_STATE);
 						break;
 					case 2:
 						__tc__("querySm.correct.delivered");
-						pduData = getPduByState(DELIVERED);
+						pduData = getPduByState(SMPP_DELIVERED_STATE);
 						break;
 					case 3:
 						__tc__("querySm.correct.expired");
-						pduData = getPduByState(EXPIRED);
+						pduData = getPduByState(SMPP_EXPIRED_STATE);
 						break;
 					case 4:
 						__tc__("querySm.correct.undeliverable");
-						pduData = getPduByState(UNDELIVERABLE);
+						pduData = getPduByState(SMPP_UNDELIVERABLE_STATE);
 						break;
 					case 5:
 						__tc__("querySm.correct.deleted");
-						pduData = getPduByState(DELETED);
+						pduData = getPduByState(SMPP_DELETED_STATE);
 						break;
 					default:
 						__unreachable__("Invalid num state");
@@ -1278,19 +1276,19 @@ void SmppProtocolTestCases::querySmIncorrect(bool sync, int num)
 				switch (s.value1(numState))
 				{
 					case 1:
-						pduData = getPduByState(ENROUTE);
+						pduData = getPduByState(SMPP_ENROUTE_STATE);
 						break;
 					case 2:
-						pduData = getPduByState(DELIVERED);
+						pduData = getPduByState(SMPP_DELIVERED_STATE);
 						break;
 					case 3:
-						pduData = getPduByState(EXPIRED);
+						pduData = getPduByState(SMPP_EXPIRED_STATE);
 						break;
 					case 4:
-						pduData = getPduByState(UNDELIVERABLE);
+						pduData = getPduByState(SMPP_UNDELIVERABLE_STATE);
 						break;
 					case 5:
-						pduData = getPduByState(DELETED);
+						pduData = getPduByState(SMPP_DELETED_STATE);
 						break;
 					default:
 						__unreachable__("Invalid num state");
@@ -1362,21 +1360,29 @@ void SmppProtocolTestCases::querySmIncorrect(bool sync, int num)
 
 struct CancelKey
 {
-	const Address& src;
-	const Address& dest;
-	const string& servType;
+	const Address srcAddr;
+	const Address destAddr;
+	const string servType;
 
-	CancelKey(const Address& _src, const Address& _dest, const string& _servType)
-		: src(_src), dest(_dest), servType(_servType) {}
+	CancelKey(const Address& _srcAddr, const Address& _destAddr,
+		const string& _servType)
+	: srcAddr(_srcAddr), destAddr(_destAddr), servType(_servType) {}
 	bool operator< (const CancelKey& key) const
 	{
-		if (src < key.src) return true;
-		if (src == key.src)
+		if (srcAddr < key.srcAddr) return true;
+		if (srcAddr == key.srcAddr)
 		{
-			if (dest < key.dest) return true;
-			if (dest == key.dest && servType < key.servType) return true;
+			if (destAddr < key.destAddr) return true;
+			if (destAddr == key.destAddr && servType < key.servType) return true;
 		}
 		return false;
+	}
+	const string str() const
+	{
+		ostringstream s;
+		s << "srcAddr = " << srcAddr << ", destAddr = " << destAddr <<
+			", servType = " << servType;
+		return s.str();
 	}
 };
 
@@ -1390,25 +1396,36 @@ PduData* SmppProtocolTestCases::getCancelSmGroupParams(bool checkServType,
 	__require__(fixture->pduReg);
 	__cfg_int__(timeCheckAccuracy);
 	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(0, LONG_MAX);
+	time_t checkTime = time(NULL) + timeCheckAccuracy + 3;
+	time_t t = 0;
+	__trace2__("getCancelSmGroupParams(): checkTime = %ld, checkServType = %s",
+		checkTime, checkServType ? "true" : "false");
 	while (PduMonitor* m = it->next())
 	{
 		if (m->getType() == DELIVERY_MONITOR)
 		{
+			//сортировано по checkTime
+			__require__(t <= m->getCheckTime());
+			t = m->getCheckTime();
 			DeliveryMonitor* monitor = dynamic_cast<DeliveryMonitor*>(m);
+			CancelKey key(monitor->srcAddr, monitor->destAddr,
+				checkServType ? monitor->serviceType : "");
 			//список "плохих" адресов для мониторов во всех состояниях
-			if (monitor->getCheckTime() < time(NULL) + timeCheckAccuracy + 3)
+			if (monitor->getCheckTime() < checkTime)
 			{
-				cancelMap[CancelKey(monitor->srcAddr, monitor->destAddr,
-					checkServType ? monitor->serviceType : "")] = false;
+				__trace2__("getCancelSmGroupParams(): bad monitor = %d, checkTime = %ld, key = %s",
+					monitor->getId(), monitor->getCheckTime(), key.str().c_str());
+				cancelMap[key] = false;
 			}
 			//поиск "хороших" адресов
-			else if (m->getFlag() == PDU_REQUIRED_FLAG &&
-				!cancelMap.count(CancelKey(monitor->srcAddr, monitor->destAddr,
-				checkServType ? monitor->serviceType : "")))
+			else if (monitor->getFlag() == PDU_REQUIRED_FLAG &&
+				monitor->serviceType != "" && !cancelMap.count(key))
 			{
-				srcAddr = monitor->srcAddr;
-				destAddr = monitor->destAddr;
-				servType = checkServType ? monitor->serviceType : "";
+				__trace2__("getCancelSmGroupParams(): good monitor = %d, checkTime = %ld, key = %s",
+					monitor->getId(), monitor->getCheckTime(), key.str().c_str());
+				srcAddr = key.srcAddr;
+				destAddr = key.destAddr;
+				servType = key.servType;
 				pduData = monitor->pduData;
 				break;
 			}
@@ -1437,7 +1454,7 @@ void SmppProtocolTestCases::cancelSmSingleCorrect(bool sync, int num)
 			PduData* cancelPduData = NULL;
 			{
 				MutexGuard mguard(fixture->pduReg->getMutex());
-				cancelPduData = getPduByState(ENROUTE);
+				cancelPduData = getPduByState(SMPP_ENROUTE_STATE);
 			}
 			if (!cancelPduData)
 			{
@@ -1580,7 +1597,7 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 			PduData* cancelPduData = NULL;
 			{
 				MutexGuard mguard(fixture->pduReg->getMutex());
-				cancelPduData = getPduByState(ENROUTE);
+				cancelPduData = getPduByState(SMPP_ENROUTE_STATE);
 			}
 			if (!cancelPduData)
 			{
