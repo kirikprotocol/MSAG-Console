@@ -272,6 +272,14 @@ struct Address
     vl[length]=0;
     return snprintf(buf,buflen,".%d.%d.%s",type,plan,vl);
   }
+  inline std::string toString()const{
+    char vl[32];
+    char buf[48];
+    memcpy(vl,value,length);
+    vl[length]=0;
+    snprintf(buf,sizeof(buf),".%d.%d.%s",type,plan,vl);
+    return buf;
+  }
 };
 
 /**
