@@ -607,15 +607,26 @@ StateType StateMachine::submit(Tuple& t)
     if(profile.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
        sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
     {
-      char buf[260];
-      char buf8[260];
+      auto_ptr<char> buf;
+      auto_ptr<char> buf8;
+
       unsigned len;
-      const short*msg=(const short*)sms->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
-      len=ConvertUCS2ToMultibyte(msg,len,buf,sizeof(buf),CONV_ENCODING_CP1251);
-      int newlen=Transliterate(buf,len,CONV_ENCODING_CP1251,buf8,sizeof(buf8));
+      const short*msg=(const short*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+      bool pl=false;
+      if(len==0)
+      {
+        msg=(const short*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      }
+      buf=auto_ptr<char>(new char[len*2]);
+      len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
+      buf8=auto_ptr<char>(new char[len*3]);
+      int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get(),len*3);
       sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
       __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
-      sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8,newlen);
+      if(pl)
+        sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf8.get(),newlen);
+      else
+        sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8.get(),newlen);
       sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
@@ -803,14 +814,26 @@ StateType StateMachine::forward(Tuple& t)
     if(p.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
        sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
     {
-      char buf[260];
-      char buf8[260];
+      auto_ptr<char> buf;
+      auto_ptr<char> buf8;
+
       unsigned len;
-      const short*msg=(const short*)sms.getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
-      len=ConvertUCS2ToMultibyte(msg,len,buf,sizeof(buf),CONV_ENCODING_CP1251);
-      int newlen=Transliterate(buf,len,CONV_ENCODING_CP1251,buf8,sizeof(buf8));
+      const short*msg=(const short*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+      bool pl=false;
+      if(len==0)
+      {
+        msg=(const short*)sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      }
+      buf=auto_ptr<char>(new char[len*2]);
+      len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
+      buf8=auto_ptr<char>(new char[len*3]);
+      int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get(),len*3);
       sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
-      sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8,newlen);
+      __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
+      if(pl)
+        sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf8.get(),newlen);
+      else
+        sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8.get(),newlen);
       sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
     }
     if(t.command->is_reschedulingForward())
