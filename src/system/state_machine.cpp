@@ -402,6 +402,7 @@ StateType StateMachine::forward(Tuple& t)
   }catch(...)
   {
     //TODO!!!: remove task and reschedule
+    __trace__("Failed to put delivery command");
     return ENROUTE_STATE;
   }
   return DELIVERING_STATE;
@@ -412,15 +413,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
   __trace2__("delivering resp for :%lld",t.msgId);
   __require__(t.state==DELIVERING_STATE);
   smsc::sms::Descriptor d;
-/*  if(t.command->get_status()!=SmppStatusSet::ESME_ROK)
+  if(t.command->get_status()!=CMD_OK)
   {
     switch(t.command->get_status())
     {
-      case SmppStatusSet::ESME_RX_T_APPN:
-      case SmppStatusSet::ESME_RMSGQFUL:
+      case CMD_TEMP:
       {
         try{
-          time_t now=time(NULL);
           Descriptor d;
           __trace__("DELIVERYRESP: change state to enroute");
           store->changeSmsStateToEnroute(t.msgId,d,0,
@@ -429,23 +428,23 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");
         }
+        return UNKNOWN_STATE;
       }break;
       default:
       {
         try{
           time_t now=time(NULL);
           Descriptor d;
-          __trace__("DELIVERYRESP: change state to enroute");
+          __trace__("DELIVERYRESP: change state to undeliverable");
           store->changeSmsStateToUndeliverable(t.msgId,d,0);
         }catch(...)
         {
-          __trace__("DELIVERYRESP: failed to change state to enroute");
+          __trace__("DELIVERYRESP: failed to change state to undeliverable");
         }
-
+        return ERROR_STATE;
       }
-
     }
-  }*/
+  }
   try{
     __trace__("change state to delivered");
     store->changeSmsStateToDelivered(t.msgId,d);
