@@ -23,6 +23,7 @@ typedef struct modescr {
 modesc moduledesc[] = {{"TCAP",   4    },
                        {"SCCP",   5    },
                        {"MTPL3",  6    },
+		       {"ISUP",   12   },
                        {"MTPL2",  13   },
                        {"ETSIMAP",107  },
                        {"",       65535}};
@@ -31,7 +32,7 @@ enum {UNBOUND,BOUND,SIDLE,SINIT,SRUN,LINKRUN} status;
 
 void usage() {
   printf("Usage:   ss7run cfgname modname [modname...]\n");
-  printf("Example: ss7run ss7.cnf ETSIMAP TCAP SCCP MTPL3 MTPL2\n");
+  printf("Example: ss7run ss7.cnf ETSIMAP TCAP SCCP ISUP MTPL3 MTPL2\n");
 }
 
 int verify(int argc, char* argv[]) {
