@@ -4,6 +4,9 @@
 #include "test/smeman/SmeManagerTestCases.hpp"
 #include "test/alias/AliasManagerTestCases.hpp"
 #include "test/router/RouteManagerTestCases.hpp"
+#include "test/config/SmeConfigGen.hpp"
+#include "test/config/AliasConfigGen.hpp"
+#include "test/config/RouteConfigGen.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include "test/util/TCResultFilter.hpp"
 #include "test/util/CheckList.hpp"
@@ -25,6 +28,7 @@ using namespace smsc::sms;
 using namespace smsc::core::synchronization;
 using namespace smsc::core::threads; //ThreadPool, ThreadedTask
 using namespace smsc::test::sme;
+using namespace smsc::test::config;
 using namespace smsc::test::util;
 
 TCResultFilter* filter = new TCResultFilter();
@@ -305,9 +309,9 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 	smeReg->clear();
 	aliasReg->clear();
 	routeReg->clear();
-	SmeManagerTestCases* tcSme = new SmeManagerTestCases(NULL, smeReg);
-	AliasManagerTestCases* tcAlias = new AliasManagerTestCases(NULL, aliasReg);
-	RouteManagerTestCases* tcRoute = new RouteManagerTestCases(NULL, routeReg);
+	SmeManagerTestCases tcSme(NULL, smeReg);
+	AliasManagerTestCases tcAlias(NULL, aliasReg);
+	RouteManagerTestCases tcRoute(NULL, routeReg);
 
 	vector<Address*> addr;
 	vector<SmeInfo*> smeInfo;
@@ -318,7 +322,7 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 	{
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
-		process(tcSme->addCorrectSme(addr[i], smeInfo[i], 1 /*RAND_TC*/));
+		process(tcSme.addCorrectSme(addr[i], smeInfo[i], 1 /*RAND_TC*/));
 		ostringstream os;
 		os << *addr[i];
 		__trace2__("genConfig(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
@@ -338,13 +342,13 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 					case 1:
 					case 2:
 					case 3:
-						process(tcAlias->addCorrectAliasMatch(&alias, RAND_TC));
+						process(tcAlias.addCorrectAliasMatch(&alias, RAND_TC));
 						break;
 					case 4:
-						process(tcAlias->addCorrectAliasNotMatchAddress(&alias, RAND_TC));
+						process(tcAlias.addCorrectAliasNotMatchAddress(&alias, RAND_TC));
 						break;
 					case 5:
-						process(tcAlias->addCorrectAliasNotMatchAlias(&alias, RAND_TC));
+						process(tcAlias.addCorrectAliasNotMatchAlias(&alias, RAND_TC));
 						break;
 					default:
 						__unreachable__("Invalid alias test case");
@@ -369,15 +373,15 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 					case 1:
 					case 2:
 					case 3:
-						process(tcRoute->addCorrectRouteMatch(
+						process(tcRoute.addCorrectRouteMatch(
 							&route, NULL, RAND_TC));
 						break;
 					case 4:
-						process(tcRoute->addCorrectRouteNotMatch(
+						process(tcRoute.addCorrectRouteNotMatch(
 							&route, NULL, RAND_TC));
 						break;
 					case 5:
-						process(tcRoute->addCorrectRouteNotMatch2(
+						process(tcRoute.addCorrectRouteNotMatch2(
 							&route, NULL, RAND_TC));
 						break;
 					default:
@@ -388,9 +392,12 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 	}
 	//tcRoute->commit();
 	//сохранение конфигов
-	smeReg->saveConfig("sme.xml");
-	aliasReg->saveConfig("aliases.xml");
-	routeReg->saveConfig("routes.xml");
+	SmeConfigGen smeCfg(smeReg);
+	AliasConfigGen aliasCfg(aliasReg);
+	RouteConfigGen routeCfg(routeReg);
+	smeCfg.saveConfig("sme.xml");
+	aliasCfg.saveConfig("aliases.xml");
+	routeCfg.saveConfig("routes.xml");
 	//создание sme
 	vector<TestSme*> sme;
 	for (int i = 0; i < numSme; i++)
@@ -465,7 +472,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		if (help)
 		{
 			help = false;
-			cout << "gen config <numAddr> - generate config files" << endl;
+			cout << "gen config <numAddr> <numSme> - generate config files" << endl;
 			cout << "test <start|pause|resume> - pause/resume test execution" << endl;
 			cout << "stat - print statistics" << endl;
 			cout << "dump pdu - dump pdu registry" << endl;
@@ -483,8 +490,15 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 			cin >> numSme;
 			if (cmd == "config")
 			{
-				sme = genConfig(numAddr, numSme, smscHost, smscPort);
-				cout << "Config generated" << endl;
+				if (numAddr < numSme)
+				{
+					cout << "Must be: numAddr >= numSme" << endl;
+				}
+				else
+				{
+					sme = genConfig(numAddr, numSme, smscHost, smscPort);
+					cout << "Config generated" << endl;
+				}
 			}
 			else
 			{
