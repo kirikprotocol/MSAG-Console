@@ -89,28 +89,34 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 			break;
 		case SMPP_UNDELIVERABLE_STATE:
 		case SMPP_EXPIRED_STATE:
-			for (time_t t = monitor->pduData->sendTime;
-				  t <= monitor->pduData->sendTime + timeCheckAccuracy; t++)
 			{
-				static const DateFormatter df("ddMMyyHHmmss");
-				ostringstream s;
-				s << "*Подтв ";
-				s << SmsUtil::configString(destAlias) << " ";
-				s << df.format(t) << ": ";
-				if (monitor->state == SMPP_UNDELIVERABLE_STATE)
+				time_t sendTime = monitor->pduData->sendTime;
+				for (PduData* replacePduData = monitor->pduData->replacePdu; replacePduData; )
 				{
-					s << "permanent error"; //захардкожено
+					sendTime = replacePduData->sendTime;
 				}
-				else if (monitor->state == SMPP_EXPIRED_STATE)
+				for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 				{
-					s << "expired"; //захардкожено
-				}
-				//s << monitor->deliveryStatus;
-				const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
-				__trace2__("getExpectedResponse(): %s", p.first.c_str());
-				if (p.first.find(text) != string::npos)
-				{
-					return new AckText(p.first, p.second, valid);
+					static const DateFormatter df("ddMMyyHHmmss");
+					ostringstream s;
+					s << "*Подтв ";
+					s << SmsUtil::configString(destAlias) << " ";
+					s << df.format(t) << ": ";
+					if (monitor->state == SMPP_UNDELIVERABLE_STATE)
+					{
+						s << "permanent error"; //захардкожено
+					}
+					else if (monitor->state == SMPP_EXPIRED_STATE)
+					{
+						s << "expired"; //захардкожено
+					}
+					//s << monitor->deliveryStatus;
+					const pair<string, uint8_t> p = convert(s.str(), profile.codepage);
+					__trace2__("getExpectedResponse(): %s", p.first.c_str());
+					if (p.first.find(text) != string::npos)
+					{
+						return new AckText(p.first, p.second, valid);
+					}
 				}
 			}
 			break;
@@ -134,8 +140,12 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 	//destAlias
 	Address destAlias;
 	SmppUtil::convert(origPdu->get_message().get_dest(), &destAlias);
-	for (time_t t = monitor->pduData->sendTime;
-		  t <= monitor->pduData->sendTime + timeCheckAccuracy; t++)
+	time_t sendTime = monitor->pduData->sendTime;
+	for (PduData* replacePduData = monitor->pduData->replacePdu; replacePduData; )
+	{
+		sendTime = replacePduData->sendTime;
+	}
+	for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 	{
 		static const DateFormatter df("ddMMyyHHmmss");
 		ostringstream s;
