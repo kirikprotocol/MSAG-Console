@@ -452,7 +452,7 @@ throw (AdminException)
 		try
 		{
 			smsc_app_runner.reset(new SmscAppRunner(configs));
-			smsc::resourcemanager::ResourceManager::reload();
+			smsc::resourcemanager::ResourceManager::reload(configs.cfgman->getString("core.locales"), configs.cfgman->getString("core.default_locale"));
 			smsc_app_runner->Start();
 		}
 		catch (smsc::util::Exception &e)
@@ -1237,10 +1237,11 @@ void SmscComponent::logSetCategories(const Arguments & args)
 }
 
 Variant SmscComponent::applyLocaleResource()
+throw (AdminException)
 {
 	if (isSmscRunning())
 	{
-		smsc::resourcemanager::ResourceManager::reload();
+		smsc::resourcemanager::ResourceManager::reload(configs.cfgman->getString("core.locales"), configs.cfgman->getString("core.default_locale"));
 	}
 	return Variant("");
 }

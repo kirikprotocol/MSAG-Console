@@ -63,7 +63,7 @@ protected:
 	void applyAliases() throw (AdminException);
 	void applySmscConfig() throw (AdminException);
 	void applyServices() throw (AdminException);
-	Variant applyLocaleResource();
+	Variant applyLocaleResource() throw (AdminException);
 	void reloadConfigsAndRestart() throw (AdminException);
 	void reReadConfigs() throw (AdminException);
 
