@@ -9,6 +9,7 @@ namespace smsc { namespace wsme
 WSmeProcessor::WSmeProcessor(ConfigView* config)
     throw(ConfigException, InitException)
         : WSmeAdmin(), log(Logger::getCategory("smsc.wsme.WSmeProcessor")),
+            svcType(0), protocolId(0), 
             ds(0), visitorManager(0), langManager(0), adManager(0)
 {
     try
@@ -33,6 +34,12 @@ WSmeProcessor::WSmeProcessor(ConfigView* config)
 void WSmeProcessor::init(ConfigView* config)
     throw(ConfigException)
 {
+    try { protocolId = config->getInt("ProtocolId"); }
+    catch(ConfigException& exc) { protocolId = 0; };
+    
+    try { svcType = config->getString("SvcType"); }
+    catch(ConfigException& exc) { svcType = 0; };
+    
     ConfigView* dsConfig = config->getSubConfig("DataSource");
     char* dsIdentity = 0;
     try

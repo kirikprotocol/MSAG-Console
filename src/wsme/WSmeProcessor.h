@@ -239,6 +239,9 @@ namespace smsc { namespace wsme
         LangManager*        langManager;
         AdManager*          adManager;
     
+        int     protocolId;
+        char*   svcType;
+        
         void init(ConfigView* config)
             throw(ConfigException);
 
@@ -247,6 +250,9 @@ namespace smsc { namespace wsme
         WSmeProcessor(ConfigView* config) 
             throw(ConfigException, InitException);
         virtual ~WSmeProcessor();
+        
+        const char* getSvcType() { return (svcType) ? svcType:"WSme"; };
+        int getProtocolId() { return protocolId; };
         
         /* ------------------------ Smsc interface ------------------------ */ 
 

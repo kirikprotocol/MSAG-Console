@@ -156,10 +156,10 @@ protected:
                 responce.setArchivationRequested(false);
                 responce.setValidTime(time(NULL)+messageLifePeriod);
                 responce.setDeliveryReport(1);
+                responce.setEServiceType(processor.getSvcType());
 
-                //body.setIntProperty(Tag::SMPP_PROTOCOL_ID, ???);
+                responce.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
                 responce.setIntProperty(Tag::SMPP_ESM_CLASS, 0 /*xx0000xx*/);
-                responce.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 0);
                 responce.setIntProperty(Tag::SMPP_PRIORITY, 0);
                 responce.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
                                         request.getIntProperty(
