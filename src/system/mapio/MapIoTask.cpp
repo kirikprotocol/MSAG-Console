@@ -344,11 +344,14 @@ void MapIoTask::dispatcher()
   MSG_T message;
   USHORT_T result;
   message.receiver = MY_USER_ID;
-
+  unsigned timecounter = 0;
   for(;;){
     if ( isStopping ) return;
     result = EINSS7CpMsgRecv_r(&message,1000);
-
+    if ( ++timecounter == 60 ) {
+      __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
+      timecounter = 0;
+    }
     if ( result == MSG_TIMEOUT ) continue;
     if ( result == MSG_BROKEN_CONNECTION ){
       __trace2__("MAP: Broken connection");
