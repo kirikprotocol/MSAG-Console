@@ -1514,6 +1514,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 }
               }
               if( dlg_found ) {
+                dialog->dialogid_smsc = dialogid_smsc;
                 __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
                 if ( !dialog->isUSSD )
                   throw MAPDIALOG_FATAL_ERROR(
@@ -1530,7 +1531,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                         mr,dialog->ussdMrRef));
                   }
                 }
-                dialog->dialogid_smsc = dialogid_smsc;
                 dialog->isQueryAbonentStatus = false;
                 dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
                 DoUSSDRequestOrNotifyReq(dialog.get());
