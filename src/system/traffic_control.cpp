@@ -128,7 +128,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
             if(deliveryCount-responseCount<=cfg.allowedDeliveryFailures &&
                speed>1 && speed<scount)
             {
-              __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",src_proxy->getSystemId(),speed,scount);
+              __info2__(log,"TC: deny - receipt protect schedule limit for %s: %lf - %d",src_proxy->getSystemId(),speed,scount);
               break;
             }
 

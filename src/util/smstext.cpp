@@ -197,6 +197,9 @@ void transLiterateSms(SMS* sms,int datacoding)
     buf8=auto_ptr<char>(new char[udhiDataLen+len*2+1]);
     newlen=ConvertLatin1ToSMSC7Bit((char*)msg,len,buf8.get()+udhiDataLen);
     dc=DataCoding::SMSC7BIT;
+  }else
+  {
+    return;
   }
 
   sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
