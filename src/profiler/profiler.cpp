@@ -14,7 +14,7 @@
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
 
-
+#include "util/recoder/recode_dll.h"
 
 namespace smsc{
 namespace profiler{
@@ -230,7 +230,9 @@ int Profiler::Execute()
   SmscCommand cmd,resp;
   SMS *sms;
   int len;
-  char body[MAX_SHORT_MESSAGE_LENGTH];
+  char body[MAX_SHORT_MESSAGE_LENGTH+1];
+  char buf[MAX_SHORT_MESSAGE_LENGTH+1];
+  int coding;
   int status=MAKE_COMMAND_STATUS(CMD_OK,0);
 
 //  char *str=body;
@@ -250,8 +252,26 @@ int Profiler::Execute()
     sms = cmd->get_sms();
     Address& addr=sms->getOriginatingAddress();
     //len = sms->getMessageBody().getData( (uint8_t*)body );
-   	strncpy(body,sms->getStrProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE).c_str(),sizeof(body));
+   	strncpy(buf,sms->getStrProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE).c_str(),sizeof(buf));
    	len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
+   	coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
+   	__trace2__("Profiler: data coding %d",coding);
+   	if(coding==DataCoding::DEFAULT)
+   	{
+   	  Convert7BitToText(buf,len,body,sizeof(body));
+   	}else if(coding==DataCoding::UCS2)
+   	{
+   	  ConvertUCS2ToMultibyte((const short*)buf,len,body,sizeof(body),CONV_ENCODING_ANSI);
+   	  body[len/2]=0;
+   	}else
+   	{
+   	  memcpy(body,buf,len);
+   	  body[len]=0;
+   	}
+   	len=strlen(body);
+
+   	__trace2__("Profiler: received %s",body);
+
    	int i;
    	for(i=0;i<len;i++)body[i]=toupper(body[i]);
    	i=0;
