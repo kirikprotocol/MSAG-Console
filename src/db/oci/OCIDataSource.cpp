@@ -737,8 +737,6 @@ OCIResultSet::~OCIResultSet()
 bool OCIResultSet::fetchNext()
     throw(SQLException)
 {
-    __require__(owner);
-
     sword status = owner->fetch();
     if (status != OCI_NO_DATA)
     {
@@ -773,6 +771,7 @@ bool OCIResultSet::isNull(int pos)
 const char* OCIResultSet::getString(int pos)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(pos)) return 0;
     return (const char*)getField(pos);
 }
 
@@ -789,7 +788,7 @@ int16_t OCIResultSet::getInt16(int pos)
 int32_t OCIResultSet::getInt32(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    __require__(owner);
+    if (isNull(pos)) return 0;
 
     boolean     ok = FALSE;
     int32_t     result = 0;
@@ -808,7 +807,7 @@ int32_t OCIResultSet::getInt32(int pos)
 int64_t OCIResultSet::getInt64(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    __require__(owner);
+    if (isNull(pos)) return 0;
 
     boolean     ok = FALSE;
     int64_t     result = 0;
@@ -837,7 +836,7 @@ uint16_t OCIResultSet::getUint16(int pos)
 uint32_t OCIResultSet::getUint32(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    __require__(owner);
+    if (isNull(pos)) return 0;
 
     boolean     ok = FALSE;
     uint32_t    result = 0;
@@ -856,7 +855,7 @@ uint32_t OCIResultSet::getUint32(int pos)
 uint64_t OCIResultSet::getUint64(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    __require__(owner);
+    if (isNull(pos)) return 0;
 
     boolean     ok = FALSE;
     uint64_t    result = 0;
@@ -875,7 +874,7 @@ uint64_t OCIResultSet::getUint64(int pos)
 float OCIResultSet::getFloat(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    __require__(owner);
+    if (isNull(pos)) return 0;
 
     boolean     ok = FALSE;
     float       result = 0;
@@ -889,9 +888,11 @@ float OCIResultSet::getFloat(int pos)
 double OCIResultSet::getDouble(int pos)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(pos)) return 0;
+
     boolean     ok = FALSE;
     double      result = 0;
-
+    
     OCINumber*  number = (OCINumber*)getField(pos);
     owner->check(OCINumberToReal(owner->errhp, (CONST OCINumber *)number,
                                  (uword) sizeof(double),
@@ -901,6 +902,8 @@ double OCIResultSet::getDouble(int pos)
 long double OCIResultSet::getLongDouble(int pos)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(pos)) return 0;
+    
     boolean     ok = FALSE;
     long double result = 0;
 
@@ -914,6 +917,8 @@ long double OCIResultSet::getLongDouble(int pos)
 time_t OCIResultSet::getDateTime(int pos)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(pos)) return 0;
+
     time_t sys_date;
     OCIDate* oci_date = (OCIDate *)getField(pos);
     owner->convertOCIDateToDate(oci_date, &sys_date);
@@ -1156,6 +1161,7 @@ void OCIRoutine::setString(const char* key, const char* str, bool null)
 const char* OCIRoutine::getString(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(key)) return 0;
     return (const char*)getField(key);
 }
 
@@ -1208,6 +1214,8 @@ void OCIRoutine::setInt32(const char* key, int32_t val, bool null)
 int32_t OCIRoutine::getInt32(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(key)) return 0;
+
     boolean     ok = FALSE;
     int32_t     result = 0;
 
@@ -1260,6 +1268,8 @@ void OCIRoutine::setInt64(const char* key, int64_t val, bool null)
 int64_t OCIRoutine::getInt64(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(key)) return 0;
+
     boolean     ok = FALSE;
     int64_t     result = 0;
 
@@ -1300,6 +1310,8 @@ void OCIRoutine::setUint32(const char* key, uint32_t val, bool null)
 uint32_t OCIRoutine::getUint32(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(key)) return 0;
+
     boolean     ok = FALSE;
     uint32_t    result = 0;
 
@@ -1321,6 +1333,8 @@ void OCIRoutine::setUint64(const char* key, uint64_t val, bool null)
 uint64_t OCIRoutine::getUint64(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(key)) return 0;
+
     boolean     ok = FALSE;
     uint64_t    result = 0;
 
@@ -1359,6 +1373,8 @@ void OCIRoutine::setFloat(const char* key, float val, bool null)
 float OCIRoutine::getFloat(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(key)) return 0;
+
     boolean     ok = FALSE;
     float       result = 0;
 
@@ -1376,6 +1392,8 @@ void OCIRoutine::setDouble(const char* key, double val, bool null)
 double OCIRoutine::getDouble(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(key)) return 0;
+
     boolean     ok = FALSE;
     double      result = 0;
 
@@ -1393,6 +1411,8 @@ void OCIRoutine::setLongDouble(const char* key, long double val, bool null)
 long double OCIRoutine::getLongDouble(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(key)) return 0;
+
     boolean     ok = FALSE;
     long double result = 0;
 
@@ -1421,6 +1441,8 @@ void OCIRoutine::setDateTime(const char* key, time_t time, bool null)
 time_t OCIRoutine::getDateTime(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
+    if (isNull(key)) return 0;
+    
     time_t sys_date;
     OCIDate* oci_date = (OCIDate *)getField(key);
     convertOCIDateToDate(oci_date, &sys_date);
