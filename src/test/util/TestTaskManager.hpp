@@ -20,17 +20,20 @@ private:
 
 public:
 	TestTask(const char* _name)
-		: executeFlag(true)
+		: executeFlag(true), name(new char[100])
 	{
-		name = new char[100];
-		memcpy(name, _name, sizeof(_name));
+		strcpy(name, _name);
 	}
 
 	TestTask(const char* className, int taskNum)
-		: executeFlag(true)
+		: executeFlag(true), name(new char[100])
 	{
-		name = new char[100];
 		sprintf(name, "%s_%d", className, taskNum);
+	}
+
+	virtual ~TestTask()
+	{
+		delete[] name;
 	}
 
 	virtual void executeCycle() = NULL; //abstract
