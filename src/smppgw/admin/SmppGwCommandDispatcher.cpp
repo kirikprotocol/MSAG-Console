@@ -153,7 +153,6 @@ SmppGwCommandDispatcher::~SmppGwCommandDispatcher()
 
 Response * SmppGwCommandDispatcher::handle(const Command * const command) throw (AdminException)
 {
-  fprintf(stderr, "------Getting Handle\n");
   try
   {
     switch (command->getId())
@@ -167,7 +166,6 @@ Response * SmppGwCommandDispatcher::handle(const Command * const command) throw 
     case CommandIds::deleteSme:
       return deleteSme((CommandDeleteSme*)command);
     case CommandIds::traceRoute: 
-      fprintf(stderr, "traceRoute\n");
       return traceRoute((CommandTraceRoute*)command);
     case CommandIds::loadRoutes:
       return loadRoutes((CommandLoadRoutes*)command);

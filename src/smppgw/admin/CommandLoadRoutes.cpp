@@ -28,10 +28,12 @@ using namespace smsc::util::config::route;
 
 
 
-CommandLoadRoutes::CommandLoadRoutes(const xercesc::DOMDocument * doc)  
+CommandLoadRoutes::CommandLoadRoutes(const xercesc::DOMDocument * doc)
   : Command((Command::Id)CommandIds::loadRoutes)
 {
   smsc_log_debug(logger, "LoadRoutes command");
+
+
 }
 
 

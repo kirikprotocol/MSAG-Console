@@ -22,14 +22,14 @@ class CommandTraceRoute : public smsc::admin::protocol::Command
 {
 public:
   
-  CommandTraceRoute(const xercesc::DOMDocument * document);
+  CommandTraceRoute(const xercesc::DOMDocument * doc);
   virtual ~CommandTraceRoute();
   smsc::admin::service::Variant GetTraceResult(smsc::smppgw::Smsc * SmscApp);
 
 protected:
-  std::auto_ptr<char> dstAddr;
-  std::auto_ptr<char> srcAddr;
-  std::auto_ptr<char> srcSysId;
+  std::string dstAddr;
+  std::string srcAddr;
+  std::string srcSysId;
 };
 
 }

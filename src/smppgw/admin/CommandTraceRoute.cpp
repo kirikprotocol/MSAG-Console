@@ -58,6 +58,7 @@ CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * doc)
   : Command((Command::Id)CommandIds::traceRoute)
 {
   smsc_log_debug(logger, "TraceRoute command");
+
   try {
     DOMElement *elem = doc->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("param"));
@@ -68,15 +69,16 @@ CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * doc)
       std::auto_ptr<char> value(getNodeText(*paramElem));
 
       if (::strcmp("srcAddr", name) == 0)
-        srcAddr = value;
+        srcAddr = value.get();
       if (::strcmp("dstAddr", name) == 0)
-        dstAddr = value;
+        dstAddr = value.get();
       if (::strcmp("srcSysId", name) == 0) 
-        srcSysId = value;
+        srcSysId = value.get();
     }
   } catch (...) {
     throw AdminException("Some exception occured");
   }
+
 }
 
 CommandTraceRoute::~CommandTraceRoute()
@@ -86,11 +88,12 @@ CommandTraceRoute::~CommandTraceRoute()
 
 smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Smsc * SmscApp)
 {
-  
-  const char* _dstAddr  = dstAddr.get();
-  const char* _srcAddr  = srcAddr.get();
-  const char* _srcSysId = srcSysId.get();
-  
+
+
+  const char* _dstAddr  = (char *)&dstAddr;
+  const char* _srcAddr  = (char *)&srcAddr;
+  const char* _srcSysId = (char *)&srcSysId;
+
   try
   {
        
@@ -152,8 +155,6 @@ smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Sm
       {
         result.appendValueToStringList("Route found");
       }
-
-
 
       if (found)
       {

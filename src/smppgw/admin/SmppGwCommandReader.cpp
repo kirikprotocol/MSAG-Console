@@ -29,7 +29,7 @@ SmppGwCommandReader::~SmppGwCommandReader()
 
 int SmppGwCommandReader::getCommandIdByName(const char * const command_name)
 {
-  fprintf(stderr, "------Reading string command %s\n",command_name);
+  fprintf(stderr,"---- Command received %s\n",command_name);
 
   if (strcmp("apply", command_name) == 0)
     return (Command::Id)CommandIds::apply;
@@ -49,6 +49,8 @@ int SmppGwCommandReader::getCommandIdByName(const char * const command_name)
 
 Command * SmppGwCommandReader::createCommand(int id, const DOMDocument *data)
 {
+  fprintf(stderr,"---- Create command \n");
+
   switch (id)
   {
     case CommandIds::apply: return new CommandApply(data);
