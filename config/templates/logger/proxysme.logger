@@ -1,0 +1,5 @@
+root=@logger.default.category@, default
+
+appender.default.file.name=@logs.dir@/proxysme.log
+appender.default.file.maxsize=20Mb
+appender.default.file.maxindex=4

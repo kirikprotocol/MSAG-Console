@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+  <param name="adminHost" type="string">@listen.host@</param>
+  <param name="adminPort" type="int">@proxysme.admin.port@</param>
+  <param name="queueLength" type="int">100</param>
+  <section name="left">
+    <param name="host" type="string">@connect.host@</param>
+    <param name="origAddr" type="string">@proxysme.orig.address@</param>
+    <param name="password" type="string"></param>
+    <param name="port" type="int">@smsc.smpp.port@</param>
+    <param name="sid" type="string">proxysme</param>
+    <param name="systemType" type="string">proxy</param>
+    <param name="timeOut" type="int">30</param>
+    <param name="defaultDCS" type="int">0</param>
+  </section>
+
+  <section name="right">
+    <param name="host" type="string">right host</param>
+    <param name="origAddr" type="string">right origAddr</param>
+    <param name="password" type="string">right password</param>
+    <param name="port" type="int">2001</param>
+    <param name="sid" type="string">right sid</param>
+    <param name="systemType" type="string">right systemType</param>
+    <param name="timeOut" type="int">2002</param>
+    <param name="defaultDCS" type="int">0</param>
+  </section>
+
+</config>

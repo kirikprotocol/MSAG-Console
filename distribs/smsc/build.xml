@@ -305,6 +305,18 @@ Targets:
     <ant dir="${SMSC_DIR}/ext_smes" target="infosme_distr"/>
   </target>
 
+  <target name="proxysme_build">
+    <ant dir="${SRC_DIR}" target="mod">
+      <property name="MOD" value="proxysme"/>
+    </ant>
+  </target>
+  <target name="proxysme_update" depends="proxysme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="proxysme_update"/>
+  </target>
+  <target name="proxysme_distr" depends="proxysme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="proxysme_distr"/>
+  </target>
+
   <target name="sibinfosme_update">
     <antcall target="infosme_update"/>
     <delete>
@@ -320,4 +332,5 @@ Targets:
       <fileset dir="${DISTR_DIR}/webapps/smsc/esme_InfoSme"/>
     </move>
   </target>
+
 </project>
