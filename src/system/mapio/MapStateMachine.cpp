@@ -1153,7 +1153,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     if ( dialog->state == MAPST_WaitRInfoConf )
     {
       if ( errorSendRoutingInfoForSm_sp && 
-        (errorSendRoutingInfoForSm_sp->errorCode == 6 ) )
+        (errorSendRoutingInfoForSm_sp->errorCode == 27 ) )
       {
         __trace2__("MAP::%s absent subscriber",__FUNCTION__);
         dialog->subscriberAbsent = true;
