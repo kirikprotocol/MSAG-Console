@@ -31,5 +31,11 @@
     <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
     <function-signature>boolean concat(java.lang.String, java.lang.String)</function-signature>
   </function>
+  <function>
+    <description>Returns locale message for SMSC error code (optionally extended by errcode value).</description>
+    <name>getErrorMessage</name>
+    <function-class>ru.sibinco.lib.backend.util.TagLibFunctions</function-class>
+    <function-signature>java.lang.String getErrorMessage(java.util.Locale, int, boolean)</function-signature>
+  </function>
 </taglib>
 
