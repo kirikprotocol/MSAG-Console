@@ -140,8 +140,9 @@ void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
 	{
 		//создать pdu
 		PduSubmitSm* pdu = new PduSubmitSm();
+		//отключить short_message & message_payload
 		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, addr,
-			OPT_ALL & ~OPT_MSG_PAYLOAD); //отключить messagePayload
+			false, OPT_ALL & ~OPT_MSG_PAYLOAD);
 		//установить немедленную доставку
 		pdu->get_message().set_scheduleDeliveryTime("");
 		//текст сообщения

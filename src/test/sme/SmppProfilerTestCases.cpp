@@ -43,8 +43,9 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 		//создать pdu
 		PduSubmitSm* pdu = new PduSubmitSm();
 		__cfg_addr__(profilerAlias);
+		//отключить short_message & message_payload
 		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, profilerAlias,
-			OPT_ALL & ~OPT_MSG_PAYLOAD); //отключить messagePayload
+			false, OPT_ALL & ~OPT_MSG_PAYLOAD);
 		//установить немедленную доставку
 		pdu->get_message().set_esmClass(0x0); //иначе профайлер отлупит
 		pdu->get_message().set_scheduleDeliveryTime("");
