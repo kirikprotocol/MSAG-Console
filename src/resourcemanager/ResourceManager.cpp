@@ -90,9 +90,10 @@ void ResourceManager::init(const _stringlist & localeNames, const std::string & 
   __trace2__("ResMgr: this = %p set valid locales %p/%d <- %p/%d", instance.get(), &(instance.get()->validLocales), instance.get()->validLocales.size(), &localeNames, localeNames.size() );
 }
 
-void ResourceManager::reload() throw ()
+void ResourceManager::reload(const char * const localesString, const char * const defaultLocaleStr) throw ()
 {
   instance.reset(new ResourceManager);
+  init(localesString, defaultLocaleStr);
 }
 
 ResourceManager::ResourceManager() throw ()

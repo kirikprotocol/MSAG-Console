@@ -37,7 +37,7 @@ public:
 
   static const ResourceManager* getInstance() throw();
   static void init(const char * const localesString, const char * const defaultLocaleStr) throw();
-  static void reload() throw();
+  static void reload(const char * const localesString, const char * const defaultLocaleStr) throw();
 
   #ifdef SMSC_DEBUG
   void dump(std::ostream & outStream) const;
