@@ -27,7 +27,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 	for (int i = 0; i < listSize; i++)
 	{
 		TCResult* res = tc.storeCorrectSM(&id[i], &sms[i], RAND_TC);
-		filter->addResult(res);
 		stack[i].push_back(res);
 	}
 	
@@ -52,15 +51,12 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					//создать
 					TCResult* res1 = tc.storeCorrectSM(&newId, &newSMS,
 						id[i], sms[i], RAND_TC);
-					filter->addResult(res1);
 					stack[i].push_back(res1);
 					//прочитать
 					TCResult* res2 = tc.loadExistentSM(id[i], sms[i]);
-					filter->addResult(res2);
 					stack[i].push_back(res2);
 					//удалить
 					TCResult* res3 = tc.deleteExistentSM(newId);
-					filter->addResult(res3);
 					stack[i].push_back(res3);
 				}
 				break;
@@ -68,7 +64,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.storeRejectDuplicateSM(sms[i]);
-					filter->addResult(res);
 					stack[i].push_back(res);
 				}
 				break;
@@ -83,7 +78,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.setCorrectSMStatus(id[i], &sms[i], RAND_TC);
-					filter->addResult(res);
 					stack[i].push_back(res);
 				}
 				break;
@@ -91,7 +85,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.setIncorrectSMStatus(id[i]);
-					filter->addResult(res);
 					stack[i].push_back(res);
 				}
 				break;
@@ -99,7 +92,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.replaceCorrectSM(id[i], &sms[i], RAND_TC);
-					filter->addResult(res);
 					stack[i].push_back(res);
 				}
 				break;
@@ -107,7 +99,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.replaceIncorrectSM(id[i], sms[i], RAND_TC);
-					filter->addResult(res);
 					stack[i].push_back(res);
 				}
 				break;
@@ -115,7 +106,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.replaceIncorrectSM2(id[i], sms[i], RAND_TC);
-					filter->addResult(res);
 					stack[i].push_back(res);
 				}
 				break;
@@ -123,7 +113,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.loadExistentSM(id[i], sms[i]);
-					filter->addResult(res);
 					stack[i].push_back(res);
 				}
 		}
@@ -134,7 +123,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 	for (int i = 0; i < listSize; i++)
 	{
 		TCResult* res = tc.deleteExistentSM(id[i]);
-		filter->addResult(res);
 		stack[i].push_back(res);
 	}
 
@@ -151,7 +139,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.setNonExistentSMStatus(id[i], RAND_TC);
-					filter->addResult(res);
 					stack[i].push_back(res);
 				}
 				break;
@@ -159,7 +146,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.replaceNonExistentSM(id[i], RAND_TC);
-					filter->addResult(res);
 					stack[i].push_back(res);
 				}
 				break;
@@ -167,7 +153,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.loadNonExistentSM(id[i], RAND_TC);
-					filter->addResult(res);
 					stack[i].push_back(res);
 				}
 				break;
@@ -175,7 +160,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.deleteNonExistentSM(id[i], RAND_TC);
-					filter->addResult(res);
 					stack[i].push_back(res);
 				}
 				break;
