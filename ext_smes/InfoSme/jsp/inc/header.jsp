@@ -3,6 +3,7 @@
 	sme_menu_begin(out);
   sme_menu_button(out, "mbMenu",  "stat",      "Statistics","");
 	sme_menu_button(out, "mbMenu",  "apply",     "Apply",     "");
+  sme_menu_button(out, "mbMenu",  "statuses",  "Statuses",  "");
 	sme_menu_button(out, "mbMenu",  "options",   "Options",   "Global InfoSme options");
 	sme_menu_button(out, "mbMenu",  "drivers",   "Drivers",   "DB drivers");
 	sme_menu_button(out, "mbMenu",  "providers", "Providers", "Providers");

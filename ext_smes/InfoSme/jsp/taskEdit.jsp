@@ -37,7 +37,7 @@
 <col width="10%">
 <tr class=row<%=rowN++&1%>>
   <th>Task ID</th>
-  <td><input class=txt name=sectionName value="<%=StringEncoderDecoder.encode(bean.getSectionName())%>"></td>
+  <td><input class=txt name=id value="<%=StringEncoderDecoder.encode(bean.getId())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Task name</th>
@@ -110,7 +110,11 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>dsTimeout</th>
+  <th><label for=trackIntegrity>track integrity</label></th>
+  <td><input class=check type=checkbox id=trackIntegrity name=trackIntegrity value=true <%=bean.isTrackIntegrity() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>system data source timeout</th>
   <td><input class=txt name=dsOwnTimeout value="<%=StringEncoderDecoder.encode(bean.getDsTimeout())%>">secs</td>
 </tr>
 <tr class=row<%=rowN++&1%>>

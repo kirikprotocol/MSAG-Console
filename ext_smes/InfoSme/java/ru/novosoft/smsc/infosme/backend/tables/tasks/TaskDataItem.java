@@ -7,8 +7,9 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
  * Date: Sep 2, 2003
  * Time: 12:58:13 PM
  */
-public class TaskDataItem extends AbstractDataItem {
-  public TaskDataItem(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage, String svcType)
+public class TaskDataItem extends AbstractDataItem
+{
+  public TaskDataItem(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage, String svcType, boolean generating, boolean processing, boolean trackIntegrity)
   {
     values.put("id", id);
     values.put("name", name);
@@ -18,6 +19,9 @@ public class TaskDataItem extends AbstractDataItem {
     values.put("retryOnFail", new Boolean(retryOnFail));
     values.put("replaceMessage", new Boolean(replaceMessage));
     values.put("svcType", svcType);
+    values.put("generating", new Boolean(generating));
+    values.put("processing", new Boolean(processing));
+    values.put("trackIntegrity", new Boolean(trackIntegrity));
   }
 
   public String getId()
@@ -58,5 +62,20 @@ public class TaskDataItem extends AbstractDataItem {
   public String getSvcType()
   {
     return (String) values.get("svcType");
+  }
+
+  public boolean isGenerating()
+  {
+    return ((Boolean) values.get("generating")).booleanValue();
+  }
+
+  public boolean isProcessing()
+  {
+    return ((Boolean) values.get("processing")).booleanValue();
+  }
+
+  public boolean isTrackIntegrity()
+  {
+    return ((Boolean) values.get("trackIntegrity")).booleanValue();
   }
 }

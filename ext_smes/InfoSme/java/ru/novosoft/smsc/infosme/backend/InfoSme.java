@@ -1,7 +1,9 @@
 package ru.novosoft.smsc.infosme.backend;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 /**
  * Created by IntelliJ IDEA.
@@ -16,4 +18,8 @@ public class InfoSme extends InfoSmeTransport
     super(info);
   }
 
+  public void updateInfo(SMSCAppContext appContext) throws AdminException
+  {
+    setInfo(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID));
+  }
 }

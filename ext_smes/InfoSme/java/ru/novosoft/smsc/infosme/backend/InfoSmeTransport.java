@@ -13,24 +13,31 @@ import java.util.*;
  */
 class InfoSmeTransport extends Service
 {
-  Component infoSmeComponent = null;
-  Method method_startTaskProcessor = null;
-  Method method_stopTaskProcessor = null;
-  Method method_isTaskProcessorRuning = null;
-  Method method_startTaskScheduler = null;
-  Method method_stopTaskScheduler = null;
-  Method method_isTaskSchedulerRuning = null;
-  Method method_addTasks = null;
-  Method method_removeTasks = null;
-  Method method_changeTasks = null;
-  Method method_isTaskEnabled = null;
-  Method method_setTaskEnabled = null;
-  Method method_startTasks = null;
-  Method method_stopTasks = null;
-  Method method_addSchedules = null;
-  Method method_removeSchedules = null;
-  Method method_changeSchedules = null;
-  Method method_flushStatistics = null;
+  private Component infoSmeComponent = null;
+  private Method method_startTaskProcessor = null;
+  private Method method_stopTaskProcessor = null;
+  private Method method_isTaskProcessorRuning = null;
+  private Method method_startTaskScheduler = null;
+  private Method method_stopTaskScheduler = null;
+  private Method method_isTaskSchedulerRuning = null;
+
+  private Method method_addTasks = null;
+  private Method method_removeTasks = null;
+  private Method method_changeTasks = null;
+
+  private Method method_isTaskEnabled = null;
+  private Method method_setTaskEnabled = null;
+
+  private Method method_startTasks = null;
+  private Method method_stopTasks = null;
+  private Method method_getProcessingTasksMethod = null;
+  private Method method_getGeneratingTasksMethod = null;
+
+  private Method method_addSchedules = null;
+  private Method method_removeSchedules = null;
+  private Method method_changeSchedules = null;
+
+  private Method method_flushStatistics = null;
 
 
   public InfoSmeTransport(ServiceInfo info) throws AdminException
@@ -183,6 +190,17 @@ class InfoSmeTransport extends Service
     call(infoSmeComponent, method_flushStatistics, Type.Types[Type.StringType], new HashMap());
   }
 
+  public synchronized List getGeneratingTasks() throws AdminException
+  {
+    refreshComponents();
+    return (List) call(infoSmeComponent, method_getGeneratingTasksMethod, Type.Types[Type.StringListType], new HashMap());
+  }
+
+  public synchronized List getProcessingTasks() throws AdminException
+  {
+    refreshComponents();
+    return (List) call(infoSmeComponent, method_getProcessingTasksMethod, Type.Types[Type.StringListType], new HashMap());
+  }
 
   protected void checkComponents()
   {
@@ -193,6 +211,7 @@ class InfoSmeTransport extends Service
             || method_addTasks == null || method_removeTasks == null || method_changeTasks == null
             || method_isTaskEnabled == null || method_setTaskEnabled == null
             || method_startTasks == null || method_stopTasks == null
+            || method_getGeneratingTasksMethod == null || method_getProcessingTasksMethod == null
             || method_addSchedules == null || method_removeSchedules == null || method_changeSchedules == null
             || method_flushStatistics == null) {
 
@@ -200,19 +219,23 @@ class InfoSmeTransport extends Service
 
       method_startTaskProcessor = (Method) infoSmeComponent.getMethods().get("startTaskProcessor");
       method_stopTaskProcessor = (Method) infoSmeComponent.getMethods().get("stopTaskProcessor");
-      method_isTaskProcessorRuning = (Method) infoSmeComponent.getMethods().get("isTaskProcessorRuning");
+      method_isTaskProcessorRuning = (Method) infoSmeComponent.getMethods().get("isTaskProcessorRunning");
 
       method_startTaskScheduler = (Method) infoSmeComponent.getMethods().get("startTaskScheduler");
       method_stopTaskScheduler = (Method) infoSmeComponent.getMethods().get("stopTaskScheduler");
-      method_isTaskSchedulerRuning = (Method) infoSmeComponent.getMethods().get("isTaskSchedulerRuning");
+      method_isTaskSchedulerRuning = (Method) infoSmeComponent.getMethods().get("isTaskSchedulerRunning");
 
       method_addTasks = (Method) infoSmeComponent.getMethods().get("addTasks");
       method_removeTasks = (Method) infoSmeComponent.getMethods().get("removeTasks");
       method_changeTasks = (Method) infoSmeComponent.getMethods().get("changeTasks");
+
       method_isTaskEnabled = (Method) infoSmeComponent.getMethods().get("isTaskEnabled");
       method_setTaskEnabled = (Method) infoSmeComponent.getMethods().get("setTaskEnabled");
+
       method_startTasks = (Method) infoSmeComponent.getMethods().get("startTasks");
       method_stopTasks = (Method) infoSmeComponent.getMethods().get("stopTasks");
+      method_getGeneratingTasksMethod = (Method) infoSmeComponent.getMethods().get("getGeneratingTasksMethod");
+      method_getProcessingTasksMethod = (Method) infoSmeComponent.getMethods().get("getProcessingTasksMethod");
 
       method_addSchedules = (Method) infoSmeComponent.getMethods().get("addSchedules");
       method_removeSchedules = (Method) infoSmeComponent.getMethods().get("removeSchedules");

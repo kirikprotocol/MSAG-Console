@@ -13,7 +13,8 @@ import java.util.*;
  * Date: Sep 2, 2003
  * Time: 12:48:07 PM
  */
-public class ScheduleDataSource extends AbstractDataSourceImpl {
+public class ScheduleDataSource extends AbstractDataSourceImpl
+{
   public static final String SCHEDULES_PREFIX = "InfoSme.Schedules";
   private Category logger = Category.getInstance(this.getClass());
 
@@ -30,8 +31,8 @@ public class ScheduleDataSource extends AbstractDataSourceImpl {
       final String currentSchedulePrefix = SCHEDULES_PREFIX + '.' + StringEncoderDecoder.encodeDot(scheduleName);
       try {
         add(new ScheduleDataItem(scheduleName,
-                             config.getString(currentSchedulePrefix + ".execute"),
-                             config.getString(currentSchedulePrefix + ".startDateTime")
+                                 config.getString(currentSchedulePrefix + ".execute"),
+                                 config.getString(currentSchedulePrefix + ".startDateTime")
         ));
       } catch (Exception e) {
         logger.error("Couldn't get parameter for schedule \"" + scheduleName + "\", schedule skipped", e);

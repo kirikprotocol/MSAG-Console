@@ -10,6 +10,9 @@
     case InfoSmeBean.RESULT_STAT:
       response.sendRedirect("stat.jsp");
       return;
+    case InfoSmeBean.RESULT_STATUSES:
+      response.sendRedirect("statuses.jsp");
+      return;
     case InfoSmeBean.RESULT_OPTIONS:
       response.sendRedirect("options.jsp");
       return;

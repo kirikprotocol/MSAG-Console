@@ -1,8 +1,6 @@
 package ru.novosoft.smsc.infosme.backend;
 
-import java.util.Date;
-import java.util.Vector;
-import java.util.Collection;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,22 +12,29 @@ import java.util.Collection;
 
 public class DateCountersSet extends CountersSet
 {
-    private Date date;
+  private Date date;
 
-    private Vector byHours = new Vector(); // contains HourCountersSet
+  private Vector byHours = new Vector(); // contains HourCountersSet
 
-    DateCountersSet(Date date) {
-        this.date = date;
-    }
-    public void addHourStat(HourCountersSet set) {
-        byHours.addElement(set);
-        super.increment(set);
-    }
-    public Collection getHourStat() {
-        return byHours;
-    }
-    public Date getDate() {
-        return date;
-    }
+  DateCountersSet(Date date)
+  {
+    this.date = date;
+  }
+
+  public void addHourStat(HourCountersSet set)
+  {
+    byHours.addElement(set);
+    super.increment(set);
+  }
+
+  public Collection getHourStat()
+  {
+    return byHours;
+  }
+
+  public Date getDate()
+  {
+    return date;
+  }
 }
 

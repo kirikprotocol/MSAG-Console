@@ -1,13 +1,20 @@
 package ru.novosoft.smsc.infosme.beans;
 
+import org.xml.sax.SAXException;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.infosme.backend.Task;
+import ru.novosoft.smsc.infosme.backend.schedules.Schedule;
 import ru.novosoft.smsc.infosme.backend.tables.schedules.ScheduleDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.config.Config;
 
-import java.security.Principal;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.*;
 
 
@@ -16,24 +23,61 @@ import java.util.*;
  * Date: Jul 31, 2003
  * Time: 2:07:44 PM
  */
-public class Index extends InfoSmeBean
+public class Index extends IndexProperties
 {
-  private String mbApply = null;
-  private String mbResetAll = null;
-  private String[] apply = new String[0];
-
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  protected int reset()
   {
-    int result = super.process(appContext, errors, loginedPrincipal);
-    if (result != RESULT_OK)
-      return result;
-
-    if (mbApply != null)
-      return apply();
-    if (mbResetAll != null)
-      return resetAll();
-
+    int result = RESULT_DONE;
+    if (isApply("all")) {
+      result = resetAll();
+    }
+    if (isApply("tasks")) {
+      try {
+        result = resetTasks();
+      } catch (Throwable e) {
+        logger.error("Could not reload tasks", e);
+        result = error("Could not reload tasks", e);
+      }
+    }
+    if (isApply("scheds")) {
+      try {
+        result = resetScheds();
+      } catch (Throwable e) {
+        logger.error("Could not reload schedules", e);
+        result = error("Could not reload schedules", e);
+      }
+    }
     return result;
+  }
+
+  private int resetTasks() throws IOException, SAXException, ParserConfigurationException, AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
+  {
+    for (Iterator i = getConfig().getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX).iterator(); i.hasNext();) {
+      String taskId = (String) i.next();
+      Task.removeTaskFromConfig(getConfig(), taskId);
+    }
+    Config oldConfig = getInfoSmeContext().loadCurrentConfig();
+    for (Iterator i = oldConfig.getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX).iterator(); i.hasNext();) {
+      String taskId = (String) i.next();
+      Task task = new Task(oldConfig, taskId);
+      task.storeToConfig(getConfig());
+    }
+    return RESULT_DONE;
+  }
+
+  private int resetScheds() throws IOException, SAXException, ParserConfigurationException, AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException, ParseException
+  {
+    for (Iterator i = getConfig().getSectionChildShortSectionNames(ScheduleDataSource.SCHEDULES_PREFIX).iterator(); i.hasNext();) {
+      String schedId = (String) i.next();
+      Schedule.removeScheduleFromConfig(schedId, getConfig());
+    }
+    Config oldConfig = getInfoSmeContext().loadCurrentConfig();
+    for (Iterator i = oldConfig.getSectionChildShortSectionNames(ScheduleDataSource.SCHEDULES_PREFIX).iterator(); i.hasNext();) {
+      String schedId = (String) i.next();
+      Schedule schedule = Schedule.getInstance(schedId, oldConfig);
+      schedule.storeToConfig(getConfig());
+    }
+    return RESULT_DONE;
   }
 
   private int resetAll()
@@ -47,13 +91,12 @@ public class Index extends InfoSmeBean
     return RESULT_DONE;
   }
 
-  private int apply()
+  protected int apply()
   {
     try {
       logger.debug("Apply ...");
       final Config oldConfig = getInfoSmeContext().loadCurrentConfig();
-      Set applySet = new HashSet(Arrays.asList(apply));
-      if (applySet.contains("all")) {
+      if (isApply("all")) {
         getConfig().save();
         getInfoSmeContext().setChangedOptions(false);
         getInfoSmeContext().setChangedDrivers(false);
@@ -61,17 +104,15 @@ public class Index extends InfoSmeBean
         getInfoSmeContext().setChangedSchedules(false);
         getInfoSmeContext().setChangedTasks(false);
         return message("Changes saved, you need to restart InfoSme to apply changes");
-      } else if (applySet.contains("tasks")) {
+      } else if (isApply("tasks")) {
         if (getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedProviders())
           return error("You cannot apply tasks without applying global options");
-        getConfig().save();
         return applyTasks(oldConfig, getConfig());
-      } else if (applySet.contains("scheds")) {
+      } else if (isApply("scheds")) {
         if (getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedProviders())
           return error("You cannot apply schedules without applying global options");
         if (getInfoSmeContext().isChangedTasks())
           return error("You cannot apply schedules without applying tasks");
-        getConfig().save();
         return applyScheds(oldConfig, getConfig());
       } else {
 
@@ -101,9 +142,9 @@ public class Index extends InfoSmeBean
         if (!scheduleChanged(schedId, oldConfig, newConfig))
           toChange.remove(schedId);
       }
-      if (toAdd.size() > 0) getInfoSmeContext().getInfoSme().addSchedules(toAdd);
-      if (toDelete.size() > 0) getInfoSmeContext().getInfoSme().removeSchedules(toDelete);
-      if (toChange.size() > 0) getInfoSmeContext().getInfoSme().changeSchedules(toChange);
+      if (toAdd.size() > 0) addScheds(oldConfig, newConfig, toAdd);
+      if (toDelete.size() > 0) deleteScheds(oldConfig, toDelete);
+      if (toChange.size() > 0) changeScheds(oldConfig, newConfig, toChange);
       getInfoSmeContext().setChangedSchedules(false);
     } catch (Throwable e) {
       logger.error("Could not apply schedules", e);
@@ -112,48 +153,46 @@ public class Index extends InfoSmeBean
     return RESULT_DONE;
   }
 
-  private boolean scheduleChanged(String schedId, Config oldConfig, Config config)
+  private void changeScheds(Config oldConfig, Config newConfig, Set toChange) throws AdminException, Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException, IOException
   {
-    try {
-      logger.debug("isScheduleChanged \"" + schedId + '"');
-      final String prefix = ScheduleDataSource.SCHEDULES_PREFIX + '.' + StringEncoderDecoder.encodeDot(schedId);
-      boolean equals = config.getString(prefix + ".execute").equals(oldConfig.getString(prefix + ".execute"))
-              && config.getString(prefix + ".tasks").equals(oldConfig.getString(prefix + ".tasks"))
-              && config.getString(prefix + ".startDateTime").equals(oldConfig.getString(prefix + ".startDateTime"));
-      if (equals) {
-        String execute = config.getString(prefix + ".execute");
-        if ("once".equalsIgnoreCase(execute)) {
-        } else if ("daily".equalsIgnoreCase(execute)) {
-          equals &= config.getString(prefix + ".endDateTime").equals(oldConfig.getString(prefix + ".endDateTime"));
-          equals &= config.getInt(prefix + ".everyNDays") == oldConfig.getInt(prefix + ".everyNDays");
-        } else if ("weekly".equalsIgnoreCase(execute)) {
-          equals &= config.getString(prefix + ".endDateTime").equals(oldConfig.getString(prefix + ".endDateTime"));
-          equals &= config.getInt(prefix + ".everyNWeeks") == oldConfig.getInt(prefix + ".everyNWeeks");
-          equals &= config.getString(prefix + ".weekDays").equals(oldConfig.getString(prefix + ".weekDays"));
-        } else if ("monthly".equalsIgnoreCase(execute)) {
-          equals &= config.getString(prefix + ".endDateTime").equals(oldConfig.getString(prefix + ".endDateTime"));
-          if (config.containsParameter(prefix + ".dayOfMonth")) {
-            equals &= config.getInt(prefix + ".dayOfMonth") == oldConfig.getInt(prefix + ".dayOfMonth");
-          } else {
-            equals &= config.getString(prefix + ".weekDayN").equals(oldConfig.getString(prefix + ".weekDayN"));
-            equals &= config.getString(prefix + ".weekDay").equals(oldConfig.getString(prefix + ".weekDay"));
-          }
-          equals &= config.getString(prefix + ".monthes").equals(oldConfig.getString(prefix + ".monthes"));
-        } else if ("interval".equalsIgnoreCase(execute)) {
-          equals &= config.getString(prefix + ".endDateTime").equals(oldConfig.getString(prefix + ".endDateTime"));
-          equals &= config.getString(prefix + ".intervalTime").equals(oldConfig.getString(prefix + ".intervalTime"));
-        } else {
-          logger.error("Unknown type of schedule: \"" + execute + "\"");
-          return true;
-        }
-      }
-      logger.debug("isScheduleChanged \"" + schedId + "\" : " + !equals);
-      return !equals;
-    } catch (Exception e) {
-      logger.error(e);
-      return true;
+    for (Iterator i = toChange.iterator(); i.hasNext();) {
+      String schedId = (String) i.next();
+      Schedule schedule = Schedule.getInstance(schedId, newConfig);
+      schedule.storeToConfig(oldConfig);
     }
+    oldConfig.save();
+    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+      getInfoSmeContext().getInfoSme().changeSchedules(toChange);
+  }
 
+  private void deleteScheds(Config oldConfig, Set toDelete) throws AdminException, IOException, Config.WrongParamTypeException
+  {
+    for (Iterator i = toDelete.iterator(); i.hasNext();) {
+      String schedId = (String) i.next();
+      Schedule.removeScheduleFromConfig(schedId, oldConfig);
+    }
+    oldConfig.save();
+    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+      getInfoSmeContext().getInfoSme().removeSchedules(toDelete);
+  }
+
+  private void addScheds(Config oldConfig, Config newConfig, Collection toAdd) throws AdminException, Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException, IOException
+  {
+    for (Iterator i = toAdd.iterator(); i.hasNext();) {
+      String schedId = (String) i.next();
+      Schedule schedule = Schedule.getInstance(schedId, newConfig);
+      schedule.storeToConfig(oldConfig);
+    }
+    oldConfig.save();
+    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+      getInfoSmeContext().getInfoSme().addSchedules(toAdd);
+  }
+
+  private boolean scheduleChanged(String schedId, Config oldConfig, Config newConfig) throws AdminException, Config.ParamNotFoundException, ParseException, Config.WrongParamTypeException
+  {
+    Schedule oldSchedule = Schedule.getInstance(schedId, oldConfig);
+    Schedule newSchedule = Schedule.getInstance(schedId, newConfig);
+    return !oldSchedule.equals(newSchedule);
   }
 
   private int applyTasks(Config oldConfig, Config newConfig)
@@ -175,9 +214,9 @@ public class Index extends InfoSmeBean
           toChange.remove(taskId);
       }
 
-      if (toAdd.size() > 0) getInfoSmeContext().getInfoSme().addTasks(toAdd);
-      if (toDelete.size() > 0) getInfoSmeContext().getInfoSme().removeTasks(toDelete);
-      if (toChange.size() > 0) getInfoSmeContext().getInfoSme().changeTasks(toChange);
+      if (toAdd.size() > 0) addTasks(oldConfig, newConfig, toAdd);
+      if (toDelete.size() > 0) deleteTasks(oldConfig, toDelete);
+      if (toChange.size() > 0) changeTasks(oldConfig, newConfig, toChange);
 
       getInfoSmeContext().setChangedTasks(false);
       applyScheds(oldConfig, newConfig);
@@ -188,74 +227,183 @@ public class Index extends InfoSmeBean
     return RESULT_DONE;
   }
 
+  private void changeTasks(Config oldConfig, Config newConfig, Collection toChange) throws AdminException, Config.WrongParamTypeException, Config.ParamNotFoundException, IOException
+  {
+    for (Iterator i = toChange.iterator(); i.hasNext();) {
+      String taskId = (String) i.next();
+      Task task = new Task(newConfig, taskId);
+      task.storeToConfig(oldConfig);
+    }
+    oldConfig.save();
+    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+      getInfoSme().changeTasks(toChange);
+  }
+
+  private void deleteTasks(Config config, Collection toDelete) throws AdminException, Config.WrongParamTypeException, IOException
+  {
+    for (Iterator i = toDelete.iterator(); i.hasNext();) {
+      String taskId = (String) i.next();
+      Task.removeTaskFromConfig(config, taskId);
+    }
+    config.save();
+    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+      getInfoSmeContext().getInfoSme().removeTasks(toDelete);
+  }
+
+  private void addTasks(Config oldConfig, Config newConfig, Collection toAdd) throws AdminException, Config.WrongParamTypeException, IOException, Config.ParamNotFoundException
+  {
+    for (Iterator i = toAdd.iterator(); i.hasNext();) {
+      String taskId = (String) i.next();
+      Task task = new Task(newConfig, taskId);
+      task.storeToConfig(oldConfig);
+    }
+    oldConfig.save();
+    if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+      getInfoSmeContext().getInfoSme().addTasks(toAdd);
+  }
+
   private boolean taskChanged(String taskId, Config oldConfig, Config newConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException
   {
-    final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId);
-    return !(oldConfig.getString(prefix + ".dsId").equals(newConfig.getString(prefix + ".dsId"))
-            && oldConfig.getBool(prefix + ".enabled") == newConfig.getBool(prefix + ".enabled")
-            && oldConfig.getInt(prefix + ".priority") == newConfig.getInt(prefix + ".priority")
-            && oldConfig.getBool(prefix + ".retryOnFail") == newConfig.getBool(prefix + ".retryOnFail")
-            && oldConfig.getBool(prefix + ".replaceMessage") == newConfig.getBool(prefix + ".replaceMessage")
-            && oldConfig.getString(prefix + ".svcType").equals(newConfig.getString(prefix + ".svcType"))
-            && oldConfig.getString(prefix + ".endDate").equals(newConfig.getString(prefix + ".endDate"))
-            && oldConfig.getString(prefix + ".retryTime").equals(newConfig.getString(prefix + ".retryTime"))
-            && oldConfig.getString(prefix + ".validityPeriod").equals(newConfig.getString(prefix + ".validityPeriod"))
-            && oldConfig.getString(prefix + ".validityDate").equals(newConfig.getString(prefix + ".validityDate"))
-            && oldConfig.getString(prefix + ".activePeriodStart").equals(newConfig.getString(prefix + ".activePeriodStart"))
-            && oldConfig.getString(prefix + ".activePeriodEnd").equals(newConfig.getString(prefix + ".activePeriodEnd"))
-            && oldConfig.getString(prefix + ".query").equals(newConfig.getString(prefix + ".query"))
-            && oldConfig.getString(prefix + ".template").equals(newConfig.getString(prefix + ".template"))
-            && oldConfig.getInt(prefix + ".dsOwnTimeout") == newConfig.getInt(prefix + ".dsOwnTimeout")
-            && oldConfig.getInt(prefix + ".dsIntTimeout") == newConfig.getInt(prefix + ".dsIntTimeout")
-            && oldConfig.getInt(prefix + ".messagesCacheSize") == newConfig.getInt(prefix + ".messagesCacheSize")
-            && oldConfig.getInt(prefix + ".messagesCacheSleep") == newConfig.getInt(prefix + ".messagesCacheSleep")
-            && oldConfig.getBool(prefix + ".transactionMode") == newConfig.getBool(prefix + ".transactionMode")
-            && oldConfig.getInt(prefix + ".uncommitedInGeneration") == newConfig.getInt(prefix + ".uncommitedInGeneration")
-            && oldConfig.getInt(prefix + ".uncommitedInProcess") == newConfig.getInt(prefix + ".uncommitedInProcess"));
+    Task oldTask = new Task(oldConfig, taskId);
+    Task newTask = new Task(newConfig, taskId);
+    return !oldTask.equals(newTask);
   }
 
-  public String getMbApply()
+  protected int start()
   {
-    return mbApply;
+    int result = RESULT_DONE;
+    if (isToStart("sme")) {
+      try {
+        getAppContext().getHostsManager().startService(Constants.INFO_SME_ID);
+      } catch (AdminException e) {
+        logger.error("Could not start Info SME", e);
+        result = error("Could not start Info SME", e);
+      }
+      return RESULT_DONE;
+    } else {
+      if (isToStart("processor")) {
+        try {
+          getInfoSme().startTaskProcessor();
+        } catch (AdminException e) {
+          logger.error("Could not start task processor", e);
+          result = error("Could not start task processor", e);
+        }
+      }
+      if (isToStart("scheduler")) {
+        try {
+          getInfoSme().startTaskScheduler();
+        } catch (AdminException e) {
+          logger.error("Could not start task scheduler", e);
+          result = error("Could not start task scheduler", e);
+        }
+      }
+    }
+    return result;
   }
 
-  public void setMbApply(String mbApply)
+  protected int stop()
   {
-    this.mbApply = mbApply;
+    int result = RESULT_DONE;
+    if (isToStart("sme")) {
+      try {
+        getAppContext().getHostsManager().shutdownService(Constants.INFO_SME_ID);
+      } catch (AdminException e) {
+        logger.error("Could not stop Info SME", e);
+        result = error("Could not stop Info SME", e);
+      }
+      return RESULT_DONE;
+    } else {
+      if (isToStart("processor")) {
+        try {
+          getInfoSme().stopTaskProcessor();
+        } catch (AdminException e) {
+          logger.error("Could not stop task processor", e);
+          result = error("Could not stop task processor", e);
+        }
+      }
+      if (isToStart("scheduler")) {
+        try {
+          getInfoSme().stopTaskScheduler();
+        } catch (AdminException e) {
+          logger.error("Could not stop task scheduler", e);
+          result = error("Could not stop task scheduler", e);
+        }
+      }
+    }
+    return result;
   }
 
-  public String getMbResetAll()
+  private int setTasksEnabled(boolean enabled)
   {
-    return mbResetAll;
+    int result = RESULT_DONE;
+    Config currentConfig = null;
+    try {
+      currentConfig = getInfoSmeContext().loadCurrentConfig();
+    } catch (Throwable e) {
+      logger.error("Could not load current config", e);
+    }
+    for (int i = 0; i < getChecked().length; i++) {
+      String taskId = getChecked()[i];
+      final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId);
+      try {
+        getInfoSme().setTaskEnabled(taskId, enabled);
+        if (currentConfig != null) currentConfig.setBool(prefix + ".enabled", enabled);
+        if (getConfig().containsSection(prefix)) getConfig().setBool(prefix + ".enabled", enabled);
+      } catch (AdminException e) {
+        logger.error("Could not enable task \"" + taskId + "\"", e);
+        result = error("Could not enable task", taskId, e);
+      }
+    }
+    try {
+      if (currentConfig != null) currentConfig.save();
+    } catch (Throwable e) {
+      logger.error("Could not save current config", e);
+      result = error("Could not save current config", e);
+    }
+    return result;
   }
 
-  public void setMbResetAll(String mbResetAll)
+  protected int enableTask()
   {
-    this.mbResetAll = mbResetAll;
+    return setTasksEnabled(true);
   }
 
-  public boolean isChangedAll()
+  protected int disableTask()
   {
-    return getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedProviders();
+    return setTasksEnabled(false);
   }
 
-  public boolean isChangedTasks()
+  protected int startTask()
   {
-    return getInfoSmeContext().isChangedTasks();
+    int result = RESULT_DONE;
+    try {
+      getInfoSme().startTasks(getCheckedSet());
+    } catch (AdminException e) {
+      logger.error("Could not start tasks", e);
+      result = error("Could not start tasks", e);
+    }
+    return result;
   }
 
-  public boolean isChangedShedules()
+  protected int stopTask()
   {
-    return getInfoSmeContext().isChangedSchedules();
+    int result = RESULT_DONE;
+    try {
+      getInfoSme().stopTasks(getCheckedSet());
+    } catch (AdminException e) {
+      logger.error("Could not stop tasks", e);
+      result = error("Could not stop tasks", e);
+    }
+    return result;
   }
 
-  public String[] getApply()
+  public boolean isTaskEnabled(TaskDataItem task)
   {
-    return apply;
-  }
-
-  public void setApply(String[] apply)
-  {
-    this.apply = apply;
+    try {
+      return isInfosmeStarted() ? getInfoSme().isTaskEnabled(task.getId()) : task.isEnabled();
+    } catch (AdminException e) {
+      logger.error("Could not get enabled status for task \"" + task.getId() + '"', e);
+      return task.isEnabled();
+    }
   }
 }

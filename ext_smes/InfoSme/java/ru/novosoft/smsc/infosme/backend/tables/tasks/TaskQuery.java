@@ -8,7 +8,8 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
  * Date: Sep 2, 2003
  * Time: 1:19:58 PM
  */
-public class TaskQuery extends AbstractQueryImpl {
+public class TaskQuery extends AbstractQueryImpl
+{
   public TaskQuery(int expectedResultsQuantity, String sortOrder, int startPosition)
   {
     super(expectedResultsQuantity, new EmptyFilter(), sortOrder, startPosition);

@@ -16,11 +16,11 @@
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
-	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+	int beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal);
+	switch(beanResult)
 	{
     case Tasks.RESULT_EDIT:
-      response.sendRedirect("taskEdit.jsp?sectionName=" + URLEncoder.encode(bean.getEdit(), "UTF-8"));
+      response.sendRedirect("taskEdit.jsp?id=" + URLEncoder.encode(bean.getEdit(), "UTF-8"));
       return;
     case Tasks.RESULT_ADD:
       response.sendRedirect("taskEdit.jsp?create=true");
@@ -38,7 +38,19 @@
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=edit>
 <input type=hidden name=sort>
-<script>
+<OBJECT id="tdcTasksStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+	<PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_InfoSme/taskStatuses.jsp">
+	<PARAM NAME="UseHeader" VALUE="True">
+	<PARAM NAME="TextQualifier" VALUE='"'>
+</OBJECT><script>
+function refreshTaskStatuses()
+{
+	document.all.tdcTasksStatuses.DataURL = document.all.tdcTasksStatuses.DataURL;
+	document.all.tdcTasksStatuses.reset();
+	window.setTimeout(refreshTaskStatuses, 1000);
+}
+refreshTaskStatuses();
+
 function setSort(sorting)
 {
 	if (sorting == "<%=bean.getSort()%>")
@@ -57,21 +69,27 @@ function setSort(sorting)
   {%>
     <table class=list cellspacing=0>
     <col width="1%">
-    <col width="93%"            > <!--name-->
+    <col width="90%"            > <!--name-->
     <col width="1%"             > <!--provider-->
     <col width="1%" align=center> <!--enabled-->
+    <col width="1%" align=center> <!--generating-->
+    <col width="1%" align=center> <!--processing-->
     <col width="1%"             > <!--priority-->
     <col width="1%" align=center> <!--retryOnFail-->
     <col width="1%" align=center> <!--replaceMessage-->
+    <col width="1%" align=center> <!--trackIntegrity-->
     <col width="1%"             > <!--svcType-->
     <tr>
       <th>&nbsp;</th>
       <th><a href="#" <%=bean.getSort().endsWith("name")           ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by task name"           onclick='return setSort("name")'          >Task name</a></th>
       <th><a href="#" <%=bean.getSort().endsWith("provider")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by data provider name"  onclick='return setSort("provider")'      >Data provider</a></th>
       <th><a href="#" <%=bean.getSort().endsWith("enabled")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Enabled flag"        onclick='return setSort("enabled")'       >Enabled</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("generating")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by generating flag"     onclick='return setSort("generating")'    >Generating</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("processing")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by processing flag"     onclick='return setSort("processing")'    >Processing</a></th>
       <th><a href="#" <%=bean.getSort().endsWith("priority")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by priority"            onclick='return setSort("priority")'      >Priority</a></th>
       <th><a href="#" <%=bean.getSort().endsWith("retryOnFail")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by RetryOnFail flag"    onclick='return setSort("retryOnFail")'   >Retry on fail</a></th>
       <th><a href="#" <%=bean.getSort().endsWith("replaceMessage") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by ReplaceMessage flag" onclick='return setSort("replaceMessage")'>Replace message</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("trackIntegrity") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by TrackIntegrity flag" onclick='return setSort("trackIntegrity")'>Track Integrity</a></th>
       <th><a href="#" <%=bean.getSort().endsWith("svcType")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by service type"        onclick='return setSort("svcType")'       >Service type</a></th>
     </tr>
     <%
@@ -84,8 +102,11 @@ function setSort(sorting)
       String provider = task.getProvider();
       int priority = task.getPriority();
       boolean enabled = task.isEnabled();
+      boolean generating = task.isGenerating();
+      boolean processing = task.isProcessing();
       boolean retryOnFail = task.isRetryOnFail();
       boolean replaceMessage = task.isReplaceMessage();
+      boolean trackIntegrity = task.isTrackIntegrity();
       String svcType = task.getSvcType();
 
       String idEnc = StringEncoderDecoder.encode(id);
@@ -98,9 +119,12 @@ function setSort(sorting)
         <td><a href="#" title="Edit task" onClick='return editSomething("<%=idEnc%>");'><%=nameEnc%></a></td>
         <td nowrap><%=providerEnc%></td>
         <td><%if (enabled       ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating    ){%><img src="<%=CPATH%>/img/ic_running.gif"><%}else{%><img src="<%=CPATH%>/img/ic_stopped.gif"><%}%></span></td>
+        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing    ){%><img src="<%=CPATH%>/img/ic_running.gif"><%}else{%><img src="<%=CPATH%>/img/ic_stopped.gif"><%}%></span></td>
         <td><%=priority%></td>
         <td><%if (retryOnFail   ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
         <td><%if (replaceMessage){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td><%if (trackIntegrity){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
         <td nowrap><%=svcTypeEnc%></td>
       </tr><%
     }

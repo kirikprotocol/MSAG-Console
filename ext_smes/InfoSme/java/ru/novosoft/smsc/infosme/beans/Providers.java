@@ -12,7 +12,8 @@ import java.util.*;
  * Date: Jul 31, 2003
  * Time: 3:58:38 PM
  */
-public class Providers extends InfoSmeBean {
+public class Providers extends InfoSmeBean
+{
   public static final int RESULT_EDIT = InfoSmeBean.PRIVATE_RESULT + 0;
   public static final int RESULT_ADD = InfoSmeBean.PRIVATE_RESULT + 1;
   public static final int RESULT_REFRESH = InfoSmeBean.PRIVATE_RESULT + 2;
@@ -74,7 +75,8 @@ public class Providers extends InfoSmeBean {
     if (sort.charAt(0) != '-')
       return new SortedList(getConfig().getSectionChildShortSectionNames("InfoSme.DataProvider"));
     else
-      return new SortedList(getConfig().getSectionChildShortSectionNames("InfoSme.DataProvider"), new Comparator() {
+      return new SortedList(getConfig().getSectionChildShortSectionNames("InfoSme.DataProvider"), new Comparator()
+      {
         public int compare(Object o1, Object o2)
         {
           if (o1 instanceof String && o2 instanceof String)

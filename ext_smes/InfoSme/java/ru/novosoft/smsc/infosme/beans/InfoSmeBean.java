@@ -6,22 +6,24 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.security.Principal;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by igork
  * Date: Jul 31, 2003
  * Time: 3:30:08 PM
  */
-public class InfoSmeBean extends PageBean {
+public class InfoSmeBean extends PageBean
+{
   public static final int RESULT_APPLY = PageBean.PRIVATE_RESULT + 0;
   public static final int RESULT_STAT = PageBean.PRIVATE_RESULT + 1;
-  public static final int RESULT_OPTIONS = PageBean.PRIVATE_RESULT + 2;
-  public static final int RESULT_DRIVERS = PageBean.PRIVATE_RESULT + 3;
-  public static final int RESULT_PROVIDERS = PageBean.PRIVATE_RESULT + 4;
-  public static final int RESULT_TASKS = PageBean.PRIVATE_RESULT + 5;
-  public static final int RESULT_SHEDULES = PageBean.PRIVATE_RESULT + 6;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 7;
+  public static final int RESULT_STATUSES = PageBean.PRIVATE_RESULT + 2;
+  public static final int RESULT_OPTIONS = PageBean.PRIVATE_RESULT + 3;
+  public static final int RESULT_DRIVERS = PageBean.PRIVATE_RESULT + 4;
+  public static final int RESULT_PROVIDERS = PageBean.PRIVATE_RESULT + 5;
+  public static final int RESULT_TASKS = PageBean.PRIVATE_RESULT + 6;
+  public static final int RESULT_SHEDULES = PageBean.PRIVATE_RESULT + 7;
+  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 8;
 
 
   private String mbMenu = null;
@@ -56,6 +58,8 @@ public class InfoSmeBean extends PageBean {
       return RESULT_APPLY;
     else if ("stat".equals(mbMenu))
       return RESULT_STAT;
+    else if ("statuses".equals(mbMenu))
+      return RESULT_STATUSES;
     else if ("options".equals(mbMenu))
       return RESULT_OPTIONS;
     else if ("drivers".equals(mbMenu))

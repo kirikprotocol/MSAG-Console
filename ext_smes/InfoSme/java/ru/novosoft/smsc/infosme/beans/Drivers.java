@@ -5,16 +5,15 @@ import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.security.Principal;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by igork
  * Date: Jul 31, 2003
  * Time: 3:43:49 PM
  */
-public class Drivers extends InfoSmeBean {
+public class Drivers extends InfoSmeBean
+{
   public static final String DRIVERS_SECTION_NAME = "StartupLoader.DataSourceDrivers";
 
   private String dsdriver_new_type = null;
@@ -50,7 +49,7 @@ public class Drivers extends InfoSmeBean {
       }
     }
     if (dsdriver_new_type != null && dsdriver_new_type.length() > 0
-        && dsdriver_new_loadup != null && dsdriver_new_loadup.length() > 0) {
+            && dsdriver_new_loadup != null && dsdriver_new_loadup.length() > 0) {
       getConfig().setString(PREFIX + dsdriver_new_type + ".type", dsdriver_new_type);
       getConfig().setString(PREFIX + dsdriver_new_type + ".loadup", dsdriver_new_loadup);
     }

@@ -1,9 +1,8 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import ru.novosoft.smsc.infosme.backend.tables.schedules.ScheduleDataSource;
+import ru.novosoft.smsc.infosme.backend.schedules.*;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
@@ -24,16 +23,16 @@ public class ScheduleEdit extends InfoSmeBean
   private boolean create = false;
   private String oldSchedule = null;
 
-  private String name = null;
-  private String execute = null;
-  private String startDateTime = null;
-  private String endDateTime = null;
+  private String name = "";
+  private String execute = "";
+  private String startDateTime = "";
+  private String endDateTime = "";
   private int everyNDays = 0;
   private int everyNWeeks = 0;
   private int dayOfMonth = 0;
-  private String weekDayN = null;
-  private String weekDay = null;
-  private String intervalTime = null;
+  private String weekDayN = "";
+  private String weekDay = "";
+  private String intervalTime = "";
 
   private String[] checkedMonths = new String[0];
   private Collection checkedMonthsSet = new HashSet();
@@ -55,61 +54,49 @@ public class ScheduleEdit extends InfoSmeBean
           return error("Schedule not specified");
 
         try {
-          final String prefix = ScheduleDataSource.SCHEDULES_PREFIX + '.' + StringEncoderDecoder.encodeDot(name);
-          execute = getConfig().getString(prefix + ".execute");
-          Functions.addValuesToCollection(checkedTasksSet, getConfig().getString(prefix + ".tasks"), ",", true);
-          startDateTime = getConfig().getString(prefix + ".startDateTime");
-          if ("once".equalsIgnoreCase(execute)) {
-          } else if ("daily".equalsIgnoreCase(execute)) {
-            endDateTime = getConfig().getString(prefix + ".endDateTime");
-            everyNDays = getConfig().getInt(prefix + ".everyNDays");
-          } else if ("weekly".equalsIgnoreCase(execute)) {
-            endDateTime = getConfig().getString(prefix + ".endDateTime");
-            everyNWeeks = getConfig().getInt(prefix + ".everyNWeeks");
-            Functions.addValuesToCollection(checkedWeekDaysSet, getConfig().getString(prefix + ".weekDays"), ",", true);
-          } else if ("monthly".equalsIgnoreCase(execute)) {
-            endDateTime = getConfig().getString(prefix + ".endDateTime");
-            if (getConfig().containsParameter(prefix + ".dayOfMonth")) {
+          Schedule schedule = Schedule.getInstance(name, getConfig());
+          execute = Schedule.getExecuteStr(schedule.getExecute());
+          checkedTasksSet = schedule.getTasks();
+          startDateTime = schedule.getStartDateTimeStr();
+          switch (schedule.getExecute()) {
+            case Schedule.EXECUTE_ONCE:
+              break;
+            case Schedule.EXECUTE_DAILY:
+              endDateTime = ((ScheduleEndDateTime) schedule).getEndDateTimeStr();
+              everyNDays = ((ScheduleDaily) schedule).getEveryNDays();
+              break;
+            case Schedule.EXECUTE_WEEKLY:
+              endDateTime = ((ScheduleEndDateTime) schedule).getEndDateTimeStr();
+              everyNWeeks = ((ScheduleWeekly) schedule).getEveryNWeeks();
+              break;
+            case Schedule.EXECUTE_MONTHLY_DAY:
+              endDateTime = ((ScheduleEndDateTime) schedule).getEndDateTimeStr();
+              checkedMonthsSet = ((ScheduleMonthly) schedule).getMonthes();
               monthlyType = "day";
-              dayOfMonth = getConfig().getInt(prefix + ".dayOfMonth");
-            } else {
+              dayOfMonth = ((ScheduleMonthlyDay) schedule).getDayOfMonth();
+              break;
+            case Schedule.EXECUTE_MONTHLY_WEEK:
+              endDateTime = ((ScheduleEndDateTime) schedule).getEndDateTimeStr();
+              checkedMonthsSet = ((ScheduleMonthly) schedule).getMonthes();
               monthlyType = "week";
-              weekDayN = getConfig().getString(prefix + ".weekDayN");
-              weekDay = getConfig().getString(prefix + ".weekDay");
-            }
-            Functions.addValuesToCollection(checkedMonthsSet, getConfig().getString(prefix + ".monthes"), ",", true);
-          } else if ("interval".equalsIgnoreCase(execute)) {
-            endDateTime = getConfig().getString(prefix + ".endDateTime");
-            intervalTime = getConfig().getString(prefix + ".intervalTime");
-          } else {
-            return error("Unknown type of schedule: \"" + execute + "\"");
+              weekDayN = ((ScheduleMonthlyWeek) schedule).getWeekDayN();
+              weekDay = ((ScheduleMonthlyWeek) schedule).getWeekDay();
+              break;
+            case Schedule.EXECUTE_INTERVAL:
+              endDateTime = ((ScheduleEndDateTime) schedule).getEndDateTimeStr();
+              intervalTime = ((ScheduleInterval) schedule).getIntervalTime();
+              break;
+            default:
+              return error("Unknown schedule type");
           }
+
           oldSchedule = name;
         } catch (Exception e) {
-          logger.error(e);
+          logger.error("Could not init bean", e);
           return error(e.getMessage());
-        } finally {
-          if (name == null) name = "";
-          if (execute == null) execute = "";
-          if (startDateTime == null) startDateTime = "";
-          if (endDateTime == null) endDateTime = "";
-          if (weekDayN == null) weekDayN = "";
-          if (weekDay == null) weekDay = "";
-          if (intervalTime == null) intervalTime = "";
-          if (oldSchedule == null) oldSchedule = "";
-          if (monthlyType == null) monthlyType = "";
         }
       }
     }
-    if (name == null) name = "";
-    if (execute == null) execute = "";
-    if (startDateTime == null) startDateTime = "";
-    if (endDateTime == null) endDateTime = "";
-    if (weekDayN == null) weekDayN = "";
-    if (weekDay == null) weekDay = "";
-    if (intervalTime == null) intervalTime = "";
-    if (oldSchedule == null) oldSchedule = "";
-    if (monthlyType == null) monthlyType = "";
 
     checkedMonthsSet.addAll(Arrays.asList(checkedMonths));
     checkedWeekDaysSet.addAll(Arrays.asList(checkedWeekDays));
@@ -136,45 +123,29 @@ public class ScheduleEdit extends InfoSmeBean
   {
     if (name == null || name.length() == 0)
       return error("Schedule name not specified");
-    final String prefix = ScheduleDataSource.SCHEDULES_PREFIX + '.' + StringEncoderDecoder.encodeDot(name);
-    if (create) {
-      if (getConfig().containsSection(prefix))
-        return error("Schedule already exists", name);
-    } else {
-      if (!oldSchedule.equals(name)) {
-        if (getConfig().containsSection(prefix))
-          return error("Schedule already exists", name);
-      }
-      getConfig().removeSection(ScheduleDataSource.SCHEDULES_PREFIX + '.' + StringEncoderDecoder.encodeDot(oldSchedule));
-    }
 
-    if ("once".equalsIgnoreCase(execute)) {
-    } else if ("daily".equalsIgnoreCase(execute)) {
-      getConfig().setString(prefix + ".endDateTime", endDateTime);
-      getConfig().setInt(prefix + ".everyNDays", everyNDays);
-    } else if ("weekly".equalsIgnoreCase(execute)) {
-      getConfig().setString(prefix + ".endDateTime", endDateTime);
-      getConfig().setInt(prefix + ".everyNWeeks", everyNWeeks);
-      getConfig().setString(prefix + ".weekDays", Functions.collectionToString(checkedWeekDaysSet, ","));
-    } else if ("monthly".equalsIgnoreCase(execute)) {
-      getConfig().setString(prefix + ".endDateTime", endDateTime);
-      if (monthlyType.equals("day")) {
-        getConfig().setInt(prefix + ".dayOfMonth", dayOfMonth);
+    try {
+      Schedule schedule = Schedule.getInstance(name, execute, checkedTasksSet, startDateTime, endDateTime, everyNDays,
+                                               everyNWeeks, checkedWeekDaysSet, "day".equalsIgnoreCase(monthlyType), checkedMonthsSet,
+                                               dayOfMonth, weekDayN, weekDay, intervalTime);
+
+      if (create) {
+        if (schedule.isContainsInConfig(getConfig()))
+          return error("Schedule already exists", name);
       } else {
-        getConfig().setString(prefix + ".weekDayN", weekDayN);
-        getConfig().setString(prefix + ".weekDay", weekDay);
+        if (!oldSchedule.equals(name)) {
+          if (schedule.isContainsInConfig(getConfig()))
+            return error("Schedule already exists", name);
+        }
+        Schedule.removeScheduleFromConfig(oldSchedule, getConfig());
       }
-      getConfig().setString(prefix + ".monthes", Functions.collectionToString(checkedMonthsSet, ","));
-    } else if ("interval".equalsIgnoreCase(execute)) {
-      getConfig().setString(prefix + ".endDateTime", endDateTime);
-      getConfig().setString(prefix + ".intervalTime", intervalTime);
-    } else {
-      return error("Unknown type of schedule: \"" + execute + "\"");
+
+      schedule.storeToConfig(getConfig());
+      getInfoSmeContext().setChangedSchedules(true);
+    } catch (Throwable e) {
+      logger.error("Could not store schedule", e);
+      error("Could not store schedule", e);
     }
-    getConfig().setString(prefix + ".execute", execute);
-    getConfig().setString(prefix + ".tasks", Functions.collectionToString(checkedTasksSet, ","));
-    getConfig().setString(prefix + ".startDateTime", startDateTime);
-    getInfoSmeContext().setChangedSchedules(true);
     return RESULT_DONE;
   }
 

@@ -10,18 +10,27 @@ package ru.novosoft.smsc.infosme.backend;
 
 public class HourCountersSet extends CountersSet
 {
-    private int hour=0;
+  private int hour = 0;
 
-    HourCountersSet(int hour) {
-        this.hour = hour;
-    }
-    HourCountersSet(int g, int d, int r, int f, int hour) {
-        super(g, d, r, f); this.hour = hour;
-    }
-    HourCountersSet(CountersSet set, int hour) {
-        super(set); this.hour = hour;
-    }
-    public int getHour() {
-        return hour;
-    }
+  HourCountersSet(int hour)
+  {
+    this.hour = hour;
+  }
+
+  HourCountersSet(long g, long d, long r, long f, int hour)
+  {
+    super(g, d, r, f);
+    this.hour = hour;
+  }
+
+  HourCountersSet(CountersSet set, int hour)
+  {
+    super(set);
+    this.hour = hour;
+  }
+
+  public int getHour()
+  {
+    return hour;
+  }
 }

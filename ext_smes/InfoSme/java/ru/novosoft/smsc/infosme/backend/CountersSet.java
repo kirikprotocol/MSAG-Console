@@ -9,23 +9,33 @@ package ru.novosoft.smsc.infosme.backend;
  */
 public class CountersSet
 {
-  public int generated = 0;
-  public int delivered = 0;
-  public int retried = 0;
-  public int failed = 0;
+  public long generated = 0;
+  public long delivered = 0;
+  public long retried = 0;
+  public long failed = 0;
 
-  CountersSet() {}
-  CountersSet(CountersSet set) {
+  CountersSet()
+  {
+  }
+
+  CountersSet(CountersSet set)
+  {
     generated = set.generated;
     delivered = set.delivered;
     retried = set.retried;
     failed = set.failed;
   }
-  CountersSet(int g, int d, int r, int f) {
-    generated = g; delivered = d; retried = r; failed = f;
+
+  CountersSet(long g, long d, long r, long f)
+  {
+    generated = g;
+    delivered = d;
+    retried = r;
+    failed = f;
   }
 
-  void increment(CountersSet set) {
+  void increment(CountersSet set)
+  {
     generated += set.generated;
     delivered += set.delivered;
     retried += set.retried;

@@ -1,13 +1,11 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
+import ru.novosoft.smsc.util.SortedList;
 
-import java.util.List;
-import java.util.Collection;
 import java.security.Principal;
+import java.util.*;
 
 /**
  * Created by igork
@@ -23,28 +21,7 @@ public class TaskEdit extends InfoSmeBean
   private boolean create = false;
   private String oldTask = null;
 
-  private String sectionName = null;
-  private String name = null;
-  private String provider = null;
-  private boolean enabled = false;
-  private int priority = 0;
-  private boolean retryOnFail = false;
-  private boolean replaceMessage = false;
-  private String svcType = null;
-  private String endDate = null;
-  private String retryTime = null;
-  private String validityPeriod = null;
-  private String validityDate = null;
-  private String activePeriodStart = null;
-  private String activePeriodEnd = null;
-  private String query = null;
-  private String template = null;
-  private int dsTimeout = 0;
-  private int messagesCacheSize = 0;
-  private int messagesCacheSleep = 0;
-  private boolean transactionMode = false;
-  private int uncommitedInGeneration = 0;
-  private int uncommitedInProcess = 0;
+  private Task task = new Task();
 
   protected int init(List errors)
   {
@@ -54,51 +31,18 @@ public class TaskEdit extends InfoSmeBean
 
     if (!initialized) {
       if (!create) {
-        if (sectionName == null || sectionName.length() == 0)
+        if (getId() == null || getId().length() == 0)
           return error("Task not specified");
-        oldTask = sectionName;
+        oldTask = getId();
 
         try {
-          final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(sectionName);
-          name = getConfig().getString(prefix + ".name");
-          provider = getConfig().getString(prefix + ".dsId");
-          enabled = getConfig().getBool(prefix + ".enabled");
-          priority = getConfig().getInt(prefix + ".priority");
-          retryOnFail = getConfig().getBool(prefix + ".retryOnFail");
-          replaceMessage = getConfig().getBool(prefix + ".replaceMessage");
-          svcType = getConfig().getString(prefix + ".svcType");
-          endDate = getConfig().getString(prefix + ".endDate");
-          retryTime = getConfig().getString(prefix + ".retryTime");
-          validityPeriod = getConfig().getString(prefix + ".validityPeriod");
-          validityDate = getConfig().getString(prefix + ".validityDate");
-          activePeriodStart = getConfig().getString(prefix + ".activePeriodStart");
-          activePeriodEnd = getConfig().getString(prefix + ".activePeriodEnd");
-          query = getConfig().getString(prefix + ".query");
-          template = getConfig().getString(prefix + ".template");
-          dsTimeout = getConfig().getInt(prefix + ".dsTimeout");
-          messagesCacheSize = getConfig().getInt(prefix + ".messagesCacheSize");
-          messagesCacheSleep = getConfig().getInt(prefix + ".messagesCacheSleep");
-          transactionMode = getConfig().getBool(prefix + ".transactionMode");
-          uncommitedInGeneration = getConfig().getInt(prefix + ".uncommitedInGeneration");
-          uncommitedInProcess = getConfig().getInt(prefix + ".uncommitedInProcess");
+          task = new Task(getConfig(), getId());
         } catch (Exception e) {
           logger.error(e);
           return error(e.getMessage());
         }
       }
     }
-    if (sectionName == null) sectionName = "";
-    if (name == null) name = null;
-    if (provider == null) provider = "";
-    if (svcType == null) svcType = "";
-    if (endDate == null) endDate = "";
-    if (retryTime == null) retryTime = "";
-    if (validityPeriod == null) validityPeriod = "";
-    if (validityDate == null) validityDate = "";
-    if (activePeriodStart == null) activePeriodStart = "";
-    if (activePeriodEnd == null) activePeriodEnd = "";
-    if (query == null) query = "";
-    if (template == null) template = "";
     if (oldTask == null) oldTask = "";
 
     return result;
@@ -120,38 +64,16 @@ public class TaskEdit extends InfoSmeBean
 
   protected int done()
   {
-    if (sectionName == null || sectionName.length() == 0)
+    if (getId() == null || getId().length() == 0)
       return error("Task section name not specified");
-    final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(sectionName);
     if (!create) {
-      if (!oldTask.equals(sectionName)) {
-        if (getConfig().containsSection(prefix))
-          return error("Task already exists", sectionName);
-        getConfig().removeSection(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(oldTask));
+      if (!oldTask.equals(getId())) {
+        if (task.isContainsInConfig(getConfig()))
+          return error("Task already exists", getId());
+        Task.removeTaskFromConfig(getConfig(), oldTask);
       }
     }
-    getConfig().setString(prefix + ".name", name);
-    getConfig().setString(prefix + ".dsId", provider);
-    getConfig().setBool(prefix + ".enabled", enabled);
-    getConfig().setInt(prefix + ".priority", priority);
-    getConfig().setBool(prefix + ".retryOnFail", retryOnFail);
-    getConfig().setBool(prefix + ".replaceMessage", replaceMessage);
-    getConfig().setString(prefix + ".svcType", svcType);
-    getConfig().setString(prefix + ".endDate", endDate);
-    getConfig().setString(prefix + ".retryTime", retryTime);
-    getConfig().setString(prefix + ".validityPeriod", validityPeriod);
-    getConfig().setString(prefix + ".validityDate", validityDate);
-    getConfig().setString(prefix + ".activePeriodStart", activePeriodStart);
-    getConfig().setString(prefix + ".activePeriodEnd", activePeriodEnd);
-    getConfig().setString(prefix + ".query", query);
-    getConfig().setString(prefix + ".template", template);
-    getConfig().setInt(prefix + ".dsTimeout", dsTimeout);
-    getConfig().setInt(prefix + ".messagesCacheSize", messagesCacheSize);
-    getConfig().setInt(prefix + ".messagesCacheSleep", messagesCacheSleep);
-    getConfig().setBool(prefix + ".transactionMode", transactionMode);
-    getConfig().setInt(prefix + ".uncommitedInGeneration", uncommitedInGeneration);
-    getConfig().setInt(prefix + ".uncommitedInProcess", uncommitedInProcess);
-
+    task.storeToConfig(getConfig());
     getInfoSmeContext().setChangedTasks(true);
     return RESULT_DONE;
   }
@@ -191,55 +113,55 @@ public class TaskEdit extends InfoSmeBean
     this.oldTask = oldTask;
   }
 
-  public String getSectionName()
+  public String getId()
   {
-    return sectionName;
+    return task.getId();
   }
 
-  public void setSectionName(String sectionName)
+  public void setId(String sectionName)
   {
-    this.sectionName = sectionName;
+    this.task.setId(sectionName);
   }
 
   public String getProvider()
   {
-    return provider;
+    return task.getProvider();
   }
 
   public void setProvider(String provider)
   {
-    this.provider = provider;
+    this.task.setProvider(provider);
   }
 
   public boolean isEnabled()
   {
-    return enabled;
+    return task.isEnabled();
   }
 
   public void setEnabled(boolean enabled)
   {
-    this.enabled = enabled;
+    this.task.setEnabled(enabled);
   }
 
   public int getPriorityInt()
   {
-    return priority;
+    return task.getPriority();
   }
 
   public void setPriorityInt(int priority)
   {
-    this.priority = priority;
+    this.task.setPriority(priority);
   }
 
   public String getPriority()
   {
-    return String.valueOf(priority);
+    return String.valueOf(task.getPriority());
   }
 
   public void setPriority(String priority)
   {
     try {
-      this.priority = Integer.decode(priority).intValue();
+      this.task.setPriority(Integer.decode(priority).intValue());
     } catch (Throwable e) {
       logger.error("Couldn't set priority to value \"" + priority + "\"", e);
     }
@@ -247,112 +169,112 @@ public class TaskEdit extends InfoSmeBean
 
   public boolean isRetryOnFail()
   {
-    return retryOnFail;
+    return task.isRetryOnFail();
   }
 
   public void setRetryOnFail(boolean retryOnFail)
   {
-    this.retryOnFail = retryOnFail;
+    this.task.setRetryOnFail(retryOnFail);
   }
 
   public boolean isReplaceMessage()
   {
-    return replaceMessage;
+    return task.isReplaceMessage();
   }
 
   public void setReplaceMessage(boolean replaceMessage)
   {
-    this.replaceMessage = replaceMessage;
+    this.task.setReplaceMessage(replaceMessage);
   }
 
   public String getSvcType()
   {
-    return svcType;
+    return task.getSvcType();
   }
 
   public void setSvcType(String svcType)
   {
-    this.svcType = svcType;
+    this.task.setSvcType(svcType);
   }
 
   public String getEndDate()
   {
-    return endDate;
+    return task.getEndDate();
   }
 
   public void setEndDate(String endDate)
   {
-    this.endDate = endDate;
+    this.task.setEndDate(endDate);
   }
 
   public String getRetryTime()
   {
-    return retryTime;
+    return task.getRetryTime();
   }
 
   public void setRetryTime(String retryTime)
   {
-    this.retryTime = retryTime;
+    this.task.setRetryTime(retryTime);
   }
 
   public String getValidityPeriod()
   {
-    return validityPeriod;
+    return task.getValidityPeriod();
   }
 
   public void setValidityPeriod(String validityPeriod)
   {
-    this.validityPeriod = validityPeriod;
+    this.task.setValidityPeriod(validityPeriod);
   }
 
   public String getValidityDate()
   {
-    return validityDate;
+    return task.getValidityDate();
   }
 
   public void setValidityDate(String validityDate)
   {
-    this.validityDate = validityDate;
+    this.task.setValidityDate(validityDate);
   }
 
   public String getActivePeriodStart()
   {
-    return activePeriodStart;
+    return task.getActivePeriodStart();
   }
 
   public void setActivePeriodStart(String activePeriodStart)
   {
-    this.activePeriodStart = activePeriodStart;
+    this.task.setActivePeriodStart(activePeriodStart);
   }
 
   public String getActivePeriodEnd()
   {
-    return activePeriodEnd;
+    return task.getActivePeriodEnd();
   }
 
   public void setActivePeriodEnd(String activePeriodEnd)
   {
-    this.activePeriodEnd = activePeriodEnd;
+    this.task.setActivePeriodEnd(activePeriodEnd);
   }
 
   public String getQuery()
   {
-    return query;
+    return task.getQuery();
   }
 
   public void setQuery(String query)
   {
-    this.query = query;
+    this.task.setQuery(query);
   }
 
   public String getTemplate()
   {
-    return template;
+    return task.getTemplate();
   }
 
   public void setTemplate(String template)
   {
-    this.template = template;
+    this.task.setTemplate(template);
   }
 
   public String getMbDone()
@@ -377,33 +299,33 @@ public class TaskEdit extends InfoSmeBean
 
   public String getName()
   {
-    return name;
+    return task.getName();
   }
 
   public void setName(String name)
   {
-    this.name = name;
+    this.task.setName(name);
   }
 
   public int getDsTimeoutInt()
   {
-    return dsTimeout;
+    return task.getDsTimeout();
   }
 
   public void setDsTimeoutInt(int dsTimeout)
   {
-    this.dsTimeout = dsTimeout;
+    this.task.setDsTimeout(dsTimeout);
   }
 
   public String getDsTimeout()
   {
-    return String.valueOf(dsTimeout);
+    return String.valueOf(task.getDsTimeout());
   }
 
   public void setDsTimeout(String dsTimeout)
   {
     try {
-      this.dsTimeout = Integer.decode(dsTimeout).intValue();
+      this.task.setDsTimeout(Integer.decode(dsTimeout).intValue());
     } catch (Throwable e) {
       logger.error("Couldn't set dsOwnTimeout to value \"" + dsTimeout + "\"", e);
     }
@@ -411,63 +333,63 @@ public class TaskEdit extends InfoSmeBean
 
   public int getMessagesCacheSizeInt()
   {
-    return messagesCacheSize;
+    return task.getMessagesCacheSize();
   }
 
   public void setMessagesCacheSizeInt(int messagesCacheSize)
   {
-    this.messagesCacheSize = messagesCacheSize;
+    this.task.setMessagesCacheSize(messagesCacheSize);
   }
 
   public int getMessagesCacheSleepInt()
   {
-    return messagesCacheSleep;
+    return task.getMessagesCacheSleep();
   }
 
   public void setMessagesCacheSleepInt(int messagesCacheSleep)
   {
-    this.messagesCacheSleep = messagesCacheSleep;
+    this.task.setMessagesCacheSleep(messagesCacheSleep);
   }
 
   public boolean isTransactionMode()
   {
-    return transactionMode;
+    return task.isTransactionMode();
   }
 
   public void setTransactionMode(boolean transactionMode)
   {
-    this.transactionMode = transactionMode;
+    this.task.setTransactionMode(transactionMode);
   }
 
   public int getUncommitedInGenerationInt()
   {
-    return uncommitedInGeneration;
+    return task.getUncommitedInGeneration();
   }
 
   public void setUncommitedInGenerationInt(int uncommitedInGeneration)
   {
-    this.uncommitedInGeneration = uncommitedInGeneration;
+    this.task.setUncommitedInGeneration(uncommitedInGeneration);
   }
 
   public int getUncommitedInProcessInt()
   {
-    return uncommitedInProcess;
+    return task.getUncommitedInProcess();
   }
 
   public void setUncommitedInProcessInt(int uncommitedInProcess)
   {
-    this.uncommitedInProcess = uncommitedInProcess;
+    this.task.setUncommitedInProcess(uncommitedInProcess);
   }
 
   public String getMessagesCacheSize()
   {
-    return String.valueOf(messagesCacheSize);
+    return String.valueOf(task.getMessagesCacheSize());
   }
 
   public void setMessagesCacheSize(String messagesCacheSize)
   {
     try {
-      this.messagesCacheSize = Integer.decode(messagesCacheSize).intValue();
+      this.task.setMessagesCacheSize(Integer.decode(messagesCacheSize).intValue());
     } catch (Throwable e) {
       logger.error("Couldn't set messagesCacheSize to value \"" + messagesCacheSize + "\"", e);
     }
@@ -475,13 +397,13 @@ public class TaskEdit extends InfoSmeBean
 
   public String getMessagesCacheSleep()
   {
-    return String.valueOf(messagesCacheSleep);
+    return String.valueOf(task.getMessagesCacheSleep());
   }
 
   public void setMessagesCacheSleep(String messagesCacheSleep)
   {
     try {
-      this.messagesCacheSleep = Integer.decode(messagesCacheSleep).intValue();
+      this.task.setMessagesCacheSleep(Integer.decode(messagesCacheSleep).intValue());
     } catch (Throwable e) {
       logger.error("Couldn't set messagesCacheSleep to value \"" + messagesCacheSleep + "\"", e);
     }
@@ -489,13 +411,13 @@ public class TaskEdit extends InfoSmeBean
 
   public String getUncommitedInGeneration()
   {
-    return String.valueOf(uncommitedInGeneration);
+    return String.valueOf(task.getUncommitedInGeneration());
   }
 
   public void setUncommitedInGeneration(String uncommitedInGeneration)
   {
     try {
-      this.uncommitedInGeneration = Integer.decode(uncommitedInGeneration).intValue();
+      this.task.setUncommitedInGeneration(Integer.decode(uncommitedInGeneration).intValue());
     } catch (Throwable e) {
       logger.error("Couldn't set uncommitedInGeneration to value \"" + uncommitedInGeneration + "\"", e);
     }
@@ -503,15 +425,25 @@ public class TaskEdit extends InfoSmeBean
 
   public String getUncommitedInProcess()
   {
-    return String.valueOf(uncommitedInProcess);
+    return String.valueOf(task.getUncommitedInProcess());
   }
 
   public void setUncommitedInProcess(String uncommitedInProcess)
   {
     try {
-      this.uncommitedInProcess = Integer.decode(uncommitedInProcess).intValue();
+      this.task.setUncommitedInProcess(Integer.decode(uncommitedInProcess).intValue());
     } catch (Throwable e) {
-      logger.error("Couldn't set uncommitedInGeneration to value \"" + uncommitedInGeneration + "\"", e);
+      logger.error("Couldn't set uncommitedInGeneration to value \"" + uncommitedInProcess + "\"", e);
     }
+  }
+
+  public boolean isTrackIntegrity()
+  {
+    return task.isTrackIntegrity();
+  }
+
+  public void setTrackIntegrity(boolean trackIntegrity)
+  {
+    task.setTrackIntegrity(trackIntegrity);
   }
 }

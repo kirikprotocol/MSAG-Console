@@ -1,17 +1,18 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
-import java.util.List;
 import java.security.Principal;
+import java.util.*;
 
 /**
  * Created by igork
  * Date: Sep 1, 2003
  * Time: 4:52:33 PM
  */
-public class ProviderEdit extends InfoSmeBean {
+public class ProviderEdit extends InfoSmeBean
+{
   private String provider = null;
   private String type = null;
   private int connections = 0;

@@ -83,12 +83,12 @@ page_menu_end(out);
         String date = formatter.format(dateCounters.getDate());
         String dateHex = StringEncoderDecoder.encodeHEX(date);
         %><tr class=row0>
-          <td><div id="p<%=dateHex%>" class=collapsing_list_closed onClick="toggleVisible(this, opForm.all.c<%=dateHex%>);"><%=date%><div></td>
+          <td><div id="p<%=dateHex%>" class=collapsing_list_<%=i.hasNext() ? "closed" : "opened"%> onClick="toggleVisible(this, opForm.all.c<%=dateHex%>);"><%=date%><div></td>
           <td><%=dateCounters.generated%></td>
           <td><%=dateCounters.delivered%></td>
           <td><%=dateCounters.retried%></td>
           <td><%=dateCounters.failed%></td>
-        </tr><tr id="c<%=dateHex%>" style="display:none"><td colspan=5><table class=list cellspacing=0 cellpadding=0 border=0>
+        </tr><tr id="c<%=dateHex%>" style="display:<%=i.hasNext() ? "none" : "block"%>"><td colspan=5><table class=list cellspacing=0 cellpadding=0 border=0>
           <col width="60%">
           <col width="10%">
           <col width="10%">

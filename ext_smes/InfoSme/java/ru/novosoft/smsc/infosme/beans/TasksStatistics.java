@@ -1,17 +1,16 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
-
-import java.util.*;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-
-import ru.novosoft.smsc.infosme.backend.Statistics;
 import ru.novosoft.smsc.infosme.backend.StatQuery;
+import ru.novosoft.smsc.infosme.backend.Statistics;
 import ru.novosoft.smsc.infosme.backend.TasksStat;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -35,7 +34,7 @@ public class TasksStatistics extends InfoSmeBean
   {
     int result = super.init(errors);
     if (result != RESULT_OK)
-        return result;
+      return result;
 
     stat.setDataSource(getInfoSmeContext().getDataSource());
     stat.setInfoSme(getInfoSmeContext().getInfoSme());
@@ -63,65 +62,81 @@ public class TasksStatistics extends InfoSmeBean
     return RESULT_OK;
   }
 
-  public Statistics getStatistics() {
+  public Statistics getStatistics()
+  {
     return statistics;
   }
-  public String getMbQuery() {
+
+  public String getMbQuery()
+  {
     return mbQuery;
   }
-  public void setMbQuery(String mbQuery) {
+
+  public void setMbQuery(String mbQuery)
+  {
     this.mbQuery = mbQuery;
   }
 
-  private Date convertStringToDate(String date) {
+  private Date convertStringToDate(String date)
+  {
     Date converted = new Date();
-    try
-    {
-        SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-        converted = formatter.parse(date);
-    }
-    catch (ParseException e)
-    {
-        e.printStackTrace();
+    try {
+      SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+      converted = formatter.parse(date);
+    } catch (ParseException e) {
+      e.printStackTrace();
     }
     return converted;
   }
-  private String convertDateToString(Date date) {
+
+  private String convertDateToString(Date date)
+  {
     SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
     return formatter.format(date);
   }
 
   /* -------------------------- StatQuery delegates -------------------------- */
-  public void setFromDate(String fromDate) {
-    if (fromDate != null && fromDate.trim().length() >0) {
-        query.setFromDate(convertStringToDate(fromDate));
-        query.setFromDateEnabled(true);
+  public void setFromDate(String fromDate)
+  {
+    if (fromDate != null && fromDate.trim().length() > 0) {
+      query.setFromDate(convertStringToDate(fromDate));
+      query.setFromDateEnabled(true);
     } else {
-        query.setFromDateEnabled(false);
+      query.setFromDateEnabled(false);
     }
   }
-  public String getFromDate() {
+
+  public String getFromDate()
+  {
     return (query.isFromDateEnabled()) ?
             convertDateToString(query.getFromDate()) : "";
   }
-  public void setTillDate(String tillDate) {
-    if (tillDate != null && tillDate.trim().length() >0) {
-        query.setTillDate(convertStringToDate(tillDate));
-        query.setTillDateEnabled(true);
+
+  public void setTillDate(String tillDate)
+  {
+    if (tillDate != null && tillDate.trim().length() > 0) {
+      query.setTillDate(convertStringToDate(tillDate));
+      query.setTillDateEnabled(true);
     } else {
-        query.setTillDateEnabled(false);
+      query.setTillDateEnabled(false);
     }
   }
-  public String getTillDate() {
+
+  public String getTillDate()
+  {
     return (query.isTillDateEnabled()) ?
             convertDateToString(query.getTillDate()) : "";
   }
-  public String getTaskId() {
+
+  public String getTaskId()
+  {
     String id = query.getTaskId();
-    return (id == null) ? "":id;
+    return (id == null) ? "" : id;
   }
-  public void setTaskId(String taskId) {
-    query.setTaskId((taskId == null || taskId.length() <= 0) ? taskId:null);
+
+  public void setTaskId(String taskId)
+  {
+    query.setTaskId((taskId == null || taskId.length() <= 0) ? taskId : null);
   }
 
   public String getTaskName(String taskId)
