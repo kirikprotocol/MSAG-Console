@@ -831,6 +831,12 @@ StateType StateMachine::submit(Tuple& t)
   sms->setArchivationRequested(ri.archived);
   sms->setBillingRecord(ri.billing);
 
+  profile=smsc->getProfiler()->lookup(dst);
+  sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
+  int pres=psSingle;
+
+  processDirectives(*sms,profile);
+
   if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
   {
     sms->setValidTime(now+maxValidTime);
@@ -838,6 +844,8 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   __trace2__("Valid time for sms %lld=%u",t.msgId,(unsigned int)sms->getValidTime());
+
+
 
   if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
   {
@@ -859,11 +867,6 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  profile=smsc->getProfiler()->lookup(dst);
-  sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
-  int pres=psSingle;
-
-  processDirectives(*sms,profile);
   __trace2__("SUBMIT_SM: after processDirectives - delrep=%d, sdt=%d",(int)sms->getDeliveryReport(),sms->getNextTime());
 
   __trace2__("SUBMIT_SM: dest_addr_subunit=%d",sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
