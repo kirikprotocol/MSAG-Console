@@ -110,7 +110,7 @@ public class Config
 
   /**
    * »щет имена секций (только секций)
-   * @return section names that is immediate descedants of given section.
+   * @return section names that is immediate descedants of given section. Full names.
    */
   public synchronized Set getSectionChildSectionNames(String sectionName)
   {
@@ -128,6 +128,27 @@ public class Config
     }
     return result;
   }
+
+	/**
+	 * »щет имена секций (только секций)
+	 * @return section names that is immediate descedants of given section.
+	 */
+	public synchronized Set getSectionChildParamsNames(String sectionName)
+	{
+	  int dotpos = sectionName.length();
+	  Set result = new HashSet();
+	  for (Iterator i = params.keySet().iterator(); i.hasNext();)
+	  {
+		 String name = (String) i.next();
+		 if (name.length() > (dotpos + 1)
+					&& name.startsWith(sectionName)
+					&& name.lastIndexOf('.') == dotpos)
+		 {
+			result.add(name);
+		 }
+	  }
+	  return result;
+	}
 
   protected void parseNode(final String prefix, final Element elem)
   {
@@ -161,7 +182,7 @@ public class Config
     {
       params.put(fullName, new Integer(value));
     }
-    else if (type.equalsIgnoreCase("boolean"))
+    else if (type.equalsIgnoreCase("bool"))
     {
       params.put(fullName, new Boolean(value));
     }
