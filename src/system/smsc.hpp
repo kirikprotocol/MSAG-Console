@@ -183,6 +183,8 @@ public:
     smeman.unregisterSmeProxy(sysid);
   }
 
+  SmeAdministrator* getSmeAdmin(){return &smeman;}
+
   void registerStatisticalEvent(int eventType,const SMS* sms)
   {
     using namespace StatEvents;
