@@ -144,6 +144,7 @@ void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
 		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, addr,
 			false, OPT_ALL & ~OPT_MSG_PAYLOAD);
 		//установить немедленную доставку
+		pdu->get_message().set_esmClass(0x0); //иначе db sme отлупит
 		pdu->get_message().set_scheduleDeliveryTime("");
 		//текст сообщения
 		switch (dataCoding)

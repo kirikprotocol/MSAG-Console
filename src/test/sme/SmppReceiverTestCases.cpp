@@ -235,6 +235,10 @@ void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
 {
 	__dumpPdu__("processGenericNackBefore", fixture->smeInfo.systemId,
 		reinterpret_cast<SmppHeader*>(&pdu));
+	__unreachable__("Fatal error");
+	/*
+	__dumpPdu__("processGenericNackBefore", fixture->smeInfo.systemId,
+		reinterpret_cast<SmppHeader*>(&pdu));
 	time_t respTime = time(NULL);
 	if (!fixture->pduReg)
 	{
@@ -265,6 +269,7 @@ void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
 		__tc_fail__(100);
 		error();
 	}
+	*/
 }
 
 void SmppReceiverTestCases::processDataSm(PduDataSm &pdu)
