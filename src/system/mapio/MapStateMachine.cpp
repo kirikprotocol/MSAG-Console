@@ -46,7 +46,7 @@ struct ET96MAP_ADDRESS_LESS:public binary_function<bool,ET96MAP_ADDRESS_T,ET96MA
   }
 };
 
-typedef std::map<ET96MAP_ADDRESS_T m_msAddr,XMOMAPLocker,ET96MAP_ADDRESS_LESS> XMOMAP;
+typedef std::map<ET96MAP_ADDRESS_T,XMOMAPLocker,ET96MAP_ADDRESS_LESS> XMOMAP;
 
 static Mutex x_map_lock;
 typedef multimap<string,unsigned> X_MAP;
