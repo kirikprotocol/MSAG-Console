@@ -26,6 +26,7 @@ public:
   {
     smppSocket->assignProxy(this);
     seq=1;
+    managerMonitor=NULL;
   }
   virtual ~SmppProxy(){}
   virtual void close()
@@ -35,13 +36,15 @@ public:
   virtual void putCommand(const SmscCommand& cmd)
   {
     trace("put command:enter");
-    MutexGuard g(mutex);
-    if(outqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
     {
-      throw ProxyQueueLimitException();
+      MutexGuard g(mutex);
+      if(outqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
+      {
+        throw ProxyQueueLimitException();
+      }
+      trace2("put command:%p",*((void**)&cmd));
+      outqueue.Push(cmd);
     }
-    trace2("put command:%p",*((void**)&cmd));
-    outqueue.Push(cmd);
     smppSocket->notifyOutThread();
   }
   virtual SmscCommand getCommand()
@@ -62,8 +65,8 @@ public:
       throw ProxyQueueLimitException();
     }
     inqueue.Push(cmd);
-    managerMonitor->Signal();
     mutex.Unlock();
+    managerMonitor->Signal();
   }
   SmscCommand getOutgoingCommand()
   {

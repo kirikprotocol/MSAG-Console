@@ -11,7 +11,7 @@ class TestSme:public smsc::sme::BaseSme{
 public:
   TestSme(const char *host,int port,const char *sysid)
   :BaseSme(host,port,sysid){}
-  bool processSms(smsc::sms::SMS *sms){}
+  bool processSms(smsc::sms::SMS *sms){return false;}
 };
 
 int main(int argc,char* argv[])
@@ -29,8 +29,8 @@ int main(int argc,char* argv[])
     trace("bind ok\n");
     SMS s;
     char oa[]="1",da[]="2";
-    s.setOriginatingAddress(strlen(oa),1,1,oa);
-    s.setDestinationAddress(strlen(da),1,1,da);
+    s.setOriginatingAddress(strlen(oa),0,0,oa);
+    s.setDestinationAddress(strlen(da),0,0,da);
     char msc[]="123";
     char imsi[]="123";
     s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);

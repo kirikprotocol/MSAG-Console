@@ -2,9 +2,13 @@
   $Id$
 */
 #include "smeman.h"
+#include <stdexcept>
+#include <string>
 
 namespace smsc {
 namespace smeman {
+
+using namespace std;
 
 using core::synchronization::MutexGuard;
 #define __synchronized__ MutexGuard mguard(lock);
@@ -26,7 +30,7 @@ __synchronized__
 
 void SmeManager::deleteSme(const SmeSystemId& systemId)
 {
-__synchronized__  
+__synchronized__
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX ) throw SmeError();
   if ( records[index].proxy )
@@ -54,7 +58,7 @@ class SmeIteratorImpl  : public SmeIterator
 public:
   SmeIteratorImpl(const Records::iterator& begin,const Records::iterator& end):
     begin(begin),end(end),ptr(begin),started(false) {}
-  
+
   virtual bool next()
   {
     if (started&&ptr!=end) ++ptr;
@@ -78,18 +82,18 @@ public:
 
 SmeIterator* SmeManager::iterator()
 {
-__synchronized__  
+__synchronized__
   return new SmeIteratorImpl(records.begin(),records.end());
 }
 
 void SmeManager::disableSme(const SmeSystemId& systemId)
 {
   /*
-	SmeIndex index = internalLookup(systemId);
+  SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX ) throw SmeError();
   // ???????  что делать если уже в работе , шутдаунить прокси, как корректно или абортом
   records[index].info.disabled = true;*/
-	__warning__("disableSme is not implemented");
+  __warning__("disableSme is not implemented");
 }
 
 void SmeManager::enableSme(const SmeSystemId& systemId)
@@ -98,7 +102,7 @@ void SmeManager::enableSme(const SmeSystemId& systemId)
   if ( index != INVALID_SME_INDEX ) throw SmeError();
   // ???????  что делать если уже в работе , шутдаунить прокси, как корректно или абортом
   records[index].info.disabled = false;*/
-	__warning__("enableSme is not implemented");
+  __warning__("enableSme is not implemented");
 }
 
 // ----- SmeTable implementation ---------------------------
@@ -112,7 +116,7 @@ SmeIndex SmeManager::lookup(const SmeSystemId& systemId) const
 
 SmeProxy* SmeManager::getSmeProxy(SmeIndex index) const
 {
-__synchronized__  
+__synchronized__
   const SmeRecord& record = records.at(index);
   if ( record.deleted ) throw SmeError();
   return record.proxy;
@@ -120,7 +124,7 @@ __synchronized__
 
 SmeInfo SmeManager::getSmeInfo(SmeIndex index) const
 {
-__synchronized__  
+__synchronized__
   const SmeRecord& record = records.at(index);
   if ( record.deleted ) throw SmeError();
   return record.info;
@@ -135,8 +139,16 @@ __synchronized__
   __require__ ( smeProxy != NULL );
 
   SmeIndex index = internalLookup(systemId);
-  if ( index == INVALID_SME_INDEX ) throw SmeError();
-  if ( records[index].proxy ) throw SmeError();
+  if ( index == INVALID_SME_INDEX )
+  {
+    throw runtime_error(string("unknown systm id:")+systemId);
+  }
+  if ( records[index].proxy )
+  {
+    __trace2__("Failed to register proxy with sid:%s",systemId.c_str());
+    __warning__("Sme proxy with tihs systemId already registered");
+    throw runtime_error(string("proxy with id ")+systemId+" already exists");
+  }
   records[index].proxy = smeProxy;
   dispatcher.attachSmeProxy(smeProxy,index);
 }
@@ -148,9 +160,9 @@ __synchronized__
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX ) throw SmeError();
   if ( records[index].proxy )
-		dispatcher.detachSmeProxy(records[index].proxy);
-	else
-		__warning__("unregister null proxy");
+    dispatcher.detachSmeProxy(records[index].proxy);
+  else
+    __warning__("unregister null proxy");
   records[index].proxy = 0;
 }
 

@@ -48,8 +48,10 @@ void SmppSocketsManager::removeSocket(Socket* sock)
   MutexGuard g(m);
   int x=(int)sock->getData(0);
   x--;
+  trace2("socket ref count for %p:%d",sock,x);
   sock->setData(0,(void*)x);
   if(sock->getData(0))return;
+  trace2("deleting socket:%p",sock);
   delete sock;
 }
 

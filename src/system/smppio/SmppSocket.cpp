@@ -64,8 +64,8 @@ int SmppSocket::receive()
 smsc::smpp::SmppHeader* SmppSocket::decode()
 {
   smsc::smpp::SmppStream s;
-  for(int i=0;i<bufferOffset;i++)printf("%02x ",buffer[i]);
-  printf("\n");fflush(stdout);
+  //for(int i=0;i<bufferOffset;i++)printf("%02x ",buffer[i]);
+  //printf("\n");fflush(stdout);
   trace2("decode: %p, %d\n",buffer,bufferOffset);
   smsc::smpp::assignStreamWith(&s,buffer,bufferOffset,true);
   smsc::smpp::SmppHeader* pdu=smsc::smpp::fetchSmppPdu(&s);

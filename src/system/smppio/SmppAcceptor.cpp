@@ -1,4 +1,6 @@
 #include "system/smppio/SmppAcceptor.hpp"
+#include <string.h>
+#include <errno.h>
 
 namespace smsc{
 namespace system{
@@ -18,8 +20,12 @@ int SmppAcceptor::Execute()
   for(;;)
   {
     clnt=srv.Accept();
-    if(!clnt)break;
-    trace("Connection accepted");
+    if(!clnt)
+    {
+      trace2("accept failed. error:%s",strerror(errno));
+      //break;
+    }
+    trace2("Connection accepted:%p",clnt);
     sm->registerSocket(clnt);
   }
   return 0;

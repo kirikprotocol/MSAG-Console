@@ -282,7 +282,7 @@ int MemoryHeap::selectHeap(const char* taskname,MemoryManager *parentmanager,
 void* MemoryHeap::getRawMem(int size)
 {
   void *retval;
-  int *iptr;
+  //int *iptr;
   int havespace;
   __require__(firstRawPage!=NULL);
   __require__(lastRawPage!=NULL);

@@ -1,8 +1,11 @@
 #include "ThreadPool.hpp"
+#include <exception>
 
 namespace smsc{
 namespace core{
 namespace threads{
+
+using namespace std;
 
 void ThreadedTask::getMemoryInfo(int& rawheapsize,int& blocksheapquantum)
 {
@@ -36,8 +39,14 @@ int PooledThread::Execute()
     }
     try{
       task->Execute();
-    }catch(...)
+    }
+    catch(exception& e)
     {
+      trace2("Exception in task %s:%s\n",task->taskName(),e.what());
+    }
+    catch(...)
+    {
+      trace2("Unknown exception in task:%s\n",task->taskName());
     }
     trace2("Execution of task %s finished",task->taskName());
     task->releaseHeap();

@@ -29,8 +29,8 @@ void BaseSme::bindsme()
   assignStreamWith(&stream,buf.buffer,size,false);
   if(fillSmppPdu(&stream,reinterpret_cast<SmppHeader*>(&pdu)))
   {
-    for(int i=0;i<size;i++)printf("%02x ",(int)buf.buffer[i]);
-    printf("\n");
+    //for(int i=0;i<size;i++)printf("%02x ",(int)buf.buffer[i]);
+    //printf("\n");
     if(!sendBuffer(buf.buffer,size))throw Exception("Failed to send bind request");
   }
   else

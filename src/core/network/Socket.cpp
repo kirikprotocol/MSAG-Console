@@ -28,7 +28,7 @@ int Socket::Init(const char *host,int port,int timeout)
   sockAddr.sin_family=AF_INET;
   ulINAddr=inet_addr(host);
 #ifndef INADDR_NONE
-  if(ulINAddr!=-1)
+  if(ulINAddr!=(unsigned int)-1)
 #else
   if(ulINAddr!=INADDR_NONE)
 #endif
@@ -82,6 +82,7 @@ void Socket::Close()
     }
     return;
   }
+  shutdown(sock,2);
   closesocket(sock);
   connected=0;
 }
@@ -114,7 +115,7 @@ int Socket::canWrite()
 int Socket::Read(char *buf,int bufsize)
 {
   if(!connected)return -1;
-  int retval;
+  //int retval;
   if(bufPos<inBuffer)
   {
     int n=inBuffer-bufPos;

@@ -2,6 +2,7 @@
 #include "system/smppio/SmppProxy.hpp"
 #include "util/debug.h"
 #include "system/smppio/SmppSocketsManager.hpp"
+#include <exception>
 //#include <memory>
 
 namespace smsc{
@@ -10,6 +11,7 @@ namespace smppio{
 
 //using std::auto_ptr;
 using namespace smsc::smpp;
+using namespace std;
 
 const int SOCKET_SLOT_REFCOUNT=0;
 const int SOCKET_SLOT_SOCKETSMANAGER=1;
@@ -45,9 +47,7 @@ void SmppInputThread::removeSocket(Socket *sock)
       }
       else
       {
-        delete sockets[i];
-        sockets.Delete(i);
-        mul.remove(sock);
+        killSocket(i);
       }
       break;
     }
@@ -63,10 +63,12 @@ void SmppInputThread::killSocket(int idx)
   sockets.Delete(idx);
   SmppSocketsManager *m=
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
+  trace2("removing socket %p by input thread",s);
   m->removeSocket(s);
   if(ss->getProxy())
   {
     smeManager->unregisterSmeProxy(ss->getProxy()->getId());
+    delete ss->getProxy();
   }
 }
 
@@ -80,12 +82,12 @@ int SmppInputThread::Execute()
   {
     {
       MutexGuard g(mon);
-      if(sockets.Count()==0)
+      while(sockets.Count()==0)
       {
         trace("in:wait for sockets");
+        //mon.wait();
         mon.wait();
         trace("in:got new socket");
-        if(sockets.Count()==0)break;
       }
       for(i=0;i<sockets.Count();i++)
       {
@@ -105,7 +107,8 @@ int SmppInputThread::Execute()
         s->setData(SOCKET_SLOT_INPUTMULTI,(void*)1);
       }
     }
-    if(mul.canRead(ready,error,1000)>0)
+    trace("in: canRead\n");
+    if(mul.canRead(ready,error,10)>0)
     {
       MutexGuard g(mon);
       for(i=0;i<sockets.Count();i++)
@@ -195,11 +198,11 @@ int SmppInputThread::Execute()
                 proxy->setId(bindpdu->get_systemId());
                 resppdu.get_header().
                   set_commandStatus(SmppStatusSet::ESME_ROK);
-              }catch(...)
+              }catch(exception& e)
               {
                 resppdu.get_header().
                   set_commandStatus(SmppStatusSet::ESME_RSYSERR);
-                trace("registration failed");
+                trace2("registration failed:%s",e.what());
                 delete proxy;
                 err=true;
               }
@@ -247,6 +250,7 @@ int SmppInputThread::Execute()
       }
     }
   }
+  trace("exiting smpp input thread loop?????");
   return 0;
 }
 
@@ -276,8 +280,7 @@ void SmppOutputThread::removeSocket(Socket *sock)
       }
       else
       {
-        delete sockets[i];
-        sockets.Delete(i);
+        killSocket(i);
       }
       break;
     }
@@ -290,6 +293,7 @@ void SmppOutputThread::killSocket(int idx)
   SmppSocket *ss=sockets[idx];
   Socket *s=ss->getSocket();
   sockets.Delete(idx);
+  trace2("removing socket %p by output thread",s);
   SmppSocketsManager *m=
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
   m->removeSocket(s);
@@ -304,12 +308,11 @@ int SmppOutputThread::Execute()
   for(;;)
   {
     mon.Lock();
-    if(sockets.Count()==0)
+    while(sockets.Count()==0)
     {
       trace("out:wait for sockets");
       mon.wait();
       trace("out:got new socket");
-      if(sockets.Count()==0)break;
     }
     int cnt=0;
     mul.clear();
@@ -320,7 +323,9 @@ int SmppOutputThread::Execute()
       Socket *s=ss->getSocket();
       if(s->getData(SOCKET_SLOT_KILL))
       {
+        trace("try to remove socket from inTask");
         inTask->removeSocket(s);
+        trace("remove ok. Killing socke");
         killSocket(i);
         i--;
         continue;
@@ -347,14 +352,14 @@ int SmppOutputThread::Execute()
     trace2("found %d sockets wanting to send data",cnt);
     if(!cnt)
     {
-      trace("wait for data");
+      trace("out: wait for data");
       //mon.Unlock();
       mon.wait();
       mon.Unlock();
       continue;
     }
     mon.Unlock();
-    if(mul.canWrite(ready,error,1000)>0)
+    if(mul.canWrite(ready,error,10)>0)
     {
       MutexGuard g(mon);
       for(i=0;i<sockets.Count();i++)

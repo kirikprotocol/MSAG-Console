@@ -45,6 +45,13 @@ public:
       bufferOffset=0;
     }
   }
+  virtual ~SmppSocket()
+  {
+    if(buffer)
+    {
+      delete [] buffer;
+    }
+  }
   void assignTasks(SmppIOTask *in,SmppIOTask *out)
   {
     inThread=in;

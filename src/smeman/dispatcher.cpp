@@ -2,8 +2,13 @@
   $Id$
 */
 #include "smedispatch.h"
+#include <stdexcept>
+#include <string>
+
 namespace smsc {
 namespace smeman {
+
+using namespace std;
 
 using core::synchronization::MutexGuard;
 #define __synchronized__ MutexGuard mguard(dispatch_lock);
@@ -24,7 +29,7 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long /*timeout*/,int* idx)
         if ( unit->proxy->hasInput() )
         {
           unit->prior = unit->proxy->getPriority();
-          __require__ ( unit->prior > SmeProxyPriorityMinBr && 
+          __require__ ( unit->prior > SmeProxyPriorityMinBr &&
                         unit->prior < SmeProxyPriorityMaxBr );
           if ( unit->prev ) unit->prev->next = unit->next; // remove from list
           else
@@ -47,7 +52,7 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long /*timeout*/,int* idx)
         unit = queuedProxies;
         while ( unit ) {
           SmeProxyPriority tmp;
-          __require__ ( unit->prior > SmeProxyPriorityMinBr && 
+          __require__ ( unit->prior > SmeProxyPriorityMinBr &&
                         unit->prior < SmeProxyPriorityMaxBr );
           if ( (tmp = unit->prior) > prior )
           {
@@ -57,9 +62,9 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long /*timeout*/,int* idx)
           unit = unit->next;
         }
         __require__(prior_unit);
-        //if ( prior_unit ) 
+        //if ( prior_unit )
         //{
-          if ( prior_unit->prev ) 
+          if ( prior_unit->prev )
           {
             prior_unit->prev->next = prior_unit->next;
             if ( prior_unit->next ) prior_unit->next->prev = prior_unit->prev;
@@ -89,7 +94,9 @@ void SmeProxyDispatcher::attachSmeProxy(SmeProxy* proxy,int idx)
 {
 __synchronized__
   __require__ ( proxy!= NULL );
-  if ( proxy->attached() ) throw SmeError();
+  if ( proxy->attached() )
+    throw runtime_error("attempt to attach monitor to "
+                        "proxy that already have monitor");
   Unit* unit = new Unit;
   unit->prev = 0;
   unit->prior = SmeProxyPriorityDefault;
@@ -112,7 +119,7 @@ __synchronized__
   {
     if ( unit->proxy == proxy )
     {
-      if ( unit == queuedProxies ) 
+      if ( unit == queuedProxies )
       {
         queuedProxies = unit->next;
         if ( queuedProxies ) queuedProxies->prev = 0;
@@ -132,7 +139,7 @@ __synchronized__
   {
     if ( unit->proxy == proxy )
     {
-      if ( unit == unqueuedProxies ) 
+      if ( unit == unqueuedProxies )
       {
         unqueuedProxies = unit->next;
         if ( unqueuedProxies ) unqueuedProxies->prev = 0;

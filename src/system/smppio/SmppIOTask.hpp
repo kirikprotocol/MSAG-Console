@@ -30,7 +30,6 @@ public:
 
   void notify()
   {
-    trace("output thread notify");
     mon.Lock();
     mon.notify();
     mon.Unlock();

@@ -45,6 +45,7 @@ public:
     smppCount(0)
   {
   }
+  virtual ~BaseSme(){}
   bool init();
   void bindsme();
   SmppHeader* receiveSmpp(int);
