@@ -1,17 +1,18 @@
 #ifndef TEST_CORE_PDU_UTIL
 #define TEST_CORE_PDU_UTIL
 
-#include "sms/sms.h"
 #include "smpp/smpp_structures.h"
+#include "test/sms/SmsUtil.hpp"
 #include <ctime>
+#include <string>
 #include <vector>
 
 namespace smsc {
 namespace test {
 namespace core {
 
-using smsc::sms::SMSId;
 using smsc::smpp::SmppHeader;
+using std::string;
 using std::vector;
 
 static const int PDU_REQUIRED_FLAG = 0x0; //pdu ожидается, но еще не получена
@@ -78,22 +79,22 @@ public:
  */
 struct PduData
 {
-	SMSId smsId;
+	string smsId;
 	const uint16_t msgRef;
 	const time_t submitTime;
 	const time_t waitTime;
 	const time_t validTime;
 	SmppHeader* pdu;
 	int responseFlag; //флаг получения респонса
-	PduReceiptFlag deliveryFlag; //флаг получения сообщения плучателем
+	PduReceiptFlag deliveryFlag; //флаг получения сообщения получателем
 	PduReceiptFlag deliveryReceiptFlag; //флаг получения подтверждения доставки
 	int intermediateNotificationFlag; //флаг получения всех нотификаций
 	PduData* replacePdu; //pdu, которая должна быть заменена текущей pdu
 	PduData* replacedByPdu; //pdu, которая замещает текущую pdu
 
 	PduData(uint16_t _msgRef, time_t _submitTime, time_t _waitTime,
-		time_t _validTime, SmppHeader* _pdu)
-		: smsId(0), msgRef(_msgRef), submitTime(_submitTime),
+		time_t _validTime, SmppHeader* _pdu, const string _smsId = "")
+		: smsId(_smsId), msgRef(_msgRef), submitTime(_submitTime),
 		waitTime(_waitTime), validTime(_validTime), pdu(_pdu),
 		responseFlag(PDU_REQUIRED_FLAG),
 		deliveryFlag(PDU_REQUIRED_FLAG, waitTime, validTime),
