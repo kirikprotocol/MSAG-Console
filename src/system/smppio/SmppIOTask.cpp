@@ -427,18 +427,19 @@ int SmppOutputThread::Execute()
         if(s->getData(SOCKET_SLOT_KILL))
         {
           int j;
-          for(int j=0;j<error.Count();j++)
+          for(j=0;j<error.Count();j++)
           {
-            if(error[i]==s)
+            if(error[j]==s)
             {
-              error.Delete(i);
+              error.Delete(j);
             }
           }
           for(j=0;j<ready.Count();j++)
           {
-            if(ready[i]==s)
+            if(ready[j]==s)
             {
-              ready.Delete(i);
+              ready.Delete(j);
+              break;
             }
           }
           inTask->removeSocket(s);
