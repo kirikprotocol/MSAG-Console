@@ -1,0 +1,7 @@
+BUILD_DIR=/home/serge/build
+SMSC_DIR=/home/serge/smsc
+MAKE_ARGS=CXX=CC DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES SNMP=YES
+; set SNMP_MOD_NAME to snmp if SNMP=YES
+SNMP_MOD_NAME=
+; for 64 bit set to lib64
+ORALIB_SUBDIR=lib

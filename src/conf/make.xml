@@ -1,0 +1,19 @@
+<project name="make runner routine" default="run_make">
+  <!-- used properties declaration from caller-->
+  <property name="SRC_DIR" value="" />
+  <property name="MAKE_ARGS" value="" />
+  <property name="BUILD_DIR" value="" />
+  <property name="ORACLE_HOME" value="" />
+  <property name="ORALIB_SUBDIR" value="" />
+  <property name="targets" value="" />
+  <!-- end callers properties -->
+
+  <target name="run_make" >
+    <exec executable="make" failifexecutionfails="yes" failonerror="yes" dir="${SRC_DIR}">
+      <arg line="${MAKE_ARGS} ${targets}"/>
+      <env key="SMSC_SRCDIR" value="${SRC_DIR}"/>
+      <env key="SMSC_BUILDDIR" value="${BUILD_DIR}"/>
+      <env key="ORACLE_LIB" value="${ORACLE_HOME}/${ORALIB_SUBDIR}"/> 
+    </exec>
+  </target>
+</project>  

@@ -1,0 +1,72 @@
+<project name="smsc_make" default="help" basedir=".">
+  <property file="build.properties"/>
+  <property environment="env"/>
+  <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
+  <property name="MOD" value=""/> <!-- fake declaration -->
+
+
+  <target name="help">
+    <echo>
+SMSC C++ code build script
+Targets:
+      clean
+      deps
+      logger
+      db (depends: logger)
+      admin (depends: logger)
+      system (depends: logger, db, snmp if SNMP_MOD_NAME=snmp)
+      smppgw (depends: logger, db)
+      mod (use -DMOD=modulename in ant command line args)
+Required environment: ORACLE_HOME
+    </echo>
+  </target>
+
+  <target name="clean">
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="clean"/>
+    </ant>
+  </target>
+
+  <target name="deps">
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="deps"/>
+    </ant>
+  </target>
+
+  <target name="logger">
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="logger"/>
+    </ant>
+  </target>
+
+  <target name="db" depends="logger">
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="db"/>
+    </ant>
+  </target>
+
+  <target name="admin" depends="logger" >
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="admin"/>
+    </ant>
+  </target>
+
+  <target name="smppgw" depends="logger, db" >
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="smppgw"/>
+    </ant>
+  </target>
+
+  <target name="system" depends="logger, db" >
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="${SNMP_MOD_NAME} system"/>
+    </ant>
+  </target>
+
+  <target name="mod">
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="${MOD}"/>
+    </ant>
+  </target>
+
+</project>

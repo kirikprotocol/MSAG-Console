@@ -95,24 +95,6 @@
     <symlink link="${ex.conf}/gw.sme.xml"              resource="${gw.conf}/sme.xml"/>
   </target>
 
-  <target name="makeclean" depends="set_properties">
-    <exec executable="make" failifexecutionfails="yes" failonerror="yes" dir="${sibinco.src}">
-      <arg line="clean"/>
-    </exec>
-  </target>
-
-  <target name="makedeps" depends="set_properties">
-    <exec executable="make" failifexecutionfails="yes" failonerror="yes" dir="${sibinco.src}">
-      <arg line="${MAKE_ARGS} deps"/>
-    </exec>
-  </target>
-
-  <target name="makesmppgw" depends="set_properties">
-    <exec executable="make" failifexecutionfails="yes" failonerror="yes" dir="${sibinco.src}">
-      <arg line="${MAKE_ARGS} logger db admin smppgw"/>
-    </exec>
-  </target>
-
   <target name="makeweb" depends="set_properties">
     <ant dir="${sibinco.cvs}/webapps" target="build"/>
   </target>
