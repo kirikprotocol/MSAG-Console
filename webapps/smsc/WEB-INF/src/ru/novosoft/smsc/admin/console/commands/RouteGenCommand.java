@@ -48,6 +48,9 @@ public abstract class RouteGenCommand implements Command
   protected long aclId = -1;
   protected boolean isAclId = false;
 
+  protected boolean allowBlocked   = false;
+  protected boolean isAllowBlocked = false;
+
   public void setRoute(String route) {
     this.route = route;
   }
@@ -81,6 +84,9 @@ public abstract class RouteGenCommand implements Command
   }
   public void setAclId(long aclId) {
     this.aclId = aclId; isAclId = true;
+  }
+  public void setAllowBlocked(boolean allowBlocked) {
+    this.allowBlocked = allowBlocked; isAllowBlocked = true;
   }
 }
 

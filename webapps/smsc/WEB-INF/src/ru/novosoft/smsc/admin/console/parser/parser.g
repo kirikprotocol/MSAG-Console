@@ -271,22 +271,24 @@ addroute returns [RouteAddCommand cmd] {
 	;
 
 addroute_flags[RouteAddCommand cmd]
-	:	(OPT_ACTIVE 	        { cmd.setActive(true);   }
-		|OPT_INACTIVE	        { cmd.setActive(false);	})?
-		(OPT_HIDE             { cmd.setHide(true);     }
-		|OPT_NOHIDE           { cmd.setHide(false);    })?
-		(OPT_RP	(VAL_FORCE    { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_FORCE);    }
-			      |VAL_SUPPRESS { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_SUPPRESS); }
-			      |VAL_PASS     { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_PASS);     }))?
-		(OPT_FD	              { cmd.setForceDelivery(true); })?
-		(OPT_BILL   	        { cmd.setBill(true);   	 }
-		|OPT_NOBILL 	        { cmd.setBill(false);  	 })
-		(OPT_ARCH   	        { cmd.setArc(true);    	 }
-		|OPT_NOARCH 	        { cmd.setArc(false);   	 })
-	  (OPT_ALLOW  	        { cmd.setAllow(true);  	 }
-		|OPT_DENY   	        { cmd.setAllow(false); 	 })
-	  (OPT_RCPT   	        { cmd.setReceipt(true);  }
-		|OPT_NORCPT 	        { cmd.setReceipt(false); })
+	:	(OPT_ACTIVE 	          { cmd.setActive(true);   }
+		|OPT_INACTIVE	          { cmd.setActive(false);	})?
+		(OPT_HIDE               { cmd.setHide(true);     }
+		|OPT_NOHIDE             { cmd.setHide(false);    })?
+		(OPT_RP	(VAL_FORCE      { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_FORCE);    }
+			      |VAL_SUPPRESS   { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_SUPPRESS); }
+			      |VAL_PASS       { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_PASS);     }))?
+		(OPT_BLOCKED (OPT_ALLOW { cmd.setAllowBlocked(true);  }
+		             |OPT_DENY  { cmd.setAllowBlocked(false); }))?
+		(OPT_FD	                { cmd.setForceDelivery(true); })?
+		(OPT_BILL   	          { cmd.setBill(true);   	 }
+		|OPT_NOBILL 	          { cmd.setBill(false);  	 })
+		(OPT_ARCH   	          { cmd.setArc(true);    	 }
+		|OPT_NOARCH 	          { cmd.setArc(false);   	 })
+	  (OPT_ALLOW  	          { cmd.setAllow(true);  	 }
+		|OPT_DENY   	          { cmd.setAllow(false); 	 })
+	  (OPT_RCPT   	          { cmd.setReceipt(true);  }
+		|OPT_NORCPT 	          { cmd.setReceipt(false); })
 	;
 	exception
 	catch [RecognitionException ex] {
@@ -339,23 +341,25 @@ altroute returns [RouteAlterCommand cmd] {
 		)?
 	;
 altroute_flags[RouteAlterCommand cmd]
-	:	(OPT_ACTIVE 	        { cmd.setActive(true);   }
-		|OPT_INACTIVE	        { cmd.setActive(false);	 })?
-		(OPT_HIDE             { cmd.setHide(true);     }
-		|OPT_NOHIDE           { cmd.setHide(false);    })?
-		(OPT_RP	(VAL_FORCE    { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_FORCE);    }
-			      |VAL_SUPPRESS { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_SUPPRESS); }
-			      |VAL_PASS     { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_PASS);     }))?
-		(OPT_FD (OPT_ON       { cmd.setForceDelivery(true);  }
-		        |OPT_OFF      { cmd.setForceDelivery(false); }))?
-		(OPT_BILL   	        { cmd.setBill(true);     }
-		|OPT_NOBILL 	        { cmd.setBill(false);    })?
-		(OPT_ARCH   	        { cmd.setArc(true);      }
-		|OPT_NOARCH 	        { cmd.setArc(false);     })?
-	  (OPT_ALLOW  	        { cmd.setAllow(true);    }
-		|OPT_DENY   	        { cmd.setAllow(false);   })?
-	  (OPT_RCPT   	        { cmd.setReceipt(true);  }
-		|OPT_NORCPT 	        { cmd.setReceipt(false); })?
+	:	(OPT_ACTIVE 	          { cmd.setActive(true);   }
+		|OPT_INACTIVE	          { cmd.setActive(false);	 })?
+		(OPT_HIDE               { cmd.setHide(true);     }
+		|OPT_NOHIDE             { cmd.setHide(false);    })?
+		(OPT_RP	(VAL_FORCE      { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_FORCE);    }
+			      |VAL_SUPPRESS   { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_SUPPRESS); }
+			      |VAL_PASS       { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_PASS);     }))?
+		(OPT_BLOCKED (OPT_ALLOW { cmd.setAllowBlocked(true);  }
+		             |OPT_DENY  { cmd.setAllowBlocked(false); }))?
+		(OPT_FD (OPT_ON         { cmd.setForceDelivery(true);  }
+		        |OPT_OFF        { cmd.setForceDelivery(false); }))?
+		(OPT_BILL   	          { cmd.setBill(true);     }
+		|OPT_NOBILL 	          { cmd.setBill(false);    })?
+		(OPT_ARCH   	          { cmd.setArc(true);      }
+		|OPT_NOARCH 	          { cmd.setArc(false);     })?
+	  (OPT_ALLOW  	          { cmd.setAllow(true);    }
+		|OPT_DENY   	          { cmd.setAllow(false);   })?
+	  (OPT_RCPT   	          { cmd.setReceipt(true);  }
+		|OPT_NORCPT 	          { cmd.setReceipt(false); })?
 	;
 	exception
 	catch [RecognitionException ex] {

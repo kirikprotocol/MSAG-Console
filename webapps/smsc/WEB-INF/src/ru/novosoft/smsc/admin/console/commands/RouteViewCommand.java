@@ -50,6 +50,7 @@ public class RouteViewCommand implements Command
                   (smscRoute.isHide() ? "hide, " : "nohide, ") +
                   "replayPath " + Route.getReplayPathValue(smscRoute.getReplayPath()) +
                   "forceDelivery " + (smscRoute.isForceDelivery() ? "on, " : "off, ") +
+                  "blocked "+(smscRoute.isAllowBlocked() ? "allowed, ":"denied, ") +
                   (smscRoute.isBilling() ? "billing, " : "no billing, ") +
                   (smscRoute.isArchiving() ? "archiving, " : "no archiving, ") +
                   (smscRoute.isEnabling() ? "allowed, " : "denied, ") +

@@ -535,6 +535,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_NOBILL:
 		case OPT_ACTIVE:
 		case OPT_INACTIVE:
+		case OPT_BLOCKED:
 		case OPT_RP:
 		case OPT_FD:
 		{
@@ -1323,6 +1324,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_PRI:
 		case OPT_ACTIVE:
 		case OPT_INACTIVE:
+		case OPT_BLOCKED:
 		case OPT_DM:
 		case OPT_FWD:
 		case OPT_SRCSME:
@@ -2636,6 +2638,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NOHIDE:
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_BLOCKED:
 			case OPT_RP:
 			case OPT_FD:
 			{
@@ -2663,6 +2666,7 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_BLOCKED:
 			case OPT_RP:
 			case OPT_FD:
 			{
@@ -2697,6 +2701,46 @@ public CommandParser(ParserSharedInputState state) {
 				{
 					match(VAL_PASS);
 					cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_PASS);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case OPT_BILL:
+			case OPT_NOBILL:
+			case OPT_BLOCKED:
+			case OPT_FD:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_BLOCKED:
+			{
+				match(OPT_BLOCKED);
+				{
+				switch ( LA(1)) {
+				case OPT_ALLOW:
+				{
+					match(OPT_ALLOW);
+					cmd.setAllowBlocked(true);
+					break;
+				}
+				case OPT_DENY:
+				{
+					match(OPT_DENY);
+					cmd.setAllowBlocked(false);
 					break;
 				}
 				default:
@@ -2864,6 +2908,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NORCPT:
 			case OPT_SVCID:
 			case OPT_PRI:
+			case OPT_BLOCKED:
 			case OPT_DM:
 			case OPT_FWD:
 			case OPT_SRCSME:
@@ -2906,6 +2951,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NORCPT:
 			case OPT_SVCID:
 			case OPT_PRI:
+			case OPT_BLOCKED:
 			case OPT_DM:
 			case OPT_FWD:
 			case OPT_SRCSME:
@@ -2943,6 +2989,61 @@ public CommandParser(ParserSharedInputState state) {
 				{
 					match(VAL_PASS);
 					cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_PASS);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_ADD:
+			case ACT_DELETE:
+			case TGT_ACL:
+			case OPT_BILL:
+			case OPT_NOBILL:
+			case OPT_ARCH:
+			case OPT_NOARCH:
+			case OPT_ALLOW:
+			case OPT_DENY:
+			case OPT_RCPT:
+			case OPT_NORCPT:
+			case OPT_SVCID:
+			case OPT_PRI:
+			case OPT_BLOCKED:
+			case OPT_DM:
+			case OPT_FWD:
+			case OPT_SRCSME:
+			case OPT_FD:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_BLOCKED:
+			{
+				match(OPT_BLOCKED);
+				{
+				switch ( LA(1)) {
+				case OPT_ALLOW:
+				{
+					match(OPT_ALLOW);
+					cmd.setAllowBlocked(true);
+					break;
+				}
+				case OPT_DENY:
+				{
+					match(OPT_DENY);
+					cmd.setAllowBlocked(false);
 					break;
 				}
 				default:
@@ -3204,14 +3305,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop102:
+			_loop106:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop102;
+					break _loop106;
 				}
 				
 			} while (true);
