@@ -100,8 +100,7 @@ DOM_Document Manager::parse(DOMParser *parser, const char * const filename)
     const char *srcFile = e.getSrcFile();
     unsigned int line = e.getSrcLine();
     char exceptionMsg[1024];
-    snprintf(exceptionMsg, sizeof(exceptionMsg), "An error occured during parsing \"%s\" at file \"%s\" on line %d. Nested: %d: %s", filename, srcFile, line, code, message);
-    delete[] message;
+    snprintf(exceptionMsg, sizeof(exceptionMsg), "An error occured during parsing \"%s\" at file \"%s\" on line %d. Nested: %d: %s", filename, srcFile, line, code, message.get());
     throw ConfigException(exceptionMsg);
   }
   catch (const DOM_DOMException& e)

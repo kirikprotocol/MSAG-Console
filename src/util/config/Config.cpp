@@ -372,7 +372,7 @@ void getChildParamsFromHash(_HashType &hash,
   _ValueType value;
   for (_HashIteratorType i = hash.getIterator(); i.Next(name, value); )
   {
-    if (memcmp(name, sectionName, sectionNameLen) == 0)
+    if (strlen(name) >= sectionNameLen && memcmp(name, sectionName, sectionNameLen) == 0)
     {
       //char paramName[strlen(name) -(sectionNameLen +1) +1];
       TmpBuf<char,64> paramName(strlen(name) -(sectionNameLen +1) +1);
