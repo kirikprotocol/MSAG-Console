@@ -132,15 +132,15 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     */
     
     bool inform = false;
-    try { config->getBool("forceInform"); } catch (...) { inform = false;
+    try { inform = config->getBool("forceInform"); } catch (...) { inform = false;
         smsc_log_warn(logger, "Parameter <MCISme.forceInform> missed. Force inform for all abonents is off");
     }
     bool notify = false;
-    try { config->getBool("forceNotify"); } catch (...) { notify = false;
+    try { notify = config->getBool("forceNotify"); } catch (...) { notify = false;
         smsc_log_warn(logger, "Parameter <MCISme.forceNotify> missed. Force notify for all abonents is off");
     }
     int eventsPerMessage = 5;
-    try { config->getInt("maxEventsPerMessage"); } catch (...) { eventsPerMessage = 5;
+    try { eventsPerMessage = config->getInt("maxEventsPerMessage"); } catch (...) { eventsPerMessage = 5;
         smsc_log_warn(logger, "Parameter <MCISme.maxEventsPerMessage> is invalid. Using default %d", eventsPerMessage);
     }
     Task::init(ds, eventsPerMessage, inform, notify); // + statistics
@@ -396,6 +396,7 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
     checkAddress(abonent);
     
     AbonentService service = Task::getService(abonent);
+    //smsc_log_debug(logger, "Abonent %s service type=%d", abonent, service);
     if (service == FULL_SERVICE || service == SUBSCRIPTION)
     {
         Message message;
