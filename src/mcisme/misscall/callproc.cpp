@@ -805,11 +805,45 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
   }
 }
 
-void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_ORIGINALNUMB_T *called, uint8_t eventType)
+void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
+                   EINSS7_I97_ORIGINALNUMB_T *called,
+                   uint8_t eventType)
 {
   MissedCallEvent event;
   event.cause = eventType;
   time(&event.time);
+
+  /*
+   * FIX: remove unnecessary country code (7) digits from national address
+   * It's a known bug in Siemens mobile switch
+   * Change request from URALTEL
+   */
+  EINSS7_I97_ORIGINALNUMB_T fixed_called;
+  UCHAR_T fixed_called_p[32] = {0};
+  if (called &&
+      called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
+  {
+    char cdaddr[32] = {0};
+    unpack_addr(cdaddr, called->addrSign_p, called->noOfAddrSign);
+    int addrlen = strlen(cdaddr);
+    if (addrlen > 10)
+    {
+      int skip = 0; while(cdaddr[skip] == '7') skip++;
+      pack_addr(fixed_called_p, cdaddr + skip, addrlen - skip);
+      fixed_called.natureOfAddr = called->natureOfAddr;
+      fixed_called.presentationRestr = called->presentationRestr;
+      fixed_called.numberPlan = called->numberPlan;
+      fixed_called.noOfAddrSign = addrlen - skip;
+      fixed_called.addrSign_p = fixed_called_p;
+      smsc_log_debug(missedCallProcessorLogger,
+                     "modify original called address: %s -> %s",
+                     getOriginalNumberDescription(called).c_str(),
+                     getOriginalNumberDescription(&fixed_called).c_str());
+      called = &fixed_called;
+    }
+  }
+
+
   if (calling &&
       calling->noOfAddrSign > 0 &&
       calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH &&
