@@ -12,6 +12,12 @@ using namespace std;
 #include "MapDialog_spcific.cxx"
 #include "MapDialogMkPDU.cxx"
 #include "../status.h"
+
+#include "../../mscman/MscManager.h"
+#include "../../mscman/MscStatus.h"
+
+using namespace smsc::mscman;
+
 using namespace smsc::system;
 
 static const bool SMS_SEGMENTATION = true;
@@ -806,6 +812,15 @@ static void SendSubmitCommand(MapDialog* dialog)
     istringstream(src_addr.value)>>dialog->ussdSequence;
     __trace2__("MAP::%s:USSD request %s",__FUNCTION__,RouteToString(dialog).c_str());
   }
+  
+  try{
+    MscManager::getMscStatus()->report(dialog->s_msc,true);
+  }
+  catch(exception& e)
+  {
+    __trace__("MAP:<exception>: ",e.what());
+  }
+
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
   SmscCommand cmd = SmscCommand::makeSumbmitSm(
     *dialog->sms.get(),((uint32_t)dialog->dialogid_map)&0xffff);
@@ -895,6 +910,9 @@ static string RouteToString(MapDialog* dialog)
 static bool SendSms(MapDialog* dialog){
   __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
   CheckLockedByMO(dialog);
+
+  if ( !MscManager::getMscStatus()->check(dialog->s_msc) )
+    throw MAPDIALOG_TEMP_ERROR("MSC BLOCKED",BLOCKEDMSC);
 
   bool mms = dialog->chain.size() != 0;
   //if ( dialog->version < 2 ) mms = false;
@@ -1886,6 +1904,12 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
     /*if ( provErrCode_p ) {
       throw MAPDIALOG_FATAL_ERROR(FormatText("provErrCode_p == 0x%x",*provErrCode_p),MAP_ERRORS_BASE+*provErrCode_p);
     }*/
+    
+    if ( provErrCode_p && *provErrCode_p == ET96MAP_NO_RESPONSE_FROM_PEER ) {
+      MscManager::getMscStatus()->report(dialog->s_msc,false);
+      throw MAPDIALOG_TEMP_ERROR("MSC",/*BLOCKEDMSC*/0);
+    }
+
     DoProvErrorProcessing(provErrCode_p);
     if ( errorForwardSMmt_sp )
     {
