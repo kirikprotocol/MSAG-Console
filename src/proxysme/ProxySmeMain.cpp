@@ -127,7 +127,7 @@ bool LoadConfig(ProxyConfig& pconf)
 
 #if !defined _WIN32
 static SMachine* machine = 0;
-extern "C" void Stopper() {
+extern "C" void Stopper(int sig) {
   smsc_log_info(smsc::logger::Logger::getInstance("smsc.proxysme"), "stop signal");
   if ( machine ) machine->Stop();
 }
@@ -136,7 +136,7 @@ void SetStopper(SMachine* m){
   sigset_t set;
   sigemptyset(&set);
   sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
-  sigset(smsc::system::SHUTDOWN_SIGNAL, (extern "C" void(*)(int))Stopper);
+  sigset(smsc::system::SHUTDOWN_SIGNAL, Stopper);
   machine = m;
 }
 #else
