@@ -58,7 +58,7 @@ void setIntParam(int & param, const char * const prefix, const char * const para
 			param = config.getInt(fullParamName);
 		}
 	} catch (smsc::core::buffers::HashInvalidKeyException & e) {
-		throw Exception("Parameter \"%s\" for %s sme not found", paramName, prefix);
+		throw Exception("Parameter \"%s\" for %s sme not found", paramName, prefix == NULL ? "" : prefix);
 	}
 }
 
@@ -85,6 +85,7 @@ ProxySmeConfig::ProxySmeConfig(const char * const config_filename) //throw(smsc:
 			fillSme(left,  "left",  config);
 			fillSme(right, "right", config);
 			setIntParam(queueLength, NULL, "queueLength", config);
+			setIntParam(adminPort, NULL, "adminPort", config);
 		} catch (DOMTreeReader::ParseException &e) {
 			throw Exception("couldn't read or parse config file, nested: %s", e.what());
 		} catch (Exception &e) {
