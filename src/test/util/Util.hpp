@@ -3,7 +3,6 @@
 
 #include <ostream>
 #include <vector>
-#undef ABORT_ON_FAILURE
 
 namespace smsc {
 namespace test {
@@ -108,6 +107,7 @@ inline int TCResult::getChoice() const
 inline void TCResult::addFailure(int subTC)
 {
 #ifdef ABORT_ON_FAILURE
+	abort();
 #endif
 	failures.push_back(subTC);
 }
