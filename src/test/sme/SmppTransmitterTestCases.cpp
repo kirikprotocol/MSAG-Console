@@ -24,8 +24,8 @@ SmppTransmitterTestCases::SmppTransmitterTestCases(SmppSession* sess,
 {
 	__require__(session);
 	__require__(smeReg);
-	__require__(routeChecker);
-	__require__(pduChecker);
+	//__require__(routeChecker);
+	//__require__(pduChecker);
 	//__require__(chkList);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
 }
@@ -217,10 +217,10 @@ void SmppTransmitterTestCases::processSubmitSmSync(PduData* pduData,
 	__require__(pduReg);
 	__require__(pduData);
 	__dumpPdu__("processSubmitSmRespSync", systemId, respPdu);
+	__decl_tc__;
+	__tc__("processSubmitSmResp.sync");
 	if (!respPdu)
 	{
-		__decl_tc__;
-		__tc__("processSubmitSmResp.sync");
 		__tc_fail__(1);
 		pduData->responseFlag = PDU_MISSING_ON_TIME_FLAG;
 		//обновить sequenceNumber
@@ -231,6 +231,7 @@ void SmppTransmitterTestCases::processSubmitSmSync(PduData* pduData,
 		pduChecker->processSubmitSmResp(pduData, *respPdu, time(NULL));
 		delete respPdu; //disposePdu
 	}
+	__tc_ok_cond__;
 	//pduReg->updatePdu(pduData);  //вся обработка в processReplaceSmResp()
 }
 
@@ -240,12 +241,13 @@ void SmppTransmitterTestCases::processSubmitSmAsync(PduData* pduData,
 {
 	__require__(pduReg);
 	__require__(pduData);
+	__decl_tc__;
+	__tc__("processSubmitSmResp.async");
 	if (respPdu)
 	{
-		__decl_tc__;
-		__tc__("processSubmitSmResp.async");
 		__tc_fail__(1);
 	}
+	__tc_ok_cond__;
 }
 
 void SmppTransmitterTestCases::submitSm(bool sync, int num)
@@ -253,7 +255,14 @@ void SmppTransmitterTestCases::submitSm(bool sync, int num)
 	TCSelector s(num, 15);
 	__decl_tc12__;
 	__tc1__("submitSm");
-	__tc2__(sync ? "submitSm.sync" : "submitSm.async");
+	if (sync)
+	{
+		__tc2__("submitSm.sync");
+	}
+	else
+	{
+		__tc2__("submitSm.async");
+	}
 	for (; s.check(); s++)
 	{
 		try
@@ -630,9 +639,9 @@ void SmppTransmitterTestCases::processReplaceSmSync(PduData* pduData,
 	PduReplaceSmResp* respPdu)
 {
 	__require__(pduData);
+	__dumpPdu__("processReplaceSmRespSync", systemId, respPdu);
 	__decl_tc__;
 	__tc__("processReplaceSmResp.sync");
-	__dumpPdu__("processReplaceSmRespSync", systemId, respPdu);
 	if (!respPdu)
 	{
 		__tc_fail__(1);
@@ -643,6 +652,7 @@ void SmppTransmitterTestCases::processReplaceSmSync(PduData* pduData,
 		pduChecker->processReplaceSmResp(pduData, *respPdu, time(NULL));
 		delete respPdu; //disposePdu
 	}
+	__tc_ok_cond__;
 	//pduReg->updatePdu(pduData); //вся обработка в processReplaceSmResp()
 }
 
@@ -651,12 +661,13 @@ void SmppTransmitterTestCases::processReplaceSmAsync(PduData* pduData,
 	PduReplaceSmResp* respPdu)
 {
 	__require__(pduData);
+	__decl_tc__;
+	__tc__("processReplaceSmResp.async");
 	if (respPdu)
 	{
-		__decl_tc__;
-		__tc__("processReplaceSmResp.async");
 		__tc_fail__(1);
 	}
+	__tc_ok_cond__;
 }
 
 void SmppTransmitterTestCases::replaceSm(bool sync, int num)

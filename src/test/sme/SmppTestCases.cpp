@@ -16,15 +16,19 @@ SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _syste
 	const Address& _smeAddr, const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
 	const RouteRegistry* _routeReg, CheckList* _chkList)
 	: config(_config), session(NULL), systemId(_systemId), smeAddr(_smeAddr),
-	smeReg(_smeReg), aliasReg(_aliasReg), routeReg(_routeReg), chkList(_chkList)
+	smeReg(_smeReg), aliasReg(_aliasReg), routeReg(_routeReg), chkList(_chkList),
+	routeChecker(NULL), pduChecker(NULL)
 {
 	__require__(smeReg);
-	__require__(aliasReg);
-	__require__(routeReg);
+	//__require__(aliasReg);
+	//__require__(routeReg);
 	//__require__(chkList);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
-	routeChecker = new RouteChecker(systemId, smeAddr, smeReg, aliasReg, routeReg);
-	pduChecker = new SmppPduChecker(pduReg, routeChecker, chkList);
+	if (pduReg && aliasReg && routeReg)
+	{
+		routeChecker = new RouteChecker(systemId, smeAddr, smeReg, aliasReg, routeReg);
+		pduChecker = new SmppPduChecker(pduReg, routeChecker, chkList);
+	}
 	receiver = new SmppReceiverTestCases(systemId, smeAddr, smeReg,
 		aliasReg, routeReg, routeChecker, pduChecker, chkList);
 	session = new SmppSession(config, receiver);
@@ -37,8 +41,8 @@ SmppTestCases::~SmppTestCases()
 {
 	if (session)
 	{
-		delete routeChecker;
-		delete pduChecker;
+		if (routeChecker) { delete routeChecker; }
+		if (pduChecker) { delete pduChecker; }
 		delete receiver;
 		delete transmitter;
 		try
@@ -201,10 +205,11 @@ void SmppTestCases::bindIncorrectSme(int num)
 	tc, pduName, (uint32_t) pduData->msgRef, pduData->submitTime, pduData->waitTime, pduData->validTime)
 	/*
 	static const char* fmt = "%Y-%m-%d %H:%M:%S"; \
+	tm t;
 	char __submitTime[20]; char __waitTime[20]; char __validTime[20]; \
-	strftime(__submitTime, 20, fmt, localtime(&pduData->submitTime)); \
-	strftime(__waitTime, 20, fmt, localtime(&pduData->waitTime)); \
-	strftime(__validTime, 20, fmt, localtime(&pduData->validTime)); \
+	strftime(__submitTime, 20, fmt, localtime_r(&pduData->submitTime, &t)); \
+	strftime(__waitTime, 20, fmt, localtime_r(&pduData->waitTime, &t)); \
+	strftime(__validTime, 20, fmt, localtime_r(&pduData->validTime, &t)); \
 	__trace2__("%s(): missing %s for sequenceNumber = %u, submitTime = %s, waitTime = %s, validTime = %s", \
 	tc, pduName, pduData->pdu->get_sequenceNumber(), __submitTime, __waitTime, __validTime)
 	*/

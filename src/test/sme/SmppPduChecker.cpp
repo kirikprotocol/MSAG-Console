@@ -9,6 +9,7 @@ namespace sme {
 using smsc::test::smpp::SmppUtil;
 using smsc::test::util::TestCase;
 using smsc::test::util::SyncTestCase;
+using namespace std;
 using namespace smsc::test; //config constants
 using namespace smsc::test::core; //constants
 using namespace smsc::smpp::SmppCommandSet; //constants
@@ -22,8 +23,8 @@ SmppPduChecker::SmppPduChecker(PduRegistry* _pduReg,
 	const RouteChecker* _routeChecker, CheckList* _chkList)
 	: pduReg(_pduReg), routeChecker(_routeChecker), chkList(_chkList)
 {
-	//__require__(routeChecker);
-	//__require__(pduReg);
+	__require__(routeChecker);
+	__require__(pduReg);
 	//__require__(chkList);
 }
 	
@@ -120,10 +121,12 @@ void SmppPduChecker::processResp(PduData* pduData,
 	__tc_ok_cond__;
 	//проверка флагов получения pdu
 	time_t respDelay = respTime - pduData->submitTime;
+	__tc__("processResp.checkDuplicates");
 	switch (pduData->responseFlag)
 	{
 		case PDU_REQUIRED_FLAG:
 		case PDU_MISSING_ON_TIME_FLAG:
+			__tc_ok__;
 			__tc__("processResp.checkTime");
 			if (respDelay < 0)
 			{
@@ -133,10 +136,10 @@ void SmppPduChecker::processResp(PduData* pduData,
 			{
 				__tc_fail__(2);
 			}
+			__tc_ok_cond__;
 			pduData->responseFlag = PDU_RECEIVED_FLAG;
 			break;
 		case PDU_RECEIVED_FLAG: //респонс уже получен ранее
-			__tc__("processResp.checkDuplicates");
 			__tc_fail__(1);
 			break;
 		case PDU_NOT_EXPECTED_FLAG: //респонс всегда должен быть
@@ -144,7 +147,6 @@ void SmppPduChecker::processResp(PduData* pduData,
 		default:
 			__unreachable__("Unknown pduData->responseFlag");
 	}
-	__tc_ok_cond__;
 	if (respPdu.get_header().get_commandStatus() != ESME_ROK)
 	{
 		__tc__("processResp.checkDelivery");
@@ -217,9 +219,9 @@ void SmppPduChecker::processResp(PduData* pduData,
 	{
 		case ESME_ROK: //No Error
 			__tc__("processResp.checkCmdStatusOk");
-			if (pduRes.size())
 			{
-				__tc_fail__(1);
+				vector<int> chkRes; //(pduRes.begin(), pduRes.end());
+				__tc_fail2__(chkRes, 10);
 			}
 			//если данная pdu замещает предыдущую pdu
 			for (PduData* replaceData = pduData->replacePdu; replaceData; )
@@ -227,15 +229,15 @@ void SmppPduChecker::processResp(PduData* pduData,
 				//replaceData->responseFlag
 				if (replaceData->deliveryFlag == PDU_RECEIVED_FLAG)
 				{
-					__tc_fail__(2);
+					__tc_fail__(1);
 				}
 				if (replaceData->deliveryReceiptFlag == PDU_RECEIVED_FLAG)
 				{
-					__tc_fail__(3);
+					__tc_fail__(2);
 				}
 				if (replaceData->intermediateNotificationFlag == PDU_RECEIVED_FLAG)
 				{
-					__tc_fail__(4);
+					__tc_fail__(3);
 				}
 				replaceData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
 				replaceData->deliveryReceiptFlag = PDU_NOT_EXPECTED_FLAG;

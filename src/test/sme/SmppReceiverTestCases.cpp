@@ -69,7 +69,7 @@ SmppReceiverTestCases::SmppReceiverTestCases(const SmeSystemId& _systemId,
 	//__require__(aliasReg);
 	//__require__(routeReg);
 	//__require__(routeChecker);
-	__require__(pduChecker);
+	//__require__(pduChecker);
 	//__require__(chkList);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
 }
