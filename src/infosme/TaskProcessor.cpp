@@ -398,12 +398,12 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
     }
     else
     {
-        // TODO: CREATE ID MAPPING HERE !!!
         if (info.transactionMode) {
             statistics->incDelivered(tmIds.taskId);
             task->deleteMessage(tmIds.msgId);
         }
         else {
+            // TODO: CREATE ID MAPPING HERE !!!
             // TODO: implement it
             logger.warn("Normal mode is not supported yet !!!");
         }

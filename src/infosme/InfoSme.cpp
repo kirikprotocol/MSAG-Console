@@ -48,6 +48,12 @@ static bool  bInfoSmeIsConnected = false;
 static Event infoSmeReady;
 static int   infoSmeReadyTimeout = 10000;
 
+static int   unrespondedMessagesSleep = 1000;
+static int   unrespondedMessagesCount = 0;
+static int   unrespondedMessagesMax   = 100;
+static Event unrespondedMessagesEvent;
+static Mutex unrespondedMessagesLock;
+
 static log4cpp::Category& logger = Logger::getCategory("smsc.infosme.InfoSme");
 
 static smsc::admin::service::ServiceSocketListener adminListener; 
@@ -132,6 +138,18 @@ private:
     TaskProcessor&  processor;
     SmppSession*    session;
     Mutex           sendLock;
+
+    void waitUnrespondedMessages()
+    {
+        // TODO: Fix IT !!!
+        int count = 0;
+        {
+            MutexGuard guard(unrespondedMessagesLock);
+            count = unrespondedMessagesCount++;
+        }
+        while (count >= unrespondedMessagesMax && !bInfoSmeIsStopped && bInfoSmeIsConnected)
+            unrespondedMessagesEvent.Wait(unrespondedMessagesSleep);
+    }
 
 public:
     
@@ -223,7 +241,8 @@ public:
         fillSmppPduFromSms(&sm, &sms);
         asyncTransmitter->submit(sm);
         seqNum = sm.get_header().get_sequenceNumber();
-        
+
+        waitUnrespondedMessages();
         return true;
     }
 };
@@ -236,6 +255,14 @@ protected:
     
     SmppTransmitter*    syncTransmitter;
     SmppTransmitter*    asyncTransmitter;
+
+    void respondMessage()
+    {
+        MutexGuard guard(unrespondedMessagesLock);
+        if (unrespondedMessagesCount-- >= unrespondedMessagesMax) {
+            unrespondedMessagesEvent.Signal();
+        }
+    }
 
 public:
     
@@ -308,10 +335,6 @@ public:
                     }
                 }
                 
-                /*char smsTextBuff[MAX_ALLOWED_MESSAGE_LENGTH+1];
-                int smsTextBuffLen = getSmsText(&sms, 
-                    (char *)&smsTextBuff, sizeof(smsTextBuff));*/
-                
                 /*logger.debug("Got receipt, message=%s is %s (%s)", 
                              msgid, delivered ? "delivered":"failed", 
                              retry ? "need retry":"no retry");*/
@@ -324,18 +347,19 @@ public:
     void processResponce(SmppHeader *pdu)
     {
         if (!pdu) return;
-        
-        int seqNum = pdu->get_sequenceNumber();
-        const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
-        if (msgid && msgid[0] != '\0') {
-            //logger.debug("Got responce: seqNum=%d, msgid=%s", seqNum, msgid);
-        }
+        respondMessage();
 
+        int seqNum = pdu->get_sequenceNumber();
         int status = pdu->get_commandStatus();
-        bool accepted = (status == SmppStatusSet::ESME_ROK);
-        bool retry    = (status == SmppStatusSet::ESME_RX_T_APPN ||
-                         status == SmppStatusSet::ESME_RMSGQFUL  ||
-                         status == SmppStatusSet::ESME_RTHROTTLED);
+        bool accepted =  (status == SmppStatusSet::ESME_ROK);
+        bool retry    =  (status == SmppStatusSet::ESME_RX_T_APPN ||
+                          status == SmppStatusSet::ESME_RMSGQFUL  ||
+                          status == SmppStatusSet::ESME_RTHROTTLED);
+        bool immediate = (status == SmppStatusSet::ESME_RMSGQFUL  ||
+                          status == SmppStatusSet::ESME_RTHROTTLED);
+
+        const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
+        if (!msgid || msgid[0] == '\0') accepted = false;
 
         processor.invokeProcessResponce(seqNum, accepted, retry, msgid);
     }
@@ -414,6 +438,18 @@ int main(void)
         DataSourceLoader::loadup(&dsConfig);
         
         ConfigView tpConfig(manager, "InfoSme");
+        try { unrespondedMessagesMax = tpConfig.getInt("unrespondedMessagesMax"); } catch (...) {};
+        if (unrespondedMessagesMax <= 0) {
+            unrespondedMessagesMax = 100;
+            logger.warn("Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
+                        unrespondedMessagesMax);
+        }
+        try { unrespondedMessagesSleep = tpConfig.getInt("unrespondedMessagesSleep"); } catch (...) {};
+        if (unrespondedMessagesSleep <= 0) {
+            unrespondedMessagesSleep = 1000;
+            logger.warn("'unrespondedMessagesSleep' value is invalid. Using default %d",
+                        unrespondedMessagesSleep);
+        }
         TaskProcessor processor(&tpConfig);
         
         /*ConfigView adminConfig(manager, "InfoSme.Admin");
@@ -425,7 +461,7 @@ int main(void)
         
         ConfigView smscConfig(manager, "InfoSme.SMSC");
         InfoSmeConfig cfg(&smscConfig);
-        
+
         while (!bInfoSmeIsStopped)
         {
             InfoSmePduListener      listener(processor);
@@ -468,6 +504,7 @@ int main(void)
                 }
             }
             logger.info("Disconnecting from SMSC ...");
+            unrespondedMessagesEvent.Signal();
             processor.Stop();
             session.close();
         }
