@@ -253,6 +253,7 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
                          ET96MAP_USERDATA_T *,
                          UCHAR_T priorityOrder)
 {
+#if defined USE_MAP
   __trace2__("MAP::Et96MapCloseInd state: 0x%x",state);
   if ( state == MAPST_READY_FOR_SENDSMS ){
     __trace2__("MAP::Et96MapCloseInd state: REDY_FOR_SEND_SMS");
@@ -296,9 +297,12 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
                smscDialogId,
                state);
     //throw "";
-    //return true; // drop dialog
-    return false;
+    return true; // drop dialog
+    //return false;
   }
+#else
+  return false;
+#endif
 }
 
 USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
@@ -310,6 +314,7 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
 				       ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
 				       ET96MAP_PROV_ERR_T *provErrCode_p )
 {
+#if defined USE_MAP
   __trace2__( "Et96MapV2SendRInfoForSmConf received ssn=%d, dialog=%d, invokeId=%d\n", localSsn, dialogueId, invokeId );
   state = MAPST_RINFOIND;
   
@@ -326,6 +331,7 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
   
   state = MAPST_READY_FOR_SENDSMS;
 
+#endif
   return ET96MAP_E_OK;
 }				       
 
