@@ -23,18 +23,22 @@ using log4cpp::Category;
 using smsc::util::Logger;
 using smsc::test::sms::SmsUtil;
 
+#define __new__ \
+	id.push_back(new SMSId); \
+	sms.push_back(new SMS);
+	
 void executeTest(MessageStoreTestCases& tc)
 {
 	Category& log = Logger::getCategory("smsc.test.store.Test");
 
-	SMSId id, id2, id3, id4, id5;
-	SMS sms, sms2, sms3, sms4, sms5;
+	vector<SMSId*> id;
+	vector<SMS*> sms;
 	
-/*
-storeCorrectSms(13)->
-replaceIncorrectSms(3){3}
-*/
-	cout << *tc.storeCorrectSms(&id, &sms, 12) << endl;
+	__new__;
+	cout << *tc.storeCorrectSms(id.back(), sms.back(), 12) << endl;
+	cout << *tc.loadExistentSms(*id.back(), *sms.back()) << endl;
+	cout << *tc.checkReadyForRetrySms(id, sms, 1);
+
 /*
 	cout << *tc.storeCorrectSms(&id, &sms, 1) << endl;
 	cout << *tc.storeCorrectSms(&id2, &sms2, id, sms, 1) << endl;
