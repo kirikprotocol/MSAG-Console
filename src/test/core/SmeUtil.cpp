@@ -118,7 +118,7 @@ vector<int> RouteChecker::checkRouteForNotification(PduDeliverySm& pdu1,
 	return res;
 }
 
-bool RouteChecker::isDestUnreachable(PduAddress& dest)
+bool RouteChecker::checkExistsReachableRoute(PduAddress& dest, bool checkSme)
 {
 	//dest является алиасом
 	Address destAlias;
@@ -130,15 +130,60 @@ bool RouteChecker::isDestUnreachable(PduAddress& dest)
 		Address destAddr;
 		if (!destList[i]->aliasToAddress(destAlias, destAddr))
 		{
+			continue;
+		}
+		const RouteRegistry::RouteList routeList =
+			routeReg->lookup(smeAddr, destAddr);
+		if (checkSme)
+		{
+			for (int i = 0; i < routeList.size(); i++)
+			{
+				if (smeReg->isSmeRegistered(routeList[i]->route->smeSystemId))
+				{
+					return true;
+				}
+			}
+		}
+		else if (routeList.size())
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool RouteChecker::checkExistsUnreachableRoute(PduAddress& dest, bool checkSme)
+{
+	//dest является алиасом
+	Address destAlias;
+	SmppUtil::convert(dest, &destAlias);
+	const AliasRegistry::AliasList destList =
+		aliasReg->findAddressByAlias(destAlias);
+	if (!destList.size())
+	{
+		return true;
+	}
+	for (int i = 0; i < destList.size(); i++)
+	{
+		Address destAddr;
+		if (!destList[i]->aliasToAddress(destAlias, destAddr))
+		{
 			return true;
 		}
 		const RouteRegistry::RouteList routeList =
 			routeReg->lookup(smeAddr, destAddr);
-		for (int i = 0; i < routeList.size(); i++)
+		if (!routeList.size())
 		{
-			if (!smeReg->isSmeRegistered(routeList[i]->route->smeSystemId))
+			return true;
+		}
+		if (checkSme)
+		{
+			for (int i = 0; i < routeList.size(); i++)
 			{
-				return true;
+				if (!smeReg->isSmeRegistered(routeList[i]->route->smeSystemId))
+				{
+					return true;
+				}
 			}
 		}
 	}

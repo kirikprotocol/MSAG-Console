@@ -36,7 +36,19 @@ public:
 
 	vector<int> checkRouteForNotification(PduDeliverySm& pdu1, PduDeliverySm& pdu2);
 
-	bool isDestUnreachable(PduAddress& destAddr);
+	/**
+	 * ѕровер€ет среди всех доступных маршрутов наличие хот€ бы одного маршрута,
+	 * по которому доставка возможна.
+	 * @param checkSme дополнительно провер€ет на bound sme.
+	 */
+	bool checkExistsReachableRoute(PduAddress& destAddr, bool checkSme);
+
+	/**
+	 * ѕровер€ет среди всех доступных маршрутов наличие хот€ бы одного маршрута,
+	 * по которому доставка не возможна.
+	 * @param checkSme дополнительно провер€ет на bound sme.
+	 */
+	bool checkExistsUnreachableRoute(PduAddress& destAddr, bool checkSme);
 };
 
 }
