@@ -3,87 +3,103 @@
 <config>
     
     <section name="StartupLoader">
-	<section name="DataSourceDrivers">
-	    <section name="OCIDataSourceDriver">
-		<param name="type" type="string">OCI</param>
-		<param name="loadup" type="string">../db/oci/libdb_oci.so</param>
-	    </section>
-	</section>
+        <section name="DataSourceDrivers">
+            <section name="OCIDataSourceDriver">
+                <param name="type" type="string">OCI</param>
+                <param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+            </section>
+        </section>
     </section>
     
-    <section name="Applications">
-        <section name="DBSme">
-    	    <section name="DataProviders">
-	    
-	        <section name="SampleDataProvider1">
-		    <param name="address" type="string">1111111</param>
-		    
-		    <section name="DataSource">
-		        <param name="type" type="string">OCI</param>
-    		        <param name="connections" type="int">5</param>
-		        <param name="dbInstance" type="string">DBS_ORCL</param>
-		        <param name="dbUserName" type="string">smsc</param>
-		        <param name="dbUserPassword" type="string">smsc</param>
-		    </section>
-		    
-		    <section name="Jobs">
-		        
-			<section name="DefautJob">
-			    <param name="name" type="string">default</param>
-			    <param name="type" type="string">sql-job</param>
-			    <param name="query" type="bool">false</param>
-			    <param name="sql" type="string">
-				update sms_test set temp=temp
-			    </param>
-			    <param name="input" type="string">
-				empty
-			    </param>
+    <section name="DBSme">
+        
+        <section name="ThreadPool">
+            <!--param name="max" type="int">50</param>
+            <param name="init" type="int">5</param-->
+        </section>  
+            
+        <section name="SMSC">
+            <param name="host" type="string">smsc</param>
+            <param name="port" type="int">9001</param>
+            <param name="sid" type="string">dbsme</param>
+            <param name="timeout" type="int">10</param>
+            <param name="password" type="string"></param>
+        </section>  
+
+        <section name="DataProviders">
+        
+            <section name="SampleDataProvider1">
+                <param name="address" type="string">1111111</param>
+            
+                <section name="DataSource">
+                    <param name="type" type="string">OCI</param>
+                    <param name="connections" type="int">5</param>
+                    <param name="dbInstance" type="string">DBS_ORCL</param>
+                    <param name="dbUserName" type="string">smsc</param>
+                    <param name="dbUserPassword" type="string">smsc</param>
+                </section>
+            
+                <section name="Jobs">
+                
+                    <section name="DefautJob">
+                        <param name="name" type="string">default</param>
+                        <param name="type" type="string">sql-job</param>
+                        <param name="query" type="bool">false</param>
+                        <param name="sql" type="string">
+                            update sms_test set temp=temp
+                        </param>
+                        <param name="input" type="string">
+                            empty
+                        </param>
 <param name="output" type="string">
 Default Job called !.
-Current date/time	: $$date pattern="dd MMMM, yyyy hh:mm t" default="now"$$
-Rows affected count is	: $$int32 arg=1$$
+Current date/time   : $$date pattern="dd MMMM, yyyy hh:mm t" default="now"$$
+Rows affected count is  : $$int32 arg=1$$
+Float       : $$float precision="2" default="3.1415"$$
+Double      : $$double digits="8" default="3.1415"$$
+Long-Double : $$long-double digits="10" default="3.1415"$$
 </param>
-			</section>
-			
-			<section name="Test-SQLJob1">
-			    <param name="name" type="string">test-sql-job</param>
-			    <param name="type" type="string">sql-job</param>
-			    <param name="query" type="bool">true</param>
-			    <param name="sql" type="string">
-				select temp, str, dt from sms_test where temp=:1 or str=:2 or dt=:3
-			    </param>
-			    <param name="input" type="string">
-				$$string arg=2  nnn="\\\""$$
-				$$int16 arg="1"    	$$
-				$$date arg=3 pattern="dd MMMM, yyyy hh:mm t" default="now"$$
-			    </param>
+                    </section>
+            
+                    <section name="Test-SQLJob1">
+                        <param name="name" type="string">sample</param>
+                        <param name="type" type="string">sql-job</param>
+                        <param name="query" type="bool">true</param>
+                        <param name="sql" type="string">
+                            select temp, str, dt from sms_test where temp=:1 or str=:2 or dt=:3
+                        </param>
+                        <param name="input" type="string">
+                            $$string arg=2  nnn="\\\""$$
+                            $$int16 arg="1"     $$
+                            $$date arg=3 pattern="dd MMMM, yyyy hh:mm t" default="now"$$
+                        </param>
 <param name="output" type="string">
  Int32 value   :  $$uint32 arg=1 $$ 
  String right  : '$$string arg=2 length=30 align="right"$$'
  String center : '$$string arg=2 length=30 align="center"$$'
  String left   : '$$string arg=2 length=30 align="left"$$'
- Date/Time by system format 	   :  $$date arg=3 $$
+ Date/Time by system format        :  $$date arg=3 $$
  Date/Time by user-desired pattern :  $$date arg=3 pattern="W, MMMM dd, yyyy hh:mm:ss (t)" default="now"$$
- Date/Time today 		   :  $$date pattern="w, dd-MMM-yyyy HH:mm:ss" default="today"$$
+ Date/Time today           :  $$date pattern="w, dd-MMM-yyyy HH:mm:ss" default="today"$$
  That's all!
  \$\$ \\
 </param>
-			</section>
-			
-			<section name="Job3">
-			</section>
-			
-			<section name="Job4">
-			</section>
-		    
-		    </section>
-		    
-		</section>
+                    </section>
+            
+                    <section name="Job3">
+                    </section>
+                    <section name="Job4">
+                    </section>
+            
+                </section>
+            
+            </section>
 
-	        <section name="SampleDataProvider2">
-	    	</section>
-		
-	    </section>
-	</section>
+            <section name="SampleDataProvider2">
+            </section>
+        
+        </section>
+        
     </section>
+
 </config>

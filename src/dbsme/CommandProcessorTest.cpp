@@ -35,7 +35,7 @@ int main(void)
         ConfigView dsConfig(manager, "StartupLoader");
         DataSourceLoader::loadup(&dsConfig);
 
-        ConfigView cpConfig(manager, "Applications.DBSme");
+        ConfigView cpConfig(manager, "DBSme");
         CommandProcessor processor(&cpConfig);
         
         // --------------------- Command Processing --------------------

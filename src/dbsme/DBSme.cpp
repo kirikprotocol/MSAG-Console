@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -6,16 +5,17 @@
 #include <core/threads/ThreadPool.hpp>
 #include <core/buffers/Array.hpp>
 
+#include <util/Logger.h>
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 
 #include <db/DataSourceLoader.h>
-#include "CommandProcessor.h"
-#include "sme/SmppBase.hpp"
-#include "sms/sms.h"
-
-#include <dbsme/jobs/SampleJob.h>
 #include <dbsme/jobs/SQLJob.h>
+
+#include <sme/SmppBase.hpp>
+#include <sms/sms.h>
+
+#include "CommandProcessor.h"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -32,6 +32,9 @@ uint64_t    failuresNoticedCount = 0;
 uint64_t    errorsHandledCount = 0;
 
 Mutex       countersLock;
+
+using smsc::util::Logger;
+static log4cpp::Category& log = Logger::getCategory("smsc.dbsme.DBSme");
 
 class DBSmeTask : public ThreadedTask
 {
@@ -76,7 +79,8 @@ public:
             command.setFromAddress(sms.getOriginatingAddress());
             command.setToAddress(sms.getDestinationAddress());
             command.setJobName(0);
-            command.setInData((const char *)sms.getMessageBody().getBuffer());
+            //command.setInData((const char *)sms.getMessageBody().getBuffer());
+            command.setInData((const char *)sms.messageBody.data);
 
             try 
             {
@@ -91,7 +95,6 @@ public:
                 }
                 command.setOutData("Error processing SMS !");
                 disposePdu(pdu);
-                return -1;
             }
 
             disposePdu(pdu);
@@ -100,10 +103,17 @@ public:
             sms.setArchivationRequested(false);
             sms.setDeliveryReport(0);
             sms.setValidTime(time(NULL)+3600);
+            
             const char* out = command.getOutData();
-            sms.getMessageBody().setBuffer((uint8_t *)out, strlen(out));
+            int outLen = strlen(out);
+            outLen = (outLen > 200) ? 200 : outLen;
+            strncpy((char *)sms.messageBody.data, out, outLen);
+            sms.messageBody.data[outLen] = '\0';
+            
+            //sms.getMessageBody().setBuffer((uint8_t *)out, strlen(out));
 
             PduSubmitSm sm;
+            sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
             fillSmppPduFromSms(&sm,&sms);
             PduSubmitSmResp *dlResp=transmitter.submit(sm);
 
@@ -137,7 +147,6 @@ class DBSmeTaskManager
 private:
 
     ThreadPool          pool;
-    //Array<DBSmeTask *>    tasks;
     
 public:
 
@@ -155,22 +164,30 @@ public:
     void init(ConfigView* config)
         throw(ConfigException)
     {
-        // load up Pool arguments from Config
         try
         {
             int maxThreads = config->getInt("max");
             pool.setMaxThreads(maxThreads);
             printf("Max treads count: %d\n", maxThreads);
-            int initThreads = config->getInt("init");   
-            pool.preCreateThreads(initThreads);
-            printf("Inited treads count: %d\n", initThreads);
         }
-        catch (ConfigException) {}
+        catch (ConfigException& exc) 
+        {
+            log.warn("Maximum thread pool size wasn't specified !");
+        }
+        try
+        {
+            int initThreads = config->getInt("init");
+            pool.preCreateThreads(initThreads);
+            printf("Precreated threads count: %d\n", initThreads);
+        }
+        catch (ConfigException& exc) 
+        {
+            log.warn("Precreated threads count in pool wasn't specified !");
+        }
     };
     
     void startTask(DBSmeTask* task)
     {
-        //(void)tasks.Push(task);
         pool.startTask(task);
     };
 };
@@ -200,13 +217,72 @@ public:
             requestsProcessingCount--;
             errorsHandledCount++;
         }
-        printf("Oops, Error handled! Code is: %d\n", errorCode);
+        log.error("Oops, Error handled! Code is: %d\n", errorCode);
     }
     
     void setTrans(SmppTransmitter *t)
     {
         trans=t;
     }
+};
+
+class DBSmeConfig : public SmeConfig
+{
+private:
+    
+    char *strHost, *strSid, *strPassword, *strSysType, *strOrigAddr;
+
+public:
+    
+    DBSmeConfig(ConfigView* config)
+        throw(ConfigException)
+            : SmeConfig(), strHost(0), strSid(0), strPassword(0), 
+                strSysType(0), strOrigAddr(0)
+    {
+        // Mandatory fields
+        strHost = config->getString("host", "SMSC host wasn't defined !");
+        host = strHost;
+        strSid = config->getString("sid", "DBSme id wasn't defined !");
+        sid = strSid;
+        
+        port = config->getInt("port", "SMSC port wasn't defined !");
+        timeOut = config->getInt("timeout", "Connect timeout wasn't defined !");
+        
+        // Optional fields
+        try
+        {
+            strPassword = 
+                config->getString("password",
+                                  "DBSme password wasn't defined !");
+            password = strPassword;
+        }
+        catch (ConfigException& exc) { password = ""; strPassword = 0; }
+        try
+        {
+            strSysType = 
+                config->getString("systemType", 
+                                  "DBSme system type wasn't defined !");
+            systemType = strSysType;
+        }
+        catch (ConfigException& exc) { systemType = ""; strSysType = 0; }
+        try
+        {
+            strOrigAddr = 
+                config->getString("origAddress", 
+                                  "DBSme originating address wasn't defined !");
+            origAddr = strOrigAddr;
+        }
+        catch (ConfigException& exc) { origAddr = ""; strOrigAddr = 0; }
+    };
+
+    virtual ~DBSmeConfig()
+    {
+        if (strHost) delete strHost;
+        if (strSid) delete strSid;
+        if (strPassword) delete strPassword;
+        if (strSysType) delete strSysType;
+        if (strOrigAddr) delete strOrigAddr;
+    };
 };
 
 int main(void) 
@@ -216,13 +292,8 @@ int main(void)
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
-    SampleJobFactory    _sampleJobFactory;
-    SQLJobFactory       _sqlJobFactory;
-
-    JobFactory::registerFactory(&_sampleJobFactory,
-                                SMSC_DBSME_SAMPLE_JOB_IDENTITY);
-    JobFactory::registerFactory(&_sqlJobFactory,
-                                SMSC_DBSME_SQL_JOB_IDENTITY);
+    SQLJobFactory _sqlJobFactory;
+    JobFactory::registerFactory(&_sqlJobFactory, SMSC_DBSME_SQL_JOB_IDENTITY);
     
     try 
     {
@@ -232,18 +303,16 @@ int main(void)
         ConfigView dsConfig(manager, "StartupLoader");
         DataSourceLoader::loadup(&dsConfig);
 
-        ConfigView cpConfig(manager, "Applications.DBSme");
+        ConfigView cpConfig(manager, "DBSme");
         CommandProcessor processor(&cpConfig);
 
-        ConfigView mnConfig(manager, "Applications.DBSme.ThreadPool");
+        ConfigView mnConfig(manager, "DBSme.ThreadPool");
         DBSmeTaskManager runner(&mnConfig);
         
         DBSmePduListener listener(processor, runner);
         
-        SmeConfig cfg;
-        // TO DO: Loadup these values from DBSme config
-        cfg.host="smsc"; cfg.port=9001; cfg.sid="1";
-        cfg.timeOut=10; cfg.password="";
+        ConfigView ssConfig(manager, "DBSme.SMSC");
+        DBSmeConfig cfg(&ssConfig);
         
         SmppSession session(cfg, &listener);
         session.connect();
