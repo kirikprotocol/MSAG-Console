@@ -541,8 +541,11 @@ int partitionSms(SMS* sms,int dstdc)
   }
   __trace2__("PARTITIONSMS: len=%d, parts=%d",len,parts);
   char bin[1+256*2];
-  bin[0]=(char)parts;
-  memcpy(bin+1,offsets,parts*2);
+  ConcatInfo *ci=(ConcatInfo*)bin;
+  ci->num=parts;
+  //bin[0]=(char)parts;
+  //memcpy(bin+1,offsets,parts*2);
+  for(int i=0;i<parts;i++)ci->setOff(i,offsets[i]);
   int blen=parts*2+1;
   sms->setBinProperty(Tag::SMSC_CONCATINFO,bin,blen);
   return psMultiple;
@@ -600,7 +603,7 @@ void extractSmsPart(SMS* sms,int partnum)
     int off=ci->getOff(partnum);
     int newlen=ci->num==partnum+1?len-off:ci->getOff(partnum+1)-off;
     __trace2__("extractSmsPart: newlen=%d, part=%d/%d, maxlen=%d, off=%d, partlen=%d",len,partnum,(int)ci->num,maxlen,off,newlen);
-    __require__(newlen<=160);
+    __require__(newlen>0 && newlen<=160);
     if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
     {
       if(dstdc==DataCoding::UCS2|DataCoding::LATIN1)dstdc=DataCoding::LATIN1;

@@ -210,9 +210,9 @@ public:
     return smeman.getSmeProxy(idx);
   }
 
-  void submitSms(SMS* sms)
+  void submitMrKill(const Address& org,const Address& dst,uint16_t mr)
   {
-    smscsme->putSms(sms);
+    smscsme->putIncomingCommand(SmscCommand::makeKillMrCacheItemCmd(org,dst,mr));
   }
 
   void unregisterSmeProxy(const string& sysid)
@@ -475,10 +475,11 @@ protected:
 
   struct MergeCacheItem{
     Address  oa;//originating address
+    Address  da;//originating address
     uint16_t mr;//message reference
     bool operator==(const MergeCacheItem& item)
     {
-      return oa==item.oa && mr==item.mr;
+      return mr==item.mr && oa==item.oa && da==item.da;
     }
   };
 
@@ -493,7 +494,11 @@ protected:
       {
         res+=(item.oa.value[i]-'0')*mul;
         mul*=10;
-        if(i==9)break;
+      }
+      for(int i=0;i<item.da.length;i++)
+      {
+        res+=(item.da.value[i]-'0')*mul;
+        mul*=10;
       }
       return res;
     }

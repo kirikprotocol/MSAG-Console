@@ -16,6 +16,7 @@ int SmscSme::Execute()
   {
     waitFor();
     if(isStopping)break;
+    /*
     while(hasOutput())
     {
       cmd=getOutgoingCommand();
@@ -37,6 +38,7 @@ int SmscSme::Execute()
       delete s;
       putIncomingCommand(resp);
     }
+    */
   }
   return 0;
 }

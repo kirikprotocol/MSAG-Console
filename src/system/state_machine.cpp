@@ -36,6 +36,32 @@ static const int REPORT_NOACK=255;
 
 Hash<std::list<std::string> > StateMachine::directiveAliases;
 
+struct TaskGuard{
+  Smsc *smsc;
+  uint32_t dialogId;
+  uint32_t uniqueId;
+  bool active;
+  TaskGuard()
+  {
+    smsc=0;
+    dialogId=0;
+    uniqueId=0;
+    active=false;
+  }
+  ~TaskGuard()
+  {
+    if(active)
+    {
+      Task t;
+      if(smsc->tasks.findAndRemoveTask(uniqueId,dialogId,&t))
+      {
+        __trace2__("TG: killing sms of task %u/%u",dialogId,uniqueId);
+        delete t.sms;
+      }
+    }
+  }
+};
+
 
 class ReceiptGetAdapter:public GetAdapter{
 public:
@@ -904,6 +930,23 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  if((
+      (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
+      (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2
+     ) &&
+     sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+  {
+    submitResp(t,sms,Status::SUBMITFAIL);
+    smsc_log_warn(smsLog, "SBM: attempt to send concatenated sms in dg or tr mode. Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId()
+    );
+    return ERROR_STATE;
+  }
+
+
   time_t now=time(NULL);
   sms->setSubmitTime(now);
 
@@ -1259,6 +1302,8 @@ StateType StateMachine::submit(Tuple& t)
       {
         // now resort parts
 
+        smsc->submitMrKill(sms->getOriginatingAddress(),sms->getDestinationAddress(),mr);
+
         vector<int> order;
         bool rightOrder=true;
         bool totalMoreUdh=false;
@@ -1314,7 +1359,11 @@ StateType StateMachine::submit(Tuple& t)
               }
             }
           }
-          memcpy(ci->off,newci,ci->num*2);
+          //memcpy(ci->off,newci,ci->num*2);
+          for(int i=0;i<ci->num;i++)
+          {
+            ci->setOff(i,newci[i]);
+          }
           tmp=newtmp;
         }
         newsms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3); // final state
@@ -1677,14 +1726,6 @@ StateType StateMachine::submit(Tuple& t)
   //
   ////
 
-  smsc_log_debug(smsLog, "SBM: sms created Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
-    t.msgId,dialogId,
-    sms->getOriginatingAddress().toString().c_str(),
-    sms->getDestinationAddress().toString().c_str(),
-    src_proxy->getSystemId(),
-    ri.smeSystemId.c_str()
-  );
-
 
 
   if(!isDatagram && !isTransaction && sms->createdInStore && needToSendResp) // Store&Forward mode
@@ -1877,6 +1918,7 @@ StateType StateMachine::submit(Tuple& t)
   }
   // create task
   uint32_t dialogId2;
+  uint32_t uniqueId=dest_proxy->getUniqueId();
   try{
      dialogId2=dest_proxy->getNextSequenceNumber();
   }catch(...)
@@ -1902,18 +1944,15 @@ StateType StateMachine::submit(Tuple& t)
     sendNotifyReport(*sms,t.msgId,"destination unavailable");
     return ENROUTE_STATE;
   }
-  smsc_log_debug(smsLog, "SBM: seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
-    dialogId2,
-    t.msgId,dialogId,
-    sms->getOriginatingAddress().toString().c_str(),
-    sms->getDestinationAddress().toString().c_str(),
-    src_proxy->getSystemId(),
-    ri.smeSystemId.c_str()
-  );
   //Task task((uint32_t)dest_proxy_index,dialogId2);
 
+  TaskGuard tg;
+  tg.smsc=smsc;
+  tg.dialogId=dialogId2;
+  tg.uniqueId=uniqueId;
+
   try{
-  Task task(dest_proxy->getUniqueId(),dialogId2,isDatagram || isTransaction?sms:0);
+  Task task(uniqueId,dialogId2,isDatagram || isTransaction?new SMS(*sms):0);
   __trace2__("SUBMIT: task.sms=%p",task.sms);
   task.messageId=t.msgId;
   if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
@@ -1970,6 +2009,16 @@ StateType StateMachine::submit(Tuple& t)
 
   Address srcOriginal=sms->getOriginatingAddress();
   Address dstOriginal=sms->getDestinationAddress();
+
+  if(isDatagram || isTransaction)
+  {
+    tg.active=true;
+  }
+
+  bool deliveryOk=false;
+  int  err=0;
+  std::string errstr;
+
   try{
 
     if( !isForwardTo )
@@ -2053,77 +2102,38 @@ StateType StateMachine::submit(Tuple& t)
     delivery->set_priority(prio);
     try{
       dest_proxy->putCommand(delivery);
+      deliveryOk=true;
     }catch(InvalidProxyCommandException& e)
     {
-      sms->setOriginatingAddress(srcOriginal);
-      sms->setDestinationAddress(dstOriginal);
-      sms->setLastResult(Status::INVBNDSTS);
+      err=Status::INVBNDSTS;
       sendNotifyReport(*sms,t.msgId,"service rejected");
-      if(!isDatagram && !isTransaction)
-      {
-        try{
-          Descriptor d;
-          changeSmsStateToEnroute(*sms,t.msgId,d,Status::INVBNDSTS,rescheduleSms(*sms));
-          smsc->notifyScheduler();
-        }catch(...)
-        {
-          __warning__("SUBMIT: failed to change state to enroute");
-        }
-      }
-      smsc_log_warn(smsLog, "SBMDLV: Attempt to putCommand for sme in invalid bind state, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
-        dialogId2,
-        t.msgId,dialogId,
-        sms->getOriginatingAddress().toString().c_str(),
-        sms->getDestinationAddress().toString().c_str(),
-        src_proxy->getSystemId(),
-        ri.smeSystemId.c_str()
-      );
-      Task t;
-      smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
-
-      return ENROUTE_STATE;
+      errstr="invalid bind state";
     }
   }catch(exception& e)
   {
-    smsc_log_warn(smsLog, "SBMDLV: failed to put delivery command, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
-      dialogId2,
-      t.msgId,dialogId,
-      sms->getOriginatingAddress().toString().c_str(),
-      sms->getDestinationAddress().toString().c_str(),
-      src_proxy->getSystemId(),
-      ri.smeSystemId.c_str()
-    );
-    sms->setOriginatingAddress(srcOriginal);
-    sms->setDestinationAddress(dstOriginal);
-    sms->setLastResult(Status::THROTTLED);
+    errstr=e.what();
     sendNotifyReport(*sms,t.msgId,"system failure");
-    if(!isDatagram && !isTransaction)
-    {
-      try{
-        Descriptor d;
-        changeSmsStateToEnroute(*sms,t.msgId,d,Status::THROTTLED,rescheduleSms(*sms));
-        smsc->notifyScheduler();
-      }catch(...)
-      {
-        __warning__("SUBMIT: failed to change state to enroute");
-      }
-    }
-    Task t;
-    smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
-    return ENROUTE_STATE;
+    err=Status::THROTTLED;
   }catch(...)
   {
-    smsc_log_warn(smsLog, "SBMDLV: failed to put delivery command, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+    err=Status::THROTTLED;
+    errstr="unknown";
+    sendNotifyReport(*sms,t.msgId,"system failure");
+  }
+  if(!deliveryOk)
+  {
+    smsc_log_warn(smsLog, "SBMDLV: failed to put delivery command, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s - %s",
       dialogId2,
       t.msgId,dialogId,
       sms->getOriginatingAddress().toString().c_str(),
       sms->getDestinationAddress().toString().c_str(),
       src_proxy->getSystemId(),
-      ri.smeSystemId.c_str()
+      ri.smeSystemId.c_str(),
+      errstr.c_str()
     );
     sms->setOriginatingAddress(srcOriginal);
     sms->setDestinationAddress(dstOriginal);
-    sms->setLastResult(Status::THROTTLED);
+    sms->setLastResult(err);
     sendNotifyReport(*sms,t.msgId,"system failure");
     if(!isDatagram && !isTransaction)
     {
@@ -2136,13 +2146,12 @@ StateType StateMachine::submit(Tuple& t)
         __warning__("SUBMIT: failed to change state to enroute");
       }
     }
-    Task t;
-    smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
     return ENROUTE_STATE;
   }
+
   if(isDatagram || isTransaction)
   {
-    t.command->get_sms_and_forget();
+    tg.active=false;
   }
   sms->lastResult=Status::OK;
   smsc_log_debug(smsLog, "SBM: submit ok, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
@@ -2162,7 +2171,7 @@ StateType StateMachine::forward(Tuple& t)
   smsc_log_debug(smsLog, "FWD: msgId=%lld",t.msgId);
   if(smsc->getTempStore().Get(t.msgId,sms))
   {
-    __trace2__("FWD: sms %lld fount in temp store... need to create it",t.msgId);
+    __trace2__("FWD: sms %lld found in temp store... need to create it",t.msgId);
     smsc->getTempStore().Delete(t.msgId);
     try{
       store->createSms(sms,t.msgId,smsc::store::CREATE_NEW);
@@ -2216,7 +2225,7 @@ StateType StateMachine::forward(Tuple& t)
 
   if(sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT) && sms.getIntProperty(Tag::SMSC_MERGE_CONCAT)!=3)
   {
-    smsc_log_warn(smsLog, "Attempt to forward incomplete concatenated message");
+    smsc_log_warn(smsLog, "Attempt to forward incomplete concatenated message %lld",t.msgId);
     try{
       Descriptor d;
       store->changeSmsStateToUndeliverable
@@ -2253,7 +2262,7 @@ StateType StateMachine::forward(Tuple& t)
       store->changeSmsStateToExpired(t.msgId);
     }catch(...)
     {
-      __trace__("FORWARD: Failed to change state of USSD request to undeliverable");
+      smsc_log_warn(smsLog,"FORWARD: Failed to change state of USSD request to undeliverable. msgId=%lld",t.msgId);
     }
     return UNDELIVERABLE_STATE;
   }
@@ -2395,11 +2404,12 @@ StateType StateMachine::forward(Tuple& t)
   // create task
 
   uint32_t dialogId2;
+  uint32_t uniqueId=dest_proxy->getUniqueId();
   try{
     dialogId2 = dest_proxy->getNextSequenceNumber();
     smsc_log_debug(smsLog, "FWDDLV: msgId=%lld, seq number:%d",t.msgId,dialogId2);
     //Task task((uint32_t)dest_proxy_index,dialogId2);
-    Task task(dest_proxy->getUniqueId(),dialogId2);
+    Task task(uniqueId,dialogId2);
     task.messageId=t.msgId;
     if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
     {
@@ -2572,7 +2582,7 @@ StateType StateMachine::forward(Tuple& t)
       __warning__("FORWARD: failed to change state to enroute");
     }
     Task t;
-    smsc->tasks.findAndRemoveTask(dest_proxy->getUniqueId(),dialogId2,&t);
+    smsc->tasks.findAndRemoveTask(uniqueId,dialogId2,&t);
     return ENROUTE_STATE;
   }
   smsc_log_debug(smsLog, "FWDDLV: deliver ok msgId=%lld, seq number:%d",t.msgId,dialogId2);
@@ -2800,12 +2810,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
     {
       {
         sms.setConcatSeqNum(sms.getConcatSeqNum()+1);
+        if(!dgortr)
         try
         {
           store->changeSmsConcatSequenceNumber(t.msgId);
-        }catch(...)
+        }catch(std::exception& e)
         {
-          __warning2__("DELIVERYRESP: failed to change sms concat seq num:%lld",t.msgId);
+          __warning2__("DELIVERYRESP: failed to change sms concat seq num:%lld - %s",t.msgId,e.what());
           try{
             sms.setLastResult(sms.getLastResult());
             changeSmsStateToEnroute
@@ -2906,11 +2917,19 @@ StateType StateMachine::deliveryResp(Tuple& t)
       // create task
 
       uint32_t dialogId2;
+      uint32_t uniqueId=dest_proxy->getUniqueId();
+
+      TaskGuard tg;
+      tg.smsc=smsc;
+      tg.dialogId=dialogId2;
+      tg.uniqueId=uniqueId;
+
       try{
         dialogId2 = dest_proxy->getNextSequenceNumber();
         __trace2__("CONCAT: seq number:%d",dialogId2);
         //Task task((uint32_t)dest_proxy_index,dialogId2);
-        Task task(dest_proxy->getUniqueId(),dialogId2);
+
+        Task task(uniqueId,dialogId2,dgortr?new SMS(sms):0);
         task.messageId=t.msgId;
         if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
         {
@@ -2933,6 +2952,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
           }
           return ENROUTE_STATE;
         }
+        __trace2__("CONCAT: created task for %u/%d",dialogId2,uniqueId);
+        if(dgortr)tg.active=true;
       }catch(...)
       {
         try{
@@ -2989,6 +3010,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
         SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
         dest_proxy->putCommand(delivery);
+        tg.active=false;
       }
       catch(InvalidProxyCommandException& e)
       {
@@ -3574,7 +3596,13 @@ StateType StateMachine::cancel(Tuple& t)
     }
     store->retriveSms(t.msgId,sms);
 
-    if(t.command->get_cancelSm().force && sms.getIntProperty(Tag::SMSC_MERGE_CONCAT)==3)
+    if(t.command->get_cancelSm().force &&
+        (
+          !sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT) ||
+          sms.getIntProperty(Tag::SMSC_MERGE_CONCAT)==3
+
+        )
+      )
     {
       return t.state;
     }
@@ -3624,10 +3652,17 @@ StateType StateMachine::cancel(Tuple& t)
       sendFailureReport(sms,t.msgId,DELETED,"");
     }else
     {
-      Descriptor d;
-      store->changeSmsStateToUndeliverable(t.msgId,d,Status::INCOMPLETECONCATMSG);
-      sms.setLastResult(Status::INCOMPLETECONCATMSG);
-      sendFailureReport(sms,t.msgId,UNDELIVERABLE,"");
+      //cancel timed out merged messages.
+      if(sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT) && sms.getIntProperty(Tag::SMSC_MERGE_CONCAT)!=3)
+      {
+        Descriptor d;
+        sms.setLastResult(Status::INCOMPLETECONCATMSG);
+        store->changeSmsStateToUndeliverable(t.msgId,d,Status::INCOMPLETECONCATMSG);
+        sendFailureReport(sms,t.msgId,UNDELIVERABLE,"");
+      }else
+      {
+        return t.state;
+      }
     }
     smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
   }catch(std::exception& e)

@@ -6,6 +6,7 @@
 #include "core/threads/ThreadedTask.hpp"
 #include "profiler/profiler.hpp"
 #include "util/debug.h"
+#include "core/buffers/CyclicQueue.hpp"
 
 namespace smsc{
 namespace system{
@@ -53,7 +54,7 @@ public:
   {
     MutexGuard g(mon);
     SmscCommand cmd;
-    inQueue.Shift(cmd);
+    inQueue.Pop(cmd);
     return cmd;
   };
 
@@ -71,7 +72,7 @@ public:
   {
     MutexGuard g(mon);
     SmscCommand cmd;
-    outQueue.Shift(cmd);
+    outQueue.Pop(cmd);
     return cmd;
   }
 
@@ -84,7 +85,7 @@ public:
   void waitFor()
   {
     mon.Lock();
-    if(!outQueue.Count() && !smsQueue.Count())
+    if(!outQueue.Count())
     {
       mon.wait();
     }
@@ -128,20 +129,6 @@ public:
     return managerMonitor!=NULL;
   }
 
-  void putSms(SMS* sms)
-  {
-    MutexGuard g(mon);
-    smsQueue.Push(sms);
-    mon.notify();
-  }
-  SMS* getSms()
-  {
-    MutexGuard g(mon);
-    SMS* sms=NULL;
-    if(smsQueue.Count())smsQueue.Shift(sms);
-    return sms;
-  }
-
   void close(){}
 
   uint32_t getNextSequenceNumber()
@@ -157,9 +144,8 @@ public:
 
 protected:
   mutable EventMonitor mon;
-  smsc::core::buffers::Array<SmscCommand> outQueue;
-  smsc::core::buffers::Array<SmscCommand> inQueue;
-  smsc::core::buffers::Array<SMS*> smsQueue;
+  smsc::core::buffers::CyclicQueue<SmscCommand> outQueue;
+  smsc::core::buffers::CyclicQueue<SmscCommand> inQueue;
   int seq;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;

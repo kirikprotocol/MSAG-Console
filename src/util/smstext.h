@@ -176,12 +176,14 @@ struct ConcatInfo{
   uint16_t off[1];
   void setOff(int idx,uint16_t val)
   {
+    val=htons(val);
     memcpy(off+idx,&val,sizeof(val));
   }
   uint16_t getOff(int idx)
   {
     uint16_t val;
     memcpy(&val,off+idx,sizeof(val));
+    val=ntohs(val);
     return val;
   }
 };
