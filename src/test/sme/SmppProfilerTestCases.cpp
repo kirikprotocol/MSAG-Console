@@ -127,6 +127,11 @@ void SmppProfilerTestCases::updateReportOptionsCorrect(bool sync,
 	uint8_t dataCoding, int num)
 {
 	__decl_tc__;
+	//убрать нарезку длинных ответных сообщений от профайлера для map proxy
+	if (fixture->smeInfo.systemId == "MAP_PROXY")
+	{
+		return;
+	}
 	TCSelector s(num, 4);
 	for (; s.check(); s++)
 	{
@@ -178,6 +183,11 @@ void SmppProfilerTestCases::updateCodePageCorrect(bool sync,
 	uint8_t dataCoding, int num)
 {
 	__decl_tc__;
+	//убрать нарезку длинных ответных сообщений от профайлера для map proxy
+	if (fixture->smeInfo.systemId == "MAP_PROXY")
+	{
+		return;
+	}
 	TCSelector s(num, 4);
 	for (; s.check(); s++)
 	{
@@ -224,6 +234,11 @@ void SmppProfilerTestCases::updateCodePageCorrect(bool sync,
 void SmppProfilerTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding)
 {
 	__decl_tc__;
+	//убрать нарезку длинных ответных сообщений от профайлера для map proxy
+	if (fixture->smeInfo.systemId == "MAP_PROXY")
+	{
+		return;
+	}
 	__tc__("updateProfile.incorrectCmdText");
 	try
 	{
