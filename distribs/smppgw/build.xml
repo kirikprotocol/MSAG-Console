@@ -1,7 +1,23 @@
 <project name="SMPP gateway" default="help">
   <property file="build.properties"/>
-  <fail unless="BUILD_DIR" message="BUILD_DIR property not specified. Please configure build.properties file"/>
+  <fail message="Please configure build.properties file" >
+    <condition>
+      <not>
+        <isset property="BUILD_DIR"/>
+        <isset property="SMSC_DIR"/>
+        <isset property="TEMPLATE_PROPS"/>
+        <isset property="CATALINA_HOME"/>
+        <isset property="CATALINA_BASE"/>
+        <isset property="MAKE_ARGS"/>
+      </not>
+    </condition>
+  </fail>
+  <!--<fail unless="BUILD_DIR" message="BUILD_DIR property not specified. "/>
   <fail unless="SMSC_DIR" message="SMSC_DIR property not specified. Please configure build.properties file"/>
+  <fail unless="TEMPLATE_PROPS" message="TEMPLATE_PROPS property file not specified. Please configure build.properties file"/>
+  -->
+  <available file="${TEMPLATE_PROPS}" property="TEMPLATE_PROPS_FOUND" value="yes"/>
+  <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
   <property environment="env"/>
   <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
@@ -16,7 +32,7 @@
 SMPP Gateway build script
 Targets:
       rmbuild
-      
+
     </echo>
   </target>
 
@@ -97,16 +113,16 @@ Targets:
       <fileset dir="${TEMPL_DIR}">
         <include name="tomcat5/*"/>
       </fileset>
-      <filterset filtersfile="smppgw.properties"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy todir="${WEBINF_DIR}/classes" file="${TEMPL_DIR}/log4j.properties">
-      <filterset filtersfile="smppgw.properties"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
-      <filterset filtersfile="smppgw.properties"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy tofile="${DISTR_DIR}/services/smppgw/logger.properties" file="${TEMPL_DIR}/logger/smppgw.logger">
-      <filterset filtersfile="smppgw.properties"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
   </target>
 
