@@ -63,6 +63,7 @@ enum MAPSTATS{
   MAPSTATS_REASSIGNDIALOG,
 };
 
+extern void MAPSTATS_Restart();
 extern void MAPSTATS_Update(MAPSTATS);
 
 enum MapState{
