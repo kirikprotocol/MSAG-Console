@@ -7,6 +7,7 @@
 #include "smeman/smetypes.h"
 #include "test/util/BaseTestCases.hpp"
 #include "test/util/Util.hpp"
+#include "test/core/RouteUtil.hpp"
 #include <vector>
 
 namespace smsc {
@@ -20,6 +21,7 @@ using smsc::sms::Address;
 using smsc::router::RouteInfo;
 using smsc::router::RouteManager;
 using smsc::smeman::SmeSystemId;
+using smsc::test::core::TestRouteData;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::TCResult;
 
@@ -28,32 +30,6 @@ const char* const TC_ADD_CORRECT_ROUTE = "addCorrectRoute";
 const char* const TC_ADD_INCORRECT_ROUTE = "addIncorrectRoute";
 const char* const TC_LOOKUP_ROUTE = "lookupRoute";
 const char* const TC_ITERATE_ROUTES = "iterateRoutes";
-
-ostream& operator<< (ostream& os, const RouteInfo& route);
-
-struct TestRouteData
-{
-	bool match;
-	float origAddrMatch;
-	float destAddrMatch;
-	const Address origAddr;
-	const Address destAddr;
-	RouteInfo* route;
-
-	TestRouteData(const Address& _origAddr, const Address& _destAddr)
-		: match(true), origAddrMatch(0.0), destAddrMatch(0.0),
-		origAddr(_origAddr), destAddr(_destAddr), route(NULL) {}
-
-	~TestRouteData()
-	{
-		if (route)
-		{
-			delete route;
-		}
-	}
-
-	friend ostream& operator<< (ostream& os, const TestRouteData& data);
-};
 
 /**
  * Этот класс содержит test cases необходимые для тестирования подсистемы
