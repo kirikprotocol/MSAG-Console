@@ -1,3 +1,4 @@
+#ifndef __SMSC_SYSTEM_STATUS_H__
 #define __SMSC_SYSTEM_STATUS_H__
 
 namespace smsc{
@@ -119,7 +120,7 @@ static const int FACILITYNOTSUPP=1173; // 21 - Facility Not Supported !
 static const int ABSENTSUBSCR=1179; // 27 - Absent Subscriber
 static const int SUBSCRBUSYMT=1183; //Subscriber Busy for MT SMS.
 static const int SMDELIFERYFAILURE=1184; //SM Delivery Failure
-static const int MSGLISTFULL=1185; // 
+static const int MSGWLISTFULL=1185; // 
 static const int SYSFAILURE=1186; // 34 - System Failure
 static const int DATAMISSING=1187; // 35 - Data Missing !
 static const int UNEXPDATA=1188; // 36 - Unexpected Data value !
