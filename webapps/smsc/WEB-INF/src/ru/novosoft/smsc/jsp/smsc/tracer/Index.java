@@ -95,8 +95,10 @@ public class Index extends IndexBean
     while (st.hasMoreTokens()) {
       String pair = st.nextToken();
       int idx = pair.indexOf(":");
-      list.add(decodeString(pair.substring(0, idx)));
-      list.add(decodeString(pair.substring(idx+1)));
+      if (idx > 0) {
+        list.add(decodeString(pair.substring(0, idx)));
+        list.add(decodeString(pair.substring(idx+1)));
+      }
     }
     return list;
   }
@@ -109,8 +111,8 @@ public class Index extends IndexBean
       if (traceResults == null || traceResults.size() <= 1)
         throw new AdminException("Transport error, invalid responce.");
       message = (String)traceResults.get(0);
-      messageType = (message.startsWith("Route found")) ? TRACE_ROUTE_FOUND :
-                      ((message.startsWith("Route not found")) ? TRACE_ROUTE_NOT_FOUND : TRACE_ROUTE_STATUS);
+      messageType = (message.startsWith("Route found (disabled)")) ? TRACE_ROUTE_STATUS :
+                      ((message.startsWith("Route not found")) ? TRACE_ROUTE_NOT_FOUND : TRACE_ROUTE_FOUND);
       routeInfo = parseRouteInfo((String)traceResults.get(1));
       traceResults.remove(0); traceResults.remove(0);
     }

@@ -699,9 +699,15 @@ Variant SmscComponent::traceRoute(const Arguments &args)
         Variant result(service::StringListType);
 
         if (!found) {
-	    result.appendValueToStringList((info.enabling == false) ? 
-		"Route disabled":"Route not found");
-	    if (info.enabling == false) found = true;
+	    if (info.enabling == false) {
+		result.appendValueToStringList("Route found (disabled)");
+		found = true;
+	    } else {
+		result.appendValueToStringList("Route not found");
+		result.appendValueToStringList("");
+	    }
+	} else {
+		result.appendValueToStringList("Route found");
 	}
 	
 	if (found)
@@ -730,11 +736,6 @@ Variant SmscComponent::traceRoute(const Arguments &args)
             
             result.appendValueToStringList(routeText);
         }
-        else {
-	    result.appendValueToStringList("Route not found");
-            result.appendValueToStringList("");
-        }
-        
         
         for (int i=0; i<traceBuff.size(); i++)
             result.appendValueToStringList(traceBuff[i].c_str()); 
