@@ -18,6 +18,8 @@
 #include "smppgw/admin/SmppGwCommandReader.h"
 #include "smppgw/admin/CommandApply.h"
 #include "CommandUpdateSmeInfo.h"
+#include "CommandAddSme.h"
+#include "CommandDeleteSme.h"
 
 namespace smsc {
 namespace smppgw {
@@ -52,6 +54,8 @@ protected:
   Response * applySmscs();
   
   Response * updateSmeInfo(CommandUpdateSmeInfo*);
+  Response * addSme(CommandAddSme*);
+  Response * deleteSme(CommandDeleteSme*);
   
 private:
   static const SmscConfigs* configs;

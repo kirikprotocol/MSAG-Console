@@ -10,7 +10,6 @@
 #include "core/threads/Thread.hpp"
 #include "smppgw/smsc.hpp"
 #include "core/synchronization/Mutex.hpp"
-#include "CommandUpdateSmeInfo.h"
 
 namespace smsc {
 namespace smppgw {
@@ -162,6 +161,10 @@ Response * SmppGwCommandDispatcher::handle(const Command * const command) throw 
       return apply((CommandApply*)command);
     case CommandIds::updateSmeInfo:
       return updateSmeInfo((CommandUpdateSmeInfo*)command);
+    case CommandIds::addSme:
+      return addSme((CommandAddSme*)command);
+    case CommandIds::deleteSme:
+      return deleteSme((CommandDeleteSme*)command);
     default:
       return new Response(Response::Error, "Unknown command");
     }
@@ -177,6 +180,36 @@ Response * SmppGwCommandDispatcher::handle(const Command * const command) throw 
 void SmppGwCommandDispatcher::shutdown()
 {
   stopGw();
+}
+
+Response * SmppGwCommandDispatcher::addSme(CommandAddSme* command)
+{
+  try
+  {
+    runner->getApp()->getSmeAdmin()->addSme(command->getSmeInfo());
+    return new Response(Response::Ok, "none");
+  } catch (AdminException &e) {
+    return new Response(Response::Error, e.what());
+  } catch (const char * const e) {
+    return new Response(Response::Error, e);
+  } catch (...) {
+    return new Response(Response::Error, "Unknown exception");
+  }
+}
+
+Response * SmppGwCommandDispatcher::deleteSme(CommandDeleteSme* command)
+{
+  try
+  {
+    runner->getApp()->getSmeAdmin()->deleteSme(command->getSmeSystemId());
+    return new Response(Response::Ok, "none");
+  } catch (AdminException &e) {
+    return new Response(Response::Error, e.what());
+  } catch (const char * const e) {
+    return new Response(Response::Error, e);
+  } catch (...) {
+    return new Response(Response::Error, "Unknown exception");
+  }
 }
 
 Response * SmppGwCommandDispatcher::updateSmeInfo(CommandUpdateSmeInfo* command)

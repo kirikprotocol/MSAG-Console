@@ -18,7 +18,9 @@ namespace CommandIds {
   enum IDS {
     unknown = smsc::admin::protocol::Command::undefined,
     apply,
-    updateSmeInfo
+    updateSmeInfo,
+    addSme,
+    deleteSme
   };
 }
 
