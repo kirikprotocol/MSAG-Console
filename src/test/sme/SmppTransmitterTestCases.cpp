@@ -630,7 +630,7 @@ void SmppTransmitterTestCases::sendInvalidPdu(PduWithOnlyHeader* pdu, bool sync)
 				time_t respTime = time(NULL);
 				__dumpPdu__("sendInvalidPduSyncAfter", fixture->smeInfo.systemId, pdu);
 				{
-					__require__(respPdu && respPdu->get_commandId() == GENERIC_NACK);
+					__require__(respPdu && respPdu->get_commandId() == SmppCommandSet::GENERIC_NACK);
 					MutexGuard mguard(fixture->pduReg->getMutex());
 					processGenericNackSync(pduData,
 						reinterpret_cast<PduGenericNack*>(respPdu), respTime);

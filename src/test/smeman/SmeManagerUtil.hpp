@@ -8,7 +8,7 @@ namespace smsc {
 namespace test {
 namespace smeman {
 
-using namespace smsc::smeman; //SmeProxy, SmeProxyPriority, SmeProxyState, ...
+using namespace smsc::smeman; //SmeProxy, SmeProxyPriority, SmeProxyState, SmscCommand, ...
 using namespace smsc::test::util; //rand0()
 
 //max values

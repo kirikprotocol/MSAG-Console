@@ -264,7 +264,7 @@ int main(int argc, char* argv[])
 	{
 		Manager::init("config.xml");
 		StoreManager::startup(Manager::getInstance());
-		//StoreManager::stopArchiver();
+		StoreManager::stopArchiver();
 		MessageStoreCheckList chkList;
 		MessageStoreTestCases tc(StoreManager::getMessageStore(), false,
 			&chkList); //throws exception

@@ -63,7 +63,7 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 	auto_ptr<char> _systemType = rand_char(MAX_SYSTEM_TYPE_LENGTH);
 	sme->systemType = _systemType.get();
 	//password
-	auto_ptr<char> _password = rand_char(rand1(MAX_PASSWORD_LENGTH));
+	auto_ptr<char> _password = rand_char(rand0(MAX_PASSWORD_LENGTH));
 	sme->password = _password.get();
 	//hostname & port
 	sme->hostname = "localhost";
@@ -587,7 +587,7 @@ void SmeManagerTestCases::selectSme(const vector<SmeInfo*>& sme,
 */
 
 void SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& systemId,
-	SmeProxy** proxy)
+	const SmePassword& password, SmeProxy** proxy)
 {
 	__require__(smeMan);
 	__decl_tc__;
@@ -595,7 +595,7 @@ void SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& systemId,
 	try
 	{
 		CorrectSmeProxy* tmp = new CorrectSmeProxy();
-		smeMan->registerSmeProxy(systemId, tmp);
+		smeMan->registerSmeProxy(systemId, password, tmp);
 		smeReg->bindSme(systemId);
 		SmeIndex index = smeMan->lookup(systemId);
 		*proxy = smeMan->getSmeProxy(index);

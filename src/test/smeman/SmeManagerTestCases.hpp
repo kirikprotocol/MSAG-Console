@@ -16,10 +16,15 @@ using std::ostream;
 using std::map;
 using std::vector;
 using log4cpp::Category;
+using smsc::sms::Address;
 using smsc::test::core::SmeRegistry;
 using smsc::test::util::CheckList;
 using smsc::test::util::BaseTestCases;
-using namespace smsc::smeman; //SmeManager, SmeSystemId, SmeInfo, SmeProxy
+using smsc::smeman::SmeManager;
+using smsc::smeman::SmeSystemId;
+using smsc::smeman::SmeInfo;
+using smsc::smeman::SmeProxy;
+using smsc::smeman::SmePassword;
 
 ostream& operator<< (ostream& os, const SmeInfo& sme);
 
@@ -105,7 +110,8 @@ public:
 	 */
 	//void selectSme(int num);
 
-	void registerCorrectSmeProxy(const SmeSystemId& systemId, SmeProxy** proxy);
+	void registerCorrectSmeProxy(const SmeSystemId& systemId,
+		const SmePassword& password, SmeProxy** proxy);
 
 	static void setupRandomCorrectSmeInfo(SmeInfo* sme);
 

@@ -208,7 +208,7 @@ void processGenericNackTc()
 		"Получение generic_nack pdu при при некорректных асинхронных запросах");
 	__reg_tc__("processGenericNack.checkHeader",
 		"Правильные значения полей хедера (command_length, command_id, sequence_number)");
-	__reg_tc__("processGenericNack.checkTime");
+	__reg_tc__("processGenericNack.checkTime",
 		"Правильное время получения pdu");
 	__reg_tc__("processGenericNack.checkStatusInvalidCommandLength",
 		"Если код ошибки ESME_RINVCMDLEN в поле command_status, то тип pdu задан корректно, а длина неправильная");
