@@ -377,7 +377,7 @@ public:
     static const int INVALIDMSGID      = 14;
   };
 
-  SmeProxy* getProxy(){return cmd->proxy;}
+  SmeProxy* getProxy()const{return cmd->proxy;}
   void setProxy(SmeProxy* newproxy){cmd->proxy=newproxy;}
 
   // specialized constructors (meta constructors)

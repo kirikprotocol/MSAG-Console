@@ -51,7 +51,7 @@ class EventQueue
   {
     CommandType command;
     unsigned long timeout;
-    CmdRecord(CommandType cmd) : command(cmd) {timeout = time(0)+LOCK_LIFE_LENGTH;}
+    CmdRecord(const CommandType& cmd) : command(cmd) {timeout = time(0)+LOCK_LIFE_LENGTH;}
     CmdRecord* next;
   };
 
@@ -240,6 +240,7 @@ public:
   void enqueue(MsgIdType msgId, const CommandType& command)
   {
   __synchronized__
+    fprintf(stderr,"enqueue: src_proxy=%p",command.getProxy());
     __trace2__("enqueue:cmd=%d, msgId=%lld",command->get_commandId(),msgId);
     Locker* locker = hash.get(msgId);
     //!__trace2__("enq: first=%p, last=%p, lock=%p",

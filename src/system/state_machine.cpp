@@ -245,6 +245,9 @@ StateType StateMachine::submit(Tuple& t)
 
   src_proxy=t.command.getProxy();
 
+  fprintf(stderr,"Submit: src_proxy=%p",src_proxy);
+  __require__(src_proxy!=NULL);
+
   __trace2__("StateMachine::submit:%lld",t.msgId);
 
   SMS* sms = t.command->get_sms();
@@ -1110,6 +1113,26 @@ StateType StateMachine::query(Tuple& t)
 StateType StateMachine::cancel(Tuple& t)
 {
   __trace2__("CANCEL: msgid=%lld",t.msgId);
+  SMS sms;
+  try{
+    Address addr(t.command->get_cancelSm().sourceAddr.get());
+    store->retriveSms(t.msgId,sms);
+    if(!(sms.getOriginatingAddress()==addr))
+    {
+      throw 0;
+    }
+  }catch(...)
+  {
+    t.command.getProxy()->putCommand
+    (
+      SmscCommand::makeCancelSmResp
+      (
+        t.command->get_dialogId(),
+        SmscCommand::Status::CANCELFAIL
+      )
+    );
+    return t.state;
+  }
   try{
     store->changeSmsStateToDeleted(t.msgId);
   }catch(...)

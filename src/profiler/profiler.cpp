@@ -288,7 +288,7 @@ int Profiler::Execute()
       )
     {
       status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,SmppStatusSet::ESME_RINVESMCLASS);
-      resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty("SMPP_RECEIPTED_MESSAGE_ID").c_str(),
+      resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
                                            cmd->get_dialogId(),status);
       putIncomingCommand(resp);
       continue;
@@ -353,7 +353,7 @@ int Profiler::Execute()
     {
       msg=9999;
     }
-    resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty("SMPP_RECEIPTED_MESSAGE_ID").c_str(),
+    resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
                                            cmd->get_dialogId(),status);
 
     putIncomingCommand(resp);

@@ -230,9 +230,23 @@ void Smsc::mainLoop()
       }
       case __CMD__(CANCEL):
       {
+        if((cmd->get_cancelSm().messageId.get() && cmd->get_cancelSm().serviceType.get()) ||
+           (!cmd->get_cancelSm().messageId.get() && !cmd->get_cancelSm().serviceType.get()))
+        {
+            src_proxy->putCommand
+            (
+              SmscCommand::makeCancelSmResp
+              (
+                cmd->get_dialogId(),
+                SmscCommand::Status::CANCELFAIL
+              )
+            );
+            continue;
+        }
+
         if(cmd->get_cancelSm().messageId.get())
         {
-          int pos;
+          int pos=0;
           if(sscanf(cmd->get_cancelSm().messageId.get(),"%lld%n",&id,&pos)!=1 ||
              cmd->get_cancelSm().messageId.get()[pos]!=0)
           {
@@ -244,9 +258,23 @@ void Smsc::mainLoop()
                 SmscCommand::Status::INVALIDMSGID
               )
             );
+            continue;
           };
         }else
         {
+          if(!cmd->get_cancelSm().sourceAddr.get() || !cmd->get_cancelSm().sourceAddr.get()[0] ||
+             !cmd->get_cancelSm().destAddr.get() || !cmd->get_cancelSm().destAddr.get()[0])
+          {
+            src_proxy->putCommand
+            (
+              SmscCommand::makeCancelSmResp
+              (
+                cmd->get_dialogId(),
+                SmscCommand::Status::CANCELFAIL
+              )
+            );
+            continue;
+          }
           cancelAgent->putCommand(cmd);
           continue;
         }
@@ -258,6 +286,8 @@ void Smsc::mainLoop()
         continue;
       }
     }
+    __require__(cmd.getProxy()==src_proxy);
+    fprintf(stderr,"main_loop: src_proxy=%p",src_proxy);
     eventqueue.enqueue(id,cmd);
   }
 }
