@@ -133,7 +133,7 @@ int main(char *argv, int argc)
   current position, starting at 1 */
   while (status == OCI_SUCCESS)
   {
-      ub2 type = 0; ub4 size = 0;
+      ub2 type = 0; ub2 size = 0;
 
       /* Retrieve the data type attribute */
       check(errhp, OCIAttrGet((dvoid *) param, (ub4) OCI_DTYPE_PARAM,
