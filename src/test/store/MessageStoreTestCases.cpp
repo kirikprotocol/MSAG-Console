@@ -21,6 +21,7 @@ using namespace smsc::sms; //constants, SMSId, SMS, AddressValue, EService, ...
 using log4cpp::Category;
 using smsc::util::Logger;
 using smsc::util::AssertException;
+using smsc::test::sms::str;
 
 MessageStoreTestCases::MessageStoreTestCases(MessageStore* _msgStore,
 	bool _loadTest, CheckList* _chkList) : msgStore(_msgStore), chkList(_chkList),
@@ -906,7 +907,7 @@ void MessageStoreTestCases::rand_text(SMS* sms, char* sm, int& len)
 }
 
 #define __prepare_for_replace_sms__(sms) \
-	int len = rand1(MAX_SMPP_SM_LENGTH); \
+	int len = rand2(3, MAX_SMPP_SM_LENGTH); \
 	char sm[MAX_SMPP_SM_LENGTH]; \
 	rand_text(sms, sm, len); \
 	uint8_t deliveryReport = rand0(255); \
@@ -1408,6 +1409,8 @@ vector<int> MessageStoreTestCases::checkReadyForCancelSms(const Address& oa,
 	const Address& da, const char* svcType, const vector<SMSId*>& ids,
 	const vector<SMS*>& sms)
 {
+	__trace2__("checkReadyForCancelSms(): oa = %s, da = %s, svcType = %s",
+		str(oa).c_str(), str(da).c_str(), svcType ? svcType : "null");
 	set<int> res;
 	set<SMSId> resIds;
 	for (int i = 0; i < sms.size(); i++)
@@ -1428,6 +1431,7 @@ vector<int> MessageStoreTestCases::checkReadyForCancelSms(const Address& oa,
 		{
 			__trace2__("checkReadyForCancelSms(): not found id = %llu", id);
 			res.insert(1);
+abort();
 		}
 	}
 	delete it;
@@ -1435,6 +1439,7 @@ vector<int> MessageStoreTestCases::checkReadyForCancelSms(const Address& oa,
 	{
 		__trace2__("checkReadyForCancelSms(): extra resId = %llu", *it);
 		res.insert(2);
+abort();
 	}
 	return vector<int>(res.begin(), res.end());
 }
@@ -1626,6 +1631,7 @@ void MessageStoreTestCases::checkConcatInitInfo(const vector<SMSId*>& ids,
 			__tc_fail__(4);
 		}
 		delete it;
+		__tc_ok_cond__;
 	}
 	catch (...)
 	{
