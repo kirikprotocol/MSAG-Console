@@ -31,7 +31,7 @@
             <param name="password" type="string"></param>
         </section>  
 	
-	<section name="MessagesSet">
+	<section name="MessageSet">
 	    <param name="PROVIDER_NOT_FOUND" type="string">Provider not found!</param>
 	    <param name="JOB_NOT_FOUND" type="string">Job not found!</param>
 	    <param name="DS_FAILURE" type="string">DataSource failure!</param>
@@ -46,7 +46,7 @@
         <section name="DataProviders">
         
             <section name="SampleDataProvider1">
-                <param name="address" type="string">111</param>
+                <param name="address" type="string">+111</param>
             
                 <section name="DataSource">
                     <param name="type" type="string">OCI</param>
@@ -115,7 +115,9 @@ Long-Double : $$long-double digits="10" default="3.1415"$$
                     </section>
             
                     <section name="Test-SQLJob1">
+			<param name="address" type="string">+22</param>
                         <param name="name" type="string">sample</param>
+			<param name="alias" type="string">22</param>
                         <param name="type" type="string">sql-job</param>
                         <param name="query" type="bool">true</param>
                         <param name="sql" type="string">
@@ -140,7 +142,9 @@ Long-Double : $$long-double digits="10" default="3.1415"$$
                     </section>
             
                     <section name="Test-Insert-SQLJob">
+			<param name="address" type="string">+33</param>
                         <param name="name" type="string">insert</param>
+			<param name="alias" type="string">33</param>
                         <param name="type" type="string">sql-job</param>
                         <param name="query" type="bool">false</param>
                         <param name="sql" type="string">
@@ -158,7 +162,9 @@ Long-Double : $$long-double digits="10" default="3.1415"$$
                     </section>
 		    
                     <section name="Test-Select-SQLJob">
+			<param name="address" type="string">+44</param>
                         <param name="name" type="string">select</param>
+			<param name="alias" type="string">44</param>
                         <param name="type" type="string">sql-job</param>
                         <param name="query" type="bool">true</param>
                         <param name="sql" type="string">
