@@ -1574,6 +1574,10 @@ StateType StateMachine::submit(Tuple& t)
       extractSmsPart(sms,0);
     }
 
+    if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
+    {
+      sms->setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
+    }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
     unsigned bodyLen=0;
     delivery->get_sms()->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&bodyLen);
@@ -2000,6 +2004,15 @@ StateType StateMachine::forward(Tuple& t)
       }
 
     }
+    if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+    {
+      uint32_t len;
+      ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len)
+      if(sms.getConcatSeqNum()<ci->num-1)
+      {
+        sms.setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
+      }
+    }
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
     dest_proxy->putCommand(delivery);
   }
@@ -2379,6 +2392,17 @@ StateType StateMachine::deliveryResp(Tuple& t)
         //
         //
         extractSmsPart(&sms,sms.getConcatSeqNum());
+
+        if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+        {
+          uint32_t len;
+          ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len)
+          if(sms.getConcatSeqNum()<ci->num-1)
+          {
+            sms.setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
+          }
+        }
+
 
         SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
         dest_proxy->putCommand(delivery);

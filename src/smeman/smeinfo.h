@@ -33,6 +33,7 @@ struct SmeInfo
   std::string receiptSchemeName;
   uint32_t timeout;
   uint32_t proclimit;
+  uint32_t schedlimit;
   ~SmeInfo(){}
   SmeInfo(){}
 };
