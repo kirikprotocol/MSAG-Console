@@ -41,6 +41,13 @@ public class Smsc extends Service
 	private Method process_cancel_messages_method = null;
 	private Method apply_smsc_config_method = null;
 	private Method apply_services_method = null;
+
+	private Method msc_registrate_method = null;
+	private Method msc_unregister_method = null;
+	private Method msc_block_method = null;
+	private Method msc_clear_method = null;
+	private Method msc_list_method = null;
+
 	private SmeManager smeManager = null;
 	private RouteSubjectManager routeSubjectManager;
 
@@ -233,7 +240,9 @@ public class Smsc extends Service
 	{
 		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null
 				|| update_profile_method == null || flush_statistics_method == null
-				|| process_cancel_messages_method == null)
+				|| process_cancel_messages_method == null
+				|| msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null
+				|| msc_clear_method == null || msc_list_method == null)
 		{
 			try
 			{
@@ -247,6 +256,13 @@ public class Smsc extends Service
 				process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
 				apply_smsc_config_method = (Method) smsc_component.getMethods().get("apply_smsc_config");
 				apply_services_method = (Method) smsc_component.getMethods().get("apply_services");
+
+				msc_registrate_method = (Method) smsc_component.getMethods().get("msc_registrate");
+				msc_unregister_method = (Method) smsc_component.getMethods().get("msc_unregister");
+				msc_block_method = (Method) smsc_component.getMethods().get("msc_block");
+				msc_clear_method = (Method) smsc_component.getMethods().get("msc_clear");
+				msc_list_method = (Method) smsc_component.getMethods().get("msc_list");
+
 			}
 			catch (AdminException e)
 			{
@@ -297,5 +313,43 @@ public class Smsc extends Service
 	{
 		checkComponents();
 		call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
+	}
+
+	public synchronized void mscRegistrate(String msc) throws AdminException
+	{
+		checkComponents();
+		HashMap args = new HashMap();
+		args.put("msc", msc);
+		call(smsc_component, msc_registrate_method, Type.Types[Type.StringType], args);
+	}
+
+	public synchronized void mscUnregister(String msc) throws AdminException
+	{
+		checkComponents();
+		HashMap args = new HashMap();
+		args.put("msc", msc);
+		call(smsc_component, msc_unregister_method, Type.Types[Type.StringType], args);
+	}
+
+	public synchronized void mscBlock(String msc) throws AdminException
+	{
+		checkComponents();
+		HashMap args = new HashMap();
+		args.put("msc", msc);
+		call(smsc_component, msc_block_method, Type.Types[Type.StringType], args);
+	}
+
+	public synchronized void mscClear(String msc) throws AdminException
+	{
+		checkComponents();
+		HashMap args = new HashMap();
+		args.put("msc", msc);
+		call(smsc_component, msc_clear_method, Type.Types[Type.StringType], args);
+	}
+
+	public synchronized void mscList(String msc) throws AdminException
+	{
+		checkComponents();
+		Object result = call(smsc_component, msc_list_method, Type.Types[Type.StringListType], new HashMap());
 	}
 }
