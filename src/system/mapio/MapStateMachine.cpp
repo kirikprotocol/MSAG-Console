@@ -1071,7 +1071,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
     }
     __require__(dialog->ssn==ssn);
     __map_trace2__("TryDestroyDialog: dialogid 0x%x state %d",dialog->dialogid_map,dialog->state);
-    if ( send_error )
+    if ( send_error)
     {
       dialog->dropChain = true;
       try{
@@ -1080,7 +1080,9 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
           status = AbonentStatus::UNKNOWNVALUE;
           SendAbonentStatusToSmsc(dialog.get(),status);
         }else{
-          SendErrToSmsc(dialog->dialogid_smsc,err_code);
+          if( dialog->state != MAPST_WaitNextMMS ) {
+            SendErrToSmsc(dialog->dialogid_smsc,err_code);
+          }
         }
       }catch(...){
         __map_warn__("TryDestroyDialog: catched exception when send error response to smsc");
