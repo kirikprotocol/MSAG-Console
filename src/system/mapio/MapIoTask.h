@@ -28,7 +28,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::threads::ThreadedTask;
 using smsc::core::synchronization::Event;
 
-//#define EINSS7_THREADSAFE 1
+#define EINSS7_THREADSAFE 1
 
 extern "C" {
 #include <portss7.h>
@@ -249,9 +249,11 @@ class MapDialogContainer{
 public:
   static MapDialogContainer* getInstance(){
     MutexGuard g(sync_object);
-    if ( !container ) container = new MapDialogContainer();
-    for (unsigned n=1;n<8*200+1;++n){
-      container->dialogId_pool.push_back(n);
+    if ( !container ) {
+	container = new MapDialogContainer();
+        for (unsigned n=1;n<8*200+1;++n){
+	  container->dialogId_pool.push_back(n);
+        }
     }
     __trace2__("MAP::access to container 0x%p",container);
     return container;
