@@ -245,6 +245,8 @@ Mutex SmppFunctionalTest::mutex = Mutex();
 	
 inline void SmppFunctionalTest::resize(int newSize)
 {
+	taskStat.clear();
+	tcStat.clear();
 	taskStat.resize(newSize);
 }
 
@@ -305,7 +307,7 @@ TestSmsc::TestSmsc(const string& host, int port)
 vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 {
 	__require__(numSme <= numAddr);
-	SmeManagerTestCases* tcSme = new SmeManagerTestCases(&smeman);
+	SmeManagerTestCases* tcSme = new SmeManagerTestCases(&smeman, smeReg);
 	AliasManagerTestCases* tcAlias = new AliasManagerTestCases(&aliaser, aliasReg);
 	RouteManagerTestCases* tcRoute = new RouteManagerTestCases(&router, routeReg);
 
@@ -318,9 +320,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 	{
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
-		SmsUtil::setupRandomCorrectAddress(addr[i]);
-		process(tcSme->addCorrectSme(smeInfo[i], 1 /*RAND_TC*/));
-		smeReg->registerSme(*addr[i], (i < numSme ? smeInfo[i] : NULL));
+		process(tcSme->addCorrectSme(addr[i], smeInfo[i], 1 /*RAND_TC*/));
 		ostringstream os;
 		os << *addr[i];
 		__trace2__("TestSmsc::config(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
@@ -388,6 +388,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 			}
 		}
 	}
+	tcRoute->commit();
 	//создание sme
 	vector<TestSme*> sme;
 	for (int i = 0; i < numSme; i++)
@@ -403,6 +404,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 		//config.origAddr;
 		sme.push_back(new TestSme(i, config, smeInfo[i]->systemId, *addr[i],
 			smeReg, aliasReg, routeReg)); //throws Exception
+		smeReg->bindSme(smeInfo[i]->systemId);
 	}
 	//печать таблицы маршрутов
 	__trace__("Route table");
@@ -414,7 +416,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 			Address& origAddr = *addr[i];
 			Address& destAlias = *addr[j];
 			string smeId = "<>";
-			bool smeAvailable = false;
+			bool smeBound = false;
 			const AliasHolder* aliasHolder =
 				aliasReg->findAddressByAlias(destAlias);
 			Address destAddr;
@@ -425,14 +427,14 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 				if (routeHolder)
 				{
 					smeId = routeHolder->route.smeSystemId;
-					smeAvailable = smeReg->isSmeAvailable(smeId);
-					routesOk |= smeAvailable;
+					smeBound = smeReg->isSmeBound(smeId);
+					routesOk |= smeBound;
 				}
 			}
 			ostringstream os;
 			os << "origAddr = " << origAddr << ", destAlias = " << destAlias;
-			__trace2__("%s, route to = %s, sme available = %s",
-				os.str().c_str(), smeId.c_str(), (smeAvailable ? "yes" : "no"));
+			__trace2__("%s, route to = %s, sme bound = %s",
+				os.str().c_str(), smeId.c_str(), (smeBound ? "yes" : "no"));
 		}
 	}
 	if (!routesOk)
