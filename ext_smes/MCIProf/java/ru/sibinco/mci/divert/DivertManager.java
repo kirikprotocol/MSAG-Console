@@ -223,10 +223,12 @@ public class DivertManager extends Thread
         writeTelnetLine("");
       }
     }
-    str = readTelnetLine();
-    logger.debug("Auth last string: "+str);
-    if (str == null || str.length() <= 0)
-      throw new IOException("Got empty responce from MSC");
+
+    do {
+      str = readTelnetLine(); str = str.trim();
+      logger.debug("Auth last string: "+str);
+    } while (str == null || str.length() <= 0);
+
     if (checkQuery(AUTH_FAILED, str))
       throw new IOException("Autentification failed, responce: "+str);
     else if (!str.equalsIgnoreCase(""+ESC_PROMPT)) readTelnetString(ESC_PROMPT);
@@ -467,13 +469,14 @@ public class DivertManager extends Thread
       while (!needExit)
       {
         try {
+          mscSocketLock.wait(60000); // interval 1 min
+          if (needExit) break;
           connect();
           logger.info("MSC pinging ...");
           while (is.available() > 0 && (is.read() != -1)); // skip is data
           writeTelnetLine(""); // ping MSC
           readTelnetString(ESC_PROMPT);
           logger.info("MSC ping ok.");
-          mscSocketLock.wait(60000); // interval 1 min
         } catch (InterruptedException exc) {
           logger.error("MSC ping interrupted", exc);
           continue;
