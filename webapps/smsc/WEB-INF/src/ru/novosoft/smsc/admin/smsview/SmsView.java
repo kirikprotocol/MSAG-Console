@@ -155,13 +155,18 @@ public class SmsView
       if (needExpression(query.getDstSmeId()))
           stmt.setString(pos++, getLikeExpression(query.getDstSmeId()));
 
+      GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
       if (query.getFromDateEnabled()) {
-        java.util.Date fromDate = DateConvertor.convertLocalToGMT(query.getFromDate());
-        stmt.setTimestamp(pos++, new java.sql.Timestamp(fromDate.getTime()));
+        //java.util.Date fromDate = DateConvertor.convertLocalToGMT(query.getFromDate());
+        //stmt.setTimestamp(pos++, new java.sql.Timestamp(fromDate.getTime()));
+        stmt.setTimestamp(pos++,
+                new java.sql.Timestamp(query.getFromDate().getTime()), cal);
       }
       if (query.getTillDateEnabled()) {
-        java.util.Date tillDate = DateConvertor.convertLocalToGMT(query.getTillDate());
-        stmt.setTimestamp(pos++, new java.sql.Timestamp(tillDate.getTime()));
+        //java.util.Date tillDate = DateConvertor.convertLocalToGMT(query.getTillDate());
+        //stmt.setTimestamp(pos++, new java.sql.Timestamp(tillDate.getTime()));
+        stmt.setTimestamp(pos++,
+                new java.sql.Timestamp(query.getTillDate().getTime()), cal);
       }
     }
 
@@ -214,7 +219,9 @@ public class SmsView
         int pos=1;
         byte id[] = rs.getBytes(pos++);
         row.setId(id);
-        row.setDate(DateConvertor.convertGMTToLocal(rs.getTimestamp(pos++)));
+        //row.setDate(DateConvertor.convertGMTToLocal(rs.getTimestamp(pos++)));
+        GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+        row.setDate(rs.getTimestamp(pos++, cal));
         row.setFrom(rs.getString(pos++));
         row.setTo(rs.getString(pos++));
         row.setStatus(rs.getInt(pos++));
