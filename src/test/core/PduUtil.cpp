@@ -9,6 +9,7 @@ void PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff,
 	time_t& nextTime, time_t& calcTime) const
 {
 	__require__(time);
+	__cfg_int_arr__(rescheduleTimes);
 	attempt = lastAttempt;
 	diff = INT_MAX;
 	nextTime = lastTime ? lastTime : startTime;
@@ -22,13 +23,13 @@ void PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff,
 		}
 		diff = curDiff;
 		calcTime = nextTime;
-		if (attempt < rescheduleSize)
+		if (attempt < rescheduleTimes.size())
 		{
 			nextTime += rescheduleTimes[attempt];
 		}
 		else
 		{
-			nextTime += rescheduleTimes[rescheduleSize - 1];
+			nextTime += rescheduleTimes[rescheduleTimes.size() - 1];
 		}
 		if (nextTime > endTime)
 		{
@@ -49,6 +50,7 @@ time_t PduReceiptFlag::getNextTime(time_t t) const
 vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
 {
 	vector<int> res;
+	__cfg_int__(timeCheckAccuracy);
 	if (recvTime < startTime)
 	{
 		__trace2__("PduReceiptFlag::checkSchedule(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld is less startTime",
@@ -149,6 +151,7 @@ bool PduReceiptFlag::isPduMissing(time_t checkTime) const
 {
 	__trace2__("PduReceiptFlag::isPduMissing(): this = %p, statTime = %ld, endTime = %ld, checkTime = %ld",
 		this, startTime, endTime, checkTime);
+	__cfg_int__(timeCheckAccuracy);
 	if (checkTime < startTime || flag != PDU_REQUIRED_FLAG)
 	{
 		return false;

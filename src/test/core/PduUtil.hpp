@@ -7,6 +7,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include <ctime>
 #include <string>
+#include <map>
 #include <vector>
 
 namespace smsc {
@@ -17,6 +18,7 @@ using smsc::smpp::SmppHeader;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using std::string;
+using std::map;
 using std::vector;
 using namespace smsc::test;
 
@@ -44,8 +46,6 @@ class PduReceiptFlag
 	time_t endTime; //окончание доставки pdu
 	time_t lastTime;
 	int lastAttempt;
-	static const int rescheduleSize =
-		sizeof(rescheduleTimes) / sizeof(*rescheduleTimes);
 
 	void eval(time_t time, int& attempt, time_t& diff, time_t& nextTime,
 		time_t& calcTime) const;
@@ -86,6 +86,9 @@ public:
  */
 struct PduData
 {
+	typedef map<const string, int> IntProps;
+	typedef map<const string, string> StrProps;
+
 	static Mutex mutex;
 	static uint32_t counter;
 	uint32_t id; //внутренний уникальный номер pdu
@@ -104,9 +107,8 @@ struct PduData
 	int intermediateNotificationFlag; //флаг получения всех нотификаций
 	PduData* replacePdu; //pdu, которая должна быть заменена текущей pdu
 	PduData* replacedByPdu; //pdu, которая замещает текущую pdu
-	//существуют другие pdu с такими же source_addr, //dest_addr, service_type,
-	//созданные с replace_if_present_flag = 0
-	bool hasSmppDuplicates;
+	map<const string, int> intProps;
+	map<const string, string> strProps;
 
 	PduData(uint16_t _msgRef, time_t _submitTime, time_t _waitTime,
 		time_t _validTime, SmppHeader* _pdu, const string _smsId = "")
@@ -117,7 +119,7 @@ struct PduData
 		deliveryFlag(PDU_REQUIRED_FLAG, waitTime, validTime),
 		deliveryReceiptFlag(PDU_REQUIRED_FLAG, waitTime, validTime),
 		intermediateNotificationFlag(PDU_REQUIRED_FLAG),
-		replacePdu(NULL), replacedByPdu(NULL), hasSmppDuplicates(false)
+		replacePdu(NULL), replacedByPdu(NULL)
 	{
 		MutexGuard mguard(mutex);
 		id = counter++;
