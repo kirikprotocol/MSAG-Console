@@ -665,8 +665,8 @@ __synchronized__
   if ( trace_enabled_ ) {
     ostringstream ost;
     ost << "route found, "
-      << AddrToString(node->record->info.source) << "(" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << ") -> "
-      << AddrToString(node->record->info.dest) << "(" << rec->info.smeSystemId << ")";
+      << AddrToString(rec->info.source) << "(" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << ") -> "
+      << AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId << ")";
 //    trace_.push_back((string("route found, target proxy is '")+=rec->info.smeSystemId)+="'");
     trace_.push_back(ost.str());
   }
