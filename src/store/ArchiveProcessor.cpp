@@ -153,7 +153,8 @@ int ArchiveProcessor::Execute()
 
 void ArchiveProcessor::cleanTransaction()
 {
-    transactionTrsFiles.Empty();
+    transactionTrsArcFiles.Empty();
+    transactionTrsTxtFiles.Empty();
     transactionSrcFiles.Empty();
     transactionSmsCount = 0;
 }
@@ -185,14 +186,23 @@ void ArchiveProcessor::commitTransaction(bool force /*= false*/)
             smsc_log_debug(log, "Commiting transaction...");
             if (indexator) indexator->EndTransaction();
 
-            // flush transaction files
-            transactionTrsFiles.First();
-            char* trsFileNameStr = 0; fpos_t* trsPosition = 0;
-            while (transactionTrsFiles.Next(trsFileNameStr, trsPosition))
+            // flush transaction files for arc(s)
+            transactionTrsArcFiles.First();
+            char* trsArcFileNameStr = 0; fpos_t* trsArcPosition = 0;
+            while (transactionTrsArcFiles.Next(trsArcFileNameStr, trsArcPosition))
             {
-                if (!trsPosition || !trsFileNameStr || !trsFileNameStr[0]) continue;
-                TransactionStorage trsFile(trsFileNameStr);
-                trsFile.setTransactionData(trsPosition);
+                if (!trsArcPosition || !trsArcFileNameStr || !trsArcFileNameStr[0]) continue;
+                TransactionStorage trsArcFile(trsArcFileNameStr);
+                trsArcFile.setTransactionData(trsArcPosition);
+            }
+            // flush transaction files for txt(s)
+            transactionTrsTxtFiles.First();
+            char* trsTxtFileNameStr = 0; fpos_t* trsTxtPosition = 0;
+            while (transactionTrsTxtFiles.Next(trsTxtFileNameStr, trsTxtPosition))
+            {
+                if (!trsTxtPosition || !trsTxtFileNameStr || !trsTxtFileNameStr[0]) continue;
+                TransactionStorage trsTxtFile(trsTxtFileNameStr);
+                trsTxtFile.setTransactionData(trsTxtPosition);
             }
             // delete source files
             transactionSrcFiles.First();
@@ -315,7 +325,8 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
             hrtime_t prtime=gethrtime();
             long long count=0;
             {
-                std::string trsFileName = "";
+                std::string trsArcFileName = "";
+                std::string trsTxtFileName = "";
                 
                 PersistentStorage source(location, file);
                 startTransaction(); // start transactional indecies
@@ -336,18 +347,21 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
 
                         std::string arcLocation = baseDirectory+'/'+destinationDirName;
                         std::string txtLocation = textDirectory+'/'+destinationDirName;
-                                    trsFileName = arcLocation+'/'+destinationFileName; 
                         std::string arcFileName = destinationFileName;
                         std::string txtFileName = destinationFileName;
                         arcFileName += '.'; arcFileName += SMSC_PREV_ARCHIVE_FILE_EXTENSION;
                         txtFileName += '.'; txtFileName += SMSC_TEXT_ARCHIVE_FILE_EXTENSION;
-                        trsFileName += '.'; trsFileName += SMSC_TRNS_ARCHIVE_FILE_EXTENSION;
+                        
+                        trsArcFileName  = arcLocation+'/'+destinationFileName; 
+                        trsArcFileName += '.'; trsArcFileName += SMSC_TRNS_ARCHIVE_FILE_EXTENSION;
+                        trsTxtFileName  = txtLocation+'/'+destinationFileName; 
+                        trsTxtFileName += '.'; trsTxtFileName += SMSC_TRNS_ARCHIVE_FILE_EXTENSION;
 
                         FileStorage::createDir(arcLocation);
                         FileStorage::createDir(txtLocation);
 
                         arcDestination = new PersistentStorage(arcLocation, arcFileName);
-                        txtDestination = new TextDumpStorage(txtLocation, txtFileName);
+                        txtDestination = new TextDumpStorage  (txtLocation, txtFileName);
 
                         lastProcessedTime = sms.lastTime; bNewArcFile = true;
                         smsc_log_debug(log, "Opened destination file '%s/%s'", destinationDirName, arcFileName.c_str());
@@ -355,48 +369,81 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
 
                     try
                     { 
-                        fpos_t position = 0;
-                        arcDestination->openWrite(&position);
-                        //smsc_log_debug(log, "Archive file position=%lld", position);
+                        fpos_t arcPosition = 0; fpos_t txtPosition = 0;
+                        arcDestination->openWrite(&arcPosition);
+                        txtDestination->openWrite(&txtPosition);
                         
-                        const char* trsFileNameStr = trsFileName.c_str();
-                        fpos_t* trsPosition = 0;
+                        const char* trsArcFileNameStr = trsArcFileName.c_str();
+                        const char* trsTxtFileNameStr = trsTxtFileName.c_str();
+                        fpos_t* trsArcPosition = 0; fpos_t* trsTxtPosition = 0;
                         if (bNewArcFile) // destination file was switched
                         {
                             bNewArcFile = false;
-                            trsPosition = transactionTrsFiles.GetPtr(trsFileNameStr);
-                            if (!trsPosition) // check reopened destination file
+
+                            trsArcPosition = transactionTrsArcFiles.GetPtr(trsArcFileNameStr);
+                            if (!trsArcPosition) // check reopened destination arc file
                             {
                                 fpos_t trans_position = 0;
-                                TransactionStorage trsFile(trsFileName);
-                                if (trsFile.getTransactionData(&trans_position))
+                                TransactionStorage trsArcFile(trsArcFileName);
+                                if (trsArcFile.getTransactionData(&trans_position))
                                 {
-                                    if (trans_position < 0 || position < trans_position)
-                                        throw Exception("Invalid transaction position=%lld, file end=%lld",
-                                                        trans_position, position);
-                                    position = trans_position;
-                                    arcDestination->setPos(&position);
+                                    if (trans_position < 0 || arcPosition < trans_position)
+                                        throw Exception("Invalid arc transaction position=%lld, file end=%lld",
+                                                        trans_position, arcPosition);
+                                    arcPosition = trans_position;
+                                    arcDestination->setPos(&arcPosition);
                                 }
-                                else trsFile.setTransactionData(&position);
+                                else trsArcFile.setTransactionData(&arcPosition);
                             }
                             else {
-                                smsc_log_debug(log, "File '%s' was re-opened, last position=%lld, file end=%lld",
-                                               file.c_str(), *trsPosition, position);
-                                position = *trsPosition;
-                                arcDestination->setPos(&position);
+                                smsc_log_debug(log, "File '%s/%s.arc' was re-opened, last position=%lld, file end=%lld",
+                                               destinationDirName, destinationFileName, *trsArcPosition, arcPosition);
+                                arcPosition = *trsArcPosition;
+                                arcDestination->setPos(&arcPosition);
+                            }
+
+                            trsTxtPosition = transactionTrsTxtFiles.GetPtr(trsTxtFileNameStr);
+                            if (!trsTxtPosition) // check reopened destination txt file
+                            {
+                                fpos_t trans_position = 0;
+                                TransactionStorage trsTxtFile(trsTxtFileName);
+                                if (trsTxtFile.getTransactionData(&trans_position))
+                                {
+                                    if (trans_position < 0 || txtPosition < trans_position)
+                                        throw Exception("Invalid txt transaction position=%lld, file end=%lld",
+                                                        trans_position, txtPosition);
+                                    if (trans_position != txtPosition)
+                                    {
+                                        FileStorage::truncateFile(trsTxtFileName, (off_t)trans_position);
+                                        txtPosition = trans_position;
+                                        txtDestination->setPos(&txtPosition);
+                                    }
+                                }
+                                else trsTxtFile.setTransactionData(&txtPosition);
+                            }
+                            else {
+                                smsc_log_debug(log, "File '%s/%s.csv' was re-opened, last position=%lld, file end=%lld",
+                                               destinationDirName, destinationFileName, *trsTxtPosition, txtPosition);
+                                txtPosition = *trsTxtPosition;
+                                txtDestination->setPos(&txtPosition);
                             }
                         }
                         
-                        indexator->IndexateSms(destinationDirName, id, (uint64_t)position, sms);
+                        indexator->IndexateSms(destinationDirName, id, (uint64_t)arcPosition, sms);
 
                         txtDestination->writeRecord(id, sms);
+                        txtDestination->getPos(&txtPosition);
                         arcDestination->writeRecord(id, sms);
-                        arcDestination->getPos(&position);
+                        arcDestination->getPos(&arcPosition);
                         transactionSmsCount++;
                         
-                        trsPosition = transactionTrsFiles.GetPtr(trsFileNameStr);
-                        if (trsPosition) *trsPosition = position;
-                        else transactionTrsFiles.Insert(trsFileNameStr, position);
+                        trsArcPosition = transactionTrsArcFiles.GetPtr(trsArcFileNameStr);
+                        if (trsArcPosition) *trsArcPosition = arcPosition;
+                        else transactionTrsArcFiles.Insert(trsArcFileNameStr, arcPosition);
+                        
+                        trsTxtPosition = transactionTrsTxtFiles.GetPtr(trsTxtFileNameStr);
+                        if (trsTxtPosition) *trsTxtPosition = txtPosition;
+                        else transactionTrsTxtFiles.Insert(trsTxtFileNameStr, txtPosition);
                     }
                     catch (DiskHashDuplicateKeyException& duplicateExc) {
                         smsc_log_warn(log, "SMS #%lld in file '%s' skipped. Details: %s.",

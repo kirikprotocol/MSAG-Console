@@ -40,16 +40,18 @@ namespace smsc { namespace store
     {
     public:
 
-        static bool createDir(std::string dir);
-        static void deleteFile(std::string fullPath);
-        static void deleteFile(std::string location, std::string fileName);
-        static void rollErrorFile(std::string location, std::string fileName);
-        static void rollFileExtension(std::string location, const char* fileName, bool bill=true);
+        static bool createDir(const std::string& dir);
+        static void deleteFile(const std::string& fullPath);
+        static void deleteFile(const std::string& location, const std::string& fileName);
+        static void truncateFile(const std::string& fullPath, off_t length);
+        static void truncateFile(const std::string& location, const std::string& fileName, off_t length);
+        static void rollErrorFile(const std::string& location, const std::string& fileName);
+        static void rollFileExtension(const std::string& location, const char* fileName, bool bill=true);
         
-        static void findEntries(std::string location, Array<std::string>& entries, 
+        static void findEntries(const std::string& location, Array<std::string>& entries, 
                                 bool files=false, const char* ext=0);
-        static void findDirs (std::string location, Array<std::string>& dirs);
-        static void findFiles(std::string location, const char* ext, Array<std::string>& files);
+        static void findDirs (const std::string& location, Array<std::string>& dirs);
+        static void findFiles(const std::string& location, const char* ext, Array<std::string>& files);
         
         static uint64_t toHostOrder(uint64_t value);
         static uint64_t toNetworkOrder(uint64_t value);
@@ -185,6 +187,7 @@ namespace smsc { namespace store
             : FileStorage(), storageFileName(filename) { storageLocation = location; };
         virtual ~TextDumpStorage() {};
 
+        void openWrite(fpos_t* pos=0);
         void writeRecord(SMSId id, SMS& sms);
     };
 

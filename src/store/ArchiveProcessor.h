@@ -118,7 +118,8 @@ namespace smsc { namespace store
         bool         bTransactionOpen;
         uint64_t     transactionSmsCount,  maxTransactionSms;
         time_t       transactionStartTime, maxTransactionTime;
-        Hash<fpos_t> transactionTrsFiles;
+        Hash<fpos_t> transactionTrsArcFiles;
+        Hash<fpos_t> transactionTrsTxtFiles;
         Hash<bool>   transactionSrcFiles;
 
         void cleanTransaction();

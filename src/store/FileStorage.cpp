@@ -44,7 +44,7 @@ const char* SMSC_PERSIST_DIR_NAME_PATTERN  = "%04d%02d%02d";
 const uint16_t SMSC_ARCHIVE_VERSION_INFO = 0x0001;
 const char*    SMSC_ARCHIVE_HEADER_TEXT  = "SMSC.ARC";
 
-void FileStorage::findEntries(std::string location, Array<std::string>& entries, 
+void FileStorage::findEntries(const std::string& location, Array<std::string>& entries, 
                               bool files, const char* ext)
 {
     int extFileLen  = 0;
@@ -107,33 +107,48 @@ void FileStorage::findEntries(std::string location, Array<std::string>& entries,
     if (locationDir) closedir(locationDir);
 }
 
-void FileStorage::findFiles(std::string location, const char* ext, Array<std::string>& files)
+void FileStorage::findFiles(const std::string& location, const char* ext, Array<std::string>& files)
 {
     FileStorage::findEntries(location, files, true, ext);    
 }
-void FileStorage::findDirs (std::string location, Array<std::string>& dirs)
+void FileStorage::findDirs (const std::string& location, Array<std::string>& dirs)
 {
     FileStorage::findEntries(location, dirs, false, 0);    
 }
 
-void FileStorage::deleteFile(std::string fullPath)
+void FileStorage::deleteFile(const std::string& fullPath)
 {
     if (remove(fullPath.c_str()) != 0) {
         Exception exc("Failed to remove file '%s'. Details: %s", fullPath.c_str(), strerror(errno));
         throw StorageException(exc.what());
     }
 }
-void FileStorage::deleteFile(std::string location, std::string fileName)
+void FileStorage::deleteFile(const std::string& location, const std::string& fileName)
 {
     std::string fullPath = location; fullPath +='/'; fullPath += fileName;
     deleteFile(fullPath);
 }
-void FileStorage::rollErrorFile(std::string location, std::string fileName)
+void FileStorage::truncateFile(const std::string& fullPath, off_t length)
 {
-    std::string fullOldFile = location; fullOldFile += '/'; fullOldFile += fileName;
-    std::string::size_type extpos = fileName.find_last_of('.');
-    if (extpos != fileName.npos) fileName.erase(extpos);
-    std::string fullNewFile = location; fullNewFile += '/'; fullNewFile += fileName;
+    if (truncate(fullPath.c_str(), length) != 0) {
+        Exception exc("Failed to truncate file '%s' to %d bytes. Details: %s",
+                      fullPath.c_str(), length, strerror(errno));
+        throw StorageException(exc.what());
+    }
+}
+void FileStorage::truncateFile(const std::string& location, const std::string& fileName, off_t length)
+{
+    std::string fullPath = location; fullPath +='/'; fullPath += fileName;
+    truncateFile(fullPath, length);
+}
+
+void FileStorage::rollErrorFile(const std::string& location, const std::string& fileName)
+{
+    std::string _fileName = fileName;
+    std::string fullOldFile = location; fullOldFile += '/'; fullOldFile += _fileName;
+    std::string::size_type extpos = _fileName.find_last_of('.');
+    if (extpos != _fileName.npos) _fileName.erase(extpos);
+    std::string fullNewFile = location; fullNewFile += '/'; fullNewFile += _fileName;
     fullNewFile += '.'; fullNewFile += SMSC_ERRF_ARCHIVE_FILE_EXTENSION;
     if (rename(fullOldFile.c_str(), fullNewFile.c_str()) != 0) {
         Exception exc("Failed to rename file '%s' to '%s'. Details: %s",
@@ -141,7 +156,7 @@ void FileStorage::rollErrorFile(std::string location, std::string fileName)
         throw StorageException(exc.what());
     }
 }
-void FileStorage::rollFileExtension(std::string location, const char* fileName, bool bill)
+void FileStorage::rollFileExtension(const std::string& location, const char* fileName, bool bill)
 {
     std::string fullOldFile = location; fullOldFile += '/'; fullOldFile += fileName; fullOldFile += '.'; 
     std::string fullNewFile = location; fullNewFile += '/'; fullNewFile += fileName; fullNewFile += '.';
@@ -154,7 +169,7 @@ void FileStorage::rollFileExtension(std::string location, const char* fileName, 
         throw StorageException(exc.what());
     }
 }
-bool FileStorage::createDir(std::string dir)
+bool FileStorage::createDir(const std::string& dir)
 {
     if (mkdir(dir.c_str(), S_IRWXU|S_IXUSR|S_IROTH|S_IWOTH) != 0) { // TODO: define mode
         if (errno == EEXIST) return false;
@@ -833,6 +848,12 @@ void TextDumpStorage::open()
         FileStorage::write(SMSC_TXT_ARCHIVE_HEADER_TEXT, strlen(SMSC_TXT_ARCHIVE_HEADER_TEXT));
         FileStorage::flush();
     }
+}
+void TextDumpStorage::openWrite(fpos_t* pos /*= 0 (no getPos) */)
+{
+    MutexGuard guard(storageFileLock);
+    this->open();
+    if (pos) FileStorage::getPos(pos);
 }
 
 static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& message)
