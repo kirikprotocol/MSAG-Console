@@ -41,11 +41,23 @@ public:
   }
 };
 
+enum MapDialogState {
+  MAPST_START,
+  MAPST_WAIT_SUBMIT_RESPONSE
+};
+
+
 /**
   \class MapDialog
 */
 class MapDialog{
+  MapDialogState state;
+  ET96MAP_DIALOGUE_ID_T dialogid;
+  ET96MAP_INVOKE_ID_T invokeId;
+  ET96MAP_LOCAL_SSN_T ssn;
 public:
+  MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,
+            ET96MAP_LOCAL_SSN_T lssn) : state(MAPST_START), dialogid(dialogid),ssn(lssn) {}
   virtual USHORT_T  Et96MapV2ForwardSmMOInd( 
     ET96MAP_LOCAL_SSN_T lssn, 
     ET96MAP_DIALOGUE_ID_T dialogId,
@@ -53,17 +65,21 @@ public:
     ET96MAP_SM_RP_DA_T* dstAddr, 
     ET96MAP_SM_RP_OA_T* srcAddr,  
     ET96MAP_SM_RP_UI_T* ud );
+  void setInvokeId(ET96MAP_INVOKE_ID_T invokeId) {this->invokeId = invokeId;}
+  // возвращает истину если это последнее сообщение в диалоге и далее диалог
+  // должн быть закрыт
+  bool ProcessCmd(SmscCommand& cmd);
 };
 
 /**
   \class MapDialogCntItem
 */
-struct MapDialogCntItem{
-  ET96MAP_DIALOGUE_ID_T dialogueId;
-  ET96MAP_LOCAL_SSN_T localSsn;
-  ET96MAP_INVOKE_ID_T invokeId;
-  auto_ptr<MapDialog> dialogue;
-};
+//struct MapDialogCntItem{
+  //ET96MAP_DIALOGUE_ID_T dialogueId;
+  //ET96MAP_LOCAL_SSN_T localSsn;
+  //ET96MAP_INVOKE_ID_T invokeId;
+  //auto_ptr<MapDialog> dialogue;
+//};
 
 extern ET96MAP_DIALOGUE_ID_T allocateDialogueId();
 extern void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
@@ -83,20 +99,18 @@ public:
     if ( !container ) container = new MapDialogContainer();
     return container;
   }
-  MapProxy* MapGetProxy() {
+  MapProxy* getProxy() {
     return &proxy;
   }
-  MapDialogCntItem* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
-    MapDialogCntItem* item = 0;
-    if ( hash.Get(dialogueid,item) ) return item;
+  MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
+    MapDialog* dlg = 0;
+    if ( hash.Get(dialogueid,dlg) ) return dlg;
     else return 0;
   }
-  MapDialogCntItem* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
-    MapDialogCntItem* itm = new MapDialogCntItem();
-    itm->dialogueId = dialogueid;
-    itm->dialogue = new MapDialog();
-    hash.Insert(dialogueid,itm);
-    return itm;
+  MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn){
+    auto_ptr<MapDialog> dlg = new MapDialog(dialogeid,lssn);
+    hash.Insert(dialogueid,dlg);
+    return dlg.release();
   }
   void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
     MapDialogCntItem* item = 0;

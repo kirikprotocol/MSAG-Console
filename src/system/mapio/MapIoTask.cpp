@@ -32,7 +32,7 @@ static void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T
   __trace2__("MAP::dialog 0x%hx destroed",dialogId);
 }
 
-void ForwardResponse(ET96MAP_DIALOGUE_ID_T dialogId){
+/*void ForwardResponse(ET96MAP_DIALOGUE_ID_T dialogId){
   MapDialogCntItem* mdci = 
     MapDialogContainer::getInstance()->getDialog(dialogId);
   if ( mdci ) {
@@ -48,7 +48,7 @@ void ForwardResponse(ET96MAP_DIALOGUE_ID_T dialogId){
   }
   __trace2__("MAP::ForwardResponse OK");
   CloseAndRemoveDialog(SSN,dialogId);
-}
+}*/
 
 extern "C"{
 
@@ -81,11 +81,11 @@ USHORT_T  Et96MapOpenInd(
 {
 	__trace2__("MAP::Et96MapOpenInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
 	try{
-    MapDialogCntItem* mdci = 
+    MapDialog* mdci = 
 		  MapDialogContainer::getInstance()->createDialog(dialogId);
-  	mdci->localSsn = SSN;
+  	//mdci->localSsn = SSN;
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-    USHORT_T result = Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_OK,&reason,0,0,0);
+    USHORT_T result = Et96MapOpenResp(SSN,dialogId,ET96MAP_RESULT_OK,&reason,0,0,0);
     if ( result != ET96MAP_E_OK )
     {
       __trace2__("MAP::Et96MapOpenInd dialog opened error 0x%x",result);
@@ -95,7 +95,7 @@ USHORT_T  Et96MapOpenInd(
   }catch(...){
     __trace2__("MAP::Et96MapOpenInd error open connection");
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-    Et96MapOpenResp(lssn,dialogId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
+    Et96MapOpenResp(SSN,dialogId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
   }
   return ET96MAP_E_OK;
 }
@@ -109,13 +109,13 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
 	ET96MAP_SM_RP_UI_T* ud ) 
 {
 	__trace2__("MAP::Et96MapV2ForwardSmMOInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
-  MapDialogCntItem* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
+  MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
   if ( !mdci ) {
     __trace2__("MAP::dialog is not present")
   }else{
   	try{
-      mdci->invokeId = invokeId;
-      mdci->dialogue->Et96MapV2ForwardSmMOInd(
+      //mdci->invokeId = invokeId;
+      mdci->Et96MapV2ForwardSmMOInd(
         SSN,dialogId,invokeId,dstAddr,srcAddr,ud);
       SMSC_FORWARD_RESPONSE_T* p = new SMSC_FORWARD_RESPONSE_T();
       p->dialogId = dialogId;
@@ -178,6 +178,9 @@ void MapIoTask::dispatcher()
 	//going = 0;
   message.receiver = MY_USER_ID;
 
+  MSG_T last_my_msg;
+  bool my_msg_was_send = true;
+
   for(;;){
     result = MsgRecv(&message);
     if ( result != MSG_OK ) {
@@ -190,7 +193,7 @@ void MapIoTask::dispatcher()
     __trace2__("MAP: MsgRecv receive msg with "
                "recver 0x%hx,sender 0x%hx,prim 0x%hx",message.receiver,message.sender,message.primitive);
     
-    if ( message.sender == message.receiver &&
+    /*if ( message.sender == message.receiver &&
          message.sender == USER01_ID )
     {
       try{
@@ -200,15 +203,40 @@ void MapIoTask::dispatcher()
             __trace2__("MAP::MessageProcessing Opss, forward response has zero data");
             throw 0;
           }
-          ForwardResponse(response->dialogId);
+          if ( ForwardResponse(response->dialogId) )
         }
       }catch(...){
       }
       delete message.msg_p;
       message.size = 0;
     }
-    else
-      Et96MapHandleIndication(&message);
+    else*/
+      
+    Et96MapHandleIndication(&message);
+
+
+    try{
+      MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
+      if ( proxy->hasOutput() ){
+        SmscCommand cmd = proxy->getOutgoingCommand();
+        uint32_t did = cmd->get_dialogId();
+        if ( did > 0x0ffff ) {
+          __trace2__("MAP::QueueProcessing: external request, now unhendled");
+        }else{
+          __trace2__("MAP::QueueProcessing: response");
+          ET96MAP_DIALOGUE_ID_T dialogid = (ET96MAP_DIALOGUE_ID_T)did;
+          MapDialog* dialog = MapDialogContainer::getInstance()->getDialog(dialogid);
+          if ( dialog == 0 ){
+            __trace2__("MAP::QueueProcessing: Opss, hereis no dialog with id x%x");
+            bool close_dlg = dialog->ProcessCmd(cmd);
+            if ( close_dlg ) CloseAndRemoveDialog(SSN,dialogid);
+          }
+        }
+      }catch(...){
+      }
+    }
+
+
     //result = Et96MapHandleIndication(&message);
     //if ( result != ET96MAP_E_OK ) {
     //  __trace2__("MAP: error at Et96MapHandleIndication with code x%hx",result);

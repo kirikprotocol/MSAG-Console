@@ -3,6 +3,7 @@
 #include <memory>
 using namespace std;
 using namespace smsc::sms;
+using namespace smsc::smeman;
   
 USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd( 
     ET96MAP_LOCAL_SSN_T lssn, 
@@ -14,8 +15,28 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
 {
   __trace2__("MapDialog::Et96MapV2ForwardSmMOInd");
   SMS sms;
-  //sms->
+  MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
+  SmscCommand cmd = SmscCommand::makeSubmitSm(&sms,dialogId);
+  proxy->putIncomingCommand(cmd);
+  dialog_state = MAPST_WAIT_SUBMIT_RESPONSE;
   return ET96MAP_E_OK;
+}
+
+bool MapDialog::ProcessCmd(SmscCommand& cmd){
+  switch ( cmd->get_commandId() ){
+  case CommandId::SUBMIT_RESP:{
+      USHORT_T result = Et96MapV2ForwardSmMOResp(ssn,dialogId,invokeId,0);
+      if ( result != ET96MAP_E_OK ) {
+        __trace2__("MapDialog::ProcessCmdToMsg: Et96MapV2ForwardSmMOResp return error 0x%hx",result);
+      }else{
+        __trace2__("MapDialog::ProcessCmdToMsg: Et96MapV2ForwardSmMOResp OK",result);
+      }
+      return true;
+    }
+  default:
+    __trace2__("MapDialog::ProcessCmdToMsg: here is no command %d",cmd->get_commandId());
+    return true;
+  }
 }
 
 
