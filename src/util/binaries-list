@@ -1,0 +1,7 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name        source name	libraries         description
+util/test1           test               -lc               #test binaries
+-util/test2          test               -lc               #test binaries
+

@@ -12,26 +12,35 @@ PACKAGEDIR = $(subst .,/,$(PACKAGE))
 endif
 
 SOURCES := $(subst $(SMSC_SRCDIR)/$(PACKAGEDIR)/,,$(wildcard $(SMSC_SRCDIR)/$(PACKAGEDIR)/*.cpp))
+MAIN_SOURCES := $(shell cat binaries-list 2>>/dev/null | awk '/^[^\#-]/{ print $$2".cpp" }' )
+EXCLUDE_SOURCES := $(MAIN_SOURCES) $(shell cat binaries-list 2>>/dev/null | awk '/^-/{ print $$2".cpp" }' )
+EXCLUDE_SOURCES := $(EXCLUDE_SOURCES) $(shell cat exclude-list 2>>/dev/null | awk '/^[^\#]/{print $$1}' ) 
+BINARIES := $(shell cat binaries-list 2>>/dev/null | awk '/^[^\#-]/{ print "$(SMSC_BUILDDIR)/bin/"$$1 }' )
+#$(warning $(BINARIES))
+#$(warning $(MAIN_SOURCES))
+SOURCES := $(filter-out $(EXCLUDE_SOURCES), $(SOURCES))
+#$(warning $(SOURCES))
 OBJECTS := $(SOURCES:.cpp=.o)
-LIBRARY := $(subst .,-,$(PACKAGE))
+LIBRARY := lib$(subst .,-,$(PACKAGE))
 
-$(warning $(OBJECTS))
+#$(warning $(OBJECTS))
 
 target:
-	cd $(SMSC_SRCDIR); make $(PACKAGE).build
+	@cd $(SMSC_SRCDIR); make -s $(PACKAGE).build
 
 include $(SMSC_SRCDIR)/conf/modules_switcher
 
 __build_message__:
 	@echo build in module $(PACKAGE)
 
-only: __build_message__ $(SMSC_BUILDDIR)/lib/$(LIBRARY).a
+build only: __build_message__ $(SMSC_BUILDDIR)/lib/$(LIBRARY).a $(BINARIES)
 
 $(SMSC_BUILDDIR)/lib/$(LIBRARY).a : $(SMSC_BUILDDIR)/obj/$(LIBRARY) $(foreach x,$(OBJECTS),$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$(x))
-	$(AR) -r $@ $(SMSC_BUILDDIR)/obj/$(LIBRARY)/*.o
-	$(RANLIB) $@
+	@echo "assemble module $(LIBRARY).a" 
+	@$(AR) -r $@ $(foreach x,$(OBJECTS),$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$(x))
+	@$(RANLIB) $@
 	
-build: only $(MODULES)
+rbuild: only $(MODULES)
 
 rclean: clean $(foreach x,$(MODULES),$(x).rclean)
 	
@@ -39,13 +48,35 @@ clean:
 	@echo "clean in $(PACKAGE)"
 	rm -f $(SMSC_BUILDDIR)/obj/$(LIBRARY)/*.o
 	rm -f $(SMSC_BUILDDIR)/lib/$(LIBRARY).a
+	rm -f $(BINARIES)
 		
 $(SMSC_BUILDDIR)/obj/$(LIBRARY):
 	mkdir -p $@
 
+deps:	
+	@echo "make dependencies in $(PACKAGEDIR)"
+	@mkdir -p $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)
+	@rm -rf .deps
+	@if [ -n "$(SOURCE:.cpp=)" ] ; then \
+	    for i in "$(SOURCES:.cpp=)" ; do \
+		gcc -MM $(SMSC_SRCDIR)/$(PACKAGEDIR)/$$i.cpp -o$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$$i.o >>\
+		      $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps; \
+	    done; \
+	fi
+	@cat binaries-list 2>>/dev/null | awk '/^[^\#-]/{print "$(SMSC_BUILDDIR)/bin/"$$1" : $(SMSC_BUILDDIR)/obj/$(LIBRARY)/"$$2".o\n"\
+	    "\tmkdir -p `dirname $$@`\n"\
+	    "\t@echo linking $$@\n"\
+	    "\t$$(CXX) $$(CXXFLAGS) -o $$@ $$< $$(LDFLAGS) "$$3"\n"}' \
+	    > $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
+
+-include $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps
+-include $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
+
 $(SMSC_BUILDDIR)/obj/$(LIBRARY)/%.o:$(SMSC_SRCDIR)/$(PACKAGEDIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	@echo "compiling $<"
+	@$(CXX) $(CXXFLAGS) -c -o $@ $<
 	
+
 
 
 

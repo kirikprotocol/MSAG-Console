@@ -45,7 +45,7 @@ export LDFLAGS
 MODULES := $(shell cat modules-list | awk '{print $$1}' | grep -v "\#" )
 SMSC_BUILDDIR_LIST = $(foreach x,lib bin obj etc doc,$(SMSC_BUILDDIR)/$(x))
 	
-all:	clean build
+all:	build
 	@echo >> /dev/null
 	
 __.empty.__:
@@ -71,17 +71,21 @@ ubuild: .update .build
 clean:	$(foreach x,$(MODULES),$(x).rclean)
 	@echo >> /dev/null
 
+deps:	$(foreach x,$(MODULES),$(x).deps)
+	@echo >> /dev/null
+	
+
 $(SMSC_BUILDDIR): $(SMSC_BUILDDIR_LIST)
 
 $(SMSC_BUILDDIR_LIST):
-	mkdir -p $(SMSC_BUILDDIR_LIST)
+	@mkdir -p $(SMSC_BUILDDIR_LIST)
 
 $(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__ $(SMSC_BUILDDIR_LIST)
 override _modules = $(subst ., ,$@)
 override _module = $(firstword $(_modules))
 override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), build )
 	@if [ -d $(_module) ]; then \
-	    cd $(_module); make $(_subtarget); \
+	    cd $(_module); make -s $(_subtarget); \
 	else \
 	    echo "'$(_module)' is not module"; exit 1;\
 	fi 
