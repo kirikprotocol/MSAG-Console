@@ -9,6 +9,58 @@ using namespace smsc::sms;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
 
+TCResultFilter* newFilter()
+{
+    TCResultFilter* filter = new TCResultFilter();
+	filter->registerTC(TC_STORE_CORRECT_SM,
+		"—охранение правильного SM");
+	filter->registerTC(TC_STORE_INCORRECT_SM,
+		"—охранение неправильного SM");
+	filter->registerTC(TC_SET_CORRECT_SM_STATUS,
+		" орректное изменение статуса SM");
+	filter->registerTC(TC_SET_INCORRECT_SM_STATUS,
+		"Ќекорректное изменение статуса SM");
+	filter->registerTC(TC_SET_NON_EXISTENT_SM_STATUS,
+		"»зменение статуса несуществующего SM");
+	filter->registerTC(TC_UPDATE_CORRECT_EXISTENT_SM,
+		" орректное обновление существующего SM");
+	filter->registerTC(TC_UPDATE_INCORRECT_EXISTENT_SM,
+		"ќбновление существующего SM некорректными данными");
+	filter->registerTC(TC_UPDATE_NON_EXISTENT_SM,
+		"ќбновление несуществующего SM");
+	filter->registerTC(TC_DELETE_EXISTENT_SM,
+		"”даление существующего SM");
+	filter->registerTC(TC_DELETE_NON_EXISTENT_SM,
+		"”даление несуществующего SM");
+	filter->registerTC(TC_DELETE_EXISTENT_WAITING_SM_BY_NUMBER,
+		"”даление существующих SM ожидающих доставки на определенный номер");
+	filter->registerTC(TC_DELETE_NON_EXISTENT_WAITING_SM_BY_NUMBER,
+		"”даление несуществующих SM ожидающих доставки на определенный номер");
+	filter->registerTC(TC_LOAD_EXISTENT_SM,
+		"„тение существующего SM");
+	filter->registerTC(TC_LOAD_NONEXISTENT_SM,
+		"„тение несуществующего SM");
+	filter->registerTC(TC_LOAD_EXISTENT_WAITING_SM_BY_DESTINATION_NUMBER,
+		"«агрузка непустого списка SM ожидающих доставки на определенный номер");
+	filter->registerTC(TC_LOAD_NON_EXISTENT_WAITING_SM_BY_DESTINATION_NUMBER,
+		"«агрузка пустого списка SM ожидающих доставки на определенный номер");
+	filter->registerTC(TC_LOAD_EXISTENT_SM_ARCHIEVE_BY_DESTINATION_NUMBER,
+		"«агрузка непустого архива SM доставленных на определенный номер");
+	filter->registerTC(TC_LOAD_NON_EXISTENT_SM_ARCHIEVE_BY_DESTINATION_NUMBER,
+		"«агрузка пустого архива SM доставленных на определенный номер");
+	filter->registerTC(TC_LOAD_EXISTENT_SM_ARCHIEVE_BY_ORIGINATING_NUMBER,
+		"«агрузка непустого архива SM доставленных с определенного номера");
+	filter->registerTC(TC_LOAD_NON_EXISTENT_SM_ARCHIEVE_BY_ORIGINATING_NUMBER,
+		"«агрузка пустого архива SM доставленных с определенного номера");
+	filter->registerTC(TC_GET_EXISTENT_SM_DELIVERY_FAILURE_STATISTICS,
+		"ѕросмотр непустой статистики причин недоставки сообщений");
+	filter->registerTC(TC_GET_NON_EXISTENT_SM_DELIVERY_FAILURE_STATISTICS,
+		"ѕросмотр пустой статистики причин недоставки сообщений");
+	filter->registerTC(TC_CREATE_BILLING_RECORD,
+		"—оздание записи дл€ начислени€ оплаты");
+	return filter;
+}
+
 /**
  * ¬ыполн€ет тестирование целостности данных (Data and Database Integrity 
  * Testing) и выводит результат по test cases в checklist.
@@ -20,15 +72,8 @@ using namespace smsc::test::util;
 int main(int argc, char* argv[])
 {
 	MessageStoreTestCases tc; //throws StoreException
-    TCResultFilter filter;
+    TCResultFilter* filter = newFilter();
 
-	//регистраци€ описаний test cases
-cout << "Register test cases" << endl;
-	filter.registerTC(TC_STORE_CORRECT_SM, "—охранение правильного SM");
-	filter.registerTC(TC_STORE_INCORRECT_SM, "—охранение неправильного SM");
-	filter.registerTC(TC_LOAD_EXISTENT_SM, "„тение существующего SM");
-	filter.registerTC(TC_LOAD_NONEXISTENT_SM, "„тение несуществующего SM");
-	
 	//выполнение тестов
 	SMSId id;
 	SMS sms;
@@ -38,16 +83,16 @@ cout << "i = " << i << endl;
 		TCResultStack stack;
 		stack.push_back(tc.storeCorrectSM(&id, &sms, RAND_TC));
 		stack.push_back(tc.loadExistentSM(id, sms));
-		filter.addResultStack(stack);
+		filter->addResultStack(stack);
 	}
-	filter.addResult(*tc.storeIncorrectSM(sms, RAND_TC));
-	filter.addResult(*tc.loadNonExistentSM());
+	filter->addResult(*tc.storeIncorrectSM(sms, ALL_TC));
+	filter->addResult(*tc.loadNonExistentSM());
 	
 	//сохранить checklist
 cout << "Save checklist" << endl;
 	CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
-	cl.startNewGroup("Message Store");
-	cl.writeResult(filter);
+	cl.startNewGroup("Message Store", "smsc::store");
+	cl.writeResult(*filter);
 
 
 	/*
