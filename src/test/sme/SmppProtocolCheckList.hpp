@@ -409,10 +409,14 @@ void protocolError()
 		"Если размер pdu меньше 16 байт (размер хедера), SC закрывает соединение");
 	__reg_tc__("protocolError.invalidBind.smallerSize2",
 		"Если размер pdu меньше правильного, SC закрывает соединение");
-	__reg_tc__("protocolError.invalidBind.greaterSize",
-		"Если размер pdu больше правильного, SC закрывает соединение");
-	__reg_tc__("protocolError.invalidBind.invalidCommandId",
-		"Если задан command_id отличный от bind_receiver, bind_transmitter или bind_transceiver, SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
+	__reg_tc__("protocolError.invalidBind.greaterSize1",
+		"Если размер pdu больше правильного, но меньше 64kb, SC закрывает соединение после таймаута");
+	__reg_tc__("protocolError.invalidBind.greaterSize2",
+		"Если размер pdu больше 100kb, SC закрывает соединение");
+	__reg_tc__("protocolError.invalidBind.allowedCommandId",
+		"Если задан command_id разрешенный для sme, но не bind, SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
+	__reg_tc__("protocolError.invalidBind.notAllowedCommandId",
+		"Если задан command_id неразрешенный для sme (pdu отправляемые исключительно SC), SC отправляет generic_nack с command_status = ESME_RINVCMDID");
 	__reg_tc__("protocolError.invalidBind.nonExistentCommandId",
 		"Если задан несуществующий в спецификации command_id, SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
 	//corruptedPdu
@@ -422,17 +426,28 @@ void protocolError()
 		"Если размер pdu меньше 16 байт (размер хедера), SC закрывает соединение");
 	__reg_tc__("protocolError.invalidPdu.smallerSize2",
 		"Если размер pdu меньше правильного, SC закрывает соединение");
-	__reg_tc__("protocolError.invalidPdu.greaterSize",
-		"Если размер pdu больше правильного, SC закрывает соединение");
-	__reg_tc__("protocolError.invalidPdu.invalidCommandId",
-		"При отправке pdu разрешенных к отправке только со стороны SC, SC отправляет generic_nack с command_status = ESME_RINVCMDID");
+	__reg_tc__("protocolError.invalidPdu.greaterSize1",
+		"Если размер pdu больше правильного, но меньше 64kb, SC закрывает соединение после таймаута");
+	__reg_tc__("protocolError.invalidPdu.greaterSize2",
+		"Если размер pdu больше 100kb, SC закрывает соединение");
+	__reg_tc__("protocolError.invalidPdu.notAllowedCommandId",
+		"Если задан command_id неразрешенный для sme (pdu отправляемые исключительно SC), SC отправляет generic_nack с command_status = ESME_RINVCMDID");
 	__reg_tc__("protocolError.invalidPdu.nonExistentCommandId",
 		"Если задан несуществующий в спецификации command_id, SC отправляет generic_nack с command_status = ESME_RINVCMDID");
+	//submitAfterUnbind
+	__reg_tc__("protocolError.submitAfterUnbind",
+		"Pdu отправленные после unbind игнорируются SC");
+	__reg_tc__("protocolError.submitAfterUnbind.allowedCommandId",
+		"Если задан command_id разрешенный для sme, но не bind, SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
+	__reg_tc__("protocolError.submitAfterUnbind.notAllowedCommandId",
+		"Если задан command_id неразрешенный для sme (pdu отправляемые исключительно SC), SC отправляет generic_nack с command_status = ESME_RINVCMDID");
+	__reg_tc__("protocolError.submitAfterUnbind.nonExistentCommandId",
+		"Если задан несуществующий в спецификации command_id, SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
 	//other
 	__reg_tc__("protocolError.equalSeqNum",
 		"Отправка нескольких submit_sm с одинаковым sequence_number не влияет на логику обработки pdu");
-	__reg_tc__("protocolError.submitAfterUnbind",
-		"Реквесты отправленные после unbind игнорируются SC");
+	__reg_tc__("protocolError.nullPdu",
+		"Отправка pdu с пустыми (NULL) полями");
 }
 
 void notImplementedTc()
