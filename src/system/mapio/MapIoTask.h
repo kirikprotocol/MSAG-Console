@@ -198,6 +198,7 @@ public:
   void forget(){
     dialog = 0;
   }
+  MapDialog* operator->() { return dialog; }
 };
 
 /**
