@@ -125,7 +125,15 @@ enum MapState{
   MAPST_WaitNextMMS = 31,
   MAPST_SendNextMMS = 32,
   MAPST_WaitFwdMOOpenConf = 33,
-  MAPST_WaitFwdMOConf = 34
+  MAPST_WaitFwdMOConf = 34,
+  MAPST_WaitUSSDReqOpenConf = 35,
+  MAPST_WaitUSSDReqConf = 36,
+  MAPST_WaitUSSDReqDelim = 37,
+  MAPST_WaitUSSDReqClose = 38,
+  MAPST_WaitUSSDNotifyOpenConf = 39,
+  MAPST_WaitUSSDNotifyConf = 40,
+  MAPST_WaitUSSDNotifyClose = 41,
+  MAPST_WaitUSSDNotifyCloseErr = 42
 };
 
 class hash_func_ET96MAP_DID{
