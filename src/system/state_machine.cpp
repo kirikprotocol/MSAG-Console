@@ -425,7 +425,7 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  __trace2__("Replace if present for message %lld=%d",t.msgId,sms->getIntProperty("SMPP_REPLACE_IF_PRESENT_FLAG"));
+  __trace2__("Replace if present for message %lld=%d",t.msgId,sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG));
 
   time_t stime=sms->getNextTime();
 
@@ -436,7 +436,7 @@ StateType StateMachine::submit(Tuple& t)
       sms->setNextTime(now);
     }
     store->createSms(*sms,t.msgId,
-      sms->getIntProperty("SMPP_REPLACE_IF_PRESENT_FLAG")?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
+      sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
   }catch(...)
   {
     __trace2__("failed to create sms with id %lld",t.msgId);
@@ -635,7 +635,7 @@ StateType StateMachine::forward(Tuple& t)
     return EXPIRED_STATE;
   }
   time_t now=time(NULL);
-  if(sms.getValidTime()<=now)
+  if(sms.getValidTime()<=now && sms.getAttemptsCount()!=0)
   {
     smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
     try{
