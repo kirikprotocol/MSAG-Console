@@ -209,6 +209,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					__tc__("submitSm.correct.serviceTypeMarginal");
 					//pdu->get_message().set_serviceType(NULL);
 					pdu->get_message().set_serviceType("");
+					pdu->get_message().set_replaceIfPresentFlag(0);
+					intProps["hasSmppDuplicates"] = 1;
 					break;
 				case 3: //serviceType максимальной длины
 					{

@@ -287,16 +287,17 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	Profile profile = fixture->profileReg->getProfile(srcAddr, t);
 	__require__(t <= time(NULL)); //с точностью до секунды
 	//pdu data
+	pdu->get_header().set_commandId(SUBMIT_SM); //проставляется в момент отправки submit_sm
 	PduData* pduData = new PduData(reinterpret_cast<SmppHeader*>(pdu),
 		submitTime, msgRef, profile.reportoptions, intProps, strProps, objProps);
 	pduData->ref();
-	//если маршрута нет, то нужен только монитор на респонс (commandStatus = ESME_RINVDSTADR)
-	bool routeExists = fixture->routeChecker->isDestReachable(
-		pdu->get_message().get_source(), pdu->get_message().get_dest(), false);
-	if (!routeExists)
+	//проверить наличие ошибок (будет ли респонс с кодом ошибки)
+	set<int> res = fixture->pduChecker->checkSubmitSm(pduData);
+	if (res.size())
 	{
 		return pduData;
 	}
+	//response monitor регистрируется когда станет известен seqNum
 	switch (pduType)
 	{
 		case PDU_NORMAL:
@@ -320,7 +321,6 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 		default:
 			__unreachable__("Invalid pdu type");
 	}
-	//response monitor регистрируется когда станет известен seqNum
 	return pduData;
 }
 

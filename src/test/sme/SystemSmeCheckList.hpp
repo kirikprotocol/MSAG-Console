@@ -96,6 +96,8 @@ void abonentInfoTc()
 		"В тексте команды лишние слова (должен быть только адрес)");
 	__reg_tc__("processAbonentInfo.checkFields",
 		"Поля pdu соответствуют настройкам abonent info sme");
+	__reg_tc__("processAbonentInfo.checkText",
+		"Тект сообщений правильный");
 }
 
 void smscSmeTc()

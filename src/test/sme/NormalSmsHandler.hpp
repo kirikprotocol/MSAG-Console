@@ -45,7 +45,7 @@ protected:
 
 	virtual Category& getLog();
 	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
-	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
+	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu, time_t recvTime);
 
 	void registerIntermediateNotificationMonitor(const DeliveryMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,

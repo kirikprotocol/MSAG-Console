@@ -75,7 +75,8 @@ vector<int> NormalSmsHandler::checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2)
 	return res;
 }
 
-void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu)
+void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
+	time_t recvTime)
 {
 	__require__(fixture->profileReg);
 	__decl_tc__;
@@ -84,7 +85,7 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu)
 	SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
 	time_t profileUpdateTime;
 	int codePage = fixture->profileReg->getProfile(destAddr, profileUpdateTime).codepage;
-	if (time(NULL) <= profileUpdateTime + timeCheckAccuracy)
+	if (abs(recvTime - profileUpdateTime) < timeCheckAccuracy)
 	{
 		//профайл может быть неконсистентным
 		return;
@@ -153,6 +154,7 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 	time_t recvTime, time_t respTime)
 {
 	__require__(monitor && pduReg);
+	__require__(!pduReg->getIntermediateNotificationMonitor(monitor->pduData->msgRef));
 	__decl_tc__;
 	uint8_t regDelivery =
 		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData);
@@ -195,14 +197,12 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 					if (deliveryStatus == DELIVERY_STATUS_NO_RESPONSE) //респонс не отослан
 					{
 						startTime = recvTime + fixture->smeInfo.timeout - 1;
-						flag = startTime < monitor->getValidTime() ?
-							PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
 					}
 					else
 					{
 						startTime = respTime;
-						flag = PDU_REQUIRED_FLAG;
 					}
+					flag = PDU_REQUIRED_FLAG;
 					break;
 				default:
 					__unreachable__("Invalid monitor flag");
@@ -222,6 +222,7 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime, time_t respTime)
 {
 	__require__(monitor && pduReg);
+	__require__(!pduReg->getDeliveryReceiptMonitor(monitor->pduData->msgRef));
 	__decl_tc__;
 	uint8_t regDelivery =
 		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData);
@@ -391,7 +392,7 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		//сравнить текст
 		if (fixture->profileReg)
 		{
-			compareMsgText(*origPdu, pdu);
+			compareMsgText(*origPdu, pdu, recvTime);
 		}
 		//optional
 		__tc__("processDeliverySm.normalSms.checkOptionalFields");

@@ -199,7 +199,10 @@ void SmppBaseTestCases::checkMissingPdu(time_t checkTime)
 		}
 		fixture->pduReg->removeMonitor(monitor);
 		//респонсы считаются валидными всегда
-		if (monitor->pduData->valid || monitor->getType() == RESPONSE_MONITOR)
+		//нотификации могут придти после первой неуспешной попытки,
+		//после чего sms будет замещена
+		if (monitor->pduData->valid || monitor->getType() == RESPONSE_MONITOR ||
+			monitor->getType() == INTERMEDIATE_NOTIFICATION_MONITOR)
 		{
 			switch (monitor->getFlag())
 			{
