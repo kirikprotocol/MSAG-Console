@@ -470,7 +470,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 
 void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 {
-	TCSelector s(num, 10);
+	TCSelector s(num, 11);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -580,6 +580,9 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
+				case 11: //недопустимый dataCoding
+					__tc__("submitSm.incorrect.dataCoding");
+					pdu->get_message().set_dataCoding(rand1(255));
 				default:
 					__unreachable__("Invalid num");
 			}
