@@ -66,11 +66,13 @@ namespace smsc {
 				T* objectPtr;
 				int* referenceCount;
 				void release() {
-					if (referenceCount != 0) {
+					if (referenceCount != 0 && objectPtr != 0) {
 						--(*referenceCount);
-						if ((*referenceCount) == 0 && objectPtr != 0) {
+						if ((*referenceCount) == 0) {
 							dispose(objectPtr);
+                            objectPtr = 0;
 							delete referenceCount;
+                            referenceCount = 0;
 						}
 					}
 				}

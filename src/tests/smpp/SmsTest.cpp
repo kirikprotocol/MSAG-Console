@@ -159,11 +159,26 @@ namespace smsc {
           try {
             // creating map proxy sme
             QueuedSmeHandler mapProxySme = createSmeByName("smsc.sme.map-proxy");
+            // creating profile manager
+            QueuedSmeHandler sme = createSme("smsc.profile-manager.sme");
+            SmppProfileManagerHandler profileManager = new SmppProfileManager(sme);
+            std::string profilerAddr = getContextStringValue("smsc.profile-manager.profiler-address");
+            profileManager->setProfilerAddress(profilerAddr.c_str());
+            profileManager->setOriginatingAddress(mapProxySme->getConfig().origAddr.c_str());
             // creating sender
             QueuedSmeHandler sender = createSmeByName("smsc.sme.sender");
+            // getting long sms message to send
+            std::string msg = getContextStringValue("smsc.long-sms-message");
+            log.debug("long message=%s", msg.c_str());
 
-            LongSmsTest test(sender, mapProxySme, 1000);
-            test.testLongSms();
+            //set profile for map proxy
+            if(profileManager->setProfile(SmppProfileManager::CP_LATIN1_UCS2)) {
+              LongSmsTest test(sender, mapProxySme, msg, timeout);
+              test.testLongSms();
+            } else {
+              log.error("testLongSms: Error when setting profile for map proxy");
+              CPPUNIT_FAIL("Test Error: when setting profile for map proxy in testLongSms");
+            }
 
           } catch (CppUnit::Exception &ex) {
             throw;

@@ -118,6 +118,7 @@ namespace smsc {
       }
 
       bool ResponseQueue::checkResponse(uint32_t sequence, uint32_t timeout) throw(ResponseQueueException) {
+        log.debug("checkResponse(%d, %d): --- enter", sequence, timeout);
         bool res = false;
 
         ResponseHandler resp;
@@ -145,16 +146,19 @@ namespace smsc {
           }
         }
 
+        log.debug("checkResponse: --- exit");
         return res;
       }
 
       bool ResponseQueue::checkAllResponses() throw(ResponseQueueException) {
+        log.debug("checkAllResponses: --- enter");
         bool res = true;
         responseMutex.Lock();
         smsc::core::buffers::IntHash<ResponseHandler>::Iterator itr = responseMap.First();
         int sequence;
         ResponseHandler resp;
         while(itr.Next(sequence, resp)) {
+          log.debug("checkAllResponses: checking sequence = %d", sequence);
           if (resp->pdu != 0) {
               if (log.isDebugEnabled()) {
                   log.debug("checkResponse: Received response");
@@ -176,9 +180,10 @@ namespace smsc {
               res = false;
           }
         }
-        clear();
+        responseMap.Empty();
         responseMutex.Unlock();
 
+        log.debug("checkAllResponses: --- exit");
         return res;
       }
 

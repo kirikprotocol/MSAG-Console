@@ -83,6 +83,8 @@ namespace smsc {
         }
         std::string toString(std::string tab) {
           std::ostringstream sout;
+          sout.fill('0');
+          sout.width(2);
 
           sout << tab << "UDH {" << std::endl;
           sout << tab << tab << "length = " << (int) getLength() << std::endl;
@@ -91,6 +93,12 @@ namespace smsc {
             sout << tab << tab << "IE {" << std::endl;
             sout << tab << tab << tab << "IEI = " << (int) elements[i].getInformationElementIdentifier() << std::endl;
             sout << tab << tab << tab << "IEDL = " << (int) elements[i].getInformationElementDataLength() << std::endl;
+            sout << tab << tab << tab << "IED = ";
+            sout << std::hex;
+            for(int j=0; j<elements[i].getInformationElementDataLength(); j++) {
+              sout << (int) elements[i].getInformationElementData()[j] << " ";
+            }
+            sout << std::dec << std::endl;
             sout << tab << tab << "}//IE" << std::endl;
           }
           sout << tab << "}//UDH" << std::endl;

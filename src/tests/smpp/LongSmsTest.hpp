@@ -2,6 +2,7 @@
 #define ___LONG_SMS_TEST___
 
 #include "Sme.hpp"
+#include "MapProxy.hpp"
 
 namespace smsc {
   namespace test {
@@ -10,25 +11,27 @@ namespace smsc {
 
       class LongSmsTest {
         QueuedSmeHandler sender;
-        QueuedSmeHandler mapProxy;
+        MapProxy mapProxy;
         log4cpp::Category& log;
         uint32_t timeout;
+        smsc::sms::Address mapProxyAddr;
+        std::string message;
       public:
-        LongSmsTest(QueuedSmeHandler _sender, QueuedSmeHandler _mapProxy, uint32_t _timeout) 
+        LongSmsTest(QueuedSmeHandler _sender, QueuedSmeHandler _mapProxy, std::string msg, uint32_t _timeout) 
         : sender(_sender)
-        , mapProxy(_mapProxy)
+        , mapProxy(_mapProxy, _timeout)
+        , message(msg)
         , log(smsc::test::util::logger.getLog("smsc.test.smpp.LongSmsTest")) 
-        , timeout(_timeout) {
+        , timeout(_timeout) 
+        , mapProxyAddr(_mapProxy->getConfig().origAddr.c_str()) {
           //connecting SMEs
           sender->connect();
-          mapProxy->connect();
         }
 
         void testLongSms();
 
         ~LongSmsTest() {
           sender->close();
-          mapProxy->close();
         }
       private:
         void test();

@@ -25,7 +25,7 @@ namespace smsc {
 
       using smsc::core::buffers::IntHash;
 
-      class ResponseQueue {
+      class ResponseQueue : smsc::test::util::ProtectedCopy {
         typedef smsc::test::util::Handler<Response> ResponseHandler;
 
         log4cpp::Category& log;

@@ -11,7 +11,7 @@ namespace smsc {
   namespace test {
     namespace smpp {
 
-      class PduQueue {
+      class PduQueue : smsc::test::util::ProtectedCopy {
         typedef std::list<PduHandler> PduHandlerList;
 
         std::list<PduHandler> pduQueue;
