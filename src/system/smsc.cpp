@@ -501,7 +501,10 @@ void Smsc::init(const SmscConfigs& cfg)
   }
 
   smsc::util::regexp::RegExp::InitLocale();
-  scAddr = cfg.cfgman->getString("core.service_center_address");
+  Address addr(cfg.cfgman->getString("core.service_center_address"));
+  AddressValue addrval;
+  addr.getValue( addrval );
+  scAddr = addrval;
 
   }catch(exception& e)
   {
