@@ -77,6 +77,9 @@ inline void extractPortsFromUdh(SMS& sms)
   {
     body=(unsigned char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
   }
+  bool allSarsAreHere=sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS) &&
+                      sms.hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM) &&
+                      sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
   unsigned char* ptr=body+1;
   unsigned char* end=body+body[0]+1;
   bool needRemove=false;
@@ -94,6 +97,14 @@ inline void extractPortsFromUdh(SMS& sms)
     {
       sms.setIntProperty(Tag::SMPP_DESTINATION_PORT,(((int)ptr[2])<<8)|ptr[3]);
       sms.setIntProperty(Tag::SMPP_SOURCE_PORT,(((int)ptr[4])<<8)|ptr[5]);
+      needRemove=true;
+    }else if(allSarsAreHere && (*ptr==0 || *ptr==8))//8 bit concat info
+    {
+      ////
+      //
+      // If both sar and udh-concat are present, remove udh.
+      // It will be reinserted from sars later
+      //
       needRemove=true;
     }
     if(needRemove)
