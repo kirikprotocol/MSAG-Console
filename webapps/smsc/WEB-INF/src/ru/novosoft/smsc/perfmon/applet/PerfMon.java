@@ -206,6 +206,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     lg = new LabelGroup(localeText.getString("glab.pque"), LabelGroup.NORTHWEST);
     lg.setLayout(new BorderLayout());
     lg.add(perfQueue, BorderLayout.CENTER);
+
     gbc.gridx = 1;
     gbc.gridy = 2;
     gbc.gridwidth = 2;
