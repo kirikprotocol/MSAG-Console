@@ -628,10 +628,14 @@ StateType StateMachine::submit(Tuple& t)
       sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
       __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
       if(pl)
+      {
         sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf8.get(),newlen);
+      }
       else
+      {
         sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8.get(),newlen);
-      sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
+        sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
+      }
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
     unsigned bodyLen=0;
@@ -839,10 +843,14 @@ StateType StateMachine::forward(Tuple& t)
       sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
       __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
       if(pl)
+      {
         sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf8.get(),newlen);
+      }
       else
+      {
         sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8.get(),newlen);
-      sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
+        sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
+      }
     }
     if(t.command->is_reschedulingForward())
     {
