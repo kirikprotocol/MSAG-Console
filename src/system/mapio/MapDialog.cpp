@@ -306,7 +306,7 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
   __trace2__( "Et96MapV2SendRInfoForSmConf received ssn=%d, dialog=%d, invokeId=%d\n", localSsn, dialogueId, invokeId );
   state = MAPST_RINFOIND;
   
-  mkSS7GTAddress( &dstMscAddr,  mscNumber_sp, 8 );
+  mkSS7GTAddress( &destMscAddr,  mscNumber_sp, 8 );
 	smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
 	smRpDa.addrLen = imsi_sp->imsiLen;
 	memcpy( smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
