@@ -32,15 +32,15 @@ public class Utils
     return result;
   }
 
-  static public Document parse(Reader inputStream)
+  static public Document parse(Reader input)
           throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException, NullPointerException
   {
-    if (inputStream == null)
+    if (input == null)
       throw new NullPointerException("input stream is null");
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     DocumentBuilder builder = factory.newDocumentBuilder();
     builder.setEntityResolver(new DtdsEntityResolver());
-    InputSource source = new InputSource(inputStream);
+    InputSource source = new InputSource(input);
     return builder.parse(source);
   }
 }
