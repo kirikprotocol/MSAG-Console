@@ -516,7 +516,13 @@ inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,bool forceDC=false)
   }
 
   fetchOptionals(pdu->optional,sms);
-  sms->setValidTime(time(NULL)+pdu->optional.get_qosTimeToLive());
+  if(pdu->optional.has_qosTimeToLive())
+  {
+    sms->setValidTime(time(NULL)+pdu->optional.get_qosTimeToLive());
+  }else
+  {
+    sms->setValidTime(0);
+  }
   sms->setIntProperty(Tag::SMPP_PRIORITY,0);
   sms->setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
   sms->setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,0);

@@ -20,7 +20,11 @@ static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize)
   int coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
   //int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
   unsigned len;
-  const char *data=sms->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
+  const char *data=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+  if(len==0 && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  {
+    data=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+  }
   if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)==0x40)
   {
     int l=(unsigned char)*data;
@@ -52,6 +56,11 @@ static inline int getPduText(PduXSm* pdu,char* buf,unsigned bufsize)
   int coding=pdu->get_message().get_dataCoding();
   unsigned len=pdu->get_message().get_smLength();
   const char *data=pdu->get_message().get_shortMessage();
+  if(len==0 && pdu->optional.has_messagePayload())
+  {
+    len=pdu->optional.size_messagePayload();
+    data=pdu->optional.get_messagePayload();
+  }
   bool udhi=pdu->get_message().get_esmClass()&0x40;
   if(udhi)
   {
