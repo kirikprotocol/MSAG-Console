@@ -448,7 +448,7 @@ StateType StateMachine::forward(Tuple& t)
     {
     }
     __trace2__("FORWARD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
-    sendFailureReport(sms,t.msgId,"expired");
+    sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
     return EXPIRED_STATE;
   }
   if(sms.getState()!=ENROUTE_STATE)
@@ -612,7 +612,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
            (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==2 ||
            sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
         {
-          sendFailureReport(sms,t.msgId,"permanent error");
+          sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
         }
         return ERROR_STATE;
       }
@@ -696,7 +696,7 @@ StateType StateMachine::alert(Tuple& t)
   return UNKNOWN_STATE;
 }
 
-void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,const char* reason)
+void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason)
 {
   SMS rpt;
   rpt.setOriginatingAddress(scAddress);
@@ -715,7 +715,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,const char* reason
   rpt.setMessageReference(sms.getMessageReference());
   rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
     sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-  rpt.setIntProperty(Tag::SMPP_MSG_STATE,sms.getState());
+  rpt.setIntProperty(Tag::SMPP_MSG_STATE,state);
   char addr[64];
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);

@@ -42,7 +42,7 @@ public:
   void formatDeliver(const char* addr,time_t date,std::string& out);
   void formatFailed(const char* addr,const char* err,time_t date,std::string& out);
 
-  void sendFailureReport(SMS& sms,MsgIdType msgId,const char* reason);
+  void sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason);
 
   const char *taskName(){return "StateMachine";}
 
