@@ -77,9 +77,9 @@ TCResult* SmppTransmitterTestCases::submitSmAssert(int num)
 					break;
 				case 4: //message body больше максимальной длины
 					{
-						char msg[MAX_MSG_BODY_LENGTH + 10];
-						rand_char(MAX_MSG_BODY_LENGTH + 1, msg);
-						pdu.get_message().set_shortMessage(msg, MAX_MSG_BODY_LENGTH + 1);
+						char msg[MAX_SM_LENGTH + 10];
+						rand_char(MAX_SM_LENGTH + 1, msg);
+						pdu.get_message().set_shortMessage(msg, MAX_SM_LENGTH + 1);
 					}
 					break;
 				default:
@@ -302,8 +302,8 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 				case 7: //тело сообщения максимальной длины
 					{
 						ShortMessage msg;
-						rand_char(MAX_MSG_BODY_LENGTH, msg);
-						pdu->get_message().set_shortMessage(msg, MAX_MSG_BODY_LENGTH);
+						rand_char(MAX_SM_LENGTH, msg);
+						pdu->get_message().set_shortMessage(msg, MAX_SM_LENGTH);
 					}
 					break;
 				case 8: //msgRef одинаковые (эквивалентно msgRef отсутствуют)
@@ -587,8 +587,8 @@ TCResult* SmppTransmitterTestCases::replaceSm(const char* tc, bool sync, int num
 				case 7: //тело сообщения максимальной длины
 					{
 						ShortMessage msg;
-						rand_char(MAX_MSG_BODY_LENGTH, msg);
-						pdu->get_message().set_shortMessage(msg, MAX_MSG_BODY_LENGTH);
+						rand_char(MAX_SM_LENGTH, msg);
+						pdu->get_message().set_shortMessage(msg, MAX_SM_LENGTH);
 					}
 					break;
 				case 8: //msgRef одинаковые (эквивалентно msgRef отсутствуют)

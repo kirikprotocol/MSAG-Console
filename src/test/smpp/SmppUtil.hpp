@@ -90,10 +90,9 @@ const uint8_t INTERMEDIATE_NOTIFICATION_REQUESTED = 0x10;
 
 //размеры структур и сами структуры
 const int MAX_SMPP_TIME_LENGTH = 20;
-const int MAX_SMS_ID_LENGTH = 65;
 typedef char SmppTime[MAX_SMPP_TIME_LENGTH];
-typedef char ShortMessage[MAX_MSG_BODY_LENGTH];
-typedef char MessageId[MAX_SMS_ID_LENGTH];
+typedef char ShortMessage[MAX_SM_LENGTH];
+typedef char MessageId[MAX_MSG_ID_LENGTH + 1];
 
 class SmppUtil
 {
