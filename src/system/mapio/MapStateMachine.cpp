@@ -226,7 +226,7 @@ static void SendRInfo(MapDialog* dialog)
 void ResponseMO(MapDialog* dialog,unsigned status)
 {
   __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
-  ET96MAP_ERROR_FORW_SM_MO_T err;
+  ET96MAP_ERROR_FORW_SM_MO_T err ;
   memset(&err,0,sizeof(ET96MAP_ERROR_FORW_SM_MO_T));
   switch ( status )
   { 
@@ -249,6 +249,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
     err.errorCode = 36;
     break;
   };
+  __trace2__("MAP::%s err.errCode 0x%x status 0x%x",__FUNCTION__,err.errorCode,status);
   USHORT_T result; 
   if ( dialog->version == 2 ) {
     result = Et96MapV2ForwardSmMOResp(
