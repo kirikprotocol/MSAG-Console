@@ -100,7 +100,7 @@ private:
 	//void setupRandomAliasMatchWithAsterisk(AliasInfo* alias, int adLen, int alLen);
 	void setupAliasHide(AliasInfo* alias);
 	void printFindResult(const char* name, const Address& param,
-		const Address* result, const AliasInfo* aliasInfo);
+		const Address& result, const AliasInfo* aliasInfo);
 	void printFindResult(const char* tc, const Address& param,
 		const Address& result, bool found);
 };

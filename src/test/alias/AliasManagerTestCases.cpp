@@ -557,22 +557,14 @@ void AliasManagerTestCases::deleteAliases()
 }
 
 void AliasManagerTestCases::printFindResult(const char* name,
-	const Address& param, const Address* result, const AliasInfo* aliasInfo)
+	const Address& param, const Address& result, const AliasInfo* aliasInfo)
 {
 	ostringstream os;
 	os << name << ": param = " << param;
-	os << ", result = ";
-	if (result)
+	os << ", result = " << result << ", aliasInfo = ";
+	if (aliasInfo)
 	{
-		os << *result << ", aliasInfo = ";
-		if (aliasInfo)
-		{
-			os << "{" << *aliasInfo << "}";
-		}
-		else
-		{
-			os << "NULL";
-		}
+		os << "{" << *aliasInfo << "}";
 	}
 	else
 	{
@@ -600,8 +592,8 @@ void AliasManagerTestCases::findAliasByAddress(const Address& addr)
 	__decl_tc__;
 	__tc__("findAliasByAddress");
 	const AliasInfo* aliasInfo;
-	auto_ptr<const Address> alias2 = aliasReg->findAliasByAddress(addr, &aliasInfo);
-	printFindResult("AliasRegistry::findAliasByAddress()", addr, alias2.get(), aliasInfo);
+	const Address alias2 = aliasReg->findAliasByAddress(addr, &aliasInfo);
+	printFindResult("AliasRegistry::findAliasByAddress()", addr, alias2, aliasInfo);
 	try
 	{
 		Address alias;
@@ -615,7 +607,7 @@ void AliasManagerTestCases::findAliasByAddress(const Address& addr)
 		{
 			__tc_fail__(103);
 		}
-		else if (found && aliasInfo && alias != *alias2)
+		else if (found && aliasInfo && alias != alias2)
 		{
 			__tc_fail__(104);
 		}
@@ -623,12 +615,7 @@ void AliasManagerTestCases::findAliasByAddress(const Address& addr)
 	}
 	catch(...)
 	{
-		if (alias2.get())
-		{
-			__tc_fail__(100);
-			error();
-		}
-		__tc_ok_cond__;
+		__tc_fail__(100);
 	}
 }
 
@@ -638,8 +625,8 @@ void AliasManagerTestCases::findAddressByAlias(const Address& alias)
 	__decl_tc__;
 	__tc__("findAddressByAlias");
 	const AliasInfo* aliasInfo;
-	auto_ptr<const Address> addr2 = aliasReg->findAddressByAlias(alias, &aliasInfo);
-	printFindResult("AliasRegistry::findAddressByAlias()", alias, addr2.get(), aliasInfo);
+	Address addr2 = aliasReg->findAddressByAlias(alias, &aliasInfo);
+	printFindResult("AliasRegistry::findAddressByAlias()", alias, addr2, aliasInfo);
 	try
 	{
 		Address addr;
@@ -653,7 +640,7 @@ void AliasManagerTestCases::findAddressByAlias(const Address& alias)
 		{
 			__tc_fail__(102);
 		}
-		else if (found && aliasInfo && addr != *addr2)
+		else if (found && aliasInfo && addr != addr2)
 		{
 			__tc_fail__(103);
 		}
@@ -661,12 +648,7 @@ void AliasManagerTestCases::findAddressByAlias(const Address& alias)
 	}
 	catch(...)
 	{
-		if (addr2.get())
-		{
-			__tc_fail__(100);
-			error();
-		}
-		__tc_ok_cond__;
+		__tc_fail__(100);
 	}
 }
 

@@ -38,14 +38,10 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduSubmitSm& pdu1,
 	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
 	//правильность destAddr
 	bool destOk = false;
-	auto_ptr<const Address> destAddr = aliasReg->findAddressByAlias(destAlias1);
-	if (!destAddr.get())
+	const Address destAddr = aliasReg->findAddressByAlias(destAlias1);
+	if (destAddr != destAddr2)
 	{
 		res.push_back(1);
-	}
-	else if (*destAddr != destAddr2)
-	{
-		res.push_back(2);
 	}
 	else
 	{
@@ -53,14 +49,10 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduSubmitSm& pdu1,
 	}
 	//правильность origAddr
 	bool origOk = false;
-	auto_ptr<const Address> origAlias = aliasReg->findAliasByAddress(origAddr1);
-	if (!origAlias.get())
+	const Address origAlias = aliasReg->findAliasByAddress(origAddr1);
+	if (origAlias != origAlias2)
 	{
-		res.push_back(3);
-	}
-	else if (*origAlias != origAlias2)
-	{
-		res.push_back(4);
+		res.push_back(2);
 	}
 	else
 	{
@@ -72,11 +64,11 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduSubmitSm& pdu1,
 		const RouteHolder* routeHolder = routeReg->lookup(origAddr1, destAddr2);
 		if (!routeHolder)
 		{
-			res.push_back(5);
+			res.push_back(3);
 		}
 		else if (systemId != routeHolder->route.smeSystemId)
 		{
-			res.push_back(6);
+			res.push_back(4);
 		}
 	}
 	return res;
@@ -125,13 +117,9 @@ bool RouteChecker::isDestReachable(PduAddress& dest, bool checkSme) const
 	//dest является алиасом
 	Address destAlias;
 	SmppUtil::convert(dest, &destAlias);
-	auto_ptr<const Address> destAddr = aliasReg->findAddressByAlias(destAlias);
-	if (!destAddr.get())
-	{
-		return false;
-	}
+	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
 	//проверка маршрута
-	const RouteHolder* routeHolder = routeReg->lookup(smeAddr, *destAddr);
+	const RouteHolder* routeHolder = routeReg->lookup(smeAddr, destAddr);
 	if (checkSme && routeHolder)
 	{
 		return smeReg->isSmeBound(routeHolder->route.smeSystemId);
@@ -149,13 +137,9 @@ const RouteInfo* RouteChecker::getRouteInfoForNormalSms(PduAddress& src,
 	SmppUtil::convert(src, &origAddr);
 	SmppUtil::convert(dest, &destAlias);
 	//правильность destAddr
-	auto_ptr<const Address> destAddr = aliasReg->findAddressByAlias(destAlias);
-	if (!destAddr.get())
-	{
-		return NULL;
-	}
+	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
 	//правильность маршрута
-	const RouteHolder* routeHolder = routeReg->lookup(origAddr, *destAddr);
+	const RouteHolder* routeHolder = routeReg->lookup(origAddr, destAddr);
 	if (!routeHolder)
 	{
 		return NULL;
