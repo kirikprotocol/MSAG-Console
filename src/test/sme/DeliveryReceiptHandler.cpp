@@ -91,10 +91,12 @@ void DeliveryReceiptHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		__cfg_int__(timeCheckAccuracy);
 		if (recvTime < monitor->getStartTime())
 		{
+			__trace2__("expected time = %ld", monitor->getStartTime());
 			__tc_fail__(1);
 		}
 		else if (recvTime > monitor->getStartTime() + timeCheckAccuracy)
 		{
+			__trace2__("expected time = %ld", monitor->getStartTime());
 			__tc_fail__(2);
 		}
 		__tc_ok_cond__;
