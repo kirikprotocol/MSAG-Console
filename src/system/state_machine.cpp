@@ -3331,9 +3331,14 @@ StateType StateMachine::replace(Tuple& t)
     {
       throw Exception("replace failed");
     }
-  }catch(...)
+  }
+  catch(smsc::store::NoSuchMessageException& e)
   {
     __REPLACE__RESPONSE(REPLACEFAIL);
+  }
+  catch(...)
+  {
+    __REPLACE__RESPONSE(SYSERR);
   }
 
 
