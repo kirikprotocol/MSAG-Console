@@ -447,7 +447,6 @@ int main(void)
 
         ConfigView adminConfig(manager, "WSme.Admin");
         WSmeComponent wsmeAdmin(processor);                   
-        // TODO: Нужно ли заводить ComponentManager ????
         ComponentManager::registerComponent(&wsmeAdmin); 
         adminListener.init(adminConfig.getString("host"), 
                            adminConfig.getInt("port"));               

@@ -28,25 +28,25 @@ namespace smsc { namespace wsme
             addAdMethod, removeAdMethod
         };
         
-        void error(const char* method, const char* param)
-            throw (ProcessException);
+        void error(const char* method, const char* param);
+            //throw (ProcessException);
     
     protected:
         
-        void addVisitor(const Arguments& args)
-            throw (ProcessException);
-        void removeVisitor(const Arguments& args)
-            throw (ProcessException);           
+        void addVisitor(const Arguments& args);
+            //throw (ProcessException);
+        void removeVisitor(const Arguments& args);
+            //throw (ProcessException);           
 
-        void addLang(const Arguments& args)
-            throw (ProcessException);
-        void removeLang(const Arguments& args)
-            throw (ProcessException);
+        void addLang(const Arguments& args);
+            //throw (ProcessException);
+        void removeLang(const Arguments& args);
+            //throw (ProcessException);
        
-        void addAd(const Arguments& args)
-            throw (ProcessException);
-        void removeAd(const Arguments& args)
-            throw (ProcessException);
+        void addAd(const Arguments& args);
+            //throw (ProcessException);
+        void removeAd(const Arguments& args);
+            //throw (ProcessException);
         
     public:
     

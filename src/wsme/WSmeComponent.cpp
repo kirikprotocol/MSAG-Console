@@ -107,18 +107,21 @@ Variant WSmeComponent::call(const Method& method, const Arguments& args)
         return Variant("");
     }
     catch (ProcessException &exc) {
+        log.debug("ProcessException: %s", exc.what());
         throw AdminException(exc.what());
     }
     catch (AdminException &e) {
+        log.debug("AdminException: %s", e.what());
         throw e;
     }
     catch (...) {
+        log.debug("... Exception");
         throw AdminException("Unknown exception catched during call");
     }
 }
 
 void WSmeComponent::error(const char* method, const char* param)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     ProcessException exc("Parameter '%s' missed or invalid "
                          "for WSmeComponent::%s()", param, method);
@@ -126,7 +129,7 @@ void WSmeComponent::error(const char* method, const char* param)
     throw exc;
 }
 void WSmeComponent::addVisitor(const Arguments& args)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     if (!args.Exists(ARGUMENT_NAME_MSISDN)) 
         error("addVisitor()", ARGUMENT_NAME_MSISDN);
@@ -138,7 +141,7 @@ void WSmeComponent::addVisitor(const Arguments& args)
     admin.addVisitor(msisdn); 
 }
 void WSmeComponent::removeVisitor(const Arguments& args)
-    throw (ProcessException)            
+    //throw (ProcessException)            
 {
     if (!args.Exists(ARGUMENT_NAME_MSISDN)) 
         error("removeVisitor()", ARGUMENT_NAME_MSISDN);
@@ -150,7 +153,7 @@ void WSmeComponent::removeVisitor(const Arguments& args)
     admin.removeVisitor(msisdn);
 }
 void WSmeComponent::addLang(const Arguments& args)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     if (!args.Exists(ARGUMENT_NAME_MASK)) 
         error("addLang()", ARGUMENT_NAME_MASK);
@@ -168,7 +171,7 @@ void WSmeComponent::addLang(const Arguments& args)
     admin.addLang(mask, lang);
 }
 void WSmeComponent::removeLang(const Arguments& args)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     if (!args.Exists(ARGUMENT_NAME_MASK)) 
         error("removeLang()", ARGUMENT_NAME_MASK);
@@ -180,7 +183,7 @@ void WSmeComponent::removeLang(const Arguments& args)
     admin.removeLang(mask);
 }
 void WSmeComponent::addAd(const Arguments& args)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     if (!args.Exists(ARGUMENT_NAME_ID)) 
         error("addAd()", ARGUMENT_NAME_ID);
@@ -205,7 +208,7 @@ void WSmeComponent::addAd(const Arguments& args)
     admin.addAd(id, lang, ad);
 }
 void WSmeComponent::removeAd(const Arguments&  args)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     if (!args.Exists(ARGUMENT_NAME_ID)) 
         error("removeAd()", ARGUMENT_NAME_ID);

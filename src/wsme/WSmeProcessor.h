@@ -60,21 +60,21 @@ namespace smsc { namespace wsme
         Mutex       visitorsLock;
         Hash<bool>  visitors;
 
-        void loadUpVisitors()
-            throw (InitException);
+        void loadUpVisitors();
+            //throw (InitException);
         
     public:
 
-        VisitorManager(DataSource& _ds, ConfigView* config)
-            throw (InitException);
+        VisitorManager(DataSource& _ds, ConfigView* config);
+            //throw (InitException);
         virtual ~VisitorManager();
 
-        bool isVisitor(const std::string msisdn)
-            throw (ProcessException);
-        void addVisitor(const std::string msisdn)
-            throw (ProcessException);
-        void removeVisitor(const std::string msisdn)
-            throw (ProcessException);
+        bool isVisitor(const std::string msisdn);
+            //throw (ProcessException);
+        void addVisitor(const std::string msisdn);
+            //throw (ProcessException);
+        void removeVisitor(const std::string msisdn);
+            //throw (ProcessException);
     };
     
     class LangManager
@@ -88,23 +88,23 @@ namespace smsc { namespace wsme
         Mutex             langsLock;
         Hash<std::string> langs; // Contains langs by mask
         
-        void loadUpLangs()
-            throw (InitException);
+        void loadUpLangs();
+            //throw (InitException);
 
     public:
 
-        LangManager(DataSource& _ds, ConfigView* config)
-            throw (InitException);
+        LangManager(DataSource& _ds, ConfigView* config);
+            //throw (InitException);
         virtual ~LangManager();
 
-        std::string getLangCode(const std::string msisdn)
-            throw (ProcessException);
+        std::string getLangCode(const std::string msisdn);
+            //throw (ProcessException);
         std::string getDefaultLang();
 
-        void addLang(const std::string mask, std::string lang)
-            throw (ProcessException);
-        void removeLang(const std::string mask)
-            throw (ProcessException);
+        void addLang(const std::string mask, std::string lang);
+            //throw (ProcessException);
+        void removeLang(const std::string mask);
+            //throw (ProcessException);
     };
     
     struct AdIdManager
@@ -131,25 +131,25 @@ namespace smsc { namespace wsme
         Mutex  adsLock;
         AdsMap ads;
 
-        void loadUpAds()
-            throw (InitException);
+        void loadUpAds();
+            //throw (InitException);
     
     public:
 
-        AdRepository(DataSource& _ds, ConfigView* config)
-            throw(ConfigException, InitException);
+        AdRepository(DataSource& _ds, ConfigView* config);
+            //throw(ConfigException, InitException);
         virtual ~AdRepository();
 
         virtual int getFirstId();
         virtual int getNextId(int id);
         
-        bool getAd(int id, const std::string lang, std::string& ad)
-            throw (ProcessException);
+        bool getAd(int id, const std::string lang, std::string& ad);
+            //throw (ProcessException);
         
-        void addAd(int id, const std::string lang, std::string ad)
-            throw (ProcessException);
-        void removeAd(int id, const std::string lang)
-            throw (ProcessException);
+        void addAd(int id, const std::string lang, std::string ad);
+            //throw (ProcessException);
+        void removeAd(int id, const std::string lang);
+            //throw (ProcessException);
     };
     
     class AdHistory : public Thread
@@ -167,26 +167,26 @@ namespace smsc { namespace wsme
         Mutex   startLock;
         bool    bStarted;
         
-        void cleanup()
-            throw (ProcessException);
+        void cleanup();
+            //throw (ProcessException);
     
     public:
 
-        AdHistory(DataSource& _ds, ConfigView* config, AdIdManager& idman)
-            throw(ConfigException, InitException);
+        AdHistory(DataSource& _ds, ConfigView* config, AdIdManager& idman);
+            //throw(ConfigException, InitException);
         virtual ~AdHistory();
 
         int  Execute();
         void Start();
         void Stop();
 
-        bool getId(const std::string msisdn, int& id)
-            throw (ProcessException);
+        bool getId(const std::string msisdn, int& id);
+            //throw (ProcessException);
         void respondAd(const std::string msisdn, 
-                       const std::string msgid, bool responded)
-            throw (ProcessException);
-        void receiptAd(const std::string msgid, bool receipted) 
-            throw (ProcessException);
+                       const std::string msgid, bool responded);
+            //throw (ProcessException);
+        void receiptAd(const std::string msgid, bool receipted); 
+            //throw (ProcessException);
     };
     
     
@@ -206,23 +206,23 @@ namespace smsc { namespace wsme
         
     public:
 
-        AdManager(DataSource& _ds, ConfigView* config)
-            throw(ConfigException, InitException);
+        AdManager(DataSource& _ds, ConfigView* config);
+            //throw(ConfigException, InitException);
         virtual ~AdManager();
 
         bool getAd(const std::string msisdn, const std::string lang,
-                   std::string& ad) 
-            throw (ProcessException);
+                   std::string& ad); 
+            //throw (ProcessException);
         void respondAd(const std::string msisdn, 
-                       const std::string msgid, bool responded)
-            throw (ProcessException);
-        void receiptAd(const std::string msgid, bool receipted) 
-            throw (ProcessException);
+                       const std::string msgid, bool responded);
+            //throw (ProcessException);
+        void receiptAd(const std::string msgid, bool receipted); 
+            //throw (ProcessException);
 
-        void addAd(int id, const std::string lang, std::string ad)
-            throw (ProcessException);
-        void removeAd(int id, const std::string lang)
-            throw (ProcessException);
+        void addAd(int id, const std::string lang, std::string ad);
+            //throw (ProcessException);
+        void removeAd(int id, const std::string lang);
+            //throw (ProcessException);
     };
     
     class WSmeProcessor : public WSmeAdmin
@@ -242,13 +242,13 @@ namespace smsc { namespace wsme
         int     protocolId;
         char*   svcType;
         
-        void init(ConfigView* config)
-            throw(ConfigException);
+        void init(ConfigView* config);
+            //throw(ConfigException);
 
     public:
 
-        WSmeProcessor(ConfigView* config) 
-            throw(ConfigException, InitException);
+        WSmeProcessor(ConfigView* config);
+            //throw(ConfigException, InitException);
         virtual ~WSmeProcessor();
         
         const char* getSvcType() { return (svcType) ? svcType:"WSme"; };
@@ -257,31 +257,31 @@ namespace smsc { namespace wsme
         /* ------------------------ Smsc interface ------------------------ */ 
 
         virtual bool processNotification(const std::string msisdn, 
-                                         std::string& out) 
-            throw (ProcessException);
+                                         std::string& out);
+            //throw (ProcessException);
         virtual void processResponce(const std::string msisdn, 
-                                     const std::string msgid, bool responded)
-            throw (ProcessException);
+                                     const std::string msgid, bool responded);
+            //throw (ProcessException);
 
-        virtual void processReceipt(const std::string msgid, bool receipted)
-            throw (ProcessException);
+        virtual void processReceipt(const std::string msgid, bool receipted);
+            //throw (ProcessException);
         
         /* ------------------------ Admin interface ------------------------ */ 
 
-        virtual void addVisitor(const std::string msisdn)
-            throw (ProcessException);
-        virtual void removeVisitor(const std::string msisdn)
-            throw (ProcessException);
+        virtual void addVisitor(const std::string msisdn);
+            //throw (ProcessException);
+        virtual void removeVisitor(const std::string msisdn);
+            //throw (ProcessException);
         
-        virtual void addLang(const std::string mask, std::string lang)
-            throw (ProcessException);
-        virtual void removeLang(const std::string mask)
-            throw (ProcessException);
+        virtual void addLang(const std::string mask, std::string lang);
+            //throw (ProcessException);
+        virtual void removeLang(const std::string mask);
+            //throw (ProcessException);
        
-        virtual void addAd(int id, const std::string lang, std::string ad)
-            throw (ProcessException);
-        virtual void removeAd(int id, const std::string lang)
-            throw (ProcessException);
+        virtual void addAd(int id, const std::string lang, std::string ad);
+            //throw (ProcessException);
+        virtual void removeAd(int id, const std::string lang);
+            //throw (ProcessException);
     };
 
 }}

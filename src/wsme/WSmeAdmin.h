@@ -23,22 +23,20 @@ namespace smsc { namespace wsme
     {
         WSmeAdmin() {};
 
-        // TODO: Add all administrative methods here !!!
+        virtual void addVisitor(const std::string msisdn) = 0;
+            //throw (ProcessException) = 0;
+        virtual void removeVisitor(const std::string msisdn) = 0;
+            //throw (ProcessException) = 0;
         
-        virtual void addVisitor(const std::string msisdn)
-            throw (ProcessException) = 0;
-        virtual void removeVisitor(const std::string msisdn)
-            throw (ProcessException) = 0;
-        
-        virtual void addLang(const std::string mask, std::string lang)
-            throw (ProcessException) = 0;
-        virtual void removeLang(const std::string mask)
-            throw (ProcessException) = 0;
+        virtual void addLang(const std::string mask, std::string lang) = 0;
+            //throw (ProcessException) = 0;
+        virtual void removeLang(const std::string mask) = 0;
+            //throw (ProcessException) = 0;
        
-        virtual void addAd(int id, const std::string lang, std::string ad)
-            throw (ProcessException) = 0;
-        virtual void removeAd(int id, const std::string lang)
-            throw (ProcessException) = 0;
+        virtual void addAd(int id, const std::string lang, std::string ad) = 0;
+            //throw (ProcessException) = 0;
+        virtual void removeAd(int id, const std::string lang) = 0;
+            //throw (ProcessException) = 0;
         
     protected:
 

@@ -6,8 +6,30 @@ namespace smsc { namespace wsme
 
 /* ----------------------------- WSmeProcessor ----------------------------- */
 
+/*class MutexGuardEx
+{
+    log4cpp::Category& log;
+    std::string method;
+    Mutex& mutex;
+
+public:
+
+    MutexGuardEx(Mutex& _mutex, log4cpp::Category& _log, std::string _method) 
+        : mutex(_mutex), log(_log), method(_method)
+    {
+        log.debug("Mutex locking <%s>", method.c_str());    
+        mutex.Lock();
+        log.debug("Mutex locked <%s>", method.c_str()); 
+    }
+    ~MutexGuardEx() {
+        log.debug("Mutex unlocking <%s>", method.c_str());  
+        mutex.Unlock();
+        log.debug("Mutex unlocked <%s>", method.c_str());   
+    }
+};*/
+
 WSmeProcessor::WSmeProcessor(ConfigView* config)
-    throw(ConfigException, InitException)
+    //throw(ConfigException, InitException)
         : WSmeAdmin(), log(Logger::getCategory("smsc.wsme.WSmeProcessor")),
             svcType(0), protocolId(0), 
             ds(0), visitorManager(0), langManager(0), adManager(0)
@@ -32,7 +54,7 @@ WSmeProcessor::WSmeProcessor(ConfigView* config)
 }
 
 void WSmeProcessor::init(ConfigView* config)
-    throw(ConfigException)
+    //throw(ConfigException)
 {
     try { protocolId = config->getInt("ProtocolId"); }
     catch(ConfigException& exc) { protocolId = 0; };
@@ -77,7 +99,7 @@ WSmeProcessor::~WSmeProcessor()
 }
 
 bool WSmeProcessor::processNotification(const std::string msisdn, std::string& out)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(visitorManager && langManager && adManager);
 
@@ -91,7 +113,7 @@ bool WSmeProcessor::processNotification(const std::string msisdn, std::string& o
 }
 void WSmeProcessor::processResponce(const std::string msisdn, 
                                     const std::string msgid, bool responded)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(adManager);
     __trace__("Processing responce message ...");
@@ -100,7 +122,7 @@ void WSmeProcessor::processResponce(const std::string msisdn,
 }
 
 void WSmeProcessor::processReceipt(const std::string msgid, bool receipted)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(adManager);
     __trace__("Processing receipt message ...");
@@ -109,37 +131,37 @@ void WSmeProcessor::processReceipt(const std::string msgid, bool receipted)
 }
 
 void WSmeProcessor::addVisitor(const std::string msisdn)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(visitorManager);
     visitorManager->addVisitor(msisdn);
 }
 void WSmeProcessor::removeVisitor(const std::string msisdn)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(visitorManager);
     visitorManager->removeVisitor(msisdn);
 }
 void WSmeProcessor::addLang(const std::string mask, std::string lang)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(langManager);
     langManager->addLang(mask, lang);
 }
 void WSmeProcessor::removeLang(const std::string mask)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(langManager);
     langManager->removeLang(mask);
 }
 void WSmeProcessor::addAd(int id, const std::string lang, std::string ad)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(adManager);
     adManager->addAd(id, lang, ad);
 }
 void WSmeProcessor::removeAd(int id, const std::string lang)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(adManager);
     adManager->removeAd(id, lang);
@@ -149,7 +171,7 @@ void WSmeProcessor::removeAd(int id, const std::string lang)
 
 /* ------------------------ VisitorManager ------------------------ */
 VisitorManager::VisitorManager(DataSource& _ds, ConfigView* config) 
-    throw (InitException)
+    //throw (InitException)
         : log(Logger::getCategory("smsc.wsme.WSmeVisitorManager")), ds(_ds) 
 {
     loadUpVisitors();
@@ -160,9 +182,9 @@ VisitorManager::~VisitorManager()
 
 const char* SQL_GET_VISITORS = "SELECT MASK FROM WSME_VISITORS";
 void VisitorManager::loadUpVisitors()
-    throw (InitException)
+    //throw (InitException)
 {
-    MutexGuard  guard(visitorsLock);
+    MutexGuard guard(visitorsLock);
 
     ResultSet* rs = 0;
     Statement* statement = 0; 
@@ -205,9 +227,9 @@ void VisitorManager::loadUpVisitors()
 }
 
 bool VisitorManager::isVisitor(const std::string msisdn) 
-    throw (ProcessException)
+    //throw (ProcessException)
 { 
-    MutexGuard  guard(visitorsLock);
+    MutexGuard guard(visitorsLock);
 
     visitors.First();
     char* mask = 0; bool avail = false;
@@ -230,9 +252,9 @@ bool VisitorManager::isVisitor(const std::string msisdn)
 const char* SQL_ADD_NEW_VISITOR = 
 "INSERT INTO WSME_VISITORS (MASK) VALUES (:MASK)";
 void VisitorManager::addVisitor(const std::string msisdn)
-    throw (ProcessException)
+//    throw (ProcessException)
 {
-    MutexGuard  guard(visitorsLock);
+    MutexGuard guard(visitorsLock);
 
     const char* addr = msisdn.c_str();
     if (visitors.Exists(addr))
@@ -276,10 +298,10 @@ void VisitorManager::addVisitor(const std::string msisdn)
 const char* SQL_REMOVE_VISITOR = 
 "DELETE FROM WSME_VISITORS WHERE MASK=:MASK";
 void VisitorManager::removeVisitor(const std::string msisdn)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
-    MutexGuard  guard(visitorsLock);
-
+    MutexGuard guard(visitorsLock);
+    
     const char* addr = msisdn.c_str();
     if (!visitors.Exists(addr))
         throw ProcessException("Visitor '%s' not exists", addr);
@@ -323,7 +345,7 @@ void VisitorManager::removeVisitor(const std::string msisdn)
 /* ------------------------ LangManager ------------------------ */
 
 LangManager::LangManager(DataSource& _ds, ConfigView* config)
-    throw (InitException)
+    //throw (InitException)
         : log(Logger::getCategory("smsc.wsme.WSmeLangManager")), ds(_ds)
 {
     ConfigView* langConfig = 0;
@@ -359,7 +381,7 @@ void convertStrToUpperCase(const char* str, char* upper)
 
 const char* SQL_GET_LANGS = "SELECT MASK, LANG FROM WSME_LANGS";
 void LangManager::loadUpLangs()
-    throw (InitException)
+    //throw (InitException)
 {
     MutexGuard  guard(langsLock);
 
@@ -410,7 +432,7 @@ void LangManager::loadUpLangs()
     }
 }
 std::string LangManager::getLangCode(const std::string msisdn)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     MutexGuard  guard(langsLock);
 
@@ -438,7 +460,7 @@ std::string LangManager::getDefaultLang()
 const char* SQL_ADD_NEW_LANG = 
 "INSERT INTO WSME_LANGS (MASK, LANG) VALUES (:MASK, :LANG)";
 void LangManager::addLang(const std::string mask, std::string lang)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     MutexGuard  guard(langsLock);
 
@@ -485,7 +507,7 @@ void LangManager::addLang(const std::string mask, std::string lang)
 const char* SQL_REMOVE_LANG = 
 "DELETE FROM WSME_LANGS WHERE MASK=:MASK";
 void LangManager::removeLang(const std::string mask)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     MutexGuard  guard(langsLock);
 
@@ -531,7 +553,7 @@ void LangManager::removeLang(const std::string mask)
 /* ------------------------ AdRepository ------------------------ */
 
 AdRepository::AdRepository(DataSource& _ds, ConfigView* config)
-    throw(ConfigException, InitException) 
+    //throw(ConfigException, InitException) 
         : log(Logger::getCategory("smsc.wsme.WSmeAdRepository")), ds(_ds)
 {
     loadUpAds();
@@ -550,7 +572,7 @@ AdRepository::~AdRepository()
 const char* SQL_LOAD_ADS = 
 "SELECT ID, LANG, AD FROM WSME_AD ORDER BY ID ASC";
 void AdRepository::loadUpAds()
-    throw(InitException)
+    //throw(InitException)
 {
     MutexGuard  guard(adsLock);
 
@@ -607,7 +629,7 @@ void AdRepository::loadUpAds()
 }
 
 bool AdRepository::getAd(int id, const std::string lang, std::string& ad)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     MutexGuard  guard(adsLock);
 
@@ -638,7 +660,7 @@ int AdRepository::getNextId(int id)
 const char* SQL_ADD_NEW_AD = 
 "INSERT INTO WSME_AD (ID, LANG, AD) VALUES (:ID, :LANG, :AD)";
 void AdRepository::addAd(int id, const std::string lang, std::string ad)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     MutexGuard  guard(adsLock);
 
@@ -699,7 +721,7 @@ void AdRepository::addAd(int id, const std::string lang, std::string ad)
 const char* SQL_REMOVE_AD = 
 "DELETE FROM WSME_AD WHERE ID=:ID AND LANG=:LANG";
 void AdRepository::removeAd(int id, const std::string lang)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     MutexGuard  guard(adsLock);
 
@@ -755,7 +777,7 @@ void AdRepository::removeAd(int id, const std::string lang)
 /* ------------------------ AdHistory ------------------------ */
 
 AdHistory::AdHistory(DataSource& _ds, ConfigView* config, AdIdManager& idman)
-    throw(ConfigException, InitException) 
+    //throw(ConfigException, InitException) 
         : Thread(), log(Logger::getCategory("smsc.wsme.WSmeAdHistory")), 
             ds(_ds), idManager(idman), bStarted(false)
 
@@ -825,7 +847,7 @@ int AdHistory::Execute()
 const char* SQL_DELETE_HISTORY_INFO =
 "DELETE FROM WSME_HISTORY WHERE LAST_UPDATE<:CT";
 void AdHistory::cleanup()
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     Statement* statement = 0; 
     Connection* connection = 0;
@@ -870,7 +892,7 @@ const char* SQL_UPDATE_NOTIFY_HISTORY_INFO =
 "UPDATE WSME_HISTORY SET ST=0, ID=:ID, MSG_ID=NULL, LAST_UPDATE=:CT\
  WHERE MSISDN=:MSISDN";
 bool AdHistory::getId(const std::string msisdn, int& id)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     bool result = false;
 
@@ -979,7 +1001,7 @@ const char* SQL_UPDATE_RESPONCE_HISTORY_INFO =
  WHERE MSISDN=:MSISDN AND ST=0";
 void AdHistory::respondAd(const std::string msisdn, 
                           const std::string msgid, bool responded)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     Statement* statement = 0; 
     Connection* connection = 0;
@@ -1021,7 +1043,7 @@ const char* SQL_UPDATE_RECEIPT_HISTORY_INFO =
 "UPDATE WSME_HISTORY SET ST=10, LAST_UPDATE=:CT\
  WHERE MSG_ID=:MSG_ID AND ST=0";
 void AdHistory::receiptAd(const std::string msgid, bool receipted) 
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     Statement* statement = 0; 
     Connection* connection = 0;
@@ -1061,7 +1083,7 @@ void AdHistory::receiptAd(const std::string msgid, bool receipted)
 /* ------------------------ AdManager ------------------------ */
 
 AdManager::AdManager(DataSource& _ds, ConfigView* config)
-    throw(ConfigException, InitException) 
+    //throw(ConfigException, InitException) 
         : log(Logger::getCategory("smsc.wsme.WSmeAdManager")), ds(_ds),
             history(0), repository(0)
 {
@@ -1106,7 +1128,7 @@ AdManager::~AdManager()
 
 bool AdManager::getAd(const std::string msisdn, const std::string lang,
                       std::string& ad)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(history && repository);
     
@@ -1118,26 +1140,26 @@ bool AdManager::getAd(const std::string msisdn, const std::string lang,
 
 void AdManager::respondAd(const std::string msisdn, 
                           const std::string msgid, bool responded)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(history);
     history->respondAd(msisdn, msgid, responded);
 }
 void AdManager::receiptAd(const std::string msgid, bool receipted) 
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(history);
     history->receiptAd(msgid, receipted);
 }
 
 void AdManager::addAd(int id, const std::string lang, std::string ad)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(repository);
     repository->addAd(id, lang, ad);
 }
 void AdManager::removeAd(int id, const std::string lang)
-    throw (ProcessException)
+    //throw (ProcessException)
 {
     __require__(repository);
     repository->removeAd(id, lang);
