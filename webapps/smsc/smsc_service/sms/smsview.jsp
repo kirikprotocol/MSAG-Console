@@ -213,7 +213,7 @@ if (request.getMethod().equals("POST")) {
       <td><b>Message</b></td>
       </tr>
       <% for (int cnt=firstIndex; cnt<=lastIndex; cnt++) {
-          SmsRow row = formBean.getRow(cnt);
+          SmsRow row = formBean.getRow(cnt-1);
       %>
       <tr>
       <td><%= row.getDate()%></td>
