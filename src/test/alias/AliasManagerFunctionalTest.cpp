@@ -21,6 +21,7 @@ class AliasManagerFunctionalTest
 	vector<TCResultStack*> stack;
 
 public:
+	AliasManagerFunctionalTest() : tc(new AliasManager()) {}
 	~AliasManagerFunctionalTest();
 	void executeTest(TCResultFilter* filter, int numAddr);
 	void printAliases();
@@ -68,11 +69,11 @@ void AliasManagerFunctionalTest::executeTestCases(
 	//—оздание нового стека дл€ пары alias, addr
 	stack.push_back(new TCResultStack());
 
-	//–егистраци€ алиаса с преобразованием addr -> alias и alias -> addr, 1/8
-	//–егистраци€ алиаса с преобразованием только alias -> addr, 1/8
-	//–егистраци€ алиаса с преобразованием только addr -> alias, 1/8
-	//–егистраци€ алиаса с переполнением адреса при alias -> addr или
-	//	алиаса при addr -> alias, 1/8
+	//–егистраци€ алиаса с преобразованием addr->alias и alias->addr, 1/8
+	//–егистраци€ алиаса с преобразованием только alias->addr, 1/8
+	//–егистраци€ алиаса с преобразованием только addr->alias, 1/8
+	//–егистраци€ алиаса с переполнением адреса при alias->addr или
+	//	алиаса при addr->alias, 1/8
 	//ѕоиск алиаса по адресу, 2/8
 	//ѕоиск адреса по алиасу, 2/8
 	for (TCSelector s(RAND_SET_TC, 8); s.check(); s++)
@@ -197,10 +198,12 @@ void AliasManagerFunctionalTest::executeTest(
 	{
 		delete addr[i];
 	}
+	addr.clear();
 	for (int i = 0; i < stack.size(); i++)
 	{
 		delete stack[i];
 	}
+	stack.clear();
 }
 
 void saveCheckList(TCResultFilter* filter)
@@ -209,13 +212,13 @@ void saveCheckList(TCResultFilter* filter)
 	CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
 	cl.startNewGroup("Alias Manager", "smsc::alias");
 	//имплементированные тест кейсы
-	cl.writeResult("–егистраци€ алиаса с преобразованием addr -> alias и alias -> addr",
+	cl.writeResult("–егистраци€ алиаса с преобразованием addr->alias и alias->addr",
 		filter->getResults(TC_ADD_CORRECT_ALIAS_MATCH));
-	cl.writeResult("–егистраци€ алиаса с преобразованием только alias -> addr",
+	cl.writeResult("–егистраци€ алиаса с преобразованием только alias->addr",
 		filter->getResults(TC_ADD_CORRECT_ALIAS_NOT_MATCH_ADDRESS));
-	cl.writeResult("–егистраци€ алиаса с преобразованием только addr -> alias",
+	cl.writeResult("–егистраци€ алиаса с преобразованием только addr->alias",
 		filter->getResults(TC_ADD_CORRECT_ALIAS_NOT_MATCH_ALIAS));
-	cl.writeResult("–егистраци€ алиаса с переполнением адреса при alias -> addr или алиаса при addr -> alias",
+	cl.writeResult("–егистраци€ алиаса с переполнением адреса при alias->addr или алиаса при addr->alias",
 		filter->getResults(TC_ADD_CORRECT_ALIAS_EXCEPTION));
 	cl.writeResult("–егистраци€ алиаса с некорректными параметрами",
 		filter->getResults(TC_ADD_INCORRECT_ALIAS));
