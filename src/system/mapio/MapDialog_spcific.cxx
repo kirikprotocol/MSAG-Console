@@ -279,7 +279,7 @@ inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_ADDRESS_T *s
   addr->ss7Addr[1] = ssn;
   addr->ss7Addr[2] = 0;
   addr->ss7Addr[3] = (saddr->typeOfAddress<<4)|(saddr->addressLength%2==0?0x02:0x01); // NP & GT coding
-  addr->ss7Addr[4] = 0x04 | (saddr->addressLength%2==0?0x80:0x00); //
+  addr->ss7Addr[4] = 0x04; // | (saddr->addressLength%2==0?0x80:0x00); high bit always 0 see 15517-CAA901437, 3.3.8
   memcpy( addr->ss7Addr+5, saddr->address, (saddr->addressLength+1)/2 );
   if( saddr->addressLength%2!=0 ) {
     addr->ss7Addr[5+(saddr->addressLength+1)/2-1] &= 0x0f;
@@ -292,7 +292,7 @@ inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_LOCATION_INF
   addr->ss7Addr[1] = ssn;
   addr->ss7Addr[2] = 0;
   addr->ss7Addr[3] = (saddr->typeOfAddress<<4)|(saddr->addressLength%2==0?0x02:0x01); // NP & GT coding
-  addr->ss7Addr[4] = 0x04 | (saddr->addressLength%2==0?0x80:0x00); //
+  addr->ss7Addr[4] = 0x04; // | (saddr->addressLength%2==0?0x80:0x00); high bit always 0 see 15517-CAA901437, 3.3.8
   memcpy( addr->ss7Addr+5, saddr->address, (saddr->addressLength+1)/2 );
   if( saddr->addressLength%2!=0 ) {
     addr->ss7Addr[5+(saddr->addressLength+1)/2-1] &= 0x0f;

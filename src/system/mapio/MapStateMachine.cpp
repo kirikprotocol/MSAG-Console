@@ -3296,7 +3296,7 @@ static bool NeedNotifyHLR(MapDialog* dialog)
 }
 static void NotifyHLR(MapDialog* dialog)
 {
-  MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,dialog->ssn,HLR_SSN);
+  MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,dialog->ssn,SSN);
   dialog->id_opened = false;
   dialog->hlrWasNotified = true;
   USHORT_T result;
