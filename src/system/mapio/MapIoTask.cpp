@@ -314,7 +314,12 @@ Mutex MapDialogContainer::sync_object;
 
 int MapIoTask::Execute(){
   try {
-    init();
+    try {
+      init();
+    } catch (exception& e) {
+      __map_warn2__("exception in mapio, restarting: %s",e.what());
+      kill(getpid(),9);
+    }
     is_started = true;
     __trace2__("signal mapiotask start:%p",startevent);
     startevent->SignalAll();
