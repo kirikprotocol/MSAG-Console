@@ -535,8 +535,8 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
         mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
         mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
         __trace2__("MAP::putCommand: Query HLR AC version");
-        QueryHlrVersion(dialog.get());
         dialog->state = MAPST_WaitHlrVersion;
+        QueryHlrVersion(dialog.get());
       }
     }else{ // MAP dialog
       dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_smsc));
@@ -859,8 +859,8 @@ USHORT_T Et96MapCloseInd(
     case MAPST_WaitRInfoClose:
       MapDialogContainer::getInstance()->reAssignDialog(dialogueId);
       dialogueId = dialog->dialogid_map;
-      QueryMcsVersion(dialog.get());
       dialog->state = MAPST_WaitMcsVersion;
+      QueryMcsVersion(dialog.get());
       break;
     case MAPST_WaitSmsClose:
       // penging processing
