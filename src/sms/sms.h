@@ -599,6 +599,7 @@ public:
           pos+=4;
           __require__(pos+len<=length);
 					string* key = tag_hash.getStrKeyForString(tag);
+					__trace2__("Str: tag=%d key=%s len=%d pos=%d length=%d",tag,key,len,pos,length);
 					if ( key )
 					{
             __require__(*(buffer+pos+len-1) == 0);
@@ -678,6 +679,7 @@ public:
           pos+=4;
           __require__(pos+len<=length);
           string* key = tag_hash.getStrKeyForInt(tag);
+					__trace2__("Int: tag=%d key=%s len=%d pos=%d length=%d",tag,key,len,pos,length);
           if ( key )
           {
             __require__(len == 4);
