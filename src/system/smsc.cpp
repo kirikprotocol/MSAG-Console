@@ -582,7 +582,7 @@ void Smsc::run()
     {
       throw Exception("Failed to start SMPP or MAP acceptor");
     }
-    tp.startTask(new MapTracker());
+//    tp.startTask(new MapTracker());
     MapDialogContainer::getInstance()->registerSelf(&smeman);
     mapProxy=MapDialogContainer::getInstance()->getProxy();
     MapDialogContainer::getInstance()->getProxy()->setId("MAP_PROXY");
