@@ -52,6 +52,49 @@ namespace smsc { namespace store
     {
     private:
         
+        class Cleaner : public Thread
+        {
+        private:
+
+            log4cpp::Category   &log;
+
+            Event       awake, exited;
+            bool        bStarted, bNeedExit;
+            Mutex       startLock, cleanupLock;
+
+            time_t      cleanupInterval;
+            
+            Connection* cleanerConnection;
+            Statement*  cleanerMinTimeStmt;
+            Statement*  cleanerDeleteStmt;
+
+            OCIDate     dbTime;
+            sb2         indDbTime;
+
+            void loadCleanupInterval(Manager& config);
+
+            static const char* cleanerMinTimeSql;
+            static const char* cleanerDeleteSql;
+            void prepareCleanerMinTimeStmt() throw(StorageException);
+            void prepareCleanerDeleteStmt() throw(StorageException);
+            
+            void cleanup() throw(StorageException);
+            void connect() throw(StorageException);
+            void disconnect() throw(StorageException);
+
+        public:
+
+            Cleaner(Manager& config, Connection* connection) 
+                throw(ConfigException); 
+            virtual ~Cleaner();
+
+            virtual int Execute();
+            void Start();
+            void Stop();
+        };
+
+        Cleaner*    cleaner;
+
         log4cpp::Category   &log;
 
         Event       job, exit, exited;
@@ -87,6 +130,7 @@ namespace smsc { namespace store
         
         Connection* storageConnection;
         Connection* billingConnection;
+        Connection* cleanerConnection;
         
         Statement*  storageSelectStmt;
         Statement*  storageDeleteStmt;
@@ -132,6 +176,8 @@ namespace smsc { namespace store
         void loadAwakeInterval(Manager& config);
         void loadMaxFinalizedCount(Manager& config);
         void loadMaxUncommitedCount(Manager& config);
+
+        bool needCleaner(Manager& config);
 
         void prepareStorageSelectStmt() throw(StorageException);
         void prepareStorageDeleteStmt() throw(StorageException);

@@ -160,9 +160,25 @@ void Archiver::loadMaxUncommitedCount(Manager& config)
     }
 }
 
+bool Archiver::needCleaner(Manager& config)
+{
+    bool cleanerIsNeeded = false;
+    try
+    {
+        cleanerIsNeeded = config.getBool("MessageStore.Archive.Cleaner.enabled");
+    }
+    catch (ConfigException& exc)
+    {
+        cleanerIsNeeded = false;
+        log.warn("Config parameter: <MessageStore.Archive.Cleaner.enabled> missed. "
+                 "Archive cleaner disabled.");
+    }
+    return cleanerIsNeeded;
+}
+
 Archiver::Archiver(Manager& config) throw(ConfigException) 
     : Thread(), log(Logger::getCategory("smsc.store.Archiver")),
-        finalizedCount(0), bStarted(false),
+        finalizedCount(0), bStarted(false), cleaner(0), cleanerConnection(0),
         storageDBInstance(0L), storageDBUserName(0L), storageDBUserPassword(0L),
         billingDBInstance(0L), billingDBUserName(0L), billingDBUserPassword(0L),
             storageSelectStmt(0L), storageDeleteStmt(0L), archiveInsertStmt(0L),
@@ -194,6 +210,13 @@ Archiver::Archiver(Manager& config) throw(ConfigException)
     
     billingConnection = new Connection(
         billingDBInstance, billingDBUserName, billingDBUserPassword);
+
+    if (needCleaner(config))
+    {
+        cleanerConnection = new Connection(
+            storageDBInstance, storageDBUserName, storageDBUserPassword);
+        cleaner = new Cleaner(config, cleanerConnection);
+    }
 }
 
 
@@ -212,6 +235,9 @@ Archiver::~Archiver()
 
     if (storageConnection) delete storageConnection;
     if (billingConnection) delete billingConnection;
+    
+    if (cleaner) delete cleaner;
+    if (cleanerConnection) delete cleanerConnection;
     
     __trace__("Archiver destructed !");
 }
@@ -764,6 +790,169 @@ void Archiver::prepareBillingInsertStmt() throw(StorageException)
     billingInsertStmt->bind(i++, SQLT_UIN, (dvoid *)&(bodyTextLen),
                             (sb4) sizeof(bodyTextLen));
 
+}
+
+/* --------------------- Archive Cleaner implementation -------------------- */ 
+
+const unsigned SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT = 365; // days
+const unsigned SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT = 30; // days
+
+void Archiver::Cleaner::loadCleanupInterval(Manager& config)
+{
+    int interval;
+    try 
+    {
+        interval = config.getInt("MessageStore.Archive.Cleaner.interval");
+        if (interval <= 0 || 
+            interval > SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT)
+        {
+            interval = SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT;
+            log.warn("Cleanup interval for archiver is incorrect "
+                     "(should be between 1 and %u days) ! "
+                     "Config parameter: <MessageStore.Archive.Cleaner.interval> "
+                     "Using default: %u", 
+                     SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT,
+                     SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT);
+        }
+    } 
+    catch (ConfigException& exc) 
+    {
+        interval = SMSC_ARCHIVER_AWAKE_INTERVAL_DEFAULT;
+        log.warn("Cleanup interval for archiver missed "
+                 "(it should be between 1 and %u days) ! "
+                 "Config parameter: <MessageStore.Archive.Cleaner.interval> "
+                 "Using default: %u", 
+                 SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT,
+                 SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT);
+    }
+
+    cleanupInterval = interval*3600*24;
+}
+
+Archiver::Cleaner::Cleaner(Manager& config, Connection* connection)
+    throw(ConfigException) 
+        : Thread(), log(Logger::getCategory("smsc.store.Archive.Cleaner")),
+            bStarted(false), bNeedExit(false), cleanerConnection(connection)
+{
+    loadCleanupInterval(config);
+    Start();
+}
+Archiver::Cleaner::~Cleaner()
+{
+    Stop();
+}
+void Archiver::Cleaner::Start()
+{
+    MutexGuard  guard(startLock);
+
+    if (!bStarted)
+    {
+        bNeedExit = false;
+        awake.Wait(0);
+        Thread::Start();
+        bStarted = true;
+    }
+}
+void Archiver::Cleaner::Stop()
+{
+    MutexGuard  guard(startLock);
+    
+    if (bStarted)
+    {
+        bNeedExit = true;
+        awake.Signal();
+        exited.Wait();
+        bStarted = false;
+    }
+}
+int Archiver::Cleaner::Execute()
+{
+    bool first = true;
+    while (!bNeedExit)
+    {
+        awake.Wait((first) ? 1000:cleanupInterval*1000);
+        if (bNeedExit) break;
+        try 
+        {
+            __trace__("Archive cleaning up ...");
+            cleanup(); first = false;
+            __trace__("Archive cleaned up.");
+        } 
+        catch (StorageException& exc) 
+        {
+            awake.Wait(0); first = true;
+            log.error("Exception occurred during archive cleanup : %s",
+                      exc.what());
+        }
+    }
+    exited.Signal();
+    return 0;
+}
+
+void Archiver::Cleaner::cleanup() 
+    throw(StorageException)
+{
+    MutexGuard  guard(cleanupLock);
+
+    connect();
+
+    time_t toDelete = 0;
+    cleanerMinTimeStmt->execute();
+    if (indDbTime != OCI_IND_NOTNULL) toDelete = 0;
+    else Statement::convertOCIDateToDate(&dbTime, &toDelete);
+
+    time_t toTime = time(0) - cleanupInterval;
+    __trace2__("Archive cleanup from: %d to: %d (%d)", 
+               toDelete, toTime, toTime-toDelete);
+
+    while (toDelete>0 && toDelete<toTime && !bNeedExit)
+    {
+        toDelete += 60;
+        Statement::convertDateToOCIDate(&toDelete, &dbTime);
+        cleanerDeleteStmt->execute();
+        cleanerConnection->commit();
+        __trace2__("Archive cleanup: %d rows deleted", 
+                   cleanerDeleteStmt->getRowsAffectedCount());
+    }
+
+    disconnect();
+}
+
+void Archiver::Cleaner::connect() 
+    throw(StorageException)
+{
+    cleanerConnection->connect();
+    prepareCleanerMinTimeStmt();
+    prepareCleanerDeleteStmt();
+}
+void Archiver::Cleaner::disconnect() 
+    throw(StorageException)
+{
+    cleanerConnection->disconnect();
+}
+
+const char* Archiver::Cleaner::cleanerMinTimeSql = (const char*)
+"SELECT MIN(LAST_TRY_TIME) FROM SMS_ARC";
+void Archiver::Cleaner::prepareCleanerMinTimeStmt() 
+    throw(StorageException)
+{
+    cleanerMinTimeStmt = new Statement(cleanerConnection,
+                                       Cleaner::cleanerMinTimeSql, true);
+
+    cleanerMinTimeStmt->define(1, SQLT_ODT, (dvoid *) &(dbTime), 
+                               (sb4) sizeof(dbTime), &indDbTime);
+}
+
+const char* Archiver::Cleaner::cleanerDeleteSql = (const char*)
+"DELETE FROM SMS_ARC WHERE LAST_TRY_TIME<:LT";
+void Archiver::Cleaner::prepareCleanerDeleteStmt() 
+    throw(StorageException)
+{
+    cleanerDeleteStmt = new Statement(cleanerConnection, 
+                                      Cleaner::cleanerDeleteSql, true);
+    
+    cleanerDeleteStmt->bind(1, SQLT_ODT, (dvoid *) &(dbTime), 
+                            (sb4) sizeof(dbTime));
 }
 
 }}
