@@ -236,6 +236,8 @@ public:
       if ( hash.Get(did,item) ){
         __trace2__("MAP::createSMSCDialog: chain size %d",item->chain.size());
         item->chain.push_back(cmd);
+      }else{
+        throw runtime_error("MAP::%s dialog id 0x%x is not present!",__FUNCTION__,did);
       }
       return 0;
     }
@@ -245,7 +247,7 @@ public:
     dlg->dialogid_smsc = smsc_did;
     dlg->abonent = abonent;
     hash.Insert(map_dialog,dlg);
-    lock_map.Insert(abonent,1);
+    lock_map.Insert(abonent,map_dialog);
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
     dlg->AddRef();
     return dlg;
