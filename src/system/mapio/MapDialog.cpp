@@ -38,7 +38,7 @@ struct MAP_SMS_ADDRESS{
 };
 
 void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
-  sa->setTypeOfNumder(ma->st.ton);
+  sa->setTypeOfNumber(ma->st.ton);
   sa->setNumberingPlan(ma->st.npi);
   if ( ma->len != 0 ){
     char sa_val[21] = {0,};
