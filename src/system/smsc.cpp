@@ -129,6 +129,8 @@ void Smsc::init(const SmscConfigs& cfg)
         si.systemType=rec->recdata.smppSme.systemType;
         si.password=rec->recdata.smppSme.password;
         si.systemId=rec->smeUid;
+        si.timeout = rec->recdata.smppSme.timeout; 
+        si.wantAlias = rec->recdata.smppSme.wantAlias;
         //si.hostname=rec->recdata->smppSme.
         si.disabled=false;
         smeman.addSme(si);
