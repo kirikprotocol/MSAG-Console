@@ -100,8 +100,9 @@ extern bool convertMSISDNStringToAddress(const char* string, Address& address)
     return true;
 };
 
-static int   unrespondedMessagesSleep = 10;
-static int   unrespondedMessagesMax   = 3;
+static int  unrespondedMessagesSleep = 10;
+static int  unrespondedMessagesMax   = 3;
+static int  maxMessagesPerSecond     = 50;
 
 class TrafficControl
 {
@@ -121,11 +122,13 @@ public:
         int out = outgoing.Get();
         int inc = incoming.Get();
         int difference = out-inc;
+        bool trafficLimitReached = (out/10 >= maxMessagesPerSecond);
         
-        if (difference >= unrespondedMessagesMax) {
+        if (difference >= unrespondedMessagesMax || trafficLimitReached) {
             smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)", 
                            difference, difference*unrespondedMessagesSleep, out, inc);
-            trafficMonitor.wait(difference*unrespondedMessagesSleep);
+            trafficMonitor.wait((trafficLimitReached) ? unrespondedMessagesSleep:
+                                 difference*unrespondedMessagesSleep);
         } else {
             smsc_log_debug(logger, "nowait");
         }
@@ -509,6 +512,18 @@ int main(void)
         DataSourceLoader::loadup(&dsConfig);
         
         ConfigView tpConfig(manager, "InfoSme");
+        maxMessagesPerSecond++;
+
+        try { maxMessagesPerSecond = tpConfig.getInt("maxMessagesPerSecond"); } catch (...) {};
+        if (maxMessagesPerSecond <= 0) {
+            maxMessagesPerSecond = 50;
+            smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value is invalid. Using default %d",
+                          maxMessagesPerSecond);
+        }
+        if (maxMessagesPerSecond > 100) {
+            smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value '%d' is too big. "
+                          "The preffered max value is 100", maxMessagesPerSecond);
+        }
         try { unrespondedMessagesMax = tpConfig.getInt("unrespondedMessagesMax"); } catch (...) {};
         if (unrespondedMessagesMax <= 0) {
             unrespondedMessagesMax = 1;
@@ -529,7 +544,6 @@ int main(void)
             smsc_log_warn(logger, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
                           "The preffered max value is 500ms", unrespondedMessagesSleep);
         }
-        
         
         ConfigView adminConfig(manager, "InfoSme.Admin");
         adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));               

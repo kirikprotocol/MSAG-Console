@@ -15,6 +15,7 @@ public class Options extends InfoSmeBean
   private String address = "";
   private String svcType = "";
   private int protocolId = 0;
+  private int maxMessagesPerSecond = 10;
   private int unrespondedMessagesMax = 0;
   private int unrespondedMessagesSleep = 0;
   private String responceWaitTime = "";
@@ -64,6 +65,7 @@ public class Options extends InfoSmeBean
         address = getConfig().getString("InfoSme.Address");
         svcType = getConfig().getString("InfoSme.SvcType");
         protocolId = getConfig().getInt("InfoSme.ProtocolId");
+        maxMessagesPerSecond = getConfig().getInt("InfoSme.maxMessagesPerSecond");
         unrespondedMessagesMax = getConfig().getInt("InfoSme.unrespondedMessagesMax");
         unrespondedMessagesSleep = getConfig().getInt("InfoSme.unrespondedMessagesSleep");
         responceWaitTime = getConfig().getString("InfoSme.responceWaitTime");
@@ -144,6 +146,7 @@ public class Options extends InfoSmeBean
     getConfig().setString("InfoSme.Address", address);
     getConfig().setString("InfoSme.SvcType", svcType);
     getConfig().setInt("InfoSme.ProtocolId", protocolId);
+    getConfig().setInt("InfoSme.maxMessagesPerSecond", maxMessagesPerSecond);
     getConfig().setInt("InfoSme.unrespondedMessagesMax", unrespondedMessagesMax);
     getConfig().setInt("InfoSme.unrespondedMessagesSleep", unrespondedMessagesSleep);
     getConfig().setString("InfoSme.responceWaitTime", responceWaitTime);
@@ -178,31 +181,21 @@ public class Options extends InfoSmeBean
     return RESULT_DONE;
   }
 
-  public String getSvcType()
-  {
+  public String getSvcType() {
     return svcType;
   }
-
-  public void setSvcType(String svcType)
-  {
+  public void setSvcType(String svcType) {
     this.svcType = svcType;
   }
-
-  public int getProtocolIdInt()
-  {
+  public int getProtocolIdInt() {
     return protocolId;
   }
-
-  public void setProtocolIdInt(int protocolId)
-  {
+  public void setProtocolIdInt(int protocolId) {
     this.protocolId = protocolId;
   }
-
-  public String getProtocolId()
-  {
+  public String getProtocolId() {
     return String.valueOf(protocolId);
   }
-
   public void setProtocolId(String protocolId)
   {
     try {
@@ -213,33 +206,22 @@ public class Options extends InfoSmeBean
     }
   }
 
-  public String getSmscHost()
-  {
+  public String getSmscHost() {
     return smscHost;
   }
-
-  public void setSmscHost(String smscHost)
-  {
+  public void setSmscHost(String smscHost) {
     this.smscHost = smscHost;
   }
-
-  public int getSmscPortInt()
-  {
+  public int getSmscPortInt() {
     return smscPort;
   }
-
-  public void setSmscPortInt(int smscPort)
-  {
+  public void setSmscPortInt(int smscPort) {
     this.smscPort = smscPort;
   }
-
-  public String getSmscPort()
-  {
+  public String getSmscPort() {
     return String.valueOf(smscPort);
   }
-
-  public void setSmscPort(String smscPort)
-  {
+  public void setSmscPort(String smscPort) {
     try {
       this.smscPort = Integer.decode(smscPort).intValue();
     } catch (NumberFormatException e) {
@@ -247,34 +229,22 @@ public class Options extends InfoSmeBean
       this.smscPort = 0;
     }
   }
-
-  public String getSmscSid()
-  {
+  public String getSmscSid() {
     return smscSid;
   }
-
-  public void setSmscSid(String smscSid)
-  {
+  public void setSmscSid(String smscSid) {
     this.smscSid = smscSid;
   }
-
-  public int getSmscTimeoutInt()
-  {
+  public int getSmscTimeoutInt() {
     return smscTimeout;
   }
-
-  public void setSmscTimeoutInt(int smscTimeout)
-  {
+  public void setSmscTimeoutInt(int smscTimeout) {
     this.smscTimeout = smscTimeout;
   }
-
-  public String getSmscTimeout()
-  {
+  public String getSmscTimeout() {
     return String.valueOf(smscTimeout);
   }
-
-  public void setSmscTimeout(String smscTimeout)
-  {
+  public void setSmscTimeout(String smscTimeout) {
     try {
       this.smscTimeout = Integer.valueOf(smscTimeout).intValue();
     } catch (NumberFormatException e) {
@@ -282,64 +252,43 @@ public class Options extends InfoSmeBean
       this.smscTimeout = 0;
     }
   }
-
-  public String getSmscPassword()
-  {
+  public String getSmscPassword() {
     return smscPassword;
   }
-
-  public void setSmscPassword(String smscPassword)
-  {
+  public void setSmscPassword(String smscPassword) {
     this.smscPassword = smscPassword;
   }
 
-  public boolean isInitialized()
-  {
+  public boolean isInitialized() {
     return initialized;
   }
-
-  public void setInitialized(boolean initialized)
-  {
+  public void setInitialized(boolean initialized) {
     this.initialized = initialized;
   }
 
-  public String getMbDone()
-  {
+  public String getMbDone() {
     return mbDone;
   }
-
-  public void setMbDone(String mbDone)
-  {
+  public void setMbDone(String mbDone) {
     this.mbDone = mbDone;
   }
-
-  public String getMbCancel()
-  {
+  public String getMbCancel() {
     return mbCancel;
   }
-
-  public void setMbCancel(String mbCancel)
-  {
+  public void setMbCancel(String mbCancel) {
     this.mbCancel = mbCancel;
   }
 
-  public int getTasksSwitchTimeoutInt()
-  {
+  public int getTasksSwitchTimeoutInt() {
     return tasksSwitchTimeout;
   }
-
-  public void setTasksSwitchTimeoutInt(int tasksSwitchTimeout)
-  {
+  public void setTasksSwitchTimeoutInt(int tasksSwitchTimeout) {
     this.tasksSwitchTimeout = tasksSwitchTimeout;
   }
-
-  public String getTasksSwitchTimeout()
-  {
+  public String getTasksSwitchTimeout() {
     return String.valueOf(tasksSwitchTimeout);
   }
-
-  public void setTasksSwitchTimeout(String tasksSwitchTimeout)
-  {
+  public void setTasksSwitchTimeout(String tasksSwitchTimeout) {
     try {
       this.tasksSwitchTimeout = Integer.decode(tasksSwitchTimeout).intValue();
     } catch (NumberFormatException e) {
@@ -348,58 +297,51 @@ public class Options extends InfoSmeBean
     }
   }
 
-  public String getTasksTaskTablesPrefix()
-  {
+  public String getTasksTaskTablesPrefix() {
     return tasksTaskTablesPrefix;
   }
-
-  public void setTasksTaskTablesPrefix(String tasksTaskTablesPrefix)
-  {
+  public void setTasksTaskTablesPrefix(String tasksTaskTablesPrefix) {
     this.tasksTaskTablesPrefix = tasksTaskTablesPrefix;
   }
 
-  public Collection getAllDataProviders()
-  {
+  public Collection getAllDataProviders() {
     return new SortedList(getConfig().getSectionChildShortSectionNames("InfoSme.DataProvider"));
   }
 
-  public String getAddress()
-  {
+  public String getAddress() {
     return address;
   }
-
-  public void setAddress(String address)
-  {
+  public void setAddress(String address) {
     this.address = address;
   }
 
-  public int getUnrespondedMessagesMaxInt()
-  {
+  public int getMaxMessagesPerSecondInt() {
+    return maxMessagesPerSecond;
+  }
+  public void setMaxMessagesPerSecondInt(int maxMessagesPerSecond) {
+    this.maxMessagesPerSecond = maxMessagesPerSecond;
+  }
+  public String getMaxMessagesPerSecond() {
+    return String.valueOf(maxMessagesPerSecond);
+  }
+  public void setMaxMessagesPerSecond(String maxMessagesPerSecond) {
+    try {
+      this.maxMessagesPerSecond = Integer.decode(maxMessagesPerSecond).intValue();
+    } catch (NumberFormatException e) {
+      logger.debug("Invalid int InfoSme.maxMessagesPerSecond parameter value: " + maxMessagesPerSecond + '"', e);
+    }
+  }
+
+  public int getUnrespondedMessagesMaxInt() {
     return unrespondedMessagesMax;
   }
-
-  public void setUnrespondedMessagesMaxInt(int unrespondedMessagesMax)
-  {
+  public void setUnrespondedMessagesMaxInt(int unrespondedMessagesMax) {
     this.unrespondedMessagesMax = unrespondedMessagesMax;
   }
-
-  public int getUnrespondedMessagesSleepInt()
-  {
-    return unrespondedMessagesSleep;
-  }
-
-  public void setUnrespondedMessagesSleepInt(int unrespondedMessagesSleep)
-  {
-    this.unrespondedMessagesSleep = unrespondedMessagesSleep;
-  }
-
-  public String getUnrespondedMessagesMax()
-  {
+  public String getUnrespondedMessagesMax() {
     return String.valueOf(unrespondedMessagesMax);
   }
-
-  public void setUnrespondedMessagesMax(String unrespondedMessagesMax)
-  {
+  public void setUnrespondedMessagesMax(String unrespondedMessagesMax) {
     try {
       this.unrespondedMessagesMax = Integer.decode(unrespondedMessagesMax).intValue();
     } catch (NumberFormatException e) {
@@ -407,13 +349,16 @@ public class Options extends InfoSmeBean
     }
   }
 
-  public String getUnrespondedMessagesSleep()
-  {
+  public int getUnrespondedMessagesSleepInt() {
+    return unrespondedMessagesSleep;
+  }
+  public void setUnrespondedMessagesSleepInt(int unrespondedMessagesSleep) {
+    this.unrespondedMessagesSleep = unrespondedMessagesSleep;
+  }
+  public String getUnrespondedMessagesSleep() {
     return String.valueOf(unrespondedMessagesSleep);
   }
-
-  public void setUnrespondedMessagesSleep(String unrespondedMessagesSleep)
-  {
+  public void setUnrespondedMessagesSleep(String unrespondedMessagesSleep) {
     try {
       this.unrespondedMessagesSleep = Integer.decode(unrespondedMessagesSleep).intValue();
     } catch (NumberFormatException e) {
@@ -421,73 +366,50 @@ public class Options extends InfoSmeBean
     }
   }
 
-  public String getResponceWaitTime()
-  {
+  public String getResponceWaitTime() {
     return responceWaitTime;
   }
-
-  public void setResponceWaitTime(String responceWaitTime)
-  {
+  public void setResponceWaitTime(String responceWaitTime) {
     this.responceWaitTime = responceWaitTime;
   }
 
-  public String getReceiptWaitTime()
-  {
+  public String getReceiptWaitTime() {
     return receiptWaitTime;
   }
-
-  public void setReceiptWaitTime(String receiptWaitTime)
-  {
+  public void setReceiptWaitTime(String receiptWaitTime) {
     this.receiptWaitTime = receiptWaitTime;
   }
 
-  public int getTasksThreadPoolMaxInt()
-  {
+  public int getTasksThreadPoolMaxInt() {
     return tasksThreadPoolMax;
   }
-
-  public void setTasksThreadPoolMaxInt(int tasksThreadPoolMax)
-  {
+  public void setTasksThreadPoolMaxInt(int tasksThreadPoolMax) {
     this.tasksThreadPoolMax = tasksThreadPoolMax;
   }
-
-  public int getTasksThreadPoolInitInt()
-  {
+  public int getTasksThreadPoolInitInt() {
     return tasksThreadPoolInit;
   }
-
-  public void setTasksThreadPoolInitInt(int tasksThreadPoolInit)
-  {
+  public void setTasksThreadPoolInitInt(int tasksThreadPoolInit) {
     this.tasksThreadPoolInit = tasksThreadPoolInit;
   }
 
-  public int getEventsThreadPoolMaxInt()
-  {
+  public int getEventsThreadPoolMaxInt() {
     return eventsThreadPoolMax;
   }
-
-  public void setEventsThreadPoolMaxInt(int eventsThreadPoolMax)
-  {
+  public void setEventsThreadPoolMaxInt(int eventsThreadPoolMax) {
     this.eventsThreadPoolMax = eventsThreadPoolMax;
   }
-
-  public int getEventsThreadPoolInitInt()
-  {
+  public int getEventsThreadPoolInitInt() {
     return eventsThreadPoolInit;
   }
-
-  public void setEventsThreadPoolInitInt(int eventsThreadPoolInit)
-  {
+  public void setEventsThreadPoolInitInt(int eventsThreadPoolInit) {
     this.eventsThreadPoolInit = eventsThreadPoolInit;
   }
 
-  public String getTasksThreadPoolMax()
-  {
+  public String getTasksThreadPoolMax() {
     return String.valueOf(tasksThreadPoolMax);
   }
-
-  public void setTasksThreadPoolMax(String tasksThreadPoolMax)
-  {
+  public void setTasksThreadPoolMax(String tasksThreadPoolMax) {
     try {
       this.tasksThreadPoolMax = Integer.decode(tasksThreadPoolMax).intValue();
     } catch (NumberFormatException e) {
@@ -495,13 +417,10 @@ public class Options extends InfoSmeBean
     }
   }
 
-  public String getTasksThreadPoolInit()
-  {
+  public String getTasksThreadPoolInit() {
     return String.valueOf(tasksThreadPoolInit);
   }
-
-  public void setTasksThreadPoolInit(String tasksThreadPoolInit)
-  {
+  public void setTasksThreadPoolInit(String tasksThreadPoolInit) {
     try {
       this.tasksThreadPoolInit = Integer.decode(tasksThreadPoolInit).intValue();
     } catch (NumberFormatException e) {
@@ -509,13 +428,10 @@ public class Options extends InfoSmeBean
     }
   }
 
-  public String getEventsThreadPoolMax()
-  {
+  public String getEventsThreadPoolMax() {
     return String.valueOf(eventsThreadPoolMax);
   }
-
-  public void setEventsThreadPoolMax(String eventsThreadPoolMax)
-  {
+  public void setEventsThreadPoolMax(String eventsThreadPoolMax) {
     try {
       this.eventsThreadPoolMax = Integer.decode(eventsThreadPoolMax).intValue();
     } catch (NumberFormatException e) {
@@ -523,13 +439,10 @@ public class Options extends InfoSmeBean
     }
   }
 
-  public String getEventsThreadPoolInit()
-  {
+  public String getEventsThreadPoolInit() {
     return String.valueOf(eventsThreadPoolInit);
   }
-
-  public void setEventsThreadPoolInit(String eventsThreadPoolInit)
-  {
+  public void setEventsThreadPoolInit(String eventsThreadPoolInit) {
     try {
       this.eventsThreadPoolInit = Integer.decode(eventsThreadPoolInit).intValue();
     } catch (NumberFormatException e) {
@@ -537,33 +450,23 @@ public class Options extends InfoSmeBean
     }
   }
 
-  public String getAdminHost()
-  {
+  public String getAdminHost() {
     return adminHost;
   }
-
-  public void setAdminHost(String adminHost)
-  {
+  public void setAdminHost(String adminHost) {
     this.adminHost = adminHost;
   }
 
-  public int getAdminPortInt()
-  {
+  public int getAdminPortInt() {
     return adminPort;
   }
-
-  public void setAdminPortInt(int adminPort)
-  {
+  public void setAdminPortInt(int adminPort) {
     this.adminPort = adminPort;
   }
-
-  public String getAdminPort()
-  {
+  public String getAdminPort() {
     return String.valueOf(adminPort);
   }
-
-  public void setAdminPort(String adminPort)
-  {
+  public void setAdminPort(String adminPort) {
     try {
       this.adminPort = Integer.decode(adminPort).intValue();
     } catch (NumberFormatException e) {
@@ -571,33 +474,23 @@ public class Options extends InfoSmeBean
     }
   }
 
-  public String getSystemDataSourceType()
-  {
+  public String getSystemDataSourceType() {
     return systemDataSourceType;
   }
-
-  public void setSystemDataSourceType(String systemDataSourceType)
-  {
+  public void setSystemDataSourceType(String systemDataSourceType) {
     this.systemDataSourceType = systemDataSourceType;
   }
 
-  public int getSystemDataSourceConnectionsInt()
-  {
+  public int getSystemDataSourceConnectionsInt() {
     return systemDataSourceConnections;
   }
-
-  public void setSystemDataSourceConnectionsInt(int systemDataSourceConnections)
-  {
+  public void setSystemDataSourceConnectionsInt(int systemDataSourceConnections) {
     this.systemDataSourceConnections = systemDataSourceConnections;
   }
-
-  public String getSystemDataSourceConnections()
-  {
+  public String getSystemDataSourceConnections() {
     return String.valueOf(systemDataSourceConnections);
   }
-
-  public void setSystemDataSourceConnections(String systemDataSourceConnections)
-  {
+  public void setSystemDataSourceConnections(String systemDataSourceConnections) {
     try {
       this.systemDataSourceConnections = Integer.decode(systemDataSourceConnections).intValue();
     } catch (NumberFormatException e) {
@@ -605,63 +498,45 @@ public class Options extends InfoSmeBean
     }
   }
 
-  public String getSystemDataSourceDbInstance()
-  {
+  public String getSystemDataSourceDbInstance() {
     return systemDataSourceDbInstance;
   }
-
-  public void setSystemDataSourceDbInstance(String systemDataSourceDbInstance)
-  {
+  public void setSystemDataSourceDbInstance(String systemDataSourceDbInstance) {
     this.systemDataSourceDbInstance = systemDataSourceDbInstance;
   }
 
-  public String getSystemDataSourceDbUserName()
-  {
+  public String getSystemDataSourceDbUserName() {
     return systemDataSourceDbUserName;
   }
-
-  public void setSystemDataSourceDbUserName(String systemDataSourceDbUserName)
-  {
+  public void setSystemDataSourceDbUserName(String systemDataSourceDbUserName) {
     this.systemDataSourceDbUserName = systemDataSourceDbUserName;
   }
 
-  public String getSystemDataSourceDbUserPassword()
-  {
+  public String getSystemDataSourceDbUserPassword() {
     return systemDataSourceDbUserPassword;
   }
-
-  public void setSystemDataSourceDbUserPassword(String systemDataSourceDbUserPassword)
-  {
+  public void setSystemDataSourceDbUserPassword(String systemDataSourceDbUserPassword) {
     this.systemDataSourceDbUserPassword = systemDataSourceDbUserPassword;
   }
 
-  public boolean isSystemDataSourceWatchdog()
-  {
+  public boolean isSystemDataSourceWatchdog() {
     return systemDataSourceWatchdog;
   }
-
-  public void setSystemDataSourceWatchdog(boolean systemDataSourceWatchdog)
-  {
+  public void setSystemDataSourceWatchdog(boolean systemDataSourceWatchdog) {
     this.systemDataSourceWatchdog = systemDataSourceWatchdog;
   }
 
-  public String getSystemDataSourceJdbcDriver()
-  {
+  public String getSystemDataSourceJdbcDriver() {
     return systemDataSourceJdbcDriver;
   }
-
-  public void setSystemDataSourceJdbcDriver(String systemDataSourceJdbcDriver)
-  {
+  public void setSystemDataSourceJdbcDriver(String systemDataSourceJdbcDriver) {
     this.systemDataSourceJdbcDriver = systemDataSourceJdbcDriver;
   }
 
-  public String getSystemDataSourceJdbcSource()
-  {
+  public String getSystemDataSourceJdbcSource() {
     return systemDataSourceJdbcSource;
   }
-
-  public void setSystemDataSourceJdbcSource(String systemDataSourceJdbcSource)
-  {
+  public void setSystemDataSourceJdbcSource(String systemDataSourceJdbcSource) {
     this.systemDataSourceJdbcSource = systemDataSourceJdbcSource;
   }
 }

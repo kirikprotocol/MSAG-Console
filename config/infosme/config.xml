@@ -11,6 +11,7 @@
     <param name="responceWaitTime" type="string">00:10:00</param>
     <param name="tasksSwitchTimeout" type="int">1000</param><!--msec-->
     <param name="tasksTablesPrefix" type="string">INFOSME_T_</param>
+    <param name="maxMessagesPerSecond" type="int">20</param>
     <param name="unrespondedMessagesMax" type="int">100</param>
     <param name="unrespondedMessagesSleep" type="int">5</param><!--sec-->
 

@@ -38,6 +38,10 @@
   <td><input class=txt name=protocolId value="<%=StringEncoderDecoder.encode(bean.getProtocolId())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th>Max messages per second</th>
+  <td><input class=txt name=maxMessagesPerSecond value="<%=StringEncoderDecoder.encode(bean.getMaxMessagesPerSecond())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>Unresponded messages max</th>
   <td><input class=txt name=unrespondedMessagesMax value="<%=StringEncoderDecoder.encode(bean.getUnrespondedMessagesMax())%>"></td>
 </tr>
