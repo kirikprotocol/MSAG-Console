@@ -862,7 +862,7 @@ public:
         _cmd->cmdid=ENQUIRELINK_RESP;
         _cmd->dta=(void*)pdu->get_commandStatus();
         goto end_construct;
-      case SmppCommandSet::SUBMIT_MULTI_SM: //reinterpret_cast<PduMultiSm*>(_pdu)->dump(log); break;
+      case SmppCommandSet::SUBMIT_MULTI: //reinterpret_cast<PduMultiSm*>(_pdu)->dump(log); break;
         {
           PduMultiSm* pduX = reinterpret_cast<PduMultiSm*>(pdu);
           _cmd->cmdid=SUBMIT_MULTI_SM;
