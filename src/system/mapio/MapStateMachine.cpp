@@ -1033,6 +1033,7 @@ USHORT_T Et96MapOpenConf (
   return ET96MAP_E_OK;
 }
 
+#if 0
 void DoMTConfErrorProcessor(
   ET96MAP_ERROR_FORW_SM_MT_T* errorForwardSMmt_sp,
   ET96MAP_PROV_ERR_T *provErrCode_p)
@@ -1077,6 +1078,7 @@ void DoMTConfErrorProcessor(
         FormatText("MAP::%s temp *provErrCode_p: 0x%x",__FUNCTION__,*provErrCode_p));
   }
 }
+#endif
 
 void DoRInfoErrorProcessor(
   ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
@@ -1487,7 +1489,25 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
     }
     dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
-    DoMTConfErrorProcessor(errorForwardSMmt_sp,provErrCode_p);
+    //DoMTConfErrorProcessor(errorForwardSMmt_sp,provErrCode_p);
+    if ( provErrCode_p ) {
+      throw MAPDIALOG_FATAL_ERROR(FormatText("provErrCode_p == 0x%x",*provErrCode_p));
+    }
+    if ( errorForwardSMmt_sp )
+    {
+      if ( errorForwardSMmt_sp->errorCode == 5 ||
+           errorForwardSMmt_sp->errorCode == 27 )
+      {
+        dialog->subscriberAbsent = true;
+        throw MAPDIALOG_TEMP_ERROR("absent subscriber");
+      }
+      if ( errorForwardSMmt_sp->errorCode == 32 && 
+        errorForwardSMmt_sp->smDeliveryFailureReason_s.reason  == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T){
+        dialog->memoryExceeded = true;
+        throw MAPDIALOG_TEMP_ERROR("memory exceeded");
+      }
+      throw MAPDIALOG_FATAL_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode));
+    }
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitSmsConf:
