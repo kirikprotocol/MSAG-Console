@@ -364,9 +364,9 @@ void DataProvider::process(Command& command)
     }
 
     struct timeval utime, curtime;
-    if( logger.isInfoEnabled() ) gettimeofday( &utime, 0 );
+    if( log.isInfoEnabled() ) gettimeofday( &utime, 0 );
     job->process(command, *ds);
-    if( logger.isInfoEnabled() ) {
+    if( log.isInfoEnabled() ) {
       long usecs;
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
