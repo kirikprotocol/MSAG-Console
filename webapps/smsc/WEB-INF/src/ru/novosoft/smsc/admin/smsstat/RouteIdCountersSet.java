@@ -17,9 +17,9 @@ public class RouteIdCountersSet extends ExtendedCountersSet
   }
 
   public RouteIdCountersSet(int accepted, int rejected, int delivered,
-                            int failed, int rescheduled, int temporal, String routeid)
+                            int failed, int rescheduled, int temporal, int i, int o, String routeid)
   {
-    super(accepted, rejected, delivered, failed, rescheduled, temporal);
+    super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
     this.routeid = routeid;
   }
 

@@ -17,9 +17,9 @@ public class SmeIdCountersSet extends ExtendedCountersSet
   }
 
   public SmeIdCountersSet(int accepted, int rejected, int delivered,
-                          int failed, int rescheduled, int temporal, String smeid)
+                          int failed, int rescheduled, int temporal, int i, int o, String smeid)
   {
-    super(accepted, rejected, delivered, failed, rescheduled, temporal);
+    super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
     this.smeid = smeid;
   }
 

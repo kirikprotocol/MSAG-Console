@@ -15,9 +15,9 @@ public class HourCountersSet extends CountersSet
     this.hour = hour;
   }
   public HourCountersSet(int accepted, int rejected, int delivered, int failed,
-                         int rescheduled, int temporal, int hour)
+                         int rescheduled, int temporal, int i, int o, int hour)
   {
-    super(accepted, rejected, delivered, failed, rescheduled, temporal);
+    super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
     this.hour = hour;
   }
   public int getHour() {

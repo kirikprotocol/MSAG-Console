@@ -25,7 +25,8 @@ public class SmsStat
   private final static String ERRORS_SET =
     " errcode, sum(counter) ";
   private final static String VALUES_SET =
-    " sum(accepted), sum(rejected), sum(delivered), sum(failed), sum(rescheduled), sum(temporal) ";
+    " sum(accepted), sum(rejected), sum(delivered), sum(failed),"+
+    " sum(rescheduled), sum(temporal), max(peak_i), max(peak_o) ";
 
   private final static String SMS_QUERY =   // group by period
     "SELECT period,"+VALUES_SET+"FROM sms_stat_sms ";
@@ -172,7 +173,8 @@ public class SmsStat
           int newPeriod = rs.getInt(1);
           int hour = calculateHour(newPeriod);
           HourCountersSet hourCounters = new HourCountersSet(
-                  rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getInt(6), rs.getInt(7), hour);
+                  rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5),
+                  rs.getInt(6), rs.getInt(7), rs.getInt(8), rs.getInt(9), hour);
           if (dateCounters == null) { // on first iteration
               Date date = calculateDate(newPeriod);
               dateCounters = new DateCountersSet(date);
@@ -208,7 +210,8 @@ public class SmsStat
       {
         String smeId = rs.getString(1);
         SmeIdCountersSet set = new SmeIdCountersSet(
-            rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getInt(6), rs.getInt(7), smeId);
+            rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5),
+            rs.getInt(6), rs.getInt(7), rs.getInt(8), rs.getInt(9), smeId);
 
         bindStatePeriodPart(errStmt, query, smeId);
         errRs = errStmt.executeQuery();
@@ -240,7 +243,8 @@ public class SmsStat
       {
         String routeId = rs.getString(1);
         RouteIdCountersSet set = new RouteIdCountersSet(
-            rs.getInt(2), rs.getInt(3),rs.getInt(4),rs.getInt(5),rs.getInt(6),rs.getInt(7), routeId);
+            rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5),
+            rs.getInt(6), rs.getInt(7), rs.getInt(8), rs.getInt(9), routeId);
 
         bindStatePeriodPart(errStmt, query, routeId);
         errRs = errStmt.executeQuery();

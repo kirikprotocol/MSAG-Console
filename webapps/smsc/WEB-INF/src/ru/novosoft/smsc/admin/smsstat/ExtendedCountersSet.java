@@ -18,8 +18,8 @@ public class ExtendedCountersSet extends CountersSet
   }
 
   public ExtendedCountersSet(int accepted, int rejected, int delivered,
-                             int failed, int rescheduled, int temporal) {
-    super(accepted, rejected, delivered, failed, rescheduled, temporal);
+                             int failed, int rescheduled, int temporal, int i, int o) {
+    super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
   }
 
   public void addError(ErrorCounterSet set) {

@@ -28,18 +28,28 @@ void StatisticsManager::updateAccepted(const char* srcSmeId, const char* routeId
 {
     MutexGuard  switchGuard(switchLock);
     
-    statGeneral[currentIndex].accepted++;
+    statGeneral[currentIndex].accepted++; 
+    statGeneral[currentIndex].incICounter();
+    
     if (srcSmeId && srcSmeId[0])
     {
         SmsStat* stat = statBySmeId[currentIndex].GetPtr(srcSmeId);
         if (stat) stat->accepted++;
-        else statBySmeId[currentIndex].Insert(srcSmeId, SmsStat(1));
+        else {
+            statBySmeId[currentIndex].Insert(srcSmeId, SmsStat(1));
+            stat = statBySmeId[currentIndex].GetPtr(srcSmeId);
+        }
+        if (stat) stat->incICounter();
     }
     if (routeId && routeId[0])
     {
         SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
         if (stat) stat->accepted++;
-        else statByRoute[currentIndex].Insert(routeId, SmsStat(1));
+        else {
+            statByRoute[currentIndex].Insert(routeId, SmsStat(1));
+            stat = statByRoute[currentIndex].GetPtr(routeId);
+        }
+        if (stat) stat->incICounter();
     }
 }
 // SMS rejected by SMSC. Affects rejected && errors only
@@ -139,7 +149,11 @@ void StatisticsManager::updateChanged(const char* dstSmeId, const char* routeId,
             SmsStat newStat(0, 0, (errcode) ? 0:1, (errcode) ? 1:0, 0, 0); // delivered or failed
             addError(newStat.errors, errcode);
             statBySmeId[currentIndex].Insert(dstSmeId, newStat);
+            if (errcode == 0) {
+                stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
+            }
         }
+        if (errcode == 0 && stat) stat->incOCounter();
     }
     
     if (routeId && routeId[0])
@@ -154,10 +168,17 @@ void StatisticsManager::updateChanged(const char* dstSmeId, const char* routeId,
             SmsStat newStat(0, 0, (errcode) ? 0:1, (errcode) ? 1:0, 0, 0); // delivered or failed
             addError(newStat.errors, errcode);
             statByRoute[currentIndex].Insert(routeId, newStat);
+            if (errcode == 0) {
+                stat = statByRoute[currentIndex].GetPtr(routeId);
+            }
         }
+        if (errcode == 0 && stat) stat->incOCounter();
     }
     
-    if (errcode == 0) statGeneral[currentIndex].delivered++;
+    if (errcode == 0) {
+        statGeneral[currentIndex].delivered++;
+        statGeneral[currentIndex].incOCounter();
+    }
     else statGeneral[currentIndex].failed++;
     addError(statGeneral[currentIndex].errors, errcode);
 }
@@ -258,14 +279,14 @@ int StatisticsManager::calculateToSleep() // returns msecs to next hour
 }
 
 const char* insertStatSmsSql = (const char*)
-"INSERT INTO sms_stat_sms (period, accepted, rejected, delivered, failed, rescheduled, temporal) "
-"VALUES (:period, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal)";
+"INSERT INTO sms_stat_sms (period, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o) "
+"VALUES (:period, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal, :peak_i, :peak_o)";
 const char* insertStatSmeSql = (const char*)
-"INSERT INTO sms_stat_sme (period, systemid, accepted, rejected, delivered, failed, rescheduled, temporal)\
- VALUES (:period, :systemid, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal)";
+"INSERT INTO sms_stat_sme (period, systemid, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o)\
+ VALUES (:period, :systemid, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal, :peak_i, :peak_o)";
 const char* insertStatRouteSql = (const char*)
-"INSERT INTO sms_stat_route (period, routeid, accepted, rejected, delivered, failed, rescheduled, temporal)\
- VALUES (:period, :routeid, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal)";
+"INSERT INTO sms_stat_route (period, routeid, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o)\
+ VALUES (:period, :routeid, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal, :peak_i, :peak_o)";
 const char* insertStatStateSql = (const char*)
 "INSERT INTO sms_stat_state (period, errcode, counter) "
 "VALUES (:period, :errcode, :counter)";
@@ -314,6 +335,8 @@ void StatisticsManager::flushCounters(short index)
         insertStatSmsStmt->setInt32 (5, statGeneral[index].failed);
         insertStatSmsStmt->setInt32 (6, statGeneral[index].rescheduled);
         insertStatSmsStmt->setInt32 (7, statGeneral[index].temporal);
+        insertStatSmsStmt->setInt32 (8, statGeneral[index].peak_i);
+        insertStatSmsStmt->setInt32 (9, statGeneral[index].peak_o);
         insertStatSmsStmt->executeUpdate();
 
         insertStatStateStmt->setUint32(1, period);
@@ -333,13 +356,15 @@ void StatisticsManager::flushCounters(short index)
         while (statByRoute[index].Next(routeId, routeStat))
         {
             if (!routeStat || !routeId || routeId[0] == '\0') continue;
-            insertStatRouteStmt->setString(2, routeId);
-            insertStatRouteStmt->setInt32 (3, routeStat->accepted);
-            insertStatRouteStmt->setInt32 (4, routeStat->rejected);
-            insertStatRouteStmt->setInt32 (5, routeStat->delivered);
-            insertStatRouteStmt->setInt32 (6, routeStat->failed);
-            insertStatRouteStmt->setInt32 (7, routeStat->rescheduled);
-            insertStatRouteStmt->setInt32 (8, routeStat->temporal);
+            insertStatRouteStmt->setString(2 , routeId);
+            insertStatRouteStmt->setInt32 (3 , routeStat->accepted);
+            insertStatRouteStmt->setInt32 (4 , routeStat->rejected);
+            insertStatRouteStmt->setInt32 (5 , routeStat->delivered);
+            insertStatRouteStmt->setInt32 (6 , routeStat->failed);
+            insertStatRouteStmt->setInt32 (7 , routeStat->rescheduled);
+            insertStatRouteStmt->setInt32 (8 , routeStat->temporal);
+            insertStatRouteStmt->setInt32 (9 , routeStat->peak_i);
+            insertStatRouteStmt->setInt32 (10, routeStat->peak_o);
             insertStatRouteStmt->executeUpdate();
 
             insertStatRouteStateStmt->setString(2, routeId);
@@ -361,13 +386,15 @@ void StatisticsManager::flushCounters(short index)
         while (statBySmeId[index].Next(smeId, smeStat))
         {
             if (!smeStat || !smeId || smeId[0] == '\0') continue;
-            insertStatSmeStmt->setString(2, smeId);
-            insertStatSmeStmt->setInt32 (3, smeStat->accepted);
-            insertStatSmeStmt->setInt32 (4, smeStat->rejected);
-            insertStatSmeStmt->setInt32 (5, smeStat->delivered);
-            insertStatSmeStmt->setInt32 (6, smeStat->failed);
-            insertStatSmeStmt->setInt32 (7, smeStat->rescheduled);
-            insertStatSmeStmt->setInt32 (8, smeStat->temporal);
+            insertStatSmeStmt->setString(2 , smeId);
+            insertStatSmeStmt->setInt32 (3 , smeStat->accepted);
+            insertStatSmeStmt->setInt32 (4 , smeStat->rejected);
+            insertStatSmeStmt->setInt32 (5 , smeStat->delivered);
+            insertStatSmeStmt->setInt32 (6 , smeStat->failed);
+            insertStatSmeStmt->setInt32 (7 , smeStat->rescheduled);
+            insertStatSmeStmt->setInt32 (8 , smeStat->temporal);
+            insertStatSmeStmt->setInt32 (9 , smeStat->peak_i);
+            insertStatSmeStmt->setInt32 (10, smeStat->peak_o);
             insertStatSmeStmt->executeUpdate();
 
             insertStatSmeStateStmt->setString(2, smeId);
