@@ -542,7 +542,7 @@ void MAPSTATS_DumpDialog(MapDialog* dlg, time_t now, bool expired)
 {
   static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.dlgdump");
   if( expired ) {
-    smsc_log_warn(logger, "Expired dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld/%ld sec, {%s->%s}",
+    smsc_log_warn(logger, "Expired dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld sec, {%s->%s}",
                  dlg,
                  dlg->dialogid_map,
                  dlg->dialogid_smsc,
@@ -552,7 +552,7 @@ void MAPSTATS_DumpDialog(MapDialog* dlg, time_t now, bool expired)
                  dlg->sms.get()?dlg->sms->getOriginatingAddress().value:"???",
                  dlg->sms.get()?dlg->sms->getDestinationAddress().value:"???");
   } else {
-    smsc_log_info(logger, "dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld/%ld sec, {%s->%s}",
+    smsc_log_info(logger, "dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld sec, {%s->%s}",
                  dlg,
                  dlg->dialogid_map,
                  dlg->dialogid_smsc,
