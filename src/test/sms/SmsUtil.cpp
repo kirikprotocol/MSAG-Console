@@ -61,14 +61,10 @@ bool SmsUtil::compareDescriptors(const Descriptor& d1, const Descriptor& d2)
 		res.push_back(errCode); \
 	}
 
-#define __compare_str__(getter, errCode, bufSize) \
+#define __compare_str__(getter, errCode) \
 	if (!mask[pos++]) { \
-		char buf1[bufSize + 1]; \
-		char buf2[bufSize + 1]; \
-		sms1.getter(buf1); \
-		sms2.getter(buf2); \
-		if (strcmp(buf1, buf2)) { \
-			__trace2__(#getter ": %s != %s", buf1, buf2); \
+		if (strcmp(sms1.getter(), sms2.getter())) { \
+			__trace2__(#getter ": %s != %s", sms1.getter(), sms2.getter()); \
 			res.push_back(errCode); \
 		} \
 	}
@@ -159,42 +155,44 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 	__compare__(getDestinationAddress, 9);
 	__compare__(getDealiasedDestinationAddress, 10);
 	__compare__(getMessageReference, 11);
-	__compare_str__(getEServiceType, 12, MAX_ESERVICE_TYPE_LENGTH);
+	__compare_str__(getEServiceType, 12);
 	__compare__(isArchivationRequested, 13);
 	__compare__(getDeliveryReport, 14);
 	__compare__(getBillingRecord, 15);
 	__compare__(getOriginatingDescriptor, 16);
 	__compare__(getDestinationDescriptor, 17);
 	__compare__(getServiceId, 18);
-	__compare_str__(getRouteId, 19, MAX_ROUTE_ID_TYPE_LENGTH);
+	__compare_str__(getRouteId, 19);
 	__compare__(getPriority, 20);
+	__compare_str__(getSourceSmeId, 21);
+	__compare_str__(getDestinationSmeId, 22);
 	//body
-	__compare_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, 21);
-	__compare_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, 22);
-	__compare_int_body_tag__(SMPP_ESM_CLASS, 23);
-	__compare_int_body_tag__(SMPP_DATA_CODING, 24);
-	__compare_int_body_tag__(SMPP_SM_LENGTH, 25);
-	__compare_int_body_tag__(SMPP_REGISTRED_DELIVERY, 26);
-	__compare_int_body_tag__(SMPP_PROTOCOL_ID, 27);
-	__compare_bin_body_tag__(SMPP_SHORT_MESSAGE, 28);
-	__compare_int_body_tag__(SMPP_PRIORITY, 29);
-	__compare_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE, 30);
-	__compare_int_body_tag__(SMPP_USSD_SERVICE_OP, 31);
-	__compare_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT, 32);
-	__compare_int_body_tag__(SMPP_PAYLOAD_TYPE, 33);
-	__compare_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, 34);
-	__compare_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES, 35);
-	__compare_int_body_tag__(SMPP_USER_RESPONSE_CODE, 36);
-	__compare_int_body_tag__(SMPP_SAR_MSG_REF_NUM, 37);
-	__compare_int_body_tag__(SMPP_LANGUAGE_INDICATOR, 38);
-	__compare_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, 39);
-	__compare_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, 40);
-	__compare_bin_body_tag__(SMPP_MESSAGE_PAYLOAD, 41);
-	__compare_int_body_tag__(SMPP_MS_VALIDITY, 42);
-	__compare_int_body_tag__(SMPP_MSG_STATE, 43);
-	__compare_int_body_tag__(SMSC_DISCHARGE_TIME, 44);
-	__compare_str_body_tag__(SMSC_RECIPIENTADDRESS, 45);
-	__compare_int_body_tag__(SMSC_STATUS_REPORT_REQUEST, 46);
+	__compare_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, 101);
+	__compare_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, 102);
+	__compare_int_body_tag__(SMPP_ESM_CLASS, 103);
+	__compare_int_body_tag__(SMPP_DATA_CODING, 104);
+	__compare_int_body_tag__(SMPP_SM_LENGTH, 105);
+	__compare_int_body_tag__(SMPP_REGISTRED_DELIVERY, 106);
+	__compare_int_body_tag__(SMPP_PROTOCOL_ID, 107);
+	__compare_bin_body_tag__(SMPP_SHORT_MESSAGE, 108);
+	__compare_int_body_tag__(SMPP_PRIORITY, 109);
+	__compare_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE, 110);
+	__compare_int_body_tag__(SMPP_USSD_SERVICE_OP, 111);
+	__compare_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT, 112);
+	__compare_int_body_tag__(SMPP_PAYLOAD_TYPE, 113);
+	__compare_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, 114);
+	__compare_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES, 115);
+	__compare_int_body_tag__(SMPP_USER_RESPONSE_CODE, 116);
+	__compare_int_body_tag__(SMPP_SAR_MSG_REF_NUM, 117);
+	__compare_int_body_tag__(SMPP_LANGUAGE_INDICATOR, 118);
+	__compare_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, 119);
+	__compare_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, 120);
+	__compare_bin_body_tag__(SMPP_MESSAGE_PAYLOAD, 121);
+	__compare_int_body_tag__(SMPP_MS_VALIDITY, 122);
+	__compare_int_body_tag__(SMPP_MSG_STATE, 123);
+	__compare_int_body_tag__(SMSC_DISCHARGE_TIME, 124);
+	__compare_str_body_tag__(SMSC_RECIPIENTADDRESS, 125);
+	__compare_int_body_tag__(SMSC_STATUS_REPORT_REQUEST, 126);
 	//bool attach;
 	return res;
 }
@@ -371,7 +369,8 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__set_int__(uint32_t, ServiceId, rand0(INT_MAX));
 	__set_str2__(RouteId, MAX_ROUTE_ID_TYPE_LENGTH);
 	__set_int__(int32_t, Priority, rand0(INT_MAX));
-
+	__set_str2__(SourceSmeId, MAX_SMESYSID_TYPE_LENGTH);
+	__set_str2__(DestinationSmeId, MAX_SMESYSID_TYPE_LENGTH);
 	//поля сохраняются в body случайным образом
 	//даже обязательные для sms поля могут не сохраняться в БД
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
@@ -481,6 +480,8 @@ void SmsUtil::clearSms(SMS* sms)
 	sms->setServiceId(0);
 	sms->setRouteId("");
 	sms->setPriority(0);
+	sms->setSourceSmeId("");
+	sms->setDestinationSmeId("");
 	sms->getMessageBody() = Body();
 	//bool attach;
 }
@@ -611,10 +612,8 @@ bool operator!=(const Descriptor& d1, const Descriptor& d2)
 #define __print_bool__(field) \
 	os << endl << #field << " = " << (sms.is##field() ? "true" : "false")
 
-#define __print_str__(field, len) \
-	char buf##field[len + 1]; \
-	sms.get##field(buf##field); \
-	os << endl << #field << " = \"" << buf##field << "\""
+#define __print_str__(field) \
+	os << endl << #field << " = \"" << sms.get##field() << "\""
 	
 #define __print_int_body_tag__(tagName) \
 	if (sms.hasIntProperty(Tag::tagName)) { \
@@ -648,15 +647,17 @@ ostream& operator<< (ostream& os, SMS& sms)
 	__print__(DestinationAddress);
 	__print__(DealiasedDestinationAddress);
 	__print_int__(MessageReference);
-	__print_str__(EServiceType, MAX_ESERVICE_TYPE_LENGTH);
+	__print_str__(EServiceType);
 	__print_bool__(ArchivationRequested);
 	__print_int__(DeliveryReport);
 	__print_int__(BillingRecord);
 	__print__(OriginatingDescriptor);
 	__print__(DestinationDescriptor);
 	__print_int__(ServiceId);
-	__print_str__(RouteId, MAX_ROUTE_ID_TYPE_LENGTH);
+	__print_str__(RouteId);
 	__print_int__(Priority);
+	__print_str__(SourceSmeId);
+	__print_str__(DestinationSmeId);
 	//body
 	__print_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME);
 	__print_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG);
