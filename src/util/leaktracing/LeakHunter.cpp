@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <ucontext.h>
 #include <signal.h>
+#include <pthread.h>
 
 #ifdef linux
 #include <execinfo.h>
@@ -135,7 +136,7 @@ public:
 
 
 static LeakHunter* lh=NULL;
-static pthread_mutex_t mtx=PTHREAD_MUTEX_INITIALIZER;;
+static pthread_mutex_t mtx=PTHREAD_MUTEX_INITIALIZER;
 
 static void sigcheckpoint(int param)
 {
