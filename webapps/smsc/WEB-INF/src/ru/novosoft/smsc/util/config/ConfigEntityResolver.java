@@ -18,7 +18,7 @@ public class ConfigEntityResolver implements EntityResolver
           throws SAXException, IOException
   {
     if (systemId.endsWith("configuration.dtd"))
-      return new InputSource(this.getClass().getClassLoader().getResourceAsStream("ru/novosoft/smsc/util/config/configuration.dtd"));
+      return new InputSource(this.getClass().getClassLoader().getResourceAsStream("dtds/configuration.dtd"));
     else
       return null;
   }
