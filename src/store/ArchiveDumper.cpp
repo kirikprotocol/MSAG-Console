@@ -228,7 +228,7 @@ static void initDumper(ConfigView* config)
 
 int main(void)
 {
-    Logger::Init("logger.properties");
+    Logger::Init();
     logger = Logger::getInstance("smsc.store.ArchiveDumper");
 
     using smsc::util::config::Manager;

@@ -8,7 +8,7 @@
 int main(int argc,char* argv[])
 {
   using namespace smsc::profiler;
-  smsc::logger::Logger::Init("logger.test.properties");
+  smsc::logger::Logger::Init();
   smsc::util::config::Manager::init("config.xml");
   smsc::db::DataSource *dataSource;
   smsc::util::config::Manager& mngr=smsc::util::config::Manager::getInstance();

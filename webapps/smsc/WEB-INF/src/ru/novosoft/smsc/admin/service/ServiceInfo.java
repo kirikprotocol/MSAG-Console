@@ -27,7 +27,6 @@ public class ServiceInfo
 
   protected String id = "";
   protected String host = "";
-  protected int port = 0;
   protected String args = "";
   protected Map components = new HashMap();
   protected SME sme = null;
@@ -40,7 +39,6 @@ public class ServiceInfo
       throws AdminException
   {
     host = serviceHost;
-    port = Integer.decode(serviceElement.getAttribute("port")).intValue();
     id = serviceElement.getAttribute("id");
     this.autostart = "true".equals(serviceElement.getAttribute("autostart"));
     args = serviceElement.getAttribute("args");
@@ -65,11 +63,10 @@ public class ServiceInfo
     this.serviceFolder = new File(daemonServicesFolder, id);
   }
 
-  public ServiceInfo(final String id, final String host, final int port, final String serviceFolder, final String args, final boolean autostart, final SME sme,
+  public ServiceInfo(final String id, final String host, final String serviceFolder, final String args, final boolean autostart, final SME sme,
                      final byte status)
   {
     this.host = host;
-    this.port = port;
     this.args = args;
     this.autostart = autostart;
     this.id = id;
@@ -81,11 +78,6 @@ public class ServiceInfo
   public String getHost()
   {
     return host;
-  }
-
-  public int getPort()
-  {
-    return port;
   }
 
   public String getId()
@@ -166,11 +158,6 @@ public class ServiceInfo
   public void setStatus(final byte status)
   {
     this.status = status;
-  }
-
-  public void setPort(final int port)
-  {
-    this.port = port;
   }
 
   public void setArgs(final String args)

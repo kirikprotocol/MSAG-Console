@@ -70,7 +70,6 @@ Logger *_mapdlg_cat = NULL;
 Logger *_mapproxy_cat = NULL;
 Logger *_sms_err_cat = NULL;
 
-
 ////////////////////// static public methods
 void Logger::Init(const char * const configFileName)
 {

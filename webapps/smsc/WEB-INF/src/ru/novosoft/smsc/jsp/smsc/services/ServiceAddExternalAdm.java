@@ -24,8 +24,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.util.*;
-import java.util.zip.*;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
 
 public class ServiceAddExternalAdm extends SmeBean
 {
@@ -79,8 +81,8 @@ public class ServiceAddExternalAdm extends SmeBean
   {
     final Statuses s = appContext.getStatuses();
     return s.isAliasesChanged() || s.isHostsChanged() || s.isProfilesChanged() || s.isRoutesChanged()
-            || s.isRoutesChanged() || s.isSmscChanged() || s.isSubjectsChanged() || s.isUsersChanged()
-            || s.isUsersChanged() || s.isWebXmlChanged();
+           || s.isRoutesChanged() || s.isSmscChanged() || s.isSubjectsChanged() || s.isUsersChanged()
+           || s.isUsersChanged() || s.isWebXmlChanged();
   }
 
   protected void cleanup()
@@ -168,9 +170,13 @@ public class ServiceAddExternalAdm extends SmeBean
 
     ServiceInfo serviceInfo = null;
     try {
-      serviceInfo = new ServiceInfo(serviceId, hostName, port,
-                                    appContext.getHostsManager().getDaemonServicesFolder(hostName) + File.separatorChar + serviceId,
-                                    startupArgs, autostart, new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password, rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit), ServiceInfo.STATUS_STOPPED);
+      serviceInfo
+      = new ServiceInfo(serviceId, hostName,
+                        appContext.getHostsManager().getDaemonServicesFolder(hostName) + File.separatorChar + serviceId,
+                        startupArgs, autostart,
+                        new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password,
+                                rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit),
+                        ServiceInfo.STATUS_STOPPED);
     } catch (AdminException e) {
       return error(SMSCErrors.error.services.coudntAddService, e);
     } catch (NullPointerException e) {
@@ -191,7 +197,8 @@ public class ServiceAddExternalAdm extends SmeBean
     journalAppend(SubjectTypes.TYPE_securityConstraint, serviceInfo.getId(), Actions.ACTION_ADD);
     appContext.getStatuses().setWebXmlChanged(true);
     try {
-      logger.debug("Created security constraint for service \"" + serviceInfo.getId() + "\" with role \"" + roleName + "\", saving changes to WEB-INF/web.xml...");
+      logger.debug(
+          "Created security constraint for service \"" + serviceInfo.getId() + "\" with role \"" + roleName + "\", saving changes to WEB-INF/web.xml...");
       appContext.getWebXmlConfig().save();
       appContext.getJournal().clear(SubjectTypes.TYPE_securityConstraint);
       appContext.getStatuses().setWebXmlChanged(false);
@@ -215,7 +222,9 @@ public class ServiceAddExternalAdm extends SmeBean
     return hostsManager.getHostNames();
   }
 
-  /************************************** ***********************************/
+  /**
+   * *********************************** **********************************
+   */
 
   private void checkServiceContent(File incomingZip) throws AdminException
   {
@@ -286,7 +295,9 @@ public class ServiceAddExternalAdm extends SmeBean
   }
 
 
-  /*********************************** Properties **********************************/
+  /**
+   * ******************************** Properties *********************************
+   */
 
   public byte getStage()
   {

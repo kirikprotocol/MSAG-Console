@@ -12,21 +12,17 @@ import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class CommandAddService extends Command
 {
-	public CommandAddService(ServiceInfo serviceInfo)
-	{
-		super("add_service");
+  public CommandAddService(final ServiceInfo serviceInfo)
+  {
+    super("add_service");
 
-		logger.debug("Add services \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
-						 + serviceInfo.getPort() + ")");
+    logger.debug("Add services \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ")");
 
-		Element serviceElem = document.createElement("service");
-		//serviceElem.setAttribute("name", StringEncoderDecoder.encode(serviceInfo.getName()));
-		serviceElem.setAttribute("id", StringEncoderDecoder.encode(serviceInfo.getId()));
-		serviceElem.setAttribute("port", StringEncoderDecoder.encode(String.valueOf(serviceInfo.getPort())));
-		serviceElem.setAttribute("args", StringEncoderDecoder.encode(serviceInfo.getArgs()));
-		serviceElem.setAttribute("status", serviceInfo.getStatusStr());
+    final Element serviceElem = document.createElement("service");
+    serviceElem.setAttribute("id", StringEncoderDecoder.encode(serviceInfo.getId()));
+    serviceElem.setAttribute("args", StringEncoderDecoder.encode(serviceInfo.getArgs()));
+    serviceElem.setAttribute("status", serviceInfo.getStatusStr());
     serviceElem.setAttribute("autostart", serviceInfo.isAutostart() ? "true" : "false");
-		document.getDocumentElement().appendChild(serviceElem);
-		//logger.debug("Command add_service created");
-	}
+    document.getDocumentElement().appendChild(serviceElem);
+  }
 }

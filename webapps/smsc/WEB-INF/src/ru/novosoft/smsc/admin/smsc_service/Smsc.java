@@ -5,7 +5,6 @@
  */
 package ru.novosoft.smsc.admin.smsc_service;
 
-import org.apache.log4j.Category;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
@@ -85,17 +84,16 @@ public class Smsc extends Service
   private AliasSet aliases = null;
   private ProfileDataSource profileDataSource = null;
 
-  private Category logger = Category.getInstance(this.getClass());
   private long serviceRefreshTimeStamp = 0;
   private static final char LOGGER_DELIMITER = ',';
 
-  public Smsc(String smscHost, int smscPort, String smscConfFolderString, NSConnectionPool connectionPool) throws AdminException
+  public Smsc(final String smscHost, final int smscPort, final String smscConfFolderString, final NSConnectionPool connectionPool) throws AdminException
   {
-    super(new ServiceInfo(Constants.SMSC_SME_ID, smscHost, smscPort, "", "", true, null, ServiceInfo.STATUS_STOPPED));
+    super(new ServiceInfo(Constants.SMSC_SME_ID, smscHost, "", "", true, null, ServiceInfo.STATUS_STOPPED), smscPort);
 
     try {
       this.configFolder = new File(smscConfFolderString);
-      Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
+      final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
       aliases = new AliasSet(aliasesDoc.getDocumentElement());
       profileDataSource = new ProfileDataSource(connectionPool);
     } catch (FactoryConfigurationError error) {
@@ -118,7 +116,7 @@ public class Smsc extends Service
     distributionListAdmin = new DistributionListManager(connectionPool);
   }
 
-  protected PrintWriter storeAliases(PrintWriter out)
+  protected PrintWriter storeAliases(final PrintWriter out)
   {
     Functions.storeConfigHeader(out, "aliases", "AliasRecords.dtd");
     aliases.store(out);
@@ -126,37 +124,37 @@ public class Smsc extends Service
     return out;
   }
 
-  public synchronized List loadRoutes(RouteSubjectManager routeSubjectManager)
+  public synchronized List loadRoutes(final RouteSubjectManager routeSubjectManager)
       throws AdminException
   {
     routeSubjectManager.trace();
-    if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
+    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
       throw new AdminException("SMSC is not running.");
 
-    Object res = call(SMSC_COMPONENT_ID, LOAD_ROUTES_METHOD_ID, Type.Types[Type.StringListType], new HashMap());
+    final Object res = call(SMSC_COMPONENT_ID, LOAD_ROUTES_METHOD_ID, Type.Types[Type.StringListType], new HashMap());
 
-    return ((res instanceof List) ? (List) res : null);
+    return res instanceof List ? (List) res : null;
   }
 
-  public synchronized List traceRoute(String dstAddress, String srcAddress, String srcSysId)
+  public synchronized List traceRoute(final String dstAddress, final String srcAddress, final String srcSysId)
       throws AdminException
   {
-    if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
+    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
       throw new AdminException("SMSC is not running.");
 
-    HashMap args = new HashMap();
+    final Map args = new HashMap();
     args.put("dstAddress", dstAddress);
     args.put("srcAddress", srcAddress);
     args.put("srcSysId", srcSysId);
-    Object res = call(SMSC_COMPONENT_ID, TRACE_ROUTE_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = call(SMSC_COMPONENT_ID, TRACE_ROUTE_METHOD_ID, Type.Types[Type.StringListType], args);
 
-    return ((res instanceof List) ? (List) res : null);
+    return res instanceof List ? (List) res : null;
   }
 
-  public synchronized void applyRoutes(RouteSubjectManager routeSubjectManager) throws AdminException
+  public synchronized void applyRoutes(final RouteSubjectManager routeSubjectManager) throws AdminException
   {
     routeSubjectManager.apply();
-    if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+    if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
       call(SMSC_COMPONENT_ID, APPLY_ROUTES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
     }
   }
@@ -171,7 +169,7 @@ public class Smsc extends Service
       storeAliases(new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()))).close();
       Functions.renameNewSavedFileToOriginal(newFile, aliasConfigFile);
 
-      if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+      if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
         call(SMSC_COMPONENT_ID, APPLY_ALIASES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
       } else
         logger.debug("Couldn't call apply method on SMSC - SMSC is not running. Status is " + getInfo().getStatusStr() + " (" + getInfo().getStatus() + ")");
@@ -187,33 +185,33 @@ public class Smsc extends Service
     return aliases;
   }
 
-  public synchronized Profile profileLookup(Mask mask) throws AdminException
+  public synchronized Profile profileLookup(final Mask mask) throws AdminException
   {
-    HashMap args = new HashMap();
+    final Map args = new HashMap();
     args.put("address", mask.getMask());
-    Object result = call(SMSC_COMPONENT_ID, PROFILE_LOOKUP_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object result = call(SMSC_COMPONENT_ID, PROFILE_LOOKUP_METHOD_ID, Type.Types[Type.StringListType], args);
     if (result instanceof List)
       return new Profile(mask, (List) result);
     else
       throw new AdminException("Error in response");
   }
 
-  public synchronized ProfileEx profileLookupEx(Mask mask) throws AdminException
+  public synchronized ProfileEx profileLookupEx(final Mask mask) throws AdminException
   {
-    HashMap args = new HashMap();
+    final Map args = new HashMap();
     args.put("address", mask.getMask());
-    Object result = call(SMSC_COMPONENT_ID, PROFILE_LOOKUP_EX_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object result = call(SMSC_COMPONENT_ID, PROFILE_LOOKUP_EX_METHOD_ID, Type.Types[Type.StringListType], args);
     if (result instanceof List)
       return new ProfileEx(mask, (List) result);
     else
       throw new AdminException("Error in response");
   }
 
-  public synchronized int profileUpdate(Mask mask, Profile newProfile) throws AdminException
+  public synchronized int profileUpdate(final Mask mask, final Profile newProfile) throws AdminException
   {
-    HashMap args = new HashMap();
+    final Map args = new HashMap();
     args.put("address", mask.getMask());
-    List profileArg = new LinkedList();
+    final List profileArg = new LinkedList();
     profileArg.add(newProfile.getCodepageString());
     profileArg.add(newProfile.getReportOptionsString());
     profileArg.add(newProfile.getLocale());
@@ -229,15 +227,15 @@ public class Smsc extends Service
     return ((Long) call(SMSC_COMPONENT_ID, PROFILE_UPDATE_METHOD_ID, Type.Types[Type.IntType], args)).intValue();
   }
 
-  public synchronized void profileDelete(Mask mask) throws AdminException
+  public synchronized void profileDelete(final Mask mask) throws AdminException
   {
-    HashMap args = new HashMap();
+    final Map args = new HashMap();
     args.put("address", mask.getMask());
     call(SMSC_COMPONENT_ID, PROFILE_DELETE_METHOD_ID, Type.Types[Type.IntType], args);
     profileDataSource.delete(mask);
   }
 
-  public synchronized QueryResultSet profilesQuery(ProfileQuery query) throws AdminException
+  public synchronized QueryResultSet profilesQuery(final ProfileQuery query) throws AdminException
   {
     return profileDataSource.query(query);
   }
@@ -247,13 +245,13 @@ public class Smsc extends Service
     // nothing to do
   }
 
-  public synchronized void processCancelMessages(Collection messageIds) throws AdminException
+  public synchronized void processCancelMessages(final Collection messageIds) throws AdminException
   {
-    StringBuffer ids = new StringBuffer(messageIds.size() * 10);
-    StringBuffer srcs = new StringBuffer(messageIds.size() * 10);
-    StringBuffer dsts = new StringBuffer(messageIds.size() * 10);
+    final StringBuffer ids = new StringBuffer(messageIds.size() * 10);
+    final StringBuffer srcs = new StringBuffer(messageIds.size() * 10);
+    final StringBuffer dsts = new StringBuffer(messageIds.size() * 10);
     for (Iterator i = messageIds.iterator(); i.hasNext();) {
-      CancelMessageData data = (CancelMessageData) i.next();
+      final CancelMessageData data = (CancelMessageData) i.next();
       ids.append(data.getMessageId());
       srcs.append(data.getSourceAddress());
       dsts.append(data.getDestinationAddress());
@@ -263,7 +261,7 @@ public class Smsc extends Service
         dsts.append(',');
       }
     }
-    Map params = new HashMap();
+    final Map params = new HashMap();
     params.put("ids", ids.toString());
     params.put("sources", srcs.toString());
     params.put("destinations", dsts.toString());
@@ -278,7 +276,7 @@ public class Smsc extends Service
   public synchronized Config getSmscConfig()
   {
     try {
-      File confFile = new File(WebAppFolders.getSmscConfFolder(), "config.xml");
+      final File confFile = new File(WebAppFolders.getSmscConfFolder(), "config.xml");
       return new Config(confFile);
     } catch (Throwable t) {
       logger.error("Couldn't get SMSC config", t);
@@ -286,7 +284,7 @@ public class Smsc extends Service
     }
   }
 
-  public synchronized void saveSmscConfig(Config config) throws AdminException
+  public synchronized void saveSmscConfig(final Config config) throws AdminException
   {
     try {
       config.save();
@@ -298,54 +296,54 @@ public class Smsc extends Service
 
   public synchronized void applyConfig() throws AdminException
   {
-    if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+    if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
       call(SMSC_COMPONENT_ID, APPLY_SMSC_CONFIG_METHOD_ID, Type.Types[Type.StringType], new HashMap());
     }
   }
 
-  public synchronized void mscRegistrate(String msc) throws AdminException
+  public synchronized void mscRegistrate(final String msc) throws AdminException
   {
-    HashMap args = new HashMap();
+    final Map args = new HashMap();
     args.put("msc", msc);
     call(SMSC_COMPONENT_ID, MSC_REGISTRATE_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  public synchronized void mscUnregister(String msc) throws AdminException
+  public synchronized void mscUnregister(final String msc) throws AdminException
   {
-    HashMap args = new HashMap();
+    final Map args = new HashMap();
     args.put("msc", msc);
     call(SMSC_COMPONENT_ID, MSC_UNREGISTER_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  public synchronized void mscBlock(String msc) throws AdminException
+  public synchronized void mscBlock(final String msc) throws AdminException
   {
-    HashMap args = new HashMap();
+    final Map args = new HashMap();
     args.put("msc", msc);
     call(SMSC_COMPONENT_ID, MSC_BLOCK_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
-  public synchronized void mscClear(String msc) throws AdminException
+  public synchronized void mscClear(final String msc) throws AdminException
   {
-    HashMap args = new HashMap();
+    final Map args = new HashMap();
     args.put("msc", msc);
     call(SMSC_COMPONENT_ID, MSC_CLEAR_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized List mscList() throws AdminException
   {
-    Object result = call(SMSC_COMPONENT_ID, MSC_LIST_METHOD_ID, Type.Types[Type.StringListType], new HashMap());
+    final Object result = call(SMSC_COMPONENT_ID, MSC_LIST_METHOD_ID, Type.Types[Type.StringListType], new HashMap());
     if (result instanceof List)
       return (List) result;
     else
       throw new AdminException("Error in response");
   }
 
-  public synchronized boolean isLocaleRegistered(String locale)
+  public synchronized boolean isLocaleRegistered(final String locale)
   {
-    Config config = getSmscConfig();
-    if (config == null)
+    final Config config = getSmscConfig();
+    if (null == config)
       return false;
-    String localesString = null;
+    String localesString;
     try {
       localesString = config.getString("core.locales");
     } catch (Config.ParamNotFoundException e) {
@@ -360,11 +358,10 @@ public class Smsc extends Service
 
   public synchronized List getRegisteredLocales() throws Config.ParamNotFoundException, Config.WrongParamTypeException
   {
-    List result = new SortedList();
-    Config config = getSmscConfig();
-    String localesString = null;
-    localesString = config.getString("core.locales");
-    StringTokenizer tokenizer = new StringTokenizer(localesString, ",");
+    final List result = new SortedList();
+    final Config config = getSmscConfig();
+    String localesString = config.getString("core.locales");
+    final StringTokenizer tokenizer = new StringTokenizer(localesString, ",");
     while (tokenizer.hasMoreTokens()) {
       result.add(tokenizer.nextToken().trim());
     }
@@ -376,9 +373,9 @@ public class Smsc extends Service
     return distributionListAdmin;
   }
 
-  private Map putSmeIntoMap(SME sme)
+  private Map putSmeIntoMap(final SME sme)
   {
-    Map params = new HashMap();
+    final Map params = new HashMap();
     params.put("id", sme.getId());
     params.put("priority", new Integer(sme.getPriority()));
     params.put("typeOfNumber", new Integer(sme.getTypeOfNumber()));
@@ -399,69 +396,69 @@ public class Smsc extends Service
     return params;
   }
 
-  public synchronized void smeAdd(SME sme) throws AdminException
+  public synchronized void smeAdd(final SME sme) throws AdminException
   {
-    Object result = call(SMSC_COMPONENT_ID, SME_ADD_METHOD_ID, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
+    final Object result = call(SMSC_COMPONENT_ID, SME_ADD_METHOD_ID, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
     if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
       throw new AdminException("Error in response");
   }
 
-  public synchronized void smeRemove(String smeId) throws AdminException
+  public synchronized void smeRemove(final String smeId) throws AdminException
   {
-    Map params = new HashMap();
+    final Map params = new HashMap();
     params.put("id", smeId);
-    Object result = call(SMSC_COMPONENT_ID, SME_REMOVE_METHOD_ID, Type.Types[Type.BooleanType], params);
+    final Object result = call(SMSC_COMPONENT_ID, SME_REMOVE_METHOD_ID, Type.Types[Type.BooleanType], params);
     if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
       throw new AdminException("Error in response");
   }
 
-  public synchronized void smeUpdate(SME sme) throws AdminException
+  public synchronized void smeUpdate(final SME sme) throws AdminException
   {
-    Object result = call(SMSC_COMPONENT_ID, SME_UPDATE_METHOD_ID, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
+    final Object result = call(SMSC_COMPONENT_ID, SME_UPDATE_METHOD_ID, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
     if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
       throw new AdminException("Error in response");
   }
 
-  public synchronized SmeStatus getSmeStatus(String id) throws AdminException
+  public synchronized SmeStatus getSmeStatus(final String id) throws AdminException
   {
     final long currentTime = System.currentTimeMillis();
     if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp) {
       serviceRefreshTimeStamp = currentTime;
       smeStatuses.clear();
-      Object result = call(SMSC_COMPONENT_ID, SME_STATUS_ID, Type.Types[Type.StringListType], new HashMap());
+      final Object result = call(SMSC_COMPONENT_ID, SME_STATUS_ID, Type.Types[Type.StringListType], new HashMap());
       if (!(result instanceof List))
         throw new AdminException("Error in response");
 
       for (Iterator i = ((List) result).iterator(); i.hasNext();) {
-        String s = (String) i.next();
-        SmeStatus smeStatus = new SmeStatus(s);
+        final String s = (String) i.next();
+        final SmeStatus smeStatus = new SmeStatus(s);
         smeStatuses.put(smeStatus.getId(), smeStatus);
       }
     }
     return (SmeStatus) smeStatuses.get(id);
   }
 
-  public synchronized void disconnectSmes(List smeIdsToDisconnect) throws AdminException
+  public synchronized void disconnectSmes(final List smeIdsToDisconnect) throws AdminException
   {
-    Map params = new HashMap();
+    final Map params = new HashMap();
     params.put("ids", smeIdsToDisconnect);
-    Object result = call(SMSC_COMPONENT_ID, SME_DISCONNECT_ID, Type.Types[Type.BooleanType], params);
+    final Object result = call(SMSC_COMPONENT_ID, SME_DISCONNECT_ID, Type.Types[Type.BooleanType], params);
     if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
       throw new AdminException("Error in response");
   }
 
   public synchronized Map getLogCategories() throws AdminException
   {
-    Map return_result = new HashMap();
-    Object resultO = call(SMSC_COMPONENT_ID, LOG_GET_CATEGORIES_ID, Type.Types[Type.StringListType], new HashMap());
+    final Map return_result = new HashMap();
+    final Object resultO = call(SMSC_COMPONENT_ID, LOG_GET_CATEGORIES_ID, Type.Types[Type.StringListType], new HashMap());
     if (resultO instanceof List) {
-      List result = (List) resultO;
+      final List result = (List) resultO;
       for (Iterator i = result.iterator(); i.hasNext();) {
-        String cat = (String) i.next();
+        final String cat = (String) i.next();
         final int delim_pos = cat.lastIndexOf(LOGGER_DELIMITER);
-        if (delim_pos >= 0) {
-          String name = cat.substring(0, delim_pos);
-          String value = cat.substring(delim_pos + 1);
+        if (0 <= delim_pos) {
+          final String name = cat.substring(0, delim_pos);
+          final String value = cat.substring(delim_pos + 1);
           return_result.put(name, value);
         } else
           logger.error("Error in response: string \"" + cat + "\" misformatted.");
@@ -471,13 +468,13 @@ public class Smsc extends Service
     return return_result;
   }
 
-  public synchronized void setLogCategories(Map cats) throws AdminException
+  public synchronized void setLogCategories(final Map cats) throws AdminException
   {
-    Map params = new HashMap();
-    LinkedList catsList = new LinkedList();
+    final Map params = new HashMap();
+    final List catsList = new LinkedList();
     params.put("categories", catsList);
     for (Iterator i = cats.entrySet().iterator(); i.hasNext();) {
-      Map.Entry entry = (Map.Entry) i.next();
+      final Map.Entry entry = (Map.Entry) i.next();
       final String catName = (String) entry.getKey();
       final String catPriority = (String) entry.getValue();
       catsList.add(catName + LOGGER_DELIMITER + catPriority);
@@ -487,7 +484,7 @@ public class Smsc extends Service
 
   public synchronized void applyLocaleResources() throws AdminException
   {
-    if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+    if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
       call(SMSC_COMPONENT_ID, APPLY_LOCALE_RESOURCES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
     }
   }
@@ -500,17 +497,17 @@ public class Smsc extends Service
 
   public List aclListNames() throws AdminException
   {
-    Object result = call(SMSC_COMPONENT_ID, ACL_LIST_NAMES, Type.Types[Type.StringListType], new HashMap());
+    final Object result = call(SMSC_COMPONENT_ID, ACL_LIST_NAMES, Type.Types[Type.StringListType], new HashMap());
     if (!(result instanceof List))
       throw new AdminException("Error in response");
 
-    List list = (List) result;
-    List resultList = new ArrayList();
+    final List list = (List) result;
+    final List resultList = new ArrayList();
     for (Iterator i = list.iterator(); i.hasNext();) {
-      String aclPair = (String) i.next();
-      int pos = aclPair.indexOf(',');
-      String idStr = aclPair.substring(0, pos);
-      String name = aclPair.substring(pos + 1);
+      final String aclPair = (String) i.next();
+      final int pos = aclPair.indexOf(',');
+      final String idStr = aclPair.substring(0, pos);
+      final String name = aclPair.substring(pos + 1);
       try {
         resultList.add(new AclInfo(Long.parseLong(idStr), name));
       } catch (NumberFormatException e) {
@@ -520,42 +517,42 @@ public class Smsc extends Service
     return resultList;
   }
 
-  public AclInfo aclGetInfo(long aclId) throws AdminException
+  public AclInfo aclGetInfo(final long aclId) throws AdminException
   {
-    Map params = new HashMap();
+    final Map params = new HashMap();
     params.put("id", new Long(aclId));
-    Object result = call(SMSC_COMPONENT_ID, ACL_GET_INFO, Type.Types[Type.StringListType], params);
+    final Object result = call(SMSC_COMPONENT_ID, ACL_GET_INFO, Type.Types[Type.StringListType], params);
     if (!(result instanceof List))
       throw new AdminException("Error in response");
 
     return new AclInfo((List) result);
   }
 
-  public void aclRemove(long aclId) throws AdminException
+  public void aclRemove(final long aclId) throws AdminException
   {
-    Map params = new HashMap();
+    final Map params = new HashMap();
     params.put("id", new Long(aclId));
     call(SMSC_COMPONENT_ID, ACL_REMOVE, Type.Types[Type.BooleanType], params);
   }
 
-  public long aclCreate(String name, String description, List addresses, char cache_type) throws AdminException
+  public long aclCreate(final String name, final String description, final List addresses, final char cache_type) throws AdminException
   {
-    Map params = new HashMap();
+    final Map params = new HashMap();
     params.put("name", name);
     params.put("description", description);
     params.put("cache_type", String.valueOf(cache_type));
     params.put("addresses", addresses);
-    Object result = call(SMSC_COMPONENT_ID, ACL_CREATE, Type.Types[Type.IntType], params);
+    final Object result = call(SMSC_COMPONENT_ID, ACL_CREATE, Type.Types[Type.IntType], params);
     if (result instanceof Long) {
-      Long aclId = (Long) result;
+      final Long aclId = (Long) result;
       return aclId.longValue();
     } else
       throw new AdminException("Error in response");
   }
 
-  public void aclUpdateInfo(long aclId, String name, String description, char cache_type) throws AdminException
+  public void aclUpdateInfo(final long aclId, final String name, final String description, final char cache_type) throws AdminException
   {
-    Map params = new HashMap();
+    final Map params = new HashMap();
     params.put("id", new Long(aclId));
     params.put("name", name);
     params.put("description", description);
@@ -563,29 +560,29 @@ public class Smsc extends Service
     call(SMSC_COMPONENT_ID, ACL_UPDATE_INFO, Type.Types[Type.BooleanType], params);
   }
 
-  public List aclLookupAddresses(long aclId, String addressPrefix) throws AdminException
+  public List aclLookupAddresses(final long aclId, final String addressPrefix) throws AdminException
   {
-    Map params = new HashMap();
+    final Map params = new HashMap();
     params.put("id", new Long(aclId));
     params.put("prefix", addressPrefix);
-    Object result = call(SMSC_COMPONENT_ID, ACL_LOOKUP_ADDRESSES, Type.Types[Type.StringListType], params);
+    final Object result = call(SMSC_COMPONENT_ID, ACL_LOOKUP_ADDRESSES, Type.Types[Type.StringListType], params);
     if (!(result instanceof List))
       throw new AdminException("Error in response");
 
     return (List) result;
   }
 
-  public void aclRemoveAddresses(long aclId, List addresses) throws AdminException
+  public void aclRemoveAddresses(final long aclId, final List addresses) throws AdminException
   {
-    Map params = new HashMap();
+    final Map params = new HashMap();
     params.put("id", new Long(aclId));
     params.put("addresses", addresses);
     call(SMSC_COMPONENT_ID, ACL_REMOVE_ADDRESSES, Type.Types[Type.BooleanType], params);
   }
 
-  public void aclAddAddresses(long aclId, List addresses) throws AdminException
+  public void aclAddAddresses(final long aclId, final List addresses) throws AdminException
   {
-    Map params = new HashMap();
+    final Map params = new HashMap();
     params.put("id", new Long(aclId));
     params.put("addresses", addresses);
     call(SMSC_COMPONENT_ID, ACL_ADD_ADDRESSES, Type.Types[Type.BooleanType], params);

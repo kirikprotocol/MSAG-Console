@@ -5,7 +5,6 @@
  */
 package ru.novosoft.smsc.admin.daemon;
 
-import org.apache.log4j.Category;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
@@ -21,7 +20,6 @@ import java.util.*;
 
 public class Daemon extends Proxy
 {
-  private Category logger = Category.getInstance(this.getClass().getName());
   private Map services = new HashMap();
   private String daemonServicesFolder;
 
@@ -79,7 +77,7 @@ public class Daemon extends Proxy
     if (services.containsKey(id))
       throw new AdminException("Couldn't add service \"" + id + "\" to host \"" + host + "\": service already contained in host");
 
-    logger.debug("Add services \"" + id + "\" (" + serviceInfo.getHost() + ':' + serviceInfo.getPort() + ")");
+    logger.debug("Add services \"" + id + "\" (" + serviceInfo.getHost() + ")");
 
     final Response r = runCommand(new CommandAddService(serviceInfo));
     if (Response.StatusOk != r.getStatus())
@@ -138,7 +136,6 @@ public class Daemon extends Proxy
     if (Response.StatusOk != r.getStatus())
       throw new AdminException("Couldn't set services startup parameters \"" + serviceId + "\", nested:" + r.getDataAsString());
     final ServiceInfo serviceInfo = getServiceInfo(serviceId);
-    serviceInfo.setPort(port);
     serviceInfo.setArgs(args);
   }
 

@@ -42,18 +42,6 @@ public:
 
   //////////////////////////  static //////////////////////////
 
-  /**
-  * Инициализирует Logger по данному файлу конфигурации.
-  * Инициализация происходит только если logger не был проинициализирован до этого.
-  * Если файл конфигурации не найден, или произошла какая-нибудь ошибка при
-  * инициализации, то logger инициализируется параметрами по умолчанию
-  * (файл smsc.log в текущей директории, уровень DEBUG)
-  * \param configFileName имя файла конфигурации logger
-  **/
-  static void Init(const char * const configFileName);
-  static void Init();
-
-
   /*!
   * Деинициализирует logger. После этого его можно снова инициализировать.
   */
@@ -64,6 +52,8 @@ public:
     MutexGuard guard(static_mutex);
     return initialized;
   }
+
+  static void Init();
 
   /**
   * retrieves smsc::logger::Logger instance for given category name
@@ -197,6 +187,9 @@ public:
   static void printDebugInfo();
 #endif //SMSC_DEBUG
 
+protected:
+  static void Init(const char * const configFileName);
+  
 private:
   static bool initialized;
   typedef smsc::core::buffers::Hash<Logger*> LoggersHash;

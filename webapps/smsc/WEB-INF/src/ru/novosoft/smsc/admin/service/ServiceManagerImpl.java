@@ -7,14 +7,9 @@ package ru.novosoft.smsc.admin.service;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.util.SortedList;
-import ru.novosoft.smsc.util.WebAppFolders;
+import ru.novosoft.smsc.util.*;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
 
 
@@ -37,7 +32,7 @@ public class ServiceManagerImpl implements ServiceManager
         throw new AdminException("Service \"" + serviceId + "\" already presented in system");
     }
     for (Iterator i = newServices.values().iterator(); i.hasNext();)
-      add(new Service((ServiceInfo) i.next()));
+      add(new Service((ServiceInfo) i.next())); //??! port initialization
   }
 
   public Service add(Service newService) throws AdminException
@@ -73,22 +68,24 @@ public class ServiceManagerImpl implements ServiceManager
   }
 
   public Service remove(String serviceId)
-          throws AdminException
+      throws AdminException
   {
     require(serviceId);
     Service s = get(serviceId);
     services.remove(serviceId);
     if (!Functions.recursiveDeleteFolder(s.getInfo().getServiceFolder())
-            || !Functions.recursiveDeleteFolder(WebAppFolders.getServiceJspsFolder(serviceId)))
+        || !Functions.recursiveDeleteFolder(WebAppFolders.getServiceJspsFolder(serviceId)))
       throw new AdminException("Service removed, but services files not deleted");
     return s;
   }
 
 
-  /*************************************************************************************************************/
+  /**
+   * *********************************************************************************************************
+   */
 
   public ServiceInfo getInfo(String servoceId)
-          throws AdminException
+      throws AdminException
   {
     Service s = get(servoceId);
     return s.getInfo();
@@ -113,7 +110,7 @@ public class ServiceManagerImpl implements ServiceManager
   }
 
   public void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo, File serviceFolder)
-          throws AdminException
+      throws AdminException
   {
     String hostName = serviceInfo.getHost();
     String serviceId = serviceInfo.getId();

@@ -88,7 +88,7 @@ int main(int argc,char* argv[])
     printf("usage: %s systemid host[:port] sourceaddr addrlistfile message/file [num=1 [delay=10]]\n",argv[0]);
     return -1;
   }
-  Logger::Init("log4cpp.flooder");
+  Logger::Init();
   SmeConfig cfg;
   string host=argc>2?argv[2]:"smsc";
   int pos=host.find(":");

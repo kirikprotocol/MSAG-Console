@@ -102,7 +102,7 @@ int main(void)
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
     
-    Logger::Init("logger.properties");
+    Logger::Init();
     logger = Logger::getInstance("smsc.store.ArchiveDaemon");
 
     atexit(atExitHandler);
