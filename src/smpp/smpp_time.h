@@ -47,7 +47,7 @@ inline bool cTime2SmppTime(time_t tval,char* buffer)
   //__trace2__("result time: %s\n",buffer);
   //__watch__(writen);
   //__require__(writen == 16);
-  __ret0_if_fail__(writen == 16);
+  __ret0_if_fail__(writen == 9);
   return 1;
 }
 
@@ -75,7 +75,7 @@ inline time_t smppTime2CTime(COStr& str)
           &ignore,
           &utc,
           &utcfix);
-  if(scaned!=16)
+  if(scaned!=9)
   {
     __trace2__("time(%d):%16s",scaned,dta);
   }
