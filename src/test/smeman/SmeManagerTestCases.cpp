@@ -16,6 +16,7 @@ using smsc::test::sms::operator<<;
 using smsc::test::conf::TestConfig;
 using namespace std;
 using namespace smsc::test::util;
+using namespace smsc::test::core; //SmeType
 
 ostream& operator<< (ostream& os, const SmeInfo& sme)
 {
@@ -54,9 +55,9 @@ void SmeManagerTestCases::debugSme(const char* tc, const Address& smeAddr,
 void SmeManagerTestCases::setupRandomCorrectAddressRange(
 	const Address& addr, SmeInfo* sme, int num)
 {
-	TCSelector s(num, 3);
+	TCSelector s(num, 4);
 	AddressValue addrVal;
-	uint8_t addrLen = addr.getValue(addrVal);
+	int addrLen = addr.getValue(addrVal);
 	ostringstream os;
 	//для match адресов надо задавать address value либо полностью
 	//либо address range = ""
@@ -68,7 +69,14 @@ void SmeManagerTestCases::setupRandomCorrectAddressRange(
 		case 2: //любые ton & npi
 			os << "\\.\\d*" << "\\.\\d*" << "\\." << addrVal;
 			break;
-		case 3: //совпадает с адресом
+		case 3: //любые ton & npi
+			os << "\\.\\d*" << "\\.\\d*" << "\\.";
+			for (int i = 0; i < addrLen; i++)
+			{
+				os << "[" << addrVal[i] << "]";
+			}
+			break;
+		case 4: //совпадает с адресом
 			os << "\\." << (int) addr.getTypeOfNumber() <<
 				"\\." << (int) addr.getNumberingPlan() <<
 				"\\." << addrVal;
@@ -630,7 +638,7 @@ void SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& systemId,
 	{
 		CorrectSmeProxy* tmp = new CorrectSmeProxy();
 		smeMan->registerSmeProxy(systemId, password, tmp);
-		smeReg->bindSme(systemId);
+		smeReg->bindSme(systemId, SME_TRANSCEIVER);
 		SmeIndex index = smeMan->lookup(systemId);
 		*proxy = smeMan->getSmeProxy(index);
 		__trace2__("registerCorrectSmeProxy(): systemId = %s, proxyId = %u",
