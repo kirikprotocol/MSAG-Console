@@ -480,11 +480,13 @@ public:
       } else {
         if( item->sms.get() && item->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
           // check if it's really next part of concatenated message
-          if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) )
+          if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
             throw NextMMSPartWaiting("Waiting next part of concat message");
-          if( item->sms.get()->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() )
+          }
+          if( item->sms.get()->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() ) {
             __mapdlg_trace2__("Waiting next part of other concat message: %d != %d",item->sms.get()->getConcatMsgRef(),cmd->get_sms()->getConcatMsgRef());
             throw NextMMSPartWaiting("Waiting next part of other concat message");
+          }
           if( item->state == MAPST_WaitNextMMS ) {
             item->state = MAPST_SendNextMMS;
             item->dialogid_smsc = smsc_did;
