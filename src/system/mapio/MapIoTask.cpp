@@ -414,7 +414,7 @@ USHORT_T  Et96MapOpenConf (
                             respondingAddr_sp,
                             appContext_sp,
                             specificInfo_sp,
-                            provErrCode_p));
+                            provErrCode_p);
      if ( openResult != ET96MAP_RESULT_OK )
       MapDialogContainer::getInstance()->dropDialog(dialogId);
     }
