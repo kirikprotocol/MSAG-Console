@@ -45,31 +45,6 @@ void Convert7BitToText(
   __trace2__("7bit->latin1: %s",text->len);
 }
 
-int ConvertTextTo7Bit(MicroString* text, char* bit7buf, int bit7buf_size)
-{
-  OutBitStream bstream((unsigned char*)bit7buf,bit7buf_size);
-  bool prev_is_capital;
-  if ( textbuf_size > 1 ) {
-    if ( (unsigned char)text[1] > 127 ) Translit(text[1],encoding,0,&prev_is_capital);
-    else if ( text[1] >= 'A' && text[1] <= 'Z' ) prev_is_capital = true;
-    else prev_is_capital = false;
-  }
-  for ( int i=0; i < textbuf_size; ++i )
-  {
-    unsigned char ch = (unsigned char)(text[i]);
-    if ( ch > 127 ) {
-      const unsigned char* sequence = Translit(ch,encoding,prev_is_capital?CONV_PREVIOUS_IS_CAPITAL:0,&prev_is_capital);
-      for (; *sequence != 0 ;++sequence){
-        bstream.Put(*sequence);
-      }
-    }else{ 
-      bstream.Put(ch);
-      if ( ch >= 'A' && ch <= 'Z' ) prev_is_capital = true;
-      else prev_is_capital = false;
-    }
-  }
-  return bstream.Size();
-}
 
 struct SMS_SUMBMIT_FORMAT_HEADER{
   union{
