@@ -281,17 +281,17 @@ void OverwriteStatement::bindSms(SMS& sms)
          (sb4) sizeof(sms.originatingDescriptor.sme));
     if (sms.waitTime) 
     {
-        convertOCIDateToDate(&waitTime, &(sms.waitTime));
+        convertDateToOCIDate(&(sms.waitTime), &waitTime);
         indWaitTime = OCI_IND_NOTNULL;
     } 
     else indWaitTime = OCI_IND_NULL;
     bind(5 , SQLT_ODT, (dvoid *) &(waitTime), 
          (sb4) sizeof(waitTime), &indWaitTime);
     
-    convertOCIDateToDate(&validTime, &(sms.validTime));
+    convertDateToOCIDate(&(sms.validTime), &validTime);
     bind(6 , SQLT_ODT, (dvoid *) &(validTime), 
          (sb4) sizeof(validTime));
-    convertOCIDateToDate(&submitTime, &(sms.submitTime));
+    convertDateToOCIDate(&(sms.submitTime), &submitTime);
     bind(7 , SQLT_ODT, (dvoid *) &(submitTime), 
          (sb4) sizeof(submitTime));
     
@@ -371,17 +371,17 @@ void StoreStatement::bindSms(SMS& sms)
     
     if (sms.waitTime) 
     {
-        convertOCIDateToDate(&waitTime, &(sms.waitTime));
+        convertDateToOCIDate(&(sms.waitTime), &waitTime);
         indWaitTime = OCI_IND_NOTNULL;
     } 
     else indWaitTime = OCI_IND_NULL;
     bind(13, SQLT_ODT, (dvoid *) &(waitTime), 
          (sb4) sizeof(waitTime), &indWaitTime);
     
-    convertOCIDateToDate(&validTime, &(sms.validTime));
+    convertDateToOCIDate(&(sms.validTime), &validTime);
     bind(14, SQLT_ODT, (dvoid *) &(validTime), 
          (sb4) sizeof(validTime));
-    convertOCIDateToDate(&submitTime, &(sms.submitTime));
+    convertDateToOCIDate(&(sms.submitTime), &submitTime);
     bind(15, SQLT_ODT, (dvoid *) &(submitTime), 
          (sb4) sizeof(submitTime));
     
@@ -515,29 +515,42 @@ void RetriveStatement::getSms(SMS& sms)
     sms.needArchivate = (bNeedArchivate == 'Y');
     sms.messageBody.header = (bHeaderIndicator == 'Y');
     
-    
-    if (indSrcImsi != OCI_IND_NOTNULL) {
+    if (indOA == OCI_IND_NOTNULL) {
+        sms.originatingAddress.lenght 
+            = strlen(sms.originatingAddress.value);
+    } else {
+        sms.originatingAddress.value[0] = '\0';
+        sms.originatingAddress.lenght = 0;
+    }
+    if (indDA == OCI_IND_NOTNULL) {
+        sms.destinationAddress.lenght 
+            = strlen(sms.destinationAddress.value);
+    } else {
+        sms.destinationAddress.value[0] = '\0';
+        sms.destinationAddress.lenght = 0;
+    }
+    if (indSrcImsi == OCI_IND_NOTNULL) {
         sms.originatingDescriptor.imsiLenght 
             = strlen(sms.originatingDescriptor.imsi);
     } else {
         sms.originatingDescriptor.imsi[0] = '\0';
         sms.originatingDescriptor.imsiLenght = 0;
     }
-    if (indSrcMsc != OCI_IND_NOTNULL) {
+    if (indSrcMsc == OCI_IND_NOTNULL) {
         sms.originatingDescriptor.mscLenght 
             = strlen(sms.originatingDescriptor.msc);
     } else {
         sms.originatingDescriptor.msc[0] = '\0';
         sms.originatingDescriptor.mscLenght = 0;
     }
-    if (indDstImsi != OCI_IND_NOTNULL) {
+    if (indDstImsi == OCI_IND_NOTNULL) {
         sms.destinationDescriptor.imsiLenght 
             = strlen(sms.destinationDescriptor.imsi);
     } else {
         sms.destinationDescriptor.imsi[0] = '\0';
         sms.destinationDescriptor.imsiLenght = 0;
     }
-    if (indDstMsc != OCI_IND_NOTNULL) {
+    if (indDstMsc == OCI_IND_NOTNULL) {
         sms.destinationDescriptor.mscLenght 
             = strlen(sms.destinationDescriptor.msc);
     } else {
@@ -638,14 +651,14 @@ void ReplaceStatement::bindDeliveryReport(dvoid* dr, sb4 size)
 void ReplaceStatement::bindValidTime(time_t validTime)
     throw(StorageException)
 {
-    convertOCIDateToDate(&vTime, &(validTime));
+    convertDateToOCIDate(&(validTime), &vTime);
     bind((CONST text *)"VT", (sb4) 2*sizeof(char), 
          SQLT_ODT, (dvoid *) &(vTime), (sb4) sizeof(vTime));
 }
 void ReplaceStatement::bindWaitTime(time_t waitTime)
     throw(StorageException)
 {
-    convertOCIDateToDate(&wTime, &(waitTime));
+    convertDateToOCIDate(&(waitTime), &wTime);
     bind((CONST text *)"WT", (sb4) 2*sizeof(char), 
          SQLT_ODT, (dvoid *) &(wTime), (sb4) sizeof(wTime));
 }
@@ -701,7 +714,7 @@ void ToEnrouteStatement::bindId(SMSId id)
 void ToEnrouteStatement::bindNextTime(time_t nextTryTime)
     throw(StorageException)
 {
-    convertOCIDateToDate(&nextTime, &(nextTryTime));
+    convertDateToOCIDate(&(nextTryTime), &nextTime);
     bind(1, SQLT_ODT, (dvoid *) &(nextTime), (sb4) sizeof(nextTime));
 }
 void ToEnrouteStatement::bindFailureCause(dvoid* cause, sb4 size)
