@@ -309,19 +309,16 @@ void TaskProcessor::loadupTasks()
         MessageState state = task->getCurrentState();
         if (state == WAIT_CNCL || state == WAIT_RCPT)
         {
-            message.reset();
-            message.abonent = abonent;
+            message.reset(abonent); message.cancel = true;
             message.id = task->getCurrentMessageId();
             message.smsc_id = task->getCurrentSmscId();
-            message.cancel = true; message.notification = false;
             const char* smsc_id = message.smsc_id.c_str();
             if (!smsc_id || !smsc_id[0]) {
                 smsc_log_warn(logger, "Smsc_id is undefined for message #%lld", message.id);
                 continue;
             }
             task->waitCancel(smsc_id);
-            smsc_log_debug(logger, "Cancel message #%lld smsc_id=%s put to out queue",
-                           message.id, smsc_id);
+            smsc_log_debug(logger, "Cancel message #%lld smsc_id=%s put to out queue", message.id, smsc_id);
             putToOutQueue(message, true);
         }
         else if (task->formatMessage(message))
@@ -477,25 +474,27 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
     {
         TaskAccessor taskAccessor(this);
 
-        bool isNewTask = false; // possible creates & loads task
+        bool isNewTask = false; // get or create task
         Task* task = taskAccessor.getTask(abonent, isNewTask); 
         if (!task) throw Exception("Failed to obtain task for abonent: %s", abonent);
 
         AbonentProfile profile = task->getAbonentProfile();
         if (profile.inform || Task::bInformAll)
         {
-            task->addEvent(event); // adds event to task chain & inassigned into DB 
+            task->addEvent(event); // add new event to task chain (inassigned to message in DB)
             smsc_log_debug(logger, "Event for %s added to %s task. Events=%d",
                            abonent, (isNewTask) ? "new":"existed", task->getEventsCount());
 
+            // process event if task not exists or task awaiting receipt
             if (!isNewTask && task->getCurrentState() != WAIT_RCPT) return;
 
-            message.reset();
-            message.abonent = abonent;
+            message.reset(abonent);
             message.id = task->getCurrentMessageId();
             message.smsc_id = task->getCurrentSmscId();
-            message.notification = false;
             const char* smsc_id = message.smsc_id.c_str();
+
+            // TODO: ѕровер€ть ли возможность расширени€ текущего сообщени€ новым событием 
+            //      (отмен€ть ли при этом старое сообщение) ???
             if ((task->getCurrentState() == WAIT_RCPT) && smsc_id && smsc_id[0]) {
                 message.cancel = true;
                 task->waitCancel(smsc_id);
@@ -577,13 +576,13 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
 
     Message message; // get message by sequence number assigned in sender
     if (!responcesTracker.popResponceData(seqNum, message)) {   
-        smsc_log_warn(logger, "Unable to locate message for sequence number: %d", seqNum);
+        smsc_log_error(logger, "Unable to locate message for sequence number: %d", seqNum);
         return;
     }
-    if (message.cancel != cancel) {
-        smsc_log_warn(logger, "%s responce got on %s message #%lld, sequence number: %d",
-                      cancel ? "Cancel":"Submit", message.cancel ? "cancel":"submit", 
-                      message.id, seqNum);
+    if (message.cancel != cancel && !message.notification) {
+        smsc_log_error(logger, "%s responce got on %s message #%lld, sequence number: %d",
+                       cancel ? "Cancel":"Submit", message.cancel ? "cancel":"submit", message.id, seqNum);
+        return;
     }
 
     if (cancel) smscId=message.smsc_id;
@@ -605,16 +604,16 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
     {
         TaskAccessor taskAccessor(this);
         Task* task = taskAccessor.getTask(message.abonent.c_str());
-        if (!task) { // Task MUST be in map for valid responce !!!
+        if (!task) { // Do not create task! Task MUST be in map for valid responce.
             smsc_log_error(logger, "Unable to locate task for abonent: %s", message.abonent.c_str());
             return;
         }
 
         if (!accepted)
         {
-            if (retry)  // temporal error => keep task & retry with message (possible updated)
+            if (retry)  // temporal error => keep task & retry with message (possible extended)
             { 
-                if (cancel || message.cancel) { // message.cancel ???
+                if (cancel) { 
                     isMessageToSend = true; messageToSend = message; message.cancel = true;
                 }
                 else    // usual (submit) message
@@ -632,7 +631,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                     }
                 }
             }
-            else        // permanent error
+            else       // permanent error
             {
                 if (cancel && cancel_failed)
                 {
@@ -649,6 +648,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                         
                         // set new current message & skip task events for old message
                         task->waitReceipt(oldEvtCount, smsc_id);
+                        // TODO: check bWasRecepted & set wait timer ??? 
 
                         // try send more events via submit next message (do not cancel)
                         if (task->formatMessage(messageToSend))
@@ -674,16 +674,17 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
         }
         else    // submit | cancel was accepted by SMSC
         {
-            if (cancel || message.cancel) // cancel was accepted by SMSC
+            if (cancel) // cancel was accepted by SMSC
             {
                 smsc_log_debug(logger, "Message #%lld (smscId=%s) cancel ok for abonent: %s",
                                message.id, smsc_id ? smsc_id:"-", message.abonent.c_str());
                 
                 if (!bWasReceipted) {
-                    // cancel responce is first => need skip future receipt on this smsc_id
-                    if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(false, false)))
+                    // cancel responce is first => need skip future receipt (if any) on this smsc_id
+                    if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(false, false))) {
                         smsc_log_error(logger, "Failed to add receipt data (on responce). "
                                        "smscId=%s already used.", smsc_id ? smsc_id:"-");
+                    }
                 }
                 else bWasReceipted = false; // skip receipt data for old message if present
 
@@ -709,6 +710,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                     {
                         // set new current message & skip task events for old message
                         task->waitReceipt(message.eventsCount, smsc_id);
+                        // task now in WAIT_RESP state
 
                         // try send more events via submit next message 
                         if (task->formatMessage(messageToSend))
