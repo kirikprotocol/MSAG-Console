@@ -8,6 +8,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "smeman/smsccmd.h"
+#include "smeman/smereg.h"
 #include <string>
 
 //#if defined USE_MAP
@@ -37,10 +38,13 @@ typedef smsc::core::buffers::Array<SmscCommand> MapIOQueue;
 
 class MapProxy:public SmeProxy{
 public:
-  MapProxy() : seq(0) {
+  MapProxy() : seq(0),smereg(0) {
    time_logger = &smsc::util::Logger::getCategory("map.otime");
   }
-  virtual ~MapProxy(){}
+  virtual ~MapProxy()
+  {
+    if(smereg)smereg->unregisterSmeProxy("MAP_PROXY");
+  }
   virtual void close(){}
   void notifyOutThread(){}
   void checkLogging();
@@ -159,6 +163,11 @@ public:
 
   const char* getSystemId()const{return id.c_str();}
 
+  void assignSmeRegistrar(SmeRegistrar* r)
+  {
+    smereg=r;
+  }
+
 protected:
   mutable Mutex mutex;
   std::string id;
@@ -167,6 +176,7 @@ protected:
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
   log4cpp::Category* time_logger;
+  SmeRegistrar *smereg;
 };
 
 };//mappio

@@ -711,7 +711,7 @@ void Smsc::run()
   //smsc::util::Logger::getCategory("sms.snmp.alarm").debug("sample alarm");
 
   __trace__("Smsc::run");
-		  
+
   try{
   if(startTime==0)startTime=time(NULL);
   {
@@ -804,12 +804,6 @@ void Smsc::shutdown()
 
   smeman.unregisterSmeProxy("scheduler");
 
-  if(mapProxy)
-  {
-#ifndef NOMAPPROXY
-    MapDialogContainer::getInstance()->unregisterSelf(&smeman);
-#endif
-  }
   tp2.shutdown();
 
 

@@ -370,6 +370,7 @@ void MapDialogContainer::registerSelf(SmeManager* smeman)
 //  smeman->registerSmeProxy("MAP_PROXY",proxy);
 //#else
   smeman->registerInternallSmeProxy("MAP_PROXY",proxy);
+  proxy->assignSmeRegistrar(smeman);
 //#endif
   __map_trace2__("register MAP_PROXY OK");
 }
