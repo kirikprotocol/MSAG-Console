@@ -44,7 +44,7 @@ void RouteManagerTestCases::debugRoute(const char* tc, const RouteInfo* route)
 	ostringstream os;
 	os << *route;
 	getLog().debug("[%d]\t%s: %s", thr_self(), tc, os.str().c_str());
-	__trace2__("%s: %s", tc, os.str().c_str());
+	//__trace2__("%s: %s", tc, os.str().c_str());
 }
 
 void RouteManagerTestCases::commit()
@@ -98,7 +98,7 @@ void RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
 	int len = rand1(addrLen);
 	switch(num)
 	{
-		case 1: //адрес с лишними '?'
+		case 1: //адрес с лишним '?'
 			if (addrLen < MAX_ADDRESS_VALUE_LENGTH)
 			{
 				memset(addrVal + addrLen - len, '?', len + 1);
@@ -106,14 +106,22 @@ void RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr, int num)
 				break;
 			}
 			//break;
-		case 2: //отличающийся адрес
+		case 2: //адрес с недостающим '?'
+			if (addrLen > 1)
+			{
+				memset(addrVal + addrLen - len, '?', len - 1);
+				addr.setValue(addrLen - 1, addrVal);
+				break;
+			}
+			//break;
+		case 3: //отличающийся адрес
 			addrVal[len - 1] = '@';
 			addr.setValue(addrLen, addrVal);
 			break;
-		case 3: //адрес с несовпадающим typeOfNumber
+		case 4: //адрес с несовпадающим typeOfNumber
 			addr.setTypeOfNumber(addr.getTypeOfNumber() + 1);
 			break;
-		case 4: //адрес с несовпадающим numberingPlan
+		case 5: //адрес с несовпадающим numberingPlan
 			addr.setNumberingPlan(addr.getNumberingPlan() + 1);
 			break;
 		default:
@@ -156,7 +164,7 @@ TCResult* RouteManagerTestCases::addCorrectRouteMatch(RouteInfo* route,
 TCResult* RouteManagerTestCases::addCorrectRouteNotMatch(RouteInfo* route,
 	SmeProxy* proxy, int num)
 {
-	int numMatch = 3; int numNotMatch = 4; int numType = 2;
+	int numMatch = 3; int numNotMatch = 5; int numType = 2;
 	TCSelector s(num, numMatch * numNotMatch * numType);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE_NOT_MATCH, s.getChoice());
 	for (; s.check(); s++)
@@ -382,6 +390,7 @@ TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
 	return res;
 }
 
+/*
 TCResult* RouteManagerTestCases::iterateRoutes()
 {
 	TCResult* res = new TCResult(TC_ITERATE_ROUTES);
@@ -389,6 +398,7 @@ TCResult* RouteManagerTestCases::iterateRoutes()
 	debug(res);
 	return res;
 }
+*/
 
 }
 }
