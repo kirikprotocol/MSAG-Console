@@ -116,7 +116,7 @@ namespace smsc { namespace store
 
         sb2         indSrcMsc, indSrcImsi, indSrcSme;
         sb2         indDstMsc, indDstImsi, indDstSme;
-        sb2         indBody, indLastTime, indSvc;
+        sb2         indBody, indLastTime, indSvc, indRouteId;
 
         FullAddressValue    oa, da, dda;
         

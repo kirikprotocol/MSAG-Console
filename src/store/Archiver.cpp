@@ -499,7 +499,7 @@ const char* Archiver::storageSelectSql = (const char*)
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
  VALID_TIME, SUBMIT_TIME,\
  ATTEMPTS, LAST_RESULT, LAST_TRY_TIME,\
- DR, BR, ARC, BODY, BODY_LEN\
+ DR, BR, ARC, BODY, BODY_LEN, ROUTE_ID, SVC_ID, PRTY\
  FROM SMS_MSG WHERE NOT ST=:ENROUTE ORDER BY LAST_TRY_TIME ASC";
 void Archiver::prepareStorageSelectStmt() throw(StorageException)
 {
@@ -565,6 +565,12 @@ void Archiver::prepareStorageSelectStmt() throw(StorageException)
                               (sb4) sizeof(bodyBuffer), &indBody);
     storageSelectStmt->define(i++, SQLT_UIN, (dvoid *) &(bodyBufferLen), 
                               (sb4) sizeof(bodyBufferLen));
+    storageSelectStmt->define(i++, SQLT_STR, (dvoid *) (sms.routeId),
+                              (sb4) sizeof(sms.routeId), &indRouteId);
+    storageSelectStmt->define(i++, SQLT_INT, (dvoid *)&(sms.serviceId),
+                              (sb4) sizeof(sms.serviceId));
+    storageSelectStmt->define(i++, SQLT_INT, (dvoid *)&(sms.priority),
+                              (sb4) sizeof(sms.priority));
     
     storageSelectStmt->bind(1 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
                             (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
@@ -585,11 +591,12 @@ const char* Archiver::archiveInsertSql = (const char*)
 "INSERT INTO SMS_ARC (ID, ST, MR, OA, DA, DDA, SVC_TYPE,\
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
  VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT,\
- LAST_TRY_TIME, DR, BR, BODY, BODY_LEN)\
+ LAST_TRY_TIME, DR, BR, BODY, BODY_LEN, ROUTE_ID, SVC_ID, PRTY)\
  VALUES (:ID, :ST, :MR, :OA, :DA, :DDA, :SVC_TYPE,\
  :SRC_MSC, :SRC_IMSI, :SRC_SME_N, :DST_MSC, :DST_IMSI, :DST_SME_N,\
  :VALID_TIME, :SUBMIT_TIME, :ATTEMPTS, :LAST_RESULT,\
- :LAST_TRY_TIME, :DR, :BR, :BODY, :BODY_LEN)";
+ :LAST_TRY_TIME, :DR, :BR, :BODY, :BODY_LEN,\
+ :ROUTE_ID, :SVC_ID, :PRTY)";
 void Archiver::prepareArchiveInsertStmt() throw(StorageException)
 {
     archiveInsertStmt = new Statement(storageConnection, 
@@ -650,9 +657,16 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
                             (sb4) sizeof(sms.billingRecord));
 
     archiveInsertStmt->bind(i++, SQLT_BIN, (dvoid *) bodyBuffer,
-                            (sb4) sizeof(bodyBuffer), &indBody);
+                            (sb4) bodyBufferLen, &indBody);
     archiveInsertStmt->bind(i++, SQLT_UIN, (dvoid *)&(bodyBufferLen),
                             (sb4) sizeof(bodyBufferLen));
+    
+    archiveInsertStmt->bind(i++, SQLT_STR, (dvoid *) (sms.routeId),
+                            (sb4) sizeof(sms.routeId), &indRouteId);
+    archiveInsertStmt->bind(i++, SQLT_INT, (dvoid *)&(sms.serviceId),
+                            (sb4) sizeof(sms.serviceId));
+    archiveInsertStmt->bind(i++, SQLT_INT, (dvoid *)&(sms.priority),
+                            (sb4) sizeof(sms.priority));
 }
 
 const char* Archiver::billingInsertSql = (const char*)
