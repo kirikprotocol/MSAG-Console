@@ -6,16 +6,16 @@
         <section name="DataSourceDrivers">
             <section name="OCIDataSourceDriver">
                 <param name="type" type="string">OCI</param>
-                <param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+                <param name="loadup" type="string">libdb_oci.so</param>
             </section>
         </section>
     </section>
     
     <section name="MCISme">
 
-        <param name="Address" type="string">555</param>
+        <param name="Address" type="string">@mcisme.orig.address@</param>
 	<param name="SvcType" type="string">MCISme</param>
-        <param name="ProtocolId" type="int">111</param>
+        <param name="ProtocolId" type="int">0</param>
 	<param name="DaysValid"  type="int">1</param>
 	<param name="CallingMask" type="string">/^(?:\.3\.\d\.\d{10}|\.4\.\d\.\d{1,20})$/</param>
 	<param name="CalledMask"  type="string">/^\d{10}$/</param>
@@ -40,13 +40,13 @@
         </section>  
 
         <section name="Admin">
-            <param name="host" type="string">smsc</param>
-            <param name="port" type="int">9759</param>
+            <param name="host" type="string">@listen.host@</param>
+            <param name="port" type="int">@mcisme.admin.port@</param>
 	</section>
 
         <section name="SMSC">
-            <param name="host" type="string">smsc</param>
-            <param name="port" type="int">9229</param>
+            <param name="host" type="string">@connect.host@</param>
+            <param name="port" type="int">@smsc.smpp.port@</param>
             <param name="sid" type="string">MCISme</param>
             <param name="password" type="string"></param>
 	    <param name="timeout" type="int">10</param>
@@ -61,13 +61,13 @@
 	<section name="DataSource">
     	    <param name="type" type="string">OCI</param>
             <param name="connections" type="int">10</param>
-            <param name="dbInstance" type="string">smsc</param>
-            <param name="dbUserName" type="string">smsc_makar</param>
-            <param name="dbUserPassword" type="string">smsc_makar</param>
+            <param name="dbInstance" type="string">@db.instance@</param>
+            <param name="dbUserName" type="string">@db.user@</param>
+            <param name="dbUserPassword" type="string">@db.password@</param>
 	    <param name="watchdog" type="bool">false</param>
 	    <section name="jdbc">
-	        <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
-	        <param name="source" type="string">jdbc:oracle:thin:@dark:1521:smsc</param>
+	        <param name="driver" type="string">@jdbc.driver@</param>
+	        <param name="source" type="string">@jdbc.source@</param>
 	    </section>
 	</section>
 
