@@ -615,6 +615,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_ORIGINALNUMB_T 
     int n=m.size();
     if(maskRx.Match(cgaddr,&m[0],n))
     {
+      cgaddr[0] = 0;
       if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
         cgaddr[0] = '+';cgaddr[1] = '7'; // valid only for Russia!!!
@@ -643,6 +644,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_ORIGINALNUMB_T 
     int n=m.size();
     if(calledMaskRx.Match(cdaddr,&m[0],n))
     {
+      cdaddr[0] = 0;
       if (called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
         cdaddr[0] = '+';cdaddr[1] = '7'; // valid only for Russia!!!
