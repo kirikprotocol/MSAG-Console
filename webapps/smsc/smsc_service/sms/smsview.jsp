@@ -39,7 +39,7 @@ if (request.getMethod().equals("POST"))
 <center>
 <table width="95%" cellpadding=2 cellspacing=2 border=0>
 <tr>
-    	<td colspan=3 valign=top>
+    	<td colspan=2 align=left>
     	<b>Source&nbsp;&nbsp;storage:&nbsp;&nbsp;</b>
     	<input type="radio" name="storageType" value="<%=
         SmsQuery.SMS_ARCHIVE_STORAGE_TYPE%>" <%=
@@ -49,8 +49,14 @@ if (request.getMethod().equals("POST"))
         SmsQuery.SMS_OPERATIVE_STORAGE_TYPE%>" <%=
           (formBean.getStorageType()==SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
               "checked":""%>>Operative&nbsp;&nbsp;
-    	</td>
+      </td>
+      <td colspan=1 align=right>
+      <b>Route&nbsp;id:</b>
+    	<input type="text" name="routeId"  value="<%=
+        formBean.getRouteId()%>" size=20 maxlength=20>
+      </td>
 </tr>
+<tr></tr>
 <tr>
     	<td colspan=1>
       <b>Source&nbsp;address:</b><br>
@@ -60,10 +66,10 @@ if (request.getMethod().equals("POST"))
       <td colspan=1>
       <b>Source&nbsp;SME&nbsp;id:</b><br>
     	<input type="text" name="srcSmeId"  value="<%=
-        formBean.getSrcSmeId()%>" size=15 maxlength=15>
+        formBean.getSrcSmeId()%>" size=20 maxlength=15>
       </td>
-      <td colspan=1>
-    	<b>Select&nbsp;from&nbsp;date:</b><br>
+      <td colspan=1 align=right>
+      <b>Select&nbsp;from&nbsp;date:</b><br>
       <input type="checkbox" name="fromDateEnabled" <%=
         (formBean.getFromDateEnabled()) ? "checked":""%>>
       <input type="text" name="fromDateDay" style="width:16pt;" value="<%=
@@ -103,9 +109,9 @@ if (request.getMethod().equals("POST"))
       <td colspan=1>
       <b>Destination&nbsp;SME&nbsp;id:</b><br>
     	<input type="text" name="dstSmeId"  value="<%=
-        formBean.getDstSmeId()%>" size=15 maxlength=15>
+        formBean.getDstSmeId()%>" size=20 maxlength=15>
       </td>
-      <td colspan=1>
+      <td colspan=1 align=right>
     	<b>Till&nbsp;date:</b><br>
       <input type="checkbox" name="tillDateEnabled" <%=
         (formBean.getTillDateEnabled()) ? "checked":""%>>
@@ -138,14 +144,8 @@ if (request.getMethod().equals("POST"))
       </td>
 </tr>
 <tr>
-      <td colspan=1>
-      <b>Route&nbsp;id:</b><br>
-    	<input type="text" name="routeId"  value="<%=
-        formBean.getRouteId()%>" size=20 maxlength=20>
-      </td>
-      <td colspan=1>
-      <b>Rows&nbsp;per&nbsp;page:</b><br>
-    	<select name="rowsToDisplay"><%
+      <td colspan=1 align=left>
+      <select name="rowsToDisplay"><%
         int rowsToDisplay = formBean.getRowsToDisplay();%>
 	      <option value="5" <%= (rowsToDisplay < 10) ?   "selected":""%>>5</option>
 	      <option value="10" <%= (rowsToDisplay == 10) ? "selected":""%>>10</option>
@@ -156,9 +156,12 @@ if (request.getMethod().equals("POST"))
 	      <option value="-1" <%= (rowsToDisplay < 0 ||
                                 rowsToDisplay > 50) ?  "selected":""%>>All</option>
 	    </select>
+      <b>Rows&nbsp;per&nbsp;page</b>
       </td>
-      <td colspan=1>
-    	<b>Sort&nbsp;results&nbsp;by:</b><br>
+      <td colspan=1 align=center>
+      </td>
+      <td colspan=1 align=right>
+    	<b>Sort&nbsp;results&nbsp;by</b>
       <select name="sortBy">
 	      <option value="Date" <%=
           (formBean.getSortBy().equalsIgnoreCase("Date")) ? "selected":""%>>Date</option>
@@ -172,9 +175,9 @@ if (request.getMethod().equals("POST"))
 	    </td>
 </tr>
 <tr>
-  <td colspan=3 align=center>
-    <input type="submit" name="query" value="Query !">
-  </td>
+      <td colspan=3 align=center>
+      <input type="submit" name="query" value="Query !">
+      </td>
 </tr>
 </table>
 
