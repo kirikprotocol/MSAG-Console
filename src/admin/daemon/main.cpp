@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 				<< std::endl;
 			return -1;
 		}
-		//daemonInit();
+		daemonInit();
 	
 		Manager::init(argv[1]);
 		Manager &manager = Manager::getInstance();

@@ -4,6 +4,7 @@
 #include <util/signal.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <signal.h>
 
 namespace smsc {
 namespace admin {
@@ -24,6 +25,9 @@ void SignalHandler::registerShutdownHandler(SignalHandler * handler) throw()
 	if (handler != 0)
 	{
 		smsc::util::setSignalHandler(SHUTDOWN_SIGNAL, shutdownSignalHandler);
+		#ifdef SMSC_DEBUG
+			smsc::util::setSignalHandler(SIGINT, shutdownSignalHandler);
+		#endif
 		atexit(atExitHandler);
 	}
 }
