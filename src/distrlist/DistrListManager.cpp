@@ -64,7 +64,8 @@ void DistrListManager::addDistrList(string dlName, const Address& dlOwner)
           PrincipalNotExistsException, ListCountExceededException)
 {
     const char* dlNameStr  = dlName.c_str();
-    const char* dlOwnerStr = dlOwner.toString().c_str();
+    string dlOwnerStdStr = dlOwner.toString();
+    const char* dlOwnerStr = dlOwnerStdStr.c_str();
     logger.debug("DistrListManager: addDistrList() called. dlName:'%s', dlOwner: '%s'",
                  dlNameStr, dlOwnerStr);
     
@@ -366,7 +367,8 @@ Array<Address> DistrListManager::members(string dlName, const Address& submitter
     Array<Address> members(0);
     
     const char* dlNameStr = dlName.c_str();
-    const char* submitterStr = submitter.toString().c_str();
+    string submitterStdStr = submitter.toString();
+    const char* submitterStr = submitterStdStr.c_str();
     logger.debug("DistrListManager: members() called for dl '%s', submitter '%s'",
                  dlNameStr, submitterStr);
     
@@ -440,7 +442,8 @@ bool DistrListManager::checkPermission(string dlName, const Address& submitter)
 {
     bool result = false;
     const char* dlNameStr = dlName.c_str();
-    const char* submitterStr = submitter.toString().c_str();
+    string submitterStdStr = submitter.toString();
+    const char* submitterStr = submitterStdStr.c_str();
     logger.debug("DistrListManager: checkPermission() called for dl '%s', submitter '%s'",
                  dlNameStr, submitterStr);
     
@@ -489,7 +492,8 @@ bool DistrListManager::checkPermission(string dlName, const Address& submitter)
 void DistrListManager::addPrincipal(const Principal& prc)
     throw(SQLException, PrincipalAlreadyExistsException)
 {
-    const char* prcAddressStr = prc.address.toString().c_str();
+    string prcAddressStdStr = prc.address.toString();
+    const char* prcAddressStr = prcAddressStdStr.c_str();
     logger.debug("DistrListManager: addPrincipal() called. Addr:'%s' maxLst=%d, maxEl=%d",
                  (prcAddressStr) ? prcAddressStr:"null", prc.maxLst, prc.maxEl);
     
@@ -555,7 +559,8 @@ void DistrListManager::addPrincipal(const Principal& prc)
 void DistrListManager::deletePrincipal(const Address& address) 
     throw(SQLException, PrincipalNotExistsException, PrincipalInUseException)
 {
-    const char* prcAddressStr = address.toString().c_str();
+    string prcAddressStdStr = address.toString();
+    const char* prcAddressStr = prcAddressStdStr.c_str();
     logger.debug("DistrListManager: deletePrincipal() called. Addr:'%s'",
                  (prcAddressStr) ? prcAddressStr:"null");
     
@@ -638,7 +643,8 @@ void DistrListManager::deletePrincipal(const Address& address)
 void DistrListManager::changePrincipal(const Principal& prc) 
     throw(SQLException, PrincipalNotExistsException, IllegalPrincipalException)
 {
-    const char* prcAddressStr = prc.address.toString().c_str();
+    string prcAddressStdStr = prc.address.toString();
+    const char* prcAddressStr = prcAddressStdStr.c_str();
     logger.debug("DistrListManager: changePrincipal() called. Addr:'%s', maxLst=%ld, maxEl=%ld",
                  prcAddressStr, prc.maxEl, prc.maxLst);
     
@@ -734,7 +740,8 @@ void DistrListManager::changePrincipal(const Principal& prc)
 Principal DistrListManager::getPrincipal(const Address& address) 
     throw(SQLException, PrincipalNotExistsException)
 {
-    const char* prcAddressStr = address.toString().c_str();
+    string prcAddressStdStr = address.toString();
+    const char* prcAddressStr = prcAddressStdStr.c_str();
     logger.debug("DistrListManager: getPrincipal() called. Addr:'%s'", prcAddressStr);
     
     Principal prc;
@@ -788,7 +795,8 @@ void DistrListManager::addMember(string dlName, const Address& member)
           MemberAlreadyExistsException, MemberCountExceededException)
 {
     const char* dlNameStr = dlName.c_str();
-    const char* memberStr = member.toString().c_str();
+    string memberStdStr = member.toString();
+    const char* memberStr = memberStdStr.c_str();
     logger.debug("DistrListManager: addMember() called. dlName:'%s' member:'%s'",
                  dlNameStr, memberStr);
     
@@ -891,7 +899,8 @@ void DistrListManager::deleteMember(string dlName, const Address& member)
     throw(SQLException, ListNotExistsException, MemberNotExistsException)
 {
     const char* dlNameStr = dlName.c_str();
-    const char* memberStr = member.toString().c_str();
+    string memberStdStr = member.toString();
+    const char* memberStr = memberStdStr.c_str();
     logger.debug("DistrListManager: deleteMember() called. dlName:'%s' member:'%s'",
                  dlNameStr, memberStr);
     
@@ -1021,7 +1030,8 @@ void DistrListManager::grantPosting(string dlName, const Address& submitter)
           PrincipalNotExistsException, SubmitterAlreadyExistsException)
 {
     const char* dlNameStr = dlName.c_str();
-    const char* submitterStr = submitter.toString().c_str();
+    string submitterStdStr = submitter.toString();
+    const char* submitterStr = submitterStdStr.c_str();
     logger.debug("DistrListManager: grantPosting() called. dlName:'%s', submitter: '%s'",
                  dlNameStr, submitterStr);
     
@@ -1117,7 +1127,8 @@ void DistrListManager::revokePosting(string dlName, const Address& submitter)
           SubmitterNotExistsException, IllegalSubmitterException)
 {
     const char* dlNameStr = dlName.c_str();
-    const char* submitterStr = submitter.toString().c_str();
+    string submitterStdStr = submitter.toString();
+    const char* submitterStr = submitterStdStr.c_str();
     logger.debug("DistrListManager: revokePosting() called. dlName:'%s', submitter: '%s'",
                  dlNameStr, submitterStr);
     
