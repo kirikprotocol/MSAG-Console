@@ -51,7 +51,7 @@ ostream& operator<< (ostream& os, const SmeInfo& sme);
 class SmeManagerTestCases : BaseTestCases
 {
 public:
-	SmeManagerTestCases();
+	SmeManagerTestCases(SmeManager* smeMan);
 
 	virtual ~SmeManagerTestCases() {}
 

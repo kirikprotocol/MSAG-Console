@@ -2,6 +2,7 @@
 #include "SmeManagerUtil.hpp"
 #include "test/core/CoreTestManager.hpp"
 #include "smeman/smetypes.h"
+#include "util/debug.h"
 #include <map>
 #include <sstream>
 
@@ -25,8 +26,11 @@ ostream& operator<< (ostream& os, const SmeInfo& sme)
 	os << ", port = " << sme.port;
 }
 
-SmeManagerTestCases::SmeManagerTestCases()
-	: smeMan(CoreTestManager::getSmeManager()) {}
+SmeManagerTestCases::SmeManagerTestCases(SmeManager* _smeMan)
+	: smeMan(_smeMan)
+{
+	__require__(smeMan);
+}
 
 Category& SmeManagerTestCases::getLog()
 {
