@@ -27,15 +27,18 @@ endif
 
 CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include
 CFLAGS := $(CAMMON_INCLUDES)
-CXXFLAGS := $(CAMMON_INCLUDES) 
+CXXFLAGS := $(CAMMON_INCLUDES)
 LDFLAGS := -L$(SMSC_BUILDDIR)/lib
 
 ifdef DEBUG
 CFLAGS := $(CFLAGS) -g
-CXXFLAGS := $(CXXFLAGS) -g 
-elif OPTI
+CXXFLAGS := $(CXXFLAGS) -g
+export DEBUG
+else
+ifdef OPTI
 CFLAGS := $(CFLAGS) -O2
 CXXFLAGS := $(CXXFLAGS) -O2
+endif
 endif
 
 export CXXFLAGS
@@ -49,38 +52,38 @@ SMSC_BUILDDIR_LIST = $(foreach x,lib bin obj etc doc,$(SMSC_BUILDDIR)/$(x))
 
 all:	build
 	@echo >> /dev/null
-	
+
 __.empty.__:
 	@echo >> /dev/null
 
 commit:
 	@echo "commit cources into CVS"
 	cvs -ecat commit
-	 
+
 update:
 	@echo "updating sources from CVS"
-	cvs update -d 
+	cvs update -d
 
 __build_message__:
 	@echo "build in SMSC"
-		
-build: __build_message__ $(SMSC_BUILDDIR_LIST) 
+
+build: __build_message__ $(SMSC_BUILDDIR_LIST)
 	@if [ -n "$(MODULES)" ]; then \
 	    XXXX="$(MODULES)"; \
 	    set -e; for i in $$XXXX; do make -s $$i.rbuild ; done; \
 	fi
-		
+
 ubuild: .update .build
 	@echo >> /dev/null
 
-clean:	
+clean:
 	@echo "clean all"
 	@if [ -n "$(MODULES)" ]; then \
 	    XXXX="$(MODULES)"; \
 	    set -e; for i in $$XXXX; do make -s $$i.rclean ; done; \
 	fi
 
-deps:	
+deps:
 	@echo "build dependencies"
 	@if [ -n "$(MODULES)" ]; then \
 	    XXXX="$(MODULES)"; \
@@ -100,4 +103,4 @@ override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@)
 	    cd $(_module); make $(_subtarget); \
 	else \
 	    echo "'$(_module)' is not module"; exit 1;\
-	fi 
+	fi
