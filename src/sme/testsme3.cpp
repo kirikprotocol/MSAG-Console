@@ -1,9 +1,10 @@
 #include <stdio.h>
-#include "sme/SmppBase.hpp"
-#include "sms/sms.h"
+#include "../smpp/smpp.h"
+#include "SmppBase.hpp"
+#include "../sms/sms.h"
 #include <unistd.h>
 
-#include "core/synchronization/Event.hpp"
+#include "../core/synchronization/Event.hpp"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -12,7 +13,6 @@ using namespace smsc::core::synchronization;
 
 int stopped=0;
 SmppTransmitter *tr;
-Event e;
 int count=0;
 
 class MyListener:public SmppPduEventListener{
@@ -21,14 +21,33 @@ public:
   {
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
-      const char *msg=((PduXSm*)pdu)->get_message().get_shortMessage();
       count=atoi(msg)+1;
       PduDeliverySmResp resp;
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       resp.set_messageId("");
       resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
       trans->sendDeliverySmResp(resp);
-      e.Signal();
+      SMS xsms;
+      fetchSmsFromSmppPdu(((PduXSm*)pdu),&xsms);
+      ////
+      // processing here
+      __trace2__("MAP::get SMS");
+      {
+        Address src_addr;
+        Address dest_addr;
+        dest_addr = xsms.getDestinationAddress();
+        src_addr = xsms.getOriginatingAddress();
+        xsms.setDestinationAddress(src_addr);
+        xsms.setOriginatingAddress(dest_addr);
+        xsms.setIntProperty(Tag::SMPP_SERVICE_OP,USSD_PSSD_RESP);
+      }
+      // end of processing
+      ////
+      __trace2__("MAP::send SMS");
+      PduSubmitSm sm;
+      sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+      fillSmppPduFromSms(&sm,&xsms);
+      PduSubmitSmResp *resp=tr->submit(sm);
     }
   }
   void handleError(int errorCode)
@@ -62,6 +81,7 @@ int main(int argc,char* argv[])
   SmppSession ss(cfg,&lst);
   try{
     ss.connect();
+    /*    
     PduSubmitSm sm;
     SMS s;
     s.setOriginatingAddress(cfg.sid.length(),1,1,cfg.sid.c_str());
@@ -72,14 +92,16 @@ int main(int argc,char* argv[])
     s.setValidTime(t);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
-    tr=ss.getSyncTransmitter();
-    lst.setTrans(tr);
     s.setEServiceType("XXX");
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
     int send=(argc==6)&&!strcmp(argv[5],"-start");
     char message[64];
+    */
+    tr=ss.getSyncTransmitter();
+    lst.setTrans(tr);
     while(!stopped)
     {
+      /*
       if(send)
       {
         s.setDestinationAddress(strlen(argv[4]),1,1,argv[4]);
@@ -96,6 +118,8 @@ int main(int argc,char* argv[])
       printf("%d\r",count);fflush(stdout);
       e.Wait();
       send=1;
+      */
+      sleep(1);
     }
   }
   catch(std::exception& e)

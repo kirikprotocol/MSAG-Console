@@ -1,6 +1,6 @@
 #include "MapIoTask.h"
-#include "sms/sms.h"
-#include "smeman/smsccmd.h"
+#include "../../sms/sms.h"
+#include "../../smeman/smsccmd.h"
 #include <memory>
 #include <list>
 #include <time.h>
