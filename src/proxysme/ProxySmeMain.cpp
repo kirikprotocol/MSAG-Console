@@ -51,7 +51,7 @@ bool LoadConfig(ProxyConfig& pconf)
   return true;
 #else
   try {
-    ProxySmeConfig cfg("proxysme.cnf");
+    ProxySmeConfig cfg("proxysme.xml");
     const ProxySmeConfig::sme& left = cfg.getLeft();
     pconf.left.host = left.host;
     pconf.left.port = left.port;
