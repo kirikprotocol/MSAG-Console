@@ -2252,6 +2252,7 @@ StateType StateMachine::cancel(Tuple& t)
     store->changeSmsStateToDeleted(t.msgId);
     sms.lastResult=Status::DELETED;
     sendFailureReport(sms,t.msgId,DELETED,"");
+    smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
   }catch(...)
   {
     if(!t.command->get_cancelSm().internall)
