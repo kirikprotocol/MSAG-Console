@@ -15,8 +15,7 @@
 #include "ProxySmeMixer.h"
 #if !defined _WIN32
 #include "ProxySmeConfig.h"
-#include "signal.h"
-#include "../system/smsc.h"
+#include "../system/smscsignalhandlers.h" 
 #endif
 #include "../logger/Logger.h"
 
