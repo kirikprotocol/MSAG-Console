@@ -2168,7 +2168,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     case MAPST_ImsiWaitRInfo:
       {
         if ( dialog->routeErr ) {
-          if(errorSendRoutingInfoForSm_sp->errorCode == 13 && 
+          if(errorSendRoutingInfoForSm_sp && errorSendRoutingInfoForSm_sp->errorCode == 13 && 
              MapDialogContainer::getAllowCallBarred() == true && 
              dialog->state == MAPST_ImsiWaitRInfo) {
             // normal situation no error
