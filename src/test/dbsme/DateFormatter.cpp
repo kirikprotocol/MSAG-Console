@@ -1,105 +1,21 @@
 #include "DateFormatter.hpp"
+#include <sstream>
 
 namespace smsc {
 namespace test {
 namespace dbsme {
 
-void DateFormatter::processToken(ostream& res, const string& token, const tm& lt) const
+using std::ostringstream;
+
+int DateFormatter::count(string::const_iterator& it, char ch, int maxCount) const
 {
-	//Abbreviated weekday name
-	if (token == "w")
+	int count = 0;
+	for (; it != fmt.end() && *it == ch && count < maxCount; it++)
 	{
-		char str[16];
-		strftime(str, sizeof(str), "%a", &lt);
-		res << str;
+		count++;
 	}
-	//Full weekday name
-	else if (token == "W")
-	{
-		char str[16];
-		strftime(str, sizeof(str), "%A", &lt);
-		res << str;
-	}
-	else if (token == "d")
-	{
-		res << lt.tm_mday;
-	}
-	else if (token == "dd")
-	{
-		res << (lt.tm_mday < 10 ? "0" : "");
-		res << lt.tm_mday;
-	}
-	else if (token == "M")
-	{
-		res << (lt.tm_mon + 1);
-	}
-	else if (token == "MM")
-	{
-		res << (lt.tm_mon < 9 ? "0" : "");
-		res << (lt.tm_mon + 1);
-	}
-	//Abbreviated month name
-	else if (token == "MMM")
-	{
-		char str[16];
-		strftime(str, sizeof(str), "%b", &lt);
-		res << str;
-	}
-	//Full month name
-	else if (token == "MMMM")
-	{
-		char str[16];
-		strftime(str, sizeof(str), "%B", &lt);
-		res << str;
-	}
-	//Year without century
-	else if (token == "yy")
-	{
-		res << (lt.tm_year % 100 < 10 ? "0" : "");
-		res << (lt.tm_year % 100);
-	}
-	else if (token == "yyyy")
-	{
-		res << lt.tm_year + 1900;
-	}
-	else if (token == "h")
-	{
-		res << lt.tm_hour;
-	}
-	else if (token == "hh")
-	{
-		res << (lt.tm_hour < 10 ? "0" : "");
-		res << lt.tm_hour;
-	}
-	else if (token == "m")
-	{
-		res << lt.tm_min;
-	}
-	else if (token == "mm")
-	{
-		res << (lt.tm_min < 10 ? "0" : "");
-		res << lt.tm_min;
-	}
-	else if (token == "s")
-	{
-		res << lt.tm_sec;
-	}
-	else if (token == "ss")
-	{
-		res << (lt.tm_sec < 10 ? "0" : "");
-		res << lt.tm_sec;
-	}
-	//Current locale's A.M./P.M. indicator
-	else if (token == "t")
-	{
-		char str[8];
-		strftime(str, sizeof(str), "%p", &lt);
-		res << str;
-	}
-	else
-	{
-		res << token;
-	}
+	it--;
+	return count;
 }
 
 const string DateFormatter::format(time_t t) const
@@ -109,21 +25,109 @@ const string DateFormatter::format(time_t t) const
 	tm lt;
 	localtime_r(&t, &lt);
 	string::const_iterator it_begin = fmt.begin();
+	char str[16];
 	for (string::const_iterator it = fmt.begin(); it != fmt.end(); it++)
 	{
-		if (!isalpha(*it))
+		switch (*it)
 		{
-			string token(it_begin, it);
-			//cout << "token: " << token << endl;
-			processToken(res, token, lt);
-			res << *it;
-			it_begin = it;
-			it_begin++;
+			case 'w': //Abbreviated weekday name
+				strftime(str, sizeof(str), "%a", &lt);
+				res << str;
+				break;
+			case 'W': //Full weekday name
+				strftime(str, sizeof(str), "%A", &lt);
+				res << str;
+				break;
+			case 'd':
+				switch (count(it, 'd', 2))
+				{
+					case 1:
+						res << lt.tm_mday;
+						break;
+					case 2:
+						res << (lt.tm_mday < 10 ? "0" : "");
+						res << lt.tm_mday;
+						break;
+				}
+				break;
+			case 'M':
+				switch (count(it, 'M', 4))
+				{
+					case 1:
+						res << (lt.tm_mon + 1);
+						break;
+					case 2:
+						res << (lt.tm_mon < 9 ? "0" : "");
+						res << (lt.tm_mon + 1);
+						break;
+					case 3: //Abbreviated month name
+						strftime(str, sizeof(str), "%b", &lt);
+						res << str;
+						break;
+					case 4: //Full month name
+						strftime(str, sizeof(str), "%B", &lt);
+						res << str;
+						break;
+				}
+				break;
+			case 'y':
+				switch (count(it, 'y', 4))
+				{
+					case 2: //Year without century
+						res << (lt.tm_year % 100 < 10 ? "0" : "");
+						res << (lt.tm_year % 100);
+						break;
+					case 4:
+						res << lt.tm_year + 1900;
+						break;
+					default:
+						return "";
+				}
+				break;
+			case 'h':
+				switch (count(it, 'h', 2))
+				{
+					case 1:
+						res << lt.tm_hour;
+						break;
+					case 2:
+						res << (lt.tm_hour < 10 ? "0" : "");
+						res << lt.tm_hour;
+						break;
+				}
+				break;
+			case 'm':
+				switch (count(it, 'm', 2))
+				{
+					case 1:
+						res << lt.tm_min;
+						break;
+					case 2:
+						res << (lt.tm_min < 10 ? "0" : "");
+						res << lt.tm_min;
+						break;
+				}
+				break;
+			case 's':
+				switch (count(it, 's', 2))
+				{
+					case 1:
+						res << lt.tm_sec;
+						break;
+					case 2:
+						res << (lt.tm_sec < 10 ? "0" : "");
+						res << lt.tm_sec;
+						break;
+				}
+				break;
+			case 't': //Current locale's A.M./P.M. indicator
+				strftime(str, sizeof(str), "%p", &lt);
+				res << str;
+				break;
+			default:
+				return "";
 		}
 	}
-	string token(it_begin, fmt.end());
-	//cout << "token: " << token << endl;
-	processToken(res, token, lt);
 	return res.str();
 }
 
