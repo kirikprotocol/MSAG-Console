@@ -251,7 +251,8 @@ void Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
             throw Exception("Current task message is null for abonent %s", abonent.c_str());
         
         uint8_t msgState = curRs->getUint8(1);
-        if (msgState != MESSAGE_WAIT_RESP && msgState != MESSAGE_WAIT_CNCL && msgState != MESSAGE_WAIT_RCPT) 
+        if (msgState != MESSAGE_WAIT_RESP && msgState != MESSAGE_WAIT_CNCL && 
+            msgState != MESSAGE_WAIT_RCPT && msgState != MESSAGE_UNKNOWNST) 
             throw Exception("Invalid message state %d for message #%lld", msgState, currentMessageId);
         currentMessageState = (MessageState)msgState;
 
