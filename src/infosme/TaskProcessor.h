@@ -199,6 +199,23 @@ namespace smsc { namespace infosme
         };
     };
 
+    struct ReceiptData
+    {
+        bool receipted, delivered, retry;
+
+        ReceiptData(bool receipted=false, bool delivered=false, bool retry=false)
+         : receipted(receipted), delivered(delivered), retry(retry) {};
+        ReceiptData(const ReceiptData& receipt)
+          : receipted(receipt.receipted), delivered(receipt.delivered), retry(receipt.retry) {};
+
+        ReceiptData& operator=(const ReceiptData& receipt) {
+            receipted = receipt.receipted;
+            delivered = receipt.delivered;
+            retry = receipt.retry;
+            return *this;
+        }
+    };
+
     class TaskProcessor : public TaskProcessorAdapter, public InfoSmeAdmin, public Thread
     {
     private:
@@ -224,13 +241,15 @@ namespace smsc { namespace infosme
         DataSource* dsInternal;
         Connection* dsIntConnection;
         Mutex       dsIntConnectionLock;
-        int         dsCommitInterval;
-
+        
         MessageSender*  messageSender;
         Mutex           messageSenderLock;
 
         IntHash<TaskMsgId> taskIdsBySeqNum;
         Mutex              taskIdsBySeqNumLock;
+
+        Hash<ReceiptData>  receipts;
+        Mutex              receiptsLock; 
         
         Connection*         dsStatConnection;
         StatisticsManager*  statistics;
@@ -240,14 +259,14 @@ namespace smsc { namespace infosme
         char*   address;
         
         bool processTask(Task* task);
-
         void resetWaitingTasks();
-        void dsInternalCommit(bool force=false);
         
         friend class EventRunner;
         virtual void processResponce(int seqNum, bool accepted, 
                                      bool retry, bool immediate, std::string smscId="");
         virtual void processReceipt (std::string smscId, bool delivered, bool retry);
+        virtual void processMessage (Task* task, Connection* connection, 
+                                     uint64_t msgId, bool delivered, bool retry);
     
     public:
 

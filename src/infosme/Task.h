@@ -47,15 +47,11 @@ namespace smsc { namespace infosme
     static const uint8_t MESSAGE_NEW_STATE          = 0;  // Ќовое или перешедуленное сообщение
     static const uint8_t MESSAGE_WAIT_STATE         = 10; // ќжидает submitResponce
     static const uint8_t MESSAGE_ENROUTE_STATE      = 20; // ¬ процессе доставки, ожидает deliveryReciept
-    static const uint8_t MESSAGE_DELIVERED_STATE    = 30; // ƒоставленно
-    static const uint8_t MESSAGE_FAILED_STATE       = 40; // ќшибка или отказ в доставке 
 
     typedef enum {
         NEW         = MESSAGE_NEW_STATE,
         WAIT        = MESSAGE_WAIT_STATE,
         ENROUTE     = MESSAGE_ENROUTE_STATE,
-        DELIVERED   = MESSAGE_DELIVERED_STATE,
-        FAILED      = MESSAGE_FAILED_STATE
     } MessageState;
 
     struct Message
@@ -263,7 +259,7 @@ namespace smsc { namespace infosme
          * @param connection    основной connection TaskProcessor'а
          *                      из внутреннего источника данных. (оптимизаци€)
          */
-        void resetWaiting(Connection* connection);
+        void resetWaiting(Connection* connection=0);
 
         /**
          * ¬озвращает следующее сообщение дл€ отправки из спец.таблицы задачи
@@ -278,38 +274,38 @@ namespace smsc { namespace infosme
         bool getNextMessage(Connection* connection, Message& message);
         
         /**
-         * ”дал€ет сообщение.
-         * ¬ыполн€етс€ из TaskProcessor'а
+         * ”дал€ет сообщение. ¬ыполн€етс€ из TaskProcessor'а
          * 
          * @param msgId         идентификатор сообщени€ в таблице задачи.
+         * @param connection    connection от TaskProcessor'а 
+         *                      из внутреннего источника данных. (оптимизаци€)
          * @return true         если сообщение найдено и удалено. 
          */
-        bool deleteMessage(uint64_t msgId);
+        bool deleteMessage(uint64_t msgId, Connection* connection=0);
         
         /**
          * ѕереводит сообщение в состо€ние NEW по получению deliveryReport Failed
-         * или submitResponce Failed с временной ошибкой,
-         * если в задаче стоит retryOnFail и установленно retryTime.
+         * или submitResponce Failed с временной ошибкой.
          * 
          * @param msgId         идентификатор сообщени€ в таблице задачи.
          * @param nextTime      врем€ следующей попытки доставки.
+         * @param connection    connection от TaskProcessor'а 
+         *                      из внутреннего источника данных. (оптимизаци€)
          * @return true         если сообщение найдено и изменено 
          */
-        bool retryMessage(uint64_t msgId, time_t nextTime);
+        bool retryMessage(uint64_t msgId, time_t nextTime, Connection* connection=0);
 
         /**
-         * ?????
-         *
          * ѕереводит сообщение в состо€ние ENROUTE по получению submitResponce Ok
          * —ообщение должно быть в состо€нии WAIT.
          * ¬ыполн€етс€ из TaskProcessor'а
          * 
-         * @param connection    основной connection TaskProcessor'а
-         *                      из внутреннего источника данных. (оптимизаци€)
          * @param msgId         идентификатор сообщени€ в таблице задачи.
+         * @param connection    connection от TaskProcessor'а 
+         *                      из внутреннего источника данных. (оптимизаци€)
          * @return true         если сообщение найдено и изменено 
          */
-        bool doEnroute(Connection* connection, uint64_t msgId);
+        bool enrouteMessage(uint64_t msgId, Connection* connection=0);
         
     };
     

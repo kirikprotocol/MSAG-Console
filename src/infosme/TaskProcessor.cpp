@@ -13,7 +13,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     : TaskProcessorAdapter(), InfoSmeAdmin(), Thread(),
         logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
             bStarted(false), bNeedExit(false), taskTablesPrefix(0), 
-                dsInternalName(0), dsInternal(0), dsIntConnection(0), dsCommitInterval(1),
+                dsInternalName(0), dsInternal(0), dsIntConnection(0), 
                     messageSender(0), dsStatConnection(0), statistics(0),
                         protocolId(0), svcType(0), address(0)
 {
@@ -23,10 +23,6 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     if (!address || !isMSISDNAddress(address))
         throw ConfigException("Address string '%s' is invalid", address ? address:"-");
     
-    dsCommitInterval = config->getInt("dsIntCommitInterval");
-    if (dsCommitInterval <= 0)
-        throw ConfigException("dsIntCommitInterval is invalid, should be positive (in seconds)");
-
     try { protocolId = config->getInt("ProtocolId"); }
     catch(ConfigException& exc) { protocolId = 0; };
     try { svcType = config->getString("SvcType"); }
@@ -179,28 +175,6 @@ TaskGuard TaskProcessor::getTask(std::string taskId)
     return TaskGuard((task && !task->isFinalizing()) ? task:0);
 }
 
-void TaskProcessor::dsInternalCommit(bool force)
-{
-    time_t currentTime = time(NULL);
-    static time_t nextTime = currentTime + dsCommitInterval;
-    
-    try 
-    {
-        if (force || nextTime <= currentTime) {
-            if (dsIntConnection) dsIntConnection->commit();
-            logger.debug("dsInternalCommit !!!\n");
-            nextTime = currentTime + dsCommitInterval;
-        }
-    }
-    catch (Exception& exc) {
-        logger.error("Failed to commit updates on internal data source. "
-                     "Details: %s", exc.what());
-    }
-    catch (...) {
-        logger.error("Failed to commit updates on internal data source.");
-    }
-}
-
 void TaskProcessor::resetWaitingTasks()
 {
     MutexGuard guard(tasksLock);
@@ -209,8 +183,6 @@ void TaskProcessor::resetWaitingTasks()
     char* key = 0; Task* task = 0; tasks.First();
     while (tasks.Next(key, task))
         if (task) task->resetWaiting(dsIntConnection);
-
-    dsInternalCommit(true);
 }
 void TaskProcessor::Start()
 {
@@ -238,10 +210,6 @@ void TaskProcessor::Stop()
         awake.Signal();
         exited.Wait();
         bStarted = false;
-        {
-            MutexGuard icGuard(dsIntConnectionLock);
-            dsInternalCommit(true);
-        }
         taskIdsBySeqNum.Empty();
         logger.info("Stoped.");
     }
@@ -342,16 +310,56 @@ bool TaskProcessor::processTask(Task* task)
     return true;
 }
 
+void TaskProcessor::processMessage(Task* task, Connection* connection, 
+                                   uint64_t msgId, bool delivered, bool retry)
+{
+    __require__(task && connection);
+
+    if (delivered)
+    {
+        task->deleteMessage(msgId, connection);
+        statistics->incDelivered(task->getId());
+    }
+    else
+    {
+        bool needDelete = true;
+        TaskInfo info = task->getInfo();
+        if (retry && info.retryOnFail && info.retryTime > 0)
+        {
+            time_t nextTime = time(NULL)+info.retryTime;
+            if (info.endDate <= 0 || (info.endDate > 0 && info.endDate >= nextTime))
+            {
+                if (!task->retryMessage(msgId, nextTime)) {
+                    logger.warn("Message #%lld not found for retry.", msgId);
+                    statistics->incFailed(info.id);
+                } else {
+                    needDelete = false;
+                    statistics->incRetried(info.id);
+                }
+            }
+            else statistics->incFailed(info.id);
+        }
+        else statistics->incFailed(info.id);
+        if (needDelete) task->deleteMessage(msgId);
+    }
+}
+
 const char* CREATE_ID_MAPPING_STATEMENT_ID = "CREATE_ID_MAPPING_STATEMENT_ID";
 const char* CREATE_ID_MAPPING_STATEMENT_SQL = (const char*)
 "INSERT INTO INFOSME_ID_MAPPING (ID, SMSC_ID, TASK_ID) VALUES (:ID, :SMSC_ID, :TASK_ID)";
 
+const char* GET_ID_MAPPING_STATEMENT_ID = "GET_ID_MAPPING_STATEMENT_ID";
+const char* GET_ID_MAPPING_STATEMENT_SQL = (const char*)
+"SELECT ID, TASK_ID FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID FOR UPDATE";
+
+const char* DEL_ID_MAPPING_STATEMENT_ID = "DEL_ID_MAPPING_STATEMENT_ID";
+const char* DEL_ID_MAPPING_STATEMENT_SQL = (const char*)
+"DELETE FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID";
+
 void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, 
                                     bool immediate, std::string smscId)
 {
-    __require__(dsIntConnection);
-
-    logger.debug("Processing resp: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
+    logger.debug("Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
                  seqNum, accepted, retry, immediate);
 
     TaskMsgId tmIds;
@@ -404,126 +412,156 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry,
         if (info.transactionMode) {
             statistics->incDelivered(tmIds.taskId);
             task->deleteMessage(tmIds.msgId);
+            return;
         }
-        else {
-            // TODO: CREATE ID MAPPING HERE !!!
-            // TODO: implement it
-            logger.warn("Normal mode is not supported yet !!!");
-        }
-    }
-    
-    /*
-    MutexGuard icGuard(dsIntConnectionLock);
-    if (!accepted)
-    {
-        if (retry && info.retryOnFail && info.retryTime > 0) {
-            if (!task->doRetry(dsIntConnection, tmIds.msgId))
-               
-        }
-        else if (!task->doFailed(dsIntConnection, tmIds.msgId))
-                logger.warn("Message #%lld not found (doFailed).", tmIds.msgId);
-    } 
-    else
-    {
-        if (task->doEnroute(dsIntConnection, tmIds.msgId))
+        
+        const char* smsc_id = smscId.c_str();
+        
+        Connection* connection = 0;
+        try
         {
-            try
+            connection = dsInternal->getConnection();
+            if (!connection)
+                throw Exception("processResponce(): Failed to obtain connection to internal data source.");
+
+            if (!task->enrouteMessage(tmIds.msgId, connection))
+                throw Exception("Message #%lld not found (doEnroute).", tmIds.msgId);
+            
+            Statement* createMapping = connection->getStatement(CREATE_ID_MAPPING_STATEMENT_ID,
+                                                                CREATE_ID_MAPPING_STATEMENT_SQL);
+            if (!createMapping)
+                throw Exception("processResponce(): Failed to create statement for ids mapping.");
+
+            createMapping->setUint64(1, tmIds.msgId);
+            createMapping->setString(2, smsc_id);
+            createMapping->setString(3, info.id.c_str());
+            createMapping->executeUpdate();
+            connection->commit();
+            
+            ReceiptData receipt; // receipt.receipted = false
             {
-                Statement* createMapping = dsIntConnection->getStatement(CREATE_ID_MAPPING_STATEMENT_ID,
-                                                                         CREATE_ID_MAPPING_STATEMENT_SQL);
-                if (!createMapping)
+                MutexGuard guard(receiptsLock);
+                ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+                if (receiptPtr) {
+                    receipt = *receiptPtr;
+                    receipts.Delete(smsc_id);
+                } 
+                else receipts.Insert(smsc_id, receipt);
+            }
+            
+            if (receipt.receipted) // receipt already come
+            {
+                Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
+                                                                 DEL_ID_MAPPING_STATEMENT_SQL);
+                if (!delMapping)
                     throw Exception("processResponce(): Failed to create statement for ids mapping.");
+
+                delMapping->setString(1, smsc_id);
+                delMapping->executeUpdate();
                 
-                createMapping->setUint64(1, tmIds.msgId);
-                createMapping->setString(2, smscId.c_str());
-                createMapping->setString(3, info.id.c_str());
-                
-                createMapping->executeUpdate();
-            }
-            catch (Exception& exc) {
-                logger.error("Task '%s'. Failed to process responce. Ids mapping failure. "
-                             "Details: %s", info.id.c_str(), exc.what());
-            }
-            catch (...) {
-                logger.error("Task '%s'. Failed to process responce. Ids mapping failure.", 
-                             info.id.c_str());
+                processMessage(task, connection, tmIds.msgId, receipt.delivered, receipt.retry);
+                connection->commit();
             }
         }
-        else
-            logger.warn("Message #%lld not found (doEnroute).", tmIds.msgId);
+        catch (Exception& exc) {
+            try { if (connection) connection->rollback(); }
+            catch (Exception& exc) {
+                logger.error("Failed to roolback transaction on internal data source. "
+                             "Details: %s", exc.what());
+            } catch (...) {
+                logger.error("Failed to roolback transaction on internal data source.");
+            }
+            logger.error("Failed to process responce. Details: %s", exc.what());
+        }
+        catch (...) {
+            try { if (connection) connection->rollback(); }
+            catch (Exception& exc) {
+                logger.error("Failed to roolback transaction on internal data source. "
+                             "Details: %s", exc.what());
+            } catch (...) {
+                logger.error("Failed to roolback transaction on internal data source.");
+            }
+            logger.error("Failed to process responce.");
+        }
+
+        if (connection) dsInternal->freeConnection(connection);
     }
-    
-    dsInternalCommit();
-    */
 }
-
-const char* GET_ID_MAPPING_STATEMENT_ID = "GET_ID_MAPPING_STATEMENT_ID";
-const char* GET_ID_MAPPING_STATEMENT_SQL = (const char*)
-"SELECT ID, TASK_ID FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID FOR UPDATE";
-
-const char* DEL_ID_MAPPING_STATEMENT_ID = "DEL_ID_MAPPING_STATEMENT_ID";
-const char* DEL_ID_MAPPING_STATEMENT_SQL = (const char*)
-"DELETE FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID";
 
 void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool retry)
 {
-    /*__require__(dsIntConnection);
+    const char* smsc_id = smscId.c_str();
 
-    logger.debug("Processing recpt: smscId=%s, delivered=%d, retry=%d",
-                 smscId.c_str(), delivered, retry);
-
-    MutexGuard icGuard(dsIntConnectionLock);
-
+    logger.debug("Receipt : smscId=%s, delivered=%d, retry=%d",
+                 smsc_id, delivered, retry);
+    {
+        MutexGuard guard(receiptsLock);
+        if (!receipts.Exists(smsc_id)) { // receipt come first => processing will be in responce !
+            receipts.Insert(smsc_id, ReceiptData(true, delivered, retry));
+            return;
+        }
+    }
+    
+    Connection* connection = 0;
     try
     {
-        Statement* getMapping = dsIntConnection->getStatement(GET_ID_MAPPING_STATEMENT_ID,
-                                                              GET_ID_MAPPING_STATEMENT_SQL);
-        Statement* delMapping = dsIntConnection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
-                                                              DEL_ID_MAPPING_STATEMENT_SQL);
-        if (!getMapping || !delMapping)
+        connection = dsInternal->getConnection();
+        if (!connection)
+            throw Exception("processReceipt(): Failed to obtain connection to internal data source.");
+
+        Statement* getMapping = connection->getStatement(GET_ID_MAPPING_STATEMENT_ID,
+                                                         GET_ID_MAPPING_STATEMENT_SQL);
+        if (!getMapping)
             throw Exception("processReceipt(): Failed to create statement for ids mapping.");
-       
-        getMapping->setString(1, smscId.c_str());
+    
+        getMapping->setString(1, smsc_id);
         std::auto_ptr<ResultSet> rsGuard(getMapping->executeQuery());
         ResultSet* rs = rsGuard.get();
         if (!rs || !rs->fetchNext())
             throw Exception("processReceipt(): Failed to obtain result set for ids mapping.");
+        
+        Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
+                                                         DEL_ID_MAPPING_STATEMENT_SQL);
+        if (!delMapping)
+            throw Exception("processReceipt(): Failed to create statement for ids mapping.");
 
         uint64_t msgId = rs->getUint64(1);
         std::string taskId = rs->getString(2);
-        
-        delMapping->setString(1, smscId.c_str());
+        delMapping->setString(1, smsc_id);
         delMapping->executeUpdate();
-        
+
         TaskGuard taskGuard = getTask(taskId); 
         Task* task = taskGuard.get();
         if (!task)
             throw Exception("processReceipt(): Unable to locate task '%s' for smscId=%s",
-                            taskId.c_str(), smscId.c_str());
+                            taskId.c_str(), smsc_id);
         TaskInfo info = task->getInfo();
         
-        if (!delivered)
-        {
-            if (retry && info.retryOnFail && info.retryTime > 0) {
-                if (!task->doRetry(dsIntConnection, msgId))
-                   logger.warn("Message #%lld not found (doRetry).", msgId);
-            }
-            else if (!task->doFailed(dsIntConnection, msgId))
-                    logger.warn("Message #%lld not found (doFailed).", msgId);
-        }
-        else if (!task->doDelivered(dsIntConnection, msgId))
-                    logger.warn("Message #%lld not found (doDelivered).", msgId);
+        processMessage(task, connection, msgId, delivered, retry);
+        connection->commit();
     }
     catch (Exception& exc) {
-        logger.error("Failed to process receipt. Ids mapping failure. "
-                     "Details: %s", exc.what());
+        try { if (connection) connection->rollback(); }
+        catch (Exception& exc) {
+            logger.error("Failed to roolback transaction on internal data source. "
+                         "Details: %s", exc.what());
+        } catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
+        logger.error("Failed to process receipt. Details: %s", exc.what());
     }
     catch (...) {
-        logger.error("Failed to process receipt. Ids mapping failure.");
+        try { if (connection) connection->rollback(); }
+        catch (Exception& exc) {
+            logger.error("Failed to roolback transaction on internal data source. "
+                         "Details: %s", exc.what());
+        } catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
+        logger.error("Failed to process receipt.");
     }
     
-    dsInternalCommit();
-    */
+    if (connection) dsInternal->freeConnection(connection);
 }
 
 }}

@@ -424,27 +424,48 @@ const char* RESET_MESSAGES_STATEMENT_SQL =
 
 void Task::resetWaiting(Connection* connection)
 {
-    logger.debug("resetWaiting called");
-
+    bool connectionInternal = false;
     try
     {
+        if (!connection) {
+            connection = dsInt->getConnection();
+            connectionInternal = true;
+        }
+        if (!connection) 
+            throw Exception("resetWaiting(): Failed to obtain connection");
+        
         std::auto_ptr<char> resetMessagesId(prepareSqlCall(RESET_MESSAGES_STATEMENT_ID));
         std::auto_ptr<char> resetMessagesSql(prepareSqlCall(RESET_MESSAGES_STATEMENT_SQL));
         Statement* resetMessages = connection->getStatement(resetMessagesId.get(), 
                                                             resetMessagesSql.get());
         if (!resetMessages)
-            throw Exception("Failed to create statement for messages access.");
+            throw Exception("resetWaiting(): Failed to create statement for messages access.");
         
         resetMessages->setUint8(1, MESSAGE_NEW_STATE);
         resetMessages->setUint8(2, MESSAGE_WAIT_STATE);
 
         resetMessages->executeUpdate();
+        connection->commit();
     }
     catch (Exception& exc) {
+        try { if (connection) connection->rollback(); }
+        catch (Exception& exc) {
+            logger.error("Failed to roolback transaction on internal data source. "
+                         "Details: %s", exc.what());
+        } catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
         logger.error("Task '%s'. Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...) {
+        try { if (connection) connection->rollback(); }
+        catch (Exception& exc) {
+            logger.error("Failed to roolback transaction on internal data source. "
+                         "Details: %s", exc.what());
+        } catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
         logger.error("Task '%s'. Messages access failure.", info.id.c_str());
     }
 }
@@ -453,16 +474,19 @@ const char* DO_RETRY_MESSAGE_STATEMENT_ID = "%s_DO_RETRY_MESSAGE_STATEMENT_ID";
 const char* DO_RETRY_MESSAGE_STATEMENT_SQL = 
 "UPDATE %s SET STATE=:NEW, SEND_DATE=:SEND_DATE WHERE ID=:ID";
 
-bool Task::retryMessage(uint64_t msgId, time_t nextTime)
+bool Task::retryMessage(uint64_t msgId, time_t nextTime, Connection* connection)
 {
-    logger.debug("retryMessage(): called for id=%lld", msgId);
+    //logger.debug("retryMessage(): called for id=%lld", msgId);
 
-    Connection* connection = 0;
     int wdTimerId = -1;
     bool result = false;
+    bool connectionInternal = false;
     try
     {
-        connection = dsInt->getConnection();
+        if (!connection) {
+            connection = dsInt->getConnection();
+            connectionInternal = true;
+        }
         if (!connection) 
             throw Exception("doRetry(): Failed to obtain connection");
 
@@ -507,23 +531,26 @@ bool Task::retryMessage(uint64_t msgId, time_t nextTime)
     }
     
     dsInt->stopTimer(wdTimerId);
-    if (connection) dsInt->freeConnection(connection);
+    if (connectionInternal && connection) dsInt->freeConnection(connection);
     return result;
 }
 
 const char* DO_DELETE_MESSAGE_STATEMENT_ID = "%s_DO_DELETE_MESSAGE_STATEMENT_ID";
 const char* DO_DELETE_MESSAGE_STATEMENT_SQL = "DELETE FROM %s WHERE ID=:ID";
 
-bool Task::deleteMessage(uint64_t msgId)
+bool Task::deleteMessage(uint64_t msgId, Connection* connection)
 {
-    logger.debug("deleteMessage(): called for id=%lld", msgId);
+    //logger.debug("deleteMessage(): called for id=%lld", msgId);
 
-    Connection* connection = 0;
     int wdTimerId = -1;
     bool result = false;
+    bool connectionInternal = false;
     try
     {
-        connection = dsInt->getConnection();
+        if (!connection) {
+            connection = dsInt->getConnection();
+            connectionInternal = true;
+        }
         if (!connection) 
             throw Exception("deleteMessage(): Failed to obtain connection");
 
@@ -564,7 +591,7 @@ bool Task::deleteMessage(uint64_t msgId)
     }
     
     dsInt->stopTimer(wdTimerId);
-    if (connection) dsInt->freeConnection(connection);
+    if (connectionInternal && connection) dsInt->freeConnection(connection);
     return result;
 }
 
@@ -572,16 +599,22 @@ const char* DO_ENROUTE_MESSAGE_STATEMENT_ID = "%s_DO_ENROUTE_MESSAGE_STATEMENT_I
 const char* DO_ENROUTE_MESSAGE_STATEMENT_SQL = 
 "UPDATE %s SET STATE=:ENROUTE WHERE ID=:ID AND STATE=:WAIT";
 
-bool Task::doEnroute(Connection* connection, uint64_t msgId)
+bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
 {
-    logger.debug("doEnroute(): called for id=%lld", msgId);
-
-    __require__(connection);
+    //logger.debug("doEnroute(): called for id=%lld", msgId);
 
     int wdTimerId = -1;
     bool result = false;
+    bool connectionInternal = false;
     try
     {
+        if (!connection) {
+            connection = dsInt->getConnection();
+            connectionInternal = true;
+        }
+        if (!connection) 
+            throw Exception("deleteMessage(): Failed to obtain connection");
+        
         std::auto_ptr<char> enrouteMessageId(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_ID));
         std::auto_ptr<char> enrouteMessageSql(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_SQL));
         Statement* enrouteMessage = connection->getStatement(enrouteMessageId.get(), 
@@ -597,59 +630,33 @@ bool Task::doEnroute(Connection* connection, uint64_t msgId)
         result = (enrouteMessage->executeUpdate() > 0);
     }
     catch (Exception& exc) {
+        try { if (connection) connection->rollback(); }
+        catch (Exception& exc) {
+            logger.error("Failed to roolback transaction on internal data source. "
+                         "Details: %s", exc.what());
+        } catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
         logger.error("Task '%s'. doEnroute(): Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...) {
+        try { if (connection) connection->rollback(); }
+        catch (Exception& exc) {
+            logger.error("Failed to roolback transaction on internal data source. "
+                         "Details: %s", exc.what());
+        } catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
         logger.error("Task '%s'. doEnroute(): Messages access failure.", 
                      info.id.c_str());
     }
+    
     dsInt->stopTimer(wdTimerId);
+    if (connectionInternal && connection) dsInt->freeConnection(connection);
     return result;
 }
 
-/*
-const char* DO_FAILED_MESSAGE_STATEMENT_ID = "%s_DO_FAILED_MESSAGE_STATEMENT_ID";
-const char* DO_FAILED_MESSAGE_STATEMENT_SQL = 
-"UPDATE %s SET STATE=:FAILED WHERE ID=:ID AND (STATE=:ENROUTE OR STATE=:WAIT)";
-
-bool Task::doFailed(Connection* connection, uint64_t msgId)
-{
-    logger.debug("doFailed(): called for id=%lld", msgId);
-
-    __require__(connection);
-    
-    int wdTimerId = -1;
-    bool result = false;
-    try
-    {
-        std::auto_ptr<char> failedMessageId(prepareSqlCall(DO_FAILED_MESSAGE_STATEMENT_ID));
-        std::auto_ptr<char> failedMessageSql(prepareSqlCall(DO_FAILED_MESSAGE_STATEMENT_SQL));
-        Statement* failedMessage = connection->getStatement(failedMessageId.get(), 
-                                                            failedMessageSql.get());
-        if (!failedMessage)
-            throw Exception("doFailed(): Failed to create statement for messages access.");
-        
-        failedMessage->setUint8 (1, MESSAGE_FAILED_STATE);
-        failedMessage->setUint64(2, msgId);
-        failedMessage->setUint8 (3, MESSAGE_ENROUTE_STATE);
-        failedMessage->setUint8 (4, MESSAGE_WAIT_STATE);
-
-        wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
-        result = (failedMessage->executeUpdate() > 0);
-    }
-    catch (Exception& exc) {
-        logger.error("Task '%s'. doFailed(): Messages access failure. "
-                     "Details: %s", info.id.c_str(), exc.what());
-    }
-    catch (...) {
-        logger.error("Task '%s'. doFailed(): Messages access failure.", 
-                     info.id.c_str());
-    }
-    dsInt->stopTimer(wdTimerId);
-    return result;
-}*/
-        
 const char* SELECT_MESSAGES_STATEMENT_ID = "%s_SELECT_MESSAGES_STATEMENT_ID";
 const char* SELECT_MESSAGES_STATEMENT_SQL = (const char*)
 "SELECT ID, ABONENT, MESSAGE FROM %s WHERE "
