@@ -167,6 +167,13 @@ struct Address
             memcmp(value, addr.value, length) == 0);
   };
 
+  bool operator<(const Address& addr)const
+  {
+    return type<addr.type ||
+           (type==addr.type && plan<addr.plan) ||
+           (type==addr.type && plan==addr.plan && memcmp(value,addr.value,length<addr.length?length:addr.length)<0);
+  }
+
 
   /**
   * ћетод устанавливает значение адреса и его длинну.
@@ -1628,7 +1635,7 @@ struct SMS
   {
     return messageBody.getStrProperty(tag);
   }
-  const char* getBinProperty(int tag,unsigned* len)
+  const char* getBinProperty(int tag,unsigned* len)const
   {
     return messageBody.getBinProperty(tag,len);
   }
@@ -1644,7 +1651,7 @@ struct SMS
   {
     return messageBody.hasStrProperty(tag);
   }
-  bool hasBinProperty(int tag)
+  bool hasBinProperty(int tag)const
   {
     return messageBody.hasBinProperty(tag);
   }
@@ -1657,8 +1664,8 @@ struct SMS
     {
       if(messageBody.hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE))
       {
-		logger::_sms_err_cat->log_(logger::Logger::LEVEL_WARN, "both rawpayload and rawshortmessage present at %s:%d",file,line);
-		smsc_log_warn(logger::_sms_err_cat, "both rawpayload and rawshortmessage present at %s:%d",file,line);
+    logger::_sms_err_cat->log_(logger::Logger::LEVEL_WARN, "both rawpayload and rawshortmessage present at %s:%d",file,line);
+    smsc_log_warn(logger::_sms_err_cat, "both rawpayload and rawshortmessage present at %s:%d",file,line);
         unsigned len;
         messageBody.getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
         if(len==0)return true;
