@@ -5,7 +5,7 @@
 	<!ATTLIST db instance CDATA #REQUIRED>    <!-- const char * const-->
 	<!ATTLIST db userName CDATA #IMPLIED>     <!-- const char * const-->
 	<!ATTLIST db userPassword CDATA #IMPLIED> <!-- const char * const-->
-	<!ELEMENT connections (#CDATA)>
+	<!ELEMENT connections (#PCDATA)>
 	    <!ATTLIST connections max CDATA #IMPLIED>  <!-- int -->
 	    <!ATTLIST connections init CDATA #IMPLIED> <!-- int -->
 	
