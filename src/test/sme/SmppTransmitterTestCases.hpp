@@ -79,7 +79,8 @@ protected:
 	void registerExtSmeMonitors(PduSubmitSm* pdu, bool destReachble,
 		time_t waitTime, time_t validTime, PduData* pduData);
 	void registerNullSmeMonitors(PduSubmitSm* pdu, bool destReachble,
-		time_t waitTime, time_t validTime, PduData* pduData);
+		time_t waitTime, time_t validTime, uint32_t deliveryStatus,
+		PduData* pduData);
 	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,
 		time_t submitTime, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType);
@@ -91,8 +92,7 @@ protected:
 	void processReplaceSmSync(PduData* pduData, PduReplaceSmResp* respPdu,
 		time_t respTime);
 	void processReplaceSmAsync(PduData* pduData);
-	void processGenericNackSync(PduData* pduData, PduGenericNack* respPdu,
-		time_t respTime);
+	void processGenericNackSync(time_t submitTime, time_t respTime);
 	void processGenericNackAsync(PduData* pduData);
 };
 

@@ -4,12 +4,14 @@
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
+#include "util/Exception.hpp"
 
 namespace smsc {
 namespace test {
 namespace sme {
 
 using smsc::util::Logger;
+using smsc::util::Exception;
 using smsc::test::conf::TestConfig;
 using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants, Profile
@@ -179,7 +181,8 @@ void SmppTransmitterTestCases::registerExtSmeMonitors(PduSubmitSm* pdu,
 }
 
 void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
-	bool destReachble, time_t waitTime, time_t validTime, PduData* pduData)
+	bool destReachble, time_t waitTime, time_t validTime,
+	uint32_t deliveryStatus, PduData* pduData)
 {
 	//предполагаю, что null sme всегда запущено
 	//sme ack быть не может в любом случае
@@ -196,8 +199,9 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
 			if (destReachble)
 			{
 				rcptMonitor = new DeliveryReceiptMonitor(waitTime, pduData, PDU_REQUIRED_FLAG);
-				rcptMonitor->deliveryFlag = PDU_ERROR_FLAG;
-				rcptMonitor->deliveryStatus = ESME_RX_P_APPN;
+				rcptMonitor->deliveryFlag = deliveryStatus == ESME_ROK ?
+					PDU_RECEIVED_FLAG : PDU_ERROR_FLAG;
+				rcptMonitor->deliveryStatus = deliveryStatus;
 				break;
 			}
 			//break;
@@ -250,9 +254,13 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 			//регистрация SmeAckMonitor и DeliveryReceiptMonitor
 			registerExtSmeMonitors(pdu, destReachble, waitTime, validTime, pduData);
 			break;
-		case PDU_NULL:
+		case PDU_NULL_OK:
 			//регистрация только DeliveryReceiptMonitor
-			registerNullSmeMonitors(pdu, destReachble, waitTime, validTime, pduData);
+			registerNullSmeMonitors(pdu, destReachble, waitTime, validTime, ESME_ROK, pduData);
+			break;
+		case PDU_NULL_ERR:
+			//регистрация только DeliveryReceiptMonitor
+			registerNullSmeMonitors(pdu, destReachble, waitTime, validTime, ESME_RX_P_APPN, pduData);
 			break;
 		default:
 			__unreachable__("Invalid pdu type");
@@ -616,27 +624,22 @@ void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu,
 }
 
 //требуется внешняя синхронизация
-void SmppTransmitterTestCases::processGenericNackSync(PduData* pduData,
-	PduGenericNack* respPdu, time_t respTime)
+void SmppTransmitterTestCases::processGenericNackSync(time_t submitTime,
+	time_t respTime)
 {
-	__require__(pduData);
-	__dumpPdu__("processGenericNackSync", fixture->smeInfo.systemId, respPdu);
 	__decl_tc__;
-	__tc__("processGenericNack.sync");
-	if (!respPdu)
+	__cfg_int__(timeCheckAccuracy);
+	__tc__("processGenericNack.checkTime");
+	time_t respDelay = respTime - submitTime;
+	if (respDelay < 0)
 	{
 		__tc_fail__(1);
 	}
-	else
+	else if (respDelay > timeCheckAccuracy)
 	{
-		//создать, но не регистрировать монитор
-		GenericNackMonitor monitor(pduData->pdu->get_sequenceNumber(),
-			pduData, PDU_REQUIRED_FLAG);
-		fixture->pduChecker->processGenericNack(&monitor, *respPdu, respTime);
-		delete respPdu; //disposePdu
+		__tc_fail__(2);
 	}
 	__tc_ok_cond__;
-	pduData->unref();
 }
 
 //обновить sequenceNumber в PduRegistry, требуется внешняя синхронизация
@@ -661,23 +664,19 @@ void SmppTransmitterTestCases::sendInvalidPdu(SmppHeader* pdu, bool sync)
 			if (sync)
 			{
 				__tc__("sendInvalidPdu.sync");
-				PduData* pduData;
-				{
-					MutexGuard mguard(fixture->pduReg->getMutex());
-					time_t submitTime = time(NULL);
-					pdu->set_sequenceNumber(0); //не известен
-					pduData = new PduData(pdu, submitTime, 0);
-				}
 				__dumpPdu__("sendInvalidPduSyncBefore", fixture->smeInfo.systemId, pdu);
-				SmppHeader* respPdu = fixture->session->getSyncTransmitter()->sendPdu(pdu);
-				time_t respTime = time(NULL);
-				__dumpPdu__("sendInvalidPduSyncAfter", fixture->smeInfo.systemId, pdu);
+				time_t submitTime = time(NULL);
+				try
 				{
-					__require__(respPdu && respPdu->get_commandId() == SmppCommandSet::GENERIC_NACK);
-					MutexGuard mguard(fixture->pduReg->getMutex());
-					processGenericNackSync(pduData,
-						reinterpret_cast<PduGenericNack*>(respPdu), respTime);
+					fixture->session->getSyncTransmitter()->sendPdu(pdu);
+					__tc_fail__(1);
 				}
+				catch (Exception&)
+				{
+					//ok
+				}
+				processGenericNackSync(submitTime, time(NULL));
+				__dumpPdu__("sendInvalidPduSyncAfter", fixture->smeInfo.systemId, pdu);
 			}
 			else
 			{
@@ -689,6 +688,7 @@ void SmppTransmitterTestCases::sendInvalidPdu(SmppHeader* pdu, bool sync)
 					fixture->session->getAsyncTransmitter()->sendPdu(pdu);
 				__dumpPdu__("sendInvalidPduAsyncAfter", fixture->smeInfo.systemId, pdu);
 				PduData* pduData = new PduData(pdu, submitTime, 0);
+				pduData->ref();
 				processGenericNackAsync(pduData);
 			}
 			//pdu life time определяется PduRegistry
@@ -699,11 +699,14 @@ void SmppTransmitterTestCases::sendInvalidPdu(SmppHeader* pdu, bool sync)
 			if (sync)
 			{
 				__tc__("sendInvalidPdu.sync");
-				SmppHeader* respPdu =
-					fixture->session->getSyncTransmitter()->sendPdu(pdu);
-				if (respPdu)
+				try
 				{
-					delete respPdu; //disposePdu
+					fixture->session->getSyncTransmitter()->sendPdu(pdu);
+					__tc_fail__(1);
+				}
+				catch (Exception&)
+				{
+					//ok
 				}
 			}
 			else
@@ -713,7 +716,7 @@ void SmppTransmitterTestCases::sendInvalidPdu(SmppHeader* pdu, bool sync)
 			}
 			delete pdu; //disposePdu
 		}
-		__tc_ok__;
+		__tc_ok_cond__;
 	}
 	catch (...)
 	{
