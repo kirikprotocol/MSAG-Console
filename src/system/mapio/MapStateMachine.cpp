@@ -670,7 +670,7 @@ none_validity:;
   {
     if ( user_data_coding & 0x4 ) encoding = MAP_8BIT_ENCODING;
     else encoding = MAP_OCTET7BIT_ENCODING;
-    sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,user_data_coding&0x3);
+    sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(user_data_coding&0x3)+1);
   }
   else{
     __trace2__("MAP:: unknown coding scheme 0x%x",user_data_coding);

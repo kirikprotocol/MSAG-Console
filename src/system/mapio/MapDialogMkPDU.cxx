@@ -113,7 +113,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         ;//datacoding |=  nothing
       else // 8bit
         datacoding |= (1<<2);
-      datacoding |= sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)&0x3;
+      datacoding |= (sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)-1)&0x3;
     }
     else
     {
@@ -263,7 +263,8 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
           *pdu_ptr++ = text_len;
           if (encoding == MAP_SMSC7BIT_ENCODING )
             pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
-          else {
+          else
+ {
       unsigned tmpX = 0;
             pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr,&tmpX);
     }
