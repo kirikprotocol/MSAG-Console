@@ -11,20 +11,17 @@ class DbSmeSelectJobTestCases : public DbSmeJobTestCases
 {
 	void writeSelectJobRecord(ostream& os, DbSmeTestRecord* rec,
 		DbSmeTestRecord* defOutput, time_t now);
+	const string processSelectNullsJobOutput(const string& text);
+	const string processSelectValuesJobOutput();
+	const string processSelectNoDefaultsJobOutput();
 public:
 	DbSmeSelectJobTestCases(DbSmeRegistry* dbSmeReg, CheckList* chkList)
 		: DbSmeJobTestCases(dbSmeReg, chkList) {}
-	DbSmeTestRecord* createJobInput();
-	virtual const string processJobFirstOutput(const string& text, DbSmeTestRecord* rec);
-};
-
-class DbSmeSelectNoDefaultJobTestCases : public DbSmeJobTestCases
-{
-public:
-	DbSmeSelectNoDefaultJobTestCases(DbSmeRegistry* dbSmeReg, CheckList* chkList)
-		: DbSmeJobTestCases(dbSmeReg, chkList) {}
-	DbSmeTestRecord* createJobInput();
-	virtual const string processJobFirstOutput(const string& text, DbSmeTestRecord* rec);
+	DbSmeTestRecord* createSelectNullsJobInput();
+	DbSmeTestRecord* createSelectValuesJobInput();
+	DbSmeTestRecord* createSelectNoDefaultsJobInput();
+	virtual const string processJobFirstOutput(const string& text,
+		DbSmeTestRecord* rec);
 };
 
 }

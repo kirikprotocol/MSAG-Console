@@ -4,8 +4,6 @@ namespace smsc {
 namespace test {
 namespace dbsme {
 
-using namespace smsc::test::util;
-
 DbSmeJobTestCases::DbSmeJobTestCases(DbSmeRegistry* _dbSmeReg, CheckList* _chkList)
 : dbSmeReg(_dbSmeReg), chkList(_chkList)
 {
@@ -64,67 +62,6 @@ void DbSmeJobTestCases::processJobOutput(const string& text, DbSmeTestRecord* re
 	__tc_ok_cond__;
 }
 
-void DbSmeJobTestCases::setInputInt16(DbSmeTestRecord* rec, int val)
-{
-	__decl_tc__;
-	__tc__("submitDbSmeCmd.correct.input.int"); __tc_ok__;
-	rec->setInt16(val);
-}
-
-void DbSmeJobTestCases::setRandomInputInt16(DbSmeTestRecord* rec)
-{
-	setInputInt16(rec, rand2(-32000, 32000));
-}
-
-void DbSmeJobTestCases::setInputInt32(DbSmeTestRecord* rec, int val)
-{
-	__decl_tc__;
-	__tc__("submitDbSmeCmd.correct.input.int"); __tc_ok__;
-	rec->setInt32(val);
-}
-
-void DbSmeJobTestCases::setRandomInputInt32(DbSmeTestRecord* rec)
-{
-	setInputInt32(rec, rand2(INT_MIN/2, INT_MAX/2));
-}
-
-void DbSmeJobTestCases::setInputFloat(DbSmeTestRecord* rec, double val)
-{
-	__decl_tc__;
-	__tc__("submitDbSmeCmd.correct.input.float"); __tc_ok__;
-	rec->setFloat(val);
-}
-
-void DbSmeJobTestCases::setRandomInputFloat(DbSmeTestRecord* rec)
-{
-	setInputFloat(rec, rand2(-100, 100) + (float) rand0(99) / 100.0);
-}
-
-void DbSmeJobTestCases::setInputDouble(DbSmeTestRecord* rec, double val)
-{
-	__decl_tc__;
-	__tc__("submitDbSmeCmd.correct.input.float"); __tc_ok__;
-	rec->setDouble(val);
-}
-
-void DbSmeJobTestCases::setRandomInputDouble(DbSmeTestRecord* rec)
-{
-	setInputDouble(rec, rand2(-100, 100) + (double) rand0(99) / 100.0);
-}
-
-void DbSmeJobTestCases::setInputDate(DbSmeTestRecord* rec, time_t val)
-{
-	__decl_tc__;
-	__tc__("submitDbSmeCmd.correct.input.date"); __tc_ok__;
-	rec->setDate(val);
-}
-
-void DbSmeJobTestCases::setRandomInputDate(DbSmeTestRecord* rec)
-{
-	static const int year = 365 * 24 * 3600;
-	setInputDate(rec, time(NULL) + rand2(-year, year));
-}
-
 void DbSmeJobTestCases::setInputString(DbSmeTestRecord* rec, const string& val)
 {
 	__decl_tc__;
@@ -157,6 +94,35 @@ void DbSmeJobTestCases::setRandomInputString(DbSmeTestRecord* rec, bool quotedSt
 	{
 		setInputString(rec, str);
 	}
+}
+
+void DbSmeJobTestCases::setInputDate(DbSmeTestRecord* rec, time_t val)
+{
+	__decl_tc__;
+	__tc__("submitDbSmeCmd.correct.input.date"); __tc_ok__;
+	rec->setDate(val);
+}
+
+void DbSmeJobTestCases::setRandomInputDate(DbSmeTestRecord* rec)
+{
+	static const int year = 365 * 24 * 3600;
+	setInputDate(rec, time(NULL) + rand2(-year, year));
+}
+
+const string DbSmeJobTestCases::getOutputJobName(const DbSmeTestRecord* rec)
+{
+	__require__(rec);
+	__decl_tc__;
+	__tc__("processDbSmeRes.output.jobName"); __tc_ok__;
+	return rec->getJob();
+}
+
+const string DbSmeJobTestCases::getOutputToAddress(const DbSmeTestRecord* rec)
+{
+	__require__(rec);
+	__decl_tc__;
+	__tc__("processDbSmeRes.output.toAddress"); __tc_ok__;
+	return rec->getToAddr();
 }
 
 const string DbSmeJobTestCases::getOutputFromAddress(const DbSmeTestRecord* rec)
@@ -306,114 +272,6 @@ const string DbSmeJobTestCases::getOutputDate(const DbSmeTestRecord* rec,
 	}
 	res = false;
 	return "";
-}
-
-int DbSmeJobTestCases::getOutputInt16(const DbSmeTestRecord* rec,
-	const DbSmeTestRecord* defOutput, bool& res)
-{
-	__decl_tc__;
-	//res = true;
-	if (rec)
-	{
-		if (rec->checkInt16())
-		{
-			__tc__("processDbSmeRes.input.int"); __tc_ok__;
-			return rec->getInt16();
-		}
-		if (rec->getDefInput() && rec->getDefInput()->checkInt16())
-		{
-			__tc__("processDbSmeRes.defaultInput.int"); __tc_ok__;
-			return rec->getDefInput()->getInt16();
-		}
-	}
-	if (defOutput && defOutput->checkInt16())
-	{
-		__tc__("processDbSmeRes.select.defaultOutput.int"); __tc_ok__;
-		return defOutput->getInt16();
-	}
-	res = false;
-	return 0;
-}
-
-int DbSmeJobTestCases::getOutputInt32(const DbSmeTestRecord* rec,
-	const DbSmeTestRecord* defOutput, bool& res)
-{
-	__decl_tc__;
-	//res = true;
-	if (rec)
-	{
-		if (rec->checkInt32())
-		{
-			__tc__("processDbSmeRes.input.int"); __tc_ok__;
-			return rec->getInt32();
-		}
-		if (rec->getDefInput() && rec->getDefInput()->checkInt32())
-		{
-			__tc__("processDbSmeRes.defaultInput.int"); __tc_ok__;
-			return rec->getDefInput()->getInt32();
-		}
-	}
-	if (defOutput && defOutput->checkInt32())
-	{
-		__tc__("processDbSmeRes.select.defaultOutput.int"); __tc_ok__;
-		return defOutput->getInt32();
-	}
-	res = false;
-	return 0;
-}
-	
-float DbSmeJobTestCases::getOutputFloat(const DbSmeTestRecord* rec,
-	const DbSmeTestRecord* defOutput, bool& res)
-{
-	__decl_tc__;
-	//res = true;
-	if (rec)
-	{
-		if (rec->checkFloat())
-		{
-			__tc__("processDbSmeRes.input.float"); __tc_ok__;
-			return rec->getFloat();
-		}
-		if (rec->getDefInput() && rec->getDefInput()->checkFloat())
-		{
-			__tc__("processDbSmeRes.defaultInput.float"); __tc_ok__;
-			return rec->getDefInput()->getFloat();
-		}
-	}
-	if (defOutput && defOutput->checkFloat())
-	{
-		__tc__("processDbSmeRes.select.defaultOutput.float"); __tc_ok__;
-		return defOutput->getFloat();
-	}
-	res = false;
-	return 0.0;
-}
-
-double DbSmeJobTestCases::getOutputDouble(const DbSmeTestRecord* rec,
-	const DbSmeTestRecord* defOutput, bool& res)
-{
-	__decl_tc__;
-	//res = true;
-	if (rec)
-	{
-		if (rec->checkDouble())
-		{
-			__tc__("processDbSmeRes.input.float"); __tc_ok__;
-			return rec->getDouble();
-		}
-		if (rec->getDefInput() && rec->getDefInput()->checkDouble())
-		{
-			__tc__("processDbSmeRes.defaultInput.float"); __tc_ok__;
-			return rec->getDefInput()->getDouble();
-		}
-	}
-	if (defOutput && defOutput->checkDouble())
-	{
-		__tc__("processDbSmeRes.select.defaultOutput.float"); __tc_ok__;
-		return defOutput->getDouble();
-	}
-	res = false;
-	return 0.0;
 }
 
 }
