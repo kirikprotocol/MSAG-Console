@@ -9,9 +9,9 @@ using namespace std;
 
 #ifdef USE_MAPIO
 
-#define SMSC_FROWARD_RESPONSE 0x001
+#define SMSC_FORWARD_RESPONSE 0x001
 
-struct SMSC_FROWARD_RESPONSE_T {
+struct SMSC_FORWARD_RESPONSE_T {
   ET96MAP_DIALOGUE_ID_T dialogId;
 };
 
@@ -40,8 +40,8 @@ void ForwardResponse(ET96MAP_DIALOGUE_ID_T dialogId){
   }
   USHORT_T result = Et96MapV2ForwardSmMOResp(SSN,dialogId,mdci->invokeId,0);
   if ( result != ET96MAP_E_OK ){
-    __trace2__("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
-    throw runtime_error("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
+    __trace2__("MAP::Et96MapV2ForwardSmMOInd error when send response on forward_sm");
+    throw runtime_error("MAP::Et96MapV2ForwardSmMOInd error when send response on forward_sm");
   }
   CloseAndRemoveDialog(SSN,dialogId);
 }
@@ -113,7 +113,7 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
       mdci->invokeId = invokeId;
       mdci->dialogue->Et96MapV2ForwardSmMOInd(
         SSN,dialogId,invokeId,dstAddr,srcAddr,ud);
-      SMSC_FROWARD_RESPONSE_T* p = new SMSC_FROWARD_RESPONSE_T();
+      SMSC_FORWARD_RESPONSE_T* p = new SMSC_FORWARD_RESPONSE_T();
       p->dialogId = dialogId;
       MSG_T msg;
       msg.primitive = SMSC_FORWARD_RESPONSE;
@@ -185,8 +185,8 @@ void MapIoTask::dispatcher()
          message.sender == USER01_ID )
     {
       try{
-        if ( message.primitive == SMSC_FROWAR_RESPONSE ){
-          SMSC_FROWARD_RESPONSE_T* response = (SMSC_FROWARD_RESPONSE_T*)message.msg_p;
+        if ( message.primitive == SMSC_FORWAR_RESPONSE ){
+          SMSC_FORWARD_RESPONSE_T* response = (SMSC_FORWARD_RESPONSE_T*)message.msg_p;
           if ( response == 0 ) {
             __trace2__("MAP::MessageProcessing Opss, forward response has zero data");
             throw 0;
