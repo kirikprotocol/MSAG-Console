@@ -11,15 +11,16 @@ import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.util.xml.Utils;
 import ru.novosoft.smsc.util.xml.DtdsEntityResolver;
+import ru.novosoft.smsc.util.xml.Utils;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 
 
 // Referenced classes of package ru.novosoft.smsc.admin.protocol:
@@ -43,8 +44,9 @@ public class Response
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			logger.debug("setting entity resolver for response");
 			builder.setEntityResolver(new DtdsEntityResolver());
-			ByteArrayInputStream inputStream = new ByteArrayInputStream(text);
-			InputSource source = new InputSource(inputStream);
+      //!!!
+			Reader in = new StringReader(new String(text));
+			InputSource source = new InputSource(in);
 			doc = builder.parse(source);
 			Element main = doc.getDocumentElement();
 			status = parseStatus(main.getAttribute("status"));
