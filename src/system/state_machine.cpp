@@ -598,6 +598,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           rpt.setDestinationAddress(sms.getOriginatingAddress());
           rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
             sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+          rpt.setIntProperty(Tag::SMPP_MSG_STATE,sms.getState());
           char msgid[60];
           sprintf(msgid,"%lld",t.msgId);
           rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
@@ -645,6 +646,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setDestinationAddress(sms.getOriginatingAddress());
       rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
         sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+      rpt.setIntProperty(Tag::SMPP_MSG_STATE,sms.getState());
       char msgid[60];
       sprintf(msgid,"%lld",t.msgId);
       rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
