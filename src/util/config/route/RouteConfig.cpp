@@ -140,12 +140,16 @@ throw (SubjectNotFoundException)
   std::auto_ptr<char> archiving(elem.getAttribute("archiving").transcode());
   std::auto_ptr<char> enabling(elem.getAttribute("enabling").transcode());
   std::auto_ptr<char> priorityStr(elem.getAttribute("priority").transcode());
+  std::auto_ptr<char> serviceIdStr(elem.getAttribute("serviceId").transcode());
   unsigned int priority = atoi(priorityStr.get());
+  unsigned int serviceId = atoi(serviceIdStr.get());
   std::auto_ptr<Route> r(new Route(std::string(id.get()),
                                    priority,
                                    strcmp("true", billing.get()) == 0,
                                    strcmp("true", archiving.get()) == 0,
-                                   strcmp("true", enabling.get()) == 0));
+                                   strcmp("true", enabling.get()) == 0,
+                                   serviceId)
+                         );
 
   DOM_NodeList srcs = elem.getElementsByTagName("source");
   for (unsigned i=0; i<srcs.getLength(); i++)
@@ -249,6 +253,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       << "\" archiving=\"" << (r->isArchiving() ? "true" : "false")
       << "\" enabling=\""  << (r->isEnabling() ? "true" : "false")
       << "\" priority=\""  << r->getPriority()
+      << "\" serviceId=\""  << r->getServiceId()
       << "\">" << std::endl;
 
       Source s;

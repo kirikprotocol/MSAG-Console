@@ -4,7 +4,7 @@
 	<subject_def id="MTS_numbers" defSme="sme1">
 		<mask value="+7902912????"/>
 	</subject_def>
-	<route id="Mobile to Mobile" billing="true" archiving="false" priority="0">
+	<route id="Mobile to Mobile" billing="true" archiving="false" priority="0" serviceId="200">
 		<source>
 			<subject id="MTS_numbers"/>
 		</source>

@@ -77,6 +77,7 @@ char * ServicesList::getText() const
 		result += "\" port=\"";
 		result += port;
 		result += "\" args=\"";
+		result += tmpArgs.get();
     result += "\" status=\"";
     switch (s->getStatus())
     {
@@ -95,7 +96,6 @@ char * ServicesList::getText() const
     default:
       result += "unknown";
     }
-		result += tmpArgs.get();
 		result += "\"/>\n";
 	}
 	return cStringCopy(result.c_str());

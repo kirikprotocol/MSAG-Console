@@ -109,20 +109,21 @@ private:
   bool billing;
   bool archiving;
   bool enabling;
+  int serviceId;
 
   friend class smsc::util::config::route::RouteConfig;
 
 public:
   Route()
-    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true)
+    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true), serviceId(0)
   {}
   Route(const Route &r)
     : id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),
-      billing(r.billing), archiving(r.archiving), enabling(r.enabling)
+      billing(r.billing), archiving(r.archiving), enabling(r.enabling), serviceId(r.serviceId)
   {}
-  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling)
+  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, int _serviceId)
     : id(rid), priority(prior), sources(), destinations(),
-      billing(isBilling), archiving(isArchiving), enabling(isEnabling)
+      billing(isBilling), archiving(isArchiving), enabling(isEnabling), serviceId(_serviceId)
   {}
 
   ~Route()
@@ -139,6 +140,7 @@ public:
   const char * const getId() const {return id.c_str();}
   int getPriority() {return priority;}
   const std::string & getIdString() const {return id;}
+  int getServiceId() const {return serviceId;}
 };
 //typedef std::vector<Route> RouteVector;
 typedef std::vector<Route*> RoutePVector;
