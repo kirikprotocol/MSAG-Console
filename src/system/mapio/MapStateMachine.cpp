@@ -537,6 +537,8 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   __trace2__("MAP:: user_data_encoding = 0x%x",user_data_coding);
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2);
   __trace2__("MAP:: user_data_len = %d",user_data_len);
+  if ( user_data_len > (ud->signalInfoLen-(2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1) )
+    throw runtime_error(FormatText("bad user_data_len %d",user_data_len));
   unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+1);
   unsigned encoding = 0;
   if ( (user_data_coding & 0xc0) == 0 ||  // 00xxxxxx
@@ -587,6 +589,8 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
         MicroString ms;
         auto_ptr<unsigned char> b(new unsigned char[255*2]);
         unsigned udh_len = ((unsigned)*user_data)&0x0ff;
+        if ( udh_len >= user_data_len )
+          throw runtime_error(FormatText("MAP:: user_data_len %d, but udhi_len %d",user_data_len,udh_len));
         __trace2__("MAP:: ud_length 0x%x",user_data_len);
         __trace2__("MAP:: udh_len 0x%x",udh_len);
         unsigned x = (udh_len+1)*8;
@@ -1004,6 +1008,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
                       mr,dialog->ussdMrRef));
               }
               dialog->dialogid_smsc = dialogid_smsc;
+              dialog->isQueryAbonentStatus = false;
               DoUSSRUserResponce(cmd,dialog.get());
               return;
             }
@@ -1783,11 +1788,17 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
         dialog->subscriberAbsent = true;
         throw MAPDIALOG_TEMP_ERROR("MAP::absent subscriber",MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
       }
-      if ( errorForwardSMmt_sp->errorCode == 32 && 
-        errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_MEM_CAPACITY_EXCEEDED )
-      {
-        dialog->memoryExceeded = true;
-        throw MAPDIALOG_TEMP_ERROR("MAP::memory exceeded",MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
+      if ( errorForwardSMmt_sp->errorCode == 32 ) /*delivery error*/ {
+        if ( errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_MEM_CAPACITY_EXCEEDED )
+        {
+          dialog->memoryExceeded = true;
+          throw MAPDIALOG_TEMP_ERROR("MAP::memory exceeded",MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
+        }
+        else if ( errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_PROTOCOL_ERROR
+               || errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_MO_SERVICE_CENTER_CONGESTION )
+        {
+          throw MAPDIALOG_TEMP_ERROR(FormatText("MAP::Delivery failure reason 0x%x",errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason),MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
+        }
       }
       if ( errorForwardSMmt_sp->errorCode == 34 /*System failure*/||
            errorForwardSMmt_sp->errorCode == 31 /*Busy*/) 
@@ -1795,7 +1806,7 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
         throw MAPDIALOG_TEMP_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode),
           MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
       }
-      throw MAPDIALOG_FATAL_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x",errorForwardSMmt_sp->errorCode),
+      throw MAPDIALOG_FATAL_ERROR(FormatText("errorForwardSMmt_sp->errorCode == 0x%x, reason if need 0x%x",errorForwardSMmt_sp->errorCode,errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason),
           MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
     }
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);

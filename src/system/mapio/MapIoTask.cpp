@@ -81,14 +81,17 @@ void MapIoTask::deinit()
   result = Et96MapUnbindReq(SSN);
   if ( result != MSG_OK){
     __trace2__("MAP::error at Et96MapUnbindReq errcode 0x%hx",result);
+    return;
   }
   result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   if ( result != MSG_OK){
     __trace2__("MAP::error at MsgRel errcode 0x%hx",result);
+    return;
   }
   result = MsgClose(MY_USER_ID);
   if ( result != MSG_OK){
     __trace2__("MAP::error at MsgClose errcode 0x%hx",result);
+    return;
   }
   MsgExit();
 }
