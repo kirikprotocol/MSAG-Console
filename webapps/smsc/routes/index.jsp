@@ -94,11 +94,8 @@ function clickClickable(headId, bodyId)
 }
 </script>
 
-<%
-String[] Filtered = { "name", "active", "allow","billing","archiving","reports" };
 
-%>
-Filter By:        <%=Filtered[0]%>,<%=Filtered[1]%>,<%=Filtered[2]%>,<%=Filtered[3]%>,<%=Filtered[4]%>,<%=Filtered[5]%>
+Filter By:       
 
 <%
 java.util.HashMap a = new java.util.HashMap();
