@@ -723,7 +723,7 @@ StateType StateMachine::submit(Tuple& t)
     // profile lookup performed before partitioning
     //profile=smsc->getProfiler()->lookup(dst);
     //
-    if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO))
+    if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO) && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3)
     {
       if(sms->getIntProperty(Tag::SMSC_DSTCODEPAGE)==smsc::profiler::ProfileCharsetOptions::Default &&
          sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
@@ -943,7 +943,7 @@ StateType StateMachine::forward(Tuple& t)
     }
     Address dst=sms.getDealiasedDestinationAddress();
     sms.setDestinationAddress(dst);
-    if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+    if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO)  && sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3)
     {
 
       if(sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==smsc::profiler::ProfileCharsetOptions::Default &&
@@ -1412,7 +1412,7 @@ StateType StateMachine::replace(Tuple& t)
 
   sms.setBinProperty
   (
-    Tag::SMPP_SHORT_MESSAGE,
+    Tag::SMSC_RAW_SHORTMESSAGE,
     t.command->get_replaceSm().shortMessage.get(),
     t.command->get_replaceSm().smLength
   );
