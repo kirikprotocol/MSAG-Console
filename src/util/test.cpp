@@ -283,7 +283,7 @@ int main(int argc, char** argv)
   Logger::Init();
 
   {
-    char *txt="Спасибо, твой рег.номер 54. Чтобы посмотреть свой профиль набери номер *739*54# и сообщи его друзьям! Отправь свое фото на email 739@loveintown.ru - покажи, что ты не такая как все и заработай больше голосов! Отправь SMS на номер 00839000002 с инфо о себе, напр.: Что нравится в людях? Любимое блюдо? Любимый CD? Как расслабляешься? Твой секс-символ? 3 вещи, без которых ты жить не можешь и тд. Удачи!";
+    const char *txt="Спасибо, твой рег.номер 54. Чтобы посмотреть свой профиль набери номер *739*54# и сообщи его друзьям! Отправь свое фото на email 739@loveintown.ru - покажи, что ты не такая как все и заработай больше голосов! Отправь SMS на номер 00839000002 с инфо о себе, напр.: Что нравится в людях? Любимое блюдо? Любимый CD? Как расслабляешься? Твой секс-символ? 3 вещи, без которых ты жить не можешь и тд. Удачи!";
     short buf[1024];
     int len=strlen(txt);
     ConvertMultibyteToUCS2(txt,len,buf,sizeof(buf),CONV_ENCODING_CP1251);
@@ -294,7 +294,7 @@ int main(int argc, char** argv)
     s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)buf,len*2);
     s.setIntProperty(Tag::SMSC_DSTCODEPAGE,DataCoding::SMSC7BIT);
 
-    if(partitionSms(&s,DataCoding::SMSC7BIT)==psMultiple)
+    if(partitionSms(&s)==psMultiple)
     {
       unsigned int len;
       ConcatInfo *ci=(ConcatInfo *)s.getBinProperty(Tag::SMSC_CONCATINFO,&len);
@@ -472,7 +472,7 @@ int main(int argc, char** argv)
     p.codepage=0;
     //StateMachine::processDirectives(s,p,p);
 
-    if(partitionSms(&s,tst[t].dstdc)==psMultiple)
+    if(partitionSms(&s)==psMultiple)
     {
       unsigned int len;
       ConcatInfo *ci=(ConcatInfo *)s.getBinProperty(Tag::SMSC_CONCATINFO,&len);
