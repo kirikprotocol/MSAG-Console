@@ -1,2 +1,0 @@
-#binary name			source name			libraries
-test/decoder			decoder				-ltest-util -lutil-recoder-recode_dll
