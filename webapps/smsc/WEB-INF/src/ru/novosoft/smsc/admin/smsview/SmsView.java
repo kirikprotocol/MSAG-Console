@@ -140,8 +140,18 @@ public class SmsView
       throws SQLException
     {
       int pos=1;
-      if (needExpression(query.getSmsId()))
-          stmt.setString(pos++, getLikeExpression(query.getSmsId()));
+      if (needExpression(query.getSmsId())) {
+          try {
+            long id = Long.valueOf( query.getSmsId() ).longValue();
+            String ids = Long.toHexString(id);
+            StringBuffer sb = new StringBuffer(16);
+            for( int i = 0; i < 16-ids.length(); i++ ) sb.append( '0' );
+            sb.append( ids.toUpperCase() );
+            stmt.setString(pos++, sb.toString());
+          } catch (NumberFormatException ex) {
+            throw new SQLException("Invalid numeric format");
+          }
+      }
       if (needExpression(query.getFromAddress()))
           stmt.setString(pos++, getLikeExpression(query.getFromAddress()));
       if (needExpression(query.getToAddress()))
@@ -187,11 +197,15 @@ public class SmsView
         if (needExpression(str))
             list.add("UPPER("+field+") "+((needLikeExpression(str)) ? "LIKE ?":"=?"));
     }
+    private void addWherePartEQ(ArrayList list, String field, String str) {
+        if (needExpression(str))
+            list.add("UPPER("+field+") = ?"));
+    }
     private String prepareWhereClause(SmsQuery query)
     {
       ArrayList list = new ArrayList();
 
-      addWherePart(list, "ID", query.getSmsId());
+      addWherePartEQ(list, "ID", query.getSmsId());
       addWherePart(list, "OA", query.getFromAddress());
       addWherePart(list, "DDA", query.getToAddress());
       addWherePart(list, "ROUTE_ID", query.getRouteId());
