@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE routes SYSTEM "file://routes.dtd">
+
+<routes>
+  <subject_def id="wsme" defSme="wsme">
+    <mask value="555"/>
+  </subject_def>
+  <subject_def id="subject00" defSme="sme00">
+    <mask value="00"/>
+  </subject_def>
+  <subject_def id="subject01" defSme="sme01">
+    <mask value="01"/>
+    <mask value="11"/>
+  </subject_def>
+  <subject_def id="subject02" defSme="sme02">
+    <mask value="02"/>
+    <mask value="12"/>
+  </subject_def>
+
+  <route id="sme_to_wsme" billing="false" archiving="false" enabling="true" priority="2" serviceId="2" suppressDeliveryReports="false" active="true">
+    <source>
+      <subject id="subject00"/>
+    </source>
+    <source>
+      <subject id="subject01"/>
+    </source>
+    <source>
+      <subject id="subject02"/>
+    </source>
+    <destination sme="wsme">
+      <subject id="wsme"/>
+    </destination>
+  </route>
+  <route id="smsc_to_wsme" billing="false" archiving="false" enabling="true" priority="2" serviceId="2" suppressDeliveryReports="false" active="true">
+    <source>
+      <mask value="+11111111111"/>
+    </source>
+    <destination sme="wsme">
+      <subject id="wsme"/>
+    </destination>
+  </route>
+  <route id="wsme_to_sme" billing="false" archiving="false" enabling="true" priority="2" serviceId="2" suppressDeliveryReports="false" active="true">
+    <source>
+      <subject id="wsme"/>
+    </source>
+    <destination sme="sme00">
+      <subject id="subject00"/>
+    </destination>
+    <destination sme="sme01">
+      <subject id="subject01"/>
+    </destination>
+    <destination sme="sme02">
+      <subject id="subject02"/>
+    </destination>
+  </route>
+</routes>

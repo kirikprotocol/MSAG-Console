@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+<config>
+    
+
+	<section name="StartupLoader">
+		<section name="DataSourceDrivers">
+			<section name="OCIDataSourceDriver">
+				<param name="type" type="string">OCI</param>
+				<param name="loadup" type="string">/export/home/bryz/install/smsc/db/oci/libdb_oci.so</param>
+			</section>
+		</section>
+	</section>
+    
+
+	<section name="WSme">
+
+		<param name="SvcType" type="string">WSme</param>
+		<param name="ProtocolId" type="int">333</param>
+        
+
+		<section name="ThreadPool">
+			<param name="max" type="int">15</param>
+			<param name="init" type="int">5</param>
+		</section>
+
+		<section name="DataSource">
+			<param name="type" type="string">OCI</param>
+			<param name="connections" type="int">5</param>
+			<param name="dbInstance" type="string">smscdb</param>
+			<param name="dbUserName" type="string">smsc2</param>
+			<param name="dbUserPassword" type="string">smsc2</param>
+		</section>
+            
+
+		<section name="SMSC">
+			<param name="host" type="string">smsc</param>
+			<param name="port" type="int">15971</param>
+			<param name="sid" type="string">wsme</param>
+			<param name="timeout" type="int">10</param>
+			<param name="password" type="string">wsme</param>
+		</section>
+	
+
+		<section name="Admin">
+			<param name="host" type="string">smsc</param>
+			<param name="port" type="int">15382</param>
+		</section>
+	
+
+		<section name="LangManager">
+			<param name="defaultLang" type="string">en_us</param>
+		</section>
+	
+
+		<section name="AdManager">
+			<section name="History">
+				<param name="age" type="int">60</param> <!-- in days -->
+				<param name="cleanup" type="int">5</param> <!-- in seconds -->
+				<param name="messageLife" type="int">20</param> <!-- in seconds -->
+				<param name="ageInSeconds" type="bool">true</param>
+			</section>
+			<section name="Repository">
+			</section>
+		</section>
+
+	</section>
+
+</config>
