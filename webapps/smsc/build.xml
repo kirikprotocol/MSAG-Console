@@ -108,6 +108,13 @@
     <jar jarfile="${CATALINA_HOME}/common/lib/smsc_tomcat_common.jar">
       <fileset dir="${java_out}" includes="${auth_path}/Authenticator.class ${auth_path}/AuthenticatorProxy.class"/>
     </jar>
+    <copy todir="${exploded}">
+      <fileset dir="${basedir}/../../docs/html">
+        <include name="SMSC Administration Guide.htm"/>
+        <include name="SMSC Administration Guide_files/*"/>
+        <exclude name="SMSC Administration Guide_files/CVS/*"/>
+      </fileset>
+    </copy>
   </target>
 
   <target name="update" depends="build,do_update" description="copy files to distributive except of config files">
