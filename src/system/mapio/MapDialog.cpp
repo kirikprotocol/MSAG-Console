@@ -26,7 +26,7 @@ extern unsigned char lll_8bit_2_7bit[256];
 //list<unsigned> DialogMapContainer::dialogId_pool;
 
 inline char GetChar(const unsigned char*& ptr,unsigned& shift){
-  __trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,*ptr);
+  //__trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,*ptr);
   char val = (*ptr >> shift)&0x7f;
   if ( shift > 1 )
     val |= (*(ptr+1) << (8-shift))&0x7f;
@@ -36,12 +36,12 @@ inline char GetChar(const unsigned char*& ptr,unsigned& shift){
     shift&=0x7;
     ++ptr;
   }
-  __trace2__("MAP: 7bit : %x",val);
+  //__trace2__("MAP: 7bit : %x",val);
   return lll_7bit_2_8bit[val];
 }
 
 inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit){
-  __trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,*ptr);
+  //__trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,*ptr);
   unsigned char val = lll_8bit_2_7bit[val8bit];
   //char val = (*ptr >> shift)&0x7f;
   *ptr = *ptr | (val << shift);
@@ -54,7 +54,7 @@ inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit){
     shift&=0x7;
     ++ptr;
   }
-  __trace2__("MAP: 7bit : %x",val);
+  //__trace2__("MAP: 7bit : %x",val);
 }
 
 void Convert7BitToText(
