@@ -11,7 +11,7 @@ div.error
 	border-bottom: 1px solid #E4E0CE;
 	border-right: 1px solid #E4E0CE;
 }
-div.error div.error_header
+div.error div.header
 {
 	color: #FF0000;
 	font-weight : bolder;
@@ -26,7 +26,7 @@ div.warning
 	border-bottom: 1px solid #E4E0CE;
 	border-right: 1px solid #E4E0CE;
 }
-div.warning div.warning_header
+div.warning div.header
 {
 	color: #880000;
 	font-weight : bolder;
@@ -41,7 +41,7 @@ div.message
 	border-bottom: 1px solid #E4E0CE;
 	border-right: 1px solid #E4E0CE;
 }
-div.message div.message_header
+div.message div.header
 {
 	font-weight : bolder;
 }

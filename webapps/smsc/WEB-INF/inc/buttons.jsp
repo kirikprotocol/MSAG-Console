@@ -11,10 +11,18 @@ void button(JspWriter out, String srcImgUrl, String name, String value, String t
 }
 void addButton(JspWriter out, String name, String value, String title) throws IOException
 {
-	button(out, "but_add.gif", name, value, title);
+	addButton(out, name, value, title, null);
+}
+void addButton(JspWriter out, String name, String value, String title, String onclick) throws IOException
+{
+	button(out, "but_add.gif", name, value, title, onclick);
 }
 void delButton(JspWriter out, String name, String value, String title) throws IOException
 {
-	button(out, "but_del.gif", name, value, title);
+  delButton(out, name, value, title, null);
+}
+void delButton(JspWriter out, String name, String value, String title, String onclick) throws IOException
+{
+	button(out, "but_del.gif", name, value, title, onclick);
 }
 %>

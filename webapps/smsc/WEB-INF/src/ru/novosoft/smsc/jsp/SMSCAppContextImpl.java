@@ -2,6 +2,7 @@ package ru.novosoft.smsc.jsp;
 
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
+import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.journal.Journal;
@@ -14,11 +15,11 @@ import ru.novosoft.smsc.admin.service.ServiceManagerImpl;
 import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.perfmon.PerfServer;
+import ru.novosoft.smsc.topmon.TopServer;
 import ru.novosoft.smsc.util.LocaleMessages;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.WebXml;
-import ru.novosoft.smsc.topmon.TopServer;
 import ru.novosoft.util.conpool.NSConnectionPool;
 import ru.novosoft.util.jsp.AppContextImpl;
 
@@ -39,6 +40,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   private SmeManager smeManager = null;
   private RouteSubjectManager routeSubjectManager = null;
   private ResourcesManager resourcesManager = null;
+  private AclManager aclManager = null;
 
   private Smsc smsc = null;
   private NSConnectionPool connectionPool = null;
@@ -124,6 +126,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       ServiceManagerImpl serviceManager = new ServiceManagerImpl();
       serviceManager.add(smsc);
       hostsManager = new HostsManager(daemonManager, serviceManager, smeManager, routeSubjectManager);
+      aclManager = new AclManager(this);
 
       File usersConfig = new File(webappConfig.getString("system.users file"));
       startConsole();
@@ -252,6 +255,11 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   public WebXml getWebXmlConfig()
   {
     return webXmlConfig;
+  }
+
+  public AclManager getAclManager()
+  {
+    return aclManager;
   }
 }
 

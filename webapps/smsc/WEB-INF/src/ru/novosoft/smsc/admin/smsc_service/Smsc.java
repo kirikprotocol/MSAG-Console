@@ -10,6 +10,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.acl.AclInfo;
 import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.DistributionListManager;
@@ -66,6 +67,15 @@ public class Smsc extends Service
 
   private static final String LOG_GET_CATEGORIES_ID = "log_get_categories";
   private static final String LOG_SET_CATEGORIES_ID = "log_set_categories";
+
+  private static final String ACL_LIST_NAMES = "acl_list_names";
+  private static final String ACL_GET_INFO = "acl_get";
+  private static final String ACL_REMOVE = "acl_remove";
+  private static final String ACL_CREATE = "acl_create";
+  private static final String ACL_UPDATE_INFO = "acl_update_info";
+  private static final String ACL_LOOKUP_ADDRESSES = "acl_lookup_addresses";
+  private static final String ACL_REMOVE_ADDRESSES = "acl_remove_addresses";
+  private static final String ACL_ADD_ADDRESSES = "acl_add_addresses";
 
 
   private File configFolder = null;
@@ -485,5 +495,93 @@ public class Smsc extends Service
   public File getConfigFolder()
   {
     return configFolder;
+  }
+
+
+  public List aclListNames() throws AdminException
+  {
+    Object result = call(SMSC_COMPONENT_ID, ACL_LIST_NAMES, Type.Types[Type.StringListType], new HashMap());
+    if (!(result instanceof List))
+      throw new AdminException("Error in response");
+
+    List list = (List) result;
+    List resultList = new ArrayList();
+    for (Iterator i = list.iterator(); i.hasNext();) {
+      String aclPair = (String) i.next();
+      int pos = aclPair.indexOf(',');
+      String idStr = aclPair.substring(0, pos);
+      String name = aclPair.substring(pos + 1);
+      try {
+        resultList.add(new AclInfo(Long.parseLong(idStr), name));
+      } catch (NumberFormatException e) {
+        logger.error("Could not parse acl. id:\"" + idStr + "\" name:\"" + name + "\"", e);
+      }
+    }
+    return resultList;
+  }
+
+  public AclInfo aclGetInfo(long aclId) throws AdminException
+  {
+    Map params = new HashMap();
+    params.put("id", new Long(aclId));
+    Object result = call(SMSC_COMPONENT_ID, ACL_GET_INFO, Type.Types[Type.StringListType], params);
+    if (!(result instanceof List))
+      throw new AdminException("Error in response");
+
+    return new AclInfo((List) result);
+  }
+
+  public void aclRemove(long aclId) throws AdminException
+  {
+    Map params = new HashMap();
+    params.put("id", new Long(aclId));
+    call(SMSC_COMPONENT_ID, ACL_REMOVE, Type.Types[Type.BooleanType], params);
+  }
+
+  public void aclCreate(long aclId, String name, String description, List addresses) throws AdminException
+  {
+    Map params = new HashMap();
+    params.put("id", new Long(aclId));
+    params.put("name", name);
+    params.put("description", description);
+    params.put("addresses", addresses);
+    call(SMSC_COMPONENT_ID, ACL_CREATE, Type.Types[Type.BooleanType], params);
+  }
+
+  public void aclUpdateInfo(long aclId, String name, String description) throws AdminException
+  {
+    Map params = new HashMap();
+    params.put("id", new Long(aclId));
+    params.put("name", name);
+    params.put("description", description);
+    call(SMSC_COMPONENT_ID, ACL_UPDATE_INFO, Type.Types[Type.BooleanType], params);
+  }
+
+  public List aclLookupAddresses(long aclId, String addressPrefix) throws AdminException
+  {
+    Map params = new HashMap();
+    params.put("id", new Long(aclId));
+    params.put("prefix", addressPrefix);
+    Object result = call(SMSC_COMPONENT_ID, ACL_LOOKUP_ADDRESSES, Type.Types[Type.StringListType], params);
+    if (!(result instanceof List))
+      throw new AdminException("Error in response");
+
+    return (List) result;
+  }
+
+  public void aclRemoveAddresses(long aclId, List addresses) throws AdminException
+  {
+    Map params = new HashMap();
+    params.put("id", new Long(aclId));
+    params.put("addresses", addresses);
+    call(SMSC_COMPONENT_ID, ACL_REMOVE_ADDRESSES, Type.Types[Type.BooleanType], params);
+  }
+
+  public void aclAddAddresses(long aclId, List addresses) throws AdminException
+  {
+    Map params = new HashMap();
+    params.put("id", new Long(aclId));
+    params.put("addresses", addresses);
+    call(SMSC_COMPONENT_ID, ACL_ADD_ADDRESSES, Type.Types[Type.BooleanType], params);
   }
 }

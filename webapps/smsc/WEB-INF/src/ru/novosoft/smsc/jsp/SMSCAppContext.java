@@ -5,6 +5,7 @@
  */
 package ru.novosoft.smsc.jsp;
 
+import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
@@ -51,4 +52,6 @@ public interface SMSCAppContext extends AppContext
   Journal getJournal();
 
   WebXml getWebXmlConfig();
+
+  AclManager getAclManager();
 }

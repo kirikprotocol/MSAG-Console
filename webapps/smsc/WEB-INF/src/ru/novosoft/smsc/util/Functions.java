@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+
 /**
  * Created by igork
  * Date: Jan 20, 2003
@@ -225,5 +226,10 @@ public class Functions
   public static String getLocaleEncoding()
   {
     return System.getProperty("file.encoding", "WINDOWS-1251");
+  }
+
+  public static boolean compareStrs(String s1, String s2)
+  {
+    return (s1 == null && s2 == null) || (s1 != null && s2 != null && s1.equals(s2));
   }
 }

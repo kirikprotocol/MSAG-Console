@@ -24,7 +24,9 @@ table.navbar td.current,
 table.navbar td.next,
 table.navbar td.next a,
 table.navbar td.last,
-table.navbar td.last a
+table.navbar td.last a,
+table.navbar td.pageSize,
+table.navbar td.pageSize a
 {
 	width: 12px;
 }
