@@ -747,7 +747,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
 
 #endif
 
-#include "MapDialogMkPDU.cpp"
+#include "MapDialogMkPDU.cxx"
 
 void MapDialog::Et96MapDelimiterInd(
   ET96MAP_LOCAL_SSN_T lssn,
