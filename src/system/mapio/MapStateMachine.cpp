@@ -3094,6 +3094,19 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     // послать ок на USSDRequestReq
     SendOkToSmsc(dialog.get());
 
+    if( smsc::logger::_map_cat->isDebugEnabled() ) {
+     {
+      char *text = new char[ussdString_sp->ussdStrLen*4+1];
+      int k = 0;
+      for ( int i=0; i<ussdString_sp->ussdStrLen; i++){
+        k+=sprintf(text+k,"%02x ",(unsigned)ussdString_sp->ussdStr[i]);
+      }
+      text[k]=0;
+      __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, 
+        "%s: ussd string len=%d, %s",__func__, ussdString_sp->ussdStrLen, text);
+      delete text;
+     }
+    }
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
     SMS* old_sms = dialog->sms.get();
