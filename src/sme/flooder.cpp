@@ -151,6 +151,7 @@ int main(int argc,char* argv[])
         }*/
         cnt++;
       }
+      usleep(1000);
       if((cnt%500)==0 || time(NULL)-lasttime>5)
       {
         printf("%d/%d\r",rcnt,cnt);
