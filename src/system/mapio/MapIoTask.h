@@ -172,11 +172,12 @@ public:
   
   MapDialog* createSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn){
     MutexGuard g(sync);
-    ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.pop_front();
+    ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn);
     dlg->smscDialogId = smsc_did;
     hash.Insert(map_did,dlg);
     __trace2__("MAP:: new dialog 0x%x for dialogid 0x%x",dlg,dialogueid);
+    dialogId_pool.pop_front();
     return dlg;
   }
   
