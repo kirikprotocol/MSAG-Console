@@ -1985,11 +1985,11 @@ static void NotifyHLR(MapDialog* dialog)
   }
   else if ( dialog->subscriberAbsent ) {
     deliveryOutcom = ET96MAP_SUBSCRIBER_ABSENT;
-    __trace2__("MAP::%s SUBSCRIBER_ABSENT (flag:%s)",__FUNCTION__,dialog->mwdStatus.mnrf);
+    __trace2__("MAP::%s SUBSCRIBER_ABSENT (flag:%d)",__FUNCTION__,dialog->mwdStatus.mnrf);
   }
   else if ( dialog->memoryExceeded ) {
     deliveryOutcom = ET96MAP_MEMORY_CAPACITY_OVERRUN;
-    __trace2__("MAP::%s MEMORY_EXCEEDE (flag:%s)",__FUNCTION__,dialog->mwdStatus.mcef);
+    __trace2__("MAP::%s MEMORY_EXCEEDE (flag:%d)",__FUNCTION__,dialog->mwdStatus.mcef);
   }
   else {
     __trace2__("MAP::%s no way!",__FUNCTION__);
