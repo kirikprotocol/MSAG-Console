@@ -15,6 +15,7 @@ using smsc::util::Logger;
 using smsc::test::conf::TestConfig;
 using namespace smsc::profiler;
 using namespace smsc::smpp::SmppCommandSet;
+using namespace smsc::smpp::DataCoding;
 using namespace smsc::test::smpp;
 using namespace smsc::test::core;
 using namespace smsc::test::util;
@@ -111,14 +112,14 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 	{
 		case ProfileCharsetOptions::Default:
 			__tc__("processDeliverySm.normalSms.checkDataCoding");
-			if (dc != DATA_CODING_SMSC_DEFAULT)
+			if (dc != DEFAULT)
 			{
 				__tc_fail__(1);
 			}
 			__tc_ok_cond__;
-			if (dc == DATA_CODING_SMSC_DEFAULT)
+			if (dc == DEFAULT)
 			{
-				if (origDc == DATA_CODING_SMSC_DEFAULT)
+				if (origDc == DEFAULT)
 				{
 					__tc__("processDeliverySm.normalSms.checkTextEqualDataCoding");
 				}

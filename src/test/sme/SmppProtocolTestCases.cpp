@@ -12,6 +12,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::test::conf::TestConfig;
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet;
+using namespace smsc::smpp::DataCoding;
 using namespace smsc::test::sms; //constants
 using namespace smsc::test::smpp;
 using namespace smsc::test::core; //constants
@@ -569,7 +570,19 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 					break;
 				case 11: //недопустимый dataCoding
 					__tc__("submitSm.incorrect.dataCoding");
-					pdu->get_message().set_dataCoding(rand1(255));
+					for (int dc = rand1(255); true; dc = rand1(255))
+					{
+						switch (dc)
+						{
+							case DEFAULT:
+							case BINARY:
+							case UCS2:
+							case SMSC7BIT:
+								continue;
+						}
+						pdu->get_message().set_dataCoding(dc);
+						break;
+					}
 					break;
 				case 12:
 					__tc__("submitSm.incorrect.transactionRollback");

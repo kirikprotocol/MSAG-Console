@@ -19,6 +19,7 @@ using namespace smsc::test::core; //constants, PduData
 using namespace smsc::test::smpp;
 using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet;
+using namespace smsc::smpp::DataCoding;
 
 DbSmeTestCases::DbSmeTestCases(SmppFixture* fixture, DbSmeRegistry* _dbSmeReg)
 : SmeAcknowledgementHandler(fixture, TestConfig::getStrParam("dbSmeServiceType"),
@@ -146,10 +147,10 @@ void DbSmeTestCases::sendDbSmePdu(const Address& addr, const string& input,
 		//текст сообщения
 		switch (dataCoding)
 		{
-			case DATA_CODING_SMSC_DEFAULT:
+			case DEFAULT:
 				__tc__("submitDbSmeCmd.cmdTextDefault");
 				break;
-			case DATA_CODING_UCS2:
+			case UCS2:
 				__tc__("submitDbSmeCmd.cmdTextUcs2");
 				break;
 			default:

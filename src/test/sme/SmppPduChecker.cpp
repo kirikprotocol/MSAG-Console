@@ -15,6 +15,7 @@ using namespace smsc::test::sms; //constants
 using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
+using namespace smsc::smpp::DataCoding; //constants
 
 static const int NO_ROUTE = 1;
 static const int INVALID_VALID_TIME = 2;
@@ -53,8 +54,8 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	}
 	switch (pdu->get_message().get_dataCoding())
 	{
-		case DATA_CODING_SMSC_DEFAULT:
-		case DATA_CODING_UCS2:
+		case DEFAULT:
+		case UCS2:
 			break;
 		default:
 			res.insert(INVALID_DATA_CODING);
@@ -192,7 +193,7 @@ void SmppPduChecker::processResp(ResponseMonitor* monitor,
 			{
 				__tc__("processResp.checkCmdStatusOk");
 				vector<int> chkRes(pduRes.begin(), pduRes.end());
-				__tc_fail2__(chkRes, 10);
+				__tc_fail2__(chkRes, 0);
 				__tc_ok_cond__;
 				//положительный респонс получен, pdu валидная
 				monitor->pduData->valid = true;

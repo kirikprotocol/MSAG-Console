@@ -14,6 +14,7 @@ using smsc::test::conf::TestConfig;
 using smsc::test::sms::SmsUtil;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
+using namespace smsc::smpp::DataCoding;
 using namespace smsc::profiler;
 using namespace smsc::test::core;
 using namespace smsc::test::smpp;
@@ -112,7 +113,7 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 			}
 			break;
 	}
-	return new AckText("Unknown", DATA_CODING_SMSC_DEFAULT, valid);
+	return new AckText("Unknown", DEFAULT, valid);
 }
 
 AckText* SmscSmeTestCases::getExpectedResponse(
@@ -171,7 +172,7 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 			return new AckText(p.first, p.second, valid);
 		}
 	}
-	return new AckText("Unknown", DATA_CODING_SMSC_DEFAULT, valid);
+	return new AckText("Unknown", DEFAULT, valid);
 }
 
 #define __compare__(errCode, field, value) \

@@ -20,6 +20,7 @@ using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants
 using namespace smsc::test::sms;
 using namespace smsc::test::smpp;
+using namespace smsc::test::smpp::DataCoding;
 using namespace smsc::test::core; //ProfileUtil, str()
 using namespace smsc::test::util;
 
@@ -304,10 +305,10 @@ void ProfilerTestCases::putCommand(const Address& addr, uint8_t dataCoding, int 
 		  //текст сообщения
 		  switch (dataCoding)
 		  {
-			case DATA_CODING_SMSC_DEFAULT:
+			case DEFAULT:
 			  __tc2__("putCommand.cmdTextDefault");
 			  break;
-			case DATA_CODING_UCS2:
+			case UCS2:
 			  __tc2__("putCommand.cmdTextUcs2");
 			  break;
 			default:

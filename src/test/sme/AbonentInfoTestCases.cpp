@@ -13,6 +13,7 @@ using smsc::test::conf::TestConfig;
 using smsc::test::sms::SmsUtil;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
+using namespace smsc::smpp::DataCoding;
 using namespace smsc::profiler;
 using namespace smsc::test::core;
 using namespace smsc::test::smpp;
@@ -54,7 +55,7 @@ AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
 		__tc__("processAbonentInfo.checkText");
 		__tc_fail__(-1); //статус абонента всегда 1
 		s << input << ":1," << profile.codepage;
-		return new AckText(s.str(), DATA_CODING_SMSC_DEFAULT, valid);
+		return new AckText(s.str(), DEFAULT, valid);
 	}
 	catch (...)
 	{
@@ -79,10 +80,10 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 		//текст сообщения
 		switch (dataCoding)
 		{
-			case DATA_CODING_SMSC_DEFAULT:
+			case DEFAULT:
 				__tc__("queryAbonentInfo.cmdTextDefault");
 				break;
-			case DATA_CODING_UCS2:
+			case UCS2:
 				__tc__("queryAbonentInfo.cmdTextUcs2");
 				break;
 			default:
@@ -207,7 +208,7 @@ AckText* AbonentInfoTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	bool valid = t + timeCheckAccuracy <= recvTime;
 	ostringstream s;
 	s << input << ":" << (bound ? 1 : 0) << "," << profile.codepage;
-	return new AckText(s.str(), DATA_CODING_SMSC_DEFAULT, valid);
+	return new AckText(s.str(), DEFAULT, valid);
 }
 
 #define __compare__(errCode, field, value) \

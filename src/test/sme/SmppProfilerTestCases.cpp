@@ -14,6 +14,7 @@ using namespace smsc::profiler; //Profile, constants
 using namespace smsc::test::core; //constants
 using namespace smsc::test::util;
 using namespace smsc::test::smpp; //constants, SmppUtil
+using namespace smsc::test::smpp::DataCoding; //constants
 
 SmppProfilerTestCases::SmppProfilerTestCases(SmppFixture* fixture)
 : SmeAcknowledgementHandler(fixture,
@@ -50,10 +51,10 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 		//текст сообщения
 		switch (dataCoding)
 		{
-			case DATA_CODING_SMSC_DEFAULT:
+			case DEFAULT:
 				__tc__("updateProfile.cmdTextDefault");
 				break;
-			case DATA_CODING_UCS2:
+			case UCS2:
 				__tc__("updateProfile.cmdTextUcs2");
 				break;
 			default:

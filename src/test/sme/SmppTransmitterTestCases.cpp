@@ -17,6 +17,7 @@ using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants, Profile
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
+using namespace smsc::smpp::DataCoding; //constants
 using namespace smsc::test::smpp; //constants, SmppUtil
 using namespace smsc::test::core; //constants
 using namespace smsc::test::sms; //constants
@@ -450,7 +451,7 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 void SmppTransmitterTestCases::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	PduData* replacePduData)
 {
-	uint8_t dataCoding = DATA_CODING_SMSC_DEFAULT;
+	uint8_t dataCoding = DEFAULT;
 	if (replacePduData)
 	{
 		PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
