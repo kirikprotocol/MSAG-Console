@@ -42,6 +42,7 @@ AliasRegistry* aliasReg;
 RouteRegistry* routeReg;
 Profile defProfile;
 ProfileRegistry* profileReg;
+DbSmeRegistry* dbSmeReg;
 CheckList* chkList;
 
 /**
@@ -112,7 +113,7 @@ public:
 //TestSme
 TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* fixture)
 	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
-	tc(config, fixture), boundOk(false)
+	tc(config, fixture, dbSmeReg), boundOk(false)
 {
 	fixture->respSender = this;
 }
@@ -433,6 +434,7 @@ int main(int argc, char* argv[])
 	routeReg = new RouteRegistry();
 	ProfileUtil::setupRandomCorrectProfile(defProfile);
 	profileReg = new ProfileRegistry(defProfile);
+	dbSmeReg = new DbSmeRegistry();
 	chkList = new DbSmeCheckList();
 	try
 	{
@@ -450,6 +452,7 @@ int main(int argc, char* argv[])
 	delete aliasReg;
 	delete routeReg;
 	delete profileReg;
+	delete dbSmeReg;
 	delete chkList;
 	return 0;
 }
