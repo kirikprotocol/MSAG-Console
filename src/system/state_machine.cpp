@@ -2021,6 +2021,7 @@ StateType StateMachine::replace(Tuple& t)
     __trace2__("REPLACE: Failed to retrieve sms:%lld",t.msgId);
     __REPLACE__RESPONSE(REPLACEFAIL);
   }
+  time_t oldtime=sms.getNextTime();
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
     if(sms.getConcatSeqNum()>0)
@@ -2145,6 +2146,7 @@ StateType StateMachine::replace(Tuple& t)
     __REPLACE__RESPONSE(REPLACEFAIL);
   }
   try{
+    smsc->UpdateSmsSchedule(oldtime,t.msgId,newsched);
     t.command.getProxy()->putCommand
     (
       SmscCommand::makeReplaceSmResp

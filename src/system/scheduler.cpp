@@ -92,6 +92,27 @@ void Scheduler::ChangeSmsSchedule(SMSId id,time_t newtime)
   __trace2__("Scheduler: notify");
 }
 
+void Scheduler::UpdateSmsSchedule(time_t old,SMSId id,time_t newtime)
+{
+  MutexGuard guard(mon);
+  std::pair<TimeLineMap::iterator,TimeLineMap::iterator> p;
+  p=timeLine.equal_range(old);
+  if(p.first!=timeLine.end())
+  {
+    for(TimeLineMap::iterator i=p.first;i!=p.second;i++)
+    {
+      if(i->second==id)
+      {
+        timeLine.erase(i);
+        timeLine.insert(TimeIdPair(newtime,id));
+        mon.notify();
+        __trace2__("Scheduler: updatesmsschedule: %lld: %d->%d",id,old,newtime);
+        break;
+      }
+    };
+  }
+}
+
 
 };//system
 };//smsc

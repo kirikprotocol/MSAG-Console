@@ -36,6 +36,7 @@ public:
   }
   void ChangeSmsSchedule(SMSId id,time_t newtime);
 
+  void UpdateSmsSchedule(time_t old,SMSId id,time_t newtime);
 
 protected:
   EventQueue &queue;
