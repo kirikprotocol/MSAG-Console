@@ -17,6 +17,7 @@ public class Params extends DbsmeBean
   private int protocolId = 0;
   private String origAddress = null;
   private String systemType = null;
+  private String forceDataCoding = null;
   private int max = 0;
   private int init = 0;
   private String host = null;
@@ -47,20 +48,24 @@ public class Params extends DbsmeBean
       return result;
 
     if (!initialized) {
-      svcType = getString("DBSme.SvcType");
-      protocolId = getInt("DBSme.ProtocolId");
+      svcType     = getString("DBSme.SvcType");
+      protocolId  = getInt   ("DBSme.ProtocolId");
       origAddress = getString("DBSme.origAddress");
-      systemType = getString("DBSme.systemType");
-      max = getInt("DBSme.ThreadPool.max");
+      systemType  = getString("DBSme.systemType");
+      forceDataCoding = getString("DBSme.forceDataCoding");
+      if (forceDataCoding == null || forceDataCoding.length() <= 0) {
+        forceDataCoding = "LATIN1";
+      }
+      max  = getInt("DBSme.ThreadPool.max");
       init = getInt("DBSme.ThreadPool.init");
       host = getString("DBSme.SMSC.host");
       port = getInt("DBSme.SMSC.port");
-      sid = getString("DBSme.SMSC.sid");
-      timeout = getInt("DBSme.SMSC.timeout");
+      sid  = getString("DBSme.SMSC.sid");
+      timeout  = getInt("DBSme.SMSC.timeout");
       password = getString("DBSme.SMSC.password");
 
       adminHost = getString("DBSme.Admin.host");
-      adminPort = getInt("DBSme.Admin.port");
+      adminPort = getInt   ("DBSme.Admin.port");
 
       provider_not_found = getOptionalString("DBSme.MessageSet.PROVIDER_NOT_FOUND");
       service_not_available = getOptionalString("DBSme.MessageSet.SERVICE_NOT_AVAIL");
@@ -79,13 +84,10 @@ public class Params extends DbsmeBean
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
-    if (result != RESULT_OK)
-      return result;
+    if (result != RESULT_OK) return result;
 
-    if (mbCancel != null)
-      return RESULT_DONE;
-    if (mbDone != null)
-      return save();
+    if (mbCancel != null) return RESULT_DONE;
+    if (mbDone != null)   return save();
 
     return result;
   }
@@ -93,18 +95,19 @@ public class Params extends DbsmeBean
   private int save()
   {
     config.setString("DBSme.SvcType", svcType == null ? "" : svcType);
-    config.setInt("DBSme.ProtocolId", protocolId);
+    config.setInt   ("DBSme.ProtocolId", protocolId);
     config.setString("DBSme.origAddress", origAddress == null ? "" : origAddress);
     config.setString("DBSme.systemType", systemType == null ? "" : systemType);
-    config.setInt("DBSme.ThreadPool.max", max);
-    config.setInt("DBSme.ThreadPool.init", init);
+    config.setString("DBSme.forceDataCoding", forceDataCoding);
+    config.setInt   ("DBSme.ThreadPool.max", max);
+    config.setInt   ("DBSme.ThreadPool.init", init);
     config.setString("DBSme.SMSC.host", host == null ? "" : host);
-    config.setInt("DBSme.SMSC.port", port);
+    config.setInt   ("DBSme.SMSC.port", port);
     config.setString("DBSme.SMSC.sid", sid == null ? "" : sid);
-    config.setInt("DBSme.SMSC.timeout", timeout);
+    config.setInt   ("DBSme.SMSC.timeout", timeout);
     config.setString("DBSme.SMSC.password", password == null ? "" : password);
     config.setString("DBSme.Admin.host", adminHost);
-    config.setInt("DBSme.Admin.port", adminPort);
+    config.setInt   ("DBSme.Admin.port", adminPort);
 
     if (provider_not_found != null && provider_not_found.length() > 0)       config.setString("DBSme.MessageSet.PROVIDER_NOT_FOUND", provider_not_found);   else config.removeParam("DBSme.MessageSet.PROVIDER_NOT_FOUND");
     if (service_not_available != null && service_not_available.length() > 0) config.setString("DBSme.MessageSet.SERVICE_NOT_AVAIL", service_not_available); else config.removeParam("DBSme.MessageSet.SERVICE_NOT_AVAIL");
@@ -129,53 +132,42 @@ public class Params extends DbsmeBean
     return RESULT_DONE;
   }
 
-  public String getMbDone()
-  {
+  public String getMbDone() {
     return mbDone;
   }
-
-  public void setMbDone(String mbDone)
-  {
+  public void setMbDone(String mbDone) {
     this.mbDone = mbDone;
   }
-
-  public String getMbCancel()
-  {
+  public String getMbCancel() {
     return mbCancel;
   }
-
-  public void setMbCancel(String mbCancel)
-  {
+  public void setMbCancel(String mbCancel) {
     this.mbCancel = mbCancel;
   }
 
-  public String getSvcType()
-  {
+  public String getForceDataCoding() {
+    return forceDataCoding;
+  }
+  public void setForceDataCoding(String forceDataCoding) {
+    this.forceDataCoding = forceDataCoding;
+  }
+
+  public String getSvcType() {
     return svcType;
   }
-
-  public void setSvcType(String svcType)
-  {
+  public void setSvcType(String svcType) {
     this.svcType = svcType;
   }
-
-  public int getProtocolIdInt()
-  {
+  public int getProtocolIdInt() {
     return protocolId;
   }
-
-  public void setProtocolIdInt(int protocolId)
-  {
+  public void setProtocolIdInt(int protocolId) {
     this.protocolId = protocolId;
   }
-
-  public String getProtocolId()
-  {
+  public String getProtocolId() {
     return String.valueOf(protocolId);
   }
-
-  public void setProtocolId(String protocolId)
-  {
+  public void setProtocolId(String protocolId) {
     try {
       this.protocolId = Integer.decode(protocolId).intValue();
     } catch (NumberFormatException e) {
@@ -183,43 +175,31 @@ public class Params extends DbsmeBean
     }
   }
 
-  public String getOrigAddress()
-  {
+  public String getOrigAddress() {
     return origAddress;
   }
-
-  public void setOrigAddress(String origAddress)
-  {
+  public void setOrigAddress(String origAddress) {
     this.origAddress = origAddress;
   }
 
-  public String getSystemType()
-  {
+  public String getSystemType() {
     return systemType;
   }
-
-  public void setSystemType(String systemType)
-  {
+  public void setSystemType(String systemType) {
     this.systemType = systemType;
   }
 
-  public int getMaxInt()
-  {
+  public int getMaxInt() {
     return max;
   }
-
-  public void setMaxInt(int max)
-  {
+  public void setMaxInt(int max) {
     this.max = max;
   }
 
-  public String getMax()
-  {
+  public String getMax() {
     return String.valueOf(max);
   }
-
-  public void setMax(String max)
-  {
+  public void setMax(String max) {
     try {
       this.max = Integer.decode(max).intValue();
     } catch (NumberFormatException e) {
@@ -227,23 +207,16 @@ public class Params extends DbsmeBean
     }
   }
 
-  public int getInitInt()
-  {
+  public int getInitInt() {
     return init;
   }
-
-  public void setInitInt(int init)
-  {
+  public void setInitInt(int init) {
     this.init = init;
   }
-
-  public String getInit()
-  {
+  public String getInit() {
     return String.valueOf(init);
   }
-
-  public void setInit(String init)
-  {
+  public void setInit(String init) {
     try {
       this.init = Integer.decode(init).intValue();
     } catch (NumberFormatException e) {
@@ -251,33 +224,23 @@ public class Params extends DbsmeBean
     }
   }
 
-  public String getHost()
-  {
+  public String getHost() {
     return host;
   }
-
-  public void setHost(String host)
-  {
+  public void setHost(String host) {
     this.host = host;
   }
 
-  public int getPortInt()
-  {
+  public int getPortInt() {
     return port;
   }
-
-  public void setPortInt(int port)
-  {
+  public void setPortInt(int port) {
     this.port = port;
   }
-
-  public String getPort()
-  {
+  public String getPort() {
     return String.valueOf(port);
   }
-
-  public void setPort(String port)
-  {
+  public void setPort(String port) {
     try {
       this.port = Integer.decode(port).intValue();
     } catch (NumberFormatException e) {
@@ -285,33 +248,23 @@ public class Params extends DbsmeBean
     }
   }
 
-  public String getSid()
-  {
+  public String getSid() {
     return sid;
   }
-
-  public void setSid(String sid)
-  {
+  public void setSid(String sid) {
     this.sid = sid;
   }
 
-  public int getTimeoutInt()
-  {
+  public int getTimeoutInt() {
     return timeout;
   }
-
-  public void setTimeoutInt(int timeout)
-  {
+  public void setTimeoutInt(int timeout) {
     this.timeout = timeout;
   }
-
-  public String getTimeout()
-  {
+  public String getTimeout() {
     return String.valueOf(timeout);
   }
-
-  public void setTimeout(String timeout)
-  {
+  public void setTimeout(String timeout) {
     try {
       this.timeout = Integer.decode(timeout).intValue();
     } catch (NumberFormatException e) {
@@ -319,143 +272,100 @@ public class Params extends DbsmeBean
     }
   }
 
-  public String getPassword()
-  {
+  public String getPassword() {
     return password;
   }
-
-  public void setPassword(String password)
-  {
+  public void setPassword(String password) {
     this.password = password;
   }
 
-  public String getProvider_not_found()
-  {
+  public String getProvider_not_found() {
     return provider_not_found;
   }
-
-  public void setProvider_not_found(String provider_not_found)
-  {
+  public void setProvider_not_found(String provider_not_found) {
     this.provider_not_found = provider_not_found;
   }
 
-  public String getJob_not_found()
-  {
+  public String getJob_not_found() {
     return job_not_found;
   }
-
-  public void setJob_not_found(String job_not_found)
-  {
+  public void setJob_not_found(String job_not_found) {
     this.job_not_found = job_not_found;
   }
 
-  public String getDs_failure()
-  {
+  public String getDs_failure() {
     return ds_failure;
   }
-
-  public void setDs_failure(String ds_failure)
-  {
+  public void setDs_failure(String ds_failure) {
     this.ds_failure = ds_failure;
   }
 
-  public String getDs_connection_lost()
-  {
+  public String getDs_connection_lost() {
     return ds_connection_lost;
   }
-
-  public void setDs_connection_lost(String ds_connection_lost)
-  {
+  public void setDs_connection_lost(String ds_connection_lost) {
     this.ds_connection_lost = ds_connection_lost;
   }
 
-  public String getDs_statement_fail()
-  {
+  public String getDs_statement_fail() {
     return ds_statement_fail;
   }
-
-  public void setDs_statement_fail(String ds_statement_fail)
-  {
+  public void setDs_statement_fail(String ds_statement_fail) {
     this.ds_statement_fail = ds_statement_fail;
   }
 
-  public String getQuery_null()
-  {
+  public String getQuery_null() {
     return query_null;
   }
-
-  public void setQuery_null(String query_null)
-  {
+  public void setQuery_null(String query_null) {
     this.query_null = query_null;
   }
 
-  public String getInput_parse()
-  {
+  public String getInput_parse() {
     return input_parse;
   }
-
-  public void setInput_parse(String input_parse)
-  {
+  public void setInput_parse(String input_parse) {
     this.input_parse = input_parse;
   }
 
-  public String getOutput_format()
-  {
+  public String getOutput_format() {
     return output_format;
   }
-
-  public void setOutput_format(String output_format)
-  {
+  public void setOutput_format(String output_format) {
     this.output_format = output_format;
   }
 
-  public String getInvalid_config()
-  {
+  public String getInvalid_config() {
     return invalid_config;
   }
-
-  public void setInvalid_config(String invalid_config)
-  {
+  public void setInvalid_config(String invalid_config) {
     this.invalid_config = invalid_config;
   }
 
-  public boolean isInitialized()
-  {
+  public boolean isInitialized() {
     return initialized;
   }
-
-  public void setInitialized(boolean initialized)
-  {
+  public void setInitialized(boolean initialized) {
     this.initialized = initialized;
   }
 
-  public String getAdminHost()
-  {
+  public String getAdminHost() {
     return adminHost;
   }
-
-  public void setAdminHost(String adminHost)
-  {
+  public void setAdminHost(String adminHost) {
     this.adminHost = adminHost;
   }
 
-  public int getAdminPortInt()
-  {
+  public int getAdminPortInt() {
     return adminPort;
   }
-
-  public void setAdminPortInt(int adminPort)
-  {
+  public void setAdminPortInt(int adminPort) {
     this.adminPort = adminPort;
   }
-
-  public String getAdminPort()
-  {
+  public String getAdminPort() {
     return String.valueOf(adminPort);
   }
-
-  public void setAdminPort(String adminPort)
-  {
+  public void setAdminPort(String adminPort) {
     try {
       this.adminPort = Integer.decode(adminPort).intValue();
     } catch (NumberFormatException e) {
@@ -463,13 +373,11 @@ public class Params extends DbsmeBean
     }
   }
 
-  public String getService_not_available()
-  {
+  public String getService_not_available() {
     return service_not_available;
   }
-
-  public void setService_not_available(String service_not_available)
-  {
+  public void setService_not_available(String service_not_available) {
     this.service_not_available = service_not_available;
   }
+
 }

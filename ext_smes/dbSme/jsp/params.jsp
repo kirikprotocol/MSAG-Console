@@ -40,10 +40,11 @@
 <%
 	startSection(out, "DBSme", "DBSme", true);
 		startParams(out);
-			param(out, "SvcType",     "svcType",     bean.getSvcType());
-			param(out, "ProtocolId",  "protocolId",  bean.getProtocolId());
-			param(out, "origAddress", "origAddress", bean.getOrigAddress(), null, null, false, "mask");
-			param(out, "systemType",  "systemType",  bean.getSystemType());
+			param(out, "SvcType",         "svcType",         bean.getSvcType());
+			param(out, "ProtocolId",      "protocolId",      bean.getProtocolId());
+			param(out, "origAddress",     "origAddress",     bean.getOrigAddress(), null, null, false, "mask");
+			param(out, "systemType",      "systemType",      bean.getSystemType());
+      param(out, "forceDataCoding", "forceDataCoding", bean.getForceDataCoding());
 		finishParams(out);
     startSection(out, "DBSme.Admin", "Admin", false);
       startParams(out);
