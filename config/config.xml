@@ -67,10 +67,10 @@
     <param name="systemId" type="string">abonentinfo</param>
   </section>
 
-  <section name="admin">
+  <!--section name="admin">
     <param name="host" type="string">smsc</param>
     <param name="port" type="int">6690</param>
-  </section>
+  </section-->
 
   <section name="core">
     <param name="protocol_id" type="int">34</param>
