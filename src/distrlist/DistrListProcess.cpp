@@ -196,7 +196,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
       }
       for ( unsigned i = 0; i < count; ++i )
       {
-        __trace2__(":DPL: %d.%d.%s",addresses[i].type,addresses[i].plan,addresses[i].value);
+        __trace2__(":DPL:MEMBER %d.%d.%s",addresses[i].type,addresses[i].plan,addresses[i].value);
         task->list[task->count].addr = addresses[i];
         task->list[task->count].dialogId = 0;
         task->list[task->count].responsed = false;
@@ -223,11 +223,12 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
   for ( unsigned i=0; i<task->count; ++i )
   {
     task->list[i].dialogId = GetNextDialogId();
-    SMS msg = multi->msg;
+    SMS& msg = multi->msg;
     msg.setDestinationAddress(task->list[i].addr);
     TPAIR p(task.get(),i);
     task_map.insert( pair<unsigned,TPAIR>(task->list[i].dialogId,p) );
-    putIncomingCommand(SmscCommand::makeSumbmitSm(multi->msg,task->list[i].dialogId));
+    __trace2__(":DPL:DEST %d.%d.%s",task->list[i].addr.type,task->list[i].addr.plan,task->list[i].addr.value);
+    putIncomingCommand(SmscCommand::makeSumbmitSm(msg,task->list[i].dialogId));
     __trace2__(":DPL: task %d of (0x%x:%d) has been scheduled for submit",
       task->list[i].dialogId,
       task.get(),
@@ -279,16 +280,18 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
   SmscCommand cmd = SmscCommand::makeSubmitMultiResp("",task->cmd->get_dialogId(),status);
   if ( status != 0 ) {
     UnsuccessElement* ue = cmd->get_MultiResp()->get_unsuccess();
-    cmd->get_MultiResp()->set_unsuccessCount(task->count-task->submited_count);
-    for ( unsigned i=0,j=0; i < task->count; ++i )
+    unsigned uno = 0;
+    for ( unsigned i=0; i < task->count; ++i )
     {
-      __require__ ( j  < 256 );
-      if ( !task->list[i].errcode == 0 ) {
+      if ( task->list[i].errcode != 0 ) {
+        __require__ ( uno  < 256 );
         if (!task->list[i].responsed) task_map.erase(task->list[i].dialogId); // остальные уже удалены
-        ue[j].addr = task->list[i].addr;
-        ue[j].errcode = task->list[i].errcode; //0; // !!!!! must be fixed
+        ue[uno].addr = task->list[i].addr;
+        ue[uno].errcode = task->list[i].errcode; //0; // !!!!! must be fixed
+        ++uno;
       }
     }
+    cmd->get_MultiResp()->set_unsuccessCount(uno);
   }
   LISTTYPE::iterator it = find(task_sheduler.begin(),task_sheduler.end(),task);
   if ( it != task_sheduler.end() ) { task_sheduler.erase(it);  }
