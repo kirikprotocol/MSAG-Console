@@ -47,6 +47,11 @@ public:
 private:
 	AddressMap addrMap;
 	AddressMap aliasMap;
+
+	int getPartLen(const char* str, char ch);
+	int compareAddr(const Address& a1, const Address& a2);
+	bool checkInverseTransformation(const Address& src1, const Address& dest1,
+		const Address& src2, const Address& dest2);
 };
 
 }

@@ -33,6 +33,7 @@ void AliasManagerTestCases::debugAlias(const char* tc, int val,
 	ostringstream os;
 	os << tc << "(" << val << "): " << *alias;
 	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
+	__trace2__("%s", os.str().c_str());
 }
 
 void AliasManagerTestCases::commit()
@@ -92,8 +93,6 @@ TCResult* AliasManagerTestCases::addCorrectAliasMatch(AliasInfo* alias, int num)
 {
 	TCSelector s(num, 3);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ALIAS_MATCH, s.getChoice());
-	getLog().debugStream() << "[" << thr_self() <<
-		"]\taddCorrectAliasMatch(" << s.value() << ")";
 	try
 	{
 		uint8_t addrLen = alias->addr.getLenght();
