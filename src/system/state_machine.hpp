@@ -131,6 +131,8 @@ protected:
 
   void finalizeSms(SMSId id,SMS& sms);
 
+  StateType DivertProcessing(Tuple& t,SMS& sms);
+
 };
 
 }//system

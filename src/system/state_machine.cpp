@@ -1086,9 +1086,12 @@ StateType StateMachine::submit(Tuple& t)
   if( ri.forwardTo.length() > 0 && ri.smeSystemId=="MAP_PROXY" )
   {
     sms->setStrProperty( Tag::SMSC_FORWARD_MO_TO, ri.forwardTo.c_str());
+
     // force forward(transaction) mode
     sms->setIntProperty( Tag::SMPP_ESM_CLASS, sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x02 );
     isForwardTo = true;
+
+    sms->getMessageBody().dropIntProperty(Tag::SMSC_MERGE_CONCAT);
   }
 
   bool generateDeliver=true; // do not generate in case of merge-concat
@@ -2340,6 +2343,22 @@ StateType StateMachine::forward(Tuple& t)
   int dest_proxy_index;
 
   Address dst=sms.getDealiasedDestinationAddress();
+
+  bool diverted=false;
+  if(t.command->get_forwardAllowDivert())
+  {
+    Profile p=smsc->getProfiler()->lookup(dst);
+    try{
+      dst=p.divert.c_str();
+      smsc_log_info(smsLog,"FWD: cond divert from %s to %s",
+        sms.getDealiasedDestinationAddress().toString().c_str(),dst.toString().c_str());
+      diverted=true;
+    }catch(...)
+    {
+      smsc_log_warn(smsLog,"FWD: failed to construct address for cond divert %s",p.divert.c_str());
+    }
+  }
+
   if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
   {
     dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
@@ -2416,6 +2435,7 @@ StateType StateMachine::forward(Tuple& t)
     smsc_log_debug(smsLog, "FWDDLV: msgId=%lld, seq number:%d",t.msgId,dialogId2);
     //Task task((uint32_t)dest_proxy_index,dialogId2);
     Task task(uniqueId,dialogId2);
+    task.diverted=diverted;
     task.messageId=t.msgId;
     if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
     {
@@ -2596,6 +2616,57 @@ StateType StateMachine::forward(Tuple& t)
   return DELIVERING_STATE;
 }
 
+
+StateType StateMachine::DivertProcessing(Tuple& t,SMS& sms)
+{
+  if(t.command->get_resp()->get_diverted())return UNKNOWN_STATE;
+  if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))return UNKNOWN_STATE;
+  Profile p=smsc->getProfiler()->lookup(sms.getDealiasedDestinationAddress());
+  if(p.divert.length()==0)return UNKNOWN_STATE;
+  int status=GET_STATUS_CODE(t.command->get_resp()->get_status());
+
+  bool doDivert=
+     (
+       p.divertActiveAbsent &&
+       (
+         status==Status::UNDEFSUBSCRIBER ||
+         status==Status::ABSENTSUBSCRIBERSM ||
+         status==Status::ABSENTSUBSCR
+       )
+     )
+     ||
+     (
+       p.divertActiveBlocked &&
+       (
+         status==Status::TELSVCNOTPROVIS ||
+         status==Status::FACILITYNOTSUPP
+       )
+     )
+     ||
+     (
+       p.divertActiveBared &&
+       (
+         status==Status::CALLBARRED
+       )
+     )
+     ||
+     (
+       p.divertActiveCapacity &&
+       (
+         status==Status::SMDELIFERYFAILURE
+       )
+     );
+  if(!doDivert)return UNKNOWN_STATE;
+  SmscCommand cmd=SmscCommand::makeForward(0,t.msgId,false);
+  cmd->set_forwardAllowDivert(true);
+  Tuple t2;
+  t2.command=cmd;
+  t2.msgId=t.msgId;
+  t2.state=t.state;
+  return forward(t);
+}
+
+
 StateType StateMachine::deliveryResp(Tuple& t)
 {
   int sttype=GET_STATUS_TYPE(t.command->get_resp()->get_status());
@@ -2736,6 +2807,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }break;
       case CMD_ERR_TEMP:
       {
+        if(!dgortr)
+        {
+          StateType st=DivertProcessing(t,sms);
+          if(st!=UNKNOWN_STATE)return st;
+        }
         sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
         try{
           __trace__("DELIVERYRESP: change state to enroute");
@@ -4027,6 +4103,7 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
     __warning2__("DELIVERYRESP: failed to finalize sms:%lld",id);
   }
 }
+
 
 
 }//system

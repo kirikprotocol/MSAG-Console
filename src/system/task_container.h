@@ -22,6 +22,7 @@ struct Task
   uint32_t sequenceNumber;
   time_t creationTime;
   time_t timeout;
+  bool diverted;
   smsc::sms::SMSId messageId;
   smsc::sms::SMS  *sms;
   Task* next;
@@ -32,7 +33,7 @@ struct Task
 
 
   Task(uint32_t proxy = 0,uint32_t sequence = 0,smsc::sms::SMS  *s=0):
-    proxy_id(proxy),sequenceNumber(sequence),sms(s) {}
+    proxy_id(proxy),sequenceNumber(sequence),sms(s),diverted(false) {}
   ~Task()
   {
   }
