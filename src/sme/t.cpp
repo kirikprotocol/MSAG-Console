@@ -214,7 +214,9 @@ const int optionsCount=sizeof(options)/sizeof(Option);
 
 
 
-static bool splitString(/*in,out*/string& head,/*out*/string& tail)
+
+/*
+static bool splitString(string& head,string& tail)
 {
   string::size_type pos=head.find(' ');
   if(pos==string::npos)return false;
@@ -224,6 +226,7 @@ static bool splitString(/*in,out*/string& head,/*out*/string& tail)
   head.erase(firstPos);
   return true;
 }
+*/
 
 typedef void(*CommandProc)(SmppSession&,const string& args);
 
@@ -842,7 +845,7 @@ public:
     {
       printf("\nReceived async submit sm resp:status=%#x, msgId=%s\n",
         pdu->get_commandStatus(),
-        ((PduXSmResp*)pdu)->get_messageId());
+        ((PduXSmResp*)pdu)->get_messageId()?((PduXSmResp*)pdu)->get_messageId():"NULL");
     }
     rl_forced_update_display();
   }
