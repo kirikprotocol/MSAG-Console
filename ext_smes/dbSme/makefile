@@ -1,5 +1,12 @@
 SME_SRCDIR:=$(PWD)
 
+ifndef SMSC_SRCDIR
+#$(warning SMSC_SRCDIR is not defined)
+SMSC_SRCDIR:=$(PWD)
+$(warning set SMSC_SRCDIR = $(SMSC_SRCDIR))
+export SMSC_SRCDIR
+endif
+
 ifndef SMSC_BUILDDIR
 #$(warning SMSC_BUILDDIR is not defined)
 SMSC_BUILDDIR:=$(HOME)/build/smsc
