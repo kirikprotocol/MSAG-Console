@@ -193,3 +193,7 @@ void MapIoTask::init()
   throw_if(Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK);
 }
 
+
+MapIoTask::MapDialogContainer* container = 0;
+MapIoTask::Mutex sync_object;
+

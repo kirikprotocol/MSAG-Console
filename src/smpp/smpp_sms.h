@@ -180,7 +180,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
     //sms->setMessageBody(message.smLength, message.dataCoding, false, message.shortMessage.cstr());
     //sms->setMessageBody((unsigned char)message.shortMessage.size(), (unsigned char)message.dataCoding, false, (uint8_t*)message.shortMessage.cstr());
 		sms->setStrProperty(Tag::SMPP_SHORT_MESSAGE,
-												message.shortMessage.cstr()?message.shortMessage.cstr():"");
+												message.shortMessage.cstr()?string(message.shortMessage.cstr(),message.shortMessage.length):string(""));
 		sms->setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)message.shortMessage.size());
 		sms->setIntProperty(Tag::SMPP_DATA_CODING,(uint32_t)message.dataCoding);
     sms->setIntProperty(Tag::SMPP_PRIORITY,(uint32_t)message.priorityFlag);
