@@ -31,22 +31,12 @@ void executeIntegrityTest(MessageStoreTestCases& tc, int listSize)
 	vector<SMS*> sms;
 	static int executeTestCounter = 0;
 
-	//Сохранение правильного sms, 1/1
 	for (int i = 0; i < listSize; i++)
 	{
 		__prepare_for_new_sms__
 		tc.storeCorrectSms(id.back(), sms.back(), RAND_TC);
 	}
 	
-	//Сохранение правильного sms с параметрами похожими на уже существующий sms, 1/15
-	//Сохранение дублированного sms, 1/15
-	//Сохранение дублированного sms с отказом, 1/15
-	//Сохранение корректного sms с замещением уже существующегоб 1/15
-	//Сохранение неправильного sms, 1/15
-	//Обновление статуса sms в состоянии ENROUTE, 1/15
-	//Корректное обновление существующего sms, 1/15
-    //Некорректное обновление существующего sms, 1/15
-	//Чтение существующего sms, 7/15
 	bool duplicatesOk = rand0(1); //взаимоисключающие тест кейсы
 	for (TCSelector s(RAND_SET_TC, 15); s.check(); s++)
 	{
@@ -111,18 +101,21 @@ void executeIntegrityTest(MessageStoreTestCases& tc, int listSize)
 					tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC);
 				}
 				break;
-			default: //case = 9..15
+			case 9:
+				tc.checkReadyForRetrySms(id, sms, RAND_TC);
+				break;
+			case 10:
+				tc.checkReadyForDeliverySms(id, sms, RAND_TC);
+				break;
+			case 11:
+				tc.checkReadyForCancelSms(id, sms, RAND_TC);
+				break;
+			default: //case = 12..15
 				for (int i = 0; i < id.size(); i++)
 				{
 					tc.loadExistentSms(*id[i], *sms[i]);
 				}
 		}
-	}
-
-	//Получение списка sms для повторной доставки
-	if (!executeTestCounter)
-	{
-		tc.checkReadyForRetrySms(id, sms, RAND_TC);
 	}
 
 	//добавить паузу, чтобы SMS::lastTime отличалось от предыдущего
@@ -132,18 +125,13 @@ void executeIntegrityTest(MessageStoreTestCases& tc, int listSize)
 		evt.Wait(1100);
 		log.debug("*** wait ***\n");
 	}
-	//Перевод sms из ENROUTE в финальное состояние, 1/1
 	for (int i = 0; i < id.size(); i++)
 	{
 		tc.changeExistentSmsStateEnrouteToFinal(*id[i], 
 			sms[i], RAND_TC);
 	}
 	
-	//Перевод sms в финальном состоянии в любое другое состояние, 1/5
-	//Сохранение sms с замещением существующего sms финальном состоянии, 1/5
-	//Обновление sms в финальном состоянии, 1/5
-	//Чтение существующего sms, 2/5
-	for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
+	for (TCSelector s(RAND_SET_TC, 8); s.check(); s++)
 	{
 		switch (s.value())
 		{
@@ -169,7 +157,16 @@ void executeIntegrityTest(MessageStoreTestCases& tc, int listSize)
 					tc.replaceFinalSms(*id[i], *sms[i]);
 				}
 				break;
-			default: //4..5
+			case 4:
+				tc.checkReadyForRetrySms(id, sms, RAND_TC);
+				break;
+			case 5:
+				tc.checkReadyForDeliverySms(id, sms, RAND_TC);
+				break;
+			case 6:
+				tc.checkReadyForCancelSms(id, sms, RAND_TC);
+				break;
+			default: //7..8
 				for (int i = 0; i < id.size(); i++)
 				{
 					tc.loadExistentSms(*id[i], *sms[i]);
@@ -177,22 +174,11 @@ void executeIntegrityTest(MessageStoreTestCases& tc, int listSize)
 		}
 	}
 
-	//Получение списка sms для повторной доставки
-	if (!executeTestCounter)
-	{
-		tc.checkReadyForRetrySms(id, sms, RAND_TC);
-	}
-
-	//Удаление существующего sms, 1/1
 	for (int i = 0; i < id.size(); i++)
 	{
 		tc.deleteExistentSms(*id[i]);
 	}
 
-	//Перевод несуществующего sms в любое состояние, 1/4
-	//Некорректное обновление несуществующего sms, 1/4
-	//Чтение несуществующего sms, 1/4
-	//Удаление несуществующего sms, 1/4
 	for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
 	{
 		switch (s.value())
@@ -223,13 +209,6 @@ void executeIntegrityTest(MessageStoreTestCases& tc, int listSize)
 				}
 				break;
 		}
-	}
-
-	//Получение списка sms для повторной доставки
-	if (!executeTestCounter)
-	{
-		tc.checkReadyForRetrySms(vector<SMSId*>(),
-			vector<SMS*>(), RAND_TC);
 	}
 
 //Сохранение неправильного sms с проверкой на assert

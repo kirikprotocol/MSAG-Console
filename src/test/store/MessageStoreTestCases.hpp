@@ -16,6 +16,7 @@ using std::vector;
 using log4cpp::Category;
 using smsc::sms::SMSId;
 using smsc::sms::SMS;
+using smsc::sms::Address;
 using smsc::store::MessageStore;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
@@ -148,54 +149,16 @@ public:
 		const vector<SMS*>& sms, int num);
 
 	/**
-	 * Удаление существующих sms ожидающих доставки на определенный номер.
+	 * Получение списка sms ожидающих доставки на определенный номер.
 	 */
-	void deleteExistentWaitingSMByNumber();
-	
-	/**
-	 * Удаление несуществующих sms ожидающих доставки на определенный номер.
-	 */
-	void deleteNonExistentWaitingSMByNumber();
-	
-	/**
-	 * Загрузка непустого списка sms ожидающих доставки на определенный номер.
-	 */
-	void loadExistentWaitingSMByDestinationNumber();
+	void checkReadyForDeliverySms(const vector<SMSId*>& ids,
+		const vector<SMS*>& sms, int num);
 
 	/**
-	 * Загрузка пустого списка sms ожидающих доставки на определенный номер.
+	 * Получение списка sms для выполнения операции cancel.
 	 */
-	void loadNonExistentWaitingSMByDestinationNumber();
-
-	/**
-	 * Загрузка непустого архива sms доставленных на определенный номер.
-	 */
-	void loadExistentSMArchieveByDestinationNumber();
-
-	/**
-	 * Загрузка пустого архива sms доставленных на определенный номер.
-	 */
-	void loadNonExistentSMArchieveByDestinationNumber();
-
-	/**
-	 * Загрузка непустого архива sms доставленных с определенного номера.
-	 */
-	void loadExistentSMArchieveByOriginatingNumber();
-	
-	/**
-	 * Загрузка пустого архива sms доставленных с определенного номера.
-	 */
-	void loadNonExistentSMArchieveByOriginatingNumber();
-
-	/**
-	 * Просмотр непустой статистики причин недоставки сообщений.
-	 */
-	void getExistentSMDeliveryFailureStatistics();
-
-	/**
-	 * Просмотр пустой статистики причин недоставки сообщений.
-	 */
-	void getNonExistentSMDeliveryFailureStatistics();
+	void checkReadyForCancelSms(const vector<SMSId*>& ids,
+		const vector<SMS*>& sms, int num);
 
 private:
 	MessageStore* msgStore;
@@ -210,6 +173,11 @@ private:
 		time_t& middleNextTime, time_t& maxNextTime);
 	void compareReadyForRetrySmsList(const vector<SMSId*>& ids, 
 		const vector<SMS*>& sms, time_t time, int shift);
+	vector<int> checkReadyForDeliverySms(const Address& addr,
+		const vector<SMSId*>& ids, const vector<SMS*>& sms);
+	vector<int> checkReadyForCancelSms(const Address& oa, 
+		const Address& da, const char* svcType, const vector<SMSId*>& ids,
+		const vector<SMS*>& sms);
 };
 
 }

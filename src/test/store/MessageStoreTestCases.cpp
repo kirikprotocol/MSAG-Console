@@ -1293,6 +1293,233 @@ void MessageStoreTestCases::compareReadyForRetrySmsList(const vector<SMSId*>& id
 	__tc_ok_cond__;
 }
 
+vector<int> MessageStoreTestCases::checkReadyForDeliverySms(const Address& addr,
+	const vector<SMSId*>& ids, const vector<SMS*>& sms)
+{
+	set<int> res;
+	set<SMSId> resIds;
+	for (int i = 0; i < sms.size(); i++)
+	{
+		if (sms[i]->getDealiasedDestinationAddress() == addr &&
+			sms[i]->getState() == ENROUTE &&
+			sms[i]->getAttemptsCount())
+		{
+			resIds.insert(*ids[i]);
+		}
+	}
+	IdIterator* it = msgStore->getReadyForDelivery(addr);
+	SMSId id;
+	while (it->getNextId(id))
+	{
+		if (!resIds.erase(id))
+		{
+			__trace2__("checkReadyForDeliverySms(): not found id = %llu", id);
+			res.insert(1);
+		}
+	}
+	delete it;
+	for (set<SMSId>::iterator it = resIds.begin(); it != resIds.end(); it++)
+	{
+		__trace2__("checkReadyForDeliverySms(): extra resId = %llu", *it);
+		res.insert(2);
+	}
+	return vector<int>(res.begin(), res.end());
+}
+
+void MessageStoreTestCases::checkReadyForDeliverySms(const vector<SMSId*>& ids,
+	const vector<SMS*>& sms, int num)
+{
+	__decl_tc__;
+	TCSelector s(num, 4);
+	for (; s.check(); s++)
+	{
+		__tc__("checkReadyForDeliverySms.noSms");
+		Address addr;
+		SmsUtil::setupRandomCorrectAddress(&addr);
+		switch(s.value())
+		{
+			case 1: //нет такого адреса
+				break;
+			case 2: //адрес есть, статус ENROUTE, но attempts count = 0
+				{
+					Address addr;
+					for (int i = 0; i < sms.size(); i++)
+					{
+						if (sms[i]->getState() == ENROUTE &&
+							!sms[i]->getAttemptsCount())
+						{
+							__tc__("checkReadyForDeliverySms.noAttempts");
+							addr = sms[i]->getDealiasedDestinationAddress();
+							break;
+						}
+					}
+				}
+				break;
+			case 3: //адрес есть, attempts count > 0, но статус финальный
+				{
+					Address addr;
+					for (int i = 0; i < sms.size(); i++)
+					{
+						if (sms[i]->getState() != ENROUTE &&
+							!sms[i]->getAttemptsCount())
+						{
+							__tc__("checkReadyForDeliverySms.finalState");
+							addr = sms[i]->getDealiasedDestinationAddress();
+							break;
+						}
+					}
+				}
+				break;
+			case 4: //адрес есть, статус ENROUTE и attempts count > 0
+				{
+					Address addr;
+					for (int i = 0; i < sms.size(); i++)
+					{
+						if (sms[i]->getState() == ENROUTE &&
+							sms[i]->getAttemptsCount())
+						{
+							__tc__("checkReadyForDeliverySms.allOk");
+							addr = sms[i]->getDealiasedDestinationAddress();
+							break;
+						}
+					}
+				}
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+		__tc_fail2__(checkReadyForDeliverySms(addr, ids, sms), 0);
+		__tc_ok_cond__;
+	}
+}
+
+vector<int> MessageStoreTestCases::checkReadyForCancelSms(const Address& oa, 
+	const Address& da, const char* svcType, const vector<SMSId*>& ids,
+	const vector<SMS*>& sms)
+{
+	set<int> res;
+	set<SMSId> resIds;
+	for (int i = 0; i < sms.size(); i++)
+	{
+		if (sms[i]->getOriginatingAddress() == oa &&
+			sms[i]->getDestinationAddress() == da &&
+			sms[i]->getState() == ENROUTE &&
+			(!svcType || string(svcType) == nvl(sms[i]->getEServiceType())))
+		{
+			resIds.insert(*ids[i]);
+		}
+	}
+	IdIterator* it = msgStore->getReadyForCancel(oa, da, svcType);
+	SMSId id;
+	while (it->getNextId(id))
+	{
+		if (!resIds.erase(id))
+		{
+			__trace2__("checkReadyForCancelSms(): not found id = %llu", id);
+			res.insert(1);
+		}
+	}
+	delete it;
+	for (set<SMSId>::iterator it = resIds.begin(); it != resIds.end(); it++)
+	{
+		__trace2__("checkReadyForCancelSms(): extra resId = %llu", *it);
+		res.insert(2);
+	}
+	return vector<int>(res.begin(), res.end());
+}
+
+void MessageStoreTestCases::checkReadyForCancelSms(const vector<SMSId*>& ids,
+	const vector<SMS*>& sms, int num)
+{
+	__decl_tc__;
+	TCSelector s(num, 6);
+	for (; s.check(); s++)
+	{
+		__tc__("checkReadyForCancelSms.noSmsWithoutServiceType");
+		Address oa, da;
+		const char* svcType = NULL;
+		SmsUtil::setupRandomCorrectAddress(&oa);
+		SmsUtil::setupRandomCorrectAddress(&da);
+		switch(s.value())
+		{
+			case 1: //нет таких sms, serviceType не задан
+				break;
+			case 2: //sms есть, но в финальном состоянии, serviceType не задан
+				{
+					Address addr;
+					for (int i = 0; i < sms.size(); i++)
+					{
+						if (sms[i]->getState() != ENROUTE)
+						{
+							__tc__("checkReadyForCancelSms.finalStateWithoutServiceType");
+							oa = sms[i]->getOriginatingAddress();
+							da = sms[i]->getDestinationAddress();
+							break;
+						}
+					}
+				}
+				break;
+			case 3: //sms есть, в состоянии ENROUTE, serviceType не задан
+				{
+					Address addr;
+					for (int i = 0; i < sms.size(); i++)
+					{
+						if (sms[i]->getState() == ENROUTE)
+						{
+							__tc__("checkReadyForCancelSms.allOkWithoutServiceType");
+							oa = sms[i]->getOriginatingAddress();
+							da = sms[i]->getDestinationAddress();
+							break;
+						}
+					}
+				}
+				break;
+			case 4: //нет таких sms, serviceType задан
+				{
+					__tc__("checkReadyForCancelSms.noSmsWithServiceType");
+					svcType = "+++";
+				}
+				break;
+			case 5: //sms есть, но в финальном состоянии, serviceType задан
+				{
+					Address addr;
+					for (int i = 0; i < sms.size(); i++)
+					{
+						if (sms[i]->getState() != ENROUTE)
+						{
+							__tc__("checkReadyForCancelSms.finalStateWithServiceType");
+							oa = sms[i]->getOriginatingAddress();
+							da = sms[i]->getDestinationAddress();
+							svcType = sms[i]->getEServiceType();
+							break;
+						}
+					}
+				}
+				break;
+			case 6: //sms есть, в состоянии ENROUTE, serviceType задан
+				{
+					Address addr;
+					for (int i = 0; i < sms.size(); i++)
+					{
+						if (sms[i]->getState() == ENROUTE)
+						{
+							__tc__("checkReadyForCancelSms.allOkWithServiceType");
+							oa = sms[i]->getOriginatingAddress();
+							da = sms[i]->getDestinationAddress();
+							svcType = sms[i]->getEServiceType();
+							break;
+						}
+					}
+				}
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+		__tc_fail2__(checkReadyForCancelSms(oa, da, svcType, ids, sms), 0);
+		__tc_ok_cond__;
+	}
+}
+
 }
 }
 }

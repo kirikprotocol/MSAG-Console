@@ -183,6 +183,33 @@ public:
 			"Ближайшее время следующей доставки sms вычисляется правильно");
 		__reg_tc__("checkReadyForRetrySms.readyForRetrySmsList",
 			"Список sms подлежащих повторной доставке полный и правильно упорядочен");
+		//checkReadyForDeliverySms
+		__reg_tc__("checkReadyForDeliverySms",
+			"Список sms ожидающих повторной доставки на заданный адрес получателя");
+		__reg_tc__("checkReadyForDeliverySms.noSms",
+			"Нет sms для заданного адреса");
+		__reg_tc__("checkReadyForDeliverySms.noAttempts",
+			"Sms для заданного адреса существуют, но attempt count = 0");
+		__reg_tc__("checkReadyForDeliverySms.finalState",
+			"Sms для заданного адреса существуют, но в финальном состоянии");
+		__reg_tc__("checkReadyForDeliverySms.allOk",
+			"Sms для заданного адреса существуют, находятся в состоянии ENROUTE и attempt count > 0");
+		//checkReadyForCancelSms
+		__reg_tc__("checkReadyForCancelSms",
+			"Списка sms для выполнения операции cancel");
+		__reg_tc__("checkReadyForCancelSms.noSmsWithoutServiceType",
+			"Нет sms удовлетворяющих условиям, serviceType не задан");
+		__reg_tc__("checkReadyForCancelSms.finalStateWithoutServiceType",
+			"Есть sms удовлетворяющие условиям, но в финальном состоянии, serviceType не задан");
+		__reg_tc__("checkReadyForCancelSms.allOkWithoutServiceType",
+			"Есть sms удовлетворяющие условиям, в состоянии ENROUTE, serviceType не задан");
+		__reg_tc__("checkReadyForCancelSms.noSmsWithServiceType",
+			"Нет sms удовлетворяющих условиям, serviceType задан");
+		__reg_tc__("checkReadyForCancelSms.finalStateWithServiceType",
+			"Есть sms удовлетворяющие условиям, но в финальном состоянии, serviceType задан");
+		__reg_tc__("checkReadyForCancelSms.allOkWithServiceType",
+			"Есть sms удовлетворяющие условиям, в состоянии ENROUTE, serviceType задан");
+		//прочее
 		//not implemented
 		/*
 		__reg_tc__("deleteExistentWaitingSMByNumber",
