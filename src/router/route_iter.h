@@ -11,7 +11,9 @@
 #include "route_types.h"
 
 namespace smsc {
-namespace smeman {
+namespace route {
+
+using smsc::smeman::SmeProxy;
 
 // abstract
 class RouteIterator

@@ -13,13 +13,23 @@
 #include "sms/sms.h"
 
 namespace smsc {
-namespace route {
+namespace router {
+
+using smsc::smeman::SmeProxy;
+using smsc::smeman::SmeManager;
+
+struct RouteRecord 
+{
+	RouteUnfo info;
+	SmeProxy* proxy;
+	int idx;
+};
 
 class RouteManager : public RouteAdmin, public RouteManager
 {
         //
 public :
-	void assignWithSmeManager(SmeManager* smeman); // for detach call with NULL;
+  void assignWithSmeManager(SmeManager* smeman); // for detach call with NULL;
   RouteInfoIterator* iterator();
   // RouteAdministrator implementaion 
   virtual void addRoute(const RouteInfo& routeInfo);

@@ -9,7 +9,7 @@
 #include "route_types.h"
 
 namespace smsc {
-namespace route {
+namespace router {
 
 // abstract
 class RouteTable
