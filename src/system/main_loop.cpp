@@ -25,11 +25,7 @@ bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProx
 {
   //smeman.getSmeProxy(0)
   proxy = 0;
-  bool ok = router.lookup(org,
-                          dst,
-                          proxy,
-                          &dest_idx,
-                          ri);
+  bool ok = getRouterInstance()->lookup(org,dst,proxy,&dest_idx,ri);
   return ok;
 }
 

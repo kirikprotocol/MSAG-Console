@@ -271,8 +271,11 @@ void Smsc::init(const SmscConfigs& cfg)
     }
     aliaser.commit();
   }
+  
+  auto_ptr<RouteManager> router(new RouteManager());
+  
   // initialize router (all->all)
-  router.assign(&smeman);
+  router->assign(&smeman);
   /*
   auto_ptr<SmeIterator> it(smeman.iterator());
   while (it->next())
@@ -299,11 +302,14 @@ void Smsc::init(const SmscConfigs& cfg)
   }
   */
   try{
-    loadRoutes(&router,*cfg.routesconfig);
+    loadRoutes(router.get(),*cfg.routesconfig);
   }catch(...)
   {
     __warning__("Failed to load routes");
   }
+
+  ResetRouteManager(router.release())
+
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
   store=smsc::store::StoreManager::getMessageStore();
 

@@ -34,6 +34,49 @@ using smsc::router::RouteInfo;
 
 //class smsc::store::MessageStore;
 
+class RouteManagerReffer
+{
+  Mutex sync_;
+  RouteManager* manager_;
+  unsigned refCounter_;
+public:
+  RouteManager* operator->() { return manager_;}
+  RouteManagerReffer(RouteManager* manager)
+  {
+    refCounter_ = 1;
+    manager_ = manager;
+  }
+  virtual ~RouteManagerReffer()
+  {
+    delete manager_;
+  }
+  void Release() {
+    MutexGuard g(sync_);
+    if ( --refCounter_ == 0 )
+      delete this;
+  }
+  RouteManagerReffer* AddRef(){
+    MutexGuard g(sync_);
+    ++refCounter_;
+    return this;
+  }
+private:
+  RouteManagerReffer& operator = (const RouteManagerReffer&);
+  RouteManagerReffer(const RouteManagerReffer&);
+};
+
+class RouteManagerGuard
+{
+  mutable RouteManagerReffer* reffer_;
+public:
+  RouteManagerGuard(RouteManagerReffer* reffer) : reffer_(reffer) { reffer_->AddRef(); }
+  RouteManagerGuard(const RouteManagerGuard& g) : reffer_(g.reffer_){g.reffer_=0;}
+  ~RouteManagerGuard() { if ( reffer_ != 0 ) reffer_->Release(); reffer_ = 0; }
+  RouteManagerReffer& operator->() { return *reffer_; }
+private:
+  RouteManagerGuard& operator = (const RouteManagerGuard&);
+};
+
 namespace StatEvents{
   const int etSubmitOk     =1;
   const int etSubmitErr    =2;
@@ -52,7 +95,7 @@ struct SmscConfigs{
 class Smsc
 {
 public:
-  Smsc():ssockman(&tp,&smeman),stopFlag(false)
+  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0)
   {
     successCounter=0;
     errorCounter=0;
@@ -151,11 +194,25 @@ public:
     submit=submitCounter;
   }
 
+  RouteManagerGuard getRouterInstance()
+  {
+    MutexGuard g(routerSwitchMutex);
+    return RouteManagerGuard(router_);
+  }
+
+  void ResetRouteManager(RouteManager* manager)
+  {
+    MutexGuard g(routerSwitchMutex);
+    if ( router_ ) router_->Release();
+    router_ = new RouteManagerReffer(manager);
+  }
+
 protected:
   smsc::core::threads::ThreadPool tp;
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
-  smsc::router::RouteManager router;
+  Mutex routerSwitchMutex;
+  RouteManagerReffer* router_;
   EventQueue eventqueue;
   smsc::store::MessageStore *store;
   smsc::alias::AliasManager aliaser;
