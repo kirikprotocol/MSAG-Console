@@ -254,7 +254,7 @@ void ArchiveProcessor::process()
         try
         {
             bool bProcessSuccess = false;
-            while (!bProcessSuccess)
+            while (!bProcessSuccess && !bNeedExit)
             {
                 Array<std::string> files;
                 FileStorage::findFiles(*location, SMSC_PREV_ARCHIVE_FILE_EXTENSION, files);
@@ -325,15 +325,16 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
             hrtime_t prtime=gethrtime();
             long long count=0;
             {
-                std::string trsArcFileName = "";
-                std::string trsTxtFileName = "";
+                std::string arcLocation    = ""; std::string txtLocation    = "";
+                std::string arcFileName    = ""; std::string txtFileName    = "";
+                std::string trsArcFileName = ""; std::string trsTxtFileName = "";
                 
                 PersistentStorage source(location, file);
                 startTransaction(); // start transactional indecies
                 if (!transactionSrcFiles.Exists(srcFileNameStr))
                      transactionSrcFiles.Insert(srcFileNameStr, true);
 
-                while (true)
+                while (!bNeedExit)
                 {
                     SMSId id; SMS sms;
                     if (!source.readRecord(id, sms, 0)) break;
@@ -345,10 +346,10 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
                         if (arcDestination) { delete arcDestination; arcDestination=0; }
                         if (txtDestination) { delete txtDestination; txtDestination=0; }
 
-                        std::string arcLocation = baseDirectory+'/'+destinationDirName;
-                        std::string txtLocation = textDirectory+'/'+destinationDirName;
-                        std::string arcFileName = destinationFileName;
-                        std::string txtFileName = destinationFileName;
+                        arcLocation  = baseDirectory+'/'+destinationDirName;
+                        txtLocation  = textDirectory+'/'+destinationDirName;
+                        arcFileName  = destinationFileName;
+                        txtFileName  = destinationFileName;
                         arcFileName += '.'; arcFileName += SMSC_PREV_ARCHIVE_FILE_EXTENSION;
                         txtFileName += '.'; txtFileName += SMSC_TEXT_ARCHIVE_FILE_EXTENSION;
                         
@@ -414,7 +415,7 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
                                                         trans_position, txtPosition);
                                     if (trans_position != txtPosition)
                                     {
-                                        FileStorage::truncateFile(trsTxtFileName, (off_t)trans_position);
+                                        FileStorage::truncateFile(txtLocation, txtFileName, (off_t)trans_position);
                                         txtPosition = trans_position;
                                         txtDestination->setPos(&txtPosition);
                                     }
@@ -460,7 +461,7 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
                           "processing speed %lf sms/sec", file.c_str(), prtime/1000000, 
                           count, transactionSmsCount, (double)count/tmInSec);
             
-            commitTransaction(false); // flush transactional indecies
+            if (!bNeedExit) commitTransaction(false); // flush transactional indecies
 
         } catch (std::exception& exc) {
           smsc_log_error(log, "Error processing archive file '%s'. Details: %s", file.c_str(), exc.what());
@@ -482,7 +483,7 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
           return false;
         }
     }
-    return true;
+    return !bNeedExit;
 }
 
 /* -------------------------- Query Implementation ------------------------- */
