@@ -125,4 +125,13 @@ public class Functions
       checkedTasksSet.add(trimValues ? i.nextToken().trim() : i.nextToken());
     }
   }
+
+  private static int filenameCounter = 0;
+  public static synchronized File createTempFilename(String prefix, String suffix, File directory)
+  {
+    File file = new File(directory, prefix + (filenameCounter++));
+    while(file.exists())
+      file = new File(directory, prefix + (filenameCounter++));
+    return file;
+  }
 }

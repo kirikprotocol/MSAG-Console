@@ -41,7 +41,12 @@ public class Config
   public Config(File configFile) throws IOException, SAXException, ParserConfigurationException
   {
     this.configFile = configFile;
-    parseNode("", Utils.parse(new FileReader(this.configFile)).getDocumentElement());
+    final FileReader reader = new FileReader(this.configFile);
+    try {
+      parseNode("", Utils.parse(reader).getDocumentElement());
+    } finally {
+      reader.close();
+    }
   }
 
   public Config(Reader configReader) throws IOException, SAXException, ParserConfigurationException
@@ -266,11 +271,12 @@ public class Config
   {
     if (configFile == null)
       throw new NullPointerException("config file not specified");
-    File c = new File(configFile.getAbsolutePath());
+    String configFileName = configFile.getAbsolutePath();
     try {
       save(configFile, encoding);
     } finally {
-      configFile = c;
+      System.err.println("config filename: " + configFile.getAbsolutePath());
+      configFile = new File(configFileName);
     }
   }
 
@@ -286,7 +292,7 @@ public class Config
   public synchronized void save(File configFileToSave, String encoding) throws IOException, WrongParamTypeException
   {
     SaveableConfigTree tree = new SaveableConfigTree(this);
-    File tmpFile = File.createTempFile(configFileToSave.getName(), ".tmp", configFileToSave.getParentFile());
+    File tmpFile = File.createTempFile(configFileToSave.getName() + '_' + System.currentTimeMillis() + '_', ".tmp", configFileToSave.getParentFile());
     PrintWriter out = new PrintWriter(new FileWriter(tmpFile));
     Functions.storeConfigHeader(out, "config", "configuration.dtd", encoding);
     //// C++ code doesn't know about other codings // System.getProperty("file.encoding");
@@ -295,12 +301,12 @@ public class Config
     out.flush();
     out.close();
 
-    File c = new File(configFileToSave.getAbsolutePath());
-    final File backFile = File.createTempFile(configFileToSave.getName(), ".bak", configFileToSave.getParentFile());
+    String configFilename = configFileToSave.getAbsolutePath();
+    final File backFile = Functions.createTempFilename(configFileToSave.getName() + '.', ".bak", configFileToSave.getParentFile());
     if (!configFileToSave.renameTo(backFile))
       throw new IOException("Couldn't rename old config file \"" + configFileToSave.getAbsolutePath() + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
-    if (!tmpFile.renameTo(c))
-      throw new IOException("Couldn't rename new file \"" + tmpFile.getAbsolutePath() + "\" to old config file \"" + c.getAbsolutePath() + '"');
+    if (!tmpFile.renameTo(new File(configFilename)))
+      throw new IOException("Couldn't rename new file \"" + tmpFile.getAbsolutePath() + "\" to old config file \"" + configFilename + '"');
     backFile.delete();
   }
 
