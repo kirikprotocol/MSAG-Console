@@ -26,7 +26,7 @@ void RouteUtil::setupRandomCorrectRouteInfo(RouteInfo* route)
 	route->archived = rand0(3);
 	//route->enabling = rand0(2);
 	route->serviceId = rand0(INT_MAX);
-	route->suppressDeliveryReports = false; //todo: rand0(1)
+	route->suppressDeliveryReports = rand0(1);
 	ostringstream s;
 	s << "route_" << routeId++;
 	route->routeId = s.str();
