@@ -48,6 +48,8 @@ namespace smsc { namespace store
         OCIError*       errhp;  // OCI error handle
         OCISession*     sesshp; // OCI session handle
         
+        Array<Statement *>      statements;
+
         StoreStatement*         StoreStmt;
         RemoveStatement*        RemoveStmt;
         RetriveStatement*       RetriveStmt;
@@ -69,6 +71,10 @@ namespace smsc { namespace store
                    const char* user, const char* password);
         virtual ~Connection();
 
+        inline void assign(Statement* statement) {
+            statements.Push(statement);
+        };
+        
         inline void setNextConnection(Connection* connection) {
             next = connection;
         };

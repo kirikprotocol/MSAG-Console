@@ -200,15 +200,6 @@ Archiver::~Archiver()
     if (billingDBUserName) delete billingDBUserName;
     if (billingDBUserPassword) delete billingDBUserPassword;
 
-    if (storageSelectStmt) delete storageSelectStmt;
-    if (storageDeleteStmt) delete storageDeleteStmt;
-    if (archiveInsertStmt) delete archiveInsertStmt;
-    
-    if (billingInsertStmt) delete billingInsertStmt;
-    if (billingCleanIdsStmt) delete billingCleanIdsStmt;
-    if (billingLookIdStmt) delete billingLookIdStmt;
-    if (billingPutIdStmt) delete billingPutIdStmt;
-    
     if (storageConnection) delete storageConnection;
     if (billingConnection) delete billingConnection;
     
@@ -256,18 +247,7 @@ void Archiver::connect()
 {
     if (!storageConnection->isAvailable())
     {
-        if (storageSelectStmt) {
-            delete storageSelectStmt; storageSelectStmt=0L;
-        }
-        if (storageDeleteStmt) {
-            delete storageDeleteStmt; storageDeleteStmt=0L;
-        }
-        if (archiveInsertStmt) {
-            delete archiveInsertStmt; storageDeleteStmt=0L;
-        }
-
         storageConnection->connect();
-        
         prepareStorageSelectStmt();
         prepareStorageDeleteStmt();
         prepareArchiveInsertStmt();
@@ -275,21 +255,7 @@ void Archiver::connect()
     
     if (!billingConnection->isAvailable())
     {
-        if (billingPutIdStmt) {
-            delete billingPutIdStmt; billingPutIdStmt=0L;
-        }
-        if (billingLookIdStmt) {
-            delete billingLookIdStmt; billingLookIdStmt=0L;
-        }
-        if (billingCleanIdsStmt) {
-            delete billingCleanIdsStmt; billingCleanIdsStmt=0L;
-        }
-        if (billingInsertStmt) {
-            delete billingInsertStmt; billingInsertStmt=0L;
-        }
-
         billingConnection->connect();
-        
         prepareBillingPutIdStmt();
         prepareBillingLookIdStmt();
         prepareBillingInsertStmt();
@@ -473,6 +439,7 @@ void Archiver::prepareBillingPutIdStmt()
 {
     billingPutIdStmt = new Statement(billingConnection,
                                      Archiver::billingPutIdSql);
+    billingConnection->assign(billingPutIdStmt);
 
     billingPutIdStmt->bind(1 , SQLT_BIN, (dvoid *) &(id),
                            (sb4) sizeof(id));
@@ -485,6 +452,7 @@ void Archiver::prepareBillingLookIdStmt()
 {
     billingLookIdStmt = new Statement(billingConnection,
                                      Archiver::billingLookIdSql);
+    billingConnection->assign(billingLookIdStmt);
 
     billingLookIdStmt->bind(1 , SQLT_BIN, (dvoid *) &(id),
                             (sb4) sizeof(id));
@@ -499,6 +467,7 @@ void Archiver::prepareBillingCleanIdsStmt()
 {
     billingCleanIdsStmt = new Statement(billingConnection,
                                         Archiver::billingCleanIdsSql);
+    billingConnection->assign(billingCleanIdsStmt);
 }
 
 const char* Archiver::storageCountSql = (const char*)
@@ -525,6 +494,7 @@ void Archiver::prepareStorageSelectStmt() throw(StorageException)
 {
     storageSelectStmt = new Statement(storageConnection, 
                                       Archiver::storageSelectSql);
+    storageConnection->assign(storageSelectStmt);
     
     storageSelectStmt->define(1, SQLT_BIN, (dvoid *) &(id),
                               (sb4) sizeof(id));
@@ -583,7 +553,8 @@ void Archiver::prepareStorageDeleteStmt() throw(StorageException)
 {
     storageDeleteStmt = new Statement(storageConnection, 
                                       Archiver::storageDeleteSql);
-    
+    storageConnection->assign(storageDeleteStmt);
+
     storageDeleteStmt->bind(1, SQLT_BIN, (dvoid *) &(id), 
                             (sb4) sizeof(id));
 }
@@ -597,7 +568,8 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
 {
     archiveInsertStmt = new Statement(storageConnection, 
                                       Archiver::archiveInsertSql);
-    
+    storageConnection->assign(archiveInsertStmt);
+
     archiveInsertStmt->bind(1, SQLT_BIN, (dvoid *) &(id),
                             (sb4) sizeof(id));
     archiveInsertStmt->bind(2 , SQLT_UIN, (dvoid *) &(uState), 
@@ -653,7 +625,8 @@ void Archiver::prepareBillingInsertStmt() throw(StorageException)
 {
     billingInsertStmt = new Statement(billingConnection, 
                                       Archiver::billingInsertSql);
-    
+    billingConnection->assign(billingInsertStmt);
+
     billingInsertStmt->bind(1, SQLT_BIN, (dvoid *) &(id),
                             (sb4) sizeof(id));
     billingInsertStmt->bind(2 , SQLT_UIN, (dvoid *) &(uState), 

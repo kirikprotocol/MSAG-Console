@@ -351,10 +351,11 @@ void Connection::connect()
 {
     if (isConnected && isDead) disconnect();
     
-    if (!isConnected)
+    try
     {
         MutexGuard  guard(connectLock);
-        try
+        
+        if (!isConnected)
         {
             // open connection to DB and begin user session 
             checkErr(OCIEnvCreate(&envhp, OCI_OBJECT|OCI_ENV_NO_MUTEX,
@@ -384,43 +385,19 @@ void Connection::connect()
                                 (dvoid *)sesshp, (ub4) 0,
                                 (ub4) OCI_ATTR_SESSION, errhp));
             
-            StoreStmt = new StoreStatement(this);
-            RemoveStmt = new RemoveStatement(this);
-            RetriveStmt = new RetriveStatement(this);
-            IsRejectStmt = new IsRejectedStatement(this);
-            IsTimedStmt = new IsTimeCorrectStatement(this);
-        } 
-        catch (StorageException& exc) 
-        {
-            if (IsTimedStmt) {
-                delete IsTimedStmt; IsTimedStmt = 0L;
-            }
-            if (IsRejectStmt) {
-                delete IsRejectStmt; IsRejectStmt = 0L;
-            }
-            if (RetriveStmt) {
-                delete RetriveStmt; RetriveStmt = 0L;
-            }
-            if (RemoveStmt) {
-                delete RemoveStmt; RemoveStmt = 0L;
-            }
-            if (StoreStmt) {
-                delete StoreStmt; StoreStmt = 0L;
-            }
+            StoreStmt = new StoreStatement(this); assign(StoreStmt);
+            RemoveStmt = new RemoveStatement(this); assign(RemoveStmt);
+            RetriveStmt = new RetriveStatement(this); assign(RetriveStmt);
+            IsRejectStmt = new IsRejectedStatement(this); assign(IsRejectStmt);
+            IsTimedStmt = new IsTimeCorrectStatement(this); assign(IsTimedStmt);
             
-            if (errhp && svchp) {
-            // logoff from database server
-                (void) OCILogoff(svchp, errhp);
-            }
-            if (envhp) {
-            // free envirounment handle, all derrived handles will be freed too
-                (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
-            }
-            
-            throw ConnectionFailedException(exc);
+            isConnected = true; isDead = false;
         }
-        
-        isConnected = true; isDead = false;
+    }
+    catch (StorageException& exc) 
+    {
+        disconnect();    
+        throw ConnectionFailedException(exc);
     }
 }
 
@@ -430,22 +407,13 @@ void Connection::disconnect()
     
     if (isConnected)
     {
-        if (IsTimedStmt) {
-            delete IsTimedStmt; IsTimedStmt = 0L;
+        while (statements.Count())
+        {
+            Statement* statement=0L;
+            (void) statements.Pop(statement);
+            if (statement) delete statement;
         }
-        if (IsRejectStmt) {
-            delete IsRejectStmt; IsRejectStmt = 0L;
-        }
-        if (RetriveStmt) {
-            delete RetriveStmt; RetriveStmt = 0L;
-        }
-        if (RemoveStmt) {
-            delete RemoveStmt; RemoveStmt = 0L;
-        }
-        if (StoreStmt) {
-            delete StoreStmt; StoreStmt = 0L;
-        }
-
+        
         if (errhp && svchp) {
         // logoff from database server
             (void) OCILogoff(svchp, errhp);
@@ -454,7 +422,7 @@ void Connection::disconnect()
         // free envirounment handle, all derrived handles will be freed too
             (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
         }
-
+        
         isConnected = false; isDead = false;
     }
 }
