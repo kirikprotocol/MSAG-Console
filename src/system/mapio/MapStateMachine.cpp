@@ -2168,9 +2168,10 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     case MAPST_ImsiWaitRInfo:
       {
         if ( dialog->routeErr ) {
+          __map_trace2__("%s: check code: %d, allowBarred: %d, state: %d", __func__, (int)errorSendRoutingInfoForSm_sp->errorCode, (int)MapDialogContainer::getAllowCallBarred(), (int)dialog->state);
           if(errorSendRoutingInfoForSm_sp->errorCode == 13 && 
-             MapDialogContainer::getAllowCallBarred() && 
-             MAPST_ImsiWaitRInfo) {
+             MapDialogContainer::getAllowCallBarred() == true && 
+             dialog->state == MAPST_ImsiWaitRInfo) {
             // normal situation no error
             // smsc will accept message from abonent
             __map_trace2__("%s: call barred but allowed", __func__);
