@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 #include <sstream>
-#include <iomanip.h>
+#include <iomanip>
 
 using namespace std;
 
@@ -1230,7 +1230,11 @@ USHORT_T Et96MapOpenInd (
           ostringstream ost;
           unsigned dlen = specificInfo_sp->specificData[1];
           for (unsigned i=0;i<dlen;++i) 
-            ost << hex << setfill(0) << setw(2) << (((unsigned)*(specificInfo_sp->specificData+1+i))&0x0ff) << " ";
+          {
+            //ost.width(2);
+            //ost.fill('0');
+            ost << hex << setfill('0') << setw(2) << (((unsigned)*(specificInfo_sp->specificData+1+i))&0x0ff) << " ";
+          }
           __trace2__("MAP::%s::adr(%d):%s",__FUNCTION__,x,ost.str().c_str());
         }
 #endif
