@@ -416,7 +416,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	if (useShortMessage)
 	{
 		mask &= ~OPT_MSG_PAYLOAD; //исключить message_payload
-		__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding, udhi);
+		__set_bin__(shortMessage, rand2(3, MAX_SHORT_MESSAGE_LENGTH), dataCoding, udhi);
 	}
 	else if (udhi && !(mask & OPT_MSG_PAYLOAD))
 	{
@@ -447,7 +447,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
-	__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding, udhi);
+	__set_bin__(shortMessage, rand2(3, MAX_SHORT_MESSAGE_LENGTH), dataCoding, udhi);
 }
 
 #define __trace_set_optional__(name, field) \
@@ -603,7 +603,16 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	__skip__; //__set_optional_int__(uint8_t, msAvailableStatus, rand0(255));
 	//int errCode = rand0(INT_MAX);
 	__skip__; //__set_optional_intarr__(networkErrorCode, (uint8_t*) &errCode, 3);
-	__set_optional_bin__(messagePayload, rand1(65535), dataCoding, udhi);
+	if (rand0(5))
+	{
+		//чтобы не сильно много в map конкатенации было
+		__set_optional_bin__(messagePayload, rand2(3, 1000), dataCoding, udhi);
+	}
+	else
+	{
+		//40000 - заведомо не пролазит в map конкатенацию: макс = 255 * 153 = 39015
+		__set_optional_bin__(messagePayload, rand2(40000, 65535), dataCoding, udhi);
+	}
 	__skip__; //__set_optional_int__(uint8_t, deliveryFailureReason, rand0(255));
 	__set_optional_int__(uint8_t, moreMessagesToSend, rand0(255));
 	//отключить messageState, поскольку отправляется только в репортах
