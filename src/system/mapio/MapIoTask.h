@@ -340,6 +340,11 @@ public:
   }
 };
 
+class MapTracker : public ThreadedTask{
+public:
+  virtual int Execute();
+  virtual const char* taskName() { return "MapTracker";}
+};
 /*
 */
 class MapIoTask : public ThreadedTask{

@@ -536,11 +536,11 @@ void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId)
 }
 
 
-void MapTracker::Execute(){
+int MapTracker::Execute(){
   Event e;
 #ifdef USE_MAP
   for(;;){
-    unsigned long t = time();
+    time_t t = time();
     while(time()<(t+15)&&!isStopping)e.Wait(1000*(time()-(t+15)));
     if ( isStopping ) return;
     if ( MAP_dispathing && !MAP_isAlive ) {
