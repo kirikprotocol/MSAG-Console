@@ -30,7 +30,10 @@ bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme,
 	smeData->externalSme = externalSme;
 	addrMap[smeAddr] = smeData;
 	smeIdMap[sme.systemId] = smeData;
-	addrList.push_back(new Address(smeAddr));
+	if (!externalSme)
+	{
+		addrList.push_back(new Address(smeAddr));
+	}
 	__trace2__("SmeRegistry::registerSme(): smeAddr = %s, smeId = %s, pduReg = %p, externalSme = %s",
 		str(smeAddr).c_str(), sme.systemId.c_str(), smeData->pduReg, smeData->externalSme ? "true" : "false");
 	return true;
@@ -51,12 +54,12 @@ void SmeRegistry::deleteSme(const SmeSystemId& smeId)
 	{
 		if (**it2 == smeData->smeAddr)
 		{
-			delete smeData;
 			delete *it2;
 			addrList.erase(it2);
-			return;
+			break;
 		}
 	}
+	delete smeData;
 	__unreachable__("Address not found");
 }
 
@@ -71,7 +74,6 @@ void SmeRegistry::bindSme(const SmeSystemId& smeId)
 void SmeRegistry::clear()
 {
 	__require__(addrMap.size() == smeIdMap.size());
-	__require__(addrMap.size() == addrList.size());
 	for (AddressMap::iterator it = addrMap.begin(); it != addrMap.end(); it++)
 	{
 		delete it->second;
@@ -88,7 +90,6 @@ void SmeRegistry::clear()
 int SmeRegistry::size()
 {
 	__require__(addrMap.size() == smeIdMap.size());
-	__require__(addrMap.size() == addrList.size());
 	return smeIdMap.size();
 }
 
