@@ -8,6 +8,7 @@
 package ru.novosoft.smsc.admin.smsstat;
 
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.Date;
 
@@ -77,7 +78,11 @@ public class SmsStat
             long till = query.getTillDate().getTime();
             long curr = (new Date()).getTime();
             if (till >= curr-3600) {
-                //smsc.flushStatistics();
+                try {
+                    smsc.flushStatistics();
+                } catch (AdminException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
