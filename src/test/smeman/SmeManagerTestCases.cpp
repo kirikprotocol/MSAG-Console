@@ -73,6 +73,7 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 	sme->SME_N = rand0(INT_MAX); //реально не используется
 	sme->disabled = !rand0(3); //реально не используется
 	//sme->wantAlias = rand0(1);
+	sme->timeout = rand2(8, 16);
 }
 
 #define __compare__(field, errCode) \
