@@ -23,31 +23,6 @@ static string FormatText(const char* format,...)
   return string(b.get());
 }
 
-static const bool SMS_SEGMENTATION = true;
-
-static map<string,unsigned> x_map;
-
-static void CloseMapDialog(unsigned dialogid){
-  USHORT_T res = Et96MapCloseReq (SSN,dialogid,ET96MAP_NORMAL_RELEASE,0,0,0);
-  if ( res != ET96MAP_E_OK ){
-    __trace2__("MAP::%s dialog 0x%x error, code 0x%hx",__FUNCTION__,dialogid,res);
-  }else{
-    __trace2__("MAP::%s dialog 0x%x closed",__FUNCTION__,dialogid);
-  }
-}
-
-static void DropMapDialog_(unsigned dialogid){
-  MapDialogContainer::getInstance()->dropDialog(dialogid);
-}
-
-static void DropMapDialog(MapDialog* dialog){
-  DropMapDialog_(dialog->dialogid_map);
-}
-
-static unsigned RemapDialog(MapDialog* dialog){
-  return MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map);
-}
-
 struct MAPDIALOG_ERROR : public runtime_error
 {
   unsigned code;
@@ -76,6 +51,63 @@ struct MAPDIALOG_HEREISNO_ID : public MAPDIALOG_ERROR
   MAPDIALOG_HEREISNO_ID(const string& s,unsigned c=1) :
     MAPDIALOG_ERROR(0,s){}
 };
+
+static const bool SMS_SEGMENTATION = true;
+
+static map<string,unsigned> x_map;
+
+static void CloseMapDialog(unsigned dialogid){
+  USHORT_T res = Et96MapCloseReq (SSN,dialogid,ET96MAP_NORMAL_RELEASE,0,0,0);
+  if ( res != ET96MAP_E_OK ){
+    __trace2__("MAP::%s dialog 0x%x error, code 0x%hx",__FUNCTION__,dialogid,res);
+  }else{
+    __trace2__("MAP::%s dialog 0x%x closed",__FUNCTION__,dialogid);
+  }
+}
+
+static void TryDestroyDialog(unsigned);
+static string RouteToString(MapDialog*);
+
+static void StartDialogProcessing(MapDialog* dialog)
+{
+  __trace2__("MAP::%s: ",__FUNCTION__);
+  __trace2__("MAP:%s: Preapre SMSC command",__FUNCTION__);
+  dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
+  __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
+  mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
+  mkMapAddress( &dialog->m_scAddr, "79029869999", 11 );
+  mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
+  mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
+  __trace2__("MAP::%s: Query HLR AC version",__FUNCTION__);
+  dialog->state = MAPST_WaitHlrVersion;
+  QueryHlrVersion(dialog.get());
+}
+
+static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 );
+
+static void DropMapDialog_(unsigned dialogid){
+  DialogRefGuard dialog(dialog->AddRef());
+  if ( !dialog.isnull() ){
+    unsigned __dialogid_map = dialog->dialogid_map;
+    unsigned __dialogid_smsc = 0;
+    if ( dialog->chain.size() == 0 ) {
+      MapDialogContainer::getInstance()->dropDialog(dialogid);
+    }else {
+      SmscCommand cmd = dialog->chain.front();
+      dialog->chain.pop_front();
+      dialog->Clean();
+      MAPIO_PutCommand(cmd, dialog.get());
+    }
+  }
+}
+
+static void DropMapDialog(MapDialog* dialog){
+  DropMapDialog_(dialog->dialogid_map);
+}
+
+static unsigned RemapDialog(MapDialog* dialog){
+  return MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map);
+}
 
 static void SendRescheduleToSmsc(unsigned dialogid)
 {
@@ -500,7 +532,11 @@ static void SendSegmentedSms(MapDialog* dialog)
       FormatText("MAP::SendSegmentedSms: Et96MapDelimiterReq error 0x%x",result));
 }
 
-void MAPIO_PutCommand(const SmscCommand& cmd )
+void MAPIO_PutCommand(const SmscCommand& cmd ){
+  MAPIO_PutCommand(const SmscCommand& cmd, 0 );
+}
+
+static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
 {
   unsigned dialogid_smsc = cmd->get_dialogId();
   unsigned dialogid_map = 0;
@@ -511,15 +547,22 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
       if ( cmd->get_commandId() != DELIVERY )
         throw MAPDIALOG_BAD_STATE("MAP::putCommand: must be SMS DELIVERY");
       try{
-        dialog.assign(MapDialogContainer::getInstance()->
-                    createOrAttachSMSCDialog(
-                      dialogid_smsc,
-                      SSN,
-                      string(cmd->get_sms()->getDestinationAddress().value)));
-        if ( dialog.isnull() ) {
-          //throw MAPDIALOG_TEMP_ERROR("Can't create or attach dialog");
-          SendRescheduleToSmsc(dialogid_smsc);
-          return;
+        if ( !dialog2  ) {
+          dialog.assign(MapDialogContainer::getInstance()->
+                      createOrAttachSMSCDialog(
+                        dialogid_smsc,
+                        SSN,
+                        string(cmd->get_sms()->getDestinationAddress().value),
+                        cmd));
+          if ( dialog.isnull() ) {
+            throw MAPDIALOG_TEMP_ERROR("Can't create or attach dialog");
+            //SendRescheduleToSmsc(dialogid_smsc);
+            //return;
+          }
+        }else{
+          dialog.assign(dialog2->AddRef());
+          dialogid_map = dialog->dialogid_map;
+          dialogid_map = MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map);
         }
       }catch(exception& e){
         __trace2__("#except#MAP::PutCommand# when create dialog");
@@ -531,18 +574,10 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
         // command has bean attached by dialog container
       }else{
         dialogid_map = dialog->dialogid_map;
-        __trace2__("MAP::putCommand: Preapre SMSC command");
-        dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
-        __trace2__("MAP::%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
-        mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
-        mkMapAddress( &dialog->m_scAddr, "79029869999", 11 );
-        mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
-        mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
-        __trace2__("MAP::putCommand: Query HLR AC version");
-        dialog->state = MAPST_WaitHlrVersion;
-        QueryHlrVersion(dialog.get());
+        StartDialogProcessing(dialog.get(),cmd);
       }
     }else{ // MAP dialog
+      if ( dialog2 ) throw runtime_error("MAP::putCommand can't chain MAPINPUT");
       dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_smsc));
       if ( dialog.isnull() )
         throw MAPDIALOG_FATAL_ERROR(

@@ -89,7 +89,6 @@ struct MapDialog{
   string abonent;
   auto_ptr<SMS> sms;
   auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
-//  ET96MAP_APP_CNTX_T appContext;
   ET96MAP_ADDRESS_T m_msAddr;	
   ET96MAP_ADDRESS_T m_scAddr;	
   ET96MAP_SS7_ADDR_T scAddr;
@@ -97,6 +96,7 @@ struct MapDialog{
   ET96MAP_SS7_ADDR_T mshlrAddr;
  	ET96MAP_SM_RP_DA_T smRpDa;
   ET96MAP_SM_RP_OA_T smRpOa;
+  list<SmscCommand> chain;
   unsigned version;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
     ref_count(1),
@@ -108,6 +108,7 @@ struct MapDialog{
   virtual ~MapDialog(){
     __trace2__("MAP::Dialog::~MapDialog 0x%x(0x%x)",dialogid_map,dialogid_smsc);
     require ( ref_count == 0 );
+    require ( chain.size() == 0 );
     if ( dialogid_smsc != 0 && dialogid_map != 0){
       freeDialogueId(dialogid_map);
     }
@@ -122,7 +123,28 @@ struct MapDialog{
       delete this;
     }
   }
+  
   void AddRef(){MutexGuard g(mutex);++ref_count;}
+  
+  void Clean() {
+    MutexGuard g(mutex);
+    state = MAPST_START;
+    //dialogid_map = 0;
+    //dialogid_smsc;
+    invokeId = 0;
+    //string abonent;
+    sms = auto_ptr<SMS>(0);
+    auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(0);
+    //ET96MAP_ADDRESS_T m_msAddr;	
+    //ET96MAP_ADDRESS_T m_scAddr;	
+    //ET96MAP_SS7_ADDR_T scAddr;
+    //ET96MAP_SS7_ADDR_T destMscAddr;
+    //ET96MAP_SS7_ADDR_T mshlrAddr;
+    //ET96MAP_SM_RP_DA_T smRpDa;
+    //ET96MAP_SM_RP_OA_T smRpOa;
+    //list<SmscCommand> chain;
+    version = 0;
+  }
 private:
   unsigned ref_count;
 };
@@ -202,34 +224,18 @@ public:
     return dlg;
   }
   
-  /*MapDialog* createSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent){
+  MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, SmscCommand& cmd){
     if ( abonent.length() == 0 )
       throw runtime_error("can't create MT dialog without abonent");
     MutexGuard g(sync);
     __trace2__("MAP::createSMSCDialog: try create SMSC dialog on abonent %s",abonent.c_str());
     if ( lock_map.Exists(abonent) ) {
       __trace2__("MAP::createSMSCDialog: locked");
-      return 0;
-    }
-    ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
-    MapDialog* dlg = new MapDialog(map_dialog,lssn);
-    dialogId_pool.pop_front();
-    dlg->dialogid_smsc = smsc_did;
-    dlg->abonent = abonent;
-    hash.Insert(map_dialog,dlg);
-    lock_map.Insert(abonent,1);
-    __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
-    dlg->AddRef();
-    return dlg;
-  }*/
-
-  MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent){
-    if ( abonent.length() == 0 )
-      throw runtime_error("can't create MT dialog without abonent");
-    MutexGuard g(sync);
-    __trace2__("MAP::createSMSCDialog: try create SMSC dialog on abonent %s",abonent.c_str());
-    if ( lock_map.Exists(abonent) ) {
-      __trace2__("MAP::createSMSCDialog: locked");
+      unsigned did = lock_map[abonent];
+      MapDialog* item = 0;
+      if ( hash.Get(did,item) ){
+        item->chain.push_back(cmd);
+      }
       return 0;
     }
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
@@ -263,6 +269,7 @@ public:
     return dialogid_map;
   }
   
+  
   void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
     MutexGuard g(sync);
     MapDialog* item = 0;
@@ -285,9 +292,6 @@ void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId)
   __trace2__("MAP::% dialogid 0x%x retuned to pool",__PRETTY_FUNCTION__,dialogueId);
   MapDialogContainer::getInstance()->dialogId_pool.push_back(dialogueId);
 }
-/*ET96MAP_DIALOGUE_ID_T allocateDialogueId()
-{
-}*/
 
 
 class MapTracker : public ThreadedTask{
