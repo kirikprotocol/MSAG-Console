@@ -597,18 +597,32 @@ void Connection::update(SMSId id, const State state,
     
     connect();
     
-    SimpleUpdateStatement* UpdateStmt;
-    if (operationTime != 0)
+    StateUpdateStatement* UpdateStmt;
+
+    switch (state)
     {
-        UpdateStmt = new ComplexUpdateStatement(this);
-        ((ComplexUpdateStatement *)UpdateStmt)->setOpTime(operationTime);
-        ((ComplexUpdateStatement *)UpdateStmt)->setFcs(fcs);
-    }
-    else 
-    {
-        UpdateStmt = new SimpleUpdateStatement(this);
-    }
+    case ENROUTE:
+    case UNDELIVERABLE:
+        UpdateStmt = new StateDateFcsUpdateStatement(this);
+        ((StateDateFcsUpdateStatement *)UpdateStmt)->setOpTime(operationTime);
+        ((StateDateFcsUpdateStatement *)UpdateStmt)->setFcs(fcs);
+        break;
     
+    case DELIVERED:
+        UpdateStmt = new StateDateUpdateStatement(this);
+        ((StateDateUpdateStatement *)UpdateStmt)->setOpTime(operationTime);
+        break;
+
+    case EXPIRED:
+    case DELETED:
+        UpdateStmt = new StateUpdateStatement(this);
+        break;
+    
+    default:
+        return; // throw exception ?
+    }
+
+    UpdateStmt->setState(state);
     UpdateStmt->setSMSId(id);
     try 
     {

@@ -173,49 +173,70 @@ namespace smsc { namespace store
         virtual ~GetMaxIdStatement() {};
     };
 
-    class SimpleUpdateStatement : public IdStatement
+    class StateUpdateStatement : public IdStatement
     {
     static const char* sql;
     protected:
         
-        State   state;
+        uint8_t uState;
 
-        SimpleUpdateStatement(Connection* connection, const char* sql)
-            throw(StorageException);
+        StateUpdateStatement(Connection* connection, const char* sql)
+            throw(StorageException) 
+                : IdStatement(connection, sql) {};
     
     public:
 
-        SimpleUpdateStatement(Connection* connection)
+        StateUpdateStatement(Connection* connection)
             throw(StorageException);
-        virtual ~SimpleUpdateStatement() {};
+        virtual ~StateUpdateStatement() {};
 
         inline bool wasUpdated() {
             return (getRowsAffectedCount() ? true:false);
         };
         inline void setState(State state) {
-            this->state = state;
+            uState = (uint8_t)state;
         };
     };
     
-    class ComplexUpdateStatement : public SimpleUpdateStatement
+    class StateDateUpdateStatement : public StateUpdateStatement
     {
     static const char* sql;
     protected:
 
         OCIDate     operationDate;
+    
+        StateDateUpdateStatement(Connection* connection, const char* sql)
+            throw(StorageException) 
+                : StateUpdateStatement(connection, sql) {};
+    public:
+
+        StateDateUpdateStatement(Connection* connection)
+            throw(StorageException);
+        virtual ~StateDateUpdateStatement() {};
+
+        inline void setOpTime(time_t time) {
+            convertDateToOCIDate(&(time), &operationDate);
+        };
+    };
+    
+    class StateDateFcsUpdateStatement : public StateDateUpdateStatement
+    {
+    static const char* sql;
+    protected:
+
         uint8_t     fcs;
 
     public:
 
-        ComplexUpdateStatement(Connection* connection)
+        StateDateFcsUpdateStatement(Connection* connection)
             throw(StorageException);
-        virtual ~ComplexUpdateStatement() {};
+        virtual ~StateDateFcsUpdateStatement() {};
 
-        void setOpTime(time_t time);
         inline void setFcs(uint8_t fcs) {
             this->fcs = fcs;
         };
     };
+
 }}
 
 #endif

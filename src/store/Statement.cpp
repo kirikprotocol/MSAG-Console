@@ -429,46 +429,40 @@ GetMaxIdStatement::GetMaxIdStatement(Connection* connection)
 }
 
 /* --------------------------- UpdateStatements ----------------------- */
-const char* SimpleUpdateStatement::sql = (const char*)
+const char* StateUpdateStatement::sql = (const char*)
 "UPDATE SMS_MSG SET ST=:ST WHERE ID=:ID";
 
-SimpleUpdateStatement::SimpleUpdateStatement(
-    Connection* connection, const char* sql)
-        throw(StorageException)
-            : IdStatement(connection, sql) 
-{
-}
-
-SimpleUpdateStatement::SimpleUpdateStatement(Connection* connection)
+StateUpdateStatement::StateUpdateStatement(Connection* connection)
     throw(StorageException)
-        : IdStatement(connection, SimpleUpdateStatement::sql)
+        : IdStatement(connection, StateUpdateStatement::sql)
 {
-    bind((CONST text*) "ST", (sb4)strlen("ST"),
-         SQLT_UIN, (dvoid *) &(state), (sb4) sizeof(state));
-    bind((CONST text*) "ID", (sb4)strlen("ID"),
-         SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+    bind(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(2 , SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
 }
 
-const char* ComplexUpdateStatement::sql = (const char*)
+const char* StateDateUpdateStatement::sql = (const char*)
+"UPDATE SMS_MSG SET ST=:ST, DELIVERY_TIME=:DT WHERE ID=:ID";
+
+StateDateUpdateStatement::StateDateUpdateStatement(Connection* connection)
+        throw(StorageException)
+            : StateUpdateStatement(connection, StateDateUpdateStatement::sql)
+{
+    bind(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(2 , SQLT_ODT, (dvoid *) &(operationDate), (sb4) sizeof(operationDate));
+    bind(3 , SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+}
+
+const char* StateDateFcsUpdateStatement::sql = (const char*)
 "UPDATE SMS_MSG SET ST=:ST, DELIVERY_TIME=:DT, FCS=:FC WHERE ID=:ID";
 
-ComplexUpdateStatement::ComplexUpdateStatement(Connection* connection)
+StateDateFcsUpdateStatement::StateDateFcsUpdateStatement(Connection* connection)
         throw(StorageException)
-            : SimpleUpdateStatement(connection, ComplexUpdateStatement::sql)
+            : StateDateUpdateStatement(connection, StateDateFcsUpdateStatement::sql)
 {
-    bind((CONST text*) "ST", (sb4)strlen("ST"),
-         SQLT_UIN, (dvoid *) &(state), (sb4) sizeof(state));
-    bind((CONST text*) "DT", (sb4)strlen("DT"),
-         SQLT_ODT, (dvoid *) &(operationDate), (sb4) sizeof(operationDate));
-    bind((CONST text*) "FC", (sb4)strlen("FC"),
-         SQLT_UIN, (dvoid *) &(fcs), (sb4) sizeof(fcs));
-    bind((CONST text*) "ID", (sb4)strlen("ID"),
-         SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
-}
-
-void ComplexUpdateStatement::setOpTime(time_t time)
-{
-    convertDateToOCIDate(&(time), &operationDate);
+    bind(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(2 , SQLT_ODT, (dvoid *) &(operationDate), (sb4) sizeof(operationDate));
+    bind(3 , SQLT_UIN, (dvoid *) &(fcs), (sb4) sizeof(fcs));
+    bind(4 , SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
 }
 
 }}
