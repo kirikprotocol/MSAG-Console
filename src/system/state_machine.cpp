@@ -137,7 +137,7 @@ StateType StateMachine::submit(Tuple& t)
   try{
     if(sms->getNextTime()<now)
     {
-      sms->setNextTime(RescheduleCalculator::calcNextTryTime(now,1));
+      sms->setNextTime(now);
     }
     store->createSms(*sms,t.msgId,
       sms->getIntProperty("SMPP_REPLACE_IF_PRESENT_FLAG")?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
@@ -154,9 +154,9 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   {
-    // sms á®åà ­¥­  ¢ ¡ §¥, á ¢ëáâ ¢«¥­­ë¬ Next Time, â ª¨¬ ®¡à §®¬
-    // ¤ ¦¥ ¥á«¨ ¤ «ìè¥ çâ®-â® ®¡«®¬¨âáï, ¯®â®¬ ¡ã¤¥â ¥é¥ ¯®¯ëâª  ¯®á« âì ¥ñ
-    // â® ¡¨èì ¬ë ¯à¨­ï«¨ sms ¢ ®¡à ¡®âªã, ¬®¦­® á« âì ok.
+    // sms ñîõðàíåíà â áàçå, ñ âûñòàâëåííûì Next Time, òàêèì îáðàçîì
+    // äàæå åñëè äàëüøå ÷òî-òî îáëîìèòñÿ, ïîòîì áóäåò åùå ïîïûòêà ïîñëàòü å¸
+    // òî áèøü ìû ïðèíÿëè sms â îáðàáîòêó, ìîæíî ñëàòü ok.
     char buf[64];
     sprintf(buf,"%lld",t.msgId);
     SmscCommand resp = SmscCommand::makeSubmitSmResp(buf, dialogId, SmscCommand::Status::OK);
@@ -178,6 +178,16 @@ StateType StateMachine::submit(Tuple& t)
   if ( !dest_proxy )
   {
     __warning__("SUBMIT_SM: SME is not connected");
+    try{
+      //time_t now=time(NULL);
+      Descriptor d;
+      __trace__("SUBMIT_SM: change state to enroute");
+      store->changeSmsStateToEnroute(t.msgId,d,0,
+        RescheduleCalculator::calcNextTryTime(sms->getNextTime(),sms->getAttemptsCount()));
+    }catch(...)
+    {
+      __trace__("SUBMIT_SM: failed to change state to enroute");
+    }
     return ENROUTE_STATE;
   }
   // create task
@@ -186,6 +196,16 @@ StateType StateMachine::submit(Tuple& t)
      dialogId2=dest_proxy->getNextSequenceNumber();
   }catch(...)
   {
+    try{
+      //time_t now=time(NULL);
+      Descriptor d;
+      __trace__("SUBMIT_SM: change state to enroute");
+      store->changeSmsStateToEnroute(t.msgId,d,0,
+        RescheduleCalculator::calcNextTryTime(sms->getNextTime(),sms->getAttemptsCount()));
+    }catch(...)
+    {
+      __trace__("SUBMIT_SM: failed to change state to enroute");
+    }
     return ENROUTE_STATE;
   }
   __trace2__("DELIVER: seq:%d",dialogId2);
@@ -195,6 +215,16 @@ StateType StateMachine::submit(Tuple& t)
   task.messageId=t.msgId;
   if ( !smsc->tasks.createTask(task) )
   {
+    try{
+      //time_t now=time(NULL);
+      Descriptor d;
+      __trace__("SUBMIT_SM: change state to enroute");
+      store->changeSmsStateToEnroute(t.msgId,d,0,
+        RescheduleCalculator::calcNextTryTime(sms->getNextTime(),sms->getAttemptsCount()));
+    }catch(...)
+    {
+      __trace__("SUBMIT_SM: failed to change state to enroute");
+    }
     __warning__("SUBMIT_SM: can't create task");
     return ENROUTE_STATE;
   }
@@ -216,7 +246,7 @@ StateType StateMachine::submit(Tuple& t)
   {
     return ENROUTE_STATE;
   }
-  __trace__("mainLoop:SUBMIT:OK");
+  __trace2__("SUBMIT_SM:OK:%lld",t.msgId);
   return DELIVERING_STATE;
 }
 
@@ -240,6 +270,11 @@ StateType StateMachine::forward(Tuple& t)
     return EXPIRED_STATE;
   }
   if(sms.getState()!=ENROUTE_STATE)
+  {
+    return sms.getState();
+  }
+  time_t now=time(NULL);
+  if(sms.getNextTime()>now)
   {
     return sms.getState();
   }
@@ -382,7 +417,7 @@ StateType StateMachine::alert(Tuple& t)
     Descriptor d;
     SMS sms;
     store->retriveSms((SMSId)t.msgId,sms);
-    store->changeSmsStateToEnroute(t.msgId,d,0,RescheduleCalculator::calcNextTryTime(now,sms.getAttemptsCount()));
+    store->changeSmsStateToEnroute(t.msgId,d,0,RescheduleCalculator::calcNextTryTime(sms.getNextTime(),sms.getAttemptsCount()));
     smsc->notifyScheduler();
   }catch(...)
   {
