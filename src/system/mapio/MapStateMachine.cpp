@@ -653,7 +653,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   if ( result != ET96MAP_E_OK )
     throw runtime_error(
       FormatText("MAP::%s Resp return error 0x%x",__FUNCTION__,result));
-  CloseMapDialog(dialog->dialogid_map,dialog->ssn,);
+  CloseMapDialog(dialog->dialogid_map,dialog->ssn);
   dialog->state = MAPST_END;
   SendOkToSmsc(dialog);
   DropMapDialog(dialog);
