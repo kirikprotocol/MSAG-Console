@@ -517,7 +517,7 @@ static inline void makeAValue(AValue& val, const Address& addr)
 }
 
 bool AliasManager::AddressToAlias(
-  const Address& addr, Address& alias, bool* hide)
+  const Address& addr, Address& alias/*, bool* hide*/)
 {
 __synchronized__
   __trace__("\n\n*@*@*@*@*@*@*@*@*@*@*@* AddressToAlias *@*@*@*@*@*@*@*@*");
@@ -542,10 +542,10 @@ __synchronized__
     makeAliasFromValueByAddres(*node,val,alias);
   }
   LEAVE;
-	if ( node && hide )
+	/*if ( node && hide )
 	{
 		*hide = node->alias->hide;
-	}
+	}*/
   return node != 0;
 }
 
@@ -688,8 +688,8 @@ __synchronized__
   __trace2__("&---------- END --------------&");
   for ( int i =0; i<new_aliases_count; ++i )
   {
-		//if ( tmp_vector[i]->hide )
-		addIntoAliasTreeRecurse(&aliasRootNode,tmp_vector[i]);
+		if ( tmp_vector[i]->alias.hide )
+			addIntoAliasTreeRecurse(&aliasRootNode,tmp_vector[i]);
   }
   delete tmp_vector;
   while(first_alias)

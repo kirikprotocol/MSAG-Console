@@ -177,8 +177,7 @@ StateType StateMachine::submit(Tuple& t)
   try{
     // send delivery
     Address src;
-		bool hide = false;
-    if(smsc->AddressToAlias(sms->getOriginatingAddress(),src,&hide) && hide)
+    if(smsc->AddressToAlias(sms->getOriginatingAddress(),src))
     {
       sms->setOriginatingAddress(src);
     }
@@ -209,8 +208,7 @@ StateType StateMachine::forward(Tuple& t)
   SmeProxy *dest_proxy=0;
   int dest_proxy_index;
   Address src;
-  bool hide = false;
-	if(smsc->AddressToAlias(sms.getOriginatingAddress(),src,&hide) && hide)
+	if(smsc->AddressToAlias(sms.getOriginatingAddress(),src))
   {
     sms.setOriginatingAddress(src);
   }

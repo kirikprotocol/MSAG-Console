@@ -107,7 +107,7 @@ class AliasTable
 {
 public:
   virtual bool AliasToAddress(const Address& alias, Address&  addr) = 0;
-  virtual bool AddressToAlias(const Address& addr, Address& alias, bool* hide=0) = 0;
+  virtual bool AddressToAlias(const Address& addr, Address& alias/*, bool* hide=0*/) = 0;
 };
 
 class AliasAdmin
@@ -165,7 +165,7 @@ public:
   }
 
   virtual bool AliasToAddress(const Address& alias, Address&  addr);
-  virtual bool AddressToAlias(const Address& addr, Address& alias, bool* hode=0);
+  virtual bool AddressToAlias(const Address& addr, Address& alias/*, bool* hode=0*/);
   
   virtual void addAlias(const AliasInfo& info);
   virtual void commit();
