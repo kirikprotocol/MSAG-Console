@@ -93,6 +93,7 @@ void SmppInputThread::killSocket(int idx)
 
 static void SendGNack(SmppSocket* ss,int seq,int status)
 {
+  __trace2__("Generating generic nack:seq=%d,status=%d",seq,status);
   PduGenericNack pdu;
   pdu.get_header().set_commandId(SmppCommandSet::GENERIC_NACK);
   pdu.get_header().set_sequenceNumber(seq);
@@ -368,7 +369,6 @@ int SmppInputThread::Execute()
             }
             default:
             {
-              __trace__("Generating generic nack!");
               SendGNack(ss,SmppStatusSet::ESME_RINVBNDSTS,pdu->get_sequenceNumber());
               /*SmscCommand cmd=
                 SmscCommand::makeGenericNack

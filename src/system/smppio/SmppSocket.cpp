@@ -50,6 +50,7 @@ int SmppSocket::receive()
     packetsize=ntohl(*((int*)buffer));
     if(packetsize>70000 || packetsize<16)
     {
+      __trace2__("Invalid packet length:%d",packetsize);
       socket->Close();
       return -1;
     }
