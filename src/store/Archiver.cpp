@@ -222,7 +222,7 @@ Archiver::Archiver(Manager& config) throw(ConfigException)
 
 Archiver::~Archiver() 
 {
-    __trace__("Archiver destruction ...");
+    log.info("Archiver destruction ...");
     
     this->Stop();
     
@@ -239,7 +239,7 @@ Archiver::~Archiver()
     if (cleaner) delete cleaner;
     if (cleanerConnection) delete cleanerConnection;
     
-    __trace__("Archiver destructed !");
+    log.info("Archiver destructed !");
 }
 
 void Archiver::Start() 
@@ -311,8 +311,8 @@ void Archiver::incrementFinalizedCount(unsigned count)
         if (bStarted && !job.isSignaled()) 
         {
             job.Signal();
-            __trace2__("Signal sent, Finalized count is : %d !\n", 
-                       finalizedCount);
+            /*__trace2__("Signal sent, Finalized count is : %d !\n", 
+                       finalizedCount);*/
         }
     }
 }
@@ -328,7 +328,7 @@ void Archiver::decrementFinalizedCount(unsigned count)
 
 int Archiver::Execute()
 {
-    __trace__("Archiver started !");
+    log.info("Archiver started !");
     bool first = true;
     do 
     {
@@ -336,11 +336,11 @@ int Archiver::Execute()
         if (exit.isSignaled()) break;
         try 
         {
-            __trace__("Doing archivation job ...\n");
+            //__trace__("Doing archivation job ...");
             job.Signal();
             archivate(first); first = false; 
             job.Wait(0);
-            __trace__("Archivation job done !\n");
+            //__trace__("Archivation job done !");
         } 
         catch (StorageException& exc) 
         {
@@ -353,7 +353,7 @@ int Archiver::Execute()
     
     exit.Wait(0);
     exited.Signal();
-    __trace__("Archiver exited !");
+    log.info("Archiver exited !");
     return 0;
 }
 
@@ -989,18 +989,19 @@ void Archiver::Cleaner::cleanup()
     else Statement::convertOCIDateToDate(&dbTime, &toDelete);
 
     time_t toTime = time(0) - ageInterval;
-    /*__trace2__("Archive cleanup from: %d to: %d (%d)", 
-               toDelete, toTime, toTime-toDelete);*/
 
     while (toDelete>0 && toDelete<toTime && !bNeedExit)
     {
+        time_t oldDelete = toDelete;
         toDelete += cleanupInterval;
         if (toDelete > toTime) toDelete=toTime;
         Statement::convertDateToOCIDate(&toDelete, &dbTime);
         cleanerDeleteStmt->execute();
         cleanerConnection->commit();
-        __trace2__("Archive cleanup: %d rows deleted", 
-                   cleanerDeleteStmt->getRowsAffectedCount());
+        if( log.isDebugEnabled() ) 
+            log.debug("Archive cleanup: %d rows deleted (from %d to %d)",
+                      cleanerDeleteStmt->getRowsAffectedCount(), 
+                      oldDelete, toDelete);
     }
 
     disconnect();
