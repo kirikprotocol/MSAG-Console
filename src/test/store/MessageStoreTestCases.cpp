@@ -423,13 +423,14 @@ void MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existentSms)
 		existentSms->getEServiceType(serviceType);
 		sms.setEServiceType(serviceType);
 		SMSId smsId = msgStore->getNextId();
-		__trace2__("storeReplaceCorrectSms(): smsId = %s", str(smsId));
+		__trace2__("storeReplaceCorrectSms(): smsId = %s, serviceType = %s",
+			str(smsId), serviceType);
 		msgStore->createSms(sms, smsId, SMPP_OVERWRITE_IF_PRESENT);
 		__tc_ok__;
-		//восстановить параметры доставки из existentSms
+		//обнулить результаты предыдущих попыток доставки
 		sms.attempts = 0; //existentSms->getAttemptsCount();
-		sms.lastResult = existentSms->getLastResult();
-		sms.lastTime = existentSms->getLastTime();
+		sms.lastResult = 0; //existentSms->getLastResult();
+		sms.lastTime = 0; //existentSms->getLastTime();
 		//вернуть результат
 		*idp = smsId;
 		*existentSms = sms;

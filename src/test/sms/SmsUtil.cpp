@@ -68,7 +68,7 @@ bool SmsUtil::compareDescriptors(const Descriptor& d1, const Descriptor& d2)
 		sms1.getter(buf1); \
 		sms2.getter(buf2); \
 		if (strcmp(buf1, buf2)) { \
-			__trace2__("##getter: %s != %s", buf1, buf2); \
+			__trace2__(#getter ": %s != %s", buf1, buf2); \
 			res.push_back(errCode); \
 		} \
 	}
@@ -277,7 +277,7 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 
 #define __set_int_body_tag__(tagName, value) \
 	if (mask[pos++]) { \
-		__trace2__("set_int_body_tag: " #tagName ", pos = %d", pos); \
+		/*__trace2__("set_int_body_tag: " #tagName ", pos = %d", pos);*/ \
 		uint32_t tmp = value; \
 		sms->setIntProperty(Tag::tagName, tmp); \
 		if (check) { \
@@ -288,7 +288,7 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 #define __set_str_body_tag__(tagName, length) \
 	if (mask[pos++]) { \
 		int len = length; \
-		__trace2__("set_str_body_tag: " #tagName ", pos = %d, length = %d", pos, len); \
+		/*__trace2__("set_str_body_tag: " #tagName ", pos = %d, length = %d", pos, len);*/ \
 		char* data = new char[len + 1]; \
 		rand_char(len, data); \
 		sms->setStrProperty(Tag::tagName, data); \
@@ -300,7 +300,7 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 #define __set_bin_body_tag__(tagName, length) \
 	if (mask[pos++]) { \
 		int len = length; \
-		__trace2__("set_bin_body_tag: " #tagName ", pos = %d, length = %d", pos, len); \
+		/*__trace2__("set_bin_body_tag: " #tagName ", pos = %d, length = %d", pos, len);*/ \
 		char* data = new char[len + 1]; \
 		rand_uint8_t(len, (uint8_t*) data); \
 		sms->setBinProperty(Tag::tagName, data, len); \
