@@ -1023,6 +1023,7 @@ USHORT_T Et96MapCloseInd(
     case MAPST_ImsiWaitCloseInd:
       dialog->state = MAPST_END;
       ContinueImsiReq(dialog->associate,dialog->s_imsi,dialog->s_msc);
+      break;
     default:
       throw MAPDIALOG_BAD_STATE(
         FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
