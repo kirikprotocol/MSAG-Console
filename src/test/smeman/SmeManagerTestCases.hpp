@@ -132,7 +132,7 @@ private:
 	vector<int> compareSmeInfo(const SmeInfo& sme1, const SmeInfo& sme2);
 	void checkSelectSmeStat(const vector<SmeInfo*>& sme,
 		const map<uint32_t, int>& statMap, TCResult* res);
-	void debugSme(SmeInfo& sme);
+	void debugSme(const char* tc, SmeInfo& sme);
 };
 
 }

@@ -34,11 +34,12 @@ Category& SmeManagerTestCases::getLog()
 	return log;
 }
 
-void SmeManagerTestCases::debugSme(SmeInfo& sme)
+void SmeManagerTestCases::debugSme(const char* tc, SmeInfo& sme)
 {
 	ostringstream os;
 	os << sme << endl;
-	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
+	getLog().debug("[%d]\t%s(): %s", thr_self(), tc, os.str().c_str());
+	//getLog().debugStream() << "[" << thr_self() << "]\t" << tc << "(): " << sme;
 }
 
 void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
@@ -178,7 +179,7 @@ TCResult* SmeManagerTestCases::addCorrectSme(SmeInfo* sme, int num)
 					throw s;
 			}
 			smeMan->addSme(*sme);
-			debugSme(*sme);
+			debugSme("addCorrectSme", *sme);
 		}
 		catch(...)
 		{
@@ -198,6 +199,7 @@ TCResult* SmeManagerTestCases::addCorrectSmeWithEmptySystemId(SmeInfo* sme)
 		setupRandomCorrectSmeInfo(sme);
 		sme->systemId = "";
 		smeMan->addSme(*sme);
+		debugSme("addCorrectSmeWithEmptySystemId", *sme);
 	}
 	catch(...)
 	{
@@ -400,7 +402,7 @@ TCResult* SmeManagerTestCases::iterateSme(const vector<SmeInfo*> sme)
 			//SmeProxy* proxy = iter->getSmeProxy();
 			//SmeIndex index = iter->getSmeIndex();
 			SmeInfo info = iter->getSmeInfo();
-			debugSme(info);
+			//debugSme(info);
 			bool found = false;
 			for (int i = 0; i < sme.size(); i++)
 			{
