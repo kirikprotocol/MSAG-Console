@@ -405,9 +405,9 @@ public class SmsView
     try {
       int fetchedCount = 0;
       while (rs.next() && rowsMaximum > fetchedCount++) {
-        SmsRow row = new SmsRow();
+        SmsDetailedRow row = new SmsDetailedRow();
         InputStream is = fetchRowFeilds(rs, row);
-        if (is != null) convertBody(is, row);
+        if (is != null) parseBody(is, row);
         set.addRow(row);
       }
     } catch (Exception exc) {
@@ -421,66 +421,6 @@ public class SmsView
         cexc.printStackTrace();
       }
     }
-  }
-
-  private void convertBody(InputStream source, SmsRow row)
-  {
-    String message = "";
-    int textEncoding = DATA_CODING_DEFAULT;
-    byte esmClass = 0;
-    int textLen = 0;
-    byte text[] = null;
-
-    //System.out.println("Converting SMS body ...");
-    try {
-      DataInputStream stream = new DataInputStream(source);
-      while (stream.available() > 0) {
-        short tag = stream.readShort();
-        byte type = (byte) ((tag & (short) 0xff00) >> 8);
-        type &= (short) 0x00ff;
-        tag &= (short) 0x00ff;
-
-        int len = (type == INT_TAG_TYPE) ? 4 : stream.readInt();
-        //System.out.println("Tag: "+tag+" Type: "+type+" Len: "+len);
-        if (tag == SMPP_SHORT_MESSAGE_TAG || tag == SMPP_MESSAGE_PAYLOAD_TAG) {
-          byte msgText[] = new byte[textLen = len];
-          stream.read(msgText, 0, textLen);
-          text = msgText;
-        } else if (tag == SMPP_DATA_CODING_TAG) {
-          textEncoding = stream.readInt();
-        } else if (tag == SMPP_ESM_CLASS_TAG) {
-          esmClass = (byte) stream.readInt();
-        } else {
-          stream.skip(len);
-        }
-      }
-      stream.close();
-
-      if (text != null && (esmClass & 0x40) == 0x40) {
-        DataInputStream input = new DataInputStream(
-            new ByteArrayInputStream(text, 0, textLen));
-        int headerLen = (int) input.readByte();
-        textLen -= headerLen + 1;
-        input.skip(headerLen);
-        if (textLen > 0) {
-          byte msgText[] = new byte[textLen];
-          input.read(msgText, 0, textLen);
-          text = msgText;
-        } else
-          text = null;
-      }
-
-      if (text != null)
-        message = decodeMessage(text, textLen, textEncoding);
-
-    } catch (IOException exc) {
-      System.out.println("SMS Body conversion failed !");
-      exc.printStackTrace();
-    }
-    //System.out.println("SMS body converted.");
-
-    row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
-    row.setText(message);
   }
 
   private String decodeMessage(byte text[], int len, int encoding)
@@ -576,14 +516,19 @@ public class SmsView
       if (text != null && text.length>0 && (esmClass & 0x40) == 0x40)
       {
         int headerLen = ((int)text[0])&0xff;  // convert negative byte to int
-        if( headerLen >= textLen-1 ) {
-          text = new String("UDH len greater then message len "+headerLen+">"+(textLen-1)).getBytes(); 
+        if( headerLen > textLen-1 ) {
+          text = new String("UDH len greater then message len "+headerLen+"/"+(textLen-1)).getBytes(); 
           textEncoding = DATA_CODING_LATIN1;
           textLen = text.length;
         } else {
-          byte msgText[] = new byte[textLen = textLen-headerLen-1];
-          System.arraycopy(text,  headerLen+1, msgText, 0, textLen);
-          text = msgText;
+          textLen = textLen-headerLen-1;
+          if( textLen > 0 ) {
+            byte msgText[] = new byte[textLen];
+            System.arraycopy(text,  headerLen+1, msgText, 0, textLen);
+            text = msgText;
+          } else {
+            text = "";
+          }
           messagePrefix += "<< UDH "+headerLen+" bytes >> ";
         }
       }
