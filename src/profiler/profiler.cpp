@@ -16,6 +16,7 @@
 
 #include "util/recoder/recode_dll.h"
 #include "util/smstext.h"
+#include "util/Logger.h"
 
 namespace smsc{
 namespace profiler{
@@ -127,7 +128,7 @@ Profile& Profiler::lookup(const Address& address)
   return profiles->find(address,exact);
 }
 
-void Profiler::update(const Address& address,const Profile& profile)
+int Profiler::update(const Address& address,const Profile& profile)
 {
   MutexGuard g(mtx);
   bool exact;
@@ -136,16 +137,27 @@ void Profiler::update(const Address& address,const Profile& profile)
   address.getText(buf,sizeof(buf));
 #endif
   Profile &prof=profiles->find(address,exact);
-  if(prof==profile)return;
+  __trace2__("Profiler: update %s:%d.%d->%d.%d(%s)",buf,prof.codepage,prof.reportoptions,
+    profile.codepage,profile.reportoptions,exact?"exact":"inexact");
+  if(prof==profile)return pusUnchanged;
+  try{
   if(exact)
   {
     prof.assign(profile);
     dbUpdate(address,prof);
     __trace2__("Profiler: update %s:%d.%d",buf,profile.codepage,profile.reportoptions);
+    return pusUpdated;
   }else
   {
     dbInsert(address,profiles->add(address,profile));
     __trace2__("Profiler: insert %s:%d.%d",buf,profile.codepage,profile.reportoptions);
+    return pusInserted;
+  }
+  }catch(...)
+  {
+    log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.Profiler");
+    log.error("Database exception during profile update/insert");
+    return pusError;
   }
 }
 

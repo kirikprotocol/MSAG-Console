@@ -46,10 +46,15 @@ struct Profile{
 
 class ProfilesTable;
 
+static int pusUpdated=1;
+static int pusInserted=2;
+static int pusUnchanged=3;
+static int pusError=4;
+
 class ProfilerInterface{
 public:
   virtual Profile& lookup(const Address& address)=0;
-  virtual void update(const Address& address,const Profile& profile)=0;
+  virtual int update(const Address& address,const Profile& profile)=0;
   virtual void add(const Address& address,const Profile& profile)=0;
 };//ProfilerInterface
 
@@ -65,7 +70,7 @@ public:
   /* from ProfilerInterface */
   Profile& lookup(const Address& address);
 
-  void update(const Address& address,const Profile& profile);
+  int update(const Address& address,const Profile& profile);
 
   void add(const Address& address,const Profile& profile);
 
