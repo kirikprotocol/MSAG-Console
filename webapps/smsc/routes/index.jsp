@@ -62,6 +62,7 @@ function edit(name_to_edit)
 	document.all.jbutton.name = "mbEdit";
 	opForm.editRouteId.value = name_to_edit;
 	opForm.submit();
+  window.event.cancelBubble = true;
 	return false;
 }
 function setSort(sorting)
@@ -73,8 +74,23 @@ function setSort(sorting)
 	opForm.submit();
 	return false;
 }
+function clickClickable(headId, bodyId)
+{
+  var _head = document.all(headId);
+  var _body = document.all(bodyId);
+  if (_body.runtimeStyle.display == 'none' || _body.runtimeStyle.display == '')
+  {
+    _head.className = 'collapsing_list_opened';
+    _body.runtimeStyle.display = 'block';
+  }
+  else
+  {
+    _head.className = 'collapsing_list_closed';
+    _body.runtimeStyle.display = 'none';
+  }
+}
 </script>
-<table class=list cellspacing=0 cellpadding=0>
+<table class=list cellspacing=0 cellpadding=0 id=ROUTE_LIST_TABLE>
 <col width="1%">
 <col width="60%" align=left>
 <col width="20%" align=center>
@@ -99,26 +115,36 @@ function setSort(sorting)
 int row = 0;
 for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
 {
-DataItem item = (DataItem) i.next();
-String routeId = (String) item.getValue("Route ID");
-SourceList sources = (SourceList) item.getValue("sources");
-DestinationList destinations = (DestinationList) item.getValue("destinations");
-boolean isActive                  = ((Boolean)item.getValue("active"                 )).booleanValue();
-boolean isEnabling                = ((Boolean)item.getValue("isEnabling"             )).booleanValue();
-boolean isBilling                 = ((Boolean)item.getValue("isBilling"              )).booleanValue();
-boolean isArchiving               = ((Boolean)item.getValue("isArchiving"            )).booleanValue();
-boolean isSuppressDeliveryReports = ((Boolean)item.getValue("suppressDeliveryReports")).booleanValue();
+  DataItem item = (DataItem) i.next();
+  String routeId = (String) item.getValue("Route ID");
+  SourceList sources = (SourceList) item.getValue("sources");
+  DestinationList destinations = (DestinationList) item.getValue("destinations");
+  boolean isActive                  = ((Boolean)item.getValue("active"                 )).booleanValue();
+  boolean isEnabling                = ((Boolean)item.getValue("isEnabling"             )).booleanValue();
+  boolean isBilling                 = ((Boolean)item.getValue("isBilling"              )).booleanValue();
+  boolean isArchiving               = ((Boolean)item.getValue("isArchiving"            )).booleanValue();
+  boolean isSuppressDeliveryReports = ((Boolean)item.getValue("suppressDeliveryReports")).booleanValue();
+  String notes                      = (String) item.getValue("notes");
+  if (notes == null)
+    notes = "";
 
-String encRouteId = StringEncoderDecoder.encode(routeId);
+  String encRouteId = StringEncoderDecoder.encode(routeId);
+  String encNotes = StringEncoderDecoder.encode(notes);
+  String rowId = "ROUTE_ID_" + StringEncoderDecoder.encodeHEX(routeId);
+  String onClick = encNotes.length() > 0 ? " class=clickable onClick='clickClickable(\""+rowId+"_HEAD\", \"" + rowId + "_BODY\")'" : "";
 %>
 <tr class=row<%=row&1%>>
 	<td><input class=check type=checkbox name=checkedRouteIds value="<%=encRouteId%>" <%=bean.isRouteChecked(routeId) ? "checked" : ""%>></td>
-	<td><a href="#" title="Edit route" onClick='return edit("<%=encRouteId%>")'><%=encRouteId%></a></td>
-	<td><%if (isActive                 ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-	<td><%if (isEnabling               ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-	<td><%if (isBilling                ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-	<td><%if (isArchiving              ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-	<td><%if (isSuppressDeliveryReports){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td <%=onClick%>><div id=<%=rowId%>_HEAD <%=encNotes.length() > 0 ? "class=collapsing_list_closed" : "class=collapsing_list_empty"%>><a href="#" title="Edit route" onClick='return edit("<%=encRouteId%>")'><%=encRouteId%></a></div></td>
+	<td <%=onClick%>><%if (isActive                 ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td <%=onClick%>><%if (isEnabling               ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td <%=onClick%>><%if (isBilling                ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td <%=onClick%>><%if (isArchiving              ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td <%=onClick%>><%if (isSuppressDeliveryReports){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+</tr>
+<tr class=row<%=row&1%> id=<%=rowId%>_BODY style="display:none">
+  <td>&nbsp;</td>
+	<td colspan=6><%=encNotes%></td>
 </tr>
 <%}}%>
 </tbody>

@@ -31,6 +31,10 @@ function srcSmeIdChanged()
 			<td><input class=txt name=routeId value="<%=bean.getRouteId()%>"></td>
 		</tr>
 		<tr class=row<%=(rowN++)&1%>>
+			<th>notes</th>
+			<td><input class=txt name=notes value="<%=bean.getNotes()%>"></td>
+		</tr>
+		<tr class=row<%=(rowN++)&1%>>
 			<th><label title="integer from 0 to 32767">priority</label></th>
 			<td><input class=txt name=priority value="<%=bean.getPriority()%>" maxlength=5 validation="priority" onkeyup="resetValidation(this)"></td>
 		</tr>

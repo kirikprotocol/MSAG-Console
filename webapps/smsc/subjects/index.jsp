@@ -194,7 +194,7 @@ for(Iterator i = bean.getSubjects().iterator(); i.hasNext(); row++)
 	<td class=check><input class=check type=checkbox name=checkedSubjects value="<%=encName%>" <%=bean.isSubjectChecked(name) ? "checked" : ""%>></td>
 	<td <%=onClick%>><div id=<%=rowId%>_HEAD <%=encNotes.length() > 0 ? "class=collapsing_list_closed" : "class=collapsing_list_empty"%>><a href="#" title="Edit subject" onClick='return edit("<%=encName%>")'><%=encName%></a></div></td>
 	<td <%=onClick%>><%=encDefSme%></td>
-	<td rowspan=2><%
+	<td><%
     if (masks.size() > 0)
     {
       if (masks.size() > MASKS_HEADER_SIZE) {
@@ -230,7 +230,7 @@ for(Iterator i = bean.getSubjects().iterator(); i.hasNext(); row++)
 </tr>
 <tr class=row<%=row&1%> id=<%=rowId%>_BODY style="display:none">
   <td>&nbsp;</td>
-  <td colspan=2><%=encNotes%></td>
+  <td colspan=3><%=encNotes%></td>
 </tr>
 <%}}%>
 </tbody>

@@ -9,11 +9,15 @@
 <col width="15%">
 <col width="85%">
 <tr class=row<%=(rowN++)&1%>>
-	<th>name:</th>
+	<th>name</th>
 	<td><input class=txt name=name value="<%=bean.getName()%>" <%=isNew?"":"readonly"%>></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th>default SME:</th>
+	<th>notes</th>
+	<td><input class=txt name=notes value="<%=bean.getNotes()%>"></td>
+</tr>
+<tr class=row<%=(rowN++)&1%>>
+	<th>default SME</th>
 	<td><select name=defSme>
 		<%for (Iterator i = bean.getPossibleSmes().iterator(); i.hasNext(); )
 		{
