@@ -175,10 +175,12 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         smsc_log_warn(logger, "Parameter <MCISme.Reasons.strategy> missed. Using default redirect strategy (MTS defualt)");
         releaseSettings.strategy = REDIRECT_STRATEGY;
     }
-    if (releaseSettings.strategy != PREFIXED_STRATEGY && releaseSettings.strategy != REDIRECT_STRATEGY) 
+    if (releaseSettings.strategy != PREFIXED_STRATEGY && 
+        releaseSettings.strategy != REDIRECT_STRATEGY && releaseSettings.strategy != MIXED_STRATEGY) 
         throw ConfigException("Parameter <MCISme.Reasons.strategy> value '%d' is invalid.", 
                               releaseSettings.strategy);
     
+    releaseCallsStrategy = releaseSettings.strategy;
     releaseSettings.busyCause           = releaseSettingsCfg->getInt ("Busy.cause");
     releaseSettings.busyInform          = releaseSettingsCfg->getBool("Busy.inform") ? 1:0;
     releaseSettings.noReplyCause        = releaseSettingsCfg->getInt ("NoReply.cause");
@@ -190,7 +192,15 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     releaseSettings.otherCause          = releaseSettingsCfg->getInt ("Other.cause");
     releaseSettings.otherInform         = releaseSettingsCfg->getBool("Other.inform") ? 1:0;
     
-    mciModule = new MCIModule(circuitsMap, releaseSettings, callingMask.c_str(), calledMask.c_str());
+    const char* redirectionAddress = (releaseSettings.strategy == MIXED_STRATEGY) ? 
+                                      config->getString("redirectionAddress") : 0;
+    if (redirectionAddress && !isMSISDNAddress(redirectionAddress))
+        throw ConfigException("Redirection address string '%s' is invalid", 
+                              redirectionAddress ? redirectionAddress:"-");
+    
+    mciModule = new MCIModule(circuitsMap, releaseSettings, redirectionAddress,
+                              callingMask.c_str(), calledMask.c_str());
+    
     smsc_log_info(logger, "MCI Module starting...");
     mciModule->Start();
     smsc_log_info(logger, "MCI Module started.");
@@ -612,10 +622,12 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
     checkAddress(abonent);
     
     AbonentProfile profile = AbonentProfiler::getProfile(abonent);
-    if (!checkEventMask(profile.eventMask, event.cause)) {
-        smsc_log_debug(logger, "Event: for abonent %s skipped (userMask=%02X, eventCause=%02X)",
-                       abonent, profile.eventMask, event.cause);
-        return; // skip event if user mask not permit it
+    if (releaseCallsStrategy != MIXED_STRATEGY || event.cause != ABSENT) {
+        if (!checkEventMask(profile.eventMask, event.cause)) {
+            smsc_log_debug(logger, "Event: for abonent %s skipped (userMask=%02X, eventCause=%02X)",
+                           abonent, profile.eventMask, event.cause);
+            return; // skip event if user mask not permit it
+        }
     }
 
     Array<Message> cancels; bool needCancels = false;

@@ -292,6 +292,7 @@ namespace smsc { namespace mcisme
         char    *svcType, *address;
 
         int     maxInThreads, initInThreads;
+        int     releaseCallsStrategy;
 
         ThreadManager       eventManager;
         ResponcesTracker    responcesTracker;
