@@ -6,19 +6,26 @@
 <%@ page import = "ru.novosoft.smsc.jsp.util.tables.QueryResultSet"%>
 <%@ include file="utils.jsp" %>
 <%
-boolean show_source_adresses = process_trigger("show_source_adresses", session, request);
-boolean show_destination_adresses = process_trigger("show_destination_adresses", session, request);
+boolean show_source_adresses = process_trigger("route_show_source_adresses", session, request);
+boolean show_destination_adresses = process_trigger("route_show_destination_adresses", session, request);
 String sort = request.getParameter("sort");
 if (sort == null)
   sort = "Route ID";
 Vector sortOrder = new Vector();
 sortOrder.add(sort);
-QueryResultSet results = smsc.getRoutes().query(new RouteQuery(10, new RouteFilter(), sortOrder, 0));
+RouteFilter route_filter = (RouteFilter) session.getAttribute("route_filter");
+if (route_filter == null)
+  route_filter = new RouteFilter();
+
+Integer pagesizeI = (Integer) session.getAttribute("route_page_size");
+int pagesize = pagesizeI == null ? 20 : pagesizeI.intValue();
+
+QueryResultSet results = smsc.getRoutes().query(new RouteQuery(pagesize, route_filter, sortOrder, 0));
 %>
   <h4>Routes</h4><!--a href="show_smsc_data.jsp">Show SMSC data</a-->
   <a href="route_filter.jsp">Filter</a> &nbsp;&nbsp;&nbsp; 
-  <%=switch_trigger("index.jsp?", "show_source_adresses", "Show sources", "Hide sources", session, request)%>
-  <%=switch_trigger("index.jsp?", "show_destination_adresses", "Show destinations", "Hide destinations", session, request)%>
+  <%=switch_trigger("index.jsp?", "route_show_source_adresses", "Show sources", "Hide sources", session, request)%>
+  <%=switch_trigger("index.jsp?", "route_show_destination_adresses", "Show destinations", "Hide destinations", session, request)%>
 	<table class="list" cellspacing="0">
     <thead>
 			<tr class="list">

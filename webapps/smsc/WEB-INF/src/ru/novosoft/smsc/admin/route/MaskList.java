@@ -76,4 +76,9 @@ public class MaskList
     }
     return out;
   }
+
+  public boolean isEmpty()
+  {
+    return masks.size() == 0;
+  }
 }

@@ -5,7 +5,6 @@
  */
 package ru.novosoft.smsc.jsp.util.tables.impl;
 
-import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.route.Subject;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 

@@ -1,3 +1,4 @@
+<%@ page import = "java.util.*"%>
 <script language="JavaScript">
   function moveItems( src, dst ) {
     for( var i = 0; i < src.options.length; i++ ) {
@@ -53,6 +54,17 @@
     result += ((String) i.next()) + "&quot;";
   result += "\">";
   
+  return result;
+}
+
+Set parseSelected(String selectedString)
+{
+  Set result = new HashSet();
+  for (StringTokenizer tokenizer = new StringTokenizer(selectedString, "\"", false);
+       tokenizer.hasMoreTokens();)
+  {
+    result.add(tokenizer.nextToken());
+  }
   return result;
 }
 %>

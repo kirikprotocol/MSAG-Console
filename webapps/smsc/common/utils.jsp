@@ -4,16 +4,33 @@ String getTriggerParamName(String trigger_name)
   return "trigger_" + trigger_name;
 }
 
+boolean set_trigger_by_request_param(String trigger_name, boolean default_value, HttpSession session, HttpServletRequest request)
+{
+  Boolean trigger = null;
+  String trigger_string = request.getParameter(getTriggerParamName(trigger_name));
+  if (trigger_string != null)
+    trigger = Boolean.valueOf(trigger_string);
+  else 
+    trigger = new Boolean(default_value);
+    
+  session.setAttribute(getTriggerParamName(trigger_name), trigger);
+
+  return trigger.booleanValue();
+}
+
+
 boolean process_trigger(String trigger_name, HttpSession session, HttpServletRequest request)
 {
   Boolean trigger = (Boolean) session.getAttribute(getTriggerParamName(trigger_name));
   if (trigger == null)
     trigger = new Boolean(false);
+    
   String trigger_string = request.getParameter(getTriggerParamName(trigger_name));
   if (trigger_string != null)
     trigger = Boolean.valueOf(trigger_string);
-  
+    
   session.setAttribute(getTriggerParamName(trigger_name), trigger);
+
   return trigger.booleanValue();
 }
 
@@ -33,5 +50,17 @@ String show_set_combo(String name, Set values)
   }
   result += "</select>";
   return result;
+}
+
+String maskStrings2String(Set maskStrings)
+{
+  String masks = "";
+  for (Iterator i = maskStrings.iterator(); i.hasNext(); )
+  {
+    masks += (String) i.next();
+    if (i.hasNext())
+      masks += '\n';
+  }
+  return masks;
 }
 %>

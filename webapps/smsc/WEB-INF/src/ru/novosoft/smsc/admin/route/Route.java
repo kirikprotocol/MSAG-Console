@@ -12,6 +12,8 @@ import ru.novosoft.smsc.util.StringEncoderDecoder;
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.StringTokenizer;
+import java.util.List;
+import java.util.Set;
 
 
 public class Route
@@ -106,13 +108,12 @@ public class Route
     return dst;
   }
 
-  public void updateSources(String sourcesString, String masksString, SubjectList allSubjects)
+  public void updateSources(Set sourcesStrings, String masksString, SubjectList allSubjects)
   {
     SourceList source_selected = new SourceList();
-    for (StringTokenizer tokenizer = new StringTokenizer(sourcesString, "\"", false);
-         tokenizer.hasMoreTokens();)
+    for (Iterator i = sourcesStrings.iterator(); i.hasNext(); )
     {
-      String token = tokenizer.nextToken();
+      String token = (String) i.next();
       source_selected.add(new Source(allSubjects.get(token)));
     }
 
@@ -128,14 +129,13 @@ public class Route
     src.addAll(source_selected);
   }
 
-  public void updateDestinations(String destinationsString, String masksString, SubjectList allSubjects, SME defaultSme)
+  public void updateDestinations(Set destinationsStrings, String masksString, SubjectList allSubjects, SME defaultSme)
           throws AdminException
   {
     DestinationList list = new DestinationList();
-    for (StringTokenizer tokenizer = new StringTokenizer(destinationsString, "\"", false);
-         tokenizer.hasMoreTokens();)
+    for (Iterator i = destinationsStrings.iterator(); i.hasNext(); )
     {
-      String token = tokenizer.nextToken();
+      String token = (String) i.next();
       list.add(new Destination(allSubjects.get(token)));
     }
 

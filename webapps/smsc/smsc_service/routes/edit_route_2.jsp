@@ -1,4 +1,5 @@
 <%@ include file="/common/header.jsp"%>
+<%@ include file="/common/list_selector.jsp"%>
 <%@ include file="/smsc_service/menu.jsp" %>
 <%@ include file="utils.jsp"%>
 <%! 
@@ -55,8 +56,8 @@ if (!old_route_name.equals(new_route_name))
   routeList.put(route);
 }
 
-route.updateSources(source_selected_string, source_masks, smsc.getSubjects());
-route.updateDestinations(destination_selected_string, destination_masks, smsc.getSubjects(), defaultSme);
+route.updateSources(parseSelected(source_selected_string), source_masks, smsc.getSubjects());
+route.updateDestinations(parseSelected(destination_selected_string), destination_masks, smsc.getSubjects(), defaultSme);
 route.setEnabling(isEnabling != null && isEnabling.equals("true"));
 route.setBilling(isBilling != null && isBilling.equals("true"));
 route.setArchiving(isArchiving != null && isArchiving.equals("true"));
