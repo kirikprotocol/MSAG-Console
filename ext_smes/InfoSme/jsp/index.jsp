@@ -52,7 +52,6 @@ function checkApplyResetButtons()
     return "clear";
 }
 %>
-<script>checkCheckboxes(opForm.all.mbApply);</script>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=edit>
@@ -247,6 +246,7 @@ function checkTasks()
   return true;
 }
 checkTasks();
+checkCheckboxes(opForm.all.mbApply);
 </script>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
