@@ -294,7 +294,11 @@ void OCIQuery::bind(CONST text* name, sb4 name_len, ub2 type,
                         dvoid* placeholder, sb4 size, dvoid* indp)
     throw(SQLException)
 {
-    __trace2__("Bind by name: %s, type %d", name, type);
+    char nameStr[name_len+2];
+    strncpy(nameStr, (const char*)name, name_len);
+    nameStr[name_len] = 0;
+    __trace2__("Bind by name: %s, type %d", nameStr, type);
+
     OCIBind *bind = 0;
     check(OCIBindByName(stmt, &bind, errhp, name, name_len,
                         placeholder, size, type, indp,
@@ -888,9 +892,9 @@ OCIRoutine::OCIRoutine(OCIConnection* connection,
         ub1 shift = ((func) ? 0:1);
         for (ub4 i=shift; i<numargs+shift; i++) 
         {
-            text*       atr; 
-            ub4         atrlen;
-            OCIParam   *innerlst;   
+            text*       atr = 0; 
+            ub4         atrlen = 0;
+            OCIParam   *innerlst = 0;   
 
             check(OCIParamGet(arglst, OCI_DTYPE_PARAM, errhp, (void **)&arg, i));
 
