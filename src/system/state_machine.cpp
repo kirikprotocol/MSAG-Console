@@ -382,35 +382,6 @@ StateType StateMachine::submit(Tuple& t)
     }
   }
 
-  if(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
-  {
-    unsigned len=sms->getIntProperty(Tag::SMPP_SM_LENGTH);
-    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
-    {
-      sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-    }
-    if(len>140)
-    {
-      sms->lastResult=Status::INVMSGLEN;
-      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-      SmscCommand resp = SmscCommand::makeSubmitSmResp
-                         (
-                           /*messageId*/"0",
-                           dialogId,
-                           Status::INVMSGLEN,
-                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                         );
-      try{
-        src_proxy->putCommand(resp);
-      }catch(...)
-      {
-      }
-      __warning__("SUBMIT_SM: invalid message length");
-      return ERROR_STATE;
-    }
-
-  }
-
 
   if(sms->getValidTime()==-1)
   {
@@ -520,6 +491,36 @@ StateType StateMachine::submit(Tuple& t)
     __warning2__("SUBMIT_SM: no route (%s->%s)",buf1,buf2);
     return ERROR_STATE;
   }
+
+  if(ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
+  {
+    unsigned len=sms->getIntProperty(Tag::SMPP_SM_LENGTH);
+    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    }
+    if(len>140)
+    {
+      sms->lastResult=Status::INVMSGLEN;
+      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+      SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           Status::INVMSGLEN,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+      }
+      __warning__("SUBMIT_SM: invalid message length");
+      return ERROR_STATE;
+    }
+
+  }
+
 
   sms->setSourceSmeId(t.command->get_sourceId());
 
