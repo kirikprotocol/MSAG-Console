@@ -32,11 +32,6 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduDeliverySm& pdu1,
 	SmppUtil::convert(pdu2.get_message().get_source(), &origAddr2);
 	SmppUtil::convert(pdu1.get_message().get_dest(), &destAddr1);
 	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
-	//ѕроверить правильность destination адреса дл€ pdu2
-	if (!SmsUtil::compareAddresses(smeAddr, destAddr2))
-	{
-		res.push_back(1);
-	}
 	//destAddr1 €вл€етс€ алиасом
 	const AliasHolder* destHolder = aliasReg->findAddressByAlias(destAddr1);
 	Address tmp;
