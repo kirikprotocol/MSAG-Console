@@ -81,7 +81,7 @@ public class Daemon extends Proxy
     if (services.containsKey(id))
       throw new SibincoException("Couldn't add service \"" + id + "\" to host \"" + host + "\": service already contained in host");
 
-    logger.debug("Add services \"" + id + "\" (" + serviceInfo.getHost() + ':' + serviceInfo.getPort() + ")");
+    logger.debug("Add services \"" + id + "\" (" + serviceInfo.getHost() + ")");
 
     final Response r = runCommand(new CommandAddService(serviceInfo));
     if (Response.StatusOk != r.getStatus())
@@ -132,7 +132,7 @@ public class Daemon extends Proxy
     return new SortedList(services.keySet());
   }
 
-  public void setServiceStartupParameters(final String serviceId, final int port, final String args)
+  public void setServiceStartupParameters(final String serviceId, final String args)
       throws SibincoException
   {
     requireService(serviceId);
@@ -140,7 +140,6 @@ public class Daemon extends Proxy
     if (Response.StatusOk != r.getStatus())
       throw new SibincoException("Couldn't set services startup parameters \"" + serviceId + "\", nested:" + r.getDataAsString());
     final ServiceInfo serviceInfo = getServiceInfo(serviceId);
-    serviceInfo.setPort(port);
     serviceInfo.setArgs(args);
   }
 

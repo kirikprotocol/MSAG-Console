@@ -1,0 +1,33 @@
+<!ENTITY % elements "(if | (bill|nobill))*">
+<!ELEMENT ruleset (rule)* >
+<!ELEMENT rule %elements; >
+<!ATTLIST rule
+name CDATA #REQUIRED
+>
+<!ENTITY % conditions "(addr | sme | route | or | and )">
+<!ELEMENT if (%conditions;,then,else?) >
+<!ELEMENT addr EMPTY>
+<!ATTLIST addr
+what (oa|da|dda) #REQUIRED
+match CDATA #IMPLIED
+equal CDATA #IMPLIED
+>
+<!ELEMENT sme EMPTY>
+<!ATTLIST sme
+what (src|dst) #REQUIRED
+match CDATA #IMPLIED
+equal CDATA #IMPLIED
+>
+<!ELEMENT route EMPTY>
+<!ATTLIST route
+what (id|serviceId|providerId) #REQUIRED
+match CDATA #IMPLIED
+equal CDATA #IMPLIED
+>
+<!ELEMENT and (%conditions;)*>
+<!ELEMENT or (%conditions;)*>
+<!ELEMENT else %elements; >
+<!ELEMENT then %elements; >
+<!ELEMENT bill EMPTY>
+<!ATTLIST bill serviceId CDATA #IMPLIED> <!-- integer if not specified svcid from route -->
+<!ELEMENT nobill EMPTY>

@@ -9,9 +9,7 @@ import java.io.File;
 
 
 /**
- * Created by igork
- * Date: 03.06.2004
- * Time: 21:35:42
+ * Created by igork Date: 03.06.2004 Time: 21:35:42
  */
 public class ServiceInfo
 {
@@ -23,7 +21,6 @@ public class ServiceInfo
 
   protected String id = "";
   protected String host = "";
-  protected int port = 0;
   protected String args = "";
   protected long pid = 0;
   protected Sme sme = null;
@@ -32,33 +29,30 @@ public class ServiceInfo
   private boolean autostart;
 
 
-  public ServiceInfo(Element serviceElement, String serviceHost, SmeManager smeManager, String daemonServicesFolder) throws SibincoException
+  public ServiceInfo(final Element serviceElement, final String serviceHost, final SmeManager smeManager, final String daemonServicesFolder)
+      throws SibincoException
   {
     host = serviceHost;
-    try {
-      port = Integer.decode(serviceElement.getAttribute("port")).intValue();
-    } catch (NumberFormatException e) {
-    }
     id = serviceElement.getAttribute("id");
     this.autostart = "true".equals(serviceElement.getAttribute("autostart"));
     args = serviceElement.getAttribute("args");
 
-    if (id.equals("")) {
+    if ("".equals(id)) {
       throw new SibincoException("services name or services system id not specified in response");
     }
     sme = (Sme) smeManager.getSmes().get(id);
 
     setStatusStr(serviceElement.getAttribute("status"));
-    String pidStr = serviceElement.getAttribute("pid");
-    this.pid = (pidStr != null && pidStr.length() > 0) ? Long.decode(pidStr).longValue() : 0;
+    final String pidStr = serviceElement.getAttribute("pid");
+    this.pid = null != pidStr && 0 < pidStr.length() ? Long.decode(pidStr).longValue() : 0;
     //? id==folder
     this.serviceFolder = new File(daemonServicesFolder, id);
   }
 
-  private ServiceInfo(String id, String host, int port, String serviceFolder, String args, boolean autostart, long pid, Sme sme, byte status)
+  private ServiceInfo(final String id, final String host, final String serviceFolder, final String args, final boolean autostart, final long pid,
+                      final Sme sme, final byte status)
   {
     this.host = host;
-    this.port = port;
     this.args = args;
     this.autostart = autostart;
     this.pid = pid;
@@ -68,20 +62,16 @@ public class ServiceInfo
     this.serviceFolder = new File(serviceFolder);
   }
 
-  public ServiceInfo(String id, String host, int port, String serviceFolder, String args, boolean autostart, Sme sme, byte status)
+  public ServiceInfo(final String id, final String host, final String serviceFolder, final String args, final boolean autostart, final Sme sme,
+                     final byte status)
   {
-    this(id, host, port, serviceFolder, args, autostart, 0, sme, status);
+    this(id, host, serviceFolder, args, autostart, 0, sme, status);
   }
 
 
   public String getHost()
   {
     return host;
-  }
-
-  public int getPort()
-  {
-    return port;
   }
 
   public String getId()
@@ -99,12 +89,12 @@ public class ServiceInfo
     return pid;
   }
 
-  public void setPid(long pid)
+  public void setPid(final long pid)
   {
     this.pid = pid;
-    if (pid == 0 && (status == STATUS_RUNNING || status == STATUS_STOPPING))
+    if (0 == pid && (STATUS_RUNNING == status || STATUS_STOPPING == status))
       status = STATUS_STOPPED;
-    if (pid != 0 && (status == STATUS_STARTING || status == STATUS_STOPPED))
+    if (0 != pid && (STATUS_STARTING == status || STATUS_STOPPED == status))
       status = STATUS_RUNNING;
   }
 
@@ -118,7 +108,7 @@ public class ServiceInfo
     return status;
   }
 
-  protected void setStatusStr(String statusStr)
+  protected void setStatusStr(final String statusStr)
   {
     if ("running".equalsIgnoreCase(statusStr)) {
       this.status = STATUS_RUNNING;
@@ -150,24 +140,19 @@ public class ServiceInfo
     }
   }
 
-  public Sme setSme(Sme sme)
+  public Sme setSme(final Sme sme)
   {
-    Sme old_sme = this.sme;
+    final Sme old_sme = this.sme;
     this.sme = sme;
     return old_sme;
   }
 
-  public void setStatus(byte status)
+  public void setStatus(final byte status)
   {
     this.status = status;
   }
 
-  public void setPort(int port)
-  {
-    this.port = port;
-  }
-
-  public void setArgs(String args)
+  public void setArgs(final String args)
   {
     this.args = args;
   }

@@ -13,17 +13,15 @@ import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 
 public class CommandAddService extends Command
 {
-  public CommandAddService(ServiceInfo serviceInfo) throws SibincoException
+  public CommandAddService(final ServiceInfo serviceInfo) throws SibincoException
   {
     super("add_service");
 
-    logger.debug("Add services \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
-                 + serviceInfo.getPort() + ")");
+    logger.debug("Add services \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ")");
 
-    Element serviceElem = document.createElement("service");
+    final Element serviceElem = document.createElement("service");
     //serviceElem.setAttribute("name", StringEncoderDecoder.encode(serviceInfo.getName()));
     serviceElem.setAttribute("id", StringEncoderDecoder.encode(serviceInfo.getId()));
-    serviceElem.setAttribute("port", StringEncoderDecoder.encode(String.valueOf(serviceInfo.getPort())));
     serviceElem.setAttribute("args", StringEncoderDecoder.encode(serviceInfo.getArgs()));
     serviceElem.setAttribute("status", serviceInfo.getStatusStr());
     serviceElem.setAttribute("autostart", serviceInfo.isAutostart() ? "true" : "false");
