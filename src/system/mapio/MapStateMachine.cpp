@@ -107,6 +107,7 @@ static string FormatText(const char* format,...)
 }
 
 #define MAP_ERRORS_BASE Status::MAP_ERR_BASE
+#define MAP_PROVIDER_ERR_BASE Status::MAP_PROVIDER_ERR_BASE
 #define MAP_FALURE (/*MAP_ERRORS_BASE+34*/8)
 
 struct MAPDIALOG_ERROR : public runtime_error
