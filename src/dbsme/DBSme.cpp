@@ -139,6 +139,24 @@ public:
             }
             command.setOutData(exc.what()); // Error processing SMS !;
         }
+        catch (std::exception& exc) 
+        {
+            {
+                MutexGuard guard(countersLock);
+                failuresNoticedCount++;
+            }
+            command.setOutData(exc.what()); // Error processing SMS !;
+            log.error( "std::exception caught while processing command: %s", exc.what() );
+        }
+        catch (...)
+        {
+            {
+                MutexGuard guard(countersLock);
+                failuresNoticedCount++;
+            }
+            command.setOutData("Unknown error"); // Error processing SMS !;
+            log.error( "... caught while processing command" );
+        }
 
         SMS response;
 
