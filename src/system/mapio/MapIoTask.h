@@ -122,7 +122,7 @@ enum MapState{
 
 class hash_func_ET96MAP_DID{
 public:
-  static inline unsigned CalcHash(ET96MAP_DIALOGUE_ID_T id){
+  static inline unsigned CalcHash(unsigned id){
     return (unsigned)id;
   }
 };
@@ -274,6 +274,10 @@ public:
   MapDialog* get() { return dialog; }
 };
 
+unsigned MKDID(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn)
+{
+  return ((unsigned(dialogueid)&0xffff)|(unsigned(lssn)<<24)) & 0xff00ffff
+}
 
 /**
   \class MapDialogContainer
@@ -293,7 +297,7 @@ class MapDialogContainer{
   Mutex sync;
   MapProxy proxy;
   time_t last_dump_time;
-  XHash<ET96MAP_DIALOGUE_ID_T,MapDialog*,hash_func_ET96MAP_DID> hash;
+  XHash<unsigned,MapDialog*,hash_func_ET96MAP_DID> hash_;
   XHash<const string,MapDialog*,StringHashFunc> lock_map;
   list<unsigned> dialogId_pool;
   friend void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
@@ -304,8 +308,8 @@ class MapDialogContainer{
     last_dump_time = time(0);
     ET96MAP_DIALOGUE_ID_T key;
     MapDialog* dlg;
-    hash.First();
-    while(hash.Next(key,dlg)) {
+    hash_.First();
+    while(hash_.Next(key,dlg)) {
       MAPSTATS_DumpDialog(dlg);
     }
   }
@@ -331,7 +335,7 @@ public:
   }
 
   unsigned getDialogCount() {
-    return hash.Count();
+    return hash_.Count();
   }
 
   unsigned getNumberOfDialogs()
@@ -343,10 +347,10 @@ public:
     return &proxy;
   }
 
-  MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
+  MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn){
     MutexGuard g(sync);
     MapDialog* dlg = 0;
-    if ( hash.Get(dialogueid,dlg) ) {
+    if ( hash_.Get(MKDID(dialogueid,lssn),dlg) ) {
       __mapdlg_trace2__("found dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
       dlg->AddRef();
       return dlg;
@@ -361,7 +365,7 @@ public:
   MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn/*,const char* abonent*/,unsigned version=2){
     MutexGuard g(sync);
     MapDialog* dlg = new MapDialog(dialogueid,lssn,version);
-    hash.Insert(dialogueid,dlg);
+    hash_.Insert(MKDID(dialogueid,lssn),dlg);
     __mapdlg_trace2__("created new dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
     dlg->AddRef();
     return dlg;
@@ -376,7 +380,7 @@ public:
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn,2);
     dialogId_pool.pop_front();
-    hash.Insert(map_dialog,dlg);
+    hash_.Insert(MKDID(map_dialog,lssn),dlg);
     __mapdlg_trace2__("create new 'IMSI' dialog 0x%p for dialogid 0x%x",dlg,map_dialog);
     dlg->AddRef();
     dlg->associate = associate->AddRef();
@@ -412,18 +416,18 @@ public:
     dialogId_pool.pop_front();
     dlg->dialogid_smsc = smsc_did;
     dlg->abonent = abonent;
-    hash.Insert(map_dialog,dlg);
+    hash_.Insert(MKDID(map_dialog,lssn),dlg);
     if ( abonent.length() != 0 ) lock_map.Insert(abonent,dlg);
     __mapdlg_trace2__("new dialog 0x%p for dialogid 0x%x/0x%x",dlg,smsc_did,map_dialog);
     dlg->AddRef();
     return dlg;
   }
 
-  USHORT_T reAssignDialog(unsigned did,unsigned ssn){
+  USHORT_T reAssignDialog(unsigned did,unsigned oldssn,unsigned ssn){
     MAPSTATS_Update(MAPSTATS_REASSIGNDIALOG);
     MutexGuard g(sync);
     MapDialog* dlg = 0;
-    hash.Get(did,dlg);
+    hash_.Get(MKDID(did,oldssn),dlg);
     if ( dlg == 0 ){
       __mapdlg_trace2__("couldn't reassign dialog, here is no did 0x%x",did);
       throw runtime_error("MAP:: reassign dialog: here is no did");
@@ -438,21 +442,21 @@ public:
     dlg->dialogid_map = dialogid_map;
     dlg->ssn = ssn;
     dialogId_pool.pop_front();
-    hash.Delete(did);
-    hash.Insert(dialogid_map,dlg);
+    hash_.Delete(MKDID(did,oldssn));
+    hash_.Insert(MKDID(dialogid_map,ssn),dlg);
     __mapdlg_trace2__("dialog reassigned 0x%x->0x%x",did,dialogid_map);
     return dialogid_map;
   }
 
 
-  void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
+  void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn){
     MutexGuard g(sync);
     MapDialog* item = 0;
-    if ( hash.Get(dialogueid,item) ){
+    if ( hash_.Get(MKDID(dialogueid,ssn),item) ){
       if ( item->abonent.length() != 0 ) {
         lock_map.Delete(item->abonent);
       }
-      hash.Delete(dialogueid);
+      hash_.Delete(MKDID(dialogueid,ssn));
       item->state = MAPST_END;
       item->Release();
       __mapdlg_trace2__("dropped dialog 0x%p for dialogid 0x%x",item,dialogueid);
