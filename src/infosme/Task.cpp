@@ -67,6 +67,7 @@ const char* DELETE_NEW_MESSAGES_STATEMENT_SQL = "DELETE FROM %s WHERE STATE=:NEW
 const char* DO_WAIT_MESSAGE_STATEMENT_SQL     = "UPDATE %s SET STATE=:WAIT WHERE ID=:ID";
 const char* CLEAR_MESSAGES_STATEMENT_SQL      = "DELETE FROM %s WHERE STATE=:NEW AND ABONENT=:ABONENT";
 const char* NEW_SD_INDEX_STATEMENT_SQL        = "CREATE INDEX %s_SD_IDX ON %s (STATE, SEND_DATE)";
+const char* NEW_AB_INDEX_STATEMENT_SQL        = "CREATE INDEX %s_AB_IDX ON %s (STATE, ABONENT)";
 const char* DELETE_MESSAGES_STATEMENT_SQL     = "DELETE FROM %s WHERE STATE=:NEW";
 const char* RESET_MESSAGES_STATEMENT_SQL      = "UPDATE %s SET STATE=:NEW WHERE STATE=:WAIT";
 const char* DO_RETRY_MESSAGE_STATEMENT_SQL    = "UPDATE %s SET STATE=:NEW, SEND_DATE=:SEND_DATE WHERE ID=:ID";
@@ -375,7 +376,15 @@ void Task::createTable()
             std::auto_ptr<Statement> statementGuard(connection->createStatement(createIndexSql.get()));
             Statement* statement = statementGuard.get();
             if (!statement) 
-                throw Exception("Failed to create index statement.");
+                throw Exception("Failed to create index1 statement.");
+            statement->execute();
+        }
+        {
+            std::auto_ptr<char> createIndexSql(prepareDoubleSqlCall(NEW_AB_INDEX_STATEMENT_SQL));
+            std::auto_ptr<Statement> statementGuard(connection->createStatement(createIndexSql.get()));
+            Statement* statement = statementGuard.get();
+            if (!statement) 
+                throw Exception("Failed to create index2 statement.");
             statement->execute();
         }
 
