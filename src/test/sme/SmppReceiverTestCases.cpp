@@ -9,11 +9,16 @@
 
 #define __compareStr__(field) \
 	failureCode++; \
-	if (string(pdu.field) != origPdu->field) { res->addFailure(failureCode); }
+	if ((pdu.field && !origPdu->field) || \
+		(!pdu.field && origPdu->field) || \
+		(pdu.field && origPdu->field && string(pdu.field) != origPdu->field)) \
+	{ res->addFailure(failureCode); }
 
 #define __compareAddr__(field) \
 	failureCode++; \
-	if (!SmppUtil::compareAddresses(pdu.field, origPdu->field) \
+	if ((pdu.field && !origPdu->field) || \
+		(!pdu.field && origPdu->field) || \
+		(pdu.field && origPdu->field && !SmppUtil::compareAddresses(pdu.field, origPdu->field))) \
 	{ res->addFailure(failureCode); }
 
 #define __checkForNull__(field) \
@@ -83,7 +88,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 				res->addFailure(2);
 			}
 			//обновить pduData по данным из респонса
-			__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM_RESP);
+			__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 			PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 			vector<int> tmp = responseChecker->checkSubmitSmResp(pduData, pdu);
 			for (int i = 0; i < tmp.size(); i++)
