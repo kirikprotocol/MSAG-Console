@@ -44,13 +44,12 @@ static inline void print(RouteRecord* record,const char* ppp= "")
 						 record->src_def,
 						 record->info.dest.value,
 						 record->info.dest.lenght,
-	 				 record->dest_def);
+	 				   record->dest_def);
 	}
 	else
 	{
 		__trace2__("%s=NULL",ppp);
 	}
-
 }
 
 inline 
@@ -211,6 +210,8 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& cmp
         else break;
       }
     }
+		else // strong
+				return node->record;
   }
   return 0;
 }
@@ -237,16 +238,22 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& cmp )
       {
         int ptr = (right+left) >> 1;
         rec = findInTreeRecurse(node->child[ptr-1],r,cmp);
-        if ( rec ) return rec;
+				if ( rec ) return rec; // found
         if ( right > left ) 
         {
           if ( cmp < 0 )right = ptr-1;
           else left = ptr+1;
         }
-        else break;
+        return 0; // not found
       }
+			else // strong
+			{
+				goto find_by_source;
+			}
     }
-    // find by source
+		else return 0; // not found
+find_by_source:    
+		// find by source
     {
       RouteRecord* rec;
       int left = 1;
@@ -261,11 +268,16 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& cmp )
           if ( cmp < 0 )right = ptr-1;
           else left = ptr+1;
         }
-        else break;
+        else return 0; // not found
       }
+			else 
+			{
+				__warning__("very strange, route has no sources");
+				return 0; // ops, no sources !!!!! 
+			}
     }
   }
-  return 0;
+  //return 0;
 }
 
 inline 
