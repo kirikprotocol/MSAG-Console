@@ -6,12 +6,12 @@
 <script>
 function openPerfMon()
 {
-	open("<%=CPATH%>/perfmon/index.jsp", null, "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580");
+	open("<%=CPATH%>/perfmon/index.jsp", "perfmon", "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580");
 	return false;
 }
 function openTopMon()
 {
-	open("<%=CPATH%>/topmon/index.jsp", null, "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640");
+	open("<%=CPATH%>/topmon/index.jsp", "topmon", "channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640");
 	return false;
 }
 </script>

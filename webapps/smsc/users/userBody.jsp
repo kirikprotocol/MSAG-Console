@@ -25,7 +25,7 @@
 		<input class=check type=checkbox name=roles id=role03 value="locale_resources"  <%=bean.isUserInRole("locale_resources")  ? "checked" : ""%>>&nbsp;<label for=role03>Locale resources uploading and viewing</label><br>
 		<input class=check type=checkbox name=roles id=role04 value="dl"                <%=bean.isUserInRole("dl")                ? "checked" : ""%>>&nbsp;<label for=role04>Distribution Lists</label><br>
 		<input class=check type=checkbox name=roles id=role05 value="perfmon"           <%=bean.isUserInRole("perfmon")           ? "checked" : ""%>>&nbsp;<label for=role05>Perfomance monitoring</label><br>
-		<input class=check type=checkbox name=roles id=role06 value="perfmon"           <%=bean.isUserInRole("topmon")            ? "checked" : ""%>>&nbsp;<label for=role06>Perfomance monitoring</label><br>
+		<input class=check type=checkbox name=roles id=role06 value="topmon"            <%=bean.isUserInRole("topmon")            ? "checked" : ""%>>&nbsp;<label for=role06>Sme monitoring</label><br>
 		<input class=check type=checkbox name=roles id=role07 value="smsView"           <%=bean.isUserInRole("smsView")           ? "checked" : ""%>>&nbsp;<label for=role07>SMS View</label><br>
 		<input class=check type=checkbox name=roles id=role08 value="smsView_archive"   <%=bean.isUserInRole("smsView_archive")   ? "checked" : ""%>>&nbsp;<label for=role08>SMS View Archive only</label><br>
 		<input class=check type=checkbox name=roles id=role09 value="smsView_operative" <%=bean.isUserInRole("smsView_operative") ? "checked" : ""%>>&nbsp;<label for=role09>SMS View Opertaive only</label><br>
