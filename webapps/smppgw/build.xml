@@ -48,7 +48,7 @@
       <fileset dir="." includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc"/>
     </copy>
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
-      <fileset file="${log4j_jar}"/>
+      <fileset dir="${basedir}/WEB-INF/lib"  includes="*.jar"/>
       <fileset file="${tomcat_auth_lib}"/>
       <fileset file="${sibinco_lib}"/>
     </copy>
