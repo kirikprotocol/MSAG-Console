@@ -143,6 +143,19 @@
 
   <security-constraint>
     <web-resource-collection>
+      <web-resource-name>Access Control Lists</web-resource-name>
+      <url-pattern>/smsc/acl/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>acls</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
       <web-resource-name></web-resource-name>
       <url-pattern>/smsc/routes/*</url-pattern>
       <url-pattern>/smsc/tracer/*</url-pattern>
@@ -298,5 +311,9 @@
   </security-role>
   <security-role>
     <role-name>services</role-name>
+  </security-role>
+  <security-role>
+    <role-name>acls</role-name>
+    <description>Access Control List manager</description>
   </security-role>
 </web-app>
