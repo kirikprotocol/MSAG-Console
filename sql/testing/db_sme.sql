@@ -18,10 +18,10 @@ tablespace smsc_idx;
 
 alter table db_sme_test add constraint db_sme_test_pk primary key (id);
 
-create or replace procedure test_proc (int8 in out smallint, int16 in out smallint,
-	int32 in out integer, int64 in out integer, flt in out float,
-	dbl in out double precision, ldbl in out double precision,
-	str in out varchar2, dt in out date) is
+create or replace procedure test_proc (str in out varchar2, dt in out date,
+	flt in out float, dbl in out double precision, ldbl in out double precision,
+	int8 in out smallint, int16 in out smallint, int32 in out integer,
+	int64 in out integer) is
 begin
 	int8 := int8 + 1;
 	int16 := int16 + 1;
@@ -31,25 +31,27 @@ begin
 	dbl := dbl + 1.1;
 	ldbl := ldbl + 1.1;
 	str := str || '!!!';
-	dt := dt + 3600;
+	dt := dt + 1/24;
 end;
+/
 
-create or replace function test_func (int8 in out smallint, int16 in out smallint,
-	int32 in out integer, int64 in out integer, flt in out float,
-	dbl in out double precision, ldbl in out double precision,
-	str in out varchar2, dt in out date) return number is
+create or replace function test_func (dt in out date, str in out varchar2,
+	uint8 in out smallint, uint16 in out smallint, uint32 in out integer,
+	uint64 in out integer, flt in out float, dbl in out double precision,
+	ldbl in out double precision) return number is
 begin
-	int8 := int8 + 1;
-	int16 := int16 + 1;
-	int32 := int32 + 1;
-	int64 := int64 + 1;
+	uint8 := uint8 + 1;
+	uint16 := uint16 + 1;
+	uint32 := uint32 + 1;
+	uint64 := uint64 + 1;
 	flt := flt + 1.1;
 	dbl := dbl + 1.1;
 	ldbl := ldbl + 1.1;
 	str := str || '!!!';
-	dt := dt + 3600;
+	dt := dt + 1/24;
 	return 5;
 end;
+/
 
 create or replace procedure test_exception(param in number) is
 begin
@@ -61,3 +63,4 @@ begin
 		raise INVALID_NUMBER;
 	end if;
 end;
+/
