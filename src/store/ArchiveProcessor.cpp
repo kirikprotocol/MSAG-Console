@@ -126,7 +126,7 @@ int ArchiveProcessor::Execute()
     while (!bNeedExit)
     {
         // Accept server socket here & process queries on ThreadPool
-        smsc_log_info(log, "Waiting query socket ...");
+        smsc_log_debug(log, "Waiting query socket ...");
         if (Socket *newSocket = serverSocket.Accept()) {
             smsc_log_info(log, "Query socket accepted.");
             queriesPool.startTask(new Query(this, newSocket));
@@ -249,7 +249,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
             }
             prtime=gethrtime()-prtime;
 
-            double tmInSec=(double)prtime/1000000.0L;
+            double tmInSec=(double)prtime/1000000000.0L;
 
             smsc_log_info(log,"Processed file '%s' in %lld msec, %lld sms found, processing speed %lf sms/sec",file.c_str(),prtime/1000000,count,(double)count/tmInSec);
 
