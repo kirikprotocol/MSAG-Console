@@ -27,7 +27,7 @@ void ServicesList::remove(const char * const serviceId) throw (AdminException)
 {
 	if (!services.Exists(serviceId))
 		throw AdminException("Service not found");
-	if (services[serviceId]->isRunning())
+	if (services[serviceId]->getStatus() != Service::stopped)
 	{
 		services[serviceId]->kill();
 	}
@@ -77,6 +77,24 @@ char * ServicesList::getText() const
 		result += "\" port=\"";
 		result += port;
 		result += "\" args=\"";
+    result += "\" status=\"";
+    switch (s->getStatus())
+    {
+    case Service::running:
+      result += "running";
+      break;
+    case Service::stopped:
+      result += "stopped";
+      break;
+    case Service::starting:
+      result += "starting";
+      break;
+    case Service::stopping:
+      result += "stopping";
+      break;
+    default:
+      result += "unknown";
+    }
 		result += tmpArgs.get();
 		result += "\"/>\n";
 	}
@@ -102,6 +120,7 @@ const char * const ServicesList::markServiceAsStopped(pid_t old_pid)
 				//logger.debug("  FINDED SERVICE!!! %lu ", (unsigned long) old_pid);
 			#endif
 			s->setPid(0);
+      s->setStatus(Service::stopped);
 			#ifdef SMSC_DEBUG
 				logger.debug("SERVICE %lu MARKED AS DEAD", (unsigned long) old_pid);
 			#endif

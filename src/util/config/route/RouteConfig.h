@@ -27,10 +27,11 @@ public:
 	};
 
 	RouteConfig();
+	virtual ~RouteConfig();
 
 	void clear();
-	status putRoute(Route *record);
-	status putSubject(Subject *subj);
+//	status putRoute(Route *record);
+//	status putSubject(Subject *subj);
 
 	status load(const char * const filename);
 

@@ -21,34 +21,44 @@ const char * const Service::service_exe = "bin/service";
 pid_t Service::start()
 	throw (AdminException)
 {
-	if (isRunning())
-	{
+  switch (status)
+  {
+  case starting:
+		throw AdminException("Service already starting");
+  case running:
 		throw AdminException("Service already running");
-	}
-
-	if (pid_t p = fork())
-	{ // parent process
-		return pid = p;
-	}
-	else
-	{	// child process
-		chdir(service_dir.get());
-		chmod(service_exe, S_IRWXU | S_IRGRP | S_IXGRP);
-		#ifdef SMSC_DEBUG
-			freopen("smsc_service.err", "a",  stderr);
-		#endif
-		execv(service_exe, createArguments());
-		logger.error("Couldn't start service (\"%s/%s\"), nested: %u: %s",
-								 service_dir.get(), service_exe, errno, strerror(errno));
-		exit(-1);
-		return 0;
-	}
+  case stopping:
+		throw AdminException("Service stopping");
+  case stopped: 
+    {
+      if (pid_t p = fork())
+      { // parent process
+        status = running;
+        return pid = p;
+      }
+      else
+      {	// child process
+        chdir(service_dir.get());
+        chmod(service_exe, S_IRWXU | S_IRGRP | S_IXGRP);
+        #ifdef SMSC_DEBUG
+          freopen("smsc_service.err", "a",  stderr);
+        #endif
+        execv(service_exe, createArguments());
+        logger.error("Couldn't start service (\"%s/%s\"), nested: %u: %s",
+                     service_dir.get(), service_exe, errno, strerror(errno));
+        exit(-1);
+        return 0;
+      }
+    }
+  default:
+    throw AdminException("Unknown service status");
+  }
 }
 
 void Service::kill()
 	throw (AdminException)
 {
-	if (!isRunning())
+	if (status == stopped)
 	{
 		throw AdminException("Service is not running");
 	}
@@ -62,20 +72,22 @@ void Service::kill()
 			throw AdminException("Incorrect signal number");
 		case EPERM:
 			throw AdminException("Does not have permission to send the signal to Service process");
-		case ESRCH:
+    case ESRCH:
+      status = stopped;
 			pid = 0;
       throw AdminException("No process or process group can be found corresponding to that specified by pid");
 		default:
 			throw AdminException("Unknown error");
 		}
 	}
-	pid = 0;
+  status = stopped;
+  pid = 0;
 }
 
 void Service::shutdown()
 	throw (AdminException)
 {
-	if (!isRunning())
+	if (status != running)
 	{
 		throw AdminException("Service is not running");
 	}
@@ -90,20 +102,22 @@ void Service::shutdown()
 		case EPERM:
 			throw AdminException("Does not have permission to send the signal to Service process");
 		case ESRCH:
+      status = stopped;
 			pid = 0;
       throw AdminException("No process or process group can be found corresponding to that specified by pid");
 		default:
 			throw AdminException("Unknown error");
 		}
 	}
+  status = stopping;
 }
 
 void Service::init(const char * const services_dir,
 									 const char * const serviceId,
-									 //const char * const serviceName,
 									 const in_port_t serviceAdminPort,
 									 const char * const serviceArgs,
-									 const pid_t servicePID = 0)
+									 const pid_t servicePID = 0,
+                   const run_status serviceStatus = stopped)
 {
 	service_dir.reset(new char[strlen(services_dir) + 1 + strlen(serviceId) + 1]);
 	strcpy(service_dir.get(), services_dir);
@@ -111,9 +125,9 @@ void Service::init(const char * const services_dir,
 	strcat(service_dir.get(), serviceId);
 
 	id.reset(cStringCopy(serviceId));
-	//name.reset(cStringCopy(serviceName));
 	port = serviceAdminPort;
 	pid = servicePID;
+  status = serviceStatus;
 	args.reset(cStringCopy(serviceArgs));
 }
 

@@ -124,6 +124,12 @@ public:
       billing(isBilling), archiving(isArchiving), enabling(isEnabling)
   {}
 
+  ~Route()
+  {
+    sources.Empty();
+    destinations.Empty();
+  }
+
   const SourceHash &getSources() const {return sources;}
   const DestinationHash &getDestinations() const {return destinations;}
   const bool isBilling() const {return billing;}

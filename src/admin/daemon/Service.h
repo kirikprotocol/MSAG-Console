@@ -20,30 +20,30 @@ using log4cpp::Category;
 class Service
 {
 public:
+  enum run_status { stopped, starting, running, stopping };
+
 	Service(const char * const services_dir,
 					const char * const serviceId,
 					//const char * const serviceName,
 					const in_port_t serviceAdminPort,
 					const char * const serviceArgs,
-					const pid_t servicePID = 0)
+					const pid_t servicePID = 0,
+          const run_status serviceStatus = stopped)
 		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
 	{
-//		Logger::getCategory("smsc.admin.daemon.Service").debug("Service(...)");
-		init(services_dir, serviceId, /*serviceName, */serviceAdminPort, serviceArgs, servicePID);
+		init(services_dir, serviceId, serviceAdminPort, serviceArgs, servicePID, serviceStatus);
 	}
 
 	Service()
 		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
 	{	
-//		Logger::getCategory("smsc.admin.daemon.Service").debug("Service(0)");
-		init(0, 0, /*0, */0, 0, 0);
+		init(0, 0, 0, 0, 0, stopped);
 	}
 
 	Service(const Service & copy)
 		: logger(Logger::getCategory("smsc.admin.daemon.Service"))
 	{
-//		Logger::getCategory("smsc.admin.daemon.Service").debug("Service(copy)");
-		init(copy.service_dir.get(), copy.id.get(), /*copy.name.get(), */copy.port, copy.args.get(), copy.pid);
+		init(copy.service_dir.get(), copy.id.get(), copy.port, copy.args.get(), copy.pid);
 	}
 
 	pid_t start() throw (AdminException);
@@ -53,29 +53,19 @@ public:
 	const char * const getId() const {return id.get();}
 	//const char * const getName() const {return name.get();}
 	const pid_t getPid() const {return pid;}
-	void setPid(const pid_t newPid) {pid = newPid;}
-	const bool isRunning() const {return pid != 0;}
+	void setPid(const pid_t newPid) {pid = newPid; status = pid == 0 ? stopped : running;}
 	const char * const getArgs() const {return args.get();}
 	const in_port_t getPort() const {return port;}
 
 	Service &operator = (Service &copy)
 	{
-		init(copy.service_dir.get(), copy.id.get(), /*copy.name.get(), */copy.port, copy.args.get(), copy.pid);
+		init(copy.service_dir.get(), copy.id.get(), copy.port, copy.args.get(), copy.pid, copy.status);
 		return *this;
 	}
 
-	/*void setName(const char * const serviceName) throw (AdminException)
+  void setPort(const in_port_t serviceAdminPort) throw (AdminException)
 	{
-		if (isRunning())
-		{
-			throw AdminException("Changing service name not permitted: service is running");
-		}
-		name.reset(cStringCopy(serviceName));
-	}*/
-
-	void setPort(const in_port_t serviceAdminPort) throw (AdminException)
-	{
-		if (isRunning())
+		if (status != stopped)
 		{
 			throw AdminException("Changing service port not permitted: service is running");
 		}
@@ -84,7 +74,7 @@ public:
 
 	void setArgs(const char * const serviceArgs) throw (AdminException)
 	{
-		if (isRunning())
+		if (status != stopped)
 		{
 			throw AdminException("Changing service arguments not permitted: service is running");
 		}
@@ -95,6 +85,9 @@ public:
   {
     return service_dir.get();
   }
+
+  run_status getStatus() {return status;}
+  void setStatus(run_status newStatus) { status = newStatus;}
 
 
 protected:
@@ -108,12 +101,15 @@ protected:
 	std::auto_ptr<char> service_dir;
 	Category &logger;
 
+  run_status status;
+
 	void init(const char * const services_dir,
 						const char * const serviceId,
 						//const char * const serviceName,
 						const in_port_t serviceAdminPort,
 						const char * const serviceArgs,
-						const pid_t servicePID = 0);
+						const pid_t servicePID = 0,
+            const run_status serviceStatus = stopped);
 };
 
 }

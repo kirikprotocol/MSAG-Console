@@ -267,7 +267,7 @@ Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * 
 				MutexGuard guard(servicesListMutex);
 				Service *s = services[command->getServiceId()];
 				logger.debug("remove service \"%s\"", command->getServiceId());
-				if (s->isRunning())
+				if (s->getStatus() != Service::stopped)
 				{
 					s->kill();
 				}
@@ -418,9 +418,9 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 		
 			tmp = prefix;
 			tmp += "args";
-			std::auto_ptr<char> serviceArgs(configManager->getString(tmp.c_str()));
-			
-			services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), serviceId.get(), /*serviceName.get(), */servicePort, serviceArgs.get()));
+			const char * const serviceArgs = configManager->getString(tmp.c_str());
+
+			services.add(new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), serviceId.get(), servicePort, serviceArgs));
 		}
 	}
 	catch (AdminException &e)
@@ -441,14 +441,13 @@ Response * DaemonCommandDispatcher::set_service_startup_parameters(const Command
 	logger.debug("set service startup parameters");
 	if (command != 0)
 	{
-		if (command->getServiceId() != 0/* && command->getServiceName() != 0*/)
+		if (command->getServiceId() != 0)
 		{
 			MutexGuard guard(servicesListMutex);
 			Service *s = services[command->getServiceId()];
-			putServiceToConfig(command->getServiceId(), /*command->getServiceName(), */command->getPort(), command->getArgs());
-			if (!s->isRunning())
+			putServiceToConfig(command->getServiceId(), command->getPort(), command->getArgs());
+			if (s->getStatus() == Service::stopped)
 			{
-				//s->setName(command->getServiceName());
 				s->setPort(command->getPort());
 				s->setArgs(command->getArgs());
 			}
