@@ -64,6 +64,7 @@ int main(int argc,char* argv[])
     printf("usage: %s systemid host[:port] sourceaddr addrlistfile message [num=1 [delay=10]]\n",argv[0]);
     return -1;
   }
+  Logger::Init("log4cpp.flooder");
   SmeConfig cfg;
   string host=argc>2?argv[2]:"smsc";
   int pos=host.find(":");
@@ -98,7 +99,7 @@ int main(int argc,char* argv[])
   string msg=argv[5];
 
   int n=1;
-  if(argc==7)
+  if(argc>=7)
   {
     n=atoi(argv[6]);
   }
@@ -129,7 +130,8 @@ int main(int argc,char* argv[])
     s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
-    s.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,3);
+    s.setIntProperty(Tag::SMPP_MS_VALIDITY,3);
+
     //unsigned char message[]="SME test message";
     SmppTransmitter *tr=ss.getSyncTransmitter();
     SmppTransmitter *atr=ss.getAsyncTransmitter();
@@ -140,24 +142,27 @@ int main(int argc,char* argv[])
     time_t lasttime=time(NULL);
     while(!stopped)
     {
-      for(int i=0;i<addrs.Count();i++)
+      for(int j=0;j<n;j++)
       {
-        //Address dst(addrs[i].c_str());
-        s.setDestinationAddress(addrs[i].c_str());
-        s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
-        s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg.c_str(),msg.length());
-        s.setIntProperty(Tag::SMPP_SM_LENGTH,msg.length());
-        fillSmppPduFromSms(&sm,&s);
-        atr->submit(sm);
-        //Array<SMS*> smsarr;
-        /*splitSms(&s,msg.c_str(),msg.length(),CONV_ENCODING_KOI8R,DataCoding::DEFAULT,smsarr);
-        for(int x=0;x<smsarr.Count();x++)
+        for(int i=0;i<addrs.Count();i++)
         {
-          fillSmppPduFromSms(&sm,smsarr[x]);
+          //Address dst(addrs[i].c_str());
+          s.setDestinationAddress(addrs[i].c_str());
+          s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+          s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg.c_str(),msg.length());
+          s.setIntProperty(Tag::SMPP_SM_LENGTH,msg.length());
+          fillSmppPduFromSms(&sm,&s);
           atr->submit(sm);
-          delete smsarr[x];
-        }*/
-        cnt++;
+          //Array<SMS*> smsarr;
+          /*splitSms(&s,msg.c_str(),msg.length(),CONV_ENCODING_KOI8R,DataCoding::DEFAULT,smsarr);
+          for(int x=0;x<smsarr.Count();x++)
+          {
+            fillSmppPduFromSms(&sm,smsarr[x]);
+            atr->submit(sm);
+            delete smsarr[x];
+          }*/
+          cnt++;
+        }
       }
       slev.Wait(delay);
       if((cnt%500)==0 || time(NULL)-lasttime>5)

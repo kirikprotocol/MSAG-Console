@@ -70,6 +70,7 @@ int main(int argc,char* argv[])
     printf("usage: %s systemid host[:port] [sourceaddr]\n",argv[0]);
     return -1;
   }
+  Logger::Init("log4cpp.t");
   SmeConfig cfg;
   string host=argc>2?argv[2]:"smsc";
   int pos=host.find(":");
@@ -108,6 +109,7 @@ int main(int argc,char* argv[])
     s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
+//    s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,2);
     //unsigned char message[]="SME test message";
     SmppTransmitter *tr=ss.getSyncTransmitter();
     //SmppTransmitter *atr=ss.getAsyncTransmitter();
@@ -156,6 +158,7 @@ int main(int argc,char* argv[])
       //s.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,message,len);
       //s.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len);
       s.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+      s.setIntProperty(smsc::sms::Tag::SMPP_REGISTRED_DELIVERY,61);
       Array<SMS*> smsarr;
       splitSms(&s,message,len,CONV_ENCODING_KOI8R,DataCoding::DEFAULT,smsarr);
       for(int x=0;x<smsarr.Count();x++)
