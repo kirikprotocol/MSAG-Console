@@ -180,6 +180,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
   auto_ptr<ListTask> task(new ListTask());
   task->count = 0;
   task->cmd = cmd;
+  __trace2__(":DPL: numer of dests %d",multi->number_of_dests);
   for ( unsigned i=0; i < multi->number_of_dests; ++i )
   {
     if ( task->count >= MAX_COUNT ) {
@@ -219,6 +220,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
       ++task->count;
     }
   }
+  __trace2__(":DPL: count of members %d",task->count);
   task->submited_count = 0;
   if ( task->count != 0 ) {
     for ( unsigned i=0; i<task->count; ++i )
@@ -240,6 +242,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
     __trace2__(":DPL: task list 0x%x has been scheduled",task.get());
     task.release();
   }else{
+    __trace2__(":DPL: sending responce immediate");
     SmscCommand cmd2 = SmscCommand::makeSubmitMultiResp("",task->cmd->get_dialogId(),0);
     cmd2->get_MultiResp()->set_unsuccessCount(0);
     SmeProxy* srcproxy =  task->cmd.getProxy();
