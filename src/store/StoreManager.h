@@ -480,14 +480,6 @@ namespace smsc { namespace store
             : id(_id), state(_state), dst(_dst), fcs(_fcs), nt(_nt) {};
     };
 
-    struct IdxSMS : public SMS
-    {
-        SMSId id;
-
-        IdxSMS(SMSId _id, const SMS& sm) : SMS(sm), id(_id) {};
-        virtual ~IdxSMS() {};
-    };
-
     class SmsCache
     {
     private:
@@ -499,7 +491,7 @@ namespace smsc { namespace store
             };
         };
 
-        XHash<SMSId, IdxSMS*, SMSIdIdx> idCache;
+        XHash<SMSId, SMS*, SMSIdIdx> idCache;
 
     public:
 
@@ -508,62 +500,29 @@ namespace smsc { namespace store
 
         void clean();
         bool delSms(SMSId id);
-        void putSms(IdxSMS* sm);
+        void putSms(SMSId id, SMS* sm);
         SMS* getSms(SMSId id);
     };
 
-    //typedef std::multimap<SMSId, UpdateRecord*> UpdatesIdMap;
-    typedef Array<UpdateRecord *> UpdatesIdMap;
-
-    class CachedStore : public RemoteStore, public Thread
+    class CachedStore : public RemoteStore
     {
     protected:
 
-        SmsCache        cache;
-        Mutex           cacheMutex;
+        SmsCache    cache;
+        Mutex       cacheMutex;
 
-        Mutex           processUpdatesMutex;
-        Mutex           processingUpdatesMutex;
-        Mutex           updatesMutex;
-        bool            processingUpdates;
-        bool            switcher;
-        UpdatesIdMap    buffers[2]; 
-        UpdatesIdMap*   updates;
+        int         maxCashCapacity;
         
-        int maxUncommitedCount, maxSleepInterval;
-        void loadMaxUncommitedCount(Manager& config);
-        void loadSleepInterval(Manager& config); 
-
-        Mutex   startLock;
-        bool    bStarted, bNeedExit;
-        Event   processEvent, exitedEvent;
-
         static log4cpp::Category    &log;
         
-        void addUpdate(UpdateRecord* update)
-            throw(StorageException, NoSuchMessageException);
-
-        void actualizeCache(SMS* sm, UpdateRecord* update);
-        void actualizeUpdate(UpdateRecord* update)
-            throw(StorageException, NoSuchMessageException);
-        void processUpdate(StorageConnection* connection,
-                           UpdateRecord* update)
-            throw(StorageException, NoSuchMessageException);
-        
-        void processUpdates();
-
     public:
 
         CachedStore(Manager& config) 
             throw(ConfigException, StorageException);
         virtual ~CachedStore();
 
-        virtual int Execute();
-        void Start();
-        void Stop();
-        
         virtual void createSms(SMS& sms, SMSId id,
-                               const CreateMode flag = CREATE_NEW)
+            const CreateMode flag = CREATE_NEW)
                 throw(StorageException, DuplicateMessageException);
         virtual void retriveSms(SMSId id, SMS &sms)
                 throw(StorageException, NoSuchMessageException);
@@ -586,10 +545,6 @@ namespace smsc { namespace store
                 throw(StorageException, NoSuchMessageException);
         virtual void changeSmsStateToDeleted(SMSId id)
                 throw(StorageException, NoSuchMessageException);
-        virtual IdIterator* getReadyForRetry(time_t retryTime)
-                throw(StorageException);
-        virtual time_t getNextRetryTime()
-                throw(StorageException);
     };
 
 }}
