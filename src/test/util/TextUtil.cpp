@@ -225,17 +225,33 @@ int getMaxChars(uint8_t dataCoding)
 	}
 }
 
-int findPos(const string& text, const string& expected, int segmentSize)
+int findPos(const string& text, const string& expected,
+	int segmentSize, bool& check)
 {
 	static int tolerance = 3; //допуск
-	int segments = 1 + (expected.length() - 1) / segmentSize;
-	for (int seg = 0; seg < segments; seg++)
+	check = false;
+	if (!expected.length() || expected.length() < text.length())
+	{
+		return string::npos;
+	}
+	int lastSeg = (expected.length() - 1) / segmentSize;
+	for (int seg = 0; seg <= lastSeg; seg++)
 	{
 		for (int shift = 0; shift <= tolerance * seg; shift++)
 		{
 			int pos = seg * segmentSize - shift;
 			if (!expected.compare(pos, text.length(), text))
 			{
+				if (seg == lastSeg)
+				{
+					check = (text.length() <= segmentSize) &&
+						(pos + text.length() == expected.length());
+				}
+				else
+				{
+					check = (text.length() >= segmentSize - tolerance) &&
+						(text.length() <= segmentSize);
+				}
 				return pos;
 			}
 		}
