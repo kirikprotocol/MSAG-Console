@@ -39,6 +39,8 @@ compile:
 	@native2ascii -encoding windows-1251 <src/ru/novosoft/smsc/perfmon/applet/text_en_US.properties > classes/ru/novosoft/smsc/perfmon/applet/text_en_US.properties
 	@native2ascii -encoding windows-1251 <src/ru/novosoft/smsc/perfmon/applet/text_ru_RU.properties > classes/ru/novosoft/smsc/perfmon/applet/text_ru_RU.properties
 	@jar -cf $(SMSC_BUILDDIR)/jars/perfmon.jar -C classes ru/novosoft/smsc/perfmon/applet/ -C classes ru/novosoft/smsc/perfmon/PerfSnap.class -C classes ru/novosoft/smsc/util/applet -C classes ru/novosoft/smsc/util/SnapBufferReader.class
+	@native2ascii -encoding windows-1251 <src/ru/novosoft/smsc/topmon/applet/text_en_US.properties > classes/ru/novosoft/smsc/topmon/applet/text_en_US.properties
+	@native2ascii -encoding windows-1251 <src/ru/novosoft/smsc/topmon/applet/text_ru_RU.properties > classes/ru/novosoft/smsc/topmon/applet/text_ru_RU.properties
 	@jar -cf $(SMSC_BUILDDIR)/jars/topmon.jar -C classes ru/novosoft/smsc/topmon/applet/ -C classes ru/novosoft/smsc/topmon/TopSnap.class -C classes ru/novosoft/smsc/topmon/SmeSnap.class -C classes ru/novosoft/smsc/topmon/ErrorSnap.class -C classes ru/novosoft/smsc/util/applet -C classes ru/novosoft/smsc/util/SnapBufferReader.class -C classes locales/messages_en.properties -C classes locales/messages_ru.properties
 	@jar -cf $(SMSC_BUILDDIR)/jars/smsc.jar -C classes .
 
