@@ -23,6 +23,57 @@ namespace smpp{
 using std::string;
 using namespace smsc::sms;
 
+inline void fillOptional(SmppOptional& optional,SMS* sms)
+{
+  if ( sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) )
+  {
+    optional.set_userMessageReference(
+      sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+  }
+  if ( sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) )
+  {
+    optional.set_receiptedMessageId(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
+  }
+  if ( sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) )
+    optional.set_ussdServiceOp(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+  if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) )
+    optional.set_destAddrSubunit(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
+  if ( sms->hasIntProperty(Tag::SMPP_PAYLOAD_TYPE) )
+    optional.set_payloadType(sms->getIntProperty(Tag::SMPP_PAYLOAD_TYPE));
+  if ( sms->hasIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES) )
+    optional.set_msMsgWaitFacilities(sms->getIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES));
+  if ( sms->hasIntProperty(Tag::SMPP_USER_RESPONSE_CODE) )
+    optional.set_userResponseCode(sms->getIntProperty(Tag::SMPP_USER_RESPONSE_CODE));
+  if ( sms->hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM) )
+    optional.set_sarMsgRefNum(sms->getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM));
+  if ( sms->hasIntProperty(Tag::SMPP_LANGUAGE_INDICATOR) )
+    optional.set_languageIndicator(sms->getIntProperty(Tag::SMPP_LANGUAGE_INDICATOR));
+  if ( sms->hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS) )
+    optional.set_sarTotalSegments(sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS));
+  if ( sms->hasIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES) )
+    optional.set_numberOfMessages(sms->getIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES));
+  if ( sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) ){
+    unsigned len;
+    const char * data = sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    optional.set_messagePayload(data,len);
+  }
+
+  if( sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) )
+    optional.set_msValidity(sms->getIntProperty(Tag::SMPP_MS_VALIDITY));
+
+  if ( sms->hasIntProperty(Tag::SMPP_MSG_STATE) )
+  {
+    switch(sms->getIntProperty(Tag::SMPP_MSG_STATE))
+    {
+      case ENROUTE: optional.set_messageState(1);break;
+      case DELIVERED: optional.set_messageState(2);break;
+      case EXPIRED:optional.set_messageState(3);break;
+      case DELETED:optional.set_messageState(4);break;
+      case UNDELIVERABLE:optional.set_messageState(5);break;
+    };
+  }
+}
+
 inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
 {
   __require__ ( pdu != NULL );
@@ -82,22 +133,6 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
         message.set_validityPeriod(smpp_time);
     }
   }
-  //pdu->optional.set_userMessageReference(sms->getMessageReference());
-  if ( sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) )
-  {
-    pdu->optional.set_userMessageReference(
-      sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-  }
-  //{
-    //char buff[64];
-    //memset(buff,0,sizeof(buff));
-    //sprintf(buff,"%lld",sms->getReceiptSmsId());
-    //pdu->optional.set_receiptedMessageId(buff);
-  //}
-  if ( sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) )
-  {
-    pdu->optional.set_receiptedMessageId(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-  }
   {
     char buff[7];
     memset(buff,0,sizeof(buff));
@@ -113,51 +148,82 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
 
   pdu->message.set_esmClass(sms->getIntProperty(Tag::SMPP_ESM_CLASS));
 
-  if ( sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) )
-    pdu->optional.set_ussdServiceOp(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
-  if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) )
-    pdu->optional.set_destAddrSubunit(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
-  if ( sms->hasIntProperty(Tag::SMPP_PAYLOAD_TYPE) )
-    pdu->optional.set_payloadType(sms->getIntProperty(Tag::SMPP_PAYLOAD_TYPE));
-  if ( sms->hasIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES) )
-    pdu->optional.set_msMsgWaitFacilities(sms->getIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES));
-  if ( sms->hasIntProperty(Tag::SMPP_USER_RESPONSE_CODE) )
-    pdu->optional.set_userResponseCode(sms->getIntProperty(Tag::SMPP_USER_RESPONSE_CODE));
-  if ( sms->hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM) )
-    pdu->optional.set_sarMsgRefNum(sms->getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM));
-  if ( sms->hasIntProperty(Tag::SMPP_LANGUAGE_INDICATOR) )
-    pdu->optional.set_languageIndicator(sms->getIntProperty(Tag::SMPP_LANGUAGE_INDICATOR));
-  if ( sms->hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS) )
-    pdu->optional.set_sarTotalSegments(sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS));
-  if ( sms->hasIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES) )
-    pdu->optional.set_numberOfMessages(sms->getIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES));
-  if ( sms->hasStrProperty(Tag::SMPP_MESSAGE_PAYLOAD) ){
-    unsigned len;
-    const char * data = sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-    pdu->optional.set_messagePayload(data,len);
-  }
-
   if ( sms->hasIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG) )
     pdu->message.set_replaceIfPresentFlag(sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG));
   else
     pdu->message.set_replaceIfPresentFlag(0);
 
-  if( sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) )
-    pdu->optional.set_msValidity(sms->getIntProperty(Tag::SMPP_MS_VALIDITY));
 
-  if ( sms->hasIntProperty(Tag::SMPP_MSG_STATE) )
-  {
-    switch(sms->getIntProperty(Tag::SMPP_MSG_STATE))
-    {
-      case ENROUTE: pdu->optional.set_messageState(1);break;
-      case DELIVERED: pdu->optional.set_messageState(2);break;
-      case EXPIRED:pdu->optional.set_messageState(3);break;
-      case DELETED:pdu->optional.set_messageState(4);break;
-      case UNDELIVERABLE:pdu->optional.set_messageState(5);break;
-    };
-  }
-
+  fillOptional(pdu->optional,sms);
   return true;
+}
+
+inline void fetchOptionals(SmppOptional& optional,SMS* sms)
+{
+  if ( optional.has_userMessageReference() )
+    //sms->setMessageReference(optional.get_userMessageReference());
+    sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
+                        optional.get_userMessageReference());
+  else
+    //sms->setMessageReference(0);
+    sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,0);
+
+  if ( optional.has_receiptedMessageId() )
+  {
+    smsc::sms::SMSId id = 0;
+    if ( !sscanf(optional.get_receiptedMessageId(),"%lld",&id) )
+    {
+      __warning__("error when processing receiptedMessageId");
+      __watch__(optional.get_receiptedMessageId());
+    }
+    //sms->setReceiptSmsId(id);
+    char buffer[64];
+    snprintf(buffer,64,"%lld",id);
+    sms->setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,buffer);
+  }
+  else
+  {
+    // nothing
+    //sms->setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,0);
+  }
+    //sms->setReceiptSmsId(0);
+  if ( optional.has_ussdServiceOp() )
+    sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,optional.get_ussdServiceOp());
+  if ( optional.has_destAddrSubunit() )
+    sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,optional.get_destAddrSubunit());
+  if ( optional.has_payloadType() )
+    sms->setIntProperty(Tag::SMPP_PAYLOAD_TYPE,optional.get_payloadType());
+  if ( optional.has_msMsgWaitFacilities() )
+    sms->setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,optional.get_msMsgWaitFacilities());
+  if ( optional.has_userResponseCode() )
+    sms->setIntProperty(Tag::SMPP_USER_RESPONSE_CODE,optional.get_userResponseCode());
+  if ( optional.has_sarMsgRefNum() )
+    sms->setIntProperty(Tag::SMPP_SAR_MSG_REF_NUM,optional.get_sarMsgRefNum());
+  if ( optional.has_languageIndicator() )
+    sms->setIntProperty(Tag::SMPP_LANGUAGE_INDICATOR,optional.get_languageIndicator());
+  if ( optional.has_sarTotalSegments() )
+    sms->setIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS,optional.get_sarTotalSegments());
+  if ( optional.has_numberOfMessages() )
+    sms->setIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES,optional.get_numberOfMessages());
+  if ( optional.has_messagePayload() )
+    sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,
+                               optional.get_messagePayload(),
+                               optional.size_messagePayload());
+
+  if(optional.has_msValidity())
+    sms->setIntProperty(Tag::SMPP_MS_VALIDITY,optional.get_msValidity());
+  if ( optional.has_messageState() )
+  {
+    switch(optional.get_messageState())
+    {
+      case 0:sms->setIntProperty(Tag::SMPP_MSG_STATE,ENROUTE);break;
+      case 1:sms->setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED);break;
+      case 2:sms->setIntProperty(Tag::SMPP_MSG_STATE,EXPIRED);break;
+      case 3:sms->setIntProperty(Tag::SMPP_MSG_STATE,DELETED);break;
+      case 4:sms->setIntProperty(Tag::SMPP_MSG_STATE,UNDELIVERABLE);break;
+      default: __warning__("UNKNOWN MESSAGE STATE");break;
+    }
+  }
 }
 
 inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
@@ -220,73 +286,68 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
     sms->setIntProperty(Tag::SMPP_PRIORITY,pdu->message.get_priorityFlag());
     sms->setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,pdu->message.get_replaceIfPresentFlag());
   }
-  if ( pdu->optional.has_userMessageReference() )
-    //sms->setMessageReference(pdu->optional.get_userMessageReference());
-    sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
-                        pdu->optional.get_userMessageReference());
-  else
-    //sms->setMessageReference(0);
-    sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,0);
-
-  if ( pdu->optional.has_receiptedMessageId() )
-  {
-    smsc::sms::SMSId id = 0;
-    if ( !sscanf(pdu->optional.get_receiptedMessageId(),"%lld",&id) )
-    {
-      __warning__("error when processing receiptedMessageId");
-      __watch__(pdu->optional.get_receiptedMessageId());
-    }
-    //sms->setReceiptSmsId(id);
-    char buffer[64];
-    snprintf(buffer,64,"%lld",id);
-    sms->setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,buffer);
-  }
-  else
-  {
-    // nothing
-    //sms->setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,0);
-  }
-    //sms->setReceiptSmsId(0);
   sms->setEServiceType(pdu->message.get_serviceType());
-  //sms->setEsmClass(pdu->message.get_esmClass());
   sms->setIntProperty(Tag::SMPP_ESM_CLASS,(uint32_t)pdu->message.get_esmClass());
-  if ( pdu->optional.has_ussdServiceOp() )
-    sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,pdu->optional.get_ussdServiceOp());
-  if ( pdu->optional.has_destAddrSubunit() )
-    sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,pdu->optional.get_destAddrSubunit());
-  if ( pdu->optional.has_payloadType() )
-    sms->setIntProperty(Tag::SMPP_PAYLOAD_TYPE,pdu->optional.get_payloadType());
-  if ( pdu->optional.has_msMsgWaitFacilities() )
-    sms->setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,pdu->optional.get_msMsgWaitFacilities());
-  if ( pdu->optional.has_userResponseCode() )
-    sms->setIntProperty(Tag::SMPP_USER_RESPONSE_CODE,pdu->optional.get_userResponseCode());
-  if ( pdu->optional.has_sarMsgRefNum() )
-    sms->setIntProperty(Tag::SMPP_SAR_MSG_REF_NUM,pdu->optional.get_sarMsgRefNum());
-  if ( pdu->optional.has_languageIndicator() )
-    sms->setIntProperty(Tag::SMPP_LANGUAGE_INDICATOR,pdu->optional.get_languageIndicator());
-  if ( pdu->optional.has_sarTotalSegments() )
-    sms->setIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS,pdu->optional.get_sarTotalSegments());
-  if ( pdu->optional.has_numberOfMessages() )
-    sms->setIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES,pdu->optional.get_numberOfMessages());
-  if ( pdu->optional.has_messagePayload() )
-    sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,
-                               pdu->optional.get_messagePayload(),
-                               pdu->optional.size_messagePayload());
+  fetchOptionals(pdu->optional,sms);
+  return true;
+}
 
-  if(pdu->optional.has_msValidity())
-    sms->setIntProperty(Tag::SMPP_MS_VALIDITY,pdu->optional.get_msValidity());
-  if ( pdu->optional.has_messageState() )
-  {
-    switch(pdu->optional.get_messageState())
-    {
-      case 0:sms->setIntProperty(Tag::SMPP_MSG_STATE,ENROUTE);break;
-      case 1:sms->setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED);break;
-      case 2:sms->setIntProperty(Tag::SMPP_MSG_STATE,EXPIRED);break;
-      case 3:sms->setIntProperty(Tag::SMPP_MSG_STATE,DELETED);break;
-      case 4:sms->setIntProperty(Tag::SMPP_MSG_STATE,UNDELIVERABLE);break;
-      default: __warning__("UNKNOWN MESSAGE STATE");break;
-    }
+inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms)
+{
+  PduDataPartSm& data = pdu->get_data();
+  { // fill address
+    PduAddress& source = data.source;
+    PduAddress& dest  = data.dest;
+    Address originatingAddr(source.value.cstr()?strlen(source.value.cstr()):1,
+                          source.typeOfNumber,
+                          source.numberingPlan,
+                          source.value.cstr()?source.value.cstr():"0");
+    Address destinationAddr(dest.value.cstr()?strlen(dest.value.cstr()):1,
+                          dest.typeOfNumber,
+                          dest.numberingPlan,
+                          dest.value.cstr()?dest.value.cstr():"0");
+    sms->setOriginatingAddress(originatingAddr);
+    sms->setDestinationAddress(destinationAddr);
   }
+  sms->setIntProperty(Tag::SMPP_ESM_CLASS,(uint32_t)data.get_esmClass());
+  sms->setIntProperty(Tag::SMPP_REGISTRED_DELIVERY,data.get_registredDelivery());
+  sms->setIntProperty(Tag::SMPP_DATA_CODING,data.get_dataCoding());
+  fetchOptionals(pdu->optional,sms);
+  sms->setValidTime(time(NULL)+pdu->optional.get_qosTimeToLive());
+  sms->setIntProperty(Tag::SMPP_PRIORITY,0);
+  sms->setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
+  sms->setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,0);
+  sms->setNextTime(0);
+  return true;
+}
+
+inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms)
+{
+  PduDataPartSm& data = pdu->get_data();
+  PduAddress& src = data.get_source();
+  {
+    char val[21];
+    Address& addr = sms->getOriginatingAddress();
+    int val_length = addr.getValue(val);
+    __require__ ( val_length <= (signed int)sizeof(val) );   // fatal if out of range !!!!
+    src.set_value(val);
+    src.set_typeOfNumber(addr.getTypeOfNumber());
+    src.set_numberingPlan(addr.getNumberingPlan());
+  }
+  PduAddress& dest = data.get_dest();
+  {
+    char val[21];
+    Address& addr = sms->getDestinationAddress();
+    int val_length = addr.getValue(val);
+    __require__ ( val_length <= (signed int)sizeof(val) );   // fatal if out of range !!!!
+    dest.set_value(val);
+    dest.set_typeOfNumber(addr.getTypeOfNumber());
+    dest.set_numberingPlan(addr.getNumberingPlan());
+  }
+  fillOptional(pdu->optional,sms);
+  data.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMPP_DATA_CODING));
+  data.set_registredDelivery(sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY));
+  data.set_registredDelivery(sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY));
   return true;
 }
 

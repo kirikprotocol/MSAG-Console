@@ -251,7 +251,13 @@ StateType StateMachine::submit(Tuple& t)
 
   if(sms->getNextTime()==-1)
   {
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDSCHEDULE);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           SmscCommand::Status::INVALIDSCHEDULE,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
     try{
       src_proxy->putCommand(resp);
     }catch(...)
@@ -265,7 +271,13 @@ StateType StateMachine::submit(Tuple& t)
      sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::BINARY &&
      sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::SMSC7BIT)
   {
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDDATACODING);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                       (
+                         /*messageId*/"0",
+                         dialogId,
+                         SmscCommand::Status::INVALIDDATACODING,
+                         sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                       );
     try{
       src_proxy->putCommand(resp);
     }catch(...)
@@ -276,7 +288,13 @@ StateType StateMachine::submit(Tuple& t)
   }
   if(sms->getValidTime()==-1)
   {
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDVALIDTIME);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           SmscCommand::Status::INVALIDVALIDTIME,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
     try{
       src_proxy->putCommand(resp);
     }catch(...)
@@ -289,7 +307,13 @@ StateType StateMachine::submit(Tuple& t)
   if(src_proxy->getSourceAddressRange().length() &&
      !checkSourceAddress(src_proxy->getSourceAddressRange(),sms->getOriginatingAddress()))
   {
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVSRC);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           SmscCommand::Status::INVSRC,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
     try{
       src_proxy->putCommand(resp);
     }catch(...)
@@ -343,7 +367,13 @@ StateType StateMachine::submit(Tuple& t)
   if ( !has_route )
   {
     //send_no_route;
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::NOROUTE);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           SmscCommand::Status::NOROUTE,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
     try{
       src_proxy->putCommand(resp);
     }catch(...)
@@ -374,7 +404,13 @@ StateType StateMachine::submit(Tuple& t)
 
   if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
   {
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDSCHEDULE);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           SmscCommand::Status::INVALIDSCHEDULE,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
     try{
       src_proxy->putCommand(resp);
     }catch(...)
@@ -399,7 +435,13 @@ StateType StateMachine::submit(Tuple& t)
   }catch(...)
   {
     __trace2__("failed to create sms with id %lld",t.msgId);
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::DBERROR);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           SmscCommand::Status::DBERROR,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
     try{
       src_proxy->putCommand(resp);
     }catch(...)
@@ -415,7 +457,13 @@ StateType StateMachine::submit(Tuple& t)
     // то бишь мы приняли sms в обработку, можно слать ok.
     char buf[64];
     sprintf(buf,"%lld",t.msgId);
-    SmscCommand resp = SmscCommand::makeSubmitSmResp(buf, dialogId, SmscCommand::Status::OK);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           buf,
+                           dialogId,
+                           SmscCommand::Status::OK,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
     try{
       src_proxy->putCommand(resp);
     }catch(...)

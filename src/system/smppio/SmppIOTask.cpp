@@ -351,6 +351,8 @@ int SmppInputThread::Execute()
             case SmppCommandSet::DELIVERY_SM_RESP:
             case SmppCommandSet::REPLACE_SM:
             case SmppCommandSet::QUERY_SM:
+            case SmppCommandSet::DATA_SM:
+            case SmppCommandSet::DATA_SM_RESP:
             case SmppCommandSet::CANCEL_SM:
             {
               try{
@@ -378,7 +380,13 @@ int SmppInputThread::Execute()
             }
             default:
             {
-              SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVCMDID);
+              if(!ss->getProxy() || !ss->getProxy()->isOpened())
+              {
+                SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
+              }else
+              {
+                SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVCMDID);
+              }
               /*SmscCommand cmd=
                 SmscCommand::makeGenericNack
                 (

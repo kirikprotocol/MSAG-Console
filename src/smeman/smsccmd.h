@@ -74,6 +74,7 @@ private:
   char* messageId;
   uint32_t status;
   Descriptor descriptor;
+  bool dataSm;
 public:
   void set_messageId(const char* msgid)
   {
@@ -93,7 +94,9 @@ public:
   {
     return descriptor;
   }
-  SmsResp() : messageId(0), status(0) {};
+  void set_dataSm(){dataSm=true;}
+  bool get_dataSm(){return dataSm;}
+  SmsResp() : messageId(0), status(0),dataSm(false) {};
   ~SmsResp() { if ( messageId ) delete messageId; }
 };
 
@@ -135,6 +138,10 @@ struct ReplaceSm{
   ReplaceSm(PduReplaceSm* repl)
   {
     fillField(messageId,repl->get_messageId());
+    if(!messageId.get() || !messageId.get()[0])
+    {
+      throw Exception("REPLACE: non empty messageId required");
+    }
     fillSmppAddr(sourceAddr,repl->get_source());
     scheduleDeliveryTime=smppTime2CTime(repl->scheduleDeliveryTime);
     validityPeriod=smppTime2CTime(repl->validityPeriod);
@@ -151,7 +158,7 @@ struct QuerySm{
   QuerySm(PduQuerySm* q)
   {
     fillField(messageId,q->get_messageId());
-    if(!messageId.get())throw Exception("QUERY: non empty messageId required");
+    if(!messageId.get() || !messageId.get()[0])throw Exception("QUERY: non empty messageId required");
     fillSmppAddr(sourceAddr,q->get_source());
   }
 };
@@ -378,7 +385,7 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeSubmitSmResp(const char* messageId, uint32_t dialogId, uint32_t status)
+  static SmscCommand makeSubmitSmResp(const char* messageId, uint32_t dialogId, uint32_t status,bool dataSm=false)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
@@ -388,6 +395,8 @@ public:
     _cmd.dta = new SmsResp;
     _cmd.get_resp()->set_messageId(messageId);
     _cmd.get_resp()->set_status(status);
+    _cmd.get_resp()->set_dataSm();
+    if(dataSm)_cmd.get_resp()->set_dataSm();
     _cmd.dialogId = dialogId;
     return cmd;
   }
@@ -519,14 +528,24 @@ public:
       //case BIND_RECIEVER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
       //case BIND_TRANSMITTER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
       //case BIND_TRANSMITTER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
-      case SmppCommandSet::QUERY_SM:
+    case SmppCommandSet::QUERY_SM:
         _cmd->cmdid=QUERY;
         (QuerySm*)_cmd->dta=new QuerySm(reinterpret_cast<PduQuerySm*>(pdu));
         goto end_construct;
       //case QUERY_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+    case SmppCommandSet::DATA_SM:
+      {
+        _cmd->cmdid = SUBMIT;
+        PduDataSm* dsm = reinterpret_cast<PduDataSm*>(pdu);
+        (SMS*)_cmd->dta =  new SMS;
+        fetchSmsFromDataSmPdu(dsm,(SMS*)(_cmd->dta));
+        ((SMS*)_cmd->dta)->setIntProperty(Tag::SMPP_DATA_SM,1);
+        goto end_construct;
+      }
     case SmppCommandSet::SUBMIT_SM:  _cmd->cmdid = SUBMIT; goto sms_pdu;
     case SmppCommandSet::DELIVERY_SM: _cmd->cmdid = DELIVERY; goto sms_pdu;
     case SmppCommandSet::SUBMIT_SM_RESP: _cmd->cmdid = SUBMIT_RESP; goto sms_resp;
+    case SmppCommandSet::DATA_SM_RESP:
     case SmppCommandSet::DELIVERY_SM_RESP: _cmd->cmdid = DELIVERY_RESP; goto sms_resp;
       //case DELIVERY_SM: reinterpret_cast<PduDeliverySm*>(_pdu)->dump(log); break;
       //case DELIVERY_SM_RESP: reinterpret_cast<PduDeliverySmResp*>(_pdu)->dump(log); break;
@@ -596,6 +615,10 @@ public:
           }
         }
       }
+      if(pdu->commandId==SmppCommandSet::DATA_SM_RESP)
+      {
+        ((SmsResp*)_cmd->dta)->set_dataSm();
+      }
       //delete (*(SmsResp*))_cmd; _cmd = 0;
       goto end_construct;
     }
@@ -643,23 +666,44 @@ public:
       }
     case DELIVERY:
       {
-        auto_ptr<PduXSm> xsm(new PduXSm);
-        xsm->header.set_commandId(SmppCommandSet::DELIVERY_SM);
-        xsm->header.set_sequenceNumber(c.get_dialogId());
-        fillSmppPduFromSms(xsm.get(),c.get_sms());
-        xsm->message.set_scheduleDeliveryTime("");
-        xsm->message.set_validityPeriod("");
-        xsm->message.set_replaceIfPresentFlag(0);
-        return reinterpret_cast<SmppHeader*>(xsm.release());
+        if(c.get_sms()->getIntProperty(Tag::SMPP_DATA_SM))
+        {
+          auto_ptr<PduDataSm> xsm(new PduDataSm);
+          xsm->header.set_commandId(SmppCommandSet::DATA_SM);
+          xsm->header.set_sequenceNumber(c.get_dialogId());
+          fillDataSmFromSms(xsm.get(),c.get_sms());
+          return reinterpret_cast<SmppHeader*>(xsm.release());
+        }else
+        {
+          auto_ptr<PduXSm> xsm(new PduXSm);
+          xsm->header.set_commandId(SmppCommandSet::DELIVERY_SM);
+          xsm->header.set_sequenceNumber(c.get_dialogId());
+          fillSmppPduFromSms(xsm.get(),c.get_sms());
+          xsm->message.set_scheduleDeliveryTime("");
+          xsm->message.set_validityPeriod("");
+          xsm->message.set_replaceIfPresentFlag(0);
+          return reinterpret_cast<SmppHeader*>(xsm.release());
+        }
       }
     case SUBMIT_RESP:
       {
-        auto_ptr<PduXSmResp> xsm(new PduXSmResp);
-        xsm->header.set_commandId(SmppCommandSet::SUBMIT_SM_RESP);
-        xsm->header.set_sequenceNumber(c.get_dialogId());
-        xsm->header.set_commandStatus(makeSmppStatus(c.get_resp()->get_status()));
-        xsm->set_messageId(c.get_resp()->get_messageId());
-        return reinterpret_cast<SmppHeader*>(xsm.release());
+        if(c.get_resp()->get_dataSm())
+        {
+          auto_ptr<PduDataSmResp> xsm(new PduDataSmResp);
+          xsm->header.set_commandId(SmppCommandSet::DATA_SM_RESP);
+          xsm->header.set_sequenceNumber(c.get_dialogId());
+          xsm->header.set_commandStatus(makeSmppStatus(c.get_resp()->get_status()));
+          xsm->set_messageId(c.get_resp()->get_messageId());
+          return reinterpret_cast<SmppHeader*>(xsm.release());
+        }else
+        {
+          auto_ptr<PduXSmResp> xsm(new PduXSmResp);
+          xsm->header.set_commandId(SmppCommandSet::SUBMIT_SM_RESP);
+          xsm->header.set_sequenceNumber(c.get_dialogId());
+          xsm->header.set_commandStatus(makeSmppStatus(c.get_resp()->get_status()));
+          xsm->set_messageId(c.get_resp()->get_messageId());
+          return reinterpret_cast<SmppHeader*>(xsm.release());
+        }
       }
     case DELIVERY_RESP:
       {
