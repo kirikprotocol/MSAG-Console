@@ -18,6 +18,7 @@ import ru.novosoft.smsc.util.LocaleMessages;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.WebXml;
+import ru.novosoft.smsc.topmon.TopServer;
 import ru.novosoft.util.conpool.NSConnectionPool;
 import ru.novosoft.util.jsp.AppContextImpl;
 
@@ -34,6 +35,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   private HostsManager hostsManager = null;
   private UserManager userManager = null;
   private PerfServer perfServer = null;
+  private TopServer topServer = null;
   private SmeManager smeManager = null;
   private RouteSubjectManager routeSubjectManager = null;
   private ResourcesManager resourcesManager = null;
@@ -129,6 +131,8 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       statuses.setRoutesSaved(routeSubjectManager.hasSavedConfiguration());
       perfServer = new PerfServer(webappConfig);
       perfServer.start();
+      topServer = new TopServer(webappConfig);
+      topServer.start();
       System.out.println("SMSC Administartion Web Apllication Started  **************************************************");
     } catch (Exception e) {
       System.err.println("Exception in initialization:");

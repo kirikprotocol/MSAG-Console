@@ -20,7 +20,7 @@
 		<param name="locale.language" value="en">
 		<param name="graph.scale" value="3">
 		<param name="graph.grid" value="2">
-		<param name="graph.hgrid" value="10">
+		<param name="graph.higrid" value="10">
 		<param name="graph.head" value="20">
 		<param name="max.speed" value="50">
 		<param name="port" value="<%=port%>">
