@@ -236,14 +236,14 @@ struct MapDialog{
     lockedAt(0),
     ref_count(1)
   {
-    memset(m_msAddr, 0, sizeof(ET96MAP_ADDRESS_T));
-    memset(m_scAddr, 0, sizeof(ET96MAP_ADDRESS_T));
-    memset(scAddr, 0, sizeof(ET96MAP_SS7_ADDR_T));
-    memset(destMscAddr, 0, sizeof(ET96MAP_SS7_ADDR_T));
-    memset(mshlrAddr,0,sizeof(ET96MAP_SS7_ADDR_T));
-    memset(smRpDa,0,sizeof(ET96MAP_SM_RP_DA_T));
-    memset(smRpOa,0,sizeof(ET96MAP_SM_RP_OA_T));
-    memset(mwdStatus,0,sizeof(ET96MAP_MWD_STATUS_T));
+    memset(&m_msAddr, 0, sizeof(ET96MAP_ADDRESS_T));
+    memset(&m_scAddr, 0, sizeof(ET96MAP_ADDRESS_T));
+    memset(&scAddr, 0, sizeof(ET96MAP_SS7_ADDR_T));
+    memset(&destMscAddr, 0, sizeof(ET96MAP_SS7_ADDR_T));
+    memset(&mshlrAddr,0,sizeof(ET96MAP_SS7_ADDR_T));
+    memset(&smRpDa,0,sizeof(ET96MAP_SM_RP_DA_T));
+    memset(&smRpOa,0,sizeof(ET96MAP_SM_RP_OA_T));
+    memset(&mwdStatus,0,sizeof(ET96MAP_MWD_STATUS_T));
     MAPSTATS_Update(MAPSTATS_NEWDIALOG);
     struct timeval tv;
     gettimeofday( &tv, 0 );
