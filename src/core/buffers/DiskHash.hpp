@@ -250,7 +250,7 @@ public:
 
     for(;;attempt++)
     {
-      if(attempt>=size/10)
+      if(attempt>20)
       {
         Rehash();
         attempt=0;
