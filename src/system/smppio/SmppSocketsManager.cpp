@@ -7,7 +7,7 @@ namespace smppio{
 
 void SmppSocketsManager::registerSocket(Socket* sock)
 {
-  MutexGuard g(m);
+  MutexGuard g(mtxAdd);
   int i;
   sock->setData(0,0);
   sock->setData(1,this);
@@ -45,7 +45,7 @@ void SmppSocketsManager::registerSocket(Socket* sock)
 
 void SmppSocketsManager::removeSocket(Socket* sock)
 {
-  MutexGuard g(m);
+  MutexGuard g(mtxRemove);
   int x=(int)sock->getData(0);
   x--;
   trace2("socket ref count for %p:%d",sock,x);

@@ -27,7 +27,7 @@ protected:
   Array<SmppIOTask*> intasks,outtasks;
   ThreadPool *tp;
   smsc::smeman::SmeManager* smeManager;
-  Mutex m;
+  Mutex mtxAdd,mtxRemove;
 };//SocketsManager
 
 };//smppio
