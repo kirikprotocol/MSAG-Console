@@ -99,7 +99,7 @@ void TaskProcessor::initDataSource(ConfigView* config)
 TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), MissedCallListener(), AdminInterface(), 
         logger(Logger::getInstance("smsc.mcisme.TaskProcessor")), 
-        protocolId(0), daysValid(1), svcType(0), address(0), mciModule(0), messageSender(0),
+        protocolId(0), daysValid(1), svcType(0), address(0), templateManager(0), mciModule(0), messageSender(0),
         ds(0), dsStatConnection(0), statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
         bStarted(false), bInQueueOpen(false), bOutQueueOpen(false)
 {
@@ -116,6 +116,12 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     try { daysValid = config->getInt("DaysValid"); }
     catch(ConfigException& exc) { daysValid = 1; };
     
+    smsc_log_info(logger, "Loading templates ...");
+    std::auto_ptr<ConfigView> templatesCfgGuard(config->getSubConfig("Templates"));
+    ConfigView* templatesCfg = templatesCfgGuard.get();
+    templateManager = new TemplateManager(templatesCfg);
+    smsc_log_info(logger, "Templates loaded.");
+
     std::auto_ptr<ConfigView> circuitsCfgGuard(config->getSubConfig("Circuits"));
     ConfigView* circuitsCfg = circuitsCfgGuard.get();
     Circuits circuits;
@@ -144,9 +150,6 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     try { Task::bNotifyAll = config->getBool("forceNotify"); } catch (...) { Task::bNotifyAll = false;
         smsc_log_warn(logger, "Parameter <MCISme.forceNotify> missed. Force notify for all abonents is off");
     }
-    try { Task::bSeparateAll = config->getBool("forceSeparate"); } catch (...) { Task::bSeparateAll = false;
-        smsc_log_warn(logger, "Parameter <MCISme.forceSeparate> missed. Force separate for all abonents is off");
-    }
 
     int rowsPerMessage = 5;
     try { rowsPerMessage = config->getInt("maxRowsPerMessage"); } catch (...) { rowsPerMessage = 5;
@@ -160,8 +163,9 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     statistics = new StatisticsManager(dsStatConnection);
     if (statistics) statistics->Start();
     
+    AbonentProfiler::init(ds);
     Task::init(ds, statistics, rowsPerMessage);
-
+    
     smsc_log_info(logger, "Load success.");
 }
 TaskProcessor::~TaskProcessor()
@@ -169,6 +173,7 @@ TaskProcessor::~TaskProcessor()
     eventManager.Stop();
     this->Stop();
     
+    if (templateManager) delete templateManager;
     if (mciModule) delete mciModule;
     if (statistics) delete statistics;
     if (dsStatConnection) ds->freeConnection(dsStatConnection);
@@ -261,7 +266,7 @@ void TaskProcessor::Run()
 }
 
 /* Is calling on Startup. Initiates current messages sending for all tasks.
-   TODO: task->getCurrentState() == (W_RESP, W_RCPT, W_CNCL);
+   task->getCurrentState() == (W_RESP, W_RCPT, W_CNCL);
    1) W_CNCL || W_RCPT => task->getCurrentSmscId() & try cancel
    2) W_RESP => format new message & send */
 void TaskProcessor::loadupTasks() 
@@ -276,10 +281,16 @@ void TaskProcessor::loadupTasks()
     char* abonent=0; Task* task = 0; tasks.First();
     while (tasks.Next(abonent, task))
     {
-        if (!task) continue;
-        smsc_log_debug(logger, "Loaded task for abonent: %s. Events=%d",
+        if (!abonent || !task) continue;
+        smsc_log_debug(logger, "Loaded task for abonent: %s. Events=%d", 
                        abonent, task->getEventsCount());
 
+        {
+            AbonentProfile profile = task->getAbonentProfile();
+            task->setTemplateFormatter((templateManager) ? 
+                                        templateManager->getInformFormatter(profile.informTemplateId):0);
+        }
+        
         MessageState state = task->getCurrentState();
         if (state == WAIT_CNCL || state == WAIT_RCPT)
         {
@@ -304,7 +315,7 @@ void TaskProcessor::loadupTasks()
                            message.id, message.eventsCount, message.rowsCount);
             putToOutQueue(message, true);
         }
-        else smsc_log_warn(logger, "Task for abonent: %s has no message to send", abonent);
+        else smsc_log_warn(logger, "Task for abonent %s has no message to send", abonent);
     }
     smsc_log_info(logger, "All loaded tasks messages added to output queue.");
 }
@@ -341,8 +352,18 @@ Task* TaskProcessor::getTask(const char* abonent, bool& newone)
     }
     
     Task* task = new Task(abonent);
-    try { task->loadup(); }
-    catch (...) { delete task; throw; }
+    try 
+    { 
+        task->loadup();
+        AbonentProfile profile = task->getAbonentProfile();
+        task->setTemplateFormatter((templateManager) ? 
+                                    templateManager->getInformFormatter(profile.informTemplateId):0);
+    } catch (std::exception& exc) { 
+        smsc_log_error(logger, "Task loadup for abonent %s failed.", abonent);
+        delete task; throw;
+    } catch (...) { 
+        delete task; throw;
+    }
     
     lockedTasks.Insert(abonent, task);
     tasks.Insert(abonent, task);
@@ -437,27 +458,23 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
     const char* abonent = event.to.c_str();
     checkAddress(abonent);
     
-    bool inform = Task::bInformAll;
-    if (!inform) {
-        AbonentProfile profile = Task::getProfile(abonent);
-        inform = profile.inform;
-    }
-    
-    if (inform)
+    Message message; bool needMessage = false;
     {
-        Message message;
-        {
-            TaskAccessor taskAccessor(this);
+        TaskAccessor taskAccessor(this);
 
-            bool isNewTask = false;
-            Task* task = taskAccessor.getTask(abonent, isNewTask); // possible loads task
-            if (!task) throw Exception("Failed to obtain task for abonent: %s", abonent);
+        bool isNewTask = false; // possible creates & loads task
+        Task* task = taskAccessor.getTask(abonent, isNewTask); 
+        if (!task) throw Exception("Failed to obtain task for abonent: %s", abonent);
+
+        AbonentProfile profile = task->getAbonentProfile();
+        if (profile.inform || Task::bInformAll)
+        {
             task->addEvent(event); // adds event to task chain & inassigned into DB 
             smsc_log_debug(logger, "Event for %s added to %s task. Events=%d",
                            abonent, (isNewTask) ? "new":"existed", task->getEventsCount());
 
             if (!isNewTask && task->getCurrentState() != WAIT_RCPT) return;
-            
+
             message.reset();
             message.abonent = abonent;
             message.id = task->getCurrentMessageId();
@@ -472,9 +489,10 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
                 message.cancel = false;
                 task->waitResponce();
             }
+            needMessage = true;
         }
-        putToOutQueue(message);
     }
+    if (needMessage) putToOutQueue(message);
 }
 
 void TaskProcessor::processMessage(const Message& message)
@@ -770,6 +788,17 @@ void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry,
 {
     std::string        abonent = task->getAbonent();
     Array<std::string> callers = task->finalizeMessage(smsc_id, delivered, retry, msg_id);
+    if (callers.Count() <= 0) return;
+
+    AbonentProfile profile = task->getAbonentProfile();
+    if (!profile.notify && !Task::bNotifyAll) return;
+    NotifyTemplateFormatter* notifyFormatter = (templateManager) ? 
+        templateManager->getNotifyFormatter(profile.notifyTemplateId):0;
+    OutputFormatter* formatter = (notifyFormatter) ? notifyFormatter->getMessageFormatter():0;
+    if (!formatter) {
+        smsc_log_error(logger, "Failed to locate notify template formatter for abonent '%s'", abonent.c_str());
+        return;
+    }
     
     for (int i=0; i<callers.Count(); i++)
     {
@@ -778,19 +807,23 @@ void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry,
         
         if (!delivered || callers[i].length() <= 0) continue;
 
-        bool notify = Task::bNotifyAll;
-        if (!notify) {
-            AbonentProfile profile = Task::getProfile(abonent.c_str());
-            notify = profile.notify;
-        }
-        if (notify)
+        Message message; message.abonent = callers[i];
+        message.cancel=false; message.notification = true;
+        try 
         {
-            Message message; message.abonent = callers[i]; 
-            message.message = "Абонент "+abonent+" в сети";
-            //message.message = "Anonent "+abonent+" is online";
-            message.cancel=false; message.notification = true;
-            putToOutQueue(message);
+            ContextEnvironment ctx;
+            NotifyGetAdapter adapter(abonent, callers[i]);
+            formatter->format(message.message, adapter, ctx);
+        } 
+        catch (std::exception& exc) {
+            smsc_log_error(logger, "Failed to format notification message for abonent '%s'. Details: %s",
+                           abonent.c_str(), exc.what());
         }
+        catch (...) {
+            smsc_log_error(logger, "Failed to format notification message for abonent '%s'. Reason is unknown",
+                           abonent.c_str());
+        }
+        putToOutQueue(message);
     }
 }
 

@@ -19,6 +19,8 @@
 
 #include <db/DataSource.h>
 
+#include "Messages.h"
+#include "Profiler.h"
 #include "Statistics.h"
 #include "misscall/callproc.hpp"
 
@@ -32,59 +34,6 @@ namespace smsc { namespace mcisme
 
     using smsc::logger::Logger;
 
-    struct Message
-    {
-        uint64_t    id;
-        uint32_t    attempts;
-        std::string abonent, message, smsc_id;
-        bool        cancel, notification;
-        int         rowsCount, eventsCount;
-
-        static int  maxRowsPerMessage;
-        
-        Message() { reset(); };
-        Message(const Message& msg) 
-            : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
-              smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification),
-              rowsCount(msg.rowsCount), eventsCount(msg.eventsCount) {};
-        
-        Message& operator=(const Message& msg) {
-            id = msg.id; attempts = msg.attempts;
-            abonent = msg.abonent; message = msg.message; smsc_id = msg.smsc_id; 
-            cancel = msg.cancel; notification = msg.notification;
-            rowsCount = msg.rowsCount; eventsCount  = msg.eventsCount; 
-            return (*this);
-        };
-
-        inline void reset(const std::string& _abonent="") {
-            id = 0; attempts = 0; this->abonent = _abonent;
-            message = ""; smsc_id = ""; cancel = false; notification = false;
-            rowsCount = 0; eventsCount = 0; 
-        };
-        inline bool isFull() {
-            return (rowsCount >= Message::maxRowsPerMessage);
-        };
-    };
-    
-    class MessageFormatter
-    {
-    private:
-
-        bool                    separate;
-        Hash <uint32_t>         counters;
-        Array<MissedCallEvent>  events;
-
-        bool isLastFromCaller(int index);
-    
-    public:
-
-        MessageFormatter(bool _separate) : separate(_separate) {};
-
-        bool canAdd(const MissedCallEvent& event);
-        void addEvent(const MissedCallEvent& event);
-        void formatMessage(Message& message);
-    };
-
     static const uint8_t MESSAGE_UNKNOWNST  =  0; // Неизвестное состояние
     static const uint8_t MESSAGE_WAIT_RESP  = 10; // Ожидает submit responce или готова к отправке
     static const uint8_t MESSAGE_WAIT_CNCL  = 20; // Ожидает cancel responce или готова к отмене
@@ -97,20 +46,6 @@ namespace smsc { namespace mcisme
         WAIT_RCPT   = MESSAGE_WAIT_RCPT
     } MessageState;
 
-    struct AbonentProfile
-    {
-        bool inform, notify, separate;
-
-        AbonentProfile(bool _inform=false, bool _notify=false, bool _separate=false)
-            : inform(_inform), notify(_notify), separate(_separate) {};
-        AbonentProfile(const AbonentProfile& pro)
-            : inform(pro.inform), notify(pro.notify), separate(pro.separate) {};
-        AbonentProfile& operator=(const AbonentProfile& pro) {
-            inform = pro.inform; notify = pro.notify; separate = pro.separate;
-            return (*this);
-        };
-    };
-    
     struct TaskEvent : public MissedCallEvent
     {
         uint64_t    id, msg_id;
@@ -138,13 +73,16 @@ namespace smsc { namespace mcisme
         Array<TaskEvent>    events;
         int                 newEventsCount;
 
+        AbonentProfile           abonentProfile;
+        InformTemplateFormatter* templateFormatter;
+
         void loadup(uint64_t currId, Connection* connection=0); // used from loadup() & loadupAll()
         void doWait(Connection* connection, const char* smsc_id, const MessageState& state);
         void doNewCurrent(Connection* connection);
 
     public:
 
-        static bool         bInformAll, bNotifyAll, bSeparateAll;
+        static bool         bInformAll, bNotifyAll;
 
         static void         init(DataSource* _ds, Statistics* _statistics, int rowsPerMessage);
         static uint64_t     getNextId(Connection* connection=0);
@@ -152,16 +90,19 @@ namespace smsc { namespace mcisme
         static bool         getMessage(const char* smsc_id, Message& message, Connection* connection=0);
         static Hash<Task *> loadupAll();
 
-        static bool delProfile(const char* abonent);
-        static void setProfile(const char* abonent, const AbonentProfile& profile);
-        static AbonentProfile getProfile(const char* abonent);
-
         Task(const std::string& _abonent)  
-            : currentMessageId(0), currentMessageState(UNKNOWNST),
-              abonent(_abonent), cur_smsc_id(""), newEventsCount(0) {};
+            : currentMessageId(0), currentMessageState(UNKNOWNST), abonent(_abonent),
+              cur_smsc_id(""), newEventsCount(0), templateFormatter(0) {};
         virtual ~Task() {};
         
         void loadup();
+        
+        inline const AbonentProfile& getAbonentProfile() {
+            return abonentProfile;
+        };
+        inline void setTemplateFormatter(InformTemplateFormatter* formatter) {
+            templateFormatter = formatter;
+        };
 
         inline int getEventsCount() { return events.Count(); };
         inline int getNewEventsCount() { return newEventsCount; };

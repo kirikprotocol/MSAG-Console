@@ -44,8 +44,9 @@ public class MCISmeContext
   private Config config = null;
   private MCISme mciSme = null;
 
-  private boolean changedOptions = false;
-  private boolean changedDrivers = false;
+  private boolean changedOptions   = false;
+  private boolean changedDrivers   = false;
+  private boolean changedTemplates = false;
   private DataSource dataSource = null;
   private String smeId = "MCISme";
 
@@ -112,6 +113,12 @@ public class MCISmeContext
   }
   public void setChangedDrivers(boolean changedDrivers) {
     this.changedDrivers = changedDrivers;
+  }
+  public boolean isChangedTemplates() {
+    return changedTemplates;
+  }
+  public void setChangedTemplates(boolean changedTemplates) {
+    this.changedTemplates = changedTemplates;
   }
 
   public DataSource getDataSource() {

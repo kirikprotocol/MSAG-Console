@@ -30,6 +30,7 @@
 #include "Tasks.h"
 #include "MCIModule.h"
 #include "MCISmeAdmin.h"
+#include "TemplateManager.h"
 #include "StatisticsManager.h"
 
 namespace smsc { namespace mcisme
@@ -260,6 +261,7 @@ namespace smsc { namespace mcisme
 
         ThreadManager       eventManager;
         ResponcesTracker    responcesTracker;
+        TemplateManager*    templateManager;
         MCIModule*          mciModule;
 
         Mutex               messageSenderLock;

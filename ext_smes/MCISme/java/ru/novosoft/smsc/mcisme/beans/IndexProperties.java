@@ -85,6 +85,9 @@ public abstract class IndexProperties extends MCISmeBean
   public boolean isDriversChanged() {
     return getMCISmeContext().isChangedDrivers();
   }
+  public boolean isTemplatesChanged() {
+    return getMCISmeContext().isChangedTemplates();
+  }
 
   public byte getStatus() {
     return ((mciSme != null) ? mciSme.getInfo().getStatus():ServiceInfo.STATUS_UNKNOWN);

@@ -20,12 +20,21 @@ import java.util.List;
  */
 public class MCISmeBean extends PageBean
 {
-  public static final int RESULT_APPLY = PageBean.PRIVATE_RESULT + 0;
-  public static final int RESULT_STAT = PageBean.PRIVATE_RESULT + 1;
-  public static final int RESULT_STATUSES = PageBean.PRIVATE_RESULT + 2;
-  public static final int RESULT_OPTIONS = PageBean.PRIVATE_RESULT + 3;
-  public static final int RESULT_DRIVERS = PageBean.PRIVATE_RESULT + 4;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 5;
+  public static final int RESULT_APPLY       = PageBean.PRIVATE_RESULT + 0;
+  public static final int RESULT_STAT        = PageBean.PRIVATE_RESULT + 1;
+  public static final int RESULT_STATUSES    = PageBean.PRIVATE_RESULT + 2;
+  public static final int RESULT_OPTIONS     = PageBean.PRIVATE_RESULT + 3;
+  public static final int RESULT_DRIVERS     = PageBean.PRIVATE_RESULT + 4;
+  public static final int RESULT_TEMPLATES   = PageBean.PRIVATE_RESULT + 5;
+  public static final int RESULT_INFORM_ADD  = PageBean.PRIVATE_RESULT + 6;
+  public static final int RESULT_INFORM_EDIT = PageBean.PRIVATE_RESULT + 7;
+  public static final int RESULT_NOTIFY_ADD  = PageBean.PRIVATE_RESULT + 8;
+  public static final int RESULT_NOTIFY_EDIT = PageBean.PRIVATE_RESULT + 9;
+  protected static final int PRIVATE_RESULT  = PageBean.PRIVATE_RESULT + 10;
+
+  public static final String TEMPLATES_SECTION_NAME        = "MCISme.Templates";
+  public static final String INFORM_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Inform";
+  public static final String NOTIFY_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Notify";
 
   private String mbMenu = null;
 
@@ -65,11 +74,12 @@ public class MCISmeBean extends PageBean
     int result = super.process(request);
     if (result != RESULT_OK)  return result;
 
-    if      ("apply".equals(mbMenu))    return RESULT_APPLY;
-    else if ("stat".equals(mbMenu))     return RESULT_STAT;
-    else if ("statuses".equals(mbMenu)) return RESULT_STATUSES;
-    else if ("options".equals(mbMenu))  return RESULT_OPTIONS;
-    else if ("drivers".equals(mbMenu))  return RESULT_DRIVERS;
+    if      ("apply".equals(mbMenu))     return RESULT_APPLY;
+    else if ("stat".equals(mbMenu))      return RESULT_STAT;
+    else if ("statuses".equals(mbMenu))  return RESULT_STATUSES;
+    else if ("options".equals(mbMenu))   return RESULT_OPTIONS;
+    else if ("templates".equals(mbMenu)) return RESULT_TEMPLATES;
+    else if ("drivers".equals(mbMenu))   return RESULT_DRIVERS;
     else return result;
   }
 

@@ -22,7 +22,7 @@ public class Index extends IndexProperties
     Config backup = (Config) oldConfig.clone();
     final Config config = getConfig();
 
-    //InfoSme - root
+    //MCISme - root
     backup.removeParamsFromSection("MCISme");
     backup.copySectionParamsFromConfig(config, "MCISme");
 

@@ -46,12 +46,16 @@ function checkApplyResetButtons()
 <div class=page_subtitle>Configuration status</div>
 <table class=properties_list cellspacing=0>
   <tr>
-    <th width="20%" nowrap valign=top>General configuration</th>
+    <th width="20%" nowrap valign=top>General settings</th>
     <td width="80%" nowrap valign=top><%= status(bean.isOptionsChanged())%></td>
   </tr>
   <tr>
     <th width="20%" nowrap valign=top>Drivers configuration</th>
     <td width="80%" nowrap valign=top><%= status(bean.isDriversChanged())%></td>
+  </tr>
+  <tr>
+    <th width="20%" nowrap valign=top>Templates definitions</th>
+    <td width="80%" nowrap valign=top><%= status(bean.isTemplatesChanged())%></td>
   </tr>
 </table>
 </div><%
