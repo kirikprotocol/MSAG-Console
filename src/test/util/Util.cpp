@@ -131,6 +131,15 @@ void rand_char(int length, char* buf, int type)
 	buf[length] = 0;
 }
 
+const string TestCaseId::str() const
+{
+	ostringstream s;
+	s << "{";
+	copy(id.begin(), id.end(), ostream_iterator<int>(s, ", "));
+	s << "}";
+	return s.str();
+}
+
 TCSelector::TCSelector(int _val, int _maxVal, int _base)
 	: pos(0), val(NULL)
 {

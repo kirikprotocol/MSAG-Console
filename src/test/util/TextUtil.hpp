@@ -35,7 +35,7 @@ auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen,
 const string decode(const char* text, int len, uint8_t dataCoding,
 	bool hostByteOrder);
 const pair<string, uint8_t> convert(const string& text, int profileCodePage);
-void convert(bool udhi, uint8_t dc1, const char* str1, int len1,
+void convert(bool udhi, uint8_t dc1, const char* str1, int len1, int textOffset,
 	uint8_t& dc2, char* str2, int& len2, int profileCodePage, bool hostByteOrder);
 
 uint8_t getDataCoding(int num);

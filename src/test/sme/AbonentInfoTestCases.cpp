@@ -297,33 +297,38 @@ AckText* AbonentInfoTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	{
 		return new AckText("", DEFAULT, false);
 	}
+	SenderData* senderData =
+		dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
+	RecipientData* recipientData =
+		dynamic_cast<RecipientData*>(monitor->pduData->objProps["recipientData"]);
 	AbonentData* abonentData =
 		dynamic_cast<AbonentData*>(monitor->pduData->objProps["abonentInfoTc.abonentData"]);
-	bool valid = abonentData->validProfile;
+	//взять текущий профиль отправителя
+	time_t t1;
+	const Profile& profile = fixture->profileReg->getProfile(senderData->srcAddr, t1);
+	bool valid = abonentData->validProfile && (t1 + timeCheckAccuracy < recvTime);
 	if (!valid)
 	{
 		return new AckText("", DEFAULT, false);
 	}
 	//проверить изменение профиля
-	time_t t;
-	const Profile& profile = fixture->profileReg->getProfile(abonentData->addr, t);
-	if (profile != abonentData->profile || recvTime <= t + timeCheckAccuracy)
+	time_t t2;
+	const Profile& abonentProfile = fixture->profileReg->getProfile(abonentData->addr, t2);
+	if (abonentProfile != abonentData->profile || recvTime <= t2 + timeCheckAccuracy)
 	{
 		return new AckText("", DEFAULT, false);
 	}
-	RecipientData* recipientData =
-		dynamic_cast<RecipientData*>(monitor->pduData->objProps["recipientData"]);
 	if (recipientData->destAddr == abonentInfoAddrSme)
 	{
 		const pair<string, uint8_t> p = AbonentInfoSmeMessage::format(
-			abonentData->profile, abonentData->input, abonentData->status, "");
+			profile, abonentData->input, abonentData->status, "");
 		__trace2__("getExpectedResponse(): input = %s, output = %s", abonentData->input.c_str(), p.first.c_str());
 		return new AckText(p.first, p.second, valid);
 	}
 	if (recipientData->destAddr == abonentInfoAddrMobile)
 	{
 		const pair<string, uint8_t> p = AbonentInfoMobileMessage::format(
-				abonentData->profile, abonentData->input, abonentData->status, "");
+				profile, abonentData->input, abonentData->status, "");
 		__trace2__("getExpectedResponse(): input = %s, output = %s", abonentData->input.c_str(), p.first.c_str());
 		return new AckText(p.first, p.second, valid);
 	}

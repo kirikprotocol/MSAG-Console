@@ -98,7 +98,7 @@ void NormalSmsHandler::checkNotMapMsgText(DeliveryMonitor* monitor,
 		return;
 	}
 	SmsPduWrapper pdu(header, 0);
-	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+	SmsPduWrapper origPdu(monitor->pduData);
 	//тип pdu
 	if (pdu.isDeliverSm())
 	{
@@ -417,7 +417,7 @@ PduFlag NormalSmsHandler::checkSimpleMapMsgText(DeliveryMonitor* monitor,
 {
 	__decl_tc__;
 	SmsPduWrapper pdu(header, 0);
-	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+	SmsPduWrapper origPdu(monitor->pduData);
 	//тип pdu
 	if (pdu.isDeliverSm())
 	{
@@ -799,7 +799,7 @@ void NormalSmsHandler::processPdu(SmppHeader* header, const Address& origAddr,
 		}
 		__tc_ok_cond__;
 		SmsPduWrapper pdu(header, 0);
-		SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+		SmsPduWrapper origPdu(monitor->pduData);
 		//проверить правильность маршрута
 		__tc__("sms.normalSms.checkRoute");
 		__tc_fail2__(checkRoute(monitor->pduData->pdu, header), 0);

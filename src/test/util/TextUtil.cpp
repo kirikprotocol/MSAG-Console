@@ -243,32 +243,34 @@ const pair<string, uint8_t> convert(const string& text, int profileCodePage)
 	//return ...;
 }
 
-void convert(bool udhi, uint8_t dc1, const char* str1, int len1,
+void convert(bool udhi, uint8_t dc1, const char* str1, int len1, int textOffset,
 	uint8_t& dc2, char* str2, int& len2, int profileCodePage, bool hostByteOrder)
 {
 	__require__(str1 && str2 && len2);
+	//udh проходит без изменений
+	int udhLen = udhi ? 1 + (unsigned char) *str1 : 0;
+	__require__(len2 > udhLen);
+	__require__(textOffset >= 0 && textOffset <= len1 - udhLen);
+	memcpy(str2, str1, udhLen);
+	//транслитерация
 	if (dc1 == UCS2 && profileCodePage == ProfileCharsetOptions::Default)
 	{
+		__require__(textOffset % 2 == 0);
 		dc2 = DEFAULT;
-		//udh проходит без изменений
-		int udhLen = udhi ? 1 + (unsigned char) *str1 : 0;
-		__require__(len2 > udhLen);
-		memcpy(str2, str1, udhLen);
-		//остальное транслитерируется
 		char mbBuf[len1 - udhLen + 1];
 		int mbLen;
 		if (hostByteOrder || ntohs(0x1234) == 0x1234)
 		{
-			int ucs2Len = len1 - udhLen;
-			const short* usc2Buf = (const short*) (str1 + udhLen);
+			int ucs2Len = len1 - udhLen - textOffset;
+			const short* usc2Buf = (const short*) (str1 + udhLen + textOffset);
 			mbLen = ConvertUCS2ToMultibyte(usc2Buf, ucs2Len,
 				mbBuf, sizeof(mbBuf), CONV_ENCODING_CP1251);
 		}
 		else
 		{
-			int ucs2Len = (len1 - udhLen) / 2;
+			int ucs2Len = (len1 - udhLen - textOffset) / 2;
 			short ucs2Buf[ucs2Len];
-			const short* _str1 = (const short*) (str1 + udhLen);
+			const short* _str1 = (const short*) (str1 + udhLen + textOffset);
 			for (int i = 0; i < ucs2Len; i++)
 			{
 				ucs2Buf[i] = ntohs(*(_str1 + i));
@@ -284,10 +286,10 @@ void convert(bool udhi, uint8_t dc1, const char* str1, int len1,
 	}
 	else
 	{
+		__require__(len2 >= len1 - textOffset);
 		dc2 = dc1;
-		__require__(len2 >= len1);
-		memcpy(str2, str1, len1);
-		len2 = len1;
+		memcpy(str2, str1 + udhLen + textOffset, len1 - udhLen - textOffset);
+		len2 = len1 - textOffset;
 	}
 }
 

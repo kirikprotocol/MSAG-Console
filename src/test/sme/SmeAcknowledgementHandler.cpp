@@ -135,7 +135,7 @@ void SmeAcknowledgementHandler::processPdu(SmppHeader* header, time_t recvTime)
 		}
 		__tc_ok_cond__;
 		//проверка pdu
-		SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+		SmsPduWrapper origPdu(monitor->pduData);
 		//правильность маршрута
 		__tc__("sms.smeAck.checkRoute");
 		__tc_fail2__(checkRoute(monitor->pduData->pdu, header), 0);

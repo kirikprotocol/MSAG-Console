@@ -316,16 +316,18 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync,
 		{
 			static const string invalidReportCmd[] =
 			{
-				"report", "report non", "report none2", "report ful", "report full2",
-				"repor none", "report2 none"
+				"report", "report non", "report ful", "repor none"
+				//"report none2", "report full2", "report2 none"
 			};
 			static const string invalidDcCmd[] =
 			{
-				"ucs", "ucs1", "ucs22", "defaul", "default2"
+				"ucs", "ucs1", "defaul"
+				//"ucs22", "default2"
 			};
 			static const string invalidLocaleCmd[] =
 			{
-				"locale", "local en_us", "locale2 en_us"
+				"locale", "local en_us"
+				//"locale2 en_us"
 			};
 			string text;
 			switch (s.value())

@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <sstream>
+#include <string>
 #include <vector>
 
 namespace smsc {
@@ -11,6 +12,7 @@ namespace util {
 
 using std::ostream;
 using std::vector;
+using std::string;
 
 //флаги выполнения тест кейсов
 /**
@@ -78,6 +80,18 @@ struct Deletor
 		if (obj) { delete obj; }
 		return NULL;
 	}
+};
+
+class TestCaseId
+{
+	vector<int> id;
+public:
+	TestCaseId(int sz) { id.assign(sz, RAND_TC); }
+	TestCaseId(int* val, int sz) { id.assign(val, val + sz); }
+	int& operator[](int index) { return id[index]; }
+	int operator[](int index) const { return id[index]; }
+	int size() const { return id.size(); }
+	const string str() const;
 };
 
 template <class T>

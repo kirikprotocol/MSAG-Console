@@ -389,6 +389,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	randMask |= OPT_MSG_PAYLOAD; //оставить payload как есть
 	mask &= randMask;
 	
+	pdu->get_header().set_commandId(SUBMIT_SM);
 	PduPartSm& p = pdu->get_message();
 	SmppTime t;
 	//set & check fields
@@ -449,6 +450,7 @@ void SmppUtil::setupRandomCorrectDataSmPdu(PduDataSm* pdu, bool forceDc,
 	randMask |= OPT_MSG_PAYLOAD; //оставить payload как есть
 	mask &= randMask;
 	
+	pdu->get_header().set_commandId(DATA_SM);
 	PduDataPartSm& p = pdu->get_data();
 	SmppTime t;
 	//set & check fields
@@ -492,6 +494,8 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	__cfg_int__(timeCheckAccuracy);
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
+
+	pdu->get_header().set_commandId(REPLACE_SM);
 	PduReplaceSm& p = *pdu;
 	SmppTime t;
 	//set & check fields

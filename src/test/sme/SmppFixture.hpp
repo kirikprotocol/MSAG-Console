@@ -61,17 +61,19 @@ struct AckText : public PduDataObject
 
 struct SenderData : public PduDataObject
 {
-	//bool forceDC;
+	const SmeInfo* smeInfo;
 	const Address srcAddr;
 	const Profile profile;
 	bool validProfile;
-	SenderData(const Address& _srcAddr, const Profile& _profile, bool _validProfile)
-		: srcAddr(_srcAddr), profile(_profile), validProfile(_validProfile) {}
+	SenderData(const SmeInfo* _smeInfo, const Address& _srcAddr,
+		const Profile& _profile, bool _validProfile)
+	: smeInfo(_smeInfo), srcAddr(_srcAddr), profile(_profile),
+		validProfile(_validProfile) { __require__(smeInfo); }
 };
 
 struct RecipientData : public PduDataObject
 {
-	//bool forceDC;
+	//const SmeInfo* smeInfo;
 	const Address destAddr;
 	const Profile profile;
 	bool validProfile;

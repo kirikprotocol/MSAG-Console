@@ -103,7 +103,7 @@ SmppPduChecker::MapMsgError SmppPduChecker::checkMapMsg(SmsMsg* msg)
 
 set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 {
-	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	SmsPduWrapper pdu(pduData);
 	__require__(pdu.isSubmitSm());
 	Address srcAddr;
 	SmppUtil::convert(pdu.getSource(), &srcAddr);
@@ -166,7 +166,7 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	}
 	__cfg_int__(maxValidPeriod);
 	time_t validTime = pdu.getValidTime();
-	time_t waitTime = pdu.getWaitTime();
+	time_t waitTime = pdu.getWaitTime(); //с учетом def директивы
 	if (!validTime || validTime < pduData->sendTime ||
 		validTime > pduData->sendTime + maxValidPeriod)
 	{
@@ -206,7 +206,7 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 
 set<uint32_t> SmppPduChecker::checkDataSm(PduData* pduData)
 {
-	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	SmsPduWrapper pdu(pduData);
 	__require__(pdu.isDataSm());
 	Address srcAddr;
 	SmppUtil::convert(pdu.getSource(), &srcAddr);
@@ -283,7 +283,7 @@ set<uint32_t> SmppPduChecker::checkDataSm(PduData* pduData)
 set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	PduData* replacePduData, PduFlag replacePduFlag)
 {
-	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	SmsPduWrapper pdu(pduData);
 	__require__(pdu.isSubmitSm());
 	Address srcAddr;
 	SmppUtil::convert(pdu.getSource(), &srcAddr);
@@ -343,7 +343,7 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	//проверки
 	__cfg_int__(maxValidPeriod);
 	time_t validTime = pdu.getValidTime();
-	time_t waitTime = pdu.getWaitTime();
+	time_t waitTime = pdu.getWaitTime(); //директиву def игнорирую
 	if (!validTime || validTime < pduData->sendTime ||
 		validTime > pduData->sendTime + maxValidPeriod)
 	{
@@ -382,7 +382,7 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 		{
 			res.insert(ESME_RINVMSGID);
 		}
-		SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
+		SmsPduWrapper replacePdu(replacePduData);
 		if (pdu.getSource() != replacePdu.getSource())
 		{
 			res.insert(ESME_RREPLACEFAIL);
@@ -438,7 +438,7 @@ set<uint32_t> SmppPduChecker::checkQuerySm(PduData* pduData, PduData* origPduDat
 		{
 			res.insert(ESME_RQUERYFAIL);
 		}
-		SmsPduWrapper origPdu(origPduData->pdu, origPduData->sendTime);
+		SmsPduWrapper origPdu(origPduData);
 		if (pdu->get_source() != origPdu.getSource())
 		{
 			res.insert(ESME_RQUERYFAIL);
@@ -512,7 +512,7 @@ set<uint32_t> SmppPduChecker::checkCancelSm(PduData* pduData,
 			{
 				res.insert(ESME_RCANCELFAIL); //ESME_RINVMSGID
 			}
-			SmsPduWrapper cancelPdu(cancelPduData->pdu, cancelPduData->sendTime);
+			SmsPduWrapper cancelPdu(cancelPduData);
 			if (pdu->get_source() != cancelPdu.getSource())
 			{
 				res.insert(ESME_RCANCELFAIL); //ESME_RINVSRCADR
@@ -535,7 +535,7 @@ set<uint32_t> SmppPduChecker::checkCancelSm(PduData* pduData,
 		}
 		else
 		{
-			SmsPduWrapper cancelPdu(cancelPduData->pdu, cancelPduData->sendTime);
+			SmsPduWrapper cancelPdu(cancelPduData);
 			if (pdu->get_source() == nullAddr ||
 				pdu->get_source() != cancelPdu.getSource())
 			{

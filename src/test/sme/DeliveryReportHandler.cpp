@@ -164,7 +164,7 @@ void DeliveryReportHandler::processPdu(SmppHeader* header, time_t recvTime)
 				__unreachable__("Unknown flag");
 		}
 		__tc_ok_cond__;
-		SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+		SmsPduWrapper origPdu(monitor->pduData);
 		//Сравнить правильность маршрута
 		__tc__("sms.reports.checkRoute");
 		__tc_fail2__(checkRoute(monitor->pduData->pdu, header), 0);
