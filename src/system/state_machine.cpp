@@ -3745,7 +3745,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
         store->changeSmsStateToDelivered(t.msgId,t.command->get_resp()->getDescriptor());
 
-        smsc->getScheduler()->DeliveryOk(t.msgId);
+        if(sms.getAttemptsCount()!=0)smsc->getScheduler()->DeliveryOk(t.msgId);
 
         __trace__("change state to delivered: ok");
       }catch(std::exception& e)
