@@ -1968,16 +1968,16 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
     moResp.errorCode = ET96MAP_UE_SYS_FAILURE;
     moResp.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
     if( version == 2 ) {
-      result = Et96MapV2ForwardSmMOResp(
+        Et96MapV2ForwardSmMOResp(
         localSsn,
         dialogueId,
         invokeId,
         &moResp);
     }else if ( dialog->version == 1 ) {
-      result = Et96MapV1ForwardSmMOResp(
-        dialog->ssn,
-        dialog->dialogid_map,
-        dialog->invokeId,
+        Et96MapV1ForwardSmMOResp(
+        localSsn,
+        dialogueId,
+        invokeId,
         &moResp);
     }
 
