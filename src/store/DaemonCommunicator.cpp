@@ -261,7 +261,7 @@ void RsSmsMessage::send(Socket* socket)
     if (validTimeSz > 0)  { memcpy(position, validTimeBuffer, validTimeSz); position+=validTimeSz; }
     memcpy(position, &lastTimeSz, sizeof(lastTimeSz)); position+=sizeof(lastTimeSz);
     if (lastTimeSz > 0)   { memcpy(position, lastTimeBuffer, lastTimeSz); position+=lastTimeSz;}
-    memcpy(position, &submitTimeSz, sizeof(submitTimeSz)); position+=sizeof(submitTimeSz);
+    memcpy(position, &nextTimeSz, sizeof(nextTimeSz)); position+=sizeof(nextTimeSz);
     if (nextTimeSz > 0)   { memcpy(position, nextTimeBuffer, nextTimeSz); position+=nextTimeSz; }
     
     uint32_t attempts = htonl(sms.attempts);
