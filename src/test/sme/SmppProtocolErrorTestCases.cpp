@@ -1037,7 +1037,7 @@ class InvalidBindStatusScenario : public SmppProtocolErrorScenario
 public:
 	InvalidBindStatusScenario(const SmeConfig& conf, const Address& addr,
 		CheckList* chkList, int _num)
-	: InvalidBindStatusScenario(conf, addr, chkList), num(_num), cmdId(0)
+	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num), cmdId(0)
 	{
 		__trace2__("InvalidBindStatusScenario(): scenario = %p", this);
 	}
