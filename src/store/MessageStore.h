@@ -20,10 +20,10 @@ namespace smsc { namespace store
             throw(StorageException, NoSuchMessageException) = 0;
 
     protected:
-
+        
         MessageStore() {};
         virtual ~MessageStore() {};
-   };
+    };
 }}
 
 #endif
