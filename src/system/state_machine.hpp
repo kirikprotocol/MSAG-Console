@@ -60,7 +60,7 @@ public:
   time_t maxValidTime;
   Address scAddress;
 
-  static void processDirectives(SMS& sms,smsc::profiler::Profile& p);
+  static void processDirectives(SMS& sms,Profile& p,Profile& srcprof);
 
 protected:
 
