@@ -260,6 +260,7 @@ div.p
 .secTitle,
 .secTitleOpened,
 .secTitleClosed,
+.secTitleOpenedClosedContinue,
 .secList,
 .secInfo,
 .secView,
@@ -288,17 +289,22 @@ div.p
 	background-color: #FFFFFF;
 	padding:4px;
 }
-.secTitleOpened {
-	background-image: url(img/list_opened.gif);
+.secTitleOpened,
+.secTitleClosed,
+.secTitleOpenedClosedContinue {
+	cursor: hand;
 	background-position: left;
 	border-top: 1px solid #888888;
 	border-bottom: none;
 }
+.secTitleOpened {
+	background-image: url(img/list_opened.gif);
+}
 .secTitleClosed {
 	background-image: url(img/list_closed.gif);
-	background-position: left;
-	border-top: 1px solid #888888;
-	border-bottom: none;
+}
+.secTitleOpenedClosedContinue {
+	padding-left:0px;
 }
 /******************************************************************************/
 /* NAVBAR TYPE 0                                                              */

@@ -51,7 +51,7 @@ name="bean" property="*"
 	void printAddSectionField(JspWriter out, String sectionFN) throws IOException
 	{
 		final String newSectionInput = "newSectionInput_" + sectionFN;
-		out.print("<table class=secRep width=100% cellspacing=1><col/><col width='16px'/>");
+		out.print("<table width=100% cellspacing=1 border=0><col/><col width='16px'/>");
 		out.print("<tr><td>");
 		createInput(out, newSectionInput);
 		out.print("</td><td>");
