@@ -100,6 +100,7 @@ Targets:
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
+    <copy file="${BUILD_BIN}/libsimplebilling.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/smppgw/smppgw" todir="${DISTR_DIR}/services/smppgw/bin"/>
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
     <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
@@ -171,6 +172,9 @@ Targets:
   </target>
 
   <target name="create_distr" depends="create_distr_tree, update">
+    <copy todir="${DISTR_DIR}/lib" file="${XERCES_LIB}" flatten="yes" failonerror="no"/>
+    <symlink resource="libxerces-c.so.25.0" link="${DISTR_DIR}/lib/libxerces-c.so.25" overwrite="yes" />
+    <symlink resource="libxerces-c.so.25.0" link="${DISTR_DIR}/lib/libxerces-c.so" overwrite="yes" />
   </target>
 
   <target name="distr" depends="create_distr, configure">
