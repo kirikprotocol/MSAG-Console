@@ -5,8 +5,7 @@ import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
 import ru.sibinco.smpp.appgw.scenario.ScenarioState;
 
 import java.util.Properties;
-
-import org.apache.log4j.Category;
+import java.io.IOException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,7 +16,7 @@ import org.apache.log4j.Category;
  */
 public class DivertManagerState
 {
-  private static Category logger = Category.getInstance(DivertManagerState.class);
+  //private static Category logger = Category.getInstance(DivertManagerState.class);
 
   protected ScenarioResourceBundle divertBundle = null;
   protected DivertManager divertManager = null;
@@ -28,7 +27,7 @@ public class DivertManagerState
     divertManager = DivertManager.getInstance();
   }
 
-  protected DivertInfo getDivertInfo(ScenarioState state)
+  protected DivertInfo getDivertInfo(ScenarioState state) throws IOException
   {
     DivertInfo info = (DivertInfo)state.getAttribute(Constants.ATTR_DIVERT);
     if (info == null) {
@@ -37,7 +36,7 @@ public class DivertManagerState
     }
     return info;
   }
-  protected void setDivertInfo(ScenarioState state, DivertInfo info)
+  protected void setDivertInfo(ScenarioState state, DivertInfo info) throws IOException
   {
     divertManager.setDivertInfo(state.getAbonent(), info);
     state.setAttribute(Constants.ATTR_DIVERT, info);

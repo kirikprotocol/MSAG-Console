@@ -23,14 +23,13 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
-    try
-    {
+    try {
       super.init(properties);
       pageFormat = new MessageFormat(Transliterator.translit(divertBundle.getString(Constants.PAGE_SET)));
-    }
-    catch (Exception e) {
-      logger.error("", e);
-      throw new ScenarioInitializationException(e.getMessage());
+    } catch (Exception e) {
+      final String err = "Executor init error";
+      logger.error(err, e);
+      throw new ScenarioInitializationException(err, e);
     }
   }
 

@@ -1,9 +1,6 @@
 package ru.sibinco.mci.profile;
 
-import ru.sibinco.smpp.appgw.scenario.ScenarioStateProcessor;
-import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
-import ru.sibinco.smpp.appgw.scenario.ScenarioState;
-import ru.sibinco.smpp.appgw.scenario.ProcessingException;
+import ru.sibinco.smpp.appgw.scenario.*;
 
 import java.util.Properties;
 
@@ -29,13 +26,13 @@ public class DivertSetPreprocessor extends DivertManagerState implements Scenari
   {
     String msg = state.getMessageString();
     if (msg == null)
-      throw new ProcessingException("Divert option is undefined", -1);
+      throw new ProcessingException("Divert option is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     msg = msg.trim();
     if      (msg.equals("1")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.BUSY);
     else if (msg.equals("2")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.ABSENT);
     else if (msg.equals("3")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.NOTAVAIL);
     else if (msg.equals("4")) state.setAttribute(Constants.ATTR_REASON, DivertInfo.UNCOND);
     else
-      throw new ProcessingException("Divert option '"+msg+"' is unknown", -2);
+      throw new ProcessingException("Divert option '"+msg+"' is unknown", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
   }
 }

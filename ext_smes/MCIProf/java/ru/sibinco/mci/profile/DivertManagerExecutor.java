@@ -6,6 +6,7 @@ import ru.aurorisoft.smpp.Message;
 
 import java.util.Properties;
 import java.text.MessageFormat;
+import java.io.IOException;
 
 import org.apache.log4j.Category;
 
@@ -37,8 +38,9 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
       valueVoicemail = Transliterator.translit(divertBundle.getString(Constants.VALUE_VOICEMAIL));
     }
     catch (Exception e) {
-      logger.error("", e);
-      throw new ScenarioInitializationException(e.getMessage());
+      final String err = "Executor init error";
+      logger.error(err, e);
+      throw new ScenarioInitializationException(err, e);
     }
   }
 
@@ -52,7 +54,14 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    DivertInfo info = getDivertInfo(state);
+    DivertInfo info = null;
+    try {
+      info = getDivertInfo(state);
+    } catch (IOException e) {
+      final String err = "Communication with MSC error";
+      logger.error(err, e);
+      throw new ExecutingException(err, e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+    }
     Object[] args = new Object[] {getValue(info.getBusy()), getValue(info.getAbsent()),
                                   getValue(info.getNotavail()), getValue(info.getUncond())};
     Message resp = new Message();

@@ -1,12 +1,10 @@
 package ru.sibinco.mci.profile;
 
-import ru.sibinco.smpp.appgw.scenario.ScenarioStateProcessor;
-import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
-import ru.sibinco.smpp.appgw.scenario.ScenarioState;
-import ru.sibinco.smpp.appgw.scenario.ProcessingException;
+import ru.sibinco.smpp.appgw.scenario.*;
 import ru.sibinco.smpp.appgw.util.Transliterator;
 
 import java.util.Properties;
+import java.io.IOException;
 
 import org.apache.log4j.Category;
 
@@ -42,13 +40,18 @@ public class DivertManagerPreprocessor extends DivertManagerState implements Sce
           else if (msg.equals("3")) value = Constants.VOICEMAIL;
           else value = Transliterator.translit(msg.trim());
 
-          DivertInfo info = getDivertInfo(state);
-          if (reason.equals(DivertInfo.BUSY))          info.busy     = value;
-          else if (reason.equals(DivertInfo.ABSENT))   info.absent   = value;
-          else if (reason.equals(DivertInfo.NOTAVAIL)) info.notavail = value;
-          else if (reason.equals(DivertInfo.UNCOND))   info.uncond   = value;
-          setDivertInfo(state, info);
-          // TODO: catch possible exception on get & set divert
+          try {
+            DivertInfo info = getDivertInfo(state);
+            if (reason.equals(DivertInfo.BUSY))          info.setBusy(value);
+            else if (reason.equals(DivertInfo.ABSENT))   info.setAbsent(value);
+            else if (reason.equals(DivertInfo.NOTAVAIL)) info.setNotavail(value);
+            else if (reason.equals(DivertInfo.UNCOND))   info.setUncond(value);
+            setDivertInfo(state, info);
+          } catch (IOException e) {
+            final String err = "Communication with MSC error";
+            logger.error(err, e);
+            throw new ProcessingException(err, e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+          }
         }
       }
     }
