@@ -525,18 +525,28 @@ void LangManager::removeLang(const std::string mask)
 
 AdRepository::AdRepository(DataSource& _ds, ConfigView* config)
     throw(ConfigException, InitException) 
-        : log(Logger::getCategory("smsc.wsme.WSmeAdRepository")), ds(_ds) 
+        : log(Logger::getCategory("smsc.wsme.WSmeAdRepository")), 
+            ds(_ds), minAdId(0), maxAdId(0)
 {
-    loadMaxAdId();
+    loadUpAds();
 }
 AdRepository::~AdRepository()
 {
+    MutexGuard  guard(adsLock);
+
+    IntHash<Hash<std::string>*>::Iterator it = ads.First();
+    int id; Hash<std::string>* ids = 0;
+    while (it.Next(id, ids))
+        if (ids) delete ids;
 }
 
-const char* SQL_MAX_AD_ID = "SELECT NVL(MAX(ID), 0) FROM WSME_AD";
-void AdRepository::loadMaxAdId()
+const char* SQL_LOAD_ADS = 
+"SELECT ID, LANG, AD FROM WSME_AD ORDER BY ID ASC";
+void AdRepository::loadUpAds()
     throw(InitException)
 {
+    MutexGuard  guard(adsLock);
+
     ResultSet* rs = 0;
     Statement* statement = 0; 
     Connection* connection = 0;
@@ -547,11 +557,29 @@ void AdRepository::loadMaxAdId()
         if (!connection)
             throw InitException("Get connection failed");
         if (!connection->isAvailable()) connection->connect();
-        statement = connection->createStatement(SQL_MAX_AD_ID);
+        statement = connection->createStatement(SQL_LOAD_ADS);
         ResultSet* rs = statement->executeQuery();
-        if (!rs || !rs->fetchNext())
+        if (!rs) 
             throw InitException("Get results failed");
-        maxAdId = rs->getInt32(1);
+
+        while (rs->fetchNext())
+        {
+            uint32_t id = rs->getUint32(1);
+            const char* lang = (rs->isNull(2)) ? 0:rs->getString(2);
+            const char* ad   = (rs->isNull(3)) ? 0:rs->getString(3);
+
+            Hash<std::string>* ids = 
+                (ads.Exist(id)) ? ads.Get(id):new Hash<std::string>(0);
+            std::string adStr = ad ? ad:"";
+            if (ids && !ids->Exists(lang))
+                ids->Insert(lang, adStr);
+            if (!ads.Exist(id))
+                ads.Insert(id, ids);
+
+            if (id > maxAdId) maxAdId = id;
+            if (id < minAdId) minAdId = id;
+        }
+
         if (rs) delete rs;
         if (statement) delete statement;
         if (connection) ds.freeConnection(connection);
@@ -567,73 +595,136 @@ void AdRepository::loadMaxAdId()
     }
 }
 
-const char* SQL_GET_AD_BY_ID_LANG =
-"SELECT AD FROM WSME_AD WHERE ID=:ID AND LANG=:LANG";
 bool AdRepository::getAd(int id, const std::string lang, std::string& ad)
     throw (ProcessException)
 {
-    ResultSet* rs = 0;
-    Statement* statement = 0; 
-    Connection* connection = 0;
+    MutexGuard  guard(adsLock);
 
-    __trace2__("AdRepository::getAd called, id=%d", id);
-
-    try
-    {
-        connection = ds.getConnection();
-        if (!connection)
-            throw ProcessException("Get connection failed");
-        if (!connection->isAvailable()) connection->connect();
-
-        statement = connection->createStatement(SQL_GET_AD_BY_ID_LANG);
-        if (!statement)
-            throw ProcessException("Create statement failed");
-        statement->setInt32 (1, id);
-        statement->setString(2, lang.c_str());    
-
-        ResultSet* rs = statement->executeQuery();
-        if (!rs)
-            throw ProcessException("Get results failed");
-        
-        if (!rs->fetchNext()) return false;
-        ad = rs->getString(1);
-        __trace2__("Got ad: '%s'", ad.c_str());
-        
-        if (rs) delete rs;
-        if (statement) delete statement;
-        if (connection) ds.freeConnection(connection);
-    }
-    catch (Exception& exc)
-    {
-        if (rs) delete rs;
-        if (statement) delete statement;
-        if (connection) ds.freeConnection(connection);
-        log.error(exc.what());
-        throw ProcessException(exc.what());
-    }
+    Hash<std::string>* ids = (ads.Exist(id)) ? ads.Get(id):0;
+    if (!ids || !ids->Exists(lang.c_str())) return false;
+    ad = ids->Get(lang.c_str());
     return true;
 }
-
 int AdRepository::getFirstId()
 {
-    return 0;
+    return minAdId;
 }
 int AdRepository::getNextId(int id)
 {
     return (id+1)%(maxAdId+1);
 }
 
+const char* SQL_ADD_NEW_AD = 
+"INSERT INTO WSME_AD (ID, LANG, AD) VALUES (:ID, :LANG, :AD)";
 void AdRepository::addAd(int id, const std::string lang, std::string ad)
     throw (ProcessException)
 {
-    // TODO: implement it
+    MutexGuard  guard(adsLock);
+
+    Hash<std::string>* newIds = ads.Exist(id) ? 0:new Hash<std::string>(0);
+    Hash<std::string>* ids = (newIds) ? newIds:ads.Get(id);
+    
+    __require__(ids);
+
+    const char* langStr = lang.c_str();
+    const char* adStr = ad.c_str();
+    if (ids->Exists(langStr)) {
+        if (newIds) delete newIds;
+        throw ProcessException("Ad with id='%d' and lang='%s' already defined", 
+                               id, langStr);
+    }
+    
+    Statement* statement = 0; 
+    Connection* connection = 0;
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection) 
+            throw Exception("Get connection failed");
+        if (!connection->isAvailable()) connection->connect();
+        statement = connection->createStatement(SQL_ADD_NEW_AD);
+        if (!statement) 
+            throw Exception("Create statement failed");
+        
+        statement->setUint32(1, id);
+        statement->setString(2, langStr);
+        statement->setString(3, adStr);
+        statement->executeUpdate();
+        connection->commit();
+        
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        if (newIds) delete newIds; newIds=0;
+        if (statement) delete statement;
+        if (connection) {
+            try { connection->rollback(); } catch (Exception& eee) {
+                log.error("Rollback failed, Cause: %s", eee.what());
+            }
+            ds.freeConnection(connection);
+        }
+        throw ProcessException("Failed to add Ad with id='%d' and lang='%s'"
+                               ", Cause: %s", id, langStr, exc.what());
+    }
+    
+    ids->Insert(langStr, ad);
+    if (!ads.Exist(id)) ads.Insert(id, ids);
 }
+
+const char* SQL_REMOVE_AD = 
+"DELETE FROM WSME_AD WHERE ID=:ID AND LANG=:LANG";
 void AdRepository::removeAd(int id, const std::string lang)
     throw (ProcessException)
 {
-    // TODO: implement it
-}
+    MutexGuard  guard(adsLock);
 
+    Hash<std::string>* ids = (ads.Exist(id)) ? ads.Get(id):0;
+    if (!ids)
+        throw ProcessException("Ad with id='%d' and lang='%s' not defined", 
+                               id, lang.c_str());
+    __require__(ids);
+
+    const char* langStr = lang.c_str();
+    Statement* statement = 0; 
+    Connection* connection = 0;
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection) 
+            throw Exception("Get connection failed");
+        if (!connection->isAvailable()) connection->connect();
+        statement = connection->createStatement(SQL_REMOVE_AD);
+        if (!statement) 
+            throw Exception("Create statement failed");
+        
+        statement->setUint32(1, id);
+        statement->setString(2, langStr);
+        statement->executeUpdate();
+        connection->commit();
+        
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        if (statement) delete statement;
+        if (connection) {
+            try { connection->rollback(); } catch (Exception& eee) {
+                log.error("Rollback failed, Cause: %s", eee.what());
+            }
+            ds.freeConnection(connection);
+        }
+        throw ProcessException("Failed to remove Ad with id='%d' and lang='%s'"
+                               ", Cause: %s", id, langStr, exc.what());
+    }
+
+    ids->Delete(langStr);
+    if (ids->GetCount() <= 0) {
+        ads.Delete(id); delete ids;
+    }
+}
 
 /* ------------------------ AdHistory ------------------------ */
 

@@ -19,6 +19,7 @@
 #include <util/Exception.hpp>
 #include <core/buffers/Array.hpp>
 #include <core/buffers/Hash.hpp>
+#include <core/buffers/IntHash.hpp>
 
 #include <util/config/Config.h>
 #include <util/config/Manager.h>
@@ -121,9 +122,12 @@ namespace smsc { namespace wsme
         log4cpp::Category&  log;
         DataSource&         ds;
 
-        int maxAdId;
-        void loadMaxAdId()
-            throw(InitException);
+        uint32_t           maxAdId, minAdId;
+        Mutex                       adsLock;
+        IntHash<Hash<std::string>*> ads;
+
+        void loadUpAds()
+            throw (InitException);
     
     public:
 
