@@ -14,13 +14,13 @@ namespace smsc { namespace store
 
     using smsc::sms::SMSId;
 
-    const int MAX_MESSAGE_LENGTH = 2048;
+    const int SMSC_MAX_ERROR_MESSAGE_LENGTH = 2048;
 
     class StoreException : public exception
     {
     protected:
         
-        char  cause[MAX_MESSAGE_LENGTH];
+        char  cause[SMSC_MAX_ERROR_MESSAGE_LENGTH];
         
         StoreException() {};
 
@@ -50,6 +50,11 @@ namespace smsc { namespace store
 
     public:
         
+        StorageException(const StorageException& exc) 
+            : StoreException(exc.what()),
+                code(exc.getErrorCode()), status(exc.getErrorStatus())
+        {};
+        
         StorageException(const char* _cause, int _code=-1, int _status=0) 
             : StoreException(), code(_code), status(_status) 
         {
@@ -58,17 +63,15 @@ namespace smsc { namespace store
         };
         virtual ~StorageException() throw() {};
         
-        inline int getErrorCode() {
+        inline int getErrorCode() const {
             return code;
         };
-        inline int getErrorStatus() {
+        inline int getErrorStatus() const {
             return status;
         };
     };
     
-    
-
-    class TooLargeQueueException : public StorageException
+    /*class TooLargeQueueException : public StorageException
     {
     public:
         
@@ -77,14 +80,14 @@ namespace smsc { namespace store
                                "for store connections !",
                                SMSC_STORE_QUEUE_TOO_LARGE) {};
         virtual ~TooLargeQueueException() throw() {};
-    };
+    };*/
 
-    class ConnectionFailedException : public StoreException
+    class ConnectionFailedException : public StorageException
     {
     public:
         
-        ConnectionFailedException(StoreException& exc)
-            : StoreException(exc.what()) {};
+        ConnectionFailedException(StorageException& exc)
+            : StorageException(exc) {};
         
         virtual ~ConnectionFailedException() throw() {};
     };

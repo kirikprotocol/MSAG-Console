@@ -8,6 +8,7 @@
 namespace smsc { namespace store 
 {
 /* ----------------------------- StoreManager -------------------------- */
+
 using namespace smsc::sms;
 using smsc::util::Logger;
 using smsc::util::config::Manager;
@@ -66,10 +67,9 @@ void StoreManager::startup(Manager& config)
             connection = pool->getConnection();
             generator = new IDGenerator(connection->getMessagesCount());
         }
-        // catch (TooLargeQueueException) ???
-        catch (StoreException& exc)
+        catch (StorageException& exc)
         {
-            log.error("StoreException: %s", exc.what());
+            //log.error("StorageException: %s", exc.what());
             if (pool) 
             {
                 if (connection)
@@ -122,15 +122,6 @@ SMSId StoreManager::store(const SMS &sms)
             pool->freeConnection(connection);
             break;
         }
-        catch (ConnectionFailedException& exc) 
-        {
-            if (connection) pool->freeConnection(connection);
-            continue;
-        }
-        catch (TooLargeQueueException& exc)
-        {
-            throw;
-        }
         catch (StorageException& exc) 
         {
             if (connection) pool->freeConnection(connection);
@@ -160,15 +151,6 @@ void StoreManager::retrive(SMSId id, SMS &sms)
             connection->retrive(id, sms);
             pool->freeConnection(connection);
             break;
-        }
-        catch (ConnectionFailedException& exc) 
-        {
-            if (connection) pool->freeConnection(connection);
-            continue;
-        }
-        catch (TooLargeQueueException& exc)
-        {
-            throw;
         }
         catch (NoSuchMessageException& exc) 
         {
@@ -204,15 +186,6 @@ void StoreManager::remove(SMSId id)
             pool->freeConnection(connection);
             break;
         }
-        catch (ConnectionFailedException& exc) 
-        {
-            if (connection) pool->freeConnection(connection);
-            continue;
-        }
-        catch (TooLargeQueueException& exc)
-        {
-            throw;
-        }
         catch (NoSuchMessageException& exc) 
         {
             if (connection) pool->freeConnection(connection);
@@ -247,15 +220,6 @@ void StoreManager::replace(SMSId id, const SMS &sms)
             pool->freeConnection(connection);
             break;
         }
-        catch (ConnectionFailedException& exc) 
-        {
-            if (connection) pool->freeConnection(connection);
-            continue;
-        }
-        catch (TooLargeQueueException& exc)
-        {
-            throw;
-        }
         catch (NoSuchMessageException& exc) 
         {
             if (connection) pool->freeConnection(connection);
@@ -273,8 +237,6 @@ void StoreManager::replace(SMSId id, const SMS &sms)
         }
     }
 }
-
-/* ----------------------------- StoreManager -------------------------- */
 
 }}
 

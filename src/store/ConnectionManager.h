@@ -55,9 +55,6 @@ namespace smsc { namespace store
 
         Mutex           mutex;
         
-        /*void checkConnErr(sword status) 
-            throw(ConnectionFailedException);*/
-        
         void checkErr(sword status) 
             throw(StorageException);
         
@@ -79,18 +76,15 @@ namespace smsc { namespace store
         };
 
         SMSId getMessagesCount()
-            throw(ConnectionFailedException, StorageException);
+            throw(StorageException);
         void store(const SMS &sms, SMSId id) 
-            throw(ConnectionFailedException, StorageException);
+            throw(StorageException);
         void retrive(SMSId id, SMS &sms) 
-            throw(ConnectionFailedException, StorageException, 
-                  NoSuchMessageException);
+            throw(StorageException, NoSuchMessageException);
         void remove(SMSId id) 
-            throw(ConnectionFailedException, StorageException, 
-                  NoSuchMessageException);
+            throw(StorageException, NoSuchMessageException);
         void replace(SMSId id, const SMS &sms) 
-            throw(ConnectionFailedException, StorageException,
-                  NoSuchMessageException);
+            throw(StorageException, NoSuchMessageException);
     };
     
     struct ConnectionQueue
@@ -161,8 +155,7 @@ namespace smsc { namespace store
         
         bool hasFreeConnections();
         
-        Connection* getConnection()
-            throw(TooLargeQueueException);
+        Connection* getConnection();
         void freeConnection(Connection* connection);
     };
 

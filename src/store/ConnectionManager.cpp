@@ -207,7 +207,6 @@ bool ConnectionPool::hasFreeConnections()
 }
 
 Connection* ConnectionPool::getConnection()
-    throw(TooLargeQueueException)
 {
     ConnectionQueue queue;
     MutexGuard  guard(monitor);
@@ -453,7 +452,7 @@ void Connection::disconnect()
 }
 
 SMSId Connection::getMessagesCount()
-    throw(ConnectionFailedException, StorageException)
+    throw(StorageException)
 {
     MutexGuard  guard(mutex);
 
@@ -468,7 +467,7 @@ SMSId Connection::getMessagesCount()
 }
 
 void Connection::store(const SMS &sms, SMSId id) 
-    throw(ConnectionFailedException, StorageException)
+    throw(StorageException)
 {
     MutexGuard  guard(mutex);
 
@@ -489,7 +488,7 @@ void Connection::store(const SMS &sms, SMSId id)
 }
 
 void Connection::retrive(SMSId id, SMS &sms) 
-    throw(ConnectionFailedException, StorageException, NoSuchMessageException)
+    throw(StorageException, NoSuchMessageException)
 {
     MutexGuard  guard(mutex);
 
@@ -511,7 +510,7 @@ void Connection::retrive(SMSId id, SMS &sms)
 }
 
 void Connection::remove(SMSId id) 
-    throw(ConnectionFailedException, StorageException, NoSuchMessageException)
+    throw(StorageException, NoSuchMessageException)
 {
     MutexGuard  guard(mutex);
 
@@ -539,7 +538,7 @@ void Connection::remove(SMSId id)
 }
 
 void Connection::replace(SMSId id, const SMS &sms) 
-    throw(ConnectionFailedException, StorageException, NoSuchMessageException)
+    throw(StorageException, NoSuchMessageException)
 {
     MutexGuard  guard(mutex);
     
@@ -622,21 +621,6 @@ void Connection::checkErr(sword status)
     log.error("Storage Exception : %s\n", exc.what());
     throw exc;
 }
-
-/*void Connection::checkConnErr(sword status) 
-    throw(ConnectionFailedException)
-{
-    try 
-    {
-        checkErr(status);
-    } 
-    catch (StorageException& exc) 
-    {
-        throw ConnectionFailedException(exc);
-    }
-}*/
-
-/* ------------------------------- Connection -------------------------- */
 
 }}
 
