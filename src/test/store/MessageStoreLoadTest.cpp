@@ -43,17 +43,9 @@ private:
 class MessageStoreLoadTestTaskManager
 	: public TestTaskManager<MessageStoreLoadTestTask>
 {
-private:
-	timeb t1;
-	int ops1;
-
 public:
 	MessageStoreLoadTestTaskManager() {}
 	virtual bool isStopped() const;
-	void startTimer();
-	void printStatus();
-	float getRate();
-	int getOps() const;
 };
 
 /**
@@ -70,12 +62,22 @@ struct MessageStoreLoadTestTaskStat
 /**
  * Хранилище статистики всего теста.
  */
-class MessageStoreLoadTestStat
+class MessageStoreLoadTest
 {
-public:
+private:
 	typedef vector<MessageStoreLoadTestTaskStat> TaskStatList;
-
 	static TaskStatList taskStat;
+	static timeb t1;
+	static int ops1;
+
+public:
+	static void init(int numThreads);
+	static bool isStopped();
+	static void onStopped(int taskNum);
+	static void doStat(int taskNum, const TCResult* res);
+	static void printStatus();
+	static float getRate();
+	static int getOps();
 };
 
 //MessageStoreLoadTestTask methods
@@ -84,38 +86,46 @@ MessageStoreLoadTestTask::MessageStoreLoadTestTask(int _taskNum)
 
 void MessageStoreLoadTestTask::executeCycle()
 {
-	SMSId id;
-	SMS sms;
 	for (int i = 0; i < 20; i++)
 	{
-		doStat(tc.storeCorrectSM(&id, &sms, RAND_TC));
-		doStat(tc.setCorrectSMStatus(id, &sms, RAND_TC));
+		SMSId id;
+		SMS sms;
+		doStat(tc.storeCorrectSms(&id, &sms, RAND_TC));
+		doStat(tc.changeExistentSmsStateEnrouteToFinal(id, &sms, RAND_TC));
 	}
 }
 
 inline void MessageStoreLoadTestTask::onStopped()
 {
-	MessageStoreLoadTestStat::taskStat[taskNum].stopped = true;
+	MessageStoreLoadTest::onStopped(taskNum);
 }
 
-void MessageStoreLoadTestTask::doStat(const TCResult* res)
+inline void MessageStoreLoadTestTask::doStat(const TCResult* res)
 {
-	(MessageStoreLoadTestStat::taskStat[taskNum].ops)++;
-	delete res;
+	MessageStoreLoadTest::doStat(taskNum, res);
 }
 
 //MessageStoreLoadTestTaskManager methods
-inline void MessageStoreLoadTestTaskManager::startTimer()
+inline bool MessageStoreLoadTestTaskManager::isStopped() const
 {
-	TestTaskManager<MessageStoreLoadTestTask>::startTimer();
-	ftime(&t1);
-	ops1 = getOps();
+	return MessageStoreLoadTest::isStopped();
 }
 
-bool MessageStoreLoadTestTaskManager::isStopped() const
+//MessageStoreBusinessCycleTest
+MessageStoreLoadTest::TaskStatList MessageStoreLoadTest::taskStat =
+	MessageStoreLoadTest::TaskStatList();
+timeb MessageStoreLoadTest::t1 = timeb();
+int MessageStoreLoadTest::ops1 = 0;
+
+inline void MessageStoreLoadTest::init(int numThreads)
 {
-	MessageStoreLoadTestStat::TaskStatList& taskStat = 
-		MessageStoreLoadTestStat::taskStat;
+	ftime(&t1);
+	ops1 = getOps();
+	taskStat.resize(numThreads);
+}
+
+bool MessageStoreLoadTest::isStopped()
+{
 	bool stopped = true;
 	for (int i = 0; stopped && (i < taskStat.size()); i++)
 	{
@@ -124,10 +134,21 @@ bool MessageStoreLoadTestTaskManager::isStopped() const
 	return stopped;
 }
 
-void MessageStoreLoadTestTaskManager::printStatus()
+inline void MessageStoreLoadTest::onStopped(int taskNum)
 {
-	MessageStoreLoadTestStat::TaskStatList& taskStat = 
-		MessageStoreLoadTestStat::taskStat;
+	taskStat[taskNum].stopped = true;
+}
+
+inline void MessageStoreLoadTest::doStat(int taskNum, const TCResult* res)
+{
+	if (res && strcmp(res->getId(), TC_STORE_CORRECT_SMS) == 0)
+	{
+		taskStat[taskNum].ops++;
+	}
+}
+
+void MessageStoreLoadTest::printStatus()
+{
 	int totalOps = 0;
 	for (int i = 0; i < taskStat.size(); i++)
 	{
@@ -139,7 +160,7 @@ void MessageStoreLoadTestTaskManager::printStatus()
 	cout << "------------------------" << endl;
 }
 
-float MessageStoreLoadTestTaskManager::getRate()
+float MessageStoreLoadTest::getRate()
 {
 	int ops2 = getOps();
 	timeb t2; ftime(&t2);
@@ -150,10 +171,8 @@ float MessageStoreLoadTestTaskManager::getRate()
 	return rate;
 }
 
-int MessageStoreLoadTestTaskManager::getOps() const
+int MessageStoreLoadTest::getOps()
 {
-	MessageStoreLoadTestStat::TaskStatList& taskStat = 
-		MessageStoreLoadTestStat::taskStat;
 	int totalOps = 0;
 	for (int i = 0; i < taskStat.size(); i++)
 	{
@@ -162,14 +181,10 @@ int MessageStoreLoadTestTaskManager::getOps() const
 	return totalOps;
 }
 
-//MessageStoreBusinessCycleTestStat
-MessageStoreLoadTestStat::TaskStatList MessageStoreLoadTestStat::taskStat =
-	MessageStoreLoadTestStat::TaskStatList();
-
 //test body
 void executeLoadTest(int numThreads)
 {
-	MessageStoreLoadTestStat::taskStat.resize(numThreads);
+	MessageStoreLoadTest::init(numThreads);
 	MessageStoreLoadTestTaskManager tm;
 	for (int i = 0; i < numThreads; i++)
 	{
@@ -179,32 +194,44 @@ void executeLoadTest(int numThreads)
 	}
 	tm.startTimer();
 
+	string cmd;
+	bool help = true;
 	while (true)
 	{
-		char ch;
-		cin >> ch;
-		switch (ch)
+		//хелп
+		if (help)
 		{
-			case 'q':
-				tm.stopTasks();
-				cout << "Total time = " << tm.getExecutionTime() << endl;
-				cout << "Total operations = " << tm.getOps() << endl;
-				cout << "Average rate = " <<
-					(tm.getOps() / tm.getExecutionTime()) << endl;
-				return;
-			case 's':
-				cout << "Time = " << tm.getExecutionTime() << endl;
-				tm.printStatus();
-				break;
-			case 'a':
-				cout << "Time = " << tm.getExecutionTime() << endl;
-				cout << "Rate = " << tm.getRate()
-					<< " messages/second" << endl;
-				break;
-			default:
-				cout << "'a' - show totals" << endl;
-				cout << "'s' - show statistics" << endl;
-				cout << "'q' - quit" << endl;
+			help = false;
+			cout << "'rate' - print rate" << endl;
+			cout << "'stat' - print statistics" << endl;
+			cout << "'quit' - quit" << endl;
+		}
+
+		//обработка команд
+		cin >> cmd;
+		if (cmd == "quit")
+		{
+			tm.stopTasks();
+			cout << "Total time = " << tm.getExecutionTime() << endl;
+			cout << "Total operations = " << MessageStoreLoadTest::getOps() << endl;
+			cout << "Average rate = " <<
+				(MessageStoreLoadTest::getOps() / tm.getExecutionTime()) << endl;
+			break;
+		}
+		else if (cmd == "stat")
+		{
+			cout << "Time = " << tm.getExecutionTime() << endl;
+			MessageStoreLoadTest::printStatus();
+		}
+		else if (cmd == "rate")
+		{
+			cout << "Time = " << tm.getExecutionTime() << endl;
+			cout << "Rate = " << MessageStoreLoadTest::getRate()
+				<< " messages/second" << endl;
+		}
+		else
+		{
+			help = true;
 		}
 	}
 }
