@@ -9,6 +9,7 @@ namespace smsc {
 namespace test {
 namespace util {
 
+using std::ostream;
 using std::vector;
 
 //флаги выполнения тест кейсов
@@ -107,6 +108,14 @@ public:
 	int value2(int num1, int num2) const;
 	int value3(int num1, int num2) const;
 };
+
+ostream& operator<< (ostream& os, int8_t val);
+//ostream& operator<< (ostream& os, int16_t val);
+//ostream& operator<< (ostream& os, int32_t val);
+
+ostream& operator<< (ostream& os, uint8_t val);
+//ostream& operator<< (ostream& os, uint16_t val);
+//ostream& operator<< (ostream& os, uint32_t val);
 
 }
 }

@@ -209,6 +209,18 @@ int TCSelector::value3(int num1, int num2) const
 	return 1 + (value() - 1) / (num1 * num2);
 }
 
+ostream& operator<< (ostream& os, int8_t val)
+{
+	os << (int) val;
+	return os;
+}
+
+ostream& operator<< (ostream& os, uint8_t val)
+{
+	os << (unsigned int) val;
+	return os;
+}
+
 }
 }
 }
