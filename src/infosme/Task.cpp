@@ -283,7 +283,7 @@ void Task::beginProcess()
         SQLGetAdapter       getAdapter(rs);
         ContextEnvironment  context;
 
-        int uncommitted = 0;
+        int uncommited = 0;
         while (bInProcess)
         {
             wdOwnTimerId = dsOwn->startTimer(ownConnection, info.dsOwnTimeout);
@@ -310,13 +310,13 @@ void Task::beginProcess()
 
                 //logger.info("Message '%s' for '%s' generated.", message.c_str(), abonentAddress);
 
-                if (info.dsUncommited <= 0 || ++uncommitted >= info.dsUncommited) {
+                if (info.dsUncommited <= 0 || ++uncommited >= info.dsUncommited) {
                     intConnection->commit();
-                    uncommitted = 0;
+                    uncommited = 0;
                 }
             }
         }
-        if (uncommitted > 0) intConnection->commit();
+        if (uncommited > 0) intConnection->commit();
     }
     catch (Exception& exc)
     {
@@ -651,7 +651,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     time_t currentTime = time(NULL);
     if (currentTime-lastMessagesCacheEmpty > sleepOnEmptyInterval)
         lastMessagesCacheEmpty = currentTime;
-    //else return false;
+    else if (!bInProcess) return false;
     
     int wdTimerId = -1;
     try
@@ -673,7 +673,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
         if (!rs)
             throw Exception("Failed to obtain result set for message access.");
         
-        int fetched = 0;
+        int fetched = 0; int uncommited = 0;
         while (rs->fetchNext() && ++fetched <= fetchSize)
         {
             Message fetchedMessage(rs->getUint64(1), rs->getString(2), rs->getString(3));
@@ -692,11 +692,17 @@ bool Task::getNextMessage(Connection* connection, Message& message)
             if (waitMessage->executeUpdate() <= 0)
                 logger.warn("Failed to update message in getNextMessage() !!!");
                 // TODO: analyse it !
+            {
+                MutexGuard guard(messagesCacheLock);
+                messagesCache.Push(fetchedMessage);
+            }
             
-            MutexGuard guard(messagesCacheLock);
-            messagesCache.Push(fetchedMessage);
+            if (info.dsUncommited <= 0 || ++uncommited >= info.dsUncommited) {
+                connection->commit();
+                uncommited = 0;
+            }
         }
-        connection->commit();
+        if (uncommited > 0) connection->commit();
     }
     catch (Exception& exc)
     {
