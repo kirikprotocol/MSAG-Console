@@ -25,8 +25,9 @@ const char* const TC_SUBMIT_SM_ASSERT = "submitSmAssert";
 class SmppTransmitterTestCases : BaseTestCases
 {
 public:
-	SmppTransmitterTestCases(SmppSession* session, const Address& smeAddr,
-		const SmeRegistry* smeReg, SmppPduChecker* pduChecker);
+	SmppTransmitterTestCases(SmppSession* session, const SmeSystemId& systemId,
+		const Address& smeAddr, const SmeRegistry* smeReg,
+		SmppPduChecker* pduChecker);
 	
 	virtual ~SmppTransmitterTestCases() {}
 
@@ -63,7 +64,8 @@ protected:
 
 private:
 	SmppSession* session;
-	const Address& smeAddr;
+	const SmeSystemId systemId;
+	const Address smeAddr;
 	const SmeRegistry* smeReg;
 	PduRegistry* pduReg;
 	SmppPduChecker* pduChecker;
