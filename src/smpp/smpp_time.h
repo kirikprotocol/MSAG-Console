@@ -107,6 +107,8 @@ inline time_t smppTime2CTime(COStr& str)
 									((unsigned long)dtm.tm_hour)*60*60 +
 									((unsigned long)dtm.tm_min)*60 +
 									((unsigned long)dtm.tm_sec);
+		__trace2__("input time: %.16s\n",dta);
+		__trace2__("ctime: %s",ctime(&resultTime));
 	}
 	else
 	{ 
