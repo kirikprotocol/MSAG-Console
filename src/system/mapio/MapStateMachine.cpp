@@ -114,7 +114,7 @@ static void QueryHlrVersion(MapDialog* dialog)
 static void QueryMcsVersion(MapDialog* dialog)
 {
   char text[32];
-  SS7ToText(&dialog->mshlrAddr,text);
+  SS7ToText(&dialog->destMscAddr,text);
   string s_(text);
   __trace2__("MAP::QueryMcsVersion: [store %s]=0x%x",s_.c_str(),dialog->dialogid_map);
   x_map[s_] = dialog->dialogid_map;
