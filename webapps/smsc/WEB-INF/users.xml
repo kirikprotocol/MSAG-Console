@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="windows-1251"?>
-<!DOCTYPE users SYSTEM "file://users.dtd">
-<users>
-	<user login="admin" password="password" firstName="System" lastName="Administrator" dept="Dept" workPhone="none" homePhone="none" cellPhone="none" email="admin@unknown.ru">
-		<role name="apply"/>
-		<role name="users"/>
-	</user>
-</users>
