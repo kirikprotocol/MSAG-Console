@@ -31,7 +31,7 @@ RouteChecker::RouteChecker(const string& id, const Address& addr,
 	wantAlias = smeInfo->wantAlias;
 }
 
-vector<int> RouteChecker::checkRouteForNormalSms(PduDeliverySm& pdu1,
+vector<int> RouteChecker::checkRouteForNormalSms(PduSubmitSm& pdu1,
 	PduDeliverySm& pdu2) const
 {
 	vector<int> res;
@@ -81,7 +81,42 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduDeliverySm& pdu1,
 	return res;
 }
 
-vector<int> RouteChecker::checkRouteForAcknowledgementSms(PduDeliverySm& pdu1,
+vector<int> RouteChecker::checkRouteForNotificationSms(PduSubmitSm& pdu1,
+	PduDeliverySm& pdu2) const
+{
+	vector<int> res;
+	Address origAddr1, origAlias2, destAddr2;
+	SmppUtil::convert(pdu1.get_message().get_source(), &origAddr1);
+	SmppUtil::convert(pdu2.get_message().get_source(), &origAlias2);
+	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
+	//правильность destAddr для pdu2
+	if (destAddr2 != origAddr1)
+	{
+		res.push_back(1);
+	}
+	//правильность маршрута
+	const RouteHolder* routeHolder = NULL;
+	if (wantAlias)
+	{
+		const Address origAddr2 = aliasReg->findAddressByAlias(origAlias2);
+		routeHolder = routeReg->lookup(origAddr2, destAddr2);
+	}
+	else
+	{
+		routeHolder = routeReg->lookup(origAlias2, destAddr2);
+	}
+	if (!routeHolder)
+	{
+		res.push_back(3);
+	}
+	else if (systemId != routeHolder->route.smeSystemId)
+	{
+		res.push_back(4);
+	}
+	return res;
+}
+
+vector<int> RouteChecker::checkRouteForAcknowledgementSms(PduSubmitSm& pdu1,
 	PduDeliverySm& pdu2) const
 {
 	vector<int> res;
