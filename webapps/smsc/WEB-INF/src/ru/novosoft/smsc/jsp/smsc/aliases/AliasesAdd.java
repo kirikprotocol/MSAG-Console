@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.jsp.smsc.aliases;
 
 import ru.novosoft.smsc.admin.alias.Alias;
+import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
@@ -13,6 +14,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.List;
+import java.util.Iterator;
 
 public class AliasesAdd extends SmscBean
 {
@@ -72,9 +74,20 @@ public class AliasesAdd extends SmscBean
 		if (countQuestions(address) != countQuestions(alias))
 			return error(SMSCErrors.error.aliases.QuestionCountsNotMathes);
 
+		AliasSet aliases = smsc.getAliases();
+      if (isHide())
+		{
+         for (Iterator i = aliases.iterator(); i.hasNext();)
+			{
+				Alias alias = (Alias) i.next();
+				if (alias.isHide() && alias.getAddress().getMask().equals(address))
+					return error(SMSCErrors.error.aliases.alreadyExistsAddress, address);
+			}
+		}
+
 		try
 		{
-			if (smsc.getAliases().add(new Alias(new Mask(address), new Mask(alias), hide)))
+			if (aliases.add(new Alias(new Mask(address), new Mask(alias), hide)))
 			{
 				appContext.getStatuses().setAliasesChanged(true);
 				return RESULT_DONE;

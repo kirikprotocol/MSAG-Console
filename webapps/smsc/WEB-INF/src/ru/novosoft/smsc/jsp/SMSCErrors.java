@@ -67,6 +67,7 @@ public class SMSCErrors
 		{
 			private static final String B = error.B + "aliases.";
 			public static final String alreadyExists = B + "alreadyExists";
+			public static final String alreadyExistsAddress = B + "alreadyExistsAddress";
 			public static final String cantAdd = B + "cantAdd";
 			public static final String cantEdit = B + "cantEdit";
 			public static final String invalidAlias = B + "invalidAlias";
