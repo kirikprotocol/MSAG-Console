@@ -68,11 +68,22 @@ public:
     sigset_t set;
     sigemptyset(&set);
     sigaddset(&set,17);
+    sigaddset(&set, SIGBUS);
+    sigaddset(&set, SIGFPE);
+    sigaddset(&set, SIGILL);
+    sigaddset(&set, SIGSEGV);
+    sigaddset(&set, SIGTERM);
+
     if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0)
     {
       __warning__("Faield to update signal mask");
     }
     sigset(17,sigDispatcher);
+    sigset(SIGBUS,sigAbortDispatcher);
+    sigset(SIGFPE,sigAbortDispatcher);
+    sigset(SIGILL,sigAbortDispatcher);
+    sigset(SIGSEGV,sigAbortDispatcher);
+    sigset(SIGTERM,sigAbortDispatcher);
 
     uint64_t cnt,last=0;
     timespec now,lasttime;
@@ -203,6 +214,10 @@ protected:
   static void sigDispatcher(int sig)
   {
     smsc->abortSmsc();
+  }
+  static void sigAbortDispatcher(int sig)
+  {
+    smsc->dumpSmsc();
   }
 };
 

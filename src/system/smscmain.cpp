@@ -74,10 +74,10 @@ int main(int argc,char* argv[])
   {
     //added by igork
     atexit(atExitHandler);
-    
+
     sigset_t set;
     sigemptyset(&set);
-    for(int i=1;i<=37;i++)sigaddset(&set,i);
+    for(int i=1;i<=37;i++)if(i!=SIGQUIT)sigaddset(&set,i);
     if(thr_sigsetmask(SIG_SETMASK,&set,NULL)!=0)
     {
       __warning__("failed to set thread signal mask!");
@@ -94,7 +94,7 @@ int main(int argc,char* argv[])
     {
       fprintf(stderr, "WARNING: parameter \"logger.initFile\" not found in config - logger initialized by default\n");
     }
-		smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
+    smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
     smsc::util::config::smeman::SmeManConfig smemancfg;
     smemancfg.load(get_filename("sme.xml"));
     cfgs.smemanconfig=&smemancfg;
@@ -139,7 +139,7 @@ int main(int argc,char* argv[])
         sigemptyset(&set);
         sigaddset(&set,SIGINT);
 //#ifndef SPARC
-        sigaddset(&set,SIGQUIT);
+//        sigaddset(&set,SIGQUIT);
 //#endif
         if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0)
         {
@@ -174,7 +174,7 @@ int main(int argc,char* argv[])
         sigemptyset(&set);
         sigaddset(&set,SIGINT);
 //#ifndef SPARC
-        sigaddset(&set,SIGQUIT);
+//        sigaddset(&set,SIGQUIT);
 //#endif
         if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0)
         {

@@ -242,8 +242,14 @@ public:
       fclose(f);
     }
     statMan->flushStatistics();
-    system::mapio::MapDialogContainer::getInstance()->abort();
+    MapDialogContainer::getInstance()->abort();
     kill(getpid(),9);
+  }
+
+  void dumpSmsc()
+  {
+    MapDialogContainer::getInstance()->abort();
+    abort();
   }
 
   void getPerfData(uint64_t *cnt)
