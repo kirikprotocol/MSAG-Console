@@ -86,7 +86,7 @@ public:
   int Puts(const char* str);
   int InitServer(const char *host,int port,int timeout,int lng=1);
   int StartServer();
-  Socket* Accept(int to=-1);
+  Socket* Accept(int to=0);
   Socket* Clone()
   {
     return new Socket(sock,sockAddr);
