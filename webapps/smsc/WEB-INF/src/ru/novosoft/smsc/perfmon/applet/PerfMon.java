@@ -234,7 +234,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   public void run() {
     Socket sock = null;
     DataInputStream is = null;
-
+    isStopping = false;
     try {
       while(!isStopping) {
         try {
@@ -404,4 +404,21 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
       viewDeliverErrEnabled = menuDeliverErr.getState();
     }
   }
+
+  public void start() {
+    System.out.println("Starting...");
+    Thread thr = new Thread(this);
+    thr.start();
+  }
+
+  public void stop() {
+    System.out.println("Stoping...");
+    isStopping = true;
+  }
+
+  public void destroy() {
+    System.out.println("Destroying...");
+    isStopping = true;
+  }
+
 }
