@@ -3,14 +3,12 @@ package ru.novosoft.smsc.dbsme;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
-import java.security.Principal;
 import java.util.*;
 
 
@@ -59,7 +57,7 @@ public class Index extends DbsmeBean
   private int stop()
   {
     try {
-      appContext.getHostsManager().shutdownService(Constants.DBSME_SME_ID);
+      appContext.getHostsManager().shutdownService(getSmeId());
     } catch (AdminException e) {
       return error(DBSmeErrors.error.couldntStopDbSme, e);
     }
@@ -69,7 +67,7 @@ public class Index extends DbsmeBean
   private int start()
   {
     try {
-      appContext.getHostsManager().startService(Constants.DBSME_SME_ID);
+      appContext.getHostsManager().startService(getSmeId());
     } catch (AdminException e) {
       return error(DBSmeErrors.error.couldntStartDbSme, e);
     }

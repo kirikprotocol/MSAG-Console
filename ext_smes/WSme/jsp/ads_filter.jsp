@@ -12,7 +12,7 @@
 %>
 <jsp:setProperty name="wsme_af_bean" property="*"/>
 <%
-FORM_METHOD="get";
+  FORM_METHOD="get";
   TITLE="Welcome SME Messages Filter";
   MENU0_SELECTION = "MENU0_SERVICES";
   //MENU1_SELECTION = "WSME_INDEX";

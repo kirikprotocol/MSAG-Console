@@ -416,7 +416,7 @@ public class Index extends IndexProperties
     int result = RESULT_DONE;
     if (isToStart("sme")) {
       try {
-        getAppContext().getHostsManager().startService(Constants.INFO_SME_ID);
+        getAppContext().getHostsManager().startService(getSmeId());
         try { // из-за долгого старта InfoSme
           Thread.sleep(5000);
         } catch (InterruptedException e) {
@@ -453,7 +453,7 @@ public class Index extends IndexProperties
     int result = RESULT_DONE;
     if (isToStart("sme")) {
       try {
-        getAppContext().getHostsManager().shutdownService(Constants.INFO_SME_ID);
+        getAppContext().getHostsManager().shutdownService(getSmeId());
       } catch (AdminException e) {
         logger.error("Could not stop Info SME", e);
         result = error("Could not stop Info SME", e);

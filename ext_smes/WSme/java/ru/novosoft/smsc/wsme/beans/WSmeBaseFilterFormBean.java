@@ -8,9 +8,11 @@
 package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.wsme.WSmeContext;
 import ru.novosoft.smsc.wsme.WSmePreferences;
+import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -49,7 +51,15 @@ public class WSmeBaseFilterFormBean extends PageBean
 
   public int process(HttpServletRequest request)
   {
-    WSmeContext wSmeContext = WSmeContext.getInstance();
+    String smeId = "WSme";
+    try {
+      smeId = Functions.getServiceId(request.getServletPath());
+    } catch (AdminException e) {
+      logger.error("Could not discover service id", e);
+      error("Could not discover service id, WSme assumed", e);
+    }
+    WSmeContext wSmeContext = WSmeContext.getInstance(Functions.getAppContext(request), smeId);
+
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;

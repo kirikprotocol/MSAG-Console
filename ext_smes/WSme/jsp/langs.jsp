@@ -5,11 +5,12 @@
                  ru.novosoft.smsc.jsp.SMSCErrors,
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  java.util.List,
-                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
+                 ru.novosoft.smsc.util.StringEncoderDecoder,
+                 ru.novosoft.smsc.util.Functions"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.wsme.beans.WSmeLangsFormBean" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-  ServiceIDForShowStatus = Constants.WSME_SME_ID;
+  ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
   TITLE="Welcome SME Languages";
   MENU0_SELECTION = "MENU0_SERVICES";
   //MENU1_SELECTION = "WSME_INDEX";
@@ -23,6 +24,7 @@
     case WSmeFormBean.RESULT_ADS:
       response.sendRedirect("ads.jsp");
       return;
+    case WSmeFormBean.RESULT_HOME:
     case WSmeFormBean.RESULT_DONE:
       response.sendRedirect("index.jsp");
       return;

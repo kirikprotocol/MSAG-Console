@@ -6,11 +6,12 @@
                  ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
                  java.util.*,
                  ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem,
-                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
+                 ru.novosoft.smsc.util.StringEncoderDecoder,
+                 ru.novosoft.smsc.util.Functions"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-	ServiceIDForShowStatus = Constants.INFO_SME_ID;
+  ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
 	TITLE="Informer SME Administration";
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
@@ -90,7 +91,7 @@ page_menu_end(out);
 <tr class=row0>
   <td style="padding-right:3px"><input class=check type=checkbox id=toStartSme name=toStart value=sme onClick="checkStartStop();"></td>
   <th><label for=toStartSme>Info SME</label></th>
-  <td><%=serviceStatus(bean.getAppContext(), Constants.INFO_SME_ID, "InfoSme_RUNNING_STATUSERVICE_InfoSme")%></td>
+  <td><%=serviceStatus(bean.getAppContext(), bean.getSmeId(), "InfoSme_RUNNING_STATUSERVICE_InfoSme")%></td>
 </tr>
 <tr class=row1 id=procRow>
   <td style="padding-right:3px"><input class=check type=checkbox id=toStartProcessor name=toStart value=processor onClick="checkStartStop();"></td>

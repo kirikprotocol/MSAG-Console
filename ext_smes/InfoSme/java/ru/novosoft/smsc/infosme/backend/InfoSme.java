@@ -20,6 +20,6 @@ public class InfoSme extends InfoSmeTransport
 
   public void updateInfo(SMSCAppContext appContext) throws AdminException
   {
-    setInfo(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID));
+    setInfo(appContext.getHostsManager().getServiceInfo(getInfo().getId()));
   }
 }

@@ -316,7 +316,7 @@ public class Config implements Cloneable
     saveInternal(configFile, "ISO-8859-1");
   }
 
-  public Collection getSectionChildShortParamsNames(String sectionName)
+  public synchronized Collection getSectionChildShortParamsNames(String sectionName)
   {
     int dotpos = sectionName.length();
     Set result = new HashSet();
@@ -329,7 +329,7 @@ public class Config implements Cloneable
     return result;
   }
 
-  public boolean containsSection(String sectionName)
+  public synchronized boolean containsSection(String sectionName)
   {
     for (Iterator i = params.keySet().iterator(); i.hasNext();) {
       String paramName = (String) i.next();
@@ -339,12 +339,12 @@ public class Config implements Cloneable
     return false;
   }
 
-  public boolean containsParameter(String parameterName)
+  public synchronized boolean containsParameter(String parameterName)
   {
     return params.containsKey(parameterName);
   }
 
-  public void copySectionFromConfig(final Config configToCopyFrom, final String sectionName)
+  public synchronized void copySectionFromConfig(final Config configToCopyFrom, final String sectionName)
   {
     final int sectionNameLength = sectionName.length();
     for (Iterator i = configToCopyFrom.getParameterNames().iterator(); i.hasNext();) {
@@ -362,7 +362,7 @@ public class Config implements Cloneable
             || (o1 != null && o2 != null && o1.equals(o2));
   }
 
-  public boolean isParamEquals(Config anotherConfig, String fullParamName)
+  public synchronized boolean isParamEquals(Config anotherConfig, String fullParamName)
   {
     Object o1 = this.params.get(fullParamName);
     Object o2 = anotherConfig.params.get(fullParamName);
@@ -370,28 +370,28 @@ public class Config implements Cloneable
             || (o1 != null && o2 != null && o1.equals(o2));
   }
 
-  public boolean isParamEquals(String fullParamName, Object paramValue)
+  public synchronized boolean isParamEquals(String fullParamName, Object paramValue)
   {
     Object o1 = this.params.get(fullParamName);
     return (o1 == null && paramValue == null)
             || (o1 != null && paramValue != null && o1.equals(paramValue));
   }
 
-  public boolean isStringParamEquals(String fullParamName, String paramValue)
+  public synchronized boolean isStringParamEquals(String fullParamName, String paramValue)
   {
     Object o1 = this.params.get(fullParamName);
-    if (o1 instanceof String) {
+    if (o1 == null || o1 instanceof String) {
       String s1 = (String) o1;
       return ((s1 == null || s1.length() == 0) && (paramValue == null || paramValue.length() == 0))
-              || (s1 != null && s1.length() > 0 && paramValue != null && paramValue.length() > 0 && o1.equals(paramValue));
+              || (s1 != null && s1.length() > 0 && paramValue != null && paramValue.length() > 0 && s1.equals(paramValue));
     } else
       return false;
   }
 
-  public boolean isBooleanParamEquals(String fullParamName, boolean paramValue)
+  public synchronized boolean isBooleanParamEquals(String fullParamName, boolean paramValue)
   {
     final Object o1 = this.params.get(fullParamName);
-    if (o1 instanceof Boolean) {
+    if (o1 == null || o1 instanceof Boolean) {
       final Boolean b1 = (Boolean) o1;
       final boolean v1 = b1 == null ? false : b1.booleanValue();
       return v1 == paramValue;
@@ -399,10 +399,10 @@ public class Config implements Cloneable
       return false;
   }
 
-  public boolean isIntParamEquals(String fullParamName, int paramValue)
+  public synchronized boolean isIntParamEquals(String fullParamName, int paramValue)
   {
     final Object o1 = this.params.get(fullParamName);
-    if (o1 instanceof Integer) {
+    if (o1 == null || o1 instanceof Integer) {
       final Integer i1 = (Integer) o1;
       final int v1 = i1 == null ? 0 : i1.intValue();
       return v1 == paramValue;
@@ -410,7 +410,7 @@ public class Config implements Cloneable
       return false;
   }
 
-  public void removeParamsFromSection(String sectionName)
+  public synchronized void removeParamsFromSection(String sectionName)
   {
     final int dotpos = sectionName.length();
     for (Iterator i = new ArrayList(params.keySet()).iterator(); i.hasNext();) {
@@ -421,7 +421,7 @@ public class Config implements Cloneable
     }
   }
 
-  public void copySectionParamsFromConfig(Config configToCopyFrom, String sectionName)
+  public synchronized void copySectionParamsFromConfig(Config configToCopyFrom, String sectionName)
   {
     final int sectionNameLength = sectionName.length();
     for (Iterator i = configToCopyFrom.getParameterNames().iterator(); i.hasNext();) {

@@ -11,7 +11,7 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Tasks" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-	//ServiceIDForShowStatus = Constants.INFO_SME_ID;
+	//ServiceIDForShowStatus = ;
 	TITLE="Informer SME Administration";
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";

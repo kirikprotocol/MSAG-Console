@@ -20,8 +20,8 @@ function setSort(sorting)
 <div class=content>
 <table>
 	<tr>
-	<th>&nbsp;<a href="#" onclick='return clickMenu(<%= WSmeFormBean.RESULT_DONE%>)' <%=
-      ((bean.getMenuId() == WSmeFormBean.RESULT_DONE) ? "disabled":"")%>>Configuration</a>&nbsp;</th>
+	<th>&nbsp;<a href="#" onclick='return clickMenu(<%= WSmeFormBean.RESULT_HOME%>)' <%=
+      ((bean.getMenuId() == WSmeFormBean.RESULT_HOME) ? "disabled":"")%>>Configuration</a>&nbsp;</th>
 	<th>&nbsp;<a href="#" onclick='return clickMenu(<%= WSmeFormBean.RESULT_VISITORS%>)' <%=
       ((bean.getMenuId() == WSmeFormBean.RESULT_VISITORS) ? "disabled":"")%>>Visitors</a>&nbsp;</th>
 	<th>&nbsp;<a href="#" onclick='return clickMenu(<%= WSmeFormBean.RESULT_LANGS%>)' <%=

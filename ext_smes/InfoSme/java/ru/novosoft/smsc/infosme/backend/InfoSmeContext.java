@@ -3,7 +3,6 @@ package ru.novosoft.smsc.infosme.backend;
 import org.apache.log4j.Category;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.conpool.NSConnectionPool;
@@ -21,12 +20,17 @@ import java.util.*;
  */
 public class InfoSmeContext
 {
-  private static InfoSmeContext instance = null;
+  private final static Map instances = new HashMap();
   private Category logger = Category.getInstance(this.getClass());
 
-  public static synchronized InfoSmeContext getInstance(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, IOException, SAXException
+  public static synchronized InfoSmeContext getInstance(SMSCAppContext appContext, String smeId) throws AdminException, ParserConfigurationException, IOException, SAXException
   {
-    return instance != null ? instance : (instance = new InfoSmeContext(appContext));
+    InfoSmeContext instance = (InfoSmeContext) instances.get(smeId);
+    if (instance == null) {
+      instance = new InfoSmeContext(appContext, smeId);
+      instances.put(smeId, instance);
+    }
+    return instance;
   }
 
 
@@ -46,17 +50,19 @@ public class InfoSmeContext
   private boolean changedTasks = false;
   private boolean changedSchedules = false;
   private DataSource dataSource = null;
+  private String smeId = "InfoSme";
 
-  private InfoSmeContext(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, SAXException, IOException
+  private InfoSmeContext(SMSCAppContext appContext, String smeId) throws AdminException, ParserConfigurationException, SAXException, IOException
   {
+    this.smeId = smeId;
     this.appContext = appContext;
-    this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID));
+    this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(this.smeId));
     resetConfig();
   }
 
   public Config loadCurrentConfig() throws AdminException, IOException, SAXException, ParserConfigurationException
   {
-    return new Config(new File(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID).getServiceFolder(),
+    return new Config(new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(),
                                "conf" + File.separatorChar + "config.xml"));
   }
 
@@ -158,16 +164,6 @@ public class InfoSmeContext
   public InfoSme getInfoSme()
   {
     return infoSme;
-  }
-
-  public static InfoSmeContext getInstance()
-  {
-    return instance;
-  }
-
-  public static void setInstance(InfoSmeContext instance)
-  {
-    InfoSmeContext.instance = instance;
   }
 
   public boolean isChangedOptions()

@@ -2,7 +2,6 @@ package ru.novosoft.smsc.dbsme;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.WebAppFolders;
@@ -11,6 +10,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.*;
 
 /**
  * Created by igork
@@ -19,23 +19,30 @@ import java.io.InputStream;
  */
 public class DbSmeContext
 {
-  private static DbSmeContext dbSmeContext = null;
+  private static final Map instances = new HashMap();
 
-  public static synchronized DbSmeContext getInstance(SMSCAppContext appContext) throws AdminException
+  public static synchronized DbSmeContext getInstance(SMSCAppContext appContext, String smeId) throws AdminException
   {
-    return dbSmeContext != null ? dbSmeContext : (dbSmeContext = new DbSmeContext(appContext));
+    DbSmeContext context = (DbSmeContext) instances.get(smeId);
+    if (context == null) {
+      context = new DbSmeContext(appContext, smeId);
+      instances.put(smeId, context);
+    }
+    return context;
   }
 
 
-  private SmeTransport smeTransport = null;
+  final private String smeId;
+  final private SmeTransport smeTransport;
   private boolean configChanged = false;
   private boolean jobsChanged = false;
-  private Category logger = Category.getInstance(this.getClass());
+  final private Category logger = Category.getInstance(this.getClass());
 
-  private DbSmeContext(SMSCAppContext appContext) throws AdminException
+  private DbSmeContext(SMSCAppContext appContext, String smeId) throws AdminException
   {
+    this.smeId = smeId;
     ServiceInfo serviceInfo = null;
-    serviceInfo = appContext.getHostsManager().getServiceInfo(Constants.DBSME_SME_ID);
+    serviceInfo = appContext.getHostsManager().getServiceInfo(this.smeId);
     this.smeTransport = serviceInfo == null ? null : new SmeTransport(serviceInfo);
     this.configChanged = false;
     File tempConfigFile = new File(WebAppFolders.getWorkFolder(), "dbSme.config.xml.tmp");
@@ -92,5 +99,10 @@ public class DbSmeContext
   public void setJobsChanged(boolean jobsChanged)
   {
     this.jobsChanged = jobsChanged;
+  }
+
+  public String getSmeId()
+  {
+    return smeId;
   }
 }

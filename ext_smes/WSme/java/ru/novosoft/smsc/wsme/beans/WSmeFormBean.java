@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.wsme.WSme;
 import ru.novosoft.smsc.wsme.WSmeContext;
 import ru.novosoft.smsc.wsme.WSmeErrors;
@@ -26,27 +27,27 @@ public class WSmeFormBean extends IndexBean
   public final static int RESULT_HISTORY = 2000;
   public final static int RESULT_LANGS = 3000;
   public final static int RESULT_ADS = 4000;
+  public static final int RESULT_HOME = 5000;
 
   protected WSme wsme = null;
   protected WSmePreferences wsmePreferences = null;
+  private String smeId = "WSme";
 
   private Config config = null;
   private Map params = new HashMap();
-  private String btnApply  = null;
+  private String btnApply = null;
   private String btnCancel = null;
-  private String btnStart  = null;
-  private String btnStop   = null;
+  private String btnStart = null;
+  private String btnStop = null;
 
   private int menuSelection = RESULT_OK;
 
   public int process(HttpServletRequest request)
   {
     int result = this.processInternal(request);
-    if (result == RESULT_OK || result == RESULT_DONE)
-    {
+    if (result == RESULT_OK || result == RESULT_DONE) {
       result = processParams(request);
-      if (result == RESULT_OK)
-      {
+      if (result == RESULT_OK) {
         if (btnApply != null)
           result = processApply();
         else if (btnCancel != null)
@@ -54,13 +55,22 @@ public class WSmeFormBean extends IndexBean
       }
     }
 
-    btnApply = null; btnCancel = null;
+    btnApply = null;
+    btnCancel = null;
     return result;
   }
 
   protected int processInternal(HttpServletRequest request)
   {
-    WSmeContext wSmeContext = WSmeContext.getInstance();
+    WSmeContext wSmeContext = null;
+    try {
+      smeId = Functions.getServiceId(request.getServletPath());
+    } catch (AdminException e) {
+      logger.error("Could not discover service id", e);
+      error("Could not discover service id, WSme assumed", e);
+    }
+
+    wSmeContext = WSmeContext.getInstance(Functions.getAppContext(request), smeId);
     if (wsme == null)
       wsme = wSmeContext.getWsme();
     if (wsmePreferences == null)
@@ -78,7 +88,8 @@ public class WSmeFormBean extends IndexBean
     else if (btnStop != null)
       result = processStop();
 
-    btnStart = null; btnStop = null;
+    btnStart = null;
+    btnStop = null;
     return menuSelection; // redirect if menuSelection != RESULT_OK;
   }
 
@@ -87,8 +98,7 @@ public class WSmeFormBean extends IndexBean
     if (config == null)
       return error(WSmeErrors.error.admin.ConfigError, "Couldn't access config");
 
-    for (Iterator i = params.keySet().iterator(); i.hasNext();)
-    {
+    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
       String name = (String) i.next();
       Object value = params.get(name);
       if (value instanceof Boolean)
@@ -107,8 +117,7 @@ public class WSmeFormBean extends IndexBean
 
     int status = getWSmeStatus();
     if (status == ServiceInfo.STATUS_RUNNING ||
-        status == ServiceInfo.STATUS_STARTING)
-    {
+            status == ServiceInfo.STATUS_STARTING) {
       int result = processStop();
       if (result != RESULT_OK) return result;
       return processStart();
@@ -127,17 +136,15 @@ public class WSmeFormBean extends IndexBean
   {
     int status = getWSmeStatus();
     if (status != ServiceInfo.STATUS_RUNNING &&
-        status != ServiceInfo.STATUS_STARTING)
-    {
+            status != ServiceInfo.STATUS_STARTING) {
       try {
-        hostsManager.startService(Constants.WSME_SME_ID);
+        hostsManager.startService(getSmeId());
         return RESULT_OK;
       } catch (Throwable e) {
         logger.error("Couldn't start WSme", e);
         return error(WSmeErrors.error.remote.couldntStart, e);
       }
-    }
-    else
+    } else
       return RESULT_OK;
   }
 
@@ -145,30 +152,29 @@ public class WSmeFormBean extends IndexBean
   {
     int status = getWSmeStatus();
     if (status != ServiceInfo.STATUS_STOPPED &&
-        status != ServiceInfo.STATUS_STOPPED)
-    {
+            status != ServiceInfo.STATUS_STOPPED) {
       try {
-        hostsManager.shutdownService(Constants.WSME_SME_ID);
+        hostsManager.shutdownService(getSmeId());
         return RESULT_OK;
       } catch (Throwable e) {
         logger.error("Couldn't stop WSme", e);
         return error(WSmeErrors.error.remote.couldntStop, e);
       }
-    }
-    else
+    } else
       return RESULT_OK;
   }
 
   public byte getWSmeStatus()
   {
     try {
-      return hostsManager.getServiceInfo(Constants.WSME_SME_ID).getStatus();
-    }
-    catch (AdminException e) {
+      return hostsManager.getServiceInfo(getSmeId()).getStatus();
+    } catch (AdminException e) {
       return ServiceInfo.STATUS_UNKNOWN;
     }
   }
-  public boolean isWSmeStarted() {
+
+  public boolean isWSmeStarted()
+  {
     return (getWSmeStatus() == ServiceInfo.STATUS_RUNNING);
   }
 
@@ -180,8 +186,7 @@ public class WSmeFormBean extends IndexBean
       return error(WSmeErrors.error.admin.ConfigError, e.getMessage());
     }
 
-    for (Iterator i = config.getParameterNames().iterator(); i.hasNext();)
-    {
+    for (Iterator i = config.getParameterNames().iterator(); i.hasNext();) {
       String name = (String) i.next();
       params.put(name, config.getParameter(name));
     }
@@ -197,49 +202,37 @@ public class WSmeFormBean extends IndexBean
     boolean isRequestHaveParams = false;
 
     Enumeration parameterNames = request.getParameterNames();
-    while (parameterNames.hasMoreElements())
-    {
+    while (parameterNames.hasMoreElements()) {
       String s = (String) parameterNames.nextElement();
-      if (s.indexOf('.') > 0)
-      {
+      if (s.indexOf('.') > 0) {
         isRequestHaveParams = true;
         Object oldValue = params.get(s);
-        if (oldValue != null)
-        {
-          if (oldValue instanceof Integer)
-          {
+        if (oldValue != null) {
+          if (oldValue instanceof Integer) {
             String parameter = request.getParameter(s);
-            try
-            {
+            try {
               if (parameter != null && parameter.trim().length() > 0)
                 params.put(s, Integer.decode(parameter.trim()));
               else
                 params.put(s, new Integer(0));
-            }
-            catch (NumberFormatException e)
-            {
+            } catch (NumberFormatException e) {
               logger.error("Invalid integer parameter: " + s + "=" + parameter);
               result = error(WSmeErrors.error.admin.InvalidIntParam, s);
             }
-          }
-          else if (oldValue instanceof Boolean)
+          } else if (oldValue instanceof Boolean)
             params.put(s, Boolean.valueOf(request.getParameter(s)));
           else
             params.put(s, request.getParameter(s));
-        }
-        else
+        } else
           params.put(s, request.getParameter(s));
       }
     }
 
-    if (isRequestHaveParams)
-    {
-      for (Iterator i = params.keySet().iterator(); i.hasNext();)
-      {
+    if (isRequestHaveParams) {
+      for (Iterator i = params.keySet().iterator(); i.hasNext();) {
         String paramName = (String) i.next();
         Object value = params.get(paramName);
-        if (value instanceof Boolean)
-        {
+        if (value instanceof Boolean) {
           final String parameter = request.getParameter(paramName);
           params.put(paramName, Boolean.valueOf(parameter));
         }
@@ -258,6 +251,7 @@ public class WSmeFormBean extends IndexBean
     else
       return null;
   }
+
   public int getIntParam(String paramName)
   {
     Object param = params.get(paramName);
@@ -267,12 +261,12 @@ public class WSmeFormBean extends IndexBean
     }
     if (param instanceof Integer) {
       return ((Integer) param).intValue();
-    }
-    else  {
+    } else {
       logger.error("parameter \"" + paramName + "\" is not integer.");
       return -1;
     }
   }
+
   public boolean getBoolParam(String paramName)
   {
     Object param = params.get(paramName);
@@ -282,8 +276,7 @@ public class WSmeFormBean extends IndexBean
     }
     if (param instanceof Boolean) {
       return ((Boolean) param).booleanValue();
-    }
-    else {
+    } else {
       logger.error("parameter \"" + paramName + "\" is not boolean.");
       return false;
     }
@@ -293,11 +286,9 @@ public class WSmeFormBean extends IndexBean
   {
     Set result = new HashSet();
     final String prefix = "StartupLoader.DataSourceDrivers.";
-    for (Iterator i = params.keySet().iterator(); i.hasNext();)
-    {
+    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
       String name = (String) i.next();
-      if (name.startsWith(prefix))
-      {
+      if (name.startsWith(prefix)) {
         String s = name.substring(prefix.length());
         result.add(s.substring(0, s.indexOf('.')));
       }
@@ -308,60 +299,92 @@ public class WSmeFormBean extends IndexBean
   protected List getPaginatedList(List list)
   {
     totalSize = list.size();
-    if (startPosition+1>totalSize) startPosition -= pageSize;
+    if (startPosition + 1 > totalSize) startPosition -= pageSize;
     if (startPosition < 0) startPosition = 0;
-    int endPosition = startPosition+pageSize;
+    int endPosition = startPosition + pageSize;
     if (endPosition > totalSize) endPosition = totalSize;
     return list.subList(startPosition, endPosition);
   }
+
   protected void clearPaginatedList(List list)
   {
-    totalSize = 0; startPosition = 0;
+    totalSize = 0;
+    startPosition = 0;
     list.clear();
   }
 
-  public void setStringParam(String paramName, String paramValue) {
+  public void setStringParam(String paramName, String paramValue)
+  {
     params.put(paramName, paramValue);
   }
-  public void setIntParam(String paramName, int paramValue) {
+
+  public void setIntParam(String paramName, int paramValue)
+  {
     params.put(paramName, new Integer(paramValue));
   }
-  public void setBoolParam(String paramName, boolean paramValue) {
+
+  public void setBoolParam(String paramName, boolean paramValue)
+  {
     params.put(paramName, new Boolean(paramValue));
   }
 
-  public int getMenuSelection() {
+  public int getMenuSelection()
+  {
     return menuSelection;
   }
-  public void setMenuSelection(int menuSelection) {
+
+  public void setMenuSelection(int menuSelection)
+  {
     this.menuSelection = menuSelection;
   }
-  public String getBtnApply() {
+
+  public String getBtnApply()
+  {
     return btnApply;
   }
-  public void setBtnApply(String btnApply) {
+
+  public void setBtnApply(String btnApply)
+  {
     this.btnApply = btnApply;
   }
-  public String getBtnCancel() {
+
+  public String getBtnCancel()
+  {
     return btnCancel;
   }
-  public void setBtnCancel(String btnCancel) {
+
+  public void setBtnCancel(String btnCancel)
+  {
     this.btnCancel = btnCancel;
   }
-  public String getBtnStart() {
+
+  public String getBtnStart()
+  {
     return btnStart;
   }
-  public void setBtnStart(String btnStart) {
+
+  public void setBtnStart(String btnStart)
+  {
     this.btnStart = btnStart;
   }
-  public String getBtnStop() {
+
+  public String getBtnStop()
+  {
     return btnStop;
   }
-  public void setBtnStop(String btnStop) {
+
+  public void setBtnStop(String btnStop)
+  {
     this.btnStop = btnStop;
   }
 
-  public int getMenuId() {
+  public int getMenuId()
+  {
     return RESULT_DONE;
+  }
+
+  public String getSmeId()
+  {
+    return smeId;
   }
 }

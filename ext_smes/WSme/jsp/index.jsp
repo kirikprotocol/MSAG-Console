@@ -7,11 +7,12 @@
                  java.util.List,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
                  java.util.Iterator,
-                 ru.novosoft.smsc.admin.Constants"%>
+                 ru.novosoft.smsc.admin.Constants,
+                 ru.novosoft.smsc.util.Functions"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.wsme.beans.WSmeFormBean" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-  ServiceIDForShowStatus = Constants.WSME_SME_ID;
+  ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
   TITLE="Welcome SME Administration";
   MENU0_SELECTION = "MENU0_SERVICES";
   //MENU1_SELECTION = "WSME_INDEX";
@@ -25,6 +26,7 @@
     case WSmeFormBean.RESULT_LANGS:
       response.sendRedirect("langs.jsp");
       return;
+    case WSmeFormBean.RESULT_HOME:
     case WSmeFormBean.RESULT_DONE:
       response.sendRedirect("index.jsp");
       return;

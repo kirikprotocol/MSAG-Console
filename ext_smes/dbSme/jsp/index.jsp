@@ -4,12 +4,13 @@
 					  ru.novosoft.smsc.dbsme.Index,
 					  java.util.Iterator,
 					  ru.novosoft.smsc.util.SortedList,
-                 ru.novosoft.smsc.jsp.PageBean"%>
+                 ru.novosoft.smsc.jsp.PageBean,
+                 ru.novosoft.smsc.util.Functions"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-	ServiceIDForShowStatus = Constants.DBSME_SME_ID;
+	ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
 	TITLE="DB SME Administration";
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";

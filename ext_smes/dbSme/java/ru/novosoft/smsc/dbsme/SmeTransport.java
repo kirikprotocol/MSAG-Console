@@ -31,7 +31,7 @@ public class SmeTransport extends Service
 
   public synchronized void updateInfo(SMSCAppContext appContext) throws AdminException
   {
-    setInfo(appContext.getHostsManager().getServiceInfo(Constants.DBSME_SME_ID));
+    setInfo(appContext.getHostsManager().getServiceInfo(getInfo().getId()));
   }
 
   public synchronized void restart() throws AdminException

@@ -288,10 +288,12 @@ public class Provider extends DbsmeBean
         if (config.containsSection(newPrefix))
           return error(DBSmeErrors.error.provider.providerAlreadyExists, providerName);
       } else {
-        final String oldProviderPrefix = createProviderPrefix(oldProviderName);
-        if (!providerName.equals(oldProviderName) && config.containsSection(oldProviderPrefix))
-          return error(DBSmeErrors.error.provider.providerAlreadyExists, providerName);
-        config.renameSection(oldProviderPrefix, newPrefix);
+        if (!providerName.equals(oldProviderName)) {
+          final String oldProviderPrefix = createProviderPrefix(oldProviderName);
+          if (config.containsSection(oldProviderPrefix))
+            return error(DBSmeErrors.error.provider.providerAlreadyExists, providerName);
+          config.renameSection(oldProviderPrefix, newPrefix);
+        }
       }
       setProviderParamsToConfig(newPrefix);
       try {

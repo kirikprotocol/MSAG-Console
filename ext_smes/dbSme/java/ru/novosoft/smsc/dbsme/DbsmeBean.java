@@ -3,15 +3,14 @@ package ru.novosoft.smsc.dbsme;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
-import ru.novosoft.smsc.util.WebAppFolders;
+import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-import java.security.Principal;
 import java.util.*;
 
 /**
@@ -29,21 +28,24 @@ public class DbsmeBean extends IndexBean
   public static final int RESULT_PROVIDER = IndexBean.PRIVATE_RESULT + 4;
   protected static final int PRIVATE_RESULT = IndexBean.PRIVATE_RESULT + 5;
 
+  private String smeId = "dbSme";
   private String menuSelection = null;
   protected Config config = null;
   private DbSmeContext context = null;
   private SmeTransport smeTransport = null;
   private File originalConfigFile = null;
-  private File tempConfigFile = new File(WebAppFolders.getWorkFolder(), Constants.DBSME_SME_ID + ".config.xml.tmp");
+  private File tempConfigFile = new File(WebAppFolders.getWorkFolder(), "dbSme.config.xml.tmp");
 
   protected int init(List errors)
   {
+    tempConfigFile = new File(WebAppFolders.getWorkFolder(), smeId + ".config.xml.tmp");
+
     int result = super.init(errors);
     if (result != RESULT_OK)
       return result;
 
     try {
-      context = DbSmeContext.getInstance(getAppContext());
+      context = DbSmeContext.getInstance(getAppContext(), smeId);
     } catch (AdminException e) {
       logger.error("Could not instantiate DbSme context", e);
       return error("Could not instantiate DbSme context", e);
@@ -51,7 +53,7 @@ public class DbsmeBean extends IndexBean
     smeTransport = context.getSmeTransport();
 
     try {
-      originalConfigFile = new File(appContext.getHostsManager().getServiceInfo(Constants.DBSME_SME_ID).getServiceFolder(), "conf/config.xml");
+      originalConfigFile = new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(), "conf/config.xml");
       if (!tempConfigFile.exists()) {
         if (!originalConfigFile.exists()) {
           logger.error("Couldn't find DBSME config file (" + originalConfigFile.getAbsolutePath() + ")");
@@ -81,6 +83,13 @@ public class DbsmeBean extends IndexBean
 
   public int process(HttpServletRequest request)
   {
+    try {
+      smeId = Functions.getServiceId(request.getServletPath());
+    } catch (AdminException e) {
+      logger.error("Could not discover sme id", e);
+      error("Could not discover sme id, \"dbSme\" assumed", e);
+    }
+
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
@@ -100,7 +109,7 @@ public class DbsmeBean extends IndexBean
   public byte getServiceStatus()
   {
     try {
-      return appContext.getHostsManager().getServiceInfo(Constants.DBSME_SME_ID).getStatus();
+      return appContext.getHostsManager().getServiceInfo(smeId).getStatus();
     } catch (AdminException e) {
       logger.error("Couldn't get DBSME status, nested: " + e.getMessage(), e);
       return ServiceInfo.STATUS_UNKNOWN;
@@ -215,6 +224,24 @@ public class DbsmeBean extends IndexBean
                                      String query_null, String input_parse, String output_format, String invalid_config)
   {
     String prefix = createProviderPrefix(providerName);
+    if (logger.isDebugEnabled()) {
+      logger.debug("address (\"" + address + "\"):" + config.isStringParamEquals(prefix + ".address", address));
+      logger.debug("connections (\"" + connections + "\"):" + config.isIntParamEquals(prefix + ".DataSource.connections", connections));
+      logger.debug("dbInstance (\"" + dbInstance + "\"):" + config.isStringParamEquals(prefix + ".DataSource.dbInstance", dbInstance));
+      logger.debug("dbUserName (\"" + dbUserName + "\"):" + config.isStringParamEquals(prefix + ".DataSource.dbUserName", dbUserName));
+      logger.debug("dbUserPassword (\"" + dbUserPassword + "\"):" + config.isStringParamEquals(prefix + ".DataSource.dbUserPassword", dbUserPassword));
+      logger.debug("type (\"" + type + "\"):" + config.isStringParamEquals(prefix + ".DataSource.type", type));
+      logger.debug("watchdog (\"" + watchdog + "\"):" + config.isBooleanParamEquals(prefix + ".DataSource.watchdog", watchdog));
+      logger.debug("service_not_available (\"" + service_not_available + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.SERVICE_NOT_AVAIL", service_not_available));
+      logger.debug("job_not_found (\"" + job_not_found + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.JOB_NOT_FOUND", job_not_found));
+      logger.debug("ds_failure (\"" + ds_failure + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.DS_FAILURE", ds_failure));
+      logger.debug("ds_connection_lost (\"" + ds_connection_lost + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.DS_CONNECTION_LOST", ds_connection_lost));
+      logger.debug("ds_statement_fail (\"" + ds_statement_fail + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.DS_STATEMENT_FAIL", ds_statement_fail));
+      logger.debug("query_null (\"" + query_null + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.QUERY_NULL", query_null));
+      logger.debug("input_parse (\"" + input_parse + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.INPUT_PARSE", input_parse));
+      logger.debug("output_format (\"" + output_format + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.OUTPUT_FORMAT", output_format));
+      logger.debug("invalid_config (\"" + invalid_config + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.INVALID_CONFIG", invalid_config));
+    }
     return providerName.equals(oldProviderName)
             && config.isStringParamEquals(prefix + ".address", address)
             && config.isIntParamEquals(prefix + ".DataSource.connections", connections)
@@ -259,5 +286,10 @@ public class DbsmeBean extends IndexBean
   protected static String createProviderPrefix(String providerName)
   {
     return "DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName);
+  }
+
+  public String getSmeId()
+  {
+    return smeId;
   }
 }

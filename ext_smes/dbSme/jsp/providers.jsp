@@ -13,7 +13,7 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Providers" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-	//ServiceIDForShowStatus = Constants.WSME_SME_ID;
+	//ServiceIDForShowStatus = ;
 	TITLE="DB SME Administration";
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";

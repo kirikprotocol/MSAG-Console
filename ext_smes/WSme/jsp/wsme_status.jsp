@@ -1,9 +1,10 @@
 <%@page import="java.util.*, ru.novosoft.smsc.admin.service.ServiceInfo,
-					 ru.novosoft.smsc.admin.Constants"%><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Statuses"/><%
+                ru.novosoft.smsc.admin.Constants,
+                ru.novosoft.smsc.util.Functions"%><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Statuses"/><%
 bean.process(request);
-out.print('"' + Constants.WSME_SME_ID + '"');
+out.print('"' + Functions.getServiceId(request.getServletPath()) + '"');
 out.println();
-switch (bean.getServiceStatus(Constants.WSME_SME_ID))
+switch (bean.getServiceStatus(Functions.getServiceId(request.getServletPath())))
 {
 	case ServiceInfo.STATUS_RUNNING:
 		%><span class=C080>running</span><%
