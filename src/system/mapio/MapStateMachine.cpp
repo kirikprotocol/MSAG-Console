@@ -27,6 +27,8 @@ using namespace smsc::system;
 static const bool SMS_SEGMENTATION = true;
 static inline unsigned GetMOLockTimeout() {return 45;}
 static inline unsigned GetBusyDelay() { return 5; }
+static void SendRInfo(MapDialog* dialog);
+static bool SendSms(MapDialog* dialog);
 
 struct XMOMAPLocker {
   string imsi;
