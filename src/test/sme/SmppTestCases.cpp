@@ -28,7 +28,7 @@ SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _syste
 	session = new SmppSession(config, receiver);
 	receiver->setSession(session);
 	transmitter = new SmppTransmitterTestCases(session, systemId, smeAddr,
-		smeReg, pduChecker);
+		smeReg, routeChecker, pduChecker);
 }
 
 SmppTestCases::~SmppTestCases()
@@ -183,9 +183,13 @@ TCResult* SmppTestCases::bindIncorrectSme(int num)
 	return res;
 }
 
+#define __checkPdu__(tc) \
+	__trace2__("%s(): checking pdu with msgRef = %u, submitTime = %d, waitTime = %d, validTime = %d", \
+	tc, (uint32_t) pduData->msgRef, pduData->submitTime, pduData->waitTime, pduData->validTime)
+
 #define __missingPdu__(tc, pduName) \
-	__trace2__("%s(): missing %s for sequenceNumber = %u, submitTime = %d, waitTime = %d, validTime = %d", \
-	tc, pduName, pduData->pdu->get_sequenceNumber(), pduData->submitTime, pduData->waitTime, pduData->validTime)
+	__trace2__("%s(): missing %s for msgRef = %u, submitTime = %d, waitTime = %d, validTime = %d", \
+	tc, pduName, (uint32_t) pduData->msgRef, pduData->submitTime, pduData->waitTime, pduData->validTime)
 	/*
 	static const char* fmt = "%Y-%m-%d %H:%M:%S"; \
 	char __submitTime[20]; char __waitTime[20]; char __validTime[20]; \
@@ -197,8 +201,8 @@ TCResult* SmppTestCases::bindIncorrectSme(int num)
 	*/
 
 #define __removedPdu__(tc) \
-	__trace2__("%s(): removed pdu data with sequenceNumber = %u", \
-	tc, pduData->pdu->get_sequenceNumber())
+	__trace2__("%s(): removed pdu data with msgRef = %u", \
+	tc, (uint32_t) pduData->msgRef)
 	
 #define __checkSummary__(tc) \
 	__trace2__("%s(): found = %d, deleted = %d", tc, found, deleted);
@@ -212,12 +216,13 @@ int SmppTestCases::checkSubmitTime()
 	int deleted = 0;
 	while (PduData* pduData = it->next())
 	{
+		__checkPdu__("SmppTestCases::checkSubmitTime");
 		found++;
-		if (!pduData->responseFlag)
+		if (pduData->responseFlag == PDU_REQUIRED_FLAG)
 		{
 			__missingPdu__("SmppTestCases::checkSubmitTime", "response");
 			res |= 0x1;
-			pduData->responseFlag = true;
+			pduData->responseFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
 		if (pduData->complete())
 		{
@@ -241,6 +246,7 @@ int SmppTestCases::checkWaitTime()
 	int deleted = 0;
 	while (PduData* pduData = it->next())
 	{
+		__checkPdu__("SmppTestCases::checkWaitTime");
 		found++;
 		__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 		PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
@@ -248,23 +254,23 @@ int SmppTestCases::checkWaitTime()
 		{
 			continue;
 		}
-		if (!pduData->deliveryFlag)
+		if (pduData->deliveryFlag == PDU_REQUIRED_FLAG)
 		{
 			__missingPdu__("SmppTestCases::checkWaitTime", "deliver_sm");
 			res |= 0x2;
-			pduData->deliveryFlag = true;
+			pduData->deliveryFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
-		if (!pduData->deliveryReceiptFlag)
+		if (pduData->deliveryReceiptFlag == PDU_REQUIRED_FLAG)
 		{
 			__missingPdu__("SmppTestCases::checkWaitTime", "delivery_receipt");
 			res |= 0x4;
-			pduData->deliveryReceiptFlag = true;
+			pduData->deliveryReceiptFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
-		if (!pduData->intermediateNotificationFlag)
+		if (pduData->intermediateNotificationFlag == PDU_REQUIRED_FLAG)
 		{
 			__missingPdu__("SmppTestCases::checkWaitTime", "intermediate_notification");
 			res |= 0x8;
-			pduData->intermediateNotificationFlag = true;
+			pduData->intermediateNotificationFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
 		if (pduData->complete())
 		{
@@ -288,30 +294,31 @@ int SmppTestCases::checkValidTime()
 	int deleted = 0;
 	while (PduData* pduData = it->next())
 	{
+		__checkPdu__("SmppTestCases::checkValidTime");
 		found++;
 		__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 		PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 		if (!routeChecker->isDestReachable(pdu->get_message().get_dest(), true))
 		{
-			pduData->deliveryFlag = true;
+			pduData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
 		}
-		if (!pduData->deliveryFlag)
+		if (pduData->deliveryFlag == PDU_REQUIRED_FLAG)
 		{
 			__missingPdu__("SmppTestCases::checkValidTime", "deliver_sm");
 			res |= 0x2;
-			pduData->deliveryFlag = true;
+			pduData->deliveryFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
-		if (!pduData->deliveryReceiptFlag)
+		if (pduData->deliveryReceiptFlag == PDU_REQUIRED_FLAG)
 		{
 			__missingPdu__("SmppTestCases::checkValidTime", "delivery_receipt");
 			res |= 0x4;
-			pduData->deliveryReceiptFlag = true;
+			pduData->deliveryReceiptFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
-		if (!pduData->intermediateNotificationFlag)
+		if (pduData->intermediateNotificationFlag == PDU_REQUIRED_FLAG)
 		{
 			__missingPdu__("SmppTestCases::checkValidTime", "intermediate_notification");
 			res |= 0x8;
-			pduData->intermediateNotificationFlag = true;
+			pduData->intermediateNotificationFlag = PDU_MISSING_ON_TIME_FLAG;
 		}
 		__removedPdu__("SmppTestCases::checkValidTime");
 		deleted++;
@@ -327,7 +334,7 @@ TCResult* SmppTestCases::checkMissingPdu()
 	TCResult* res = new TCResult(TC_CHECK_MISSING_PDU);
 	if (pduReg)
 	{
-		MutexGuard(pduReg->getMutex());
+		MutexGuard mguard(pduReg->getMutex());
 		int chk = checkSubmitTime() | checkWaitTime() | checkValidTime();
 		if (chk & 0x1) //неполученные респонсы
 		{
