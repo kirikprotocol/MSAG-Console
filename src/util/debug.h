@@ -10,7 +10,7 @@
 #define __Cpp_Header__smsc_util_debug_h_
 
 #if defined ccassert
-	#error "opps, cc_assert alreadry defined"
+	#error "opps, ccassert alreadry defined"
 #endif
 
 #define require(expr) ccassert(expr)	
