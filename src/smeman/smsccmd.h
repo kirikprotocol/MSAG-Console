@@ -685,7 +685,7 @@ public:
         _cmd->cmdid = SUBMIT;
         PduDataSm* dsm = reinterpret_cast<PduDataSm*>(pdu);
         (SMS*)_cmd->dta =  new SMS;
-        fetchSmsFromDataSmPdu(dsm,(SMS*)(_cmd->dta));
+        if(!fetchSmsFromDataSmPdu(dsm,(SMS*)(_cmd->dta)))throw Exception("Invalid data coding");
         ((SMS*)_cmd->dta)->setIntProperty(Tag::SMPP_DATA_SM,1);
         goto end_construct;
       }
@@ -734,7 +734,7 @@ public:
     {
       PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
       (SMS*)_cmd->dta =  new SMS;
-      fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta),forceDC);
+      if(!fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta),forceDC))throw Exception("Invalid data coding");
       SMS &s=*((SMS*)_cmd->dta);
       if(s.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
       {
