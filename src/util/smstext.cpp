@@ -674,7 +674,7 @@ void extractSmsPart(SMS* sms,int partnum)
         if(dstdc==DataCoding::SMSC7BIT)
         {
           auto_ptr<char> buf7(new char[len*2+1+udhlen]);
-          len=ConvertLatin1ToSMSC7Bit(bufTr.get()+udhlen,len-udhlen,buf7.get());
+          len=ConvertLatin1ToSMSC7Bit(bufTr.get()+udhlen,len-udhlen,buf7.get()+udhlen);
           memcpy(buf7.get(),bufTr.get(),udhlen);
           bufTr=buf7;
           len+=udhlen;
