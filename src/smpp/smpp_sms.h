@@ -96,12 +96,12 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
 	if ( sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID) )
 	{
 		pdu->optional.set_receiptedMessageId(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-		{
-			char buff[7];
-			memset(buff,0,sizeof(buff));
-			sms->getEServiceType(buff);
-			pdu->message.set_serviceType(buff);
-		}
+	}
+	{
+		char buff[7];
+		memset(buff,0,sizeof(buff));
+		sms->getEServiceType(buff);
+		pdu->message.set_serviceType(buff);
 	}
 	
 	if ( sms->hasIntProperty(Tag::SMPP_PRIORITY))
