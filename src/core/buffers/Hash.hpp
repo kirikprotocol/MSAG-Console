@@ -17,6 +17,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <exception>
 
 namespace smsc{
 namespace core{
@@ -25,6 +26,8 @@ namespace buffers{
 typedef char hashchar;
 typedef hashchar *phashstr;
 typedef const hashchar* pchashstr;
+
+class HashInvalidKeyException{};
 
 namespace _hashinternall{
 
@@ -261,7 +264,7 @@ private:
   int _iterindex;
   Link *_iterlink;
 
-  Link* FindLink(pchashstr key)
+  Link* FindLink(pchashstr key)const
   {
     if(!_bucketsnum)return NULL;
     return _buckets[HashFunc(key) % _bucketsnum].Find(key);
@@ -348,6 +351,20 @@ public:
     _count=src._count;
   }
 
+  const T& Get(pchashstr key)const
+  {
+    Link* link=FindLink(key);
+    if(!link)throw HashInvalidKeyException();
+    return link->_keyval._value;
+  }
+
+  T& Get(pchashstr key)
+  {
+    Link* link=FindLink(key);
+    if(!link)throw HashInvalidKeyException();
+    return link->_keyval._value;
+  }
+
   T& operator[](pchashstr key)
   {
     unsigned index;
@@ -370,7 +387,7 @@ public:
       return link->_keyval._value;
     }else
     {
-      return *((const T*)0);
+      throw HashInvalidKeyException();
     }
   }
   int Insert(pchashstr key,const T& value)

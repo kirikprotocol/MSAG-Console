@@ -203,7 +203,7 @@ public:
     return _count;
   }
 
-  int Delete(int index,int count=-1)
+  int Delete(int index,int count=1)
   {
     if(index<0)index+=_count;
     if(index<0)
