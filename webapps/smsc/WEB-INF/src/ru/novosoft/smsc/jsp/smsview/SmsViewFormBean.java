@@ -122,8 +122,12 @@ public class SmsViewFormBean extends IndexBean
             }
             if (sortField.equalsIgnoreCase("sendDate"))
               result = r1.getSubmitTime().compareTo(r2.getSubmitTime());
-            if (sortField.equalsIgnoreCase("lastDate"))
-              result = r1.getLastTryTime().compareTo(r2.getLastTryTime());
+            if (sortField.equalsIgnoreCase("lastDate")) {
+              Date time1 = r1.getLastTryTime();
+              Date time2 = r2.getLastTryTime();
+              result = (time1 != null && time2 != null) ? time1.compareTo(time2):
+                        ((time1 == null && time2 != null) ? -1:1);
+            }
             if (sortField.equalsIgnoreCase("from"))
               result = r1.getOriginatingAddress().compareTo(r2.getOriginatingAddress());
             if (sortField.equalsIgnoreCase("to"))
