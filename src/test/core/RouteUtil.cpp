@@ -10,6 +10,7 @@ namespace core {
 using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
 using smsc::test::sms::operator!=;
+using namespace std;
 using namespace smsc::router;
 using namespace smsc::test::util;
 
@@ -82,8 +83,29 @@ ostream& operator<< (ostream& os, const RouteInfo& route)
 ostream& operator<< (ostream& os, const RouteHolder& holder)
 {
 	os << "route = {" << holder.route;
-	os << "}, proxy = " << holder.proxy->getUniqueId();
+	if (holder.proxy)
+	{
+		os << "}, proxy = " << holder.proxy->getUniqueId();
+	}
+	else
+	{
+		os << "}, proxy = NULL";
+	}
 	return os;
+}
+
+const string str(const RouteInfo& route)
+{
+	ostringstream os;
+	os << route;
+	return os.str();
+}
+
+const string str(const RouteHolder& holder)
+{
+	ostringstream os;
+	os << holder;
+	return os.str();
 }
 
 }

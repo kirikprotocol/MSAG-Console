@@ -7,6 +7,7 @@
 #include "smeman/smeproxy.h"
 #include <ostream>
 #include <vector>
+#include <string>
 
 namespace smsc {
 namespace test {
@@ -14,6 +15,7 @@ namespace core {
 
 using std::ostream;
 using std::vector;
+using std::string;
 using smsc::sms::Address;
 using smsc::router::RouteInfo;
 using smsc::smeman::SmeSystemId;
@@ -40,6 +42,9 @@ public:
 
 ostream& operator<< (ostream& os, const RouteInfo& route);
 ostream& operator<< (ostream& os, const RouteHolder& holder);
+
+const string str(const RouteInfo& route);
+const string str(const RouteHolder& holder);
 
 }
 }

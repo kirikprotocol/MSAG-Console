@@ -30,7 +30,7 @@ bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme, bool p
 	smeIdMap[sme.systemId] = smeData;
 	addrList.push_back(new Address(smeAddr));
 	__trace2__("SmeRegistry::registerSme(): smeAddr = %s, smeId = %s, pduReg = %p",
-		str(smeAddr).get(), sme.systemId.c_str(), smeData->pduReg);
+		str(smeAddr).c_str(), sme.systemId.c_str(), smeData->pduReg);
 	return true;
 }
 
