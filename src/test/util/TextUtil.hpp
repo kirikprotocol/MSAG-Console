@@ -14,6 +14,7 @@ namespace util {
 using std::string;
 using std::vector;
 using std::auto_ptr;
+using std::pair;
 
 //data_coding
 const uint8_t DATA_CODING_SMSC_DEFAULT = 0x0;
@@ -26,11 +27,13 @@ void rand_text(int length, char* buf, uint8_t dataCoding = DATA_CODING_SMSC_DEFA
 
 auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen);
 const string decode(const char* text, int len, uint8_t dataCoding);
+const pair<string, uint8_t> convert(const string& text, int profileCodePage);
 
 vector<int> compare(uint8_t dc1, const char* str1, int len1,
 	uint8_t dc2, const char* str2, int len2);
 
 uint8_t getDataCoding(int num);
+int getMaxChars(uint8_t dataCoding);
 
 }
 }
