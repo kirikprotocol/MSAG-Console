@@ -2,7 +2,7 @@
 #include "system/smsc.hpp"
 #include "system/state_machine.hpp"
 #include <exception>
-#include "system/rescheduler.hpp"
+#include "system/common/rescheduler.hpp"
 #include "profiler/profiler.hpp"
 #include "util/recoder/recode_dll.h"
 #include "core/buffers/Hash.hpp"
@@ -1017,6 +1017,18 @@ StateType StateMachine::submit(Tuple& t)
 
 
   sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
+
+  if(profile.codepage&smsc::profiler::ProfileCharsetOptions::UssdIn7Bit)
+  {
+    if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+    {
+      sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,smsc::profiler::ProfileCharsetOptions::Default);
+    }else
+    {
+      sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage&(~smsc::profiler::ProfileCharsetOptions::UssdIn7Bit));
+    }
+  }
+
   int pres=psSingle;
 
   bool isForwardTo = false;

@@ -18,7 +18,7 @@
 
 #include "system/version.inc"
 
-extern bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic);
+#include "license/check/license.hpp"
 
 class SmscRunner : public smsc::core::threads::Thread
 {
@@ -62,16 +62,16 @@ protected:
 extern "C" void atExitHandler(void)
 {
     smsc::util::xml::TerminateXerces();
-	smsc::logger::Logger::Shutdown();
+  smsc::logger::Logger::Shutdown();
 }
 
 int main(int argc,char* argv[])
 {
   Logger::Init();
-  
+
   atexit(atExitHandler);
   smsc::system::clearThreadSignalMask();
-  
+
   try{
     smsc::system::SmscConfigs cfgs;
     smsc::util::config::Manager::init(findConfigFile("config.xml"));
@@ -82,7 +82,7 @@ int main(int argc,char* argv[])
     {
       string lf=findConfigFile("license.ini");
       string sig=findConfigFile("license.sig");
-      if(!CheckLicense(lf.c_str(),sig.c_str(),lic))
+      if(!smsc::license::check::CheckLicense(lf.c_str(),sig.c_str(),lic))
       {
         smsc_log_error(logger, "Invalid license\n");
         return -1;
