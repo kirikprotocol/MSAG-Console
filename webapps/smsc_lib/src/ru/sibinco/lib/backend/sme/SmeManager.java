@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.xml.Utils;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -21,7 +22,7 @@ public class SmeManager
   private final Map smes = Collections.synchronizedMap(new HashMap());
   private final String configFilename;
 
-  public SmeManager(final String configFilename) throws IOException, ParserConfigurationException, SAXException
+  public SmeManager(final String configFilename)
   {
     this.configFilename = configFilename;
   }
@@ -55,8 +56,10 @@ public class SmeManager
         return s1.getId().compareTo(s2.getId());
       }
     });
+    Functions.storeConfigHeader(out, "records", "SmeRecords.dtd");
     for (Iterator i = values.iterator(); i.hasNext();)
       ((Sme) i.next()).store(out);
+    Functions.storeConfigFooter(out, "records");
     return out;
   }
 
