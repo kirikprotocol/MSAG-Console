@@ -47,23 +47,20 @@ public:
 		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
 		PduData::ObjProps* objProps = NULL);
 
-	void sendCancelSmPdu(PduCancelSm* pdu, bool sync);
+	void sendCancelSmPdu(PduCancelSm* pdu, PduData* cancelPduData, bool sync,
+		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
+		PduData::ObjProps* objProps = NULL);
 
 	void sendDeliverySmResp(PduDeliverySmResp& pdu, bool sync, int delay = 0);
 
 	void sendInvalidPdu(SmppHeader* pdu, bool sync);
 
 	/*
-		virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
 	virtual SmppHeader* sendPdu(SmppHeader& pdu)=0;
 	virtual void sendGenericNack(PduGenericNack& pdu)=0;
-		virtual void sendDeliverySmResp(PduDeliverySmResp& pdu)=0;
 	virtual void sendDataSmResp(PduDataSmResp& pdu)=0;
 	virtual PduMultiSmResp* submitm(PduMultiSm& pdu)=0;
 	virtual PduDataSmResp* data(PduDataSm& pdu)=0;
-	virtual PduQuerySmResp* query(PduQuerySm& pdu)=0;
-	virtual PduCancelSmResp* cancel(PduCancelSm& pdu)=0;
-		virtual PduReplaceSmResp* replace(PduReplaceSm& pdu)=0;
 	*/
 	static uint8_t getRegisteredDelivery(PduData* pduData);
 	
@@ -72,15 +69,23 @@ protected:
 	CheckList* chkList;
 
 	virtual Category& getLog();
+	//общие манипуляции с мониторами
+	void cancelMonitor(PduMonitor* monitor, time_t cancelTime,
+		bool forceRemoveMonitor);
+	void cancelPduMonitors(PduData* pduData, time_t cancelTime,
+		bool forceRemoveMonitors);
+	void registerTransmitterReportMonitors(uint16_t msgRef, time_t waitTime,
+		time_t validTime, PduData* pduData);
+	void registerNotBoundReportMonitors(uint16_t msgRef, time_t waitTime,
+		time_t validTime, PduData* pduData);
 	//submitSm
-	void updateReplacePduMonitors(PduData* pduData, time_t submitTime);
 	void registerNormalSmeMonitors(PduSubmitSm* pdu, PduData* existentPduData,
 		uint16_t msgRef, time_t waitTime, time_t validTime, PduData* pduData);
 	void registerExtSmeMonitors(PduSubmitSm* pdu, uint16_t msgRef, time_t waitTime,
 		time_t validTime, PduData* pduData);
 	void registerNullSmeMonitors(PduSubmitSm* pdu, uint16_t msgRef, time_t waitTime,
 		time_t validTime, uint32_t deliveryStatus, PduData* pduData);
-	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,
+	PduData* prepareSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,
 		time_t submitTime, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType);
 	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu,
@@ -89,19 +94,28 @@ protected:
 	//replaceSm
 	void registerReplaceMonitors(PduSubmitSm* resPdu, PduData* replacePduData,
 		PduData* pduData);
-	PduData* registerReplaceSm(PduReplaceSm* pdu, PduData* replacePduData,
+	PduData* prepareReplaceSm(PduReplaceSm* pdu, PduData* replacePduData,
 		time_t submitTime, PduData::IntProps* intProps, PduData::StrProps* strProps,
 		PduData::ObjProps* objProps);
 	void processReplaceSmSync(PduData* pduData, PduReplaceSm* pdu,
 		PduReplaceSmResp* respPdu, time_t respTime);
 	void processReplaceSmAsync(PduData* pduData, PduReplaceSm* pdu);
 	//querySm
-	PduData* registerQuerySm(PduQuerySm* pdu, PduData* origPduData,
+	PduData* prepareQuerySm(PduQuerySm* pdu, PduData* origPduData,
 		time_t queryTime, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps);
 	void processQuerySmSync(PduData* pduData, PduQuerySmResp* respPdu,
 		time_t respTime);
 	void processQuerySmAsync(PduData* pduData);
+	//cancelSm
+	void processCancelledMonitors(PduCancelSm* pdu, PduData* cancelPduData,
+		time_t cancelTime, PduData* pduData);
+	PduData* prepareCancelSm(PduCancelSm* pdu, PduData* cancelPduData,
+		time_t cancelTime, PduData::IntProps* intProps, PduData::StrProps* strProps,
+		PduData::ObjProps* objProps);
+	void processCancelSmSync(PduData* pduData, PduCancelSmResp* respPdu,
+		time_t respTime);
+	void processCancelSmAsync(PduData* pduData);
 	//generickNack	
 	void processGenericNackSync(time_t submitTime, time_t respTime);
 	void processGenericNackAsync(PduData* pduData);

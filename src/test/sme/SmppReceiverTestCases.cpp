@@ -193,6 +193,44 @@ void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp &pdu)
 	}
 }
 
+void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp &pdu)
+{
+	__dumpPdu__("processCancelSmRespBefore", fixture->smeInfo.systemId,
+		reinterpret_cast<SmppHeader*>(&pdu));
+	time_t respTime = time(NULL);
+	if (!fixture->pduReg)
+	{
+		return;
+	}
+	__decl_tc__;
+	__tc__("cancelSm.resp.async");
+	try
+	{
+		//получить оригинальную pdu
+		MutexGuard mguard(fixture->pduReg->getMutex());
+		ResponseMonitor* monitor = fixture->pduReg->getResponseMonitor(
+			pdu.get_header().get_sequenceNumber());
+		//для sequence number из респонса нет соответствующего pdu
+		if (!monitor)
+		{
+			__tc_fail__(1);
+		}
+		else
+		{
+			//проверить response монитор
+			fixture->pduReg->removeMonitor(monitor);
+			fixture->pduChecker->processCancelSmResp(monitor, pdu, respTime);
+			//__dumpPdu__("processCancelSmRespAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
+		}
+		__tc_ok_cond__;
+	}
+	catch(...)
+	{
+		__tc_fail__(100);
+		error();
+	}
+}
+
 void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
 {
 	__dumpPdu__("processGenericNackBefore", fixture->smeInfo.systemId,
@@ -250,14 +288,6 @@ void SmppReceiverTestCases::processDataSmResp(PduDataSmResp &pdu)
 	//__dumpPdu__("processDataSmResp", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 	__decl_tc__;
 	__tc__("notImplemented.processDataSmResp");
-	__tc_fail__(100);
-}
-
-void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp &pdu)
-{
-	//__dumpPdu__("processCancelSmResp", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
-	__decl_tc__;
-	__tc__("notImplemented.processCancelSmResp");
 	__tc_fail__(100);
 }
 
