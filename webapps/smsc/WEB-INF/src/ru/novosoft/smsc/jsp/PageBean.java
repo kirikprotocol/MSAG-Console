@@ -10,10 +10,7 @@ import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 public abstract class PageBean
 {
@@ -97,17 +94,19 @@ public abstract class PageBean
 
 	protected String[] trimStrings(String[] masks)
 	{
-		Set newMasks = new HashSet();
+		Set newMasks = new HashSet(masks.length);
 		for (int i = 0; i < masks.length; i++)
 		{
 			String mask = masks[i];
 			if (mask != null)
 			{
 				final String m = mask.trim();
-				if (m.length() > 0 && !newMasks.contains(m))
+				if (m.length() > 0)
 					newMasks.add(m);
 			}
 		}
-		return (String[]) newMasks.toArray(new String[0]);
+		String result[] = (String[]) newMasks.toArray(new String[0]);
+		Arrays.sort(result);
+		return result;
 	}
 }
