@@ -31,6 +31,11 @@ using namespace smsc::test::config;
 using namespace smsc::test::smpp; //SmppUtil, constants
 using namespace smsc::test::util;
 
+struct CorruptedPduTestCasesImpl : public CorruptedPduTestCases
+{
+	virtual void process(char* buf, int size);
+};
+
 class TestSme : public ThreadedTask, public SmppPduEventListener
 {
 	const string smscHost;
@@ -53,10 +58,12 @@ public:
 	void bind();
 	void unbind();
 	void submitSm();
+	void sendCorruptedPdu(bool sync);
 	void permanentAppError(PduDeliverySm& pdu);
 	void genericNack(PduDeliverySm& pdu);
-	void handleSubmitSmResp(PduSubmitSmResp& pdu);
-	void handleDeliverSm(PduDeliverySm& pdu);
+	void handleGenericNack(PduGenericNack* pdu);
+	void handleSubmitSmResp(PduSubmitSmResp* pdu);
+	void handleDeliverSm(PduDeliverySm* pdu);
 	virtual void handleEvent(SmppHeader* pdu);
 	virtual void handleError(int errorCode);
 	virtual int Execute();
@@ -78,7 +85,7 @@ TestSme::~TestSme()
 	}
 }
 
-SmppTransmitter* TestSme::getTransmitter(bool sync)
+inline SmppTransmitter* TestSme::getTransmitter(bool sync)
 {
 	return (sync ? sess->getSyncTransmitter() : sess->getAsyncTransmitter());
 }
@@ -121,7 +128,7 @@ void TestSme::submitSm()
 	{
 		if (respPdu)
 		{
-			handleSubmitSmResp(*respPdu);
+			handleSubmitSmResp(respPdu);
 			delete respPdu;
 		}
 		else
@@ -129,6 +136,20 @@ void TestSme::submitSm()
 			__warning__("null response for sync request");
 		}
 	}
+}
+
+void TestSme::sendCorruptedPdu(bool sync)
+{
+	PduSubmitSm pdu;
+	SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, OPT_ALL);
+	CorruptedPduTestCasesImpl tc;
+	sess->writer.tc = &tc;
+	__trace2__("sendCorruptedPdu(): before submit");
+	PduSubmitSmResp* respPdu = getTransmitter(sync)->submit(pdu);
+	sess->writer.tc = NULL;
+	__trace2__("sendCorruptedPdu(): sme = %p, pdu = %u, sync = %s",
+		this, pdu.get_header().get_sequenceNumber(), sync ? "true" : "false");
+	__require__(!respPdu);
 }
 
 void TestSme::permanentAppError(PduDeliverySm& pdu)
@@ -151,33 +172,22 @@ void TestSme::genericNack(PduDeliverySm& pdu)
 		this, respPdu.get_header().get_sequenceNumber());
 }
 
-void TestSme::handleSubmitSmResp(PduSubmitSmResp& pdu)
+void TestSme::handleGenericNack(PduGenericNack* pdu)
 {
-	__trace2__("handleSubmitSmResp(): sme = %p, pdu = %u",
-		this, pdu.get_header().get_sequenceNumber());
-	unbind();
-	event.Signal();
+	__require__(pdu);
+	__trace2__("handleGenericNack(): sme = %p, pdu:\n%s", this, str(*pdu).c_str());
 }
 
-void TestSme::handleDeliverSm(PduDeliverySm& pdu)
+void TestSme::handleSubmitSmResp(PduSubmitSmResp* pdu)
 {
-	__trace2__("handleDeliverSm(): sme = %p, pdu = %u",
-		this, pdu.get_header().get_sequenceNumber());
-	switch (rand1(3))
-	{
-		case 1:
-			unbind();
-			break;
-		case 2:
-			permanentAppError(pdu);
-			break;
-		case 3:
-			genericNack(pdu);
-			break;
-		default:
-			__unreachable__("");
-	}
-	event.Signal();
+	__require__(pdu);
+	__trace2__("handleSubmitSmResp(): sme = %p, pdu:\n%s", this, str(*pdu).c_str());
+}
+
+void TestSme::handleDeliverSm(PduDeliverySm* pdu)
+{
+	__require__(pdu);
+	__trace2__("handleDeliverSm(): sme = %p, pdu:\n%s", this, str(*pdu).c_str());
 }
 
 void TestSme::handleEvent(SmppHeader* pdu)
@@ -185,10 +195,13 @@ void TestSme::handleEvent(SmppHeader* pdu)
 	switch (pdu->get_commandId())
 	{
 		case SUBMIT_SM_RESP:
-			handleSubmitSmResp(*reinterpret_cast<PduSubmitSmResp*>(pdu));
+			handleSubmitSmResp(reinterpret_cast<PduSubmitSmResp*>(pdu));
 			break;
 		case DELIVERY_SM:
-			//handleDeliverSm(*reinterpret_cast<PduDeliverySm*>(pdu));
+			handleDeliverSm(reinterpret_cast<PduDeliverySm*>(pdu));
+			break;
+		case GENERIC_NACK:
+			handleGenericNack(reinterpret_cast<PduGenericNack*>(pdu));
 			break;
 		default:
 			__unreachable__("Invalid pdu type");
@@ -199,7 +212,7 @@ void TestSme::handleEvent(SmppHeader* pdu)
 void TestSme::handleError(int errorCode)
 {
 	__trace2__("handleError(): errorCode = %d", errorCode);
-	__unreachable__("handleError()");
+	//__unreachable__("handleError()");
 }
 
 int TestSme::Execute()
@@ -209,9 +222,12 @@ int TestSme::Execute()
 		while (!isStopping)
 		{
 			bind();
-			submitSm();
-			count++;
+			sendCorruptedPdu(rand0(1));
 			event.Wait(5000);
+			unbind();
+			//unbind();
+			//submitSm();
+			count++;
 			if (paused)
 			{
 				pauseEvent.Wait();
@@ -224,6 +240,13 @@ int TestSme::Execute()
 		__warning2__("exception in sme = %p", this);
 		return -1;
 	}
+}
+
+void CorruptedPduTestCasesImpl::process(char* buf, int size)
+{
+	__require__(size >= 16);
+	SmppHeader* header = reinterpret_cast<SmppHeader*>(buf);
+	header->set_commandLength(rand2(0, 2 * size));
 }
 
 vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
