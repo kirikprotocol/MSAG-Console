@@ -19,8 +19,7 @@ using namespace smsc::test::core; //SmeRegistry, PduRegistry, ...
 const char* const TC_BIND_CORRECT_SME = "bindCorrectSme";
 const char* const TC_BIND_INCORRECT_SME = "bindIncorrectSme";
 const char* const TC_PROCESS_INVALID_SMS = "processInvalidSms";
-const char* const TC_UNBIND_BOUNDED = "unbindBounded";
-const char* const TC_UNBIND_NON_BOUNDED = "unbindNonBounded";
+const char* const TC_UNBIND = "unbind";
 
 /**
  * Этот класс содержит все test cases необходимые для тестирования sme.
@@ -62,14 +61,9 @@ public:
 	TCResult* processInvalidSms();
 	
 	/**
-	 * Unbind для sme соединенной с smsc.
+	 * Unbind для sme.
 	 */
-	TCResult* unbindBounded();
-
-	/**
-	 * Unbind для sme несоединенной с smsc.
-	 */
-	TCResult* unbindNonBounded();
+	TCResult* unbind();
 
 protected:
 	virtual Category& getLog();

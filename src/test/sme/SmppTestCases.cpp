@@ -1,4 +1,5 @@
 #include "SmppTestCases.hpp"
+#include "test/smpp/SmppUtil.hpp"
 #include "util/debug.h"
 
 namespace smsc {
@@ -6,6 +7,8 @@ namespace test {
 namespace sme {
 
 using smsc::util::Logger;
+using smsc::core::synchronization::MutexGuard;
+using namespace smsc::smpp::SmppCommandSet;
 
 SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _systemId,
 	const Address& addr, const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
@@ -60,7 +63,7 @@ SmppTransmitterTestCases& SmppTestCases::getTransmitter()
 
 Category& SmppTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("SmeTestCases");
+	static Category& log = Logger::getCategory("SmppTestCases");
 	return log;
 }
 
@@ -99,7 +102,9 @@ TCResult* SmppTestCases::bindCorrectSme(int num)
 
 TCResult* SmppTestCases::bindIncorrectSme(int num)
 {
-	TCSelector s(num, 4);
+	//повторный bind убран из тест кейсов, т.к. приводит к пересозданию коннекта
+	//без ошибок
+	TCSelector s(num, 3);
 	TCResult* res = new TCResult(TC_BIND_INCORRECT_SME, s.getChoice());
 	for (; s.check(); s++)
 	{
@@ -126,10 +131,7 @@ TCResult* SmppTestCases::bindIncorrectSme(int num)
 						}
 					}
 					break;
-				case 2: //повторный bind
-					session->connect();
-					break;
-				case 3: //bind на недоступный SC (неизвестный хост)
+				case 2: //bind на недоступный SC (неизвестный хост)
 					{
 						SmppSession* sess = NULL;
 						try
@@ -148,7 +150,7 @@ TCResult* SmppTestCases::bindIncorrectSme(int num)
 						}
 					}
 					break;
-				case 4: //bind на недоступный SC (неправильный порт)
+				case 3: //bind на недоступный SC (неправильный порт)
 					{
 						SmppSession* sess = NULL;
 						try
@@ -168,7 +170,7 @@ TCResult* SmppTestCases::bindIncorrectSme(int num)
 					}
 					break;
 				default:
-					throw s;
+					res->addFailure(s.value());
 			}
 			res->addFailure(s.value());
 		}
@@ -186,19 +188,114 @@ TCResult* SmppTestCases::processInvalidSms()
 	TCResult* res = new TCResult(TC_PROCESS_INVALID_SMS);
 	if (pduReg)
 	{
-		vector<PduData*> pduData = pduReg->getOverduePdu(time(NULL) - 5);
+		MutexGuard(pduReg->getMutex());
 		bool missingResp = false;
 		bool missingDelivery = false;
 		bool missingDeliveryReceipt = false;
 		bool missingIntermediateNotification = false;
-		for (int i = 0; i < pduData.size(); i++)
+		//проверить неполученные респонсы
+		PduRegistry::PduDataIterator* sit = pduReg->getPduBySubmitTime(0, __checkTime__);
+		int sitCount = 0;
+		while (PduData* pduData = sit->next())
 		{
-			missingResp |= !pduData[i]->responseFlag;
-			missingDelivery |= !pduData[i]->deliveryFlag;
-			missingDeliveryReceipt |= !pduData[i]->deliveryReceiptFlag;
-			missingIntermediateNotification |= !pduData[i]->intermediateNotificationFlag;
-			pduReg->removePdu(pduData[i]);
+			sitCount++;
+			if (!pduData->responseFlag)
+			{
+				__trace2__("SmppTestCases::processInvalidSms(): missing response for seqNum = %d",
+					pduData->pdu->get_sequenceNumber());
+				missingResp = true;
+				pduData->responseFlag = true;
+				if (pduData->complete())
+				{
+					pduReg->removePdu(pduData);
+				}
+			}
 		}
+		delete sit;
+		__trace2__("SmppTestCases::processInvalidSms(): sitCount = %d", sitCount);
+		//проверить неполученные доставки и подтверждения доставки 
+		//на момент waitTime
+		PduRegistry::PduDataIterator* wit = pduReg->getPduByWaitTime(0, __checkTime__);
+		int witCount = 0;
+		while (PduData* pduData = wit->next())
+		{
+			witCount++;
+			if (pduData->deliveryFlag && pduData->deliveryReceiptFlag)
+			{
+				continue;
+			}
+			__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
+			PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
+			if (routeChecker->checkExistsUnreachableRoute(
+				pdu->get_message().get_dest(), true))
+			{
+				continue;
+			}
+			if (!pduData->deliveryFlag)
+			{
+				__trace2__("SmppTestCases::processInvalidSms(): missing delivery for seqNum = %d",
+					pduData->pdu->get_sequenceNumber());
+				missingDelivery = true;
+				pduData->deliveryFlag = true;
+			}
+			if (!pduData->deliveryReceiptFlag)
+			{
+				__trace2__("SmppTestCases::processInvalidSms(): missing delivery receipt for seqNum = %d",
+					pduData->pdu->get_sequenceNumber());
+				missingDeliveryReceipt = true;
+				pduData->deliveryReceiptFlag = true;
+			}
+			if (pduData->complete())
+			{
+				pduReg->removePdu(pduData);
+			}
+		}
+		delete wit;
+		__trace2__("SmppTestCases::processInvalidSms(): witCount = %d", witCount);
+		//проверить неполученные доставки и подтверждения доставки
+		//по окончании validTime
+		PduRegistry::PduDataIterator* vit = pduReg->getPduByValidTime(0, __checkTime__);
+		int vitCount = 0;
+		while (PduData* pduData = vit->next())
+		{
+			vitCount++;
+			if (pduData->responseFlag && pduData->deliveryReceiptFlag)
+			{
+				continue;
+			}
+			__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
+			PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
+			if (routeChecker->checkExistsUnreachableRoute(
+				pdu->get_message().get_dest(), true))
+			{
+				pduData->deliveryFlag = true;
+				pduData->deliveryReceiptFlag = true;
+			}
+			if (!pduData->deliveryFlag)
+			{
+				__trace2__("SmppTestCases::processInvalidSms(): missing delivery for seqNum = %d",
+					pduData->pdu->get_sequenceNumber());
+				missingDelivery = true;
+				pduData->deliveryFlag = true;
+			}
+			if (!pduData->deliveryReceiptFlag)
+			{
+				__trace2__("SmppTestCases::processInvalidSms(): missing delivery receipt for seqNum = %d",
+					pduData->pdu->get_sequenceNumber());
+				missingDeliveryReceipt = true;
+				pduData->deliveryReceiptFlag = true;
+			}
+			if (!pduData->intermediateNotificationFlag)
+			{
+				__trace2__("SmppTestCases::processInvalidSms(): missing intermediate notification for seqNum = %d",
+					pduData->pdu->get_sequenceNumber());
+				missingIntermediateNotification = true;
+				pduData->intermediateNotificationFlag = true;
+			}
+			pduReg->removePdu(pduData);
+		}
+		delete vit;
+		__trace2__("SmppTestCases::processInvalidSms(): vitCount = %d", vitCount);
 		if (missingResp) { res->addFailure(1); }
 		if (missingDelivery) { res->addFailure(2); }
 		if (missingDeliveryReceipt) { res->addFailure(3); }
@@ -208,9 +305,9 @@ TCResult* SmppTestCases::processInvalidSms()
 	return res;
 }
 
-TCResult* SmppTestCases::unbindBounded()
+TCResult* SmppTestCases::unbind()
 {
-	TCResult* res = new TCResult(TC_UNBIND_BOUNDED);
+	TCResult* res = new TCResult(TC_UNBIND);
 	try
 	{
 		session->close();
@@ -219,22 +316,6 @@ TCResult* SmppTestCases::unbindBounded()
 	{
 		error();
 		res->addFailure(100);
-	}
-	debug(res);
-	return res;
-}
-
-TCResult* SmppTestCases::unbindNonBounded()
-{
-	TCResult* res = new TCResult(TC_UNBIND_NON_BOUNDED);
-	try
-	{
-		session->close();
-		res->addFailure(1);
-	}
-	catch(...)
-	{
-		//ok
 	}
 	debug(res);
 	return res;
