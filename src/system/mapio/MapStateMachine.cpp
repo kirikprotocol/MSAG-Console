@@ -551,7 +551,7 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   if ( ssfh->tp_vp != 0 )
   {
     unsigned char* tvp = (unsigned char*)(ud->signalInfo+2+msa_len+1+1);
-    __trace__("MAP:%s: TVP = 0x%x , first octet 0x%x",__FUNCTION__,(unsigned)ssfh->tp_vp,(unsigned)*tvp);
+    __trace2__("MAP:%s: TVP = 0x%x , first octet 0x%x",__FUNCTION__,(unsigned)ssfh->tp_vp,(unsigned)*tvp);
     time_t timeValue = time(0);
     if ( ssfh->tp_vp == 1 ){
 parse_tvp_scheme1:
