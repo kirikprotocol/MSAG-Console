@@ -14,7 +14,7 @@ $(warning set SMSC_BUILDDIR = $(SMSC_BUILDDIR))
 export SMSC_BUILDDIR
 endif
 
-SME_BUILDDIR:=$(SMSC_BUILDDIR)/ext_smes/proxysmeTmp
+SME_BUILDDIR:=$(SMSC_BUILDDIR)/ext_smes/InfoSmeTmp
 
 
 default: compile pack
@@ -32,10 +32,10 @@ compile:
 	@mkdir -p $(SME_BUILDDIR)/lib
 	@cp -f service $(SME_BUILDDIR)/bin
 	@cp -f log4cpp.properties $(SME_BUILDDIR)/log4cpp.properties
-	@cp -f $(SMSC_BUILDDIR)/bin/proxysme/proxysme $(SME_BUILDDIR)/bin/
-	@cp -f $(SMSC_BUILDDIR)/jars/proxysme.jar  $(SME_BUILDDIR)/lib/proxysme.jar
+	@cp -f $(SMSC_BUILDDIR)/bin/infosme/service $(SME_BUILDDIR)/bin/
+	@cp -f $(SMSC_BUILDDIR)/jars/infosme.jar  $(SME_BUILDDIR)/lib/infosme.jar
 #	@cp -f log4cpp.properties $(SME_BUILDDIR)/log4cpp.properties
-	@cp -f ../../config/proxysme/config.xml $(SME_BUILDDIR)/conf/config.xml
+	@cp -f ../../config/infosme/config.xml $(SME_BUILDDIR)/conf/config.xml
 	@cp -f ../../config/configuration.dtd $(SME_BUILDDIR)/conf/configuration.dtd
 	@cp -f ../../config/command.dtd $(SME_BUILDDIR)/conf/command.dtd
 	@cp -f ../../config/response.dtd $(SME_BUILDDIR)/conf/response.dtd
@@ -45,10 +45,10 @@ compile:
 pack:
 	@echo zipping archive
 #	@cd $(SME_BUILDDIR); zip -9 -r $(SMSC_BUILDDIR)/ext_smes/dbsme bin conf jsp lib config.xml
-	@jar -cfM $(SMSC_BUILDDIR)/ext_smes/proxysme.war -C $(SME_BUILDDIR) .
+	@jar -cfM $(SMSC_BUILDDIR)/ext_smes/infosme.war -C $(SME_BUILDDIR) .
 
 clean:
 	@echo Clean
 	@${MAKE} -C java clean
 	@rm -fr $(SME_BUILDDIR)
-	@rm -f $(SMSC_BUILDDIR)/ext_smes/proxysme.*
+	@rm -f $(SMSC_BUILDDIR)/ext_smes/infosme.*

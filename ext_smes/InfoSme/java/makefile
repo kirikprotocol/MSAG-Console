@@ -11,11 +11,11 @@ compile:
 	@mkdir -p $(SMSC_BUILDDIR)/jars
 	@javac -sourcepath . -classpath $(CLASSPATH) -d $(SMSC_BUILDDIR)/classes `find . -follow -name *.java`
 	@echo create jar
-	@jar -cf $(SMSC_BUILDDIR)/jars/proxysme.jar -C $(SMSC_BUILDDIR)/classes .
+	@jar -cf $(SMSC_BUILDDIR)/jars/infosme.jar -C $(SMSC_BUILDDIR)/classes .
 
 clean:
 	@echo Clean
 	@rm -rf $(SMSC_BUILDDIR)/classes
-	@rm -f $(SMSC_BUILDDIR)/jars/proxysme.jar
+	@rm -f $(SMSC_BUILDDIR)/jars/infosme.jar
 
 rebuild: clean compile
