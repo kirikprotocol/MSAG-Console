@@ -48,7 +48,7 @@ public:
   void setPerformanceLimits(int newTimeOut,int newProcLimit)
   {
     __mapproxy_trace2__("Setting proccessing limits on map proxy timeout=%d, limit=%d", newTimeOut, newProcLimit);
-    processTimeOut=newTimeOut+newTimeOut/4;
+    processTimeout=newTimeOut+newTimeOut/4;
     processLimit=newProcLimit;
   }
   virtual void close(){}
