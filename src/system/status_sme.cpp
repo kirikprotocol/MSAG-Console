@@ -80,11 +80,29 @@ int StatusSme::Execute()
 
     if(request=="scheduler" || request=="sc")
     {
-      int tcnt,tll,rs,ipc;
-      smsc->scheduler->getSmsCounts(tcnt,tll,rs,ipc);
-      char buf[128];
-      sprintf(buf,"tc:%d,tll:%d,rs=%d,ipc:%d",tcnt,tll,rs,ipc);
+      Scheduler::SchedulerCounts cnts;
+      smsc->getScheduler()->getCounts(cnts);
+      char buf[256];
+      time_t now=time(NULL);
+      time_t headTime=smsc->scheduler->tlHeadTime();
+      sprintf(buf,"tlc:%d,ftc=%d,tll:%d,rs=%d,ipc:%d\nht/now=%d/%d(",
+        cnts.timeLineCount,
+        cnts.firstTimeCount,
+        cnts.timeLineSize,
+        cnts.regSize,
+        cnts.inProcCount,
+        headTime,
+        now
+      );
       answer=buf;
+      ctime_r(&headTime,buf);
+      buf[strlen(buf)-1]=0;
+      answer+=buf;
+      answer+='/';
+      ctime_r(&now,buf);
+      buf[strlen(buf)-1]=0;
+      answer+=buf;
+      answer+=')';
     }else if (request=="eventqueue" || request=="eq")
     {
       int cnt=smsc->eventqueue.getCounter();
@@ -148,7 +166,13 @@ int StatusSme::Execute()
       }
     }else if(request=="hlralert")
     {
-      putIncomingCommand(SmscCommand::makeHLRAlert(arg.c_str()));
+      try{
+        putIncomingCommand(SmscCommand::makeHLRAlert(arg.c_str()));
+        answer="hlr alert generated";
+      }catch(...)
+      {
+        answer="invalid address";
+      }
     }else if(request=="ver")
     {
       answer=getStrVersion();
