@@ -1876,18 +1876,15 @@ static inline
 void DoProvErrorProcessing(ET96MAP_PROV_ERR_T *provErrCode_p )
 {
   if ( provErrCode_p != 0 ){
-    if ( *provErrCode_p == 0x02 || // unsupported service
-         *provErrCode_p == 0x03 || // mystyped parametor
-         *provErrCode_p == 0x06 || // unexpected responnse from peer
-         *provErrCode_p == 0x09 || // invalid responce recived
-         (*provErrCode_p > 0x0b && *provErrCode_p <= 0x10)) // unxpected component end other
+    if( isErrorPermanent( Status::MAP_PROVIDER_ERR_BASE+*provErrCode_p ) ) {
       throw MAPDIALOG_FATAL_ERROR(
         FormatText("MAP::%s fatal *provErrCode_p: 0x%x",__func__,*provErrCode_p),
         Status::MAP_PROVIDER_ERR_BASE+*provErrCode_p);
-    else
+    } else {
       throw MAPDIALOG_TEMP_ERROR(
         FormatText("MAP::%s temp *provErrCode_p: 0x%x",__func__,*provErrCode_p),
         Status::MAP_PROVIDER_ERR_BASE+*provErrCode_p);
+    }
   }
 }
 
@@ -1897,33 +1894,19 @@ void DoMAPErrorProcessor(
   ET96MAP_PROV_ERR_T *provErrCode_p )
 {
   if ( errorCode != 0 ){
-    bool fatal = false;
-    switch( errorSendRoutingInfoForSm_sp->errorCode){
-    case 1:  // Unknown subscriber
-    case 9: // Illegal subscriber
-    case 12: // Illegal Equipment
-    case 21: // Facility Not Supported
-    case 35: // Data Missing
-    case 36: // Unexpected Data value
-    case 71: // Unknown alphabet
-      fatal = true;
-      break;
-    default:
-      fatal = false;
-      break;
-    }
-    if ( fatal )
+    if( isErrorPermanent( MAP_ERRORS_BASE+errorCode ) ) {
       throw MAPDIALOG_FATAL_ERROR(
         FormatText("MAP::%s perm error errorCode: 0x%x",
                    __func__,
                    errorCode),
                    MAP_ERRORS_BASE+errorCode);
-    else
+    } else {
       throw MAPDIALOG_TEMP_ERROR(
         FormatText("MAP::%s temp error errorCode: 0x%x",
                  __func__,
                  errorCode),
                  MAP_ERRORS_BASE+errorCode);
+    }
   }
   DoProvErrorProcessing(provErrCode_p);
 }
