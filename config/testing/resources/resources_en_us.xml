@@ -16,6 +16,8 @@
 			<param name="msgReportFull">Отчеты доставки разрешены</param>
 			<param name="msgLocaleChanged">Locale is successfully changed</param>
 			<param name="msgLocaleUnknown">Unknown locale</param>
+			<param name="msgHide">Hide option is turned on</param>
+			<param name="msgUnhide">Unhide option is turned on</param>
 			<param name="msgError">Неправильная команда (!@#$%^&amp;*( )_+-=|\:;'&lt;,&gt;.?/)</param>
 		</section>
 		<section name="abonentinfo">

@@ -14,6 +14,8 @@
 			<param name="msgUCS2">Кодировка текста сообщений установлена в ucs2 (теперь вы сможете получать сообщения содержащие русские символы в тексте, однако ваш телефон должен поддерживать ucs2 сообщения)</param>
 			<param name="msgLocaleChanged">Настройки locale успешно изменены</param>
 			<param name="msgLocaleUnknown">Неправильно задан locale</param>
+			<param name="msgHide">Включена hide опция</param>
+			<param name="msgUnhide">Включена unhide опция</param>
 			<param name="msgError"></param>
 		</section>
 		<section name="abonentinfo">
