@@ -1,5 +1,6 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
+#include "core/threads/ThreadPool.hpp"
 #include "SmppBaseTestCases.hpp"
 #include "SmppPduChecker.hpp"
 #include "SmppTransmitterTestCases.hpp"
@@ -8,6 +9,7 @@
 #include "SmppProtocolTestCases.hpp"
 #include "SmppProfilerTestCases.hpp"
 #include "AbonentInfoTestCases.hpp"
+#include "SmppProtocolErrorTestCases.hpp"
 #include "test/smeman/SmeManagerTestCases.hpp"
 #include "test/alias/AliasManagerTestCases.hpp"
 #include "test/router/RouteManagerTestCases.hpp"
@@ -17,7 +19,6 @@
 #include "test/config/AliasConfigGen.hpp"
 #include "test/config/RouteConfigGen.hpp"
 #include "test/config/ConfigUtil.hpp"
-#include "test/util/TestTaskManager.hpp"
 #include "test/util/TextUtil.hpp"
 #include "SystemSmeCheckList.hpp"
 #include "test/config/ConfigGenCheckList.hpp"
@@ -59,12 +60,29 @@ CheckList* smppChkList;
 CheckList* configChkList;
 SmppPduSender* pduSender;
 
+class TestSme : public ThreadedTask
+{
+protected:
+	Event event;
+	bool paused;
+	int tcCount;
+public:
+	TestSme() : paused(false), tcCount(0) {}
+	virtual int Execute() = NULL;
+	virtual const char* taskName() = NULL;
+	int getTcCount() { return tcCount; }
+	void pause() { paused = true; }
+	void resume() { paused = false; event.Signal(); }
+	void stop() { isStopping = true; event.Signal(); }
+};
+
 /**
  * Тестовая sme.
  */
-class TestSme : public TestTask, SmppResponseSender
+class TestSmeFunc : public TestSme, SmppResponseSender
 {
-	int smeNum;
+	string name;
+	int delay;
 	SmppFixture* fixture;
 	SmppSession* session; //удаляется в fixture
 	SmppPduChecker pduChecker;
@@ -76,82 +94,126 @@ class TestSme : public TestTask, SmppResponseSender
 	SmppProfilerTestCases profilerTc;
 	AbonentInfoTestCases abonentInfoTc;
 	time_t nextCheckTime;
-	bool boundOk;
 	Event evt;
-	int idx;
 	vector<int> seq;
 
 public:
-	TestSme(int smeNum, const SmeConfig& config, SmppFixture* fixture);
-	virtual ~TestSme() { delete fixture; }
+	TestSmeFunc(int smeNum, const SmeConfig& config, SmppFixture* _fixture)
+	: delay(1000), nextCheckTime(0), fixture(_fixture),
+		pduChecker(_fixture), baseTc(config, _fixture), receiverTc(_fixture),
+		transmitterTc(_fixture), smscSmeTc(_fixture), protocolTc(_fixture),
+		profilerTc(_fixture), abonentInfoTc(_fixture)
+	{
+		ostringstream os;
+		os << "TestSmeFunc" << smeNum;
+		name = os.str();
+		session = new SmppSession(config, &receiverTc);
+		fixture->session = session;
+		fixture->respSender = this;
+	}
+	virtual ~TestSmeFunc() { delete fixture; }
 	virtual void executeCycle();
-	virtual void onStopped();
+	virtual int Execute();
+	virtual const char* taskName() { return name.c_str(); }
+	void setDelay(int val) { delay = val; }
 	PduHandler* getDeliveryReceiptHandler() { return &smscSmeTc; }
 	PduHandler* getProfilerAckHandler() { return &profilerTc; }
 	PduHandler* getAbonentInfoAckHandler() { return &abonentInfoTc; }
 
 private:
 	virtual pair<uint32_t, time_t> sendDeliverySmResp(PduDeliverySm& pdu);
-	virtual void updateStat();
 };
 
-/**
- * Таск менеджер.
- */
-class TestSmeTaskManager
-	: public TestTaskManager<TestSme>
+class TestSmeErr : public TestSme
 {
+	string name;
+	SmeConfig config;
+	SmppFixture* fixture;
 public:
-	TestSmeTaskManager() {}
-	virtual bool isStopped() const;
+	TestSmeErr(int smeNum, const SmeConfig& _config, SmppFixture* _fixture)
+		: config(_config), fixture(_fixture)
+	{
+		ostringstream os;
+		os << "TestSmeErr" << smeNum;
+		name = os.str();
+	}
+	~TestSmeErr() { delete fixture; }
+	virtual int Execute();
+	virtual const char* taskName() { return name.c_str(); }
 };
 
-/**
- * Статистика работы sme.
- */
-struct TestSmeStat
+int TestSmeFunc::Execute()
 {
-	int ops;
-	bool stopped;
-	TestSmeStat() : ops(0), stopped(false) {}
-};
-
-/**
- * Статистика работы всего теста.
- */
-class SmppFunctionalTest
-{
-	typedef vector<TestSmeStat> TaskStatList;
-	
-	static TaskStatList taskStat;
-	static Mutex mutex;
-
-public:
-	static int delay;
-	static bool pause;
-	
-public:
-	static void resize(int newSize);
-	static void onStopped(int taskNum);
-	static bool isStopped();
-	static void updateStat(int taskNum);
-	static void printStat();
-};
-
-//TestSme
-TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* _fixture)
-	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
-	fixture(_fixture), pduChecker(_fixture), baseTc(config, _fixture),
-	receiverTc(_fixture), transmitterTc(_fixture), smscSmeTc(_fixture),
-	protocolTc(_fixture), profilerTc(_fixture), abonentInfoTc(_fixture),
-	boundOk(false), idx(0)
-{
-	session = new SmppSession(config, &receiverTc);
-	fixture->session = session;
-	fixture->respSender = this;
+	cout << "Sme " << taskName() << " started" << endl;
+	//стартовая последовательност команд
+	seq.push_back(1);
+	seq.insert(seq.end(), 3, 4);
+	seq.insert(seq.end(), 3, 2);
+	seq.insert(seq.end(), 3, 3);
+	seq.push_back(1);
+	for (int i = 0; i < seq.size(); i++)
+	{
+		switch (seq[i])
+		{
+			case 1: //правильный bind
+				sleep(2);
+				if (!baseTc.bindCorrectSme())
+				{
+					cout << "Sme " << taskName() << " bind failed" << endl;
+					exit(0);
+				}
+				break;
+			case 2: //неправильный bind
+				baseTc.bindIncorrectSme(RAND_TC);
+				break;
+			case 3:
+				//baseTc.bindUnbindCorrect(RAND_TC);
+				break;
+			case 4: //unbind
+				baseTc.unbind();
+				break;
+			default:
+				__unreachable__("Invalid seq number");
+		}
+	}
+	sleep(5);
+	//тестовая последовательност команд
+	seq.clear();
+#ifdef LOAD_TEST
+	seq.push_back(201);
+#else
+	seq.insert(seq.end(), 30, 1);
+	seq.insert(seq.end(), 10, 2);
+	//seq.insert(seq.end(), 5, 3);
+	//seq.insert(seq.end(), 5, 4);
+	seq.push_back(51);
+	seq.push_back(52);
+	seq.push_back(53);
+	seq.push_back(61);
+	seq.push_back(62);
+	seq.push_back(71);
+	//seq.push_back(100);
+#ifdef ASSERT
+	seq.push_back(101);
+#endif //ASSERT
+#endif //LOAD_TEST
+	random_shuffle(seq.begin(), seq.end());
+	while (!isStopping)
+	{
+		event.Wait(delay);
+		executeCycle();
+		if (paused)
+		{
+			cout << "Sme " << taskName() << " paused" << endl;
+			event.Wait();
+			cout << "Sme " << taskName() << " resumed" << endl;
+		}
+	}
+	cout << "Sme " << taskName() << " stopped" << endl;
+	return 0;
 }
 
-void TestSme::executeCycle()
+void TestSmeFunc::executeCycle()
 {
 	//Проверка неполученых подтверждений доставки, нотификаций и sms от других sme
 	if (time(NULL) > nextCheckTime)
@@ -160,83 +222,8 @@ void TestSme::executeCycle()
 		__cfg_int__(missingPduCheckInterval);
 		nextCheckTime = time(NULL) + missingPduCheckInterval;
 	}
-	//проверить тест остановлен/замедлен
-	//__trace2__("TestSme::executeCycle(): SmppFunctionalTest::pause = %d", SmppFunctionalTest::pause);
-	if (SmppFunctionalTest::pause)
-	{
-		evt.Wait(1000);
-		__trace__("TestSme paused. Returned.");
-		return;
-	}
-	//__trace__("TestSme active. Continued.");
-	if (SmppFunctionalTest::delay)
-	{
-		evt.Wait(SmppFunctionalTest::delay);
-	}
-	//debug("*** start ***");
-	//Bind sme зарегистрированной в smsc
-	//Bind sme с неправильными параметрами
-	if (!boundOk)
-	{
-		//стартовая последовательност команд
-		seq.push_back(1);
-		seq.insert(seq.end(), 3, 4);
-		seq.insert(seq.end(), 3, 2);
-		seq.insert(seq.end(), 3, 3);
-		seq.push_back(1);
-		for (int i = 0; i < seq.size(); i++)
-		{
-			switch (seq[i])
-			{
-				case 1: //правильный bind
-					sleep(2);
-					boundOk = baseTc.bindCorrectSme();
-					if (!boundOk)
-					{
-						cout << "Bound failed" << endl;
-						exit(0);
-					}
-					break;
-				case 2: //неправильный bind
-					baseTc.bindIncorrectSme(RAND_TC);
-					break;
-				case 3:
-					//baseTc.bindUnbindCorrect(RAND_TC);
-					break;
-				case 4: //unbind
-					baseTc.unbind();
-					boundOk = false;
-					break;
-				default:
-					__unreachable__("Invalid seq number");
-			}
-		}
-		__require__(boundOk);
-		sleep(5);
-		//тестовая последовательност команд
-		seq.clear();
-#ifdef LOAD_TEST
-		seq.push_back(201);
-#else
-		seq.insert(seq.end(), 30, 1);
-		seq.insert(seq.end(), 10, 2);
-		//seq.insert(seq.end(), 5, 3);
-		//seq.insert(seq.end(), 5, 4);
-		seq.push_back(51);
-		seq.push_back(52);
-		seq.push_back(53);
-		seq.push_back(61);
-		seq.push_back(62);
-		seq.push_back(71);
-		//seq.push_back(100);
-#ifdef ASSERT
-		seq.push_back(101);
-#endif //ASSERT
-#endif //LOAD_TEST
-		random_shuffle(seq.begin(), seq.end());
-	}
-	idx = idx < seq.size() ? idx : 0;
-	switch (seq[idx++])
+	int idx = ++tcCount % seq.size();
+	switch (seq[idx])
 	{
 		//smsc
 		case 1: //правильная sms
@@ -289,18 +276,9 @@ void TestSme::executeCycle()
 		default:
 			__unreachable__("Invalid seq number");
 	}
-	updateStat();
 }
 
-void TestSme::onStopped()
-{
-	baseTc.unbind(); //Unbind для sme соединенной с smsc
-	baseTc.unbind(); //Unbind для sme несоединенной с smsc
-	SmppFunctionalTest::onStopped(smeNum);
-	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
-}
-
-pair<uint32_t, time_t> TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
+pair<uint32_t, time_t> TestSmeFunc::sendDeliverySmResp(PduDeliverySm& pdu)
 {
 	//на delivery receipt и сообщение от профайлера ответить ok
 	Address addr;
@@ -325,68 +303,49 @@ pair<uint32_t, time_t> TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 #endif //LOAD_TEST
 }
 
-void TestSme::updateStat()
+int TestSmeErr::Execute()
 {
-	SmppFunctionalTest::updateStat(smeNum);
-}
-
-//TestSmeTaskManager
-bool TestSmeTaskManager::isStopped() const
-{
-	return SmppFunctionalTest::isStopped();
-}
-
-//SmppFunctionalTest
-int SmppFunctionalTest::delay = 1000;
-bool SmppFunctionalTest::pause = false;
-SmppFunctionalTest::TaskStatList
-	SmppFunctionalTest::taskStat =
-	SmppFunctionalTest::TaskStatList();
-Mutex SmppFunctionalTest::mutex = Mutex();
-	
-void SmppFunctionalTest::resize(int newSize)
-{
-	taskStat.clear();
-	taskStat.resize(newSize);
-}
-
-void SmppFunctionalTest::onStopped(int taskNum)
-{
-	//MutexGuard guard(mutex);
-	taskStat[taskNum].stopped = true;
-}
-
-bool SmppFunctionalTest::isStopped()
-{
-	//MutexGuard guard(mutex);
-	bool stopped = true;
-	for (int i = 0; i < taskStat.size(); i++)
+	SmppProtocolErrorTestCases tc(config, fixture->smeAddr, fixture->chkList);
+	while (!isStopping)
 	{
-		if(!taskStat[i].stopped)
+		++tcCount;
+		switch (rand1(7))
 		{
-			cout<< "Still running = " << i << endl;
+			case 1:
+				tc.invalidBindScenario(RAND_TC);
+				break;
+			case 2:
+				tc.invalidPduScenario(RAND_TC);
+				break;
+			case 3:
+				tc.equalSequenceNumbersScenario();
+				break;
+			case 4:
+				tc.submitAfterUnbindScenario(RAND_TC);
+				break;
+			case 5:
+				tc.nullPduScenario(RAND_TC);
+				break;
+			case 6:
+				tc.bindUnbindScenario(RAND_TC);
+				break;
+			case 7:
+				tc.invalidBindStatusScenario(RAND_TC);
+				break;
+			default:
+				__unreachable__("Invalid scenario num");
 		}
-		stopped &= taskStat[i].stopped;
+		sleep(1); //подождать, чтобы освободился systemId
+		if (paused)
+		{
+			event.Wait();
+		}
 	}
-	return stopped;
+	return 0;
 }
 
-void SmppFunctionalTest::updateStat(int smeNum)
-{
-	//обновить статистику
-	taskStat[smeNum].ops++;
-}
-
-void SmppFunctionalTest::printStat()
-{
-	for (int i = 0; i < taskStat.size(); i++)
-	{
-		cout << "sme_" << i << ": ops = " << taskStat[i].ops << endl;
-	}
-}
-
-vector<TestSme*> genConfig(int transceivers, int transmitters,
-	int receivers, int notConnected, const string& smscHost, int smscPort)
+vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
+	int notConnected, int errSme, const string& smscHost, int smscPort)
 {
 	__require__(transceivers > 0 && transmitters > 0 &&
 		receivers > 0 && notConnected > 0);
@@ -517,9 +476,33 @@ vector<TestSme*> genConfig(int transceivers, int transmitters,
 	}
 	//маршруты между системными sme
 	cfgUtil.setupSystemSmeRoutes();
+	//маршруты и создание errSme
+	vector<TestSme*> smeList;
+	for (int i = 0; i < errSme; i++)
+	{
+		Address smeAddr;
+		SmeInfo smeInfo;
+		SmsUtil::setupRandomCorrectAddress(&smeAddr);
+		SmeManagerTestCases::setupRandomCorrectSmeInfo(&smeInfo);
+		smeReg->registerSme(smeAddr, smeInfo, false, true);
+		//маршрут на самого себя
+		cfgUtil.setupRoute(smeAddr, smeAddr, smeInfo.systemId);
+		//конфиг
+		SmeConfig config;
+		config.host = smscHost;
+		config.port = smscPort;
+		config.sid = smeInfo.systemId;
+		config.timeOut = 10;
+		config.password = smeInfo.password;
+		//config.systemType;
+		//config.origAddr;
+		SmppFixture* fixture = new SmppFixture(SME_TRANSCEIVER,
+			smeInfo, smeAddr, NULL, NULL, NULL, NULL, NULL, smppChkList);
+		smeList.push_back(new TestSmeErr(i, config, fixture));
+		//smeReg->bindSme(smeInfo.systemId, SME_TRANSCEIVER);
+	}
 	//tcRoute->commit();
-	//создание sme
-	vector<TestSme*> sme;
+	//нормальные sme
 	for (int i = 0; i < numSme; i++)
 	{
 		SmeConfig config;
@@ -534,15 +517,16 @@ vector<TestSme*> genConfig(int transceivers, int transmitters,
 			(i < transceivers + transmitters ? SME_TRANSMITTER : SME_RECEIVER);
 		SmppFixture* fixture = new SmppFixture(smeType, *smeInfo[i], *addr[i],
 			NULL, smeReg, aliasReg, routeReg, profileReg, smppChkList);
-		sme.push_back(new TestSme(i, config, fixture)); //throws Exception
-		fixture->pduHandler[smscAddr] = sme.back()->getDeliveryReceiptHandler();
-		fixture->pduHandler[smscAlias] = sme.back()->getDeliveryReceiptHandler();
-		fixture->pduHandler[profilerAddr] = sme.back()->getProfilerAckHandler();
-		fixture->pduHandler[profilerAlias] = sme.back()->getProfilerAckHandler();
-		fixture->pduHandler[abonentInfoAddr] = sme.back()->getAbonentInfoAckHandler();
-		fixture->pduHandler[abonentInfoAlias] = sme.back()->getAbonentInfoAckHandler();
+		TestSmeFunc* sme = new TestSmeFunc(i, config, fixture);
+		fixture->pduHandler[smscAddr] = sme->getDeliveryReceiptHandler();
+		fixture->pduHandler[smscAlias] = sme->getDeliveryReceiptHandler();
+		fixture->pduHandler[profilerAddr] = sme->getProfilerAckHandler();
+		fixture->pduHandler[profilerAlias] = sme->getProfilerAckHandler();
+		fixture->pduHandler[abonentInfoAddr] = sme->getAbonentInfoAckHandler();
+		fixture->pduHandler[abonentInfoAlias] = sme->getAbonentInfoAckHandler();
 		fixture->pduSender = pduSender;
 		smeReg->bindSme(smeInfo[i]->systemId, smeType);
+		smeList.push_back(sme); //throws Exception
 	}
 	__trace__("*** Route table ***");
 	//печать таблицы маршрутов sme->sme
@@ -599,7 +583,7 @@ vector<TestSme*> genConfig(int transceivers, int transmitters,
 		delete smeInfo[i];
 		delete alias[i];
 	}
-	return sme;
+	return smeList;
 }
 
 void printRouteArcBillInfo(const char* fileName)
@@ -657,8 +641,6 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 {
 	vector<TestSme*> sme;
 	ThreadPool threadPool;
-	TestSmeTaskManager tm;
-	tm.startTimer();
 	//обработка команд консоли
 	bool help = true;
 	string cmdLine;
@@ -668,7 +650,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		if (help)
 		{
 			help = false;
-			cout << "conf <transceivers> [transmitters = 1] [receivers = 1] [notConnected = 1] - generate config files" << endl;
+			cout << "conf <transceivers> [transmitters = 1] [receivers = 1] [notConnected = 1] [errSme = 1] - generate config files" << endl;
 			cout << "test <start|pause|resume> - pause/resume test execution" << endl;
 			cout << "stat - print statistics" << endl;
 			cout << "chklist - save checklist" << endl;
@@ -685,27 +667,33 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		if (cmd == "conf")
 		{
 			int transceivers = -1; //required
-			int transmitters = 1, receivers = 1, notConnected = 1; //optional
+			int transmitters = 1, receivers = 1, notConnected = 1, errSme = 1; //optional
 			is >> transceivers;
 			is >> transmitters;
 			is >> receivers;
 			is >> notConnected;
+			is >> errSme;
 			if (transceivers < 0)
 			{
 				cout << "Required param <transceivers> is missing" << endl;
+				continue;
 			}
-			else if (transceivers > 0 && transmitters > 0 && receivers > 0 && notConnected > 0)
+			else if (transceivers >= 0 && transmitters >= 0 &&
+					 receivers >= 0 && notConnected >= 0 && errSme >= 0)
 			{
 				sme = genConfig(transceivers, transmitters,
-					receivers, notConnected, smscHost, smscPort);
+					receivers, notConnected, errSme, smscHost, smscPort);
 				cout << "Config generated: transceivers = " << transceivers <<
 					", transmitters = " << transmitters <<
 					", receivers = " << receivers <<
-					", notConnected = " << notConnected << endl;
+					", notConnected = " << notConnected <<
+					", errSme = " << errSme << endl;
+				continue;
 			}
 			else
 			{
-				cout << "All params must be greater than 0" << endl;
+				cout << "All params must be greater or equal to 0" << endl;
+				continue;
 			}
 		}
 		else if (cmd == "test")
@@ -714,34 +702,39 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 			if (cmd == "start")
 			{
 				threadPool.startTask(pduSender);
-				SmppFunctionalTest::resize(sme.size());
 				for (int i = 0; i < sme.size(); i++)
 				{
-					tm.addTask(sme[i]);
+					threadPool.startTask(sme[i]);
 				}
-				tm.startTimer();
-				cout << "Started " << sme.size() << " sme" << endl;
+				cout << "Test started" << endl;
+				continue;
 			}
 			else if (cmd == "pause")
 			{
-				SmppFunctionalTest::pause = true;
-				cout << "Test paused successfully" << endl;
+				for (int i = 0; i < sme.size(); i++)
+				{
+					sme[i]->pause();
+				}
+				cout << "Test paused" << endl;
+				continue;
 			}
 			else if (cmd == "resume")
 			{
-				SmppFunctionalTest::pause = false;
-				cout << "Test resumed successfully" << endl;
+				for (int i = 0; i < sme.size(); i++)
+				{
+					sme[i]->resume();
+				}
+				cout << "Test resumed" << endl;
+				continue;
 			}
-			else
-			{
-				help = true;
-			}
-			__trace2__("executeFunctionalTest(): SmppFunctionalTest::pause = %d", SmppFunctionalTest::pause);
 		}
 		else if (cmd == "stat")
 		{
-			cout << "Time = " << tm.getExecutionTime() << endl;
-			SmppFunctionalTest::printStat();
+			for (int i = 0; i < sme.size(); i++)
+			{
+				cout << sme[i]->taskName() << ": ops = " << sme[i]->getTcCount() << endl;
+			}
+			continue;
 		}
 		else if (cmd == "chklist")
 		{
@@ -750,6 +743,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 			configChkList->save();
 			configChkList->saveHtml();
 			cout << "Checklists saved" << endl;
+			continue;
 		}
 		else if (cmd == "route")
 		{
@@ -758,10 +752,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 			{
 				printRouteArcBillInfo("routes.txt");
 				cout << "Routes info saved to file routes.txt" << endl;
-			}
-			else
-			{
-				help = true;
+				continue;
 			}
 		}
 		else if (cmd == "dump")
@@ -771,10 +762,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 			{
 				smeReg->dump(TRACE_LOG_STREAM);
 				cout << "Pdu registry dumped successfully" << endl;
-			}
-			else
-			{
-				help = true;
+				continue;
 			}
 		}
 		else if (cmd == "set")
@@ -786,16 +774,21 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 				is >> newVal;
 				if (newVal < 0)
 				{
-					cout << "Required parameters missing" << endl;
+					cout << "Required parameter missing" << endl;
 				}
 				else
 				{
-					SmppFunctionalTest::delay = newVal;
+					for (int i = 0; i < sme.size(); i++)
+					{
+						TestSmeFunc* testSmeFunc = dynamic_cast<TestSmeFunc*>(sme[i]);
+						if (testSmeFunc)
+						{
+							testSmeFunc->setDelay(newVal);
+						}
+					}
+					cout << "Delay is set to " << newVal << endl;
 				}
-			}
-			else
-			{
-				help = true;
+				continue;
 			}
 		}
 		else if (cmd == "quit")
@@ -808,14 +801,9 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 				cout << "Checklist saved" << endl;
 			}
 			threadPool.shutdown();
-			tm.stopTasks();
-			cout << "Total time = " << tm.getExecutionTime() << endl;
 			return;
 		}
-		else
-		{
-			help = true;
-		}
+		help = true;
 	}
 }
 
