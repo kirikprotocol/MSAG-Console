@@ -14,7 +14,7 @@ namespace buffers{
 
 class DiskHashDuplicateKeyException:public std::exception{
 public:
-  const char* what()
+  const char* what()const throw()
   {
     return "Duplicate key found during insert operation";
   }
