@@ -15,6 +15,10 @@
 
 #include <new.h>
 
+namespace smsc{
+namespace core{
+namespace buffers{
+
 template <class T>
 class Array{
 protected:
@@ -260,6 +264,10 @@ public:
     return oldsize;
   }
 
-};
+};//Array
+
+};//buffers
+};//core
+};//smsc
 
 #endif
