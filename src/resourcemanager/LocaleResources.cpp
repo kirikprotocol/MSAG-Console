@@ -28,7 +28,7 @@ std::string strToLower(const std::string & str)
   return dst;
 }
 
-void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_stringmap & settings, const std::string &prefix) throw ()
+void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_stringmap & _settings, const std::string &prefix) throw ()
 {
   smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.resourcemanager.LocaleResources");
   try
@@ -48,7 +48,7 @@ void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_s
           if (!prefix.empty())
             newPrefix += '.';
           newPrefix += sectionName.get();
-          processParams(elem, settings, newPrefix);
+          processParams(elem, _settings, newPrefix);
         }
         else if (strcmp(elemName.get(), "param") == 0)
         {
@@ -58,7 +58,7 @@ void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_s
           if (!prefix.empty())
             paramName += '.';
           paramName += name.get();
-          settings[strToLower(paramName)] = value.get();
+          _settings[strToLower(paramName)] = value.get();
         }
       }
     }

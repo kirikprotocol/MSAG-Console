@@ -23,9 +23,10 @@ namespace smsc { namespace db
         static Array<void *>        handles;
         static Mutex                loadupLock;
 
+        DataSourceLoader() {};
+
     public:
 
-        DataSourceLoader() {};
         virtual ~DataSourceLoader();
 
         static void loadup(ConfigView* config)

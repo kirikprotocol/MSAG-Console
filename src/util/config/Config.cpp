@@ -67,7 +67,7 @@ void Config::processNode(const DOM_Element &element,
         else if (strcmp(nodeName.get(), "param") == 0)
         {
           auto_ptr<const char> type(e.getAttribute("type").transcode());
-          processParamNode(e, fullName.release(), type.get());
+          processParamNode(e, fullName.get(), type.get());
         }
         else
         {

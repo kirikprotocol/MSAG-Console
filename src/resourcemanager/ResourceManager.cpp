@@ -138,6 +138,8 @@ ResourceManager::ResourceManager() throw ()
       locales[localeName.get()] = new LocaleResources(name);
     }
   }
+  if (configDir != 0)
+  	closedir(configDir);
 }
 
 ResourceManager::~ResourceManager() throw ()

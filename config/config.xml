@@ -99,10 +99,6 @@
     <param name="a7" type="string">flash</param>
   </section>
 
-  <section name="logger">
-    <param name="initFile" type="string">log4cpp.init</param>
-  </section>
-
   <section name="map">
     <param name="hlr" type="string">hlr:address</param>
     <param name="vlr" type="string">vlr:address</param>

@@ -95,8 +95,7 @@ namespace smsc { namespace mscman
 
 Mutex MscManager::startupLock;
 MscManager* MscManager::instance = 0;
-smsc::logger::Logger *MscManager::log =
-    Logger::getInstance("smsc.mscman.MscManager");
+smsc::logger::Logger *MscManager::log = 0;
 
 MscManager::MscManager(DataSource& _ds, Manager& config)
     throw(ConfigException)
@@ -114,6 +113,8 @@ void MscManager::startup(DataSource& ds, Manager& config)
     throw(ConfigException, InitException)
 {
     MutexGuard guard(startupLock);
+	if (!log)
+		log = Logger::getInstance("smsc.mscman.MscManager");
     if (instance) throw InitException(MSCMAN_INSTANCE_EXIST);
     instance = new MscManagerImpl(ds, config);
     ((MscManagerImpl *)instance)->Start();
@@ -180,7 +181,6 @@ int MscManagerImpl::Execute()
     do
     {
         flushEvent.Wait(); // ??? sleepInterval
-        __trace__("Flush event signaled !");
 
         MscInfoChange change;
         bool process = true;
@@ -276,11 +276,6 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
 {
     __require__(connection);
 
-    __trace2__("Processing change on DB Op=%d "
-               "Msc:%s, mLock=%d, aLock=%d fc=%d", change.op,
-               change.mscNum.c_str(), change.manualLock,
-               change.automaticLock, change.failureCount);
-
     Statement* statement = 0;
     try
     {
@@ -328,8 +323,6 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
 
 void MscManagerImpl::report(const char* msc, bool status)
 {
-    __trace2__("MscManager: Report called for '%s'", msc);
-
     MutexGuard  guard(hashLock);
 
     bool needInsert = false;
@@ -351,8 +344,6 @@ void MscManagerImpl::report(const char* msc, bool status)
 }
 bool MscManagerImpl::check(const char* msc)
 {
-    __trace2__("MscManager: Check called for '%s'", msc);
-
     MutexGuard  guard(hashLock);
 
     if (!mscs.Exists(msc)) return true;
@@ -364,8 +355,6 @@ bool MscManagerImpl::check(const char* msc)
 
 void MscManagerImpl::registrate(const char* msc)
 {
-    __trace2__("MscManager: Registrate called for '%s'", msc);
-
     MutexGuard  guard(hashLock);
 
     if (!mscs.Exists(msc))
@@ -378,8 +367,6 @@ void MscManagerImpl::registrate(const char* msc)
 }
 void MscManagerImpl::unregister(const char* msc)
 {
-    __trace2__("MscManager: Unregister called for '%s'", msc);
-
     MutexGuard  guard(hashLock);
 
     if (mscs.Exists(msc))
@@ -393,8 +380,6 @@ void MscManagerImpl::unregister(const char* msc)
 }
 void MscManagerImpl::block(const char* msc)
 {
-    __trace2__("MscManager: Block called for '%s'", msc);
-
     MutexGuard  guard(hashLock);
 
     if (mscs.Exists(msc))
@@ -410,8 +395,6 @@ void MscManagerImpl::block(const char* msc)
 }
 void MscManagerImpl::clear(const char* msc)
 {
-    __trace2__("MscManager: Clear called for '%s'", msc);
-
     MutexGuard  guard(hashLock);
 
     if (mscs.Exists(msc))
@@ -428,8 +411,6 @@ void MscManagerImpl::clear(const char* msc)
 }
 Array<MscInfo> MscManagerImpl::list()
 {
-    __trace__("MscManager: List called");
-
     Array<MscInfo> list;
 
     MutexGuard  guard(hashLock);

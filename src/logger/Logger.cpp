@@ -99,7 +99,10 @@ Logger * Logger::getInstance(const char * const name)
 	MutexGuard guard(static_mutex);
 	if (!initialized)
 	{
-		__loggerError("getInstance: Logger not initialized");
+		std::string s("getInstance: Logger not initialized. Trying to get category \"");
+		s += name;
+		s += '"';
+		__loggerError(s.c_str());
 	}
 	return getInstanceInternal(name);
 }
@@ -363,12 +366,12 @@ Logger & Logger::operator = (const Logger & other)
 void Logger::log_(const LogLevel _logLevel, const std::string &message) throw()
 {
 	if (isInitialized()) {
-		if (isLogLevelEnabled(_logLevel))
-			try {
-				appender->log(logChars[_logLevel], this->name, message.c_str());
-			} catch (...) {
-			}
+		try {
+			appender->log(logChars[_logLevel], this->name, message.c_str());
+		} catch (...) {
+		}
 	} else {
+		__loggerError("log_: Logger not initialized");
 		fprintf(stderr, "%c %s: %s", logChars[_logLevel], this->name, message.c_str());
 	}
 }
@@ -385,11 +388,10 @@ void Logger::log_(const LogLevel _logLevel, const char * const stringFormat, ...
 void Logger::logva_(const LogLevel _logLevel, const char * const stringFormat, va_list args) throw()
 {
 	if (isInitialized()) {
-		if (isLogLevelEnabled(_logLevel)) {
-			std::auto_ptr<char> message(vform(stringFormat, args));
-			appender->log(logChars[_logLevel], this->name, message.get());
-		}
+		std::auto_ptr<char> message(vform(stringFormat, args));
+		appender->log(logChars[_logLevel], this->name, message.get());
 	} else {
+		__loggerError("logva_: Logger not initialized");
 		std::auto_ptr<char> message(vform(stringFormat, args));
 		fprintf(stderr, "%c %s: %s", logChars[_logLevel], this->name, message.get());
 	}

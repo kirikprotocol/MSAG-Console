@@ -65,21 +65,26 @@ void atExitHandler(void)
 	smsc::logger::Logger::Shutdown();
 }
 
+void initLogger()
+{
+	char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
+	if (logFileName)
+		smsc::logger::Logger::Init(logFileName);
+	else
+		smsc::logger::Logger::Init("logger.properties");
+}
+
 int main(int argc,char* argv[])
 {
+  initLogger();
+  
   atexit(atExitHandler);
   smsc::system::clearThreadSignalMask();
-
+  
   try{
     smsc::system::SmscConfigs cfgs;
     smsc::util::config::Manager::init(findConfigFile("config.xml"));
     cfgs.cfgman=&cfgs.cfgman->getInstance();
-    try {
-      Logger::Init(cfgs.cfgman->getString("logger.initFile"));
-    } catch (smsc::util::config::ConfigException &e)
-    {
-      fprintf(stderr, "WARNING: parameter \"logger.initFile\" not found in config - logger initialized by default\n");
-    }
     smsc::logger::Logger *logger = Logger::getInstance("smscmain");
 
     Hash<string> lic;
@@ -165,18 +170,18 @@ int main(int argc,char* argv[])
       smsc_component.runSmsc();
 
 
-      fprintf(stderr,"smsc started\n");
+      //fprintf(stderr,"smsc started\n");
       //running
       listener.WaitFor();
 
-      fprintf(stderr,"smsc stopped, finishing\n");
+      //fprintf(stderr,"smsc stopped, finishing\n");
       // stopped
       if (smsc_component.isSmscRunning() && !smsc_component.isSmscStopping())
       smsc_component.stopSmsc();
 
       Manager::deinit();
 
-      fprintf(stderr,"smsc finished\n");
+      //fprintf(stderr,"smsc finished\n");
     }
 
   }

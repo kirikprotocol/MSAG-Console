@@ -37,19 +37,6 @@ void rolloverFiles(const char * const filename, unsigned int maxBackupIndex)
 RollingFileAppender::RollingFileAppender(const char * const _name, const Properties & properties)
 	:Appender(_name)
 {
-#ifdef SMSC_DEBUG
-	{
-		char * blya;
-		const char * fuck;
-		fprintf (stderr, "RollingFileAppender \"%s\" properties:\n", name.get());
-		for (Properties::Iterator i = properties.getIterator(); i.Next(blya, fuck); )
-		{
-			fprintf(stderr, "RollingFileAppender \"%s\" : %s->%s\n", name.get(), blya, fuck);
-		}
-		fprintf (stderr, "RollingFileAppender \"%s\" was properties\n", name.get());
-	}
-#endif //SMSC_DEBUG
-
 	maxFileSize = 1*1024*1024;
 	maxBackupIndex = 5;
 

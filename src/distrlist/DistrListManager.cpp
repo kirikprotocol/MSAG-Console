@@ -9,9 +9,6 @@ namespace smsc { namespace distrlist
     using namespace smsc::sms;
     using namespace core::buffers;
     
-smsc::logger::Logger *DistrListManager::logger = 
-    Logger::getInstance("smsc.distribution.DistrListManager");
-
 const char* FAILED_TO_OBTAIN_CONNECTION     = "Failed to obtain connection to DB";
 const char* FAILED_TO_CREATE_STATEMENT      = "Failed to create statement";
 const char* FAILED_TO_OBTAIN_RESULTSET      = "Failed to obtain result set";
@@ -19,7 +16,7 @@ const char* FAILED_TO_ROLLBACK_TRANSACTION  = "Failed to rollback transaction";
 
 DistrListManager::DistrListManager(DataSource& _ds, Manager& config)
     throw(ConfigException)
-        : DistrListAdmin(), ds(_ds)
+        : DistrListAdmin(), ds(_ds), logger(Logger::getInstance("smsc.distribution.DistrListManager"))
 {
     // TODO: Loadup parameters from config !
 }

@@ -12,11 +12,9 @@ typedef DataSourceFactory* (*getDsfInstanceFn)(void);
 
 using smsc::logger::Logger;
 
-smsc::logger::Logger *DataSourceLoader::logger = Logger::getInstance("smsc.db.DataSourceLoader");
+smsc::logger::Logger *DataSourceLoader::logger = 0;
 Array<void *>         DataSourceLoader::handles;
 Mutex                 DataSourceLoader::loadupLock;
-
-static DataSourceLoader _dataSourceLoader;
 
 DataSourceLoader::~DataSourceLoader()
 {
@@ -70,6 +68,8 @@ void DataSourceLoader::loadup(ConfigView* config)
     throw(ConfigException, LoadupException)
 {
     __require__(config); // load up libraries by config
+	if (!logger)
+		logger = Logger::getInstance("smsc.db.DataSourceLoader");
 
     std::auto_ptr<ConfigView> driversConfigGuard(config->getSubConfig("DataSourceDrivers"));
     ConfigView* driversConfig = driversConfigGuard.get();

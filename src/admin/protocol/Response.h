@@ -27,7 +27,7 @@ protected:
 
 	struct _Response
 	{
-		char * name;
+		const char * const name;
 		Status id;
 	};
 

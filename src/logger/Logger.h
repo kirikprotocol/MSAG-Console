@@ -119,9 +119,49 @@ public:
 		return logLevel;
 	}
 
+	/** 
+	* Log a message.
+	* @param message String to write in the log file.
+	* @param ... The arguments for stringFormat 
+	**/  
+	inline void log(const LogLevel _logLevel, const std::string &message) throw()
+	{
+		if (isLogLevelEnabled(_logLevel))
+			log_(logLevel, message);
+	}
+
+	/** 
+	* Log a message with debug priority.
+	* @param stringFormat Format specifier for the string to write 
+	* in the log file.
+	* @param ... The arguments for stringFormat 
+	**/  
+	inline void log(const LogLevel _logLevel, const char * const stringFormat, ...) throw()
+	{
+		if (isLogLevelEnabled(_logLevel))
+		{
+			va_list args;
+			va_start(args, stringFormat);
+			logva_(_logLevel, stringFormat, args);
+			va_end(args);
+		}
+	}
+
+	/** 
+	* Log a message with debug priority.
+	* @param stringFormat Format specifier for the string to write 
+	* in the log file.
+	* @param ... The arguments for stringFormat 
+	**/  
+	inline void logva(const LogLevel _logLevel, const char * const stringFormat, va_list args) throw()
+	{
+		if (isLogLevelEnabled(_logLevel))
+			logva_(logLevel, stringFormat, args);
+	}
 
 	/** 
 	* Log a message.
+	* Do not checks loglevel.
 	* @param message String to write in the log file.
 	* @param ... The arguments for stringFormat 
 	**/  
@@ -129,6 +169,7 @@ public:
 
 	/** 
 	* Log a message with debug priority.
+	* Do not checks loglevel.
 	* @param stringFormat Format specifier for the string to write 
 	* in the log file.
 	* @param ... The arguments for stringFormat 
@@ -137,6 +178,7 @@ public:
 
 	/** 
 	* Log a message with debug priority.
+	* Do not checks loglevel.
 	* @param stringFormat Format specifier for the string to write 
 	* in the log file.
 	* @param ... The arguments for stringFormat 
