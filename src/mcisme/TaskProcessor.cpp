@@ -139,6 +139,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     
     std::auto_ptr<ConfigView> releaseSettingsCfgGuard(config->getSubConfig("Reasons"));
     ConfigView* releaseSettingsCfg = releaseSettingsCfgGuard.get();
+    
     ReleaseSettings releaseSettings;
     try { releaseSettings.strategy = releaseSettingsCfg->getInt ("strategy"); } catch (...) {
         smsc_log_warn(logger, "Parameter <MCISme.Reasons.strategy> missed. Using default redirect strategy (MTS defualt)");
@@ -148,6 +149,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         releaseSettings.strategy != REDIRECT_STRATEGY) 
         throw ConfigException("Parameter <MCISme.Reasons.strategy> value '%d' is invalid.", 
                               releaseSettings.strategy);
+
     releaseSettings.busyCause           = releaseSettingsCfg->getInt ("Busy.cause");
     releaseSettings.busyInform          = releaseSettingsCfg->getBool("Busy.inform") ? 1:0;
     releaseSettings.noReplyCause        = releaseSettingsCfg->getInt ("NoReply.cause");
