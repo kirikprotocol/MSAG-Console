@@ -385,7 +385,7 @@ void Smsc::init(const SmscConfigs& cfg)
     }
     tp.startTask(sm);
     log.info( "Speedmonitor started" );
- }
+  }
 
   {
     using namespace smsc::db;
@@ -582,6 +582,14 @@ void Smsc::init(const SmscConfigs& cfg)
     tccfg.smoothTimeFrame=5;
 
     tcontrol=new TrafficControl(tccfg);
+  }
+
+  eventQueueLimit=1000;
+  try{
+    eventQueueLimit=cfg.cfgman->getInt("core.eventQueueLimit");
+  }catch(...)
+  {
+    __warning__("eventQueueLimit not found, using default(1000)");
   }
 
   try{

@@ -404,6 +404,8 @@ protected:
   string scAddr;
   time_t startTime;
 
+  int eventQueueLimit;
+
   smsc::core::threads::ThreadPool tp,tp2;
 
   friend class StatusSme;

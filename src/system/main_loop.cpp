@@ -243,7 +243,10 @@ void Smsc::mainLoop()
       {
         __info2__(log,"cnt=%d, smooth_cnt=%d, submitCnt=%d",cntInstant,cntSmooth,submitCount);
       }
-      if(cntInstant+1<=maxsms*stf || cntSmooth+1000<=maxsms*smt*1000)
+
+      int eqsize,equnsize;
+      eventqueue.getStats(eqsize,equnsize);
+      if((cntInstant+1<=maxsms*stf || cntSmooth+1000<=maxsms*smt*1000) && eqsize+1<=eventQueueLimit)
       {
         SmscCommand cmd=frame.back();
         frame.pop_back();
