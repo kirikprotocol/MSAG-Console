@@ -1602,7 +1602,7 @@ USHORT_T Et96MapDelimiterInd(
       //dialog->state = MAPST_WaitSmsConf;
       SendNextMMS(dialog.get());
       break;
-    case MAPST_WaitLertDelimiter:
+    case MAPST_WaitAlertDelimiter:
       SendAlertToSMSC(dialog.get(),msisdnAlert_sp);
       ResponseAlertSC(dialog.get());
       CloseMapDialog(dialog->dialogid_map,dialog->ssn);
