@@ -223,9 +223,11 @@ set<uint32_t> SmppPduChecker::checkCancelSm(PduData* pduData,
 		{
 			res.insert(ESME_RCANCELFAIL);
 		}
-		else if (!cancelPduData)
+		//какой-то из параметров (source_addr, dest_addr или service_type) сгенерен случайным
+		if (!cancelPduData)
 		{
-			res.insert(ESME_RCANCELFAIL); //ESME_RINVMSGID
+			//res.insert(ESME_RCANCELFAIL);
+			res.insert(ESME_RINVMSGID); //message_id сгенерен rand_char()
 		}
 		else if (cancelPduFlag != PDU_REQUIRED_FLAG)
 		{
@@ -256,13 +258,30 @@ set<uint32_t> SmppPduChecker::checkCancelSm(PduData* pduData,
 	else
 	{
 		__require__(!pdu->get_messageId());
-		if (pdu->get_source() == nullAddr)
+		//какой-то из параметров (source_addr, dest_addr или service_type) сгенерен случайным
+		if (!cancelPduData)
 		{
-			res.insert(ESME_RINVSRCADR);
+			res.insert(ESME_RCANCELFAIL);
 		}
-		if (pdu->get_dest() == nullAddr)
+		else
 		{
-			res.insert(ESME_RINVDSTADR);
+			__require__(cancelPduData->pdu->get_commandId() == SUBMIT_SM);
+			PduSubmitSm* cancelPdu = reinterpret_cast<PduSubmitSm*>(cancelPduData->pdu);
+			if (pdu->get_source() == nullAddr ||
+				pdu->get_source() != cancelPdu->get_message().get_source())
+			{
+				res.insert(ESME_RCANCELFAIL); //ESME_RINVSRCADR
+			}
+			if (pdu->get_dest() == nullAddr ||
+				pdu->get_dest() != cancelPdu->get_message().get_dest())
+			{
+				res.insert(ESME_RCANCELFAIL); //ESME_RINVDSTADR
+			}
+			if (pdu->get_serviceType() &&
+				string(pdu->get_serviceType()) != nvl(cancelPdu->get_message().get_serviceType()))
+			{
+				res.insert(ESME_RCANCELFAIL); //ESME_RINVSERTYP
+			}
 		}
 	}
 	return res;
@@ -568,6 +587,7 @@ void SmppPduChecker::processCancelSmResp(ResponseMonitor* monitor,
 				__tc_fail2__(chkRes, 0);
 			}
 			break;
+		/*
 		case ESME_RINVSRCADR:
 			__tc__("cancelSm.resp.checkCmdStatusInvalidSourceAddr");
 			__check__(1, checkRes.count(ESME_RINVSRCADR));
@@ -576,6 +596,7 @@ void SmppPduChecker::processCancelSmResp(ResponseMonitor* monitor,
 			__tc__("cancelSm.resp.checkCmdStatusInvalidDestAddr");
 			__check__(1, checkRes.count(ESME_RINVDSTADR));
 			break;
+		*/
 		case ESME_RINVBNDSTS:
 			__tc__("cancelSm.resp.checkCmdStatusInvalidBindStatus");
 			__check__(1, checkRes.count(ESME_RINVBNDSTS));
