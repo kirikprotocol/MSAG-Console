@@ -56,7 +56,7 @@ SmppReceiverTestCases::SmppReceiverTestCases(const SmeSystemId& _systemId,
 	const AliasRegistry* _aliasReg, const RouteRegistry* _routeReg,
 	ResultHandler* handler, RouteChecker* _routeChecker,
 	SmppPduChecker* _pduChecker)
-	: systemId(_systemId), smeAlias(addr), smeReg(_smeReg),
+	: systemId(_systemId), smeAddr(addr), smeReg(_smeReg),
 	aliasReg(_aliasReg), routeReg(_routeReg), resultHandler(handler),
 	routeChecker(_routeChecker), pduChecker(_pduChecker)
 {
@@ -66,7 +66,7 @@ SmppReceiverTestCases::SmppReceiverTestCases(const SmeSystemId& _systemId,
 	__require__(resultHandler);
 	__require__(routeChecker);
 	__require__(pduChecker);
-	pduReg = smeReg->getPduRegistry(smeAlias); //может быть NULL
+	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
 }
 
 Category& SmppReceiverTestCases::getLog()
@@ -101,11 +101,8 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 			//проверить и обновить pduData по данным из респонса
 			__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 			PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-			vector<int> tmp = pduChecker->checkSubmitSmResp(pduData, pdu, respTime);
-			for (int i = 0; i < tmp.size(); i++)
-			{
-				res->addFailure(tmp[i] > 0 ? 10 + tmp[i] : tmp[i]);
-			}
+			res->addFailure(pduChecker->checkSubmitSmResp(
+				pduData, pdu, respTime), 10);
 			//обновить таблицу поиска по SMSId
 			pduData->smsId = SmppUtil::convert(pdu.get_messageId());
 			pduReg->updatePdu(pduData);
@@ -261,17 +258,22 @@ TCResult* SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu,
 	TCResult* res = new TCResult(TC_PROCESS_NORMAL_SMS);
 	try
 	{
+		//перкрыть pduReg класса
+		PduRegistry* pduReg;
 		Address origAlias;
 		SmppUtil::convert(pdu.get_message().get_source(), &origAlias);
-		//перкрыть pduReg класса
-		PduRegistry* pduReg = smeReg->getPduRegistry(origAlias);
-		if (!pduReg)
+		auto_ptr<const Address> origAddr = aliasReg->findAddressByAlias(origAlias);
+		if (!origAddr.get())
+		{
+			res->addFailure(101);
+		}
+		else if (!(pduReg = smeReg->getPduRegistry(*origAddr)))
 		{
 			ostringstream os;
-			os << origAlias;
-			__trace2__("SmppReceiverTestCases::processNormalSms(): pduReg not found for origAlias = %s",
+			os << "origAlias = " << origAlias << ", origAddr = " << *origAddr;
+			__trace2__("SmppReceiverTestCases::processNormalSms(102): %s",
 				os.str().c_str());
-			res->addFailure(103);
+			res->addFailure(102);
 		}
 		//в полученной pdu нет user_message_reference
 		else if (!pdu.get_optional().has_userMessageReference())
