@@ -26,7 +26,7 @@ DeliveryIterator& DeliveryIterator::operator++()
 	return *this;
 }
 
-time_t PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff)
+time_t PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff) const
 {
 	__require__(time);
 	DeliveryIterator it(startTime, endTime);
@@ -41,7 +41,14 @@ time_t PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff)
 	return it.getTime();
 }
 
-vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted, time_t& nextTime)
+time_t PduReceiptFlag::getNextTime(time_t t) const
+{
+	int attempt;
+	time_t diff;
+	return eval(t, attempt, diff);
+}
+
+vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
 {
 	vector<int> res;
 	if (recvTime < startTime)
@@ -57,7 +64,7 @@ vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted, time_t& nextT
 	{
 		int attempt, lastAttempt = -1;
 		time_t diff, lastDiff;
-		nextTime = eval(recvTime, attempt, diff);
+		time_t nextTime = eval(recvTime, attempt, diff);
 		__trace2__("PduReceiptFlag::update(): this = 0x%x, recvTime = %ld, startTime = %ld, endTime = %ld, attempt = %d, diff = %d, nextTime = %ld",
 			this, recvTime, startTime, endTime, attempt, diff, nextTime);
 		if (lastTime)
@@ -77,26 +84,35 @@ vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted, time_t& nextT
 		{
 			res.push_back(5);
 		}
-		lastTime = recvTime;
-		switch (flag)
-		{
-			case PDU_REQUIRED_FLAG:
-			case PDU_MISSING_ON_TIME_FLAG:
+	}
+	return res;
+}
+
+vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted)
+{
+	vector<int> res;
+	switch (flag)
+	{
+		case PDU_REQUIRED_FLAG:
+		case PDU_MISSING_ON_TIME_FLAG:
+			{
+				time_t nextTime = getNextTime(recvTime);
 				if (accepted || !nextTime)
 				{
 					flag = PDU_RECEIVED_FLAG;
 				}
-				break;
-			case PDU_RECEIVED_FLAG:
-				res.push_back(6);
-				break;
-			case PDU_NOT_EXPECTED_FLAG:
-				res.push_back(7);
-				break;
-			default:
-				__unreachable__("Unknown flag");
-		}
+			}
+			break;
+		case PDU_RECEIVED_FLAG:
+			res.push_back(1);
+			break;
+		case PDU_NOT_EXPECTED_FLAG:
+			res.push_back(2);
+			break;
+		default:
+			__unreachable__("Unknown flag");
 	}
+	lastTime = recvTime;
 	return res;
 }
 
@@ -122,6 +138,9 @@ bool PduReceiptFlag::isPduMissing(time_t checkTime)
 	}
 	return (attempt - lastAttempt != 1);
 }
+
+Mutex PduData::mutex = Mutex();
+uint32_t PduData::counter = 1;
 
 }
 }
