@@ -19,7 +19,7 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 		STATUS.append("Ok");
 		break;
 	case Index.RESULT_REFRESH:
-		response.sendRedirect("index.jsp?refreshed=true&initialized=" + bean.isInitialized() + "&filterMask=" + URLEncoder.encode(bean.getFilterMask()));
+		response.sendRedirect("index.jsp?refreshed=true&initialized=" + bean.isInitialized() + "&startPosition=" + bean.getStartPositionInt() + "&filterMask=" + URLEncoder.encode(bean.getFilterMask()));
 		return;
 	case Index.RESULT_ERROR:
 		STATUS.append("<span class=CF00>Error</span>");

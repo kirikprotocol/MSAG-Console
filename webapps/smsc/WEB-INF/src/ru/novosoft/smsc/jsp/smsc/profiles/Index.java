@@ -7,7 +7,6 @@ package ru.novosoft.smsc.jsp.smsc.profiles;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
@@ -17,10 +16,7 @@ import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Index extends IndexBean {
 	public static final int RESULT_ADD = IndexBean.PRIVATE_RESULT;
