@@ -446,7 +446,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   if ( dialog->udhiRef != INVALID )
   {
     XMOMAPLocker* locker;
-    __trace2__("MAP:UDHI:%s: find locker with imsi %s",__FUNCTION__,dialog->s_imsi.c_str());
+    __trace2__("MAP:UDHI:%s: find locker with imsi %s, ref %x",__FUNCTION__,dialog->s_imsi.c_str(),dialog->udhiRef);
     XMOMAP::iterator it = x_momap.find(dialog->s_imsi);
     if ( it == x_momap.end() )
     {
