@@ -3,28 +3,32 @@
 
 <users>
 	<user login="superadmin" password="123" firstName="first" lastName="last" dept="dept" workPhone="work" homePhone="home" cellPhone="cell" email="email@email.com">
-		<role name="apply"/>
-		<role name="smsView"/>
 		<role name="aliases"/>
-		<role name="services"/>
+		<role name="apply"/>
 		<role name="hosts"/>
-		<role name="routes"/>
-		<role name="profiles"/>
-		<role name="users"/>
-		<role name="subjects"/>
 		<role name="perfmon"/>
+		<role name="profiles"/>
+		<role name="routes"/>
+		<role name="services"/>
+		<role name="smsView"/>
+		<role name="smsc_service"/>
+		<role name="smsstat"/>
+		<role name="subjects"/>
+		<role name="users"/>
 	</user>
 	<user login="bryz" password="123" firstName="Vit" lastName="Bryz" dept="novosoft" workPhone="123" homePhone="123" cellPhone="123" email="bryz@novosoft.ru">
-		<role name="apply"/>
-		<role name="smsView"/>
 		<role name="aliases"/>
-		<role name="services"/>
+		<role name="apply"/>
 		<role name="hosts"/>
-		<role name="routes"/>
-		<role name="profiles"/>
-		<role name="users"/>
-		<role name="subjects"/>
 		<role name="perfmon"/>
+		<role name="profiles"/>
+		<role name="routes"/>
+		<role name="services"/>
+		<role name="smsView"/>
+		<role name="smsc_service"/>
+		<role name="smsstat"/>
+		<role name="subjects"/>
+		<role name="users"/>
 	</user>
 	<user login="user00" password="pass00" firstName="first00" lastName="last00" dept="dept00" workPhone="123" homePhone="123" cellPhone="123" email="user00@mail.ru">
 	</user>
