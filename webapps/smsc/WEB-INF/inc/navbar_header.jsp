@@ -1,4 +1,18 @@
-<%{
+<%@ page import="java.io.PrintWriter"%>
+<%{%><%--
+
+try {
+%>
+total size: <%=bean.getTotalSizeInt()%><br>
+start position: <%=bean.getStartPositionInt()%><br>
+page size: <%=bean.getPageSizeInt()%><br>
+<%
+} catch (Throwable e) {
+  %><pre style="color:red;"><%
+  e.printStackTrace(new PrintWriter(out));
+  %></pre><%
+}
+--%><%
 int itemsTotal = bean.getTotalSizeInt(); // 31
 int pageCurrent = bean.getStartPositionInt() / bean.getPageSizeInt(); // 1
 int pageFirst = (pageCurrent -4) < 0 ? 0 : (pageCurrent -4); // 0

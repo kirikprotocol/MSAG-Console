@@ -9,7 +9,7 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
+import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteQuery;
 import ru.novosoft.smsc.admin.AdminException;
 
@@ -55,7 +55,7 @@ public class Index extends IndexBean
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
-		routes = new NullResultSet();
+		routes = new EmptyResultSet();
 
 		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)

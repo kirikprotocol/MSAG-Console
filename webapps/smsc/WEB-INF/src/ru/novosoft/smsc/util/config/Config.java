@@ -133,6 +133,25 @@ public class Config
 
 	/**
 	 * »щет имена секций (только секций)
+	 * @return section names that is immediate descedants of given section. Full names.
+	 */
+	public synchronized Set getSectionChildShortSectionNames(String sectionName)
+	{
+		int dotpos = sectionName.length();
+		Set result = new HashSet();
+		for (Iterator i = params.keySet().iterator(); i.hasNext();)
+		{
+			String name = (String) i.next();
+			if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.lastIndexOf('.') > dotpos)
+			{
+				result.add(name.substring(dotpos+1, name.indexOf('.', dotpos + 1)));
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * »щет имена секций (только секций)
 	 * @return section names that is immediate descedants of given section.
 	 */
 	public synchronized Set getSectionChildParamsNames(String sectionName)

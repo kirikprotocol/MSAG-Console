@@ -10,7 +10,7 @@ package ru.novosoft.smsc.jsp.smsc.users;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
-import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
+import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserQuery;
 
@@ -53,7 +53,7 @@ public class Index extends IndexBean
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
-		users = new NullResultSet();
+		users = new EmptyResultSet();
 
 		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)

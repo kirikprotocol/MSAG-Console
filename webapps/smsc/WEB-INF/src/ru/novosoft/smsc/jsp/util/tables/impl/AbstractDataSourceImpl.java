@@ -10,6 +10,8 @@ import ru.novosoft.smsc.util.SortedVector;
 
 import java.util.*;
 
+import org.apache.log4j.Category;
+
 
 public abstract class AbstractDataSourceImpl implements DataSource
 {

@@ -169,7 +169,7 @@ while (i.hasNext()) {
         <%
           String errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
           if (errMessage == null) errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
-        <%= StringEncoderDecoder.encode(errMessage)%>
+        <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
         (<%=errid.errcode%>)
             </td>
             <td align=right><%= errid.counter%></td>

@@ -8,7 +8,7 @@ package ru.novosoft.smsc.jsp.util.tables;
 import java.util.Iterator;
 import java.util.Vector;
 
-public class NullResultSet implements QueryResultSet
+public class EmptyResultSet implements QueryResultSet
 {
 	public int size()
 	{

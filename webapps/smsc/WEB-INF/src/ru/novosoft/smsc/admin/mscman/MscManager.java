@@ -7,52 +7,61 @@
  */
 package ru.novosoft.smsc.admin.mscman;
 
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.impl.mscman.MscDataSource;
+import ru.novosoft.smsc.jsp.util.tables.impl.mscman.MscQuery;
 
 import java.util.List;
-import java.util.ArrayList;
 
-public class MscManager
-{
-    private Smsc smsc = null;
+import org.apache.log4j.Category;
 
-    public void setSmsc(Smsc smsc) {
-        this.smsc = smsc;
-    }
+public class MscManager {
+  private Category logger = Category.getInstance(MscManager.class);
 
-    private List fakeList() {
-        ArrayList lst = new ArrayList();
-        lst.add(new MscInfo("32133", false, false, 0));
-        lst.add(new MscInfo("12345", true, false, 10));
-        lst.add(new MscInfo("54321", true, true, 100));
-        lst.add(new MscInfo("32177", false, true, 1000));
-        return lst;
-    }
-    public List list() throws AdminException
-    {
-        ArrayList mscs = new ArrayList();
-        List lst = smsc.mscList();
-        for (int i=0; i<lst.size(); i++) {
-            Object obj = lst.get(i);
-            if (obj != null && obj instanceof String) {
-                //System.out.println("MscManager: "+i+" "+(String)obj);
-                mscs.add(new MscInfo((String)obj));
-            }
+  private Smsc smsc = null;
+  private MscDataSource mscs = new MscDataSource();
+
+  public void setSmsc(Smsc smsc)
+  {
+    this.smsc = smsc;
+  }
+
+  public QueryResultSet query(MscQuery query) throws AdminException
+  {
+    mscs.clear();
+    List lst = smsc.mscList();
+    for (int i = 0; i < lst.size(); i++) {
+      Object obj = lst.get(i);
+      if (obj != null && obj instanceof String) {
+        try {
+          mscs.add(new MscInfo((String) obj));
+        } catch (IllegalArgumentException e) {
+          logger.error("Misformatted msc string returned by smsc:\"" + (String) obj + "\", msc scipped", e);
         }
-        //return fakeList();
-        return mscs;
+      }
     }
-    public void register(String msc) throws AdminException {
-        smsc.mscRegistrate(msc);
-    }
-    public void unregister(String msc) throws AdminException {
-        smsc.mscUnregister(msc);
-    }
-    public void block(String msc) throws AdminException {
-        smsc.mscBlock(msc);
-    }
-    public void clear(String msc) throws AdminException {
-        smsc.mscClear(msc);
-    }
+    return mscs.query(query);
+  }
+
+  public void register(String msc) throws AdminException
+  {
+    smsc.mscRegistrate(msc);
+  }
+
+  public void unregister(String msc) throws AdminException
+  {
+    smsc.mscUnregister(msc);
+  }
+
+  public void block(String msc) throws AdminException
+  {
+    smsc.mscBlock(msc);
+  }
+
+  public void clear(String msc) throws AdminException
+  {
+    smsc.mscClear(msc);
+  }
 }

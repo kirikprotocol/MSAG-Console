@@ -12,7 +12,7 @@ import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
-import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
+import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
 
@@ -58,7 +58,7 @@ public class Groups extends IndexBean
 
 	public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
 	{
-		profiles = new NullResultSet();
+		profiles = new EmptyResultSet();
 
 		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
