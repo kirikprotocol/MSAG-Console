@@ -7,10 +7,7 @@ import java.util.Collection;
 
 
 /**
- * Created by IntelliJ IDEA.
- * User: igork
- * Date: 03.03.2004
- * Time: 18:39:37
+ * Created by IntelliJ IDEA. User: igork Date: 03.03.2004 Time: 18:39:37
  */
 public class Index extends TabledBeanImpl implements TabledBean
 {
@@ -26,6 +23,7 @@ public class Index extends TabledBeanImpl implements TabledBean
 
   protected void delete()
   {
-    appContext.getUserManager().getUsers().keySet().removeAll(checkedSet);
+    if (appContext.getUserManager().getUsers().keySet().removeAll(checkedSet))
+      appContext.getStatuses().setUsersChanged(true);
   }
 }

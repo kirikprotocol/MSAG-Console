@@ -22,6 +22,7 @@ public class Constants
       public static final Constants COULDNT_STOP_GATEWAY = new Constants("error.status.couldnt_stop_gateway");
       public static final Constants COULDNT_REFRESH_SERVICES = new Constants("error.status.couldnt_refresh_services");
       public static final Constants COULDNT_GET_DAEMON = new Constants("error.status.couldnt_get_daemon");
+      public static final Constants COULDNT_APPLY_USERS = new Constants("error.status.couldnt_apply_users");
     }
 
 

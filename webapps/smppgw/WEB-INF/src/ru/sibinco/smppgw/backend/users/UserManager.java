@@ -6,6 +6,7 @@ import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.util.xml.Utils;
+import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
@@ -13,9 +14,7 @@ import java.util.*;
 
 
 /**
- * Created by igork
- * Date: 03.03.2004
- * Time: 19:20:19
+ * Created by igork Date: 03.03.2004 Time: 19:20:19
  */
 public class UserManager
 {
@@ -38,10 +37,10 @@ public class UserManager
     }
   }
 
-  public synchronized void apply() throws IOException
+  public synchronized void apply() throws IOException, ParserConfigurationException, SAXException
   {
     store();
-    //todo: XmlAuthenticator.init(configFile);
+    XmlAuthenticator.init(configFile);
   }
 
   protected void store() throws IOException

@@ -8,9 +8,7 @@ import java.util.Map;
 
 
 /**
- * Created by igork
- * Date: 10.03.2004
- * Time: 17:55:16
+ * Created by igork Date: 10.03.2004 Time: 17:55:16
  */
 public class Edit extends EditBean
 {
@@ -34,38 +32,39 @@ public class Edit extends EditBean
 
   protected void save() throws SmppgwJspException
   {
-    if ((password != null && password.length() > 0) || (confirmPassword != null && confirmPassword.length() > 0))
-      if (password != null ? !password.equals(confirmPassword) : !confirmPassword.equals(password))
+    if ((null != password && 0 < password.length()) || (null != confirmPassword && 0 < confirmPassword.length()))
+      if (null != password ? !password.equals(confirmPassword) : !confirmPassword.equals(password))
         throw new SmppgwJspException(Constants.errors.users.PASSWORD_NOT_CONFIRM);
 
     final Map users = appContext.getUserManager().getUsers();
 
     if (isAdd()) {
-      if (login == null || login.length() == 0)
+      if (null == login || 0 == login.length())
         throw new SmppgwJspException(Constants.errors.users.LOGIN_NOT_SPECIFIED);
-      if (password == null || password.length() == 0)
+      if (null == password || 0 == password.length())
         throw new SmppgwJspException(Constants.errors.users.PASSWORD_NOT_SPECIFIED);
       if (users.containsKey(login))
         throw new SmppgwJspException(Constants.errors.users.USER_ALREADY_EXISTS, login);
     } else {
-      if (getEditId() == null || getEditId().length() == 0 || login == null || login.length() == 0)
+      if (null == getEditId() || 0 == getEditId().length() || null == login || 0 == login.length())
         throw new SmppgwJspException(Constants.errors.users.LOGIN_NOT_SPECIFIED);
       if (users.containsKey(login) && !getEditId().equals(login))
         throw new SmppgwJspException(Constants.errors.users.USER_ALREADY_EXISTS, login);
 
-      User user = (User) users.remove(getEditId());
-      if (user != null) {
-        if (password == null || password.length() == 0)
+      final User user = (User) users.remove(getEditId());
+      if (null != user) {
+        if (null == password || 0 == password.length())
           password = user.getPassword();
       }
     }
     users.put(login, new User(login, password, roles, firstName, lastName, dept, workPhone, homePhone, cellPhone, email));
+    appContext.getStatuses().setUsersChanged(true);
     throw new DoneException();
   }
 
   protected void load(final String userLogin) throws SmppgwJspException
   {
-    if (userLogin == null || userLogin.length() == 0)
+    if (null == userLogin || 0 == userLogin.length())
       throw new SmppgwJspException(Constants.errors.users.LOGIN_NOT_SPECIFIED);
 
     if (!appContext.getUserManager().getUsers().containsKey(userLogin))
@@ -89,7 +88,7 @@ public class Edit extends EditBean
     return login;
   }
 
-  public void setLogin(String login)
+  public void setLogin(final String login)
   {
     this.login = login;
   }
@@ -99,7 +98,7 @@ public class Edit extends EditBean
     return password;
   }
 
-  public void setPassword(String password)
+  public void setPassword(final String password)
   {
     this.password = password;
   }
@@ -109,7 +108,7 @@ public class Edit extends EditBean
     return confirmPassword;
   }
 
-  public void setConfirmPassword(String confirmPassword)
+  public void setConfirmPassword(final String confirmPassword)
   {
     this.confirmPassword = confirmPassword;
   }
@@ -119,7 +118,7 @@ public class Edit extends EditBean
     return roles;
   }
 
-  public void setRoles(String[] roles)
+  public void setRoles(final String[] roles)
   {
     this.roles = roles;
   }
@@ -129,7 +128,7 @@ public class Edit extends EditBean
     return firstName;
   }
 
-  public void setFirstName(String firstName)
+  public void setFirstName(final String firstName)
   {
     this.firstName = firstName;
   }
@@ -139,7 +138,7 @@ public class Edit extends EditBean
     return lastName;
   }
 
-  public void setLastName(String lastName)
+  public void setLastName(final String lastName)
   {
     this.lastName = lastName;
   }
@@ -149,7 +148,7 @@ public class Edit extends EditBean
     return dept;
   }
 
-  public void setDept(String dept)
+  public void setDept(final String dept)
   {
     this.dept = dept;
   }
@@ -159,7 +158,7 @@ public class Edit extends EditBean
     return workPhone;
   }
 
-  public void setWorkPhone(String workPhone)
+  public void setWorkPhone(final String workPhone)
   {
     this.workPhone = workPhone;
   }
@@ -169,7 +168,7 @@ public class Edit extends EditBean
     return homePhone;
   }
 
-  public void setHomePhone(String homePhone)
+  public void setHomePhone(final String homePhone)
   {
     this.homePhone = homePhone;
   }
@@ -179,7 +178,7 @@ public class Edit extends EditBean
     return cellPhone;
   }
 
-  public void setCellPhone(String cellPhone)
+  public void setCellPhone(final String cellPhone)
   {
     this.cellPhone = cellPhone;
   }
@@ -189,7 +188,7 @@ public class Edit extends EditBean
     return email;
   }
 
-  public void setEmail(String email)
+  public void setEmail(final String email)
   {
     this.email = email;
   }

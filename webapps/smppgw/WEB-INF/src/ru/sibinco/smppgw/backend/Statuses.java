@@ -8,6 +8,7 @@ public class Statuses
 {
   private boolean configChanged = false;
   private boolean routesChanged = false;
+  private boolean usersChanged = false;
 
   public boolean isConfigChanged()
   {
@@ -27,5 +28,15 @@ public class Statuses
   public void setRoutesChanged(final boolean routesChanged)
   {
     this.routesChanged = routesChanged;
+  }
+
+  public boolean isUsersChanged()
+  {
+    return usersChanged;
+  }
+
+  public void setUsersChanged(boolean usersChanged)
+  {
+    this.usersChanged = usersChanged;
   }
 }

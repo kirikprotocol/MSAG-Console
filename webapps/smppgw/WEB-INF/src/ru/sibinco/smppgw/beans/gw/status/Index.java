@@ -99,7 +99,20 @@ public class Index extends SmppgwBean
           applyConfig();
         if ("routes".equals(s))
           applyRoutes();
+        if ("users".equals(s))
+          applyUsers();
       }
+  }
+
+  private void applyUsers() throws SmppgwJspException
+  {
+    try {
+      appContext.getUserManager().apply();
+      appContext.getStatuses().setUsersChanged(false);
+    } catch (Throwable e) {
+      logger.debug("Couldn't apply users", e);
+      throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_USERS, e);
+    }
   }
 
   private void applyRoutes() throws SmppgwJspException
@@ -174,6 +187,11 @@ public class Index extends SmppgwBean
   public boolean isRoutesChanged()
   {
     return appContext.getStatuses().isRoutesChanged();
+  }
+
+  public boolean isUsersChanged()
+  {
+    return appContext.getStatuses().isUsersChanged();
   }
 
   public boolean isGwRunning()

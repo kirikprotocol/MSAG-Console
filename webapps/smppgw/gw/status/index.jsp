@@ -14,10 +14,13 @@
     <table class="list" cellspacing="0">
       <col width="1px"/>
       <tr class="row0">
-        <td><input class="check" type="checkbox" name="subj" value="config" <c:if test="${!bean.configChanged}">disabled</c:if>></td><td>GW config</td><td><sm:status changed="${bean.configChanged}"/></td>
+        <td><input class="check" type="checkbox" name="subj" id="chk_cofig" value="config" <c:if test="${!bean.configChanged}">disabled</c:if>></td><td><label for="chk_cofig">GW config</label></td><td><sm:status changed="${bean.configChanged}"/></td>
       </tr>
       <tr class="row1">
-        <td><input class="check" type="checkbox" name="subj" value="routes" <c:if test="${!bean.routesChanged}">disabled</c:if>></td><td>Routes</td><td><sm:status changed="${bean.routesChanged}"/></td>
+        <td><input class="check" type="checkbox" name="subj" id="chk_routes" value="routes" <c:if test="${!bean.routesChanged}">disabled</c:if>></td><td><label for="chk_routes">Routes</label></td><td><sm:status changed="${bean.routesChanged}"/></td>
+      </tr>
+      <tr class="row0">
+        <td><input class="check" type="checkbox" name="subj" id="chk_users" value="users" <c:if test="${!bean.usersChanged}">disabled</c:if>></td><td><label for="chk_users">Users</label></td><td><sm:status changed="${bean.usersChanged}"/></td>
       </tr>
     </table>
     <script>
