@@ -18,8 +18,10 @@ using smsc::sms::Body;
 using smsc::sms::SMS;
 
 const int MAX_ADDRESS_LENGTH = 20;
-const int MAX_MSG_BODY_LENGTH = 200;
+const int MAX_SM_LENGTH = 254;
+const int MAX_PAYLOAD_LENGTH = 65535;
 const int MAX_SERVICE_TYPE_LENGTH = 5;
+const int MAX_MSG_ID_LENGTH = 64;
 
 typedef enum
 {
@@ -41,9 +43,9 @@ public:
 
 	static bool compareDescriptors(const Descriptor& d1, const Descriptor& d2);
 
-	static vector<int> compareMessageBodies(Body& b1, Body& b2);
+	static vector<int> compareMessageBodies(const Body& b1, const Body& b2);
 
-	static vector<int> compareMessages(SMS& sms1, SMS& sms2,
+	static vector<int> compareMessages(const SMS& sms1, const SMS& sms2,
 		SmsCompareFlag flag = COMPARE_ALL);
 
 	static void setupRandomCorrectAddress(Address* addr);
