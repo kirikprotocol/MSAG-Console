@@ -18,7 +18,7 @@ using namespace std;
 using namespace smsc::sms;
 using namespace smsc::smeman;
 namespace smsc{
-namespace util{
+namespace logger{
 extern smsc::logger::Logger* _map_cat;
 extern smsc::logger::Logger* _mapdlg_cat;
 };
