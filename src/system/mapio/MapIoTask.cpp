@@ -121,8 +121,8 @@ void MapIoTask::dispatcher()
     MAP_isAlive = true;
     if ( isStopping ) return;
     MAP_dispatching = true;
-//  result = EINSS7CpMsgRecv_r(&message,1000);
-    result = MsgRecvEvent( &message, eventlist, &eventlist_len, 1000 );
+    result = EINSS7CpMsgRecv_r(&message,1000);
+//    result = MsgRecvEvent( &message, eventlist, &eventlist_len, 1000 );
     MAP_dispatching = false;
     if ( ++timecounter == 60 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
@@ -210,8 +210,18 @@ restart:
     time( &last_msg );
     map_result = Et96MapHandleIndication(&message);
     if( map_result != ET96MAP_E_OK ) {
-      __trace2__("MAP: WARN: error at Et96MapHandleIndication with code x%hx",map_result);
+     {
+      char *text = new char[message.size*4+1];
+      int k = 0;
+      for ( int i=0; i<message.size; i++){
+        k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
+      }
+      text[k]=0;
+      __trace2__("MAP: WARN: error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
+      delete text;
+     }
     }
+    EINSS7CpReleaseMsgBuffer(&message);
   }
 }
 
