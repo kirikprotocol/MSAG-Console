@@ -294,6 +294,7 @@ sub process{
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr_other($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
+      $outfields->{INV_SERVICE_ID}=21;
       outrow($out,$outfields);
       $outfields->{RECORD_TYPE}=30;
       outrow($out,$outfields);
@@ -306,6 +307,7 @@ sub process{
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr_other($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
+      $outfields->{INV_SERVICE_ID}=21;
       outrow($out,$outfields);
     }
   }
