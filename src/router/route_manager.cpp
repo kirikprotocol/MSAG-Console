@@ -425,12 +425,24 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
         if ( r0->srcProxyIdx == rec->srcProxyIdx ) {
           __warning__("duplicate route, is not added");
           if ( trace_ ) {
-            ostringstream ost;
-            ost << "duplicated route " 
-              << AddrToString(r0->info.source) << "(" << r0->info.srcSmeSystemId << ")"
-              << " -> " 
-              << AddrToString(r0->info.dest) << "(" << r0->info.smeSystemId << ")";
-            trace_->push_back(ost.str());
+            {
+              ostringstream ost;
+              ost << "duplicated route "
+                << r0->info.routeId << ": " 
+                << AddrToString(r0->info.source) << "(" << r0->info.srcSmeSystemId << ")"
+                << " -> " 
+                << AddrToString(r0->info.dest) << "(" << r0->info.smeSystemId << ")";
+              trace_->push_back(ost.str());
+            }
+            {
+              ostringstream ost;
+              ost << "       exists as "
+                << rec->info.routeId << ": " 
+                << AddrToString(rec->info.source) << "(" << rec->info.srcSmeSystemId << ")"
+                << " -> " 
+                << AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId << ")";
+              trace_->push_back(ost.str());
+            }
           }
           conflicted = true;
         }
@@ -624,7 +636,9 @@ __synchronized__
   // ....
   
   if ( trace_enabled_ )
-    trace_.push_back(string("lookup for: ")+AddrToString(source)+" -> "+AddrToString(dest));
+    trace_.push_back(string("lookup for: ")+AddrToString(source)+"("+
+      (srcidx?sme_table->getSmeInfo(srcidx).systemId:"default")
+      +") -> "+AddrToString(dest));
 
   RouteRecord* rec =  findInTree(&root,&source,&dest,trace_enabled_?&trace_:0);
   if ( !rec ) {
@@ -646,7 +660,7 @@ __synchronized__
       ost << "check alternative route with src proxy: '" << rec->info.srcSmeSystemId  << "'";
       trace_.push_back(ost.str());
     }
-    if ( rec->srcProxyIdx == srcidx ) {
+    if ( srcidx != 0 && rec->srcProxyIdx == srcidx ) {
       if ( trace_enabled_ ) {
         ostringstream ost;
         ost << "found alternative route with src proxy: '" << rec->info.srcSmeSystemId << "'";

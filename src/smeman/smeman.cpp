@@ -155,7 +155,7 @@ __synchronized__
 static uint32_t nextProxyUniqueId()
 {
   static uint32_t unique = 0;
-  return unique++;
+  return ++unique;
 }
 // ------ SmeRegistrar implementation --------------------------
 
