@@ -46,8 +46,26 @@ void SmscComponent::runSmsc()
   smsc::core::synchronization::MutexGuard guard(mutex);
 	if (smsc_app_runner.get() == 0)
 	{
-		smsc_app_runner.reset(new SmscAppRunner(configs));
-		smsc_app_runner->Start();
+    try
+    {
+      smsc_app_runner.reset(new SmscAppRunner(configs));
+      smsc_app_runner->Start();
+    } 
+    catch (smsc::util::Exception &e)
+    {
+      logger.error("Exception on starting SMSC: \"%s\"", e.what());
+      throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
+    } 
+    catch (std::exception &e)
+    {
+      logger.error("Exception on starting SMSC: \"%s\"", e.what());
+      throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
+    } 
+    catch (...)
+    {
+      logger.error("Unknown exception on starting SMSC");
+      throw AdminException("Unknown exception on starting SMSC");
+    }
 	}
 	else
 		throw AdminException("SMSC Application started already");
@@ -59,9 +77,27 @@ void SmscComponent::stopSmsc()
   smsc::core::synchronization::MutexGuard guard(mutex);
 	if (smsc_app_runner.get() != 0)
 	{
-		smsc_app_runner->stop();
-		smsc_app_runner->WaitFor();
-		smsc_app_runner.reset(0);
+    try
+    {
+  		smsc_app_runner->stop();
+  		smsc_app_runner->WaitFor();
+  		smsc_app_runner.reset(0);
+    } 
+    catch (smsc::util::Exception &e)
+    {
+      logger.error("Exception on starting SMSC: \"%s\"", e.what());
+      throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
+    } 
+    catch (std::exception &e)
+    {
+      logger.error("Exception on starting SMSC: \"%s\"", e.what());
+      throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
+    } 
+    catch (...)
+    {
+      logger.error("Unknown exception on starting SMSC");
+      throw AdminException("Unknown exception on starting SMSC");
+    }
 	}
 	else
 		throw AdminException("SMSC Application started already");

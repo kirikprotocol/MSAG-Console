@@ -129,7 +129,18 @@ int main(int argc,char* argv[])
       fprintf(stderr,"smsc finished\n");
     }
 
-  }catch(std::exception& e)
+  } 
+  catch (AdminException &e)
+  {
+    fprintf(stderr,"top level exception: %s\n", e.what());
+    exit(-3);
+  }
+  catch (smsc::util::Exception &e)
+  {
+    fprintf(stderr,"top level exception: %s\n", e.what());
+    exit(-2);
+  }
+  catch(std::exception& e)
   {
     fprintf(stderr,"top level exception: %s\n",e.what());
     exit(-1);
