@@ -58,6 +58,7 @@ Category& SmppReceiverTestCases::getLog()
 
 void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 {
+	__dumpPdu__("SmppReceiverTestCases::processSubmitSmResp", pdu);
 	if (!pduReg)
 	{
 		return;
@@ -81,22 +82,15 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 			{
 				res->addFailure(2);
 			}
-			if (pduData->pdu->get_commandId() == SUBMIT_SM_RESP)
-			{
-				PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-				vector<int> tmp = responseChecker->checkSubmitSmResp(pduData, pdu);
-				for (int i = 0; i < tmp.size(); i++)
-				{
-					res->addFailure(10 + tmp[i]);
-				}
-			}
-			else
-			{
-				res->addFailure(3);
-			}
 			//обновить pduData по данным из респонса
-			//и удалить, если все уже получено
-			pduData->responseFlag = true;
+			__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM_RESP);
+			PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
+			vector<int> tmp = responseChecker->checkSubmitSmResp(pduData, pdu);
+			for (int i = 0; i < tmp.size(); i++)
+			{
+				res->addFailure(10 + tmp[i]);
+			}
+			//удалить, если все уже получено
 			if (pduData->complete())
 			{
 				pduReg->removePdu(pduData);
@@ -118,6 +112,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 
 void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 {
+	__dumpPdu__("SmppReceiverTestCases::processDeliverySm", pdu);
 	__require__(session);
 	TCResult* res = new TCResult(TC_PROCESS_DELIVERY_SM);
 	//общая проверка полей
@@ -224,8 +219,8 @@ TCResult* SmppReceiverTestCases::processNormalSms(PduDeliverySm &pdu)
 				}
 				pduData->deliveryFlag = true;
 				//неправильное время доставки
-				if (time(NULL) < pduData->waitTime ||
-					time(NULL) > pduData->waitTime + 5)
+				if (pduData->waitTime > time(NULL) ||
+					pduData->waitTime < __checkTime__)
 				{
 					res->addFailure(105);
 				}
@@ -373,7 +368,7 @@ TCResult* SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu)
 				}
 				pduData->deliveryReceiptFlag = true;
 				//время доставки должно быть не на много позже wait_time
-				if (time(NULL) > pduData->waitTime + 5)
+				if (pduData->waitTime < __checkTime__)
 				{
 					res->addFailure(212);
 				}
@@ -475,7 +470,7 @@ TCResult* SmppReceiverTestCases::processIntermediateNotification(
 					pduData->intermediateNotificationFlag = true;
 				}
 				//время получения должно быть не на много позже wait_time
-				if (time(NULL) > pduData->waitTime + 5)
+				if (pduData->waitTime < __checkTime__)
 				{
 					res->addFailure(305);
 				}
@@ -528,36 +523,44 @@ TCResult* SmppReceiverTestCases::processIntermediateNotification(
 	return res;
 }
 
-void SmppReceiverTestCases::processGenericNack(const PduGenericNack &pdu)
+void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
 {
+	__dumpPdu__("SmppReceiverTestCases::processGenericNack", pdu);
 }
 
-void SmppReceiverTestCases::processDataSm(const PduDataSm &pdu)
+void SmppReceiverTestCases::processDataSm(PduDataSm &pdu)
 {
+	__dumpPdu__("SmppReceiverTestCases::processDataSm", pdu);
 }
 
-void SmppReceiverTestCases::processMultiResp(const PduMultiSmResp &pdu)
+void SmppReceiverTestCases::processMultiResp(PduMultiSmResp &pdu)
 {
+	__dumpPdu__("SmppReceiverTestCases::processMultiResp", pdu);
 }
 
-void SmppReceiverTestCases::processReplaceSmResp(const PduReplaceSmResp &pdu)
+void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 {
+	__dumpPdu__("SmppReceiverTestCases::processReplaceSmResp", pdu);
 }
 
-void SmppReceiverTestCases::processDataSmResp(const PduDataSmResp &pdu)
+void SmppReceiverTestCases::processDataSmResp(PduDataSmResp &pdu)
 {
+	__dumpPdu__("SmppReceiverTestCases::processDataSmResp", pdu);
 }
 
-void SmppReceiverTestCases::processQuerySmResp(const PduQuerySmResp &pdu)
+void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp &pdu)
 {
+	__dumpPdu__("SmppReceiverTestCases::processQuerySmResp", pdu);
 }
 
-void SmppReceiverTestCases::processCancelSmResp(const PduCancelSmResp &pdu)
+void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp &pdu)
 {
+	__dumpPdu__("SmppReceiverTestCases::processCancelSmResp", pdu);
 }
 
-void SmppReceiverTestCases::processAlertNotificatin(const PduAlertNotification &pdu)
+void SmppReceiverTestCases::processAlertNotificatin(PduAlertNotification &pdu)
 {
+	__dumpPdu__("SmppReceiverTestCases::processAlertNotification", pdu);
 }
 
 void SmppReceiverTestCases::handleError(int errorCode)
