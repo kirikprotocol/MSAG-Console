@@ -10,7 +10,7 @@
 		<servlet-class>ru.novosoft.smsc.jsp.SMSCJspController</servlet-class>
 		<init-param>
 			<param-name>config</param-name>
-			<param-value>D:\igork\work\cvs\smsc\src\webapp\smsc\WEB-INF\config.xml</param-value>
+			<param-value>webapps/smsc/WEB-INF/config.xml</param-value>
 		</init-param>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
@@ -122,6 +122,7 @@
 		<web-resource-collection>
 			<web-resource-name></web-resource-name>
 			<url-pattern>/smsc/routes/*</url-pattern>
+			<url-pattern>/smsc/tracer/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>routes</role-name>
