@@ -352,6 +352,7 @@ void Connection::connect()
     throw(ConnectionFailedException) 
 {
     if (isConnected && isDead) {
+        log.info("DB connection recreating ...");
         disconnect();
         //usleep(100000); //100 msec
         sleepOnReconnect.Wait(100);
@@ -363,6 +364,8 @@ void Connection::connect()
         
         if (!isConnected)
         {
+            envhp=0L; svchp=0L; srvhp=0L; errhp=0L; sesshp=0L;
+
             // open connection to DB and begin user session 
             check(OCIEnvCreate(&envhp, OCI_OBJECT|OCI_ENV_NO_MUTEX,
                                (dvoid *)0, 0, 0, 0, (size_t) 0, (dvoid **)0));
@@ -392,6 +395,7 @@ void Connection::connect()
                              (ub4) OCI_ATTR_SESSION, errhp));
             
             isConnected = true; isDead = false;
+            log.info("DB connection recreated.");
         }
     }
     catch (StorageException& exc) 
