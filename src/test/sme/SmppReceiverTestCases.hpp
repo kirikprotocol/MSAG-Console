@@ -2,7 +2,7 @@
 #define TEST_SME_SMPP_RECEIVER_TEST_CASES
 
 #include "sme/SmppBase.hpp"
-#include "smpp/smpp_structures.h"
+#include "smpp/smpp.h"
 #include "test/util/BaseTestCases.hpp"
 #include "test/core/SmeRegistry.hpp"
 #include "test/core/PduRegistry.hpp"
@@ -42,16 +42,17 @@ struct ResultHandler
 /**
  * Тест кейсы для обработки результатов асинхронных pdu.
  */
-class SmppReceiverTestCases : BaseTestCases, SmppBaseReceiver
+class SmppReceiverTestCases : BaseTestCases, public SmppBaseReceiver
 {
 public:
-	SmppReceiverTestCases(SmppSession* session, const SmeSystemId& systemId,
-		const Address& smeAddr, const SmeRegistry* smeReg,
-		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
-		ResultHandler* handler, RouteChecker* routeChecker,
-		SmppResponsePduChecker* responseChecker);
+	SmppReceiverTestCases(const SmeSystemId& systemId, const Address& smeAddr,
+		const SmeRegistry* smeReg, const AliasRegistry* aliasReg,
+		const RouteRegistry* routeReg, ResultHandler* handler,
+		RouteChecker* routeChecker, SmppResponsePduChecker* responseChecker);
 
 	virtual ~SmppReceiverTestCases() {}
+
+	void setSession(SmppSession* sess) { session = sess; }
 	
 	/**
 	 * Получение submit_sm_resp pdu для асинхронного submit_sm реквеста.
@@ -62,6 +63,21 @@ public:
 	 * Получение асинхронного deliver_sm pdu.
 	 */
 	virtual void processDeliverySm(PduDeliverySm &pdu);
+	
+	/**
+	 * Сообщения правильно доставляются от одного sme другому.
+	 */
+	TCResult* processNormalSms(PduDeliverySm &pdu);
+
+	/**
+	 * Подтверждения доставки (delivery receipts) работают правильно.
+	 */
+	TCResult* processDeliveryReceipt(PduDeliverySm &pdu);
+
+	/**
+	 * Промежуточные нотификации (intermediate notifications) работают правильно.
+	 */
+	TCResult* processIntermediateNotification(PduDeliverySm &pdu);
 	
 	//not implemented
 	virtual void processGenericNack(const PduGenericNack &pdu);
@@ -88,10 +104,6 @@ private:
 	ResultHandler* resultHandler;
 	RouteChecker* routeChecker;
 	SmppResponsePduChecker* responseChecker;
-
-	TCResult* processNormalSms(PduDeliverySm &pdu);
-	TCResult* processDeliveryReceipt(PduDeliverySm &pdu);
-	TCResult* processIntermediateNotification(PduDeliverySm &pdu);
 };
 
 }
