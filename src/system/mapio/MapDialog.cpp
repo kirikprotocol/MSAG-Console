@@ -393,7 +393,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     pdu_tm->min.second  = tms->tm_min%10;
     pdu_tm->sec.first  =  tms->tm_sec/10;
     pdu_tm->sec.second  = tms->tm_sec%10;
-    pdu_tm->tz = 0;
+    pdu_tm->tz = 6*4;
     pdu_ptr+=sizeof(MAP_TIMESTAMP);
   }
   if ( encoding == 0 ){ // 7bit
