@@ -356,7 +356,6 @@ int Profiler::Execute()
       while(isspace(body[i]))i++;
       int j=i;
       while(body[i] && !isspace(body[i]))i++;
-      if(body[i])i--;
       string loc;
       loc.assign(body+j,i-j);
       for(int i=0;i<loc.length();i++)loc.at(i)=tolower(loc.at(i));
