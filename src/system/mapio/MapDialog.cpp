@@ -1115,25 +1115,14 @@ void  MapDialog::Et96MapOpenConf (
         cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_NETWORKERROR));
       throw runtime_error("MAP::MapDialog::Et96MapOpenConf: Opss, dialog is not opened!");
     }
-    if ( state == MAPST_OPENCONF ){
-      result = Et96MapV2SendRInfoForSmReq(ssn, dialogid, 1, &m_msAddr, ET96MAP_DO_NOT_ATTEMPT_DELIVERY, &m_scAddr );
-      if ( result != ET96MAP_E_OK ) {
-        __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapV2SendRInfoForSmReq error 0x%x",result);
-        throw runtime_error("MAP::MapDialog::Et96MapOpenConf: Et96MapV2SendRInfoSmReq error");
-      }
-      __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapV2SendRInfoForSmReq OK");
-      result = Et96MapDelimiterReq(ssn, dialogid, 0, 0 );
-      if ( result != ET96MAP_E_OK ) {
-        __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapDelimiterReq error 0x%x",result);
-        throw runtime_error("MAP::MapDialog::Et96MapOpenConf: Et96MapDelimiterReq error");
-      }
+    /*if ( state == MAPST_OPENCONF ){
       __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapDelimiterReq OK");
       state = MAPST_WAIT_RINFO;
     }else{
       __trace2__("incorrect state, must be MAPST_OPENCONF(%d) but %d",
                           MAPST_OPENCONF,state);
       throw runtime_error("incorrect state, must be MAPST_OPENCONF");
-    }
+    }*/
   }catch(...){
     state = MAPST_BROKEN;
     throw;
@@ -1206,6 +1195,17 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
       if ( result != ET96MAP_E_OK ) {
         __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapOpenReq error 0x%x",result);
         throw runtime_error("MAP::MapDialog::ProcessCmdg: Et96MapOpenReq error");
+      }
+      result = Et96MapV2SendRInfoForSmReq(ssn, dialogid, 1, &m_msAddr, ET96MAP_DO_NOT_ATTEMPT_DELIVERY, &m_scAddr );
+      if ( result != ET96MAP_E_OK ) {
+        __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapV2SendRInfoForSmReq error 0x%x",result);
+        throw runtime_error("MAP::MapDialog::Et96MapOpenConf: Et96MapV2SendRInfoSmReq error");
+      }
+      __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapV2SendRInfoForSmReq OK");
+      result = Et96MapDelimiterReq(ssn, dialogid, 0, 0 );
+      if ( result != ET96MAP_E_OK ) {
+        __trace2__("MAP::MapDialog::Et96MapOpenConf: Et96MapDelimiterReq error 0x%x",result);
+        throw runtime_error("MAP::MapDialog::Et96MapOpenConf: Et96MapDelimiterReq error");
       }
       __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapOpenReq OK");
     }
