@@ -67,7 +67,7 @@ public:
 	virtual void onStopped();
 
 private:
-	virtual void process();
+	virtual void updateStat();
 };
 
 /**
@@ -109,7 +109,7 @@ public:
 	static void resize(int newSize);
 	static void onStopped(int taskNum);
 	static bool isStopped();
-	static void process(int taskNum);
+	static void updateStat(int taskNum);
 	static void printStat();
 };
 
@@ -172,19 +172,20 @@ void TestSme::executeCycle()
 	//Bind sme с неправильными параметрами
 	if (!boundOk)
 	{
-		tc.bindCorrectSme(RAND_TC);
+		boundOk = tc.bindCorrectSme(RAND_TC);
+		__require__(boundOk);
 		for (int i = 0; i < 3; i++)
 		{
 			tc.bindIncorrectSme(RAND_TC); //обязательно после bindCorrectSme
 		}
-		boundOk = true;
+		evt.Wait(5000);
 	}
 	//Синхронная отправка submit_sm pdu другим sme
 	//Асинхронная отправка submit_sm pdu другим sme
 #ifdef ASSERT
-	for (TCSelector s(RAND_SET_TC, 3); s.check(); s++)
+	for (TCSelector s(RAND_TC, 3); s.check(); s++)
 #else
-	for (TCSelector s(RAND_SET_TC, 2); s.check(); s++)
+	for (TCSelector s(RAND_TC, 2); s.check(); s++)
 #endif
 	{
 		switch (s.value())
@@ -201,7 +202,7 @@ void TestSme::executeCycle()
 				break;
 #endif
 		}
-		process();
+		updateStat();
 	}
 }
 
@@ -213,9 +214,9 @@ inline void TestSme::onStopped()
 	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
 }
 
-inline void TestSme::process()
+inline void TestSme::updateStat()
 {
-	SmppFunctionalTest::process(smeNum);
+	SmppFunctionalTest::updateStat(smeNum);
 }
 
 //TestSmeTaskManager
@@ -225,7 +226,7 @@ bool TestSmeTaskManager::isStopped() const
 }
 
 //SmppFunctionalTest
-int SmppFunctionalTest::delay = 200;
+int SmppFunctionalTest::delay = 250;
 bool SmppFunctionalTest::pause = false;
 SmppFunctionalTest::TaskStatList
 	SmppFunctionalTest::taskStat =
@@ -259,7 +260,7 @@ bool SmppFunctionalTest::isStopped()
 	return stopped;
 }
 
-void SmppFunctionalTest::process(int smeNum)
+void SmppFunctionalTest::updateStat(int smeNum)
 {
 	//обновить статистику
 	taskStat[smeNum].ops++;
@@ -267,6 +268,10 @@ void SmppFunctionalTest::process(int smeNum)
 
 void SmppFunctionalTest::printStat()
 {
+	for (int i = 0; i < taskStat.size(); i++)
+	{
+		cout << "sme_" << i << ": ops = " << taskStat[i].ops << endl;
+	}
 }
 
 //TestSmsc

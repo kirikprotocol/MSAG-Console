@@ -71,7 +71,7 @@ Category& SmppTestCases::getLog()
 	return log;
 }
 
-void SmppTestCases::bindCorrectSme(int num)
+bool SmppTestCases::bindCorrectSme(int num)
 {
 	TCSelector s(num, 3);
 	__decl_tc__;
@@ -97,11 +97,13 @@ void SmppTestCases::bindCorrectSme(int num)
 			}
 			session->connect();
 			__tc_ok_cond__;
+			return true;
 		}
 		catch(...)
 		{
 			__tc_fail__(100);
 			error();
+			return false;
 		}
 	}
 }

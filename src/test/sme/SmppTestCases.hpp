@@ -42,7 +42,7 @@ public:
 	/**
 	 * Bind sme зарегистрированной в smsc.
 	 */
-	void bindCorrectSme(int num);
+	bool bindCorrectSme(int num);
 
 	/**
 	 * Bind sme с неправильными параметрами.

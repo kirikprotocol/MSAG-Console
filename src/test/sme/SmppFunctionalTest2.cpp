@@ -56,7 +56,7 @@ public:
 	virtual void onStopped();
 
 private:
-	virtual void process();
+	virtual void updateStat();
 };
 
 /**
@@ -98,7 +98,7 @@ public:
 	static void resize(int newSize);
 	static void onStopped(int taskNum);
 	static bool isStopped();
-	static void process(int taskNum);
+	static void updateStat(int taskNum);
 	static void printStat();
 };
 
@@ -147,9 +147,9 @@ void TestSme::executeCycle()
 	//Синхронная отправка submit_sm pdu другим sme
 	//Асинхронная отправка submit_sm pdu другим sme
 #ifdef ASSERT
-	for (TCSelector s(RAND_SET_TC, 3); s.check(); s++)
+	for (TCSelector s(RAND_TC, 3); s.check(); s++)
 #else
-	for (TCSelector s(RAND_SET_TC, 2); s.check(); s++)
+	for (TCSelector s(RAND_TC, 2); s.check(); s++)
 #endif
 	{
 		switch (s.value())
@@ -166,7 +166,7 @@ void TestSme::executeCycle()
 				break;
 #endif
 		}
-		process();
+		updateStat();
 	}
 }
 
@@ -178,9 +178,9 @@ inline void TestSme::onStopped()
 	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
 }
 
-inline void TestSme::process()
+inline void TestSme::updateStat()
 {
-	SmppFunctionalTest::process(smeNum);
+	SmppFunctionalTest::updateStat(smeNum);
 }
 
 //TestSmeTaskManager
@@ -190,7 +190,7 @@ bool TestSmeTaskManager::isStopped() const
 }
 
 //SmppFunctionalTest
-int SmppFunctionalTest::delay = 200;
+int SmppFunctionalTest::delay = 250;
 bool SmppFunctionalTest::pause = false;
 SmppFunctionalTest::TaskStatList
 	SmppFunctionalTest::taskStat =
@@ -224,7 +224,7 @@ bool SmppFunctionalTest::isStopped()
 	return stopped;
 }
 
-void SmppFunctionalTest::process(int smeNum)
+void SmppFunctionalTest::updateStat(int smeNum)
 {
 	//обновить статистику
 	taskStat[smeNum].ops++;
@@ -232,6 +232,10 @@ void SmppFunctionalTest::process(int smeNum)
 
 void SmppFunctionalTest::printStat()
 {
+	for (int i = 0; i < taskStat.size(); i++)
+	{
+		cout << "sme_" << i << ": ops = " << taskStat[i].ops << endl;
+	}
 }
 
 vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
@@ -324,9 +328,9 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	SmeConfigGen smeCfg(smeReg);
 	AliasConfigGen aliasCfg(aliasReg);
 	RouteConfigGen routeCfg(routeReg);
-	smeCfg.saveConfig("sme.xml");
-	aliasCfg.saveConfig("aliases.xml");
-	routeCfg.saveConfig("routes.xml");
+	smeCfg.saveConfig("../system/sme.xml");
+	aliasCfg.saveConfig("../system/aliases.xml");
+	routeCfg.saveConfig("../system/routes.xml");
 	//создание sme
 	vector<TestSme*> sme;
 	for (int i = 0; i < numSme; i++)
@@ -346,7 +350,8 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	}
 	//печать таблицы маршрутов
 	__trace__("Route table");
-	bool routesOk = false;
+	int numRoutes = 0;
+	int numBound = 0;
 	for (int i = 0; i < numAddr; i++)
 	{
 		for (int j = 0; j < numAddr; j++)
@@ -365,7 +370,11 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 				{
 					smeId = routeHolder->route.smeSystemId;
 					smeBound = smeReg->isSmeBound(smeId);
-					routesOk |= smeBound;
+					numRoutes++;
+					if (smeBound)
+					{
+						numBound++;
+					}
 				}
 			}
 			ostringstream os;
@@ -374,11 +383,13 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 				os.str().c_str(), smeId.c_str(), (smeBound ? "yes" : "no"));
 		}
 	}
-	if (!routesOk)
+	if (!numBound)
 	{
 		cout << "Invalid routes generated" << endl;
 		abort();
 	}
+	cout << "Valid routes: " << numRoutes << endl;
+	cout << "Valid routes with sme: " << numBound << endl;
 	for (int i = 0; i < numAddr; i++)
 	{
 		delete addr[i];
@@ -401,7 +412,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		if (help)
 		{
 			help = false;
-			cout << "gen config <numAddr> <numAlias> <numSme> - generate config files" << endl;
+			cout << "conf <numAddr> <numAlias> <numSme> - generate config files" << endl;
 			cout << "test <start|pause|resume> - pause/resume test execution" << endl;
 			cout << "stat - print statistics" << endl;
 			cout << "chklist - save checklist" << endl;
@@ -412,32 +423,24 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 
 		//обработка команд
 		cin >> cmd;
-		if (cmd == "gen")
+		if (cmd == "conf")
 		{
 			int numAddr, numAlias, numSme;
-			cin >> cmd;
 			cin >> numAddr;
 			cin >> numAlias;
 			cin >> numSme;
-			if (cmd == "config")
+			if (numAddr < numSme)
 			{
-				if (numAddr < numSme)
-				{
-					cout << "Must be: numAddr >= numSme" << endl;
-				}
-				else if (numAddr < numAlias)
-				{
-					cout << "Must be: numAddr >= numAlias" << endl;
-				}
-				else
-				{
-					sme = genConfig(numAddr, numAlias, numSme, smscHost, smscPort);
-					cout << "Config generated" << endl;
-				}
+				cout << "Must be: numAddr >= numSme" << endl;
+			}
+			else if (numAddr < numAlias)
+			{
+				cout << "Must be: numAddr >= numAlias" << endl;
 			}
 			else
 			{
-				help = true;
+				sme = genConfig(numAddr, numAlias, numSme, smscHost, smscPort);
+				cout << "Config generated" << endl;
 			}
 		}
 		else if (cmd == "test")

@@ -72,7 +72,10 @@ void SmppPduChecker::processSubmitSmResp(PduData* pduData,
 	}
 	__tc_ok_cond__;
 	//дальнейшая обработка
-	pduData->smsId = respPdu.get_messageId();
+	if (respPdu.get_header().get_commandStatus() == ESME_ROK)
+	{
+		pduData->smsId = respPdu.get_messageId();
+	}
 	pduData->deliveryStatus = respPdu.get_header().get_commandStatus();
 	processResp(pduData, respPdu, respTime);
 }
@@ -266,9 +269,8 @@ void SmppPduChecker::processResp(PduData* pduData,
 			__tc_ok_cond__;
 			break;
 		default:
-			//__tc__("processResp.checkCmdStatusOther");
-			//__tc_fail__(-respPdu.get_header().get_commandStatus());
-			__unreachable__("Unknown command_status");
+			__tc__("processResp.checkCmdStatusOther");
+			__tc_fail__(respPdu.get_header().get_commandStatus());
 	}
 }
 
