@@ -716,10 +716,12 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
           case MAPST_WaitMcsVersion:
             dialog->version = version;
             SendSms(dialog.get());
-            /*if ( SendSms(dialog.get()) == SMS_SEGMENTATION )
+            /*
+            if ( SendSms(dialog.get()) == SMS_SEGMENTATION )
               dialog->state = MAPST_WaitSpecOpenConf;
             else
-              dialog->state = MAPST_WaitOpenConf;*/
+              dialog->state = MAPST_WaitOpenConf;
+            */
             break;
           case MAPST_ImsiWaitACVersion:
             dialog->version = version;
@@ -1351,6 +1353,7 @@ static void PauseOnImsiReq(MapDialog* map)
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
     __trace2__("MAP::%s: Query HLR AC version",__FUNCTION__);
     //dialog->mshlrAddr = map->mshlrAddr;
+    dialog->state = MAPST_WaitHlrVersion;
     QueryHlrVersion(dialog.get());
   }MAP_CATCH(dialogid_map,0);
 }
