@@ -523,7 +523,7 @@ void OCIStatement::setInt64(int pos, int64_t val, bool null)
     throw(SQLException)
 {
     OCIDataDescriptor* descriptor =
-        setField(pos, SQLT_INT, sizeof(int32_t), null);
+        setField(pos, SQLT_INT, sizeof(int64_t), null);
 
     if (!null)
     {
