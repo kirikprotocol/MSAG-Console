@@ -46,13 +46,23 @@ typedef enum
 	SME_ACK_MONITOR = 0x5
 } MonitorType;
 
+class PduDataObject
+{
+	int count;
+public:
+	PduDataObject() : count(0) {}
+	virtual ~PduDataObject() {}
+	void ref();
+	void unref();
+};
+
 class PduData
 {
 	int count;
 public:
 	typedef map<const string, int> IntProps;
 	typedef map<const string, string> StrProps;
-	typedef map<const string, void*> ObjProps;
+	typedef map<const string, PduDataObject*> ObjProps;
 
 	SmppHeader* const pdu;
 	const time_t submitTime;

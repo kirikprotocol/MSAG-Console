@@ -168,6 +168,20 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 Mutex PduMonitor::mutex = Mutex();
 uint32_t PduMonitor::counter = 1;
 
+void PduDataObject::ref()
+{
+	count++;
+}
+void PduDataObject::unref()
+{
+	__require__(count > 0);
+	count--;
+	if (!count)
+	{
+		delete this;
+	}
+}
+
 PduData::PduData(SmppHeader* _pdu, time_t _submitTime, uint16_t _msgRef,
 	IntProps* _intProps, StrProps* _strProps, ObjProps* _objProps)
 : pdu(_pdu), submitTime(_submitTime), msgRef(_msgRef), valid(false), count(0),
@@ -205,6 +219,11 @@ PduData::~PduData()
 		__require__(pdu);
 		disposePdu(pdu);
 	}
+	for (ObjProps::iterator it = objProps.begin(); it != objProps.end(); it++)
+	{
+		__require__(it->second);
+		it->second->unref();
+	}
 	__trace2__("PduData deleted = %p", this);
 }
 
@@ -214,6 +233,7 @@ void PduData::ref()
 }
 void PduData::unref()
 {
+	__require__(count > 0);
 	count--;
 	if (!count)
 	{
@@ -265,22 +285,23 @@ void PduMonitor::setNotExpected()
 string PduMonitor::str() const
 {
 	ostringstream s;
+	s << "id = " << id;
 	switch (getType())
 	{
 		case RESPONSE_MONITOR:
-			s << "type = response";
+			s << ", type = response";
 			break;
 		case DELIVERY_MONITOR:
-			s << "type = delivery";
+			s << ", type = delivery";
 			break;
 		case DELIVERY_RECEIPT_MONITOR:
-			s << "type = delivery receipt";
+			s << ", type = delivery receipt";
 			break;
 		case INTERMEDIATE_NOTIFICATION_MONITOR:
-			s << "type = intermediate notification";
+			s << ", type = intermediate notification";
 			break;
 		case SME_ACK_MONITOR:
-			s << "type = sme ack";
+			s << ", type = sme ack";
 			break;
 		default:
 			__unreachable__("Invalid monitor type");
