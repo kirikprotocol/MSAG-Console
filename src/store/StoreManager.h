@@ -83,8 +83,8 @@ namespace smsc { namespace store
                 throw(StorageException);
         };
 
-        void doCreateSms(StorageConnection* connection,
-            SMS& sms, SMSId id, const CreateMode flag)
+        SMSId doCreateSms(StorageConnection* connection,
+                          SMS& sms, SMSId id, const CreateMode flag)
                 throw(StorageException, DuplicateMessageException);
         void doRetrieveSms(StorageConnection* connection,
             SMSId id, SMS& sms)
@@ -161,8 +161,8 @@ namespace smsc { namespace store
          * Реализация метода MessageStore
          * @see MessageStore
          */
-        virtual void createSms(SMS& sms, SMSId id,
-                               const CreateMode flag = CREATE_NEW)
+        virtual SMSId createSms(SMS& sms, SMSId id,
+                                const CreateMode flag = CREATE_NEW)
                 throw(StorageException, DuplicateMessageException);
         /**
          * Реализация метода MessageStore
@@ -528,7 +528,7 @@ namespace smsc { namespace store
             };
             static inline int CalcHash(const ComplexStIdx& idx) {
                 // Add real hash calculation code here !!!
-                return AddressIdx::addressHash()+(int)idx.st;
+                return 0;
             };
         };
         struct ComplexMrIdx : public AddressIdx
@@ -547,15 +547,13 @@ namespace smsc { namespace store
             };
             static inline int CalcHash(const ComplexMrIdx& idx) {
                 // Add real hash calculation code here !!!
-                return AddressIdx::addressHash()+idx.mr;
+                return idx.mr;
             };
         };
 
         XHash<SMSId,        IdxSMS*, SMSIdIdx>      idCache;
         XHash<ComplexMrIdx, IdxSMS*, ComplexMrIdx>  mrCache;
         XHash<ComplexStIdx, IdxSMS*, ComplexStIdx>  stCache;
-
-        std::multimap<time_t, IdxSMS*>              ntCache;
 
     public:
 
@@ -570,19 +568,18 @@ namespace smsc { namespace store
                     const char* svc, SMSId& id);
         SMS* getSms(const Address& oa, const Address& da, 
                     uint16_t mr, SMSId& id);
-
-        time_t getMinNextTime();
     };
+
+    typedef std::multimap<SMSId, UpdateRecord*> UpdatesIdMap;
 
     class CachedStore : public RemoteStore, public Thread
     {
     protected:
 
-        SmsCache                cache;
-        Mutex                   cacheMutex;
+        SmsCache        cache;
+        Mutex           cacheMutex;
 
-        std::multimap<SMSId, UpdateRecord*> updates;
-        Mutex                               updatesMutex;
+        UpdatesIdMap    updates;
         
         int maxUncommitedCount, maxSleepInterval;
         void loadMaxUncommitedCount(Manager& config);
@@ -594,16 +591,19 @@ namespace smsc { namespace store
 
         static log4cpp::Category    &log;
         
+        inline SMS* _retriveSms(SMSId id)
+            throw(StorageException, NoSuchMessageException);
+        
         void addUpdate(SMSId id, UpdateRecord* update)
             throw(StorageException, NoSuchMessageException);
         void actualizeUpdate(SMSId id, UpdateRecord* update)
-            throw(NoSuchMessageException);
+            throw(StorageException, NoSuchMessageException);
         void processUpdate(StorageConnection* connection,
                            SMSId id, UpdateRecord* update)
             throw(StorageException, NoSuchMessageException);
         bool delUpdates(SMSId id);
         
-        void processUpdates();
+        void processUpdates(SMSId forId = 0);
 
     public:
 
@@ -615,8 +615,8 @@ namespace smsc { namespace store
         void Start();
         void Stop();
         
-        virtual void createSms(SMS& sms, SMSId id,
-                               const CreateMode flag = CREATE_NEW)
+        virtual SMSId createSms(SMS& sms, SMSId id,
+                                const CreateMode flag = CREATE_NEW)
                 throw(StorageException, DuplicateMessageException);
         virtual void retriveSms(SMSId id, SMS &sms)
                 throw(StorageException, NoSuchMessageException);

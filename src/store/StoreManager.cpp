@@ -129,7 +129,7 @@ SMSId RemoteStore::getNextId()
     return StoreManager::getNextId();
 }
 
-void RemoteStore::doCreateSms(StorageConnection* connection,
+SMSId RemoteStore::doCreateSms(StorageConnection* connection,
     SMS& sms, SMSId id, const CreateMode flag)
         throw(StorageException, DuplicateMessageException)
 {
@@ -202,7 +202,7 @@ void RemoteStore::doCreateSms(StorageConnection* connection,
                 connection->rollback();
                 throw exc;
             }
-            return;
+            return retId;
         }
     }
     else if (flag == ETSI_REJECT_IF_PRESENT)
@@ -250,14 +250,17 @@ void RemoteStore::doCreateSms(StorageConnection* connection,
         connection->rollback();
         throw exc;
     }
+
+    return id;
 }
-void RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
+SMSId RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
     throw(StorageException, DuplicateMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     __require__(pool);
 
+    SMSId retId = 0; 
     StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
@@ -265,7 +268,7 @@ void RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
         try
         {
             connection = (StorageConnection *)pool->getConnection();
-            doCreateSms(connection, sms, id, flag);
+            retId = doCreateSms(connection, sms, id, flag);
             pool->freeConnection(connection);
             break;
         }
@@ -285,6 +288,7 @@ void RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
             }
         }
     }
+    return retId; 
 
 #else
 
@@ -306,7 +310,7 @@ void RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
     }
 
     fakeStore.Insert(id, new SMS(sms));
-
+    return id;
 #endif
 }
 
@@ -1203,21 +1207,24 @@ bool SmsCache::delSms(SMSId id)
     if (!idCache.Exists(id)) return false;
     idCache.Get(id, sm);
     if (!sm) return false;
+    idCache.Delete(id);
     ComplexMrIdx mrIdx(sm->originatingAddress,
                        sm->dealiasedDestinationAddress,
                        sm->messageReference);
-    if (mrCache.Exists(mrIdx)) mrCache.Delete(mrIdx);
+    mrCache.Delete(mrIdx);
     ComplexStIdx stIdx(sm->originatingAddress,
                        sm->dealiasedDestinationAddress,
                        sm->eServiceType);
-    if (stCache.Exists(stIdx)) stCache.Delete(stIdx);
+    stCache.Delete(stIdx);
     delete sm;
+    __trace2__("Message for smsId = %lld deleted from cache", id);
     return true;
 }
 SMS* SmsCache::getSms(SMSId id)
 {
     IdxSMS* sm = 0;
     if (idCache.Exists(id)) idCache.Get(id, sm);
+    __trace2__("getSms() = %p smsId = %lld", sm, id);
     return (SMS *)sm;
 }
 SMS* SmsCache::getSms(const Address& oa, const Address& da, 
@@ -1241,10 +1248,6 @@ SMS* SmsCache::getSms(const Address& oa, const Address& da,
         if (sm) id = sm->id;
     }
     return (SMS *)sm;
-}
-time_t SmsCache::getMinNextTime()
-{
-
 }
 /* ------------------------------- SMS Cache -------------------------------- */
 
@@ -1349,97 +1352,125 @@ int CachedStore::Execute() // Thread for updates appling & committing
     while (!bNeedExit)
     {
         processEvent.Wait(maxSleepInterval);
-        processUpdates();
+        {
+            MutexGuard guard(cacheMutex);
+            processUpdates();
+        }
     }
     exitedEvent.Signal();
 }
 
-void CachedStore::createSms(SMS& sms, SMSId id,
+SMSId CachedStore::createSms(SMS& sms, SMSId id,
                             const CreateMode flag = CREATE_NEW)
     throw(StorageException, DuplicateMessageException)
 {
+    SMSId retId = 0;
+
     if (flag == ETSI_REJECT_IF_PRESENT)
     {
         SMS* sm = 0; SMSId oldId;
-        {
-            MutexGuard guard(cacheMutex);
-            sm = cache.getSms(sms.originatingAddress, 
-                              sms.dealiasedDestinationAddress, 
-                              sms.messageReference, oldId);
-        }
-
-        if (sm && sm->state == ENROUTE)
-        {
-            throw DuplicateMessageException(id);
-        }
-        else if (!sm) // Нету в кэше, идём в базу ... если Ok кладём в кэш.
-        {
-            RemoteStore::createSms(sms, id, flag);
-            MutexGuard guard(cacheMutex);
-            cache.putSms(new IdxSMS(id, sms));
-            return;
-        }
         
+        MutexGuard guard(cacheMutex);
+        sm = cache.getSms(sms.originatingAddress, 
+                          sms.dealiasedDestinationAddress, 
+                          sms.messageReference, oldId);
+        if (sm && sm->state == ENROUTE)
+            throw DuplicateMessageException(id);
+
+        // Нету в кэше, идём в базу ... если Ok кладём в кэш.
         // Есть в кэше, но состояние уже финальное.
         // Реджектить нельзя, нужно создавать новую.
+        __trace2__("CreateSms: creating rejectif smsId = %lld flag = %d ", 
+                   id, (!sm) ? ETSI_REJECT_IF_PRESENT:CREATE_NEW );
+        retId = RemoteStore::createSms(sms, id, (!sm) ? 
+                                       ETSI_REJECT_IF_PRESENT:CREATE_NEW);
+        
+        cache.putSms(new IdxSMS(id, sms));
     }
     else if (flag == SMPP_OVERWRITE_IF_PRESENT)
     {
-        SMS* sm = 0; SMSId oldId;
-        {
-            MutexGuard guard(cacheMutex);
-            sm = cache.getSms(sms.originatingAddress, 
-                              sms.dealiasedDestinationAddress, 
-                              sms.eServiceType, oldId);
-        }
+        SMS* sm = 0; SMSId oldId=0;
+        
+        MutexGuard guard(cacheMutex);
+        sm = cache.getSms(sms.originatingAddress, 
+                          sms.dealiasedDestinationAddress, 
+                          sms.eServiceType, oldId);
         
         if (sm && sm->state == ENROUTE) 
         {
             // Есть в кэше, состояние не финальное. 
             // Нужно игнорировать все update'ы этой sms !!!
-            
-            delUpdates(oldId);
-            RemoteStore::createSms(sms, id, flag);
-            MutexGuard guard(cacheMutex);
+            __trace2__("CreateSms: creating overwriteif (exist in cache) "
+                       "oldId = %lld, smsId = %lld flag = %d", 
+                       oldId, id, SMPP_OVERWRITE_IF_PRESENT);
+            processUpdates(oldId);
+            retId = RemoteStore::createSms(sms, id, SMPP_OVERWRITE_IF_PRESENT);
             cache.delSms(oldId);
-            cache.putSms(new IdxSMS(id, sms));
-            return;
+            delUpdates(oldId);
+            __trace2__("CreateSms: clean up for smsId = %lld (exist)", oldId);
         }
-        else if (!sm) 
+        else
         {
             // Нету в кэше, идём в базу ...  если Ok кладём в кэш.
-
-            RemoteStore::createSms(sms, id, flag);
-            MutexGuard guard(cacheMutex);
-            cache.putSms(new IdxSMS(id, sms));
-            return;
+            __trace2__("CreateSms: creating overwriteif "
+                       "(final | not exist in cache) smsId = %lld flag = %d",
+                       id, (!sm) ? SMPP_OVERWRITE_IF_PRESENT:CREATE_NEW);
+            // Есть в кэше, но состояние уже финальное. 
+            // Реплэйсить нельзя, нужно создавать новую.
+            retId = RemoteStore::createSms(sms, id, (!sm) ? 
+                                           SMPP_OVERWRITE_IF_PRESENT:CREATE_NEW);
+            if (!sm) 
+            {
+                __trace2__("CreateSms: clean up for smsId = %lld (not exist)", 
+                           retId);
+                cache.delSms(retId); // На всякий случай.
+                delUpdates(retId);
+            }
+            else 
+            {
+                __trace2__("CreateSms: created overwriteif (final) "
+                           "oldId = %lld smsId = %lld", 
+                           oldId, id);
+                cache.putSms(new IdxSMS(id, sms));
+            }
         }
-        
-        // Есть в кэше, но состояние уже финальное. 
-        // Реплэйсить нельзя, нужно создавать новую.
     }
-    
-    RemoteStore::createSms(sms, id, CREATE_NEW);
-    MutexGuard guard(cacheMutex);
-    cache.putSms(new IdxSMS(id, sms));
+    else // CREATE_NEW
+    {
+        __trace2__("CreateSms: creating new smsId = %lld", id);
+        retId = RemoteStore::createSms(sms, id, CREATE_NEW);
+        MutexGuard guard(cacheMutex);
+        cache.putSms(new IdxSMS(id, sms));
+    }
+
+    return retId;
 }
 
 void CachedStore::retriveSms(SMSId id, SMS &sms)
     throw(StorageException, NoSuchMessageException)
 {
-    SMS* sm = 0;
-    {
-        MutexGuard guard(cacheMutex);
-        sm = cache.getSms(id);
-    }
+    MutexGuard guard(cacheMutex);
+    sms = *(_retriveSms(id));
+}
+
+inline SMS* CachedStore::_retriveSms(SMSId id)
+    throw(StorageException, NoSuchMessageException)
+{
+    SMS* sm = cache.getSms(id);
     if (!sm) 
     { 
+        __trace2__("smsId = %lld not exist in cache. Retriving from DB...", id);
+        SMS sms;
         RemoteStore::retriveSms(id, sms);
-        MutexGuard guard(cacheMutex);
-        cache.putSms(new IdxSMS(id, sms));
+        IdxSMS* ism = new IdxSMS(id, sms);
+        cache.putSms(ism);
+        sm = (SMS *)ism;
+        __trace2__("smsId = %lld retrived from DB, att = %d", 
+                   id, ism->attempts);
     }
-    else sms = *sm;
+    return sm;
 }
+
 void CachedStore::replaceSms(SMSId id, const Address& oa,
                              const uint8_t* newMsg, uint8_t newMsgLen,
                              uint8_t deliveryReport, 
@@ -1447,56 +1478,45 @@ void CachedStore::replaceSms(SMSId id, const Address& oa,
     throw(StorageException, NoSuchMessageException)
 {
     SMS* sm = 0;
-    {
-        MutexGuard guard(cacheMutex);
-        sm = cache.getSms(id);
-    }
+    MutexGuard guard(cacheMutex);
+    sm = cache.getSms(id);
+    
     if (!sm) 
     {
+        processUpdates(id); // Нужно пропроцессить только для этого id
+        cache.delSms(id);   // На всякий случай ...
         RemoteStore::replaceSms(id, oa, newMsg, newMsgLen, deliveryReport,
                                 validTime, waitTime);
-        
-        // Нужно ли зачитывать её в кэш ???
-        /*SMS sms; 
-        retriveSms(id, sms);*/
     }
-    else
+    else // есть в кэше
     {
         if (!(sm->state == ENROUTE && sm->originatingAddress == oa)) 
             throw NoSuchMessageException(id);
 
         // Есть в кэше, состояние не финальное. 
-        // Нужно ли игнорировать все update'ы этой sms ???
-        
-        delUpdates(id);
+        processUpdates(id); // Нужно пропроцессить только для этого id
+        cache.delSms(id);
         RemoteStore::replaceSms(id, oa, newMsg, newMsgLen, deliveryReport,
                                 validTime, waitTime);
-        
-        // Может не выкидывать старую из кэша ???
-        MutexGuard guard(cacheMutex);
-        cache.delSms(id);
     }
 }
 void CachedStore::destroySms(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
     {
-       MutexGuard guard(cacheMutex);
-       cache.delSms(id);
-       delUpdates(id);
+        MutexGuard guard(cacheMutex);
+        cache.delSms(id);
+        delUpdates(id);
     }
     RemoteStore::destroySms(id);
 }
 
 void CachedStore::actualizeUpdate(SMSId id, UpdateRecord* update)
-    throw(NoSuchMessageException)
+    throw(StorageException, NoSuchMessageException)
 {
-    SMS sms; 
-    retriveSms(id, sms);
-    
-    MutexGuard guard(cacheMutex);
-    SMS* sm = cache.getSms(id);
-    if (!sm) throw NoSuchMessageException(id);
+    SMS* sm = _retriveSms(id); // Зачитываем в кэш
+    if (!sm || sm->state != ENROUTE) 
+        throw NoSuchMessageException(id);
     
     switch (update->state)
     {
@@ -1517,8 +1537,8 @@ void CachedStore::actualizeUpdate(SMSId id, UpdateRecord* update)
         sm->attempts++;
         break;
     case EXPIRED:
-        sm->nextTime = 0;
         sm->state = EXPIRED;
+        sm->nextTime = 0;
         break;
     case UNDELIVERABLE:
         sm->state = UNDELIVERABLE;
@@ -1536,44 +1556,73 @@ void CachedStore::actualizeUpdate(SMSId id, UpdateRecord* update)
         log.error("Unknown state for update: %d", update->state);
         break;
     }
+
+    __trace2__("smsId = %lld, Changing to %d, att = %d", 
+               id, update->state, sm->attempts); 
 }
 void CachedStore::addUpdate(SMSId id, UpdateRecord* update)
     throw(StorageException, NoSuchMessageException)
 {
     __require__(update);
 
+    MutexGuard guard(cacheMutex);
+    
     actualizeUpdate(id, update);
-
-    MutexGuard guard(updatesMutex);
     updates.insert(std::pair<SMSId, UpdateRecord*>(id, update));
-    if (updates.size() >= maxUncommitedCount) processEvent.Signal();
+    if (updates.size() >= maxUncommitedCount) processUpdates();
 }
 bool CachedStore::delUpdates(SMSId id)
 {
-    MutexGuard guard(updatesMutex);
+    // Need to block on cacheMutex before calling this routine   
     
-    std::map<SMSId, UpdateRecord*>::iterator i;
-    for (i = updates.find(id); i != updates.end(); ++i) 
-        delete (*i).second;
+    std::pair<UpdatesIdMap::iterator, 
+              UpdatesIdMap::iterator> its = updates.equal_range(id);
     
-    return (updates.erase(id)>0);
+    UpdatesIdMap::iterator i = its.first;
+    UpdatesIdMap::iterator end = its.second;
+    
+    while (i != end) 
+    {
+        UpdateRecord* update = (*i++).second;
+        if (update) delete update;
+    }
+    
+    int erased = updates.erase(id);
+    __trace2__("Erased %d updates for smsId = %lld", erased, id);
+    return (erased>0);
 }
-void CachedStore::processUpdates()
+void CachedStore::processUpdates(SMSId forId) // if forId == 0 => all
 {
-    MutexGuard guard(updatesMutex);
+    // Need to block on cacheMutex before calling this routine
 
     StorageConnection* connection = 0;
     try 
     {
         connection = (StorageConnection *)pool->getConnection();
         if (!connection) return;
+        
+        UpdatesIdMap::iterator begin;
+        UpdatesIdMap::iterator end;
+        UpdatesIdMap::iterator i;
 
-        std::map<SMSId, UpdateRecord*>::iterator i;
-        for (i = updates.begin(); i != updates.end(); ++i)
+        if (forId)
+        {
+            std::pair<UpdatesIdMap::iterator, 
+                  UpdatesIdMap::iterator> its = updates.equal_range(forId);
+            begin = its.first; end = its.second;
+        }
+        else
+        {
+            begin = updates.begin(); end = updates.end();
+        }
+
+        for (i = begin; i != end; i++)
         {
             try 
             {
-                processUpdate(connection, (*i).first, (*i).second);
+                UpdateRecord* update = (*i).second;
+                SMSId id = (*i).first;
+                if (update) processUpdate(connection, id, update);
             } 
             catch (NoSuchMessageException& exc) 
             {
@@ -1581,7 +1630,14 @@ void CachedStore::processUpdates()
             }
         }
         connection->commit();
-        updates.clear();
+        for (i = begin; i != end; i++)
+        {
+            UpdateRecord* update = (*i).second;
+            if (update) delete update;
+        }
+        
+        if (forId) updates.erase(forId);
+        else updates.clear();
     }
     catch (Exception& exc) 
     {
@@ -1601,7 +1657,7 @@ void CachedStore::processUpdate(StorageConnection* connection,
                                 SMSId id, UpdateRecord* update)
     throw(StorageException, NoSuchMessageException)
 {
-    log.debug("processUpdate called for id = %lld.", id);
+    // Need to block on cacheMutex before calling this routine
 
     __require__(update);
     __require__(connection);
@@ -1609,33 +1665,38 @@ void CachedStore::processUpdate(StorageConnection* connection,
     switch (update->state)
     {
     case ENROUTE:
+        __trace2__("DB to ENROUTE for smsId = %lld.", id);
         doChangeSmsStateToEnroute(connection, id, update->dst,
                                   update->fcs, update->nt);
+        __trace2__("Changed to ENROUTE for smsId = %lld.", id);
         break;
     case DELIVERED:
+        __trace2__("DB to DELIVERED for smsId = %lld.", id);
         doChangeSmsStateToDelivered(connection, id, update->dst);
+        __trace2__("Changed to DELIVERED for smsId = %lld.", id);
         break;
     case EXPIRED:
+        __trace2__("DB to EXPIRED for smsId = %lld.", id);
         doChangeSmsStateToExpired(connection, id);
+        __trace2__("Changed to EXPIRED for smsId = %lld.", id);
         break;
     case UNDELIVERABLE:
+        __trace2__("DB to UNDELIVERABLE for smsId = %lld.", id);
         doChangeSmsStateToUndeliverable(connection, id,
                                         update->dst, update->fcs);
+        __trace2__("Changed to UNDELIVERABLE for smsId = %lld.", id);
         break;
     case DELETED:
+        __trace2__("DB to DELETED for smsId = %lld.", id);
         doChangeSmsStateToDeleted(connection, id);
+        __trace2__("Changed to DELETED for smsId = %lld.", id);
         break;
     default:
         log.error("Unknown state for update: %d", update->state);
         break;
     }
 
-    if (update->state != ENROUTE)
-    {
-        MutexGuard guard(cacheMutex);
-        cache.delSms(id);
-    }
-    delete update;
+    if (update->state != ENROUTE) cache.delSms(id);
 }
 
 void CachedStore::changeSmsStateToEnroute(SMSId id, const Descriptor& dst, 
@@ -1643,14 +1704,14 @@ void CachedStore::changeSmsStateToEnroute(SMSId id, const Descriptor& dst,
                                           time_t nextTryTime)
     throw(StorageException, NoSuchMessageException)
 {
-    log.debug("Change to ENROUTE for id = %lld.", id);
+    __trace2__("Changing to ENROUTE for smsId = %lld.", id);
     addUpdate(id, new UpdateRecord(ENROUTE, dst, failureCause, nextTryTime));
 }
 void CachedStore::changeSmsStateToDelivered(SMSId id,
                                             const Descriptor& dst)
     throw(StorageException, NoSuchMessageException)
 {
-    log.debug("Change to DELIVERED for id = %lld.", id);
+    __trace2__("Changing to DELIVERED for smsId = %lld.", id);
     addUpdate(id, new UpdateRecord(DELIVERED, dst));
 }
 void CachedStore::changeSmsStateToUndeliverable(SMSId id,
@@ -1658,31 +1719,37 @@ void CachedStore::changeSmsStateToUndeliverable(SMSId id,
                                                 uint32_t failureCause)
     throw(StorageException, NoSuchMessageException)
 {
-    log.debug("Change to UNDELIVERABLE for id = %lld.", id);
+    __trace2__("Changing to UNDELIVERABLE for smsId = %lld.", id);
     addUpdate(id, new UpdateRecord(UNDELIVERABLE, dst, failureCause));
 }
 void CachedStore::changeSmsStateToExpired(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
-    log.debug("Change to EXPIRED for id = %lld.", id);
+    __trace2__("Changing to EXPIRED for smsId = %lld.", id);
     addUpdate(id, new UpdateRecord(EXPIRED));
 }
 void CachedStore::changeSmsStateToDeleted(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
-    log.debug("Change to DELETED for id = %lld.", id);
+    __trace2__("Changing to DELETED for smsId = %lld.", id);
     addUpdate(id, new UpdateRecord(DELETED));
 }
 IdIterator* CachedStore::getReadyForRetry(time_t retryTime)
     throw(StorageException)
 {
-    // temp impl
+    {
+        MutexGuard guard(cacheMutex);
+        processUpdates();
+    }
     return RemoteStore::getReadyForRetry(retryTime);
 }
 time_t CachedStore::getNextRetryTime()
     throw(StorageException)
 {
-    // temp impl
+    {
+        MutexGuard guard(cacheMutex);
+        processUpdates();
+    }
     return RemoteStore::getNextRetryTime();
 }
 
