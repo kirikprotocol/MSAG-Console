@@ -6,17 +6,23 @@ namespace system{
 
 void Scheduler::Init(MessageStore* st,Smsc* psmsc)
 {
+  smsc=psmsc;
   smsc::store::TimeIdIterator* it=st->getReadyForRetry(time(NULL)+30*24*60*60);
   if(it)
   {
     MutexGuard guard(mon);
     SMSId id;
     try{
+      StartupItem si;
       while(it->getNextId(id))
       {
-        char dstSmeId[32];
-        if(it->getDstSmeId(dstSmeId))
+
+        if(it->getDstSmeId(si.smeId))
         {
+          si.id=id;
+          si.schedTime=it->getTime();
+          startupCache.Push(si);
+          /*
           SmeIndex idx=psmsc->getSmeIndex(dstSmeId);
           if(idx!=INVALID_SME_INDEX)
           {
@@ -32,6 +38,7 @@ void Scheduler::Init(MessageStore* st,Smsc* psmsc)
               smeCountCache.Insert(idx,c);
             }
           }
+          */
         }
       }
       __trace2__("Scheduler: init ok - %d messages for rescheduling",timeLine.size());
@@ -110,6 +117,32 @@ int Scheduler::Execute()
   }
   return 0;
   */
+
+  mon.Lock();
+  for(int i=0;i<startupCache.Count();i++)
+  {
+    StartupItem& si=startupCache[i];
+    SmeIndex idx=smsc->getSmeIndex(si.smeId);
+    if(idx!=INVALID_SME_INDEX)
+    {
+      timeLine.insert(TimeIdPair(si.schedTime,Data(si.id,idx)));
+      CacheItem *ci=smeCountCache.GetPtr(idx);
+      if(ci)
+      {
+        ci->totalCount++;
+      }else
+      {
+        CacheItem c;
+        c.totalCount=1;
+        smeCountCache.Insert(idx,c);
+      }
+    }
+    mon.Unlock();
+    thr_yield();
+    mon.Lock();;
+  }
+  mon.Unlock();
+
   time_t r,t;
   while(!isStopping)
   {

@@ -129,6 +129,15 @@ public:
   }
 
 protected:
+  struct StartupItem{
+    SMSId id;
+    time_t schedTime;
+    char smeId[32];
+  };
+  Array<StartupItem> startupCache;
+
+  Smsc* smsc;
+
   EventQueue &queue;
   mutable EventMonitor mon;
   Array<SmscCommand> outQueue;
