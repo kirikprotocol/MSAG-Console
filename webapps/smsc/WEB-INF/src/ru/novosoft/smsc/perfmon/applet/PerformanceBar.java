@@ -5,10 +5,6 @@ import java.awt.*;
 import ru.novosoft.smsc.perfmon.PerfSnap;
 
 public class PerformanceBar extends Canvas {
-  int scale;
-  int counter;
-
-  String scaleString;
   String bottomString;
   Image offscreen;
   int pixInGrid = 5;
@@ -27,12 +23,9 @@ public class PerformanceBar extends Canvas {
 
   PerfSnap snap;
 
-  public PerformanceBar(int scale, int counter, PerfSnap snap) {
+  public PerformanceBar(PerfSnap snap) {
     super();
-    this.scale = scale;
-    this.counter = counter;
     this.snap = snap;
-    scaleString = String.valueOf(scale);
     bottomString = PerfMon.localeText.getString("sms.per.s");
   }
 
@@ -45,13 +38,14 @@ public class PerformanceBar extends Canvas {
     Font font = getFont();
     if(font != null) {
       FontMetrics fm = getFontMetrics(font);
+      String scaleString = String.valueOf(PerfMon.scale);
       textwidth = 3*pad + fm.charsWidth(scaleString.toCharArray(), 0, scaleString.length());
       Dimension sz = getSize();
 
       bottomSpace = 2*pad + fm.getDescent() + fm.getHeight();
       topSpace = pad + fm.getAscent();
       numGrids = (sz.height - bottomSpace - topSpace)/5;
-      gridsInBlock = (numGrids + 2)/counter;
+      gridsInBlock = (numGrids + 2)/PerfMon.block;
 
       setSize(textwidth + graphWidth + 2*pad, sz.height);
     }
@@ -83,7 +77,7 @@ public class PerformanceBar extends Canvas {
     g.setColor(colorBackground);
     g.fillRect(0, 0, size.width, size.height);
 
-    int gmax = (counter)*gridsInBlock;
+    int gmax = (PerfMon.block)*gridsInBlock;
     int barposx = pad + textwidth + (graphWidth - barWidth)/2;
 
     int maxheight = gmax*pixInGrid;
@@ -99,19 +93,19 @@ public class PerformanceBar extends Canvas {
 
       // last submit err bar
       g.setColor(colorBarSubmitErr);
-      int barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_SUBMITERR])/scale);
+      int barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_SUBMITERR])/PerfMon.scale);
       g.fillRect(barposx, size.height - bottomSpace - spent - barheight, halfBarWidth, barheight);
       spent += barheight;
 
       // last retry bar
       g.setColor(colorBarRetry);
-      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_RETRY])/scale);
+      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_RETRY])/PerfMon.scale);
       g.fillRect(barposx, size.height - bottomSpace - spent - barheight, halfBarWidth, barheight);
       spent += barheight;
 
       // last submit ok bar
       g.setColor(colorBarSubmit);
-      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_SUBMIT])/scale);
+      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_SUBMIT])/PerfMon.scale);
       g.fillRect(barposx, size.height - bottomSpace - spent - barheight, halfBarWidth, barheight);
       spent += barheight;
 
@@ -119,13 +113,13 @@ public class PerformanceBar extends Canvas {
 
       // last deliver err bar
       g.setColor(colorBarDeliverErr);
-      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_DELIVERERR])/scale);
+      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_DELIVERERR])/PerfMon.scale);
       g.fillRect(barposx + halfBarWidth + midBarWidth, size.height - bottomSpace - spent - barheight, halfBarWidth, barheight);
       spent += barheight;
 
       // last deliver ok bar
       g.setColor(colorBarDeliver);
-      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_DELIVER])/scale);
+      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_DELIVER])/PerfMon.scale);
       g.fillRect(barposx + halfBarWidth + midBarWidth, size.height - bottomSpace - spent - barheight, halfBarWidth, barheight);
       spent += barheight;
 
@@ -138,7 +132,7 @@ public class PerformanceBar extends Canvas {
 
       // last submit err bar
       g.setColor(colorBarSubmitErr);
-      int barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_SUBMITERR])/scale);
+      int barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_SUBMITERR])/PerfMon.scale);
       g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
       barposx += smallBarWidth;
       // separator bar background
@@ -148,7 +142,7 @@ public class PerformanceBar extends Canvas {
 
       // last retry bar
       g.setColor(colorBarRetry);
-      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_RETRY])/scale);
+      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_RETRY])/PerfMon.scale);
       g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
       barposx += smallBarWidth;
       // separator bar background
@@ -158,7 +152,7 @@ public class PerformanceBar extends Canvas {
 
       // last submit ok bar
       g.setColor(colorBarSubmit);
-      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_SUBMIT])/scale);
+      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_SUBMIT])/PerfMon.scale);
       g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
       barposx += smallBarWidth;
       // separator bar background
@@ -168,7 +162,7 @@ public class PerformanceBar extends Canvas {
 
       // last deliver err bar
       g.setColor(colorBarDeliverErr);
-      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_DELIVERERR])/scale);
+      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_DELIVERERR])/PerfMon.scale);
       g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
       barposx += smallBarWidth;
       // separator bar background
@@ -178,7 +172,7 @@ public class PerformanceBar extends Canvas {
 
       // last deliver ok bar
       g.setColor(colorBarDeliver);
-      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_DELIVER])/scale);
+      barheight = (int) ((maxheight*snap.last[PerfSnap.IDX_DELIVER])/PerfMon.scale);
       g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
       barposx += smallBarWidth;
       // separator bar background
@@ -198,7 +192,7 @@ public class PerformanceBar extends Canvas {
         g.drawChars(s.toCharArray(), 0, s.length(),
                 size.width - graphWidth - 3*pad - fm.charsWidth(s.toCharArray(), 0, s.length()),
                 yy + fm.getDescent());
-        labcnt += scale/counter;
+        labcnt += PerfMon.scale/PerfMon.block;
         g.setColor(colorGridLight);
       } else {
         g.setColor(colorGrid);

@@ -22,8 +22,6 @@ public class PerformanceGraph extends Canvas {
   private static final Color colorGraphSubmitErr = Color.orange;
   private static final Color colorGraphTotal = Color.white;
 
-  int scale;
-  int counter;
   Image offscreen;
   int numGrids = 1;
   int gridsInBlock = 1;
@@ -31,24 +29,20 @@ public class PerformanceGraph extends Canvas {
   int topSpace = pad;
   int graphWidth = 0;
 
-  int pixPerSecond = 2;
   int vertNumGrids = 0;
   int vertGridWidth = 5;
   int vertLightGrid = 4;
-  int vertMinuteGrid = 12;
+  int vertMinuteGrid;
 
   Dimension prefsz = new Dimension(80, 200);
 
   Vector snaps = new Vector(MAX_SNAP_LIST_SIZE);
 
 
-  public PerformanceGraph(int scale, int counter, int pixPerSecond, int vertLightGrid, int vertMinuteGrid, PerfSnap snap) {
+  public PerformanceGraph(int vertLightGrid, int vertMinuteGrid, PerfSnap snap) {
     super();
-    this.scale = scale;
-    this.counter = counter;
-    this.pixPerSecond = pixPerSecond;
     this.vertLightGrid = vertLightGrid;
-    this.vertMinuteGrid = vertMinuteGrid*pixPerSecond;
+    this.vertMinuteGrid = vertMinuteGrid;
     snaps.addElement(new PerfSnap(snap));
   }
 
@@ -69,7 +63,7 @@ public class PerformanceGraph extends Canvas {
         bottomSpace = 2*pad + fm.getDescent() + fm.getHeight();
         topSpace = pad + fm.getAscent();
         numGrids = (sz.height - bottomSpace - topSpace)/pixInGrid;
-        gridsInBlock = (numGrids + 2)/counter;
+        gridsInBlock = (numGrids + 2)/PerfMon.block;
         graphWidth = sz.width - 2*pad;
         vertNumGrids = (graphWidth + vertGridWidth - 1)/vertGridWidth;
       }
@@ -93,10 +87,10 @@ public class PerformanceGraph extends Canvas {
     g.setColor(colorBackground);
     g.fillRect(0, 0, size.width, size.height);
 
-    int gmax = (counter)*gridsInBlock;
+    int gmax = (PerfMon.block)*gridsInBlock;
 
     PerfSnap lastSnap = (PerfSnap) snaps.elementAt(snaps.size() - 1);
-    int gridShift = ((lastSnap.sctime%vertGridWidth)*pixPerSecond)%vertGridWidth;
+    int gridShift = ((lastSnap.sctime%vertGridWidth)*PerfMon.pixPerSecond)%vertGridWidth;
 
     int posx = size.width - pad - gridShift;
     int posy1 = size.height - bottomSpace - gmax*pixInGrid;
@@ -122,7 +116,7 @@ public class PerformanceGraph extends Canvas {
 
 
     //draw lighter grid
-    gridShift = ((lastSnap.sctime%(vertGridWidth*vertLightGrid))*pixPerSecond)%(vertGridWidth*vertLightGrid);
+    gridShift = ((lastSnap.sctime%(vertGridWidth*vertLightGrid))*PerfMon.pixPerSecond)%(vertGridWidth*vertLightGrid);
     posx = size.width - pad - gridShift;
     int cnt = (graphWidth + vertLightGrid*vertGridWidth - 1)/(vertLightGrid*vertGridWidth);
     g.setColor(colorGridLight);
@@ -130,17 +124,18 @@ public class PerformanceGraph extends Canvas {
       g.drawLine(posx - i*vertGridWidth*vertLightGrid, posy1, posx - i*vertGridWidth*vertLightGrid, posy2);
     }
 
+    int vertMinuteGridPix = vertMinuteGrid*PerfMon.pixPerSecond;
     //draw minute grid
-    gridShift = (((lastSnap.sctime)%(vertGridWidth*vertMinuteGrid))*pixPerSecond)%(vertGridWidth*vertMinuteGrid);
+    gridShift = (((lastSnap.sctime)%(vertGridWidth*vertMinuteGridPix))*PerfMon.pixPerSecond)%(vertGridWidth*vertMinuteGridPix);
     posx = size.width - pad - gridShift;
-    long sctime = lastSnap.sctime - gridShift/pixPerSecond;
-    cnt = (graphWidth + vertMinuteGrid*vertGridWidth - 1)/(vertMinuteGrid*vertGridWidth);
+    long sctime = lastSnap.sctime - gridShift/PerfMon.pixPerSecond;
+    cnt = (graphWidth + vertMinuteGridPix*vertGridWidth - 1)/(vertMinuteGridPix*vertGridWidth);
     g.setColor(colorGridMin);
     for(int i = 0; i < cnt; i++) {
-      int xx = posx - (i*vertGridWidth*vertMinuteGrid);
+      int xx = posx - (i*vertGridWidth*vertMinuteGridPix);
       g.drawLine(xx, posy1 - 2, xx, posy2 + 2);
-      String strSctime = PerfMon.gridFormat.format(new Date(((long) sctime)*1000));
-      sctime -= vertGridWidth*vertMinuteGrid/pixPerSecond;
+      String strSctime = PerfMon.gridFormat.format(new Date(sctime*1000));
+      sctime -= vertGridWidth*vertMinuteGridPix/PerfMon.pixPerSecond;
       g.drawChars(strSctime.toCharArray(), 0, strSctime.length(),
               xx - fm.charsWidth(strSctime.toCharArray(), 0, strSctime.length())/2,
               size.height - pad - fm.getDescent());
@@ -150,13 +145,13 @@ public class PerformanceGraph extends Canvas {
     // prepare arrays for polyline
     if(snaps.size() > 1) {
       int maxheight = gmax*5;
-      int viewableGraph = graphWidth/pixPerSecond;
+      int viewableGraph = graphWidth/PerfMon.pixPerSecond;
       int idx = snaps.size() - 1;
       int posy = size.height - bottomSpace;
       int cntg = 0;
       posx = size.width - pad;
       for(int i = 0; i < viewableGraph && idx > 0; i++, cntg++) {
-        posx -= pixPerSecond;
+        posx -= PerfMon.pixPerSecond;
         PerfSnap prevSnap = (PerfSnap) snaps.elementAt(idx);
         PerfSnap snap = (PerfSnap) snaps.elementAt(--idx);
         // draw submit graphs
@@ -205,7 +200,7 @@ public class PerformanceGraph extends Canvas {
   protected void drawGraphLine(Graphics g, int y, int x, int snapVal, int prevSnapVal, int underGraphVal, int underGraphPrevVal, int maxheight, Color color) {
     if(snapVal == 0 && prevSnapVal == 0) return;
     g.setColor(color);
-    g.drawLine(x, y - (maxheight*(snapVal + underGraphVal))/scale, x + pixPerSecond, y - (maxheight*(prevSnapVal + underGraphPrevVal))/scale);
+    g.drawLine(x, y - (maxheight*(snapVal + underGraphVal))/PerfMon.scale, x + PerfMon.pixPerSecond, y - (maxheight*(prevSnapVal + underGraphPrevVal))/PerfMon.scale);
   }
 
 

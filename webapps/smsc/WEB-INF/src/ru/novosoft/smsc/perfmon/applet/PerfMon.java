@@ -8,6 +8,7 @@ import java.text.*;
 import java.net.Socket;
 import java.io.ObjectInputStream;
 import java.io.DataInputStream;
+import java.io.IOException;
 
 import ru.novosoft.smsc.perfmon.PerfSnap;
 
@@ -32,14 +33,22 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   CheckboxMenuItem menuRetry;
   CheckboxMenuItem menuDeliverErr;
   CheckboxMenuItem menuDeliver;
+  Menu     menuIncrease;
+  Menu     menuDecrease;
+  MenuItem menuIncrScale;
+  MenuItem menuIncrBlock;
+  MenuItem menuIncrPix;
+  MenuItem menuDecrScale;
+  MenuItem menuDecrBlock;
+  MenuItem menuDecrPix;
 
   public static ResourceBundle localeText;
   public static Locale locale;
   public static SimpleDateFormat dateFormat;
   public static SimpleDateFormat gridFormat;
-  int pixPerSecond = 2;
-  int scale = 200;
-  int block = 8;
+  public static int pixPerSecond = 2;
+  public static int scale = 200;
+  public static int block = 8;
   int vLightGrid = 4;
   int vMinuteGrid = 12;
 
@@ -118,6 +127,32 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     menuDeliverErr = new CheckboxMenuItem(localeText.getString("popup.delivererr"), viewDeliverErrEnabled);
     menuDeliverErr.addItemListener(this);
 
+    menuIncrease = new Menu(localeText.getString("popup.increase"));
+    menuDecrease = new Menu(localeText.getString("popup.decrease"));
+
+    menuIncrScale = new MenuItem(localeText.getString("popup.scale"));
+    menuIncrScale.addActionListener(this);
+    menuIncrBlock = new MenuItem(localeText.getString("popup.block"));
+    menuIncrBlock.addActionListener(this);
+    menuIncrPix = new MenuItem(localeText.getString("popup.pix"));
+    menuIncrPix.addActionListener(this);
+    menuDecrScale = new MenuItem(localeText.getString("popup.scale"));
+    menuDecrScale.addActionListener(this);
+    menuDecrBlock = new MenuItem(localeText.getString("popup.block"));
+    menuDecrBlock.addActionListener(this);
+    menuDecrPix = new MenuItem(localeText.getString("popup.pix"));
+    menuDecrPix.addActionListener(this);
+
+    menuIncrease.add(menuIncrScale);
+    menuIncrease.add(menuIncrBlock);
+    menuIncrease.add(menuIncrPix);
+
+    menuDecrease.add(menuDecrScale);
+    menuDecrease.add(menuDecrBlock);
+    menuDecrease.add(menuDecrPix);
+
+    popupMenu.add(menuIncrease);
+    popupMenu.add(menuDecrease);
     popupMenu.add(menuSwitch);
     popupMenu.add(new MenuItem("-"));
     if( viewMode == VIEWMODE_IO ) {
@@ -131,11 +166,11 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
       popupMenu.add(menuDeliverErr );
     }
     add( popupMenu );
-    perfbar = new PerformanceBar(scale, block, snap);
+    perfbar = new PerformanceBar(snap);
     perfbar.setFont(new Font("dialog", Font.PLAIN, 10));
     perfbar.addMouseListener(this);
     perfTable = new PerfInfoTable(snap);
-    perfGraph = new PerformanceGraph(scale, block, pixPerSecond, vLightGrid, vMinuteGrid, snap);
+    perfGraph = new PerformanceGraph(vLightGrid, vMinuteGrid, snap);
     perfGraph.setFont(new Font("dialog", Font.PLAIN, 10));
     perfGraph.addMouseListener(this);
 
@@ -201,21 +236,32 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     DataInputStream is = null;
 
     try {
-      sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
-      is = new DataInputStream(sock.getInputStream());
-      PerfSnap snap = new PerfSnap();
-      snap.read(is);
-      snap.calc();
-      gotFirstSnap(snap);
       while(!isStopping) {
-        snap.read(is);
-        snap.calc();
+        try {
+          sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
+          is = new DataInputStream(sock.getInputStream());
+          PerfSnap snap = new PerfSnap();
+          snap.read(is);
+          snap.calc();
+          gotFirstSnap(snap);
+          while(!isStopping) {
+            snap.read(is);
+            snap.calc();
 //              System.out.println("Got snap: ls="+snap.last[PerfSnap.IDX_DELIVER]+" le="+snap.last[PerfSnap.IDX_DELIVERERR]+" upt="+snap.uptime+" tm="+(new Date(snap.sctime*1000)).toString());
-        uptimeLabel.setText(snap.strUptime);
-        sctimeLabel.setText(snap.strSctime);
-        perfbar.setSnap(snap);
-        perfTable.setSnap(snap);
-        perfGraph.addSnap(snap);
+            uptimeLabel.setText(snap.strUptime);
+            sctimeLabel.setText(snap.strSctime);
+            perfbar.setSnap(snap);
+            perfTable.setSnap(snap);
+            perfGraph.addSnap(snap);
+          }
+        } catch (IOException ex) {
+          removeAll();
+          GridBagConstraints gbc = new GridBagConstraints();
+          gbc.fill = GridBagConstraints.BOTH;
+          add(connectingLabel, gbc);
+          validate();
+          invalidate();
+        }
       }
     } catch(Exception e) {
       e.printStackTrace();
@@ -307,6 +353,30 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         popupMenu.add(menuInput);
         popupMenu.add(menuOutput);
       }
+    } else if( e.getSource() == menuIncrScale ) {
+      scale+=10;
+      perfbar.invalidate();
+      perfGraph.invalidate();
+    } else if( e.getSource() == menuIncrBlock ) {
+      block++;
+      perfbar.invalidate();
+      perfGraph.invalidate();
+    } else if( e.getSource() == menuIncrPix ) {
+      pixPerSecond++;
+      perfbar.invalidate();
+      perfGraph.invalidate();
+    } else if( e.getSource() == menuDecrScale ) {
+      if( scale >= 20 ) scale-=10;
+      perfbar.invalidate();
+      perfGraph.invalidate();
+    } else if( e.getSource() == menuDecrBlock ) {
+      if( block > 4 ) block--;
+      perfbar.invalidate();
+      perfGraph.invalidate();
+    } else if( e.getSource() == menuDecrPix ) {
+      if( pixPerSecond > 2) pixPerSecond--;
+      perfbar.invalidate();
+      perfGraph.invalidate();
     }
   }
 
