@@ -10,9 +10,11 @@ void PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff,
 {
 	__require__(time);
 	__cfg_int_arr__(rescheduleTimes);
-	attempt = lastAttempt;
+	attempt = 0;
+	nextTime = startTime;
+	//attempt = lastAttempt;
+	//nextTime = lastTime ? lastTime : startTime;
 	diff = INT_MAX;
-	nextTime = lastTime ? lastTime : startTime;
 	for (;; attempt++)
 	{
 		__trace2__("eval(): nextTime = %ld", nextTime);
@@ -97,13 +99,13 @@ vector<int> PduReceiptFlag::update(time_t recvTime, RespPduFlag respFlag)
 {
 	vector<int> res;
 	PduFlag prevFlag = flag;
+	int attempt = 0;
+	time_t diff = 0, nextTime = 0, calcTime = 0;
 	switch (flag)
 	{
 		case PDU_REQUIRED_FLAG:
 		case PDU_MISSING_ON_TIME_FLAG:
 			{
-				int attempt;
-				time_t diff, nextTime, calcTime;
 				eval(recvTime, attempt, diff, nextTime, calcTime);
 				lastAttempt = attempt;
 				switch (respFlag)
@@ -114,12 +116,14 @@ vector<int> PduReceiptFlag::update(time_t recvTime, RespPduFlag respFlag)
 						lastTime = recvTime;
 						break;
 					case RESP_PDU_RESCHED:
+					case RESP_PDU_MISSING:
 						if (!nextTime || nextTime > endTime)
 						{
 							flag = PDU_RECEIVED_FLAG;
 						}
 						lastTime = recvTime;
 						break;
+					/*
 					case RESP_PDU_MISSING:
 						//lastTime и nextTime с учетом 8 секундного timeout
 						if (!nextTime || nextTime + 8 > endTime)
@@ -128,6 +132,7 @@ vector<int> PduReceiptFlag::update(time_t recvTime, RespPduFlag respFlag)
 						}
 						lastTime = recvTime + 8;
 						break;
+					*/
 					default:
 						__unreachable__("Unknown resp flag");
 				}
@@ -142,8 +147,8 @@ vector<int> PduReceiptFlag::update(time_t recvTime, RespPduFlag respFlag)
 		default:
 			__unreachable__("Unknown flag");
 	}
-	__trace2__("PduReceiptFlag::update(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld, respFlag = %d, flag = %d, prevFlag = %d, lastTime = %ld, lastAttempt = %d",
-		this, startTime, endTime, recvTime, respFlag, flag, prevFlag, lastTime, lastAttempt);
+	__trace2__("PduReceiptFlag::update(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld, respFlag = %d, flag: %d -> %d, attempt = %d, calcTime = %ld, diff = %ld",
+		this, startTime, endTime, recvTime, respFlag, prevFlag, flag, attempt, calcTime, diff);
 	return res;
 }
 
