@@ -170,6 +170,42 @@ public class DivertManager
   private final static int ESC_SEMI   = ':';
   private final static int ESC_PROMPT = '<';
 
+  private final static String[] NVT_IO_DEVICE = {"NVT", "IO DEVICE", "DEVICE NUMBER", "NVT DEVICE"};
+  private final static String[] USER_CODE     = {"USER", "CODE"};
+  private final static String[] USER_PASSWORD = {"PASSWORD"};
+  private final static String[] USER_DOMAIN   = {"DOMAIN"};
+
+  private boolean checkQuery(String[] sequence, String qwery)
+  {
+    for (int i=0; i<sequence.length; i++) {
+      if (qwery.indexOf(sequence[i]) != -1) return true;
+    }
+    return false;
+  }
+  private void autentificate() throws IOException
+  {
+    boolean needNvtIoDevice  = true;
+    boolean needUserCode     = true;
+    boolean needUserPassword = true;
+
+    while (needNvtIoDevice || needUserCode || needUserPassword)
+    {
+      String str = readTelnetString(ESC_SEMI);
+      if (str == null || str.length() <= 0)
+        throw new IOException("Got empty qwery string from MSC");
+      str = str.toUpperCase();
+      if (needNvtIoDevice && checkQuery(NVT_IO_DEVICE, str)) {
+        writeTelnetLine(mscNvtIODevice); needNvtIoDevice = false;
+      } else if (needUserCode && checkQuery(USER_CODE, str)) {
+        writeTelnetLine(mscUserCode); needUserCode = false;
+      } else if (needUserPassword && checkQuery(USER_PASSWORD, str)) {
+        writeTelnetLine(mscUserPassword); needUserPassword = false;
+      } else if (checkQuery(USER_DOMAIN, str)) {
+        writeTelnetLine("");
+      }
+    }
+    readTelnetString(ESC_PROMPT);
+  }
   private void connect() throws DivertManagerException, IOException
   {
     if (mscSocket == null || !(mscSocket.isConnected()))
@@ -184,11 +220,8 @@ public class DivertManager
         is = mscSocket.getInputStream(); os = mscSocket.getOutputStream();
 
         // login using params MSC.nvtIODevice, MSC.USERCODE, MSC.PASSWORD
-        logger.info("Connected Ok");
-        readTelnetString(ESC_SEMI); writeTelnetLine(mscNvtIODevice);
-        readTelnetString(ESC_SEMI); writeTelnetLine(mscUserCode);
-        readTelnetString(ESC_SEMI); writeTelnetLine(mscUserPassword);
-        readTelnetString(ESC_PROMPT);
+        logger.info("Connected Ok. Autentificating...");
+        autentificate();
         logger.info("Autentificated user="+mscUserCode);
       } catch (IOException exc) {
         logger.error("Connect to MSC "+mscHost+":"+mscPort+" error", exc);
