@@ -27,17 +27,15 @@ int TaskScheduler::Execute()
     return 0;
 }
 
-void TaskScheduler::registerTask(Task* task)
+bool TaskScheduler::registerTask(Task* task)
 {
     // TODO: implement it
+    return false;
 }
-void TaskScheduler::unregisterTask(int id)
+bool TaskScheduler::unregisterTask(const char* name)
 {
     // TODO: implement it
-}
-void TaskScheduler::unregisterTask(const std::string name)
-{
-    // TODO: implement it
+    return false;
 }
 
 }}

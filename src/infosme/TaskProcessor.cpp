@@ -7,15 +7,32 @@ namespace smsc { namespace infosme
 Hash<TaskFactory *>*  TaskFactory::registry = 0;
 
 TaskProcessor::TaskProcessor(ConfigView* config)
-    : Thread(), bStarted(false)
+    : Thread(), logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
+            bStarted(false), dsInternalName(0), dsInternal(0)
 {
+    logger.info("Loading ...");
+
+    std::auto_ptr<ConfigView> providerCfgGuard(config->getSubConfig("DataProvider"));
+    ConfigView* providerCfg = providerCfgGuard.get();
+    provider.init(providerCfg);
     
-    std::auto_ptr<ConfigView> providerConfig(config->getSubConfig("DataProvider"));
-    provider.init(providerConfig.get());
+    dsInternalName = providerCfg->getString("dsInternal", 
+                                            "Internal DataSource driver name missed.", true);
+    dsInternal = provider.getDataSource(dsInternalName);
+    if (!dsInternal)
+        throw ConfigException("Failed to obtail internal DataSource driver '%s'", dsInternalName);
+    
+    logger.info("Internal DataSource driver '%s' obtained.", dsInternalName);
+    
+    // TODO: Init tasks here !!!
+
+    logger.info("Load success.");
 }
 TaskProcessor::~TaskProcessor()
 {
-    // TODO: implement it
+    if (dsInternalName) delete dsInternalName;
+    
+    // TODO: implement task set stop & cleanup
 }
 void TaskProcessor::Start()
 {

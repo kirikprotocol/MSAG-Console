@@ -14,7 +14,6 @@ DataProvider::~DataProvider()
 }
 
 DataSource* DataProvider::createDataSource(ConfigView* config)
-    throw(ConfigException)
 {
     DataSource* ds   = 0;
     try 
@@ -35,13 +34,12 @@ DataSource* DataProvider::createDataSource(ConfigView* config)
 }
 
 void DataProvider::init(ConfigView* config)
-    throw(ConfigException)
 {
     MutexGuard guard(dssLock);
     
     std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
     std::set<std::string>* set = setGuard.get();
-
+    
     for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
     {
         try

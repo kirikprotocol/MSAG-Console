@@ -44,8 +44,7 @@ namespace smsc { namespace infosme
         Hash<DataSource *>  dss;
         Mutex               dssLock;
         
-        DataSource* createDataSource(ConfigView* config)
-            throw(ConfigException);
+        DataSource* createDataSource(ConfigView* config);
     
     public:
 
@@ -59,8 +58,7 @@ namespace smsc { namespace infosme
          * @param config
          * @exception ConfigException throws when configuration is invalid
          */
-        void init(ConfigView* config)
-            throw(ConfigException);
+        void init(ConfigView* config);
         
         DataSource* getDataSource(const char* dsid)
         {

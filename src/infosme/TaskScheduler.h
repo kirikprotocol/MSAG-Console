@@ -31,6 +31,8 @@ namespace smsc { namespace infosme
     {
     private:
 
+        Hash<Task*> tasks;
+
         Event       awake, exited;
         bool        bStarted, bNeedExit;
         Mutex       startLock;
@@ -49,12 +51,11 @@ namespace smsc { namespace infosme
         
         inline bool isStarted() { return bStarted; };
 
-        void registerTask(Task* task);
-        void unregisterTask(int id);
-        void unregisterTask(const std::string name);
+        bool registerTask(Task* task);
+        bool unregisterTask(const char* name);
     };
 
 }}
 
-#endif //SMSC_INFO_SME_TASK_PROCESSOR
+#endif //SMSC_INFO_SME_TASK_SCHEDULER
 

@@ -45,12 +45,17 @@ namespace smsc { namespace infosme
     {
     private:
 
+        log4cpp::Category  &logger;
+
         TaskScheduler scheduler;
         DataProvider  provider;
-
+        
         Event       awake, exited;
         bool        bStarted, bNeedExit;
         Mutex       startLock;
+
+        const char* dsInternalName;
+        DataSource* dsInternal;
         
         void MainLoop();
 
