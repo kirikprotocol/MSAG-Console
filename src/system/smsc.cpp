@@ -35,6 +35,7 @@ using std::exception;
 using namespace smsc::sms;
 using namespace smsc::smeman;
 using namespace smsc::router;
+using namespace smsc::snmp;
 using namespace smsc::core::synchronization;
 using util::Exception;
 
@@ -197,6 +198,14 @@ void Smsc::init(const SmscConfigs& cfg)
   tp.preCreateThreads(15);
   //smsc::util::config::Manager::init("config.xml");
   //cfgman=&cfgman->getInstance();
+
+#ifdef SNMP
+  {
+    snmpAgent = new SnmpAgent(this);
+    tp2.startTask(snmpAgent);
+    snmpAgent->statusChange(SnmpAgent::INIT);
+  }
+#endif
 
   /*
     register SME's
@@ -425,7 +434,6 @@ void Smsc::init(const SmscConfigs& cfg)
     tp.startTask(sm);
     log.info( "Speedmonitor started" );
   }
-
   {
     using namespace smsc::db;
     using smsc::util::config::ConfigView;
@@ -700,6 +708,8 @@ void Smsc::init(const SmscConfigs& cfg)
 void Smsc::run()
 {
   log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.run");
+  //smsc::util::Logger::getCategory("sms.snmp.alarm").debug("sample alarm");
+
   __trace__("Smsc::run");
   try{
   if(startTime==0)startTime=time(NULL);
@@ -746,8 +756,17 @@ void Smsc::run()
   tp.startTask(msout);
 #endif
 
+#ifdef SNMP
+  if(snmpAgent) snmpAgent->statusChange(SnmpAgent::OPER);
+#endif
+
   // некоторые действия до основного цикла
   mainLoop();
+
+#ifdef SNMP
+  if(snmpAgent) snmpAgent->statusChange(SnmpAgent::SHUT);
+#endif
+
   // и после него
   //shutdown();
   }catch(exception& e)

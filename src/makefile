@@ -44,6 +44,10 @@ ifeq ($(NOMAPPROXY),YES)
 CXXFLAGS := $(CXXFLAGS) -DNOMAPPROXY
 endif
 
+ifeq ($(SNMP),YES)
+CXXFLAGS := $(CXXFLAGS) -DSNMP
+endif
+
 ifdef WARNINGS
 CFLAGS := $(CFLAGS) -Wall
 CXXFLAGS := $(CXXFLAGS) -Wall

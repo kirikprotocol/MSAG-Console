@@ -23,6 +23,7 @@
 #include "system/mapio/MapIoTask.h"
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
+#include "snmp/SnmpAgent.hpp"
 
 #include "distrlist/DistrListManager.h"
 #include "distrlist/DistrListProcess.h"
@@ -421,6 +422,7 @@ protected:
   SmeProxy* abonentInfoProxy;
 
   smsc::stat::StatisticsManager *statMan;
+  snmp::SnmpAgent *snmpAgent;
 
   SmeProxy* mapProxy;
 
