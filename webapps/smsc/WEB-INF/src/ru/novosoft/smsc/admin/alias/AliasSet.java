@@ -132,4 +132,14 @@ public class AliasSet
 	{
 		return aliases.size();
 	}
+
+  public boolean isContainsAlias(Mask aliasMask)
+  {
+    for (Iterator i = aliases.iterator(); i.hasNext();) {
+      Alias alias = (Alias) i.next();
+      if (alias.getAlias().addressConfirm(aliasMask))
+        return true;
+    }
+    return false;
+  }
 }

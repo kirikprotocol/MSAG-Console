@@ -123,7 +123,9 @@ public class SMSCErrors
 			public static final String destinationsIsEmpty = B + "destinationsIsEmpty";
 			public static final String invalidDestinationMask = B + "invalidDestinationMask";
 			public static final String invalidSourceMask = B + "invalidSourceMask";
-		}
+      public static final String srcAddressIsAlias = B + "srcAddressIsAlias";
+      public static final String dstAddressIsAlias = B + "dstAddressIsAlias";
+    }
 
 		public static class users
 		{
