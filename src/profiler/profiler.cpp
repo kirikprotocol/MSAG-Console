@@ -121,12 +121,14 @@ Profiler::~Profiler()
 
 Profile& Profiler::lookup(const Address& address)
 {
+  MutexGuard g(mtx);
   bool exact;
   return profiles->find(address,exact);
 }
 
 void Profiler::update(const Address& address,const Profile& profile)
 {
+  MutexGuard g(mtx);
   bool exact;
   Profile &prof=profiles->find(address,exact);
   if(prof==profile)return;
@@ -142,6 +144,7 @@ void Profiler::update(const Address& address,const Profile& profile)
 
 void Profiler::add(const Address& address,const Profile& profile)
 {
+  MutexGuard g(mtx);
   profiles->add(address,profile);
 }
 
@@ -356,6 +359,8 @@ int Profiler::Execute()
     ans.setDeliveryReport(0);
     ans.setArchivationRequested(false);
     ans.setEServiceType("XXX");
+    ans.setIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE,
+      sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
 
     Profile pr=lookup(addr);
     __trace2__("profiler response:%s!",msgstr);
