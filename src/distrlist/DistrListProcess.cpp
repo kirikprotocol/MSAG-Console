@@ -273,7 +273,7 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
   unsigned status = 0;
   if ( task->count != task->submited_count ) status = Status::CNTSUBDL; /// !!!!!! must be fixed
   __trace2__(":DPL: sending submit multi responce, status %d (%d smses not responsed)",status,task->count-task->submited_count);
-  SmscCommand cmd = SmscCommand::makeSubmitMultiResp(0,task->cmd->get_dialogId(),status);
+  SmscCommand cmd = SmscCommand::makeSubmitMultiResp("",task->cmd->get_dialogId(),status);
   if ( status != 0 ) {
     UnsuccessElement* ue = cmd->get_MultiResp()->get_unsuccess();
     cmd->get_MultiResp()->set_unsuccessCount(task->count-task->submited_count);
@@ -290,7 +290,7 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
   LISTTYPE::iterator it = find(task_sheduler.begin(),task_sheduler.end(),task);
   if ( it != task_sheduler.end() ) { task_sheduler.erase(it);  }
   //putIncomingCommand(cmd);
-  SmeProxy* srcproxy =  cmd.getProxy();
+  SmeProxy* srcproxy =  task->cmd.getProxy();
   srcproxy->putCommand(cmd);
 }
 

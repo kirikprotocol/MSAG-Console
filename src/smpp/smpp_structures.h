@@ -358,7 +358,7 @@ namespace DataCoding{
 #define __ptr2_property__(type,field,counter) \
   type* field;\
   inline void set_##field(type* value,unsigned count) {\
-    if ( field ) delete[] field; \
+    if ( field && counter != 0 ) delete[] field; \
     field = new type[count]; \
     for ( unsigned i=0; i<count; ++i ) { field[i] = value[i]; }\
     counter = count; } \
@@ -769,7 +769,7 @@ struct PduPartSm //: public MemoryManagerUnit
   ~PduPartSm()
   {
     //__trace2__("::%s:",__FUNCTION__);
-    if (dests) delete[] dests;
+    if (dests && numberOfDests ) delete[] dests;
     dests = 0;
   }
   PduPartSm() :
@@ -950,10 +950,11 @@ struct PduMultiSmResp //: public SmppHeader//MemoryManagerUnit
     --align;
     dump_text("} //PduMultiResp");
   }
+  PduMultiSmResp() : noUnsuccess(0),sme(0) {}
   ~PduMultiSmResp()
   {
 //    __trace2__("::%s:",__FUNCTION__);
-    if (sme) delete[] sme;
+    if (sme && noUnsuccess) delete[] sme;
     sme = 0;
   }
 };
