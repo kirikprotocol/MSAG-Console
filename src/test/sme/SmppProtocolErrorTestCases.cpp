@@ -419,7 +419,7 @@ public:
 				invalidCmdId = true;
 				break;
 			case 7: //unbind
-				__tc__("protocolError.submitAfterUnbind.cmdId.unbindBeforeBind");
+				__tc__("protocolError.invalidBind.cmdId.unbindBeforeBind");
 				cmdId = UNBIND;
 				pdu = createPdu(cmdId);
 				invalidCmdId = true;
