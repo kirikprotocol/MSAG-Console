@@ -55,8 +55,8 @@ CFLAGS := $(CFLAGS) -pg -g -a
 CXXFLAGS := $(CXXFLAGS) -pg -g -a
 else
 ifdef OPTI
-CFLAGS := $(CFLAGS) -O2
-CXXFLAGS := $(CXXFLAGS) -O2
+CFLAGS := $(CFLAGS) -O2 -finline-limit=16384 -DDISABLE_ANY_CHECKS
+CXXFLAGS := $(CXXFLAGS) -O2 -finline-limit=16384 -DDISABLE_ANY_CHECKS
 endif
 endif
 endif
