@@ -251,8 +251,7 @@ public:
     {
         if (!pdu || !asyncTransmitter) return;
 
-        {
-            // Send DeliverySmResp here for accepted DeliverySm
+        {   // Send DeliverySmResp here for accepted DeliverySm
             PduDeliverySmResp smResp;
             smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
             smResp.set_messageId("");
@@ -265,16 +264,56 @@ public:
         bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
             ((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C) == 0x4) : false;
         
-        logger.debug("SMPP_ESM_CLASS=%d", sms.getIntProperty(Tag::SMPP_ESM_CLASS));
+        const int SMSC_SMPP_INT_ENROUTE_STATE       = 1;
+        const int SMSC_SMPP_INT_DELIVERED_STATE     = 2;
+        const int SMSC_SMPP_INT_EXPIRED_STATE       = 3;
+        const int SMSC_SMPP_INT_DELETED_STATE       = 4;
+        const int SMSC_SMPP_INT_UNDELIVERABLE_STATE = 5;
+        const int SMSC_SMPP_INT_ACCEPTED_STATE      = 6;
+        const int SMSC_SMPP_INT_UNKNOWN_STATE       = 7;
+        const int SMSC_SMPP_INT_REJECTED_STATE      = 8;
 
         if (isReceipt && ((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
         {
             const char* msgid = ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
-            if (msgid && msgid[0] != '\0') {
-                bool delivered = (sms.hasIntProperty(Tag::SMPP_MSG_STATE)) ?
-                    (sms.getIntProperty(Tag::SMPP_MSG_STATE) == SMSC_BYTE_DELIVERED_STATE) : false;
-                logger.debug("Got receipt, message=%s is %s", msgid, delivered ? "delivered":"failed");
-                processor.processReceipt(msgid, delivered);
+            if (msgid && msgid[0] != '\0')
+            {
+                bool delivered = false;
+                bool retry = false;
+                
+                if (sms.hasIntProperty(Tag::SMPP_MSG_STATE))
+                {
+                    int msgState = sms.getIntProperty(Tag::SMPP_MSG_STATE);
+                    switch (msgState)
+                    {
+                    case SMSC_SMPP_INT_DELIVERED_STATE:
+                        delivered = true;
+                        break;
+                    case SMSC_SMPP_INT_EXPIRED_STATE:
+                    case SMSC_SMPP_INT_DELETED_STATE:
+                        retry = true;
+                        break;
+                    case SMSC_SMPP_INT_ENROUTE_STATE:
+                    case SMSC_SMPP_INT_ACCEPTED_STATE:
+                    case SMSC_SMPP_INT_UNKNOWN_STATE:
+                    case SMSC_SMPP_INT_REJECTED_STATE:
+                    case SMSC_SMPP_INT_UNDELIVERABLE_STATE:
+                        break;
+                    default:
+                        logger.warn("Invalid state=%d received in reciept !", msgState);
+                        break;
+                    }
+                }
+                
+                /*char smsTextBuff[MAX_ALLOWED_MESSAGE_LENGTH+1];
+                int smsTextBuffLen = getSmsText(&sms, 
+                    (char *)&smsTextBuff, sizeof(smsTextBuff));*/
+                
+                logger.debug("Got receipt, message=%s is %s (%s)", 
+                             msgid, delivered ? "delivered":"failed", 
+                             retry ? "need retry":"no retry");
+                
+                processor.processReceipt(msgid, delivered, retry);
             }
         } 
     }
@@ -300,8 +339,6 @@ public:
 
     void handleEvent(SmppHeader *pdu)
     {
-        logger.debug("InfoSme: pdu received. Processing...");
-
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
@@ -368,12 +405,12 @@ int main(void)
         ConfigView tpConfig(manager, "InfoSme");
         TaskProcessor processor(&tpConfig);
         
-        ConfigView adminConfig(manager, "InfoSme.Admin");
+        /*ConfigView adminConfig(manager, "InfoSme.Admin");
         InfoSmeComponent admin(processor);                   
         ComponentManager::registerComponent(&admin); 
         adminListener.init(adminConfig.getString("host"), adminConfig.getInt("port"));               
         bAdminListenerInited = true;
-        adminListener.Start();                                     
+        adminListener.Start();*/
         
         ConfigView smscConfig(manager, "InfoSme.SMSC");
         InfoSmeConfig cfg(&smscConfig);
@@ -391,7 +428,7 @@ int main(void)
                 listener.setSyncTransmitter(session.getSyncTransmitter());
                 listener.setAsyncTransmitter(session.getAsyncTransmitter());
                 
-                session.connect(BindType::Transmitter);
+                session.connect();
                 processor.Start();
                 bInfoSmeIsConnected = true;
             }

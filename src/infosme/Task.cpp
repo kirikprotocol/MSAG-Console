@@ -297,8 +297,7 @@ void Task::beginProcess()
                 newMessage->setString(4, message.c_str());
                 newMessage->executeUpdate();
 
-                logger.info("Message '%s' for '%s' generated.", 
-                            message.c_str(), abonentAddress);
+                //logger.info("Message '%s' for '%s' generated.", message.c_str(), abonentAddress);
 
                 if (info.dsUncommited <= 0 || ++uncommitted >= info.dsUncommited) {
                     intConnection->commit();
@@ -418,16 +417,12 @@ const char* RESET_MESSAGES_STATEMENT_ID = "%s_RESET_MESSAGES_STATEMENT_ID";
 const char* RESET_MESSAGES_STATEMENT_SQL = 
 "UPDATE %s SET STATE=:NEW WHERE STATE=:WAIT";
 
-void Task::resetWaiting()
+void Task::resetWaiting(Connection* connection)
 {
-    Connection* connection = 0;
-    
+    logger.debug("resetWaiting called");
+
     try
     {
-        connection = dsInt->getConnection();
-        if (!connection)
-            throw Exception("Failed to obtain connection to internal data source.");
-
         std::auto_ptr<char> resetMessagesId(prepareSqlCall(RESET_MESSAGES_STATEMENT_ID));
         std::auto_ptr<char> resetMessagesSql(prepareSqlCall(RESET_MESSAGES_STATEMENT_SQL));
         Statement* resetMessages = getStatement(connection, resetMessagesId.get(), 
@@ -439,33 +434,14 @@ void Task::resetWaiting()
         resetMessages->setUint8(2, MESSAGE_WAIT_STATE);
 
         resetMessages->executeUpdate();
-        connection->commit();
     }
-    catch (Exception& exc)
-    {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
-        }
+    catch (Exception& exc) {
         logger.error("Task '%s'. Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
-    catch (...)
-    {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            logger.error("Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            logger.error("Failed to roolback transaction on internal data source.");
-        }
+    catch (...) {
         logger.error("Task '%s'. Messages access failure.", info.id.c_str());
     }
-
-    if (connection) dsInt->freeConnection(connection);
 }
 
 const char* DO_RETRY_MESSAGE_STATEMENT_ID = "%s_DO_RETRY_MESSAGE_STATEMENT_ID";
@@ -475,6 +451,8 @@ const char* DO_RETRY_MESSAGE_STATEMENT_SQL =
 
 bool Task::doRetry(Connection* connection, uint64_t msgId)
 {
+    logger.debug("doRetry(): called for id=%lld", msgId);
+
     if (!info.retryOnFail || info.retryTime <= 0) return false;
 
     __require__(connection);
@@ -521,6 +499,8 @@ const char* DO_ENROUTE_MESSAGE_STATEMENT_SQL =
 
 bool Task::doEnroute(Connection* connection, uint64_t msgId)
 {
+    logger.debug("doEnroute(): called for id=%lld", msgId);
+
     __require__(connection);
 
     int wdTimerId = -1;
@@ -559,8 +539,10 @@ const char* DO_FAILED_MESSAGE_STATEMENT_SQL =
 
 bool Task::doFailed(Connection* connection, uint64_t msgId)
 {
-    __require__(connection);
+    logger.debug("doFailed(): called for id=%lld", msgId);
 
+    __require__(connection);
+    
     int wdTimerId = -1;
     bool result = false;
     try
@@ -572,7 +554,7 @@ bool Task::doFailed(Connection* connection, uint64_t msgId)
         if (!failedMessage)
             throw Exception("doFailed(): Failed to create statement for messages access.");
         
-        failedMessage->setUint8  (1, MESSAGE_FAILED_STATE);
+        failedMessage->setUint8 (1, MESSAGE_FAILED_STATE);
         failedMessage->setUint64(2, msgId);
         failedMessage->setUint8 (3, MESSAGE_ENROUTE_STATE);
         failedMessage->setUint8 (4, MESSAGE_WAIT_STATE);
@@ -598,6 +580,8 @@ const char* DO_DELIVERED_MESSAGE_STATEMENT_SQL =
 
 bool Task::doDelivered(Connection* connection, uint64_t msgId)
 {
+    logger.debug("doDelivered(): called for id=%lld", msgId);
+
     __require__(connection);
 
     int wdTimerId = -1;
@@ -681,7 +665,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
             
             wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
             waitMessage->setUint8 (1, MESSAGE_WAIT_STATE);
-            waitMessage->setUint64(1, message.id);
+            waitMessage->setUint64(2, message.id);
             result = (waitMessage->executeUpdate() > 0);
         }
     }

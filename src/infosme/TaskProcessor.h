@@ -156,7 +156,7 @@ namespace smsc { namespace infosme
         virtual TaskGuard getTask(std::string taskId);
         virtual TaskGuard getNextTask();
 
-        void resetWaitingTasks();
+        void resetWaitingTasks(Connection* connection);
     };
 
     struct MessageSender
@@ -254,7 +254,7 @@ namespace smsc { namespace infosme
         }
 
         void processResponce(int seqNum, bool accepted, bool retry, std::string smscId="");
-        void processReceipt (std::string smscId, bool delivered);
+        void processReceipt (std::string smscId, bool delivered, bool retry);
 
         /* ------------------------ Admin interface ------------------------ */ 
 

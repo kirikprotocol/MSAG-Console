@@ -84,13 +84,13 @@ TaskGuard TaskContainer::getNextTask()
     
     return TaskGuard(0);
 }
-void TaskContainer::resetWaitingTasks()
+void TaskContainer::resetWaitingTasks(Connection* connection)
 {
     MutexGuard guard(tasksLock);
     
     char* key = 0; Task* task = 0; tasks.First();
     while (tasks.Next(key, task))
-        if (task) task->resetWaiting();
+        if (task) task->resetWaiting(connection);
 }
 
 /* ---------------------------- TaskProcessor ---------------------------- */
@@ -206,6 +206,7 @@ void TaskProcessor::dsInternalCommit(bool force)
     {
         if (force || nextTime <= currentTime) {
             if (dsIntConnection) dsIntConnection->commit();
+            logger.debug("dsInternalCommit !!!\n");
             nextTime = currentTime + dsCommitInterval;
         }
     }
@@ -225,7 +226,11 @@ void TaskProcessor::Start()
     if (!bStarted)
     {
         logger.info("Starting ...");
-        container.resetWaitingTasks();
+        {
+            MutexGuard icGuard(dsIntConnectionLock);
+            container.resetWaitingTasks(dsIntConnection);
+            dsInternalCommit(true);
+        }
         bNeedExit = false;
         awake.Wait(0);
         Thread::Start();
@@ -244,8 +249,11 @@ void TaskProcessor::Stop()
         awake.Signal();
         exited.Wait();
         bStarted = false;
+        {
+            MutexGuard icGuard(dsIntConnectionLock);
+            dsInternalCommit(true);
+        }
         taskIdsBySeqNum.Empty();
-        dsInternalCommit(true);
         logger.info("Stoped.");
     }
 }
@@ -280,12 +288,12 @@ void TaskProcessor::MainLoop()
     
     TaskInfo info = task->getInfo();
     time_t ct = time(NULL);
-    if (ct >=  info.endDate) return;
+    if (info.endDate > 0 && ct >=  info.endDate) return;
 
     if (info.activePeriodStart > 0 && info.activePeriodEnd > 0)
     {
-        if (info.activePeriodStart < info.activePeriodEnd) return;
-
+        if (info.activePeriodStart > info.activePeriodEnd) return;
+        
         tm dt; localtime_r(&ct, &dt);
         
         dt.tm_isdst = -1;
@@ -306,11 +314,14 @@ void TaskProcessor::MainLoop()
     Message message;
     {
         MutexGuard icGuard(dsIntConnectionLock);
-        if (!task->getNextMessage(dsIntConnection, message)) return;
+        if (!task->getNextMessage(dsIntConnection, message)) {
+            //logger.debug("No messages found for task '%s'", info.id.c_str());
+            return;
+        }
         dsInternalCommit();
     }
 
-    logger.debug("Message #%lld for '%s': %s", 
+    logger.debug("Sending message #%lld for '%s': %s", 
                  message.id, message.abonent.c_str(), message.message.c_str());
 
     MutexGuard msGuard(messageSenderLock);
@@ -341,22 +352,28 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
 {
     __require__(dsIntConnection);
 
-    TaskMsgId* tmIds = 0;
+    logger.debug("Processing resp: seqNum=%d, accepted=%d, retry=%d", seqNum, accepted, retry);
+
+    TaskMsgId tmIds;
     
     {   // Get taskId & msgId by seqNum
+        TaskMsgId* tmIdsPtr = 0;
         MutexGuard snGuard(taskIdsBySeqNumLock);
-        if (!(tmIds = taskIdsBySeqNum.GetPtr(seqNum))) {
+        if (!(tmIdsPtr = taskIdsBySeqNum.GetPtr(seqNum))) {
             logger.warn("processResponce(): Sequence number=%d is unknown !", seqNum);
             return;
         }
+        tmIds = *tmIdsPtr;
         taskIdsBySeqNum.Delete(seqNum);
+        //logger.debug("Task id=%s, msgid=%lld for seqNum=%d", 
+        //             tmIds.taskId.c_str(), tmIds.msgId, seqNum);
     }
     
-    TaskGuard taskGuard = container.getTask(tmIds->taskId); 
+    TaskGuard taskGuard = container.getTask(tmIds.taskId); 
     Task* task = taskGuard.get();
     if (!task) {
         logger.warn("Unable to locate task '%s' for sequence number=%d", 
-                    tmIds->taskId.c_str(), seqNum);
+                    tmIds.taskId.c_str(), seqNum);
         return;
     }
     TaskInfo info = task->getInfo();
@@ -364,17 +381,16 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
     MutexGuard icGuard(dsIntConnectionLock);
     if (!accepted)
     {
-        if (retry && info.retryOnFail && info.retryTime > 0)
-             if (!task->doRetry(dsIntConnection, tmIds->msgId))
-                logger.warn("Message #%lld not found (doRetry).", tmIds->msgId);
-        else if (!task->doFailed(dsIntConnection, tmIds->msgId))
-                logger.warn("Message #%lld not found (doFailed).", tmIds->msgId);
+        if (retry && info.retryOnFail && info.retryTime > 0) {
+            if (!task->doRetry(dsIntConnection, tmIds.msgId))
+               logger.warn("Message #%lld not found (doRetry).", tmIds.msgId);
+        }
+        else if (!task->doFailed(dsIntConnection, tmIds.msgId))
+                logger.warn("Message #%lld not found (doFailed).", tmIds.msgId);
     } 
     else
     {
-        if (!task->doEnroute(dsIntConnection, tmIds->msgId))
-            logger.warn("Message #%lld not found (doEnroute).", tmIds->msgId);
-        else
+        if (task->doEnroute(dsIntConnection, tmIds.msgId))
         {
             try
             {
@@ -384,7 +400,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
                 if (!createMapping)
                     throw Exception("processResponce(): Failed to create statement for ids mapping.");
                 
-                createMapping->setUint64(1, tmIds->msgId);
+                createMapping->setUint64(1, tmIds.msgId);
                 createMapping->setString(2, smscId.c_str());
                 createMapping->setString(3, info.id.c_str());
                 
@@ -399,6 +415,8 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
                              info.id.c_str());
             }
         }
+        else
+            logger.warn("Message #%lld not found (doEnroute).", tmIds.msgId);
     }
     
     dsInternalCommit();
@@ -412,9 +430,12 @@ const char* DEL_ID_MAPPING_STATEMENT_ID = "DEL_ID_MAPPING_STATEMENT_ID";
 const char* DEL_ID_MAPPING_STATEMENT_SQL = (const char*)
 "DELETE FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID";
 
-void TaskProcessor::processReceipt (std::string smscId, bool delivered)
+void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool retry)
 {
     __require__(dsIntConnection);
+
+    logger.debug("Processing recpt: smscId=%s, delivered=%d, retry=%d",
+                 smscId.c_str(), delivered, retry);
 
     MutexGuard icGuard(dsIntConnectionLock);
 
@@ -450,9 +471,10 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered)
         
         if (!delivered)
         {
-            if (info.retryOnFail && info.retryTime > 0)
-                 if (!task->doRetry(dsIntConnection, msgId))
-                    logger.warn("Message #%lld not found (doRetry).", msgId);
+            if (retry && info.retryOnFail && info.retryTime > 0) {
+                if (!task->doRetry(dsIntConnection, msgId))
+                   logger.warn("Message #%lld not found (doRetry).", msgId);
+            }
             else if (!task->doFailed(dsIntConnection, msgId))
                     logger.warn("Message #%lld not found (doFailed).", msgId);
         }

@@ -236,8 +236,11 @@ namespace smsc { namespace infosme
          * »спользуетс€ дл€ восстановлени€ сообщени€ из состо€ни€ WAIT в случае,
          * если submitResponce не пришЄл при обрыве соединени€ с SMSC.
          * ¬ыполн€етс€ при старте TaskProcessor'а.
+         *
+         * @param connection    основной connection TaskProcessor'а
+         *                      из внутреннего источника данных. (оптимизаци€)
          */
-        void resetWaiting();
+        void resetWaiting(Connection* connection);
 
         /**
          * ¬озвращает следующее сообщение дл€ отправки из спец.таблицы задачи
