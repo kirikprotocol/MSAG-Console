@@ -407,15 +407,16 @@ USHORT_T  Et96MapOpenConf (
   try{
     DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
     if ( !mdci.isnull() ){
-      if ( mdci->Et96MapOpenConf(ssn,
-                                dialogId,
-                                openResult,
-                                 refuseReason_p,
-                                 respondingAddr_sp,
-                                 appContext_sp,
-                                 specificInfo_sp,
-                                 provErrCode_p));
-        MapDialogContainer::getInstance()->dropDialog(dialogId);
+      mdci->Et96MapOpenConf(ssn,
+                            dialogId,
+                            openResult,
+                            refuseReason_p,
+                            respondingAddr_sp,
+                            appContext_sp,
+                            specificInfo_sp,
+                            provErrCode_p));
+     if ( openResult != ET96MAP_RESULT_OK )
+      MapDialogContainer::getInstance()->dropDialog(dialogId);
     }
   }catch(...){
     __trace2__("MAP::Et96MapCloseInd: catch exception when processing did 0x%x",dialogId);
