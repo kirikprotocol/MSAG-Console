@@ -46,68 +46,103 @@ namespace smsc { namespace infosme
     struct TaskInfo
     {
         std::string name;
+        bool        enabled;
+        int         priority;
+
+        bool    retryOnFail;
+        bool    replaceIfPresent;
+        
+        time_t  endDate;            // full date/time
+        time_t  retryTime;          // only HH:mm:ss in seconds
+        time_t  validityPeriod;     // only HH:mm:ss in seconds
+        time_t  validityDate;       // full date/time
+        time_t  activePeriodStart;  // only HH:mm:ss in seconds
+        time_t  activePeriodEnd;    // only HH:mm:ss in seconds
+        
         std::string dsId;
-        bool enabled;
-        int priority;
+        std::string querySql;
+        std::string msgTemplate;
+        std::string svcType;        // specified if replaceIfPresent == true
         
         TaskInfo()
-            : name(""), dsId(""), enabled(true), priority(0) {};
+            : name(""), enabled(true), priority(0),
+              retryOnFail(false), replaceIfPresent(false),
+              endDate(-1), retryTime(-1), 
+              validityPeriod(-1), validityDate(-1),
+              activePeriodStart(-1), activePeriodEnd(-1),
+              dsId(""), querySql(""), msgTemplate(""), svcType("") {};
         TaskInfo(const TaskInfo& info) 
-            : name(info.name), dsId(info.dsId), 
-                enabled(info.enabled), priority(info.priority) {}; 
+            : name(info.name), enabled(info.enabled), priority(info.priority),
+              retryOnFail(info.retryOnFail), replaceIfPresent(info.replaceIfPresent),
+              endDate(info.endDate), retryTime(info.retryTime), 
+              validityPeriod(info.validityPeriod), validityDate(info.validityDate),
+              activePeriodStart(info.activePeriodStart), activePeriodEnd(info.activePeriodEnd),
+              dsId(info.dsId), querySql(info.querySql), 
+              msgTemplate(info.msgTemplate), svcType(info.svcType) {};
+        
         virtual ~TaskInfo() {};
         
         TaskInfo& operator=(const TaskInfo& info)
         {
-            name = info.name;
-            dsId = info.dsId;
-            enabled = info.enabled;
-            priority = info.priority;
+            name = info.name; enabled = info.enabled; priority = info.priority;
+            retryOnFail = info.retryOnFail; replaceIfPresent = info.replaceIfPresent;
+            endDate = info.endDate; retryTime = info.retryTime;
+            validityPeriod = info.validityPeriod; validityDate = info.validityDate;
+            activePeriodStart = info.activePeriodStart; 
+            activePeriodEnd = info.activePeriodEnd;
+            dsId = info.dsId; querySql = info.querySql;
+            msgTemplate = info.msgTemplate; svcType = info.svcType;
             return *this;
         };
     };
 
-    /* 
-        TODO: 1) Задать наконец структуры StateInfo && Message
-              2) Имплементить общую логику
+    /*  TODO:   
+            1) Разобраться с логикой getNextMessage & doNotifyMessage и 
+            2) Задать наконец структуры StateInfo && Message
     */                                                      
     class Task
     {
     friend class TaskGuard;
     private:
         
-        Event           usersCountChanged;
-        Mutex           usersCountLock;
-        long            usersCount;
+        Event       usersCountEvent;
+        Mutex       usersCountLock;
+        long        usersCount;
         
-        Mutex           finalizingLock;
-        bool            bFinalizing;
-
+        Mutex       finalizingLock;
+        bool        bFinalizing;
+    
     protected:
-        
+
         TaskInfo        info;
         DataSource*     dsOwn;
         DataSource*     dsInt;
         
-        virtual void init(ConfigView* config) {
-            __require__(config);
-        };
+        Event       processEndEvent;
+        Event       inProcessEvent;
+        Mutex       inProcessLock;
+        bool        bInProcess;
         
-        Task() : usersCount(0), bFinalizing(false), dsOwn(0), dsInt(0) {};
+        virtual void init(ConfigView* config, std::string taskName);
+
         virtual ~Task() {};
 
     public:
         
+        static time_t parseDateTime(const char* str);
+        static time_t parseTime(const char* str);
+        
         Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
-            : usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt) 
+            : usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), bInProcess(false) 
         {
             __require__(dsOwn && dsInt);
             this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
         }
-        Task(ConfigView* config, DataSource* dsOwn, DataSource* dsInt)
-            : usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt) 
+        Task(ConfigView* config, std::string taskName, DataSource* dsOwn, DataSource* dsInt)
+            : usersCount(0), bFinalizing(false), 
+                dsOwn(dsOwn), dsInt(dsInt), bInProcess(false)
         {
-            init(config);
+            init(config, taskName);
         }
         
         void finalize()
@@ -119,7 +154,7 @@ namespace smsc { namespace infosme
             endProcess();
             
             while (true) {
-                usersCountChanged.Wait(10);
+                usersCountEvent.Wait(10);
                 MutexGuard guard(usersCountLock);
                 if (usersCount <= 0) break;
             }
@@ -200,14 +235,14 @@ namespace smsc { namespace infosme
             if (!task) return;
             MutexGuard guard(task->usersCountLock);
             task->usersCount++;
-            task->usersCountChanged.Signal();
+            task->usersCountEvent.Signal();
         }
         virtual ~TaskGuard() {
             if (!task) return;
             MutexGuard guard(task->usersCountLock);
             if (task->usersCount > 0) { 
                 task->usersCount--;
-                task->usersCountChanged.Signal();
+                task->usersCountEvent.Signal();
             }
         }
         inline Task* get() {

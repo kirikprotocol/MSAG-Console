@@ -100,8 +100,38 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     if (switchTimeout <= 0) 
         throw ConfigException("Task switch timeout should be positive");
     
-    // TODO: Init tasks here !!!
-    
+    std::auto_ptr< std::set<std::string> > setGuard(tasksCfg->getShortSectionNames());
+    std::set<std::string>* set = setGuard.get();
+    for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
+    {
+        try
+        {
+            const char* taskName = (const char *)i->c_str();
+            if (!taskName || taskName[0] == '\0')
+                throw ConfigException("Task name empty or wasn't specified");
+            logger.info("Loading task '%s' ...", taskName);
+            
+            std::auto_ptr<ConfigView> taskConfigGuard(tasksCfg->getSubConfig(taskName));
+            ConfigView* taskConfig = taskConfigGuard.get();
+            const char* dsId = taskConfig->getString("dsId");
+            if (!dsId || dsId[0] == '\0')
+                throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
+                                      taskName);
+            DataSource* taskDs = provider.getDataSource(dsId);
+            if (!taskDs)
+                throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
+                                      dsId, taskName);
+            
+            if (!container.addTask(new Task(taskConfig, taskName, taskDs, dsInternal)))
+                throw ConfigException("Failed to add task. Task '%s' already registered.",
+                                      taskName);
+        }
+        catch (ConfigException& exc)
+        {
+            logger.error("Load of tasks failed ! Config exception: %s", exc.what());
+            throw;
+        }
+    }
     logger.info("Tasks loaded.");
 
     logger.info("Loading task schedule ...");
