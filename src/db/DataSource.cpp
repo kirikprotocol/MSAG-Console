@@ -270,6 +270,7 @@ int WatchDog::startTimer(Connection* connection, uint32_t timeout)
     __trace2__("DS WatchDog> Timer #%u start for connection %x timeout=%d",
                 timer, connection, timeout);
     awake.Signal();
+    return timer;
 }
 void WatchDog::stopTimer(int timer)
 {
