@@ -761,21 +761,33 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 					__tc_fail__(5);
 				}
 				__tc_ok_cond__;
-				__tc__("processDeliverySm.deliveryReceipt.checkProfile");
-				//switch (origPdu->get_message().get_registredDelivery() &
-				//	SMSC_DELIVERY_RECEIPT_BITS)
+				//расширенная проверка полей
+				__tc__("processDeliverySm.deliveryReceipt.checkFieldsExt");
+				uint8_t regDelivery;
 				switch (pduData->reportOptions)
 				{
-					//delivery receipt получено, но не запрашивался
 					case ProfileReportOptions::ReportNone:
+						regDelivery =
+							origPdu->get_message().get_registredDelivery() &
+							SMSC_DELIVERY_RECEIPT_BITS;
+						break;
+					case ProfileReportOptions::ReportFull:
+						regDelivery = FINAL_SMSC_DELIVERY_RECEIPT;
+						break;
+					default:
+						__unreachable__("Invalid report options");
+				}
+				switch (regDelivery)
+				{
+					//delivery receipt получено, но не запрашивался
+					case NO_SMSC_DELIVERY_RECEIPT:
 						__tc_fail__(1);
 						break;
-					/*
 					case FAILURE_SMSC_DELIVERY_RECEIPT:
 						//Должна быть причина ошибки
 						if (!pdu.get_optional().has_networkErrorCode())
 						{
-							__tc_fail__(11);
+							__tc_fail__(2);
 						}
 						//Сообщение не может быть успешно доставлено
 						switch (pdu.get_optional().get_messageState())
@@ -784,7 +796,7 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 							case SMPP_DELIVERED_STATE:
 							case SMPP_ACCEPTED_STATE:
 							case SMPP_UNKNOWN_STATE:
-								__tc_fail__(12);
+								__tc_fail__(3);
 								break;
 							case SMPP_EXPIRED_STATE:
 							case SMPP_DELETED_STATE:
@@ -796,15 +808,14 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 								__unreachable__("Invalid state");
 						}
 						break;
-					*/
-					case ProfileReportOptions::ReportFull:
+					case FINAL_SMSC_DELIVERY_RECEIPT:
 						//Статус должен быть финальным
 						switch (pdu.get_optional().get_messageState())
 						{
 							case SMPP_ENROUTE_STATE:
 							case SMPP_ACCEPTED_STATE:
 							case SMPP_UNKNOWN_STATE:
-								__tc_fail__(2);
+								__tc_fail__(4);
 								break;
 							case SMPP_DELIVERED_STATE:
 							case SMPP_EXPIRED_STATE:
@@ -818,12 +829,11 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 						}
 						break;
 					default:
-						//Некорректное значение
-						__tc_fail__(3);
+						__unreachable__("Invalid registered delivery option");
 				}
 				__tc_ok_cond__;
-				//проверить информацию о доставленной pdu (код ошибки и статус)
-				__tc__("processDeliverySm.deliveryReceipt.checkStatus");
+				__tc__("processDeliverySm.deliveryReceipt.checkErrorCode");
+				//проверить информацию о доставленной pdu (код ошибки)
 				if (pdu.get_optional().has_networkErrorCode() &&
 					!pduData->deliveryStatus)
 				{
@@ -850,26 +860,29 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 						__tc_fail__(4);
 					}
 				}
+				__tc_ok_cond__;
+				//проверить информацию о доставленной pdu (статус)
+				__tc__("processDeliverySm.deliveryReceipt.checkState");
 				switch (pdu.get_optional().get_messageState())
 				{
 					case SMPP_ENROUTE_STATE:
 					case SMPP_ACCEPTED_STATE:
 					case SMPP_UNKNOWN_STATE:
-						__tc_fail__(11);
+						__tc_fail__(1); //ничего не произошло, нотификация не нужна
 						break;
 					case SMPP_DELIVERED_STATE:
-						if (pduData->deliveryReceiptFlag != PDU_RECEIVED_FLAG)
+						if (pduData->deliveryFlag != PDU_RECEIVED_FLAG)
 						{
-							__tc_fail__(12);
+							__tc_fail__(2);
 						}
 						break;
 					case SMPP_EXPIRED_STATE:
 					case SMPP_DELETED_STATE:
 					case SMPP_UNDELIVERABLE_STATE:
 					case SMPP_REJECTED_STATE:
-						if (pduData->deliveryReceiptFlag != PDU_NOT_EXPECTED_FLAG)
+						if (pduData->deliveryFlag != PDU_NOT_EXPECTED_FLAG)
 						{
-							__tc_fail__(13);
+							__tc_fail__(3);
 						}
 						break;
 					default:
@@ -990,6 +1003,7 @@ void SmppReceiverTestCases::processIntermediateNotification(
 					__tc_fail__(5);
 				}
 				__tc_ok_cond__;
+				/*
 				__tc__("processDeliverySm.intermediateNotification.checkProfile");
 				if (pduData->reportOptions == ProfileReportOptions::ReportNone)
 				{
@@ -997,6 +1011,7 @@ void SmppReceiverTestCases::processIntermediateNotification(
 				}
 				__tc_ok_cond__;
 				//__tc__("processDeliverySm.intermediateNotification.checkStatus");
+				*/
 				//время доставки попадает в ожидаемый интервал
 				__tc__("processDeliverySm.intermediateNotification.checkTime");
 				if (recvTime < pduData->submitTime)
