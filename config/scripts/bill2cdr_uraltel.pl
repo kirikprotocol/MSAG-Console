@@ -78,33 +78,40 @@ for($indir,$outdir,$tmpdir,$arcdir)
 opendir(D,$indir) or die "failed to read $indir";
 my @dir=readdir(D);
 closedir(D);
+
+my @monthes=qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
+
 for(@dir)
 {
   next unless $_=~/\.csv$/;
   my $infile=$indir.$_;
   my $ofn=$_;
-  $ofn=~s/\.csv$/\.cdr/;
+  $ofn=~s/\.csv$/\.001/;
   $ofn=~s/_//;
   $ofn=~/(\d+)/;
   my $timestamp=$1;
-  {
-    $timestamp=~/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/;
-    my $t1=timegm($6,$5,$4,$3,$2-1,$1-1900);
-    my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($t1);
+  $timestamp=~/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/;
+  my $t1=timegm($6,$5,$4,$3,$2-1,$1-1900);
+  my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($t1);
 
-    $year+=1900;
-    $mon++;
-    $timestamp="$year$mon$mday$hour$min$sec";
-  }
+  $year+=1900;
+  my $curmon=$monthes[$mon];
+  $mon++;
+  $timestamp="$year$mon$mday$hour$min$sec";
+
   my $tmpfile=$tmpdir.$ofn;
-  my $outfile=$outdir.$ofn;
+  my $outfile=$outdir."SMS2_$mday$curmon${year}_${hour}&${min}&${sec}_".$ofn;
+
   $header="90$timestamp".(' 'x81).'0'.(' 'x7).'90'.(' 'x17).'0'.(' 'x385);
   $footer="90$timestamp".(' 'x81)."0\n$crc";
   process($infile,$tmpfile);
-  if(!move($tmpfile,$outfile))
+  if(-f $tmpfile)
   {
-    unlink $tmpfile;
-    die "failed to move $tmpfile to $outfile";
+    if(!move($tmpfile,$outfile))
+    {
+      unlink $tmpfile;
+      die "failed to move $tmpfile to $outfile";
+    }
   }
   move($infile,$arcdir);
 }
@@ -173,9 +180,9 @@ sub process{
   my ($inf,$outf)=@_;
   my $in=IO::File->new;
   if(!$in->open('<'.$inf)){die "Faield to open input file $inf"};
-  my $out=IO::File->new;
-  if(!$out->open('> '.$outf)){die "Faield to open output file $outf"};
-  print $out "$header\n";
+  my $out=DelayedFile->new('>'.$outf);
+  $out->{header}=$header."\n";
+  $out->{footer}=$footer."\n";
   my $csv=Text::CSV_XS->new({'binary'=>1});
   my $hdr=$csv->getline($in);
   die "Input file parsing failed" unless $hdr;
@@ -222,7 +229,6 @@ sub process{
       outrow($out,$outfields);
     }
   }
-  print $out "$footer\n";
 }
 
 
@@ -259,3 +265,53 @@ msg_id,
 '0',
 '0'
 =cut
+
+package DelayedFile;
+use IO::File;
+use strict;
+
+sub new{
+  my $class=shift;
+  $class=ref($class) if ref($class);
+  my $fn=shift;
+  die "Filename wasn't specified in constructor of DelayedFile" unless $fn;
+  return bless {filename=>$fn},$class;
+}
+
+sub print{
+  my $self=shift;
+  unless($self->{opened})
+  {
+    $self->{handle}=IO::File->new;
+    $self->{handle}->open($self->{filename}) || die "Failed to open ".$self->{filename};
+    $self->{opened}=1;
+    if($self->{header})
+    {
+      $self->{handle}->print($self->{header});
+    }
+  }
+  $self->{handle}->print(@_);
+}
+
+sub close{
+  my $self=shift;
+  if($self->{opened})
+  {
+    $self->{handle}->close();
+    $self->{opened}=0;
+  }
+}
+
+sub DESTROY{
+  my $self=shift;
+  if($self->{opened})
+  {
+    if($self->{footer})
+    {
+      $self->print($self->{footer});
+    }
+    $self->{handle}=undef;
+  }
+}
+
+1;
