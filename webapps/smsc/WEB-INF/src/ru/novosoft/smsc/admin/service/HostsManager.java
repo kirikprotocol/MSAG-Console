@@ -19,7 +19,7 @@ import java.util.*;
  * Date: Jan 20, 2003
  * Time: 6:23:33 PM
  */
-public class HostsManager
+public class hOstsManager
 {
 	private Category logger = Category.getInstance(this.getClass());
 
@@ -196,8 +196,7 @@ public class HostsManager
 			throw new AdminException("Couldn't add new service \"" + id + "\": service with that ID already contained in system.");
 		if (smeManager.contains(id))
 			throw new AdminException("Couldn't add new service \"" + id + "\": SME with that ID already contained in system.");
-
-    final File serviceFolder = new File(daemonManager.getServiceDaemon(serviceInfo.getHost()).getDaemonServicesFolder(), serviceInfo.getId());
+    final File serviceFolder = new File(daemonManager.get(serviceInfo.getHost()).getDaemonServicesFolder(), serviceInfo.getId());
 		try
 		{
       serviceManager.deployAdministrableService(incomingZip, serviceInfo, serviceFolder);
