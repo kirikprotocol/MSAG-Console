@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+    
+    <section name="StartupLoader">
+        <section name="DataSourceDrivers">
+            <section name="OCIDataSourceDriver">
+                <param name="type" type="string">OCI</param>
+                <param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+            </section>
+        </section>
+    </section>
+    
+    <section name="MCISme">
+
+        <param name="Address" type="string">555</param>
+	<param name="SvcType" type="string">MCISme</param>
+        <param name="ProtocolId" type="int">111</param>
+	<param name="DaysValid"  type="int">1</param>
+	<param name="CallingMask" type="string">/^(?:\.3\.\d\.\d{10}|\.4\.\d\.\d{1,20})$/</param>
+	<param name="CalledMask"  type="string">/^\d{10}$/</param>
+	
+	<param name="unrespondedMessagesMax" type="int">5</param>
+	<param name="unrespondedMessagesSleep" type="int">20</param>
+	
+	<param name="responceWaitTime" type="string">00:00:05</param>
+	<param name="receiptWaitTime" type="string">00:00:05</param>
+	
+	<param name="inputQueueSize"  type="int">1000</param>
+	<param name="outputQueueSize" type="int">1000</param>
+	
+	<param name="maxRowsPerMessage" type="int">5</param>
+	<param name="forceInform" type="bool">true</param>
+	<param name="forceNotify" type="bool">true</param>
+	<param name="forceSeparate" type="bool">false</param>
+			
+        <section name="SMPPThreadPool">
+            <param name="max" type="int">15</param>
+            <param name="init" type="int">5</param>
+        </section>  
+
+        <section name="Admin">
+            <param name="host" type="string">smsc</param>
+            <param name="port" type="int">9759</param>
+	</section>
+
+        <section name="SMSC">
+            <param name="host" type="string">smsc</param>
+            <param name="port" type="int">9229</param>
+            <param name="sid" type="string">MCISme</param>
+            <param name="password" type="string"></param>
+	    <param name="timeout" type="int">10</param>
+        </section>  
+	
+        <section name="Circuits">
+	    <param name="hsn" type="int">1</param>
+	    <param name="spn" type="int">2</param>
+    	    <param name="tsm" type="string">123ABC</param>
+	</section>
+
+	<section name="DataSource">
+    	    <param name="type" type="string">OCI</param>
+            <param name="connections" type="int">10</param>
+            <param name="dbInstance" type="string">smsc</param>
+            <param name="dbUserName" type="string">smsc_makar</param>
+            <param name="dbUserPassword" type="string">smsc_makar</param>
+	    <param name="watchdog" type="bool">false</param>
+	    <section name="jdbc">
+	        <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
+	        <param name="source" type="string">jdbc:oracle:thin:@dark:1521:smsc</param>
+	    </section>
+	</section>
+
+        <section name="Reasons">
+	  <section name="Absent">
+    	    <param name="cause" type="int">20</param>
+	    <param name="inform" type="bool">true</param>
+    	  </section>
+          <section name="Busy">
+    	    <param name="cause" type="int">17</param>
+    	    <param name="inform" type="bool">true</param>
+          </section>
+          <section name="NoReply">
+    	    <param name="cause" type="int">19</param>
+    	    <param name="inform" type="bool">true</param>
+          </section>
+          <section name="Other">
+    	    <param name="cause" type="int">21</param>
+    	    <param name="inform" type="bool">false</param>
+          </section>
+          <section name="Unconditional">
+	    <param name="cause" type="int">21</param>
+	    <param name="inform" type="bool">false</param>
+	  </section>
+	</section>
+    
+        <section name="Templates">
+
+	  <section name="Inform">
+    	    <param name="default" type="int">3</param>
+
+            <section name="Template 1 (Detailed)">
+	      <param name="group" type="bool">false</param>
+	      <param name="id" type="int">1</param>
+              <param name="message" type="string">Âàì ($$string arg="abonent"$$) çâîíèëè $$int32 arg="total"$$ðàç:$$string arg="rows"$$ ÌÒÑ</param>
+              <param name="singleRow" type="string"> $$string arg="caller"$$ â $$date arg="date" pattern="HH:mm dd MMMM"$$;</param>
+            </section>
+    	    <section name="Template 2 (Complex)">
+    	      <param name="group" type="bool">true</param>
+              <param name="id" type="int">2</param>
+              <param name="message" type="string">Âàì çâîíèëè:$$string arg="rows"$$ ÌÒÑ</param>
+              <param name="multiRow" type="string"> $$string arg="caller"$$ - $$int32 arg="count"$$ âûçîâîâ, ïîñëåäíèé $$date arg="date" pattern="HH:mm dd.MM.yy"$$;</param>
+              <param name="singleRow" type="string"> $$string arg="caller"$$ â $$date arg="date" pattern="HH:mm dd.MM.yy"$$;</param>
+            </section>
+            <section name="Template 3 (Custom)">
+              <param name="group" type="bool">true</param>
+              <param name="id" type="int">3</param>
+              <param name="message" type="string">Âàì çâîíèëè:$$string arg="rows"$$ ÌÒÑ</param>
+              <param name="multiRow" type="string"> $$string arg="caller"$$ âûçîâîâ $$int32 arg="count"$$, ïîñëåäíèé âûçîâ $$date arg="date" pattern="HH:mm dd/MM/yy"$$;</param>
+              <param name="singleRow" type="string"> $$string arg="caller"$$ âûçîâîâ $$int32 arg="count"$$, ïîñëåäíèé âûçîâ $$date arg="date" pattern="HH:mm dd/MM/yy"$$;</param>
+            </section>
+            <section name="Template 4 (English)">
+              <param name="group" type="bool">true</param>
+              <param name="id" type="int">4</param>
+              <param name="message" type="string">Missed calls ($$int32 arg="total"$$):$$string arg="rows"$$ MTS</param>
+              <param name="multiRow" type="string"> $$string arg="caller"$$ ($$int32 arg="count"$$), last at $$date arg="date" pattern="HH:mm dd MMMM"$$;</param>
+              <param name="singleRow" type="string"> $$string arg="caller"$$ at $$date arg="date" pattern="HH:mm dd MMMM"$$;</param>
+            </section>
+          </section>
+
+          <section name="Notify">
+            <param name="default" type="int">2</param>
+
+            <section name="Notification 1 (Detailed)">
+              <param name="id" type="int">1</param>
+              <param name="message" type="string">Äîáðûé äåíü $$string arg="caller"$$! Àâîíåíò $$string arg="abonent"$$ äîñòóïåí â ñåòè. ÌÒÑ</param>
+            </section>
+            <section name="Notification 2 (Custom)">
+              <param name="id" type="int">2</param>
+              <param name="message" type="string">Àáîíåíò $$string arg="abonent"$$ äîñòóïåí. ÌÒÑ</param>
+            </section>
+            <section name="Notification 3 (English)">
+              <param name="id" type="int">3</param>
+              <param name="message" type="string">Abonent $$string arg="abonent"$$ is online. MTS</param>
+            </section>
+	  </section>
+      
+      </section> <!-- Templates -->
+        
+    </section> <!-- MCISme -->
+    
+</config>
