@@ -6,6 +6,7 @@
 #include "util/debug.h"
 #include "smsccmd.h"
 #include "core/synchronization/Event.hpp"
+#include <vector>
 
 #if !defined __Cpp_Header__smeman_smeproxy_h__
 #define __Cpp_Header__smeman_smeproxy_h__
@@ -73,6 +74,20 @@ public:
   /// и длина очереди еще не упала до допустимого значения
   virtual void putCommand(const SmscCommand& command) = 0;
   virtual bool getCommand(SmscCommand& cmd) = 0;
+  virtual int getCommandEx(std::vector<SmscCommand>& cmds,int& mx,SmeProxy* prx)
+  {
+    SmscCommand cmd;
+    if(getCommand(cmd))
+    {
+      cmds.push_back(cmd);
+      cmd.setProxy(prx);
+      mx=1;
+    }else
+    {
+      mx=0;
+    }
+    return 0;
+  }
   virtual SmeProxyState getState() const = 0;
   virtual void init() = 0;
   virtual SmeProxyPriority getPriority()const {return SmeProxyPriorityDefault;};

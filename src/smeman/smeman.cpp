@@ -312,9 +312,11 @@ SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
 // SmeDispatcher implementation
 void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
 {
+  static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smeman");
   {
     frames.clear();
     __synchronized__
+    int count=0;
     for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
     {
       if ( (*p) )
@@ -322,12 +324,24 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
         if ( (*p)->deleted || (*p)->proxy==NULL) continue;
 
         try {
+          /*
           SmscCommand cmd;
           if((*p)->proxy->getCommand(cmd))
           {
             frames.push_back(cmd);
             frames.back().setProxy((*p));
           }
+          */
+          int prio=(*p)->info.priority/1000;
+          if(prio<0)prio=0;
+          if(prio>31)prio=31;
+          prio+=1;
+          int cnt=(*p)->proxy->getCommandEx(frames,prio,*p);
+          if(prio>0)
+          {
+            info2(log,"taken from %s:%d, inqueue:%d",(*p)->info.systemId.c_str(),prio,cnt);
+          }
+          count+=cnt;
         }catch(exception& e)
         {
           __warning2__("exception %s when getting command",e.what());
@@ -335,6 +349,7 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
 
       }
     }
+    if(count)info2(log,"total commands in queues:%d",count);
   }
   if ( !frames.size() ) dispatcher.waitOnMon(timeout);
 }

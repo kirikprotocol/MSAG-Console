@@ -46,6 +46,7 @@ public:
     submitCount=0;
     processLimit=procLimit;
     processTimeout=timeout;
+    inQueueCount=0;
     __trace2__("SmppProxy: processLimit=%d, processTimeout=%u",processLimit,processTimeout);
   }
   virtual ~SmppProxy(){}
@@ -122,8 +123,31 @@ public:
     if(!inqueue.Pop(cmd))return false;
     trace2("get command:%p",*((void**)&cmd));
     MutexGuard g(mutexin);
+    inQueueCount--;
     if(cmd->get_commandId()==SUBMIT)submitCount--;
     return true;
+  }
+  virtual int getCommandEx(std::vector<SmscCommand>& cmds,int& mx,SmeProxy* prx)
+  {
+    if(inQueueCount==0)
+    {
+      mx=0;
+      return 0;
+    }
+    MutexGuard g(mutexin);
+    int cnt=inQueueCount<mx?inQueueCount:mx;
+    mx=0;
+    SmscCommand cmd;
+    for(int i=0;i<cnt;i++)
+    {
+      if(!inqueue.Pop(cmd))break;
+      inQueueCount--;
+      cmd.setProxy(prx);
+      cmds.push_back(cmd);
+      mx++;
+      if(cmd->get_commandId()==SUBMIT)submitCount--;
+    }
+    return inQueueCount;
   }
 
   void putIncomingCommand(const SmscCommand& cmd)
@@ -227,9 +251,9 @@ public:
           submitCount++;
         }
         else
-        if(inqueue.Count()>=totalLimit)
+        if(inQueueCount>=totalLimit)
         {
-          throw ProxyQueueLimitException(inqueue.Count(),totalLimit);
+          throw ProxyQueueLimitException(inQueueCount,totalLimit);
         }
         if(cmd->get_commandId()==DELIVERY_RESP)
         {
@@ -237,6 +261,7 @@ public:
         }
       }
       inqueue.Push(cmd);
+      inQueueCount++;
     }
     if(managerMonitor)managerMonitor->Signal();
   }
@@ -310,7 +335,7 @@ public:
   bool hasInput()const
   {
     //MutexGuard g(mutexin);
-    return inqueue.Count()!=0;
+    return inQueueCount!=0;
   }
   virtual void attachMonitor(ProxyMonitor* mon)
   {
@@ -426,6 +451,7 @@ protected:
   SmeIndex smeIndex;
   //smsc::core::buffers::Array<SmscCommand> inqueue;
   smsc::core::buffers::FastMTQueue<SmscCommand> inqueue;
+  int inQueueCount;
   smsc::core::buffers::PriorityQueue<SmscCommand,smsc::core::buffers::CyclicQueue<SmscCommand>,0,31> outqueue;
   bool forceDc;
 
