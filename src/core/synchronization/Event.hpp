@@ -96,7 +96,16 @@ public:
     mutex.Unlock();
     return retval;
   }
-#endif  
+#endif
+#ifndef _WIN32
+  void SignalAll()
+  {
+    mutex.Lock();
+    signaled=1;
+    cond_broadcast(&event);
+    mutex.Unlock();
+  }
+#endif
 protected:
 #ifdef _WIN32
   HANDLE event;
