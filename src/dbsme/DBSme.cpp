@@ -81,7 +81,7 @@ public:
         Body& body = sms.getMessageBody();
 
         std::string input = body.getStrProperty(Tag::SMPP_SHORT_MESSAGE);
-        __trace2__("Input Data for DBSme '%s'", input.c_str());
+        //__trace2__("Input Data for DBSme '%s'", input.c_str());
         int bodyLen = body.getIntProperty(Tag::SMPP_SM_LENGTH);
         input.erase(bodyLen);
         __trace2__("Input Data for DBSme (improved) '%s'", input.c_str());
@@ -154,7 +154,7 @@ public:
         {
         case SmppCommandSet::DELIVERY_SM:
             
-            ((PduXSm*)pdu)->dump(TRACE_LOG_STREAM);
+            //((PduXSm*)pdu)->dump(TRACE_LOG_STREAM);
             printf("\nReceived DELIVERY_SM Pdu.\n");
             /*printf("\nReceived DELIVERY_SM Pdu. Message: '%s'\n",
                    ((PduXSm*)pdu)->get_message().get_shortMessage());*/

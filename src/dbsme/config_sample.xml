@@ -12,6 +12,9 @@
     </section>
     
     <section name="DBSme">
+
+        <param name="SvcType" type="string">DBSme</param>
+        <param name="ProtocolId" type="int">111</param>
         
         <section name="ThreadPool">
             <param name="max" type="int">15</param>
@@ -49,11 +52,11 @@
                             update sms_test set temp=temp
                         </param>
                         <param name="input" type="string">
-                            empty
+                            \\empty \$$ " \" \\" ""
                         </param>
 <param name="output" type="string">
 Default Job called !.
-Current date/time   : $$date pattern="dd MMMM, yyyy hh:mm t" default="now"$$
+Current date/time   : \"$$date pattern="dd MMMM, yyyy hh:mm t" default="now"$$\"
 Rows affected count is  : $$int32 arg=1$$
 Float       : $$float precision="2" default="3.1415"$$
 Double      : $$double digits="8" default="3.1415"$$
@@ -69,7 +72,7 @@ Long-Double : $$long-double digits="10" default="3.1415"$$
                             select temp, str, dt from sms_test where temp=:1 or str=:2 or dt=:3
                         </param>
                         <param name="input" type="string">
-                            $$string arg=2  nnn="\\\""$$
+                            $$string arg=2  nn="\\\"" ff="\"" ee="\\" dd= " \$$ " tt="\\\e"$$
                             $$int16 arg="1"     $$
                             $$date arg=3 pattern="dd MMMM, yyyy hh:mm t" default="now"$$
                         </param>

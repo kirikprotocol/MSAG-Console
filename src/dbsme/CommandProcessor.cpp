@@ -214,6 +214,8 @@ void DataProvider::process(Command& command)
         const char* input = command.getInData();
         std::string str = "";
         
+        while (input && isspace(input[curPos])) curPos++; 
+        
         while (input && isalnum(input[curPos]))
             str += input[curPos++];
         
