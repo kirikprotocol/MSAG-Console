@@ -28,9 +28,10 @@ public class SmsView
   {
     if (smsc == null) {
       this.smsc = appContext.getSmsc();
-     // operative.setDataSource(appContext.getConnectionPool());
-      archive.init(appContext);
+      // operative.setDataSource(appContext.getConnectionPool());
       operative.init(appContext);
+      archive.init(appContext);
+
     }
   }
 

@@ -2,7 +2,6 @@ package ru.novosoft.smsc.admin.smsview;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.smsview.archive.Message;
-import ru.novosoft.smsc.admin.smsview.archive.QueryMessage;
 import ru.novosoft.smsc.admin.smsview.operative.RsFileMessage;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
@@ -63,7 +62,7 @@ public class SmsOperativeSource extends SmsSource
     } catch (FileNotFoundException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     }
-    QueryMessage request = new QueryMessage(query);
+    // QueryMessage request = new QueryMessage(query);
     Message responce;
     ;
 
