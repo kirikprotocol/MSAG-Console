@@ -246,6 +246,9 @@ namespace smsc { namespace wsme
 
 }}
 
+extern bool compareMaskAndAddress(const std::string mask, 
+                                  const std::string addr);
+
 #endif // SMSC_WSME_PROCESSOR
 
 

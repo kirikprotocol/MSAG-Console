@@ -78,6 +78,7 @@ bool WSmeProcessor::processNotification(const std::string msisdn, std::string& o
     {
         std::string lang;
         bool isLang = langManager->getLangCode(msisdn, lang);
+        __trace2__("Lang is '%s'", isLang ? lang.c_str():"DEFAULT");
         return adManager->getAd(msisdn, lang, isLang, out);
     }
     return false;
@@ -87,25 +88,22 @@ void WSmeProcessor::processResponce(const std::string msisdn,
     throw (ProcessException)
 {
     __require__(adManager);
+    __trace__("Processing responce message ...");
     adManager->respondAd(msisdn, msgid, responded);
+    __trace__("Processed responce message.");
 }
 
 void WSmeProcessor::processReceipt(const std::string msgid, bool receipted)
     throw (ProcessException)
 {
     __require__(adManager);
+    __trace__("Processing receipt message ...");
     adManager->receiptAd(msgid, receipted);
+    __trace__("Processed receipt message.");
 }
 
 
 /* ------------------------ Managers Implementation ------------------------ */
-
-bool compareMaskAndAddress(const std::string mask, 
-                           const std::string addr)
-{
-    // TODO: implement check
-    return true;
-}
 
 /* ------------------------ VisitorManager ------------------------ */
 VisitorManager::VisitorManager(DataSource& _ds) 
@@ -169,9 +167,15 @@ bool VisitorManager::isVisitor(const std::string msisdn)
 { 
     MutexGuard  guard(visitorsLock);
 
-    for (int i=0; i<visitors.Count(); i++)
-        if (compareMaskAndAddress(visitors[i], msisdn)) 
+    for (int i=0; i<visitors.Count(); i++) {
+        __trace2__("Checking visitor '%s' by mask '%s'", 
+                   msisdn.c_str(), visitors[i].c_str());
+        if (compareMaskAndAddress(visitors[i], msisdn)) {
+            __trace2__("Visitor '%s' conform with mask '%s'", 
+                       msisdn.c_str(), visitors[i].c_str());
             return true;
+        }
+    }
 
     return false;
 }
@@ -308,6 +312,8 @@ bool AdRepository::getAd(int id, const std::string lang, bool isLang,
     Statement* statement = 0; 
     Connection* connection = 0;
 
+    __trace2__("AdRepository::getAd called, id=%d", id);
+
     try
     {
         connection = ds.getConnection();
@@ -328,6 +334,7 @@ bool AdRepository::getAd(int id, const std::string lang, bool isLang,
         
         if (!rs->fetchNext()) return false;
         ad = rs->getString(1);
+        __trace2__("Got ad: '%s'", ad.c_str());
         
         if (rs) delete rs;
         if (statement) delete statement;
@@ -388,6 +395,8 @@ bool AdHistory::getId(const std::string msisdn, int& id)
     Statement* updateStmt = 0; 
     Connection* connection = 0;
 
+    __trace2__("AdHistory::getId called for '%s'.", msisdn.c_str());
+
     try
     {
         connection = ds.getConnection();
@@ -402,6 +411,8 @@ bool AdHistory::getId(const std::string msisdn, int& id)
         if (!rs || !rs->fetchNext()) 
         {
             id = idManager.getFirstId();
+            __trace2__("History for '%s' not found, inserting id=%d",
+                       msisdn.c_str(), id);
             insertStmt = connection->createStatement(SQL_INSERT_HISTORY_INFO);
             insertStmt->setString  (1, msisdn.c_str());
             insertStmt->setInt32   (2, id);
@@ -409,17 +420,22 @@ bool AdHistory::getId(const std::string msisdn, int& id)
             insertStmt->executeUpdate();
             delete insertStmt; insertStmt = 0;
             result = true;
+            __trace__("Inserted");
         }
         else
         {
+            __trace2__("History for '%s' found", msisdn.c_str());
             uint32_t last_id = rs->getInt32(1);
             uint8_t  st = rs->getUint8(2);
             time_t interval = time(NULL) - rs->getDateTime(3);
-
+            
             if (st == 0 && (interval <= lifePeriod)) {
+                __trace2__("Life period is not expired, interval=%d !", 
+                           interval);
                 result = false;
             } else {
                 id = idManager.getNextId(last_id);
+                __trace2__("Last id=%d, newid=%d", last_id, id);
                 updateStmt = connection->createStatement(SQL_UPDATE_NOTIFY_HISTORY_INFO);
                 updateStmt->setInt32   (1, id);
                 updateStmt->setDateTime(2, time(NULL));
@@ -427,6 +443,7 @@ bool AdHistory::getId(const std::string msisdn, int& id)
                 updateStmt->executeUpdate();
                 delete updateStmt; updateStmt = 0;
                 result = true;
+                __trace2__("Updated");
             }
         }
         
@@ -593,6 +610,7 @@ bool AdManager::getAd(const std::string msisdn,
 {
     __require__(history && repository);
     
+    __trace__("AdManager::getAd called");
     int id = 0;
     if (!(history->getId(msisdn, id))) return false;
     return repository->getAd(id, lang, isLang, ad);

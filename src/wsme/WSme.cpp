@@ -50,6 +50,28 @@ static bool convertMSISDNStringToAddress(const char* string, Address& address)
     return true;
 };
 
+bool compareMaskAndAddress(const std::string mask, 
+                           const std::string addr)
+{
+    try 
+    {
+        Address ma(mask.c_str());
+        Address aa(addr.c_str());
+        
+        if (ma.length != aa.length || ma.type != aa.type || ma.plan != aa.plan)
+            return false;
+
+        for (int i=0; i<ma.length; i++)
+            if ((ma.value[i] != '?') && (ma.value[i] != aa.value[i])) 
+                return false;
+    } 
+    catch (...) 
+    {
+        return false;
+    }
+    return true;
+}
+
 class WSmeTask : public ThreadedTask
 {
 protected:
@@ -78,12 +100,16 @@ protected:
 
             if (isReceipt)
             {
+                __trace__("Got receipt");
                 if (((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
                 {
                     const char* msgid = 
                         ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
-                    if (msgid && msgid[1] != '\0')
+                    if (msgid && msgid[1] != '\0') {
+                        __trace2__("Got receipt, msgid=%s", msgid);
                         processor.processReceipt(msgid, true);
+                    }
+                        
                     // ??? TODO: check receipted or not
                 } 
                 return;
@@ -93,6 +119,8 @@ protected:
             int smsTextBuffLen = getSmsText(&request, 
                 (char *)&smsTextBuff, sizeof(smsTextBuff));
             __require__(smsTextBuffLen < MAX_ALLOWED_MESSAGE_LENGTH);
+            
+            __trace2__("Got notification message: %s", smsTextBuff);
 
             std::string msisdn;
             Address visitorAddress;
@@ -104,6 +132,7 @@ protected:
                 throw Exception("Visitor '%s' is not valid MSISDN address",
                                 (smsTextBuff) ? smsTextBuff:"");
             
+            __trace__("Processing notification message ...");
             std::string outMsgStr = ""; 
             if (processor.processNotification(msisdn, outMsgStr))
             {
@@ -121,6 +150,7 @@ protected:
                 responce.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
                                         request.getIntProperty(
                                         Tag::SMPP_USER_MESSAGE_REFERENCE));
+                responce.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
 
                 const char* out = outMsgStr.c_str();
                 int outLen = outMsgStr.length();
@@ -161,15 +191,19 @@ protected:
                 {
                     // check responded or not, get msgid here
                     const char* msgid = ((PduXSmResp*)resp)->get_messageId();
-                    if (msgid && msgid[1] != '\0')
+                    if (msgid && msgid[1] != '\0') {
+                        __trace2__("Got responce, msgid=%s", msgid);
                         processor.processResponce(msisdn, msgid, true);
+                    }
                     
                     disposePdu((SmppHeader*)resp);
                 }
             }
+            __trace__("End message processing.");
         }
         catch (exception& exc)
         {
+            __trace2__("Error handled: %s", exc.what());
             log.error(exc.what());
         }
     };
