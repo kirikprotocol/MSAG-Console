@@ -455,7 +455,7 @@ void Smsc::init(const SmscConfigs& cfg)
       gwcfg.password=(val=std::auto_ptr<char>(cv->getString((*it+".password").c_str()))).get();;
       gwcfg.smppTimeOut=cv->getInt((*it+".responseTimeout").c_str());
       GatewaySme *gwsme=new GatewaySme(gwcfg,&smeman);
-      gwsme->setId(gwcfg.sid,smeman.lookup(gwcfg.sid));
+      gwsme->setId(gwcfg.sid,smeman.lookup(*it));
       uint8_t uid=cv->getInt((*it+".uniqueMsgIdPrefix").c_str());
       if(gwSmeMap[uid])
       {
@@ -463,7 +463,7 @@ void Smsc::init(const SmscConfigs& cfg)
       }
       gwSmeMap[uid]=gwsme;
       gwsme->setPrefix(uid);
-      smeman.registerInternallSmeProxy(gwcfg.sid,gwsme);
+      smeman.registerInternallSmeProxy(*it,gwsme);
       tp.startTask(gwsme);
     }
   }
