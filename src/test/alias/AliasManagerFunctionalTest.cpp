@@ -8,6 +8,7 @@ using log4cpp::Category;
 using smsc::util::Logger;
 using smsc::alias::AliasInfo;
 using smsc::test::sms::SmsUtil;
+using smsc::test::core::AliasRegistry;
 using smsc::test::core::operator<<;
 using namespace smsc::test::alias; //constants, AliasManagerTestCases
 using namespace smsc::test::util; //TCResultFilter, CheckList
@@ -16,20 +17,24 @@ static Category& log = Logger::getCategory("AliasManagerFunctionalTest");
 
 class AliasManagerFunctionalTest
 {
+	AliasManager* aliasMan;
+	AliasRegistry* aliasReg;
 	AliasManagerTestCases tc;
 	vector<Address*> addr;
 	//AliasRegistry aliasReg;
 	vector<TCResultStack*> stack;
 
 public:
-	AliasManagerFunctionalTest() : tc(new AliasManager(), new AliasRegistry()) {}
+	AliasManagerFunctionalTest()
+		: aliasMan(new AliasManager()), aliasReg(new AliasRegistry()),
+		tc(aliasMan, aliasReg) {}
 	~AliasManagerFunctionalTest();
 	void executeTest(TCResultFilter* filter, int numAddr);
 	void printAliases();
 
 private:
 	void executeTestCases(const Address& alias, const Address& addr);
-	void printAlias(const AliasInfo* aliasData);
+	void printAlias(const AliasInfo& aliasData);
 };
 
 AliasManagerFunctionalTest::~AliasManagerFunctionalTest()
@@ -42,25 +47,27 @@ AliasManagerFunctionalTest::~AliasManagerFunctionalTest()
 	{
 		delete stack[i];
 	}
+	delete aliasMan;
+	delete aliasReg;
 }
 
-void AliasManagerFunctionalTest::printAlias(const AliasInfo* alias)
+void AliasManagerFunctionalTest::printAlias(const AliasInfo& alias)
 {
 	ostringstream os;
-	os << *alias;
+	os << alias;
 	log.debug("[%d]\t%s", thr_self(), os.str().c_str());
 }
 
 void AliasManagerFunctionalTest::printAliases()
 {
-	/*
-	RouteRegistry::RouteIterator* it = routeReg.iterator();
-	for (; it->hasNext(); (*it)++)
+	log.debug("*** Begin of alias registry ***");
+	AliasRegistry::AliasIterator* it = aliasReg->iterator();
+	while (const AliasHolder* aliasHolder = it->next())
 	{
-		printRoute(**it);
+		printAlias(aliasHolder->aliasInfo);
 	}
 	delete it;
-	*/
+	log.debug("*** End of alias registry ***");
 }
 
 void AliasManagerFunctionalTest::executeTestCases(
@@ -71,9 +78,9 @@ void AliasManagerFunctionalTest::executeTestCases(
 	//—оздание нового стека дл€ пары alias, addr
 	stack.push_back(new TCResultStack());
 
-	//–егистраци€ алиаса с преобразованием addr->alias и alias->addr, 1/8
-	//–егистраци€ алиаса с преобразованием только alias->addr, 1/8
-	//–егистраци€ алиаса с преобразованием только addr->alias, 1/8
+	//–егистраци€ алиаса с преобразованием addr->alias и alias->addr, 1/3
+	//–егистраци€ алиаса с преобразованием только alias->addr, 1/3
+	//–егистраци€ алиаса с преобразованием только addr->alias, 1/3
 	for (TCSelector s(RAND_SET_TC, 3); s.check(); s++)
 	{
 		switch (s.value())
@@ -157,6 +164,7 @@ void AliasManagerFunctionalTest::executeTest(
 		}
 	}
 	tc.commit();
+	printAliases();
 	
 	//ѕоиск алиаса и адреса
 	for (int i = 0; i < numAddr; i++)
@@ -266,7 +274,6 @@ int main(int argc, char* argv[])
 		{
 			AliasManagerFunctionalTest test;
 			test.executeTest(filter, numAddr);
-			test.printAliases();
 		}
 		saveCheckList(filter);
 		delete filter;
