@@ -1,15 +1,15 @@
 #undef SMSDEFTAG
 #if !defined SMS_IMPLEMENTATION
-		#define SMSDEFTAG(tag_type,tag,x) static const char* x 
+                #define SMSDEFTAG(tag_type,tag,x) static const char* x 
 #else
-	#if defined SMS_IMPLEMENTATION_STATIC
-		#define SMSDEFTAG(tag_type,tag,x) const char* Tag::x = #x
-	#else	
-		#define SMSDEFTAG(tag_type,tag,x) \
-			tagToKey[tag].type = tag_type;\
-			tagToKey[tag].key = Tag::x;	\
-			keyToTag[Tag::x]=tag;
-	#endif		
+        #if defined SMS_IMPLEMENTATION_STATIC
+                #define SMSDEFTAG(tag_type,tag,x) const char* Tag::x = #x
+        #else   
+                #define SMSDEFTAG(tag_type,tag,x) \
+                        tagToKey[tag].type = tag_type;\
+                        tagToKey[tag].key = Tag::x;     \
+                        keyToTag[Tag::x]=tag;
+        #endif          
 #endif
 
 #undef SMS_BODY_INT_TAG
@@ -26,27 +26,27 @@
 
 #undef SMS_BODY_TAGS_SET
 #define SMS_BODY_TAGS_SET \
-	ISMSDEFTAG(0,SMPP_SCHEDULE_DELIVERY_TIME)\
-	ISMSDEFTAG(1,SMPP_REPLACE_IF_PRESENT_FLAG)\
-	ISMSDEFTAG(2,SMPP_ESM_CLASS)\
-	ISMSDEFTAG(3,SMPP_DATA_CODING)\
-	ISMSDEFTAG(4,SMPP_SM_LENGTH)\
-	ISMSDEFTAG(5,SMPP_REGISTRED_DELIVERY)\
-	ISMSDEFTAG(6,SMPP_PROTOCOL_ID)\
-	SSMSDEFTAG(7,SMPP_SHORT_MESSAGE)\
-	ISMSDEFTAG(8,SMPP_PRIORITY)\
-	ISMSDEFTAG(9,SMPP_USER_MESSAGE_REFERENCE)\
-	ISMSDEFTAG(10,SMPP_USSD_SERVICE_OP)\
-	ISMSDEFTAG(11,SMPP_DEST_ADDR_SUBUNIT)\
-	ISMSDEFTAG(12,SMPP_PAYLOAD_TYPE)\
-	SSMSDEFTAG(13,SMPP_RECEIPTED_MESSAGE_ID)\
-	ISMSDEFTAG(14,SMPP_MS_MSG_WAIT_FACILITIES)\
-	ISMSDEFTAG(15,SMPP_USER_RESPONSE_CODE)\
-	ISMSDEFTAG(16,SMPP_SAR_MSG_REF_NUM)\
-	ISMSDEFTAG(17,SMPP_LANGUAGE_INDICATOR)\
-	ISMSDEFTAG(18,SMPP_SAR_TOTAL_SEGMENTS)\
-	ISMSDEFTAG(19,SMPP_NUMBER_OF_MESSAGES)\
-	SSMSDEFTAG(20,SMPP_MESSAGE_PAYLOAD)
+        ISMSDEFTAG(0,SMPP_SCHEDULE_DELIVERY_TIME)\
+        ISMSDEFTAG(1,SMPP_REPLACE_IF_PRESENT_FLAG)\
+        ISMSDEFTAG(2,SMPP_ESM_CLASS)\
+        ISMSDEFTAG(3,SMPP_DATA_CODING)\
+        ISMSDEFTAG(4,SMPP_SM_LENGTH)\
+        ISMSDEFTAG(5,SMPP_REGISTRED_DELIVERY)\
+        ISMSDEFTAG(6,SMPP_PROTOCOL_ID)\
+        SSMSDEFTAG(7,SMPP_SHORT_MESSAGE)\
+        ISMSDEFTAG(8,SMPP_PRIORITY)\
+        ISMSDEFTAG(9,SMPP_USER_MESSAGE_REFERENCE)\
+        ISMSDEFTAG(10,SMPP_USSD_SERVICE_OP)\
+        ISMSDEFTAG(11,SMPP_DEST_ADDR_SUBUNIT)\
+        ISMSDEFTAG(12,SMPP_PAYLOAD_TYPE)\
+        SSMSDEFTAG(13,SMPP_RECEIPTED_MESSAGE_ID)\
+        ISMSDEFTAG(14,SMPP_MS_MSG_WAIT_FACILITIES)\
+        ISMSDEFTAG(15,SMPP_USER_RESPONSE_CODE)\
+        ISMSDEFTAG(16,SMPP_SAR_MSG_REF_NUM)\
+        ISMSDEFTAG(17,SMPP_LANGUAGE_INDICATOR)\
+        ISMSDEFTAG(18,SMPP_SAR_TOTAL_SEGMENTS)\
+        ISMSDEFTAG(19,SMPP_NUMBER_OF_MESSAGES)\
+        SSMSDEFTAG(20,SMPP_MESSAGE_PAYLOAD)
 
 #define SMS_BODY_TAGS_SET_SIZE 100
 
@@ -75,12 +75,12 @@
 
 namespace smsc { namespace sms
 {
-	using std::string;
-	using smsc::core::buffers::Hash;
-	using std::runtime_error;
-	using std::auto_ptr;
+        using std::string;
+        using smsc::core::buffers::Hash;
+        using std::runtime_error;
+        using std::auto_ptr;
 
-		const int MAX_ESERVICE_TYPE_LENGTH = 5;
+                const int MAX_ESERVICE_TYPE_LENGTH = 5;
     const int MAX_ADDRESS_VALUE_LENGTH = 20;
     const int MAX_SHORT_MESSAGE_LENGTH = 200; //depricated
     const int MAX_BODY_LENGTH          = 2000; 
@@ -140,40 +140,40 @@ namespace smsc { namespace sms
             setValue(addr.length, addr.value);   
         };
 
-				Address(const char* text)
-				{
-					char addr_value[21];
-					int iplan,itype;
-					memset(addr_value,0,21);
-					int scaned = sscanf(text,".%d.%d.%20s",
-								 &itype,
-								 &iplan,
-								 addr_value);
-					if ( scaned != 3 )
-					{
-						scaned = sscanf(text,"+%[0123456789?]20s",addr_value);
-						if ( scaned )
-						{
-							iplan = 1;//ISDN
-							itype = 1;//INTERNATIONAL
-						}
-						else
-						{
-							scaned = sscanf(text,"%[0123456789?]20s",addr_value);
-							if ( !scaned )
-								throw runtime_error(string("bad address ")+text);
-							else
-							{
-								iplan = 1;//ISDN
-								itype = 2;//NATIONAL
-							}
-						}
-					}
-					plan = (uint8_t)iplan;
-					type = (uint8_t)itype;
-					length = strlen(addr_value);
-					memcpy(value,addr_value,length);
-				}
+                                Address(const char* text)
+                                {
+                                        char addr_value[21];
+                                        int iplan,itype;
+                                        memset(addr_value,0,21);
+                                        int scaned = sscanf(text,".%d.%d.%20s",
+                                                                 &itype,
+                                                                 &iplan,
+                                                                 addr_value);
+                                        if ( scaned != 3 )
+                                        {
+                                                scaned = sscanf(text,"+%[0123456789?]20s",addr_value);
+                                                if ( scaned )
+                                                {
+                                                        iplan = 1;//ISDN
+                                                        itype = 1;//INTERNATIONAL
+                                                }
+                                                else
+                                                {
+                                                        scaned = sscanf(text,"%[0123456789?]20s",addr_value);
+                                                        if ( !scaned )
+                                                                throw runtime_error(string("bad address ")+text);
+                                                        else
+                                                        {
+                                                                iplan = 1;//ISDN
+                                                                itype = 2;//NATIONAL
+                                                        }
+                                                }
+                                        }
+                                        plan = (uint8_t)iplan;
+                                        type = (uint8_t)itype;
+                                        length = strlen(addr_value);
+                                        memcpy(value,addr_value,length);
+                                }
 
         /**
          * Переопределённый оператор '=',
@@ -495,87 +495,87 @@ namespace smsc { namespace sms
 class SMSDict
 {
 public:
-		virtual void setStrProperty(const string& s,const string& value)= 0;
-		virtual void setIntProperty(const string& s,const uint32_t value) = 0;
-		virtual string getStrProperty(const string& s) = 0;
-		virtual uint32_t getIntProperty(const string& s) = 0;
-		virtual bool hasIntProperty(const string& s) = 0;
-		virtual bool hasStrProperty(const string& s) = 0;
-		virtual ~SMSDict(){}
+                virtual void setStrProperty(const string& s,const string& value)= 0;
+                virtual void setIntProperty(const string& s,const uint32_t value) = 0;
+                virtual string getStrProperty(const string& s) = 0;
+                virtual uint32_t getIntProperty(const string& s) = 0;
+                virtual bool hasIntProperty(const string& s) = 0;
+                virtual bool hasStrProperty(const string& s) = 0;
+                virtual ~SMSDict(){}
 };
 
 
-		class Tag
-		{
-		public: 
-			SMS_BODY_TAGS_SET
-		};
-		
-		class TagHash
-		{
-			struct SMSTag
-			{
-				string key;
-				int type;
-				SMSTag():type(SMS_BODY_UNKNOWN_TAG){}
-			};
-			Hash<int> keyToTag;
-			SMSTag* tagToKey;
-		public:
-			TagHash();
-			~TagHash();
-			string* getStrKeyForString(int tag)
-			{
-				throw_if(tag >= SMS_BODY_TAGS_SET_SIZE);
-				if ( tagToKey[tag].type == SMS_BODY_STR_TAG )
-					return &tagToKey[tag].key;
-				else 
-				/*{
-					char buff[128];
-					snprintf(buff,sizeof(buff),"tag %d is not STRING PRPERTY tag",tag);
-					throw runtime_error(buff);
-				}*/ return 0;
-			}
-			string* getStrKeyForInt(int tag)
-			{
-				throw_if(tag >= SMS_BODY_TAGS_SET_SIZE);
-				if ( tagToKey[tag].type == SMS_BODY_INT_TAG )
-					return &tagToKey[tag].key;
-				else 
-				/*{
-					char buff[128];
-					snprintf(buff,sizeof(buff),"tag %d is not INT PRPERTY tag",tag);
-					throw runtime_error(buff);
-				}*/ return 0;
-			}
-			int getTag(const string& key) 
-			{
-				const int* tag = keyToTag.GetPtr(key.c_str());
-				if ( !tag ) 
-					throw runtime_error(string("key ")+key+" is invalid for tagging");
-				throw_if(*tag >= SMS_BODY_TAGS_SET_SIZE);
-				return *tag;
-			}
-			int getTag(const char* key)
-			{
-				const int* tag = keyToTag.GetPtr(key);
-				if ( !tag ) 
-					throw runtime_error(string("key ")+key+" is invalid for tagging");
-				throw_if(*tag >= SMS_BODY_TAGS_SET_SIZE);
-				return *tag;
-			}
-		};
-		
-		extern TagHash tag_hash;
+                class Tag
+                {
+                public: 
+                        SMS_BODY_TAGS_SET
+                };
+                
+                class TagHash
+                {
+                        struct SMSTag
+                        {
+                                string key;
+                                int type;
+                                SMSTag():type(SMS_BODY_UNKNOWN_TAG){}
+                        };
+                        Hash<int> keyToTag;
+                        SMSTag* tagToKey;
+                public:
+                        TagHash();
+                        ~TagHash();
+                        string* getStrKeyForString(int tag)
+                        {
+                                throw_if(tag >= SMS_BODY_TAGS_SET_SIZE);
+                                if ( tagToKey[tag].type == SMS_BODY_STR_TAG )
+                                        return &tagToKey[tag].key;
+                                else 
+                                /*{
+                                        char buff[128];
+                                        snprintf(buff,sizeof(buff),"tag %d is not STRING PRPERTY tag",tag);
+                                        throw runtime_error(buff);
+                                }*/ return 0;
+                        }
+                        string* getStrKeyForInt(int tag)
+                        {
+                                throw_if(tag >= SMS_BODY_TAGS_SET_SIZE);
+                                if ( tagToKey[tag].type == SMS_BODY_INT_TAG )
+                                        return &tagToKey[tag].key;
+                                else 
+                                /*{
+                                        char buff[128];
+                                        snprintf(buff,sizeof(buff),"tag %d is not INT PRPERTY tag",tag);
+                                        throw runtime_error(buff);
+                                }*/ return 0;
+                        }
+                        int getTag(const string& key) 
+                        {
+                                const int* tag = keyToTag.GetPtr(key.c_str());
+                                if ( !tag ) 
+                                        throw runtime_error(string("key ")+key+" is invalid for tagging");
+                                throw_if(*tag >= SMS_BODY_TAGS_SET_SIZE);
+                                return *tag;
+                        }
+                        int getTag(const char* key)
+                        {
+                                const int* tag = keyToTag.GetPtr(key);
+                                if ( !tag ) 
+                                        throw runtime_error(string("key ")+key+" is invalid for tagging");
+                                throw_if(*tag >= SMS_BODY_TAGS_SET_SIZE);
+                                return *tag;
+                        }
+                };
+                
+                extern TagHash tag_hash;
     
-		class TemporaryBodyStr
+                class TemporaryBodyStr
     {
       Hash<string> hash;
-		public:
+                public:
       int getRequiredBufferSize()
       {
         int size = 0;
-				char* key;
+                                char* key;
         string* value;
         hash.First();
         while(hash.Next(key,value))
@@ -583,8 +583,8 @@ public:
           __require__(value!=0);
           size+=value->length()+4+1+2; 
         }
-				__trace2__("TemporaryBodyStr size: %d",size);
-				return size;
+                                __trace2__("TemporaryBodyStr size: %d",size);
+                                return size;
       }
       
       int hasValue(const string& key)
@@ -618,10 +618,10 @@ public:
           *(uint16_t*)(buffer+offs) = htons(tag);
           *(uint32_t*)(buffer+offs+2) = htonl(len);
           offs+=4+2;
-					__trace2__("Senc: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
+                                        __trace2__("Senc: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
           __require__(offs+len<=(unsigned)length);
           memcpy(buffer+offs,value->c_str(),len);
-					offs+=len;
+                                        offs+=len;
         }
         return offs;
       }
@@ -629,21 +629,21 @@ public:
       void decode(uint8_t* buffer, int length)
       {
         hash.Empty();
-				if ( !buffer || !length ) return;
+                                if ( !buffer || !length ) return;
         for(int pos = 0; pos+4 < length;)
         {
           uint16_t tag = ntohs(*(uint16_t*)(buffer+pos));
           uint32_t len = ntohl(*(uint32_t*)(buffer+pos+2));
           pos+=4+2;
           __require__(pos+len<=(unsigned)length);
-					string* key = tag_hash.getStrKeyForString(tag);
-					__trace2__("Sdec: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
-					if ( key )
-					{
+                                        string* key = tag_hash.getStrKeyForString(tag);
+                                        __trace2__("Sdec: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
+                                        if ( key )
+                                        {
             __require__(*(buffer+pos+len-1) == 0);
             hash[key->c_str()] = string((char*)buffer+pos);
           }
-					pos+=len;
+                                        pos+=len;
         }
       }
     };
@@ -651,21 +651,21 @@ public:
     class TemporaryBodyInt
     {
       Hash<int> hash;
-		public:
+                public:
       int getRequiredBufferSize()
       {
         int size = 0;
-				char* key;
+                                char* key;
         int* value;
         hash.First();
         while(hash.Next(key,value))
         {
           //__reqruire__(value!=0);
           //size+=value->length(); 
-					size+=4+4+2;
+                                        size+=4+4+2;
         }
-				__trace2__("TemporaryBodyInt size: %d",size);
-				return size;
+                                __trace2__("TemporaryBodyInt size: %d",size);
+                                return size;
       }
       
       bool hasValue(const string& key)
@@ -699,11 +699,11 @@ public:
           *(uint16_t*)(buffer+offs) = htons(tag);
           *(uint32_t*)(buffer+offs+2) = htonl(4);
           offs+=4+2;
-					__trace2__("Ienc: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key:"NULL",len,offs,length,*value);
+                                        __trace2__("Ienc: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key:"NULL",len,offs,length,*value);
           __require__(offs+len<=(unsigned)length);
           //memcpy(buffer+pos,value->c_str(),len);
-					*(uint32_t*)(buffer+offs) = htonl(*value); 
-					offs+=4;
+                                        *(uint32_t*)(buffer+offs) = htonl(*value); 
+                                        offs+=4;
         }
         return offs;
       }
@@ -711,7 +711,7 @@ public:
       void decode(uint8_t* buffer, int length)
       {
         hash.Empty();
-				if ( !buffer || !length ) return;
+                                if ( !buffer || !length ) return;
         for(int pos = 0; pos+4 < length;)
         {
           uint16_t tag = ntohs(*(uint16_t*)(buffer+pos));
@@ -721,7 +721,7 @@ public:
           string* key = tag_hash.getStrKeyForInt(tag);
           if ( key )
           {
-						__trace2__("Idec: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key->c_str():"NULL",len,pos,length,ntohl(*(uint32_t*)(buffer+pos)));
+                                                __trace2__("Idec: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key->c_str():"NULL",len,pos,length,ntohl(*(uint32_t*)(buffer+pos)));
             __require__(len == 4);
             hash[key->c_str()] = ntohl(*(uint32_t*)(buffer+pos));
           }
@@ -730,7 +730,7 @@ public:
       }
     };
     
-		/**
+                /**
      * Структура описывает тело сообщения
      * 
      * @author Victor V. Makarov
@@ -772,8 +772,8 @@ public:
             : buffLen(0)
         {
           int len = body.getBufferLength();
-					uint8_t* b = new uint8_t[len];
-					memcpy(b,body.getBuffer(),len);
+                                        uint8_t* b = new uint8_t[len];
+                                        memcpy(b,body.getBuffer(),len);
           setBuffer(b, len);
         };
 
@@ -787,8 +787,8 @@ public:
         Body& operator =(const Body& body) 
         {
           int len = body.getBufferLength();
-					uint8_t* b = new uint8_t[len];
-					memcpy(b,body.getBuffer(),len);
+                                        uint8_t* b = new uint8_t[len];
+                                        memcpy(b,body.getBuffer(),len);
           setBuffer(b, len);
           return (*this);
         };
@@ -805,7 +805,7 @@ public:
             return 0L;
         };
         
-        uint8_t* getBuffer()	const
+        uint8_t* getBuffer()    const
         {
           int blength = getRequiredBufferSize();
           if ( !buff.get() || buffLen < blength )
@@ -824,9 +824,9 @@ public:
 
         void setBuffer(uint8_t* buffer, int length)
         {
-					//encode(buffer,length);
-					decode(buffer,length);
-					this->buff = buffer;
+                                        //encode(buffer,length);
+                                        decode(buffer,length);
+                                        this->buff = buffer;
           //delete buffer;
         }
 
@@ -844,8 +844,8 @@ public:
         {
           int size = temporaryBodyStr.getRequiredBufferSize()+
                  temporaryBodyInt.getRequiredBufferSize();
-					__trace2__("RequiredBufferSize: %d",size);
-					return size;
+                                        __trace2__("RequiredBufferSize: %d",size);
+                                        return size;
         };
         
         void decode(uint8_t* buffer,int length)
@@ -876,15 +876,15 @@ public:
           return temporaryBodyInt.getValue(s);
         }
 
-				bool hasIntProperty(const string& s)
-				{
-					return temporaryBodyInt.hasValue(s);
-				}
-				
-				bool hasStrProperty(const string& s)
-				{
-					return temporaryBodyStr.hasValue(s);
-				}
+                                bool hasIntProperty(const string& s)
+                                {
+                                        return temporaryBodyInt.hasValue(s);
+                                }
+                                
+                                bool hasStrProperty(const string& s)
+                                {
+                                        return temporaryBodyStr.hasValue(s);
+                                }
     };
    
     const uint8_t SMSC_BYTE_ENROUTE_STATE       = (uint8_t)0;
@@ -953,13 +953,13 @@ public:
         time_t      validTime;      // Время/Дата до которого сообщение валидно
         
         uint32_t    attempts;       // Количество неуспешных попыток доставки
-        uint8_t     lastResult;     // Результат последней попытки
+        uint32_t    lastResult;     // Результат последней попытки
         time_t      lastTime;       // Время/Дата последней попытки доставки
         time_t      nextTime;       // Время/Дата слудующей попытки доставки
         
         Address     originatingAddress;
         Address     destinationAddress;
-				Address 		dealiasedDestinationAddress;
+        Address     dealiasedDestinationAddress;
 
         uint16_t    messageReference;
         EService    eServiceType;   
@@ -1044,7 +1044,7 @@ public:
             nextTime(sms.nextTime),
             originatingAddress(sms.originatingAddress),
             destinationAddress(sms.destinationAddress), 
-						dealiasedDestinationAddress(sms.dealiasedDestinationAddress),
+            dealiasedDestinationAddress(sms.dealiasedDestinationAddress),
             messageReference(sms.messageReference),
             needArchivate(sms.needArchivate),
             deliveryReport(sms.deliveryReport),
@@ -1109,7 +1109,7 @@ public:
             nextTime = sms.nextTime;
             originatingAddress = sms.originatingAddress;
             destinationAddress = sms.destinationAddress;
-						dealiasedDestinationAddress = sms.dealiasedDestinationAddress;
+            dealiasedDestinationAddress = sms.dealiasedDestinationAddress;
             messageReference = sms.messageReference;
             needArchivate = sms.needArchivate;
             deliveryReport = sms.deliveryReport;
@@ -1502,7 +1502,7 @@ public:
             //__trace__("Method is depricated !!!");
             //__require__(false);
             //priority = pri;
-					setIntProperty(SMPP_PRIORITY,(uint32_t)pri);
+                                        setIntProperty(SMPP_PRIORITY,(uint32_t)pri);
         };*/
         
         /**
@@ -1518,7 +1518,7 @@ public:
             //__trace__("Method is depricated !!!");
             //__require__(false);
             //return priority;
-					return (uint8_t)getIntProperty(SMPP_PRIORITY);
+                                        return (uint8_t)getIntProperty(SMPP_PRIORITY);
         };*/
        
         /**
@@ -1534,7 +1534,7 @@ public:
             //__trace__("Method is depricated !!!");
             //__require__(false);
             //protocolIdentifier = pid;
-					setIntProperty(SMPP_PROTOCOL_ID,(uint32_t)pid);
+                                        setIntProperty(SMPP_PROTOCOL_ID,(uint32_t)pid);
         };*/
         
         /**
@@ -1550,7 +1550,7 @@ public:
             //__trace__("Method is depricated !!!");
             //__require__(false);
             //return protocolIdentifier;
-					return (uint8_t)getIntProperty(SMPP_PROTOCOL_ID);
+                                        return (uint8_t)getIntProperty(SMPP_PROTOCOL_ID);
         };*/
        
         /**
@@ -1647,7 +1647,7 @@ public:
          * 
          * @return причина отказа/некорректности/недоставки сообщения
          */
-        inline uint8_t getLastResult() const 
+        inline uint32_t getLastResult() const 
         {
             return lastResult;
         };
@@ -1841,33 +1841,33 @@ public:
         {
         };*/
     
-				#define ___SMS_DICT messageBody
-				virtual void setStrProperty(const string& s,const string& value)
-				{
-					___SMS_DICT.setStrProperty(s,value);
-				}
-				virtual void setIntProperty(const string& s,const uint32_t value)
-				{
-					___SMS_DICT.setIntProperty(s,value);
-				}
-				virtual string getStrProperty(const string& s)
-				{
-					return ___SMS_DICT.getStrProperty(s);
-				}
-				virtual uint32_t getIntProperty(const string& s)
-				{
-					return ___SMS_DICT.getIntProperty(s);
-				}
-				virtual bool hasIntProperty(const string& s)
-				{
-					return ___SMS_DICT.hasIntProperty(s);
-				}
-				virtual bool hasStrProperty(const string& s)
-				{
-					return ___SMS_DICT.hasStrProperty(s);
-				}
-				#undef ___SMS_DICT
-				virtual ~SMS() {}
+                                #define ___SMS_DICT messageBody
+                                virtual void setStrProperty(const string& s,const string& value)
+                                {
+                                        ___SMS_DICT.setStrProperty(s,value);
+                                }
+                                virtual void setIntProperty(const string& s,const uint32_t value)
+                                {
+                                        ___SMS_DICT.setIntProperty(s,value);
+                                }
+                                virtual string getStrProperty(const string& s)
+                                {
+                                        return ___SMS_DICT.getStrProperty(s);
+                                }
+                                virtual uint32_t getIntProperty(const string& s)
+                                {
+                                        return ___SMS_DICT.getIntProperty(s);
+                                }
+                                virtual bool hasIntProperty(const string& s)
+                                {
+                                        return ___SMS_DICT.hasIntProperty(s);
+                                }
+                                virtual bool hasStrProperty(const string& s)
+                                {
+                                        return ___SMS_DICT.hasStrProperty(s);
+                                }
+                                #undef ___SMS_DICT
+                                virtual ~SMS() {}
     };
 
 }}

@@ -143,13 +143,13 @@ namespace smsc { namespace store
         
         void doChangeSmsStateToEnroute(StorageConnection* connection,
             SMSId id, const Descriptor& dst,
-            uint8_t failureCause, time_t nextTryTime)
+            uint32_t failureCause, time_t nextTryTime)
                 throw(StorageException, NoSuchMessageException);
         void doChangeSmsStateToDelivered(StorageConnection* connection, 
             SMSId id, const Descriptor& dst)
                 throw(StorageException, NoSuchMessageException);
         void doChangeSmsStateToUndeliverable(StorageConnection* connection, 
-            SMSId id, const Descriptor& dst, uint8_t failureCause)
+            SMSId id, const Descriptor& dst, uint32_t failureCause)
                 throw(StorageException, NoSuchMessageException);
         void doChangeSmsStateToExpired(StorageConnection* connection, 
             SMSId id)
@@ -351,7 +351,7 @@ namespace smsc { namespace store
          * @see MessageStore 
          */
         virtual void changeSmsStateToEnroute(SMSId id,
-            const Descriptor& dst, uint8_t failureCause, time_t nextTryTime) 
+            const Descriptor& dst, uint32_t failureCause, time_t nextTryTime) 
                 throw(StorageException, NoSuchMessageException); 
         /**
          * Реализация метода MessageStore
@@ -365,7 +365,7 @@ namespace smsc { namespace store
          * @see MessageStore 
          */
         virtual void changeSmsStateToUndeliverable(SMSId id,
-            const Descriptor& dst, uint8_t failureCause) 
+            const Descriptor& dst, uint32_t failureCause) 
                 throw(StorageException, NoSuchMessageException); 
         /**
          * Реализация метода MessageStore

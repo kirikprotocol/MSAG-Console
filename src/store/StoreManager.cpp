@@ -529,7 +529,7 @@ void StoreManager::replaceSms(SMSId id, const Address& oa,
 } 
 
 void StoreManager::doChangeSmsStateToEnroute(StorageConnection* connection,
-    SMSId id, const Descriptor& dst, uint8_t failureCause, time_t nextTryTime) 
+    SMSId id, const Descriptor& dst, uint32_t failureCause, time_t nextTryTime) 
         throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
@@ -561,7 +561,7 @@ void StoreManager::doChangeSmsStateToEnroute(StorageConnection* connection,
     connection->commit();
 }
 void StoreManager::changeSmsStateToEnroute(SMSId id,
-    const Descriptor& dst, uint8_t failureCause, time_t nextTryTime) 
+    const Descriptor& dst, uint32_t failureCause, time_t nextTryTime) 
         throw(StorageException, NoSuchMessageException)
 {
     __require__(pool);
@@ -662,7 +662,7 @@ void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
 
 void StoreManager::doChangeSmsStateToUndeliverable(
     StorageConnection* connection, SMSId id, 
-        const Descriptor& dst, uint8_t failureCause)
+        const Descriptor& dst, uint32_t failureCause)
             throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
@@ -693,7 +693,7 @@ void StoreManager::doChangeSmsStateToUndeliverable(
     connection->commit();
 }
 void StoreManager::changeSmsStateToUndeliverable(SMSId id, 
-    const Descriptor& dst, uint8_t failureCause)
+    const Descriptor& dst, uint32_t failureCause)
        throw(StorageException, NoSuchMessageException)
 {
     __require__(pool);
