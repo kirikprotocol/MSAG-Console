@@ -568,6 +568,10 @@ TCResult* SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& system
 		smeMan->registerSmeProxy(systemId, tmp);
 		SmeIndex index = smeMan->lookup(systemId);
 		*proxy = smeMan->getSmeProxy(index);
+		getLog().debug("[%d]\tregisterCorrectSmeProxy(): systemId = %s, proxyId = %u",
+			thr_self(), systemId.c_str(), (*proxy)->getUniqueId());
+		__trace2__("registerCorrectSmeProxy(): systemId = %s, proxyId = %u",
+			systemId.c_str(), (*proxy)->getUniqueId());
 	}
 	catch(...)
 	{

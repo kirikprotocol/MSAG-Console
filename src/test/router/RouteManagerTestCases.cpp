@@ -44,6 +44,7 @@ void RouteManagerTestCases::debugRoute(const char* tc, const RouteInfo* route)
 	ostringstream os;
 	os << *route;
 	getLog().debug("[%d]\t%s: %s", thr_self(), tc, os.str().c_str());
+	__trace2__("%s: %s", tc, os.str().c_str());
 }
 
 void RouteManagerTestCases::commit()
@@ -322,7 +323,7 @@ void RouteManagerTestCases::printLookupResult(const Address& origAddr,
 	os << ", origAddr = " << origAddr;
 	os << ", destAddr = " << destAddr;
 	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
-	//getLog().debugStream() << ss.str();
+	__trace2__("%s", os.str().c_str());
 }
 
 TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
@@ -332,6 +333,7 @@ TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
 	try
 	{
 		SmeProxy* proxy = NULL;
+		__trace__("RouteManagerTestCases::lookupRoute()");
 		bool found = routeMan->lookup(origAddr, destAddr, proxy);
 		const RouteHolder* routeHolder = routeReg->lookup(origAddr, destAddr);
 		printLookupResult(origAddr, destAddr, routeHolder, found, proxy);
