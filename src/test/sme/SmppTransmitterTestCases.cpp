@@ -95,7 +95,7 @@ void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 //предварительная регистрация pdu, требуется внешняя синхронизация
 PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	PduData* existentPduData, time_t submitTime, PduData::IntProps* intProps,
-	PduData::StrProps* strProps, PduData::ObjProps* objProps, bool normalSms)
+	PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType)
 {
 	__require__(pdu);
 	__require__(fixture->pduReg);
@@ -120,7 +120,7 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 		submitTime, msgRef, intProps, strProps, objProps);
 	pduData->ref();
 	//delivery monitor
-	PduFlag deliveryFlag = destReachble && normalSms ?
+	PduFlag deliveryFlag = destReachble && (pduType == PDU_NORMAL) ?
 		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
 	DeliveryMonitor* deliveryMonitor =
 		new DeliveryMonitor(pdu->get_message().get_serviceType(),
@@ -155,7 +155,7 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	}
 	fixture->pduReg->registerMonitor(deliveryMonitor);
 	//sme ack monitor
-	PduFlag smeAckFlag = destReachble && !normalSms ?
+	PduFlag smeAckFlag = destReachble && (pduType == PDU_EXT_SME) ?
 		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
 	SmeAckMonitor* smeAckMonitor = new SmeAckMonitor(waitTime, pduData, smeAckFlag);
 	fixture->pduReg->registerMonitor(smeAckMonitor);
@@ -173,7 +173,7 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 			break;
 		case FAILURE_SMSC_DELIVERY_RECEIPT:
 			startTime = validTime;
-			rcptFlag = destReachble && !normalSms ?
+			rcptFlag = destReachble && (pduType != PDU_NORMAL) ?
 				PDU_NOT_EXPECTED_FLAG : PDU_REQUIRED_FLAG;
 			break;
 		case NO_SMSC_DELIVERY_RECEIPT: //default
@@ -238,7 +238,7 @@ void SmppTransmitterTestCases::processSubmitSmAsync(PduData* pduData)
 //отправить и зарегистрировать pdu
 void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 	PduData* existentPduData, bool sync, PduData::IntProps* intProps,
-	PduData::StrProps* strProps, PduData::ObjProps* objProps, bool normalSms)
+	PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType)
 {
 	__decl_tc__;
 	try
@@ -255,7 +255,7 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 					pdu->get_header().set_sequenceNumber(0); //не известен
 					submitTime = time(NULL);
 					pduData = registerSubmitSm(pdu, existentPduData, submitTime,
-						intProps, strProps, objProps, normalSms); //all times, msgRef
+						intProps, strProps, objProps, pduType); //all times, msgRef
 				}
 				//__dumpSubmitSmPdu__("submitSmSyncBefore", fixture->systemId, pdu);
 				PduSubmitSmResp* respPdu =
@@ -286,7 +286,7 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 				time_t responseTime = time(NULL);
 				__dumpSubmitSmPdu__("submitSmAsyncAfter", fixture->systemId, pdu);
 				PduData* pduData = registerSubmitSm(pdu, existentPduData,
-					submitTime, intProps, strProps, objProps, normalSms); //all times, msgRef, sequenceNumber
+					submitTime, intProps, strProps, objProps, pduType); //all times, msgRef, sequenceNumber
 				processSubmitSmAsync(pduData);
 			}
 			//pdu life time определяется PduRegistry
@@ -376,7 +376,7 @@ PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
 		resPdu->get_message().set_smDefaultMsgId(pdu->get_smDefaultMsgId());
 		resPdu->get_message().set_shortMessage(pdu->get_shortMessage(), pdu->size_shortMessage());
 		resPdu->get_message().set_replaceIfPresentFlag(1); //для правильной работы registerSubmitSm()
-		PduData* pduData = registerSubmitSm(resPdu, replacePduData, submitTime, NULL, NULL, NULL, true);
+		PduData* pduData = registerSubmitSm(resPdu, replacePduData, submitTime, NULL, NULL, NULL, PDU_NORMAL);
 		pduData->smsId = pdu->get_messageId();
 		__require__(fixture->pduReg);
 		DeliveryReceiptMonitor* rcptMonitor =

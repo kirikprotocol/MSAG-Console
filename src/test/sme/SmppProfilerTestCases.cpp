@@ -53,7 +53,7 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 		pdu->get_message().set_shortMessage(msg.get(), msgLen);
 		pdu->get_message().set_dataCoding(dataCoding);
 		//отправить pdu
-		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps, NULL, NULL, false);
+		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps, NULL, NULL, PDU_EXT_SME);
 		__tc_ok__;
 		//обновить профиль, ответные сообщения от профайлера и
 		//подтверждения доставки  уже по новым настройкам

@@ -2,6 +2,7 @@
 #define TEST_SME_SMPP_TRANSMITTER_TEST_CASES
 
 #include "sme/SmppBase.hpp"
+#include "test/core/PduUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "SmppFixture.hpp"
 #include "SmppPduSender.hpp"
@@ -18,6 +19,7 @@ using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 using smsc::test::smpp::OPT_ALL;
 using namespace smsc::smpp; //pdu
+using namespace smsc::test::core;
 
 class SmppTransmitterTestCases : BaseTestCases
 {
@@ -33,7 +35,7 @@ public:
 
 	void sendSubmitSmPdu(PduSubmitSm* pdu, PduData* existentPduData, bool sync,
 		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
-		PduData::ObjProps* objProps = NULL, bool normalSms = true);
+		PduData::ObjProps* objProps = NULL, PduType pduType = PDU_NORMAL);
 
 	void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData);
 
@@ -67,7 +69,7 @@ protected:
 	void checkRegisteredDelivery(Message& m);
 	PduData* registerSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,
 		time_t submitTime, PduData::IntProps* intProps,
-		PduData::StrProps* strProps, PduData::ObjProps* objProps, bool normalSms);
+		PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType);
 	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu,
 		time_t respTime);
 	void processSubmitSmAsync(PduData* pduData);
