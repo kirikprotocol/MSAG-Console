@@ -16,8 +16,19 @@ using smsc::sme::SmppBaseReceiver;
 using smsc::test::util::BaseTestCases;
 using smsc::test::core::RespPduFlag;
 using smsc::test::core::DeliveryMonitor;
+using smsc::test::core::DeliveryReceiptMonitor;
+using smsc::test::core::PduDataObject;
 using smsc::test::util::CheckList;
 using namespace smsc::smpp; //pdu
+
+struct AckText : public PduDataObject
+{
+	string text;
+	uint8_t dataCoding;
+	bool valid;
+	AckText(const string& _text, uint8_t _dataCoding, bool _valid)
+		: text(_text), dataCoding(_dataCoding), valid(_valid) {}
+};
 
 /**
  * Тест кейсы для обработки результатов асинхронных pdu.
@@ -88,6 +99,10 @@ protected:
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
 	void updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime);
+	AckText* getExpectedResponse(DeliveryReceiptMonitor* monitor,
+		PduSubmitSm* origPdu, const string& text, time_t recvTime);
+	void processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
+		PduDeliverySm& pdu, PduSubmitSm* origPdu, time_t recvTime);
 };
 
 }

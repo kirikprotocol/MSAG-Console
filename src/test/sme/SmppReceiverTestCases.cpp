@@ -2,10 +2,14 @@
 #include "test/conf/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
+#include "test/util/DateFormatter.hpp"
 #include "core/synchronization/Mutex.hpp"
 
+#define __check__(errCode, field, value) \
+	if (value != pdu.field) { __tc_fail__(errCode); }
+
 #define __compare__(failureCode, field) \
-	if ((pdu.field) != (origPdu->field)) { \
+	if (pdu.field != origPdu->field) { \
 		ostringstream s1, s2; \
 		s1 << (pdu.field); \
 		s2 << (origPdu->field); \
@@ -311,7 +315,6 @@ void SmppReceiverTestCases::updateDeliveryReceiptMonitor(DeliveryMonitor* monito
 			__require__(rcptMonitor->getFlag() == PDU_NOT_EXPECTED_FLAG);
 			break;
 		case FINAL_SMSC_DELIVERY_RECEIPT:
-			__tc__("processDeliverySm.deliveryReceipt.deliveryRescheduled");
 			pduReg->removeMonitor(rcptMonitor);
 			switch (respFlag)
 			{
@@ -327,7 +330,6 @@ void SmppReceiverTestCases::updateDeliveryReceiptMonitor(DeliveryMonitor* monito
 					__unreachable__("Invalid resp flag");
 			}
 			pduReg->registerMonitor(rcptMonitor);
-			__tc_ok__;
 			break;
 		case FAILURE_SMSC_DELIVERY_RECEIPT:
 			pduReg->removeMonitor(rcptMonitor);
@@ -462,7 +464,7 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 		//обновить статус delivery монитора
 		__tc__("processDeliverySm.normalSms.checkAllowed");
 		pduReg->removeMonitor(monitor);
-			__tc_fail2__(monitor->update(recvTime, respFlag), 0);
+		__tc_fail2__(monitor->update(recvTime, respFlag), 0);
 		pduReg->registerMonitor(monitor);
 		__tc_ok_cond__;
 		//обновить статус delivery receipt монитора
@@ -511,27 +513,6 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 			return;
 		}
 		__tc_ok_cond__;
-		__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);
-		PduSubmitSm* origPdu =
-			reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
-		//Сравнить правильность маршрута
-		__tc__("processDeliverySm.smeAck.checkRoute");
-		__tc_fail2__(fixture->routeChecker->checkRouteForAcknowledgementSms(
-			*origPdu, pdu), 0);
-		__tc_ok_cond__;
-		//проверить содержимое полученной pdu
-		__tc__("processDeliverySm.smeAck.checkFields");
-		//поля хедера проверяются в processDeliverySm()
-		//message
-		//__compareCStr__(get_message().get_serviceType());
-		//правильность адресов проверяется в fixture->routeChecker->checkRouteForAcknowledgementSms()
-		//__compareAddr__(get_message().get_source());
-		//__compareAddr__(get_message().get_dest());
-		//__compare__(2, get_message().get_protocolId());
-		//__compare__(get_message().get_priorityFlag());
-		//__compare__(get_message().get_registredDelivery());
-		__tc_ok_cond__;
-		//обновить статус
 		__tc__("processDeliverySm.smeAck.checkAllowed");
 		switch (monitor->getFlag())
 		{
@@ -541,25 +522,34 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 				break;
 			case PDU_RECEIVED_FLAG:
 				__tc_fail__(1);
-				break;
+				return;
 			case PDU_NOT_EXPECTED_FLAG:
 				__tc_fail__(2);
-				break;
+				return;
 			default:
 				__unreachable__("Unknown flag");
 		}
 		__tc_ok_cond__;
-		//передать дальнейшую проверку (тела сообщения и опциональных
-		//полей) тест кейсам конкретных sme, обновить monitor
-		//__compare__(get_message().get_smLength());
-		//__compareOStr__(get_message().get_shortMessage());
-		//optional
-		//__tc_fail2__(SmppUtil::compareOptional(
-		//	pdu.get_optional(), origPdu->get_optional()), 10);
+		//проверка pdu
+		__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);
+		PduSubmitSm* origPdu =
+			reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
+		//правильность маршрута
+		__tc__("processDeliverySm.smeAck.checkRoute");
+		__tc_fail2__(fixture->routeChecker->checkRouteForAcknowledgementSms(
+			*origPdu, pdu), 0);
+		__tc_ok_cond__;
+		//проверить содержимое полученной pdu
+		__tc__("processDeliverySm.smeAck.checkFields");
+		//поля header проверяются в processDeliverySm()
+		//поля message проверяются в fixture->ackHandler->processSmeAcknowledgement()
+		//правильность адресов проверяется в fixture->routeChecker->checkRouteForAcknowledgementSms()
+		__check__(1, get_message().get_esmClass(), ESM_CLASS_NORMAL_MESSAGE);
+		__tc_ok_cond__;
 		if (fixture->ackHandler)
 		{
 			pduReg->removeMonitor(monitor);
-			fixture->ackHandler->processSmeAcknowledgement(monitor, pdu);
+			fixture->ackHandler->processSmeAcknowledgement(monitor, pdu, recvTime);
 			pduReg->registerMonitor(monitor);
 		}
 		//для sme acknoledgement не проверяю повторную доставку
@@ -569,7 +559,7 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 		{
 			__tc_fail__(1);
 		}
-		else if (recvTime > monitor->getValidTime() + timeCheckAccuracy)
+		else if (recvTime > monitor->startTime + timeCheckAccuracy)
 		{
 			__tc_fail__(2);
 		}
@@ -586,7 +576,192 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 	}
 }
 
-void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
+AckText* SmppReceiverTestCases::getExpectedResponse(
+	DeliveryReceiptMonitor* monitor, PduSubmitSm* origPdu, const string& text,
+	time_t recvTime)
+{
+	__require__(monitor);
+	__require__(origPdu);
+	__cfg_int__(timeCheckAccuracy);
+	Address destAlias;
+	SmppUtil::convert(origPdu->get_message().get_dest(), &destAlias);
+	string expected;
+	if (monitor->deliveryFlag == PDU_RECEIVED_FLAG)
+	{
+		static const DateFormatter df("dd MMMM yyyy, HH:mm:ss");
+		for (time_t t = recvTime; t > recvTime - timeCheckAccuracy; t--)
+		{
+			ostringstream s;
+			s << "Your message sent to address ";
+			s << SmsUtil::configString(destAlias);
+			s << " was successfully delivered on ";
+			s << df.format(t);
+			expected = s.str();
+			if (expected == text)
+			{
+				break;
+			}
+		}
+	}
+	else if (monitor->deliveryFlag == PDU_NOT_EXPECTED_FLAG)
+	{
+		ostringstream s;
+		s << "Ваше сообщение отправленное по адресу ";
+		s << SmsUtil::configString(destAlias);
+		s << " wasn't delivered, reason ";
+		s << monitor->deliveryStatus;
+		expected = s.str();
+	}
+	Address srcAddr;
+	SmppUtil::convert(origPdu->get_message().get_source(), &srcAddr);
+	time_t t;
+	const Profile& profile = fixture->profileReg->getProfile(srcAddr, t);
+	const pair<string, uint8_t> p = convert(expected, profile.codepage);
+	bool valid = t + timeCheckAccuracy <= time(NULL);
+	return new AckText(p.first, p.second, valid);
+}
+
+void SmppReceiverTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
+	PduDeliverySm& pdu, PduSubmitSm* origPdu, time_t recvTime)
+{
+	__decl_tc__;
+	__cfg_addr__(smscAddr);
+	__cfg_addr__(smscAlias);
+	__cfg_str__(smscServiceType);
+	__cfg_int__(smscProtocolId);
+
+	Address destAddr;
+	SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
+	const SmeInfo* sme = fixture->smeReg->getSme(destAddr);
+	__require__(sme);
+	//декодировать
+	const string text = decode(pdu.get_message().get_shortMessage(),
+		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
+	if (!monitor->pduData->objProps.count("output"))
+	{
+		AckText* ack = getExpectedResponse(monitor, origPdu, text, recvTime);
+		ack->ref();
+		monitor->pduData->objProps["output"] = ack;
+	}
+	AckText* ack =
+		dynamic_cast<AckText*>(monitor->pduData->objProps["output"]);
+	__require__(ack);
+	if (!ack->valid)
+	{
+		monitor->setReceived();
+		return;
+	}
+	//проверить содержимое полученной pdu
+	__tc__("processDeliverySm.deliveryReceipt.checkFields");
+	//поля хедера проверяются в processDeliverySm()
+	//message
+	__check__(1, get_message().get_serviceType(), smscServiceType);
+	//правильность адресов частично проверяется в fixture->routeChecker->checkRouteForAcknowledgementSms()
+	Address srcAlias;
+	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
+	if (sme->wantAlias && srcAlias != smscAlias)
+	{
+		__tc_fail__(2);
+	}
+	else if (!sme->wantAlias && srcAlias != smscAddr)
+	{
+		__tc_fail__(3);
+	}
+	//__check__(get_message().get_dest());
+	__check__(4, get_message().get_esmClass(), ESM_CLASS_DELIVERY_RECEIPT);
+	__check__(5, get_message().get_protocolId(), smscProtocolId);
+	__check__(6, get_message().get_priorityFlag(), 0);
+	__check__(7, get_message().get_registredDelivery(), 0);
+	__check__(8, get_message().get_dataCoding(), ack->dataCoding);
+	if (text.length() > getMaxChars(ack->dataCoding))
+	{
+		__tc_fail__(9);
+	}
+	__tc_ok_cond__;
+	__tc__("processDeliverySm.deliveryReceipt.checkStatus");
+	SmppOptional opt;
+	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
+	opt.set_receiptedMessageId(monitor->pduData->smsId.c_str());
+	switch(monitor->deliveryFlag)
+	{
+		case PDU_REQUIRED_FLAG:
+		case PDU_MISSING_ON_TIME_FLAG:
+			__tc_fail__(1);
+			break;
+		case PDU_RECEIVED_FLAG:
+			if (monitor->regDelivery == FINAL_SMSC_DELIVERY_RECEIPT &&
+				monitor->deliveryStatus == ESME_ROK)
+			{
+				opt.set_messageState(SMPP_DELIVERED_STATE);
+			}
+			else if (monitor->regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
+			{
+				__tc_fail__(2);
+			}
+			else
+			{
+				__tc_fail__(3);
+			}
+			break;
+		case PDU_NOT_EXPECTED_FLAG:
+			switch (monitor->deliveryStatus)
+			{
+				case ESME_ROK:
+					__tc_fail__(4);
+					break;
+				case ESME_RX_T_APPN:
+				case ESME_RMSGQFUL:
+				case 0xffffffff: //ошибка отправки deliver_sm_resp
+					opt.set_messageState(SMPP_EXPIRED_STATE);
+					break;
+				case ESME_RX_P_APPN:
+					__unreachable__("Not supported");
+				default:
+					{
+						opt.set_messageState(SMPP_REJECTED_STATE);
+						uint8_t errCode[3];
+						*errCode = 3; //GSM
+						*((uint16_t*) (errCode + 1)) = rand0(65535);
+						opt.set_networkErrorCode(errCode);
+					}
+			}
+			break;
+		default:
+			__unreachable__("Invalid flag");
+	}
+	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
+	__tc_ok_cond__;
+	__tc__("processDeliverySm.deliveryReceipt.checkText");
+	int pos = ack->text.find(text);
+	__trace2__("delivery receipt: pos = %d, received:\n%s\nexpected:\n%s\n",
+		pos, text.c_str(), ack->text.c_str());
+	if (pos == string::npos)
+	{
+		__tc_fail__(1);
+		monitor->setReceived();
+	}
+	else
+	{
+		__tc_ok__;
+		ack->text.erase(pos, text.length());
+		if (!ack->text.length())
+		{
+			monitor->setReceived();
+		}
+		else
+		{
+			__tc__("processDeliverySm.deliveryReceipt.multipleMessages");
+			if (text.length() != getMaxChars(ack->dataCoding) &&
+				ack->text.length() % getMaxChars(ack->dataCoding) != 0)
+			{
+				__tc_fail__(1);
+			}
+			__tc_ok_cond__;
+		}
+	}
+}
+
+void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm& pdu,
 	time_t recvTime)
 {
 	__trace__("processDeliveryReceipt()");
@@ -600,19 +775,9 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 			__tc_fail__(1);
 			return;
 		}
-		if (!pdu.get_optional().has_messageState())
-		{
-			__tc_fail__(2);
-			return;
-		}
-		if (!pdu.get_optional().has_receiptedMessageId())
-		{
-			__tc_fail__(3);
-			return;
-		}
+		//перекрыть pduReg класса
 		Address destAddr;
 		SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
-		//перкрыть pduReg класса
 		PduRegistry* pduReg = fixture->smeReg->getPduRegistry(destAddr);
 		__require__(pduReg);
 		//получить оригинальную pdu
@@ -624,182 +789,60 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 		//нет соответствующего оригинального pdu
 		if (!monitor)
 		{
-			__tc_fail__(4);
+			__tc_fail__(2);
 			return;
 		}
 		if (!monitor->pduData->valid)
 		{
-			__tc_fail__(5);
+			__tc_fail__(3);
 			return;
+		}
+		__tc_ok_cond__;
+		__tc__("processDeliverySm.deliveryReceipt.checkAllowed");
+		switch (monitor->getFlag())
+		{
+			case PDU_REQUIRED_FLAG:
+			case PDU_MISSING_ON_TIME_FLAG:
+				//ok
+				break;
+			case PDU_RECEIVED_FLAG:
+				__tc_fail__(1);
+				return;
+			case PDU_NOT_EXPECTED_FLAG:
+				__tc_fail__(2);
+				return;
+			default:
+				__unreachable__("Unknown flag");
 		}
 		__tc_ok_cond__;
 		__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);
 		PduSubmitSm* origPdu =
 			reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
+		__require__(origPdu);
 		//Сравнить правильность маршрута
 		__tc__("processDeliverySm.deliveryReceipt.checkRoute");
 		__tc_fail2__(fixture->routeChecker->checkRouteForAcknowledgementSms(*origPdu, pdu), 0);
 		__tc_ok_cond__;
-		//проверить содержимое полученной pdu
-		__tc__("processDeliverySm.deliveryReceipt.checkFields");
-		//поля хедера проверяются в processDeliverySm()
-		//message
-		//__compareCStr__(get_message().get_serviceType());
-		//правильность адресов частично проверяется в fixture->routeChecker->checkRouteForAcknowledgementSms()
-		__cfg_addr__(smscAlias);
-		Address srcAlias;
-		SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
-		if (srcAlias != smscAlias)
+		//проверка полей pdu
+		pduReg->removeMonitor(monitor);
+		processDeliveryReceipt(monitor, pdu, origPdu, recvTime);
+		pduReg->registerMonitor(monitor);
+		//для delivery receipt не проверяю повторную доставку
+		__tc__("processDeliverySm.deliveryReceipt.recvTimeChecks");
+		__cfg_int__(timeCheckAccuracy);
+		if (recvTime < monitor->getStartTime())
 		{
 			__tc_fail__(1);
 		}
-		//__compareAddr__(get_message().get_dest());
-		if (pdu.get_message().get_esmClass() !=
-			ESM_CLASS_DELIVERY_RECEIPT)
+		else if (recvTime > monitor->getStartTime() + timeCheckAccuracy)
 		{
 			__tc_fail__(2);
 		}
-		__compare__(3, get_message().get_protocolId());
-		//__compare__(get_message().get_priorityFlag());
-		//__compare__(get_message().get_registredDelivery());
-		__compare__(4, get_message().get_dataCoding());
-		//__compare__(get_message().get_smLength());
-		//__compareOStr__(get_message().get_shortMessage(),
-		//optional
-		//__tc_fail2__(SmppUtil::compareOptional(
-		//	pdu.get_optional(), origPdu->get_optional()), 10);
-		if (monitor->pduData->smsId != pdu.get_optional().get_receiptedMessageId())
-		{
-			__tc_fail__(5);
-		}
 		__tc_ok_cond__;
-		//расширенная проверка полей
-		__tc__("processDeliverySm.deliveryReceipt.checkFieldsExt");
-		switch (monitor->regDelivery)
-		{
-			//delivery receipt получено, но не запрашивался
-			case NO_SMSC_DELIVERY_RECEIPT:
-				__tc_fail__(1);
-				break;
-			case FAILURE_SMSC_DELIVERY_RECEIPT:
-				//Должна быть причина ошибки
-				if (!pdu.get_optional().has_networkErrorCode())
-				{
-					__tc_fail__(2);
-				}
-				//Сообщение не может быть успешно доставлено
-				switch (pdu.get_optional().get_messageState())
-				{
-					case SMPP_ENROUTE_STATE:
-					case SMPP_DELIVERED_STATE:
-					case SMPP_ACCEPTED_STATE:
-					case SMPP_UNKNOWN_STATE:
-						__tc_fail__(3);
-						break;
-					case SMPP_EXPIRED_STATE:
-					case SMPP_DELETED_STATE:
-					case SMPP_UNDELIVERABLE_STATE:
-					case SMPP_REJECTED_STATE:
-						//ok
-						break;
-					default:
-						__unreachable__("Invalid state");
-				}
-				break;
-			case FINAL_SMSC_DELIVERY_RECEIPT:
-				//Статус должен быть финальным
-				switch (pdu.get_optional().get_messageState())
-				{
-					case SMPP_ENROUTE_STATE:
-					case SMPP_ACCEPTED_STATE:
-					case SMPP_UNKNOWN_STATE:
-						__tc_fail__(4);
-						break;
-					case SMPP_DELIVERED_STATE:
-					case SMPP_EXPIRED_STATE:
-					case SMPP_DELETED_STATE:
-					case SMPP_UNDELIVERABLE_STATE:
-					case SMPP_REJECTED_STATE:
-						//ok
-						break;
-					default:
-						__unreachable__("Invalid state");
-				}
-				break;
-			default:
-				__unreachable__("Invalid registered delivery option");
-		}
-		__tc_ok_cond__;
-		__tc__("processDeliverySm.deliveryReceipt.checkErrorCode");
-		//проверить информацию о доставленной pdu (код ошибки)
-		if (pdu.get_optional().has_networkErrorCode() &&
-			!monitor->deliveryStatus)
-		{
-			__tc_fail__(1);
-		}
-		else if (!pdu.get_optional().has_networkErrorCode() &&
-			monitor->deliveryStatus)
-		{
-			__tc_fail__(2);
-		}
-		else if (pdu.get_optional().has_networkErrorCode() &&
-			monitor->deliveryStatus)
-		{
-			uint8_t networkType =
-				*pdu.get_optional().get_networkErrorCode();
-			uint16_t errCode = ntohs(*(uint16_t*) (
-				pdu.get_optional().get_networkErrorCode() + 1));
-			if (networkType != 3) //GSM
-			{
-				__tc_fail__(3);
-			}
-			if (errCode != monitor->deliveryStatus) //пока просто заглушка
-			{
-				__tc_fail__(4);
-			}
-		}
-		__tc_ok_cond__;
-		//проверить информацию о доставленной pdu (статус)
-		__tc__("processDeliverySm.deliveryReceipt.checkState");
-		switch (pdu.get_optional().get_messageState())
-		{
-			case SMPP_ENROUTE_STATE:
-			case SMPP_ACCEPTED_STATE:
-			case SMPP_UNKNOWN_STATE:
-				__tc_fail__(1); //ничего не произошло, нотификация не нужна
-				break;
-			case SMPP_DELIVERED_STATE:
-				if (monitor->deliveryFlag != PDU_RECEIVED_FLAG)
-				{
-					__tc_fail__(2);
-				}
-				break;
-			case SMPP_EXPIRED_STATE:
-			case SMPP_DELETED_STATE:
-			case SMPP_UNDELIVERABLE_STATE:
-			case SMPP_REJECTED_STATE:
-				if (monitor->deliveryFlag != PDU_NOT_EXPECTED_FLAG)
-				{
-					__tc_fail__(3);
-				}
-				break;
-			default:
-				__unreachable__("Invalid state");
-		}
-		__tc_ok_cond__;
-		//проверка механизма повторной доставки
-		__tc__("processDeliverySm.deliveryReceipt.scheduleChecks");
-		__tc_fail2__(monitor->checkSchedule(recvTime), 0);
-		__tc_ok_cond__;
-		//отправить респонс
+		//отправить респонс, только ESME_ROK разрешено
 		uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
 		RespPduFlag respFlag = isAccepted(deliveryStatus);
-		//обновить статус
-		__tc__("processDeliverySm.deliveryReceipt.checkAllowed");
-		pduReg->removeMonitor(monitor);
-			__tc_fail2__(monitor->update(recvTime, respFlag), 0);
-		pduReg->registerMonitor(monitor);
-		__tc_ok_cond__;
+		__require__(respFlag == RESP_PDU_OK);
 	}
 	catch(...)
 	{
