@@ -198,18 +198,21 @@ PduFlag NormalSmsHandler::compareSegmentedMapMsgText(DeliveryMonitor* monitor,
 		for (int i = 0; i < sz; i++)
 		{
 			char ch = msg->msg[i + msg->offset];
-			switch (ch)
+			if (msg->dataCoding == DEFAULT)
 			{
-				case '|':
-				case '^':
-				case '{':
-				case '}':
-				case '[':
-				case ']':
-				case '~':
-				case '\\':
-					ext++;
-					break;
+				switch (ch)
+				{
+					case '|':
+					case '^':
+					case '{':
+					case '}':
+					case '[':
+					case ']':
+					case '~':
+					case '\\':
+						ext++;
+						break;
+				}
 			}
 			if (i + ext >= 153)
 			{
@@ -240,8 +243,8 @@ PduFlag NormalSmsHandler::compareSegmentedMapMsgText(DeliveryMonitor* monitor,
 		}
 		if (smLen < len1 || smLen > len2)
 		{
-			__trace2__("check segment len: seqNum = %d, maxNum = %d, len1 = %d, len2 = %d, msg offset = %d, msg len = %d",
-				concatSeqNum, concatMaxNum, len1, len2, msg->offset, msg->len);
+			__trace2__("check segment len: seqNum = %d, maxNum = %d, len1 = %d, len2 = %d, ext = %d, msg offset = %d, msg len = %d",
+				concatSeqNum, concatMaxNum, len1, len2, ext, msg->offset, msg->len);
 			__tc_fail__(5);
 		}
 	}
@@ -682,8 +685,14 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		//optional
 		__tc__("deliverySm.normalSms.checkOptionalFields");
 		//отключить message_payload, который проверяется в compareMsgText()
+		uint64_t excludeMask = OPT_MSG_PAYLOAD + OPT_RCPT_MSG_ID;
+		if (monitor->pduData->intProps.count("forceDC"))
+		{
+			excludeMask += OPT_DEST_ADDR_SUBUNIT +
+				OPT_MS_MSG_WAIT_FACILITIES + OPT_MS_VALIDITY;
+		}
 		__tc_fail2__(SmppUtil::compareOptional(pdu.get_optional(),
-			origPdu->get_optional(), OPT_MSG_PAYLOAD + OPT_RCPT_MSG_ID), 0);
+			origPdu->get_optional(), excludeMask), 0);
 		__tc_ok_cond__;
 		//проверка механизма повторной доставки
 		__tc__("deliverySm.normalSms.scheduleChecks");

@@ -135,6 +135,7 @@ void submitSmTc()
 		"Отправка submit_sm реквеста с sme зарегистрированной как transmitter");
 	__reg_tc__("submitSm.transceiver",
 		"Отправка submit_sm реквеста с sme зарегистрированной как transceiver");
+	//forceDc
 	__reg_tc__("submitSm.forceDc",
 		"Отправка submit_sm реквеста с sme с установленным признаком forceDC");
 	//submitSm.correct
@@ -312,6 +313,8 @@ void replaceSmTc()
 		"Значение schedule_delivery_time = NULL (сохранить оригинальное значение), а validity_period меньше schedule_delivery_time замещаемого сообщения");
 	__reg_tc__("replaceSm.incorrect.replaceFinal",
 		"Замещение сообщения находящегося в финальном состоянии (код ошибки ESME_RREPLACEFAIL)");
+	__reg_tc__("replaceSm.incorrect.udhiLength",
+		"Длина udh при выставленном флаге udhi (в замещаемом сообщении) задана некорректно");
 	__reg_tc__("replaceSm.incorrect.messageIdLength",
 		"Длина поля message_id больше допустимой");
 	__reg_tc__("replaceSm.incorrect.sourceAddrLength",
@@ -349,7 +352,7 @@ void replaceSmTc()
 		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
 	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidMsgId",
 		"Если код ошибки ESME_RINVMSGID в поле command_status, то действительно message_id задан неправильно");
-	__reg_tc__("replaceSm.resp.checkCmdStatusReplaceFiled",
+	__reg_tc__("replaceSm.resp.checkCmdStatusReplaceFailed",
 		"Если код ошибки ESME_RREPLACEFAIL в поле command_status, то действительно замещаемое сообщение находится в финальном состоянии");
 	__reg_tc__("replaceSm.resp.checkCmdStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
