@@ -162,13 +162,14 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		res.insert(Status::NOROUTE);
 	}
 	__cfg_int__(maxValidPeriod);
-	if (!pdu.getValidTime() || pdu.getValidTime() < pduData->sendTime ||
-		pdu.getValidTime() > pduData->sendTime + maxValidPeriod)
+	time_t validTime = pdu.getValidTime();
+	time_t waitTime = pdu.getWaitTime();
+	if (!validTime || validTime < pduData->sendTime ||
+		validTime > pduData->sendTime + maxValidPeriod)
 	{
 		res.insert(ESME_RINVEXPIRY);
 	}
-	if (!pdu.getWaitTime() ||
-		(pdu.getValidTime() && pdu.getWaitTime() > pdu.getValidTime()))
+	if (!waitTime || (validTime && waitTime > validTime))
 	{
 		res.insert(ESME_RINVSCHED);
 	}
@@ -338,13 +339,14 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	}
 	//проверки
 	__cfg_int__(maxValidPeriod);
-	if (!pdu.getValidTime() || pdu.getValidTime() < pduData->sendTime ||
-		pdu.getValidTime() > pduData->sendTime + maxValidPeriod)
+	time_t validTime = pdu.getValidTime();
+	time_t waitTime = pdu.getWaitTime();
+	if (!validTime || validTime < pduData->sendTime ||
+		validTime > pduData->sendTime + maxValidPeriod)
 	{
 		res.insert(ESME_RINVEXPIRY);
 	}
-	if (!pdu.getWaitTime() ||
-		(pdu.getValidTime() && pdu.getWaitTime() > pdu.getValidTime()))
+	if (!waitTime || (validTime && waitTime > validTime))
 	{
 		res.insert(ESME_RINVSCHED);
 	}
@@ -984,7 +986,7 @@ void SmppPduChecker::processQuerySmResp(ResponseMonitor* monitor,
 		monitor->pduData->pdu->get_sequenceNumber());
 	__tc_ok_cond__;
 	__tc__("querySm.resp.checkFields");
-	__check__(1, respPdu.get_errorCode() == rand1(65535));
+	__check__(-1, respPdu.get_errorCode() == rand1(65535));
 	if (respPdu.get_header().get_commandStatus() == ESME_ROK)
 	{
 		__check__(2, !strcmp(nvl(respPdu.get_messageId()), nvl(pdu->get_messageId())));
