@@ -210,6 +210,11 @@ void* operator new(unsigned int size)
     fprintf(stderr,"OUT OF MEMORY!\n");
     throw "OUT OF MEMORY!\n";
   }
+  if(getenv("LHFULLREPORT"))
+  {
+    fprintf(stderr,"new:0x%08x(%d)\n",mem,size);
+    smsc::util::leaktracing::PrintTrace();
+  }
   smsc::util::leaktracing::lh.RegisterAlloc(mem,size);
   return mem;
 }
@@ -222,6 +227,11 @@ void* operator new[](unsigned int size)
     fprintf(stderr,"OUT OF MEMORY!\n");
     throw "OUT OF MEMORY!\n";
   }
+  if(getenv("LHFULLREPORT"))
+  {
+    fprintf(stderr,"new[]:0x%08x(%d)\n",mem,size);
+    smsc::util::leaktracing::PrintTrace();
+  }
   smsc::util::leaktracing::lh.RegisterAlloc(mem,size);
   return mem;
 }
@@ -230,6 +240,11 @@ void operator delete(void* mem)
 {
   if(mem)
   {
+    if(getenv("LHFULLREPORT"))
+    {
+      fprintf(stderr,"delete:0x%08x\n",mem);
+      smsc::util::leaktracing::PrintTrace();
+    }
     if(smsc::util::leaktracing::lh.RegisterDealloc(mem))
     {
       free(mem);
@@ -242,6 +257,11 @@ void operator delete[](void* mem)
   //printf("FREE:%x\n",mem);
   if(mem)
   {
+    if(getenv("LHFULLREPORT"))
+    {
+      fprintf(stderr,"delete[]:0x%08x\n",mem);
+      smsc::util::leaktracing::PrintTrace();
+    }
     if(smsc::util::leaktracing::lh.RegisterDealloc(mem))
     {
       free(mem);
