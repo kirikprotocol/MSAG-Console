@@ -147,6 +147,10 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef
 	time_t waitTime, time_t validTime, PduData* pduData)
 {
 	__decl_tc__;
+	if (fixture->smeType == SME_TRANSMITTER)
+	{
+		return;
+	}
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
@@ -174,6 +178,10 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(uint16_t msgRef,
 	time_t waitTime, time_t validTime, PduData* pduData)
 {
 	__decl_tc__;
+	if (fixture->smeType == SME_TRANSMITTER)
+	{
+		return;
+	}
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
@@ -281,6 +289,10 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 void SmppTransmitterTestCases::registerExtSmeMonitors(PduSubmitSm* pdu,
 	uint16_t msgRef, time_t waitTime, time_t validTime, PduData* pduData)
 {
+	if (fixture->smeType == SME_TRANSMITTER)
+	{
+		return;
+	}
 	//предполагаю, что ext sme всегда запущено и на него есть маршрут
 	//ext sme всегда отправляет sme ack и, по ситуации, final delivery receipt
 	__require__(fixture->routeChecker->isDestReachable(
@@ -305,6 +317,10 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
 	uint16_t msgRef, time_t waitTime, time_t validTime, uint32_t deliveryStatus,
 	PduData* pduData)
 {
+	if (fixture->smeType == SME_TRANSMITTER)
+	{
+		return;
+	}
 	//предполагаю, что null sme всегда запущено и на него есть маршрут
 	//null sme не отправляет sme ack, а на deliver_sm сразу отправляет респонс
 	__require__(fixture->routeChecker->isDestReachable(
@@ -1163,6 +1179,7 @@ void SmppTransmitterTestCases::sendCancelSmPdu(PduCancelSm* pdu,
 				PduData* pduData;
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
+					pdu->get_header().set_commandId(CANCEL_SM); //еще не выставлен
 					pdu->get_header().set_sequenceNumber(0); //не известен
 					pduData = prepareCancelSm(pdu, cancelPduData, time(NULL),
 						intProps, strProps, objProps);
