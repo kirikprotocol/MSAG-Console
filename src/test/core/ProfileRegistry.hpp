@@ -46,7 +46,8 @@ public:
 	virtual ~ProfileRegistry();
 
 	/**
-	 * Регистрация профиля.
+	 * Регистрация или обновление существующего профиля.
+	 * Выставляет текущее время обновления профиля.
 	 */
 	void putProfile(const Address& addr, const Profile& profile);
 
@@ -61,6 +62,11 @@ public:
 	 * Призак валидности игнорируется.
 	 */
 	bool checkExists(const Address& addr) const;
+
+	/**
+	 * Устанавливает заданное время изменения профиля.
+	 */
+	void setProfileUpdateTime(const Address& addr, time_t t);
 
 	ProfileIterator* iterator() const;
 

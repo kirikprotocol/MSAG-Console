@@ -83,6 +83,15 @@ bool ProfileRegistry::checkExists(const Address& addr) const
 	return (it != profileMap.end());
 }
 
+void ProfileRegistry::setProfileUpdateTime(const Address& addr, time_t t)
+{
+	ProfileMap::const_iterator it = profileMap.find(addr);
+	if (it != profileMap.end())
+	{
+		it->second->putTime = t;
+	}
+}
+
 bool ProfileRegistry::registerDialogId(uint32_t dialogId, int cmdType)
 {
 	DialogMap::const_iterator it = dialogMap.find(dialogId);
