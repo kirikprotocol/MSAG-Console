@@ -111,7 +111,7 @@ public:
         pdu=NULL;
       }else
       {
-        listener->handleError(smppExiting);
+        listener->handleError(smppErrorNetwork);
         break;
       }
     }
@@ -132,7 +132,7 @@ protected:
       if(rd<=0)
       {
         __trace2__("SmppReader: Socket error %s",strerror(errno));
-        throw Exception("SMPP transport network error (receiving header)");
+        return NULL;
       }
       buf.offset+=rd;
     }
@@ -141,7 +141,7 @@ protected:
     while(buf.offset<sz)
     {
       int rd=socket->Read(buf.current(),sz-buf.offset);
-      if(rd<=0)throw Exception("SMPP transport network error (receiving body)");
+      if(rd<=0)return NULL;
       buf.offset+=rd;
     }
     SmppStream s;
