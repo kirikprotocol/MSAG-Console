@@ -1465,10 +1465,94 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 	return false; //после темплейта другие директивы запрещены
 }
 
+bool SmppProtocolTestCases::correctHideDirectives(SmppHeader* header,
+	PduData::IntProps& intProps, int num)
+{
+	__require__(intProps.count("directive.offset"));
+	__decl_tc__;
+	TCSelector s(num, 7);
+	int& offset = intProps["directive.offset"];
+	string dir;
+	switch (s.value())
+	{
+		case 1: //нет директивы
+			break;
+		case 2: //hide директива
+			dir = "#hide#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.hide"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.hide"] = 1;
+				return true;
+			}
+			break;
+		case 3: //hide директива
+			dir = "#unhide##hide#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.hide"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.hide"] = 1;
+				return true;
+			}
+			break;
+		case 4: //unhide директива
+			dir = "#unhide#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.unhide"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.hide"] = 0;
+				return true;
+			}
+			break;
+		case 5: //unhide директива
+			dir = "#hide##unhide#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.unhide"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.hide"] = 0;
+				return true;
+			}
+			break;
+		case 6: //hide директива с битой unhide
+			dir = "#hide#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.hide"); __tc_ok__;
+				intProps["directive.hide"] = 1;
+				dir = "unhide#";
+				int tmp = offset;
+				setDirective(header, mixedCase(dir), offset);
+				offset = tmp;
+				return false;
+			}
+			break;
+		case 7: //unhide директива с битой hide
+			dir = "#unhide#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.unhide"); __tc_ok__;
+				intProps["directive.hide"] = 0;
+				dir = " #hide#";
+				int tmp = offset;
+				setDirective(header, mixedCase(dir), offset);
+				offset = tmp;
+				return false;
+			}
+			break;
+		default:
+			__unreachable__("Invalid num for ack directive");
+	}
+	return false;
+}
+
 void SmppProtocolTestCases::correctDirectives(SmppHeader* header, PduData::IntProps& intProps,
 	PduData::StrProps& strProps, const TestCaseId& num)
 {
-	__require__(num.size() == 4);
+	__require__(num.size() == 5);
 	//ack/noack директивы
 	bool dirCont = correctAckDirectives(header, intProps, num[1]);
 	//def директивы
@@ -1480,6 +1564,11 @@ void SmppProtocolTestCases::correctDirectives(SmppHeader* header, PduData::IntPr
 	if (dirCont)
 	{
 		dirCont = correctTemplateDirectives(header, intProps, strProps, num[3]);
+	}
+	//hide директивы
+	if (dirCont)
+	{
+		dirCont = correctHideDirectives(header, intProps, num[4]);
 	}
 }
 
@@ -1545,7 +1634,9 @@ void SmppProtocolTestCases::incorrectDirectives(SmppHeader* header,
 		"#ac#", "#ack2#", "# ack#", "#ack #", "#ack=#",
 		"#noac#", "#noack2#", "# noack#", "#noack #", "#noack=#",
 		"#def#", "#de 999#", "#def2 999#",
-		"#templat=t0#", "#template2=t0#", "#template#"
+		"#templat=t0#", "#template2=t0#", "#template#",
+		"#hid#", "#unhid#", "#hide2#", "#unhide2#", "# hide#", "# unhide#",
+		"#hide=#", "#unhide=#"
 	};
 	const string invalidDefDir[] =
 	{

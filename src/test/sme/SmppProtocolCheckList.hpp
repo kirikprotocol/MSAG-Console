@@ -382,6 +382,10 @@ void directiveTc()
 		"Корректные def директивы");
 	__reg_tc__("directive.correct.template",
 		"Корректные template директивы с различным количеством параметров (0..2), русские и латинские символы в параметрах и т.п.");
+	__reg_tc__("directive.correct.hide",
+		"Корректные hide директивы");
+	__reg_tc__("directive.correct.unhide",
+		"Корректные unhide директивы");
 	__reg_tc__("directive.incorrect",
 		"Отправка sms с некорректными директивами");
 	__reg_tc__("directive.incorrect.invalidDir",
@@ -679,6 +683,16 @@ void normalSmsTc()
 		"Проверка правильности маршрута (определение sme по адресу отправителя и алиасу получателя)");
 	__reg_tc__("sms.normalSms.checkMandatoryFields",
 		"Сравнение обязательных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm, data_sm) pdu");
+	__reg_tc__("sms.normalSms.checkSourceAddr",
+		"Проверка правильности адреса отправителя");
+	__reg_tc__("sms.normalSms.checkSourceAddr.hideDirective",
+		"Если в настройках sme получателя wantAlias = true и в sms задана директива hide, то происходит сокрытие адреса отправителя (независимо от настроек профиля отправителя)");
+	__reg_tc__("sms.normalSms.checkSourceAddr.unhideDirective",
+		"Если в настройках sme получателя wantAlias = true и в sms задана директива unhide, то сокрытие адреса отправителя не происходит (независимо от настроек профиля отправителя)");
+	__reg_tc__("sms.normalSms.checkSourceAddr.nohideDirective",
+		"Если в настройках sme получателя wantAlias = true и в sms не задана hide/unhide директива, то сокрытие адреса отправителя происходит в зависимости настроек профиля отправителя");
+	__reg_tc__("sms.normalSms.checkSourceAddr.notWantAlias",
+		"Если в настройках sme получателя wantAlias = false, то сокрытие адреса отправителя не происходит (независимо от настроек профиля отправителя и наличия hide директивы в sms)");
 	__reg_tc__("sms.normalSms.checkOptionalFields",
 		"Сравнение опциональных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm, data_sm) pdu");
 	__reg_tc__("sms.normalSms.scheduleChecks",

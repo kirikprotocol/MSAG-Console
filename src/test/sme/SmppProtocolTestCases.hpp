@@ -168,6 +168,7 @@ protected:
 	bool correctDefDirectives(SmppHeader* header, PduData::IntProps& intProps, int num);
 	bool correctTemplateDirectives(SmppHeader* header, PduData::IntProps& intProps,
 		PduData::StrProps& strProps, int num);
+	bool correctHideDirectives(SmppHeader* header, PduData::IntProps& intProps, int num);
 	void correctDirectives(SmppHeader* header, PduData::IntProps& intProps,
 		PduData::StrProps& strProps, const TestCaseId& num);
 	void incorrectDirectives(SmppHeader* header, PduData::IntProps& intProps, int num);

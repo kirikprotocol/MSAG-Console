@@ -49,6 +49,12 @@ void profilerTc()
 		"Правильно заданная локаль (en_us, en_gb, ru_ru)");
 	__reg_tc__("updateProfile.locale.nonExistentLocale",
 		"Заданная локаль не прописана в списке локалей поддерживаемых SC");
+	__reg_tc__("updateProfile.hide",
+		"Изменение hide опций");
+	__reg_tc__("updateProfile.hide.hide",
+		"Установить опцию hide (команда hide)");
+	__reg_tc__("updateProfile.hide.unhide",
+		"Установить опцию unhide (команда unhide)");
 	__reg_tc__("updateProfile.incorrectCmdText",
 		"Неправильный текст команды");
 	//updateProfile.ack
@@ -69,6 +75,10 @@ void profilerTc()
 	__reg_tc__("updateProfile.ack.locale",
 		"Подтверждения об изменении настроек локали");
 	__reg_tc__("updateProfile.ack.locale.dataCoding",
+		"При отсутствии в тексте сообщения русских символов приходит в default кодировке, при наличии русских симовлов приходит либо в default (транслитерация), либо в ucs2 в зависимости от текущих настроек профиля");
+	__reg_tc__("updateProfile.ack.hide",
+		"Подтверждения об изменении hide опции");
+	__reg_tc__("updateProfile.ack.hide.dataCoding",
 		"При отсутствии в тексте сообщения русских символов приходит в default кодировке, при наличии русских симовлов приходит либо в default (транслитерация), либо в ucs2 в зависимости от текущих настроек профиля");
 	__reg_tc__("updateProfile.ack.incorrectCmdText",
 		"Уведомление о неправильном тексте команды");

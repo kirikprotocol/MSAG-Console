@@ -94,6 +94,33 @@ struct ProfilerLocaleMessage
 	}
 };
 
+//Сообщения всегда умещаются на 1 sms
+//Латиница для en, кирилица для ru
+struct ProfilerHideMessage
+{
+	static const pair<string, uint8_t> format(const Profile& profile,
+		int hide)
+	{
+		if (profile.locale == "en_us" || profile.locale == "en_gb")
+		{
+			if (hide)
+			{
+				return convert("Hide option is turned on", profile.codepage);
+			}
+			return convert("Unhide option is turned on", profile.codepage);
+		}
+		if (profile.locale == "ru_ru")
+		{
+			if (hide)
+			{
+				return convert("Включена hide опция", profile.codepage);
+			}
+			return convert("Включена unhide опция", profile.codepage);
+		}
+		__unreachable__("Invalid locale options");
+	}
+};
+
 //Пустое сообщение
 struct ProfilerErrorMessage
 {

@@ -43,6 +43,11 @@ public:
 	void updateLocaleCorrect(bool sync, uint8_t dataCoding, int num);
 
 	/**
+	 * Обновление hide опции.
+	 */
+	void updateHideOptionsCorrect(bool sync, uint8_t dataCoding, int num);
+
+	/**
 	 * Обновление профиля некорректными данными.
 	 */
 	void updateProfileIncorrect(bool sync, uint8_t dataCoding, int num);

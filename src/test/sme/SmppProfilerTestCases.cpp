@@ -297,6 +297,48 @@ void SmppProfilerTestCases::updateLocaleCorrect(bool sync,
 	}
 }
 
+void SmppProfilerTestCases::updateHideOptionsCorrect(bool sync,
+	uint8_t dataCoding, int num)
+{
+	__decl_tc__;
+	//убрать нарезку длинных ответных сообщений от профайлера для map proxy
+	if (fixture->smeInfo.systemId == "MAP_PROXY")
+	{
+		return;
+	}
+	TCSelector s(num, 2);
+	for (; s.check(); s++)
+	{
+		try
+		{
+			string text;
+			PduData::IntProps intProps;
+			switch (s.value())
+			{
+				case 1: //hide
+					__tc__("updateProfile.hide.hide");
+					text = "hide";
+					intProps["profilerTc.hide"] = 1;
+					break;
+				case 2: //unhide
+					__tc__("updateProfile.hide.unhide");
+					text = "unhide";
+					intProps["profilerTc.hide"] = 0;
+					break;
+				default:
+					__unreachable__("Invalid num");
+			}
+			sendUpdateProfilePdu(text, &intProps, NULL, NULL, sync, dataCoding);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(100);
+			error();
+		}
+	}
+}
+
 template<typename T, int size>
 inline int sz(T (&)[size]) { return size; }
 
@@ -310,7 +352,7 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync,
 		return;
 	}
 	__tc__("updateProfile.incorrectCmdText");
-	TCSelector s(num, 4);
+	TCSelector s(num, 5);
 	for (; s.check(); s++)
 	{
 		try
@@ -330,6 +372,11 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync,
 				"locale", "local en_us"
 				//"locale2 en_us"
 			};
+			static const string invalidHideCmd[] =
+			{
+				"hid", "hide2", "inhid", "unhide2"
+				//"locale2 en_us"
+			};
 			string text;
 			switch (s.value())
 			{
@@ -347,6 +394,9 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync,
 					break;
 				case 4: //locale
 					text = invalidLocaleCmd[rand0(sz(invalidLocaleCmd) - 1)];
+					break;
+				case 5: //hide
+					text = invalidHideCmd[rand0(sz(invalidHideCmd) - 1)];
 					break;
 				default:
 					__unreachable__("Invalid num");
@@ -388,6 +438,10 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	{
 		profile.locale = monitor->pduData->strProps["profilerTc.locale"];
 	}
+	if (monitor->pduData->intProps.count("profilerTc.hide"))
+	{
+		profile.hide = monitor->pduData->intProps["profilerTc.hide"];
+	}
 	//проверка profiler reportOptions
 	if (monitor->pduData->intProps.count("profilerTc.reportOptions"))
 	{
@@ -408,6 +462,13 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 		__tc__("updateProfile.ack.locale.dataCoding"); __tc_ok__;
 		const pair<string, uint8_t> p = ProfilerLocaleMessage::format(profile,
 			monitor->pduData->strProps["profilerTc.locale"]);
+		return new AckText(p.first, p.second, true /*valid*/);
+	}
+	if (monitor->pduData->intProps.count("profilerTc.hide"))
+	{
+		__tc__("updateProfile.ack.hide.dataCoding"); __tc_ok__;
+		const pair<string, uint8_t> p = ProfilerHideMessage::format(profile,
+			monitor->pduData->intProps["profilerTc.hide"]);
 		return new AckText(p.first, p.second, true /*valid*/);
 	}
 	//неправильный текст команды

@@ -63,6 +63,7 @@ vector<int> NormalSmsHandler::checkRoute(SmppHeader* header1,
 		}
 	}
 	//правильность origAddr
+	/*
 	if (routeHolder)
 	{
 		if (fixture->smeInfo.wantAlias)
@@ -78,11 +79,62 @@ vector<int> NormalSmsHandler::checkRoute(SmppHeader* header1,
 			res.push_back(5);
 		}
 	}
+	*/
 	return res;
 }
 
 #define __check__(errCode, cond) \
 	if (!(cond)) { __tc_fail__(errCode); }
+
+void NormalSmsHandler::checkSourceAddr(DeliveryMonitor* monitor, SmppHeader* header)
+{
+	__require__(monitor->pduData->objProps.count("senderData"));
+	__decl_tc__;
+	SmsPduWrapper pdu(header, 0);
+	SmsPduWrapper origPdu(monitor->pduData);
+	SenderData* senderData =
+		dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
+	//алиасенный адрес
+	PduAddress aliasedAddr;
+	Address addr;
+	SmppUtil::convert(origPdu.getSource(), &addr);
+	addr = fixture->aliasReg->findAliasByAddress(addr);
+	SmppUtil::convert(addr, &aliasedAddr);
+	if (fixture->smeInfo.wantAlias)
+	{
+		if (monitor->pduData->intProps.count("directive.hide"))
+		{
+			if (monitor->pduData->intProps["directive.hide"])
+			{
+				__tc__("sms.normalSms.checkSourceAddr.hideDirective");
+				__check__(1, pdu.getSource() == aliasedAddr);
+			}
+			else
+			{
+				__tc__("sms.normalSms.checkSourceAddr.unhideDirective");
+				__check__(1, pdu.getSource() == origPdu.getSource());
+			}
+		}
+		else if (senderData->validProfile)
+		{
+			__tc__("sms.normalSms.checkSourceAddr.nohideDirective");
+			if (senderData->profile.hide)
+			{
+				__check__(1, pdu.getSource() == aliasedAddr);
+			}
+			else
+			{
+				__check__(1, pdu.getSource() == origPdu.getSource());
+			}
+		}
+	}
+	else
+	{
+		__tc__("sms.normalSms.checkSourceAddr.notWantAlias");
+		__check__(1, pdu.getSource() == origPdu.getSource());
+	}
+	__tc_ok_cond__;
+}
 
 //проверка: тип pdu, data coding, text
 void NormalSmsHandler::checkNotMapMsgText(DeliveryMonitor* monitor,
@@ -784,6 +836,8 @@ void NormalSmsHandler::processPdu(SmppHeader* header, const Address& origAddr,
 		__tc__("sms.normalSms.checkRoute");
 		__tc_fail2__(checkRoute(monitor->pduData->pdu, header), 0);
 		__tc_ok_cond__;
+		//проверка адреса отправителя
+		checkSourceAddr(monitor, header);
 		//сравнить поля полученной и оригинальной pdu
 		__tc__("sms.normalSms.checkMandatoryFields");
 		//поля хедера проверяются в processDeliverySm()

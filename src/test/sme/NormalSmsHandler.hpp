@@ -46,6 +46,8 @@ protected:
 	virtual Category& getLog();
 	vector<int> checkRoute(SmppHeader* header1, SmppHeader* header2) const;
 
+	void checkSourceAddr(DeliveryMonitor* monitor, SmppHeader* header);
+
 	void checkNotMapMsgText(DeliveryMonitor* monitor, SmppHeader* header);
 
 	PduFlag checkSegmentedMapMsgText(DeliveryMonitor* monitor,
