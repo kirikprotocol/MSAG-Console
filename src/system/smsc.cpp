@@ -18,6 +18,7 @@
 #include "mscman/MscManager.h"
 #include "resourcemanager/ResourceManager.hpp"
 #include <typeinfo>
+#include "system/status_sme.hpp"
 
 //#define ENABLE_MAP_SYM
 
@@ -332,10 +333,10 @@ void Smsc::init(const SmscConfigs& cfg)
   // create scheduler here, and start later in run
   scheduler=new Scheduler(eventqueue);
 
-  smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),scheduler);
+  smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),0);
   store=smsc::store::StoreManager::getMessageStore();
 
-  scheduler->Init(store);
+  scheduler->Init(store,this);
 
   mrCache.assignStore(store);
 
@@ -560,11 +561,31 @@ void Smsc::init(const SmscConfigs& cfg)
   addr.getValue( addrval );
   scAddr = addrval;
 
+  {
+    TrafficControl::TrafficControlConfig tccfg;
+    tccfg.smsc=this;
+    tccfg.store=store;
+    tccfg.maxSmsPerSecond=cfg.cfgman->getInt("trafficControl.maxSmsPerSecond");
+    tccfg.shapeTimeFrame=cfg.cfgman->getInt("trafficControl.shapeTimeFrame");
+    tccfg.protectTimeFrame=cfg.cfgman->getInt("trafficControl.protectTimeFrame");
+    tccfg.protectThreshold=cfg.cfgman->getInt("trafficControl.protectThreshold");
+    tccfg.allowedDeliveryFailures=cfg.cfgman->getInt("trafficControl.allowedDeliveryFailures");
+    tccfg.lookAheadTime=cfg.cfgman->getInt("trafficControl.lookAheadTime");
+
+    tcontrol=new TrafficControl(tccfg);
+  }
+
   try{
     scheduler->setRescheduleLimit(cfg.cfgman->getInt("core.reschedule_limit"));
   }catch(...)
   {
     __warning__("reschedule_limit not found in config, using default");
+  }
+
+  {
+    StatusSme *ss=new StatusSme(this,"StatusSme");
+    tp.startTask(ss);
+    smeman.registerInternallSmeProxy("StatusSme",ss);
   }
 
   log.info( "SMSC init complete" );

@@ -129,6 +129,10 @@ public:
     }
     else throw runtime_error("proxy unregistred");
   }
+  virtual SmeIndex getSmeIndex()
+  {
+    return idx;
+  }
 };
 
 using core::synchronization::Mutex;

@@ -33,7 +33,8 @@ int AlertAgent::Execute()
       {
         try{
           store->retriveSms(ids[i],s);
-          psmsc->UpdateSmsSchedule(s.getNextTime(),ids[i],now);
+          SmeIndex idx=psmsc->getSmeIndex(s.dstSmeId);
+          psmsc->UpdateSmsSchedule(s.getNextTime(),ids[i],now,idx);
         }catch(...)
         {
           __warning2__("AlertAgent: failed to retrieve sms: %lld",ids[i]);

@@ -4,6 +4,7 @@
 #include "system/event_queue.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "core/buffers/Array.hpp"
+#include "core/buffers/IntHash.hpp"
 #include "core/synchronization/Event.hpp"
 #include "system/sched_timer.hpp"
 #include "store/StoreManager.h"
@@ -15,16 +16,19 @@ namespace system{
 using smsc::store::MessageStore;
 using namespace smsc::smeman;
 using smsc::core::buffers::Array;
+using smsc::core::buffers::IntHash;
 using smsc::core::synchronization::Event;
 
-class Scheduler:public smsc::core::threads::ThreadedTask,public SchedTimer{
+class Smsc;
+
+class Scheduler:public smsc::core::threads::ThreadedTask{//,public SchedTimer{
 public:
   Scheduler(EventQueue& eq):
     queue(eq),rescheduleLimit(10){}
   int Execute();
   const char* taskName(){return "scheduler";}
 
-  void Init(MessageStore* st);
+  void Init(MessageStore* st,Smsc* psmsc);
 
   void notify()
   {
@@ -34,16 +38,31 @@ public:
   {
     rescheduleLimit=rl;
   }
-  void ChangeSmsSchedule(SMSId id,time_t newtime);
+  void ChangeSmsSchedule(SMSId id,time_t newtime,SmeIndex idx);
 
-  void UpdateSmsSchedule(time_t old,SMSId id,time_t newtime);
+  void UpdateSmsSchedule(time_t old,SMSId id,time_t newtime,SmeIndex idx);
+
+  int getSmeCount(SmeIndex idx,time_t time);
 
 protected:
   EventQueue &queue;
   EventMonitor mon;
   int rescheduleLimit;
-  typedef std::multimap<time_t,SMSId> TimeLineMap;
-  typedef std::pair<SMSId,time_t> TimeIdPair;
+  struct Data{
+    Data():id(0),idx(0){}
+    Data(SMSId id,SmeIndex idx):id(id),idx(idx){}
+    SMSId id;
+    SmeIndex idx;
+  };
+  typedef std::multimap<time_t,Data> TimeLineMap;
+  typedef std::pair<time_t,Data> TimeIdPair;
+
+  struct CacheItem{
+    time_t lastUpdate;
+    int count;
+  };
+  IntHash<CacheItem> smeCountCache;
+
   TimeLineMap timeLine;
 };
 

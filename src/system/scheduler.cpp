@@ -1,19 +1,23 @@
+#include "system/smsc.hpp"
 #include "system/scheduler.hpp"
 
 namespace smsc{
 namespace system{
 
-void Scheduler::Init(MessageStore* st)
+void Scheduler::Init(MessageStore* st,Smsc* psmsc)
 {
   smsc::store::TimeIdIterator* it=st->getReadyForRetry(time(NULL)+30*24*60*60);
   if(it)
   {
     MutexGuard guard(mon);
     SMSId id;
+    SMS s;
     try{
       while(it->getNextId(id))
       {
-        timeLine.insert(TimeIdPair(it->getTime(),id));
+        st->retriveSms(id,s);
+        SmeIndex idx=psmsc->getSmeIndex(s.dstSmeId);
+        timeLine.insert(TimeIdPair(it->getTime(),Data(id,idx)));
       }
       __trace2__("Scheduler: init ok - %d messages for rescheduling",timeLine.size());
     }catch(std::exception& e)
@@ -35,7 +39,7 @@ int Scheduler::Execute()
 {
   time_t t,r;
   Event e;
-  Array<SMSId> ids;
+  Array<Data> ids;
   while(!isStopping)
   {
     t=time(NULL);
@@ -57,8 +61,17 @@ int Scheduler::Execute()
     }
     for(int i=0;i<ids.Count();i++)
     {
-      SmscCommand cmd=SmscCommand::makeForward();
-      queue.enqueue(ids[i],cmd);
+      SmscCommand cmd=SmscCommand::makeForward(ids[i].idx,ids[i].id,false);
+      queue.enqueue(ids[i].id,cmd);
+      CacheItem *ci=smeCountCache.GetPtr(ids[i].idx);
+      if(ci)
+      {
+        if(ci->lastUpdate>t)
+        {
+          ci->count--;
+        }
+      }
+
       e.Wait(1000/rescheduleLimit);
       if(isStopping)break;
     }
@@ -83,16 +96,16 @@ int Scheduler::Execute()
   return 0;
 }
 
-void Scheduler::ChangeSmsSchedule(SMSId id,time_t newtime)
+void Scheduler::ChangeSmsSchedule(SMSId id,time_t newtime,SmeIndex idx)
 {
   MutexGuard guard(mon);
-  timeLine.insert(TimeIdPair(newtime,id));
+  timeLine.insert(TimeIdPair(newtime,Data(id,idx)));
   __trace2__("Scheduler: changesmsschedule %lld -> %d",id,newtime);
   mon.notify();
   __trace2__("Scheduler: notify");
 }
 
-void Scheduler::UpdateSmsSchedule(time_t old,SMSId id,time_t newtime)
+void Scheduler::UpdateSmsSchedule(time_t old,SMSId id,time_t newtime,SmeIndex idx)
 {
   MutexGuard guard(mon);
   std::pair<TimeLineMap::iterator,TimeLineMap::iterator> p;
@@ -101,16 +114,53 @@ void Scheduler::UpdateSmsSchedule(time_t old,SMSId id,time_t newtime)
   {
     for(TimeLineMap::iterator i=p.first;i!=p.second;i++)
     {
-      if(i->second==id)
+      if(i->second.id==id)
       {
         timeLine.erase(i);
-        timeLine.insert(TimeIdPair(newtime,id));
+        timeLine.insert(TimeIdPair(newtime,Data(id,idx)));
+        CacheItem *ci=smeCountCache.GetPtr(idx);
+        if(ci)
+        {
+          if(ci->lastUpdate>old && ci->lastUpdate<newtime)
+          {
+            ci->count--;
+          }
+        }
         mon.notify();
         __trace2__("Scheduler: updatesmsschedule: %lld: %d->%d",id,old,newtime);
         break;
       }
     };
   }
+}
+
+int Scheduler::getSmeCount(SmeIndex idx,time_t time)
+{
+  MutexGuard guard(mon);
+  if(!smeCountCache.Exist(idx))
+  {
+    CacheItem ci;
+    ci.lastUpdate=0;
+    ci.count=0;
+    smeCountCache.Insert(idx,ci);
+  }
+  CacheItem *pci=smeCountCache.GetPtr(idx);
+  TimeLineMap::iterator from=timeLine.lower_bound(pci->lastUpdate);
+  if(from==timeLine.end())from=timeLine.begin();
+  TimeLineMap::iterator till=timeLine.upper_bound(time);
+  if(till==timeLine.end())
+  {
+    return pci->count;
+  }
+  for(;from!=till;from++)
+  {
+    if(from->second.idx==idx)
+    {
+      pci->count++;
+    }
+  }
+  pci->lastUpdate=time+1;
+  return pci->count;
 }
 
 

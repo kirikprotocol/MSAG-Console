@@ -30,6 +30,8 @@
 
 #include "system/mrcache.hpp"
 
+#include "system/traffic_control.hpp"
+
 #include <sys/types.h>
 
 
@@ -124,6 +126,7 @@ public:
     deliverErrCounter=0;
     rescheduleCounter=0;
     startTime=0;
+    tcontrol=0;
   };
   ~Smsc();
   void init(const SmscConfigs& cfg);
@@ -153,14 +156,19 @@ public:
     scheduler->notify();
   }
 
-  void ChangeSmsSchedule(SMSId msgId,time_t t)
+  void ChangeSmsSchedule(SMSId msgId,time_t t,SmeIndex idx)
   {
-    scheduler->ChangeSmsSchedule(msgId,t);
+    scheduler->ChangeSmsSchedule(msgId,t,idx);
   }
 
-  void UpdateSmsSchedule(time_t old,SMSId msgId,time_t t)
+  void UpdateSmsSchedule(time_t old,SMSId msgId,time_t t,SmeIndex idx)
   {
-    scheduler->UpdateSmsSchedule(old,msgId,t);
+    scheduler->UpdateSmsSchedule(old,msgId,t,idx);
+  }
+
+  int GetSmeScheduleCount(SmeIndex idx,time_t time)
+  {
+    return scheduler->getSmeCount(idx,time);
   }
 
   smsc::profiler::Profiler* getProfiler()
@@ -346,6 +354,12 @@ public:
     return mapProxy;
   }
 
+  bool allowCommandProcessing(SmscCommand& cmd)
+  {
+    return tcontrol->processCommand(cmd);
+  }
+
+
 protected:
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
@@ -366,6 +380,8 @@ protected:
   AlertAgent *alertAgent;
   performance::PerformanceDataDispatcher perfDataDisp;
   smsc::db::DataSource *dataSource;
+
+  TrafficControl *tcontrol;
 
   SmeProxy* abonentInfoProxy;
 

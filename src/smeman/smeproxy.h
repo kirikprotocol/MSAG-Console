@@ -69,6 +69,8 @@ public:
   virtual const std::string& getSourceAddressRange(){return nullstr;};
   virtual const char * getSystemId() const = 0;
 
+  virtual SmeIndex getSmeIndex(){return INVALID_SME_INDEX;}
+
   virtual int getBindMode(){return smeTRX;}
 
   // in and out MUST BE AT LEAST 32 BYTES!!!

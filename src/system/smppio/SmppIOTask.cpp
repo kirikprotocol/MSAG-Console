@@ -765,7 +765,7 @@ int SmppOutputThread::Execute()
     if(isStopping)break;
     int cnt=0;
     mul.clear();
-    trace("check data for output");
+    //trace("check data for output");
     for(i=0;i<sockets.Count();i++)
     {
       SmppSocket *ss=sockets[i];

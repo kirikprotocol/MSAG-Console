@@ -49,16 +49,16 @@ int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,
         buf=auto_ptr<char>(new char[buflen]);
       }
     }while(datalen==-1);
-    dc=DataCoding::DEFAULT;
+    dc=DataCoding::LATIN1;
   }
   __trace2__("splitSms:dc=%d",dc);
-  int maxlen=dc==DataCoding::DEFAULT?160:140;
+  int maxlen=dc==DataCoding::LATIN1?160:140;
   int sent=0;
   while(sent<datalen)
   {
     SMS *s=new SMS(*tmplSms);
     int piece=datalen-sent>maxlen?maxlen:datalen-sent;
-    if(dc==DataCoding::DEFAULT && piece==maxlen)piece-=countEscapedChars(buf.get()+sent,piece);
+    if(dc==DataCoding::LATIN1 && piece==maxlen)piece-=countEscapedChars(buf.get()+sent,piece);
     s->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
     s->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get()+sent,piece);
     s->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,piece);
@@ -90,7 +90,7 @@ int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
         buf=auto_ptr<char>(new char[buflen]);
       }
     }while(datalen==-1);
-    dc=DataCoding::DEFAULT;
+    dc=DataCoding::LATIN1;
   }
   sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
   if(datalen>255)
@@ -148,7 +148,7 @@ int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
       buf.get()[158]='.';
       buf.get()[157]='.';
     }
-    dc=DataCoding::DEFAULT;
+    dc=DataCoding::LATIN1;
   }
   sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
   sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get(),datalen);
@@ -189,7 +189,7 @@ void transLiterateSms(SMS* sms)
   len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
   buf8=auto_ptr<char>(new char[udhiDataLen+len*3+1]);
   int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen,len*3);
-  sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+  sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
   __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
   if(udhi)
   {
@@ -331,7 +331,7 @@ int partitionSms(SMS* sms,int dstdc)
     len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhilen,len*3);
     if(udhi)memcpy(bufTr.get(),msg,udhilen);
     msg=bufTr.get();
-    dc=DataCoding::DEFAULT;
+    dc=DataCoding::LATIN1;
     //len+=udhilen;
   }
   int maxlen=134;;
@@ -341,7 +341,7 @@ int partitionSms(SMS* sms,int dstdc)
 
   if(exudhilen)udhilen=exudhilen;
   int rv=psErrorUdhi;
-  if(dc==DataCoding::DEFAULT)
+  if(dc==DataCoding::LATIN1)
   {
     int xlen=len;
     for(int i=0;i<len;i++)
@@ -479,7 +479,7 @@ int partitionSms(SMS* sms,int dstdc)
         lastword=i;
         wl=0;
       }
-      if(dc==DataCoding::DEFAULT)
+      if(dc==DataCoding::LATIN1)
       {
         switch(msg[i])
         {
@@ -532,7 +532,7 @@ void extractSmsPart(SMS* sms,int partnum)
     msg=bufTr.get();
   }
   int maxlen=134;
-  if(dstdc==DataCoding::DEFAULT)
+  if(dstdc==DataCoding::LATIN1)
   {
     maxlen=153;
   }

@@ -276,7 +276,7 @@ void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
     if ( records[index]->proxy )
       dispatcher.detachSmeProxy(records[index]->proxy);
     else
-      __warning__("unregister null proxy");
+      __warning2__("unregister null proxy(%s)",systemId.c_str());
     records[index]->proxy = 0;
   }
 }

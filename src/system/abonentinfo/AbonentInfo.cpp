@@ -117,8 +117,6 @@ int AbonentInfoSme::Execute()
   char msc[]="";
   char imsi[]="";
   s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
-  time_t t=time(NULL)+60;
-  s.setValidTime(t);
   s.setDeliveryReport(0);
   s.setArchivationRequested(false);
   s.setEServiceType(servType.c_str());
@@ -267,6 +265,8 @@ int AbonentInfoSme::Execute()
       //char buf7[MAX_SHORT_MESSAGE_LENGTH];
       //int len7=ConvertTextTo7Bit(answ,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
 
+      time_t t=time(NULL)+60;
+      s.setValidTime(t);
       s.setOriginatingAddress(as.destAddr);
       s.setDestinationAddress(as.sourceAddr);
       s.setIntProperty(Tag::SMPP_ESM_CLASS,0);

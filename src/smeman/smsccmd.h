@@ -122,6 +122,13 @@ struct AlertNotification{
   int status;
 };
 
+struct ForwardData{
+  ForwardData(SmeIndex idx,SMSId id,bool reschedule):idx(idx),id(id),reschedule(reschedule){}
+  SmeIndex idx;
+  SMSId id;
+  bool reschedule;
+};
+
 struct SmsResp
 {
 private:
@@ -394,8 +401,10 @@ struct _SmscCommand
     case ALERT_NOTIFICATION:
       if(dta)delete (AlertNotification*)dta;
       break;
-    case UNKNOWN:
     case FORWARD:
+      if(dta)delete (ForwardData*)dta;
+      break;
+    case UNKNOWN:
     case ALERT:
     case GENERIC_NACK:
     case UNBIND_RESP:
@@ -436,7 +445,9 @@ struct _SmscCommand
     return *((AbonentStatus*)dta);
   }
 
-  bool is_reschedulingForward(){return dta!=0;}
+  bool is_reschedulingForward(){return ((ForwardData*)dta)->reschedule;}
+  SmeIndex get_forwardDestSme(){return ((ForwardData*)dta)->idx;}
+  SMSId get_forwardMsgId(){return ((ForwardData*)dta)->id;}
 };
 
 class SmscCommand
@@ -624,14 +635,14 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeForward(bool reschedule=false)
+  static SmscCommand makeForward(SmeIndex idx,SMSId id,bool reschedule=false)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = FORWARD;
-    _cmd.dta = reschedule?((void*)0xffffffff):0;
+    _cmd.dta = new ForwardData(idx,id,reschedule);
     _cmd.dialogId = 0;
     return cmd;
   }
