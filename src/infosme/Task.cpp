@@ -1026,6 +1026,8 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     }
     
     dsInt->stopTimer(wdTimerId);
+    smsc_log_debug(logger, "Selected %d messages from DB for task '%s'",
+                   messagesCache.Count(), info.id.c_str());
     
     MutexGuard guard(messagesCacheLock);
     if (messagesCache.Count() > 0) {
