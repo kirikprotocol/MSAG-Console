@@ -501,6 +501,8 @@ void Smsc::init(const SmscConfigs& cfg)
   }
 
   smsc::util::regexp::RegExp::InitLocale();
+  scAddr = cfg.cfgman->getString("core.service_center_address");
+
   }catch(exception& e)
   {
     __trace2__("Smsc::init exception:%s",e.what());
@@ -512,7 +514,6 @@ void Smsc::init(const SmscConfigs& cfg)
     log.warn("Smsc::init exception:unknown");
     throw;
   }
-  scAddr = cfg.cfgman->getString("mapio.scaddr");
   __trace__("Smsc::init completed");
 }
 
