@@ -321,8 +321,13 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						int len = MAX_SMPP_SM_LENGTH;
 						bool udhi = pdu->get_message().get_esmClass() &
 							ESM_CLASS_UDHI_INDICATOR;
-						auto_ptr<char> tmp = rand_text2(len,
-							pdu->get_message().get_dataCoding(), udhi, false);
+						uint8_t dc = pdu->get_message().get_dataCoding();
+						if (fixture->smeInfo.forceDC)
+						{
+							bool res = SmppUtil::extractDataCoding(dc, dc);
+							__require__(res);
+						}
+						auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
 						pdu->get_message().set_shortMessage(tmp.get(), len);
 					}
 					break;
@@ -331,7 +336,14 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					{
 						__tc__("submitSm.correct.messagePayloadLengthMarginal");
 						pdu->get_message().set_esmClass(0);
-						pdu->get_message().set_dataCoding(DEFAULT);
+						if (fixture->smeInfo.forceDC)
+						{
+							pdu->get_message().set_dataCoding(0); //DEFAULT
+						}
+						else
+						{
+							pdu->get_message().set_dataCoding(DEFAULT);
+						}
 						int len = MAX_PAYLOAD_LENGTH;
 						auto_ptr<char> tmp = rand_text2(len, DEFAULT, false, false);
 						pdu->get_optional().set_messagePayload(tmp.get(), len);
@@ -759,8 +771,13 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 						int len = rand2(3, MAX_SMPP_SM_LENGTH);
 						bool udhi = pdu->get_message().get_esmClass() &
 							ESM_CLASS_UDHI_INDICATOR;
-						auto_ptr<char> tmp = rand_text2(len,
-							pdu->get_message().get_dataCoding(), udhi, false);
+						uint8_t dc = pdu->get_message().get_dataCoding();
+						if (fixture->smeInfo.forceDC)
+						{
+							bool res = SmppUtil::extractDataCoding(dc, dc);
+							__require__(res);
+						}
+						auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
 						pdu->get_message().set_shortMessage(tmp.get(), len);
 					}
 					if (!pdu->get_optional().has_messagePayload())
@@ -768,8 +785,13 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 						int len = rand2(3, MAX_PAYLOAD_LENGTH);
 						bool udhi = pdu->get_message().get_esmClass() &
 							ESM_CLASS_UDHI_INDICATOR;
-						auto_ptr<char> tmp = rand_text2(len,
-							pdu->get_message().get_dataCoding(), udhi, false);
+						uint8_t dc = pdu->get_message().get_dataCoding();
+						if (fixture->smeInfo.forceDC)
+						{
+							bool res = SmppUtil::extractDataCoding(dc, dc);
+							__require__(res);
+						}
+						auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
 						pdu->get_optional().set_messagePayload(tmp.get(), len);
 					}
 					break;
@@ -863,7 +885,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 			PduData* replacePduData = NULL;
 			{
 				MutexGuard mguard(fixture->pduReg->getMutex());
-				replacePduData = getNonReplaceEnrotePdu(false);
+				replacePduData = getNonReplaceEnrotePdu(true);
 			}
 			if (!replacePduData)
 			{
