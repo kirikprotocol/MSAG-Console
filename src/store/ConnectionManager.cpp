@@ -500,7 +500,7 @@ void Connection::retrive(SMSId id, SMS &sms)
     if ((status) == OCI_NO_DATA)
     {
         NoSuchMessageException exc(id);
-        log.warn("Storage Exception : %s\n", exc.what());
+        //log.debug(exc.what());
         throw exc;
     }
     else 
@@ -532,7 +532,7 @@ void Connection::remove(SMSId id)
     {
         checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
         NoSuchMessageException exc(id);
-        log.warn("Storage Exception : %s\n", exc.what());
+        //log.debug(exc.what());
         throw exc;
     }
     checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
@@ -561,7 +561,7 @@ void Connection::replace(SMSId id, const SMS &sms)
     {
         checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
         NoSuchMessageException exc(id);
-        log.warn("Storage Exception : %s\n", exc.what());
+        //log.debug(exc.what());
         throw exc;
     }
     checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
