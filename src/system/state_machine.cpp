@@ -953,7 +953,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
          (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1  ||
          sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
       {
-        SMS rpt;
+        SMS *prpt=new SMS;
+        SMS &rpt=*prpt;
         rpt.setOriginatingAddress(scAddress);
         char msc[]="123";
         char imsi[]="123";
@@ -976,18 +977,19 @@ StateType StateMachine::deliveryResp(Tuple& t)
         char msgid[60];
         sprintf(msgid,"%lld",t.msgId);
         rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
-        Array<SMS*> arr;
         string out;
         sms.getDestinationAddress().getText(addr,sizeof(addr));
         formatDeliver(addr,time(NULL),out);
         rpt.getDestinationAddress().getText(addr,sizeof(addr));
         __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
         smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-        splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
+        trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
+        smsc->submitSms(prpt);
+        /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
         for(int i=0;i<arr.Count();i++)
         {
           smsc->submitSms(arr[i]);
-        };
+        };*/
       }
     }
   }catch(std::exception& e)
@@ -1261,7 +1263,8 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
       )
     )return;
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))return;
-  SMS rpt;
+  SMS *prpt=new SMS;
+  SMS &rpt=*prpt;
   rpt.setOriginatingAddress(scAddress);
   char msc[]="123";
   char imsi[]="123";
@@ -1287,16 +1290,18 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   char msgid[60];
   sprintf(msgid,"%lld",msgId);
   rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
-  Array<SMS*> arr;
+  //Array<SMS*> arr;
   string out;
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   formatFailed(addr,reason,sms.getSubmitTime(),out);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-  splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
+  trimSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage);
+  smsc->submitSms(prpt);
+  /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
   for(int i=0;i<arr.Count();i++)
   {
     smsc->submitSms(arr[i]);
-  };
+  };*/
 }
 
 void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
@@ -1311,7 +1316,8 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
   if(sms.getAttemptsCount()!=0)return;
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))return;
-  SMS rpt;
+  SMS *prpt=new SMS;
+  SMS &rpt=*prpt;
   rpt.setOriginatingAddress(scAddress);
   char msc[]="123";
   char imsi[]="123";
@@ -1342,11 +1348,13 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   formatNotify(addr,reason,sms.getSubmitTime(),out);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-  splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
+  splitSms(prpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
+  smsc->submitSms(prpt);
+  /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
   for(int i=0;i<arr.Count();i++)
   {
     smsc->submitSms(arr[i]);
-  };
+  };*/
 }
 
 time_t StateMachine::rescheduleSms(SMS& sms)

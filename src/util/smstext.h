@@ -77,6 +77,8 @@ static inline bool hasHighBit(const char* buf,int len)
 int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,int datacoding,
              Array<SMS*>& dest);
 
+int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding);
+
 };
 };
 

@@ -65,5 +65,54 @@ int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,
   return dest.Count();
 }
 
+int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding)
+{
+  int buflen=length*2+4;
+  auto_ptr<char> buf(new char[buflen]);
+  bool hb=hasHighBit(text,length);
+  int dc;
+  int datalen;
+  if(hb && datacoding==DataCoding::UCS2)
+  {
+    ConvertMultibyteToUCS2(text,length,(short*)buf.get(),buflen,encoding);
+    dc=DataCoding::UCS2;
+    if(length<=70)
+    {
+      datalen=length*2;
+    }else
+    {
+      datalen=70;
+      short d[1];
+      ConvertMultibyteToUCS2(".",1,d,1,CONV_ENCODING_ANSI);
+      short *b=(short*)buf.get();
+      b[69]=d[0];
+      b[68]=d[0];
+      b[67]=d[0];
+    }
+  }else
+  {
+    do{
+      datalen=Transliterate(text,length,encoding,buf.get(),buflen);
+      if(datalen==-1)
+      {
+        buflen*=2;
+        buf=auto_ptr<char>(new char[buflen]);
+      }
+    }while(datalen==-1);
+    if(datalen>160)
+    {
+      datalen=160;
+      buf.get()[159]='.';
+      buf.get()[158]='.';
+      buf.get()[157]='.';
+    }
+    dc=DataCoding::DEFAULT;
+  }
+  sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
+  sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get(),datalen);
+  sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,datalen);
+  return datalen;
+}
+
 };//util
 };//smsc
