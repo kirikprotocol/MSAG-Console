@@ -233,6 +233,10 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     if ( encoding == MAP_SMSC7BIT_ENCODING || encoding == MAP_OCTET7BIT_ENCODING  || encoding == MAP_LATIN1_ENCODING ){ // 7bit
         unsigned text_len;
         const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+        if(text_len==0 && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+        {
+          text=(const unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
+        }
         if ( header->uu.s.udhi ){
           unsigned udh_len = (unsigned)*text;
           __trace2__("MAP::mkDeliverPDU: udh_len 0x%x",udh_len);
