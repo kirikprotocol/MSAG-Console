@@ -78,23 +78,23 @@ function setSort(sorting)
     <col width="1%" align=center> <!--enabled-->
     <col width="1%" align=center> <!--generating-->
     <col width="1%" align=center> <!--processing-->
-    <col width="1%"             > <!--priority-->
+    <col width="1%" align=center> <!--priority-->
     <col width="1%" align=center> <!--retryOnFail-->
     <col width="1%" align=center> <!--replaceMessage-->
     <col width="1%" align=center> <!--trackIntegrity-->
     <col width="1%"             > <!--svcType-->
     <tr>
       <th>&nbsp;</th>
-      <th><a href="#" <%=bean.getSort().endsWith("name")           ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by task name"           onclick='return setSort("name")'          >Task name</a></th>
-      <th><a href="#" <%=bean.getSort().endsWith("provider")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by data provider name"  onclick='return setSort("provider")'      >Data provider</a></th>
-      <th><a href="#" <%=bean.getSort().endsWith("enabled")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Enabled flag"        onclick='return setSort("enabled")'       >Enabled</a></th>
-      <th><a href="#" <%=bean.getSort().endsWith("generating")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by generating flag"     onclick='return setSort("generating")'    >Generating</a></th>
-      <th><a href="#" <%=bean.getSort().endsWith("processing")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by processing flag"     onclick='return setSort("processing")'    >Processing</a></th>
-      <th><a href="#" <%=bean.getSort().endsWith("priority")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by priority"            onclick='return setSort("priority")'      >Priority</a></th>
-      <th><a href="#" <%=bean.getSort().endsWith("retryOnFail")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by RetryOnFail flag"    onclick='return setSort("retryOnFail")'   >Retry on fail</a></th>
-      <th><a href="#" <%=bean.getSort().endsWith("replaceMessage") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by ReplaceMessage flag" onclick='return setSort("replaceMessage")'>Replace message</a></th>
-      <th><a href="#" <%=bean.getSort().endsWith("trackIntegrity") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by TrackIntegrity flag" onclick='return setSort("trackIntegrity")'>Track Integrity</a></th>
-      <th><a href="#" <%=bean.getSort().endsWith("svcType")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by service type"        onclick='return setSort("svcType")'       >Service type</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("name")           ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Task name"           onclick='return setSort("name")'           >Task</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("provider")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Data provider name"  onclick='return setSort("provider")'       >Data provider</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("enabled")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Enabled flag"        onclick='return setSort("enabled")'        >Enabled</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("generating")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Generating flag"     onclick='return setSort("generating")'     >Generating</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("processing")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Processing flag"     onclick='return setSort("processing")'     >Processing</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("priority")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Priority"            onclick='return setSort("priority")'       >Priority</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("retryOnFail")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Retry on fail flag"    onclick='return setSort("retryOnFail")'  >Retry</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("replaceMessage") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Replace message flag" onclick='return setSort("replaceMessage")'>Replace</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("trackIntegrity") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Track integrity flag" onclick='return setSort("trackIntegrity")'>Integrity</a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("svcType")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Service type"        onclick='return setSort("svcType")'        >SVC</a></th>
     </tr>
     <%
     int rowN = 0;
