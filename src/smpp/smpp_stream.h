@@ -120,8 +120,8 @@ inline void __fill_x__ (SmppStream* stream, T& data)
   __check_smpp_stream_is_writable__(stream);
   if (stream->dataOffset+sizeof(T) <= stream->dataLength)
   { 
-    __watch__((int)stream->dataOffset);
-    __watch__((int)stream->dataLength);
+    __watch__(stream->dataOffset);
+    __watch__(stream->dataLength);
     __watch__(sizeof(T));
   }
   __throw_if_fail__ ( stream->dataOffset+sizeof(T) <= stream->dataLength ,

@@ -16,17 +16,17 @@
 #if defined DISABLE_ANY_CHECKS
 //  #warning "any chacks will disabled, it is very dungrouse mode"
   #if !defined DISABLE_HARD_CHECKS
-		#define DISABLE_HARD_CHECKS
-	#endif
+    #define DISABLE_HARD_CHECKS
+  #endif
   #if !defined DISABLE_SOFT_CHECKS
-		#define DISABLE_SOFT_CHECKS
-	#endif
+    #define DISABLE_SOFT_CHECKS
+  #endif
   #if !defined DISABLE_WATCHDOG
-		#define DISABLE_WATCHDOG
-	#endif
-	#if !defined DISABLE_TRACING  
-		#define DISABLE_TRACING
-	#endif
+    #define DISABLE_WATCHDOG
+  #endif
+  #if !defined DISABLE_TRACING  
+    #define DISABLE_TRACING
+  #endif
 #endif
 
 #define require(expr) ccassert(expr)
@@ -284,6 +284,19 @@ namespace util{
   }
 
   inline void watchxImpl(int e, const char* expr,
+                         const char* file, const char* func, int line)
+  {
+    fprintf(WATCH_LOG_STREAM,"*watch*: %s = %x     %s(%s):%d\n",
+            expr,e,
+            #if defined ENABLE_FILE_NAME
+              file,
+            #else
+              "",
+            #endif
+            func,line);
+  }
+
+  inline void watchxImpl(unsigned int e, const char* expr,
                          const char* file, const char* func, int line)
   {
     fprintf(WATCH_LOG_STREAM,"*watch*: %s = %x     %s(%s):%d\n",
