@@ -33,6 +33,7 @@ namespace stat {
 
     struct CommonStat
     {
+      int providerId;
       int accepted;
       int rejected;
       int delivered;
@@ -53,6 +54,7 @@ namespace stat {
         delivered=0;
         temperror=0;
         permerror=0;
+        providerId=-1;
         errors.Empty();
       }
     };
@@ -120,7 +122,7 @@ namespace stat {
 
         virtual void flushStatistics();
 
-        virtual void updateCounter(int counter,const char* srcSmeId, const char* routeId,int errorCode);
+        virtual void updateCounter(int counter,const StatInfo& si,int errorCode);
 
         GWStatisticsManager(DataSource& ds);
         virtual ~GWStatisticsManager();

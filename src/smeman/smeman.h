@@ -132,6 +132,10 @@ public:
   {
     return info.systemId.c_str();
   }
+  virtual int getProviderId() const
+  {
+    return info.providerId;
+  };
   virtual SmeIndex getSmeIndex()
   {
     return idx;

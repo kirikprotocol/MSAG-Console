@@ -266,7 +266,7 @@ public:
     return trScInvalid;
   }
 
-  TrSmsStatus RegisterS2C(SMS& sms,time_t timeOut,TrafficRules& r,billing::TransactionIdType& idptr)
+  TrSmsStatus RegisterS2C(SMS& sms,const stat::StatInfo& si,time_t timeOut,TrafficRules& r,billing::TransactionIdType& idptr)
   {
     TrSmsStatus st=getS2CSmsStatus(sms,r);
     if((st&trDeniedBase) || (st&trInvalid))
@@ -285,8 +285,7 @@ public:
 
 
       TransactionInfo ti(true,TransactionInfo::S2C);
-      ti.sysId=sms.getSourceSmeId();
-      ti.routeId=sms.getRouteId();
+      ti.si=si;
       ti.trId=billing::GetBillingInterface()->BeginTransaction(sms,true);
       if(ti.trId==billing::InvalidTransactionId)
       {
@@ -336,7 +335,7 @@ public:
     return st;
   }
 
-  TrSmsStatus RegisterC2S(SMS& sms,time_t timeOut,TrafficRules& r)
+  TrSmsStatus RegisterC2S(SMS& sms,const stat::StatInfo& si,time_t timeOut,TrafficRules& r)
   {
     TrSmsStatus st=getC2SSmsStatus(sms,r);
     if((st&trDeniedBase) || (st&trInvalid))return st;
@@ -351,8 +350,7 @@ public:
       }
 
       TransactionInfo ti(st==trScUssdInit,TransactionInfo::C2S);
-      ti.sysId=sms.getDestinationSmeId();
-      ti.routeId=sms.getRouteId();
+      ti.si=si;
       ti.trId=GetBillingInterface()->BeginTransaction(sms,false);
       if(ti.trId==billing::InvalidTransactionId)
       {
@@ -453,15 +451,15 @@ public:
       {
         if(ti.dir==TransactionInfo::S2C)
         {
-          smsc->updateCounter(stat::Counters::cntUssdTrFromSmeFailed,ti.sysId.c_str(),ti.routeId.c_str(),smsc::system::Status::TRANSACTIONTIMEDOUT);
+          smsc->updateCounter(stat::Counters::cntUssdTrFromSmeFailed,ti.si,smsc::system::Status::TRANSACTIONTIMEDOUT);
         }else
         {
-          smsc->updateCounter(stat::Counters::cntUssdTrFromScFailed,ti.sysId.c_str(),ti.routeId.c_str(),smsc::system::Status::TRANSACTIONTIMEDOUT);
+          smsc->updateCounter(stat::Counters::cntUssdTrFromScFailed,ti.si,smsc::system::Status::TRANSACTIONTIMEDOUT);
         }
         smsc->updatePerformance(performance::Counters::cntTransFail);
       }else
       {
-        smsc->updateCounter(stat::Counters::cntSmsTrFailed,ti.sysId.c_str(),ti.routeId.c_str(),smsc::system::Status::TRANSACTIONTIMEDOUT);
+        smsc->updateCounter(stat::Counters::cntSmsTrFailed,ti.si,smsc::system::Status::TRANSACTIONTIMEDOUT);
       }
       if(ti.trId!=billing::InvalidTransactionId)
       {
@@ -573,8 +571,7 @@ protected:
     int trLen;
     TrDir dir;
     bool ussd;
-    std::string sysId;
-    std::string routeId;
+    stat::StatInfo si;
     smsc::smppgw::billing::TransactionIdType trId;
     TransactionInfo(bool u,TrDir d):trLen(0),ussd(u),dir(d)
     {
@@ -600,26 +597,30 @@ protected:
 
 static TransactionMonitor tmon;
 
+using smsc::smppgw::stat::StatInfo;
+
 class RespRegistry{
 public:
 
   struct RegistryData{
     SmeProxy* sme;
     int seq;
-    std::string smeId;
-    std::string routeId;
+    StatInfo si;
     billing::TransactionIdType trId;
     TransactionMonitor::TransactionKey trKey;
     TransactionMonitor::TrSmsStatus trSt;
     bool finishTransaction;
 
     RegistryData():sme(0),seq(0),trId(billing::InvalidTransactionId),finishTransaction(false){}
-    RegistryData(SmeProxy* smeVal,int seqVal,const std::string& smeIdVal,const std::string& routeIdVal,billing::TransactionIdType trIdVal=billing::InvalidTransactionId):
-      sme(smeVal),seq(seqVal),smeId(smeIdVal),routeId(routeIdVal),trId(trIdVal)
+    RegistryData(SmeProxy* smeVal,int seqVal):sme(smeVal),seq(seqVal),trId(billing::InvalidTransactionId),finishTransaction(false)
     {
     }
-    RegistryData(SmeProxy* smeVal,int seqVal,const std::string& smeIdVal,const std::string& routeIdVal,const TransactionMonitor::TransactionKey& key,TransactionMonitor::TrSmsStatus st):
-      sme(smeVal),seq(seqVal),smeId(smeIdVal),routeId(routeIdVal),trId(billing::InvalidTransactionId),trKey(key),finishTransaction(true),trSt(st)
+    RegistryData(SmeProxy* smeVal,int seqVal,const RouteInfo& riVal,billing::TransactionIdType trIdVal=billing::InvalidTransactionId):
+      sme(smeVal),seq(seqVal),si(smeVal,riVal),trId(trIdVal)
+    {
+    }
+    RegistryData(SmeProxy* smeVal,int seqVal,const RouteInfo& riVal,const TransactionMonitor::TransactionKey& key,TransactionMonitor::TrSmsStatus st):
+      sme(smeVal),seq(seqVal),si(smeVal,riVal),trId(billing::InvalidTransactionId),trKey(key),finishTransaction(true),trSt(st)
     {
     }
   };
@@ -637,13 +638,13 @@ public:
       {
         tmon.FinishTransaction(rd.trKey,false);
         smsc->updatePerformance(performance::Counters::cntDeliverErr);
-        smsc->updateCounter(stat::Counters::cntTemp,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::DELIVERYTIMEDOUT);
+        smsc->updateCounter(stat::Counters::cntTemp,rd.si,smsc::system::Status::DELIVERYTIMEDOUT);
         if(rd.trSt==TransactionMonitor::trScUssdEnd)
         {
-          smsc->updateCounter(stat::Counters::cntUssdTrFromScFailed,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::DELIVERYTIMEDOUT);
+          smsc->updateCounter(stat::Counters::cntUssdTrFromScFailed,rd.si,smsc::system::Status::DELIVERYTIMEDOUT);
         }else if(rd.trSt==TransactionMonitor::trSmeUssdEnd)
         {
-          smsc->updateCounter(stat::Counters::cntUssdTrFromSmeFailed,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::DELIVERYTIMEDOUT);
+          smsc->updateCounter(stat::Counters::cntUssdTrFromSmeFailed,rd.si,smsc::system::Status::DELIVERYTIMEDOUT);
         }
 
         if(rd.trId!=billing::InvalidTransactionId)
@@ -768,7 +769,7 @@ void StateMachine::submit(SmscCommand& cmd)
                      );
     src_proxy->putCommand(resp);
     smsc->updatePerformance(performance::Counters::cntRejected);
-    smsc->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),0,smsc::system::Status::NOROUTE);
+    smsc->updateCounter(stat::Counters::cntRejected,stat::StatInfo(src_proxy),smsc::system::Status::NOROUTE);
     return;
   }
   if(!dst_proxy)
@@ -782,7 +783,7 @@ void StateMachine::submit(SmscCommand& cmd)
                      );
     src_proxy->putCommand(resp);
     smsc->updatePerformance(performance::Counters::cntRejected);
-    smsc->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::SMENOTCONNECTED);
+    smsc->updateCounter(stat::Counters::cntRejected,stat::StatInfo(src_proxy,ri),smsc::system::Status::SMENOTCONNECTED);
     return;
   }
 
@@ -798,14 +799,14 @@ void StateMachine::submit(SmscCommand& cmd)
   sms.setDestinationSmeId(dst_proxy->getSystemId());
 
   billing::TransactionIdType trId=billing::InvalidTransactionId;
-  TransactionMonitor::TrSmsStatus st=tmon.RegisterS2C(sms,32,ri.trafRules,trId);
+  TransactionMonitor::TrSmsStatus st=tmon.RegisterS2C(sms,stat::StatInfo(src_proxy,ri),32,ri.trafRules,trId);
 
   smsc_log_info(smsLog,"SBM: trstate for sms from %s to %s=%s",sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),TransactionMonitor::getStatusName(st));
 
   if((st&TransactionMonitor::trDeniedBase) || (st&TransactionMonitor::trInvalid))
   {
     smsc->updatePerformance(performance::Counters::cntRejected);
-    smsc->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::RX_R_APPN);
+    smsc->updateCounter(stat::Counters::cntRejected,stat::StatInfo(src_proxy,ri),smsc::system::Status::RX_R_APPN);
     SmscCommand resp=SmscCommand::makeSubmitSmResp
                      (
                        "0",
@@ -840,8 +841,7 @@ void StateMachine::submit(SmscCommand& cmd)
       (
         src_proxy,
         dialogId,
-        src_proxy->getSystemId(),
-        ri.routeId.c_str(),
+        ri,
         TransactionMonitor::makeKey(sms),
         st
       ),
@@ -858,8 +858,7 @@ void StateMachine::submit(SmscCommand& cmd)
       (
         src_proxy,
         dialogId,
-        src_proxy->getSystemId(),
-        ri.routeId.c_str(),
+        ri,
         trId
       ),
       dst_proxy->getPreferredTimeout()
@@ -884,7 +883,7 @@ void StateMachine::submit(SmscCommand& cmd)
   if(!ok)
   {
     smsc->updatePerformance(performance::Counters::cntRejected);
-    smsc->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::RX_R_APPN);
+    smsc->updateCounter(stat::Counters::cntRejected,stat::StatInfo(src_proxy,ri),smsc::system::Status::RX_R_APPN);
 
     SmscCommand resp=SmscCommand::makeSubmitSmResp
                      (
@@ -938,7 +937,7 @@ void StateMachine::submitResp(SmscCommand& cmd)
     {
       warn1(smsLog,"SBMRESP: incorrect command direction (submit response to to gatewaysme)");
       smsc->updatePerformance(performance::Counters::cntDeliverErr);
-      smsc->updateCounter(stat::Counters::cntPerm,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::RX_P_APPN);
+      smsc->updateCounter(stat::Counters::cntPerm,rd.si,smsc::system::Status::RX_P_APPN);
       return;
     }
     GatewaySme *gwsme=0;
@@ -965,10 +964,10 @@ void StateMachine::submitResp(SmscCommand& cmd)
             smsc->updatePerformance(st==0?performance::Counters::cntTransOk:performance::Counters::cntTransFail);
             if(rd.trSt==TransactionMonitor::trSmeAnswerEnd)
             {
-              smsc->updateCounter(st==0?stat::Counters::cntSmsTrOk:stat::Counters::cntSmsTrFailed,src_proxy->getSystemId(),rd.routeId.c_str(),st);
+              smsc->updateCounter(st==0?stat::Counters::cntSmsTrOk:stat::Counters::cntSmsTrFailed,rd.si,st);
             }else if(rd.trSt==TransactionMonitor::trScUssdEnd)
             {
-              smsc->updateCounter(st==0?stat::Counters::cntUssdTrFromScOk:stat::Counters::cntUssdTrFromScFailed,src_proxy->getSystemId(),rd.routeId.c_str(),st);
+              smsc->updateCounter(st==0?stat::Counters::cntUssdTrFromScOk:stat::Counters::cntUssdTrFromScFailed,rd.si,st);
             }
           }
         }
@@ -985,18 +984,18 @@ void StateMachine::submitResp(SmscCommand& cmd)
         {
           cnt=stat::Counters::cntTemp;
         }
-        smsc->updateCounter(cnt,rd.smeId.c_str(),rd.routeId.c_str(),st);
+        smsc->updateCounter(cnt,rd.si,st);
       }catch(...)
       {
         warn2(smsLog,"SBMRESP: failed to put command to %s",dst_proxy->getSystemId());
-        smsc->updateCounter(stat::Counters::cntPerm,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::RX_T_APPN);
+        smsc->updateCounter(stat::Counters::cntPerm,rd.si,smsc::system::Status::RX_T_APPN);
         smsc->updatePerformance(performance::Counters::cntDeliverErr);
       }
     }else
     {
       warn1(smsLog,"SBMRESP: incorrect command direction (submit response to to gatewaysme)");
       smsc->updatePerformance(performance::Counters::cntDeliverErr);
-      smsc->updateCounter(stat::Counters::cntTemp,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::RX_T_APPN);
+      smsc->updateCounter(stat::Counters::cntTemp,rd.si,smsc::system::Status::RX_T_APPN);
       return;
     }
   }else
@@ -1032,7 +1031,7 @@ void StateMachine::delivery(SmscCommand& cmd)
     {
     }
     smsc->updatePerformance(performance::Counters::cntRejected);
-    smsc->updateCounter(stat::Counters::cntPerm,src_proxy->getSystemId(),0,smsc::system::Status::NOROUTE);
+    smsc->updateCounter(stat::Counters::cntPerm,stat::StatInfo(src_proxy),smsc::system::Status::NOROUTE);
     return;
   }
 
@@ -1046,7 +1045,7 @@ void StateMachine::delivery(SmscCommand& cmd)
                      );
     src_proxy->putCommand(resp);
     smsc->updatePerformance(performance::Counters::cntRejected);
-    smsc->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::SMENOTCONNECTED);
+    smsc->updateCounter(stat::Counters::cntRejected,stat::StatInfo(src_proxy,ri),smsc::system::Status::SMENOTCONNECTED);
     return;
   }
 
@@ -1065,7 +1064,7 @@ void StateMachine::delivery(SmscCommand& cmd)
   sms.setDestinationSmeId(dst_proxy->getSystemId());
 
 
-  TransactionMonitor::TrSmsStatus st=tmon.RegisterC2S(sms,32,ri.trafRules);
+  TransactionMonitor::TrSmsStatus st=tmon.RegisterC2S(sms,stat::StatInfo(dst_proxy,ri),32,ri.trafRules);
 
   smsc_log_info(smsLog,"DLV: trstate for sms from %s to %s=%s",sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),TransactionMonitor::getStatusName(st));
 
@@ -1079,7 +1078,7 @@ void StateMachine::delivery(SmscCommand& cmd)
                      );
     src_proxy->putCommand(resp);
     smsc->updatePerformance(performance::Counters::cntRejected);
-    smsc->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::RX_T_APPN);
+    smsc->updateCounter(stat::Counters::cntRejected,stat::StatInfo(dst_proxy,ri),smsc::system::Status::RX_T_APPN);
     return;
   }
 
@@ -1102,10 +1101,9 @@ void StateMachine::delivery(SmscCommand& cmd)
       dst_index,
       RespRegistry::RegistryData
       (
-        src_proxy,
+        dst_proxy,
         dialogId,
-        src_proxy->getSystemId(),
-        ri.routeId.c_str(),
+        ri,
         TransactionMonitor::makeKey(sms),
         st
       ),
@@ -1120,10 +1118,9 @@ void StateMachine::delivery(SmscCommand& cmd)
       dst_index,
       RespRegistry::RegistryData
       (
-        src_proxy,
+        dst_proxy,
         dialogId,
-        src_proxy->getSystemId(),
-        ri.routeId.c_str()
+        ri
       ),
       dst_proxy->getPreferredTimeout()
     );
@@ -1147,7 +1144,7 @@ void StateMachine::delivery(SmscCommand& cmd)
   if(!ok)
   {
     smsc->updatePerformance(performance::Counters::cntRejected);
-    smsc->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::RX_T_APPN);
+    smsc->updateCounter(stat::Counters::cntRejected,stat::StatInfo(dst_proxy,ri),smsc::system::Status::RX_T_APPN);
     return;
   }
 
@@ -1178,12 +1175,12 @@ void StateMachine::deliveryResp(SmscCommand& cmd)
       smsc->updatePerformance(st==0?performance::Counters::cntDelivered:performance::Counters::cntDeliverErr);
       smsc->updateCounter(st==0?stat::Counters::cntDelivered:
         smsc::system::Status::isErrorPermanent(st)?stat::Counters::cntPerm:stat::Counters::cntTemp
-        ,dst_proxy->getSystemId(),rd.routeId.c_str(),st);
+        ,rd.si,st);
       if(rd.finishTransaction)
       {
         if(tmon.FinishTransaction(rd.trKey,st==0))
         {
-          smsc->updateCounter(st==0?stat::Counters::cntUssdTrFromSmeOk:stat::Counters::cntUssdTrFromSmeFailed,src_proxy->getSystemId(),rd.routeId.c_str(),st);
+          smsc->updateCounter(st==0?stat::Counters::cntUssdTrFromSmeOk:stat::Counters::cntUssdTrFromSmeFailed,rd.si,st);
           smsc->updatePerformance(st==0?performance::Counters::cntTransOk:performance::Counters::cntTransFail);
         }
       }
@@ -1191,7 +1188,7 @@ void StateMachine::deliveryResp(SmscCommand& cmd)
     {
       warn2(smsLog,"DLVRESP: failed to put command to %s",dst_proxy->getSystemId());
       smsc->updatePerformance(performance::Counters::cntRejected);
-      smsc->updateCounter(stat::Counters::cntRejected,dst_proxy->getSystemId(),rd.routeId.c_str(),st);
+      smsc->updateCounter(stat::Counters::cntRejected,rd.si,st);
     }
   }else
   {
@@ -1225,9 +1222,8 @@ void StateMachine::replace(SmscCommand& cmd)
     replaceRegistry.Register(smsc,newdid,gwsme->getSmeIndex(),
        RespRegistry::RegistryData(
          cmd.getProxy(),
-         cmd->get_dialogId(),
-         "",
-         ""),gwsme->getPreferredTimeout()
+         cmd->get_dialogId()
+         ),gwsme->getPreferredTimeout()
        );
     cmd->set_dialogId(newdid);
     gwsme->putCommand(cmd);
@@ -1281,11 +1277,8 @@ void StateMachine::query(SmscCommand& cmd)
   try{
     int newdid=gwsme->getNextSequenceNumber();
     queryRegistry.Register(smsc,newdid,gwsme->getSmeIndex(),
-       RespRegistry::RegistryData(
-         cmd.getProxy(),
-         cmd->get_dialogId(),
-         "",
-         ""),gwsme->getPreferredTimeout()
+       RespRegistry::RegistryData(cmd.getProxy(),cmd->get_dialogId()),
+       gwsme->getPreferredTimeout()
        );
     cmd->set_dialogId(newdid);
     gwsme->putCommand(cmd);
@@ -1338,11 +1331,8 @@ void StateMachine::cancel(SmscCommand& cmd)
   try{
     int newdid=gwsme->getNextSequenceNumber();
     cancelRegistry.Register(smsc,newdid,gwsme->getSmeIndex(),
-       RespRegistry::RegistryData(
-         cmd.getProxy(),
-         cmd->get_dialogId(),
-         "",
-         ""),gwsme->getPreferredTimeout()
+       RespRegistry::RegistryData(cmd.getProxy(),cmd->get_dialogId()),
+       gwsme->getPreferredTimeout()
        );
     cmd->set_dialogId(newdid);
     gwsme->putCommand(cmd);
