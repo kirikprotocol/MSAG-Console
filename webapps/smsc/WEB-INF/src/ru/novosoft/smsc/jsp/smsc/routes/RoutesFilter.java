@@ -1,14 +1,16 @@
+package ru.novosoft.smsc.jsp.smsc.routes;
+
 /*
  * Created by igork
  * Date: 05.11.2002
  * Time: 23:38:40
  */
-package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
+import ru.novosoft.smsc.jsp.smsc.*;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
 import ru.novosoft.smsc.util.Functions;
 
@@ -25,6 +27,8 @@ public class RoutesFilter extends SmscBean
   protected String[] dstMasks = null;
   protected String[] smeChks = null;
   private String[] names = null;
+
+  public static final int RESULT_ClEAR = 4;
 
   protected boolean strict = false;
   protected int strict1 = 2;
@@ -59,7 +63,7 @@ public class RoutesFilter extends SmscBean
       dstChks = filter.getDestinationSubjectNames();
       dstMasks = filter.getDestinationMaskStrings();
       smeChks = filter.getSmeIds();
-      names=filter.getNames();
+      names = filter.getNames();
       strict = filter.isIntersection();
       strict1 = filter.getIntersection();
       showSrc = preferences.isRouteShowSrc();
@@ -71,23 +75,23 @@ public class RoutesFilter extends SmscBean
     if (smeChks == null) smeChks = new String[0];
 
     srcChks = Functions.trimStrings(srcChks);
-     if (!initialized) {
-    try {
-          filteredName=filter.getNames()[0];
-        } catch (Exception e) {
-          filteredName="";
-        }
-     try {
-          queryProvider=filter.getProviders()[0];
-        } catch (Exception e) {
-          queryProvider="";
-        }
-        try {
-          queryCategory=filter.getCategories()[0];
-        } catch (Exception e) {
-          queryCategory="";
-        }
-     }
+    if (!initialized) {
+      try {
+        filteredName = filter.getNames()[0];
+      } catch (Exception e) {
+        filteredName = "";
+      }
+      try {
+        queryProvider = filter.getProviders()[0];
+      } catch (Exception e) {
+        queryProvider = "";
+      }
+      try {
+        queryCategory = filter.getCategories()[0];
+      } catch (Exception e) {
+        queryCategory = "";
+      }
+    }
     try {
       srcMasks = MaskList.normalizeMaskList(Functions.trimStrings(srcMasks));
     } catch (AdminException e) {
@@ -116,42 +120,41 @@ public class RoutesFilter extends SmscBean
     int result = super.process(request);
 
     if (mbClear != null) {
-       int dresult = clearFilter();
-      return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
+      int dresult = clearFilter();
+      return (dresult != RESULT_OK) ? dresult : RESULT_ClEAR;
     }
 
 
-  /*  if (mbClear != null) {
-      filter = preferences.getRoutesFilter();
+    /*  if (mbClear != null) {
+        filter = preferences.getRoutesFilter();
 
-      srcChks = srcMasks = dstChks = dstMasks = smeChks = new String[0];
-      strict = showSrc = showDst = false;
-      strict1=2;filteredName=""; queryProvider=""; queryCategory="";
-      srcChksSet = dstChksSet = smeChksSet = new HashSet();
-      mbApply = mbClear = mbCancel = null;
-      filter.setNames(new String[0]);
-      filter.setProviders(new String[0]);
-      filter.setCategories(new String[0]);
-      this.errors.clear();
+        srcChks = srcMasks = dstChks = dstMasks = smeChks = new String[0];
+        strict = showSrc = showDst = false;
+        strict1=2;filteredName=""; queryProvider=""; queryCategory="";
+        srcChksSet = dstChksSet = smeChksSet = new HashSet();
+        mbApply = mbClear = mbCancel = null;
+        filter.setNames(new String[0]);
+        filter.setProviders(new String[0]);
+        filter.setCategories(new String[0]);
+        this.errors.clear();
 
-      return RESULT_OK;
-    } */
-    else
-    if (result == RESULT_OK && mbApply != null) {
-     initialized = true;
+        return RESULT_OK;
+      } */
+    else if (result == RESULT_OK && mbApply != null) {
+      initialized = true;
 
-       if (filteredName != null)
-            filter.setNames(new String[]{filteredName.toLowerCase()});
-        else
-            filter.setNames(new String[0]);
+      if (filteredName != null)
+        filter.setNames(new String[]{filteredName.toLowerCase()});
+      else
+        filter.setNames(new String[0]);
       if (queryProvider != null)
-           filter.setProviders(new String[]{queryProvider.toLowerCase()});
-        else
-          filter.setProviders(new String[0]);
-        if (queryCategory != null)
-           filter.setCategories(new String[]{queryCategory.toLowerCase()});
-        else
-          filter.setCategories(new String[0]);
+        filter.setProviders(new String[]{queryProvider.toLowerCase()});
+      else
+        filter.setProviders(new String[0]);
+      if (queryCategory != null)
+        filter.setCategories(new String[]{queryCategory.toLowerCase()});
+      else
+        filter.setCategories(new String[0]);
       try {
         filter.setSourceMaskStrings(srcMasks);
       } catch (AdminException e) {
@@ -166,10 +169,10 @@ public class RoutesFilter extends SmscBean
       filter.setDestinationSubjectNames(dstChks);
       filter.setSmeIds(smeChks);
 
-     /*  int strict1;
-      if (strict) strict1=0;
-       else strict1=2;
-       */
+      /*  int strict1;
+       if (strict) strict1=0;
+        else strict1=2;
+        */
 
       filter.setIntersection(strict1);
       preferences.setRouteShowSrc(showSrc);
@@ -179,30 +182,32 @@ public class RoutesFilter extends SmscBean
 
     return result;
   }
-     private int clearFilter() {
-       try {
-    /*         srcChks = srcMasks = dstChks = dstMasks = smeChks = new String[0];
-      strict = showSrc = showDst = false;
-      strict1=2;filteredName=""; queryProvider=""; queryCategory="";
-      srcChksSet = dstChksSet = smeChksSet = new HashSet();
-      mbApply = mbClear = mbCancel = null;
-      */
-            filter = preferences.getRoutesFilter();
-        // filter.setIntersection(false);
-             filter.setNames(new String[0]);
-             filter.setProviders(new String[0]);
-             filter.setCategories(new String[0]);
-             filter.setSourceSubjectNames(new String[0]);
-             filter.setDestinationSubjectNames(new String[0]);
-             filter.setSourceMaskStrings(new String[0]);
-             filter.setDestinationMaskStrings(new String[0]);
-             filter.setSmeIds(new String[0]);
-         //this.errors.clear();
-       } catch (AdminException e) {
-         return error(SMSCErrors.error.routes.CantUpdateFilter, e);
-       }
-         return RESULT_OK;
-     }
+
+  private int clearFilter()
+  {
+    try {
+      /*         srcChks = srcMasks = dstChks = dstMasks = smeChks = new String[0];
+        strict = showSrc = showDst = false;
+        strict1=2;filteredName=""; queryProvider=""; queryCategory="";
+        srcChksSet = dstChksSet = smeChksSet = new HashSet();
+        mbApply = mbClear = mbCancel = null;
+        */
+      filter = preferences.getRoutesFilter();
+      // filter.setIntersection(false);
+      filter.setNames(new String[0]);
+      filter.setProviders(new String[0]);
+      filter.setCategories(new String[0]);
+      filter.setSourceSubjectNames(new String[0]);
+      filter.setDestinationSubjectNames(new String[0]);
+      filter.setSourceMaskStrings(new String[0]);
+      filter.setDestinationMaskStrings(new String[0]);
+      filter.setSmeIds(new String[0]);
+      //this.errors.clear();
+    } catch (AdminException e) {
+      return error(SMSCErrors.error.routes.CantUpdateFilter, e);
+    }
+    return RESULT_OK;
+  }
 
   public boolean isSrcChecked(String subj)
   {
@@ -230,7 +235,9 @@ public class RoutesFilter extends SmscBean
   }
 
 
-  /***************************** properties **********************************/
+  /**
+   * ************************** properties *********************************
+   */
   public String[] getSrcChks()
   {
     return srcChks;

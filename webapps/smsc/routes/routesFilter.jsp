@@ -18,6 +18,9 @@ switch(bean.process(request))
 	case RoutesFilter.RESULT_OK:
 
 		break;
+   case RoutesFilter.RESULT_ClEAR:
+   response.sendRedirect("routesFilter.jsp");
+		break;
 	case RoutesFilter.RESULT_ERROR:
 
 		break;
