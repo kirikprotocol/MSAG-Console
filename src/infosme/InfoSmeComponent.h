@@ -37,6 +37,16 @@ namespace smsc { namespace infosme
         void error(const char* method, const char* param);
     
     protected:
+
+        void addTasks(const Arguments& args);
+        void removeTasks(const Arguments& args); 
+        void startTasks(const Arguments& args);
+        void stopTasks(const Arguments& args); 
+        void setTaskEnabled(const Arguments& args);
+
+        void addSchedule(const Arguments& args);
+        void removeSchedule(const Arguments& args);
+        void changeSchedule(const Arguments& args);
         
     public:
     

@@ -34,8 +34,6 @@ namespace smsc { namespace infosme
         virtual bool invokeBeginProcess(Task* task) = 0;
         virtual bool invokeDropAllMessages(Task* task) = 0;
         
-        virtual bool addTask(Task* task) = 0;
-        virtual bool removeTask(std::string taskId) = 0;
         virtual bool hasTask(std::string taskId) = 0;
         virtual TaskGuard getTask(std::string taskId) = 0;
     
@@ -88,6 +86,11 @@ namespace smsc { namespace infosme
         virtual int Execute();
         void Start();
         void Stop();
+
+        inline bool isStarted() { 
+            MutexGuard guard(startLock);
+            return bStarted;
+        };
         
         /**
          * Adds schedule into scheduling plan and reactivates scheduler.

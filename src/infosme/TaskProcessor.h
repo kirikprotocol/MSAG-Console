@@ -330,7 +330,7 @@ namespace smsc { namespace infosme
 
         virtual bool putTask(Task* task);
         virtual bool addTask(Task* task);
-        virtual bool removeTask(std::string taskId);
+        virtual bool deleteTask(std::string taskId);
         virtual bool hasTask(std::string taskId);
         virtual TaskGuard getTask(std::string taskId);
         
@@ -362,7 +362,39 @@ namespace smsc { namespace infosme
 
         /* ------------------------ Admin interface ------------------------ */ 
 
-        // TODO: implement administrative part
+        virtual void startTaskProcessor() {
+            this->Start();
+        }
+        virtual void stopTaskProcessor() {
+            this->Stop();
+        }
+        virtual bool isTaskProcessorRunning() {
+            return this->isStarted();
+        }
+
+        virtual void startTaskScheduler() {
+            scheduler.Start();
+        }
+        virtual void stopTaskScheduler() {
+            scheduler.Stop();
+        }
+        virtual bool isTaskSchedulerRunning() {
+            return scheduler.isStarted();
+        }
+        virtual void flushStatistics() {
+            if (statistics) statistics->flushStatistics();
+        }
+        
+        virtual bool addTask(std::string taskId);
+        virtual bool removeTask(std::string taskId);
+        virtual bool startTask(std::string taskId);
+        virtual bool stopTask(std::string taskId);
+        virtual bool setTaskEnabled(std::string taskId, bool enabled);
+        
+        virtual bool addSchedule(std::string scheduleId);
+        virtual bool removeSchedule(std::string scheduleId);
+        virtual bool changeSchedule(std::string oldScheduleId, std::string newScheduleId);
+        
     };
 
 }}

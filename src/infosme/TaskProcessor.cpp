@@ -147,7 +147,7 @@ bool TaskProcessor::addTask(Task* task)
     if (result) task->createTable();
     return result;
 }
-bool TaskProcessor::removeTask(std::string taskId)
+bool TaskProcessor::deleteTask(std::string taskId)
 {
     MutexGuard guard(tasksLock);
     
@@ -684,6 +684,42 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
     
     if (connection) dsInternal->freeConnection(connection);
 }
+
+/* ------------------------ Admin interface implementation ------------------------ */ 
+
+bool TaskProcessor::addTask(std::string taskId)
+{
+    return false;
+}
+bool TaskProcessor::removeTask(std::string taskId)
+{
+    return false;
+}
+bool TaskProcessor::startTask(std::string taskId)
+{
+    return false;
+}
+bool TaskProcessor::stopTask(std::string taskId)
+{
+    return false;
+}
+bool TaskProcessor::setTaskEnabled(std::string taskId, bool enabled)
+{
+    return false;
+}
+bool TaskProcessor::addSchedule(std::string scheduleId)
+{
+    return false;
+}
+bool TaskProcessor::removeSchedule(std::string scheduleId)
+{
+    return false;
+}
+bool TaskProcessor::changeSchedule(std::string oldScheduleId, std::string newScheduleId)
+{
+    return false;
+}
+
 
 }}
 
