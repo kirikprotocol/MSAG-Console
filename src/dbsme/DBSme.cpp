@@ -284,17 +284,15 @@ public:
     virtual int Execute()
     {
         __require__(pdu);
-        __trace__("DBSME: Processing PDU.");
+        
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
-
-            //((PduXSm*)pdu)->dump(TRACE_LOG_STREAM);
-            __trace__("Received DELIVERY_SM Pdu.");
             process();
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
-            __trace__("Received SUBMIT_SM_RESP Pdu.");
+            break;
+        case SmppCommandSet::ENQUIRE_LINK: case SmppCommandSet::ENQUIRE_LINK_RESP:
             break;
         default:
             __trace__("Received unsupported Pdu !");
