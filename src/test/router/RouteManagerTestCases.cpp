@@ -295,30 +295,37 @@ TCResult* RouteManagerTestCases::addIncorrectRoute(const SmeSystemId& smeSystemI
 }
 
 void RouteManagerTestCases::printLookupResult(const Address& origAddr,
-	const Address& destAddr, const vector<const SmeProxy*>& proxyList,
+	const Address& destAddr, const RouteRegistry::RouteList& routeList,
 	bool found, const SmeProxy* proxy)
 {
 	ostringstream os;
-	os << "lookupRoute(): ids = {";
-	for (int i = 0; i < proxyList.size(); i++)
+	os << "lookupRoute(): ids = <";
+	for (int i = 0; i < routeList.size(); i++)
 	{
 		if (i > 0)
 		{
 			os  << ',';
 		}
-		os << proxyList[i]->getUniqueId();
+		if (routeList[i]->proxy)
+		{
+			os << routeList[i]->proxy->getUniqueId();
+		}
+		else
+		{
+			os << "NULL";
+		}
 	}
 	if (proxy)
 	{
-		os << "}, res = " << proxy->getUniqueId();
+		os << ">, res = " << proxy->getUniqueId();
 	}
 	else if (found)
 	{
-		os << "}, res = <NULL>";
+		os << ">, res = <NULL>";
 	}
 	else
 	{
-		os << "}, res = <>";
+		os << ">, res = <>";
 	}
 	os << ", origAddr = " << origAddr;
 	os << ", destAddr = " << destAddr;
@@ -334,17 +341,18 @@ TCResult* RouteManagerTestCases::lookupRoute(const RouteRegistry& routeReg,
 	{
 		SmeProxy* proxy = NULL;
 		bool found = routeMan->lookup(origAddr, destAddr, proxy);
-		const vector<const SmeProxy*> proxyList = routeReg.lookup(origAddr, destAddr);
-		printLookupResult(origAddr, destAddr, proxyList, found, proxy);
+		const RouteRegistry::RouteList routeList = routeReg.lookup(origAddr, destAddr);
+		printLookupResult(origAddr, destAddr, routeList, found, proxy);
 		if (found)
 		{
 			if (proxy)
 			{
 				uint32_t id = proxy->getUniqueId();
 				found = false;
-				for (int i = 0; i < proxyList.size(); i++)
+				for (int i = 0; i < routeList.size(); i++)
 				{
-					if (proxyList[i]->getUniqueId() == id)
+					if (routeList[i]->proxy &&
+						routeList[i]->proxy->getUniqueId() == id)
 					{
 						found = true;
 						break;
@@ -356,12 +364,12 @@ TCResult* RouteManagerTestCases::lookupRoute(const RouteRegistry& routeReg,
 				}
 			}
 			//маршрут есть, но proxy нет
-			else if (!proxyList.size())
+			else if (!routeList.size())
 			{
 				res->addFailure(102);
 			}
 		}
-		else if (proxyList.size())
+		else if (routeList.size())
 		{
 			res->addFailure(103);
 		}
@@ -369,7 +377,7 @@ TCResult* RouteManagerTestCases::lookupRoute(const RouteRegistry& routeReg,
 	catch(...)
 	{
 		error();
-		printLookupResult(origAddr, destAddr, vector<const SmeProxy*>(), false, NULL);
+		printLookupResult(origAddr, destAddr, RouteRegistry::RouteList(), false, NULL);
 		res->addFailure(100);
 	}
 	debug(res);
