@@ -1093,46 +1093,44 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
 {
     smsc_log_debug(log, "Finalizing msg#%lld", id);
 
-    // TODO: move it after destroySms for valid rollback
+    if (needDelete)
+    {
+        __require__(pool);
+        StorageConnection* connection = 0L;
+        unsigned iteration=1;
+        while (true)
+        {
+            try
+            {
+                connection = (StorageConnection *)pool->getConnection();
+                if (connection)
+                {
+                    smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
+                    doDestroySms(connection, id);
+                    pool->freeConnection(connection);
+                }
+                break;
+            }
+            catch (StorageException& exc)
+            {
+                if (connection) pool->freeConnection(connection);
+                if (iteration++ >= maxTriesCount) {
+                    smsc_log_warn(log, "Max tries count to finalize message #%lld exceeded!", id);
+                    throw;
+                }
+            }
+            catch (...)
+            {
+                if (connection) pool->freeConnection(connection);
+                throw StorageException("Unknown exception thrown");
+            }
+        }
+    }
+   
     if (sms.billingRecord) billingStorage.createRecord(id, sms);
     if (sms.needArchivate) archiveStorage.createRecord(id, sms);
-
-    if (!needDelete) { 
-        smsc_log_debug(log, "Finalized msg#%lld" , id);
-        return;
-    }
-
-    __require__(pool);
-    StorageConnection* connection = 0L;
-    unsigned iteration=1;
-    while (true)
-    {
-        try
-        {
-            connection = (StorageConnection *)pool->getConnection();
-            if (connection)
-            {
-                smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
-                doDestroySms(connection, id);
-                pool->freeConnection(connection);
-                smsc_log_debug(log, "Finalized msg#%lld" , id);
-            }
-            break;
-        }
-        catch (StorageException& exc)
-        {
-            if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount) {
-                smsc_log_warn(log, "Max tries count to finalize message #%lld exceeded!", id);
-                throw;
-            }
-        }
-        catch (...)
-        {
-            if (connection) pool->freeConnection(connection);
-            throw StorageException("Unknown exception thrown");
-        }
-    }
+    
+    smsc_log_debug(log, "Finalized msg#%lld" , id);
 }
 
 void RemoteStore::createFinalizedSms(SMSId id, SMS& sms)
