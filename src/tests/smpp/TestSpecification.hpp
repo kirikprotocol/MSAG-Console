@@ -10,7 +10,8 @@ namespace smsc {
 		static const int BIND_TEST_test_transmitter_receiver_enquire_link = 1;
 		// тесты для проверки отсылки и приема SMS-ок
 		static const int SMS_TEST_test_sms_for_transmitter_receiver_itself = 100;
-		static const int SMS_TEST_test_sms_for_transceiver_itself = 101;
+		static const int SMS_TEST_test_sms_for_transmitter_receiver = 101;
+		static const int SMS_TEST_test_sms_for_transceiver_itself = 102;
 	  };
 	} //namespace smpp
   } // namespace test

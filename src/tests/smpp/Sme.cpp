@@ -271,6 +271,33 @@ namespace smsc {
 			  return sequence;
 			}
 
+			void BasicSme::sendGenerickNack(smsc::smpp::PduGenericNack& pdu) throw(PduListenerException, IllegalSmeOperation) {
+			  if(session == 0) {
+				throw IllegalSmeOperation("BasicSme Error: Can't send any PDU when the session is NULL");
+			  }
+			  smsc::sme::SmppTransmitter *atrans = session->getAsyncTransmitter();
+			  atrans->sendGenericNack(pdu);
+			  listener->checkError();
+			}
+
+			void BasicSme::sendDeliverySmResp(smsc::smpp::PduDeliverySmResp& pdu) throw(PduListenerException, IllegalSmeOperation) {
+			  if(session == 0) {
+				throw IllegalSmeOperation("BasicSme Error: Can't send any PDU when the session is NULL");
+			  }
+			  smsc::sme::SmppTransmitter *atrans = session->getAsyncTransmitter();
+			  atrans->sendDeliverySmResp(pdu);
+			  listener->checkError();
+			}
+
+			void BasicSme::sendDataSmResp(smsc::smpp::PduDataSmResp& pdu) throw(PduListenerException, IllegalSmeOperation) {
+			  if(session == 0) {
+				throw IllegalSmeOperation("BasicSme Error: Can't send any PDU when the session is NULL");
+			  }
+			  smsc::sme::SmppTransmitter *atrans = session->getAsyncTransmitter();
+			  atrans->sendDataSmResp(pdu);
+			  listener->checkError();
+			}
+
 			void BasicSme::sendPduAsIs(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) {
 			  if(session == 0) {
 				throw IllegalSmeOperation("BasicSme Error: Can't send any PDU when the session is NULL");

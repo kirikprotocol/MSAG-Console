@@ -143,6 +143,9 @@ namespace smsc {
 				virtual uint32_t sendEquireLink() throw(PduListenerException, IllegalSmeOperation) = 0;
 				virtual uint32_t sendPdu(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) = 0;
 				virtual void sendPduAsIs(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) = 0;
+				virtual void sendGenerickNack(smsc::smpp::PduGenericNack& pdu) throw(PduListenerException, IllegalSmeOperation)=0;
+				virtual void sendDeliverySmResp(smsc::smpp::PduDeliverySmResp& pdu) throw(PduListenerException, IllegalSmeOperation)=0;				
+				virtual void sendDataSmResp(smsc::smpp::PduDataSmResp& pdu) throw(PduListenerException, IllegalSmeOperation)=0;
 				// виртуальный деструктор для производных классов
 				virtual ~GenericSme() {}
 			};
@@ -243,6 +246,9 @@ namespace smsc {
 				virtual uint32_t sendEquireLink() throw(PduListenerException, IllegalSmeOperation);
 				virtual uint32_t sendPdu(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation);
 				virtual void sendPduAsIs(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation);
+				virtual void sendGenerickNack(smsc::smpp::PduGenericNack& pdu) throw(PduListenerException, IllegalSmeOperation);
+				virtual void sendDeliverySmResp(smsc::smpp::PduDeliverySmResp& pdu) throw(PduListenerException, IllegalSmeOperation);				
+				virtual void sendDataSmResp(smsc::smpp::PduDataSmResp& pdu) throw(PduListenerException, IllegalSmeOperation);
 			};
 
 			class QueuedSme;

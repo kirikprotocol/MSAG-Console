@@ -479,6 +479,7 @@ namespace smsc {
 					log.debug("SequenceNumber = %i", seq);
 					uint32_t commandId = pdu->get_commandId();
 					log.debug("CommandId = %X", commandId);
+					log.debug("CommandStatus = %X", pdu->get_commandStatus());
 					if(commandId == ENQUIRE_LINK_RESP) {
 						log.debug("EnquireLink response has been received !!!");
 					}
