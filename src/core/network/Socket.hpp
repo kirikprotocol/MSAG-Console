@@ -67,6 +67,11 @@ public:
   int Connect();
   void Close();
   void Abort();
+  void ReuseAddr()
+  {
+    int one=1;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &one, sizeof(int));
+  }
   int canRead();
   int canWrite();
   int Read(char *buf,int bufsize);
