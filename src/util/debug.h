@@ -24,7 +24,7 @@
   #if !defined DISABLE_WATCHDOG
     #define DISABLE_WATCHDOG
   #endif
-  #if !defined DISABLE_TRACING  
+  #if !defined DISABLE_TRACING
     #define DISABLE_TRACING
   #endif
 #endif
@@ -72,6 +72,7 @@
   #define __ret1_if_fail__(expr)
   #define __retneg_if_fail__(expr)
   #define __retval_if_fail__(expr,val)
+  #define __throw_if_fail__(expr,except)
 #endif
 
 #if !defined ( LOG_DOMAIN )
@@ -98,6 +99,7 @@
 
 #if defined ( DISABLE_HARD_CHECKS )
   #define ccassert(expr)
+  #define __unreachable__(text)
 #else
   #if defined ( ASSERT_ABORT_IF_FAIL )
     #define ccassert(expr) \
@@ -121,6 +123,7 @@
       smsc::util::abortIfFail(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
                 #define __unreachable__(text) \
                   smsc::util::abortIfReached(text,__FILE__,__PRETTY_FUNCTION__,__LINE__)
+
   #endif
 #endif
 
@@ -193,7 +196,7 @@ namespace util{
     }
   }
   inline void throwIfFail(bool expr,const char* expr_text,
-                          const char* file, const char* func, int line) 
+                          const char* file, const char* func, int line)
   {
     if (!expr)
     {
@@ -212,7 +215,7 @@ namespace util{
   inline void warningIfFail(bool expr,const char* expr_text,
                             const char* file, const char* func, int line) throw()
   {
-    if ( !expr )  
+    if ( !expr )
                         fprintf(ASSERT_LOG_STREAM,"*%s*<%s(%s):%d>\n\tassertin %s failed\n",
               ASSERT_LOG_DOMAIN,
               file,
@@ -246,7 +249,7 @@ namespace util{
       //throw throw_message;
                         throw AssertException();
   }
-  
+
         inline void warningIfReached(const char* expr_text,
                             const char* file, const char* func, int line) throw()
   {
@@ -257,7 +260,7 @@ namespace util{
               line,
               expr_text);
   }
-  
+
         inline void watchImpl(bool e, const char* expr,
                         const char* file, const char* func, int line)
   {
@@ -283,7 +286,7 @@ namespace util{
             #endif
             func,line);
   }
-  
+
   inline void watchImpl(unsigned int e, const char* expr,
                         const char* file, const char* func, int line)
   {
