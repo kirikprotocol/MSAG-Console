@@ -157,7 +157,7 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2,
 	{
 		res.push_back(19);
 	}
-	if (sms1.getRecieptSmsId() != sms2.getRecieptSmsId())
+	if (sms1.getReceiptSmsId() != sms2.getReceiptSmsId())
 	{
 		res.push_back(20);
 	}
@@ -233,7 +233,7 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms)
 	setupRandomCorrectBody(&sms->getMessageBody());
 	auto_ptr<char> tmp = rand_char(rand1(MAX_ESERVICE_TYPE_LENGTH));
 	sms->setEServiceType(tmp.get());
-	sms->setRecieptSmsId(rand0(INT_MAX));
+	sms->setReceiptSmsId(rand0(INT_MAX));
 	sms->setEsmClass((uint8_t) rand0(255));
 }
 
@@ -258,7 +258,7 @@ void SmsUtil::clearSms(SMS* sms)
 	//sms->setAttemptsCount();
 	sms->setMessageBody(0, 0, false, NULL);
 	sms->setEServiceType("");
-	sms->setRecieptSmsId(0);
+	sms->setReceiptSmsId(0);
 	sms->setEsmClass(0);
 }
 
