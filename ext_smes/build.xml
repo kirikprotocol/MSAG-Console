@@ -7,15 +7,9 @@ Modules:
     </echo>
   </target>
   <target name="dbSme_distr">
-    <ant dir="." antfile="make_esme.xml" target="distr">
-      <property name="esme_name" value="dbSme"/>
-      <property name="esme_bin" value="dbsme/DBSme"/>
-    </ant>
+    <ant dir="dbSme" antfile="build.xml" target="distr"/>
   </target>
   <target name="dbSme_update">
-    <ant dir="." antfile="make_esme.xml" target="update">
-      <property name="esme_name" value="dbSme"/>
-      <property name="esme_bin" value="dbsme/DBSme"/>
-    </ant>
+    <ant dir="dbSme" antfile="build.xml" target="update"/>
   </target>
 </project>
