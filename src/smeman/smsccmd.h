@@ -163,7 +163,11 @@ struct QuerySm{
   QuerySm(PduQuerySm* q)
   {
     fillField(messageId,q->get_messageId());
-    if(!messageId.get() || !messageId.get()[0])throw Exception("QUERY: non empty messageId required");
+    if(!messageId.get())
+    {
+      messageId=auto_ptr<char>(new char[1]);
+      messageId.get()[0]=0;
+    }
     fillSmppAddr(sourceAddr,q->get_source());
   }
 };

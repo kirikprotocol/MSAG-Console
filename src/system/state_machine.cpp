@@ -590,13 +590,28 @@ StateType StateMachine::submit(Tuple& t)
     {
       sendNotifyReport(*sms,t.msgId,"facility not supported");
       __trace__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
+      try{
+        Descriptor d;
+        store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(*sms));
+        smsc->notifyScheduler();
+      }catch(...)
+      {
+        __trace__("SUBMIT: failed to change state to enroute");
+      }
       return ENROUTE_STATE;
     }
   }catch(...)
   {
     __trace__("SUBMIT: failed to put delivery command");
-
     sendNotifyReport(*sms,t.msgId,"system failure");
+    try{
+      Descriptor d;
+      store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(*sms));
+      smsc->notifyScheduler();
+    }catch(...)
+    {
+      __trace__("SUBMIT: failed to change state to enroute");
+    }
 
     return ENROUTE_STATE;
   }
