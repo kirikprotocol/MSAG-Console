@@ -262,14 +262,14 @@ int StatisticsManager::calculateToSleep() // returns msecs to next hour
 }
 
 const char* insertStatSmsSql = (const char*)
-"INSERT INTO sms_stat_sms (period, accepted, rejected, delivered, rescheduled, temporal) "
+"INSERT INTO sms_stat_sms (period, accepted, rejected, delivered, failed, rescheduled, temporal) "
 "VALUES (:period, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal)";
 const char* insertStatSmeSql = (const char*)
-"INSERT INTO sms_stat_sme (period, systemid, accepted, rejected, delivered, rescheduled, temporal)\
- VALUES (:period, :systemid, :accepted, :rejected, :delivered, :rescheduled, :temporal)";
+"INSERT INTO sms_stat_sme (period, systemid, accepted, rejected, delivered, failed, rescheduled, temporal)\
+ VALUES (:period, :systemid, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal)";
 const char* insertStatRouteSql = (const char*)
-"INSERT INTO sms_stat_route (period, routeid, accepted, rejected, delivered, rescheduled, temporal)\
- VALUES (:period, :routeid, :accepted, :rejected, :delivered, :rescheduled, :temporal)";
+"INSERT INTO sms_stat_route (period, routeid, accepted, rejected, delivered, failed, rescheduled, temporal)\
+ VALUES (:period, :routeid, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal)";
 const char* insertStatStateSql = (const char*)
 "INSERT INTO sms_stat_state (period, errcode, counter) "
 "VALUES (:period, :errcode, :counter)";
