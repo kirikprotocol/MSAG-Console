@@ -678,7 +678,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
           unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP );
           if ( serviceOp == USSD_PSSR /*_RESPONSE*/ ) 
           {
-            string s_seq = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+            string s_seq = "";//cmd->get_sms()->getStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
             if (s_seq.length()==0) throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: empty user_message_reference");
             long long sequence;
             if ( sscanf(s_seq.c_str(),"%llx",&sequence) != 1 )
