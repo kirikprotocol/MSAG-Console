@@ -1,0 +1,17 @@
+2                       Mux config file version
+EXTERNAL                SS7CC Clock reference
+PCMA                    Clock source
+E1                      Transmission system
+SHORTHAUL               Line interface mode PCMA
+LO			Line impendance PCMA
+SHORTHAUL               Line interface mode PCMB
+LO                      Line impendance PCMB
+2                       No of 2 MB trunks to be multiplexed
+PCMA                    Destination trunk name
+1                       Number of channels used on PCMA
+16                      Channel 16 is taken from PRA (same channel)
+PRA                     Source trunk name
+PRA                     Destination trunk name
+1                       Number of channels used on PRA
+16                      Channel 16 is taken from PCMA (same channel)
+PCMA                    Source trunk name

@@ -1,0 +1,16 @@
+1                       FE-MTP-L2-IF file ver no
+FEIF01                  Module name
+PCI                     Board type
+5000                    tWFC
+10                      tDMAW
+4000                    tWFNB
+BEIF                    Module name for BE-IF
+BEIF                    Module name for Expedited BE-IF
+MGMT                    Module name for the management
+e1t1driver01_0          Device driver to be used by this FE-MTP-L2-IF
+NO_HWTEST               Load the binary diagnostics testfile. Not supported !
+./hwtest.bit            Path name of the binary HW test file.
+./19003_cxc132914_1.bit Path name of the binary MTPL2 file.
+./fe_l2_0.cnf           Path name of the MTPL2 config file.
+./fe_mux_0.cnf          Path name of the MUX config file.
+./e1pcisetup.cnf        Path name of the FALC config file.

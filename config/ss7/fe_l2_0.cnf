@@ -1,0 +1,23 @@
+1                       FE-MTP-L2-IF config file version
+1                       No of link configuration templates
+0                       Template number
+ITU-T                   Type of MtpL2
+64                      SUERM threshold. T
+256                     SUERM error rate. D
+4                       Normal AERM threshold
+1                       Emergency AERM threshold
+5                       Proving abort limit
+4000                    TimerT1
+50000                   TimerT2
+1000                    TimerT3
+8000                    TimerT4n
+600                     TimerT4e
+120                     TimerT5
+5000                    TimerT6
+1000                    TimerT7
+80                      Transmit buffer high watermark
+20                      Transmit buffer low watermark
+1                       Number of signalling links on HSN 0
+0                       Use configuration template no
+16                      SDL, Time slot 16 on the PRA (HSN 0)
+0                       Number of signalling links on PRB (HSN 1)

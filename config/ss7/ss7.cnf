@@ -1,0 +1,339 @@
+4                       File version number
+8                       SSN for SMS
+2                       Number of local SSN
+8                       Local SSN
+41                      Contents indicator, SMS/MPC Subsystem
+15347                   SMS/MPC Subsystem Point code
+8                       SMS/MPC Subsystem SSN
+8                       Local SSN
+41                      Contents indicator, Subsystem #0
+15347                   Subsystem #0 Point code
+8                       Subsystem #0 SSN
+41                      Contents indicator, Gateway MSC
+15350                   Gateway MSC Point code
+8                       Gateway MSC SSN
+41                      Contents indicator, SMSC
+15350                   SMSC Point code
+8                       SMSC SSN
+2                       Max No of EMAP Users
+350                     Max No of Dialogues
+0                       Priority Order
+1                       Alphanumeric Address handling
+500                     Foward Mobile Terminated Short Message Timer
+500                     Forward Mobile Originated Short Message Timer
+500                     Service Centre Alert Timer
+500                     General Timer
+500                     USSD Timer
+200                     Process USSD Timer
+500                     Submit Timer
+500                     Forward Mobile Terminated Positioning Timer
+500                     Provide Subscriber LCS timer
+500                     Send Routing Info For LCS Timer
+1                       No of bytes in SMS/MPC Subsystem Address
+129                     SMS/MPC Subsystem Address (1 byte)
+5                       No of bytes in SMSC Address
+145                     SMSC Address (1 byte)
+33                      (2 byte)
+67                      (3 byte)
+101                     (4 byte)
+119                     (5 byte)
+0                       No Of Bytes In Translation Table
+0                       Number of SSN with External Node Number
+CAA20116R5              ANSI-41 MAP File version number
+00011111b               Functionality bitmask
+1                       Max number of users
+5                       Max number of transactions per user
+150                     Bind Timer Value (time in 1/10 sec.)
+150                     Appl Timer Value (time in 1/10 sec.)
+1                       Application Lost
+70                      Threshold high %
+30                      Threshold low %
+CAA20145R10             MAP File version
+1                       Max Number of SSN
+1000                    Number of dialogues
+1000                    Number of transactions
+80                      Higher threshold %
+50                      Lower threshold %
+1                       Unbinds at loose of application connection
+65                      S Timer
+225                     M Timer
+3000                    Ml Timer
+250                     Bind Timer
+4000                    Guard Timer
+194                     File version number
+4                       Protocol version
+2                       Max number of users
+100                     Max number of dialogues for each user
+1                       Automatically send ActivityTestInvoke
+1                       Automatically respond to received ActivityTestInvoke
+1000                    Timer value for sending ActivityTestInvoke
+1                       Use SRF Timer
+10000                   Timer value for SRF
+150                     Timer value for bind
+300                     Timer value for ActivateServiceFiltering
+50                      Timer value for ActivityTest
+50                      Timer value for ApplyCharging
+50                      Timer value for AssistRequestInstructions
+50                      Timer value for CallGap
+50                      Timer value for CallInformationRequest
+50                      Timer value for Cancel
+50                      Timer value for CollectInformation
+50                      Timer value for Connect
+50                      Timer value for ConnectToResource
+50                      Timer value for Continue
+50                      Timer value for DisconnectForwardConnection
+300                     Timer value for EstablishTemporaryConnection
+50                      Timer value for FurnishChargingInformation
+50                      Timer value for InitiateCallAttempt
+50                      Timer value for ReleaseCall
+50                      Timer value for RequestNotificationChargingEvent
+50                      Timer value for RequestReportBCSMEvent
+50                      Timer value for ResetTimer
+50                      Timer value for SendChargingInformation
+3000                    Timer value for PlayAnnouncement
+3000                    Timer value for PromptAndCollectUserInformation
+50                      Timer value for SpecializedResourceReport
+300                     Timer value for Executed
+20                      Timer value for CallLimit
+20                      Timer value for DialogueUserInformation
+80                      Timer value for HandOver
+20                      Timer value for HoldCallPartyConnection
+20                      Timer value for Reconnect
+20                      Timer value for ReleaseCallPartyConnection
+40                      Timer value for Retrieve
+20                      Timer value for SignallingInformation
+40                      Timer value for Update
+1                       User Data Manipulation ASE Version
+597                     TCAP ITU / ETSI / TTC R4 File version number
+ITU                     Standard Identifier
+2                       Max number of subsystems.
+2                       Max number of TC-users per subsystem
+10                      Max number of dialogue per subsystem
+10                      Max number of concurrent components per dialogue
+1                       Hop Counter Used
+10                      Bind Timer
+3488                    Max length per Dialogue Message.
+0                       Invoke as result is not used
+0                       Indefinite form for length of contents indicator is not used
+70                      Dialogue Threshold Alarm, High Watermark
+60                      Dialogue Threshold Alarm, Low Watermark
+596                     TCAP ANSI R5 File version number
+1                       Max number of subsystems.
+1                       Max number of TC-users per subsystem
+10                      Max number of dialogue per subsystem
+10                      Max number of concurrent components per dialogue
+1                       Hop Counter Used
+10                      Bind Timer
+3488                    Max length per Dialogue Message.
+70                      Dialogue Threshold Alarm, High Watermark
+60                      Dialogue Threshold Alarm, Low Watermark
+CAA20180R8              Version ISUP
+0                       ITU Chinese
+1                       Multiple Originating (Local) Point Codes
+0                       Transparency behaviour
+00000110b               Transparency, unrecognized messages congestion behaviour mask
+3                       Network Indicator
+6                       MTPL3 module identity
+0                       Location code
+E0h                     Code for internal parameter
+8                       Number of address signals
+16                      Address signals possible in the Called party number
+0                       Message code for Charge information
+0                       Time slot base
+1                       Number of timer templates
+15                      Timer T1
+120                     Timer T3
+300                     Timer T4
+300                     Timer T5
+120                     Timer T6
+30                      Timer T7
+10                      Timer T8
+120                     Timer T9
+15                      Timer T16
+300                     Timer T17
+15                      Timer T18
+300                     Timer T19
+15                      Timer T20
+300                     Timer T21
+15                      Timer T22
+300                     Timer T23
+240                     Timer T27
+3                       Timer T29
+5                       Timer T30
+12                      Timer T33
+2                       Timer T34
+15                      Timer T35
+10                      Timer T36
+15                      Timer TBind
+62                      Timer TStopBlock
+62                      Timer TStopUnblock
+62                      Timer TStopRSC
+62                      Timer TStopGRS
+10                      Timer TSpanTimer
+1                       Total number of node connections
+15350                   Remote Signalling Point Code
+15347                   Local Signalling Point Code
+00001011b               Mask 1
+00000001b               Mask 2
+00000001b               Mask 3
+0                       Timer template index for this Node Connection
+5                       Traffic level for congestion level 1
+3                       Traffic level for congestion level 2
+1                       Traffic level for congestion level 3
+75                      High Threshold percentage of max. number of CICs in use
+40                      Low Threshold percentage of max. number of CICs in use
+1                       Number of spans for this Node Connection
+127                     HSN
+127                     SPN
+FFFFFFFFh               Incoming CICs
+FFFFFFFFh               Outgoing CICs
+00001111b               Span behaviour parameter mask 1
+00011000b               Span behaviour parameter mask 2
+0                       CIC allocation method
+0                       CIC base
+1                       Total number of resource groups
+101                     Resource group ID
+0                       Circuit selection method to avoid dual seizure
+1                       Number of spans in resource group
+127                     HSN ID
+127                     SPN ID
+FFFFFFFFh               Mask for allowed circuits in this group
+0                       Total number of National messages
+00010011b               Default message compatibility mask
+0                       Number of messages to change compatibility behaviour for
+1                       Use congestion priorities
+0                       Number of messages to change default congestion behaviour for
+796                     File version number
+1                       No of Local SPC
+15347                   SPC of the MTP-L3 Signaling Point #0
+0                       How to construct UDTS from UDT? (0:Swap data, 1:Swap pointers)
+1800                    TimerConnEst
+1200                    TimerIas
+3600                    TimerIar
+100                     TimerRelease
+300                     TimerCong
+300                     TimerStatInfo
+150                     TimerBind
+100                     TimerConnResp
+150                     TimerReassembly
+5000                    TimerGuard
+6                       TimerAttack
+100                     TimerDecay
+100                     TimerCon
+1                       How to set MSB of address indicator? (0 = No MSB is used, 1 = MSB is used)
+195                     SIO (NI=3, Reserved for national use)
+8                       hop Counter for SCLC
+8                       hop Counter for SCOC
+1                       Message priority for SST
+1                       Message priority for IT
+1                       Message priority for RLSD
+2                       General message priority
+0                       SCMG Flag
+0                       Outgoing SMI Value
+75                      Configurable Connection Threshold High Utilisation Alarm (X%)
+50                      Configurable Connection Threshold Normal Utilisation Alarm (Y%)
+1                       No of Local SSN
+8                       SSN of the Local SCCP SAP #1: (SSN 8)
+1048575                 MaxNoOfConnections for the Local SCCP SAP #1: (SSN 8)
+0                       Number SAPs to which S1 applies
+0                       Number SAPs to which S2 applies
+0                       Number SAPs to which S3 applies
+0                       Number SAPs to which S4 applies
+0                       S5 (For compatibility with ANSI)
+3                       N1 section
+1                       Contents Indicator (1: SPC + SSN)
+15347                   SPC of the Local SCCP SAP #1: (SSN 8)
+8                       SSN of the Local SCCP SAP #1: (SSN 8)
+1                       Contents Indicator (1: SPC + SSN)
+15350                   SPC of the Remote SCCP SAP #2: (SSN 6)
+6                       SSN of the Remote SCCP SAP #2: (SSN 6)
+1                       Contents Indicator (1: SPC + SSN)
+15350                   SPC of the Remote SCCP SAP #1: (SSN 8)
+8                       SSN of the Remote SCCP SAP #1: (SSN 8)
+0                       N2 section
+0                       N3 section
+1                       N4 section
+15350                   SPC
+CAA901735R1             File version number
+13                      Network Layer Id
+1                       Number of Local Signaling Points
+0                       Node Behaviour
+1                       Number of used Hardware Comm. cards
+1                       Number of links per Hardware card
+150                     Timer TBINDEXP
+8                       Timer T1
+14                      Timer T2
+8                       Timer T3
+8                       Timer T4
+8                       Timer T5
+8                       Timer T6
+10                      Timer T8
+450                     Timer T10
+11                      Timer T12
+11                      Timer T13
+25                      Timer T14
+11                      Timer T17
+550                     Timer T18
+680                     Timer T19
+600                     Timer T20
+640                     Timer T21
+2500                    Timer T22
+2500                    Timer T23
+450                     Timer SLTM
+80                      Timer SLTA
+80                      Timer Tc
+10                      Timer TBSNT
+10                      Timer TRETRIEVAL
+1200                    Timer TSTART
+20                      Timer TDLACK
+150                     Max. size of rerouting buffer
+150                     Max. size of changeover buffer
+3                       Priority for SLTM/SLTA
+3                       Priority for COO/COA
+3                       Priority for CBD/CBA
+3                       Priority for ECO/ECA
+3                       Priority for RST/RSR
+3                       Priority for LIN, LUN, LIA, LUA, LID, LFU, LLT and LRT
+3                       Priority for TRA
+3                       Priority for UPU
+0                       Treatment of an incoming TFR
+0                       Treat spare-bits in SIO for NI = 2
+0                       Treat spare-bits in SIO for NI = 3
+5                       Interval of MTP_STATUS_ind when congestion
+0                       ITU Version: 03/93(White), BLUE or RED
+1                       Send SLTM message before link in service
+A5A5A5A5                SLTM Test Pattern
+0                       Number of Prohibited OPC / DPC
+15347                   Local Signaling Point Code (OPC)
+0                       Number of Secondary OPCs
+0                       Number of Allowed Incoming OPCs
+1                       Number of Linksets
+1                       Linkset number
+1                       Number of Links in Linkset
+15350                   Adjacent DPC for Linkset
+0                       Linkset Behavior Mask
+3                       Network Indicator for the Linkset
+0                       SLC - Signaling Link Code
+0                       HSN - Hardware Selection Number
+0                       SDL - Signaling Data Link
+0                       Link Class
+1                       Number of Routes
+1                       Route number
+1                       Linkset Number
+35                      Low Link Availability
+45                      Normal Link Availability
+1                       Number of Routesets
+15350                   DPC - Destination Point Code
+1                       Number of Alternative Routes
+1                       Alternative Route
+1                       Route Priority
+1                       BE-IF File version
+50                      Timer TMsg
+100                     Timer TLsr
+1                       Number of Front Ends
+FEIF01_ID               FE Name
+1                       Number of links
+0                       Logical HSN #0
+0                       Logical SDL #0
+0                       Physical HSN #0
+16                      Physical SDL #0
