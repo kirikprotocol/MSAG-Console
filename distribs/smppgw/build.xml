@@ -1,25 +1,21 @@
 <project name="SMPP gateway" default="help">
   <property file="build.properties"/>
-  <fail message="Please configure build.properties file" >
-    <condition>
-      <not>
-        <and>
-          <isset property="BUILD_DIR"/>
-          <isset property="SMSC_DIR"/>
-          <isset property="TEMPLATE_PROPS"/>
-          <isset property="CATALINA_HOME"/>
-          <isset property="CATALINA_BASE"/>
-          <isset property="MAKE_ARGS"/>
-        </and>
-      </not>
-    </condition>
-  </fail>
-  <!--<fail unless="BUILD_DIR" message="BUILD_DIR property not specified. "/>
-  <fail unless="SMSC_DIR" message="SMSC_DIR property not specified. Please configure build.properties file"/>
-  <fail unless="TEMPLATE_PROPS" message="TEMPLATE_PROPS property file not specified. Please configure build.properties file"/>
-  -->
+  <condition property="INIT_FAILED" >
+    <not>
+      <and>
+        <isset property="BUILD_DIR"/>
+        <isset property="SMSC_DIR"/>
+        <isset property="TEMPLATE_PROPS"/>
+        <isset property="CATALINA_HOME"/>
+        <isset property="CATALINA_BASE"/>
+        <isset property="MAKE_ARGS"/>
+      </and>
+    </not>
+  </condition>
+  <fail if="INIT_FAILED" message="Please configure build.properties file"/>
   <available file="${TEMPLATE_PROPS}" property="TEMPLATE_PROPS_FOUND" value="yes"/>
   <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
+
   <property environment="env"/>
   <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
