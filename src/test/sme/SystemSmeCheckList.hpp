@@ -50,8 +50,6 @@ void profilerTc()
 		"Поля pdu соответствуют настройкам менеджера профилей");
 	__reg_tc__("updateProfile.ack.checkText",
 		"Тект сообщений правильный");
-	__reg_tc__("updateProfile.ack.multipleMessages",
-		"Если в конфигурации менеджера профилей прописаны длинные тексты уведомлений, тогда отправляется несколько sms");
 	__reg_tc__("updateProfile.ack.reportOptions",
 		"Подтверждения об изменении настроек получения уведомлений о доставке");
 	__reg_tc__("updateProfile.ack.reportOptions.dataCoding",
