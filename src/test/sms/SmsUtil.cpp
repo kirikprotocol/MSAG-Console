@@ -213,6 +213,8 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 	__compare_int_body_tag__(SMPP_SOURCE_BEARER_TYPE, 137);
 	__compare_bin_body_tag__(SMSC_CONCATINFO, 138);
 	__compare_int_body_tag__(SMSC_DSTCODEPAGE, 140);
+	__compare_int_body_tag__(SMSC_ORIGINAL_DC, 141);
+	__compare_int_body_tag__(SMSC_FORCE_DC, 142);
 	//bool attach;
 	return res;
 }
@@ -508,6 +510,8 @@ try
 		__set_bin_body_tag__(SMSC_CONCATINFO, 3);
 		__set_int_body_tag__(SMSC_DSTCODEPAGE, rand0(255));
 	}
+	__set_int_body_tag__(SMSC_ORIGINAL_DC, rand0(255));
+	__set_int_body_tag__(SMSC_FORCE_DC, rand0(255));
 	//check fileds
 	if (check)
 	{
@@ -550,6 +554,8 @@ try
 		__check_int_body_tag__(SMPP_SOURCE_BEARER_TYPE);
 		__check_bin_body_tag__(SMSC_CONCATINFO);
 		__check_int_body_tag__(SMSC_DSTCODEPAGE);
+		__check_int_body_tag__(SMSC_ORIGINAL_DC);
+		__check_int_body_tag__(SMSC_FORCE_DC);
 	}
 	//bool attach;
 	for (BinMap::iterator it = binMap.begin(); it != binMap.end(); it++)
@@ -815,6 +821,8 @@ ostream& operator<< (ostream& os, SMS& sms)
 	__print_int_body_tag__(SMPP_SOURCE_BEARER_TYPE);
 	__print_bin_body_tag__(SMSC_CONCATINFO);
 	__print_int_body_tag__(SMSC_DSTCODEPAGE);
+	__print_int_body_tag__(SMSC_ORIGINAL_DC);
+	__print_int_body_tag__(SMSC_FORCE_DC);
 	//bool attach;
 }
 
