@@ -70,7 +70,7 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 	SmppUtil::convert(origPdu->get_message().get_dest(), &destAlias);
 	switch (monitor->state)
 	{
-		case DELIVERED:
+		case SMPP_DELIVERED_STATE:
 			for (time_t t = recvTime; t > recvTime - timeCheckAccuracy; t--)
 			{
 				static const DateFormatter df("dd MMMM yyyy, HH:mm:ss");
@@ -87,8 +87,8 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 				}
 			}
 			break;
-		case UNDELIVERABLE:
-		case EXPIRED:
+		case SMPP_UNDELIVERABLE_STATE:
+		case SMPP_EXPIRED_STATE:
 			for (time_t t = monitor->pduData->sendTime;
 				  t <= monitor->pduData->sendTime + timeCheckAccuracy; t++)
 			{
@@ -97,11 +97,11 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 				s << "*ѕодтв ";
 				s << SmsUtil::configString(destAlias) << " ";
 				s << df.format(t) << ": ";
-				if (monitor->state == UNDELIVERABLE)
+				if (monitor->state == SMPP_UNDELIVERABLE_STATE)
 				{
 					s << "permanent error"; //захардкожено
 				}
-				else if (monitor->state == EXPIRED)
+				else if (monitor->state == SMPP_EXPIRED_STATE)
 				{
 					s << "expired"; //захардкожено
 				}
@@ -182,6 +182,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	//дл€ ext sme не может быть PDU_COND_REQUIRED_FLAG
 	if (monitor->getFlag() == PDU_COND_REQUIRED_FLAG)
 	{
+		monitor->setNotExpected();
 		return;
 	}
 	//оригинальна€ pdu
@@ -203,7 +204,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	__require__(ack);
 	if (!ack->valid)
 	{
-		monitor->setCondRequired();
+		monitor->setNotExpected();
 		return;
 	}
 	__tc__("deliverySm.reports.deliveryReceipt.checkStatus");
@@ -231,11 +232,11 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData);
 	switch(monitor->state)
 	{
-		case ENROUTE:
-		case DELETED:
+		case SMPP_ENROUTE_STATE:
+		case SMPP_DELETED_STATE:
 			__tc_fail__(1);
 			break;
-		case DELIVERED:
+		case SMPP_DELIVERED_STATE:
 			if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT &&
 				monitor->deliveryStatus == ESME_ROK)
 			{
@@ -250,11 +251,11 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 				__tc_fail__(3);
 			}
 			break;
-		case EXPIRED:
+		case SMPP_EXPIRED_STATE:
 			opt.set_messageState(SMPP_EXPIRED_STATE);
 			opt.set_networkErrorCode(errCode);
 			break;
-		case UNDELIVERABLE:
+		case SMPP_UNDELIVERABLE_STATE:
 			opt.set_messageState(SMPP_UNDELIVERABLE_STATE);
 			opt.set_networkErrorCode(errCode);
 			break;
@@ -266,37 +267,14 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	__tc_ok_cond__;
 	__tc__("deliverySm.reports.deliveryReceipt.checkText");
 	__compare__(1, pdu.get_message().get_dataCoding(), ack->dataCoding);
-	if (text.length() > getMaxChars(ack->dataCoding))
+	if (text != ack->text)
 	{
+		__trace2__("delivery receipt text mismatch: received:\n%s\nexpected:\n%s",
+			text.c_str(), ack->text.c_str());
 		__tc_fail__(2);
 	}
-	int pos = ack->text.find(text);
-	__trace2__("delivery receipt: pos = %d, received:\n%s\nexpected:\n%s",
-		pos, text.c_str(), ack->text.c_str());
-	if (pos == string::npos)
-	{
-		__tc_fail__(3);
-		monitor->setNotExpected();
-	}
-	else
-	{
-		__tc_ok__;
-		ack->text.erase(pos, text.length());
-		if (!ack->text.length())
-		{
-			monitor->setNotExpected();
-		}
-		else
-		{
-			__tc__("deliverySm.reports.multipleMessages");
-			if (text.length() != getMaxChars(ack->dataCoding) &&
-				ack->text.length() % getMaxChars(ack->dataCoding) != 0)
-			{
-				__tc_fail__(1);
-			}
-			__tc_ok_cond__;
-		}
-	}
+	__tc_ok_cond__;
+	monitor->setNotExpected();
 }
 
 void SmscSmeTestCases::processIntermediateNotification(
@@ -306,6 +284,7 @@ void SmscSmeTestCases::processIntermediateNotification(
 	//дл€ ext sme не может быть PDU_COND_REQUIRED_FLAG
 	if (monitor->getFlag() == PDU_COND_REQUIRED_FLAG)
 	{
+		monitor->setNotExpected();
 		return;
 	}
 	//оригинальна€ pdu
@@ -327,7 +306,7 @@ void SmscSmeTestCases::processIntermediateNotification(
 	__require__(ack);
 	if (!ack->valid)
 	{
-		monitor->setCondRequired();
+		monitor->setNotExpected();
 		return;
 	}
 	//проверить содержимое полученной pdu
@@ -354,16 +333,16 @@ void SmscSmeTestCases::processIntermediateNotification(
 	memcpy(errCode + 1, &tmp, 2);
 	switch(monitor->state)
 	{
-		case ENROUTE: //темпоральна€ ошибка
-		case UNDELIVERABLE: //есть маршрут, но sme не забиндена
-		case EXPIRED: //pdu еще находитс€ в ENROUTE, но уже не будет доставл€тьс€
+		case SMPP_ENROUTE_STATE: //темпоральна€ ошибка
+		case SMPP_UNDELIVERABLE_STATE: //есть маршрут, но sme не забиндена
+		case SMPP_EXPIRED_STATE: //pdu еще находитс€ в ENROUTE, но уже не будет доставл€тьс€
 			opt.set_messageState(SMPP_ENROUTE_STATE);
 			opt.set_networkErrorCode(errCode);
 			break;
-		case DELIVERED:
+		case SMPP_DELIVERED_STATE:
 			__tc_fail__(1);
 			break;
-		case DELETED:
+		case SMPP_DELETED_STATE:
 			__tc_fail__(2);
 			break;
 		default:
@@ -374,37 +353,14 @@ void SmscSmeTestCases::processIntermediateNotification(
 	__tc_ok_cond__;
 	__tc__("deliverySm.reports.intermediateNotification.checkText");
 	__compare__(1, pdu.get_message().get_dataCoding(), ack->dataCoding);
-	if (text.length() > getMaxChars(ack->dataCoding))
+	if (text != ack->text)
 	{
+		__trace2__("intermediate notification text mismatch: received:\n%s\nexpected:\n%s",
+			text.c_str(), ack->text.c_str());
 		__tc_fail__(2);
 	}
-	int pos = ack->text.find(text);
-	__trace2__("intermediate notification: pos = %d, received:\n%s\nexpected:\n%s",
-		pos, text.c_str(), ack->text.c_str());
-	if (pos == string::npos)
-	{
-		__tc_fail__(3);
-		monitor->setNotExpected();
-	}
-	else
-	{
-		__tc_ok__;
-		ack->text.erase(pos, text.length());
-		if (!ack->text.length())
-		{
-			monitor->setNotExpected();
-		}
-		else
-		{
-			__tc__("deliverySm.reports.multipleMessages");
-			if (text.length() != getMaxChars(ack->dataCoding) &&
-				ack->text.length() % getMaxChars(ack->dataCoding) != 0)
-			{
-				__tc_fail__(1);
-			}
-			__tc_ok_cond__;
-		}
-	}
+	__tc_ok_cond__;
+	monitor->setNotExpected();
 }
 
 }
