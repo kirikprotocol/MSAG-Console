@@ -1,6 +1,7 @@
 #ifndef TEST_UTIL_CHECK_LIST
 #define TEST_UTIL_CHECK_LIST
 
+#include "Util.hpp"
 #include <fstream>
 #include <map>
 #include <string>
@@ -8,7 +9,6 @@
 namespace smsc {
 namespace test {
 namespace util {
-
 
 /**
  * Вспомогательный класс для записи результатов в checklist.
@@ -38,7 +38,7 @@ public:
 	/**
 	 * Записать результаты тестирования (test case) в текущцю группу/таблицу
 	 */
-	void writeResult(const std::string& testCaseDesc, bool result);
+	void writeResult(const std::string& testCaseDesc, TCResult result);
 
 private:
 	static CheckListMap* clists;

@@ -1,17 +1,17 @@
+#include "CheckList.hpp"
 #include <map>
 #include <string>
 #include <fstream>
-#include "CheckList.h"
-
-using namespace std;
 
 namespace smsc {
 namespace test {
 namespace util {
 
-const std::string CheckList::UNIT_TEST = "unit_test";
-const std::string CheckList::SYSTEM_TEST = "system_test";
-const std::string CheckList::STANDARDS_TEST = "standards_test";
+using namespace std;
+
+const string CheckList::UNIT_TEST = "unit_test";
+const string CheckList::SYSTEM_TEST = "system_test";
+const string CheckList::STANDARDS_TEST = "standards_test";
 CheckList::CheckListMap* CheckList::clists = new CheckList::CheckListMap();
 
 CheckList& CheckList::getCheckList(const string& name)
@@ -32,22 +32,20 @@ CheckList::CheckList(const string& name_)
 	string tmp = "./" + name + ".chk";
 	os.open(tmp.data());
 }
-/*
-CheckList::~CheckList()
-{
-	delete[] os;
-}
-*/
+
 void CheckList::startNewGroup(const string& groupName)
 {
 	counter = 1;
 	os << endl << groupName << endl;
+	os << "№|Тест|Id|Результат" << endl;
 }
 
-void CheckList::writeResult(const string& testCaseDesc, bool result)
+void CheckList::writeResult(const string& testCaseDesc, TCResult result)
 {
-	os << counter++ << "|" << testCaseDesc << "|" << (result ? "Ok" : 
-		"Failed") << endl; }
+	os << counter++ << "|" << testCaseDesc << "|";
+	result.print(os);
+	os << "|" << (result.value() ? "Ok" : "Failed") << endl;
+}
 
 }
 }
