@@ -18,8 +18,7 @@ void PduRegistry::registerMonitor(uint32_t seqNum, PduMonitor* monitor)
 {
 	__require__(monitor);
 	SeqNumKey key(seqNum, monitor->getType());
-	SeqNumMap::const_iterator it = seqNumMap.find(key);
-	__require__(it == seqNumMap.end());
+	__require__(seqNumMap.find(key) == seqNumMap.end());
 	seqNumMap[key] = monitor;
 }
 

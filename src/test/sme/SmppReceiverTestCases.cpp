@@ -73,7 +73,7 @@ void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 		return;
 	}
 	__decl_tc__;
-	__tc__("processReplaceSmResp.async");
+	__tc__("replaceSm.resp.async");
 	try
 	{
 		//получить оригинальную pdu
@@ -89,6 +89,7 @@ void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 		{
 			//проверить и обновить response и delivery receipt мониторы
 			//по данным из респонса
+			fixture->pduReg->removeMonitor(monitor);
 			fixture->pduChecker->processReplaceSmResp(monitor, pdu, respTime);
 			//__dumpPdu__("processReplaceSmRespAfter", fixture->smeInfo.systemId, &pdu);
 		}
