@@ -103,7 +103,9 @@ unsigned ConvertText27bit(
     __trace2__("MAP::7bit(hex): %s",b);
   }
 #endif
-  return bit7buf-base+(shift?0:1);
+  unsigned _7bit_len = bit7buf-base+(shift?1:0);
+  __trace2__("MAP::7bit buffer length: %d",_7bit_len);
+  return _7bit_len;
 }
 
 #pragma pack(1)
