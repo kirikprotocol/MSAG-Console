@@ -247,10 +247,10 @@ public:
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn,2);
     dialogId_pool.pop_front();
-    hash.Insert(dialogueid,dlg);
+    hash.Insert(map_dialog,dlg);
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
     dlg->AddRef();
-    dialog->associate = associate->AddRef();
+    dlg->associate = associate->AddRef();
     return dlg;
   }
   
