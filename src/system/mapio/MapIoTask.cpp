@@ -1,5 +1,7 @@
 
 #include "MapIoTask.h"
+#include <sys/types.h>
+#include <signal.h>
 
 #define MAXENTRIES 10
 #define MY_USER_ID USER01_ID 
@@ -127,6 +129,7 @@ void MapIoTask::dispatcher()
     if ( result == MSG_TIMEOUT ) continue;
     if ( result == MSG_BROKEN_CONNECTION ){
       __trace2__("MAP: Broken connection");
+      kill(getpid(),17);
 restart:
       __trace2__("MAP:: try restart MAP service");
 //      warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
