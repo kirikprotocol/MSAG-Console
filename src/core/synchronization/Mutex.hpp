@@ -64,6 +64,8 @@ protected:
   mutex_t mutex;
   friend class Event;
 #endif
+  Mutex(const Mutex&);
+  void operator=(const Mutex&);
 };//Mutex
 
 class MutexGuard{
