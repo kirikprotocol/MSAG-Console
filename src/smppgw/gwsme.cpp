@@ -24,7 +24,7 @@ int GatewaySme::Execute()
       SmscCommand cmd;
       {
         MutexGuard g(mutexout);
-        while(!isStopping && outqueue.Count()==0)mutexout.wait();
+        while(!isStopping && outqueue.Count()==0)mutexout.wait(1000);
         if(isStopping || !isConnected())break;
         outqueue.Pop(cmd);
       }

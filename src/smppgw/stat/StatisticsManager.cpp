@@ -91,10 +91,10 @@ void GWStatisticsManager::updateCounter(int counter,const char* srcSmeId, const 
     UPDATE_SRV_STAT_CNT(SmsTrBilled)
     UPDATE_SRV_STAT_CNT(UssdTrFromScOk)
     UPDATE_SRV_STAT_CNT(UssdTrFromScFailed)
-    UPDATE_SRV_STAT_CNT(UssdTrFromScFailedBilled)
+    UPDATE_SRV_STAT_CNT(UssdTrFromScBilled)
     UPDATE_SRV_STAT_CNT(UssdTrFromSmeOk)
     UPDATE_SRV_STAT_CNT(UssdTrFromSmeFailed)
-    UPDATE_SRV_STAT_CNT(UssdTrFromSmeFailedBilled)
+    UPDATE_SRV_STAT_CNT(UssdTrFromSmeBilled)
 
 #undef UPDATE_SRV_STAT_CNT
   }
@@ -311,10 +311,10 @@ void GWStatisticsManager::flushCounters(int index)
             insertStatSmeStmt->setInt32 (10 , smeStat->service.SmsTrBilled);
             insertStatSmeStmt->setInt32 (11 , smeStat->service.UssdTrFromScOk);
             insertStatSmeStmt->setInt32 (12 , smeStat->service.UssdTrFromScFailed);
-            insertStatSmeStmt->setInt32 (13 , smeStat->service.UssdTrFromScFailedBilled);
+            insertStatSmeStmt->setInt32 (13 , smeStat->service.UssdTrFromScBilled);
             insertStatSmeStmt->setInt32 (14 , smeStat->service.UssdTrFromSmeOk);
             insertStatSmeStmt->setInt32 (15 , smeStat->service.UssdTrFromSmeFailed);
-            insertStatSmeStmt->setInt32 (16 , smeStat->service.UssdTrFromSmeFailedBilled);
+            insertStatSmeStmt->setInt32 (16 , smeStat->service.UssdTrFromSmeBilled);
 
             insertStatSmeStmt->executeUpdate();
 

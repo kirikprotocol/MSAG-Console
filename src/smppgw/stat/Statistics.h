@@ -22,10 +22,10 @@ namespace stat {
           cntSmsTrBilled,
           cntUssdTrFromScOk,
           cntUssdTrFromScFailed,
-          cntUssdTrFromScFailedBilled,
+          cntUssdTrFromScBilled,
           cntUssdTrFromSmeOk,
           cntUssdTrFromSmeFailed,
-          cntUssdTrFromSmeFailedBilled
+          cntUssdTrFromSmeBilled
         };
     }
 

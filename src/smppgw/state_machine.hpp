@@ -9,7 +9,6 @@
 #include "profiler/profiler.hpp"
 #include "core/buffers/Hash.hpp"
 #include <list>
-#include "util/regexp/RegExp.hpp"
 #include <exception>
 
 namespace smsc{
@@ -19,14 +18,6 @@ class smsc::smppgw::Smsc;
 using smsc::profiler::Profile;
 
 using namespace smsc::util::templates;
-
-class RegExpCompilationException:public std::exception{
-public:
-  const char* what()const throw()
-  {
-    return "failed to compile directive processing regexp in state machine";
-  }
-};
 
 class StateMachine:public smsc::core::threads::ThreadedTask{
 public:

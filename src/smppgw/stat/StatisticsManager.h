@@ -65,10 +65,10 @@ namespace stat {
       int SmsTrBilled;
       int UssdTrFromScOk;
       int UssdTrFromScFailed;
-      int UssdTrFromScFailedBilled;
+      int UssdTrFromScBilled;
       int UssdTrFromSmeOk;
       int UssdTrFromSmeFailed;
-      int UssdTrFromSmeFailedBilled;
+      int UssdTrFromSmeBilled;
       ServiceStat()
       {
         Reset();

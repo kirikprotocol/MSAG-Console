@@ -8,7 +8,6 @@
 #include "core/buffers/Hash.hpp"
 #include "util/smstext.h"
 #include "logger/Logger.h"
-#include "util/regexp/RegExp.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "system/status.h"
 #include "resourcemanager/ResourceManager.hpp"
@@ -32,8 +31,6 @@ using namespace smsc::smpp;
 using namespace util;
 using namespace smsc::resourcemanager;
 using std::exception;
-using smsc::util::regexp::RegExp;
-using smsc::util::regexp::SMatch;
 using namespace smsc::core::synchronization;
 
 using smsc::system::Task;
@@ -381,7 +378,7 @@ public:
     return st;
   }
 
-  void ProcessExpired(stat::IStatistics* stat)
+  void ProcessExpired(smsc::smppgw::Smsc* stat)
   {
     MutexGuard mg(mtx);
     time_t now=time(NULL);
@@ -641,7 +638,7 @@ StateMachine::StateMachine(EventQueue& q,
 void StateMachine::KillExpiredTrans()
 {
   //__trace__("process expired transactions");
-  tmon.ProcessExpired(smsc->getStatistics());
+  tmon.ProcessExpired(smsc);
 }
 
 
@@ -704,7 +701,7 @@ void StateMachine::submit(SmscCommand& cmd)
                        sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
                      );
     src_proxy->putCommand(resp);
-    smsc->getStatistics()->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),0,smsc::system::Status::NOROUTE);
+    smsc->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),0,smsc::system::Status::NOROUTE);
     return;
   }
   if(!dst_proxy)
@@ -738,7 +735,7 @@ void StateMachine::submit(SmscCommand& cmd)
 
   if((st&TransactionMonitor::trDeniedBase) || (st&TransactionMonitor::trInvalid))
   {
-    smsc->getStatistics()->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::RX_R_APPN);
+    smsc->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::RX_R_APPN);
     SmscCommand resp=SmscCommand::makeSubmitSmResp
                      (
                        "0",
@@ -752,10 +749,10 @@ void StateMachine::submit(SmscCommand& cmd)
 
   if(st==TransactionMonitor::trSmeAnswerEnd)
   {
-    smsc->getStatistics()->updateCounter(stat::Counters::cntSmsTrOk,src_proxy->getSystemId(),0,0);
+    smsc->updateCounter(stat::Counters::cntSmsTrOk,src_proxy->getSystemId(),0,0);
   }else if(st==TransactionMonitor::trScUssdEnd)
   {
-    smsc->getStatistics()->updateCounter(stat::Counters::cntUssdTrFromScOk,src_proxy->getSystemId(),0,0);
+    smsc->updateCounter(stat::Counters::cntUssdTrFromScOk,src_proxy->getSystemId(),0,0);
   }
 
   int newdid=dst_proxy->getNextSequenceNumber();
@@ -792,7 +789,7 @@ void StateMachine::submit(SmscCommand& cmd)
 
   if(!ok)
   {
-    smsc->getStatistics()->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::RX_T_APPN);
+    smsc->updateCounter(stat::Counters::cntRejected,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::RX_T_APPN);
     SmscCommand resp=SmscCommand::makeSubmitSmResp
                      (
                        "0",
@@ -804,7 +801,7 @@ void StateMachine::submit(SmscCommand& cmd)
     return;
   }
 
-  //smsc->getStatistics()->updateCounter(stat::Counters::cntAccepted,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::OK);
+  //smsc->updateCounter(stat::Counters::cntAccepted,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::OK);
 
   return;
 }
@@ -844,7 +841,7 @@ void StateMachine::submitResp(SmscCommand& cmd)
     if(!smerec)
     {
       warn1(smsLog,"SBMRESP: incorrect command direction (submit response to to gatewaysme)");
-      smsc->getStatistics()->updateCounter(stat::Counters::cntRejected,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::RX_R_APPN);
+      smsc->updateCounter(stat::Counters::cntRejected,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::RX_R_APPN);
       return;
     }
     GatewaySme *gwsme=0;
@@ -861,16 +858,16 @@ void StateMachine::submitResp(SmscCommand& cmd)
       cmd->get_resp()->set_messageId(buf);
       try{
         dst_proxy->putCommand(cmd);
-        smsc->getStatistics()->updateCounter(st==0?stat::Counters::cntAccepted:stat::Counters::cntRejected,rd.smeId.c_str(),rd.routeId.c_str(),st);
+        smsc->updateCounter(st==0?stat::Counters::cntAccepted:stat::Counters::cntRejected,rd.smeId.c_str(),rd.routeId.c_str(),st);
       }catch(...)
       {
         warn2(smsLog,"SBMRESP: failed to put command to %s",dst_proxy->getSystemId());
-        smsc->getStatistics()->updateCounter(stat::Counters::cntRejected,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::RX_R_APPN);
+        smsc->updateCounter(stat::Counters::cntRejected,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::RX_R_APPN);
       }
     }else
     {
       warn1(smsLog,"SBMRESP: incorrect command direction (submit response to to gatewaysme)");
-      smsc->getStatistics()->updateCounter(stat::Counters::cntRejected,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::RX_R_APPN);
+      smsc->updateCounter(stat::Counters::cntRejected,rd.smeId.c_str(),rd.routeId.c_str(),smsc::system::Status::RX_R_APPN);
       return;
     }
   }else
@@ -905,7 +902,7 @@ void StateMachine::delivery(SmscCommand& cmd)
     }catch(...)
     {
     }
-    smsc->getStatistics()->updateCounter(stat::Counters::cntPerm,src_proxy->getSystemId(),0,smsc::system::Status::RX_P_APPN);
+    smsc->updateCounter(stat::Counters::cntPerm,src_proxy->getSystemId(),0,smsc::system::Status::RX_P_APPN);
     return;
   }
 
@@ -918,7 +915,7 @@ void StateMachine::delivery(SmscCommand& cmd)
                        smsc::system::Status::RX_T_APPN
                      );
     src_proxy->putCommand(resp);
-    smsc->getStatistics()->updateCounter(stat::Counters::cntTemp,src_proxy->getSystemId(),0,smsc::system::Status::RX_T_APPN);
+    smsc->updateCounter(stat::Counters::cntTemp,src_proxy->getSystemId(),0,smsc::system::Status::RX_T_APPN);
     return;
   }
 
@@ -955,7 +952,7 @@ void StateMachine::delivery(SmscCommand& cmd)
 
   if(st==TransactionMonitor::trSmeUssdEnd)
   {
-    smsc->getStatistics()->updateCounter(stat::Counters::cntUssdTrFromSmeOk,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::OK);
+    smsc->updateCounter(stat::Counters::cntUssdTrFromSmeOk,src_proxy->getSystemId(),ri.routeId.c_str(),smsc::system::Status::OK);
   }
 
   int newdid=dst_proxy->getNextSequenceNumber();
@@ -997,7 +994,7 @@ void StateMachine::deliveryResp(SmscCommand& cmd)
     dlgId=rd.seq;
     dst_proxy=rd.sme;
     int st=cmd->get_resp()->get_status();
-    smsc->getStatistics()->updateCounter(st==0?stat::Counters::cntDelivered:
+    smsc->updateCounter(st==0?stat::Counters::cntDelivered:
       smsc::system::Status::isErrorPermanent(st)?stat::Counters::cntPerm:stat::Counters::cntTemp
       ,dst_proxy->getSystemId(),rd.routeId.c_str(),st);
     debug1(smsLog,"record for delivery resp found");

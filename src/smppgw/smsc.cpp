@@ -40,7 +40,7 @@ Smsc::~Smsc()
 
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
 public:
-  SpeedMonitor(EventQueue& eq,smsc::system::performance::PerformanceListener* pl,Smsc* psmsc):
+  SpeedMonitor(EventQueue& eq,smsc::smppgw::performance::PerformanceListener* pl,Smsc* psmsc):
     queue(eq),perfListener(pl)
   {
     start.tv_sec=0;
@@ -61,7 +61,7 @@ public:
     for(int i=0;i<60;i++)times[i]=start.tv_sec;
     int lastscnt=0;
     memset(perfCnt,0,sizeof(perfCnt));
-    uint64_t lastPerfCnt[smsc::system::performance::performanceCounters]={0,};
+    uint64_t lastPerfCnt[smsc::smppgw::performance::performanceCounters]={0,};
     //now.tv_sec=0;
     int i;
     for(;;)
@@ -87,12 +87,13 @@ public:
       last=cnt;
       lasttime=now;
       if(isStopping)break;
-      uint64_t perf[smsc::system::performance::performanceCounters];
+      uint64_t perf[smsc::smppgw::performance::performanceCounters];
       // success, error, reschedule
       smsc->getPerfData(perf);
-      smsc::system::performance::PerformanceData d;
-      d.countersNumber=smsc::system::performance::performanceCounters;
-      for(i=0;i<smsc::system::performance::performanceCounters;i++)
+      __trace2__("perf[0]=%lld",perf[0]);
+      smsc::smppgw::performance::PerformanceData d;
+      d.countersNumber=smsc::smppgw::performance::performanceCounters;
+      for(i=0;i<smsc::smppgw::performance::performanceCounters;i++)
       {
         d.counters[i].lastSecond=(int)(perf[i]-lastPerfCnt[i]);
         d.counters[i].total=perf[i];
@@ -111,14 +112,14 @@ public:
         int idx=timeshift-1;
         if(idx<0)idx=59;
         times[idx]=now.tv_sec;
-        for(i=0;i<smsc::system::performance::performanceCounters;i++)perfCnt[i][idx]=0;
+        for(i=0;i<smsc::smppgw::performance::performanceCounters;i++)perfCnt[i][idx]=0;
       }
       if(scnt!=lastscnt)
       {
         times[scnt]=now.tv_sec;
         lastscnt=scnt;
       }
-      for(int j=0;j<smsc::system::performance::performanceCounters;j++)
+      for(int j=0;j<smsc::smppgw::performance::performanceCounters;j++)
       {
         d.counters[j].average=0;
       }
@@ -128,12 +129,12 @@ public:
         if(idx>=60)idx=0;
         if(i==scnt)
         {
-          for(int j=0;j<smsc::system::performance::performanceCounters;j++)
+          for(int j=0;j<smsc::smppgw::performance::performanceCounters;j++)
           {
             perfCnt[j][idx]+=d.counters[j].lastSecond;
           }
         }
-        for(int j=0;j<smsc::system::performance::performanceCounters;j++)
+        for(int j=0;j<smsc::smppgw::performance::performanceCounters;j++)
         {
           d.counters[j].average+=perfCnt[j][idx];
         }
@@ -143,7 +144,7 @@ public:
       //__trace2__("ca=%d,ea=%d,ra=%d, time diff=%u",
       //  d.success.average,d.error.average,d.rescheduled.average,diff);
 
-      for(i=0;i<smsc::system::performance::performanceCounters;i++)
+      for(i=0;i<smsc::smppgw::performance::performanceCounters;i++)
       {
         d.counters[i].average/=diff;
       }
@@ -152,11 +153,10 @@ public:
       d.uptime=now.tv_sec-start.tv_sec;
 
       d.eventQueueSize=equnl;
-      d.inProcessingCount=0;
 
       perfListener->reportGenPerformance(&d);
 
-      for(i=0;i<smsc::system::performance::performanceCounters;i++)
+      for(i=0;i<smsc::smppgw::performance::performanceCounters;i++)
       {
         lastPerfCnt[i]=perf[i];
       }
@@ -174,11 +174,11 @@ public:
   }
 protected:
   EventQueue& queue;
-  int perfCnt[smsc::system::performance::performanceCounters][60];
+  int perfCnt[smsc::smppgw::performance::performanceCounters][60];
   int timeshift;
   time_t times[60];
   timespec start;
-  smsc::system::performance::PerformanceListener* perfListener;
+  smsc::smppgw::performance::PerformanceListener* perfListener;
   static Smsc* smsc;
 };
 
@@ -391,12 +391,12 @@ void Smsc::init(const SmscConfigs& cfg)
       time_t ut;
       fscanf(f,"%d %lld %lld %lld %lld %lld %lld",
         &ut,
-        &submitOkCounter,
-        &submitErrCounter,
-        &deliverOkCounter,
-        &deliverErrTempCounter,
-        &deliverErrPermCounter,
-        &rescheduleCounter
+        &acceptedCounter,
+        &rejectedCounter,
+        &deliveredCounter,
+        &deliverErrCounter,
+        &transOkCounter,
+        &transFailCounter
       );
       startTime=time(NULL)-ut;
       sm->setStartTime(startTime);
@@ -419,7 +419,7 @@ void Smsc::init(const SmscConfigs& cfg)
   ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
 
   {
-    smsc::system::performance::PerformanceServer *perfSrv=new smsc::system::performance::PerformanceServer
+    smsc::smppgw::performance::PerformanceServer *perfSrv=new smsc::smppgw::performance::PerformanceServer
     (
       cfg.cfgman->getString("core.performance.host"),
       cfg.cfgman->getInt("core.performance.port"),
@@ -455,7 +455,7 @@ void Smsc::init(const SmscConfigs& cfg)
       gwcfg.password=(val=std::auto_ptr<char>(cv->getString((*it+".password").c_str()))).get();;
       gwcfg.smppTimeOut=cv->getInt((*it+".responseTimeout").c_str());
       GatewaySme *gwsme=new GatewaySme(gwcfg,&smeman);
-      gwsme->setId(gwcfg.sid,smeman.lookup(*it));
+      gwsme->setId(*it,smeman.lookup(*it));
       uint8_t uid=cv->getInt((*it+".uniqueMsgIdPrefix").c_str());
       if(gwSmeMap[uid])
       {

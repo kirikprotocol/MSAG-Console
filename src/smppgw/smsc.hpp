@@ -13,8 +13,7 @@
 #include "alias/aliasman.h"
 #include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
-#include "system/smscsme.hpp"
-#include "system/performance.hpp"
+#include "smppgw/performance.hpp"
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
 #include "snmp/SnmpAgent.hpp"
@@ -114,12 +113,13 @@ class Smsc
 public:
   Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser_(0)
   {
-    submitOkCounter=0;
-    submitErrCounter=0;
-    deliverOkCounter=0;
-    deliverErrTempCounter=0;
-    deliverErrPermCounter=0;
-    rescheduleCounter=0;
+    acceptedCounter=0;
+    rejectedCounter=0;
+    deliveredCounter=0;
+    deliverErrCounter=0;
+    transOkCounter=0;
+    transFailCounter=0;
+
     startTime=0;
     license.maxsms=0;
     license.expdate=0;
@@ -177,9 +177,34 @@ public:
 
   SmeAdministrator* getSmeAdmin(){return &smeman;}
 
-  smsc::smppgw::stat::IStatistics* getStatistics()
+  void updateCounter(int counter, const char* srcSmeId, const char* routeId,int errorCode=0)
   {
-    return statMan;
+    statMan->updateCounter(counter, srcSmeId,  routeId,errorCode);
+    MutexGuard g(perfMutex);
+    using namespace smsc::smppgw::stat::Counters;
+    switch(counter)
+    {
+      case cntAccepted:acceptedCounter++;break;
+
+      case cntRejected:
+      case cntDeniedByBilling:rejectedCounter++;break;
+
+      case cntDelivered:deliveredCounter++;break;
+
+      case cntTemp:
+      case cntPerm:deliverErrCounter++;break;
+
+      case cntSmsTrOk:
+      case cntSmsTrBilled:
+      case cntUssdTrFromScOk:
+      case cntUssdTrFromScBilled:
+      case cntUssdTrFromSmeOk:
+      case cntUssdTrFromSmeBilled:transOkCounter++;break;
+
+      case cntSmsTrFailed:
+      case cntUssdTrFromScFailed:
+      case cntUssdTrFromSmeFailed:transFailCounter++;break;
+    }
   }
 
   void SaveStats()
@@ -188,12 +213,12 @@ public:
     if(f)
     {
       fprintf(f,"%d %lld %lld %lld %lld %lld %lld",time(NULL)-startTime,
-        submitOkCounter,
-        submitErrCounter,
-        deliverOkCounter,
-        deliverErrTempCounter,
-        deliverErrPermCounter,
-        rescheduleCounter
+        acceptedCounter,
+        rejectedCounter,
+        deliveredCounter,
+        deliverErrCounter,
+        transOkCounter,
+        transFailCounter
       );
       fclose(f);
     }
@@ -215,12 +240,13 @@ public:
   void getPerfData(uint64_t *cnt)
   {
     MutexGuard g(perfMutex);
-    cnt[0]=submitOkCounter;
-    cnt[1]=submitErrCounter;
-    cnt[2]=deliverOkCounter;
-    cnt[3]=deliverErrTempCounter;
-    cnt[4]=deliverErrPermCounter;
-    cnt[5]=rescheduleCounter;
+    __trace2__("getPerfData: acceptedCounter=%lld",acceptedCounter);
+    cnt[0]=acceptedCounter;
+    cnt[1]=rejectedCounter;
+    cnt[2]=deliveredCounter;
+    cnt[3]=deliverErrCounter;
+    cnt[4]=transOkCounter=0;
+    cnt[5]=transFailCounter;
   }
 
   void getStatData(int& eqsize)
@@ -322,7 +348,7 @@ protected:
   std::string smscHost;
   int smscPort;
 
-  smsc::system::performance::PerformanceDataDispatcher perfDataDisp;
+  smsc::smppgw::performance::PerformanceDataDispatcher perfDataDisp;
   smsc::db::DataSource *dataSource;
 
   SmeProxy* abonentInfoProxy;
@@ -338,12 +364,14 @@ protected:
   MessageReferenceCache mrCache;
 
   Mutex perfMutex;
-  uint64_t submitOkCounter;
-  uint64_t submitErrCounter;
-  uint64_t deliverOkCounter;
-  uint64_t deliverErrTempCounter;
-  uint64_t deliverErrPermCounter;
-  uint64_t rescheduleCounter;
+
+  uint64_t acceptedCounter;
+  uint64_t rejectedCounter;
+  uint64_t deliveredCounter;
+  uint64_t deliverErrCounter;
+  uint64_t transOkCounter;
+  uint64_t transFailCounter;
+
   string scAddr;
   string ussdCenterAddr;
   int    ussdSSN;
