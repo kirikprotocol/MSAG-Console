@@ -107,6 +107,14 @@
   </section>
 
   <section name="profiler">
+
+    <section name="notify">
+      <param name="host" type="string">@profiler.notify.host@</param>
+      <param name="port" type="int">@profiler.notify.port@</param>
+      <param name="dir" type="string">@profiler.notify.dir@</param>
+    </section>
+
+
     <param name="defaultDataCoding" type="string">DEFAULT</param>
     <param name="defaultReport" type="string">NONE</param>
     <param name="defaultHide" type="bool">true</param>
