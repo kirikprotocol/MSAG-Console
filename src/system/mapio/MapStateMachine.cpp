@@ -57,7 +57,7 @@ static const bool SMS_SEGMENTATION = true;
 static map<string,unsigned> x_map;
 
 static void CloseMapDialog(unsigned dialogid){
-  if ( dialogid = 0 ) return;
+  if ( dialogid == 0 ) return;
   USHORT_T res = Et96MapCloseReq (SSN,dialogid,ET96MAP_NORMAL_RELEASE,0,0,0);
   if ( res != ET96MAP_E_OK ){
     __trace2__("MAP::%s dialog 0x%x error, code 0x%hx",__FUNCTION__,dialogid,res);
@@ -249,7 +249,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
     err.errorCode = 36;
     break;
   };
-  __trace2__("MAP::%s err.errCode 0x%x status 0x%x (state %d) /V:%d/",__FUNCTION__,err.errorCode,status,dialog->state,dialog->version);
+  __trace2__("MAP::%s err.errCode 0x%x (state %d) ",__FUNCTION__,err.errorCode,dialog->state);
   USHORT_T result; 
   if ( dialog->version == 2 ) {
     result = Et96MapV2ForwardSmMOResp(
