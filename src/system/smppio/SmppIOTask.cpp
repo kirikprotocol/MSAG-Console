@@ -285,7 +285,7 @@ int SmppInputThread::Execute()
                 //delete proxy;
                 err=true;
               }
-
+              bindpdu->set_interfaceVersion(0x34);
               char buf[64];
               int size=resppdu.size();
               __require__(size<(int)sizeof(buf));
