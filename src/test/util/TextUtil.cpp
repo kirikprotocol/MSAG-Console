@@ -35,6 +35,31 @@ void rand_text(int& length, char* buf, uint8_t dataCoding, bool hostByteOrder)
 		case DEFAULT:
 			rand_char(length, buf, RAND_LAT_NUM + RAND_SYM + RAND_WS);
 			break;
+		case SMSC7BIT:
+			{
+				int ext = 0;
+				char msg[length + 1];
+				rand_char(length, msg, RAND_LAT_NUM + RAND_SYM + RAND_WS);
+				for (int i = 0; i < length; i++)
+				{
+					switch (buf[i])
+					{
+						case '|':
+						case '^':
+						case '{':
+						case '}':
+						case '[':
+						case ']':
+						case '~':
+						case '\\':
+							ext++;
+							break;
+					}
+				}
+				length = ConvertTextTo7Bit(msg, length - ext, buf, length,
+					CONV_ENCODING_CP1251);
+			}
+			break;
 		case UCS2:
 			{
 				int len = length / 2;
