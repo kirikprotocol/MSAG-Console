@@ -387,7 +387,7 @@ namespace smsc { namespace store
         ReplaceAllStatement*        replaceAllStmt;
         
         ToEnrouteStatement*         toEnrouteStmt;
-        ToFinalStatement*           toFinalStmt;
+        GetSeqIdStatement*          nextSeqIdStmt;
         
         SetBodyStatement*           setBodyStmt;
         GetBodyStatement*           getBodyStmt;
@@ -542,7 +542,7 @@ namespace smsc { namespace store
          *                   возникает в случае потери реального соединения с
          *                   базой данных
          */
-        ToEnrouteStatement*         getToEnrouteStatement()
+        ToEnrouteStatement*     getToEnrouteStatement()
             throw(ConnectionFailedException); 
         /**
          * @return подготовленный (хранимый) SQL оператор
@@ -550,7 +550,7 @@ namespace smsc { namespace store
          *                   возникает в случае потери реального соединения с
          *                   базой данных
          */
-        ToFinalStatement*       getToFinalStatement()
+        GetSeqIdStatement*      getNextSeqIdStatement()
             throw(ConnectionFailedException); 
         
         /**

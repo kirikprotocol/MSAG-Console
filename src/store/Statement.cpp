@@ -166,13 +166,18 @@ void IdStatement::getSMSId(SMSId &_smsId)
 }
 
 /* --------------------------- GetIdStatement ----------------------- */
-GetIdStatement::GetIdStatement(Connection* connection, const char* sql,
-                               bool assign)
+GetIdStatement::GetIdStatement(Connection* connection, const char* sql, bool assign)
     throw(StorageException)
         : IdStatement(connection, sql, assign)
 {
     define(1, SQLT_VNU, (dvoid *) &(smsId), (sb4) sizeof(smsId));
 }
+
+const char* GetSeqIdStatement::sql = (const char*)
+"SELECT NVL(SMS_MSG_SEQ.NEXTVAL, 0) FROM DUAL";
+GetSeqIdStatement::GetSeqIdStatement(Connection* connection, bool assign)
+    throw(StorageException)
+        : GetIdStatement(connection, GetSeqIdStatement::sql, assign) {}
 
 /* --------------------------- SetIdStatement ----------------------- */
 SetIdStatement::SetIdStatement(Connection* connection, const char* sql,
@@ -973,165 +978,6 @@ void ToEnrouteStatement::bindDestinationDescriptor(Descriptor& dst)
     bind(7 , SQLT_UIN, (dvoid *)&(dst.sme),
          (sb4) sizeof(dst.sme));
 }
-
-/*
-CREATE OR REPLACE PROCEDURE DO_FINALIZE_SMS
-  (id IN NUMBER, st IN NUMBER, submitTime IN DATE, validTime IN DATE,
-   attempts IN NUMBER, lastResult IN NUMBER,
-   lastTryTime IN DATE, nextTryTime IN DATE,
-   oa IN VARCHAR2, oaVal IN VARCHAR2, oaTon IN NUMBER, oaNpi IN NUMBER,
-   da IN VARCHAR2, daVal IN VARCHAR2, daTon IN NUMBER, daNpi IN NUMBER,
-   dda IN VARCHAR2,
-   mr IN NUMBER, svcType IN VARCHAR2, dr IN NUMBER, br IN NUMBER,
-   srcMsc IN VARCHAR2, srcImsi IN VARCHAR2, srcSmeN IN NUMBER,
-   dstMsc IN VARCHAR2, dstImsi IN VARCHAR2, dstSmeN IN NUMBER,
-   routeId IN VARCHAR2, svcId IN NUMBER, prty IN NUMBER,
-   srcSmeId IN VARCHAR2, dstSmeId VARCHAR2, txtLength IN NUMBER,
-   bodyLen IN NUMBER, body IN RAW, arc IN NUMBER, bill IN NUMBER,
-   delete IN NUMBER, diverted IN NUMBER)
-*/
-const char* ToFinalStatement::sql = (const char*)
-"BEGIN\
-    DO_FINALIZE_SMS\
-    (:id, :st, :submitTime, :validTime, :attempts,\
-     :lastResult, :lastTryTime, :nextTryTime,\
-     :oa, :oaVal, :oaTon, :oaNpi, :da, :daVal, :daTon, :daNpi, :dda,\
-     :mr, :svcType, :dr, :br,\
-     :srcMsc, :srcImsi, :srcSmeN, :dstMsc, :dstImsi, :dstSmeN,\
-     :routeId, :svcId, :prty, :srcSmeId, :dstSmeId,\
-     :txtLength, :bodyLen, :body, :arc, :bill, :delete, :diverted);\
- END;";
-ToFinalStatement::ToFinalStatement(Connection* connection, bool assign)
-    throw(StorageException)
-        : IdStatement(connection, ToFinalStatement::sql, assign)
-{
-    __trace2__("%p : FinalizeStatement creating ...", stmt);
-}
-void ToFinalStatement::bindSms(SMSId id, SMS& sms, bool needDelete)
-    throw(StorageException)
-{
-    setSMSId(id);
-
-    ub4 i=1;
-    bind(i++, SQLT_VNU, (dvoid *)&(smsId), (sb4)sizeof(smsId));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.state), (sb4)sizeof(sms.state));
-    convertDateToOCIDate(&(sms.submitTime), &submitTime);
-    bind(i++, SQLT_ODT, (dvoid *) &(submitTime), (sb4)sizeof(submitTime));
-    convertDateToOCIDate(&(sms.validTime), &validTime);
-    bind(i++, SQLT_ODT, (dvoid *) &(validTime), (sb4)sizeof(validTime));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.attempts), (sb4)sizeof(sms.attempts));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.lastResult), (sb4)sizeof(sms.lastResult));
-
-    time_t cTime = time(NULL);
-    if (sms.lastTime) {
-        convertDateToOCIDate(&(sms.lastTime), &lastTime);
-        indLastTime = OCI_IND_NOTNULL;
-    }
-    else indLastTime = OCI_IND_NULL;
-    bind(i++, SQLT_ODT, (dvoid *) &(lastTime),
-         (sb4)sizeof(lastTime), &indLastTime);
-    if (sms.nextTime) {
-        convertDateToOCIDate(&(sms.nextTime), &nextTime);
-        indNextTime = OCI_IND_NOTNULL;
-    }
-    else indNextTime = OCI_IND_NULL;
-    bind(i++, SQLT_ODT, (dvoid *) &(nextTime),
-         (sb4)sizeof(nextTime), &indNextTime);
-
-    // OA & OA VAL, TON, NPI
-    convertAddressToString(sms.originatingAddress, oa);
-    bind(i++, SQLT_STR, (dvoid *) (oa), (sb4)sizeof(oa));
-    bind(i++, SQLT_STR, (dvoid *) sms.originatingAddress.value,
-         (sb4)sizeof(AddressValue));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.originatingAddress.type),
-         (sb4)sizeof(sms.originatingAddress.type));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.originatingAddress.plan),
-         (sb4)sizeof(sms.originatingAddress.plan));
-    // DA & DDA VAL, TON, NPI
-    convertAddressToString(sms.destinationAddress, da);
-    bind(i++, SQLT_STR, (dvoid *) (da), (sb4)sizeof(da));
-    bind(i++, SQLT_STR, (dvoid *) (sms.dealiasedDestinationAddress.value),
-         (sb4)sizeof(sms.dealiasedDestinationAddress.value));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.dealiasedDestinationAddress.type),
-         (sb4)sizeof(sms.dealiasedDestinationAddress.type));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.dealiasedDestinationAddress.plan),
-         (sb4)sizeof(sms.dealiasedDestinationAddress.plan));
-    // DDA
-    convertAddressToString(sms.dealiasedDestinationAddress, dda);
-    bind(i++, SQLT_STR, (dvoid *) (dda), (sb4) sizeof(dda));
-
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.messageReference),
-         (sb4)sizeof(sms.messageReference));
-
-    indSvcType = strlen(sms.eServiceType) ?
-                    OCI_IND_NOTNULL:OCI_IND_NULL;
-    bind(i++, SQLT_STR, (dvoid *) (sms.eServiceType),
-         (sb4)sizeof(sms.eServiceType), &indSvcType);
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.deliveryReport),
-         (sb4)sizeof(sms.deliveryReport));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.billingRecord),
-         (sb4)sizeof(sms.billingRecord));
-
-    bind(i++, SQLT_STR, (dvoid *) (sms.originatingDescriptor.msc),
-         (sb4) sizeof(sms.originatingDescriptor.msc));
-    bind(i++, SQLT_STR, (dvoid *) (sms.originatingDescriptor.imsi),
-         (sb4) sizeof(sms.originatingDescriptor.imsi));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.originatingDescriptor.sme),
-         (sb4) sizeof(sms.originatingDescriptor.sme));
-
-    indDstMsc = (!sms.destinationDescriptor.mscLength ||
-                 !strlen(sms.destinationDescriptor.msc)) ?
-                    OCI_IND_NULL : OCI_IND_NOTNULL;
-    indDstImsi = (!sms.destinationDescriptor.imsiLength ||
-                  !strlen(sms.destinationDescriptor.imsi)) ?
-                    OCI_IND_NULL : OCI_IND_NOTNULL;
-    bind(i++, SQLT_STR, (dvoid *) (sms.destinationDescriptor.msc),
-         (sb4) sizeof(sms.destinationDescriptor.msc), &indDstMsc);
-    bind(i++, SQLT_STR, (dvoid *) (sms.destinationDescriptor.imsi),
-         (sb4) sizeof(sms.destinationDescriptor.imsi), &indDstImsi);
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.destinationDescriptor.sme),
-         (sb4) sizeof(sms.destinationDescriptor.sme));
-
-    indRouteId = strlen(sms.routeId) ? OCI_IND_NOTNULL:OCI_IND_NULL;
-    bind(i++, SQLT_STR, (dvoid *) (sms.routeId),
-         (sb4)sizeof(sms.routeId), &indRouteId);
-    bind(i++, SQLT_INT, (dvoid *)&(sms.serviceId),
-         (sb4)sizeof(sms.serviceId));
-    bind(i++, SQLT_INT, (dvoid *)&(sms.priority),
-         (sb4)sizeof(sms.priority));
-
-    indSrcSmeId = strlen(sms.srcSmeId) ? OCI_IND_NOTNULL:OCI_IND_NULL;
-    bind(i++, SQLT_STR, (dvoid *) (sms.srcSmeId),
-         (sb4)sizeof(sms.srcSmeId), &indSrcSmeId);
-    indDstSmeId = strlen(sms.dstSmeId) ? OCI_IND_NOTNULL:OCI_IND_NULL;
-    bind(i++, SQLT_STR, (dvoid *) (sms.dstSmeId),
-         (sb4)sizeof(sms.dstSmeId), &indDstSmeId);
-
-    bodyTextLen = sms.messageBody.getShortMessageLength();
-    bind(i++, SQLT_UIN, (dvoid *)&(bodyTextLen), (sb4)sizeof(bodyTextLen));
-
-    bodyBufferLen = sms.messageBody.getBufferLength();
-    bodyBuffer = sms.messageBody.getBuffer();
-    indBody = (bodyBuffer && bodyBufferLen <= MAX_BODY_LENGTH)
-                ? OCI_IND_NOTNULL : OCI_IND_NULL;
-    bind(i++, SQLT_UIN, (dvoid *)&(bodyBufferLen),
-         (sb4) sizeof(bodyBufferLen));
-    bind(i++, SQLT_BIN, (dvoid *) bodyBuffer,
-         (sb4) bodyBufferLen, &indBody);
-
-    deleteFlag = (needDelete) ? 1:0;
-    divertedFlag = (sms.hasStrProperty(Tag::SMSC_DIVERTED_TO)) ? 1:0;
-
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.needArchivate), // arc
-         (sb4) sizeof(sms.needArchivate));
-    bind(i++, SQLT_UIN, (dvoid *)&(sms.billingRecord), // bill
-         (sb4)sizeof(sms.billingRecord));
-    bind(i++, SQLT_UIN, (dvoid *)&(deleteFlag),        // delete
-         (sb4)sizeof(deleteFlag));
-    bind(i++, SQLT_UIN, (dvoid *)&(divertedFlag),      // diverted
-         (sb4)sizeof(divertedFlag));                   
-}
-
 
 const char* UpdateSeqNumStatement::sql = (const char*)
 "UPDATE SMS_MSG SET SEQ_NUM=SEQ_NUM+:INC\

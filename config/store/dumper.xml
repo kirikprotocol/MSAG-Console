@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+  <section name="ArchiveDumper">
+
+    <param name="destination" type="string">arc</param>
+    <param name="maxSmsPerFile" type="int">5000</param>
+    
+    <section name="Storage">
+	<param name="dbInstance" type="string">Provide dbInstance</param>
+	<param name="dbUserName" type="string">Provide dbUserName</param>
+	<param name="dbUserPassword" type="string">Provide dbUserPassword</param>
+    </section>
+    
+  </section>
+</config>

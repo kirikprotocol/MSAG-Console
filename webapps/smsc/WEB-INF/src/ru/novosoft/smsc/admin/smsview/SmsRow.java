@@ -13,14 +13,13 @@ import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.*;
 
 import java.util.Date;
+import java.util.Hashtable;
 import java.text.SimpleDateFormat;
 
 public class SmsRow
 {
   private static int numStates = 5;
-  private static String states[] = {
-    "ENROUTE", "DELIVERED", "EXPIRED", "UNDELIVERABLE", "DELETED"
-  };
+  private static String states[] = { "ENROUTE", "DELIVERED", "EXPIRED", "UNDELIVERABLE", "DELETED" };
 
   private long    id;
   private Date    submitTime = new Date();
@@ -56,6 +55,8 @@ public class SmsRow
   private boolean textEncoded = false;
 
   private boolean marked = false;
+
+  private Hashtable parameters = new Hashtable();
 
   public void setId(long id) { this.id = id; };
   public long getId() { return id; };
@@ -123,169 +124,143 @@ public class SmsRow
   public int getAttempts() {
     return attempts;
   }
-
   public short getBillingRecord() {
     return billingRecord;
   }
-
   public short getConcatMsgRef() {
     return concatMsgRef;
   }
-
   public short getConcatSeqNum() {
     return concatSeqNum;
   }
-
   public short getDeliveryReport() {
     return deliveryReport;
   }
-
   public SmsDescriptor getDestinationDescriptor() {
     return destinationDescriptor;
   }
-
   public String getDstSmeId() {
     return dstSmeId;
   }
-
   public Date getLastTryTime() {
     return lastTryTime;
   }
-
   public int getMessageReference() {
     return messageReference;
   }
-
   public boolean isNeedArchivate() {
     return needArchivate;
   }
-
   public Date getNextTryTime() {
     return nextTryTime;
   }
-
   public SmsDescriptor getOriginatingDescriptor() {
     return originatingDescriptor;
   }
-
   public int getPriority() {
     return priority;
   }
-
   public String getRouteId() {
     return routeId;
   }
-
   public int getServiceId() {
     return serviceId;
   }
-
   public String getServiceType() {
     return serviceType;
   }
-
   public String getSrcSmeId() {
     return srcSmeId;
   }
-
   public Date getValidTime() {
     return validTime;
   }
-
   public String getValidString()
   {
       SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
       return formatter.format(validTime);
   }
-
   public void setAttempts(int attempts) {
     this.attempts = attempts;
   }
-
   public void setBillingRecord(short billingRecord) {
     this.billingRecord = billingRecord;
   }
-
   public void setConcatMsgRef(short concatMsgRef) {
     this.concatMsgRef = concatMsgRef;
   }
-
   public void setConcatSeqNum(short concatSeqNum) {
     this.concatSeqNum = concatSeqNum;
   }
-
   public void setDeliveryReport(short deliveryReport) {
     this.deliveryReport = deliveryReport;
   }
-
   public void setDestinationDescriptor(SmsDescriptor destinationDescriptor) {
     this.destinationDescriptor = destinationDescriptor;
   }
-
   public void setDstSmeId(String dstSmeId) {
     this.dstSmeId = dstSmeId;
   }
-
   public void setLastTryTime(Date lastTryTime) {
     this.lastTryTime = lastTryTime;
   }
-
   public void setMessageReference(int messageReference) {
     this.messageReference = messageReference;
   }
-
   public void setNeedArchivate(boolean needArchivate) {
     this.needArchivate = needArchivate;
   }
-
   public void setNextTryTime(Date nextTryTime) {
     this.nextTryTime = nextTryTime;
   }
-
   public void setOriginatingDescriptor(SmsDescriptor originatingDescriptor) {
     this.originatingDescriptor = originatingDescriptor;
   }
-
   public void setPriority(int priority) {
     this.priority = priority;
   }
-
   public void setRouteId(String routeId) {
     this.routeId = routeId;
   }
-
   public void setServiceId(int serviceId) {
     this.serviceId = serviceId;
   }
-
   public void setServiceType(String serviceType) {
     this.serviceType = serviceType;
   }
-
   public void setSrcSmeId(String srcSmeId) {
     this.srcSmeId = srcSmeId;
   }
-
   public void setValidTime(Date validTime) {
     this.validTime = validTime;
   }
-
   public Mask getDealiasedDestinationAddressMask() {
     return dealiasedDestinationAddressMask;
   }
-
   public Mask getDestinationAddressMask() {
     return destinationAddressMask;
   }
-
   public Mask getOriginatingAddressMask() {
     return originatingAddressMask;
   }
-
   public boolean isTextEncoded() {
     return textEncoded;
   }
   public void setTextEncoded(boolean textEncoded) {
     this.textEncoded = textEncoded;
   }
+
+  public void addBodyParameter(short tag, Object value) {
+    parameters.put(String.valueOf( tag ), value);
+  }
+  public Hashtable getBodyParameters() {
+    return parameters;
+  }
+
+  public boolean equals(Object obj) {
+    if (obj instanceof SmsRow) {
+      return (((SmsRow)obj).getId() == id);
+    } else return super.equals(obj);
+  }
+
 };

@@ -17,19 +17,20 @@
  * @see SMS
  */
 
-#include <core/synchronization/Mutex.hpp>
+#include <map>
+#include <system/sched_timer.hpp>
+
 #include <util/config/Manager.h>
 #include <logger/Logger.h>
 
+#include <core/synchronization/Mutex.hpp>
+#include <core/threads/Thread.hpp>
 #include <core/buffers/XHash.hpp>
 #include <core/buffers/Array.hpp>
-#include <map>
-
-#include <system/sched_timer.hpp>
 
 #include "MessageStore.h"
 #include "ConnectionManager.h"
-#include "Cleaner.h"
+#include "FileStorage.h"
 
 #undef SMSC_FAKE_MEMORY_MESSAGE_STORE
 //#define SMSC_FAKE_MEMORY_MESSAGE_STORE
@@ -46,6 +47,7 @@ namespace smsc { namespace store
     using namespace smsc::core::buffers;
     
     using smsc::logger::Logger;
+    using smsc::core::threads::Thread;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
 
@@ -62,27 +64,16 @@ namespace smsc { namespace store
 
         smsc::logger::Logger *log;
 
-        Event       awake, exited;
-        bool        bStarted, bNeedExit;
+        Mutex   startLock;
+        Event   awake, exited;
+        bool    bStarted, bNeedExit;
         
-        Mutex       startLock, billingFileLock;
-        FILE*       billingFile;
-        std::string billingLocation;
-        uint32_t    billingInterval;    
-        char        billingFileName[256];
-        
-        void createBillingRecord(SMSId id, SMS& sms)
-            throw(StorageException);
-        void createArchiveRecord(SMSId id, SMS& sms)
-            throw(StorageException);
-        
-        void initBilling(Manager& config)
-            throw(ConfigException, StorageException);
-        void openBillingFile()
-            throw(StorageException);
-        void writeToBillingFile(std::string out)
-            throw(StorageException);
+        Mutex       sequenceIdLock;
+        SMSId       currentId, sequenceId;
 
+        BillingStorage  billingStorage;
+        ArchiveStorage  archiveStorage;
+        
     protected:
 
         void loadMaxTriesCount(Manager& config);
@@ -373,14 +364,11 @@ namespace smsc { namespace store
 
         static Mutex mutex;
 
-        static Cleaner                  *cleaner;
-        static RemoteStore              *instance;
-
-        static smsc::logger::Logger     *log;
+        static RemoteStore*             instance;
+        static smsc::logger::Logger*    log;
 
         static bool needCache(Manager& config);
-        static bool needCleaner(Manager& config);
-		
+
     public:
 
         /**
@@ -426,8 +414,8 @@ namespace smsc { namespace store
         inline static SMSId getNextId()
             throw(StorageException)
         {
-            __require__(cleaner);
-            return cleaner->getNextId();
+            __require__(instance);
+            return instance->getNextId();
         };
 
         /**
@@ -491,49 +479,6 @@ namespace smsc { namespace store
             return instance->getPendingQueueLength();
         }
 
-        /**
-         * ѕозвол€ет принудительно активизировать подсистему очистки
-         *
-         * @exception StorageException
-         *                   возникает при ошибке хранилища физической природы,
-         *                   т.н когда хранилище недоступно.
-         * @see Cleaner
-         */
-        static void startCleaner()
-            throw (StorageException)
-        {
-            __require__(cleaner);
-            cleaner->Start();
-        }
-        /**
-         * ѕозвол€ет принудительно остановить подсистему очистки
-         *
-         * ќжидает завершени€ текущего минимального кванта работы.
-         * @see Cleaner
-         */
-        static void stopCleaner() {
-            __require__(cleaner);
-            cleaner->Stop();
-        }
-        /**
-         * @return ¬озвращает признак, запущена ли подсистема очистки
-         *
-         * @see Cleaner
-         */
-        static bool isCleanerStarted() {
-            __require__(cleaner);
-            return cleaner->isStarted();
-        }
-        /**
-         * @return ¬озвращает признак, работает ли реально процесс очистки
-         *
-         * @see Cleaner
-         */
-        static bool isCleaningInProgress() {
-            __require__(cleaner);
-            return cleaner->isInProgress();
-        }
-
     };
 
     struct UpdateRecord
@@ -584,13 +529,13 @@ namespace smsc { namespace store
     {
     protected:
 
+        smsc::logger::Logger *log;
+
         Mutex       cacheMutex;
         SmsCache*   cache;
 
         int         maxCacheCapacity;
         void loadMaxCacheCapacity(Manager& config);
-
-        smsc::logger::Logger *log;
 
     public:
 

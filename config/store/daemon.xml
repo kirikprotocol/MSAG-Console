@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+  <section name="ArchiveDaemon">
+
+    <param name="interval" type="int">30</param>
+    
+    <section name="View">
+	<param name="host" type="string">smsc</param>
+	<param name="port" type="int">6789</param>
+	<param name="timeout" type="int">10</param>
+    </section>
+    
+    <section name="Queries">
+	<param name="init" type="int">1</param>
+	<param name="max" type="int">5</param>    
+    </section>
+  
+    <section name="Locations">
+	<param name="destination" type="string">arc</param>
+	<section name="arc1">
+	    <param name="enabled" type="bool">true</param>
+	    <param name="dir" type="string">/usr/home/makarov/install/daemon/services/SMSC/arc</param>
+	</section>
+	<section name="arc2">
+	    <param name="enabled" type="bool">false</param>
+	    <param name="dir" type="string">arc</param>
+	</section>
+    </section>
+
+    <section name="Indexator">
+	<param name="smsIdHashSize" type="int">1000000</param>
+        <param name="smeIdHashSize" type="int">64</param>
+	<param name="routeIdHashSize" type="int">256</param>
+        <param name="addrHashSize" type="int">1000000</param>
+	<param name="smeIdRootSize" type="int">32</param>
+        <param name="smeIdChunkSize" type="int">8192</param>
+	<param name="routeIdRootSize" type="int">64</param>
+        <param name="routeIdChunkSize" type="int">8192</param>
+        <param name="addrRootSize" type="int">32768</param>
+	<param name="defAddrChunkSize" type="int">32</param>
+	<section name="smeAddrChunkSize">
+    	    <param name="MAP_PROXY" type="int">8</param>
+	    <param name="hello" type="int">4</param>
+	    <param name="hello1" type="int">4</param>
+	    <param name="hello2" type="int">4</param>
+	    <param name="world" type="int">4</param>
+	</section>
+    </section>
+
+  </section>
+</config>

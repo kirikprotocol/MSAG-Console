@@ -1,18 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
 
 #include <oci.h>
 #include <orl.h>
 
 #include <util/debug.h>
 #include <system/status.h>
-#include <util/csv/CSVFileEncoder.h>
-#include <smpp/smpp_structures.h>
 
 #include "StoreManager.h"
 
@@ -27,23 +21,14 @@ using namespace smsc::sms;
 using namespace smsc::system;
 using smsc::logger::Logger;
 using smsc::util::config::Manager;
-using smsc::smpp::DataCoding;
-
-using namespace smsc::util::csv;
 
 const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION = 3;
 const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT = 1000;
 
-const char* SMSC_LAST_BILLING_FILE_EXTENSION = "lst";
-const char* SMSC_PREV_BILLING_FILE_EXTENSION = "csv";
-
-const unsigned SMSC_MIN_BILLING_INTERVAL = 10;
-
 Mutex        StoreManager::mutex;
-Cleaner*     StoreManager::cleaner = 0;
 RemoteStore* StoreManager::instance  = 0;
 
-smsc::logger::Logger *StoreManager::log = 0;
+smsc::logger::Logger* StoreManager::log = 0;
 
 #ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
 IntHash<SMS*> RemoteStore::fakeStore(100000);
@@ -61,30 +46,15 @@ bool StoreManager::needCache(Manager& config)
     catch (ConfigException& exc)
     {
         smsc_log_warn(log, "Config parameter: <MessageStore.Cache.enabled> missed. "
-                 "Cache disabled.");
+                      "Cache disabled.");
     }
     return cacheIsNeeded;
-}
-bool StoreManager::needCleaner(Manager& config)
-{
-    bool cleanerIsNeeded = false;
-    try
-    {
-        cleanerIsNeeded = config.getBool("MessageStore.Cleaner.enabled");
-    }
-    catch (ConfigException& exc)
-    {
-        smsc_log_warn(log, "Config parameter: <MessageStore.Cleaner.enabled> missed. "
-                 "Cleaner disabled.");
-    }
-    return cleanerIsNeeded;
 }
 void StoreManager::startup(Manager& config, SchedTimer* sched)
     throw(ConfigException, ConnectionFailedException)
 {
     MutexGuard guard(mutex);
-  if (!log)
-    log = Logger::getInstance("smsc.store.StoreManager");
+    if (!log) log = Logger::getInstance("smsc.store.StoreManager");
 
     if (!instance)
     {
@@ -97,18 +67,13 @@ void StoreManager::startup(Manager& config, SchedTimer* sched)
             instance = (needCache(config)) ?
                         new CachedStore(config, sched) :
                         new RemoteStore(config, sched);
-
-            cleaner = new Cleaner(config);
-            if (needCleaner(config)) cleaner->Start();
 #else
-            cleaner = new Cleaner(config);
             instance = new RemoteStore(config, sched);
 #endif
         }
         catch (StorageException& exc)
         {
             if (instance) { delete instance; instance = 0; }
-            if (cleaner) { delete cleaner; cleaner = 0; }
             throw ConnectionFailedException(exc);
         }
         smsc_log_info(log, "Storage Manager was started up.");
@@ -123,8 +88,6 @@ void StoreManager::shutdown()
     {
         smsc_log_info(log, "Storage Manager is shutting down ...");
         delete instance; instance = 0;
-        smsc_log_info(log, "Storage Manager shutting down cleaner...");
-        if (cleaner) delete cleaner; cleaner = 0;
         smsc_log_info(log, "Storage Manager was shutdowned.");
     }
 }
@@ -141,43 +104,44 @@ void RemoteStore::loadMaxTriesCount(Manager& config)
         {
             maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
             smsc_log_warn(log, "Max tries count to process operation on MessageStore "
-                     "is incorrect (should be between 1 and %u) ! "
-                     "Config parameter: <MessageStore.maxTriesCount> "
-                     "Using default: %u",
-                     SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT,
-                     SMSC_MAX_TRIES_TO_PROCESS_OPERATION);
+                          "is incorrect (should be between 1 and %u) ! "
+                          "Config parameter: <MessageStore.maxTriesCount> "
+                          "Using default: %u",
+                          SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT,
+                          SMSC_MAX_TRIES_TO_PROCESS_OPERATION);
         }
     }
     catch (ConfigException& exc)
     {
         maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
         smsc_log_warn(log, "Max tries count to process operation on MessageStore "
-                 "wasn't specified ! "
-                 "Config parameter: <MessageStore.maxTriesCount> "
-                 "Using default: %d",
-                 SMSC_MAX_TRIES_TO_PROCESS_OPERATION);
+                      "wasn't specified ! Config parameter: <MessageStore.maxTriesCount> "
+                      "Using default: %d", SMSC_MAX_TRIES_TO_PROCESS_OPERATION);
     }
 }
 
 RemoteStore::RemoteStore(Manager& config, SchedTimer* sched)
     throw(ConfigException, StorageException)
-        : Thread(), bStarted(false), bNeedExit(false), billingFile(0), billingInterval(0),
-            pool(0), scheduleTimer(sched), maxTriesCount(SMSC_MAX_TRIES_TO_PROCESS_OPERATION),
-      log(Logger::getInstance("smsc.store.RemoteStore"))
+        : Thread(), log(Logger::getInstance("smsc.store.RemoteStore")),
+            bStarted(false), bNeedExit(false), currentId(0), sequenceId(0), 
+                pool(0), scheduleTimer(sched), maxTriesCount(SMSC_MAX_TRIES_TO_PROCESS_OPERATION)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
     loadMaxTriesCount(config);
     pool = new StorageConnectionPool(config);
 #endif
-    initBilling(config);
+    
+    billingStorage.init(config);
+    archiveStorage.init(config);
+    
     Start();
 }
 RemoteStore::~RemoteStore()
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    smsc_log_info(log,  "RemoteStore: Destroying connection pool" );
+    smsc_log_info(log, "RemoteStore: Destroying connection pool");
     if (pool) delete pool;
-    smsc_log_info(log,  "RemoteStore: Connection pool destroyed" );
+    smsc_log_info(log, "RemoteStore: Connection pool destroyed");
 #endif
 
     Stop();
@@ -186,7 +150,42 @@ RemoteStore::~RemoteStore()
 SMSId RemoteStore::getNextId()
     throw(StorageException)
 {
-    return StoreManager::getNextId();
+    static const int SMS_ID_PRELOAD_COUNT = 1000;
+
+    MutexGuard  guard(sequenceIdLock);
+
+    if (!currentId || !sequenceId || currentId-sequenceId >= SMS_ID_PRELOAD_COUNT)
+    {
+        StorageConnection* connection = 0L;
+        unsigned iteration=1;
+        while (true)
+        {
+            try
+            {
+                connection = (StorageConnection *)pool->getConnection();
+                if (!connection) throw StorageException("Failed to obtain DB connection !");
+                smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
+                GetSeqIdStatement* nextIdStmt = connection->getNextSeqIdStatement();
+                if (!nextIdStmt) throw StorageException("Failed to obtain nextId statement!");
+                connection->check(nextIdStmt->execute());
+                nextIdStmt->getSMSId(sequenceId);
+                currentId = sequenceId;
+                pool->freeConnection(connection);
+                break;
+            }
+            catch (StorageException& exc)
+            {
+                if (connection) pool->freeConnection(connection);
+                if (iteration++ >= maxTriesCount) {
+                    smsc_log_warn(log, "Max tries count to get next message id exceeded !");
+                    throw;
+                }
+            }
+        }
+
+    }
+
+    return ++currentId;
 }
 
 SMSId RemoteStore::doCreateSms(StorageConnection* connection,
@@ -212,8 +211,7 @@ SMSId RemoteStore::doCreateSms(StorageConnection* connection,
         {
             needOverwriteStmt = connection->getNeedOverwriteSvcStatement();
             ((NeedOverwriteSvcStatement *)needOverwriteStmt)->
-                bindEServiceType((dvoid *) sms.eServiceType,
-                                 (sb4) sizeof(sms.eServiceType));
+                bindEServiceType((dvoid *) sms.eServiceType, (sb4) sizeof(sms.eServiceType));
 
         }
         needOverwriteStmt->bindOriginatingAddress(sms.originatingAddress);
@@ -229,10 +227,8 @@ SMSId RemoteStore::doCreateSms(StorageConnection* connection,
             {
                 needOverwriteStmt->getId(retId);
 
-                OverwriteStatement* overwriteStmt
-                    = connection->getOverwriteStatement();
-                DestroyBodyStatement* destroyBodyStmt
-                    = connection->getDestroyBodyStatement();
+                OverwriteStatement* overwriteStmt = connection->getOverwriteStatement();
+                DestroyBodyStatement* destroyBodyStmt = connection->getDestroyBodyStatement();
 
                 destroyBodyStmt->setSMSId(retId);
                 destroyBodyStmt->destroyBody();
@@ -360,7 +356,7 @@ SMSId RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
             if (iteration++ >= maxTriesCount)
             {
                 smsc_log_warn(log, "Max tries count to store message "
-                         "#%lld exceeded !\n", id);
+                              "#%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -442,7 +438,7 @@ void RemoteStore::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
-                smsc_log_debug( log, "got connection %p for %s", connection, __FUNCTION__);
+                smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
                 doChangeSmsConcatSequenceNumber(connection, id, inc);
                 pool->freeConnection(connection);
             }
@@ -459,8 +455,8 @@ void RemoteStore::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
             if (iteration++ >= maxTriesCount)
             {
                 smsc_log_warn(log, "Max tries count to change "
-                         "sequence number in concatenneted message "
-                         "#%lld exceeded !\n", id);
+                              "sequence number in concatenneted message "
+                              "#%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -534,7 +530,7 @@ void RemoteStore::retriveSms(SMSId id, SMS &sms)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
-                smsc_log_debug( log, "got connection %p for %s", connection, __FUNCTION__);
+                smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
                 doRetrieveSms(connection, id, sms);
                 pool->freeConnection(connection);
             }
@@ -551,7 +547,7 @@ void RemoteStore::retriveSms(SMSId id, SMS &sms)
             if (iteration++ >= maxTriesCount)
             {
                 smsc_log_warn(log, "Max tries count to retrive message "
-                         "#%lld exceeded !\n", id);
+                              "#%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -574,10 +570,8 @@ void RemoteStore::doDestroySms(StorageConnection* connection, SMSId id)
 {
     __require__(connection);
 
-    DestroyStatement* destroyStmt
-        = connection->getDestroyStatement();
-    DestroyBodyStatement* destroyBodyStmt
-        = connection->getDestroyBodyStatement();
+    DestroyStatement* destroyStmt = connection->getDestroyStatement();
+    DestroyBodyStatement* destroyBodyStmt = connection->getDestroyBodyStatement();
 
     try
     {
@@ -613,7 +607,7 @@ void RemoteStore::destroySms(SMSId id)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
-                smsc_log_debug( log, "got connection %p for %s", connection, __FUNCTION__);
+                smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
                 doDestroySms(connection, id);
                 pool->freeConnection(connection);
             }
@@ -627,10 +621,8 @@ void RemoteStore::destroySms(SMSId id)
         catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount)
-            {
-                smsc_log_warn(log, "Max tries count to remove message "
-                         "#%lld exceeded !\n", id);
+            if (iteration++ >= maxTriesCount) {
+                smsc_log_warn(log, "Max tries count to remove message #%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -640,9 +632,7 @@ void RemoteStore::destroySms(SMSId id)
 
     MutexGuard guard(fakeMutex);
 
-    if (!fakeStore.Exist(id))
-        throw NoSuchMessageException(id);
-
+    if (!fakeStore.Exist(id)) throw NoSuchMessageException(id);
     delete fakeStore.Get(id);
     fakeStore.Delete(id);
 
@@ -659,8 +649,7 @@ void RemoteStore::doReplaceSms(StorageConnection* connection,
 
     Body    body;
     ReplaceStatement* replaceStmt = 0;
-    RetrieveBodyStatement* retrieveBodyStmt
-        = connection->getRetrieveBodyStatement();
+    RetrieveBodyStatement* retrieveBodyStmt = connection->getRetrieveBodyStatement();
     try
     {
         retrieveBodyStmt->bindId(id);
@@ -673,15 +662,13 @@ void RemoteStore::doReplaceSms(StorageConnection* connection,
         if (!retrieveBodyStmt->getBody(body) ||
              retrieveBodyStmt->getBodyLength() > MAX_BODY_LENGTH)
         {
-            GetBodyStatement* getBodyStmt
-                = connection->getGetBodyStatement();
+            GetBodyStatement* getBodyStmt = connection->getGetBodyStatement();
 
             getBodyStmt->setSMSId(id);
             getBodyStmt->getBody(body);
             //connection->commit(); // Need to reset BLOB (SELECT FOR UPDATE)
 
-            DestroyBodyStatement* destroyBodyStmt
-                = connection->getDestroyBodyStatement();
+            DestroyBodyStatement* destroyBodyStmt = connection->getDestroyBodyStatement();
 
             destroyBodyStmt->setSMSId(id);
             destroyBodyStmt->destroyBody();
@@ -713,17 +700,14 @@ void RemoteStore::doReplaceSms(StorageConnection* connection,
         replaceStmt->bindId(id);
         replaceStmt->bindOriginatingAddress((Address&) oa);
         replaceStmt->bindBody(body);
-        replaceStmt->bindDeliveryReport((dvoid *) &deliveryReport,
-                                        (sb4) sizeof(deliveryReport));
+        replaceStmt->bindDeliveryReport((dvoid *) &deliveryReport, (sb4) sizeof(deliveryReport));
 
         connection->check(replaceStmt->execute());
 
         int bodyLen = body.getBufferLength();
         if (bodyLen > MAX_BODY_LENGTH)
         {
-            SetBodyStatement* setBodyStmt
-                = connection->getSetBodyStatement();
-
+            SetBodyStatement* setBodyStmt = connection->getSetBodyStatement();
             setBodyStmt->setSMSId(id);
             setBodyStmt->setBody(body);
         }
@@ -763,7 +747,7 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
-                smsc_log_debug( log, "got connection %p for %s", connection, __FUNCTION__);
+                smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
                 doReplaceSms(connection, id, oa, newMsg, newMsgLen,
                              deliveryReport, validTime, waitTime);
                 pool->freeConnection(connection);
@@ -778,10 +762,8 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
         catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount)
-            {
-                smsc_log_warn(log, "Max tries count to replace message "
-                         "#%lld exceeded !\n", id);
+            if (iteration++ >= maxTriesCount) {
+                smsc_log_warn(log, "Max tries count to replace message #%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -791,8 +773,7 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
 
     MutexGuard guard(fakeMutex);
 
-    if (!fakeStore.Exist(id))
-        throw NoSuchMessageException(id);
+    if (!fakeStore.Exist(id)) throw NoSuchMessageException(id);
 
     SMS *sms=fakeStore.Get(id);
 
@@ -804,10 +785,9 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
 
     try
     {
-        sms->getMessageBody().setBinProperty(Tag::SMPP_SHORT_MESSAGE,
-            (const char*)newMsg, (unsigned)newMsgLen);
-        sms->getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH,
-            (uint32_t)newMsgLen);
+        sms->getMessageBody().setBinProperty(Tag::SMPP_SHORT_MESSAGE, 
+                                             (const char*)newMsg, (unsigned)newMsgLen);
+        sms->getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH, (uint32_t)newMsgLen);
     }
     catch (...) {
         throw StorageException("Incorrect Sms body data. Set/Get Property failed!");
@@ -823,10 +803,8 @@ void RemoteStore::doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms
 {
     __require__(connection);
 
-    ReplaceAllStatement* replaceStmt
-        = connection->getReplaceAllStatement();
-    RetrieveBodyStatement* retrieveBodyStmt
-        = connection->getRetrieveBodyStatement();
+    ReplaceAllStatement* replaceStmt = connection->getReplaceAllStatement();
+    RetrieveBodyStatement* retrieveBodyStmt = connection->getRetrieveBodyStatement();
 
     try
     {
@@ -842,9 +820,7 @@ void RemoteStore::doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms
             if (!retrieveBodyStmt->getBody(oldBody) ||
                  retrieveBodyStmt->getBodyLength() > MAX_BODY_LENGTH)
             {
-                DestroyBodyStatement* destroyBodyStmt
-                    = connection->getDestroyBodyStatement();
-
+                DestroyBodyStatement* destroyBodyStmt = connection->getDestroyBodyStatement();
                 destroyBodyStmt->setSMSId(id);
                 destroyBodyStmt->destroyBody();
             }
@@ -859,9 +835,7 @@ void RemoteStore::doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms
         int bodyLen = body.getBufferLength();
         if (bodyLen > MAX_BODY_LENGTH)
         {
-            SetBodyStatement* setBodyStmt
-                = connection->getSetBodyStatement();
-
+            SetBodyStatement* setBodyStmt = connection->getSetBodyStatement();
             setBodyStmt->setSMSId(id);
             setBodyStmt->setBody(body);
         }
@@ -900,7 +874,7 @@ void RemoteStore::replaceSms(SMSId id, SMS& sms)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
-                smsc_log_debug( log, "got connection %p for %s", connection, __FUNCTION__);
+                smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
                 doReplaceSms(connection, id, sms);
                 pool->freeConnection(connection);
             }
@@ -914,10 +888,8 @@ void RemoteStore::replaceSms(SMSId id, SMS& sms)
         catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount)
-            {
-                smsc_log_warn(log, "Max tries count to replace message "
-                         "#%lld exceeded !\n", id);
+            if (iteration++ >= maxTriesCount) {
+                smsc_log_warn(log, "Max tries count to replace message #%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -927,9 +899,7 @@ void RemoteStore::replaceSms(SMSId id, SMS& sms)
 
     MutexGuard guard(fakeMutex);
 
-    if (!fakeStore.Exist(id))
-        throw NoSuchMessageException(id);
-
+    if (!fakeStore.Exist(id)) throw NoSuchMessageException(id);
     delete fakeStore.Get(id);
     fakeStore.Delete(id);
     fakeStore.Insert(id, new SMS(sms));
@@ -939,19 +909,16 @@ void RemoteStore::replaceSms(SMSId id, SMS& sms)
 
 
 void RemoteStore::doChangeSmsStateToEnroute(StorageConnection* connection,
-    SMSId id, const Descriptor& dst, uint32_t failureCause, time_t nextTryTime,
-        uint32_t attempts)
+    SMSId id, const Descriptor& dst, uint32_t failureCause, time_t nextTryTime, uint32_t attempts)
             throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
 
-    ToEnrouteStatement* toEnrouteStmt
-        = connection->getToEnrouteStatement();
+    ToEnrouteStatement* toEnrouteStmt = connection->getToEnrouteStatement();
 
     toEnrouteStmt->bindId(id);
     toEnrouteStmt->bindNextTime(nextTryTime);
-    toEnrouteStmt->bindFailureCause((dvoid *)&(failureCause),
-                                    (sb4) sizeof(failureCause));
+    toEnrouteStmt->bindFailureCause((dvoid *)&(failureCause), (sb4) sizeof(failureCause));
     toEnrouteStmt->bindDestinationDescriptor((Descriptor &)dst);
     toEnrouteStmt->bindAttempts(attempts);
 
@@ -977,8 +944,7 @@ void RemoteStore::doChangeSmsStateToEnroute(StorageConnection* connection,
     connection->commit();
 }
 void RemoteStore::changeSmsStateToEnroute(SMSId id,
-    const Descriptor& dst, uint32_t failureCause, time_t nextTryTime,
-        uint32_t attempts)
+    const Descriptor& dst, uint32_t failureCause, time_t nextTryTime, uint32_t attempts)
             throw(StorageException, NoSuchMessageException)
 {
     if (scheduleTimer)
@@ -997,7 +963,7 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
-                smsc_log_debug( log, "got connection %p for %s", connection, __FUNCTION__);
+                smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
                 doChangeSmsStateToEnroute(connection, id, dst,
                                           failureCause, nextTryTime, attempts);
                 pool->freeConnection(connection);
@@ -1012,10 +978,8 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
         catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount)
-            {
-                smsc_log_warn(log, "Max tries count to update message state"
-                         "#%lld exceeded !\n", id);
+            if (iteration++ >= maxTriesCount) {
+                smsc_log_warn(log, "Max tries count to update message state #%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -1025,12 +989,9 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
 
     MutexGuard guard(fakeMutex);
 
-    if (!fakeStore.Exist(id))
-        throw NoSuchMessageException(id);
-
+    if (!fakeStore.Exist(id)) throw NoSuchMessageException(id);
     SMS *sms=fakeStore.Get(id);
-    if (sms->getState() != ENROUTE)
-        throw NoSuchMessageException(id);
+    if (sms->getState() != ENROUTE) throw NoSuchMessageException(id);
 
     sms->destinationDescriptor = dst;
     sms->lastResult = failureCause;
@@ -1042,163 +1003,36 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
 #endif
 }
 
-static void findFiles(std::string location, const char* ext, Array<std::string>& files)
-    throw(StorageException)
-{
-    if (!ext || !ext[0]) return;
-    int extFileLen  = strlen(ext) + 1;
-    const char* locationStr = location.c_str();
-
-    DIR *locationDir = 0;
-    if (!(locationDir = opendir(locationStr))) {
-      Exception exc("Failed to open directory '%s'. Details: %s",
-                      locationStr, strerror(errno));
-        throw StorageException(exc.what());
-    }
-
-    char entry[4096];//sizeof(struct dirent)+pathconf(locationStr, _PC_NAME_MAX)];
-    //printf("Max name len=%d\n", pathconf(locationStr, _PC_NAME_MAX));
-    struct dirent* pentry = 0;
-
-    while (locationDir)
-    {
-        errno = 0;
-        int result = readdir_r(locationDir, (struct dirent *)entry, &pentry);
-        if (!result && pentry != NULL)
-        {
-            std::string fileName = location;
-            fileName += '/'; fileName += pentry->d_name;
-            struct stat description;
-            if (stat(fileName.c_str(), &description) != 0) {
-                Exception exc("Failed to obtain '%s' file info. Details: %s",
-                              fileName.c_str(), strerror(errno));
-                if (locationDir) closedir(locationDir);
-                throw StorageException(exc.what());
-            }
-            //printf("%s\tmode:%d\n", pentry->d_name, description.st_mode);
-            if (!(description.st_mode & S_IFDIR)) {
-                int fileNameLen = strlen(pentry->d_name);
-                if (fileNameLen > extFileLen)
-                {
-                    const char* extPos = pentry->d_name+(fileNameLen-extFileLen);
-                    if ((*extPos == '.') && !strcmp(extPos+1, ext)) files.Push(pentry->d_name);
-                }
-            }
-        }
-        else
-        {
-            if (errno == 0) break;
-            Exception exc("Failed to scan directory '%s' contents. Details: %s",
-                          locationStr, strerror(errno));
-            if (locationDir) closedir(locationDir);
-            throw StorageException(exc.what());
-        }
-    }
-
-    if (locationDir) closedir(locationDir);
-}
-static void changeFileExtension(std::string location, const char* fileName)
-    throw(StorageException)
-{
-    std::string fullOldFile = location; fullOldFile += '/'; fullOldFile += fileName;
-    std::string fullNewFile = location; fullNewFile += '/'; fullNewFile += fileName;
-    fullOldFile += '.'; fullOldFile += SMSC_LAST_BILLING_FILE_EXTENSION;
-    fullNewFile += '.'; fullNewFile += SMSC_PREV_BILLING_FILE_EXTENSION;
-    if (rename(fullOldFile.c_str(), fullNewFile.c_str()) != 0) {
-        Exception exc("Failed to rename file '%s' to '%s'. Details: %s",
-                      fullOldFile.c_str(), fullNewFile.c_str(), strerror(errno));
-        throw StorageException(exc.what());
-    }
-}
-void RemoteStore::initBilling(Manager& config)
-    throw(ConfigException, StorageException)
-{
-    billingLocation = config.getString("MessageStore.billingDir");
-    int bi = config.getInt("MessageStore.billingInterval");
-    if (bi < SMSC_MIN_BILLING_INTERVAL) {
-        throw ConfigException("Parameter 'billingInterval' should be more than %u seconds",
-                              SMSC_MIN_BILLING_INTERVAL);
-    }
-    else billingInterval = bi;
-
-    Array<std::string> files;
-    findFiles(billingLocation, SMSC_LAST_BILLING_FILE_EXTENSION, files);
-    int extLen = strlen(SMSC_LAST_BILLING_FILE_EXTENSION)+1;
-
-    for (int i=0; i<files.Count(); i++)
-    {
-        std::string file = files[i];
-        int fileNameLen = file.length();
-        const char* fileNameStr = file.c_str();
-        smsc_log_debug(log, "Found old billing file: %s", fileNameStr);
-
-        char fileName[4096];//fileNameLen];
-        strncpy(fileName, fileNameStr, fileNameLen-extLen);
-        fileName[fileNameLen-extLen] = '\0';
-        changeFileExtension(billingLocation, fileName);
-    }
-}
-
-// MUST be executed under billingFileLock
-void RemoteStore::openBillingFile()
-    throw(StorageException)
-{
-    if (!billingFile)
-    {
-        time_t current = time(NULL);
-        tm dt; gmtime_r(&current, &dt);
-        const char* billingFileNamePattern = "%04d%02d%02d_%02d%02d%02d";
-        sprintf(billingFileName, billingFileNamePattern,
-                dt.tm_year+1900, dt.tm_mon+1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec);
-
-        std::string fullFilePath = billingLocation;
-        fullFilePath += '/'; fullFilePath += (const char*)billingFileName;
-        fullFilePath += '.'; fullFilePath += SMSC_LAST_BILLING_FILE_EXTENSION;
-        const char* fullFilePathStr = fullFilePath.c_str();
-        billingFile = fopen(fullFilePathStr, "r");
-
-        bool needFile = true;
-        if (billingFile) { // file exists
-            fclose(billingFile); billingFile = 0;
-            needFile = false;
-        }
-
-        billingFile = fopen(fullFilePathStr, "a+");
-        if (!billingFile) {
-            Exception exc("Failed to create billing file '%s'. Details: %s",
-                          fullFilePathStr, strerror(errno));
-            throw StorageException(exc.what());
-        }
-
-        if (needFile) {
-            writeToBillingFile("MSG_ID,RECORD_TYPE,MEDIA_TYPE,BEARER_TYPE,SUBMIT,FINALIZED,STATUS,"
-                               "SRC_ADDR,SRC_IMSI,SRC_MSC,SRC_SME_ID,DST_ADDR,DST_IMSI,DST_MSC,DST_SME_ID,"
-                               "DIVERTED_FOR,ROUTE_ID,SERVICE_ID,USER_MSG_REF,DATA_LENGTH\n");
-        }
-    }
-}
-// MUST be executed under billingFileLock
-void RemoteStore::writeToBillingFile(std::string out)
-    throw(StorageException)
-{
-    if (fwrite(out.c_str(), out.length(), 1, billingFile) != 1) {
-        Exception exc("Failed to write to billing file. Details: %s", strerror(errno));
-        fclose(billingFile); billingFile = 0;
-        throw StorageException(exc.what());
-    }
-    if (fflush(billingFile)) {
-        Exception exc("Failed to flush billing file. Details: %s", strerror(errno));
-        fclose(billingFile); billingFile = 0;
-        throw StorageException(exc.what());
-    }
-}
-
 int RemoteStore::Execute()
 {
+    const int SERVICE_SLEEP = 3600;   // in seconds
+
+    int32_t  billingRest = billingStorage.getStorageInterval();
+    int32_t  archiveRest = archiveStorage.getStorageInterval();
+    bool     billing, archive;
+    uint32_t toSleep;
+
     while (!bNeedExit)
     {
-        const int SERVICE_SLEEP = 3600;   // in seconds
-        uint32_t toSleep = billingInterval;
+        if (billingRest < archiveRest) {
+            archiveRest -= billingRest;
+            billing = true; archive = false;
+            toSleep = billingRest;
+            billingRest = billingStorage.getStorageInterval();
+        }
+        else if (billingRest > archiveRest) {
+            billingRest -= archiveRest;
+            billing = false; archive = true;
+            toSleep = archiveRest;
+            archiveRest = archiveStorage.getStorageInterval();
+        }
+        else {
+            billing = true; archive = true;
+            toSleep = archiveRest;
+            archiveRest = archiveStorage.getStorageInterval();
+            billingRest = billingStorage.getStorageInterval();
+        }
+        
         while (toSleep > 0 && !bNeedExit)
         {
             if (toSleep > SERVICE_SLEEP) {
@@ -1211,25 +1045,21 @@ int RemoteStore::Execute()
             }
         }
 
-        try
-        {
-            MutexGuard guard(billingFileLock);
-            if (billingFile)
-            {
-                fclose(billingFile); billingFile = 0;
-                changeFileExtension(billingLocation, billingFileName);
-            }
+        try { // rool billing file
+            if (billing || bNeedExit) billingStorage.roll();
+        } catch (StorageException& exc) {
+            awake.Wait(0); smsc_log_error(log, "%s", exc.what());
         }
-        catch (StorageException& exc)
-        {
+        
+        try {  // rool archive file
+            if (archive || bNeedExit) archiveStorage.roll();
+        } catch (StorageException& exc) {
             awake.Wait(0); smsc_log_error(log, "%s", exc.what());
         }
     }
 
-    MutexGuard guard(billingFileLock);
-    if (billingFile) {
-        fclose(billingFile); billingFile = 0;
-    }
+    billingStorage.close();
+    archiveStorage.close();
 
     exited.Signal();
     return 0;
@@ -1259,95 +1089,16 @@ void RemoteStore::Stop()
     }
 }
 
-/*
-MSG_ID                    -- msg id
-RECORD_TYPE               -- 0 SMS, 1 Diverted SMS
-MEDIA_TYPE                -- 0 SMS text, 1 SMS binary
-BEARER_TYPE               -- 0 SMS, 1 USSD
-SUBMIT                    -- submit time
-FINALIZED                 -- finalized time
-STATUS                    -- LAST_RESULT from SMS_MSG
-SRC_ADDR                  -- OA  (.1.1.7865765 format)
-SRC_IMSI                  -- SRC IMSI
-SRC_MSC                   -- SRC MSC
-SRC_SME_ID                --
-DST_ADDR                  -- DDA (.1.1.7865765 format)
-DST_IMSI                  -- DST IMSI
-DST_MSC                   -- DST MSC
-DST_SME_ID                --
-DIVERTED_FOR              -- message originally was for DIVERTED_FOR address, but was delivered to DST_ADDR
-ROUTE_ID                  -- ROUTE_ID from SMS_MSG
-SERVICE_ID                -- SERVICE_ID from SMS_MSG
-USER_MSG_REF
-DATA_LENGTH               -- text or binary length (add it to SMS_MSG insteed of TXT_LENGTH)
-*/
-void RemoteStore::createBillingRecord(SMSId id, SMS& sms)
-    throw(StorageException)
-{
-    MutexGuard guard(billingFileLock);
-
-    openBillingFile();
-
-    std::string out = "";
-    bool isDiverted = sms.hasStrProperty(Tag::SMSC_DIVERTED_TO);
-    bool isBinary   = sms.hasIntProperty(Tag::SMPP_DATA_CODING) ?
-                     (sms.getIntProperty(Tag::SMPP_DATA_CODING) == DataCoding::BINARY) : false;
-
-    CSVFileEncoder::addUint64(out, id);
-    CSVFileEncoder::addUint8 (out, isDiverted ? 1:0);
-    CSVFileEncoder::addUint8 (out, isBinary   ? 1:0);
-    CSVFileEncoder::addUint8 (out, sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? 1:0);
-    CSVFileEncoder::addDateTime(out, sms.submitTime);
-    CSVFileEncoder::addDateTime(out, sms.lastTime);
-    CSVFileEncoder::addUint32(out, sms.lastResult);
-
-    std::string oa = sms.originatingAddress.toString();
-    CSVFileEncoder::addString(out, oa.c_str());
-    CSVFileEncoder::addString(out, sms.originatingDescriptor.imsi);
-    CSVFileEncoder::addString(out, sms.originatingDescriptor.msc);
-    //CSVFileEncoder.addUint32(out, sms.originatingDescriptor.sme);
-    CSVFileEncoder::addString(out, sms.srcSmeId);
-
-    std::string dda = sms.dealiasedDestinationAddress.toString();
-    CSVFileEncoder::addString(out, dda.c_str());
-    CSVFileEncoder::addString(out, sms.destinationDescriptor.imsi);
-    CSVFileEncoder::addString(out, sms.destinationDescriptor.msc);
-    //CSVFileEncoder.addUint32(out, sms.destinationDescriptor.sme);
-    CSVFileEncoder::addString(out, sms.dstSmeId);
-
-    if (isDiverted) {
-        std::string divertedTo = sms.getStrProperty(Tag::SMSC_DIVERTED_TO);
-        CSVFileEncoder::addString(out, divertedTo.c_str());
-    }
-    else CSVFileEncoder::addString(out, 0);
-    CSVFileEncoder::addString(out, sms.routeId);
-    CSVFileEncoder::addInt32 (out, sms.serviceId);
-    if (sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
-        CSVFileEncoder::addUint32(out, sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-    else
-        CSVFileEncoder::addSeparator(out);
-    CSVFileEncoder::addUint32(out, sms.messageBody.getShortMessageLength(), true);
-
-    //smsc_log_debug(log, "Billing record is:\n%s", out.c_str());
-
-    writeToBillingFile(out);
-}
-
-void RemoteStore::createArchiveRecord(SMSId id, SMS& sms)
-    throw(StorageException)
-{
-    // TODO: implement it
-}
 void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
     throw(StorageException, NoSuchMessageException)
 {
     smsc_log_debug(log, "Finalizing msg#%lld", id);
 
     // TODO: move it after destroySms for valid rollback
-    if (sms.billingRecord) createBillingRecord(id, sms);
-    if (sms.needArchivate) createArchiveRecord(id, sms);
+    if (sms.billingRecord) billingStorage.createRecord(id, sms);
+    if (sms.needArchivate) archiveStorage.createRecord(id, sms);
 
-    if (!needDelete && !sms.needArchivate) { // TODO: remove && !sms.needArchivate here
+    if (!needDelete) { 
         smsc_log_debug(log, "Finalized msg#%lld" , id);
         return;
     }
@@ -1362,19 +1113,8 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
-                smsc_log_debug( log, "got connection %p for %s", connection, __FUNCTION__);
-
-                /* TODO: remove it !!! */
-                ToFinalStatement* toFinalStatement
-                    = connection->getToFinalStatement();
-
-                toFinalStatement->bindSms(id, sms, needDelete);
-                connection->check(toFinalStatement->execute());
-                connection->commit();
-                /* TODO: remove it !!! */
-
-                /* TODO: enable this !!!
-                doDestroySms(connection, id);*/
+                smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
+                doDestroySms(connection, id);
                 pool->freeConnection(connection);
                 smsc_log_debug(log, "Finalized msg#%lld" , id);
             }
@@ -1382,18 +1122,14 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
         }
         catch (StorageException& exc)
         {
-            try { connection->rollback(); } catch (...) { smsc_log_error(log, "Failed to rollback"); } // TODO: remove it !!
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount)
-            {
-                smsc_log_warn(log, "Max tries count to finalize message "
-                         "#%lld exceeded !\n", id);
+            if (iteration++ >= maxTriesCount) {
+                smsc_log_warn(log, "Max tries count to finalize message #%lld exceeded !\n", id);
                 throw;
             }
         }
         catch (...)
         {
-            try { connection->rollback(); } catch (...) { smsc_log_error(log, "Failed to rollback"); } // TODO: remove it !!
             if (connection) pool->freeConnection(connection);
             throw StorageException("Unknown exception thrown");
         }
@@ -1439,13 +1175,9 @@ void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
 
     MutexGuard guard(fakeMutex);
 
-    if (!fakeStore.Exist(id))
-        throw NoSuchMessageException(id);
-
+    if (!fakeStore.Exist(id)) throw NoSuchMessageException(id);
     SMS *sms = fakeStore.Get(id);
-    if (sms->getState() != ENROUTE)
-        throw NoSuchMessageException(id);
-
+    if (sms->getState() != ENROUTE) throw NoSuchMessageException(id);
     delete sms;
     fakeStore.Delete(id);
 
@@ -1472,13 +1204,9 @@ void RemoteStore::changeSmsStateToUndeliverable(SMSId id,
 
     MutexGuard guard(fakeMutex);
 
-    if (!fakeStore.Exist(id))
-        throw NoSuchMessageException(id);
-
+    if (!fakeStore.Exist(id)) throw NoSuchMessageException(id);
     SMS *sms = fakeStore.Get(id);
-    if (sms->getState() != ENROUTE)
-        throw NoSuchMessageException(id);
-
+    if (sms->getState() != ENROUTE) throw NoSuchMessageException(id);
     delete sms;
     fakeStore.Delete(id);
 
@@ -1502,13 +1230,9 @@ void RemoteStore::changeSmsStateToExpired(SMSId id)
 
     MutexGuard guard(fakeMutex);
 
-    if (!fakeStore.Exist(id))
-        throw NoSuchMessageException(id);
-
+    if (!fakeStore.Exist(id)) throw NoSuchMessageException(id);
     SMS *sms = fakeStore.Get(id);
-    if (sms->getState() != ENROUTE)
-        throw NoSuchMessageException(id);
-
+    if (sms->getState() != ENROUTE) throw NoSuchMessageException(id);
     fakeStore.Delete(id);
 
 #endif
@@ -1531,13 +1255,9 @@ void RemoteStore::changeSmsStateToDeleted(SMSId id)
 
     MutexGuard guard(fakeMutex);
 
-    if (!fakeStore.Exist(id))
-        throw NoSuchMessageException(id);
-
+    if (!fakeStore.Exist(id)) throw NoSuchMessageException(id);
     SMS *sms = fakeStore.Get(id);
-    if (sms->getState() != ENROUTE)
-        throw NoSuchMessageException(id);
-
+    if (sms->getState() != ENROUTE) throw NoSuchMessageException(id);
     delete sms;
     fakeStore.Delete(id);
 
@@ -1558,6 +1278,7 @@ RemoteStore::ReadyIdIterator::ReadyIdIterator(
     if (!connection) return;
     try
     {
+        //smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
         if (connection && !connection->isAvailable())
             connection->connect();
 
@@ -1641,7 +1362,7 @@ time_t RemoteStore::getNextRetryTime()
     Connection* connection = pool->getConnection();
     if (connection)
     {
-        smsc_log_debug( log, "got connection %p for %s", connection, __FUNCTION__);
+        smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
         MinNextTimeStatement* minTimeStmt = 0L;
         try
         {
@@ -1681,10 +1402,9 @@ time_t RemoteStore::getNextRetryTime()
 #endif
 }
 
-RemoteStore::DeliveryIdIterator::DeliveryIdIterator(
-    StorageConnectionPool* _pool, const Address& da)
-        throw(StorageException)
-            : IdIterator(), pool(_pool), connection(0), deliveryStmt(0)
+RemoteStore::DeliveryIdIterator::DeliveryIdIterator(StorageConnectionPool* _pool, const Address& da)
+    throw(StorageException)
+        : IdIterator(), pool(_pool), connection(0), deliveryStmt(0)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
@@ -1693,6 +1413,7 @@ RemoteStore::DeliveryIdIterator::DeliveryIdIterator(
     if (!connection) return;
     try
     {
+        //smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
         if (connection && !connection->isAvailable())
             connection->connect();
 
@@ -1770,6 +1491,7 @@ RemoteStore::CancelIdIterator::CancelIdIterator(StorageConnectionPool* _pool,
     if (!connection) return;
     try
     {
+        //smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
         if (connection && !connection->isAvailable())
             connection->connect();
 
@@ -1847,7 +1569,7 @@ int RemoteStore::getConcatMessageReference(const Address& dda)
 
     try
     {
-        smsc_log_debug( log, "got connection %p for %s", connection, __FUNCTION__);
+        smsc_log_debug(log, "got connection %p for %s", connection, __FUNCTION__);
         if (connection && !connection->isAvailable())
             connection->connect();
 
@@ -1945,17 +1667,15 @@ void CachedStore::loadMaxCacheCapacity(Manager& config)
     catch (ConfigException& exc)
     {
         maxCacheCapacity = SMSC_MAX_SMS_CACHE_CAPACITY;
-        smsc_log_warn( log,"Config parameter: <MessageStore.Cache.capacity> missed. "
-                 "Using default: %d.", maxCacheCapacity);
+        smsc_log_warn(log, "Config parameter: <MessageStore.Cache.capacity> missed. "
+                      "Using default: %d.", maxCacheCapacity);
     }
 }
 
 CachedStore::CachedStore(Manager& config, SchedTimer* sched)
     throw(ConfigException, StorageException)
-        : RemoteStore(config, sched), cache(0),
-            maxCacheCapacity(SMSC_MAX_SMS_CACHE_CAPACITY),
-      log(Logger::getInstance("smsc.store.CachedStore"))
-
+        : RemoteStore(config, sched), log(Logger::getInstance("smsc.store.CachedStore")),
+            cache(0), maxCacheCapacity(SMSC_MAX_SMS_CACHE_CAPACITY)
 {
     loadMaxCacheCapacity(config);
     cache = new SmsCache(maxCacheCapacity);
@@ -1964,9 +1684,9 @@ CachedStore::CachedStore(Manager& config, SchedTimer* sched)
 CachedStore::~CachedStore()
 {
     MutexGuard  guard(cacheMutex);
-    smsc_log_info( log, "CachedStore: cleaning cache..." );
+    smsc_log_info(log, "CachedStore: cleaning cache..." );
     if (cache) delete cache;
-    smsc_log_debug( log, "CachedStore: cache cleaned." );
+    smsc_log_info(log, "CachedStore: cache cleaned." );
 }
 
 SMSId CachedStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
@@ -1974,9 +1694,9 @@ SMSId CachedStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
 {
     SMSId retId;
 
-    smsc_log_debug( log,"Creating sms, smsId = %lld, flag = %d", id, flag);
+    smsc_log_debug(log,"Creating sms, smsId = %lld, flag = %d", id, flag);
     retId = RemoteStore::createSms(sms, id, flag);
-    smsc_log_debug( log,"Created sms, smsId = %lld, retId = %lld", id, retId);
+    smsc_log_debug(log,"Created sms, smsId = %lld, retId = %lld", id, retId);
 
     SMS* sm = new SMS(sms);
     MutexGuard cacheGuard(cacheMutex);
@@ -1990,21 +1710,22 @@ void CachedStore::retriveSms(SMSId id, SMS &sms)
     throw(StorageException, NoSuchMessageException)
 {
     if( sms.hasBinProperty(Tag::SMSC_CONCATINFO) )
-      smsc_log_warn( log,"smsId = %lld 'empty sms' already have concatinfo", id);
+        smsc_log_warn(log, "smsId = %lld 'empty sms' already have concatinfo", id);
+
     SMS* sm = 0;
     {
         MutexGuard cacheGuard(cacheMutex);
         sm = cache->getSms(id);
         if (sm) {
             sms = *sm;
-            smsc_log_debug( log,"smsId = %lld found in cache.", id);
+            smsc_log_debug(log, "smsId = %lld found in cache.", id);
             return;
         }
     }
 
-    smsc_log_debug( log, "smsId = %lld retriving from DB ...", id);
+    smsc_log_debug(log, "smsId = %lld retriving from DB ...", id);
     RemoteStore::retriveSms(id, sms);
-    smsc_log_debug( log, "smsId = %lld retrived DB. concat=%d", id, sms.hasBinProperty(Tag::SMSC_CONCATINFO));
+    smsc_log_debug(log, "smsId = %lld retrived DB. concat=%d", id, sms.hasBinProperty(Tag::SMSC_CONCATINFO));
 
     if (sms.state == ENROUTE)
     {
@@ -2013,14 +1734,14 @@ void CachedStore::retriveSms(SMSId id, SMS &sms)
         cache->putSms(id, sm);
 
         SMS* sm1 = cache->getSms(id);
-        smsc_log_debug( log,"smsId = %lld concat check=%d", id, sm1->hasBinProperty(Tag::SMSC_CONCATINFO));
+        smsc_log_debug(log, "smsId = %lld concat check=%d", id, sm1->hasBinProperty(Tag::SMSC_CONCATINFO));
     }
 }
 
 void CachedStore::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
     throw(StorageException, NoSuchMessageException)
 {
-    smsc_log_debug( log, "Changing seqNum for smsId = %lld.", id);
+    smsc_log_debug(log, "Changing seqNum for smsId = %lld.", id);
     RemoteStore::changeSmsConcatSequenceNumber(id, inc);
 
     SMS* sm = 0;
@@ -2078,7 +1799,7 @@ void CachedStore::changeSmsStateToEnroute(SMSId id, const Descriptor& dst,
                                           time_t nextTryTime, uint32_t attempts)
     throw(StorageException, NoSuchMessageException)
 {
-    smsc_log_debug( log, "Changing to ENROUTE for smsId = %lld.", id);
+    smsc_log_debug(log, "Changing to ENROUTE for smsId = %lld.", id);
     time_t lastTryTime = time(0);
     RemoteStore::changeSmsStateToEnroute(id, dst, failureCause, nextTryTime, attempts);
 
@@ -2110,7 +1831,7 @@ void CachedStore::changeSmsStateToDelivered(SMSId id,
                                             const Descriptor& dst)
     throw(StorageException, NoSuchMessageException)
 {
-    smsc_log_debug( log, "Changing to DELIVERED for smsId = %lld.", id);
+    smsc_log_debug(log, "Changing to DELIVERED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToDelivered(id, dst);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
@@ -2120,7 +1841,7 @@ void CachedStore::changeSmsStateToUndeliverable(SMSId id,
                                                 uint32_t failureCause)
     throw(StorageException, NoSuchMessageException)
 {
-    smsc_log_debug( log, "Changing to UNDELIVERABLE for smsId = %lld.", id);
+    smsc_log_debug(log, "Changing to UNDELIVERABLE for smsId = %lld.", id);
     RemoteStore::changeSmsStateToUndeliverable(id, dst, failureCause);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
@@ -2128,7 +1849,7 @@ void CachedStore::changeSmsStateToUndeliverable(SMSId id,
 void CachedStore::changeSmsStateToExpired(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
-    smsc_log_debug( log, "Changing to EXPIRED for smsId = %lld.", id);
+    smsc_log_debug(log, "Changing to EXPIRED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToExpired(id);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
@@ -2136,7 +1857,7 @@ void CachedStore::changeSmsStateToExpired(SMSId id)
 void CachedStore::changeSmsStateToDeleted(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
-    smsc_log_debug( log, "Changing to DELETED for smsId = %lld.", id);
+    smsc_log_debug(log, "Changing to DELETED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToDeleted(id);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);

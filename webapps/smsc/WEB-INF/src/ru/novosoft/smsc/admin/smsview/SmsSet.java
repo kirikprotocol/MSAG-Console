@@ -25,8 +25,8 @@ public class SmsSet
   public Enumeration getRows() {
     return rows.elements();
   }
-  public SmsRow getRow(int index) {
-    return ((SmsRow)rows.elementAt(index));
+  public List getRowsList() {
+    return rows;
   }
   public void addRow(SmsRow row) {
     rows.addElement(row);
@@ -34,9 +34,13 @@ public class SmsSet
   public void clean() {
     rows.removeAllElements();
   }
-
-	public List getRowsList()
-	{
-		return rows;
-	}
+  public SmsRow getRow(int index) {
+    return ((SmsRow)rows.elementAt(index));
+  }
+  public SmsRow getRow(String id) {
+    SmsRow pattern = new SmsRow();
+    pattern.setId(Long.parseLong(id));
+    int index = rows.indexOf(pattern);
+    return (index >= 0) ? getRow(index) : null;
+  }
 }

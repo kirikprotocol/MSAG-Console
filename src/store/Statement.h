@@ -90,18 +90,25 @@ namespace smsc { namespace store
     {
     public:
 
-        GetIdStatement(Connection* connection, const char* sql,
-                       bool assign=false)
+        GetIdStatement(Connection* connection, const char* sql, bool assign=false)
             throw(StorageException);
         virtual ~GetIdStatement() {};
+    };
+
+    class GetSeqIdStatement : public GetIdStatement
+    {
+    static const char* sql;
+    public:
+        GetSeqIdStatement(Connection* connection, bool assign=true)
+            throw(StorageException);
+        virtual ~GetSeqIdStatement() {};
     };
 
     class SetIdStatement : public IdStatement
     {
     public:
 
-        SetIdStatement(Connection* connection, const char* sql,
-                       bool assign=false)
+        SetIdStatement(Connection* connection, const char* sql, bool assign=false)
             throw(StorageException);
         virtual ~SetIdStatement() {};
     };
@@ -444,37 +451,6 @@ namespace smsc { namespace store
             throw(StorageException);
 
         inline bool wasUpdated() {
-            return (getRowsAffectedCount() ? true:false);
-        };
-    };
-
-    class ToFinalStatement : public IdStatement
-    {
-    static const char* sql;
-    protected:
-
-        OCIDate submitTime, validTime, lastTime, nextTime;
-        sb2     indLastTime, indNextTime;
-        sb2     indSvcType, indDstMsc, indDstImsi;
-        sb2     indRouteId, indSrcSmeId, indDstSmeId, indBody;
-
-        FullAddressValue    oa, da, dda;
-
-        int         bodyTextLen, bodyBufferLen;
-        uint8_t*    bodyBuffer;
-
-        ub1     deleteFlag, divertedFlag;
-
-    public:
-
-        ToFinalStatement(Connection* connection, bool assign=true)
-            throw(StorageException);
-        virtual ~ToFinalStatement() {};
-
-        void bindSms(SMSId id, SMS& sms, bool needDelete=true)
-            throw(StorageException);
-
-        inline bool wasFinalized() {
             return (getRowsAffectedCount() ? true:false);
         };
     };

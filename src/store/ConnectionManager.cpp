@@ -507,8 +507,7 @@ StorageConnectionPool::StorageConnectionPool(Manager& config)
 {
     for (unsigned i=0; i<count; i++)
     {
-        Connection* connection = new StorageConnection(
-            dbInstance, dbUserName, dbUserPassword); 
+        Connection* connection = new StorageConnection(dbInstance, dbUserName, dbUserPassword); 
         connections.Push(connection);
         push(connection);
     }
@@ -522,13 +521,10 @@ Connection* StorageConnectionPool::newConnection()
 StorageConnection::StorageConnection(const char* instance, 
                                      const char* user, const char* password) 
     : Connection(instance, user, password), 
-        needOverwriteSvcStmt(0L), needOverwriteStmt(0L), needRejectStmt(0L), 
-        overwriteStmt(0L), storeStmt(0L), retrieveStmt(0L), retrieveBodyStmt(0L), 
-        destroyStmt(0L), replaceStmt(0L), replaceVTStmt(0L),
-        replaceWTStmt(0L), replaceVWTStmt(0L), replaceAllStmt(0L),
-        toEnrouteStmt(0L), toFinalStmt(0L), 
-        setBodyStmt(0L), getBodyStmt(0L), destroyBodyStmt(0L),
-        seqNumStmt(0L) 
+        needOverwriteSvcStmt(0L), needOverwriteStmt(0L), needRejectStmt(0L), overwriteStmt(0L),
+        storeStmt(0L), retrieveStmt(0L), retrieveBodyStmt(0L), destroyStmt(0L),
+        replaceStmt(0L), replaceVTStmt(0L), replaceWTStmt(0L), replaceVWTStmt(0L), replaceAllStmt(0L),
+        toEnrouteStmt(0L), nextSeqIdStmt(0L), setBodyStmt(0L), getBodyStmt(0L), destroyBodyStmt(0L), seqNumStmt(0L) 
 {}
 
 void StorageConnection::connect()
@@ -555,7 +551,7 @@ void StorageConnection::connect()
         replaceAllStmt = new ReplaceAllStatement(this); 
 
         toEnrouteStmt = new ToEnrouteStatement(this);
-        toFinalStmt = new ToFinalStatement(this);
+        nextSeqIdStmt = new GetSeqIdStatement(this);
 
         setBodyStmt = new SetBodyStatement(this);
         getBodyStmt = new GetBodyStatement(this);
@@ -653,11 +649,11 @@ ToEnrouteStatement* StorageConnection::getToEnrouteStatement()
     connect();
     return toEnrouteStmt;
 }
-ToFinalStatement* StorageConnection::getToFinalStatement()
+GetSeqIdStatement*  StorageConnection::getNextSeqIdStatement()
     throw(ConnectionFailedException)
 {
     connect();
-    return toFinalStmt;
+    return nextSeqIdStmt;
 }
 SetBodyStatement* StorageConnection::getSetBodyStatement()
     throw(ConnectionFailedException)
