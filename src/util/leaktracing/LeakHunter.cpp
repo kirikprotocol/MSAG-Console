@@ -3,6 +3,7 @@
 #include <string.h>
 #include "core/synchronization/Mutex.hpp"
 #include "core/threads/Thread.hpp"
+#include "util/debug.h"
 
 #define TRACESIZE 10
 
@@ -16,7 +17,6 @@ void BackTrace(void** trace)
 {
 #define TRACE_BACK(n) \
   trace[n]=__builtin_return_address(n+2);\
-  printf("%x\n",trace[n]);fflush(stdout); \
   if(!trace[n])return;\
   if(trace[n]==threadstart){trace[n]=0;return;}
   TRACE_BACK(0)
@@ -184,7 +184,7 @@ void LeakHunter::RegisterDealloc(void* ptr)
 void* operator new(unsigned int size)
 {
   void* mem=malloc(size);
-  printf("ALLOC:%x(%d)\n",mem,size);
+  //printf("ALLOC:%x(%d)\n",mem,size);
   if(!mem)
   {
     fprintf(stderr,"OUT OF MEMORY!\n");
@@ -197,7 +197,7 @@ void* operator new(unsigned int size)
 void* operator new[](unsigned int size)
 {
   void* mem=malloc(size);
-  printf("ALLOC:%x(%d)\n",mem,size);
+  //printf("ALLOC:%x(%d)\n",mem,size);
   if(!mem)
   {
     fprintf(stderr,"OUT OF MEMORY!\n");
@@ -209,14 +209,33 @@ void* operator new[](unsigned int size)
 
 void operator delete(void* mem)
 {
-  printf("FREE:%x\n",mem);
-  smsc::util::lh.RegisterDealloc(mem);
-  if(mem)free(mem);
+  //printf("FREE:%x\n",mem);
+  if(mem)
+  {
+    smsc::util::lh.RegisterDealloc(mem);
+    free(mem);
+  }
+}
+
+static void PrintTrace()
+{
+  void* trace[TRACESIZE];
+  BackTrace(trace);
+  DumpTrace(trace);
 }
 
 void operator delete[](void* mem)
 {
-  printf("FREE:%x\n",mem);
-  smsc::util::lh.RegisterDealloc(mem);
-  if(mem)free(mem);
+  //printf("FREE:%x\n",mem);
+  if(mem)
+  {
+    smsc::util::lh.RegisterDealloc(mem);
+    free(mem);
+  }else
+  {
+    fprintf(stderr,"FATAL ERROR: delete [] NULL\n");
+    void *trace[TRACESIZE];
+    PrintTrace();
+    assert(mem!=NULL);
+  }
 }
