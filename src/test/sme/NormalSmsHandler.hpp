@@ -44,7 +44,8 @@ protected:
 	virtual Category& getLog();
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
 	void updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
-		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime);
+		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,
+		uint32_t smeTimeout);
 };
 
 }
