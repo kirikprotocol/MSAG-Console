@@ -1378,7 +1378,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
 static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
 {
   dialog->isUSSD = true;
-  __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
+  __map_trace2__("%s: dialogid 0x%x opened=%s invoke=%d",__func__,dialog->dialogid_map,dialog->id_opened?"true":"false", dialog->invokeId);
   if( !dialog->id_opened ) {
     bool dlg_found = false;
     istringstream(string(dialog->sms->getDestinationAddress().value))>>dialog->ussdSequence;
@@ -1440,7 +1440,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       k+=sprintf(text+k,"%02x ",(unsigned)ussdString.ussdStr[i]);
     }
     text[k]=0;
-    __map_trace2__("USSD string enc=0x%02X ussdenc=0x%02X dump: %s",encoding,ussdEncoding,text);
+    __map_trace2__("USSD string enc=0x%02X ussdenc=0x%02X bytes=%d dump: %s",encoding,ussdEncoding,bytes,text);
     delete text;
   }
 
@@ -1469,6 +1469,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     } else {
       dialog->state = MAPST_WaitUSSDNotifyOpenConf;
     }
+    dialog->invokeId=0;
     ET96MAP_ADDRESS_T origAddr;
     mkMapAddress( &origAddr, dialog->sms->getOriginatingAddress().value, dialog->sms->getOriginatingAddress().length );
 
