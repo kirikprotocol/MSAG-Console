@@ -41,18 +41,9 @@ public class SmsOperativeSource extends SmsSource
     } catch (Config.WrongParamTypeException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     }
-    String path = smsstorePath;
-    if (smsstorePath.indexOf("/") == 0)
-      path = absolutePath + smsstorePath;
-    try {
-      FileInputStream input = null;
-      input = new FileInputStream(path);
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-      absolutePath = absolutePath + "/";
-    } finally {
+    if (smsstorePath.indexOf("/") != 0)
       smsstorePath = absolutePath + smsstorePath;
-    }
+
   }
 
   protected void load(File file) throws IOException
