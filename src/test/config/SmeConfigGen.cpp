@@ -44,10 +44,12 @@ void SmeConfigGen::saveConfig(const char* configFileName)
 			(sme->wantAlias ? "yes" : "no") << "\"/>" << endl;
 		os << "\t<param name=\"forceDC\" value=\"" <<
 			(sme->forceDC ? "true" : "false") << "\"/>" << endl;
-		os << "\t<param name=\"timeout\" value=\"" << sme->timeout <<
-            "\"/>" << endl;
-		os << "\t<param name=\"priority\" value=\"" << sme->priority <<
-            "\"/>" << endl;
+		os << "\t<param name=\"timeout\" value=\"" <<
+			sme->timeout << "\"/>" << endl;
+		os << "\t<param name=\"priority\" value=\"" <<
+			sme->priority << "\"/>" << endl;
+		os << "\t<param name=\"receiptSchemeName\" value=\"" <<
+			sme->receiptSchemeName << "\"/>" << endl;
 		os << "</smerecord>" << endl;
 		__tc_ok__;
 	}
