@@ -1,6 +1,7 @@
 #ifndef CONNECTION_MANAGER_DECLARATIONS
 #define CONNECTION_MANAGER_DECLARATIONS
 
+#include <unistd.h>
 #include <oci.h>
 #include <orl.h>
 
@@ -21,91 +22,22 @@ namespace smsc { namespace store
     using smsc::core::buffers::Array;
 
     using namespace smsc::core::synchronization;
+    using namespace smsc::sms;
     
-    class Connection;
-    class ConnectionPool
+    class Connection
     {
+    friend class Statement;
     private:
 
-        log4cpp::Category    &log;
-
-        unsigned    size;
-        unsigned    count;
+        bool    isConnected, isDead;
+        log4cpp::Category      &log;
         
         const char* dbInstance;
         const char* dbUserName;
         const char* dbUserPassword;
-
-        EventMonitor    monitor;
-
-        Array<Connection *> idle;
-        Array<Connection *> busy;
-        Array<Connection *> dead;
-        
-        void loadMaxSize(Manager& config);
-        void loadInitSize(Manager& config);
-        
-        void loadDBInstance(Manager& config)
-            throw(ConfigException);
-        void loadDBUserName(Manager& config)
-            throw(ConfigException);
-        void loadDBUserPassword(Manager& config)
-            throw(ConfigException);
-
-    public:
     
-        ConnectionPool(Manager& config) 
-            throw(ConfigException, ConnectionFailedException);
-        
-        virtual ~ConnectionPool(); 
-        
-        inline const char* getDBInstance() {
-            return dbInstance;
-        };
-        inline const char* getDBUserName() {
-            return dbUserName;
-        };
-        inline const char* getDBUserPassword() {
-            return dbUserPassword;
-        };
-        
-        void setSize(unsigned _size);
-
-        inline unsigned getSize() {
-            return size;
-        }
-        
-        inline unsigned getConnectionsCount() {
-            return count;
-        }
-        inline unsigned getBusyConnectionsCount() {
-            return busy.Count();
-        }
-        inline unsigned getIdleConnectionsCount() {
-            return idle.Count();
-        }
-        inline unsigned getDeadConnectionsCount() {
-            return dead.Count();
-        }
-        
-        bool hasFreeConnections();
-        Connection* getConnection() 
-            throw(ConnectionFailedException);
-        void freeConnection(Connection* connection);
-        void killConnection(Connection* connection);
-    };
-    
-    using namespace smsc::sms;
-
-    class Connection
-    {
-    friend class Statement;
     protected:
         
-        log4cpp::Category    &log;
-
-        ConnectionPool* owner;
-
         OCIEnv*         envhp;  // OCI envirounment handle
         OCISvcCtx*      svchp;  // OCI service handle
         OCIServer*      srvhp;  // OCI server handle
@@ -119,31 +51,104 @@ namespace smsc { namespace store
 
         Mutex           mutex;
         
-        void checkConnErr(sword status) 
-            throw(ConnectionFailedException);
+        /*void checkConnErr(sword status) 
+            throw(ConnectionFailedException);*/
         
         void checkErr(sword status) 
             throw(StorageException);
+        
+        void connect()
+            throw(ConnectionFailedException);
+        void disconnect();
 
     public:
 
-        Connection(ConnectionPool* pool)
-            throw(ConnectionFailedException);
+        Connection(const char* instance, 
+                   const char* user, const char* password);
         virtual ~Connection();
 
         SMSId getMessagesCount()
-            throw(ConnectionFailedException);
-
+            throw(ConnectionFailedException, StorageException);
         void store(const SMS &sms, SMSId id) 
-            throw(StorageException);
+            throw(ConnectionFailedException, StorageException);
         void retrive(SMSId id, SMS &sms) 
-            throw(StorageException, NoSuchMessageException);
+            throw(ConnectionFailedException, StorageException, 
+                  NoSuchMessageException);
         void remove(SMSId id) 
-            throw(StorageException, NoSuchMessageException);
+            throw(ConnectionFailedException, StorageException, 
+                  NoSuchMessageException);
         void replace(SMSId id, const SMS &sms) 
-            throw(StorageException);
+            throw(ConnectionFailedException, StorageException,
+                  NoSuchMessageException);
     };
     
+    struct ConnectionQueue
+    {
+        cond_t              condition;
+        Connection*         connection;
+        ConnectionQueue*    next;
+    };
+
+    class ConnectionPool
+    {
+    private:
+
+        log4cpp::Category    &log;
+
+        unsigned    size;
+        unsigned    count;
+        unsigned    maxQueueSize;
+        
+        const char* dbInstance;
+        const char* dbUserName;
+        const char* dbUserPassword;
+
+        EventMonitor    monitor;
+        ConnectionQueue *head,*tail;
+        unsigned        queueLen;
+
+        Array<Connection *> idle;
+        Array<Connection *> busy;
+        
+        void loadMaxSize(Manager& config);
+        void loadInitSize(Manager& config);
+        void loadMaxQueueSize(Manager& config);
+        
+        void loadDBInstance(Manager& config)
+            throw(ConfigException);
+        void loadDBUserName(Manager& config)
+            throw(ConfigException);
+        void loadDBUserPassword(Manager& config)
+            throw(ConfigException);
+
+    public:
+    
+        ConnectionPool(Manager& config) 
+            throw(ConfigException);
+        virtual ~ConnectionPool(); 
+        
+        void setSize(unsigned _size);
+
+        inline unsigned getSize() {
+            return size;
+        }
+        inline unsigned getConnectionsCount() {
+            return count;
+        }
+        inline unsigned getBusyConnectionsCount() {
+            return busy.Count();
+        }
+        inline unsigned getIdleConnectionsCount() {
+            return idle.Count();
+        }
+        
+        bool hasFreeConnections();
+        
+        Connection* getConnection()
+            throw(TooLargeQueueException);
+        void freeConnection(Connection* connection);
+    };
+
 }}
 
 #endif

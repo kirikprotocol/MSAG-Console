@@ -93,19 +93,18 @@ namespace smsc { namespace store
             __require__(pool);
             return pool->getIdleConnectionsCount();
         }
-        static unsigned getDeadConnectionsCount() {
-            __require__(pool);
-            return pool->getDeadConnectionsCount();
-        }
 
         virtual SMSId store(const SMS &sms)  
-            throw(StorageException);
+            throw(TooLargeQueueException, StorageException);
         virtual void retrive(SMSId id, SMS &sms)
-            throw(StorageException, NoSuchMessageException);
+            throw(TooLargeQueueException, StorageException,
+                  NoSuchMessageException);
         virtual void remove(SMSId id) 
-            throw(StorageException, NoSuchMessageException);
+            throw(TooLargeQueueException, StorageException, 
+                  NoSuchMessageException);
         virtual void replace(SMSId id, const SMS &sms) 
-            throw(StorageException, NoSuchMessageException);
+            throw(TooLargeQueueException, StorageException, 
+                  NoSuchMessageException); 
     };
 
 }}

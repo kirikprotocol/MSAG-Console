@@ -115,19 +115,13 @@ namespace smsc { namespace store
         
         static const char* sql;
     
-    protected:
-
-        unsigned    res;
-
     public:
         
         ReplaceStatement(Connection* connection)
             throw(StorageException);
         virtual ~ReplaceStatement() {};
 
-        inline bool wasReplaced() {
-            return ((res == 1) ? true:false); 
-        }
+        bool wasReplaced();
     };
     
     class RemoveStatement : public Statement
@@ -139,8 +133,7 @@ namespace smsc { namespace store
     protected:
 
         SMSId       smsId;
-        unsigned    res;
-
+    
     public:
         
         RemoveStatement(Connection* connection)
@@ -150,9 +143,8 @@ namespace smsc { namespace store
         inline void setSMSId(SMSId id) {
             smsId = id;
         }
-        inline bool wasRemoved() {
-            return ((res == 1) ? true:false); 
-        }
+        
+        bool wasRemoved();
     };
     
     class GetMaxIdStatement : public Statement

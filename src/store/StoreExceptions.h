@@ -12,7 +12,7 @@ namespace smsc { namespace store
 {
     using smsc::sms::SMSId;
 
-    const int MAX_MESSAGE_LENGTH = 1024;
+    const int MAX_MESSAGE_LENGTH = 2048;
 
     class StoreException : public exception
     {
@@ -25,7 +25,7 @@ namespace smsc { namespace store
     public:
         
         StoreException(const char* _cause) {
-            sprintf(cause, "Failure cause - %s", _cause);
+            strcpy(cause, _cause);
         };
         
         virtual ~StoreException() throw() {};
@@ -36,6 +36,17 @@ namespace smsc { namespace store
         
     };
     
+    class TooLargeQueueException : public StoreException
+    {
+    public:
+
+        TooLargeQueueException() 
+            : StoreException("Too many pending requests a waiting "
+                             "for store connections !") {};
+        
+        virtual ~TooLargeQueueException() throw() {};
+    };
+
     class StorageException : public StoreException
     {
     protected:
@@ -59,15 +70,13 @@ namespace smsc { namespace store
         };
     };
     
-    class ConnectionFailedException : public StorageException
+    class ConnectionFailedException : public StoreException
     {
     public:
         
-        ConnectionFailedException(StorageException& exc) 
-            : StorageException(exc.getErrorCode())
-        {
-            strcpy(cause, exc.what());
-        };
+        ConnectionFailedException(StoreException& exc)
+            : StoreException(exc.what()) {};
+        
         virtual ~ConnectionFailedException() throw() {};
     };
     
@@ -78,10 +87,10 @@ namespace smsc { namespace store
         NoSuchMessageException() 
             : StoreException("Unable to find such message in DB !") {};
         
-        NoSuchMessageException(SMSId id) : StoreException() 
+        NoSuchMessageException(SMSId id) 
+            : StoreException() 
         {
-            sprintf(cause, "Failure cause - "
-                    "Unable to find message with id = %d in DB !", id);
+            sprintf(cause, "Unable to find message with id = %u in DB !", id);
         };
         virtual ~NoSuchMessageException() throw() {};
     };

@@ -23,9 +23,12 @@ log4cpp::Category& StoreManager::log = Logger::getCategory("smsc.store.StoreMana
 
 void StoreManager::loadMaxTriesCount(Manager& config)
 {
-    try {
+    try 
+    {
         maxTriesCount = (unsigned)config.getInt("MessageStore.maxTriesCount");
-    } catch (ConfigException& exc) {
+    } 
+    catch (ConfigException& exc) 
+    {
         maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
         log.warn("Max tries count to process operation wasn't specified ! "
                  "Using default: %d", maxTriesCount);
@@ -48,9 +51,10 @@ void StoreManager::startup(Manager& config)
             connection = pool->getConnection();
             generator = new IDGenerator(connection->getMessagesCount());
         }
-        catch (StorageException& exc) 
+        // catch (TooLargeQueueException) ???
+        catch (StoreException& exc)
         {
-            //log.error("Storage Exception : %s\n", exc.what());
+            log.error("StoreException: %s", exc.what());
             if (pool) 
             {
                 if (connection)
@@ -86,30 +90,32 @@ void StoreManager::shutdown()
 }
 
 SMSId StoreManager::store(const SMS &sms) 
-    throw(StorageException)
+    throw(TooLargeQueueException, StorageException)
 {
     __require__(pool && generator);
     
     SMSId id = generator->getNextId();
-    for (int iteration=1; iteration<=maxTriesCount; iteration++)
+    
+    Connection* connection = 0L;
+    unsigned iteration=1;
+    while (true)
     {
-        Connection* connection = 0L;
         try 
         {
             connection = pool->getConnection();
             connection->store(sms, id);
             pool->freeConnection(connection);
             break;
-        } 
+        }
         catch (ConnectionFailedException& exc) 
         {
             if (connection) pool->freeConnection(connection);
-            throw;
+            continue;
         }
         catch (StorageException& exc) 
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount) 
             {
                 log.warn("Max tries count to store message "
                          "#%d exceeded !\n", id);
@@ -121,24 +127,25 @@ SMSId StoreManager::store(const SMS &sms)
 }
 
 void StoreManager::retrive(SMSId id, SMS &sms) 
-    throw(StorageException, NoSuchMessageException)
+    throw(TooLargeQueueException, StorageException, NoSuchMessageException)
 {
     __require__(pool);
     
-    for (int iteration=1; iteration<=maxTriesCount; iteration++)
+    Connection* connection = 0L;
+    unsigned iteration=1;
+    while (true)
     {
-        Connection* connection = 0L;
         try 
         {
             connection = pool->getConnection();
             connection->retrive(id, sms);
             pool->freeConnection(connection);
             break;
-        } 
+        }
         catch (ConnectionFailedException& exc) 
         {
             if (connection) pool->freeConnection(connection);
-            throw;
+            continue;
         }
         catch (NoSuchMessageException& exc) 
         {
@@ -148,7 +155,7 @@ void StoreManager::retrive(SMSId id, SMS &sms)
         catch (StorageException& exc) 
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount) 
             {
                 log.warn("Max tries count to retrive message "
                          "#%d exceeded !\n", id);
@@ -159,24 +166,25 @@ void StoreManager::retrive(SMSId id, SMS &sms)
 }
 
 void StoreManager::remove(SMSId id) 
-    throw(StorageException, NoSuchMessageException)
+    throw(TooLargeQueueException, StorageException, NoSuchMessageException)
 {
     __require__(pool);
     
-    for (int iteration=1; iteration<=maxTriesCount; iteration++)
+    Connection* connection = 0L;
+    unsigned iteration=1;
+    while (true)
     {
-        Connection* connection = 0L;
         try 
         {
             connection = pool->getConnection();
             connection->remove(id);
             pool->freeConnection(connection);
             break;
-        } 
+        }
         catch (ConnectionFailedException& exc) 
         {
             if (connection) pool->freeConnection(connection);
-            throw;
+            continue;
         }
         catch (NoSuchMessageException& exc) 
         {
@@ -186,7 +194,7 @@ void StoreManager::remove(SMSId id)
         catch (StorageException& exc) 
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount) 
             {
                 log.warn("Max tries count to remove message "
                          "#%d exceeded !\n", id);
@@ -197,24 +205,25 @@ void StoreManager::remove(SMSId id)
 }
 
 void StoreManager::replace(SMSId id, const SMS &sms)
-    throw(StorageException, NoSuchMessageException)
+    throw(TooLargeQueueException, StorageException, NoSuchMessageException)
 {
     __require__(pool);
     
-    for (int iteration=1; iteration<=maxTriesCount; iteration++)
+    Connection* connection = 0L;
+    unsigned iteration=1;
+    while (true)
     {
-        Connection* connection = 0L;
         try 
         {
             connection = pool->getConnection();
             connection->replace(id, sms);
             pool->freeConnection(connection);
             break;
-        } 
+        }
         catch (ConnectionFailedException& exc) 
         {
             if (connection) pool->freeConnection(connection);
-            throw;
+            continue;
         }
         catch (NoSuchMessageException& exc) 
         {
@@ -224,9 +233,9 @@ void StoreManager::replace(SMSId id, const SMS &sms)
         catch (StorageException& exc) 
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount) 
             {
-                log.warn("Max tries count to update message "
+                log.warn("Max tries count to replace message "
                          "#%d exceeded !\n", id);
                 throw;
             }

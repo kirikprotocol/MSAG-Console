@@ -324,8 +324,17 @@ ReplaceStatement::ReplaceStatement(Connection* connection)
          (sb4) sizeof(sms.messageBody.lenght));
     bind(24, SQLT_BIN, (dvoid *) (sms.messageBody.data), 
          (sb4) sizeof(sms.messageBody.data));
-    
-    define(1, SQLT_UIN, (dvoid *) &(res), (sb4) sizeof(res));
+}
+
+bool ReplaceStatement::wasReplaced() 
+{
+    ub4 res = 0; 
+    if (OCIAttrGet((CONST dvoid *)stmt, OCI_HTYPE_STMT, 
+                   &res, NULL, OCI_ATTR_ROW_COUNT, errhp) != OCI_SUCCESS)
+    {
+        return false;
+    }
+    return ((res) ? true:false); 
 }
 
 /* --------------------------- RemoveStatement ----------------------- */
@@ -337,7 +346,17 @@ RemoveStatement::RemoveStatement(Connection* connection)
         : Statement(connection, RemoveStatement::sql)
 {
     bind(1, SQLT_UIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
-    define(1, SQLT_UIN, (dvoid *) &(res), (sb4) sizeof(res));
+}
+
+bool RemoveStatement::wasRemoved() 
+{
+    ub4 res = 0; 
+    if (OCIAttrGet((CONST dvoid *)stmt, OCI_HTYPE_STMT, 
+                   &res, NULL, OCI_ATTR_ROW_COUNT, errhp) != OCI_SUCCESS)
+    {
+        return false;
+    }
+    return ((res) ? true:false); 
 }
 
 /* --------------------------- GetMaxIdStatement ----------------------- */
