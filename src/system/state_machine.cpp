@@ -1803,18 +1803,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
       sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY),
       sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST));
 
-    if(
-        sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
-        sms.getDeliveryReport()==REPORT_NOACK ||
-        (
-          sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) &&
-          sms.getDeliveryReport()!=REPORT_ACK
-        )
-      )return DELIVERED_STATE;
+      bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
+                  sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
+
+      if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && !regdel &&
+         sms.getDeliveryReport()!=REPORT_ACK)return DELIVERED_STATE;
     if(
         sms.getDeliveryReport() ||
-        (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1  ||
-        sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)
+        regdel
       )
     {
       SMS *prpt=new SMS;
