@@ -542,7 +542,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   {
   case Status::OK: break;
   case Status::SYSERR:
-    err.errorCode = 32;
+    err.errorCode = 34;
     break;
   case Status::INVSRCADR:
   case Status::INVDSTADR:
@@ -550,13 +550,13 @@ void ResponseMO(MapDialog* dialog,unsigned status)
     err.errorCode = dialog->version == 3 ? 21: 5;
     break;
   case Status::INVSCHED:
-    err.errorCode = 32;
+    err.errorCode = 34;
     break;
   default:
     if( Status::isErrorPermanent(status) ) {
       err.errorCode = 21;
     } else {
-      err.errorCode = 36;
+      err.errorCode = 34;
     }
     break;
   };
