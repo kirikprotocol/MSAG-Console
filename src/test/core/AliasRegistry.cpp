@@ -21,6 +21,12 @@ AliasRegistry::~AliasRegistry()
 
 void AliasRegistry::putAlias(const AliasInfo& alias)
 {
+	//дублированные алиасы не сохраняются
+	if (addrMap.find(alias.addr) != addrMap.end() ||
+		aliasMap.find(alias.alias) != aliasMap.end())
+	{
+		return;
+	}
 	AliasHolder* holder = new AliasHolder(alias);
 	addrMap[alias.addr].push_back(holder);
 	aliasMap[alias.alias].push_back(holder);
