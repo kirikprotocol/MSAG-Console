@@ -657,6 +657,7 @@ void extractSmsPart(SMS* sms,int partnum)
         memcpy(bufTr.get(),msg,udhlen);
         len+=udhlen;
         msg=bufTr.get();
+        sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
         if(dstdc==DataCoding::SMSC7BIT)
         {
           auto_ptr<char> buf7(new char[len*2+1+udhlen]);
@@ -666,6 +667,7 @@ void extractSmsPart(SMS* sms,int partnum)
           len+=udhlen;
           msg=bufTr.get();
           if(len>udhlen+(len-udhlen)*8/7)len=udhlen+(len-udhlen)*8/7;
+          sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::SMSC7BIT);
         }else
         {
           if(len>140)len=140;
