@@ -78,6 +78,12 @@ namespace smsc { namespace dbsme
         DataProvider* getProvider(const Address& address);
         bool addProvider(const Address& address, DataProvider *provider);
         bool addProviderIndex(const Address& address, DataProvider *provider);
+
+        /* ---------------- Admin interface implementation ----------------- */
+
+        void addJob(std::string jobId);
+        void removeJob(std::string jobId);
+        void changeJob(std::string jobId);
     };
 
     class DataProvider

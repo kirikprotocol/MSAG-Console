@@ -55,12 +55,13 @@ namespace smsc { namespace dbsme
         
         uint32_t    dsOperationTimeout;
         
+        virtual ~SQLQueryJob();
+
     public:
 
         SQLQueryJob() : Job(), parser(0), formatter(0),
             sql(0), inputFormat(0), outputFormat(0), 
                 dsOperationTimeout(0) {};
-        virtual ~SQLQueryJob();
         
         virtual void init(ConfigView* config)
             throw(ConfigException);
@@ -96,10 +97,11 @@ namespace smsc { namespace dbsme
         virtual void process(Command& command, Routine& routine) 
             throw(CommandProcessException);
         
+        virtual ~PLSQLJob() {};
+
     public:
 
         PLSQLJob() : SQLQueryJob(), needCommit(true), isFunction(false) {};
-        virtual ~PLSQLJob() {};
         
         virtual void init(ConfigView* config)
             throw(ConfigException);

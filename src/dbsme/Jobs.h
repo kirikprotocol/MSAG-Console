@@ -104,21 +104,51 @@ namespace smsc { namespace dbsme
 
     class Job
     {
+    friend class JobGuard;
     protected:
 
         log4cpp::Category   &log;
 
+        Event       usersCountEvent;
+        Mutex       usersCountLock;
+        long        usersCount;
+        
+        Mutex       finalizingLock;
+        bool        bFinalizing;
+        
         MessageSet  messages;
         char*       name;
 
-        Job() : log(Logger::getCategory("smsc.dbsme.Job")), name(0) {};
+        void doFinalization()
+        {
+            {
+                MutexGuard guard(finalizingLock);
+                bFinalizing = true;
+            }
+            
+            while (true) {
+                usersCountEvent.Wait(10);
+                MutexGuard guard(usersCountLock);
+                if (usersCount <= 0) break;
+            }
+        }
+        
+        Job() : log(Logger::getCategory("smsc.dbsme.Job")), 
+                    usersCount(0), bFinalizing(false), name(0) {};
+        virtual ~Job() { 
+            if (name) delete name; 
+        };
 
     public:
 
-        virtual ~Job() 
-        { 
-            if (name) delete name; 
-        };
+        virtual void finalize() {
+            doFinalization();
+            delete this;
+        }
+        inline bool isFinalizing() {
+            MutexGuard guard(finalizingLock);
+            return bFinalizing;
+        }
         
         void init(ConfigView* config, const MessageSet& set)
             throw(ConfigException) 
@@ -177,6 +207,45 @@ namespace smsc { namespace dbsme
             return ((jf) ? jf->createJob():0);
         };
     };
+
+    class JobGuard
+    {
+    private:
+        
+        JobGuard& operator=(const JobGuard& jg) {
+            changeJobCounter(false);
+            job = jg.job;
+            changeJobCounter(true);
+            return *this;
+        };
+
+
+    protected:
+        
+        Job* job;
+        
+        inline void changeJobCounter(bool increment) {
+           if (!job) return;
+           MutexGuard guard(job->usersCountLock);
+           if (increment) job->usersCount++;
+           else job->usersCount--;
+           job->usersCountEvent.Signal();
+        }
+        
+    public:
+        
+        JobGuard(Job* job=0) : job(job) {
+            changeJobCounter(true);
+        }
+        virtual ~JobGuard() {
+            changeJobCounter(false);
+        }
+    
+        inline Job* get() {
+            return job;
+        }
+    };
+
 
 }}
 

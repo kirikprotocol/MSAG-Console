@@ -304,7 +304,7 @@ DataProvider::~DataProvider()
     for (int i=0; i<allJobs.Count(); i++) 
     {
         Job* job = allJobs[i];
-        if (job) delete job;
+        if (job) job->finalize();
         __trace__("Job destructed.");
     }
     if (ds) delete ds;
@@ -392,6 +392,22 @@ void DataProvider::process(Command& command)
       throw;
     }
 }
+
+// TODO: implement all admin methods
+
+void CommandProcessor::addJob(std::string jobId)
+{
+    throw Exception("Not implemented yet"); 
+}
+void CommandProcessor::removeJob(std::string jobId)
+{
+    throw Exception("Not implemented yet"); 
+}
+void CommandProcessor::changeJob(std::string jobId)
+{
+    throw Exception("Not implemented yet"); 
+}
+
 
 }}
 

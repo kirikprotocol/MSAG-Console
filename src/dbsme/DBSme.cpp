@@ -440,18 +440,33 @@ public:
 
 struct DBSmeAdminHandler : public DBSmeAdmin
 {
-    virtual void restart()
-    {
+    virtual void restart() {
         logger.error("Administrator has requested restart");
         setNeedReinit(true);
     }
+    virtual void addJob(std::string jobId) {
+        processor.addJob(jobId);
+    }
+    virtual void removeJob(std::string jobId) {
+        processor.removeJob(jobId);
+    }
+    virtual void changeJob(std::string jobId) {
+        processor.changeJob(jobId);
+    }
+
+    DBSmeAdminHandler(CommandProcessor& processor)
+        : DBSmeAdmin(), processor(processor) {};
+    virtual ~DBSmeAdminHandler() {};
+
+private:
+
+    CommandProcessor& processor;
 };
 
 static void appSignalHandler(int sig)
 {
     logger.debug("Signal %d handled !", sig);
-    if (sig==SIGTERM || sig==SIGINT)
-    {
+    if (sig==SIGTERM || sig==SIGINT) {
         logger.info("Stopping ...");
         setNeedStop(true);
     }
@@ -488,16 +503,15 @@ int main(void)
     {
         logger.info(getStrVersion());
         Manager::init("config.xml");
-        Manager& manager = Manager::getInstance();
         
-        ConfigView dsConfig(manager, "StartupLoader");
+        ConfigView dsConfig(Manager::getInstance(), "StartupLoader");
         DataSourceLoader::loadup(&dsConfig);
 
-        ConfigView cpConfig(manager, "DBSme");
+        ConfigView cpConfig(Manager::getInstance(), "DBSme");
         CommandProcessor processor(&cpConfig);
         
-        DBSmeAdminHandler adminHandler;
-        ConfigView adminConfig(manager, "DBSme.Admin");
+        DBSmeAdminHandler adminHandler(processor);
+        ConfigView adminConfig(Manager::getInstance(), "DBSme.Admin");
         DBSmeComponent admin(adminHandler);                   
         ComponentManager::registerComponent(&admin); 
         adminListener.init(adminConfig.getString("host"), adminConfig.getInt("port"));               
@@ -509,21 +523,20 @@ int main(void)
             if (isNeedReinit())
             {
                 Manager::reinit();
-                manager = Manager::getInstance();
-
+                
                 DataSourceLoader::unload();
-                ConfigView dsConfig(manager, "StartupLoader");
+                ConfigView dsConfig(Manager::getInstance(), "StartupLoader");
                 DataSourceLoader::loadup(&dsConfig);
                 
-                ConfigView cpConfig(manager, "DBSme");
+                ConfigView cpConfig(Manager::getInstance(), "DBSme");
                 processor.clean();
                 processor.init(&cpConfig);
                 
                 setNeedReinit(false);
             }
             
-            ConfigView mnConfig(manager, "DBSme.ThreadPool");
-            ConfigView ssConfig(manager, "DBSme.SMSC");
+            ConfigView mnConfig(Manager::getInstance(), "DBSme.ThreadPool");
+            ConfigView ssConfig(Manager::getInstance(), "DBSme.SMSC");
             DBSmeConfig cfg(&ssConfig);
             
             DBSmeTaskManager runner(&mnConfig);
