@@ -44,13 +44,11 @@ tokens {
   VAL_FULL	= "full"	;
   VAL_NONE	= "none"	;
   OPT_ENCODE	= "encoding"	;
-  VAL_GSM7	= "gsm7"	;
+  VAL_DEF	= "default"	;
   VAL_UCS2	= "ucs2"	;
 }
 
-WS    	: 	( ' '
-		| '\t'
-		| '\f'
+WS    	: 	( STR_WS
 		// handle newlines
 		| (	"\r\n"  // Evil DOS
 		    |	'\r'    // Macintosh
@@ -65,15 +63,23 @@ STR
 options {
   paraphrase = "more input";
 }
-	:	('a'..'z'|'A'..'Z'|'0'..'9'|'_'|'$'
-		|'.'|'?'|'!'|'#'|'+'|'-'|'/'|'*'|'%')+
+	:	(STR_CHR)+
 	;
 	
 QSTR
 options {
   paraphrase = "quoted string";
 }
-	:	'"'! (ESC|~'"')* '"'!
+	:	'"'! (ESC | STR_CHR | STR_WS)+ '"'!
+	;
+
+protected
+STR_WS	:	' '|'\t'|'\f'
+	;
+
+protected
+STR_CHR	:	'a'..'z'|'A'..'Z'|'0'..'9'|'_'|'$'
+		|'.'|'?'|'!'|'#'|'+'|'-'|'/'|'*'|'%'
 	;
 
 COMMA

@@ -140,16 +140,16 @@ dstdef[RouteGenCommand cmd] { // Special command required !!!
 		    def.setDst(addr.getText());
 		  })
 		)
-		{
+		({
 		    def.setSmeId(getnameid("SME System id"));
 		    cmd.addDstDef(def);
-		}
+		})
 	;
 
 /* ----------------------- Route command parsers ----------------------- */
 
 route_src[RouteGenCommand cmd]
-	:	OPT_SRC (srcdef[cmd])+
+	:	(OPT_SRC (srcdef[cmd])+)
 	;
 	exception
 	catch [RecognitionException ex] {
@@ -157,7 +157,7 @@ route_src[RouteGenCommand cmd]
 	}
 
 route_dst[RouteGenCommand cmd]
-	:	OPT_DST (dstdef[cmd])+
+	:	(OPT_DST (dstdef[cmd])+)
 	;
 	exception
 	catch [RecognitionException ex] {
@@ -167,9 +167,9 @@ route_dst[RouteGenCommand cmd]
 addroute returns [RouteAddCommand cmd] {
     cmd = new RouteAddCommand();
 }
-	:	{
+	:	({
 		    cmd.setRoute(getnameid("Route name"));
-		}
+		})
 		addroute_flags[cmd]
 		(OPT_SVCID num:STR {
 		    try {
@@ -204,17 +204,17 @@ addroute_flags[RouteAddCommand cmd]
 delroute returns [RouteDeleteCommand cmd] {
     cmd = new RouteDeleteCommand();
 }
-	:	{
+	:	({
 		    cmd.setRoute(getnameid("Route name"));
-		}
+		})
 	;
 
 altroute returns [RouteAlterCommand cmd] {
     cmd = new RouteAlterCommand();
 }
-	:	{
+	:	({
 		    cmd.setRoute(getnameid("Route name"));
-		}
+		})
 		altroute_flags[cmd]
 		(OPT_SVCID num:STR {
 		    try {
@@ -251,9 +251,9 @@ altroute_flags[RouteAlterCommand cmd]
 viewroute returns [RouteViewCommand cmd] {
     cmd = new RouteViewCommand();
 }
-	:	{
+	:	({
 		    cmd.setRoute(getnameid("Route name"));
-		}
+		})
 	;
 
 /* ----------------------- Alias command parsers ----------------------- */
@@ -325,42 +325,42 @@ addsubj_masks[SubjectGenCommand cmd]
 addsubject returns [SubjectAddCommand cmd] {
     cmd = new SubjectAddCommand();
 }
-	:	{
+	:	({
 		    cmd.setSubject(getnameid("Subject name"));
-		}
-		{
+		})
+		({
 		    cmd.setDefaultSmeId(getnameid("SME id"));
-		}
+		})
 		addsubj_masks[cmd]
 	;
 altsubject returns [SubjectAlterCommand cmd] {
     cmd = new SubjectAlterCommand();
 }
-	:	{
+	:	({
 		    cmd.setSubject(getnameid("Subject name"));
-		}
-		((ACT_ADD {
+		})
+		(((ACT_ADD {
 		    cmd.setActionAdd();
 		} | ACT_DELETE {
 		    cmd.setActionDelete();
 		}) addsubj_masks[cmd]) | 
 		(OPT_DEFSME {
 		    cmd.setDefaultSmeId(getnameid("SME id"));
-		})
+		}))
 	;
 delsubject returns [SubjectDeleteCommand cmd] {
     cmd = new SubjectDeleteCommand();
 }
-	:	{
+	:	({
 		    cmd.setSubject(getnameid("Subject name"));
-		}
+		})
 	;
 viewsubject returns [SubjectViewCommand cmd] {
     cmd = new SubjectViewCommand();
 }
-	:	{
+	:	({
 		    cmd.setSubject(getnameid("Subject name"));
-		}
+		})
 	;
 
 /* ----------------------- Profile command parsers --------------------- */
@@ -371,7 +371,7 @@ addprofile returns [ProfileAddCommand cmd] {
 	:	(mask:STR  { cmd.setMask(mask.getText());    })
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))
-		(OPT_ENCODE (VAL_GSM7 { cmd.setGsm7Encoding(); }
+		(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding(); }
 			   | VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
 	;
 	exception[mask]
@@ -384,7 +384,7 @@ altprofile returns [ProfileAlterCommand cmd] {
 	:	(addr:STR  { cmd.setAddress(addr.getText()); })
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))
-		(OPT_ENCODE (VAL_GSM7 { cmd.setGsm7Encoding();  }
+		(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding();  }
 			   | VAL_UCS2 { cmd.setUcs2Encoding();  } ))?
 	;
 	exception[addr]

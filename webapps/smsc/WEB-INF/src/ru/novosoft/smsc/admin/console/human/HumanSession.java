@@ -66,12 +66,12 @@ public class HumanSession extends Session
         while (!isStopping && !writer.checkError())
         {
             writer.print(CONSOLE_LOGIN); writer.flush();
-            String login = readTelnetLine(writer, true);
+            String login = readTelnetLine(true);
             login = login.trim();
             if (login.length() == 0) continue;
 
             writer.print(CONSOLE_PASSWORD); writer.flush();
-            String password = readTelnetLine(writer, false);
+            String password = readTelnetLine(false);
             if (password == null) continue;
             password = password.trim();
 

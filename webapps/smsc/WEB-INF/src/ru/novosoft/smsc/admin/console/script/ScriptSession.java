@@ -37,10 +37,10 @@ public class ScriptSession extends Session
         writer.flush();
     }
 
-    protected String readTelnetLine(PrintWriter writer, boolean echo)
+    protected String readTelnetLine(boolean echo)
         throws IOException
     {
-        return super.readTelnetLine(writer, false);
+        return super.readTelnetLine(false);
     }
 
     protected boolean authorize(BufferedReader reader, PrintWriter writer)
@@ -50,10 +50,10 @@ public class ScriptSession extends Session
         while (!isStopping)
         {
             showMessage(writer, CommandContext.CMD_OK, CONSOLE_CONNECT);
-            String login = readTelnetLine(writer, false);
+            String login = readTelnetLine(false);
             if (login == null || login.length() == 0) continue;
             showMessage(writer, CommandContext.CMD_OK, CONSOLE_LOGINOK);
-            String password = readTelnetLine(writer, false);
+            String password = readTelnetLine(false);
             if (password == null) continue;
 
             if (authorizeUser(login, password)) {

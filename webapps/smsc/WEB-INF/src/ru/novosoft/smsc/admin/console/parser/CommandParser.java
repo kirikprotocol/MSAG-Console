@@ -305,9 +305,11 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new RouteAddCommand();
 		
 		
+		{
 		
 				    cmd.setRoute(getnameid("Route name"));
 				
+		}
 		addroute_flags(cmd);
 		{
 		match(OPT_SVCID);
@@ -405,12 +407,16 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new SubjectAddCommand();
 		
 		
+		{
 		
 				    cmd.setSubject(getnameid("Subject name"));
 				
+		}
+		{
 		
 				    cmd.setDefaultSmeId(getnameid("SME id"));
 				
+		}
 		addsubj_masks(cmd);
 		return cmd;
 	}
@@ -465,9 +471,9 @@ public CommandParser(ParserSharedInputState state) {
 			match(OPT_ENCODE);
 			{
 			switch ( LA(1)) {
-			case VAL_GSM7:
+			case VAL_DEF:
 			{
-				match(VAL_GSM7);
+				match(VAL_DEF);
 				cmd.setGsm7Encoding();
 				break;
 			}
@@ -505,9 +511,11 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new RouteDeleteCommand();
 		
 		
+		{
 		
 				    cmd.setRoute(getnameid("Route name"));
 				
+		}
 		return cmd;
 	}
 	
@@ -541,9 +549,11 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new SubjectDeleteCommand();
 		
 		
+		{
 		
 				    cmd.setSubject(getnameid("Subject name"));
 				
+		}
 		return cmd;
 	}
 	
@@ -556,9 +566,11 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new RouteAlterCommand();
 		
 		
+		{
 		
 				    cmd.setRoute(getnameid("Route name"));
 				
+		}
 		altroute_flags(cmd);
 		{
 		switch ( LA(1)) {
@@ -725,13 +737,16 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new SubjectAlterCommand();
 		
 		
+		{
+		
+				    cmd.setSubject(getnameid("Subject name"));
+				
+		}
+		{
 		switch ( LA(1)) {
 		case ACT_ADD:
 		case ACT_DELETE:
 		{
-			
-					    cmd.setSubject(getnameid("Subject name"));
-					
 			{
 			{
 			switch ( LA(1)) {
@@ -774,6 +789,7 @@ public CommandParser(ParserSharedInputState state) {
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
+		}
 		}
 		}
 		return cmd;
@@ -829,9 +845,9 @@ public CommandParser(ParserSharedInputState state) {
 			match(OPT_ENCODE);
 			{
 			switch ( LA(1)) {
-			case VAL_GSM7:
+			case VAL_DEF:
 			{
-				match(VAL_GSM7);
+				match(VAL_DEF);
 				cmd.setGsm7Encoding();
 				break;
 			}
@@ -869,9 +885,11 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new RouteViewCommand();
 		
 		
+		{
 		
 				    cmd.setRoute(getnameid("Route name"));
 				
+		}
 		return cmd;
 	}
 	
@@ -905,9 +923,11 @@ public CommandParser(ParserSharedInputState state) {
 		cmd = new SubjectViewCommand();
 		
 		
+		{
 		
 				    cmd.setSubject(getnameid("Subject name"));
 				
+		}
 		return cmd;
 	}
 	
@@ -1065,10 +1085,12 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
+		{
 		
 				    def.setSmeId(getnameid("SME System id"));
 				    cmd.addDstDef(def);
 				
+		}
 	}
 	
 	public final void route_src(
@@ -1077,20 +1099,22 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		try {      // for error handling
+			{
 			match(OPT_SRC);
 			{
-			int _cnt19=0;
-			_loop19:
+			int _cnt21=0;
+			_loop21:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt19>=1 ) { break _loop19; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt21>=1 ) { break _loop21; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt19++;
+				_cnt21++;
 			} while (true);
+			}
 			}
 		}
 		catch (RecognitionException ex) {
@@ -1106,20 +1130,22 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		try {      // for error handling
+			{
 			match(OPT_DST);
 			{
-			int _cnt22=0;
-			_loop22:
+			int _cnt25=0;
+			_loop25:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd);
 				}
 				else {
-					if ( _cnt22>=1 ) { break _loop22; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt25>=1 ) { break _loop25; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt22++;
+				_cnt25++;
 			} while (true);
+			}
 			}
 		}
 		catch (RecognitionException ex) {
@@ -1326,14 +1352,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop58:
+			_loop65:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop58;
+					break _loop65;
 				}
 				
 			} while (true);
@@ -1405,11 +1431,13 @@ public CommandParser(ParserSharedInputState state) {
 		"\"full\"",
 		"\"none\"",
 		"\"encoding\"",
-		"\"gsm7\"",
+		"\"default\"",
 		"\"ucs2\"",
 		"WS",
 		"more input",
 		"quoted string",
+		"STR_WS",
+		"STR_CHR",
 		"comma character ','",
 		"ESC",
 		"DIGIT"

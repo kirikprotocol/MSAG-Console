@@ -72,20 +72,33 @@ public abstract class Session extends Thread
     private final static int ESC_IAC = 255;
     private final static int ESC_SB = 250;
     private final static int ESC_SE = 240;
+    private final static int ESC_ESC = 27;
     private final static int ESC_CR = 13;
     private final static int ESC_LF = 10;
     private final static int ESC_BS = 8;
     private final static int ESC_NUL = 0;
 
-    protected String readTelnetLine(PrintWriter writer, boolean echo)
+    protected String readTelnetLine(boolean echo)
         throws IOException
     {
+        os.flush();
         int b = -1;
         StringBuffer sb = new StringBuffer();
         boolean escape = false;
         boolean parameter = false;
         boolean typeofop = false;
         while( (b=is.read()) != -1 ) {
+            //System.out.println("Got CHR="+(char)b+" code "+b);
+            if( b == ESC_IAC ) {
+                //System.out.println("Got IAC");
+                if (!escape) {
+                    escape = true;
+                    continue;
+                } else {
+                    if (echo) os.write(b);
+                    escape = false;
+                }
+            }
             if( typeofop ) {
                 //System.out.println("Got TGT="+b);
                 escape = false;
@@ -110,30 +123,30 @@ public abstract class Session extends Thread
                 }
                 continue;
             }
-            if( b == ESC_IAC ) {
-                //System.out.println("Got IAC");
-                escape = true;
+            if (b == ESC_ESC) {
+                b = is.read(); // skip 91
+                //System.out.println("Got CHR="+(char)b+" code "+b);
+                b = is.read(); // skip opcode
+                //System.out.println("Got CHR="+(char)b+" code "+b);
+                if ( b >=49 && b<= 54) is.read(); // for Ins, Del, Home, End, PgUp, PgDn
                 continue;
             }
-
             if ( b == ESC_BS ) {
                 if (sb.length() > 0) {
                     sb.deleteCharAt(sb.length()-1);
                     if (echo) {
-                        byte bs[] = {(byte)ESC_BS};
-                        byte sp[] = {' '};
-                        os.write(bs); os.write(sp);
+                        byte bs[] = {(byte)ESC_BS, (byte)' ', (byte)ESC_BS};
                         os.write(bs); os.flush();
                     }
                 }
                 continue;
             }
 
+            System.out.println("Got CHR="+(char)b+" code "+b);
             b = (b == ESC_NUL) ? ESC_LF:b;
-            //System.out.println("Got CHR="+(char)b+" code "+b);
 
             if( echo ) {
-                writer.write(b); writer.flush();
+                os.write(b); os.flush();
             }
 
             if( b == ESC_LF ) break;
@@ -156,7 +169,7 @@ public abstract class Session extends Thread
         while (!isStopping && !writer.checkError())
         {
             prompt(writer);
-            String input = readTelnetLine(writer, true);
+            String input = readTelnetLine(true);
             if (input == null || input.length() == 0) continue;
             if (input.equalsIgnoreCase(COMMAND_QUIT)) {
                 farewell(writer); sleep(1000); break;

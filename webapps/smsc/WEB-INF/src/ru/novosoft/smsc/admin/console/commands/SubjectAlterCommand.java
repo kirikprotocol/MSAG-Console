@@ -47,6 +47,8 @@ public class SubjectAlterCommand extends SubjectGenCommand
                 SME sme = ctx.getSmsc().getSmes().get(defaultSmeId);
                 if (sme != null) {
                     smscSubject.setDefaultSme(sme);
+                    ctx.setMessage(out+" altered. Default sme changed");
+                    ctx.setStatus(CommandContext.CMD_OK);
                 } else {
                     ctx.setMessage("Couldn't alter "+out+
                                    ". No default SME for id '"+defaultSmeId+"'");
@@ -60,6 +62,8 @@ public class SubjectAlterCommand extends SubjectGenCommand
                         list.add(new Mask((String)obj));
                     }
                 }
+                ctx.setMessage(out+" altered. Mask(s) added");
+                ctx.setStatus(CommandContext.CMD_OK);
             } else if (action == ACTION_DELETE) {
                 MaskList oldList = smscSubject.getMasks();
                 MaskList newList = new MaskList();
@@ -71,6 +75,8 @@ public class SubjectAlterCommand extends SubjectGenCommand
                     }
                 }
                 smscSubject.setMasks(newList);
+                ctx.setMessage(out+" altered. Mask(s) deleted");
+                ctx.setStatus(CommandContext.CMD_OK);
             } else {
                 ctx.setMessage("Couldn't alter "+out+". Cause: Unknown action");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
