@@ -33,6 +33,7 @@ struct Profile{
   int codepage;
   int reportoptions;
   std::string locale;
+  int hide;
   bool operator==(const Profile& src)
   {
     return codepage==src.codepage &&

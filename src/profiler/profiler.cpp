@@ -175,14 +175,17 @@ int Profiler::updatemask(const Address& address,const Profile& profile)
     if(exists)
     {
       dbUpdate(address,profile);
+      return pusUpdated;
     }else
     {
       dbInsert(address,profile);
+      return pusInserted;
     }
   }catch(...)
   {
     log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.Profiler");
     log.error("Database exception during mask profile update");
+    return pusError;
   }
 }
 
@@ -222,7 +225,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:3 where mask=:4";
+  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:3, hidden=:4 where mask=:5";
   ConnectionGuard connection(ds);
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
@@ -233,7 +236,8 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   addr.toString(addrbuf,sizeof(addrbuf));
   __trace2__("profiler: update %s=%d,%d,%s",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str());
   statement->setString(3,profile.locale.c_str());
-  statement->setString(4,addrbuf);
+  statement->setInt8(4,profile.hide);
+  statement->setString(5,addrbuf);
   statement->executeUpdate();
   connection->commit();
 }
@@ -244,8 +248,8 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset, locale)"
-                      " VALUES (:1, :2, :3, :4)";
+  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset, locale,hidden)"
+                      " VALUES (:1, :2, :3, :4, :5)";
 
   ConnectionGuard connection(ds);
 
@@ -258,6 +262,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   statement->setInt8(2, profile.reportoptions);
   statement->setInt8(3, profile.codepage);
   statement->setString(4,profile.locale.c_str());
+  statement->setInt8(5, profile.hide);
   statement->executeUpdate();
   connection->commit();
 }
@@ -265,6 +270,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
 static const int _update_report=1;
 static const int _update_charset=2;
 static const int _update_locale=3;
+static const int _update_hide=4;
 
 void Profiler::internal_update(int flag,const Address& addr,int value,const char* svalue)
 {
@@ -282,6 +288,10 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
   if(flag==_update_locale)
   {
     profile.locale=svalue;
+  }
+  if(flag==_update_hide)
+  {
+    profile.hide=value;
   }
   update(addr,profile);
 }
@@ -407,7 +417,18 @@ int Profiler::Execute()
     {
       msg=3;
       internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
+    }else
+    if(!strncmp(body+i,"HIDE",4))
+    {
+      msg=6;
+      internal_update(_update_hide,addr,1);
+    }else
+    if(!strncmp(body+i,"UNHIDE",6))
+    {
+      msg=7;
+      internal_update(_update_hide,addr,0);
     }
+
     resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
                                            cmd->get_dialogId(),status);
 
@@ -440,6 +461,14 @@ int Profiler::Execute()
       case 5:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgLocaleUnknown");
+      }break;
+      case 6:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgHide");
+      }break;
+      case 7:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgUnhide");
       }break;
       default:
       {
@@ -502,7 +531,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
 
-  const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE FROM SMS_PROFILE";
+  const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE, HIDDEN FROM SMS_PROFILE";
 
 
   ConnectionGuard connection(ds);
@@ -521,6 +550,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
     p.reportoptions=rs->getInt8(2);
     p.codepage=rs->getInt8(3);
     p.locale=rs->getString(4);
+    p.hide=rs->getInt8(5);
     profiles->add(addr,p);
   }
 }

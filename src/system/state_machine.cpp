@@ -409,6 +409,22 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
       offsets.Push(d);
       i+=7;
     }else
+    if(!strncasecmp(buf+i,"#hide#",6))
+    {
+      __trace__("DIRECT: hide");
+      sms.setIntProperty(Tag::SMSC_HIDE,1);
+      Directive d(i,6);
+      offsets.Push(d);
+      i+=6;
+    }else
+    if(!strncasecmp(buf+i,"#unhide#",8))
+    {
+      __trace__("DIRECT: hide");
+      sms.setIntProperty(Tag::SMSC_HIDE,0);
+      Directive d(i,8);
+      offsets.Push(d);
+      i+=8;
+    }else
     if(def.MatchEx(buf,buf+i,buf+len,m,n))
     {
       int t=atoi(buf+m[1].start);
@@ -796,7 +812,6 @@ StateType StateMachine::submit(Tuple& t)
 
   __trace2__("SUBMIT_SM: profile options=%d",profile.reportoptions);
   sms->setDeliveryReport(profile.reportoptions);
-  sms->setStrProperty(Tag::SMSC_RECEIPT_LOCALE,profile.locale.c_str());
 
   smsc::router::RouteInfo ri;
   bool has_route = smsc->routeSms(sms->getOriginatingAddress(),
@@ -847,6 +862,8 @@ StateType StateMachine::submit(Tuple& t)
   sms->setArchivationRequested(ri.archived);
   sms->setBillingRecord(ri.billing);
 
+
+  sms->setIntProperty(Tag::SMSC_HIDE,profile.hide);
   profile=smsc->getProfiler()->lookup(dst);
   sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
   int pres=psSingle;
@@ -1134,7 +1151,11 @@ StateType StateMachine::submit(Tuple& t)
     // send delivery
     Address src;
     __trace2__("SUBMIT: wantAlias=%s",smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias?"true":"false");
-    if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias && smsc->AddressToAlias(sms->getOriginatingAddress(),src))
+    if(
+        smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
+        sms->getIntProperty(Tag::SMSC_HIDE) &&
+        smsc->AddressToAlias(sms->getOriginatingAddress(),src)
+      )
     {
       sms->setOriginatingAddress(src);
     }
@@ -1401,7 +1422,11 @@ StateType StateMachine::forward(Tuple& t)
   try{
     // send delivery
     Address src;
-    if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias && smsc->AddressToAlias(sms.getOriginatingAddress(),src))
+    if(
+        smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
+        sms.getIntProperty(Tag::SMSC_HIDE) &&
+        smsc->AddressToAlias(sms.getOriginatingAddress(),src)
+      )
     {
       sms.setOriginatingAddress(src);
     }
@@ -1765,7 +1790,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
       fd.lastResult=0;
       fd.lastResultGsm=0;
       fd.msc=d.msc;
-      string loc=sms.getStrProperty(Tag::SMSC_RECEIPT_LOCALE);
       smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
       fd.locale=profile.locale.c_str();
       smsc::smeman::SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());

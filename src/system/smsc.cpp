@@ -398,7 +398,7 @@ void Smsc::init(const SmscConfigs& cfg)
     while((*str=toupper(*str)))str++;
     str=dc;
     while((*str=toupper(*str)))str++;
-    smsc::profiler::Profile defProfile={0,0};
+    smsc::profiler::Profile defProfile={0,0,"",0};
     if(!strcmp(dc,"DEFAULT"))
       defProfile.codepage=profiler::ProfileCharsetOptions::Default;
     else if(!strcmp(dc,"UCS2"))
@@ -587,22 +587,22 @@ void Smsc::shutdown()
 {
   __trace__("shutting down");
 
-	smeman.unregisterSmeProxy("DSTRLST");
+  smeman.unregisterSmeProxy("DSTRLST");
 
-	tp.shutdown();
+  tp.shutdown();
 
   if(mapProxy)
   {
-		MapDialogContainer::getInstance()->unregisterSelf(&smeman);
-		MapDialogContainer::dropInstance();
-	}
+    MapDialogContainer::getInstance()->unregisterSelf(&smeman);
+    MapDialogContainer::dropInstance();
+  }
 
   delete distlstman;
 
-	smsc::mscman::MscManager::shutdown();
+  smsc::mscman::MscManager::shutdown();
 
   smsc::store::StoreManager::shutdown();
-	if(dataSource)delete dataSource;
+  if(dataSource)delete dataSource;
 }
 
 void Smsc::reloadRoutes(const SmscConfigs& cfg)
