@@ -1,5 +1,6 @@
 #include "MapIoTask.h"
 #include "sms/sms.h"
+#include "smeman/smsccmd.h"
 #include <memory>
 using namespace std;
 using namespace smsc::sms;

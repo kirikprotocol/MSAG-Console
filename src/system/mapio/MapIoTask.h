@@ -5,8 +5,11 @@ $Id$
 #include <stdio.h>
 #include <malloc.h>
 #include <memory.h>
-
+#include "sms/sms.h"
+#include "smeman/smsccmd.h"
 using namespace std;
+using namespace smsc::sms;
+using namespace smsc::smeman;
 
 #include "core/buffers/XHash.hpp"
 #include "core/synchronization/Mutex.hpp"
