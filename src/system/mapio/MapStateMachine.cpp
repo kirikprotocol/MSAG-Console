@@ -398,7 +398,7 @@ static bool SendSms(MapDialog* dialog){
 
   ET96MAP_SM_RP_UI_T* ui;
   dialog->auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
-  mkDeliverPDU(sms.get(),ui);
+  mkDeliverPDU(dialog->sms.get(),ui);
   if ( ui->signalInfoLen > 98 ) {
     __trace2__("MAP::SendSMSCToMT:Et96MapDelimiterReq");
     result = Et96MapDelimiterReq( SSN, dialog->dialogid_map, 0, 0 );
