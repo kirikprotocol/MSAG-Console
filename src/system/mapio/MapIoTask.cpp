@@ -326,8 +326,12 @@ void Et96MapIndicationError(USHORT_T error,UCHAR_T* errString)
 
 void MapIoTask::deinit()
 {
+  unsigned USHORT_T result;
   warning_if(Et96MapUnbindReq(SSN)!=ET96MAP_E_OK);  
-  warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
+  result = MsgRel(MY_USER_ID,ETSIMAP_ID);
+  if ( result != MSG_OK){
+    __trace2__("MAP::error at MsgRel errcode 0x%hx",result);
+  }
   warning_if(MsgClose(MY_USER_ID)!=MSG_OK);
   MsgExit();
 }
