@@ -13,12 +13,14 @@ using namespace smsc::test; //config constants
 using namespace smsc::smpp::SmppCommandSet;
 
 SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _systemId,
-	const Address& _smeAddr, const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
+	const Address& _smeAddr, SmppResponseSender* respSender,
+	const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
 	const RouteRegistry* _routeReg, CheckList* _chkList)
 	: config(_config), session(NULL), systemId(_systemId), smeAddr(_smeAddr),
 	smeReg(_smeReg), aliasReg(_aliasReg), routeReg(_routeReg), chkList(_chkList),
 	routeChecker(NULL), pduChecker(NULL)
 {
+	__require__(respSender);
 	__require__(smeReg);
 	//__require__(aliasReg);
 	//__require__(routeReg);
@@ -29,7 +31,7 @@ SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _syste
 		routeChecker = new RouteChecker(systemId, smeAddr, smeReg, aliasReg, routeReg);
 		pduChecker = new SmppPduChecker(pduReg, routeChecker, chkList);
 	}
-	receiver = new SmppReceiverTestCases(systemId, smeAddr, smeReg,
+	receiver = new SmppReceiverTestCases(systemId, smeAddr, respSender, smeReg,
 		aliasReg, routeReg, routeChecker, pduChecker, chkList);
 	session = new SmppSession(config, receiver);
 	receiver->setSession(session);

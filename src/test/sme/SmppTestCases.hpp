@@ -4,6 +4,7 @@
 #include "test/util/BaseTestCases.hpp"
 #include "SmppTransmitterTestCases.hpp"
 #include "SmppReceiverTestCases.hpp"
+#include "SmppResponseSender.hpp"
 
 namespace smsc {
 namespace test {
@@ -23,9 +24,9 @@ class SmppTestCases : BaseTestCases
 {
 public:
 	SmppTestCases(const SmeConfig& config, const SmeSystemId& systemId,
-		const Address& smeAddr, const SmeRegistry* smeReg,
-		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
-		CheckList* chkList); //throws Exception
+		const Address& smeAddr, SmppResponseSender* respSender,
+		const SmeRegistry* smeReg, const AliasRegistry* aliasReg,
+		const RouteRegistry* routeReg, CheckList* chkList); //throws Exception
 	
 	virtual ~SmppTestCases();
 
