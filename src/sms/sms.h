@@ -161,13 +161,13 @@ namespace smsc { namespace sms
 
         inline void setOriginatingAddress(uint8_t lenght, uint8_t type, 
                                          uint8_t plan, uint8_t* buff) 
-        { // Copies address value from 'buff' to static array 
+        { // Copies address value from 'buff' to static structure
             originatingAddress.setTypeOfNumber(type);
             originatingAddress.setNumberingPlan(plan);
             originatingAddress.setValue(lenght, buff);
         };
         inline void setOriginatingAddress(Address& address) 
-        { // Copies address value from 'address' to static array 
+        { // Copies address value from 'address' to static structure 
             originatingAddress = address;     
         };
         inline Address& getOriginatingAddress() {
@@ -176,13 +176,13 @@ namespace smsc { namespace sms
 
         inline void setDestinationAddress(uint8_t lenght, uint8_t type, 
                                           uint8_t plan, uint8_t* buff) 
-        { // Copies address value from 'buff' to static array 
+        { // Copies address value from 'buff' to static structure 
             destinationAddress.setTypeOfNumber(type);
             destinationAddress.setNumberingPlan(plan);
             destinationAddress.setValue(lenght, buff);
         };
         inline void setDestinationAddress(Address& address) 
-        { // Copies address value from 'address' to static array 
+        { // Copies address value from 'address' to static structure 
             destinationAddress = address;     
         };
         inline Address& getDestinationAddress() {
@@ -268,13 +268,13 @@ namespace smsc { namespace sms
         
         inline void setMessageBody(uint8_t lenght, uint8_t scheme, 
                                          bool header, uint8_t* buff) 
-        { // Copies address value from 'buff' to static array 
+        { // Copies body data from 'buff' to static structure 
             messageBody.setCodingScheme(scheme);
             messageBody.setHeaderIndicator(header);
             messageBody.setData(lenght, buff);
         };
         inline void setMessageBody(Body& body) 
-        { // Copies address value from 'address' to static array 
+        { // Copies body data from 'body' to static structure 
             messageBody = body;     
         };
         inline Body& getMessageBody() {
