@@ -254,7 +254,7 @@ public class Index extends PageBean
 		}
 		catch (AdminException e)
 		{
-			logger.error("Couldn't get sme status for service \"" + id + '"', e);
+			logger.error("Couldn't get sme status for service \"" + id + "\", nested:" + e.getMessage());
 			error(SMSCErrors.error.services.couldntGetServiceInfo, id);
 			return null;
 		}

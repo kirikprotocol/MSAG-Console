@@ -134,7 +134,7 @@ public class Proxy
 			}
 			catch (IOException e)
 			{
-				logger.warn("Couldn't connect to \"" + host + ':' + port + '"', e);
+				logger.warn("Couldn't connect to \"" + host + ':' + port + "\", nested: " + e.getMessage());
 				throw new AdminException("Couldn't connect to \"" + host + ':' + port + "\", nested: " + e.getMessage());
 			}
 		}

@@ -174,7 +174,7 @@ function showhide(sectionId)
 		//~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Connections ~~~~~~~~~~~~~~~~~~~~~~~~
 		startSection(out, "MessageStore.Connections", "Connections", false);
 			startParams(out);
-				param(out, "maximum", "MessageStore.Connections.max", bean.getBoolParam("MessageStore.Connections.max"));
+				param(out, "maximum", "MessageStore.Connections.max", bean.getIntParam("MessageStore.Connections.max"));
 				param(out, "initial", "MessageStore.Connections.init", bean.getIntParam("MessageStore.Connections.init"));
 			finishParams(out);
 		finishSection(out);

@@ -44,7 +44,7 @@ public class Statuses extends PageBean
 		}
 		catch (AdminException e)
 		{
-			logger.error("Couldn't get service \"" + id + "\" connection status", e);
+			logger.error("Couldn't get service \"" + id + "\" connection status, nested: " + e.getMessage());
 			return null;
 		}
 	}
