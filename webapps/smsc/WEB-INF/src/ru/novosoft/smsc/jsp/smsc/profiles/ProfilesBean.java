@@ -20,6 +20,9 @@ public class ProfilesBean extends SmscBean
 	protected String locale = "";
 	protected List registeredLocales = new LinkedList();
 
+  protected boolean aliasHide = false;
+  protected boolean aliasModifiable = true;
+
 	protected int init(List errors)
 	{
 		int result = super.init(errors);
@@ -48,14 +51,18 @@ public class ProfilesBean extends SmscBean
 		this.mask = mask;
 	}
 
-	public byte getReport()
+	public String getReport()
 	{
-		return report;
+		return Byte.toString(report);
 	}
+  public byte getByteReport()
+  {
+    return report;
+  }
 
 	public void setReport(String report)
 	{
-		try
+    try
 		{
 			this.report = Byte.decode(report).byteValue();
 		}
@@ -65,10 +72,15 @@ public class ProfilesBean extends SmscBean
 		}
 	}
 
-	public byte getCodepage()
+
+	public String getCodepage()
 	{
-		return codepage;
+		return Byte.toString(codepage);
 	}
+  public byte getByteCodepage()
+  {
+    return codepage;
+  }
 
 	public void setCodepage(String codepage)
 	{
@@ -96,4 +108,26 @@ public class ProfilesBean extends SmscBean
 	{
 		return registeredLocales;
 	}
+
+  public boolean isAliasHide() {
+    return aliasHide;
+  }
+  public void setAliasHide(boolean aliasHide) {
+    this.aliasHide = aliasHide;
+  }
+  public void setAliasHide(String aliasHide) {
+    this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
+                      aliasHide.equalsIgnoreCase("hide"));
+  }
+
+  public boolean isAliasModifiable() {
+    return aliasModifiable;
+  }
+  public void setAliasModifiable(boolean aliasModifiable) {
+    this.aliasModifiable = aliasModifiable;
+  }
+  public void setAliasModifiable(String aliasModifiable) {
+    this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
+                            aliasModifiable.equalsIgnoreCase("modifiable"));
+  }
 }

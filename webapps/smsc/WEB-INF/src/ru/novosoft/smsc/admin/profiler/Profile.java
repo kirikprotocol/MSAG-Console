@@ -24,6 +24,9 @@ public class Profile
 	private byte reportOptions;
 	private String locale;
 
+  private boolean aliasHide = false;
+  private boolean aliasModifiable = true;
+
 	/**
 	 * Constructs <code>Profile</code> from string returned by SMSC.
 	 * @param profileString profile string returned by SMSC. Must be
@@ -49,9 +52,15 @@ public class Profile
 				case 2:
 					setLocale(token);
 					break;
+        case 3:
+          setAliasHide(token);
+          break;
+        case 4:
+          setAliasModifiable(token);
+          break;
 			}
 		}
-		if (i < 3)
+		if (i < 5)
 			throw new AdminException("profile string returned by SMSC misformatted: " + profileString);
 	}
 
@@ -143,7 +152,8 @@ public class Profile
 
 	public String getStringRepresentation() throws AdminException
 	{
-		return getCodepageString() + ',' + getReportOptionsString() + ',' + locale;
+		return getCodepageString() + ',' + getReportOptionsString() + ',' + locale +
+           ',' + (aliasHide ? "true":"false") + ',' + (aliasModifiable ? "true":"false");
 	}
 
 	public Mask getMask()
@@ -162,4 +172,26 @@ public class Profile
 		if (this.locale == null)
 			this.locale = "";
 	}
+
+  public boolean isAliasHide() {
+    return aliasHide;
+  }
+  public void setAliasHide(boolean aliasHide) {
+    this.aliasHide = aliasHide;
+  }
+  public void setAliasHide(String aliasHide) {
+    this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
+                      aliasHide.equalsIgnoreCase("hide"));
+  }
+
+  public boolean isAliasModifiable() {
+    return aliasModifiable;
+  }
+  public void setAliasModifiable(boolean aliasModifiable) {
+    this.aliasModifiable = aliasModifiable;
+  }
+  public void setAliasModifiable(String aliasModifiable) {
+    this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
+                            aliasModifiable.equalsIgnoreCase("modifiable"));
+  }
 }

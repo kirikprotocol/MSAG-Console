@@ -44,6 +44,8 @@ public class ProfilesEdit extends ProfilesBean
 				report = p.getReportOptions();
 				codepage = p.getCodepage();
 				locale = p.getLocale();
+        aliasHide = p.isAliasHide();
+        aliasModifiable = p.isAliasModifiable();
 			}
 			catch (AdminException e)
 			{
@@ -67,6 +69,8 @@ public class ProfilesEdit extends ProfilesBean
 		{
 			final Mask address = new Mask(mask);
 			Profile profile = new Profile(address, codepage, report, locale);
+      profile.setAliasHide(aliasHide);
+      profile.setAliasModifiable(aliasModifiable);
 			switch (smsc.updateProfile(address, profile))
 			{
 				case 1: //pusUpdated
