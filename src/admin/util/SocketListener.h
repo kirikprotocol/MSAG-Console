@@ -1,9 +1,6 @@
 #ifndef SMSC_ADMIN_UTIL_SOCKET_LISTENER
 #define SMSC_ADMIN_UTIL_SOCKET_LISTENER
 
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <log4cpp/Category.hh>
 #include <admin/AdminException.h>
 #include <core/network/Socket.hpp>
@@ -36,7 +33,7 @@ public:
 	{
 	}
 	
-	void init(const char * const hostName, in_port_t portToListen)
+	void init(const char * const hostName, unsigned portToListen)
 		throw (AdminException)
 	{
 		isShutdownSignaled = false;
