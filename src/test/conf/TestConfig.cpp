@@ -19,18 +19,22 @@ TestConfig::TestConfig()
 	intMap["maxValidPeriod"] = 150; //150 сек
 	intMap["maxWaitTime"] = 60; //max(waitTime)
 	intMap["maxDeliveryPeriod"] = 120; //max(validTime - waitTime)
-	//адреса
-	addrMap["smscAddr"] = ".3.5.123abc";
+	//smsc sme
+	addrMap["smscAddr"] = "+111111111111";
+	addrMap["smscAlias"] = ".3.3.smscSmeAlias123";
+	strMap["smscSystemId"] = "smscsme";
+	strMap["smscServiceType"] = "SmSc";
+	intMap["smscProtocolId"] = 3;
 	//profiler
-	addrMap["profilerAddr"] = "+38435435";
-	addrMap["profilerAlias"] = ".3.3.profilerAlias123";
+	addrMap["profilerAddr"] = "+222222222222";
+	addrMap["profilerAlias"] = ".5.5.profilerAlias123";
 	strMap["profilerSystemId"] = "profiler";
 	strMap["profilerServiceType"] = "pRof";
 	intMap["profilerProtocolId"] = 5;
 	//db sme
-	addrMap["dbSmeAddr"] = "+1597534682";
-	addrMap["dbSmeAlias"] = ".5.5.dbSmeAlias123";
-	addrMap["dbSmeInvalidAddr"] = ".5.5.dbSmeInvalidAddr123";
+	addrMap["dbSmeAddr"] = "+333333333333";
+	addrMap["dbSmeAlias"] = ".7.7.dbSmeAlias123";
+	addrMap["dbSmeInvalidAddr"] = ".7.7.dbSmeInvalidAddr123";
 	strMap["dbSmeSystemId"] = "dbSme";
 	strMap["dbSmeServiceType"] = "dBsmE";
 	intMap["dbSmeProtocolId"] = 23;
