@@ -32,13 +32,13 @@
     <mkdir dir="${exploded}/jsp"/>
   </target>
 
-  <target name="compile" depends="init" description="compile the sources">
+  <target name="compile" description="compile the sources">
     <javac srcdir="${java_src}" destdir="${java_out}" debug="yes" >
       <classpath refid="esme_classpath"/>
     </javac>
   </target>
 
-  <target name="build" depends="clean,compile" description="generate the distribution">
+  <target name="build" description="generate the distribution">
     <jar jarfile="${java_lib}/${esme_name}.jar">
       <fileset dir="${java_out}"/>
     </jar>
@@ -48,7 +48,7 @@
     </copy>
   </target>
 
-  <target name="distr" depends="build" description="installs the webapp">
+  <target name="distr" description="installs the webapp">
     <copy tofile="${exploded}/conf/config.xml" file="${TEMPL_DIR}/${esme_name}/config.xml" preservelastmodified="yes">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
@@ -65,7 +65,7 @@
     <jar basedir="${exploded}" jarfile="${DISTR_DIR}/services/${esme_name}.war" compress="9"/>
   </target>
 
-  <target name="update" depends="build" description="update existing installation">
+  <target name="update" description="update existing installation">
     <copy todir="${DISTR_DIR}/services/${esme_name}/bin" file="${BUILD_BIN}/${esme_bin}" flatten="yes" preservelastmodified="yes"/>
     <copy todir="${DISTR_DIR}/conf/sql" preservelastmodified="yes">
       <fileset dir="${TEMPL_DIR}/sql" includes="${esme_name}.sql updates/${esme_name}*.sql"/>
