@@ -43,6 +43,27 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 	string text(_text);
 	try
 	{
+		//обновить профиль, ответные сообщения от профайлера и
+		//подтверждения доставки  уже по новым настройкам
+		if (fixture->profileReg)
+		{
+			time_t t;
+			Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
+			if (intProps && intProps->count("profilerTc.reportOptions"))
+			{
+				profile.reportoptions = (*intProps)["profilerTc.reportOptions"];
+			}
+			if (intProps && intProps->count("profilerTc.codePage"))
+			{
+				profile.codepage = (*intProps)["profilerTc.codePage"];
+			}
+			if (strProps && strProps->count("profilerTc.locale") &&
+				(*strProps)["profilerTc.locale"].length())
+			{
+				profile.locale = (*strProps)["profilerTc.locale"];
+			}
+			fixture->profileReg->putProfile(fixture->smeAddr, profile);
+		}
 		//кодировка текста сообщения
 		switch (dataCoding)
 		{
@@ -128,27 +149,6 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 				strProps, objProps, PDU_EXT_SME);
 		}
 		__tc_ok__;
-		//обновить профиль, ответные сообщения от профайлера и
-		//подтверждения доставки  уже по новым настройкам
-		if (fixture->profileReg)
-		{
-			time_t t;
-			Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
-			if (intProps && intProps->count("profilerTc.reportOptions"))
-			{
-				profile.reportoptions = (*intProps)["profilerTc.reportOptions"];
-			}
-			if (intProps && intProps->count("profilerTc.codePage"))
-			{
-				profile.codepage = (*intProps)["profilerTc.codePage"];
-			}
-			if (strProps && strProps->count("profilerTc.locale") &&
-				(*strProps)["profilerTc.locale"].length())
-			{
-				profile.locale = (*strProps)["profilerTc.locale"];
-			}
-			fixture->profileReg->putProfile(fixture->smeAddr, profile);
-		}
 	}
 	catch(...)
 	{
@@ -364,14 +364,15 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync,
 AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	SmppHeader* header, time_t recvTime)
 {
+	__require__(monitor->pduData->objProps.count("senderData"));
 	__decl_tc__;
 	__cfg_int__(timeCheckAccuracy);
 	SmsPduWrapper pdu(header, 0);
-	Address addr;
-	SmppUtil::convert(pdu.getDest(), &addr);
-	time_t t;
-	const Profile& profile = fixture->profileReg->getProfile(addr, t);
-	bool valid = t + timeCheckAccuracy <= recvTime;
+	//данные отправителя с уже обновленным профилем
+	SenderData* senderData =
+		dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
+	const Profile& profile = senderData->profile;
+	bool valid = senderData->validProfile;
 	//проверка profiler reportOptions
 	if (monitor->pduData->intProps.count("profilerTc.reportOptions"))
 	{
