@@ -1062,6 +1062,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     __trace2__("DELIVERYRESP: failed to retrieve sms:%s",e.what());
     return UNKNOWN_STATE;
   }
+  sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
     switch(GET_STATUS_TYPE(t.command->get_resp()->get_status()))
@@ -1069,14 +1070,20 @@ StateType StateMachine::deliveryResp(Tuple& t)
       case CMD_ERR_RESCHEDULENOW:
       {
         try{
-          Descriptor d;
           __trace__("DELIVERYRESP: change state to enroute");
           time_t rt=time(NULL)+2;
           if(t.command->get_resp()->get_delay()!=-1)
           {
             rt=t.command->get_resp()->get_delay()-2;
           }
-          store->changeSmsStateToEnroute(t.msgId,d,GET_STATUS_CODE(t.command->get_resp()->get_status()),rt,true);
+          store->changeSmsStateToEnroute
+          (
+            t.msgId,
+            sms.getDestinationDescriptor(),
+            GET_STATUS_CODE(t.command->get_resp()->get_status()),
+            rt,
+            true
+          );
         }catch(...)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");
@@ -1089,7 +1096,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
       case CMD_ERR_TEMP:
       {
         try{
-          Descriptor d;
           __trace__("DELIVERYRESP: change state to enroute");
           time_t rt;
           if(t.command->get_resp()->get_delay()!=-1)
@@ -1099,7 +1105,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
           {
             rt=rescheduleSms(sms);
           }
-          store->changeSmsStateToEnroute(t.msgId,d,GET_STATUS_CODE(t.command->get_resp()->get_status()),rt);
+          store->changeSmsStateToEnroute
+          (
+            t.msgId,
+            sms.getDestinationDescriptor(),
+            GET_STATUS_CODE(t.command->get_resp()->get_status()),
+            rt
+          );
         }catch(...)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");
@@ -1113,9 +1125,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
       default:
       {
         try{
-          Descriptor d;
           __trace__("DELIVERYRESP: change state to undeliverable");
-          store->changeSmsStateToUndeliverable(t.msgId,d,GET_STATUS_CODE(t.command->get_resp()->get_status()));
+          store->changeSmsStateToUndeliverable
+          (
+            t.msgId,
+            sms.getDestinationDescriptor(),
+            GET_STATUS_CODE(t.command->get_resp()->get_status())
+          );
         }catch(...)
         {
           __trace__("DELIVERYRESP: failed to change state to undeliverable");
