@@ -4,12 +4,12 @@
 #
 #
 
-CXXFLAGS := $(CXXFLAGS) -I$(SMSC_SRCDIR)/sms -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
+CXXFLAGS := $(CXXFLAGS) -I$(SMSC_SRCDIR)/sms -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public -I/opt/EABss7009/src -DEINSS7_FUNC_POINTER
 PACKAGE := mcisme.misscall
 
 #__LIBRARIES := $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so
 
-__LIBRARIES := -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc
+__LIBRARIES := -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc -L/opt/EABss7009/lib -L$(SMSC_BUILDDIR)/bin
 __OCI_LIB_SO__ :=  $(ORACLE_LIB)/libclntsh.so
 
 ifndef SMSC_SRCDIR

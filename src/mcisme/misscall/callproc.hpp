@@ -18,7 +18,7 @@ struct MissedCallEvent{
 };
 class MissedCallListener{
   public:
-    virtual void missed(MissedCallEvent& event) = 0;
+    virtual void missed(MissedCallEvent event) = 0;
 };
 class MissedCallProcessor{
   public:

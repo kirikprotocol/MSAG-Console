@@ -1,0 +1,58 @@
+#include <unistd.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/param.h>
+#include <sys/resource.h>
+#include "callproc.hpp"
+using smsc::misscall::MissedCallProcessor;
+using smsc::misscall::MissedCallListener;
+using smsc::misscall::MissedCallEvent;
+using smsc::logger::Logger;
+
+static Logger* logger = 0;
+
+class Listener: public MissedCallListener{
+  public:
+      virtual void missed(MissedCallEvent& event) const {
+        smsc_log_debug(logger, "event: %s->%s",event.from.toString().c_str(),event.to.toString().c_str());
+      };
+};
+extern "C"
+static void sighandler( int signal ) {
+  MissedCallProcessor *p = MissedCallProcessor::instance();
+  if (p)
+  {
+    p->removeMissedCallListener();
+    p->stop();
+  }
+}
+
+int main (int argc, char *argv[])
+{
+  if (getppid() != 1)
+  {
+    signal(SIGTTOU, SIG_IGN);
+    signal(SIGTTIN, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
+    int dpid;
+    if ((dpid = fork()) != 0)
+    {
+      printf("%s pid=%d\n",argv[0],dpid);
+      exit(0);
+    }
+    setsid();
+  }
+  struct rlimit flim;
+  getrlimit(RLIMIT_NOFILE, &flim);
+  for (int fd = 0; fd < flim.rlim_max; fd ++)
+  {
+    close(fd);
+  }
+  Listener listener;
+  Logger::Init();
+  logger = Logger::getInstance("smsc.misscall");
+  MissedCallProcessor *processor = MissedCallProcessor::instance();
+  processor->addMissedCallListener(&listener);
+  sigset( SIGTERM, sighandler );
+  processor->run();
+}
