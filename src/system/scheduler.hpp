@@ -409,7 +409,17 @@ public:
     {
       UpdateChainChedule(c);
       debug2(log,"Chain::Pop failed, rescheduled to %d",c->headTime);
-      timeLine.Add(c,this);
+      if(c->Count()==0)
+      {
+        if(!DeleteChain(c))
+        {
+          warn2(log,"SHIT HAPPENED WITH CHAIN %p, addr=%s, intl=%s,inproc=%s",
+            c,c->addr.toString().c_str(),c->inTimeLine?"true":"false",c->inProcMap?"true":"false");
+        }
+      }else
+      {
+        timeLine.Add(c,this);
+      }
       return false;
     }
 
@@ -604,12 +614,12 @@ public:
     return rv;
   }
 
-  void DeleteChain(Chain* c)
+  bool DeleteChain(Chain* c)
   {
     if(c->inTimeLine || c->inProcMap)
     {
       debug2(log,"Do not delete c=%p",c);
-      return;
+      return false;
     }
     ChainRegistry::iterator it=chainRegistry.find(c->addr);
     if(it!=chainRegistry.end())
@@ -618,6 +628,7 @@ public:
     }
     debug2(log,"deleteChain: %p",c);
     delete c;
+    return true;
   }
 
   struct SmeStat{
