@@ -237,6 +237,7 @@ int partitionSms(SMS* sms,int dstdc)
       memcpy(&c,msg+i*2,2);
       if((i-lastpos)>=67)
       {
+        __trace2__("PARTITIONSMS: part=%d, i=%d, lastpos=%d, lastword=%d",parts,i,lastpos,lastword);
         if(lastword-lastpos<67)
         {
           offsets[parts++]=lastword+1;
@@ -246,11 +247,12 @@ int partitionSms(SMS* sms,int dstdc)
           offsets[parts++]=i;
           lastpos=i;
         }
+        __trace2__("PARTITIONSMS: part=%d, off=%d",parts,offsets[parts-1]);
         if(parts>=256)return psErrorLength;
       }
       if(c<=32)lastword=i;
     }
-  }
+  }else
   if(dc==DataCoding::BINARY)
   {
     parts=len/maxlen+((len%maxlen)?1:0);
