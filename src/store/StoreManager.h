@@ -125,6 +125,7 @@ namespace smsc { namespace store
         {
         private:
             
+            bool                        isNull;
             Connection*                 connection;
             ConcatDataStatement*        concatStmt;
             StorageConnectionPool*      pool;

@@ -1454,6 +1454,7 @@ RemoteStore::ConcatInitIterator::ConcatInitIterator(StorageConnectionPool* _pool
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
+    isNull = false;
     connection = pool->getConnection();
     if (!connection) return;
     try
@@ -1462,8 +1463,9 @@ RemoteStore::ConcatInitIterator::ConcatInitIterator(StorageConnectionPool* _pool
             connection->connect();
         
         concatStmt = new ConcatDataStatement(connection, false);
-        if (concatStmt)
-            connection->check(concatStmt->execute(OCI_DEFAULT, 0, 0));
+        sword status = concatStmt->execute(OCI_DEFAULT, 0, 0);
+        if (status != OCI_NO_DATA) connection->check(status);
+        else isNull = true;
     }
     catch (...)
     {
@@ -1486,7 +1488,7 @@ bool RemoteStore::ConcatInitIterator::getNext()
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
-    if (concatStmt && connection && connection->isAvailable())
+    if (!isNull && concatStmt && connection && connection->isAvailable())
     {
         sword status = concatStmt->fetch();
         if (status != OCI_NO_DATA)
