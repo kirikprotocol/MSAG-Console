@@ -176,7 +176,7 @@ void MapIoTask::dispatcher()
   message.receiver = MY_USER_ID;
 
   for(;;){
-    result = MsgRecv(&message);
+    result = MsgRecv_NW(&message,100);
     if ( result != MSG_OK ) {
       __trace2__("MAP: error at MsgRecv with code x%hx",result);
       return;
