@@ -23,10 +23,10 @@ const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE = 200;
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE_LIMIT = 10000;
 
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE = 10;
-const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT = 10000;
+const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT = 1000;
 
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE = 5;
-const unsigned SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE_LIMIT = 10000;
+const unsigned SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE_LIMIT = 1000;
 
 void ConnectionPool::loadMaxSize(Manager& config)
 {
@@ -295,6 +295,15 @@ void ConnectionPool::setSize(unsigned new_size)
     if (!new_size || new_size == size) return;
     MutexGuard  guard(monitor);
     
+    if (new_size > SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT)
+    {
+        new_size = SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT;
+        log.warn("Attempt to change ConnectionPool size "
+                 "by more than allowed value "
+                 "Using maximum possible : %u",
+                 SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT);
+    }
+    
     if (new_size < size)
     {
         unsigned counter = size - new_size;
@@ -317,21 +326,22 @@ void ConnectionPool::setSize(unsigned new_size)
         {
             Connection* connection = 
                     new Connection(dbInstance, dbUserName, dbUserPassword);
-            count++;
             if (head)
             {   // Notify waiting threads & give them new connections
                 ConnectionQueue *queue = head;
                 head = head->next;
                 if (!head) tail = 0L;
-                queueLen--;
+                queueLen--; count++;
                 (void) busy.Push(connection);
                 queue->connection = connection;
                 monitor.notify(&(queue->condition));
             }
-            else 
+            else break;
+            /*else 
             {
                 (void) idle.Push(connection);
-            }
+                count++;
+            }*/
         }
     }
     size = new_size;
