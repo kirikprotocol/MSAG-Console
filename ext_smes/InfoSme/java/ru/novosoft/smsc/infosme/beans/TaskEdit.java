@@ -56,13 +56,10 @@ public class TaskEdit extends InfoSmeBean
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
-    if (result != RESULT_OK)
-      return result;
+    if (result != RESULT_OK) return result;
 
-    if (mbDone != null)
-      return done();
-    if (mbCancel != null)
-      return RESULT_DONE;
+    if (mbDone != null)      return done();
+    if (mbCancel != null)    return RESULT_DONE;
 
     return result;
   }
@@ -86,86 +83,61 @@ public class TaskEdit extends InfoSmeBean
     return RESULT_DONE;
   }
 
-  public Collection getAllProviders()
-  {
+  public Collection getAllProviders() {
     return new SortedList(getConfig().getSectionChildShortSectionNames("InfoSme.DataProvider"));
   }
 
-  public boolean isInitialized()
-  {
+  public boolean isInitialized() {
     return initialized;
   }
-
-  public void setInitialized(boolean initialized)
-  {
+  public void setInitialized(boolean initialized) {
     this.initialized = initialized;
   }
 
-  public boolean isCreate()
-  {
+  public boolean isCreate() {
     return create;
   }
-
-  public void setCreate(boolean create)
-  {
+  public void setCreate(boolean create) {
     this.create = create;
   }
 
-  public String getOldTask()
-  {
+  public String getOldTask() {
     return oldTask;
   }
-
-  public void setOldTask(String oldTask)
-  {
+  public void setOldTask(String oldTask) {
     this.oldTask = oldTask;
   }
 
-  public String getId()
-  {
+  public String getId() {
     return task.getId();
   }
-
-  public void setId(String sectionName)
-  {
+  public void setId(String sectionName) {
     this.task.setId(sectionName);
   }
 
-  public String getProvider()
-  {
+  public String getProvider() {
     return task.getProvider();
   }
-
-  public void setProvider(String provider)
-  {
+  public void setProvider(String provider) {
     this.task.setProvider(provider);
   }
 
-  public boolean isEnabled()
-  {
+  public boolean isEnabled() {
     return task.isEnabled();
   }
-
-  public void setEnabled(boolean enabled)
-  {
+  public void setEnabled(boolean enabled) {
     this.task.setEnabled(enabled);
   }
 
-  public int getPriorityInt()
-  {
+  public int getPriorityInt() {
     return task.getPriority();
   }
-
-  public void setPriorityInt(int priority)
-  {
+  public void setPriorityInt(int priority) {
     this.task.setPriority(priority);
   }
-
-  public String getPriority()
-  {
+  public String getPriority() {
     return String.valueOf(task.getPriority());
   }
-
   public void setPriority(String priority)
   {
     try {
@@ -175,161 +147,113 @@ public class TaskEdit extends InfoSmeBean
     }
   }
 
-  public boolean isRetryOnFail()
-  {
+  public boolean isRetryOnFail() {
     return task.isRetryOnFail();
   }
-
-  public void setRetryOnFail(boolean retryOnFail)
-  {
+  public void setRetryOnFail(boolean retryOnFail) {
     this.task.setRetryOnFail(retryOnFail);
   }
 
-  public boolean isReplaceMessage()
-  {
+  public boolean isReplaceMessage() {
     return task.isReplaceMessage();
   }
-
-  public void setReplaceMessage(boolean replaceMessage)
-  {
+  public void setReplaceMessage(boolean replaceMessage) {
     this.task.setReplaceMessage(replaceMessage);
   }
 
-  public String getSvcType()
-  {
+  public String getSvcType() {
     return task.getSvcType();
   }
-
-  public void setSvcType(String svcType)
-  {
+  public void setSvcType(String svcType) {
     this.task.setSvcType(svcType);
   }
 
-  public String getEndDate()
-  {
+  public String getEndDate() {
     return task.getEndDate();
   }
-
-  public void setEndDate(String endDate)
-  {
+  public void setEndDate(String endDate) {
     this.task.setEndDate(endDate);
   }
 
-  public String getRetryTime()
-  {
+  public String getRetryTime() {
     return task.getRetryTime();
   }
-
-  public void setRetryTime(String retryTime)
-  {
+  public void setRetryTime(String retryTime) {
     this.task.setRetryTime(retryTime);
   }
 
-  public String getValidityPeriod()
-  {
+  public String getValidityPeriod() {
     return task.getValidityPeriod();
   }
-
-  public void setValidityPeriod(String validityPeriod)
-  {
+  public void setValidityPeriod(String validityPeriod) {
     this.task.setValidityPeriod(validityPeriod);
   }
 
-  public String getValidityDate()
-  {
+  public String getValidityDate() {
     return task.getValidityDate();
   }
-
-  public void setValidityDate(String validityDate)
-  {
+  public void setValidityDate(String validityDate) {
     this.task.setValidityDate(validityDate);
   }
 
-  public String getActivePeriodStart()
-  {
+  public String getActivePeriodStart() {
     return task.getActivePeriodStart();
   }
-
-  public void setActivePeriodStart(String activePeriodStart)
-  {
+  public void setActivePeriodStart(String activePeriodStart) {
     this.task.setActivePeriodStart(activePeriodStart);
   }
 
-  public String getActivePeriodEnd()
-  {
+  public String getActivePeriodEnd() {
     return task.getActivePeriodEnd();
   }
-
-  public void setActivePeriodEnd(String activePeriodEnd)
-  {
+  public void setActivePeriodEnd(String activePeriodEnd) {
     this.task.setActivePeriodEnd(activePeriodEnd);
   }
 
-  public String getQuery()
-  {
+  public String getQuery() {
     return task.getQuery();
   }
-
-  public void setQuery(String query)
-  {
+  public void setQuery(String query) {
     this.task.setQuery(query);
   }
 
-  public String getTemplate()
-  {
+  public String getTemplate() {
     return task.getTemplate();
   }
-
-  public void setTemplate(String template)
-  {
+  public void setTemplate(String template) {
     this.task.setTemplate(template);
   }
 
-  public String getMbDone()
-  {
+  public String getMbDone() {
     return mbDone;
   }
-
-  public void setMbDone(String mbDone)
-  {
+  public void setMbDone(String mbDone) {
     this.mbDone = mbDone;
   }
 
-  public String getMbCancel()
-  {
+  public String getMbCancel() {
     return mbCancel;
   }
-
-  public void setMbCancel(String mbCancel)
-  {
+  public void setMbCancel(String mbCancel) {
     this.mbCancel = mbCancel;
   }
 
-  public String getName()
-  {
+  public String getName() {
     return task.getName();
   }
-
-  public void setName(String name)
-  {
+  public void setName(String name) {
     this.task.setName(name);
   }
 
-  public int getDsTimeoutInt()
-  {
+  public int getDsTimeoutInt() {
     return task.getDsTimeout();
   }
-
-  public void setDsTimeoutInt(int dsTimeout)
-  {
+  public void setDsTimeoutInt(int dsTimeout) {
     this.task.setDsTimeout(dsTimeout);
   }
-
-  public String getDsTimeout()
-  {
+  public String getDsTimeout() {
     return String.valueOf(task.getDsTimeout());
   }
-
   public void setDsTimeout(String dsTimeout)
   {
     try {
@@ -339,61 +263,44 @@ public class TaskEdit extends InfoSmeBean
     }
   }
 
-  public int getMessagesCacheSizeInt()
-  {
+  public int getMessagesCacheSizeInt() {
     return task.getMessagesCacheSize();
   }
-
-  public void setMessagesCacheSizeInt(int messagesCacheSize)
-  {
+  public void setMessagesCacheSizeInt(int messagesCacheSize) {
     this.task.setMessagesCacheSize(messagesCacheSize);
   }
 
-  public int getMessagesCacheSleepInt()
-  {
+  public int getMessagesCacheSleepInt() {
     return task.getMessagesCacheSleep();
   }
-
-  public void setMessagesCacheSleepInt(int messagesCacheSleep)
-  {
+  public void setMessagesCacheSleepInt(int messagesCacheSleep) {
     this.task.setMessagesCacheSleep(messagesCacheSleep);
   }
 
-  public boolean isTransactionMode()
-  {
+  public boolean isTransactionMode() {
     return task.isTransactionMode();
   }
-
-  public void setTransactionMode(boolean transactionMode)
-  {
+  public void setTransactionMode(boolean transactionMode) {
     this.task.setTransactionMode(transactionMode);
   }
 
-  public int getUncommitedInGenerationInt()
-  {
+  public int getUncommitedInGenerationInt() {
     return task.getUncommitedInGeneration();
   }
-
-  public void setUncommitedInGenerationInt(int uncommitedInGeneration)
-  {
+  public void setUncommitedInGenerationInt(int uncommitedInGeneration) {
     this.task.setUncommitedInGeneration(uncommitedInGeneration);
   }
 
-  public int getUncommitedInProcessInt()
-  {
+  public int getUncommitedInProcessInt() {
     return task.getUncommitedInProcess();
   }
-
-  public void setUncommitedInProcessInt(int uncommitedInProcess)
-  {
+  public void setUncommitedInProcessInt(int uncommitedInProcess) {
     this.task.setUncommitedInProcess(uncommitedInProcess);
   }
 
-  public String getMessagesCacheSize()
-  {
+  public String getMessagesCacheSize() {
     return String.valueOf(task.getMessagesCacheSize());
   }
-
   public void setMessagesCacheSize(String messagesCacheSize)
   {
     try {
@@ -403,11 +310,9 @@ public class TaskEdit extends InfoSmeBean
     }
   }
 
-  public String getMessagesCacheSleep()
-  {
+  public String getMessagesCacheSleep() {
     return String.valueOf(task.getMessagesCacheSleep());
   }
-
   public void setMessagesCacheSleep(String messagesCacheSleep)
   {
     try {
@@ -417,11 +322,9 @@ public class TaskEdit extends InfoSmeBean
     }
   }
 
-  public String getUncommitedInGeneration()
-  {
+  public String getUncommitedInGeneration() {
     return String.valueOf(task.getUncommitedInGeneration());
   }
-
   public void setUncommitedInGeneration(String uncommitedInGeneration)
   {
     try {
@@ -431,11 +334,9 @@ public class TaskEdit extends InfoSmeBean
     }
   }
 
-  public String getUncommitedInProcess()
-  {
+  public String getUncommitedInProcess() {
     return String.valueOf(task.getUncommitedInProcess());
   }
-
   public void setUncommitedInProcess(String uncommitedInProcess)
   {
     try {
@@ -445,13 +346,17 @@ public class TaskEdit extends InfoSmeBean
     }
   }
 
-  public boolean isTrackIntegrity()
-  {
+  public boolean isTrackIntegrity() {
     return task.isTrackIntegrity();
   }
-
-  public void setTrackIntegrity(boolean trackIntegrity)
-  {
+  public void setTrackIntegrity(boolean trackIntegrity) {
     task.setTrackIntegrity(trackIntegrity);
+  }
+
+  public boolean isKeepHistory() {
+    return task.isKeepHistory();
+  }
+  public void setKeepHistory(boolean keepHistory) {
+    task.setKeepHistory(keepHistory);
   }
 }

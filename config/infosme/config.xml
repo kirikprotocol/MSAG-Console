@@ -139,6 +139,7 @@
         <param name="template" type="string">Balance for '$$string arg=1$$' is $$float arg=2$$</param>
         <param name="transactionMode" type="bool">false</param>
 	<param name="trackIntegrity" type="bool">false</param>
+	<param name="keepHistory" type="bool">false</param>
         <param name="uncommitedInGeneration" type="int">50</param>
         <param name="uncommitedInProcess" type="int">50</param>
         <param name="validityDate" type="string"></param>
@@ -159,6 +160,7 @@
 		<param name="validityDate" type="string"></param>
 		<param name="activePeriodStart" type="string">09:00:00</param>
 		<param name="activePeriodEnd" type="string">20:00:00</param>
+		<param name="keepHistory" type="bool">false</param>
 		<param name="query" type="string">
 		    select ...
 		</param>
@@ -182,6 +184,7 @@
 		<param name="validityDate" type="string"></param>
 		<param name="activePeriodStart" type="string">09:00:00</param>
 		<param name="activePeriodEnd" type="string">20:00:00</param>
+		<param name="keepHistory" type="bool">false</param>
 		<param name="query" type="string">
 		    select ...
 		</param>

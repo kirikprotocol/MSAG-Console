@@ -194,6 +194,15 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th><label for=keepHistory>keep messages history</label></th>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=check type=checkbox id=keepHistory name=keepHistory value=true <%=bean.isKeepHistory() ? "checked" : ""%>><%
+  } else {
+    %><%=bean.isKeepHistory() ? "enabled" : "disabled"%><%
+  }%>
+  </td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>system data source timeout</th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=txt name=dsOwnTimeout value="<%=StringEncoderDecoder.encode(bean.getDsTimeout())%>">secs<%

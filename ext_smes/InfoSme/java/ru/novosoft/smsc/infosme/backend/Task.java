@@ -32,6 +32,7 @@ public class Task
   private int messagesCacheSize = 0;
   private int messagesCacheSleep = 0;
   private boolean transactionMode = false;
+  private boolean keepHistory = false;
   private int uncommitedInGeneration = 0;
   private int uncommitedInProcess = 0;
   private boolean trackIntegrity;
@@ -40,7 +41,9 @@ public class Task
   {
   }
 
-  public Task(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage, String svcType, String endDate, String retryTime, String validityPeriod, String validityDate, String activePeriodStart, String activePeriodEnd, String query, String template, int dsTimeout, int messagesCacheSize, int messagesCacheSleep, boolean transactionMode, int uncommitedInGeneration, int uncommitedInProcess, boolean trackIntegrity)
+  public Task(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage, String svcType, String endDate, String retryTime, String validityPeriod, String validityDate, String activePeriodStart, String activePeriodEnd, String query, String template, int dsTimeout,
+              int messagesCacheSize, int messagesCacheSleep, boolean transactionMode,
+              int uncommitedInGeneration, int uncommitedInProcess, boolean trackIntegrity, boolean keepHistory)
   {
     this();
     this.id = id;
@@ -66,6 +69,7 @@ public class Task
     this.uncommitedInGeneration = uncommitedInGeneration;
     this.uncommitedInProcess = uncommitedInProcess;
     this.trackIntegrity = trackIntegrity;
+    this.keepHistory = keepHistory;
   }
 
   public Task(Config config, String id) throws Config.WrongParamTypeException, Config.ParamNotFoundException
@@ -95,6 +99,7 @@ public class Task
     uncommitedInGeneration = config.getInt(prefix + ".uncommitedInGeneration");
     uncommitedInProcess = config.getInt(prefix + ".uncommitedInProcess");
     trackIntegrity = config.getBool(prefix + ".trackIntegrity");
+    keepHistory = config.getBool(prefix + ".keepHistory");
   }
 
   public void storeToConfig(Config config)
@@ -122,6 +127,7 @@ public class Task
     config.setInt(prefix + ".uncommitedInGeneration", uncommitedInGeneration);
     config.setInt(prefix + ".uncommitedInProcess", uncommitedInProcess);
     config.setBool(prefix + ".trackIntegrity", trackIntegrity);
+    config.setBool(prefix + ".keepHistory", keepHistory);
   }
 
   public boolean isContainsInConfig(Config config)
@@ -165,240 +171,177 @@ public class Task
               && this.transactionMode == task.transactionMode
               && this.uncommitedInGeneration == task.uncommitedInGeneration
               && this.uncommitedInProcess == task.uncommitedInProcess
-              && this.trackIntegrity == task.trackIntegrity;
+              && this.trackIntegrity == task.trackIntegrity
+              && this.keepHistory == task.keepHistory;
     } else
       return false;
   }
 
   /************************************** properties **************************************/
 
-  public String getId()
-  {
+  public String getId() {
     return id;
   }
-
-  public void setId(String id)
-  {
+  public void setId(String id) {
     this.id = id;
   }
 
-  public String getName()
-  {
+  public String getName() {
     return name;
   }
-
-  public void setName(String name)
-  {
+  public void setName(String name) {
     this.name = name;
   }
 
-  public String getProvider()
-  {
+  public String getProvider() {
     return provider;
   }
-
-  public void setProvider(String provider)
-  {
+  public void setProvider(String provider) {
     this.provider = provider;
   }
 
-  public boolean isEnabled()
-  {
+  public boolean isEnabled() {
     return enabled;
   }
-
-  public void setEnabled(boolean enabled)
-  {
+  public void setEnabled(boolean enabled) {
     this.enabled = enabled;
   }
 
-  public int getPriority()
-  {
+  public int getPriority() {
     return priority;
   }
-
-  public void setPriority(int priority)
-  {
+  public void setPriority(int priority) {
     this.priority = priority;
   }
 
-  public boolean isRetryOnFail()
-  {
+  public boolean isRetryOnFail() {
     return retryOnFail;
   }
-
-  public void setRetryOnFail(boolean retryOnFail)
-  {
+  public void setRetryOnFail(boolean retryOnFail) {
     this.retryOnFail = retryOnFail;
   }
 
-  public boolean isReplaceMessage()
-  {
+  public boolean isReplaceMessage() {
     return replaceMessage;
   }
-
-  public void setReplaceMessage(boolean replaceMessage)
-  {
+  public void setReplaceMessage(boolean replaceMessage) {
     this.replaceMessage = replaceMessage;
   }
 
-  public String getSvcType()
-  {
+  public String getSvcType() {
     return svcType;
   }
-
-  public void setSvcType(String svcType)
-  {
+  public void setSvcType(String svcType) {
     this.svcType = svcType;
   }
 
-  public String getEndDate()
-  {
+  public String getEndDate() {
     return endDate;
   }
-
-  public void setEndDate(String endDate)
-  {
+  public void setEndDate(String endDate) {
     this.endDate = endDate;
   }
 
-  public String getRetryTime()
-  {
+  public String getRetryTime() {
     return retryTime;
   }
-
-  public void setRetryTime(String retryTime)
-  {
+  public void setRetryTime(String retryTime) {
     this.retryTime = retryTime;
   }
 
-  public String getValidityPeriod()
-  {
+  public String getValidityPeriod() {
     return validityPeriod;
   }
-
-  public void setValidityPeriod(String validityPeriod)
-  {
+  public void setValidityPeriod(String validityPeriod) {
     this.validityPeriod = validityPeriod;
   }
 
-  public String getValidityDate()
-  {
+  public String getValidityDate() {
     return validityDate;
   }
-
-  public void setValidityDate(String validityDate)
-  {
+  public void setValidityDate(String validityDate) {
     this.validityDate = validityDate;
   }
 
-  public String getActivePeriodStart()
-  {
+  public String getActivePeriodStart() {
     return activePeriodStart;
   }
-
-  public void setActivePeriodStart(String activePeriodStart)
-  {
+  public void setActivePeriodStart(String activePeriodStart) {
     this.activePeriodStart = activePeriodStart;
   }
 
-  public String getActivePeriodEnd()
-  {
+  public String getActivePeriodEnd() {
     return activePeriodEnd;
   }
-
-  public void setActivePeriodEnd(String activePeriodEnd)
-  {
+  public void setActivePeriodEnd(String activePeriodEnd) {
     this.activePeriodEnd = activePeriodEnd;
   }
 
-  public String getQuery()
-  {
+  public String getQuery() {
     return query;
   }
-
-  public void setQuery(String query)
-  {
+  public void setQuery(String query) {
     this.query = query;
   }
 
-  public String getTemplate()
-  {
+  public String getTemplate() {
     return template;
   }
-
-  public void setTemplate(String template)
-  {
+  public void setTemplate(String template) {
     this.template = template;
   }
 
-  public int getDsTimeout()
-  {
+  public int getDsTimeout() {
     return dsTimeout;
   }
-
-  public void setDsTimeout(int dsTimeout)
-  {
+  public void setDsTimeout(int dsTimeout) {
     this.dsTimeout = dsTimeout;
   }
 
-  public int getMessagesCacheSize()
-  {
+  public int getMessagesCacheSize() {
     return messagesCacheSize;
   }
-
-  public void setMessagesCacheSize(int messagesCacheSize)
-  {
+  public void setMessagesCacheSize(int messagesCacheSize) {
     this.messagesCacheSize = messagesCacheSize;
   }
-
-  public int getMessagesCacheSleep()
-  {
+  public int getMessagesCacheSleep() {
     return messagesCacheSleep;
   }
-
-  public void setMessagesCacheSleep(int messagesCacheSleep)
-  {
+  public void setMessagesCacheSleep(int messagesCacheSleep) {
     this.messagesCacheSleep = messagesCacheSleep;
   }
 
-  public boolean isTransactionMode()
-  {
+  public boolean isTransactionMode() {
     return transactionMode;
   }
-
-  public void setTransactionMode(boolean transactionMode)
-  {
+  public void setTransactionMode(boolean transactionMode) {
     this.transactionMode = transactionMode;
   }
 
-  public int getUncommitedInGeneration()
-  {
+  public int getUncommitedInGeneration() {
     return uncommitedInGeneration;
   }
-
-  public void setUncommitedInGeneration(int uncommitedInGeneration)
-  {
+  public void setUncommitedInGeneration(int uncommitedInGeneration) {
     this.uncommitedInGeneration = uncommitedInGeneration;
   }
-
-  public int getUncommitedInProcess()
-  {
+  public int getUncommitedInProcess() {
     return uncommitedInProcess;
   }
-
-  public void setUncommitedInProcess(int uncommitedInProcess)
-  {
+  public void setUncommitedInProcess(int uncommitedInProcess) {
     this.uncommitedInProcess = uncommitedInProcess;
   }
 
-  public boolean isTrackIntegrity()
-  {
+  public boolean isTrackIntegrity() {
     return trackIntegrity;
   }
-
-  public void setTrackIntegrity(boolean trackIntegrity)
-  {
+  public void setTrackIntegrity(boolean trackIntegrity) {
     this.trackIntegrity = trackIntegrity;
+  }
+
+  public boolean isKeepHistory() {
+    return keepHistory;
+  }
+  public void setKeepHistory(boolean keepHistory) {
+    this.keepHistory = keepHistory;
   }
 }
