@@ -327,7 +327,7 @@ SMSId RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
             if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to store message "
-                         "#%d exceeded !\n", id);
+                         "#%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -426,7 +426,7 @@ void RemoteStore::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
             {
                 log.warn("Max tries count to change "
                          "sequence number in concatenneted message "
-                         "#%d exceeded !\n", id); 
+                         "#%lld exceeded !\n", id); 
                 throw;
             }
         }
@@ -516,7 +516,7 @@ void RemoteStore::retriveSms(SMSId id, SMS &sms)
             if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to retrive message "
-                         "#%d exceeded !\n", id);
+                         "#%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -594,7 +594,7 @@ void RemoteStore::destroySms(SMSId id)
             if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to remove message "
-                         "#%d exceeded !\n", id);
+                         "#%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -744,7 +744,7 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
             if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to replace message "
-                         "#%d exceeded !\n", id);
+                         "#%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -879,7 +879,7 @@ void RemoteStore::replaceSms(SMSId id, SMS& sms)
             if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to replace message "
-                         "#%d exceeded !\n", id);
+                         "#%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -973,7 +973,7 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
             if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to update message state"
-                         "#%d exceeded !\n", id);
+                         "#%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -1567,9 +1567,9 @@ SMSId CachedStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
 {
     SMSId retId;
 
-    __trace2__("Creating sms, smsId = %lld, flag = %d", id, flag);
+    log.debug("Creating sms, smsId = %lld, flag = %d", id, flag);
     retId = RemoteStore::createSms(sms, id, flag);
-    __trace2__("Created sms, smsId = %lld, retId = %lld", id, retId);
+    log.debug("Created sms, smsId = %lld, retId = %lld", id, retId);
     
     SMS* sm = new SMS(sms);
     MutexGuard cacheGuard(cacheMutex);
