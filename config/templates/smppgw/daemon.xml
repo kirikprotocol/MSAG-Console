@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+  <section name="services">
+    <section name="smppgw">
+      <param name="args" type="string">@smppgw.service.args@</param>
+      <param name="autostart" type="bool">@smppgw.service.autostart@</param>
+    </section>
+  </section>
+  <section name="admin">
+    <section name="daemon">
+      <param name="stderr" type="string">logs/daemon.err</param>
+      <param name="host" type="string">@listen.host@</param>
+      <param name="services folder" type="string">services</param>
+      <param name="port" type="int">@daemon.admin.port@</param>
+    </section>
+  </section>
+</config>

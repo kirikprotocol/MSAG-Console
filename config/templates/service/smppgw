@@ -1,0 +1,27 @@
+#! /bin/bash
+export LC_ALL=@LC_ALL@
+export NLS_LANG=@NLS_LANG@
+
+if [ -f logs/smppgw.err ]; then
+  mv logs/smppgw.err logs/smppgw.err.old
+fi
+while true;
+do
+bin/smppgw 1>/dev/null 2>>logs/smppgw.err&
+PID=$!
+export PID
+trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
+wait $PID
+if [ -f core ]; then
+  DATE=`perl -e '($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);printf("%04d%02d%02d%02d%02d%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec)'`
+
+  mkdir "$DATE"
+  mv core "$DATE"
+  mv logs/smppgw.err "$DATE"
+  if [ -f logs/smppgw.err.old ]; then
+    mv logs/smppgw.err.old "$DATE"
+  fi
+  mv logs/smppgw.log* "$DATE"
+  cp -p bin/smppgw "$DATE"
+fi
+done

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+
+  <section name="DataSource">
+    <param name="connections" type="int">5</param>
+    <param name="dbInstance" type="string">@db.instance@</param>
+    <param name="dbUserName" type="string">@db.user@</param>
+    <param name="dbUserPassword" type="string">@db.password@</param>
+    <param name="type" type="string">OCI</param>
+  </section>
+
+  <section name="StartupLoader">
+    <section name="DataSourceDrivers">
+      <section name="OCIDataSourceDriver">
+        <param name="loadup" type="string">libdb_oci.so</param>
+        <param name="type" type="string">OCI</param>
+      </section>
+    </section>
+  </section>
+
+  <section name="admin">
+    <param name="host" type="string">@listen.port@</param>
+    <param name="port" type="int">@gateway.admin.port@</param>
+  </section>
+
+  <section name="core">
+    <param name="eventQueueLimit" type="int">1000</param>
+    <param name="protocol_id" type="int">34</param>
+    <param name="state_machines_count" type="int">10</param>
+
+    <section name="performance">
+      <param name="host" type="string">@listen.port@</param>
+      <param name="port" type="int">@perfmon.smppgw.port@</param>
+    </section>
+  </section>
+
+  <section name="billing">
+    <param name="module" type="string">libsimplebilling.so</param>
+  </section>
+
+  <section name="smpp">
+    <param name="host" type="string">@listen.port@</param>
+    <param name="inactivityTime" type="int">30</param>
+    <param name="inactivityTimeOut" type="int">30</param>
+    <param name="port" type="int">@gateway.smpp.port@</param>
+    <param name="readTimeout" type="int">60</param>
+  </section>
+
+  <section name="smsc-connections">
+  </section>
+
+  <section name="trafficControl">
+    <param name="maxSmsPerSecond" type="int">1000</param>
+  </section>
+
+  <section name="providers">
+    <param name="last used provider id" type="int">0</param>
+  </section>
+</config>
+
