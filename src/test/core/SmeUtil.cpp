@@ -12,16 +12,19 @@ using smsc::sms::Address;
 using smsc::test::sms::SmsUtil;
 using smsc::test::smpp::SmppUtil;
 
-RouteChecker::RouteChecker(const AliasRegistry* _aliasReg,
+RouteChecker::RouteChecker(const string& id, const Address& addr,
+	const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
 	const RouteRegistry* _routeReg)
-	: aliasReg(_aliasReg), routeReg(_routeReg)
+	: systemId(id), smeAddr(addr), smeReg(_smeReg), aliasReg(_aliasReg),
+	routeReg(_routeReg)
 {
+	__require__(smeReg);
 	__require__(aliasReg);
 	__require__(routeReg);
 }
 
 vector<int> RouteChecker::checkRouteForNormalSms(PduDeliverySm& pdu1,
-	PduDeliverySm& pdu2, const string& systemId, const Address& smeAddr)
+	PduDeliverySm& pdu2)
 {
 	vector<int> res;
 	Address origAddr1, origAddr2, destAddr1, destAddr2;
@@ -93,42 +96,53 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduDeliverySm& pdu1,
 }
 
 vector<int> RouteChecker::checkRouteForNotification(PduDeliverySm& pdu1,
-	PduDeliverySm& pdu2, const string& systemId, const Address& smeAddr,
-	const Address& smscAddr)
+	PduDeliverySm& pdu2)
 {
 	vector<int> res;
-	Address origAddr1, origAddr2, destAddr1, destAddr2;
-	SmppUtil::convert(pdu1.get_message().get_source(), &origAddr1);
-	SmppUtil::convert(pdu2.get_message().get_source(), &origAddr2);
-	SmppUtil::convert(pdu1.get_message().get_dest(), &destAddr1);
+	Address destAddr2;
 	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
+	PduAddress& origAddr2 = pdu2.get_message().get_source();
 	//Проверить правильность destination адреса для pdu2
 	if (!SmsUtil::compareAddresses(smeAddr, destAddr2))
 	{
 		res.push_back(1);
 	}
-	const RouteRegistry::RouteList routeList =
-		routeReg->lookup(smscAddr, destAddr2);
-	bool smeFound = false;
-	for (int i = 0; i < routeList.size(); i++)
-	{
-		if (systemId == routeList[i]->route->smeSystemId)
-		{
-			smeFound = true;
-			break;
-		}
-	}
-	if (!smeFound)
+	//Проверить правильность source адреса для pdu2
+	//origAddr2 должен быть пустым (или равным адресу сервис центра)
+	if (origAddr2.get_typeOfNumber() != 0 ||
+		origAddr2.get_numberingPlan() != 0 ||
+		strcmp(origAddr2.get_value(), "") != 0)
 	{
 		res.push_back(2);
 	}
-	//Проверить правильность source адреса для pdu2
-	//origAddr2 является адресом сервис центра
-	if (!SmsUtil::compareAddresses(smscAddr, origAddr2))
-	{
-		res.push_back(3);
-	}
 	return res;
+}
+
+bool RouteChecker::isDestUnreachable(PduAddress& dest)
+{
+	//dest является алиасом
+	Address destAlias;
+	SmppUtil::convert(dest, &destAlias);
+	const AliasRegistry::AliasList destList =
+		aliasReg->findAddressByAlias(destAlias);
+	for (int i = 0; i < destList.size(); i++)
+	{
+		Address destAddr;
+		if (!destList[i]->aliasToAddress(destAlias, destAddr))
+		{
+			return true;
+		}
+		const RouteRegistry::RouteList routeList =
+			routeReg->lookup(smeAddr, destAddr);
+		for (int i = 0; i < routeList.size(); i++)
+		{
+			if (!smeReg->isSmeRegistered(routeList[i]->route->smeSystemId))
+			{
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 }
