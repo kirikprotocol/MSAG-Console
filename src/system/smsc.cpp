@@ -243,9 +243,9 @@ void Smsc::init(const SmscConfigs& cfg)
         using namespace smsc::util::config::smeman;
         switch(rec->recdata.smppSme.mode)
         {
-          case MODE_TX:si.bindMode=smeTX;
-          case MODE_RX:si.bindMode=smeRX;
-          case MODE_TRX:si.bindMode=smeTRX;
+          case MODE_TX:si.bindMode=smeTX;break;
+          case MODE_RX:si.bindMode=smeRX;break;
+          case MODE_TRX:si.bindMode=smeTRX;break;
         };
 
         try{

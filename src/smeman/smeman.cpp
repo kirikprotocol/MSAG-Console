@@ -39,7 +39,8 @@ __synchronized__
     // ???????  что делать если уже в работе , шутдаунить прокси, как корректно или абортом
     // к примеру так, но тогда , что делает close?
     dispatcher.detachSmeProxy(records[index]->proxy);
-    records[index]->proxy->close();
+    //records[index]->proxy->close();
+    records[index]->proxy->disconnect();
     //delete records[index].proxy;
     records[index]->proxy = 0;
   }

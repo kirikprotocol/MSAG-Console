@@ -34,7 +34,7 @@ public:
   int wait(int timeout)
   {
     Unlock();
-    int res=WaitForSingleObject(hEvent,INFINITE);
+    int res=WaitForSingleObject(hEvent,timeout);
     Lock();
     return res;
   }

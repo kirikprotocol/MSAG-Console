@@ -27,11 +27,13 @@ public:
     return thr_kill(thread,sig);
   }
 #endif
+  int getRetCode(){return retcode;}
+  void setRetCode(int rc){retcode=rc;}
 
 protected:
+  int retcode;
 #ifdef _WIN32
   HANDLE thread;
-  DWORD threadid;
 #else
   thread_t thread;
 #endif
