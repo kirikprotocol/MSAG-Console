@@ -88,6 +88,8 @@ void MapIoTask::deinit()
 {
   USHORT_T result;
   __map_trace2__("deinitialize");
+  __global_bind_counter = 0;
+  MapDialogContainer::destroyInstance();
   result = Et96MapUnbindReq(SSN);
   if ( result != ET96MAP_E_OK){
     __map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);

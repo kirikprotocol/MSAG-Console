@@ -350,6 +350,14 @@ class MapDialogContainer{
     }
   }
 public:
+  static void destroyInstance(){
+    MutexGuard g(sync_object);
+    if ( container ) {
+      delete container;
+      container = 0;
+    }
+  }
+
   static MapDialogContainer* getInstance(){
     MutexGuard g(sync_object);
     if ( !container ) {
@@ -438,7 +446,6 @@ public:
   }
 
   MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd){
-    if( !isMapBound() ) throw runtime_error("MAP is not bound yet");
     //if ( abonent.length() == 0 )
     //  throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
     MutexGuard g(sync);

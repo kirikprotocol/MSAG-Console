@@ -1475,6 +1475,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
   __map_trace2__("putCommand dialog /0x%x (state:NONE)",dialogid_smsc);
   DialogRefGuard dialog;
   MAP_TRY {
+    if( !isMapBound() ) throw runtime_error("MAP is not bound yet");
     if ( cmd->get_commandId() != SUBMIT_RESP ) { 
       if ( cmd->get_commandId() != DELIVERY && cmd->get_commandId() != QUERYABONENTSTATUS)
         throw MAPDIALOG_BAD_STATE("MAP::putCommand: must be DELIVERY or QUERYABONENTSTATUS");
