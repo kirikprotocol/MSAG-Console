@@ -306,7 +306,7 @@
 				    location   	(1248, 784)
 				    anchor_loc 	1
 				    nlines     	2
-				    max_width  	680
+				    max_width  	688
 				    justify    	0
 				    label      	"Admin")
 				icon       	"Actor"
@@ -1143,7 +1143,7 @@
 				    location   	(1280, 800)
 				    anchor_loc 	1
 				    nlines     	2
-				    max_width  	696
+				    max_width  	704
 				    justify    	0
 				    label      	"Admin")
 				icon       	"Actor"
@@ -1446,7 +1446,7 @@
 				    location   	(1120, 992)
 				    anchor_loc 	1
 				    nlines     	2
-				    max_width  	682
+				    max_width  	690
 				    justify    	0
 				    label      	"Admin")
 				icon       	"Actor"
@@ -1492,7 +1492,7 @@
 			    location   	(1104, 688)
 			    anchor_loc 	1
 			    nlines     	2
-			    max_width  	664
+			    max_width  	672
 			    justify    	0
 			    label      	"Admin")
 			icon       	"Actor"
@@ -1629,7 +1629,7 @@
 			    location   	(288, 480)
 			    anchor_loc 	1
 			    nlines     	2
-			    max_width  	667
+			    max_width  	675
 			    justify    	0
 			    label      	"User")
 			icon       	"Actor"
@@ -2649,7 +2649,7 @@
 					zoom       	100
 					max_height 	28350
 					max_width  	21600
-					origin_x   	0
+					origin_x   	3682
 					origin_y   	0
 					items      	(list diagram_item_list
 					    (object ClassView "Class" "Logical View::smsc::admin::AdminApp::RightsChecker" @79
@@ -2672,7 +2672,7 @@
 						    location   	(1983, 1244)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	485
+						    max_width  	493
 						    justify    	0
 						    label      	"RightsChecker")
 						icon       	"Interface"
@@ -2722,7 +2722,7 @@
 						    location   	(911, 1244)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	488
+						    max_width  	493
 						    justify    	0
 						    label      	"AdminManager")
 						icon       	"Interface"
@@ -2730,24 +2730,6 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C6B5D8A004E"
-						compartment 	(object Compartment
-						    Parent_View 	@80
-						    location   	(716, 1285)
-						    font       	(object Font
-							size       	10
-							face       	"Arial"
-							charSet    	204
-							bold       	FALSE
-							italics    	FALSE
-							underline  	FALSE
-							strike     	FALSE
-							color      	0
-							default_color 	TRUE)
-						    icon_style 	"Icon"
-						    anchor     	2
-						    nlines     	11
-						    max_width  	422
-						    justify    	0)
 						width      	58
 						height     	58
 						annotation 	8
@@ -2772,7 +2754,7 @@
 						    location   	(1487, 1244)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	490
+						    max_width  	496
 						    justify    	0
 						    label      	"GroupManager")
 						icon       	"Interface"
@@ -2780,24 +2762,6 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C6B6C4E03AE"
-						compartment 	(object Compartment
-						    Parent_View 	@81
-						    location   	(1303, 1285)
-						    font       	(object Font
-							size       	10
-							face       	"Arial"
-							charSet    	204
-							bold       	FALSE
-							italics    	FALSE
-							underline  	FALSE
-							strike     	FALSE
-							color      	0
-							default_color 	TRUE)
-						    icon_style 	"Icon"
-						    anchor     	2
-						    nlines     	8
-						    max_width  	397
-						    justify    	0)
 						width      	58
 						height     	58
 						annotation 	8
@@ -2822,7 +2786,7 @@
 						    location   	(207, 1244)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	493
+						    max_width  	499
 						    justify    	0
 						    label      	"Loginer")
 						icon       	"Interface"
@@ -2830,24 +2794,6 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C6B738800C8"
-						compartment 	(object Compartment
-						    Parent_View 	@82
-						    location   	(120, 1285)
-						    font       	(object Font
-							size       	10
-							face       	"Arial"
-							charSet    	204
-							bold       	FALSE
-							italics    	FALSE
-							underline  	FALSE
-							strike     	FALSE
-							color      	0
-							default_color 	TRUE)
-						    icon_style 	"Icon"
-						    anchor     	2
-						    nlines     	2
-						    max_width  	188
-						    justify    	0)
 						width      	58
 						height     	58
 						annotation 	8
@@ -2879,24 +2825,6 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C6B8FAF00FF"
-						compartment 	(object Compartment
-						    Parent_View 	@83
-						    location   	(29, 476)
-						    font       	(object Font
-							size       	10
-							face       	"Arial"
-							charSet    	204
-							bold       	FALSE
-							italics    	FALSE
-							underline  	FALSE
-							strike     	FALSE
-							color      	0
-							default_color 	TRUE)
-						    icon_style 	"Icon"
-						    fill_color 	16777215
-						    anchor     	2
-						    nlines     	2
-						    max_width  	365)
 						width      	376
 						height     	186
 						annotation 	8
@@ -3241,7 +3169,7 @@
 						    location   	(2048, 2336)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	690
+						    max_width  	706
 						    justify    	0
 						    label      	"User")
 						icon       	"Actor"
@@ -3478,24 +3406,6 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C6A4E9C002F"
-						compartment 	(object Compartment
-						    Parent_View 	@119
-						    location   	(706, 476)
-						    font       	(object Font
-							size       	10
-							face       	"Arial"
-							charSet    	204
-							bold       	FALSE
-							italics    	FALSE
-							underline  	FALSE
-							strike     	FALSE
-							color      	0
-							default_color 	TRUE)
-						    icon_style 	"Icon"
-						    fill_color 	16777215
-						    anchor     	2
-						    nlines     	2
-						    max_width  	418)
 						width      	430
 						height     	186
 						annotation 	8
@@ -4379,7 +4289,7 @@
 						vertices   	(list Points
 						    (886, 2111)
 						    (512, 1848)
-						    (309, 1376))
+						    (263, 1269))
 						line_style 	0)
 					    (object RealizeView "" @164
 						stereotype 	TRUE
@@ -5058,24 +4968,6 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C6BA6580235"
-						compartment 	(object Compartment
-						    Parent_View 	@193
-						    location   	(962, 467)
-						    font       	(object Font
-							size       	10
-							face       	"Arial"
-							charSet    	204
-							bold       	FALSE
-							italics    	FALSE
-							underline  	FALSE
-							strike     	FALSE
-							color      	0
-							default_color 	TRUE)
-						    icon_style 	"Icon"
-						    fill_color 	13434879
-						    anchor     	2
-						    nlines     	2
-						    max_width  	546)
 						width      	558
 						height     	236
 						annotation 	8
@@ -5178,7 +5070,7 @@
 						    default_color 	TRUE)
 						label      	(object ItemLabel
 						    Parent_View 	@195
-						    location   	(164, 604)
+						    location   	(164, 603)
 						    fill_color 	13434879
 						    nlines     	2
 						    max_width  	408
@@ -5189,7 +5081,7 @@
 						fill_color 	13434879
 						quidu      	"3C6A3B0F01D7"
 						width      	426
-						height     	384
+						height     	386
 						annotation 	8
 						autoResize 	TRUE)
 					    (object ClassView "Class" "Logical View::smsc::admin::protocols::Response" @196
@@ -5209,7 +5101,7 @@
 						    default_color 	TRUE)
 						label      	(object ItemLabel
 						    Parent_View 	@196
-						    location   	(637, 604)
+						    location   	(637, 603)
 						    fill_color 	13434879
 						    nlines     	2
 						    max_width  	422
@@ -5220,7 +5112,7 @@
 						fill_color 	13434879
 						quidu      	"3C6A3B1E02AB"
 						width      	440
-						height     	384
+						height     	386
 						annotation 	8
 						autoResize 	TRUE)))))
 			    (object Class_Category "ClientApp"

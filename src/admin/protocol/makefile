@@ -4,6 +4,7 @@
 #
 #
 
+CXXFLAGS := $(CXXFLAGS) -I/usr/local/include/xercesc
 PACKAGE := admin.protocol
 
 ifndef SMSC_SRCDIR

@@ -1,17 +1,21 @@
 #ifndef SMSC_ADMIN_ADMIN_EXCEPTION
 #define SMSC_ADMIN_ADMIN_EXCEPTION
 
-//#include <util/inttypes.h>
+#include <exception>
 
 namespace smsc {
 namespace admin {
 
-class AdminException {
+class AdminException : public std::exception
+{
 public:
-	AdminException(const char *	const message);
-	~AdminException();
+//	AdminException(AdminException a);
+	AdminException(const AdminException &a) throw();
+	AdminException(const char *	const message) throw();
+	~AdminException() throw ();
 
-	const char * const GetMessage() {
+	const char * what() const throw()
+	{
 		return msg;
 	}
 protected:

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file:///export/home/igork/cvs/smsc/config/configuration.dtd">
+
+<config>
+    <section name="services">
+	<param name="service" type="string">dumb</param>
+    </section>
+</config>

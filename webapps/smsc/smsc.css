@@ -1,0 +1,38 @@
+table.header {
+	background : #FFFFCC;
+	border : none;
+	text-align : center;
+	vertical-align : middle;
+	width : 100%;
+}
+table.main {
+	border : none;
+	width : 100%;
+}
+table.data {
+	border : 1px solid Gray;
+	background : #F0F0FF;
+	color : Navy;
+}
+th.data {
+	border : 1px solid Silver;
+	border-bottom : double;
+}
+td.data {
+	border : 1px solid Silver;
+}
+
+table.list {
+	border : 1px solid Silver;
+	background : #F8F8FF;
+	color : Navy;
+}
+tr.list {
+	border : 1px solid Silver;
+}
+th.list {
+	border : 1px solid Silver;
+}
+td.list {
+	border : 1px solid Silver;
+}
