@@ -181,7 +181,10 @@ public:
     _cmd.dialogId = dialogId;
     return cmd;
   }
-  ~SmscCommand() { dispose(); }
+  ~SmscCommand() { 
+		__trace__(__PRETTY_FUNCTION__);
+		dispose();
+	}
   SmscCommand() : cmd (0) {}
   SmscCommand(SmppHeader* pdu) : cmd (0)
   {
