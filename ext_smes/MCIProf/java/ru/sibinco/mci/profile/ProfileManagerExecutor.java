@@ -35,8 +35,9 @@ public class ProfileManagerExecutor extends ProfileManagerState implements Execu
       valueNo  = Transliterator.translit(profileBundle.getString(Constants.VALUE_NO));
     }
     catch (Exception e) {
-      logger.error("", e);
-      throw new ScenarioInitializationException(e.getMessage());
+      final String err = "Executor init error";
+      logger.error(err, e);
+      throw new ScenarioInitializationException(err, e);
     }
   }
 

@@ -2,6 +2,7 @@ package ru.sibinco.mci.profile;
 
 import ru.sibinco.smpp.appgw.scenario.ExecutingException;
 import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
+import ru.sibinco.smpp.appgw.scenario.ErrorCode;
 import ru.sibinco.smpp.appgw.util.ConnectionPool;
 
 import java.util.Iterator;
@@ -143,7 +144,7 @@ public class ProfileManager
     }
     catch (Exception e) {
       logger.error("Query to DB failed", e);
-      throw new ExecutingException("Query to ProfileManager failed", e, -1);
+      throw new ExecutingException("Query to ProfileManager failed", e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     }
     finally {
       try { if (rs != null) rs.close(); }
@@ -189,7 +190,7 @@ public class ProfileManager
       try { if (connection != null) connection.rollback(); }
       catch (Throwable th) { logger.error("", th); }
       logger.error("Update/Insert to DB failed", e);
-      throw new ExecutingException("Query to ProfileManager failed", e, -2);
+      throw new ExecutingException("Query to ProfileManager failed", e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     }
     finally {
       try { if (stmt != null) stmt.close(); }
@@ -215,7 +216,7 @@ public class ProfileManager
       try { if (connection != null) connection.rollback(); }
       catch (Throwable th) { logger.error("", th); }
       logger.error("Delete form DB failed", e);
-      throw new ExecutingException("Query to ProfileManager failed", e, -3);
+      throw new ExecutingException("Query to ProfileManager failed", e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     }
     finally {
       try { if (stmt != null) stmt.close(); }

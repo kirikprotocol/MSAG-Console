@@ -32,8 +32,9 @@ public class HelpExecutor implements Executor
       pageInfo = Transliterator.translit(helpBundle.getString(Constants.PAGE_INFO));
       pageManual = Transliterator.translit(helpBundle.getString(Constants.PAGE_MAN));
     } catch (ScenarioResourceBundleException e) {
-      logger.error("", e);
-      throw new ScenarioInitializationException(e.getMessage());
+      final String err = "Executor init error";
+      logger.error(err, e);
+      throw new ScenarioInitializationException(err, e);
     }
   }
 

@@ -30,7 +30,7 @@ public class ProfileManagerPreprocessor extends ProfileManagerState implements S
       HashMap formats = (HashMap)state.getAttribute(Constants.ATTR_FORMATS);
 
       if (msg == null)
-        throw new ProcessingException("Profile option is undefined", -1);
+        throw new ProcessingException("Profile option is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
 
       msg = msg.trim();
       if (!msg.equals(Constants.OPTION_EXIT))
@@ -45,26 +45,27 @@ public class ProfileManagerPreprocessor extends ProfileManagerState implements S
         {
           if      (msg.equals("1")) info.inform = !info.inform;
           else if (msg.equals("3")) info.notify = !info.notify;
-          else new ProcessingException("Profile option '"+msg+"' in unknown", -2);
+          else new ProcessingException("Profile option '"+msg+"' in unknown", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
         }
         else // set inform or notify message format type
         {
           String reason = (String)state.getAttribute(Constants.ATTR_REASON);
           if (reason == null)
-            throw new ProcessingException("Profile option is undefined", -1);
+            throw new ProcessingException("Profile option is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
 
           boolean inform = true;
           if      (reason.equals(Constants.INFORM)) inform = true;
           else if (reason.equals(Constants.NOTIFY)) inform = false;
-          else throw new ProcessingException("Profile option '"+reason+"' in unknown", -2);
+          else throw new ProcessingException("Profile option '"+reason+"' in unknown", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
           try {
             FormatType format = (FormatType)formats.get(new Integer(msg));
             if (format == null) throw new Exception("Profile message format is undefined");
             if (inform) info.informFormat = format;
             else info.notifyFormat = format;
           } catch (Exception exc) {
-            logger.error("", exc);
-            throw new ProcessingException("Profile option is invalid '"+msg+"'", exc, -3);
+            String err = "Profile option is invalid '"+msg+"'";
+            logger.error(err, exc);
+            throw new ProcessingException(err, exc, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
           }
         }
         try {

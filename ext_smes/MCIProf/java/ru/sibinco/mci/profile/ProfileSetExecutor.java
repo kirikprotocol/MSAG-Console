@@ -37,8 +37,9 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
       valueNotify = Transliterator.translit(profileBundle.getString(Constants.VALUE_NOTIFY));
     }
     catch (Exception e) {
-      logger.error("", e);
-      throw new ScenarioInitializationException(e.getMessage());
+      final String err = "Executor init error";
+      logger.error(err, e);
+      throw new ScenarioInitializationException(err, e);
     }
   }
 
@@ -48,8 +49,8 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
     boolean inform = true;
     if      (reason.equals(Constants.INFORM)) inform = true;
     else if (reason.equals(Constants.NOTIFY)) inform = false;
-    else
-      throw new ExecutingException("Profile option '"+reason+"' is unknown");
+    else throw new ExecutingException("Profile option '"+reason+"' is unknown",
+                                      ErrorCode.PAGE_EXECUTOR_EXCEPTION);
 
     HashMap formats = new HashMap();
     String formatAlts = ""; int counter = 1;

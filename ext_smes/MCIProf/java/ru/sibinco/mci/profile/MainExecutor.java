@@ -31,8 +31,9 @@ public class MainExecutor implements Executor
     try {
       pageFormat =  new MessageFormat(Transliterator.translit(systemBundle.getString(Constants.PAGE_MAIN)));
     } catch (Exception e) {
-      logger.error("", e);
-      throw new ScenarioInitializationException(e.getMessage());
+      final String err = "Executor init error";
+      logger.error(err, e);
+      throw new ScenarioInitializationException(err, e);
     }
   }
 
