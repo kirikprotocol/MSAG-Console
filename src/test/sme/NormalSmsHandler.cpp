@@ -234,7 +234,7 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 	int sz = msg->len - msg->offset;
 	if (msg->dataCoding == DEFAULT || msg->dataCoding == SMSC7BIT)
 	{
-		int len1 = 0, len2 = 0, ext = 0;
+		int len1 = 0, len2 = 0, prevLen1 = 0, prevLen2 = 0, ext = 0;
 		bool prevWhiteSpace = true;
 		for (int i = 0; i < sz; i++)
 		{
@@ -255,12 +255,10 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 						break;
 				}
 			}
-			if (i + ext >= 153)
+			//текст без пробелов
+			if (!len1 && !len2 && i + ext >= 153)
 			{
-				if (!len1 && !len2)
-				{
-					len1 = len2 = i;
-				}
+				len1 = len2 = i;
 				break;
 			}
 			switch (ch)
@@ -269,19 +267,41 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 				case '\t':
 				case '\n':
 				case '\r':
-					if (!prevWhiteSpace) { len1 = i; }
+					if (!prevWhiteSpace)
+					{
+						prevLen1 = len1;
+						len1 = i;
+					}
 					len2 = i + 1;
 					prevWhiteSpace = true;
 					break;
 				default:
-					if (prevWhiteSpace) { len2 = i; }
+					if (prevWhiteSpace)
+					{
+						prevLen2 = len2;
+						len2 = i;
+					}
 					prevWhiteSpace = false;
+			}
+			if (len2 + ext >= 153)
+			{
+				break;
 			}
 		}
 		if (sz + ext <= 153)
 		{
 			len1 = len2 = sz;
 		}
+		else if (len1 + ext <= 153 && len2 + ext > 153)
+		{
+			len2 = 153 - ext;
+		}
+		else if (len1 + ext > 153)
+		{
+			len1 = prevLen1;
+			len2 = prevLen2;
+		}
+		__require__(len1 <= len2 && len2 + ext <= 153);
 		if (smLen < len1 || smLen > len2)
 		{
 			__trace2__("check segment len: seqNum = %d, maxNum = %d, len1 = %d, len2 = %d, ext = %d, msg offset = %d, msg len = %d",
@@ -291,32 +311,60 @@ PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
 	}
 	else if (msg->dataCoding == UCS2)
 	{
-		int len1 = 0, len2 = 0, ext = 0;
+		int len1 = 0, len2 = 0, prevLen1 = 0, prevLen2 = 0, ext = 0;
 		bool prevWhiteSpace = true;
-		for (int i = 0; i < min(sz, 134); i += 2)
+		for (int i = 0; i < sz; i += 2)
 		{
 			short ch;
 			memcpy(&ch, msg->msg + msg->offset + i, 2);
 			ch = ntohs(ch);
+			//текст без пробелов
+			if (!len1 && !len2 && i >= 134)
+			{
+				len1 = len2 = i;
+				break;
+			}
 			switch (ch)
 			{
 				case ' ':
 				case '\t':
 				case '\n':
 				case '\r':
-					if (!prevWhiteSpace) { len1 = i; }
+					if (!prevWhiteSpace)
+					{
+						prevLen1 = len1;
+						len1 = i;
+					}
 					len2 = i + 2;
 					prevWhiteSpace = true;
 					break;
 				default:
-					if (prevWhiteSpace) { len2 = i; }
+					if (prevWhiteSpace)
+					{
+						prevLen2 = len2;
+						len2 = i;
+					}
 					prevWhiteSpace = false;
+			}
+			if (len2 >= 134)
+			{
+				break;
 			}
 		}
 		if (sz <= 134)
 		{
 			len1 = len2 = sz;
 		}
+		else if (len1 <= 134 && len2 > 134)
+		{
+			len2 = 134;
+		}
+		else if (len1 > 134)
+		{
+			len1 = prevLen1;
+			len2 = prevLen2;
+		}
+		__require__(len1 <= len2 && len2 <= 134);
 		if (smLen % 2)
 		{
 			__tc_fail__(6);
@@ -543,38 +591,48 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 		default:
 			__unreachable__("Invalid regDelivery");
 	}
+	bool report = true;
 	if (monitor->pduData->intProps.count("ussdServiceOp"))
 	{
 		__tc__("sms.reports.intermediateNotification.ussdServiceOp");
 		__tc_ok__;
-		return;
+		report = false;
 	}
-	//startTime
-	time_t startTime;
-	RespPduFlag respFlag = isAccepted(deliveryStatus);
-	switch (respFlag)
+	if (monitor->pduData->intProps.count("suppressDeliveryReports"))
 	{
-		case RESP_PDU_OK:
-		case RESP_PDU_ERROR:
-			return; //повторных доставок не будет
-		case RESP_PDU_CONTINUE:
-			return; //продолжается доставка пачки
-		case RESP_PDU_RESCHED:
-			startTime = respTime;
-			break;
-		case RESP_PDU_MISSING:
-			startTime = recvTime + fixture->smeInfo.timeout - 1;
-			break;
-		default:
-			__unreachable__("Invalid respFlag");
+		__tc__("sms.reports.intermediateNotification.suppressDeliveryReports");
+		__tc_ok__;
+		report = false;
 	}
-	//register
-	IntermediateNotificationMonitor* notifMonitor =
-		new IntermediateNotificationMonitor(monitor->msgRef, startTime,
-			monitor->pduData, PDU_REQUIRED_FLAG);
-	notifMonitor->state = SMPP_ENROUTE_STATE;
-	notifMonitor->deliveryStatus = deliveryStatus;
-	pduReg->registerMonitor(notifMonitor);
+	if (report)
+	{
+		//startTime
+		time_t startTime;
+		RespPduFlag respFlag = isAccepted(deliveryStatus);
+		switch (respFlag)
+		{
+			case RESP_PDU_OK:
+			case RESP_PDU_ERROR:
+				return; //повторных доставок не будет
+			case RESP_PDU_CONTINUE:
+				return; //продолжается доставка пачки
+			case RESP_PDU_RESCHED:
+				startTime = respTime;
+				break;
+			case RESP_PDU_MISSING:
+				startTime = recvTime + fixture->smeInfo.timeout - 1;
+				break;
+			default:
+				__unreachable__("Invalid respFlag");
+		}
+		//register
+		IntermediateNotificationMonitor* notifMonitor =
+			new IntermediateNotificationMonitor(monitor->msgRef, startTime,
+				monitor->pduData, PDU_REQUIRED_FLAG);
+		notifMonitor->state = SMPP_ENROUTE_STATE;
+		notifMonitor->deliveryStatus = deliveryStatus;
+		pduReg->registerMonitor(notifMonitor);
+	}
 }
 
 void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* monitor,
@@ -636,48 +694,58 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 		default:
 			__unreachable__("Invalid regDelivery");
 	}
+	bool report = true;
 	if (monitor->pduData->intProps.count("ussdServiceOp"))
 	{
 		__tc__("sms.reports.deliveryReceipt.ussdServiceOp");
 		__tc_ok__;
-		return;
+		report = false;
 	}
-	//startTime & state
-	time_t startTime;
-	SmppState state;
-	RespPduFlag respFlag = isAccepted(deliveryStatus);
-	switch (respFlag)
+	if (monitor->pduData->intProps.count("suppressDeliveryReports"))
 	{
-		case RESP_PDU_OK:
-			startTime = respTime;
-			state = SMPP_DELIVERED_STATE;
-			break;
-		case RESP_PDU_ERROR:
-			startTime = respTime;
-			state = SMPP_UNDELIVERABLE_STATE;
-			break;
-		case RESP_PDU_RESCHED:
-			__tc__("sms.reports.deliveryReceipt.expiredDeliveryReceipt");
-			__tc_ok__;
-			startTime = monitor->getValidTime();
-			state = SMPP_EXPIRED_STATE;
-			break;
-		case RESP_PDU_MISSING:
-			__tc__("sms.reports.deliveryReceipt.expiredDeliveryReceipt");
-			__tc_ok__;
-			startTime = max(recvTime + (time_t) (fixture->smeInfo.timeout - 1),
-				monitor->getValidTime());
-			state = SMPP_EXPIRED_STATE;
-			break;
-		default:
-			__unreachable__("Invalid respFlag");
+		__tc__("sms.reports.deliveryReceipt.suppressDeliveryReports");
+		__tc_ok__;
+		report = false;
 	}
-	//register
-	DeliveryReceiptMonitor* rcptMonitor = new DeliveryReceiptMonitor(
-		monitor->msgRef, startTime, monitor->pduData,flag);
-	rcptMonitor->state = state;
-	rcptMonitor->deliveryStatus = deliveryStatus;
-	pduReg->registerMonitor(rcptMonitor);
+	if (report)
+	{
+		//startTime & state
+		time_t startTime;
+		SmppState state;
+		RespPduFlag respFlag = isAccepted(deliveryStatus);
+		switch (respFlag)
+		{
+			case RESP_PDU_OK:
+				startTime = respTime;
+				state = SMPP_DELIVERED_STATE;
+				break;
+			case RESP_PDU_ERROR:
+				startTime = respTime;
+				state = SMPP_UNDELIVERABLE_STATE;
+				break;
+			case RESP_PDU_RESCHED:
+				__tc__("sms.reports.deliveryReceipt.expiredDeliveryReceipt");
+				__tc_ok__;
+				startTime = monitor->getValidTime();
+				state = SMPP_EXPIRED_STATE;
+				break;
+			case RESP_PDU_MISSING:
+				__tc__("sms.reports.deliveryReceipt.expiredDeliveryReceipt");
+				__tc_ok__;
+				startTime = max(recvTime + (time_t) (fixture->smeInfo.timeout - 1),
+					monitor->getValidTime());
+				state = SMPP_EXPIRED_STATE;
+				break;
+			default:
+				__unreachable__("Invalid respFlag");
+		}
+		//register
+		DeliveryReceiptMonitor* rcptMonitor = new DeliveryReceiptMonitor(
+			monitor->msgRef, startTime, monitor->pduData,flag);
+		rcptMonitor->state = state;
+		rcptMonitor->deliveryStatus = deliveryStatus;
+		pduReg->registerMonitor(rcptMonitor);
+	}
 }
 
 void NormalSmsHandler::registerDeliveryReportMonitors(const DeliveryMonitor* monitor,
