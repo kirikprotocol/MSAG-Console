@@ -633,7 +633,10 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
             __trace2__(":MAP:UDHI: tag 0, len %d",elLength);
             break;
           }else{
-            ref = ntohs(*(unsigned short*)(udh+ptr+2));
+            //ref = ntohs(*(unsigned short*)(udh+ptr+2));
+            unsigned short tmpVal;
+            memcpy(&tmpVal,udh+ptr+2,2);
+            ref = ntohs(tmpVal);
             msgCount = udh[ptr+4];
             msgNum   = udh[ptr+5];
             __trace2__(":MAP:UDHI: tag 8, len %d",elLength);

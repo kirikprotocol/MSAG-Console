@@ -246,7 +246,7 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
   }else{
 trivial:
     __trace2__(":SMS::Body::%s get trivial value",__FUNCTION__);
-    if ( tag == untype(Tag::SMPP_SHORT_MESSAGE) )
+    if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) )
 	    tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
 	  if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) )
 	  	tag = unType(Tag::SMSC_RAW_PAYLOAD);

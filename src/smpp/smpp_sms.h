@@ -52,9 +52,9 @@ inline void fillOptional(SmppOptional& optional,SMS* sms)
     optional.set_sarTotalSegments(sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS));
   if ( sms->hasIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES) )
     optional.set_numberOfMessages(sms->getIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES));
-  if ( sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) ){
+  if ( sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD) ){
     unsigned len;
-    const char * data = sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    const char * data = sms->getBinProperty(Tag::SMSC_RAW_PAYLOAD,&len);
     optional.set_messagePayload(data,len);
   }
 
@@ -203,7 +203,7 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms)
   if ( optional.has_numberOfMessages() )
     sms->setIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES,optional.get_numberOfMessages());
   if ( optional.has_messagePayload() )
-    sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,
+    sms->setBinProperty(Tag::SMSC_RAW_PAYLOAD,
                                optional.get_messagePayload(),
                                optional.size_messagePayload());
 
