@@ -579,6 +579,7 @@ StateType StateMachine::submit(Tuple& t)
       Descriptor d;
       __trace__("SUBMIT_SM: change state to enroute");
 
+      sms->lastResult=Status::SMENOTCONNECTED;
       sendNotifyReport(*sms,t.msgId,"destination unavailable");
 
       store->changeSmsStateToEnroute(t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(*sms));
@@ -605,6 +606,7 @@ StateType StateMachine::submit(Tuple& t)
     {
       __trace__("SUBMIT_SM: failed to change state to enroute");
     }
+    sms->lastResult=Status::SMENOTCONNECTED;
     sendNotifyReport(*sms,t.msgId,"destination unavailable");
     return ENROUTE_STATE;
   }
@@ -627,6 +629,7 @@ StateType StateMachine::submit(Tuple& t)
     }
     __warning__("SUBMIT_SM: can't create task");
 
+    sms->lastResult=Status::SYSERR;
     sendNotifyReport(*sms,t.msgId,"system failure");
 
     return ENROUTE_STATE;
@@ -634,6 +637,7 @@ StateType StateMachine::submit(Tuple& t)
   }catch(...)
   {
     __trace__("SUBMIT: failed to create task");
+    sms->lastResult=Status::SYSERR;
     sendNotifyReport(*sms,t.msgId,"system failure");
     return ENROUTE_STATE;
   }
@@ -674,6 +678,7 @@ StateType StateMachine::submit(Tuple& t)
     {
       sms->setOriginatingAddress(srcOriginal);
       sms->setDestinationAddress(dstOriginal);
+      sms->lastResult=Status::INVBNDSTS;
       sendNotifyReport(*sms,t.msgId,"service rejected");
       __trace__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
       try{
@@ -691,6 +696,7 @@ StateType StateMachine::submit(Tuple& t)
     __warning2__("SUBMIT: failed to put delivery command:%s",e.what());
     sms->setOriginatingAddress(srcOriginal);
     sms->setDestinationAddress(dstOriginal);
+    sms->lastResult=Status::THROTTLED;
     sendNotifyReport(*sms,t.msgId,"system failure");
     try{
       Descriptor d;
@@ -706,6 +712,7 @@ StateType StateMachine::submit(Tuple& t)
     __trace__("SUBMIT: failed to put delivery command");
     sms->setOriginatingAddress(srcOriginal);
     sms->setDestinationAddress(dstOriginal);
+    sms->lastResult=Status::THROTTLED;
     sendNotifyReport(*sms,t.msgId,"system failure");
     try{
       Descriptor d;
@@ -782,6 +789,7 @@ StateType StateMachine::forward(Tuple& t)
   {
     __warning__("FORWARD: No route");
     try{
+      sms.lastResult=Status::NOROUTE;
       sendNotifyReport(sms,t.msgId,"destination unavailable");
     }catch(...)
     {
@@ -803,6 +811,7 @@ StateType StateMachine::forward(Tuple& t)
   {
     __trace__("FORWARD: no proxy");
     try{
+      sms.lastResult=Status::SMENOTCONNECTED;
       sendNotifyReport(sms,t.msgId,"destination unavailable");
     }catch(...)
     {
@@ -833,6 +842,7 @@ StateType StateMachine::forward(Tuple& t)
     {
       __warning__("FORWARD: can't create task");
       try{
+        sms.lastResult=Status::SYSERR;
         sendNotifyReport(sms,t.msgId,"destination unavailable");
       }catch(...)
       {
@@ -892,6 +902,7 @@ StateType StateMachine::forward(Tuple& t)
     __trace2__("FORWARD::Err %s",errtext);
     sms.setOriginatingAddress(srcOriginal);
     sms.setDestinationAddress(dstOriginal);
+    sms.lastResult=errstatus;
     sendNotifyReport(sms,t.msgId,errtext);
     try{
       //time_t now=time(NULL);
@@ -969,8 +980,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
           __trace__("DELIVERYRESP: failed to change state to enroute");
         }
         smsc->notifyScheduler();
-        sendNotifyReport(sms,t.msgId,"subscriber busy");
         sms.lastResult=GET_STATUS_CODE(t.command->get_resp()->get_status());
+        sendNotifyReport(sms,t.msgId,"subscriber busy");
         smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
         return UNKNOWN_STATE;
       }break;
@@ -985,8 +996,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
           __trace__("DELIVERYRESP: failed to change state to undeliverable");
         }
 
-        sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
         sms.lastResult=GET_STATUS_CODE(t.command->get_resp()->get_status());
+        sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
         smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
         return UNDELIVERABLE_STATE;
       }
@@ -1085,8 +1096,8 @@ StateType StateMachine::alert(Tuple& t)
     __trace2__("ALERT: failed to change state to enroute");
   }
   smsc->notifyScheduler();
-  sendNotifyReport(sms,t.msgId,"delivery attempt timed out");
   sms.lastResult=Status::DELIVERYTIMEDOUT;
+  sendNotifyReport(sms,t.msgId,"delivery attempt timed out");
   smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
   return UNKNOWN_STATE;
 }
@@ -1331,6 +1342,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   rpt.setOriginatingAddress(scAddress);
   char msc[]="";
   char imsi[]="";
+  rpt.lastResult=sms.lastResult;
   rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
   rpt.setValidTime(0);
   rpt.setDeliveryReport(0);
@@ -1384,6 +1396,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   rpt.setOriginatingAddress(scAddress);
   char msc[]="";
   char imsi[]="";
+  rpt.lastResult=sms.lastResult;
   rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
   rpt.setValidTime(0);
   rpt.setDeliveryReport(0);

@@ -206,7 +206,11 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
       {
         case DELIVERED: *pdu_ptr++=0;break; //ok
         case EXPIRED: *pdu_ptr++=0x46;break; //expired
-        default: *pdu_ptr++=esm&0x3c==0x20?0x21:0x63;break; //busy:failed
+        case UNDELIVERABLE: *pdu_ptr++=0x41;break; //failed
+        default:
+        {
+          *pdu_ptr++=0x21;//busy
+        }break;
       }
       //*pdu_ptr++=0;//0x6; //TP-Parameter-Indicator 0110
       //*pdu_ptr++=datacoding;
@@ -236,33 +240,33 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
           __trace2__("MAP::mkDeliverPDU: text symbols 0x%x",symbols);
           __trace2__("MAP::mkDeliverPDU: text bit offset 0x%x",x-(udh_len+1)*8);
           unsigned _7bit_text_len;
-          if (encoding == MAP_SMSC7BIT_ENCODING ) 
+          if (encoding == MAP_SMSC7BIT_ENCODING )
            _7bit_text_len = ConvertSMSC7bit27bit(
               text+1+udh_len,
               symbols,
               pdu_ptr+udh_len+1+1,
               x-(udh_len+1)*8);
           else {
-	    unsigned tmpX = 0;
+      unsigned tmpX = 0;
             _7bit_text_len = ConvertText27bit(//text,text_len,pdu_ptr+1,&elen);
               text+1+udh_len,
               symbols,
               pdu_ptr+udh_len+1+1,
-	      &tmpX,
+        &tmpX,
               x-(udh_len+1)*8);
-	  }
+    }
           *pdu_ptr++ = x/7+symbols;
           __trace2__("MAP::mkDeliverPDU: data length(symbols) 0x%x",x/7+symbols);
           pdu_ptr+= udh_len+_7bit_text_len+1;
           __trace2__("MAP::mkDeliverPDU: data length(octets) 0x%x",udh_len+_7bit_text_len);
         }else{
           *pdu_ptr++ = text_len;
-          if (encoding == MAP_SMSC7BIT_ENCODING ) 
+          if (encoding == MAP_SMSC7BIT_ENCODING )
             pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
           else {
-	    unsigned tmpX = 0;
+      unsigned tmpX = 0;
             pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr,&tmpX);
-	  }
+    }
         }
     }else{ // UCS2 || 8BIT
       unsigned text_len;
