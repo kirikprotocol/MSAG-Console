@@ -1,6 +1,7 @@
 //$Id$
 
 #if defined USE_MAP
+#define MAP_DIALOGS_LIMIT 160
 
 #include <stdlib.h>
 #include <stdarg.h>
