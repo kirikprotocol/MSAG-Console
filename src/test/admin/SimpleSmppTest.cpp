@@ -169,9 +169,16 @@ void SimpleSmppTest::submit(const string& src, const string& dest,
 		dumpPdu("submit", selectedId, reinterpret_cast<SmppHeader*>(&pdu));
 		uint8_t dc = pdu.get_message().get_dataCoding();
 		cout << "submit: sme = " << selectedId <<
-			", seqNum = " << dec << pdu.get_header().get_sequenceNumber() <<
-			", commandStatus = 0x" << hex << respPdu->get_header().get_commandStatus() <<
-			", msgRef = " << dec << (int) pdu.get_optional().get_userMessageReference() <<
+			", seqNum = " << dec << pdu.get_header().get_sequenceNumber();
+		if (respPdu)
+		{
+			cout << ", commandStatus = 0x" << hex << respPdu->get_header().get_commandStatus();
+		}
+		else
+		{
+			cout << ", response missing";
+		}
+		cout << ", msgRef = " << dec << (int) pdu.get_optional().get_userMessageReference() <<
 			", ussd = " << (ussd ? "yes" : "no") <<
 			", dc = " << (int) dc;
 		if (forceDc)
