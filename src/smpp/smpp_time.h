@@ -25,13 +25,13 @@ inline bool cTime2SmppTime(time_t tval,char* buffer)
   //__trace2__("input time: %s",asctime(&dtm));
   dtm.tm_mon+=1;
   dtm.tm_year-=100;
-  __ret0_if_fail__ ( dtm.tm_mon >= 1 && dtm.tm_mon <= 12 ); 
-  __ret0_if_fail__ ( dtm.tm_year >= 0 && dtm.tm_mon <= 99 ); 
+  __ret0_if_fail__ ( dtm.tm_mon >= 1 && dtm.tm_mon <= 12 );
+  __ret0_if_fail__ ( dtm.tm_year >= 0 && dtm.tm_mon <= 99 );
   __ret0_if_fail__ ( dtm.tm_mday >= 1 && dtm.tm_mday <= 31 );
   __ret0_if_fail__ ( dtm.tm_hour >= 0 && dtm.tm_hour <= 23 );
   __ret0_if_fail__ ( dtm.tm_min >= 0 && dtm.tm_min <= 59 );
   __ret0_if_fail__ ( dtm.tm_sec >=0 && dtm.tm_sec <= 59 );
-  int writen = 
+  int writen =
   snprintf(buffer,SMPP_TIME_BUFFER_LENGTH,
 //        YY MM DD hh mm ss t  nn p
         "%02d%02d%02d%02d%02d%02d%01d%02d%c",
@@ -62,7 +62,7 @@ inline time_t smppTime2CTime(COStr& str)
   const char* dta = str.cstr();
   __ret0_if_fail__ ( str != 0 );
   __ret0_if_fail__ ( strlen(dta) == 16 );
-  scaned = 
+  scaned =
     sscanf(dta,
   //        YY MM DD hh mm ss t  nn p
           "%2d%2d%2d%2d%2d%2d%1d%2d%c",
@@ -75,11 +75,15 @@ inline time_t smppTime2CTime(COStr& str)
           &ignore,
           &utc,
           &utcfix);
+  if(scaned!=16)
+  {
+    __trace2__("time(%d):%16s",scaned,dta);
+  }
   __trace2_if_fail__( scaned == 16, "!!!!! input time: %.16s\n",dta);
   __ret0_if_fail__ ( scaned == 16 );
-  __ret0_if_fail__ ( dtm.tm_mon >= 1 && dtm.tm_mon <= 12 ); 
+  __ret0_if_fail__ ( dtm.tm_mon >= 1 && dtm.tm_mon <= 12 );
   dtm.tm_mon-=1;
-  __ret0_if_fail__ ( dtm.tm_year >= 0 && dtm.tm_mon <= 99 ); 
+  __ret0_if_fail__ ( dtm.tm_year >= 0 && dtm.tm_mon <= 99 );
   dtm.tm_year+=100;
   __ret0_if_fail__ ( dtm.tm_mday >= 1 && dtm.tm_mday <= 31 );
   __ret0_if_fail__ ( dtm.tm_hour >= 0 && dtm.tm_hour <= 23 );
@@ -89,7 +93,7 @@ inline time_t smppTime2CTime(COStr& str)
 
   resultTime = mktime(&dtm);
   __ret0_if_fail__ ( resultTime != -1 );
-  
+
   return resultTime;
 }
 
@@ -97,5 +101,3 @@ inline time_t smppTime2CTime(COStr& str)
 };
 
 #endif
-
-

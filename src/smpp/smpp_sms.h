@@ -150,7 +150,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
   if ( pdu->optional.has_receiptedMessageId() )
   {
     smsc::sms::SMSId id = 0;
-    if ( !scanf(pdu->optional.get_receiptedMessageId(),"%ld",&id) )
+    if ( !sscanf(pdu->optional.get_receiptedMessageId(),"%lld",&id) )
     {
       __warning__("error when processing receiptedMessageId");
       __watch__(pdu->optional.get_receiptedMessageId());

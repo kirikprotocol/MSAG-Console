@@ -7,6 +7,7 @@
 #include "system/state_machine.hpp"
 #include "core/synchronization/Event.hpp"
 #include "system/scheduler.hpp"
+#include "util/Exception.hpp"
 
 namespace smsc{
 namespace system{
@@ -17,6 +18,7 @@ using namespace smsc::sms;
 using namespace smsc::smeman;
 using namespace smsc::router;
 using namespace smsc::core::synchronization;
+using util::Exception;
 
 
 class SmscSignalHandler:public smsc::admin::util::SignalHandler{
@@ -194,13 +196,22 @@ void Smsc::init(const SmscConfigs& cfg)
 
 void Smsc::run()
 {
-  tp.startTask(
-    new smppio::SmppAcceptor(
-      smscHost.c_str(),
-      smscPort,
-      &ssockman
-    )
-  );
+  {
+    Event accstarted;
+    smppio::SmppAcceptor *acc=new
+      smppio::SmppAcceptor(
+        smscHost.c_str(),
+        smscPort,
+        &ssockman,
+        &accstarted
+      );
+    tp.startTask(acc);
+    accstarted.Wait();
+    if(!acc->isStarted())
+    {
+      throw Exception("Failed to start smpp acceptor");
+    }
+  }
 
   tp.startTask(new Scheduler(eventqueue,store));
 

@@ -111,14 +111,14 @@ int main(int argc,char* argv[])
       fillSmppPduFromSms(&sm,&s);
       PduSubmitSmResp *resp=tr->submit(sm);
       atr->submit(sm);
-      if(resp->get_header().get_commandStatus()==0)
+      if(resp && resp->get_header().get_commandStatus()==0)
       {
         printf("Accepted:%d bytes\n",len);fflush(stdout);
       }else
       {
         printf("Wasn't accepted\n");fflush(stdout);
       }
-      disposePdu((SmppHeader*)resp);
+      if(resp)disposePdu((SmppHeader*)resp);
     }
   }
   catch(std::exception& e)

@@ -516,6 +516,7 @@ protected:
           Lock &l=lock.Get(seq);
           if(l.event)
           {
+            lockMutex.Unlock();
             l.error=1;
             l.event->Signal();
             disposePdu(pdu);
@@ -540,6 +541,7 @@ protected:
           Lock &l=lock.Get(seq);
           if(l.event)
           {
+            lockMutex.Unlock();
             l.pdu=pdu;
             l.event->Signal();
           }else
