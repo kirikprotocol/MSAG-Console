@@ -124,11 +124,13 @@ const char* USER_QUERY_STATEMENT_ID = "USER_QUERY_STATEMENT_ID";
 const char* NEW_MESSAGE_STATEMENT_ID = "NEW_MESSAGE_STATEMENT_ID";
 
 const char* NEW_MESSAGE_STATEMENT_SQL = (const char*)
-"INSERT INTO %s ... VALUES (...)";
+"INSERT INTO %s (ABONENT, MESSAGE) "
+"VALUES (:ABONENT, :MESSAGE)";
 
 const char* NEW_TABLE_STATEMENT_SQL = (const char*)
 "CREATE TABLE %s ("
-"VARCHAR2 MESSAGE"
+"VARCHAR2(30)   ABONENT,"
+"VARCHAR2       MESSAGE"
 ")";
 void Task::createTable(Connection* connection)
 {
@@ -212,8 +214,12 @@ void Task::beginProcess()
             if (!fetched) break;
 
             const char* abonentAddress = rs->getString(1);
-            // TODO: check abonent address here !!! Throw exc if invalid
-
+            // TODO: check abonent address here !!! continue if invalid
+            if (!abonentAddress || abonentAddress[0] == '\0') {
+                logger.warn("Invalid abonent number selected.");
+                continue;
+            }
+            
             std::string message = "";
             formatter->format(message, getAdapter, context);
 
