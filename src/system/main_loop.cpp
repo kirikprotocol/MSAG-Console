@@ -183,6 +183,7 @@ void Smsc::mainLoop()
       MergeCacheItem* pmci=reverseMergeCache.GetPtr(id);
       if(pmci)
       {
+        smsc_log_info(log,"merging expired for msgId=%lld;oa=%s;da=%s;mr=%d",id,pmci->oa.toString().c_str(),pmci->da.toString().c_str(),(int)pmci->mr);
         mergeCache.Delete(*pmci);
         reverseMergeCache.Delete(id);
         eventqueue.enqueue(id,SmscCommand::makeCancel(id));
@@ -388,6 +389,7 @@ void Smsc::processCommand(SmscCommand& cmd)
             __trace__("first piece");
             sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,1);
             id=store->getNextId();
+            smsc_log_info(log,"create mrcache item msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
             mergeCache.Insert(mci,id);
             reverseMergeCache.Insert(id,mci);
             std::pair<time_t,SMSId> to(time(NULL)+mergeConcatTimeout,id);
@@ -397,7 +399,7 @@ void Smsc::processCommand(SmscCommand& cmd)
             __trace__("next piece");
             sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,2);
             id=*pid;
-            smsc_log_info(log,"assign msgId=%lld for sms from %s to %s from mrcache",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str());
+            smsc_log_info(log,"assign from mrcache msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
           }
         }else
         {
@@ -427,6 +429,7 @@ void Smsc::processCommand(SmscCommand& cmd)
           __trace__("first piece");
           sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,1);
           id=store->getNextId();
+          smsc_log_info(log,"create mrcache item msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
           mergeCache.Insert(mci,id);
           reverseMergeCache.Insert(id,mci);
           std::pair<time_t,SMSId> to(time(NULL)+mergeConcatTimeout,id);
@@ -436,6 +439,7 @@ void Smsc::processCommand(SmscCommand& cmd)
           __trace__("next piece");
           sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,2);
           id=*pid;
+          smsc_log_info(log,"assign from mrcache msgId=%lld;oa=%s;da=%s;mr=%d",id,sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),(int)mr);
         }
       }else
       {
@@ -589,11 +593,13 @@ void Smsc::processCommand(SmscCommand& cmd)
       SMSId* pid=mergeCache.GetPtr(mci);
       if(pid)
       {
-        smsc_log_info(log,"kill mr cache item for %s,%s,%d",ki.org.toString().c_str(),ki.dst.toString().c_str(),(int)ki.mr);
+        smsc_log_info(log,"msgId=%lld: kill mr cache item for %s,%s,%d",*pid,ki.org.toString().c_str(),ki.dst.toString().c_str(),(int)ki.mr);
+        SMSId id=*pid;
+        reverseMergeCache.Delete(id);
         mergeCache.Delete(mci);
-        reverseMergeCache.Delete(*pid);
       }
-    }break;
+      return;
+    };
     default:
     {
       __warning2__("mainLoop: unprocessed command id:%d",cmd->get_commandId());

@@ -1302,6 +1302,7 @@ StateType StateMachine::submit(Tuple& t)
       {
         // now resort parts
 
+        smsc_log_debug(smsLog,"all parts received, send kill cache item:msgId=%lld;oa=%s;da=%s;mr=%d",t.msgId,sms->getOriginatingAddress().toString().c_str(),sms->getDestinationAddress().toString().c_str(),(int)mr);
         smsc->submitMrKill(sms->getOriginatingAddress(),sms->getDestinationAddress(),mr);
 
         vector<int> order;
