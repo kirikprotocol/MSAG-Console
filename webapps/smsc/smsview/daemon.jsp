@@ -5,7 +5,9 @@
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  ru.novosoft.smsc.jsp.SMSCErrors,
                  ru.novosoft.smsc.admin.Constants,
-                 ru.novosoft.smsc.admin.service.ServiceInfo"%>
+                 ru.novosoft.smsc.admin.service.ServiceInfo,
+                 ru.novosoft.smsc.jsp.smsc.localeResources.Section,
+                 java.io.IOException"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsview.*"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsview.SmsDaemonFormBean"
 /><jsp:setProperty name="bean" property="*"/><%
@@ -27,7 +29,26 @@
   }
 %><%@
 include file="/WEB-INF/inc/html_3_header.jsp"%><%@
-include file="/WEB-INF/inc/collapsing_tree.jsp"%><%
+include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
+  void printAddParam(JspWriter out, String section) throws IOException
+  {
+    out.print("<tr class=row" + ((row++) & 1) + ">");
+    out.print("<th><input class=txt id=\"newParamName_"+section+"\" name=\"newParamName_"+section+"\"></th>");
+    out.print("<td width=100% ><input class=txtW id=\"newParamValue_"+section+"\" name=\"newParamValue_"+section+"\"></td>");
+    out.print("<td><img src=\"/images/but_add.gif\" onclick=\"addParam('"+section+"')\" title='Add new parameter'></td>");
+    out.print("</tr>");
+  }
+  void printDelParam(JspWriter out, String section, String param, String value) throws IOException
+  {
+    String fullParam = section + Section.NAME_DELIMETER + param;
+    out.print("<tr class=row" + ((row++) & 1) + " id=\"paramRow_"+fullParam+"\">");
+    out.print("<th nowrap>"+param+"</th>");
+    out.print("<td width=100% ><input class=txtW id=\""+fullParam+"\" name=\""+fullParam+"\" value=\""+StringEncoderDecoder.encode(value)+"\"></td>");
+    out.print("<td><img src=\"/images/but_del.gif\" onclick=\"delParam('"+section+"', '"+param+"')\" title='Remove parameter'></td>");
+    out.print("</tr>");
+  }
+%>
+<%
   page_menu_begin(out);
   page_menu_button(out, "mbSave",  "Save",  "Save config");
   page_menu_button(out, "mbReset", "Reset", "Reset", "clickCancel()");
@@ -35,7 +56,8 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%
   page_menu_button(out, "mbStart", "Start", "Start SMSC", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
   page_menu_button(out, "mbStop",  "Stop",  "Stop SMSC", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
   page_menu_end(out);
-%><script>
+%>
+<script language="JavaScript">
 function refreshStartStopButtonsStatus()
 {
 	document.all.mbStart.disabled = (document.all.RUNNING_STATUSERVICE_<%=Constants.ARCHIVE_DAEMON_SVC_ID%>.innerText != "stopped");
@@ -43,6 +65,50 @@ function refreshStartStopButtonsStatus()
 	window.setTimeout(refreshStartStopButtonsStatus, 500);
 }
 refreshStartStopButtonsStatus();
+
+function addParam(sectionName)
+{
+	tableElem = opForm.all("paramTable_" + sectionName);
+	paramNameElem = opForm.all("newParamName_" + sectionName);
+	paramValueElem = opForm.all("newParamValue_" + sectionName);
+
+	newRow = tableElem.insertRow(tableElem.rows.length-1);
+	newRow.className = "row" + (tableElem.rows.length & 1);
+	newRow.id = "paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value;
+	newCell = document.createElement("th");
+	newCell.className = "label";
+	newCell.innerText = paramNameElem.value;
+	newRow.appendChild(newCell);
+
+	inputElement = document.createElement("input");
+	inputElement.name = sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value;
+	inputElement.value = paramValueElem.value;
+	inputElement.className = "txtW";
+	newCell = newRow.insertCell();
+	newCell.appendChild(inputElement);
+
+	imgElement = document.createElement("img");
+	imgElement.src = "/images/but_del.gif";
+	imgElement.setAttribute('sectionName', sectionName);
+	imgElement.setAttribute('paramName', paramNameElem.value);
+	imgElement.attachEvent("onclick", removeParam_Event);
+	newCell = newRow.insertCell();
+	newCell.appendChild(imgElement);
+
+	paramNameElem.value = "";
+	paramValueElem.value = "";
+}
+function removeParam_Event()
+{
+  delParam(event.srcElement.attributes.sectionName.nodeValue, event.srcElement.attributes.paramName.nodeValue);
+}
+function delParam(sectionName, paramName)
+{
+  tableElem = opForm.all("paramTable_" + sectionName);
+	rowId = "paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramName;
+	rowElem = tableElem.rows(rowId);
+	tableElem.deleteRow(rowElem.rowIndex);
+}
 </script>
 <%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=content>
@@ -71,16 +137,22 @@ refreshStartStopButtonsStatus();
       startParams(out);
         param(out, "destination", "ArchiveDaemon.Locations.destination", bean.getStringParam("ArchiveDaemon.Locations.destination"));
       finishParams(out);
-      // TODO: support for entries adding/deleting
-      startSection(out, "Source", "Source", true);
-        startParams(out);
-          param(out, "enabled", "ArchiveDaemon.Locations.Source.enabled", bean.getBoolParam("ArchiveDaemon.Locations.Source.enabled"));
-          param(out, "dir",     "ArchiveDaemon.Locations.Source.dir",     bean.getStringParam("ArchiveDaemon.Locations.Source.dir"));
+      startSection(out, "sources", "sources", true);
+        final String baseSrcSection = SmsDaemonFormBean.LOC_SOURCES_SECTION;
+        startParams(out, "paramTable_"+baseSrcSection);
+          HashMap locationsMap = bean.getSubParams(baseSrcSection);
+          for (Iterator i=locationsMap.keySet().iterator(); i.hasNext();) {
+            String locName = (String)i.next();
+            Object locDir = locationsMap.get(locName);
+            if (locDir != null && locDir instanceof String)
+              printDelParam(out, baseSrcSection, locName, (String)locDir);
+          }
+          printAddParam(out, baseSrcSection);
         finishParams(out);
       finishSection(out);
     finishSection(out);
     //################################## Indexator #############################
-    startSection(out, "Indexator", "Indexator", false);
+    startSection(out, "Indexator", "Indexator", true);
       startParams(out);
         param(out, "smsIdHashSize",    "ArchiveDaemon.Indexator.smsIdHashSize",    bean.getIntParam("ArchiveDaemon.Indexator.smsIdHashSize"));
         param(out, "smeIdHashSize",    "ArchiveDaemon.Indexator.smeIdHashSize",    bean.getIntParam("ArchiveDaemon.Indexator.smeIdHashSize"));
@@ -94,11 +166,16 @@ refreshStartStopButtonsStatus();
         param(out, "defAddrChunkSize", "ArchiveDaemon.Indexator.defAddrChunkSize", bean.getIntParam("ArchiveDaemon.Indexator.defAddrChunkSize"));
       finishParams(out);
       startSection(out, "smeAddrChunkSize", "smeAddrChunkSize", true);
-        startParams(out);
-          // TODO: support for smeAddrChunkSize entries adding/deleting
-          param(out, "MAP_PROXY", "ArchiveDaemon.Indexator.smeAddrChunkSize.MAP_PROXY", bean.getIntParam("ArchiveDaemon.Indexator.smeAddrChunkSize.MAP_PROXY"));
-          param(out, "hello", "ArchiveDaemon.Indexator.smeAddrChunkSize.hello", bean.getIntParam("ArchiveDaemon.Indexator.smeAddrChunkSize.hello"));
-          param(out, "world", "ArchiveDaemon.Indexator.smeAddrChunkSize.world", bean.getIntParam("ArchiveDaemon.Indexator.smeAddrChunkSize.world"));
+        final String baseSmeSection = SmsDaemonFormBean.SME_PARAMS_SECTION;
+        startParams(out, "paramTable_"+baseSmeSection);
+          HashMap smeMap = bean.getSubParams(baseSmeSection);
+          for (Iterator i=smeMap.keySet().iterator(); i.hasNext();) {
+            String smeName = (String)i.next();
+            Object smeValue = smeMap.get(smeName);
+            if (smeValue != null && smeValue instanceof Integer)
+              printDelParam(out, baseSmeSection, smeName, String.valueOf(smeValue));
+          }
+          printAddParam(out, baseSmeSection);
         finishParams(out);
       finishSection(out);
     finishSection(out);
