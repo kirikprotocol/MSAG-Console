@@ -301,7 +301,7 @@ AbonentService Task::getService(const char* abonent)
 {
     __require__(ds);
 
-    if (bInformAll || bNotifyAll) return FULL_SERVICE;
+    if (bInformAll && bNotifyAll) return FULL_SERVICE;
     
     AbonentService service = NONE_SERVICE;
     Connection* connection = 0;
@@ -325,11 +325,17 @@ AbonentService Task::getService(const char* abonent)
         {
             switch(rs->getUint8(1))
             {
-                case ABONENT_SUBSCRIPTION: service = SUBSCRIPTION; break;
-                case ABONENT_NOTIFICATION: service = NOTIFICATION; break;
+                case ABONENT_SUBSCRIPTION: service = (bNotifyAll) ? FULL_SERVICE:SUBSCRIPTION; break;
+                case ABONENT_NOTIFICATION: service = (bInformAll) ? FULL_SERVICE:NOTIFICATION; break;
                 case ABONENT_FULL_SERVICE: service = FULL_SERVICE; break;
                 case ABONENT_NONE_SERVICE:
-                default:                   service = NONE_SERVICE; break;
+                default: {
+                    if (bNotifyAll && bInformAll) service = FULL_SERVICE;
+                    else if (bNotifyAll) service = NOTIFICATION; 
+                    else if (bInformAll) service = SUBSCRIPTION;
+                    else service = NONE_SERVICE;
+                    break;
+                }
             }
         }
         
