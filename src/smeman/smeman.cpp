@@ -149,11 +149,11 @@ void SmeManager::registerSmeProxy(const SmeSystemId& systemId, SmeProxy* smeProx
 __synchronized__
 
   __require__ ( smeProxy != NULL );
-	{
-		SmeProxyPriority p = smeProxy->getPriority();
-		if (!( p > SmeProxyPriorityMinBr && p < SmeProxyPriorityMaxBr ))
-			throw runtime_error("proxy has incorrect priority");
-	}
+  {
+    SmeProxyPriority p = smeProxy->getPriority();
+    if (!( p > SmeProxyPriorityMinBr && p < SmeProxyPriorityMaxBr ))
+      throw runtime_error("proxy has incorrect priority");
+  }
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX )
   {
@@ -212,8 +212,15 @@ SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
 //__synchronized__ не нужно поскольку вызывается из синхронизированных методов
   for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
   {
-    if ( (*p)->deleted ) continue;
-    if ( (*p)->info.systemId.compare(systemId) == 0 ) return (*p)->idx;
+    if ( (*p) == 0 ) 
+		{
+			__warning__("iterator pointed on null element");
+		}
+		else
+		{
+			if ( (*p)->deleted ) continue;
+			if ( (*p)->info.systemId.compare(systemId) == 0 ) return (*p)->idx;
+		}
   }
   return INVALID_SME_INDEX;
 }
