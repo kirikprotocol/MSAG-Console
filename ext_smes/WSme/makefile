@@ -37,6 +37,8 @@ compile:
 	@cp -f $(DB_OCI_LIB) $(SME_BUILDDIR)/lib/libdb_oci.so
 	@cp -f ../../config/wsme/config.xml $(SME_BUILDDIR)/conf/config.xml
 	@cp -f ../../config/configuration.dtd $(SME_BUILDDIR)/conf/configuration.dtd
+	@cp -f ../../config/command.dtd $(SME_BUILDDIR)/conf/command.dtd
+	@cp -f ../../config/response.dtd $(SME_BUILDDIR)/conf/response.dtd
 	@cp -f jsp/*.* $(SME_BUILDDIR)/jsp
 	@cp -f jsp/inc/*.* $(SME_BUILDDIR)/jsp/inc
 	@cp -f config.xml $(SME_BUILDDIR)
