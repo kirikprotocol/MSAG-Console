@@ -645,7 +645,7 @@ void protocolError()
 	__reg_tc__("protocolError.invalidBind.cmdId.nonExistentCmdId",
 		"Неправильная pdu с command_id несоответствующим спецификации");
 	__reg_tc__("protocolError.invalidBind.cmdId.generickNack",
-		"При получении pdu с command_id отличным от bind SC отправляет generic_nack с command_status = ESME_RINVCMDID или ESME_RINVBNDSTS в зависимости от ситуации");
+		"При получении pdu с command_id отличным от bind SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
 	//protocolError.invalidPdu
 	__reg_tc__("protocolError.invalidPdu",
 		"Отправка неправильных pdu после установления соединения и успешного bind");
@@ -697,7 +697,7 @@ void protocolError()
 	__reg_tc__("protocolError.submitAfterUnbind.cmdId.nonExistentCmdId",
 		"Неправильная pdu с command_id несоответствующим спецификации");
 	__reg_tc__("protocolError.submitAfterUnbind.cmdId.generickNack",
-		"При получении pdu с command_id отличным от bind SC отправляет generic_nack с command_status = ESME_RINVCMDID или ESME_RINVBNDSTS в зависимости от ситуации");
+		"При получении pdu с command_id отличным от bind SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
 	//other
 	__reg_tc__("protocolError.equalSeqNum",
 		"Отправка нескольких submit_sm с одинаковым sequence_number не влияет на логику обработки pdu");
