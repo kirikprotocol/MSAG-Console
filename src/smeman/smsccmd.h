@@ -42,6 +42,18 @@ enum CommandId
   ALERT,
 };
 
+
+enum CommandStatus{
+  CMD_OK=0,
+  CMD_ERR_TEMP=1,
+  CMD_ERR_PERM=2,
+  CMD_ERR_FATAL=3,
+};
+
+#define MAKE_COMMAND_STATUS(type,code) ((type<<16)|code)
+#define GET_STATUS_TYPE(status) ((status>>16)&3)
+#define GET_STATUS_CODE(status) ((status>>16)&3)
+
 struct SmsResp
 {
 private:
