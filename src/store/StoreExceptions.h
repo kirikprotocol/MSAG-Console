@@ -112,7 +112,8 @@ namespace smsc { namespace store
     public:
 
         DuplicateMessageException() 
-            : StoreException("Storage already contains similar message !") {};
+            : StoreException("Message was rejected by MessageStore ! "
+                             "Storage already contains such message") {};
 
         virtual ~DuplicateMessageException() throw() {};
     };
