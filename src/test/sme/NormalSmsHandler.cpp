@@ -77,6 +77,25 @@ vector<int> NormalSmsHandler::checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2)
 	return res;
 }
 
+bool NormalSmsHandler::checkEqualDataCoding(PduSubmitSm& origPdu, SmsMsg* msg)
+{
+	__require__(msg && msg->msg);
+	int origLen = 0;
+	const char* origMsg = "";
+	if (origPdu.get_optional().has_messagePayload() &&
+		origPdu.get_optional().size_messagePayload())
+	{
+		origLen = origPdu.get_optional().size_messagePayload();
+		origMsg = origPdu.get_optional().get_messagePayload();
+	}
+	else if (origPdu.get_message().size_shortMessage())
+	{
+		origLen = origPdu.get_message().size_shortMessage();
+		origMsg = origPdu.get_message().get_shortMessage();
+	}
+	return (origLen == msg->len && !memcmp(origMsg, msg->msg, origLen));
+}
+
 void NormalSmsHandler::compareMsgText(DeliveryMonitor* monitor,
 	PduSubmitSm& origPdu, PduDeliverySm& pdu, time_t recvTime)
 {
@@ -87,13 +106,17 @@ void NormalSmsHandler::compareMsgText(DeliveryMonitor* monitor,
 	{
 		return;
 	}
-	__tc__("deliverySm.normalSms.notMap.checkDataCoding");
-	if (pdu.get_message().get_dataCoding() != msg->dataCoding)
+	//data coding только для больная sme -> нормальную и нормальная -> нормальную
+	if (!fixture->smeInfo.forceDC)
 	{
-		__tc_fail__(1);
+		__tc__("deliverySm.normalSms.notMap.checkDataCoding");
+		if (pdu.get_message().get_dataCoding() != msg->dataCoding)
+		{
+			__tc_fail__(1);
+		}
+		__tc_ok_cond__;
 	}
-	__tc_ok_cond__;
-	if (pdu.get_message().get_dataCoding() == origPdu.get_message().get_dataCoding())
+	if (checkEqualDataCoding(origPdu, msg))
 	{
 		__tc__("deliverySm.normalSms.notMap.checkEqualDataCoding");
 	}
@@ -150,7 +173,7 @@ PduFlag NormalSmsHandler::compareSegmentedMapMsgText(DeliveryMonitor* monitor,
 	const char* sm = pdu.get_message().get_shortMessage() + udhLen;
 	int smLen = pdu.get_message().size_shortMessage() - udhLen;
 
-	if (pdu.get_message().get_dataCoding() == origPdu.get_message().get_dataCoding())
+	if (checkEqualDataCoding(origPdu, msg))
 	{
 		__tc__("deliverySm.normalSms.map.checkLongSmsEqualDataCoding");
 	}
@@ -327,7 +350,7 @@ PduFlag NormalSmsHandler::compareSimpleMapMsgText(DeliveryMonitor* monitor,
 	SmsMsg* msg)
 {
 	__decl_tc__;
-	if (pdu.get_message().get_dataCoding() == origPdu.get_message().get_dataCoding())
+	if (checkEqualDataCoding(origPdu, msg))
 	{
 		__tc__("deliverySm.normalSms.map.checkShortSmsEqualDataCoding");
 	}
@@ -382,12 +405,16 @@ PduFlag NormalSmsHandler::compareMapMsgText(DeliveryMonitor* monitor,
 	{
 		return PDU_COND_REQUIRED_FLAG;
 	}
-	__tc__("deliverySm.normalSms.map.checkDataCoding");
-	if (pdu.get_message().get_dataCoding() != msg->dataCoding)
+	//data coding только для больная sme -> нормальную и нормальная -> нормальную
+	if (!fixture->smeInfo.forceDC)
 	{
-		__tc_fail__(1);
+		__tc__("deliverySm.normalSms.map.checkDataCoding");
+		if (pdu.get_message().get_dataCoding() != msg->dataCoding)
+		{
+			__tc_fail__(1);
+		}
+		__tc_ok_cond__;
 	}
-	__tc_ok_cond__;
 	int concatRefNum = 0, concatMaxNum = 0, concatSeqNum = 0;
 	bool udhi = pdu.get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
 	bool segmentedMsg = false;

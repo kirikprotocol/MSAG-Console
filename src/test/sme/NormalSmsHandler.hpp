@@ -47,6 +47,8 @@ protected:
 	virtual Category& getLog();
 	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
 
+	bool checkEqualDataCoding(PduSubmitSm& origPdu, SmsMsg* msg);
+
 	void compareMsgText(DeliveryMonitor* monitor, PduSubmitSm& origPdu,
 		PduDeliverySm& pdu, time_t recvTime);
 
