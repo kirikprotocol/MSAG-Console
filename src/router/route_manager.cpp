@@ -5,13 +5,18 @@
 #include "route_manager.h"
 #include <stdexcept>
 #include <memory>
+#include <algorithm>
 
 #define __synchronized__
+
+extern void __qsort__ (void *const pbase, size_t total_elems, size_t size,int(*cmp)(const void*,const void*));
+
 
 namespace smsc {
 namespace router{
 using std::runtime_error;
 using std::auto_ptr;
+using std::sort;
 
 static inline void printRoute(RouteRecord* record)
 {
@@ -107,7 +112,7 @@ int route_compare(const void* route,const void* pattern)
 
 int route_pattern_compare(const void* pat1,const void* pat2)
 {
-        return compare_patpat((**(RouteRecord**)pat2).pattern,(**(RouteRecord**)pat1).pattern);
+   return compare_patpat((**(RouteRecord**)pat2).pattern,(**(RouteRecord**)pat1).pattern);
 }
 
 void RouteManager::assign(SmeTable* smetable) // for detach call with NULL
@@ -144,10 +149,10 @@ __synchronized__
   char addrVal[21];
   char addrPattern[21];
 
-        memset(addrVal,0,sizeof(addrVal));
+  memset(addrVal,0,sizeof(addrVal));
   undefVal = 20;
   length = routeInfo.source.getValue(addrVal);
-        __require__( length < 21 );
+  __require__( length < 21 );
   memset(addrPattern,0,sizeof(addrPattern));
   for ( int i=0; i<length; ++i )
   {
@@ -173,7 +178,7 @@ __synchronized__
 
   undefVal = 20;
   length = routeInfo.dest.getValue(addrVal);
-        __require__( length < 21 );
+  __require__( length < 21 );
   memset(addrPattern,0,sizeof(addrPattern));
   for ( int i=0; i<20; ++i )
   {
@@ -225,16 +230,17 @@ static inline void makeAddress( RouteAddress* addr, const Address* source, const
         __require__( length < 21 );
 }
 
+
 // RoutingTable implementation
 bool RouteManager::lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
 {
 __synchronized__
   __require__(smeTable);
-        if ( !table_ptr ) return false;
-        if (!sorted)
+  if ( !table_ptr ) return false;
+  if (!sorted)
   {
-    qsort(table,table_ptr,sizeof(RouteRecord*),route_pattern_compare);
-    sorted = true;
+    __qsort__(table,table_ptr,sizeof(RouteRecord*),route_pattern_compare);
+		sorted = true;
     for ( int i=0; i < table_ptr; ++i )
       printRoute(table[i]);
   }
@@ -289,7 +295,7 @@ __synchronized__
         record = ok_route;
         ok_route = tmp;
       }
-			else ok_route = ok_route->ok_next;
+      else ok_route = ok_route->ok_next;
     }
     __require__(record);
     ok_route = record;
@@ -309,17 +315,17 @@ __synchronized__
         record = ok_route;
         ok_route = tmp;
       }
-			else ok_route = ok_route->ok_next;
+      else ok_route = ok_route->ok_next;
     }
     __require__(record);
     if ( record->ok_next )
     {
-			__warning__("more then one route found, use anyone");
+      __warning__("more then one route found, use anyone");
     }
   }
   else
   {
-		record = ok_route;
+    record = ok_route;
   }
   proxy = smeTable->getSmeProxy(record->proxyIdx);
   if ( info ) *info = record->info;

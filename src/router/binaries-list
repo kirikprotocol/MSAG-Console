@@ -1,2 +1,2 @@
-router/testUnit testUnit -lrouter -lsmeman -lsms
+router/testUnit testUnit -lrouter -lsmeman -lsms -lutil
  
