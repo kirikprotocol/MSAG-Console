@@ -53,7 +53,7 @@ class VeryLongText{};
 
 inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit,unsigned char* ptr_end){
   //__trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,*ptr);
-  if ( ptr >= ptr_end ) throw VeryLongText;
+  if ( ptr >= ptr_end ) throw VeryLongText();
   unsigned char val = val8bit;
   //char val = (*ptr >> shift)&0x7f;
   *ptr = *ptr | (val << shift);
