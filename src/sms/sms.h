@@ -606,8 +606,8 @@ public:
 					{
             __require__(*(buffer+pos+len-1) == 0);
             hash[key->c_str()] = string((char*)buffer+pos);
+						pos+=len;
           }
-          pos+=len;
         }
       }
     };
