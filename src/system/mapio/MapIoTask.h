@@ -235,6 +235,9 @@ public:
       if ( item == 0 ) {
         __trace2__("MAP::%s dialog for abonent %s is not present!",__FUNCTION__,abonent.c_str());
         throw runtime_error("MAP::createOrAttachSMSCDialog: has no dialog for abonent ");
+      }else if ( item->chain.size() > 5 ) {
+        __trace2__("MAP::%s chain is verly long (%d)",__FUNCTION__,item->chain.size());
+        throw runtime_error("chain is very long");
       }
       __trace2__("MAP::createOrAttachSMSCDialog: chain size %d",item->chain.size());
       item->chain.push_back(cmd);
