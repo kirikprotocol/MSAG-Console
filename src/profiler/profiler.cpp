@@ -439,7 +439,7 @@ int Profiler::Execute()
 
         int code=-1;
         int pos;
-        if(sscanf(str,"%d%n",str,pos)==1 && str[pos]==0)
+        if(sscanf(str,"%d%n",&code,&pos)==1 && str[pos]==0)
         {
           __trace2__("Profiler: ussd op=%s(%d)",str,code);
           if(ussdCmdMap.Exist(code))
