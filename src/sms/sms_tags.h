@@ -89,7 +89,7 @@
   BSMSDEFTAG(61,SMSC_UMR_LIST_MASK)
 
 
-#define SMS_LAST_TAG 60
+#define SMS_LAST_TAG 61
 
 #ifndef _TAGS_INTERNAL_
 namespace smsc{
