@@ -286,7 +286,7 @@ void Profiler::loadFromDB()
 
   ConfigView *dsConfig;
 
-  Manager::init("config.xml");
+  //Manager::init("config.xml");
   Manager& manager = Manager::getInstance();
 
   dsConfig = new ConfigView(manager, "StartupLoader");
