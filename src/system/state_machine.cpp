@@ -1059,18 +1059,21 @@ StateType StateMachine::submit(Tuple& t)
       tmp.append((const char*)body,len);
       ci->off[ci->num]=newlen;
       ci->num++;
-      if(ci->num==num) // all parts received
+      bool allParts=ci->num==num;
+      if(allParts) // all parts received
       {
         // now resort parts
 
         vector<int> order;
         bool rightOrder=true;
+        bool totalMoreUdh=false;
         for(int i=0;i<ci->num;i++)
         {
           uint16_t mr0;
           uint8_t idx0,num0;
           bool havemoreudh;
           smsc::util::findConcatInfo((unsigned char*)tmp.c_str()+ci->off[i],mr0,idx0,num0,havemoreudh);
+          totalMoreUdh=totalMoreUdh || havemoreudh;
           order.push_back(idx0);
           rightOrder=rightOrder && idx0==i+1;
         }
@@ -1079,6 +1082,7 @@ StateType StateMachine::submit(Tuple& t)
           //average number of parts is 2-3. so, don't f*ck mind with quick sort and so on.
           //maximum is 255.  65025 comparisons. not very good, but not so bad too.
           string newtmp;
+          uint16_t newci[256];
           for(unsigned i=1;i<=num;i++)
           {
             for(unsigned j=0;j<num;j++)
@@ -1086,13 +1090,30 @@ StateType StateMachine::submit(Tuple& t)
               if(order[j]==i)
               {
                 int partlen=i==num?tmp.length()-ci->off[i-1]:ci->off[i]-ci->off[i-1];
+                newci[i-1]=newtmp.length();
                 newtmp.append(tmp.c_str()+ci->off[i-1],partlen);
               }
             }
           }
+          memcpy(ci->off,newci,ci->num*2);
           tmp=newtmp;
         }
         newsms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3); // final state
+        if(!totalMoreUdh && sms->getIntProperty(Tag::SMPP_DATA_CODING)!=DataCoding::BINARY)//make single text message
+        {
+          string newtmp;
+          for(int i=1;i<=ci->num;i++)
+          {
+            int partlen=i==num?tmp.length()-ci->off[i-1]:ci->off[i]-ci->off[i-1];
+            const unsigned char * part=(const unsigned char *)tmp.c_str()+ci->off[i-1];
+            partlen-=*part+1;
+            part+=*part+1;
+            newtmp.append((const char*)part,partlen);
+          }
+          tmp=newtmp;
+          newsms.messageBody.dropProperty(Tag::SMSC_CONCATINFO);
+          newsms.messageBody.dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+        }
       }
 
       newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
@@ -1105,7 +1126,7 @@ StateType StateMachine::submit(Tuple& t)
         submitResp(t,&newsms,Status::SUBMITFAIL);
         return ERROR_STATE;
       }
-      if(ci->num!=num)
+      if(!allParts)
       {
         smsLog->info("merging sms %lld, not all parts are here, waiting",t.msgId);
         char buf[64];
