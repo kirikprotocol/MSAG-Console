@@ -472,7 +472,7 @@ void MAPSTATS_Restart()
   MAPSTATS_Flush(MAPSTATS__SEC,false);
   MAPSTATS_Flush(MAPSTATS__MIN,false);
   MAPSTATS_Flush(MAPSTATS__HOUR,false);
-  time_t cur_time = time();
+  time_t cur_time = time(0);
   MAPSTATS_last_time_sec = cur_time;
   MAPSTATS_last_time_min = cur_time;
   MAPSTATS_last_time_hour = cur_time;
@@ -481,7 +481,7 @@ void MAPSTATS_Restart()
 void MAPSTATS_Update(MAPSTATS stats)
 {
   MutexGuard _mg(MAPSTATS_GetMutex());
-  time_t cur_time = time();
+  time_t cur_time = time(0);
   if ( cur_time > MAPSTATS_last_time_hour+60*60 ) {
     // dump one hour stats
     MAPSTATS_last_time_hour = cur_time;

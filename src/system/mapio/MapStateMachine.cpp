@@ -52,7 +52,7 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code);
 
 static void AbortMapDialog(unsigned dialogid,unsigned ssn)
 {
-  MAPSTATS_Update(MAPSTATS_MSGDIALOG_ABORT);
+  MAPSTATS_Update(MAPSTATS_GSMDIALOG_ABORT);
   Et96MapUAbortReq(ssn,dialogid,0,0,0,0);
 }
 
