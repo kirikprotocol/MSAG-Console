@@ -117,34 +117,53 @@ public class RouteAlterCommand extends RouteGenCommand
                     Object obj = dsts.get(i);
                     if (obj != null && obj instanceof RouteDstDef) {
                         RouteDstDef def = (RouteDstDef)obj;
-                        Destination dst = null;
-                        SME sme = ctx.getSmsc().getSmes().get(def.getSmeId());
-                        if (sme == null) {
-                            ctx.setMessage("SME '"+def.getSmeId()+"' in dst definition not found. Couldn't alter "+out);
-                            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                            return;
-                        }
-                        if (def.getType() == RouteDstDef.TYPE_MASK) {
-                            dst = new Destination(new Mask(def.getDst()), sme);
-                        } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
-                            Subject subj = ctx.getSmsc().getSubjects().get(def.getDst());
-                            if (subj == null) {
-                                ctx.setMessage("Subject '"+def.getDst()+"' in dst definition not found. Couldn't alter "+out);
+                        if (action == ACTION_ADD)
+                        {
+                            Destination dst = null;
+                            SME sme = ctx.getSmsc().getSmes().get(def.getSmeId());
+                            if (sme == null) {
+                                ctx.setMessage("SME '"+def.getSmeId()+"' in dst definition not found. Couldn't alter "+out);
                                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                                 return;
                             }
-                            dst = new Destination(subj, sme);
-                        } else {
-                            ctx.setMessage("Unsupported dst definition for "+out);
-                            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                            return;
-                        }
-
-                        if (action == ACTION_ADD) {
+                            if (def.getType() == RouteDstDef.TYPE_MASK) {
+                                dst = new Destination(new Mask(def.getDst()), sme);
+                            } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
+                                Subject subj = ctx.getSmsc().getSubjects().get(def.getDst());
+                                if (subj == null) {
+                                    ctx.setMessage("Subject '"+def.getDst()+"' in dst definition not found. Couldn't alter "+out);
+                                    ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                                    return;
+                                }
+                                dst = new Destination(subj, sme);
+                            } else {
+                                ctx.setMessage("Unsupported dst definition for "+out);
+                                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                                return;
+                            }
                             newRoute.addDestination(dst);
-                        } else if (action == ACTION_DEL) {
-                            newRoute.removeDestination(dst.getName());
-                        } else {
+                        }
+                        else if (action == ACTION_DEL)
+                        {
+                            String dstName;
+                            if (def.getType() == RouteDstDef.TYPE_MASK) {
+                                dstName = (new Mask(def.getDst())).getMask();
+                            } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
+                                Subject subj = ctx.getSmsc().getSubjects().get(def.getDst());
+                                if (subj == null) {
+                                    ctx.setMessage("Subject '"+def.getDst()+"' in dst definition not found. Couldn't alter "+out);
+                                    ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                                    return;
+                                }
+                                dstName = subj.getName();
+                            } else {
+                                ctx.setMessage("Unsupported dst definition for "+out);
+                                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                                return;
+                            }
+                            newRoute.removeDestination(dstName);
+                        }
+                        else {
                             ctx.setMessage("Unsupported action on "+out+". Allowed ADD & DELETE");
                             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                             return;

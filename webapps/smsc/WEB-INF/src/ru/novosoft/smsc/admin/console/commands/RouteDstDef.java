@@ -14,7 +14,7 @@ public class RouteDstDef
 
     private byte type;
     private String dst;
-    private String smeId;
+    private String smeId = null;
 
     public RouteDstDef() {
         type = TYPE_MASK; dst = null; smeId = null;
