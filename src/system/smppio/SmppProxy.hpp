@@ -164,6 +164,11 @@ public:
 
   const char* getSystemId()const{return id.c_str();}
 
+  bool isOpened()
+  {
+    return opened;
+  }
+
 protected:
   mutable Mutex mutex,mutexin,mutexout;
   std::string id;

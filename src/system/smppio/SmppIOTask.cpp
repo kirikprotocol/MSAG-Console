@@ -356,7 +356,7 @@ int SmppInputThread::Execute()
               try{
                 SmscCommand cmd(pdu);
                 try{
-                  if(ss->getProxy())
+                  if(ss->getProxy() && ss->getProxy()->isOpened())
                   {
                     ss->getProxy()->putIncomingCommand(cmd);
                   }else
