@@ -36,6 +36,14 @@ static void CloseMapDialog(unsigned dialogid){
   }
 }
 
+static void DropMapDialog_(unsigned dialogid){
+  MapDialogContainer::getInstance()->dropDialog(dialogid);
+}
+
+static void DropMapDialog(MapDialog* dialog){
+  MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map);
+}
+
 struct MAPDIALOG_ERROR : public runtime_error
 {
   unsigned code;
@@ -466,14 +474,14 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
         dialogid_map = dialog->dialogid_map;
         __trace2__("MAP::putCommand: Preapre SMSC command");
         dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
-        __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()));
+        __trace2__("MAP::%s:DELIVERY_SM %s",__PRETTY_FUNCTION__,RouteToString(dialog.get()).c_str());
         mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
         mkMapAddress( &dialog->m_scAddr, "79029869999", 11 );
         mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
         mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
         __trace2__("MAP::putCommand: Query HLR AC version");
         QueryHlrVersion(dialog.get());
-        dialog->sate = MAPST_WaitHlrVersion;
+        dialog->state = MAPST_WaitHlrVersion;
       }
     }else{ // MAP dialog
       dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_smsc));
@@ -482,9 +490,9 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
           FormatText("MAP::putCommand: Opss, here is no dialog with id x%x",(ET96MAP_DIALOGUE_ID_T)dialogid_smsc));
       dialogid_map = dialogid_smsc;
       if ( dialog->state == MAPST_WaitSubmitCmdConf ){
-        ResponseMO(dialog,cmd->get_resp()->get_status());
+        ResponseMO(dialog.get(),cmd->get_resp()->get_status());
         CloseMapDialog(dialog->dialogid_map);
-        DropMapDialog(dialog);
+        DropMapDialog(dialog.get());
       }else 
         throw MAPDIALOG_BAD_STATE(
           FormatText("MAP::%s bad state %d, did 0x%x, SMSC.did 0x%x",__PRETTY_FUNCTION__,dialog->state,dialog->dialogid,dialog->dialogid_smsc));
