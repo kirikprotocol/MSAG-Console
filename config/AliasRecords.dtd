@@ -1,0 +1,3 @@
+<!ELEMENT aliases (record*)>
+<!ATTLIST record addr CDATA #REQUIRED alias CDATA #REQUIRED>
+
