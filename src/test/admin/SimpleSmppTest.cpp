@@ -48,6 +48,7 @@ public:
 		: host(_host), port(_port) {}
 	void bind(const string& systemId, const string& passwd);
 	void select(const string& systemId);
+	const string& getSelected() { return selectedId; }
 	void list();
 	void unbind();
 	void submit(const string& src, const string& dest,
@@ -258,7 +259,8 @@ void executeTest(const string& smscHost, int smscPort)
 			cout << "quit - quit test" << endl;
 			continue;
 		}
-		const char* cmdLine = readline(">");
+		string prompt = test.getSelected() + ">";
+		const char* cmdLine = readline(prompt.c_str());
 		if (!cmdLine)
 		{
 			return;
