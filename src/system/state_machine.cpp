@@ -537,7 +537,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       int j=m[0].end;
       n=10;
       string name,value;
-      while(dreTemplate.MatchEx(buf,buf+j,buf+len,m,n))
+      while(dreTemplateParam.MatchEx(buf,buf+j,buf+len,m,n))
       {
         name.assign(buf+m[1].start,m[1].end-m[1].start);
         value.assign
@@ -641,7 +641,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     if(!f)
     {
       __warning2__("template %s not found for locale %s",tmplname.c_str(),p.locale.c_str());
-      newtext.assign(body,tmplstart,tmpllen);
+      newtext.assign(buf+tmplstart,tmpllen);
     }else
     {
       try{
@@ -649,7 +649,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       }catch(exception& e)
       {
         __warning2__("failed to format template %s for locale %s: %s",tmplname.c_str(),p.locale.c_str(),e.what());
-        newtext.assign(body,tmplstart,tmpllen);
+        newtext.assign(buf+tmplstart,tmpllen);
       }
     }
     udhi=false;
