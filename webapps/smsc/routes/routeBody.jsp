@@ -27,12 +27,12 @@ function encodeHEX( str ) {
 </script>
 <div class=page_subtitle>Route information</div>
 <table cellspacing=0 cellpadding=0 _border=1>
-<col width="50%">
-<col width="0%" >
-<col width="50%">
+<col width="35%">
+<col width="10%" >
+<col width="45%">
 <tr>
 	<td valign=top><%rowN = 0;%>
-		<table class=properties_list_ cellspacing=0 cellpadding=0>
+		<table cellspacing=0 cellpadding=0>
 		<col width="1%">
 		<col width="98%">
 		<tr class=row<%=(rowN++)&1%>>
@@ -44,7 +44,7 @@ function encodeHEX( str ) {
 			<td><input class=txt name=priority value="<%=bean.getPriority()%>" maxlength=5 validation="priority" onkeyup="resetValidation(this)"></td>
 		</tr>
 		<tr class=row<%=(rowN++)&1%>>
-			<th>service ID</th>
+			<th>service&nbsp;ID&nbsp;</th>
 			<td><input class=txt name=serviceId value="<%=bean.getServiceId()%>" maxlength=5 validation="route_serviceId" onkeyup="resetValidation(this)"></td>
 		</tr>
 		<tr class=row<%=(rowN++)&1%>>
@@ -62,9 +62,9 @@ function encodeHEX( str ) {
 		</tr>		
 		</table>
 	</td>
-	<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+	<td>&nbsp;</td>
 	<td valign=top><%rowN = 0;%>
-		<table cellspacing=0 cellpadding=0>
+		<table cellspacing=2 cellpadding=0>
 		<col width=1%>
 		<col width=99%>
 		<tr>
@@ -90,10 +90,13 @@ function encodeHEX( str ) {
 		</table>
 	</td>
 </tr>
-<tr>
-	<td colspan=3>&nbsp;</td>
-</tr>
-<tr><td colspan=3><hr></td></tr>
+</table>
+<br>
+<hr>
+<table cellspacing=0 cellpadding=0 _border=1>
+<col width="45%">
+<col width="10%" >
+<col width="45%">
 <tr>
 	<td valign=top><%rowN = 0;%>
 		<div class=page_subtitle>Sources</div>
