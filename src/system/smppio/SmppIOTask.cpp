@@ -291,14 +291,17 @@ int SmppInputThread::Execute()
             case SmppCommandSet::UNBIND:
             {
               try{
-                ss->getProxy()->putIncomingCommand
-                (
-                  SmscCommand::makeUnbindResp
+                if(ss->getProxy())
+                {
+                  ss->getProxy()->putIncomingCommand
                   (
-                    pdu->get_sequenceNumber(),
-                    SmppStatusSet::ESME_ROK
-                  )
-                );
+                    SmscCommand::makeUnbindResp
+                    (
+                      pdu->get_sequenceNumber(),
+                      SmppStatusSet::ESME_ROK
+                    )
+                  );
+                }
               }catch(...)
               {
               }
@@ -312,7 +315,10 @@ int SmppInputThread::Execute()
               try{
                 SmscCommand cmd(pdu);
                 try{
-                  ss->getProxy()->putIncomingCommand(cmd);
+                  if(ss->getProxy())
+                  {
+                    ss->getProxy()->putIncomingCommand(cmd);
+                  }
                 }catch(...)
                 {
                 }
