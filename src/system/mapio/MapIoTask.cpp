@@ -81,10 +81,7 @@ void MapIoTask::deinit()
   if ( result != MSG_OK){
     __trace2__("MAP::error at MsgClose errcode 0x%hx",result);
   }
-  result = MsgExit();
-  if ( result != MSG_OK){
-    __trace2__("MAP::error at MsgExit errcode 0x%hx",result);
-  }
+  MsgExit();
 }
 
 void MapIoTask::dispatcher()
