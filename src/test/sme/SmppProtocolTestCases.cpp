@@ -290,7 +290,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					{
 						__tc__("submitSm.correct.validTimeExceeded");
 						SmppTime t;
-						SmppUtil::time2string(INT_MAX, t, time(NULL), __numTime__);
+						SmppUtil::time2string(time(NULL) + maxValidPeriod * 10,
+							t, time(NULL), __numTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
@@ -867,8 +868,7 @@ void SmppProtocolTestCases::dataSmCorrect(bool sync, int num)
 			PduDataSm* pdu = new PduDataSm();
 			const Address* destAlias = fixture->smeReg->getRandomAddress();
 			__require__(destAlias);
-			fixture->transmitter->setupRandomCorrectDataSmPdu(
-				pdu, *destAlias, rand0(1));
+			fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, *destAlias);
 			PduData* existentPduData = NULL;
 			PduData::IntProps intProps;
 			switch (s.value())
@@ -892,12 +892,12 @@ void SmppProtocolTestCases::dataSmCorrect(bool sync, int num)
 					break;
 				case 4: //срок валидности больше максимального
 					__tc__("dataSm.correct.validTimeExceeded");
-					pdu->get_optional().set_qosTimeToLive(INT_MAX);
+					pdu->get_optional().set_qosTimeToLive(maxValidPeriod * 10);
 					break;
 				case 5: //пустой messagePayload
 					__tc__("dataSm.correct.messagePayloadLengthMarginal");
-					pdu->get_optional().set_messagePayload(NULL, 0);
-					//pdu->get_optional().set_messagePayload("", 0);
+					//pdu->get_optional().set_messagePayload(NULL, 0);
+					pdu->get_optional().set_messagePayload("", 0);
 					pdu->get_data().set_esmClass(
 						pdu->get_data().get_esmClass() & ~ESM_CLASS_UDHI_INDICATOR);
 					break;
@@ -977,7 +977,7 @@ void SmppProtocolTestCases::dataSmIncorrect(bool sync, int num)
 			PduDataSm* pdu = new PduDataSm();
 			const Address* destAlias = fixture->smeReg->getRandomAddress();
 			__require__(destAlias);
-			fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, *destAlias, rand0(5));
+			fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, *destAlias);
 			switch (s.value())
 			{
 				case 1: //неправильный адрес отправителя
@@ -1136,7 +1136,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 			}
 			fixture->transmitter->setupRandomCorrectReplaceSmPdu(pdu, replacePduData);
 			//replaced pdu params
-			SmsPduWrapper replacePdu(replacePduData->pdu, 0);
+			SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
 			bool udhi = replacePdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
 			uint8_t dc = replacePdu.getDataCoding();
 			if (fixture->smeInfo.forceDC)
@@ -1281,7 +1281,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 				return;
 			}
 			fixture->transmitter->setupRandomCorrectReplaceSmPdu(pdu, replacePduData);
-			SmsPduWrapper replacePdu(replacePduData->pdu, 0);
+			SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
 			switch (s.value())
 			{
 				case 1: //неправильный message_id

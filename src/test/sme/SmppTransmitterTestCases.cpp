@@ -550,18 +550,14 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 		pduData->intProps["ussdServiceOp"] = pdu.get_optional().get_ussdServiceOp();
 	}
 	//dataCoding
+	bool simMsg = false;
 	if (fixture->smeInfo.forceDC)
 	{
 		pduData->intProps["forceDC"] = 1;
 		uint8_t dc;
-		bool simMsg;
 		if (SmppUtil::extractDataCoding(pdu.getDataCoding(), dc, simMsg))
 		{
 			pduData->intProps["dataCoding"] = dc;
-			if (simMsg)
-			{
-				pduData->intProps["simMsg"] = 1;
-			}
 		}
 	}
 	else
@@ -577,8 +573,18 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 		__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
 			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) pdu.getDataCoding(), msg->valid ? "true" : "false");
 		msg->ref();
-		bool mapDest = routeInfo->smeSystemId == "MAP_PROXY";
-		pduData->objProps[mapDest ? "map.msg" : "sms.msg"] = msg;
+		if (routeInfo->smeSystemId == "MAP_PROXY")
+		{
+			pduData->objProps["map.msg"] = msg;
+			if (simMsg)
+			{
+				pduData->intProps["simMsg"] = 1;
+			}
+		}
+		else
+		{
+			pduData->objProps["sms.msg"] = msg;
+		}
 	}
 	if (pdu.isSubmitSm())
 	{
@@ -884,7 +890,7 @@ void SmppTransmitterTestCases::sendDataSmPdu(PduDataSm* pdu,
 				pduData = prepareSms(reinterpret_cast<SmppHeader*>(pdu),
 					existentPduData, time(NULL), intProps, strProps, objProps, pduType); //all times, msgRef
 			}
-			//__dumpPdu__("dataSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			__dumpPdu__("dataSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			PduDataSmResp* respPdu =
 				fixture->session->getSyncTransmitter()->data(*pdu);
 			{
@@ -898,7 +904,7 @@ void SmppTransmitterTestCases::sendDataSmPdu(PduDataSm* pdu,
 		{
 			__tc__("dataSm.async"); __tc_ok__;
 			MutexGuard mguard(fixture->pduReg->getMutex());
-			//__dumpPdu__("dataSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			__dumpPdu__("dataSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			time_t dataTime = time(NULL);
 			PduDataSmResp* respPdu =
 				fixture->session->getAsyncTransmitter()->data(*pdu);
@@ -1234,7 +1240,7 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 				pduData = prepareReplaceSm(pdu, replacePduData, time(NULL),
 					intProps, strProps, objProps);
 			}
-			//__dumpPdu__("replaceSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			__dumpPdu__("replaceSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			PduReplaceSmResp* respPdu =
 				fixture->session->getSyncTransmitter()->replace(*pdu);
 			__dumpPdu__("replaceSmSyncAfter", fixture->smeInfo.systemId,
@@ -1248,7 +1254,7 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 		{
 			__tc__("replaceSm.async"); __tc_ok__;
 			MutexGuard mguard(fixture->pduReg->getMutex());
-			//__dumpPdu__("replaceSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			__dumpPdu__("replaceSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			time_t submitTime = time(NULL);
 			PduReplaceSmResp* respPdu =
 				fixture->session->getAsyncTransmitter()->replace(*pdu);

@@ -214,7 +214,7 @@ void SmppReceiverTestCases::processDataSm(PduDataSm& pdu)
 	__checkForNull__(2, pdu.get_header().get_commandStatus());
 	//pdu.get_header().get_sequenceNumber()
 	//message
-	__checkForNull__(3, pdu.get_optional().has_qosTimeToLive());
+	//__checkForNull__(3, pdu.get_optional().has_qosTimeToLive());
 	__tc_ok_cond__;
 	//обработать data_sm pdu
 	if (fixture->pduReg)

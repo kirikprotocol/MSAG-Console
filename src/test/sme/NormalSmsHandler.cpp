@@ -757,13 +757,14 @@ void NormalSmsHandler::processPdu(SmppHeader* header, const Address origAddr,
 			//влияет на порядок доставки сообщений
 			__compare__(5, get_message().get_priorityFlag());
 		}
-		__compare__(6, get_message().get_registredDelivery());
+		__compare__(6, getRegistredDelivery());
 		__tc_ok_cond__;
 		//optional
 		__tc__("sms.normalSms.checkOptionalFields");
 		//отключить message_payload, который проверяется в compareMsgText()
 		uint64_t excludeMask = OPT_MSG_PAYLOAD + OPT_RCPT_MSG_ID;
-		if (monitor->pduData->intProps.count("forceDC"))
+		if (monitor->pduData->intProps.count("forceDC") ||
+			fixture->smeInfo.forceDC)
 		{
 			excludeMask += OPT_DEST_ADDR_SUBUNIT +
 				OPT_MS_MSG_WAIT_FACILITIES + OPT_MS_VALIDITY;
