@@ -43,7 +43,7 @@ using namespace smsc::dbsme;
 
 static smsc::logger::Logger *logger = 0;
 
-static std::auto_ptr<smsc::admin::service::ServiceSocketListener> adminListener;
+static smsc::admin::service::ServiceSocketListener *adminListener;
 static bool bAdminListenerInited = false;
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
@@ -495,9 +495,12 @@ int main(void)
 
     //added by igork
     atexit(atExitHandler);
+
     smsc::logger::Logger::Init();
     logger = Logger::getInstance("smsc.dbsme.DBSme");
-    adminListener.reset(new smsc::admin::service::ServiceSocketListener());
+
+    std::auto_ptr<smsc::admin::service::ServiceSocketListener> adml(new smsc::admin::service::ServiceSocketListener());
+    adminListener = adml.get();
 
     SQLJobFactory _sqlJobFactory;
     JobFactory::registerFactory(&_sqlJobFactory,
