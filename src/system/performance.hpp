@@ -75,7 +75,8 @@ public:
     PerformanceData ld=*data;
     int high,low;
 
-    ld.size=htons(sizeof(ld));
+    uint16_t sz = htons(sizeof(ld));
+    ld.size = sz;
 
 
     for(int i=0;i<performanceCounters;i++)

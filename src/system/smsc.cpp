@@ -97,8 +97,7 @@ public:
       uint64_t perf[performance::performanceCounters];
       // success, error, reschedule
       smsc->getPerfData(perf);
-      auto_ptr<performance::PerformanceData> dptr (new performance::PerformanceData);
-      performance::PerformanceData& d = *dptr;
+      performance::PerformanceData d;
       d.countersNumber=performance::performanceCounters;
       for(i=0;i<performance::performanceCounters;i++)
       {
