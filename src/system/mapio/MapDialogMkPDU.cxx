@@ -325,7 +325,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
           else
           {
             unsigned tmpX = 0;
-            int _newbuflen = ConvertText27bit(text,text_len,pdu_ptr,&tmpX);
+            int _newbuflen = ConvertText27bit(text,text_len,pdu_ptr+1,&tmpX);
             *pdu_ptr++ = text_len+tmpX;
             pdu_ptr += _newbuflen;
           }
