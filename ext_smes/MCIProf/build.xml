@@ -2,6 +2,17 @@
   <property name="esme_name" value="MCIProf"/>
   <property name="esme_bin_path" value="MCIProf"/>
   <property name="esme_bin_name" value="MCIProf"/>
+  <property name="SMSC_DIR" value="../.." />
+  <property file="${SMSC_DIR}/webapps/build.properties"/>
+  <property name="java_src" location="java"/>
+  <property name="java_out" location="${BUILD_DIR}/classes/${esme_name}"/>
+  <property name="exploded" location="${BUILD_DIR}/exploded/${esme_name}"/>
+  <property name="java_lib" location="${exploded}/lib"/>
+  <property name="libs_path" location="${SMSC_DIR}/webapps/libs"/>
+  <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
+  <property name="TEMPLATE_PROPS" value="should be defined in calling script"/>
+  <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
+  <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
 
   <target name="help">
     <echo message="Do not build from this file directly"/>
