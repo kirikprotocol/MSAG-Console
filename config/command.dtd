@@ -9,7 +9,7 @@
     
 <!ELEMENT service (#PCDATA)>
     <!ATTLIST service id CDATA #REQUIRED>
-    <!ATTLIST service name CDATA #REQUIRED>
+    <!--ATTLIST service name CDATA #REQUIRED-->
     <!ATTLIST service port CDATA #REQUIRED>
     <!ATTLIST service args CDATA #REQUIRED>
 
