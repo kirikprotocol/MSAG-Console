@@ -100,6 +100,8 @@ deps:
 	@if [ -n "$(SOURCES:.cpp=)" ] ; then \
 	    XXXX="$(SOURCES:.cpp=)"; \
 	    for i in $$XXXX ; do \
+	    printf "%s" "$(SMSC_BUILDDIR)/obj/$(LIBRARY)/" >> \
+	    $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps; \
 		gcc -MM $(CXXFLAGS) $(SMSC_SRCDIR)/$(PACKAGEDIR)/$$i.cpp >>\
 		      $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps; \
 	    done; \
