@@ -48,7 +48,7 @@ Targets:
     <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat5.tar.gz" dest="${DISTR_DIR}/tomcat"/>
     <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="build"/>
     <copy todir="${DISTR_DIR}/webapps">
-      <fileset dir="${WEBSRC_DIR}" includes="images/**/*, styles/**/*, scripts/**/*"/> 
+      <fileset dir="${WEBSRC_DIR}" includes="images/**/*, styles/**/*, scripts/**/*"/>
     </copy>
   </target>
 
@@ -207,5 +207,10 @@ Targets:
   <target name="distr" depends="create_distr, extra_libs, configure">
     <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="install"/>
   </target>
+
+  <target name="tar" description="tar distr directory">
+    <tar destfile="${DISTR_DIR}/smppgw_update.tar.gz" compression="GZIP" basedir="${DISTR_DIR}"/>
+  </target>
+
 
 </project>
