@@ -484,9 +484,11 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
     }catch(exception& e)
     {
       __trace2__("DIRECT: exception : %s",e.what());
+      newtext="";
     }catch(...)
     {
       __trace2__("DIRECT: exception : unknown");
+      newtext="";
     }
     udhi=false;
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x40));
@@ -537,7 +539,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
       dc=DataCoding::UCS2;
       newlen=2*newlen-udhiLen;
     }
-    if(hb)
+    if(hb || dc==DataCoding::UCS2)
     {
       auto_ptr<short> nt(new short[newtext.length()+1]);
       __trace2__("DIRECT: newtext=%s, newtext.length=%d, nt.get()=%p",newtext.c_str(),newtext.length(),nt.get());
