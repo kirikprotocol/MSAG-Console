@@ -351,6 +351,7 @@ static const int _update_locale=3;
 static const int _update_hide=4;
 static const int _update_divert_act=5;
 static const int _update_divert=6;
+static const int _update_charset_ussd=7;
 
 
 void Profiler::internal_update(int flag,const Address& addr,int value,const char* svalue)
@@ -385,6 +386,16 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
     if(!profile.divertModifiable)throw AccessDeniedException();
     profile.divert=svalue;
   }
+  if(flag==_update_charset_ussd)
+  {
+    if(value)
+    {
+      profile.codepage|=ProfileCharsetOptions::UssdIn7Bit;
+    }else
+    {
+      profile.codepage&=~ProfileCharsetOptions::UssdIn7Bit;
+    }
+  }
   update(addr,profile);
 }
 
@@ -404,7 +415,9 @@ enum{
   msgDivertOn,
   msgDivertOff,
   msgDivertChanged,
-  msgInvalidParam
+  msgInvalidParam,
+  msg7BitUssdOn,
+  msg7BitUssdOff
 };
 
 int Profiler::Execute()
@@ -584,7 +597,22 @@ int Profiler::Execute()
         {
           msg=msgUCS2;
           internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
-        }else
+        }
+        if(!strncmp(body+i,"USSD7BIT",8))
+        {
+          i+=8;
+          while(body[i]==' ')i++;
+          if(!strcmp(body+i,"ON"))
+          {
+            internal_update(_update_charset_ussd,addr,1);
+            msg=msg7BitUssdOn;
+          }else if(!strcmp(body+i,"OFF"))
+          {
+            internal_update(_update_charset_ussd,addr,0);
+            msg=msg7BitUssdOff;
+          }
+        }
+        else
         if(!strncmp(body+i,"HIDE",4))
         {
           msg=msgHide;
@@ -709,6 +737,14 @@ int Profiler::Execute()
         case msgInvalidParam:
         {
           msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgInvalidParam");
+        }break;
+        case msg7BitUssdOn:
+        {
+          msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msg7BitUssdOn");
+        }break;
+        case msg7BitUssdOff:
+        {
+          msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msg7BitUssdOff");
         }break;
         default:
         {

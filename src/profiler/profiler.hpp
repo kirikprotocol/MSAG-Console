@@ -33,7 +33,21 @@ namespace ProfileCharsetOptions{
   const int Latin1     =smsc::smpp::DataCoding::LATIN1;
   const int Ucs2       =smsc::smpp::DataCoding::UCS2;
   const int Ucs2AndLat =smsc::smpp::DataCoding::UCS2 | smsc::smpp::DataCoding::LATIN1;
+  const int UssdIn7Bit =0x80;
 }
+
+/*
+  if((profile_dcs&UssdIn7Bit)==UssdIn7Bit)
+  {
+    if(sms.ussd_service_op)
+    {
+      profile_dcs=Default;
+    }else
+    {
+      profile_dcs=profile_dcs&(~UssdIn7Bit);
+    }
+  }
+*/
 
 namespace ProfilerMatchType{
   const int mtDefault=0;
