@@ -1196,7 +1196,7 @@ StateType StateMachine::submit(Tuple& t)
   try{
     // send delivery
     Address src;
-    __trace2__("SUBMIT: wantAlias=%s",smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias?"true":"false");
+    __trace2__("SUBMIT: wantAlias=%s, hide=%s",smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias?"true":"false",sms->getIntProperty(Tag::SMSC_HIDE)?"true":"false");
     if(
         smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
         sms->getIntProperty(Tag::SMSC_HIDE) &&
@@ -1803,11 +1803,22 @@ StateType StateMachine::deliveryResp(Tuple& t)
       sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY),
       sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST));
 
-      bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
-                  sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
+    bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
+                sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
 
-      if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && !regdel &&
-         sms.getDeliveryReport()!=REPORT_ACK)return DELIVERED_STATE;
+    if(
+       (
+         sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) &&
+         !regdel &&
+         sms.getDeliveryReport()!=REPORT_ACK
+       ) ||
+       (
+         sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)==REPORT_NOACK
+       )
+      )
+    {
+      return DELIVERED_STATE;
+    }
     if(
         sms.getDeliveryReport() ||
         regdel
