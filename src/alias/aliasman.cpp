@@ -187,21 +187,16 @@ static TreeNode* findNodeByAliasRecurse(TreeNode* node,AValue& val,int& cmp)
     #endif
     int left = 1;
     int right = (signed)node->child.size();
-    if ( right > 0 ) for(;;)
+    for(;right>=left;)
     {
       int ptr = (right+left) >> 1;
       TreeNode* res = findNodeByAliasRecurse(node->child[ptr-1],val,cmp);
       if ( res ) LEAVE_(res);
       __require__( cmp != 0 );
-      if ( right > left  )
-      {
-        __require__ ( right <= (signed)node->child.size() );
-        //__require__ ( left < right );
-        __require__ ( 0 < left );
-        if ( cmp < 0 )right = ptr-1;
-        else left = ptr+1;
-      }
-      else break;
+      __require__ ( right <= (signed)node->child.size() );
+      __require__ ( 0 < left );
+      if ( cmp < 0 )right = ptr-1;
+      else left = ptr+1;
     }
     // is not found
     LEAVE_(node);
@@ -240,21 +235,16 @@ TreeNode* findNodeByAddrRecurse(TreeNode* node,AValue& val, int& cmp)
     #endif
     int left = 1;
     int right = (signed)node->child.size();
-    if ( right > 0 ) for(;;)
+    for(;right>=left;)
     {
       int ptr = (right+left) >> 1;
       TreeNode* res = findNodeByAddrRecurse(node->child[ptr-1],val,cmp);
       if ( res ) LEAVE_(res);
       __require__( cmp != 0 );
-      if ( right > left )
-      {
-        __require__ ( right <= (signed)node->child.size() );
-        //__require__ ( left < right );
-        __require__ ( 0 < left );
-        if ( cmp < 0 )right = ptr-1;
-        else left = ptr+1;
-      }
-      else break;
+      __require__ ( right <= (signed)node->child.size() );
+      __require__ ( 0 < left );
+      if ( cmp < 0 )right = ptr-1;
+      else left = ptr+1;
     }
     // is not found
     LEAVE_(node);
@@ -304,21 +294,16 @@ int addIntoAliasTreeRecurse(TreeNode* node,AliasRecord* rec)
     #endif*/
     int left = 1;
     int right = (signed)node->child.size();
-    if ( right > 0 ) for(;;)
+    for(;right>=left;)
     {
       int ptr = (right+left) >> 1;
       cmp = addIntoAliasTreeRecurse(node->child[ptr-1],rec);
       if ( cmp == 0 ) LEAVE_(0);
       __require__( cmp != 0 );
-      if ( right > left )
-      {
-        __require__ ( right <= (signed)node->child.size() );
-        //__require__ ( left < right );
-        __require__ ( 0 < left );
-        if ( cmp < 0 )right = ptr-1;
-        else left = ptr+1;
-      }
-      else break;
+      __require__ ( right <= (signed)node->child.size() );
+      __require__ ( 0 < left );
+      if ( cmp < 0 )right = ptr-1;
+      else left = ptr+1;
     }
     __trace__("**** add element ****");
     TreeNode* newNode = new TreeNode;
@@ -371,21 +356,16 @@ int addIntoAddrTreeRecurse(TreeNode* node,AliasRecord* rec)
     #endif*/
     int left = 1;
     int right = (signed)node->child.size();
-    if ( right > 0 ) for(;;)
+    for(;right>=left;)
     {
       int ptr = (right+left) >> 1;
       cmp = addIntoAddrTreeRecurse(node->child[ptr-1],rec);
       if ( cmp == 0 ) LEAVE_(0);
       __require__( cmp != 0 );
-      if ( right > left )
-      {
-        __require__ ( right <= (signed)node->child.size() );
-        //__require__ ( left < right );
-        __require__ ( 0 < left );
-        if ( cmp < 0 )right = ptr-1;
-        else left = ptr+1;
-      }
-      else break;
+      __require__ ( right <= (signed)node->child.size() );
+      __require__ ( 0 < left );
+      if ( cmp < 0 )right = ptr-1;
+      else left = ptr+1;
     }
     __trace2__("****add element*****");
     TreeNode* newNode = new TreeNode;
