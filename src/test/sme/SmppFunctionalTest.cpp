@@ -7,6 +7,7 @@
 #include "system/state_machine.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
+#include "profiler/profiler.hpp"
 #include "system/scheduler.hpp"
 #include "test/sme/SmppTestCases.hpp"
 #include "test/smeman/SmeManagerTestCases.hpp"
@@ -24,6 +25,7 @@
 #define __print__(val) cout << #val << " = " << (val) << endl
 
 using smsc::sme::SmeConfig;
+using smsc::profiler::Profile;
 using smsc::util::config::Manager;
 using smsc::system::RescheduleCalculator;
 using smsc::test::sms::SmsUtil;
@@ -142,10 +144,10 @@ public:
 
 //TestSme
 TestSme::TestSme(int _smeNum, const SmeConfig& config, const SmeSystemId& systemId,
-	const Address& smeAddr, const SmeRegistry* smeReg,
+	const Address& smeAlias, const SmeRegistry* smeReg,
 	const AliasRegistry* aliasReg, const RouteRegistry* routeReg)
 	: TestTask("TestSme", _smeNum), smeNum(_smeNum), nextCheckTime(0),
-	tc(config, systemId, smeAddr, smeReg, aliasReg, routeReg, this),
+	tc(config, systemId, smeAlias, smeReg, aliasReg, routeReg, this),
 	boundOk(false) {}
 
 void TestSme::executeCycle()
@@ -304,12 +306,21 @@ TestSmsc::TestSmsc(const string& host, int port)
 	smscPort = port;
 }
 
+void TestSmsc::process(TCResult* res)
+{
+	if (res)
+	{
+		filter->addResult(res);
+		delete res;
+	}
+}
+
 vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 {
 	__require__(numSme <= numAddr);
-	SmeManagerTestCases* tcSme = new SmeManagerTestCases(&smeman, smeReg);
-	AliasManagerTestCases* tcAlias = new AliasManagerTestCases(&aliaser, aliasReg);
-	RouteManagerTestCases* tcRoute = new RouteManagerTestCases(&router, routeReg);
+	SmeManagerTestCases tcSme(&smeman, smeReg);
+	AliasManagerTestCases tcAlias(&aliaser, aliasReg);
+	RouteManagerTestCases tcRoute(&router, routeReg);
 
 	vector<Address*> addr;
 	vector<SmeInfo*> smeInfo;
@@ -320,7 +331,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 	{
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
-		process(tcSme->addCorrectSme(addr[i], smeInfo[i], 1 /*RAND_TC*/));
+		process(tcSme.addCorrectSme(addr[i], smeInfo[i], 1 /*RAND_TC*/));
 		ostringstream os;
 		os << *addr[i];
 		__trace2__("TestSmsc::config(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
@@ -340,13 +351,13 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 					case 1:
 					case 2:
 					case 3:
-						process(tcAlias->addCorrectAliasMatch(&alias, RAND_TC));
+						process(tcAlias.addCorrectAliasMatch(&alias, RAND_TC));
 						break;
 					case 4:
-						process(tcAlias->addCorrectAliasNotMatchAddress(&alias, RAND_TC));
+						process(tcAlias.addCorrectAliasNotMatchAddress(&alias, RAND_TC));
 						break;
 					case 5:
-						process(tcAlias->addCorrectAliasNotMatchAlias(&alias, RAND_TC));
+						process(tcAlias.addCorrectAliasNotMatchAlias(&alias, RAND_TC));
 						break;
 					default:
 						__unreachable__("Invalid alias test case");
@@ -354,7 +365,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 			}
 		}
 	}
-	tcAlias->commit();
+	tcAlias.commit();
 	//регистрация маршрутов
 	for (int i = 0; i < numAddr; i++)
 	{
@@ -371,15 +382,15 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 					case 1:
 					case 2:
 					case 3:
-						process(tcRoute->addCorrectRouteMatch(
+						process(tcRoute.addCorrectRouteMatch(
 							&route, NULL, RAND_TC));
 						break;
 					case 4:
-						process(tcRoute->addCorrectRouteNotMatch(
+						process(tcRoute.addCorrectRouteNotMatch(
 							&route, NULL, RAND_TC));
 						break;
 					case 5:
-						process(tcRoute->addCorrectRouteNotMatch2(
+						process(tcRoute.addCorrectRouteNotMatch2(
 							&route, NULL, RAND_TC));
 						break;
 					default:
@@ -388,7 +399,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 			}
 		}
 	}
-	tcRoute->commit();
+	tcRoute.commit();
 	//создание sme
 	vector<TestSme*> sme;
 	for (int i = 0; i < numSme; i++)
@@ -450,15 +461,6 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 	return sme;
 }
 
-void TestSmsc::process(TCResult* res)
-{
-	if (res)
-	{
-		filter->addResult(res);
-		delete res;
-	}
-}
-
 //TestSmsc
 vector<TestSme*> TestSmsc::init(int numAddr, int numSme)
 {
@@ -474,17 +476,23 @@ vector<TestSme*> TestSmsc::init(int numAddr, int numSme)
 	smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
 	store = smsc::store::StoreManager::getMessageStore();
 
-	int cnt = Manager::getInstance().getInt("core.state_machines_count");
+	int cnt = cfgMan.getInt("core.state_machines_count");
+    time_t maxValidTime = cfgMan.getInt("sms.max_valid_time");
 	for(int i = 0; i < cnt; i++)
 	{
-		tp.startTask(new StateMachine(eventqueue, store, this));
+      StateMachine *m = new StateMachine(eventqueue, store, this);
+      m->maxValidTime = maxValidTime;
+      tp.startTask(m);
 	}
 	RescheduleCalculator::Init(Manager::getInstance().getString("core.reschedule_table"));
 
 	//smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
 	//tp.startTask(new SpeedMonitor(eventqueue));
 
-    tp.startTask(new smsc::profiler::Profiler());
+	smsc::profiler::Profile defProfile;
+	defProfile.codepage = 0;
+	defProfile.reportoptions = 0;
+	tp.startTask(new smsc::profiler::Profiler(defProfile));
 	
 	return sme;
 }
