@@ -2,14 +2,15 @@ package ru.novosoft.smsc.dbsme;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
-import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.config.Config;
 
 import java.security.Principal;
 import java.util.*;
@@ -19,7 +20,8 @@ import java.util.*;
  * Date: Jul 11, 2003
  * Time: 4:48:42 PM
  */
-public class Provider extends DbsmeBean {
+public class Provider extends DbsmeBean
+{
   public static final int RESULT_EDIT = DbsmeBean.PRIVATE_RESULT;
   public static final int RESULT_ADD = DbsmeBean.PRIVATE_RESULT + 1;
   public static final int RESULT_REFRESH = DbsmeBean.PRIVATE_RESULT + 2;
@@ -29,7 +31,6 @@ public class Provider extends DbsmeBean {
   private boolean initialized = false;
   private String providerName = null;
   private String oldProviderName = null;
-  private String jobName = null;
   private String prefix;
   private String address = null;
   private int connections = 0;
@@ -55,10 +56,13 @@ public class Provider extends DbsmeBean {
   private String mbCancel = null;
   private String mbAdd = null;
   private String mbDelete = null;
+  private String edit = null;
 
-  private class _DataItem extends AbstractDataItem {
-    protected _DataItem(String name, String type, String address, String alias)
+  private class _DataItem extends AbstractDataItem
+  {
+    protected _DataItem(String id, String name, String type, String address, String alias)
     {
+      values.put("id", id);
       values.put("name", name);
       values.put("type", type);
       values.put("address", address);
@@ -66,36 +70,41 @@ public class Provider extends DbsmeBean {
     }
   }
 
-  private class _DataSource extends AbstractDataSourceImpl {
+  private class _DataSource extends AbstractDataSourceImpl
+  {
 
     public _DataSource()
     {
-      super(new String[]{"name", "type", "address", "alias"});
+      super(new String[]{"id", "name", "type", "address", "alias"});
     }
 
     public QueryResultSet query(_Query query_to_run)
     {
       clear();
-      for (Iterator i = getSectionChildSectionNames(prefix + ".Jobs").iterator(); i.hasNext();) {
+      final String jobsSection = prefix + ".Jobs";
+      for (Iterator i = getSectionChildSectionNames(jobsSection).iterator(); i.hasNext();) {
         String fullJobName = (String) i.next();
+        String jobId = fullJobName.substring(jobsSection.length() + 1);
         String jobName = getString(fullJobName + ".name");
         String jobType = getString(fullJobName + ".type");
         String jobAddress = getString(fullJobName + ".address");
         String jobAlias = getString(fullJobName + ".alias");
-        add(new _DataItem(jobName, jobType, jobAddress, jobAlias));
+        add(new _DataItem(jobId, jobName, jobType, jobAddress, jobAlias));
       }
       return super.query(query_to_run);
     }
   }
 
-  private class _Query extends AbstractQueryImpl {
+  private class _Query extends AbstractQueryImpl
+  {
     public _Query(int expectedResultsQuantity, Filter filter, Vector sortOrder, int startPosition)
     {
       super(expectedResultsQuantity, filter, sortOrder, startPosition);
     }
   }
 
-  private class _Filter implements Filter {
+  private class _Filter implements Filter
+  {
     public boolean isEmpty()
     {
       return true;
@@ -205,19 +214,6 @@ public class Provider extends DbsmeBean {
     if (result != RESULT_OK)
       return result;
 
-    if (mbEdit != null && mbEdit.length() > 0 && providerName != null && providerName.length() > 0)
-      return RESULT_EDIT;
-
-    if (mbDelete != null)
-      result = delete();
-    if (result != RESULT_OK)
-      return result;
-
-    Vector sortVector = new Vector();
-    sortVector.add(sort);
-    jobs = new _DataSource().query(new _Query(pageSize, new _Filter(), sortVector, startPosition));
-    totalSize = jobs.getTotalSize();
-
     if (mbCancel != null)
       return RESULT_DONE;
     if (mbDone != null)
@@ -229,6 +225,23 @@ public class Provider extends DbsmeBean {
       else
         return RESULT_ADD;
     }
+    if (mbEdit != null && mbEdit.length() > 0 && providerName != null && providerName.length() > 0) {
+      result = save();
+      if (result != RESULT_DONE)
+        return result;
+      else
+        return RESULT_EDIT;
+    }
+    if (mbDelete != null) {
+      result = delete();
+      if (result != RESULT_OK)
+        return result;
+    }
+
+    Vector sortVector = new Vector();
+    sortVector.add(sort);
+    jobs = new _DataSource().query(new _Query(pageSize, new _Filter(), sortVector, startPosition));
+    totalSize = jobs.getTotalSize();
 
     checkedSet.addAll(Arrays.asList(checked));
 
@@ -244,17 +257,54 @@ public class Provider extends DbsmeBean {
     if (result != RESULT_DONE)
       return result;
 
-    DbSmeContext.getInstance(appContext).setConfigChanged(true);
+    getContext().setJobsChanged(true);
 
     checked = new String[0];
     checkedSet.clear();
+
     return RESULT_REFRESH;
+  }
+
+  private boolean isOptionalStringEqualsToConfig(String fullParamName, String param) throws Config.ParamNotFoundException, Config.WrongParamTypeException
+  {
+    final boolean containsParam = config.containsParameter(fullParamName);
+    return (((param == null || param.length() == 0) && !containsParam)
+            || (param != null && param.length() > 0 && containsParam && param.equals(config.getString(fullParamName))));
+  }
+
+  private boolean isProviderEquals() throws Config.ParamNotFoundException, Config.WrongParamTypeException
+  {
+    prefix = "DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName);
+    return providerName.equals(oldProviderName)
+            && address.equals(getString(prefix + ".address"))
+            && connections == getInt(prefix + ".DataSource.connections")
+            && dbInstance.equals(getString(prefix + ".DataSource.dbInstance"))
+            && dbUserName.equals(getString(prefix + ".DataSource.dbUserName"))
+            && dbUserPassword.equals(getString(prefix + ".DataSource.dbUserPassword"))
+            && type.equals(getString(prefix + ".DataSource.type"))
+            && watchdog == getBool(prefix + ".DataSource.watchdog")
+
+            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.JOB_NOT_FOUND", job_not_found)
+            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.DS_FAILURE", ds_failure)
+            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.DS_CONNECTION_LOST", ds_connection_lost)
+            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.DS_STATEMENT_FAIL", ds_statement_fail)
+            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.QUERY_NULL", query_null)
+            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.INPUT_PARSE", input_parse)
+            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.OUTPUT_FORMAT", output_format)
+            && isOptionalStringEqualsToConfig(prefix + ".MessageSet.INVALID_CONFIG", invalid_config);
   }
 
   private int save()
   {
-    String newPrefix = "DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName);
+    String newPrefix = createProviderPrefix(providerName);
     if (!creating) {
+      try {
+        if (isProviderEquals())
+          return RESULT_DONE;
+      } catch (Throwable e) {
+        //skip it
+        logger.error("Could not verify provider \"" + providerName + "\" (\"" + oldProviderName + "\")");
+      }
       if (!newPrefix.equals(prefix)) {
         final String tmp = getString(newPrefix + ".type");
         if (tmp != null && tmp.length() > 0)
@@ -291,9 +341,14 @@ public class Provider extends DbsmeBean {
       return error(DBSmeErrors.error.couldntSaveTempConfig, e);
     }
 
-    DbSmeContext.getInstance(appContext).setConfigChanged(true);
+    getContext().setConfigChanged(true);
 
     return RESULT_DONE;
+  }
+
+  protected static String createProviderPrefix(String providerName)
+  {
+    return "DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName);
   }
 
   public List getTypes()
@@ -329,16 +384,6 @@ public class Provider extends DbsmeBean {
   public void setProviderName(String providerName)
   {
     this.providerName = providerName;
-  }
-
-  public String getJobName()
-  {
-    return jobName;
-  }
-
-  public void setJobName(String jobName)
-  {
-    this.jobName = jobName;
   }
 
   public String getAddress()
@@ -593,5 +638,15 @@ public class Provider extends DbsmeBean {
   public void setChecked(String[] checked)
   {
     this.checked = checked;
+  }
+
+  public String getEdit()
+  {
+    return edit;
+  }
+
+  public void setEdit(String edit)
+  {
+    this.edit = edit;
   }
 }

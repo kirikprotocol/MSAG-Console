@@ -1,6 +1,9 @@
 package ru.novosoft.smsc.dbsme;
 
+import org.apache.log4j.Category;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.WebAppFolders;
 
@@ -14,30 +17,36 @@ import java.io.InputStream;
  * Date: Jul 16, 2003
  * Time: 4:50:30 PM
  */
-public class DbSmeContext {
+public class DbSmeContext
+{
   private static DbSmeContext dbSmeContext = null;
 
-  public static synchronized DbSmeContext getInstance(SMSCAppContext appContext)
+  public static synchronized DbSmeContext getInstance(SMSCAppContext appContext) throws AdminException
   {
-    if (dbSmeContext == null)
-      dbSmeContext = new DbSmeContext(appContext);
-    return dbSmeContext;
+    return dbSmeContext != null ? dbSmeContext : (dbSmeContext = new DbSmeContext(appContext));
   }
 
-  private boolean configChanged = false;
 
-  public DbSmeContext(SMSCAppContext appContext)
+  private SmeTransport smeTransport = null;
+  private boolean configChanged = false;
+  private boolean jobsChanged = false;
+  private Category logger = Category.getInstance(this.getClass());
+
+  private DbSmeContext(SMSCAppContext appContext) throws AdminException
   {
+    ServiceInfo serviceInfo = null;
+    serviceInfo = appContext.getHostsManager().getServiceInfo(Constants.DBSME_SME_ID);
+    this.smeTransport = serviceInfo == null ? null : new SmeTransport(serviceInfo);
     this.configChanged = false;
     File tempConfigFile = new File(WebAppFolders.getWorkFolder(), "dbSme.config.xml.tmp");
     if (tempConfigFile.exists()) {
       File origConfigFile = null;
-      try {
-        origConfigFile = new File(appContext.getHostsManager().getServiceInfo(Constants.DBSME_SME_ID).getServiceFolder(), "conf/config.xml");
-      } catch (Exception e) {
-        System.out.println("Couldn't get original config, nested: " + e.getMessage());
+      if (serviceInfo != null) {
+        origConfigFile = new File(serviceInfo.getServiceFolder(), "conf/config.xml");
+      } else {
+        logger.error("Could not get DbSme original config, nested: Could not get service info");
       }
-      if (origConfigFile.exists()) {
+      if (origConfigFile != null && origConfigFile.exists()) {
         if (origConfigFile.length() != tempConfigFile.length()) {
           this.configChanged = true;
           return;
@@ -68,5 +77,20 @@ public class DbSmeContext {
   public void setConfigChanged(boolean configChanged)
   {
     this.configChanged = configChanged;
+  }
+
+  public SmeTransport getSmeTransport()
+  {
+    return smeTransport;
+  }
+
+  public boolean isJobsChanged()
+  {
+    return jobsChanged;
+  }
+
+  public void setJobsChanged(boolean jobsChanged)
+  {
+    this.jobsChanged = jobsChanged;
   }
 }

@@ -41,10 +41,15 @@
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <%@ include file="inc/menu.jsp"%>
 <div class=content>
-<div class=page_subtitle>DB SME Config <%=bean.isConfigChanged() ? "changed" : "not changed"%></div>
+<input class=check type=checkbox name=apply id=applyAllCheckbox value=all
+ <%=bean.isConfigChanged() ? "" : "disabled"%>
+ <%=bean.isApplyAll() ? "checked" : ""%>><label for=applyAllCheckbox>Apply all</label></br>
+<input class=check type=checkbox name=apply id=applyJobCheckbox value=jobs
+ <%=bean.isJobsChanged() && !bean.isConfigChanged() ? "" : "disabled"%>
+ <%=bean.isApplyJobs() || bean.isConfigChanged() ? "checked" : ""%>><label for=applyJobCheckbox>Apply jobs</label>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbApply", "Save", "Save new config");
+page_menu_button(out, "mbApply", "Apply", "Apply new config");
 page_menu_button(out, "mbReset", "Reset", "Cancel changes");
 page_menu_space(out);
 page_menu_end(out);

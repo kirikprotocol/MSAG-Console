@@ -10,15 +10,15 @@ import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
 import java.security.Principal;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by igork
  * Date: Jul 10, 2003
  * Time: 6:42:34 PM
  */
-public class DbsmeBean extends IndexBean {
+public class DbsmeBean extends IndexBean
+{
 
   public static final int RESULT_OVERVIEW = IndexBean.PRIVATE_RESULT;
   public static final int RESULT_PARAMS = IndexBean.PRIVATE_RESULT + 1;
@@ -29,6 +29,10 @@ public class DbsmeBean extends IndexBean {
 
   private String menuSelection = null;
   protected Config config = null;
+  private DbSmeContext context = null;
+  private SmeTransport smeTransport = null;
+  private File originalConfigFile = null;
+  private File tempConfigFile = new File(WebAppFolders.getWorkFolder(), Constants.DBSME_SME_ID + ".config.xml.tmp");
 
   protected int init(List errors)
   {
@@ -37,14 +41,21 @@ public class DbsmeBean extends IndexBean {
       return result;
 
     try {
-      File tempConfigFile = new File(WebAppFolders.getWorkFolder(), "dbSme.config.xml.tmp");
+      context = DbSmeContext.getInstance(getAppContext());
+    } catch (AdminException e) {
+      logger.error("Could not instantiate DbSme context", e);
+      return error("Could not instantiate DbSme context", e);
+    }
+    smeTransport = context.getSmeTransport();
+
+    try {
+      originalConfigFile = new File(appContext.getHostsManager().getServiceInfo(Constants.DBSME_SME_ID).getServiceFolder(), "conf/config.xml");
       if (!tempConfigFile.exists()) {
-        File origConfigFile = new File(appContext.getHostsManager().getServiceInfo(Constants.DBSME_SME_ID).getServiceFolder(), "conf/config.xml");
-        if (!origConfigFile.exists()) {
-          logger.error("Couldn't find DBSME config file (" + origConfigFile.getAbsolutePath() + ")");
-          return error(DBSmeErrors.error.couldntFindConfig, origConfigFile.getAbsolutePath());
+        if (!originalConfigFile.exists()) {
+          logger.error("Couldn't find DBSME config file (" + originalConfigFile.getAbsolutePath() + ")");
+          return error(DBSmeErrors.error.couldntFindConfig, originalConfigFile.getAbsolutePath());
         }
-        InputStream in = new BufferedInputStream(new FileInputStream(origConfigFile));
+        InputStream in = new BufferedInputStream(new FileInputStream(originalConfigFile));
         OutputStream out = new BufferedOutputStream(new FileOutputStream(tempConfigFile));
         for (int readedByte = in.read(); readedByte >= 0; readedByte = in.read())
           out.write(readedByte);
@@ -59,6 +70,11 @@ public class DbsmeBean extends IndexBean {
     }
 
     return RESULT_OK;
+  }
+
+  protected File getOriginalConfigFile()
+  {
+    return originalConfigFile;
   }
 
   public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
@@ -142,5 +158,20 @@ public class DbsmeBean extends IndexBean {
   public Set getSectionChildSectionNames(String sectionName)
   {
     return config.getSectionChildSectionNames(sectionName);
+  }
+
+  protected DbSmeContext getContext()
+  {
+    return context;
+  }
+
+  protected File getTempConfigFile()
+  {
+    return tempConfigFile;
+  }
+
+  protected SmeTransport getSmeTransport()
+  {
+    return smeTransport;
   }
 }

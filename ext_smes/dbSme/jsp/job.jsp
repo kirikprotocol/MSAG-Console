@@ -55,7 +55,7 @@
 <div class=content>
 <%@include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <input type=hidden name=providerName value="<%=StringEncoderDecoder.encode(bean.getProviderName())%>">
-<input type=hidden name=jobPrefix value="<%=StringEncoderDecoder.encode(bean.getJobPrefix())%>">
+<input type=hidden name=jobId value="<%=StringEncoderDecoder.encode(bean.getJobId())%>">
 <input type=hidden name=creating value="<%=bean.isCreating()%>">
 <input type=hidden name=initialized value=true>
 <script>

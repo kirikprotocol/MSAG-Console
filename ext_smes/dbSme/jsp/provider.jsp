@@ -26,7 +26,7 @@
 			break;
 		case Provider.RESULT_EDIT:
 			response.sendRedirect("job.jsp?providerName=" + URLEncoder.encode(bean.getProviderName())
-										 + "&jobName=" + URLEncoder.encode(bean.getJobName()));
+										 + "&jobId=" + URLEncoder.encode(bean.getEdit()));
 			return;
 		case Provider.RESULT_ADD:
 			response.sendRedirect("job.jsp?providerName=" + URLEncoder.encode(bean.getProviderName()) + "&creating=true");
@@ -58,7 +58,7 @@
 <%@ include file="inc/menu.jsp"%>
 <%@include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <input type=hidden name=oldProviderName value="<%=StringEncoderDecoder.encode(bean.getOldProviderName())%>">
-<input type=hidden name=jobName value="<%=StringEncoderDecoder.encode(bean.getJobName() == null ? "" : bean.getJobName())%>">
+<input type=hidden name=edit value="<%=StringEncoderDecoder.encode(bean.getEdit() == null ? "" : bean.getEdit())%>">
 <input type=hidden name=creating value="<%=bean.isCreating()%>">
 <input type=hidden name=initialized value=true>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
@@ -106,14 +106,6 @@ function setSort(sorting)
 	opForm.submit();
 	return false;
 }
-function edit(jName)
-{
-	opForm.jobName.value = jName;
-	opForm.jbutton.value = "Edit";
-	opForm.jbutton.name =  "mbEdit";
-	opForm.submit();
-	return false;
-}
 </script>
 <table class=list cellspacing=0>
 <col width=1%>
@@ -128,19 +120,21 @@ function edit(jName)
 	int row = 0;
 	for (Iterator i = bean.getJobs().iterator(); i.hasNext();) {
 		DataItem item = (DataItem) i.next();
-      String jobName    = (String) item.getValue("name");
+    String jobId = (String) item.getValue("id");
+    String jobName    = (String) item.getValue("name");
 		String jobType    = (String) item.getValue("type");
 		String jobAddress = (String) item.getValue("address");
 		String jobAlias   = (String) item.getValue("alias");
 
+    String encId = StringEncoderDecoder.encode(jobId);
 		String encName = StringEncoderDecoder.encode(jobName);
 		String encType = StringEncoderDecoder.encode(jobType);
 		String encAddress = StringEncoderDecoder.encode(jobAddress);
 		String encAlias   = StringEncoderDecoder.encode(jobAlias);
 %>
 <tr class=row<%=(row++)&1%>>
-	<td><input class=check type=checkbox name=checked value="<%=encName%>" <%=bean.isJobChecked(jobName) ? "checked" : ""%>></td>
-	<td><a href="#" title="Edit job" onClick='return edit("<%=encName%>")'><%=encName%></a></td>
+	<td><input class=check type=checkbox name=checked value="<%=encId%>" <%=bean.isJobChecked(jobId) ? "checked" : ""%>></td>
+	<td style="cursor:hand;" onClick='return editSomething("<%=encId%>")' title="Edit job <%=encName%>"><a href="#"><%=encName%></a></td>
 	<td><%=encType%>&nbsp;</td>
 	<td><%=encAddress%>&nbsp;</td>
 	<td><%=encAlias%>&nbsp;</td>
@@ -153,7 +147,7 @@ function edit(jName)
 <%finishSection(out);%>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",    "Add job",    "Create new job", "return confirm('Save provider changes?')");
+page_menu_button(out, "mbAdd",    "Add job",    "Create new job");
 page_menu_button(out, "mbDelete", "Delete jobs", "Delete all checked jobs", "return confirm('Are you sure to delete all checked jobs?') && confirm('Save provider changes?')");
 page_menu_button(out, "mbDone",  "Done",  "");
 page_menu_button(out, "mbCancel", "Cancel", "Cancel changes", "return noValidationSubmit(this);");

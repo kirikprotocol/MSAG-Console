@@ -48,6 +48,12 @@
 			param(out, "origAddress", "origAddress", bean.getOrigAddress(), null, null, false, "mask");
 			param(out, "systemType",  "systemType",  bean.getSystemType());
 		finishParams(out);
+    startSection(out, "DBSme.Admin", "Admin", false);
+      startParams(out);
+        param(out, "adminHost", "adminHost", bean.getAdminHost(), null, null, false, "nonEmpty");
+        param(out, "adminPort", "adminPort", bean.getAdminPort(), null, null, false, "port");
+      finishParams(out);
+    finishSection(out);
 		startSection(out, "DBSme.ThreadPool", "ThreadPool", false);
 			startParams(out);
 				param(out, "max",  "max",  bean.getMax(), null, null, false, "positive");
