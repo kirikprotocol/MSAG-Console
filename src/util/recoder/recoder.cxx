@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "recode_dll/recode_dll.h"
+#include "recode_dll.h"
 
 unsigned char  _8bit_2_7bit[256];
 unsigned char  _7bit_2_8bit[128];
