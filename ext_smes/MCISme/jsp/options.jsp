@@ -206,6 +206,19 @@
   <td><input class=txt name=dataSourceJdbcSource value="<%=StringEncoderDecoder.encode(bean.getDataSourceJdbcSource())%>"></td>
 </tr>
 </table>
+<div class=page_subtitle>MCI Profiler options</div>
+<table class=properties_list cellspacing=0  width="100%" <%rowN=0;%>>
+<col width="20%">
+<col width="80%">
+<tr class=row<%=rowN++&1%>>
+  <th>location</th>
+  <td><input class=txt name=mciProfLocation value="<%=StringEncoderDecoder.encode(bean.getMciProfLocation())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Add more options...</th>
+  <td>&nbsp;</td>
+</tr>
+</table>
 </div><%
 page_menu_begin(out);
 page_menu_button(out, "mbDone",  "Done",  "Done editing");

@@ -1,12 +1,8 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.mcisme.beans.Templates,
-					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors,
-                 ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.mcisme.beans.MCISmeBean,
-                 java.net.URLEncoder,
-                 java.util.*"%>
+<%@ page import="ru.novosoft.smsc.admin.Constants, ru.novosoft.smsc.mcisme.beans.Templates,
+					       ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
+                 ru.novosoft.smsc.util.StringEncoderDecoder, ru.novosoft.smsc.mcisme.beans.MCISmeBean,
+                 java.net.URLEncoder, java.util.*, ru.novosoft.smsc.util.Functions"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Templates" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -20,14 +16,14 @@
       return;
     case MCISmeBean.RESULT_INFORM_EDIT:
       response.sendRedirect("template.jsp?informTemplate=true&createTemplate=false&templateName="+
-                            URLEncoder.encode(bean.getEditTemplate(), "UTF-8"));
+                            URLEncoder.encode(bean.getEditTemplate(), Functions.getLocaleEncoding()));
       return;
     case MCISmeBean.RESULT_NOTIFY_ADD:
       response.sendRedirect("template.jsp?informTemplate=false&createTemplate=true&templateName=");
       return;
     case MCISmeBean.RESULT_NOTIFY_EDIT:
       response.sendRedirect("template.jsp?informTemplate=false&createTemplate=false&templateName="+
-                            URLEncoder.encode(bean.getEditTemplate(), "UTF-8"));
+                            URLEncoder.encode(bean.getEditTemplate(), Functions.getLocaleEncoding()));
       return;
 		default: {
       %><%@ include file="inc/menu_switch.jsp"%><%

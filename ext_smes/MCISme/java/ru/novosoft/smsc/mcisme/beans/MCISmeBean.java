@@ -20,25 +20,37 @@ import java.util.List;
  */
 public class MCISmeBean extends PageBean
 {
-  public static final int RESULT_APPLY       = PageBean.PRIVATE_RESULT + 0;
-  public static final int RESULT_STAT        = PageBean.PRIVATE_RESULT + 1;
-  public static final int RESULT_STATUSES    = PageBean.PRIVATE_RESULT + 2;
-  public static final int RESULT_OPTIONS     = PageBean.PRIVATE_RESULT + 3;
-  public static final int RESULT_DRIVERS     = PageBean.PRIVATE_RESULT + 4;
-  public static final int RESULT_TEMPLATES   = PageBean.PRIVATE_RESULT + 5;
-  public static final int RESULT_INFORM_ADD  = PageBean.PRIVATE_RESULT + 6;
-  public static final int RESULT_INFORM_EDIT = PageBean.PRIVATE_RESULT + 7;
-  public static final int RESULT_NOTIFY_ADD  = PageBean.PRIVATE_RESULT + 8;
-  public static final int RESULT_NOTIFY_EDIT = PageBean.PRIVATE_RESULT + 9;
-  protected static final int PRIVATE_RESULT  = PageBean.PRIVATE_RESULT + 10;
+  public final static int RESULT_APPLY       = PageBean.PRIVATE_RESULT + 0;
+  public final static int RESULT_STAT        = PageBean.PRIVATE_RESULT + 1;
+  public final static int RESULT_STATUSES    = PageBean.PRIVATE_RESULT + 2;
+  public final static int RESULT_OPTIONS     = PageBean.PRIVATE_RESULT + 3;
+  public final static int RESULT_DRIVERS     = PageBean.PRIVATE_RESULT + 4;
+  public final static int RESULT_TEMPLATES   = PageBean.PRIVATE_RESULT + 5;
+  public final static int RESULT_INFORM_ADD  = PageBean.PRIVATE_RESULT + 6;
+  public final static int RESULT_INFORM_EDIT = PageBean.PRIVATE_RESULT + 7;
+  public final static int RESULT_NOTIFY_ADD  = PageBean.PRIVATE_RESULT + 8;
+  public final static int RESULT_NOTIFY_EDIT = PageBean.PRIVATE_RESULT + 9;
+  protected final static int PRIVATE_RESULT  = PageBean.PRIVATE_RESULT + 10;
 
-  public static final String TEMPLATES_SECTION_NAME        = "MCISme.Templates";
-  public static final String INFORM_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Inform";
-  public static final String NOTIFY_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Notify";
+  public final static String TEMPLATES_SECTION_NAME        = "MCISme.Templates";
+  public final static String INFORM_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Inform";
+  public final static String NOTIFY_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Notify";
+
+  public final static String MCI_PROF_DS_FILE     = "executor.properties";
+  public final static String MCI_PROF_MTF_FILE    = "templates.properties";
+  public final static String MCI_PROF_MSC_FILE    = "commutator.properties";
+  public final static String MCI_PROF_DS_COMMENT  = "MCI Profile DataSource settings";
+  public final static String MCI_PROF_MTF_COMMENT = "MCI Profile messages templates settings";
+  public final static String MCI_PROF_MSC_COMMENT = "MCI Profile MSC settings";
+
+  public final static String MCI_PROF_LOCATION_PARAM = "MCISme.MCIProfLocation";
+  public final static String MCI_PROF_MSCSET_SECTION = "MCISme.MSCSettings";
 
   private String mbMenu = null;
 
-  private String smeId = "MCISme";
+  private String smeId         = "MCISme";
+  private String profilerSmeId = "MCIProf";
+
   private Config config = null;
   private MCISmeContext mciSmeContext = null;
   private MCISme mciSme = null;
@@ -107,5 +119,7 @@ public class MCISmeBean extends PageBean
   public String getSmeId() {
     return smeId;
   }
-
+  public String getProfilerSmeId() {
+    return profilerSmeId;
+  }
 }

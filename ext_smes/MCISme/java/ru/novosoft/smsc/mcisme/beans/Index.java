@@ -2,10 +2,10 @@ package ru.novosoft.smsc.mcisme.beans;
 
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.mcisme.backend.CountersSet;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.Iterator;
+import java.util.Properties;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,20 +17,17 @@ import java.util.Iterator;
 public class Index extends IndexProperties
 {
   private int applyGlobalParams(final Config oldConfig)
-    throws Config.WrongParamTypeException, IOException, NullPointerException, CloneNotSupportedException
+      throws Config.WrongParamTypeException, IOException, NullPointerException, CloneNotSupportedException
   {
     Config backup = (Config) oldConfig.clone();
     final Config config = getConfig();
 
-    //MCISme - root
     backup.removeParamsFromSection("MCISme");
     backup.copySectionParamsFromConfig(config, "MCISme");
 
-    //StartupLoader
     backup.removeSection("StartupLoader");
     backup.copySectionFromConfig(config, "StartupLoader");
 
-    //others
     for (Iterator i = backup.getSectionChildSectionNames("MCISme").iterator(); i.hasNext();) {
       String sectionName = (String) i.next();
       backup.removeSection(sectionName);
@@ -49,6 +46,8 @@ public class Index extends IndexProperties
     if (getMCISmeContext().getDataSource() == null)
       warning("Invalid JDBC parameters");
 
+    saveMCIProfOptions(config);
+
     return message("Changes saved, you should restart MCI Sme to apply changes");
   }
 
@@ -56,6 +55,7 @@ public class Index extends IndexProperties
   {
     try {
       getMCISmeContext().resetConfig();
+      saveMCIProfOptions(getConfig());
       getMCISmeContext().setChangedOptions(false);
       getMCISmeContext().setChangedDrivers(false);
       getMCISmeContext().setChangedTemplates(false);
@@ -73,7 +73,6 @@ public class Index extends IndexProperties
       logger.debug("Apply ...");
       final Config oldConfig = getMCISmeContext().loadCurrentConfig();
       result = applyGlobalParams(oldConfig);
-
     } catch (Throwable e) {
       logger.error("Couldn't save MCI Sme config", e);
       result = error("Could not save MCI Sme config", e);
@@ -84,16 +83,25 @@ public class Index extends IndexProperties
   protected int start()
   {
     int result = RESULT_DONE;
-    try {
-      getAppContext().getHostsManager().startService(getSmeId());
-      try { // из-за долгого старта MCISme
-        Thread.sleep(5000);
-      } catch (InterruptedException e) {
-        //do nothing
+    if (isToStart("service"))
+    {
+      try {
+        getAppContext().getHostsManager().startService(getSmeId());
+        try { Thread.sleep(5000); } catch (InterruptedException e) {}
+      } catch (AdminException e) {
+        logger.error("Could not start MCI Sme", e);
+        result = error("Could not start MCI Sme", e);
       }
-    } catch (AdminException e) {
-      logger.error("Could not start MCI Sme", e);
-      result = error("Could not start MCI Sme", e);
+    }
+    else if (isToStart("profiler"))
+    {
+      try {
+        getAppContext().getHostsManager().startService(getProfilerSmeId());
+        try { Thread.sleep(5000); } catch (InterruptedException e) {}
+      } catch (AdminException e) {
+        logger.error("Could not start MCI Profiler", e);
+        result = error("Could not start MCI Profiler", e);
+      }
     }
     return result;
   }
@@ -101,13 +109,84 @@ public class Index extends IndexProperties
   protected int stop()
   {
     int result = RESULT_DONE;
-    try {
-      getAppContext().getHostsManager().shutdownService(getSmeId());
-    } catch (AdminException e) {
-      logger.error("Could not stop MCI Sme", e);
-      result = error("Could not stop MCI Sme", e);
+    if (isToStart("service"))
+    {
+      try {
+        getAppContext().getHostsManager().shutdownService(getSmeId());
+      } catch (AdminException e) {
+        logger.error("Could not stop MCI Sme", e);
+        result = error("Could not stop MCI Sme", e);
+      }
+    }
+    else if (isToStart("profiler"))
+    {
+      try {
+        getAppContext().getHostsManager().shutdownService(getProfilerSmeId());
+      } catch (AdminException e) {
+        logger.error("Could not stop MCI Profiler", e);
+        result = error("Could not stop MCI Profiler", e);
+      }
     }
     return result;
+  }
+
+  private void savePropertiesFile(String location, String fileName, Properties properties, String comment)
+      throws IOException
+  {
+    File file = new File(location+'/'+fileName);
+    if (file.exists()) file.delete();
+    file.createNewFile();
+
+    OutputStream os = null;
+    try {
+      os = new FileOutputStream(file);
+      properties.store(os, comment);
+    } catch(IOException e) {
+      throw e;
+    } finally {
+      if (os != null) { os.flush(); os.close(); }
+    }
+  }
+  private void saveMCIProfOptions(Config config) throws IOException
+  {
+    try
+    {
+      final String location = config.getString(MCI_PROF_LOCATION_PARAM);
+      if (location == null || location.trim().length() <= 0) return;
+
+      Properties dsProperties = new Properties();
+      dsProperties.setProperty("jdbc.driver"  , config.getString("MCISme.DataSource.jdbc.driver"));
+      dsProperties.setProperty("jdbc.source"  , config.getString("MCISme.DataSource.jdbc.source"));
+      dsProperties.setProperty("jdbc.user"    , config.getString("MCISme.DataSource.dbUserName"));
+      dsProperties.setProperty("jdbc.password", config.getString("MCISme.DataSource.dbUserPassword"));
+      savePropertiesFile(location, MCI_PROF_DS_FILE, dsProperties, MCI_PROF_DS_COMMENT);
+
+      Properties mscProperties = new Properties();
+      mscProperties.setProperty("MCISme.Address", config.getString("MCISme.Address"));
+      // TODO: add more MSC settings form MCI_PROF_MSCSET_SECTION
+      savePropertiesFile(location, MCI_PROF_MSC_FILE, mscProperties, MCI_PROF_MSC_COMMENT);
+
+      Properties mtfProperties = new Properties();
+      mtfProperties.setProperty("defaultInformId", ""+config.getInt(INFORM_TEMPLATES_SECTION_NAME+".default"));
+      for (Iterator i = config.getSectionChildShortSectionNames(INFORM_TEMPLATES_SECTION_NAME).iterator(); i.hasNext();) {
+        String templateName = (String)i.next();
+        int id = config.getInt(INFORM_TEMPLATES_SECTION_NAME+'.'+templateName+".id");
+        mtfProperties.setProperty("informTemplate."+id, templateName);
+      }
+      mtfProperties.setProperty("defaultNotifyId", ""+config.getInt(NOTIFY_TEMPLATES_SECTION_NAME+".default"));
+      for (Iterator i = config.getSectionChildShortSectionNames(NOTIFY_TEMPLATES_SECTION_NAME).iterator(); i.hasNext();) {
+        String templateName = (String)i.next();
+        int id = config.getInt(NOTIFY_TEMPLATES_SECTION_NAME+'.'+templateName+".id");
+        mtfProperties.setProperty("notifyTemplate."+id, templateName);
+      }
+      savePropertiesFile(location, MCI_PROF_MTF_FILE, mtfProperties, MCI_PROF_MTF_COMMENT);
+
+    } catch (IOException e) {
+      throw e;
+    } catch (Exception e) {
+      logger.warn("Failed to save MCIProf options", e);
+    }
+
   }
 
 }

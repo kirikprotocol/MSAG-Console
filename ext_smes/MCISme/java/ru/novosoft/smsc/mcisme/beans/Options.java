@@ -68,6 +68,9 @@ public class Options extends MCISmeBean
   private String  dataSourceJdbcDriver = "";
   private String  dataSourceJdbcSource = "";
 
+  private String  mciProfLocation = "";
+  // TODO: add MSC settings params
+
   private boolean initialized = false;
 
   private String mbDone = null;
@@ -94,6 +97,13 @@ public class Options extends MCISmeBean
         maxRowsPerMessage = getConfig().getInt("MCISme.maxRowsPerMessage");
         forceInform = getConfig().getBool("MCISme.forceInform");
         forceNotify = getConfig().getBool("MCISme.forceNotify");
+
+        try {
+          mciProfLocation = getConfig().getString(MCI_PROF_LOCATION_PARAM);
+          // TODO: init bean properties for MSC settings
+        } catch (Throwable th) {
+          logger.warn("Parameter '"+MCI_PROF_LOCATION_PARAM+"' wasn't specified");
+        }
 
         smppThreadPoolMax = getConfig().getInt("MCISme.SMPPThreadPool.max");
         smppThreadPoolInit = getConfig().getInt("MCISme.SMPPThreadPool.init");
@@ -130,6 +140,7 @@ public class Options extends MCISmeBean
         dataSourceWatchdog = getConfig().getBool("MCISme.DataSource.watchdog");
         dataSourceJdbcDriver = getConfig().getString("MCISme.DataSource.jdbc.driver");
         dataSourceJdbcSource = getConfig().getString("MCISme.DataSource.jdbc.source");
+
       } catch (Exception e) {
         logger.error(e);
         return error(e.getMessage());
@@ -165,6 +176,9 @@ public class Options extends MCISmeBean
     getConfig().setInt   ("MCISme.maxRowsPerMessage", maxRowsPerMessage);
     getConfig().setBool  ("MCISme.forceInform", forceInform);
     getConfig().setBool  ("MCISme.forceNotify", forceNotify);
+
+    getConfig().setString(MCI_PROF_LOCATION_PARAM, mciProfLocation);
+    // TODO: set MSC settings from bean properties
 
     getConfig().setInt   ("MCISme.SMPPThreadPool.max", smppThreadPoolMax);
     getConfig().setInt   ("MCISme.SMPPThreadPool.init", smppThreadPoolInit);
@@ -204,6 +218,13 @@ public class Options extends MCISmeBean
 
     getMCISmeContext().setChangedOptions(true);
     return RESULT_DONE;
+  }
+
+  public String getMciProfLocation() {
+    return mciProfLocation;
+  }
+  public void setMciProfLocation(String mciProfLocation) {
+    this.mciProfLocation = mciProfLocation;
   }
 
   public String getSvcType() {

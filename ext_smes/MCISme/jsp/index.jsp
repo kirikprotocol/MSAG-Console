@@ -38,43 +38,99 @@ function checkApplyResetButtons()
   opForm.all.mbReset.disabled = !((<%=bean.isConfigChanged()%> && opForm.all.allCheck.checked));
 }
 </script>
-<%! private String status(boolean isChanged) { // TODO: ???
-  return ((isChanged) ? "<span style='color:red;'>changed</span>":
-                        "<span style='color:green;'>clear</span>");
+<%! private String configStatus(boolean isChanged) {
+    return (isChanged) ? "<span style='color:red;'>changed</span>":"clear";
 }%>
+<!--%! private String runStatus(byte status) {
+  if      (status == ServiceInfo.STATUS_RUNNING)  return "<span style='color:green;'>running</span>";
+  else if (status == ServiceInfo.STATUS_STARTING) return "<span style='color:green;'>starting</span>";
+  else if (status == ServiceInfo.STATUS_STOPPING) return "<span style='color:red;'  >stopping</span>";
+  else if (status == ServiceInfo.STATUS_STOPPED)  return "stopped";
+  return "<span style='color:blue;'>unknown</span>";
+}%-->
 <input type=hidden name=edit>
-<div class=page_subtitle>Configuration status</div>
-<table class=properties_list cellspacing=0>
-  <tr>
-    <th width="20%" nowrap valign=top>General settings</th>
-    <td width="80%" nowrap valign=top><%= status(bean.isOptionsChanged())%></td>
-  </tr>
-  <tr>
-    <th width="20%" nowrap valign=top>Drivers configuration</th>
-    <td width="80%" nowrap valign=top><%= status(bean.isDriversChanged())%></td>
-  </tr>
-  <tr>
-    <th width="20%" nowrap valign=top>Templates definitions</th>
-    <td width="80%" nowrap valign=top><%= status(bean.isTemplatesChanged())%></td>
-  </tr>
+
+<table cellspacing=0 cellpadding=0>
+<col width="48%">
+<col width="4%" >
+<col width="48%">
+<tr>
+  <td valign="top">
+    <table class=properties_list cellspacing=0 cellpadding=0 id=startStopTable>
+    <col width="1%">
+    <col width="79%">
+    <col width="20%" align="right">
+    <tr class=row0>
+      <td style="padding-right:3px"><input class=check type=checkbox id=toStartService name=toStart value=service onClick="checkStartStop();"></td>
+      <th><label for=toStartSme>MCI Service</label></th>
+      <td><%= serviceStatus(bean.getAppContext(), bean.getSmeId(),
+                            "MCISme_RUNNING_STATUSERVICE_MCISme")%></td>
+    </tr>
+    <tr class=row1 id=profRow>
+      <td style="padding-right:3px"><input class=check type=checkbox id=toStartProfiler name=toStart value=profiler onClick="checkStartStop();"></td>
+      <th><label for=toStartProfiler>MCI Profiler<label></th>
+      <td><%= serviceStatus(bean.getAppContext(), bean.getProfilerSmeId(),
+                            "MCIProf_RUNNING_STATUSERVICE_MCIProf")%></td>
+    </tr>
+    <tr class=row0>
+      <td style="padding-right:3px">&nbsp;</td><th>&nbsp;</th><td>&nbsp;</td>
+    </tr>
+    </table>
+  </td>
+  <td>&nbsp;</td>
+  <td>
+    <table class=properties_list cellspacing=0>
+    <col width="80%">
+    <col width="20%" align="right">
+    <tr class=row0>
+      <th>General settings</th>
+      <td><%= configStatus(bean.isOptionsChanged())%></td>
+    </tr>
+    <tr class=row1>
+      <th>Drivers configuration</th>
+      <td><%= configStatus(bean.isDriversChanged())%></td>
+    </tr>
+    <tr class=row0>
+      <th>Templates definitions</th>
+      <td><%= configStatus(bean.isTemplatesChanged())%></td>
+    </tr>
+    </table>
+  </td>
+</tr>
 </table>
 </div><%
 page_menu_begin(out);
+page_menu_button(out, "mbStart", "Start", "Start selected service(s)");
+page_menu_button(out, "mbStop",  "Stop",  "Stop selected service(s)");
+page_menu_space(out);
 page_menu_button(out, "mbApply",  "Apply",  "Apply changes", bean.isConfigChanged());
 page_menu_button(out, "mbReset",  "Reset",  "Discard changes", bean.isConfigChanged());
-page_menu_space(out);
-page_menu_button(out, "mbStart", "Start", "Start MCI Sme service", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
-page_menu_button(out, "mbStop",  "Stop",  "Stop MCI Sme service", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
 page_menu_end(out);
 %>
 <script language="JavaScript">
-function refreshStartStopButtonsStatus()
+function checkStartStop()
 {
-	document.all.mbStart.disabled = (document.all.RUNNING_STATUSERVICE_MCISme.innerText != "stopped");
-	document.all.mbStop.disabled = (document.all.RUNNING_STATUSERVICE_MCISme.innerText != "running");
-	window.setTimeout(refreshStartStopButtonsStatus, 500);
+  var serviceChecked  = opForm.all.toStartService.checked;
+  var serviceRunning  = document.all.MCISme_RUNNING_STATUSERVICE_MCISme.innerText == "running";
+  var serviceStopped  = document.all.MCISme_RUNNING_STATUSERVICE_MCISme.innerText == "stopped";
+  var profilerChecked = opForm.all.toStartProfiler.checked;
+  var profilerRunning = document.all.MCIProf_RUNNING_STATUSERVICE_MCIProf.innerText == "running";
+  var profilerStopped = document.all.MCIProf_RUNNING_STATUSERVICE_MCIProf.innerText == "stopped";
+
+  var serviceStart  = serviceStopped && serviceChecked;
+  var serviceStop   = serviceRunning && serviceChecked;
+  var profilerStart = profilerStopped && profilerChecked;
+  var profilerStop  = profilerRunning && profilerChecked;
+
+  var start = serviceStart || profilerStart;
+  var stop  = serviceStop  || profilerStop;
+
+  opForm.all.mbStart.disabled = !start;
+  opForm.all.mbStop.disabled = !stop;
+
+  window.setTimeout(checkStartStop, 500);
 }
-refreshStartStopButtonsStatus();
+checkStartStop();
 </script><%
   CountersSet cstatSet = bean.getStatistics(); RuntimeSet  rstatSet = bean.getRuntime();
 %><div class=content>

@@ -7,6 +7,9 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
 
 /**
  * Created by IntelliJ IDEA.
@@ -24,6 +27,9 @@ public abstract class IndexProperties extends MCISmeBean
   private String mbStart = null;
   private String mbStop = null;
 
+  private String[] toStart = new String[0];
+  private Set toStartSet = new HashSet();
+
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
@@ -40,6 +46,8 @@ public abstract class IndexProperties extends MCISmeBean
     }
 
     mcismeStarted = mciSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING;
+
+    toStartSet.addAll(Arrays.asList(toStart));
 
     if (mbApply != null)  return apply();
     if (mbReset != null)  return reset();
@@ -96,6 +104,16 @@ public abstract class IndexProperties extends MCISmeBean
   }
   public boolean isMCISmeStarted() {
     return mcismeStarted;
+  }
+
+  public String[] getToStart() {
+    return toStart;
+  }
+  public void setToStart(String[] toStart) {
+    this.toStart = toStart;
+  }
+  public boolean isToStart(String toStartId) {
+    return toStartSet.contains(toStartId);
   }
 
   public String getMbApply() {
