@@ -779,7 +779,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 {
 	__require__(fixture->pduReg);
-	TCSelector s(num, 11);
+	TCSelector s(num, 13);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(timeCheckAccuracy);
@@ -824,7 +824,19 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 						pdu->set_messageId(msgId.get());
 					}
 					break;
-				case 2: //неправильный адрес отправителя
+				case 2: //неправильный message_id
+					{
+						__tc__("replaceSm.incorrect.messageId");
+						pdu->set_messageId("-1");
+					}
+					break;
+				case 3: //неправильный message_id
+					{
+						__tc__("replaceSm.incorrect.messageId");
+						pdu->set_messageId("36893488147419103232"); //2**65
+					}
+					break;
+				case 4: //неправильный адрес отправителя
 					{
 						__tc__("replaceSm.incorrect.sourceAddr");
 						Address addr; PduAddress smppAddr;
@@ -833,7 +845,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 						pdu->set_source(smppAddr);
 					}
 					break;
-				case 3: //неправильный формат validity_period
+				case 5: //неправильный формат validity_period
 					{
 						__tc__("replaceSm.incorrect.validTimeFormat");
 						string t = pdu->get_validityPeriod();
@@ -841,7 +853,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 						pdu->set_validityPeriod(t.c_str());
 					}
 					break;
-				case 4: //неправильный формат validity_period
+				case 6: //неправильный формат validity_period
 					{
 						__tc__("replaceSm.incorrect.validTimeFormat");
 						string t = pdu->get_validityPeriod();
@@ -849,7 +861,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 						pdu->set_validityPeriod(t.c_str());
 					}
 					break;
-				case 5: //неправильный формат schedule_delivery_time
+				case 7: //неправильный формат schedule_delivery_time
 					{
 						__tc__("replaceSm.incorrect.waitTimeFormat");
 						string t = pdu->get_scheduleDeliveryTime();
@@ -857,7 +869,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 						pdu->set_scheduleDeliveryTime(t.c_str());
 					}
 					break;
-				case 6: //неправильный формат schedule_delivery_time
+				case 8: //неправильный формат schedule_delivery_time
 					{
 						__tc__("replaceSm.incorrect.waitTimeFormat");
 						string t = pdu->get_scheduleDeliveryTime();
@@ -865,7 +877,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 						pdu->set_scheduleDeliveryTime(t.c_str());
 					}
 					break;
-				case 7: //срок валидности уже закончился
+				case 9: //срок валидности уже закончился
 					{
 						__tc__("replaceSm.incorrect.validTimePast");
 						SmppTime t;
@@ -874,7 +886,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 						pdu->set_validityPeriod(t);
 					}
 					break;
-				case 8: //waitTime > validTime
+				case 10: //waitTime > validTime
 					{
 						__tc__("replaceSm.incorrect.waitTimeInvalid1");
 						SmppTime t;
@@ -886,7 +898,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 						pdu->set_validityPeriod(t);
 					}
 					break;
-				case 9: //waitTime > validTime
+				case 11: //waitTime > validTime
 					{
 						__tc__("replaceSm.incorrect.waitTimeInvalid2");
 						SmppTime t;
@@ -896,7 +908,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 						pdu->set_validityPeriod("");
 					}
 					break;
-				case 10: //waitTime > validTime
+				case 12: //waitTime > validTime
 					{
 						__tc__("replaceSm.incorrect.waitTimeInvalid3");
 						SmppTime t;
@@ -907,7 +919,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 						pdu->set_validityPeriod(t);
 					}
 					break;
-				case 11: //замещением существующего сообщения, но находящегося
+				case 13: //замещением существующего сообщения, но находящегося
 					//уже в финальном состоянии.
 					{
 						MutexGuard mguard(fixture->pduReg->getMutex());
