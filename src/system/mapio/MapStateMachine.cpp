@@ -1825,7 +1825,7 @@ USHORT_T Et96MapOpenInd (
   {
     __map_warn2__("%s: dialogid 0x%x <exception>:%s",__FUNCTION__,dialogueId,e.what());
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-    MapDialogContainer::getInstance()->dropDialog(dialogueId);
+    MapDialogContainer::getInstance()->dropDialog(dialogueId,localSsn);
     Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
     Et96MapDelimiterReq(localSsn,dialogueId,0,0);
   }
