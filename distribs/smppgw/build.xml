@@ -47,7 +47,7 @@ Targets:
     <mkdir dir="${DISTR_DIR}/webapps"/>
   </target>
 
-  <target name="create_distr_tree" depends="create_distr_tree" >
+  <target name="create_distr_tree" depends="create_distr_tree_update" >
     <mkdir dir="${DISTR_DIR}/tomcat"/>
     <mkdir dir="${DISTR_DIR}/temp"/>
     <mkdir dir="${DISTR_DIR}/logs"/>
