@@ -202,7 +202,9 @@ public class DivertManager
         throw new IOException("Got empty qwery string from MSC");
       logger.debug("Auth got string: "+str);
       str = str.toUpperCase();
-      if (needNvtIoDevice && checkQuery(NVT_IO_DEVICE, str)) {
+      if (checkQuery(AUTH_FAILED, str)) {
+        throw new IOException("Autentification failed");
+      } else if (needNvtIoDevice && checkQuery(NVT_IO_DEVICE, str)) {
         writeTelnetLine(mscNvtIODevice); needNvtIoDevice = false;
       } else if (needUserCode && checkQuery(USER_CODE, str)) {
         writeTelnetLine(mscUserCode); needUserCode = false;
@@ -210,8 +212,6 @@ public class DivertManager
         writeTelnetLine(mscUserPassword); needUserPassword = false;
       } else if (checkQuery(USER_DOMAIN, str)) {
         writeTelnetLine("");
-      } else if (checkQuery(AUTH_FAILED, str)) {
-        throw new IOException("Autentification failed");
       }
     }
     readTelnetString(ESC_PROMPT);
