@@ -15,7 +15,7 @@ struct Task
   Task* timeout_prev;
   Task* timeout_next;
   Task(uint32_t proxy = 0,uint32_t sequence = 0):
-		proxy_id(proxy),sequenceNumber(sequence) {}
+    proxy_id(proxy),sequenceNumber(sequence) {}
   ~Task()
   {
   }
@@ -36,7 +36,7 @@ class TaskContainer
   Task *timeout_link_begin;
   Task *timeout_link_end;
 public:  
-	TaskContainer():
+  TaskContainer():
     first_task(pool),
     timeout_link_begin(0),
     timeout_link_end(0)
@@ -92,13 +92,13 @@ public:
       if ( _res->proxy_id == proxy_idx && _res->sequenceNumber == sequenceNumber )
       {
         remove(_res,prev,hash+hashcode);
-				*res = *_res;
+        *res = *_res;
         return true;
       }
       prev = _res;
       res = prev->next;
     }
-		return false;
+    return false;
   }
 
   void __findAndRemove(Task* task)
@@ -116,7 +116,7 @@ public:
       prev = res;
       res = prev->next;
     }
-		//throw Exception("");
+    //throw Exception("");
   }
   void remove(Task* task,Task* prev,Task** addr)
   {
@@ -128,7 +128,7 @@ public:
     else 
     {
       __require__(addr);
-      *addr = prev->next;
+      *addr = task->next;
     }
     
     // remove from time link
