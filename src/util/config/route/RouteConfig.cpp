@@ -4,6 +4,7 @@
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
 #include <util/Logger.h>
 #include <util/cstrings.h>
+#include <util/debug.h>
 
 namespace smsc {
 namespace util {
@@ -184,8 +185,11 @@ RouteConfig::status RouteConfig::load(const char * const filename)
 
 RouteConfig::status RouteConfig::reload()
 {
+  __trace2__("smsc::util::config::route::RouteConfig - Reload routes");
   clear();
-  load(config_filename.get());
+  std::auto_ptr<char> tmp = config_filename;
+  load(tmp.get());
+  __trace2__("smsc::util::config::route::RouteConfig - loaded %u routes, %u subjects", routes.size(), subjects.GetCount());
 }
 
 RouteConfig::status RouteConfig::store(const char * const filename) const

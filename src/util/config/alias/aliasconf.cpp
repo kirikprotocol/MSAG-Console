@@ -8,6 +8,7 @@
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
 #include <util/Logger.h>
 #include <util/cstrings.h>
+#include <util/debug.h>
 #include <memory>
 #include "util/debug.h"
 
@@ -166,8 +167,11 @@ AliasConfig::status AliasConfig::load(const char * const filename)
 
 AliasConfig::status AliasConfig::reload()
 {
+  __trace2__("smsc::util::config::alias::AliasConfig - Reload config");
   clear();
-  load(config_filename.get());
+  std::auto_ptr<char> tmp = config_filename;
+  load(tmp.get());
+  __trace2__("smsc::util::config::alias::AliasConfig - loaded %u records", records.size());
 }
 
 

@@ -246,12 +246,19 @@ public class ServiceManager
 	public synchronized void startService(String serviceId)
 			  throws AdminException
 	{
-		Service s = getService(serviceId);
-		Daemon d = getDaemon(s.getInfo().getHost());
-		s.getInfo().setPid(d.startService(serviceId));
-		if (s.getInfo().isRunning())
+		try
 		{
-			s.refreshComponents();
+			Service s = getService(serviceId);
+			Daemon d = getDaemon(s.getInfo().getHost());
+			s.getInfo().setPid(d.startService(serviceId));
+			if (s.getInfo().isRunning())
+			{
+				s.refreshComponents();
+			}
+		}
+		catch (AdminException e)
+		{
+			refreshService(serviceId);
 		}
 	}
 
