@@ -18,4 +18,10 @@
     <param name="gwhost" type="string">localhost</param>
     <param name="gwport" type="int">6109</param>
   </section>
+  <section name="jdbc">
+    <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
+    <param name="password" type="string">smsc_igork</param>
+    <param name="source" type="string">jdbc:oracle:thin:@hsr:1521:ORCL</param>
+    <param name="user" type="string">smsc_igork</param>
+  </section>
 </config>

@@ -6,6 +6,7 @@ import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.daemon.Daemon;
 import ru.sibinco.lib.backend.daemon.ServiceInfo;
 import ru.sibinco.lib.backend.util.config.Config;
+import ru.sibinco.lib.backend.util.conpool.NSConnectionPool;
 import ru.sibinco.smppgw.backend.resources.ResourceManager;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
 import ru.sibinco.smppgw.backend.sme.*;
@@ -13,9 +14,12 @@ import ru.sibinco.smppgw.backend.users.UserManager;
 import ru.sibinco.smppgw.perfmon.PerfServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
+import javax.sql.DataSource;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
+import java.sql.SQLException;
+import java.util.Properties;
 
 
 /**
@@ -39,6 +43,7 @@ public class SmppGWAppContext
   private final Daemon gwDaemon;
   private final Gateway gateway;
   private final Statuses statuses;
+  private DataSource connectionPool;
 
   private SmppGWAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
                                                                 Config.ParamNotFoundException, SibincoException
@@ -47,6 +52,7 @@ public class SmppGWAppContext
       System.out.println("  **  config file:" + new File(config_filename).getAbsolutePath());
       System.out.flush();
       config = new Config(new File(config_filename));
+      connectionPool = createConnectionPool(config);
       gwConfig = new Config(new File(config.getString("gw_config")));
       userManager = new UserManager(config.getString("users_config_file"));
       providerManager = new ProviderManager(gwConfig);
@@ -69,14 +75,25 @@ public class SmppGWAppContext
     }
   }
 
-  public void destroy() {
+  private static DataSource createConnectionPool(final Config config) throws Config.ParamNotFoundException, Config.WrongParamTypeException, SQLException
+  {
+    final Properties props = new Properties();
+    props.setProperty("jdbc.source", config.getString("jdbc.source"));
+    props.setProperty("jdbc.driver", config.getString("jdbc.driver"));
+    props.setProperty("jdbc.user", config.getString("jdbc.user"));
+    props.setProperty("jdbc.pass", config.getString("jdbc.password"));
+    return new NSConnectionPool(props);
+  }
+
+  public void destroy()
+  {
     perfServer.shutdown();
   }
 
   public static synchronized SmppGWAppContext getInstance(final String config_filename) throws Throwable, IOException, ParserConfigurationException,
                                                                                                Config.ParamNotFoundException, SAXException, SibincoException
   {
-    return instance != null
+    return null != instance
            ? instance
            : (instance = new SmppGWAppContext(config_filename));
   }
