@@ -22,6 +22,7 @@ using namespace std;
 using namespace smsc::mscman;
 
 using namespace smsc::system;
+using namespace smsc::util;
 
 
 static const bool SMS_SEGMENTATION = true;
@@ -1000,7 +1001,18 @@ static bool SendSms(MapDialog* dialog){
   if ( !MscManager::getMscStatus().check(dialog->s_msc.c_str()) )
     throw MAPDIALOG_TEMP_ERROR("MSC BLOCKED",Status::BLOCKEDMSC);
 
-  bool mms = dialog->chain.size() != 0;
+  bool mms = FALSE;
+  if( dialog->version > 1 ) {
+    if( dialog->chain.size() != 0 ) {
+      mms = TRUE;
+    } else if( dialog->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
+      unsigned int ciLen;
+      ConcatInfo *ci=(ConcatInfo*)dialog->sms.get()->getBinProperty(Tag::SMSC_CONCATINFO,&ciLen);
+      if( dialog->sms.get()->getConcatSeqNum() < ci->num-1 ) {
+        mms = TRUE;
+      }
+    }
+  }
   if ( dialog->version < 2 ) mms = false;
 //  mms = false;
   ET96MAP_APP_CNTX_T appContext;
