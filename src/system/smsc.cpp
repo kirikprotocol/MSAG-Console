@@ -370,9 +370,10 @@ void Smsc::init(const SmscConfigs& cfg)
 
 
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),0);
-  store=smsc::store::StoreManager::getMessageStore();
+  //store=smsc::store::StoreManager::getMessageStore();
+  store=scheduler;
   smsc_log_info(log, "Initializing scheduler" );
-  scheduler->Init(store,this);
+  scheduler->Init(this,cfg.cfgman);
 
   smeman.registerInternallSmeProxy("scheduler",scheduler);
 
@@ -632,8 +633,15 @@ void Smsc::init(const SmscConfigs& cfg)
     __warning__("Failed to register smscsme");
   }
 
+  eventQueueLimit=1000;
+  try{
+    eventQueueLimit=cfg.cfgman->getInt("core.eventQueueLimit");
+  }catch(...)
+  {
+    __warning2__("eventQueueLimit not found, using default(%d)",eventQueueLimit);
+  }
 
-  cancelAgent=new CancelAgent(eventqueue,store);
+  cancelAgent=new CancelAgent(eventqueue,scheduler,eventQueueLimit);
   tp.startTask(cancelAgent);
   smsc_log_info(log, "Cancel agent started" );
 
@@ -733,13 +741,6 @@ void Smsc::init(const SmscConfigs& cfg)
     tcontrol=new TrafficControl(tccfg);
   }
 
-  eventQueueLimit=1000;
-  try{
-    eventQueueLimit=cfg.cfgman->getInt("core.eventQueueLimit");
-  }catch(...)
-  {
-    __warning__("eventQueueLimit not found, using default(1000)");
-  }
 
   /*
   try{
@@ -882,6 +883,7 @@ void Smsc::run()
 void Smsc::shutdown()
 {
   __trace__("shutting down");
+  smeman.Dump();
 
   delete smscsme;
   smeman.unregisterSmeProxy("DSTRLST");
@@ -901,6 +903,8 @@ void Smsc::shutdown()
 
   smsc::store::StoreManager::shutdown();
   if(dataSource)delete dataSource;
+  __trace__("shutdown completed");
+  smeman.Dump();
 }
 
 void Smsc::reloadRoutes(const SmscConfigs& cfg)

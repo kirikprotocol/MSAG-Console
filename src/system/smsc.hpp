@@ -132,7 +132,7 @@ public:
     deliverErrTempCounter=0;
     deliverErrPermCounter=0;
     rescheduleCounter=0;
-    startTime=0;
+    startTime=time(NULL);
     tcontrol=0;
     license.maxsms=0;
     license.expdate=0;
