@@ -5,8 +5,7 @@
                  ru.novosoft.smsc.jsp.SMSCErrors,
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  java.util.List,
-                 ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.jsp.smsc.profiles.ProfilesFilter"%>
+                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
 <jsp:useBean id="wsme_vf_bean" scope="session" class="ru.novosoft.smsc.wsme.beans.WSmeVisitorsFilterFormBean"/>
 <%
   WSmeVisitorsFilterFormBean bean = wsme_vf_bean;

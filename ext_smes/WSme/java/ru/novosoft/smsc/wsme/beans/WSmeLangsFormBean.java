@@ -106,9 +106,9 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
             LangRow r1 = (LangRow) o1;
             LangRow r2 = (LangRow) o2;
             if (sortField.equalsIgnoreCase("mask"))
-              result = r1.mask.compareTo(r2.mask);
+              result = r1.mask.compareToIgnoreCase(r2.mask);
             if (sortField.equalsIgnoreCase("lang"))
-              result = r1.lang.compareTo(r2.lang);
+              result = r1.lang.compareToIgnoreCase(r2.lang);
 
             return isNegativeSort ? -result : result;
           }

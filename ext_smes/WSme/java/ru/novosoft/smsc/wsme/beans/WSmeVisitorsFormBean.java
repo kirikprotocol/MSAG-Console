@@ -14,11 +14,7 @@ import ru.novosoft.smsc.wsme.WSmeErrors;
 import ru.novosoft.smsc.wsme.WSmePreferences;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.security.Principal;
+import java.util.*;
 
 public class WSmeVisitorsFormBean extends WSmeBaseFormBean
 {
@@ -104,7 +100,7 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
             String r1 = (String) o1;
             String r2 = (String) o2;
             if (sortField.equalsIgnoreCase("mask"))
-              result = r1.compareTo(r2);
+              result = r1.compareToIgnoreCase(r2);
 
             return isNegativeSort ? -result : result;
           }

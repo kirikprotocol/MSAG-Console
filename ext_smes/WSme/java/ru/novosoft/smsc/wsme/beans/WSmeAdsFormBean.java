@@ -109,12 +109,10 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
             AdRow r1 = (AdRow) o1;
             AdRow r2 = (AdRow) o2;
             if (sortField.equalsIgnoreCase("id")) {
-              String id1 = Integer.toString(r1.id);
-              String id2 = Integer.toString(r2.id);
-              result = id1.compareTo(id2);
+              result = r1.id - r2.id;
             }
             if (sortField.equalsIgnoreCase("lang"))
-              result = r1.lang.compareTo(r2.lang);
+              result = r1.lang.compareToIgnoreCase(r2.lang);
 
             return isNegativeSort ? -result : result;
           }
