@@ -9,7 +9,7 @@
 		ostringstream s1, s2; \
 		s1 << (pdu.field); \
 		s2 << (origPdu->field); \
-		__trace2__("%s = {%s, %s}", #field, s1.str().c_str(), s2.str().c_str()); \
+		__trace2__("%s: %s != %s", #field, s1.str().c_str(), s2.str().c_str()); \
 		__tc_fail__(failureCode); \
 	}
 
@@ -17,7 +17,7 @@
 	if ((pdu.field && !origPdu->field) || \
 		(!pdu.field && origPdu->field) || \
 		(pdu.field && origPdu->field && strcmp(pdu.field, origPdu->field))) { \
-		__trace2__("%s = {%s, %s}", #field, pdu.field, origPdu->field); \
+		__trace2__("%s: %s != %s", #field, pdu.field, origPdu->field); \
 		__tc_fail__(failureCode); \
 	}
 
@@ -28,7 +28,7 @@
 	} else if (pdu.field && origPdu->field) { \
 		if ((pdu.fieldSize != origPdu->fieldSize) || \
 			strncmp(pdu.field, origPdu->field, pdu.fieldSize)) { \
-			__trace2__("%s = {%s(%d), %s(%d)}", #field, pdu.field, \
+			__trace2__("%s: = %s(%d) != %s(%d)", #field, pdu.field, \
 				(int) pdu.fieldSize, origPdu->field, (int) origPdu->fieldSize); \
 			__tc_fail__(failureCode); \
 		} \
@@ -208,6 +208,7 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 
 void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime)
 {
+	__trace__("processNormalSms()");
 	__decl_tc__;
 	__tc__("processDeliverySm.normalSms");
 	try
@@ -241,23 +242,21 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 			vector<PduData*> tmp =
 				pduReg->getPdu(pdu.get_optional().get_userMessageReference());
 			PduData* pduData = NULL;
-			if (tmp.size() == 1)
+			__trace2__("iterate pdu for msgRef = %d",
+				(int) pdu.get_optional().get_userMessageReference());
+			for (int i = 0; i < tmp.size(); i++)
 			{
-				pduData = tmp[0];
-			}
-			else
-			{
-				for (int i = 0; i < tmp.size(); i++)
+				__require__(tmp[i]->pdu && tmp[i]->pdu->get_commandId() == SUBMIT_SM);
+				PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(tmp[i]->pdu);
+				__trace2__("\tserviceType = %s, shortMessage size = %d",
+					origPdu->get_message().get_serviceType(),
+					(int) origPdu->get_message().size_shortMessage());
+				//сравнить по service_type и short_message
+				if (!strcmp(pdu.get_message().get_serviceType(), origPdu->get_message().get_serviceType()) &&
+					pdu.get_message().size_shortMessage() == origPdu->get_message().size_shortMessage() &&
+					!memcmp(pdu.get_message().get_shortMessage(), origPdu->get_message().get_shortMessage(), pdu.get_message().size_shortMessage()))
 				{
-					__require__(tmp[i]->pdu && tmp[i]->pdu->get_commandId() == SUBMIT_SM);
-					PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(tmp[i]->pdu);
-					//сравнить по service_type и short_message
-					if (!strcmp(pdu.get_message().get_serviceType(), origPdu->get_message().get_serviceType()) &&
-						pdu.get_message().size_shortMessage() == origPdu->get_message().size_shortMessage() &&
-						!memcmp(pdu.get_message().get_shortMessage(), origPdu->get_message().get_shortMessage(), pdu.get_message().size_shortMessage()))
-					{
-						pduData = tmp[i];
-					}
+					pduData = tmp[i];
 				}
 			}
 			//для user_message_reference из полученной pdu
@@ -352,6 +351,7 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 	time_t recvTime)
 {
+	__trace__("processDeliveryReceipt()");
 	__decl_tc__;
 	__tc__("processDeliverySm.deliveryReceipt");
 	try
@@ -547,6 +547,7 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu,
 void SmppReceiverTestCases::processIntermediateNotification(
 	PduDeliverySm &pdu, time_t recvTime)
 {
+	__trace__("processIntermediateNotification()");
 	__decl_tc__;
 	__tc__("processDeliverySm.intermediateNotification");
 	try
