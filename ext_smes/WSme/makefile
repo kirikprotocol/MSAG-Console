@@ -31,6 +31,7 @@ compile:
 	@mkdir -p $(SME_BUILDDIR)/conf
 	@mkdir -p $(SME_BUILDDIR)/jsp
 	@mkdir -p $(SME_BUILDDIR)/jsp/inc
+	@mkdir -p $(SME_BUILDDIR)/lib
 	@cp -f service $(SME_BUILDDIR)/bin
 	@cp -f $(SMSC_BUILDDIR)/bin/wsme/WSme $(SME_BUILDDIR)/bin
 	@cp -f $(SMSC_BUILDDIR)/jars/wsme.jar  $(SME_BUILDDIR)/lib/wsme.jar
