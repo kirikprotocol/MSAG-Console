@@ -127,18 +127,6 @@ namespace smsc { namespace distrlist
         virtual ~ListAlreadyExistsException() throw() {};
     };
     
-    class IllegalListException : public Exception
-    {
-    public:
-
-        IllegalListException() : Exception() {};
-        IllegalListException(const char* fmt,...) 
-            : Exception() { SMSC_UTIL_EX_FILL(fmt); };
-        IllegalListException(const Exception& exc)
-            : Exception(exc.what()) {};
-        virtual ~IllegalListException() throw() {};
-    };
-
     class ListCountExceededException : public Exception
     {
     public:

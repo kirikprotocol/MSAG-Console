@@ -37,14 +37,14 @@ const char* GET_PRINCIPAL_SQL =
 const char* COUNT_ONWNER_DLS_SQL =
 "SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE OWNER=:OWNER";
 
-void DistrListManager::addDistrList(const DistrList& list) 
+void DistrListManager::addDistrList(string dlName, const Address& dlOwner) 
     throw(SQLException, ListAlreadyExistsException, 
-          PrincipalNotExistsException, IllegalListException, ListCountExceededException)
+          PrincipalNotExistsException, ListCountExceededException)
 {
-    const char* dlNameStr  = list.name.c_str();
-    const char* dlOwnerStr = (list.system) ? 0: ((list.owner.length() > 0) ? list.owner.c_str():0);
-    logger.debug("DistrListManager: addDistrList() called. dlName:'%s', maxEl:%d, owner: '%s'",
-                 dlNameStr, list.maxEl, (dlOwnerStr) ? dlOwnerStr:"system");
+    const char* dlNameStr  = dlName.c_str();
+    const char* dlOwnerStr = dlOwner.toString().c_str();
+    logger.debug("DistrListManager: addDistrList() called. dlName:'%s', dlOwner: '%s'",
+                 dlNameStr, dlOwnerStr);
     
     Connection* connection = 0;
     try
@@ -66,46 +66,39 @@ void DistrListManager::addDistrList(const DistrList& list)
         if (checkListRs->getUint32(1))
             throw ListAlreadyExistsException("DL '%s' already exists", dlNameStr);
 
-        if (dlOwnerStr)
-        {
+        std::auto_ptr<Statement> getPrincipalGuard(connection->createStatement(GET_PRINCIPAL_SQL));
+        Statement* getPrincipal = getPrincipalGuard.get();
+        if (!getPrincipal)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
 
-            std::auto_ptr<Statement> getPrincipalGuard(connection->createStatement(GET_PRINCIPAL_SQL));
-            Statement* getPrincipal = getPrincipalGuard.get();
-            if (!getPrincipal)        
-                throw SQLException(FAILED_TO_CREATE_STATEMENT);
+        getPrincipal->setString(1, dlOwnerStr);
 
-            getPrincipal->setString(1, dlOwnerStr);
+        std::auto_ptr<ResultSet> getPrincipalRsGuard(getPrincipal->executeQuery());
+        ResultSet* getPrincipalRs = getPrincipalRsGuard.get();
+        if (!getPrincipalRs) 
+            throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+        if (!getPrincipalRs->fetchNext())
+            throw PrincipalNotExistsException("Principal for owner '%s' not exists", dlOwnerStr);
 
-            std::auto_ptr<ResultSet> getPrincipalRsGuard(checkList->executeQuery());
-            ResultSet* getPrincipalRs = getPrincipalRsGuard.get();
-            if (!getPrincipalRs) 
-                throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
-            if (!getPrincipalRs->fetchNext())
-                throw PrincipalNotExistsException("Principal for owner '%s' not exists", dlOwnerStr);
-            
-            int maxLst = getPrincipalRs->getInt32(1);
-            int maxEl  = getPrincipalRs->getInt32(2);
-            if (list.maxEl<=0  || list.maxEl > maxEl)
-                throw IllegalListException("DL's maxEl=%ld is invalid, principal value is %ld",
-                                           list.maxEl, maxEl);
+        int maxLst = getPrincipalRs->getInt32(1);
+        int maxEl  = getPrincipalRs->getInt32(2);
 
-            std::auto_ptr<Statement> countDlsGuard(connection->createStatement(COUNT_ONWNER_DLS_SQL));
-            Statement* countDls = countDlsGuard.get();
-            if (!countDls)        
-                throw SQLException(FAILED_TO_CREATE_STATEMENT);
+        std::auto_ptr<Statement> countDlsGuard(connection->createStatement(COUNT_ONWNER_DLS_SQL));
+        Statement* countDls = countDlsGuard.get();
+        if (!countDls)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
 
-            countDls->setString(1, dlOwnerStr);
+        countDls->setString(1, dlOwnerStr);
 
-            std::auto_ptr<ResultSet> countDlsRsGuard(countDls->executeQuery());
-            ResultSet* countDlsRs = countDlsRsGuard.get();
-            if (!countDlsRs || !countDlsRs->fetchNext()) 
-                throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+        std::auto_ptr<ResultSet> countDlsRsGuard(countDls->executeQuery());
+        ResultSet* countDlsRs = countDlsRsGuard.get();
+        if (!countDlsRs || !countDlsRs->fetchNext()) 
+            throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
 
-            int lists = countDlsRs->getInt32(1);
-            if (lists >= maxLst)
-                throw ListCountExceededException("DL count exceeded for owner '%s', maximum is %ld", 
-                                                 dlOwnerStr, maxLst); 
-        }
+        int lists = countDlsRs->getInt32(1);
+        if (lists >= maxLst)
+            throw ListCountExceededException("DL count exceeded for owner '%s', maximum is %ld", 
+                                             dlOwnerStr, maxLst); 
         
         std::auto_ptr<Statement> addListGuard(connection->createStatement(ADD_DL_SQL));
         Statement* addList = addListGuard.get();
@@ -113,7 +106,7 @@ void DistrListManager::addDistrList(const DistrList& list)
             throw SQLException(FAILED_TO_CREATE_STATEMENT);
 
         addList->setString(1, dlNameStr);
-        addList->setInt32 (2, list.maxEl);
+        addList->setInt32 (2, maxEl);
         addList->setString(3, dlOwnerStr, !dlOwnerStr);
         addList->executeUpdate();
         connection->commit();
@@ -166,7 +159,7 @@ void DistrListManager::deleteDistrList(string dlName)
             throw SQLException(FAILED_TO_CREATE_STATEMENT);
 
         deleteList->setString(1, dlNameStr);
-        if (!deleteList->executeUpdate())
+        if (deleteList->executeUpdate() <= 0)
             throw ListNotExistsException("DL '%s' not exists", dlNameStr);
 
         std::auto_ptr<Statement> deleteMembersGuard(connection->createStatement(DELETE_MEMBERS_SQL));
@@ -291,9 +284,14 @@ Array<DistrList> DistrListManager::list()
         {
             const char* name = selectListRs->getString(1);
             if (!name || name[0] == '\0') continue;
-            const char* owner = (selectListRs->isNull(2)) ? 0:selectListRs->getString(2);
             int maxEl = selectListRs->getInt32(3);
-            lists.Push(DistrList(name, maxEl, !owner, (owner) ? owner:""));
+            if (selectListRs->isNull(2)) {
+                lists.Push(DistrList(name, maxEl));
+            } else {
+                const char* owner = selectListRs->getString(2);
+                if (!owner || owner[0] == '\0') continue;
+                lists.Push(DistrList(Address(owner), name, maxEl));
+            }
         }
     }
     catch(Exception& exc) {
@@ -457,7 +455,7 @@ const char* ADD_PRINCIPAL_SQL   =  (const char*)
 void DistrListManager::addPrincipal(const Principal& prc)
     throw(SQLException, PrincipalAlreadyExistsException)
 {
-    const char* prcAddressStr = prc.address.c_str();
+    const char* prcAddressStr = prc.address.toString().c_str();
     logger.debug("DistrListManager: addPrincipal() called. Addr:'%s' maxLst=%d, maxEl=%d",
                  (prcAddressStr) ? prcAddressStr:"null", prc.maxLst, prc.maxEl);
     
@@ -519,7 +517,249 @@ void DistrListManager::addPrincipal(const Principal& prc)
     
     if (connection) ds.freeConnection(connection);
 }
- 
+
+const char* DELETE_PRINCIPAL_SQL =  (const char*)
+"DELETE FROM DL_PRINCIPALS WHERE ADDRESS=:ADDRESS";
+const char* CHECK_SUB_PRINCIPAL_SQL =  (const char*)
+"SELECT NVL(COUNT(*), 0) FROM DL_SUBMITTERS WHERE ADDRESS=:ADDRESS";
+
+void DistrListManager::deletePrincipal(const Address& address) 
+    throw(SQLException, PrincipalNotExistsException, PrincipalInUseException)
+{
+    const char* prcAddressStr = address.toString().c_str();
+    logger.debug("DistrListManager: deletePrincipal() called. Addr:'%s'",
+                 (prcAddressStr) ? prcAddressStr:"null");
+    
+    Connection* connection = 0;
+    try
+    {
+        if (!(connection = ds.getConnection())) 
+            throw SQLException(FAILED_TO_OBTAIN_CONNECTION);
+        
+        // Check principal use as owner
+        std::auto_ptr<Statement> checkDlsPrincipalGuard(connection->createStatement(COUNT_ONWNER_DLS_SQL));
+        Statement* checkDlsPrincipal = checkDlsPrincipalGuard.get();
+        if (!checkDlsPrincipal)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
+        
+        checkDlsPrincipal->setString(1, prcAddressStr);
+        
+        std::auto_ptr<ResultSet> checkDlsPrincipalRsGuard(checkDlsPrincipal->executeQuery());
+        ResultSet* checkDlsPrincipalRs = checkDlsPrincipalRsGuard.get();
+        if (!checkDlsPrincipalRs) 
+            throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+        if (checkDlsPrincipalRs->fetchNext() && (checkDlsPrincipalRs->getInt32(1) > 0))
+            throw PrincipalInUseException("Principal for address '%s' is in use as DL owner(s)",
+                                          prcAddressStr);
+        
+        // Check principal use as submitter
+        std::auto_ptr<Statement> checkSubPrincipalGuard(connection->createStatement(CHECK_SUB_PRINCIPAL_SQL));
+        Statement* checkSubPrincipal = checkSubPrincipalGuard.get();
+        if (!checkSubPrincipal)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
+        
+        checkSubPrincipal->setString(1, prcAddressStr);
+        
+        std::auto_ptr<ResultSet> checkSubPrincipalRsGuard(checkSubPrincipal->executeQuery());
+        ResultSet* checkSubPrincipalRs = checkSubPrincipalRsGuard.get();
+        if (!checkSubPrincipalRs) 
+            throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+        if (checkSubPrincipalRs->fetchNext() && (checkSubPrincipalRs->getInt32(1) > 0))
+            throw PrincipalInUseException("Principal for address '%s' is in use as DL submitter(s)",
+                                          prcAddressStr);
+        
+        // Delete principal
+        std::auto_ptr<Statement> deletePrincipalGuard(connection->createStatement(DELETE_PRINCIPAL_SQL));
+        Statement* deletePrincipal = deletePrincipalGuard.get();
+        if (!deletePrincipal)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
+
+        deletePrincipal->setString(1, prcAddressStr);
+        if (deletePrincipal->executeUpdate() <= 0)
+            throw PrincipalNotExistsException("Principal for address '%s' not exists", prcAddressStr);
+
+        connection->commit();
+    }
+    catch(Exception& exc) {
+        try { if (connection) connection->rollback(); }
+        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        if (connection) ds.freeConnection(connection);
+        logger.error("%s", exc.what());
+        throw;
+    }
+    catch(std::exception& exc) {
+        try { if (connection) connection->rollback(); }
+        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        if (connection) ds.freeConnection(connection);
+        logger.error("%s", exc.what());
+        throw;
+    }
+    catch(...) {
+        try { if (connection) connection->rollback(); }
+        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        if (connection) ds.freeConnection(connection);
+        Exception exc("... exception handled");
+        logger.error("%s", exc.what());
+        throw exc;
+    }
+    
+    if (connection) ds.freeConnection(connection);
+}
+
+const char* CHANGE_PRINCIPAL_SQL =
+"UPDATE DL_PRINCIPALS SET MAX_EL=:MAX_EL, MAX_LST=:MAX_LST WHERE ADDRESS=:ADDRESS";
+const char* MAX_ONWNER_MEMBERS_SQL =
+"SELECT NVL(MAX(COUNT(LIST)), 0) FROM DL_MEMBERS WHERE LIST IN"
+"   (SELECT LIST FROM DL_SET WHERE OWNER=:OWNER) GROUP BY LIST";
+
+void DistrListManager::changePrincipal(const Principal& prc) 
+    throw(SQLException, PrincipalNotExistsException, IllegalPrincipalException)
+{
+    const char* prcAddressStr = prc.address.toString().c_str();
+    logger.debug("DistrListManager: changePrincipal() called. Addr:'%s', maxLst=%ld, maxEl=%ld",
+                 prcAddressStr, prc.maxEl, prc.maxLst);
+    
+    Connection* connection = 0;
+    try
+    {
+        if (!(connection = ds.getConnection())) 
+            throw SQLException(FAILED_TO_OBTAIN_CONNECTION);
+        
+        // Check principal's dl count
+        std::auto_ptr<Statement> checkDlsPrincipalGuard(connection->createStatement(COUNT_ONWNER_DLS_SQL));
+        Statement* checkDlsPrincipal = checkDlsPrincipalGuard.get();
+        if (!checkDlsPrincipal)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
+        
+        checkDlsPrincipal->setString(1, prcAddressStr);
+        
+        std::auto_ptr<ResultSet> checkDlsPrincipalRsGuard(checkDlsPrincipal->executeQuery());
+        ResultSet* checkDlsPrincipalRs = checkDlsPrincipalRsGuard.get();
+        if (!checkDlsPrincipalRs) 
+            throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+        if (checkDlsPrincipalRs->fetchNext())
+        {
+            int dlsCount = checkDlsPrincipalRs->getInt32(1);
+            if (dlsCount > prc.maxLst)
+                throw IllegalPrincipalException("Principal for address '%s' is in use %ld times as DL owner. "
+                                                "Can't change maximum lists count to %ld",
+                                                prcAddressStr, dlsCount, prc.maxLst);
+        }
+        
+        // Check principal's members count in dl(s) 
+        std::auto_ptr<Statement> checkMembersGuard(connection->createStatement(MAX_ONWNER_MEMBERS_SQL));
+        Statement* checkMembers = checkMembersGuard.get();
+        if (!checkMembers)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
+        
+        checkMembers->setString(1, prcAddressStr);
+        
+        std::auto_ptr<ResultSet> checkMembersRsGuard(checkMembers->executeQuery());
+        ResultSet* checkMembersRs = checkMembersRsGuard.get();
+        if (!checkMembersRs) 
+            throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+        if (checkMembersRs->fetchNext())
+        {
+            int membersCount = checkMembersRs->getInt32(1);
+            if (membersCount > prc.maxEl)
+                throw IllegalPrincipalException("Principal for address '%s' is in use as DL owner that has %ld elements. "
+                                                "Can't change maximum elements count to %ld",
+                                                prcAddressStr, membersCount, prc.maxEl);
+        }
+        
+        // Change principal
+        std::auto_ptr<Statement> changePrincipalGuard(connection->createStatement(CHANGE_PRINCIPAL_SQL));
+        Statement* changePrincipal = changePrincipalGuard.get();
+        if (!changePrincipal)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
+
+        changePrincipal->setInt32 (1, prc.maxEl);
+        changePrincipal->setInt32 (2, prc.maxLst);
+        changePrincipal->setString(3, prcAddressStr);
+
+        if (changePrincipal->executeUpdate() <= 0)
+            throw PrincipalNotExistsException("Principal for address '%s' not exists", prcAddressStr);
+
+        connection->commit();
+    }
+    catch(Exception& exc) {
+        try { if (connection) connection->rollback(); }
+        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        if (connection) ds.freeConnection(connection);
+        logger.error("%s", exc.what());
+        throw;
+    }
+    catch(std::exception& exc) {
+        try { if (connection) connection->rollback(); }
+        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        if (connection) ds.freeConnection(connection);
+        logger.error("%s", exc.what());
+        throw;
+    }
+    catch(...) {
+        try { if (connection) connection->rollback(); }
+        catch (...) { logger.error(FAILED_TO_ROLLBACK_TRANSACTION); }
+        if (connection) ds.freeConnection(connection);
+        Exception exc("... exception handled");
+        logger.error("%s", exc.what());
+        throw exc;
+    }
+    
+    if (connection) ds.freeConnection(connection);
+}
+
+Principal DistrListManager::getPrincipal(const Address& address) 
+    throw(SQLException, PrincipalNotExistsException)
+{
+    const char* prcAddressStr = address.toString().c_str();
+    logger.debug("DistrListManager: getPrincipal() called. Addr:'%s'", prcAddressStr);
+    
+    Principal prc;
+    Connection* connection = 0;
+    try
+    {
+        if (!(connection = ds.getConnection())) 
+            throw SQLException(FAILED_TO_OBTAIN_CONNECTION);
+        
+        std::auto_ptr<Statement> getPrincipalGuard(connection->createStatement(GET_PRINCIPAL_SQL));
+        Statement* getPrincipal = getPrincipalGuard.get();
+        if (!getPrincipal)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
+
+        getPrincipal->setString(1, prcAddressStr);
+
+        std::auto_ptr<ResultSet> getPrincipalRsGuard(getPrincipal->executeQuery());
+        ResultSet* getPrincipalRs = getPrincipalRsGuard.get();
+        if (!getPrincipalRs) 
+            throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+        if (!getPrincipalRs->fetchNext())
+            throw PrincipalNotExistsException("Principal for address '%s' not exists", prcAddressStr);
+
+        prc.maxLst = getPrincipalRs->getInt32(1);
+        prc.maxEl  = getPrincipalRs->getInt32(2);
+        prc.address = address;
+    }
+    catch(Exception& exc) {
+        if (connection) ds.freeConnection(connection);
+        logger.error("%s", exc.what());
+        throw;
+    }
+    catch(std::exception& exc) {
+        if (connection) ds.freeConnection(connection);
+        logger.error("%s", exc.what());
+        throw;
+    }
+    catch(...) {
+        if (connection) ds.freeConnection(connection);
+        Exception exc("... exception handled");
+        logger.error("%s", exc.what());
+        throw exc;
+    }
+    
+    if (connection) ds.freeConnection(connection);
+    return prc;
+}
+
 const char* CHECK_MEMBER_SQL = (const char*)
 "SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=:LIST AND ADDRESS=:ADDRESS";
 const char* COUNT_MEMBERS_SQL = (const char*)
@@ -662,22 +902,6 @@ void DistrListManager::deleteMember(string dlName, const Address& member)
         if (!checkListRs->getUint32(1))
             throw ListNotExistsException("DL '%s' not exists", dlNameStr);
         
-        std::auto_ptr<Statement> checkMemberGuard(connection->createStatement(CHECK_MEMBER_SQL));
-        Statement* checkMember = checkMemberGuard.get();
-        if (!checkMember)        
-            throw SQLException(FAILED_TO_CREATE_STATEMENT);
-        
-        checkMember->setString(1, memberStr);
-        checkMember->setString(2, dlNameStr);
-        
-        std::auto_ptr<ResultSet> checkMemberRsGuard(checkMember->executeQuery());
-        ResultSet* checkMemberRs = checkMemberRsGuard.get();
-        if (!checkMemberRs || !checkMemberRs->fetchNext()) 
-            throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
-        if (!checkMemberRs->getUint32(1))
-            throw MemberNotExistsException("Member '%s' not exists in DL '%s'",
-                                           memberStr, dlNameStr);
-
         std::auto_ptr<Statement> deleteMemberGuard(connection->createStatement(DELETE_MEMBER_SQL));
         Statement* deleteMember = deleteMemberGuard.get();
         if (!deleteMember)        
@@ -686,7 +910,10 @@ void DistrListManager::deleteMember(string dlName, const Address& member)
         deleteMember->setString(1, dlNameStr);
         deleteMember->setString(2, memberStr);
         
-        deleteMember->executeUpdate();
+        if (deleteMember->executeUpdate() <= 0)
+            throw MemberNotExistsException("Member '%s' not exists in DL '%s'",
+                                           memberStr, dlNameStr);
+
         connection->commit();
     }
     catch(Exception& exc) {
