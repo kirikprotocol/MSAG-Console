@@ -114,14 +114,17 @@ public:
   
   MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
     MapDialog* dlg = 0;
-    if ( hash.Get(dialogueid,dlg) ) return dlg;
+    if ( hash.Get(dialogueid,dlg) ) {
+      __trace2__("MAP:: find dialog 0x%x for dialogid 0x%x",dlg,dialogueid);
+      return dlg;
+    }
     else return 0;
   }
   
   MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn){
     MapDialog* dlg = new MapDialog(dialogueid,lssn);
     hash.Insert(dialogueid,dlg);
-    __trace2__("MAP:: new dialog 0x%x",dlg);
+    __trace2__("MAP:: new dialog 0x%x for dialogid",dlg,dialogueid);
     return dlg;
   }
   
