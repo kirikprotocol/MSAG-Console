@@ -1312,7 +1312,7 @@ static const bool errorStatus[1280] = {
 1, // reserved
 1, // reserved
 1, // reserved
-0, // FACILITYNOTSUPP=1173 21 - Facility Not Supported
+1, // FACILITYNOTSUPP=1173 21 - Facility Not Supported
 1, // reserved
 1, // reserved
 1, // reserved
