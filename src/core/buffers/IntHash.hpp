@@ -27,6 +27,16 @@ public:
   }
   IntHash(const IntHash& src)
   {
+    keys=0;
+    values=0;
+    refcounts=0;
+
+    count=0;
+    size=0;
+
+    reflist=0;
+    reflistsize=0;
+
     *this=src;
   }
 
