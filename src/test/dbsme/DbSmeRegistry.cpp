@@ -18,6 +18,7 @@ void DbSmeRegistry::putRecord(DbSmeTestRecord* rec)
 	RecordMap::iterator it = recordMap.find(rec->getId());
 	__require__(it == recordMap.end());
 	recordMap[rec->getId()] = rec;
+	rec->ref();
 }
 	
 void DbSmeRegistry::updateRecord(int newId, DbSmeTestRecord* rec)
@@ -45,7 +46,9 @@ bool DbSmeRegistry::removeRecord(int id)
 	RecordMap::iterator it = recordMap.find(id);
 	if (it != recordMap.end())
 	{
-		delete it->second;
+		__require__(it->second);
+		it->second->unref();
+		recordMap.erase(it);
 		return true;
 	}
 	return false;
@@ -73,7 +76,7 @@ void DbSmeRegistry::clear()
 	for (RecordMap::iterator it = recordMap.begin(); it != recordMap.end(); it++)
 	{
 		__require__(it->second);
-		delete it->second;
+		it->second->unref();
 	}
 	recordMap.clear();
 }
