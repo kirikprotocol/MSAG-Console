@@ -2,6 +2,7 @@
 #include "test/TestConfig.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
+#include "test/util/TextUtil.hpp"
 #include "util/debug.h"
 
 namespace smsc {
@@ -14,6 +15,7 @@ using namespace smsc::sms; //constants
 using namespace smsc::test; //config constants
 using namespace smsc::test::smpp; //constants, SmppUtil
 using namespace smsc::test::sms; //constants
+using namespace smsc::test::util; //constants
 using namespace smsc::smpp;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
@@ -34,6 +36,7 @@ SmppTransmitterTestCases::SmppTransmitterTestCases(SmppSession* sess,
 	//__require__(pduChecker);
 	//__require__(chkList);
 	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
+	//__trace2__("For smeAddr = %s pduReg = %p ", str(smeAddr).c_str(), pduReg);
 }
 
 Category& SmppTransmitterTestCases::getLog()
@@ -107,6 +110,7 @@ void SmppTransmitterTestCases::submitSmAssert(int num)
 PduData* SmppTransmitterTestCases::getNonReplaceEnrotePdu()
 {
 	__require__(pduReg);
+	__cfg_int__(sequentialPduInterval);
 	PduRegistry::PduDataIterator* it = pduReg->getPduByWaitTime(
 		time(NULL) + sequentialPduInterval, LONG_MAX);
 	//ищу корректную незамещающую и незамещенную ранее pdu
@@ -115,7 +119,7 @@ PduData* SmppTransmitterTestCases::getNonReplaceEnrotePdu()
 	{
 		if (!data->replacedByPdu && !data->replacePdu &&
 			data->smsId.length() && data->deliveryFlag == PDU_REQUIRED_FLAG &&
-			!data->hasSmppDuplicates)
+			!data->intProps.size())
 		{
 			pduData = data;
 			break;
@@ -128,6 +132,7 @@ PduData* SmppTransmitterTestCases::getNonReplaceEnrotePdu()
 PduData* SmppTransmitterTestCases::getReplaceEnrotePdu()
 {
 	__require__(pduReg);
+	__cfg_int__(sequentialPduInterval);
 	PduRegistry::PduDataIterator* it = pduReg->getPduByWaitTime(
 		time(NULL) + sequentialPduInterval, LONG_MAX);
 	//ищу замещающую и незамещенную ранее pdu
@@ -136,7 +141,7 @@ PduData* SmppTransmitterTestCases::getReplaceEnrotePdu()
 	{
 		if (!data->replacedByPdu && data->replacePdu &&
 			data->smsId.length() && data->deliveryFlag == PDU_REQUIRED_FLAG &&
-			!data->hasSmppDuplicates)
+			!data->intProps.size())
 		{
 			pduData = data;
 			break;
@@ -149,6 +154,7 @@ PduData* SmppTransmitterTestCases::getReplaceEnrotePdu()
 PduData* SmppTransmitterTestCases::getNonReplaceRescheduledEnrotePdu()
 {
 	__require__(pduReg);
+	__cfg_int__(sequentialPduInterval);
 	PduRegistry::PduDataIterator* it = pduReg->getPduByWaitTime(0, time(NULL));
 	//ищу незамещенную ранее pdu
 	PduData* pduData = NULL;
@@ -156,7 +162,7 @@ PduData* SmppTransmitterTestCases::getNonReplaceRescheduledEnrotePdu()
 	{
 		if (!data->replacedByPdu && data->smsId.length() &&
 			data->deliveryFlag == PDU_REQUIRED_FLAG &&
-			!data->hasSmppDuplicates &&
+			!data->intProps.size() &&
 			data->deliveryFlag.getNextTime(time(NULL)) >=
 			time(NULL) + sequentialPduInterval)
 		{
@@ -172,10 +178,17 @@ template <class Message>
 void SmppTransmitterTestCases::checkRegisteredDelivery(Message& m)
 {
 	//m.get_registredDelivery();
+	__cfg_int__(maxWaitTime);
+	__cfg_int__(maxValidPeriod);
+	__cfg_int__(maxDeliveryPeriod);
+	__cfg_int__(timeCheckAccuracy);
+	__cfg_int__(sequentialPduInterval);
 	Address srcAddr;
 	SmppUtil::convert(m.get_source(), &srcAddr);
-	int reportOptions = profileReg->getProfile(srcAddr).reportoptions;
-	if (reportOptions != ProfileReportOptions::ReportNone)
+	time_t t;
+	int reportOptions = profileReg->getProfile(srcAddr, t).reportoptions;
+	if (reportOptions != ProfileReportOptions::ReportNone ||
+		time(NULL) <= t + timeCheckAccuracy)
 	{
 		SmppTime t;
 		time_t waitTime = time(NULL) + rand2(sequentialPduInterval, maxWaitTime);
@@ -187,7 +200,8 @@ void SmppTransmitterTestCases::checkRegisteredDelivery(Message& m)
 	}
 }
 
-void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu)
+void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
+	const Address* destAlias)
 {
 	SmppUtil::setupRandomCorrectSubmitSmPdu(pdu);
 	 //Default message Type (i.e. normal message)
@@ -200,12 +214,18 @@ void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu)
 	PduAddress srcAddr;
 	SmppUtil::convert(smeAddr, &srcAddr);
 	pdu->get_message().set_source(srcAddr);
-	//случайный dest алиас без проверки наличи€ маршрутов
-	PduAddress destAddr;
-	const Address* tmp = smeReg->getRandomAddress();
-	__require__(tmp);
-	SmppUtil::convert(*tmp, &destAddr);
-	pdu->get_message().set_dest(destAddr);
+	PduAddress addr;
+	if (destAlias)
+	{
+		SmppUtil::convert(*destAlias, &addr);
+	}
+	else //случайный dest алиас без проверки наличи€ маршрутов
+	{
+		const Address* tmp = smeReg->getRandomAddress();
+		__require__(tmp);
+		SmppUtil::convert(*tmp, &addr);
+	}
+	pdu->get_message().set_dest(addr);
 	//msgRef
 	if (pduReg)
 	{
@@ -215,13 +235,15 @@ void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu)
 
 //предварительна€ регистраци€ pdu, требуетс€ внешн€€ синхронизаци€
 PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
-	PduData* existentPduData, time_t submitTime)
+	PduData* existentPduData, time_t submitTime, PduData::IntProps* intProps,
+	PduData::StrProps* strProps, bool normalSms)
 {
 	__require__(pduReg);
+	__cfg_int__(maxValidPeriod);
 	time_t waitTime = max(submitTime, SmppUtil::getWaitTime(
 			pdu->get_message().get_scheduleDeliveryTime(), submitTime));
-	time_t validTime = SmppUtil::getValidTime(
-		pdu->get_message().get_validityPeriod(), submitTime);
+	time_t validTime = normalSms ? SmppUtil::getValidTime(
+		pdu->get_message().get_validityPeriod(), submitTime) : waitTime + maxValidPeriod;
 	PduData* pduData = new PduData(pdu->get_optional().get_userMessageReference(),
 		submitTime, waitTime, validTime, reinterpret_cast<SmppHeader*>(pdu));
 	//дл€ флагов самые простые проверки, остальное делаетс€ в
@@ -233,11 +255,21 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	//pdu->get_message().get_registredDelivery();
 	Address srcAddr;
 	SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
-	pduData->reportOptions = profileReg->getProfile(srcAddr).reportoptions;
+	time_t t; //профиль нужно брать именно тот, что в profileReg, игнориру€ profileUpdateTime
+	pduData->reportOptions = profileReg->getProfile(srcAddr, t).reportoptions;
 	pduData->deliveryReceiptFlag =
 		(pduData->reportOptions == ProfileReportOptions::ReportNone ?
 		PDU_NOT_EXPECTED_FLAG : PDU_REQUIRED_FLAG);
 	pduData->intermediateNotificationFlag = PDU_NOT_EXPECTED_FLAG;
+	//опциональные проперти
+	if (intProps)
+	{
+		pduData->intProps = *intProps;
+	}
+	if (strProps)
+	{
+		pduData->strProps = *strProps;
+	}
 	//—огласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 	//destination address and service_type. —ообщение должно быть в 
 	//ENROTE state.
@@ -251,8 +283,8 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	{
 		if (pdu->get_message().get_replaceIfPresentFlag() == 0)
 		{
-			pduData->hasSmppDuplicates = true;
-			existentPduData->hasSmppDuplicates = true;
+			pduData->intProps["hasSmppDuplicates"] = 1;
+			existentPduData->intProps["hasSmppDuplicates"] = 1;
 		}
 		else if (pdu->get_message().get_replaceIfPresentFlag() == 1)
 		{
@@ -307,7 +339,8 @@ void SmppTransmitterTestCases::processSubmitSmAsync(PduData* pduData,
 
 //отправить и зарегистрировать pdu
 void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
-	PduData* existentPduData, bool sync)
+	PduData* existentPduData, bool sync, PduData::IntProps* intProps,
+	PduData::StrProps* strProps, bool normalSms)
 {
 	__decl_tc__;
 	try
@@ -321,7 +354,8 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 				{
 					MutexGuard mguard(pduReg->getMutex());
 					pdu->get_header().set_sequenceNumber(0); //не известен
-					pduData = registerSubmitSm(pdu, existentPduData, time(NULL)); //all times, msgRef
+					pduData = registerSubmitSm(pdu, existentPduData, time(NULL),
+						intProps, strProps, normalSms); //all times, msgRef
 				}
 				//__dumpSubmitSmPdu__("submitSmSyncBefore", systemId, pdu);
 				PduSubmitSmResp* respPdu = session->getSyncTransmitter()->submit(*pdu);
@@ -339,7 +373,8 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 				time_t submitTime = time(NULL);
 				PduSubmitSmResp* respPdu = session->getAsyncTransmitter()->submit(*pdu);
 				__dumpSubmitSmPdu__("submitSmAsyncAfter", systemId, pdu);
-				PduData* pduData = registerSubmitSm(pdu, existentPduData, submitTime); //all times, msgRef, sequenceNumber
+				PduData* pduData = registerSubmitSm(pdu, existentPduData,
+					submitTime, intProps, strProps, normalSms); //all times, msgRef, sequenceNumber
 				processSubmitSmAsync(pduData, respPdu);
 			}
 			//pdu life time определ€етс€ PduRegistry
@@ -378,13 +413,16 @@ void SmppTransmitterTestCases::submitSmCorrect(bool sync, int num)
 {
 	TCSelector s(num, 15);
 	__decl_tc__;
+	__cfg_int__(maxWaitTime);
+	__cfg_int__(maxValidPeriod);
+	__cfg_int__(timeCheckAccuracy);
 	__tc__("submitSm.correct");
 	for (; s.check(); s++)
 	{
 		try
 		{
 			PduSubmitSm* pdu = new PduSubmitSm();
-			setupRandomCorrectSubmitSmPdu(pdu);
+			setupRandomCorrectSubmitSmPdu(pdu, NULL);
 			PduData* existentPduData = NULL;
 			switch (s.value())
 			{
@@ -639,13 +677,17 @@ void SmppTransmitterTestCases::submitSmIncorrect(bool sync, int num)
 {
 	TCSelector s(num, 10);
 	__decl_tc__;
+	__cfg_int__(maxWaitTime);
+	__cfg_int__(maxValidPeriod);
+	__cfg_int__(maxDeliveryPeriod);
+	__cfg_int__(timeCheckAccuracy);
 	__tc__("submitSm.incorrect");
 	for (; s.check(); s++)
 	{
 		try
 		{
 			PduSubmitSm* pdu = new PduSubmitSm();
-			setupRandomCorrectSubmitSmPdu(pdu);
+			setupRandomCorrectSubmitSmPdu(pdu, NULL);
 			switch (s.value())
 			{
 				case 1: //неправильный адрес отправител€
@@ -802,7 +844,7 @@ PduData* SmppTransmitterTestCases::registerReplaceSm(PduReplaceSm* pdu,
 		resPdu->get_message().set_smDefaultMsgId(pdu->get_smDefaultMsgId());
 		resPdu->get_message().set_shortMessage(pdu->get_shortMessage(), pdu->size_shortMessage());
 		resPdu->get_message().set_replaceIfPresentFlag(1); //дл€ правильной работы registerSubmitSm()
-		PduData* pduData = registerSubmitSm(resPdu, replacePduData, submitTime);
+		PduData* pduData = registerSubmitSm(resPdu, replacePduData, submitTime, NULL, NULL, true);
 		pduData->smsId = replacePduData->smsId;
 		return pduData;
 	}
@@ -930,6 +972,10 @@ void SmppTransmitterTestCases::replaceSm(bool sync, int num)
 {
 	TCSelector s(num, 11);
 	__decl_tc__;
+	__cfg_int__(maxWaitTime);
+	__cfg_int__(maxValidPeriod);
+	__cfg_int__(maxDeliveryPeriod);
+	__cfg_int__(timeCheckAccuracy);
 	__tc__("replaceSm");
 	for (; s.check(); s++)
 	{
@@ -1205,6 +1251,158 @@ uint32_t SmppTransmitterTestCases::sendDeliverySmRespError(PduDeliverySm& pdu,
 		error();
 	}
 	return 0xffffffff;
+}
+
+void SmppTransmitterTestCases::sendUpdateProfilePdu(PduSubmitSm* pdu,
+	const string& text, bool sync, uint8_t dataCoding, PduData::IntProps& intProps)
+{
+	__require__(pdu);
+	__decl_tc__;
+	try
+	{
+		switch (dataCoding)
+		{
+			case DATA_CODING_SMSC_DEFAULT:
+				__tc__("updateProfileCorrect.cmdTextDefault");
+				break;
+			case DATA_CODING_UCS2:
+				__tc__("updateProfileCorrect.cmdTextUcs2");
+				break;
+			default:
+				__unreachable__("Invalid data coding");
+		}
+		string encText = encode(text.c_str(), dataCoding);
+		pdu->get_message().set_shortMessage(encText.c_str(), encText.length());
+		pdu->get_message().set_dataCoding(dataCoding);
+		//отправить и зарегистрировать pdu
+		sendSubmitSmPdu(pdu, NULL, sync, &intProps, NULL, false);
+		__tc_ok__;
+	}
+	catch(...)
+	{
+		__tc_fail__(100);
+		//error();
+		throw;
+	}
+}
+
+void SmppTransmitterTestCases::updateProfileCorrect(bool sync,
+	uint8_t dataCoding, int num)
+{
+	__decl_tc__;
+	TCSelector s(num, 8);
+	for (; s.check(); s++)
+	{
+		try
+		{
+			PduSubmitSm* pdu = new PduSubmitSm();
+			__cfg_addr__(profilerAlias);
+			setupRandomCorrectSubmitSmPdu(pdu, &profilerAlias);
+			string text;
+			int cmdType;
+			PduData::IntProps intProps;
+			switch (s.value())
+			{
+				case 1: //report none
+					__tc__("updateProfile.reportOptions.reportNoneMixedCase");
+					text = "RePoRT NoNe";
+					intProps["reportOptions"] = ProfileReportOptions::ReportNone;
+					cmdType = UPDATE_REPORT_OPTIONS;
+					break;
+				case 2: //report none
+					__tc__("updateProfile.reportOptions.reportNoneSpaces");
+					text = "  rEpOrt  nOnE  ";
+					intProps["reportOptions"] = ProfileReportOptions::ReportNone;
+					cmdType = UPDATE_REPORT_OPTIONS;
+					break;
+				case 3: //report full
+					__tc__("updateProfile.reportOptions.reportFullMixedCase");
+					text = "RePoRT FuLL";
+					intProps["reportOptions"] = ProfileReportOptions::ReportFull;
+					cmdType = UPDATE_REPORT_OPTIONS;
+					break;
+				case 4: //report full
+					__tc__("updateProfile.reportOptions.reportFullSpaces");
+					text = "  rEpOrt  fUll  ";
+					intProps["reportOptions"] = ProfileReportOptions::ReportFull;
+					cmdType = UPDATE_REPORT_OPTIONS;
+					break;
+				case 5: //ucs2 codepage
+					__tc__("updateProfile.dataCoding.ucs2CodepageMixedCase");
+					text = "uCS2";
+					intProps["codePage"] = ProfileCharsetOptions::Ucs2;
+					cmdType = UPDATE_CODE_PAGE;
+					break;
+				case 6: //usc2 codepage
+					__tc__("updateProfile.dataCoding.ucs2CodepageSpaces");
+					text = "  Ucs2  ";
+					intProps["codePage"] = ProfileCharsetOptions::Ucs2;
+					cmdType = UPDATE_CODE_PAGE;
+					break;
+				case 7: //default codepage
+					__tc__("updateProfile.dataCoding.defaultCodepageMixedCase");
+					text = "DeFauLT";
+					intProps["codePage"] = ProfileCharsetOptions::Default;
+					cmdType = UPDATE_CODE_PAGE;
+					break;
+				case 8: //default codepage
+					__tc__("updateProfile.dataCoding.defaultCodepageSpaces");
+					text = "  dEfAUlt  ";
+					intProps["codePage"] = ProfileCharsetOptions::Default;
+					cmdType = UPDATE_CODE_PAGE;
+					break;
+				default:
+					__unreachable__("Invalid num");
+			}
+			//задать кодировку, отправить и зарегистрировать pdu
+			if (profileReg)
+			{
+				time_t t;
+				Profile profile = profileReg->getProfile(smeAddr, t);
+				if (intProps.count("reportOptions"))
+				{
+					profile.reportoptions = intProps.find("reportOptions")->second;
+				}
+				if (intProps.count("codePage"))
+				{
+					profile.codepage = intProps.find("codePage")->second;
+				}
+				//установить немедленную доставку и обновить profileReg
+				pdu->get_message().set_scheduleDeliveryTime("");
+				profileReg->putProfile(smeAddr, profile);
+			}
+			sendUpdateProfilePdu(pdu, text, sync, dataCoding, intProps);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(100);
+			error();
+		}
+	}
+}
+
+void SmppTransmitterTestCases::updateProfileIncorrect(bool sync, uint8_t dataCoding)
+{
+	__decl_tc__;
+	__tc__("updateProfile.incorrectCmdText");
+	try
+	{
+		PduSubmitSm* pdu = new PduSubmitSm();
+		__cfg_addr__(profilerAlias);
+		setupRandomCorrectSubmitSmPdu(pdu, &profilerAlias);
+		PduData::IntProps intProps;
+		intProps["incorrectCmdText"] = 1;
+		//задать кодировку, отправить и зарегистрировать pdu
+		sendUpdateProfilePdu(pdu, "Cmd Text", sync, dataCoding, intProps);
+		__tc_ok__;
+
+	}
+	catch(...)
+	{
+		__tc_fail__(100);
+		error();
+	}
 }
 
 }
