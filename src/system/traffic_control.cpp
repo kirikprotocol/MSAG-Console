@@ -18,8 +18,6 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
     case SUBMIT:
     case FORWARD:
     {
-      bool isReceipt=cmd->get_commandId()!=FORWARD &&
-                     cmd->get_sms()->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID);
 
       /*
       if(!isReceipt)
@@ -52,6 +50,8 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
         }
         sms=&_sms;
       }
+      bool isReceipt=sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID);
+
 
       if(!cfg.smsc->AliasToAddress(sms->getDestinationAddress(),dst))
       {
@@ -77,88 +77,88 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
         }
       }
 
-
-      if(!dest_proxy)return true;
-
-
-      if(!isReceipt)
+      if(cmd->get_commandId()==SUBMIT && !sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
       {
-        time_t lookAhead=time(NULL)+cfg.lookAheadTime;
+        smsc::profiler::Profile profile=cfg.smsc->getProfiler()->lookup(sms->getOriginatingAddress());
 
-        IntTimeSlotCounter *dcnt=getTSC(deliverCnt,dstIdx);
-        IntTimeSlotCounter *rcnt=getTSC(responseCnt,dstIdx);
+        bool regdel=(sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
+                    (sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==2 ||
+                     sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
 
-        int deliveryCount=dcnt->Get();
-        int responseCount=rcnt->Get();
-
-        if(deliveryCount-responseCount>cfg.protectThreshold)
+        if(regdel || profile.reportoptions!=ProfileReportOptions::ReportNone)
         {
-          __info2__(log,"TC: deny - protect threshold limit for %s: %d/%d",dest_proxy->getSystemId(),responseCount,deliveryCount);
-          break;
-        }
+          SmeIndex idx=src_proxy->getSmeIndex();
+          SmeInfo si=cfg.smsc->getSmeInfo(idx);
+          __trace2__("smeschedcount(receipt) for %s=%d",src_proxy->getSystemId(),cfg.smsc->GetSmeScheduleCount(idx,0));
+          if(si.schedlimit!=0 && cfg.smsc->GetSmeScheduleCount(idx,0)>=si.schedlimit)
+          {
+            break;
+          }
+          IntTimeSlotCounter *dsrccnt=getTSC(deliverCnt,idx);
+          IntTimeSlotCounter *rsrccnt=getTSC(responseCnt,idx);
+          int deliveryCount=dsrccnt->Get();
+          int responseCount=rsrccnt->Get();
 
-        /*
-        if(cmd->get_commandId()==SUBMIT)
-        {
-          int scount=cfg.smsc->GetSmeScheduleCount(dstIdx,lookAhead);
-
+          if(deliveryCount-responseCount>cfg.protectThreshold)
+          {
+            __info2__(log,"TC: deny - receipt protect threshold limit for %s: %d-%d",
+              src_proxy->getSystemId(),deliveryCount,responseCount);
+            break;
+          }
+          /*
+          int scount=cfg.smsc->GetSmeScheduleCount(idx,lookAhead);
           double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
 
           if(speed>1 && speed<scount)
           {
-            __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",dest_proxy->getSystemId(),speed,scount);
+            __info2__(log,"TC: deny - receipt protect schedule limit for %s: %lf - %d",src_proxy->getSystemId(),speed,scount);
             break;
           }
+          */
+          dsrccnt->Inc();
+          __debug2__(log,"TC: receipt inc for %s",src_proxy->getSystemId());
         }
-        */
+      }
 
-        if(cmd->get_commandId()==SUBMIT && !sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
+
+
+      if(!dest_proxy)return true;
+
+
+      //time_t lookAhead=time(NULL)+cfg.lookAheadTime;
+
+      IntTimeSlotCounter *dcnt=getTSC(deliverCnt,dstIdx);
+      IntTimeSlotCounter *rcnt=getTSC(responseCnt,dstIdx);
+
+      int deliveryCount=dcnt->Get();
+      int responseCount=rcnt->Get();
+
+      if(deliveryCount-responseCount>cfg.protectThreshold)
+      {
+        __info2__(log,"TC: deny - protect threshold limit for %s: %d/%d",dest_proxy->getSystemId(),responseCount,deliveryCount);
+        break;
+      }
+
+      /*
+      if(cmd->get_commandId()==SUBMIT)
+      {
+        int scount=cfg.smsc->GetSmeScheduleCount(dstIdx,lookAhead);
+
+        double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
+
+        if(speed>1 && speed<scount)
         {
-          smsc::profiler::Profile profile=cfg.smsc->getProfiler()->lookup(sms->getOriginatingAddress());
-
-          bool regdel=(sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
-                      (sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==2 ||
-                       sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
-
-          if(regdel || profile.reportoptions!=ProfileReportOptions::ReportNone)
-          {
-            SmeIndex idx=src_proxy->getSmeIndex();
-            SmeInfo si=cfg.smsc->getSmeInfo(idx);
-            if(si.schedlimit!=0 && cfg.smsc->GetSmeScheduleCount(idx,0)>=si.schedlimit)
-            {
-              break;
-            }
-            IntTimeSlotCounter *dsrccnt=getTSC(deliverCnt,idx);
-            IntTimeSlotCounter *rsrccnt=getTSC(responseCnt,idx);
-            int deliveryCount=dsrccnt->Get();
-            int responseCount=rsrccnt->Get();
-
-            if(deliveryCount-responseCount>cfg.protectThreshold)
-            {
-              __info2__(log,"TC: deny - receipt protect threshold limit for %s: %d-%d",
-                src_proxy->getSystemId(),deliveryCount,responseCount);
-              break;
-            }
-            /*
-            int scount=cfg.smsc->GetSmeScheduleCount(idx,lookAhead);
-            double speed=(double)responseCount*cfg.lookAheadTime/cfg.protectTimeFrame;
-
-            if(speed>1 && speed<scount)
-            {
-              __info2__(log,"TC: deny - receipt protect schedule limit for %s: %lf - %d",src_proxy->getSystemId(),speed,scount);
-              break;
-            }
-            */
-            dsrccnt->Inc();
-            __debug2__(log,"TC: receipt inc for %s",src_proxy->getSystemId());
-          }
+          __info2__(log,"TC: deny - protect schedule limit for %s: %lf - %d",dest_proxy->getSystemId(),speed,scount);
+          break;
         }
+      }
+      */
 
-        if(!sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
-        {
-          __debug2__(log,"TC: inc for %s",dest_proxy->getSystemId());
-          dcnt->Inc();
-        }
+
+      if(!sms->hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
+      {
+        __debug2__(log,"TC: inc for %s",dest_proxy->getSystemId());
+        dcnt->Inc();
       }
 
       //totalCounter.Inc();

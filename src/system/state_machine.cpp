@@ -3085,6 +3085,7 @@ time_t StateMachine::rescheduleSms(SMS& sms)
   time_t basetime=time(NULL);
   time_t nextTryTime=RescheduleCalculator::calcNextTryTime(basetime,sms.getLastResult(),sms.getAttemptsCount());
   if(nextTryTime>sms.getValidTime())nextTryTime=sms.getValidTime();
+  __trace2__("rescheduleSms: bt=%u ntt=%u",basetime,nextTryTime);
   return nextTryTime;
 }
 
@@ -3112,7 +3113,8 @@ void StateMachine::submitReceipt(SMS& sms)
   }
   sms.setDealiasedDestinationAddress(dst);
 
-  sms.setNextTime(time(NULL));
+  sms.setNextTime(now);
+  sms.setValidTime(now+maxValidTime);
 
   try{
     int dest_proxy_index;

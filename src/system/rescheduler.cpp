@@ -87,7 +87,7 @@ time_t RescheduleCalculator::calcNextTryTime(time_t lasttry,int code,int attempt
     if(ta->Count()==0)
     {
       __warning2__("Rescheduling table for error code %d is empty!!!");
-      return 60;
+      return lasttry+60;
     }
     if(attempt>=ta->Count())attempt=ta->Count()-1;
     return lasttry+(*ta)[attempt];
@@ -95,7 +95,7 @@ time_t RescheduleCalculator::calcNextTryTime(time_t lasttry,int code,int attempt
   if(RescheduleTable.Count()==0)
   {
     __warning__("Rescheduling table is empty!");
-    return 60;
+    return lasttry+60;
   }
   if(attempt<0)attempt=0;
   if(attempt>=RescheduleTable.Count())attempt=RescheduleTable.Count()-1;
