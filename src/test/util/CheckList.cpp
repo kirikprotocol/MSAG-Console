@@ -22,17 +22,11 @@ TestCase* CheckList::registerTc(const char* id, const char* desc)
 {
 	MutexGuard mguard(mutex);
 	TcMap::iterator it = tcMap.find(id);
-	if (it == tcMap.end())
-	{
-		TestCase* tc = new TestCase(id, desc);
-		tcMap[id] = tc;
-		tcList.push_back(tc);
-		return tc;
-	}
-	else
-	{
-		return it->second;
-	}
+	__require__(it == tcMap.end());
+	TestCase* tc = new TestCase(id, desc);
+	tcMap[id] = tc;
+	tcList.push_back(tc);
+	return tc;
 }
 
 TestCase* CheckList::getTc(const char* id) const
