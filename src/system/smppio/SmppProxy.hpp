@@ -97,7 +97,8 @@ public:
   virtual SmscCommand getCommand()
   {
     MutexGuard g(mutexin);
-    if(inqueue.Count()==0)throw Exception("SmppProxy::getCommand: no commands in input queue");
+    if(inqueue.Count()==0)return SmscCommand();
+    //throw Exception("SmppProxy::getCommand: no commands in input queue");
     SmscCommand cmd;
     inqueue.Shift(cmd);
     trace2("get command:%p",*((void**)&cmd));

@@ -195,6 +195,7 @@ public:
   {
     MutexGuard g(mon);
     SmscCommand cmd;
+    if(inQueue.Count()==0)return cmd;
     inQueue.Shift(cmd);
     return cmd;
   };

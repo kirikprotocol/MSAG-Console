@@ -68,6 +68,7 @@ public:
   {
     MutexGuard g(mutex);
     SmscCommand cmd;
+    if(inqueue.Count()==0)return cmd;
     inqueue.Shift(cmd);
     __mapproxy_trace2__("get command:%p",*((void**)&cmd));
     return cmd;
