@@ -299,11 +299,11 @@ function showhide(elem)
 	<td><input class=txtW name="core.protocol_id" value="<%=bean.getIntParam("core.protocol_id")%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
-	<th class=label>protocol_id:</th>
+	<th class=label>locales:</th>
 	<td><input class=txtW name="core.locales" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.locales"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
-	<th class=label>protocol_id:</th>
+	<th class=label>default locale:</th>
 	<td><input class=txtW name="core.default_locale" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.default_locale"))%>"></td>
 </tr>
 </table>
