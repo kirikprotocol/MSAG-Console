@@ -10,6 +10,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.RouteFilter;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.MaskList;
 
 import java.util.*;
 
@@ -61,9 +62,23 @@ public class RoutesFilter extends SmscBean
 		if (smeChks == null) smeChks = new String[0];
 
 		srcChks = trimStrings(srcChks);
-		srcMasks = trimStrings(srcMasks);
+		try
+		{
+			srcMasks = MaskList.normalizeMaskList(trimStrings(srcMasks));
+		}
+		catch (AdminException e)
+		{
+			return error(SMSCErrors.error.routes.invalidSourceMask, e);
+		}
 		dstChks = trimStrings(dstChks);
-		dstMasks = trimStrings(dstMasks);
+		try
+		{
+			dstMasks = MaskList.normalizeMaskList(trimStrings(dstMasks));
+		}
+		catch (AdminException e)
+		{
+			return error(SMSCErrors.error.routes.invalidDestinationMask, e);
+		}
 		smeChks = trimStrings(smeChks);
 
 		srcChksSet = new HashSet(Arrays.asList(srcChks));
@@ -98,12 +113,12 @@ public class RoutesFilter extends SmscBean
 				return error(SMSCErrors.error.routes.invalidDestinationMask, e);
 			}
 			filter.setSourceSubjectNames(srcChks);
-				filter.setDestinationSubjectNames(dstChks);
-				filter.setSmeIds(smeChks);
-				filter.setIntersection(strict);
-				appContext.getUserPreferences().setRouteShowSrc(showSrc);
-				appContext.getUserPreferences().setRouteShowDst(showDst);
-				return RESULT_DONE;
+			filter.setDestinationSubjectNames(dstChks);
+			filter.setSmeIds(smeChks);
+			filter.setIntersection(strict);
+			appContext.getUserPreferences().setRouteShowSrc(showSrc);
+			appContext.getUserPreferences().setRouteShowDst(showDst);
+			return RESULT_DONE;
 		}
 		else if (mbClear != null)
 		{

@@ -10,6 +10,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.MaskList;
 
 import java.util.*;
 
@@ -52,7 +53,14 @@ public class SubjectsFilter extends SmscBean
 
 		checkedSubjects = trimStrings(checkedSubjects);
 		checkedSmes = trimStrings(checkedSmes);
-		masks = trimStrings(masks);
+		try
+		{
+			masks = MaskList.normalizeMaskList(trimStrings(masks));
+		}
+		catch (AdminException e)
+		{
+			return error(SMSCErrors.error.subjects.incorrectMask, e);
+		}
 
 		checkedSubjectsSet = new HashSet(Arrays.asList(checkedSubjects));
 		checkedSmesSet = new HashSet(Arrays.asList(checkedSmes));

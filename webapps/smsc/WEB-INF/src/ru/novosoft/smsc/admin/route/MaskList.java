@@ -133,4 +133,9 @@ public class MaskList
 	{
 		masks.clear();
 	}
+
+	public static String[] normalizeMaskList(String[] masks) throws AdminException
+	{
+		return (String[]) new MaskList(masks).getNames().toArray(new String[0]);
+	}
 }

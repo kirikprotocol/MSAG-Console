@@ -10,6 +10,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.MaskList;
 
 import java.util.List;
 
@@ -44,8 +45,22 @@ public class AliasesFilter extends SmscBean
 		if (addresses == null)
 			addresses = new String[0];
 
-		aliases = trimStrings(aliases);
-		addresses = trimStrings(addresses);
+		try
+		{
+			aliases = MaskList.normalizeMaskList(trimStrings(aliases));
+		}
+		catch (AdminException e)
+		{
+			return error(SMSCErrors.error.aliases.invalidAlias, e);
+		}
+		try
+		{
+			addresses = MaskList.normalizeMaskList(trimStrings(addresses));
+		}
+		catch (AdminException e)
+		{
+			return error(SMSCErrors.error.aliases.invalidAddress, e);
+		}
 
 		return RESULT_OK;
 	}
