@@ -50,6 +50,12 @@
 	    <param name="timeout" type="int">10</param>
         </section>  
 	
+        <section name="Circuits">
+	    <param name="hsn" type="int">1</param>
+	    <param name="spn" type="int">2</param>
+    	    <param name="tsm" type="string">123ABC</param>
+	</section>
+
 	<section name="DataSource">
     	    <param name="type" type="string">OCI</param>
             <param name="connections" type="int">10</param>
