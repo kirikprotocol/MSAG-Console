@@ -210,6 +210,7 @@ extern void loadRoutes(RouteManager* rm,smsc::util::config::route::RouteConfig& 
 
 void Smsc::init(const SmscConfigs& cfg)
 {
+  try{
   tp.preCreateThreads(15);
   log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.init");
 
@@ -523,6 +524,15 @@ void Smsc::init(const SmscConfigs& cfg)
   }
 
   smsc::util::regexp::RegExp::InitLocale();
+  }catch(exception& e)
+  {
+    __trace2__("Smsc::init exception:%s",e.what());
+    throw;
+  }catch(...)
+  {
+    __trace2__("Smsc::init exception:unknown");
+    throw;
+  }
 }
 
 void Smsc::run()
