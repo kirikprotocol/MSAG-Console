@@ -48,11 +48,12 @@ enum CommandStatus{
   CMD_ERR_TEMP=1,
   CMD_ERR_PERM=2,
   CMD_ERR_FATAL=3,
+  CMD_ERR_RESCHEDULENOW=4,
 };
 
 #define MAKE_COMMAND_STATUS(type,code) ((type<<16)|code)
-#define GET_STATUS_TYPE(status) ((status>>16)&3)
-#define GET_STATUS_CODE(status) ((status>>16)&3)
+#define GET_STATUS_TYPE(status) ((status>>16)&7)
+#define GET_STATUS_CODE(status) (status&0x0ffff)
 
 struct SmsResp
 {
