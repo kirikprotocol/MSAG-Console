@@ -10,7 +10,7 @@ public abstract class Version
 {
   public static final int VER_MAJOR = 1;
   public static final int VER_MINOR = 0;
-  public static final int VER_BUILD = 2;
-  public static final String VER_DATE = "Tue Nov  4 10:51:36 2003";
+  public static final int VER_BUILD = 5;
+  public static final String VER_DATE = "Thu Nov  6 13:39:40 2003";
   public static final String VER_STR = "Sibinco SMSC Control Center ver " + VER_MAJOR + "." + VER_MINOR + " build " + VER_BUILD + " date " + VER_DATE;
 }
