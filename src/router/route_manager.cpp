@@ -409,7 +409,7 @@ void dump(RouteTreeNode* node,int step)
 }
 
 static
-int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec)
+int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<string>* trace_)
 {
   __trace2__("addRouteIntoSrcTreeRecurse");
   print(node->record,"\tnode->record");
@@ -424,6 +424,14 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec)
       for ( RouteRecord* r0 = node->record; r0 != 0 ; r0 = r0->alternate_pair ) {
         if ( r0->srcProxyIdx == rec->srcProxyIdx ) {
           __warning__("duplicate route, is not added");
+          if ( trace_ ) {
+            ostringstream ost;
+            ost << "duplicated route " 
+              << AddrToString(r0->info.source) << "(" << r0->info.srcSmeSystemId << ")"
+              << " -> " 
+              << AddrToString(r0->info.dest) << "(" << r0->info.smeSystemId << ")";
+            trace_->push_back(ost.str());
+          }
           conflicted = true;
         }
       }
@@ -635,13 +643,13 @@ __synchronized__
   for ( ; rec != 0 ; rec = rec->alternate_pair ) {
     if ( trace_enabled_ ) {
       ostringstream ost;
-      ost << "check alternative route with src proxy: '" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << "'";
+      ost << "check alternative route with src proxy: '" << rec->info.srcSmeSystemId  << "'";
       trace_.push_back(ost.str());
     }
     if ( rec->srcProxyIdx == srcidx ) {
       if ( trace_enabled_ ) {
         ostringstream ost;
-        ost << "found alternative route with src proxy: '" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << "'";
+        ost << "found alternative route with src proxy: '" << rec->info.srcSmeSystemId << "'";
         trace_.push_back(ost.str());
       }
       break;
@@ -665,9 +673,8 @@ __synchronized__
   if ( trace_enabled_ ) {
     ostringstream ost;
     ost << "route found, "
-      << AddrToString(rec->info.source) << "(" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << ") -> "
+      << AddrToString(rec->info.source) << "(" << rec->info.srcSmeSystemId << ") -> "
       << AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId << ")";
-//    trace_.push_back((string("route found, target proxy is '")+=rec->info.smeSystemId)+="'");
     trace_.push_back(ost.str());
   }
   if ( info ) *info = rec->info;
