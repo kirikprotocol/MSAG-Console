@@ -47,15 +47,18 @@ void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
   sa->setNumberingPlan(ma->st.npi);
   if ( ma->len != 0 ){
     char sa_val[21] = {0,};
-    for ( int i=0; i<ma->len;){
+    int i = 0;
+    for ( ;i<ma->len;){
+      if ( (ma->val[(i>>1)]&0x0f) == 0xf ) break;
       sa_val[i]=(ma->val[(i>>1)]&0x0f)+0x30;
       ++i;
       if ( i < ma->len ){
+        if ( (ma->val[(i>>1)]&0x0f) == 0xf ) break;
         sa_val[i] = (ma->val[(i>>1)]>>4)+0x30;
         ++i;
       }else break;
     }
-    sa->setValue(ma->len,sa_val);
+    sa->setValue(i,sa_val);
     {
       char b[256] = {0,};
       memcpy(b,sa_val,ma->len);
