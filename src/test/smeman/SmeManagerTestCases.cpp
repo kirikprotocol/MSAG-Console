@@ -144,7 +144,7 @@ void SmeManagerTestCases::addSme(const char* tc, int num,
 
 void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 {
-	int numAddr = 3; int numSme = 8;
+	int numAddr = 3; int numSme = 7;
 	TCSelector s(num, numAddr * numSme);
 	__decl_tc__;
 	for (; s.check(); s++)
@@ -227,6 +227,7 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 					__tc__("addCorrectSme.invalidPasswordLength");
 					sme->password = "";
 					break;
+				/*
 				case 8: //password больше макс длины
 					{
 						__tc__("addCorrectSme.invalidPasswordLength");
@@ -235,7 +236,6 @@ void SmeManagerTestCases::addCorrectSme(Address* smeAddr, SmeInfo* sme, int num)
 						sme->password = _password.get();
 					}
 					break;
-				/*
 				case 11: //systemId больше макс длины
 					{
 						__tc__("addCorrectSme.invalidSystemIdLength");

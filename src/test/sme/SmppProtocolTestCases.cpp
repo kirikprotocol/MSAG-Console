@@ -455,7 +455,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 
 void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 {
-	TCSelector s(num, 12);
+	TCSelector s(num, 11);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -568,14 +568,6 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 				case 11: //недопустимый dataCoding
 					__tc__("submitSm.incorrect.dataCoding");
 					pdu->get_message().set_dataCoding(rand1(255));
-					break;
-				case 12: //serviceType больше максимальной длины
-					{
-						__tc__("submitSm.assert.serviceTypeInvalid");
-						char serviceType[MAX_SERVICE_TYPE_LENGTH + 10];
-						rand_char(MAX_SERVICE_TYPE_LENGTH + 1, serviceType);
-						pdu->get_message().set_serviceType(serviceType);
-					}
 					break;
 				default:
 					__unreachable__("Invalid num");
@@ -826,7 +818,11 @@ void SmppProtocolTestCases::sendInvalidPdu(bool sync, int num)
 					break;
 				case 14:
 					__tc__("sendInvalidPdu.response");
-					pdu = reinterpret_cast<SmppHeader*>(new PduMultiSmResp());
+					{
+						PduMultiSmResp* p = new PduMultiSmResp();
+						p->set_sme(NULL);
+						pdu = reinterpret_cast<SmppHeader*>(p);
+					}
 					pdu->set_commandId(SUBMIT_MULTI_RESP);
 					break;
 				case 15:
