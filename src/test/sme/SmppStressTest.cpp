@@ -70,7 +70,7 @@ int TestSme::Execute()
 	{
 		try
 		{
-			switch (rand1(5))
+			switch (rand1(7))
 			{
 				case 1:
 					tc.invalidBindScenario(RAND_TC);
@@ -86,6 +86,12 @@ int TestSme::Execute()
 					break;
 				case 5:
 					tc.nullPduScenario(RAND_TC);
+					break;
+				case 6:
+					tc.bindUnbindScenario(RAND_TC);
+					break;
+				case 7:
+					tc.invalidBindStatusScenario(RAND_TC);
 					break;
 				default:
 					__unreachable__("Invalid scenario num");
