@@ -128,7 +128,7 @@ public class Logging extends PageBean {
       Collection keys = new SortedList(logCategories.keySet());
       for (Iterator i = keys.iterator(); i.hasNext();) {
         String key = (String) i.next();
-        String value = (String)logCategories.get(value);
+        String value = (String)logCategories.get(key);
         rootCategory.addChild(key, value);
       }
     } catch (AdminException e) {
