@@ -204,6 +204,18 @@ void Smsc::mainLoop()
         sscanf(cmd->get_querySm().messageId.get(),"%lld",&id);
         break;
       }
+      case __CMD__(CANCEL):
+      {
+        if(cmd->get_cancelSm().messageId.get())
+        {
+          sscanf(cmd->get_cancelSm().messageId.get(),"%lld",&id);
+        }else
+        {
+          cancelAgent->putCommand(cmd);
+          continue;
+        }
+        break;
+      }
     }
     eventqueue.enqueue(id,cmd);
   }

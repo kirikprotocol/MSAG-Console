@@ -69,6 +69,11 @@ public:
   int send();
   void send(int length);
 
+  bool isConnectionTimedOut()
+  {
+    return bufferOffset>0 && time(NULL)-lastUpdate>60;
+  }
+
   char* getBuffer(int length);
 
   Socket* getSocket(){return socket;}
@@ -81,6 +86,7 @@ protected:
   int bufferSize;
   int bufferOffset;
   int mode;
+  time_t lastUpdate;
   smsc::core::network::Socket* socket;
   SmppIOTask *inThread,*outThread;
   SmppProxy *proxy;

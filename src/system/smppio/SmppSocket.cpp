@@ -79,7 +79,7 @@ int SmppSocket::receive()
     return -1;
   }
   bufferOffset+=rd;
-
+  lastUpdate=time(NULL);
   if(bufferOffset==packetsize)return 1;
   return 0;
 }

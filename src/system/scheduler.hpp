@@ -32,26 +32,24 @@ public:
       __trace__("scheduler started");
       try{
         it=store->getReadyForRetry(t);
-        //cnt=0;
-        while(it->getNextId(id))
+        if(it)
         {
-          ids.Push(id);
-        }
-        for(int i=0;i<ids.Count();i++)
-        {
-          queue.enqueue(ids[i],SmscCommand::makeForward());
-          thr_yield();
-          /*cnt++;
-          if(cnt%100==0)
+          while(it->getNextId(id))
           {
-            sleep(1);
-          }*/
+            ids.Push(id);
+          }
+          delete it;
+          for(int i=0;i<ids.Count();i++)
+          {
+            queue.enqueue(ids[i],SmscCommand::makeForward());
+            thr_yield();
+          }
+          ids.Clean();
         }
-        ids.Clean();
       }catch(...)
       {
+        __trace__("Scheduler: Exception in getReadyForRetry");
       }
-      delete it;
       it=NULL;
       __trace__("scheduler finished, sleeping");
       sleep(1);

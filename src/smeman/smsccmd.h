@@ -20,6 +20,7 @@
 #include <inttypes.h>
 #include "smeman/smetypes.h"
 #include "smpp/smpp_time.h"
+#include "util/Exception.hpp"
 
 namespace smsc{
 namespace smeman{
@@ -32,6 +33,7 @@ using smsc::sms::Address;
 using smsc::sms::Descriptor;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
+using smsc::util::Exception;
 
 enum CommandId
 {
@@ -149,6 +151,7 @@ struct QuerySm{
   QuerySm(PduQuerySm* q)
   {
     fillField(messageId,q->get_messageId());
+    if(!messageId.get())throw Exception("QUERY: non empty messageId required");
     fillSmppAddr(sourceAddr,q->get_source());
   }
 };
@@ -190,6 +193,7 @@ struct CancelSm{
   auto_ptr<char> messageId;
   auto_ptr<char> sourceAddr;
   auto_ptr<char> destAddr;
+  bool internall;
 
   CancelSm(PduCancelSm* pdu)
   {
@@ -197,6 +201,20 @@ struct CancelSm{
     fillField(messageId,pdu->get_messageId());
     fillSmppAddr(sourceAddr,pdu->get_source());
     fillSmppAddr(destAddr,pdu->get_dest());
+    internall=false;
+  }
+  CancelSm(SMSId id,const Address& oa,const Address& da)
+  {
+    char oabuf[32];
+    char dabuf[32];
+    int oalen=oa.toString(oabuf,sizeof(oabuf));
+    int dalen=da.toString(dabuf,sizeof(dabuf));
+    fillField(sourceAddr,oabuf,oalen);
+    fillField(destAddr,dabuf,dalen);
+    char idbuf[32];
+    int idlen=sprintf(idbuf,"%lld",id);
+    fillField(messageId,idbuf,idlen);
+    internall=true;
   }
 
 };
@@ -260,6 +278,7 @@ struct _SmscCommand
   SMS* get_sms_and_forget() { SMS* s = (SMS*)dta; dta = 0; return s;}
   const ReplaceSm& get_replaceSm(){return *(ReplaceSm*)dta;}
   const QuerySm& get_querySm(){return *(QuerySm*)dta;}
+  const CancelSm& get_cancelSm(){return *(CancelSm*)dta;}
   SmsResp* get_resp() const { return (SmsResp*)dta; }
   int get_priority(){return priority;};
   void set_priority(int newprio){priority=newprio;}
@@ -471,7 +490,17 @@ public:
     return cmd;
   }
 
-
+  static SmscCommand makeCancel(SMSId id,Address& oa,Address& da)
+  {
+    SmscCommand cmd;
+    cmd.cmd = new _SmscCommand;
+    _SmscCommand& _cmd = *cmd.cmd;
+    _cmd.ref_count = 1;
+    _cmd.cmdid = CANCEL;
+    _cmd.dta = new CancelSm(id,oa,da);
+    _cmd.dialogId = 0;
+    return cmd;
+  }
 
   ~SmscCommand() {
      //__trace__(__PRETTY_FUNCTION__);

@@ -333,6 +333,9 @@ void Smsc::init(const SmscConfigs& cfg)
     __warning__("Failed to register smscsme");
   }
 
+  cancelAgent=new CancelAgent(eventqueue,store);
+  tp.startTask(cancelAgent);
+
   smscHost=cfg.cfgman->getString("smpp.host");
   smscPort=cfg.cfgman->getInt("smpp.port");
 
@@ -381,7 +384,7 @@ void Smsc::run()
   // некоторые действия до основного цикла
   mainLoop();
   // и после него
-  shutdown();
+  //shutdown();
 }
 
 void Smsc::shutdown()

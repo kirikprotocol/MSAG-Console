@@ -1358,7 +1358,8 @@ static inline void disposePdu(SmppHeader* _pdu)
   case DATA_SM_RESP:
     delete(reinterpret_cast<PduDataSmResp*>(_pdu)); break;
   default:
-    __unreachable__("this code is not reachable");
+    delete _pdu;
+    //__unreachable__("this code is not reachable");
   }
 }
 

@@ -16,6 +16,7 @@
 #include "system/scheduler.hpp"
 #include "profiler/profiler.hpp"
 #include "system/smscsme.hpp"
+#include "system/cancel_agent.hpp"
 
 namespace smsc{
 namespace system{
@@ -95,6 +96,7 @@ protected:
   std::string smscHost;
   int smscPort;
   SmscSme *smscsme;
+  CancelAgent *cancelAgent;
 };
 
 };//system

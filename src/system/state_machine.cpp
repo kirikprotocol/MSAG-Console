@@ -181,6 +181,7 @@ int StateMachine::Execute()
       case ALERT:st=alert(t);break;
       case REPLACE:st=replace(t);break;
       case QUERY:st=query(t);break;
+      case CANCEL:st=cancel(t);break;
       default:
         __warning__("UNKNOWN COMMAND");
         st=ERROR_STATE;
@@ -931,7 +932,36 @@ StateType StateMachine::query(Tuple& t)
 
 StateType StateMachine::cancel(Tuple& t)
 {
-  //
+  __trace2__("CANCEL: msgid=%lld",t.msgId);
+  try{
+    store->changeSmsStateToDeleted(t.msgId);
+  }catch(...)
+  {
+    if(!t.command->get_cancelSm().internall)
+    {
+      t.command.getProxy()->putCommand
+      (
+        SmscCommand::makeCancelSmResp
+        (
+          t.command->get_dialogId(),
+          SmscCommand::Status::CANCELFAIL
+        )
+      );
+    }
+    return t.state;
+  }
+  if(!t.command->get_cancelSm().internall)
+  {
+    t.command.getProxy()->putCommand
+    (
+      SmscCommand::makeCancelSmResp
+      (
+        t.command->get_dialogId(),
+        SmscCommand::Status::OK
+      )
+    );
+  }
+  return t.state;
 }
 
 

@@ -47,6 +47,7 @@ public:
           case FORWARD:return true;
           case REPLACE:return true;
           case QUERY:return true;
+          case CANCEL:return true;
           default:return false;
         }
       }

@@ -498,9 +498,11 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
     //  goto trap;
     }
     dropPdu(stream);
+    SmppHeader *hdr=new SmppHeader;
+    hdr->commandId=cmdid;
     __trace2__("fetchSmppPdu: unknown cmdid:%d",cmdid);
     //__unreachable__("");
-    return 0;
+    return hdr;
   }
   catch (...)
   {

@@ -141,7 +141,7 @@ int SmppInputThread::Execute()
           s->setData(SOCKET_SLOT_INPUTSMPPSOCKET,(void*)ss);
           mul.add(s);
         }
-        if(s->getData(SOCKET_SLOT_KILL))
+        if(s->getData(SOCKET_SLOT_KILL) || ss->isConnectionTimedOut())
         {
           killSocket(i);
           i--;
@@ -351,6 +351,7 @@ int SmppInputThread::Execute()
             case SmppCommandSet::DELIVERY_SM_RESP:
             case SmppCommandSet::REPLACE_SM:
             case SmppCommandSet::QUERY_SM:
+            case SmppCommandSet::CANCEL_SM:
             {
               try{
                 SmscCommand cmd(pdu);
