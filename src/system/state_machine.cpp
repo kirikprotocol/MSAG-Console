@@ -2016,6 +2016,7 @@ StateType StateMachine::forward(Tuple& t)
       {
         __warning__("FORWARD: failed to send intermediate notification");
       }
+      smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
       try{
         Descriptor d;
         __trace__("FORWARD: change state to enroute");
@@ -2035,6 +2036,7 @@ StateType StateMachine::forward(Tuple& t)
       Descriptor d;
       __trace__("FORWARD: change state to enroute");
       sms.setLastResult(Status::SMENOTCONNECTED);
+      smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
       changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
       smsc->notifyScheduler();
     }catch(...)
@@ -2157,6 +2159,7 @@ StateType StateMachine::forward(Tuple& t)
     sms.setOriginatingAddress(srcOriginal);
     sms.setDestinationAddress(dstOriginal);
     sms.setLastResult(errstatus);
+    smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     sendNotifyReport(sms,t.msgId,errtext);
     try{
       //time_t now=time(NULL);

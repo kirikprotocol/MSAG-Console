@@ -551,66 +551,66 @@ void extractSmsPart(SMS* sms,int partnum)
 {
   if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO))return;
   int dstdc=sms->getIntProperty(Tag::SMSC_DSTCODEPAGE);
-  unsigned int len;
   int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
+  unsigned int len;
   const char* msg=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
   if(len==0 && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
     msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
   }
-  __trace2__("extractSmsPart: len=%d, dc=%d, dstdc=%d",len,dc,dstdc);
-  auto_ptr<char> buf8;
-  auto_ptr<char> bufTr;
-  if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
-  {
-    buf8=auto_ptr<char>(new char[len]);
-    ConvertUCS2ToMultibyte((short*)msg,len,buf8.get(),len,CONV_ENCODING_CP1251);
-    len/=2;
-    bufTr=auto_ptr<char>(new char[len*3]);
-    len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get(),len*3);
-    msg=bufTr.get();
-    if(dstdc==DataCoding::SMSC7BIT)
-    {
-      auto_ptr<char> buf7(new char[len*2+1]);
-      len=ConvertLatin1ToSMSC7Bit(bufTr.get(),len,buf7.get());
-      bufTr=buf7;
-      msg=bufTr.get();
-    }
-  }
-  int maxlen=133;
-  if(dstdc==DataCoding::LATIN1 || dstdc==DataCoding::SMSC7BIT)
-  {
-    maxlen=152;
-  }
-  unsigned int cilen;
-  ConcatInfo *ci=(ConcatInfo *)sms->getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
-  __require__(partnum<ci->num);
-  int off=ci->off[partnum];
-  int newlen=ci->num==partnum+1?len-off:ci->off[partnum+1]-off;
-  __trace2__("extractSmsPart: newlen=%d, part=%d/%d, maxlen=%d, off=%d, partlen=%d",len,partnum,(int)ci->num,maxlen,off,newlen);
-  __require__(newlen<=160);
-  if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
-  {
-    if(dstdc==DataCoding::UCS2|DataCoding::LATIN1)dstdc=DataCoding::LATIN1;
-    sms->setIntProperty(Tag::SMPP_DATA_CODING,dstdc);
-    if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
-    {
-      int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
-      int olddc=dc;
-      if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
-      {
-        dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
-
-      }else if((dc&0xf0)==0xe0)
-      {
-        dc=0xd0 | (dc&0x0f);
-      }
-      sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
-      __trace2__("extractSmsPart: transliterate olddc(%x)->dc(%x)",olddc,dc);
-    }
-  }
   if(!sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
   {
+    __trace2__("extractSmsPart: len=%d, dc=%d, dstdc=%d",len,dc,dstdc);
+    auto_ptr<char> buf8;
+    auto_ptr<char> bufTr;
+    if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
+    {
+      buf8=auto_ptr<char>(new char[len]);
+      ConvertUCS2ToMultibyte((short*)msg,len,buf8.get(),len,CONV_ENCODING_CP1251);
+      len/=2;
+      bufTr=auto_ptr<char>(new char[len*3]);
+      len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get(),len*3);
+      msg=bufTr.get();
+      if(dstdc==DataCoding::SMSC7BIT)
+      {
+        auto_ptr<char> buf7(new char[len*2+1]);
+        len=ConvertLatin1ToSMSC7Bit(bufTr.get(),len,buf7.get());
+        bufTr=buf7;
+        msg=bufTr.get();
+      }
+    }
+    int maxlen=133;
+    if(dstdc==DataCoding::LATIN1 || dstdc==DataCoding::SMSC7BIT)
+    {
+      maxlen=152;
+    }
+    unsigned int cilen;
+    ConcatInfo *ci=(ConcatInfo *)sms->getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
+    __require__(partnum<ci->num);
+    int off=ci->off[partnum];
+    int newlen=ci->num==partnum+1?len-off:ci->off[partnum+1]-off;
+    __trace2__("extractSmsPart: newlen=%d, part=%d/%d, maxlen=%d, off=%d, partlen=%d",len,partnum,(int)ci->num,maxlen,off,newlen);
+    __require__(newlen<=160);
+    if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
+    {
+      if(dstdc==DataCoding::UCS2|DataCoding::LATIN1)dstdc=DataCoding::LATIN1;
+      sms->setIntProperty(Tag::SMPP_DATA_CODING,dstdc);
+      if(sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+      {
+        int dc=sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
+        int olddc=dc;
+        if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+        {
+          dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+
+        }else if((dc&0xf0)==0xe0)
+        {
+          dc=0xd0 | (dc&0x0f);
+        }
+        sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+        __trace2__("extractSmsPart: transliterate olddc(%x)->dc(%x)",olddc,dc);
+      }
+    }
     uint8_t buf[256];
     buf[0]=6;
     buf[1]=8;
@@ -631,14 +631,49 @@ void extractSmsPart(SMS* sms,int partnum)
     FillUd(sms);
   }else
   {
+    __trace2__("extractSmsPart: (unmerge) len=%d, dc=%d, dstdc=%d",len,dc,dstdc);
+    unsigned int cilen;
+    ConcatInfo *ci=(ConcatInfo *)sms->getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
+    int off=ci->off[partnum];
+    int newlen=ci->num==partnum+1?len-off:ci->off[partnum+1]-off;
+    __trace2__("extractSmsPart: (unmerge) newlen=%d, part=%d/%d, off=%d, partlen=%d",len,partnum,(int)ci->num,off,newlen);
     if(sms->hasStrProperty(Tag::SMSC_FORWARD_MO_TO))
     {
       sms->setBinProperty(Tag::SMSC_MO_PDU,msg+off,newlen);
     }else
     {
+      msg+=off;
+      int udhlen=*((unsigned char*)msg)+1;
+      len=newlen;
+      auto_ptr<char> buf8;
+      auto_ptr<char> bufTr;
+      if(dc==DataCoding::UCS2 && (dstdc&DataCoding::UCS2)!=DataCoding::UCS2)
+      {
+        buf8=auto_ptr<char>(new char[len]);
+        ConvertUCS2ToMultibyte((short*)(msg+udhlen),len-udhlen,buf8.get(),len,CONV_ENCODING_CP1251);
+        len=(len-udhlen)/2;
+        bufTr=auto_ptr<char>(new char[udhlen+len*3+1]);
+        len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhlen,len*3);
+        memcpy(bufTr.get(),msg,udhlen);
+        len+=udhlen;
+        msg=bufTr.get();
+        if(dstdc==DataCoding::SMSC7BIT)
+        {
+          auto_ptr<char> buf7(new char[len*2+1+udhlen]);
+          len=ConvertLatin1ToSMSC7Bit(bufTr.get()+udhlen,len-udhlen,buf7.get());
+          memcpy(buf7.get(),bufTr.get(),udhlen);
+          bufTr=buf7;
+          len+=udhlen;
+          msg=bufTr.get();
+          if(len>udhlen+(len-udhlen)*8/7)len=udhlen+(len-udhlen)*8/7;
+        }else
+        {
+          if(len>140)len=140;
+        }
+      }
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
-      sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)msg+off,newlen);
-      sms->setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
+      sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)msg,len);
+      sms->setIntProperty(Tag::SMPP_SM_LENGTH,len);
       sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
       sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
       sms->setIntProperty(Tag::SMPP_DATA_SM,0);
