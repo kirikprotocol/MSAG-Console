@@ -309,7 +309,7 @@ public class SmsView
         StringBuffer sb = new StringBuffer();
         for ( int i=0; i<len/2; ++i)
         {
-          int x = ((((int)text[i*2])&0x0ff)) | ((((int)text[i*2+1])&0x0ff)<<8);
+          int x = ((((int)text[i*2])&0x0ff)<<8) | ((((int)text[i*2+1])&0x0ff));
           sb.append("&#").append(x).append(';');
         }
         message = sb.toString();

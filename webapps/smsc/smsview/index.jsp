@@ -141,7 +141,7 @@ if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
       <td nowrap><%= StringEncoderDecoder.encode(row.getStatus())%></td>
   </tr>
   <tr class=row<%=rowN&1%>1>
-      <td colspan=5><%= StringEncoderDecoder.encode(row.getText())%>&nbsp;</td>
+      <td colspan=5><%= (row.getText()!=null&&row.getText().startsWith("&#")?row.getText():StringEncoderDecoder.encode(row.getText()))%>&nbsp;</td>
   </tr><%
 }}
 %></tbody>
