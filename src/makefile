@@ -38,6 +38,10 @@ CFLAGS := $(CFLAGS) -O2
 CXXFLAGS := $(CXXFLAGS) -O2
 endif
 
+export CXXFLAGS
+export CFLAGS
+export LDFLAGS
+
 MODULES := $(shell cat modules-list | awk '{print $$1}' | grep -v "\#" )
 SMSC_BUILDDIR_LIST = $(foreach x,lib bin obj etc doc,$(SMSC_BUILDDIR)/$(x))
 	
