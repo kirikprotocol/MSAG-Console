@@ -25,13 +25,24 @@ StoreManager::~StoreManager()
     if (pool) delete pool;
 }
 
-SMSId StoreManager::store(SMS* message)
+SMSId StoreManager::store(SMS* sms)
     throw(ResourceAllocationException)
 {
     Connection* conn;
-    if (pool && (conn = pool->getConnection())) 
+    if (sms && pool && (conn = pool->getConnection())) 
     {
+        sword status;
+        
+        // start transaction
+        status = OCITransStart (conn->svchp, conn->errhp, 0, OCI_TRANS_NEW);
+
+        // execute prepared statements
+        status = OCIStmtExecute(conn->svchp, conn->storeStmthps[0], conn->errhp,
+                                (ub4) 1, (ub4) 0, (CONST OCISnapshot *) NULL,
+                                (OCISnapshot *) NULL, OCI_DEFAULT);
           
+        status = OCITransCommit (conn->svchp, conn->errhp, OCI_DEFAULT);
+
         pool->freeConnection(conn);
         return 0;
     }
@@ -42,10 +53,10 @@ SMS* StoreManager::retrive(SMSId id)
     throw(ResourceAllocationException, NoSuchMessageException)
 {
     Connection* conn;
-    SMS*        sms;
     if (pool && (conn = pool->getConnection())) 
     {
-          
+        SMS* sms = new SMS();
+
         pool->freeConnection(conn);
         return sms;
     }

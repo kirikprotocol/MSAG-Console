@@ -8,10 +8,14 @@ int main(void)
     using namespace smsc::store;
     
     MessageStore* store;
+    SMS           sms;
     
     try {
         store = StoreManager::getInstance();
         printf("Connect Ok !\n");
+        SMSId id = store->store(&sms);
+        printf("Message stored !\n");
+        //store->retrive(id);
     } 
     catch (exception& exc) {
         printf("Exception : %s\n", exc.what());

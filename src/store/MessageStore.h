@@ -10,7 +10,7 @@ namespace smsc { namespace store
 
     struct MessageStore 
     {
-        virtual SMSId store(SMS* message) 
+        virtual SMSId store(SMS* sms) 
             throw(ResourceAllocationException) = 0;
         
         virtual SMS* retrive(SMSId id) 

@@ -25,13 +25,18 @@ namespace smsc { namespace store
         inline const char* getDbName() { return dbName; };
     };
     
+    const int MAX_STORE_STATEMENTS = 3;
+
     struct Connection
     {
 	    OCIEnv*         envhp;  // OCI envirounment handle
         OCISvcCtx*      svchp;  // OCI service handle
-	    OCIError*       errhp;	// OCI error handle
+	    OCIError*       errhp;  // OCI error handle
+        
+        // OCI prepared 'store' statements
+        OCIStmt*        storeStmthps[MAX_STORE_STATEMENTS]; 
 		
-	    Connection(int _id) 
+	    Connection(int _id = 0) 
 	        : id(_id), envhp(0L), svchp(0L), errhp(0L) {};
 	    Connection(int _id, OCIEnv* _envhp, OCISvcCtx* _svchp, OCIError* _errhp)
 	        : id(_id), envhp(_envhp), svchp(_svchp), errhp(_errhp) {};

@@ -30,7 +30,7 @@ namespace smsc { namespace store
         
         virtual ~StoreManager();
 
-        virtual SMSId store(SMS* message) 
+        virtual SMSId store(SMS* sms) 
             throw(ResourceAllocationException);
         virtual SMS* retrive(SMSId id) 
             throw(ResourceAllocationException, NoSuchMessageException);

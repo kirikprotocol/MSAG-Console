@@ -22,6 +22,18 @@ StoreConfig::~StoreConfig()
 /* ----------------------------- StoreConfig --------------------------- */
 
 /* ----------------------------- ConnectionPool ------------------------ */
+static text* sqlStoreStmt0 = (text *)
+"UPDATE SMS_ID_LOCK SET ID=ID+1 WHERE TGT='SMS_MSG'";
+
+static text* sqlStoreStmt1 = (text *)
+"SELECT MAX(ID) FROM SMS_MSG";
+            
+static text* sqlStoreStmt2 = (text *)
+"INSERT INTO SMS_MSG VALUES(:ID, :ST, :MR, :RM,\
+ :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
+ :VALID_TIME, :WAIT_TIME, :SUBMIT_TIME, :DELIVERY_TIME,\
+ :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UD)";
+
 SingleConnectionPool::SingleConnectionPool(StoreConfig* _config)
     throw(ResourceAllocationException, AuthenticationException)
         : ConnectionPool(_config), conn(0L), lock(false)
@@ -80,10 +92,63 @@ void SingleConnectionPool::connect()
                                 (OraText*)dbName, strlen(dbName));
             if (status != OCI_SUCCESS || !(conn->svchp))
             {
-                // free envirounment handle (error handle will be freed too)
                 //checkerror(conn.errhp, status);
+                // free envirounment handle (error handle will be freed too)
                 (void) OCIHandleFree(conn->envhp, OCI_HTYPE_ENV);
                 throw AuthenticationException();
+            }
+
+            // ----------- Prepare statements here --------------
+
+            // allocate statements handles
+            status = OCIHandleAlloc ((dvoid *)(conn->envhp), 
+                                     (dvoid **)&(conn->storeStmthps[0]),
+                                     OCI_HTYPE_STMT, 0, (dvoid **) 0);
+            if (status != OCI_SUCCESS || !(conn->storeStmthps[0])) 
+            {
+                (void) OCIHandleFree(conn->envhp, OCI_HTYPE_ENV);
+                throw ResourceAllocationException();
+            }
+            status = OCIHandleAlloc ((dvoid *)(conn->envhp), 
+                                     (dvoid **)&(conn->storeStmthps[1]),
+                                     OCI_HTYPE_STMT, 0, (dvoid **) 0);
+            if (status != OCI_SUCCESS || !(conn->storeStmthps[1])) 
+            {
+                (void) OCIHandleFree(conn->envhp, OCI_HTYPE_ENV);
+                throw ResourceAllocationException();
+            }
+            status = OCIHandleAlloc ((dvoid *)(conn->envhp), 
+                                     (dvoid **)&(conn->storeStmthps[2]),
+                                     OCI_HTYPE_STMT, 0, (dvoid **) 0);
+            if (status != OCI_SUCCESS || !(conn->storeStmthps[2])) 
+            {
+                (void) OCIHandleFree(conn->envhp, OCI_HTYPE_ENV);
+                throw ResourceAllocationException();
+            }
+            
+            status =  OCIStmtPrepare(conn->storeStmthps[0], conn->errhp, sqlStoreStmt0,
+                                    (ub4)strlen((char *)sqlStoreStmt0),
+                                    (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT);
+            if (status != OCI_SUCCESS) 
+            {
+                (void) OCIHandleFree(conn->envhp, OCI_HTYPE_ENV);
+                throw ResourceAllocationException();
+            }
+            status = OCIStmtPrepare(conn->storeStmthps[1], conn->errhp, sqlStoreStmt1,
+                                    (ub4)strlen((char *)sqlStoreStmt1),
+                                    (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT);
+            if (status != OCI_SUCCESS) 
+            {
+                (void) OCIHandleFree(conn->envhp, OCI_HTYPE_ENV);
+                throw ResourceAllocationException();
+            }
+            status = OCIStmtPrepare(conn->storeStmthps[2], conn->errhp, sqlStoreStmt2,
+                                    (ub4)strlen((char *)sqlStoreStmt2),
+                                    (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT);
+            if (status != OCI_SUCCESS) 
+            {
+                (void) OCIHandleFree(conn->envhp, OCI_HTYPE_ENV);
+                throw ResourceAllocationException();
             }
         } 
         else {
