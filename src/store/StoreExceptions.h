@@ -39,7 +39,8 @@ namespace smsc { namespace store
         
         StorageException(const char* _cause, int _code=-1, int _status=0) 
             : StoreException("Code: %d, Status: %d, Failure cause: %s",
-                             _code, _status), code(_code), status(_status) 
+                             _code, _status, _cause), 
+                    code(_code), status(_status) 
         {};
         virtual ~StorageException() throw() {};
         
