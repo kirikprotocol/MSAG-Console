@@ -124,6 +124,7 @@ TaskProcessor::~TaskProcessor()
         char* key = 0; Task* task = 0; tasks.First();
         while (tasks.Next(key, task))
             if (task) task->finalize();
+        tasks.Empty();
     }
 
     if (statistics) delete statistics;
@@ -198,6 +199,10 @@ void TaskProcessor::Start()
     if (!bStarted)
     {
         logger.info("Starting ...");
+        {
+            MutexGuard snGuard(taskIdsBySeqNumLock);
+            taskIdsBySeqNum.Empty();
+        }
         resetWaitingTasks();
         bNeedExit = false;
         awake.Wait(0);
@@ -217,7 +222,6 @@ void TaskProcessor::Stop()
         awake.Signal();
         exited.Wait();
         bStarted = false;
-        taskIdsBySeqNum.Empty();
         logger.info("Stoped.");
     }
 }
@@ -268,66 +272,6 @@ int TaskProcessor::Execute()
     return 0;
 }
 
-void TaskProcessor::processWaitingEvents(time_t time)
-{
-    int count = 0;
-    
-    do
-    {
-        ResponceTimer timer;
-        {
-            MutexGuard respGuard(responceWaitQueueLock);
-            if (responceWaitQueue.Count() > 0) {
-                timer = responceWaitQueue[0];
-                if (timer.timer > time) break;
-                responceWaitQueue.Shift(timer);
-            }
-            else break;
-        }
-
-        bool needProcess = false;
-        {
-            MutexGuard guard(taskIdsBySeqNumLock);
-            needProcess = taskIdsBySeqNum.Exist(timer.seqNum);
-        }
-        if (needProcess)
-            processResponce(timer.seqNum, false, true, true, "", true);
-        
-        {
-            MutexGuard respGuard(responceWaitQueueLock);
-            count = responceWaitQueue.Count();
-        }
-    }
-    while (!bNeedExit && count > 0);
-    
-    do
-    {
-        ReceiptTimer timer;
-        {
-            MutexGuard recptGuard(receiptWaitQueueLock);
-            if (receiptWaitQueue.Count() > 0) {
-                timer = receiptWaitQueue[0];
-                if (timer.timer > time) break;
-                receiptWaitQueue.Shift(timer);
-            } 
-            else break;
-        }
-
-        bool needProcess = false;
-        {
-            MutexGuard guard(receiptsLock);
-            needProcess = receipts.Exists(timer.smscId.c_str());
-        }
-        if (needProcess)
-            processReceipt (timer.smscId, false, true, true);
-
-        {
-            MutexGuard recptGuard(receiptWaitQueueLock);
-            count = receiptWaitQueue.Count();
-        }
-    }
-    while (!bNeedExit && count > 0);
-}
 bool TaskProcessor::processTask(Task* task)
 {
     __require__(task && dsIntConnection);
@@ -381,6 +325,71 @@ bool TaskProcessor::processTask(Task* task)
     }
 
     return true;
+}
+
+void TaskProcessor::processWaitingEvents(time_t time)
+{
+    int count = 0;
+    
+    do
+    {
+        ResponceTimer timer;
+        {
+            MutexGuard respGuard(responceWaitQueueLock);
+            if (responceWaitQueue.Count() > 0) {
+                timer = responceWaitQueue[0];
+                if (timer.timer > time) break;
+                responceWaitQueue.Shift(timer);
+            }
+            else break;
+        }
+
+        bool needProcess = false;
+        {
+            MutexGuard guard(taskIdsBySeqNumLock);
+            needProcess = taskIdsBySeqNum.Exist(timer.seqNum);
+        }
+        if (needProcess)
+            processResponce(timer.seqNum, false, true, true, "", true);
+        
+        {
+            MutexGuard respGuard(responceWaitQueueLock);
+            count = responceWaitQueue.Count();
+        }
+    }
+    while (!bNeedExit && count > 0);
+    
+    do
+    {
+        ReceiptTimer timer;
+        {
+            MutexGuard recptGuard(receiptWaitQueueLock);
+            if (receiptWaitQueue.Count() > 0) {
+                timer = receiptWaitQueue[0];
+                if (timer.timer > time) break;
+                receiptWaitQueue.Shift(timer);
+            } 
+            else break;
+        }
+
+        bool needProcess = false;
+        {
+            MutexGuard guard(receiptsLock);
+            ReceiptData* receiptPtr = receipts.GetPtr(timer.smscId.c_str());
+            if (receiptPtr) logger.warn("%s for smscId=%s wasn't received and timed out!", 
+                                        ((receiptPtr->receipted) ? "Receipt":"Responce"),
+                                        timer.smscId.c_str());
+            
+        }
+        if (needProcess)
+            processReceipt(timer.smscId, false, true, true);
+
+        {
+            MutexGuard recptGuard(receiptWaitQueueLock);
+            count = receiptWaitQueue.Count();
+        }
+    }
+    while (!bNeedExit && count > 0);
 }
 
 void TaskProcessor::processMessage(Task* task, Connection* connection, uint64_t msgId,
@@ -486,54 +495,68 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
             return;
         }
         
+        Connection* connection = 0;
         const char* smsc_id = smscId.c_str();
         
-        Connection* connection = 0;
         try
         {
             connection = dsInternal->getConnection();
             if (!connection)
                 throw Exception("processResponce(): Failed to obtain connection to internal data source.");
 
-            if (!task->enrouteMessage(tmIds.msgId, connection))
-                throw Exception("Message #%lld not found (doEnroute).", tmIds.msgId);
-            
-            Statement* createMapping = connection->getStatement(CREATE_ID_MAPPING_STATEMENT_ID,
-                                                                CREATE_ID_MAPPING_STATEMENT_SQL);
-            if (!createMapping)
-                throw Exception("processResponce(): Failed to create statement for ids mapping.");
-
-            createMapping->setUint64(1, tmIds.msgId);
-            createMapping->setString(2, smsc_id);
-            createMapping->setString(3, info.id.c_str());
-            createMapping->executeUpdate();
-            connection->commit();
-            
             ReceiptData receipt; // receipt.receipted = false
             {
                 MutexGuard guard(receiptsLock);
                 ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
-                if (receiptPtr) {
-                    receipt = *receiptPtr;
-                    receipts.Delete(smsc_id);
-                } 
+                if (receiptPtr) receipt = *receiptPtr;
                 else {
                     receipts.Insert(smsc_id, receipt);
                     MutexGuard recptGuard(receiptWaitQueueLock);
                     receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, smscId));
                 }
             }
-            
+
+            bool idMappingCreated = false;
+            if (!receipt.receipted)
+            {
+                if (!task->enrouteMessage(tmIds.msgId, connection))
+                    throw Exception("Message #%lld not found (doEnroute).", tmIds.msgId);
+
+                Statement* createMapping = connection->getStatement(CREATE_ID_MAPPING_STATEMENT_ID,
+                                                                    CREATE_ID_MAPPING_STATEMENT_SQL);
+                if (!createMapping)
+                    throw Exception("processResponce(): Failed to create statement for ids mapping.");
+
+                createMapping->setUint64(1, tmIds.msgId);
+                createMapping->setString(2, smsc_id);
+                createMapping->setString(3, info.id.c_str());
+                createMapping->executeUpdate();
+                connection->commit();
+            }
+
+            {
+                MutexGuard guard(receiptsLock);
+                ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+                if (receiptPtr) {
+                    receipt = *receiptPtr;
+                    receipts.Delete(smsc_id);
+                }
+                else receipt.receipted = false;
+            }
+
             if (receipt.receipted) // receipt already come
             {
                 logger.debug("Receipt come when responce is in process");
-                Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
-                                                                 DEL_ID_MAPPING_STATEMENT_SQL);
-                if (!delMapping)
-                    throw Exception("processResponce(): Failed to create statement for ids mapping.");
+                if (idMappingCreated)
+                {
+                    Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
+                                                                     DEL_ID_MAPPING_STATEMENT_SQL);
+                    if (!delMapping)
+                        throw Exception("processResponce(): Failed to create statement for ids mapping.");
 
-                delMapping->setString(1, smsc_id);
-                delMapping->executeUpdate();
+                    delMapping->setString(1, smsc_id);
+                    delMapping->executeUpdate();
+                }
                 
                 processMessage(task, connection, tmIds.msgId, receipt.delivered, receipt.retry);
                 connection->commit();
@@ -570,19 +593,25 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
 
     if (!internal) logger.debug("Receipt : smscId=%s, delivered=%d, retry=%d",
                                 smsc_id, delivered, retry);
-    else logger.debug("Receipt for smscId=%s is timed out", smsc_id);
-
+    else logger.debug("Responce/Receipt for smscId=%s is timed out. Cleanup.");
+    
+    if (!internal)
     {
         MutexGuard guard(receiptsLock);
-        if (!internal && !receipts.Exists(smsc_id)) 
-        {   // receipt come first => processing will be in responce !
-            logger.debug("Receipt come before responce");
+        ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+        if (receiptPtr) // attach & return;
+        {   
+            receiptPtr->receipted = true;
+            receiptPtr->delivered = delivered;
+            receiptPtr->retry     = retry;
+            return;
+        }
+        else
+        {
             receipts.Insert(smsc_id, ReceiptData(true, delivered, retry));
             MutexGuard recptGuard(receiptWaitQueueLock);
             receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, smscId));
-            return;
         }
-        else receipts.Delete(smsc_id);
     }
     
     Connection* connection = 0;
@@ -600,31 +629,43 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
         getMapping->setString(1, smsc_id);
         std::auto_ptr<ResultSet> rsGuard(getMapping->executeQuery());
         ResultSet* rs = rsGuard.get();
-        if (!rs)
-            throw Exception("processReceipt(): Failed to obtain result set for ids mapping.");
         
-        if (rs->fetchNext())
+        if (rs && rs->fetchNext())
         {
-            Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
-                                                             DEL_ID_MAPPING_STATEMENT_SQL);
-            if (!delMapping)
-                throw Exception("processReceipt(): Failed to create statement for ids mapping.");
+            bool needProcess = false;
+            {
+                MutexGuard guard(receiptsLock);
+                ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+                if (receiptPtr) { 
+                    receipts.Delete(smsc_id);
+                    needProcess = true;
+                }
+            }
+            
+            if (needProcess)
+            {
+                Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
+                                                                 DEL_ID_MAPPING_STATEMENT_SQL);
+                if (!delMapping)
+                    throw Exception("processReceipt(): Failed to create statement for ids mapping.");
 
-            uint64_t msgId = rs->getUint64(1);
-            std::string taskId = rs->getString(2);
-            delMapping->setString(1, smsc_id);
-            delMapping->executeUpdate();
+                uint64_t msgId = rs->getUint64(1);
+                std::string taskId = rs->getString(2);
+                delMapping->setString(1, smsc_id);
+                delMapping->executeUpdate();
 
-            TaskGuard taskGuard = getTask(taskId); 
-            Task* task = taskGuard.get();
-            if (!task)
-                throw Exception("processReceipt(): Unable to locate task '%s' for smscId=%s",
-                                taskId.c_str(), smsc_id);
-            TaskInfo info = task->getInfo();
-                                                                // if internal do it immidiate
-            processMessage(task, connection, msgId, delivered, retry, internal);
+                TaskGuard taskGuard = getTask(taskId); 
+                Task* task = taskGuard.get();
+                if (!task)
+                    throw Exception("processReceipt(): Unable to locate task '%s' for smscId=%s",
+                                    taskId.c_str(), smsc_id);
+                TaskInfo info = task->getInfo();
+
+                processMessage(task, connection, msgId, delivered, retry, internal);
+            }
+            
+            connection->commit();
         }
-        connection->commit();
     }
     catch (Exception& exc) {
         try { if (connection) connection->rollback(); }

@@ -166,7 +166,7 @@ namespace smsc { namespace infosme
         Event       inProcessEvent;
         Mutex       inProcessLock;
         Mutex       createTableLock;
-        bool        bInProcess, bTableCreated;
+        bool        bInProcess;
 
         Mutex           messagesCacheLock;
         Array<Message>  messagesCache;
@@ -187,7 +187,7 @@ namespace smsc { namespace infosme
              DataSource* dsOwn, DataSource* dsInt);
         
         void createTable();
-        void dropTable() {}; // TODO: implement it !!!
+        void dropTable();
 
         void finalize()
         {

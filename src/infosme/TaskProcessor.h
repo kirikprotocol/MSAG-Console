@@ -238,7 +238,7 @@ namespace smsc { namespace infosme
         time_t      timer;
         std::string smscId;
         
-        ReceiptTimer(time_t timer=0, std::string smscId=""): timer(timer), smscId(smscId) {};
+        ReceiptTimer(time_t timer=0, std::string smscId="") : timer(timer), smscId(smscId) {};
         ReceiptTimer(const ReceiptTimer& rt) : timer(rt.timer), smscId(rt.smscId) {};
         ReceiptTimer& operator=(const ReceiptTimer& rt) {
             timer = rt.timer; smscId = rt.smscId;
@@ -251,11 +251,11 @@ namespace smsc { namespace infosme
 
         log4cpp::Category  &logger;
 
-        DataProvider  provider;     // to obtain registered data source by key
-        TaskScheduler scheduler;    // for scheduled messages generation
-
         ThreadManager taskManager;
         ThreadManager eventManager;
+        
+        TaskScheduler scheduler;    // for scheduled messages generation
+        DataProvider  provider;     // to obtain registered data source by key
         
         Hash<Task *>  tasks;
         Mutex         tasksLock;

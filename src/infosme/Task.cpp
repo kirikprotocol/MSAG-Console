@@ -49,8 +49,7 @@ int parseTime(const char* str)
 Task::Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
     : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
         usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
-            bInProcess(false), bTableCreated(false), 
-                lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
+            bInProcess(false), lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
     __require__(dsOwn && dsInt);
     this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
@@ -61,8 +60,7 @@ Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix,
      DataSource* dsOwn, DataSource* dsInt)
     : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
         usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
-            bInProcess(false), bTableCreated(false),
-                lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
+            bInProcess(false), lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
     init(config, taskId, tablePrefix);
     formatter = new OutputFormatter(info.msgTemplate.c_str());
@@ -177,52 +175,90 @@ void Task::createTable()
 {
     MutexGuard guard(createTableLock);
     
-    if (!bTableCreated)
+    Connection* connection = 0;
+    Statement* statement = 0;
+    try
     {
-        Connection* connection = 0;
-        Statement* statement = 0;
-        try
-        {
-            connection = dsInt->getConnection();
-            if (!connection)
-                throw Exception("Failed to obtain connection to internal data source.");
-            
-            std::auto_ptr<char> createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
-            statement = connection->createStatement(createTableSql.get());
-            if (!statement) 
-                throw Exception("Failed to create table statement.");
-            statement->execute();
-            delete statement;
+        connection = dsInt->getConnection();
+        if (!connection)
+            throw Exception("Failed to obtain connection to internal data source.");
 
-            std::auto_ptr<char> createIndexSql(prepareDoubleSqlCall(NEW_SD_INDEX_STATEMENT_SQL));
-            statement = connection->createStatement(createIndexSql.get());
-            if (!statement) 
-                throw Exception("Failed to create index statement.");
-            statement->execute();
-            
-            connection->commit();
-            bTableCreated = true;
-        } 
-        catch (Exception& exc)
-        {
-            try { if (connection) connection->rollback(); }
-            catch (...) {
-                logger.error("Failed to roolback transaction on internal data source.");
-            }
-            logger.error("Task '%s'. Failed to create internal table. "
-                         "Details: %s", info.id.c_str(), exc.what());
-        }
+        std::auto_ptr<char> createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
+        statement = connection->createStatement(createTableSql.get());
+        if (!statement) 
+            throw Exception("Failed to create table statement.");
+        statement->execute();
+        delete statement;
+
+        std::auto_ptr<char> createIndexSql(prepareDoubleSqlCall(NEW_SD_INDEX_STATEMENT_SQL));
+        statement = connection->createStatement(createIndexSql.get());
+        if (!statement) 
+            throw Exception("Failed to create index statement.");
+        statement->execute();
+
+        connection->commit();
+    } 
+    catch (Exception& exc)
+    {
+        try { if (connection) connection->rollback(); }
         catch (...) {
-            try { if (connection) connection->rollback(); }
-            catch (...) {
-                logger.error("Failed to roolback transaction on internal data source.");
-            }
-            logger.error("Task '%s'. Failed to create internal table.",
-                         info.id.c_str());
+            logger.error("Failed to roolback transaction on internal data source.");
         }
-        if (statement) delete statement;
-        if (connection) dsInt->freeConnection(connection);
+        logger.error("Task '%s'. Failed to create internal table. "
+                     "Details: %s", info.id.c_str(), exc.what());
     }
+    catch (...) {
+        try { if (connection) connection->rollback(); }
+        catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
+        logger.error("Task '%s'. Failed to create internal table.",
+                     info.id.c_str());
+    }
+    if (statement) delete statement;
+    if (connection) dsInt->freeConnection(connection);
+}
+
+const char* DROP_TABLE_STATEMENT_SQL = "DROP TABLE %s";
+
+void Task::dropTable()
+{
+    MutexGuard guard(createTableLock);
+    
+    Connection* connection = 0;
+    Statement* statement = 0;
+    try
+    {
+        connection = dsInt->getConnection();
+        if (!connection)
+            throw Exception("Failed to obtain connection to internal data source.");
+
+        std::auto_ptr<char> dropTableSql(prepareSqlCall(DROP_TABLE_STATEMENT_SQL));
+        statement = connection->createStatement(dropTableSql.get());
+        if (!statement) 
+            throw Exception("Failed to create table statement.");
+        statement->execute();
+        connection->commit();
+    } 
+    catch (Exception& exc)
+    {
+        try { if (connection) connection->rollback(); }
+        catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
+        logger.error("Task '%s'. Failed to drop internal table. "
+                     "Details: %s", info.id.c_str(), exc.what());
+    }
+    catch (...) {
+        try { if (connection) connection->rollback(); }
+        catch (...) {
+            logger.error("Failed to roolback transaction on internal data source.");
+        }
+        logger.error("Task '%s'. Failed to drop internal table.",
+                     info.id.c_str());
+    }
+    if (statement) delete statement;
+    if (connection) dsInt->freeConnection(connection);
 }
 
 const char* USER_QUERY_STATEMENT_ID = "%s_USER_QUERY_STATEMENT_ID";
@@ -352,10 +388,11 @@ void Task::beginProcess(Statistics* statistics)
 }
 void Task::endProcess()
 {
-    MutexGuard guard(inProcessLock);
-    if (!bInProcess) return;
-    
-    bInProcess = false;
+    {
+        MutexGuard guard(inProcessLock);
+        if (!bInProcess) return;
+        bInProcess = false;
+    }
     inProcessEvent.Signal();
     processEndEvent.Wait();
 }
@@ -630,6 +667,8 @@ bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
 
         wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
         result = (enrouteMessage->executeUpdate() > 0);
+        if (result) connection->commit();
+        else connection->rollback();
     }
     catch (Exception& exc) {
         try { if (connection) connection->rollback(); }

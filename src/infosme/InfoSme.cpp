@@ -426,11 +426,10 @@ int main(void)
 
     Logger::Init("log4cpp.infosme");
     
-    sigset_t set;
+    sigset_t set, old;
     sigemptyset(&set);
-    sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+    sigprocmask(SIG_SETMASK, &set, &old);
     sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
-    sigaddset(&set, SIGINT);
     sigset(SIGINT, appSignalHandler);
 
     atexit(atExitHandler);
@@ -498,6 +497,11 @@ int main(void)
                 continue;
             }
             logger.info("Connected.");
+            
+            sigemptyset(&set);
+            sigaddset(&set, SIGINT);
+            sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+            sigprocmask(SIG_SETMASK, &set, &old);
             
             Event aaa;
             while (!bInfoSmeIsStopped && bInfoSmeIsConnected) {
