@@ -4,9 +4,11 @@
   <section name="logger">
     <param name="initFile" type="string">log4cpp.init</param>
   </section>
-  <section name="admin">
+  <!--section name="admin">
     <param name="host" type="string">smsc</param>
     <param name="port" type="int">6690</param>
+  </section-->
+
   <section name="MessageStore">
 
     <param name="maxTriesCount" type="int">2</param>

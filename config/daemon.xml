@@ -2,19 +2,14 @@
 <!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
   <section name="services">
-    <section name="TDS v0/2">
-      <param name="args" type="string">/dev/udp6</param>
-      <param name="name" type="string">Test Dumb Service v0.2</param>
-      <param name="port" type="int">6670</param>
-    </section>
   </section>
   <section name="admin">
     <section name="daemon">
       <section name="logger">
-        <param name="configFile" type="string">daemon.logger.init</param>
+        <param name="configFile" type="string">conf/log4cpp.init</param>
       </section>
       <param name="stderr" type="string">logs/daemon.err</param>
-      <param name="home" type="string">/export/home/igork/smsc_bin_daemon</param>
+      <param name="home" type="string">..</param>
       <param name="host" type="string">smsc</param>
       <param name="services folder" type="string">services</param>
       <param name="port" type="int">6680</param>

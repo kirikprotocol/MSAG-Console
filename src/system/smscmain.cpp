@@ -67,7 +67,16 @@ int main(int argc,char* argv[])
       { 
       }
 		}
-    if (servicePort == 0) {
+
+    char * admin_host = 0;
+    try
+    {
+      cfgs.cfgman->getString("admin.host");
+    } 
+    catch (smsc::util::config::ConfigException &c)
+    {}
+
+    if (servicePort == 0 || admin_host == 0) {
       fprintf(stderr,"WARNING: admin port not specified, admin module disabled - smsc is not administrable\n");
       
       smsc::system::Smsc *app=new smsc::system::Smsc;
@@ -91,7 +100,7 @@ int main(int argc,char* argv[])
 
       // start
       smsc_component.runSmsc();
-      AdminSocketManager::start(cfgs.cfgman->getString("admin.host"), servicePort);
+      AdminSocketManager::start(admin_host, servicePort);
       fprintf(stderr,"smsc started");
 
       //running
