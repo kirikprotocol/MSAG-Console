@@ -88,21 +88,8 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		PduRegistry* pduReg = fixture->smeReg->getPduRegistry(destAddr);
 		__require__(pduReg);
 		//тип pdu (delivery receipt '*' или intermediate notification '$')
-		char pduType;
-		switch (pdu.get_message().get_dataCoding())
-		{
-			case DATA_CODING_SMSC_DEFAULT:
-				__require__(pdu.get_message().size_shortMessage() > 0);
-				pduType = *pdu.get_message().get_shortMessage();
-				break;
-			case DATA_CODING_UCS2:
-				__require__(pdu.get_message().size_shortMessage() > 1);
-				pduType = *(pdu.get_message().get_shortMessage() + 1);
-				break;
-			default:
-				__unreachable__("Invalid data coding");
-
-		}
+		__require__(pdu.get_message().size_shortMessage() > 0);
+		char pduType = *pdu.get_message().get_shortMessage();
 		//получить оригинальную pdu
 		MutexGuard mguard(pduReg->getMutex());
 		DeliveryReportMonitor* monitor = NULL;
@@ -152,6 +139,7 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 				break;
 			case PDU_RECEIVED_FLAG:
 				//иногда валится всякий шыт сюда
+				//if (!monitor->getSkipChecks())
 				__tc_fail__(1);
 				throw TCException();
 			case PDU_NOT_EXPECTED_FLAG:
@@ -231,21 +219,6 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		__compare__(9, pdu.get_message().get_priorityFlag(), 0);
 		__compare__(10, pdu.get_message().get_registredDelivery(), 0);
 		__tc_ok_cond__;
-		//проверка полей pdu
-		pduReg->removeMonitor(monitor);
-		if (pduType == DELIVERY_RECEIPT)
-		{
-			processDeliveryReceipt(dynamic_cast<DeliveryReceiptMonitor*>(monitor),
-				pdu, recvTime);
-		}
-		else
-		{
-			__require__(pduType == INTERMEDIATE_NOTIFICATION);
-			processIntermediateNotification(
-				dynamic_cast<IntermediateNotificationMonitor*>(monitor),
-				pdu, recvTime);
-		}
-		pduReg->registerMonitor(monitor);
 		//для delivery report не проверяю повторную доставку
 		if (pduType == DELIVERY_RECEIPT)
 		{
@@ -268,11 +241,25 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 			__tc_fail__(2);
 		}
 		__tc_ok_cond__;
+		//проверка полей pdu
+		pduReg->removeMonitor(monitor);
+		if (pduType == DELIVERY_RECEIPT)
+		{
+			processDeliveryReceipt(dynamic_cast<DeliveryReceiptMonitor*>(monitor),
+				pdu, recvTime);
+		}
+		else
+		{
+			__require__(pduType == INTERMEDIATE_NOTIFICATION);
+			processIntermediateNotification(
+				dynamic_cast<IntermediateNotificationMonitor*>(monitor),
+				pdu, recvTime);
+		}
+		pduReg->registerMonitor(monitor);
 		//отправить респонс, только ESME_ROK разрешено
 		pair<uint32_t, time_t> deliveryResp =
 			fixture->respSender->sendDeliverySmResp(pdu);
 		__require__(deliveryResp.first == ESME_ROK);
-		RespPduFlag respFlag = isAccepted(deliveryResp.first);
 	}
 	catch (TCException&)
 	{
