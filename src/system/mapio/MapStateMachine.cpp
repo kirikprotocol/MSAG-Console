@@ -479,6 +479,9 @@ static bool SendSms(MapDialog* dialog){
   USHORT_T result;
   bool segmentation = false;
 
+  if ( mms )  { __trace2__("MAP::%s: MMS flag is set",__FUNCTION__); }
+  __trace2__("MAP::%s: chain size is %d",__FUNCTION__,dialog->chain.size());
+
   if ( !mms ) {
     result = Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0);
     if ( result != ET96MAP_E_OK )
@@ -582,7 +585,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
           if ( dialog.isnull() ) {
             //throw MAPDIALOG_TEMP_ERROR("Can't create or attach dialog");
             //SendRescheduleToSmsc(dialogid_smsc);
-            __trace2__("MAP::%s: was scheduled (state:NONE)",__FUNCTION__);
+            __trace2__("MAP::%s: was scheduled (state:NONE) ",__FUNCTION__);
             return;
           }
         }else{
