@@ -81,10 +81,11 @@ void Convert7BitToText(
 #endif
 }
 
-void ConvertText27bit(
+unsigned ConvertText27bit(
   const unsigned char* text, int chars, unsigned char* bit7buf)
 {
   __require__(chars<=255);
+  unsigned char* base = bit7buf;
   unsigned shift = 0;
   for ( int i=0; i< chars; ++i ){
      PutChar(bit7buf,shift,text[i]);
@@ -101,6 +102,7 @@ void ConvertText27bit(
     __trace2__("MAP::7bit(hex): %s",b);
   }
 #endif
+  return bit7buf-base+(shift?0:1);
 }
 
 #pragma pack(1)
@@ -391,9 +393,11 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     unsigned text_len;
     const unsigned char* text = (unsigned char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
     *pdu_ptr++ = text_len;
-    ConvertText27bit(text,text_len,pdu_ptr);
+    pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr);
+    
   }else{ // UCS2
   }
+  pdu->signalInfo = pdu_ptr-(unsigned char*)pdu+;
   return pdu.release();
 #else
   return 0;
