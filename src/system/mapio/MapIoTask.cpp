@@ -128,15 +128,15 @@ void MapIoTask::deinit()
 }
 
 USHORT_T  Et96MapCloseInd(ET96MAP_LOCAL_SSN_T ssn,
-                         ET96MAP_DIALOGUE_ID_T did,
+                         ET96MAP_DIALOGUE_ID_T dialogId,
                          ET96MAP_USERDATA_T *ud,
                          UCHAR_T priorityOrder)
 {
-  __trace2__("MAP::Et96MapCloseInd did 0x%x",did);
+  __trace2__("MAP::Et96MapCloseInd did 0x%x",dialogId);
   MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
   if ( mdci ){
     if ( mdci->Et96MapCloseInd(ssn,
-                          did,
+                          dialogId,
                           ud,
                           priorityOrder) )
       MapDialogContainer::getInstance()->dropDialog(dialogId);
