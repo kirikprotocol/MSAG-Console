@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <ctime>
 #include <map>
+#include <fstream>
 
 namespace smsc {
 namespace test {
@@ -24,47 +25,75 @@ using namespace smsc::smpp::SmppCommandSet;
 
 static const int MAX_OSTR_PRINT_SIZE = 255;
 
+void pdu2file(const char* pduName, const string& id, SmppHeader* pdu)
+{
+	//get bytes
+	int sz = calcSmppPacketLength(pdu);
+	char buf[sz];
+	SmppStream s;
+	assignStreamWith(&s, buf, sz, false);
+	if (!fillSmppPdu(&s, pdu)) throw Exception("Failed to fill smpp packet");
+	//save
+	char fileName[64];
+	sprintf(fileName, "pdu/%s_%u_%s", pduName, pdu->get_sequenceNumber(), id.c_str());
+	ofstream fs(fileName);
+	fs.write(buf, sz);
+}
+
 void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 {
 	if (pdu)
 	{
-		ostringstream os;
-		os << tc << "(): systemId = " << id <<
+		ostringstream ss;
+		ss << tc << "(): systemId = " << id <<
 			", sequenceNumber = " << pdu->get_sequenceNumber();
 		switch (pdu->get_commandId())
 		{
+			//реквесты
 			case SUBMIT_SM:
 				{
 					PduSubmitSm* p = reinterpret_cast<PduSubmitSm*>(pdu);
-					os << ", serviceType = " << nvl(p->get_message().get_serviceType());
+					ss << ", serviceType = " << nvl(p->get_message().get_serviceType());
 					__require__(p->get_optional().has_userMessageReference());
-					os << ", msgRef = " << (int) p->get_optional().get_userMessageReference();
-					os << ", waitTime = " << SmppUtil::getWaitTime(p->get_message().get_scheduleDeliveryTime(), time(NULL));
-					os << ", validTime = " << SmppUtil::getValidTime(p->get_message().get_validityPeriod(), time(NULL));
+					ss << ", msgRef = " << (int) p->get_optional().get_userMessageReference();
+					ss << ", waitTime = " << SmppUtil::getWaitTime(p->get_message().get_scheduleDeliveryTime(), time(NULL));
+					ss << ", validTime = " << SmppUtil::getValidTime(p->get_message().get_validityPeriod(), time(NULL));
+					pdu2file("submit_sm", id, pdu);
 				}
 				break;
 			case DELIVERY_SM:
 				{
 					PduDeliverySm* p = reinterpret_cast<PduDeliverySm*>(pdu);
-					os << ", serviceType = " << nvl(p->get_message().get_serviceType());
+					ss << ", serviceType = " << nvl(p->get_message().get_serviceType());
 					__require__(p->get_optional().has_userMessageReference());
-					os << ", msgRef = " << (int) p->get_optional().get_userMessageReference();
+					ss << ", msgRef = " << (int) p->get_optional().get_userMessageReference();
+					pdu2file("deliver_sm", id, pdu);
 				}
 				break;
 			case REPLACE_SM:
 				{
 					PduReplaceSm* p = reinterpret_cast<PduReplaceSm*>(pdu);
-					os << ", waitTime = " << SmppUtil::getWaitTime(p->get_scheduleDeliveryTime(), time(NULL));
-					os << ", validTime = " << SmppUtil::getValidTime(p->get_validityPeriod(), time(NULL));
+					ss << ", waitTime = " << SmppUtil::getWaitTime(p->get_scheduleDeliveryTime(), time(NULL));
+					ss << ", validTime = " << SmppUtil::getValidTime(p->get_validityPeriod(), time(NULL));
+					pdu2file("replace_sm", id, pdu);
 				}
+				break;
+			case QUERY_SM:
+				pdu2file("query_sm", id, pdu);
+				break;
+			case CANCEL_SM:
+				pdu2file("cancel_sm", id, pdu);
+				break;
+			case DATA_SM:
+				pdu2file("data_sm", id, pdu);
 				break;
 		}
 		time_t lt = time(NULL);
 		tm t;
 		char buf[30];
-		os << ", system time = " << asctime_r(localtime_r(&lt, &t), buf) <<
+		ss << ", system time = " << asctime_r(localtime_r(&lt, &t), buf) <<
 			", pdu:" << endl << pdu;
-		__trace2__("%s", os.str().c_str());
+		__trace2__("%s", ss.str().c_str());
 	}
 	else
 	{
@@ -316,9 +345,11 @@ auto_ptr<char> rand_text2(int& length, uint8_t dataCoding, bool udhi,
 		return rand_text(length, dataCoding, hostByteOrder);
 	}
 	int headerLen = rand0(length - 1);
+	__require__(headerLen >= 0);
 	auto_ptr<uint8_t> header = rand_uint8_t(headerLen);
 	int msgLen = length - headerLen - 1;
 	auto_ptr<char> msg = rand_text(msgLen, dataCoding, hostByteOrder);
+	__require__(msgLen >= 0);
 	__require__(headerLen + msgLen + 1 <= length);
 	length = headerLen + msgLen + 1;
 	char* buf = new char[length];
@@ -404,6 +435,11 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	{
 		mask &= ~OPT_MSG_PAYLOAD; //исключить message_payload
 		__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding, udhi);
+	}
+	else if (udhi && !(mask & OPT_MSG_PAYLOAD))
+	{
+		pdu->get_message().set_esmClass(
+			pdu->get_message().get_esmClass() & ~ESM_CLASS_UDHI_INDICATOR);
 	}
 	mask &= ~OPT_USER_MSG_REF; //исключить userMessageReference
 	setupRandomCorrectOptionalParams(pdu->get_optional(), dataCoding, udhi, mask, check);
