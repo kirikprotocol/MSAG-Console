@@ -9,6 +9,7 @@ package ru.novosoft.smsc.admin.smsview;
  * @version 1.0
  */
 
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
@@ -39,6 +40,11 @@ public class SmsSet
   public void addRow(SmsRow row)
   {
     rows.addElement(row);
+  }
+
+  public void addAll(Collection smes)
+  {
+    rows.addAll(smes);
   }
 
   public void removeRow(SmsRow row)
