@@ -73,15 +73,25 @@ bool AdminBaseTestCases::checkResponse(const char* pattern)
 			throw Exception("socket read failed");
 		}
 		//trim
-		if (!resp.length() && (ch == '\n' || ch == '\r' || ch == ' '))
+		if (ch == '\n' || ch == '\r' || ch == ' ')
 		{
-			continue;
-		}
-		resp += ch;
-		if (!isalpha(ch))
-		{
-			//__trace2__("socket read: '%s'", resp.c_str());
+			//trim leading whitespaces
+			if (!resp.length())
+			{
+				continue;
+			}
+			//чтобы для однострочных ответов исключить перевод строки
 			if (chkResp.Match(resp.c_str(), &match, matchcount))
+			{
+				__trace2__("resp(ok): %s", resp.c_str());
+				return true;
+			}
+			resp += ch;
+		}
+		else
+		{
+			resp += ch;
+			if (!isalpha(ch) && chkResp.Match(resp.c_str(), &match, matchcount))
 			{
 				__trace2__("resp(ok): %s", resp.c_str());
 				return true;
@@ -144,16 +154,9 @@ bool AdminBaseTestCases::login(const char* login, const char* passwd,
 
 void AdminBaseTestCases::apply()
 {
-	__decl_tc__;
 	char cmd[64];
 	sprintf(cmd, "apply %s", shit);
-	sendRequest(cmd);
-	__tc__("adminConsole.apply");
-	if (!checkResponse("/Ok. Changes applied succesfully/m"))
-	{
-		__tc_fail__(1);
-	}
-	__tc_ok_cond__;
+	runTestCase("adminConsole.apply", cmd, "/Ok. Changes applied succesfully/");
 }
 
 void AdminBaseTestCases::executeTestCases()
