@@ -9,10 +9,20 @@ namespace test {
 namespace sme {
 
 using std::string;
+using std::pair;
 using log4cpp::Category;
 using smsc::sme::SmeConfig;
 using smsc::test::core::PduData;
+using smsc::test::core::PduDataObject;
 using namespace smsc::smpp; //pdu
+
+struct ProfilerAck : public PduDataObject
+{
+	string text;
+	uint8_t dataCoding;
+	ProfilerAck(const string& _text, uint8_t _dataCoding)
+		: text(_text), dataCoding(_dataCoding) {}
+};
 
 /**
  * Тест кейсы для profiler через smpp протокол.
@@ -30,9 +40,14 @@ public:
 	virtual ~SmppProfilerTestCases() {}
 
 	/**
-	 * Обновление профиля корректными данными.
+	 * Обновление настроек уведомления о доствке.
 	 */
-	void updateProfileCorrect(bool sync, uint8_t dataCoding, int num);
+	void updateReportOptionsCorrect(bool sync, uint8_t dataCoding, int num);
+
+	/**
+	 * Обновление настроек кодировки.
+	 */
+	void updateCodePageCorrect(bool sync, uint8_t dataCoding, int num);
 
 	/**
 	 * Обновление профиля некорректными данными.
@@ -47,9 +62,12 @@ public:
 
 protected:
 	virtual Category& getLog();
-	void sendUpdateProfilePdu(PduSubmitSm* pdu, const string& text,
-		bool sync, uint8_t dataCoding, PduData::IntProps& intProps);
+	void sendUpdateProfilePdu(const string& text, PduData::IntProps* intProps,
+		PduData::StrProps* strProps, PduData::ObjProps* objProps, bool sync,
+		uint8_t dataCoding);
 	bool checkPdu(PduDeliverySm &pdu);
+	ProfilerAck* getExpectedResponse(SmeAckMonitor* monitor,
+		PduDeliverySm &pdu);
 };
 
 }
