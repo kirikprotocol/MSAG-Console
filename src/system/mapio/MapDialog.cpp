@@ -165,7 +165,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   if ( user_data_coding == 0 ) // 7bit
   {
     MicroString ms;
-    Convert7BitToText(user_data,user_data_len,&ms);
+    Convert7BitToText((const char*)user_data,user_data_len,&ms);
     sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
     sms.setIntProperty(Tag::SMPP_DATA_CODING,0x03); // Latin1
   }
