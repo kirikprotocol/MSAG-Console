@@ -1,0 +1,11 @@
+# a simple test config
+#
+#appender root basic console
+priority root DEBUG
+appender root pattern file smsc.log %d	[%R]	%p	%x	%c :	%m%n
+#appender sub1 basic syslog log4cpptest
+#priority sub1.sub2 ERROR
+#appender smsc.admin pattern file smsc_admin.log [%R]	%p	%x	%c :	%m%n
+#appender smsc.admin pattern file smsc_admin.log [%d][%r][%R][%u]	%p	%x	%c :	%m%n
+
+#appender sub1.sub2 basic remotesyslog log4cpptest 192.168.2.72 LOG_USER 4445
