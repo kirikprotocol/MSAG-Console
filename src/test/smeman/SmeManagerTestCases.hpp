@@ -107,6 +107,8 @@ public:
 
 	void registerCorrectSmeProxy(const SmeSystemId& systemId, SmeProxy** proxy);
 
+	static void setupRandomCorrectSmeInfo(SmeInfo* sme);
+
 protected:
 	virtual Category& getLog();
 
@@ -115,7 +117,6 @@ private:
 	SmeRegistry* smeReg;
 	CheckList* chkList;
 	
-	void setupRandomCorrectSmeInfo(SmeInfo* sme);
 	vector<int> compareSmeInfo(const SmeInfo& sme1, const SmeInfo& sme2);
 	void debugSme(const char* tc, const Address& smeAddr, const SmeInfo& sme);
 	void addSme(const char* tc, int num, const Address* smeAddr, const SmeInfo* sme);
