@@ -1,0 +1,119 @@
+.h1, .h1b
+{
+	background-color: #778899;
+	color:#FFFFFF;
+	font-family:Tahoma, Arial, Verdana;
+	font-size:12px;
+	font-weight:bold;
+	padding-left:10px;
+	height:16px;
+}
+.h1b
+{
+	text-align:center;
+	padding:1px;
+	width:96px;
+}
+.h1b a, .h1b a:visited, .h1b a:hover
+{
+	background-color: #FFDEAD;
+	color: Navy;
+	border:solid 1px #FFFFFF;
+	text-decoration:none;
+	width:100%;
+	padding-left: 10px;
+	padding-right: 10px;
+		
+}
+.h1b a:hover
+{
+	background-color: Navy;
+	color: #FFDEAD;
+}
+.h2
+{
+	background-color:#FFFFFF;
+	color:#336699;
+	font-family:Tahoma, Arial, Verdana;
+	font-size:12px;
+	font-weight:bold;
+	padding-left:10px;
+}
+.V1, .V2
+{
+	font-family:Tahoma, Arial, Verdana;
+	font-size:12px;
+	font-weight:bold;
+	border:solid 1px #778899;	
+	border-top:none 0px;
+	background-color:#FFFFFF;
+}
+.V1 th
+{
+	background-color:#DDDDDD;
+	color:#000066;
+}
+.V1 td
+{
+	background-color:#EEEEEE;
+	color:#000000;
+	padding-left:2px;
+}
+.V2 th
+{
+	background-color:#DDDDDD;
+	color:#000066;
+	padding-right:4px;
+}
+.V2 thead th
+{
+	border-bottom:solid 1px #336699;
+}
+.V2 td
+{
+	background-color:#EEEEEE;
+	color:#000000;
+	padding-left:2px;
+}
+.V2 th.LH
+{
+	font-family: Tahoma, Arial, Verdana;
+	font-size: 12px;
+	font-weight: bold;
+	background-color: #EEEEEE;
+	color: #000000;
+	padding: 2px;
+	writing-mode: tb-rl;
+}
+
+.menu
+{
+	
+	border: 1px double #336699;
+	background: #EEEEEE;
+	width: 100%
+}
+.menu thead th
+{
+	
+	border: 1px solid Black;
+	background: #DDDDDD;
+}
+.button, .edit
+{
+	border:solid 1px #FFFFFF;
+/*	font-size: 9px;
+	height: 16px;*/
+}
+.button
+{
+	background-color: #FFDEAD;
+	padding-left: 10px;
+	padding-right: 10px;
+	color: Navy;
+}
+.edit
+{
+	background-color: #FFFFFF;
+	width: 100%;
+}
