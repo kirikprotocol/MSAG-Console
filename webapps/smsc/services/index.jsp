@@ -1,4 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
+<%@ include file="/WEB-INF/inc/service_status.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.services.Index"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Index"/>
 <jsp:setProperty name="bean" property="*"/>
@@ -21,7 +22,7 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 		response.sendRedirect(CPATH+"/hosts/hostView.jsp?hostName="+bean.getHostId());
 		return;
 	case Index.RESULT_ADD:
-		response.sendRedirect("serviceAdd.jsp");
+		response.sendRedirect("serviceAdd.jsp" + (bean.getHostId() != null ? ("?hostName=" + bean.getHostId()) : ""));
 		return;
 	default:
 		STATUS.append("<span class=CF00>Error</span>");
@@ -33,7 +34,6 @@ MENU0_SELECTION = "MENU0_SERVICES";
 
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
 
-<%@ include file="/WEB-INF/inc/service_status.jsp"%>
 <input type=hidden ID=jbutton value="jbutton">
 <input type=hidden name=serviceId>
 <input type=hidden name=hostId>

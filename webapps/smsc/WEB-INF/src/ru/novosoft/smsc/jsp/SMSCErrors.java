@@ -26,6 +26,8 @@ public class SMSCErrors
 			public static final String couldntStartInternalService = B + "couldntStartInternalService";
 			public static final String unknownAction = B + "unknownAction";
 			public static final String couldntGetServiceInfo = B + "couldntGetServiceInfo";
+			public static final String coudntDeleteService = B + "coudntDeleteService";
+			public static final String coudntAddService = B + "coudntAddService";
 		}
 
 		public static class hosts

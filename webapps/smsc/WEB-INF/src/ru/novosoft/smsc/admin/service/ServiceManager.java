@@ -200,11 +200,18 @@ public class ServiceManager
 		}
 	}
 
-	public synchronized void addNonAdmService(AddNonAdmServiceWizard wizard)
+	public synchronized void addNonAdmService(String serviceId,
+															String systemType,
+															int typeOfNumber,
+															int numberingPlan,
+															int interfaceVersion,
+															String rangeOfAddress,
+															String password
+															)
 			  throws AdminException
 	{
-		wizard.check();
-		SME sme = wizard.createSme();
+		SME sme = new SME(serviceId, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion, systemType, password,
+								rangeOfAddress, -1, false, 8);
 		if (smsc.getSmes().getNames().contains(sme.getId()))
 			throw new AdminException("SME \"" + sme.getId() + "\" already exists");
 		smsc.getSmes().add(sme);

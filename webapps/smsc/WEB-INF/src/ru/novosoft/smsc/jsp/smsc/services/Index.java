@@ -88,7 +88,23 @@ public class Index extends PageBean
 
 	protected int deleteServices()
 	{
-		return error(SMSCErrors.error.failed);
+		List notRemoved = new LinkedList();
+		for (int i = 0; i < serviceIds.length; i++)
+		{
+			String id = serviceIds[i];
+			try
+			{
+				serviceManager.removeService(id);
+			}
+			catch (Throwable e)
+			{
+				error(SMSCErrors.error.services.coudntDeleteService, id);
+				logger.error("Couldn't delete service \"" + id + '"', e);
+				notRemoved.add(id);
+			}
+		}
+		serviceIds = (String[]) notRemoved.toArray(new String[0]);
+		return errors.size() == 0 ? RESULT_OK : RESULT_ERROR;
 	}
 
 	protected int startServices()
