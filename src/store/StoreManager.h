@@ -83,8 +83,8 @@ namespace smsc { namespace store
                 throw(StorageException);
         };
 
-        void doCreateSms(StorageConnection* connection,
-                         SMS& sms, SMSId id, const CreateMode flag)
+        SMSId doCreateSms(StorageConnection* connection,
+            SMS& sms, SMSId id, const CreateMode flag)
                 throw(StorageException, DuplicateMessageException);
         void doRetrieveSms(StorageConnection* connection,
             SMSId id, SMS& sms)
@@ -161,8 +161,8 @@ namespace smsc { namespace store
          * Реализация метода MessageStore
          * @see MessageStore
          */
-        virtual void createSms(SMS& sms, SMSId id,
-                               const CreateMode flag = CREATE_NEW)
+        virtual SMSId createSms(SMS& sms, SMSId id,
+            const CreateMode flag = CREATE_NEW)
                 throw(StorageException, DuplicateMessageException);
         /**
          * Реализация метода MessageStore
@@ -522,7 +522,7 @@ namespace smsc { namespace store
             throw(ConfigException, StorageException);
         virtual ~CachedStore();
 
-        virtual void createSms(SMS& sms, SMSId id,
+        virtual SMSId createSms(SMS& sms, SMSId id,
             const CreateMode flag = CREATE_NEW)
                 throw(StorageException, DuplicateMessageException);
         virtual void retriveSms(SMSId id, SMS &sms)

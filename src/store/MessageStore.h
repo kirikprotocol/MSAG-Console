@@ -113,8 +113,8 @@ namespace smsc { namespace store
          * @see CreateMode
          * @see SMS
          */
-        virtual void createSms(SMS& sms, SMSId id,
-                               const CreateMode flag = CREATE_NEW)
+        virtual SMSId createSms(SMS& sms, SMSId id,
+                                const CreateMode flag = CREATE_NEW)
                 throw(StorageException, DuplicateMessageException) = 0;
         
         /**

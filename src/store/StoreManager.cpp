@@ -161,8 +161,8 @@ SMSId RemoteStore::getNextId()
     return StoreManager::getNextId();
 }
 
-void RemoteStore::doCreateSms(StorageConnection* connection,
-                              SMS& sms, SMSId id, const CreateMode flag)
+SMSId RemoteStore::doCreateSms(StorageConnection* connection,
+    SMS& sms, SMSId id, const CreateMode flag)
         throw(StorageException, DuplicateMessageException)
 {
     __require__(connection);
@@ -234,7 +234,7 @@ void RemoteStore::doCreateSms(StorageConnection* connection,
                 connection->rollback();
                 throw exc;
             }
-            return;
+            return retId;
         }
     }
     else if (flag == ETSI_REJECT_IF_PRESENT)
@@ -282,13 +282,17 @@ void RemoteStore::doCreateSms(StorageConnection* connection,
         connection->rollback();
         throw exc;
     }
+
+    return id;
 }
-void RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
+SMSId RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
     throw(StorageException, DuplicateMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     __require__(pool);
+
+    SMSId retId = id;
 
     StorageConnection* connection = 0L;
     unsigned iteration=1;
@@ -297,7 +301,7 @@ void RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
         try
         {
             connection = (StorageConnection *)pool->getConnection();
-            doCreateSms(connection, sms, id, flag);
+            retId = doCreateSms(connection, sms, id, flag);
             pool->freeConnection(connection);
             break;
         }
@@ -317,6 +321,8 @@ void RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
             }
         }
     }
+
+    return retId;
 
 #else
 
@@ -338,7 +344,7 @@ void RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
     }
 
     fakeStore.Insert(id, new SMS(sms));
-
+    return id;
 #endif
 }
 
@@ -1272,31 +1278,19 @@ CachedStore::~CachedStore()
     cache.clean();
 }
 
-void CachedStore::createSms(SMS& sms, SMSId id,
-                            const CreateMode flag = CREATE_NEW)
+SMSId CachedStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
     throw(StorageException, DuplicateMessageException)
 {
-    if (flag != SMPP_OVERWRITE_IF_PRESENT)
-    {
-        __trace2__("Creating new smsId = %lld", id);
-        RemoteStore::createSms(sms, id, CREATE_NEW);
-        
-        SMS* sm = new SMS(sms);
-        MutexGuard cacheGuard(cacheMutex);
-        cache.putSms(id, sm);
-    }
-    else 
-    {
-        {
-            __trace2__("Cleaning SMS cache ...");
-            MutexGuard cacheGuard(cacheMutex);
-            cache.clean();
-            __trace2__("SMS Cache cleaned.");
-        }
+    SMSId retId;
 
-        __trace2__("Creating new or overwriting smsId = %lld", id);
-        RemoteStore::createSms(sms, id, flag);
-    }
+    __trace2__("Creating sms, smsId = %lld, flag = %d", id, flag);
+    retId = RemoteStore::createSms(sms, id, flag);
+    __trace2__("Created sms, smsId = %lld, retId = %lld", id, retId);
+    
+    SMS* sm = new SMS(sms);
+    MutexGuard cacheGuard(cacheMutex);
+    if (retId != id) cache.delSms(retId);
+    cache.putSms(id, sm);
 }
 
 void CachedStore::retriveSms(SMSId id, SMS &sms)
