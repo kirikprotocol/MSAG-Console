@@ -80,7 +80,7 @@ uint8_t SmppTransmitterTestCases::getRegisteredDelivery(PduData* pduData,
 	else if (ack)
 	{
 		__tc__("sms.reports.priorityCheck.directiveAck"); __tc_ok__;
-		return FINAL_SMSC_DELIVERY_RECEIPT & INTERMEDIATE_NOTIFICATION_REQUESTED;
+		return (FINAL_SMSC_DELIVERY_RECEIPT + INTERMEDIATE_NOTIFICATION_REQUESTED);
 	}
 	else if (noack)
 	{
@@ -89,11 +89,16 @@ uint8_t SmppTransmitterTestCases::getRegisteredDelivery(PduData* pduData,
 	}
 	//флаг registeredDelivery
 	SmsPduWrapper pdu(pduData);
-	uint8_t registredDelivery = pdu.getRegistredDelivery() & SMSC_DELIVERY_REPORT_BITS;
-	if (registredDelivery)
+	uint8_t deliveryReceiptFlag =
+		pdu.getRegistredDelivery() & SMSC_DELIVERY_RECEIPT_BITS;
+	uint8_t intermediateNotificationFlag =
+		pdu.getRegistredDelivery() & INTERMEDIATE_NOTIFICATION_REQUESTED;
+	if (deliveryReceiptFlag == FINAL_SMSC_DELIVERY_RECEIPT ||
+		deliveryReceiptFlag == FAILURE_SMSC_DELIVERY_RECEIPT ||
+		intermediateNotificationFlag)
 	{
 		__tc__("sms.reports.priorityCheck.registeredDelivery"); __tc_ok__;
-		return registredDelivery;
+		return pdu.getRegistredDelivery() & SMSC_DELIVERY_REPORT_BITS;
 	}
 	//запрет отчетов на маршруте
 	if (pduData->intProps.count("suppressDeliveryReports"))
@@ -115,7 +120,7 @@ uint8_t SmppTransmitterTestCases::getRegisteredDelivery(PduData* pduData,
 			return FINAL_SMSC_DELIVERY_RECEIPT;
 		case ProfileReportOptions::ReportFull:
 			__tc__("sms.reports.priorityCheck.profileReportFull"); __tc_ok__;
-			return FINAL_SMSC_DELIVERY_RECEIPT & INTERMEDIATE_NOTIFICATION_REQUESTED;
+			return (FINAL_SMSC_DELIVERY_RECEIPT + INTERMEDIATE_NOTIFICATION_REQUESTED);
 		default:
 			__unreachable__("Invalid report options");
 	}
@@ -308,8 +313,8 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(PduData* pduDat
 		return;
 	}
 	SmsPduWrapper pdu(pduData);
-	uint8_t regDelivery =
-		getRegisteredDelivery(pduData, chkList) & SMSC_DELIVERY_RECEIPT_BITS;
+	uint8_t regDelivery = SMSC_DELIVERY_RECEIPT_BITS &
+		getRegisteredDelivery(pduData, chkList);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
 	{
@@ -341,8 +346,8 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(PduData* pduData)
 		return;
 	}
 	SmsPduWrapper pdu(pduData);
-	uint8_t regDelivery =
-		getRegisteredDelivery(pduData, chkList) & SMSC_DELIVERY_RECEIPT_BITS;
+	uint8_t regDelivery = SMSC_DELIVERY_RECEIPT_BITS &
+		getRegisteredDelivery(pduData, chkList);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
 	{
@@ -474,8 +479,8 @@ void SmppTransmitterTestCases::registerExtSmeMonitors(PduData* pduData)
 		new SmeAckMonitor(pdu.getMsgRef(), pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
 	fixture->pduReg->registerMonitor(smeAckMonitor);
 	//delivery receipt monitor
-	uint8_t regDelivery =
-		getRegisteredDelivery(pduData, chkList) & SMSC_DELIVERY_RECEIPT_BITS;
+	uint8_t regDelivery = SMSC_DELIVERY_RECEIPT_BITS &
+		getRegisteredDelivery(pduData, chkList);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT)
 	{
 		DeliveryReceiptMonitor* rcptMonitor = new DeliveryReceiptMonitor(
@@ -501,8 +506,8 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduData* pduData,
 	__require__(fixture->routeChecker->isDestReachable(
 		pdu.getSource(), pdu.getDest()) == SME_TRANSCEIVER);
 	//delivery receipt monitor
-	uint8_t regDelivery =
-		getRegisteredDelivery(pduData, chkList) & SMSC_DELIVERY_RECEIPT_BITS;
+	uint8_t regDelivery = SMSC_DELIVERY_RECEIPT_BITS &
+		getRegisteredDelivery(pduData, chkList);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		(regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT && deliveryStatus != ESME_ROK))
 	{

@@ -97,7 +97,8 @@ void RouteConfigGen::printRouteStart(ostream& os, const RouteInfo& route)
 		"\" priority=\"" << route.priority <<
 		"\" serviceId=\"" << route.serviceId <<
 		"\" suppressDeliveryReports=\"" <<
-		(route.suppressDeliveryReports ? "true" : "false") << "\">" << endl;
+		(route.suppressDeliveryReports ? "true" : "false") <<
+		"\" active=\"true\">" << endl;
 	if (route.billing)
 	{
 		__tc__("routeConfig.billing"); __tc_ok__;
