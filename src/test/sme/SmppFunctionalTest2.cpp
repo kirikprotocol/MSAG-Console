@@ -40,7 +40,7 @@ using namespace smsc::test::util;
 
 SmeRegistry* smeReg;
 AliasRegistry* aliasReg;
-RouteRegistry* routeReg = new RouteRegistry();
+RouteRegistry* routeReg;
 Profile defProfile;
 ProfileRegistry* profileReg;
 CheckList* smppChkList;
@@ -372,11 +372,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	}
 	//tcRoute->commit();
 	//сохранение конфигов
-	if (configChkList)
-	{
-		delete configChkList;
-	}
-	configChkList = new ConfigGenCheckList();
+	configChkList->reset();
 	SmeConfigGen smeCfg(smeReg, configChkList);
 	AliasConfigGen aliasCfg(aliasReg, configChkList);
 	RouteConfigGen routeCfg(routeReg, configChkList);
@@ -527,7 +523,9 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		}
 		else if (cmd == "chklist")
 		{
+			smppChkList->save();
 			smppChkList->saveHtml();
+			configChkList->save();
 			configChkList->saveHtml();
 			cout << "Checklists saved" << endl;
 		}
@@ -593,8 +591,11 @@ int main(int argc, char* argv[])
 	routeReg = new RouteRegistry();
 	ProfileUtil::setupRandomCorrectProfile(defProfile);
 	profileReg = new ProfileRegistry(defProfile);
+	__trace__("before new SmppCheckList()");
 	smppChkList = new SmppCheckList();
+	__trace__("before new ConfigGenCheckList()");
 	configChkList = new ConfigGenCheckList();
+	__trace__("after checklists");
 	try
 	{
 		executeFunctionalTest(smscHost, smscPort);
