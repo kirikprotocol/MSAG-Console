@@ -74,6 +74,7 @@ public abstract class Session extends Thread
     private final static int ESC_SE = 240;
     private final static int ESC_CR = 13;
     private final static int ESC_LF = 10;
+    private final static int ESC_BS = 8;
     private final static int ESC_NUL = 0;
 
     protected String readTelnetLine(PrintWriter writer, boolean echo)
@@ -112,6 +113,17 @@ public abstract class Session extends Thread
             if( b == ESC_IAC ) {
                 //System.out.println("Got IAC");
                 escape = true;
+                continue;
+            }
+
+            if ( b == ESC_BS ) {
+                if (sb.length() > 0) {
+                    sb.deleteCharAt(sb.length()-1);
+                    if (echo) {
+                        writer.write(ESC_BS); writer.write(' ');
+                        writer.write(ESC_BS); writer.flush();
+                    }
+                }
                 continue;
             }
 
