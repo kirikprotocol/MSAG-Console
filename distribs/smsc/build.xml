@@ -42,13 +42,13 @@ Targets:
   </target>
 
   <target name="makesmsc">
-    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="system"/>
-    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
+    <ant dir="${SRC_DIR}" target="system"/>
+    <ant dir="${SRC_DIR}" target="admin"/>
   </target>
 
   <target name="makeweb">
     <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat.tar.gz" dest="${DISTR_DIR}/tomcat"/>
-    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="build"/>
+    <ant dir="${WEBSRC_DIR}" target="build"/>
     <copy todir="${DISTR_DIR}/webapps">
       <fileset dir="${SMSC_DIR}/webapps" includes="images/**/*, styles/**/*, scripts/**/*"/>
     </copy>

@@ -5,7 +5,7 @@
   <property name="java_out" location="${BUILD_DIR}/classes/smsc"/>
   <property name="exploded" location="${BUILD_DIR}/exploded/smsc"/>
   <property name="java_lib" location="${exploded}/WEB-INF/lib"/>
-  <property name="libs_path" location="${basedir}/../libs"/>
+  <property name="libs_path" location="../libs"/>
   <property name="smsc_package_path" value="ru/novosoft/smsc"/>
   <property name="perfmon_path" value="${smsc_package_path}/perfmon"/>
   <property name="perfmon_src" location="${java_src}/${perfmon_path}"/>
