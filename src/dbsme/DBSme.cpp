@@ -8,6 +8,10 @@
 #include <util/Logger.h>
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
+#include <util/recoder/recode_dll.h>
+#include <util/smstext.h>
+
+#include <signal.h>
 
 #include <db/DataSourceLoader.h>
 #include <dbsme/jobs/SQLJob.h>
@@ -19,12 +23,13 @@
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
+using namespace smsc::util;
 using namespace smsc::core::threads;
 using namespace smsc::core::buffers;
 
 using namespace smsc::dbsme;
 
-bool        bDBSmeIsStopped = false;
+static bool bDBSmeIsStopped = false;
 
 uint64_t    requestsProcessingCount = 0;
 uint64_t    requestsProcessedCount = 0;
@@ -33,7 +38,6 @@ uint64_t    errorsHandledCount = 0;
 
 Mutex       countersLock;
 
-using smsc::util::Logger;
 static log4cpp::Category& log = Logger::getCategory("smsc.dbsme.DBSme");
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 200;
@@ -78,14 +82,10 @@ public:
         command.setToAddress(sms.getDestinationAddress());
         command.setJobName(0);
 
-        Body& body = sms.getMessageBody();
-
-        std::string input = body.getStrProperty(Tag::SMPP_SHORT_MESSAGE);
-        //__trace2__("Input Data for DBSme '%s'", input.c_str());
-        int bodyLen = body.getIntProperty(Tag::SMPP_SM_LENGTH);
-        input.erase(bodyLen);
-        __trace2__("Input Data for DBSme (improved) '%s'", input.c_str());
-        command.setInData(input.c_str());
+        char smsTextBuff[MAX_ALLOWED_MESSAGE_LENGTH+1];
+        getSmsText(&sms, (char *)&smsTextBuff);
+        command.setInData((const char*)smsTextBuff);
+        __trace2__("Input Data for DBSme '%s'", smsTextBuff);
         
         try 
         {
@@ -109,9 +109,10 @@ public:
         sms.setValidTime(time(NULL)+3600);
         sms.setDeliveryReport(0);
         
+        Body& body = sms.getMessageBody();
         body.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
         body.setIntProperty(Tag::SMPP_ESM_CLASS, 0 /*xx0000xx*/);
-        body.setIntProperty(Tag::SMPP_DATA_CODING, 0);
+        body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::DEFAULT);
         body.setIntProperty(Tag::SMPP_PRIORITY, 0);
         
         char* out = (char *)command.getOutData();
@@ -124,9 +125,12 @@ public:
         {
             int strLen = (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) ?
                           outLen : MAX_ALLOWED_MESSAGE_LENGTH;
-            strncpy(buff, out, strLen); buff[strLen] = '\0';
-            body.setIntProperty(Tag::SMPP_SM_LENGTH, strLen);
-            body.setStrProperty(Tag::SMPP_SHORT_MESSAGE, buff);
+            
+            int convLen = ConvertTextTo7Bit(out, strLen, buff, sizeof(buff), 
+                                            CONV_ENCODING_ANSI);
+
+            body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, buff, convLen);
+            body.setIntProperty(Tag::SMPP_SM_LENGTH, convLen);
             
             PduSubmitSm sm;
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
@@ -156,8 +160,6 @@ public:
             
             //((PduXSm*)pdu)->dump(TRACE_LOG_STREAM);
             printf("\nReceived DELIVERY_SM Pdu.\n");
-            /*printf("\nReceived DELIVERY_SM Pdu. Message: '%s'\n",
-                   ((PduXSm*)pdu)->get_message().get_shortMessage());*/
             process();
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
@@ -316,6 +318,16 @@ public:
     };
 };
 
+static void appSignalHandler(int sig)
+{
+    printf("Signal %d handled !\n", sig);
+    if (sig==SIGTERM || sig==SIGINT)
+    {
+        printf("Stopping ... \n");
+        bDBSmeIsStopped = true;
+    }
+}
+
 int main(void) 
 {
     using smsc::db::DataSourceLoader;
@@ -323,6 +335,13 @@ int main(void)
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
+    sigset(SIGTERM, appSignalHandler);
+    sigset(SIGINT , appSignalHandler);
+    
+    /*while (!bDBSmeIsStopped) sleep(1);
+    printf("Stopped.\n");
+    return 0;*/
+    
     SQLJobFactory _sqlJobFactory;
     JobFactory::registerFactory(&_sqlJobFactory, SMSC_DBSME_SQL_JOB_IDENTITY);
     
