@@ -225,10 +225,11 @@ int partitionSms(SMS* sms,int dstdc)
     len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhilen,len*3);
     if(udhi)memcpy(bufTr.get(),msg,udhilen);
     msg=bufTr.get();
+    dc=DataCoding::DEFAULT;
     //len+=udhilen;
   }
   int maxlen=134,maxfulllen=140;
-  if(dc==DataCoding::DEFAULT || dstdc==DataCoding::DEFAULT)
+  if(dc==DataCoding::DEFAULT)
   {
     int xlen=len;
     for(int i=0;i<len;i++)
@@ -249,7 +250,7 @@ int partitionSms(SMS* sms,int dstdc)
     __trace2__("PARTITIONSMS: udhilen=%d, xlen=%d",udhilen,xlen);
     xlen*=7;
     if(udhilen+xlen/8+(xlen%8?1:0)<=maxfulllen)return psSingle;
-  }
+  }else
   if(dc==DataCoding::SMSC7BIT)
   {
     len*=7;
@@ -264,7 +265,7 @@ int partitionSms(SMS* sms,int dstdc)
   int parts=1;
   uint16_t offsets[256];
   offsets[0]=0;
-  if(dc==DataCoding::UCS2 && dstdc==DataCoding::UCS2)
+  if(dc==DataCoding::UCS2)
   {
     int lastword=0;
     int lastpos=0;
@@ -331,7 +332,7 @@ int partitionSms(SMS* sms,int dstdc)
         lastword=i;
         wl=0;
       }
-      if(dc==DataCoding::DEFAULT || dstdc==DataCoding::DEFAULT)
+      if(dc==DataCoding::DEFAULT)
       {
         switch(msg[i])
         {
