@@ -98,13 +98,13 @@ void MapIoTask::deinit()
   result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   if ( result != MSG_OK){
     __map_warn2__("error at MsgRel errcode 0x%hx",result);
-    kill(getpid(),17);
+    if( !isStopping ) kill(getpid(),17);
     return;
   }
   result = MsgClose(MY_USER_ID);
   if ( result != MSG_OK){
     __map_warn2__("error at MsgClose errcode 0x%hx",result);
-    kill(getpid(),17);
+    if( !isStopping ) kill(getpid(),17);
     return;
   }
   MsgExit();
