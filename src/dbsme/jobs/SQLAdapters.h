@@ -76,6 +76,12 @@ namespace smsc { namespace dbsme { namespace io
             int pos = atoi(key);
             SET_THROW_CAUGHT_EXCEPTION(base->setInt32(pos, val, null));
         };
+        virtual void setInt64(const char* key, int64_t val, bool null=false)
+            throw(AdapterException)
+        {
+            int pos = atoi(key);
+            SET_THROW_CAUGHT_EXCEPTION(base->setInt64(pos, val, null));
+        };
         virtual void setUint8(const char* key, uint8_t val, bool null=false)
             throw(AdapterException)
         {
@@ -93,6 +99,12 @@ namespace smsc { namespace dbsme { namespace io
         {
             int pos = atoi(key);
             SET_THROW_CAUGHT_EXCEPTION(base->setUint32(pos, val, null));
+        };
+        virtual void setUint64(const char* key, uint64_t val, bool null=false)
+            throw(AdapterException)
+        {
+            int pos = atoi(key);
+            SET_THROW_CAUGHT_EXCEPTION(base->setUint64(pos, val, null));
         };
         virtual void setFloat(const char* key, float val, bool null=false)
             throw(AdapterException)
@@ -163,6 +175,12 @@ namespace smsc { namespace dbsme { namespace io
             int pos = atoi(key);
             GET_THROW_CAUGHT_EXCEPTION(base->getInt32(pos));
         };
+        virtual int64_t getInt64(const char* key)
+            throw(AdapterException)
+        {
+            int pos = atoi(key);
+            GET_THROW_CAUGHT_EXCEPTION(base->getInt64(pos));
+        };
         virtual uint8_t getUint8(const char* key)
             throw(AdapterException)
         {
@@ -180,6 +198,12 @@ namespace smsc { namespace dbsme { namespace io
         {
             int pos = atoi(key);
             GET_THROW_CAUGHT_EXCEPTION(base->getUint32(pos));
+        };
+        virtual uint64_t getUint64(const char* key)
+            throw(AdapterException)
+        {
+            int pos = atoi(key);
+            GET_THROW_CAUGHT_EXCEPTION(base->getUint64(pos));
         };
         virtual float getFloat(const char* key)
             throw(AdapterException)
@@ -247,6 +271,11 @@ namespace smsc { namespace dbsme { namespace io
         {
             return (int32_t)rows;
         };
+        virtual int64_t getInt64(const char* key)
+            throw(AdapterException)
+        {
+            return (int64_t)rows;
+        };
         virtual uint8_t getUint8(const char* key)
             throw(AdapterException)
         {
@@ -261,6 +290,11 @@ namespace smsc { namespace dbsme { namespace io
             throw(AdapterException)
         {
             return (uint32_t)rows;
+        };
+        virtual uint64_t getUint64(const char* key)
+            throw(AdapterException)
+        {
+            return (uint64_t)rows;
         };
         virtual float getFloat(const char* key)
             throw(AdapterException)
