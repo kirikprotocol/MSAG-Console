@@ -31,7 +31,7 @@ Manager::Manager()
     __trace__("reading config...");
     DOMTreeReader reader;
     DOMDocument *document = reader.read(config_filename.get());
-    if (document)
+    if (document && document->getDocumentElement())
     {
       DOMElement *elem = document->getDocumentElement();
       __trace__("config readed");
