@@ -20,8 +20,8 @@ bool AliasRegistry::putAlias(const AliasInfo& alias)
 		return false;
 	}
 	AliasHolder* holder = new AliasHolder(alias);
-	addrMap[alias.addr].push_back(holder);
-	aliasMap[alias.alias].push_back(holder);
+	addrMap[alias.addr] = holder;
+	aliasMap[alias.alias] = holder;
 	return true;
 }
 
@@ -29,23 +29,15 @@ void AliasRegistry::clear()
 {
 	for (AddressMap::iterator it = addrMap.begin(); it != addrMap.end(); it++)
 	{
-		AliasList& list = it->second;
-		for (int i = 0; i < list.size(); i++)
-		{
-			delete list[i];
-		}
+		delete it->second;
 	}
 	//для aliasMap ничего удалять не нужно, т.к. объекты в aliasMap и addrMap общие
 	addrMap.clear();
 	aliasMap.clear();
 }
 
-const AliasRegistry::AliasList AliasRegistry::findAliasByAddress(const Address& addr) const
+const AliasHolder* AliasRegistry::findAliasByAddress(const Address& addr) const
 {
-#define __findAlias__() \
-	AddressMap::const_iterator it = addrMap.find(tmp); \
-	if (it != addrMap.end()) { return it->second; }
-
 	Address tmp(addr);
 	AddressValue addrVal;
 	int addrLen = tmp.getValue(addrVal);
@@ -53,26 +45,32 @@ const AliasRegistry::AliasList AliasRegistry::findAliasByAddress(const Address& 
 	{
 		if (len)
 		{
-			memset(addrVal + addrLen - len, '?', len);
+			addrVal[addrLen - len] = '?';
 			tmp.setValue(addrLen, addrVal);
 		}
-		__findAlias__();
+		AddressMap::const_iterator it = addrMap.find(tmp);
+		if (it != addrMap.end())
+		{
+			return it->second;
+		}
+		/*
 		if (addrLen - len < MAX_ADDRESS_VALUE_LENGTH)
 		{
 			addrVal[addrLen - len] = '*';
 			tmp.setValue(addrLen - len + 1, addrVal);
-			__findAlias__();
+			AddressMap::const_iterator it = addrMap.find(tmp);
+			if (it != addrMap.end())
+			{
+				return it->second;
+			}
 		}
+		*/
 	}
-	return AliasList();
+	return NULL;
 }
 
-const AliasRegistry::AliasList AliasRegistry::findAddressByAlias(const Address& alias) const
+const AliasHolder* AliasRegistry::findAddressByAlias(const Address& alias) const
 {
-#define __findAddress__() \
-	AddressMap::const_iterator it = aliasMap.find(tmp); \
-	if (it != aliasMap.end()) { return it->second; }
-
 	Address tmp(alias);
 	AddressValue aliasVal;
 	int aliasLen = tmp.getValue(aliasVal);
@@ -80,18 +78,28 @@ const AliasRegistry::AliasList AliasRegistry::findAddressByAlias(const Address& 
 	{
 		if (len)
 		{
-			memset(aliasVal + aliasLen - len, '?', len);
+			aliasVal[aliasLen - len] = '?';
 			tmp.setValue(aliasLen, aliasVal);
 		}
-		__findAddress__();
+		AddressMap::const_iterator it = aliasMap.find(tmp);
+		if (it != aliasMap.end())
+		{
+			return it->second;
+		}
+		/*
 		if (aliasLen - len < MAX_ADDRESS_VALUE_LENGTH)
 		{
 			aliasVal[aliasLen - len] = '*';
 			tmp.setValue(aliasLen - len + 1, aliasVal);
-			__findAddress__();
+			AddressMap::const_iterator it = aliasMap.find(tmp);
+			if (it != aliasMap.end())
+			{
+				return it->second;
+			}
 		}
+		*/
 	}
-	return AliasList();
+	return NULL;
 }
 
 }

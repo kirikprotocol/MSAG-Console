@@ -19,8 +19,6 @@ using smsc::test::sms::ltAddress;
 class AliasRegistry
 {
 public:
-	typedef vector<const AliasHolder*> AliasList;
-
 	AliasRegistry(){}
 
 	virtual ~AliasRegistry();
@@ -31,12 +29,12 @@ public:
 	
 	//AliasIterator* iterator();
 
-	const AliasList findAliasByAddress(const Address& addr) const;
+	const AliasHolder* findAliasByAddress(const Address& addr) const;
 
-	const AliasList findAddressByAlias(const Address& alias) const;
+	const AliasHolder* findAddressByAlias(const Address& alias) const;
 
 private:
-	typedef map<const Address, AliasList, ltAddress> AddressMap;
+	typedef map<const Address, AliasHolder*, ltAddress> AddressMap;
 	AddressMap addrMap;
 	AddressMap aliasMap;
 };
