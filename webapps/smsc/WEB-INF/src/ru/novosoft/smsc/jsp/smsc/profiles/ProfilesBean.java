@@ -7,10 +7,9 @@ import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Created by igork
- * Date: 11.03.2003
- * Time: 18:38:02
+ * Created by igork Date: 11.03.2003 Time: 18:38:02
  */
 public class ProfilesBean extends SmscBean
 {
@@ -22,7 +21,7 @@ public class ProfilesBean extends SmscBean
   protected List registeredLocales = new LinkedList();
   protected String returnPath = null;
 
-  protected boolean aliasHide = false;
+  protected byte aliasHide = Profile.ALIAS_HIDE_false;
   protected boolean aliasModifiable = false;
 
   protected String divert = "";
@@ -35,10 +34,10 @@ public class ProfilesBean extends SmscBean
   protected boolean udhConcat = false;
   protected boolean translit = false;
 
-  protected int init(List errors)
+  protected int init(final List errors)
   {
-    int result = super.init(errors);
-    if (result != RESULT_OK)
+    final int result = super.init(errors);
+    if (RESULT_OK != result)
       return result;
 
     try {
@@ -55,7 +54,7 @@ public class ProfilesBean extends SmscBean
     return mask;
   }
 
-  public void setMask(String mask)
+  public void setMask(final String mask)
   {
     this.mask = mask;
   }
@@ -70,7 +69,7 @@ public class ProfilesBean extends SmscBean
     return report;
   }
 
-  public void setReport(String report)
+  public void setReport(final String report)
   {
     try {
       this.report = Byte.decode(report).byteValue();
@@ -90,7 +89,7 @@ public class ProfilesBean extends SmscBean
     return codepage;
   }
 
-  public void setCodepage(String codepage)
+  public void setCodepage(final String codepage)
   {
     try {
       this.codepage = Byte.decode(codepage).byteValue();
@@ -104,7 +103,7 @@ public class ProfilesBean extends SmscBean
     return locale;
   }
 
-  public void setLocale(String locale)
+  public void setLocale(final String locale)
   {
     this.locale = locale;
   }
@@ -114,20 +113,24 @@ public class ProfilesBean extends SmscBean
     return registeredLocales;
   }
 
-  public boolean isAliasHide()
+  public byte getAliasHideByte()
   {
     return aliasHide;
   }
 
-  public void setAliasHide(boolean aliasHide)
+  public String getAliasHide()
   {
-    this.aliasHide = aliasHide;
+    return Profile.getAliasHideString(aliasHide);
   }
-
-  public void setAliasHide(String aliasHide)
+  
+  public void setAliasHide(final String aliasHide)
   {
-    this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
-                      aliasHide.equalsIgnoreCase("hide"));
+    if ("true".equalsIgnoreCase(aliasHide) || "hide".equalsIgnoreCase(aliasHide))
+      this.aliasHide = Profile.ALIAS_HIDE_true;
+    else if ("false".equalsIgnoreCase(aliasHide))
+      this.aliasHide = Profile.ALIAS_HIDE_false;
+    else if ("substitute".equalsIgnoreCase(aliasHide))
+      this.aliasHide = Profile.ALIAS_HIDE_substitute;
   }
 
   public boolean isAliasModifiable()
@@ -135,15 +138,14 @@ public class ProfilesBean extends SmscBean
     return aliasModifiable;
   }
 
-  public void setAliasModifiable(boolean aliasModifiable)
+  public void setAliasModifiable(final boolean aliasModifiable)
   {
     this.aliasModifiable = aliasModifiable;
   }
 
-  public void setAliasModifiable(String aliasModifiable)
+  public void setAliasModifiable(final String aliasModifiable)
   {
-    this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
-                            aliasModifiable.equalsIgnoreCase("modifiable"));
+    this.aliasModifiable = "true".equalsIgnoreCase(aliasModifiable) || "modifiable".equalsIgnoreCase(aliasModifiable);
   }
 
   public String getReturnPath()
@@ -151,7 +153,7 @@ public class ProfilesBean extends SmscBean
     return returnPath;
   }
 
-  public void setReturnPath(String returnPath)
+  public void setReturnPath(final String returnPath)
   {
     this.returnPath = returnPath;
   }
@@ -161,7 +163,7 @@ public class ProfilesBean extends SmscBean
     return divert;
   }
 
-  public void setDivert(String divert)
+  public void setDivert(final String divert)
   {
     this.divert = divert;
   }
@@ -171,7 +173,7 @@ public class ProfilesBean extends SmscBean
     return divertModifiable;
   }
 
-  public void setDivertModifiable(boolean divertModifiable)
+  public void setDivertModifiable(final boolean divertModifiable)
   {
     this.divertModifiable = divertModifiable;
   }
@@ -181,7 +183,7 @@ public class ProfilesBean extends SmscBean
     return ussd7bit;
   }
 
-  public void setUssd7bit(boolean ussd7bit)
+  public void setUssd7bit(final boolean ussd7bit)
   {
     this.ussd7bit = ussd7bit;
   }
@@ -191,7 +193,7 @@ public class ProfilesBean extends SmscBean
     return divertActiveUnconditional;
   }
 
-  public void setDivertActiveUnconditional(boolean divertActiveUnconditional)
+  public void setDivertActiveUnconditional(final boolean divertActiveUnconditional)
   {
     this.divertActiveUnconditional = divertActiveUnconditional;
   }
@@ -201,7 +203,7 @@ public class ProfilesBean extends SmscBean
     return divertActiveAbsent;
   }
 
-  public void setDivertActiveAbsent(boolean divertActiveAbsent)
+  public void setDivertActiveAbsent(final boolean divertActiveAbsent)
   {
     this.divertActiveAbsent = divertActiveAbsent;
   }
@@ -211,7 +213,7 @@ public class ProfilesBean extends SmscBean
     return divertActiveBlocked;
   }
 
-  public void setDivertActiveBlocked(boolean divertActiveBlocked)
+  public void setDivertActiveBlocked(final boolean divertActiveBlocked)
   {
     this.divertActiveBlocked = divertActiveBlocked;
   }
@@ -221,7 +223,7 @@ public class ProfilesBean extends SmscBean
     return divertActiveBarred;
   }
 
-  public void setDivertActiveBarred(boolean divertActiveBarred)
+  public void setDivertActiveBarred(final boolean divertActiveBarred)
   {
     this.divertActiveBarred = divertActiveBarred;
   }
@@ -231,7 +233,7 @@ public class ProfilesBean extends SmscBean
     return divertActiveCapacity;
   }
 
-  public void setDivertActiveCapacity(boolean divertActiveCapacity)
+  public void setDivertActiveCapacity(final boolean divertActiveCapacity)
   {
     this.divertActiveCapacity = divertActiveCapacity;
   }
@@ -241,7 +243,7 @@ public class ProfilesBean extends SmscBean
     return udhConcat;
   }
 
-  public void setUdhConcat(boolean udhConcat)
+  public void setUdhConcat(final boolean udhConcat)
   {
     this.udhConcat = udhConcat;
   }
@@ -251,7 +253,7 @@ public class ProfilesBean extends SmscBean
     return translit;
   }
 
-  public void setTranslit(boolean translit)
+  public void setTranslit(final boolean translit)
   {
     this.translit = translit;
   }

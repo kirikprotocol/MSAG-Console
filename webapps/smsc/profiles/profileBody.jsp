@@ -49,9 +49,10 @@
 <tr class=row0>
 	<th>alias</th>
 	<td>
-    <input class=check type=radio type="radio" name="aliasHide" value="true"  <%= (bean.isAliasHide()) ? "checked":""%>>Hide
-    <input class=check type=radio type="radio" name="aliasHide" value="false" <%= (bean.isAliasHide()) ? "":"checked"%>>Unhide
-    <input class=check type=checkbox type="checkbox" name="aliasModifiable" value="true" <%= (bean.isAliasModifiable()) ? "checked":""%>>Modifiable
+    <input class=check type="radio" name="aliasHide" id="aliasHide_true" value="true"  <%= (bean.getAliasHideByte() == Profile.ALIAS_HIDE_true) ? "checked":""%>><label for="aliasHide_true">Hide</label>
+    <input class=check type="radio" name="aliasHide" id="aliasHide_false" value="false" <%= (bean.getAliasHideByte() == Profile.ALIAS_HIDE_false) ? "checked":""%>><label for="aliasHide_false">Unhide</label>
+    <input class=check type="radio" name="aliasHide" id="aliasHide_substitute" value="substitute" <%= (bean.getAliasHideByte() == Profile.ALIAS_HIDE_substitute) ? "checked":""%>><label for="aliasHide_substitute">Substitute</label>
+    <input class=check type="checkbox" name="aliasModifiable" id="aliasModifiable" value="true" <%= (bean.isAliasModifiable()) ? "checked":""%>><label for="aliasModifiable">Modifiable</label>
   </td>
 </tr>
 <tr class=row1>

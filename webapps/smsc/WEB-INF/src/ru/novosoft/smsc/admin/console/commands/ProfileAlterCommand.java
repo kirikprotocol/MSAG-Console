@@ -52,7 +52,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
                   profile.setUssd7bit(ussd7bit);
                 }
                 if (isReport) profile.setReportOptions(report);
-                if (isAliasHide) profile.setAliasHide(aliasHide);
+                if (isAliasHide) profile.setAliasHide(aliasHide ? Profile.ALIAS_HIDE_true : Profile.ALIAS_HIDE_false); //todo: reimplement
                 if (isAliasModifiable) profile.setAliasModifiable(aliasModifiable);
                 if (isDivert) profile.setDivert(divert);
                 if (isDivertActiveAbsent) profile.setDivertActiveAbsent(divertActiveOn ? divertActiveAbsent:false);

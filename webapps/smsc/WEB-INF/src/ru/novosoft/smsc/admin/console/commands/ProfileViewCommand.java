@@ -35,7 +35,7 @@ public class ProfileViewCommand implements Command
       " Encoding: "+profile.getCodepageString()+
       " ussd7bit: "+((profile.isUssd7bit()) ? "on":"off")+
       " Alias: "+((aliasAlias != null) ? aliasAlias.getMask():"-")+
-      (profile.isAliasHide() ? " hide":" nohide")+
+      (Profile.ALIAS_HIDE_true == profile.getAliasHide() ? " hide": Profile.ALIAS_HIDE_false == profile.getAliasHide() ? " nohide": Profile.ALIAS_HIDE_substitute == profile.getAliasHide() ? " substitute" : " unknown")+ //todo: check and reimplement
       (profile.isAliasModifiable() ? " modifiable":" notmodifiable")+
       " Divert: "+((divert == null || divert.length() <= 0) ? "-":divert);
 

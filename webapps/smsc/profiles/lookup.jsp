@@ -4,7 +4,8 @@
 					  ru.novosoft.smsc.admin.profiler.ProfileEx,
 					  java.net.URLEncoder,
 					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors"%>
+					  ru.novosoft.smsc.jsp.SMSCErrors,
+                 ru.novosoft.smsc.admin.profiler.Profile"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.Lookup"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -96,7 +97,22 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
 		<th nowrap>alias hide</th>
-		<td><img src="/images/ic_<%=bean.isAliasHide() ? "" : "not_"%>checked.gif"></td>
+		<td><%
+      switch (bean.getAliasHide()) {
+        case Profile.ALIAS_HIDE_false: {
+          %><img src="/images/ic_not_checked.gif"> no hide<%
+        }
+          break;
+        case Profile.ALIAS_HIDE_true: {
+          %><img src="/images/ic_checked.gif"> hide<%
+        }
+          break;
+        case Profile.ALIAS_HIDE_substitute: {
+          %>substitute<%
+        }
+          break;
+      }
+		%></td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
 		<th nowrap>alias modifiable</th>

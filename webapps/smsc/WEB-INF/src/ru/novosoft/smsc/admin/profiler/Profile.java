@@ -10,15 +10,21 @@ import ru.novosoft.smsc.admin.route.Mask;
 
 import java.util.List;
 
+
 public class Profile
 {
   public static final byte CODEPAGE_Default = 0;
   public static final byte CODEPAGE_Latin1 = 3;
   public static final byte CODEPAGE_UCS2 = 8;
   public static final byte CODEPAGE_UCS2AndLatin1 = 11;
+
   public static final byte REPORT_OPTION_None = 0;
   public static final byte REPORT_OPTION_Full = 1;
   public static final byte REPORT_OPTION_Final = 3;
+
+  public static final byte ALIAS_HIDE_false = 0;
+  public static final byte ALIAS_HIDE_true = 1;
+  public static final byte ALIAS_HIDE_substitute = 2;
 
   private Mask mask;
   private boolean ussd7bit;
@@ -36,12 +42,15 @@ public class Profile
   private byte reportOptions;
   private String locale;
 
-  private boolean aliasHide = false;
+  private byte aliasHide = ALIAS_HIDE_false;
   private boolean aliasModifiable = true;
   private boolean udhConcat;
   private boolean translit;
 
-  public Profile(Mask mask, byte codepage, boolean ussd7bit, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divertActiveUnconditional, boolean divertActiveAbsent, boolean divertActiveBlocked, boolean divertActiveBarred, boolean divertActiveCapacity, boolean divertModifiable, boolean udhConcat, boolean translit)
+  public Profile(final Mask mask, final byte codepage, final boolean ussd7bit, final byte reportOptions, final String locale, final byte aliasHide,
+                 final boolean aliasModifiable, final String divert, final boolean divertActiveUnconditional, final boolean divertActiveAbsent,
+                 final boolean divertActiveBlocked, final boolean divertActiveBarred, final boolean divertActiveCapacity, final boolean divertModifiable,
+                 final boolean udhConcat, final boolean translit)
   {
     this.mask = mask;
     this.ussd7bit = ussd7bit;
@@ -61,7 +70,9 @@ public class Profile
     this.translit = translit;
   }
 
-  public Profile(Mask mask, byte codepage, boolean ussd7bit, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, String divertActive, boolean divertModifiable, boolean udhConcat, boolean translit)
+  public Profile(final Mask mask, final byte codepage, final boolean ussd7bit, final byte reportOptions, final String locale, final byte aliasHide,
+                 final boolean aliasModifiable, final String divert, final String divertActive, final boolean divertModifiable, final boolean udhConcat,
+                 final boolean translit)
   {
     this.mask = mask;
     this.ussd7bit = ussd7bit;
@@ -77,7 +88,9 @@ public class Profile
     this.udhConcat = udhConcat;
   }
 
-  public Profile(Mask mask, String codepage, String ussd7bit, String reportOptions, String locale, String aliasHide, String aliasModifiable, String divert, String divert_act, String divert_mod, String udhConcat, String translit) throws AdminException
+  public Profile(final Mask mask, final String codepage, final String ussd7bit, final String reportOptions, final String locale, final String aliasHide,
+                 final String aliasModifiable, final String divert, final String divert_act, final String divert_mod, final String udhConcat,
+                 final String translit) throws AdminException
   {
     this.mask = mask;
     setCodepage(codepage);
@@ -93,7 +106,7 @@ public class Profile
     setTranslit(translit);
   }
 
-  public Profile(Mask mask, List profileProperties) throws AdminException
+  public Profile(final Mask mask, final List profileProperties) throws AdminException
   {
     this(mask, (String) profileProperties.get(0),
          (String) profileProperties.get(8),
@@ -118,7 +131,7 @@ public class Profile
     return getCodepageString(codepage);
   }
 
-  public static String getCodepageString(byte codepage) throws AdminException
+  public static String getCodepageString(final byte codepage) throws AdminException
   {
     switch (codepage) {
       case CODEPAGE_Default:
@@ -134,20 +147,20 @@ public class Profile
     }
   }
 
-  public void setCodepage(byte codepage)
+  public void setCodepage(final byte codepage)
   {
     this.codepage = codepage;
   }
 
-  private void setCodepage(String codepageString) throws AdminException
+  private void setCodepage(final String codepageString) throws AdminException
   {
-    if (codepageString.equalsIgnoreCase("default"))
+    if ("default".equalsIgnoreCase(codepageString))
       codepage = CODEPAGE_Default;
-    else if (codepageString.equalsIgnoreCase("UCS2"))
+    else if ("UCS2".equalsIgnoreCase(codepageString))
       codepage = CODEPAGE_UCS2;
-    else if (codepageString.equalsIgnoreCase("Latin1"))
+    else if ("Latin1".equalsIgnoreCase(codepageString))
       codepage = CODEPAGE_Latin1;
-    else if (codepageString.equalsIgnoreCase("UCS2&Latin1"))
+    else if ("UCS2&Latin1".equalsIgnoreCase(codepageString))
       codepage = CODEPAGE_UCS2AndLatin1;
     else
       throw new AdminException("Unknown codepage: " + codepageString);
@@ -163,7 +176,7 @@ public class Profile
     return getReportOptionsString(reportOptions);
   }
 
-  public static String getReportOptionsString(byte reportOptions) throws AdminException
+  public static String getReportOptionsString(final byte reportOptions) throws AdminException
   {
     switch (reportOptions) {
       case REPORT_OPTION_Full:
@@ -177,18 +190,18 @@ public class Profile
     }
   }
 
-  public void setReportOptions(byte reportOptions)
+  public void setReportOptions(final byte reportOptions)
   {
     this.reportOptions = reportOptions;
   }
 
-  private void setReportOptions(String reportoptionsString) throws AdminException
+  private void setReportOptions(final String reportoptionsString) throws AdminException
   {
-    if (reportoptionsString.equalsIgnoreCase("full"))
+    if ("full".equalsIgnoreCase(reportoptionsString))
       reportOptions = REPORT_OPTION_Full;
-    else if (reportoptionsString.equalsIgnoreCase("final"))
+    else if ("final".equalsIgnoreCase(reportoptionsString))
       reportOptions = REPORT_OPTION_Final;
-    else if (reportoptionsString.equalsIgnoreCase("none"))
+    else if ("none".equalsIgnoreCase(reportoptionsString))
       reportOptions = REPORT_OPTION_None;
     else
       throw new AdminException("Unknown report option: " + reportoptionsString);
@@ -204,29 +217,51 @@ public class Profile
     return locale;
   }
 
-  public void setLocale(String locale)
+  public void setLocale(final String locale)
   {
     this.locale = locale;
-    if (this.locale == null)
+    if (null == this.locale)
       this.locale = "";
   }
 
-  public boolean isAliasHide()
+  public byte getAliasHide()
   {
     return aliasHide;
   }
 
-  public void setAliasHide(boolean aliasHide)
+  public void setAliasHide(final byte aliasHide)
   {
     this.aliasHide = aliasHide;
   }
 
-  private void setAliasHide(String aliasHide)
+  private void setAliasHide(final String aliasHide)
   {
-    if( aliasHide == null ) this.aliasHide = false;
-    else {
-      this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
-                      aliasHide.equalsIgnoreCase("hide"));
+    if (null == aliasHide)
+      this.aliasHide = ALIAS_HIDE_false;
+    else if ("true".equalsIgnoreCase(aliasHide) || "hide".equalsIgnoreCase(aliasHide))
+      this.aliasHide = ALIAS_HIDE_true;
+    else if ("substitute".equalsIgnoreCase(aliasHide))
+      this.aliasHide = ALIAS_HIDE_substitute;
+    else
+      this.aliasHide = ALIAS_HIDE_false;
+  }
+
+  public  String getAliasHideString()
+  {
+    return getAliasHideString(aliasHide);
+  }
+  
+  public static String getAliasHideString(final byte aliasHide)
+  {
+    switch (aliasHide) {
+      case ALIAS_HIDE_false:
+        return "false";
+      case ALIAS_HIDE_true:
+        return "true";
+      case ALIAS_HIDE_substitute:
+        return "substitute";
+      default:
+        return "unknown";
     }
   }
 
@@ -235,15 +270,14 @@ public class Profile
     return aliasModifiable;
   }
 
-  public void setAliasModifiable(boolean aliasModifiable)
+  public void setAliasModifiable(final boolean aliasModifiable)
   {
     this.aliasModifiable = aliasModifiable;
   }
 
-  private void setAliasModifiable(String aliasModifiable)
+  private void setAliasModifiable(final String aliasModifiable)
   {
-    this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
-                            aliasModifiable.equalsIgnoreCase("modifiable"));
+    this.aliasModifiable = "true".equalsIgnoreCase(aliasModifiable) || "modifiable".equalsIgnoreCase(aliasModifiable);
   }
 
   public String getDivert()
@@ -251,14 +285,14 @@ public class Profile
     return divert;
   }
 
-  public void setDivert(String divert)
+  public void setDivert(final String divert)
   {
     this.divert = divert;
   }
 
   public String getDivertActive()
   {
-    StringBuffer result = new StringBuffer(5);
+    final StringBuffer result = new StringBuffer(5);
     result.append(divertActiveUnconditional ? 'Y' : 'N');
     result.append(divertActiveAbsent ? 'Y' : 'N');
     result.append(divertActiveBlocked ? 'Y' : 'N');
@@ -267,13 +301,13 @@ public class Profile
     return result.toString();
   }
 
-  public void setDivertActive(String divertActive)
+  public void setDivertActive(final String divertActive)
   {
-    this.divertActiveUnconditional = Character.toUpperCase(divertActive.charAt(0)) == 'Y';
-    this.divertActiveAbsent = Character.toUpperCase(divertActive.charAt(1)) == 'Y';
-    this.divertActiveBlocked = Character.toUpperCase(divertActive.charAt(2)) == 'Y';
-    this.divertActiveBarred = Character.toUpperCase(divertActive.charAt(3)) == 'Y';
-    this.divertActiveCapacity = Character.toUpperCase(divertActive.charAt(4)) == 'Y';
+    this.divertActiveUnconditional = 'Y' == Character.toUpperCase(divertActive.charAt(0));
+    this.divertActiveAbsent = 'Y' == Character.toUpperCase(divertActive.charAt(1));
+    this.divertActiveBlocked = 'Y' == Character.toUpperCase(divertActive.charAt(2));
+    this.divertActiveBarred = 'Y' == Character.toUpperCase(divertActive.charAt(3));
+    this.divertActiveCapacity = 'Y' == Character.toUpperCase(divertActive.charAt(4));
   }
 
   public boolean isDivertModifiable()
@@ -281,14 +315,14 @@ public class Profile
     return divertModifiable;
   }
 
-  public void setDivertModifiable(boolean divertModifiable)
+  public void setDivertModifiable(final boolean divertModifiable)
   {
     this.divertModifiable = divertModifiable;
   }
 
-  private void setDivertModifiable(String divert_mod)
+  private void setDivertModifiable(final String divert_mod)
   {
-    this.divertModifiable = divert_mod.equalsIgnoreCase("true");
+    this.divertModifiable = "true".equalsIgnoreCase(divert_mod);
   }
 
   public boolean isUssd7bit()
@@ -296,12 +330,12 @@ public class Profile
     return ussd7bit;
   }
 
-  public void setUssd7bit(boolean ussd7bit)
+  public void setUssd7bit(final boolean ussd7bit)
   {
     this.ussd7bit = ussd7bit;
   }
 
-  private void setUssd7bit(String ussd7bit)
+  private void setUssd7bit(final String ussd7bit)
   {
     this.ussd7bit = Boolean.valueOf(ussd7bit).booleanValue();
   }
@@ -311,7 +345,7 @@ public class Profile
     return divertActiveUnconditional;
   }
 
-  public void setDivertActiveUnconditional(boolean divertActiveUnconditional)
+  public void setDivertActiveUnconditional(final boolean divertActiveUnconditional)
   {
     this.divertActiveUnconditional = divertActiveUnconditional;
   }
@@ -321,7 +355,7 @@ public class Profile
     return divertActiveAbsent;
   }
 
-  public void setDivertActiveAbsent(boolean divertActiveAbsent)
+  public void setDivertActiveAbsent(final boolean divertActiveAbsent)
   {
     this.divertActiveAbsent = divertActiveAbsent;
   }
@@ -331,7 +365,7 @@ public class Profile
     return divertActiveBlocked;
   }
 
-  public void setDivertActiveBlocked(boolean divertActiveBlocked)
+  public void setDivertActiveBlocked(final boolean divertActiveBlocked)
   {
     this.divertActiveBlocked = divertActiveBlocked;
   }
@@ -341,7 +375,7 @@ public class Profile
     return divertActiveBarred;
   }
 
-  public void setDivertActiveBarred(boolean divertActiveBarred)
+  public void setDivertActiveBarred(final boolean divertActiveBarred)
   {
     this.divertActiveBarred = divertActiveBarred;
   }
@@ -351,7 +385,7 @@ public class Profile
     return divertActiveCapacity;
   }
 
-  public void setDivertActiveCapacity(boolean divertActiveCapacity)
+  public void setDivertActiveCapacity(final boolean divertActiveCapacity)
   {
     this.divertActiveCapacity = divertActiveCapacity;
   }
@@ -361,17 +395,17 @@ public class Profile
     return udhConcat;
   }
 
-  public void setUdhConcat(boolean udhConcat)
+  public void setUdhConcat(final boolean udhConcat)
   {
     this.udhConcat = udhConcat;
   }
 
-  public void setUdhConcat(String udhConcat)
+  public void setUdhConcat(final String udhConcat)
   {
-    this.udhConcat = udhConcat != null
-                     ? (udhConcat.length() == 1
-                        ? Character.toUpperCase(udhConcat.charAt(0)) == 'Y'
-                        : Boolean.valueOf(udhConcat).booleanValue())
+    this.udhConcat = null != udhConcat
+                     ? 1 == udhConcat.length()
+                       ? 'Y' == Character.toUpperCase(udhConcat.charAt(0))
+                       : Boolean.valueOf(udhConcat).booleanValue()
                      : false;
   }
 
@@ -380,16 +414,17 @@ public class Profile
     return translit;
   }
 
-  public void setTranslit(boolean translit)
+  public void setTranslit(final boolean translit)
   {
     this.translit = translit;
   }
-  public void setTranslit(String translit)
+
+  public void setTranslit(final String translit)
   {
-    this.translit = translit != null
-                     ? (translit.length() == 1
-                        ? Character.toUpperCase(translit.charAt(0)) == 'Y'
-                        : Boolean.valueOf(translit).booleanValue())
-                     : false;
+    this.translit = null != translit
+                    ? 1 == translit.length()
+                      ? 'Y' == Character.toUpperCase(translit.charAt(0))
+                      : Boolean.valueOf(translit).booleanValue()
+                    : false;
   }
 }

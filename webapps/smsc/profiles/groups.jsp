@@ -122,7 +122,7 @@ if (divertActive.length() == 0)
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Codepage"))%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("Report info"))%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("locale"))%></td>
-  <td align=center><%if (((Boolean)item.getValue("hidden"        )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td align=center><%=item.getValue("alias hide")%></td>
   <td align=center><%if (((Boolean)item.getValue("hidden_mod"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
   <td><%=divertEnc%></td>
   <td><%=divertActive%></td>

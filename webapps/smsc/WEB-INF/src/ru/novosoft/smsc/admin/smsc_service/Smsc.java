@@ -215,7 +215,7 @@ public class Smsc extends Service
     profileArg.add(newProfile.getCodepageString());
     profileArg.add(newProfile.getReportOptionsString());
     profileArg.add(newProfile.getLocale());
-    profileArg.add(newProfile.isAliasHide() ? "true" : "false");
+    profileArg.add(newProfile.getAliasHideString());
     profileArg.add(newProfile.isAliasModifiable() ? "true" : "false");
     profileArg.add(newProfile.getDivert());
     profileArg.add(newProfile.getDivertActive());

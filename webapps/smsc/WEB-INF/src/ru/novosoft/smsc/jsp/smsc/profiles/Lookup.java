@@ -10,6 +10,7 @@ import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.profiler.ProfileEx;
+import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.PageBean;
@@ -31,7 +32,7 @@ public class Lookup extends PageBean
   private boolean ussd7bit = false;
   private String reportOptions = null;
   private String locale = null;
-  private boolean aliasHide = false;
+  private byte aliasHide = Profile.ALIAS_HIDE_false;
   private boolean aliasModifiable = false;
   private byte matchType = ProfileEx.MATCH_UNKNOWN;
   private Mask matchAddress = null;
@@ -56,38 +57,38 @@ public class Lookup extends PageBean
   private String mbDeleteMask = null;
 
 
-  protected int init(List errors)
+  protected int init(final List errors)
   {
-    int result = super.init(errors);
-    if (result != RESULT_OK)
+    final int result = super.init(errors);
+    if (RESULT_OK != result)
       return result;
 
     try {
-      if (appContext.getHostsManager().getServiceInfo(Constants.SMSC_SME_ID).getStatus() != ServiceInfo.STATUS_RUNNING) {
+      if (ServiceInfo.STATUS_RUNNING != appContext.getHostsManager().getServiceInfo(Constants.SMSC_SME_ID).getStatus()) {
         return warning(SMSCErrors.warning.SMSCNotRunning);
       }
     } catch (Exception e) {
       return error(SMSCErrors.error.CouldntGetSMSCStatus, e);
     }
 
-    if (profile != null) {
+    if (null != profile) {
       try {
         final Mask profileMask = new Mask(profile);
         final AliasSet aliases = appContext.getSmsc().getAliases();
-        Mask alias = aliases.dealias(profileMask);
-        if (alias != null)
+        final Mask alias = aliases.dealias(profileMask);
+        if (null != alias)
           profileDealiased = alias.getMask();
-        ProfileEx p = appContext.getSmsc().profileLookupEx(profileDealiased != null ? new Mask(profileDealiased) : profileMask);
-        if (p.getMatchType() == ProfileEx.MATCH_EXACT) {
-          Alias aliased = aliases.getAliasByAddress(p.getMatchAddress());
-          if (aliased != null)
+        final ProfileEx p = appContext.getSmsc().profileLookupEx(null != profileDealiased ? new Mask(profileDealiased) : profileMask);
+        if (ProfileEx.MATCH_EXACT == p.getMatchType()) {
+          final Alias aliased = aliases.getAliasByAddress(p.getMatchAddress());
+          if (null != aliased)
             profileAliased = aliased.getAlias().getMask();
         }
         codepage = p.getCodepageString();
         ussd7bit = p.isUssd7bit();
         reportOptions = p.getReportOptionsString();
         locale = p.getLocale();
-        aliasHide = p.isAliasHide();
+        aliasHide = p.getAliasHide();
         aliasModifiable = p.isAliasModifiable();
         divert = p.getDivert();
         divertActiveUnconditional = p.isDivertActiveUnconditional();
@@ -111,19 +112,19 @@ public class Lookup extends PageBean
     return RESULT_OK;
   }
 
-  public int process(HttpServletRequest request)
+  public int process(final HttpServletRequest request)
   {
-    int result = super.process(request);
-    if (result != RESULT_OK)
+    final int result = super.process(request);
+    if (RESULT_OK != result)
       return result;
 
-    if (mbAdd != null)
+    if (null != mbAdd)
       return RESULT_ADD;
-    if (mbEdit != null)
+    if (null != mbEdit)
       return RESULT_EDIT;
-    if (mbEditMask != null)
+    if (null != mbEditMask)
       return RESULT_EDIT_MASK;
-    if (mbDelete != null) {
+    if (null != mbDelete) {
       try {
         return delete(new Mask(profile));
       } catch (AdminException e) {
@@ -131,16 +132,16 @@ public class Lookup extends PageBean
         return error(SMSCErrors.error.profiles.couldntDelete, profile, e);
       }
     }
-    if (mbDeleteMask != null)
+    if (null != mbDeleteMask)
       return delete(matchAddress);
 
-    if (mbRefreshed != null)
+    if (null != mbRefreshed)
       return RESULT_OK;
     else
       return RESULT_REFRESH;
   }
 
-  private int delete(Mask profileToDelete)
+  private int delete(final Mask profileToDelete)
   {
     try {
       appContext.getSmsc().profileDelete(profileToDelete);
@@ -156,7 +157,7 @@ public class Lookup extends PageBean
     return profile;
   }
 
-  public void setProfile(String profile)
+  public void setProfile(final String profile)
   {
     this.profile = profile;
   }
@@ -181,7 +182,7 @@ public class Lookup extends PageBean
     return locale;
   }
 
-  public boolean isAliasHide()
+  public byte getAliasHide()
   {
     return aliasHide;
   }
@@ -206,7 +207,7 @@ public class Lookup extends PageBean
     return mbAdd;
   }
 
-  public void setMbAdd(String mbAdd)
+  public void setMbAdd(final String mbAdd)
   {
     this.mbAdd = mbAdd;
   }
@@ -216,7 +217,7 @@ public class Lookup extends PageBean
     return mbEdit;
   }
 
-  public void setMbEdit(String mbEdit)
+  public void setMbEdit(final String mbEdit)
   {
     this.mbEdit = mbEdit;
   }
@@ -226,7 +227,7 @@ public class Lookup extends PageBean
     return mbDelete;
   }
 
-  public void setMbDelete(String mbDelete)
+  public void setMbDelete(final String mbDelete)
   {
     this.mbDelete = mbDelete;
   }
@@ -236,7 +237,7 @@ public class Lookup extends PageBean
     return mbEditMask;
   }
 
-  public void setMbEditMask(String mbEditMask)
+  public void setMbEditMask(final String mbEditMask)
   {
     this.mbEditMask = mbEditMask;
   }
@@ -246,7 +247,7 @@ public class Lookup extends PageBean
     return mbRefreshed;
   }
 
-  public void setMbRefreshed(String mbRefreshed)
+  public void setMbRefreshed(final String mbRefreshed)
   {
     this.mbRefreshed = mbRefreshed;
   }
@@ -256,7 +257,7 @@ public class Lookup extends PageBean
     return mbDeleteMask;
   }
 
-  public void setMbDeleteMask(String mbDeleteMask)
+  public void setMbDeleteMask(final String mbDeleteMask)
   {
     this.mbDeleteMask = mbDeleteMask;
   }
@@ -316,7 +317,7 @@ public class Lookup extends PageBean
     return translit;
   }
 
-  public void setTranslit(boolean translit)
+  public void setTranslit(final boolean translit)
   {
     this.translit = translit;
   }

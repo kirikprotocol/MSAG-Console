@@ -42,7 +42,7 @@ public class ProfilesEdit extends ProfilesBean
         codepage = p.getCodepage();
         ussd7bit = p.isUssd7bit();
         locale = p.getLocale();
-        aliasHide = p.isAliasHide();
+        aliasHide = p.getAliasHide();
         aliasModifiable = p.isAliasModifiable();
         divert = p.getDivert();
         divertActiveUnconditional = p.isDivertActiveUnconditional();

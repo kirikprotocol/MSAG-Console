@@ -47,7 +47,8 @@ public class ProfileAddCommand extends ProfileGenCommand
         throw new Exception("Locale '" + locale + "' is not registered");
 
       Profile profile = new Profile(profileMask, codepage, ussd7bit, report, locale,
-                                    aliasHide, aliasModifiable,
+                                    aliasHide ? Profile.ALIAS_HIDE_true : Profile.ALIAS_HIDE_false, //todo: reimplement
+                                    aliasModifiable,
                                     divert, divertActiveUnconditional, divertActiveAbsent,
                                     divertActiveBlocked, divertActiveBarred, divertActiveCapacity,
                                     divertModifiable, udhConcat, false); //todo: implement translit flag
