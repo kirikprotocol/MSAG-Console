@@ -47,11 +47,9 @@ Mixer::~Mixer()
 bool Mixer::Connect()
 {
   log_.info("Mixer::Connect: connecting...");
-  if ( left_state_ == SESSION_BROKEN ) {
+  if ( left_state_ == SESSION_BROKEN || right_state_ == SESSION_BROKEN ) {
     left_->close();
     left_state_ = SESSION_DISCONNECTED;
-  }
-  if ( right_state_ == SESSION_BROKEN ) {
     right_->close();
     right_state_ = SESSION_DISCONNECTED;
   }

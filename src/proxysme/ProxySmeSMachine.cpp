@@ -181,6 +181,7 @@ void SMachine::TranslateToDeliverRespAndSend(DIRECTION direct,SmppHeader* pdu)
 
 void SMachine::DumpCommand(DIRECTION direct,SmppHeader* pdu)
 {
+
 }
 
 SMSC_SMEPROXY_END
