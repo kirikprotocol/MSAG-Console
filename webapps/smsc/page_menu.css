@@ -9,24 +9,23 @@ div.page_menu
 table.page_menu
 {
 	height: 30px;
-	text-align:left;
-	/*border-bottom:solid 1px #888888;*/
 	white-space: nowrap;
 	z-index: 20;
+}
+table.page_menu td
+{
+	padding-left: 4px;
+	padding-right: 4px;
 }
 table.page_menu a,
 table.page_menu a:hover,
 table.page_menu a:visited
 {
 	border: 0px;
-	/*background-color: #DFD4AE;
-	*/
 	cursor: hand;
 	color: #161E49;
 	text-decoration : none;
 	behavior : url(click_submit.htc);
-	padding-left: 7px;
-	padding-right: 7px;
 	white-space : nowrap;
 }
 table.page_menu_background

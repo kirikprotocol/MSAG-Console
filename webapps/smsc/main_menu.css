@@ -26,6 +26,7 @@ table.main_menu a:hover
 {
 	text-decoration: none;
 	color: #F2E275;
+	cursor: hand;
 }
 
 table.main_menu table.submenu,

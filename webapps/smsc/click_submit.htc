@@ -2,11 +2,11 @@
 <SCRIPT LANGUAGE="JScript">
 function clickSubmit()
 {
-	if (this.onclick != null)
-	{
-		if (this.onclick() == false)
-			return false;
-	}
+	if (this.onclick != null && this.onclick() == false)
+		return false;
+	if (opForm.onsubmit() == false)
+		return false;
+		
 	opForm.jbutton.name = this.jbuttonName;
 	opForm.jbutton.value = this.jbuttonValue;
 	opForm.submit();
