@@ -66,7 +66,7 @@ class TestSme : public TestTask, SmppResponseSender
 {
 	int smeNum;
 	SmppFixture* fixture;
-	SmppSession session;
+	SmppSession* session; //удаляется в fixture
 	SmppBaseTestCases baseTc;
 	SmppTransmitterTestCases transmitterTc;
 	SmppReceiverTestCases receiverTc;
@@ -136,13 +136,14 @@ public:
 };
 
 //TestSme
-TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* fixture)
+TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* _fixture)
 	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
-	baseTc(config, fixture), receiverTc(fixture), transmitterTc(fixture),
-	session(config, &receiverTc), smscSmeTc(fixture), protocolTc(fixture),
-	profilerTc(fixture), boundOk(false), idx(0)
+	fixture(_fixture), baseTc(config, _fixture), receiverTc(_fixture),
+	transmitterTc(_fixture), smscSmeTc(_fixture), protocolTc(_fixture),
+	profilerTc(_fixture), boundOk(false), idx(0)
 {
-	fixture->session = &session;
+	session = new SmppSession(config, &receiverTc);
+	fixture->session = session;
 	fixture->respSender = this;
 }
 
