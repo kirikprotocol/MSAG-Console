@@ -59,16 +59,16 @@ TestSme::TestSme(const string& _smscHost, int _smscPort, const Address& _smeAddr
 
 int TestSme::Execute()
 {
-	try
+	SmeConfig conf;
+	conf.host = smscHost;
+	conf.port = smscPort;
+	conf.sid = smeInfo.systemId;
+	conf.timeOut = smeInfo.timeout;
+	conf.password = smeInfo.password;
+	SmppProtocolErrorTestCases tc(conf, smeAddr, chkList);
+	while (!isStopping)
 	{
-		SmeConfig conf;
-		conf.host = smscHost;
-		conf.port = smscPort;
-		conf.sid = smeInfo.systemId;
-		conf.timeOut = smeInfo.timeout;
-		conf.password = smeInfo.password;
-		SmppProtocolErrorTestCases tc(conf, smeAddr, chkList);
-		while (!isStopping)
+		try
 		{
 			switch (rand1(5))
 			{
@@ -98,13 +98,12 @@ int TestSme::Execute()
 				event.Wait();
 			}
 		}
-		return 0;
+		catch(...)
+		{
+			__warning2__("exception in sme = %p", this);
+		}
 	}
-	catch(...)
-	{
-		__warning2__("exception in sme = %p", this);
-		return -1;
-	}
+	return 0;
 }
 
 vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort,
