@@ -3,7 +3,7 @@
 <scenarios>
   <scenario id="0" active="1" sms="1" ussd="2" resources="resources.xml">
 
-    <page id="MAIN" question="0">
+    <page id="MAIN_PAGE" question="0">
       <segment>
         <data>
 Ваши настройки:
@@ -17,14 +17,14 @@
       <command name="2" target="divert_mgr"/>
       <command name="3" target="profile_info"/>
       <command name="4" target="profile_mgr"/>
-      <command name="(**)" target="MAIN"/>
+      <command name="(**)" target="MAIN_PAGE"/>
     </page>
 
     <page id="divert_info" question="0">
       <pageExecutor class="ru.sibinco.mci.profile.DivertViewExecutor">
         <bundle name="divert"/>
       </pageExecutor>
-      <command name="(**)" target="MAIN"/>
+      <command name="(**)" target="MAIN_PAGE"/>
     </page>
 
     <page id="divert_mgr" question="0">
@@ -41,7 +41,7 @@
       <command name="2" target="divert_prompt"/>
       <command name="3" target="divert_prompt"/>
       <command name="4" target="divert_prompt"/>
-      <command name="(**)" target="MAIN"/>
+      <command name="(**)" target="MAIN_PAGE"/>
     </page>
     <page id="divert_prompt" question="0" >
       <pagePreProcessor class="ru.sibinco.mci.profile.DivertPromptPreprocessor"/>
