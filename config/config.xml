@@ -113,9 +113,10 @@
 
   <section name="smpp">
     <param name="host" type="string">smsc</param>
-    <param name="inactivityTime" type="int">600</param>
     <param name="port" type="int">9009</param>
     <param name="readTimeout" type="int">60</param>
+    <param name="inactivityTime" type="int">600</param>
+    <param name="inactivityTimeOut" type="int">60</param>
   </section>
 
   <section name="sms">
