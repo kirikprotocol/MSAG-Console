@@ -34,6 +34,10 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     receiptWaitTime = parseTime(config->getString("receiptWaitTime"));
     if (receiptWaitTime <= 0) 
         throw ConfigException("Invalid value for 'receiptWaitTime' parameter.");
+    switchTimeout = config->getInt("tasksSwitchTimeout");
+    taskTablesPrefix = config->getString("tasksTablesPrefix");
+    if (switchTimeout <= 0) 
+        throw ConfigException("Task switch timeout should be positive");
     
     std::auto_ptr<ConfigView> tasksThreadPoolCfgGuard(config->getSubConfig("TasksThreadPool"));
     taskManager.init(tasksThreadPoolCfgGuard.get()); // loads up thread pool for tasks
@@ -56,11 +60,6 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     logger.info("Loading tasks ...");
     std::auto_ptr<ConfigView> tasksCfgGuard(config->getSubConfig("Tasks"));
     ConfigView* tasksCfg = tasksCfgGuard.get();
-    switchTimeout = tasksCfg->getInt("switchTimeout");
-    taskTablesPrefix = tasksCfg->getString("taskTablesPrefix");
-    if (switchTimeout <= 0) 
-        throw ConfigException("Task switch timeout should be positive");
-    
     std::auto_ptr< std::set<std::string> > setGuard(tasksCfg->getShortSectionNames());
     std::set<std::string>* set = setGuard.get();
     for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
