@@ -5,71 +5,105 @@
  */
 package ru.novosoft.smsc.admin.service;
 
-import org.apache.log4j.Category;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
+import java.util.*;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.protocol.Command;
-import ru.novosoft.smsc.admin.service.protocol.CommandWriter;
-import ru.novosoft.smsc.admin.service.protocol.Response;
-import ru.novosoft.smsc.admin.service.protocol.ResponseReader;
+import ru.novosoft.smsc.admin.protocol.*;
+import ru.novosoft.smsc.admin.utli.Proxy;
+import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.xml.Utils;
 
-public class Service
+public class Service extends Proxy
 {
-  public Service(String host, int port)
-  {
-    connect(host, port);
-  }
+  ServiceInfo info = null;
 
-  public void reconnect()
-  {
-    if (socket != null) {
-      try {
-        socket.close();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-    connect(host, port);
-  }
-
-  public Response runCommand(Command command)
+  public Service(ServiceInfo info)
           throws AdminException
   {
-    try {
-      writer.write(command);
-      return reader.read();
-    } catch (IOException e) {
-
-      throw new AdminException(e.getMessage());
-    }
+    super(info.getHost(), info.getPort());
+    this.info = info;
   }
 
-  private void connect(String host, int port)
+  public ServiceInfo getInfo()
   {
-    this.host = host;
-    this.port = port;
-    try {
-      socket = new Socket(host, port);
-      out = socket.getOutputStream();
-      in = socket.getInputStream();
-      writer = new CommandWriter(out);
-      reader = new ResponseReader(in);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    return info;
   }
 
-  private Socket socket = null;
-  private OutputStream out;
-  private InputStream in;
-  private CommandWriter writer;
-  private ResponseReader reader;
-  private String host = "localhost";
-  private int port = 1024;
-  private Category logger = Category.getInstance(this.getClass().getName());
+  public Config getConfig()
+          throws AdminException
+  {
+    if (info.getPid() == 0)
+      throw new AdminException("Service \"" + info.getName() + "\"not started");
+
+    Response response = runCommand(new CommandGetServiceConfig());
+    if (response.getStatus() != Response.StatusOk)
+      throw new AdminException("Couldn't get config, nested:" + response.getDataAsString());
+    return new Config(response.getData());
+  }
+
+  public String getLogs(long startpos, long length)
+          throws AdminException
+  {
+    if (info.getPid() == 0)
+      throw new AdminException("Service \"" + info.getName() + "\"not started");
+
+    Response response = runCommand(new CommandGetServiceLogs(startpos, length));
+    if (response.getStatus() != Response.StatusOk)
+      throw new AdminException("Couldn't get logs, nested:" + response.getDataAsString());
+    return Utils.getNodeText(response.getData().getDocumentElement());
+  }
+
+  public Map getMonitoringData()
+          throws AdminException
+  {
+    if (info.getPid() == 0)
+      throw new AdminException("Service \"" + info.getName() + "\"not started");
+
+    Response response = runCommand(new CommandGetServiceMonitoringData());
+    if (response.getStatus() != Response.StatusOk)
+      throw new AdminException("Couldn't get monitoring data, nested:" + response.getDataAsString());
+
+    Map result = new HashMap();
+    NodeList list = response.getData().getDocumentElement().getChildNodes();
+    for (int i = 0; i < list.getLength(); i++) {
+      if (list.item(i).getNodeType() == Node.ELEMENT_NODE) {
+        Element e = (Element) list.item(i);
+        NamedNodeMap attrs = e.getAttributes();
+        for (int j = 0; j < attrs.getLength(); j++) {
+          Node a = attrs.item(j);
+          result.put(a.getNodeName(), Integer.decode(a.getNodeValue()));
+        }
+      }
+    }
+    return result;
+  }
+
+  public void setConfig(Config config)
+          throws AdminException
+  {
+    if (info.getPid() == 0)
+      throw new AdminException("Service \"" + info.getName() + "\"not started");
+
+    Response response = runCommand(new CommandSetServiceConfig(config));
+    if (response.getStatus() != Response.StatusOk)
+      throw new AdminException("Couldn't set config, nested:" + response.getDataAsString());
+  }
+
+  public void shutdown()
+          throws AdminException
+  {
+    if (info.getPid() == 0)
+      throw new AdminException("Service \"" + info.getName() + "\"not started");
+
+    Response response = runCommand(new CommandShutdownService());
+    if (response.getStatus() != Response.StatusOk)
+      throw new AdminException("Couldn't shutdown service, nested:" + response.getDataAsString());
+
+    info.setPid(0);
+  }
 }

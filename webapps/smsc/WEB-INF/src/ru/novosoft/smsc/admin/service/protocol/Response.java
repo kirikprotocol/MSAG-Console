@@ -3,7 +3,7 @@
  * Date: Feb 28, 2002
  * Time: 12:49:06 PM
  */
-package ru.novosoft.smsc.admin.service.protocol;
+package ru.novosoft.smsc.admin.protocol;
 
 import org.apache.log4j.Category;
 import org.w3c.dom.Document;
@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.util.xml.Utils;
 
 class Status
 {
@@ -94,6 +95,11 @@ public class Response
   public Document getData()
   {
     return doc;
+  }
+
+  public String getDataAsString()
+  {
+    return Utils.getNodeText(doc.getDocumentElement());
   }
 
   public byte getStatus()

@@ -12,6 +12,8 @@ import org.w3c.dom.NodeList;
 
 import java.util.*;
 
+import ru.novosoft.smsc.util.xml.Utils;
+
 public class Config
 {
   protected Map params = new HashMap();
@@ -60,7 +62,7 @@ public class Config
             ? elem.getAttribute("name")
             : prefix + "." + elem.getAttribute("name");
     String type = elem.getAttribute("type");
-    String value = getNodeText(elem);
+    String value = Utils.getNodeText(elem);
     if (type.equalsIgnoreCase("int")) {
       params.put(fullName, new Integer(value));
     } else if (type.equalsIgnoreCase("boolean")) {
@@ -68,17 +70,6 @@ public class Config
     } else {
       params.put(fullName, value);
     }
-  }
-
-  protected String getNodeText(final Node node)
-  {
-    String result = "";
-    NodeList list = node.getChildNodes();
-    for (int i = 0; i < list.getLength(); i++) {
-      if (list.item(i).getNodeType() == Node.TEXT_NODE)
-        result += list.item(i).getNodeValue();
-    }
-    return result;
   }
 
   public int getInt(String paramName)

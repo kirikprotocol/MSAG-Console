@@ -10,15 +10,11 @@ namespace protocol {
 class CommandShutdown : public Command
 {
 public:
-	CommandShutdown()
+	CommandShutdown(DOM_Document doc)
 	{
-		setId(shutdown);
-		data = 0;
+		setId(shutdown_service);
+		setData(doc);
 	}
-
-protected:
-
-private:
 };
 
 }

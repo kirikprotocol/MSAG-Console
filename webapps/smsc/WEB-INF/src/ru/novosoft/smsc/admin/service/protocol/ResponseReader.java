@@ -3,7 +3,7 @@
  * Date: Feb 28, 2002
  * Time: 12:47:28 PM
  */
-package ru.novosoft.smsc.admin.service.protocol;
+package ru.novosoft.smsc.admin.protocol;
 
 import org.apache.log4j.Category;
 
@@ -23,7 +23,7 @@ public class ResponseReader
   }
 
   public Response read()
-          throws AdminException
+          throws IOException, AdminException
   {
     int length = readLength();
     byte buffer[] = new byte[length];
@@ -33,7 +33,7 @@ public class ResponseReader
         readedNow = in.read(buffer, readed, length - readed);
       } catch (IOException e) {
         logger.info("Couldn't read response", e);
-        throw new AdminException("Couldn't read response: "+e.getMessage());
+        throw e;
       }
       if (readedNow == -1)
         return null;
@@ -44,7 +44,7 @@ public class ResponseReader
   }
 
   protected int readLength()
-          throws AdminException
+          throws IOException
   {
     int length = 0;
     for (int i = 0; i < 4; i++) {
@@ -53,10 +53,10 @@ public class ResponseReader
         c = in.read();
       } catch (IOException e) {
         logger.info("Couldn't read response length", e);
-        throw new AdminException("Couldn't read response length: "+e.getMessage());
+        throw e;
       }
       if (c == -1)
-        throw new AdminException("Couldn't read response length");
+        throw new IOException("Couldn't read response length");
       length = (length << 8) + c;
     }
     return length;

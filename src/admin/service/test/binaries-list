@@ -1,0 +1,5 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name			source name			libraries																		description
+admin/service/smsc_dumb_service	ServiceSocketListenerTest 	-ladmin-util -ladmin-service -ladmin-protocol -ladmin -lutil-config -lutil-xml -lutil -lcore-threads -lcore-buffers -lcore -llog4cpp -lxerces-c1_5_2 -lsocket

@@ -13,10 +13,15 @@
 #include <xercesc/dom/DOM_Node.hpp>
 
 #include <admin/protocol/CommandGetConfig.h>
+#include <admin/protocol/CommandSetConfig.h>
 #include <admin/protocol/CommandGetLogs.h>
 #include <admin/protocol/CommandGetMonitoringData.h>
-#include <admin/protocol/CommandSetConfig.h>
+#include <admin/protocol/CommandStartService.h>
 #include <admin/protocol/CommandShutdown.h>
+#include <admin/protocol/CommandKillService.h>
+#include <admin/protocol/CommandAddService.h>
+#include <admin/protocol/CommandRemoveService.h>
+#include <admin/protocol/CommandListServices.h>
 #include <util/Logger.h>
 #include <util/xml/DOMErrorLogger.h>
 
@@ -153,18 +158,24 @@ Command * CommandReader::createCommand(Command::Id id, DOM_Document data) {
 	{
 	case Command::get_config:
 		return new CommandGetConfig(data);
-		break;
-	case Command::get_logs:
-		return new CommandGetLogs(data);
-		break;
-	case Command::get_monitoring:
-		return new CommandGetMonitoringData(data);
-		break;
 	case Command::set_config:
 		return new CommandSetConfig(data);
-		break;
-	case Command::shutdown:
-		return new CommandShutdown();
+	case Command::get_logs:
+		return new CommandGetLogs(data);
+	case Command::get_monitoring:
+		return new CommandGetMonitoringData(data);
+	case Command::start_service:
+		return new CommandStartService(data);
+	case Command::shutdown_service:
+		return new CommandShutdown(data);
+	case Command::kill_service:
+		return new CommandKillService(data);
+	case Command::add_service:
+		return new CommandAddService(data);
+	case Command::remove_service:
+		return new CommandRemoveService(data);
+	case Command::list_services:
+		return new CommandListServices(data);
 	default:
 		logger.warn("Unknown command id \"%i\"", id);
 		throw AdminException("Unknown command");

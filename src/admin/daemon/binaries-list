@@ -1,0 +1,9 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name			source name			libraries																		description
+#igork_tests/config_test	ConfigTest			-lutil-config -lutil-xml -lutil -llog4cpp -lxerces-c1_5_2
+#igork_tests/service_listener	ServiceSocketListenerTest 	-ladmin-service -ladmin-protocol -ladmin -lutil-config -lutil-xml -lutil -lcore-threads -lcore-buffers -lcore -llog4cpp -lxerces-c1_5_2 -lsocket
+#igork_tests/SmeManConfigTest	SmeManConfigTest		-lutil-config-smeman -lutil-config -lutil-xml -lutil -lxerces-c1_5_2 -llog4cpp
+
+admin/daemon/smsc_ssdaemon	main				-ladmin-service -ladmin-util -ladmin-protocol -ladmin-daemon -ladmin 	-lutil-config -lutil-xml -lutil 	-lcore-threads -lcore-buffers -lcore 	-llog4cpp -lxerces-c1_5_2 -lsocket

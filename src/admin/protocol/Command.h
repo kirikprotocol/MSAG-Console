@@ -26,14 +26,19 @@ public:
 		set_config,
 		get_logs,
 		get_monitoring,
-		shutdown
+		start_service,
+		shutdown_service,
+		kill_service,
+		add_service,
+		remove_service,
+		list_services
 	};
 	
 	virtual ~Command();
 	
-	const Id getId()      {return id;}
-	const char * const getName() {return names[id].name;}
-	DOM_Document getData()       {return data;}
+	const Id getId() const             {return id;}
+	const char * const getName() const {return names[id].name;}
+	const DOM_Document getData() const {return data;}
 	
 protected:
 	struct _Command {
@@ -45,7 +50,7 @@ protected:
 	Id id;
 	DOM_Document data;
 	log4cpp::Category &logger;
-	static const uint8_t commands_quantity = 6;
+	static const uint8_t commands_quantity = 11;
 	static const _Command names[commands_quantity];
 	
 	void setId(Id newId)  {id = newId;}

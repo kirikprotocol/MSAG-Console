@@ -1,8 +1,7 @@
-smpp	"SMPP protocol implementation"
-#core 	"SMSC core implementation"
+#smpp	"SMPP protocol implementation"
+core 	"SMSC core implementation"
 util	"Utility classes"
-core
-sms		"SMS declaration"
-store		"Store implementation"
-storetest	"Service program to test store module"
+#sms		"SMS declaration"
+#store		"Store implementation"
+#storetest	"Service program to test store module"
 admin		"Administration subsystem"

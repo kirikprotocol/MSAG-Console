@@ -1,0 +1,5 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name					source name			libraries																		description
+util/config/smeman/smsc_smeman_config_test	SmeManConfigTest		-lutil-config-smeman -lutil-config -lutil-xml -lutil -lxerces-c1_5_2 -llog4cpp

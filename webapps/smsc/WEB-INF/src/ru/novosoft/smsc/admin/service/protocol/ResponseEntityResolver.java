@@ -3,7 +3,7 @@
  * Date: Mar 12, 2002
  * Time: 11:05:23 PM
  */
-package ru.novosoft.smsc.admin.service.protocol;
+package ru.novosoft.smsc.admin.protocol;
 
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;

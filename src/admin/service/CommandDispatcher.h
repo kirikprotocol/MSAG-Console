@@ -4,22 +4,50 @@
 #include <iostream>
 #include <log4cpp/Category.hh>
 
-#include <admin/protocol/CommandReader.h>
-#include <admin/protocol/ResponseWriter.h>
+#include <admin/protocol/Command.h>
+//#include <admin/protocol/CommandReader.h>
+#include <admin/protocol/Response.h>
+//#include <admin/protocol/ResponseWriter.h>
 #include <admin/service/ServiceCommandHandler.h>
-#include <admin/service/ServiceSocketListener.h>
-#include <core/threads/ThreadedTask.hpp>
+#include <admin/util/CommandDispatcher.h>
+#include <admin/util/Shutdownable.h>
+#include <admin/AdminException.h>
+//#include <core/threads/ThreadedTask.hpp>
 
 namespace smsc {
 namespace admin {
 namespace service {
 
+using smsc::admin::AdminException;
 using smsc::admin::service::ServiceCommandHandler;
-using smsc::admin::service::ServiceSocketListener;
-using smsc::admin::protocol::CommandReader;
-using smsc::admin::protocol::ResponseWriter;
+using smsc::admin::protocol::Command;
+//using smsc::admin::protocol::CommandReader;
+using smsc::admin::protocol::Response;
+//using smsc::admin::protocol::ResponseWriter;
+using smsc::admin::util::Shutdownable;
 
-class CommandDispatcher : public smsc::core::threads::ThreadedTask
+class CommandDispatcher : public smsc::admin::util::CommandDispatcher
+{
+public:
+	CommandDispatcher(Shutdownable * parentListener,
+										int admSocket,
+										const char * const client_addr,
+										ServiceCommandHandler * commandHandler)
+		: smsc::admin::util::CommandDispatcher(parentListener,
+																					 admSocket,
+																					 client_addr,
+																					 "smsc.admin.service.CommandDispatcher")
+	{
+		handler = commandHandler;
+	}
+
+	Response * handle(const Command * const command) throw (AdminException &);
+
+protected:
+	ServiceCommandHandler * handler;
+};
+
+/*class CommandDispatcher : public smsc::core::threads::ThreadedTask
 {
 public:
 	CommandDispatcher(ServiceSocketListener * parentListener,
@@ -42,7 +70,7 @@ private:
 	ResponseWriter writer;
 	ServiceCommandHandler *handler;
 	ServiceSocketListener * parent;
-};
+};*/
 
 }
 }

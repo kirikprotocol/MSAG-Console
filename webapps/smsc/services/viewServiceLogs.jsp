@@ -1,11 +1,11 @@
-<%@ page errorPage="error.jsp" %>
 <%@ page import = "ru.novosoft.smsc.admin.*"%>
 <%@ page import = "ru.novosoft.smsc.admin.service.*"%>
-<%@include file="../header.jsp"%>
+<%@include file="header.jsp"%>
 <% 
-	ServiceManager manager = ctx.getServiceManager();
-	String logs = manager.getServiceLogs(request.getParameter("service"), 0, 100);
+	String name = request.getParameter("service");
+	String host = request.getParameter("host");
+	String logs = serviceManager.getServiceLogs(name, 0, 100);
 %>
 <pre><%=logs%></pre>
-<a href="index.jsp">Services</a>
-<%@include file="../footer.jsp"%>
+<%=action("Host \""+host+'"', "viewHost.jsp", "host", host)%>
+<%@include file="footer.jsp"%>

@@ -1,20 +1,22 @@
-<%@ page errorPage="error.jsp" %>
 <%@ page import = "ru.novosoft.smsc.admin.*"%>
 <%@ page import = "ru.novosoft.smsc.admin.service.*"%>
-<%@include file="../header.jsp"%>
+<%@include file="header.jsp"%>
 <% 
-	ServiceManager manager = ctx.getServiceManager();
-	Config conf = manager.getServiceConfig(request.getParameter("service"));
+	String name = request.getParameter("service");
+	String host = request.getParameter("host");
+	Config conf = serviceManager.getServiceConfig(name);
 %>
 <form method="post" action="setServiceConfig.jsp">
+	<input type="Hidden" name="service" value="<%=URLEncoder.encode(name)%>">
+	<input type="Hidden" name="host"    value="<%=URLEncoder.encode(host)%>">
 	<table>
 		<% for (Iterator i=conf.getParameterNames().iterator(); i.hasNext(); )
 		{
-			String name = (String)i.next();
+			String paramName = (String)i.next();
 			%>
 			<tr>
-				<td><%=name%></td>
-				<td><input type="Text" name="<%=name%>" value="<%=conf.getParameter(name)%>"></td>
+				<td><%=paramName%></td>
+				<td><input type="Text" name="<%=paramName%>" value="<%=conf.getParameter(paramName)%>"></td>
 			</tr>
 			<%
 		}
@@ -25,5 +27,5 @@
 		</tr>
 	</table>
 </form>
-<a href="index.jsp">Services</a>
-<%@include file="../footer.jsp"%>
+<%=action("Host \""+host+'"', "viewHost.jsp", "host", host)%>
+<%@include file="footer.jsp"%>

@@ -5,13 +5,13 @@
  */
 package ru.novosoft.smsc.admin.service;
 
-import org.w3c.dom.*;
+import org.apache.log4j.Category;
 
 import java.util.*;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.protocol.Command;
-import ru.novosoft.smsc.admin.service.protocol.Response;
+import ru.novosoft.smsc.admin.daemon.Daemon;
+import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.util.config.Config;
 
 public class ServiceManager
@@ -27,88 +27,178 @@ public class ServiceManager
 
 
   private Map services = new HashMap();
+  private DaemonManager daemonManager = new DaemonManager();
+  protected Category logger = Category.getInstance(this.getClass().getName());
 
   protected ServiceManager()
   {
+    logger.debug("creating ServiceManager");
   }
 
-  public synchronized void addService(String serviceName, String host, int port)
+  public synchronized void addDaemon(String host, int port)
+          throws AdminException
   {
-    Service s = new Service(host, port);
-    services.put(serviceName, s);
+    Daemon d = daemonManager.addDaemon(host, port);
+    Map newServices = d.listServices();
+    for (Iterator i = newServices.keySet().iterator(); i.hasNext();) {
+      putService(new Service((ServiceInfo) newServices.get((String) i.next())));
+    }
+  }
+
+  public synchronized Set getHosts()
+  {
+    return daemonManager.getHosts();
+  }
+
+  public synchronized void addService(ServiceInfo serviceInfo)
+          throws AdminException
+  {
+    logger.debug("Add service \"" + serviceInfo.getName() + "\" (" + serviceInfo.getHost() + ':'
+                 + serviceInfo.getPort() + ")");
+    Daemon d = getDaemon(serviceInfo.getHost());
+    if (services.containsKey(serviceInfo.getName()))
+      throw new AdminException("Service \"" + serviceInfo.getName() + "\" already present");
+
+    //logger.debug("checkpoint 1");
+    d.addService(serviceInfo);
+    //logger.debug("checkpoint 2");
+    putService(new Service(serviceInfo));
+    logger.debug("service added");
+  }
+
+  public synchronized void removeService(String serviceName)
+          throws AdminException
+  {
+    Service s = getService(serviceName);
+    Daemon d = getDaemon(s.getInfo().getHost());
+    if (s.getInfo().getPid() != 0) {
+      s.shutdown();
+    }
+    d.removeService(serviceName);
+    services.remove(serviceName);
+  }
+
+  public synchronized void startService(String serviceName)
+          throws AdminException
+  {
+    Service s = getService(serviceName);
+    Daemon d = getDaemon(s.getInfo().getHost());
+    s.getInfo().setPid(d.startService(serviceName));
+  }
+
+  public synchronized void killService(String serviceName)
+          throws AdminException
+  {
+    Service s = getService(serviceName);
+    Daemon d = getDaemon(s.getInfo().getHost());
+
+    try {
+      s.shutdown();
+    } catch (AdminException e) {
+      d.killService(serviceName);
+    }
+    s.getInfo().setPid(0);
+  }
+
+  public synchronized void shutdownService(String name)
+          throws AdminException
+  {
+    Service s = getService(name);
+    s.shutdown();
   }
 
   public synchronized Config getServiceConfig(String name)
           throws AdminException
   {
-    Service s = (Service) services.get(name);
-    if (s != null) {
-      Response response = s.runCommand(new Command("get_config"));
-      if (response.getStatus() == Response.StatusOk)
-        return new Config(response.getData());
-    }
-
-    return null;
+    Service s = getService(name);
+    return s.getConfig();
   }
 
   public synchronized String getServiceLogs(String name, int startPos, int length)
           throws AdminException
   {
-    Service s = (Service) services.get(name);
-    if (s != null) {
-      Response response = s.runCommand(new Command("get_logs"));
-      if (response.getStatus() == Response.StatusOk) {
-        NodeList list = response.getData().getDocumentElement().getChildNodes();
-        for (int i = 0; i < list.getLength(); i++) {
-          if (list.item(i).getNodeType() == Node.TEXT_NODE) {
-            return list.item(i).getNodeValue();
-          }
-        }
-      }
-    }
-
-    return null;
+    Service s = getService(name);
+    return s.getLogs(startPos, length);
   }
 
   public synchronized Map getServiceMonitoringData(String name)
           throws AdminException
   {
-    Map result = null;
-    Service s = (Service) services.get(name);
-    if (s != null) {
-      Response response = s.runCommand(new Command("get_monitoring"));
-      if (response.getStatus() == Response.StatusOk) {
-        result = new HashMap();
-        NodeList list = response.getData().getDocumentElement().getChildNodes();
-        for (int i = 0; i < list.getLength(); i++) {
-          if (list.item(i).getNodeType() == Node.ELEMENT_NODE) {
-            Element e = (Element) list.item(i);
-            NamedNodeMap attrs = e.getAttributes();
-            for (int j = 0; j < attrs.getLength(); j++) {
-              Node a = attrs.item(j);
-              result.put(a.getNodeName(), Integer.decode(a.getNodeValue()));
-            }
-          }
-        }
-      }
-    }
-
-    return result;
-  }
-
-  public synchronized boolean shutdownService(String name)
-          throws AdminException
-  {
-    Service s = (Service) services.get(name);
-    if (s != null) {
-      Response response = s.runCommand(new Command("shutdown"));
-      return response.getStatus() == Response.StatusOk;
-    }
-    throw new AdminException("Unknown service \"" + name + '"');
+    Service s = getService(name);
+    return s.getMonitoringData();
   }
 
   public synchronized Set getServiceNames()
   {
     return services.keySet();
+  }
+
+  public synchronized Set getServiceNames(String host)
+          throws AdminException
+  {
+    Set result = new HashSet();
+    for (Iterator i = services.keySet().iterator(); i.hasNext();) {
+      Service s = getService((String) i.next());
+      if (s.getInfo().getHost().equals(host))
+        result.add(s.getInfo().getName());
+    }
+    return result;
+  }
+
+  public synchronized ServiceInfo getServiceInfo(String servoceName)
+          throws AdminException
+  {
+    Service s = getService(servoceName);
+    return s.getInfo();
+  }
+
+  /************************************ helpers ******************************/
+  public synchronized void refreshServices()
+          throws AdminException
+  {
+    services.clear();
+    for (Iterator i = daemonManager.getHosts().iterator(); i.hasNext(); )
+    {
+      Daemon d = daemonManager.getDaemon((String) i.next());
+      Map infos = d.listServices();
+      for (Iterator j = infos.values().iterator(); j.hasNext(); ) {
+        ServiceInfo info = (ServiceInfo) j.next();
+        services.put(info.getName(), new Service(info));
+      }
+    }
+  }
+
+  protected Service getService(String serviceName)
+          throws AdminException
+  {
+    Service s = (Service) services.get(serviceName);
+    if (s == null)
+      throw new AdminException("Unknown service \"" + serviceName + '"');
+    return s;
+  }
+
+  protected void putService(Service s)
+          throws AdminException
+  {
+    if (services.containsKey(s.getInfo().getName()))
+      throw new AdminException("Service \"" + s.getInfo().getName() + "\" already present");
+    services.put(s.getInfo().getName(), s);
+  }
+
+  protected Daemon getDaemon(String hostName)
+          throws AdminException
+  {
+    Daemon d = daemonManager.getDaemon(hostName);
+    if (d == null)
+      throw new AdminException("Host \"" + hostName + "\" not connected");
+    return d;
+  }
+
+  protected void putDaemon(Daemon d)
+          throws AdminException
+  {
+    if (services.containsKey(d.getHost()))
+      throw new AdminException("Host \"" + d.getHost() + "\" already connected");
+    services.put(d.getHost(), d);
   }
 }

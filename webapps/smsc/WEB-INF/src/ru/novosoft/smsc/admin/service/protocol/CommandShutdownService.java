@@ -1,0 +1,14 @@
+/*
+ * Created by igork
+ * Date: Mar 19, 2002
+ * Time: 11:08:45 PM
+ */
+package ru.novosoft.smsc.admin.protocol;
+
+public class CommandShutdownService extends Command
+{
+  public CommandShutdownService()
+  {
+    super("shutdown_service");
+  }
+}
