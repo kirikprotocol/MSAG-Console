@@ -105,8 +105,6 @@ const uint64_t OPT_USSD_SERVICE_OP = ((uint64_t) 0x1) << 43;
 
 class SmppUtil
 {
-	static time_t string2time(const char* str, time_t base, bool check = true);
-
 public:
 	/*
 	virtual SmppHeader* sendPdu(SmppHeader& pdu)=0;
@@ -127,6 +125,7 @@ public:
 	static SMSId convert(const char* id);
 	static MessageId& convert(const SMSId& smsId, MessageId& smppId);
 	*/
+	static time_t string2time(const char* str, time_t base, bool check = true);
 	static const char* time2string(time_t t, char* str, time_t base, int num, bool check = true);
 	static time_t getWaitTime(const char* str, time_t submitTime);
 	static time_t getValidTime(const char* str, time_t submitTime);

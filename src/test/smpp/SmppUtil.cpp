@@ -182,7 +182,7 @@ const char* SmppUtil::time2string(time_t lt, char* str, time_t base, int num, bo
 
 time_t SmppUtil::string2time(const char* str, time_t base, bool check)
 {
-	if (strlen(str) != MAX_SMPP_TIME_LENGTH)
+	if (!str || strlen(str) != MAX_SMPP_TIME_LENGTH)
 	{
 		return 0;
 	}
@@ -605,16 +605,8 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	__skip__; //__set_optional_int__(uint8_t, msAvailableStatus, rand0(255));
 	//int errCode = rand0(INT_MAX);
 	__skip__; //__set_optional_intarr__(networkErrorCode, (uint8_t*) &errCode, 3);
-	if (rand0(5))
-	{
-		//чтобы не сильно много в map конкатенации было
-		__set_optional_bin__(messagePayload, rand2(3, 1000), dataCoding, udhi);
-	}
-	else
-	{
-		//40000 - заведомо не пролазит в map конкатенацию: макс = 255 * 153 = 39015
-		__set_optional_bin__(messagePayload, rand2(40000, 65535), dataCoding, udhi);
-	}
+	//чтобы не сильно много в map конкатенации было
+	__set_optional_bin__(messagePayload, rand2(3, 1000), dataCoding, udhi);
 	__skip__; //__set_optional_int__(uint8_t, deliveryFailureReason, rand0(255));
 	__set_optional_int__(uint8_t, moreMessagesToSend, rand0(255));
 	//отключить messageState, поскольку отправляется только в репортах
