@@ -494,7 +494,7 @@ public class SmsView
   private void parseBody(InputStream is, SmsDetailedRow row)
   {
     int     textEncoding = DATA_CODING_DEFAULT;
-    byte    esmClass = 0;
+    int     esmClass = 0;
     int     textLen = 0;
     byte    text[] = null;
 
@@ -520,7 +520,7 @@ public class SmsView
           textEncoding = stream.readInt();
           row.addBodyParameter(tag, new Integer(textEncoding));
         } else if (tag == SMPP_ESM_CLASS_TAG) {
-          esmClass = (byte)stream.readInt();
+          esmClass = stream.readInt();
           row.addBodyParameter(tag, new Integer(esmClass));
         } else {
           if( type == INT_TAG_TYPE ) {
