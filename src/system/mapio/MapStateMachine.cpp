@@ -2283,8 +2283,6 @@ static void PauseOnImsiReq(MapDialog* map)
         }
         __map_trace2__("%s ARRDDRESS: %s",__FUNCTION__,b.get());
       }
-#endif
-*/
       dialog->m_msAddr = map->m_msAddr;
     }
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
