@@ -19,6 +19,7 @@ ServletPath:<%=request.getServletPath()%>  --%>
 <link rel="STYLESHEET" type="text/css" href="properties_list.css">
 <link rel="STYLESHEET" type="text/css" href="main_menu.css">
 <link rel="STYLESHEET" type="text/css" href="collapsing_tree.css">
+<link rel="STYLESHEET" type="text/css" href="collapsing_list.css">
 <link rel="STYLESHEET" type="text/css" href="navbar.css">
 <link rel="STYLESHEET" type="text/css" href="messages.css">
 <link rel="STYLESHEET" type="text/css" href="page_menu.css">

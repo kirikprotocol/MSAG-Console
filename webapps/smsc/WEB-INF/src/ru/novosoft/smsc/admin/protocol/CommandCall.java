@@ -8,6 +8,7 @@ package ru.novosoft.smsc.admin.protocol;
 import org.w3c.dom.Element;
 import ru.novosoft.smsc.admin.service.Type;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.SortedList;
 
 import java.util.*;
 
@@ -54,6 +55,11 @@ public class CommandCall extends ServiceCommand
 				paramElem.setAttribute("type", Type.Types[Type.StringListType].getName());
 				paramElem.appendChild(document.createTextNode(StringEncoderDecoder.encode(encodeStringList((List) param))));
 			}
+      else if (param instanceof Collection)
+      {
+        paramElem.setAttribute("type", Type.Types[Type.StringListType].getName());
+        paramElem.appendChild(document.createTextNode(StringEncoderDecoder.encode(encodeStringList(new SortedList((Collection) param)))));
+      }
 		}
 	}
 

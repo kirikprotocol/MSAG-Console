@@ -127,7 +127,7 @@ public class Config
     Set result = new HashSet();
     for (Iterator i = params.keySet().iterator(); i.hasNext();) {
       String name = (String) i.next();
-      if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.lastIndexOf('.') > dotpos) {
+      if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.charAt(dotpos) == '.' && name.lastIndexOf('.') > dotpos) {
         result.add(name.substring(0, name.indexOf('.', dotpos + 1)));
       }
     }
@@ -144,7 +144,7 @@ public class Config
     Set result = new HashSet();
     for (Iterator i = params.keySet().iterator(); i.hasNext();) {
       String name = (String) i.next();
-      if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.lastIndexOf('.') > dotpos) {
+      if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.charAt(dotpos) == '.' && name.lastIndexOf('.') > dotpos) {
         result.add(name.substring(dotpos + 1, name.indexOf('.', dotpos + 1)));
       }
     }

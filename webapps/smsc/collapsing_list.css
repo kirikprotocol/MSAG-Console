@@ -1,0 +1,15 @@
+div.collapsing_list_opened,
+div.collapsing_list_closed
+{
+	background-repeat: no-repeat;
+	padding-left: 18px;
+	cursor: hand;
+}
+div.collapsing_list_opened
+{
+	background-image: url(img/list_opened.gif);
+}
+div.collapsing_list_closed
+{
+	background-image: url(img/list_closed.gif);
+}

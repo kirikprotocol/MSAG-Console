@@ -133,6 +133,17 @@ function validateField_positive(elem)
 		: true;
 }
 
+function validateField_int_range(elem)
+{
+	var intValue = elem.value/1;
+	var intMin = elem.range_min == null ? (1/0) : (elem.range_min/1);
+	var intMax = elem.range_max == null ? (1/0) : (elem.range_max/1);
+	return isNaN(intValue) || ((!isNaN(intMin)) && intValue < intMin) || ((!isNaN(intMax)) && intValue > intMax)
+		? validationError(elem, "value must be an integer and positive")
+		: true;
+}
+
+
 function validateField_unsigned(elem)
 {
 	//var r = RegExp("^(\\s*)(\\d+)(\\s*)$");
@@ -187,6 +198,7 @@ function validateField(elem)
 		case "nonEmpty": return validateField_nonEmpty(elem);
 		case "email": return validateField_email(elem);
 		case "positive": return validateField_positive(elem);
+		case "int_range": return validateField_int_range(elem);
 		case "address": return validateField_address(elem);
 		case "address_prefix": return validateField_address_prefix(elem);
 		case "unsigned": return validateField_unsigned(elem);
@@ -349,15 +361,21 @@ function navigate(direction)
 }
 
 /** disable Delete button, if none of checkboxes checked **/
-function checkCheckboxesForMbDeleteButton()
+function checkCheckboxes(elem)
 {
   var inputs = opForm.getElementsByTagName("input");
-  var disabledDelete = true;
+  var disabledElem = true;
   for (i = 0; i < inputs.length; i++)
   {
     var inp = inputs[i];
     if (inp.type == "checkbox")
-      disabledDelete &= !inp.checked;
+      disabledElem &= !inp.checked;
   }
-  opForm.all.mbDelete.disabled = disabledDelete;
+  elem.disabled = disabledElem;
+  return true;
+}
+
+function checkCheckboxesForMbDeleteButton()
+{
+  return checkCheckboxes(opForm.all.mbDelete);
 }

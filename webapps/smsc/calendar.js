@@ -191,7 +191,14 @@ function showCalendar(calendarInputText, us, showTime){
 		calendarCurPM = PM;
 	}
 //-------------------------------------------------
-	var PageX=0;var PageY=0;var E=calendarInputText;while(E!=null){PageX+=E.offsetLeft;PageY+=E.offsetTop;E=E.offsetParent;}
+	var PageX=0;var PageY=0;var E=calendarInputText;
+	while(E!=null){
+	  if (E.offsetParent != null && E.offsetParent.offsetParent != null) //hack for current design
+	    PageX+=E.offsetLeft;
+
+	  PageY+=E.offsetTop;
+	  E=E.offsetParent;
+	}
 	var row=calendarWeekDays;
 	if (row.cells(0)==null)
 	for (i=0;i<7;i++) {
