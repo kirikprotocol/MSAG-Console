@@ -70,6 +70,8 @@ refreshStartStopButtonsStatus();
       param(out, "event queue limit",      "core.eventQueueLimit",        bean.getIntParam("core.eventQueueLimit"));
       param(out, "reschedule table",       "core.reschedule_table",       bean.getStringParam("core.reschedule_table"));
       param(out, "service center address", "core.service_center_address", bean.getStringParam("core.service_center_address"));
+      param(out, "USSD center address",    "core.ussd_center_address",    bean.getStringParam("core.ussd_center_address"));
+      param(out, "USSD SSN",               "core.ussd_ssn",               bean.getIntParam(   "core.ussd_ssn"));
       param(out, "system ID",              "core.systemId",               bean.getStringParam("core.systemId"));
       param(out, "service type",           "core.service_type",           bean.getStringParam("core.service_type"));
       param(out, "protocol ID",            "core.protocol_id",            bean.getIntParam(   "core.protocol_id"));
