@@ -36,7 +36,7 @@ using std::runtime_error;
 #define __trace2_if_fail__
 
 #else
- 
+
 #if !defined ( __Cpp_Header__smsc_util_debug_h__ )
 #define __Cpp_Header__smsc_util_debug_h__
 
@@ -86,7 +86,7 @@ using std::runtime_error;
   #define __watchdog__(expr) (expr)
   #define __watchdog2__(expr,info) (expr)
 #endif
-  
+
 #define throw_if_fail(expr) \
     if ( !__watchdog2__(expr,"failed: "#expr"\n\tthrow runtime_error") ) throw runtime_error("failed: "#expr); else;
 #define throw_if(expr) throw_if_fail(!(expr))
@@ -248,8 +248,9 @@ namespace util{
     if (!expr)
     {
       char throw_message[512];
-      sprintf(throw_message,"\n*%.100s*<%.100s(%.100s):%d>\n\tassertin %.100s failed\n\n",
+      sprintf(throw_message,"\n*%.100s*[%d]<%.100s(%.100s):%d>\n\tassertin %.100s failed\n\n",
               ASSERT_LOG_DOMAIN,
+              thr_self(),
               file,
               func,
               line,
@@ -286,8 +287,9 @@ namespace util{
                           const char* file, const char* func, int line)
   {
       char throw_message[512];
-      snprintf(throw_message,512,"\n*%.100s*<%.100s(%.100s):%d>\n\t%.100s\n\n",
+      snprintf(throw_message,512,"\n*%.100s*[%d]<%.100s(%.100s):%d>\n\t%.100s\n\n",
               UNREACHABLE_LOG_DOMAIN,
+              thr_self(),
               file,
               func,
               line,
@@ -441,7 +443,7 @@ namespace util{
                            const char* file, const char* func, int line)
   {
     if ( !expr )
-      fprintf(TRACE_LOG_STREAM,"*%s*: %s     %s(%s):%d\n",info,e,
+      fprintf(TRACE_LOG_STREAM,"*%s*[%d]: %s     %s(%s):%d\n",info,thr_self(),e,
             #if defined ENABLE_FILE_NAME
               file,
             #else
@@ -456,4 +458,3 @@ namespace util{
 #endif
 
 #endif /* __Cpp_Header__smsc_util_debug_h__ */
-
