@@ -1,21 +1,22 @@
+package ru.novosoft.smsc.jsp.smsc.subjects;
+
 /*
  * Created by igork
  * Date: 04.11.2002
  * Time: 20:02:01
  */
-package ru.novosoft.smsc.jsp.smsc.subjects;
 
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.route.Subject;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
 
 public class SubjectsEdit extends SmscBean
 {
@@ -93,7 +94,9 @@ public class SubjectsEdit extends SmscBean
     return smeManager.getSmeNames();
   }
 
-  /*************************** properties *********************************/
+  /**
+   * ************************ properties ********************************
+   */
   public String getMbSave()
   {
     return mbSave;

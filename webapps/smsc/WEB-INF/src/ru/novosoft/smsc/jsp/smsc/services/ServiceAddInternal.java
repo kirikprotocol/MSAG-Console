@@ -1,18 +1,19 @@
+package ru.novosoft.smsc.jsp.smsc.services;
+
 /*
  * Created by igork
  * Date: 31.10.2002
  * Time: 6:21:34
  */
-package ru.novosoft.smsc.jsp.smsc.services;
 
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
 
 public class ServiceAddInternal extends SmeBean
 {
@@ -71,7 +72,9 @@ public class ServiceAddInternal extends SmeBean
     return RESULT_DONE;
   }
 
-  /******************************* properties ****************************************/
+  /**
+   * **************************** properties ***************************************
+   */
   public String getMbNext()
   {
     return mbNext;

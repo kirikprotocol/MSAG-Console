@@ -1,12 +1,12 @@
 package ru.novosoft.smsc.jsp.smsc.smsc_service;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.Comparator_CaseInsensitive;
+import ru.novosoft.smsc.util.SortedList;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -42,10 +42,12 @@ public class Logging extends PageBean
           final String childName = childFullName.substring(0, dotPos);
           LoggerCategoryInfo child = getOrCreateChild(childName, childName, "NOTSET");
           child.addChild(childFullName, childPriority);
-        } else {
+        }
+        else {
           childs.put(childFullName, new LoggerCategoryInfo(childFullName, childFullName, childPriority));
         }
-      } else {
+      }
+      else {
         if (childFullName.length() > fullName.length() && childFullName.startsWith(fullName) && childFullName.charAt(fullName.length()) == '.') {
           final int beginIndex = fullName.length() + 1;
           final int endIndex = childFullName.indexOf('.', beginIndex);
@@ -53,11 +55,13 @@ public class Logging extends PageBean
           if (endIndex > 0) {
             LoggerCategoryInfo child = getOrCreateChild(childName, childFullName.substring(0, endIndex), "NOTSET");
             child.addChild(childFullName, childPriority);
-          } else {
+          }
+          else {
             LoggerCategoryInfo child = getOrCreateChild(childName, childFullName, childPriority);
             child.priority = childPriority;
           }
-        } else {
+        }
+        else {
           logger.debug("Incorrect LoggerCategoryInfo.addChild algorithm");
         }
       }
@@ -73,7 +77,7 @@ public class Logging extends PageBean
       return !childs.isEmpty();
     }
 
-    private LoggerCategoryInfo getOrCreateChild(final String childName, final String childFullName, final String childPriority)
+    private LoggerCategoryInfo getOrCreateChild(String childName, String childFullName, String childPriority)
     {
       LoggerCategoryInfo child = (LoggerCategoryInfo) childs.get(childName);
       if (child == null) {
@@ -88,7 +92,8 @@ public class Logging extends PageBean
       if (o instanceof LoggerCategoryInfo) {
         LoggerCategoryInfo info = (LoggerCategoryInfo) o;
         return name.compareTo(info.name);
-      } else
+      }
+      else
         return 0;
     }
 
@@ -166,7 +171,8 @@ public class Logging extends PageBean
       if (paramName.startsWith(catParamNamePrefix)) {
         cats.put(paramName.substring(catParamNamePrefix.length()), getParamValue(entry.getValue()));
         logger.info("cat   param: " + paramName + ":=" + getParamValue(entry.getValue()));
-      } else {
+      }
+      else {
         logger.info("WRONG param: " + paramName + ":=" + getParamValue(entry.getValue()));
       }
     }
@@ -190,7 +196,8 @@ public class Logging extends PageBean
         result += values[i];
       }
       return result;
-    } else
+    }
+    else
       return value.toString();
   }
 

@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.services;
+
 /*
  * Created by igork
  * Date: 23.10.2002
  * Time: 19:49:14
  */
-package ru.novosoft.smsc.jsp.smsc.services;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
@@ -15,7 +16,10 @@ import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 
 public class Index extends PageBean
@@ -52,7 +56,8 @@ public class Index extends PageBean
         return deleteServices();
       else
         return error(SMSCErrors.error.services.notAuthorizedForDeletingService);
-    } else if (null != mbStartService)
+    }
+    else if (null != mbStartService)
       return startServices();
     else if (null != mbStopService)
       return stopServices();
@@ -73,7 +78,8 @@ public class Index extends PageBean
     if (null == hostsManager) {
       error("Service Manager is null!!!");
       return new LinkedList();
-    } else {
+    }
+    else {
       final List smeIds = hostsManager.getSmeIds();
       smeIds.remove(Constants.SMSC_SME_ID);
       return smeIds;
@@ -117,7 +123,8 @@ public class Index extends PageBean
             error(SMSCErrors.error.services.couldntSaveWebXml, e);
             logger.error("Could not save WEB-INF/web.xml", e);
           }
-        } else
+        }
+        else
           hostsManager.removeSme(id);
 
         journalAppend(SubjectTypes.TYPE_service, id, Actions.ACTION_DEL);
@@ -148,7 +155,8 @@ public class Index extends PageBean
         try {
           if (ServiceInfo.STATUS_STOPPED == hostsManager.getServiceInfo(svcId).getStatus()) {
             hostsManager.startService(svcId);
-          } else
+          }
+          else
             logger.debug("startServices: " + svcId + " is " + hostsManager.getServiceInfo(svcId).getStatusStr());
         } catch (AdminException e) {
           notStartedIds.add(svcId);
@@ -156,7 +164,8 @@ public class Index extends PageBean
           logger.error("Couldn't start services \"" + svcId + '"', e);
           continue;
         }
-      } else {
+      }
+      else {
         notStartedIds.add(svcId);
         result = error(SMSCErrors.error.services.couldntStartInternalService, svcId);
       }
@@ -234,7 +243,8 @@ public class Index extends PageBean
         error(SMSCErrors.error.services.couldntGetServiceInfo, serviceId);
         return ServiceInfo.STATUS_UNKNOWN;
       }
-    } else
+    }
+    else
       return ServiceInfo.STATUS_RUNNING;
   }
 

@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.services;
+
 /*
  * Created by igork
  * Date: 24.09.2002
  * Time: 17:57:03
  */
-package ru.novosoft.smsc.jsp.smsc.services;
 
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
@@ -58,7 +59,8 @@ public class ServiceAddExternalAdm extends SmeBean
       mbCancel = null;
       cleanup();
       return RESULT_DONE;
-    } else if (mbNext != null) {
+    }
+    else if (mbNext != null) {
       mbNext = null;
       switch (stage) {
         case 0:
@@ -73,7 +75,8 @@ public class ServiceAddExternalAdm extends SmeBean
         default:
           return RESULT_DONE;
       }
-    } else
+    }
+    else
       return RESULT_OK;
   }
 
@@ -81,8 +84,8 @@ public class ServiceAddExternalAdm extends SmeBean
   {
     final Statuses s = appContext.getStatuses();
     return s.isAliasesChanged() || s.isHostsChanged() || s.isProfilesChanged() || s.isRoutesChanged()
-           || s.isRoutesChanged() || s.isSmscChanged() || s.isSubjectsChanged() || s.isUsersChanged()
-           || s.isUsersChanged() || s.isWebXmlChanged();
+            || s.isRoutesChanged() || s.isSmscChanged() || s.isSubjectsChanged() || s.isUsersChanged()
+            || s.isUsersChanged() || s.isWebXmlChanged();
   }
 
   protected void cleanup()
@@ -124,7 +127,8 @@ public class ServiceAddExternalAdm extends SmeBean
           incomingZip = null;
           return error(SMSCErrors.error.services.serviceAlreadyExists, serviceId);
         }
-      } else
+      }
+      else
         return error(SMSCErrors.error.services.distributiveFileMustBeZipCompressed);
     } catch (Throwable t) {
       return error(SMSCErrors.error.services.couldntReceiveFile, t);
@@ -137,7 +141,8 @@ public class ServiceAddExternalAdm extends SmeBean
     if (errors.size() == 0) {
       stage++;
       return RESULT_OK;
-    } else {
+    }
+    else {
       return RESULT_ERROR;
     }
   }
@@ -156,7 +161,8 @@ public class ServiceAddExternalAdm extends SmeBean
       wantAlias = true;
       forceDC = true;
       return RESULT_OK;
-    } else
+    }
+    else
       return RESULT_ERROR;
   }
 
@@ -171,12 +177,12 @@ public class ServiceAddExternalAdm extends SmeBean
     ServiceInfo serviceInfo = null;
     try {
       serviceInfo
-      = new ServiceInfo(serviceId, hostName,
-                        appContext.getHostsManager().getDaemonServicesFolder(hostName) + File.separatorChar + serviceId,
-                        startupArgs, autostart,
-                        new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password,
-                                rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit),
-                        ServiceInfo.STATUS_STOPPED);
+              = new ServiceInfo(serviceId, hostName,
+                      appContext.getHostsManager().getDaemonServicesFolder(hostName) + File.separatorChar + serviceId,
+                      startupArgs, autostart,
+                      new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password,
+                              rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit),
+                      ServiceInfo.STATUS_STOPPED);
     } catch (AdminException e) {
       return error(SMSCErrors.error.services.coudntAddService, e);
     } catch (NullPointerException e) {
@@ -197,8 +203,7 @@ public class ServiceAddExternalAdm extends SmeBean
     journalAppend(SubjectTypes.TYPE_securityConstraint, serviceInfo.getId(), Actions.ACTION_ADD);
     appContext.getStatuses().setWebXmlChanged(true);
     try {
-      logger.debug(
-          "Created security constraint for service \"" + serviceInfo.getId() + "\" with role \"" + roleName + "\", saving changes to WEB-INF/web.xml...");
+      logger.debug("Created security constraint for service \"" + serviceInfo.getId() + "\" with role \"" + roleName + "\", saving changes to WEB-INF/web.xml...");
       appContext.getWebXmlConfig().save();
       appContext.getJournal().clear(SubjectTypes.TYPE_securityConstraint);
       appContext.getStatuses().setWebXmlChanged(false);

@@ -1,13 +1,14 @@
+package ru.novosoft.smsc.jsp.smsc.subjects;
+
 /*
  * Created by igork
  * Date: 04.11.2002
  * Time: 18:49:34
  */
-package ru.novosoft.smsc.jsp.smsc.subjects;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
@@ -16,7 +17,10 @@ import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectQuery;
 import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public final class Index extends IndexBean
 {
@@ -82,13 +86,16 @@ public final class Index extends IndexBean
     else if (mbDelete != null) {
       int dresult = deleteSubject();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    } else if (mbSave != null) {
+    }
+    else if (mbSave != null) {
       int dresult = saveRoutes();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    } else if (mbLoad != null) {
+    }
+    else if (mbLoad != null) {
       int dresult = loadRoutes();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    } else if (mbRestore != null) {
+    }
+    else if (mbRestore != null) {
       int dresult = restoreRoutes();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
     }
@@ -111,7 +118,8 @@ public final class Index extends IndexBean
         routeSubjectManager.getSubjects().remove(subject);
         journalAppend(SubjectTypes.TYPE_subject, subject, Actions.ACTION_DEL);
         appContext.getStatuses().setSubjectsChanged(true);
-      } else
+      }
+      else
         result = error(SMSCErrors.error.subjects.cantDelete, subject);
     }
     checkedSubjects = new String[0];
@@ -169,7 +177,9 @@ public final class Index extends IndexBean
     return checkedSubjectsSet.contains(alias);
   }
 
-  /******************** properties *************************/
+  /**
+   * ***************** properties ************************
+   */
 
   public String getEditName()
   {

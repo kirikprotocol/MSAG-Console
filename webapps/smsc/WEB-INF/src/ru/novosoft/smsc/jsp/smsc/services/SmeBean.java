@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.jsp.smsc.services;
 
-import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.admin.route.SME;
+import ru.novosoft.smsc.jsp.PageBean;
 
 /**
  * Created by igork
@@ -32,7 +32,8 @@ public class SmeBean extends PageBean
     int pos = version.indexOf('.');
     if (pos > 0) {
       return (Integer.parseInt(version.substring(0, pos)) << 4) + (Integer.parseInt(version.substring(pos + 1)));
-    } else
+    }
+    else
       return -1;
   }
 
@@ -56,7 +57,9 @@ public class SmeBean extends PageBean
     schedlimit = 0;
   }
 
-  /******************************* properties ****************************************/
+  /**
+   * **************************** properties ***************************************
+   */
   public String getServiceId()
   {
     return serviceId;
@@ -251,18 +254,21 @@ public class SmeBean extends PageBean
   {
     this.schedlimit = schedlimit;
   }
+
   public String getProclimit()
   {
     return String.valueOf(proclimit);
   }
 
   public void setProclimit(String proclimit)
-  {  try{
-    this.proclimit = Integer.decode(proclimit).intValue();
+  {
+    try {
+      this.proclimit = Integer.decode(proclimit).intValue();
     } catch (NumberFormatException e) {
       logger.error("proclimit int parameter misformatted: \"" + proclimit + "\", skipped");
       this.proclimit = 0;
-    };
+    }
+    ;
   }
 
   public String getSchedlimit()

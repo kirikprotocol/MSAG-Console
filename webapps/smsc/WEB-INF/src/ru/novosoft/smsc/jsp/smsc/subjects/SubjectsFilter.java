@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.subjects;
+
 /*
  * Created by igork
  * Date: 05.11.2002
  * Time: 23:38:40
  */
-package ru.novosoft.smsc.jsp.smsc.subjects;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.MaskList;
@@ -11,7 +12,6 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter;
 import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.util.SortedList;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -121,7 +121,9 @@ public class SubjectsFilter extends SmscBean
   }
 
 
-  /***************************** properties **********************************/
+  /**
+   * ************************** properties *********************************
+   */
   public String[] getCheckedSubjects()
   {
     return checkedSubjects;

@@ -1,14 +1,15 @@
+package ru.novosoft.smsc.jsp.smsc.smsc_service;
+
 /**
  * Created by igork
  * Date: Dec 9, 2002
  * Time: 4:07:15 PM
  */
-package ru.novosoft.smsc.jsp.smsc.smsc_service;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
@@ -122,11 +123,13 @@ public class Index extends SmscBean
               logger.error("Invalid integer parameter: " + s + "=" + parameter);
               result = error(SMSCErrors.error.smsc.invalidIntParameter, s);
             }
-          } else if (oldValue instanceof Boolean)
+          }
+          else if (oldValue instanceof Boolean)
             params.put(s, Boolean.valueOf(parameter));
           else
             params.put(s, parameter);
-        } else {
+        }
+        else {
           try {
             params.put(s, Integer.decode(parameter));
           } catch (NumberFormatException e) {
@@ -164,7 +167,8 @@ public class Index extends SmscBean
         logger.error("Couldn't start SMSC", e);
         return error(SMSCErrors.error.smsc.couldntStart, e);
       }
-    } else
+    }
+    else
       return RESULT_OK;
   }
 
@@ -178,7 +182,8 @@ public class Index extends SmscBean
         logger.error("Couldn't stop SMSC", e);
         return error(SMSCErrors.error.smsc.couldntStop, e);
       }
-    } else
+    }
+    else
       return RESULT_OK;
   }
 
@@ -231,7 +236,8 @@ public class Index extends SmscBean
     }
     if (param instanceof Integer) {
       return ((Integer) param).intValue();
-    } else {
+    }
+    else {
       logger.error("parameter \"" + paramName + "\" is not integer.");
       return -1;
     }
@@ -246,7 +252,8 @@ public class Index extends SmscBean
     }
     if (param instanceof Boolean) {
       return ((Boolean) param).booleanValue();
-    } else {
+    }
+    else {
       logger.error("parameter \"" + paramName + "\" is not boolean.");
       return false;
     }

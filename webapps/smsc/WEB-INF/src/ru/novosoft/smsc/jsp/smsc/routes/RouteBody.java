@@ -52,14 +52,14 @@ public class RouteBody extends SmscBean
   protected CategoryManager categoryManager = null;
 
   protected int init(List errors)
-	{
-		int result = super.init(errors);
-		if (result != RESULT_OK)
-			return result;
+  {
+    int result = super.init(errors);
+    if (result != RESULT_OK)
+      return result;
     providerManager = appContext.getProviderManager();
     categoryManager = appContext.getCategoryManager();
-		return result;
-	}
+    return result;
+  }
 
   public boolean isSrcChecked(final String srcName)
   {
@@ -80,15 +80,17 @@ public class RouteBody extends SmscBean
   {
     return new SortedList(smeManager.getSmeNames());
   }
-     public Collection getProviders()
+
+  public Collection getProviders()
   {
     return new SortedList(providerManager.getProviders().values());
   }
- 
+
   public Collection getCategories()
   {
     return new SortedList(categoryManager.getCategories().values());
   }
+
   public boolean isSmeSelected(final String dstName, final String smeId)
   {
     return smeId.equals(selectedSmes.get(dstName));
@@ -281,19 +283,23 @@ public class RouteBody extends SmscBean
     this.srcSmeId = srcSmeId;
   }
 
-  public String getProviderIdStr() {
+  public String getProviderIdStr()
+  {
     return providerIdStr;
   }
 
-  public void setProviderIdStr(String providerIdStr) {
+  public void setProviderIdStr(String providerIdStr)
+  {
     this.providerIdStr = providerIdStr;
   }
 
-  public String getCategoryIdStr() {
+  public String getCategoryIdStr()
+  {
     return categoryIdStr;
   }
 
-  public void setCategoryIdStr(String categoryIdStr) {
+  public void setCategoryIdStr(String categoryIdStr)
+  {
     this.categoryIdStr = categoryIdStr;
   }
 
@@ -387,19 +393,23 @@ public class RouteBody extends SmscBean
     this.allowBlocked = allowBlocked;
   }
 
-  public long getProviderId() {
+  public long getProviderId()
+  {
     return providerId;
   }
 
-  public void setProviderId(final long providerId) {
+  public void setProviderId(final long providerId)
+  {
     this.providerId = providerId;
   }
 
-  public long getCategoryId() {
+  public long getCategoryId()
+  {
     return categoryId;
   }
 
-  public void setCategoryId(final long categoryId) {
+  public void setCategoryId(final long categoryId)
+  {
     this.categoryId = categoryId;
   }
 }

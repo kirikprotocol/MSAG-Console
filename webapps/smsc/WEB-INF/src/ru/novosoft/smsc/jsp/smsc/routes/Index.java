@@ -1,24 +1,22 @@
+package ru.novosoft.smsc.jsp.smsc.routes;
+
 /*
  * Created by igork
  * Date: 04.11.2002
  * Time: 18:49:34
  */
-package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.category.CategoryManager;
-import ru.novosoft.smsc.admin.category.Category;
-import ru.novosoft.smsc.admin.provider.ProviderManager;
-import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteQuery;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteQuery;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -52,22 +50,20 @@ public class Index extends IndexBean
   protected String mbRestore = null;
   protected String mbLoad = null;
   private String mbQuickFilter = null;
-   protected String mbClear = null;
+  protected String mbClear = null;
 
   protected boolean initialized = false;
 
-    protected String[] srcChks = null;
-    protected String[] srcMasks = null;
-    protected String[] dstChks = null;
-    protected String[] dstMasks = null;
-    protected String[] smeChks = null;
-    protected String[] names = null;
-    protected String[] providerNames = null;
-    protected String[] categoryNames = null;
-    protected ProviderManager providerManager = null;
-    protected CategoryManager categoryManager = null;
-    private  Map providers = Collections.synchronizedMap(new TreeMap());
-    private  Map categories = Collections.synchronizedMap(new TreeMap());
+  protected String[] srcChks = null;
+  protected String[] srcMasks = null;
+  protected String[] dstChks = null;
+  protected String[] dstMasks = null;
+  protected String[] smeChks = null;
+  protected String[] names = null;
+  protected String[] providerNames = null;
+  protected String[] categoryNames = null;
+  protected ProviderManager providerManager = null;
+  protected CategoryManager categoryManager = null;
 
   protected int init(List errors)
   {
@@ -77,7 +73,7 @@ public class Index extends IndexBean
 
     providerManager = appContext.getProviderManager();
     categoryManager = appContext.getCategoryManager();
-   // providers=providerManager.getProviders();
+    // providers=providerManager.getProviders();
     //providers=providerManager.getProviders();
     pageSize = preferences.getRoutesPageSize();
     if (sort != null)
@@ -96,71 +92,74 @@ public class Index extends IndexBean
       return result;
 
     if (!initialized) {
-        final RouteFilter routesFilter = preferences.getRoutesFilter();
-        srcChks = routesFilter.getSourceSubjectNames();
-        srcMasks = routesFilter.getSourceMaskStrings();
-        dstChks = routesFilter.getDestinationSubjectNames();
-        dstMasks = routesFilter.getDestinationMaskStrings();
-        smeChks = routesFilter.getSmeIds();
-        names = routesFilter.getNames();
-        providerNames = routesFilter.getProviders();
-        categoryNames = routesFilter.getCategories();
-         try {
-          queryName=names[0];
-        } catch (Exception e) {
-          queryName="";
-        }
-          try {
-          querySubj=srcChks[0];
-        } catch (Exception e) {
-           querySubj="";
-        }
-         try {
-          queryMask=srcMasks[0];
-        } catch (Exception e) {
-          queryMask="";
-        }
-        try {
-          querySMEs=smeChks[0];
-        } catch (Exception e) {
-          querySMEs="";
-        }
-         try {
-          queryProvider=providerNames[0];
-        } catch (Exception e) {
-          queryProvider="";
-        }
-        try {
-          queryCategory=categoryNames[0];
-        } catch (Exception e) {
-          queryCategory="";
-        }
+      final RouteFilter routesFilter = preferences.getRoutesFilter();
+      srcChks = routesFilter.getSourceSubjectNames();
+      srcMasks = routesFilter.getSourceMaskStrings();
+      dstChks = routesFilter.getDestinationSubjectNames();
+      dstMasks = routesFilter.getDestinationMaskStrings();
+      smeChks = routesFilter.getSmeIds();
+      names = routesFilter.getNames();
+      providerNames = routesFilter.getProviders();
+      categoryNames = routesFilter.getCategories();
+      try {
+        queryName = names[0];
+      } catch (Exception e) {
+        queryName = "";
       }
+      try {
+        querySubj = srcChks[0];
+      } catch (Exception e) {
+        querySubj = "";
+      }
+      try {
+        queryMask = srcMasks[0];
+      } catch (Exception e) {
+        queryMask = "";
+      }
+      try {
+        querySMEs = smeChks[0];
+      } catch (Exception e) {
+        querySMEs = "";
+      }
+      try {
+        queryProvider = providerNames[0];
+      } catch (Exception e) {
+        queryProvider = "";
+      }
+      try {
+        queryCategory = categoryNames[0];
+      } catch (Exception e) {
+        queryCategory = "";
+      }
+    }
 
 
-     if (mbAdd != null)
+    if (mbAdd != null)
       return RESULT_ADD;
     else if (mbEdit != null)
       return RESULT_EDIT;
     else if (mbDelete != null) {
       int dresult = deleteRoutes();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    } else if (mbSave != null) {
+    }
+    else if (mbSave != null) {
       int dresult = saveRoutes();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    } else if (mbLoad != null) {
+    }
+    else if (mbLoad != null) {
       int dresult = loadRoutes();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
-    } else if (mbRestore != null) {
+    }
+    else if (mbRestore != null) {
       int dresult = restoreRoutes();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
     }
-       else if (mbQuickFilter != null) {
-       int dresult = updateFilter();
+    else if (mbQuickFilter != null) {
+      int dresult = updateFilter();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
     }
-     else if (mbClear != null) {
-       int dresult = clearFilter();
+    else if (mbClear != null) {
+      int dresult = clearFilter();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
     }
 
@@ -173,74 +172,74 @@ public class Index extends IndexBean
     return RESULT_OK;
   }
 
-    private int updateFilter() {
-      try {
-        final RouteFilter routesFilter = preferences.getRoutesFilter();
-        routesFilter.setIntersection(1);
-        if (queryName != null)
-            routesFilter.setNames(new String[]{queryName.toLowerCase()});
-        else
-            routesFilter.setNames(new String[0]);
-          if (querySubj != null) {
-            routesFilter.setSourceSubjectNames(new String[]{querySubj.toLowerCase()});
-            routesFilter.setDestinationSubjectNames(new String[]{querySubj.toLowerCase()});
-        }
-          else
-          {
-            routesFilter.setSourceSubjectNames(new String[0]);
-            routesFilter.setDestinationSubjectNames(new String[0]);
-          }
-        if (queryMask != null) {
-            routesFilter.setSourceMaskStrings(new String[]{queryMask});
-            routesFilter.setDestinationMaskStrings(new String[]{queryMask});
-        }
-        else
-        {
-            routesFilter.setSourceMaskStrings(new String[0]);
-            routesFilter.setDestinationMaskStrings(new String[0]);
-        }
-        if (querySMEs != null)
-                    routesFilter.setSmeIds(new String[]{querySMEs.toLowerCase()});
-        else
-                    routesFilter.setSmeIds(new String[0]);
-        if (queryProvider != null)
-           routesFilter.setProviders(new String[]{queryProvider.toLowerCase()});
-        else
-          routesFilter.setProviders(new String[0]);
-        if (queryCategory != null)
-           routesFilter.setCategories(new String[]{queryCategory.toLowerCase()});
-        else
-          routesFilter.setCategories(new String[0]);
-
-        /*    if ("5".equals(filterSelect))
-                    routesFilter.setSmeIds(new String[]{queryName});
-      */
-      } catch (AdminException e) {
-        return error(SMSCErrors.error.routes.CantUpdateFilter, e);
+  private int updateFilter()
+  {
+    try {
+      final RouteFilter routesFilter = preferences.getRoutesFilter();
+      routesFilter.setIntersection(1);
+      if (queryName != null)
+        routesFilter.setNames(new String[]{queryName.toLowerCase()});
+      else
+        routesFilter.setNames(new String[0]);
+      if (querySubj != null) {
+        routesFilter.setSourceSubjectNames(new String[]{querySubj.toLowerCase()});
+        routesFilter.setDestinationSubjectNames(new String[]{querySubj.toLowerCase()});
       }
-      return RESULT_OK;
+      else {
+        routesFilter.setSourceSubjectNames(new String[0]);
+        routesFilter.setDestinationSubjectNames(new String[0]);
+      }
+      if (queryMask != null) {
+        routesFilter.setSourceMaskStrings(new String[]{queryMask});
+        routesFilter.setDestinationMaskStrings(new String[]{queryMask});
+      }
+      else {
+        routesFilter.setSourceMaskStrings(new String[0]);
+        routesFilter.setDestinationMaskStrings(new String[0]);
+      }
+      if (querySMEs != null)
+        routesFilter.setSmeIds(new String[]{querySMEs.toLowerCase()});
+      else
+        routesFilter.setSmeIds(new String[0]);
+      if (queryProvider != null)
+        routesFilter.setProviders(new String[]{queryProvider.toLowerCase()});
+      else
+        routesFilter.setProviders(new String[0]);
+      if (queryCategory != null)
+        routesFilter.setCategories(new String[]{queryCategory.toLowerCase()});
+      else
+        routesFilter.setCategories(new String[0]);
+
+      /*    if ("5".equals(filterSelect))
+                  routesFilter.setSmeIds(new String[]{queryName});
+    */
+    } catch (AdminException e) {
+      return error(SMSCErrors.error.routes.CantUpdateFilter, e);
     }
+    return RESULT_OK;
+  }
 
-  private int clearFilter() {
-       try {
-         final RouteFilter routesFilter = preferences.getRoutesFilter();
-        // routesFilter.setIntersection(false);
-             routesFilter.setNames(new String[0]);
-             routesFilter.setProviders(new String[0]);
-             routesFilter.setCategories(new String[0]);
-             routesFilter.setSourceSubjectNames(new String[0]);
-             routesFilter.setDestinationSubjectNames(new String[0]);
-             routesFilter.setSourceMaskStrings(new String[0]);
-             routesFilter.setDestinationMaskStrings(new String[0]);
-             routesFilter.setSmeIds(new String[0]);
-       } catch (AdminException e) {
-         return error(SMSCErrors.error.routes.CantUpdateFilter, e);
-       }
-         return RESULT_OK;
-     }
+  private int clearFilter()
+  {
+    try {
+      final RouteFilter routesFilter = preferences.getRoutesFilter();
+      // routesFilter.setIntersection(false);
+      routesFilter.setNames(new String[0]);
+      routesFilter.setProviders(new String[0]);
+      routesFilter.setCategories(new String[0]);
+      routesFilter.setSourceSubjectNames(new String[0]);
+      routesFilter.setDestinationSubjectNames(new String[0]);
+      routesFilter.setSourceMaskStrings(new String[0]);
+      routesFilter.setDestinationMaskStrings(new String[0]);
+      routesFilter.setSmeIds(new String[0]);
+    } catch (AdminException e) {
+      return error(SMSCErrors.error.routes.CantUpdateFilter, e);
+    }
+    return RESULT_OK;
+  }
 
 
-    protected int deleteRoutes()
+  protected int deleteRoutes()
   {
     for (int i = 0; i < checkedRouteIds.length; i++) {
       String routeId = checkedRouteIds[i];
@@ -412,7 +411,7 @@ public class Index extends IndexBean
     this.mbLoad = mbLoad;
   }
 
-      public String getQueryName()
+  public String getQueryName()
   {
     return queryName;
   }
@@ -422,79 +421,95 @@ public class Index extends IndexBean
     this.queryName = queryName;
   }
 
-  public String getQuerySubj() {
+  public String getQuerySubj()
+  {
     return querySubj;
   }
 
-  public void setQuerySubj(String querySubj) {
+  public void setQuerySubj(String querySubj)
+  {
     this.querySubj = querySubj;
   }
 
-  public String getQueryMask() {
+  public String getQueryMask()
+  {
     return queryMask;
   }
 
-  public void setQueryMask(String queryMask) {
+  public void setQueryMask(String queryMask)
+  {
     this.queryMask = queryMask;
   }
 
-  public String getQuerySMEs() {
+  public String getQuerySMEs()
+  {
     return querySMEs;
   }
 
-  public void setQuerySMEs(String querySMEs) {
+  public void setQuerySMEs(String querySMEs)
+  {
     this.querySMEs = querySMEs;
   }
 
-  public String getQueryCategory() {
+  public String getQueryCategory()
+  {
     return queryCategory;
   }
 
-  public void setQueryCategory(String queryCategory) {
+  public void setQueryCategory(String queryCategory)
+  {
     this.queryCategory = queryCategory;
   }
 
-  public String getQueryProvider() {
+  public String getQueryProvider()
+  {
     return queryProvider;
   }
 
-  public void setQueryProvider(String queryProvider) {
+  public void setQueryProvider(String queryProvider)
+  {
     this.queryProvider = queryProvider;
   }
 
-  public String getFilterSelect() {
+  public String getFilterSelect()
+  {
     return filterSelect;
   }
 
-  public void setFilterSelect(String filterSelect) {
+  public void setFilterSelect(String filterSelect)
+  {
     this.filterSelect = filterSelect;
   }
 
-  public String getMbQuickFilter() {
+  public String getMbQuickFilter()
+  {
     return mbQuickFilter;
   }
 
-  public void setMbQuickFilter(String mbQuickFilter) {
+  public void setMbQuickFilter(String mbQuickFilter)
+  {
     this.mbQuickFilter = mbQuickFilter;
   }
 
-  public String getMbClear() {
+  public String getMbClear()
+  {
     return mbClear;
   }
 
-  public void setMbClear(String mbClear) {
+  public void setMbClear(String mbClear)
+  {
     this.mbClear = mbClear;
   }
 
-  public boolean isInitialized() {
+  public boolean isInitialized()
+  {
     return initialized;
   }
 
-  public void setInitialized(boolean initialized) {
+  public void setInitialized(boolean initialized)
+  {
     this.initialized = initialized;
   }
 
-  public Map getProviders() {
-    return providers;
-  }
+
 }

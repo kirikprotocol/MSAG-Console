@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.routes;
+
 /*
  * Created by igork
  * Date: 04.11.2002
  * Time: 20:02:01
  */
-package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.journal.Actions;
@@ -116,7 +117,8 @@ public class RoutesEdit extends RouteBody
           final String dstName = StringEncoderDecoder.decodeHEX(paramName.substring(subjprefix.length()));
           selectedSmes.put(dstName, strings[0]);
         }
-      } else if (paramName.startsWith(maskprefix)) {
+      }
+      else if (paramName.startsWith(maskprefix)) {
         final String[] strings = (String[]) requestParameters.get(paramName);
         if (0 < strings.length) {
           final String dstName = StringEncoderDecoder.decodeHEX(paramName.substring(maskprefix.length()));
@@ -179,13 +181,13 @@ public class RoutesEdit extends RouteBody
         return error(SMSCErrors.error.routes.sourcesIsEmpty);
       if (destinations.isEmpty())
         return error(SMSCErrors.error.routes.destinationsIsEmpty);
-       if ((providerIdStr != null && providerIdStr.length() > 0))
-        providerId=Long.parseLong(providerIdStr);
+      if ((providerIdStr != null && providerIdStr.length() > 0))
+        providerId = Long.parseLong(providerIdStr);
       if ((categoryIdStr != null && categoryIdStr.length() > 0))
-        categoryId=Long.parseLong(categoryIdStr);
+        categoryId = Long.parseLong(categoryIdStr);
       routeSubjectManager.getRoutes().remove(oldRouteId);
       routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
-                                                    deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked,providerId,categoryId));
+              deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked, providerId, categoryId));
       if (oldRouteId.equals(routeId))
         journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY);
       else

@@ -7,7 +7,9 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 
 
 /**
@@ -87,13 +89,16 @@ public class Index extends IndexBean
       else if (i + 1 < strLen && '#' == strBuff[i + 1]) {
         sb.append('#');
         i++;
-      } else if (i + 1 < strLen && 'c' == strBuff[i + 1]) {
+      }
+      else if (i + 1 < strLen && 'c' == strBuff[i + 1]) {
         sb.append(':');
         i++;
-      } else if (i + 1 < strLen && 's' == strBuff[i + 1]) {
+      }
+      else if (i + 1 < strLen && 's' == strBuff[i + 1]) {
         sb.append(';');
         i++;
-      } else
+      }
+      else
         sb.append(strBuff[i]);
     }
     return sb.toString();
@@ -126,19 +131,19 @@ public class Index extends IndexBean
         final Alias a = appContext.getSmsc().getAliases().getAliasByAddress(srcAddressMask);
         if (a != null && a.isHide())
           result = message(SMSCErrors.error.routes.srcAddressIsAlias,
-                           srcAddress + " -> " + appContext.getSmsc().getAliases().getAddressByAlias(srcAddressMask).getAddress().getMask());
+                  srcAddress + " -> " + appContext.getSmsc().getAliases().getAddressByAlias(srcAddressMask).getAddress().getMask());
       }
       if (appContext.getSmsc().getAliases().isContainsAlias(dstAddressMask))
         result
-        = warning(SMSCErrors.error.routes.dstAddressIsAlias,
-                  dstAddress + " -> " + appContext.getSmsc().getAliases().getAddressByAlias(dstAddressMask).getAddress().getMask());
+                = warning(SMSCErrors.error.routes.dstAddressIsAlias,
+                        dstAddress + " -> " + appContext.getSmsc().getAliases().getAddressByAlias(dstAddressMask).getAddress().getMask());
 
       traceResults = appContext.getSmsc().traceRoute(dstAddress, srcAddress, srcSysId);
       if (null == traceResults || 1 >= traceResults.size())
         throw new AdminException("Transport error, invalid responce.");
       message = (String) traceResults.get(0);
       messageType = message.startsWith("Route found (disabled)") ? TRACE_ROUTE_STATUS :
-                    message.startsWith("Route not found") ? TRACE_ROUTE_NOT_FOUND : TRACE_ROUTE_FOUND;
+              message.startsWith("Route not found") ? TRACE_ROUTE_NOT_FOUND : TRACE_ROUTE_FOUND;
       routeInfo = parseRouteInfo((String) traceResults.get(1));
       traceResults.remove(0);
       traceResults.remove(0);
