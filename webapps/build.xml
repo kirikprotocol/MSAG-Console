@@ -1,19 +1,21 @@
 <project default="dist" basedir="." name="ALL">
   <description>Builds all webapps</description>
 
-  <input addproperty="work_path" message="Working directory [out]:" defaultvalue="out"/>
-  <input addproperty="dist_path" message="Distribs directory [dist]:" defaultvalue="dist"/>
+  <property environment="env"/>
+  <input addproperty="work_path" message="Working directory [${env.HOME}/tmp/smppgw_out]:" defaultvalue="${env.HOME}/tmp/smppgw_out"/>
+  <input addproperty="dist_path" message="Distribs directory [${env.HOME}/tmp/smppgw_dist]:" defaultvalue="${env.HOME}/tmp/smppgw_dist"/>
+  <input addproperty="inst_path" message="Install directory [${env.HOME}/install]:" defaultvalue="${env.HOME}/install"/>
 
-  <property name="log4j_jar" location="smppgw/WEB-INF/lib/log4j-1.2.8.jar"/>
-  <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet-api.jar"/>
-  <property name="jmx_jar" location="${CATALINA_HOME}/bin/jmx.jar"/>
-  <property name="catalina_jar" location="${CATALINA_HOME}/server/lib/catalina.jar"/>
+  <property name="log4j_jar" location="smppgw/WEB-INF/lib/log4j.jar"/>
+  <property name="servlet_jar" location="${env.CATALINA_HOME}/common/lib/servlet-api.jar"/>
+  <property name="jmx_jar" location="${env.CATALINA_HOME}/bin/jmx.jar"/>
+  <property name="catalina_jar" location="${env.CATALINA_HOME}/server/lib/catalina.jar"/>
 
-  <property name="sibinco_lib" location="${dist_path}/sibinco_lib.jar"/>
-  <property name="tomcat_auth_lib" location="${dist_path}/sibinco_tomcat_auth.jar"/> 
+  <property name="tomcat_auth_lib" location="tomcat_auth/lib/sibinco_tomcat_auth.jar"/> 
   <property name="tomcat_auth_common_lib" location="tomcat_auth/lib/sibinco_tomcat_auth_common.jar"/>
   <property name="tomcat_auth_server_lib" location="tomcat_auth/lib/sibinco_tomcat_auth_server.jar"/>
-  <!--echoproperties prefix="cat"/-->
+  <property name="sibinco_lib" location="${dist_path}/sibinco_lib.jar"/>
+  <property name="smppgw_war" location="${dist_path}/smppgw.war"/>
 
   <target name="init">
     <tstamp/>
@@ -22,15 +24,19 @@
   </target>
 
   <target name="compile" depends="init" description="compile the sources">
-    <!--ant dir="tomcat_auth" target="compile"/-->
     <ant dir="smsc_lib" target="compile"/>
     <ant dir="smppgw" target="compile"/>
   </target>
 
-  <target name="dist" depends="init" description="generate the distribution" >
+  <target name="dist" depends="init" description="generate the distribution">
     <!--ant dir="tomcat_auth" target="dist"/-->
     <ant dir="smsc_lib" target="dist"/>
     <ant dir="smppgw" target="dist"/>
+  </target>
+  
+  <target name="install" depends="dist" description="makes install">
+    <ant dir="tomcat_auth" target="install"/>
+    <copy file="${smppgw_war}" todir="${env.CATALINA_HOME}/webapps"/>
   </target>
 
   <target name="clean" description="clean up" >

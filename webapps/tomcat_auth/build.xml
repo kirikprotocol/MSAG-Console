@@ -1,8 +1,10 @@
-<project default="install" name="Sibinco Tomcat Authentication Module">
+<project default="rebuild" name="Sibinco Tomcat Authentication Module">
 
-  <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet-api.jar"/>
-  <property name="jmx_jar" location="${CATALINA_HOME}/bin/jmx.jar"/>
-  <property name="catalina_jar" location="${CATALINA_HOME}/server/lib/catalina.jar"/>
+  <property environment="env"/>
+  <!--property name="servlet_jar" location="${env.CATALINA_HOME}/common/lib/servlet-api.jar"/-->
+  <property name="jmx_jar" location="${env.CATALINA_HOME}/bin/jmx.jar"/>
+  <property name="catalina_jar" location="${env.CATALINA_HOME}/server/lib/catalina.jar"/>
+  <echo message="using CATALINA_HOME=${env.CATALINA_HOME}"/>
 
   <target name="init">
     <tstamp/>
@@ -13,10 +15,9 @@
   </target>
 
   <target name="compile" depends="init" description="compile the sources">
-    <!--echo message="Classpath: ${log4j_jar}:${jmx_jar}:${catalina_jar}"/--> 
     <javac srcdir="common/src" destdir="common/classes" classpath="${jmx_jar}:${catalina_jar}"/>
-    <javac srcdir="server/src" destdir="server/classes" classpath="${jmx_jar}:${catalina_jar}"/>
-    <javac srcdir="webapp/src" destdir="webapp/classes" classpath="${jmx_jar}:${catalina_jar}"/>
+    <javac srcdir="server/src" destdir="server/classes" classpath="${jmx_jar}:${catalina_jar}:common/classes"/>
+    <javac srcdir="webapp/src" destdir="webapp/classes" classpath="${jmx_jar}:${catalina_jar}:common/classes:server/classes"/>
   </target>
 
   <target name="build" depends="compile" description="generate the distribution">
@@ -28,8 +29,8 @@
   <target name="rebuild" depends="clean,build" description="rebuild"/>
 
   <target name="install" depends="build">
-    <copyfile src="lib/sibinco_tomcat_auth_server.jar" dest="${CATALINA_HOME}/server/lib/sibinco_tomcat_auth_server.jar"/>
-    <copyfile src="lib/sibinco_tomcat_auth_common.jar" dest="${CATALINA_HOME}/common/lib/sibinco_tomcat_auth_common.jar"/>
+    <copy file="lib/sibinco_tomcat_auth_server.jar" todir="${env.CATALINA_HOME}/server/lib"/>
+    <copy file="lib/sibinco_tomcat_auth_common.jar" todir="${env.CATALINA_HOME}/common/lib"/>
   </target>
 
   <target name="clean" description="clean up">
