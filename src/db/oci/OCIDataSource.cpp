@@ -513,7 +513,18 @@ void OCIStatement::setInt32(int pos, int32_t val, bool null)
 void OCIStatement::setInt64(int pos, int64_t val, bool null)
     throw(SQLException)
 {
-    setInt32(pos, (int32_t)val, null);
+    OCIDataDescriptor* descriptor =
+        setField(pos, SQLT_INT, sizeof(int64_t), null);
+
+    if (!null)
+    {
+        check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                               (uword)sizeof(int64_t),
+                               (uword)OCI_NUMBER_SIGNED,
+                               (OCINumber *)&(descriptor->number)));
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
 }
 void OCIStatement::setUint8(int pos, uint8_t val, bool null)
     throw(SQLException)
@@ -566,7 +577,18 @@ void OCIStatement::setUint32(int pos, uint32_t val, bool null)
 void OCIStatement::setUint64(int pos, uint64_t val, bool null)
     throw(SQLException)
 {
-    setUint32(pos, (uint32_t)val, null);
+    OCIDataDescriptor* descriptor =
+        setField(pos, SQLT_UIN, sizeof(uint64_t), null);
+
+    if (!null)
+    {
+        check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                               (uword)sizeof(uint64_t),
+                               (uword)OCI_NUMBER_UNSIGNED,
+                               (OCINumber *)&(descriptor->number)));
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
 }
 void OCIStatement::setFloat(int pos, float val, bool null)
     throw(SQLException)
@@ -746,9 +768,8 @@ int32_t OCIResultSet::getInt32(int pos)
     OCINumber*  number = (OCINumber*)getField(pos);
     owner->check(OCINumberIsInt(owner->errhp, (CONST OCINumber *)number, &ok));
     if (ok != TRUE)
-    {
         throw InvalidArgumentException();
-    }
+    
     owner->check(OCINumberToInt(owner->errhp, (CONST OCINumber *)number,
                                 (uword) sizeof(int32_t),
                                 (uword)OCI_NUMBER_SIGNED,
@@ -758,7 +779,21 @@ int32_t OCIResultSet::getInt32(int pos)
 int64_t OCIResultSet::getInt64(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    return (int64_t)getInt32(pos);
+    __require__(owner);
+
+    boolean     ok = FALSE;
+    int64_t     result = 0;
+
+    OCINumber*  number = (OCINumber*)getField(pos);
+    owner->check(OCINumberIsInt(owner->errhp, (CONST OCINumber *)number, &ok));
+    if (ok != TRUE)
+        throw InvalidArgumentException();
+    
+    owner->check(OCINumberToInt(owner->errhp, (CONST OCINumber *)number,
+                                (uword) sizeof(int64_t),
+                                (uword)OCI_NUMBER_SIGNED,
+                                (dvoid *) &result));
+    return result;
 }
 uint8_t OCIResultSet::getUint8(int pos)
     throw(SQLException, InvalidArgumentException)
@@ -781,9 +816,8 @@ uint32_t OCIResultSet::getUint32(int pos)
     OCINumber*  number = (OCINumber*)getField(pos);
     owner->check(OCINumberIsInt(owner->errhp, (CONST OCINumber *)number, &ok));
     if (ok != TRUE)
-    {
         throw InvalidArgumentException();
-    }
+    
     owner->check(OCINumberToInt(owner->errhp, (CONST OCINumber *)number,
                                 (uword) sizeof(uint32_t),
                                 (uword)OCI_NUMBER_UNSIGNED,
@@ -793,7 +827,21 @@ uint32_t OCIResultSet::getUint32(int pos)
 uint64_t OCIResultSet::getUint64(int pos)
     throw(SQLException, InvalidArgumentException)
 {
-    return (uint64_t)getUint32(pos);
+    __require__(owner);
+
+    boolean     ok = FALSE;
+    uint64_t    result = 0;
+
+    OCINumber*  number = (OCINumber*)getField(pos);
+    owner->check(OCINumberIsInt(owner->errhp, (CONST OCINumber *)number, &ok));
+    if (ok != TRUE)
+        throw InvalidArgumentException();
+    
+    owner->check(OCINumberToInt(owner->errhp, (CONST OCINumber *)number,
+                                (uword) sizeof(uint64_t),
+                                (uword)OCI_NUMBER_UNSIGNED,
+                                (dvoid *) &result));
+    return result;
 }
 float OCIResultSet::getFloat(int pos)
     throw(SQLException, InvalidArgumentException)
