@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+<config>
+    
+    <section name="StartupLoader">
+        <section name="DataSourceDrivers">
+            <section name="OCIDataSourceDriver">
+                <param name="type" type="string">OCI</param>
+                <param name="loadup" type="string">libdb_oci.so</param>
+            </section>
+        </section>
+    </section>
+    
+    <section name="DBSme">
+
+        <param name="SvcType" type="string">DB</param>
+        <param name="ProtocolId" type="int">0</param>
+	<param name="origAddress" type="string">@dbsme.orig.address@</param>
+	<param name="systemType" type="string">smpp</param>
+	<param name="forceDataCoding" type="string">UCS2</param>
+	<!-- DataCoding values: UCS2, SMSC7BIT, LATIN1. DEFAULT: LATIN1 -->
+        
+        <section name="ThreadPool">
+            <param name="max" type="int">15</param>
+            <param name="init" type="int">5</param>
+        </section>  
+            
+        <section name="SMSC">
+            <param name="host" type="string">@connect.host@</param>
+            <param name="port" type="int">@smsc.smpp.port@</param>
+            <param name="sid" type="string">dbSme</param>
+            <param name="timeout" type="int">10</param>
+            <param name="password" type="string"></param>
+        </section>  
+
+        <section name="Admin">
+            <param name="host" type="string">@listen.host@</param>
+            <param name="port" type="int">@dbsme.admin.port@</param>
+	</section>
+	
+	<section name="MessageSet">
+	    <param name="PROVIDER_NOT_FOUND" type="string">Provider not found!</param>
+	    <param name="SERVICE_NOT_AVAIL" type="string">Service not available!</param>
+	    <param name="JOB_NOT_FOUND" type="string">Job not found!</param>
+	    <param name="DS_FAILURE" type="string">DataSource failure!</param>
+	    <param name="DS_CONNECTION_LOST" type="string">Connection to DataSource lost !</param>
+	    <param name="DS_STATEMENT_FAIL" type="string">DataSource failure!</param>
+	    <param name="QUERY_NULL" type="string">Result of query execution is NULL!</param>
+	    <param name="INPUT_PARSE" type="string">Input data parse error!</param>
+	    <param name="OUTPUT_FORMAT" type="string">Output data format error!</param>
+	    <param name="INVALID_CONFIG" type="string">Invalid configuration!</param>
+	</section>
+
+        <section name="DataProviders">
+        </section>
+    </section>
+</config>

@@ -1,0 +1,21 @@
+<project name="External sme build" default="help" basedir=".">
+  <target name="help">
+    <echo>
+Modules:
+      dbSme_distr
+      dbSme_update
+    </echo>
+  </target>
+  <target name="dbSme_distr">
+    <ant antfile="make_esme.xml" target="distr">
+      <property name="esme_name" value="dbSme"/>
+      <property name="esme_bin" value="dbsme/DBSme"/>
+    </ant>
+  </target>
+  <target name="dbSme_update">
+    <ant antfile="make_esme.xml" target="update">
+      <property name="esme_name" value="dbSme"/>
+      <property name="esme_bin" value="dbsme/DBSme"/>
+    </ant>
+  </target>
+</project>

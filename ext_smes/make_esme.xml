@@ -1,0 +1,83 @@
+<project default="update" basedir="." name="make esme routine">
+  <property file="../webapps/build.properties"/>
+  <property file="../src/build.properties"/>
+  <property environment="env"/>
+  <property name="TEMPLATE_PROPS" value="should be defined in calling script"/>
+  <property name="esme_name" value="should be defined in calling script"/>
+  <property name="esme_bin" value="should be defined in calling script"/>
+  <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
+  <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
+  <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
+  <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
+  <property name="java_src" location="${esme_name}/java"/>
+  <property name="java_out" location="${BUILD_DIR}/classes/${esme_name}"/>
+  <property name="exploded" location="${BUILD_DIR}/exploded/${esme_name}"/>
+  <property name="java_lib" location="${exploded}/lib"/>
+  <property name="libs_path" location="../webapps/libs"/>
+  <property name="smsc_package_path" value="ru/novosoft/smsc"/>
+
+  <classfileset id="common_libs" dir="${libs_path}">
+    <include name="log4j.jar, antlr.jar, nsjsp.jar, classes12.jar"/>
+  </classfileset>
+  <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet.jar"/>
+
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${java_out}"/>
+    <mkdir dir="${java_lib}"/>
+    <mkdir dir="${exploded}"/>
+    <mkdir dir="${exploded}/jsp"/>
+  </target>
+
+
+  <target name="compile" depends="init" description="compile the sources">
+    <javac srcdir="${java_src}" destdir="${java_out}" debug="yes">
+      <classpath refid="common_libs"/>
+      <classpath path="${servlet_jar}"/>
+    </javac>
+    <native2ascii encoding="Cp1251" src="${java_src}/**/*.properties" dest="${java_out}"/>
+  </target>
+
+  <target name="build" depends="clean,compile" description="generate the distribution">
+    <jar jarfile="${java_lib}/${esme_name}.jar">
+      <fileset dir="${java_out}"/>
+    </jar>
+    <copy todir="${exploded}/jsp" preservelastmodified="yes">
+      <fileset dir="${basedir}/jsp" includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc"/>
+    </copy>
+  </target>
+
+  <target name="distr" depends="build" description="installs the webapp">
+    <copy tofile="${exploded}/conf/config.xml" file="${TEMPL_DIR}/${esme_name}/config.xml" preservelastmodified="yes">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy tofile="${exploded}/bin/service" file="${TEMPL_DIR}/service/${esme_name}" preservelastmodified="yes">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy todir="${exploded}/bin" file="${BUILD_BIN}/${esme_bin}" flatten="yes" preservelastmodified="yes"/>
+    <copy tofile="${exploded}/logger.properties" file="${TEMPL_DIR}/logger/${esme_name}.logger" preservelastmodified="yes">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy tofile="${exploded}/config.xml" file="${TEMPL_DIR}/${esme_name}/war.xml" preservelastmodified="yes">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <jar basedir="${exploded}" jarfile="${DISTR_DIR}/services/${esme_name}.war" compress="9"/>
+  </target>
+
+  <target name="update" depends="build" description="update existing installation">
+    <copy todir="${DISTR_DIR}/services/${esme_name}/bin" file="${BUILD_BIN}/${esme_bin}" flatten="yes" preservelastmodified="yes"/>
+    <copy todir="${DISTR_DIR}/conf/sql" preservelastmodified="yes">
+      <fileset dir="${TEMPL_DIR}/sql" includes="${esme_name}.sql updates/${esme_name}*.sql"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/webapps/smsc/esme_${esme_name}" preservelastmodified="yes">
+      <fileset dir="${exploded}/jsp"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/webapps/smsc/WEB-INF/lib" file="${exploded}/lib/${esme_name}.jar" preservelastmodified="yes"/>
+  </target>
+
+  <target name="clean" description="clean up">
+    <delete dir="${java_out}"/>
+    <delete dir="${exploded}"/>
+  </target>
+</project>

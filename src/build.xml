@@ -62,7 +62,13 @@ Required environment: ORACLE_HOME
     </ant>
   </target>
 
-  <target name="system" depends="logger, db" >
+  <target name="store" depends="logger" >
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="store"/>
+    </ant>
+  </target>
+
+  <target name="system" depends="logger, db, store" >
     <ant antfile="${SRC_DIR}/conf/make.xml">
       <property name="targets" value="${SNMP_MOD_NAME} system"/>
     </ant>

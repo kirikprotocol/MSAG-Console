@@ -1,0 +1,87 @@
+<project default="update" basedir="." name="SMS Center web application">
+  <property file="../build.properties"/>
+  <property environment="env"/>
+  <property name="java_src" location="${basedir}/WEB-INF/src"/>
+  <property name="java_out" location="${BUILD_DIR}/classes/smsc"/>
+  <property name="exploded" location="${BUILD_DIR}/exploded/smsc"/>
+  <property name="java_lib" location="${exploded}/WEB-INF/lib"/>
+  <property name="libs_path" location="${basedir}/../libs"/>
+  <property name="smsc_package_path" value="ru/novosoft/smsc"/>
+  <property name="perfmon_path" value="${smsc_package_path}/perfmon"/>
+  <property name="perfmon_src" location="${java_src}/${perfmon_path}"/>
+  <property name="perfmon_out" location="${java_out}/${perfmon_path}"/>
+  <property name="topmon_path" value="${smsc_package_path}/topmon"/>
+  <property name="topmon_src" location="${java_src}/${topmon_path}"/>
+  <property name="topmon_out" location="${java_out}/${topmon_path}"/>
+
+  <classfileset id="common_libs" dir="${libs_path}">
+    <include name="log4j.jar, antlr.jar, nsjsp.jar, classes12.jar"/>
+  </classfileset>
+  <property name="servlet_jar" location="${CATALINA_HOME}/common/lib/servlet.jar"/>
+
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${java_out}"/>
+    <mkdir dir="${java_lib}"/>
+    <mkdir dir="${exploded}"/>
+  </target>
+
+
+  <target name="compile" depends="init" description="compile the sources">
+    <javac srcdir="${java_src}" destdir="${java_out}" debug="yes">
+      <classpath refid="common_libs"/>
+      <classpath path="${servlet_jar}"/>
+    </javac>
+    <native2ascii encoding="Cp1251" src="${java_src}/locales" dest="${java_out}/locales"/>
+    <native2ascii encoding="Cp1251" src="${perfmon_src}/applet" dest="${perfmon_out}/applet"/>
+    <native2ascii encoding="Cp1251" src="${topmon_src}/applet" dest="${topmon_out}/applet"/>
+  </target>
+
+  <target name="build" depends="clean,compile" description="generate the distribution">
+    <jar jarfile="${java_lib}/smsc.jar">
+      <fileset dir="${java_out}" excludes="${perfmon_path}/applet/**, ${topmon_path}/applet/**" />
+    </jar>
+    <mkdir dir="${exploded}/perfmon"/>
+    <jar jarfile="${exploded}/perfmon/perfmon.jar">
+      <fileset dir="${java_out}">
+        <include name="${perfmon_path}/applet/**"/>
+        <include name="${perfmon_path}/PerfSnap.class"/>
+        <include name="${smsc_package_path}/util/applet/**"/>
+        <include name="${smsc_package_path}/util/SnapBufferReader.class"/>
+      </fileset>
+    </jar>
+    <mkdir dir="${exploded}/topmon"/>
+    <jar jarfile="${exploded}/topmon/topmon.jar">
+      <fileset dir="${java_out}">
+        <include name="${topmon_path}/applet/**"/>
+        <include name="${topmon_path}/TopSnap.class"/>
+        <include name="${topmon_path}/ErrorSnap.class"/>
+        <include name="${topmon_path}/SmeSnap.class"/>
+        <include name="${smsc_package_path}/util/applet/**"/>
+        <include name="${smsc_package_path}/util/SnapBufferReader.class"/>
+      </fileset>
+    </jar>
+    <copy todir="${exploded}" preservelastmodified="yes">
+      <fileset dir="." includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc" excludes="**/build.xml" />
+    </copy>
+    <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
+      <fileset refid="classpath" />
+    </copy>
+  </target>
+
+  <target name="install" depends="build" description="installs the webapp">
+    <copy todir="${CATALINA_BASE}/webapps/smsc" preservelastmodified="yes">
+      <fileset dir="${exploded}"/>
+    </copy>
+  </target>
+
+  <target name="update" depends="build" description="update existing installation">
+    <copy todir="${CATALINA_BASE}/webapps/smsc" preservelastmodified="yes">
+    </copy>
+  </target>
+
+  <target name="clean" description="clean up">
+    <delete dir="${java_out}"/>
+    <delete dir="${exploded}"/>
+  </target>
+</project>
