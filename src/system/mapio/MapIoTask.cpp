@@ -2,6 +2,7 @@
 #define SSN 8
 #define MAXENTRIES 10
  
+using namespace std;
 
 #ifdef USE_MAPIO
 
@@ -168,4 +169,16 @@ void MapIoTask::init()
 
 MapDialogContainer* MapDialogContainer::container = 0;
 Mutex MapDialogContainer::sync_object;
+
+int MapIoTask::Execute(){
+  try{
+    init();
+    startevent->Signal();
+    is_started = true;
+    dispatcher();
+    //deinit();
+  }catch(exception& e){
+    __trace2__("exception in mapio: %s",e.what());
+  }
+}
 
