@@ -155,22 +155,32 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
 	{
-		//intermediate notification
-		__tc__("deliverySm.reports.intermediateNotification.transmitter");
-		__tc_ok__;
-		IntermediateNotificationMonitor* notifMonitor =
-			new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
-		notifMonitor->state = ENROUTE;
-		notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
-		fixture->pduReg->registerMonitor(notifMonitor);
-		//delivery receipt
-		__tc__("deliverySm.reports.deliveryReceipt.transmitter");
-		__tc_ok__;
-		DeliveryReceiptMonitor* rcptMonitor =
-			new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
-		rcptMonitor->state = EXPIRED;
-		rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
-		fixture->pduReg->registerMonitor(rcptMonitor);
+		if (pduData->intProps.count("ussdServiceOp"))
+		{
+			__tc__("deliverySm.reports.deliveryReceipt.ussdServiceOp");
+			__tc_ok__;
+			__tc__("deliverySm.reports.intermediateNotification.ussdServiceOp");
+			__tc_ok__;
+		}
+		else
+		{
+			//intermediate notification
+			__tc__("deliverySm.reports.intermediateNotification.transmitter");
+			__tc_ok__;
+			IntermediateNotificationMonitor* notifMonitor =
+				new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
+			notifMonitor->state = ENROUTE;
+			notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
+			fixture->pduReg->registerMonitor(notifMonitor);
+			//delivery receipt
+			__tc__("deliverySm.reports.deliveryReceipt.transmitter");
+			__tc_ok__;
+			DeliveryReceiptMonitor* rcptMonitor =
+				new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
+			rcptMonitor->state = EXPIRED;
+			rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
+			fixture->pduReg->registerMonitor(rcptMonitor);
+		}
 	}
 }
 
@@ -186,22 +196,32 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(uint16_t msgRef,
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
 	{
-		//intermediate notification
-		__tc__("deliverySm.reports.intermediateNotification.notBound");
-		__tc_ok__;
-		IntermediateNotificationMonitor* notifMonitor =
-			new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
-		notifMonitor->state = ENROUTE;
-		notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
-		fixture->pduReg->registerMonitor(notifMonitor);
-		//delivery receipt
-		__tc__("deliverySm.reports.deliveryReceipt.notBound");
-		__tc_ok__;
-		DeliveryReceiptMonitor* rcptMonitor =
-			new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
-		rcptMonitor->state = EXPIRED;
-		rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
-		fixture->pduReg->registerMonitor(rcptMonitor);
+		if (pduData->intProps.count("ussdServiceOp"))
+		{
+			__tc__("deliverySm.reports.deliveryReceipt.ussdServiceOp");
+			__tc_ok__;
+			__tc__("deliverySm.reports.intermediateNotification.ussdServiceOp");
+			__tc_ok__;
+		}
+		else
+		{
+			//intermediate notification
+			__tc__("deliverySm.reports.intermediateNotification.notBound");
+			__tc_ok__;
+			IntermediateNotificationMonitor* notifMonitor =
+				new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
+			notifMonitor->state = ENROUTE;
+			notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
+			fixture->pduReg->registerMonitor(notifMonitor);
+			//delivery receipt
+			__tc__("deliverySm.reports.deliveryReceipt.notBound");
+			__tc_ok__;
+			DeliveryReceiptMonitor* rcptMonitor =
+				new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
+			rcptMonitor->state = EXPIRED;
+			rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
+			fixture->pduReg->registerMonitor(rcptMonitor);
+		}
 	}
 }
 
@@ -289,6 +309,7 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 void SmppTransmitterTestCases::registerExtSmeMonitors(PduSubmitSm* pdu,
 	uint16_t msgRef, time_t waitTime, time_t validTime, PduData* pduData)
 {
+	__decl_tc__;
 	if (fixture->smeType == SME_TRANSMITTER)
 	{
 		return;
@@ -305,11 +326,19 @@ void SmppTransmitterTestCases::registerExtSmeMonitors(PduSubmitSm* pdu,
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT)
 	{
-		DeliveryReceiptMonitor* rcptMonitor =
-			new DeliveryReceiptMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
-		rcptMonitor->state = DELIVERED;
-		rcptMonitor->deliveryStatus = ESME_ROK;
-		fixture->pduReg->registerMonitor(rcptMonitor);
+		if (pduData->intProps.count("ussdServiceOp"))
+		{
+			__tc__("deliverySm.reports.deliveryReceipt.ussdServiceOp");
+			__tc_ok__;
+		}
+		else
+		{
+			DeliveryReceiptMonitor* rcptMonitor =
+				new DeliveryReceiptMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
+			rcptMonitor->state = DELIVERED;
+			rcptMonitor->deliveryStatus = ESME_ROK;
+			fixture->pduReg->registerMonitor(rcptMonitor);
+		}
 	}
 }
 
@@ -317,6 +346,7 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
 	uint16_t msgRef, time_t waitTime, time_t validTime, uint32_t deliveryStatus,
 	PduData* pduData)
 {
+	__decl_tc__;
 	if (fixture->smeType == SME_TRANSMITTER)
 	{
 		return;
@@ -330,11 +360,19 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		(regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT && deliveryStatus != ESME_ROK))
 	{
-		DeliveryReceiptMonitor* rcptMonitor = 
-			new DeliveryReceiptMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
-		rcptMonitor->state = deliveryStatus == ESME_ROK ? DELIVERED : UNDELIVERABLE;
-		rcptMonitor->deliveryStatus = deliveryStatus;
-		fixture->pduReg->registerMonitor(rcptMonitor);
+		if (pduData->intProps.count("ussdServiceOp"))
+		{
+			__tc__("deliverySm.reports.deliveryReceipt.ussdServiceOp");
+			__tc_ok__;
+		}
+		else
+		{
+			DeliveryReceiptMonitor* rcptMonitor = 
+				new DeliveryReceiptMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
+			rcptMonitor->state = deliveryStatus == ESME_ROK ? DELIVERED : UNDELIVERABLE;
+			rcptMonitor->deliveryStatus = deliveryStatus;
+			fixture->pduReg->registerMonitor(rcptMonitor);
+		}
 	}
 }
 
@@ -362,6 +400,10 @@ PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
 		submitTime, intProps, strProps, objProps);
 	pduData->intProps["registredDelivery"] = pdu->get_message().get_registredDelivery();
 	pduData->intProps["reportOptions"] = profile.reportoptions;
+	if (pdu->get_optional().has_ussdServiceOp())
+	{
+		pduData->intProps["ussdServiceOp"] = pdu->get_optional().get_ussdServiceOp();
+	}
 	pduData->checkRes = fixture->pduChecker->checkSubmitSm(pduData);
 	pduData->ref();
 	//проверить наличие ошибок (будет ли респонс с кодом ошибки)
@@ -692,6 +734,10 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 		submitTime, intProps, strProps, objProps);
 	pduData->intProps["registredDelivery"] = pdu->get_registredDelivery();
 	pduData->intProps["reportOptions"] = profile.reportoptions;
+	if (resPdu->get_optional().has_ussdServiceOp())
+	{
+		pduData->intProps["ussdServiceOp"] = resPdu->get_optional().get_ussdServiceOp();
+	}
 	pduData->strProps["smsId"] = nvl(pdu->get_messageId());
 	//проверить наличие ошибок (будет ли респонс с кодом ошибки)
 	pduData->checkRes = fixture->pduChecker->checkReplaceSm(pduData,

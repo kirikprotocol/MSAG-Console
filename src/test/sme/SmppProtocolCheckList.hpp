@@ -237,6 +237,8 @@ void submitSmTc()
 		"Если код ошибки ESME_RSYSERR в поле command_status, то на стороне SC действительно возникла неустранимая ошибка (transaction rollback при сохранении сообщения)");
 	__reg_tc__("submitSm.resp.checkCmdStatusInvalidBindStatus",
 		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
+	__reg_tc__("submitSm.resp.checkCmdStatusNoRoute",
+		"Если код ошибки NOROUTE в поле command_status, то маршрута действительно не существует");
 	__reg_tc__("submitSm.resp.checkCmdStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
 }
@@ -359,6 +361,8 @@ void deliverySmTc()
 		"Сравнение опциональных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm) pdu");
 	__reg_tc__("deliverySm.normalSms.scheduleChecks",
 		"Корректная работа механизма повторной доставки (правильное время, нет пропусков между повторными доставками, отсутствие дублей)");
+	__reg_tc__("deliverySm.normalSms.ussdServiceOp",
+		"Если установлено опциональное поле ussd_service_op, то SC выполняет единственную попытку доставки сообщения");
 	//deliverySm.reports
 	__reg_tc__("deliverySm.reports",
 		"Отчеты о доставке (подтверждения доставки и промежуточные нотификации)");
@@ -379,6 +383,8 @@ void deliverySmTc()
 		"Подтверждение доставки на ошибку не доставляется в случае успешной доставки оригинального сообщения");
 	__reg_tc__("deliverySm.reports.deliveryReceipt.expiredDeliveryReceipt",
 		"Подтверждение доставки при истечении срока валидности доставляется в момент времени validity_period, даже если последняя попытка доставки прошла раньше validity_period");
+	__reg_tc__("deliverySm.reports.deliveryReceipt.ussdServiceOp",
+		"Если установлено опциональное поле ussd_service_op, то SC не отправляет подтверждения доставки");
 	__reg_tc__("deliverySm.reports.deliveryReceipt.checkAllowed",
 		"Проверка правомерности получения подтверждений доставки (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз по окончании доставки оригинальной pdu)");
 	__reg_tc__("deliverySm.reports.deliveryReceipt.recvTimeChecks",
@@ -394,6 +400,8 @@ void deliverySmTc()
 		"SC отправляет промежуточную нотификацию в момент времени schedule_delivery_time, если sme-получатель зарегистрирован как transmitter");
 	__reg_tc__("deliverySm.reports.intermediateNotification.notBound",
 		"SC отправляет промежуточную нотификацию в момент времени schedule_delivery_time, если нет соединения с sme-получателем");
+	__reg_tc__("deliverySm.reports.intermediateNotification.ussdServiceOp",
+		"Если установлено опциональное поле ussd_service_op, то SC не отправляет промежуточную нотификацию");
 	__reg_tc__("deliverySm.reports.intermediateNotification.checkAllowed",
 		"Проверка правомерности получения промежуточных нотификаций (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз после первой зарешедуленой попытки доставки)");
 	__reg_tc__("deliverySm.reports.intermediateNotification.noRescheduling",
