@@ -23,6 +23,7 @@ public class AliasAlterCommand implements Command
     private String address = null;
     private String alias = null;
     private boolean hide = false;
+    private boolean hideSet = false;
 
     public void setAddress(String address) {
         this.address = address;
@@ -31,30 +32,30 @@ public class AliasAlterCommand implements Command
         this.alias = alias;
     }
     public void setHide(boolean hide) {
-        this.hide = hide;
+        this.hide = hide; hideSet = true;
     }
 
     public void process(CommandContext ctx)
     {
         String out = "Alias '"+alias+"'";
-        boolean ok = ctx.getSmsc().getAliases().remove(alias);
-        if (!ok) {
+        Alias smscAlias = ctx.getSmsc().getAliases().get(alias);
+        if (smscAlias != null) {
+            try {
+                ctx.getSmsc().getAliases().remove(alias);
+                Alias newAlias = new Alias(new Mask(address), new Mask(alias),
+                        (hideSet) ? hide:smscAlias.isHide());
+                ctx.getSmsc().getAliases().add(newAlias);
+                ctx.setMessage(out+" altered");
+                ctx.setStatus(CommandContext.CMD_OK);
+            } catch (Exception e) {
+                e.printStackTrace();
+                ctx.setMessage("Failed to alter "+out+". Cause: "+e.getMessage());
+                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            }
+        } else {
             ctx.setMessage(out+" not exists");
-            ctx.setResult(CommandContext.CMD_PROCESS_ERROR);
-            return;
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
-        try {
-            Alias smscAlias = new Alias(new Mask(address), new Mask(alias), hide);
-            ctx.getSmsc().getAliases().add(smscAlias);
-        } catch (Exception e) {
-            e.printStackTrace();
-            ctx.setMessage("Failed to update "+out+". Cause: "+e.getMessage());
-            ctx.setResult(CommandContext.CMD_PROCESS_ERROR);
-            return;
-        }
-
-        ctx.setMessage(out+" updated");
-        ctx.setResult(CommandContext.CMD_OK);
     }
 }
 

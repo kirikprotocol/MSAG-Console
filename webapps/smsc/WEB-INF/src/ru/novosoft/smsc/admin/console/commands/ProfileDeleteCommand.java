@@ -23,16 +23,18 @@ public class ProfileDeleteCommand implements Command
 
     public void process(CommandContext ctx)
     {
-        String out = "Profile for mask '"+mask+"'";
+        ctx.setMessage("Depricated !!!");
+        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+
+        /*String out = "Profile for mask '"+mask+"' ";
         try {
             ctx.getSmsc().updateProfile(new Mask(mask), null);
-            ctx.setMessage(out+" deleted");
-            ctx.setResult(0);
+            ctx.setMessage(out+"deleted");
+            ctx.setStatus(CommandContext.CMD_OK);
         } catch (Exception e) {
-            e.printStackTrace(); // ???
-            ctx.setMessage(out+" not deleted. Cause: "+e.getMessage());
-            ctx.setResult(-1);
-        }
+            ctx.setMessage(out+"not deleted. Cause: "+e.getMessage());
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        }*/
     }
 }
 

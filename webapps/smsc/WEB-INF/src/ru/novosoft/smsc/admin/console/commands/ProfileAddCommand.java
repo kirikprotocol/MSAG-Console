@@ -7,28 +7,31 @@
  */
 package ru.novosoft.smsc.admin.console.commands;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.profiler.Profile;
 
-public class ProfileAddCommand implements Command
+public class ProfileAddCommand extends ProfileGenCommand
 {
     private String mask;
-    private String report;
-    private String enc;
 
     public void setMask(String mask) {
         this.mask = mask;
     }
-    public void setReport(String rep) {
-        this.report = rep;
-    }
-    public void setEncoding(String enc) {
-        this.enc = enc;
-    }
 
     public void process(CommandContext ctx)
     {
-        ctx.setMessage("Not implemented yet");
+        String out = "Profile for mask '"+mask+"' ";
+        try {
+            Mask profileMask = new Mask(mask);
+            Profile profile = new Profile(profileMask, codepage, report);
+            ctx.getSmsc().updateProfile(profileMask, profile);
+            ctx.setMessage(out+"added");
+            ctx.setStatus(CommandContext.CMD_OK);
+        } catch (Exception e) {
+            ctx.setMessage("Failed to add "+out+". Cause: "+e.getMessage());
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        }
     }
 }
 

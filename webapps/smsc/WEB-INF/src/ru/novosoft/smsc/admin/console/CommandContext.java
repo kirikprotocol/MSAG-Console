@@ -9,15 +9,20 @@ package ru.novosoft.smsc.admin.console;
 
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 public class CommandContext
 {
-    public final static int CMD_OK   = 0;
-    public final static int CMD_PARSE_ERROR = 100;
-    public final static int CMD_PROCESS_ERROR = 200;
+    public final static int CMD_OK   = 100;
+    public final static int CMD_LIST = 200;
+    public final static int CMD_PARSE_ERROR = 500;
+    public final static int CMD_PROCESS_ERROR = 600;
 
     protected Smsc smsc;
-    protected int result = CMD_OK;
+    protected int status = CMD_OK;
     protected String message = "No message";
+    protected ArrayList results = new ArrayList();
 
     public CommandContext(Smsc smsc) {
         this.smsc = smsc;
@@ -33,10 +38,19 @@ public class CommandContext
         this.message = message;
     }
 
-    public int getResult() {
-        return result;
+    public int getStatus() {
+        return status;
     }
-    public void setResult(int result) {
-        this.result = result;
+    public void setStatus(int status) {
+        this.status = status;
+    }
+    public void addResult(Object res) {
+        results.add(res);
+    }
+    public void addResults(Collection col) {
+        results.addAll(col);
+    }
+    public Collection getResults() {
+        return results;
     }
 }

@@ -8,30 +8,38 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.profiler.Profile;
 
-public class ProfileAlterCommand implements Command
+public class ProfileAlterCommand extends ProfileGenCommand
 {
     private String address;
-    private String report;
-    private String enc;
 
     public void setAddress(String address) {
         this.address = address;
     }
-    public void setReport(String rep) {
-        this.report = rep;
-    }
-    public void setEncoding(String enc) {
-        this.enc = enc;
-    }
 
     public void process(CommandContext ctx)
     {
-        ctx.setMessage("Not implemented yet");
+        String out = "Profile for address '"+address+"' ";
+        try {
+            Mask profileMask = new Mask(address);
+            Profile profile = ctx.getSmsc().lookupProfile(profileMask);
+            if (profile == null) {
+                ctx.setMessage(out+"not exists");
+                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            } else {
+                profile.setCodepage(codepage);
+                profile.setReportOptions(report);
+                ctx.getSmsc().updateProfile(profileMask, profile);
+                ctx.setMessage(out+"altered");
+                ctx.setStatus(CommandContext.CMD_OK);
+            }
+        } catch (Exception e) {
+            ctx.setMessage("Failed to alter "+out+". Cause: "+e.getMessage());
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        }
     }
 }
 

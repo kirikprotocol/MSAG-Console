@@ -41,13 +41,17 @@ public interface CommandParserTokenTypes {
 	int OPT_PRI = 27;
 	int OPT_DEFSME = 28;
 	int OPT_REPORT = 29;
-	int OPT_ENCODE = 30;
-	int WS = 31;
-	int STRING = 32;
-	int ID = 33;
-	int NUMBER = 34;
-	int ADDRESS = 35;
-	int COMMA = 36;
-	int ESC = 37;
-	int DIGIT = 38;
+	int VAL_FULL = 30;
+	int VAL_NONE = 31;
+	int OPT_ENCODE = 32;
+	int VAL_GSM7 = 33;
+	int VAL_UCS2 = 34;
+	int WS = 35;
+	int STRING = 36;
+	int ID = 37;
+	int NUMBER = 38;
+	int ADDRESS = 39;
+	int COMMA = 40;
+	int ESC = 41;
+	int DIGIT = 42;
 }

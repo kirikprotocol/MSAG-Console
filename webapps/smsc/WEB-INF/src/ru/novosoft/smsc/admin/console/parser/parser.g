@@ -77,9 +77,6 @@ del[CommandContext ctx]
 	|	TGT_SUBJECT	{
 		    SubjectDeleteCommand cmd = new SubjectDeleteCommand();
 		} delsubject[ctx, cmd]
-	|	TGT_PROFILE	{
-		    ProfileDeleteCommand cmd = new ProfileDeleteCommand();
-		} delprofile[ctx, cmd]
 	;
 /* ----------------------- Alt action parser ---------------------- */
 alt[CommandContext ctx]
@@ -358,12 +355,10 @@ addprofile[CommandContext ctx, ProfileAddCommand cmd]
 		    System.out.println("Add profile, mask="+mask.getText());
 		    cmd.setMask(mask.getText());
 		}
-		(OPT_REPORT rep:ID) {
-		    cmd.setReport(rep.getText());
-		}
-		(OPT_ENCODE enc:ID)? {
-		    cmd.setEncoding(enc.getText());
-		}
+		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
+			   | VAL_NONE { cmd.setNoneReport(); } ))
+		(OPT_ENCODE (VAL_GSM7 { cmd.setGsm7Encoding(); }
+			   | VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
 		{
 		    cmd.process(ctx);
 		}
@@ -373,12 +368,10 @@ altprofile[CommandContext ctx, ProfileAlterCommand cmd]
 		    System.out.println("Alter profile, addr="+addr.getText());
 		    cmd.setAddress(addr.getText());
 		}
-		(OPT_REPORT rep:ID) {
-		    cmd.setReport(rep.getText());
-		}
-		(OPT_ENCODE enc:ID)? {
-		    cmd.setEncoding(enc.getText());
-		}
+		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
+			   | VAL_NONE { cmd.setNoneReport(); } ))
+		(OPT_ENCODE (VAL_GSM7 { cmd.setGsm7Encoding(); }
+			   | VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
 		{
 		    cmd.process(ctx);
 		}

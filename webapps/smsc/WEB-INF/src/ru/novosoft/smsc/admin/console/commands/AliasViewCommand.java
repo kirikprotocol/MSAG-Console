@@ -30,25 +30,15 @@ public class AliasViewCommand implements Command
     }
     public void process(CommandContext ctx)
     {
-        String out;
-        if (alias == null || alias.length() == 0) {
-            Iterator i = ctx.getSmsc().getAliases().iterator();
-            out = (i.hasNext()) ? "Aliases:" : "No aliases defined";
-            while (i.hasNext()) {
-                Alias smscAlias = (Alias)i.next();
-                if (smscAlias != null) {
-                    out += "\r\n" + showAlias(smscAlias);
-                }
-            }
+        Alias smscAlias = ctx.getSmsc().getAliases().get(alias);
+        if (smscAlias != null) {
+            ctx.setMessage(showAlias(smscAlias));
+            ctx.setStatus(CommandContext.CMD_OK);
         }
         else {
-            Alias smscAlias = ctx.getSmsc().getAliases().get(alias);
-            out = (smscAlias != null) ?
-                    showAlias(smscAlias) : "Alias '"+alias+"' not found";
+            ctx.setMessage("Alias '"+alias+"' not found");
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
-
-        ctx.setMessage(out);
     }
-
 }
 

@@ -20,9 +20,10 @@ public class AliasDeleteCommand implements Command
 
     public void process(CommandContext ctx)
     {
+        String out = "Alias '"+alias+"' ";
         boolean ok = ctx.getSmsc().getAliases().remove(alias);
-        ctx.setMessage((ok) ? "Alias '"+alias+"' deleted" : "Alias '"+alias+"' not found");
-        ctx.setResult((ok) ? CommandContext.CMD_OK : CommandContext.CMD_PROCESS_ERROR);
+        ctx.setMessage((ok) ? out+"deleted" : out+"not found");
+        ctx.setStatus((ok) ? CommandContext.CMD_OK : CommandContext.CMD_PROCESS_ERROR);
     }
 }
 

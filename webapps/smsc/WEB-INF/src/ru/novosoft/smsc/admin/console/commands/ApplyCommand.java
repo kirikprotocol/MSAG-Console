@@ -19,10 +19,10 @@ public class ApplyCommand implements Command
             ctx.getSmsc().applyAliases();
             ctx.getSmsc().applyRoutes();
             ctx.setMessage("Changes applied succesfully");
-            ctx.setResult(0);
+            ctx.setStatus(CommandContext.CMD_OK);
         } catch (Exception e) {
             ctx.setMessage("Failed to apply changes");
-            ctx.setResult(-1);
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             e.printStackTrace();
         }
     }

@@ -39,15 +39,15 @@ public class AliasAddCommand implements Command
             ok = ctx.getSmsc().getAliases().add(smscAlias);
             if (ok) {
                 ctx.setMessage(out+" added");
-                ctx.setResult(CommandContext.CMD_OK);
+                ctx.setStatus(CommandContext.CMD_OK);
             } else {
                 ctx.setMessage(out+" already exists");
-                ctx.setResult(CommandContext.CMD_PROCESS_ERROR);
+                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             }
         } catch (Exception e) {
             e.printStackTrace();
             ctx.setMessage("Failed to add "+out+". Cause: "+e.getMessage());
-            ctx.setResult(CommandContext.CMD_PROCESS_ERROR);
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }
 }

@@ -40,7 +40,11 @@ tokens {
   OPT_PRI	= "priority"	;
   OPT_DEFSME 	= "defaultsme"	;
   OPT_REPORT	= "report"	;
+  VAL_FULL	= "full"	;
+  VAL_NONE	= "none"	;
   OPT_ENCODE	= "encoding"	;
+  VAL_GSM7	= "gsm7"	;
+  VAL_UCS2	= "ucs2"	;
 }
 
 WS    : ( ' '

@@ -222,15 +222,6 @@ public CommandParser(ParserSharedInputState state) {
 				delsubject(ctx, cmd);
 				break;
 			}
-			case TGT_PROFILE:
-			{
-				match(TGT_PROFILE);
-				
-						    ProfileDeleteCommand cmd = new ProfileDeleteCommand();
-						
-				delprofile(ctx, cmd);
-				break;
-			}
 			default:
 			{
 				throw new NoViableAltException(LT(1), getFilename());
@@ -568,8 +559,6 @@ public CommandParser(ParserSharedInputState state) {
 	) throws RecognitionException, TokenStreamException {
 		
 		Token  mask = null;
-		Token  rep = null;
-		Token  enc = null;
 		
 		try {      // for error handling
 			{
@@ -582,19 +571,52 @@ public CommandParser(ParserSharedInputState state) {
 					
 			{
 			match(OPT_REPORT);
-			rep = LT(1);
-			match(ID);
+			{
+			switch ( LA(1)) {
+			case VAL_FULL:
+			{
+				match(VAL_FULL);
+				cmd.setFullReport();
+				break;
 			}
-			
-					    cmd.setReport(rep.getText());
-					
+			case VAL_NONE:
+			{
+				match(VAL_NONE);
+				cmd.setNoneReport();
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			}
 			{
 			switch ( LA(1)) {
 			case OPT_ENCODE:
 			{
 				match(OPT_ENCODE);
-				enc = LT(1);
-				match(ID);
+				{
+				switch ( LA(1)) {
+				case VAL_GSM7:
+				{
+					match(VAL_GSM7);
+					cmd.setGsm7Encoding();
+					break;
+				}
+				case VAL_UCS2:
+				{
+					match(VAL_UCS2);
+					cmd.setUcs2Encoding();
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
 				break;
 			}
 			case EOF:
@@ -607,9 +629,6 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			}
-			
-					    cmd.setEncoding(enc.getText());
-					
 			
 					    cmd.process(ctx);
 					
@@ -719,30 +738,6 @@ public CommandParser(ParserSharedInputState state) {
 					    String out = (qname == null) ? name.getText():qname.getText();
 					    System.out.println("Delete subject="+out);
 					    cmd.setSubject(out);
-					    cmd.process(ctx);
-					
-		}
-		catch (RecognitionException ex) {
-			reportError(ex);
-			consume();
-			consumeUntil(_tokenSet_0);
-		}
-	}
-	
-	public final void delprofile(
-		CommandContext ctx, ProfileDeleteCommand cmd
-	) throws RecognitionException, TokenStreamException {
-		
-		Token  mask = null;
-		
-		try {      // for error handling
-			{
-			mask = LT(1);
-			match(ADDRESS);
-			}
-			
-					    System.out.println("Delete profile, mask="+mask.getText());
-					    cmd.setMask(mask.getText());
 					    cmd.process(ctx);
 					
 		}
@@ -1029,8 +1024,6 @@ public CommandParser(ParserSharedInputState state) {
 	) throws RecognitionException, TokenStreamException {
 		
 		Token  addr = null;
-		Token  rep = null;
-		Token  enc = null;
 		
 		try {      // for error handling
 			{
@@ -1043,19 +1036,52 @@ public CommandParser(ParserSharedInputState state) {
 					
 			{
 			match(OPT_REPORT);
-			rep = LT(1);
-			match(ID);
+			{
+			switch ( LA(1)) {
+			case VAL_FULL:
+			{
+				match(VAL_FULL);
+				cmd.setFullReport();
+				break;
 			}
-			
-					    cmd.setReport(rep.getText());
-					
+			case VAL_NONE:
+			{
+				match(VAL_NONE);
+				cmd.setNoneReport();
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			}
 			{
 			switch ( LA(1)) {
 			case OPT_ENCODE:
 			{
 				match(OPT_ENCODE);
-				enc = LT(1);
-				match(ID);
+				{
+				switch ( LA(1)) {
+				case VAL_GSM7:
+				{
+					match(VAL_GSM7);
+					cmd.setGsm7Encoding();
+					break;
+				}
+				case VAL_UCS2:
+				{
+					match(VAL_UCS2);
+					cmd.setUcs2Encoding();
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
 				break;
 			}
 			case EOF:
@@ -1068,9 +1094,6 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			}
-			
-					    cmd.setEncoding(enc.getText());
-					
 			
 					    cmd.process(ctx);
 					
@@ -1719,6 +1742,30 @@ public CommandParser(ParserSharedInputState state) {
 		}
 	}
 	
+	public final void delprofile(
+		CommandContext ctx, ProfileDeleteCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		Token  mask = null;
+		
+		try {      // for error handling
+			{
+			mask = LT(1);
+			match(ADDRESS);
+			}
+			
+					    System.out.println("Delete profile, mask="+mask.getText());
+					    cmd.setMask(mask.getText());
+					    cmd.process(ctx);
+					
+		}
+		catch (RecognitionException ex) {
+			reportError(ex);
+			consume();
+			consumeUntil(_tokenSet_0);
+		}
+	}
+	
 	
 	public static final String[] _tokenNames = {
 		"<0>",
@@ -1751,7 +1798,11 @@ public CommandParser(ParserSharedInputState state) {
 		"\"priority\"",
 		"\"defaultsme\"",
 		"\"report\"",
+		"\"full\"",
+		"\"none\"",
 		"\"encoding\"",
+		"\"gsm7\"",
+		"\"ucs2\"",
 		"WS",
 		"STRING",
 		"ID",
@@ -1778,7 +1829,7 @@ public CommandParser(ParserSharedInputState state) {
 	public static final BitSet _tokenSet_6 = new BitSet(_tokenSet_6_data_);
 	private static final long _tokenSet_7_data_[] = { 201326672L, 0L };
 	public static final BitSet _tokenSet_7 = new BitSet(_tokenSet_7_data_);
-	private static final long _tokenSet_8_data_[] = { 68719476738L, 0L };
+	private static final long _tokenSet_8_data_[] = { 1099511627778L, 0L };
 	public static final BitSet _tokenSet_8 = new BitSet(_tokenSet_8_data_);
 	
 	}
