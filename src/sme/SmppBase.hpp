@@ -464,7 +464,6 @@ public:
     socket.Close();
     reader.WaitFor();
     writer.WaitFor();
-    lock.Empty();
     closed=true;
   }
 
