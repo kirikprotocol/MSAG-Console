@@ -455,7 +455,7 @@ public:
   {
     close();
   }
-  void connect()
+  void connect()throw(SmppConnectException)
   {
     if(!closed)return;
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
