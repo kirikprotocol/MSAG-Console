@@ -537,7 +537,7 @@ public class SmsView
         messagePrefix = StringEncoderDecoder.encode(messagePrefix);
 
       row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
-      row.setText(messagePrefix + text!=null?decodeMessage(text, textLen, textEncoding):"");
+      row.setText(messagePrefix + ((text!=null)?decodeMessage(text, textLen, textEncoding):""));
     }
     catch (IOException exc) {
       System.out.println("SMS Body parsing failed !");
