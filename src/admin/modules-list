@@ -1,5 +1,5 @@
 protocol	"protocol classes"
 service		"service api"
-daemon		"service start/stop daemon"
 util		"some util classes for admin subsystem"
+daemon		"service start/stop daemon"
 smsc_service	"SMSC starter"

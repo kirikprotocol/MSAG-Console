@@ -46,7 +46,7 @@ public class ServiceAddExternalAdm extends PageBean
 	private String rangeOfAddress = null;
 	private String password = null;
 	private boolean wantAlias = false;
-	private int timeout = 0;
+	private int timeout = 8;
 
 	protected String mbNext = null;
 	protected String mbCancel = null;

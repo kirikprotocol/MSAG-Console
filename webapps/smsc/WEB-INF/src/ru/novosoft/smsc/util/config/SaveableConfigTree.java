@@ -19,8 +19,8 @@ public class SaveableConfigTree
 	{
 		for (Iterator i = config.params.keySet().iterator(); i.hasNext();)
 		{
-		  String name = (String) i.next();
-		  this.putParameter(name, config.params.get(name));
+			String name = (String) i.next();
+			this.putParameter(name, config.params.get(name));
 		}
 	}
 
@@ -51,24 +51,25 @@ public class SaveableConfigTree
 		}
 	}
 
-  public void write(OutputStream out, String prefix)
-        throws ConfigManager.WrongParamTypeException, IOException
-  {
-    write( new PrintWriter( new OutputStreamWriter(out)), prefix);
-  }
+	public void write(OutputStream out, String prefix)
+			throws ConfigManager.WrongParamTypeException, IOException
+	{
+		write(new PrintWriter(new OutputStreamWriter(out)), prefix);
+	}
 
 	public void write(PrintWriter out, String prefix)
-			  throws ConfigManager.WrongParamTypeException, IOException
+			throws ConfigManager.WrongParamTypeException, IOException
 	{
 		writeParams(out, prefix, params);
 		writeSections(out, prefix, sections);
 	}
 
 	private void writeParams(PrintWriter out, String prefix, Map parameters)
-			  throws ConfigManager.WrongParamTypeException, IOException
+			throws ConfigManager.WrongParamTypeException, IOException
 	{
 		List paramNames = new ArrayList(parameters.keySet());
-		Collections.sort(paramNames, new Comparator() {
+		Collections.sort(paramNames, new Comparator()
+		{
 			public int compare(Object o1, Object o2)
 			{
 				String s1 = (String) o1;
@@ -105,7 +106,7 @@ public class SaveableConfigTree
 	}
 
 	private void writeSections(PrintWriter out, String prefix, Map secs)
-			  throws IOException, ConfigManager.WrongParamTypeException
+			throws IOException, ConfigManager.WrongParamTypeException
 	{
 		List secNames = new ArrayList(secs.keySet());
 		Collections.sort(secNames, new Comparator()

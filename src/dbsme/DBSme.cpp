@@ -378,7 +378,7 @@ static void appSignalHandler(int sig)
 // added by igork
 void atExitHandler(void)
 {
-    sigsend(P_PID, getppid(), SIGCHLD);
+    //sigsend(P_PID, getppid(), SIGCHLD);
     smsc::util::xml::TerminateXerces();
 }
 

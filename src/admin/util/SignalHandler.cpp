@@ -16,7 +16,7 @@ SignalHandler * SignalHandler::shutdownHandler = 0;
 
 void atExitHandler(void)
 {
-  sigsend(P_PID, getppid(), SIGCHLD);
+//  sigsend(P_PID, getppid(), SIGCHLD);
   smsc::util::xml::TerminateXerces();
 }
 

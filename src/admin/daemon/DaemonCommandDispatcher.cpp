@@ -38,6 +38,70 @@ Mutex DaemonCommandDispatcher::servicesListMutex;
 config::Manager *DaemonCommandDispatcher::configManager = 0;
 Mutex DaemonCommandDispatcher::configManagerMutex;
 
+
+class ChildShutdownWaiter : public Thread
+{
+private:
+  DaemonCommandDispatcher * dispatcher;
+  log4cpp::Category &logger;
+public:
+  ChildShutdownWaiter(DaemonCommandDispatcher *daemon_dispatcher) 
+    : dispatcher(daemon_dispatcher), logger(Logger::getCategory("smsc.admin.daemon.ChildShutdownWaiter"))
+  {};
+
+  virtual int Execute()
+  {
+    while (!dispatcher->isStopping)
+    {
+      pid_t chldpid = waitpid(-1, 0, 0);
+      if (chldpid == -1)
+      {
+        switch (errno)
+        {
+          case ECHILD:
+            break;
+          case EINTR:
+            logger.debug("interrupted");
+            break;
+          case EINVAL:
+            logger.error("invalid arguments");
+            break;
+          default:
+            logger.error("unknown error");
+            break;
+        }
+      } 
+      else if (chldpid > 0)
+      {
+        #ifdef SMSC_DEBUG
+        logger.debug("CHILD %u is finished", chldpid);
+        #endif
+        MutexGuard a(dispatcher->servicesListMutex);
+        if (const char * const serviceId = dispatcher->services.markServiceAsStopped(chldpid))
+        {
+          MutexGuard lock(dispatcher->configManagerMutex);
+          dispatcher->updateServiceFromConfig(dispatcher->services[serviceId]);
+        }
+      }
+      #ifdef SMSC_DEBUG
+      else
+      {
+        logger.debug("waitpid returns %u ");
+      }
+      #endif
+    }
+    return 0;
+  }
+};
+
+DaemonCommandDispatcher::DaemonCommandDispatcher(Socket * admSocket)
+: CommandDispatcher(admSocket, "smsc.admin.daemon.CommandDispatcher"),
+        logger(Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher"))
+{
+  childShutdownWaiter.reset(new ChildShutdownWaiter(this));
+  childShutdownWaiter->Start();
+}
+
 Response * DaemonCommandDispatcher::handle(const Command * const command)
 	throw (AdminException)
 {
@@ -324,7 +388,7 @@ void DaemonCommandDispatcher::childSignalListener(int signo,
 																									void *some_pointer)
 	throw ()
 {
-	#ifdef SMSC_DEBUG
+/*	#ifdef SMSC_DEBUG
 		log4cpp::Category &log(Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher"));
 		//log.debug("some signal received");
 	#endif
@@ -385,6 +449,7 @@ void DaemonCommandDispatcher::childSignalListener(int signo,
 			;// skip these signals
 		}
 	}
+*/
 }
 
 void DaemonCommandDispatcher::activateChildSignalHandler()

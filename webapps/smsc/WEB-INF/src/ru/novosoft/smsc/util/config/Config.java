@@ -85,7 +85,7 @@ public class Config
 
 	public synchronized Set getParameterNames()
 	{
-		return params.keySet();
+		return new HashSet(params.keySet());
 	}
 
 	public synchronized void setInt(String paramName, int value)

@@ -21,7 +21,7 @@ public class ServiceAddInternal extends PageBean
 	protected String interfaceVersion = "3.4";
 	protected String rangeOfAddress = "";
 	protected String password = "";
-	protected int timeout = 0;
+	protected int timeout = 8;
 	protected boolean wantAlias = false;
 
 	protected String hostName = null;
@@ -41,11 +41,6 @@ public class ServiceAddInternal extends PageBean
 			return addService();
 
 		return RESULT_OK;
-	}
-
-	protected int init(List errors)
-	{
-		return super.init(errors);
 	}
 
 	private int convertInterfaceVersion(String version)
