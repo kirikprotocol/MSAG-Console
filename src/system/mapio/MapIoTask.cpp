@@ -347,11 +347,15 @@ USHORT_T  Et96MapCloseInd(ET96MAP_LOCAL_SSN_T ssn,
   try{
     DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
     if ( !mdci.isnull() ){
-      if ( mdci->Et96MapCloseInd(ssn,
+    	try{
+	      if ( mdci->Et96MapCloseInd(ssn,
                             dialogId,
                             ud,
                             priorityOrder) )
-        MapDialogContainer::getInstance()->dropDialog(dialogId);
+	        MapDialogContainer::getInstance()->dropDialog(mdci->GetDialogId());
+      }catch(...){
+				MapDialogContainer::getInstance()->dropDialog(mdci->GetDialogId());
+      }
     }
   }catch(...){
     __trace2__("MAP::Et96MapCloseInd: catch exception when processing did 0x%x",dialogId);
