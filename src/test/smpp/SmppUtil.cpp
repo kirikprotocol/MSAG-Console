@@ -675,6 +675,9 @@ bool operator!=(PduAddress& a1, PduAddress& a2)
 #define __prop__(prop) \
 	os << "    " #prop " = " << p.get_##prop() << endl;
 
+#define __hex_prop__(prop) \
+	os << "    " #prop " = 0x" << p.get_##prop() << endl;
+
 #define __str_prop__(prop) \
 	os << "    " #prop " = " << (p.get_##prop() ? p.get_##prop() : "NULL") << endl; \
 	
@@ -987,8 +990,10 @@ ostream& operator<< (ostream& os, SmppHeader& p)
 {
 	os << "  SmppHeader {" << endl;
 	__prop__(commandLength);
-	__prop__(commandId);
-	__prop__(commandStatus);
+	os << hex;
+	__hex_prop__(commandId);
+	__hex_prop__(commandStatus);
+	os << dec;
 	__prop__(sequenceNumber);
 	os << "  }";
 	return os;
