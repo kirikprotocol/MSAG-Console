@@ -812,6 +812,9 @@ struct SMS
   SmeSystemIdType srcSmeId;
   SmeSystemIdType dstSmeId;
 
+  uint8_t     concatMsgRef;   // For concatenated messages only
+  uint8_t     concatSeqNum;   //
+
   /**
   * Default конструктор, просто инициализирует поле state как ENROUTE
   * и прочие поля дефолтными значениями
@@ -820,7 +823,7 @@ struct SMS
     attempts(0), lastResult(0), lastTime(0), nextTime(0),
     messageReference(0), needArchivate(true),
     deliveryReport(0), billingRecord(0), attach(false),
-    serviceId(0), priority(0)
+    serviceId(0), priority(0),concatMsgRef(0),concatSeqNum(0)
   {
     eServiceType[0]='\0'; routeId[0]='\0';
     srcSmeId[0]='\0'; dstSmeId[0]='\0';
@@ -853,7 +856,9 @@ struct SMS
     messageBody(sms.messageBody),
     attach(sms.attach),
     serviceId(sms.serviceId),
-    priority(sms.priority)
+    priority(sms.priority),
+    concatMsgRef(sms.concatMsgRef),
+    concatSeqNum(sms.concatSeqNum)
   {
     strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
     strncpy(routeId, sms.routeId, sizeof(routeId));
@@ -890,6 +895,9 @@ struct SMS
     attach = sms.attach;
     serviceId = sms.serviceId;
     priority = sms.priority;
+
+    concatMsgRef=sms.concatMsgRef;
+    concatSeqNum=sms.concatSeqNum;
 
     strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
     strncpy(routeId, sms.routeId, sizeof(routeId));
@@ -1518,6 +1526,26 @@ struct SMS
   {
     return dstSmeId;
   };
+
+  inline void setConcatMsgRef(uint8_t newval)
+  {
+    concatMsgRef=newval;
+  }
+
+  inline uint8_t getConcatMsgRef()
+  {
+    return concatMsgRef;
+  }
+
+  inline void setConcatSeqNum(uint8_t newval)
+  {
+    concatSeqNum=newval;
+  }
+
+  inline uint8_t getConcatSeqNum()
+  {
+    return concatSeqNum;
+  }
 
   void setStrProperty(int tag,const char* value)
   {
