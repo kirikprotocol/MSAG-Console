@@ -10,6 +10,34 @@ namespace smsc{
 namespace system{
 namespace smppio{
 
+
+using smsc::logger::Logger;
+
+static inline void DumpPduBuffer(Logger* log,const char* prefix,const char* buf)
+{
+  if(!log)return;
+  if(!log->isDebugEnabled())return;
+  int32_t sz,id,st,sq;
+  memcpy(&sz,buf,4);
+  memcpy(&id,buf+4,4);
+  memcpy(&st,buf+8,4);
+  memcpy(&sq,buf+12,4);
+  sz=ntohl(sz);
+  id=ntohl(id);
+  st=ntohl(st);
+  sq=ntohl(sq);
+  string res=prefix;
+  char tmp[128];
+  sprintf(tmp,"sz=%d,id=%x,st=%d,sq=%d:",sz,id,st,sq);
+  res+=tmp;
+  for(int i=16;i<sz;i++)
+  {
+    sprintf(tmp," %02X",(unsigned int)(unsigned char)buf[i]);
+    res+=tmp;
+  }
+  log->log(Logger::LEVEL_DEBUG,"%s",res.c_str());
+}
+
 char* SmppSocket::getBuffer(int length)
 {
   if(length>bufferSize)
@@ -24,17 +52,7 @@ char* SmppSocket::getBuffer(int length)
 
 void SmppSocket::send(int length)
 {
-  if(log && log->isDebugEnabled())
-  {
-    std::string s="out:";
-    char buf[16];
-    for(int i=0;i<bufferOffset;i++)
-    {
-      sprintf(buf," %02X",(unsigned int)(unsigned char)buffer[i]);
-      s+=buf;
-    }
-    log->log(smsc::logger::Logger::LEVEL_DEBUG,"%s",s.c_str());
-  }
+  DumpPduBuffer(log,"out:",buffer);
 
   dataLength=length;
   bufferOffset=0;
@@ -105,17 +123,7 @@ smsc::smpp::SmppHeader* SmppSocket::decode()
   //printf("\n");fflush(stdout);
   trace2("decode: %p, %d",buffer,bufferOffset);
 
-  if(log && log->isDebugEnabled())
-  {
-    std::string s="in :";
-    char buf[16];
-    for(int i=0;i<bufferOffset;i++)
-    {
-      sprintf(buf," %02X",(unsigned int)(unsigned char)buffer[i]);
-      s+=buf;
-    }
-    log->log(smsc::logger::Logger::LEVEL_DEBUG,"%s",s.c_str());
-  }
+  DumpPduBuffer(log,"in :",buffer);
 
   smsc::smpp::assignStreamWith(&s,buffer,bufferOffset,true);
   smsc::smpp::SmppHeader* pdu=smsc::smpp::fetchSmppPdu(&s);
