@@ -2,6 +2,7 @@
 #include "util/debug.h"
 #include "MessageStoreTestCases.hpp"
 #include "test/sms/SmsUtil.hpp"
+#include "test/util/AutoSync.hpp"
 #include "store/StoreManager.h"
 #include "store/StoreExceptions.h"
 #include <cstdlib>
@@ -13,7 +14,7 @@ namespace test  {
 namespace store {
 
 using namespace std;
-using namespace smsc::test::util; //TCSelector, TCResult
+using namespace smsc::test::util; //auto_sync, etc
 using namespace smsc::test::sms; //constants, SmsUtil
 using namespace smsc::store; //StoreManager, CreateMode
 using namespace smsc::sms; //constants, SMSId, SMS, AddressValue, EService, ...
@@ -21,10 +22,11 @@ using log4cpp::Category;
 using smsc::util::Logger;
 using smsc::util::AssertException;
 
-MessageStoreTestCases::MessageStoreTestCases(MessageStore* _msgStore)
-	: msgStore(_msgStore)
+MessageStoreTestCases::MessageStoreTestCases(MessageStore* _msgStore,
+	CheckList* _chkList) : msgStore(_msgStore), chkList(_chkList)
 {
 	__require__(msgStore);
+	//__require__(chkList);
 }
 
 Category& MessageStoreTestCases::getLog()
@@ -58,10 +60,38 @@ Category& MessageStoreTestCases::getLog()
 		__trace2__("set_str_body_tag: tag = " #tagName ", set = %s, get = %s", tmp_##tagName.get(), sms.getMessageBody().getStrProperty(Tag::tagName).c_str()); \
 	}
 
-TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
+#define __tc__(tcId) \
+	if (chkList) { tc = chkList->getTc(tcId); }
+
+#define __tc_ok__ \
+	__trace2__("%s: ok", tc->id.c_str()); \
+	if (chkList) { \
+		__require__(tc.get()); \
+		tc->correct++; \
+	}
+
+#define __tc_fail__(errCode) \
+	__trace2__("%s: err = %d", tc->id.c_str(), errCode); \
+	if (chkList) { \
+		__require__(tc.get()); \
+		tc->incorrect++; \
+		tc->errCodes.insert(errCode); \
+	}
+
+#define __tc_fail2__(errList) \
+	{ ostringstream s; \
+		copy(errList.begin(), errList.end(), ostream_iterator<int>(s, ", ")); \
+		__trace2__("%s: err = %s", tc->id.c_str(), s.str().c_str()); } \
+	if (chkList) { \
+		__require__(tc.get()); \
+		tc->incorrect++; \
+		tc->errCodes.insert(errList.begin(), errList.end()); \
+	}
+
+void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 {
 	TCSelector s(num, 15);
-	TCResult* res = new TCResult(TC_STORE_CORRECT_SMS, s.getChoice());
+	auto_sync<TestCase> tc;
 	for (; s.check(); s++)
 	{
 		try
@@ -71,46 +101,56 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 			switch(s.value())
 			{
 				case 1: //ничего особенного
+					__tc__("storeCorrectSms");
 					break;
 				case 2: //originatingAddress минимальной длины
 					//согласно SMPP v3.4 должно быть 0, но мы делаем 1
+					__tc__("storeCorrectSms.origAddrMarginalLength");
 					sms.setOriginatingAddress(1, 10, 20, "*");
 					break;
 				case 3: //originatingAddress максимальной длины
 					{
+						__tc__("storeCorrectSms.origAddrMarginalLength");
 						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH);
 						sms.setOriginatingAddress(MAX_ADDRESS_LENGTH, 20, 30,
 							addr.get());
 					}
 					break;
 				case 4: //destinationAddress минимальной длины
+					__tc__("storeCorrectSms.destAddrMarginalLength");
 					sms.setDestinationAddress(1, 30, 40, "*");
 					break;
 				case 5: //destinationAddress максимальной длины
 					{
+						__tc__("storeCorrectSms.destAddrMarginalLength");
 						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH);
 						sms.setDestinationAddress(MAX_ADDRESS_LENGTH, 40, 50, 
 							addr.get());
 					}
 					break;
 				case 6: //dealiasedDestinationAddress минимальной длины
+					__tc__("storeCorrectSms.dealiasedDestAddrMarginalLength");
 					sms.setDealiasedDestinationAddress(1, 30, 40, "*");
 					break;
 				case 7: //dealiasedDestinationAddress максимальной длины
 					{
+						__tc__("storeCorrectSms.dealiasedDestAddrMarginalLength");
 						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH);
 						sms.setDealiasedDestinationAddress(MAX_ADDRESS_LENGTH,
 							40, 50, addr.get());
 					}
 					break;
 				case 8: //пустой imsi (см. GSM 09.02 пункт 12.2) и пустой msc (???)
+					__tc__("storeCorrectSms.origDescMarginal");
 					sms.setOriginatingDescriptor(0, NULL, 0, NULL, 10);
 					break;
 				case 9: //пустой imsi (см. GSM 09.02 пункт 12.2) и пустой msc (???)
+					__tc__("storeCorrectSms.origDescMarginal");
 					sms.setOriginatingDescriptor(0, "*", 0, "*", 20);
 					break;
 				case 10: //imsi и msc адреса максимальной длины
 					{
+						__tc__("storeCorrectSms.origDescMarginal");
 						auto_ptr<char> mscAddr = rand_char(MAX_ADDRESS_LENGTH);
 						auto_ptr<char> imsiAddr = rand_char(MAX_ADDRESS_LENGTH);
 						sms.setOriginatingDescriptor(
@@ -119,35 +159,40 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 					}
 					break;
 				case 11: //пустое тело сообщения
+					__tc__("storeCorrectSms.bodyEmpty");
 					sms.getMessageBody() = Body();
 					break;
 				case 12: //short_message и message_payload максимальной длины
 					{
+						__tc__("storeCorrectSms.bodyMaxLength");
                         __set_int_body_tag__(SMPP_SM_LENGTH, MAX_SM_LENGTH);
 						__set_str_body_tag__(SMPP_SHORT_MESSAGE, MAX_SM_LENGTH);
 						__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, MAX_PAYLOAD_LENGTH);
 					}
 					break;
 				case 13: //пустой serviceType, NULL недопустимо
+					__tc__("storeCorrectSms.serviceTypeMarginal");
                    	sms.setEServiceType("");
 					break;
 				case 14: //serviceType максимальной длины
 					{
+						__tc__("storeCorrectSms.serviceTypeMarginal");
 						auto_ptr<char> type = rand_char(MAX_SERVICE_TYPE_LENGTH);
 						sms.setEServiceType(type.get());
 					}
 					break;
 				case 15: //receipted_message_id максимальной длины
 					{
+						__tc__("storeCorrectSms.rcptMsgIdMaxLength");
 						__set_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, MAX_MSG_ID_LENGTH);
 					}
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
 			SMSId smsId = msgStore->getNextId();
-			__trace2__("@@@ storeCorrectSms(): nextTime = %ld", sms.getNextTime());
 			msgStore->createSms(sms, smsId, CREATE_NEW);
+			__tc_ok__;
 			if (idp != NULL && smsp != NULL)
 			{
 				*idp = smsId;
@@ -156,21 +201,19 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 		}
 		catch(...)
 		{
+			__tc_fail__(s.value());
 			error();
 			*idp = 0;
 			SmsUtil::clearSms(smsp);
-			res->addFailure(s.value());
 		}
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp,
+void MessageStoreTestCases::storeSimilarSms(SMSId* idp, SMS* smsp,
 	const SMSId existentId, const SMS& existentSms, int num)
 {
-	TCSelector s(num, 7, 1000);
-	TCResult* res = new TCResult(TC_STORE_CORRECT_SMS, s.getChoice());
+	TCSelector s(num, 7);
+	auto_sync<TestCase> tc;
 	//messageReference
 	uint8_t msgRef = existentSms.getMessageReference();
 	//originatingAddress
@@ -198,56 +241,66 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp,
 			uint8_t shift = rand1(254);
 			switch(s.value())
 			{
-				case 1001: //отличие только в msgRef
+				case 1: //отличие только в msgRef
+					__tc__("storeSimilarSms.diffMsgRef");
 					sms.setMessageReference(msgRef + shift);
 					sms.setOriginatingAddress(origAddr);
 					sms.setDestinationAddress(destAddr);
 					break;
-				case 1002: //отличие только в origAddrType
+				case 2: //отличие только в origAddrType
+					__tc__("storeSimilarSms.diffOrigAddr.diffType");
 					sms.setMessageReference(msgRef);
 					sms.setOriginatingAddress(origAddrLength,
 						origAddrType + shift, origAddrPlan, origAddrValue);
 					sms.setDestinationAddress(destAddr);
 					break;
-				case 1003: //отличие только в origAddrPlan
+				case 3: //отличие только в origAddrPlan
+					__tc__("storeSimilarSms.diffOrigAddr.diffPlan");
 					sms.setMessageReference(msgRef);
 					sms.setOriginatingAddress(origAddrLength, origAddrType,
 						origAddrPlan + shift, origAddrValue);
 					sms.setDestinationAddress(destAddr);
 					break;
-				case 1004: //отличие только в origAddrValue
-						sms.setMessageReference(msgRef);
-						sms.setOriginatingAddress(randAddrLength, origAddrType,
-							origAddrPlan, randAddrValue.get());
-						sms.setDestinationAddress(destAddr);
+				case 4: //отличие только в origAddrValue
+					__tc__("storeSimilarSms.diffOrigAddr.diffValue");
+					sms.setMessageReference(msgRef);
+					sms.setOriginatingAddress(randAddrLength, origAddrType,
+						origAddrPlan, randAddrValue.get());
+					sms.setDestinationAddress(destAddr);
 					break;
-				case 1005: //отличие только в destAddrType
+				case 5: //отличие только в destAddrType
+					__tc__("storeSimilarSms.diffDestAddr.diffType");
 					sms.setMessageReference(msgRef);
 					sms.setOriginatingAddress(origAddr);
 					sms.setDestinationAddress(destAddrLength,
 						destAddrType + shift, destAddrPlan, destAddrValue);
 					break;
-				case 1006: //отличие только в destAddrPlan
+				case 6: //отличие только в destAddrPlan
+					__tc__("storeSimilarSms.diffDestAddr.diffPlan");
 					sms.setMessageReference(msgRef);
 					sms.setOriginatingAddress(origAddr);
 					sms.setDestinationAddress(destAddrLength, destAddrType,
 						destAddrPlan + shift, destAddrValue);
 					break;
-				case 1007: //отличие только в destAddrValue
-						sms.setMessageReference(msgRef);
-						sms.setOriginatingAddress(origAddr);
-						sms.setDestinationAddress(randAddrLength, destAddrType,
-							destAddrPlan, randAddrValue.get());
+				case 7: //отличие только в destAddrValue
+					__tc__("storeSimilarSms.diffDestAddr.diffValue");
+					sms.setMessageReference(msgRef);
+					sms.setOriginatingAddress(origAddr);
+					sms.setDestinationAddress(randAddrLength, destAddrType,
+						destAddrPlan, randAddrValue.get());
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
 			SMSId smsId = msgStore->getNextId();
 			msgStore->createSms(sms, smsId, flag);
 			if (smsId == existentId)
 			{
-				res->addFailure(1101);
-				throw s;
+				__tc_fail__(s.value());
+			}
+			else
+			{
+				__tc_ok__;
 			}
 			if (idp != NULL && smsp != NULL)
 			{
@@ -257,20 +310,19 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp,
 		}
 		catch(...)
 		{
+			__tc_fail__(s.value());
 			error();
 			*idp = 0;
 			SmsUtil::clearSms(smsp);
-			res->addFailure(s.value());
 		}
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::storeDuplicateSms(SMSId* idp, SMS* smsp,
+void MessageStoreTestCases::storeDuplicateSms(SMSId* idp, SMS* smsp,
 	const SMSId existentId, const SMS& existentSms)
 {
-	TCResult* res = new TCResult(TC_STORE_DUPLICATE_SMS);
+	auto_sync<TestCase> tc;
+	__tc__("storeDuplicateSms");
 	try
 	{
 		SMS sms(existentSms);
@@ -278,7 +330,11 @@ TCResult* MessageStoreTestCases::storeDuplicateSms(SMSId* idp, SMS* smsp,
 		msgStore->createSms(sms, id, CREATE_NEW);
 		if (id == existentId)
 		{
-			res->addFailure(101);
+			__tc_fail__(101);
+		}
+		else
+		{
+			__tc_ok__;
 		}
 		if (idp != NULL && smsp != NULL)
 		{
@@ -288,18 +344,17 @@ TCResult* MessageStoreTestCases::storeDuplicateSms(SMSId* idp, SMS* smsp,
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
 		*idp = 0;
 		SmsUtil::clearSms(smsp);
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
+void MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
 {
-	TCResult* res = new TCResult(TC_STORE_REJECT_DUPLICATE_SMS);
+	auto_sync<TestCase> tc;
+	__tc__("storeRejectDuplicateSms");
 	try
 	{
 		SMS sms;
@@ -312,24 +367,23 @@ TCResult* MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
 		sms.setDealiasedDestinationAddress(existentSms.getDealiasedDestinationAddress());
 		SMSId smsId = msgStore->getNextId();
 		msgStore->createSms(sms, smsId, ETSI_REJECT_IF_PRESENT);
-		res->addFailure(101);
+		__tc_fail__(101);
 	}
 	catch(DuplicateMessageException&)
 	{
-		//ok
+		__tc_ok__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existentSms)
+void MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existentSms)
 {
-	TCResult* res = new TCResult(TC_STORE_REPLACE_CORRECT_SMS);
+	auto_sync<TestCase> tc;
+	__tc__("storeReplaceCorrectSms");
 	try
 	{
 		SMS sms;
@@ -346,22 +400,22 @@ TCResult* MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existen
 		sms.setEServiceType(serviceType);
 		SMSId smsId = msgStore->getNextId();
 		msgStore->createSms(sms, smsId, SMPP_OVERWRITE_IF_PRESENT);
+		__tc_ok__;
 		*idp = smsId;
 		*existentSms = sms;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::storeReplaceSmsInFinalState(SMSId* idp, SMS* smsp,
+void MessageStoreTestCases::storeReplaceSmsInFinalState(SMSId* idp, SMS* smsp,
 	const SMS& existentSms)
 {
-	TCResult* res = new TCResult(TC_STORE_REPLACE_SMS_IN_FINAL_STATE);
+	auto_sync<TestCase> tc;
+	__tc__("storeReplaceSmsInFinalState");
 	try
 	{
 		//Отсутствует в GSM 03.40
@@ -371,6 +425,7 @@ TCResult* MessageStoreTestCases::storeReplaceSmsInFinalState(SMSId* idp, SMS* sm
 		SMS sms(existentSms);
 		SMSId smsId = msgStore->getNextId();
 		msgStore->createSms(sms, smsId, SMPP_OVERWRITE_IF_PRESENT);
+		__tc_ok__;
 		if (idp != NULL && smsp != NULL)
 		{
 			*idp = smsId;
@@ -379,18 +434,17 @@ TCResult* MessageStoreTestCases::storeReplaceSmsInFinalState(SMSId* idp, SMS* sm
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
 		*idp = 0;
 		SmsUtil::clearSms(smsp);
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::storeIncorrectSms(int num)
+void MessageStoreTestCases::storeIncorrectSms(int num)
 {
-	TCResult* res = new TCResult(TC_STORE_INCORRECT_SMS);
+	auto_sync<TestCase> tc;
+	__tc__("storeIncorrectSms");
 	//Проверяется вызывающей стороной:
 	//некорректный статус DELIVERED
 	//некорректный статус EXPIRED
@@ -398,14 +452,13 @@ TCResult* MessageStoreTestCases::storeIncorrectSms(int num)
 	//некорректный статус DELETED
 	//срок валидности уже закончился
 	//waitTime > validTime
-	debug(res);
-	return res;
+	__tc_ok__;
 }
 
-TCResult* MessageStoreTestCases::storeAssertSms(int num)
+void MessageStoreTestCases::storeAssertSms(int num)
 {
 	TCSelector s(num, 14);
-	TCResult* res = new TCResult(TC_STORE_ASSERT_SMS, s.getChoice());
+	auto_sync<TestCase> tc;
 	SMS sms;
 	for (; s.check(); s++)
 	{
@@ -415,103 +468,115 @@ TCResult* MessageStoreTestCases::storeAssertSms(int num)
 			switch(s.value())
 			{
 				case 1: //пустой destinationAddress
+					__tc__("storeAssertSms.destAddrMarginal");
 					sms.setDestinationAddress(0, 0, 0, NULL);
 					break;
 				case 2: //пустой destinationAddress
+					__tc__("storeAssertSms.destAddrMarginal");
 					sms.setDestinationAddress(0, 20, 30, "*");
 					break;
 				case 3: //пустой dealiasedDestinationAddress
+					__tc__("storeAssertSms.dealiasedDestAddrMarginal");
 					sms.setDealiasedDestinationAddress(0, 20, 30, "*");
 					break;
 				case 4: //originatingAddress больше максимальной длины
 					{
+						__tc__("storeAssertSms.origAddrMarginal");
 						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
 						sms.setOriginatingAddress(MAX_ADDRESS_LENGTH + 1, 20, 30, addr.get());
 					}
 					break;
 				case 5: //destinationAddress больше максимальной длины
 					{
+						__tc__("storeAssertSms.destAddrMarginal");
 						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
 						sms.setDestinationAddress(MAX_ADDRESS_LENGTH + 1, 20, 30, addr.get());
 					}
 					break;
 				case 6: //dealiasedDestinationAddress больше максимальной длины
 					{
+						__tc__("storeAssertSms.dealiasedDestAddrMarginal");
 						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
 						sms.setDealiasedDestinationAddress(MAX_ADDRESS_LENGTH + 1, 20, 30, addr.get());
 					}
 					break;
 				case 7: //msc адрес в originatingDescriptor больше максимальной длины
 					{
+						__tc__("storeAssertSms.origDescMscAddrGreaterMaxLength");
 						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
 						sms.setOriginatingDescriptor(MAX_ADDRESS_LENGTH + 1, addr.get(), 1, "*", 1);
 					}
 					break;
 				case 8: //imsi адрес в originatingDescriptor больше максимальной длины
 					{
+						__tc__("storeAssertSms.origDescImsiAddrGreaterMaxLength");
 						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
 						sms.setOriginatingDescriptor(1, "*", MAX_ADDRESS_LENGTH + 1, addr.get(), 1);
 					}
 					break;
 				case 9: //msc адрес в Descriptor больше максимальной длины
 					{
+						__tc__("storeAssertSms.descMscAddrGreaterMaxLength");
 						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
 						Descriptor(MAX_ADDRESS_LENGTH + 1, addr.get(), 1, "*", 1);
 					}
 					break;
 				case 10: //imsi адрес в Descriptor больше максимальной длины
 					{
+						__tc__("storeAssertSms.descImsiAddrGreaterMaxLength");
 						auto_ptr<char> addr = rand_char(MAX_ADDRESS_LENGTH + 1);
 						Descriptor(1, "*", MAX_ADDRESS_LENGTH + 1, addr.get(), 1);
 					}
 					break;
 				case 11: //short_message больше максимальной длины
 					{
+						__tc__("storeAssertSms.smGreaterMaxLength");
 						__set_int_body_tag__(SMPP_SM_LENGTH, MAX_SM_LENGTH + 1);
 						__set_str_body_tag__(SMPP_SHORT_MESSAGE, MAX_SM_LENGTH + 1);
 					}
 					break;
 				case 12: //message_payload больше максимальной длины
 					{
-						__set_int_body_tag__(SMPP_MESSAGE_PAYLOAD, MAX_PAYLOAD_LENGTH + 1);
+						__tc__("storeAssertSms.payloadGreaterMaxLength");
+						__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, MAX_PAYLOAD_LENGTH + 1);
 					}
 					break;
-				case 13: //serviceType больше максимальной длины
+				case 13: //service_type больше максимальной длины
 					{
+						__tc__("storeAssertSms.serviceTypeGreaterMaxLength");
 						__set_str__(EServiceType, MAX_SERVICE_TYPE_LENGTH + 1);
 					}
 					break;
 				case 14: //receipted_message_id больше максимальной длины
 					{
+						__tc__("storeAssertSms.rcptMsgIdGreaterMaxLength");
 						__set_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, MAX_MSG_ID_LENGTH + 1);
 					}
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
 			//SMSId smsId = msgStore->store(sms);
 			//res->addFailure(s.value());
+			__tc_fail__(s.value());
 		}
 		catch(AssertException&)
 		{
-			//ok
+			__tc_ok__;
 		}
 		catch(...)
 		{
+			__tc_fail__(s.value());
 			error();
-			res->addFailure(s.value());
 		}
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
+void MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 	const SMSId id, SMS* sms, int num)
 {
 	TCSelector s(num, 5);
-	TCResult* res = new TCResult(TC_CHANGE_EXISTENT_SMS_STATE_ENROUTE_TO_ENROUTE,
-		s.getChoice());
+	auto_sync<TestCase> tc;
 	for (; s.check(); s++)
 	{
 		try
@@ -523,15 +588,18 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 			switch(s.value())
 			{
 				case 1: //пустой imsi и msc (например, SME не имееют imsi и msc)
+					__tc__("changeExistentSmsStateEnrouteToEnroute.destDescMarginal");
 					dst.setMsc(0, NULL);
 					dst.setImsi(0, NULL);
 					break;
 				case 2: //пустой imsi и msc (например, SME не имееют imsi и msc)
+					__tc__("changeExistentSmsStateEnrouteToEnroute.destDescMarginal");
 					dst.setMsc(0, "*");
 					dst.setImsi(0, "*");
 					break;
 				case 3: //imsi и msc адреса максимальной длины
 					{
+						__tc__("changeExistentSmsStateEnrouteToEnroute.destDescMarginal");
 						auto_ptr<char> mscAddr = rand_char(MAX_ADDRESS_LENGTH);
 						auto_ptr<char> imsiAddr = rand_char(MAX_ADDRESS_LENGTH);
 						dst.setMsc(MAX_ADDRESS_LENGTH, mscAddr.get());
@@ -539,15 +607,18 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 					}
 					break;
 				case 4: //nextTryTime в прошлом времени
+					__tc__("changeExistentSmsStateEnrouteToEnroute.nextTimePast");
 					nextTryTime -= rand0(3600);
 					break;
 				case 5: //lastResult не задан
+					__tc__("changeExistentSmsStateEnrouteToEnroute.lastResultZero");
 					lastResult = 0;
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
 			msgStore->changeSmsStateToEnroute(id, dst, lastResult, nextTryTime);
+			__tc_ok__;
 			sms->setNextTime(nextTryTime);
 			//hack, все сеттеры запрещены
 			sms->destinationDescriptor = dst;
@@ -557,12 +628,10 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 		}
 		catch(...)
 		{
+			__tc_fail__(s.value());
 			error();
-			res->addFailure(s.value());
 		}
 	}
-	debug(res);
-	return res;
 }
 
 //hack, все сеттеры запрещены
@@ -581,12 +650,11 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 	sms->lastResult = lastResult; \
 	sms->attempts++;
 
-TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
+void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 	const SMSId id, SMS* sms, int num)
 {
 	TCSelector s(num, 9);
-	TCResult* res = new TCResult(TC_CHANGE_EXISTENT_SMS_STATE_ENROUTE_TO_FINAL, 
-		s.getChoice());
+	auto_sync<TestCase> tc;
 	for (; s.check(); s++)
 	{
 		try
@@ -598,12 +666,14 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 			switch(s.value())
 			{
 				case 1: //DELIVERED, пустой imsi и msc
+					__tc__("changeExistentSmsStateEnrouteToFinal.stateDeliveredDestDescMarginal");
 					dst.setMsc(0, NULL);
 					dst.setImsi(0, NULL);
 					msgStore->changeSmsStateToDelivered(id, dst);
 					SET_DELIVERED_SMS
 					break;
 				case 2: //DELIVERED, пустой imsi и msc
+					__tc__("changeExistentSmsStateEnrouteToFinal.stateDeliveredDestDescMarginal");
 					dst.setMsc(0, "*");
 					dst.setImsi(0, "*");
 					msgStore->changeSmsStateToDelivered(id, dst);
@@ -611,6 +681,7 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					break;
 				case 3: //DELIVERED, imsi и msc адреса максимальной длины
 					{
+						__tc__("changeExistentSmsStateEnrouteToFinal.stateDeliveredDestDescMarginal");
 						auto_ptr<char> mscAddr = rand_char(MAX_ADDRESS_LENGTH);
 						auto_ptr<char> imsiAddr = rand_char(MAX_ADDRESS_LENGTH);
 						dst.setMsc(MAX_ADDRESS_LENGTH, mscAddr.get());
@@ -620,12 +691,14 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					SET_DELIVERED_SMS
 					break;
 				case 4: //UNDELIVERABLE, пустой imsi и msc
+					__tc__("changeExistentSmsStateEnrouteToFinal.stateUndeliverableDestDescMarginal");
 					dst.setMsc(0, NULL);
 					dst.setImsi(0, NULL);
 					msgStore->changeSmsStateToUndeliverable(id, dst, lastResult);
 					SET_UNDELIVERABLE_SMS
 					break;
 				case 5: //UNDELIVERABLE, пустой imsi и msc
+					__tc__("changeExistentSmsStateEnrouteToFinal.stateUndeliverableDestDescMarginal");
 					dst.setMsc(0, "*");
 					dst.setImsi(0, "*");
 					msgStore->changeSmsStateToUndeliverable(id, dst, lastResult);
@@ -633,6 +706,7 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					break;
 				case 6: //UNDELIVERABLE, imsi и msc адреса максимальной длины
 					{
+						__tc__("changeExistentSmsStateEnrouteToFinal.stateUndeliverableDestDescMarginal");
 						auto_ptr<char> mscAddr = rand_char(MAX_ADDRESS_LENGTH);
 						auto_ptr<char> imsiAddr = rand_char(MAX_ADDRESS_LENGTH);
 						dst.setMsc(MAX_ADDRESS_LENGTH, mscAddr.get());
@@ -642,11 +716,13 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					SET_UNDELIVERABLE_SMS
 					break;
 				case 7: //UNDELIVERABLE, lastResult не задан
+					__tc__("changeExistentSmsStateEnrouteToFinal.stateUndeliverableLastResultEmpty");
 					lastResult = 0;
 					msgStore->changeSmsStateToUndeliverable(id, dst, lastResult);
 					SET_UNDELIVERABLE_SMS
 					break;
 				case 8: //EXPIRED
+					__tc__("changeExistentSmsStateEnrouteToFinal.stateExpired");
 					msgStore->changeSmsStateToExpired(id);
 					sms->setNextTime(0);
 					//hack, все сеттеры запрещены
@@ -654,6 +730,7 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					//sms->lastTime = time(NULL);
 					break;
 				case 9: //DELETED
+					__tc__("changeExistentSmsStateEnrouteToFinal.stateDeleted");
 					msgStore->changeSmsStateToDeleted(id);
 					sms->setNextTime(0);
 					//hack, все сеттеры запрещены
@@ -661,23 +738,22 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					//sms->lastTime = time(NULL);
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
+			__tc_ok__;
 		}
 		catch(...)
 		{
+			__tc_fail__(s.value());
 			error();
-			res->addFailure(s.value());
 		}
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::changeFinalSmsStateToAny(const SMSId id, int num)
+void MessageStoreTestCases::changeFinalSmsStateToAny(const SMSId id, int num)
 {
 	TCSelector s(num, 5);
-	TCResult* res = new TCResult(TC_CHANGE_FINAL_SMS_STATE_TO_ANY, s.getChoice());
+	auto_sync<TestCase> tc;
 	for (; s.check(); s++)
 	{
 		try
@@ -689,43 +765,47 @@ TCResult* MessageStoreTestCases::changeFinalSmsStateToAny(const SMSId id, int nu
 			switch(s.value())
 			{
 				case 1: //ENROUTE
+					__tc__("changeFinalSmsStateToAny.stateEnrote");
 					msgStore->changeSmsStateToEnroute(id, dst, lastResult, nextTryTime);
 					break;
 				case 2: //DELIVERED
+					__tc__("changeFinalSmsStateToAny.stateDelivered");
 					msgStore->changeSmsStateToDelivered(id, dst);
 					break;
 				case 3: //UNDELIVERABLE
+					__tc__("changeFinalSmsStateToAny.stateUndeliverable");
 					msgStore->changeSmsStateToUndeliverable(id, dst, lastResult);
 					break;
 				case 4: //EXPIRED
+					__tc__("changeFinalSmsStateToAny.stateExpired");
 					msgStore->changeSmsStateToExpired(id);
 					break;
 				case 5: //DELETED
+					__tc__("changeFinalSmsStateToAny.stateDeleted");
 					msgStore->changeSmsStateToDeleted(id);
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
-			res->addFailure(s.value());
+			__tc_fail__(s.value());
 		}
 		catch(NoSuchMessageException&)
 		{
-			//ok
+			__tc_ok__;
 		}
 		catch(...)
 		{
+			__tc_fail__(s.value());
 			error();
-			res->addFailure(s.value());
 		}
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int num)
+void MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int num)
 {
 	TCSelector s(num, 6);
-	TCResult* res = new TCResult(TC_REPLACE_CORRECT_SMS, s.getChoice());
+	auto_sync<TestCase> tc;
+	__tc__("replaceCorrectSms"); //to del
 	/*
 	for (; s.check(); s++)
 	{
@@ -738,34 +818,41 @@ TCResult* MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int
 			time_t waitTime = time(NULL) + 50;
 			switch(s.value())
 			{
-				case 1: //проапдейтить все возможные атрибуты
+				case 1: //заменить все возможные поля
+					__tc__("replaceCorrectSms.replaceAll");
 					break;
 				case 2: //оставить schedule_delivery_time без изменений
+					__tc__("replaceCorrectSms.waitTimeUnchanged");
 					waitTime = 0;
 					break;
 				case 3: //оставить validity_period без изменений
+					__tc__("replaceCorrectSms.validTimeUnchanged");
 					validTime = 0;
 					break;
 				case 4: //пустое тело сообщения
+					__tc__("replaceCorrectSms.smMarginal");
 					body.setData(0, NULL);
 					break;
 				case 5: //пустое тело сообщения
 					{
+						__tc__("replaceCorrectSms.smMarginal");
 						uint8_t tmp[] = {0};
 						body.setData(0, tmp);
 					}
 					break;
 				case 6: //тело сообщения максимальной длины
 					{
+						__tc__("replaceCorrectSms.smMarginal");
 						auto_ptr<uint8_t> data = rand_uint8_t(MAX_SM_LENGTH);
 						body.setData(MAX_SM_LENGTH, data.get());
 					}
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
 			msgStore->replaceSms(id, sms->getOriginatingAddress(),
                 body, deliveryReport, validTime, waitTime);
+			__tc_ok__;
 			//данные новые, схема и наличие хедера прежние
 			uint8_t data[MAX_SHORT_MESSAGE_LENGTH];
 			uint8_t len = body.getData(data);
@@ -782,17 +869,15 @@ TCResult* MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int
 		}
 		catch(...)
 		{
+			__tc_fail__(s.value());
 			error();
-			res->addFailure(s.value());
 		}
 	}
 	*/
-	res->addFailure(100);
-	debug(res);
-	return res;
+	__tc_fail__(100);
 }
 
-TCResult* MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
+void MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 	const SMS& sms, int num)
 {
 	//Следующие проверки делает вызывающая сторона:
@@ -800,7 +885,8 @@ TCResult* MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 	//waitTime > validTime
 
 	TCSelector s(num, 3);
-	TCResult* res = new TCResult(TC_REPLACE_INCORRECT_SMS, s.getChoice());
+	auto_sync<TestCase> tc;
+	__tc__("replaceIncorrectSms"); //to del
 	/*
 	for (; s.check(); s++)
 	{
@@ -815,43 +901,45 @@ TCResult* MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 			switch(s.value())
 			{
 				case 1: //отличие только в TypeOfNumber
+					__tc__("replaceIncorrectSms.diffType");
 					addr.setTypeOfNumber(addr.getTypeOfNumber() + 1);
 					break;
 				case 2: //отличие только в NumberingPlan
+					__tc__("replaceIncorrectSms.diffPlan");
 					addr.setNumberingPlan(addr.getNumberingPlan() + 1);
 					break;
 				case 3: //отличие только в Value
 					{
+						__tc__("replaceIncorrectSms.diffValue");
 						int len = rand1(MAX_ADDRESS_VALUE_LENGTH);
 						auto_ptr<char> val = rand_char(len);
 						addr.setValue(len, val.get());
 					}
 					break;
 				default:
-					throw s;
+					__unreachable__("Invalid num");
 			}
 			msgStore->replaceSms(id, addr, body, deliveryReport, validTime, waitTime);
-			res->addFailure(s.value());
+			__tc_fail__(s.value());
 		}
 		catch(NoSuchMessageException&)
 		{
-			//ok
+			__tc_ok__;
 		}
 		catch(...)
 		{
+			__tc_fail__(s.value());
 			error();
-			res->addFailure(s.value());
 		}
 	}
 	*/
-	res->addFailure(100);
-	debug(res);
-	return res;
+	__tc_fail__(100);
 }
 
-TCResult* MessageStoreTestCases::replaceFinalSms(const SMSId id, const SMS& sms)
+void MessageStoreTestCases::replaceFinalSms(const SMSId id, const SMS& sms)
 {
-	TCResult* res = new TCResult(TC_REPLACE_FINAL_SMS);
+	auto_sync<TestCase> tc;
+	__tc__("replaceIncorrectSms.replaceFinalSms");
 	/*
 	try
 	{
@@ -862,125 +950,155 @@ TCResult* MessageStoreTestCases::replaceFinalSms(const SMSId id, const SMS& sms)
 		time_t waitTime = time(NULL) + 50;
 		msgStore->replaceSms(id, sms.getOriginatingAddress(), body,
 			deliveryReport, validTime, waitTime);
-		res->addFailure(101);
+		__tc_fail__(101);
 	}
 	catch(NoSuchMessageException&)
 	{
-		//ok
+		__tc_ok__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
 	*/
-	res->addFailure(100);
-	debug(res);
-	return res;
+	__tc_fail__(100);
 }
 
-TCResult* MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
+void MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
 {
-	TCResult* res = new TCResult(TC_LOAD_EXISTENT_SMS);
+	auto_sync<TestCase> tc;
+	__tc__("loadSms.existentSms");
 	try
 	{
 		SMS _sms;
 		msgStore->retriveSms(id, _sms);
-		__trace2__("@@@ loadExistentSms(): nextTime = %ld", _sms.getNextTime());
 		if (&sms == NULL || &_sms == NULL)
 		{
-			res->addFailure(101);
+			__tc_fail__(101);
 		}
 		else
 		{
 			vector<int> tmp = SmsUtil::compareMessages(sms, _sms);
-			for (int i = 0; i < tmp.size(); i++)
+			if (tmp.size())
 			{
-				res->addFailure(tmp[i]);
+				__tc_fail2__(tmp);
+			}
+			else
+			{
+				__tc_ok__;
 			}
 		}
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::loadNonExistentSms(const SMSId id)
+void MessageStoreTestCases::loadNonExistentSms(const SMSId id)
 {
-	TCResult* res = new TCResult(TC_LOAD_NON_EXISTENT_SMS);
+	auto_sync<TestCase> tc;
+	__tc__("loadSms.nonExistentSms");
 	try
 	{
 		SMS sms;
 		msgStore->retriveSms(id, sms);
-		res->addFailure(101);
+		__tc_fail__(101);
 	}
 	catch(NoSuchMessageException&)
 	{
-		//Ok
+		__tc_ok__;
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::deleteExistentSms(const SMSId id)
+void MessageStoreTestCases::deleteExistentSms(const SMSId id)
 {
-	TCResult* res = new TCResult(TC_DELETE_EXISTENT_SMS);
+	auto_sync<TestCase> tc;
+	__tc__("deleteSms.existentSms");
 	try
 	{
 		msgStore->destroySms(id);
+		__tc_ok__;
 	}
 	catch (...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 	
-TCResult* MessageStoreTestCases::deleteNonExistentSms(const SMSId id)
+void MessageStoreTestCases::deleteNonExistentSms(const SMSId id)
 {
-	TCResult* res = new TCResult(TC_DELETE_NON_EXISTENT_SMS);
+	auto_sync<TestCase> tc;
+	__tc__("deleteSms.nonExistentSms");
 	try
 	{
 		msgStore->destroySms(id);
-		res->addFailure(101);
+		__tc_fail__(101);
 	}
 	catch (NoSuchMessageException&)
 	{
-		//Ok
+		__tc_ok__;
 	}
 	catch (...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	debug(res);
-	return res;
 }
 
-TCResult* MessageStoreTestCases::checkReadyForRetrySms(const vector<SMSId*>& ids,
+void MessageStoreTestCases::checkReadyForRetrySms(const vector<SMSId*>& ids,
 	const vector<SMS*>& sms, int num)
 {
 	TCSelector s(num, 4);
-	TCResult* res = new TCResult(TC_CHECK_READY_FOR_RETRY_SMS, s.getChoice());
 	//Получить времена
-	bool found = false;
 	time_t minNextTime, middleNextTime, maxNextTime;
+	checkNextRetryTime(ids, sms, minNextTime, middleNextTime, maxNextTime);
+	//сравнить списки MessageStore::getReadyForRetry()
+	for (; s.check(); s++)
+	{
+		switch(s.value())
+		{
+			case 1: //меньше minNextTime
+				compareReadyForRetrySmsList(ids, sms, minNextTime - 1, 10);
+				break;
+			case 2: //равно middleNextTime
+				compareReadyForRetrySmsList(ids, sms, middleNextTime, 20);
+				break;
+			case 3: //равно какому-то среднему времени
+				compareReadyForRetrySmsList(ids, sms,
+					(minNextTime + maxNextTime) / 2, 30);
+				break;
+			case 4: //больше maxNextTime
+				compareReadyForRetrySmsList(ids, sms, maxNextTime + 1, 40);
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+	}
+}
+void MessageStoreTestCases::checkNextRetryTime(const vector<SMSId*>& ids, 
+	const vector<SMS*>& sms, time_t& minNextTime, time_t& middleNextTime,
+	time_t& maxNextTime)
+{
+	auto_sync<TestCase> tc;
+	__tc__("checkReadyForRetrySms.nextRetryTime");
+	bool found = false;
+	minNextTime = 0;
+	middleNextTime = 0;
+	maxNextTime = 0;
 	for (int i = 0; i < sms.size(); i++)
 	{
 ostringstream os;
 os << "smsId = " << *ids[i] << ", nextTime = " << sms[i]->getNextTime();
-__trace2__("checkReadyForRetrySms(): %s", os.str().c_str());
+__trace2__("checkNextRetryTime(): %s", os.str().c_str());
 		if (sms[i]->getState() != ENROUTE)
 		{
 			continue;
@@ -1017,106 +1135,92 @@ __trace2__("checkReadyForRetrySms(): %s", os.str().c_str());
 		__trace2__("@@@ checkReadyForRetrySms(): nextTime = %ld", nextTime);
 		if (!found && nextTime != 0)
 		{
-			res->addFailure(1);
+			__tc_fail__(1);
 		}
-		if (found && nextTime != minNextTime)
+		else if (found && nextTime != minNextTime)
 		{
 			__trace2__("checkReadyForRetrySms(): nextTime = %ld, minNextTime = %ld",
 				nextTime, minNextTime);
-			res->addFailure(2);
+			__tc_fail__(2);
+		}
+		else
+		{
+			__tc_ok__;
 		}
 	}
 	catch(...)
 	{
+		__tc_fail__(100);
 		error();
-		res->addFailure(100);
 	}
-	//сравнить списки MessageStore::getReadyForRetry()
-	for (; s.check(); s++)
-	{
-		try
-		{
-			switch(s.value())
-			{
-				case 1: //меньше minNextTime
-					compareReadyForRetrySmsList(ids, sms, minNextTime - 1, res, 10);
-					break;
-				case 2: //равно middleNextTime
-					compareReadyForRetrySmsList(ids, sms, middleNextTime, res, 20);
-					break;
-				case 3: //равно какому-то среднему времени
-					compareReadyForRetrySmsList(ids, sms,
-						(minNextTime + maxNextTime) / 2, res, 30);
-					break;
-				case 4: //больше maxNextTime
-					compareReadyForRetrySmsList(ids, sms, maxNextTime + 1, res, 40);
-					break;
-				default:
-					throw s;
-			}
-		}
-		catch(...)
-		{
-			error();
-			res->addFailure(200);
-		}
-	}
-	debug(res);
-	return res;
 }
 
 void MessageStoreTestCases::compareReadyForRetrySmsList(const vector<SMSId*>& ids, 
-	const vector<SMS*>& sms, time_t time, TCResult* res, int shift)
+	const vector<SMS*>& sms, time_t t, int shift)
 {
+	auto_sync<TestCase> tc;
+	__tc__("checkReadyForRetrySms.readyForRetrySmsList");
 	//выбрать и отсортировать ids
 	typedef map<SMSId, time_t> IdMap;
 	IdMap enroteIds;
 	for (int i = 0; i < sms.size(); i++)
 	{
 		if (sms[i]->getState() == ENROUTE && sms[i]->getNextTime() > 0 &&
-			sms[i]->getNextTime() <= time)
+			sms[i]->getNextTime() <= t)
 		{
 			enroteIds[*ids[i]] = sms[i]->getNextTime();
 		}
 	}
 	//сверить списки
-	SMSId id;
-	time_t prevTime = 0;
-	IdIterator* it = msgStore->getReadyForRetry(time);
 	bool sortOrderOk = true;
 	bool idFound = true;
-	while (it->getNextId(id))
+	try
 	{
-		IdMap::iterator idIt = enroteIds.find(id);
-		if (idIt == enroteIds.end())
+		SMSId id;
+		time_t prevTime = 0;
+		IdIterator* it = msgStore->getReadyForRetry(t);
+		while (it->getNextId(id))
 		{
-			idFound = false;
-			continue;
+			IdMap::iterator idIt = enroteIds.find(id);
+			if (idIt == enroteIds.end())
+			{
+				idFound = false;
+				continue;
+			}
+			time_t curTime = idIt->second;
+			if (curTime < prevTime)
+			{
+				sortOrderOk = false;
+				continue;
+			}
+			prevTime = curTime;
+			enroteIds.erase(idIt);
+			//log.debug("dbid = %d, msid = %d", id, enroteIds[i].smsId);
 		}
-		time_t curTime = idIt->second;
-		if (curTime < prevTime)
-		{
-			sortOrderOk = false;
-			continue;
-		}
-		prevTime = curTime;
-		enroteIds.erase(idIt);
-//log.debug("dbid = %d, msid = %d", id, enroteIds[i].smsId);
+		delete it;
+	}
+	catch (...)
+	{
+		__tc_fail__(100);
+		error();
 	}
 	if (!idFound)
 	{
-		res->addFailure(shift + 1);
+		__tc_fail__(shift + 1);
 	}
 	if (!sortOrderOk)
 	{
-		res->addFailure(shift + 2);
+		__tc_fail__(shift + 2);
 	}
 	if (enroteIds.size())
 	{
 //log.debug("dbid!!! = %d", id);
-		res->addFailure(shift + 3);
+		__tc_fail__(shift + 3);
 	}
-	delete it;
+	if (idFound && sortOrderOk && !enroteIds.size())
+	{
+		__tc_ok__;
+	}
 }
 
 }
