@@ -11,7 +11,7 @@
 
 #ifdef DEBUG
 #include <stdarg.h>
-#define LOG(x) log.logit x
+#define LOG(x) logger.logit x
 #else
 #define LOG(x)
 #endif
@@ -43,7 +43,7 @@ void logit(const char* fmt,...)
 {
   if(f)fclose(f);
 }
-}log;
+}logger;
 #endif
 
 bool ReadConfig(const char* cfgfile)
