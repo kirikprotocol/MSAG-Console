@@ -34,6 +34,7 @@ struct ReleaseSettings {
 };
 
 bool setCallingMask(const char* rx);
+bool setCalledMask(const char* rx);
 
 class MissedCallProcessor{
   public:

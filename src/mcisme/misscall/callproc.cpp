@@ -28,6 +28,7 @@ Mutex MissedCallProcessor::lock;
 MissedCallProcessor* volatile MissedCallProcessor::processor = 0;
 
 static smsc::util::regexp::RegExp maskRx;
+static smsc::util::regexp::RegExp calledMaskRx;
 
 
 enum State{
@@ -134,6 +135,10 @@ bool setCallingMask(const char* rx)
 {
   smsc::util::regexp::RegExp::InitLocale();
   return maskRx.Compile(rx)!=0;
+}
+bool setCalledMask(const char* rx) {
+  smsc::util::regexp::RegExp::InitLocale();
+  return calledMaskRx.Compile(rx)!=0;
 }
 
 void MissedCallProcessor::setCircuits(Circuits cics)
@@ -521,48 +526,6 @@ USHORT_T EINSS7_I97IsupIndError(USHORT_T errorCode,MSG_T *message)
   delete msg;
   return EINSS7_I97_REQUEST_OK;
 }
-void  fillEvent(EINSS7_I97_CALLINGNUMB_T *calling,
-                EINSS7_I97_ORIGINALNUMB_T *called,
-                MissedCallEvent& event)
-{
-  time(&event.time);
-  if (calling &&
-      calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH &&
-      calling->presentationRestr == EINSS7_I97_PRES_ALLOWED)
-  {
-    vector<char> addr(calling->noOfAddrSign +  1);
-    unpack_addr(&addr[0], calling->addrSign_p, calling->noOfAddrSign);
-    if( calling->noOfAddrSign > 0 ) {
-      if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
-      {
-        addr.insert(addr.begin(),'7'); // valid only for Russia!!!
-        addr.insert(addr.begin(),'+');
-      }
-      else if (calling->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
-      {
-        addr.insert(addr.begin(),'+');
-      }
-    }
-    event.from = &addr[0];
-  }
-  if (called && called->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH)
-  {
-    vector<char> addr(called->noOfAddrSign +  1);
-    unpack_addr(&addr[0], called->addrSign_p, called->noOfAddrSign);
-    if( called->noOfAddrSign > 0 ) {
-      if (called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
-      {
-        addr.insert(addr.begin(),'7'); // valid only for Russia!!!
-        addr.insert(addr.begin(),'+');
-      }
-      else if (called->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
-      {
-        addr.insert(addr.begin(),'+');
-      }
-    }
-    event.to = &addr[0];
-  }
-}
 
 USHORT_T EINSS7_I97IsupBindConf(USHORT_T isupUserID,UCHAR_T result)
 {
@@ -634,9 +597,67 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValu
 void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_ORIGINALNUMB_T *called)
 {
   MissedCallEvent event;
-  fillEvent(calling,called,event);
-  smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s",event.from.c_str(),event.to.c_str());
-  MissedCallProcessor::instance()->fireMissedCallEvent(event);
+  time(&event.time);
+  if (calling &&
+      calling->noOfAddrSign > 0 &&
+      calling->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH &&
+      calling->presentationRestr == EINSS7_I97_PRES_ALLOWED)
+  {
+    /*max length of .ton.npi.digits = 1+3+1+1+1+20 = 27*/
+    char cgaddr[32] = {0};
+    int pos = snprintf(cgaddr,sizeof(cgaddr),".%d.%d.",calling->natureOfAddr,calling->numberPlan);
+    unpack_addr(cgaddr+pos, calling->addrSign_p, calling->noOfAddrSign);
+
+    using smsc::misscall::maskRx;
+    using smsc::util::regexp::SMatch;
+    std::vector<SMatch> m(maskRx.GetBracketsCount());
+
+    int n=m.size();
+    if(maskRx.Match(cgaddr,&m[0],n))
+    {
+      if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
+      {
+        cgaddr[0] = '+';cgaddr[1] = '7'; // valid only for Russia!!!
+        unpack_addr(cgaddr+2, calling->addrSign_p, calling->noOfAddrSign);
+      }
+      else if (calling->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
+      {
+        cgaddr[0] = '+';
+        unpack_addr(cgaddr+1, calling->addrSign_p, calling->noOfAddrSign);
+      }
+      event.from = cgaddr;
+    }
+  }
+  if (called && 
+      called->noOfAddrSign > 0 &&
+      called->noOfAddrSign <= MAX_FULL_ADDRESS_VALUE_LENGTH)
+  {
+    char cdaddr[32] = {0};
+    int pos = snprintf(cdaddr,sizeof(cdaddr),".%d.%d.",called->natureOfAddr,called->numberPlan);
+    unpack_addr(cdaddr+pos, called->addrSign_p, called->noOfAddrSign);
+
+    using smsc::misscall::calledMaskRx;
+    using smsc::util::regexp::SMatch;
+    std::vector<SMatch> m(calledMaskRx.GetBracketsCount());
+
+    int n=m.size();
+    if(calledMaskRx.Match(cdaddr,&m[0],n))
+    {
+      if (called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
+      {
+        cdaddr[0] = '+';cdaddr[1] = '7'; // valid only for Russia!!!
+        unpack_addr(cdaddr+2, called->addrSign_p, called->noOfAddrSign);
+      }
+      else if (called->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
+      {
+        cdaddr[0] = '+';
+        unpack_addr(cdaddr+1, called->addrSign_p, called->noOfAddrSign);
+      }
+      event.to = cdaddr;
+      smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s",event.from.c_str(),event.to.c_str());
+      MissedCallProcessor::instance()->fireMissedCallEvent(event);
+    }
+  }
 }
 USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                                 USHORT_T resourceGroup,
@@ -706,16 +727,6 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
 
   releaseConnection(isupHead_sp,causeValue);
 
-  using smsc::misscall::maskRx;
-  using smsc::util::regexp::SMatch;
-  std::vector<SMatch> m(maskRx.GetBracketsCount());
-
-  int n=m.size();
-  if(!maskRx.Match(formatCallingNumber(calling).c_str(),&m[0],n))
-  {
-    smsc_log_debug(missedCallProcessorLogger, "Calling=%s doesn't match",formatCallingNumber(calling).c_str());
-    inform=0;
-  }
 
   if (original && inform)
   {
