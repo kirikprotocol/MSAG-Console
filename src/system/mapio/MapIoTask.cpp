@@ -34,7 +34,7 @@ static void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T
 
 void ForwardResponse(ET96MAP_DIALOGUE_ID_T dialogId){
   MapDialogCntItem* mdci = 
-    MapDialogContainer::getInstance()->createDialog(dialogId);
+    MapDialogContainer::getInstance()->GetDialog(dialogId);
   if ( mdci ) {
     if ( !mdci ){
       __trace2__("MAP::bad dialogid 0x%x",dialogId);
