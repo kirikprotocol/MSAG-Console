@@ -89,8 +89,7 @@ namespace smsc { namespace infosme
         std::string msgTemplate;
         std::string svcType;        // specified if replaceIfPresent == true
 
-        int     dsOwnTimeout, dsIntTimeout;
-        int     dsUncommitedInProcess, dsUncommitedInGeneration;
+        int     dsTimeout, dsUncommitedInProcess, dsUncommitedInGeneration;
         int     messagesCacheSize, messagesCacheSleep;
         
         TaskInfo()
@@ -99,8 +98,7 @@ namespace smsc { namespace infosme
               endDate(-1), retryTime(-1), validityPeriod(-1), validityDate(-1),
               activePeriodStart(-1), activePeriodEnd(-1),
               dsId(""), tablePrefix(""), querySql(""), msgTemplate(""), svcType(""),
-              dsOwnTimeout(0), dsIntTimeout(0), 
-              dsUncommitedInProcess(1), dsUncommitedInGeneration(1), 
+              dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1), 
               messagesCacheSize(100), messagesCacheSleep(0) {};
         TaskInfo(const TaskInfo& info) 
             : id(info.id), name(info.name), enabled(info.enabled), priority(info.priority),
@@ -110,8 +108,7 @@ namespace smsc { namespace infosme
               validityPeriod(info.validityPeriod), validityDate(info.validityDate),
               activePeriodStart(info.activePeriodStart), activePeriodEnd(info.activePeriodEnd),
               dsId(info.dsId), tablePrefix(info.tablePrefix), querySql(info.querySql), 
-              msgTemplate(info.msgTemplate), svcType(info.svcType), 
-              dsOwnTimeout(info.dsOwnTimeout), dsIntTimeout(info.dsIntTimeout), 
+              msgTemplate(info.msgTemplate), svcType(info.svcType), dsTimeout(info.dsTimeout),
               dsUncommitedInProcess(info.dsUncommitedInProcess),
               dsUncommitedInGeneration(info.dsUncommitedInGeneration),
               messagesCacheSize(info.messagesCacheSize), 
@@ -130,7 +127,7 @@ namespace smsc { namespace infosme
             activePeriodEnd = info.activePeriodEnd;
             dsId = info.dsId; tablePrefix = info.tablePrefix; querySql = info.querySql;
             msgTemplate = info.msgTemplate; svcType = info.svcType;
-            dsOwnTimeout = info.dsOwnTimeout; dsIntTimeout = info.dsIntTimeout;
+            dsTimeout = info.dsTimeout;
             dsUncommitedInProcess = info.dsUncommitedInProcess;
             dsUncommitedInGeneration = info.dsUncommitedInGeneration;
             messagesCacheSize = info.messagesCacheSize;

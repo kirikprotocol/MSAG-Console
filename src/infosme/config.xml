@@ -123,8 +123,7 @@
         <param name="activePeriodEnd" type="string">22:00:00</param>
         <param name="activePeriodStart" type="string">09:00:00</param>
         <param name="dsId" type="string">WORKING_DS1</param>
-        <param name="dsIntTimeout" type="int">10</param>
-        <param name="dsOwnTimeout" type="int">10</param>
+        <param name="dsTimeout" type="int">10</param>
         <param name="enabled" type="bool">true</param>
         <param name="endDate" type="string"></param>
         <param name="messagesCacheSize" type="int">1000</param>
@@ -147,8 +146,7 @@
 	    <!--section name="Task2">
 		<param name="name" type="string">Task 2</param>
 		<param name="dsId" type="string">WORKING_DS2</param>
-		<param name="dsOwnTimeout" type="int">10</param> 
-		<param name="dsIntTimeout" type="int">10</param>
+		<param name="dsTimeout" type="int">10</param> 
 		<param name="enabled" type="bool">true</param>
 		<param name="priority" type="int">2</param>
 		<param name="retryOnFail" type="bool">true</param>
@@ -171,8 +169,7 @@
 	    <section name="Task3">
 		<param name="name" type="string">Task 3</param>
 		<param name="dsId" type="string">WORKING_DS1</param>
-		<param name="dsOwnTimeout" type="int">10</param>
-		<param name="dsIntTimeout" type="int">10</param>
+		<param name="dsTimeout" type="int">10</param>
 		<param name="enabled" type="bool">true</param>
 		<param name="priority" type="int">3</param>
 		<param name="retryOnFail" type="bool">true</param>

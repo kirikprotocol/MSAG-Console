@@ -115,12 +115,9 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     if (info.replaceIfPresent && (!svc_type || svc_type[0] == '\0'))
         throw ConfigException("Service type task empty or wasn't specified.");
     info.svcType = svc_type;
-    info.dsOwnTimeout = 0;
-    try { info.dsOwnTimeout = config->getInt("dsOwnTimeout"); } catch(...) {}
-    if (info.dsOwnTimeout < 0) info.dsOwnTimeout = 0;
-    info.dsIntTimeout = 0;
-    try { info.dsIntTimeout = config->getInt("dsIntTimeout"); } catch(...) {}
-    if (info.dsIntTimeout < 0) info.dsIntTimeout = 0;
+    info.dsTimeout = 0;
+    try { info.dsTimeout = config->getInt("dsTimeout"); } catch(...) {}
+    if (info.dsTimeout < 0) info.dsTimeout = 0;
     
     info.dsUncommitedInProcess = 1;
     try { info.dsUncommitedInProcess = config->getInt("uncommitedInProcess"); } catch(...) {}
@@ -286,8 +283,7 @@ void Task::beginProcess(Statistics* statistics)
 
     Connection* ownConnection = 0;
     Connection* intConnection = 0;
-    int wdOwnTimerId = -1;
-    int wdIntTimerId = -1;
+    int wdTimerId = -1;
 
     try
     {
@@ -311,10 +307,8 @@ void Task::beginProcess(Statistics* statistics)
         if (!newMessage)
             throw Exception("Failed to create statement for message generation.");
             
-        wdOwnTimerId = dsOwn->startTimer(ownConnection, info.dsOwnTimeout);
         std::auto_ptr<ResultSet> rsGuard(userQuery->executeQuery());
         ResultSet* rs = rsGuard.get();
-        dsOwn->stopTimer(wdOwnTimerId);
         if (!rs)
             throw Exception("Failed to obtain result set for message generation.");
 
@@ -322,13 +316,8 @@ void Task::beginProcess(Statistics* statistics)
         ContextEnvironment  context;
 
         int uncommited = 0;
-        while (bInProcess)
+        while (bInProcess && rs->fetchNext())
         {
-            wdOwnTimerId = dsOwn->startTimer(ownConnection, info.dsOwnTimeout);
-            bool fetched = rs->fetchNext();
-            dsOwn->stopTimer(wdOwnTimerId);
-            if (!fetched) break;
-
             const char* abonentAddress = rs->getString(1);
             if (!abonentAddress || abonentAddress[0] == '\0' || !isMSISDNAddress(abonentAddress)) {
                 logger.warn("Invalid abonent number '%s' selected.", 
@@ -340,11 +329,13 @@ void Task::beginProcess(Statistics* statistics)
             formatter->format(message, getAdapter, context);
             if (message.length() > 0)
             {
+                wdTimerId = dsInt->startTimer(intConnection, info.dsTimeout);
                 newMessage->setUint8(1, MESSAGE_NEW_STATE);
                 newMessage->setString(2, abonentAddress);
                 newMessage->setDateTime(3, time(NULL));
                 newMessage->setString(4, message.c_str());
                 newMessage->executeUpdate();
+                if (wdTimerId >= 0) dsInt->stopTimer(wdTimerId);
 
                 //logger.info("Message '%s' for '%s' generated.", message.c_str(), abonentAddress);
                 if (statistics) statistics->incGenerated(info.id, 1);
@@ -382,10 +373,9 @@ void Task::beginProcess(Statistics* statistics)
                      info.id.c_str());
     }
     
-    if (wdOwnTimerId >= 0) dsOwn->stopTimer(wdOwnTimerId);
-    if (wdIntTimerId >= 0) dsInt->stopTimer(wdIntTimerId);
-    if (ownConnection) dsOwn->freeConnection(ownConnection);
+    if (wdTimerId >= 0) dsInt->stopTimer(wdTimerId);
     if (intConnection) dsInt->freeConnection(intConnection);
+    if (ownConnection) dsOwn->freeConnection(ownConnection);
     
     {
         MutexGuard guard(inProcessLock);
@@ -430,7 +420,7 @@ void Task::dropAllMessages()
 
         deleteMessages->setUint8(1, MESSAGE_NEW_STATE);
         
-        wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
+        wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
         deleteMessages->executeUpdate();
         connection->commit();
     }
@@ -544,7 +534,7 @@ bool Task::retryMessage(uint64_t msgId, time_t nextTime, Connection* connection)
         if (!retryMessage)
             throw Exception("doRetry(): Failed to create statement for messages access.");
         
-        wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
+        wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
 
         retryMessage->setUint8   (1, MESSAGE_NEW_STATE);
         retryMessage->setDateTime(2, nextTime); 
@@ -608,7 +598,7 @@ bool Task::deleteMessage(uint64_t msgId, Connection* connection)
         if (!deleteMessage)
             throw Exception("deleteMessage(): Failed to create statement for messages access.");
         
-        wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
+        wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
         deleteMessage->setUint64  (1, msgId);
         result = (deleteMessage->executeUpdate() > 0);
         if (result) connection->commit();
@@ -673,7 +663,7 @@ bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
         enrouteMessage->setUint64(2, msgId);
         enrouteMessage->setUint8 (3, MESSAGE_WAIT_STATE);
 
-        wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
+        wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
         result = (enrouteMessage->executeUpdate() > 0);
         if (result) connection->commit();
         else connection->rollback();
@@ -745,7 +735,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
         selectMessage->setUint8   (1, MESSAGE_NEW_STATE);
         selectMessage->setDateTime(2, currentTime);
 
-        wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
+        wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
 
         std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
         ResultSet* rs = rsGuard.get();
@@ -765,7 +755,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
             if (!waitMessage)
                 throw Exception("Failed to create statement for messages access.");
             
-            wdTimerId = dsInt->startTimer(connection, info.dsIntTimeout);
+            wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
             waitMessage->setUint8 (1, MESSAGE_WAIT_STATE);
             waitMessage->setUint64(2, fetchedMessage.id);
             if (waitMessage->executeUpdate() <= 0)
