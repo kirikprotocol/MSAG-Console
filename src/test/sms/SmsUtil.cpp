@@ -104,7 +104,8 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2)
 	{
 		res.push_back(8);
 	}
-	if (sms1.getLastTime() != sms2.getLastTime())
+	//совпадение с точностью до 1-ой секунды
+	if (abs(sms1.getLastTime() - sms2.getLastTime()) > 1)
 	{
 		res.push_back(9);
 	}
