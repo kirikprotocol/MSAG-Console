@@ -70,13 +70,20 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 			pdu->get_message().set_esmClass(0x0); //иначе профайлер отлупит
 			pdu->get_message().set_scheduleDeliveryTime("");
 			pdu->get_message().set_dataCoding(dataCoding);
-			pdu->get_message().set_shortMessage(msg.get(), msgLen);
+			if (rand0(1))
+			{
+				pdu->get_message().set_shortMessage(msg.get(), msgLen);
+			}
+			else
+			{
+				pdu->get_optional().set_messagePayload(msg.get(), msgLen);
+			}
 			fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps,
 				strProps, objProps, PDU_EXT_SME);
 		}
 		else
 		{
-			__tc__("updateProfile.submitSm");
+			__tc__("updateProfile.dataSm");
 			PduDataSm* pdu = new PduDataSm();
 			//отключить short_message & message_payload
 			fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, profilerAlias,
