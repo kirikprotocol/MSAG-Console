@@ -64,7 +64,7 @@ SmppHeader* BaseSme::receiveSmpp(int to)
   }
   int sz=ntohl(*((int*)rdbuf.buffer));
   //__trace2__("SMPP packet length (%d:%d,%d,%d,%d):%d",rdbuf.offset,
-  //
+  //  some shit
   //  (int)buf.buffer[0],(int)buf.buffer[1],(int)buf.buffer[2],(int)buf.buffer[3],sz);
   rdbuf.setSize(sz);
   while(rdbuf.offset<sz)
