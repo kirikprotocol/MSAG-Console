@@ -261,6 +261,9 @@ namespace smsc { namespace db
         bool                isConnected, isDead;
         Array<Statement *>  statements;
         
+        Mutex               statementsRegistryLock;
+        Hash<Statement *>   statementsRegistry;
+        
         Connection() 
             : next(0), log(Logger::getCategory("smsc.dbsme.Connection")),
                 isConnected(false), isDead(false) {};
@@ -278,6 +281,11 @@ namespace smsc { namespace db
         virtual Routine* createRoutine(const char* call, bool func=false) 
             throw(SQLException) = 0;
 
+        bool registerStatement(const char* id, Statement* statement);
+        bool unregisterStatement(const char* id);
+        void unregisterAllStatements();
+        Statement* getStatement(const char* id);
+        
         virtual void connect() 
             throw(SQLException) = 0;
         virtual void disconnect() = 0;

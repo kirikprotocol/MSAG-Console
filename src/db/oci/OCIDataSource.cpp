@@ -101,6 +101,8 @@ void OCIConnection::disconnect()
 
     if (isConnected)
     {
+        unregisterAllStatements();
+
         while (statements.Count())
         {
             Statement* statement=0L;

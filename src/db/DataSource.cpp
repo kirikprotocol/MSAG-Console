@@ -12,6 +12,32 @@ Hash<DataSourceFactory *>*  DataSourceFactory::registry = 0;
 const unsigned SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE = 10;
 const unsigned SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE_LIMIT = 1000;
 
+bool Connection::registerStatement(const char* id, Statement* statement)
+{
+    MutexGuard guard(statementsRegistryLock);
+    if (!id || id[0] == '\0' || statementsRegistry.Exists(id)) return false;
+    statementsRegistry.Insert(id, statement);
+    return true;
+}
+bool Connection::unregisterStatement(const char* id)
+{
+    MutexGuard guard(statementsRegistryLock);
+    if (!id || id[0] == '\0' || !statementsRegistry.Exists(id)) return false;
+    statementsRegistry.Delete(id);
+    return true;
+}
+void Connection::unregisterAllStatements()
+{
+    MutexGuard guard(statementsRegistryLock);
+    statementsRegistry.Empty();
+}
+Statement* Connection::getStatement(const char* id)
+{
+    MutexGuard guard(statementsRegistryLock);
+    if (!id || id[0] == '\0' || !statementsRegistry.Exists(id)) return 0;
+    return statementsRegistry.Get(id);
+}
+
 void ConnectionPool::loadPoolSize(ConfigView* config)
 {
     __require__(config);
