@@ -1562,7 +1562,8 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }
-    Address src_addr = Address("911523");
+    Address src_addr;// = Address("911523");
+    ConvAddrMap2Smc(&dialog->m_msAddr,&src_addr);
     Address dest_addr = Address(subsystem.c_str());
     unsigned esm_class = 0;
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
