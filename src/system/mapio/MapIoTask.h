@@ -104,6 +104,7 @@ struct MapDialog{
     state(MAPST_START), 
     dialogid_map(dialogid),
     dialogid_smsc(0),
+    mms(false),
     version(version)
     {}
   virtual ~MapDialog(){
@@ -145,6 +146,7 @@ struct MapDialog{
     //ET96MAP_SM_RP_OA_T smRpOa;
     //list<SmscCommand> chain;
     version = 0;
+    mms = false;
   }
 private:
   unsigned ref_count;

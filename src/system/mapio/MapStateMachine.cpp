@@ -493,13 +493,12 @@ static bool SendSms(MapDialog* dialog){
   if ( mms )  { __trace2__("MAP::%s: MMS flag is set",__FUNCTION__); }
   __trace2__("MAP::%s: chain size is %d",__FUNCTION__,dialog->chain.size());
 
-  if ( !mms ) {
+  if ( !dialog->mms ) {
     result = Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0);
     if ( result != ET96MAP_E_OK )
       throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::SendSms: Et96MapOpenReq error 0x%x",result));
   }
   
-  dialog->mms = mms;
   dialog->smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
   dialog->smRpOa.addrLen = (dialog->m_scAddr.addressLength+1)/2+1;
   dialog->smRpOa.addr[0] = dialog->m_scAddr.typeOfAddress;
@@ -508,7 +507,7 @@ static bool SendSms(MapDialog* dialog){
   ET96MAP_SM_RP_UI_T* ui;
   dialog->auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
   mkDeliverPDU(dialog->sms.get(),ui,mms);
-  if ( ui->signalInfoLen > 98 || mms ) {
+  if ( ui->signalInfoLen > 98 || (mms && !dialog->mms) ) {
     __trace2__("MAP::SendSMSCToMT: Et96MapDelimiterReq");
     result = Et96MapDelimiterReq( SSN, dialog->dialogid_map, 0, 0 );
     if( result != ET96MAP_E_OK )
@@ -534,9 +533,11 @@ static bool SendSms(MapDialog* dialog){
   }
   if ( segmentation == SMS_SEGMENTATION )
     dialog->state = MAPST_WaitSpecOpenConf;
-  else dialog->state = MAPST_WaitOpenConf;
-  //else // mms
-  //  dialog->state = MAPST_WaitSmsConf;
+  else if ( !dialog->mms )
+    dialog->state = MAPST_WaitOpenConf;
+  else // mms continue
+    dialog->state = MAPST_WaitSmsConf;
+  dialog->mms = mms;
   return segmentation;
 }
 
