@@ -3,6 +3,7 @@
 */
 
 #include "smsc.hpp"
+#include <memory>
 
 #include <exception>
 
@@ -14,12 +15,15 @@ using smsc::smeman::CommandId;
 using smsc::smeman::SmscCommand;
 using std::exception;
 using smsc::sms::SMS;
+using smsc::smeman::SmeIterator;
+using std::auto_ptr;
 
 #define __CMD__(x) smsc::smeman::x
 
-SmeProxy* Smsc::routeSms(SMS* sms, int* dest_idx)
+/*SmeProxy* Smsc::routeSms(SMS* sms, int* dest_idx)
 {
-}
+	smeman.getSmeProxy(0)
+}*/
 
 void Smsc::mainLoop()
 {
@@ -31,12 +35,24 @@ void Smsc::mainLoop()
   {
     switch ( cmd->get_commandId() )
     {
-		case __CMD__(SUBMIT):
+    case __CMD__(SUBMIT):
       {
         SMS* sms = cmd->get_sms();
         uint32_t dialogId =  cmd->get_dialogId();
         // route sms
-        SmeProxy* dest_proxy = routeSms(sms,&dest_proxy_index);
+        //SmeProxy* dest_proxy = routeSms(sms,&dest_proxy_index);
+				SmeProxy* dest_proxy = 0;
+				auto_ptr<SmeIterator> it(smeman.iterator());
+				while (it->next())
+				{
+					SmeProxy* proxy = it->getSmeProxy();
+					if ( proxy != src_proxy )
+					{
+						dest_proxy = proxy;
+						break;
+					}
+				}
+
         if ( !dest_proxy )
         {
           //send_no_route;
@@ -69,13 +85,13 @@ void Smsc::mainLoop()
         uint32_t status = cmd->get_resp()->get_status();
         uint32_t dialogId = cmd->get_dialogId();
         const char* messageId = cmd->get_resp()->get_messageId();
-				Task task;
+        Task task;
         // find and remove task
         if (!tasks.findAndRemoveTask((uint32_t)src_proxy_index,dialogId,&task))
-				{
-					__warning__("responce on unpresent task");
-					break;
-				}
+        {
+          __warning__("responce on unpresent task");
+          break;
+        }
         // update sms state
         //......
         break;
