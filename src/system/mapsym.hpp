@@ -118,6 +118,8 @@ public:
     return seq++;
   }
 
+  const char* getSystemId()const{return "MAPSYM";}
+
   string servType;
   int protId;
 

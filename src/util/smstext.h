@@ -24,7 +24,7 @@ static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize)
   const char *data=sms->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
   if(coding==DataCoding::UCS2)
   {
-    ConvertUCS2ToMultibyte((const short*)data,len,buf,bufsize,CONV_ENCODING_ANSI);
+    ConvertUCS2ToMultibyte((const short*)data,len,buf,bufsize,CONV_ENCODING_CP1251);
     len/=2;
     __require__(len<bufsize);
   }else if(coding==DataCoding::SMSC7BIT)
@@ -48,7 +48,7 @@ static inline int getPduText(PduXSm* pdu,char* buf,unsigned bufsize)
   const char *data=pdu->get_message().get_shortMessage();
   if(coding==DataCoding::UCS2)
   {
-    ConvertUCS2ToMultibyte((const short*)data,len,buf,bufsize,CONV_ENCODING_ANSI);
+    ConvertUCS2ToMultibyte((const short*)data,len,buf,bufsize,CONV_ENCODING_CP1251);
     len/=2;
     __require__(len<bufsize);
   }else if(coding==DataCoding::SMSC7BIT)
