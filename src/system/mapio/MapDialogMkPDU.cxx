@@ -242,12 +242,15 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
               symbols,
               pdu_ptr+udh_len+1+1,
               x-(udh_len+1)*8);
-          else
+          else {
+	    unsigned tmpX = 0;
             _7bit_text_len = ConvertText27bit(//text,text_len,pdu_ptr+1,&elen);
               text+1+udh_len,
               symbols,
               pdu_ptr+udh_len+1+1,
+	      &tmpX,
               x-(udh_len+1)*8);
+	  }
           *pdu_ptr++ = x/7+symbols;
           __trace2__("MAP::mkDeliverPDU: data length(symbols) 0x%x",x/7+symbols);
           pdu_ptr+= udh_len+_7bit_text_len+1;
@@ -256,8 +259,10 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
           *pdu_ptr++ = text_len;
           if (encoding == MAP_SMSC7BIT_ENCODING ) 
             pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
-          else
-            pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr);
+          else {
+	    unsigned tmpX = 0;
+            pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr,&tmpX);
+	  }
         }
     }else{ // UCS2 || 8BIT
       unsigned text_len;
