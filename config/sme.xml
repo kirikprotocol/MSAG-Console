@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE records SYSTEM "SmeRecords.dtd">
+
+<records>
+<smerecord type="smpp" uid="1">
+  <param name="typeOfNumber" value="0"/>
+  <param name="numberingPlan" value="0"/>
+  <param name="interfaceVersion" value="0x34"/>
+  <param name="systemType" value="1"/>
+  <param name="systemId" value="1"/>
+  <param name="password" value="drowssap"/>
+  <param name="addrRange" value="902*"/>
+  <param name="smeN" value="0"/>
+</smerecord>
+</records>
