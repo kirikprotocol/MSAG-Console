@@ -248,6 +248,7 @@ int SmppInputThread::Execute()
             continue;
           }
           __trace2__("SmppInputThread: received commandId=%x",pdu->get_commandId());
+          int errcode=Status::INVCMDID;
           switch(pdu->get_commandId())
           {
             case SmppCommandSet::BIND_RECIEVER:
@@ -469,6 +470,7 @@ int SmppInputThread::Execute()
               }catch(...)
               {
                 __trace__("Failed to build command from pdu, sending gnack");
+                errcode=Status::INVOPTPARAMVAL;
               }
               //
               // Это так и задумано, здесь не должно быть break!
@@ -486,7 +488,7 @@ int SmppInputThread::Execute()
                   SmscCommand::makeGenericNack
                   (
                     pdu->get_sequenceNumber(),
-                    Status::INVCMDID
+                    errcode
                   )
                 );
                 //SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVCMDID);
