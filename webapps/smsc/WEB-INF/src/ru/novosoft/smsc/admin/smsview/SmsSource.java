@@ -114,7 +114,7 @@ public abstract class SmsSource
              }
              System.out.println("Concat info: "+sb.toString());
              for( int i = 0; i < partsCount; i++ ) {
-               int offset = ((((int)concatInfo[i*2]+1)&0xFF)<<8)|(((int)concatInfo[i*2+2])&0xFF);
+               int offset = ((((int)concatInfo[i*2+1])&0xFF)<<8)|(((int)concatInfo[i*2+2])&0xFF);
                int len = text.length-offset;
                System.out.println("len="+len+" tlen="+text.length+" offset="+offset+" 1="+(((int)concatInfo[i*2+1])&0xFF)+" 2="+(((int)concatInfo[i*2+2])&0xFF));
                if( i < partsCount-1) {
