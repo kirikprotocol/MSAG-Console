@@ -117,7 +117,7 @@ void MapIoTask::dispatcher()
   struct timeval utime, curtime;
   APP_EVENT_T *eventlist = NULL;
   INT_T	       eventlist_len = 0;
-  log4cpp::Category& time_logger = smsc::util::Logger::getCategory("map.time");
+  log4cpp::Category& time_logger = smsc::util::Logger::getCategory("map.itime");
   
   message.receiver = MY_USER_ID;
   for(;;){
