@@ -6,6 +6,7 @@
 #include "util/debug.h"
 #include "store/StoreManager.h"
 #include "system/state_machine.hpp"
+#include "core/synchronization/Event.hpp"
 
 namespace smsc{
 namespace system{
@@ -15,6 +16,7 @@ using std::string;
 using namespace smsc::sms;
 using namespace smsc::smeman;
 using namespace smsc::router;
+using namespace smsc::core::synchronization;
 
 
 class SmscSignalHandler:public smsc::admin::util::SignalHandler{
@@ -32,6 +34,49 @@ protected:
 Smsc::~Smsc()
 {
 }
+
+class SpeedMonitor:public smsc::core::threads::ThreadedTask{
+public:
+  SpeedMonitor(EventQueue& eq):queue(eq){}
+  int Execute()
+  {
+    uint64_t cnt,last=0;
+    timespec start,now,lasttime;
+    double ut,tm,rate,avg;
+    clock_gettime(CLOCK_REALTIME,&start);
+    Event ev;
+    __trace__("enter SpeedMonitor");
+    for(;;)
+    {
+      //sleep(1);
+      //timeval tv;
+      //tv.tv_sec=1;
+      //tv.tv_usec=0;
+      //select(0,0,0,0,&tv);
+      ev.Wait(1000);
+      cnt=queue.getCounter();
+      clock_gettime(CLOCK_REALTIME,&now);
+      ut=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
+         (start.tv_sec*1000.0+start.tv_nsec/1000000.0))/1000.0;
+      tm=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
+         (lasttime.tv_sec*1000.0+lasttime.tv_nsec/1000000.0))/1000;
+      rate=(cnt-last)/tm;
+      avg=cnt/ut;
+      printf("UT:%.3lf AVG:%.3lf LAST:%.3lf (%llu)         \r",ut,avg,rate,cnt);
+      fflush(stdout);
+      last=cnt;
+      lasttime=now;
+      if(isStopping)break;
+    }
+    return 0;
+  }
+  const char* taskName()
+  {
+    return "SpeedMonitor";
+  }
+protected:
+  EventQueue& queue;
+};
 
 void Smsc::init()
 {
@@ -121,6 +166,8 @@ void Smsc::init()
   tp.startTask(new StateMachine(eventqueue,store,this));
 
   smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
+
+  tp.startTask(new SpeedMonitor(eventqueue));
 }
 
 void Smsc::run()
