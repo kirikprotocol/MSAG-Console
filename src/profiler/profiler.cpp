@@ -200,7 +200,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:4 where mask=:3";
+  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:3 where mask=:4";
   ConnectionGuard connection(ds);
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
@@ -210,8 +210,8 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   char addrbuf[30];
   addr.toString(addrbuf,sizeof(addrbuf));
   __trace2__("profiler: update %s=%d,%d,%s",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str());
-  statement->setString(3,addrbuf);
-  statement->setString(4,profile.locale.c_str());
+  statement->setString(3,profile.locale.c_str());
+  statement->setString(4,addrbuf);
   statement->executeUpdate();
   connection->commit();
 }
