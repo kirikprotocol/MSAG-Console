@@ -1,0 +1,2 @@
+#binary name			source name		libraries
+smpp/RespDelayTest RespDelayTest -ltest-smpp -ltest-sms -ltest-core -ltest-conf -ltest-util -lsme -lsmpp -lsms -lutil -lutil-recoder-recode_dll -lcore-network -lcore-threads -lcore-buffers -lreadline -ltermcap -lrt -lthread -lsocket
