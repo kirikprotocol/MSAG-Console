@@ -39,7 +39,7 @@ CommandProcessor::CommandProcessor(ConfigView* config)
             if (address) delete address;
             delete providersConfig;
             delete providerConfig;
-            throw exc;
+            throw;
         }
         if (address) delete address;
         delete providerConfig;
@@ -89,17 +89,14 @@ DataProvider::DataProvider(ConfigView* config)
             }
             else
             {
-                char errorMsg[2048];
-                sprintf(errorMsg, 
-                        "DataSource for '%s' identity wasn't registered !",
-                        dsIdentity);
-                throw ConfigException(errorMsg);
+                throw ConfigException("DataSource for '%s' identity"
+                                      " wasn't registered !", dsIdentity);
             }
         }
         catch (ConfigException& exc)
         {
             if (ds) delete ds;
-            throw exc;
+            throw;
         }
         if (dsIdentity) delete dsIdentity;
     }
@@ -107,7 +104,7 @@ DataProvider::DataProvider(ConfigView* config)
     {
         if (dsIdentity) delete dsIdentity;
         if (dsConfig) delete dsConfig;
-        throw exc;
+        throw;
     }
     delete dsConfig;
     
@@ -134,9 +131,7 @@ DataProvider::DataProvider(ConfigView* config)
             }
             else
             {
-                char errorMsg[2048];
-                sprintf(errorMsg, "Job '%s' wasn't registered !", name);
-                throw ConfigException(errorMsg);
+                throw ConfigException("Job '%s' wasn't registered !", name);
             }
             
             log.info("Loaded Job for '%s' section. Job name is: '%s'",
@@ -149,7 +144,7 @@ DataProvider::DataProvider(ConfigView* config)
             if (name) delete name;
             delete jobsConfig;
             delete jobConfig;
-            throw exc;
+            throw;
         }
         if (name) delete name;
         delete jobConfig;
