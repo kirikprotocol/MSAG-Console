@@ -1,6 +1,6 @@
 <project name="SMPP gateway" default="help">
   <property file="build.properties"/>
-  <condition property="INIT_FAILED" >
+  <condition property="INIT_FAILED" value="yes" >
     <not>
       <and>
         <isset property="BUILD_DIR"/>
@@ -12,6 +12,7 @@
       </and>
     </not>
   </condition>
+  <echo message="Failed? ${INIT_FAILED}"/> 
   <fail if="INIT_FAILED" message="Please configure build.properties file"/>
   <available file="${TEMPLATE_PROPS}" property="TEMPLATE_PROPS_FOUND" value="yes"/>
   <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
