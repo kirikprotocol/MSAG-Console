@@ -5,26 +5,27 @@
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 
+#include <dlfcn.h>
+
 #include <db/DataSource.h>
-#include <db/oci/OCIDataSource.h>
-
-const char* OCI_DS_FACTORY_IDENTITY = "OCI";
-
-const char* sql1 = "INSERT INTO SMS_TEST (TEMP, STR) VALUES (:TEMP, :STR)";
-const char* sql2 = "SELECT * FROM SMS_TEST";
+#include <db/DataSourceLoader.h>
 
 int main(void) 
 {
+    using namespace smsc::db;
+
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
-    
-    using namespace smsc::db;
-    using namespace smsc::db::oci;
 
-    OCIDataSourceFactory ociDSFactory;
-    DataSourceFactory::registerFactory(&ociDSFactory, OCI_DS_FACTORY_IDENTITY);
+    const char* OCI_DS_FACTORY_IDENTITY = "OCI";
     
+    const char* sql1 = "INSERT INTO SMS_TEST (TEMP, STR) VALUES (:TEMP, :STR)";
+    const char* sql2 = "SELECT * FROM SMS_TEST";
+    
+    DataSourceLoader::loadupDataSourceFactory(
+        "../db/oci/libdb_oci.so", OCI_DS_FACTORY_IDENTITY);
+
     try 
     {
         Manager::init("config.xml");
@@ -58,6 +59,7 @@ int main(void)
                     ResultSet* rs = statement2->executeQuery();
                     if (rs)
                     {
+                        int count = 0;
                         while (rs->fetchNext())
                         {
                             int8_t inum8 = rs->getInt8(1);
@@ -77,7 +79,8 @@ int main(void)
                             if (!rs->isNull(2))
                             {
                                 const char* str = rs->getString(2);
-                                printf("str : \"%s\" value selected\n", str);
+                                printf("str %d: \"%s\" value selected\n", 
+                                       ++count, str);
                             }
                         }
                         delete rs;

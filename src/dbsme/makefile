@@ -9,7 +9,7 @@ PACKAGE := dbsme
 
 #include $(ORACLE_HOME)/rdbms/lib/env_rdbms.mk
 
-__LIBRARIES := $(ORACLE_HOME)/lib/libclntsh.so
+#__LIBRARIES := $(ORACLE_HOME)/lib/libclntsh.so
 #$(LIBCLNTSH) $(OCISHAREDLIBS)
 
 #$(warning $(__LIBRARIES))

@@ -12,13 +12,15 @@
 #include <orl.h>
 
 #include <util/debug.h>
-
 #include <db/DataSource.h>
+
+using namespace smsc::db;
+
+extern "C" 
+DataSourceFactory*  getDataSourceFactory(void);
 
 namespace smsc { namespace db { namespace oci
 {
-    using namespace smsc::db;
-
     struct OCIDataDescriptor 
     {
         ub2         type;

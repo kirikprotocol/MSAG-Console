@@ -75,6 +75,16 @@ namespace smsc { namespace db
         
         virtual ~InvalidArgumentException() throw() {};
     };
+    
+    class LoadupException : public BaseException
+    {
+    public:
+        
+        LoadupException() 
+            : BaseException("Loadup failed !") {};
+        
+        virtual ~LoadupException() throw() {};
+    };
 
 }}
 

@@ -1,10 +1,20 @@
 
 #include "OCIDataSource.h"
 
+using namespace smsc::db;
+
+extern "C"
+DataSourceFactory*  getDataSourceFactory(void)
+{
+    using namespace smsc::db;
+    using namespace smsc::db::oci;
+
+    static OCIDataSourceFactory _ociDataSourceFactory;
+    return &_ociDataSourceFactory;
+}
+
 namespace smsc { namespace db { namespace oci
 {
-
-using namespace smsc::db;
 
 /* ------------------------ Connection implementation ---------------------- */
 
@@ -17,7 +27,7 @@ OCIConnection::OCIConnection(const char* instance,
             envhp(0), svchp(0), srvhp(0), errhp(0), sesshp(0)
 {
     __require__(dbInstance && dbUserName && dbUserPassword);
-    printf("Connection : %s %s %s\n", dbInstance, dbUserName, dbUserPassword);
+    //printf("Connection : %s %s %s\n", dbInstance, dbUserName, dbUserPassword);
 }
         
 OCIConnection::~OCIConnection() 
@@ -761,7 +771,7 @@ OCIDriver::OCIDriver(ConfigView* config)
                                    "DB user name wasn't specified !");
     dbUserPassword = config->getString("dbUserPassword", 
                                     "DB user password wasn't specified !");
-    printf("Driver : %s %s %s\n", dbInstance, dbUserName, dbUserPassword);
+    //printf("Driver : %s %s %s\n", dbInstance, dbUserName, dbUserPassword);
 }
 
 OCIDriver::~OCIDriver() 
