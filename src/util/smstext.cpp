@@ -194,6 +194,7 @@ int partitionSms(SMS* sms,int dstdc)
     len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get()+udhilen,len*3);
     if(udhi)memcpy(bufTr.get(),msg,udhilen);
     msg=bufTr.get();
+    len+=udhilen;
   }
   int maxlen=134,maxfulllen=140;
   if(dc==DataCoding::DEFAULT || dstdc==DataCoding::DEFAULT)
