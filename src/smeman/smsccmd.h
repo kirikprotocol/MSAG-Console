@@ -99,7 +99,7 @@ struct AbonentStatus{
   }
   static const int OFFLINE=0;
   static const int ONLINE=1;
-  static const int UNKNOWN=2;
+  static const int UNKNOWNVALUE=2;
 };
 
 struct SmsResp
