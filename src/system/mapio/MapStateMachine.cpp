@@ -223,7 +223,7 @@ static void DropMapDialog_(unsigned dialogid){
           dialog->state = MAPST_END;
           ContinueImsiReq(dialog->associate,"","");
         }
-        else if ( NeedNotifyHLR(dialog.get()) )
+        else if ( NeedNotifyHLR(dialog.get()) && !dialog->isUSSD )
         {
           try{
             dialog->Clean();
@@ -2388,7 +2388,9 @@ USHORT_T Et96MapV2InformSCInd (
 
 static bool NeedNotifyHLR(MapDialog* dialog)
 {
-  return !dialog->hlrWasNotified && dialog->hlrVersion != 0 &&
+  return 
+  	!dialog->isUSSD &&
+  	!dialog->hlrWasNotified && dialog->hlrVersion != 0 &&
     ((!dialog->wasDelivered && !dialog->routeErr &&
       ( ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
         ((unsigned)dialog->memoryExceeded != (unsigned)dialog->mwdStatus.mcef )
