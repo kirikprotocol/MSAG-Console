@@ -68,7 +68,6 @@ if (stat != null) {
     if( obj.style.display != 'none' )
       obj.style.display='none';
     else obj.style.display='block';
-    return false;
   }
 </script>
 <table class=list cellspacing=0>
