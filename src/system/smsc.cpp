@@ -68,7 +68,7 @@ public:
     times[0]=start.tv_sec;
     int lastscnt=0;
     memset(perfCnt,0,sizeof(perfCnt));
-    uint64_t lastPerfCnt[5]={0};
+    uint64_t lastPerfCnt[5]={0,0,0,0,0};
     now.tv_sec=0;
     int i;
     for(;;)
@@ -171,7 +171,7 @@ public:
   }
 protected:
   EventQueue& queue;
-  int perfCnt[4][60];
+  int perfCnt[5][60];
   int timeshift;
   time_t times[60];
   performance::PerformanceListener* perfListener;
