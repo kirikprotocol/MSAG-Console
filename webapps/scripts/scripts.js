@@ -200,6 +200,19 @@ function validateField_id(elem)
 		: true;
 }
 
+function validateField_reschedule(elem)
+{
+	if (elem.value == null || elem.value.length == 0)
+	{
+		return true;
+	}
+	var r = /^(\d+[s|m|h|d](\:\d+)?\,)*(\d+[s|m|h|d](\:(\d+|\*))?)$/
+
+	return elem.value == null || elem.value.match(r) == null
+		? validationError(elem, "Invalid reschedule policy")
+		: true;
+}
+
 function validateField(elem)
 {
 	switch(elem.validation)
@@ -218,6 +231,7 @@ function validateField(elem)
 		case "address_prefix": return validateField_address_prefix(elem);
 		case "id" : return validateField_id(elem);
 		case "unsigned": return validateField_unsigned(elem);
+		case "reschedule": return validateField_reschedule(elem);
 	}
 	alert("unknown validation type:"+elem.validation);
 	return false;

@@ -1,7 +1,7 @@
 <%@ page import="ru.novosoft.smsc.jsp.smsc.reshedule.Body,
                  ru.novosoft.smsc.util.SortedList,
                  java.util.*"%>
-<%= bean.isDefaultReshedule() ? "Default reschedule policy" : "Reschedule policy"%>: <input class=txt name=reshedule value="<%=bean.getReshedule()%>">
+<%= bean.isDefaultReshedule() ? "Default reschedule policy" : "Reschedule policy"%>: <input class=txt name=reshedule value="<%=bean.getReshedule()%>" validation="reschedule">
 <%
   if (!bean.isDefaultReshedule()) {
 %>
