@@ -37,16 +37,10 @@
       </td></tr>
     </table>
     </div>
-     <sm-ep:properties title="Routes tracing">
-           <sm-ep:txt title="Source Address" name="srcAddress"   validation="nonEmpty"/>
-           <sm-ep:txt title="Destination Address" name="dstAddress"  />
-           <sm-ep:txt title="Source System ID" name="srcSysId"  />
-         </sm-ep:properties>
-     
+
     <sm:break>
      <sm-pm:menu>
       <sm-pm:item name="mbCheck" value="Loadup & Check" title="Load & Check routing configuration"/>
-       <sm-pm:item name="mbTrace" value="Trace route" title="Trace route" />
       <sm-pm:space/>
      </sm-pm:menu>
     </sm:break>
