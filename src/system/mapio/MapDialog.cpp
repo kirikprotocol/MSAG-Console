@@ -269,7 +269,7 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
 
     USHORT_T result;
     __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
-	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, ui, FALSE);
+	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, ui.get(), FALSE);
 	  if( result != ET96MAP_E_OK ) {
       __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq error 0x%x",result);
 	  }
