@@ -1,16 +1,4 @@
 <%@ include file="/WEB-INF/inc/sme_menu.jsp"%>
-<%--script>
-function setSort(sorting)
-{
-	if (sorting == "<%=bean.getSort()%>")
-		opForm.sort.value = "-<%=bean.getSort()%>";
-	else
-		opForm.sort.value = sorting;
-
-	opForm.submit();
-	return false;
-}
-</script--%>
 <%
 	sme_menu_begin(out);
 	sme_menu_button(out, "mbMenu",  "apply",     "Apply",     "");

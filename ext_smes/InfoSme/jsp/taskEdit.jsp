@@ -50,12 +50,17 @@
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
+<%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <div class=content>
 <input type=hidden name=initialized value=true>
 <input type=hidden name=create value=<%=bean.isCreate()%>>
 <input type=hidden name=oldTask value="<%=bean.getOldTask()%>">
 <table class=properties_list>
 <col width="10%">
+<tr class=row<%=rowN++&1%>>
+  <th>Task section name</th>
+  <td><input class=txt name=sectionName value="<%=StringEncoderDecoder.encode(bean.getSectionName())%>"></td>
+</tr>
 <tr class=row<%=rowN++&1%>>
   <th>Task name</th>
   <td><input class=txt name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>"></td>
@@ -71,20 +76,20 @@
   %></select></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Enabled</th>
-  <td><input class=check type=checkbox name=enabled value=true <%=bean.isEnabled() ? "checked" : ""%>></td>
+  <th><label for=enabled>Enabled</label></th>
+  <td><input class=check type=checkbox id=enabled name=enabled value=true <%=bean.isEnabled() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Priority</th>
   <td><input class=txt name=priority value="<%=StringEncoderDecoder.encode(bean.getPriority())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Retry on fail</th>
-  <td><input class=check type=checkbox name=retryOnFail value=true <%=bean.isRetryOnFail() ? "checked" : ""%>></td>
+  <th><label for=retryOnFail>Retry on fail</label></th>
+  <td><input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=bean.isRetryOnFail() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Replace message</th>
-  <td><input class=check type=checkbox name=replaceMessage value=true <%=bean.isReplaceMessage() ? "checked" : ""%>></td>
+  <th><label for=replaceMessage>Replace message</label></th>
+  <td><input class=check type=checkbox id=replaceMessage name=replaceMessage value=true <%=bean.isReplaceMessage() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Service type</th>
@@ -92,7 +97,7 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>End date</th>
-  <td><input class=txt name=endDate value="<%=StringEncoderDecoder.encode(bean.getEndDate())%>"></td>
+  <td nowrap><input class=calendarField id=endDate name=endDate value="<%=StringEncoderDecoder.encode(bean.getEndDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(endDate, false, true);">...</button></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Retry time</th>
@@ -121,6 +126,18 @@
 <tr class=row<%=rowN++&1%>>
   <th>Template</th>
   <td><textarea name=template><%=StringEncoderDecoder.encode(bean.getTemplate())%></textarea></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>dsOwnTimeout</th>
+  <td><input class=txt name=dsOwnTimeout value="<%=StringEncoderDecoder.encode(bean.getDsOwnTimeout())%>">secs</td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>dsIntTimeout</th>
+  <td><input class=txt name=dsIntTimeout value="<%=StringEncoderDecoder.encode(bean.getDsIntTimeout())%>">secs</td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>uncommited</th>
+  <td><input class=txt name=uncommited value="<%=StringEncoderDecoder.encode(bean.getUncommited())%>"></td>
 </tr>
 </table>
 </div><%

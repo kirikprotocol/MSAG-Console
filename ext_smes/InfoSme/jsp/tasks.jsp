@@ -44,7 +44,7 @@
 			STATUS.append("Ok");
 			break;
     case Tasks.RESULT_EDIT:
-      response.sendRedirect("taskEdit.jsp?name=" + URLEncoder.encode(bean.getEdit(), "UTF-8"));
+      response.sendRedirect("taskEdit.jsp?sectionName=" + URLEncoder.encode(bean.getEdit(), "UTF-8"));
       return;
     case Tasks.RESULT_ADD:
       response.sendRedirect("taskEdit.jsp?create=true");

@@ -1,8 +1,9 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.util.SortedList;
 
-import java.util.List;
+import java.util.*;
 import java.security.Principal;
 
 /**
@@ -21,6 +22,9 @@ public class Options extends InfoSmeBean {
   private int smscTimeout = 0;
   private String smscPassword = null;
   private boolean initialized = false;
+  private int tasksSwitchTimeout = 0;
+  private String tasksTaskTablesPrefix = null;
+  private String dataProviderDsInternal = null;
 
   private String mbDone = null;
   private String mbCancel = null;
@@ -42,6 +46,9 @@ public class Options extends InfoSmeBean {
         smscSid = getConfig().getString("InfoSme.SMSC.sid");
         smscTimeout = getConfig().getInt("InfoSme.SMSC.timeout");
         smscPassword = getConfig().getString("InfoSme.SMSC.password");
+        tasksSwitchTimeout = getConfig().getInt("InfoSme.Tasks.switchTimeout");
+        tasksTaskTablesPrefix = getConfig().getString("InfoSme.Tasks.taskTablesPrefix");
+        dataProviderDsInternal = getConfig().getString("InfoSme.DataProvider.dsInternal");
       } catch (Exception e) {
         logger.error(e);
         return error(e.getMessage());
@@ -75,6 +82,9 @@ public class Options extends InfoSmeBean {
     getConfig().setString("InfoSme.SMSC.sid", smscSid);
     getConfig().setInt("InfoSme.SMSC.timeout", smscTimeout);
     getConfig().setString("InfoSme.SMSC.password", smscPassword);
+    getConfig().setInt("InfoSme.Tasks.switchTimeout", tasksSwitchTimeout);
+    getConfig().setString("InfoSme.Tasks.taskTablesPrefix", tasksTaskTablesPrefix);
+    getConfig().setString("InfoSme.DataProvider.dsInternal", dataProviderDsInternal);
     return RESULT_DONE;
   }
 
@@ -271,5 +281,55 @@ public class Options extends InfoSmeBean {
   public void setMbCancel(String mbCancel)
   {
     this.mbCancel = mbCancel;
+  }
+
+  public int getTasksSwitchTimeoutInt()
+  {
+    return tasksSwitchTimeout;
+  }
+
+  public void setTasksSwitchTimeoutInt(int tasksSwitchTimeout)
+  {
+    this.tasksSwitchTimeout = tasksSwitchTimeout;
+  }
+
+  public String getTasksSwitchTimeout()
+  {
+    return String.valueOf(tasksSwitchTimeout);
+  }
+
+  public void setTasksSwitchTimeout(String tasksSwitchTimeout)
+  {
+    try {
+      this.tasksSwitchTimeout = Integer.decode(tasksSwitchTimeout).intValue();
+    } catch (NumberFormatException e) {
+      logger.error("Invalid int InfoSme.Tasks.switchTimeout parameter value: \"" + smscTimeout + '"', e);
+      this.tasksSwitchTimeout = 0;
+    }
+  }
+
+  public String getTasksTaskTablesPrefix()
+  {
+    return tasksTaskTablesPrefix;
+  }
+
+  public void setTasksTaskTablesPrefix(String tasksTaskTablesPrefix)
+  {
+    this.tasksTaskTablesPrefix = tasksTaskTablesPrefix;
+  }
+
+  public String getDataProviderDsInternal()
+  {
+    return dataProviderDsInternal;
+  }
+
+  public void setDataProviderDsInternal(String dataProviderDsInternal)
+  {
+    this.dataProviderDsInternal = dataProviderDsInternal;
+  }
+
+  public Collection getAllDataProviders()
+  {
+    return new SortedList(getConfig().getSectionChildShortSectionNames("InfoSme.DataProvider"));
   }
 }

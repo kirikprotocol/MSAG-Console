@@ -3,7 +3,9 @@
 					  ru.novosoft.smsc.infosme.beans.Options,
 					  ru.novosoft.smsc.jsp.SMSCJspException,
 					  ru.novosoft.smsc.jsp.SMSCErrors,
-					  ru.novosoft.smsc.infosme.beans.Index"%>
+					  ru.novosoft.smsc.infosme.beans.Index,
+                 ru.novosoft.smsc.util.StringEncoderDecoder,
+                 java.util.*"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Options" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -58,39 +60,57 @@
 <% int rowN = 0;%>
 <tr class=row<%=rowN++&1%>>
   <th>Service type</th>
-  <td><input class=txt name=svcType value="<%=bean.getSvcType()%>"></td>
+  <td><input class=txt name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Protocol ID</th>
-  <td><input class=txt name=protocolId value="<%=bean.getProtocolId()%>"></td>
+  <td><input class=txt name=protocolId value="<%=StringEncoderDecoder.encode(bean.getProtocolId())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Internal data provider</th>
+  <td><select name=dataProviderDsInternal><%
+    for (Iterator i = bean.getAllDataProviders().iterator(); i.hasNext();) {
+      String providerName = (String) i.next();
+      String providerNameEnc = StringEncoderDecoder.encode(providerName);
+      %><option value="<%=providerNameEnc%>" <%=providerName.equals(bean.getDataProviderDsInternal()) ? "selected" : ""%>><%=providerNameEnc%></option><%
+    }
+  %></select></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Thread pool max</th>
-  <td><input class=txt name=threadPoolMax value="<%=bean.getThreadPoolMax()%>"></td>
+  <td><input class=txt name=threadPoolMax value="<%=StringEncoderDecoder.encode(bean.getThreadPoolMax())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Thread pool init</th>
-  <td><input class=txt name=threadPoolInit value="<%=bean.getThreadPoolInit()%>"></td>
+  <td><input class=txt name=threadPoolInit value="<%=StringEncoderDecoder.encode(bean.getThreadPoolInit())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>SMSC host</th>
-  <td><input class=txt name=smscHost value="<%=bean.getSmscHost()%>"></td>
+  <td><input class=txt name=smscHost value="<%=StringEncoderDecoder.encode(bean.getSmscHost())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>SMSC port</th>
-  <td><input class=txt name=smscPort value="<%=bean.getSmscPort()%>"></td>
+  <td><input class=txt name=smscPort value="<%=StringEncoderDecoder.encode(bean.getSmscPort())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>SMSC SID</th>
-  <td><input class=txt name=smscSid value="<%=bean.getSmscSid()%>"></td>
+  <td><input class=txt name=smscSid value="<%=StringEncoderDecoder.encode(bean.getSmscSid())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>SMSC connection timeout</th>
-  <td><input class=txt name=smscTimeout value="<%=bean.getSmscTimeout()%>"></td>
+  <td><input class=txt name=smscTimeout value="<%=StringEncoderDecoder.encode(bean.getSmscTimeout())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>SMSC connection password</th>
-  <td><input class=txt name=smscPassword value="<%=bean.getSmscPassword()%>"></td>
+  <td><input class=txt name=smscPassword value="<%=StringEncoderDecoder.encode(bean.getSmscPassword())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Tasks switch timeout</th>
+  <td><input class=txt name=tasksSwitchTimeout value="<%=StringEncoderDecoder.encode(bean.getTasksSwitchTimeout())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Tasks task tables prefix</th>
+  <td><input class=txt name=tasksTaskTablesPrefix value="<%=StringEncoderDecoder.encode(bean.getTasksTaskTablesPrefix())%>"></td>
 </tr>
 </table>
 </div><%

@@ -52,7 +52,7 @@ public class Index extends InfoSmeBean {
       logger.debug("Apply all...");
       getConfig().save();
     } catch (Throwable e) {
-      logger.debug("Couldn't save InfoSME config", e);
+      logger.error("Couldn't save InfoSME config", e);
       return error("Could not save InfoSME config", e);
     }
     return RESULT_DONE;

@@ -14,7 +14,8 @@ import java.security.Principal;
  * Date: Sep 2, 2003
  * Time: 2:31:58 PM
  */
-public class TaskEdit extends InfoSmeBean {
+public class TaskEdit extends InfoSmeBean
+{
   private String mbDone = null;
   private String mbCancel = null;
 
@@ -22,6 +23,7 @@ public class TaskEdit extends InfoSmeBean {
   private boolean create = false;
   private String oldTask = null;
 
+  private String sectionName = null;
   private String name = null;
   private String provider = null;
   private boolean enabled = false;
@@ -37,6 +39,9 @@ public class TaskEdit extends InfoSmeBean {
   private String activePeriodEnd = null;
   private String query = null;
   private String template = null;
+  private int dsOwnTimeout = 0;
+  private int dsIntTimeout = 0;
+  private int uncommited = 0;
 
   protected int init(List errors)
   {
@@ -46,11 +51,13 @@ public class TaskEdit extends InfoSmeBean {
 
     if (!initialized) {
       if (!create) {
-        if (name == null || name.length() == 0)
+        if (sectionName == null || sectionName.length() == 0)
           return error("Task not specified");
+        oldTask = sectionName;
 
         try {
-          final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(name);
+          final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(sectionName);
+          name = getConfig().getString(prefix + ".name");
           provider = getConfig().getString(prefix + ".dsId");
           enabled = getConfig().getBool(prefix + ".enabled");
           priority = getConfig().getInt(prefix + ".priority");
@@ -65,14 +72,17 @@ public class TaskEdit extends InfoSmeBean {
           activePeriodEnd = getConfig().getString(prefix + ".activePeriodEnd");
           query = getConfig().getString(prefix + ".query");
           template = getConfig().getString(prefix + ".template");
-          oldTask = name;
+          dsOwnTimeout = getConfig().getInt(prefix + ".dsOwnTimeout");
+          dsIntTimeout = getConfig().getInt(prefix + ".dsIntTimeout");
+          uncommited = getConfig().getInt(prefix + ".uncommited");
         } catch (Exception e) {
           logger.error(e);
           return error(e.getMessage());
         }
       }
     }
-    if (name == null) name = "";
+    if (sectionName == null) sectionName = "";
+    if (name == null) name = null;
     if (provider == null) provider = "";
     if (svcType == null) svcType = "";
     if (endDate == null) endDate = "";
@@ -104,16 +114,17 @@ public class TaskEdit extends InfoSmeBean {
 
   protected int done()
   {
-    if (name == null || name.length() == 0)
-      return error("Task name not specified");
-    final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(name);
+    if (sectionName == null || sectionName.length() == 0)
+      return error("Task section name not specified");
+    final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(sectionName);
     if (!create) {
-      if (!oldTask.equals(name)) {
+      if (!oldTask.equals(sectionName)) {
         if (getConfig().containsSection(prefix))
-          return error("Task already exists", name);
+          return error("Task already exists", sectionName);
         getConfig().removeSection(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(oldTask));
       }
     }
+    getConfig().setString(prefix + ".name", name);
     getConfig().setString(prefix + ".dsId", provider);
     getConfig().setBool(prefix + ".enabled", enabled);
     getConfig().setInt(prefix + ".priority", priority);
@@ -128,8 +139,10 @@ public class TaskEdit extends InfoSmeBean {
     getConfig().setString(prefix + ".activePeriodEnd", activePeriodEnd);
     getConfig().setString(prefix + ".query", query);
     getConfig().setString(prefix + ".template", template);
+    getConfig().setInt(prefix + ".dsOwnTimeout", dsOwnTimeout);
+    getConfig().setInt(prefix + ".dsIntTimeout", dsIntTimeout);
+    getConfig().setInt(prefix + ".uncommited", uncommited);
     return RESULT_DONE;
-
   }
 
   public Collection getAllProviders()
@@ -167,14 +180,14 @@ public class TaskEdit extends InfoSmeBean {
     this.oldTask = oldTask;
   }
 
-  public String getName()
+  public String getSectionName()
   {
-    return name;
+    return sectionName;
   }
 
-  public void setName(String name)
+  public void setSectionName(String sectionName)
   {
-    this.name = name;
+    this.sectionName = sectionName;
   }
 
   public String getProvider()
@@ -218,6 +231,7 @@ public class TaskEdit extends InfoSmeBean {
       this.priority = Integer.decode(priority).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set priority to value \"" + priority + "\"", e);
+      this.priority = 0;
     }
   }
 
@@ -349,5 +363,92 @@ public class TaskEdit extends InfoSmeBean {
   public void setMbCancel(String mbCancel)
   {
     this.mbCancel = mbCancel;
+  }
+
+  public String getName()
+  {
+    return name;
+  }
+
+  public void setName(String name)
+  {
+    this.name = name;
+  }
+
+  public int getDsOwnTimeoutInt()
+  {
+    return dsOwnTimeout;
+  }
+
+  public void setDsOwnTimeoutInt(int dsOwnTimeout)
+  {
+    this.dsOwnTimeout = dsOwnTimeout;
+  }
+
+  public int getDsIntTimeoutInt()
+  {
+    return dsIntTimeout;
+  }
+
+  public void setDsIntTimeoutInt(int dsIntTimeout)
+  {
+    this.dsIntTimeout = dsIntTimeout;
+  }
+
+  public int getUncommitedInt()
+  {
+    return uncommited;
+  }
+
+  public void setUncommitedInt(int uncommited)
+  {
+    this.uncommited = uncommited;
+  }
+
+  public String getDsOwnTimeout()
+  {
+    return String.valueOf(dsOwnTimeout);
+  }
+
+  public void setDsOwnTimeout(String dsOwnTimeout)
+  {
+    try {
+      this.dsOwnTimeout = Integer.decode(dsOwnTimeout).intValue();
+    } catch (Throwable e) {
+      logger.error("Couldn't set dsOwnTimeout to value \"" + dsOwnTimeout + "\"", e);
+      this.dsOwnTimeout = 0;
+    }
+    ;
+  }
+
+  public String getDsIntTimeout()
+  {
+    return String.valueOf(dsIntTimeout);
+  }
+
+  public void setDsIntTimeout(String dsIntTimeout)
+  {
+    try {
+      this.dsIntTimeout = Integer.decode(dsIntTimeout).intValue();
+    } catch (Throwable e) {
+      logger.error("Couldn't set priority to value \"" + dsIntTimeout + "\"", e);
+      this.dsIntTimeout = 0;
+    }
+    ;
+  }
+
+  public String getUncommited()
+  {
+    return String.valueOf(uncommited);
+  }
+
+  public void setUncommited(String uncommited)
+  {
+    try {
+      this.uncommited = Integer.decode(uncommited).intValue();
+    } catch (Throwable e) {
+      logger.error("Couldn't set priority to value \"" + uncommited + "\"", e);
+      this.uncommited = 0;
+    }
   }
 }

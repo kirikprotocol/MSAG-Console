@@ -4,8 +4,8 @@ import ru.novosoft.smsc.infosme.backend.tables.schedules.ScheduleDataSource;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.security.Principal;
 import java.util.*;
@@ -161,11 +161,9 @@ public class ScheduleEdit extends InfoSmeBean
       getConfig().setString(prefix + ".weekDays", Functions.collectionToString(checkedWeekDaysSet, ","));
     } else if ("monthly".equalsIgnoreCase(execute)) {
       getConfig().setString(prefix + ".endDateTime", endDateTime);
-      if (getConfig().containsParameter(prefix + ".dayOfMonth")) {
-        monthlyType = "day";
+      if (monthlyType.equals("day")) {
         getConfig().setInt(prefix + ".dayOfMonth", dayOfMonth);
       } else {
-        monthlyType = "week";
         getConfig().setString(prefix + ".weekDayN", weekDayN);
         getConfig().setString(prefix + ".weekDay", weekDay);
       }
