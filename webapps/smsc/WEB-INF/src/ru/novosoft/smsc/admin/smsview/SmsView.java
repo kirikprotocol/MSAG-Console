@@ -97,7 +97,7 @@ public class SmsView
     } finally {
       try {
         if (stmt != null) stmt.close();
-        connection.close();
+        if (connection != null) connection.close();
       } catch (Exception cexc) {
         cexc.printStackTrace();
       }
@@ -125,7 +125,7 @@ public class SmsView
     } finally {
       try {
         if (stmt != null) stmt.close();
-        connection.close();
+        if (connection != null) connection.close();
       } catch (Exception cexc) {
         cexc.printStackTrace();
       }
@@ -157,7 +157,7 @@ public class SmsView
     } finally {
       try {
         if (stmt != null) stmt.close();
-        connection.close();
+        if (connection != null) connection.close();
       } catch (Exception cexc) {
         cexc.printStackTrace();
       }
@@ -191,7 +191,7 @@ public class SmsView
     } finally {
       try {
         if (stmt != null) stmt.close();
-        connection.close();
+        if (connection != null) connection.close();
       } catch (Exception cexc) {
         cexc.printStackTrace();
       }
