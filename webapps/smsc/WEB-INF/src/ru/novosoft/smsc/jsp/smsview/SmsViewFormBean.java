@@ -16,6 +16,7 @@ public class SmsViewFormBean extends IndexBean
 	private SmsSet rows = null;
 	private SmsView view = new SmsView();
 	private int deletedRowsCount = 0;
+    private int totalRowsCount = 0;
 
 	public static String monthesNames[] = {
 		"Jan", "Feb", "Mar", "Apr",
@@ -110,8 +111,9 @@ public class SmsViewFormBean extends IndexBean
 
 	public int processQuery()
 	{
-        rows = null; startPosition = 0; totalSize = 0;
+        rows = null; startPosition = 0; totalSize = 0; totalRowsCount = 0;
         try {
+          totalRowsCount = view.getSmsCount(query);
           rows = view.getSmsSet(query);
           startPosition = 0;
           totalSize = rows.getRowsCount();
@@ -122,9 +124,10 @@ public class SmsViewFormBean extends IndexBean
           return error(SMSCErrors.error.smsview.QueryFailed, ex.getMessage());
         }
 	}
+
     public int clearQuery()
     {
-        rows = null; startPosition = 0; totalSize = 0;
+        rows = null; startPosition = 0; totalSize = 0; totalRowsCount = 0;
         query = new SmsQuery();
         processResortAndNavigate(true);
         return RESULT_OK;
@@ -132,12 +135,17 @@ public class SmsViewFormBean extends IndexBean
 
 	public int processDeleteAll()
 	{
-		if (getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)
-			deletedRowsCount = view.delArchiveSmsSet(rows);
-		else
-			deletedRowsCount = view.delOperativeSmsSet(rows);
+        try {
+            if (getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE)
+                deletedRowsCount = view.delArchiveSmsSet(rows);
+            else
+                deletedRowsCount = view.delOperativeSmsSet(rows);
+        } catch (AdminException ex) {
+          ex.printStackTrace();
+          return error(SMSCErrors.error.smsview.DeleteFailed, ex.getMessage());
+        }
 
-		return processQuery();
+        return processQuery();
 	}
 
 	public SmsRow getRow(int index)	{
@@ -268,6 +276,13 @@ public class SmsViewFormBean extends IndexBean
 			}
 		}
 	}
+
+    public int getTotalRowsCount() {
+        return totalRowsCount;
+    }
+    public int getDeletedRowsCount() {
+        return deletedRowsCount;
+    }
 
 	public String getMbDelete() { return mbDelete; }
 	public void setMbDelete(String mbDelete) {	this.mbDelete = mbDelete; }
