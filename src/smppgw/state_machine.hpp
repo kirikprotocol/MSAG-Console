@@ -40,9 +40,6 @@ public:
 
   const char *taskName(){return "StateMachine";}
 
-  time_t maxValidTime;
-  Address scAddress;
-
   static smsc::db::DataSource* dataSource;
 
 protected:
@@ -51,10 +48,6 @@ protected:
   smsc::smppgw::Smsc *smsc;
 
   smsc::logger::Logger* smsLog;
-
-  std::string serviceType;
-  int protocolId;
-  std::string smscSmeId;
 
 
   void submit(SmscCommand& cmd);
