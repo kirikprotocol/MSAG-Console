@@ -445,6 +445,20 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
 #endif
 }
 
+void MapDialog::Et96MapDelimiterInd(
+  ET96MAP_LOCAL_SSN_T lssn,
+  ET96MAP_DIALOGUE_ID_T dialogId,
+  UCHAR_T priorityOrder)
+{
+#if defined USE_MAP
+  __trace2__("MAP::MapDialog::Et96MapDelimiterInd:);
+  if ( state == MAPST_START ){
+    __trace2__("MAP::MapDialog::Et96MapDelimiterInd: send Req);
+    Et96MapDelimiterReq(ssn,dialogId,priorityOrder,0);
+  }
+#endif
+}
+
 void MapDialog::Et96MapPAbortInd(
   ET96MAP_LOCAL_SSN_T lssn,
   ET96MAP_DIALOGUE_ID_T dialogid,
