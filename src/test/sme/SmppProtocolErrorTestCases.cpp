@@ -1444,10 +1444,11 @@ void SmppProtocolErrorTestCases::enquireLinkScenario(int num)
 class SmeInactivityScenario : public SmppProtocolErrorScenario
 {
 	int num;
+	bool connClose;
 public:
 	SmeInactivityScenario(const SmeConfig& conf, const Address& addr,
 		CheckList* chkList, int _num)
-	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num)
+	: SmppProtocolErrorScenario(conf, addr, chkList), num(_num), connClose(false)
 	{
 		__trace2__("SmeInactivityScenario(): scenario = %p", this);
 	}
@@ -1456,10 +1457,27 @@ public:
 		__trace2__("~SmeInactivityScenario(): scenario = %p", this);
 		sess.close(); //иначе может быть pure virtual method called
 	}
+	void sendAnyCorrectPdu()
+	{
+		uint32_t cmdId;
+		switch (rand1(2))
+		{
+			case 1:
+				cmdId = allowedRequestCmdIds[rand0(allowedRequestCmdIdsSize - 1)];
+				break;
+			case 2:
+				cmdId = allowedResponseCmdIds[rand0(allowedResponseCmdIdsSize - 1)];
+				break;
+		}
+		SmppHeader* pdu = createPdu(cmdId);
+		sendPdu(pdu);
+		disposePdu(pdu);
+	}
 	virtual void execute()
 	{
 		__decl_tc__;
 		__cfg_int__(smeInactivityTime);
+		__cfg_int__(smeInactivityTimeOut);
 		__cfg_int__(timeCheckAccuracy);
 		connect();
 		//bind
@@ -1483,31 +1501,44 @@ public:
 		for (int i = 0; i < 2; i++)
 		{
 			//дождаться первого enquire_link
-			__tc__("protocolError.smeInactivity.checkTime");
+			__tc__("protocolError.smeInactivity.checkEnquireLinkTime");
 			time_t t1 = time(NULL);
 			__check__(1, checkComplete(smeInactivityTime + timeCheckAccuracy));
 			__check__(2, abs(time(NULL) - t1 - smeInactivityTime) < timeCheckAccuracy);
 			setComplete(false);
 			//последующие enquire_link
 			time_t t2 = time(NULL);
-			for (int j = 0; j < 10; j++)
+			const int enquireLinkCount = 10;
+			for (int j = 0; j < enquireLinkCount; j++)
 			{
-				__check__(1, checkComplete(timeCheckAccuracy));
+				__check__(3, checkComplete(timeCheckAccuracy));
 				setComplete(false);
 			}
-			__check__(2, abs(time(NULL) - t2 - 10 * 1) < timeCheckAccuracy);
+			__check__(4, abs(time(NULL) - t2 - enquireLinkCount * 1) < timeCheckAccuracy);
 			__tc_ok_cond__;
-			//отправить респонс (sequenceNumber по фигу)
-			SmppHeader* respPdu = createPdu(ENQUIRE_LINK_RESP);
-			sendPdu(respPdu);
-			disposePdu(respPdu);
+			//отправить что-нибудь (sequenceNumber по фигу)
+			if (i == 0)
+			{
+				sendAnyCorrectPdu();
+			}
+			//дождаться закрытия соединения
+			else
+			{
+				connClose = true;
+				__tc__("protocolError.smeInactivity.checkConnectionClose");
+				time_t t3 = t2 + smeInactivityTimeOut;
+				__check__(1, checkComplete(t3 - time(NULL) + timeCheckAccuracy));
+				__check__(2, abs(time(NULL) - t3) < timeCheckAccuracy);
+				__tc_ok_cond__;
+				return;
+			}
 		}
 	}
 	virtual void handleEvent(SmppHeader* pdu)
 	{
 		__trace2__("handleEvent(): scenario = %p, pdu:\n%s", this, str(pdu).c_str());
 		__decl_tc__;
-		__tc__("protocolError.smeInactivity.checkEnquireLinkRequest");
+		__tc__("protocolError.smeInactivity.checkEnquireLinkFileds");
 		switch (pdu->get_commandId())
 		{
 			case BIND_RECIEVER_RESP:
@@ -1519,7 +1550,19 @@ public:
 				__check__(1, pdu->get_commandLength() == 16);
 				__check__(2, pdu->get_commandStatus() == ESME_ROK);
 				__tc_ok_cond__;
-				setComplete(true);
+				if (!connClose)
+				{
+					setComplete(true);
+				}
+				break;
+			case QUERY_SM_RESP:
+			case SUBMIT_SM_RESP:
+			case REPLACE_SM_RESP:
+			case CANCEL_SM_RESP:
+			case ENQUIRE_LINK_RESP:
+			//case SUBMIT_MULTI_RESP:
+			case DATA_SM_RESP:
+				//ок, респонсы
 				break;
 			default:
 				__warning2__("handleEvent(): unexpected pdu with commandId = %x", pdu->get_commandId());
@@ -1528,7 +1571,15 @@ public:
 	}
 	virtual void handleError(int errorCode)
 	{
-		__warning2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
+		if (connClose)
+		{
+			__trace2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
+			setComplete(true);
+		}
+		else
+		{
+			__warning2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
+		}
 	}
 };
 
