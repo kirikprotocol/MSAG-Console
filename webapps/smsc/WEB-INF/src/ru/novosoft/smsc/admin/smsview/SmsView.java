@@ -569,18 +569,16 @@ public class SmsView
       }
       stream.close();
 
-      if (text != null && (esmClass & 0x40) == 0x40) {
-        DataInputStream input = new DataInputStream(
-            new ByteArrayInputStream(text, 0, textLen));
-        int headerLen = (int) input.readByte();
-        textLen -= headerLen + 1;
-        input.skip(headerLen);
-        if (textLen > 0) {
-          byte msgText[] = new byte[textLen];
-          input.read(msgText, 0, textLen);
+      if (text != null && text.length>0 && (esmClass & 0x40) == 0x40)
+      {
+        int headerLen = text[0];
+        if( headerLen >= textLen-1 ) {
+          text = null; textLen = 0;
+        } else {
+          byte msgText[] = new byte[textLen = textLen-headerLen-1];
+          System.arraycopy(text,  headerLen+1, msgText, 0, textLen);
           text = msgText;
-        } else
-          text = null;
+        }
       }
 
       row.setText(decodeMessage(text, textLen, textEncoding));
