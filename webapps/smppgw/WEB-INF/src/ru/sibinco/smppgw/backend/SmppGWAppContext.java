@@ -4,9 +4,7 @@ import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.daemon.Daemon;
-import ru.sibinco.lib.backend.daemon.DaemonManager;
 import ru.sibinco.lib.backend.service.ServiceInfo;
-import ru.sibinco.lib.backend.service.ServiceManager;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.util.conpool.NSConnectionPool;
 import ru.sibinco.smppgw.backend.resources.ResourceManager;
@@ -15,8 +13,6 @@ import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
 import ru.sibinco.smppgw.backend.sme.*;
 import ru.sibinco.smppgw.backend.users.UserManager;
 import ru.sibinco.smppgw.backend.protocol.journal.Journal;
-import ru.sibinco.smppgw.backend.protocol.SmeHostsManager;
-import ru.sibinco.smppgw.backend.protocol.HostsManager;
 import ru.sibinco.smppgw.perfmon.PerfServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
@@ -41,7 +37,7 @@ public class SmppGWAppContext
   private final Config gwConfig;
   private final UserManager userManager;
   private final GwSmeManager gwSmeManager;
-  private final SmeHostsManager smeHostsManager;
+ // private final SmeHostsManager smeHostsManager;
  // private final HostsManager hostsManager ;
   private final ProviderManager providerManager;
   private final SmscsManager smscsManager;
@@ -75,17 +71,17 @@ public class SmppGWAppContext
       smscsManager = new SmscsManager(gwConfig);
       resourceManager = new ResourceManager(new File(gwConfigFolder));
       smppgw = new Smppgw(gwDaemonHost, (int)config.getInt("gw daemon.port"),gwConfigFolder, this);
-      smeHostsManager = new SmeHostsManager(config.getString("sme_file"), smppgw);
+     // smeHostsManager = new SmeHostsManager(config.getString("sme_file"), smppgw);
       billingManager = new BillingManager(new File(gwConfigFolder, "billing-rules.xml"));
       gwRoutingManager = new GwRoutingManager(new File(gwConfigFolder), gwSmeManager, providerManager, billingManager);
       gwRoutingManager.init();
       gwDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), gwSmeManager, config.getString("gw daemon.folder"));
       final ServiceInfo gwServiceInfo = (ServiceInfo) gwDaemon.getServices().get(config.getString("gw name"));
       gateway = new Gateway(gwServiceInfo, (int) gwConfig.getInt("admin.port"));
-      //DaemonManager daemonManager = new DaemonManager(smeHostsManager, config);
+      //DaemonManager daemonManager = new DaemonManager(smeManager, config);
      // ServiceManager serviceManager = new ServiceManager();
      // serviceManager.add(smppgw);
-      //hostsManager = new HostsManager(daemonManager, serviceManager, smeHostsManager, gwRoutingManager);
+      //hostsManager = new HostsManager(daemonManager, serviceManager, smeManager, gwRoutingManager);
       statuses = new Statuses();
       perfServer = new PerfServer(config);
       perfServer.start();
@@ -198,12 +194,12 @@ public class SmppGWAppContext
   {
     return smppgw;
   }
-
+/*
   public SmeHostsManager getSmeHostsManager()
   {
     return smeHostsManager;
   }
- /*
+
   public HostsManager getHostsManager()
   {
     return hostsManager;

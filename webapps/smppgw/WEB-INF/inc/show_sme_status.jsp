@@ -41,15 +41,4 @@ String showSmeStatus(SmeStatus status)
 	}
 	return result;
 }
-String smeStatus(SmppGWAppContext appContext, String serviceId)
-{
-	SmeStatus status = null;
-	try {
-		status = appContext.getSmeHostsManager().smeStatus(serviceId);
-	}
-	catch (Throwable e)
-	{}
-	String elem_id = "CONNECTION_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
-	return "<span id=\"" + elem_id + "\" datasrc=#tdcConnStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\" "+ showSmeStatus(status);
-}
 %>

@@ -11,10 +11,8 @@ package ru.sibinco.smppgw.beans.services.services;
 import ru.sibinco.smppgw.beans.TabledBeanImpl;
 import ru.sibinco.smppgw.beans.SmppgwJspException;
 import ru.sibinco.smppgw.Constants;
-import ru.sibinco.smppgw.backend.protocol.HostsManager;
-import ru.sibinco.smppgw.backend.protocol.SmeHostsManager;
+import ru.sibinco.smppgw.backend.sme.GwSmeManager;
 import ru.sibinco.lib.bean.TabledBean;
-import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.lib.backend.sme.SmeStatus;
 import ru.sibinco.lib.SibincoException;
 
@@ -45,12 +43,12 @@ public class Index extends TabledBeanImpl implements TabledBean
   protected String mbEdit = null;
   protected String mbDisconnectServices = null;
   private String CPATH = "/smppgw";
-  protected SmeHostsManager smeHostsManager = null;
+  protected GwSmeManager smeManager = null;
 
   public void process(final HttpServletRequest request,final HttpServletResponse response) throws SmppgwJspException
   {
     super.process(request, response);
-    smeHostsManager = appContext.getSmeHostsManager();
+    smeManager = appContext.getGwSmeManager();
 
     try {
       if (null != mbAddService)
@@ -84,7 +82,7 @@ public class Index extends TabledBeanImpl implements TabledBean
 
   public Collection getSmeIds()
   {
-    if (null == smeHostsManager) {
+    if (null == smeManager) {
       try {
         throw new SibincoException( "Service Manager is null!!!");
       } catch (SibincoException e) {
@@ -94,7 +92,7 @@ public class Index extends TabledBeanImpl implements TabledBean
       return new LinkedList();
     }
     else {
-      final List smeIds = smeHostsManager.getSmeIds();
+      final List smeIds = smeManager.getSmeNames();
       smeIds.remove(Constants.SMPPGW_SME_ID);
       return smeIds;
     }
@@ -141,14 +139,14 @@ public class Index extends TabledBeanImpl implements TabledBean
   public SmeStatus getSmeStatus(final String id)
   {
     try {
-      return appContext.getSmeHostsManager().smeStatus(id);
+      return appContext.getGateway().getSmeStatus(id);
     } catch (SibincoException e) {
       logger.error("Couldn't get sme status for service \"" + id + "\", nested:" + e.getMessage());
      // throw new SmppgwJspException(Constants.errors.services.couldntGetServiceInfo, id);
       return null;
     }
   }
-
+  /*
   public boolean isServiceDisabled(final String serviceId)
   {
     try {
@@ -158,11 +156,11 @@ public class Index extends TabledBeanImpl implements TabledBean
       return false;
     }
   }
-
+    */
   public boolean isServiceConnected(final String serviceId)
   {
     try {
-      final SmeStatus smeStatus = appContext.getSmeHostsManager().smeStatus(serviceId);
+      final SmeStatus smeStatus = appContext.getGateway().getSmeStatus(serviceId);
       if (null != smeStatus)
         return smeStatus.isConnected();
       else {
