@@ -7,6 +7,7 @@ package ru.novosoft.smsc.admin.preferences;
 
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.dl.DlFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.dl.PrincipalsFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserFilter;
@@ -47,6 +48,10 @@ public class UserPreferences {
 	private DlFilter dlFilter = new DlFilter();
 	private int dlPageSize = 20;
 	private String dlSortOrder = "address";
+
+  private int dlPrincipalsPageSize = 20;
+  private String dlPrincipalsSortOrder = "address";
+  private PrincipalsFilter dlPrincipalsFilter = new PrincipalsFilter(null);
 
 	private Locale locale = new Locale("ru");
 
@@ -248,4 +253,34 @@ public class UserPreferences {
 	{
 		this.dlFilter = dlFilter;
 	}
+
+  public int getDlPrincipalsPageSize()
+  {
+    return dlPrincipalsPageSize;
+  }
+
+  public void setDlPrincipalsPageSize(int dlPrincipalsPageSize)
+  {
+    this.dlPrincipalsPageSize = dlPrincipalsPageSize;
+  }
+
+  public String getDlPrincipalsSortOrder()
+  {
+    return dlPrincipalsSortOrder;
+  }
+
+  public void setDlPrincipalsSortOrder(String dlPrincipalsSortOrder)
+  {
+    this.dlPrincipalsSortOrder = dlPrincipalsSortOrder;
+  }
+
+  public PrincipalsFilter getDlPrincipalsFilter()
+  {
+    return dlPrincipalsFilter;
+  }
+
+  public void setDlPrincipalsFilter(PrincipalsFilter dlPrincipalsFilter)
+  {
+    this.dlPrincipalsFilter = dlPrincipalsFilter;
+  }
 }

@@ -7,36 +7,44 @@
  */
 package ru.novosoft.smsc.admin.dl;
 
-public class Principal
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
+
+public class Principal extends AbstractDataItem
 {
-    private String  address;
-    private int     maxLists;
-    private int     maxElements;
+  public Principal(String address, int maxLists, int maxElements)
+  {
+    values.put("address", address);
+    values.put("max_lst", new Integer(maxLists));
+    values.put("max_el", new Integer(maxElements));
+  }
 
-    public Principal(String address, int maxLists, int maxElements) {
-        this.address = address;
-        this.maxLists = maxLists;
-        this.maxElements = maxElements;
-    }
+  public String getAddress()
+  {
+    return (String) values.get("address");
+  }
 
-    public String getAddress() {
-        return address;
-    }
-    public void setAddress(String address) {
-        this.address = address;
-    }
+  public void setAddress(String address)
+  {
+    values.put("address", address);
+  }
 
-    public int getMaxLists() {
-        return maxLists;
-    }
-    public void setMaxLists(int maxLists) {
-        this.maxLists = maxLists;
-    }
+  public int getMaxLists()
+  {
+    return ((Integer)values.get("max_lst")).intValue();
+  }
 
-    public int getMaxElements() {
-        return maxElements;
-    }
-    public void setMaxElements(int maxElements) {
-        this.maxElements = maxElements;
-    }
+  public void setMaxLists(int maxLists)
+  {
+    values.put("max_lst", new Integer(maxLists));
+  }
+
+  public int getMaxElements()
+  {
+    return ((Integer)values.get("max_el")).intValue();
+  }
+
+  public void setMaxElements(int maxElements)
+  {
+    values.put("max_el", new Integer(maxElements));
+  }
 }

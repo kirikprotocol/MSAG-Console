@@ -129,8 +129,9 @@ if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShow
 			main_menu_end_item(out);
 
 			main_menu_begin_item(out, "MENU0_Options_menu", "MENU0_Options_submenu", "Options");
-			main_menu_submenu_item(out, "/mscman", "MENU0_MSCMAN", "MSCs");
-			main_menu_submenu_item(out, "/dl",     "MENU0_DL",     "Distribution lists");
+			main_menu_submenu_item(out, "/mscman",            "MENU0_MSCMAN",        "MSCs");
+			main_menu_submenu_item(out, "/dl",                "MENU0_DL",            "Distribution lists");
+      main_menu_submenu_i_fu(out, "/dl/principals.jsp", "MENU0_DL_PRINCIPALS", "Distribution lists - principals");
 			main_menu_end_item(out);
 			%>
 			<td width=100%>&nbsp;</td>
