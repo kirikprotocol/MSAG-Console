@@ -111,10 +111,12 @@ public class RouteAlterCommand extends RouteGenCommand
                                 } else {
                                     ctx.setMessage("Couldn't delete source '"+src.getName()+"' for "+out+". It rest only one.");
                                     ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                                    return;
                                 }
                             } else {
                                 ctx.setMessage("Source '"+src.getName()+"' not found for "+out);
                                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                                return;
                             }
                         }
                         else {
@@ -183,10 +185,12 @@ public class RouteAlterCommand extends RouteGenCommand
                                 } else {
                                     ctx.setMessage("Couldn't delete destination '"+dstName+"' for "+out+". It rest only one.");
                                     ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                                    return;
                                 }
                             } else {
                                 ctx.setMessage("Destination '"+dstName+"' not found for "+out);
                                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                                return;
                             }
                         }
                         else {
