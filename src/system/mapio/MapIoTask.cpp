@@ -143,9 +143,13 @@ void MapIoTask::dispatcher()
 
 void MapIoTask::init()
 {
-  throw_if(!MsgInit(MAXENTRIES));
-	throw_if(!MsgOpen(USER01_ID));
-  throw_if(!MsgConn(USER01_ID,ETSIMAP_ID));
+  USHORT_T err
+  err = MsgInit(MAXENTRIES);
+  if ( err != MSG_OK ) { __trace2__("MAP: Erroat at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+	err = MsgOpen(USER01_ID);
+  if ( err != MSG_OK ) { __trace2__("MAP: Erroat at MsgOpen, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+  err = MsgConn(USER01_ID,ETSIMAP_ID);
+  if ( err != MSG_OK ) { __trace2__("MAP: Erroat at MsgConn, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   MsgTraceOn( USER01_ID );
   MsgTraceOn( ETSIMAP_ID );
   MsgTraceOn( TCAP_ID );
