@@ -8,7 +8,6 @@
 package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
-import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.wsme.WSmeContext;
 import ru.novosoft.smsc.wsme.WSme;
 import ru.novosoft.smsc.wsme.WSmeErrors;
@@ -102,11 +101,16 @@ public class WSmeFormBean extends IndexBean
       return error(WSmeErrors.error.admin.ApplyFailed, e.getMessage());
     }
 
-    int result = processStop();
-    if (result != RESULT_OK)
-      return result;
+    int status = getWSmeStatus();
+    if (status == ServiceInfo.STATUS_RUNNING ||
+        status == ServiceInfo.STATUS_STARTING)
+    {
+      int result = processStop();
+      if (result != RESULT_OK) return result;
+      return processStart();
+    }
 
-    return processStart();
+    return RESULT_OK;
   }
 
   private int processReset()
