@@ -1,6 +1,7 @@
 <project default="update" basedir="." name="make esme routine">
-  <property file="../webapps/build.properties"/>
-  <property file="../src/build.properties"/>
+  <property name="SMSC_DIR" value=".."/>
+  <property file="${SMSC_DIR}/webapps/build.properties"/>
+  <property file="${SMSC_DIR}/src/build.properties"/>
   <property environment="env"/>
   <property name="TEMPLATE_PROPS" value="should be defined in calling script"/>
   <property name="esme_name" value="should be defined in calling script"/>
@@ -24,6 +25,8 @@
     <fileset dir="${libs_path}" includes="log4j.jar antlr.jar nsjsp.jar classes12.jar"/>
     <fileset dir="${CATALINA_HOME}/common/lib" includes="servlet.jar"/>
   </path>
+
+  <target name="preinit" description="sets properties that is not defined yet" />
 
   <target name="init">
     <tstamp/>
