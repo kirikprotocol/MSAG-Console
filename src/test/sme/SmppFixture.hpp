@@ -89,9 +89,7 @@ struct SmsMsg : public PduDataObject
 	uint8_t dataCoding;
 	bool valid;
 	int offset;
-	SmsMsg(bool _udhi, const char* _msg, int _len, uint8_t _dataCoding, bool _valid)
-	: udhi(_udhi), msg(_msg), len(_len), dataCoding(_dataCoding), valid(_valid),
-		offset(0) {}
+	SmsMsg(bool udhi, const char* msg, int len, uint8_t dataCoding, bool valid);
 	virtual ~SmsMsg() { if (msg) delete msg; }
 };
 

@@ -10,6 +10,7 @@ using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::system;
 using namespace smsc::test::core;
 using namespace smsc::test::smpp;
+using namespace std;
 
 RespPduFlag PduHandler::isAccepted(uint32_t status)
 {
@@ -29,6 +30,23 @@ RespPduFlag PduHandler::isAccepted(uint32_t status)
 		default:
 			return RESP_PDU_ERROR;
 	}
+}
+
+SmsMsg::SmsMsg(bool _udhi, const char* _msg, int _len, uint8_t _dataCoding,
+	bool _valid) : udhi(_udhi), msg(_msg), len(_len), dataCoding(_dataCoding),
+	valid(_valid), offset(0)
+{
+	ostringstream s;
+	s << hex;
+	int udhLen = udhi ? 1 + *(unsigned char*) msg : 0;
+	for (int i = 0; i < len && i < MAX_OSTR_PRINT_SIZE; i++)
+	{
+		if (udhi && i == udhLen) { s << endl; }
+		unsigned int ch = (unsigned char) *(msg + i);
+		s << (ch < 0x10 ? "0" : "") << ch << " ";
+	}
+	__trace2__("sms msg created: this = %p, udhi = %s, dataCoding = %d, valid = %s, msg: len = %d\n%s",
+		this, udhi ? "true" : "false", (int) dataCoding, valid ? "true" : "false", len, s.str().c_str());
 }
 
 SmppFixture::SmppFixture(SmeType _smeType, const SmeInfo& _smeInfo,
