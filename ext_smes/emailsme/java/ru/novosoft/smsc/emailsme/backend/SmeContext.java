@@ -43,6 +43,7 @@ public class SmeContext
   {
     this.appContext = appContext;
     resetConfig();
+    applyJdbc(null);
   }
 
   public void resetConfig() throws AdminException, IOException, ParserConfigurationException, SAXException
