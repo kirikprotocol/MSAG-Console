@@ -126,15 +126,15 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu)
 	SmppTime tmp;
 	//PduPartSm
 	EService serviceType;
-	rand_char(rand1(MAX_ESERVICE_TYPE_LENGTH), serviceType);
+	rand_char(MAX_ESERVICE_TYPE_LENGTH, serviceType);
 	pdu->get_message().set_serviceType(serviceType);
 	//pdu->get_message().set_source(PduAddress);
 	//pdu->get_message().set_dest(PduAddress);
 	pdu->get_message().set_esmClass(rand0(255));
 	pdu->get_message().set_protocolId(rand0(255));
 	pdu->get_message().set_priorityFlag(rand0(255));
-	time_t waitTime = time(NULL) + rand0(60);
-	time_t validTime = waitTime + rand0(60);
+	time_t waitTime = time(NULL) + rand1(60);
+	time_t validTime = waitTime + rand1(60);
 	pdu->get_message().set_scheduleDeliveryTime(
 		time2string(waitTime, tmp, __numTime__));
 	pdu->get_message().set_validityPeriod(
