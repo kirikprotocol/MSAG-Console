@@ -367,8 +367,12 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       hasDirectives=*body=='#';
       break;
     case DataCoding::UCS2:
-      hasDirectives=*((unsigned short*)body)=='#';
+    {
+      unsigned short tmp;
+      memcpy(&tmp,body,2);
+      hasDirectives=(tmp=='#');
       break;
+    }
   }
   if(!hasDirectives)return;
   static const char *escchars="[]{}^~\\|";
