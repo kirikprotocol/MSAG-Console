@@ -71,6 +71,7 @@ class MapDialog{
   unsigned smscDialogId;
   ET96MAP_INVOKE_ID_T invokeId;
   ET96MAP_LOCAL_SSN_T ssn;
+  char abonent[32];
   auto_ptr<SMS> sms;
   auto_ptr<ET96MAP_SM_RP_UI_T> auto_ui;
   ET96MAP_APP_CNTX_T appContext;
@@ -94,6 +95,8 @@ public:
   void setDialogId(USHORT_T ndid) { dialogid = ndid; }
   unsigned getSMSCDialogId() { return smscDialogId; }
   void setSMSCDialogId(unsigned did) {smscDialogId=did;}
+  const char* getAbonent() { return abonent;}
+  void setAbonent(const char* a) { memset(abonent,0,32); strncpy(abonent,a,31); }
   virtual USHORT_T  Et96MapV2SendRInfoForSmConf ( 
     ET96MAP_LOCAL_SSN_T localSsn,
 		ET96MAP_DIALOGUE_ID_T dialogueId,
@@ -166,6 +169,7 @@ class MapDialogContainer{
   Mutex sync;
   MapProxy proxy;
   XHash<ET96MAP_DIALOGUE_ID_T,MapDialog*,hash_func_ET96MAP_DID> hash;
+  Hash<unsigned> lock_map;
   list<unsigned> dialogId_pool;
   friend void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
 public:
@@ -194,20 +198,34 @@ public:
     else return 0;
   }
   
-  MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn){
+  MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn,const char* abonent){
     MutexGuard g(sync);
+    __trace2__("MAP::createSMSCDialog: try create dialog on abonent %s",abonent);
+    if ( lock_map.Exists(abonent) ) {
+      __trace2__("MAP::createSMSCDialog: locked");
+      return 0;
+    }
     MapDialog* dlg = new MapDialog(dialogueid,lssn);
+    dlg->setAbonent(abonent);
     hash.Insert(dialogueid,dlg);
+    lock_map.Insert(abonent,1);
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
     return dlg;
   }
   
-  MapDialog* createSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn){
+  MapDialog* createSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const char* abonent){
     MutexGuard g(sync);
+    __trace2__("MAP::createSMSCDialog: try create SMSC dialog on abonent %s",abonent);
+    if ( lock_map.Exists(abonent) ) {
+      __trace2__("MAP::createSMSCDialog: locked");
+      return 0;
+    }
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn);
     dlg->setSMSCDialogId (smsc_did);
+    dlg->setAbonent(abonent);
     hash.Insert(map_dialog,dlg);
+    lock_map.Insert(abonent,1);
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x->0x%x",dlg,smsc_did,map_dialog);
     dialogId_pool.pop_front();
     return dlg;
@@ -237,6 +255,7 @@ public:
     MapDialog* item = 0;
     if ( hash.Get(dialogueid,item) ){
       __trace2__("MAP:: drop dialog 0x%p for dialogid 0x%x",item,dialogueid);
+      lock_map.Remove(item->GetAbonent());
       hash.Delete(dialogueid);
       delete item;
     }

@@ -21,7 +21,8 @@ using namespace smsc::smeman;
 #define MAP_8BIT_ENCODING 0x4
 #define MAP_UCS2_ENCODING 0x8
 
-#define MAKE_ERRORCODE(klass,code) (klass)
+//#define MAKE_ERRORCODE(klass,code) (klass)
+#define MAKE_ERRORCODE(klass,code) MAKE_COMMAND_STATUS(klass,code)
 #define MAP_NETWORK_ERROR 1
 
 struct MicroString{
@@ -1152,9 +1153,13 @@ void MapProxy::putCommand(const SmscCommand& cmd)
     ET96MAP_DIALOGUE_ID_T dialogid = (ET96MAP_DIALOGUE_ID_T)did;
     if ( did > 0xffff ) {
       __trace2__("MAP::QueueProcessing: SMSC request");
-      dialog = MapDialogContainer::getInstance()->createSMSCDialog(did,SSN);
+      dialog = MapDialogContainer::getInstance()->createSMSCDialog(did,SSN,sms->getDestinationAddress().value);
       if ( dialog == 0 ) {
-        __trace2__("MAP::QueryProcessing: can't create SMSC->MS dialog");
+        __trace2__("MAP::QueryProcessing: can't create SMSC->MS dialog, locked!");
+        SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",did,MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,0));
+        MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+        __trace2__("MAP::QueryProcessing: was send RESCHEDULENOW to SMSC");
+        return;
       }
       did = dialog->getDialogId();
       __trace2__("MAP::QueueProcessing: dialog translation SC:%x -> MAP:%x",
