@@ -95,7 +95,7 @@ function clickClickable(headId, bodyId)
 </script>
 
 
-Filter By:       
+Filter By:
 
 <%
 java.util.HashMap a = new java.util.HashMap();
@@ -111,7 +111,7 @@ o.put("reports", "3");
 %>
 <input:select name="mbFilter" default="1"
     attributes="<%= a %>" options="<%= o %>" />
-
+<br>
 <table class=list cellspacing=0 cellpadding=0 id=ROUTE_LIST_TABLE>
 <col width="1%">
 <col width="60%" align=left>
