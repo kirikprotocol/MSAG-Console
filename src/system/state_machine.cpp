@@ -237,8 +237,9 @@ StateType StateMachine::submit(Tuple& t)
     dst=sms->getDestinationAddress();
   }
   sms->setDealiasedDestinationAddress(dst);
-  smsc::profiler::Profile profile=smsc->getProfiler()->lookup(dst);
-  __trace2__("SUBMIT: lookup .%d.%d.%20s, result: %d,%d",dst.type,dst.plan,dst.value,
+  smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms->getOriginatingAddress());
+  __trace2__("SUBMIT: lookup .%d.%d.%20s, result: %d,%d",sms->getOriginatingAddress().type,
+    sms->getOriginatingAddress().plan,dst.value,
     profile.reportoptions,profile.codepage);
 
   sms->setDeliveryReport(sms->getDeliveryReport()|profile.reportoptions);
@@ -395,6 +396,7 @@ StateType StateMachine::submit(Tuple& t)
     }
     sms->setDestinationAddress(dst);
 
+    profile=smsc->getProfiler()->lookup(dst);
     if(profile.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
        sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
     {
