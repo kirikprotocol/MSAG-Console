@@ -263,6 +263,7 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
         if ( dialog->associate != 0 && dialog->state != MAPST_END )
         {
           //Et96MapPAbortInd(SSN,dialog->associate->dialogid_map,0,0,0);
+          dialog->associate->hlrVersion = dialog->hlrVersion;
           ContinueImsiReq(dialog->associate,"","");
           dialog->state = MAPST_END;
         }
@@ -1831,6 +1832,7 @@ USHORT_T Et96MapCloseInd(
       DropMapDialog(dialog.get());
       break;
     case MAPST_ImsiWaitCloseInd:
+      dialog->associate->hlrVersion = dialog->hlrVersion;
       ContinueImsiReq(dialog->associate,dialog->s_imsi,dialog->s_msc);
       dialog->state = MAPST_END;
       DropMapDialog(dialog.get());
