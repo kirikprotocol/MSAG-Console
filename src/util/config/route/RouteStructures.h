@@ -5,6 +5,7 @@
 #include <util/cstrings.h>
 #include <core/buffers/Hash.hpp>
 #include <sms/sms_const.h>
+#include <acls/interfaces.h>
 
 namespace smsc {
 namespace util {
@@ -13,6 +14,7 @@ namespace route {
 
 using smsc::util::cStringCopy;
 using smsc::core::buffers::Hash;
+using namespace smsc::acls;
 
 typedef std::string Mask;
 typedef std::vector<Mask> MaskVector;
@@ -119,24 +121,25 @@ private:
   const uint8_t deliveryMode;
   std::string forwardTo;
   std::string trafrules;
+  const AclIdent aclId;
 
 
   friend class smsc::util::config::route::RouteConfig;
 
 public:
   Route()
-    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true),suppressDeliveryReports(false), hide(true), forceReplyPath(false), serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE), forwardTo()
+    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true),suppressDeliveryReports(false), hide(true), forceReplyPath(false), serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE), forwardTo(), aclId(-1)
   {}
   Route(const Route &r)
     : id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),
     billing(r.billing), archiving(r.archiving), enabling(r.enabling),suppressDeliveryReports(r.suppressDeliveryReports), serviceId(r.serviceId),
     active(r.active),hide(r.hide),forceReplyPath(r.forceReplyPath),
-    srcSmeSystemId(r.srcSmeSystemId), deliveryMode(r.deliveryMode), forwardTo(r.forwardTo),trafrules(r.trafrules)
+    srcSmeSystemId(r.srcSmeSystemId), deliveryMode(r.deliveryMode), forwardTo(r.forwardTo),trafrules(r.trafrules), aclId(r.aclId)
   {}
-  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR, bool isActive,bool isHide,bool isForceRP, int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode, const std::string & _forwardTo,const std::string& _trafrules)
+  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR, bool isActive,bool isHide,bool isForceRP, int _serviceId, const std::string & _srcSmeSystemId, const uint8_t _deliveryMode, const std::string & _forwardTo,const std::string& _trafrules, const AclIdent aclId)
     : id(rid), priority(prior), sources(), destinations(),
     billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR), active(isActive), hide(isHide),forceReplyPath(isForceRP),serviceId(_serviceId),
-    srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo),trafrules(_trafrules)
+    srcSmeSystemId(_srcSmeSystemId), deliveryMode(_deliveryMode), forwardTo(_forwardTo),trafrules(_trafrules), aclId(aclId)
   {}
 
   ~Route()
@@ -162,6 +165,7 @@ public:
   const uint8_t getDeliveryMode() const {return this->deliveryMode;}
   const std::string & getForwardTo() const {return this->forwardTo;}
   const std::string& getTrafRules()const{return this->trafrules;}
+  const AclIdent getAclId() const { return this->aclId; }
 };
 //typedef std::vector<Route> RouteVector;
 typedef std::vector<Route*> RoutePVector;

@@ -175,6 +175,7 @@ throw (SubjectNotFoundException)
   XmlStr deliveryModeStr(elem.getAttribute(XmlStr("deliveryMode")));
   XmlStr forwardToStr(elem.getAttribute(XmlStr("forwardTo")));
   XmlStr trafRulesStr(elem.getAttribute(XmlStr("trafficRules")));
+  const AclIdent aclId(atol(XmlStr(elem.getAttribute(XmlStr("aclId")))));
 
   std::auto_ptr<Route> r(new Route(std::string(id),
                                    priority,
@@ -189,7 +190,8 @@ throw (SubjectNotFoundException)
                                    std::string(srcSmeSystemId),
                                    strToDeliveryMode(deliveryModeStr),
                                    std::string(forwardToStr),
-                                   std::string(trafRulesStr))
+                                   std::string(trafRulesStr),
+                                   aclId)
                          );
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));
@@ -302,6 +304,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       << "\" serviceId=\""  << r->getServiceId()
       << "\" deliveryMode=\""  << deliveryModeToStr(r->getDeliveryMode())
       << "\" forwardTo=\""  << r->getForwardTo()
+      << "\" aclId=\""      << r->getAclId()
       << "\">" << std::endl;
 
       Source src;
