@@ -5,15 +5,25 @@ package ru.sibinco.mci.profile;
  * Date: 06.09.2004
  * Time: 14:34:36
  */
-public class DivertManager {
-  static DivertManager instance = null;
-  static Object syncObj = new Object();
-  public static DivertManager getInstance() {
+public class DivertManager
+{
+  private static DivertManager instance = null;
+  private static Object syncObj = new Object();
+
+  public static DivertManager getInstance()
+  {
     synchronized(syncObj) {
-      if( instance == null ) {
-        instance = new DivertManager();
-      }
-      return instance;
+      return (instance == null) ? (instance = new DivertManager()):instance;
     }
+  }
+
+  protected DivertManager() {
+    // TODO: init connection settings & estabilish connection to MSC
+  }
+  public DivertInfo getDivertInfo(String abonent)
+  {
+    // TODO: implement query to MSC
+    return new DivertInfo(DivertScenarioConstants.BUSY, DivertScenarioConstants.ABSENT,
+                          DivertScenarioConstants.NOTAVAIL, DivertScenarioConstants.UNCOND);
   }
 }

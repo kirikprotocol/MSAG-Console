@@ -2,43 +2,64 @@
 <!DOCTYPE scenarios SYSTEM "file:///scenarios.dtd">
 <scenarios>
   <scenario id="0" active="1" sms="1" ussd="2" resources="resources.xml">
+
     <page id="MAIN" question="0">
       <segment>
-        Привет!
-        1>Просмотр переадресации
-        2>Управление переадресацией
-        3>Управление профилем
+        Ваши настройки:
+        1> Просмотр переадресации
+        2> Управление переадресацией
+        3> Просмотр профиля
+        4> Управление профилем
       </segment>
       <command name="1" target="divert_info"/>
       <command name="2" target="divert_mgr"/>
-      <command name="3" target="profile_mgr"/>
+      <command name="3" target="profile_info"/>
+      <command name="4" target="profile_mgr"/>
       <command name="(**)" target="MAIN"/>
     </page>
+
+    <page id="divert_info" question="0">
+      <pageExecutor class="ru.sibinco.mci.profile.DivertViewExecutor">
+        <bundle name="divert"/>
+      </pageExecutor>
+      <command name="(**)" target="MAIN"/>
+    </page>
+
     <page id="divert_mgr" question="0">
       <segment>
-        Установить переадресацию
-        1>Безусл
-        2>Busy
-        3>Absent
-        4>Not avail
+        Установить переадресацию:
+        1> Занято
+        2> Отсутствует
+        3> Не доступен
+        4> Безусловно
       </segment>
-      <command name="1" target="uncond_divert"/>
+      <command name="1" target="divert_prompt"/>
+      <command name="2" target="divert_prompt"/>
+      <command name="3" target="divert_prompt"/>
+      <command name="4" target="divert_prompt"/>
+      <command name="(**)" target="MAIN"/>
     </page>
-    <page id="uncoond_divert" question="0" >
+    <page id="divert_prompt" question="0" >
+      <pagePreProcessor class="ru.sibinco.mci.profile.DivertPromptPreprocessor"/>
       <segment>
-        Введите номер телефона
-        или 0 выключить
-        00 мисед колс
-        000 автоответчик
+        Введите номер телефона или
+        1> выключить
+        2> миссед колс
+        3> автоответчик
+        4> назад
       </segment>
-      <command name="(**)" target="u_divert_set"/>
+      <command name="1" target="divert_set"/>
+      <command name="2" target="divert_set"/>
+      <command name="3" target="divert_set"/>
+      <command name="4" target="diver_mgr"/>
+      <command name="(**)" target="divert_set"/>
     </page>
-    <page id="u_divert_set" question="0">
-      <pageExecutor class="ru.sibinco.mci.profile.DivertSet">
-        <initParam name="type" value="uncond"/>
-        <bundle name="system"/>
+    <page id="divert_set" question="0">
+      <pageExecutor class="ru.sibinco.mci.profile.DivertSetExecutor">
+        <bundle name="divert"/>
       </pageExecutor>
       <command name="(**)" target="divert_mgr"/>
     </page>
+
   </scenario>
 </scenarios>

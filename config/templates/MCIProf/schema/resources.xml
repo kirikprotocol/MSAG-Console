@@ -1,16 +1,37 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <!DOCTYPE resources SYSTEM "file:///resources.dtd">
 <resources>
+
   <bundle name="system">
-    <str name="test" value="test value"/>
-    <str name="pattern">
-      Это текст {0} такой
+  </bundle>
+
+  <bundle name="divert">
+    <str name="reason_busy"     value="занят"/>
+    <str name="reason_absent"   value="отсутствует"/>
+    <str name="reason_notavail" value="не доступен"/>
+    <str name="reason_uncond"   value="безусловно"/>
+
+    <str name="value_off"       value="выключено"/>
+    <str name="value_unknown"   value="не известно"/>
+
+    <str name="error_msc_no_resp" value="нет ответа от коммутатора"/>
+    <str name="error_msc_fail"    value="сбой коммутатора"/>
+    <str name="error_internal"    value="ошибка сервиса"/>
+
+    <str name="info">
+      Установки переадресации:
+      {0} >> {4}
+      {1} >> {5}
+      {2} >> {6}
+      {3} >> {7}
     </str>
-    <str name="divert_set">
+    <str name="set">
       Переадресация установлена на {0} для причины {1}.
       0> назад
     </str>
-    <str name="reason_busy" value="занят"/>
-    <str name="reason_uncond" value="безусловно"/>
   </bundle>
+
+  <bundle name="profile">
+  </bundle>
+
 </resources>
