@@ -340,14 +340,6 @@ class MapDialogContainer{
   int    processTimeout;
   int    processLimit;
 
-  void setPerformanceLimits(int newTimeOut,int newProcLimit)
-  {
-    MutexGuard g(sync);
-    __mapproxy_trace2__("Setting proccessing limits on map proxy timeout=%d, limit=%d", newTimeOut, newProcLimit);
-    processTimeout=newTimeOut+newTimeOut/4;
-    processLimit=newProcLimit;
-  }
-
   void Dump() {
     if ( time(0) < last_dump_time+60 ) return;
     last_dump_time = time(0);
@@ -360,6 +352,14 @@ class MapDialogContainer{
   }
 public:
   static smsc::logger::Logger* loggerStatDlg;
+
+  void setPerformanceLimits(int newTimeOut,int newProcLimit)
+  {
+    MutexGuard g(sync);
+    __mapproxy_trace2__("Setting proccessing limits on map proxy timeout=%d, limit=%d", newTimeOut, newProcLimit);
+    processTimeout=newTimeOut+newTimeOut/4;
+    processLimit=newProcLimit;
+  }
 
   static void destroyInstance(){
     MutexGuard g(sync_object);
