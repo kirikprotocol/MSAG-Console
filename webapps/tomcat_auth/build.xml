@@ -34,7 +34,7 @@
   </target>
 
   <target name="cvs_update">
-    <cvs command="update" compressionlevel="9" failonerror="yes"/>
+    <cvs command="update" compressionlevel="9" failonerror="yes" quiet="yes"/>
   </target>
 
   <target name="update" depends="cvs_update,install"/>
