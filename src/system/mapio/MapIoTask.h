@@ -519,6 +519,7 @@ public:
 
   USHORT_T reAssignDialog(unsigned did,unsigned oldssn,unsigned ssn){
     MAPSTATS_Update(MAPSTATS_REASSIGNDIALOG);
+
     MutexGuard g(sync);
     MapDialog* dlg = 0;
     hash_.Get(MKDID(did,oldssn),dlg);
@@ -526,6 +527,7 @@ public:
       __mapdlg_trace2__("couldn't reassign dialog, here is no did 0x%x",did);
       throw runtime_error("MAP:: reassign dialog: here is no did");
     }
+    MAPSTATS_DumpDialogLC(dlg);
     if ( dialogId_pool.size() == 0 ) {
       smsc_log_warn(smsc::logger::_mapdlg_cat, "Dialog id POOL is empty" );
       Dump();
@@ -540,6 +542,9 @@ public:
     hash_.Insert(MKDID(dialogid_map,ssn),dlg);
     __mapdlg_trace2__("dialog reassigned 0x%x->0x%x",did,dialogid_map);
     dlg->lockedAt = time(NULL);
+    struct timeval tv;
+    gettimeofday( &tv, 0 );
+    dlg->maked_at_mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
     return dialogid_map;
   }
 
