@@ -184,8 +184,10 @@ public class DivertManager
   private final static String REASON_UNCOND    = "CFU";
   private final static String REASON_BUSY      = "CFB";
 
-  private final static String MSISDN_STR  = ":MSISDN=";
-  private final static String RESPONCE_OK = "EXECUTED";
+  private final static String MSISDN_STR    = ":MSISDN=";
+  private final static String RESPONCE_OK   = "EXECUTED";
+  private final static String RESPONCE_FAIL = "NOT ACCEPTED";
+
 
   // set divert for abonent=msisdn for reason=ss to address
   private void set(String msisdn, String ss, String address) throws IOException
@@ -243,12 +245,12 @@ public class DivertManager
       writeTelnetLine(command);
 
       String responce = readTelnetString(ESC_PROMPT);
-      if (responce == null || responce.length() <= 0 || !responce.startsWith(RESPONCE_OK))
+      if (responce == null || responce.length() <= 0 || responce.trim().startsWith(RESPONCE_FAIL))
         throw new IOException("Get divert settings failed. Details: "+responce);
 
       int index = responce.indexOf(SSD_STR);
       if (index < 0)
-        throw new IOException("Failed to locate SS data");
+        throw new IOException("Failed to locate SS data in responce: "+responce);
       responce = responce.substring(index + SSD_STR.length()).trim();
 
       DivertInfo info = new DivertInfo();
