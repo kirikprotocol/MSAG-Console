@@ -42,6 +42,7 @@ public:
 struct SessionData
 {
 	SmeConfig config;
+	PduAddress addr;
 	SmppSession* session;
 	SessionListener* listener;
 };
@@ -53,7 +54,8 @@ class SubmitMultiTest
 	vector<SessionData*> smeList;
 	SessionData* sme;
 	
-	SessionData* bindSme(const string& systemId, const string& passwd, int bindType);
+	SessionData* bindSme(const string& addr, const string& systemId,
+		const string& passwd, int bindType);
 	void submitMulti(PduMultiSm& pdu);
 public:
 	SubmitMultiTest(const string& _host, int _port)
@@ -62,10 +64,13 @@ public:
 	void submitMultiSeveralDistLists();
 };
 
-SessionData* SubmitMultiTest::bindSme(const string& systemId,
+SessionData* SubmitMultiTest::bindSme(const string& addr, const string& systemId,
 	const string& passwd, int bindType)
 {
 	SessionData* data = new SessionData();
+	const Address a(addr.c_str());
+	PduAddress pduAddr;
+	data->addr = *SmppUtil::convert(a, &pduAddr);
 	data->config.host = host;
 	data->config.port = port;
 	data->config.sid = systemId;
@@ -89,12 +94,31 @@ SessionData* SubmitMultiTest::bindSme(const string& systemId,
 
 void SubmitMultiTest::bindAllSme()
 {
-	sme = bindSme("sme1", "sme1", BindType::Transceiver);
+	sme = bindSme("111", "sme1", "sme1", BindType::Transceiver);
 	
-	smeList.push_back(bindSme("sme2", "sme2", BindType::Transmitter));
-	smeList.push_back(bindSme("sme3", "sme3", BindType::Transceiver));
-	smeList.push_back(bindSme("sme4", "sme4", BindType::Transceiver));
-	smeList.push_back(bindSme("MAP_PROXY", "sme5", BindType::Transceiver));
+	smeList.push_back(bindSme("222", "sme2", "sme2", BindType::Transmitter));
+	smeList.push_back(bindSme("333", "sme3", "sme3", BindType::Transceiver));
+	smeList.push_back(bindSme("444", "sme4", "sme4", BindType::Transceiver));
+	smeList.push_back(bindSme("555", "MAP_PROXY", "sme5", BindType::Transceiver));
+}
+
+void check(SmppHeader* pdu, const string& sid)
+{
+	//serialize
+	__trace__("serialization started");
+	int sz = calcSmppPacketLength(pdu);
+	char buf[sz];
+	SmppStream s1;
+	assignStreamWith(&s1, buf, sz, false);
+	if (!fillSmppPdu(&s1, pdu)) throw Exception("Failed to fill smpp packet");
+	__trace__("serialization finished");
+	//deserialize
+	__trace__("deserialization started");
+    SmppStream s2;
+    assignStreamWith(&s2, buf, sz, true);
+    SmppHeader* header = fetchSmppPdu(&s2);
+	dumpPdu("submitMultiDeserialized", sid, header);
+	__trace__("deserialization finished");
 }
 
 void SubmitMultiTest::submitMulti(PduMultiSm& pdu)
@@ -103,10 +127,14 @@ void SubmitMultiTest::submitMulti(PduMultiSm& pdu)
 	{
 		static int msgRef = 1;
 		pdu.get_header().set_commandId(SUBMIT_MULTI);
+		pdu.get_message().set_source(sme->addr);
 		pdu.get_optional().set_userMessageReference(msgRef++);
 		dumpPdu("submitMultiBefore", sme->config.sid, reinterpret_cast<SmppHeader*>(&pdu));
+		check(reinterpret_cast<SmppHeader*>(&pdu), sme->config.sid);
+		/*
 		sme->session->getAsyncTransmitter()->submitm(pdu);
 		dumpPdu("submitMultiAfter", sme->config.sid, reinterpret_cast<SmppHeader*>(&pdu));
+		*/
 	}
 	catch (exception& e)
 	{
