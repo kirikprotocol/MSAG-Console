@@ -6,6 +6,7 @@
 #include "test/router/RouteManagerTestCases.hpp"
 #include "test/profiler/ProfilerTestCases.hpp"
 #include "test/core/ProfileUtil.hpp"
+#include "test/conf/TestConfig.hpp"
 #include "test/config/SmeConfigGen.hpp"
 #include "test/config/AliasConfigGen.hpp"
 #include "test/config/RouteConfigGen.hpp"
@@ -31,6 +32,7 @@ using smsc::test::smeman::SmeManagerTestCases;
 using smsc::test::alias::AliasManagerTestCases;
 using smsc::test::router::RouteManagerTestCases;
 using smsc::test::profiler::ProfilerTestCases;
+using smsc::test::conf::TestConfig;
 using smsc::test::core::ProfileUtil;
 using smsc::test::core::RouteHolder;
 using namespace std;
@@ -296,6 +298,11 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	AliasManagerTestCases tcAlias(NULL, aliasReg, NULL);
 	RouteManagerTestCases tcRoute(NULL, routeReg, NULL);
 
+	__cfg_addr__(profilerAddr);
+	__cfg_addr__(profilerAlias);
+	__cfg_str__(profilerSystemId);
+	__cfg_str__(mapProxySystemId);
+	
 	vector<Address*> addr;
 	vector<SmeInfo*> smeInfo;
 	addr.reserve(numAddr);
@@ -310,6 +317,18 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		os << *addr[i];
 		__trace2__("genConfig(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
 	}
+	//регистрация profiler
+	SmeInfo profilerInfo;
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&profilerInfo);
+	profilerInfo.systemId = profilerSystemId;
+	smeReg->registerSme(profilerAddr, profilerInfo, false, true);
+	smeReg->bindSme(profilerInfo.systemId);
+	//регистрация map proxy
+	SmeInfo mapProxyInfo;
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&mapProxyInfo);
+	mapProxyInfo.systemId = mapProxySystemId;
+	smeReg->registerSme("+123", mapProxyInfo, false, true);
+	smeReg->bindSme(mapProxyInfo.systemId);
 	//регистрация алиасов
 	for (int i = 0; i < numAlias; i++)
 	{
@@ -339,6 +358,12 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 			}
 		}
 	}
+	//алиас для profiler
+	AliasInfo profilerAliasInfo;
+	profilerAliasInfo.addr = profilerAddr;
+	profilerAliasInfo.alias = profilerAlias;
+	profilerAliasInfo.hide = true;
+	aliasReg->putAlias(profilerAliasInfo);
 	//tcAlias->commit();
 	//регистрация маршрутов
 	for (int i = 0; i < numAddr; i++)
@@ -369,6 +394,24 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 				}
 			}
 		}
+	}
+	//маршруты на profiler
+	for (int i = 0; i < numAddr; i++)
+	{
+		//sme -> profiler
+		RouteInfo route1;
+		route1.source = *addr[i];
+		route1.dest = profilerAddr;
+		route1.smeSystemId = profilerSystemId;
+		route1.enabling = true;
+		tcRoute.addCorrectRouteMatch(&route1, NULL, RAND_TC);
+		//profiler -> sme
+		RouteInfo route2;
+		route2.source = profilerAddr;
+		route2.dest = *addr[i];
+		route2.smeSystemId = smeInfo[i]->systemId;
+		route2.enabling = true;
+		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
 	}
 	//tcRoute->commit();
 	//сохранение конфигов
