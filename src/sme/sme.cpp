@@ -14,12 +14,13 @@ bool BaseSme::init()
 {
   if(socket.Init(smscHost.c_str(),smscPort,0)==-1)return false;
   if(socket.Connect()==-1)return false;
+  return true;
 }
 
 void BaseSme::bindsme()
 {
   PduBindTRX pdu;
-  pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANSMITTER);
+  pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
   pdu.get_header().set_sequenceNumber(getNextSeq());
   pdu.set_systemId(smeSystemId.c_str());
   int size=pdu.size();
@@ -28,13 +29,15 @@ void BaseSme::bindsme()
   assignStreamWith(&stream,buf.buffer,size,false);
   if(fillSmppPdu(&stream,reinterpret_cast<SmppHeader*>(&pdu)))
   {
+    for(int i=0;i<size;i++)printf("%02x ",(int)buf.buffer[i]);
+    printf("\n");
     if(!sendBuffer(buf.buffer,size))throw Exception("Failed to send bind request");
   }
   else
   {
     throw Exception("Failed to fill bind pdu");
   }
-
+  trace("bind pdu sent\n");
   PduBindTRXResp *resp=reinterpret_cast<PduBindTRXResp*>(receiveSmpp(0));
   if(resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber())
   {
@@ -55,7 +58,7 @@ SmppHeader* BaseSme::receiveSmpp(int to)
     if(rd<=0)throw Exception("SMPP transport connection error");
     buf.offset+=rd;
   }
-  int sz=*((int*)buf.buffer);
+  int sz=ntohl(*((int*)buf.buffer));
   buf.setSize(sz);
   while(buf.offset<sz)
   {
@@ -71,17 +74,17 @@ SmppHeader* BaseSme::receiveSmpp(int to)
 bool BaseSme::sendSms(smsc::sms::SMS* sms)
 {
   PduXSm pdu;
+  int seq=getNextSeq();
+  pdu.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+  pdu.get_header().set_sequenceNumber(seq);
   if(!fillSmppPduFromSms(&pdu,sms))
   {
     return false;
   }
-  pdu.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-  int seq=getNextSeq();
-  pdu.get_header().set_sequenceNumber(seq);
   int sz=pdu.size(false);
   buf.setSize(sz);
   SmppStream s;
-  assignStreamWith(&s,buf.buffer,sz,true);
+  assignStreamWith(&s,buf.buffer,sz,false);
   fillSmppPdu(&s,reinterpret_cast<SmppHeader*>(&pdu));
   if(!sendBuffer(buf.buffer,sz))throw Exception("Failed to send sms");
   return true;

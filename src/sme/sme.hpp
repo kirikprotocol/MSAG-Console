@@ -3,6 +3,7 @@
 
 #include "core/network/Socket.hpp"
 #include "smpp/smpp.h"
+#include "core/buffers/Array.hpp"
 #include <string>
 
 namespace smsc{
@@ -47,7 +48,6 @@ public:
   bool init();
   void bindsme();
   SmppHeader* receiveSmpp(int);
-  SMS* receiveSMS(int);
 
   int getNextSeq(){return smppCount++;}
 
