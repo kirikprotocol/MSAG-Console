@@ -17,15 +17,15 @@ using namespace smsc::util;
 using namespace std;
 
 static string ToString(DIRECTION d) {
-  return 
+  return
    (d==LEFT_TO_RIGHT)?"LEFT_TO_RIGHT":
    (d==RIGHT_TO_LEFT)?"RIGHT_TO_LEFT":
    "IVALID_DIRECTION";
 }
 
-Mixer::Mixer(Queue& que,const ProxyConfig& pconf) : 
+Mixer::Mixer(Queue& que,const ProxyConfig& pconf) :
 config_(pconf),
-que_(que), 
+que_(que),
 log_(Logger::getCategory("smsc.proxysme.mixer")),
 listen_left_(LEFT_TO_RIGHT,que,log_), listen_right_(RIGHT_TO_LEFT,que,log_)
 {
@@ -53,11 +53,11 @@ bool Mixer::Connect()
     right_->close();
     right_state_ = SESSION_DISCONNECTED;
   }
-// LEFT PROXY CONNECTION  
+// LEFT PROXY CONNECTION
   if ( left_state_ != SESSION_OK ) {
     try {
-      left_->connect();
       left_state_ = SESSION_OK;
+      left_->connect();
     }catch(SmppConnectException& e) {
       log_.error("<exception> on connect : %s",e.what());
       switch ( e.getReason() ) {
@@ -72,14 +72,15 @@ bool Mixer::Connect()
       return false;
     }catch( exception& _ ){
       log_.error("<exception> on connect : %s",_.what());
+      left_state_ = SESSION_DISCONNECTED;
       return false;
     }
   }
 // RIGHT PROXY CONNECTION
   if ( right_state_ != SESSION_OK ) {
     try {
-      right_->connect();
       right_state_ = SESSION_OK;
+      right_->connect();
     }catch(SmppConnectException& e) {
       log_.error("<exception> on connect : %s",e.what());
       switch ( e.getReason() ) {
@@ -94,6 +95,7 @@ bool Mixer::Connect()
       return false;
     }catch( exception& _ ){
       log_.error("<exception> on connect : %s",_.what());
+      right_state_ = SESSION_DISCONNECTED;
       return false;
     }
   }
@@ -120,17 +122,17 @@ bool Mixer::SendPdu(DIRECTION direct,SmppHeader* pdu)
   log_.info("Mixer::SendPdu: %s ",ToString(direct).c_str());
   try {
     switch ( direct ) {
-    case LEFT_TO_RIGHT:  
+    case LEFT_TO_RIGHT:
       if ( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM_RESP )
-        right_->getAsyncTransmitter()->sendDeliverySmResp(*(PduDeliverySmResp*)pdu);  
-      else 
-        right_->getAsyncTransmitter()->sendPdu(pdu);  
-      break;
-    case RIGHT_TO_LEFT:  
-      if ( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM_RESP )
-        left_->getAsyncTransmitter()->sendDeliverySmResp(*(PduDeliverySmResp*)pdu);  
+        right_->getAsyncTransmitter()->sendDeliverySmResp(*(PduDeliverySmResp*)pdu);
       else
-        left_->getAsyncTransmitter()->sendPdu(pdu); 
+        right_->getAsyncTransmitter()->sendPdu(pdu);
+      break;
+    case RIGHT_TO_LEFT:
+      if ( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM_RESP )
+        left_->getAsyncTransmitter()->sendDeliverySmResp(*(PduDeliverySmResp*)pdu);
+      else
+        left_->getAsyncTransmitter()->sendPdu(pdu);
       break;
     default:
       log_.error("Mixer::SendPdu: invalid direction ");
@@ -144,7 +146,7 @@ bool Mixer::SendPdu(DIRECTION direct,SmppHeader* pdu)
   return true;
 }
 
-PduListener::PduListener(DIRECTION d,Queue& que,log4cpp::Category& log) : 
+PduListener::PduListener(DIRECTION d,Queue& que,log4cpp::Category& log) :
 log_(log),incom_dirct_(d), que_(que)
 {
   log_.info("PduListener::ctor");
@@ -163,7 +165,7 @@ void PduListener::handleEvent(SmppHeader *pdu)
   qc->pdu_       = pdu;
   // пытаемся запихать команду в очередь
   if ( que_.PutBack(qc.get()) ) {
-    // О! запихалась :) 
+    // О! запихалась :)
     qc.release();
   }else{
     log_.error("PduListener::handleEvent: %s ,packet skipped bcause queue is full",ToString(incom_dirct_).c_str());
