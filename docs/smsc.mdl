@@ -22,8 +22,8 @@
 	clipIconLabels 	TRUE
 	autoResize 	TRUE
 	snapToGrid 	TRUE
-	gridX      	16
-	gridY      	16
+	gridX      	31
+	gridY      	31
 	defaultFont 	(object Font
 	    size       	9
 	    face       	"Arial"
@@ -140,7 +140,7 @@
 				height     	275)))))
 	    (object Class_Category "Use-Case Model"
 		quid       	"35B677F4010E"
-		documentation 	"Эта секция содержит краткий обзор зафиксорованных на данный момент функциональных требований в виде use-cases."
+		documentation 	"Эта секция содержит обзор функциональных требований."
 		visible_categories 	(list visibility_relationship_list
 		    (object Visibility_Relationship
 			quid       	"35C633DA030C"
@@ -161,29 +161,105 @@
 			    (object Visibility_Relationship
 				quid       	"3C5D21F801C0"
 				supplier   	"Use Case View::Use-Case Model::Use Cases::SMPP Use Cases"
-				quidu      	"3C3D638D0074"))
+				quidu      	"3C3D638D0074")
+			    (object Visibility_Relationship
+				quid       	"3C5E70470230"
+				supplier   	"Use Case View::Use-Case Model::Use Cases::System Use Cases"
+				quidu      	"3C3D6B550119"))
 			exportControl 	"Public"
 			logical_models 	(list unit_reference_list
 			    (object Class "MS"
 				quid       	"353D5816026C"
 				documentation 	
-|мобильная станция
-|
+|Клиент, использующий мобильную сеть связи как инфраструктуру для взаимодействия с SMSC. Взаимодействие заключается в способности мобильной станции отправлять короткие сообщения, принимать короткие сообщения, получать уведомление о статусе ранее посланного сообщения.
+|В качестве такого клиента может выступать любой сотовый телефон с возможностью работы со службой коротких сообщений мобильной сети связи.
 |
 				
 				stereotype 	"Actor")
 			    (object Class "SME"
 				quid       	"3C3C83310061"
 				documentation 	
-|SMS клиент находящийся за рамками мобильной сети связи
-|
+|Клиент, использующий функциональные и транспортные возможности SMPP протокола как инфраструктуру для взаимодействия с SMSC. Взаимодействие, как и в случае с мобильной станцией, заключается в способности отправлять короткие сообщения, принимать короткие сообщения, получать уведомление о статусе ранее посланного сообщения.
+|В качестве такого клиента будут выступать именно программные системы, использующие SMPP протокол. Например, рабочее место оператора SMS, позволяющее отправлять сообщения с обычного компьютера для организации отправки короткого сообщения через оператора.
 |
 				
 				stereotype 	"Actor")
 			    (object Class "Administrator"
 				quid       	"3C3C835302B9"
 				documentation 	"администратор сервис-центра"
-				stereotype 	"Actor"))
+				stereotype 	"Actor")
+			    (object Association "$UNNAMED$0"
+				quid       	"3C3DADD501CC"
+				roles      	(list role_list
+				    (object Role "$UNNAMED$1"
+					quid       	"3C3DADD60051"
+					supplier   	"Use Case View::Use-Case Model::Use Cases::Мониторинг::Мониторинг::Мониторинг"
+					quidu      	"3C3DAD4602B7"
+					is_navigable 	TRUE)
+				    (object Role "$UNNAMED$2"
+					quid       	"3C3DADD60053"
+					supplier   	"Use Case View::Use-Case Model::Actors::Administrator"
+					quidu      	"3C3C835302B9")))
+			    (object Association "$UNNAMED$3"
+				quid       	"3C617AF90057"
+				roles      	(list role_list
+				    (object Role "$UNNAMED$4"
+					quid       	"3C617AF902C3"
+					supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами"
+					quidu      	"3C4EACD00030"
+					is_navigable 	TRUE)
+				    (object Role "$UNNAMED$5"
+					quid       	"3C617AF902D7"
+					supplier   	"Use Case View::Use-Case Model::Actors::Administrator"
+					quidu      	"3C3C835302B9")))
+			    (object Association "$UNNAMED$6"
+				quid       	"3C617B1701C2"
+				roles      	(list role_list
+				    (object Role "$UNNAMED$7"
+					quid       	"3C617B1703CB"
+					supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление короткими адресами::Управление короткими адресами"
+					quidu      	"3C4C504D02B5"
+					is_navigable 	TRUE)
+				    (object Role "$UNNAMED$8"
+					quid       	"3C617B1703CD"
+					supplier   	"Use Case View::Use-Case Model::Actors::Administrator"
+					quidu      	"3C3C835302B9")))
+			    (object Association "$UNNAMED$9"
+				quid       	"3C617B2802B7"
+				roles      	(list role_list
+				    (object Role "$UNNAMED$10"
+					quid       	"3C617B2900BA"
+					supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Управление маршрутами"
+					quidu      	"3C4C5079009B"
+					is_navigable 	TRUE)
+				    (object Role "$UNNAMED$11"
+					quid       	"3C617B2900C4"
+					supplier   	"Use Case View::Use-Case Model::Actors::Administrator"
+					quidu      	"3C3C835302B9")))
+			    (object Association "$UNNAMED$12"
+				quid       	"3C617B320293"
+				roles      	(list role_list
+				    (object Role "$UNNAMED$13"
+					quid       	"3C617B3300BE"
+					supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление пользователями::Управление пользователями"
+					quidu      	"3C4C4FD601E1"
+					is_navigable 	TRUE)
+				    (object Role "$UNNAMED$14"
+					quid       	"3C617B3300C8"
+					supplier   	"Use Case View::Use-Case Model::Actors::Administrator"
+					quidu      	"3C3C835302B9")))
+			    (object Association "$UNNAMED$15"
+				quid       	"3C617B400135"
+				roles      	(list role_list
+				    (object Role "$UNNAMED$16"
+					quid       	"3C617B40030C"
+					supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление языками::Управление языками"
+					quidu      	"3C4D9BCC00DB"
+					is_navigable 	TRUE)
+				    (object Role "$UNNAMED$17"
+					quid       	"3C617B400316"
+					supplier   	"Use Case View::Use-Case Model::Actors::Administrator"
+					quidu      	"3C3C835302B9"))))
 			logical_presentations 	(list unit_reference_list
 			    (object UseCaseDiagram "Actors"
 				quid       	"3C5D20EB021D"
@@ -195,11 +271,11 @@
 				origin_x   	0
 				origin_y   	0
 				items      	(list diagram_item_list
-				    (object ClassView "Class" "Use Case View::Use-Case Model::Actors::Administrator" @3
+				    (object ClassView "Class" "Use Case View::Use-Case Model::Actors::MS" @3
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
-					location   	(224, 176)
+					location   	(217, 558)
 					font       	(object Font
 					    size       	9
 					    face       	"Arial"
@@ -212,23 +288,23 @@
 					    default_color 	TRUE)
 					label      	(object ItemLabel
 					    Parent_View 	@3
-					    location   	(224, 336)
+					    location   	(217, 718)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	479
+					    max_width  	501
 					    justify    	0
-					    label      	"Administrator")
+					    label      	"MS")
 					icon       	"Actor"
 					icon_style 	"Icon"
 					line_color 	3342489
-					quidu      	"3C3C835302B9"
+					quidu      	"353D5816026C"
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Use Case View::Use-Case Model::Actors::MS" @4
+				    (object ClassView "Class" "Use Case View::Use-Case Model::Actors::SME" @4
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
-					location   	(208, 544)
+					location   	(217, 868)
 					font       	(object Font
 					    size       	9
 					    face       	"Arial"
@@ -241,23 +317,23 @@
 					    default_color 	TRUE)
 					label      	(object ItemLabel
 					    Parent_View 	@4
-					    location   	(208, 704)
+					    location   	(217, 1028)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	483
+					    max_width  	509
 					    justify    	0
-					    label      	"MS")
+					    label      	"SME")
 					icon       	"Actor"
 					icon_style 	"Icon"
 					line_color 	3342489
-					quidu      	"353D5816026C"
+					quidu      	"3C3C83310061"
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Use Case View::Use-Case Model::Actors::SME" @5
+				    (object ClassView "Class" "Use Case View::Use-Case Model::Actors::Administrator" @5
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
-					location   	(208, 864)
+					location   	(217, 186)
 					font       	(object Font
 					    size       	9
 					    face       	"Arial"
@@ -270,32 +346,20 @@
 					    default_color 	TRUE)
 					label      	(object ItemLabel
 					    Parent_View 	@5
-					    location   	(208, 1024)
+					    location   	(217, 346)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	490
+					    max_width  	497
 					    justify    	0
-					    label      	"SME")
+					    label      	"Administrator")
 					icon       	"Actor"
 					icon_style 	"Icon"
 					line_color 	3342489
-					quidu      	"3C3C83310061"
+					quidu      	"3C3C835302B9"
 					annotation 	8
 					autoResize 	TRUE)))))
 		    (object Class_Category "Use Cases"
 			quid       	"34E37E430280"
-			documentation 	
-|All Use Cases in the system are contained in this package.   This is done strictly as a way to organize the model and make it easier to understand.
-|
-|See Rational UnifiedProcess:
-|Activity " Describe the Use Case Model".
-|
-|In order to version control use cases it is recommended to specify use case packages within this package.
-|
-|Use Cases are often documented in a separate text file, use the  Rational Unified Process template or use the use case template  in Rational Requsite Pro.
-|
-|The "Use Case Realizations" that correspond to these use cases  are created in the Design Model..
-			
 			stereotype 	"use-case package"
 			exportControl 	"Public"
 			logical_models 	(list unit_reference_list
@@ -332,7 +396,6 @@
 						name       	"ReqProReqType"
 						value      	""))
 					quid       	"35C0EC150366"
-					documentation 	" A separate package is recommended for each Use Case to facilitate access and version control of related use case artifacts."
 					exportControl 	"Public"
 					logical_models 	(list unit_reference_list
 					    (object UseCase "Send Message"
@@ -369,7 +432,7 @@
 								ShowCompartmentStereotypes 	TRUE
 								IncludeAttribute 	TRUE
 								IncludeOperation 	TRUE
-								location   	(224, 576)
+								location   	(217, 589)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -382,10 +445,10 @@
 								    default_color 	TRUE)
 								label      	(object ItemLabel
 								    Parent_View 	@6
-								    location   	(224, 736)
+								    location   	(217, 749)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	467
+								    max_width  	487
 								    justify    	0
 								    label      	"MS")
 								icon       	"Actor"
@@ -394,7 +457,7 @@
 								quidu      	"353D5816026C"
 								annotation 	8
 								autoResize 	TRUE)
-							    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Create Billing Record::Create Billing Record" @7
+							    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Тарификация::Тарификация" @7
 								location   	(1312, 96)
 								font       	(object Font
 								    size       	9
@@ -413,12 +476,12 @@
 								    nlines     	2
 								    max_width  	630
 								    justify    	0
-								    label      	"Create Billing Record")
+								    label      	"Тарификация")
 								icon_style 	"Icon"
 								line_color 	3342489
 								fill_color 	13434879
 								quidu      	"3C3D6CF800B7")
-							    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Store Message::Store Message" @8
+							    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::Управление сообщениями" @8
 								location   	(1312, 1104)
 								font       	(object Font
 								    size       	9
@@ -437,7 +500,7 @@
 								    nlines     	2
 								    max_width  	630
 								    justify    	0
-								    label      	"Store Message")
+								    label      	"Управление сообщениями")
 								icon_style 	"Icon"
 								line_color 	3342489
 								fill_color 	13434879
@@ -467,7 +530,7 @@
 								fill_color 	13434879
 								quidu      	"3C3D62CE039B")
 							    (object AssociationViewNew "" @10
-								location   	(224, 406)
+								location   	(218, 391)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -480,7 +543,7 @@
 								    default_color 	TRUE)
 								stereotype 	(object SegLabel @11
 								    Parent_View 	@10
-								    location   	(240, 416)
+								    location   	(234, 401)
 								    font       	(object Font
 									size       	9
 									face       	"Arial"
@@ -505,7 +568,7 @@
 								roleview_list 	(list RoleViews
 								    (object RoleView "" @12
 									Parent_View 	@10
-									location   	(96, 230)
+									location   	(90, 215)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -518,7 +581,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @13
 									    Parent_View 	@12
-									    location   	(266, 336)
+									    location   	(261, 297)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -547,7 +610,7 @@
 									line_style 	0)
 								    (object RoleView "" @14
 									Parent_View 	@10
-									location   	(96, 230)
+									location   	(90, 215)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -560,7 +623,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @15
 									    Parent_View 	@14
-									    location   	(183, 476)
+									    location   	(176, 485)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -612,7 +675,7 @@
 								fill_color 	13434879
 								quidu      	"3C3D6BE500E4")
 							    (object AssociationViewNew "" @17
-								location   	(224, 935)
+								location   	(219, 917)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -625,7 +688,7 @@
 								    default_color 	TRUE)
 								stereotype 	(object SegLabel @18
 								    Parent_View 	@17
-								    location   	(224, 923)
+								    location   	(219, 905)
 								    font       	(object Font
 									size       	9
 									face       	"Arial"
@@ -650,7 +713,7 @@
 								roleview_list 	(list RoleViews
 								    (object RoleView "" @19
 									Parent_View 	@17
-									location   	(32, 759)
+									location   	(27, 741)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -663,7 +726,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @20
 									    Parent_View 	@19
-									    location   	(183, 1036)
+									    location   	(179, 1033)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -692,7 +755,7 @@
 									line_style 	0)
 								    (object RoleView "" @21
 									Parent_View 	@17
-									location   	(32, 759)
+									location   	(27, 741)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -705,7 +768,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @22
 									    Parent_View 	@21
-									    location   	(266, 834)
+									    location   	(260, 801)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -759,7 +822,7 @@
 								height     	118
 								autoResize 	TRUE)
 							    (object AssociationViewNew "" @24
-								location   	(740, 576)
+								location   	(737, 580)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -772,7 +835,7 @@
 								    default_color 	TRUE)
 								stereotype 	(object SegLabel @25
 								    Parent_View 	@24
-								    location   	(740, 612)
+								    location   	(737, 616)
 								    font       	(object Font
 									size       	9
 									face       	"Arial"
@@ -797,7 +860,7 @@
 								roleview_list 	(list RoleViews
 								    (object RoleView "" @26
 									Parent_View 	@24
-									location   	(500, -608)
+									location   	(497, -604)
 									stereotype 	TRUE
 									line_color 	3342489
 									quidu      	"35C0ED3B0118"
@@ -806,7 +869,7 @@
 									line_style 	0)
 								    (object RoleView "" @27
 									Parent_View 	@24
-									location   	(500, -608)
+									location   	(497, -604)
 									stereotype 	TRUE
 									line_color 	3342489
 									quidu      	"35C0ED3B0119"
@@ -979,7 +1042,7 @@
 									supplier   	@23
 									line_style 	0)))
 							    (object AssociationViewNew "" @40
-								location   	(754, 851)
+								location   	(753, 851)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -992,7 +1055,7 @@
 								    default_color 	TRUE)
 								stereotype 	(object SegLabel @41
 								    Parent_View 	@40
-								    location   	(800, 856)
+								    location   	(799, 856)
 								    font       	(object Font
 									size       	9
 									face       	"Arial"
@@ -1017,7 +1080,7 @@
 								roleview_list 	(list RoleViews
 								    (object RoleView "" @42
 									Parent_View 	@40
-									location   	(-558, 275)
+									location   	(-559, 275)
 									stereotype 	TRUE
 									line_color 	3342489
 									quidu      	"3C3D97870168"
@@ -1026,7 +1089,7 @@
 									line_style 	0)
 								    (object RoleView "" @43
 									Parent_View 	@40
-									location   	(-558, 275)
+									location   	(-559, 275)
 									stereotype 	TRUE
 									line_color 	3342489
 									quidu      	"3C3D9787016A"
@@ -1102,7 +1165,7 @@
 								ShowCompartmentStereotypes 	TRUE
 								IncludeAttribute 	TRUE
 								IncludeOperation 	TRUE
-								location   	(1552, 464)
+								location   	(1550, 465)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -1115,10 +1178,10 @@
 								    default_color 	TRUE)
 								label      	(object ItemLabel
 								    Parent_View 	@46
-								    location   	(1552, 624)
+								    location   	(1550, 625)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	520
+								    max_width  	539
 								    justify    	0
 								    label      	"SME")
 								icon       	"Actor"
@@ -1128,7 +1191,7 @@
 								annotation 	8
 								autoResize 	TRUE)
 							    (object AssociationViewNew "" @47
-								location   	(1271, 358)
+								location   	(1352, 390)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -1141,7 +1204,7 @@
 								    default_color 	TRUE)
 								stereotype 	(object SegLabel @48
 								    Parent_View 	@47
-								    location   	(1271, 251)
+								    location   	(1352, 283)
 								    font       	(object Font
 									size       	9
 									face       	"Arial"
@@ -1166,7 +1229,7 @@
 								roleview_list 	(list RoleViews
 								    (object RoleView "" @49
 									Parent_View 	@47
-									location   	(263, 166)
+									location   	(344, 198)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -1179,7 +1242,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @50
 									    Parent_View 	@49
-									    location   	(1461, 384)
+									    location   	(1475, 392)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -1208,7 +1271,7 @@
 									line_style 	0)
 								    (object RoleView "" @51
 									Parent_View 	@47
-									location   	(263, 166)
+									location   	(344, 198)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -1221,7 +1284,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @52
 									    Parent_View 	@51
-									    location   	(1110, 256)
+									    location   	(1257, 312)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -1359,7 +1422,7 @@
 								fill_color 	13434879
 								quidu      	"3C3DA6EA039D")
 							    (object AssociationViewNew "" @60
-								location   	(1136, 715)
+								location   	(1130, 718)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -1372,7 +1435,7 @@
 								    default_color 	TRUE)
 								stereotype 	(object SegLabel @61
 								    Parent_View 	@60
-								    location   	(1136, 608)
+								    location   	(1130, 611)
 								    font       	(object Font
 									size       	9
 									face       	"Arial"
@@ -1397,7 +1460,7 @@
 								roleview_list 	(list RoleViews
 								    (object RoleView "" @62
 									Parent_View 	@60
-									location   	(192, 43)
+									location   	(186, 46)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -1410,7 +1473,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @63
 									    Parent_View 	@62
-									    location   	(1235, 608)
+									    location   	(1224, 614)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -1439,7 +1502,7 @@
 									line_style 	0)
 								    (object RoleView "" @64
 									Parent_View 	@60
-									location   	(192, 43)
+									location   	(186, 46)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -1534,94 +1597,94 @@
 									client     	@66
 									supplier   	@59
 									line_style 	0)))))))
-					    (object Association "$UNNAMED$0"
+					    (object Association "$UNNAMED$18"
 						quid       	"35C0ED3A00F0"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$1"
+						    (object Role "$UNNAMED$19"
 							quid       	"35C0ED3B0118"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message"
 							quidu      	"34E37FB203D4"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$2"
+						    (object Role "$UNNAMED$20"
 							quid       	"35C0ED3B0119"
 							supplier   	"Use Case View::Use-Case Model::Actors::MS"
 							quidu      	"353D5816026C")))
-					    (object Association "$UNNAMED$3"
+					    (object Association "$UNNAMED$21"
 						quid       	"3C3D6DDD0233"
 						stereotype 	"include"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$4"
+						    (object Role "$UNNAMED$22"
 							quid       	"3C3D6DDE0162"
-							supplier   	"Use Case View::Use-Case Model::Use Cases::System Use Cases::Create Billing Record::Create Billing Record"
+							supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Тарификация::Тарификация"
 							quidu      	"3C3D6CF800B7"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$5"
+						    (object Role "$UNNAMED$23"
 							quid       	"3C3D6DDE016C"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message"
 							quidu      	"34E37FB203D4")))
-					    (object Association "$UNNAMED$6"
+					    (object Association "$UNNAMED$24"
 						quid       	"3C3D70560233"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$7"
+						    (object Role "$UNNAMED$25"
 							quid       	"3C3D705700FE"
-							supplier   	"Use Case View::Use-Case Model::Use Cases::System Use Cases::Store Message::Store Message"
+							supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::Управление сообщениями"
 							quidu      	"3C3D6FC8024D"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$8"
+						    (object Role "$UNNAMED$26"
 							quid       	"3C3D70570100"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message"
 							quidu      	"34E37FB203D4")))
-					    (object Association "$UNNAMED$9"
+					    (object Association "$UNNAMED$27"
 						quid       	"3C3D977300D3"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$10"
+						    (object Role "$UNNAMED$28"
 							quid       	"3C3D97740279"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Receive Message::Receive Message"
 							quidu      	"3C3D62CE039B"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$11"
+						    (object Role "$UNNAMED$29"
 							quid       	"3C3D97740283"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message"
 							quidu      	"34E37FB203D4")))
-					    (object Association "$UNNAMED$12"
+					    (object Association "$UNNAMED$30"
 						quid       	"3C3D978601A2"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$13"
+						    (object Role "$UNNAMED$31"
 							quid       	"3C3D97870168"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Receive Status Report::Receive Status Report"
 							quidu      	"3C3D6BE500E4"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$14"
+						    (object Role "$UNNAMED$32"
 							quid       	"3C3D9787016A"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message"
 							quidu      	"34E37FB203D4")))
-					    (object Association "$UNNAMED$15"
+					    (object Association "$UNNAMED$33"
 						quid       	"3C4323D40093"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$16"
+						    (object Role "$UNNAMED$34"
 							quid       	"3C4323D50044"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::SMPP Use Cases::Message Delivery::Message Delivery"
 							quidu      	"3C3DA741017B"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$17"
+						    (object Role "$UNNAMED$35"
 							quid       	"3C4323D50046"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message to SME"
 							quidu      	"3C4323AE0337")))
-					    (object Association "$UNNAMED$18"
+					    (object Association "$UNNAMED$36"
 						quid       	"3C4323D701CE"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$19"
+						    (object Role "$UNNAMED$37"
 							quid       	"3C4323D80085"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message to SME"
 							quidu      	"3C4323AE0337"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$20"
+						    (object Role "$UNNAMED$38"
 							quid       	"3C4323D8008F"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::SMPP Use Cases::Message Submission::Message Submission"
 							quidu      	"3C3DA6EA039D"))))
@@ -1633,16 +1696,16 @@
 					    (object UseCase "Receive Message"
 						quid       	"3C3D62CE039B"
 						documentation 	"доставка короткого сообщения получателю сети")
-					    (object Association "$UNNAMED$21"
+					    (object Association "$UNNAMED$39"
 						quid       	"3C3D631A0209"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$22"
+						    (object Role "$UNNAMED$40"
 							quid       	"3C3D631B0143"
 							supplier   	"Use Case View::Use-Case Model::Actors::MS"
 							quidu      	"353D5816026C"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$23"
+						    (object Role "$UNNAMED$41"
 							quid       	"3C3D631B0161"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Receive Message::Receive Message"
 							quidu      	"3C3D62CE039B"))))
@@ -1654,16 +1717,16 @@
 					    (object UseCase "Receive Status Report"
 						quid       	"3C3D6BE500E4"
 						documentation 	"уведомление отправителя о результате доставки короткого сообщения")
-					    (object Association "$UNNAMED$24"
+					    (object Association "$UNNAMED$42"
 						quid       	"3C3D6C510310"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$25"
+						    (object Role "$UNNAMED$43"
 							quid       	"3C3D6C520249"
 							supplier   	"Use Case View::Use-Case Model::Actors::MS"
 							quidu      	"353D5816026C"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$26"
+						    (object Role "$UNNAMED$44"
 							quid       	"3C3D6C520271"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Receive Status Report::Receive Status Report"
 							quidu      	"3C3D6BE500E4"))))
@@ -1690,7 +1753,7 @@
 								ShowCompartmentStereotypes 	TRUE
 								IncludeAttribute 	TRUE
 								IncludeOperation 	TRUE
-								location   	(1552, 448)
+								location   	(1550, 434)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -1703,10 +1766,10 @@
 								    default_color 	TRUE)
 								label      	(object ItemLabel
 								    Parent_View 	@70
-								    location   	(1552, 608)
+								    location   	(1550, 594)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	531
+								    max_width  	554
 								    justify    	0
 								    label      	"SME")
 								icon       	"Actor"
@@ -1719,7 +1782,7 @@
 								ShowCompartmentStereotypes 	TRUE
 								IncludeAttribute 	TRUE
 								IncludeOperation 	TRUE
-								location   	(144, 464)
+								location   	(155, 465)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -1732,10 +1795,10 @@
 								    default_color 	TRUE)
 								label      	(object ItemLabel
 								    Parent_View 	@71
-								    location   	(144, 624)
+								    location   	(155, 625)
 								    anchor_loc 	1
 								    nlines     	2
-								    max_width  	501
+								    max_width  	523
 								    justify    	0
 								    label      	"MS")
 								icon       	"Actor"
@@ -1769,7 +1832,7 @@
 								fill_color 	13434879
 								quidu      	"3C3DA741017B")
 							    (object AssociationViewNew "" @73
-								location   	(1392, 311)
+								location   	(1393, 304)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -1782,7 +1845,7 @@
 								    default_color 	TRUE)
 								stereotype 	(object SegLabel @74
 								    Parent_View 	@73
-								    location   	(1392, 330)
+								    location   	(1393, 323)
 								    font       	(object Font
 									size       	9
 									face       	"Arial"
@@ -1807,7 +1870,7 @@
 								roleview_list 	(list RoleViews
 								    (object RoleView "" @75
 									Parent_View 	@73
-									location   	(1152, -329)
+									location   	(1153, -336)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -1820,7 +1883,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @76
 									    Parent_View 	@75
-									    location   	(1499, 349)
+									    location   	(1497, 335)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -1849,7 +1912,7 @@
 									line_style 	0)
 								    (object RoleView "" @77
 									Parent_View 	@73
-									location   	(1152, -329)
+									location   	(1153, -336)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -1862,7 +1925,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @78
 									    Parent_View 	@77
-									    location   	(1339, 211)
+									    location   	(1342, 209)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -1914,7 +1977,7 @@
 								fill_color 	13434879
 								quidu      	"3C3DA6EA039D")
 							    (object AssociationViewNew "" @80
-								location   	(1242, 678)
+								location   	(1243, 671)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -1927,7 +1990,7 @@
 								    default_color 	TRUE)
 								stereotype 	(object SegLabel @81
 								    Parent_View 	@80
-								    location   	(1193, 730)
+								    location   	(1194, 723)
 								    font       	(object Font
 									size       	9
 									face       	"Arial"
@@ -1952,7 +2015,7 @@
 								roleview_list 	(list RoleViews
 								    (object RoleView "" @82
 									Parent_View 	@80
-									location   	(746, -122)
+									location   	(747, -129)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -1965,7 +2028,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @83
 									    Parent_View 	@82
-									    location   	(1270, 607)
+									    location   	(1277, 595)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -1994,7 +2057,7 @@
 									line_style 	0)
 								    (object RoleView "" @84
 									Parent_View 	@80
-									location   	(746, -122)
+									location   	(747, -129)
 									font       	(object Font
 									    size       	9
 									    face       	"Arial"
@@ -2007,7 +2070,7 @@
 									    default_color 	TRUE)
 									label      	(object SegLabel @85
 									    Parent_View 	@84
-									    location   	(1166, 683)
+									    location   	(1163, 681)
 									    font       	(object Font
 										size       	9
 										face       	"Arial"
@@ -2059,7 +2122,7 @@
 								fill_color 	13434879
 								quidu      	"3C3DA0D9008C")
 							    (object AssociationViewNew "" @87
-								location   	(357, 464)
+								location   	(363, 463)
 								font       	(object Font
 								    size       	9
 								    face       	"Arial"
@@ -2072,7 +2135,7 @@
 								    default_color 	TRUE)
 								stereotype 	(object SegLabel @88
 								    Parent_View 	@87
-								    location   	(358, 423)
+								    location   	(364, 422)
 								    font       	(object Font
 									size       	9
 									face       	"Arial"
@@ -2097,7 +2160,7 @@
 								roleview_list 	(list RoleViews
 								    (object RoleView "" @89
 									Parent_View 	@87
-									location   	(213, 272)
+									location   	(219, 271)
 									stereotype 	TRUE
 									line_color 	3342489
 									quidu      	"3C3DA7930345"
@@ -2106,7 +2169,7 @@
 									line_style 	0)
 								    (object RoleView "" @90
 									Parent_View 	@87
-									location   	(213, 272)
+									location   	(219, 271)
 									stereotype 	TRUE
 									line_color 	3342489
 									quidu      	"3C3DA7930347"
@@ -2223,41 +2286,41 @@
 									client     	@95
 									supplier   	@86
 									line_style 	0)))))))
-					    (object Association "$UNNAMED$27"
+					    (object Association "$UNNAMED$45"
 						quid       	"3C3DA79101E4"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$28"
+						    (object Role "$UNNAMED$46"
 							quid       	"3C3DA7930345"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Submit USSD Request::Submit USSD Request"
 							quidu      	"3C3DA0D9008C"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$29"
+						    (object Role "$UNNAMED$47"
 							quid       	"3C3DA7930347"
 							supplier   	"Use Case View::Use-Case Model::Actors::MS"
 							quidu      	"353D5816026C")))
-					    (object Association "$UNNAMED$30"
+					    (object Association "$UNNAMED$48"
 						quid       	"3C3DACBC02EB"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$31"
+						    (object Role "$UNNAMED$49"
 							quid       	"3C3DACBD0152"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::SMPP Use Cases::Message Delivery::Message Delivery"
 							quidu      	"3C3DA741017B"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$32"
+						    (object Role "$UNNAMED$50"
 							quid       	"3C3DACBD0154"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Submit USSD Request::Submit USSD Request"
 							quidu      	"3C3DA0D9008C")))
-					    (object Association "$UNNAMED$33"
+					    (object Association "$UNNAMED$51"
 						quid       	"3C431C9602FA"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$34"
+						    (object Role "$UNNAMED$52"
 							quid       	"3C431C9702B5"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::SMPP Use Cases::Message Submission::Message Submission"
 							quidu      	"3C3DA6EA039D")
-						    (object Role "$UNNAMED$35"
+						    (object Role "$UNNAMED$53"
 							quid       	"3C431C9702B7"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Submit USSD Request::Submit USSD Request"
 							quidu      	"3C3DA0D9008C"
@@ -2271,7 +2334,11 @@
 				    (object Visibility_Relationship
 					quid       	"3C43174301EC"
 					supplier   	"Use Case View::Use-Case Model::Use Cases::System Use Cases"
-					quidu      	"3C3D6B550119"))
+					quidu      	"3C3D6B550119")
+				    (object Visibility_Relationship
+					quid       	"3C5E70570215"
+					supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases"
+					quidu      	"3C3D6370005F"))
 				exportControl 	"Public"
 				logical_models 	(list unit_reference_list
 				    (object Class_Category "Message Submission"
@@ -2282,16 +2349,16 @@
 					    (object UseCase "Message Submission"
 						quid       	"3C3DA6EA039D"
 						documentation 	"принять SMPP сообщение от SME")
-					    (object Association "$UNNAMED$36"
+					    (object Association "$UNNAMED$54"
 						quid       	"3C3DAC590343"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$37"
+						    (object Role "$UNNAMED$55"
 							quid       	"3C3DAC5A025E"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::SMPP Use Cases::Message Submission::Message Submission"
 							quidu      	"3C3DA6EA039D"
 							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$38"
+						    (object Role "$UNNAMED$56"
 							quid       	"3C3DAC5A0268"
 							supplier   	"Use Case View::Use-Case Model::Actors::SME"
 							quidu      	"3C3C83310061"))))
@@ -2304,15 +2371,15 @@
 					    (object UseCase "Message Delivery"
 						quid       	"3C3DA741017B"
 						documentation 	"доставить SMPP сообшение от сервис-центра до SME")
-					    (object Association "$UNNAMED$39"
+					    (object Association "$UNNAMED$57"
 						quid       	"3C3DABC2038C"
 						stereotype 	"communicate"
 						roles      	(list role_list
-						    (object Role "$UNNAMED$40"
+						    (object Role "$UNNAMED$58"
 							quid       	"3C3DABC30379"
 							supplier   	"Use Case View::Use-Case Model::Use Cases::SMPP Use Cases::Message Delivery::Message Delivery"
 							quidu      	"3C3DA741017B")
-						    (object Role "$UNNAMED$41"
+						    (object Role "$UNNAMED$59"
 							quid       	"3C3DABC3037B"
 							supplier   	"Use Case View::Use-Case Model::Actors::SME"
 							quidu      	"3C3C83310061"
@@ -2324,335 +2391,397 @@
 				stereotype 	"use-case package"
 				exportControl 	"Public"
 				logical_models 	(list unit_reference_list
-				    (object Class_Category "Create Billing Record"
-					quid       	"3C3D6CE20160"
-					exportControl 	"Public"
-					logical_models 	(list unit_reference_list
-					    (object UseCase "Create Billing Record"
-						quid       	"3C3D6CF800B7"
-						documentation 	"сохранение сведений для начисления платы за услугу"))
-					logical_presentations 	(list unit_reference_list))
-				    (object Class_Category "Log Action"
+				    (object Class_Category "Протоколирование"
 					quid       	"3C3D6EE30398"
 					exportControl 	"Public"
 					logical_models 	(list unit_reference_list
-					    (object UseCase "Log Action"
+					    (object UseCase "Протоколирование"
 						quid       	"3C3D6F07021E"
-						documentation 	
-|this use case is used to record all action system has performed
-|протоколирование работы сервис-центра
-						))
+						documentation 	"С целью обнаружения дефектов и сбоев функционирования SMSC осуществляет протоколирование своей работы с записью протокола на постоянный носитель. Все события, используемые для протоколирования, должны быть разбиты на категории и приоритеты. Категории могут образовывать иерархии. Это позволит гибко разрешать и запрещать протоколирование целых групп событий. Также должна быть предусмотрена возможность одновременного протоколирования по нескольким адресатам с указанием формата вывода. Протокол должен представлять собой текст, удобный для составления отчетов о сбоях. "))
 					logical_presentations 	(list unit_reference_list))
-				    (object Class_Category "Store Message"
+				    (object Class_Category "Сбор статистики"
+					quid       	"3C3D9C880250"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Сбор статистики"
+						quid       	"3C3D9CA800BB"
+						documentation 	
+|SMSC должен осуществлять сбор и обработку статистической информации о своей работе. Это призвано отслеживать тенденции использования службы коротких сообщений и устойчивого функционирования системы.
+|Реализация должна частично опираться на возможность общесистемного протоколирования и на функциональные возможности конкретных подсистем 
+|Список статистических параметров может расширяться по мере разработки. Однако на данном этапе можно ограничиться следующими показателями
+|·	Число обработанных сообщений со времени последнего сброс счетчиков
+|·	Средняя скорость обработки со времени последнего сброс счетчиков
+|Возможность сохранения статистических показателей не предусматривается.
+|
+						))
+					logical_presentations 	(list unit_reference_list)))
+				logical_presentations 	(list unit_reference_list))
+			    (object Class_Category "Базовые функции"
+				quid       	"3C5EBE3202DD"
+				documentation 	"Эта секция описывает функции обработки SMS и USSD запросов, независимые от конкретного транспорта (SMPP,MAP). Использование конкретного транспорта вносит специфику, которая будет описана позже. (не ниже а позже)"
+				stereotype 	"use-case package"
+				exportControl 	"Public"
+				logical_models 	(list unit_reference_list
+				    (object Class_Category "Управление сообщениями"
 					quid       	"3C3D6FB401A4"
 					exportControl 	"Public"
 					logical_models 	(list unit_reference_list
-					    (object UseCase "Store Message"
+					    (object UseCase "Управление сообщениями"
 						quid       	"3C3D6FC8024D"
-						documentation 	"хранение коротких сообщений в процессе их доставки получателю"))
-					logical_presentations 	(list unit_reference_list))
-				    (object Class_Category "Server Configuration"
-					quid       	"3C3D9B99013E"
-					documentation 	"настройка основных параметров сервис-центра"
-					stereotype 	"use-case package"
-					exportControl 	"Public"
-					logical_models 	(list unit_reference_list
-					    (object UseCase "User Management"
-						quid       	"3C4C4FD601E1"
 						documentation 	
-|управление пользователями сервис-центра
-|- добавление пользователя
-|- удаление пользователя
-|- просмотр списка пользователей
-|- модификация прав пользователя
-						)
-					    (object UseCase "Address Management"
-						quid       	"3C4C504D02B5"
-						documentation 	
-|настройка коротких адресов (алиасов)
-|- создание короткого адреса
-|- удаление короткого адреса
-|- просмотр списка коротких адресов
-|- модификация свойств короткого номера (переадресация, сокрытие реального номера) ??? надо мозговать
+|В процессе обработки короткого сообщения SMSC должен сохранять их в долговременном хранилище. Это необходимо для повторной попытки доставки в случае неудачи и для восстановления утерянных сообщений по запросу клиента компании, эксплуатирующей SMSC.
+|Необходимо реализовать следующие функции управления сообщениями
+|·	хранение коротких сообщений в процессе их доставки получателю
+|·	просмотр сообщений, ожидающих доставки на определенный номер
+|·	удаление сообщений, ожидающих доставки на определенный номер
+|·	просмотр архива сообщений, доставленных на определенный номер
+|·	просмотр архива сообщений, доставленных с определенного номера
+|·	просмотр статистики причин недоставки сообщений с указанием количества абонентов, которым не были доставлены сообщения по этим причинам
+|SMSC хранит сообщения только за определенный период времени, задаваемый параметром конфигурации. Устаревшие сообщения должны либо удалятся, либо необходимо разработать механизм архивации.
+|Реализация хранилища основано на использовании сервера баз данных. При недостаточной производительности такой реализации по результатам тестирования должно быть принято решение об использовании более быстрых методов, например, использование файловых хранилищ.
+|Для обеспечения замера производительности SMSC точка обращения к хранилищу должна быть обложена условием, задаваемым либо режимом компиляции, либо параметром конфигурации.
 |
-						)
-					    (object UseCase "Route Management"
-						quid       	"3C4C5079009B"
-						documentation 	"настройка направлений маршрутизации")
-					    (object UseCase "Message Management"
-						quid       	"3C4D92AA002F"
-						documentation 	
-|управление сообщениями
-|- просмотр сообщений, ожидающих доставки на определенный номер
-|- удаление сообщений, ожидающих доставки на определенный номер
-|- просмотр архива сообщений, доставленных на определенный номер
-|- просмотр архива сообщений, доставленных с определенного номера (весьма странный use case для ФСБ)
-						)
-					    (object UseCase "Delivery List Management"
-						quid       	"3C4D9A78001E"
-						documentation 	
-|управление списком рассылки
-|считаю такой use case вредным !!! - это функциональность внешнего приложения да и то использование SMS не по назначению пусть заказывают Cell Broadcast
-						)
-					    (object UseCase "i18n"
-						quid       	"3C4D9BCC00DB"
-						documentation 	
-|мультиязычность, шаблоны для списков рассылки на разных языках, форматы уведомлений о доставке на разных языках
-|вещь в принципе полезная но не в первой версии
-|
-|
-						)
-					    (object UseCase "SME Management"
-						quid       	"3C4EACD00030"
-						documentation 	
-|управление внешними сервисами (своего рода HLR только для SME)
-|- регистрация внешнего сервиса
-|- удаление регистрационной записи внешнего сервиса
-|- получение списка зарегисирированных внешних сервисов
-|- управление типами внешних сервисов (для Чена!!!)
 						))
-					logical_presentations 	(list unit_reference_list
-					    (object UseCaseDiagram "Local  View - <Configure Server>"
-						quid       	"3C3D9BDB0175"
-						title      	"Local  View - <Configure Server>"
-						documentation 	"основные функции при конфигурировании"
-						zoom       	100
-						max_height 	28350
-						max_width  	21600
-						origin_x   	0
-						origin_y   	0
-						items      	(list diagram_item_list
-						    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Server Configuration::User Management" @99
-							location   	(864, 160)
-							font       	(object Font
-							    size       	9
-							    face       	"Arial"
-							    charSet    	204
-							    bold       	FALSE
-							    italics    	FALSE
-							    underline  	FALSE
-							    strike     	FALSE
-							    color      	0
-							    default_color 	TRUE)
-							label      	(object ItemLabel
-							    Parent_View 	@99
-							    location   	(864, 298)
-							    anchor_loc 	1
-							    nlines     	2
-							    max_width  	630
-							    justify    	0
-							    label      	"User Management")
-							icon_style 	"Icon"
-							line_color 	3342489
-							fill_color 	13434879
-							quidu      	"3C4C4FD601E1")
-						    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Server Configuration::Address Management" @100
-							location   	(912, 416)
-							font       	(object Font
-							    size       	9
-							    face       	"Arial"
-							    charSet    	204
-							    bold       	FALSE
-							    italics    	FALSE
-							    underline  	FALSE
-							    strike     	FALSE
-							    color      	0
-							    default_color 	TRUE)
-							label      	(object ItemLabel
-							    Parent_View 	@100
-							    location   	(912, 554)
-							    anchor_loc 	1
-							    nlines     	2
-							    max_width  	630
-							    justify    	0
-							    label      	"Address Management")
-							icon_style 	"Icon"
-							line_color 	3342489
-							fill_color 	13434879
-							quidu      	"3C4C504D02B5")
-						    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Server Configuration::Route Management" @101
-							location   	(1376, 672)
-							font       	(object Font
-							    size       	9
-							    face       	"Arial"
-							    charSet    	204
-							    bold       	FALSE
-							    italics    	FALSE
-							    underline  	FALSE
-							    strike     	FALSE
-							    color      	0
-							    default_color 	TRUE)
-							label      	(object ItemLabel
-							    Parent_View 	@101
-							    location   	(1376, 810)
-							    anchor_loc 	1
-							    nlines     	2
-							    max_width  	630
-							    justify    	0
-							    label      	"Route Management")
-							icon_style 	"Icon"
-							line_color 	3342489
-							fill_color 	13434879
-							quidu      	"3C4C5079009B")
-						    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Server Configuration::Message Management" @102
-							location   	(928, 688)
-							font       	(object Font
-							    size       	9
-							    face       	"Arial"
-							    charSet    	204
-							    bold       	FALSE
-							    italics    	FALSE
-							    underline  	FALSE
-							    strike     	FALSE
-							    color      	0
-							    default_color 	TRUE)
-							label      	(object ItemLabel
-							    Parent_View 	@102
-							    location   	(928, 826)
-							    anchor_loc 	1
-							    nlines     	2
-							    max_width  	630
-							    justify    	0
-							    label      	"Message Management")
-							icon_style 	"Icon"
-							line_color 	3342489
-							fill_color 	13434879
-							quidu      	"3C4D92AA002F")
-						    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Server Configuration::Delivery List Management" @103
-							location   	(1376, 416)
-							font       	(object Font
-							    size       	9
-							    face       	"Arial"
-							    charSet    	204
-							    bold       	FALSE
-							    italics    	FALSE
-							    underline  	FALSE
-							    strike     	FALSE
-							    color      	0
-							    default_color 	TRUE)
-							label      	(object ItemLabel
-							    Parent_View 	@103
-							    location   	(1376, 554)
-							    anchor_loc 	1
-							    nlines     	2
-							    max_width  	630
-							    justify    	0
-							    label      	"Delivery List Management")
-							icon_style 	"Icon"
-							line_color 	3342489
-							fill_color 	13434879
-							quidu      	"3C4D9A78001E")
-						    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Server Configuration::i18n" @104
-							location   	(912, 944)
-							font       	(object Font
-							    size       	9
-							    face       	"Arial"
-							    charSet    	204
-							    bold       	FALSE
-							    italics    	FALSE
-							    underline  	FALSE
-							    strike     	FALSE
-							    color      	0
-							    default_color 	TRUE)
-							label      	(object ItemLabel
-							    Parent_View 	@104
-							    location   	(912, 1082)
-							    anchor_loc 	1
-							    nlines     	2
-							    max_width  	630
-							    justify    	0
-							    label      	"i18n")
-							icon_style 	"Icon"
-							line_color 	3342489
-							fill_color 	13434879
-							quidu      	"3C4D9BCC00DB")
-						    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Server Configuration::SME Management" @105
-							location   	(1312, 160)
-							font       	(object Font
-							    size       	9
-							    face       	"Arial"
-							    charSet    	204
-							    bold       	FALSE
-							    italics    	FALSE
-							    underline  	FALSE
-							    strike     	FALSE
-							    color      	0
-							    default_color 	TRUE)
-							label      	(object ItemLabel
-							    Parent_View 	@105
-							    location   	(1312, 298)
-							    anchor_loc 	1
-							    nlines     	2
-							    max_width  	630
-							    justify    	0
-							    label      	"SME Management")
-							icon_style 	"Icon"
-							line_color 	3342489
-							fill_color 	13434879
-							quidu      	"3C4EACD00030")
-						    (object ClassView "Class" "Use Case View::Use-Case Model::Actors::Administrator" @106
-							ShowCompartmentStereotypes 	TRUE
-							IncludeAttribute 	TRUE
-							IncludeOperation 	TRUE
-							location   	(160, 592)
-							font       	(object Font
-							    size       	9
-							    face       	"Arial"
-							    charSet    	204
-							    bold       	FALSE
-							    italics    	FALSE
-							    underline  	FALSE
-							    strike     	FALSE
-							    color      	0
-							    default_color 	TRUE)
-							label      	(object ItemLabel
-							    Parent_View 	@106
-							    location   	(160, 752)
-							    anchor_loc 	1
-							    nlines     	2
-							    max_width  	483
-							    justify    	0
-							    label      	"Administrator")
-							icon       	"Actor"
-							icon_style 	"Icon"
-							line_color 	3342489
-							quidu      	"3C3C835302B9"
-							annotation 	8
-							autoResize 	TRUE)))))
-				    (object Class_Category "Statistics Collecting"
-					quid       	"3C3D9C880250"
-					stereotype 	"use-case package"
-					exportControl 	"Public"
-					logical_models 	(list unit_reference_list
-					    (object UseCase "Statistics Collecting"
-						quid       	"3C3D9CA800BB"
-						documentation 	"сбор статистики работы сервис-центра"))
 					logical_presentations 	(list unit_reference_list))
-				    (object Class_Category "Server Monitoring"
-					quid       	"3C3DAD270014"
-					stereotype 	"use-case package"
+				    (object Class_Category "Тарификация"
+					quid       	"3C3D6CE20160"
 					exportControl 	"Public"
 					logical_models 	(list unit_reference_list
-					    (object UseCase "Server Monitoring"
+					    (object UseCase "Тарификация"
+						quid       	"3C3D6CF800B7"
+						documentation 	
+|SMSC должен сохранять сведения для начисления платы за услугу.
+|Реализация этой функции должна заключаться в 
+|Для обеспечения замера производительности SMSC точка обращения к этой функции должна быть обложена логическим условием, задаваемым либо режимом компиляции, либо параметром конфигурации.
+|
+						))
+					logical_presentations 	(list unit_reference_list))
+				    (object Class_Category "Уведомление о доставке"
+					quid       	"3C6179140077"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Уведомление о доставке"
+						quid       	"3C5ECA0D03B3"))
+					logical_presentations 	(list unit_reference_list))
+				    (object Class_Category "Маршрутизация сообщений"
+					quid       	"3C6179220384"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Маршрутизация сообщений"
+						quid       	"3C6169D10156"
+						documentation 	
+|Поскольку клиенты физически могут находиться в разнородных сетях, SMSC должен обеспечивать сквозное взаимодействие различных типов клиентов. Например, Мобильная станция может послать короткое сообщение на Внешнее приложение и наоборот. Причем, клиент-отправитель сообщения ничего не знает о фактическом типе клиента-получателя, поскольку используется единая система адресации абонентов. Иными словами, SMSC должен обеспечивать прозрачное взаимодействие между клиентами.
+|Для обеспечения такого взаимодействия SMSC использует понятие модуля, обслуживающего клиентов. Один модуль может обслуживать несколько клиентов, расположенных в сети одного типа. Маршруты позволяют по модулю, через который сообщение попало в SMSC, и по номеру адресата определить модуль, осуществляющего дальнейшую обработку сообщения.
+|Содержимым таблиц маршрутизации управляет Администратор.
+						))
+					logical_presentations 	(list unit_reference_list))
+				    (object Class_Category "Доставка сообщения"
+					quid       	"3C61792F0062"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Доставка сообщения"
+						quid       	"3C5EC5CF0394"))
+					logical_presentations 	(list unit_reference_list))
+				    (object Class_Category "Прием сообщения"
+					quid       	"3C6179410249"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Прием сообщения"
+						quid       	"3C5EC63000F4"))
+					logical_presentations 	(list unit_reference_list))
+				    (object Class_Category "Submit USSD Request"
+					quid       	"3C61796E01C1"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Submit USSD Request"
+						quid       	"3C5F897D022D"))
+					logical_presentations 	(list unit_reference_list)))
+				logical_presentations 	(list unit_reference_list))
+			    (object Class_Category "Мониторинг"
+				quid       	"3C6173240325"
+				stereotype 	"use-case package"
+				exportControl 	"Public"
+				logical_models 	(list unit_reference_list
+				    (object Class_Category "Мониторинг"
+					quid       	"3C3DAD270014"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Мониторинг"
 						quid       	"3C3DAD4602B7"
 						documentation 	
-|конроль функционирования сервис-центра в реальном времени и получение статистики
-|- просмотр статистики причин недоставленных сообщений с указанием количества абонентов, которым не были доставлены сообщения по этим причинам
-						)
-					    (object Association "$UNNAMED$42"
-						quid       	"3C3DADD501CC"
-						roles      	(list role_list
-						    (object Role "$UNNAMED$43"
-							quid       	"3C3DADD60051"
-							supplier   	"Use Case View::Use-Case Model::Use Cases::System Use Cases::Server Monitoring::Server Monitoring"
-							quidu      	"3C3DAD4602B7"
-							is_navigable 	TRUE)
-						    (object Role "$UNNAMED$44"
-							quid       	"3C3DADD60053"
-							supplier   	"Use Case View::Use-Case Model::Actors::Administrator"
-							quidu      	"3C3C835302B9"))))
+|SMSC должен позволять Администратор производить визуальный контроль функционирования в реальном времени, получать статистику и информацию о загрузке системы.
+|Реализация этой возможности должна быть основана на системных функциях протоколирования и сбора статистики. Визуализация предоставляемой информации должна быть реализована с использованием средств HTML, Java applets, Swing. В качестве терминала должен использоваться стандартный браузер, например, MS Internet Explorer версии 5 и выше. Поддержка других будет осуществляться по требованию.
+|
+						))
 					logical_presentations 	(list unit_reference_list)))
-				logical_presentations 	(list unit_reference_list)))
+				logical_presentations 	(list unit_reference_list))
+			    (object Class_Category "Администрирование"
+				quid       	"3C3D9B99013E"
+				documentation 	
+|Администратор может использовать функции, описанные в этой секции, для конфигурирования SMSC.
+|В качестве терминала должен использоваться стандартный браузер, например, MS Internet Explorer версии 5 и выше. Поддержка других будет осуществляться по требованию.
+|
+				
+				stereotype 	"use-case package"
+				exportControl 	"Public"
+				logical_models 	(list unit_reference_list
+				    (object Class_Category "Управление короткими адресами"
+					quid       	"3C617425014D"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Управление короткими адресами"
+						quid       	"3C4C504D02B5"
+						documentation 	
+|С целью повышения удобства SMSC должен поддерживать возможность использования коротких номеров для задания адресата короткого сообщения. Это особенно ценно для людей, которые используют те или иные клиенты для взаимодействия с SMSC.
+|Кроме этого короткий адрес может быть использован как средство сокрытия полного адреса и возможности гибкой переадресации на тот или иной полный адрес.
+|SMSC должен поддерживать взаимно однозначное соответствие между короткими и полными адресами. К основным функциям управления короткими адресами следует отнести
+|·	создание короткого адреса
+|·	удаление короткого адреса
+|·	просмотр списка коротких адресов
+|·	модификация свойств короткого номера (переадресация, сокрытие реального номера)
+|
+						))
+					logical_presentations 	(list unit_reference_list))
+				    (object Class_Category "Управление маршрутами"
+					quid       	"3C6174890075"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Управление маршрутами"
+						quid       	"3C4C5079009B"
+						documentation 	"SMSC должен обеспечивать управление информацией о маршрутах. Маршрут представляет собой диапазон разрешенных для этого маршрута входящих номеров, набор диапазонов выходящих номеров, и правила модификации свойств сообщения. Несколько маршрутов могут быть ассоциированы с модулем обработки клиентов. "))
+					logical_presentations 	(list unit_reference_list))
+				    (object Class_Category "Управление языками"
+					quid       	"3C6174DC0327"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Управление языками"
+						quid       	"3C4D9BCC00DB"
+						documentation 	
+|SMSC должен поддерживать способность взаимодействия с клиентом, используя язык, заданный в параметрах клиента. К сообщениям, подлежащим интернационализации следует отнести
+|·	шаблоны для списков рассылки на разных языках
+|·	форматы уведомлений о доставке на разных языках
+|Кроме этого SMSC должен поддерживать способность обрабатывать короткие сообщения, набранные с использованием национальных кодировок.
+|
+|
+						))
+					logical_presentations 	(list unit_reference_list))
+				    (object Class_Category "Управление внешними сервисами"
+					quid       	"3C6175330214"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Управление внешними сервисами"
+						quid       	"3C4EACD00030"
+						documentation 	
+|При обслуживании клиентов типа Мобильная станция система может использовать функциональность базы HLR для проверки прав на использование службы коротких сообщений. Однако для клиентов типа Внешнее приложение такую функциональность придется поддерживать средствами самого SMSC. 
+|Необходимо поддержать следующие функции
+|·	регистрация внешнего сервиса
+|·	удаление регистрационной записи внешнего сервиса
+|·	получение списка зарегистрированных внешних сервисов
+|
+						))
+					logical_presentations 	(list unit_reference_list))
+				    (object Class_Category "Управление пользователями"
+					quid       	"3C61757E02C6"
+					exportControl 	"Public"
+					logical_models 	(list unit_reference_list
+					    (object UseCase "Управление пользователями"
+						quid       	"3C4C4FD601E1"
+						documentation 	
+|Для обеспечения возможности разделения обязанностей по администрированию SMSC должен поддерживать возможность управления пользователями. Под пользователем здесь понимается активный субъект типа Администратор. После первичной инициализации в SMSC зарегистрирован единственный пользователь, который может заводить новых и управлять их правами.
+|Следует поддержать следующие функции управления пользователями
+|·	добавление пользователя
+|·	удаление пользователя
+|·	просмотр списка пользователей
+|·	модификация прав пользователя
+|Следовательно, SMSC должен обеспечить аутентификацию и авторизацию пользователей. Список прав должен быть определен позже.
+|Расщепление возможностей субъекта типа Администратор по непересекающийся набор ролей считается нецелесообразным, хотя и не исключается.
+|
+						))
+					logical_presentations 	(list unit_reference_list)))
+				logical_presentations 	(list unit_reference_list
+				    (object UseCaseDiagram "Local  View - <Configure Server>"
+					quid       	"3C3D9BDB0175"
+					title      	"Local  View - <Configure Server>"
+					documentation 	"основные функции при конфигурировании"
+					zoom       	100
+					max_height 	28350
+					max_width  	21600
+					origin_x   	0
+					origin_y   	113
+					items      	(list diagram_item_list
+					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление пользователями::Управление пользователями" @99
+						location   	(864, 160)
+						font       	(object Font
+						    size       	9
+						    face       	"Arial"
+						    charSet    	204
+						    bold       	FALSE
+						    italics    	FALSE
+						    underline  	FALSE
+						    strike     	FALSE
+						    color      	0
+						    default_color 	TRUE)
+						label      	(object ItemLabel
+						    Parent_View 	@99
+						    location   	(864, 298)
+						    anchor_loc 	1
+						    nlines     	2
+						    max_width  	630
+						    justify    	0
+						    label      	"Управление пользователями")
+						icon_style 	"Icon"
+						line_color 	3342489
+						fill_color 	13434879
+						quidu      	"3C4C4FD601E1")
+					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление короткими адресами::Управление короткими адресами" @100
+						location   	(912, 416)
+						font       	(object Font
+						    size       	9
+						    face       	"Arial"
+						    charSet    	204
+						    bold       	FALSE
+						    italics    	FALSE
+						    underline  	FALSE
+						    strike     	FALSE
+						    color      	0
+						    default_color 	TRUE)
+						label      	(object ItemLabel
+						    Parent_View 	@100
+						    location   	(912, 554)
+						    anchor_loc 	1
+						    nlines     	2
+						    max_width  	630
+						    justify    	0
+						    label      	"Управление короткими адресами")
+						icon_style 	"Icon"
+						line_color 	3342489
+						fill_color 	13434879
+						quidu      	"3C4C504D02B5")
+					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Управление маршрутами" @101
+						location   	(1376, 672)
+						font       	(object Font
+						    size       	9
+						    face       	"Arial"
+						    charSet    	204
+						    bold       	FALSE
+						    italics    	FALSE
+						    underline  	FALSE
+						    strike     	FALSE
+						    color      	0
+						    default_color 	TRUE)
+						label      	(object ItemLabel
+						    Parent_View 	@101
+						    location   	(1376, 810)
+						    anchor_loc 	1
+						    nlines     	2
+						    max_width  	630
+						    justify    	0
+						    label      	"Управление маршрутами")
+						icon_style 	"Icon"
+						line_color 	3342489
+						fill_color 	13434879
+						quidu      	"3C4C5079009B")
+					    (object UseCaseView "Use Case View::Use-Case Model::Trash::Списки рассылки" @102
+						location   	(1376, 416)
+						font       	(object Font
+						    size       	9
+						    face       	"Arial"
+						    charSet    	204
+						    bold       	FALSE
+						    italics    	FALSE
+						    underline  	FALSE
+						    strike     	FALSE
+						    color      	0
+						    default_color 	TRUE)
+						label      	(object ItemLabel
+						    Parent_View 	@102
+						    location   	(1376, 554)
+						    anchor_loc 	1
+						    nlines     	2
+						    max_width  	630
+						    justify    	0
+						    label      	"Списки рассылки")
+						icon_style 	"Icon"
+						line_color 	3342489
+						fill_color 	13434879
+						quidu      	"3C4D9A78001E")
+					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление языками::Управление языками" @103
+						location   	(912, 944)
+						font       	(object Font
+						    size       	9
+						    face       	"Arial"
+						    charSet    	204
+						    bold       	FALSE
+						    italics    	FALSE
+						    underline  	FALSE
+						    strike     	FALSE
+						    color      	0
+						    default_color 	TRUE)
+						label      	(object ItemLabel
+						    Parent_View 	@103
+						    location   	(912, 1082)
+						    anchor_loc 	1
+						    nlines     	2
+						    max_width  	630
+						    justify    	0
+						    label      	"Управление языками")
+						icon_style 	"Icon"
+						line_color 	3342489
+						fill_color 	13434879
+						quidu      	"3C4D9BCC00DB")
+					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами" @104
+						location   	(1312, 160)
+						font       	(object Font
+						    size       	9
+						    face       	"Arial"
+						    charSet    	204
+						    bold       	FALSE
+						    italics    	FALSE
+						    underline  	FALSE
+						    strike     	FALSE
+						    color      	0
+						    default_color 	TRUE)
+						label      	(object ItemLabel
+						    Parent_View 	@104
+						    location   	(1312, 298)
+						    anchor_loc 	1
+						    nlines     	2
+						    max_width  	630
+						    justify    	0
+						    label      	"Управление внешними сервисами")
+						icon_style 	"Icon"
+						line_color 	3342489
+						fill_color 	13434879
+						quidu      	"3C4EACD00030")
+					    (object ClassView "Class" "Use Case View::Use-Case Model::Actors::Administrator" @105
+						ShowCompartmentStereotypes 	TRUE
+						IncludeAttribute 	TRUE
+						IncludeOperation 	TRUE
+						location   	(155, 589)
+						font       	(object Font
+						    size       	9
+						    face       	"Arial"
+						    charSet    	204
+						    bold       	FALSE
+						    italics    	FALSE
+						    underline  	FALSE
+						    strike     	FALSE
+						    color      	0
+						    default_color 	TRUE)
+						label      	(object ItemLabel
+						    Parent_View 	@105
+						    location   	(155, 749)
+						    anchor_loc 	1
+						    nlines     	2
+						    max_width  	505
+						    justify    	0
+						    label      	"Administrator")
+						icon       	"Actor"
+						icon_style 	"Icon"
+						line_color 	3342489
+						quidu      	"3C3C835302B9"
+						annotation 	8
+						autoResize 	TRUE))))))
 			logical_presentations 	(list unit_reference_list
 			    (object UseCaseDiagram "Architecturally Significant Use-Cases"
 				quid       	"34E36CFC03D4"
@@ -2664,7 +2793,7 @@
 				origin_x   	0
 				origin_y   	0
 				items      	(list diagram_item_list
-				    (object CategoryView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases" @107
+				    (object CategoryView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases" @106
 					location   	(208, 176)
 					font       	(object Font
 					    size       	9
@@ -2677,7 +2806,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@107
+					    Parent_View 	@106
 					    location   	(64, 92)
 					    fill_color 	13434879
 					    nlines     	2
@@ -2690,7 +2819,7 @@
 					quidu      	"3C3D6370005F"
 					width      	300
 					height     	180)
-				    (object CategoryView "Use Case View::Use-Case Model::Use Cases::SMPP Use Cases" @108
+				    (object CategoryView "Use Case View::Use-Case Model::Use Cases::SMPP Use Cases" @107
 					location   	(1040, 176)
 					font       	(object Font
 					    size       	9
@@ -2703,7 +2832,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@108
+					    Parent_View 	@107
 					    location   	(859, 91)
 					    fill_color 	13434879
 					    nlines     	2
@@ -2716,7 +2845,7 @@
 					quidu      	"3C3D638D0074"
 					width      	375
 					height     	182)
-				    (object CategoryView "Use Case View::Use-Case Model::Use Cases::System Use Cases" @109
+				    (object CategoryView "Use Case View::Use-Case Model::Use Cases::System Use Cases" @108
 					location   	(608, 720)
 					font       	(object Font
 					    size       	9
@@ -2729,7 +2858,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@109
+					    Parent_View 	@108
 					    location   	(436, 635)
 					    fill_color 	13434879
 					    nlines     	2
@@ -2742,27 +2871,35 @@
 					quidu      	"3C3D6B550119"
 					width      	356
 					height     	182)
-				    (object ImportView "" @110
+				    (object ImportView "" @109
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"3C4317400179"
+					client     	@106
+					supplier   	@108
+					line_style 	0)
+				    (object ImportView "" @110
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"3C43174301EC"
 					client     	@107
-					supplier   	@109
+					supplier   	@108
 					line_style 	0)
 				    (object ImportView "" @111
 					stereotype 	TRUE
 					line_color 	3342489
-					quidu      	"3C43174301EC"
-					client     	@108
-					supplier   	@109
-					line_style 	0)
-				    (object ImportView "" @112
-					stereotype 	TRUE
-					line_color 	3342489
 					quidu      	"3C43266001DB"
-					client     	@107
-					supplier   	@108
-					line_style 	0))))))
+					client     	@106
+					supplier   	@107
+					line_style 	0)))))
+		    (object Class_Category "Trash"
+			quid       	"3C6171C20022"
+			exportControl 	"Public"
+			logical_models 	(list unit_reference_list
+			    (object UseCase "Списки рассылки"
+				quid       	"3C4D9A78001E"
+				documentation 	"Управление списком рассылки. Считаю такую функциональность вредной, поскольку это функциональность внешнего приложения, причем использование SMS не по назначению. Доставка сообщений абонентам на основе их местоположения должна быть реализована с использованием Cell Broadcast. А простые списки рассылки нужно выносить во внешнее по отношению к SMSC приложение."))
+			logical_presentations 	(list unit_reference_list)))
 		logical_presentations 	(list unit_reference_list
 		    (object UseCaseDiagram "Global View of Actors and Use Cases"
 			quid       	"35B6803F0281"
@@ -2771,10 +2908,10 @@
 			max_height 	28350
 			max_width  	21600
 			origin_x   	0
-			origin_y   	281
+			origin_y   	0
 			items      	(list diagram_item_list
-			    (object CategoryView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases" @113
-				location   	(272, 608)
+			    (object CategoryView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases" @112
+				location   	(341, 403)
 				font       	(object Font
 				    size       	9
 				    face       	"Arial"
@@ -2786,30 +2923,21 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@113
-				    location   	(65, 571)
+				    Parent_View 	@112
+				    location   	(186, 319)
 				    fill_color 	13434879
 				    nlines     	2
-				    max_width  	414
+				    max_width  	310
 				    justify    	0
 				    label      	"MAP Use Cases")
-				stereotype 	(object ItemLabel
-				    Parent_View 	@113
-				    location   	(65, 524)
-				    fill_color 	13434879
-				    anchor     	10
-				    nlines     	1
-				    max_width  	414
-				    justify    	0
-				    label      	"<<use-case package>>")
-				icon_style 	"Icon"
+				icon_style 	"None"
 				line_color 	3342489
 				fill_color 	13434879
 				quidu      	"3C3D6370005F"
-				width      	426
+				width      	322
 				height     	180)
-			    (object CategoryView "Use Case View::Use-Case Model::Use Cases::SMPP Use Cases" @114
-				location   	(1504, 608)
+			    (object CategoryView "Use Case View::Use-Case Model::Use Cases::SMPP Use Cases" @113
+				location   	(1395, 434)
 				font       	(object Font
 				    size       	9
 				    face       	"Arial"
@@ -2821,85 +2949,20 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@114
-				    location   	(1297, 571)
+				    Parent_View 	@113
+				    location   	(1240, 350)
 				    fill_color 	13434879
 				    nlines     	2
-				    max_width  	414
+				    max_width  	310
 				    justify    	0
 				    label      	"SMPP Use Cases")
-				stereotype 	(object ItemLabel
-				    Parent_View 	@114
-				    location   	(1297, 524)
-				    fill_color 	13434879
-				    anchor     	10
-				    nlines     	1
-				    max_width  	414
-				    justify    	0
-				    label      	"<<use-case package>>")
-				icon_style 	"Icon"
+				icon_style 	"None"
 				line_color 	3342489
 				fill_color 	13434879
 				quidu      	"3C3D638D0074"
-				width      	426
+				width      	322
 				height     	180)
-			    (object ImportView "" @115
-				stereotype 	TRUE
-				line_color 	3342489
-				quidu      	"3C43266001DB"
-				client     	@113
-				supplier   	@114
-				line_style 	0)
-			    (object CategoryView "Use Case View::Use-Case Model::Use Cases::System Use Cases" @116
-				location   	(912, 1088)
-				font       	(object Font
-				    size       	9
-				    face       	"Arial"
-				    charSet    	204
-				    bold       	FALSE
-				    italics    	FALSE
-				    underline  	FALSE
-				    strike     	FALSE
-				    color      	0
-				    default_color 	TRUE)
-				label      	(object ItemLabel
-				    Parent_View 	@116
-				    location   	(705, 1051)
-				    fill_color 	13434879
-				    nlines     	2
-				    max_width  	414
-				    justify    	0
-				    label      	"System Use Cases")
-				stereotype 	(object ItemLabel
-				    Parent_View 	@116
-				    location   	(705, 1004)
-				    fill_color 	13434879
-				    anchor     	10
-				    nlines     	1
-				    max_width  	414
-				    justify    	0
-				    label      	"<<use-case package>>")
-				icon_style 	"Icon"
-				line_color 	3342489
-				fill_color 	13434879
-				quidu      	"3C3D6B550119"
-				width      	426
-				height     	180)
-			    (object ImportView "" @117
-				stereotype 	TRUE
-				line_color 	3342489
-				quidu      	"3C4317400179"
-				client     	@113
-				supplier   	@116
-				line_style 	0)
-			    (object ImportView "" @118
-				stereotype 	TRUE
-				line_color 	3342489
-				quidu      	"3C43174301EC"
-				client     	@114
-				supplier   	@116
-				line_style 	0)
-			    (object CategoryView "Use Case View::Use-Case Model::Actors" @119
+			    (object CategoryView "Use Case View::Use-Case Model::Actors" @114
 				location   	(864, 160)
 				font       	(object Font
 				    size       	9
@@ -2912,41 +2975,106 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@119
-				    location   	(614, 113)
+				    Parent_View 	@114
+				    location   	(720, 76)
 				    fill_color 	13434879
 				    nlines     	2
-				    max_width  	500
+				    max_width  	288
 				    justify    	0
 				    label      	"Actors")
+				icon_style 	"None"
+				line_color 	3342489
+				fill_color 	13434879
+				quidu      	"3518CBC9026C"
+				width      	300
+				height     	180)
+			    (object ImportView "" @115
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3C5D21F5039C"
+				client     	@114
+				supplier   	@112
+				line_style 	0)
+			    (object ImportView "" @116
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3C5D21F801C0"
+				client     	@114
+				supplier   	@113
+				line_style 	0)
+			    (object ImportView "" @117
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3C43266001DB"
+				client     	@112
+				supplier   	@113
+				line_style 	3
+				origin_attachment 	(502, 372)
+				terminal_attachment 	(1233, 372))
+			    (object ImportView "" @118
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3C5E70570215"
+				client     	@113
+				supplier   	@112
+				line_style 	3
+				origin_attachment 	(1233, 431)
+				terminal_attachment 	(502, 431))
+			    (object CategoryView "Use Case View::Use-Case Model::Use Cases::System Use Cases" @119
+				location   	(868, 713)
+				font       	(object Font
+				    size       	9
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				label      	(object ItemLabel
+				    Parent_View 	@119
+				    location   	(661, 676)
+				    fill_color 	13434879
+				    nlines     	2
+				    max_width  	414
+				    justify    	0
+				    label      	"System Use Cases")
 				stereotype 	(object ItemLabel
 				    Parent_View 	@119
-				    location   	(614, 66)
+				    location   	(661, 629)
 				    fill_color 	13434879
 				    anchor     	10
 				    nlines     	1
-				    max_width  	500
+				    max_width  	414
 				    justify    	0
 				    label      	"<<use-case package>>")
 				icon_style 	"Icon"
 				line_color 	3342489
 				fill_color 	13434879
-				quidu      	"3518CBC9026C"
-				width      	512
-				height     	200)
+				quidu      	"3C3D6B550119"
+				width      	426
+				height     	180)
 			    (object ImportView "" @120
 				stereotype 	TRUE
 				line_color 	3342489
-				quidu      	"3C5D21F5039C"
-				client     	@119
-				supplier   	@113
+				quidu      	"3C4317400179"
+				client     	@112
+				supplier   	@119
 				line_style 	0)
 			    (object ImportView "" @121
 				stereotype 	TRUE
 				line_color 	3342489
-				quidu      	"3C5D21F801C0"
-				client     	@119
-				supplier   	@114
+				quidu      	"3C43174301EC"
+				client     	@113
+				supplier   	@119
+				line_style 	0)
+			    (object ImportView "" @122
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3C5E70470230"
+				client     	@114
+				supplier   	@119
 				line_style 	0))))))
 	logical_presentations 	(list unit_reference_list
 	    (object UseCaseDiagram "Main"
@@ -2961,7 +3089,7 @@
 		origin_x   	0
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object CategoryView "Use Case View::Use-Case Model" @122
+		    (object CategoryView "Use Case View::Use-Case Model" @123
 			location   	(384, 880)
 			font       	(object Font
 			    size       	10
@@ -2974,7 +3102,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@122
+			    Parent_View 	@123
 			    location   	(189, 779)
 			    fill_color 	13434879
 			    nlines     	2
@@ -2987,7 +3115,7 @@
 			quidu      	"35B677F4010E"
 			width      	402
 			height     	215)
-		    (object NoteView @123
+		    (object NoteView @124
 			location   	(1040, 560)
 			font       	(object Font
 			    size       	10
@@ -3000,7 +3128,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@123
+			    Parent_View 	@124
 			    location   	(813, 358)
 			    fill_color 	13434879
 			    nlines     	9
@@ -3010,7 +3138,7 @@
 			fill_color 	13434879
 			width      	479
 			height     	416)
-		    (object CategoryView "Use Case View::Business Use-Case Model" @124
+		    (object CategoryView "Use Case View::Business Use-Case Model" @125
 			location   	(384, 320)
 			font       	(object Font
 			    size       	9
@@ -3023,7 +3151,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@124
+			    Parent_View 	@125
 			    location   	(189, 229)
 			    fill_color 	13434879
 			    nlines     	2
@@ -3036,18 +3164,18 @@
 			quidu      	"35B677D701B8"
 			width      	403
 			height     	194)
-		    (object ImportView "" @125
+		    (object ImportView "" @126
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"35C633DA030C"
-			client     	@122
-			supplier   	@124
+			client     	@123
+			supplier   	@125
 			line_style 	0)
-		    (object AttachView "" @126
+		    (object AttachView "" @127
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@125
-			supplier   	@123
+			client     	@126
+			supplier   	@124
 			line_style 	0)))))
     root_category 	(object Class_Category "Logical View"
 	quid       	"34DBB4830141"
@@ -3100,14 +3228,14 @@
 				quid       	"3C5D121103A7"
 				stereotype 	"use-case realization"
 				logical_models 	(list unit_reference_list
-				    (object Mechanism @127
+				    (object Mechanism @128
 					logical_models 	(list unit_reference_list
-					    (object Object "$UNNAMED$45"
+					    (object Object "$UNNAMED$60"
 						quid       	"3C5D36FD0069"
 						collaborators 	(list link_list
 						    (object Link
 							quid       	"3C5D374F02D4"
-							supplier   	"$UNNAMED$46"
+							supplier   	"$UNNAMED$61"
 							quidu      	"3C5D37230013"
 							messages   	(list Messages
 							    (object Message ""
@@ -3121,12 +3249,12 @@
 						quidu      	"353D5816026C"
 						persistence 	"Transient"
 						multi      	FALSE)
-					    (object Object "$UNNAMED$46"
+					    (object Object "$UNNAMED$61"
 						quid       	"3C5D37230013"
 						collaborators 	(list link_list
 						    (object Link
 							quid       	"3C5D37800035"
-							supplier   	"$UNNAMED$47"
+							supplier   	"$UNNAMED$62"
 							quidu      	"3C5D372B01D7"
 							messages   	(list Messages
 							    (object Message ""
@@ -3138,7 +3266,7 @@
 								ordinal    	1)))
 						    (object Link
 							quid       	"3C5D378403AC"
-							supplier   	"$UNNAMED$48"
+							supplier   	"$UNNAMED$63"
 							quidu      	"3C5D3725000C"
 							messages   	(list Messages
 							    (object Message ""
@@ -3157,7 +3285,7 @@
 								ordinal    	4)))
 						    (object Link
 							quid       	"3C5D37CA0122"
-							supplier   	"$UNNAMED$49"
+							supplier   	"$UNNAMED$64"
 							quidu      	"3C5D373A01A7"
 							messages   	(list Messages
 							    (object Message ""
@@ -3171,19 +3299,19 @@
 						quidu      	"3C5D27D1033F"
 						persistence 	"Transient"
 						multi      	FALSE)
-					    (object Object "$UNNAMED$48"
+					    (object Object "$UNNAMED$63"
 						quid       	"3C5D3725000C"
 						class      	"Logical View::Analysis Model::Scenarios::Send Handler"
 						quidu      	"3C5D2F030063"
 						persistence 	"Transient"
 						multi      	FALSE)
-					    (object Object "$UNNAMED$47"
+					    (object Object "$UNNAMED$62"
 						quid       	"3C5D372B01D7"
 						class      	"Logical View::Analysis Model::Message Store::MessageStore"
 						quidu      	"3C557515008A"
 						persistence 	"Transient"
 						multi      	FALSE)
-					    (object Object "$UNNAMED$49"
+					    (object Object "$UNNAMED$64"
 						quid       	"3C5D373A01A7"
 						class      	"Logical View::Analysis Model::Message Routing::Message Router"
 						quidu      	"3C42AF0300E2"
@@ -3199,31 +3327,6 @@
 					origin_x   	0
 					origin_y   	0
 					items      	(list diagram_item_list
-					    (object UseCaseView "Logical View::Analysis Model::Scenarios::Send Message" @128
-						location   	(208, 608)
-						font       	(object Font
-						    size       	9
-						    face       	"Arial"
-						    charSet    	204
-						    bold       	FALSE
-						    italics    	FALSE
-						    underline  	FALSE
-						    strike     	FALSE
-						    color      	0
-						    default_color 	TRUE)
-						label      	(object ItemLabel
-						    Parent_View 	@128
-						    location   	(208, 749)
-						    anchor_loc 	1
-						    nlines     	2
-						    max_width  	648
-						    justify    	0
-						    label      	"Send Message")
-						icon       	"use-case realization"
-						icon_style 	"Icon"
-						line_color 	3342489
-						fill_color 	13434879
-						quidu      	"3C5D121103A7")
 					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message to SME" @129
 						location   	(752, 80)
 						font       	(object Font
@@ -3248,8 +3351,8 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C4323AE0337")
-					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Create Billing Record::Create Billing Record" @130
-						location   	(1472, 128)
+					    (object UseCaseView "Logical View::Analysis Model::Scenarios::Send Message" @130
+						location   	(208, 608)
 						font       	(object Font
 						    size       	9
 						    face       	"Arial"
@@ -3262,18 +3365,19 @@
 						    default_color 	TRUE)
 						label      	(object ItemLabel
 						    Parent_View 	@130
-						    location   	(1472, 266)
+						    location   	(208, 749)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	630
+						    max_width  	648
 						    justify    	0
-						    label      	"Create Billing Record")
+						    label      	"Send Message")
+						icon       	"use-case realization"
 						icon_style 	"Icon"
 						line_color 	3342489
 						fill_color 	13434879
-						quidu      	"3C3D6CF800B7")
-					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Store Message::Store Message" @131
-						location   	(1552, 640)
+						quidu      	"3C5D121103A7")
+					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Тарификация::Тарификация" @131
+						location   	(1472, 128)
 						font       	(object Font
 						    size       	9
 						    face       	"Arial"
@@ -3286,18 +3390,18 @@
 						    default_color 	TRUE)
 						label      	(object ItemLabel
 						    Parent_View 	@131
-						    location   	(1552, 778)
+						    location   	(1472, 266)
 						    anchor_loc 	1
 						    nlines     	2
 						    max_width  	630
 						    justify    	0
-						    label      	"Store Message")
+						    label      	"Тарификация")
 						icon_style 	"Icon"
 						line_color 	3342489
 						fill_color 	13434879
-						quidu      	"3C3D6FC8024D")
-					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message" @132
-						location   	(768, 624)
+						quidu      	"3C3D6CF800B7")
+					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::Управление сообщениями" @132
+						location   	(1552, 640)
 						font       	(object Font
 						    size       	9
 						    face       	"Arial"
@@ -3310,6 +3414,54 @@
 						    default_color 	TRUE)
 						label      	(object ItemLabel
 						    Parent_View 	@132
+						    location   	(1552, 778)
+						    anchor_loc 	1
+						    nlines     	2
+						    max_width  	630
+						    justify    	0
+						    label      	"Управление сообщениями")
+						icon_style 	"Icon"
+						line_color 	3342489
+						fill_color 	13434879
+						quidu      	"3C3D6FC8024D")
+					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Receive Message::Receive Message" @133
+						location   	(1552, 1168)
+						font       	(object Font
+						    size       	9
+						    face       	"Arial"
+						    charSet    	204
+						    bold       	FALSE
+						    italics    	FALSE
+						    underline  	FALSE
+						    strike     	FALSE
+						    color      	0
+						    default_color 	TRUE)
+						label      	(object ItemLabel
+						    Parent_View 	@133
+						    location   	(1552, 1306)
+						    anchor_loc 	1
+						    nlines     	2
+						    max_width  	630
+						    justify    	0
+						    label      	"Receive Message")
+						icon_style 	"Icon"
+						line_color 	3342489
+						fill_color 	13434879
+						quidu      	"3C3D62CE039B")
+					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message" @134
+						location   	(768, 624)
+						font       	(object Font
+						    size       	9
+						    face       	"Arial"
+						    charSet    	204
+						    bold       	FALSE
+						    italics    	FALSE
+						    underline  	FALSE
+						    strike     	FALSE
+						    color      	0
+						    default_color 	TRUE)
+						label      	(object ItemLabel
+						    Parent_View 	@134
 						    location   	(768, 762)
 						    anchor_loc 	1
 						    nlines     	2
@@ -3320,7 +3472,7 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"34E37FB203D4")
-					    (object AssociationViewNew "" @133
+					    (object AssociationViewNew "" @135
 						location   	(488, 614)
 						font       	(object Font
 						    size       	9
@@ -3332,8 +3484,8 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						stereotype 	(object SegLabel @134
-						    Parent_View 	@133
+						stereotype 	(object SegLabel @136
+						    Parent_View 	@135
 						    location   	(488, 507)
 						    font       	(object Font
 							size       	9
@@ -3357,8 +3509,8 @@
 						line_color 	3342489
 						quidu      	"3C5D13E7014A"
 						roleview_list 	(list RoleViews
-						    (object RoleView "" @135
-							Parent_View 	@133
+						    (object RoleView "" @137
+							Parent_View 	@135
 							location   	(-312, 214)
 							font       	(object Font
 							    size       	9
@@ -3370,8 +3522,8 @@
 							    strike     	FALSE
 							    color      	0
 							    default_color 	TRUE)
-							label      	(object SegLabel @136
-							    Parent_View 	@135
+							label      	(object SegLabel @138
+							    Parent_View 	@137
 							    location   	(348, 570)
 							    font       	(object Font
 								size       	9
@@ -3396,11 +3548,11 @@
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C5D13E702BC"
-							client     	@133
-							supplier   	@128
+							client     	@135
+							supplier   	@130
 							line_style 	0)
-						    (object RoleView "" @137
-							Parent_View 	@133
+						    (object RoleView "" @139
+							Parent_View 	@135
 							location   	(-312, 214)
 							font       	(object Font
 							    size       	9
@@ -3412,8 +3564,8 @@
 							    strike     	FALSE
 							    color      	0
 							    default_color 	TRUE)
-							label      	(object SegLabel @138
-							    Parent_View 	@137
+							label      	(object SegLabel @140
+							    Parent_View 	@139
 							    location   	(631, 576)
 							    font       	(object Font
 								size       	9
@@ -3438,17 +3590,17 @@
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C5D13E702A8"
-							client     	@133
-							supplier   	@132
+							client     	@135
+							supplier   	@134
 							line_style 	0)))
-					    (object InheritView "" @139
+					    (object InheritView "" @141
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"3C4323C300CB"
 						client     	@129
-						supplier   	@132
+						supplier   	@134
 						line_style 	0)
-					    (object AssociationViewNew "$UNNAMED$3" @140
+					    (object AssociationViewNew "$UNNAMED$21" @142
 						location   	(1064, 412)
 						font       	(object Font
 						    size       	9
@@ -3460,8 +3612,8 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						stereotype 	(object SegLabel @141
-						    Parent_View 	@140
+						stereotype 	(object SegLabel @143
+						    Parent_View 	@142
 						    location   	(1064, 305)
 						    font       	(object Font
 							size       	9
@@ -3485,8 +3637,8 @@
 						line_color 	3342489
 						quidu      	"3C3D6DDD0233"
 						roleview_list 	(list RoleViews
-						    (object RoleView "$UNNAMED$5" @142
-							Parent_View 	@140
+						    (object RoleView "$UNNAMED$23" @144
+							Parent_View 	@142
 							location   	(-520, 252)
 							font       	(object Font
 							    size       	9
@@ -3498,8 +3650,8 @@
 							    strike     	FALSE
 							    color      	0
 							    default_color 	TRUE)
-							label      	(object SegLabel @143
-							    Parent_View 	@142
+							label      	(object SegLabel @145
+							    Parent_View 	@144
 							    location   	(845, 516)
 							    font       	(object Font
 								size       	9
@@ -3524,11 +3676,11 @@
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C3D6DDE016C"
-							client     	@140
-							supplier   	@132
+							client     	@142
+							supplier   	@134
 							line_style 	0)
-						    (object RoleView "$UNNAMED$4" @144
-							Parent_View 	@140
+						    (object RoleView "$UNNAMED$22" @146
+							Parent_View 	@142
 							location   	(-520, 252)
 							font       	(object Font
 							    size       	9
@@ -3540,8 +3692,8 @@
 							    strike     	FALSE
 							    color      	0
 							    default_color 	TRUE)
-							label      	(object SegLabel @145
-							    Parent_View 	@144
+							label      	(object SegLabel @147
+							    Parent_View 	@146
 							    location   	(1237, 242)
 							    font       	(object Font
 								size       	9
@@ -3566,10 +3718,10 @@
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C3D6DDE0162"
-							client     	@140
-							supplier   	@130
+							client     	@142
+							supplier   	@131
 							line_style 	0)))
-					    (object AssociationViewNew "$UNNAMED$6" @146
+					    (object AssociationViewNew "$UNNAMED$24" @148
 						location   	(1159, 629)
 						font       	(object Font
 						    size       	9
@@ -3581,8 +3733,8 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						stereotype 	(object SegLabel @147
-						    Parent_View 	@146
+						stereotype 	(object SegLabel @149
+						    Parent_View 	@148
 						    location   	(1159, 522)
 						    font       	(object Font
 							size       	9
@@ -3606,8 +3758,8 @@
 						line_color 	3342489
 						quidu      	"3C3D70560233"
 						roleview_list 	(list RoleViews
-						    (object RoleView "$UNNAMED$8" @148
-							Parent_View 	@146
+						    (object RoleView "$UNNAMED$26" @150
+							Parent_View 	@148
 							location   	(-697, -59)
 							font       	(object Font
 							    size       	9
@@ -3619,8 +3771,8 @@
 							    strike     	FALSE
 							    color      	0
 							    default_color 	TRUE)
-							label      	(object SegLabel @149
-							    Parent_View 	@148
+							label      	(object SegLabel @151
+							    Parent_View 	@150
 							    location   	(953, 584)
 							    font       	(object Font
 								size       	9
@@ -3645,11 +3797,11 @@
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C3D70570100"
-							client     	@146
-							supplier   	@132
+							client     	@148
+							supplier   	@134
 							line_style 	0)
-						    (object RoleView "$UNNAMED$7" @150
-							Parent_View 	@146
+						    (object RoleView "$UNNAMED$25" @152
+							Parent_View 	@148
 							location   	(-697, -59)
 							font       	(object Font
 							    size       	9
@@ -3661,8 +3813,8 @@
 							    strike     	FALSE
 							    color      	0
 							    default_color 	TRUE)
-							label      	(object SegLabel @151
-							    Parent_View 	@150
+							label      	(object SegLabel @153
+							    Parent_View 	@152
 							    location   	(1367, 592)
 							    font       	(object Font
 								size       	9
@@ -3687,34 +3839,10 @@
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C3D705700FE"
-							client     	@146
-							supplier   	@131
+							client     	@148
+							supplier   	@132
 							line_style 	0)))
-					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Receive Message::Receive Message" @152
-						location   	(1552, 1168)
-						font       	(object Font
-						    size       	9
-						    face       	"Arial"
-						    charSet    	204
-						    bold       	FALSE
-						    italics    	FALSE
-						    underline  	FALSE
-						    strike     	FALSE
-						    color      	0
-						    default_color 	TRUE)
-						label      	(object ItemLabel
-						    Parent_View 	@152
-						    location   	(1552, 1306)
-						    anchor_loc 	1
-						    nlines     	2
-						    max_width  	630
-						    justify    	0
-						    label      	"Receive Message")
-						icon_style 	"Icon"
-						line_color 	3342489
-						fill_color 	13434879
-						quidu      	"3C3D62CE039B")
-					    (object AssociationViewNew "$UNNAMED$9" @153
+					    (object AssociationViewNew "$UNNAMED$27" @154
 						location   	(1186, 913)
 						font       	(object Font
 						    size       	9
@@ -3726,8 +3854,8 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						stereotype 	(object SegLabel @154
-						    Parent_View 	@153
+						stereotype 	(object SegLabel @155
+						    Parent_View 	@154
 						    location   	(1186, 806)
 						    font       	(object Font
 							size       	9
@@ -3751,8 +3879,8 @@
 						line_color 	3342489
 						quidu      	"3C3D977300D3"
 						roleview_list 	(list RoleViews
-						    (object RoleView "$UNNAMED$11" @155
-							Parent_View 	@153
+						    (object RoleView "$UNNAMED$29" @156
+							Parent_View 	@154
 							location   	(-670, -223)
 							font       	(object Font
 							    size       	9
@@ -3764,8 +3892,8 @@
 							    strike     	FALSE
 							    color      	0
 							    default_color 	TRUE)
-							label      	(object SegLabel @156
-							    Parent_View 	@155
+							label      	(object SegLabel @157
+							    Parent_View 	@156
 							    location   	(999, 734)
 							    font       	(object Font
 								size       	9
@@ -3790,11 +3918,11 @@
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C3D97740283"
-							client     	@153
-							supplier   	@132
+							client     	@154
+							supplier   	@134
 							line_style 	0)
-						    (object RoleView "$UNNAMED$10" @157
-							Parent_View 	@153
+						    (object RoleView "$UNNAMED$28" @158
+							Parent_View 	@154
 							location   	(-670, -223)
 							font       	(object Font
 							    size       	9
@@ -3806,8 +3934,8 @@
 							    strike     	FALSE
 							    color      	0
 							    default_color 	TRUE)
-							label      	(object SegLabel @158
-							    Parent_View 	@157
+							label      	(object SegLabel @159
+							    Parent_View 	@158
 							    location   	(1374, 1094)
 							    font       	(object Font
 								size       	9
@@ -3832,10 +3960,10 @@
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C3D97740279"
-							client     	@153
-							supplier   	@152
+							client     	@154
+							supplier   	@133
 							line_style 	0)))
-					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Receive Status Report::Receive Status Report" @159
+					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Receive Status Report::Receive Status Report" @160
 						location   	(784, 1200)
 						font       	(object Font
 						    size       	9
@@ -3848,7 +3976,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@159
+						    Parent_View 	@160
 						    location   	(784, 1338)
 						    anchor_loc 	1
 						    nlines     	2
@@ -3859,7 +3987,7 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C3D6BE500E4")
-					    (object AssociationViewNew "$UNNAMED$12" @160
+					    (object AssociationViewNew "$UNNAMED$30" @161
 						location   	(776, 985)
 						font       	(object Font
 						    size       	9
@@ -3871,8 +3999,8 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						stereotype 	(object SegLabel @161
-						    Parent_View 	@160
+						stereotype 	(object SegLabel @162
+						    Parent_View 	@161
 						    location   	(776, 878)
 						    font       	(object Font
 							size       	9
@@ -3896,8 +4024,8 @@
 						line_color 	3342489
 						quidu      	"3C3D978601A2"
 						roleview_list 	(list RoleViews
-						    (object RoleView "$UNNAMED$14" @162
-							Parent_View 	@160
+						    (object RoleView "$UNNAMED$32" @163
+							Parent_View 	@161
 							location   	(280, -423)
 							font       	(object Font
 							    size       	9
@@ -3909,8 +4037,8 @@
 							    strike     	FALSE
 							    color      	0
 							    default_color 	TRUE)
-							label      	(object SegLabel @163
-							    Parent_View 	@162
+							label      	(object SegLabel @164
+							    Parent_View 	@163
 							    location   	(733, 889)
 							    font       	(object Font
 								size       	9
@@ -3935,11 +4063,11 @@
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C3D9787016A"
-							client     	@160
-							supplier   	@132
+							client     	@161
+							supplier   	@134
 							line_style 	0)
-						    (object RoleView "$UNNAMED$13" @164
-							Parent_View 	@160
+						    (object RoleView "$UNNAMED$31" @165
+							Parent_View 	@161
 							location   	(280, -423)
 							font       	(object Font
 							    size       	9
@@ -3951,8 +4079,8 @@
 							    strike     	FALSE
 							    color      	0
 							    default_color 	TRUE)
-							label      	(object SegLabel @165
-							    Parent_View 	@164
+							label      	(object SegLabel @166
+							    Parent_View 	@165
 							    location   	(737, 1082)
 							    font       	(object Font
 								size       	9
@@ -3977,11 +4105,11 @@
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C3D97870168"
-							client     	@160
-							supplier   	@159
+							client     	@161
+							supplier   	@160
 							line_style 	0)))))
 				    (object InteractionDiagram "Send Message - Primary Flow"
-					mechanism_ref 	@127
+					mechanism_ref 	@128
 					quid       	"3C5D365D013B"
 					title      	"Send Message - Primary Flow"
 					documentation 	"основной поток действий при получении запроса на доставку сообщения"
@@ -3991,8 +4119,8 @@
 					origin_x   	0
 					origin_y   	0
 					items      	(list diagram_item_list
-					    (object InterObjView "$UNNAMED$45" @166
-						location   	(112, 224)
+					    (object InterObjView "$UNNAMED$60" @167
+						location   	(124, 217)
 						font       	(object Font
 						    size       	9
 						    face       	"Arial"
@@ -4004,8 +4132,8 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@166
-						    location   	(112, 247)
+						    Parent_View 	@167
+						    location   	(124, 240)
 						    anchor_loc 	1
 						    nlines     	2
 						    max_width  	360
@@ -4022,15 +4150,15 @@
 						icon_width 	120
 						icon_y_offset 	0
 						annotation 	1
-						Focus_Of_Control 	(object Focus_Of_Control "" @167
-						    location   	(80, 352)
+						Focus_Of_Control 	(object Focus_Of_Control "" @168
+						    location   	(124, 352)
 						    line_color 	3342489
-						    InterObjView 	@166
+						    InterObjView 	@167
 						    height     	1156
 						    y_coord    	1096
 						    Nested     	FALSE))
-					    (object InterObjView "$UNNAMED$46" @168
-						location   	(464, 224)
+					    (object InterObjView "$UNNAMED$61" @169
+						location   	(465, 217)
 						font       	(object Font
 						    size       	9
 						    face       	"Arial"
@@ -4042,8 +4170,8 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@168
-						    location   	(464, 247)
+						    Parent_View 	@169
+						    location   	(465, 240)
 						    anchor_loc 	1
 						    nlines     	2
 						    max_width  	471
@@ -4060,15 +4188,15 @@
 						icon_width 	157
 						icon_y_offset 	0
 						annotation 	1
-						Focus_Of_Control 	(object Focus_Of_Control "" @169
-						    location   	(416, 512)
+						Focus_Of_Control 	(object Focus_Of_Control "" @170
+						    location   	(465, 527)
 						    line_color 	3342489
-						    InterObjView 	@168
+						    InterObjView 	@169
 						    height     	936
 						    y_coord    	876
 						    Nested     	FALSE))
-					    (object InterObjView "$UNNAMED$48" @170
-						location   	(880, 224)
+					    (object InterObjView "$UNNAMED$63" @171
+						location   	(868, 217)
 						font       	(object Font
 						    size       	9
 						    face       	"Arial"
@@ -4080,8 +4208,8 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@170
-						    location   	(880, 247)
+						    Parent_View 	@171
+						    location   	(868, 240)
 						    anchor_loc 	1
 						    nlines     	2
 						    max_width  	471
@@ -4098,22 +4226,22 @@
 						icon_width 	157
 						icon_y_offset 	0
 						annotation 	1
-						Focus_Of_Control 	(object Focus_Of_Control "" @171
-						    location   	(752, 928)
+						Focus_Of_Control 	(object Focus_Of_Control "" @172
+						    location   	(868, 930)
 						    line_color 	3342489
-						    InterObjView 	@170
+						    InterObjView 	@171
 						    height     	60
 						    y_coord    	0
 						    Nested     	FALSE)
-						Focus_Of_Control 	(object Focus_Of_Control "" @172
-						    location   	(752, 1328)
+						Focus_Of_Control 	(object Focus_Of_Control "" @173
+						    location   	(868, 1333)
 						    line_color 	3342489
-						    InterObjView 	@170
+						    InterObjView 	@171
 						    height     	60
 						    y_coord    	0
 						    Nested     	FALSE))
-					    (object InterObjView "$UNNAMED$47" @173
-						location   	(1216, 224)
+					    (object InterObjView "$UNNAMED$62" @174
+						location   	(1209, 217)
 						font       	(object Font
 						    size       	9
 						    face       	"Arial"
@@ -4125,8 +4253,8 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@173
-						    location   	(1216, 247)
+						    Parent_View 	@174
+						    location   	(1209, 240)
 						    anchor_loc 	1
 						    nlines     	2
 						    max_width  	471
@@ -4143,15 +4271,15 @@
 						icon_width 	157
 						icon_y_offset 	0
 						annotation 	1
-						Focus_Of_Control 	(object Focus_Of_Control "" @174
-						    location   	(1088, 720)
+						Focus_Of_Control 	(object Focus_Of_Control "" @175
+						    location   	(1209, 713)
 						    line_color 	3342489
-						    InterObjView 	@173
+						    InterObjView 	@174
 						    height     	60
 						    y_coord    	0
 						    Nested     	FALSE))
-					    (object InterObjView "$UNNAMED$49" @175
-						location   	(1648, 224)
+					    (object InterObjView "$UNNAMED$64" @176
+						location   	(1643, 217)
 						font       	(object Font
 						    size       	9
 						    face       	"Arial"
@@ -4163,8 +4291,8 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@175
-						    location   	(1648, 247)
+						    Parent_View 	@176
+						    location   	(1643, 240)
 						    anchor_loc 	1
 						    nlines     	2
 						    max_width  	471
@@ -4181,14 +4309,14 @@
 						icon_width 	157
 						icon_y_offset 	0
 						annotation 	1
-						Focus_Of_Control 	(object Focus_Of_Control "" @176
-						    location   	(1424, 1136)
+						Focus_Of_Control 	(object Focus_Of_Control "" @177
+						    location   	(1643, 1147)
 						    line_color 	3342489
-						    InterObjView 	@175
+						    InterObjView 	@176
 						    height     	60
 						    y_coord    	0
 						    Nested     	FALSE))
-					    (object InterMessView "" @177
+					    (object InterMessView "" @178
 						location   	(288, 512)
 						font       	(object Font
 						    size       	9
@@ -4200,9 +4328,9 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						label      	(object SegLabel @178
-						    Parent_View 	@177
-						    location   	(287, 468)
+						label      	(object SegLabel @179
+						    Parent_View 	@178
+						    location   	(294, 468)
 						    font       	(object Font
 							size       	9
 							face       	"Arial"
@@ -4223,14 +4351,14 @@
 						    height     	45
 						    orientation 	0)
 						line_color 	3342489
-						client     	@166
-						supplier   	@168
-						Focus_Src  	@167
-						Focus_Entry 	@169
-						origin     	(127, 512)
-						terminus   	(448, 512)
+						client     	@167
+						supplier   	@169
+						Focus_Src  	@168
+						Focus_Entry 	@170
+						origin     	(139, 512)
+						terminus   	(449, 512)
 						ordinal    	0)
-					    (object InterMessView "" @179
+					    (object InterMessView "" @180
 						location   	(848, 720)
 						font       	(object Font
 						    size       	9
@@ -4242,9 +4370,9 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						label      	(object SegLabel @180
-						    Parent_View 	@179
-						    location   	(839, 676)
+						label      	(object SegLabel @181
+						    Parent_View 	@180
+						    location   	(836, 676)
 						    font       	(object Font
 							size       	9
 							face       	"Arial"
@@ -4265,14 +4393,14 @@
 						    height     	45
 						    orientation 	0)
 						line_color 	3342489
-						client     	@168
-						supplier   	@173
-						Focus_Src  	@169
-						Focus_Entry 	@174
-						origin     	(479, 720)
-						terminus   	(1200, 720)
+						client     	@169
+						supplier   	@174
+						Focus_Src  	@170
+						Focus_Entry 	@175
+						origin     	(480, 720)
+						terminus   	(1193, 720)
 						ordinal    	1)
-					    (object InterMessView "" @181
+					    (object InterMessView "" @182
 						location   	(672, 928)
 						font       	(object Font
 						    size       	9
@@ -4284,9 +4412,9 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						label      	(object SegLabel @182
-						    Parent_View 	@181
-						    location   	(671, 884)
+						label      	(object SegLabel @183
+						    Parent_View 	@182
+						    location   	(666, 884)
 						    font       	(object Font
 							size       	9
 							face       	"Arial"
@@ -4307,14 +4435,14 @@
 						    height     	45
 						    orientation 	0)
 						line_color 	3342489
-						client     	@168
-						supplier   	@170
-						Focus_Src  	@169
-						Focus_Entry 	@171
-						origin     	(479, 928)
-						terminus   	(864, 928)
+						client     	@169
+						supplier   	@171
+						Focus_Src  	@170
+						Focus_Entry 	@172
+						origin     	(480, 928)
+						terminus   	(852, 928)
 						ordinal    	2)
-					    (object InterMessView "" @183
+					    (object InterMessView "" @184
 						location   	(1056, 1136)
 						font       	(object Font
 						    size       	9
@@ -4326,9 +4454,9 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						label      	(object SegLabel @184
-						    Parent_View 	@183
-						    location   	(1055, 1092)
+						label      	(object SegLabel @185
+						    Parent_View 	@184
+						    location   	(1053, 1092)
 						    font       	(object Font
 							size       	9
 							face       	"Arial"
@@ -4349,14 +4477,14 @@
 						    height     	45
 						    orientation 	0)
 						line_color 	3342489
-						client     	@168
-						supplier   	@175
-						Focus_Src  	@169
-						Focus_Entry 	@176
-						origin     	(479, 1136)
-						terminus   	(1632, 1136)
+						client     	@169
+						supplier   	@176
+						Focus_Src  	@170
+						Focus_Entry 	@177
+						origin     	(480, 1136)
+						terminus   	(1627, 1136)
 						ordinal    	3)
-					    (object InterMessView "" @185
+					    (object InterMessView "" @186
 						location   	(672, 1328)
 						font       	(object Font
 						    size       	9
@@ -4368,9 +4496,9 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						label      	(object SegLabel @186
-						    Parent_View 	@185
-						    location   	(671, 1284)
+						label      	(object SegLabel @187
+						    Parent_View 	@186
+						    location   	(666, 1284)
 						    font       	(object Font
 							size       	9
 							face       	"Arial"
@@ -4391,14 +4519,14 @@
 						    height     	45
 						    orientation 	0)
 						line_color 	3342489
-						client     	@168
-						supplier   	@170
-						Focus_Src  	@169
-						Focus_Entry 	@172
-						origin     	(479, 1328)
-						terminus   	(864, 1328)
+						client     	@169
+						supplier   	@171
+						Focus_Src  	@170
+						Focus_Entry 	@173
+						origin     	(480, 1328)
+						terminus   	(852, 1328)
 						ordinal    	4)
-					    (object NoteView @187
+					    (object NoteView @188
 						location   	(288, 400)
 						font       	(object Font
 						    size       	9
@@ -4411,7 +4539,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@187
+						    Parent_View 	@188
 						    location   	(66, 328)
 						    fill_color 	13434879
 						    nlines     	3
@@ -4421,7 +4549,7 @@
 						fill_color 	13434879
 						width      	469
 						height     	157)
-					    (object NoteView @188
+					    (object NoteView @189
 						location   	(848, 624)
 						font       	(object Font
 						    size       	9
@@ -4434,7 +4562,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@188
+						    Parent_View 	@189
 						    location   	(523, 558)
 						    fill_color 	13434879
 						    nlines     	2
@@ -4444,7 +4572,7 @@
 						fill_color 	13434879
 						width      	675
 						height     	144)
-					    (object NoteView @189
+					    (object NoteView @190
 						location   	(864, 832)
 						font       	(object Font
 						    size       	9
@@ -4457,7 +4585,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@189
+						    Parent_View 	@190
 						    location   	(526, 766)
 						    fill_color 	13434879
 						    nlines     	2
@@ -4467,7 +4595,7 @@
 						fill_color 	13434879
 						width      	700
 						height     	144)
-					    (object NoteView @190
+					    (object NoteView @191
 						location   	(1056, 1040)
 						font       	(object Font
 						    size       	9
@@ -4480,7 +4608,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@190
+						    Parent_View 	@191
 						    location   	(531, 981)
 						    fill_color 	13434879
 						    nlines     	2
@@ -4490,7 +4618,7 @@
 						fill_color 	13434879
 						width      	1075
 						height     	131)
-					    (object NoteView @191
+					    (object NoteView @192
 						location   	(672, 1248)
 						font       	(object Font
 						    size       	9
@@ -4503,7 +4631,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@191
+						    Parent_View 	@192
 						    location   	(534, 1188)
 						    fill_color 	13434879
 						    nlines     	2
@@ -4513,16 +4641,16 @@
 						fill_color 	13434879
 						width      	300
 						height     	132)))))
-			    (object Association "$UNNAMED$50"
+			    (object Association "$UNNAMED$65"
 				quid       	"3C5D13E7014A"
 				stereotype 	"realize"
 				roles      	(list role_list
-				    (object Role "$UNNAMED$51"
+				    (object Role "$UNNAMED$66"
 					quid       	"3C5D13E702A8"
 					supplier   	"Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message"
 					quidu      	"34E37FB203D4"
 					is_navigable 	TRUE)
-				    (object Role "$UNNAMED$52"
+				    (object Role "$UNNAMED$67"
 					quid       	"3C5D13E702BC"
 					supplier   	"Logical View::Analysis Model::Scenarios::Send Message"
 					quidu      	"3C5D121103A7"))))
@@ -4557,7 +4685,7 @@
 				
 				stereotype 	"entity"
 				language   	"C++")
-			    (object Association "$UNNAMED$53"
+			    (object Association "$UNNAMED$68"
 				quid       	"3C4D9006039E"
 				documentation 	"ключ для идентификации пользователя сервис-центра"
 				roles      	(list role_list
@@ -4567,7 +4695,7 @@
 					supplier   	"Logical View::Analysis Model::Message Routing::Address"
 					quidu      	"3C4C4E4302C8"
 					is_navigable 	TRUE)
-				    (object Role "$UNNAMED$54"
+				    (object Role "$UNNAMED$69"
 					quid       	"3C4D9007024B"
 					supplier   	"Logical View::Analysis Model::Configuration Manager::User"
 					quidu      	"3C4D8F530061"))))
@@ -4581,51 +4709,11 @@
 				origin_x   	0
 				origin_y   	0
 				items      	(list diagram_item_list
-				    (object ClassView "Class" "Logical View::Analysis Model::Configuration Manager::Configaration Manager" @192
+				    (object ClassView "Class" "Logical View::Analysis Model::Configuration Manager::Configaration Manager" @193
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
-					location   	(608, 288)
-					font       	(object Font
-					    size       	9
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@192
-					    location   	(380, 262)
-					    fill_color 	13434879
-					    nlines     	1
-					    max_width  	456
-					    justify    	0
-					    label      	"Configaration Manager")
-					stereotype 	(object ItemLabel
-					    Parent_View 	@192
-					    location   	(380, 215)
-					    fill_color 	13434879
-					    anchor     	10
-					    nlines     	1
-					    max_width  	456
-					    justify    	0
-					    label      	"<<singleton>>")
-					icon_style 	"Icon"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"3C516994018E"
-					width      	474
-					height     	168
-					annotation 	8
-					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Analysis Model::Configuration Manager::Configuration" @193
-					ShowCompartmentStereotypes 	TRUE
-					IncludeAttribute 	TRUE
-					IncludeOperation 	TRUE
-					location   	(1264, 288)
+					location   	(620, 279)
 					font       	(object Font
 					    size       	9
 					    face       	"Arial"
@@ -4638,7 +4726,65 @@
 					    default_color 	TRUE)
 					label      	(object ItemLabel
 					    Parent_View 	@193
-					    location   	(1130, 240)
+					    location   	(388, 223)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	464
+					    justify    	0
+					    label      	"Configaration Manager")
+					stereotype 	(object ItemLabel
+					    Parent_View 	@193
+					    location   	(388, 176)
+					    fill_color 	13434879
+					    anchor     	10
+					    nlines     	1
+					    max_width  	464
+					    justify    	0
+					    label      	"<<singleton>>")
+					icon_style 	"Icon"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"3C516994018E"
+					compartment 	(object Compartment
+					    Parent_View 	@193
+					    location   	(388, 281)
+					    font       	(object Font
+						size       	9
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    icon_style 	"Icon"
+					    fill_color 	16777215
+					    anchor     	2
+					    nlines     	2
+					    max_width  	338)
+					width      	482
+					height     	228
+					annotation 	8
+					autoResize 	TRUE)
+				    (object ClassView "Class" "Logical View::Analysis Model::Configuration Manager::Configuration" @194
+					ShowCompartmentStereotypes 	TRUE
+					IncludeAttribute 	TRUE
+					IncludeOperation 	TRUE
+					location   	(1271, 279)
+					font       	(object Font
+					    size       	9
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@194
+					    location   	(1137, 231)
 					    fill_color 	13434879
 					    nlines     	1
 					    max_width  	268
@@ -4652,7 +4798,7 @@
 					height     	118
 					annotation 	8
 					autoResize 	TRUE)
-				    (object NoteView @194
+				    (object NoteView @195
 					location   	(736, 832)
 					font       	(object Font
 					    size       	9
@@ -4665,7 +4811,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@194
+					    Parent_View 	@195
 					    location   	(76, 560)
 					    fill_color 	13434879
 					    nlines     	11
@@ -4679,6 +4825,8 @@
 |  1 - DB URL
 |LOGGER
 | 1- его настройки
+|STORE
+| 1 - период хранения сообщений
 					    )
 					line_color 	3342489
 					fill_color 	13434879
@@ -4788,11 +4936,11 @@
 					    origin_x   	0
 					    origin_y   	0
 					    items      	(list diagram_item_list
-						(object Swimlane "" @195
+						(object Swimlane "" @196
 						    line_color 	3342489
 						    width      	450)
-						(object StateView "Normal" "Enroute" @196
-						    Parent_View 	@195
+						(object StateView "Normal" "Enroute" @197
+						    Parent_View 	@196
 						    location   	(720, 304)
 						    font       	(object Font
 							size       	9
@@ -4805,7 +4953,7 @@
 							color      	0
 							default_color 	TRUE)
 						    label      	(object ItemLabel
-							Parent_View 	@196
+							Parent_View 	@197
 							location   	(720, 290)
 							fill_color 	13434879
 							anchor_loc 	1
@@ -4818,8 +4966,8 @@
 						    fill_color 	13434879
 						    quidu      	"3C58F19D00B2"
 						    autoResize 	TRUE)
-						(object StateView "Normal" "Delivered" @197
-						    Parent_View 	@195
+						(object StateView "Normal" "Delivered" @198
+						    Parent_View 	@196
 						    location   	(480, 688)
 						    font       	(object Font
 							size       	9
@@ -4832,7 +4980,7 @@
 							color      	0
 							default_color 	TRUE)
 						    label      	(object ItemLabel
-							Parent_View 	@197
+							Parent_View 	@198
 							location   	(480, 674)
 							fill_color 	13434879
 							anchor_loc 	1
@@ -4845,8 +4993,8 @@
 						    fill_color 	13434879
 						    quidu      	"3C58F1CA019D"
 						    autoResize 	TRUE)
-						(object StateView "Normal" "Expired" @198
-						    Parent_View 	@195
+						(object StateView "Normal" "Expired" @199
+						    Parent_View 	@196
 						    location   	(1440, 336)
 						    font       	(object Font
 							size       	9
@@ -4859,7 +5007,7 @@
 							color      	0
 							default_color 	TRUE)
 						    label      	(object ItemLabel
-							Parent_View 	@198
+							Parent_View 	@199
 							location   	(1440, 322)
 							fill_color 	13434879
 							anchor_loc 	1
@@ -4872,8 +5020,8 @@
 						    fill_color 	13434879
 						    quidu      	"3C58F1E80240"
 						    autoResize 	TRUE)
-						(object StateView "Normal" "Deleted" @199
-						    Parent_View 	@195
+						(object StateView "Normal" "Deleted" @200
+						    Parent_View 	@196
 						    location   	(1456, 528)
 						    font       	(object Font
 							size       	9
@@ -4886,7 +5034,7 @@
 							color      	0
 							default_color 	TRUE)
 						    label      	(object ItemLabel
-							Parent_View 	@199
+							Parent_View 	@200
 							location   	(1456, 514)
 							fill_color 	13434879
 							anchor_loc 	1
@@ -4899,8 +5047,8 @@
 						    fill_color 	13434879
 						    quidu      	"3C58F2030389"
 						    autoResize 	TRUE)
-						(object StateView "Normal" "Undeliverable" @200
-						    Parent_View 	@195
+						(object StateView "Normal" "Undeliverable" @201
+						    Parent_View 	@196
 						    location   	(1024, 848)
 						    font       	(object Font
 							size       	9
@@ -4913,7 +5061,7 @@
 							color      	0
 							default_color 	TRUE)
 						    label      	(object ItemLabel
-							Parent_View 	@200
+							Parent_View 	@201
 							location   	(1024, 829)
 							fill_color 	13434879
 							anchor_loc 	1
@@ -4928,8 +5076,8 @@
 						    width      	356
 						    height     	144
 						    autoResize 	TRUE)
-						(object StateView "Normal" "Accepted" @201
-						    Parent_View 	@195
+						(object StateView "Normal" "Accepted" @202
+						    Parent_View 	@196
 						    location   	(210, 304)
 						    font       	(object Font
 							size       	9
@@ -4942,7 +5090,7 @@
 							color      	0
 							default_color 	TRUE)
 						    label      	(object ItemLabel
-							Parent_View 	@201
+							Parent_View 	@202
 							location   	(210, 290)
 							fill_color 	13434879
 							anchor_loc 	1
@@ -4955,8 +5103,8 @@
 						    fill_color 	13434879
 						    quidu      	"3C58F23C0179"
 						    autoResize 	TRUE)
-						(object StateView "Normal" "Unknown" @202
-						    Parent_View 	@195
+						(object StateView "Normal" "Unknown" @203
+						    Parent_View 	@196
 						    location   	(1488, 768)
 						    font       	(object Font
 							size       	9
@@ -4969,7 +5117,7 @@
 							color      	0
 							default_color 	TRUE)
 						    label      	(object ItemLabel
-							Parent_View 	@202
+							Parent_View 	@203
 							location   	(1488, 754)
 							fill_color 	13434879
 							anchor_loc 	1
@@ -4982,8 +5130,8 @@
 						    fill_color 	13434879
 						    quidu      	"3C58F264007C"
 						    autoResize 	TRUE)
-						(object StateView "Normal" "Rejected" @203
-						    Parent_View 	@195
+						(object StateView "Normal" "Rejected" @204
+						    Parent_View 	@196
 						    location   	(256, 928)
 						    font       	(object Font
 							size       	9
@@ -4996,7 +5144,7 @@
 							color      	0
 							default_color 	TRUE)
 						    label      	(object ItemLabel
-							Parent_View 	@203
+							Parent_View 	@204
 							location   	(256, 914)
 							fill_color 	13434879
 							anchor_loc 	1
@@ -5010,7 +5158,7 @@
 						    quidu      	"3C58F2790311"
 						    autoResize 	TRUE)))))
 				language   	"Java")
-			    (object Association "$UNNAMED$55"
+			    (object Association "$UNNAMED$70"
 				quid       	"3C4D8C53023E"
 				roles      	(list role_list
 				    (object Role "destination"
@@ -5020,11 +5168,11 @@
 					quidu      	"3C4C4E4302C8"
 					client_cardinality 	(value cardinality "1")
 					is_navigable 	TRUE)
-				    (object Role "$UNNAMED$56"
+				    (object Role "$UNNAMED$71"
 					quid       	"3C4D8C550196"
 					supplier   	"Logical View::Analysis Model::Message Store::SMS"
 					quidu      	"3C4C4DBE02E5")))
-			    (object Association "$UNNAMED$57"
+			    (object Association "$UNNAMED$72"
 				quid       	"3C4D8C8B0234"
 				roles      	(list role_list
 				    (object Role "source"
@@ -5033,7 +5181,7 @@
 					supplier   	"Logical View::Analysis Model::Message Routing::Address"
 					quidu      	"3C4C4E4302C8"
 					is_navigable 	TRUE)
-				    (object Role "$UNNAMED$58"
+				    (object Role "$UNNAMED$73"
 					quid       	"3C4D8C8C0145"
 					supplier   	"Logical View::Analysis Model::Message Store::SMS"
 					quidu      	"3C4C4DBE02E5"))))
@@ -5048,12 +5196,12 @@
 				origin_x   	0
 				origin_y   	0
 				items      	(list diagram_item_list
-				    (object ClassView "Class" "Logical View::Analysis Model::Message Store::MessageStore" @204
+				    (object ClassView "Class" "Logical View::Analysis Model::Message Store::MessageStore" @205
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
 					ShowOperationSignature 	TRUE
-					location   	(288, 256)
+					location   	(279, 248)
 					font       	(object Font
 					    size       	9
 					    face       	"Arial"
@@ -5065,11 +5213,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@204
-					    location   	(287, 417)
+					    Parent_View 	@205
+					    location   	(278, 409)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	1004
+					    max_width  	1007
 					    justify    	0
 					    label      	"MessageStore")
 					icon       	"control"
@@ -5077,32 +5225,14 @@
 					line_color 	3342489
 					fill_color 	13434879
 					quidu      	"3C557515008A"
-					compartment 	(object Compartment
-					    Parent_View 	@204
-					    location   	(23, 456)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	3
-					    max_width  	525
-					    justify    	0)
 					width      	158
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Analysis Model::Message Store::SMS" @205
+				    (object ClassView "Class" "Logical View::Analysis Model::Message Store::SMS" @206
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
-					location   	(1392, 256)
+					location   	(1395, 248)
 					font       	(object Font
 					    size       	9
 					    face       	"Arial"
@@ -5114,11 +5244,11 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@205
-					    location   	(1392, 412)
+					    Parent_View 	@206
+					    location   	(1395, 404)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	495
+					    max_width  	499
 					    justify    	0
 					    label      	"SMS")
 					icon       	"entity"
@@ -5126,33 +5256,15 @@
 					line_color 	3342489
 					fill_color 	13434879
 					quidu      	"3C4C4DBE02E5"
-					compartment 	(object Compartment
-					    Parent_View 	@205
-					    location   	(1170, 451)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	5
-					    max_width  	441
-					    justify    	0)
 					height     	154
 					annotation 	8
 					autoResize 	TRUE)
-				    (object UsesView "" @206
+				    (object UsesView "" @207
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"3C5D086A01A5"
-					client     	@204
-					supplier   	@205
+					client     	@205
+					supplier   	@206
 					line_style 	0)))))
 		    (object Class_Category "Message Routing"
 			quid       	"3C5D09BD010C"
@@ -5230,7 +5342,7 @@
 				origin_x   	0
 				origin_y   	200
 				items      	(list diagram_item_list
-				    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::MAP Services Provider" @207
+				    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::MAP Services Provider" @208
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					location   	(480, 1184)
@@ -5245,7 +5357,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@207
+					    Parent_View 	@208
 					    location   	(479, 1345)
 					    anchor_loc 	1
 					    nlines     	1
@@ -5260,7 +5372,7 @@
 					width      	158
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::SMS-IWMSC" @208
+				    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::SMS-IWMSC" @209
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					location   	(224, 656)
@@ -5275,7 +5387,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@208
+					    Parent_View 	@209
 					    location   	(223, 817)
 					    anchor_loc 	1
 					    nlines     	1
@@ -5290,7 +5402,7 @@
 					width      	158
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::SMS-GMSC" @209
+				    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::SMS-GMSC" @210
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -5306,7 +5418,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@209
+					    Parent_View 	@210
 					    location   	(623, 817)
 					    anchor_loc 	1
 					    nlines     	2
@@ -5318,42 +5430,24 @@
 					line_color 	3342489
 					fill_color 	13434879
 					quidu      	"3C4FE022013C"
-					compartment 	(object Compartment
-					    Parent_View 	@209
-					    location   	(501, 906)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	2
-					    max_width  	241
-					    justify    	0)
 					width      	158
 					annotation 	8
 					autoResize 	TRUE)
-				    (object UsesView "" @210
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"3C5027670079"
-					client     	@207
-					supplier   	@208
-					line_style 	0)
 				    (object UsesView "" @211
 					stereotype 	TRUE
 					line_color 	3342489
-					quidu      	"3C50276B0057"
-					client     	@209
-					supplier   	@207
+					quidu      	"3C5027670079"
+					client     	@208
+					supplier   	@209
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::SMPP Services Provider" @212
+				    (object UsesView "" @212
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"3C50276B0057"
+					client     	@210
+					supplier   	@208
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::SMPP Services Provider" @213
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -5369,7 +5463,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@212
+					    Parent_View 	@213
 					    location   	(1551, 1361)
 					    anchor_loc 	1
 					    nlines     	2
@@ -5384,7 +5478,7 @@
 					width      	158
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::SC" @213
+				    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::SC" @214
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -5400,7 +5494,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@213
+					    Parent_View 	@214
 					    location   	(447, 353)
 					    anchor_loc 	1
 					    nlines     	2
@@ -5415,21 +5509,21 @@
 					width      	158
 					annotation 	8
 					autoResize 	TRUE)
-				    (object UsesView "" @214
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"3C5027F302FB"
-					client     	@208
-					supplier   	@213
-					line_style 	0)
 				    (object UsesView "" @215
 					stereotype 	TRUE
 					line_color 	3342489
-					quidu      	"3C5027F602EC"
-					client     	@213
-					supplier   	@209
+					quidu      	"3C5027F302FB"
+					client     	@209
+					supplier   	@214
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::Analysis Model::Message Routing::Message Router" @216
+				    (object UsesView "" @216
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"3C5027F602EC"
+					client     	@214
+					supplier   	@210
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::Analysis Model::Message Routing::Message Router" @217
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -5445,7 +5539,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@216
+					    Parent_View 	@217
 					    location   	(1231, 337)
 					    anchor_loc 	1
 					    nlines     	2
@@ -5460,21 +5554,21 @@
 					width      	158
 					annotation 	8
 					autoResize 	TRUE)
-				    (object UsesView "" @217
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"3C569AFB031C"
-					client     	@216
-					supplier   	@207
-					line_style 	0)
 				    (object UsesView "" @218
 					stereotype 	TRUE
 					line_color 	3342489
-					quidu      	"3C569B0000CA"
-					client     	@216
-					supplier   	@212
+					quidu      	"3C569AFB031C"
+					client     	@217
+					supplier   	@208
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::Analysis Model::Message Routing::Route" @219
+				    (object UsesView "" @219
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"3C569B0000CA"
+					client     	@217
+					supplier   	@213
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::Analysis Model::Message Routing::Route" @220
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -5490,7 +5584,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@219
+					    Parent_View 	@220
 					    location   	(1664, 732)
 					    anchor_loc 	1
 					    nlines     	2
@@ -5505,12 +5599,12 @@
 					height     	154
 					annotation 	8
 					autoResize 	TRUE)
-				    (object UsesView "" @220
+				    (object UsesView "" @221
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"3C5146FE016E"
-					client     	@216
-					supplier   	@219
+					client     	@217
+					supplier   	@220
 					line_style 	0)))
 			    (object ClassDiagram "Main"
 				quid       	"3C45A4920188"
@@ -5522,7 +5616,7 @@
 				origin_x   	0
 				origin_y   	0
 				items      	(list diagram_item_list
-				    (object ClassView "Class" "Logical View::Analysis Model::Message Routing::Alias" @221
+				    (object ClassView "Class" "Logical View::Analysis Model::Message Routing::Alias" @222
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -5538,7 +5632,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@221
+					    Parent_View 	@222
 					    location   	(208, 924)
 					    anchor_loc 	1
 					    nlines     	2
@@ -5553,7 +5647,7 @@
 					height     	154
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Analysis Model::Message Store::SMS" @222
+				    (object ClassView "Class" "Logical View::Analysis Model::Message Store::SMS" @223
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -5569,7 +5663,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@222
+					    Parent_View 	@223
 					    location   	(1136, 316)
 					    anchor_loc 	1
 					    nlines     	2
@@ -5581,28 +5675,10 @@
 					line_color 	3342489
 					fill_color 	13434879
 					quidu      	"3C4C4DBE02E5"
-					compartment 	(object Compartment
-					    Parent_View 	@222
-					    location   	(914, 405)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	5
-					    max_width  	441
-					    justify    	0)
 					height     	154
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Analysis Model::Message Routing::Address" @223
+				    (object ClassView "Class" "Logical View::Analysis Model::Message Routing::Address" @224
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -5618,7 +5694,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@223
+					    Parent_View 	@224
 					    location   	(1136, 972)
 					    anchor_loc 	1
 					    nlines     	2
@@ -5630,28 +5706,10 @@
 					line_color 	3342489
 					fill_color 	13434879
 					quidu      	"3C4C4E4302C8"
-					compartment 	(object Compartment
-					    Parent_View 	@223
-					    location   	(1071, 1061)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	3
-					    max_width  	138
-					    justify    	0)
 					height     	154
 					annotation 	8
 					autoResize 	TRUE)
-				    (object AssociationViewNew "$UNNAMED$55" @224
+				    (object AssociationViewNew "$UNNAMED$70" @225
 					location   	(881, 640)
 					font       	(object Font
 					    size       	9
@@ -5667,8 +5725,8 @@
 					line_color 	3342489
 					quidu      	"3C4D8C53023E"
 					roleview_list 	(list RoleViews
-					    (object RoleView "destination" @225
-						Parent_View 	@224
+					    (object RoleView "destination" @226
+						Parent_View 	@225
 						location   	(-159, 416)
 						font       	(object Font
 						    size       	9
@@ -5680,8 +5738,8 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						label      	(object SegLabel @226
-						    Parent_View 	@225
+						label      	(object SegLabel @227
+						    Parent_View 	@226
 						    location   	(979, 731)
 						    font       	(object Font
 							size       	9
@@ -5705,11 +5763,11 @@
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"3C4D8C550164"
-						client     	@224
-						supplier   	@223
+						client     	@225
+						supplier   	@224
 						line_style 	0
-						label      	(object SegLabel @227
-						    Parent_View 	@225
+						label      	(object SegLabel @228
+						    Parent_View 	@226
 						    location   	(1012, 794)
 						    font       	(object Font
 							size       	9
@@ -5730,20 +5788,20 @@
 						    pctDist    	0.900000
 						    height     	54
 						    orientation 	1))
-					    (object RoleView "$UNNAMED$56" @228
-						Parent_View 	@224
+					    (object RoleView "$UNNAMED$71" @229
+						Parent_View 	@225
 						location   	(-159, 416)
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"3C4D8C550196"
-						client     	@224
-						supplier   	@222
+						client     	@225
+						supplier   	@223
 						vertices   	(list Points
 						    (881, 640)
 						    (831, 606)
-						    (970, 404))
+						    (1049, 287))
 						line_style 	0)))
-				    (object AssociationViewNew "$UNNAMED$57" @229
+				    (object AssociationViewNew "$UNNAMED$72" @230
 					location   	(1501, 631)
 					font       	(object Font
 					    size       	9
@@ -5759,8 +5817,8 @@
 					line_color 	3342489
 					quidu      	"3C4D8C8B0234"
 					roleview_list 	(list RoleViews
-					    (object RoleView "source" @230
-						Parent_View 	@229
+					    (object RoleView "source" @231
+						Parent_View 	@230
 						location   	(461, 407)
 						font       	(object Font
 						    size       	9
@@ -5772,8 +5830,8 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						label      	(object SegLabel @231
-						    Parent_View 	@230
+						label      	(object SegLabel @232
+						    Parent_View 	@231
 						    location   	(1297, 736)
 						    font       	(object Font
 							size       	9
@@ -5797,30 +5855,30 @@
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"3C4D8C8C013B"
-						client     	@229
-						supplier   	@223
+						client     	@230
+						supplier   	@224
 						line_style 	0)
-					    (object RoleView "$UNNAMED$58" @232
-						Parent_View 	@229
+					    (object RoleView "$UNNAMED$73" @233
+						Parent_View 	@230
 						location   	(461, 407)
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"3C4D8C8C0145"
-						client     	@229
-						supplier   	@222
+						client     	@230
+						supplier   	@223
 						vertices   	(list Points
 						    (1501, 631)
 						    (1581, 591)
-						    (1413, 428))
+						    (1222, 244))
 						line_style 	0)))
-				    (object InheritView "" @233
+				    (object InheritView "" @234
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"3C4D8FD701C0"
-					client     	@221
-					supplier   	@223
+					client     	@222
+					supplier   	@224
 					line_style 	0)
-				    (object ClassView "Class" "Logical View::Analysis Model::Configuration Manager::User" @234
+				    (object ClassView "Class" "Logical View::Analysis Model::Configuration Manager::User" @235
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -5836,7 +5894,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@234
+					    Parent_View 	@235
 					    location   	(256, 1260)
 					    anchor_loc 	1
 					    nlines     	2
@@ -5851,7 +5909,7 @@
 					height     	154
 					annotation 	8
 					autoResize 	TRUE)
-				    (object AssociationViewNew "$UNNAMED$53" @235
+				    (object AssociationViewNew "$UNNAMED$68" @236
 					location   	(695, 956)
 					font       	(object Font
 					    size       	9
@@ -5867,8 +5925,8 @@
 					line_color 	3342489
 					quidu      	"3C4D9006039E"
 					roleview_list 	(list RoleViews
-					    (object RoleView "address" @236
-						Parent_View 	@235
+					    (object RoleView "address" @237
+						Parent_View 	@236
 						location   	(263, -372)
 						font       	(object Font
 						    size       	9
@@ -5880,8 +5938,8 @@
 						    strike     	FALSE
 						    color      	0
 						    default_color 	TRUE)
-						label      	(object SegLabel @237
-						    Parent_View 	@236
+						label      	(object SegLabel @238
+						    Parent_View 	@237
 						    location   	(910, 898)
 						    font       	(object Font
 							size       	9
@@ -5905,17 +5963,17 @@
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"3C4D9007022D"
-						client     	@235
-						supplier   	@223
+						client     	@236
+						supplier   	@224
 						line_style 	0)
-					    (object RoleView "$UNNAMED$54" @238
-						Parent_View 	@235
+					    (object RoleView "$UNNAMED$69" @239
+						Parent_View 	@236
 						location   	(263, -372)
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"3C4D9007024B"
-						client     	@235
-						supplier   	@234
+						client     	@236
+						supplier   	@235
 						line_style 	0)))))))
 		    (object Class_Category "System"
 			quid       	"3C5D0D7A00A4"
@@ -5966,7 +6024,7 @@
 				origin_x   	0
 				origin_y   	0
 				items      	(list diagram_item_list
-				    (object ClassView "Class" "Logical View::Analysis Model::System::Parser" @239
+				    (object ClassView "Class" "Logical View::Analysis Model::System::Parser" @240
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -5982,7 +6040,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@239
+					    Parent_View 	@240
 					    location   	(287, 465)
 					    anchor_loc 	1
 					    nlines     	2
@@ -5994,28 +6052,10 @@
 					line_color 	3342489
 					fill_color 	13434879
 					quidu      	"3C5D0DC7011D"
-					compartment 	(object Compartment
-					    Parent_View 	@239
-					    location   	(184, 504)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	3
-					    max_width  	222
-					    justify    	0)
 					width      	158
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Analysis Model::System::Output Stream" @240
+				    (object ClassView "Class" "Logical View::Analysis Model::System::Output Stream" @241
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -6031,7 +6071,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@240
+					    Parent_View 	@241
 					    location   	(844, 208)
 					    fill_color 	13434879
 					    nlines     	1
@@ -6046,7 +6086,7 @@
 					height     	118
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Analysis Model::System::Input Stream" @241
+				    (object ClassView "Class" "Logical View::Analysis Model::System::Input Stream" @242
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -6062,7 +6102,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@241
+					    Parent_View 	@242
 					    location   	(1425, 352)
 					    fill_color 	13434879
 					    nlines     	1
@@ -6077,7 +6117,7 @@
 					height     	118
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Analysis Model::System::Stream" @242
+				    (object ClassView "Class" "Logical View::Analysis Model::System::Stream" @243
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -6093,7 +6133,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@242
+					    Parent_View 	@243
 					    location   	(1199, 1041)
 					    anchor_loc 	1
 					    nlines     	2
@@ -6108,12 +6148,12 @@
 					width      	158
 					annotation 	8
 					autoResize 	TRUE)
-				    (object UsesView "" @243
+				    (object UsesView "" @244
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"3C5D3D5E007B"
-					client     	@239
-					supplier   	@242
+					client     	@240
+					supplier   	@243
 					line_style 	0)))))
 		    (object Class_Category "Thoughts"
 			quid       	"3C5D3BE002DF"
@@ -6533,7 +6573,7 @@
 					origin_x   	0
 					origin_y   	0
 					items      	(list diagram_item_list
-					    (object ClassView "Class" "Logical View::Analysis Model::Message Store::SMS" @244
+					    (object ClassView "Class" "Logical View::Analysis Model::Message Store::SMS" @245
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6549,7 +6589,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@244
+						    Parent_View 	@245
 						    location   	(288, 316)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6561,28 +6601,10 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C4C4DBE02E5"
-						compartment 	(object Compartment
-						    Parent_View 	@244
-						    location   	(95, 405)
-						    font       	(object Font
-							size       	9
-							face       	"Arial"
-							charSet    	204
-							bold       	FALSE
-							italics    	FALSE
-							underline  	FALSE
-							strike     	FALSE
-							color      	0
-							default_color 	TRUE)
-						    icon_style 	"Icon"
-						    anchor     	2
-						    nlines     	5
-						    max_width  	441
-						    justify    	0)
 						height     	154
 						annotation 	8
 						autoResize 	TRUE)
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-DELIVER" @245
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-DELIVER" @246
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6598,7 +6620,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@245
+						    Parent_View 	@246
 						    location   	(304, 924)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6613,7 +6635,7 @@
 						height     	154
 						annotation 	8
 						autoResize 	TRUE)
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-DELIVER-REPORT" @246
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-DELIVER-REPORT" @247
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6629,7 +6651,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@246
+						    Parent_View 	@247
 						    location   	(736, 828)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6644,7 +6666,7 @@
 						height     	154
 						annotation 	8
 						autoResize 	TRUE)
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-SUBMIT" @247
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-SUBMIT" @248
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6660,7 +6682,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@247
+						    Parent_View 	@248
 						    location   	(1232, 636)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6675,7 +6697,7 @@
 						height     	154
 						annotation 	8
 						autoResize 	TRUE)
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-SUBMIT-REPORT" @248
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-SUBMIT-REPORT" @249
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6691,7 +6713,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@248
+						    Parent_View 	@249
 						    location   	(1264, 1036)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6706,7 +6728,7 @@
 						height     	154
 						annotation 	8
 						autoResize 	TRUE)
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-STATUS-REPORT" @249
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-STATUS-REPORT" @250
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6722,7 +6744,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@249
+						    Parent_View 	@250
 						    location   	(288, 1228)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6737,7 +6759,7 @@
 						height     	154
 						annotation 	8
 						autoResize 	TRUE)
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-COMMAND" @250
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::SMS-COMMAND" @251
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6753,7 +6775,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@250
+						    Parent_View 	@251
 						    location   	(832, 396)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6778,7 +6800,7 @@
 					origin_x   	0
 					origin_y   	0
 					items      	(list diagram_item_list
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-MO-DATA" @251
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-MO-DATA" @252
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6794,7 +6816,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@251
+						    Parent_View 	@252
 						    location   	(288, 476)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6809,7 +6831,7 @@
 						height     	154
 						annotation 	8
 						autoResize 	TRUE)
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-MT-DATA" @252
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-MT-DATA" @253
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6825,7 +6847,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@252
+						    Parent_View 	@253
 						    location   	(288, 812)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6840,7 +6862,7 @@
 						height     	154
 						annotation 	8
 						autoResize 	TRUE)
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-ACK" @253
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-ACK" @254
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6856,7 +6878,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@253
+						    Parent_View 	@254
 						    location   	(736, 508)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6871,7 +6893,7 @@
 						height     	154
 						annotation 	8
 						autoResize 	TRUE)
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-ERROR" @254
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-ERROR" @255
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6887,7 +6909,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@254
+						    Parent_View 	@255
 						    location   	(752, 908)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6902,7 +6924,7 @@
 						height     	154
 						annotation 	8
 						autoResize 	TRUE)
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-ALERT-SC" @255
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-ALERT-SC" @256
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6918,7 +6940,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@255
+						    Parent_View 	@256
 						    location   	(1168, 732)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6933,7 +6955,7 @@
 						height     	154
 						annotation 	8
 						autoResize 	TRUE)
-					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-SM-MEMORY-AVAILABLE" @256
+					    (object ClassView "Class" "Logical View::Analysis Model::Thoughts::Messages::RP-SM-MEMORY-AVAILABLE" @257
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
@@ -6949,7 +6971,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@256
+						    Parent_View 	@257
 						    location   	(352, 1228)
 						    anchor_loc 	1
 						    nlines     	2
@@ -6974,7 +6996,7 @@
 					origin_x   	0
 					origin_y   	400
 					items      	(list diagram_item_list
-					    (object NoteView @257
+					    (object NoteView @258
 						location   	(928, 816)
 						font       	(object Font
 						    size       	9
@@ -6987,7 +7009,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@257
+						    Parent_View 	@258
 						    location   	(65, 53)
 						    fill_color 	13434879
 						    nlines     	32
@@ -7163,9 +7185,9 @@
 					
 					stereotype 	"use-case realization"
 					logical_models 	(list unit_reference_list
-					    (object Mechanism @258
-						logical_models 	(list unit_reference_list))
 					    (object Mechanism @259
+						logical_models 	(list unit_reference_list))
+					    (object Mechanism @260
 						logical_models 	(list unit_reference_list)))
 					logical_presentations 	(list unit_reference_list
 					    (object ClassDiagram "<Use Case Name> -  Realize Dependencies"
@@ -7189,7 +7211,7 @@
 						origin_y   	0
 						items      	(list diagram_item_list))
 					    (object InteractionDiagram "<Use Case Name> -  Basic Flow"
-						mechanism_ref 	@258
+						mechanism_ref 	@259
 						quid       	"35081E3603A2"
 						title      	"<Use Case Name> -  Basic Flow"
 						zoom       	100
@@ -7199,7 +7221,7 @@
 						origin_y   	0
 						items      	(list diagram_item_list))
 					    (object InteractionDiagram "<Use Case Name> -  <Flow Type>"
-						mechanism_ref 	@259
+						mechanism_ref 	@260
 						quid       	"3540A0B901AE"
 						title      	"<Use Case Name> -  <Flow Type>"
 						zoom       	100
@@ -7219,7 +7241,7 @@
 					origin_x   	0
 					origin_y   	0
 					items      	(list diagram_item_list
-					    (object NoteView @260
+					    (object NoteView @261
 						location   	(704, 144)
 						font       	(object Font
 						    size       	9
@@ -7232,7 +7254,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@260
+						    Parent_View 	@261
 						    location   	(38, 25)
 						    fill_color 	13434879
 						    nlines     	5
@@ -7245,7 +7267,7 @@
 						fill_color 	13434879
 						width      	1356
 						height     	250)
-					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message" @261
+					    (object UseCaseView "Use Case View::Use-Case Model::Use Cases::MAP Use Cases::Send Message::Send Message" @262
 						location   	(1152, 528)
 						font       	(object Font
 						    size       	9
@@ -7258,7 +7280,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@261
+						    Parent_View 	@262
 						    location   	(1152, 666)
 						    anchor_loc 	1
 						    nlines     	2
@@ -7271,7 +7293,7 @@
 						quidu      	"34E37FB203D4"
 						height     	118
 						autoResize 	TRUE)
-					    (object UseCaseView "Logical View::Design Model::Use-Case Realizations::<Use-Case Name>::<Use-Case Name>" @262
+					    (object UseCaseView "Logical View::Design Model::Use-Case Realizations::<Use-Case Name>::<Use-Case Name>" @263
 						location   	(608, 960)
 						font       	(object Font
 						    size       	9
@@ -7284,7 +7306,7 @@
 						    color      	0
 						    default_color 	TRUE)
 						label      	(object ItemLabel
-						    Parent_View 	@262
+						    Parent_View 	@263
 						    location   	(608, 1148)
 						    anchor_loc 	1
 						    nlines     	2
@@ -7292,7 +7314,7 @@
 						    justify    	0
 						    label      	"<Use-Case Name>")
 						stereotype 	(object ItemLabel
-						    Parent_View 	@262
+						    Parent_View 	@263
 						    location   	(608, 1078)
 						    anchor     	10
 						    anchor_loc 	1
@@ -7320,16 +7342,16 @@
 				quid       	"35DB3CB002BC"
 				documentation 	"This is a sub-process or thread within the <name of process of which this thread is a sub-process> process which handles <enter a description of what this thread does>.  A separate thread was chosen for this to be able to <enter the rationale for creating a separate thread>."
 				stereotype 	"thread")
-			    (object Association "$UNNAMED$59"
+			    (object Association "$UNNAMED$74"
 				quid       	"35DB3E72017C"
 				roles      	(list role_list
-				    (object Role "$UNNAMED$60"
+				    (object Role "$UNNAMED$75"
 					quid       	"35DB3E73005A"
 					supplier   	"Logical View::Design Model::Process View::<Process Name>"
 					quidu      	"35DB3C8302D0"
 					is_navigable 	TRUE
 					is_aggregate 	TRUE)
-				    (object Role "$UNNAMED$61"
+				    (object Role "$UNNAMED$76"
 					quid       	"35DB3E730096"
 					supplier   	"Logical View::Design Model::Process View::<Thread Name>"
 					quidu      	"35DB3CB002BC"
@@ -7346,7 +7368,7 @@
 				origin_x   	0
 				origin_y   	0
 				items      	(list diagram_item_list
-				    (object ClassView "Class" "Logical View::Design Model::Process View::<Process Name>" @263
+				    (object ClassView "Class" "Logical View::Design Model::Process View::<Process Name>" @264
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -7362,7 +7384,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@263
+					    Parent_View 	@264
 					    location   	(122, 436)
 					    fill_color 	13434879
 					    nlines     	1
@@ -7370,7 +7392,7 @@
 					    justify    	0
 					    label      	"<Process Name>")
 					stereotype 	(object ItemLabel
-					    Parent_View 	@263
+					    Parent_View 	@264
 					    location   	(122, 389)
 					    fill_color 	13434879
 					    anchor     	10
@@ -7386,7 +7408,7 @@
 					height     	172
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Design Model::Process View::<Thread Name>" @264
+				    (object ClassView "Class" "Logical View::Design Model::Process View::<Thread Name>" @265
 					ShowCompartmentStereotypes 	TRUE
 					IncludeAttribute 	TRUE
 					IncludeOperation 	TRUE
@@ -7402,7 +7424,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@264
+					    Parent_View 	@265
 					    location   	(740, 436)
 					    fill_color 	13434879
 					    nlines     	1
@@ -7410,7 +7432,7 @@
 					    justify    	0
 					    label      	"<Thread Name>")
 					stereotype 	(object ItemLabel
-					    Parent_View 	@264
+					    Parent_View 	@265
 					    location   	(740, 389)
 					    fill_color 	13434879
 					    anchor     	10
@@ -7426,29 +7448,29 @@
 					height     	172
 					annotation 	8
 					autoResize 	TRUE)
-				    (object AssociationViewNew "$UNNAMED$59" @265
+				    (object AssociationViewNew "$UNNAMED$74" @266
 					location   	(596, 464)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"35DB3E72017C"
 					roleview_list 	(list RoleViews
-					    (object RoleView "$UNNAMED$60" @266
-						Parent_View 	@265
+					    (object RoleView "$UNNAMED$75" @267
+						Parent_View 	@266
 						location   	(-300, 0)
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"35DB3E73005A"
-						client     	@265
-						supplier   	@263
+						client     	@266
+						supplier   	@264
 						line_style 	0)
-					    (object RoleView "$UNNAMED$61" @267
-						Parent_View 	@265
+					    (object RoleView "$UNNAMED$76" @268
+						Parent_View 	@266
 						location   	(-300, 0)
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"35DB3E730096"
-						client     	@265
-						supplier   	@264
+						client     	@266
+						supplier   	@265
 						line_style 	0)))))))
 		    (object Class_Category "SC core"
 			quid       	"3BB0676100C3"
@@ -7547,7 +7569,7 @@
 			origin_x   	0
 			origin_y   	0
 			items      	(list diagram_item_list
-			    (object NoteView @268
+			    (object NoteView @269
 				location   	(672, 304)
 				font       	(object Font
 				    size       	9
@@ -7560,7 +7582,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@268
+				    Parent_View 	@269
 				    location   	(28, 19)
 				    fill_color 	13434879
 				    nlines     	13
@@ -7583,7 +7605,7 @@
 				fill_color 	13434879
 				width      	1313
 				height     	582)
-			    (object NoteView @269
+			    (object NoteView @270
 				location   	(1696, 160)
 				font       	(object Font
 				    size       	9
@@ -7596,7 +7618,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@269
+				    Parent_View 	@270
 				    location   	(1358, 29)
 				    fill_color 	13434879
 				    nlines     	5
@@ -7631,7 +7653,7 @@
 			origin_x   	0
 			origin_y   	169
 			items      	(list diagram_item_list
-			    (object CategoryView "Logical View::Design Model::SC core" @270
+			    (object CategoryView "Logical View::Design Model::SC core" @271
 				location   	(1232, 784)
 				font       	(object Font
 				    size       	9
@@ -7644,7 +7666,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@270
+				    Parent_View 	@271
 				    location   	(1088, 747)
 				    fill_color 	13434879
 				    nlines     	2
@@ -7652,7 +7674,7 @@
 				    justify    	0
 				    label      	"SC core")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@270
+				    Parent_View 	@271
 				    location   	(1088, 700)
 				    fill_color 	13434879
 				    anchor     	10
@@ -7666,7 +7688,7 @@
 				quidu      	"3BB0676100C3"
 				width      	300
 				height     	180)
-			    (object CategoryView "Logical View::Design Model::SMS-IWMSC" @271
+			    (object CategoryView "Logical View::Design Model::SMS-IWMSC" @272
 				location   	(464, 1424)
 				font       	(object Font
 				    size       	9
@@ -7679,7 +7701,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@271
+				    Parent_View 	@272
 				    location   	(320, 1387)
 				    fill_color 	13434879
 				    nlines     	2
@@ -7687,7 +7709,7 @@
 				    justify    	0
 				    label      	"SMS-IWMSC")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@271
+				    Parent_View 	@272
 				    location   	(320, 1340)
 				    fill_color 	13434879
 				    anchor     	10
@@ -7701,7 +7723,7 @@
 				quidu      	"3BB067840073"
 				width      	300
 				height     	180)
-			    (object CategoryView "Logical View::Design Model::SMS-GMSC" @272
+			    (object CategoryView "Logical View::Design Model::SMS-GMSC" @273
 				location   	(2096, 1424)
 				font       	(object Font
 				    size       	9
@@ -7714,7 +7736,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@272
+				    Parent_View 	@273
 				    location   	(1952, 1387)
 				    fill_color 	13434879
 				    nlines     	2
@@ -7722,7 +7744,7 @@
 				    justify    	0
 				    label      	"SMS-GMSC")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@272
+				    Parent_View 	@273
 				    location   	(1952, 1340)
 				    fill_color 	13434879
 				    anchor     	10
@@ -7736,21 +7758,21 @@
 				quidu      	"3BB067860102"
 				width      	300
 				height     	180)
-			    (object ImportView "" @273
-				stereotype 	TRUE
-				line_color 	3342489
-				quidu      	"3BB067C80234"
-				client     	@270
-				supplier   	@272
-				line_style 	0)
 			    (object ImportView "" @274
 				stereotype 	TRUE
 				line_color 	3342489
-				quidu      	"3BB067CC0013"
+				quidu      	"3BB067C80234"
 				client     	@271
-				supplier   	@270
+				supplier   	@273
 				line_style 	0)
-			    (object CategoryView "Logical View::Design Model::SMPP gateway" @275
+			    (object ImportView "" @275
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3BB067CC0013"
+				client     	@272
+				supplier   	@271
+				line_style 	0)
+			    (object CategoryView "Logical View::Design Model::SMPP gateway" @276
 				location   	(448, 784)
 				font       	(object Font
 				    size       	9
@@ -7763,7 +7785,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@275
+				    Parent_View 	@276
 				    location   	(304, 747)
 				    fill_color 	13434879
 				    nlines     	2
@@ -7771,7 +7793,7 @@
 				    justify    	0
 				    label      	"SMPP gateway")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@275
+				    Parent_View 	@276
 				    location   	(304, 700)
 				    fill_color 	13434879
 				    anchor     	10
@@ -7785,14 +7807,14 @@
 				quidu      	"3BB068820032"
 				width      	300
 				height     	180)
-			    (object ImportView "" @276
+			    (object ImportView "" @277
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"3BB0689C0242"
-				client     	@270
-				supplier   	@275
+				client     	@271
+				supplier   	@276
 				line_style 	0)
-			    (object CategoryView "Logical View::Design Model::E-mail gateway" @277
+			    (object CategoryView "Logical View::Design Model::E-mail gateway" @278
 				location   	(2048, 784)
 				font       	(object Font
 				    size       	9
@@ -7805,7 +7827,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@277
+				    Parent_View 	@278
 				    location   	(1904, 747)
 				    fill_color 	13434879
 				    nlines     	2
@@ -7813,7 +7835,7 @@
 				    justify    	0
 				    label      	"E-mail gateway")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@277
+				    Parent_View 	@278
 				    location   	(1904, 700)
 				    fill_color 	13434879
 				    anchor     	10
@@ -7827,14 +7849,14 @@
 				quidu      	"3BB068A40334"
 				width      	300
 				height     	180)
-			    (object ImportView "" @278
+			    (object ImportView "" @279
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"3BB068BB0048"
-				client     	@270
-				supplier   	@277
+				client     	@271
+				supplier   	@278
 				line_style 	0)
-			    (object CategoryView "Logical View::Design Model::Billing gateway" @279
+			    (object CategoryView "Logical View::Design Model::Billing gateway" @280
 				location   	(1232, 208)
 				font       	(object Font
 				    size       	9
@@ -7847,7 +7869,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@279
+				    Parent_View 	@280
 				    location   	(1088, 171)
 				    fill_color 	13434879
 				    nlines     	2
@@ -7855,7 +7877,7 @@
 				    justify    	0
 				    label      	"Billing gateway")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@279
+				    Parent_View 	@280
 				    location   	(1088, 124)
 				    fill_color 	13434879
 				    anchor     	10
@@ -7869,14 +7891,14 @@
 				quidu      	"3BB068C5029C"
 				width      	300
 				height     	180)
-			    (object ImportView "" @280
+			    (object ImportView "" @281
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"3BB068D30093"
-				client     	@270
-				supplier   	@279
+				client     	@271
+				supplier   	@280
 				line_style 	0)
-			    (object CategoryView "Logical View::Design Model::Administration interface" @281
+			    (object CategoryView "Logical View::Design Model::Administration interface" @282
 				location   	(448, 224)
 				font       	(object Font
 				    size       	9
@@ -7889,7 +7911,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@281
+				    Parent_View 	@282
 				    location   	(304, 187)
 				    fill_color 	13434879
 				    nlines     	2
@@ -7897,7 +7919,7 @@
 				    justify    	0
 				    label      	"Administration interface")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@281
+				    Parent_View 	@282
 				    location   	(304, 140)
 				    fill_color 	13434879
 				    anchor     	10
@@ -7911,12 +7933,12 @@
 				quidu      	"3BB069D10110"
 				width      	300
 				height     	180)
-			    (object ImportView "" @282
+			    (object ImportView "" @283
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"3BB069E500B5"
-				client     	@270
-				supplier   	@281
+				client     	@271
+				supplier   	@282
 				line_style 	0)))
 		    (object ClassDiagram "Main"
 			quid       	"3C45708800B0"
@@ -7927,7 +7949,7 @@
 			origin_x   	0
 			origin_y   	0
 			items      	(list diagram_item_list
-			    (object CategoryView "Logical View::Design Model::SMPP gateway" @283
+			    (object CategoryView "Logical View::Design Model::SMPP gateway" @284
 				location   	(240, 688)
 				font       	(object Font
 				    size       	9
@@ -7940,7 +7962,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@283
+				    Parent_View 	@284
 				    location   	(96, 651)
 				    fill_color 	13434879
 				    nlines     	2
@@ -7948,7 +7970,7 @@
 				    justify    	0
 				    label      	"SMPP gateway")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@283
+				    Parent_View 	@284
 				    location   	(96, 604)
 				    fill_color 	13434879
 				    anchor     	10
@@ -7962,7 +7984,7 @@
 				quidu      	"3BB068820032"
 				width      	300
 				height     	180)
-			    (object CategoryView "Logical View::Design Model::SMS-GMSC" @284
+			    (object CategoryView "Logical View::Design Model::SMS-GMSC" @285
 				location   	(1568, 224)
 				font       	(object Font
 				    size       	9
@@ -7975,7 +7997,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@284
+				    Parent_View 	@285
 				    location   	(1424, 187)
 				    fill_color 	13434879
 				    nlines     	2
@@ -7983,7 +8005,7 @@
 				    justify    	0
 				    label      	"SMS-GMSC")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@284
+				    Parent_View 	@285
 				    location   	(1424, 140)
 				    fill_color 	13434879
 				    anchor     	10
@@ -7997,7 +8019,7 @@
 				quidu      	"3BB067860102"
 				width      	300
 				height     	180)
-			    (object CategoryView "Logical View::Design Model::SMS-IWMSC" @285
+			    (object CategoryView "Logical View::Design Model::SMS-IWMSC" @286
 				location   	(1568, 1088)
 				font       	(object Font
 				    size       	9
@@ -8010,7 +8032,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@285
+				    Parent_View 	@286
 				    location   	(1424, 1051)
 				    fill_color 	13434879
 				    nlines     	2
@@ -8018,7 +8040,7 @@
 				    justify    	0
 				    label      	"SMS-IWMSC")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@285
+				    Parent_View 	@286
 				    location   	(1424, 1004)
 				    fill_color 	13434879
 				    anchor     	10
@@ -8032,7 +8054,7 @@
 				quidu      	"3BB067840073"
 				width      	300
 				height     	180)
-			    (object CategoryView "Logical View::Design Model::Billing gateway" @286
+			    (object CategoryView "Logical View::Design Model::Billing gateway" @287
 				location   	(224, 1136)
 				font       	(object Font
 				    size       	9
@@ -8045,7 +8067,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@286
+				    Parent_View 	@287
 				    location   	(80, 1099)
 				    fill_color 	13434879
 				    nlines     	2
@@ -8053,7 +8075,7 @@
 				    justify    	0
 				    label      	"Billing gateway")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@286
+				    Parent_View 	@287
 				    location   	(80, 1052)
 				    fill_color 	13434879
 				    anchor     	10
@@ -8067,7 +8089,7 @@
 				quidu      	"3BB068C5029C"
 				width      	300
 				height     	180)
-			    (object CategoryView "Logical View::Design Model::Administration interface" @287
+			    (object CategoryView "Logical View::Design Model::Administration interface" @288
 				location   	(240, 176)
 				font       	(object Font
 				    size       	9
@@ -8080,7 +8102,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@287
+				    Parent_View 	@288
 				    location   	(96, 139)
 				    fill_color 	13434879
 				    nlines     	2
@@ -8088,7 +8110,7 @@
 				    justify    	0
 				    label      	"Administration interface")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@287
+				    Parent_View 	@288
 				    location   	(96, 92)
 				    fill_color 	13434879
 				    anchor     	10
@@ -8102,7 +8124,7 @@
 				quidu      	"3BB069D10110"
 				width      	300
 				height     	180)
-			    (object CategoryView "Logical View::Design Model::SC core" @288
+			    (object CategoryView "Logical View::Design Model::SC core" @289
 				location   	(960, 688)
 				font       	(object Font
 				    size       	9
@@ -8115,7 +8137,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@288
+				    Parent_View 	@289
 				    location   	(797, 604)
 				    fill_color 	13434879
 				    nlines     	2
@@ -8123,7 +8145,7 @@
 				    justify    	0
 				    label      	"SC core")
 				stereotype 	(object ItemLabel
-				    Parent_View 	@288
+				    Parent_View 	@289
 				    location   	(797, 557)
 				    fill_color 	13434879
 				    anchor     	10
@@ -8136,8 +8158,8 @@
 				fill_color 	13434879
 				quidu      	"3BB0676100C3"
 				compartment 	(object Compartment
-				    Parent_View 	@288
-				    location   	(960, 706)
+				    Parent_View 	@289
+				    location   	(960, 729)
 				    font       	(object Font
 					size       	9
 					face       	"Arial"
@@ -8160,40 +8182,40 @@
 					"- USSD Handler"))
 				width      	338
 				height     	274)
-			    (object ImportView "" @289
-				stereotype 	TRUE
-				line_color 	3342489
-				quidu      	"3BB067CC0013"
-				client     	@285
-				supplier   	@288
-				line_style 	0)
 			    (object ImportView "" @290
 				stereotype 	TRUE
 				line_color 	3342489
-				quidu      	"3BB067C80234"
-				client     	@288
-				supplier   	@284
+				quidu      	"3BB067CC0013"
+				client     	@286
+				supplier   	@289
 				line_style 	0)
 			    (object ImportView "" @291
 				stereotype 	TRUE
 				line_color 	3342489
-				quidu      	"3BB0689C0242"
-				client     	@288
-				supplier   	@283
+				quidu      	"3BB067C80234"
+				client     	@289
+				supplier   	@285
 				line_style 	0)
 			    (object ImportView "" @292
 				stereotype 	TRUE
 				line_color 	3342489
-				quidu      	"3BB068D30093"
-				client     	@288
-				supplier   	@286
+				quidu      	"3BB0689C0242"
+				client     	@289
+				supplier   	@284
 				line_style 	0)
 			    (object ImportView "" @293
 				stereotype 	TRUE
 				line_color 	3342489
-				quidu      	"3BB069E500B5"
-				client     	@288
+				quidu      	"3BB068D30093"
+				client     	@289
 				supplier   	@287
+				line_style 	0)
+			    (object ImportView "" @294
+				stereotype 	TRUE
+				line_color 	3342489
+				quidu      	"3BB069E500B5"
+				client     	@289
+				supplier   	@288
 				line_style 	0))))))
 	logical_presentations 	(list unit_reference_list
 	    (object ClassDiagram "Welcome"
@@ -8260,7 +8282,7 @@
 			origin_x   	0
 			origin_y   	0
 			items      	(list diagram_item_list
-			    (object NoteView @294
+			    (object NoteView @295
 				location   	(624, 160)
 				font       	(object Font
 				    size       	9
@@ -8273,7 +8295,7 @@
 				    color      	0
 				    default_color 	TRUE)
 				label      	(object ItemLabel
-				    Parent_View 	@294
+				    Parent_View 	@295
 				    location   	(21, 26)
 				    fill_color 	13434879
 				    nlines     	5
@@ -8299,7 +8321,7 @@
 		origin_x   	0
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object SubSysView "Component View::Implementation Model" @295
+		    (object SubSysView "Component View::Implementation Model" @296
 			location   	(736, 800)
 			font       	(object Font
 			    size       	9
@@ -8312,7 +8334,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@295
+			    Parent_View 	@296
 			    location   	(552, 713)
 			    fill_color 	13434879
 			    nlines     	2
@@ -8406,7 +8428,7 @@
 		origin_x   	0
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object ProcessorView "SMSC Server" @296
+		    (object ProcessorView "SMSC Server" @297
 			location   	(992, 304)
 			font       	(object Font
 			    size       	9
@@ -8419,7 +8441,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@296
+			    Parent_View 	@297
 			    location   	(691, 98)
 			    nlines     	2
 			    max_width  	531
@@ -8431,7 +8453,7 @@
 			width      	606
 			height     	482
 			annotation 	0)
-		    (object DeviceView "SS7 interface" @297
+		    (object DeviceView "SS7 interface" @298
 			location   	(1584, 304)
 			font       	(object Font
 			    size       	9
@@ -8444,7 +8466,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@297
+			    Parent_View 	@298
 			    location   	(1461, 239)
 			    nlines     	2
 			    max_width  	175
@@ -8456,14 +8478,14 @@
 			width      	250
 			height     	200
 			annotation 	0)
-		    (object ConnectionView "" @298
+		    (object ConnectionView "" @299
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"34DBBD4B008C"
-			client     	@296
-			supplier   	@297
+			client     	@297
+			supplier   	@298
 			line_style 	0)
-		    (object ProcessorView "SME Server" @299
+		    (object ProcessorView "SME Server" @300
 			location   	(416, 1344)
 			font       	(object Font
 			    size       	9
@@ -8476,7 +8498,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@299
+			    Parent_View 	@300
 			    location   	(227, 1229)
 			    nlines     	2
 			    max_width  	306
@@ -8488,7 +8510,7 @@
 			width      	381
 			height     	300
 			annotation 	2)
-		    (object NoteView @300
+		    (object NoteView @301
 			location   	(832, 640)
 			font       	(object Font
 			    size       	9
@@ -8501,7 +8523,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@300
+			    Parent_View 	@301
 			    location   	(694, 580)
 			    nlines     	2
 			    max_width  	240
@@ -8510,7 +8532,7 @@
 			fill_color 	16777215
 			width      	300
 			height     	132)
-		    (object NoteView @301
+		    (object NoteView @302
 			location   	(1584, 80)
 			font       	(object Font
 			    size       	9
@@ -8523,7 +8545,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@301
+			    Parent_View 	@302
 			    location   	(1406, 21)
 			    nlines     	2
 			    max_width  	321
@@ -8532,7 +8554,7 @@
 			fill_color 	16777215
 			width      	381
 			height     	131)
-		    (object ProcessorView "MSC" @302
+		    (object ProcessorView "MSC" @303
 			location   	(1584, 1344)
 			font       	(object Font
 			    size       	9
@@ -8545,7 +8567,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@302
+			    Parent_View 	@303
 			    location   	(1395, 1226)
 			    nlines     	2
 			    max_width  	306
@@ -8557,7 +8579,7 @@
 			width      	381
 			height     	306
 			annotation 	0)
-		    (object DeviceView "SS7 interface" @303
+		    (object DeviceView "SS7 interface" @304
 			location   	(1584, 944)
 			font       	(object Font
 			    size       	9
@@ -8570,7 +8592,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@303
+			    Parent_View 	@304
 			    location   	(1473, 889)
 			    nlines     	2
 			    max_width  	150
@@ -8582,21 +8604,21 @@
 			width      	225
 			height     	180
 			annotation 	0)
-		    (object ConnectionView "" @304
-			stereotype 	TRUE
-			line_color 	4210816
-			quidu      	"3C3C7A8B0040"
-			client     	@302
-			supplier   	@303
-			line_style 	0)
 		    (object ConnectionView "" @305
 			stereotype 	TRUE
 			line_color 	4210816
-			quidu      	"3C3C7A920339"
-			client     	@297
-			supplier   	@303
+			quidu      	"3C3C7A8B0040"
+			client     	@303
+			supplier   	@304
 			line_style 	0)
-		    (object NoteView @306
+		    (object ConnectionView "" @306
+			stereotype 	TRUE
+			line_color 	4210816
+			quidu      	"3C3C7A920339"
+			client     	@298
+			supplier   	@304
+			line_style 	0)
+		    (object NoteView @307
 			location   	(1152, 640)
 			font       	(object Font
 			    size       	9
@@ -8609,7 +8631,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@306
+			    Parent_View 	@307
 			    location   	(1014, 580)
 			    nlines     	2
 			    max_width  	240
@@ -8618,13 +8640,13 @@
 			fill_color 	16777215
 			width      	300
 			height     	132)
-		    (object AttachView "" @307
+		    (object AttachView "" @308
 			stereotype 	TRUE
 			line_color 	4210816
-			client     	@306
-			supplier   	@305
+			client     	@307
+			supplier   	@306
 			line_style 	0)
-		    (object NoteView @308
+		    (object NoteView @309
 			location   	(960, 304)
 			font       	(object Font
 			    size       	9
@@ -8637,7 +8659,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@308
+			    Parent_View 	@309
 			    location   	(822, 244)
 			    nlines     	2
 			    max_width  	240
@@ -8649,13 +8671,13 @@
 			fill_color 	16777215
 			width      	300
 			height     	132)
-		    (object AttachView "" @309
+		    (object AttachView "" @310
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@301
-			supplier   	@297
+			client     	@302
+			supplier   	@298
 			line_style 	0)
-		    (object DeviceView "TCP/IP interface" @310
+		    (object DeviceView "TCP/IP interface" @311
 			location   	(416, 944)
 			font       	(object Font
 			    size       	9
@@ -8668,7 +8690,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@310
+			    Parent_View 	@311
 			    location   	(305, 889)
 			    nlines     	2
 			    max_width  	150
@@ -8680,7 +8702,7 @@
 			width      	225
 			height     	180
 			annotation 	0)
-		    (object DeviceView "TCP/IP interface" @311
+		    (object DeviceView "TCP/IP interface" @312
 			location   	(416, 304)
 			font       	(object Font
 			    size       	9
@@ -8693,7 +8715,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@311
+			    Parent_View 	@312
 			    location   	(305, 249)
 			    nlines     	2
 			    max_width  	150
@@ -8705,32 +8727,32 @@
 			width      	225
 			height     	180
 			annotation 	0)
-		    (object ConnectionView "" @312
-			stereotype 	TRUE
-			line_color 	4210816
-			quidu      	"3C3C7719038B"
-			client     	@310
-			supplier   	@311
-			line_style 	0)
 		    (object ConnectionView "" @313
 			stereotype 	TRUE
 			line_color 	4210816
-			quidu      	"3C3C770701B8"
-			client     	@299
-			supplier   	@310
-			line_style 	0)
-		    (object AttachView "" @314
-			stereotype 	TRUE
-			line_color 	4210816
-			client     	@300
+			quidu      	"3C3C7719038B"
+			client     	@311
 			supplier   	@312
 			line_style 	0)
-		    (object ConnectionView "" @315
+		    (object ConnectionView "" @314
+			stereotype 	TRUE
+			line_color 	4210816
+			quidu      	"3C3C770701B8"
+			client     	@300
+			supplier   	@311
+			line_style 	0)
+		    (object AttachView "" @315
+			stereotype 	TRUE
+			line_color 	4210816
+			client     	@301
+			supplier   	@313
+			line_style 	0)
+		    (object ConnectionView "" @316
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"3C3C76530015"
-			client     	@311
-			supplier   	@296
+			client     	@312
+			supplier   	@297
 			line_style 	0)))))
     properties 	(object Properties
 	attributes 	(list Attribute_Set
