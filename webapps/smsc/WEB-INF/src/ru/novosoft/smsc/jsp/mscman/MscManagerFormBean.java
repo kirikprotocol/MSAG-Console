@@ -10,6 +10,7 @@ package ru.novosoft.smsc.jsp.mscman;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.admin.mscman.MscManager;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.List;
 
@@ -42,22 +43,31 @@ public class MscManagerFormBean extends IndexBean
     }
     public int process(SMSCAppContext appContext, List errors)
     {
-        if (this.appContext == null && appContext instanceof SMSCAppContext)
-        {
+        if (this.appContext == null && appContext instanceof SMSCAppContext) {
             manager.setSmsc(appContext.getSmsc());
         }
 
         int result = super.process(appContext, errors);
-        if (result != RESULT_OK) return result;
+        if (result != RESULT_OK) {
+            clearBeenProperties();
+            return result;
+        }
 
-        if (mbBlock != null) manager.block(mscKey);
-        else if (mbClear != null) manager.clear(mscKey);
-        else if (mbUnregister != null) manager.unregister(mscKey);
-        else if (mbRegister != null) manager.register(mscNum);
+        try {
+            if (mbBlock != null) manager.block(mscKey);
+            else if (mbClear != null) manager.clear(mscKey);
+            else if (mbUnregister != null) manager.unregister(mscKey);
+            else if (mbRegister != null) manager.register(mscNum);
 
-        mscs = manager.list();
+            mscs = manager.list();
+            result = RESULT_OK;
+        }
+        catch (AdminException exc) {
+            exc.printStackTrace();
+            result = RESULT_ERROR;
+        }
         clearBeenProperties();
-        return RESULT_OK;
+        return result;
     }
 
     public List getMscs() {

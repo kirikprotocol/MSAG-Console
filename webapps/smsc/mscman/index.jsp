@@ -32,15 +32,18 @@
     }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%
-    List mscList = bean.getMscs();
-    if (mscList == null || mscList.size() <= 0) {
-    %><div align=left>No commutators defined</div><%
-    } else { int posIdx = 0;%>
+
 <table class=secRep cellspacing=1 width="100%">
 <tr>
     <td colspan=4><div class=secView>Commutators status</div></td>
 </tr>
+<%  List mscList = bean.getMscs();
+    if (mscList == null || mscList.size() <= 0) {%>
+<tr class=row0>
+    <td colspan=4><div align=left>No commutators defined</div><td>
+</tr>
+<%  } else {
+        int posIdx = 0;%>
 <tr class=row<%= (posIdx++)%2%>>
     <th width="20%"><div align=right>Commutator</div></th>
     <th width="25%"><div align=right>Status</div></th>
@@ -64,9 +67,10 @@
     </div>
     </td>
 </tr><%     }
-        }%>
+        }
+    }%>
 </table>
-<%  }%>
+
 
 <div class=secQuestion>Register new commutator</div>
 <table class=secRep cellspacing=1 width="100%">
