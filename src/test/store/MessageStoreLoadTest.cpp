@@ -11,7 +11,7 @@ using namespace smsc::sms;
 using namespace smsc::util::config;
 using namespace smsc::store;
 using namespace smsc::test::util;
-using smsc::test::sms::SmsUtil;
+using namespace smsc::test::sms;
 
 /**
  * Предназначен для измерения производительности Message Store.
@@ -27,6 +27,10 @@ class MessageStoreLoadTestTask : public TestTask
 private:
 	int taskNum;
 	MessageStore* msgStore;
+	static const int numSms = 10;
+	SMS sms[numSms];
+	Descriptor dst;
+	int num;
 
 public:
 	MessageStoreLoadTestTask(MessageStore* msgStore, int taskNum);
@@ -82,39 +86,39 @@ public:
 //MessageStoreLoadTestTask methods
 MessageStoreLoadTestTask::MessageStoreLoadTestTask(MessageStore* _msgStore,
 	int _taskNum) : TestTask("LoadTask", _taskNum), msgStore(_msgStore),
-	taskNum(_taskNum)
+	taskNum(_taskNum), num(0)
 {
 	__require__(msgStore);
+	//подготовить sms-ки
+	//отключить сеттер на SMPP_MESSAGE_PAYLOAD
+	static const uint64_t mask = BODY_ALL ^ BODY_MSG_PAYLOAD;
+	for (int i = 0; i < numSms; i++)
+	{
+		SmsUtil::setupRandomCorrectSms(&sms[i], mask);
+	}
+	SmsUtil::setupRandomCorrectDescriptor(&dst);
+	dst.setSmeNumber(rand0(65535));
 }
 
 void MessageStoreLoadTestTask::executeCycle()
 {
-	//отключить сеттер на SMPP_MESSAGE_PAYLOAD
-	static uint64_t mask = (uint64_t) 0xffffffffffffffff ^ (uint64_t) 0x100000;
-	for (int i = 0; i < 20; i++)
+	try
 	{
-		try
-		{
-			//create
-			SMS sms;
-			SmsUtil::setupRandomCorrectSms(&sms, mask, false);
-			SMSId smsId = msgStore->getNextId();
-			msgStore->createSms(sms, smsId, CREATE_NEW);
-			//load
-			SMS sms2;
-			msgStore->retriveSms(smsId, sms2);
-			//change state
-			Descriptor dst;
-			SmsUtil::setupRandomCorrectDescriptor(&dst);
-			dst.setSmeNumber(rand0(65535));
-			msgStore->changeSmsStateToDelivered(smsId, dst);
-			//stat
-			updateStat();
-		}
-		catch (...)
-		{
-			__warning__("Message store error");
-		}
+		num = (num + 1) % numSms;
+		//create
+		SMSId smsId = msgStore->getNextId();
+		msgStore->createSms(sms[num], smsId, CREATE_NEW);
+		//load
+		SMS tmp;
+		msgStore->retriveSms(smsId, tmp);
+		//change state
+		msgStore->changeSmsStateToDelivered(smsId, dst);
+		//stat
+		updateStat();
+	}
+	catch (...)
+	{
+		__warning__("Message store error");
 	}
 }
 
