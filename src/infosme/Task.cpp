@@ -47,7 +47,7 @@ int parseTime(const char* str)
 }
 
 Task::Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
-    : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
+    : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
         usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
             bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
                 lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
@@ -59,7 +59,7 @@ Task::Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt)
 }
 Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
      DataSource* dsOwn, DataSource* dsInt)
-    : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
+    : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
         usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
             bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
                 lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)

@@ -19,8 +19,8 @@ using namespace smsc::sms;
 using namespace smsc::smeman;
 namespace smsc{
 namespace util{
-extern log4cpp::Category* _map_cat;
-extern log4cpp::Category* _mapdlg_cat;
+extern smsc::logger::Logger* _map_cat;
+extern smsc::logger::Logger* _mapdlg_cat;
 };
 };
 using namespace smsc::util;

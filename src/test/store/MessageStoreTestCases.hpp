@@ -13,7 +13,7 @@ namespace test  {
 namespace store {
 
 using std::vector;
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::sms::SMSId;
 using smsc::sms::SMS;
 using smsc::sms::Address;
@@ -178,7 +178,7 @@ private:
 	uint64_t mask;
 	bool check;
 
-	virtual Category& getLog();
+	virtual Logger getLog();
 	void checkNextRetryTime(const vector<SMSId*>& ids,
 		const vector<SMS*>& sms, time_t& minNextTime,
 		time_t& middleNextTime, time_t& maxNextTime);

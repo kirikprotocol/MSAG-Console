@@ -192,7 +192,7 @@ extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteCo
 void Smsc::init(const SmscConfigs& cfg)
 {
   smsc::util::regexp::RegExp::InitLocale();
-  log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.init");
+  smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.init");
   try{
   InitLicense(*cfg.licconfig);
   tp.preCreateThreads(15);
@@ -707,8 +707,8 @@ void Smsc::init(const SmscConfigs& cfg)
 
 void Smsc::run()
 {
-  log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.run");
-  //smsc::util::Logger::getCategory("sms.snmp.alarm").debug("sample alarm");
+  smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.run");
+  //smsc::logger::Logger::getInstance("sms.snmp.alarm").debug("sample alarm");
 
   __trace__("Smsc::run");
 

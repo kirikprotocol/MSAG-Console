@@ -9,7 +9,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::core::synchronization::MutexGuard;
 using smsc::test::conf::TestConfig;
 using smsc::test::sms::operator<;
@@ -34,9 +34,9 @@ SmppProtocolTestCases::SmppProtocolTestCases(SmppFixture* _fixture)
 	}
 }
 
-Category& SmppProtocolTestCases::getLog()
+Logger SmppProtocolTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("SmppProtocolTestCases");
+	static Logger log = Logger::getInstance("SmppProtocolTestCases");
 	return log;
 }
 

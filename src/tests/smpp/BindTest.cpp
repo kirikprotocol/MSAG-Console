@@ -29,7 +29,7 @@ namespace smsc {
 
 			class BindTest : public CppUnit::TestFixture {
 				// logger
-				log4cpp::Category& log;
+				smsc::logger::Logger log;
 				// SMEs for testing
 				QueuedSmeHandler sme;
 				QueuedSmeHandler sme1;

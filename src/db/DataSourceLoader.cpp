@@ -7,11 +7,11 @@ namespace smsc { namespace db
 {
 typedef DataSourceFactory* (*getDsfInstanceFn)(void);
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
-log4cpp::Category&  DataSourceLoader::logger = Logger::getCategory("smsc.db.DataSourceLoader");
-Array<void *>       DataSourceLoader::handles;
-Mutex               DataSourceLoader::loadupLock;
+smsc::logger::Logger DataSourceLoader::logger = Logger::getInstance("smsc.db.DataSourceLoader");
+Array<void *>        DataSourceLoader::handles;
+Mutex                DataSourceLoader::loadupLock;
 
 static DataSourceLoader _dataSourceLoader;
 

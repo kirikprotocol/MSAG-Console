@@ -34,7 +34,7 @@ namespace smsc { namespace infosme
     using smsc::core::synchronization::Event;
     using smsc::core::synchronization::Mutex;
     
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
@@ -158,8 +158,8 @@ namespace smsc { namespace infosme
     {
     protected:
 
-        log4cpp::Category  &logger;
-        ThreadPool          pool;
+        smsc::logger::Logger logger;
+        ThreadPool           pool;
         
         Mutex               stopLock;
         bool                bStopping;
@@ -167,7 +167,7 @@ namespace smsc { namespace infosme
     public:
 
         ThreadManager() : ThreadPool(), 
-            logger(Logger::getCategory("smsc.infosme.ThreadManager")), 
+            logger(Logger::getInstance("smsc.infosme.ThreadManager")), 
                 bStopping(false) {};
         virtual ~ThreadManager() {
             this->Stop();
@@ -249,7 +249,7 @@ namespace smsc { namespace infosme
     {
     private:
 
-        log4cpp::Category  &logger;
+        smsc::logger::Logger logger;
 
         ThreadManager taskManager;
         ThreadManager eventManager;

@@ -83,19 +83,19 @@ bool ReadLicense(FILE* f,Hash<string>& lic)
 
 bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic)
 {
-  log4cpp::Category *log=&smsc::util::Logger::getCategory("smsc.license");
+  smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.license");
 
   /*
   BIO* in=BIO_new(BIO_s_file());
   if (BIO_read_filename(in,pk) <= 0)
   {
-    log->error("error: failed to open public key file");
+    log.error("error: failed to open public key file");
     return false;
   }
   RSA *rsa=PEM_read_bio_RSA_PUBKEY(in,NULL, NULL,NULL);
   if(!rsa)
   {
-    log->error("error: failed to read public key");
+    log.error("error: failed to read public key");
     return false;
   }
   */
@@ -105,14 +105,14 @@ bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic)
   d2i_RSAPublicKey(&rsa,&p,sizeof(rsapublickey));
   if(!rsa)
   {
-    log->error("error: failed to read public key");
+    log.error("error: failed to read public key");
     return false;
   }
 
   string sign;
   if(!ReadFile(sig,sign))
   {
-    log->error("error: failed to read signature file");
+    log.error("error: failed to read signature file");
     return false;
   }
   vector<unsigned char> signbuf;
@@ -127,13 +127,13 @@ bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic)
   FILE* f=fopen(lf,"rb");
   if(!f)
   {
-    log->error("error: failed to open license file!");
+    log.error("error: failed to open license file!");
     return false;
   }
   if(!ReadLicense(f,lic))
   {
     fclose(f);
-    log->error("error: failed to read license file!");
+    log.error("error: failed to read license file!");
     return false;
   }
 
@@ -144,7 +144,7 @@ bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic)
     msg+='=';
     if(!lic.Exists(lkeys[i]))
     {
-      log->error("Field %s not found in license",lkeys[i]);
+      log.error("Field %s not found in license",lkeys[i]);
       return false;
     }
     msg+=lic[lkeys[i]];
@@ -160,10 +160,10 @@ bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic)
     lic.Empty();
     return false;
   }
-  log->info("Licensed for %s",lic["Organization"].c_str());
-  log->info("License type %s",lic["LicenseType"].c_str());
-  log->info("License expiration date %s",lic["LicenseExpirationDate"].c_str());
-  log->info("Licensed for host id %s",lic["Hostid"].c_str());
-  log->info("Licensed maximum sms throughput %s",lic["MaxSmsThroughput"].c_str());
+  log.info("Licensed for %s",lic["Organization"].c_str());
+  log.info("License type %s",lic["LicenseType"].c_str());
+  log.info("License expiration date %s",lic["LicenseExpirationDate"].c_str());
+  log.info("Licensed for host id %s",lic["Hostid"].c_str());
+  log.info("Licensed maximum sms throughput %s",lic["MaxSmsThroughput"].c_str());
   return true;
 }

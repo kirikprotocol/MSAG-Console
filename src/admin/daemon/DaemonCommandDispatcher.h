@@ -29,7 +29,7 @@ using smsc::admin::util::CommandDispatcher;
 using smsc::core::network::Socket;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::util::config;
 using smsc::core::threads::Thread;
 
@@ -48,7 +48,7 @@ public:
 	static void shutdown();
 
 protected:
-	log4cpp::Category &logger;
+	smsc::logger::Logger logger;
 	static ServicesList services;
 	static config::Manager *configManager;
 	static unsigned int shutdownTimeout;

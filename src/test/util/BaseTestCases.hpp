@@ -13,7 +13,7 @@ namespace test {
 namespace util {
 
 using namespace std;
-using log4cpp::Category;
+using smsc::logger::Logger;
 
 struct TCException : public exception
 {
@@ -36,7 +36,7 @@ public:
 	virtual ~BaseTestCases() {}
 
 protected:
-	virtual Category& getLog() = NULL;
+	virtual Logger getLog() = NULL;
 	void error();
 };
 

@@ -12,6 +12,7 @@
 #include "../util/recoder/recode_dll.h"
 #include <memory>
 #include <cassert>
+#include <vector>
 #if !defined _WIN32
 #include <time.h>
 #endif
@@ -104,7 +105,7 @@ void SMachine::RecodeIfNeed(DIRECTION direct,SmppHeader* pdu) {
         }else if ( config_.left_dcs == DEFAULTDCS_LATIN1 ) {
           ConvertMsg_LATIN1_to_SMSC7BIT(p);
         }else
-          smsc::util::Logger::getCategory("smsc.proxysme")
+          smsc::logger::Logger::getInstance("smsc.proxysme")
             .error("invalid left default encoding value %x",config_.left_dcs);
       } else { // RIGHT_TO_LEFT
         if ( config_.right_dcs == DEFAULTDCS_SMSC7BIT ) {
@@ -112,7 +113,7 @@ void SMachine::RecodeIfNeed(DIRECTION direct,SmppHeader* pdu) {
         }else if ( config_.right_dcs == DEFAULTDCS_LATIN1 ) {
           ConvertMsg_LATIN1_to_SMSC7BIT(p);
         }else
-          smsc::util::Logger::getCategory("smsc.proxysme")
+          smsc::logger::Logger::getInstance("smsc.proxysme")
             .error("invalid right default encoding value %x",config_.right_dcs);
       }
     }
@@ -128,7 +129,7 @@ unsigned SMachine::ProcessCommands(SMachineNotifier& notifier)
     if ( !mixer_.IsConnected() ) {
       if ( mixer_.IsUnrecoverable() ) return END_PROCESSING;
       if ( !mixer_.Connect() ) {
-        smsc::util::Logger::getCategory("smsc.proxysme").error("can't connect left/right smscs");
+        smsc::logger::Logger::getInstance("smsc.proxysme").error("can't connect left/right smscs");
         MacroSleep();
       }
       continue;

@@ -40,7 +40,7 @@ using namespace smsc::admin::service;
 
 using namespace smsc::wsme;
 
-static log4cpp::Category& logger = Logger::getCategory("smsc.wsme.WSme");
+static smsc::logger::Logger logger = Logger::getInstance("smsc.wsme.WSme");
 static int messageLifePeriod;
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;

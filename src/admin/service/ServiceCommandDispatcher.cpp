@@ -1,7 +1,5 @@
 #include "ServiceCommandDispatcher.h"
 
-#include <log4cpp/NDC.hh>
-
 #include <admin/protocol/Command.h>
 #include <admin/protocol/CommandCall.h>
 #include <admin/protocol/CommandListComponents.h>

@@ -20,7 +20,7 @@ public:
   void trap(std::string &message);
   void init();
 protected:
-  log4cpp::Category* log;
+  smsc::logger::Logger* log;
   smsc::system::Smsc* smsc;
 };
 

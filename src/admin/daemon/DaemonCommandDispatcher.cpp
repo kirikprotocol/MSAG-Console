@@ -44,11 +44,11 @@ Mutex DaemonCommandDispatcher::configManagerMutex;
 class ChildShutdownWaiter : public Thread
 {
 private:
-	log4cpp::Category &logger;
+	smsc::logger::Logger logger;
 	bool isStopping;
 public:
 	ChildShutdownWaiter() 
-		: logger(Logger::getCategory("smsc.admin.daemon.ChildShutdownWaiter")), isStopping(false)
+		: logger(Logger::getInstance("smsc.admin.daemon.ChildShutdownWaiter")), isStopping(false)
 	{};
 	~ChildShutdownWaiter()
 	{
@@ -121,9 +121,9 @@ void DaemonCommandDispatcher::init(config::Manager * confManager) throw ()
 	try {
 		shutdownTimeout = configManager->getInt(CONFIG_SHUTDOWN_TIMEOUT);
 	} catch (ConfigException &e) {
-		Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").warn("Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: %s", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT, e.what());
+		Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").warn("Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: %s", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT, e.what());
 	} catch (...) {
-		Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").warn("Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: Unknown exception", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT);
+		Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").warn("Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: Unknown exception", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT);
 	}
 	addServicesFromConfig();
 
@@ -140,7 +140,7 @@ void DaemonCommandDispatcher::shutdown()
 /// constructor
 DaemonCommandDispatcher::DaemonCommandDispatcher(Socket * admSocket)
 	: CommandDispatcher(admSocket, "smsc.admin.daemon.CommandDispatcher"),
-	logger(Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher"))
+	logger(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"))
 {
 }
 
@@ -418,7 +418,7 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 			try {
 				autostart = configManager->getBool((prefix+"autostart").c_str());
 			} catch (AdminException &e) {
-				Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").warn("Could not get autostart flag for service \"%s\", nested: %s", serviceId.get(), e.what());
+				Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").warn("Could not get autostart flag for service \"%s\", nested: %s", serviceId.get(), e.what());
 			} catch (...) 
 			{
 				//skip
@@ -429,12 +429,12 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 	}
 	catch (AdminException &e)
 	{
-		Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").
+		Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").
 			error("Exception on adding services, nested: %s", e.what());
 	}
 	catch (...)
 	{
-		Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").
+		Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").
 			error("Exception on adding services");
 	}
 }
@@ -512,7 +512,7 @@ void DaemonCommandDispatcher::startAllServices()
 				servicePtr->start();
 			} catch (...) {
 				if (serviceId != NULL)
-					Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't start service \"%s\", skipped", serviceId);
+					Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't start service \"%s\", skipped", serviceId);
 			}
 		}
 	}
@@ -532,7 +532,7 @@ void DaemonCommandDispatcher::stopAllServices(unsigned int timeoutInSecs)
 				allShutdowned = false;
 				servicePtr->shutdown();
 			} catch (...) {
-				Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't stop service \"%s\", skipped", serviceId == NULL ? "<unknown>" : serviceId);
+				Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't stop service \"%s\", skipped", serviceId == NULL ? "<unknown>" : serviceId);
 			}
 		}
 	}
@@ -548,10 +548,10 @@ void DaemonCommandDispatcher::stopAllServices(unsigned int timeoutInSecs)
 			try {
 				servicePtr->kill();
 			} catch (AdminException &e) {
-				Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't kill service \"%s\", skipped, nested:\n%s", serviceId == NULL ? "<unknown>" : serviceId, e.what());
+				Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't kill service \"%s\", skipped, nested:\n%s", serviceId == NULL ? "<unknown>" : serviceId, e.what());
 			} catch (...) {
 				if (serviceId != NULL)
-					Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't stop service \"%s\", skipped", serviceId);
+					Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher").error("Couldn't stop service \"%s\", skipped", serviceId);
 			}
 		}
 	}

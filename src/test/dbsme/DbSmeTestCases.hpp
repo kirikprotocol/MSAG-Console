@@ -15,7 +15,7 @@ namespace test {
 namespace dbsme {
 
 using std::string;
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::sms::Address;
 using smsc::smpp::PduSubmitSm;
 using smsc::smpp::PduDeliverySm;
@@ -99,7 +99,7 @@ protected:
 	DbSmeSelectJobTestCases selectTc;
 	DbSmePlSqlJobTestCases plsqlTc;
 
-	virtual Category& getLog();
+	virtual Logger getLog();
 	const Address getFromAddress();
 	const Address getToAddress();
 	const string getCmdText(DbSmeTestRecord* rec, const DateFormatter* df);

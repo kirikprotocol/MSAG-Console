@@ -12,8 +12,7 @@ namespace daemon {
 
 using smsc::util::cStringCopy;
 using smsc::admin::AdminException;
-using smsc::util::Logger;
-using log4cpp::Category;
+using smsc::logger::Logger;
 
 //typedef std::vector<char*> ServiceArguments;
 
@@ -29,19 +28,19 @@ public:
 		const bool autostartFlag = true,
 		const pid_t servicePID = 0,
 		const run_status serviceStatus = stopped)
-		: logger(Logger::getCategory("smsc.admin.daemon.Service")), autostart(autostartFlag)
+		: logger(Logger::getInstance("smsc.admin.daemon.Service")), autostart(autostartFlag)
 	{
 		init(services_dir, serviceId, serviceAdminPort, serviceArgs, servicePID, serviceStatus);
 	}
 
 	Service()
-		: logger(Logger::getCategory("smsc.admin.daemon.Service")), autostart(true)
+		: logger(Logger::getInstance("smsc.admin.daemon.Service")), autostart(true)
 	{	
 		init(0, 0, 0, 0, 0, stopped);
 	}
 
 	Service(const Service & copy)
-		: logger(Logger::getCategory("smsc.admin.daemon.Service")), autostart(copy.autostart)
+		: logger(Logger::getInstance("smsc.admin.daemon.Service")), autostart(copy.autostart)
 	{
 		init(copy.service_dir.get(), copy.id.get(), copy.port, copy.args.get(), copy.pid);
 	}
@@ -101,7 +100,7 @@ protected:
 	static const char * const service_exe;
 	std::auto_ptr<char> service_dir;
 	bool autostart;
-	Category &logger;
+	Logger logger;
 
 	run_status status;
 

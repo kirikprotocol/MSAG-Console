@@ -4,11 +4,11 @@ namespace smsc {
 namespace test {
 namespace admin {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
-Category& AdminAliasTestCases::getLog()
+Logger AdminAliasTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("AdminAliasTestCases");
+	static Logger log = Logger::getInstance("AdminAliasTestCases");
 	return log;
 }
 

@@ -49,7 +49,7 @@ static int   unrespondedMessagesMax   = 100;
 static Event unrespondedMessagesEvent;
 static Mutex unrespondedMessagesLock;
 
-static log4cpp::Category& logger = Logger::getCategory("smsc.infosme.InfoSme");
+static smsc::logger::Logger logger = Logger::getInstance("smsc.infosme.InfoSme");
 
 static smsc::admin::service::ServiceSocketListener adminListener; 
 static bool bAdminListenerInited = false;

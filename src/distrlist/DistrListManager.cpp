@@ -9,8 +9,8 @@ namespace smsc { namespace distrlist
     using namespace smsc::sms;
     using namespace core::buffers;
     
-log4cpp::Category& DistrListManager::logger = 
-    Logger::getCategory("smsc.distribution.DistrListManager");
+smsc::logger::Logger DistrListManager::logger = 
+    Logger::getInstance("smsc.distribution.DistrListManager");
 
 const char* FAILED_TO_OBTAIN_CONNECTION     = "Failed to obtain connection to DB";
 const char* FAILED_TO_CREATE_STATEMENT      = "Failed to create statement";

@@ -40,7 +40,7 @@ namespace smsc {
         QueuedSmeHandler mapProxy;
         IntHash<SmsArrayHandler> smsArrayMap;
         uint32_t timeout;
-        log4cpp::Category& log;
+        smsc::logger::Logger log;
       public:
         MapProxy(QueuedSmeHandler mapProxy, uint32_t timeout);
         bool receiveAndCheck(const char * const message);

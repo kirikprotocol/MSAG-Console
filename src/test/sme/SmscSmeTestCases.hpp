@@ -30,7 +30,7 @@ public:
 	void dataSm(bool sync);
 
 protected:
-	virtual Category& getLog();
+	virtual Logger getLog();
 	
 	AckText* getExpectedResponse(DeliveryReceiptMonitor* monitor,
 		const string& text, time_t recvTime);

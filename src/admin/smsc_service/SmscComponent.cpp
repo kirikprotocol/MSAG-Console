@@ -23,7 +23,7 @@ using smsc::mscman::MscInfo;
 
 SmscComponent::SmscComponent(SmscConfigs &all_configs)
 : configs(all_configs),isStopping(false),
-      logger(Logger::getCategory("smsc.admin.smsc_service.SmscComponent"))
+      logger(Logger::getInstance("smsc.admin.smsc_service.SmscComponent"))
 {
   /*********************** parameters ***************************************/
   Parameters empty_params;
@@ -1183,15 +1183,13 @@ void SmscComponent::smeDisconnect(const Arguments & args)
 Variant SmscComponent::logGetCategories(void)
 {
   Variant result(service::StringListType);
-  typedef std::vector<log4cpp::Category *> Cats;
-  Cats * cats = log4cpp::Category::getCurrentCategories();
-  for (Cats::iterator i = cats->begin(); i != cats->end(); i++)
+  Logger::LogCats * cats = Logger::getCurrentCategories();
+  for (Logger::LogCats::iterator i = cats->begin(); i != cats->end(); i++)
   {
-    log4cpp::Category * cat = *i;
-    std::string tmp(cat->getName());
-    tmp += ",";
-    tmp += log4cpp::Priority::getPriorityName(cat->getPriority());
-    result.appendValueToStringList(tmp.c_str());
+	  std::string tmp(i->first);
+	  tmp += ","; 
+	  tmp += Logger::getLogLevelName(i->second);
+	  result.appendValueToStringList(tmp.c_str());
   }
   delete cats;
   return result;
@@ -1199,7 +1197,6 @@ Variant SmscComponent::logGetCategories(void)
 
 void SmscComponent::setLogCat(const char * catStr)
 {
-  using namespace log4cpp;
   using namespace std;
 
   auto_ptr<char> str(new char[strlen(catStr) +1]);
@@ -1210,42 +1207,7 @@ void SmscComponent::setLogCat(const char * catStr)
     char * value = delim_pos+1;
     *delim_pos = 0;
 
-    try {
-      Priority::Value priority = Priority::getPriorityValue(value);
-      if (strlen(str.get()) != 0)
-      {
-        Category &cat = Category::getInstance(str.get());
-        if (cat.getPriority() != priority)
-        {
-          logger.debug("Setting priority \"%s[%i]\" for category \"%s\"", value, priority, str.get());
-          cat.setPriority(priority);
-          logger.debug("Priority setted sucessfully for category \"%s\"", str.get());
-        }
-      }
-      else
-      {
-        if (priority != Priority::NOTSET)
-        {
-          Category & cat = Category::getRoot();
-          if (cat.getPriority() != priority)
-          {
-            logger.debug("Setting priority \"%s[%i]\" for root category", value, priority);
-            Category::setRootPriority(priority);
-            logger.debug("Priority setted sucessfully for root category");
-          }
-        }
-        else
-          logger.error("tried to set NOTSET priority to root category. Ignored");
-      }
-    }
-    catch (std::invalid_argument & e)
-    {
-      logger.error("invalid logger category priority: \"%s\":\"%s\"", str.get(), value);
-    }
-    catch (...)
-    {
-      logger.error("unknown exception on setting priority \"%s\" to logger category \"%s\"", value, str.get());
-    }
+	Logger::setCategoryLogLevel(str.get(), Logger::getLogLevel(value));
   }
   else
   {

@@ -5,12 +5,12 @@ namespace smsc {
 namespace test {
 namespace admin {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using namespace smsc::test::util;
 
-Category& AdminProfileTestCases::getLog()
+Logger AdminProfileTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("AdminProfileTestCases");
+	static Logger log = Logger::getInstance("AdminProfileTestCases");
 	return log;
 }
 

@@ -25,10 +25,10 @@ namespace protocol {
 
 using smsc::util::xml::DOMErrorLogger;
 using smsc::core::network::Socket;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
 CommandReader::CommandReader(Socket * admSocket)
-	: logger(Logger::getCategory("smsc.admin.protocol.CommandReader"))
+	: logger(Logger::getInstance("smsc.admin.protocol.CommandReader"))
 {
 	sock = admSocket;
 }

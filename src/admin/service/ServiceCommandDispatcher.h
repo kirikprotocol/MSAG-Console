@@ -2,7 +2,6 @@
 #define SMSC_ADMIN_SERVICE_COMMAND_DISPATCHER
 
 #include <iostream>
-#include <log4cpp/Category.hh>
 
 #include <admin/protocol/Command.h>
 #include <admin/protocol/CommandCall.h>

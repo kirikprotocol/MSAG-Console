@@ -1,8 +1,6 @@
 #ifndef SMSC_WSME_COMPONENT
 #define SMSC_WSME_COMPONENT
 
-#include <log4cpp/Category.hh>
-
 #include <admin/service/Component.h>
 #include <admin/service/Method.h>
 #include <admin/service/Type.h>
@@ -17,7 +15,7 @@ namespace smsc { namespace wsme
     {
     private:
     
-        log4cpp::Category  &log;
+        smsc::logger::Logger log;
 
         WSmeAdmin          &admin;
         Methods             methods;

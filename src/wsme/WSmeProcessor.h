@@ -41,7 +41,7 @@ namespace smsc { namespace wsme
     using namespace smsc::db;
     using namespace smsc::core::buffers;
                               
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::Exception;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
@@ -54,7 +54,7 @@ namespace smsc { namespace wsme
     {
     private:
 
-        log4cpp::Category&  log;
+        smsc::logger::Logger log;
         DataSource&         ds;
 
         Mutex       visitorsLock;
@@ -81,7 +81,7 @@ namespace smsc { namespace wsme
     {
     private:
         
-        log4cpp::Category&  log;
+        smsc::logger::Logger log;
         DataSource&         ds;
         
         std::string       defaultLang;
@@ -125,7 +125,7 @@ namespace smsc { namespace wsme
     {
     private:
         
-        log4cpp::Category&  log;
+        smsc::logger::Logger log;
         DataSource&         ds;
 
         Mutex  adsLock;
@@ -156,7 +156,7 @@ namespace smsc { namespace wsme
     {
     private:
         
-        log4cpp::Category&  log;
+        smsc::logger::Logger log;
         DataSource&         ds;
         
         AdIdManager&        idManager;
@@ -194,7 +194,7 @@ namespace smsc { namespace wsme
     {
     private:
 
-        log4cpp::Category&  log;
+        smsc::logger::Logger log;
         
     protected:
 
@@ -229,7 +229,7 @@ namespace smsc { namespace wsme
     {
     private:
         
-        log4cpp::Category   &log;
+        smsc::logger::Logger log;
         
     protected:
         

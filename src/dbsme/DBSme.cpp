@@ -41,7 +41,7 @@ using namespace smsc::admin::service;
 
 using namespace smsc::dbsme;
 
-static log4cpp::Category& logger = Logger::getCategory("smsc.dbsme.DBSme");
+static smsc::logger::Logger logger = Logger::getInstance("smsc.dbsme.DBSme");
 
 static smsc::admin::service::ServiceSocketListener adminListener; 
 static bool bAdminListenerInited = false;

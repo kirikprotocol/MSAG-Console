@@ -2,6 +2,7 @@
 #include <util/Exception.hpp>
 #include <util/xml/DOMTreeReader.h>
 #include <core/buffers/Hash.hpp>
+#include <sys/stat.h>
 
 namespace smsc {
 namespace proxysme {

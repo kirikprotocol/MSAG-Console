@@ -14,14 +14,14 @@ namespace smsc { namespace infosme
 {
     using namespace smsc::admin::service;
     
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::Exception;
     
     class InfoSmeComponent : public Component
     {
     private:
     
-        log4cpp::Category  &logger;
+        smsc::logger::Logger logger;
 
         InfoSmeAdmin       &admin;
         Methods            methods;

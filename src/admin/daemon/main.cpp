@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 			throw ConfigException("Couldn't redirect stderr");
 
 		Logger::Init(manager.getString(CONFIG_LOGGER_CONFIG_PARAMETER));
-		log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon"));
+		smsc::logger::Logger logger(Logger::getInstance("smsc.admin.daemon"));
 
 		logger.info("Starting...");
 
@@ -120,16 +120,16 @@ int main(int argc, char **argv)
 	}
 	catch (ConfigException &e)
 	{
-		Logger::getCategory("smsc.admin.daemon").info("ConfigException: %s\n\r", e.what());
+		Logger::getInstance("smsc.admin.daemon").info("ConfigException: %s\n\r", e.what());
 		exit(-1);
 	}
 	catch (AdminException &e)
 	{
-		Logger::getCategory("smsc.admin.daemon").info("AdminException: %s", e.what());
+		Logger::getInstance("smsc.admin.daemon").info("AdminException: %s", e.what());
 	}
 	catch (...)
 	{
-		Logger::getCategory("smsc.admin.daemon").info("Exception: <unknown>");
+		Logger::getInstance("smsc.admin.daemon").info("Exception: <unknown>");
 	}
 }
 

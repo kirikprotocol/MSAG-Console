@@ -13,7 +13,7 @@ const char* ARGUMENT_NAME_ID     = "id";
 const char* ARGUMENT_NAME_AD     = "ad";
 
 WSmeComponent::WSmeComponent(WSmeAdmin& _admin)
-    : log(Logger::getCategory("smsc.wsme.WSmeComponent")),
+    : log(Logger::getInstance("smsc.wsme.WSmeComponent")),
         admin(_admin)
 {
     Parameters visitor_params;

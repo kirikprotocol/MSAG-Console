@@ -3,7 +3,7 @@
 
 namespace smsc { namespace db
 {
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
 /* --------- Abstract Connection Management (ConnectionPool) --------------- */
 
@@ -74,7 +74,7 @@ void ConnectionPool::loadPoolSize(ConfigView* config)
                      "Config parameter: <%s.%s> "
                      "Using default: %u",
                      SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE_LIMIT,
-                     config->getCategory(), sizeParam,
+                     config->getInstance(), sizeParam,
                      SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE);
         }
     } 
@@ -84,14 +84,14 @@ void ConnectionPool::loadPoolSize(ConfigView* config)
         log.warn("Maximum ConnectionPool size wasn't specified ! "
                  "Config parameter: <%s.%s> "
                  "Using default: %u", 
-                 config->getCategory(), sizeParam,
+                 config->getInstance(), sizeParam,
                  SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE);
     }
 }
 
 ConnectionPool::ConnectionPool(DataSource& _ds, ConfigView* config)
     throw(ConfigException) : ds(_ds), count(0),
-        log(Logger::getCategory("smsc.db.ConnectionPool")),
+        log(Logger::getInstance("smsc.db.ConnectionPool")),
             idleHead(0), idleTail(0), idleCount(0), head(0), tail(0), queueLen(0)
 {
     loadPoolSize(config);

@@ -10,7 +10,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::test::conf::TestConfig;
 using smsc::test::sms::SmsUtil;
 using namespace smsc::smpp::SmppCommandSet;
@@ -29,9 +29,9 @@ SmscSmeTestCases::SmscSmeTestCases(SmppFixture* fixture)
 	TestConfig::getIntParam("smscProtocolId"))
 {}
 
-Category& SmscSmeTestCases::getLog()
+Logger SmscSmeTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("SmscSmeTestCases");
+	static Logger log = Logger::getInstance("SmscSmeTestCases");
 	return log;
 }
 

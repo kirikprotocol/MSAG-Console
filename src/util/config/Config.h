@@ -3,9 +3,11 @@
 
 #include <inttypes.h>
 #include <iostream>
+#include <string>
+#include <set>
+#include <vector>
 #include <xercesc/dom/DOM_Element.hpp>
 #include <xercesc/dom/DOM_DOMException.hpp>
-#include <log4cpp/Category.hh>
 #include <core/buffers/Hash.hpp>
 #include <logger/Logger.h>
 #include <util/cstrings.h>
@@ -17,7 +19,7 @@ namespace config {
 
 using smsc::core::buffers::Hash;
 using smsc::core::buffers::HashInvalidKeyException;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::util::cStringCopy;
 
 class smsc::util::config::Manager;

@@ -14,7 +14,7 @@ namespace daemon {
 using smsc::admin::AdminException;
 using smsc::core::buffers::Hash;
 using smsc::util::cStringCopy;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
 /**
  * Thread-safe list of services.

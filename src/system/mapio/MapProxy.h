@@ -17,7 +17,7 @@ extern void MAPIO_PutCommand(const smsc::smeman::SmscCommand& cmd );
 
 namespace smsc{
 namespace util{
-extern log4cpp::Category* _mapproxy_cat;
+extern smsc::logger::Logger* _mapproxy_cat;
 };
 };
 #define __mapproxy_trace2__(format,args...) __debug2__(smsc::util::_mapproxy_cat,format,##args)
@@ -39,7 +39,7 @@ typedef smsc::core::buffers::Array<SmscCommand> MapIOQueue;
 class MapProxy:public SmeProxy{
 public:
   MapProxy() : seq(0),smereg(0) {
-   time_logger = &smsc::util::Logger::getCategory("map.otime");
+   time_logger = new smsc::logger::Logger(smsc::logger::Logger::getInstance("map.otime"));
   }
   virtual ~MapProxy()
   {
@@ -58,7 +58,7 @@ public:
       long usecs;
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-      time_logger->_log( log4cpp::Priority::DEBUG, "cmdid=%d s=%ld us=%ld", cmd->get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
+	  time_logger->debug("cmdid=%d s=%ld us=%ld", cmd->get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
     }
 //#endif
   }
@@ -175,7 +175,7 @@ protected:
   uint32_t seq;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
-  log4cpp::Category* time_logger;
+  smsc::logger::Logger* time_logger;
   SmeRegistrar *smereg;
 };
 

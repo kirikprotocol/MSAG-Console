@@ -22,13 +22,13 @@ namespace smsc { namespace infosme
     using core::buffers::IntHash;
     using core::buffers::Hash;
     
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     
     class StatisticsManager : public Statistics, public Thread
     {
     protected:
     
-        log4cpp::Category   &logger;
+        smsc::logger::Logger logger;
         Connection*         connection;
         
         Hash<TaskStat>      statistics[2];

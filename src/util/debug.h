@@ -20,8 +20,8 @@
 using std::runtime_error;
 
 namespace smsc{
-namespace util{
-extern log4cpp::Category* _trace_cat;
+namespace logger{
+	extern smsc::logger::Logger* _trace_cat;
 };
 };
 
@@ -129,9 +129,9 @@ static inline void warning2(const char* fmt,...)
 #define warning_if(expr) __warning2__(#expr)
 //  {if (expr) smsc::util::warningImpl("Warning !!! "#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__);}
 
-#define __warning2__(text,arg...) if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN)) smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,text,##arg)
+#define __warning2__(text,arg...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,text,##arg)
 
-#define __log2__(category,priority,text,arg...) if(category->isPriorityEnabled(priority)) category->_log(priority,text,##arg)
+#define __log2__(category,priority,text,arg...) if(category->isLogLevelEnabled(priority)) category->log(priority,text,##arg)
 
 #if !defined DISABLE_WATCHDOG
   #define __watchdog__(expr) __watchdog2__(expr,"GAW-GAW")
@@ -248,18 +248,18 @@ static inline void warning2(const char* fmt,...)
     smsc::util::watchtImpl(expr,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #define watchtext(expr,len) \
     smsc::util::watchtextImpl(expr,len,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
-  #define trace(text) if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::DEBUG)) smsc::util::_trace_cat->_log(log4cpp::Priority::DEBUG,text)
+  #define trace(text) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_DEBUG,text)
   #if defined ENABLE_FILE_NAME
-    #define trace2(format,args...) if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::DEBUG)) smsc::util::_trace_cat->_log(log4cpp::Priority::DEBUG,format,##args)
+    #define trace2(format,args...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_DEBUG,format,##args)
   #else
-    #define trace2(format,args...) if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::DEBUG)) smsc::util::_trace_cat->_log(log4cpp::Priority::DEBUG,format,##args)
+    #define trace2(format,args...) if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_DEBUG,format,##args)
   #endif
-  #define debug1(category,text) if(category->isPriorityEnabled(log4cpp::Priority::DEBUG)) category->_log(log4cpp::Priority::DEBUG,text)
-  #define debug2(category,format,args...) if(category->isPriorityEnabled(log4cpp::Priority::DEBUG)) category->_log(log4cpp::Priority::DEBUG,format,##args)
-  #define warn1(category,text) if(category->isPriorityEnabled(log4cpp::Priority::WARN)) category->_log(log4cpp::Priority::WARN,text)
-  #define warn2(category,format,args...) if(category->isPriorityEnabled(log4cpp::Priority::WARN)) category->_log(log4cpp::Priority::WARN,format,##args)
-  #define info1(category,text) if(category->isPriorityEnabled(log4cpp::Priority::INFO)) category->_log(log4cpp::Priority::INFO,text)
-  #define info2(category,format,args...) if(category->isPriorityEnabled(log4cpp::Priority::INFO)) category->_log(log4cpp::Priority::INFO,format,##args)
+  #define debug1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) category->log(smsc::logger::Logger::LEVEL_DEBUG,text)
+  #define debug2(category,format,args...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) category->log(smsc::logger::Logger::LEVEL_DEBUG,format,##args)
+  #define warn1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) category->log(smsc::logger::Logger::LEVEL_WARN,text)
+  #define warn2(category,format,args...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN)) category->log(smsc::logger::Logger::LEVEL_WARN,format,##args)
+  #define info1(category,text) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_INFO)) category->log(smsc::logger::Logger::LEVEL_INFO,text)
+  #define info2(category,format,args...) if(category->isLogLevelEnabled(smsc::logger::Logger::LEVEL_INFO)) category->log(smsc::logger::Logger::LEVEL_INFO,format,##args)
 #else
   #define watch(expr)
   #define watchx(expr)
@@ -298,8 +298,8 @@ namespace util{
   {
     if (!expr)
     {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::FATAL))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::FATAL,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_FATAL))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_FATAL,
          "\n*%s*<%s(%s):%d>\n\tassertin %s failed\n",
               ASSERT_LOG_DOMAIN,
               file,
@@ -315,8 +315,8 @@ namespace util{
     if (!expr)
     {
       char throw_message[512];
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,"\n*%.100s*[%d]<%.100s(%.100s):%d>\n\tassertin %.100s failed\n\n",
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,"\n*%.100s*[%d]<%.100s(%.100s):%d>\n\tassertin %.100s failed\n\n",
               ASSERT_LOG_DOMAIN,
               thr_self(),
               file,
@@ -332,8 +332,8 @@ namespace util{
                             const char* file, const char* func, int line) throw()
   {
     if ( !expr )
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
          "*%s*<%s(%s):%d>\n\tassertin %s failed\n",
               ASSERT_LOG_DOMAIN,
               file,
@@ -345,8 +345,8 @@ namespace util{
   inline void abortIfReached(const char* expr_text,
                           const char* file, const char* func, int line) throw()
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::FATAL))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::FATAL,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_FATAL))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_FATAL,
          "\n*%s*<%s(%s):%d>\n\t%s\n",
               UNREACHABLE_LOG_DOMAIN,
               file,
@@ -358,8 +358,8 @@ namespace util{
   inline void throwIfReached(const char* expr_text,
                           const char* file, const char* func, int line)
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
          "\n*%.100s*[%d]<%.100s(%.100s):%d>\n\t%.100s\n\n",
               UNREACHABLE_LOG_DOMAIN,
               thr_self(),
@@ -374,8 +374,8 @@ namespace util{
   inline void warningIfReached(const char* expr_text,
                             const char* file, const char* func, int line) throw()
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
          "*%s*<%s(%s):%d>\n\%s\n",
               UNREACHABLE_LOG_DOMAIN,
               file,
@@ -387,8 +387,8 @@ namespace util{
         inline void watchImpl(bool e, const char* expr,
                         const char* file, const char* func, int line)
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
        "*watch*: %s = %s     %s(%s):%d\n",
             expr,e?"true":"false",
             #if defined ENABLE_FILE_NAME
@@ -402,8 +402,8 @@ namespace util{
   inline void watchImpl(int e, const char* expr,
                         const char* file, const char* func, int line)
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %d     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -417,8 +417,8 @@ namespace util{
   inline void watchImpl(unsigned int e, const char* expr,
                         const char* file, const char* func, int line)
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %d     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -432,8 +432,8 @@ namespace util{
   inline void watchxImpl(int e, const char* expr,
                          const char* file, const char* func, int line)
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %x     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -447,8 +447,8 @@ namespace util{
   inline void watchxImpl(unsigned int e, const char* expr,
                          const char* file, const char* func, int line)
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %x     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -462,8 +462,8 @@ namespace util{
   inline void watchImpl(char e, const char* expr,
                         const char* file, const char* func, int line)
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = '%c'     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -477,8 +477,8 @@ namespace util{
   inline void watchImpl(void* e, const char* expr,
                         const char* file, const char* func, int line)
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %p     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -492,8 +492,8 @@ namespace util{
   inline void watchtImpl(const char* e, const char* expr,
                          const char* file, const char* func, int line)
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
          "*watch*: %s = %s     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
@@ -507,7 +507,7 @@ namespace util{
   inline void watchtextImpl(const char* e, int len, const char* expr,
                             const char* file, const char* func, int line)
   {
-    smsc::util::_trace_cat->warn("*watch*: %s = '",expr);
+    smsc::logger::_trace_cat->warn("*watch*: %s = '",expr);
     fwrite(e,len,1,WATCH_LOG_STREAM);
     fprintf(WATCH_LOG_STREAM,"'\t%s(%s):%d\n",
             #if defined ENABLE_FILE_NAME
@@ -520,16 +520,16 @@ namespace util{
 
   inline void warningImpl(const char* e, const char* file, const char* func, int line)
   {
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,"*WARNING*: %s",e);
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,"*WARNING*: %s",e);
   }
 
   inline bool watchdogImpl(bool expr, const char* info, const char* e,
                            const char* file, const char* func, int line)
   {
     if ( !expr )
-      if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
-         smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
+      if(smsc::logger::_trace_cat->isLogLevelEnabled(smsc::logger::Logger::LEVEL_WARN))
+         smsc::logger::_trace_cat->log(smsc::logger::Logger::LEVEL_WARN,
          "*%s*[%d]: %s     %s(%s):%d\n",info,thr_self(),e,
             #if defined ENABLE_FILE_NAME
               file,

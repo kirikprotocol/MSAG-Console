@@ -32,7 +32,7 @@
 
 namespace smsc { namespace store 
 {
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
     using smsc::core::buffers::Array;
@@ -67,7 +67,7 @@ namespace smsc { namespace store
 
     private:
         
-        log4cpp::Category      &log;
+        smsc::logger::Logger log;
         
         static Mutex    connectLock;
 
@@ -225,7 +225,7 @@ namespace smsc { namespace store
     {
     private:
 
-        log4cpp::Category    &log;
+        smsc::logger::Logger log;
         
         EventMonitor    monitor;
         ConnectionQueue *head,*tail;

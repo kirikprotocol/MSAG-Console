@@ -11,7 +11,7 @@ namespace sme {
 
 using std::string;
 using std::pair;
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::test::core::PduData;
 using smsc::test::core::SmeAckMonitor;
 using smsc::test::util::BaseTestCases;
@@ -59,7 +59,7 @@ public:
 		SmppHeader* header, time_t recvTime);
 
 protected:
-	virtual Category& getLog();
+	virtual Logger getLog();
 	void updateProfile(Profile& profile, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps);
 	void sendUpdateProfilePdu(const string& text, PduData::IntProps* intProps,

@@ -60,9 +60,10 @@
 
       SnmpAgent::SnmpAgent(Smsc* _smsc)
       {
-        log=&smsc::util::Logger::getCategory("sms.snmp");
-        log4cpp::Category& tlog=smsc::util::Logger::getCategory("sms.snmp.alarm");
-        tlog.addAppender(new SnmpAppender("-",this));
+        log=new smsc::logger::Logger(smsc::logger::Logger::getInstance("sms.snmp"));
+        smsc::logger::Logger tlog=smsc::logger::Logger::getInstance("sms.snmp.alarm");
+		// TODO implement addAppender
+        //tlog.addAppender(new SnmpAppender("-",this));
         agentlog = (void*)log;
         agent = (void*)this;
         smsc = _smsc;
@@ -176,7 +177,7 @@
         break;
       case MODE_SET_ACTION:
         //*it = (int) *(requests->requestvb->val.integer);
-        ((log4cpp::Category*)agentlog)->debug("hello from smscStatusHandler MODE_SET_ACTION");
+        ((smsc::logger::Logger*)agentlog)->debug("hello from smscStatusHandler MODE_SET_ACTION");
         if (agent)
         {
           if (status != smsc::snmp::SnmpAgent::OPER)
@@ -310,10 +311,10 @@
     switch (reqinfo->mode)
     {
       case MODE_GET:
-        ((log4cpp::Category*)agentlog)->debug("hello from stats handler");
+        ((smsc::logger::Logger*)agentlog)->debug("hello from stats handler");
         for(i = 0; i <= reginfo->rootoid_len; i++ )
         {
-        ((log4cpp::Category*)agentlog)->debug("oid[%d] = %d",i,reginfo->rootoid[i]);
+        ((smsc::logger::Logger*)agentlog)->debug("oid[%d] = %d",i,reginfo->rootoid[i]);
         }
         if (snmp_oid_compare(sumbitOkOid,OID_LENGTH(sumbitOkOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
@@ -321,7 +322,7 @@
           val.high = perf[0] >> 32;
           val.low  = perf[0] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-         ((log4cpp::Category*)agentlog)->debug("submitOK req");
+         ((smsc::logger::Logger*)agentlog)->debug("submitOK req");
         }
         else if (snmp_oid_compare(sumbitErrOid,OID_LENGTH(sumbitErrOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
@@ -329,7 +330,7 @@
           val.high = perf[1] >> 32;
           val.low  = perf[1] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        ((log4cpp::Category*)agentlog)->debug("submitErr req");
+        ((smsc::logger::Logger*)agentlog)->debug("submitErr req");
         }
         else if (snmp_oid_compare(deliverOkOid,OID_LENGTH(deliverOkOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
@@ -337,7 +338,7 @@
           val.high = perf[2] >> 32;
           val.low  = perf[2] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        ((log4cpp::Category*)agentlog)->debug("delivwerOK req");
+        ((smsc::logger::Logger*)agentlog)->debug("delivwerOK req");
         }
         else if (snmp_oid_compare(deliverErrOid,OID_LENGTH(deliverErrOid),
                              reginfo->rootoid, reginfo->rootoid_len) == 0)
@@ -345,7 +346,7 @@
           val.high = perf[3] >> 32;
           val.low  = perf[4] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        ((log4cpp::Category*)agentlog)->debug("deliverERR req");
+        ((smsc::logger::Logger*)agentlog)->debug("deliverERR req");
         }
         else if (snmp_oid_compare(rescheduledOid,OID_LENGTH(rescheduledOid),
                              reginfo->rootoid, reginfo->rootoid_len) ==0)
@@ -353,11 +354,11 @@
           val.high = perf[5] >> 32;
           val.low  = perf[5] & 0xffffffff;
           snmp_set_var_typed_value(requests->requestvb, ASN_COUNTER64, (u_char *) &val, sizeof(val));
-        ((log4cpp::Category*)agentlog)->debug("rescheduled req");
+        ((smsc::logger::Logger*)agentlog)->debug("rescheduled req");
         }
         else 
         {
-        ((log4cpp::Category*)agentlog)->debug("compate does not work");
+        ((smsc::logger::Logger*)agentlog)->debug("compate does not work");
           netsnmp_set_request_error(reqinfo, requests, SNMP_NOSUCHINSTANCE);
         }
         return SNMP_ERR_NOERROR;

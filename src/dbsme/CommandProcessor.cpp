@@ -13,11 +13,11 @@ Hash<JobFactory *>*  JobFactory::registry = 0;
 /* ---------------------- Abstract Command Processing ---------------------- */
 
 CommandProcessor::CommandProcessor()
-    : log(Logger::getCategory("smsc.dbsme.CommandProcessor")),
+    : log(Logger::getInstance("smsc.dbsme.CommandProcessor")),
         svcType(0), protocolId(0) {}
 CommandProcessor::CommandProcessor(ConfigView* config)
     throw(ConfigException)
-        : log(Logger::getCategory("smsc.dbsme.CommandProcessor")),
+        : log(Logger::getInstance("smsc.dbsme.CommandProcessor")),
             svcType(0), protocolId(0) { init(config); }
 
 void CommandProcessor::init(ConfigView* config)
@@ -206,7 +206,7 @@ void DataProvider::createDataSource(ConfigView* config)
 
 DataProvider::DataProvider(CommandProcessor* root, ConfigView* config, const MessageSet& mset)
     throw(ConfigException) 
-        : log(Logger::getCategory("smsc.dbsme.DataProvider")), messages(mset, config),
+        : log(Logger::getInstance("smsc.dbsme.DataProvider")), messages(mset, config),
             bFinalizing(false), bEnabled(false), owner(root), ds(0)
 {
     createDataSource(config);

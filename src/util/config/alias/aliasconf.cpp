@@ -45,7 +45,7 @@ AliasConfig::status AliasConfig::RecordIterator::fetchNext(AliasRecord *&record)
 }
 
 AliasConfig::AliasConfig()
-  : logger(smsc::util::Logger::getCategory("smsc.util.config.alias.AliasConfig"))
+  : logger(smsc::logger::Logger::getInstance("smsc.util.config.alias.AliasConfig"))
 {
 }
 
@@ -146,7 +146,7 @@ AliasConfig::status AliasConfig::reload()
 }
 
 
-AliasConfig::status AliasConfig::store(const char * const filename) const
+AliasConfig::status AliasConfig::store(const char * const filename)
 {
   try {
     std::ofstream out(filename);

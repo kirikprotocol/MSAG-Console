@@ -4,8 +4,7 @@
 #include "AliasManagerCheckList.hpp"
 #include <sstream>
 
-using log4cpp::Category;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::alias::AliasInfo;
 using smsc::test::sms::SmsUtil;
 using smsc::test::core::AliasRegistry;
@@ -14,7 +13,7 @@ using namespace smsc::test::alias; //constants, AliasManagerTestCases, AliasMana
 using namespace smsc::test::util; //TCSelector, Deletor
 using namespace std;
 
-static Category& log = Logger::getCategory("AliasManagerFunctionalTest");
+static Logger log = Logger::getInstance("AliasManagerFunctionalTest");
 
 class AliasManagerFunctionalTest
 {

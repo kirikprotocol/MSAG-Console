@@ -1,8 +1,6 @@
 #ifndef SMSC_ADMIN_SMSC_SMSCCOMPONENT
 #define SMSC_ADMIN_SMSC_SMSCCOMPONENT
 
-#include <log4cpp/Category.hh>
-
 #include <admin/service/Component.h>
 #include <admin/service/Method.h>
 #include <admin/service/Type.h>
@@ -19,7 +17,7 @@ using namespace smsc::admin::service;
 using smsc::core::threads::Thread;
 using smsc::system::Smsc;
 using smsc::admin::service::Component;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
 class SmscComponent : public Component
 {
@@ -110,7 +108,7 @@ private:
 	public:
 		SmscAppRunner(SmscConfigs &configs)
 		: _app(new Smsc()),
-				  runner_logger(Logger::getCategory("smsc.admin.smsc_service.SmscComponent.SmscAppRunner"))
+				  runner_logger(Logger::getInstance("smsc.admin.smsc_service.SmscComponent.SmscAppRunner"))
 		{
 			_app->init(configs);
 		}
@@ -164,12 +162,12 @@ private:
 
 	protected:
 		std::auto_ptr<Smsc> _app;
-		log4cpp::Category &runner_logger;
+		smsc::logger::Logger runner_logger;
 	};
 
 protected:
 	std::auto_ptr<SmscAppRunner> smsc_app_runner;
-	log4cpp::Category &logger;
+	smsc::logger::Logger logger;
 };
 
 }

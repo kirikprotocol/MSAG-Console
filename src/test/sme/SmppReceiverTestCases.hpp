@@ -11,7 +11,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::sme::SmppBaseReceiver;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
@@ -79,7 +79,7 @@ protected:
 	CheckList* chkList;
 	NormalSmsHandler defaultHandler;
 
-	virtual Category& getLog();
+	virtual Logger getLog();
 };
 
 }

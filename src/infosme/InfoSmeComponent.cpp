@@ -11,7 +11,7 @@ static const char* ARGUMENT_NAME_IDS        = "ids";
 static const char* ARGUMENT_NAME_ENABLED    = "enabled";
 
 InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
-    : logger(Logger::getCategory("smsc.infosme.InfoSmeComponent")), admin(admin)
+    : logger(Logger::getInstance("smsc.infosme.InfoSmeComponent")), admin(admin)
 {
     Parameters empty_params;
     Method start_task_processor((unsigned)startTaskProcessorMethod, 

@@ -8,7 +8,7 @@ CXXFLAGS := $(CXXFLAGS) -I$(SMSC_SRCDIR)/sms -I$(SMSC_SRCDIR)/store -I/usr/local
 
 PACKAGE := tests
 
-__LIBS := -L$(ORACLE_LIB) -llog4cpp -lxerces-c $(ORACLE_LIB)/libclntsh.so -lthread -lrt $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so
+__LIBS := -L$(ORACLE_LIB) -lxerces-c $(ORACLE_LIB)/libclntsh.so -lthread -lrt $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

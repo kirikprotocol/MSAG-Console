@@ -33,7 +33,7 @@ namespace smsc {
 			///////////////////////////////////////////
 			// BasicSme
 			//////////////////////////////////////////
-			log4cpp::Category& BasicSme::log = smsc::test::util::logger.getLog("smsc.test.smpp.BasicSme");
+			smsc::logger::Logger BasicSme::log = smsc::test::util::logger.getLog("smsc.test.smpp.BasicSme");
 			BasicSme::Registrator BasicSme::reg;
 
 			class BasicListener : public smsc::sme::SmppPduEventListener {

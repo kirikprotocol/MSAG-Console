@@ -3,11 +3,11 @@
 
 namespace smsc { namespace util { namespace config
 {
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
 /* ----------------------- Tree Configuration Management ------------------- */
-log4cpp::Category& ConfigView::log = 
-    Logger::getCategory("smsc.util.config.ConfigView");
+smsc::logger::Logger ConfigView::log = 
+    Logger::getInstance("smsc.util.config.ConfigView");
 
 char* ConfigView::prepareSubSection(const char* sub)
 {

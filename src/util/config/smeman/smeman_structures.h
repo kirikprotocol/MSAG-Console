@@ -46,7 +46,6 @@ if ( success )
 #define SMSC_UTIL_CONFIG_SMEMAN_SMEMAN_STRUCTURES
 
 #include <inttypes.h>
-#include <log4cpp/Category.hh>
 #include <util/cstrings.h>
 #include <logger/Logger.h>
 #include <string>
@@ -57,7 +56,7 @@ namespace config {
 namespace smeman {
 
 using smsc::util::cStringCopy;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
 typedef enum {SMPP_SME,SS7_SME} RecordType;
 typedef enum {MODE_TX, MODE_RX, MODE_TRX} ModeType;

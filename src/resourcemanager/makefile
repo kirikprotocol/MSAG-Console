@@ -6,6 +6,8 @@
 
 PACKAGE := resourcemanager
 
+__LIBRARIES:=-L$(SMSC_BUILDDIR)/bin
+
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)
 endif

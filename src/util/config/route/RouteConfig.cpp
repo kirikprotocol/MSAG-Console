@@ -35,7 +35,7 @@ RouteConfig::status RouteConfig::RouteIterator::fetchNext(Route *&record)
 }
 
 RouteConfig::RouteConfig()
-: logger(smsc::util::Logger::getCategory("smsc.util.config.route.RouteConfig"))
+: logger(smsc::logger::Logger::getInstance("smsc.util.config.route.RouteConfig"))
 {
 }
 

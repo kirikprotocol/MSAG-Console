@@ -11,7 +11,7 @@ namespace test {
 namespace sme {
 
 using std::vector;
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::smpp::SmppHeader;
 using smsc::smeman::SmeInfo;
 using smsc::test::util::BaseTestCases;
@@ -43,7 +43,7 @@ protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
 
-	virtual Category& getLog();
+	virtual Logger getLog();
 	vector<int> checkRoute(SmppHeader* header1, SmppHeader* header2) const;
 
 	void checkSourceAddr(DeliveryMonitor* monitor, SmppHeader* header);

@@ -26,7 +26,7 @@ std::string strToLower(const std::string & str)
 
 void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_stringmap & settings, const std::string &prefix) throw ()
 {
-  log4cpp::Category &logger(smsc::util::Logger::getCategory("smsc.resourcemanager.LocaleResources"));
+  smsc::logger::Logger logger(smsc::logger::Logger::getInstance("smsc.resourcemanager.LocaleResources"));
   try
   {
     DOM_NodeList sectionList = elem.getChildNodes();
@@ -76,7 +76,7 @@ void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_s
 LocaleResources::LocaleResources(const std::string & filename) throw ()
 {
   __trace2__("Load locale resources from \"%s\"\n", filename.c_str());
-  log4cpp::Category &logger(smsc::util::Logger::getCategory("smsc.resourcemanager.LocaleResources"));
+  smsc::logger::Logger logger(smsc::logger::Logger::getInstance("smsc.resourcemanager.LocaleResources"));
   try
   {
     DOMTreeReader reader;

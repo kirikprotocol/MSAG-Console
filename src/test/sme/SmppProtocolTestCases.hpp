@@ -9,7 +9,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::smeman::SmeInfo;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
@@ -162,7 +162,7 @@ protected:
 	CheckList* chkList;
 	Address* mapAddr;
 
-	virtual Category& getLog();
+	virtual Logger getLog();
 	PduData* getNonReplaceEnrotePdu();
 	PduData* getReplaceEnrotePdu();
 	PduData* getNonReplaceRescheduledEnrotePdu();

@@ -10,7 +10,7 @@ namespace test {
 namespace sme {
 
 using std::vector;
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::smpp::SmppHeader;
 using smsc::smeman::SmeInfo;
 using smsc::test::util::BaseTestCases;
@@ -49,7 +49,7 @@ protected:
 	const string smeServiceType;
 	uint8_t smeProtocolId;
 
-	virtual Category& getLog() = NULL;
+	virtual Logger getLog() = NULL;
 	vector<int> checkRoute(SmppHeader* header1, SmppHeader* header2) const;
 };
 

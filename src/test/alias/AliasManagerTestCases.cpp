@@ -8,7 +8,7 @@ namespace test {
 namespace alias {
 
 using smsc::sms::AddressValue;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
 using smsc::test::sms::operator!=;
@@ -26,9 +26,9 @@ AliasManagerTestCases::AliasManagerTestCases(AliasManager* _aliasMan,
 	//__require__(chkList);
 }
 
-Category& AliasManagerTestCases::getLog()
+Logger AliasManagerTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("AliasManagerTestCases");
+	static Logger log = Logger::getInstance("AliasManagerTestCases");
 	return log;
 }
 

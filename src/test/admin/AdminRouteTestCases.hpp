@@ -7,7 +7,6 @@ namespace smsc {
 namespace test {
 namespace admin {
 
-using log4cpp::Category;
 using smsc::test::util::CheckList;
 
 /**
@@ -32,7 +31,7 @@ public:
 	void incorrectRouteCommands();
 
 protected:
-	virtual Category& getLog();
+	virtual Logger getLog();
 	const char* getSubjectName(int i);
 };
 

@@ -21,6 +21,7 @@
 #include <memory>
 #include <algorithm>
 #include <string>
+#include <sstream>
 
 #define __synchronized__
 

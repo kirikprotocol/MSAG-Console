@@ -38,7 +38,7 @@ namespace smsc { namespace dbsme
     using namespace smsc::core::buffers;
     using namespace smsc::db;
     
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
@@ -53,7 +53,7 @@ namespace smsc { namespace dbsme
     friend class DataProvider;
     private:
 
-        log4cpp::Category       &log;
+        smsc::logger::Logger    log;
         MessageSet              messages;
 
         int     protocolId;
@@ -103,7 +103,7 @@ namespace smsc { namespace dbsme
     friend class ProviderGuard;
     protected:
 
-        log4cpp::Category       &log;
+        smsc::logger::Logger    log;
         MessageSet              messages;
         
         Event       usersCountEvent;

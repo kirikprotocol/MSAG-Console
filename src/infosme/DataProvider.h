@@ -29,7 +29,7 @@ namespace smsc { namespace infosme
     
     using smsc::core::synchronization::Mutex;
     
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
@@ -39,15 +39,15 @@ namespace smsc { namespace infosme
     {
     private:
 
-        log4cpp::Category  &logger;
+        smsc::logger::Logger logger;
 
-        Hash<DataSource *>  dss;
-        Mutex               dssLock;
+        Hash<DataSource *>   dss;
+        Mutex                dssLock;
     
     public:
 
         DataProvider()
-            : logger(Logger::getCategory("smsc.infosme.DataProvider")) {};
+            : logger(Logger::getInstance("smsc.infosme.DataProvider")) {};
         virtual ~DataProvider();
 
         /**

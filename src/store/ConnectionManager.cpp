@@ -14,7 +14,7 @@ namespace smsc { namespace store
 {
 using namespace smsc::sms;
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::util::config::Manager;
 using smsc::util::config::ConfigException;
 using smsc::core::synchronization::Event;
@@ -135,7 +135,7 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
 }
 
 ConnectionPool::ConnectionPool(Manager& config) throw(ConfigException) 
-    : log(Logger::getCategory("smsc.store.ConnectionPool")),
+    : log(Logger::getInstance("smsc.store.ConnectionPool")),
         head(0L), tail(0L), queueLen(0), 
             idleHead(0L), idleTail(0L), idleCount(0),
                 dbInstance(0L), dbUserName(0L), dbUserPassword(0L)
@@ -335,7 +335,7 @@ Mutex Connection::connectLock;
 
 Connection::Connection(const char* instance, 
                        const char* user, const char* password) 
-    : log(Logger::getCategory("smsc.store.Connection")),
+    : log(Logger::getInstance("smsc.store.Connection")),
         next(0L), isConnected(false), isDead(false), 
         dbInstance(instance), dbUserName(user), dbUserPassword(password), 
         envhp(0L), svchp(0L), srvhp(0L), errhp(0L), sesshp(0L)

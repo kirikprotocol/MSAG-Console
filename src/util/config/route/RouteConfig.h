@@ -43,7 +43,7 @@ public:
 
 protected:
 	DOMTreeReader reader;
-	log4cpp::Category &logger;
+	smsc::logger::Logger logger;
 	RoutePVector routes;
 	SubjectPHash subjects;
   std::auto_ptr<char> config_filename;

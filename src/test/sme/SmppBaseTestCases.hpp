@@ -9,7 +9,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::sme::SmeConfig;
 using smsc::sme::SmppPduEventListener;
 using smsc::smpp::SmppHeader;
@@ -50,7 +50,7 @@ public:
 	void unbind();
 
 protected:
-	virtual Category& getLog();
+	virtual Logger getLog();
 
 private:
 	const SmeConfig config;

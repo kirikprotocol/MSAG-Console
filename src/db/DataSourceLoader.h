@@ -12,14 +12,14 @@
 
 namespace smsc { namespace db
 {
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::core::buffers::Array;
 
     class DataSourceLoader
     {
     private:
 
-        static log4cpp::Category    &logger;
+        static smsc::logger::Logger logger;
         static Array<void *>        handles;
         static Mutex                loadupLock;
 

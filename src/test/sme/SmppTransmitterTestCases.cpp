@@ -13,7 +13,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::util::Exception;
 using smsc::sme::SmppInvalidBindState;
 using smsc::test::conf::TestConfig;
@@ -29,9 +29,9 @@ using namespace smsc::test::core; //constants
 using namespace smsc::test::sms; //constants
 using namespace smsc::test::util; //constants
 
-Category& SmppTransmitterTestCases::getLog()
+Logger SmppTransmitterTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("SmppTransmitterTestCases");
+	static Logger log = Logger::getInstance("SmppTransmitterTestCases");
 	return log;
 }
 

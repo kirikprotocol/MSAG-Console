@@ -12,7 +12,7 @@ namespace smsc {
       class LongSmsTest {
         QueuedSmeHandler sender;
         MapProxy mapProxy;
-        log4cpp::Category& log;
+        smsc::logger::Logger log;
         uint32_t timeout;
         smsc::sms::Address mapProxyAddr;
         std::string message;

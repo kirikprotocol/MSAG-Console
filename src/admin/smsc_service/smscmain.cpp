@@ -8,7 +8,7 @@
 #include <admin/AdminException.h>
 
 using smsc::system::SmscConfigs;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::util::config::Manager;
 using smsc::util::config::smeman::SmeManConfig;
 using smsc::admin::smsc_service::SmscComponent;

@@ -1,7 +1,6 @@
 #ifndef SMSC_ADMIN_UTIL_COMMAND_DISPATCHER
 #define SMSC_ADMIN_UTIL_COMMAND_DISPATCHER
 
-#include <log4cpp/Category.hh>
 #include <admin/AdminException.h>
 #include <admin/protocol/CommandReader.h>
 #include <admin/protocol/ResponseWriter.h>
@@ -27,7 +26,7 @@ class CommandDispatcher : public ThreadedTask
 public:
 	CommandDispatcher(Socket * admSocket,
 										//const char * const client_addr,
-										const char * const loggerCategory = "smsc.admin.util.CommandDispatcher");
+										const char * const loggerCatname = "smsc.admin.util.CommandDispatcher");
 	virtual ~CommandDispatcher();
 	virtual Response *handle(const Command * const command)
 		throw (AdminException) = 0;
@@ -38,7 +37,7 @@ public:
 
 protected:
 	Socket * sock;
-	log4cpp::Category &logger;
+	smsc::logger::Logger logger;
 	const static char * const task_name;
 	char cl_addr[16];
 	CommandReader reader;

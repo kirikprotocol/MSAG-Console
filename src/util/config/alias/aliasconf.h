@@ -4,6 +4,7 @@
 
 
 #include <inttypes.h>
+#include <vector>
 
 #ifndef SMSC_UTIL_CONFIG_ALIAS_ALIASCONFIG
 #define SMSC_UTIL_CONFIG_ALIAS_ALIASCONFIG
@@ -63,12 +64,12 @@ public:
   status load(const char * const filename);
   status reload();
 
-  status store(const char * const filename) const;
+  status store(const char * const filename);
 
   RecordIterator getRecordIterator() const;
 protected:
   DOMTreeReader reader;
-  log4cpp::Category &logger;
+  smsc::logger::Logger logger;
   SRVector records;
   std::auto_ptr<char> config_filename;
 private:

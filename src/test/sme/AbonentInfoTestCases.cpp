@@ -10,7 +10,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::test::conf::TestConfig;
 using smsc::test::sms::SmsUtil;
 using smsc::test::core::operator==;
@@ -41,9 +41,9 @@ AbonentInfoTestCases::AbonentInfoTestCases(SmppFixture* fixture)
 	addSmeAlias(abonentInfoAliasMobile);
 }
 
-Category& AbonentInfoTestCases::getLog()
+Logger AbonentInfoTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("AbonentInfoTestCases");
+	static Logger log = Logger::getInstance("AbonentInfoTestCases");
 	return log;
 }
 

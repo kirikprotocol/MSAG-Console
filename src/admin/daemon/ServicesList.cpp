@@ -10,7 +10,7 @@ using smsc::util::encode;
 
 void ServicesList::add(Service *service) throw (AdminException)
 {
-	log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon.ServicesList"));
+	smsc::logger::Logger logger(Logger::getInstance("smsc.admin.daemon.ServicesList"));
 	if (services.Exists(service->getId()))
 		throw AdminException("Service already exists in list");
 	services[service->getId()] = service;
@@ -51,7 +51,7 @@ char * ServicesList::getText() const
 	for (_ServiceList::Iterator i = services.getIterator(); i.Next(sname, s); )
 	{
 /*		#ifdef SMSC_DEBUG
-			log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon.ServicesList"));
+			smsc::logger::Logger logger(Logger::getInstance("smsc.admin.daemon.ServicesList"));
 			logger.debug("******************");
 			logger.debug("  name=%s", sname);
 			logger.debug("  name=%s", s.getName());
@@ -106,7 +106,7 @@ char * ServicesList::getText() const
 const char * const ServicesList::markServiceAsStopped(pid_t old_pid)
 {
 	#ifdef SMSC_DEBUG
-		log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon.ServicesList"));
+		smsc::logger::Logger logger(Logger::getInstance("smsc.admin.daemon.ServicesList"));
 		//logger.debug("Mark service %lu as dead", (unsigned long) old_pid);
 	#endif
 	char * sname;

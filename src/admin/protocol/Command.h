@@ -3,13 +3,12 @@
 
 #include <inttypes.h>
 #include <xercesc/dom/DOM_Document.hpp>
-#include <log4cpp/Category.hh>
 
 #include <admin/AdminException.h>
 #include <logger/Logger.h>
 
 using smsc::admin::AdminException;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
 namespace smsc {
 namespace admin {
@@ -40,13 +39,13 @@ public:
 	};
 
 	Command(Id newId) throw ()
-		: logger(Logger::getCategory("smsc.admin.protocol.Command"))
+		: logger(Logger::getInstance("smsc.admin.protocol.Command"))
 	{
 		id = newId;
 	}
 
 	Command(const char * const commandName) throw ()
-		: logger(Logger::getCategory("smsc.admin.protocol.Command"))
+		: logger(Logger::getInstance("smsc.admin.protocol.Command"))
 	{
 		id = getCommandIdByName(commandName);
 	}
@@ -69,7 +68,7 @@ protected:
 	
 	Id id;
 	DOM_Document data;
-	log4cpp::Category &logger;
+	smsc::logger::Logger logger;
 	static const uint8_t commands_quantity = 10;
 	static const _Command names[commands_quantity];
 	

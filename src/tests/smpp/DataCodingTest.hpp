@@ -17,7 +17,7 @@ namespace smsc {
         QueuedSmeHandler sender;
         QueuedSmeHandler receiver;
         SmppProfileManagerHandler profileManager;
-        log4cpp::Category& log;
+        smsc::logger::Logger log;
         uint32_t timeout;
         Latin1Text *latin1Msg;
         Smsc7BitText *smsc7bitMsg;

@@ -24,7 +24,7 @@ namespace smsc {
 
 			class SmppSession {
 				// כמדדונ
-				static log4cpp::Category& log;
+				static smsc::logger::Logger log;
 			protected:
 				struct Lock {
 					time_t timeOut;

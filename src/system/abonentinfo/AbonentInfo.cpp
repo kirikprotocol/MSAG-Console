@@ -121,7 +121,7 @@ int AbonentInfoSme::Execute()
   s.setArchivationRequested(false);
   s.setEServiceType(servType.c_str());
   s.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protId);
-  log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.AbonentInfoSme");
+  smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.system.AbonentInfoSme");
 
   while(!isStopping)
   {

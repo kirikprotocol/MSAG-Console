@@ -166,7 +166,7 @@ StateMachine::StateMachine(EventQueue& q,
 
 {
   using namespace smsc::util::regexp;
-  smsLog=&smsc::util::Logger::getCategory("sms.trace");
+  smsLog=new smsc::logger::Logger(smsc::logger::Logger::getInstance("sms.trace"));
   dreAck.Compile(AltConcat("ack",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
   __throw_if_fail__(dreAck.LastError()==regexp::errNone,RegExpCompilationException);
   dreNoAck.Compile(AltConcat("noack",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
@@ -379,7 +379,7 @@ bool checkSourceAddress(const std::string& pattern,const Address& src)
     re=new RegExp();
     if(!re->Compile(pattern.c_str(),OP_OPTIMIZE|OP_STRICT))
     {
-      smsc::util::Logger::getCategory("smsc.system.StateMachine").
+      smsc::logger::Logger::getInstance("smsc.system.StateMachine").
         error("Failed to compile address range regexp");
     }
     reCache.Insert(pattern.c_str(),re);

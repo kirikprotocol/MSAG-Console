@@ -13,6 +13,7 @@
 #include "resourcemanager/ResourceManager.hpp"
 #include "system/state_machine.hpp"
 #include "util/regexp/RegExp.hpp"
+#include "logger/Logger.h"
 
 using namespace smsc::sms;
 using namespace smsc::smpp;
@@ -21,6 +22,7 @@ using namespace smsc::util;
 using namespace smsc::util::templates;
 using namespace smsc::resourcemanager;
 using smsc::system::StateMachine;
+using smsc::logger::Logger;
 
 using std::exception;
 

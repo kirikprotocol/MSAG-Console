@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
+#include <vector>
 #include <system/smscsignalhandlers.h>
 
 namespace smsc {

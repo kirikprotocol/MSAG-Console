@@ -16,7 +16,7 @@ namespace smsc { namespace distrlist
 {
     using namespace smsc::db;
     
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
     
@@ -26,7 +26,7 @@ namespace smsc { namespace distrlist
     {
     protected:
         
-        static log4cpp::Category&   logger;
+        static smsc::logger::Logger logger;
         
         DataSource&     ds;
         

@@ -14,7 +14,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 using smsc::test::smpp::OPT_ALL;
@@ -95,7 +95,7 @@ protected:
 			: msgRef(_msgRef), cancelTime(_cancelTime), status(_status) {}
 	};
 
-	virtual Category& getLog();
+	virtual Logger getLog();
 	//общие манипуляции с мониторами
 	pair<LockType, time_t> checkActionLocked(DeliveryMonitor* monitor,
 		time_t checkTime);

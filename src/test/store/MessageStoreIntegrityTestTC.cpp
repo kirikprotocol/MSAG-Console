@@ -11,13 +11,13 @@ using namespace smsc::test::store; //constants, MessageStoreTestCases
 using namespace smsc::test::util; //constants, ...
 using std::vector;
 using std::ostringstream;
-using log4cpp::Category;
-using smsc::util::Logger;
+using smsc::logger::Logger;
+using smsc::logger::Logger;
 using smsc::util::config::Manager;
 using smsc::store::StoreManager;
 using smsc::core::synchronization::Event;
 
-static Category& log = Logger::getCategory("smsc.test.store.IntegrityTest");
+static Logger log = Logger::getInstance("smsc.test.store.IntegrityTest");
 
 #define __prepare_for_new_sms__ \
 	id.push_back(new SMSId()); \

@@ -97,7 +97,7 @@ const char * DistrListProcess::getSystemId() const
 int DistrListProcess::Execute()
 {
   SmscCommand cmd,resp,answ;
-  log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.distrlist.process");
+  smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.distrlist.process");
   while(!isStopping)
   {
     CheckTimeouts();

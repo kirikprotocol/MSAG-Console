@@ -15,7 +15,7 @@ const int SMS_ID_PRELOAD_COUNT = 1000;
 
 Cleaner::Cleaner(Manager& config)
     throw(ConfigException) 
-        : Thread(), log(Logger::getCategory("smsc.store.Cleaner")),
+        : Thread(), log(Logger::getInstance("smsc.store.Cleaner")),
             storageDBInstance(0L), storageDBUserName(0L), storageDBUserPassword(0L),
                 bStarted(false), bNeedExit(false), cleanerConnection(0),
                     cleanerMinTimeStmt(0), cleanerDeleteStmt(0), cleanerNextIdStmt(0),

@@ -23,7 +23,7 @@ namespace smsc { namespace store
 
 using namespace smsc::sms;
 using namespace smsc::system;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::util::config::Manager;
 using smsc::smpp::DataCoding;
 
@@ -41,9 +41,9 @@ Mutex        StoreManager::mutex;
 Cleaner*     StoreManager::cleaner = 0;
 RemoteStore* StoreManager::instance  = 0;
 
-log4cpp::Category& StoreManager::log = Logger::getCategory("smsc.store.StoreManager");
-log4cpp::Category& RemoteStore::log = Logger::getCategory("smsc.store.RemoteStore");
-log4cpp::Category& CachedStore::log = Logger::getCategory("smsc.store.CachedStore");
+smsc::logger::Logger StoreManager::log = Logger::getInstance("smsc.store.StoreManager");
+smsc::logger::Logger RemoteStore::log = Logger::getInstance("smsc.store.RemoteStore");
+smsc::logger::Logger CachedStore::log = Logger::getInstance("smsc.store.CachedStore");
 
 #ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
 IntHash<SMS*> RemoteStore::fakeStore(100000);

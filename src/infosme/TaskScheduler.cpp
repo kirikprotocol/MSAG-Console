@@ -5,7 +5,7 @@ namespace smsc { namespace infosme
 {
 
 TaskScheduler::TaskScheduler()
-    : Thread(), logger(Logger::getCategory("smsc.infosme.TaskScheduler")),
+    : Thread(), logger(Logger::getInstance("smsc.infosme.TaskScheduler")),
         bStarted(false), bNeedExit(false), bChanged(false)
 {
 }

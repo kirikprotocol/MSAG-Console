@@ -31,7 +31,7 @@ namespace smsc { namespace dbsme
     using namespace smsc::core::buffers;
     using namespace smsc::db;
     
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
@@ -108,7 +108,7 @@ namespace smsc { namespace dbsme
     friend class JobGuard;
     protected:
 
-        log4cpp::Category   &log;
+        smsc::logger::Logger log;
 
         Event       usersCountEvent;
         Mutex       usersCountLock;
@@ -134,7 +134,7 @@ namespace smsc { namespace dbsme
             }
         }
         
-        Job() : log(Logger::getCategory("smsc.dbsme.Job")), 
+        Job() : log(Logger::getInstance("smsc.dbsme.Job")), 
                     usersCount(0), bFinalizing(false), name(0) {};
         virtual ~Job() { 
             if (name) delete name; 

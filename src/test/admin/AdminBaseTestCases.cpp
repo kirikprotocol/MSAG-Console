@@ -6,7 +6,7 @@ namespace smsc {
 namespace test {
 namespace admin {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::util::Exception;
 using namespace smsc::util::regexp;
 using namespace smsc::test::util;
@@ -30,9 +30,9 @@ AdminBaseTestCases::~AdminBaseTestCases()
 	}
 }
 
-Category& AdminBaseTestCases::getLog()
+Logger AdminBaseTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("AdminBaseTestCases");
+	static Logger log = Logger::getInstance("AdminBaseTestCases");
 	return log;
 }
 

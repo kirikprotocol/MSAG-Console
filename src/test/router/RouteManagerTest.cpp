@@ -6,15 +6,15 @@
 using namespace smsc::test::util;
 using namespace smsc::test::smeman; //constants, SmeManagerTestCases
 using namespace smsc::test::router; //constants, TestRouteData
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::sms::Address;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::smeman::SmeInfo;
 using smsc::smeman::SmeProxy;
 using smsc::test::sms::operator<<;
 using smsc::test::sms::SmsUtil;
 
-static Category& log = Logger::getCategory("RouteManagerTest");
+static Logger log = Logger::getInstance("RouteManagerTest");
 
 class RouteManagerTest
 {

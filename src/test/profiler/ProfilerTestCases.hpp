@@ -10,7 +10,7 @@ namespace smsc {
 namespace test {
 namespace profiler {
 
-using log4cpp::Category;
+using smsc::logger::Logger;
 using std::vector;
 using smsc::profiler::Profile;
 using smsc::profiler::Profiler;
@@ -65,7 +65,7 @@ public:
 	void onCommand();
 
 protected:
-	virtual Category& getLog();
+	virtual Logger getLog();
 
 private:
 	Profiler* profiler;

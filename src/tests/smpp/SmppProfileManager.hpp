@@ -12,7 +12,7 @@ namespace smsc {
 	  class SmppProfileManager : smsc::test::util::ProtectedCopy {
         static const char* profileCommands[];
         static const char* profileResponses[];
-        log4cpp::Category& log;
+        smsc::logger::Logger log;
 		QueuedSmeHandler sme;
 		SmsAddressHandler origAddr;
 		SmsAddressHandler profilerAddr;

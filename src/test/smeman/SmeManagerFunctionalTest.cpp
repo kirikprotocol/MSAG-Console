@@ -5,11 +5,11 @@
 
 using namespace smsc::test::util;
 using namespace smsc::test::smeman; //constants, SmeManagerTestCases
-using log4cpp::Category;
-using smsc::util::Logger;
+using smsc::logger::Logger;
+using smsc::logger::Logger;
 using smsc::smeman::SmeInfo;
 using smsc::smeman::SmeProxy;
-static Category& log = Logger::getCategory("SmeManagerFunctionalTest");
+static Logger log = Logger::getInstance("SmeManagerFunctionalTest");
 
 void executeFunctionalTest(int listSize, CheckList* chkList)
 {

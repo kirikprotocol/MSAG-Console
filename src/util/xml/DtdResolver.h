@@ -8,18 +8,17 @@
 #include <framework/LocalFileInputSource.hpp>
 #include <util/XMLString.hpp>
 #include <util/debug.h>
-#include <log4cpp/Category.hh>
 
 namespace smsc {
 namespace util {
 namespace xml {
 
-using log4cpp::Category;
+using smsc::logger::Logger;
 
 class DtdResolver : public EntityResolver {
 public:
   DtdResolver()
-    : logger(smsc::util::Logger::getCategory("smsc.util.xml.DtdResolver"))
+    : logger(smsc::logger::Logger::getInstance("smsc.util.xml.DtdResolver"))
   {
   }
 	/**
@@ -81,7 +80,7 @@ public:
 	}
 
 private:
-  Category &logger;
+  Logger logger;
 
   InputSource * tryPrefix(const XMLCh * const dtdName, const char * const prefixChars)
   {

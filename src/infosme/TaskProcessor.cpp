@@ -11,7 +11,7 @@ namespace smsc { namespace infosme
 
 TaskProcessor::TaskProcessor(ConfigView* config)
     : TaskProcessorAdapter(), InfoSmeAdmin(), Thread(),
-        logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
+        logger(Logger::getInstance("smsc.infosme.TaskProcessor")), 
             bStarted(false), bNeedExit(false), taskTablesPrefix(0), 
                 dsInternal(0), dsIntConnection(0), messageSender(0), 
                     responceWaitTime(0), receiptWaitTime(0), dsStatConnection(0),

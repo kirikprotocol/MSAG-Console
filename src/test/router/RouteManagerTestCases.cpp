@@ -21,7 +21,7 @@ using namespace smsc::test::smeman; //constants, TestSmeProxy
 using namespace smsc::test::core; //route utils, CoreTestManager
 using smsc::test::sms::operator<<;
 using smsc::test::core::operator<<;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::sms::AddressValue;
 using smsc::test::core::RouteUtil;
 
@@ -34,9 +34,9 @@ RouteManagerTestCases::RouteManagerTestCases(RouteManager* _routeMan,
 	//__require__(chkList);
 }
 
-Category& RouteManagerTestCases::getLog()
+Logger RouteManagerTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("RouteManagerTestCases");
+	static Logger log = Logger::getInstance("RouteManagerTestCases");
 	return log;
 }
 

@@ -7,7 +7,6 @@ namespace smsc {
 namespace test {
 namespace admin {
 
-using log4cpp::Category;
 using smsc::test::util::CheckList;
 
 /**
@@ -29,7 +28,7 @@ public:
 	void incorrectCommands();
 
 protected:
-	virtual Category& getLog();
+	virtual smsc::logger::Logger getLog();
 };
 
 }

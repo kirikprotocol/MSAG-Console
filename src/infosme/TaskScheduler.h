@@ -26,7 +26,7 @@ namespace smsc { namespace infosme
     using smsc::core::synchronization::Event;
     using smsc::core::synchronization::Mutex;
     
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     
     struct TaskProcessorAdapter
     {
@@ -54,7 +54,7 @@ namespace smsc { namespace infosme
     {
     private:
 
-        log4cpp::Category  &logger;
+        Logger  logger;
 
         TaskProcessorAdapter*   processor;
         Hash<Schedule*>         schedules;

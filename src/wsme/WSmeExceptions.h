@@ -20,7 +20,7 @@
 
 namespace smsc { namespace wsme
 {
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::Exception;
 
     class InitException : public Exception

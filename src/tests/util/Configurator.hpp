@@ -20,8 +20,7 @@
 #include <util/xml/DtdResolver.h>
 #include <util/xml/init.h>
 
-// Logger & log4cpp
-#include <log4cpp/Category.hh>
+// Logger
 #include <logger/Logger.h>
 
 #include "Handler.hpp"
@@ -41,7 +40,7 @@ namespace smsc {
 			  void init() {
 				if(!initialized) {
 				  //std::cout << "Initializing logger\n";
-				  smsc::util::Logger::Init("log4cpp.test");
+				  smsc::logger::Logger::Init("log4cpp.test");
 				  initialized = true;
 				}
 			  }
@@ -49,10 +48,10 @@ namespace smsc {
 				Logger() {
 				  init();
 				}
-				log4cpp::Category& getLog(const char * const category) {
+				smsc::logger::Logger getLog(const char * const category) {
   					init();
 					//std::cout << "getting logger for " << category << std::endl;
-					return smsc::util::Logger::getCategory(category);
+					return smsc::logger::Logger::getInstance(category);
 				}
 			};
 
@@ -172,7 +171,7 @@ namespace smsc {
 				Handler<DOMParser> createParser();
 				DOM_Document parse(string filename);
 				ContextHandler loadContext(DOM_Element root);
-				log4cpp::Category& log;
+				smsc::logger::Logger log;
 			public:
 				static ContextConfiguratorHandler instance() {
 					return config;

@@ -11,7 +11,7 @@
 
 namespace smsc { namespace util { namespace config
 {
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
 
@@ -19,7 +19,7 @@ namespace smsc { namespace util { namespace config
     {
     protected:
         
-        static log4cpp::Category    &log;
+        static smsc::logger::Logger log;
 
         Manager&    config;
         char*       category;
@@ -31,7 +31,7 @@ namespace smsc { namespace util { namespace config
         ConfigView(Manager& manager, const char* cat=0);
         virtual ~ConfigView();
         
-        inline const char* getCategory() {
+        inline const char* getInstance() {
             return category;
         };
         

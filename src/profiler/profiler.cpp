@@ -204,7 +204,7 @@ int Profiler::update(const Address& address,const Profile& profile)
   }
   }catch(...)
   {
-    log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.Profiler");
+    smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.system.Profiler");
     log.error("Database exception during profile update/insert");
     return pusError;
   }
@@ -228,7 +228,7 @@ int Profiler::updatemask(const Address& address,const Profile& profile)
     }
   }catch(...)
   {
-    log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.Profiler");
+    smsc::logger::Logger log=smsc::logger::Logger::getInstance("smsc.system.Profiler");
     log.error("Database exception during mask profile update");
     return pusError;
   }

@@ -170,7 +170,7 @@ namespace smsc {
 				// Состояние (тип SME после bind)
 				int bindType;
 				// логгер
-				static log4cpp::Category& log;
+				static smsc::logger::Logger log;
 			public:
   				// деструктор закрывает соединение
   				virtual ~BasicSme() {close();}

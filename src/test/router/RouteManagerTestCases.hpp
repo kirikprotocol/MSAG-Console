@@ -17,7 +17,7 @@ namespace router {
 
 using std::vector;
 using std::ostream;
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::sms::Address;
 using smsc::router::RouteInfo;
 using smsc::router::RoutePriority;
@@ -78,7 +78,7 @@ public:
 	//void iterateRoutes();
 
 protected:
-	virtual Category& getLog();
+	virtual Logger getLog();
 
 private:
 	RouteManager* routeMan;

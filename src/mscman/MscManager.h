@@ -18,7 +18,7 @@ namespace smsc { namespace mscman
 {
     using smsc::db::DataSource;
 
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
     
@@ -30,7 +30,7 @@ namespace smsc { namespace mscman
 
         static Mutex                startupLock;
         static MscManager*          instance;
-        static log4cpp::Category&   log;
+        static smsc::logger::Logger log;
         
         DataSource&         ds;
         bool                automaticRegistration;

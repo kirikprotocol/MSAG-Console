@@ -4,7 +4,7 @@
 namespace smsc {
   namespace test {
 	namespace smpp {
-	  log4cpp::Category& SmppSession::log = smsc::test::util::logger.getLog("smsc.test.smpp.SmppSession");
+	  smsc::logger::Logger SmppSession::log = smsc::test::util::logger.getLog("smsc.test.smpp.SmppSession");
 	}
   }
 }

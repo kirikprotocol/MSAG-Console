@@ -680,7 +680,7 @@ static void ForwardMO(MapDialog* dialog) {
       k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
     }
     text[k]=0;
-    __log2__(smsc::util::_map_cat,log4cpp::Priority::WARN, "rpda: %s",text);
+    __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_WARN, "rpda: %s",text);
 
     buf = (unsigned char *)&smRpOa;
     buflen = smRpOa.addrLen+2;
@@ -689,7 +689,7 @@ static void ForwardMO(MapDialog* dialog) {
       k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
     }
     text[k]=0;
-    __log2__(smsc::util::_map_cat,log4cpp::Priority::WARN, "rpoa: %s",text);
+    __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_WARN, "rpoa: %s",text);
     
     buf = (unsigned char *)&ui;
     buflen = ui.signalInfoLen+1;
@@ -698,7 +698,7 @@ static void ForwardMO(MapDialog* dialog) {
       k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
     }
     text[k]=0;
-    __log2__(smsc::util::_map_cat,log4cpp::Priority::WARN, "ui: %s",text);
+    __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_WARN, "ui: %s",text);
     delete text;
    }
   }
@@ -3110,7 +3110,7 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
         k+=sprintf(text+k,"%02x ",(unsigned)mapAddr->address[i]);
       }
       text[k]=0;
-      __log2__(smsc::util::_map_cat,log4cpp::Priority::DEBUG, 
+      __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, 
         "%s: mapaddress len=%d, type=%x, val=%s",__FUNCTION__, mapAddr->addressLength, mapAddr->typeOfAddress, text);
       delete text;
      }
@@ -3244,7 +3244,7 @@ USHORT_T Et96MapV2InformSCInd (
 	   k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
        }
        text[k]=0;
-       __log2__(smsc::util::_map_cat,log4cpp::Priority::DEBUG, "msisdnAlert_s: %s",text);
+       __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "msisdnAlert_s: %s",text);
        delete text;
     }
     if( mwdStatus_sp && smsc::util::_map_cat->isDebugEnabled() )
@@ -3257,7 +3257,7 @@ USHORT_T Et96MapV2InformSCInd (
 	   k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
        }
        text[k]=0;
-       __log2__(smsc::util::_map_cat,log4cpp::Priority::DEBUG, "mwdStatus_s: %s",text);
+       __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "mwdStatus_s: %s",text);
        delete text;
     }
     switch( dialog->state ){

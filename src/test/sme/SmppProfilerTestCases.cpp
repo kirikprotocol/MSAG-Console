@@ -9,7 +9,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::test::conf::TestConfig;
 using namespace smsc::profiler; //Profile, constants
 using namespace smsc::test::core; //constants
@@ -28,9 +28,9 @@ SmppProfilerTestCases::SmppProfilerTestCases(SmppFixture* fixture)
 	addSmeAlias(profilerAlias);
 }
 
-Category& SmppProfilerTestCases::getLog()
+Logger SmppProfilerTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("SmppProfilerReceiverTestCases");
+	static Logger log = Logger::getInstance("SmppProfilerReceiverTestCases");
 	return log;
 }
 

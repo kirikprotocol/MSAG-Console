@@ -12,7 +12,7 @@ namespace smsc {
 namespace test {
 namespace profiler {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::smeman::SmsResp;
 using smsc::test::conf::TestConfig;
 using namespace std;
@@ -33,9 +33,9 @@ ProfilerTestCases::ProfilerTestCases(Profiler* _profiler,
 	//__require__(chkList);
 }
 
-Category& ProfilerTestCases::getLog()
+Logger ProfilerTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("ProfilerTestCases");
+	static Logger log = Logger::getInstance("ProfilerTestCases");
 	return log;
 }
 

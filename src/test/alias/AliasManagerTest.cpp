@@ -1,8 +1,7 @@
 #include "AliasManagerTestCases.hpp"
 #include "logger/Logger.h"
 
-using log4cpp::Category;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::sms::Address;
 using smsc::alias::AliasInfo;
 using smsc::alias::AliasManager;
@@ -11,7 +10,7 @@ using smsc::test::core::AliasRegistry;
 using smsc::test::alias::AliasManagerTestCases;
 using namespace smsc::test::util;
 
-static Category& log = Logger::getCategory("AliasManagerTest");
+static smsc::logger::Logger log = Logger::getInstance("AliasManagerTest");
 
 void executeTest()
 {

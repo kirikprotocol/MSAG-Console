@@ -6,8 +6,6 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-#include <log4cpp/NDC.hh>
-
 #include <core/network/Socket.hpp>
 #include <logger/Logger.h>
 
@@ -22,8 +20,8 @@ const char * const CommandDispatcher::task_name = "CommandDispatcher";
 
 CommandDispatcher::CommandDispatcher(Socket* admSocket,
                                      //const char * const client_addr,
-                                     const char * const loggerCategory)
-  : logger(smsc::util::Logger::getCategory(loggerCategory)),
+                                     const char * const loggerCatname)
+  : logger(smsc::logger::Logger::getInstance(loggerCatname)),
     reader(admSocket),
     writer(admSocket)
 {
@@ -50,7 +48,6 @@ void CommandDispatcher::init()
   std::string ndc;
   ndc += thr;
   //ndc += cl_addr;
-  log4cpp::NDC::push(ndc);
 }
 
 int CommandDispatcher::Execute()
@@ -133,7 +130,6 @@ int CommandDispatcher::Execute()
   delete sock;
   sock = 0;
   logger.info("Command dispather stopped");
-  log4cpp::NDC::pop();
   return 0;
 }
 

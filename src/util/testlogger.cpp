@@ -9,9 +9,9 @@ bool stopped=false;
 
 class TestThread:public smsc::core::threads::Thread
 {
-  log4cpp::Category *log;
+  smsc::logger::Logger *log;
 public:
-  TestThread(log4cpp::Category* l):log(l){}
+  TestThread(smsc::logger::Logger* l):log(l){}
   int Execute()
   {
     int cnt1=0,cnt2=0,cnt3=0;
@@ -36,14 +36,14 @@ void sigintdisp(int)
 int main(int argc,char* argv[])
 {
   signal(SIGINT,sigintdisp);
-  smsc::util::Logger::Init("log4cpp.properties");
+  smsc::logger::Logger::Init("log4cpp.properties");
   const int N=2;
   TestThread* tt[N];
   for(int i=0;i<N;i++)
   {
     char buf[64];
     sprintf(buf,"test.log.%d",i);
-    tt[i]=new TestThread(&smsc::util::Logger::getCategory(buf));
+    tt[i]=new TestThread(new smsc::logger::Logger(smsc::logger::Logger::getInstance(buf)));
     tt[i]->Start();
   }
   for(int i=0;i<N;i++)

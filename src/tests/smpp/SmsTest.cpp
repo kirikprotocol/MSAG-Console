@@ -34,7 +34,7 @@ namespace smsc {
 
       class SmsTest : public CppUnit::TestFixture {
         // logger
-        log4cpp::Category& log;
+        smsc::logger::Logger log;
         std::string message;
         uint32_t timeout;
         static bool configInited;

@@ -5,7 +5,7 @@ namespace smsc { namespace infosme
 {
 
 StatisticsManager::StatisticsManager(Connection* connection)
-    : Statistics(), Thread(), logger(Logger::getCategory("smsc.infosme.StatisticsManager")),
+    : Statistics(), Thread(), logger(Logger::getInstance("smsc.infosme.StatisticsManager")),
             connection(connection), currentIndex(0), 
                 bExternalFlush(false), bStarted(false), bNeedExit(false)
 {

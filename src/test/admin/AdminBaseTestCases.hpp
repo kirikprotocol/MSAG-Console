@@ -12,7 +12,6 @@ namespace admin {
 
 using std::string;
 using std::vector;
-using log4cpp::Category;
 using smsc::core::network::Socket;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
@@ -100,7 +99,7 @@ public:
 protected:
 	AdminFixture* fixture;
 
-	virtual Category& getLog();
+	virtual Logger getLog();
 	void sendRequest(const char* cmd);
 	bool checkResponse(const char* pattern);
 	bool login(const char* login, const char* passwd, bool correct);

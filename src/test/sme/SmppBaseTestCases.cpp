@@ -7,7 +7,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::core::synchronization::MutexGuard;
 using smsc::test::conf::TestConfig;
 using namespace smsc::sme; //SmppConnectException, BindType
@@ -15,9 +15,9 @@ using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::test::core; //flags
 using namespace smsc::test::util;
 
-Category& SmppBaseTestCases::getLog()
+Logger SmppBaseTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("SmppBaseTestCases");
+	static Logger log = Logger::getInstance("SmppBaseTestCases");
 	return log;
 }
 

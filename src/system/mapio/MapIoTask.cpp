@@ -124,7 +124,7 @@ void MapIoTask::dispatcher()
   struct timeval utime, curtime;
   APP_EVENT_T *eventlist = NULL;
   INT_T        eventlist_len = 0;
-  log4cpp::Category& time_logger = smsc::util::Logger::getCategory("map.itime");
+  smsc::logger::Logger time_logger = smsc::logger::Logger::getInstance("map.itime");
 
   message.receiver = MY_USER_ID;
   int bindTimer = 0;
@@ -188,7 +188,7 @@ void MapIoTask::dispatcher()
             k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
           }
           text[k]=0;
-          __log2__(smsc::util::_map_cat,log4cpp::Priority::DEBUG, "Decoding openInd: %s",text);
+		  __log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "Decoding openInd: %s",text);
           delete text;
         }
       }
@@ -235,7 +235,7 @@ void MapIoTask::dispatcher()
           k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
         }
         text[k]=0;
-        __log2__(smsc::util::_map_cat,log4cpp::Priority::WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
+		__log2__(smsc::util::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
         delete text;
       }
     }
@@ -399,20 +399,20 @@ Mutex& MAPSTATS_GetMutex(){
   return mutex;
 }
 
-log4cpp::Category* MAPSTATS_GetLoggerSec() {
-  static log4cpp::Category* logger = &smsc::util::Logger::getCategory("map.stat.sec");
+smsc::logger::Logger* MAPSTATS_GetLoggerSec() {
+  static smsc::logger::Logger* logger = new smsc::logger::Logger(smsc::logger::Logger::getInstance("map.stat.sec"));
   return logger;
 }
-log4cpp::Category* MAPSTATS_GetLoggerMin() {
-  static log4cpp::Category* logger = &smsc::util::Logger::getCategory("map.stat.min");
+smsc::logger::Logger* MAPSTATS_GetLoggerMin() {
+  static smsc::logger::Logger* logger = new smsc::logger::Logger(smsc::logger::Logger::getInstance("map.stat.min"));
   return logger;
 }
-log4cpp::Category* MAPSTATS_GetLoggerHour() {
-  static log4cpp::Category* logger = &smsc::util::Logger::getCategory("map.stat.hour");
+smsc::logger::Logger* MAPSTATS_GetLoggerHour() {
+  static smsc::logger::Logger* logger = new smsc::logger::Logger(smsc::logger::Logger::getInstance("map.stat.hour"));
   return logger;
 }
-log4cpp::Category* MAPSTATS_GetLoggerDlg() {
-  static log4cpp::Category* logger = &smsc::util::Logger::getCategory("map.stat.dlg");
+smsc::logger::Logger* MAPSTATS_GetLoggerDlg() {
+  static smsc::logger::Logger* logger = new smsc::logger::Logger(smsc::logger::Logger::getInstance("map.stat.dlg"));
   return logger;
 }
 
@@ -454,7 +454,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
     switch ( x ) {
     case MAPSTATS__SEC:
       {
-        log4cpp::Category* log = MAPSTATS_GetLoggerSec();
+        smsc::logger::Logger* log = MAPSTATS_GetLoggerSec();
         log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d, rcv %d",
                   MAPSTATS_open_in[0],
                   MAPSTATS_open_out[0],
@@ -468,7 +468,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
       break;
     case MAPSTATS__MIN:
       {
-        log4cpp::Category* log = MAPSTATS_GetLoggerMin();
+        smsc::logger::Logger* log = MAPSTATS_GetLoggerMin();
         log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
                   MAPSTATS_open_in[1],
                   MAPSTATS_open_out[1],
@@ -481,7 +481,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
       break;
     case MAPSTATS__HOUR:
       {
-        log4cpp::Category* log = MAPSTATS_GetLoggerHour();
+        smsc::logger::Logger* log = MAPSTATS_GetLoggerHour();
         log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
                   MAPSTATS_open_in[2],
                   MAPSTATS_open_out[2],
@@ -564,7 +564,7 @@ void MAPSTATS_Update(MAPSTATS stats)
 
 void MAPSTATS_DumpDialog(MapDialog* dlg)
 {
-  static log4cpp::Category* logger = &smsc::util::Logger::getCategory("map.stat.dlgdump");
+  static smsc::logger::Logger* logger = new smsc::logger::Logger(smsc::logger::Logger::getInstance("map.stat.dlgdump"));
   logger->info("dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld sec, {%s->%s}",
                dlg,
                dlg->dialogid_map,
@@ -578,21 +578,21 @@ void MAPSTATS_DumpDialog(MapDialog* dlg)
 
 void MapProxy::checkLogging() {
 #ifdef USE_MAP
-  if ( smsc::util::Logger::getCategory("map.trace.user1").isDebugEnabled() ) {
+  if ( smsc::logger::Logger::getInstance("map.trace.user1").isDebugEnabled() ) {
     __map_trace__("Enable trace for system USER01");
     MsgTraceOn( USER01_ID );
   } else {
     __map_trace__("Disable trace for system USER01");
     MsgTraceOff( USER01_ID );
   }
-  if ( smsc::util::Logger::getCategory("map.trace.etsimap").isDebugEnabled() ) {
+  if ( smsc::logger::Logger::getInstance("map.trace.etsimap").isDebugEnabled() ) {
     __map_trace__("Enable trace for system ETSIMAP_ID");
     MsgTraceOn( ETSIMAP_ID );
   } else {
     __map_trace__("Disable trace for system ETSIMAP_ID");
     MsgTraceOff( ETSIMAP_ID );
   }
-  if ( smsc::util::Logger::getCategory("map.trace.tcap").isDebugEnabled() ) {
+  if ( smsc::logger::Logger::getInstance("map.trace.tcap").isDebugEnabled() ) {
     __map_trace__("Enable trace for system TCAP_ID");
     MsgTraceOn( TCAP_ID );
   } else {

@@ -10,11 +10,13 @@
 
 #include "ProxySmeMixer.h"
 #include <string>
+#include "logger/Logger.h"
 
 SMSC_SMEPROXY_BEGIN
 
 using namespace smsc::util;
 using namespace std;
+using namespace smsc::logger;
 
 static string ToString(DIRECTION d) {
   return
@@ -26,7 +28,7 @@ static string ToString(DIRECTION d) {
 Mixer::Mixer(Queue& que,const ProxyConfig& pconf) :
 config_(pconf),
 que_(que),
-log_(Logger::getCategory("smsc.proxysme.mixer")),
+log_(Logger::getInstance("smsc.proxysme.mixer")),
 listen_left_(LEFT_TO_RIGHT,que,log_), listen_right_(RIGHT_TO_LEFT,que,log_)
 {
   left_state_ = right_state_ = SESSION_DISCONNECTED;
@@ -146,7 +148,7 @@ bool Mixer::SendPdu(DIRECTION direct,SmppHeader* pdu)
   return true;
 }
 
-PduListener::PduListener(DIRECTION d,Queue& que,log4cpp::Category& log) :
+PduListener::PduListener(DIRECTION d,Queue& que,smsc::logger::Logger log) :
 log_(log),incom_dirct_(d), que_(que)
 {
   log_.info("PduListener::ctor");

@@ -12,7 +12,7 @@ namespace test {
 namespace alias {
 
 using std::vector;
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 using smsc::test::core::AliasRegistry;
@@ -87,7 +87,7 @@ public:
 	void iterateAliases();
 
 protected:
-	virtual Category& getLog();
+	virtual Logger getLog();
 
 private:
 	AliasManager* aliasMan;

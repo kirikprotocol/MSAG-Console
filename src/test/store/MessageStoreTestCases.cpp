@@ -18,8 +18,8 @@ using namespace smsc::test::util; //auto_sync, etc
 using namespace smsc::test::sms; //constants, SmsUtil
 using namespace smsc::store; //StoreManager, CreateMode
 using namespace smsc::sms; //constants, SMSId, SMS, AddressValue, EService, ...
-using log4cpp::Category;
-using smsc::util::Logger;
+using smsc::logger::Logger;
+using smsc::logger::Logger;
 using smsc::util::AssertException;
 using smsc::test::sms::str;
 
@@ -36,9 +36,9 @@ MessageStoreTestCases::MessageStoreTestCases(MessageStore* _msgStore,
 	}
 }
 
-Category& MessageStoreTestCases::getLog()
+Logger MessageStoreTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("MessageStoreTestCases");
+	static Logger log = Logger::getInstance("MessageStoreTestCases");
 	return log;
 }
 

@@ -67,7 +67,7 @@ void ResourceManager::init(const char * const localesString, const char * const 
 typedef std::list<std::string> _stringlist;
 void ResourceManager::init(const _stringlist & localeNames, const std::string & defaultLocaleName) throw()
 {
-  log4cpp::Category &logger(smsc::util::Logger::getCategory("smsc.resourcemanager.ResourceManager"));
+  smsc::logger::Logger logger(smsc::logger::Logger::getInstance("smsc.resourcemanager.ResourceManager"));
   defaultLocale = defaultLocaleName;
   instance.reset(new ResourceManager);
   bool isDefaultLocaleFound = false;
@@ -99,7 +99,7 @@ void ResourceManager::reload(const char * const localesString, const char * cons
 
 ResourceManager::ResourceManager() throw ()
 {
-  log4cpp::Category &logger(smsc::util::Logger::getCategory("smsc.resourcemanager.ResourceManager"));
+  smsc::logger::Logger logger(smsc::logger::Logger::getInstance("smsc.resourcemanager.ResourceManager"));
   const char * const prefix = "resources_";
   const char * const suffix = ".xml";
   unsigned int prefixLength = strlen(prefix);

@@ -11,56 +11,14 @@
 #include <admin/smsc_service/SmscComponent.h>
 #include <util/signal.hpp>
 #include <util/xml/init.h>
+#include <util/findConfigFile.h>
 #include <resourcemanager/ResourceManager.hpp>
 #include <system/smscsignalhandlers.h>
 #include <core/threads/Thread.hpp>
 
 #include "system/version.inc"
 
-bool file_exist(const char * const filename)
-{
-  struct stat buf;
-  return stat(filename, &buf) == 0;
-}
-
 extern bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic);
-
-
-char get_filename_result[128];
-const char * const get_filename(const char * const file_to_find)
-throw (smsc::admin::AdminException)
-{
-  if (file_exist(file_to_find))
-  {
-    strcpy(get_filename_result, file_to_find);
-    return get_filename_result;
-  }
-  else
-  {
-    char buf[strlen(file_to_find)+8+1];
-    strcpy(buf, "../conf/");
-    strcat(buf, file_to_find);
-    if (file_exist(buf))
-    {
-      strcpy(get_filename_result, buf);
-      return get_filename_result;
-    }
-    else
-    {
-      char buf[strlen(file_to_find)+8+1];
-      strcpy(buf, "./conf/");
-      strcat(buf, file_to_find);
-      if (file_exist(buf))
-      {
-        strcpy(get_filename_result, buf);
-        return get_filename_result;
-      }
-    }
-  }
-  char message[strlen(file_to_find) + 64];
-  sprintf(message, "File \"%s\" not found", file_to_find);
-  throw smsc::admin::AdminException(message);
-}
 
 class SmscRunner : public smsc::core::threads::Thread
 {
@@ -104,6 +62,7 @@ protected:
 void atExitHandler(void)
 {
     smsc::util::xml::TerminateXerces();
+	smsc::logger::Logger::Shutdown();
 }
 
 int main(int argc,char* argv[])
@@ -113,7 +72,7 @@ int main(int argc,char* argv[])
 
   try{
     smsc::system::SmscConfigs cfgs;
-    smsc::util::config::Manager::init(get_filename("config.xml"));
+    smsc::util::config::Manager::init(findConfigFile("config.xml"));
     cfgs.cfgman=&cfgs.cfgman->getInstance();
     try {
       Logger::Init(cfgs.cfgman->getString("logger.initFile"));
@@ -121,12 +80,12 @@ int main(int argc,char* argv[])
     {
       fprintf(stderr, "WARNING: parameter \"logger.initFile\" not found in config - logger initialized by default\n");
     }
-    log4cpp::Category& logger = Logger::getCategory("smscmain");
+    smsc::logger::Logger logger = Logger::getInstance("smscmain");
 
     Hash<string> lic;
     {
-      string lf=get_filename("license.ini");
-      string sig=get_filename("license.sig");
+      string lf=findConfigFile("license.ini");
+      string sig=findConfigFile("license.sig");
       if(!CheckLicense(lf.c_str(),sig.c_str(),lic))
       {
         logger.error("Invalid license\n");
@@ -139,15 +98,15 @@ int main(int argc,char* argv[])
     smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
     logger.info( "Locale resources loaded" );
     smsc::util::config::smeman::SmeManConfig smemancfg;
-    smemancfg.load(get_filename("sme.xml"));
+    smemancfg.load(findConfigFile("sme.xml"));
     cfgs.smemanconfig=&smemancfg;
     logger.info( "SME configuration loaded" );
     smsc::util::config::alias::AliasConfig aliascfg;
-    aliascfg.load(get_filename("aliases.xml"));
+    aliascfg.load(findConfigFile("aliases.xml"));
     cfgs.aliasconfig=&aliascfg;
     logger.info( "Alias configuration loaded" );
     smsc::util::config::route::RouteConfig rc;
-    rc.load(get_filename("routes.xml"));
+    rc.load(findConfigFile("routes.xml"));
     cfgs.routesconfig=&rc;
     logger.info( "Route configuration loaded" );
 

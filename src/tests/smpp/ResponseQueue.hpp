@@ -28,7 +28,7 @@ namespace smsc {
       class ResponseQueue : smsc::test::util::ProtectedCopy {
         typedef smsc::test::util::Handler<Response> ResponseHandler;
 
-        log4cpp::Category& log;
+        smsc::logger::Logger log;
         smsc::core::synchronization::Mutex responseMutex;
         IntHash<ResponseHandler> responseMap;
       public:

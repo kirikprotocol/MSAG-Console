@@ -14,20 +14,20 @@ namespace admin {
 namespace service {
 
 using smsc::util::xml;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
 class ServiceCommand
 {
 protected:
 	Method method;
 	Arguments args;
-	log4cpp::Category &logger;
+	smsc::logger::Logger logger;
 
 public:
 	ServiceCommand(DOM_Node commandNode)
 		throw (AdminException)
 		: method(commandNode),
-		  logger(Logger::getCategory("smsc.admin.service.ServiceCommand"))
+		  logger(Logger::getInstance("smsc.admin.service.ServiceCommand"))
 	{
 		DOM_NodeList childs = commandNode.getChildNodes();
 		for (unsigned i=0; i<childs.getLength(); i++)

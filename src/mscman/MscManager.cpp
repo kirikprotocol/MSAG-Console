@@ -95,8 +95,8 @@ namespace smsc { namespace mscman
 
 Mutex MscManager::startupLock;
 MscManager* MscManager::instance = 0;
-log4cpp::Category& MscManager::log = 
-    Logger::getCategory("smsc.mscman.MscManager");
+smsc::logger::Logger MscManager::log = 
+    Logger::getInstance("smsc.mscman.MscManager");
 
 MscManager::MscManager(DataSource& _ds, Manager& config)
     throw(ConfigException)

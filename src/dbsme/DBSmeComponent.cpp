@@ -9,7 +9,7 @@ static const char* ARGUMENT_NAME_ENABLED     = "enabled";
 static const char* ARGUMENT_PROVIDER_NAME_ID = "providerId";
 
 DBSmeComponent::DBSmeComponent(DBSmeAdmin& admin)
-    : logger(Logger::getCategory("smsc.dbsme.DBSmeComponent")), admin(admin)
+    : logger(Logger::getInstance("smsc.dbsme.DBSmeComponent")), admin(admin)
 {
     Parameters empty_params;
     Method restart((unsigned)restartMethod, "restart", empty_params, StringType);

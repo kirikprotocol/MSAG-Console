@@ -18,7 +18,7 @@ namespace test {
 using smsc::admin::AdminException;
 using smsc::admin::service;
 using smsc::util::config::Config;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
 class DumbServiceCommandHandler : public Component
 {
@@ -31,12 +31,12 @@ protected:
 		setConfigId
 	};
 	Config config;
-	log4cpp::Category &logger;
+	smsc::logger::Logger logger;
 	std::string dumb_config;
 
 public:
 	DumbServiceCommandHandler()
-		: logger(Logger::getCategory("smsc.admin.service.test.DumbServiceCommandHandler"))
+		: logger(Logger::getInstance("smsc.admin.service.test.DumbServiceCommandHandler"))
 	{
 		Parameters params_empty;
 		methods["get service config"] = Method(getConfigId,

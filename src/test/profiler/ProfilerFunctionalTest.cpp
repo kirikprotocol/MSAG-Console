@@ -10,8 +10,8 @@
 #include "ProfilerCheckList.hpp"
 #include <sstream>
 
-using log4cpp::Category;
-using smsc::util::Logger;
+using smsc::logger::Logger;
+using smsc::logger::Logger;
 using smsc::profiler::Profile;
 using smsc::smeman::SmeManager;
 using smsc::smeman::ProxyMonitor;
@@ -23,7 +23,7 @@ using namespace smsc::test::profiler; //ProfilerTestCases, ProfilerCheckList
 using namespace smsc::test::util; //TCSelector, Deletor
 using namespace std;
 
-static Category& log = Logger::getCategory("ProfilerFunctionalTest");
+static Logger log = Logger::getInstance("ProfilerFunctionalTest");
 
 class ProfilerMonitor : public ThreadedTask, public ProxyMonitor
 {

@@ -36,8 +36,8 @@
 
 namespace smsc {
 
-namespace util{
-extern log4cpp::Category* _sms_err_cat;
+namespace logger{
+extern smsc::logger::Logger* _sms_err_cat;
 };
 
 
@@ -1657,7 +1657,7 @@ struct SMS
     {
       if(messageBody.hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE))
       {
-        util::_sms_err_cat->warn("both rawpayload and rawshortmessage present at %s:%d",file,line);
+        logger::_sms_err_cat->warn("both rawpayload and rawshortmessage present at %s:%d",file,line);
         unsigned len;
         messageBody.getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
         if(len==0)return true;

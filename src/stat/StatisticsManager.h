@@ -24,7 +24,7 @@ namespace smsc { namespace stat
     using core::buffers::IntHash;
     using core::buffers::Hash;
     
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::TimeSlotCounter;
     
     struct SmsStat
@@ -114,7 +114,7 @@ namespace smsc { namespace stat
     {
     protected:
     
-        log4cpp::Category       &logger;
+		smsc::logger::Logger    logger;
         DataSource              &ds;
         
         SmsStat         statGeneral[2];

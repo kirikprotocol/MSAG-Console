@@ -2,7 +2,6 @@
 #define SMSC_UTIL_XML_DOM_ERROR_LOGGER
 
 #include <xercesc/sax/ErrorHandler.hpp>
-#include <log4cpp/Category.hh>
 #include <logger/Logger.h>
 
 namespace smsc {

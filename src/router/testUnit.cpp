@@ -24,6 +24,7 @@ public:
     virtual void attachMonitor(ProxyMonitor *monitor) {}
     virtual bool attached() {return false;}
     virtual uint32_t getNextSequenceNumber() {return 1;}
+	virtual const char* getSystemId() const {return "fake proxy";}
   };
   class FakeSmeTable : public SmeTable
   {

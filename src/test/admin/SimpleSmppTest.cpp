@@ -504,7 +504,7 @@ int main(int argc, char* argv[])
 		cout << "Usage: SimpleSmppTest [host] [port]" << endl;
 		exit(-1);
 	}
-	smsc::util::Logger::getCategory("");
+	smsc::logger::Logger::getInstance("");
 	string smscHost = "smsc";
 	int smscPort = 15971;
 	if (argc == 3)

@@ -9,7 +9,7 @@ PACKAGE := mscman
 
 #__LIBRARIES := $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so
 
-__LIBRARIES := -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc
+__LIBRARIES := -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -L$(SMSC_BUILDDIR)/bin -ldb_exc
 __OCI_LIB_SO__ :=  $(ORACLE_LIB)/libclntsh.so
 
 ifndef SMSC_SRCDIR

@@ -12,7 +12,7 @@ using std::ostringstream;
 using smsc::sms::Address;
 using smsc::sms::AddressValue;
 using smsc::core::synchronization::MutexGuard;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::test::conf::TestConfig;
 using smsc::test::smpp::SmppUtil;
 using namespace smsc::test::core; //constants, PduData
@@ -60,9 +60,9 @@ DbSmeTestCases::DbSmeTestCases(SmppFixture* fixture, DbSmeRegistry* _dbSmeReg)
 	handlers["ExceptionJob"] = &plsqlTc;
 }
 
-Category& DbSmeTestCases::getLog()
+Logger DbSmeTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("DbSmeTestCases");
+	static Logger log = Logger::getInstance("DbSmeTestCases");
 	return log;
 }
 

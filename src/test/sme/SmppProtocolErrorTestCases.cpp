@@ -6,7 +6,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::test::conf::TestConfig;
 using namespace smsc::sme;
 using namespace smsc::smpp::SmppCommandSet;
@@ -337,9 +337,9 @@ SmppProtocolErrorTestCases::SmppProtocolErrorTestCases(const SmeConfig& _cfg,
 	const Address& _smeAddr, CheckList* _chkList)
 : cfg(_cfg), smeAddr(_smeAddr), chkList(_chkList) {}
 
-Category& SmppProtocolErrorTestCases::getLog()
+Logger SmppProtocolErrorTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("SmppProtocolErrorTestCases");
+	static Logger log = Logger::getInstance("SmppProtocolErrorTestCases");
 	return log;
 }
 

@@ -29,7 +29,7 @@ namespace smsc { namespace db
 {
     using namespace smsc::core::synchronization;
     
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::core::buffers::Hash;
     using smsc::core::buffers::Array;
     using smsc::util::config::ConfigView;
@@ -256,7 +256,7 @@ namespace smsc { namespace db
     
     protected:
         
-        log4cpp::Category   &log;
+		smsc::logger::Logger log;
 
         bool                isConnected, isDead;
         
@@ -264,7 +264,7 @@ namespace smsc { namespace db
         Hash<Statement *>   statementsRegistry;
         
         Connection() 
-            : next(0), log(Logger::getCategory("smsc.db.Connection")),
+            : next(0), log(Logger::getInstance("smsc.db.Connection")),
                 isConnected(false), isDead(false) {};
 
     public:
@@ -436,10 +436,10 @@ namespace smsc { namespace db
     {
     private:
 
-        DataSource          &ds;
-        log4cpp::Category   &log;
+        DataSource           &ds;
+        smsc::logger::Logger log;
 
-        EventMonitor        monitor;
+        EventMonitor         monitor;
         
         struct ConnectionQueue
         {

@@ -8,7 +8,7 @@ namespace smsc { namespace wsme
 
 WSmeProcessor::WSmeProcessor(ConfigView* config)
     //throw(ConfigException, InitException)
-        : WSmeAdmin(), log(Logger::getCategory("smsc.wsme.WSmeProcessor")),
+        : WSmeAdmin(), log(Logger::getInstance("smsc.wsme.WSmeProcessor")),
             svcType(0), protocolId(0), 
             ds(0), visitorManager(0), langManager(0), adManager(0)
 {
@@ -150,7 +150,7 @@ void WSmeProcessor::removeAd(int id, const std::string lang)
 /* ------------------------ VisitorManager ------------------------ */
 VisitorManager::VisitorManager(DataSource& _ds, ConfigView* config) 
     //throw (InitException)
-        : log(Logger::getCategory("smsc.wsme.WSmeVisitorManager")), ds(_ds) 
+        : log(Logger::getInstance("smsc.wsme.WSmeVisitorManager")), ds(_ds) 
 {
     loadUpVisitors();
 }
@@ -324,7 +324,7 @@ void VisitorManager::removeVisitor(const std::string msisdn)
 
 LangManager::LangManager(DataSource& _ds, ConfigView* config)
     //throw (InitException)
-        : log(Logger::getCategory("smsc.wsme.WSmeLangManager")), ds(_ds)
+        : log(Logger::getInstance("smsc.wsme.WSmeLangManager")), ds(_ds)
 {
     ConfigView* langConfig = 0;
     try
@@ -548,7 +548,7 @@ void LangManager::removeLang(const std::string mask)
 
 AdRepository::AdRepository(DataSource& _ds, ConfigView* config)
     //throw(ConfigException, InitException) 
-        : log(Logger::getCategory("smsc.wsme.WSmeAdRepository")), ds(_ds)
+        : log(Logger::getInstance("smsc.wsme.WSmeAdRepository")), ds(_ds)
 {
     loadUpAds();
 }
@@ -772,7 +772,7 @@ void AdRepository::removeAd(int id, const std::string lang)
 
 AdHistory::AdHistory(DataSource& _ds, ConfigView* config, AdIdManager& idman)
     //throw(ConfigException, InitException) 
-        : Thread(), log(Logger::getCategory("smsc.wsme.WSmeAdHistory")), 
+        : Thread(), log(Logger::getInstance("smsc.wsme.WSmeAdHistory")), 
             ds(_ds), idManager(idman), bStarted(false)
 
 {
@@ -1078,7 +1078,7 @@ void AdHistory::receiptAd(const std::string msgid, bool receipted)
 
 AdManager::AdManager(DataSource& _ds, ConfigView* config)
     //throw(ConfigException, InitException) 
-        : log(Logger::getCategory("smsc.wsme.WSmeAdManager")), ds(_ds),
+        : log(Logger::getInstance("smsc.wsme.WSmeAdManager")), ds(_ds),
             history(0), repository(0)
 {
     MutexGuard  guard(initLock);

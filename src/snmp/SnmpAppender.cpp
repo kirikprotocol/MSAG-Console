@@ -1,36 +1,56 @@
 #include <stdio.h>
 #include <time.h>
 #include "SnmpAppender.hpp"
-#include <log4cpp/Category.hh>
 #include "SnmpAgent.hpp"
+
 namespace smsc {
-  namespace snmp {
-    using log4cpp::LoggingEvent;
-    SnmpAppender::SnmpAppender(const std::string& name, SnmpAgent *agent) :
-      LayoutAppender(name),
-      agent(agent)
-    {
-    }
-    
-    SnmpAppender::~SnmpAppender()
-    {
-    }
-    void SnmpAppender::close()
-    {
-    }
+namespace snmp {
 
-    void SnmpAppender::_append(const LoggingEvent& event)
-    {
-      fprintf(stderr,"snmp appender\n");
-        std::string message(event.message);
-      //std::string message(_getLayout().format(event));
+#ifdef LOGGER_LIB_LOG4CPP
+using log4cpp::LoggingEvent;
+SnmpAppender::SnmpAppender(const std::string& name, SnmpAgent *agent) :
+LayoutAppender(name),
+	agent(agent)
+{
+}
 
-      if (agent)
-      {
-        agent->trap(message);
-      }
-      fprintf(stderr,"snmp appender exit\n");
-    }
+SnmpAppender::~SnmpAppender()
+{
+}
+void SnmpAppender::close()
+{
+}
 
-  }
+void SnmpAppender::_append(const LoggingEvent& event)
+{
+	std::string message(event.message);
+	if (agent)
+	{
+		agent->trap(message);
+	}
+}
+#else
+SnmpAppender::SnmpAppender(const std::string& name, SnmpAgent *agent)
+	:Appender(), agent(agent)
+{
+}
+
+SnmpAppender::~SnmpAppender()
+{
+}
+
+void SnmpAppender::close()
+{
+}
+
+void SnmpAppender::append(const InternalLoggingEvent& event)
+{
+	std::string message(event.getMessage());
+	if (agent)
+	{
+		agent->trap(message);
+	}
+}
+#endif
+}
 }

@@ -68,7 +68,7 @@ void Config::processNode(const DOM_Element &element,
 				}
 				else
 				{
-					log4cpp::Category &logger(Logger::getCategory("smsc.util.config.Config"));
+					smsc::logger::Logger logger(Logger::getInstance("smsc.util.config.Config"));
 					logger.warn("Unknown node \"%s\" in section \"%s\"", nodeName.get(), prefix);
 				}
 			}
@@ -108,14 +108,14 @@ void Config::processParamNode(const DOM_Element &element,
 		}
 		else
 		{
-			log4cpp::Category &logger(Logger::getCategory("smsc.util.config.Config"));
+			smsc::logger::Logger logger(Logger::getInstance("smsc.util.config.Config"));
 			logger.warn("Unrecognized boolean value \"%s\" for parameter \"%s\". Setted to FALSE.", value.get(), name);
 			setBool(name, false);
 		}
 	}
 	else
 	{
-		log4cpp::Category &logger(Logger::getCategory("smsc.util.config.Config"));
+		smsc::logger::Logger logger(Logger::getInstance("smsc.util.config.Config"));
 		logger.warn("Unrecognized parameter type \"%s\" for parameter \"%s\"", type, name);
 	}
 }

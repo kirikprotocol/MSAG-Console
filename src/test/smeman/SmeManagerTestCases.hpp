@@ -15,7 +15,7 @@ namespace smeman {
 using std::ostream;
 using std::map;
 using std::vector;
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::sms::Address;
 using smsc::test::core::SmeRegistry;
 using smsc::test::util::CheckList;
@@ -118,7 +118,7 @@ public:
 	static void setupRandomCorrectSmeInfo(SmeInfo* sme);
 
 protected:
-	virtual Category& getLog();
+	virtual Logger getLog();
 
 private:
 	SmeManager* smeMan;

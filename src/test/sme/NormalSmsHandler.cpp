@@ -11,7 +11,7 @@ namespace test {
 namespace sme {
 
 using smsc::sms::Address;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::test::conf::TestConfig;
 using namespace smsc::profiler;
 using namespace smsc::smpp::SmppCommandSet;
@@ -24,9 +24,9 @@ using namespace smsc::test::util;
 NormalSmsHandler::NormalSmsHandler(SmppFixture* _fixture)
 : fixture(_fixture), chkList(_fixture->chkList) {}
 
-Category& NormalSmsHandler::getLog()
+Logger NormalSmsHandler::getLog()
 {
-	static Category& log = Logger::getCategory("NormalSmsHandler");
+	static Logger log = Logger::getInstance("NormalSmsHandler");
 	return log;
 }
 

@@ -11,8 +11,8 @@
 using namespace std;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
-using log4cpp::Category;
-using smsc::util::Logger;
+using smsc::logger::Logger;
+using smsc::logger::Logger;
 using smsc::sms::SMS;
 using smsc::sms::SMSId;
 using smsc::util::config::Manager;
@@ -92,7 +92,7 @@ public:
 
 void debug(const char* str)
 {
-	static Category& log = Logger::getCategory("smsc.test.store.BusinessCycleTest");
+	static Logger log = Logger::getInstance("smsc.test.store.BusinessCycleTest");
 	log.debug("[%d]\t%s", thr_self(), str);
 }
 

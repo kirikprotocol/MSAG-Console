@@ -14,14 +14,14 @@ namespace smsc { namespace dbsme
 {
     using namespace smsc::admin::service;
     
-    using smsc::util::Logger;
+    using smsc::logger::Logger;
     using smsc::util::Exception;
     
     class DBSmeComponent : public Component
     {
     private:
     
-        log4cpp::Category  &logger;
+        smsc::logger::Logger logger;
 
         DBSmeAdmin         &admin;
         Methods            methods;

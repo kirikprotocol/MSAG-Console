@@ -1,7 +1,6 @@
 #ifndef	SMSC_ADMIN_PROTOCOL_COMMAND_RUN_COMMAND
 #define SMSC_ADMIN_PROTOCOL_COMMAND_RUN_COMMAND
 
-#include <log4cpp/Category.hh>
 #include <xercesc/dom/DOM_Document.hpp>
 #include <xercesc/dom/DOM_Node.hpp>
 #include <xercesc/dom/DOM_NodeList.hpp>
@@ -22,7 +21,7 @@ namespace protocol {
 using smsc::admin::protocol::CommandService;
 //using smsc::admin::service::ServiceCommand;
 using smsc::util::xml::getNodeAttribute;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::admin::service::Method;
 using smsc::admin::service::Methods;
 using smsc::admin::service::Variant;
@@ -36,7 +35,7 @@ public:
 		throw ()
 		: CommandService(call, doc),
 			method(doc.getDocumentElement()),
-		  logger(Logger::getCategory("smsc.admin.service.ServiceCommand"))
+		  logger(Logger::getInstance("smsc.admin.service.ServiceCommand"))
 	{
 		DOM_Element elem = data.getDocumentElement();
 		component	= elem.getAttribute("component").transcode();
@@ -102,7 +101,7 @@ protected:
 	char * component;
 	Method method;
 	Arguments args;
-	log4cpp::Category &logger;
+	smsc::logger::Logger logger;
 //	ServiceCommand *serviceCommand;
 };
 

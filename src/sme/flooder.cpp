@@ -6,6 +6,7 @@
 #include "core/buffers/Array.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "util/timeslotcounter.hpp"
+#include "logger/Logger.h"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -13,6 +14,7 @@ using namespace smsc::smpp;
 using namespace smsc::util;
 using namespace smsc::core::buffers;
 using namespace smsc::core::synchronization;
+using namespace smsc::logger;
 
 const int MAX_UNRESPONDED_HIGH=5000;
 const int MAX_UNRESPONDED_LOW=2000;

@@ -10,18 +10,15 @@
 #include <util/config/ConfigException.h>
 #include <system/smscsignalhandlers.h>
 
-using log4cpp::Category;
 using std::cout;
 using std::cerr;
 using std::endl;
 using smsc::admin::AdminException;
-using smsc::admin::service::ComponentManager;
-using smsc::admin::service::ServiceSocketListener;
-using smsc::admin::service::ServiceCommandDispatcher;
+using namespace smsc::admin::service;
 using smsc::admin::service::test::DumbServiceCommandHandler;
 using smsc::util::config::ConfigException;
 using smsc::util::config::Manager;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::util::xml::initXerces;
 
 void clearThreadSignalMask()
@@ -96,7 +93,7 @@ int main (int argc, char *argv[])
 	
 		Logger::Init(config.getString("dumbtest.loggerInitFile"));
 		
-		Category &logger(Logger::getCategory("smsc.admin.service.test.ServiceSocketListenerTest"));
+		Logger logger(Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest"));
 		
 		for (int i=0; i<argc; i++)
 			logger.debug("Param[%u]=\"%s\"", i, argv[i]);
@@ -117,11 +114,11 @@ int main (int argc, char *argv[])
 		Manager::deinit();
  		logger.debug("Service stopped");
  	} catch (AdminException &e) {
- 		Logger::getCategory("smsc.admin.service.test.ServiceSocketListenerTest").debug("Exception occured: \"%s\"", e.what());
+ 		Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest").debug("Exception occured: \"%s\"", e.what());
 	} catch (ConfigException &e) {
- 		Logger::getCategory("smsc.admin.service.test.ServiceSocketListenerTest").debug("Exception occured: \"%s\"", e.what());
+ 		Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest").debug("Exception occured: \"%s\"", e.what());
  	} catch (...) {
- 		Logger::getCategory("smsc.admin.service.test.ServiceSocketListenerTest").debug("Unknown Exception occured");
+ 		Logger::getInstance("smsc.admin.service.test.ServiceSocketListenerTest").debug("Unknown Exception occured");
  	}
  	return 0;
 }

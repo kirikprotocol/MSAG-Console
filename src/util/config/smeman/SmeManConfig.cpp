@@ -1,6 +1,7 @@
 #include "SmeManConfig.h"
 
 #include <fstream>
+#include <sstream>
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
 #include <logger/Logger.h>
 
@@ -33,7 +34,7 @@ SmeManConfig::status SmeManConfig::RecordIterator::fetchNext(SmeRecord *&record)
 }
 
 SmeManConfig::SmeManConfig()
-  : logger(smsc::util::Logger::getCategory("smsc.util.config.smeman.SmeManConfig"))
+  : logger(smsc::logger::Logger::getInstance("smsc.util.config.smeman.SmeManConfig"))
 {
 }
 
@@ -209,13 +210,13 @@ SmeManConfig::status SmeManConfig::reload()
   return load(cfn.get());
 }
 
-SmeManConfig::status SmeManConfig::store(const char * const filename) const
+SmeManConfig::status SmeManConfig::store(const char * const filename)
 {
   std::ofstream out(filename);
   return store(out);
 }
 
-SmeManConfig::status SmeManConfig::store(std::ostream &out) const
+SmeManConfig::status SmeManConfig::store(std::ostream &out)
 {
   try {
     out << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" << std::endl;
@@ -259,7 +260,7 @@ SmeManConfig::RecordIterator SmeManConfig::getRecordIterator() const
   return RecordIterator(records);
 }
 
-std::string SmeManConfig::getText() const
+std::string SmeManConfig::getText()
 {
   std::ostringstream out;
   if (store(out) == success)

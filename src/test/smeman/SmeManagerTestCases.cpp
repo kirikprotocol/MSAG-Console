@@ -10,7 +10,7 @@ namespace smsc {
 namespace test {
 namespace smeman {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
 using smsc::test::conf::TestConfig;
@@ -37,9 +37,9 @@ SmeManagerTestCases::SmeManagerTestCases(SmeManager* _smeMan, SmeRegistry* _smeR
 	//__require__(chkList);
 }
 
-Category& SmeManagerTestCases::getLog()
+Logger SmeManagerTestCases::getLog()
 {
-	static Category& log = Logger::getCategory("SmeManagerTestCases");
+	static Logger log = Logger::getInstance("SmeManagerTestCases");
 	return log;
 }
 

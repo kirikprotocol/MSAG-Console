@@ -7,7 +7,6 @@ namespace smsc {
 namespace test {
 namespace admin {
 
-using log4cpp::Category;
 using smsc::test::util::CheckList;
 
 static const char* noSC = "/^Failed: .*. Cause: Couldn't connect to .*, nested: Connection refused$/";
@@ -32,7 +31,7 @@ public:
 	void incorrectCommands();
 
 protected:
-	virtual Category& getLog();
+	virtual Logger getLog();
 	const char* getReport(const char* mask);
 	const char* getEncoding(const char* mask);
 };

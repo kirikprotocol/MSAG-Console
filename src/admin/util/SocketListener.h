@@ -1,7 +1,6 @@
 #ifndef SMSC_ADMIN_UTIL_SOCKET_LISTENER
 #define SMSC_ADMIN_UTIL_SOCKET_LISTENER
 
-#include <log4cpp/Category.hh>
 #include <admin/AdminException.h>
 #include <core/network/Socket.hpp>
 #include <core/threads/ThreadPool.hpp>
@@ -14,12 +13,12 @@ namespace smsc {
 namespace admin {
 namespace util {
 
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::admin::AdminException;
 using smsc::core::network::Socket;
 using smsc::core::threads::ThreadPool;
 using smsc::core::threads::Thread;
-using smsc::util::Logger;
+using smsc::logger::Logger;
 using smsc::core::synchronization::EventMonitor;
 
 template<class _T_CommandDispatcher>
@@ -27,9 +26,9 @@ class SocketListener : public Thread
 {
 public:
 
-	SocketListener(const char * const debugCategory = "smsc.admin.util.SocketListener")
+	SocketListener(const char * const loggerCatname = "smsc.admin.util.SocketListener")
 		throw (AdminException)
-		: logger(Logger::getCategory(debugCategory))
+		: logger(Logger::getInstance(loggerCatname))
 	{
 	}
 
@@ -114,7 +113,7 @@ protected:
 	bool isShutdownSignaled;
 	bool isAbortSignaled;
 	ThreadPool pool;
-	Category &logger;
+	Logger logger;
 };
 
 }

@@ -9,6 +9,8 @@
 #include "readline/history.h"
 #include <locale.h>
 #include "core/buffers/Hash.hpp"
+#include <vector>
+#include "logger/Logger.h"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -16,6 +18,7 @@ using namespace smsc::smpp;
 using namespace smsc::util;
 using namespace std;
 using namespace smsc::core::buffers;
+using smsc::logger::Logger;
 
 int stopped=0;
 

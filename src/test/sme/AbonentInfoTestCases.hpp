@@ -42,7 +42,7 @@ public:
 	void queryAbonentInfoIncorrect(bool sync, uint8_t dataCoding, int num);
 
 protected:
-	virtual Category& getLog();
+	virtual Logger getLog();
 	
 	AbonentData* getAbonentData(const string& input);
 	void sendAbonentInfoPdu(const string& input, bool sync,

@@ -11,7 +11,7 @@ namespace smsc {
 namespace util {
 namespace xml {
 
-using smsc::util::Logger;
+using smsc::logger::Logger;
 
 DOMTreeReader::DOMTreeReader()
 {
@@ -57,7 +57,7 @@ DOM_Document DOMTreeReader::read(const InputSource & source)
 		parser->parse(source);
 		int errorCount = parser->getErrorCount();
 		if (errorCount > 0) {
-			log4cpp::Category &logger(Logger::getCategory("smsc.util.xml.DOMTreeReader"));
+			smsc::logger::Logger logger(Logger::getInstance("smsc.util.xml.DOMTreeReader"));
 			logger.error("An %d errors occured during parsing received command", errorCount);
 			throw ParseException("An errors occured during parsing");
 		}
@@ -69,26 +69,26 @@ DOM_Document DOMTreeReader::read(const InputSource & source)
 		XMLExcepts::Codes code = e.getCode();
 		const char *srcFile = e.getSrcFile();
 		unsigned int line = e.getSrcLine();
-		log4cpp::Category &logger(Logger::getCategory("smsc.util.xml.DOMTreeReader"));
+		smsc::logger::Logger logger(Logger::getInstance("smsc.util.xml.DOMTreeReader"));
 		logger.error("An error occured during parsing received (\"%s\") command on line %d. Nested: %d: %s", srcFile, line, code, message.get());
 		throw ParseException(message.get());
 	}
 	catch (const DOM_DOMException& e)
 	{
-		log4cpp::Category &logger(Logger::getCategory("smsc.util.xml.DOMTreeReader"));
+		smsc::logger::Logger logger(Logger::getInstance("smsc.util.xml.DOMTreeReader"));
 		logger.error("A DOM error occured during parsing received command. DOMException code: %i", e.code);
 		throw ParseException("An errors occured during parsing");
 	}
 	catch (const SAXException &e)
 	{
 		std::auto_ptr<char> message(DOMString(e.getMessage()).transcode());
-		log4cpp::Category &logger(Logger::getCategory("smsc.util.xml.DOMTreeReader"));
+		smsc::logger::Logger logger(Logger::getInstance("smsc.util.xml.DOMTreeReader"));
 		logger.error("A DOM error occured during parsing received command, nested: %s", message.get());
 		throw ParseException(message.get());
 	}
 	catch (...)
 	{
-		log4cpp::Category &logger(Logger::getCategory("smsc.util.xml.DOMTreeReader"));
+		smsc::logger::Logger logger(Logger::getInstance("smsc.util.xml.DOMTreeReader"));
 		logger.error("An error occured during parsing  received command");
 		throw ParseException("An errors occured during parsing");
 	}

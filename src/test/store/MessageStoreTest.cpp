@@ -17,8 +17,8 @@ using namespace smsc::util::config;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
 using std::ostringstream;
-using log4cpp::Category;
-using smsc::util::Logger;
+using smsc::logger::Logger;
+using smsc::logger::Logger;
 
 #define __new__ \
 	id.push_back(new SMSId()); \
@@ -26,7 +26,7 @@ using smsc::util::Logger;
 	
 void executeTest(MessageStoreTestCases& tc)
 {
-	Category& log = Logger::getCategory("smsc.test.store.Test");
+	Logger log = Logger::getInstance("smsc.test.store.Test");
 
 	vector<SMSId*> id;
 	vector<SMS*> sms;

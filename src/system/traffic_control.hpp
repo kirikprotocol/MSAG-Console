@@ -44,7 +44,7 @@ public:
     totalCounter(cfg.shapeTimeFrame,10),
     totalCounterLong(cfg.smoothTimeFrame,10)
   {
-    log=&smsc::util::Logger::getCategory("smsc.tc");
+    log=new smsc::logger::Logger(smsc::logger::Logger::getInstance("smsc.tc"));
   }
 
 
@@ -91,7 +91,7 @@ protected:
   IntTimeSlotCounter totalCounter;
   IntTimeSlotCounter totalCounterLong;
   Mutex mtx;
-  log4cpp::Category* log;
+  smsc::logger::Logger* log;
   friend class StatusSme;
 };
 

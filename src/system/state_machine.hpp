@@ -89,7 +89,7 @@ protected:
   smsc::store::MessageStore* store;
   smsc::system::Smsc *smsc;
 
-  log4cpp::Category* smsLog;
+  smsc::logger::Logger* smsLog;
 
   std::string serviceType;
   int protocolId;

@@ -10,7 +10,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
-using log4cpp::Category;
+using smsc::logger::Logger;
 using smsc::sms::Address;
 using smsc::sme::SmeConfig;
 using smsc::sme::SmppPduEventListener;
@@ -130,7 +130,7 @@ protected:
 	const Address smeAddr;
 	CheckList* chkList;
 
-	virtual Category& getLog();
+	virtual Logger getLog();
 };
 
 }

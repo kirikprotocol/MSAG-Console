@@ -6,7 +6,7 @@ namespace smsc { namespace stat
 
 StatisticsManager::StatisticsManager(DataSource& _ds)
     : Statistics(), ThreadedTask(),
-        logger(Logger::getCategory("smsc.stat.StatisticsManager")),
+        logger(Logger::getInstance("smsc.stat.StatisticsManager")),
             ds(_ds), currentIndex(0), isStarted(false), bExternalFlush(false)
 {
     resetCounters(0); resetCounters(1);
