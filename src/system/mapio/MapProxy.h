@@ -26,20 +26,21 @@ public:
   virtual ~MapProxy(){}
   virtual void close(){}
   void notifyOutThread(){}
-  virtual void putCommand(const SmscCommand& cmd)
-  {
-    __trace2__("MAPPROXY::putCommand");
-    {
-      MutexGuard g(mutex);
-      if(outqueue.Count()==MAP_PROXY_QUEUE_LIMIT)
-      {
-        throw ProxyQueueLimitException();
-      }
-      __trace2__("MAPPROXY::put command:%p",*((void**)&cmd));
-      outqueue.Push(cmd);
-    }
-    notifyOutThread();
-  }
+  virtual void putCommand(const SmscCommand& cmd);
+  //{
+  //  __trace2__("MAPPROXY::putCommand");
+  //  {
+  //    MutexGuard g(mutex);
+  //    /*if(outqueue.Count()==MAP_PROXY_QUEUE_LIMIT)
+  //    {
+  //      throw ProxyQueueLimitException();
+  //    }
+  //    __trace2__("MAPPROXY::put command:%p",*((void**)&cmd));
+  //    outqueue.Push(cmd);*/
+  //
+  //  }
+  //  //notifyOutThread();
+  //}
   virtual SmscCommand getCommand()
   {
     MutexGuard g(mutex);
