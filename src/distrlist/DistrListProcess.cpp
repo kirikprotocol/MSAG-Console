@@ -179,6 +179,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
   }
   auto_ptr<ListTask> task(new ListTask());
   task->count = 0;
+  task->cmd = cmd;
   for ( unsigned i=0; i < multi->number_of_dests; ++i )
   {
     if ( task->count >= MAX_COUNT ) {
