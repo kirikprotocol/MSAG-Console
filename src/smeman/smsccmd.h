@@ -197,9 +197,9 @@ public:
     return cmd;
   }
   ~SmscCommand() { 
-                __trace__(__PRETTY_FUNCTION__);
-                dispose();
-        }
+     //__trace__(__PRETTY_FUNCTION__);
+     dispose();
+  }
   SmscCommand() : cmd (0) {}
   SmscCommand(SmppHeader* pdu) : cmd (0)
   {
