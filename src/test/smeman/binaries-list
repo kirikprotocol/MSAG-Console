@@ -1,0 +1,4 @@
+#binary name			source name			libraries
+test/SmeManagerFunctionalTest	SmeManagerFunctionalTest	-ltest-smeman -ltest-core -ltest-util -lrouter -lsmeman -lutil-config -lutil -llog4cpp -lxerces-c1_5_2
+test/SmeManagerTest		SmeManagerTest			-ltest-smeman -ltest-core -ltest-util -lrouter -lsmeman -lutil-config -lutil -llog4cpp -lxerces-c1_5_2
+
