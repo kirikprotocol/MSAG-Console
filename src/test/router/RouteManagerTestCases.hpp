@@ -20,15 +20,18 @@ using std::ostream;
 using log4cpp::Category;
 using smsc::sms::Address;
 using smsc::router::RouteInfo;
+using smsc::router::RoutePriority;
 using smsc::router::RouteManager;
 using smsc::smeman::SmeSystemId;
+using smsc::smeman::SmeProxy;
 using smsc::test::core::TestRouteData;
 using smsc::test::core::RouteRegistry;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::TCResult;
 
 //implemented
-const char* const TC_ADD_CORRECT_ROUTE = "addCorrectRoute";
+const char* const TC_ADD_CORRECT_ROUTE_MATCH = "addCorrectRouteMatch";
+const char* const TC_ADD_CORRECT_ROUTE_NOT_MATCH = "addCorrectRouteNotMatch";
 const char* const TC_ADD_INCORRECT_ROUTE = "addIncorrectRoute";
 const char* const TC_LOOKUP_ROUTE = "lookupRoute";
 const char* const TC_ITERATE_ROUTES = "iterateRoutes";
@@ -47,16 +50,22 @@ public:
 	virtual ~RouteManagerTestCases() {}
 
 	/**
-	 * Добавление корректного маршрута.
+	 * Добавление корректного рабочего маршрута.
 	 */
-	TCResult* addCorrectRoute(const SmeSystemId& smeSystemId,
+	TCResult* addCorrectRouteMatch(const SmeSystemId& smeSystemId,
+		TestRouteData* data, int num);
+
+	/**
+	 * Добавление корректного нерабочего маршрута.
+	 */
+	TCResult* addCorrectRouteNotMatch(const SmeSystemId& smeSystemId,
 		TestRouteData* data, int num);
 
 	/**
 	 * Добавление корректного маршрута с неправильными (непроверяемыми)
 	 * значениями.
 	 */
-	TCResult* addCorrectRoute2(const SmeSystemId& smeSystemId,
+	TCResult* addCorrectRouteNotMatch2(const SmeSystemId& smeSystemId,
 		TestRouteData* data, int num);
 
 	/**
@@ -81,7 +90,12 @@ protected:
 
 private:
 	RouteManager* routeMan;
-	void debugRoute(RouteInfo& route);
+	float setupRandomAddressMatch(Address& addr, int num);
+	void setupRandomAddressNotMatch(Address& addr, int num);
+	void setupRandomPriority(RoutePriority* priority, int num);
+	void debugRoute(const TestRouteData* route);
+	void printLookupResult(const Address& origAddr, const Address& destAddr,
+		const vector<const SmeProxy*>& ids, const SmeProxy* proxy);
 };
 
 }
