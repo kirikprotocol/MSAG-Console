@@ -103,6 +103,7 @@ void DbSmeTestCases::sendDbSmePdu(PduSubmitSm* pdu, DbSmeTestRecord* rec,
 		//отправить и зарегистрировать pdu
 		PduData::ObjProps objProps;
 		objProps["dbSmeRec"] = rec;
+		rec->ref();
 		transmitter->sendSubmitSmPdu(pdu, NULL, sync, NULL, NULL, &objProps, false);
 		__tc_ok__;
 	}
@@ -281,24 +282,39 @@ void DbSmeTestCases::submitCorrectFormatDbSmeCmd(bool sync, uint8_t dataCoding, 
 	}
 }
 
-void DbSmeTestCases::submitCorrectSelectDbSmeCmd(bool sync, uint8_t dataCoding)
+void DbSmeTestCases::submitCorrectSelectDbSmeCmd(bool sync,
+	uint8_t dataCoding, int num)
 {
 	__decl_tc__;
-	__tc__("submitDbSmeCmd.correct.job.select"); __tc_ok__;
-	try
+	TCSelector s(num, 2);
+	for (; s.check(); s++)
 	{
-		PduSubmitSm* pdu = new PduSubmitSm();
-		__cfg_addr__(dbSmeAlias);
-		transmitter->setupRandomCorrectSubmitSmPdu(pdu, dbSmeAlias);
-		DbSmeTestRecord* rec = new DbSmeTestRecord();
-		__tc__("submitDbSmeCmd.correct.input.noParams"); __tc_ok__;
-		rec->setJob("SelectJob");
-		sendDbSmePdu(pdu, rec, NULL, sync, dataCoding);
-	}
-	catch(...)
-	{
-		__tc_fail__(100);
-		error();
+		__tc__("submitDbSmeCmd.correct.job.select"); __tc_ok__;
+		try
+		{
+			PduSubmitSm* pdu = new PduSubmitSm();
+			__cfg_addr__(dbSmeAlias);
+			transmitter->setupRandomCorrectSubmitSmPdu(pdu, dbSmeAlias);
+			DbSmeTestRecord* rec = new DbSmeTestRecord();
+			switch (s.value())
+			{
+				case 1: //SelectJob
+					__tc__("submitDbSmeCmd.correct.input.noParams"); __tc_ok__;
+					rec->setJob("SelectJob");
+					break;
+				case 2:
+					rec->setJob("SelectNoDefaultJob");
+					break;
+				default:
+					__unreachable__("Invalid num");
+			}
+			sendDbSmePdu(pdu, rec, NULL, sync, dataCoding);
+		}
+		catch(...)
+		{
+			__tc_fail__(100);
+			error();
+		}
 	}
 }
 
@@ -625,8 +641,12 @@ double DbSmeTestCases::getOutputDouble(const DbSmeTestRecord* rec)
 }
 
 #define __trace_ack__(job, match, text, output) \
-	__trace2__(job ": match = %s, text = %s, expected = %s", \
+	__trace2__(job ": match = %s, text:\n%s\nexpected:\n%s\n", \
 		match ? "true" : "false", text.c_str(), output.c_str())
+
+#define __trace_multi_ack__(job, match, pos, text, output) \
+	__trace2__(job ": match = %s, pos = %d, text:\n%s\nexpected:\n%s\n", \
+		match ? "true" : "false", pos, text.c_str(), output.c_str());
 
 void DbSmeTestCases::processDateFormatJobAck(const string& text,
 	DbSmeTestRecord* rec, SmeAckMonitor* monitor, int dateJobNum)
@@ -634,12 +654,12 @@ void DbSmeTestCases::processDateFormatJobAck(const string& text,
 	__require__(rec);
 	__decl_tc__;
 	__tc__("processDbSmeRes.select.singleRecord"); __tc_ok__;
-	static const DateFormatter df("w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy yyyy yyyyy h hh hhh m mm mmm t tt");
+	static const DateFormatter df("!@#$%^&*()_+-=|\\:;\"'<,>.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt");
 	static const string prefix("Date: ");
 	if (rec->checkDate())
 	{
 		__tc__("processDbSmeRes.output");
-		string output = prefix + getOutputDate(rec, df, 0);
+		string output = "\n" + prefix + getOutputDate(rec, df, 0) + "\n";
 		bool match = text == output;
 		__trace_ack__("DateFormatJob", match, text, output);
 		if (!match)
@@ -694,7 +714,7 @@ void DbSmeTestCases::processDateFormatJobAck(const string& text,
 		__tc_ok_cond__;
 	}
 	monitor->setReceived();
-	delete rec;
+	//delete rec;
 }
 
 void DbSmeTestCases::processOtherFormatJobAck(const string& text,
@@ -704,7 +724,7 @@ void DbSmeTestCases::processOtherFormatJobAck(const string& text,
 	__decl_tc__;
 	__tc__("processDbSmeRes.select.singleRecord"); __tc_ok__;
 	ostringstream res;
-	res << "from-address: '" << getOutputFromAddress(rec) << "';" << endl;
+	res << endl << "from-address: '" << getOutputFromAddress(rec) << "';" << endl;
 	string str = getOutputString(rec);
 	res << "string: \"" << str << "\"," << endl;
 	__tc__("processDbSmeRes.output.string.left"); __tc_ok__;
@@ -720,13 +740,13 @@ void DbSmeTestCases::processOtherFormatJobAck(const string& text,
 	else
 	{
 		res << "string_right: " << str << "," << endl;
-		res << "string_center: " << str << ",\n" << endl;
+		res << "string_center: " << str << "," << endl;
 	}
 	res << "string_left: " << str << ";" << endl;
 	res << "int16: (--$" << getOutputInt16(rec) << "--)," << endl;
 	res << "int32: (++$" << getOutputInt32(rec) << "++)," << endl;
 	res << "float: (**$" << getOutputFloat(rec) << "**)," << endl;
-	res << "double: (::$" << getOutputDouble(rec) << "::);";
+	res << "double: (::$" << getOutputDouble(rec) << "::);" << endl;
 	string output = res.str();
 	bool match = text == output;
 	__trace_ack__("OtherFormatJob", match, text, output);
@@ -737,7 +757,7 @@ void DbSmeTestCases::processOtherFormatJobAck(const string& text,
 	}
 	__tc_ok_cond__;
 	monitor->setReceived();
-	delete rec;
+	//delete rec;
 }
 
 void DbSmeTestCases::processInsertJobAck(const string& text,
@@ -752,14 +772,14 @@ void DbSmeTestCases::processInsertJobAck(const string& text,
 	{
 		__tc__("processDbSmeRes.insert.duplicateKey"); __tc_ok__;
 		res << "Duplicate key";
-		delete rec;
+		//delete rec;
 	}
 	else
 	{
 		__tc__("processDbSmeRes.insert.ok"); __tc_ok__;
 		static const DateFormatter df("dd-MM-yyyy HH:mm:ss");
 		ostringstream res;
-		res << "InsertJob:" << endl;
+		res << endl << "InsertJob:" << endl;
 		res << "string: " << getOutputString(rec) << endl;
 		res << "date: " << getOutputDate(rec, df, 0) << endl;
 		res << "int16: " << getOutputInt16(rec) << endl;
@@ -768,7 +788,7 @@ void DbSmeTestCases::processInsertJobAck(const string& text,
 		res << "double: " << getOutputDouble(rec) << endl;
 		res << "from-address: " << getOutputFromAddress(rec) << endl;
 		res << "id: " << rec->getId() << endl;
-		res << "rows-affected: 1";
+		res << "rows-affected: 1" << endl;
 		dbSmeReg->putRecord(rec);
 	}
 	string output = res.str();
@@ -791,7 +811,7 @@ void DbSmeTestCases::processUpdateOkJobAck(const string& text,
 	__decl_tc__;
 	__tc__("processDbSmeRes.update.ok"); __tc_ok__;
 	ostringstream res;
-	res << "UpdateJob1:" << endl;
+	res << endl << "UpdateJob1:" << endl;
 	res << "from-address: " << getOutputFromAddress(rec) << endl;
 	res << "string: " << getOutputString(rec) << endl;
 	static const DateFormatter df("dd-MM-yyyy HH:mm:ss");
@@ -806,17 +826,14 @@ void DbSmeTestCases::processUpdateOkJobAck(const string& text,
 	{
 		__require__(r->checkId());
 		int id = r->getId();
-		if (id % 5 == 0)
-		{
-			rowsAffected++;
-			//обновить запись
-			*r = *rec;
-			r->setId(id);
-		}
+		rowsAffected++;
+		//обновить запись
+		*r = *rec;
+		r->setId(id);
 	}
 	delete it;
 	__tc__("processDbSmeRes.update.recordsAffected"); __tc_ok__;
-	res << "rows-affected: " << rowsAffected;
+	res << "rows-affected: " << rowsAffected << endl;
 	string output = res.str();
 	bool match = text == output;
 	__trace_ack__("UpdateJob1", match, text, output);
@@ -827,7 +844,7 @@ void DbSmeTestCases::processUpdateOkJobAck(const string& text,
 	}
 	__tc_ok_cond__;
 	monitor->setReceived();
-	delete rec;
+	//delete rec;
 }
 
 void DbSmeTestCases::processUpdateDuplicateJobAck(const string& text,
@@ -846,7 +863,7 @@ void DbSmeTestCases::processUpdateDuplicateJobAck(const string& text,
 	{
 		__tc__("processDbSmeRes.update.ok"); __tc_ok__;
 		ostringstream res;
-		res << "UpdateJob2:" << endl;
+		res << endl << "UpdateJob2:" << endl;
 		res << "id:" << rec->getId() << endl;
 		DbSmeRegistry::DbSmeTestRecordIterator* it = dbSmeReg->getRecords();
 		while (DbSmeTestRecord* r = it->next())
@@ -856,7 +873,7 @@ void DbSmeTestCases::processUpdateDuplicateJobAck(const string& text,
 		}
 		delete it;
 		__tc__("processDbSmeRes.update.recordsAffected"); __tc_ok__;
-		res << "rows-affected: " << dbSmeReg->size();
+		res << "rows-affected: " << dbSmeReg->size() << endl;
 	}
 	__tc__("processDbSmeRes.output");
 	string output = res.str();
@@ -868,7 +885,7 @@ void DbSmeTestCases::processUpdateDuplicateJobAck(const string& text,
 	}
 	__tc_ok_cond__;
 	monitor->setReceived();
-	delete rec;
+	//delete rec;
 }
 
 void DbSmeTestCases::processDeleteJobAck(const string& text,
@@ -878,9 +895,9 @@ void DbSmeTestCases::processDeleteJobAck(const string& text,
 	__decl_tc__;
 	ostringstream res;
 	__tc__("processDbSmeRes.delete.ok"); __tc_ok__;
-	res << "DeleteJob:" << endl;
+	res << endl << "DeleteJob:" << endl;
 	__tc__("processDbSmeRes.delete.recordsAffected"); __tc_ok__;
-	res << "rows-affected: " << dbSmeReg->size();
+	res << "rows-affected: " << dbSmeReg->size() << endl;
 	dbSmeReg->clear();
 	string output = res.str();
 	bool match = text == output;
@@ -892,7 +909,7 @@ void DbSmeTestCases::processDeleteJobAck(const string& text,
 	}
 	__tc_ok_cond__;
 	monitor->setReceived();
-	delete rec;
+	//delete rec;
 }
 
 void DbSmeTestCases::processSelectJobAck(const string& text,
@@ -912,24 +929,17 @@ void DbSmeTestCases::processSelectJobAck(const string& text,
 		while (DbSmeTestRecord* r = it->next())
 		{
 			__require__(r->checkId());
-			int id = r->getId();
-			if (id % 5 == 0)
-			{
-				if (i++)
-				{
-					res << endl;
-				}
-				res << "SelectJob:" << endl;
-				res << getOutputInt16(r) << endl;
-				res << getOutputInt32(r) << endl;
-				res << getOutputFloat(r) << endl;
-				res << getOutputDouble(r) << endl;
-				res << getOutputString(r) << endl;
-				res << getOutputDate(r, df1, 0) << endl;
-				res << getOutputDate(r, df2, -1) << endl;
-				res << getOutputDate(r, df3, 1) << endl;
-				res << getOutputDate(r, df4, 0);
-			}
+			//if (i++) { res << endl; }
+			res << endl << "SelectJob:" << endl;
+			res << getOutputInt16(r) << endl;
+			res << getOutputInt32(r) << endl;
+			res << getOutputFloat(r) << endl;
+			res << getOutputDouble(r) << endl;
+			res << getOutputString(r) << endl;
+			res << getOutputDate(r, df1, 0) << endl;
+			res << getOutputDate(r, df2, -1) << endl;
+			res << getOutputDate(r, df3, 1) << endl;
+			res << getOutputDate(r, df4, 0) << endl;
 		}
 		delete it;
 		monitor->pduData->strProps["output"] = res.str();
@@ -937,7 +947,7 @@ void DbSmeTestCases::processSelectJobAck(const string& text,
 	const string& output = monitor->pduData->strProps["output"];
 	if (!output.length())
 	{
-		res << "SelectJob:" << endl;
+		res << endl << "SelectJob:" << endl;
 		res << getOutputInt16(NULL) << endl;
 		res << getOutputInt32(NULL) << endl;
 		res << getOutputFloat(NULL) << endl;
@@ -952,7 +962,7 @@ void DbSmeTestCases::processSelectJobAck(const string& text,
 		bool match;
 		for (time_t t = monitor->startTime; t <= time(NULL); t++)
 		{
-			string output = tmp + df4.format(t);
+			string output = tmp + df4.format(t) + "\n";
 			match = text == output;
 			__trace_ack__("SelectJob", match, text, output);
 			if (match)
@@ -972,25 +982,84 @@ void DbSmeTestCases::processSelectJobAck(const string& text,
 		int pos = monitor->pduData->intProps.count("output") ?
 			monitor->pduData->intProps["output"] : 0;
 		bool match = !output.compare(pos, text.length(), text);
-		__trace2__("SelectJob: match = %s, pos = %d, text = %s, expected = %s",
-			match ? "true" : "false", pos, text.c_str(), output.c_str());
+		__trace_multi_ack__("SelectJob", match, pos, text, output);
 		__tc__("processDbSmeRes.output");
 		if (!match)
 		{
 			__tc_fail__(1);
 			monitor->setReceived();
-			delete rec;
+			//delete rec;
 		}
 		__tc_ok_cond__;
-		if (pos + text.length() == output.length())
+		pos += text.length();
+		if (pos == output.length())
 		{
 			monitor->setReceived();
-			delete rec;
+			//delete rec;
 		}
 		else
 		{
-			monitor->pduData->intProps["output"] = pos + text.length();
+			monitor->pduData->intProps["output"] = pos;
 		}
+	}
+}
+
+void DbSmeTestCases::processSelectNoDefaultJobAck(const string& text,
+	DbSmeTestRecord* rec, SmeAckMonitor* monitor)
+{
+	__require__(dbSmeReg);
+	__decl_tc__;
+	ostringstream res;
+	static const DateFormatter df("dd-MM-yyyy HH:mm:ss");
+	if (!monitor->pduData->strProps.count("output"))
+	{
+		bool hasNulls = true;
+		DbSmeRegistry::DbSmeTestRecordIterator* it = dbSmeReg->getRecords();
+		int i = 0;
+		while (DbSmeTestRecord* r = it->next())
+		{
+			__require__(r->checkId());
+			hasNulls = false;
+			//if (i++) { res << endl; }
+			res << endl << "SelectNoDefaultJob:" << endl;
+			res << getOutputInt16(r) << endl;
+			res << getOutputInt32(r) << endl;
+			res << getOutputFloat(r) << endl;
+			res << getOutputDouble(r) << endl;
+			res << getOutputDate(r, df, 0) << endl;
+			res << getOutputString(r) << endl;
+			if (!r->getString().length())
+			{
+				hasNulls = true;
+				break;
+			}
+		}
+		delete it;
+		monitor->pduData->strProps["output"] = hasNulls ?
+			"Invalid format" : res.str();
+	}
+	const string& output = monitor->pduData->strProps["output"];
+	int pos = monitor->pduData->intProps.count("output") ?
+		monitor->pduData->intProps["output"] : 0;
+	bool match = !output.compare(pos, text.length(), text);
+	__trace_multi_ack__("SelectNoDefaultJob", match, pos, text, output);
+	__tc__("processDbSmeRes.output");
+	if (!match)
+	{
+		__tc_fail__(1);
+		monitor->setReceived();
+		//delete rec;
+	}
+	__tc_ok_cond__;
+	pos += text.length();
+	if (pos == output.length())
+	{
+		monitor->setReceived();
+		//delete rec;
+	}
+	else
+	{
+		monitor->pduData->intProps["output"] = pos;
 	}
 }
 
@@ -1056,6 +1125,10 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	else if (rec->getJob() == "SelectJob")
 	{
 		processSelectJobAck(text, rec, monitor);
+	}
+	else if (rec->getJob() == "SelectNoDefaultJob")
+	{
+		processSelectNoDefaultJobAck(text, rec, monitor);
 	}
 	else
 	{

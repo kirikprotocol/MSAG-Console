@@ -45,7 +45,7 @@ public:
 	/**
 	 * Отправка правильной команды db sme на выборку данных.
 	 */
-	void submitCorrectSelectDbSmeCmd(bool sync, uint8_t dataCoding);
+	void submitCorrectSelectDbSmeCmd(bool sync, uint8_t dataCoding, int num);
 
 	/**
 	 * Отправка правильной команды db sme на добавление записей в таблицу.
@@ -118,6 +118,8 @@ protected:
 		SmeAckMonitor* monitor);
 	void processSelectJobAck(const string& text, DbSmeTestRecord* rec,
 		SmeAckMonitor* monitor);
+	void processSelectNoDefaultJobAck(const string& text,
+		DbSmeTestRecord* rec, SmeAckMonitor* monitor);
 };
 
 }
