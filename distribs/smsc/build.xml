@@ -285,4 +285,11 @@ Targets:
   <target name="mcisme_distr" depends="mcisme_build" >
     <ant dir="${SMSC_DIR}/ext_smes" target="mcisme_distr"/>
   </target>
+
+  <target name="mciprof_update" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="mciprof_update"/>
+  </target>
+  <target name="mciprof_distr" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="mciprof_distr"/>
+  </target>
 </project>

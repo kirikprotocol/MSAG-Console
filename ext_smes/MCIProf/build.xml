@@ -11,6 +11,7 @@
   <property name="SMSC_DIR" value="defined in caller"/>
   <property name="TEMPLATE_PROPS" value="defined in caller"/>
   <property name="TEMPL_DIR" value="defined in caller"/>
+  <property name="BUILD_BIN" value="defined in caller"/>
 
   <target name="help">
     <echo message="Do not build from this file directly"/>
@@ -35,6 +36,7 @@
   </target>
 
   <target name="build" depends="clean,compile" description="generate the distribution">
+    <echo file="${BUILD_BIN}/${esme_bin_path}/${esme_bin_name}" message="Fake binary file"/>
     <ant antfile="../make_esme.xml" target="build"/>
   </target>
 
