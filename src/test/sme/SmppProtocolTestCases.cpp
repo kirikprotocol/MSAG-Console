@@ -11,6 +11,9 @@ namespace sme {
 using smsc::util::Logger;
 using smsc::core::synchronization::MutexGuard;
 using smsc::test::conf::TestConfig;
+using smsc::test::sms::operator<;
+using smsc::test::sms::operator==;
+using smsc::test::smpp::operator==;
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::smpp::DataCoding;
@@ -99,7 +102,7 @@ PduData* SmppProtocolTestCases::getNonReplaceEnrotePdu(bool deliveryReports)
 	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(
 		time(NULL) + timeCheckAccuracy + 3, LONG_MAX);
 	//ищу корректную незамещающую и незамещенную ранее pdu
-	PduData* pduData = NULL;
+	vector<PduData*> res;
 	while (PduMonitor* m = it->next())
 	{
 		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
@@ -108,12 +111,12 @@ PduData* SmppProtocolTestCases::getNonReplaceEnrotePdu(bool deliveryReports)
 			(deliveryReports ||
 			 SmppTransmitterTestCases::getRegisteredDelivery(m->pduData) == NO_SMSC_DELIVERY_RECEIPT))
 		{
-			pduData = m->pduData;
-			break;
+			res.push_back(m->pduData);
+			//break;
 		}
 	}
 	delete it;
-	return pduData;
+	return res.size() ? res[rand0(res.size() - 1)] : NULL;
 }
 
 PduData* SmppProtocolTestCases::getReplaceEnrotePdu(bool deliveryReports)
@@ -123,7 +126,7 @@ PduData* SmppProtocolTestCases::getReplaceEnrotePdu(bool deliveryReports)
 	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(
 		time(NULL) + timeCheckAccuracy + 3, LONG_MAX);
 	//ищу замещающую и незамещенную ранее pdu
-	PduData* pduData = NULL;
+	vector<PduData*> res;
 	while (PduMonitor* m = it->next())
 	{
 		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
@@ -132,12 +135,12 @@ PduData* SmppProtocolTestCases::getReplaceEnrotePdu(bool deliveryReports)
 			(deliveryReports ||
 			 SmppTransmitterTestCases::getRegisteredDelivery(m->pduData) == NO_SMSC_DELIVERY_RECEIPT))
 		{
-			pduData = m->pduData;
-			break;
+			res.push_back(m->pduData);
+			//break;
 		}
 	}
 	delete it;
-	return pduData;
+	return res.size() ? res[rand0(res.size() - 1)] : NULL;
 }
 
 PduData* SmppProtocolTestCases::getNonReplaceRescheduledEnrotePdu(bool deliveryReports)
@@ -147,7 +150,7 @@ PduData* SmppProtocolTestCases::getNonReplaceRescheduledEnrotePdu(bool deliveryR
 	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(
 		time(NULL) + timeCheckAccuracy + 3, LONG_MAX);
 	//ищу незамещенную ранее pdu
-	PduData* pduData = NULL;
+	vector<PduData*> res;
 	while (PduMonitor* m = it->next())
 	{
 		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
@@ -161,13 +164,13 @@ PduData* SmppProtocolTestCases::getNonReplaceRescheduledEnrotePdu(bool deliveryR
 			//была попытка доставки
 			if (monitor->getLastTime())
 			{
-				pduData = monitor->pduData;
-				break;
+				res.push_back(monitor->pduData);
+				//break;
 			}
 		}
 	}
 	delete it;
-	return pduData;
+	return res.size() ? res[rand0(res.size() - 1)] : NULL;
 }
 
 PduData* SmppProtocolTestCases::getFinalPdu(bool deliveryReports)
@@ -177,7 +180,7 @@ PduData* SmppProtocolTestCases::getFinalPdu(bool deliveryReports)
 	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(
 		0, time(NULL) - timeCheckAccuracy);
 	//ищу незамещенную ранее pdu
-	PduData* pduData = NULL;
+	vector<PduData*> res;
 	while (PduMonitor* m = it->next())
 	{
 		if (m->getType() == DELIVERY_MONITOR && !m->pduData->replacedByPdu &&
@@ -190,13 +193,13 @@ PduData* SmppProtocolTestCases::getFinalPdu(bool deliveryReports)
 			__require__(monitor);
 			if (monitor->state == DELIVERED) //беру заведомо хорошие sms
 			{
-				pduData = monitor->pduData;
-				break;
+				res.push_back(monitor->pduData);
+				//break;
 			}
 		}
 	}
 	delete it;
-	return pduData;
+	return res.size() ? res[rand0(res.size() - 1)] : NULL;
 }
 
 PduData* SmppProtocolTestCases::getPduByState(State state)
@@ -215,7 +218,7 @@ PduData* SmppProtocolTestCases::getPduByState(State state)
 		flag = PDU_NOT_EXPECTED_FLAG;
 		it = fixture->pduReg->getMonitors(0, time(NULL) - timeCheckAccuracy);
 	}
-	PduData* pduData = NULL;
+	vector<PduData*> res;
 	while (PduMonitor* m = it->next())
 	{
 		if (m->getType() == DELIVERY_MONITOR && m->getFlag() == flag)
@@ -224,13 +227,13 @@ PduData* SmppProtocolTestCases::getPduByState(State state)
 			__require__(monitor);
 			if (monitor->state == state)
 			{
-				pduData = monitor->pduData;
-				break;
+				res.push_back(monitor->pduData);
+				//break;
 			}
 		}
 	}
 	delete it;
-	return pduData;
+	return res.size() ? res[rand0(res.size() - 1)] : NULL;
 }
 
 void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
@@ -1357,11 +1360,68 @@ void SmppProtocolTestCases::querySmIncorrect(bool sync, int num)
 	}
 }
 
-void SmppProtocolTestCases::cancelSmCorrect(bool sync, int num)
+struct CancelKey
+{
+	const Address& src;
+	const Address& dest;
+	const string& servType;
+
+	CancelKey(const Address& _src, const Address& _dest, const string& _servType)
+		: src(_src), dest(_dest), servType(_servType) {}
+	bool operator< (const CancelKey& key) const
+	{
+		if (src < key.src) return true;
+		if (src == key.src)
+		{
+			if (dest < key.dest) return true;
+			if (dest == key.dest && servType < key.servType) return true;
+		}
+		return false;
+	}
+};
+
+PduData* SmppProtocolTestCases::getCancelSmGroupParams(bool checkServType,
+	Address& srcAddr, Address& destAddr, string& servType)
+{
+	typedef map<CancelKey, bool> CancelKeyMap;
+	CancelKeyMap cancelMap;
+	PduData* pduData = NULL;
+
+	__require__(fixture->pduReg);
+	__cfg_int__(timeCheckAccuracy);
+	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(0, LONG_MAX);
+	while (PduMonitor* m = it->next())
+	{
+		if (m->getType() == DELIVERY_MONITOR && m->getFlag() == PDU_REQUIRED_FLAG)
+		{
+			DeliveryMonitor* monitor = dynamic_cast<DeliveryMonitor*>(m);
+			//список "плохих" адресов
+			if (monitor->getCheckTime() < time(NULL) + timeCheckAccuracy + 3)
+			{
+				cancelMap[CancelKey(monitor->srcAddr, monitor->destAddr,
+					checkServType ? monitor->serviceType : "")] = false;
+			}
+			//поиск "хороших" адресов
+			else if (!cancelMap.count(CancelKey(monitor->srcAddr, monitor->destAddr,
+				checkServType ? monitor->serviceType : "")))
+			{
+				srcAddr = monitor->srcAddr;
+				destAddr = monitor->destAddr;
+				servType = checkServType ? monitor->serviceType : "";
+				pduData = monitor->pduData;
+				break;
+			}
+		}
+	}
+	delete it;
+	return pduData;
+}
+
+void SmppProtocolTestCases::cancelSmSingleCorrect(bool sync, int num)
 {
 	__require__(fixture->pduReg);
 	__decl_tc__;
-	TCSelector s(num, 4);
+	TCSelector s(num, 2);
 	__tc__("cancelSm.correct");
 	for (; s.check(); s++)
 	{
@@ -1413,26 +1473,82 @@ void SmppProtocolTestCases::cancelSmCorrect(bool sync, int num)
 					pdu->set_dest(cancelPdu->get_message().get_dest());
 					//pdu->set_serviceType();
 					break;
-				case 3: //по source_addr и dest_addr с нулевым service_type
-					__tc__("cancelSm.correct.destAddrWithoutServiceType");
-					//pdu->set_messageId();
-					//pdu->set_source();
-					pdu->set_dest(cancelPdu->get_message().get_dest());
-					//pdu->set_serviceType();
-					break;
-				case 4: //по source_addr, dest_addr и service_type
-					__tc__("cancelSm.correct.destAddrWithServiceType");
-					//pdu->set_messageId();
-					//pdu->set_source();
-					pdu->set_dest(cancelPdu->get_message().get_dest());
-					pdu->set_serviceType(
-						nvl(cancelPdu->get_message().get_serviceType()));
-					break;
 				default:
 					__unreachable__("Invalid num");
 			}
 			//отправить и зарегистрировать pdu
 			fixture->transmitter->sendCancelSmPdu(pdu, cancelPduData, sync);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(s.value());
+			error();
+		}
+	}
+}
+
+void SmppProtocolTestCases::cancelSmGroupCorrect(bool sync, int num)
+{
+	__require__(fixture->pduReg);
+	__decl_tc__;
+	TCSelector s(num, 2);
+	__tc__("cancelSm.correct");
+	for (; s.check(); s++)
+	{
+		__trace2__("cancelSmGroupCorrect(%d)", s.value());
+		try
+		{
+			PduCancelSm* pdu = new PduCancelSm();
+			PduData* pduData = NULL;
+			Address srcAddr, destAddr;
+			string servType;
+			switch (s.value())
+			{
+				case 1: //по source_addr и dest_addr с нулевым service_type
+					{
+						MutexGuard mguard(fixture->pduReg->getMutex());
+						pduData = getCancelSmGroupParams(false, srcAddr, destAddr, servType);
+						if (pduData)
+						{
+							__tc__("cancelSm.correct.destAddrWithoutServiceType");
+							PduAddress addr;
+							//pdu->set_messageId();
+							pdu->set_source(*SmppUtil::convert(srcAddr, &addr));
+							pdu->set_dest(*SmppUtil::convert(destAddr, &addr));
+							//pdu->set_serviceType();
+						}
+					}
+					break;
+				case 2: //по source_addr, dest_addr и service_type
+					{
+						MutexGuard mguard(fixture->pduReg->getMutex());
+						pduData = getCancelSmGroupParams(true, srcAddr, destAddr, servType);
+						if (pduData)
+						{
+							__tc__("cancelSm.correct.destAddrWithServiceType");
+							PduAddress addr;
+							//pdu->set_messageId();
+							pdu->set_source(*SmppUtil::convert(srcAddr, &addr));
+							pdu->set_dest(*SmppUtil::convert(destAddr, &addr));
+							pdu->set_serviceType(servType.c_str());
+						}
+					}
+					break;
+				default:
+					__unreachable__("Invalid num");
+			}
+			//отправить и зарегистрировать pdu
+			if (!pduData)
+			{
+				__tc__("cancelSm.incorrect.messageId");
+				auto_ptr<char> msgId = rand_char(MAX_MSG_ID_LENGTH);
+				pdu->set_messageId(msgId.get());
+				//pdu->set_source();
+				//pdu->set_dest();
+				//pdu->set_serviceType();
+			}
+			fixture->transmitter->sendCancelSmPdu(pdu, pduData, sync);
 			__tc_ok__;
 		}
 		catch(...)
