@@ -26,7 +26,17 @@ USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
 {
   __trace2__("MAP::Et96MapBindConf confirmation received ssn=%x status=%x\n",lssn,status);
   if (status == 0) return MSG_OK;
-  else return status;
+  else if ( status == 1 ){
+    __trace__("MAP: Unbind");
+    Et96MapUnbindReq(SSN);
+    __trace__("MAP: Bind ");
+    if ( Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK ){
+      return MSG_ERR;
+    }
+    return 0;
+  }else{
+    return status;
+  }
 }
 
 USHORT_T  Et96MapOpenInd(
@@ -164,12 +174,8 @@ void MapIoTask::init()
   __trace__("MAP: Bind");
   USHORT_T bind_res = Et96MapBindReq(USER01_ID, SSN);
   if(bind_res!=ET96MAP_E_OK){
-    __trace2__("bind error 0x%hx",bind_res);
-    //if (bind_res == ){
-      __trace__("MAP: Unbind");
-      Et96MapUnbindReq(SSN);  
-      throw_if(!Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK);
-    //}else throw runtime_error("can't bind");
+    __trace2__("MAP: Bind error 0x%hx",bind_res);
+    throw runtime_error("bind error");
   }
   __trace__("MAP: Ok");
 }
@@ -206,5 +212,6 @@ int MapIoTask::Execute(){
   }catch(exception& e){
     __trace2__("exception in mapio: %s",e.what());
   }
+  return 0;
 }
 

@@ -68,7 +68,7 @@ struct MapDialogCntItem{
   ET96MAP_DIALOGUE_ID_T dialogueId;
   ET96MAP_LOCAL_SSN_T localSsn;
   ET96MAP_INVOKE_ID_T invokeId;
-  MapDialog* dialogue;
+  auto_ptr<MapDialog> dialogue;
 };
 
 extern ET96MAP_DIALOGUE_ID_T allocateDialogueId();
@@ -100,6 +100,7 @@ public:
   MapDialogCntItem* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
     MapDialogCntItem* itm = new MapDialogCntItem();
     itm->dialogueId = dialogueid;
+    itm->dialogue = new MapDialog();
     hash.Insert(dialogueid,itm);
     return itm;
   }
