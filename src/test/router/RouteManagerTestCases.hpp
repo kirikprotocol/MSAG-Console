@@ -93,7 +93,7 @@ private:
 	float setupRandomAddressMatch(Address& addr, int num);
 	void setupRandomAddressNotMatch(Address& addr, int num);
 	void printLookupResult(const Address& origAddr, const Address& destAddr,
-		const vector<const SmeProxy*>& ids, bool found, const SmeProxy* proxy);
+		const RouteRegistry::RouteList& routeList, bool found, const SmeProxy* proxy);
 };
 
 }
