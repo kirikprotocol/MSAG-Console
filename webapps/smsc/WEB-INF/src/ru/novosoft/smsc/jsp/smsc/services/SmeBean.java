@@ -65,9 +65,16 @@ public class SmeBean extends PageBean
 		return priority;
 	}
 
-	public void setPriority(int priority)
+	public void setPriority(String priority)
 	{
-		this.priority = priority;
+		try
+		{
+			this.priority = Integer.decode(priority).intValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.priority = 0;
+		}
 	}
 
 	public String getSystemType()
@@ -85,9 +92,16 @@ public class SmeBean extends PageBean
 		return typeOfNumber;
 	}
 
-	public void setTypeOfNumber(int typeOfNumber)
+	public void setTypeOfNumber(String typeOfNumber)
 	{
-		this.typeOfNumber = typeOfNumber;
+		try
+		{
+			this.typeOfNumber = Integer.decode(typeOfNumber).intValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.typeOfNumber = 0;
+		}
 	}
 
 	public int getNumberingPlan()
@@ -95,9 +109,16 @@ public class SmeBean extends PageBean
 		return numberingPlan;
 	}
 
-	public void setNumberingPlan(int numberingPlan)
+	public void setNumberingPlan(String numberingPlan)
 	{
-		this.numberingPlan = numberingPlan;
+		try
+		{
+			this.numberingPlan = Integer.decode(numberingPlan).intValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.numberingPlan = 0;
+		}
 	}
 
 	public String getInterfaceVersion()
@@ -135,9 +156,16 @@ public class SmeBean extends PageBean
 		return timeout;
 	}
 
-	public void setTimeout(int timeout)
+	public void setTimeout(String timeout)
 	{
-		this.timeout = timeout;
+		try
+		{
+			this.timeout = Integer.decode(timeout).intValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.timeout = 8;
+		}
 	}
 
 	public boolean isWantAlias()

@@ -5,12 +5,12 @@
  */
 package ru.novosoft.smsc.jsp.smsc.aliases;
 
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
-import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.route.MaskList;
 
 import java.util.List;
 
@@ -132,9 +132,16 @@ public class AliasesFilter extends SmscBean
 		return hide;
 	}
 
-	public void setHide(byte hide)
+	public void setHide(String hide)
 	{
-		this.hide = hide;
+		try
+		{
+			this.hide = Byte.decode(hide).byteValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.hide = AliasFilter.HIDE_UNKNOWN;
+		}
 	}
 
 	public String getMbApply()

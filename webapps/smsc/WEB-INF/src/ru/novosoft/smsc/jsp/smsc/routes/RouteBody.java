@@ -178,9 +178,16 @@ public class RouteBody extends SmscBean
 		return priority;
 	}
 
-	public void setPriority(int priority)
+	public void setPriority(String priority)
 	{
-		this.priority = priority;
+		try
+		{
+			this.priority = Integer.decode(priority).intValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.priority = 0;
+		}
 	}
 
 	public int getServiceId()
@@ -188,9 +195,16 @@ public class RouteBody extends SmscBean
 		return serviceId;
 	}
 
-	public void setServiceId(int serviceId)
+	public void setServiceId(String serviceId)
 	{
-		this.serviceId = serviceId;
+		try
+		{
+			this.serviceId = Integer.decode(serviceId).intValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.serviceId = 0;
+		}
 	}
 
 	public boolean isSuppressDeliveryReports()

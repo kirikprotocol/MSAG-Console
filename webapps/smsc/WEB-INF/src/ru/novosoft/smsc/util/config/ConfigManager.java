@@ -14,6 +14,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 
 
+
 public class ConfigManager
 {//toremove whole class
 	static protected boolean isInitialized = false;
@@ -94,3 +95,4 @@ public class ConfigManager
 		tmpFile.renameTo(new File(configurationFileName));
 	}
 }
+

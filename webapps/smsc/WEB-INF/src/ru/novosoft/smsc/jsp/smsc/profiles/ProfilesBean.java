@@ -1,9 +1,8 @@
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
-import ru.novosoft.smsc.jsp.smsc.SmscBean;
-import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.admin.profiler.Profile;
-import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -54,9 +53,16 @@ public class ProfilesBean extends SmscBean
 		return report;
 	}
 
-	public void setReport(byte report)
+	public void setReport(String report)
 	{
-		this.report = report;
+		try
+		{
+			this.report = Byte.decode(report).byteValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.report = Profile.REPORT_OPTION_None;
+		}
 	}
 
 	public byte getCodepage()
@@ -64,9 +70,16 @@ public class ProfilesBean extends SmscBean
 		return codepage;
 	}
 
-	public void setCodepage(byte codepage)
+	public void setCodepage(String codepage)
 	{
-		this.codepage = codepage;
+		try
+		{
+			this.codepage = Byte.decode(codepage).byteValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.codepage = Profile.CODEPAGE_Default;
+		}
 	}
 
 	public String getLocale()

@@ -42,9 +42,16 @@ public abstract class IndexBean extends SmscBean
 		return startPosition;
 	}
 
-	public void setStartPosition(int startPosition)
+	public void setStartPosition(String startPosition)
 	{
-		this.startPosition = startPosition;
+		try
+		{
+			this.startPosition = Integer.decode(startPosition).intValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.startPosition = 0;
+		}
 	}
 
 	public int getTotalSize()
@@ -52,14 +59,28 @@ public abstract class IndexBean extends SmscBean
 		return totalSize;
 	}
 
-	public void setTotalSize(int totalSize)
+	public void setTotalSize(String totalSize)
 	{
-		this.totalSize = totalSize;
+		try
+		{
+			this.totalSize = Integer.decode(totalSize).intValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.totalSize = 0;
+		}
 	}
 
-	public void setPageSize(int pageSize)
+	public void setPageSize(String pageSize)
 	{
-		this.pageSize = pageSize;
+		try
+		{
+			this.pageSize = Integer.decode(pageSize).intValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.pageSize = 0;
+		}
 	}
 
 	public String getSort()

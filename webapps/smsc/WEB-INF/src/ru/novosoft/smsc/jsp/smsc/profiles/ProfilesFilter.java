@@ -152,9 +152,16 @@ public class ProfilesFilter extends SmscBean
 		return codepage;
 	}
 
-	public void setCodepage(byte codepage)
+	public void setCodepage(String codepage)
 	{
-		this.codepage = codepage;
+		try
+		{
+			this.codepage = Byte.decode(codepage).byteValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.codepage = -2;
+		}
 	}
 
 	public byte getReportinfo()
@@ -162,9 +169,16 @@ public class ProfilesFilter extends SmscBean
 		return reportinfo;
 	}
 
-	public void setReportinfo(byte reportinfo)
+	public void setReportinfo(String reportinfo)
 	{
-		this.reportinfo = reportinfo;
+		try
+		{
+			this.reportinfo = Byte.decode(reportinfo).byteValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.reportinfo = -2;
+		}
 	}
 
 	public String getMbClear()

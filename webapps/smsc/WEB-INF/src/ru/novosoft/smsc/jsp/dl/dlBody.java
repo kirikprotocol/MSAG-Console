@@ -170,9 +170,16 @@ public class dlBody extends IndexBean
 		return maxElements;
 	}
 
-	public void setMaxElements(int maxElements)
+	public void setMaxElements(String maxElements)
 	{
-		this.maxElements = maxElements;
+		try
+		{
+			this.maxElements = Integer.decode(maxElements).intValue();
+		}
+		catch (NumberFormatException e)
+		{
+			this.maxElements = 0;
+		}
 	}
 
 	public String[] getSubmitters()
