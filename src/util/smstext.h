@@ -53,15 +53,31 @@ static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize)
 
 static inline int getPduText(PduXSm* pdu,char* buf,unsigned bufsize)
 {
-  int coding=pdu->get_message().get_dataCoding();
-  unsigned len=pdu->get_message().get_smLength();
-  const char *data=pdu->get_message().get_shortMessage();
-  if(len==0 && pdu->optional.has_messagePayload())
+  int coding;
+  unsigned len;
+  const char* data;
+  bool udhi;
+
+  if(pdu->get_header().get_commandId()==SmppCommandSet::DATA_SM)
   {
-    len=pdu->optional.size_messagePayload();
-    data=pdu->optional.get_messagePayload();
+    PduDataSm *dpdu=(PduDataSm *)pdu;
+    coding=dpdu->get_data().get_dataCoding();
+    len=dpdu->optional.size_messagePayload();
+    data=dpdu->optional.get_messagePayload();
+    udhi=dpdu->get_data().get_esmClass()&0x40;
+  }else
+  {
+    coding=pdu->get_message().get_dataCoding();
+    len=pdu->get_message().get_smLength();
+    data=pdu->get_message().get_shortMessage();
+    if(len==0 && pdu->optional.has_messagePayload())
+    {
+      len=pdu->optional.size_messagePayload();
+      data=pdu->optional.get_messagePayload();
+    }
+    udhi=pdu->get_message().get_esmClass()&0x40;
   }
-  bool udhi=pdu->get_message().get_esmClass()&0x40;
+
   if(udhi)
   {
     int udhilen=*((unsigned char*)data);
@@ -71,17 +87,20 @@ static inline int getPduText(PduXSm* pdu,char* buf,unsigned bufsize)
   }
   if(coding==DataCoding::UCS2)
   {
-    ConvertUCS2ToMultibyte((const short*)data,len,buf,bufsize,CONV_ENCODING_CP1251);
+    if(len/2>bufsize)return -1;
+    char *tmp=new char[len+1];
+    UCS_ntohs(tmp,data,len,0);
+    ConvertUCS2ToMultibyte((const short*)tmp,len,buf,bufsize,CONV_ENCODING_CP1251);
+    delete tmp;
     len/=2;
-    __require__(len<bufsize);
   }else if(coding==DataCoding::SMSC7BIT)
   {
+    if(len>bufsize)return -1;
     len=ConvertSMSC7BitToLatin1(data,len,buf);
-    __require__(len<bufsize);
   }
   else
   {
-    __require__(len<bufsize);
+    if(len>bufsize)return -1;
     memcpy(buf,data,len);
   }
   buf[len]=0;
