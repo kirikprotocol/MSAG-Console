@@ -444,7 +444,14 @@ StateType StateMachine::forward(Tuple& t)
     {
     }
     __trace2__("FORWARD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
-    sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
+    if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
+       sms.getDeliveryReport() ||
+       (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
+       (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==2 ||
+       sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
+    {
+      sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
+    }
     return EXPIRED_STATE;
   }
   if(sms.getState()!=ENROUTE_STATE)
