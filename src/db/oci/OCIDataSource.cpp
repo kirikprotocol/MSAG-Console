@@ -218,7 +218,7 @@ Routine* OCIConnection::createRoutine(const char* call, bool func)
 {
     connect();
 
-    std::string routine; std::string name = "";
+    std::string routine = ""; std::string name = "";
     routine += "BEGIN\n";
     if (func)
     {
