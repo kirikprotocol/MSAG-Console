@@ -68,56 +68,6 @@ const RouteInfo* RouteRegistry::getRoute(RouteId routeId) const
 	return NULL;
 }
 
-RouteRegistry::RouteIterator* RouteRegistry::iterator()
-{
-	return new RouteIterator(routeMap.begin(), routeMap.end());
-}
-
-int RouteRegistry::size() const
-{
-	return routeMap.size();
-}
-
-const Address* RouteRegistry::getRandomReachableDestAddress(
-	const Address& origAddr) const
-{
-	AddressMap::const_iterator it = addrMap.find(origAddr);
-	if (it == addrMap.end())
-	{
-		return NULL;
-	}
-	const RouteList& routes = it->second;
-	RouteList res;
-	for (int i = 0; i < routes.size(); i++)
-	{
-		if (routes[i]->match)
-		{
-			res.push_back(routes[i]);
-		}
-	}
-	return (res.size() ? new Address(res[rand0(res.size() - 1)]->destAddr) : NULL);
-}
-
-const Address* RouteRegistry::getRandomNonReachableDestAddress(
-	const Address& origAddr) const
-{
-	AddressMap::const_iterator it = addrMap.find(origAddr);
-	if (it == addrMap.end())
-	{
-		return NULL;
-	}
-	const RouteList& routes = it->second;
-	RouteList res;
-	for (int i = 0; i < routes.size(); i++)
-	{
-		if (!routes[i]->match)
-		{
-			res.push_back(routes[i]);
-		}
-	}
-	return (res.size() ? new Address(res[rand0(res.size() - 1)]->destAddr) : NULL);
-}
-
 const RouteRegistry::RouteList RouteRegistry::lookup(const Address& origAddr,
 	const Address& destAddr) const
 {
@@ -167,6 +117,16 @@ const RouteRegistry::RouteList RouteRegistry::lookup(const Address& origAddr,
 		}
 	}
 	return res;
+}
+
+RouteRegistry::RouteIterator* RouteRegistry::iterator()
+{
+	return new RouteIterator(routeMap.begin(), routeMap.end());
+}
+
+int RouteRegistry::size() const
+{
+	return routeMap.size();
 }
 
 }

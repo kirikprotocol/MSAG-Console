@@ -16,7 +16,6 @@ namespace core {
 using std::map;
 using std::vector;
 using smsc::sms::Address;
-using smsc::smeman::SmeSystemId;
 using smsc::router::RouteId;
 using smsc::test::sms::ltAddress;
 
@@ -45,22 +44,12 @@ public:
 	
 	const RouteInfo* getRoute(RouteId routeId) const;
 
+	const RouteList lookup(const Address& origAddr,
+		const Address& destAddr) const;
+
 	RouteIterator* iterator();
 
 	int size() const;
-
-	/**
-	 * @return адрес должен удал€тьс€ вызывающей стороной.
-	 */
-	const Address* getRandomReachableDestAddress(const Address& origAddr) const;
-
-	/**
-	 * @return адрес должен удал€тьс€ вызывающей стороной.
-	 */
-	const Address* getRandomNonReachableDestAddress(const Address& origAddr) const;
-
-	const RouteList lookup(const Address& origAddr,
-		const Address& destAddr) const;
 
 private:
 	typedef map<const Address, RouteList, ltAddress> AddressMap;
