@@ -996,12 +996,15 @@ void Archiver::Cleaner::cleanup()
         toDelete += cleanupInterval;
         if (toDelete > toTime) toDelete=toTime;
         Statement::convertDateToOCIDate(&toDelete, &dbTime);
+        cleanerDeleteStmt->bind(1, SQLT_ODT, (dvoid *) &(dbTime), 
+                                (sb4) sizeof(dbTime));
         cleanerDeleteStmt->execute();
-        cleanerConnection->commit();
         if( log.isDebugEnabled() ) 
             log.debug("Archive cleanup: %d rows deleted (from %d to %d)",
                       cleanerDeleteStmt->getRowsAffectedCount(), 
                       oldDelete, toDelete);
+        cleanerConnection->commit();
+
     }
 
     disconnect();
@@ -1040,8 +1043,6 @@ void Archiver::Cleaner::prepareCleanerDeleteStmt()
     cleanerDeleteStmt = new Statement(cleanerConnection, 
                                       Cleaner::cleanerDeleteSql, true);
     
-    cleanerDeleteStmt->bind(1, SQLT_ODT, (dvoid *) &(dbTime), 
-                            (sb4) sizeof(dbTime));
 }
 
 }}
