@@ -185,6 +185,7 @@ void ArchiveProcessor::commitTransaction(bool force /*= false*/)
         {
             smsc_log_debug(log, "Commiting transaction...");
             if (indexator) indexator->EndTransaction();
+            smsc_log_debug(log, "Transaction indecies flushed.");
 
             // flush transaction files for arc(s)
             transactionTrsArcFiles.First();
@@ -192,6 +193,7 @@ void ArchiveProcessor::commitTransaction(bool force /*= false*/)
             while (transactionTrsArcFiles.Next(trsArcFileNameStr, trsArcPosition))
             {
                 if (!trsArcPosition || !trsArcFileNameStr || !trsArcFileNameStr[0]) continue;
+                smsc_log_debug(log, "Commiting arc transaction file '%s'", trsArcFileNameStr);
                 TransactionStorage trsArcFile(trsArcFileNameStr);
                 trsArcFile.setTransactionData(trsArcPosition);
             }
@@ -201,6 +203,7 @@ void ArchiveProcessor::commitTransaction(bool force /*= false*/)
             while (transactionTrsTxtFiles.Next(trsTxtFileNameStr, trsTxtPosition))
             {
                 if (!trsTxtPosition || !trsTxtFileNameStr || !trsTxtFileNameStr[0]) continue;
+                smsc_log_debug(log, "Commiting txt transaction file '%s'", trsTxtFileNameStr);
                 TransactionStorage trsTxtFile(trsTxtFileNameStr);
                 trsTxtFile.setTransactionData(trsTxtPosition);
             }
@@ -210,6 +213,7 @@ void ArchiveProcessor::commitTransaction(bool force /*= false*/)
             while (transactionSrcFiles.Next(srcFileNameStr, data))
             {
                 if (!srcFileNameStr || !srcFileNameStr[0]) continue;
+                smsc_log_debug(log, "Deliting source file '%s'", srcFileNameStr);
                 FileStorage::deleteFile(srcFileNameStr);
             }
             bTransactionOpen = false; cleanTransaction();
@@ -219,7 +223,6 @@ void ArchiveProcessor::commitTransaction(bool force /*= false*/)
     } catch (std::exception& exc) {
       smsc_log_error(log, "Error commiting transaction. Details: %s", exc.what());
     }
-    
 }
 void ArchiveProcessor::rollbackTransaction()
 {
