@@ -28,6 +28,8 @@ public class QueryMessage extends Message
   public final static byte T_ROUTE_ID    = 80;
   public final static byte T_ABN_ADDRESS = 90;
   public final static byte T_SME_ID      = 100;
+  public final static byte T_STAUS       = 110;
+  public final static byte T_LAST_RESULT = 120;
 
   private SmsQuery query = null;
 
@@ -55,6 +57,9 @@ public class QueryMessage extends Message
 
   private boolean isMeaning(String str) {
     return (str != null && str.length() != 0 && !str.trim().equalsIgnoreCase("*"));
+  }
+  private boolean isMeaning(int value) {
+    return (value != SmsQuery.SMS_UNDEFINED_VALUE);
   }
   private List formatParameters() throws IOException
   {
@@ -99,6 +104,7 @@ public class QueryMessage extends Message
         }
       }
     }
+
     if (isMeaning(query.getSmeId())) {
       list.add(new Param(T_SME_ID, query.getSmeId().trim()));
     }
@@ -108,13 +114,20 @@ public class QueryMessage extends Message
       if (isMeaning(query.getDstSmeId()))
         list.add(new Param(T_DST_SME_ID, query.getDstSmeId().trim()));
     }
+
     if (isMeaning(query.getRouteId()))
       list.add(new Param(T_ROUTE_ID, query.getRouteId().trim()));
+
+    if (isMeaning(query.getStatus()))
+      list.add(new Param(T_STAUS, query.getStatus()));
+    if (isMeaning(query.getLastResult()))
+      list.add(new Param(T_LAST_RESULT, query.getLastResult()));
 
     return list;
   }
 
-  public void send(OutputStream os) throws IOException {
+  public void send(OutputStream os) throws IOException
+  {
     List params = formatParameters();
     super.send(os);
     Message.writeUInt8 (os, params.size());
@@ -124,6 +137,10 @@ public class QueryMessage extends Message
         case T_SMS_ID:
           Message.writeUInt8(os, param.type);
           Message.writeInt64(os, param.longValue);
+          break;
+        case T_STAUS: case T_LAST_RESULT:
+          Message.writeUInt8(os, param.type);
+          Message.writeUInt32(os, (int)param.longValue);
           break;
         case T_FROM_DATE: case T_TILL_DATE: case T_ROUTE_ID:
         case T_SME_ID: case T_SRC_SME_ID: case T_DST_SME_ID:

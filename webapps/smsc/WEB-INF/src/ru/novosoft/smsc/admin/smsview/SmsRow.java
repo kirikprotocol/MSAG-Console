@@ -106,9 +106,11 @@ public class SmsRow
 		return submitTime;
 	}
   public void setSubmitTime(Date submitTime){ this.submitTime = submitTime; }
+  public static String getStatusString(int status) {
+    return (status >= 0 && status < numStates) ? states[status]:"UNKNOUN";
+  }
   public String getStatus() {
-    String state = (status >= 0 && status < numStates) ? states[status]:"UNKNOUN";
-    return state;
+    return getStatusString(status);
   }
   public void setStatus(int status){ this.status = status; }
   public int getLastResult() { return lastResult; }

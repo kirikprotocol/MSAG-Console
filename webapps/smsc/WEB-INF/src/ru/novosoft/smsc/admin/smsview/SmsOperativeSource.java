@@ -201,6 +201,9 @@ public class SmsOperativeSource extends SmsSource
     if (query.getFromDateEnabled()) list.add("SUBMIT_TIME >=?");
     if (query.getTillDateEnabled()) list.add("SUBMIT_TIME <=?");
 
+    if (query.getStatus() != SmsQuery.SMS_UNDEFINED_VALUE) list.add("ST="+query.getStatus());
+    if (query.getLastResult() != SmsQuery.SMS_UNDEFINED_VALUE) list.add("LAST_RESULT="+query.getLastResult());
+
     String where = (list.size() > 0) ? " WHERE " : " WHERE ID>0";
     for (int i = 0; i < list.size(); i++) {
       where += (String) list.get(i);

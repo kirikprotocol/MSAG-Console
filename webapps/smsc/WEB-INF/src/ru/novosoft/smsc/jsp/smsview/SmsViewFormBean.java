@@ -27,10 +27,12 @@ public class SmsViewFormBean extends IndexBean
   private int deletedRowsCount = 0;
   private int totalRowsCount = 0;
 
+  public final static String UNKNOWN_STR = "unknown";
+  public final static String ERR_CODES_PREFIX = "smsc.errcode.";
+  public final static String ERR_CODE_UNKNOWN = ERR_CODES_PREFIX + UNKNOWN_STR;
+
   public static String monthesNames[] = {
-    "Jan", "Feb", "Mar", "Apr",
-    "May", "Jun", "Jul", "Aug", "Sep",
-    "Oct", "Nov", "Dec"
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   };
 
   private String mbRemove = null;
@@ -43,6 +45,22 @@ public class SmsViewFormBean extends IndexBean
 
   private Vector checkedRows = new Vector();
   private boolean exactRowsCount = false;
+
+  public class ErrorValue implements Comparable
+  {
+    public int errorCode;
+    public String errorString;
+
+    public ErrorValue(int errorCode, String errorString) {
+      this.errorCode = errorCode;
+      this.errorString = errorString;
+    }
+    public int compareTo(Object o) {
+      if (o == null || !(o instanceof ErrorValue)) return -1;
+      return (this.errorCode-((ErrorValue)o).errorCode);
+    }
+  };
+  private Vector errorValues = null;
 
   protected int init(List errors)
   {
@@ -65,6 +83,25 @@ public class SmsViewFormBean extends IndexBean
   {
     int result = super.process(request);
     if (result != RESULT_OK) return result;
+
+    if (errorValues == null) { // init error values
+      Locale locale = request.getLocale();
+      Set errorStrings = appContext.getLocaleStrings(locale, ERR_CODES_PREFIX);
+      errorValues = new Vector();
+      for (Iterator i=errorStrings.iterator(); i.hasNext(); ) {
+        String err = (String)i.next();
+        if (!err.startsWith(UNKNOWN_STR)) {
+          try {
+            int errorCode = Integer.parseInt(err);
+            String errorString = appContext.getLocaleString(locale, ERR_CODES_PREFIX+err);
+            errorValues.add(new ErrorValue(errorCode, (errorString != null) ? errorString:""));
+          } catch (Exception e) {
+            continue;
+          }
+        }
+      }
+      Collections.sort(errorValues);
+    }
 
     if (getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) {
       if (!request.isUserInRole("smsView") && !request.isUserInRole("smsView_archive"))
@@ -321,6 +358,18 @@ public class SmsViewFormBean extends IndexBean
   public void setSmsId(String id) {
     query.setSmsId(id);
   }
+  public int getStatus() {
+    return query.getStatus();
+  }
+  public void setStatus(int status) {
+    query.setStatus(status);
+  }
+  public int getLastResult() {
+    return query.getLastResult();
+  }
+  public void setLastResult(int lastResult) {
+    query.setLastResult(lastResult);
+  }
 
   public String getFromDate()
   {
@@ -438,4 +487,7 @@ public class SmsViewFormBean extends IndexBean
     this.exactRowsCount = exactRowsCount;
   }
 
+  public Collection getErrorValues() {
+    return errorValues;
+  }
 }

@@ -17,6 +17,7 @@ public class SmsQuery
 {
   public final static int SMS_OPERATIVE_STORAGE_TYPE = 100;
   public final static int SMS_ARCHIVE_STORAGE_TYPE = 200;
+  public final static int SMS_UNDEFINED_VALUE = -1;
 
   private int storageType = SMS_ARCHIVE_STORAGE_TYPE;
   private int rowsMaximum = 500;
@@ -33,157 +34,127 @@ public class SmsQuery
   private String sortBy = "lastDate";
   private boolean fromDateEnabled = true;
   private boolean tillDateEnabled = false;
+  private int status = SMS_UNDEFINED_VALUE;
+  private int lastResult = SMS_UNDEFINED_VALUE;
 
-  public int getStorageType()
-  {
+  public int getStorageType() {
     return storageType;
   }
-
-  public void setStorageType(int type)
-  {
+  public void setStorageType(int type) {
     storageType = type;
   }
 
-  public int getRowsMaximum()
-  {
+  public int getRowsMaximum() {
     return rowsMaximum;
   }
-
-  public void setRowsMaximum(int max)
-  {
+  public void setRowsMaximum(int max) {
     rowsMaximum = max;
   }
 
-  public String getAbonentAddress()
-  {
+  public String getAbonentAddress() {
     return abonentAddress;
   }
-
-  public void setAbonentAddress(String address)
-  {
+  public void setAbonentAddress(String address) {
     abonentAddress = address;
   }
 
-  public String getFromAddress()
-  {
+  public String getFromAddress() {
     return fromAddress;
   }
-
-  public void setFromAddress(String address)
-  {
+  public void setFromAddress(String address) {
     fromAddress = address;
   }
 
-  public String getToAddress()
-  {
+  public String getToAddress() {
     return toAddress;
   }
 
-  public void setToAddress(String address)
-  {
+  public void setToAddress(String address) {
     toAddress = address;
   }
 
-  public String getSmeId()
-  {
+  public String getSmeId() {
     return smeId;
   }
-
-  public void setSmeId(String id)
-  {
+  public void setSmeId(String id) {
     smeId = id;
   }
 
-  public String getSrcSmeId()
-  {
+  public String getSrcSmeId() {
     return srcSmeId;
   }
-
-  public void setSrcSmeId(String id)
-  {
+  public void setSrcSmeId(String id) {
     srcSmeId = id;
   }
 
-  public String getDstSmeId()
-  {
+  public String getDstSmeId() {
     return dstSmeId;
   }
-
-  public void setDstSmeId(String id)
-  {
+  public void setDstSmeId(String id) {
     dstSmeId = id;
   }
 
-  public String getRouteId()
-  {
+  public String getRouteId() {
     return routeId;
   }
-
-  public void setRouteId(String id)
-  {
+  public void setRouteId(String id) {
     routeId = id;
   }
 
-  public String getSmsId()
-  {
+  public String getSmsId() {
     return smsId;
   }
-
-  public void setSmsId(String id)
-  {
+  public void setSmsId(String id) {
     smsId = id;
   }
 
-  public void setFromDateEnabled(boolean enabled)
-  {
+  public void setFromDateEnabled(boolean enabled) {
     fromDateEnabled = enabled;
   }
-
-  public boolean getFromDateEnabled()
-  {
+  public boolean getFromDateEnabled() {
     return fromDateEnabled;
   }
 
-  public Date getFromDate()
-  {
+  public Date getFromDate() {
     return fromDate;
   }
-
-  public void setFromDate(Date date)
-  {
+  public void setFromDate(Date date) {
     fromDate = date;
   }
 
-  public void setTillDateEnabled(boolean enabled)
-  {
+  public void setTillDateEnabled(boolean enabled) {
     tillDateEnabled = enabled;
   }
-
-  public boolean getTillDateEnabled()
-  {
+  public boolean getTillDateEnabled() {
     return tillDateEnabled;
   }
 
-  public Date getTillDate()
-  {
+  public Date getTillDate() {
     return tillDate;
   }
-
-  public void setTillDate(Date date)
-  {
+  public void setTillDate(Date date) {
     tillDate = date;
   }
 
-  public String getSortBy()
-  {
+  public String getSortBy() {
     return sortBy;
   }
-
-  public void setSortBy(String by)
-  {
+  public void setSortBy(String by) {
     sortBy = by;
   }
 
-}
+  public int getStatus() {
+    return status;
+  }
+  public void setStatus(int status) {
+    this.status = status;
+  }
 
-;
+  public int getLastResult() {
+    return lastResult;
+  }
+  public void setLastResult(int lastResult) {
+    this.lastResult = lastResult;
+  }
+  
+};
