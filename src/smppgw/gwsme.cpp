@@ -1,5 +1,6 @@
 #include "gwsme.hpp"
 #include "util/sleep.h"
+#include "util/debug.h"
 
 namespace smsc{
 namespace smppgw{
@@ -43,8 +44,14 @@ int GatewaySme::Execute()
     {
       SmscCommand cmd;
       {
+        debug1(log,"tick in");
         MutexGuard g(mutexout);
-        while(!isStopping && isConnected() && outqueue.Count()==0)mutexout.wait(1000);
+        while(!isStopping && isConnected() && outqueue.Count()==0)
+        {
+          mutexout.wait(1000);
+          debug1(log,"tick");
+        }
+        debug1(log,"tick out");
         if(isStopping || !isConnected())break;
         outqueue.Pop(cmd);
       }
@@ -72,9 +79,11 @@ int GatewaySme::Execute()
       }
       disposePdu(pdu);
     }
+    debug1(log,"closing session");
     sess.close();
     cfgIdx++;
   }
+  debug1(log,"finishing gwsme");
   return 0;
 }
 
