@@ -84,6 +84,7 @@ void Socket::Close()
   }
   shutdown(sock,2);
   closesocket(sock);
+  sock=INVALID_SOCKET;
   connected=0;
 }
 
