@@ -133,11 +133,11 @@ public class Index extends IndexBean
   {
     try {
       routeSubjectManager.load();
-      journalAppend(SubjectTypes.TYPE_route, null, Actions.ACTION_LOAD);
-      journalAppend(SubjectTypes.TYPE_subject, null, Actions.ACTION_LOAD);
     } catch (AdminException exc) {
       return error(SMSCErrors.error.routes.cantLoad, exc.getMessage());
     }
+    appContext.getJournal().clear(SubjectTypes.TYPE_route);
+    appContext.getJournal().clear(SubjectTypes.TYPE_subject);
     appContext.getStatuses().setSubjectsChanged(false);
     appContext.getStatuses().setRoutesChanged(false);
     appContext.getStatuses().setRoutesRestored(false);
