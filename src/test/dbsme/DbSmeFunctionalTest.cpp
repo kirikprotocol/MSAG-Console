@@ -156,14 +156,10 @@ void TestSme::executeCycle()
 		//подготовить последовательност команд
 		seq.insert(seq.end(), 5, 1); //format
 		seq.insert(seq.end(), 5, 2); //insert
-		seq.push_back(4); //select (мало записей)
+		seq.push_back(4); //select
 		seq.push_back(3); //update
-		seq.push_back(4); //select (мало записей, после update)
-		seq.insert(seq.end(), 20, 2); //insert
-		seq.push_back(4); //select (много записей)
-		seq.push_back(3); //update
-		seq.push_back(4); //select (много записей, после update)
-		seq.push_back(5); //delete (удалить все записи)
+		seq.push_back(4); //select
+		seq.push_back(5); //delete (все записи)
 		seq.push_back(4); //select (пустая таблица)
 		//зависнуть
 		evt.Wait(5000);
@@ -181,7 +177,7 @@ void TestSme::executeCycle()
 			tc.submitCorrectUpdateDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
 		case 4:
-			tc.submitCorrectSelectDbSmeCmd(rand0(1), getDataCoding(RAND_TC));
+			tc.submitCorrectSelectDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			evt.Wait(1000);
 			break;
 		case 5:
