@@ -158,6 +158,18 @@ namespace smsc { namespace util { namespace templates
         FormatEntityRenderer(const char* format, bool io)
             throw(FormatRenderingException);
         virtual ~FormatEntityRenderer();
+
+        /**
+         * Ищет сущность форматирования и возвращает её тип по значению указанной опции.
+         * Если сущность, опция или ключ не найдены, возвращает -1.
+         *
+         * @param key       значение указанной опции
+         * @param option    опция, по цмолчанию SMSC_DBSME_IO_FORMAT_IMPORT_OPTION
+         * @return          EntityType для найденной опции. 
+         *                  Если сущность, опция или ключ не найдены, возвращает -1.
+         */
+        int getEntityType(const char* key, 
+                          const char* option = SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
     };
 
 }}}

@@ -287,6 +287,20 @@ FormatEntityRenderer::~FormatEntityRenderer()
 {
     clearEntities();
 }
+int FormatEntityRenderer::getEntityType(const char* key, const char* option)
+{
+    if (!key || !option) return -1;
+
+    for (int i=0; i<entities.Count(); i++)
+    {
+        FormatEntity* entity = entities[i];
+        if (!entity) continue;
+        const char* value = entity->getOption(option);
+        if (value && strcmp(key, value) == 0) return entity->type;
+    }
+    return -1;
+}
+
 
 void ContextEnvironment::toUpperCase(const char* str, char* low)
 {
