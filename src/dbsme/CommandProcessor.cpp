@@ -1,4 +1,4 @@
-
+#include <sys/time.h>
 #include "CommandProcessor.h"
 
 namespace smsc { namespace dbsme 
