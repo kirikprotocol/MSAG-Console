@@ -50,17 +50,33 @@ namespace ProfileCharsetOptions{
 */
 
 namespace ProfilerMatchType{
-  const int mtDefault=0;
-  const int mtMask   =1;
-  const int mtExact  =2;
+  static const int mtDefault=0;
+  static const int mtMask   =1;
+  static const int mtExact  =2;
 }
 
+namespace HideOption{
+  static const int hoDisabled=0;
+  static const int hoEnabled =1;
+  static const int hoSubstitute=2;
+}
+
+inline const char* HideOptionToText(int ho)
+{
+  switch(ho)
+  {
+    case HideOption::hoDisabled:return "N";
+    case HideOption::hoEnabled:return "Y";
+    case HideOption::hoSubstitute:return "S";
+  }
+  return "U";
+}
 
 struct Profile{
   int codepage;
   int reportoptions;
-  std::string locale;
   int hide;
+  std::string locale;
   bool hideModifiable;
 
   std::string divert;

@@ -1049,11 +1049,22 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   sms->setIntProperty(Tag::SMSC_HIDE,profile.hide);
+  if(profile.hide==HideOption::hoSubstitute)
+  {
+    Address addr;
+    if(smsc->AddressToAlias(sms->getOriginatingAddress(),addr))
+    {
+      info2(smsLog,"msgId=%lld: oa subst: %s->%s",t.msgId,sms->getOriginatingAddress().toString().c_str(),addr.toString().c_str());
+      sms->setOriginatingAddress(addr);
+    }
+  }
+
   if(!sms->hasIntProperty(Tag::SMSC_TRANSLIT))
   {
     sms->setIntProperty(Tag::SMSC_TRANSLIT,profile.translit);
     debug2(smsLog,"msgId=%lld, set translit to %d",t.msgId,sms->getIntProperty(Tag::SMSC_TRANSLIT));
   }
+
 
 
   Profile srcprof=profile;
@@ -2362,10 +2373,10 @@ StateType StateMachine::submit(Tuple& t)
     {
       // send delivery
       Address src;
-      __trace2__("SUBMIT: wantAlias=%s, hide=%s",dstSmeInfo.wantAlias?"true":"false",sms->getIntProperty(Tag::SMSC_HIDE)?"true":"false");
+      __trace2__("SUBMIT: wantAlias=%s, hide=%s",dstSmeInfo.wantAlias?"true":"false",HideOptionToText(sms->getIntProperty(Tag::SMSC_HIDE)));
       if(
           dstSmeInfo.wantAlias &&
-          sms->getIntProperty(Tag::SMSC_HIDE) &&
+          sms->getIntProperty(Tag::SMSC_HIDE)==HideOption::hoEnabled &&
           ri.hide &&
           smsc->AddressToAlias(sms->getOriginatingAddress(),src)
         )
@@ -2880,7 +2891,7 @@ StateType StateMachine::forward(Tuple& t)
     Address src;
     if(
         smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
-        sms.getIntProperty(Tag::SMSC_HIDE) &&
+        sms.getIntProperty(Tag::SMSC_HIDE)==HideOption::hoEnabled &&
         ri.hide &&
         smsc->AddressToAlias(sms.getOriginatingAddress(),src)
       )
@@ -3582,7 +3593,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         // send delivery
         Address src;
         if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
-           sms.getIntProperty(Tag::SMSC_HIDE) &&
+           sms.getIntProperty(Tag::SMSC_HIDE)==HideOption::hoEnabled &&
            smsc->AddressToAlias(sms.getOriginatingAddress(),src))
         {
           sms.setOriginatingAddress(src);

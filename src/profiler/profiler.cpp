@@ -311,7 +311,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   addr.toString(addrbuf,sizeof(addrbuf));
   __trace2__("Profiler: dbUpdate %s=%d,%d,%s,%d,%c,%s,%c,%c",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
   statement->setString(3,profile.locale.c_str());
-  statement->setString(4,profile.hide?"Y":"N");
+  statement->setString(4,HideOptionToText(profile.hide));
   statement->setString(5,profile.hideModifiable?"Y":"N");
   statement->setString(6,profile.divert.c_str());
   char div[16];
@@ -353,7 +353,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   sprintf(buf,"%d",profile.codepage);
   statement->setString(3, buf);
   statement->setString(4,profile.locale.c_str());
-  statement->setString(5, profile.hide?"Y":"N");
+  statement->setString(5, HideOptionToText(profile.hide));
   statement->setString(6, profile.hideModifiable?"Y":"N");
   statement->setString(7,profile.divert.c_str());
   char div[16];
@@ -1171,6 +1171,13 @@ static bool RsAsBool(smsc::db::ResultSet* rs,int idx)
   return toupper(*r)=='Y';
 }
 
+static int RsAsHide(smsc::db::ResultSet* rs,int idx)
+{
+  const char *r=rs->getString(idx);
+  if(!r)return 0;
+  return toupper(*r)=='Y'?HideOption::hoEnabled:toupper(*r)=='S'?HideOption::hoSubstitute:HideOption::hoDisabled;
+}
+
 void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
 {
   ds=datasrc;
@@ -1211,7 +1218,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
     p.codepage=RsAsInt(rs.get(),3);
     const char * l=rs->getString(4);
     p.locale=l?l:"";
-    p.hide=RsAsBool(rs.get(),5);
+    p.hide=RsAsHide(rs.get(),5);
     p.hideModifiable=RsAsBool(rs.get(),6);
     const char *d=rs->getString(7);
     p.divert=d?d:"";
