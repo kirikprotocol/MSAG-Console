@@ -612,7 +612,7 @@ static void ForwardMO(MapDialog* dialog) {
   if( !sms->hasBinProperty(Tag::SMSC_MO_PDU) )
     throw MAPDIALOG_FATAL_ERROR("MAP::ForwardMO: SMS has SMSC_FORWARD_MO_TO but has no SMSC_MO_PDU",smsc::system::Status::DATAMISSING);
 
-  dialog->state = MAPST_WaitFwdMOConf;
+  dialog->state = MAPST_WaitFwdMOOpenConf;
   dialog->version = 2;
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_MO_RELAY;
