@@ -16,7 +16,7 @@
 #include <admin/protocol/CommandListComponents.h>
 #include <admin/protocol/CommandSetServiceStartupParameters.h>
 #include <core/network/Socket.hpp>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/xml/DOMErrorLogger.h>
 
 namespace smsc {

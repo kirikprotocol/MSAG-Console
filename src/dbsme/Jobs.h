@@ -16,7 +16,7 @@
 #include <string>
 
 #include <util/debug.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <core/buffers/Hash.hpp>
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>

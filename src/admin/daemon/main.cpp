@@ -12,7 +12,7 @@
 #include <admin/daemon/config_parameter_names.h>
 #include <util/config/ConfigException.h>
 #include <util/config/Manager.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/signal.hpp>
 #include <system/smscsignalhandlers.h>
 

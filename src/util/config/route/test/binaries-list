@@ -2,4 +2,4 @@
 # this file contains binaries definitions
 
 # binary name					source name			libraries																		description
-util/config/route/smsc_route_config_test	ConfigRouteTest		-lutil-config-route -lutil-config -lutil-xml -lutil -lxerces-c -llog4cpp
+util/config/route/smsc_route_config_test	ConfigRouteTest		-lutil-config-route -lutil-config -lutil-xml -lutil -lxerces-c -llog4cpp -L$(SMSC_BUILDDIR)/bin -llogger

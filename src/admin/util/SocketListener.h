@@ -9,7 +9,7 @@
 #include <core/network/Socket.hpp>
 #include <core/threads/ThreadPool.hpp>
 #include <core/threads/Thread.hpp>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/debug.h>
 #include <core/synchronization/EventMonitor.hpp>
 

@@ -2,6 +2,6 @@
 # this file contains binaries definitions
 
 # binary name        source name	libraries
-util/test1           test               -lc -lsms -lutil -lsms -lutil-recoder-recode_dll -lutil-templates -lresourcemanager -llog4cpp -lxerces-c -lutil-xml -lutil  -lsystem -lprofiler -lutil-regexp -lsmeman -lrt -lcore-threads -lcore-buffers -lutil-templates
+util/test1           test               -lc -lsms -lutil -lsms -lutil-recoder-recode_dll -lutil-templates -lresourcemanager -llog4cpp -lxerces-c -lutil-xml -lutil  -lsystem -lprofiler -lutil-regexp -lsmeman -lrt -lcore-threads -lcore-buffers -lutil-templates -L$(SMSC_BUILDDIR)/bin -llogger
 #-util/test2          test               -lc
 #LeakHunter.so LeakHunter -shared

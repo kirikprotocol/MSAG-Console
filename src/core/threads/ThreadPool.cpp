@@ -111,6 +111,7 @@ void ThreadPool::shutdown()
     }
     for(int i=0;i<usedThreads.Count();i++)
     {
+      __warning2__("Unfinished task:%s",usedThreads[i]->taskName());
       usedThreads[i]->stopTask();
       usedThreads[i]->Kill(16);
     }

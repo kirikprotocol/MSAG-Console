@@ -1,6 +1,6 @@
 #include "system/abonentinfo/AbonentInfo.hpp"
 #include "util/smstext.h"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include "resourcemanager/ResourceManager.hpp"
 #include <exception>
 

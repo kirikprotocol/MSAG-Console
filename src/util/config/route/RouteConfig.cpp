@@ -2,7 +2,7 @@
 
 #include <fstream>
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/cstrings.h>
 #include <util/debug.h>
 

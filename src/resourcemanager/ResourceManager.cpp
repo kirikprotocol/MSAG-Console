@@ -4,7 +4,7 @@
 #include <iostream>
 #include <dirent.h>
 #include <util/Exception.hpp>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include "util/debug.h"
 
 namespace smsc{

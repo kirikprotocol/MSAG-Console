@@ -3,7 +3,7 @@
 #define __SYSTEM_MAPIO_MAPPROXY_H__
 
 #include "smeman/smeproxy.h"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include "core/buffers/Array.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"

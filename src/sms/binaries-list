@@ -1,1 +1,1 @@
-testHS testHS -lsms
+testHS testHS -lsms -L$(SMSC_BUILDDIR)/bin -llogger

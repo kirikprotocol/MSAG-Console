@@ -7,7 +7,7 @@
 #include "util/recoder/recode_dll.h"
 #include "core/buffers/Hash.hpp"
 #include "util/smstext.h"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include "util/regexp/RegExp.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "system/status.h"

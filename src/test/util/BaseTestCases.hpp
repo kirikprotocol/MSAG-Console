@@ -3,7 +3,7 @@
 
 #include "CheckList.hpp"
 #include "Util.hpp"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include "core/threads/Thread.hpp"
 #include <iostream>
 #include <sstream>

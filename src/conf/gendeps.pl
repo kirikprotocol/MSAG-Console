@@ -41,6 +41,7 @@ while(<IN>)
     $lpath=~s!-!/!g;
 #    print "lpath:$lpath\n";
     next unless -d "$srcdir/$lpath";
+    next if -e "$srcdir/$lpath/.ignorelib";
     #next if $lib eq $l;
     $libdeps.=" $builddir/lib/lib$l.a";
   }

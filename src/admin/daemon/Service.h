@@ -3,7 +3,7 @@
 
 #include <netinet/in.h>
 #include <admin/AdminException.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/cstrings.h>
 
 namespace smsc {

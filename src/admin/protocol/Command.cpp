@@ -1,6 +1,6 @@
 #include "Command.h"
 
-#include <util/Logger.h>
+#include <logger/Logger.h>
 
 namespace smsc {
 namespace admin {

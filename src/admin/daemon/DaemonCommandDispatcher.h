@@ -15,7 +15,7 @@
 #include <admin/protocol/Response.h>
 #include <admin/util/CommandDispatcher.h>
 #include <core/synchronization/Mutex.hpp>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/config/Manager.h>
 #include <core/threads/Thread.hpp>
 

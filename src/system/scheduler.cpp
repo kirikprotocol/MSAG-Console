@@ -1,86 +1,98 @@
 #include "system/scheduler.hpp"
-#include "store/StoreManager.h"
 
 namespace smsc{
 namespace system{
 
+void Scheduler::Init(MessageStore* st)
+{
+  smsc::store::TimeIdIterator* it=st->getReadyForRetry(time(NULL)+30*24*60*60);
+  if(it)
+  {
+    MutexGuard guard(mon);
+    SMSId id;
+    try{
+      while(it->getNextId(id))
+      {
+        timeLine.insert(TimeIdPair(it->getTime(),id));
+      }
+      __trace2__("Scheduler: init ok - %d messages for rescheduling",timeLine.size());
+    }catch(std::exception& e)
+    {
+      __warning2__("Scheduler:failed to init scheduler timeline:%s",e.what());
+    }catch(...)
+    {
+      __warning__("Scheduler:failed to init scheduler timeline:unknown");
+    }
+    delete it;
+  }else
+  {
+    __trace__("Scheduler: init - No messages found");
+  }
+}
+
+
 int Scheduler::Execute()
 {
   time_t t,r;
-  smsc::store::IdIterator *it=NULL;
-  Array<SMSId> ids;
-  SMSId id;
   Event e;
-  //int cnt;
+  Array<SMSId> ids;
   while(!isStopping)
   {
     t=time(NULL);
-    __trace__("scheduler started");
-    try{
-      it=store->getReadyForRetry(t,true);
-      if(it)
-      {
-        try{
-          while(it->getNextId(id))
-          {
-            ids.Push(id);
-            if(ids.Count()>=rescheduleLimit*2)break;
-          }
-        }catch(...)
-        {
-          __trace__("Scheduler: Exception in getReadyForRetry");
-        }
-        delete it;
-      }
-      it=store->getReadyForRetry(t);
-      if(it)
-      {
-        try{
-          while(it->getNextId(id))
-          {
-            ids.Push(id);
-            if(ids.Count()>=rescheduleLimit*2)break;
-          }
-        }catch(...)
-        {
-          __trace__("Scheduler: Exception in getReadyForRetry");
-        }
-        delete it;
-      }
-      if(ids.Count())
-      {
-        __trace2__("Scheduler: %d messages for rescheduling",ids.Count());
-        try{
-          for(int i=0;i<ids.Count();i++)
-          {
-            SmscCommand cmd=SmscCommand::makeForward();
-            queue.enqueue(ids[i],cmd);
-            //thr_yield();
-            e.Wait(1000/rescheduleLimit);
-            if(isStopping)break;
-          }
-        }catch(...)
-        {
-          __trace__("Scheduler: Exception queue.enqueue");
-        }
-        ids.Clean();
-      }
-    }catch(...)
     {
-      __trace__("Scheduler: Exception in getReadyForRetry");
+      MutexGuard guard(mon);
+      if(timeLine.size())
+      {
+        __trace2__("Scheduler: start check - now=%d, first=%d",t,timeLine.begin()->first);
+      }
+      while(timeLine.size() && timeLine.begin()->first<t && ids.Count()<rescheduleLimit)
+      {
+        ids.Push(timeLine.begin()->second);
+        timeLine.erase(timeLine.begin());
+      }
     }
+    if(ids.Count())
+    {
+      __trace2__("Scheduler: %d ids for reschedule",ids.Count());
+    }
+    for(int i=0;i<ids.Count();i++)
+    {
+      SmscCommand cmd=SmscCommand::makeForward();
+      queue.enqueue(ids[i],cmd);
+      e.Wait(1000/rescheduleLimit);
+      if(isStopping)break;
+    }
+    ids.Clean();
+
     if(isStopping)break;
-    it=NULL;
-    __trace__("scheduler finished, sleeping");
     sleep(1);
-    r=store->getNextRetryTime();
-    if(r==0)
-      event.Wait();
-    else
-      if(r>t)event.Wait((r-t)*1000);
+    {
+      MutexGuard guard(mon);
+      if(timeLine.size())
+      {
+        r=timeLine.begin()->first;
+      }else
+      {
+        r=0;
+      }
+      if(r==0)
+        mon.wait();
+      else
+        if(r>t)mon.wait((r-t)*1000);
+    }
   }
   return 0;
 }
+
+void Scheduler::ChangeSmsSchedule(SMSId id,time_t newtime)
+{
+  MutexGuard guard(mon);
+  timeLine.insert(TimeIdPair(newtime,id));
+  __trace2__("Scheduler: changesmsschedule %lld -> %d",id,newtime);
+  mon.notify();
+  __trace2__("Scheduler: notify");
+}
+
 
 };//system
 };//smsc

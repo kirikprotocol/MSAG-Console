@@ -2,7 +2,7 @@
 #include <xercesc/parsers/DOMParser.hpp>
 #include <xercesc/dom/DOM_DOMException.hpp>
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/config/XmlUtils.h>
 #include <util/xml/DOMErrorLogger.h>
 #include <util/xml/DtdResolver.h>

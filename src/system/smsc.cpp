@@ -9,7 +9,7 @@
 #include "system/rescheduler.hpp"
 #include "util/config/route/RouteConfig.h"
 #include "system/abonentinfo/AbonentInfo.hpp"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include "system/smscsme.hpp"
 #include "util/regexp/RegExp.hpp"
 #include "util/config/ConfigView.h"
@@ -329,10 +329,12 @@ void Smsc::init(const SmscConfigs& cfg)
   */
 
   // create scheduler here, and start later in run
-  scheduler=new Scheduler(eventqueue,store);
+  scheduler=new Scheduler(eventqueue);
 
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),scheduler);
   store=smsc::store::StoreManager::getMessageStore();
+
+  scheduler->Init(store);
 
   mrCache.assignStore(store);
 

@@ -5,7 +5,7 @@
 #include <admin/daemon/Service.h>
 #include <core/buffers/Hash.hpp>
 #include <util/cstrings.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 
 namespace smsc {
 namespace admin {

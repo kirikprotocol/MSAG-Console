@@ -11,7 +11,7 @@
 #include <admin/service/Method.h>
 #include <admin/service/Type.h>
 #include <admin/service/Variant.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/xml/utilFunctions.h>
 //#include <admin/service/ServiceCommand.h>
 

@@ -6,6 +6,8 @@
 
 PACKAGE := sme
 
+__LIBRARIES :=-L$(SMSC_BUILDDIR)/bin -llogger
+
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)
 endif

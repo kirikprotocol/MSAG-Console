@@ -41,6 +41,10 @@ public:
   {
     if(task)task->stop();
   }
+  const char* taskName()
+  {
+    if(task)return task->taskName();else return "";
+  }
 protected:
   Event taskEvent;
   ThreadPool *owner;

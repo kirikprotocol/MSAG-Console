@@ -5,7 +5,7 @@
 #include "core/threads/ThreadPool.hpp"
 #include "smeman/smeman.h"
 #include "smeman/smeproxy.h"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include "util/config/Manager.h"
 #include "ProfilerCheckList.hpp"
 #include <sstream>

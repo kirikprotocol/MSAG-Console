@@ -5,7 +5,7 @@
 #include <core/threads/ThreadPool.hpp>
 #include <core/buffers/Array.hpp>
 
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/config/Manager.h>
 #include <util/config/ConfigView.h>
 #include <util/recoder/recode_dll.h>

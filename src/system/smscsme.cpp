@@ -1,6 +1,6 @@
 #include "system/smscsme.hpp"
 #include "util/smstext.h"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include "smeman/smsccmd.h"
 
 namespace smsc{

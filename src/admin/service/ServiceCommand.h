@@ -7,7 +7,7 @@
 #include <admin/service/Method.h>
 #include <admin/service/Variant.h>
 #include <util/xml/utilFunctions.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 
 namespace smsc {
 namespace admin {

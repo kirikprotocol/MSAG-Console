@@ -9,7 +9,7 @@
 #include <log4cpp/NDC.hh>
 
 #include <core/network/Socket.hpp>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 
 namespace smsc {
 namespace admin {

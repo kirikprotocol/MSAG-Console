@@ -3,7 +3,7 @@
 #include <admin/service/AdminSocketManager.h>
 #include <admin/smsc_service/SmscComponent.h>
 #include <admin/smsc_service/SmscShutdownHandler.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/config/alias/aliasconf.h>
 #include <admin/AdminException.h>
 

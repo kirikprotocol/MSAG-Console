@@ -2,7 +2,7 @@
 #include "test/smeman/SmeManagerTestCases.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "RouteManagerCheckList.hpp"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include "util/debug.h"
 
 using namespace smsc::test::util;

@@ -1,7 +1,7 @@
 #include "SmeManagerTestCases.hpp"
 #include "test/util/Util.cpp"
 #include "SmeManagerCheckList.hpp"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 
 using namespace smsc::test::util;
 using namespace smsc::test::smeman; //constants, SmeManagerTestCases

@@ -5,7 +5,7 @@
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/config/Manager.h>
 
 #include <db/DataSource.h>

@@ -6,6 +6,8 @@
 #include "core/buffers/Array.hpp"
 #include "core/synchronization/Event.hpp"
 #include "system/sched_timer.hpp"
+#include "store/StoreManager.h"
+#include <map>
 
 namespace smsc{
 namespace system{
@@ -17,24 +19,31 @@ using smsc::core::synchronization::Event;
 
 class Scheduler:public smsc::core::threads::ThreadedTask,public SchedTimer{
 public:
-  Scheduler(EventQueue& eq,MessageStore* st):
-    queue(eq),store(st),rescheduleLimit(10){}
+  Scheduler(EventQueue& eq):
+    queue(eq),rescheduleLimit(10){}
   int Execute();
   const char* taskName(){return "scheduler";}
 
+  void Init(MessageStore* st);
+
   void notify()
   {
-    event.Signal();
+    //
   }
   void setRescheduleLimit(int rl)
   {
     rescheduleLimit=rl;
   }
+  void ChangeSmsSchedule(SMSId id,time_t newtime);
+
+
 protected:
   EventQueue &queue;
-  MessageStore* store;
-  Event event;
+  EventMonitor mon;
   int rescheduleLimit;
+  typedef std::multimap<time_t,SMSId> TimeLineMap;
+  typedef std::pair<SMSId,time_t> TimeIdPair;
+  TimeLineMap timeLine;
 };
 
 };//system

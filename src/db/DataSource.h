@@ -14,7 +14,7 @@
 #include <map>
 
 #include <util/debug.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/config/ConfigView.h>
 #include <core/buffers/Array.hpp>
 #include <core/buffers/Hash.hpp>

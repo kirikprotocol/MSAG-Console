@@ -1,5 +1,5 @@
 #include "util/debug.h"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include "util/config/Manager.h"
 #include "store/StoreManager.h"
 #include "MessageStoreTestCases.hpp"

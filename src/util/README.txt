@@ -1,7 +1,7 @@
 	$Id$
 
 	Logging:
-	подключаете "util/Logger.h"
+	подключаете "logger/Logger.h"
 	метод smsc::util::Logger.getCategory(const std::string & categoryName) 
 	возвращает log4cpp::Category, с помощью которго и производится запись 
 	в лог. Имя категории состоит из полного имени класса, где "::" 

@@ -2,7 +2,7 @@
 
 #include <fstream>
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 
 namespace smsc {
 namespace util {

@@ -11,7 +11,7 @@
 #include <core/threads/ThreadedTask.hpp>
 
 #include <db/DataSource.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 
 namespace smsc { namespace stat 
 {

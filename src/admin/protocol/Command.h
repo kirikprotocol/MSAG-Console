@@ -6,7 +6,7 @@
 #include <log4cpp/Category.hh>
 
 #include <admin/AdminException.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 
 using smsc::admin::AdminException;
 using smsc::util::Logger;

@@ -146,7 +146,9 @@ void Smsc::mainLoop()
       while ( tasks.getExpired(&task) )
       {
         SMSId id = task.messageId;
-        __trace__("enqueue timeout Alert");
+        __trace2__("enqueue timeout Alert: dialogId=%d, systemId=%s",
+          task.sequenceNumber,smeman.getSmeInfo(task.proxy_id).systemId.c_str());
+
         eventqueue.enqueue(id,SmscCommand::makeAlert());
       }
     }

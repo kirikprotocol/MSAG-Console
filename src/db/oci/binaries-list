@@ -2,4 +2,4 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-db/oci/libdb_oci.so  OCIDataSource -shared -ldl -ldb -lutil-config -lutil-xml -lutil -llog4cpp -lcore-threads -lthread -lxerces-c $(__LIBRARIES) -lrt
+db/oci/libdb_oci.so  OCIDataSource -shared -ldl -ldb -lutil-config -lutil-xml -lutil -lcore-threads -lthread $(__LIBRARIES) -lrt

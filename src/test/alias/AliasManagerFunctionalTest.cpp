@@ -1,5 +1,5 @@
 #include "AliasManagerTestCases.hpp"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include "test/sms/SmsUtil.hpp"
 #include "AliasManagerCheckList.hpp"
 #include <sstream>

@@ -7,7 +7,7 @@
 #include <xercesc/dom/DOM_DOMException.hpp>
 #include <log4cpp/Category.hh>
 #include <core/buffers/Hash.hpp>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/cstrings.h>
 #include <util/config/ConfigException.h>
 

@@ -7,7 +7,7 @@
 #include <admin/service/Method.h>
 #include <admin/service/Type.h>
 #include <core/synchronization/Mutex.hpp>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <system/smsc.hpp>
 
 namespace smsc {

@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <sys/timeb.h>
 
-#include "util/Logger.h"
+#include "logger/Logger.h"
 
 #ifndef _WIN32
 #include <thread.h>
@@ -387,7 +387,7 @@ namespace util{
   {
       if(smsc::util::_trace_cat->isPriorityEnabled(log4cpp::Priority::WARN))
          smsc::util::_trace_cat->_log(log4cpp::Priority::WARN,
-    	 "*watch*: %s = %s     %s(%s):%d\n",
+       "*watch*: %s = %s     %s(%s):%d\n",
             expr,e?"true":"false",
             #if defined ENABLE_FILE_NAME
               file,

@@ -48,7 +48,7 @@ if ( success )
 #include <inttypes.h>
 #include <log4cpp/Category.hh>
 #include <util/cstrings.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <string>
 
 namespace smsc {

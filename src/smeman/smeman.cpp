@@ -2,7 +2,7 @@
   $Id$
 */
 #include "smeman.h"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include <stdexcept>
 #include <string>
 
@@ -146,7 +146,9 @@ __synchronized__
   SmeIndex idx=internalLookup(systemid);
   if ( idx == INVALID_SME_INDEX ) throw runtime_error("can't find SME Proxy identifier");
   SmeRecord *r=records.at(idx);
+  bool internal=r->info.internal;
   r->info=newinfo;
+  r->info.internal=internal;
 }
 
 

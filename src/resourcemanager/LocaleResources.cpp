@@ -3,7 +3,7 @@
 #include <util/xml/DOMTreeReader.h>
 #include <util/debug.h>
 #include <util/xml/utilFunctions.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <xercesc/dom/DOM_DOMException.hpp>
 #include <xercesc/sax/SAXException.hpp>
 #include "util/debug.h"

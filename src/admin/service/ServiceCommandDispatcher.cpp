@@ -9,7 +9,7 @@
 #include <admin/service/ComponentManager.h>
 #include <core/synchronization/Mutex.hpp>
 #include <util/config/Config.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/cstrings.h>
 
 namespace smsc {

@@ -15,7 +15,7 @@
 
 #include "util/recoder/recode_dll.h"
 #include "util/smstext.h"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 #include "system/status.h"
 
 #include "resourcemanager/ResourceManager.hpp"

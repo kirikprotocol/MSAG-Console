@@ -1,6 +1,6 @@
 #include "DOMTreeReader.h"
 
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <util/xml/DOMErrorLogger.h>
 #include <util/xml/init.h>
 #include <util/xml/DtdResolver.h>

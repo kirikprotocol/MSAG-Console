@@ -24,7 +24,7 @@
 
 #include <core/buffers/Array.hpp>
 #include <util/config/Manager.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 #include <sms/sms.h>
 
 #include "StoreExceptions.h"

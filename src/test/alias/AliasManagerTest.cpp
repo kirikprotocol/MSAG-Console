@@ -1,5 +1,5 @@
 #include "AliasManagerTestCases.hpp"
-#include "util/Logger.h"
+#include "logger/Logger.h"
 
 using log4cpp::Category;
 using smsc::util::Logger;

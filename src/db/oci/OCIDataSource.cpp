@@ -1,4 +1,4 @@
-
+#define DISABLE_ANY_CHECKS
 #include "OCIDataSource.h"
 
 using namespace smsc::db;

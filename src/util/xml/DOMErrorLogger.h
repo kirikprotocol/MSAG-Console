@@ -3,7 +3,7 @@
 
 #include <xercesc/sax/ErrorHandler.hpp>
 #include <log4cpp/Category.hh>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 
 namespace smsc {
 namespace util {

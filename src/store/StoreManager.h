@@ -19,7 +19,7 @@
 
 #include <core/synchronization/Mutex.hpp>
 #include <util/config/Manager.h>
-#include <util/Logger.h>
+#include <logger/Logger.h>
 
 #include <core/buffers/XHash.hpp>
 #include <core/buffers/Array.hpp>
