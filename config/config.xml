@@ -57,13 +57,18 @@
     <param name="systemId" type="string">profiler</param>
     <param name="defaultReport" type="string">NONE</param>
     <param name="defaultDataCoding" type="string">DEFAULT</param>
+    <param name="msgReportNone" type="string">Now you will receive only requested delivery reports</param>
+    <param name="msgReportFull" type="string">Now you will receive auxiliary delivery reports</param>
+    <param name="msgDataCodingDefault" type="string">Now you are a default language user</param>
+    <param name="msgDataCodingUCS2" type="string">Now you will be able to receive ucs2-encoded messages</param>
+    <param name="msgError" type="string">Unrecognized profile management command</param>
   </section>
 
 
   <section name="sms">
     <param name="max_valid_time" type="int">1209600</param>
   </section>
-  
+
   <section name="StartupLoader">
     <section name="DataSourceDrivers">
       <section name="OCIDataSourceDriver">
@@ -72,7 +77,7 @@
       </section>
     </section>
   </section>
-  
+
   <section name="DataSource">
     <param name="type" type="string">OCI</param>
     <param name="connections" type="int">5</param>
