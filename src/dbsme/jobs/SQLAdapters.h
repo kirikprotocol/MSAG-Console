@@ -10,7 +10,7 @@
 
 #include <stdlib.h>
 
-#include <dbsme/io/Adapters.h>
+#include <util/templates/Adapters.h>
 #include <db/DataSource.h>
 
 #define SET_THROW_CAUGHT_EXCEPTION(stmt)    \
@@ -37,6 +37,7 @@ catch (Exception& exc)                      \
 
 namespace smsc { namespace dbsme { namespace io
 {
+    using namespace smsc::util::templates;
     using namespace smsc::db;
 
     class SQLSetAdapter : public SetAdapter
