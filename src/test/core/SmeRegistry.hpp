@@ -31,16 +31,27 @@ class SmeRegistry
 	{
 		const Address smeAddr;
 		const SmeInfo sme;
-		PduRegistry pduReg;
+		PduRegistry* pduReg;
 		bool bound;
-		SmeData(const Address& addr, const SmeInfo& smeInfo)
-			: smeAddr(addr), sme(smeInfo), bound(false) {}
+		SmeData(const Address& _smeAddr, const SmeInfo& _sme, PduRegistry* _pduReg)
+			: smeAddr(_smeAddr), sme(_sme), pduReg(_pduReg), bound(false) {}
+		~SmeData()
+		{
+			if (pduReg)
+			{
+				delete pduReg;
+			}
+		}
 	};
 	typedef map<const Address, SmeData*, ltAddress> AddressMap;
 	typedef map<const SmeSystemId, SmeData*> SmeIdMap;
+	typedef vector<const Address*> AddressList;
+
+	AddressMap addrMap;
+	SmeIdMap smeIdMap;
+	AddressList addrList;
 
 public:
-	typedef vector<const Address*> AddressList;
 	struct SmeIterator
 	{
 		SmeIdMap::const_iterator it1;
@@ -53,16 +64,11 @@ public:
 		}
 	};
 
-private:
-	AddressMap addrMap;
-	SmeIdMap smeIdMap;
-	AddressList addrList;
-
 public:
 	SmeRegistry() {}
 	~SmeRegistry();
 
-	bool registerSme(const Address& smeAddr, const SmeInfo& sme);
+	bool registerSme(const Address& smeAddr, const SmeInfo& sme, bool pduReg = true);
 
 	void deleteSme(const SmeSystemId& smeId);
 

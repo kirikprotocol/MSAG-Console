@@ -18,14 +18,14 @@ SmeRegistry::~SmeRegistry()
 	clear();
 }
 
-bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme)
+bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme, bool pduReg)
 {
 	if (addrMap.find(smeAddr) != addrMap.end() ||
 		smeIdMap.find(sme.systemId) != smeIdMap.end())
 	{
 		return false;
 	}
-	SmeData* smeData = new SmeData(smeAddr, sme);
+	SmeData* smeData = new SmeData(smeAddr, sme, pduReg ? new PduRegistry() : NULL);
 	addrMap[smeAddr] = smeData;
 	smeIdMap[sme.systemId] = smeData;
 	addrList.push_back(new Address(smeAddr));
@@ -96,7 +96,7 @@ const SmeInfo* SmeRegistry::getSme(const SmeSystemId& smeId) const
 PduRegistry* SmeRegistry::getPduRegistry(const Address& smeAddr) const
 {
 	AddressMap::const_iterator it = addrMap.find(smeAddr);
-	return (it == addrMap.end() ? NULL : &it->second->pduReg);
+	return (it == addrMap.end() ? NULL : it->second->pduReg);
 }
 
 const Address* SmeRegistry::getRandomAddress() const
@@ -124,7 +124,7 @@ void SmeRegistry::dump(FILE* log) const
 		os << smeData->smeAddr;
 		fprintf(TRACE_LOG_STREAM, "Sme = (systemId = %s, address = %s)\n",
 			smeData->sme.systemId.c_str(), os.str().c_str());
-		smeData->pduReg.dump(TRACE_LOG_STREAM);
+		smeData->pduReg->dump(TRACE_LOG_STREAM);
 	}
 }
 
