@@ -83,7 +83,6 @@ const uint8_t ESM_CLASS_DELIVERY_RECEIPT = 0x4;
 const uint8_t ESM_CLASS_SME_ACKNOWLEDGEMENT = 0x10;
 const uint8_t ESM_CLASS_INTERMEDIATE_NOTIFICATION = 0x20;
 
-/*
 //registered_delivery (SMPP v3.4, 5.2.17):
 //SMSC Delivery Receipt:
 //xxxxxx00 - No SMSC Delivery Receipt requested (default)
@@ -100,7 +99,6 @@ const uint8_t FAILURE_SMSC_DELIVERY_RECEIPT = 0x2;
 //xxx0xxxx - No Intermediate notification requested
 //xxx1xxxx - Intermediate notification requested
 const uint8_t INTERMEDIATE_NOTIFICATION_REQUESTED = 0x10;
-*/
 
 //размеры структур и сами структуры
 const int MAX_SMPP_TIME_LENGTH = 16;
