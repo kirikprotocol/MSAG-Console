@@ -51,7 +51,7 @@ RouteRegistry* routeReg = new RouteRegistry();
 /**
  * Тестовая sme.
  */
-class TestSme : public TestTask, ResultHandler
+class TestSme : public TestTask, ResultHandler, StatHandler
 {
 	int smeNum;
 	SmppTestCases tc;
@@ -68,7 +68,8 @@ public:
 	virtual void onStopped();
 
 private:
-	void process(TCResult* res);
+	virtual void process(TCResult* res);
+	virtual void updateStat(bool billing, bool archived);
 };
 
 /**
@@ -93,6 +94,16 @@ struct TestSmeStat
 };
 
 /**
+ * Статистика по sms.
+ */
+struct SmsStat
+{
+	int billing;
+	int archived;
+	SmsStat() : billing(0), archived(0) {}
+};
+
+/**
  * Статистика работы всего теста.
  */
 class SmppFunctionalTest
@@ -102,6 +113,7 @@ class SmppFunctionalTest
 	
 	static TaskStatList taskStat;
 	static TCStatMap tcStat;
+	static SmsStat smsStat;
 	static Mutex mutex;
 
 public:
@@ -113,7 +125,8 @@ public:
 	static void onStopped(int taskNum);
 	static bool isStopped();
 	static void process(int taskNum, const TCResult* res);
-	static void printOpsStatByTC();
+	static void updateStat(bool billing, bool archived);
+	static void printStat();
 };
 
 /**
@@ -144,10 +157,10 @@ public:
 
 //TestSme
 TestSme::TestSme(int _smeNum, const SmeConfig& config, const SmeSystemId& systemId,
-	const Address& smeAlias, const SmeRegistry* smeReg,
+	const Address& smeAddr, const SmeRegistry* smeReg,
 	const AliasRegistry* aliasReg, const RouteRegistry* routeReg)
 	: TestTask("TestSme", _smeNum), smeNum(_smeNum), nextCheckTime(0),
-	tc(config, systemId, smeAlias, smeReg, aliasReg, routeReg, this),
+	tc(config, systemId, smeAddr, smeReg, aliasReg, routeReg, this, this),
 	boundOk(false) {}
 
 void TestSme::executeCycle()
@@ -228,6 +241,11 @@ inline void TestSme::process(TCResult* res)
 	SmppFunctionalTest::process(smeNum, res);
 }
 
+inline void TestSme::updateStat(bool billing, bool archived)
+{
+	SmppFunctionalTest::updateStat(billing, archived);
+}
+
 //TestSmeTaskManager
 bool TestSmeTaskManager::isStopped() const
 {
@@ -243,6 +261,7 @@ SmppFunctionalTest::TaskStatList
 SmppFunctionalTest::TCStatMap
 	SmppFunctionalTest::tcStat =
 	SmppFunctionalTest::TCStatMap();
+SmsStat SmppFunctionalTest::smsStat = SmsStat();
 Mutex SmppFunctionalTest::mutex = Mutex();
 	
 inline void SmppFunctionalTest::resize(int newSize)
@@ -285,7 +304,19 @@ void SmppFunctionalTest::process(int smeNum, const TCResult* res)
 	}
 }
 
-void SmppFunctionalTest::printOpsStatByTC()
+void SmppFunctionalTest::updateStat(bool billing, bool archived)
+{
+	if (billing)
+	{
+		smsStat.billing++;
+	}
+	if (archived)
+	{
+		smsStat.archived++;
+	}
+}
+
+void SmppFunctionalTest::printStat()
 {
 	int totalOps = 0;
 	for (TCStatMap::iterator it = tcStat.begin(); it != tcStat.end(); it++)
@@ -296,6 +327,8 @@ void SmppFunctionalTest::printOpsStatByTC()
 		cout << tcId << ": ops = " << ops << endl;
 	}
 	cout << "Total ops = " << totalOps << endl;
+	cout << "Billing sms = " << smsStat.billing << endl;
+	cout << "Archived sms = " << smsStat.archived << endl;
 	cout << "-----------------------------" << endl;
 }
 
@@ -428,13 +461,12 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 			Address& destAlias = *addr[j];
 			string smeId = "<>";
 			bool smeBound = false;
-			const AliasHolder* aliasHolder =
+			auto_ptr<const Address> destAddr =
 				aliasReg->findAddressByAlias(destAlias);
-			Address destAddr;
-			if (aliasHolder && aliasHolder->aliasToAddress(destAlias, destAddr))
+			if (destAddr.get())
 			{
 				const RouteHolder* routeHolder =
-					routeReg->lookup(origAddr, destAddr);
+					routeReg->lookup(origAddr, *destAddr);
 				if (routeHolder)
 				{
 					smeId = routeHolder->route.smeSystemId;
@@ -609,7 +641,7 @@ void executeFunctionalTest(int numAddr, int numSme,
 		else if (cmd == "stat")
 		{
 			cout << "Time = " << tm.getExecutionTime() << endl;
-			SmppFunctionalTest::printOpsStatByTC();
+			SmppFunctionalTest::printStat();
 		}
 		else if (cmd == "dump")
 		{
