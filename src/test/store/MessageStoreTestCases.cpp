@@ -1015,7 +1015,10 @@ void MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
 	try
 	{
 		SMS _sms;
-		__trace2__("loadExistentSms(): smsId = %s", str(id));
+		EService serviceType;
+		sms.getEServiceType(serviceType);
+		__trace2__("loadExistentSms(): smsId = %s, serviceType = %s",
+			str(id), serviceType);
 		msgStore->retriveSms(id, _sms);
 		if (&sms == NULL || &_sms == NULL)
 		{
