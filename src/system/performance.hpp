@@ -71,6 +71,10 @@ public:
       ld.counters[i].low=htonl(low);
     }
 
+    ld.uptime=htonl(ld.uptime);
+    ld.now=htonl(ld.now);
+    ld.eventQueueSize=htonl(ld.eventQueueSize);
+
     for(int i=0;i<sockets.Count();i++)
     {
       int wr=sockets[i]->WriteAll((char*)&ld,sizeof(ld));
