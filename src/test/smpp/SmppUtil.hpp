@@ -22,37 +22,12 @@ using namespace smsc::test::sms; //constants
 #define __absoluteTime__ rand1(2)
 
 #ifdef DISABLE_TRACING
-	#define __dumpSubmitSmPdu__(tc, id, pdu) 
-	#define __dumpReplaceSmPdu__(tc, id, pdu)
 	#define __dumpPdu__(tc, id, pdu)
 #else
-	#define __dumpSubmitSmPdu__(tc, id, pdu) dumpSubmitSmPdu(tc, id, pdu)
-	#define __dumpReplaceSmPdu__(tc, id, pdu) dumpReplaceSmPdu(tc, id, pdu)
 	#define __dumpPdu__(tc, id, pdu) dumpPdu(tc, id, pdu)
 #endif //DISABLE_TRACING
 
-void dumpSubmitSmPdu(const char* tc, const string& id, PduSubmitSm* pdu);
-
-void dumpReplaceSmPdu(const char* tc, const string& id, PduReplaceSm* pdu);
-
-template <class Pdu>
-void dumpPdu(const char* tc, const string& id, Pdu* pdu)
-{
-	if (pdu)
-	{
-		ostringstream os;
-		os << *pdu;
-		time_t lt = time(NULL); tm t; char buf[30];
-		SmppHeader* header = reinterpret_cast<SmppHeader*>(pdu);
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, system time = %s, pdu:\n%s",
-			tc, id.c_str(), header->get_sequenceNumber(),
-			asctime_r(localtime_r(&lt, &t), buf), os.str().c_str());
-	}
-	else
-	{
-		__trace2__("%s(): pdu = NULL", tc);
-	}
-}
+void dumpPdu(const char* tc, const string& id, SmppHeader* pdu);
 
 typedef enum
 { 

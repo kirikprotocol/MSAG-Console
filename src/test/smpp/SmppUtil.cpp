@@ -23,37 +23,35 @@ using namespace smsc::test::util;
 
 static const int MAX_OSTR_PRINT_SIZE = 255;
 
-void dumpSubmitSmPdu(const char* tc, const string& id, PduSubmitSm* pdu)
+void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 {
 	if (pdu)
 	{
 		ostringstream os;
-		os << *pdu;
-		time_t lt = time(NULL); tm t; char buf[30];
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s, pdu:\n%s",
-			tc, id.c_str(), pdu->get_header().get_sequenceNumber(),
-			SmppUtil::getWaitTime(pdu->get_message().get_scheduleDeliveryTime(), time(NULL)),
-			SmppUtil::getValidTime(pdu->get_message().get_validityPeriod(), time(NULL)),
-			asctime_r(localtime_r(&lt, &t), buf), os.str().c_str());
-	}
-	else
-	{
-		__trace2__("%s(): pdu = NULL", tc);
-	}
-}
-
-void dumpReplaceSmPdu(const char* tc, const string& id, PduReplaceSm* pdu)
-{
-	if (pdu)
-	{
-		ostringstream os;
-		os << *pdu;
-		time_t lt = time(NULL); tm t; char buf[30];
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s, pdu:\n%s",
-			tc, id.c_str(), pdu->get_header().get_sequenceNumber(),
-			SmppUtil::getWaitTime(pdu->get_scheduleDeliveryTime(), time(NULL)),
-			SmppUtil::getValidTime(pdu->get_validityPeriod(), time(NULL)),
-			asctime_r(localtime_r(&lt, &t), buf), os.str().c_str());
+		os << tc << "(): systemId = " << id <<
+			", sequenceNumber = " << pdu->get_sequenceNumber();
+		switch (pdu->get_commandId())
+		{
+			case SUBMIT_SM:
+				{
+					PduSubmitSm* p = reinterpret_cast<PduSubmitSm*>(pdu);
+					os << ", scheduleDeliveryTime = " << SmppUtil::getWaitTime(p->get_message().get_scheduleDeliveryTime(), time(NULL));
+					os << ", validityPeriod = " << SmppUtil::getValidTime(p->get_message().get_validityPeriod(), time(NULL));
+				}
+				break;
+			case REPLACE_SM:
+				{
+					PduReplaceSm* p = reinterpret_cast<PduReplaceSm*>(pdu);
+					os << ", scheduleDeliveryTime = " << SmppUtil::getWaitTime(p->get_scheduleDeliveryTime(), time(NULL));
+					os << ", validityPeriod = " << SmppUtil::getValidTime(p->get_validityPeriod(), time(NULL));
+				}
+				break;
+		}
+		time_t lt = time(NULL);
+		tm t;
+		char buf[30];
+		os << ", system time = " << asctime_r(localtime_r(&lt, &t), buf) <<
+			", pdu:" << endl << *pdu;
 	}
 	else
 	{
