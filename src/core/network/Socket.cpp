@@ -217,7 +217,11 @@ int Socket::InitServer(const char *host,int port,int timeout,int lng)
   if(Init(host,port,timeout)==-1)return -1;
   sock=socket(AF_INET,SOCK_STREAM,0);
   if(sock==INVALID_SOCKET) return -1;
-  if(bind(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)))return -1;
+  if(bind(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)))
+  {
+    close(sock);
+    return -1;
+  }
   linger l;
   l.l_onoff=1;
   l.l_linger=lng;
@@ -227,7 +231,12 @@ int Socket::InitServer(const char *host,int port,int timeout,int lng)
 
 int Socket::StartServer()
 {
-  if(listen(sock,SOMAXCONN))return -1;
+  if(listen(sock,SOMAXCONN))
+  {
+    close(sock);
+    sock=0;
+    return -1;
+  }
   connected=1;
   return 0;
 }
