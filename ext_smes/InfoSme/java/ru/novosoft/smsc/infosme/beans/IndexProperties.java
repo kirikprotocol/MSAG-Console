@@ -47,7 +47,7 @@ public abstract class IndexProperties extends TasksListBean
       infoSme.updateInfo(appContext);
     } catch (AdminException e) {
       logger.error("Could not refresh Info SME status", e);
-      return error("Could not refresh Info SME status", e);
+      result = error("Could not refresh Info SME status", e);
     }
 
     infosmeStarted = infoSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING;
@@ -60,7 +60,7 @@ public abstract class IndexProperties extends TasksListBean
       }
     } catch (AdminException e) {
       logger.error("Could not get task processor or task scheduler status", e);
-      return error("Could not get task processor or task scheduler status", e);
+      result = error("Could not get task processor or task scheduler status", e);
     }
 
     applySet.addAll(Arrays.asList(apply));
