@@ -166,13 +166,19 @@ public class Index extends IndexProperties
       savePropertiesFile(location, MCI_PROF_DS_FILE, dsProperties, MCI_PROF_DS_COMMENT);
 
       Properties mscProperties = new Properties();
-      mscProperties.setProperty("MSC.mcisme"      , config.getString("MCISme.MSC.mcisme"));
-      mscProperties.setProperty("MSC.voicemail"   , config.getString("MCISme.MSC.voicemail"));
       mscProperties.setProperty("MSC.host"        , config.getString("MCISme.MSC.host"));
       mscProperties.setProperty("MSC.port"        , ""+config.getInt("MCISme.MSC.port"));
       mscProperties.setProperty("MSC.usercode"    , config.getString("MCISme.MSC.usercode"));
       mscProperties.setProperty("MSC.userpassword", config.getString("MCISme.MSC.userpassword"));
       mscProperties.setProperty("MSC.nvtIODevice" , config.getString("MCISme.MSC.nvtIODevice"));
+      mscProperties.setProperty("MSC.voicemail"   , config.getString("MCISme.MSC.voicemail"));
+      mscProperties.setProperty("MSC.mcisme"      , config.getString("MCISme.MSC.mcisme"));
+      String mcismeReasons = "";
+      if (config.getBool("MCISme.Reasons.Busy.inform"))          mcismeReasons += "B";
+      if (config.getBool("MCISme.Reasons.Absent.inform"))        mcismeReasons += "A";
+      if (config.getBool("MCISme.Reasons.NoReply.inform"))       mcismeReasons += "N";
+      if (config.getBool("MCISme.Reasons.Unconditional.inform")) mcismeReasons += "U";
+      mscProperties.setProperty("MSC.mcisme.reasons", mcismeReasons);
       savePropertiesFile(location, MCI_PROF_MSC_FILE, mscProperties, MCI_PROF_MSC_COMMENT);
 
       Properties mtfProperties = new Properties();

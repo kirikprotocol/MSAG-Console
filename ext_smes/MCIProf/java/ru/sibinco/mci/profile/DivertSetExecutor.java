@@ -20,12 +20,14 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
   private static Category logger = Category.getInstance(DivertSetExecutor.class);
 
   private MessageFormat pageFormat = null;
+  private String valueService = null;
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
     try {
       super.init(properties);
       pageFormat = new MessageFormat(Transliterator.translit(divertBundle.getString(Constants.PAGE_SET)));
+      valueService = Transliterator.translit(divertBundle.getString(Constants.VALUE_SERVICE));
     } catch (Exception e) {
       final String err = "Executor init error";
       logger.error(err, e);
@@ -43,7 +45,11 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
       resp.setMessageString(errorFormat.format(new Object [] {getErrorMessage(exc)}));
       return new ExecutorResponse(new Message[]{resp}, true);
     }
-    resp.setMessageString(pageFormat.format(new Object[] {}));
+    if (checkReason((String)state.getAttribute(Constants.ATTR_REASON))) {
+      resp.setMessageString(pageFormat.format(new Object[] {"3>"+valueService}));
+    } else {
+      resp.setMessageString(pageFormat.format(new Object[] {""}));
+    }
     return new ExecutorResponse(new Message[]{resp}, false);
   }
 }

@@ -67,5 +67,8 @@ public class DivertManagerState
     divertManager.setDivertInfo(state.getAbonent(), info);
     state.setAttribute(Constants.ATTR_DIVERT, info);
   }
-
+  protected boolean checkReason(String reason)
+  {
+    return divertManager.checkReason(reason);
+  }
 }

@@ -35,9 +35,9 @@ public class DivertManagerPreprocessor extends DivertManagerState implements Sce
         if (reason != null && !msg.equals(Constants.OPTION_EXIT))
         {
           String value = null;
-          if      (msg.equals("1")) value = Constants.SERVICE;
-          else if (msg.equals("2")) value = Constants.OFF;
-          else if (msg.equals("3")) value = Constants.VOICEMAIL;
+          if      (msg.equals("1")) value = Constants.OFF;
+          else if (msg.equals("2")) value = Constants.VOICEMAIL;
+          else if (msg.equals("3") && checkReason(reason)) value = Constants.SERVICE;
           else value = Transliterator.translit(msg.trim());
 
           try {

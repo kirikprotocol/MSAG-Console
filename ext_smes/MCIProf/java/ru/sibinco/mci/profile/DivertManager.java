@@ -34,6 +34,7 @@ public class DivertManager
   private String mscUserCode      = null;
   private String mscUserPassword  = null;
   private String mscNvtIODevice   = null;
+  private String mciSmeReasons    = null;
   private Vector mciSmeAddresses    = null;
   private Vector voiceMailAddresses = null;
 
@@ -42,14 +43,14 @@ public class DivertManager
   private Socket mscSocket = null;
   private Object mscSocketLock = new Object();
 
-  private Vector parseAddresses(String addresses)
+  private Vector parseSequence(String sequence)
   {
-    if (addresses == null) return null;
+    if (sequence == null) return null;
     Vector result = new Vector();
-    StringTokenizer st = new StringTokenizer(addresses, " ,;:");
+    StringTokenizer st = new StringTokenizer(sequence, " ,;:");
     while (st.hasMoreTokens()) {
-      String address = st.nextToken();
-      if (address != null) result.add(address.trim());
+      String str = st.nextToken();
+      if (str != null) result.add(str.trim());
     }
     return ((result.size() > 0) ? result : null);
   }
@@ -68,10 +69,11 @@ public class DivertManager
       mscNvtIODevice   = properties.getProperty("MSC.nvtIODevice");
       mscUserCode      = properties.getProperty("MSC.usercode");
       mscUserPassword  = properties.getProperty("MSC.userpassword");
-      mciSmeAddresses    = parseAddresses(properties.getProperty("MSC.mcisme"));
+      mciSmeReasons    = properties.getProperty("MSC.mcisme.reasons");
+      mciSmeAddresses  = parseSequence(properties.getProperty("MSC.mcisme"));
       if (mciSmeAddresses == null)
         throw new Exception("Shuold be at least one MCISme address specified");
-      voiceMailAddresses = parseAddresses(properties.getProperty("MSC.voicemail"));
+      voiceMailAddresses = parseSequence(properties.getProperty("MSC.voicemail"));
       if (voiceMailAddresses == null)
         throw new Exception("Shuold be at least one VoiceMail address specified");
 
@@ -274,6 +276,14 @@ public class DivertManager
     if (address == null || address.length() <= 0)
       throw new IOException("Abonent address is undefined");
     return (address.startsWith("+")) ? address.substring(1):address;
+  }
+
+  public boolean checkReason(String reason)
+  {
+    if (reason == null || reason.length() <= 0 ||
+        mciSmeReasons == null || mciSmeReasons.length() <=0) return false;
+    char rsChar = reason.toUpperCase().charAt(0);
+    return (mciSmeReasons.indexOf(rsChar) != -1);
   }
 
   public DivertInfo getDivertInfo(String abonent) throws DivertManagerException
