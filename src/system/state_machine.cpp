@@ -335,7 +335,7 @@ StateType StateMachine::submit(Tuple& t)
     }
     if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
     {
-      len-=*msg;
+      len-=*msg+1;
     }
     ////
     // Unicode message with odd length
