@@ -71,15 +71,23 @@ namespace smsc { namespace dbsme
             if (!config) return;
             
             // Load up messages as parameters here !!!
-
-            /*
             ConfigView* messageConfig = config->getSubConfig("MessageSet");
-            std::set<std::string>* set = messageConfig->getSectionNames();
-
+            std::set<std::string>* set = (messageConfig) ?
+                                          messageConfig->getStrParamNames() : 0;
+            if (!set) return;
             for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
             {
-
-            }*/
+                const char* key = (const char *)i->c_str();
+                if (!key) continue;
+                char* message = messageConfig->getString(key);
+                if (message)
+                {
+                    this->set(key, message);
+                    delete message;
+                }
+            }
+            if (set) delete set;
+            if (messageConfig) delete messageConfig;
         };
 
         const char* get(const char* key) 
