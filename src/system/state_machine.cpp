@@ -19,6 +19,7 @@ using namespace smsc::sms;
 using namespace StateTypeValue;
 using namespace smsc::smpp;
 using namespace util;
+using namespace smsc::system;
 using std::exception;
 using smsc::util::regexp::RegExp;
 using smsc::util::regexp::SMatch;
@@ -308,6 +309,7 @@ StateType StateMachine::submit(Tuple& t)
   if(src_proxy->getSourceAddressRange().length() &&
      !checkSourceAddress(src_proxy->getSourceAddressRange(),sms->getOriginatingAddress()))
   {
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp
                          (
                            /*messageId*/"0",
@@ -367,6 +369,7 @@ StateType StateMachine::submit(Tuple& t)
   //smsc->routeSms(sms,dest_proxy_index,dest_proxy);
   if ( !has_route )
   {
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     //send_no_route;
     SmscCommand resp = SmscCommand::makeSubmitSmResp
                          (
@@ -405,6 +408,7 @@ StateType StateMachine::submit(Tuple& t)
 
   if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
   {
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp
                          (
                            /*messageId*/"0",
@@ -436,6 +440,7 @@ StateType StateMachine::submit(Tuple& t)
   }catch(...)
   {
     __trace2__("failed to create sms with id %lld",t.msgId);
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp
                          (
                            /*messageId*/"0",
@@ -451,6 +456,8 @@ StateType StateMachine::submit(Tuple& t)
     }
     return ERROR_STATE;
   }
+
+  smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
 
   {
     // sms сохранена в базе, с выставленным Next Time, таким образом
@@ -615,6 +622,7 @@ StateType StateMachine::forward(Tuple& t)
   time_t now=time(NULL);
   if(sms.getValidTime()<=now)
   {
+    smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
     try{
       store->changeSmsStateToExpired(t.msgId);
     }catch(...)
@@ -635,6 +643,8 @@ StateType StateMachine::forward(Tuple& t)
   {
     return sms.getState();
   }
+  smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
+
   SmeProxy *dest_proxy=0;
   int dest_proxy_index;
 
@@ -814,7 +824,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
 
         sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
-
+        smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
         return ERROR_STATE;
       }
     }
@@ -832,6 +842,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
     log.error("Failed to change state to delivered for sms %lld",t.msgId);
     return UNKNOWN_STATE;
   }
+  __trace__("DELIVERY_RESP: registerStatisticalEvent");
+  smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
   try{
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
     if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
@@ -935,6 +947,7 @@ StateType StateMachine::replace(Tuple& t)
   }
   if(t.command->get_replaceSm().validityPeriod==-1)
   {
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
     try{
       t.command.getProxy()->putCommand
       (
@@ -950,6 +963,7 @@ StateType StateMachine::replace(Tuple& t)
   }
   if(t.command->get_replaceSm().scheduleDeliveryTime==-1)
   {
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
     try{
       t.command.getProxy()->putCommand
       (
@@ -975,12 +989,14 @@ StateType StateMachine::replace(Tuple& t)
         t.command->get_replaceSm().scheduleDeliveryTime:0
 
       );
+    smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
 //  }catch(NoSuchMessageException& e)
 //  {
     //
   }catch(...)
   {
     //
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
     try{
       t.command.getProxy()->putCommand
       (

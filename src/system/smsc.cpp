@@ -53,8 +53,8 @@ Smsc::~Smsc()
 
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
 public:
-  SpeedMonitor(EventQueue& eq,performance::PerformanceListener* pl):
-    queue(eq),perlListener(pl){}
+  SpeedMonitor(EventQueue& eq,performance::PerformanceListener* pl,Smsc* smsc):
+    queue(eq),perfListener(pl),smsc(smsc){}
   int Execute()
   {
     uint64_t cnt,last=0;
@@ -63,10 +63,13 @@ public:
     clock_gettime(CLOCK_REALTIME,&start);
     Event ev;
     __trace__("enter SpeedMonitor");
-    cntshift[0]=0;
-    cntshift[1]=0;
-    cntshift[2]=0;
+    timeshift=0;
+    time_t perfStart=start.tv_sec;
+    times[0]=start.tv_sec;
+    int lastscnt=0;
+    memset(perfCnt,0,sizeof(perfCnt));
     uint64_t lastPerfCnt[3]={0,0,0};
+    now.tv_sec=0;
     for(;;)
     {
       //sleep(1);
@@ -74,7 +77,7 @@ public:
       //tv.tv_sec=1;
       //tv.tv_usec=0;
       //select(0,0,0,0,&tv);
-      ev.Wait(1000);
+      while(now.tv_sec==time(NULL))ev.Wait(10);
       cnt=queue.getCounter();
       int eqhash,equnl;
       queue.getStats(eqhash,equnl);
@@ -91,8 +94,71 @@ public:
       lasttime=now;
       if(isStopping)break;
       uint64_t perf[3];
-      //queue.getPerfData(perf[0],perf[1],perf[2]);
-      //for
+      // success, error, reschedule
+      smsc->getPerfData(perf[0],perf[1],perf[2]);
+      performance::PerformanceData d;
+      d.success.lastSecond=perf[0]-lastPerfCnt[0];
+      d.error.lastSecond=perf[1]-lastPerfCnt[1];
+      d.rescheduled.lastSecond=perf[2]-lastPerfCnt[2];
+      d.success.total=perf[0];
+      d.error.total=perf[1];
+      d.rescheduled.total=perf[2];
+
+
+      int scnt=(now.tv_sec-perfStart)/60;
+      __trace2__("SpeedMonitor: scnt=%d",scnt);
+      if(scnt>=60)
+      {
+        timeshift++;
+        if(timeshift>=60)timeshift=0;
+        perfStart=times[timeshift];
+        scnt=59;
+        int idx=timeshift-1;
+        if(idx<0)idx=59;
+        times[idx]=now.tv_sec;
+        perfCnt[0][idx]=0;
+        perfCnt[1][idx]=0;
+        perfCnt[2][idx]=0;
+      }
+      if(scnt!=lastscnt)
+      {
+        times[scnt]=now.tv_sec;
+        lastscnt=scnt;
+      }
+      d.error.average=0;
+      d.success.average=0;
+      d.rescheduled.average=0;
+      int idx=timeshift;
+      for(int i=0;i<=scnt;i++,idx++)
+      {
+        if(idx>=60)idx=0;
+        if(i==scnt)
+        {
+          perfCnt[0][idx]+=d.success.lastSecond;
+          perfCnt[1][idx]+=d.error.lastSecond;
+          perfCnt[2][idx]+=d.rescheduled.lastSecond;
+        }
+        d.success.average+=perfCnt[0][idx];
+        d.error.average+=perfCnt[1][idx];
+        d.rescheduled.average+=perfCnt[2][idx];
+      }
+      int diff=now.tv_sec-times[timeshift];
+      if(diff==0)diff=1;
+      __trace2__("ca=%d,ea=%d,ra=%d, time diff=%u",
+        d.success.average,d.error.average,d.rescheduled.average,diff);
+
+      d.success.average/=diff;
+      d.error.average/=diff;
+      d.rescheduled.average/=diff;
+
+      d.now=now.tv_sec;
+      d.uptime=now.tv_sec-start.tv_sec;
+
+      perfListener->reportPerformance(&d);
+
+      lastPerfCnt[0]=perf[0];
+      lastPerfCnt[1]=perf[1];
+      lastPerfCnt[2]=perf[2];
     }
     return 0;
   }
@@ -102,10 +168,11 @@ public:
   }
 protected:
   EventQueue& queue;
-  int cnt[3][60];
-  int cntshift[3];
-  //time_t
-  performance::PerformanceListener* perlListener;
+  int perfCnt[3][60];
+  int timeshift;
+  time_t times[60];
+  performance::PerformanceListener* perfListener;
+  Smsc* smsc;
 };
 
 extern void loadRoutes(RouteManager* rm,smsc::util::config::route::RouteConfig& rc);
@@ -259,7 +326,7 @@ void Smsc::init(const SmscConfigs& cfg)
 
   //smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
 
-  tp.startTask(new SpeedMonitor(eventqueue,&perfDataDisp));
+  tp.startTask(new SpeedMonitor(eventqueue,&perfDataDisp,this));
 
   {
     using namespace smsc::db;

@@ -27,13 +27,16 @@ public:
   int wait()
   {
     Unlock();
-    WaitForSingleObject(hEvent,INFINITE);
+    int res=WaitForSingleObject(hEvent,INFINITE);
     Lock();
-    return 0;
+    return res;
   }
   int wait(int timeout)
   {
-    return WaitForSingleObject(hEvent,INFINITE);
+    Unlock();
+    int res=WaitForSingleObject(hEvent,INFINITE);
+    Lock();
+    return res;
   }
   int notify()
   {
@@ -94,4 +97,3 @@ protected:
 
 
 #endif
-
