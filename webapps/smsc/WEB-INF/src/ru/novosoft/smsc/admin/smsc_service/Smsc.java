@@ -229,20 +229,25 @@ public class Smsc extends Service
 	public synchronized void processCancelMessages(Collection messageIds) throws AdminException
 	{
 		refreshComponents();
-		String ids = "";
-		String srcs = "";
-		String dsts = "";
+		StringBuffer ids = new StringBuffer(messageIds.size()*10);
+		StringBuffer  srcs = new StringBuffer(messageIds.size()*10);
+		StringBuffer  dsts = new StringBuffer(messageIds.size()*10);
 		for (Iterator i = messageIds.iterator(); i.hasNext();)
 		{
 			CancelMessageData data = (CancelMessageData) i.next();
-			ids += data.getMessageId() + (i.hasNext() ? ", " : "");
-			srcs += data.getSourceAddress() + (i.hasNext() ? ", " : "");
-			dsts += data.getDestinationAddress() + (i.hasNext() ? ", " : "");
+			ids.append( data.getMessageId() );
+			srcs.append( data.getSourceAddress() );
+			dsts.append( data.getDestinationAddress() );
+			if( i.hasNext() ) {
+			  ids.append(',');
+			  srcs.append(',');
+			  dsts.append(',');
+			}
 		}
 		Map params = new HashMap();
-		params.put("ids", ids);
-		params.put("sources", srcs);
-		params.put("destinations", dsts);
+		params.put("ids", ids.toString());
+		params.put("sources", srcs.toString());
+		params.put("destinations", dsts.toString());
 		call(smsc_component, process_cancel_messages_method, Type.Types[Type.StringType], params);
 	}
 
