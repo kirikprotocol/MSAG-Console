@@ -16,6 +16,7 @@ public class Profile
 	public static final byte CODEPAGE_UCS2 = 8;
 	public static final byte REPORT_OPTION_None = 0;
 	public static final byte REPORT_OPTION_Full = 1;
+	public static final byte REPORT_OPTION_Final = 3;
 
 	private Mask mask;
 
@@ -114,6 +115,8 @@ public class Profile
 		{
 			case REPORT_OPTION_Full:
 				return "full";
+			case REPORT_OPTION_Final:
+				return "final";
 			case REPORT_OPTION_None:
 				return "none";
 			default:
@@ -130,6 +133,8 @@ public class Profile
 	{
 		if (reportoptionsString.equalsIgnoreCase("full"))
 			reportOptions = REPORT_OPTION_Full;
+		else if (reportoptionsString.equalsIgnoreCase("final"))
+			reportOptions = REPORT_OPTION_Final;
 		else if (reportoptionsString.equalsIgnoreCase("none"))
 			reportOptions = REPORT_OPTION_None;
 		else
