@@ -59,7 +59,13 @@ time_t SmsPduWrapper::getWaitTime()
 	{
 		case SUBMIT_SM:
 		case DELIVERY_SM:
-			return SmppUtil::getWaitTime(get_message().get_scheduleDeliveryTime(), sendTime);
+			{
+				//если schedule_delivery_time = NULL, то немедленная доставка
+				const char* str = get_message().get_scheduleDeliveryTime();
+				time_t waitTime = str && strlen(str) ?
+					SmppUtil::string2time(str, sendTime) : sendTime;
+				return waitTime ? max(waitTime, sendTime) : 0;
+			}
 		case DATA_SM:
 			return sendTime;
 		default:
@@ -74,7 +80,14 @@ time_t SmsPduWrapper::getValidTime()
 	{
 		case SUBMIT_SM:
 		case DELIVERY_SM:
-			return SmppUtil::getValidTime(get_message().get_validityPeriod(), sendTime);
+			{
+				//если validity_period = NULL, то срок валидности по умолчанию
+				const char* str = get_message().get_validityPeriod();
+				time_t validTime = str && strlen(str) ?
+					SmppUtil::string2time(str, sendTime) : sendTime + maxValidPeriod;
+				//если validity_period > maxValidPeriod, то maxValidPeriod
+				return validTime ? min(validTime, sendTime + maxValidPeriod) : 0;
+			}
 		case DATA_SM:
 			return (get_optional().has_qosTimeToLive() ?
 				sendTime + min((int) get_optional().get_qosTimeToLive(), maxValidPeriod) :
