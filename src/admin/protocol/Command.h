@@ -2,10 +2,10 @@
 #define SMSC_ADMIN_PROTOCOL_COMMAND
 
 #include <inttypes.h>
-#include <xercesc/dom/DOM_Document.hpp>
+#include <xercesc/dom/DOM.hpp>
 
-#include <admin/AdminException.h>
-#include <logger/Logger.h>
+#include "admin/AdminException.h"
+#include "logger/Logger.h"
 
 using smsc::admin::AdminException;
 using smsc::logger::Logger;
@@ -60,20 +60,20 @@ public:
 
   static Id getCommandIdByName(const char * const name) throw ();
 protected:
-  const DOM_Document getData() const {return data;}
+  const xercesc::DOMDocument * getData() const {return data;}
   struct _Command {
     const char * name;
     Id id;
   };
 
   Id id;
-  DOM_Document data;
+  const xercesc::DOMDocument * data;
   smsc::logger::Logger *logger;
   static const uint8_t commands_quantity = 10;
   static const _Command names[commands_quantity];
 
   void setId(Id newId) throw () {id = newId;}
-  void setData(DOM_Document newData) throw () {data = newData;}
+  void setData(const xercesc::DOMDocument * newData) throw () {data = newData;}
 
 private:
 };

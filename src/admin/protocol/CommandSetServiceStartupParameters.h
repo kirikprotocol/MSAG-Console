@@ -8,25 +8,22 @@ namespace protocol {
 class CommandSetServiceStartupParameters : public CommandService
 {
 public:
-	CommandSetServiceStartupParameters(DOM_Document doc)	throw (AdminException)
+	CommandSetServiceStartupParameters(const DOMDocument *doc)	throw (AdminException)
 		: CommandService(set_service_startup_parameters, doc)
 	{
 		smsc_log_debug(logger, "Add service command");
 		try
 		{
-			DOM_Element elem = doc.getDocumentElement();
-			DOM_NodeList list = elem.getElementsByTagName("service");
-			if (list.getLength() > 0)
+			DOMElement *elem = doc->getDocumentElement();
+			DOMNodeList *list = elem->getElementsByTagName(XmlStr("service"));
+			if (list->getLength() > 0)
 			{
-				DOM_Node serviceNode = list.item(0);
-				DOM_Element &serviceElem = (DOM_Element&) serviceNode;
+				DOMElement *serviceElem = (DOMElement*) list->item(0);
 				//serviceName.reset(serviceElem.getAttribute("name").transcode());
-				serviceId.reset(serviceElem.getAttribute("id").transcode());
-				std::auto_ptr<char> portStr(serviceElem.getAttribute("port").transcode());
-				port = atol(portStr.get());
-				args.reset(serviceElem.getAttribute("args").transcode());
-				std::auto_ptr<char> autostartStr(serviceElem.getAttribute("autostart").transcode());
-				autostart = strcmp("true", autostartStr.get()) == 0;
+				serviceId.reset(XmlStr(serviceElem->getAttribute(XmlStr("id"))).c_release());
+				port = atol(XmlStr(serviceElem->getAttribute(XmlStr("port"))));
+				args.reset(XmlStr(serviceElem->getAttribute(XmlStr("args"))).c_release());
+				autostart = strcmp("true", XmlStr(serviceElem->getAttribute(XmlStr("autostart")))) == 0;
 			}
 		}
 		catch (...)

@@ -12,7 +12,7 @@ using smsc::admin::protocol::Command;
 class CommandListComponents : public CommandService
 {
 public:
-	CommandListComponents(DOM_Document doc) throw ()
+	CommandListComponents(const DOMDocument *doc) throw ()
 		: CommandService(list_components, doc)
 	{
 	}

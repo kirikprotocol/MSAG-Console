@@ -1,17 +1,19 @@
-#include <resourcemanager/LocaleResources.hpp>
+#include "resourcemanager/LocaleResources.hpp"
+
 #include <string>
-#include <util/xml/DOMTreeReader.h>
-#include <util/debug.h>
-#include <util/xml/utilFunctions.h>
-#include <logger/Logger.h>
-#include <xercesc/dom/DOM_DOMException.hpp>
+#include <xercesc/dom/DOM.hpp>
 #include <xercesc/sax/SAXException.hpp>
+
+#include "util/xml/DOMTreeReader.h"
+#include "util/debug.h"
+#include "util/xml/utilFunctions.h"
+#include "logger/Logger.h"
 #include "util/debug.h"
 
 namespace smsc {
 namespace resourcemanager {
 
-using smsc::util::xml::DOMTreeReader;
+using namespace smsc::util::xml;
 
 std::string strToLower(const std::string & str)
 {
@@ -28,37 +30,36 @@ std::string strToLower(const std::string & str)
   return dst;
 }
 
-void LocaleResources::processParams(const DOM_Element &elem, LocaleResources::_stringmap & _settings, const std::string &prefix) throw ()
+void LocaleResources::processParams(const DOMElement &elem, LocaleResources::_stringmap & _settings, const std::string &prefix) throw ()
 {
   smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.resourcemanager.LocaleResources");
   try
   {
-    DOM_NodeList sectionList = elem.getChildNodes();
-    for (int i = 0; i < sectionList.getLength(); i++)
+    XmlStr _name("name");
+    DOMNodeList * sectionList = elem.getChildNodes();
+    for (int i = 0; i < sectionList->getLength(); i++)
     {
-      DOM_Node node = sectionList.item(i);
-      if (node.getNodeType() == DOM_Node::ELEMENT_NODE)
+      DOMNode * node = sectionList->item(i);
+      if (node->getNodeType() == DOMNode::ELEMENT_NODE)
       {
-        DOM_Element &elem = *(DOM_Element*)(&node);
-        std::auto_ptr<char> elemName(elem.getNodeName().transcode());
-        if (strcmp(elemName.get(), "section") == 0)
+        DOMElement * elem = (DOMElement*)(node);
+        XmlStr elemName(elem->getNodeName());
+        if (strcmp(elemName.c_str(), "section") == 0)
         {
-          std::auto_ptr<char> sectionName(elem.getAttribute("name").transcode());
           std::string newPrefix = prefix;
           if (!prefix.empty())
             newPrefix += '.';
-          newPrefix += sectionName.get();
-          processParams(elem, _settings, newPrefix);
+          newPrefix += XmlStr(elem->getAttribute(_name));
+          processParams(*elem, _settings, newPrefix);
         }
-        else if (strcmp(elemName.get(), "param") == 0)
+        else if (strcmp(elemName.c_str(), "param") == 0)
         {
-          std::auto_ptr<char> name(elem.getAttribute("name").transcode());
-          std::auto_ptr<char> value(smsc::util::xml::getNodeText(elem));
+          XmlStr value(getNodeText(*elem));
           std::string paramName = prefix;
           if (!prefix.empty())
             paramName += '.';
-          paramName += name.get();
-          _settings[strToLower(paramName)] = value.get();
+          paramName += XmlStr(elem->getAttribute(_name));
+          _settings[strToLower(paramName)] = value;
         }
       }
     }
@@ -84,34 +85,34 @@ LocaleResources::LocaleResources(const std::string & filename) throw ()
   try
   {
     DOMTreeReader reader;
-    DOM_Element doc = reader.read(filename.c_str()).getDocumentElement();
-
-    DOM_NodeList settingsList = doc.getElementsByTagName("settings");
-    for (unsigned i = 0; i < settingsList.getLength(); i++)
+    DOMElement *doc = reader.read(filename.c_str())->getDocumentElement();
+    
+    DOMNodeList *settingsList = doc->getElementsByTagName(XmlStr("settings"));
+    for (unsigned i = 0; i < settingsList->getLength(); i++)
     {
-      DOM_Node node = settingsList.item(i);
-      processParams(*(DOM_Element*)(&node), settings, "");
+      DOMNode *node = settingsList->item(i);
+      processParams(*(DOMElement*)(node), settings, "");
     }
 
-    DOM_NodeList recourcesList = doc.getElementsByTagName("resources");
-    for (unsigned i = 0; i < recourcesList.getLength(); i++)
+    DOMNodeList *recourcesList = doc->getElementsByTagName(XmlStr("resources"));
+    for (unsigned i = 0; i < recourcesList->getLength(); i++)
     {
-      DOM_Node node = recourcesList.item(i);
-      processParams(*(DOM_Element*)(&node), resources, "");
+      DOMNode *node = recourcesList->item(i);
+      processParams(*(DOMElement*)(node), resources, "");
     }
   }
   catch (const XMLException& e)
   {
-    std::auto_ptr<char> message(DOMString(e.getMessage()).transcode());
+    XmlStr message(e.getMessage());
     XMLExcepts::Codes code = e.getCode();
     const char *srcFile = e.getSrcFile();
     unsigned int line = e.getSrcLine();
     smsc_log_error(logger, "Couldn't construct locale \"%s\": An error occured during parsing received (\"%s\") command on line %d. Nested: %d: %s",
-                 filename.c_str(), srcFile, line, code, message.get());
-    __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), message.get());
+                 filename.c_str(), srcFile, line, code, message.c_str());
+    __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), message.c_str());
     return;
   }
-  catch (const DOM_DOMException& e)
+  catch (const DOMException& e)
   {
     smsc_log_error(logger, "Couldn't construct locale \"%s\": DOMException code %i", filename.c_str(), e.code);
     __trace2__("Locale resources from \"%s\" not loaded due to error: DOMException code %i\n", filename.c_str(), e.code);
@@ -119,9 +120,9 @@ LocaleResources::LocaleResources(const std::string & filename) throw ()
   }
   catch (const SAXException &e)
   {
-    std::auto_ptr<char> message(DOMString(e.getMessage()).transcode());
-    smsc_log_error(logger, "Couldn't construct locale \"%s\": %s", filename.c_str(), message.get());
-    __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), message.get());
+    XmlStr message(e.getMessage());
+    smsc_log_error(logger, "Couldn't construct locale \"%s\": %s", filename.c_str(), message.c_str());
+    __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), message.c_str());
     return;
   }
   catch (smsc::util::Exception &e)

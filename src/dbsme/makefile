@@ -4,7 +4,7 @@
 #
 #
 
-CXXFLAGS := $(CXXFLAGS) -I/usr/local/include/xercesc -I$(SMSC_SRCDIR)/sms -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
+CXXFLAGS := $(CXXFLAGS) -I$(SMSC_SRCDIR)/sms -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
 PACKAGE := dbsme
 
 #__LIBRARIES := $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so

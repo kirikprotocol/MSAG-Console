@@ -1,10 +1,8 @@
 #include "CommandReader.h"
 
+#include <xercesc/dom/DOM.hpp>
 #include <xercesc/framework/MemBufInputSource.hpp>
-#include <xercesc/parsers/DOMParser.hpp>
-#include <xercesc/dom/DOM_DOMException.hpp>
-#include <xercesc/dom/DOM_NamedNodeMap.hpp>
-#include <xercesc/dom/DOM_Node.hpp>
+#include <xercesc/framework/Wrapper4InputSource.hpp>
 
 #include <admin/protocol/CommandStartService.h>
 #include <admin/protocol/CommandShutdown.h>
@@ -26,6 +24,7 @@ namespace protocol {
 using smsc::util::xml::DOMErrorLogger;
 using smsc::core::network::Socket;
 using smsc::logger::Logger;
+using namespace xercesc;
 
 CommandReader::CommandReader(Socket * admSocket)
   : logger(Logger::getInstance("smsc.admin.protocol.CommandReader"))
@@ -47,7 +46,7 @@ Command *CommandReader::read()
   readMessageBody(buf.get(), len);
 
   // parse message
-  MemBufInputSource is(buf.get(), len, "received_command.xml");
+  Wrapper4InputSource is(new MemBufInputSource (buf.get(), len, "received_command.xml"));
   return parseCommand(is);
 }
 
@@ -79,13 +78,13 @@ void CommandReader::readMessageBody(XMLByte * buf, uint32_t len)
   }
 }
 
-Command* CommandReader::parseCommand(InputSource &source)
+Command* CommandReader::parseCommand(DOMInputSource &source)
   throw (AdminException)
 {
 
   try
   {
-    DOM_Document data = reader.read(source);
+    DOMDocument *data = reader.read(source);
 
     std::auto_ptr<char> command_name(getCommandName(data));
     Command::Id id = Command::getCommandIdByName(command_name.get());
@@ -104,14 +103,12 @@ Command* CommandReader::parseCommand(InputSource &source)
   }
   catch (const XMLException& e)
   {
-    char * message = DOMString(e.getMessage()).transcode();
     XMLExcepts::Codes code = e.getCode();
     unsigned int line = e.getSrcLine();
-    smsc_log_warn(logger, "An error occured during parsing on line %d. Nested: %d: %s", line, code, message);
-    delete[] message;
+    smsc_log_warn(logger, "An error occured during parsing on line %d. Nested: %d: %s", line, code, XmlStr(e.getMessage()).c_str());
     throw AdminException("An errors occured during parsing");
   }
-  catch (const DOM_DOMException& e)
+  catch (const DOMException& e)
   {
     smsc_log_warn(logger, "A DOM error occured during parsing command. DOMException code: %i", e.code);
     throw AdminException("An errors occured during parsing");
@@ -128,18 +125,18 @@ Command* CommandReader::parseCommand(InputSource &source)
   throw AdminException("Fatal error: unreachible code reached in smsc::admin::protocol::CommandReader.parseCommand(InputSource &)");
 }
 
-char * CommandReader::getCommandName(DOM_Document data)
+char * CommandReader::getCommandName(const DOMDocument *data)
 {
-  DOM_Element commandElem = data.getDocumentElement();
-  if (!commandElem.getNodeName().equals("command"))
+  DOMElement *commandElem = data->getDocumentElement();
+  if (XMLString::compareString(commandElem->getNodeName(), XmlStr("command")) != 0)
   {
     smsc_log_warn(logger, "<command> tag not found in command");
     throw AdminException("<command> tag not found in command");
   }
-  return commandElem.getAttribute("name").transcode();
+  return XmlStr(commandElem->getAttribute(XmlStr("name"))).c_release();
 }
 
-Command * CommandReader::createCommand(Command::Id id, DOM_Document data) {
+Command * CommandReader::createCommand(Command::Id id, const DOMDocument *data) {
   switch (id)
   {
 /*  case Command::get_config:

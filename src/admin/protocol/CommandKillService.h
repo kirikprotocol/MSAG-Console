@@ -10,7 +10,7 @@ namespace protocol {
 class CommandKillService : public CommandService
 {
 public:
-	CommandKillService(DOM_Document doc) throw ()
+	CommandKillService(const DOMDocument *doc) throw ()
 		: CommandService(kill_service, doc)
 	{
 	}

@@ -1,24 +1,23 @@
 #ifndef SMSC_ADMIN_SERVICE_METHOD
 #define SMSC_ADMIN_SERVICE_METHOD
 
-#include <xercesc/dom/DOM_Node.hpp>
-#include <xercesc/dom/DOM_NodeList.hpp>
-#include <xercesc/dom/DOM_Element.hpp>
-#include <admin/service/Parameter.h>
-#include <admin/service/Type.h>
-#include <admin/service/Variant.h>
-#include <core/buffers/Hash.hpp>
-#include <util/cstrings.h>
-#include <util/xml/utilFunctions.h>
+#include <xercesc/dom/DOM.hpp>
+#include "admin/service/Parameter.h"
+#include "admin/service/Type.h"
+#include "admin/service/Variant.h"
+#include "core/buffers/Hash.hpp"
+#include "util/cstrings.h"
+#include "util/xml/utilFunctions.h"
 
 namespace smsc {
 namespace admin {
 namespace service {
 
+using namespace xercesc;
 using smsc::core::buffers::Hash;
 using smsc::util::cStringCopy;
 using smsc::util::xml::getNodeAttribute;
-using smsc::util::xml::getNodeText;
+using namespace smsc::util::xml;
 
 class Method
 {
@@ -37,22 +36,19 @@ public:
 		init(methodId, methodName, methodParameters , methodReturnType);
 	}
 
-	Method(DOM_Element methodElem)
+	Method(const DOMElement *methodElem)
 		throw (AdminException)
 	{
-		name = methodElem.getAttribute("method").transcode();
-		std::auto_ptr<char> methodReturnTypeString(methodElem.getAttribute("returnType").transcode());
-		returnType = cstr2Type(methodReturnTypeString.get());
+		name = XmlStr(methodElem->getAttribute(XmlStr("method"))).c_release();
+		returnType = cstr2Type(XmlStr(methodElem->getAttribute(XmlStr("returnType"))));
 		id = 0;
-		DOM_NodeList childs = methodElem.getElementsByTagName("param");
-		for (unsigned i=0; i<childs.getLength(); i++)
+		DOMNodeList *childs = methodElem->getElementsByTagName(XmlStr("param"));
+		for (unsigned i=0; i<childs->getLength(); i++)
 		{
-			DOM_Node paramNode = childs.item(i);
-			DOM_Element &elem = (DOM_Element&) paramNode;
-			std::auto_ptr<char> paramName(elem.getAttribute("name").transcode());
-			std::auto_ptr<char> paramtypeStr(elem.getAttribute("type").transcode());
-			params[paramName.get()]
-				= Parameter(paramName.get(), cstr2Type(paramtypeStr.get()));
+			DOMNode *paramNode = childs->item(i);
+			DOMElement *elem = (DOMElement*) paramNode;
+			XmlStr paramName(elem->getAttribute(XmlStr("name")));
+			params[paramName] = Parameter(paramName, cstr2Type(XmlStr(elem->getAttribute(XmlStr("type")))));
 		}
 	}
 

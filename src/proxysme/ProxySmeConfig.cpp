@@ -88,7 +88,8 @@ ProxySmeConfig::ProxySmeConfig(const char * const config_filename) //throw(smsc:
     try
     {
       DOMTreeReader reader;
-      Config config(reader.read(filename.get()).getDocumentElement());
+      DOMElement * rootElement = reader.read(filename.get())->getDocumentElement();
+      Config config(*rootElement);
       fillSme(left,  "left",  config);
       fillSme(right, "right", config);
       setIntParam(queueLength, NULL, "queueLength", config);

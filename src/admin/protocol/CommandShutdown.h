@@ -10,7 +10,7 @@ namespace protocol {
 class CommandShutdown : public CommandService
 {
 public:
-	CommandShutdown(DOM_Document doc) throw ()
+	CommandShutdown(const DOMDocument *doc) throw ()
 		: CommandService(shutdown_service, doc)
 	{
 	}

@@ -4,7 +4,7 @@
 #
 #
 
-CXXFLAGS := $(CXXFLAGS) -I. -I/usr/local/include/xercesc
+CXXFLAGS := $(CXXFLAGS) -I.
 PACKAGE := db
 
 ifndef SMSC_SRCDIR

@@ -10,7 +10,7 @@ namespace protocol {
 class CommandRemoveService : public CommandService
 {
 public:
-	CommandRemoveService(DOM_Document doc) throw ()
+	CommandRemoveService(const DOMDocument *doc) throw ()
 		: CommandService(remove_service, doc)
 	{
 	}

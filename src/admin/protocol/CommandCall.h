@@ -1,10 +1,7 @@
 #ifndef	SMSC_ADMIN_PROTOCOL_COMMAND_RUN_COMMAND
 #define SMSC_ADMIN_PROTOCOL_COMMAND_RUN_COMMAND
 
-#include <xercesc/dom/DOM_Document.hpp>
-#include <xercesc/dom/DOM_Node.hpp>
-#include <xercesc/dom/DOM_NodeList.hpp>
-#include <xercesc/dom/DOM_Element.hpp>
+#include <xercesc/dom/DOM.hpp>
 #include <admin/protocol/Command.h>
 #include <admin/protocol/CommandService.h>
 #include <admin/service/Method.h>
@@ -12,12 +9,12 @@
 #include <admin/service/Variant.h>
 #include <logger/Logger.h>
 #include <util/xml/utilFunctions.h>
-//#include <admin/service/ServiceCommand.h>
 
 namespace smsc {
 namespace admin {
 namespace protocol {
 
+using namespace xercesc;
 using smsc::admin::protocol::CommandService;
 //using smsc::admin::service::ServiceCommand;
 using smsc::util::xml::getNodeAttribute;
@@ -31,44 +28,42 @@ using smsc::admin::service::cstr2Type;
 class CommandCall : public CommandService
 {
 public:
-	CommandCall(DOM_Document doc)
+	CommandCall(const DOMDocument *doc)
 		throw ()
 		: CommandService(call, doc),
-			method(doc.getDocumentElement()),
+			method(doc->getDocumentElement()),
 		  logger(Logger::getInstance("smsc.admin.service.ServiceCommand"))
 	{
-		DOM_Element elem = data.getDocumentElement();
-		component	= elem.getAttribute("component").transcode();
-
-		DOM_NodeList params = elem.getElementsByTagName("param");
-		for (unsigned i=0; i<params.getLength(); i++)
+		DOMElement *elem = data->getDocumentElement();
+		component	= XmlStr(elem->getAttribute(XmlStr("component"))).c_release();
+		DOMNodeList *params = elem->getElementsByTagName(XmlStr("param"));
+		for (unsigned i=0; i<params->getLength(); i++)
 		{
-			DOM_Node paramNode = params.item(i);
-			DOM_Element & paramElem = (DOM_Element &) paramNode;
-			std::auto_ptr<char> name(paramElem.getAttribute("name").transcode());
-			std::auto_ptr<char> type(paramElem.getAttribute("type").transcode());
-			std::auto_ptr<char> value(getNodeText(paramElem));
-			switch (cstr2Type(type.get()))
+			DOMNode *paramNode = params->item(i);
+			DOMElement * paramElem = (DOMElement *) paramNode;
+			XmlStr name(paramElem->getAttribute(XmlStr("name")));
+			XmlStr type(paramElem->getAttribute(XmlStr("type")));
+			std::auto_ptr<char> value(getNodeText(*paramElem));
+			switch (cstr2Type(type.c_str()))
 			{
 			case service::StringType:
-				args[name.get()] = Variant(value.get());
+				args[name.c_str()] = Variant(value.get());
 				break;
 			case service::LongType:
-				args[name.get()] = Variant(atol(value.get()));
+				args[name.c_str()] = Variant(atol(value.get()));
 			  break;
 			case service::BooleanType:
-				args[name.get()] = Variant(   (strcmp(value.get(),  "true") == 0)
+				args[name.c_str()] = Variant( (strcmp(value.get(),  "true") == 0)
 																	 || (strcmp(value.get(),  "on") == 0)
 																	 || (strcmp(value.get(),  "1") == 0)
 																	 || (strcmp(value.get(),  "-1") == 0)
 																	 || (strcmp(value.get(),  "yes") == 0));
 			  break;
       case service::StringListType:
-        args[name.get()] = Variant(value.get(), service::StringListType);
+        args[name.c_str()] = Variant(value.get(), service::StringListType);
 			  break;
 			default:
-				smsc_log_debug(logger, "creating ServiceCommand: unknown parameter type %s",
-										 type.get());
+				smsc_log_debug(logger, "creating ServiceCommand: unknown parameter type %s", type.c_str());
 			}
 		}
 	}

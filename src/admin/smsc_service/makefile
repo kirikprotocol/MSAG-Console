@@ -4,7 +4,7 @@
 #
 #
 
-CXXFLAGS := $(CXXFLAGS) -I/usr/local/include/xercesc
+#CXXFLAGS := $(CXXFLAGS)
 PACKAGE := admin.smsc_service
 
 #__LIBRARIES := $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so
