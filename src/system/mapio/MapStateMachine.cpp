@@ -505,14 +505,14 @@ static void SendRInfo(MapDialog* dialog)
   bool hiPrior = false;
 
   if ( !dialog->isQueryAbonentStatus ) {
-    if( dialog->sms.get() != 0 &&
+/*    if( dialog->sms.get() != 0 &&
        (dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ||
         dialog->sms->getNextTime() > dialog->sms->getSubmitTime() + ((dialog->sms->getValidTime() - dialog->sms->getSubmitTime())/2)
        )
       )
-    {
+    {*/
       hiPrior = true;
-    }
+/*    }*/
   }
 
   // €Š !!!!
