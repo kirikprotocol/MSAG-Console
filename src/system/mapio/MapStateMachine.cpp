@@ -1692,7 +1692,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
 static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
 {
   Address addr;
-  ConvAddrMSISDN2Smc(mapAddr,addr);
+  ConvAddrMSISDN2Smc(mapAddr,&addr);
   SmscCommand cmd = SmscCommand::makeHLRAlert(addr);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
 }
@@ -1823,7 +1823,9 @@ static void NotifyHLR(MapDialog* dialog)
     // ????? всегда ли ???????
     result = Et96MapV1ReportSmDelStatReq(
       HLR_SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr);
-  } else throw runtime_error(FormatText("MAP::%s bad protocol version 0x%x",__FUNCTION__,dialog->hlrVersion);
+  } else 
+    throw runtime_error(
+    FormatText("MAP::%s bad protocol version 0x%x",__FUNCTION__,dialog->hlrVersion));
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::%s: Et96MapV2ReportSmDelStatReq error 0x%x",__FUNCTION__,result));
