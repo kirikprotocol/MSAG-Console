@@ -136,6 +136,7 @@
     </section>
     <section name="templates">
       <section name="dl">
+        <param name="unknowncommand">Unknown dl command</param>
         <param name="invalidcmdparam">Invalid dl command</param>
         <param name="adderr">Add list error:reason=$$string import=reason$$, arg=$$string import=arg1$$</param>
         <param name="addok">Add $$string import=arg1$$ ok</param>
