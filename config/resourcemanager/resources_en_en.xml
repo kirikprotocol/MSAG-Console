@@ -10,6 +10,17 @@
   </settings>
   <resources>
     <section name="profiler">
+      <section name="divstatus">
+         <param name="absent">absent</param>
+         <param name="bared">bared</param>
+         <param name="blocked">blocked</param>
+         <param name="capacity">capacity</param>
+         <param name="msg">Divert status - enabled: $$string import=enabled$$, disabled: $$string import=disabled$$, to: $$string import=to$$</param>
+         <param name="none">none</param>
+         <param name="unconditional">unconditional</param>
+      </section>
+      <param name="msgConcatOff">Multipart messages concatenation disabled.</param>
+      <param name="msgConcatOn">Multipart messages concatenation enabled.</param>
       <param name="msgDefault">Now you are a default language user</param>
       <param name="msgUCS2">Now you will be able to receive ucs2-encoded messages</param>
       <param name="msgLatin1">Now you will be able to receive latin1-encoded messages</param>
