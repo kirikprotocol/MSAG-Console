@@ -52,7 +52,7 @@ struct Buffer{
 };
 
 enum SmppError{
-  smppErrorNetwork,
+  smppErrorNetwork=0x1000,
   smppErrorInvalidPdu,
 };
 
@@ -236,7 +236,7 @@ public:
       case QUERY_SM_RESP:     processQuerySmResp(*(PduQuerySmResp*)pdu);break;
       case CANCEL_SM_RESP:    processCancelSmResp(*(PduCancelSmResp*)pdu);break;
       case REPLACE_SM_RESP:   processReplaceSmResp(*(PduReplaceSmResp*)pdu);break;
-      case ALERT_NOTIFICATION:processAlertNotificatin(*(PduAlertNotification*)pdu);break;
+      case ALERT_NOTIFICATION:processAlertNotification(*(PduAlertNotification*)pdu);break;
       default: handleError(smppErrorInvalidPdu);break;
     }
     disposePdu(pdu);
@@ -250,7 +250,7 @@ public:
   virtual void processQuerySmResp(PduQuerySmResp& pdu){};
   virtual void processCancelSmResp(PduCancelSmResp& pdu){};
   virtual void processReplaceSmResp(PduReplaceSmResp& pdu){};
-  virtual void processAlertNotificatin(PduAlertNotification& pdu){};
+  virtual void processAlertNotification(PduAlertNotification& pdu){};
 };
 
 struct SmeConfig{
