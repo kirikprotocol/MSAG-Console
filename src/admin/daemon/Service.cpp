@@ -1,5 +1,7 @@
 #include "Service.h"
 
+#define __EXTENSIONS__
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
@@ -8,6 +10,7 @@
 #include <unistd.h>
 #include <vector>
 #include <system/smscsignalhandlers.h>
+#include <sys/resource.h>
 
 namespace smsc {
 namespace admin {
@@ -88,7 +91,8 @@ void Service::kill()
     throw AdminException("Service is not running");
   }
 
-  int result = sigsend(P_PID, pid, SIGKILL);
+  //int result = sigsend(P_PID, pid, SIGKILL);
+  int result = ::kill(pid, SIGKILL);
   if (result != 0)
   {
     switch (errno)
@@ -118,7 +122,8 @@ void Service::shutdown()
   }
 
   smsc_log_debug(logger, "sending %i signal to %u", smsc::system::SHUTDOWN_SIGNAL, pid);
-  int result = sigsend(P_PID, pid, smsc::system::SHUTDOWN_SIGNAL);
+  //int result = sigsend(P_PID, pid, smsc::system::SHUTDOWN_SIGNAL);
+  int result = ::kill(pid, smsc::system::SHUTDOWN_SIGNAL);
   if (result != 0)
   {
     switch (errno)
