@@ -168,6 +168,7 @@ failed_msginit:
 /* BindConf                                                          */
 /* SetupInd                                                          */
 /* ReleaseConf                                                       */
+/* ReleaseInd                                                        */
 /*********************************************************************/
 using smsc::misscall::MissedCallEvent;
 using smsc::misscall::MissedCallProcessor;
@@ -277,7 +278,12 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp)
   delete addr;
   if (res != 0)
   {
-    smsc_log_error(missedCallProcessorLogger, "IsupReleaseReq failed with error code %d", res);
+    smsc_log_error(
+                   missedCallProcessorLogger,
+                   "IsupReleaseReq %s failed with error code %d",
+                   getHeadDescription(isupHead_sp).c_str(),
+                   res
+                  );
   }
   return res;
 }
@@ -323,6 +329,49 @@ USHORT_T EINSS7_I97IsupReleaseConf(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
   smsc_log_debug(missedCallProcessorLogger,
                  "ReleaseConf %s",
                  getHeadDescription(isupHead_sp).c_str());
+  return EINSS7_I97_REQUEST_OK;
+}
+USHORT_T confirmReleaseConnection(EINSS7_I97_ISUPHEAD_T* isupHead)
+{
+  USHORT_T res;
+  res = EINSS7_I97IsupReleaseResp(isupHead,
+                                  0  /* extraOpts_sp */
+                                 );
+  if (res != 0)
+  {
+    smsc_log_error(
+                   missedCallProcessorLogger,
+                   "IsupReleaseResp %s failed with error code %d",
+                   getHeadDescription(isupHead).c_str(),
+                   res
+                  );
+  }
+  return res;
+}
+
+USHORT_T EINSS7_I97IsupReleaseInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
+                                  UCHAR_T responseInd,
+                                  UCHAR_T sourceInd,
+                                  EINSS7_I97_CAUSE_T *cause_sp,
+                                  UCHAR_T *autoCongestLevel_p,
+                                  EINSS7_I97_REDIRECTIONNUMB_T *redirectionNumb_sp,
+                                  EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,
+                                  EINSS7_I97_OPTPARAMS_T *extraOpts_sp)
+{
+  smsc_log_debug(missedCallProcessorLogger,
+                 "ReleaseInd %s %s %s %s %s %s",
+                 getHeadDescription(isupHead_sp).c_str(),
+                 getResponseIndicatorDescription(responseInd).c_str(),
+                 getSourceIndicatorDescription(sourceInd).c_str(),
+                 getCauseDescription(cause_sp).c_str(),
+                 getAutoCongLevelDescription(autoCongestLevel_p).c_str(),
+                 getRedirectionNumberDescription(redirectionNumb_sp).c_str()
+                 getRedirectionInfoDescription(redirectionInfo_sp).c_str(),
+                );
+  if (responseInd & 0x01)
+  {
+    confirmReleaseConnection(isupHead_sp);
+  }
   return EINSS7_I97_REQUEST_OK;
 }
 /*********************************************************************/

@@ -15,7 +15,6 @@ using smsc::misscall::missedCallProcessorLogger;
 /* ISUP EMPTY CALLBACKS                                              */
 /*-------------------------------------------------------------------*/
 /* SetupConf                                                         */
-/* ReleaseInd                                                        */
 /* ProceedInd                                                        */
 /* ProgressInd                                                       */
 /* ContinuityConf                                                    */
@@ -39,18 +38,6 @@ USHORT_T EINSS7_I97IsupSetupConf(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                                  EINSS7_I97_OPTPARAMS_T *extraOpts_sp)
 {
   smsc_log_warn( missedCallProcessorLogger, "EMPTY CALLBACK: EINSS7_I97IsupSetupConf");
-  return EINSS7_I97_REQUEST_OK;
-}
-USHORT_T EINSS7_I97IsupReleaseInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
-                                  UCHAR_T responseInd,
-                                  UCHAR_T sourceInd,
-                                  EINSS7_I97_CAUSE_T *cause_sp,
-                                  UCHAR_T *autoCongestLevel_p,
-                                  EINSS7_I97_REDIRECTIONNUMB_T *redirectionNumb_sp,
-                                  EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,
-                                  EINSS7_I97_OPTPARAMS_T *extraOpts_sp)
-{
-  smsc_log_warn(Logger::getInstance("smsc.misscall"), "EMPTY CALLBACK: EINSS7_I97IsupReleaseInd");
   return EINSS7_I97_REQUEST_OK;
 }
 USHORT_T EINSS7_I97IsupProceedInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,

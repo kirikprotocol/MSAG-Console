@@ -41,16 +41,27 @@ std::string getCallingNumberDescription(EINSS7_I97_CALLINGNUMB_T* calling)
   addr.insert(addr.begin(),str,end);
   return &addr[0];
 }
-std::string getRedirectinNumberDescription(EINSS7_I97_REDIRECTINGNUMB_T* redirNumb)
+std::string getRedirectingNumberDescription(EINSS7_I97_REDIRECTINGNUMB_T* redirNumb)
 {
   if (!redirNumb) return "";
   vector<char> addr(redirNumb->noOfAddrSign + 1);
   unpack_addr(&addr[0], redirNumb->addrSign_p, redirNumb->noOfAddrSign);
-  char str[]="Redirecting=";
+  char str[]="RedirectingNumber=";
   char *end=str+sizeof(str)-1;
   addr.insert(addr.begin(),str,end);
   return &addr[0];
 }
+std::string getRedirectionNumberDescription(EINSS7_I97_REDIRECTIONNUMB_T* redirectionNumb_sp)
+{
+  if (!redirectionNumb_sp) return "";
+  vector<char> addr(redirectionNumb_sp->noOfAddrSign + 1);
+  unpack_addr(&addr[0], redirectionNumb_sp->addrSign_p, redirectionNumb_sp->noOfAddrSign);
+  char str[]="RedirectionNumber=";
+  char *end=str+sizeof(str)-1;
+  addr.insert(addr.begin(),str,end);
+  return &addr[0];
+}
+
 std::string getOriginalNumberDescription(EINSS7_I97_ORIGINALNUMB_T* origNumb)
 {
   if (!origNumb) return "";
@@ -193,6 +204,20 @@ const char* getCongLevelDescription(UCHAR_T congLevel)
     case EINSS7_I97_UNAVAIL_UNEQUIP: return "Unavailable, due to \"unequipped remote user\"";
   }
 }
+std::string getAutoCongLevelDescription(UCHAR_T* autoCongestLevel)
+{
+  if(!autoCongestLevel) return "";
+  string res = "Auto Congestion level=(";
+  switch(*autoCongestLevel)
+  {
+    case EINSS7_I97_ACC_CONG_1 : res += "level 1 exceeded";break;
+    case EINSS7_I97_ACC_CONG_2 : res += "level 2 exceeded";break;
+    default                    : res += "UNKNOWN"; break;
+  }
+  res +=")";
+  return res;
+}
+
 const char* getIsupBindStatusDescription(UCHAR_T result)
 {
   switch (result)
@@ -201,6 +226,140 @@ const char* getIsupBindStatusDescription(UCHAR_T result)
     case EINSS7_I97_ANOTHER_CC_BOUND: return "Another Call Control was bound";
     case EINSS7_I97_SAME_CC_BOUND: return "Same Call Control already bound";
   }
+}
+std::string getResponseIndicatorDescription(UCHAR_T responseInd)
+{
+  string res = "Response indicator=(";
+  switch(responseInd & 0x01)
+  {
+    case 0x00  : res += "NOT required";break;
+    case 0x01  : res += "required";break;
+  }
+  res += ")";
+  return res;
+}
+std::string getSourceIndicatorDescription(UCHAR_T sourceInd)
+{
+  string res = "Source indicator=(";
+  switch(sourceInd)
+  {
+    case EINSS7_I97_SOURCE_NET : res += "Network initiated release";break;
+    case EINSS7_I97_SOURCE_LOC : res += "ISUP module initiated release";break;
+  }
+  res += ")";
+  return res;
+}
+
+std::string getCauseDescription(EINSS7_I97_CAUSE_T *cause_sp)
+{
+  if (!cause_sp) return "";
+  string res = "Cause indicator=(";
+  switch(cause_sp->location)
+  {
+    case EINSS7_I97_ISUP_USER     : res += "location=User";break;
+    case EINSS7_I97_PRIV_NETW_LOC : res += "location=Private network serving local user";break;
+    case EINSS7_I97_PUBL_NETW_LOC : res += "location=Public network serving local user";break;
+    case EINSS7_I97_TRANS_NETW    : res += "location=Transit network";break;
+    case EINSS7_I97_PUBL_NETW_REM : res += "location=Public network serving remote user";break;
+    case EINSS7_I97_PRIV_NETW_REM : res += "location=Private network serving remote user";break;
+    case EINSS7_I97_INTERNAT_NETW : res += "location=International network";break;
+    case EINSS7_I97_BEYOND_INTERW : res += "location=Beyond an interworking point";break;
+    default                       : res += "location=NOT STANDARDAZED";break;
+  }
+  switch(cause_sp->codingStd)
+  {
+    case EINSS7_I97_ITU_STAND : res += " codingStandard=ITU-T standard";break;
+    case EINSS7_I97_REC_Q_763 : res += " codingStandard=local use";break;
+    case 0x01                 : res += " codingStandard=ISO/IEC standard";break;
+    case 0x02                 : res += " codingStandard=national standard";break;
+    default                   : res += " codingStandard=XXX";break;
+  }
+  if (cause_sp->codingStd == EINSS7_I97_REC_Q_763)
+  {
+    switch (cause_sp->causeValue)
+    {
+      case EINSS7_I97_LC_HARD_BLOCK : res += " cause=Circuit hardware blocked";break;";break;
+      case EINSS7_I97_LC_DUAL_SEIZ  : res += " cause=Dual seizure";break;
+      case EINSS7_I97_LC_INV_RG     : res += " cause=Invalid Resource Group";break;
+      case EINSS7_I97_LC_INV_HSN    : res += " cause=Invalid Hardware Selection Number";break;
+      case EINSS7_I97_LC_INV_SPAN   : res += " cause=Invalid Span";break;
+      case EINSS7_I97_LC_INV_TS     : res += " cause=Invalid Timeslot (circuit)";break;
+      case EINSS7_I97_LC_USR_ERR    : res += " cause=User Application protocol error";break;
+      case EINSS7_I97_LC_NTW_ERR    : res += " cause=Network protocol error";break;
+      case EINSS7_I97_LC_NO_MEM     : res += " cause=Out of memory (temporarily)";break;
+      case EINSS7_I97_LC_NO_CIRC    : res += " cause=No circuit available in RG or HSN/SPN";break;
+      case EINSS7_I97_LC_TS_UNAVAIL : res += " cause=Specified circuit unavailable";break;
+      case EINSS7_I97_LC_T6_REL     : res += " cause=Suspended call released on T6 expiry";break;
+      case EINSS7_I97_LC_T7_REL     : res += " cause=No ACM received (T7 expired)";break;
+      case EINSS7_I97_LC_T9_REL     : res += " cause=No ANM received (T9 expired)";break;
+      case EINSS7_I97_LC_RESET      : res += " cause=Circuit reset by network";break;
+      case EINSS7_I97_LC_UCIC_TWICE : res += " cause=UCIC has been received twice for this setup. No more reattempts";break;
+      case EINSS7_I97_LC_CONG       : res += " cause=Destination congested";break;
+      case EINSS7_I97_LC_LOC_RESET  : res += " cause=Circuit locally reset";break;
+      default                       : res += " cause=RESERVED";break;
+    }
+  }
+  if (cause_sp->codingStd == EINSS7_I97_ITU_STAND)
+  {
+    switch (cause_sp->causeValue)
+    {
+      case 0x01 : res += " cause=normal[unallocated number]";break;
+      case 0x02 : res += " cause=normal[no route to specified transit network]";break;
+      case 0x03 : res += " cause=normal[no route to destination]";break;
+      case 0x04 : res += " cause=normal[send special information tone]";break;
+      case 0x05 : res += " cause=normal[misdialled trunk prefix]";break;
+      case 0x08 : res += " cause=normal[preemption]";break;
+      case 0x09 : res += " cause=normal[preemption - circuit reserved for reuse]";break;
+      case 0x10 : res += " cause=normal[normal clearing]";break;
+      case 0x11 : res += " cause=normal[called user busy]";break;
+      case 0x12 : res += " cause=normal[no user responding]";break;
+      case 0x13 : res += " cause=normal[no answer from user]";break;
+      case 0x14 : res += " cause=normal[subscriber absent]";break;
+      case 0x15 : res += " cause=normal[call rejected]";break;
+      case 0x16 : res += " cause=normal[number changed]";break;
+      case 0x1B : res += " cause=normal[destination out of order]";break;
+      case 0x1C : res += " cause=normal[address incomplete]";break;
+      case 0x1D : res += " cause=normal[facility rejected]";break;
+      case 0x1F : res += " cause=normal[unspecified]";break;
+      case 0x22 : res += " cause=service/option not available[no circuit available]";break;
+      case 0x26 : res += " cause=service/option not available[network out of order]";break;
+      case 0x29 : res += " cause=service/option not available[temporary failure]";break;
+      case 0x2A : res += " cause=service/option not available[switching equipment congestion]";break;
+      case 0x2B : res += " cause=service/option not available[access information discarded]";break;
+      case 0x2C : res += " cause=service/option not available[requested circuit not available]";break;
+      case 0x2E : res += " cause=service/option not available[precedence call blocked]";break;
+      case 0x2F : res += " cause=service/option not available[resource unavailable - unspecified]";break;
+      case 0x32 : res += " cause=service/option not available[requested facility not subscribed]";break;
+      case 0x37 : res += " cause=service/option not available[incoming calls barred within CUG]";break;
+      case 0x39 : res += " cause=service/option not available[bearer capability not authorized]";break;
+      case 0x3A : res += " cause=service/option not available[bearer capability not presently available]";break;
+      case 0x3E : res += " cause=service/option not available[inconsistency in designated outgoing access information and subscriber class]";break;
+      case 0x3F : res += " cause=service/option not available[service/option not available - unspecified]";break;
+      case 0x41 : res += " cause=service/option not implemented[bearer capability not implemented]";break;
+      case 0x45 : res += " cause=service/option not implemented[requested facility not implemented]";break;
+      case 0x46 : res += " cause=service/option not implemented[only restricted digital information bearer capability is available]";break;
+      case 0x4F : res += " cause=service/option not implemented[unspecified]";break;
+      case 0x57 : res += " cause=invalid message[called user not member of CUG]";break;
+      case 0x58 : res += " cause=invalid message[incompatible destination]";break;
+      case 0x5A : res += " cause=invalid message[non-existent CUG]";break;
+      case 0x5B : res += " cause=invalid message[invalid transit network selection]";break;
+      case 0x5F : res += " cause=invalid message[unspecified]";break;
+      case 0x61 : res += " cause=protocol error[message type non-existent or not implemented]";break;
+      case 0x63 : res += " cause=protocol error[parameter non-existent or not implemented - discarded]";break;
+      case 0x66 : res += " cause=protocol error[recovery on timer expiry]";break;
+      case 0x67 : res += " cause=protocol error[parameter non-existent or not implemented - passed on]";break;
+      case 0x6E : res += " cause=protocol error[message with unrecognized parameter - discarded]";break;
+      case 0x6F : res += " cause=protocol error[unspecified]";break;
+      case 0x7F : res += " cause=interworking[unspecified]";break;
+      default   : res += " cause=UNKNOWN";break;
+    }
+  }
+  if (cause_sp->lengthOfDiagnostics > 0)
+  {
+      res += " dignostic is present";
+  }
+  res += ")";
+  return res;
 }
 const char* getModuleName(USHORT_T moduleId)
 {
