@@ -25,13 +25,13 @@ function encodeHEX( str ) {
 	return result;
 }
 </script>
-<div class=page_subtitle>Route information</div>
 <table cellspacing=0 cellpadding=0 _border=1>
 <col width="35%">
 <col width="10%" >
 <col width="45%">
 <tr>
 	<td valign=top><%rowN = 0;%>
+		<div class=page_subtitle>Route information</div>
 		<table cellspacing=0 cellpadding=0>
 		<col width="1%">
 		<col width="98%">
@@ -64,6 +64,7 @@ function encodeHEX( str ) {
 	</td>
 	<td>&nbsp;</td>
 	<td valign=top><%rowN = 0;%>
+		<div class=page_subtitle>Route options</div>
 		<table cellspacing=2 cellpadding=0>
 		<col width=1%>
 		<col width=99%>
@@ -126,7 +127,7 @@ function encodeHEX( str ) {
 		</tr>
 		</table>
 	</td>
-	<td>&nbsp;</td>
+	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
 	<td valign=top>
 		<div class=page_subtitle>Destinations</div>
 		<table cellspacing=0 cellpadding=0>
