@@ -671,9 +671,27 @@ Variant SmscComponent::traceRoute(const Arguments &args)
         SmeProxy* proxy = 0;
         RouteInfo info;
         bool found = false;
-  info.enabling = true;
+        info.enabling = true;
 
-  if (srcSysId)
+        //-1:   Dealiased destination
+        // 0:   Message (Route found | Route found (disabled) | Route not found)
+        // 1:   RouteInfo (if any)
+        // 2..: Trace (if any)
+
+        Variant result(service::StringListType);
+
+
+        Address dealiased;
+        char addrBuf[MAX_ADDRESS_VALUE_LENGTH+5];
+        string dealiasText="There are no aliases for this address";
+        if(smsc_app_runner->getApp()->AliasToAddress(Address(dstAddr),dealiased))
+        {
+          dealiasText="Address "+Address(dstAddr).toString()+" was dealiased to "+dealiased.toString();
+          dealiased.toString(addrBuf,sizeof(addrBuf));
+          dstAddr=addrBuf;
+        }
+
+        if (srcSysId)
         {
             SmeIndex index = smsc_app_runner->getApp()->getSmeIndex(srcSysId);
             if (index == -1)
@@ -691,25 +709,24 @@ Variant SmscComponent::traceRoute(const Arguments &args)
         vector<std::string> traceBuff;
         smsc_app_runner->getApp()->getTestRouterInstance()->getTrace(traceBuff);
 
-        // 0:   Message (Route found | Route found (disabled) | Route not found)
-        // 1:   RouteInfo (if any)
-        // 2..: Trace (if any)
 
-        Variant result(service::StringListType);
+        if (!found)
+        {
+          if (info.enabling == false)
+          {
+            result.appendValueToStringList("Route found (disabled)");
+            found = true;
+          } else
+          {
+            result.appendValueToStringList("Route not found");
+            result.appendValueToStringList("");
+          }
+        } else
+        {
+          result.appendValueToStringList("Route found");
+        }
 
-        if (!found) {
-      if (info.enabling == false) {
-    result.appendValueToStringList("Route found (disabled)");
-    found = true;
-      } else {
-    result.appendValueToStringList("Route not found");
-    result.appendValueToStringList("");
-      }
-  } else {
-    result.appendValueToStringList("Route found");
-  }
-
-  if (found)
+        if (found)
         {
             char routeText[2048];
             char srcAddressText[64]; char dstAddressText[64];
@@ -720,7 +737,7 @@ Variant SmscComponent::traceRoute(const Arguments &args)
             std::auto_ptr<char> encSrcAddressText(getEncodedString(srcAddressText));
             std::auto_ptr<char> encDstAddressText(getEncodedString(dstAddressText));
             std::auto_ptr<char> encSmeSystemId(getEncodedString(info.smeSystemId.c_str()));
-      std::auto_ptr<char> encForwardTo(getEncodedString(info.forwardTo.c_str()));
+            std::auto_ptr<char> encForwardTo(getEncodedString(info.forwardTo.c_str()));
             std::auto_ptr<char> encSrcSmeSystemId(getEncodedString(info.srcSmeSystemId.c_str()));
 
             sprintf(routeText, "route id:%s;source address:%s;destination address:%s;"
@@ -734,6 +751,12 @@ Variant SmscComponent::traceRoute(const Arguments &args)
                     (info.enabling) ? "yes":"no", (info.suppressDeliveryReports) ? "yes":"no");
 
             result.appendValueToStringList(routeText);
+        }
+
+        if(dealiasText.length())
+        {
+          result.appendValueToStringList(dealiasText.c_str());
+          result.appendValueToStringList("");
         }
 
         for (int i=0; i<traceBuff.size(); i++)
