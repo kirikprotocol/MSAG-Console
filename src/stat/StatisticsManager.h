@@ -81,6 +81,9 @@ namespace smsc { namespace stat
         virtual void updateScheduled();
         virtual void updateAccepted(const char* srcSmeId);
         virtual void updateRejected(int errcode);
+        virtual void updateTemporal(int errcode) {
+            updateRejected(errcode);
+        };
         virtual void updateChanged(const char* dstSmeId, 
             const char* routeId, int errcode = 0);
         
