@@ -47,7 +47,7 @@ void profilerTc()
 	__reg_tc__("processUpdateProfile",
 		"Сообщения от менеджера профилей");
 	__reg_tc__("processUpdateProfile.checkFields",
-		"Поля pdu service_type, source_addr, data_coding, protocol_id, user_message_reference и т.д. правильные (соответствуют настройкам менеджера профилей и полученному сообщению)");
+		"Поля pdu соответствуют настройкам менеджера профилей");
 	__reg_tc__("processUpdateProfile.checkText",
 		"Тект сообщений правильный");
 	__reg_tc__("processUpdateProfile.multipleMessages",
@@ -66,6 +66,38 @@ void profilerTc()
 		"При отсутствии в тексте сообщения русских символов приходит в 7-bit кодировке, при наличии русских симовлов приходит либо в 7-bit (транслитерация), либо в UCS2 в зависимости от текущих настроек профиля");
 }
 
+void abonentInfoTc()
+{
+	__reg_tc__("queryAbonentInfo",
+		"Отправка smpp сообщений abonent info sme");
+	__reg_tc__("queryAbonentInfo.cmdTextDefault",
+		"Текст команды в дефолтной кодировке SC");
+	__reg_tc__("queryAbonentInfo.cmdTextUcs2",
+		"Текст команды в кодировке UCS2");
+	__reg_tc__("queryAbonentInfo.correct",
+		"Отправка корректных запросов на abonent info sme");
+	__reg_tc__("queryAbonentInfo.correct.existentAddr",
+		"Запрос статуса существующего абонента");
+	__reg_tc__("queryAbonentInfo.correct.nonExistentAddr",
+		"Запрос статуса несуществующего абонента");
+	__reg_tc__("queryAbonentInfo.correct.unifiedAddrFormat",
+		"Команда с адресом в унифицированном (.ton.npi.addr) формате");
+	__reg_tc__("queryAbonentInfo.correct.humanFormat",
+		"Команда с адресом в сокращенной (+7902... или 83832...) записи");
+	__reg_tc__("queryAbonentInfo.incorrect",
+		"Отправка некорректных запросов на abonent info sme");
+	__reg_tc__("queryAbonentInfo.incorrect.addrFormat",
+		"Неправильный формат адреса");
+	__reg_tc__("queryAbonentInfo.incorrect.addrLength",
+		"Длина адреса больше максимальной (20 символов)");
+	__reg_tc__("queryAbonentInfo.incorrect.invalidSymbols",
+		"Недопустимые символы в строке адреса");
+	__reg_tc__("queryAbonentInfo.incorrect.extraWords",
+		"В тексте команды лишние слова (должен быть только адрес)");
+	__reg_tc__("processAbonentInfo.checkFields",
+		"Поля pdu соответствуют настройкам abonent info sme");
+}
+
 void smscSmeTc()
 {
 	//updateProfile
@@ -78,6 +110,7 @@ public:
 	: SmppProtocolCheckList("Результаты функционального тестирования Profiler и SmscSme через протокол SMPP", "system_sme.chk")
 	{
 		profilerTc();
+		abonentInfoTc();
 		smscSmeTc();
 	}
 
@@ -86,6 +119,7 @@ protected:
 	: SmppProtocolCheckList(name, fileName)
 	{
 		profilerTc();
+		abonentInfoTc();
 		smscSmeTc();
 	}
 };
