@@ -338,7 +338,8 @@ int MapIoTask::Execute(){
   try {
     init();
     is_started = true;
-    startevent->Signal();
+    __trace2__("signal mapiotask start:%p",startevent);
+    startevent->SignalAll();
     dispatcher();
     //deinit();
   } catch (exception& e) {
