@@ -522,6 +522,17 @@ unsigned ParseSemiOctetU(unsigned char v)
 static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_SM_RP_OA_T *srcAddr)
 {
   __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
+  
+  __trace2__("MAP::Received PDU: signalInfoLen 0x%x",ud->signalInfoLen);
+  {
+    char text[sizeof(*ud)*4] = {0,};
+    int k = 0;
+    for ( int i=0; i<ud->signalInfoLen; ++i){
+      k+=sprintf(text+k,"%02x ",(unsigned)ud->signalInfo[i]);
+    }
+    __trace2__("MAP::Received PDU: PDU %s",text);
+  }
+  
   auto_ptr<SMS> _sms ( new SMS() );
   SMS& sms = *_sms.get();
   Address src_addr;
@@ -535,18 +546,19 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
   __trace2__("MAP:: MSG_REPLY_PATH(1) = %d",ssfh->reply_path);
   __trace2__("MAP:: MSG_SRR(1) = %d",ssfh->srr);
   MAP_SMS_ADDRESS* msa = (MAP_SMS_ADDRESS*)(ud->signalInfo+2);
-  __trace2__("MAP:: MSA tonpi.va(8):0x%x, ton(3):0x%x, npi(4):0x%x, len(8):%d",
-             msa->tonpi,msa->st.ton,msa->st.npi,msa->len);
   unsigned msa_len = msa->len/2+msa->len%2+2;
+  __trace2__("MAP:: MSA tonpi.va(8):0x%x, ton(3):0x%x, npi(4):0x%x, len(8):%d, msa_len=%d",
+             msa->tonpi,msa->st.ton,msa->st.npi,msa->len, msa_len);
   unsigned char protocol_id = *(unsigned char*)(ud->signalInfo+2+msa_len);
   __trace2__("MAP:: protocol_id = 0x%x",protocol_id);
   unsigned char user_data_coding = *(unsigned char*)(ud->signalInfo+2+msa_len+1);
   __trace2__("MAP:: user_data_encoding = 0x%x",user_data_coding);
   unsigned tpvpLen = (ssfh->tp_vp==0)?0:(ssfh->tp_vp==2)?1:7;
+  __trace2__("MAP:: tp_vp len= %d", tpvpLen);
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2);
   __trace2__("MAP:: user_data_len = %d",user_data_len);
   if ( user_data_len > (ud->signalInfoLen-(2+tpvpLen+msa_len+2+1) ))
-    throw runtime_error(FormatText("bad user_data_len %d must be <= %d",user_data_len,(ud->signalInfoLen-(2+tpvpLen+msa_len+2+1))));
+    throw runtime_error(FormatText("bad user_data_len %d must be <= %d, PDU len=%d",user_data_len,(ud->signalInfoLen-(2+tpvpLen+msa_len+2+1)),ud->signalInfoLen));
   unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+tpvpLen+msa_len+2+1);
   if ( ssfh->tp_vp != 0 )
   {
