@@ -267,6 +267,8 @@ int WatchDog::startTimer(Connection* connection, uint32_t timeout)
     int timer = (timers.empty()) ? 0:(timers.end()->first+1);
     timers.insert(TimersPair(timer, 
                     ConnectionDeadline(connection, time(NULL)+timeout)));
+    __trace2__("DS WatchDog> Timer #%u start for connection %x timeout=%d",
+                timer, connection, timeout);
     awake.Signal();
 }
 void WatchDog::stopTimer(int timer)
@@ -276,6 +278,7 @@ void WatchDog::stopTimer(int timer)
         if (!bStarted || timer < 0) return;
     }
     
+    __trace2__("DS WatchDog> Timer #%u stop", timer);
     MutexGuard  guard(timersLock);
     timers.erase(timer);
 }
