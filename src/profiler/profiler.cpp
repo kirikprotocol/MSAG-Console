@@ -404,7 +404,9 @@ int Profiler::Execute()
         if(str)
         {
           str++;
-          int code=atoi(str);
+
+          int code=-1;
+          if(isdigit(*str))code=atoi(str);
           __trace2__("Profiler: ussd op=%s(%d)",str,code);
           if(ussdCmdMap.Exist(code))
           {
