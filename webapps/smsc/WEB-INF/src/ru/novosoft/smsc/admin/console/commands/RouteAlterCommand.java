@@ -25,7 +25,7 @@ public class RouteAlterCommand extends RouteGenCommand
     private boolean bill = true;
     private boolean arc = true;
     private boolean allow = true;
-    private boolean reciept = true;
+    private boolean receipt = true;
     private int serviceid;
     private int priority;
 
@@ -34,7 +34,7 @@ public class RouteAlterCommand extends RouteGenCommand
     private boolean setAllow = false;
     private boolean setId = false;
     private boolean setPri = false;
-    private boolean setReciept = false;
+    private boolean setReceipt = false;
 
     public void setAction(byte action) {
         this.action = action;
@@ -52,8 +52,8 @@ public class RouteAlterCommand extends RouteGenCommand
     public void setAllow(boolean allow) {
         this.allow = allow; setAllow = true;
     }
-    public void setReciept(boolean reciept) {
-        this.reciept = reciept; setReciept = true;
+    public void setReceipt(boolean receipt) {
+        this.receipt = receipt; setReceipt = true;
     }
     public void setServiceId(int serviceid) {
         this.serviceid = serviceid; setId = true;
@@ -217,7 +217,7 @@ public class RouteAlterCommand extends RouteGenCommand
             if (setBill) newRoute.setBilling(bill);
             if (setArc) newRoute.setArchiving(arc);
             if (setAllow) newRoute.setEnabling(allow);
-            if (setReciept) newRoute.setSuppressDeliveryReports(!reciept);
+            if (setReceipt) newRoute.setSuppressDeliveryReports(!receipt);
             if (setId) newRoute.setServiceId(serviceid);
             if (setPri) {
                 if (priority < 0 || priority > 32000)

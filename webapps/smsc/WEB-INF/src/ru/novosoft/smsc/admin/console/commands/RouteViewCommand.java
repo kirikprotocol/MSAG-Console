@@ -41,7 +41,9 @@ public class RouteViewCommand implements Command
         ctx.addResult("flags: "+
                         (smscRoute.isArchiving() ? "archiving, ": "no archiving, ")+
                         (smscRoute.isBilling()   ? "billing, ":"no billing, ")+
-                        (smscRoute.isEnabling()  ? "allowed":"denied"));
+                        (smscRoute.isEnabling()  ? "allowed, ":"denied, ")+
+                        (smscRoute.isSuppressDeliveryReports() ?
+                                                   "no receipt":"receipt"));
 
         String srcsStr = "";
         Iterator srcs = smscRoute.getSources().iterator();

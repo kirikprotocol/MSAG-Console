@@ -16,7 +16,7 @@ public class RouteAddCommand extends RouteGenCommand
     private boolean bill = true;
     private boolean arc = true;
     private boolean allow = true;
-    private boolean reciept = true;
+    private boolean receipt = true;
     private int serviceid;
     private int priority;
 
@@ -35,8 +35,8 @@ public class RouteAddCommand extends RouteGenCommand
     public void setPriority(int priority) {
         this.priority = priority;
     }
-    public void setReciept(boolean reciept) {
-        this.reciept = reciept;
+    public void setReceipt(boolean receipt) {
+        this.receipt = receipt;
     }
 
     public void process(CommandContext ctx)
@@ -104,7 +104,7 @@ public class RouteAddCommand extends RouteGenCommand
                 }
             }
 
-            smscRoute = new Route(route, priority, allow, bill, arc, !reciept,
+            smscRoute = new Route(route, priority, allow, bill, arc, !receipt,
                                   serviceid, srcList, dstList);
 
             if (priority < 0 || priority > 32000)

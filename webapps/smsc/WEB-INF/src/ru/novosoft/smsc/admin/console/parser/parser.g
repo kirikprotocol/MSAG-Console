@@ -232,12 +232,12 @@ addroute_flags[RouteAddCommand cmd]
 		| OPT_NOARCH { cmd.setArc(false);   })
 	        ( OPT_ALLOW  { cmd.setAllow(true);  }
 		| OPT_DENY   { cmd.setAllow(false); })
-	        ( OPT_RCPT   { cmd.setReciept(true);  }
-		| OPT_NORCPT { cmd.setReciept(false); })
+	        ( OPT_RCPT   { cmd.setReceipt(true);  }
+		| OPT_NORCPT { cmd.setReceipt(false); })
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny) (reciept|noreceipt)");
+           throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
 	}
 
 delroute returns [RouteDeleteCommand cmd] {
@@ -289,12 +289,12 @@ altroute_flags[RouteAlterCommand cmd]
 		| OPT_NOARCH { cmd.setArc(false);     })?
 	        ( OPT_ALLOW  { cmd.setAllow(true);    }
 		| OPT_DENY   { cmd.setAllow(false);   })?
-	        ( OPT_RCPT   { cmd.setReciept(true);  }
-		| OPT_NORCPT { cmd.setReciept(false); })?
+	        ( OPT_RCPT   { cmd.setReceipt(true);  }
+		| OPT_NORCPT { cmd.setReceipt(false); })?
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny] [reciept|noreceipt]");
+           throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
 	}
 
 viewroute returns [RouteViewCommand cmd] {

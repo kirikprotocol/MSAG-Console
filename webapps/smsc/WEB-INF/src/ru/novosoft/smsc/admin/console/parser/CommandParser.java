@@ -1856,13 +1856,13 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_RCPT:
 			{
 				match(OPT_RCPT);
-				cmd.setReciept(true);
+				cmd.setReceipt(true);
 				break;
 			}
 			case OPT_NORCPT:
 			{
 				match(OPT_NORCPT);
-				cmd.setReciept(false);
+				cmd.setReceipt(false);
 				break;
 			}
 			default:
@@ -1874,7 +1874,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny) (reciept|noreceipt)");
+			throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
 				
 		}
 	}
@@ -1986,13 +1986,13 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_RCPT:
 			{
 				match(OPT_RCPT);
-				cmd.setReciept(true);
+				cmd.setReceipt(true);
 				break;
 			}
 			case OPT_NORCPT:
 			{
 				match(OPT_NORCPT);
-				cmd.setReciept(false);
+				cmd.setReceipt(false);
 				break;
 			}
 			case EOF:
@@ -2012,7 +2012,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny] [reciept|noreceipt]");
+			throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
 				
 		}
 	}
