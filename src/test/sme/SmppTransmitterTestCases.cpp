@@ -112,13 +112,12 @@ void SmppTransmitterTestCases::fillSubmitSmPduData(PduData* pduData,
 	pduData->deliveryFlag = routeChecker->isDestReachable(
 		pdu->get_message().get_dest(), false) ?
 		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
+	uint8_t regDelivery = pdu->get_message().get_registredDelivery();
 	pduData->deliveryReceiptFlag =
-		(pdu->get_message().get_registredDelivery() &
-		SMSC_DELIVERY_RECEIPT_BITS == NO_SMSC_DELIVERY_RECEIPT ?
+		((regDelivery & SMSC_DELIVERY_RECEIPT_BITS) == NO_SMSC_DELIVERY_RECEIPT ?
 		PDU_NOT_EXPECTED_FLAG : PDU_REQUIRED_FLAG);
 	pduData->intermediateNotificationFlag =
-		(pdu->get_message().get_registredDelivery() &
-		INTERMEDIATE_NOTIFICATION_REQUESTED ?
+		((regDelivery & INTERMEDIATE_NOTIFICATION_REQUESTED) ?
 		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG);
 	pduData->replacePdu = replacePduData;
 	if (replacePduData)
@@ -210,12 +209,29 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 		{
 			PduSubmitSm* pdu = new PduSubmitSm();
 			SmppUtil::setupRandomCorrectSubmitSmPdu(pdu);
+			 //Default message Type (i.e. normal message)
 			pdu->get_message().set_esmClass(
-				pdu->get_message().get_esmClass() & 0xc3); //Default message Type (i.e. normal message)
+				pdu->get_message().get_esmClass() & 0xc3);
+			//если ожидаются подтверждения доставки или промежуточные нотификации,
+			//установить отложенную доставку
+			uint8_t regDelivery = pdu->get_message().get_registredDelivery();
+			if ((regDelivery & SMSC_DELIVERY_RECEIPT_BITS) == FINAL_SMSC_DELIVERY_RECEIPT ||
+				(regDelivery & SMSC_DELIVERY_RECEIPT_BITS) == FAILURE_SMSC_DELIVERY_RECEIPT ||
+				(regDelivery & INTERMEDIATE_NOTIFICATION_REQUESTED))
+			{
+				SmppTime t;
+				time_t waitTime = time(NULL) + rand2(10, 60);
+				time_t validTime = waitTime + rand1(60);
+				pdu->get_message().set_scheduleDeliveryTime(
+					SmppUtil::time2string(waitTime, t, time(NULL), __numTime__));
+				pdu->get_message().set_validityPeriod(
+					SmppUtil::time2string(validTime, t, time(NULL), __numTime__));
+			}
+			//src алиас
 			PduAddress addr;
 			SmppUtil::convert(smeAlias, &addr);
 			pdu->get_message().set_source(addr);
-			//случайный dest адрес без алиасинга и проверки наличия маршрутов
+			//случайный dest алиас без проверки наличия маршрутов
 			PduAddress destAddr;
 			const Address* tmp = smeReg->getRandomAddress();
 			__require__(tmp);
@@ -243,6 +259,8 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 						SmppUtil::time2string(
 							time(NULL) - rand1(60), t, time(NULL), __absoluteTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
+						//отменить подтверждения доставки и нотификации
+						pdu->get_message().set_registredDelivery(0);
 					}
 					break;
 				case 3: //срок валидности уже закончился
