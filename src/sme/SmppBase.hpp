@@ -101,6 +101,7 @@ class SmppPduEventListener{
 public:
   virtual void handleEvent(SmppHeader *pdu)=0;
   virtual void handleError(int errorCode)=0;
+  virtual bool handleIdle(){return false;}
 };
 
 class SmppThread:public Thread{
@@ -123,9 +124,11 @@ protected:
 
 class SmppReader:public SmppThread{
 public:
-  SmppReader(SmppPduEventListener *lst,Socket *sock):
+  SmppReader(SmppPduEventListener *lst,Socket *sock,int it,int dt):
     listener(lst),
-    socket(sock)
+    socket(sock),
+    idleTimeout(it),disconnectTimeout(dt),
+    lastUpdate(0)
   {
   }
   int Execute()
@@ -160,12 +163,40 @@ protected:
   SmppPduEventListener *listener;
   Socket *socket;
   Buffer buf;
+  int idleTimeout;
+  int disconnectTimeout;
+
+  time_t lastUpdate;
+
+  bool IdleCheck()
+  {
+    if(idleTimeout)
+    {
+      if(!socket->canRead(idleTimeout))
+      {
+        if(time(NULL)-lastUpdate>disconnectTimeout)
+        {
+          socket->Close();
+          return true;
+        }
+        listener->handleIdle();
+        return false;
+      }else
+      {
+        return true;
+      }
+    }
+    return true;
+  }
+
   SmppHeader* receivePdu()
   {
+    lastUpdate=time(NULL);
     buf.offset=0;
-    buf.setSize(32);
+    buf.setSize(64);
     while(buf.offset<4)
     {
+      if(!IdleCheck())continue;
       int rd=socket->Read(buf.buffer+buf.offset,4-buf.offset);
       if(rd<=0)
       {
@@ -174,10 +205,12 @@ protected:
       }
       buf.offset+=rd;
     }
+    lastUpdate=time(NULL);
     int sz=ntohl(*((int*)buf.buffer));
     buf.setSize(sz);
     while(buf.offset<sz)
     {
+      if(!IdleCheck())continue;
       int rd=socket->Read(buf.current(),sz-buf.offset);
       if(rd<=0)return NULL;
       buf.offset+=rd;
@@ -321,6 +354,8 @@ struct SmeConfig{
     port=-1;
     timeOut=10;
     smppTimeOut=12;
+    idleTimeout=60;
+    disconnectTimeout=300;
   }
   std::string host;
   int port;
@@ -330,6 +365,9 @@ struct SmeConfig{
   std::string password;
   std::string systemType;
   std::string origAddr;
+
+  int idleTimeout;
+  int disconnectTimeout;
 };
 
 namespace BindType{
@@ -362,6 +400,20 @@ protected:
     void handleEvent(SmppHeader* pdu)
     {
       session.processIncoming(pdu);
+    }
+    bool handleIdle()
+    {
+      if(session.listener)
+      {
+        if(!session.listener->handleIdle())
+        {
+          PduEnquireLink el;
+          el.get_header().set_commandId(SmppCommandSet::ENQUIRE_LINK);
+          el.get_header().set_sequenceNumber(session.getNextSeq());
+          el.get_header().set_commandStatus(0);
+          session.getAsyncTransmitter()->sendPdu((SmppHeader*)&el);
+        }
+      }
     }
   };
   class InnerSyncTransmitter:public SmppTransmitter{
@@ -477,7 +529,7 @@ public:
     cfg(config),
     listener(lst),
     innerListener(*this),
-    reader(&innerListener,&socket),
+    reader(&innerListener,&socket,config.idleTimeout,config.disconnectTimeout),
     writer(&innerListener,&socket),
     seqCounter(0),
     strans(*this),
