@@ -70,55 +70,55 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2,
 	{
 		res.push_back(1);
 	}
+	if (sms1.getMessageReference() != sms2.getMessageReference())
+	{
+		res.push_back(2);
+	}
 	if (!compareAddresses(sms1.getOriginatingAddress(),
 		sms2.getOriginatingAddress()))
 	{
-		res.push_back(2);
+		res.push_back(3);
 	}
 	if (!compareAddresses(sms1.getDestinationAddress(),
 		sms2.getDestinationAddress()))
 	{
-		res.push_back(3);
+		res.push_back(4);
 	}
 	if (!(flag & IGNORE_ORIGINATING_DESCRIPTOR) &&
 		!compareDescriptors(sms1.getOriginatingDescriptor(),
 		sms2.getOriginatingDescriptor()))
 	{
-		res.push_back(4);
+		res.push_back(5);
 	}
 	if (!(flag & IGNORE_DESTINATION_DESCRIPTOR) &&
 		!compareDescriptors(sms1.getDestinationDescriptor(),
 		sms2.getDestinationDescriptor()))
 	{
-		res.push_back(5);
+		res.push_back(6);
 	}
 	if (sms1.getWaitTime() != sms2.getWaitTime())
 	{
-		res.push_back(6);
+		res.push_back(7);
 	}
 	if (sms1.getValidTime() != sms2.getValidTime())
 	{
-		res.push_back(7);
+		res.push_back(8);
 	}
 	if (sms1.getSubmitTime() != sms2.getSubmitTime())
 	{
-		res.push_back(8);
+		res.push_back(9);
 	}
 	//совпадение с точностью до 1-ой секунды
 	if (!(flag & IGNORE_LAST_TIME) &&
 		abs(sms1.getLastTime() - sms2.getLastTime()) > 1)
 	{
-		res.push_back(9);
+		res.push_back(10);
 	}
 	if (!(flag & IGNORE_NEXT_TIME) && sms1.getNextTime() != sms2.getNextTime())
 	{
-		res.push_back(10);
-	}
-	if (sms1.getPriority() != sms2.getPriority())
-	{
 		res.push_back(11);
 	}
-	if (sms1.getMessageReference() != sms2.getMessageReference())
+	if (sms1.getPriority() != sms2.getPriority())
 	{
 		res.push_back(12);
 	}
@@ -156,6 +156,14 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2,
 	if (strcmp(type1, type2))
 	{
 		res.push_back(19);
+	}
+	if (sms1.getRecieptSmsId() != sms2.getRecieptSmsId())
+	{
+		res.push_back(20);
+	}
+	if (sms1.getEsmClass() != sms2.getEsmClass())
+	{
+		res.push_back(21);
 	}
 	return res;
 }
@@ -225,6 +233,8 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms)
 	setupRandomCorrectBody(&sms->getMessageBody());
 	auto_ptr<char> tmp = rand_char(rand1(MAX_ESERVICE_TYPE_LENGTH));
 	sms->setEServiceType(tmp.get());
+	sms->setRecieptSmsId(rand0(INT_MAX));
+	sms->setEsmClass((uint8_t) rand0(255));
 }
 
 void SmsUtil::clearSms(SMS* sms)
@@ -248,6 +258,8 @@ void SmsUtil::clearSms(SMS* sms)
 	//sms->setAttemptsCount();
 	sms->setMessageBody(0, 0, false, NULL);
 	sms->setEServiceType("");
+	sms->setRecieptSmsId(0);
+	sms->setEsmClass(0);
 }
 
 bool ltAddress::operator() (const Address& a1, const Address& a2) const
