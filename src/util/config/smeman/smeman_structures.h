@@ -59,7 +59,8 @@ namespace smeman {
 using smsc::util::cStringCopy;
 using smsc::util::Logger;
 
-typedef enum{SMPP_SME,SS7_SME}RecordType;
+typedef enum {SMPP_SME,SS7_SME} RecordType;
+typedef enum {MODE_TX, MODE_RX, MODE_TRX} ModeType;
 
 struct SmppSmeRecord
 {
@@ -74,6 +75,8 @@ struct SmppSmeRecord
   bool forceDC;
   uint32_t timeout;
 	char* receiptSchemeName;
+	bool disabled;
+	ModeType mode;
 };
 
 struct Ss7SmeRecord
