@@ -417,6 +417,7 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
 #if defined USE_MAP
   __trace2__("MAP::Et96MapCloseInd state: 0x%x",state);
   if ( state == MAPST_READY_FOR_SENDSMS ){
+    state == MAPST_READY_FOR_CLOSE;
     __trace2__("MAP::Et96MapCloseInd state: REDY_FOR_SEND_SMS");
     ET96MAP_APP_CNTX_T appContext;
   	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
@@ -437,11 +438,12 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
 	  memcpy( smRpOa.addr+1, m_scAddr.address, (m_scAddr.addressLength+1)/2 );
 
     //auto_ptr<ET96MAP_SM_RP_UI_T> ui(mkDeliverPDU(sms.get()));// = mkDeliverPDU( oaddress, message ); 
-    ET96MAP_SM_RP_UI_T ui;
-    mkDeliverPDU(sms.get(),&ui);
+    ET96MAP_SM_RP_UI_T* ui;
+    auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
+    mkDeliverPDU(sms.get(),ui);
 
     __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
-	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, &ui, FALSE);
+	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, ui, FALSE);
 	  if( result != ET96MAP_E_OK ) {
       __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq error 0x%x",result);
 	  }
@@ -453,8 +455,8 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
       MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
     }
     __trace2__("MAP::send response to SMSC OK");
-    //return true;// :) optimization
-    return false;
+    return true;// :) optimization
+    //return false;
   }
   else if (state == MAPST_READY_FOR_CLOSE)
   {
