@@ -610,6 +610,13 @@ protected:
   bool checkIncomingValidity(SmppHeader* pdu)
   {
     using namespace SmppCommandSet;
+    switch(pdu->get_commandId())
+    {
+      case BIND_TRANSMITTER_RESP:
+      case BIND_RECIEVER_RESP:
+      case BIND_TRANCIEVER_RESP:
+        return true;
+    }
     switch(bindType)
     {
       case BindType::Receiver:
@@ -690,6 +697,8 @@ protected:
       case REPLACE_SM_RESP:
       case SUBMIT_MULTI_RESP:
       case BIND_TRANCIEVER_RESP:
+      case BIND_TRANSMITTER_RESP:
+      case BIND_RECIEVER_RESP:
       {
         if(lock.Exist(seq))
         {
