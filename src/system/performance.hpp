@@ -23,8 +23,8 @@ struct PerformanceCounter{
   union{
     uint64_t total;
     struct{
-      uint32_t high;
       uint32_t low;
+      uint32_t high;
     };
   };
 };
@@ -48,20 +48,28 @@ public:
   {
     MutexGuard g(mtx);
     PerformanceData ld=*data;
+    int high,low;
     ld.success.lastSecond=htonl(ld.success.lastSecond);
     ld.success.average=htonl(ld.success.average);
-    ld.success.high=htonl(ld.success.high);
-    ld.success.low=htonl(ld.success.low);
+
+    low=ld.success.total&0xffffffff;
+    high=ld.success.total>>32;
+    ld.success.high=htonl(high);
+    ld.success.low=htonl(low);
 
     ld.error.lastSecond=htonl(ld.error.lastSecond);
     ld.error.average=htonl(ld.error.average);
-    ld.error.high=htonl(ld.error.high);
-    ld.error.low=htonl(ld.error.low);
+    low=ld.error.total&0xffffffff;
+    high=ld.error.total>>32;
+    ld.error.high=htonl(high);
+    ld.error.low=htonl(low);
 
     ld.rescheduled.lastSecond=htonl(ld.rescheduled.lastSecond);
     ld.rescheduled.average=htonl(ld.rescheduled.average);
-    ld.rescheduled.high=htonl(ld.rescheduled.high);
-    ld.rescheduled.low=htonl(ld.rescheduled.low);
+    low=ld.rescheduled.total&0xffffffff;
+    high=ld.rescheduled.total>>32;
+    ld.rescheduled.high=htonl(high);
+    ld.rescheduled.low=htonl(low);
     ld.uptime=htonl(ld.uptime);
     ld.now=htonl(ld.now);
 
