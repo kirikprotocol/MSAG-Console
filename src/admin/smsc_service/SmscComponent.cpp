@@ -106,15 +106,16 @@ void SmscComponent::stopSmsc()
 void SmscComponent::applyRoutes()
 	throw (AdminException)
 {
-	stopSmsc();
-	reReadConfigs();
-	runSmsc();
+  configs.routesconfig->reload();
+	configs.smemanconfig->reload();
+  smsc_app_runner->getApp()->reloadRoutes(configs);
 }
 
 void SmscComponent::applyAliases()
 	throw (AdminException)
 {
-	applyRoutes();
+  configs.aliasconfig->reload();
+	smsc_app_runner->getApp()->reloadAliases(configs);
 }
 
 void SmscComponent::reReadConfigs()
