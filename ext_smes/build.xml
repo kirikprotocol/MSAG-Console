@@ -8,10 +8,10 @@ Modules:
       mciprof_update
     </echo>
   </target>
-  <target name="dbSme_distr">
+  <target name="dbsme_distr">
     <ant dir="dbSme" antfile="build.xml" target="distr"/>
   </target>
-  <target name="dbSme_update">
+  <target name="dbsme_update">
     <ant dir="dbSme" antfile="build.xml" target="update"/>
   </target>
   <target name="mciprof_distr">
