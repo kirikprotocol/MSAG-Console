@@ -103,6 +103,10 @@ void enquireLinkTc()
 		"Отправка enquire_link реквеста с sme зарегистрированной как transmitter");
 	__reg_tc__("enquireLink.transceiver",
 		"Отправка enquire_link реквеста с sme зарегистрированной как transceiver");
+	__reg_tc__("enquireLink.beforeBind",
+		"Отправка enquire_link до отправки bind реквеста");
+	__reg_tc__("enquireLink.afterUnbind",
+		"Отправка enquire_link после отправки unbind реквеста");
 	//enquireLink.resp
 	__reg_tc__("enquireLink.resp",
 		"На enquire_link реквест SC отправляет enquire_link_resp респонс");
@@ -111,7 +115,7 @@ void enquireLinkTc()
 	__reg_tc__("enquireLink.resp.checkTime",
 		"Правильное время получения респонса");
 	__reg_tc__("enquireLink.resp.checkPdu",
-		"Правильные значения полей респонса (command_length, sequence_number, command_status = ESME_ROK");
+		"Правильные значения полей респонса (command_length, sequence_number, command_status = ESME_ROK независимо от bind статуса");
 }
 
 void submitSmTc()

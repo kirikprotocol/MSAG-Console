@@ -413,7 +413,8 @@ public:
 				{
 					cmdId = allowedResponseCmdIds[rand0(allowedResponseCmdIdsSize - 1)];
 				}
-				while (cmdId == GENERIC_NACK); //на GENERIC_NACK не будет ответа
+				//на GENERIC_NACK и ENQUIRE_LINK_RESP не будет ответа
+				while (cmdId == GENERIC_NACK || cmdId == ENQUIRE_LINK_RESP);
 				pdu = createPdu(cmdId);
 				invalidCmdId = true;
 				break;
@@ -885,7 +886,8 @@ public:
 				{
 					cmdId = allowedResponseCmdIds[rand0(allowedResponseCmdIdsSize - 1)];
 				}
-				while (cmdId == GENERIC_NACK); //на GENERIC_NACK не будет ответа
+				//на GENERIC_NACK и ENQUIRE_LINK_RESP не будет ответа
+				while (cmdId == GENERIC_NACK || cmdId == ENQUIRE_LINK_RESP);
 				pdu = createPdu(cmdId);
 				invalidCmdId = true;
 				break;
@@ -1200,7 +1202,7 @@ public:
 		connect();
 		PduBindTRX bindPdu;
 		sendPdu(setupBindPdu(bindPdu, bindType));
-		TCSelector s(num, 3);
+		TCSelector s(num, 4);
 		switch (s.value())
 		{
 			case 1:
@@ -1208,10 +1210,14 @@ public:
 				cmdId = SUBMIT_SM;
 				break;
 			case 2:
+				__tc__("replaceSm.receiver");
+				cmdId = REPLACE_SM;
+				break;
+			case 3:
 				__tc__("querySm.receiver");
 				cmdId = QUERY_SM;
 				break;
-			case 3:
+			case 4:
 				__tc__("cancelSm.receiver");
 				cmdId = CANCEL_SM;
 				break;
@@ -1242,6 +1248,10 @@ public:
 			case SUBMIT_SM:
 				__tc__("submitSm.resp.checkCmdStatusInvalidBindStatus");
 				__check__(1, pdu->get_commandId() == SUBMIT_SM_RESP)
+				break;
+			case REPLACE_SM:
+				__tc__("replaceSm.resp.checkCmdStatusInvalidBindStatus");
+				__check__(1, pdu->get_commandId() == REPLACE_SM_RESP)
 				break;
 			case QUERY_SM:
 				__tc__("querySm.resp.checkCmdStatusInvalidBindStatus");
@@ -1286,13 +1296,32 @@ public:
 		__trace2__("~EnquireLinkScenario(): scenario = %p", this);
 		sess.close(); //иначе может быть pure virtual method called
 	}
-	virtual void execute()
+	void enquireLink()
 	{
 		__decl_tc__;
 		__cfg_int__(timeCheckAccuracy);
-		TCSelector s(num, 3);
-		//connect & bind
+		SmppHeader* pdu = createPdu(ENQUIRE_LINK);
+		sendPdu(pdu);
+		disposePdu(pdu);
+		//enquire_link_resp
+		__tc__("enquireLink.resp.checkTime");
+		__check__(1, checkComplete(timeCheckAccuracy));
+		__tc_ok_cond__;
+		__tc__("enquireLink.resp.checkDuplicates");
+		setComplete(false);
+		__check__(1, !checkComplete(timeCheckAccuracy));
+		__tc_ok_cond__;
+	}
+	virtual void execute()
+	{
+		__decl_tc__;
 		connect();
+		//enquire_link
+		__tc__("enquireLink.beforeBind");
+		enquireLink();
+		__tc_ok_cond__;
+		//bind
+		TCSelector s(num, 3);
 		switch (s.value())
 		{
 			case 1:
@@ -1314,17 +1343,14 @@ public:
 		PduBindTRX bindPdu;
 		sendPdu(setupBindPdu(bindPdu, bindType));
 		//enquire_link
-		SmppHeader* pdu = createPdu(ENQUIRE_LINK);
-		sendPdu(pdu);
-		disposePdu(pdu);
+		enquireLink();
 		__tc_ok_cond__;
-		//enquire_link_resp
-		__tc__("enquireLink.resp.checkTime");
-		__check__(1, checkComplete(timeCheckAccuracy));
-		__tc_ok_cond__;
-		__tc__("enquireLink.resp.checkDuplicates");
-		setComplete(false);
-		__check__(1, !checkComplete(timeCheckAccuracy));
+		//unbind
+		PduUnbind unbindPdu;
+		sendPdu(setupUnbindPdu(unbindPdu));
+		//enquire_link
+		__tc__("enquireLink.afterUnbind");
+		enquireLink();
 		__tc_ok_cond__;
 	}
 	virtual void handleEvent(SmppHeader* pdu)
@@ -1338,6 +1364,9 @@ public:
 			case BIND_TRANSMITTER_RESP:
 			case BIND_TRANCIEVER_RESP:
 				checkBindResp(pdu);
+				break;
+			case UNBIND_RESP:
+				checkUnbindResp(pdu);
 				break;
 			case ENQUIRE_LINK_RESP:
 				__check__(1, pdu->get_commandLength() == 16);
