@@ -62,16 +62,17 @@ int main(int argc,char* argv[])
     PduSubmitSm sm;
     SMS s;
 //    const char *dst="2";
-    s.setOriginatingAddress(strlen(cfg.sid.c_str()),1,1,cfg.sid.c_str());
+//47.44.rymhrwDMy4
+    s.setOriginatingAddress(cfg.sid.length(),1,1,cfg.sid.c_str());
     char msc[]="123";
     char imsi[]="123";
     s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
-    s.setWaitTime(0);
+    //s.setWaitTime(0);
     time_t t=time(NULL)+60;
     s.setValidTime(t);
     //s.setSubmitTime(0);
-    s.setPriority(0);
-    s.setProtocolIdentifier(0);
+    //s.setPriority(0);
+    //s.setProtocolIdentifier(0);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
     //unsigned char message[]="SME test message";
@@ -107,7 +108,10 @@ int main(int argc,char* argv[])
         if(message[i]<32)message[i]=32;
       }
       int len=strlen((char*)message);
-      s.setMessageBody(len,1,false,message);
+      //s.setMessageBody(len,1,false,message);
+      s.setStrProperty("SMPP_SHORT_MESSAGE",(char*)message);
+      s.setIntProperty("SMPP_SM_LENGTH",len);
+
       fillSmppPduFromSms(&sm,&s);
       PduSubmitSmResp *resp=tr->submit(sm);
       atr->submit(sm);
