@@ -85,7 +85,7 @@ public class Smsc extends Service
   private long serviceRefreshTimeStamp = 0;
   private static final char LOGGER_DELIMITER = ',';
 
-  public Smsc(String smscHost, int smscPort, String smscConfFolderString, NSConnectionPool connectionPool) throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
+  public Smsc(String smscHost, int smscPort, String smscConfFolderString, NSConnectionPool connectionPool) throws AdminException
   {
     super(new ServiceInfo(Constants.SMSC_SME_ID, smscHost, smscPort, "", "", true, null, ServiceInfo.STATUS_STOPPED));
 
@@ -123,7 +123,7 @@ public class Smsc extends Service
   }
 
   public synchronized List loadRoutes(RouteSubjectManager routeSubjectManager)
-          throws AdminException
+      throws AdminException
   {
     routeSubjectManager.trace();
     if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
@@ -135,7 +135,7 @@ public class Smsc extends Service
   }
 
   public synchronized List traceRoute(String dstAddress, String srcAddress, String srcSysId)
-          throws AdminException
+      throws AdminException
   {
     if (getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)
       throw new AdminException("SMSC is not running.");
@@ -218,6 +218,7 @@ public class Smsc extends Service
     profileArg.add(newProfile.getDivert());
     profileArg.add(newProfile.isDivertActive() ? "true" : "false");
     profileArg.add(newProfile.isDivertModifiable() ? "true" : "false");
+    profileArg.add(newProfile.isUssd7bit() ? "true" : "false");
 
     args.put("profile", profileArg);
     return ((Long) call(SMSC_COMPONENT_ID, PROFILE_UPDATE_METHOD_ID, Type.Types[Type.IntType], args)).intValue();

@@ -16,8 +16,10 @@
 			<option value="<%=Profile.CODEPAGE_Latin1 %>" <%=bean.getByteCodepage() == Profile.CODEPAGE_Latin1    ? "SELECTED" : ""%>>Latin1</option>
 			<option value="<%=Profile.CODEPAGE_UCS2   %>" <%=bean.getByteCodepage() == Profile.CODEPAGE_UCS2    ? "SELECTED" : ""%>>UCS2</option>
 			<option value="<%=Profile.CODEPAGE_UCS2AndLatin1%>" <%=bean.getByteCodepage() == Profile.CODEPAGE_UCS2AndLatin1    ? "SELECTED" : ""%>>UCS2&Latin1</option>
-
-		</select></div></td>
+		</select>
+    <input class=check type=checkbox type="checkbox" name="ussd7bit" value="true"  <%=bean.isUssd7bit() ? "checked" : ""%>>USSD in 7-bit
+    </div>
+  </td>
 </tr>
 <tr class=row0>
 	<th>report mode</th>

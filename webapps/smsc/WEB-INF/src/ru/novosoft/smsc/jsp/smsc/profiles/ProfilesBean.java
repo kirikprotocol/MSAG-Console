@@ -17,6 +17,7 @@ public class ProfilesBean extends SmscBean
   protected String mask = "";
   protected byte report = Profile.REPORT_OPTION_None;
   protected byte codepage = Profile.CODEPAGE_Default;
+  protected boolean ussd7bit = false;
   protected String locale = "";
   protected List registeredLocales = new LinkedList();
   protected String returnPath = null;
@@ -120,7 +121,7 @@ public class ProfilesBean extends SmscBean
   public void setAliasHide(String aliasHide)
   {
     this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
-            aliasHide.equalsIgnoreCase("hide"));
+                      aliasHide.equalsIgnoreCase("hide"));
   }
 
   public boolean isAliasModifiable()
@@ -136,7 +137,7 @@ public class ProfilesBean extends SmscBean
   public void setAliasModifiable(String aliasModifiable)
   {
     this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
-            aliasModifiable.equalsIgnoreCase("modifiable"));
+                            aliasModifiable.equalsIgnoreCase("modifiable"));
   }
 
   public String getReturnPath()
@@ -177,5 +178,15 @@ public class ProfilesBean extends SmscBean
   public void setDivertModifiable(boolean divertModifiable)
   {
     this.divertModifiable = divertModifiable;
+  }
+
+  public boolean isUssd7bit()
+  {
+    return ussd7bit;
+  }
+
+  public void setUssd7bit(boolean ussd7bit)
+  {
+    this.ussd7bit = ussd7bit;
   }
 }

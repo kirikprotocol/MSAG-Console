@@ -68,7 +68,8 @@ public class ProfileDataSource
       results = new QueryResultSetImpl(columnNames, query_to_run.getSortOrder());
       for (int i = 0; i < query_to_run.getExpectedResultsQuantity() && sqlResultSet.next(); i++, totalCount++) {
         results.add(new ProfileDataItem(new Profile(new Mask(sqlResultSet.getString("mask")),
-                                                    sqlResultSet.getByte("codeset"),
+                                                    (byte) (sqlResultSet.getByte("codeset") & 0x7F),
+                                                    (sqlResultSet.getByte("codeset") & 0x80) != 0,
                                                     sqlResultSet.getByte("reportinfo"),
                                                     sqlResultSet.getString("locale"),
                                                     sqlResultSet.getByte("hidden") != 0,

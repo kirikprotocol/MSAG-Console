@@ -67,7 +67,7 @@ public class ProfilesEdit extends ProfilesBean
 
     try {
       final Mask address = new Mask(mask);
-      Profile profile = new Profile(address, codepage, report, locale, aliasHide, aliasModifiable, divert, divertActive, divertModifiable);
+      Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActive, divertModifiable);
       switch (smsc.profileUpdate(address, profile)) {
         case 1: //pusUpdated
           journalAppend(SubjectTypes.TYPE_profile, address.getMask(), Actions.ACTION_MODIFY);
@@ -89,7 +89,9 @@ public class ProfilesEdit extends ProfilesBean
     }
   }
 
-  /*************************** properties *********************************/
+  /**
+   * ************************ properties ********************************
+   */
 
   public String getMbSave()
   {

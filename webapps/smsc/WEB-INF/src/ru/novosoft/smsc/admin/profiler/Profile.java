@@ -9,7 +9,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
 
 import java.util.List;
-import java.util.StringTokenizer;
 
 public class Profile
 {
@@ -22,6 +21,7 @@ public class Profile
   public static final byte REPORT_OPTION_Final = 3;
 
   private Mask mask;
+  private boolean ussd7bit;
   private String divert;
   private boolean divertActive;
   private boolean divertModifiable;
@@ -44,59 +44,24 @@ public class Profile
     setDivert((String) profileProperties.get(5));
     setDivert_act((String) profileProperties.get(6));
     setDivert_mod((String) profileProperties.get(7));
+    setUssd7bit(Boolean.valueOf((String) profileProperties.get(8)).booleanValue());
   }
 
-  /**
-   * Constructs <code>Profile</code> from string returned by SMSC.
-   * @param profileString profile string returned by SMSC. Must be
-   * formatted as <code>&lt;codepage&gt;,&lt;report options&gt;</code>
-   * where &lt;codepage&gt; must be "default" or "UCS2" and &lt;report
-   * options&gt; must be "full" or "none".
-   */
-/*
-  public Profile(Mask mask, String profileString) throws AdminException
-  {
-    this.mask = mask;
-    int i = 0;
-    for (StringTokenizer tokenizer = new StringTokenizer(profileString, ",", false); tokenizer.hasMoreTokens();) {
-      String token = tokenizer.nextToken().trim();
-      switch (i++) {
-        case 0:
-          setCodepage(token);
-          break;
-        case 1:
-          setReportOptions(token);
-          break;
-        case 2:
-          setLocale(token);
-          break;
-        case 3:
-          setAliasHide(token);
-          break;
-        case 4:
-          setAliasModifiable(token);
-          break;
-      }
-    }
-    if (i < 5)
-      throw new AdminException("profile string returned by SMSC misformatted: " + profileString);
-  }
-*/
-
-  public Profile(Mask mask, byte codepage, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divertActive, boolean divertModifiable)
+  public Profile(Mask mask, byte codepage, boolean ussd7bit, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divertActive, boolean divertModifiable)
   {
     this.mask = mask;
     this.divert = divert;
     this.divertActive = divertActive;
     this.divertModifiable = divertModifiable;
     setCodepage(codepage);
+    setUssd7bit(ussd7bit);
     setReportOptions(reportOptions);
     setLocale(locale);
     this.aliasHide = aliasHide;
     this.aliasModifiable = aliasModifiable;
   }
 
-  public Profile(Mask mask, String codepage, String reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divert_act, boolean divert_mod) throws AdminException
+  public Profile(Mask mask, String codepage, String ussd7bit, String reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divert_act, boolean divert_mod) throws AdminException
   {
     this.mask = mask;
     this.divert = divert;
@@ -107,6 +72,7 @@ public class Profile
     setLocale(locale);
     this.aliasHide = aliasHide;
     this.aliasModifiable = aliasModifiable;
+    setUssd7bit(ussd7bit);
   }
 
   public byte getCodepage()
@@ -217,7 +183,7 @@ public class Profile
   public void setAliasHide(String aliasHide)
   {
     this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
-            aliasHide.equalsIgnoreCase("hide"));
+                      aliasHide.equalsIgnoreCase("hide"));
   }
 
   public boolean isAliasModifiable()
@@ -233,7 +199,7 @@ public class Profile
   public void setAliasModifiable(String aliasModifiable)
   {
     this.aliasModifiable = (aliasModifiable.equalsIgnoreCase("true") ||
-            aliasModifiable.equalsIgnoreCase("modifiable"));
+                            aliasModifiable.equalsIgnoreCase("modifiable"));
   }
 
   public static String getReportOptionsString(byte reportOptions) throws AdminException
@@ -288,5 +254,20 @@ public class Profile
   public void setDivert_mod(String divert_mod)
   {
     this.divertModifiable = divert_mod.equalsIgnoreCase("true");
+  }
+
+  public boolean isUssd7bit()
+  {
+    return ussd7bit;
+  }
+
+  public void setUssd7bit(boolean ussd7bit)
+  {
+    this.ussd7bit = ussd7bit;
+  }
+
+  public void setUssd7bit(String ussd7bit)
+  {
+    this.ussd7bit = Boolean.valueOf(ussd7bit).booleanValue();
   }
 }
