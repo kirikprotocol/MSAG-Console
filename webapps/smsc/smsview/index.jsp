@@ -95,7 +95,8 @@ Per page:<select name="pageSize"><%int rowsToDisplay = bean.getPageSize();%>
 		<option value="50" <%= (rowsToDisplay == 50) ? "selected":""%>>50</option>
 		<option value="-1" <%= (rowsToDisplay < 0 || rowsToDisplay > 50) ?  "selected":""%>>All</option>
 	</select>
-<input class=btn type="submit" name="mbQuery" value="Query !"></div>
+<input class=btn type="submit" name="mbQuery" value="Query !">
+<input class=btn type="submit" name="mbClear" value="Clear query parameters"></div>
 <%
 if (bean.getTotalSize()>0) {%>
 <input type=hidden name=sort>

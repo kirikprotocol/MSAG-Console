@@ -28,7 +28,7 @@ public class SmsQuery
   private Date   tillDate = new Date();
   private String sortBy = "Date";
   private boolean fromDateEnabled = false;
-  private boolean tillDateEnabled = true;
+  private boolean tillDateEnabled = false;
 
   public int getStorageType() { return storageType; }
   public void setStorageType(int type) { storageType = type; }

@@ -23,6 +23,7 @@ public class SmsViewFormBean extends IndexBean
 
 	private String mbDelete = null;
 	private String mbQuery = null;
+    private String mbClear = null;
 	private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 	private String oldSort = null;
 
@@ -56,11 +57,14 @@ public class SmsViewFormBean extends IndexBean
 			result = processDeleteAll();
 		else if (mbQuery != null)
 			result = processQuery();
+        else if (mbClear != null)
+            result = clearQuery();
 		else
 			result = processResortAndNavigate(false);
 
 		mbDelete = null;
 		mbQuery = null;
+        mbClear = null;
 
 		return result;
 	}
@@ -110,6 +114,14 @@ public class SmsViewFormBean extends IndexBean
 		processResortAndNavigate(true);
 		return RESULT_OK;
 	}
+    public int clearQuery()
+    {
+        rows = null; startPosition = 0;
+        totalSize = 0;
+        query = new SmsQuery();
+        processResortAndNavigate(true);
+        return RESULT_OK;
+    }
 
 	public int processDeleteAll()
 	{
@@ -249,4 +261,6 @@ public class SmsViewFormBean extends IndexBean
 	public void setMbDelete(String mbDelete) {	this.mbDelete = mbDelete; }
 	public String getMbQuery() { return mbQuery; }
 	public void setMbQuery(String mbQuery) { this.mbQuery = mbQuery; }
+    public String getMbClear() { return mbClear; }
+    public void setMbClear(String mbClear) { this.mbClear = mbClear; }
 }
