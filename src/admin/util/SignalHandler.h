@@ -10,7 +10,7 @@ namespace util {
 class SignalHandler
 {
 public:
-	static const int SHUTDOWN_SIGNAL = SIGTERM;
+	static const int SHUTDOWN_SIGNAL = SIGINT;
 	
 	virtual void handleSignal() throw() = 0;
 	static void registerShutdownHandler(SignalHandler * handler) throw();

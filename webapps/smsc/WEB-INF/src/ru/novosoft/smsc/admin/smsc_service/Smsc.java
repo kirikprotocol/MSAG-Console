@@ -316,7 +316,9 @@ public class Smsc extends Service
 			dsts += data.getDestinationAddress() + (i.hasNext() ? ", " : "");
 		}
 		Map params = new HashMap();
-		params.put("cancelMessageIds", ids + "; " + srcs + "; " + dsts);
+		params.put("ids", ids);
+		params.put("sources", srcs);
+		params.put("destinations", dsts);
 		call(smsc_component, process_cancel_messages_method, Type.Types[Type.StringType], params);
 	}
 

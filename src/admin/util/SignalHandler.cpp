@@ -26,8 +26,8 @@ void SignalHandler::registerShutdownHandler(SignalHandler * handler) throw()
   shutdownHandler = handler;
   if (handler != 0)
   {
-    //smsc::util::setSignalHandler(SHUTDOWN_SIGNAL, shutdownSignalHandler);
-    smsc::util::setSignalHandler(SIGINT, shutdownSignalHandler);
+    smsc::util::setSignalHandler(SHUTDOWN_SIGNAL, shutdownSignalHandler);
+    //smsc::util::setSignalHandler(SIGINT, shutdownSignalHandler);
     atexit(atExitHandler);
   }
 }

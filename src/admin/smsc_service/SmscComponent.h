@@ -37,7 +37,9 @@ public:
     update_params["address"] = Parameter("address", StringType);
     update_params["profile"] = Parameter("profile", StringType);
     Parameters cancelMessage_params;
-    cancelMessage_params["cancelMessageIds"] = Parameter("cancelMessageIds", StringType);
+    cancelMessage_params["ids"] = Parameter("ids", StringType);
+    cancelMessage_params["sources"] = Parameter("sources", StringType);
+    cancelMessage_params["destinations"] = Parameter("destinations", StringType);
 
     Method apply_routes((unsigned)applyRoutesMethod, "apply_routes",
                         empty_params, StringType);
@@ -92,6 +94,7 @@ protected:
   std::string lookupProfile(const Arguments &args) throw (AdminException);
   std::string flushStatistics(const Arguments &args) throw (AdminException);
   std::string processCancelMessages(const Arguments &args) throw (AdminException);
+  void processCancelMessage(const std::string &sid, const std::string &ssrc, const std::string &sdst);
 
   bool isSmscRunning() throw() {return smsc_app_runner.get() != 0;}
   void applyRoutes() throw (AdminException);
