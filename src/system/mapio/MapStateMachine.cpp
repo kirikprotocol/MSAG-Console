@@ -203,7 +203,7 @@ static void SendRescheduleToSmsc(unsigned dialogid)
   __trace2__("Send RESCHEDULE NOW to SMSC OK");
 }
 
-static void SendAbonentStatusToSmsc(MapDialog* dialog,int status=AbonentStatus::UNKNOWN)
+static void SendAbonentStatusToSmsc(MapDialog* dialog,int status/*=AbonentStatus::UNKNOWN*/)
 {
   __trace2__("MAP::%s: Send abonent status(%d) to SMSC ",__FUNCTION__,status);
   SmscCommand cmd = SmscCommand::makeQueryAbonentStatusResp(dialog->QueryAbonentCommand->get_abonentStatus,status);
