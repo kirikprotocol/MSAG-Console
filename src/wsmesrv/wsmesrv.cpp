@@ -33,9 +33,9 @@ static void sighandler( int signal ) {
   Deinit();
 }
 
-void Dump(UCHAR_T* buf,int len)
+void Dump(char* nameUCHAR_T* buf,int len)
 {
-  fprintf(stderr,"Packet:");
+  fprintf(stderr,"%s, len=%d, packet:",name,len);
   for(int i=0;i<len;i++)
   {
     fprintf(stderr," %02X",buf[i]);
@@ -58,12 +58,15 @@ USHORT_T EINSS7_I97TBeginInd(   UCHAR_T ssn,
                                 USHORT_T userInfoLength,
                                 UCHAR_T *userInfo_p)
 {
-  fprintf(stderr,"BeginInd: ssn=%d, userId=%d, dId=%d\n",
+  fprintf(stderr,"BeginInd ===>>>\n");
+  fprintf(stderr,"ssn=%d, userId=%d, dId=%d\n",
     (int)ssn,(int)userId,(int)dialogueId);
-  fprintf(stderr,"BeginInd: ac_length=%d\n",appContextLength);
-  Dump(appContext_p,appContextLength);
-  fprintf(stderr,"BeginInd: ui_length=%d\n",userInfoLength);
-  Dump(userInfo_p,userInfoLength);
+  Dump("ac",appContext_p,appContextLength);
+  Dump("ui",userInfo_p,userInfoLength);
+  Dump("orgAddr",orgAdr_p,orgAdrLength);
+  Dump("destAddr",destAdr_p,destAdrLength);
+
+  fprintf(stderr,"BeginInd <<<===\n");
   return RETURN_VALUE;
 }
 
@@ -81,13 +84,15 @@ USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T ssn,
                                 USHORT_T paramLength,
                                 UCHAR_T *parameters_p)
 {
-  fprintf(stderr,"InvokeInd: ssn=%d, userId=%d, dId=%d, invokeId=%d\n",
+  fprintf(stderr,"InvokeInd ===>>>\n");
+
+  fprintf(stderr,"ssn=%d, userId=%d, dId=%d, invokeId=%d\n",
     (int)ssn,(int)userId,(int)dialogueId,(int)invokeId);
 
-  fprintf(stderr,"InvokeInd: op_length=%d\n",operationLength);
-  Dump(operationCode_p,operationLength);
-  fprintf(stderr,"InvokeInd: param_length=%d\n",paramLength);
-  Dump(parameters_p,paramLength);
+  Dump("opcode",operationCode_p,operationLength);
+  Dump("param",parameters_p,paramLength);
+
+  fprintf(stderr,"InvokeInd <<<===\n");
   return RETURN_VALUE;
 }
 
@@ -150,6 +155,7 @@ int main(int argc, char **argv)
     if( result != MSG_OK ) going = 0;
     else {
         result = EINSS7_I97THandleInd(&message);
+        EINSS7CpReleaseMsgBuffer(&message);
         printf( "MsgHandle result=%d\n",result);        if(result != MSG_OK) going = 0;
     }
 
