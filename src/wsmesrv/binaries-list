@@ -1,3 +1,3 @@
 #MapDialogMkPDU MapDialogMkPDU
 
-wsmesrv wsmesrv $(__LIBRARIES) -lsocket
+wsmesrv wsmesrv $(__LIBRARIES) -lsocket -lwsmesrv
