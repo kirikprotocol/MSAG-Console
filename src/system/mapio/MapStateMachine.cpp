@@ -2577,7 +2577,8 @@ static string GetUSSDRequestString(
   unsigned length)
 {
   const char* p = text;
-  const char* pEnd = text+length-1;
+  const char* pEnd = strrchr(text,'#');
+  if( pEnd == 0 ) throw runtime_error("No trailing # found in USSD request string");
   for ( ; p < pEnd; ++p ) if ( (*p != '#') && (*p != '*') ) break;
   const char* sBegin = p;
   for ( ; p < pEnd; ++p ) if ( (*p == '#') || (*p == '*') ) break;
