@@ -211,7 +211,7 @@
 <col width="20%">
 <col width="80%">
 <tr class=row<%=rowN++&1%>>
-  <th>location</th>
+  <th>Config location</th>
   <td><input class=txt name=mciProfLocation value="<%=StringEncoderDecoder.encode(bean.getMciProfLocation())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
