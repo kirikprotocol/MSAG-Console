@@ -167,6 +167,12 @@ public class SMSCErrors
 			public static final String couldntGetMembers = B + "couldntGetMembers";
 			public static final String invalidAddress = B + "invalidAddress";
 		}
+
+        public static class smsview
+        {
+            private static final String B = error.B + "smsview.";
+            public static final String QueryFailed = B + "QueryFailed";
+        }
 	}
 
 	public static class warning

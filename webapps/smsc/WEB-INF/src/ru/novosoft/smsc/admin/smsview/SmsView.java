@@ -152,7 +152,7 @@ public class SmsView
             sb.append( ids.toUpperCase() );
             stmt.setString(pos++, sb.toString());
           } catch (NumberFormatException ex) {
-            throw new SQLException("Invalid numeric format");
+            throw new SQLException("Invalid numeric format for sms id");
           }
       }
       if (needExpression(query.getFromAddress()))

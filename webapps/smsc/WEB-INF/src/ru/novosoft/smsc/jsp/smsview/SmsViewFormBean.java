@@ -4,6 +4,7 @@ import ru.novosoft.smsc.admin.smsview.*;
 import ru.novosoft.smsc.admin.*;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -118,7 +119,7 @@ public class SmsViewFormBean extends IndexBean
           return RESULT_OK;
         } catch (AdminException ex) {
           ex.printStackTrace();
-          return RESULT_ERROR;
+          return error(SMSCErrors.error.smsview.QueryFailed, ex.getMessage());
         }
 	}
     public int clearQuery()
