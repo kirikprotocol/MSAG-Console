@@ -2007,7 +2007,7 @@ StateType StateMachine::forward(Tuple& t)
     if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
     {
       uint32_t len;
-      ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len)
+      ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
       if(sms.getConcatSeqNum()<ci->num-1)
       {
         sms.setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
