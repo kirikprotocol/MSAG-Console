@@ -69,6 +69,10 @@
     <param name="systemId" type="string">smscsme</param>
     <param name="service_type" type="string">SMSC</param>
     <param name="protocol_id" type="int">34</param>
+    <section name="performance">
+      <param name="host" type="string">smsc</param>
+      <param name="port" type="int">9002</param>
+    </section>
   </section>
 
   <section name="abonentinfo">
