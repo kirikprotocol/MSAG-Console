@@ -11,11 +11,13 @@ namespace smsc   {
 namespace util   {
 namespace config {
 
-const DOMString Manager::db_name(createDOMString("db"));
-const DOMString Manager::map_name(createDOMString("map"));
-const DOMString Manager::log_name(createDOMString("log"));
+const DOMString db_name(createDOMString("db"));
+const DOMString map_name(createDOMString("map"));
+const DOMString log_name(createDOMString("log"));
+char * Manager::config_filename = 0;
+Manager * Manager::manager = 0;
 
-Manager::Manager(const char * const _config_filename)
+Manager::Manager()
 	throw(ConfigException &)
 	: cat(smsc::util::Logger::getCategory("smsc.util.config.Manager"))
 {
@@ -23,7 +25,6 @@ Manager::Manager(const char * const _config_filename)
 	db = 0;
 	map = 0;
 	log = 0;
-	config_filename = _config_filename;
 
 	DOMParser *parser = createParser();
 

@@ -28,13 +28,25 @@ namespace config {
 class Manager
 {
 public:
+	static void init(const char * const configurationFileName)
+	{
+		manager = 0;
+		config_filename = new char[strlen(configurationFileName)+1];
+		strcpy(config_filename, configurationFileName);
+	}
+
 	/**
-	 * Читает конфигурацию.
-	 *
-	 * @param config_filename
-	 *               Имя файла, в котором хранится конфигурация.
+	 * Возвращает проинициализированный Manager
 	 */
-	Manager(const char * const config_filename) throw(ConfigException &);
+	static Manager & getInstance()
+	{
+		if (manager == 0)
+		{
+			manager = new Manager();
+		}
+		return *manager;
+	}
+
 	/**
 	 * Запись конфигурации
 	 */
@@ -58,10 +70,20 @@ public:
 	 */
 	MapProtocol &getMapProtocol() const {return *map;};
 
+protected:
+	/**
+	 * Читает конфигурацию.
+	 *
+	 * @param config_filename
+	 *               Имя файла, в котором хранится конфигурация.
+	 */
+	Manager() throw(ConfigException &);
+	static Manager * manager;
+
 private:
+	static char * config_filename;
 	void writeNode(std::ostream &out, DOM_Node & node, unsigned int tabs);
 	void writeHeader(std::ostream &out);
-	const char * config_filename;
 	DOM_Document document;
 	Database *db;
 	MapProtocol *map;
@@ -72,9 +94,6 @@ private:
 	void parse(DOMParser *parser, const char * const filename) throw (ConfigException &);
 	void processTree(const DOM_Element &element);
 
-	static const DOMString db_name;
-	static const DOMString map_name;
-	static const DOMString log_name;
 };
 
 }
