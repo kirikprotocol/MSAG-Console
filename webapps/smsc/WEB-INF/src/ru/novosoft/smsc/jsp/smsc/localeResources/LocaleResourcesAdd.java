@@ -3,12 +3,11 @@ package ru.novosoft.smsc.jsp.smsc.localeResources;
 import ru.novosoft.smsc.jsp.*;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.WebAppFolders;
-import ru.novosoft.util.jsp.MultipartServletRequest;
 import ru.novosoft.util.jsp.MultipartDataSource;
+import ru.novosoft.util.jsp.MultipartServletRequest;
 
+import java.io.File;
 import java.util.List;
-import java.util.Arrays;
-import java.io.*;
 
 /**
  * Created by igork
@@ -60,18 +59,12 @@ public class LocaleResourcesAdd extends PageBean
 						return error(SMSCErrors.error.localeResources.wrongFileName);
 
 					File file = new File(WebAppFolders.getSmscConfFolder(), name);
-					if (file.exists())
-						return error(SMSCErrors.error.localeResources.alreadyExists);
 
-					BufferedReader is = new BufferedReader(new InputStreamReader(dataFile.getInputStream()));
-					Writer os = new FileWriter(file);
-					for (String line = is.readLine(); line != null; line = is.readLine())
-					{
-						os.write(line);
-						os.write('\n');
-					}
-					is.close();
-					os.close();
+					File tmpFile = Functions.saveFileToTemp(dataFile.getInputStream(), "locale_resource_", ".xml.tmp");
+					if (file.exists())
+						file.delete();
+					tmpFile.renameTo(file);
+
 					dataFile.close();
 					dataFile = null;
 					return RESULT_DONE;
