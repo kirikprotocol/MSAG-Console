@@ -153,8 +153,8 @@ public:
 };
 
 EventMonitor         TrafficControl::trafficMonitor;
-TimeSlotCounter<int> TrafficControl::incoming(10, 100);
-TimeSlotCounter<int> TrafficControl::outgoing(10, 100);
+TimeSlotCounter<int> TrafficControl::incoming(10, 10);
+TimeSlotCounter<int> TrafficControl::outgoing(10, 10);
 bool                 TrafficControl::stopped = false;
 
 class InfoSmeConfig : public SmeConfig
