@@ -79,7 +79,7 @@ public:
     return false;
   }
 
-  bool createTask(const Task& t)
+  bool createTask(const Task& t,unsigned long preferred_timeout=8)
   {
     MutexGuard guard(mutex);
     //checkTimeout();
@@ -98,7 +98,7 @@ public:
     int hashcode = calcHashCode(task->proxy_id,task->sequenceNumber);
     task->next = hash[hashcode];
     hash[hashcode] = task;
-    task->timeout = time(NULL)+8;
+    task->timeout = time(NULL)+preferred_timeout;
     return true;
   }
 

@@ -121,6 +121,9 @@ public:
   {
     id=newid;
   }
+
+  virtual unsigned long getPreferredTimeout() { return 45; }
+
   std::string getId(){return id;}
 
 protected:

@@ -209,8 +209,9 @@ void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
       __trace2__("MAP::ConvAddrMap2Smc::adr value(%d) %s",ma->len,b);
     }
   }else{
-    char c = 0;
-    sa->setValue(0,&c);
+    //char c = 0;
+    //sa->setValue(0,&c);
+    throw runtime_error("MAP::ConvAddrMap2Smc  MAP_SMS_ADDRESS length should be greater than 0");
   }
 }
 
@@ -270,8 +271,9 @@ void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
     }
     sa->setValue(i,sa_val);
   }else{
-    char c = 0;
-    sa->setValue(0,&c);
+//    char c = 0;
+//    sa->setValue(0,&c);
+    throw runtime_error("MAP::ConvAddrMap2Smc  ET96MAP_SM_RP_OA_T length should be greater than 0");
   }
 }
 
@@ -585,13 +587,8 @@ void MapDialog::Et96MapV2ForwardSmMTConf (
   ET96MAP_PROV_ERR_T *provErrCode_p)
 {
 #if defined USE_MAP
-  if ( !errorForwardSMmt_sp && !provErrCode_p )
-  {
-    SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_OK);
-    MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
-  }
-  else 
-  {
+  if ( errorForwardSMmt_sp ){
+    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x errorForwardSMmt_sp->errorCode 0x%x",dialogid,errorForwardSMmt_sp->errorCode);
     bool fatal = false;
     switch( errorForwardSMmt_sp->errorCode ){
     case 27: /*Absent*/
@@ -614,8 +611,19 @@ void MapDialog::Et96MapV2ForwardSmMTConf (
       cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_TEMP);
     }
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x was send %s to SMSC",
+               fatal?"CMD_ERR_FATAL":"CMD_ERR_TEMP");
+  }else if (provErrCode_p){
+    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x *provErrCode_p 0x%x",dialogid,*provErrCode_p);
+    SmscCommand cmd;
+    cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_TEMP);
+    MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x was send CMD_ERR_TEMP to SMSC");
+  }else{
+    SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_OK);
+    MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+    __trace2__("MAP::Et96MapV2ForwardSmMTConf:did 0x%x was send OK to SMSC");
   }
-  __trace2__("MAP::send response to SMSC OK");
 #endif
 }
 
@@ -631,17 +639,16 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
 #if defined USE_MAP
   __trace2__( "Et96MapV2SendRInfoForSmConf received ssn=%d, dialog=%d, invokeId=%d\n", localSsn, dialogueId, invokeId );
   state = MAPST_RINFOIND;
-  
-  mkSS7GTAddress( &destMscAddr,  mscNumber_sp, 8 );
-	smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
-	smRpDa.addrLen = imsi_sp->imsiLen;
-	memcpy( smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
-
   if ( provErrCode_p != 0 ){
     // error hadling
     __trace2__("MAP::Et96MapV2SendRInfoForSmConf provErrCode_p 0x%x",provErrCode_p);
     throw runtime_error("MAP::Et96MapV2SendRInfoForSmConf error");
   }
+  
+  mkSS7GTAddress( &destMscAddr,  mscNumber_sp, 8 );
+	smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
+	smRpDa.addrLen = imsi_sp->imsiLen;
+	memcpy( smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
   
   state = MAPST_READY_FOR_SENDSMS;
 
