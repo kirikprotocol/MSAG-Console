@@ -374,14 +374,12 @@ void RouteConfigGen::saveConfig(const char* configFileName)
 	Routes routes;
 	RouteRegistry::RouteIterator* it = routeReg->iterator();
 	__require__(it);
+	int i = 0;
 	while (const RouteHolder* routeHolder = it->next())
 	{
-		/*
 		RouteInfo* routeInfo = new RouteInfo(routeHolder->route);
-		routeInfo.routeId = i++;
+		routeInfo->routeId = i++;
 		routes.push_back(routeInfo);
-		*/
-		routes.push_back(&routeHolder->route);
 	}
 	delete it;
 	/*
@@ -411,6 +409,10 @@ void RouteConfigGen::saveConfig(const char* configFileName)
 	os << "<!-- single source & single dest -->" << endl;
 	printRoutes(os, routes, "sssd");
 	os << "</routes>" << endl;
+	for (int i = 0; i < routes.size(); i++)
+	{
+		delete routes[i];
+	}
 }
 
 }
