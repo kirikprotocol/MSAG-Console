@@ -505,7 +505,7 @@ int main(void)
     catch (SmppConnectException& exc)
     {
         if (exc.getReason() == SmppConnectException::Reason::bindFailed)
-            logger.error("Failed to bind WSme. Exiting.\n");
+            logger.error("Failed to bind DBSme. Exiting.\n");
         return -1;
     }
     catch (ConfigException& exc) 

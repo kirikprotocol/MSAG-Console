@@ -483,10 +483,10 @@ int main(void)
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
-                logger.error("Connect failed.\nCause: %s\n", (msg) ? msg:"unknown");
+                logger.error("Connect to SMSC failed. Cause: %s\n", (msg) ? msg:"unknown");
                 bWSmeIsConnected = false;
                 if (exc.getReason() == 
-                    SmppConnectException::Reason::bindFailed) throw;
+                    SmppConnectException::Reason::bindFailed) throw exc;
                 sleep(cfg.timeOut);
                 session.close();
                 runner.shutdown();
@@ -500,18 +500,39 @@ int main(void)
             runner.shutdown();
         };
     }
+    catch (SmppConnectException& exc)
+    {
+        if (exc.getReason() == SmppConnectException::Reason::bindFailed)
+            logger.error("Failed to bind WSme. Exiting.\n");
+        resultCode = -1;
+    }
     catch (ConfigException& exc) 
     {
-        logger.error("Configuration invalid. Details: %s\n", exc.what());
+        logger.error("Configuration invalid. Details: %s Exiting.\n", exc.what());
         resultCode = -2;
+    }
+    catch (Exception& exc) 
+    {
+        logger.error("Top level Exception: %s Exiting.\n", exc.what());
+        resultCode = -3;
     }
     catch (exception& exc) 
     {
-        logger.error("Top level exception: %s\n", exc.what());
-        resultCode = -1;
+        logger.error("Top level exception: %s Exiting.\n", exc.what());
+        resultCode = -4;
     }
+    catch (...) 
+    {
+        logger.error("Unknown exception: ... caught. Exiting.\n");
+        resultCode = -5;
+    }
+
     
-    if (bAdminListenerInited) adminListener.WaitFor();
+    if (bAdminListenerInited)
+    {
+        adminListener.shutdown();
+        adminListener.WaitFor();
+    }
     return resultCode;
 }
 
