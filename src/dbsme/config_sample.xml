@@ -29,34 +29,29 @@
 		    <section name="Jobs">
 		        
 			<section name="DefautJob">
-			    <param name="id" type="string">default</param>
-			    <param name="query" type="bool">true</param>
-			    <param name="sql" type="string">blah-blah-blah</param>
-			    <param name="input" type="string">blah-blah-blah</param>
-			    <param name="output" type="string">blah-blah-blah</param>
+			    <param name="name" type="string">default</param>
+			    <param name="type" type="string">sql-job</param>
+			    <param name="query" type="bool">false</param>
+			    <param name="sql" type="string">
+				update sms_test set temp=temp
+			    </param>
+			    <param name="input" type="string">
+				empty
+			    </param>
+<param name="output" type="string">
+Default Job called !.
+Current date/time	: $$date pattern="dd MMMM, yyyy hh:mm t" default="now"$$
+Rows affected count is	: $$int32 arg=1$$
+</param>
 			</section>
 			
-			<section name="SampleJob1">
-			    <param name="id" type="string">sql-job</param>
+			<section name="Test-SQLJob1">
+			    <param name="name" type="string">test-sql-job</param>
+			    <param name="type" type="string">sql-job</param>
 			    <param name="query" type="bool">true</param>
 			    <param name="sql" type="string">
 				select temp, str, dt from sms_test where temp=:1 or str=:2 or dt=:3
 			    </param>
-			    <!--param name="input" type="string">
-				$$int8 arg=2    	$$
-				$$int16 arg=1   	$$
-				$$int32 arg=3   	$$
-				$$uint8 arg="4" 	$$
-				$$uint16 arg="5"	$$
-				$$uint32 arg="6"	$$
-				$$string arg="7"	$$
-				$$string arg="8"	$$
-				$$float arg=9   	$$
-				$$double arg=10		$$
-				$$long-double arg=11	$$
-				$$date arg=3 
-				  pattern="dd/mm/yy hh:mm::ss"$$
-			    </param-->
 			    <param name="input" type="string">
 				$$string arg=2  nnn="\\\""$$
 				$$int16 arg="1"    	$$
