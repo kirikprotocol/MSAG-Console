@@ -4,13 +4,16 @@
 #include <inttypes.h>
 #include <time.h>
 #include <string>
-#include "core/synchronization/Mutex.hpp"
+
+#include <core/buffers/Hash.hpp>
+#include <core/synchronization/Mutex.hpp>
 
 namespace smsc{
 namespace misscall{
 
 using std::string;
 using smsc::core::synchronization::Mutex;
+using smsc::core::buffers::Hash;
 
 static const uint8_t NONE    = 0x00;
 static const uint8_t ABSENT  = 0x01;
@@ -61,7 +64,7 @@ class MissedCallProcessor{
     void addMissedCallListener(MissedCallListener* listener);
     void removeMissedCallListener();
     void fireMissedCallEvent(MissedCallEvent& event);
-    void setCircuits(Circuits cics);
+    void setCircuits(Hash<Circuits>& cics);
     void setReleaseSettings(ReleaseSettings params);
 
   private:

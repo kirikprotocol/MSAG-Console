@@ -24,13 +24,14 @@ public class MCISmeBean extends PageBean
   public final static int RESULT_STAT        = PageBean.PRIVATE_RESULT + 1;
   public final static int RESULT_STATUSES    = PageBean.PRIVATE_RESULT + 2;
   public final static int RESULT_OPTIONS     = PageBean.PRIVATE_RESULT + 3;
-  public final static int RESULT_DRIVERS     = PageBean.PRIVATE_RESULT + 4;
-  public final static int RESULT_TEMPLATES   = PageBean.PRIVATE_RESULT + 5;
-  public final static int RESULT_INFORM_ADD  = PageBean.PRIVATE_RESULT + 6;
-  public final static int RESULT_INFORM_EDIT = PageBean.PRIVATE_RESULT + 7;
-  public final static int RESULT_NOTIFY_ADD  = PageBean.PRIVATE_RESULT + 8;
-  public final static int RESULT_NOTIFY_EDIT = PageBean.PRIVATE_RESULT + 9;
-  protected final static int PRIVATE_RESULT  = PageBean.PRIVATE_RESULT + 10;
+  public final static int RESULT_CIRCUITS    = PageBean.PRIVATE_RESULT + 4;
+  public final static int RESULT_DRIVERS     = PageBean.PRIVATE_RESULT + 5;
+  public final static int RESULT_TEMPLATES   = PageBean.PRIVATE_RESULT + 6;
+  public final static int RESULT_INFORM_ADD  = PageBean.PRIVATE_RESULT + 7;
+  public final static int RESULT_INFORM_EDIT = PageBean.PRIVATE_RESULT + 8;
+  public final static int RESULT_NOTIFY_ADD  = PageBean.PRIVATE_RESULT + 9;
+  public final static int RESULT_NOTIFY_EDIT = PageBean.PRIVATE_RESULT + 10;
+  protected final static int PRIVATE_RESULT  = PageBean.PRIVATE_RESULT + 11;
 
   public final static String TEMPLATES_SECTION_NAME        = "MCISme.Templates";
   public final static String INFORM_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Inform";
@@ -92,6 +93,7 @@ public class MCISmeBean extends PageBean
     else if ("stat".equals(mbMenu))      return RESULT_STAT;
     else if ("statuses".equals(mbMenu))  return RESULT_STATUSES;
     else if ("options".equals(mbMenu))   return RESULT_OPTIONS;
+    else if ("circuits".equals(mbMenu))  return RESULT_CIRCUITS;
     else if ("templates".equals(mbMenu)) return RESULT_TEMPLATES;
     else if ("drivers".equals(mbMenu))   return RESULT_DRIVERS;
     else return result;
@@ -104,6 +106,14 @@ public class MCISmeBean extends PageBean
     this.mbMenu = mbMenu;
   }
 
+  protected void restoreConfig() {
+    try {
+      mciSmeContext.resetConfig();
+      config = mciSmeContext.getConfig();
+    } catch (Throwable th) {
+      logger.error("Restore config failed", th);
+    }
+  }
   protected Config getConfig() {
     return config;
   }

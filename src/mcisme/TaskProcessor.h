@@ -47,7 +47,7 @@ namespace smsc { namespace mcisme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
-    class TaskProcessor; class EventRunner;
+    class TaskProcessor; class EventRunner; class EventTask;
 
     struct MessageSender
     {
@@ -74,6 +74,7 @@ namespace smsc { namespace mcisme
         int                 threadCount;
 
         friend class EventRunner;
+        friend class EventTask;
 
         void newThread() {
             MutexGuard guard(threadMonitor);
@@ -88,9 +89,11 @@ namespace smsc { namespace mcisme
 
     public:
 
-        ThreadManager() : ThreadPool(), logger(Logger::getInstance("smsc.mcisme.ThreadManager")),
-            bStopping(false), threadCount(0) {};
-        virtual ~ThreadManager() {
+        ThreadManager() : ThreadPool(), 
+            logger(Logger::getInstance("smsc.mcisme.ThreadManager")),
+                bStopping(false), threadCount(0) {};
+        virtual ~ThreadManager()
+        {
             this->Stop();
             shutdown();
         };
@@ -106,28 +109,32 @@ namespace smsc { namespace mcisme
             while (threadCount > 0) threadMonitor.wait();
             __trace__("All pooled threads finished.");
         }
-        bool startThread(ThreadedTask* task) {
+        bool startThread(ThreadedTask* task)
+        {
             MutexGuard guard(stopLock);
             if (!bStopping && task) {
-                startTask(task);
-                return true;
+                startTask(task); return true;
             }
             else if (task) delete task;
             return false;
         }
 
-        void init(ConfigView* config) // throw(ConfigException)
+        void init(int max, int precreate=0)
         {
-            try {
-                setMaxThreads(config->getInt("max"));
-            } catch (ConfigException& exc) {
-                smsc_log_warn(logger, "Maximum thread pool size wasn't specified !");
+            setMaxThreads(max);
+            if (precreate > 0) preCreateThreads(precreate);
+        }
+        void init(ConfigView* config)
+        {
+            int max = 10;
+            try { max = config->getInt("max"); } catch (ConfigException& exc) {
+                smsc_log_warn(logger, "Maximum thread pool size wasn't specified. Using default %d", max);
             }
-            try {
-                preCreateThreads(config->getInt("init"));
-            } catch (ConfigException& exc) {
-                smsc_log_warn(logger, "Precreated threads count in pool wasn't specified !");
+            int precreate = 0;
+            try { precreate = config->getInt("init"); } catch (ConfigException& exc) {
+                smsc_log_warn(logger, "Precreated threads count wasn't specified. No precreated");
             }
+            init(max, precreate);
         }
     };
 
@@ -147,7 +154,7 @@ namespace smsc { namespace mcisme
 
     public:
 
-        virtual const char* taskName() { return "MCISmeEvent"; };
+        virtual const char* taskName() { return "EventRunner"; };
 
         EventRunner(EventMethod method, TaskProcessor& processor, ThreadManager& _manager,
                     int seqNum, bool accepted, bool retry, bool immediate, 
@@ -175,6 +182,25 @@ namespace smsc { namespace mcisme
         virtual int Execute();
     };
 
+    class EventTask : public ThreadedTask
+    {
+    private:
+    
+        TaskProcessor&  processor;
+        ThreadManager&  manager;
+        MissedCallEvent event;
+    
+    public:
+    
+        virtual const char* taskName() { return "EventTask"; };
+    
+        EventTask(TaskProcessor& _processor, ThreadManager& _manager, const MissedCallEvent& _event)
+            : processor(_processor), manager(_manager), event(_event) { manager.newThread(); };
+        virtual ~EventTask() { manager.delThread(); };
+    
+        virtual int Execute();
+    };
+    
     struct ReceiptData
     {
         bool delivered, expired;
@@ -257,10 +283,15 @@ namespace smsc { namespace mcisme
     {
     private:
 
+        friend class EventTask;
+        friend class EventRunner;
+
         smsc::logger::Logger *logger;
 
         int     protocolId, daysValid;
         char    *svcType, *address;
+
+        int     maxInThreads, initInThreads;
 
         ThreadManager       eventManager;
         ResponcesTracker    responcesTracker;
@@ -309,11 +340,14 @@ namespace smsc { namespace mcisme
         void processReceipt(Task* task, bool delivered, bool expired, const char* smsc_id, uint64_t msg_id=0);
         void processNotificationResponce(Message& message,
                                          bool accepted, bool retry, bool immediate, std::string smscId="");
-        friend class EventRunner;
+        
         virtual void processResponce(int seqNum, bool accepted, bool retry, bool immediate,
                                      bool cancel, bool cancel_failed, std::string smscId="");
         virtual void processReceipt (std::string smscId, bool delivered, bool expired, bool deleted);
     
+        void processEvent(const MissedCallEvent& event);
+        void processMessage(const Message& message);
+
     public:
 
         TaskProcessor(ConfigView* config);
@@ -345,9 +379,6 @@ namespace smsc { namespace mcisme
         virtual int Execute();  // inQueue processing
         void Start(); void Stop();
         
-        void processEvent(const MissedCallEvent& event);
-        void processMessage(const Message& message);
-
         virtual void missed(MissedCallEvent event) {
             putToInQueue(event);
         };

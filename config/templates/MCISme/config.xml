@@ -53,9 +53,11 @@
         </section>  
 	
         <section name="Circuits">
-	    <param name="hsn" type="int">1</param>
-	    <param name="spn" type="int">2</param>
-    	    <param name="tsm" type="string">123ABC</param>
+	    <section name="MSC1">
+		<param name="hsn" type="int">1</param>
+		<param name="spn" type="int">2</param>
+    		<param name="tsm" type="string">123ABC</param>
+	    </section>
 	</section>
 
 	<section name="DataSource">

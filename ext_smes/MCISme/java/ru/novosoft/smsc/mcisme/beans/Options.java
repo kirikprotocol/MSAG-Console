@@ -51,10 +51,6 @@ public class Options extends MCISmeBean
   private int smscTimeout = 0;
   private String smscPassword = "";
 
-  private int HSN = 0;
-  private int SPN = 0;
-  private String TSM = "";
-
   private boolean skipUnknownCaller = false;
   private int releaseStrategy    = RELEASE_REDIRECT_STRATEGY; // MTS default
   private int causeBusy          = 0;
@@ -193,10 +189,6 @@ public class Options extends MCISmeBean
         smscTimeout = getConfig().getInt("MCISme.SMSC.timeout");
         smscPassword = getConfig().getString("MCISme.SMSC.password");
 
-        HSN = getConfig().getInt("MCISme.Circuits.hsn");
-        SPN = getConfig().getInt("MCISme.Circuits.spn");
-        TSM = getConfig().getString("MCISme.Circuits.tsm");
-
         try { releaseStrategy = getConfig().getInt("MCISme.Reasons.strategy"); } catch (Throwable th) {
           logger.warn("Parameter 'MCISme.Reasons.strategy' wasn't specified, using default (redirect)");
           releaseStrategy = RELEASE_REDIRECT_STRATEGY;
@@ -323,10 +315,6 @@ public class Options extends MCISmeBean
     getConfig().setString("MCISme.SMSC.sid", smscSid);
     getConfig().setInt   ("MCISme.SMSC.timeout", smscTimeout);
     getConfig().setString("MCISme.SMSC.password", smscPassword);
-
-    getConfig().setInt   ("MCISme.Circuits.hsn", HSN);
-    getConfig().setInt   ("MCISme.Circuits.spn", SPN);
-    getConfig().setString("MCISme.Circuits.tsm", TSM);
 
     getConfig().setInt   ("MCISme.Reasons.strategy", releaseStrategy);
     getConfig().setBool  ("MCISme.Reasons.skipUnknownCaller", skipUnknownCaller);
@@ -725,50 +713,6 @@ public class Options extends MCISmeBean
       this.adminPort = Integer.decode(adminPort).intValue();
     } catch (NumberFormatException e) {
       logger.debug("Invalid int MCISme.Admin.port parameter value: \"" + adminPort + '"', e);
-    }
-  }
-
-  public String getTSM() {
-    return TSM;
-  }
-  public void setTSM(String TSM) {
-    this.TSM = TSM;
-    try {
-      Integer.parseInt(TSM, 16);
-    } catch (NumberFormatException e) {
-      logger.debug("Invalid int MCISme.Circuits.tsm hex parameter value: \"" + TSM + '"', e);
-    }
-  }
-  public int getHSNInt() {
-    return HSN;
-  }
-  public void setHSNInt(int HSN) {
-    this.HSN = HSN;
-  }
-  public String getHSN() {
-    return String.valueOf(HSN);
-  }
-  public void setHSN(String HSN) {
-    try {
-      this.HSN = Integer.decode(HSN).intValue();
-    } catch (NumberFormatException e) {
-      logger.debug("Invalid int MCISme.Circuits.hsn parameter value: \"" + HSN + '"', e);
-    }
-  }
-  public int getSPNInt() {
-    return SPN;
-  }
-  public void setSPNInt(int SPN) {
-    this.SPN = SPN;
-  }
-  public String getSPN() {
-    return String.valueOf(SPN);
-  }
-  public void setSPN(String SPN) {
-    try {
-      this.SPN = Integer.decode(SPN).intValue();
-    } catch (NumberFormatException e) {
-      logger.debug("Invalid int MCISme.Circuits.spn parameter value: \"" + SPN + '"', e);
     }
   }
 

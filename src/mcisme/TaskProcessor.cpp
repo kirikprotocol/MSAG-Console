@@ -99,7 +99,8 @@ void TaskProcessor::initDataSource(ConfigView* config)
 TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), MissedCallListener(), AdminInterface(), 
         logger(Logger::getInstance("smsc.mcisme.TaskProcessor")), 
-        protocolId(0), daysValid(1), svcType(0), address(0), templateManager(0), mciModule(0), messageSender(0),
+        protocolId(0), daysValid(1), svcType(0), address(0), 
+        maxInThreads(10), initInThreads(0), templateManager(0), mciModule(0), messageSender(0),
         ds(0), dsStatConnection(0), statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
         bStarted(false), bInQueueOpen(false), bOutQueueOpen(false)
 {
@@ -125,17 +126,34 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     templateManager = new TemplateManager(templatesCfg);
     smsc_log_info(logger, "Templates loaded.");
 
+    Hash<Circuits> circuitsMap; // loadup all MSC(s) circuits
     std::auto_ptr<ConfigView> circuitsCfgGuard(config->getSubConfig("Circuits"));
     ConfigView* circuitsCfg = circuitsCfgGuard.get();
-    Circuits circuits;
-    circuits.hsn = circuitsCfg->getInt("hsn");
-    circuits.spn = circuitsCfg->getInt("spn");
-    const char* tsmStr = circuitsCfg->getString("tsm");
-    uint32_t tsmLong = 0;
-    if (!tsmStr || !tsmStr[0] || sscanf(tsmStr, "%lx", &tsmLong) != 1)
-        throw ConfigException("Parameter <MCISme.Circuits.tsm> value is empty or invalid."
-                              " Expecting hex string, found '%s'.", tsmStr ? tsmStr:"null");
-    circuits.ts = tsmLong;
+    std::auto_ptr< std::set<std::string> > circuitsSetGuard(circuitsCfg->getShortSectionNames());
+    std::set<std::string>* circuitsSet = circuitsSetGuard.get();
+    for (std::set<std::string>::iterator i=circuitsSet->begin();i!=circuitsSet->end();i++)
+    {
+        const char* circuitsMsc = (const char *)i->c_str();
+        if (!circuitsMsc || circuitsMap.Exists(circuitsMsc)) continue;
+
+        std::auto_ptr<ConfigView> mscCfgGuard(circuitsCfg->getSubConfig(circuitsMsc));
+        ConfigView* mscCfg = mscCfgGuard.get();
+
+        Circuits circuits;
+        circuits.hsn       = mscCfg->getInt   ("hsn");
+        circuits.spn       = mscCfg->getInt   ("spn");
+        const char* tsmStr = mscCfg->getString("tsm");
+        uint32_t tsmLong = 0;
+        if (!tsmStr || !tsmStr[0] || sscanf(tsmStr, "%lx", &tsmLong) != 1)
+            throw ConfigException("Parameter <MCISme.Circuits.%s.tsm> value is empty or invalid."
+                                  " Expecting hex string, found '%s'.", 
+                                  circuitsMsc, tsmStr ? tsmStr:"null");
+        circuits.ts = tsmLong;
+        circuitsMap.Insert(circuitsMsc, circuits);
+    }
+    if (circuitsMap.GetCount() <= 0) 
+        throw ConfigException("No one valid MSC section <MCISme.Circuits.XXX> defined.");
+    
     
     std::auto_ptr<ConfigView> releaseSettingsCfgGuard(config->getSubConfig("Reasons"));
     ConfigView* releaseSettingsCfg = releaseSettingsCfgGuard.get();
@@ -172,14 +190,22 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     releaseSettings.otherCause          = releaseSettingsCfg->getInt ("Other.cause");
     releaseSettings.otherInform         = releaseSettingsCfg->getBool("Other.inform") ? 1:0;
     
-    mciModule = new MCIModule(circuits, releaseSettings, callingMask.c_str(), calledMask.c_str());
+    mciModule = new MCIModule(circuitsMap, releaseSettings, callingMask.c_str(), calledMask.c_str());
     responcesTracker.init(this, config);
 
     maxInQueueSize  = config->getInt("inputQueueSize");
     maxOutQueueSize = config->getInt("outputQueueSize");
 
-    std::auto_ptr<ConfigView> eventsThreadPoolCfgGuard(config->getSubConfig("SMPPThreadPool"));
-    eventManager.init(eventsThreadPoolCfgGuard.get()); // loads up thread pool for events
+    std::auto_ptr<ConfigView> smppThreadPoolCfgGuard(config->getSubConfig("SMPPThreadPool"));
+    ConfigView* smppThreadPoolCfg = smppThreadPoolCfgGuard.get();
+    eventManager.init(smppThreadPoolCfg); // loads up thread pool for smpp events
+    // TODO: std::auto_ptr<ConfigView> eventsThreadPoolCfgGuard(config->getSubConfig("EventsThreadPool"));
+    try { maxInThreads = smppThreadPoolCfg->getInt("max"); } catch (ConfigException& exc) {
+        smsc_log_warn(logger, "Maximum thread pool size wasn't specified. Using default %d", maxInThreads);
+    }
+    try { initInThreads = smppThreadPoolCfg->getInt("init"); } catch (ConfigException& exc) {
+        smsc_log_warn(logger, "Precreated threads count wasn't specified. No precreated");
+    }
     
     try { Task::bInformAll = config->getBool("forceInform"); } catch (...) { Task::bInformAll = false;
         smsc_log_warn(logger, "Parameter <MCISme.forceInform> missed. Force inform for all abonents is off");
@@ -283,28 +309,6 @@ void TaskProcessor::Stop()
         smsc_log_info(logger, "Stoped.");
     }
 }
-int TaskProcessor::Execute()
-{
-    clearSignalMask();
-    static const char* ERROR_MESSAGE = "Failed to process missed call event. Details: %s";
-    
-    while (bInQueueOpen)
-    {
-        try
-        {
-            MissedCallEvent event;
-            if (!getFromInQueue(event)) break;
-            processEvent(event);
-
-        } catch (std::exception& exc) {
-            smsc_log_error(logger, ERROR_MESSAGE, exc.what());    
-        } catch (...) {
-            smsc_log_error(logger, ERROR_MESSAGE, "Cause is unknown");
-        }
-    }
-    exitedEvent.Signal();
-    return 0;
-}
 void TaskProcessor::Run()
 {
     static const char* ERROR_MESSAGE = "Failed to process message. Details: %s";
@@ -323,6 +327,45 @@ void TaskProcessor::Run()
             smsc_log_error(logger, ERROR_MESSAGE, "Cause is unknown");
         }
     }
+}
+
+int EventTask::Execute()
+{ 
+    static const char* ERROR_MESSAGE = "Failed to process missed call event. Details: %s";
+
+    try 
+    { 
+        clearSignalMask(); 
+        processor.processEvent(event);
+    
+    } catch (std::exception& exc) { 
+        smsc_log_error(processor.logger, ERROR_MESSAGE, exc.what()); 
+        return -1;
+    } catch (...) { 
+        smsc_log_error(processor.logger, ERROR_MESSAGE, "Cause is unknown"); 
+        return -1;
+    }
+    return 0;
+};
+int TaskProcessor::Execute()
+{
+    clearSignalMask();
+    {
+        ThreadManager processingPool;
+        processingPool.init(maxInThreads, initInThreads);
+
+        while (bInQueueOpen)
+        {
+            MissedCallEvent event;
+            if (!getFromInQueue(event)) break;
+            if (!processingPool.startThread(new EventTask(*this, processingPool, event))) {
+                smsc_log_warn(logger, "Couldn't start thread for event processing");
+                break; // WAS: !!! direct call processEvent(event); !!!
+            } 
+        }
+    }
+    exitedEvent.Signal();
+    return 0;
 }
 
 /* Is calling on Startup. Initiates current messages sending for all tasks.

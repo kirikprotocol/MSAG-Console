@@ -151,23 +151,6 @@ function switchConstraint()
 }
 switchConstraint();
 </script>
-<div class=page_subtitle>Circuits settings</div>
-<table class=properties_list cellspacing=0  width="100%" <%rowN=0;%>>
-<col width="20%">
-<col width="80%">
-<tr class=row<%=rowN++&1%>>
-  <th>Hardware Selection Number</th>
-  <td><input class=txt name=HSN value="<%=StringEncoderDecoder.encode(bean.getHSN())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>Span</th>
-  <td><input class=txt name=SPN value="<%=StringEncoderDecoder.encode(bean.getSPN())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>Timeslot mask (hex)</th>
-  <td><input class=txt name=TSM value="<%=StringEncoderDecoder.encode(bean.getTSM())%>"></td>
-</tr>
-</table>
 <div class=page_subtitle>Release responce settings and codes</div>
 <table class=properties_list cellspacing=0 width="100%" <%rowN=0;%>>
 <col width="40%">

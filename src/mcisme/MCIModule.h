@@ -63,7 +63,7 @@ namespace smsc { namespace mcisme
 
     public:
 
-        MCIModule(const Circuits& circuits, const ReleaseSettings& releaseSettings, 
+        MCIModule(Hash<Circuits>& circuits, const ReleaseSettings& releaseSettings, 
                   const char* callingMask, const char* calledMask) 
             : Thread(), logger(Logger::getInstance("smsc.mcisme.MCIModule")), 
                 listener(0), bAttached(false), bNeedExit(false)
