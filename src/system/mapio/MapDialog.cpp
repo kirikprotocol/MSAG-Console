@@ -449,7 +449,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   }
   else // make coding scheme
   {
-    if ( sms->hasIntProperty(MS_DESTADDRSUBUNIT) ){
+    if ( sms->hasIntProperty(Tag::MS_DESTADDRSUBUNIT) ){
       // coding scheme 1111xxxx
       value = 0xf0;
       if ( encoding == MAP_UCS2_ENCODING){
@@ -460,25 +460,25 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
         ;//value |=  nothing
       else // 8bit
         value |= (1<<2);
-      value |= sms->getIntProperty(MS_DESTADDRSUBUNIT)&0x3;
+      value |= sms->getIntProperty(Tag::MS_DESTADDRSUBUNIT)&0x3;
     }
     else
     {
       unsigned char value = 0;
-      if ( sms->hasIntProperty(SMPP_MS_MSG_WAIT_FACILITIES) ){
+      if ( sms->hasIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES) ){
         if ( encoding == MA_UCS2_ENCODING ){
           value = 0xe0;
-          unsigned _val = sms->getIntProperty(SMPP_MS_MSG_WAIT_FACILITIES);
+          unsigned _val = sms->getIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES);
           value |= _val&0x3;
           if ( _val&0x80 )value |= 0x8;
         }
         else
         {
-          if ( !sms->hasIntProperty(MS_VALIDITY) ){
+          if ( !sms->hasIntProperty(Tag::MS_VALIDITY) ){
             __trace2__("MAP::mkDeliveryPDU: Opss, has no ms_validity");
             throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
           }
-          unsigned ms_validity = sms->getIntProperty(MS_VALIDITY);
+          unsigned ms_validity = sms->getIntProperty(Tag::MS_VALIDITY);
           if ( ms_validity & 0x3 == 0x3 ){
             value = 0xc0;
           }else if ( ms_validity & 0x3 == 0 ){
@@ -488,18 +488,18 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
                        ms_validity);
             throw runtime_error("bad ms_validity value");
           }
-          unsigned _val = sms->getIntProperty(SMPP_MS_MSG_WAIT_FACILITIES);
+          unsigned _val = sms->getIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES);
           value |= _val&0x3;
           if ( _val&0x80 )value |= 0x8;
         }
       }
       else
       {
-        if ( !sms->hasIntProperty(MS_VALIDITY) ){
+        if ( !sms->hasIntProperty(Tag::MS_VALIDITY) ){
           __trace2__("MAP::mkDeliveryPDU: Opss, has no ms_validity");
           throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
         }
-        unsigned ms_validity = sms->getIntProperty(MS_VALIDITY);
+        unsigned ms_validity = sms->getIntProperty(Tag::MS_VALIDITY);
         if ( ms_validity & 0x3 == 0x3 ){
           value = 0x40;
         }else if ( ms_validity & 0x3 == 0 ){
