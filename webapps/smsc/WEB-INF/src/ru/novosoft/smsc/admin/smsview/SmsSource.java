@@ -1,7 +1,5 @@
 package ru.novosoft.smsc.admin.smsview;
 
-import ru.novosoft.smsc.util.StringEncoderDecoder;
-
 import java.io.UnsupportedEncodingException;
 import java.io.InputStream;
 import java.io.DataInputStream;
@@ -18,20 +16,22 @@ public abstract class SmsSource
 {
   //private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(Class.class);
 
-  private static byte INT_TAG_TYPE = 0;
-  private static byte STR_TAG_TYPE = 1;
-  private static byte BIN_TAG_TYPE = 2;
+  private final static byte INT_TAG_TYPE = 0;
+  private final static byte STR_TAG_TYPE = 1;
+  private final static byte BIN_TAG_TYPE = 2;
 
-  private static short SMPP_ESM_CLASS_TAG       = 2;
-  private static short SMPP_DATA_CODING_TAG     = 3;
-  private static short SMPP_SHORT_MESSAGE_TAG   = 28;
-  private static short SMPP_MESSAGE_PAYLOAD_TAG = 29;
-  private static short SMPP_CONCAT_INFO_TAG     = 40;
+  private final static short SMPP_ESM_CLASS_TAG       = 2;
+  private final static short SMPP_DATA_CODING_TAG     = 3;
+  private final static short SMPP_SHORT_MESSAGE_TAG   = 28;
+  private final static short SMPP_MESSAGE_PAYLOAD_TAG = 29;
+  private final static short SMPP_CONCAT_INFO_TAG     = 40;
+  private final static short SMSC_MERGE_CONCAT_TAG    = 45;
+  private final static short SMSC_DC_LIST_TAG         = 52;
 
-  private static short DATA_CODING_DEFAULT = 0;    // 0
-  private static short DATA_CODING_LATIN1  = 3;    // 11
-  private static short DATA_CODING_BINARY  = 4;    // BIT(2)
-  private static short DATA_CODING_UCS2    = 8;    // BIT(3)
+  private final static short DATA_CODING_DEFAULT      = 0;  // 0
+  private final static short DATA_CODING_LATIN1       = 3;  // 11
+  private final static short DATA_CODING_BINARY       = 4;  // 10
+  private final static short DATA_CODING_UCS2         = 8;  // 100
 
   public static String getHexString(byte val[])
   {
@@ -53,86 +53,113 @@ public abstract class SmsSource
     int textLen = 0;
     byte text[] = null;
     byte concatInfo[] = null;
+    byte partsEncoding[] = null;
+    boolean isMergeConcat = false;
 
     //System.out.println("Parsing SMS body ...");
-    try {
+    try
+    {
       DataInputStream stream = new DataInputStream(is);
-      while (stream.available() > 0) {
+      while (stream.available() > 0)
+      {
         short tag = stream.readShort();
         byte type = (byte) ((tag & (short) 0xff00) >> 8);
-        type &= (short) 0x00ff;
-        tag &= (short) 0x00ff;
+        type &= (short) 0x00ff; tag &= (short) 0x00ff;
 
         int len = (type == INT_TAG_TYPE) ? 4 : stream.readInt();
-
         //System.out.println("Tag: "+tag+" Type: "+type+" Len: "+len);
-        if (tag == SMPP_SHORT_MESSAGE_TAG || tag == SMPP_MESSAGE_PAYLOAD_TAG) {
-          byte msgText[] = new byte[textLen = len];
-          stream.read(msgText, 0, textLen);
-          text = msgText;
-          row.addBodyParameter(tag, msgText);
-        } else if (tag == SMPP_CONCAT_INFO_TAG) {
-          concatInfo = new byte[len];
-          stream.read(concatInfo, 0, len);
-          row.addBodyParameter(tag, concatInfo);
-        } else if (tag == SMPP_DATA_CODING_TAG) {
-          textEncoding = stream.readInt();
-          row.addBodyParameter(tag, new Integer(textEncoding));
-        } else if (tag == SMPP_ESM_CLASS_TAG) {
-          esmClass = stream.readInt();
-          row.addBodyParameter(tag, new Integer(esmClass));
-        } else {
-          if (type == INT_TAG_TYPE) {
-            int val = stream.readInt();
-            row.addBodyParameter(tag, new Integer(val));
-          } else if (type == STR_TAG_TYPE) {
-            byte val[] = new byte[len];
-            stream.read(val, 0, len);
-            row.addBodyParameter(tag, new String(val));
-          } else if (type == BIN_TAG_TYPE) {
-            byte val[] = new byte[len];
-            stream.read(val, 0, len);
-            row.addBodyParameter(tag, val);
-          } else {
-            byte val[] = new byte[len];
-            stream.read(val, 0, len);
-            row.addBodyParameter(tag, "invalid tag type: " + getHexString(val));
+
+        switch (tag)
+        {
+          case SMPP_SHORT_MESSAGE_TAG: case SMPP_MESSAGE_PAYLOAD_TAG: {
+            byte msgText[] = new byte[textLen = len];
+            stream.read(msgText, 0, textLen);
+            text = msgText;
+            row.addBodyParameter(tag, msgText); break;
+          } case SMSC_MERGE_CONCAT_TAG: {
+            isMergeConcat = true;
+            int mcValue = stream.readInt();
+            row.addBodyParameter(tag, new Integer(mcValue)); break;
+          } case SMSC_DC_LIST_TAG: {
+            partsEncoding = new byte[len];
+            stream.read(partsEncoding, 0, len);
+            row.addBodyParameter(tag, partsEncoding); break;
+          } case SMPP_CONCAT_INFO_TAG: {
+            concatInfo = new byte[len];
+            stream.read(concatInfo, 0, len);
+            row.addBodyParameter(tag, concatInfo); break;
+          } case SMPP_DATA_CODING_TAG: {
+            textEncoding = stream.readInt();
+            row.addBodyParameter(tag, new Integer(textEncoding)); break;
+          } case SMPP_ESM_CLASS_TAG: {
+            esmClass = stream.readInt();
+            row.addBodyParameter(tag, new Integer(esmClass)); break;
+          } default: {
+            switch (type) {
+              case INT_TAG_TYPE: {
+                int val = stream.readInt();
+                row.addBodyParameter(tag, new Integer(val)); break;
+              }
+              case STR_TAG_TYPE: {
+                byte val[] = new byte[len]; stream.read(val, 0, len);
+                row.addBodyParameter(tag, new String(val)); break;
+              }
+              case BIN_TAG_TYPE: {
+                byte val[] = new byte[len]; stream.read(val, 0, len);
+                row.addBodyParameter(tag, val); break;
+              }
+              default: {
+                byte val[] = new byte[len]; stream.read(val, 0, len);
+                row.addBodyParameter(tag, "invalid tag type: " + getHexString(val));
+                break;
+              }
+            }
+            break;
           }
-          //stream.skip(len);
-        }
-      }
+        } // switch (tag)
+      } // while (stream.available() > 0)
       stream.close();
 
-      if( text != null && text.length>0 ) {
-         StringBuffer textBuffer = new StringBuffer(text.length);
-         if( (esmClass & 0x40) == 0x40 ) {
-           if(concatInfo != null) {
-             int partsCount = concatInfo[0];
-             StringBuffer sb = new StringBuffer();
-             for( int i = 0; i < concatInfo.length; i++ ) {
-               sb.append( Integer.toHexString(((int)concatInfo[i])&0xFF) ).append(' ');
-             }
-             System.out.println("Concat info: "+sb.toString());
-             for( int i = 0; i < partsCount; i++ ) {
-               int offset = ((((int)concatInfo[i*2+1])&0xFF)<<8)|(((int)concatInfo[i*2+2])&0xFF);
-               int len = text.length-offset;
-               System.out.println("len="+len+" tlen="+text.length+" offset="+offset+" 1="+(((int)concatInfo[i*2+1])&0xFF)+" 2="+(((int)concatInfo[i*2+2])&0xFF));
-               if( i < partsCount-1) {
-                 int offset_next = ((((int)concatInfo[(i+1)*2+1])&0xFF)<<8)|(((int)concatInfo[(i+1)*2+2])&0xFF);
-                 len = offset_next-offset;
-                 System.out.println("next part len="+len+" tlen="+text.length+" offset="+offset+" 1="+(((int)concatInfo[(i+1)*2+1])&0xFF)+" 2="+(((int)concatInfo[(i+1)*2+2])&0xFF));
-               }
-               convertMessage(textBuffer, text, offset, len, true, textEncoding);
-             }
-           } else {
-             convertMessage(textBuffer, text, 0, text.length, true, textEncoding);
-           }
-         } else {
-           convertMessage(textBuffer, text, 0, text.length, false, textEncoding);
-         }
-         row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
-         row.setText(textBuffer.toString());
+      if( text == null || text.length <= 0 ) return;
+
+      StringBuffer textBuffer = new StringBuffer(text.length);
+      if(isMergeConcat)
+      {
+        if(concatInfo != null)
+        {
+          int partsCount = concatInfo[0];
+          StringBuffer sb = new StringBuffer();
+          for( int i = 0; i < concatInfo.length; i++ ) {
+            sb.append( Integer.toHexString(((int)concatInfo[i])&0xFF) ).append(' ');
+          }
+          System.out.println("Concat info: "+sb.toString());
+          if (partsEncoding != null && partsCount != partsEncoding.length) {
+            IOException exc = new IOException("Invalid partsEncoding count dc:"+partsEncoding.length+
+                                              " ci:"+partsCount);
+            row.setText(exc.getMessage());
+            throw exc;
+          }
+
+          for( int i = 0; i < partsCount; i++ )
+          {
+            int offset = ((((int)concatInfo[i*2+1])&0xFF)<<8)|(((int)concatInfo[i*2+2])&0xFF);
+            int len = text.length-offset;
+            System.out.println("len="+len+" tlen="+text.length+" offset="+offset+" 1="+(((int)concatInfo[i*2+1])&0xFF)+" 2="+(((int)concatInfo[i*2+2])&0xFF));
+            if( i < partsCount-1) {
+              int offset_next = ((((int)concatInfo[(i+1)*2+1])&0xFF)<<8)|(((int)concatInfo[(i+1)*2+2])&0xFF);
+              len = offset_next-offset;
+              System.out.println("next part len="+len+" tlen="+text.length+" offset="+offset+" 1="+(((int)concatInfo[(i+1)*2+1])&0xFF)+" 2="+(((int)concatInfo[(i+1)*2+2])&0xFF));
+            }
+            convertMessage(textBuffer, text, offset, len, true,
+                           (partsEncoding != null) ? partsEncoding[i]:textEncoding);
+          }
+        }
+        else convertMessage(textBuffer, text, 0, text.length, true, textEncoding);
       }
+      else convertMessage(textBuffer, text, 0, text.length, ((esmClass & 0x40) == 0x40), textEncoding);
+
+      row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
+      row.setText(textBuffer.toString());
     }
     catch (IOException exc) {
       System.out.println("SMS Body parsing failed !");
