@@ -83,8 +83,8 @@ namespace smsc { namespace store
                 throw(StorageException);
         };
 
-        SMSId doCreateSms(StorageConnection* connection,
-                          SMS& sms, SMSId id, const CreateMode flag)
+        void doCreateSms(StorageConnection* connection,
+                         SMS& sms, SMSId id, const CreateMode flag)
                 throw(StorageException, DuplicateMessageException);
         void doRetrieveSms(StorageConnection* connection,
             SMSId id, SMS& sms)
@@ -161,8 +161,8 @@ namespace smsc { namespace store
          * Реализация метода MessageStore
          * @see MessageStore
          */
-        virtual SMSId createSms(SMS& sms, SMSId id,
-                                const CreateMode flag = CREATE_NEW)
+        virtual void createSms(SMS& sms, SMSId id,
+                               const CreateMode flag = CREATE_NEW)
                 throw(StorageException, DuplicateMessageException);
         /**
          * Реализация метода MessageStore
@@ -467,16 +467,17 @@ namespace smsc { namespace store
     
     struct UpdateRecord
     {
+        SMSId       id;
         State       state;
         Descriptor  dst;
         uint32_t    fcs;
         time_t      nt;
 
-        UpdateRecord(State _state) 
-            : state(_state), fcs(0), nt(0) {};
-        UpdateRecord(State _state, const Descriptor& _dst,
+        UpdateRecord(SMSId _id, State _state) 
+            : id(_id), state(_state), fcs(0), nt(0) {};
+        UpdateRecord(SMSId _id, State _state, const Descriptor& _dst,
                      uint32_t _fcs = 0, time_t _nt = 0)
-            : state(_state), dst(_dst), fcs(_fcs), nt(_nt) {};
+            : id(_id), state(_state), dst(_dst), fcs(_fcs), nt(_nt) {};
     };
 
     struct IdxSMS : public SMS
@@ -497,113 +498,22 @@ namespace smsc { namespace store
                 return (unsigned int)id;
             };
         };
-        struct AddressIdx
-        {
-            Address oa, da; 
-            
-            AddressIdx(const Address& _oa, const Address& _da) 
-                : oa(_oa), da(_da) {};
-            AddressIdx(const AddressIdx& idx) 
-                : oa(idx.oa), da(idx.da) {};
 
-            static unsigned getStrHash(const char* key)
-            {
-                char* curr = (char *)key;
-                unsigned count = *curr;
-                while(*curr) {
-                  count += 37 * count + *curr; curr++;
-                }
-                count=(unsigned)(( ( count * (unsigned)19L ) + 
-                                   (unsigned)12451L ) % (unsigned)8882693L);
-                return count;
-            };
-            
-            inline AddressIdx& operator =(const AddressIdx& idx) {
-                oa = idx.oa; da = idx.da;
-                return (*this);
-            };
-            inline int operator ==(const AddressIdx& idx) {
-                return (oa == idx.oa && da == idx.da);
-            };
-        };
-        struct ComplexStIdx : public AddressIdx
-        {
-            EService st;
-
-            void setSt(const char* _st) {
-                st[0] = '\0';
-                if (_st) strncpy(st, _st, sizeof(st)-1);
-            };
-
-            ComplexStIdx(const Address& _oa, const Address& _da, 
-                         const char* _st) 
-                : AddressIdx(_oa, _da) { setSt(_st); };
-            ComplexStIdx(const ComplexStIdx& idx) 
-                : AddressIdx(idx) { setSt(idx.st); };
-            
-            inline ComplexStIdx& operator =(const ComplexStIdx& idx) {
-                AddressIdx::operator =(idx); setSt(idx.st);
-                return (*this);
-            };
-            inline int operator ==(const ComplexStIdx& idx) {
-                return (AddressIdx::operator ==(idx) && 
-                        strcmp(st, idx.st) == 0);
-            };
-            static inline unsigned int CalcHash(const ComplexStIdx& idx) {
-                char buff[128];
-                sprintf(buff, ".%d.%d.%s+.%d.%d.%s+%s", 
-                        idx.oa.type, idx.oa.plan, idx.oa.value,
-                        idx.da.type, idx.da.plan, idx.da.value, idx.st);
-                return AddressIdx::getStrHash(buff);
-            };
-        };
-        struct ComplexMrIdx : public AddressIdx
-        {
-            uint16_t mr;
-
-            ComplexMrIdx(const Address& _oa, const Address& _da, 
-                         uint16_t _mr) 
-                : AddressIdx(_oa, _da), mr(_mr) {};
-            ComplexMrIdx(const ComplexMrIdx& idx) 
-                : AddressIdx(idx), mr(idx.mr) {};
-                
-            inline ComplexMrIdx& operator =(const ComplexMrIdx& idx) {
-                AddressIdx::operator =(idx); mr = idx.mr;
-                return (*this);
-            };
-            inline int operator ==(const ComplexMrIdx& idx) {
-                return (AddressIdx::operator ==(idx) && 
-                        mr == idx.mr);
-            };
-            static inline unsigned int CalcHash(const ComplexMrIdx& idx) {
-                char buff[128];
-                sprintf(buff, ".%d.%d.%s+.%d.%d.%s+%d", 
-                        idx.oa.type, idx.oa.plan, idx.oa.value,
-                        idx.da.type, idx.da.plan, idx.da.value, idx.mr);
-                return AddressIdx::getStrHash(buff);
-            };
-        };
-
-        XHash<SMSId,        IdxSMS*, SMSIdIdx>      idCache;
-        XHash<ComplexMrIdx, IdxSMS*, ComplexMrIdx>  mrCache;
-        XHash<ComplexStIdx, IdxSMS*, ComplexStIdx>  stCache;
+        XHash<SMSId, IdxSMS*, SMSIdIdx> idCache;
 
     public:
 
         SmsCache(int capacity=0);
         virtual ~SmsCache();
 
+        void clean();
         bool delSms(SMSId id);
         void putSms(IdxSMS* sm);
-        
         SMS* getSms(SMSId id);
-        SMS* getSms(const Address& oa, const Address& da, 
-                    const char* svc, SMSId& id);
-        SMS* getSms(const Address& oa, const Address& da, 
-                    uint16_t mr, SMSId& id);
     };
 
-    typedef std::multimap<SMSId, UpdateRecord*> UpdatesIdMap;
+    //typedef std::multimap<SMSId, UpdateRecord*> UpdatesIdMap;
+    typedef Array<UpdateRecord *> UpdatesIdMap;
 
     class CachedStore : public RemoteStore, public Thread
     {
@@ -612,7 +522,13 @@ namespace smsc { namespace store
         SmsCache        cache;
         Mutex           cacheMutex;
 
-        UpdatesIdMap    updates;
+        Mutex           processUpdatesMutex;
+        Mutex           processingUpdatesMutex;
+        Mutex           updatesMutex;
+        bool            processingUpdates;
+        bool            switcher;
+        UpdatesIdMap    buffers[2]; 
+        UpdatesIdMap*   updates;
         
         int maxUncommitedCount, maxSleepInterval;
         void loadMaxUncommitedCount(Manager& config);
@@ -624,19 +540,17 @@ namespace smsc { namespace store
 
         static log4cpp::Category    &log;
         
-        inline SMS* _retriveSms(SMSId id)
+        void addUpdate(UpdateRecord* update)
             throw(StorageException, NoSuchMessageException);
-        
-        void addUpdate(SMSId id, UpdateRecord* update)
-            throw(StorageException, NoSuchMessageException);
-        void actualizeUpdate(SMSId id, UpdateRecord* update)
+
+        void actualizeCache(SMS* sm, UpdateRecord* update);
+        void actualizeUpdate(UpdateRecord* update)
             throw(StorageException, NoSuchMessageException);
         void processUpdate(StorageConnection* connection,
-                           SMSId id, UpdateRecord* update)
+                           UpdateRecord* update)
             throw(StorageException, NoSuchMessageException);
-        bool delUpdates(SMSId id);
         
-        void processUpdates(SMSId forId = 0);
+        void processUpdates();
 
     public:
 
@@ -648,8 +562,8 @@ namespace smsc { namespace store
         void Start();
         void Stop();
         
-        virtual SMSId createSms(SMS& sms, SMSId id,
-                                const CreateMode flag = CREATE_NEW)
+        virtual void createSms(SMS& sms, SMSId id,
+                               const CreateMode flag = CREATE_NEW)
                 throw(StorageException, DuplicateMessageException);
         virtual void retriveSms(SMSId id, SMS &sms)
                 throw(StorageException, NoSuchMessageException);
