@@ -111,29 +111,6 @@ PduMonitor* PduRegistry::getMonitor(uint32_t seqNum, MonitorType type) const
 	return (it == seqNumMap.end() ? NULL : it->second);
 }
 
-ResponseMonitor* PduRegistry::getResponseMonitor(uint32_t seqNum) const
-{
-	return reinterpret_cast<ResponseMonitor*>(getMonitor(seqNum, RESPONSE_MONITOR));
-}
-
-DeliveryMonitor* PduRegistry::getDeliveryMonitor(uint16_t msgRef) const
-{
-	PduMonitor* m = getMonitor(msgRef, DELIVERY_MONITOR);
-	return (m ? dynamic_cast<DeliveryMonitor*>(m) : NULL);
-}
-
-DeliveryReceiptMonitor* PduRegistry::getDeliveryReceiptMonitor(uint16_t msgRef) const
-{
-	PduMonitor* m = getMonitor(msgRef, DELIVERY_RECEIPT_MONITOR);
-	return (m ? dynamic_cast<DeliveryReceiptMonitor*>(m) : NULL);
-}
-
-SmeAckMonitor* PduRegistry::getSmeAckMonitor(uint16_t msgRef) const
-{
-	PduMonitor* m = getMonitor(msgRef, SME_ACK_MONITOR);
-	return (m ? dynamic_cast<SmeAckMonitor*>(m) : NULL);
-}
-
 void PduRegistry::removeMonitor(PduMonitor* monitor)
 {
 	__require__(monitor);

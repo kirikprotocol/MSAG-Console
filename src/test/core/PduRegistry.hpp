@@ -77,6 +77,12 @@ class PduRegistry
 	MsgRefMap msgRefMap;
 	TimeMap checkTimeMap;
 
+	PduMonitor* getMonitor(uint16_t msgRef, MonitorType type) const;
+	PduMonitor* getMonitor(uint32_t seqNum, MonitorType type) const;
+	void registerMonitor(uint32_t seqNum, PduMonitor* monitor);
+	void registerMonitor(uint16_t msgRef, PduMonitor* monitor);
+	void registerMonitor(time_t t, PduMonitor* monitor);
+
 public:
 	struct PduMonitorIterator
 	{
@@ -108,10 +114,24 @@ public:
 
 	void registerMonitor(PduMonitor* monitor);
 
-	ResponseMonitor* getResponseMonitor(uint32_t seqNum) const;
-	DeliveryMonitor* getDeliveryMonitor(uint16_t msgRef) const;
-	DeliveryReceiptMonitor* getDeliveryReceiptMonitor(uint16_t msgRef) const;
-	SmeAckMonitor* getSmeAckMonitor(uint16_t msgRef) const;
+#define __get_monitor_by_seq_num__(MonitorClass, MonitorType) \
+	MonitorClass* get##MonitorClass(uint32_t seqNum) const { \
+		PduMonitor* m = getMonitor(seqNum, MonitorType); \
+		return (m ? dynamic_cast<MonitorClass*>(m) : NULL); \
+	}
+
+#define __get_monitor_by_msg_reg__(MonitorClass, MonitorType) \
+	MonitorClass* get##MonitorClass(uint16_t msgRef) const { \
+		PduMonitor* m = getMonitor(msgRef, MonitorType); \
+		return (m ? dynamic_cast<MonitorClass*>(m) : NULL); \
+	}
+
+	__get_monitor_by_seq_num__(ResponseMonitor, RESPONSE_MONITOR)
+	__get_monitor_by_seq_num__(GenericNackMonitor, GENERIC_NACK_MONITOR)
+	__get_monitor_by_msg_reg__(DeliveryMonitor, DELIVERY_MONITOR)
+	__get_monitor_by_msg_reg__(DeliveryReceiptMonitor, DELIVERY_RECEIPT_MONITOR)
+	__get_monitor_by_msg_reg__(IntermediateNotificationMonitor, INTERMEDIATE_NOTIFICATION_MONITOR)
+	__get_monitor_by_msg_reg__(SmeAckMonitor, SME_ACK_MONITOR)
 
 	void removeMonitor(PduMonitor* monitor);
 
@@ -122,13 +142,6 @@ public:
 	int size() const;
 
 	void dump(FILE* log) const;
-
-protected:
-	PduMonitor* getMonitor(uint16_t msgRef, MonitorType type) const;
-	PduMonitor* getMonitor(uint32_t seqNum, MonitorType type) const;
-	void registerMonitor(uint32_t seqNum, PduMonitor* monitor);
-	void registerMonitor(uint16_t msgRef, PduMonitor* monitor);
-	void registerMonitor(time_t t, PduMonitor* monitor);
 };
 
 }
