@@ -82,7 +82,7 @@ void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
     }
     {
       char b[256] = {0,};
-      memcpy(b,xa_val,(ma->addrLen-1)*2);
+      memcpy(b,sa_val,(ma->addrLen-1)*2);
       __trace2__("MAP::ConvAddrMSISDN2Smc::adr value(%d) %s",(ma->addrLen-1)*2,b);
     }
     sa->setValue(ma->addrLen*2,sa_val);
