@@ -71,9 +71,10 @@ public class Options extends MCISmeBean
   private String  mciProfLocation = "";
   private String  mciHost = "";
   private int     mciPort = 0;
-  private String  mciNwt = "";
   private String  mciUsercode = "";
   private String  mciUserpassword = "";
+  private String  mciNvtIODevice = "";
+  private String  voiceMailAddress = "";
 
   private boolean initialized = false;
 
@@ -105,11 +106,12 @@ public class Options extends MCISmeBean
         try {
           mciProfLocation = getConfig().getString(MCI_PROF_LOCATION_PARAM);
           if (mciProfLocation != null && mciProfLocation.length() > 0) {
-            mciHost         = getConfig().getString("MCISme.MSC.host");
-            mciPort         = getConfig().getInt   ("MCISme.MSC.port");
-            mciNwt          = getConfig().getString("MCISme.MSC.NWT");
-            mciUsercode     = getConfig().getString("MCISme.MSC.usercode");
-            mciUserpassword = getConfig().getString("MCISme.MSC.userpassword");
+            mciHost          = getConfig().getString("MCISme.MSC.host");
+            mciPort          = getConfig().getInt   ("MCISme.MSC.port");
+            mciNvtIODevice   = getConfig().getString("MCISme.MSC.nvtIODevice");
+            mciUsercode      = getConfig().getString("MCISme.MSC.usercode");
+            mciUserpassword  = getConfig().getString("MCISme.MSC.userpassword");
+            voiceMailAddress = getConfig().getString("MCISme.VoiceMail");
           }
         } catch (Throwable th) {
           logger.warn("Parameter '"+MCI_PROF_LOCATION_PARAM+"' wasn't specified");
@@ -191,9 +193,10 @@ public class Options extends MCISmeBean
     if (mciProfLocation != null && mciProfLocation.trim().length() > 0) {
       getConfig().setString("MCISme.MSC.host", mciHost);
       getConfig().setInt   ("MCISme.MSC.port", mciPort);
-      getConfig().setString("MCISme.MSC.NWT" , mciNwt);
       getConfig().setString("MCISme.MSC.usercode", mciUsercode);
       getConfig().setString("MCISme.MSC.userpassword", mciUserpassword);
+      getConfig().setString("MCISme.MSC.nvtIODevice", mciNvtIODevice);
+      getConfig().setString("MCISme.VoiceMail", voiceMailAddress);
     }
 
     getConfig().setInt   ("MCISme.SMPPThreadPool.max", smppThreadPoolMax);
@@ -794,11 +797,11 @@ public class Options extends MCISmeBean
       logger.debug("Invalid int MCISme.MSC.port parameter value: \"" + mciPort + '"', e);
     }
   }
-  public String getMciNwt() {
-    return mciNwt;
+  public String getMciNvtIODevice() {
+    return mciNvtIODevice;
   }
-  public void setMciNwt(String mciNwt) {
-    this.mciNwt = mciNwt;
+  public void setMciNvtIODevice(String mciNvtIODevice) {
+    this.mciNvtIODevice = mciNvtIODevice;
   }
   public String getMciUsercode() {
     return mciUsercode;
@@ -812,5 +815,11 @@ public class Options extends MCISmeBean
   public void setMciUserpassword(String mciUserpassword) {
     this.mciUserpassword = mciUserpassword;
   }
-  
+
+  public String getVoiceMailAddress() {
+    return voiceMailAddress;
+  }
+  public void setVoiceMailAddress(String voiceMailAddress) {
+    this.voiceMailAddress = voiceMailAddress;
+  }
 }

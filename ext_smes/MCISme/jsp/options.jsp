@@ -215,6 +215,10 @@
   <td><input class=txt name=mciProfLocation value="<%=StringEncoderDecoder.encode(bean.getMciProfLocation())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th>VoiceMail address</th>
+  <td><input class=txt name=voiceMailAddress value="<%=StringEncoderDecoder.encode(bean.getVoiceMailAddress())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>MSC host</th>
   <td><input class=txt name=mciHost value="<%=StringEncoderDecoder.encode(bean.getMciHost())%>"></td>
 </tr>
@@ -223,8 +227,8 @@
   <td><input class=txt name=mciPort value="<%=StringEncoderDecoder.encode(bean.getMciPort())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>MSC NWT</th>
-  <td><input class=txt name=mciNwt value="<%=StringEncoderDecoder.encode(bean.getMciNwt())%>"></td>
+  <th>MSC NVT IO DEVICE</th>
+  <td><input class=txt name=mciNvtIODevice value="<%=StringEncoderDecoder.encode(bean.getMciNvtIODevice())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>MSC usercode</th>

@@ -163,11 +163,12 @@ public class Index extends IndexProperties
 
       Properties mscProperties = new Properties();
       mscProperties.setProperty("MCISme.Address"  , config.getString("MCISme.Address"));
+      mscProperties.setProperty("MCISme.VoiceMail", config.getString("MCISme.VoiceMail"));
       mscProperties.setProperty("MSC.host"        , config.getString("MCISme.MSC.host"));
       mscProperties.setProperty("MSC.port"        , ""+config.getInt("MCISme.MSC.port"));
-      mscProperties.setProperty("MSC.NWT"         , config.getString("MCISme.MSC.NWT"));
       mscProperties.setProperty("MSC.usercode"    , config.getString("MCISme.MSC.usercode"));
       mscProperties.setProperty("MSC.userpassword", config.getString("MCISme.MSC.userpassword"));
+      mscProperties.setProperty("MSC.nvtIODevice" , config.getString("MCISme.MSC.nvtIODevice"));
       savePropertiesFile(location, MCI_PROF_MSC_FILE, mscProperties, MCI_PROF_MSC_COMMENT);
 
       Properties mtfProperties = new Properties();
