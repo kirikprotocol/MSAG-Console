@@ -70,9 +70,14 @@ public:
 	void querySmIncorrect(bool sync, int num);
 
 	/**
-	 * Отмена существующего sms.
+	 * Отмена одиночной существующей sms.
 	 */
-	void cancelSmCorrect(bool sync, int num);
+	void cancelSmSingleCorrect(bool sync, int num);
+
+	/**
+	 * Отмена группы существующих sms.
+	 */
+	void cancelSmGroupCorrect(bool sync, int num);
 
 	/**
 	 * Отмена несуществующего sms.
@@ -116,6 +121,8 @@ protected:
 	PduData* getNonReplaceRescheduledEnrotePdu(bool deliveryReports);
 	PduData* getFinalPdu(bool deliveryReports);
 	PduData* getPduByState(State state);
+	PduData* getCancelSmGroupParams(bool checkServType, Address& srcAddr,
+		Address& destAddr, string& servType);
 	int getRandomRespDelay();
 };
 

@@ -228,7 +228,8 @@ int TestSmeFunc::Execute()
 	//seq.insert(seq.end(), 5, 6);
 	//seq.insert(seq.end(), 5, 7);
 	seq.insert(seq.end(), 1, 8);
-	seq.insert(seq.end(), 7, 9);
+	seq.insert(seq.end(), 1, 9);
+	seq.insert(seq.end(), 7, 10);
 	seq.push_back(51);
 	seq.push_back(52);
 	seq.push_back(53);
@@ -299,9 +300,12 @@ void TestSmeFunc::executeCycle()
 			protocolTc.querySmIncorrect(rand0(1), RAND_TC);
 			break;
 		case 8:
-			protocolTc.cancelSmCorrect(rand0(1), RAND_TC);
+			protocolTc.cancelSmSingleCorrect(rand0(1), RAND_TC);
 			break;
 		case 9:
+			protocolTc.cancelSmGroupCorrect(rand0(1), RAND_TC);
+			break;
+		case 10:
 			protocolTc.cancelSmIncorrect(rand0(1), RAND_TC);
 			break;
 		//profilerTc
