@@ -413,8 +413,17 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
     const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
     *pdu_ptr++ = text_len;
     pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr);
-    
   }else{ // UCS2
+    unsigned text_len;
+    const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+    if ( text_len > pdu_ptr-pdu->signalInfoLen ){
+      __trace2_("MAP::mkDeliverPDU:  UCS2 text length(%d) > pdu_ptr-pdu->signalInfoLen(%d)",
+                text_len,
+                pdu_ptr-pdu->signalInfoLen);
+      throw runtime_error("MAP::mkDeliverPDU:  UCS2 text length > pdu_ptr-pdu->signalInfoLen");
+    }
+    memcpy(pdu_ptr,text,text_len);
+    *pdu_ptr++ = text_len;
   }
   pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
   __trace2__("MAP::mkDeliverPDU: signalInfoLen 0x%x",pdu->signalInfoLen);
@@ -439,8 +448,10 @@ void MapDialog::Et96MapPAbortInd(
   ET96MAP_SOURCE_T source,
   UCHAR_T priorityOrder)
 {
+#if defined USE_MAP
   __trace2__("MAP::MapDialog::Et96MapPAbortInd");
   state = MAPST_READY_FOR_CLOSE;
+#endif
 }
 
 void MapDialog::Et96MapUAbortInd(
@@ -451,8 +462,10 @@ void MapDialog::Et96MapUAbortInd(
   ET96MAP_USERDATA_T *ud,
   UCHAR_T priorityOrder)
 {
+#if defined USE_MAP
   __trace2__("MAP::MapDialog::Et96MapUAbortInd");
   state = MAPST_READY_FOR_CLOSE;
+#endif
 }
 
 bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
@@ -501,11 +514,6 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
       __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq OK");
     	result = Et96MapDelimiterReq( SSN, dialogid, 0, 0 );
       __trace2__("MAP::send response to SMSC");
-      {
-        SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,0);
-        MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
-      }
-      __trace2__("MAP::send response to SMSC OK");
       //return true;// :) optimization
       return false;
     }catch(exception& e){
@@ -540,6 +548,48 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
 #endif
 }
 
+virtual void Et96MapV2ForwardSmMTConf (
+  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_DIALOGUE_ID_T dialogid,
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
+  ET96MAP_PROV_ERR_T *provErrCode_p)
+{
+#if defined USE_MAP
+  if ( !errForwardSMmt_sp && !provErrCode_p )
+  {
+    SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_OK);
+    MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+  }
+  else 
+  {
+    bool fatal = false;
+    switch( errorForwardSMmt_sp->errorCode ){
+    case 27: /*Absent*/
+    case 31: /*Busy*/
+      fatal = false;
+      break;
+    case 32: /*Delivery failure*/
+      fatal = false;
+      break;
+    case 34: /*System failure*/
+      fatal = false;
+      break;
+    default:
+      fatal = true;
+    }
+    SmscCommand cmd;
+    if ( fatal ) {
+      cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_FATAL);
+    }else{
+      cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_ERR_TEMP);
+    }
+    MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
+  }
+  __trace2__("MAP::send response to SMSC OK");
+#endif
+}
+
 USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
 				       ET96MAP_DIALOGUE_ID_T dialogueId,
 				       ET96MAP_INVOKE_ID_T invokeId,
@@ -569,8 +619,6 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
 #endif
   return ET96MAP_E_OK;
 }				       
-
-
 
 bool MapDialog::ProcessCmd(const SmscCommand& cmd){
 #if defined USE_MAP  
