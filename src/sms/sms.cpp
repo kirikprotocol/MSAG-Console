@@ -78,7 +78,7 @@ void Body::encode(uint8_t* buffer,int& length) const
           uint32_t len=htonl(prop.properties[i].bValue->length());
           memcpy(buffer+offset,&len,4);
           offset+=4;
-          __require__(offset<length);
+          __require__(offset+len<=length);
           len=prop.properties[i].bValue->length();
           memcpy(buffer+offset,prop.properties[i].bValue->c_str(),len);
           offset+=len;
