@@ -663,7 +663,7 @@ void MAPIO_PutCommand(const SmscCommand& cmd ){ MAPIO_PutCommand(cmd, 0 ); }
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
 {
-  __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);
+  //__trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);
   unsigned dialogid_smsc = cmd->get_dialogId();
   unsigned dialogid_map = 0;
   __trace2__(">>MAPPROXY::putCommand dialog:0x%x (state:NONE)",dialogid_smsc);
@@ -673,7 +673,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
       if ( cmd->get_commandId() != DELIVERY )
         throw MAPDIALOG_BAD_STATE("MAP::putCommand: must be SMS DELIVERY");
       try{
-        if ( cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP )
+        if ( cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) )
         {
           unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP )
           if ( serviceOp == USSD_PSSR /*_RESPONSE*/ ) 
