@@ -4,6 +4,10 @@
 
 #include "ConnectionManager.h"
 
+#ifndef DISABLE_TRACING
+#define DISABLE_TRACING
+#endif
+
 namespace smsc { namespace store 
 {
 
