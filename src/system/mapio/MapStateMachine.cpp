@@ -93,17 +93,21 @@ static void DropMapDialog_(unsigned dialogid){
   if ( dialogid == 0 ) return;
   DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid));
   if ( !dialog.isnull() ){
-    __trace2__("MAP::%s: 0x%x  (state CLOSED/ABORTED) /%d/",__FUNCTION__,dialog->dialogid_map,dialog->chain.size());
-    unsigned __dialogid_map = dialog->dialogid_map;
-    unsigned __dialogid_smsc = 0;
-    if ( dialog->chain.size() == 0 ) {
-      MapDialogContainer::getInstance()->dropDialog(dialogid);
-    }else {
-      SmscCommand cmd = dialog->chain.front();
-      dialog->chain.pop_front();
-      dialog->Clean();
-      MAPIO_PutCommand(cmd, dialog.get());
+    {
+      MutexGuard(dialog.mutex);
+      __trace2__("MAP::%s: 0x%x  (state CLOSED/ABORTED) /%d/",__FUNCTION__,dialog->dialogid_map,dialog->chain.size());
+      unsigned __dialogid_map = dialog->dialogid_map;
+      unsigned __dialogid_smsc = 0;
+      if ( dialog->chain.size() == 0 ) {
+        MapDialogContainer::getInstance()->dropDialog(dialogid);
+        __trace2__("MAP::%s: 0x%x - closed and droped - ",__FUNCTION__,__dialogid_map);
+        return;
+      }
     }
+    SmscCommand cmd = dialog->chain.front();
+    dialog->chain.pop_front();
+    dialog->Clean();
+    MAPIO_PutCommand(cmd, dialog.get());
   }
 }
 
@@ -429,7 +433,8 @@ static void TryDestroyDialog(unsigned dialogid)
       CloseMapDialog(dialog->dialogid_map);
     }
   }
-  MapDialogContainer::getInstance()->dropDialog(dialogid);
+  //MapDialogContainer::getInstance()->dropDialog(dialogid);
+  DropMapDialog(dialogid);
 }
 
 static string RouteToString(MapDialog* dialog)
