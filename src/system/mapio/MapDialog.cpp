@@ -379,7 +379,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   *pdu_ptr++ = (unsigned char)sms->getIntProperty(Tag::SMPP_PROTOCOL_ID);
   unsigned encoding = sms->getIntProperty(Tag::SMPP_DATA_CODING);
   if ( encoding == 0 ) *pdu_ptr++ = 0;
-  else if ( encoding == 0x08 ) *pdu_ptr++ = 0x04;
+  else if ( encoding == 0x08 ) *pdu_ptr++ = 0x08;
   else{
     __trace2__("MAP::mkDeliverPDU: unsuppprted encoding 0x%x",encoding);
     throw runtime_error("unsupported encoding");
@@ -425,8 +425,9 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
                 size_x);
       throw runtime_error("MAP::mkDeliverPDU:  UCS2 text length > pdu_ptr-pdu->signalInfoLen");
     }
-    memcpy(pdu_ptr,text,text_len);
+    memcpy(pdu_ptr+1,text,text_len);
     *pdu_ptr++ = text_len;
+    pdu_ptr += text_len;
   }
   pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
   __trace2__("MAP::mkDeliverPDU: signalInfoLen 0x%x",pdu->signalInfoLen);
