@@ -2402,6 +2402,11 @@ USHORT_T Et96MapPAbortInd(
       __require__(dialog->ssn==localSsn);
       dialogid_smsc = dialog->dialogid_smsc;
       dialog->id_opened = false;
+      if( dialog->isUSSD ) {
+        MutexGuard ussd_map_guard( ussd_map_lock );
+        __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
+        ussd_map.erase(dialog->ussdSequence);
+      }
       throw MAPDIALOG_TEMP_ERROR("PABORT",Status::MAP_PROVIDER_REASON_BASE+provReason);
     }
   }MAP_CATCH(dialogid_map,dialogid_smsc,localSsn);
