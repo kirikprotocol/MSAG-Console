@@ -1,7 +1,7 @@
 #ifndef TEST_DBSME_DBSME_TEST_CASES
 #define TEST_DBSME_DBSME_TEST_CASES
 
-#include "test/sme/SmppProtocolTestCases.hpp"
+#include "test/sme/SmppProfilerTestCases.hpp"
 #include "DbSmeRegistry.hpp"
 #include "DateFormatter.hpp"
 #include "DbSmeFormatJobTestCases.hpp"
@@ -19,24 +19,24 @@ using smsc::sme::SmeConfig;
 using smsc::smpp::PduSubmitSm;
 using smsc::smpp::PduDeliverySm;
 using smsc::test::sme::SmppFixture;
-using smsc::test::sme::SmppProtocolTestCases;
+using smsc::test::sme::SmppProfilerTestCases;
 using smsc::test::sme::SmeAcknowledgementHandler;
 using smsc::test::core::SmeAckMonitor;
 using smsc::test::core::PduData;
+using smsc::test::core::PduDataObject;
 
-struct DbSmeSimpleJobTestCases : public DbSmeJobTestCases
+struct DbSmeAck : public PduDataObject
 {
-	DbSmeSimpleJobTestCases(DbSmeRegistry* dbSmeReg, CheckList* chkList)
-		: DbSmeJobTestCases(dbSmeReg, chkList) {}
-	virtual const string processJobFirstOutput(const string& text,
-		DbSmeTestRecord* rec) { __unreachable__("Error"); }
+	string text;
+	uint8_t dataCoding;
+	DbSmeAck(const string& _text, uint8_t _dataCoding)
+		: text(_text), dataCoding(_dataCoding) {}
 };
 
 /**
  * Тест кейсы для db sme.
  */
-class DbSmeTestCases : public SmppProtocolTestCases,
-	public SmeAcknowledgementHandler
+class DbSmeTestCases : public SmppProfilerTestCases
 {
 public:
 	DbSmeTestCases(const SmeConfig& config, SmppFixture* fixture,
@@ -92,7 +92,6 @@ public:
 
 protected:
 	DbSmeRegistry* dbSmeReg;
-	DbSmeSimpleJobTestCases simpleTc;
 	DbSmeDateFormatJobTestCases dateFormatTc;
 	DbSmeOtherFormatJobTestCases otherFormatTc;
 	DbSmeInsertJobTestCases insertTc;
@@ -111,7 +110,9 @@ protected:
 		bool sync, uint8_t dataCoding);
 	void sendDbSmePdu(const string& text, const string& output,
 		bool sync, uint8_t dataCoding);
-	bool checkPdu(PduDeliverySm &pdu);
+	const string processJobFirstOutput(const string& text, DbSmeTestRecord* rec);
+	DbSmeAck* getExpectedResponse(SmeAckMonitor* monitor, PduDeliverySm &pdu,
+		const string& text);
 };
 
 }
