@@ -104,6 +104,7 @@ restart:
       warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
       bool ok = false;
       while ( !ok ){
+        if ( isStopping ) return;
         try{
           deinit();
           init(30);
