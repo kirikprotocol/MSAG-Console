@@ -12,6 +12,8 @@
     		<param name="dbInstance" type="string">ORCL</param>
 		<param name="dbUserName" type="string">smsc</param>
 		<param name="dbUserPassword" type="string">smsc</param>
+		<param name="interval" type="int">5000</param>
+		<param name="count" type="int">50000</param>
 	    </section>
 	    <section name="Connections">
 		<param name="max" type="int">5</param>
