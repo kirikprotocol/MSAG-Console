@@ -344,6 +344,8 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
     throw runtime_error("MAP::ConvAddrMap2Smc  ET96MAP_SM_RP_OA_T length should be greater than 0");
   }
 }
+inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
+{ConvAddrMSISDN2Smc((ET96MAP_SM_RP_OA_T*)ms,sa);}
 
 
 extern void CloseDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);

@@ -43,6 +43,7 @@ extern "C" {
 
 #define SSN 8
 #define USSD_SSN 6
+#define HLR_SSN 6
 
 enum MapState{
   MAPST_UNKNOWN = 0,
@@ -73,7 +74,10 @@ enum MapState{
   MAPST_ImsiWaitRInfo = 23,
   MAPST_ImsiWaitCloseInd = 24,
   MAPST_WaitImsiReq = 25,
-  MAPST_USSDWaitResponce = 26
+  MAPST_USSDWaitResponce = 26,
+  MAPST_WaitDelRepConf = 27,
+  MAPST_MTFINAL = 28,
+  MAPST_WaitDelClose = 29,
 };
 
 class hash_func_ET96MAP_DID{
@@ -90,6 +94,13 @@ void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
   \class MapDialog
 */
 struct MapDialog{
+  bool isUSSD:1;
+  bool mms:1;
+  bool hasIndAddress:1;
+  bool hasMwdStatus:1;
+  bool wasDelivered:1;
+  bool subscriberAbsent:1;
+  bool hlrWasNotified:1;
   Mutex mutex;
   MapState state;
   ET96MAP_DIALOGUE_ID_T dialogid_map;
@@ -106,29 +117,32 @@ struct MapDialog{
  	ET96MAP_SM_RP_DA_T smRpDa;
   ET96MAP_SM_RP_OA_T smRpOa;
   list<SmscCommand> chain;
-  bool mms;
   unsigned version;
+  unsigned hlrVersion;
   string s_imsi;
   string s_msc;
   MapDialog* associate;
-  bool isUSSD;
   ET96MAP_LOCAL_SSN_T ssn;
-  bool hasIndAddress;
   long long ussdSequence;
   unsigned ussdMrRef;
+  ET96MAP_MWD_STATUS_T mwdStatus;
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
+    isUSSD(false),
+    mms(false),
+    hasIndAddress(false),
+    hasMwdStatus(false),
+    wasDelivered(false),
+    subscriberAbsent(true);
+    hlrWasNotified(false,
     ref_count(1),
     state(MAPST_START), 
     dialogid_map(dialogid),
     dialogid_smsc(0),
-    mms(false),
     version(version),
     associate(0),
-    isUSSD(false),
     ssn(lssn),
-    hasIndAddress(false),
     ussdSequence(0),
     ussdMrRef(0)
 //    isMOreq(false),
