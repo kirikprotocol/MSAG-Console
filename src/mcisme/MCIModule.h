@@ -119,14 +119,14 @@ namespace smsc { namespace mcisme
         #ifdef MCI_MODULE_TEST
         void test()
         {
-            const int maxAbonents = 100; //1000000;
-            srandom((unsigned int)0xdeadbeaf);
+            const int maxAbonents = 100;
+            srandom((unsigned int)time(NULL)/*(unsigned int)0xdeadbeaf*/);
 
             MissedCallEvent event; char abonent[128]; Event sleepEvent;
             for (int i=0; i<maxAbonents && !isNeedExit(); i++)
             {
                 int number = (int)(random()%maxAbonents);
-                int caller = (int)(random()%maxAbonents);
+                int caller = (int)(maxAbonents - random()%maxAbonents);
                 event.time = time(NULL)+((int)random()%3600);
                 sprintf(abonent, "+79029%06d", number); event.to   = abonent;
                 sprintf(abonent, "+79029%06d", caller); event.from = abonent;
@@ -134,7 +134,7 @@ namespace smsc { namespace mcisme
                     MutexGuard guard(attachLock);
                     if (bAttached && listener) listener->missed(event);
                 }
-                sleepEvent.Wait(30); //300
+                sleepEvent.Wait(100); //300
             }
         }
         #endif

@@ -140,7 +140,7 @@ namespace smsc { namespace mcisme
         ThreadManager&  manager;
 
         int             seqNum;
-        bool            delivered, retry, immediate, replace, replace_failed;
+        bool            delivered, retry, immediate, cancel, cancel_failed;
         std::string     smscId;
 
     public:
@@ -149,10 +149,10 @@ namespace smsc { namespace mcisme
 
         EventRunner(EventMethod method, TaskProcessor& processor, ThreadManager& _manager,
                     int seqNum, bool accepted, bool retry, bool immediate, 
-                    bool replace, bool replace_failed, std::string smscId="")
+                    bool cancel, bool cancel_failed, std::string smscId="")
             : method(method), processor(processor), manager(_manager), seqNum(seqNum),
               delivered(accepted), retry(retry), immediate(immediate), 
-              replace(replace), replace_failed(replace_failed), smscId(smscId) 
+              cancel(cancel), cancel_failed(cancel_failed), smscId(smscId) 
         { 
             manager.newThread();
         };
@@ -160,7 +160,7 @@ namespace smsc { namespace mcisme
                     std::string smscId, bool delivered, bool retry)
             : method(method), processor(processor), manager(_manager), seqNum(0),
               delivered(delivered), retry(retry), immediate(false),
-              replace(false), replace_failed(false), smscId(smscId)
+              cancel(false), cancel_failed(false), smscId(smscId)
         {
             manager.newThread();
         };
@@ -222,10 +222,11 @@ namespace smsc { namespace mcisme
         Event           exitedEvent;
 
         EventMonitor                responcesMonitor;
-        IntHash<Message>            messages;
-        Hash<ReceiptData>           receipts;
-        CyclicQueue<ResponceTimer>  responceWaitQueue; // used for responce waiting after submit|replace
-        CyclicQueue<ReceiptTimer>   receiptWaitQueue;  // used for responce waiting after receipt come
+        Hash<bool>                  smscIds;            // unresponded smsc_ids
+        IntHash<Message>            messages;           // messages by sequence number
+        Hash<ReceiptData>           receipts;           // receipts by smsc_id
+        CyclicQueue<ResponceTimer>  responceWaitQueue;  // used for responce waiting after submit|cancel
+        CyclicQueue<ReceiptTimer>   receiptWaitQueue;   // used for responce waiting after receipt come
 
         int                       responceWaitTime, receiptWaitTime;
 
@@ -299,7 +300,7 @@ namespace smsc { namespace mcisme
 
         friend class EventRunner;
         virtual void processResponce(int seqNum, bool accepted, bool retry, bool immediate,
-                                     bool replace, bool replace_failed, std::string smscId="");
+                                     bool cancel, bool cancel_failed, std::string smscId="");
         virtual void processReceipt (std::string smscId, bool delivered, bool retry);
 
         void processReceipt(Task* task, bool delivered, bool retry, const char* smsc_id, uint64_t msg_id=0);
@@ -346,11 +347,11 @@ namespace smsc { namespace mcisme
         };
         
         virtual bool invokeProcessResponce(int seqNum, bool accepted, bool retry, bool immediate,
-                                           bool replace, bool replace_failed, std::string smscId="")
+                                           bool cancel, bool cancel_failed, std::string smscId="")
         {
             return eventManager.startThread(new EventRunner(processResponceMethod, *this, eventManager,
                                                             seqNum, accepted, retry, immediate, 
-                                                            replace, replace_failed, smscId));
+                                                            cancel, cancel_failed, smscId));
         };
         virtual bool invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
         {

@@ -31,6 +31,8 @@
 #include "TaskProcessor.h"
 #include "MCISmeComponent.h"
 
+#include "version.inc"
+
 using namespace smsc::sme;
 using namespace smsc::smpp;
 using namespace smsc::util;
@@ -243,16 +245,9 @@ public:
             return false;
         }
         
-        smsc_log_debug(logger, "%s%s message #%lld seqNum=%ld for %s: %s", (message.replace) ? "Replacing ":"Sending",
-                       (message.replace) ? message.smsc_id.c_str():"", message.id, seqNumber,
-                        message.abonent.c_str(), message.message.c_str());
+        smsc_log_debug(logger, "Sender: %s%s message #%lld seqNum=%ld for %s", (message.cancel) ? "Canceling ":"Sending",
+                       (message.cancel) ? message.smsc_id.c_str():"", message.id, seqNumber, message.abonent.c_str());
 
-/*        if (message.message.length() > MAX_ALLOWED_MESSAGE_LENGTH) {
-            smsc_log_error(logger, "Message #%lld to send is too large: len=%d, max=%d",
-                           message.id, message.message.length(), MAX_ALLOWED_MESSAGE_LENGTH);
-            return false;
-        }
-*/        
         Address oa, da;
         const char* oaStr = processor.getAddress(); // TODO: caller address for notifications
         if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
@@ -264,47 +259,22 @@ public:
             smsc_log_error(logger, "Invalid destination address '%s'", daStr ? daStr:"-");
             return false;
         }
-        time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
         
-        const int MAX_SMS_MESSAGE_LENGTH = 255;
-        int msgLen = message.message.length();
-        const char* msgBuf = message.message.c_str();
-        int MCISmeDataCoding = DataCoding::LATIN1;
-        
-        /*
-        int MCISmeDataCoding = DataCoding::UCS2;
-        int outLen = message.message.length();
-        int msgLen = outLen*2;
-        std::auto_ptr<char> msgBufGuard(new char[msgLen+2]);
-        char* msgBuf = msgBufGuard.get();
-        ConvertMultibyteToUCS2(message.message.c_str(), outLen, 
-                               (short *)msgBuf, msgLen, CONV_ENCODING_CP1251);
-        smsc_log_debug(logger, "1251 >> UCS2. Message %p Len:%d/%d",
-                       message.message.c_str(), outLen, msgLen);
-        short* msgBufConv = (short *)msgBuf;
-        for (int p=0; p<outLen; p++) msgBufConv[p] = htons(msgBufConv[p]);
-        */
-        
-        if (message.replace)
+        if (message.cancel)
         {
-            PduReplaceSm sm;
-            
+            //smsc_log_debug(logger, "CANCEL SMSC_ID=%s da=%s", message.smsc_id.c_str(), daStr);
+            PduCancelSm sm;
+
             sm.set_messageId(message.smsc_id.c_str());
             sm.get_source().set_typeOfNumber(oa.type);
             sm.get_source().set_numberingPlan(oa.plan);
             sm.get_source().set_value(oa.value);
-            char timeBuffer[64];
-            cTime2SmppTime(smsValidityDate, timeBuffer);
-            sm.set_validityPeriod(timeBuffer);
-            cTime2SmppTime(time(NULL)+60*message.attempts, timeBuffer);
-            sm.set_scheduleDeliveryTime(timeBuffer);
-            sm.set_registredDelivery(1);
-            sm.set_smDefaultMsgId(0);
-            sm.set_shortMessage(msgBuf, (msgLen > MAX_SMS_MESSAGE_LENGTH) ? 
-                                MAX_SMS_MESSAGE_LENGTH:msgLen);
+            sm.get_dest()  .set_typeOfNumber(da.type);
+            sm.get_dest()  .set_numberingPlan(da.plan);
+            sm.get_dest()  .set_value(da.value);
             
             sm.get_header().set_commandLength(sm.size());
-            sm.get_header().set_commandId(SmppCommandSet::REPLACE_SM);
+            sm.get_header().set_commandId(SmppCommandSet::CANCEL_SM);
             sm.get_header().set_commandStatus(0);
             sm.get_header().set_sequenceNumber(seqNumber);
             
@@ -312,12 +282,25 @@ public:
         }
         else
         {
-            PduSubmitSm  sm;
+            int outLen = message.message.length();
+            int msgLen = outLen*2;
+            std::auto_ptr<char> msgBufGuard(new char[msgLen+2]);
+            char* msgBuf = msgBufGuard.get();
+            ConvertMultibyteToUCS2(message.message.c_str(), outLen, 
+                                   (short *)msgBuf, msgLen, CONV_ENCODING_CP1251);
+            /*smsc_log_debug(logger, "1251 >> UCS2. Message %p Len:%d/%d",
+                           message.message.c_str(), outLen, msgLen);*/
+            short* msgBufConv = (short *)msgBuf;
+            for (int p=0; p<outLen; p++) msgBufConv[p] = htons(msgBufConv[p]);
+
+            time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
             
             EService svcType;
             strncpy(svcType, processor.getSvcType(), MAX_ESERVICE_TYPE_LENGTH);
             svcType[MAX_ESERVICE_TYPE_LENGTH]='\0';
-                
+
+            PduSubmitSm  sm;
+            
             sm.get_message().set_serviceType(svcType);
             sm.get_message().get_source().set_typeOfNumber(oa.type);
             sm.get_message().get_source().set_numberingPlan(oa.plan);
@@ -337,9 +320,18 @@ public:
             sm.get_message().set_replaceIfPresentFlag(0);
 
             sm.get_message().set_smDefaultMsgId(0);
-            sm.get_message().set_dataCoding(MCISmeDataCoding);
-            sm.get_message().set_shortMessage(msgBuf, (msgLen > MAX_SMS_MESSAGE_LENGTH) ? 
-                                              MAX_SMS_MESSAGE_LENGTH:msgLen);
+            sm.get_message().set_dataCoding(DataCoding::UCS2);
+            
+            if (msgLen > MAX_ALLOWED_MESSAGE_LENGTH)
+            {
+                if (msgLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
+                    smsc_log_error(logger, "Message #%lld is too large to send (%d bytes)", message.id, msgLen);
+                    return false;
+                }
+                sm.get_optional().set_payloadType(0);
+                sm.get_optional().set_messagePayload(msgBuf, msgLen);
+            } 
+            else sm.get_message().set_shortMessage(msgBuf, msgLen);
             
             sm.get_header().set_commandLength(sm.size(false));
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
@@ -347,9 +339,8 @@ public:
             sm.get_header().set_sequenceNumber(seqNumber);
             
             asyncTransmitter->sendPdu(&(sm.get_header()));
+            TrafficControl::incOutgoing();
         }
-        
-        TrafficControl::incOutgoing();
         return true;
     }
 };
@@ -376,7 +367,7 @@ public:
         asyncTransmitter = transmitter;
     }
     
-    void processResponce(SmppHeader *pdu, bool replace)
+    void processResponce(SmppHeader *pdu, bool cancel)
     {
         if (!pdu) return;
         
@@ -384,8 +375,8 @@ public:
         int status = pdu->get_commandStatus();
         
         bool accepted       = (status == Status::OK);
-        bool replace_failed = (replace && (status == Status::REPLACEFAIL));
-        bool retry          = (replace_failed) ? false:(!accepted && !Status::isErrorPermanent(status));
+        bool cancel_failed  = (cancel && (status == Status::CANCELFAIL));
+        bool retry          = (cancel_failed) ? false:(!accepted && !Status::isErrorPermanent(status));
         
         bool immediate      = (status == Status::MSGQFUL   ||
                                status == Status::THROTTLED ||
@@ -398,17 +389,17 @@ public:
                                status == Status::SMENOTCONNECTED           ||
                                status == Status::SYSFAILURE);
 
-        if (!trafficst) TrafficControl::incIncoming();
+        if (!trafficst && !cancel) TrafficControl::incIncoming();
 
         std::string msgId = ""; 
-        if (!replace) {
+        if (!cancel) {
             const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
             if (!msgid || msgid[0] == '\0') accepted = false;
             else msgId = msgid;
         }
 
         processor.invokeProcessResponce(seqNum, accepted, retry, immediate,
-                                        replace, replace_failed, msgId);
+                                        cancel, cancel_failed, msgId);
     }
 
     void processReceipt (SmppHeader *pdu)
@@ -482,7 +473,7 @@ public:
         case SmppCommandSet::DELIVERY_SM:
             processReceipt(pdu);
             break;
-        case SmppCommandSet::REPLACE_SM_RESP:
+        case SmppCommandSet::CANCEL_SM_RESP:
             processResponce(pdu, true);
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
@@ -604,6 +595,8 @@ int main(void)
     int resultCode = 0;
     try 
     {
+        smsc_log_info(logger, getStrVersion());
+
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
 

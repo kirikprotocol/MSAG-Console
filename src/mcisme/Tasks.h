@@ -37,7 +37,7 @@ namespace smsc { namespace mcisme
         uint64_t    id;
         uint32_t    attempts;
         std::string abonent, message, smsc_id;
-        bool        replace, notification;
+        bool        cancel, notification;
         int         rowsCount, eventsCount;
 
         static int  maxRowsPerMessage;
@@ -45,20 +45,20 @@ namespace smsc { namespace mcisme
         Message() { reset(); };
         Message(const Message& msg) 
             : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
-              smsc_id(msg.smsc_id), replace(msg.replace), notification(msg.notification),
+              smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification),
               rowsCount(msg.rowsCount), eventsCount(msg.eventsCount) {};
         
         Message& operator=(const Message& msg) {
             id = msg.id; attempts = msg.attempts;
             abonent = msg.abonent; message = msg.message; smsc_id = msg.smsc_id; 
-            replace = msg.replace; notification = msg.notification;
+            cancel = msg.cancel; notification = msg.notification;
             rowsCount = msg.rowsCount; eventsCount  = msg.eventsCount; 
             return (*this);
         };
 
         inline void reset(const std::string& _abonent="") {
             id = 0; attempts = 0; this->abonent = _abonent;
-            message = ""; smsc_id = ""; replace = false; notification = false;
+            message = ""; smsc_id = ""; cancel = false; notification = false;
             rowsCount = 0; eventsCount = 0; 
         };
         inline bool isFull() {
@@ -85,11 +85,15 @@ namespace smsc { namespace mcisme
         void formatMessage(Message& message);
     };
 
-    static const uint8_t MESSAGE_WAIT_RESP  = 10; // Ожидает submit|replace responce или готова к доставке
-    static const uint8_t MESSAGE_WAIT_RCPT  = 20; // Ожидает delivery reciept
+    static const uint8_t MESSAGE_UNKNOWNST  =  0; // Неизвестное состояние
+    static const uint8_t MESSAGE_WAIT_RESP  = 10; // Ожидает submit responce или готова к отправке
+    static const uint8_t MESSAGE_WAIT_CNCL  = 20; // Ожидает cancel responce или готова к отмене
+    static const uint8_t MESSAGE_WAIT_RCPT  = 30; // Ожидает delivery reciept
 
     typedef enum {
+        UNKNOWNST   = MESSAGE_UNKNOWNST,
         WAIT_RESP   = MESSAGE_WAIT_RESP,
+        WAIT_CNCL   = MESSAGE_WAIT_CNCL,
         WAIT_RCPT   = MESSAGE_WAIT_RCPT
     } MessageState;
 
@@ -126,12 +130,13 @@ namespace smsc { namespace mcisme
         static DataSource*  ds;
         static Statistics*  statistics;
         static Logger*      logger;
-        static uint64_t     currentId, sequenceId;
+        static uint64_t     currentId, sequenceId; // id generation sequence control
         
-        bool                bNeedReplace;
-        std::string         abonent, cur_smsc_id;
         uint64_t            currentMessageId;
+        MessageState        currentMessageState;
+        std::string         abonent, cur_smsc_id;
         Array<TaskEvent>    events;
+        int                 newEventsCount;
 
         void loadup(uint64_t currId, Connection* connection=0); // used from loadup() & loadupAll()
         void doWait(Connection* connection, const char* smsc_id, const MessageState& state);
@@ -152,13 +157,18 @@ namespace smsc { namespace mcisme
         static AbonentProfile getProfile(const char* abonent);
 
         Task(const std::string& _abonent)  
-            : bNeedReplace(false), abonent(_abonent), cur_smsc_id(""), currentMessageId(0) {};
+            : currentMessageId(0), currentMessageState(UNKNOWNST),
+              abonent(_abonent), cur_smsc_id(""), newEventsCount(0) {};
         virtual ~Task() {};
         
         void loadup();
 
-        inline int eventsCount() { return events.Count(); };
+        inline int getEventsCount() { return events.Count(); };
+        inline int getNewEventsCount() { return newEventsCount; };
         inline const std::string& getAbonent() { return abonent; };
+        inline const std::string& getCurrentSmscId() { return cur_smsc_id; };
+        inline uint64_t getCurrentMessageId() { return currentMessageId; };
+        inline const MessageState getCurrentState() { return currentMessageState; };
         
         // Adds new event to chain & inserts inassigned event to DB
         void addEvent(const MissedCallEvent& event);
@@ -170,8 +180,9 @@ namespace smsc { namespace mcisme
         // Returns set of deleted events (for notification(s) processing) by caller
         Array<std::string> finalizeMessage(const char* smsc_id, bool delivered, bool retry, uint64_t msg_id=0);
 
-        void waitResponce(const char* smsc_id); // Makes current message WAIT_RESP & set smsc_id
+        void waitCancel  (const char* smsc_id); // Makes current message WAIT_CNCL & set smsc_id
         void waitReceipt (const char* smsc_id); // Makes current message WAIT_RCPT & set smsc_id
+        void waitResponce();                    // Makes current message WAIT_RESP & set smsc_id to null
 
         // Makes current message WAIT_RCPT & create new current message & shifts task events by eventCount
         void waitReceipt(int eventCount, const char* smsc_id);

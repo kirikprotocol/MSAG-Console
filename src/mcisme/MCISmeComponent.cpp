@@ -39,7 +39,7 @@ Variant MCISmeComponent::call(const Method& method, const Arguments& args)
 {
     try 
     {
-        smsc_log_debug(logger, "call \"%s\"", method.getName());
+        //smsc_log_debug(logger, "call \"%s\"", method.getName());
         
         switch (method.getId())
         {
