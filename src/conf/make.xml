@@ -13,7 +13,7 @@
       <arg line="${MAKE_ARGS} ${targets}"/>
       <env key="SMSC_SRCDIR" value="${SRC_DIR}"/>
       <env key="SMSC_BUILDDIR" value="${BUILD_DIR}"/>
-      <env key="ORACLE_LIB" value="${ORACLE_HOME}/${ORALIB_SUBDIR}"/> 
+      <env key="ORACLE_LIB" value="${env.ORACLE_HOME}/${ORALIB_SUBDIR}"/>
     </exec>
   </target>
 </project>  
