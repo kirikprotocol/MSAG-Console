@@ -41,7 +41,8 @@ public class ProfileAddCommand extends ProfileGenCommand
       if (!ctx.getSmsc().isLocaleRegistered(locale))
         throw new Exception("Locale '" + locale + "' is not registered");
 
-      Profile profile = new Profile(profileMask, codepage, report, locale, aliasHide, aliasModifiable,
+      Profile profile = new Profile(profileMask, codepage, ussd7bit, report, locale,
+                                    aliasHide, aliasModifiable,
                                     divert, divertActive, divertModifiable);
       switch (ctx.getSmsc().profileUpdate(profileMask, profile))
       {

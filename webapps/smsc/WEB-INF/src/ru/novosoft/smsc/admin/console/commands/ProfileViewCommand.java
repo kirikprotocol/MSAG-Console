@@ -29,7 +29,7 @@ public class ProfileViewCommand implements Command
     return "Profile '"+profile.getMask().getMask()+"'"+
            " Report: "+profile.getReportOptionsString()+
            " Locale: "+profile.getLocale()+
-           " Encoding: "+profile.getCodepageString()+
+           " Encoding: "+profile.getCodepageString()+((profile.isUssd7bit()) ? " ussd7bit":"")+
            " Alias: "+(profile.isAliasHide() ? "hide":"nohide")+
            ", "+(profile.isAliasModifiable() ? "modifiable":"nomodifiable")+
            " Divert: "+((divert == null || divert.length() <= 0) ? "-":divert)+

@@ -458,18 +458,29 @@ profile_alias_opt[ProfileGenCommand cmd] {
 	catch [RecognitionException ex] {
            throw new RecognitionException("Profile alias options expected. Syntax: [hide|nohide] [modifiable|notmodifiable]");
 	}
-
+profile_encode_opt[ProfileGenCommand cmd] {
+    cmd.setUssd7Bit(false);
+}
+	:	(OPT_ENCODE (VAL_DEF        { cmd.setGsm7Encoding(); }
+			    |VAL_UCS2       { cmd.setUcs2Encoding(); }
+			    |VAL_LATIN1     { cmd.setLatin1Encoding(); }
+			    |VAL_UCS2LATIN1 { cmd.setUcs2Latin1Encoding(); })
+			    (OPT_USSD7BIT   { cmd.setUssd7Bit(true); })?
+		)?
+	;
+	exception
+	catch [RecognitionException ex] {
+           throw new RecognitionException("Profile encode options expected. Syntax: (default|ucs2|latin1|ucs2&latin1) [ussd7bit]");
+	}
+    
 addprofile returns [ProfileAddCommand cmd] {
     cmd = new ProfileAddCommand();
 }
 	:	(mask:STR  { cmd.setMask(mask.getText());    })
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))
-		(OPT_LOCALE {
-		    cmd.setLocale(getnameid("Locale name"));
-		})
-		(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding(); }
-			    |VAL_UCS2 { cmd.setUcs2Encoding(); }) )?
+		(OPT_LOCALE { cmd.setLocale(getnameid("Locale name")); } )
+		(OPT_ENCODE profile_encode_opt[cmd] )?
 		(TGT_ALIAS  profile_alias_opt[cmd]  )?
 		(OPT_DIVERT  { cmd.setDivertOptions(true); }
 			    ({ cmd.setDivert(getnameid("Divert value")); })
@@ -483,14 +494,11 @@ addprofile returns [ProfileAddCommand cmd] {
 altprofile returns [ProfileAlterCommand cmd] {
     cmd = new ProfileAlterCommand();
 }
-	:	(addr:STR  { cmd.setAddress(addr.getText()); })
+	:	(addr:STR   { cmd.setAddress(addr.getText()); })
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
 			   | VAL_NONE { cmd.setNoneReport(); } ))?
-		(OPT_LOCALE {
-		    cmd.setLocale(getnameid("Locale name"));
-		})?
-		(OPT_ENCODE (VAL_DEF  { cmd.setGsm7Encoding(); }
-			    |VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
+		(OPT_LOCALE { cmd.setLocale(getnameid("Locale name")); } )?
+		(OPT_ENCODE profile_encode_opt[cmd] )?
 		(TGT_ALIAS  profile_alias_opt[cmd]  )?
 		(OPT_DIVERT { cmd.setDivertOptions(true); }
 			    ((OPT_SET   { cmd.setDivert(getnameid("Divert value")); })|

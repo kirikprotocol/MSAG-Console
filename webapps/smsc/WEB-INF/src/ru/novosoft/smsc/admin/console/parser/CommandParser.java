@@ -640,35 +640,14 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		{
 		match(OPT_LOCALE);
-		
-				    cmd.setLocale(getnameid("Locale name"));
-				
+		cmd.setLocale(getnameid("Locale name"));
 		}
 		{
 		switch ( LA(1)) {
 		case OPT_ENCODE:
 		{
 			match(OPT_ENCODE);
-			{
-			switch ( LA(1)) {
-			case VAL_DEF:
-			{
-				match(VAL_DEF);
-				cmd.setGsm7Encoding();
-				break;
-			}
-			case VAL_UCS2:
-			{
-				match(VAL_UCS2);
-				cmd.setUcs2Encoding();
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
+			profile_encode_opt(cmd);
 			break;
 		}
 		case EOF:
@@ -1481,9 +1460,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_LOCALE:
 		{
 			match(OPT_LOCALE);
-			
-					    cmd.setLocale(getnameid("Locale name"));
-					
+			cmd.setLocale(getnameid("Locale name"));
 			break;
 		}
 		case EOF:
@@ -1504,26 +1481,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_ENCODE:
 		{
 			match(OPT_ENCODE);
-			{
-			switch ( LA(1)) {
-			case VAL_DEF:
-			{
-				match(VAL_DEF);
-				cmd.setGsm7Encoding();
-				break;
-			}
-			case VAL_UCS2:
-			{
-				match(VAL_UCS2);
-				cmd.setUcs2Encoding();
-				break;
-			}
-			default:
-			{
-				throw new NoViableAltException(LT(1), getFilename());
-			}
-			}
-			}
+			profile_encode_opt(cmd);
 			break;
 		}
 		case EOF:
@@ -2588,6 +2546,94 @@ public CommandParser(ParserSharedInputState state) {
 		}
 	}
 	
+	public final void profile_encode_opt(
+		ProfileGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		
+		cmd.setUssd7Bit(false);
+		
+		
+		try {      // for error handling
+			{
+			switch ( LA(1)) {
+			case OPT_ENCODE:
+			{
+				match(OPT_ENCODE);
+				{
+				switch ( LA(1)) {
+				case VAL_DEF:
+				{
+					match(VAL_DEF);
+					cmd.setGsm7Encoding();
+					break;
+				}
+				case VAL_UCS2:
+				{
+					match(VAL_UCS2);
+					cmd.setUcs2Encoding();
+					break;
+				}
+				case VAL_LATIN1:
+				{
+					match(VAL_LATIN1);
+					cmd.setLatin1Encoding();
+					break;
+				}
+				case VAL_UCS2LATIN1:
+				{
+					match(VAL_UCS2LATIN1);
+					cmd.setUcs2Latin1Encoding();
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				{
+				switch ( LA(1)) {
+				case OPT_USSD7BIT:
+				{
+					match(OPT_USSD7BIT);
+					cmd.setUssd7Bit(true);
+					break;
+				}
+				case EOF:
+				case TGT_ALIAS:
+				case OPT_DIVERT:
+				{
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case TGT_ALIAS:
+			case OPT_DIVERT:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("Profile encode options expected. Syntax: (default|ucs2|latin1|ucs2&latin1) [ussd7bit]");
+				
+		}
+	}
+	
 	public final ProfileDeleteCommand  delprofile() throws RecognitionException, TokenStreamException {
 		ProfileDeleteCommand cmd;
 		
@@ -2665,10 +2711,13 @@ public CommandParser(ParserSharedInputState state) {
 		"\"srcsme\"",
 		"\"set\"",
 		"\"clear\"",
+		"\"ussd7bit\"",
 		"\"full\"",
 		"\"none\"",
-		"\"ucs2\"",
 		"\"default\"",
+		"\"ucs2\"",
+		"\"latin1\"",
+		"\"ucs2&latin1\"",
 		"\"store\"",
 		"\"forward\"",
 		"\"datagram\"",

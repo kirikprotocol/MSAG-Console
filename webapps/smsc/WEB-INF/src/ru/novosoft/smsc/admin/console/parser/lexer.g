@@ -64,11 +64,14 @@ tokens {
   OPT_SRCSME    = "srcsme"	 ;
   OPT_SET       = "set"	         ;
   OPT_CLEAR	= "clear"	 ;
-
+  OPT_USSD7BIT	= "ussd7bit"	 ;
+  
   VAL_FULL	= "full"	 ;
   VAL_NONE	= "none"	 ;
-  VAL_UCS2	= "ucs2"	 ;
   VAL_DEF	= "default"	 ;
+  VAL_UCS2	= "ucs2"	 ;
+  VAL_LATIN1	= "latin1"	 ;
+  VAL_UCS2LATIN1= "ucs2&latin1"	 ;
   VAL_STORE	= "store"	 ;
   VAL_FORWARD	= "forward"	 ;
   VAL_DATAGRAM  = "datagram"	 ;  

@@ -48,18 +48,21 @@ OPT_FWD="fwd"=48
 OPT_SRCSME="srcsme"=49
 OPT_SET="set"=50
 OPT_CLEAR="clear"=51
-VAL_FULL="full"=52
-VAL_NONE="none"=53
-VAL_UCS2="ucs2"=54
+OPT_USSD7BIT="ussd7bit"=52
+VAL_FULL="full"=53
+VAL_NONE="none"=54
 VAL_DEF="default"=55
-VAL_STORE="store"=56
-VAL_FORWARD="forward"=57
-VAL_DATAGRAM="datagram"=58
-WS=59
-STR("more input")=60
-QSTR("quoted string")=61
-STR_WS=62
-STR_CHR=63
-COMMA("comma character ','")=64
-ESC=65
-DIGIT=66
+VAL_UCS2="ucs2"=56
+VAL_LATIN1="latin1"=57
+VAL_UCS2LATIN1="ucs2&latin1"=58
+VAL_STORE="store"=59
+VAL_FORWARD="forward"=60
+VAL_DATAGRAM="datagram"=61
+WS=62
+STR("more input")=63
+QSTR("quoted string")=64
+STR_WS=65
+STR_CHR=66
+COMMA("comma character ','")=67
+ESC=68
+DIGIT=69

@@ -14,6 +14,8 @@ public abstract class ProfileGenCommand implements Command
 {
   protected byte    report = Profile.REPORT_OPTION_None;
   protected byte    codepage = Profile.CODEPAGE_Default;
+  protected boolean ussd7bit = false;
+
   protected boolean aliasHide = false;
   protected boolean aliasModifiable = false;
   protected String  divert = "";
@@ -47,6 +49,15 @@ public abstract class ProfileGenCommand implements Command
   }
   public void setUcs2Encoding() {
     this.codepage = Profile.CODEPAGE_UCS2; isCodepage = true;
+  }
+  public void setLatin1Encoding() {
+    this.codepage = Profile.CODEPAGE_Latin1; isCodepage = true;
+  }
+  public void setUcs2Latin1Encoding() {
+    this.codepage = Profile.CODEPAGE_UCS2AndLatin1; isCodepage = true;
+  }
+  public void setUssd7Bit(boolean ussd7bit) {
+    this.ussd7bit = ussd7bit;
   }
 
   public void setAliasHide(boolean aliasHide) {
