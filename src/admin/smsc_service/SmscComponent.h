@@ -9,6 +9,8 @@
 #include <core/synchronization/Mutex.hpp>
 #include <util/Logger.h>
 #include <system/smsc.hpp>
+#include <admin/util/SignalHandler.h>
+#include <signal.h>
 
 namespace smsc {
 namespace admin {
@@ -93,7 +95,8 @@ private:
 	{
 	public:
 		SmscAppRunner(SmscConfigs &configs)
-			: _app(new Smsc())
+			: _app(new Smsc()),
+        runner_logger(Logger::getCategory("smsc.admin.smsc_service.SmscComponent.SmscAppRunner"))
 		{
 			_app->init(configs);
 		}
@@ -114,11 +117,17 @@ private:
 			}catch(std::exception& e)
 			{
 				fprintf(stderr,"top level exception: %s\n",e.what());
+        runner_logger.error("SMSC execution exception: \"%s\", SMSC stopped.", e.what());
+        //_app->shutdown();
+        sigsend(P_PID, getpid(), smsc::admin::util::SignalHandler::SHUTDOWN_SIGNAL);
 				return (-1);
 			}
 			catch(...)
 			{
 				fprintf(stderr,"FATAL EXCEPTION!\n");
+        runner_logger.error("SMSC execution unknown exception.");
+        //_app->shutdown();
+        sigsend(P_PID, getpid(), smsc::admin::util::SignalHandler::SHUTDOWN_SIGNAL);
 				return (-0);
 			}
 	
@@ -133,6 +142,7 @@ private:
 	
 	protected:
 		std::auto_ptr<Smsc> _app;
+    log4cpp::Category &runner_logger;
 	};
 
 protected:
