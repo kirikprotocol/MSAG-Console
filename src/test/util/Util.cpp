@@ -46,6 +46,22 @@ int rand1(int maxValue)
 
 static string randChars = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
+double randDouble(int digits, int precision)
+{
+	__require__(digits > 0 && precision >= 0 && digits >= precision);
+	char tmp[digits + 3]; //sign + point + null terminator
+	tmp[0] = rand0(1) ? '+' : '-';
+	for (int i = 1; i <= digits + 1; i++)
+	{
+		tmp[i] = randChars[rand0(9)];
+	}
+	tmp[digits - precision + 1] = '.';
+	tmp[digits + 2] = 0;
+	double val;
+	sscanf(tmp, "%lf", &val);
+	return val;
+}
+
 auto_ptr<uint8_t> rand_uint8_t(int length)
 {
 	uint8_t* res = new uint8_t[length];

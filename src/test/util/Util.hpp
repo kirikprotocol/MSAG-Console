@@ -43,6 +43,8 @@ int rand0(int maxValue);
 
 int rand1(int maxValue);
 
+double randDouble(int digits, int precision);
+
 std::auto_ptr<uint8_t> rand_uint8_t(int length);
 void rand_uint8_t(int length, uint8_t* buf);
 
