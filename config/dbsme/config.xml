@@ -13,21 +13,7 @@
     
     <section name="DBSme">
 
-        <section name="MessageSet">
-	    <param name="PROVIDER_NOT_FOUND" type="string">DataProvider not found!</param>
-	    <param name="JOB_NOT_FOUND" type="string">Job not found!</param>
-	    
-	    <param name="DS_FAILURE" type="string">Problem with DataSource!</param>
-	    <param name="DS_CONNECTION_LOST" type="string">Connection to DataSource lost!</param>
-	    <param name="DS_STATEMENT_FAIL" type="string">Failed to create SQL statement!</param>
-	    
-	    <param name="QUERY_NULL" type="string">Query result is NULL!</param>
-	    <param name="INPUT_PARSE" type="string">Input parsing error!</param>
-	    <param name="OUTPUT_FORMAT" type="string">Output formatting error!</param>
-	    <param name="INVALID_CONFIG" type="string">Configuration is invalid!</param>
-	</section>
-	
-	<param name="SvcType" type="string">DBSme</param>
+        <param name="SvcType" type="string">DBSme</param>
         <param name="ProtocolId" type="int">111</param>
         
         <section name="ThreadPool">
@@ -58,7 +44,43 @@
             
                 <section name="Jobs">
                 
-                    <section name="DefautJob">
+                    <section name="ProcTestJob">
+                        <param name="name" type="string">ProcTest</param>
+                        <param name="type" type="string">pl/sql-job</param>
+                        <param name="function" type="bool">false</param>
+			<param name="commit" type="bool">true</param>
+                        <param name="sql" type="string">
+                            raiseAccount(:arg1, :arg2, :arg3);
+                        </param>
+                        <param name="input" type="string">
+			    $$string arg="Arg1" default="222"$$
+			    $$int32 arg="arg2" default=100$$
+			</param>
+<param name="output" type="string">
+$$string import="job-name"$$ PL/SQL Job called!
+Account is: $$int32 arg="ArG3" default="hz"$$
+</param>
+			
+		    </section>
+		    
+                    <section name="FuncTestJob">
+                        <param name="name" type="string">FuncTest</param>
+                        <param name="type" type="string">pl/sql-job</param>
+                        <param name="function" type="bool">true</param>
+			<param name="commit" type="bool">false</param>
+                        <param name="sql" type="string">
+                            getAccount(:address);
+                        </param>
+                        <param name="input" type="string">
+			    $$string arg="Address" default="222"$$
+			</param>
+<param name="output" type="string">
+$$string import="job-name"$$ PL/SQL Job called!
+Account is: $$int32 arg="rEtUrN" default="hz"$$
+</param>
+		    </section>
+		    
+		    <section name="DefautJob">
                         <param name="name" type="string">default</param>
                         <param name="type" type="string">sql-job</param>
                         <param name="query" type="bool">false</param>
