@@ -31,14 +31,15 @@ namespace smsc { namespace store
         friend class ConnectionPool;
 
     private:
-
-        Connection* next;
-
+        
+        log4cpp::Category      &log;
+        
         static Mutex    connectLock;
+
+        Connection*     next;
         Mutex           mutex;
 
         bool    isConnected, isDead;
-        log4cpp::Category      &log;
         
         const char* dbInstance;
         const char* dbUserName;
@@ -60,7 +61,7 @@ namespace smsc { namespace store
         OCIError*       errhp;  // OCI error handle
         OCISession*     sesshp; // OCI session handle
         
-        Array<Statement *>      statements;
+        Array<Statement *>          statements;
 
         NeedOverwriteSvcStatement*  needOverwriteSvcStmt;
         NeedOverwriteStatement*     needOverwriteStmt;

@@ -102,7 +102,7 @@ namespace smsc { namespace store
         NoSuchMessageException(SMSId id) 
             : StoreException() 
         {
-            sprintf(cause, "Unable to find message with id = %u in DB !", id);
+            sprintf(cause, "Unable to find message with id = %llu in DB !", id);
         };
         virtual ~NoSuchMessageException() throw() {};
     };

@@ -128,10 +128,11 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
 }
 
 ConnectionPool::ConnectionPool(Manager& config) throw(ConfigException) 
-    : queueLen(0), head(0L), tail(0L),
-        idleCount(0), idleHead(0L), idleTail(0L),
-            dbInstance(0L), dbUserName(0L), dbUserPassword(0L),
-                log(Logger::getCategory("smsc.store.ConnectionPool"))
+    : log(Logger::getCategory("smsc.store.ConnectionPool")),
+        dbInstance(0L), dbUserName(0L), dbUserPassword(0L),
+            head(0L), tail(0L), queueLen(0),
+                idleHead(0L), idleTail(0L), idleCount(0)
+                
 {
     loadMaxSize(config);
     loadInitSize(config);
@@ -148,7 +149,7 @@ ConnectionPool::ConnectionPool(Manager& config) throw(ConfigException)
 
     __require__(dbInstance && dbUserName && dbUserPassword);
 
-    for (int i=0; i<count; i++)
+    for (unsigned i=0; i<count; i++)
     {
         Connection* connection = 
                     new Connection(dbInstance, dbUserName, dbUserPassword);
@@ -223,18 +224,18 @@ Connection* ConnectionPool::getConnection()
         return queue.connection;
     }
     
+    Connection* connection = 0L;
     if (idleCount)
     {
-        return pop();
+        connection = pop();
     }
     else if (count < size) 
     {
-        Connection* connection =
-                    new Connection(dbInstance, dbUserName, dbUserPassword);
+        connection = new Connection(dbInstance, dbUserName, dbUserPassword);
         (void) connections.Push(connection);
         count++;
-        return connection; 
     }
+    return connection; 
 }
 
 void ConnectionPool::freeConnection(Connection* connection)
@@ -330,15 +331,15 @@ Mutex Connection::connectLock;
 
 Connection::Connection(const char* instance, 
                        const char* user, const char* password) 
-    : isConnected(false), isDead(false), next(0L),
+    : log(Logger::getCategory("smsc.store.Connection")),
+        next(0L), isConnected(false), isDead(false), 
         dbInstance(instance), dbUserName(user), dbUserPassword(password), 
-            needOverwriteStmt(0L), needRejectStmt(0L), overwriteStmt(0L),
-            storeStmt(0L), retriveStmt(0L), destroyStmt(0L), replaceStmt(0L),
-            replaceVTStmt(0L), replaceWTStmt(0L), replaceVWTStmt(0L), 
-            toEnrouteStmt(0L), toDeliveredStmt(0L), toUndeliverableStmt(0L),
-            toExpiredStmt(0L), toDeletedStmt(0L),
-                envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L), 
-                    log(Logger::getCategory("smsc.store.Connection"))
+        envhp(0L), svchp(0L), srvhp(0L), errhp(0L), sesshp(0L),
+        needOverwriteSvcStmt(0L), needOverwriteStmt(0L), needRejectStmt(0L), 
+        overwriteStmt(0L), storeStmt(0L), retriveStmt(0L), destroyStmt(0L), 
+        replaceStmt(0L), replaceVTStmt(0L), replaceWTStmt(0L), replaceVWTStmt(0L), 
+        toEnrouteStmt(0L), toDeliveredStmt(0L), toUndeliverableStmt(0L),
+        toExpiredStmt(0L), toDeletedStmt(0L)
 {
     __require__(dbInstance && dbUserName && dbUserPassword);
 }
@@ -556,7 +557,7 @@ void Connection::check(sword status)
     throw(StorageException)
 {
     text        errbuf[1024];
-    ub4         buflen, errcode = status;
+    sb4         errcode = status;
     
     switch (status)
     {
