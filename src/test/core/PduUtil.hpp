@@ -20,15 +20,26 @@ using std::string;
 using std::vector;
 using namespace smsc::test;
 
-static const int PDU_REQUIRED_FLAG = 0x0; //pdu ожидается, но еще не получена
-static const int PDU_MISSING_ON_TIME_FLAG = 0x1; //тоже самое, что PDU_REQUIRED_FLAG, только исключается из проверок на ошибки
-static const int PDU_RECEIVED_FLAG = 0x2; //pdu получена вовремя
-static const int PDU_NOT_EXPECTED_FLAG = 0x3; //данной pdu быть не должно
+typedef enum
+{
+	PDU_REQUIRED_FLAG = 0x0, //pdu ожидается, но еще не получена
+	PDU_MISSING_ON_TIME_FLAG = 0x1, //тоже самое, что PDU_REQUIRED_FLAG, только исключается из проверок на ошибки
+	PDU_RECEIVED_FLAG = 0x2, //pdu получена вовремя
+	PDU_NOT_EXPECTED_FLAG = 0x3 //данной pdu быть не должно
+} PduFlag;
+
+typedef enum
+{
+	RESP_PDU_OK = 0x0, //респонс pdu отправлена со статусом ok
+	RESP_PDU_ERROR = 0x1, //респонс pdu отправлена со статусом ошибки
+	RESP_PDU_RESCHED = 0x2, //респонс pdu отправлена со статусом передоставки
+	RESP_PDU_MISSING = 0x3 //респонс pdu не отправлена
+} RespPduFlag;
 
 //normal sms, delivery receipt
 class PduReceiptFlag
 {
-	int flag;
+	PduFlag flag;
 	time_t startTime; //начало доставки pdu
 	time_t endTime; //окончание доставки pdu
 	time_t lastTime;
@@ -40,13 +51,13 @@ class PduReceiptFlag
 		time_t& calcTime) const;
 
 public:
-	PduReceiptFlag(int flg, time_t start, time_t end) :
+	PduReceiptFlag(PduFlag flg, time_t start, time_t end) :
 		flag(flg), startTime(start), endTime(end), lastTime(0), lastAttempt(0) {}
 
-	PduReceiptFlag& operator= (int _flag) { flag = _flag; }
+	PduReceiptFlag& operator= (PduFlag _flag) { flag = _flag; }
 	
-	bool operator== (int _flag) { return (flag == _flag); }
-	bool operator!= (int _flag) { return (flag != _flag); }
+	bool operator== (PduFlag _flag) { return (flag == _flag); }
+	bool operator!= (PduFlag _flag) { return (flag != _flag); }
 
 	time_t getNextTime(time_t t) const;
 
@@ -63,11 +74,11 @@ public:
 	/**
 	 * Обновляет текущий статус
 	 */
-	vector<int> update(time_t recvTime, bool accepted);
+	vector<int> update(time_t recvTime, RespPduFlag respFlag);
 
 	bool isPduMissing(time_t checkTime) const;
 
-	operator int() const { return flag; }
+	operator PduFlag() const { return flag; }
 };
 
 /**

@@ -14,8 +14,8 @@ void PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff,
 	nextTime = lastTime ? lastTime : startTime;
 	for (;; attempt++)
 	{
-		//__trace2__("eval(): nextTime = %ld", nextTime);
-		time_t curDiff = nextTime - time;
+		__trace2__("eval(): nextTime = %ld", nextTime);
+		time_t curDiff = time - nextTime;
 		if (abs(curDiff) > abs(diff))
 		{
 			break;
@@ -91,19 +91,43 @@ vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
 	return res;
 }
 
-vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted)
+vector<int> PduReceiptFlag::update(time_t recvTime, RespPduFlag respFlag)
 {
 	vector<int> res;
-	int prevFlag = flag;
+	PduFlag prevFlag = flag;
 	switch (flag)
 	{
 		case PDU_REQUIRED_FLAG:
 		case PDU_MISSING_ON_TIME_FLAG:
 			{
-				time_t nextTime = getNextTime(recvTime);
-				if (accepted || !nextTime)
+				int attempt;
+				time_t diff, nextTime, calcTime;
+				eval(recvTime, attempt, diff, nextTime, calcTime);
+				lastAttempt = attempt;
+				switch (respFlag)
 				{
-					flag = PDU_RECEIVED_FLAG;
+					case RESP_PDU_OK:
+					case RESP_PDU_ERROR:
+						flag = PDU_RECEIVED_FLAG;
+						lastTime = recvTime;
+						break;
+					case RESP_PDU_RESCHED:
+						if (!nextTime || nextTime > endTime)
+						{
+							flag = PDU_RECEIVED_FLAG;
+						}
+						lastTime = recvTime;
+						break;
+					case RESP_PDU_MISSING:
+						//lastTime и nextTime с учетом 8 секундного timeout
+						if (!nextTime || nextTime + 8 > endTime)
+						{
+							flag = PDU_RECEIVED_FLAG;
+						}
+						lastTime = recvTime + 8;
+						break;
+					default:
+						__unreachable__("Unknown resp flag");
 				}
 			}
 			break;
@@ -116,9 +140,8 @@ vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted)
 		default:
 			__unreachable__("Unknown flag");
 	}
-	__trace2__("PduReceiptFlag::update(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld, accepted = %s, flag = %d, prevFlag = %d",
-		this, startTime, endTime, recvTime, accepted ? "true" : "false", flag, prevFlag);
-	lastTime = recvTime;
+	__trace2__("PduReceiptFlag::update(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld, respFlag = %d, flag = %d, prevFlag = %d, lastTime = %ld, lastAttempt = %d",
+		this, startTime, endTime, recvTime, respFlag, flag, prevFlag, lastTime, lastAttempt);
 	return res;
 }
 
