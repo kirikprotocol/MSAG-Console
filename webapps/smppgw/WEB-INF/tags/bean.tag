@@ -12,6 +12,7 @@
   try {
     ru.sibinco.smppgw.beans.SmppgwBean bean = (ru.sibinco.smppgw.beans.SmppgwBean) Thread.currentThread().getContextClassLoader().loadClass(className).getConstructor(new Class[0]).newInstance(new Object[0]);
     request.setAttribute("bean", bean);
+    System.out.println("class = " + bean.getClass().getName() + ", bean = " + bean);
     jspContext.setAttribute("bean", bean); //!pageContext
     %><jsp:setProperty name="bean" property="*"/><%
     bean.process(request, response);

@@ -7,12 +7,14 @@
  attribute name="beanClass"    required="false" %><%@
  attribute name="title"        required="true" %><%@
  attribute name="menu"         required="false" %><%@
+ attribute name="menu2"        required="false" %><%@
  attribute name="form_method"  required="false" %><%@
  attribute name="form_uri"     required="false" %><%@
  attribute name="form_enctype" required="false"%><%@
  attribute name="onLoad"       required="false"%><%@
  attribute name="rawBody"      required="false"%><%
-  if (jspContext.getAttribute("beanClass") == null) //!pageContext
+  Object beanClassObj = jspContext.getAttribute("beanClass");
+  if (beanClassObj == null || (beanClassObj instanceof String && ((String)beanClassObj).trim().length() == 0)) //!pageContext
   {
     final StringBuffer buffer = new StringBuffer();
     final String servletPath = request.getServletPath();
@@ -56,12 +58,96 @@
   <link rel="STYLESHEET" type="text/css" href="/styles/messages.css">
   <link rel="STYLESHEET" type="text/css" href="/styles/page_menu.css">
   <link rel="STYLESHEET" type="text/css" href="/styles/sme_menu.css">
+  <link rel="STYLESHEET" type="text/css" href="/styles/calendar.css">
 
   <link rel="STYLESHEET" type="text/css" href="collapsing_tree.css">
 
   <script src="/scripts/scripts.js" type="text/javascript"></script>
+  <script src="/scripts/calendar.js" type="text/javascript"></script>
 </head>
 <body onload="${onLoad}">
+
+  <iframe id=calendarIFrame class=calendarHiddenLayer2 src="/images/blank.html"></iframe>
+  <div id=calendarPanel class=calendarHiddenLayer
+    oncontextmenu="return false;"
+    onselectstart="return false;"
+    ondragstart="return false;"
+    onmousedown="return calendarMD();"
+    onmouseup="return calendarMU();"
+    onmousemove="return calendarMM();"
+    onlosecapture="return calendarClose();"
+    onfocusout="return calendarClose();">
+  <table border=1 bgcolor="#dododo" cellpadding=0 cellspacing=2>
+  <tr>
+  <td style="border:0;">
+    <table cellpadding=1 cellspacing=0>
+      <tr>
+        <td style="border:0; border-bottom:solid 1px #000000; padding-bottom:2px;padding-top:0px">
+          <table height=100% cellpadding=0 cellspacing=0>
+            <tr align=center class=calendarYear>
+              <td colspan=5 id=calendarYearPanel></td>
+              <td colspan=2 align=rigth>
+                <table cellpadding=0 cellspacing=0 class=calendarMonth>
+                  <tr align=right>
+                    <td width="100%" name=calendarMonthMinus style="font-family: Webdings;">3</td>
+                    <td name=calendarMonthPlus style="font-family: Webdings;">4</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr align=center style="padding-top:2px" class=calendarWeekDay id=calendarWeekDays></tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td id=calendarDaysPanel style="border:0; border-top:solid 1px #ffffff; padding-top:2px">
+          <table height=100% cellpadding=0 cellspacing=0 class=calendarDate id=calendarDaysTable></table>
+        </td>
+      </tr>
+      <tr>
+        <td id=calendarTimePanel style="border-top:solid 1px #ffffff;display:none;padding-top:2px;">
+          <table cellpadding=0 cellspacing=0>
+          <tr>
+            <td rowspan=2 width=2px></td>
+            <td rowspan=2><div class=calendarTimeH id=calendarTimeHour>00</div></td>
+            <td valign=bottom align=center>
+              <div name=calendarTimeHourUp style="background-color:#f0f0f0;border-top:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">5</div>
+            </td>
+            <td rowspan=2><div class=calendarTimeM id=calendarTimeMinute>00</div></td>
+            <td valign=bottom align=center>
+              <div name=calendarTimeMinuteUp style="background-color:#f0f0f0;border-top:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">5</div>
+            </td>
+            <td rowspan=2><div class=calendarTimeS id=calendarTimeSecond>00</div></td>
+            <td valign=bottom align=center>
+              <div name=calendarTimeSecondUp style="background-color:#f0f0f0;border-top:solid 1px #000000;border-right:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">5</div>
+            </td>
+            <td rowspan=2 width=30px align=right>
+              <div id=calendarAMPMsv name=calendarAMPMsv align=center style="padding:0px; padding-left:2px; background-color:#f0f0f0;border:solid 1px #000000;width=24px;height=16px;font-family:Tahoma,Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;visibility: hidden;">PM</div>
+            </td>
+            <td rowspan=2 width=40px align=right>
+              <div name=calendarTimeOk align=center style="padding:0px; background-color:#f0f0f0;border:solid 1px #000000;width=30px;height=16px;font-family:Tahoma,Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;">Ok</div>
+            </td>
+          </tr>
+          <tr>
+            <td align=center>
+              <div name=calendarTimeHourDown style="background-color:#f0f0f0;border-bottom:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">6</div>
+            </td>
+            <td align=center>
+              <div name=calendarTimeMinuteDown style="background-color:#f0f0f0;border-bottom:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">6</div>
+            </td>
+            <td align=center>
+              <div name=calendarTimeSecondDown style="background-color:#f0f0f0;border-bottom:solid 1px #000000;border-right:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">6</div>
+            </td>
+          </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </td>
+  </tr>
+  </table>
+  </div>
+
   <%if (request.getUserPrincipal() != null) {%>
   <OBJECT id="tdcSmppgwStatusObject" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
     <PARAM NAME="DataURL" VALUE="gw/status/status.jsp">
@@ -167,7 +253,7 @@
         <c:choose>
           <c:when test="${!empty rawBody}">${rawBody}</c:when>
           <c:otherwise>
-            <sm:content menu="${menu}">
+            <sm:content menu="${menu}" menu2="${menu2}">
               <jsp:doBody/>
             </sm:content>
           </c:otherwise>
