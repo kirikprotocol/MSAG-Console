@@ -115,6 +115,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     catch(ConfigException& exc) { svcType = 0; };
     try { daysValid = config->getInt("DaysValid"); }
     catch(ConfigException& exc) { daysValid = 1; };
+
+    std::string callingMask = config->getString("CallingMask");
     
     smsc_log_info(logger, "Loading templates ...");
     std::auto_ptr<ConfigView> templatesCfgGuard(config->getSubConfig("Templates"));
@@ -149,7 +151,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     releaseSettings.otherCause          = releaseSettingsCfg->getInt ("Other.cause");
     releaseSettings.otherInform         = releaseSettingsCfg->getBool("Other.inform") ? 1:0;
     
-    mciModule = new MCIModule(circuits, releaseSettings);
+    mciModule = new MCIModule(circuits, releaseSettings, callingMask.c_str());
     
     responcesTracker.init(this, config);
 

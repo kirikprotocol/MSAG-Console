@@ -17,6 +17,7 @@
 	<param name="SvcType" type="string">MCISme</param>
         <param name="ProtocolId" type="int">111</param>
 	<param name="DaysValid"  type="int">1</param>
+	<param name="CallingMask" type="string">/^\d{10}$/</param>
 	
 	<param name="unrespondedMessagesMax" type="int">5</param>
 	<param name="unrespondedMessagesSleep" type="int">20</param>
