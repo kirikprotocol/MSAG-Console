@@ -110,17 +110,17 @@ public class Smsc extends Service
 		}
 	}
 
-	public RouteList getRoutes()
+	public synchronized RouteList getRoutes()
 	{
 		return routes;
 	}
 
-	public SMEList getSmes()
+	public synchronized SMEList getSmes()
 	{
 		return smes;
 	}
 
-	public SubjectList getSubjects()
+	public synchronized SubjectList getSubjects()
 	{
 		return subjects;
 	}
@@ -173,7 +173,7 @@ public class Smsc extends Service
 		return out;
 	}
 
-	public void applyRoutes()
+	public synchronized void applyRoutes()
 			throws AdminException
 	{
 		checkComponents();
@@ -182,13 +182,13 @@ public class Smsc extends Service
 		call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
 	}
 
-	public void applyProfiles()
+	public synchronized void applyProfiles()
 			throws AdminException
 	{
 		/* todo applyProfiles */
 	}
 
-	public void applyAliases()
+	public synchronized void applyAliases()
 			throws AdminException
 	{
 		checkComponents();
@@ -223,12 +223,12 @@ public class Smsc extends Service
 		}
 	}
 
-	public AliasSet getAliases()
+	public synchronized AliasSet getAliases()
 	{
 		return aliases;
 	}
 
-	public Profile lookupProfile(Mask mask)
+	public synchronized Profile lookupProfile(Mask mask)
 			throws AdminException
 	{
 		checkComponents();
@@ -241,7 +241,7 @@ public class Smsc extends Service
 			throw new AdminException("Error in response");
 	}
 
-	public int updateProfile(Mask mask, Profile newProfile)
+	public synchronized int updateProfile(Mask mask, Profile newProfile)
 			throws AdminException
 	{
 		checkComponents();
@@ -251,13 +251,13 @@ public class Smsc extends Service
 		return ((Long) call(smsc_component, update_profile_method, Type.Types[Type.IntType], args)).intValue();
 	}
 
-	public QueryResultSet queryProfiles(ProfileQuery query)
+	public synchronized QueryResultSet queryProfiles(ProfileQuery query)
 			throws AdminException
 	{
 		return profileDataSource.query(query);
 	}
 
-	public void saveSmesConfig()
+	public synchronized void saveSmesConfig()
 			throws AdminException
 	{
 		try
@@ -279,7 +279,7 @@ public class Smsc extends Service
 		}
 	}
 
-	public void saveRoutesConfig()
+	public synchronized void saveRoutesConfig()
 			throws AdminException
 	{
 		try
@@ -301,7 +301,7 @@ public class Smsc extends Service
 		}
 	}
 
-	public void processCancelMessages(Collection messageIds)
+	public synchronized void processCancelMessages(Collection messageIds)
 			throws AdminException
 	{
 		checkComponents();
@@ -322,20 +322,20 @@ public class Smsc extends Service
 		call(smsc_component, process_cancel_messages_method, Type.Types[Type.StringType], params);
 	}
 
-	public void flushStatistics()
+	public synchronized void flushStatistics()
 			throws AdminException
 	{
 		checkComponents();
 		call(smsc_component, flush_statistics_method, Type.Types[Type.StringType], new HashMap());
 	}
 
-	public void start(Daemon smscDaemon)
+	public synchronized void start(Daemon smscDaemon)
 			throws AdminException
 	{
 		smscDaemon.startService(Constants.SMSC_SME_ID);
 	}
 
-	public void stop(Daemon smscDaemon) throws AdminException
+	public synchronized void stop(Daemon smscDaemon) throws AdminException
 	{
 		smscDaemon.shutdownService(Constants.SMSC_SME_ID);
 	}
@@ -365,7 +365,7 @@ public class Smsc extends Service
 		}
 	}
 
-	public Config getSmscConfig()
+	public synchronized Config getSmscConfig()
 	{
 		try
 		{
@@ -407,7 +407,7 @@ public class Smsc extends Service
 		}
 	}
 
-	public void applyConfig(Config config)
+	public synchronized void applyConfig(Config config)
 			throws AdminException
 	{
 		checkComponents();

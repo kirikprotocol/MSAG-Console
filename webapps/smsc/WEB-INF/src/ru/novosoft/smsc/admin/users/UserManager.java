@@ -105,7 +105,8 @@ public class UserManager implements DataSource
 		Collections.sort(userLogins);
 		for (Iterator i = userLogins.iterator(); i.hasNext();)
 		{
-			User user = (User) i.next();
+			String userLogin = (String) i.next();
+			User user = (User) users.get(userLogin);
 			result += user.getXmlText();
 		}
 		result += "</users>";
