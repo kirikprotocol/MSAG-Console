@@ -3,10 +3,11 @@
 
 #include <util/debug.h>
 
-using smsc::core::threads::Thread;
-
 namespace smsc { namespace store 
 {
+
+using smsc::core::threads::Thread;
+using namespace smsc::core::synchronization;
 
 const uint8_t enrouteState = (uint8_t)ENROUTE;
 const int SMSC_ARCHIVER_TRANSACTION_COMMIT_INTERVAL = 10;
@@ -54,10 +55,77 @@ const char* Archiver::loadDBUserPassword(Manager& config, const char* cat)
     }
 }
 
+const unsigned SMSC_ARCHIVER_AWAKE_INTERVAL_LIMIT = 100000;
+const unsigned SMSC_ARCHIVER_AWAKE_INTERVAL_DEFAULT = 1000;
+
+void Archiver::loadAwakeInterval(Manager& config)
+{
+    try 
+    {
+        awakeInterval = 
+            (unsigned)config.getInt("MessageStore.Archive.interval");
+        if (!awakeInterval || 
+            awakeInterval > SMSC_ARCHIVER_AWAKE_INTERVAL_LIMIT)
+        {
+            awakeInterval = SMSC_ARCHIVER_AWAKE_INTERVAL_DEFAULT;
+            log.warn("Maximum timeout interval "
+                     "(between Archiver activations) is incorrect "
+                     "(should be between 1 and %u m-seconds) ! "
+                     "Config parameter: <MessageStore.Archive.interval> "
+                     "Using default: %u",
+                     SMSC_ARCHIVER_AWAKE_INTERVAL_LIMIT,
+                     SMSC_ARCHIVER_AWAKE_INTERVAL_DEFAULT);
+        }
+    } 
+    catch (ConfigException& exc) 
+    {
+        awakeInterval = SMSC_ARCHIVER_AWAKE_INTERVAL_DEFAULT;
+        log.warn("Maximum timeout interval "
+                 "(between Archiver activations) wasn't specified ! "
+                 "Config parameter: <MessageStore.Archive.interval> "
+                 "Using default: %u",
+                 SMSC_ARCHIVER_AWAKE_INTERVAL_DEFAULT);
+    }
+}
+
+const unsigned SMSC_ARCHIVER_MAX_FINALIZED_LIMIT = 10000;
+const unsigned SMSC_ARCHIVER_MAX_FINALIZED_DEFAULT = 1000;
+
+void Archiver::loadMaxFinalizedCount(Manager& config)
+{
+    try 
+    {
+        maxFinalizedCount =
+            (unsigned)config.getInt("MessageStore.Archive.interval");
+        if (!maxFinalizedCount || 
+            maxFinalizedCount > SMSC_ARCHIVER_MAX_FINALIZED_LIMIT)
+        {
+            maxFinalizedCount = SMSC_ARCHIVER_MAX_FINALIZED_DEFAULT;
+            log.warn("Maximum count of finalized messages "
+                     "in storage (for Archiver activation) is incorrect "
+                     "(should be between 1 and %u) ! "
+                     "Config parameter: <MessageStore.Archive.count> "
+                     "Using default: %u",
+                     SMSC_ARCHIVER_MAX_FINALIZED_LIMIT,
+                     SMSC_ARCHIVER_MAX_FINALIZED_DEFAULT);
+        }
+    } 
+    catch (ConfigException& exc) 
+    {
+        maxFinalizedCount = SMSC_ARCHIVER_MAX_FINALIZED_DEFAULT;
+        log.warn("Maximum count of finalized messages "
+                 "in storage (for Archiver activation) wasn't specified ! "
+                 "Config parameter: <MessageStore.Archive.count> "
+                 "Using default: %u",
+                 SMSC_ARCHIVER_MAX_FINALIZED_DEFAULT);
+    }
+}
+
 Archiver::Archiver(Manager& config)
-    throw(ConfigException) 
-        : Thread(), log(Logger::getCategory("smsc.store.Archiver"))
-{ 
+    throw(ConfigException, StorageException) 
+        : Thread(), finalizedCount(0),
+            log(Logger::getCategory("smsc.store.Archiver"))
+{
     storageDBInstance = 
         loadDBInstance(config, "MessageStore.Storage.dbInstance");
     storageDBUserName = 
@@ -70,6 +138,9 @@ Archiver::Archiver(Manager& config)
         loadDBUserName(config, "MessageStore.Archive.dbUserName");
     archiveDBUserPassword =
         loadDBUserPassword(config, "MessageStore.Archive.dbUserPassword");
+    
+    loadAwakeInterval(config);
+    loadMaxFinalizedCount(config);
 
     __require__(storageDBInstance && storageDBUserName && storageDBUserPassword);
     __require__(archiveDBInstance && archiveDBUserName && archiveDBUserPassword);
@@ -79,17 +150,18 @@ Archiver::Archiver(Manager& config)
     
     archiveConnection = new Connection(
         archiveDBInstance, archiveDBUserName, archiveDBUserPassword);
-    
-    this->Start();
+
+    startup();
 }
+
 
 Archiver::~Archiver() 
 {
     __trace__("Archiver destruction ...");
-
     exit.Signal();
+    __trace__("Stop signal sent, waiting ...");
     exited.Wait();
-
+    
     if (storageDBInstance) delete storageDBInstance;
     if (storageDBUserName) delete storageDBUserName;
     if (storageDBUserPassword) delete storageDBUserPassword;
@@ -108,17 +180,106 @@ Archiver::~Archiver()
     __trace__("Archiver destructed !");
 }
 
+const char* Archiver::countSql = (const char*)
+"SELECT NVL(COUNT(*), 0) FROM SMS_MSG WHERE NOT ST=:ST";
+
+void Archiver::startup()
+    throw(StorageException)
+{
+    connect();
+    
+    Statement countStmt(storageConnection, Archiver::countSql);
+    countStmt.bind(1 , SQLT_UIN, (dvoid *) &(enrouteState),
+                   (sb4) sizeof(enrouteState));
+    countStmt.define(1 , SQLT_UIN, (dvoid *) &(finalizedCount), 
+                     (sb4) sizeof(finalizedCount));
+    countStmt.checkErr(countStmt.execute());
+    
+    archivate(true);
+}
+
+void Archiver::connect()
+    throw(StorageException)
+{
+    if (!storageConnection->isAvailable())
+    {
+        if (selectStmt) delete selectStmt;
+        if (deleteStmt) delete deleteStmt;
+        storageConnection->connect();
+        selectStmt = new Statement(storageConnection, Archiver::selectSql);
+        prepareSelectStmt();
+        deleteStmt = new Statement(storageConnection, Archiver::deleteSql);
+        prepareDeleteStmt();
+    }
+    
+    if (!archiveConnection->isAvailable())
+    {
+        if (insertStmt) delete insertStmt;
+        archiveConnection->connect();
+        insertStmt = new Statement(archiveConnection, Archiver::insertSql);
+        prepareInsertStmt();
+        lookIdStmt = new Statement(archiveConnection, Archiver::lookIdSql);
+        prepareLookIdStmt();
+    }
+}
+
+const char* Archiver::storageMaxIdSql = (const char*)
+"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_MSG";
+const char* Archiver::archiveMaxIdSql = (const char*)
+"SELECT NVL(MAX(ID), '0000000000000000') FROM SMS_ARC";
+SMSId Archiver::getMaxId() 
+    throw(StorageException)
+{
+    connect();
+    SMSId storageId, archiveId;
+
+    GetIdStatement storageMaxIdStmt(storageConnection,
+                                    Archiver::storageMaxIdSql);
+    GetIdStatement archiveMaxIdStmt(archiveConnection, 
+                                    Archiver::archiveMaxIdSql);
+
+    storageMaxIdStmt.checkErr(storageMaxIdStmt.execute());
+    storageMaxIdStmt.getSMSId(storageId);
+    archiveMaxIdStmt.checkErr(archiveMaxIdStmt.execute());
+    archiveMaxIdStmt.getSMSId(archiveId);
+    
+    return ((storageId > archiveId) ? storageId : archiveId);
+}
+
+void Archiver::incrementFinalizedCount(unsigned count)
+{
+    MutexGuard  guard(finalizedMutex);  
+
+    if ((finalizedCount += count) >= maxFinalizedCount) 
+    {
+        if (!job.isSignaled()) 
+        {
+            job.Signal();
+            __trace__("Signal sent !");
+        }
+    }
+}
+void Archiver::decrementFinalizedCount(unsigned count)
+{
+    MutexGuard  guard(finalizedMutex);
+    
+    if ((finalizedCount -= count) < 0)
+    {
+        finalizedCount = 0;
+    }
+}
+
 int Archiver::Execute()
 {
     __trace__("Archiver started !");
-    bool check = true; 
     do 
     {
-        sleep(5);
+        job.Wait(awakeInterval);
         try 
         {
-            archivate(check);
-            check = false;
+            __trace__("Doing archivation job ...");
+            archivate(false);
+            __trace__("Archivation job done !");
         } 
         catch (StorageException& exc) 
         {
@@ -128,9 +289,68 @@ int Archiver::Execute()
     } 
     while (!exit.isSignaled());
     
-    __trace__("Archiver exited !");
     exited.Signal();
+    __trace__("Archiver exited !");
     return 0;
+}
+
+void Archiver::archivate(bool first)
+    throw(StorageException) 
+{
+    connect();
+
+    // do real job here
+    unsigned uncommited = 0;
+    try 
+    {
+        sword status = selectStmt->execute();
+        if (status == OCI_NO_DATA) return;
+        selectStmt->checkErr(status);
+        do
+        {
+            if (bNeedArchivate)
+            {
+                if (first)
+                {
+                    lookIdStmt->checkErr(lookIdStmt->execute());
+                    if (idCounter == 0)
+                    {
+                        insertStmt->checkErr(insertStmt->execute());    
+                    }
+                } 
+                else 
+                {
+                    insertStmt->checkErr(insertStmt->execute());
+                }
+            }
+            deleteStmt->checkErr(deleteStmt->execute());
+            if (++uncommited == SMSC_ARCHIVER_TRANSACTION_COMMIT_INTERVAL)
+            {
+                archiveConnection->commit();
+                storageConnection->commit();
+                decrementFinalizedCount(uncommited);
+                uncommited = 0;
+            }
+        } 
+        while ((status = selectStmt->fetch()) == OCI_SUCCESS ||
+               status == OCI_SUCCESS_WITH_INFO);
+
+        if (status != OCI_NO_DATA)
+            selectStmt->checkErr(status);
+    }
+    catch (StorageException& exc)
+    {
+        archiveConnection->rollback();
+        storageConnection->rollback();
+        throw exc;
+    }
+
+    if (uncommited)
+    {
+        archiveConnection->commit();
+        storageConnection->commit();
+        decrementFinalizedCount(uncommited);
+    }
 }
 
 const char* Archiver::selectSql = (const char*)
@@ -219,7 +439,6 @@ const char* Archiver::insertSql = (const char*)
  :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
  :VALID_TIME, :WAIT_TIME, :SUBMIT_TIME, :DELIVERY_TIME,\
  :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";
-
 void Archiver::prepareInsertStmt() throw(StorageException)
 {
     insertStmt->bind(1, SQLT_BIN, (dvoid *) &(id),
@@ -272,79 +491,6 @@ void Archiver::prepareInsertStmt() throw(StorageException)
                      (sb4) sizeof(dataLenght));
     insertStmt->bind(25, SQLT_BIN, (dvoid *) (data),
                      (sb4) sizeof(data));
-}
-
-void Archiver::archivate(bool check)
-    throw(StorageException) 
-{
-    if (!storageConnection->isAvailable())
-    {
-        if (selectStmt) delete selectStmt;
-        if (deleteStmt) delete deleteStmt;
-        storageConnection->connect();
-        selectStmt = new Statement(storageConnection, Archiver::selectSql);
-        prepareSelectStmt();
-        deleteStmt = new Statement(storageConnection, Archiver::deleteSql);
-        prepareDeleteStmt();
-        
-    }
-    
-    if (!archiveConnection->isAvailable())
-    {
-        if (insertStmt) delete insertStmt;
-        archiveConnection->connect();
-        insertStmt = new Statement(archiveConnection, Archiver::insertSql);
-        prepareInsertStmt();
-        lookIdStmt = new Statement(archiveConnection, Archiver::lookIdSql);
-        prepareLookIdStmt();
-    }
-    
-    // do real job here
-    unsigned uncommited = 0;
-    try 
-    {
-        sword status;
-        selectStmt->checkErr(selectStmt->execute());
-        do
-        {
-            if (check)
-            {
-                lookIdStmt->checkErr(lookIdStmt->execute());
-                if (idCounter == 0)
-                {
-                    insertStmt->checkErr(insertStmt->execute());    
-                }
-            } 
-            else 
-            {
-                insertStmt->checkErr(insertStmt->execute());
-            }
-            deleteStmt->checkErr(deleteStmt->execute());
-            if (++uncommited == SMSC_ARCHIVER_TRANSACTION_COMMIT_INTERVAL)
-            {
-                archiveConnection->commit();
-                storageConnection->commit();
-                uncommited = 0;
-            }
-        } 
-        while ((status = selectStmt->fetch()) == OCI_SUCCESS ||
-               status == OCI_SUCCESS_WITH_INFO);
-
-        if (status != OCI_NO_DATA)
-            selectStmt->checkErr(status);
-    }
-    catch (StorageException& exc)
-    {
-        archiveConnection->rollback();
-        storageConnection->rollback();
-        throw exc;
-    }
-
-    if (uncommited)
-    {
-        archiveConnection->commit();
-        storageConnection->commit();
-    }
 }
 
 }}

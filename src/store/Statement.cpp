@@ -142,6 +142,15 @@ void IdStatement::getSMSId(SMSId &_smsId)
     _smsId = UINT64_SWAP_LE_BE_CONSTANT(smsId);
 }
 
+/* ----------------------------- GetIdStatetment ------------------------- */  
+
+GetIdStatement::GetIdStatement(Connection* connection, const char* sql) 
+    throw(StorageException)
+        : IdStatement(connection, sql)
+{
+    define(1, SQLT_BIN, (dvoid *) &(smsId),(sb4) sizeof(smsId));
+}
+
 /* --------------------------- MessageStatetment --------------------- */
 
 void MessageStatement::setSMS(const SMS &_sms)

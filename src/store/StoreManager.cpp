@@ -60,24 +60,18 @@ void StoreManager::startup(Manager& config)
     if (!instance)
     {
         log.info("Storage Manager is starting ... ");
-        Connection* connection = 0L; 
         loadMaxTriesCount(config);
         try 
         {
             pool = new ConnectionPool(config);
-            connection = pool->getConnection();
-            generator = new IDGenerator(connection->getMessagesCount());
             archiver = new Archiver(config);
+            generator = new IDGenerator(archiver->getMaxId());
         }
         catch (StorageException& exc)
         {
             //log.error("StorageException: %s", exc.what());
             if (pool) 
             {
-                if (connection)
-                {
-                    pool->freeConnection(connection);
-                }
                 delete pool; pool = 0L;
             }
             if (generator)
@@ -86,8 +80,8 @@ void StoreManager::startup(Manager& config)
             }
             throw ConnectionFailedException(exc);
         }
-        pool->freeConnection(connection);
         instance = new StoreManager();
+        archiver->Start();
         log.info("Storage Manager was started up.");
     }
 }
@@ -191,6 +185,7 @@ void StoreManager::remove(SMSId id)
         {
             connection = pool->getConnection();
             connection->remove(id);
+            // state ??? archiver->decrementFinalizedCount();
             pool->freeConnection(connection);
             break;
         }
@@ -260,6 +255,10 @@ void StoreManager::update(SMSId id, const State state,
         {
             connection = pool->getConnection();
             connection->update(id, state, operationTime, fcs);
+            if (state != ENROUTE)
+            {
+                archiver->incrementFinalizedCount();
+            }
             pool->freeConnection(connection);
             break;
         }

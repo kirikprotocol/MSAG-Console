@@ -69,6 +69,15 @@ namespace smsc { namespace store
         void setSMSId(const SMSId smsId);
         void getSMSId(SMSId &smsId);
     };
+    
+    class GetIdStatement : public IdStatement
+    {
+    public:
+
+        GetIdStatement(Connection* connection, const char* sql) 
+            throw(StorageException);
+        virtual ~GetIdStatement() {};
+    };
 
     class MessageStatement : public IdStatement
     {

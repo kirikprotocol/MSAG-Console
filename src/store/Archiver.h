@@ -6,6 +6,7 @@
 
 #include <sms/sms.h>
 #include <core/threads/Thread.hpp>
+#include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 
 #include "ConnectionManager.h"
@@ -14,6 +15,7 @@ namespace smsc { namespace store
 {
     using smsc::core::threads::Thread;
     using smsc::core::synchronization::Event;
+    using smsc::core::synchronization::Mutex;
 
     using namespace smsc::sms;
     
@@ -21,9 +23,17 @@ namespace smsc { namespace store
     {
     private:
         
-        Event   exit, exited;
-        
         log4cpp::Category   &log;
+
+        Event       job, exit, exited;
+        Mutex       finalizedMutex;
+        int         finalizedCount;
+        unsigned    maxFinalizedCount;
+        unsigned    awakeInterval;
+        
+        static const char*  countSql;
+        static const char*  storageMaxIdSql;
+        static const char*  archiveMaxIdSql;
 
         static const char*  selectSql;
         static const char*  insertSql;
@@ -40,13 +50,13 @@ namespace smsc { namespace store
         
         Connection*     storageConnection;
         Connection*     archiveConnection;
-
+        
         Statement*      selectStmt;
         Statement*      insertStmt;
         Statement*      deleteStmt;
         Statement*      lookIdStmt;
         
-        ub4             idCounter; // for lookId
+        ub4             idCounter; // for lookIdStmt
 
         SMSId           id;
         uint8_t         uState;
@@ -81,21 +91,34 @@ namespace smsc { namespace store
             throw(ConfigException);
         const char* loadDBUserPassword(Manager& config, const char* cat)
             throw(ConfigException);
-    
+        
+        void loadAwakeInterval(Manager& config);
+        void loadMaxFinalizedCount(Manager& config);
+
         void prepareSelectStmt() throw(StorageException);
         void prepareInsertStmt() throw(StorageException);
         void prepareDeleteStmt() throw(StorageException);
         void prepareLookIdStmt() throw(StorageException);
-    
-        void archivate(bool check)
+
+        void connect()
+            throw(StorageException); 
+        void startup()
+            throw(StorageException); 
+        void archivate(bool first)
             throw(StorageException); 
     
     public:
 
         Archiver(Manager& config)
-            throw(ConfigException);
+            throw(ConfigException, StorageException);
         virtual ~Archiver();
     
+        SMSId getMaxId()
+            throw(StorageException); 
+
+        void incrementFinalizedCount(unsigned count=1);
+        void decrementFinalizedCount(unsigned count=1);
+
         virtual int Execute();
     };
 

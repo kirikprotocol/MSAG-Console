@@ -25,9 +25,6 @@ const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE_LIMIT = 10000;
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE = 10;
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT = 1000;
 
-const unsigned SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE = 5;
-const unsigned SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE_LIMIT = 1000;
-
 void ConnectionPool::loadMaxSize(Manager& config)
 {
     try 
@@ -54,6 +51,9 @@ void ConnectionPool::loadMaxSize(Manager& config)
                  SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE);
     }
 }
+
+const unsigned SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE = 5;
+const unsigned SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE_LIMIT = 1000;
 
 void ConnectionPool::loadInitSize(Manager& config)
 {
