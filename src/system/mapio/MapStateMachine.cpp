@@ -570,7 +570,7 @@ parse_tvp_scheme2:
       dtm.tm_hour = ParseSemiOctetU(tvp[3]);
       dtm.tm_min  = ParseSemiOctetU(tvp[4]);
       dtm.tm_sec  = ParseSemiOctetU(tvp[5]);
-      unsigned tzOctet = ParseSemiOctetU(tvp[6));
+      unsigned tzOctet = ParseSemiOctetU(tvp[6]);
       int timeZoneX = tzOctet&0x080?tzOctet:(0-(int)(tzOctet&0x07f));
       __trace2__("MAP:%s:TVP: %d:%d:%d:%d:%d:%d:%d",
         __FUNCTION__,dtm.tm_year,dtm.tm_mon,dtm.tm_mday,dtm.tm_hour,dtm.tm_min,dtm.tm_sec,tzOctet);
@@ -590,12 +590,12 @@ parse_tvp_scheme2:
       unsigned char tags = *tvp;
       unsigned valForm = tags&0x7;
       unsigned char* dta = tvp;
-      while ( *dta & 0x080 ) { ++dta; if ( dta-tpv == 7 ) throw runtime_error("out of tvp data");
+      while ( *dta & 0x080 ) { ++dta; if ( dta-tvp == 7 ) throw runtime_error("out of tvp data"); }
       __trace2__("MAP:%s: tvp 0x%x dta 0x%x valForm 0x%x",__FUNCTION__,tvp,dta,valForm);
       switch(valForm)
       {
       case 0: 
-        __trace2__("MAP:%s: ext has no validity",__FUNCTION__);
+        __trace2__("MAP:%s: enhanced has no validity",__FUNCTION__);
         goto nene_validity;
       case 0x1:
         if ( dta-tvp > 6 ) throw runtime_error("out of tvp data");
@@ -604,7 +604,7 @@ parse_tvp_scheme2:
         break;
       case 0x2:
         if ( *dta == 0 ) {
-          __trace2__("MAP:%s: ext has relative value 0 assumed as novalidity",__FUNCTION__);
+          __trace2__("MAP:%s: enhanced has relative value 0 assumed as novalidity",__FUNCTION__);
           goto none_validity;
         }
         timeValue+=(unsigned)*dta;
@@ -614,13 +614,13 @@ parse_tvp_scheme2:
         timeValue+=((unsigned)dta[0])*60*60+((unsigned)dta[1])*60+((unsigned)dta[2]);
         break;
       default:
-        throw runtime_error("bad tp_vp ext format");
+        throw runtime_error("bad tp_vp enhanced format");
       }
     }
     __trace2__("MAP:%s: result time: %s ",__FUNCTION__,ctime(&timeValue));
     __trace2__("MAP:%s: set validity 0x%x (time:0x%x)",__FUNCTION__,timeValue,time(0));
     sms.setValidTime(timeValue);
-none_validity:
+none_validity:;
   }
   unsigned encoding = 0;
   if ( (user_data_coding & 0xc0) == 0 ||  // 00xxxxxx
