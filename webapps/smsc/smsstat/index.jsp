@@ -159,22 +159,12 @@ while (i.hasNext()) {
             ErrorCounterSet errid = (ErrorCounterSet)i.next();
         %>
         <tr class=row1>
-            <td align=right>
-          <%
-          String errstr = null;
-          try {
-            errstr = appContext.getLocaleMessages(request.getLocale()).getString("smsc.errcode."+errid.errcode);
-          } catch(Exception e) {
-            System.err.println(e.getMessage());
-          }
-          if( errstr != null ) {
-          %><%=errstr%>
-          <%
-          } else {
-          %><%=errid.errcode%>
-          <%
-          }
-          %>
+            <td align=right nowrap>
+        <%
+          String errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
+          if (errMessage == null) errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
+        <%= StringEncoderDecoder.encode(errMessage)%>
+        (<%=errid.errcode%>)
             </td>
             <td align=right><%= errid.counter%></td>
             <td align=right>&nbsp;</td>

@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.jsp.smsview;
 
 import ru.novosoft.smsc.admin.smsview.*;
+import ru.novosoft.smsc.admin.*;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 
@@ -108,11 +109,17 @@ public class SmsViewFormBean extends IndexBean
 
 	public int processQuery()
 	{
-		rows = view.getSmsSet(query);
-		startPosition = 0;
-		totalSize = rows.getRowsCount();
-		processResortAndNavigate(true);
-		return RESULT_OK;
+    rows = null;
+    try {
+      rows = view.getSmsSet(query);
+      startPosition = 0;
+      totalSize = rows.getRowsCount();
+      processResortAndNavigate(true);
+      return RESULT_OK;
+    } catch (AdminException ex) {
+      ex.printStackTrace();
+      return RESULT_ERROR;
+    }
 	}
     public int clearQuery()
     {

@@ -26,6 +26,8 @@ import java.io.DataInputStream;
 
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsc_service.CancelMessageData;
+import ru.novosoft.smsc.admin.route.*;
+import ru.novosoft.smsc.admin.*;
 
 public class SmsView
 {
@@ -48,7 +50,7 @@ public class SmsView
     public void setDataSource(DataSource ds) { this.ds = ds; }
     public void setSmsc(Smsc smsc) { this.smsc = smsc; }
 
-    public SmsSet getSmsSet(SmsQuery query)
+    public SmsSet getSmsSet(SmsQuery query) throws AdminException
     {
       SmsSet set = new SmsSet();
       Connection connection = null;
@@ -63,6 +65,7 @@ public class SmsView
       } catch (Exception exc) {
         System.out.println("Operation with DB failed !");
         exc.printStackTrace();
+        throw new AdminException(exc.getMessage());
       } finally {
           try { if (stmt != null) stmt.close(); connection.close(); }
           catch (Exception cexc) { cexc.printStackTrace(); }
@@ -137,7 +140,7 @@ public class SmsView
               str.trim().toUpperCase();
     }
     private void bindInput(PreparedStatement stmt, SmsQuery query)
-      throws SQLException
+      throws SQLException, AdminException
     {
       int pos=1;
       if (needExpression(query.getSmsId())) {
@@ -153,9 +156,9 @@ public class SmsView
           }
       }
       if (needExpression(query.getFromAddress()))
-          stmt.setString(pos++, getLikeExpression(query.getFromAddress()));
+          stmt.setString(pos++, getLikeExpression((new Mask(query.getFromAddress())).getNormalizedMask()));
       if (needExpression(query.getToAddress()))
-          stmt.setString(pos++, getLikeExpression(query.getToAddress()));
+          stmt.setString(pos++, getLikeExpression((new Mask(query.getToAddress())).getNormalizedMask()));
       if (needExpression(query.getRouteId()))
           stmt.setString(pos++, getLikeExpression(query.getRouteId()));
       if (needExpression(query.getSrcSmeId()))
@@ -178,8 +181,7 @@ public class SmsView
       }
     }
 
-    private String prepareQueryString(SmsQuery query)
-    {
+    private String prepareQueryString(SmsQuery query) throws AdminException {
       String sql =
               "SELECT ID, ST, SUBMIT_TIME, VALID_TIME, ATTEMPTS, LAST_RESULT, "+
               "LAST_TRY_TIME, NEXT_TRY_TIME, OA, DA, DDA, MR, SVC_TYPE, "+
@@ -197,12 +199,12 @@ public class SmsView
         if (needExpression(str))
             list.add("UPPER("+field+") "+((needLikeExpression(str)) ? "LIKE ?":"=?"));
     }
+
     private void addWherePartEQ(ArrayList list, String field, String str) {
         if (needExpression(str))
             list.add("UPPER("+field+")=?");
     }
-    private String prepareWhereClause(SmsQuery query)
-    {
+    private String prepareWhereClause(SmsQuery query) {
       ArrayList list = new ArrayList();
 
       addWherePartEQ(list, "ID", query.getSmsId());

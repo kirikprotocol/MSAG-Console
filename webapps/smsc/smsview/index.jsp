@@ -141,23 +141,23 @@ if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
 {int rowN=0; for (int cnt=firstIndex; cnt<=lastIndex; cnt++, rowN++) {
   SmsRow row = bean.getRow(cnt-1);
 %><tr class=row<%=rowN&1%>0>
-      <td nowrap>
+      <td nowrap valign=top style="text-align: right">
         <%= row.getIdLong()%><br>
         <!--%= row.getAttempts()%-->
       </td>
-      <td nowrap>
+      <td nowrap style="padding-left: 5px; border-left:dotted 1px #C0C0C0;">
         <%= (row.getSubmitTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getSubmitTime())):"&nbsp;"%><br>
         <%= (row.getValidTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getValidTime())):"&nbsp;"%>
       </td>
-      <td nowrap>
+      <td nowrap style="padding-left: 5px; border-left:dotted 1px #C0C0C0;">
         <%= (row.getLastTryTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getLastTryTime())):"&nbsp;"%><br>
         <%= (row.getNextTryTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getNextTryTime())):"&nbsp;"%>
       </td>
-      <td nowrap>
+      <td nowrap style="padding-left: 5px; border-left:dotted 1px #C0C0C0;">
         <%= StringEncoderDecoder.encode(row.getOriginatingAddressMask().getMask())%><br>
         <%= StringEncoderDecoder.encode(row.getSrcSmeId())%>
       </td>
-      <td nowrap>
+      <td nowrap style="padding-left: 5px; border-left:dotted 1px #C0C0C0;">
         <%= StringEncoderDecoder.encode(row.getDestinationAddressMask().getMask())%>
         <%String dea = row.getDealiasedDestinationAddressMask().getMask();
           if( dea != null && dea.trim().length() > 0 && !dea.equals(row.getDestinationAddressMask().getMask())) {
@@ -169,10 +169,10 @@ if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
         <br>
         <%= StringEncoderDecoder.encode(row.getDstSmeId())%>
       </td>
-      <td>
+      <td valign=top nowrap style="padding-left: 5px; border-left:dotted 1px #C0C0C0;">
         <%= StringEncoderDecoder.encode(row.getRouteId())%>
       </td>
-      <td nowrap>
+      <td nowrap style="padding-left: 5px; border-left:dotted 1px #C0C0C0;">
         <%= StringEncoderDecoder.encode(row.getStatus())%> (<%=row.getLastResult()%>) <br>
         <%
             String errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode."+row.getLastResult());
@@ -181,7 +181,7 @@ if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
       </td>
   </tr>
   <tr class=row<%=rowN&1%>1>
-      <td colspan=7><%= (row.getText()!=null&&row.getText().startsWith("&#")?row.getText():StringEncoderDecoder.encode(row.getText()))%>&nbsp;</td>
+      <td colspan=7 style="border-top:dotted 1px #C0C0C0;"><%= (row.getText()!=null&&row.getText().startsWith("&#")?row.getText():StringEncoderDecoder.encode(row.getText()))%>&nbsp;</td>
   </tr><%
 }}
 %></tbody>

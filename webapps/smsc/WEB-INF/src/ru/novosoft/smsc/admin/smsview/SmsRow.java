@@ -9,6 +9,9 @@ package ru.novosoft.smsc.admin.smsview;
  * @version 1.0
  */
 
+import ru.novosoft.smsc.admin.route.*;
+import ru.novosoft.smsc.admin.*;
+
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
@@ -44,6 +47,9 @@ public class SmsRow
   private short   concatMsgRef;
   private short   concatSeqNum;
 
+  private Mask  originatingAddressMask;
+  private Mask  destinationAddressMask;
+  private Mask  dealiasedDestinationAddressMask;
 
   private int     status  = 0;
   private String  text = "Message text ";
@@ -77,11 +83,20 @@ public class SmsRow
   };
 
   public String getOriginatingAddress() { return originatingAddress; }
-  public void setOriginatingAddress(String address) { originatingAddress = address; }
+  public void setOriginatingAddress(String address) throws AdminException {
+    originatingAddress = address;
+    originatingAddressMask = new Mask(address);
+  }
   public String getDestinationAddress(){ return destinationAddress; };
-  public void setDestinationAddress(String address) { destinationAddress = address; }
+  public void setDestinationAddress(String address) throws AdminException {
+    destinationAddress = address;
+    destinationAddressMask = new Mask(address);
+  }
   public String getDealiasedDestinationAddress(){ return dealiasedDestinationAddress; };
-  public void setDealiasedDestinationAddress(String address) { dealiasedDestinationAddress = address; }
+  public void setDealiasedDestinationAddress(String address) throws AdminException {
+    dealiasedDestinationAddress = address;
+    dealiasedDestinationAddressMask = new Mask(address);
+  }
   public String getToString() {
       return ((dealiasedDestinationAddress == null || dealiasedDestinationAddress.length() == 0 ||
                destinationAddress.equalsIgnoreCase(dealiasedDestinationAddress)) ? destinationAddress:(destinationAddress+" ("+dealiasedDestinationAddress+")"));
@@ -259,5 +274,17 @@ public class SmsRow
 
   public void setValidTime(Date validTime) {
     this.validTime = validTime;
+  }
+
+  public Mask getDealiasedDestinationAddressMask() {
+    return dealiasedDestinationAddressMask;
+  }
+
+  public Mask getDestinationAddressMask() {
+    return destinationAddressMask;
+  }
+
+  public Mask getOriginatingAddressMask() {
+    return originatingAddressMask;
   }
 };
