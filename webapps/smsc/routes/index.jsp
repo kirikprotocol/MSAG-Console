@@ -129,15 +129,15 @@ o.put("Dest Subj", "3");
 o.put("Dest Mask", "4");
 o.put("SMEs", "5");
 %>
-<table>
-<tr>
+<table with="100%">
+<%--<tr>
 <td><input:select name="filterSelect" default="1"
-    attributes="<%= as %>" options="<%= o %>"  /></td></tr>
+    attributes="<%= as %>" options="<%= o %>"  /></td></tr> --%>
 
-<tr><td>    name: &nbsp;<input:text name="queryName"  /> </td></tr>
-<tr><td>    subj: &nbsp;<input:text name="querySubj"  /> </td></tr>
-<tr><td>    mask: &nbsp;<input:text name="queryMask"  /> </td></tr>
-<tr><td>    SMEs: &nbsp;<input:text name="querySMEs"  /> </td></tr>
+<tr><td >    name: &nbsp;<input:text name="queryName"  /> </td></tr>
+<tr><td >    subj: &nbsp;<input:text name="querySubj"  /> </td></tr>
+<tr><td >    mask: &nbsp;<input:text name="queryMask"  /> </td></tr>
+<tr><td >    smes: &nbsp;<input:text name="querySMEs"  /> </td></tr>
 <tr><td>  &nbsp;&nbsp;
 <%
 page_small_menu_begin(out);
