@@ -1011,7 +1011,7 @@ USHORT_T Et96MapCloseInd(
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitRInfoClose:
-      MapDialogContainer::getInstance()->reAssignDialog(dialogueId,locaSsn);
+      MapDialogContainer::getInstance()->reAssignDialog(dialogueId,localSsn);
       dialogueId = dialog->dialogid_map;
       dialog->state = MAPST_WaitMcsVersion;
       QueryMcsVersion(dialog.get());
