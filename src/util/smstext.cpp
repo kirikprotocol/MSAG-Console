@@ -283,9 +283,11 @@ static bool FillUd(SMS* sms)
       }
       userdata[off++]=5;
       userdata[off++]=4;
-      *((unsigned short*)(userdata+off))=htons(sms->getIntProperty(Tag::SMPP_DESTINATION_PORT));
+      unsigned short tmp=htons(sms->getIntProperty(Tag::SMPP_DESTINATION_PORT));
+      memcpy(userdata+off,&tmp,2);
       off+=2;
-      *((unsigned short*)(userdata+off))=htons(sms->getIntProperty(Tag::SMPP_SOURCE_PORT));
+      tmp=htons(sms->getIntProperty(Tag::SMPP_SOURCE_PORT));
+      memcpy(userdata+off,&tmp,2);
       off+=2;
     }
     processed=true;
