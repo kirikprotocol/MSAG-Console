@@ -696,23 +696,37 @@ void DateTimeFormatter::format(std::string& output,
             {
                 if (pattern[curPos+1] == 'y')
                 {
-                    curPos += 2;
-                    if (pattern[curPos] == 'y' && 
-                        pattern[curPos+1] == 'y') 
+                    if (pattern[curPos+2] == 'y')
                     {
-                        curPos += 2;
-                        sprintf(buff, "%04d", tmdt.tm_year+1900);
+                        if (pattern[curPos+3] == 'y')
+                        {
+                            curPos += 4;
+                            sprintf(buff, "%04d", tmdt.tm_year+1900);
+                            output += buff;
+                            continue;
+                        }
+                        // else => go to default
                     }
                     else
+                    {
+                        curPos += 2;
                         sprintf(buff, "%02d", (tmdt.tm_year >= 100) ?
                                 tmdt.tm_year-100:tmdt.tm_year);
-                    output += buff;
-                    continue;
+                        output += buff;
+                        continue;
+                    }
                 }
-                // break missed !!!
+                // break missed => go to default !!!
             }
             default:
-                output += pattern[curPos++];
+                if (isalnum(pattern[curPos]))
+                {
+                    throw FormattingException("Incorrect Date/Time format! "
+                                              "Delimenter or format option expected. "
+                                              "Pattern is: '%s', position %d",
+                                              pattern, curPos);
+                }
+                else output += pattern[curPos++];
                 break;
             }
         }

@@ -43,6 +43,11 @@ void InputParser::parse(std::string& input,
                 ParserRegistry::getParser(ioEntityTypeStrings[entity->type]);
             if (parser)
             {
+                int bytes = 0;
+                const char* str = input.c_str();
+                while (str && isspace(str[bytes])) bytes++; 
+                if (bytes) input.erase(0, bytes);
+                
                 parser->parse(input, *entity, adapter, ctx);
             }
             else throw ParsingException("Parser for type <%s> not defined !",
@@ -67,13 +72,14 @@ void Int8Parser::parse(std::string& input,
     else
     {
         int bytes = 0; int result;
+        const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        const char* str = (!def) ? input.c_str():def;
+        if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%d%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning int8 type. "
                                    "Processing string: '%s'", str);
-        if (!def) input.erase(0, bytes);
+        if (str != def) input.erase(0, bytes);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -99,13 +105,14 @@ void Int16Parser::parse(std::string& input,
     else
     {
         int bytes = 0; int result;
+        const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        const char* str = (!def) ? input.c_str():def;
+        if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%d%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning int16 type. "
                                    "Processing string: '%s'", str);
-        if (!def) input.erase(0, bytes);
+        if (str != def) input.erase(0, bytes);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -131,13 +138,14 @@ void Int32Parser::parse(std::string& input,
     else
     {
         int bytes = 0; int result;
+        const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        const char* str = (!def) ? input.c_str():def;
+        if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%ld%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning int32 type. "
                                    "Processing string: '%s'", str);
-        if (!def) input.erase(0, bytes);
+        if (str != def) input.erase(0, bytes);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -163,13 +171,14 @@ void Int64Parser::parse(std::string& input,
     else
     {
         int bytes = 0; int result;
+        const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        const char* str = (!def) ? input.c_str():def;
+        if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%lld%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning int64 type. "
                                    "Processing string: '%s'", str);
-        if (!def) input.erase(0, bytes);
+        if (str != def) input.erase(0, bytes);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -195,13 +204,14 @@ void Uint8Parser::parse(std::string& input,
     else
     {
         int bytes = 0; int result;
+        const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        const char* str = (!def) ? input.c_str():def;
+        if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%u%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning uint8 type. "
                                    "Processing string: '%s'", str);
-        if (!def) input.erase(0, bytes);
+        if (str != def) input.erase(0, bytes);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -227,13 +237,14 @@ void Uint16Parser::parse(std::string& input,
     else
     {
         int bytes = 0; int result;
+        const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        const char* str = (!def) ? input.c_str():def;
+        if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%u%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning uint16 type. "
                                    "Processing string: '%s'", str);
-        if (!def) input.erase(0, bytes);
+        if (str != def) input.erase(0, bytes);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -259,13 +270,14 @@ void Uint32Parser::parse(std::string& input,
     else
     {
         int bytes = 0; int result;
+        const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        const char* str = (!def) ? input.c_str():def;
+        if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%lu%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning uint32 type. "
                                    "Processing string: '%s'", str);
-        if (!def) input.erase(0, bytes);
+        if (str != def) input.erase(0, bytes);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -291,13 +303,14 @@ void Uint64Parser::parse(std::string& input,
     else
     {
         int bytes = 0; int result;
+        const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        const char* str = (!def) ? input.c_str():def;
+        if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%llu%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning uint64 type. "
                                    "Processing string: '%s'", str);
-        if (!def) input.erase(0, bytes);
+        if (str != def) input.erase(0, bytes);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -313,7 +326,6 @@ void StringParser::parse(std::string& input,
     FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
         throw(ParsingException, AdapterException)
 {
-    const char* str = 0;
     std::string line = "";
 
     const char* imp = entity.getOption(SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
@@ -321,18 +333,14 @@ void StringParser::parse(std::string& input,
     if (imp && ctx.importStr(imp, impVal) && impVal)
     {
         line += impVal;
-        str = impVal;
     }
     else
     {
-        const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        str = (!def) ? input.c_str():def;
+        const char* str = input.c_str();
 
-        if (!def)
+        if (str && *str)
         {
             int curPos = 0;
-            while (isspace(str[curPos])) curPos++;
-            
             if (str[curPos] == '\"')
             {
                 curPos++;
@@ -345,15 +353,18 @@ void StringParser::parse(std::string& input,
                 while (str[curPos] && !isspace(str[curPos])) 
                     line += str[curPos++];
             }
-            
             input.erase(0, curPos);
         }
-        else line += def;
+        else 
+        {
+            const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+            if (def) line += def;
+        }
     }
     
     if (!line.length())
         throw ParsingException("Parameter of type string missed."
-                               "Processing string: '%s'", str);
+                               "Processing string: '%s'", input.c_str());
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportStr(exp, line.c_str());
@@ -378,13 +389,14 @@ void FloatParser::parse(std::string& input,
     else
     {
         int bytes, result;
+        const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        const char* str = (!def) ? input.c_str():def;
-        if ((result = sscanf(str, "%f%n", &value, &bytes)) == EOF
+        if (!(str && *str) && def) str = def;
+        if ((result = sscanf(str, "%fu%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning float type. "
                                    "Processing string: '%s'", str);
-        if (!def) input.erase(0, bytes);
+        if (str != def) input.erase(0, bytes);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -410,13 +422,14 @@ void DoubleParser::parse(std::string& input,
     else
     {
         int bytes, result;
+        const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        const char* str = (!def) ? input.c_str():def;
+        if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%le%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
             throw ParsingException("Error scanning double type. "
                                    "Processing string: '%s'", str);
-        if (!def) input.erase(0, bytes);
+        if (str != def) input.erase(0, bytes);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -442,13 +455,14 @@ void LongDoubleParser::parse(std::string& input,
     else
     {
         int bytes, result;
+        const char* str = input.c_str();
         const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-        const char* str = (!def) ? input.c_str():def;
+        if (!(str && *str) && def) str = def;
         if ((result = sscanf(str, "%Le%n", &value, &bytes)) == EOF
             || !result || !bytes || bytes<0)
-            throw ParsingException("Error scanning long double type. "
+            throw ParsingException("Error scanning long-double type. "
                                    "Processing string: '%s'", str);
-        if (!def) input.erase(0, bytes);
+        if (str != def) input.erase(0, bytes);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
@@ -464,24 +478,25 @@ void DateTimeParser::parse(std::string& input,
     FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
         throw(ParsingException, AdapterException)
 {
-    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
-    const char* pattern = entity.getOption(SMSC_DBSME_IO_FORMAT_PATTERN_OPTION);
-    const char* error = "Error scanning date type: %s. "
+    const char* error = "Error scanning Date/Time type: %s. "
                         "Processing string: '%s' "
                         "Pattern is: '%s'";
     tm      tmdt;
     time_t  date; 
-    int     strPos = 0;
-    int     bytes, result = 0;
     
     memset(&tmdt, 0, sizeof(tmdt));
     
     const char* imp = entity.getOption(SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
     if (!imp || !ctx.importDat(imp, date))
     {
-        char* str = (char *)((!def) ? input.c_str():def);
-        
-        while (isspace(str[strPos])) strPos++;
+        int     strPos = 0;
+        int     bytes, result = 0;
+
+        const char* pattern = entity.getOption(SMSC_DBSME_IO_FORMAT_PATTERN_OPTION);
+
+        const char* str = input.c_str();
+        const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+        if (!(str && *str) && def) str = def;
         
         if (&str[strPos] == strstr(&str[strPos], ioNowString))
         {
@@ -518,7 +533,6 @@ void DateTimeParser::parse(std::string& input,
 
             while (pattern[curPos] && str[strPos])
             {
-
                 while (isspace(str[strPos])) strPos++;
                 while (isspace(pattern[curPos])) curPos++;
 
@@ -659,33 +673,46 @@ void DateTimeParser::parse(std::string& input,
                 {
                     if (pattern[curPos+1] == 'y')
                     {
-                        curPos += 2;
                         if ((result = sscanf(&str[strPos], "%d%n", 
                             &tmdt.tm_year, &bytes)) == EOF ||
                             !result || !bytes || bytes<0)
                             throw ParsingException(error, 
                                                    "2-digit year number expected",
                                                    str, pattern);
-
-                        if (pattern[curPos] == 'y' && pattern[curPos+1] == 'y') 
+                    
+                        if (pattern[curPos+2] == 'y')
                         {
-                            curPos += 2;
-                            tmdt.tm_year -= 1900;
-                        } 
+                            if (pattern[curPos+3] == 'y') 
+                            {
+                                curPos += 4; tmdt.tm_year -= 1900;
+                                strPos += bytes; isYear = true;
+                                continue;
+                            }
+                            // else => go to default
+                        }
                         else
                         {
+                            curPos += 2;
                             tmdt.tm_year = (tmdt.tm_year < 70) ? 
                                 tmdt.tm_year+100 : tmdt.tm_year;
+                            strPos += bytes; isYear = true;
+                            continue;
                         }
-                        strPos += bytes; isYear = true;
-                        continue;
                     }
-                    // break missed !!!
+                    // break missed => go to default !!!
                 }
                 default:
-                    if (str[strPos] != pattern[curPos])
-                        throw ParsingException(error, "Delimeter expected",
-                                               str, pattern);
+                    
+                    if (isalnum(str[strPos]) || 
+                        isalnum(pattern[curPos]) || 
+                        str[strPos] != pattern[curPos])
+                            throw ParsingException(
+                                "Error scanning Date/Time format! "
+                                "Delimenter or format option expected. "
+                                "Processing string: '%s', position %d "
+                                "Pattern is: '%s', position %d",
+                                str, strPos, pattern, curPos);
+                    
                     strPos++; curPos++;
                     break;
                 }
@@ -698,7 +725,7 @@ void DateTimeParser::parse(std::string& input,
                     tmdt.tm_hour += (AMPM && tmdt.tm_hour<12) ? 12:0;
                 }
                 else throw ParsingException(error, "AM/PM qualifer missed",
-                                        str, pattern);
+                                            str, pattern);
             }
 
             time_t  current = time(NULL);
@@ -720,14 +747,15 @@ void DateTimeParser::parse(std::string& input,
                 &tmdt.tm_mday, &tmdt.tm_mon, &tmdt.tm_year,
                 &tmdt.tm_hour, &tmdt.tm_min, &tmdt.tm_sec,
                 &bytes)) == EOF || !result || !bytes || bytes<0)
-                throw ParsingException("Error scanning default date type format. "
-                                       "Processing string: '%s'", str);
+                throw ParsingException("Error scanning default Date/Time format."
+                                       " Processing string: '%s'", str);
 
-            tmdt.tm_mon -= 1; tmdt.tm_year -= 1900; strPos = bytes;
+            tmdt.tm_mon -= 1; tmdt.tm_year -= 1900; 
             date = mktime(&tmdt);
+            strPos = bytes;
         }
         
-        if (!def) input.erase(0, strPos);
+        if (str != def && strPos) input.erase(0, strPos);
     }
     
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
