@@ -134,7 +134,7 @@ int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
   sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
   if(datalen>255)
   {
-    sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,"",0);
+    //sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,"",0);
     sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,0);
     sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf.get(),datalen);
   }else
