@@ -38,6 +38,7 @@ extern "C" {
 #include <et96map_api_types.h>
 #include <et96map_dialogue.h>
 #include <et96map_sms.h>
+#include <et96map_ussd.h>
 }
 
 #define SSN 8
