@@ -102,6 +102,16 @@ const AliasHolder* AliasRegistry::findAddressByAlias(const Address& alias) const
 	return NULL;
 }
 
+void AliasRegistry::saveConfig(FILE* cfg)
+{
+	__require__(cfg);
+	__require__(addrMap.size() == aliasMap.size());
+	for (AddressMap::const_iterator it = addrMap.begin(); it != addrMap.end(); it++)
+	{
+		//typedef map<const Address, AliasHolder*, ltAddress> AddressMap;
+	}
+}
+
 }
 }
 }
