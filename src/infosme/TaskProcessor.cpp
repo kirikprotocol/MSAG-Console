@@ -228,8 +228,7 @@ int TaskProcessor::Execute()
     while (!bNeedExit)
     {
         time_t currentTime = time(NULL);
-        processWaitingEvents(currentTime);
-
+        
         {
             MutexGuard guard(tasksLock);
             char* key = 0; Task* task = 0; tasks.First();
@@ -262,6 +261,7 @@ int TaskProcessor::Execute()
             delete taskGuard;
         }
 
+        processWaitingEvents(currentTime); // ?? or time(NULL)
         if (!bNeedExit && processed <= 0) awake.Wait(switchTimeout);
     }
     exited.Signal();
@@ -298,7 +298,7 @@ void TaskProcessor::processWaitingEvents(time_t time)
             count = responceWaitQueue.Count();
         }
     }
-    while (count > 0);
+    while (!bNeedExit && count > 0);
     
     do
     {
@@ -326,7 +326,7 @@ void TaskProcessor::processWaitingEvents(time_t time)
             count = receiptWaitQueue.Count();
         }
     }
-    while (count > 0);
+    while (!bNeedExit && count > 0);
 }
 bool TaskProcessor::processTask(Task* task)
 {
