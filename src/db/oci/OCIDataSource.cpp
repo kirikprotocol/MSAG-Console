@@ -1001,6 +1001,7 @@ OCIDataDescriptor* OCIRoutine::findDescriptor(const char* key)
         !(descriptor = descriptors.Get(up))) 
     { 
         if (up) delete up;
+        __trace2__("Descriptor for '%s/%s' key not found !", key, up);
         throw InvalidArgumentException();
     }
             
@@ -1189,7 +1190,7 @@ uint64_t OCIRoutine::getUint64(const char* key)
 #define defineSetFloat(key, val, null)                                  \
 {                                                                       \
     OCIDataDescriptor* descriptor = findDescriptor(key);                \
-    if (descriptor->type != SQLT_FLT)                                   \
+    if (descriptor->type != SQLT_VNU)                                   \
         throw InvalidArgumentException();                               \
     if (!null)                                                          \
     {                                                                   \
