@@ -32,6 +32,9 @@ public:
 	}
 	void setupSystemSme();
 	void setupSystemSmeRoutes();
+
+	void setupDuplexRoutes(const Address& addr1, const SmeSystemId smeId1,
+		const Address& addr2, const SmeSystemId smeId2);
 	
 	void checkRoute(const Address& origAddr, const SmeSystemId& origSmeId,
 		const Address& destAlias, int* numRoutes = NULL, int* numBound = NULL);

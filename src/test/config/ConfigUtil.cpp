@@ -56,6 +56,22 @@ void ConfigUtil::setupSystemSme()
 	profilerAliasInfo.alias = profilerAlias;
 	profilerAliasInfo.hide = true; //rand0(2);
 	aliasReg->putAlias(profilerAliasInfo);
+	//abonent info
+	__cfg_addr__(abonentInfoAddr);
+	__cfg_addr__(abonentInfoAlias);
+	__cfg_str__(abonentInfoSystemId);
+	SmeInfo abonentInfoSme;
+	abonentInfoSme.wantAlias = false;
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&abonentInfoSme);
+	abonentInfoSme.systemId = abonentInfoSystemId;
+	smeReg->registerSme(abonentInfoAddr, abonentInfoSme, false, true);
+	smeReg->bindSme(abonentInfoSme.systemId);
+	//алиас для abonent info
+	AliasInfo abonentInfoAliasInfo;
+	abonentInfoAliasInfo.addr = abonentInfoAddr;
+	abonentInfoAliasInfo.alias = abonentInfoAlias;
+	abonentInfoAliasInfo.hide = true; //rand0(2);
+	aliasReg->putAlias(abonentInfoAliasInfo);
 	//регистрация map proxy
 	__cfg_str__(mapProxySystemId);
 	SmeInfo mapProxySme;
@@ -64,14 +80,6 @@ void ConfigUtil::setupSystemSme()
 	mapProxySme.systemId = mapProxySystemId;
 	smeReg->registerSme("+123", mapProxySme, false, true);
 	smeReg->bindSme(mapProxySme.systemId);
-	//abonent info прокси
-	__cfg_str__(abonentInfoSystemId);
-	SmeInfo abonentInfoSme;
-	abonentInfoSme.wantAlias = false;
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&abonentInfoSme);
-	abonentInfoSme.systemId = abonentInfoSystemId;
-	smeReg->registerSme("+321", abonentInfoSme, false, true);
-	smeReg->bindSme(abonentInfoSme.systemId);
 }
 
 void ConfigUtil::setupSystemSmeRoutes()
@@ -116,6 +124,27 @@ void ConfigUtil::setupSystemSmeRoutes()
 			routeReg->putRoute(route, NULL);
 		}
 	}
+}
+
+void ConfigUtil::setupDuplexRoutes(const Address& addr1, const SmeSystemId smeId1,
+	const Address& addr2, const SmeSystemId smeId2)
+{
+	//1 -> 2
+	RouteInfo route1;
+	RouteUtil::setupRandomCorrectRouteInfo(&route1);
+	route1.source = addr1;
+	route1.dest = addr2;
+	route1.smeSystemId = smeId2;
+	route1.enabling = true;
+	routeReg->putRoute(route1, NULL);
+	//2 -> 1
+	RouteInfo route2;
+	RouteUtil::setupRandomCorrectRouteInfo(&route2);
+	route2.source = addr2;
+	route2.dest = addr1;
+	route2.smeSystemId = smeId1;
+	route2.enabling = true;
+	routeReg->putRoute(route2, NULL);
 }
 
 void ConfigUtil::checkRoute(const Address& origAddr, const SmeSystemId& origSmeId,
