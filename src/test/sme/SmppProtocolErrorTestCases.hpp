@@ -96,7 +96,13 @@ public:
 	/**
 	 * Отправка submit_sm после unbind.
 	 */
-	void submitAfterUnbindScenario();
+	void submitAfterUnbindScenario(int num);
+
+	/**
+	 * Отправка произвольных pdu с пустыми полями.
+	 * Проверка ошибок минимальная, основное назначение - завалить SC.
+	 */
+	void nullPduScenario(int num);
 
 protected:
 	const SmeConfig cfg;
