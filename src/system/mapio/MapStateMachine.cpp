@@ -643,7 +643,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
 
 static long long NextSequence()
 {
-  static long long secuence = (((long long)time(0))<<32);
+  static long long sequence = (((long long)time(0))<<32);
   return ++sequence;
 }
 
@@ -687,7 +687,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
             string s_seq = "";//cmd->get_sms()->getStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
             if (s_seq.length()==0) throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: empty user_message_reference");
             long long sequence;
-            if ( sscanf(s_seq.c_str(),"%llx",&sequence) != 1 )
+            istringstream(s_seq) >> sequence;
+            if ( sequence == 0 )
               throw MAPDIALOG_FATAL_ERROR(
                 FormatText("MAP::PutCommand: invaid USSD code 0x%llx",s_seq.c_str()));
             {
@@ -781,7 +782,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
           {
             {
               MutexGuard ussd_map_guard( ussd_map_lock );
-              dialog->ussdSequence = NextSequence();
               ussd_map[dialog->ussdSequence] = dialog->dialogid_map;
             }
           }
@@ -1568,6 +1568,13 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     sms.setDestinationAddress(dest_addr);
     dialog->sms = _sms;
     dialog->state = MAPST_WaitSmsMODelimiter2;
+    dialog->ussdSequence = NextSequence();
+    _sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_USSR);
+    {
+      ostringstream  ost;
+      ost << dialog->ussdSequence;
+      //sms->setStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,message_reference.str());
+    }
     //SendSubmitCommand (dialog.get());
   }MAP_CATCH(__dialogid_map,0);
   return ET96MAP_E_OK;
