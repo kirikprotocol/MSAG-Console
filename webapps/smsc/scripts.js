@@ -73,7 +73,6 @@ function validateField_routeMask(elem)
 		return true;
 	}
 	var r = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+)|\\d)\\d{0,21}\\?{0,21}$");
-	else
 	{
 		return elem.value.match(r) == null
 			? validationError(elem, "Invalid mask")
