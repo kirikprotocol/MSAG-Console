@@ -788,7 +788,7 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id,
                                          bool delivered, bool retry, uint64_t msg_id/*=0*/)
 {
     smsc_log_debug(logger, "Finalizing message #%lld smsc_id=%s delivered=%d",
-                   msg_id, smsc_id, delivered);
+                   msg_id, (smsc_id) ? smsc_id:"-", delivered);
 
     Array<std::string> callers;
     
