@@ -86,13 +86,13 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   if ( msa_len%2 ) msa_len+1;
   msa_len = msa_len/2+2;
   unsigned user_data_len = *(unsigned char*)(ud->signalInfo+2+ssfh->tp_vp?7:1+msa->len+2);
-  unsigned user_data = *(unsigned char*)(user_data_len+1);
+  unsigned* user_data = (unsigned char*)(user_data_len+1);
   unsigned protocol_id = *(unsigned char*)(ud->signalInfo+2+msa->len);
   unsigned user_data_coding = *(unsigned char*)(ud->signalInfo+2+msa->len+1);
   __trace2__("MAP::DIALOG::ForwardReaq: protocol_id = 0x%x",protocol_id);
   __trace2__("MAP::DIALOG::ForwardReaq: user_data_len = %d",user_data_len);
   __trace2__("MAP::DIALOG::ForwardReaq: user_data_encoding = 0x%x",user_data_coding);
-  sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,user_data,user_data_len);
+  sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
   sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
   sms.setIntProperty(Tag::SMPP_DATA_CODING,user_data_coding);
   sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
