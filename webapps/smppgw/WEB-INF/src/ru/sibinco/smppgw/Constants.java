@@ -85,6 +85,12 @@ public class Constants
     {
       public static final Constants SMSC_NOT_FOUND = new Constants("error.smscs.smsc_not_found");
     }
+
+    public interface stat
+    {
+      public static final Constants GET_STATISTICS_FAILED = new Constants("error.stat.get_statistics_failed");
+    }
+
   }
 
 
