@@ -1838,6 +1838,10 @@ USHORT_T Et96MapCloseInd(
       dialog->state = MAPST_END;
       DropMapDialog(dialog.get());
       break;
+    case MAPST_WaitAlertDelimiter:
+      dialog->state = MAPST_CLOSED;
+      DropMapDialog(dialog.get());
+      break;
     default:
       throw MAPDIALOG_BAD_STATE(
         FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialogid_map,dialogid_smsc));
@@ -2487,6 +2491,7 @@ USHORT_T Et96MapVxAlertSCInd_Impl(
     __require__(dialog->ssn==localSsn);
     dialog->hlrVersion = version;
     dialogid_smsc = dialog->dialogid_smsc;
+    dialog->hlrWasNotified = TRUE;
     __map_trace2__("%s: dialogid 0x%x (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitSms:
