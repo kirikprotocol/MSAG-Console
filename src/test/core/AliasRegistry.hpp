@@ -6,6 +6,7 @@
 #include "AliasUtil.hpp"
 #include <map>
 #include <vector>
+#include <memory>
 
 namespace smsc {
 namespace test {
@@ -13,6 +14,7 @@ namespace core {
 
 using std::map;
 using std::vector;
+using std::auto_ptr;
 using smsc::sms::Address;
 using smsc::test::sms::ltAddress;
 
@@ -40,9 +42,11 @@ public:
 	
 	AliasIterator* iterator() const;
 
-	const AliasHolder* findAliasByAddress(const Address& addr) const;
+	auto_ptr<const Address> findAliasByAddress(const Address& addr,
+		const AliasInfo** aliasInfo = NULL) const;
 
-	const AliasHolder* findAddressByAlias(const Address& alias) const;
+	auto_ptr<const Address> findAddressByAlias(const Address& alias,
+		const AliasInfo** aliasInfo = NULL) const;
 
 private:
 	AddressMap addrMap;
@@ -50,8 +54,8 @@ private:
 
 	int getPartLen(const char* str, char ch);
 	int compareAddr(const Address& a1, const Address& a2);
-	bool checkInverseTransformation(const Address& src1, const Address& dest1,
-		const Address& src2, const Address& dest2);
+	bool checkAddr2Alias2AddrTransformation(const AliasInfo& alias1,
+		const AliasInfo& alias2);
 };
 
 }
