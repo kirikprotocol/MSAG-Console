@@ -2860,6 +2860,7 @@ StateType StateMachine::alert(Tuple& t)
   sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
   smsLog->warn("ALERT: delivery timed out(%s->%s)",bufsrc,bufdst);
   sms.setLastResult(Status::DELIVERYTIMEDOUT);
+  smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
      (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
   {
@@ -2885,7 +2886,6 @@ StateType StateMachine::alert(Tuple& t)
     smsc->notifyScheduler();
     sendNotifyReport(sms,t.msgId,"delivery attempt timed out");
   }
-  smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
   return UNKNOWN_STATE;
 }
 
