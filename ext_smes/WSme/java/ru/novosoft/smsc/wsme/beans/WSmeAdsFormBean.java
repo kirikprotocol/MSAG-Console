@@ -11,6 +11,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.wsme.WSmeErrors;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class WSmeAdsFormBean extends WSmeBaseFormBean
 {
@@ -18,20 +19,27 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
   private String newLang;
   private String newAd;
 
+  private List ads = new ArrayList();
+
+  public final static char ID_LANG_SEPARATOR = '-';
+
   public int process(List errors)
   {
     int result = super.process(errors);
-    if (result != RESULT_OK ||
-        result != RESULT_ADS) return result;
+    if (result != RESULT_OK && result != RESULT_ADS) return result;
+    result = RESULT_OK;
 
     if (btnAdd != null && newId != null && newLang != null && newAd != null)
       result = addNewAd();
     else if (btnDel != null && selectedRows != null)
       result = delAds();
 
+    if (result == RESULT_OK)
+      result = loadAds();
+
     selectedRows = null; btnAdd = null; btnDel = null;
     newId = null; newLang = null; newAd = null;
-    return RESULT_OK;
+    return result;
   }
 
   protected int addNewAd()
@@ -42,8 +50,11 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
       int id = Integer.parseInt(newId);
       wsme.addAd(id, newLang, newAd);
     }
+    catch (NumberFormatException exc) {
+      result = error(WSmeErrors.error.admin.ParseError, exc.getMessage());
+    }
     catch (Exception exc) {
-       result = error(WSmeErrors.error.transport.failure, exc.getMessage());
+       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
@@ -54,25 +65,35 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     int result = RESULT_OK;
     try {
       for (int i=0; i<selectedRows.length; i++) {
-        // TODO: parse selectedRows[i] here, get id and lang !!!
-        wsme.removeAd(0, "");
+        String row = selectedRows[i];
+        int separator = (row == null) ? -1:row.indexOf(ID_LANG_SEPARATOR);
+        if (separator <= 0) continue;
+        int id = Integer.parseInt(row.substring(0, separator));
+        wsme.removeAd(id, row.substring(separator+1));
       }
     }
+    catch (NumberFormatException exc) {
+      result = error(WSmeErrors.error.admin.ParseError, exc.getMessage());
+    }
     catch (AdminException exc) {
-       result = error(WSmeErrors.error.transport.failure, exc.getMessage());
+       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
 
-  public List getAds()
+  public int loadAds()
   {
-    List ads = null;
+    int result = RESULT_OK;
     try {
        ads = wsme.getAds();
     }
     catch (AdminException exc) {
-       int result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
+       ads.clear();
+       result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
     }
+    return result;
+  }
+  public List getAds() {
     return ads;
   }
 

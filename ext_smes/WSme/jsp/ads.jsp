@@ -25,6 +25,9 @@
     case WSmeFormBean.RESULT_DONE:
       response.sendRedirect("index.jsp");
       return;
+    case WSmeFormBean.RESULT_ADS:
+      STATUS.append("Ok");
+      break;
     case WSmeFormBean.RESULT_OK:
       STATUS.append("Ok");
       break;
@@ -58,7 +61,7 @@
     AdRow ad = (AdRow)ads.get(i);
   %><tr class=row<%=rowN&1%>0>
       <td nowrap valign=top>
-        <input class=check type=checkbox name=selectedRows value="<%= ""+ad.id+"-"+ad.lang%>">
+        <input class=check type=checkbox name=selectedRows value="<%= StringEncoderDecoder.encode(""+ad.id+WSmeAdsFormBean.ID_LANG_SEPARATOR+ad.lang)%>">
       </td>
       <td nowrap valign=top>
         <%= ad.id%>

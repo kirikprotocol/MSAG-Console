@@ -26,8 +26,8 @@
       response.sendRedirect("ads.jsp");
       return;
     case WSmeFormBean.RESULT_DONE:
-      response.sendRedirect("index.jsp");
-      return;
+      STATUS.append("Ok");
+      break;
     case WSmeFormBean.RESULT_OK:
       STATUS.append("Ok");
       break;
@@ -44,8 +44,9 @@
 <%@ include file="inc/menu.jsp"%>
 
 <h1>Config edit goes here ...</h1>
-<input class=btn type=submit name=applyConfig value="Apply" title="Apply">
-<input class=btn type=submit name=cancelConfig value="Cancel" title="Cancel">
+
+<input class=btn type=submit name=btnApply value="Apply" title="Apply">
+<input class=btn type=submit name=btnCancel value="Cancel" title="Cancel">
 
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

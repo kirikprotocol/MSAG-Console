@@ -11,26 +11,32 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.wsme.WSmeErrors;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class WSmeLangsFormBean extends WSmeBaseFormBean
 {
   private String newMask = null;
   private String newLang = null;
 
+  private List langs = new ArrayList();
+
   public int process(List errors)
   {
     int result = super.process(errors);
-    if (result != RESULT_OK &&
-        result != RESULT_LANGS) return result;
+    if (result != RESULT_OK && result != RESULT_LANGS) return result;
+    result = RESULT_OK;
 
     if (btnAdd != null && newMask != null && newLang != null)
       result = addNewLang();
     else if (btnDel != null && selectedRows != null)
       result = delLangs();
 
+    if (result == RESULT_OK)
+      result = loadLangs();
+
     selectedRows = null; btnAdd = null; btnDel = null;
     newLang = null; newMask = null;
-    return RESULT_OK;
+    return result;
   }
 
   protected int addNewLang()
@@ -41,7 +47,7 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
        wsme.addLang(newMask, newLang);
     }
     catch (AdminException exc) {
-       result = error(WSmeErrors.error.failed, exc.getMessage());
+       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
@@ -54,20 +60,24 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
         wsme.removeLang(selectedRows[i]);
     }
     catch (AdminException exc) {
-       result = error(WSmeErrors.error.failed, exc.getMessage());
+       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
 
-  public List getLangs()
+  public int loadLangs()
   {
-    List langs = null;
+    int result = RESULT_OK;
     try {
        langs = wsme.getLangs();
     }
     catch (AdminException exc) {
-       int result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
+       langs.clear();
+       result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
     }
+    return result;
+  }
+  public List getLangs() {
     return langs;
   }
 

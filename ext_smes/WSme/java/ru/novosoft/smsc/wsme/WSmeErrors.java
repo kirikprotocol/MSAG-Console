@@ -31,6 +31,18 @@ public class WSmeErrors
 
       public static final String failure = B + "Failure";
     }
+    public static class remote
+    {
+      private static final String B = WSmeErrors.error.B + "remote.";
+
+      public static final String failure = B + "Failure";
+    }
+    public static class admin
+    {
+      private static final String B = WSmeErrors.error.B + "admin.";
+
+      public static final String ParseError = B + "ParseError";
+    }
   }
 
   public static class warning

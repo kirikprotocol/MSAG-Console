@@ -11,19 +11,27 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.wsme.WSmeErrors;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class WSmeVisitorsFormBean extends WSmeBaseFormBean
 {
   private String newVisitor = null;
 
+  private List visitors = new ArrayList();
+
   public int process(List errors)
   {
     int result = super.process(errors);
-    if (result != RESULT_OK &&
-        result != RESULT_VISITORS) return result;
+    if (result != RESULT_OK && result != RESULT_VISITORS) return result;
+    result = RESULT_OK;
 
-    if (btnAdd != null && newVisitor != null) result = addNewVisitor();
-    else if (btnDel != null && selectedRows != null) result = delVisitors();
+    if (btnAdd != null && newVisitor != null)
+      result = addNewVisitor();
+    else if (btnDel != null && selectedRows != null)
+      result = delVisitors();
+
+    if (result == RESULT_OK)
+      result = loadVisitors();
 
     selectedRows = null; btnAdd = null; btnDel = null;
     newVisitor = null;
@@ -38,7 +46,7 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
        wsme.addVisitor(newVisitor);
     }
     catch (AdminException exc) {
-       result = error(WSmeErrors.error.failed, exc.getMessage());
+       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
@@ -51,20 +59,24 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
         wsme.removeVisitor(selectedRows[i]);
     }
     catch (AdminException exc) {
-       result = error(WSmeErrors.error.failed, exc.getMessage());
+       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
 
-  public List getVisitors()
+  public int loadVisitors()
   {
-    List visitors = null;
+    int result = RESULT_OK;
     try {
        visitors = wsme.getVisitors();
     }
     catch (AdminException exc) {
-       int result = error(WSmeErrors.error.transport.failure, exc.getMessage());
+       visitors.clear();
+       result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
     }
+    return result;
+  }
+  public List getVisitors() {
     return visitors;
   }
 
