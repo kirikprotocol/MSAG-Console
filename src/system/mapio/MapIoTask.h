@@ -154,7 +154,7 @@ public:
 void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
 //ET96MAP_DIALOGUE_ID_T allocateDialogueId();
 
-static const unsigned MAX_DIALOGID_POOLED  = 8*200+1;
+static const unsigned MAX_DIALOGID_POOLED  = 8*2000+1;
 
 /**
   \class MapDialog
@@ -291,12 +291,19 @@ private:
 
 class DialogRefGuard{
   MapDialog* dialog;
+  DialogRefGuard(const DialogRefGuard&);
 public:
   DialogRefGuard(MapDialog* d = 0):dialog(d){/*d->AddRef();*/}
-  ~DialogRefGuard(){if ( dialog ) dialog->Release();}
+  ~DialogRefGuard(){
+    if ( dialog ) {
+      MapDialogContainer::getInstance()->releaseDialog(dialog);
+    }
+  }
   void assign(MapDialog* d){
     if ( dialog == d ) return;
-    if ( dialog ) dialog->Release();
+    if ( dialog ) {
+      MapDialogContainer::getInstance()->releaseDialog(dialog);
+    }
     dialog = d;
     dialog->lockedAt = time(NULL);
   }
@@ -576,6 +583,10 @@ public:
     return dialogid_map;
   }
 
+  void releaseDialog(MapDialog *dialog){
+    MutexGuard g(sync);
+    dialog->Release();
+  }
 
   void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn){
     MutexGuard g(sync);

@@ -30,7 +30,7 @@ namespace smsc{
 namespace system{
 namespace mapio{
 
-#define MAP_PROXY_QUEUE_LIMIT 1024
+#define MAP_PROXY_QUEUE_LIMIT 16*1024
 
 using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
@@ -41,6 +41,7 @@ class MapProxy:public SmeProxy{
 public:
   MapProxy() : seq(0),smereg(0) {
    time_logger = smsc::logger::Logger::getInstance("map.otime");
+   setPerformanceLimits(45, 100);
   }
   virtual ~MapProxy()
   {
@@ -108,14 +109,14 @@ public:
     __mapproxy_trace__("putIncomingCommand");
     {
       MutexGuard g(mutex);
-      if(cmd->get_commandId()==DELIVERY_RESP)
-      {
-        processResponse(cmd);
-      }
       if(inqueue.Count()==MAP_PROXY_QUEUE_LIMIT)
       {
         __mapproxy_trace__("putIncomingCommand: proxy queue limit exceded");
         throw ProxyQueueLimitException();
+      }
+      if(cmd->get_commandId()==DELIVERY_RESP)
+      {
+        processResponse(cmd);
       }
       inqueue.Push(cmd);
     }
