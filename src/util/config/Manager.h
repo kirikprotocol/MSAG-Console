@@ -60,7 +60,7 @@ public:
 	 *
 	 * @return Конфигурация базы данных
 	 */
-	StoreConfig *getDatabase() const {return db;};
+	StoreConfig *getStoreConfig() const {return db;};
 	/**
 	 * Возвращает конфигурацию логгера
 	 *
