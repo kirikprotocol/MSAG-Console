@@ -55,7 +55,6 @@ void RouteConfig::clear()
   Subject * value;
   for (SubjectPHash::Iterator j = subjects.getIterator(); j.Next(key, value); )
   {
-    delete key;
     delete value;
   }
   subjects.Empty();
@@ -177,7 +176,14 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       DOM_Node node(subj_defs.item(i));
       DOM_Element &elem = (DOM_Element &)node;
       Subject *s = createSubjectDef(elem);
-      subjects[s->getId()] = s;
+      if (subjects.Exists(s->getId()))
+      {
+        logger.warn("Duplicate of subject \"%s\" definition. Second subject definition skipped", s->getId());
+      }
+      else
+      {
+        subjects[s->getId()] = s;
+      }
     }
 
     DOM_NodeList route_list = elem.getElementsByTagName("route");
