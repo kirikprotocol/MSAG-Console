@@ -11,7 +11,7 @@ do
 ./bin/smsc 1>/dev/null 2>>logs/smsc.err&
 PID=$!
 export PID
-trap "kill -2 $PID;wait $PID" SIGINT
+trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
 wait $PID
 if [ -f core ]; then
   DATE=`perl -e '($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);printf("%04d%02d%02d%02d%02d%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec)'`
