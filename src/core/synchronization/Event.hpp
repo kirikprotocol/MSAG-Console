@@ -21,6 +21,7 @@ public:
     event=CreateEvent(NULL,FALSE,FALSE,NULL);
 #else
     cond_init(&event,USYNC_THREAD,NULL);
+    signaled=0;
 #endif
   }
   ~Event()
@@ -37,6 +38,12 @@ public:
     return WaitForSingleObject(event,INFINITE);
 #else
     mutex.Lock();
+    if(signaled)
+    {
+      signaled=0;
+      mutex.Unlock();
+      return 0;
+    }
     int retval=cond_wait(&event,&mutex.mutex);
     mutex.Unlock();
     return retval;
@@ -47,7 +54,10 @@ public:
 #ifdef _WIN32
     SetEvent(event);
 #else
+    mutex.Lock();
     cond_signal(&event);
+    signaled=1;
+    mutex.Unlock();
 #endif
   }
 protected:
@@ -56,6 +66,7 @@ protected:
 #else
   cond_t event;
   Mutex mutex;
+  int signaled;
 #endif
 };//Event
 

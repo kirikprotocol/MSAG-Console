@@ -55,7 +55,7 @@ MemoryManager::acquireHeap(const char* taskname,int rawheapsize,int blocksheapqu
     {
       retval=freeHeaps[i];
       usedHeaps.Push(freeHeaps[i]);
-      freeHeaps.Delete(i);
+      freeHeaps.Delete(i,1);
       Unlock();
       return retval;
     }
@@ -80,7 +80,7 @@ void MemoryManager::releaseHeap(MemoryHeap *heap)
     if(usedHeaps[i]==heap)
     {
       freeHeaps.Push(usedHeaps[i]);
-      usedHeaps.Delete(i);
+      usedHeaps.Delete(i,1);
     }
   }
   Unlock();
@@ -205,27 +205,19 @@ void MemoryHeap::initHeap(int rawheapsize,
 void MemoryHeap::cleanHeap()
 {
   PRawHeapPage p=firstRawPage,q;
-  trace2("raw heap cleanup:%08x",p)
   char *mem;
   while(p)
   {
     q=p->next;
     mem=p->memPage;
-    if(!mem)
-    {
-      __warning__("empty raw heap page!!!");
-      p=q;
-      continue;
-    }
+    __require__(mem);
     mem-=sizeof(RawHeapPage);
-    trace2("delete:%x",mem);
     delete [] mem;
     p=q;
   }
-  firstRawPage=0;
+  lastRawPage=firstRawPage=0;
   checkPointsCount=0;
   int i,j;
-  trace("blocks pool heap cleanup")
   for(i=0;i<blocksPool.Count();i++)
   {
     for(j=0;j<blocksPool[i]->freeBlocks.Count();j++)
@@ -245,7 +237,6 @@ void MemoryHeap::cleanHeap()
     delete blocksPool[i];
   }
   blocksPool.Clean();
-  trace("var blocks heap cleanup")
   for(i=0;i<varBlocks.Count();i++)
   {
     for(j=0;j<varBlocks[i]->freeBlocks.Count();j++)
@@ -310,11 +301,12 @@ void* MemoryHeap::getRawMem(int size)
     lastRawPage->pageUsage+=size+sizeof(int);
   }else
   {
-    PRawHeapPage p=new RawHeapPage;
-    lastRawPage->next=p;
-    lastRawPage=p;
+    PRawHeapPage p=lastRawPage;
     char *rawheap=new char[size+sizeof(int)+rawHeapPageSize+sizeof(RawHeapPage)];
-    p=lastRawPage=(PRawHeapPage)rawheap;
+    __require__(rawheap!=NULL);
+    lastRawPage=(PRawHeapPage)rawheap;
+    p->next=lastRawPage;
+    p=lastRawPage;
     p->pageSize=size+sizeof(int)+rawHeapPageSize;
     p->pageUsage=size+sizeof(int);
     p->memPage=rawheap+sizeof(RawHeapPage);
@@ -369,7 +361,8 @@ void* MemoryHeap::getMem(int size)
   {
     n++;
   }
-  int alignedSize=1<<n;
+  int alignedSize=blocksHeapQuantum*n;
+  n--;
 
   if(n<blocksPool.Count())
   {
@@ -379,7 +372,9 @@ void* MemoryHeap::getMem(int size)
       blocksPool[n]->usedBlocks.Push(retval);
     }else
     {
-      retval=new char[alignedSize+sizeof(int)*3]+sizeof(int)*3;
+      retval=new char[alignedSize+sizeof(int)*3];
+      __require__(retval!=NULL);
+      retval+=sizeof(int)*3;
       blocksPool[n]->usedBlocks.Push(retval);
     }
     ((int*)retval)[-1]=MM_BLOCK_HEAP_MAGIC;
@@ -398,7 +393,9 @@ void* MemoryHeap::getMem(int size)
           varBlocks[i]->usedBlocks.Push(retval);
         }else
         {
-          retval=new char[alignedSize+sizeof(int)*3]+sizeof(int)*3;
+          retval=new char[alignedSize+sizeof(int)*3];
+          __require__(retval!=NULL);
+          retval+=sizeof(int)*3;
           varBlocks[i]->usedBlocks.Push(retval);
         }
         ((int*)retval)[-1]=MM_BLOCK_HEAP_MAGIC;
@@ -408,7 +405,9 @@ void* MemoryHeap::getMem(int size)
       }
     }
     varBlocks.Push(new BlocksHeapVarPage(alignedSize));
-    retval=new char[alignedSize+sizeof(int)*3]+sizeof(int)*3;
+    retval=new char[alignedSize+sizeof(int)*3];
+    __require__(retval!=NULL);
+    retval+=sizeof(int)*3;
     varBlocks[-1]->usedBlocks.Push(retval);
     ((int*)retval)[-1]=MM_BLOCK_HEAP_MAGIC;
     ((int*)retval)[-2]=varBlocks[-1]->usedBlocks.Count()-1;
@@ -419,11 +418,7 @@ void* MemoryHeap::getMem(int size)
 
 void MemoryHeap::freeMem(void*& block)
 {
-  if(((int*)block)[-1]!=MM_BLOCK_HEAP_MAGIC)
-  {
-    printf("Shit happened!\n");
-    throw 0;
-  }
+  __require__((((const int*)block)[-1])==MM_BLOCK_HEAP_MAGIC);
   int pos=((int*)block)[-2];
   int size=((int*)block)[-3];
   int n=size>>blocksHeapQuantumShift;
@@ -432,20 +427,22 @@ void MemoryHeap::freeMem(void*& block)
   {
     n++;
   }
-  int alignedSize=1<<n;
+  int alignedSize=blocksHeapQuantum*n;
+  n--;
   if(n<blocksPool.Count())
   {
-    for(i=pos;i>=0;i++)
+    if(pos>=blocksPool[n]->usedBlocks.Count())pos=blocksPool[n]->usedBlocks.Count()-1;
+    for(i=pos;i>=0;i--)
     {
       if(blocksPool[n]->usedBlocks[i]==block)
       {
-        blocksPool[n]->usedBlocks.Delete(i);
+        blocksPool[n]->usedBlocks.Delete(i,1);
         blocksPool[n]->freeBlocks.Push((char*)block);
         block=0;
         return;
       }
     }
-    printf("Shit happened!\n");
+    fprintf(stderr,"ATTEMPT TO FREE UNALLOCATED BLOCK\n");
     throw 0;
   }else
   {
@@ -453,21 +450,21 @@ void MemoryHeap::freeMem(void*& block)
     {
       if(varBlocks[i]->blocksize==alignedSize)
       {
-        for(j=pos;j>=0;j--)
+        for(j=pos>=varBlocks[i]->usedBlocks.Count()?varBlocks[i]->usedBlocks.Count()-1:pos;j>=0;j--)
         {
           if(varBlocks[i]->usedBlocks[j]==block)
           {
-            varBlocks[i]->usedBlocks.Delete(j);
+            varBlocks[i]->usedBlocks.Delete(j,1);
             varBlocks[i]->freeBlocks.Push((char*)block);
             block=0;
             return;
           }
         }
-        printf("Shit happened!\n");
+        fprintf(stderr,"ATTEMPT TO FREE UNALLOCATED BLOCK\n");
         throw 0;
       }
     }
-    printf("Shit happened!\n");
+    fprintf(stderr,"ATTEMPT TO FREE UNALLOCATED BLOCK\n");
     throw 0;
   }
   block=0;

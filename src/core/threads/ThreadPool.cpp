@@ -15,13 +15,13 @@ int PooledThread::Execute()
 {
   int rawheapsize;
   int blocksheapquantum;
-  trace2("Pooled thread ready for task\n");
-  owner->releaseThread(this);
+  trace2("Pooled thread %08X ready for tasks\n",this);
+  if(!task)owner->releaseThread(this);
   for(;;)
   {
-    trace2("Thread waiting for task\n");
+    trace2("Thread %08X waiting for task\n",this);
     taskEvent.Wait();
-    trace2("Thread got a task\n");
+    trace2("Thread %08X got a task\n",this);
     if(task==NULL)return 0;
     task->getMemoryInfo(rawheapsize,blocksheapquantum);
     task->assignHeap(
@@ -32,9 +32,11 @@ int PooledThread::Execute()
       )
     );
     task->Execute();
+    trace2("Execution of task %s finished",task->taskName());
     task->releaseHeap();
-    owner->releaseThread(this);
     delete task;
+    task=NULL;
+    owner->releaseThread(this);
   }
 }
 
@@ -50,6 +52,7 @@ ThreadPool::~ThreadPool()
   for(;;)
   {
     Lock();
+    trace2("Waiting when all threads will be finished:%d",usedThreads.Count());
     if(usedThreads.Count()==0)
     {
       Unlock();
@@ -67,12 +70,14 @@ MemoryHeap* ThreadPool::getMemoryHeap(const char* taskname,int rawheapsize,int b
 
 void ThreadPool::preCreateThreads(int count)
 {
-  trace2("Attempting to create %d threads\n",count-usedThreads.Count());
+  trace2("COUNT:%d\n",count);
+  int n=count-usedThreads.Count()-freeThreads.Count();
+  trace2("Attempting to create %d threads(%d/%d)\n",n,freeThreads.Count(),usedThreads.Count());
   mm.preallocateHeaps(count);
   Lock();
   usedThreads.SetSize(count);
   int i;
-  for(i=0;i<count-(usedThreads.Count()+freeThreads.Count());i++)
+  for(i=0;i<n;i++)
   {
     trace2("Creating thread:%d\n",i);
     usedThreads.Push(new PooledThread(this));
@@ -87,6 +92,7 @@ void ThreadPool::startTask(ThreadedTask* task)
   PooledThread* t;
   if(freeThreads.Count()>0)
   {
+    trace("use free thread for new task");
     freeThreads.Pop(t);
     t->assignTask(task);
     t->processTask();
@@ -95,12 +101,14 @@ void ThreadPool::startTask(ThreadedTask* task)
   {
     if(usedThreads.Count()==maxThreads)
     {
+      trace("pending task");
       pendingTasks.Push(task);
     }else
     {
+      trace("creating new thread for task");
       t=new PooledThread(this);
-      t->Start(defaultStackSize);
       t->assignTask(task);
+      t->Start(defaultStackSize);
       t->processTask();
       usedThreads.Push(t);
     }
@@ -110,16 +118,30 @@ void ThreadPool::startTask(ThreadedTask* task)
 
 void ThreadPool::releaseThread(PooledThread* thread)
 {
+  trace2("Releasing thread %08X",thread);
   Lock();
   int i;
   for(i=0;i<usedThreads.Count();i++)
   {
     if(usedThreads[i]==thread)
     {
-      usedThreads.Delete(i);
-      freeThreads.Push(thread);
+      trace2("Pending tasks:%d",pendingTasks.Count());
+      if(pendingTasks.Count()>0)
+      {
+        ThreadedTask *t;
+        pendingTasks.Shift(t);
+        thread->assignTask(t);
+        thread->processTask();
+        break;
+      }else
+      {
+        usedThreads.Delete(i,1);
+        freeThreads.Push(thread);
+      }
+      break;
     }
   }
+
   Unlock();
 }
 

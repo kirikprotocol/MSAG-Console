@@ -4,7 +4,7 @@
 #
 #
 
-CXXFLAGS=-I$(SMSC_SRCDIR)
+#CXXFLAGS=-I$(SMSC_SRCDIR)
 
 PACKAGE := core.threads
 

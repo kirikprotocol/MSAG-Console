@@ -6,6 +6,8 @@
 
 PACKAGE := core
 
+CXXFLAGS := $(CXXFLAGS) -DDISABLE_ANY_CHECKS
+
 #LDFLAGS=$(LDGLAGS) -Wl,-verbose
 
 ifndef SMSC_SRCDIR

@@ -6,7 +6,11 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/buffers/Array.hpp"
+#ifdef _WIN32
+#include <stdio.h>
+#else
 #include <unistd.h>
+#endif
 
 #include "util/debug.h"
 
@@ -21,7 +25,7 @@ class ThreadPool;
 
 class PooledThread:public Thread{
 public:
-  PooledThread(ThreadPool* newowner):owner(newowner),Thread(){}
+  PooledThread(ThreadPool* newowner):owner(newowner),task(NULL),Thread(){}
 
   virtual int Execute();
 
