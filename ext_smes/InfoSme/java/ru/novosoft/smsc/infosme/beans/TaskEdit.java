@@ -155,6 +155,7 @@ public class TaskEdit extends InfoSmeBean
     getConfig().setInt(prefix + ".uncommitedInGeneration", uncommitedInGeneration);
     getConfig().setInt(prefix + ".uncommitedInProcess", uncommitedInProcess);
 
+    getInfoSmeContext().setChangedTasks(true);
     return RESULT_DONE;
   }
 

@@ -38,16 +38,19 @@ class InfoSmeTransport extends Service
 
   public synchronized void startTaskProcessor() throws AdminException
   {
+    refreshComponents();
     call(infoSmeComponent, method_startTaskProcessor, Type.Types[Type.StringType], new HashMap());
   }
 
   public synchronized void stopTaskProcessor() throws AdminException
   {
+    refreshComponents();
     call(infoSmeComponent, method_stopTaskProcessor, Type.Types[Type.StringType], new HashMap());
   }
 
   public synchronized boolean isTaskProcessorRuning() throws AdminException
   {
+    refreshComponents();
     Object result = call(infoSmeComponent, method_isTaskProcessorRuning, Type.Types[Type.BooleanType], new HashMap());
     if (result instanceof Boolean)
       return ((Boolean) result).booleanValue();
@@ -57,16 +60,19 @@ class InfoSmeTransport extends Service
 
   public synchronized void startTaskScheduler() throws AdminException
   {
+    refreshComponents();
     call(infoSmeComponent, method_startTaskScheduler, Type.Types[Type.StringType], new HashMap());
   }
 
   public synchronized void stopTaskScheduler() throws AdminException
   {
+    refreshComponents();
     call(infoSmeComponent, method_stopTaskScheduler, Type.Types[Type.StringType], new HashMap());
   }
 
   public synchronized boolean isTaskSchedulerRuning() throws AdminException
   {
+    refreshComponents();
     Object result = call(infoSmeComponent, method_isTaskSchedulerRuning, Type.Types[Type.BooleanType], new HashMap());
     if (result instanceof Boolean)
       return ((Boolean) result).booleanValue();
@@ -79,10 +85,11 @@ class InfoSmeTransport extends Service
    * @param taskIds - список тасок, которые надо добавить (они уже должны быть прописаны в конфиге)
    * @throws AdminException - если что-то не получилось
    */
-  public synchronized void addTasks(List taskIds) throws AdminException
+  public synchronized void addTasks(Collection taskIds) throws AdminException
   {
     Map params = new HashMap();
     params.put("taskIds", taskIds);
+    refreshComponents();
     call(infoSmeComponent, method_addTasks, Type.Types[Type.StringType], params);
   }
 
@@ -95,6 +102,7 @@ class InfoSmeTransport extends Service
   {
     Map params = new HashMap();
     params.put("taskIds", taskIds);
+    refreshComponents();
     call(infoSmeComponent, method_removeTasks, Type.Types[Type.StringType], params);
   }
 
@@ -103,6 +111,7 @@ class InfoSmeTransport extends Service
     Map params = new HashMap();
     params.put("taskId", taskId);
     params.put("enabled", new Boolean(enabled));
+    refreshComponents();
     call(infoSmeComponent, method_setTaskEnabled, Type.Types[Type.StringType], params);
   }
 
@@ -110,6 +119,7 @@ class InfoSmeTransport extends Service
   {
     Map params = new HashMap();
     params.put("taskIds", taskIds);
+    refreshComponents();
     call(infoSmeComponent, method_startTasks, Type.Types[Type.StringType], params);
   }
 
@@ -117,6 +127,7 @@ class InfoSmeTransport extends Service
   {
     Map params = new HashMap();
     params.put("taskIds", taskIds);
+    refreshComponents();
     call(infoSmeComponent, method_stopTasks, Type.Types[Type.StringType], params);
   }
 
@@ -124,6 +135,7 @@ class InfoSmeTransport extends Service
   {
     Map params = new HashMap();
     params.put("scheduleId", scheduleId);
+    refreshComponents();
     call(infoSmeComponent, method_addSchedule, Type.Types[Type.StringType], params);
   }
 
@@ -131,6 +143,7 @@ class InfoSmeTransport extends Service
   {
     Map params = new HashMap();
     params.put("scheduleId", scheduleId);
+    refreshComponents();
     call(infoSmeComponent, method_removeSchedule, Type.Types[Type.StringType], params);
   }
 
@@ -139,11 +152,13 @@ class InfoSmeTransport extends Service
     Map params = new HashMap();
     params.put("oldScheduleId", oldScheduleId);
     params.put("newScheduleId", newScheduleId);
+    refreshComponents();
     call(infoSmeComponent, method_changeSchedule, Type.Types[Type.StringType], params);
   }
 
   public synchronized void flushStatistics() throws AdminException
   {
+    refreshComponents();
     call(infoSmeComponent, method_flushStatistics, Type.Types[Type.StringType], new HashMap());
   }
 

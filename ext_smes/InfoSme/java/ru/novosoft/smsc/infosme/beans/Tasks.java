@@ -82,6 +82,7 @@ public class Tasks extends InfoSmeBean {
     for (int i = 0; i < checked.length; i++) {
       getConfig().removeSection(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(checked[i]));
       checkedSet.remove(checked[i]);
+      getInfoSmeContext().setChangedTasks(true);
     }
 
     return RESULT_DONE;

@@ -152,6 +152,7 @@ public class Options extends InfoSmeBean
     getConfig().setBool("InfoSme.systemDataSource.watchdog", systemDataSourceWatchdog);
     getConfig().setString("InfoSme.systemDataSource.jdbc.driver", systemDataSourceJdbcDriver);
     getConfig().setString("InfoSme.systemDataSource.jdbc.source", systemDataSourceJdbcSource);
+    getInfoSmeContext().setChangedOptions(true);
     return RESULT_DONE;
   }
 

@@ -93,6 +93,7 @@ public class ProviderEdit extends InfoSmeBean {
     getConfig().setString(prefix + ".dbUserName", dbUserName);
     getConfig().setString(prefix + ".dbUserPassword", dbUserPassword);
     getConfig().setBool(prefix + ".watchdog", watchdog);
+    getInfoSmeContext().setChangedProviders(true);
     return RESULT_DONE;
 
   }

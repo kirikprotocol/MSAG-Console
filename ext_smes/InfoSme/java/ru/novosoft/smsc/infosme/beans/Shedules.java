@@ -80,6 +80,7 @@ public class Shedules extends InfoSmeBean
     for (int i = 0; i < checked.length; i++) {
       getConfig().removeSection(ScheduleDataSource.SCHEDULES_PREFIX + '.' + StringEncoderDecoder.encodeDot(checked[i]));
       checkedSet.remove(checked[i]);
+      getInfoSmeContext().setChangedSchedules(true);
     }
 
     return RESULT_DONE;

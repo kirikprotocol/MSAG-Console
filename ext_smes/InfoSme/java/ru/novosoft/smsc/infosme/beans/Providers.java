@@ -64,8 +64,8 @@ public class Providers extends InfoSmeBean {
     for (int i = 0; i < checkedProviders.length; i++) {
       getConfig().removeSection("InfoSme.DataProvider." + StringEncoderDecoder.encodeDot(checkedProviders[i]));
       checkedProvidersSet.remove(checkedProviders[i]);
+      getInfoSmeContext().setChangedProviders(true);
     }
-
     return RESULT_REFRESH;
   }
 

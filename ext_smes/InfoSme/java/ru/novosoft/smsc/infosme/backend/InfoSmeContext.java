@@ -15,7 +15,8 @@ import java.io.IOException;
  * Date: Jul 31, 2003
  * Time: 3:22:21 PM
  */
-public class InfoSmeContext {
+public class InfoSmeContext
+{
   private static InfoSmeContext instance = null;
 
   public static synchronized InfoSmeContext getInstance(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, IOException, SAXException
@@ -34,11 +35,23 @@ public class InfoSmeContext {
   private String schedulesSort = "name";
   private int schedulesPageSize = 20;
 
+  private boolean changedOptions = false;
+  private boolean changedDrivers = false;
+  private boolean changedProviders = false;
+  private boolean changedTasks = false;
+  private boolean changedSchedules = false;
+
   public InfoSmeContext(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, SAXException, IOException
   {
     this.appContext = appContext;
     this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID));
     resetConfig();
+  }
+
+  public Config loadCurrentConfig() throws AdminException, IOException, SAXException, ParserConfigurationException
+  {
+    return new Config(new File(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID).getServiceFolder(),
+                               "conf" + File.separatorChar + "config.xml"));
   }
 
   public Config getConfig()
@@ -88,8 +101,7 @@ public class InfoSmeContext {
 
   public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException
   {
-    config = new Config(new File(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID).getServiceFolder(),
-                                 "conf" + File.separatorChar + "config.xml"));
+    config = loadCurrentConfig();
   }
 
   public String getSchedulesSort()
@@ -115,5 +127,65 @@ public class InfoSmeContext {
   public InfoSme getInfoSme()
   {
     return infoSme;
+  }
+
+  public static InfoSmeContext getInstance()
+  {
+    return instance;
+  }
+
+  public static void setInstance(InfoSmeContext instance)
+  {
+    InfoSmeContext.instance = instance;
+  }
+
+  public boolean isChangedOptions()
+  {
+    return changedOptions;
+  }
+
+  public void setChangedOptions(boolean changedOptions)
+  {
+    this.changedOptions = changedOptions;
+  }
+
+  public boolean isChangedDrivers()
+  {
+    return changedDrivers;
+  }
+
+  public void setChangedDrivers(boolean changedDrivers)
+  {
+    this.changedDrivers = changedDrivers;
+  }
+
+  public boolean isChangedProviders()
+  {
+    return changedProviders;
+  }
+
+  public void setChangedProviders(boolean changedProviders)
+  {
+    this.changedProviders = changedProviders;
+  }
+
+  public boolean isChangedTasks()
+  {
+    return changedTasks;
+  }
+
+  public void setChangedTasks(boolean changedTasks)
+  {
+    this.changedTasks = changedTasks;
+  }
+
+  public boolean isChangedSchedules()
+  {
+    return changedSchedules;
+  }
+
+  public void setChangedSchedules(boolean changedSchedules)
+  {
+    this.changedSchedules = changedSchedules;
   }
 }

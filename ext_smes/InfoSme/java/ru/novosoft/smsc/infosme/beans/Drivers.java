@@ -54,6 +54,7 @@ public class Drivers extends InfoSmeBean {
       getConfig().setString(PREFIX + dsdriver_new_type + ".type", dsdriver_new_type);
       getConfig().setString(PREFIX + dsdriver_new_type + ".loadup", dsdriver_new_loadup);
     }
+    getInfoSmeContext().setChangedDrivers(true);
     return RESULT_DONE;
   }
 

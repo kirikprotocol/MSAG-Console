@@ -148,9 +148,6 @@ public class ScheduleEdit extends InfoSmeBean
       getConfig().removeSection(ScheduleDataSource.SCHEDULES_PREFIX + '.' + StringEncoderDecoder.encodeDot(oldSchedule));
     }
 
-    getConfig().setString(prefix + ".execute", execute);
-    getConfig().setString(prefix + ".tasks", Functions.collectionToString(checkedTasksSet, ","));
-    getConfig().setString(prefix + ".startDateTime", startDateTime);
     if ("once".equalsIgnoreCase(execute)) {
     } else if ("daily".equalsIgnoreCase(execute)) {
       getConfig().setString(prefix + ".endDateTime", endDateTime);
@@ -174,6 +171,10 @@ public class ScheduleEdit extends InfoSmeBean
     } else {
       return error("Unknown type of schedule: \"" + execute + "\"");
     }
+    getConfig().setString(prefix + ".execute", execute);
+    getConfig().setString(prefix + ".tasks", Functions.collectionToString(checkedTasksSet, ","));
+    getConfig().setString(prefix + ".startDateTime", startDateTime);
+    getInfoSmeContext().setChangedSchedules(true);
     return RESULT_DONE;
   }
 
