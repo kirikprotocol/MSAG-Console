@@ -24,6 +24,11 @@ void init_rand()
 
 int rand2(int minValue, int maxValue)
 {
+	if (minValue > maxValue)
+	{
+		int tmp = (int) ((minValue - maxValue + 1) * (float) rand() / (RAND_MAX + 1.0));
+		return maxValue + tmp;
+	}
 	int tmp = (int) ((maxValue - minValue + 1) * (float) rand() / (RAND_MAX + 1.0));
 	return minValue + tmp;
 }
