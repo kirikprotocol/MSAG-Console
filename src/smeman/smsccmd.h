@@ -62,7 +62,7 @@ struct _SmscCommand
       __unreachable__("incorrect state dat != NULL && cmdid == UNKNOWN");
     default:
       __unreachable__("unprocessed cmdid");
-		}
+                }
   }
 };
 
@@ -87,17 +87,18 @@ class SmscCommand
     return cmd;
   }
   
-	void copy(const _SmscCommand& _cmd)
+        void copy(const _SmscCommand& _cmd)
   {
     if ( cmd ) unref(cmd);
     cmd = ref(const_cast<_SmscCommand*>(&_cmd));
   }
 
 public:
+	SmscCommand() : cmd (0) {}
   SmscCommand(SmppHeader* pdu) : cmd (0)
   {
-		__require__ ( pdu != NULL );
-		auto_ptr<_SmscCommand> _cmd(ref(new _SmscCommand()));
+                __require__ ( pdu != NULL );
+                auto_ptr<_SmscCommand> _cmd(ref(new _SmscCommand()));
     switch ( pdu->commandId )
     {
       //case GENERIC_NACK:  reinterpret_cast<PduGenericNack*>(_pdu)->dump(log); break;
@@ -133,26 +134,26 @@ public:
     __unreachable__("command id is not processed");
     sms_pdu:
     {
-			PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
-			(smsc::sms::SMS*)_cmd->dta =  new smsc::sms::SMS;
+                        PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
+                        (smsc::sms::SMS*)_cmd->dta =  new smsc::sms::SMS;
       fetchSmsFromSmppPdu(xsm,(smsc::sms::SMS*)(_cmd->dta));
-			//delete (smsc::sms::SMS*)_cmd; _cmd = 0;
+                        //delete (smsc::sms::SMS*)_cmd; _cmd = 0;
       goto end_construct;
     }
     sms_resp:
     {
       PduXSmResp* xsm = reinterpret_cast<PduXSmResp*>(pdu);
-			(SmsResp*)_cmd->dta = new SmsResp;
+                        (SmsResp*)_cmd->dta = new SmsResp;
       //fetchSmsFromSmppPdu(xsm,&_cmd->sms);
       ((SmsResp*)_cmd->dta)->setMessageId(xsm->get_messageId());
-			//delete (*(SmsResp*))_cmd; _cmd = 0;
+                        //delete (*(SmsResp*))_cmd; _cmd = 0;
       goto end_construct;
     }
     // unreachable
-		//_pdu.release();
-		end_construct:
-			cmd = _cmd.release();
-			return;
+                //_pdu.release();
+                end_construct:
+                        cmd = _cmd.release();
+                        return;
   }
 
   SmscCommand(const SmscCommand& _cmd)
