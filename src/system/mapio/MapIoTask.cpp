@@ -124,7 +124,7 @@ void MapIoTask::dispatcher()
   struct timeval utime, curtime;
   APP_EVENT_T *eventlist = NULL;
   INT_T        eventlist_len = 0;
-  smsc::logger::Logger time_logger = smsc::logger::Logger::getInstance("map.itime");
+  smsc::logger::Logger *time_logger = smsc::logger::Logger::getInstance("map.itime");
 
   message.receiver = MY_USER_ID;
   int bindTimer = 0;
@@ -246,7 +246,7 @@ void MapIoTask::dispatcher()
       long usecs;
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-      time_logger.debug( "prim=%d s=%ld us=%ld", message.primitive, curtime.tv_sec-utime.tv_sec, usecs );
+      smsc_log_debug(time_logger, "prim=%d s=%ld us=%ld", message.primitive, curtime.tv_sec-utime.tv_sec, usecs );
     }
   }
 }
@@ -578,21 +578,21 @@ void MAPSTATS_DumpDialog(MapDialog* dlg)
 
 void MapProxy::checkLogging() {
 #ifdef USE_MAP
-  if ( smsc::logger::Logger::getInstance("map.trace.user1").isDebugEnabled() ) {
+  if ( smsc::logger::Logger::getInstance("map.trace.user1")->isDebugEnabled() ) {
     __map_trace__("Enable trace for system USER01");
     MsgTraceOn( USER01_ID );
   } else {
     __map_trace__("Disable trace for system USER01");
     MsgTraceOff( USER01_ID );
   }
-  if ( smsc::logger::Logger::getInstance("map.trace.etsimap").isDebugEnabled() ) {
+  if ( smsc::logger::Logger::getInstance("map.trace.etsimap")->isDebugEnabled() ) {
     __map_trace__("Enable trace for system ETSIMAP_ID");
     MsgTraceOn( ETSIMAP_ID );
   } else {
     __map_trace__("Disable trace for system ETSIMAP_ID");
     MsgTraceOff( ETSIMAP_ID );
   }
-  if ( smsc::logger::Logger::getInstance("map.trace.tcap").isDebugEnabled() ) {
+  if ( smsc::logger::Logger::getInstance("map.trace.tcap")->isDebugEnabled() ) {
     __map_trace__("Enable trace for system TCAP_ID");
     MsgTraceOn( TCAP_ID );
   } else {

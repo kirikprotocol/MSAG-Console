@@ -272,7 +272,7 @@ int addIntoAliasTreeRecurse(TreeNode* node,AliasRecord* rec)
       __warning__("duplicate alias, is has not added into aliases set");
       LEAVE_(0);
     }
-    __trace2__("weak equal:")
+    __trace__("weak equal:")
     if (node->alias->defLength > rec->alias.defLength)
     {
       __unreachable__("incorrect tree");
@@ -567,7 +567,7 @@ __synchronized__
   makeAPattern(rec->addr,info.addr);
   rec->alias.hide = info.hide;
   //rec->info = info;
-  __trace2__("+++++++ ADD ALIAS +++++++");
+  __trace__("+++++++ ADD ALIAS +++++++");
   print(rec->addr,"addr");
   print(rec->alias,"alias");
   /*__trace2__("add into alias tree");
@@ -644,14 +644,13 @@ __synchronized__
   }
   __qsort__(tmp_vector,new_aliases_count,sizeof(AliasRecord*),
             adr_sort_comparator);
-  __trace2__("&---------- BEGIN by Addr --------------&");
+  __trace__("&---------- BEGIN by Addr --------------&");
   for ( int i =0; i<new_aliases_count; ++i )
   {
-    __trace__("\n");
     print(tmp_vector[i]->addr,"from:");
     //print(tmp_vector[i]->alias,"\tto:");
   }
-  __trace2__("&---------- END --------------&");
+  __trace__("&---------- END --------------&");
   for ( int i =0; i<new_aliases_count; ++i )
   {
     if ( tmp_vector[i]->alias.hide )
@@ -659,14 +658,13 @@ __synchronized__
   }
   __qsort__(tmp_vector,new_aliases_count,sizeof(AliasRecord*),
             ali_sort_comparator);
-  __trace2__("&---------- BEGIN table by Alias --------------&");
+  __trace__("&---------- BEGIN table by Alias --------------&");
   for ( int i =0; i<new_aliases_count; ++i )
   {
-    __trace__("\n");
     print(tmp_vector[i]->alias,"from: ");
     //print(tmp_vector[i]->addr,"\tto:");
   }
-  __trace2__("&---------- END --------------&");
+  __trace__("&---------- END --------------&");
   for ( int i =0; i<new_aliases_count; ++i )
   {
     addIntoAliasTreeRecurse(&aliasRootNode,tmp_vector[i]);
