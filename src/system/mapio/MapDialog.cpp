@@ -1185,7 +1185,7 @@ USHORT_T MapDialog::Et96MapV1ForwardSmMOInd (
     ET96MAP_INVOKE_ID_T invokeId,
     ET96MAP_SM_RP_DA_T *smRpDa_sp,
     ET96MAP_SM_RP_OA_T *smRpOa_sp,
-    ET96MAP_SM_RP_UI_T *smRpUi_sp)
+    ET96MAP_SM_RP_UI_T *ud)
 {
 #if defined USE_MAP
   try{
