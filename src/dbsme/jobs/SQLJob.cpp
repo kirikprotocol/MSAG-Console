@@ -133,6 +133,7 @@ void SQLJob::process(Command& command, Statement& stmt)
         } 
         catch (FormattingException& exc)
         {
+            if (rs) delete rs;
             error(SQL_JOB_OUTPUT_FORMAT, exc.what());
         }
         catch (CommandProcessException& exc) 

@@ -131,17 +131,23 @@ public:
         
         for (int i=0; i<smsarr.Count(); i++)
         {
-            PduSubmitSm sm;
-            sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-            fillSmppPduFromSms(&sm, smsarr[i]);
-            PduSubmitSmResp *resp = transmitter.submit(sm);
-            
-            if (resp && resp->get_header().get_commandStatus()==0)
-                __trace2__("Response #%d accepted\n", i);
-            else
-                __trace2__("Response wasn't accepted\n");
-            
-            if (resp) disposePdu((SmppHeader*)resp);
+            PduSubmitSm sm; SMS* sms = smsarr[i];
+            if (sms)
+            {
+                sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+                fillSmppPduFromSms(&sm, sms);
+                PduSubmitSmResp *resp = transmitter.submit(sm);
+
+                if (resp && resp->get_header().get_commandStatus()==0) {
+                    __trace2__("Response #%d accepted\n", i);
+                }
+                else {
+                    __trace2__("Response wasn't accepted\n");
+                }
+                
+                if (resp) disposePdu((SmppHeader*)resp);
+                delete sms;
+            }
         }
 
         {
