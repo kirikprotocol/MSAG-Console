@@ -24,6 +24,7 @@ void check(SmppHeader* pdu)
     SmppHeader* header = fetchSmppPdu(&s2);
 	__trace__("deserialization finished");
     __trace2__("commandId = %x", header->get_commandId());
+    disposePdu(header);
 }
 
 PduAddress& getAddr(uint8_t ton, uint8_t npi, const char* val)
