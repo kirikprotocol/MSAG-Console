@@ -60,7 +60,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
       //const smsc::sms::Body& sms_body = sms->getMessageBody();
 			string short_msg = sms->getStrProperty(Tag::SMPP_SHORT_MESSAGE);
       int msg_length = sms->getIntProperty(Tag::SMPP_SM_LENGTH);
-      __require__(msg_length <= short_msg.length());
+      __require__(msg_length <= (signed)short_msg.length());
       message.set_shortMessage(short_msg.c_str(),msg_length);
       //message.set_smLength((uint8_t)msg_length);
       //message.set_dataCoding((uint8_t)sms_body.getCodingScheme());

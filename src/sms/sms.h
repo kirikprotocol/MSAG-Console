@@ -466,6 +466,7 @@ public:
 		virtual uint32_t getIntProperty(const string& s) = 0;
 		virtual bool hasIntProperty(const string& s) = 0;
 		virtual bool hasStrProperty(const string& s) = 0;
+		virtual ~SMSDict(){}
 };
 
 
@@ -547,6 +548,7 @@ public:
           __require__(value!=0);
           size+=value->length(); 
         }
+				return size;
       }
       
       int hasValue(const string& key)
@@ -623,6 +625,7 @@ public:
           //size+=value->length(); 
 					size+=4;
         }
+				return size;
       }
       
       bool hasValue(const string& key)
@@ -1813,6 +1816,7 @@ public:
 					return ___SMS_DICT.hasStrProperty(s);
 				}
 				#undef ___SMS_DICT
+				virtual ~SMS() {}
     };
 
 }}
