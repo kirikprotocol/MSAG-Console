@@ -11,7 +11,7 @@ using namespace std;
 #include "MapDialog_spcific.cxx"
 #include "MapDialogMkPDU.cxx"
 
-const void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
+static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
 
 string ImsiToString(const ET96MAP_IMSI_T* imsi)
 {
@@ -139,7 +139,7 @@ static void DropMapDialog_(unsigned dialogid){
         if ( dialog->associate != 0 && dialog->state != MAPST_END )
         {
           //Et96MapPAbortInd(SSN,dialog->associate->dialogid_map,0,0,0);
-          ContinueImsiReq(dialog->associate,0);
+          ContinueImsiReq(dialog->associate,"","");
         }
         MapDialogContainer::getInstance()->dropDialog(dialogid);
         __trace2__("MAP::%s: 0x%x - closed and droped - ",__FUNCTION__,__dialogid_map);
@@ -1304,7 +1304,7 @@ unsigned char  lll_8bit_2_7bit[256] = {
 0x54,0x7d,0x08,0x54,0x54,0x54,0x7c,0x54,
 0x0c,0x06,0x54,0x54,0x7e,0x54,0x54,0x54};
 
-void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc)
+static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc)
 {
   if ( dialog->state == MAPST_END ){// already closed
     return;
@@ -1312,7 +1312,7 @@ void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc)
   if ( s_imsi.length() != 0 && s_msc.length() != 0 )
   {
     dialog->state = MAPST_WaitSubmitCmdConf;
-    ResponseMO(dialog.get(),cmd->get_resp()->get_status());
+    ResponseMO(dialog.get(),9);
     CloseMapDialog(dialog->dialogid_map);
     DropMapDialog(dialog.get());
   }
@@ -1329,7 +1329,8 @@ void PauseOnImsiReq(MapDialog* map)
   bool success = false;
   MAP_TRY{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialogImsiReq(SSN,map));
-    if (dialog.isnull()) throw runtime_error("MAP::%s can't create dialog",__FUNCTION__);
+    if (dialog.isnull()) throw runtime_error(
+      FormatText("MAP::%s can't create dialog",__FUNCTION__));
     QueryHlrVersion(dialog.get());
     success = true;
   }MAP_CATCH(dialogid_map,0);
