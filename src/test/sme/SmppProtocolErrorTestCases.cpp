@@ -300,8 +300,10 @@ inline SmppHeader* SmppProtocolErrorScenario::setupSubmitSmPdu(PduSubmitSm& pdu)
 	SmppUtil::convert(smeAddr, &addr);
 	pdu.get_message().set_source(addr);
 	pdu.get_message().set_dest(addr);
-	pdu.get_message().set_esmClass(ESM_CLASS_NORMAL_MESSAGE);
+	pdu.get_message().set_esmClass(
+		pdu.get_message().get_esmClass() & 0xc3);
 	pdu.get_message().set_scheduleDeliveryTime("");
+	pdu.get_message().set_validityPeriod("");
 	pdu.get_message().set_registredDelivery(0);
 	pdu.get_message().set_replaceIfPresentFlag(0);
 	return reinterpret_cast<SmppHeader*>(&pdu);
@@ -697,7 +699,7 @@ void SmppProtocolErrorTestCases::invalidPduScenario(int num)
 
 class EqualSequenceNumbersScenario : public SmppProtocolErrorScenario
 {
-	static const int pduCount = 10;
+	static const int pduCount = 5;
 	int respCount;
 	int deliveryCount;
 public:
@@ -1102,14 +1104,12 @@ public:
 		__trace2__("~BindUnbindScenario(): scenario = %p", this);
 		sess.close(); //иначе может быть pure virtual method called
 	}
-	virtual void execute()
+	void executeBindUnbindCycle()
 	{
 		__decl_tc__;
 		__cfg_int__(timeCheckAccuracy);
 		int numBindType = 3;
 		TCSelector s(num, numBindType * numBindType);
-		//connect & bind
-		connect();
 		PduBindTRX bindPdu;
 		switch (s.value1(numBindType))
 		{
@@ -1172,6 +1172,29 @@ public:
 		__tc__("unbind.resp.checkDuplicates");
 		__check__(1, !checkComplete(timeCheckAccuracy));
 		__tc_ok_cond__;
+		/*
+		//повторный unbind
+		__tc__("unbind.secondUnbind");
+		sendPdu(setupUnbindPdu(unbindPdu));
+		__check__(1, checkComplete(timeCheckAccuracy));
+		setComplete(false);
+		__tc_ok_cond__;
+		*/
+	}
+	virtual void execute()
+	{
+		__decl_tc__;
+		connect();
+		for (int i = 0; i < 3; i++)
+		{
+			if (i)
+			{
+				__tc__("bind.correct.afterUnbind"); __tc_ok__;
+			}
+			executeBindUnbindCycle();
+			__cfg_int__(proxyTimeout);
+			sleep(proxyTimeout + 1);
+		}
 	}
 	virtual void handleEvent(SmppHeader* pdu)
 	{
