@@ -4,6 +4,7 @@
 #include "util/debug.h"
 
 #define __numTime__ rand1(2)
+#define __absoluteTime__ 1
 
 namespace smsc {
 namespace test {
@@ -130,8 +131,8 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 			switch (s.value())
 			{
 				case 1: //пустой serviceType
-					pdu->get_message().set_serviceType(NULL);
-					//pdu->get_message().set_serviceType("");
+					//pdu->get_message().set_serviceType(NULL);
+					pdu->get_message().set_serviceType("");
 					break;
 				case 2: //serviceType максимальной длины
 					{
@@ -143,14 +144,14 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 				case 3: //доставка уже должна была начаться
 					{
 						SmppTime t;
-						SmppUtil::time2string(time(NULL) - rand1(60), t, __numTime__);
+						SmppUtil::time2string(time(NULL) - rand1(60), t, __absoluteTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
 					}
 					break;
 				case 4: //срок валидности уже закончился
 					{
 						SmppTime t;
-						SmppUtil::time2string(time(NULL) - rand1(60), t, __numTime__);
+						SmppUtil::time2string(time(NULL) - rand1(60), t, __absoluteTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
