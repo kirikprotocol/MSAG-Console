@@ -352,21 +352,21 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   memset(&err,0,sizeof(ET96MAP_ERROR_FORW_SM_MO_T));
   switch ( status )
   { 
-  case SmscCommand::Status::OK: break;  
-  case SmscCommand::Status::SYSERROR:
+  case Status::OK: break;  
+  case Status::SYSERROR:
     err.errorCode = 32;
     break;
-  case SmscCommand::Status::INVSRC:
-  case SmscCommand::Status::INVDST:
-  case SmscCommand::Status::NOROUTE:
+  case Status::INVSRC:
+  case Status::INVDST:
+  case Status::NOROUTE:
     err.errorCode = 5;
     break;
-  case SmscCommand::Status::DBERROR:
-  case SmscCommand::Status::INVALIDSCHEDULE:
+  case Status::DBERROR:
+  case Status::INVALIDSCHEDULE:
     err.errorCode = 32;
     break;
-  case SmscCommand::Status::INVALIDVALIDTIME:
-  case SmscCommand::Status::INVALIDDATACODING:
+  case Status::INVALIDVALIDTIME:
+  case Status::INVALIDDATACODING:
   default:
     err.errorCode = 36;
     break;
@@ -378,13 +378,13 @@ void ResponseMO(MapDialog* dialog,unsigned status)
       dialog->ssn,
       dialog->dialogid_map,
       dialog->invokeId,
-      (status!=SmscCommand::Status::OK)?&err:0);
+      (status!=Status::OK)?&err:0);
   }else if ( dialog->version == 1 ) {
     result = Et96MapV1ForwardSmMOResp(
       dialog->ssn,
       dialog->dialogid_map,
       dialog->invokeId,
-      (status!=SmscCommand::Status::OK)?&err:0);
+      (status!=Status::OK)?&err:0);
   }else throw runtime_error(
     FormatText("MAP::ResponseMO: incorrect dialog version %d",dialog->version));
   if ( result != ET96MAP_E_OK ) {
@@ -479,18 +479,18 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
         Convert7BitToSMSC7Bit(user_data+udh_len+1,symbols,&ms,x-(udh_len+1)*8);
         memcpy(b.get(),user_data,udh_len+1);
         memcpy(b.get()+udh_len+1,ms.bytes,ms.len);
-        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)b.get(),udh_len+1+symbols);
+        sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(char*)b.get(),udh_len+1+symbols);
         sms.setIntProperty(Tag::SMPP_SM_LENGTH,udh_len+1+symbols);
       }else{
         MicroString ms;
         Convert7BitToSMSC7Bit(user_data,user_data_len,&ms,0);
-        sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
+        sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ms.bytes,ms.len);
         sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
       }
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }
     else{
-      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
+      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,(const char*)user_data,user_data_len);
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)encoding);
     }
@@ -740,7 +740,7 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
   ET96MAP_USSD_STRING_T ussdString = {0,};
   unsigned text_len;
-  const unsigned char* text = (const unsigned char*)cmd->get_sms()->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+  const unsigned char* text = (const unsigned char*)cmd->get_sms()->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);
   if ( text_len > 160 ) throw runtime_error(
     FormatText("MAP::%s MAP.did:{0x%x} very long string %d",__FUNCTION__,dialog->dialogid_map,text_len));
   unsigned bytes = 0;
@@ -1885,7 +1885,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       Convert7BitToSMSC7Bit(ussdString_s.ussdStr,chars/*ussdString_s.ussdStrLen*/,&ms,0);
       subsystem = GetUSSDSubsystem(ms.bytes,ms.len);
       __trace2__("MAP::%s subsystem: %s",__FUNCTION__,subsystem.c_str());
-      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
+      sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,ms.bytes,ms.len);
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }

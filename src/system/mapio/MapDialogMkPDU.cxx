@@ -249,7 +249,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         }
     }else{ // UCS2 || 8BIT
       unsigned text_len;
-      const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+      const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);
       //unsigned size_x = /*pdu_ptr-(unsigned char*)pdu->signalInfo*;
       if ( text_len > 140 ){
         __trace2__("MAP::mkDeliverPDU:  UCS2 text length(%d) > 140",

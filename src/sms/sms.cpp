@@ -39,6 +39,7 @@ void Body::encode(uint8_t* buffer,int& length) const
   int offset=0;
   for(int i=0;i<=SMS_LAST_TAG;i++)
   {
+		if ( i == Tag::SMPP_SHORT_MESSAGE ) continue;
     if(prop.properties[i].isSet)
     {
       __require__(offset<length);

@@ -110,7 +110,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
       //char msg[256];
       //const smsc::sms::Body& sms_body = sms->getMessageBody();
       unsigned len = 0;
-      const char* short_msg = sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+      const char* short_msg = sms->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
       unsigned msg_length = sms->getIntProperty(Tag::SMPP_SM_LENGTH);
       __require__(msg_length <= len);
       message.set_shortMessage(short_msg,msg_length);
@@ -261,7 +261,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
     //__require__ ( message.shortMessage.size() == message.smLength );
     //sms->setMessageBody(message.smLength, message.dataCoding, false, message.shortMessage.cstr());
     //sms->setMessageBody((unsigned char)message.shortMessage.size(), (unsigned char)message.dataCoding, false, (uint8_t*)message.shortMessage.cstr());
-    sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,
+    sms->setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,
                         message.shortMessage.cstr()?message.shortMessage.cstr():"",message.shortMessage.length);
     sms->setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)message.shortMessage.size());
     sms->setIntProperty(Tag::SMPP_DATA_CODING,(uint32_t)message.dataCoding);
