@@ -472,6 +472,7 @@ namespace smsc { namespace store
     private:
         
         OCIDate minNextTime;
+        sb2     indNextTime;
 
     public:
 

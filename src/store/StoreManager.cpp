@@ -765,23 +765,41 @@ void StoreManager::changeSmsStateToDeleted(SMSId id)
 StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
     throw(StorageException) : IdIterator()
 {
+    __trace__("Creating ...");
     connection = StoreManager::pool->getConnection();
-    readyStmt = new ReadyByNextTimeStatement(connection, false);
-    if (readyStmt)
+    try
     {
-        readyStmt->bindRetryTime(retryTime);
-        connection->check(readyStmt->execute(OCI_DEFAULT, 0, 0));
+        if (connection && !connection->isAvailable())
+        {
+            connection->connect();
+        }
+
+        readyStmt = new ReadyByNextTimeStatement(connection, false);
+        if (readyStmt)
+        {
+            readyStmt->bindRetryTime(retryTime);
+            connection->check(readyStmt->execute(OCI_DEFAULT, 0, 0));
+        }
     }
+    catch (...)
+    {
+        __trace__("Oops, exception !!!\n");
+        StoreManager::pool->freeConnection(connection);
+        throw;
+    }
+    __trace__("Created");
 }
 StoreManager::ReadyIdIterator::~ReadyIdIterator()
 {
-    StoreManager::pool->freeConnection(connection);
+    __trace__("Destruction ...");
     if (readyStmt) delete readyStmt;
+    StoreManager::pool->freeConnection(connection);
+    __trace__("Destructed");
 }
 bool StoreManager::ReadyIdIterator::getNextId(SMSId &id) 
     throw(StorageException) 
 {
-    if (readyStmt)
+    if (readyStmt && connection->isAvailable())
     {
         sword status = readyStmt->fetch();
         if (status != OCI_NO_DATA)
@@ -803,19 +821,49 @@ IdIterator* StoreManager::getReadyForRetry(time_t retryTime)
 time_t StoreManager::getNextRetryTime() 
     throw(StorageException)
 {
+    time_t minTime = 0;
     Connection* connection = StoreManager::pool->getConnection();
     if (connection)
     {
-        MinNextTimeStatement minTimeStmt(connection, false);
-        sword status = minTimeStmt.execute();
-        if (status != OCI_NO_DATA)
+        MinNextTimeStatement* minTimeStmt = 0L;
+        try 
         {
-            connection->check(status);
-            return minTimeStmt.getMinNextTime();
+            if (!connection->isAvailable())
+            {
+                connection->connect();
+            }
+            minTimeStmt = new MinNextTimeStatement(connection, false);
+        }
+        catch (...)
+        {
+            __trace__("Oops, exception !!!\n");
+            StoreManager::pool->freeConnection(connection);
+            throw;
+        }
+
+        if (minTimeStmt)
+        {
+            try 
+            {
+                sword status = minTimeStmt->execute();
+                if (status != OCI_NO_DATA)
+                {
+                    connection->check(status);
+                    minTime = minTimeStmt->getMinNextTime();
+                }
+                delete minTimeStmt;
+            }
+            catch (...)
+            {
+                __trace__("Oops, exception !!!\n");
+                delete minTimeStmt;
+                StoreManager::pool->freeConnection(connection);
+                throw;
+            }
         }
         StoreManager::pool->freeConnection(connection);
     }
-    return 0;
+    return minTime;
 }
 
 }}

@@ -942,6 +942,8 @@ ReadyByNextTimeStatement::ReadyByNextTimeStatement(Connection* connection,
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
+    
+    define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
 }
 void ReadyByNextTimeStatement::bindRetryTime(time_t retryTime)
     throw(StorageException)
@@ -960,16 +962,21 @@ MinNextTimeStatement::MinNextTimeStatement(Connection* connection,
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
+    
     define(1, SQLT_ODT, (dvoid *) &(minNextTime),
-           (sb4) sizeof(minNextTime));
+           (sb4) sizeof(minNextTime), &indNextTime);
 }
 
 time_t MinNextTimeStatement::getMinNextTime()
     throw(StorageException)
 {
-    time_t minTime;
-    convertOCIDateToDate(&minNextTime, &(minTime));
-    return minTime;
+    if (indNextTime == OCI_IND_NOTNULL)
+    {
+        time_t minTime;
+        convertOCIDateToDate(&minNextTime, &(minTime));
+        return minTime;
+    }
+    return 0;
 }
 
 }}
