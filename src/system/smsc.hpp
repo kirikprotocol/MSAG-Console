@@ -180,6 +180,7 @@ public:
       {
         MutexGuard g(perfMutex);
         submitErrCounter++;
+        statMan->updateRejected(sms->getLastResult());
       }break;
       case etDeliveredOk:
       {
