@@ -3199,6 +3199,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       {
         rpt.setMessageReference(umrList[umrIndex]);
       }
+      __trace2__("RECEIPT: set mr[%d]=%d",umrIndex,rpt.getMessageReference());
       rpt.setIntProperty(Tag::SMPP_MSG_STATE,SmppMessageState::DELIVERED);
       char addr[64];
       sms.getDestinationAddress().getText(addr,sizeof(addr));
@@ -3246,6 +3247,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         while(umrIndex<umrList.size())
         {
           rpt.setMessageReference(umrList[umrIndex]);
+          __trace2__("RECEIPT: set mr[%d]=%d",umrIndex,rpt.getMessageReference());
           submitReceipt(rpt,0x4);
           umrIndex++;
         }
