@@ -157,7 +157,7 @@ if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
         <input class=check type=checkbox name=checkedRows value="<%= smsRowId%>" <%=bean.isRowChecked(smsRowId) ? "checked" : ""%>>
       </td>
       <td nowrap valign=top style="text-align: right">
-        <a href="view.jsp?smsId=<%= smsRowId%>&storageType=<%= bean.getStorageType()%>&mbView=show" title="Detailed view"><%= smsRowId%></a><br>
+        <a target="smsc_smsview" href="<%= CPATH%>/smsview/view.jsp?smsId=<%= smsRowId%>&storageType=<%= bean.getStorageType()%>&mbView=show" title="Detailed view"><%= smsRowId%></a><br>
         <!--%= row.getAttempts()%-->
       </td>
       <td nowrap style="padding-left: 5px; border-left:dotted 1px #C0C0C0;">
