@@ -172,7 +172,11 @@ Targets:
     <copy todir="${DISTR_DIR}/lib" flatten="yes" failonerror="yes">
       <fileset dir="/" includesfile="./extra_libs.list"/>
     </copy>
-    <copy todir="${DISTR_DIR}/lib" file="extra_lib_links.list" flatten="yes"/>
+    <copy todir="${DISTR_DIR}/lib" file="extra_lib_links.list" flatten="yes">
+      <filterset>
+        <filter token="DEST" value="${DISTR_DIR}/lib"/>
+      </filterset>
+    </copy>
     <symlink action="recreate">
       <fileset dir="${DISTR_DIR}/lib" file="extra_lib_links.list"/>
     </symlink>
