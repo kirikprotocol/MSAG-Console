@@ -12,7 +12,7 @@
     <section name="profiler">
       <section name="divstatus">
          <param name="absent">absent</param>
-         <param name="bared">bared</param>
+         <param name="barred">barred</param>
          <param name="blocked">blocked</param>
          <param name="capacity">capacity</param>
          <param name="msg">Divert status - enabled: $$string import=enabled$$, disabled: $$string import=disabled$$, to: $$string import=to$$</param>
