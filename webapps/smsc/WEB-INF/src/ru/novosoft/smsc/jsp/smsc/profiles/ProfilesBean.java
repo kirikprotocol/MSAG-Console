@@ -32,6 +32,7 @@ public class ProfilesBean extends SmscBean
   protected boolean divertActiveBarred;
   protected boolean divertActiveCapacity;
   protected boolean divertModifiable = false;
+  protected boolean udhConcat = false;
 
   protected int init(List errors)
   {
@@ -232,5 +233,15 @@ public class ProfilesBean extends SmscBean
   public void setDivertActiveCapacity(boolean divertActiveCapacity)
   {
     this.divertActiveCapacity = divertActiveCapacity;
+  }
+
+  public boolean isUdhConcat()
+  {
+    return udhConcat;
+  }
+
+  public void setUdhConcat(boolean udhConcat)
+  {
+    this.udhConcat = udhConcat;
   }
 }

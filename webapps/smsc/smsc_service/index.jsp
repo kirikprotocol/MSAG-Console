@@ -188,6 +188,7 @@ refreshStartStopButtonsStatus();
       param(out, "default&nbsp;hide&nbsp;modifiable",         "profiler.defaultHideModifiable",   bean.getBoolParam(  "profiler.defaultHideModifiable"));
       param(out, "default&nbsp;divert&nbsp;modifiable",       "profiler.defaultDivertModifiable", bean.getBoolParam(  "profiler.defaultDivertModifiable"));
       param(out, "default&nbsp;USSD&nbsp;in&nbsp;7&nbsp;bit", "profiler.defaultUssdIn7Bit",       bean.getBoolParam(  "profiler.defaultUssdIn7Bit"));
+      param(out, "default&nbsp;UDH&nbsp;concatenation",       "profiler.defaultUdhConcat",        bean.getBoolParam(  "profiler.defaultUdhConcat"));
 
     finishParams(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~ profiler.ussdOpsMapping ~~~~~~~~~~~~~~~~~~~~~~~~~

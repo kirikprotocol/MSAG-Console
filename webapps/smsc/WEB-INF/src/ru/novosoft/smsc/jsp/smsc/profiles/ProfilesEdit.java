@@ -53,6 +53,7 @@ public class ProfilesEdit extends ProfilesBean
         divertActiveBarred = p.isDivertActiveBarred();
         divertActiveCapacity = p.isDivertActiveCapacity();
         divertModifiable = p.isDivertModifiable();
+        udhConcat = p.isUdhConcat();
       } catch (AdminException e) {
         logger.error("Couldn't lookup profile \"" + mask + '"', e);
         return error(SMSCErrors.error.profiles.couldntLookup, mask, e);
@@ -72,7 +73,7 @@ public class ProfilesEdit extends ProfilesBean
 
     try {
       final Mask address = new Mask(mask);
-      Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActiveUnconditional, divertActiveAbsent, divertActiveBlocked, divertActiveBarred, divertActiveCapacity, divertModifiable);
+      Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActiveUnconditional, divertActiveAbsent, divertActiveBlocked, divertActiveBarred, divertActiveCapacity, divertModifiable, udhConcat);
       switch (smsc.profileUpdate(address, profile)) {
         case 1: //pusUpdated
           journalAppend(SubjectTypes.TYPE_profile, address.getMask(), Actions.ACTION_MODIFY);

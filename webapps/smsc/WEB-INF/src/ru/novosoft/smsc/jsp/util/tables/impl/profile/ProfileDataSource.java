@@ -53,7 +53,7 @@ public class ProfileDataSource
       connection = connectionPool.getConnection();
       statement = connection.createStatement();
 
-      final String queryStr = "select mask, reportinfo, codeset, locale, hidden, hidden_mod, divert, divert_act, divert_mod from sms_profile " +
+      final String queryStr = "select mask, reportinfo, codeset, locale, hidden, hidden_mod, divert, divert_act, divert_mod, udhConcat from sms_profile " +
                               createWhereStatement(query_to_run.getFilter(), query_to_run.getShow()) +
                               " order by " + sortOrder;
       sqlResultSet = statement.executeQuery(queryStr);
@@ -76,7 +76,8 @@ public class ProfileDataSource
                                                     sqlResultSet.getString("hidden_mod").equalsIgnoreCase("Y"),
                                                     sqlResultSet.getString("divert"),
                                                     sqlResultSet.getString("divert_act"),
-                                                    sqlResultSet.getString("divert_mod").equalsIgnoreCase("Y"))));
+                                                    sqlResultSet.getString("divert_mod").equalsIgnoreCase("Y"),
+                                                    sqlResultSet.getString("udhConcat").equalsIgnoreCase("Y"))));
       }
 
       boolean isLast = true;

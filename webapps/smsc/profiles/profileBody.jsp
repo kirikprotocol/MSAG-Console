@@ -59,28 +59,32 @@
 	<td><input class=txt name="divert" value="<%=bean.getDivert()%>" validation="address" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row0>
-	<th><label for=divertActive>divert active unconditional</label></th>
+	<th><label for=divertActiveUnconditional>divert active unconditional</label></th>
 	<td><input class=check type=checkbox type="checkbox" id=divertActiveUnconditional name="divertActiveUnconditional" value="true" <%= (bean.isDivertActiveUnconditional()) ? "checked":""%>></td>
 </tr>
 <tr class=row1>
-	<th><label for=divertActive>divert active absent</label></th>
+	<th><label for=divertActiveAbsent>divert active absent</label></th>
 	<td><input class=check type=checkbox type="checkbox" id=divertActiveAbsent name="divertActiveAbsent" value="true" <%= (bean.isDivertActiveAbsent()) ? "checked":""%>></td>
 </tr>
 <tr class=row0>
-	<th><label for=divertActive>divert active blocked</label></th>
+	<th><label for=divertActiveBlocked>divert active blocked</label></th>
 	<td><input class=check type=checkbox type="checkbox" id=divertActiveBlocked name="divertActiveBlocked" value="true" <%= (bean.isDivertActiveBlocked()) ? "checked":""%>></td>
 </tr>
 <tr class=row1>
-	<th><label for=divertActive>divert active barred</label></th>
+	<th><label for=divertActiveBarred>divert active barred</label></th>
 	<td><input class=check type=checkbox type="checkbox" id=divertActiveBarred name="divertActiveBarred" value="true" <%= (bean.isDivertActiveBarred()) ? "checked":""%>></td>
 </tr>
 <tr class=row1>
-	<th><label for=divertActive>divert active capacity</label></th>
+	<th><label for=divertActiveCapacity>divert active capacity</label></th>
 	<td><input class=check type=checkbox type="checkbox" id=divertActiveCapacity name="divertActiveCapacity" value="true" <%= (bean.isDivertActiveCapacity()) ? "checked":""%>></td>
 </tr>
 <tr class=row1>
 	<th><label for=divertModifiable>divert modifiable</label></th>
 	<td><input class=check type=checkbox type="checkbox" id=divertModifiable name="divertModifiable" value="true" <%= (bean.isDivertModifiable()) ? "checked":""%>></td>
+</tr>
+<tr class=row0>
+	<th><label for=udhConcat>UDH concatenate</label></th>
+	<td><input class=check type=checkbox type="checkbox" id=udhConcat name="udhConcat" value="true" <%= (bean.isUdhConcat()) ? "checked":""%>></td>
 </tr>
 </table>
 </div>

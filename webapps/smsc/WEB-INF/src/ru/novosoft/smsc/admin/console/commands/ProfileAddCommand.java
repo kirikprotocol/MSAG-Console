@@ -15,7 +15,8 @@ public class ProfileAddCommand extends ProfileGenCommand
 {
   private String mask;
 
-  public void setMask(String mask) {
+  public void setMask(String mask)
+  {
     this.mask = mask;
   }
 
@@ -23,19 +24,17 @@ public class ProfileAddCommand extends ProfileGenCommand
   {
     String out = "Profile for mask '" + mask + "'";
 
-    if (isAliasOptions && !isAliasHide && !isAliasModifiable)
-    {
-      ctx.setMessage("expecting alias option(s). "+
+    if (isAliasOptions && !isAliasHide && !isAliasModifiable) {
+      ctx.setMessage("expecting alias option(s). " +
                      "Syntax: alias [hide|nohide] [modifiable|notmodifiable]");
       ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
       return;
     }
     if (isDivertOptions && !isDivert && !isDivertModifiable &&
         !isDivertActiveAbsent && !isDivertActiveBarred && !isDivertActiveBlocked &&
-        !isDivertActiveCapacity && !isDivertActiveUnconditional)
-    {
-      ctx.setMessage("expecting divert option(s). "+
-        "Syntax: divert <string> [absent][barred][blocked][capacity][unconditional] [modifiable|notmodifiable]");
+        !isDivertActiveCapacity && !isDivertActiveUnconditional) {
+      ctx.setMessage("expecting divert option(s). " +
+                     "Syntax: divert <string> [absent][barred][blocked][capacity][unconditional] [modifiable|notmodifiable]");
       ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
       return;
     }
@@ -49,10 +48,10 @@ public class ProfileAddCommand extends ProfileGenCommand
                                     aliasHide, aliasModifiable,
                                     divert, divertActiveUnconditional, divertActiveAbsent,
                                     divertActiveBlocked, divertActiveBarred, divertActiveCapacity,
-                                    divertModifiable);
+                                    divertModifiable,
+                                    isUdhConcat); //todo: implement udhConcat
 
-      switch (ctx.getSmsc().profileUpdate(profileMask, profile))
-      {
+      switch (ctx.getSmsc().profileUpdate(profileMask, profile)) {
         case 1:	//pusUpdated
           ctx.setMessage(out + " was updated");
           ctx.setStatus(CommandContext.CMD_OK);
@@ -76,7 +75,8 @@ public class ProfileAddCommand extends ProfileGenCommand
     }
   }
 
-  public String getId() {
+  public String getId()
+  {
     return "PROFILE_ADD";
   }
 

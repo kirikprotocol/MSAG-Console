@@ -38,8 +38,9 @@ public class Profile
 
   private boolean aliasHide = false;
   private boolean aliasModifiable = true;
+  private boolean udhConcat;
 
-  public Profile(Mask mask, byte codepage, boolean ussd7bit, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divertActiveUnconditional, boolean divertActiveAbsent, boolean divertActiveBlocked, boolean divertActiveBarred, boolean divertActiveCapacity, boolean divertModifiable)
+  public Profile(Mask mask, byte codepage, boolean ussd7bit, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, boolean divertActiveUnconditional, boolean divertActiveAbsent, boolean divertActiveBlocked, boolean divertActiveBarred, boolean divertActiveCapacity, boolean divertModifiable, boolean udhConcat)
   {
     this.mask = mask;
     this.ussd7bit = ussd7bit;
@@ -55,9 +56,10 @@ public class Profile
     this.locale = locale;
     this.aliasHide = aliasHide;
     this.aliasModifiable = aliasModifiable;
+    this.udhConcat = udhConcat;
   }
 
-  public Profile(Mask mask, byte codepage, boolean ussd7bit, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, String divertActive, boolean divertModifiable)
+  public Profile(Mask mask, byte codepage, boolean ussd7bit, byte reportOptions, String locale, boolean aliasHide, boolean aliasModifiable, String divert, String divertActive, boolean divertModifiable, boolean udhConcat)
   {
     this.mask = mask;
     this.ussd7bit = ussd7bit;
@@ -69,9 +71,10 @@ public class Profile
     this.locale = locale;
     this.aliasHide = aliasHide;
     this.aliasModifiable = aliasModifiable;
+    this.udhConcat = udhConcat;
   }
 
-  public Profile(Mask mask, String codepage, String ussd7bit, String reportOptions, String locale, String aliasHide, String aliasModifiable, String divert, String divert_act, String divert_mod) throws AdminException
+  public Profile(Mask mask, String codepage, String ussd7bit, String reportOptions, String locale, String aliasHide, String aliasModifiable, String divert, String divert_act, String divert_mod, String udhConcat) throws AdminException
   {
     this.mask = mask;
     setCodepage(codepage);
@@ -83,6 +86,7 @@ public class Profile
     setDivert(divert);
     setDivertActive(divert_act);
     setDivertModifiable(divert_mod);
+    setUdhConcat(udhConcat);
   }
 
   public Profile(Mask mask, List profileProperties) throws AdminException
@@ -95,7 +99,8 @@ public class Profile
          (String) profileProperties.get(4),
          (String) profileProperties.get(5),
          (String) profileProperties.get(6),
-         (String) profileProperties.get(7));
+         (String) profileProperties.get(7),
+         (String) profileProperties.get(9));
   }
 
   public byte getCodepage()
@@ -341,5 +346,24 @@ public class Profile
   public void setDivertActiveCapacity(boolean divertActiveCapacity)
   {
     this.divertActiveCapacity = divertActiveCapacity;
+  }
+
+  public boolean isUdhConcat()
+  {
+    return udhConcat;
+  }
+
+  public void setUdhConcat(boolean udhConcat)
+  {
+    this.udhConcat = udhConcat;
+  }
+
+  public void setUdhConcat(String udhConcat)
+  {
+    this.udhConcat = udhConcat != null
+                     ? (udhConcat.length() == 1
+                        ? Character.toUpperCase(udhConcat.charAt(0)) == 'Y'
+                        : Boolean.valueOf(udhConcat).booleanValue())
+                     : false;
   }
 }
