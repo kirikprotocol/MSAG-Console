@@ -210,12 +210,12 @@ Targets:
 
   <target name="tar" description="tar distr directory">
     <tar destfile="${DISTR_DIR}/smppgw_update.tar.gz" compression="gzip">
-      <tarfileset dir="${DISTR_DIR}" mode="775">
-        <include name="daemon/bin/smsc_ssdaemon"/>
-        <include name="tomcat/bin/*.sh"/>
-      </tarfileset>
+      <tarfileset dir="${DISTR_DIR}/daemon/bin" mode="775" includes="smsc_ssdaemon"/>
+      <tarfileset dir="${DISTR_DIR}/tomcat/bin" mode="775" includes="*.sh"/>
+      <tarfileset dir="${DISTR_DIR}/services/smppgw/bin" mode="775" includes="smppgw"/>
       <tarfileset dir="${DISTR_DIR}" mode="664">
         <exclude name="daemon/bin/smsc_ssdaemon"/>
+        <exclude name="/services/smppgw/bin/smppgw"/>
         <exclude name="tomcat/bin/*.sh"/>
         <include name="**/*"/>
       </tarfileset>
