@@ -17,17 +17,23 @@ public:
 void AdminFunctionalTest::executeTest()
 {
 	//base
+	/*
 	AdminBaseTestCases baseTc(fixture);
-	//baseTc.loginCommands();
-	//baseTc.invalidCommands();
-	//baseTc.executeTestCases();
+	//baseTc.invalidLoginCommands();
+	baseTc.login();
+	baseTc.invalidCommands();
+	baseTc.logout();
+	*/
 	//alias
 	AdminAliasTestCases aliasTc(fixture, true);
-	aliasTc.loginCommands();
-	//aliasTc.incorrectCommands(); //не мен€ют конфигурации
+	aliasTc.login();
+	aliasTc.incorrectCommands(); //не мен€ют конфигурации
 	//aliasTc.correctCommands();
-	//aliasTc.executeTestCases();
 	//aliasTc.apply();
+	aliasTc.logout();
+	/*
+	AdminProfileTestCases(AdminFixture* fixture, bool _hasRights, bool _scRunning)
+	*/
 }
 
 /**

@@ -24,6 +24,8 @@ void baseTc()
 		"Правильные логин и пароль");
 	__reg_tc__("adminConsole.login.incorrect",
 		"Неправильные логин или пароль");
+	__reg_tc__("adminConsole.logout",
+		"Завершение сеанса работы (команда quit)");
 	__reg_tc__("adminConsole.invalidCommands",
 		"Неправильные команды");
 	__reg_tc__("adminConsole.apply",
@@ -105,11 +107,75 @@ void aliasTc()
 		"Просмотр списка всех алиасов (команда list alias)");
 }
 
+void profileTc()
+{
+	__reg_tc__("adminConsole.profile",
+		"Работа с профилями через human admin console и script admin console");
+	//adminConsole.profile.add
+	__reg_tc__("adminConsole.profile.add",
+		"Добавление профиля (команда add profile)");
+	__reg_tc__("adminConsole.profile.add.correct",
+		"Правильно введенные данные (маска адреса и атрибуты профиля)");
+	__reg_tc__("adminConsole.profile.add.existentProfile",
+		"При добавлении уже существующего профиля происходит замещение");
+	//adminConsole.profile.add.incorrect
+	__reg_tc__("adminConsole.profile.add.incorrect",
+		"Для неправильно введенных данных выдаются соответствующие сообщения об ошибках");
+	__reg_tc__("adminConsole.profile.add.incorrect.missingRequiredParam",
+		"Не заданы обязательные параметры (маска, атрибуты профиля)");
+	__reg_tc__("adminConsole.profile.add.incorrect.invalidAddrFormat",
+		"Неправильный формат маски");
+	__reg_tc__("adminConsole.profile.add.incorrect.identicalToDefault",
+		"Добавляемый профиль совпадает с дефолтным");
+	//adminConsole.profile.delete
+	__reg_tc__("adminConsole.profile.delete",
+		"Удаление профиля (команда delete profile)");
+	__reg_tc__("adminConsole.profile.delete.existent",
+		"Удаление существующего профиля");
+	__reg_tc__("adminConsole.profile.delete.incorrect",
+		"Для неправильно введенных данных выдаются соответствующие сообщения об ошибках");
+	__reg_tc__("adminConsole.profile.delete.incorrect.missingRequiredParam",
+		"Не задана маска");
+	__reg_tc__("adminConsole.profile.delete.incorrect.nonExistent",
+		"Удаление несуществующего профиля");
+	__reg_tc__("adminConsole.profile.delete.incorrect.invalidAliasFormat",
+		"Неправильный формат маски");
+	//adminConsole.profile.view
+	__reg_tc__("adminConsole.profile.view",
+		"Просмотр профиля (команда view profile)");
+	__reg_tc__("adminConsole.profile.view.existent",
+		"Просмотр существующего профиля");
+	__reg_tc__("adminConsole.profile.view.nonExistent",
+		"При просмотре несуществующего профиля выводятся значения профиля по умолчанию");
+	__reg_tc__("adminConsole.profile.view.missingRequiredParam",
+		"Не задана маска");
+	__reg_tc__("adminConsole.profile.view.invalidAddrFormat",
+		"Неправильный формат маски");
+	//adminConsole.profile.alter
+	__reg_tc__("adminConsole.profile.alter",
+		"Изменение профиля (команда alter profile)");
+	__reg_tc__("adminConsole.profile.alter.correct",
+		"Правильно введенные данные");
+	//adminConsole.profile.alter.incorrect
+	__reg_tc__("adminConsole.profile.alter.incorrect",
+		"Для неправильно введенных данных выдаются соответствующие сообщения об ошибках");
+	__reg_tc__("adminConsole.profile.alter.incorrect.missingRequiredParam",
+		"Не заданы обязательные параметры (маска, атрибуты профиля)");
+	__reg_tc__("adminConsole.profile.alter.incorrect.nonExistent",
+		"Изменение несуществующего профиля");
+	__reg_tc__("adminConsole.profile.alter.incorrect.invalidAddrFormat",
+		"Неправильный формат маски");
+	//adminConsole.profile.list
+	__reg_tc__("adminConsole.profile.list",
+		"Просмотр списка всех профилей (команда list profile)");
+}
+
 AdminCheckList()
 	: CheckList("Результаты функционального тестирования Admin Console", "admin.chk")
 {
 	baseTc();
 	aliasTc();
+	profileTc();
 }
 
 };
