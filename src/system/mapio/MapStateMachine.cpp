@@ -11,6 +11,15 @@ using namespace std;
 #include "MapDialog_spcific.cxx"
 #include "MapDialogMkPDU.cxx"
 
+static const bool SMS_SEGMENTATION = true;
+
+static Mutex x_map_lock;
+typedef multimap<string,unsigned> X_MAP;
+static X_MAP x_map;
+static Mutex ussd_map_lock;
+typedef map<long long,unsigned> USSD_MAP; 
+static USSD_MAP ussd_map;
+
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
 static void PauseOnImsiReq(MapDialog* map);
 static const string& SC_ADDRESS() { static string s("79029869999"); return s;}
@@ -90,10 +99,6 @@ struct MAPDIALOG_HEREISNO_ID : public MAPDIALOG_ERROR
     MAPDIALOG_ERROR(0,s){}
 };
 
-static const bool SMS_SEGMENTATION = true;
-
-static Mutex x_map_lock;
-static multimap<string,unsigned> x_map;
 
 static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn){
   if ( dialogid == 0 ) return;
@@ -617,10 +622,47 @@ static void SendSegmentedSms(MapDialog* dialog)
       FormatText("MAP::SendSegmentedSms: Et96MapDelimiterReq error 0x%x",result));
 }
 
+static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
+{
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
+  ET96MAP_ERROR_PROCESS_UNSTRUCTURED_SS_REQ_T error;
+  error.errorCode = 34; /*Sytem failure */
+  ET96MAP_USSD_STRING_T ussdString = {0,}
+  if ( dialog->version == 2 ) 
+  {
+    Et96MapV2ProcessUnstructuredSSRequestResp(
+      dialog->ssn,dialog->dialogid_map,dialog->invokeId,
+      &ussdEncoding,
+      ussdString,
+      &error);
+  }
+  else throw runtime_error(
+    FormatText("MAP::%s incorrect dialog version %d",__FUNCTION__,dialog->version));
+}
+
+static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
+{
+  __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
+  //ET96MAP_ERROR_PROCESS_UNSTRUCTURED_SS_REQ_T error = 0;
+  ET96MAP_USSD_STRING_T ussdString = {0,}
+  if ( dialog->version == 2 ) 
+  {
+    Et96MapV2ProcessUnstructuredSSRequestResp(
+      dialog->ssn,dialog->dialogid_map,dialog->invokeId,
+      &ussdEncoding,
+      ussdString,
+      0);
+  }
+  else throw runtime_error(
+    FormatText("MAP::%s incorrect dialog version %d",__FUNCTION__,dialog->version));
+}
+
 void MAPIO_PutCommand(const SmscCommand& cmd ){ MAPIO_PutCommand(cmd, 0 ); }
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
 {
+  __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);
   unsigned dialogid_smsc = cmd->get_dialogId();
   unsigned dialogid_map = 0;
   __trace2__(">>MAPPROXY::putCommand dialog:0x%x (state:NONE)",dialogid_smsc);
@@ -630,6 +672,52 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
       if ( cmd->get_commandId() != DELIVERY )
         throw MAPDIALOG_BAD_STATE("MAP::putCommand: must be SMS DELIVERY");
       try{
+        if ( cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP )
+        {
+          unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP )
+          if ( serviceOp == USSD_PSSR /*_RESPONSE*/ ) 
+          {
+            string s_seq = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+            if (s_seq.length()==0) throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: empty user_message_reference");
+            long long sequence;
+            if ( sscanf(s_seq.c_str(),"%llx",&sequence) != 1 )
+              throw MAPDIALOG_FATAL_ERROR(
+                FormatText("MAP::PutCommand: invaid USSD code 0x%llx",s_seq));
+            {
+              MutexGuard ussd_map_guard( ussd_map_lock );
+              USSD_MAP::iterator it = ussd_map.find(sequence);
+              if ( it == ussd_map.end() )
+                throw MAPDIALOG_FATAL_ERROR(
+                  FormatText("MAP::PutCommand: can't find session %s",s_seq));
+              dialogid_map = it.second;
+            }
+            try {
+              dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_smsc));
+              if ( dialog.isnull() )
+                throw MAPDIALOG_FATAL_ERROR(
+                  FormatText("MAP::putCommand: Opss, here is no dialog with id x%x seq: %s",dialogid_smsc,s_seq));
+              __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
+              if ( !dialog->isUSSD )
+                throw MAPDIALOG_FATAL_ERROR(
+                  FormatText("MAP::putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq));
+              if ( dialog->state != MAPST_USSDWaitResponce )
+                throw MAPDIALOG_BAD_STATE(
+                  FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+              DoUSSRUserResponce(cmd,dialog.get());
+            }
+            catch(...)
+            {
+              MutexGuard ussd_map_guard( ussd_map_lock );
+              ussd_map.erase(sequence);
+              throw;
+            }
+          }
+          else
+          {
+            throw MAPDIALOG_FATAL_ERROR(
+              FormatText("MAP::PutCommand: invaid USSD code 0x%x",serviceOp));
+          }
+        }
         if ( !dialog2  ) {
           dialog.assign(MapDialogContainer::getInstance()->
                       createOrAttachSMSCDialog(
@@ -673,9 +761,29 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
       __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
       dialogid_map = dialogid_smsc;
       if ( dialog->state == MAPST_WaitSubmitCmdConf ){
-        ResponseMO(dialog.get(),cmd->get_resp()->get_status());
-        CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-        DropMapDialog(dialog.get());
+        if ( dialog->isUSSD )
+        {
+          dialog->state = MAPST_USSDWaitResponce;
+          if ( cmd->get_resp()->get_status() != 0 )
+          {
+            DoUSSRUserResponceError(cmd,dialog);
+            CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+            DropMapDialog(dialog.get());
+          }
+          else
+          {
+            {
+              MutexGuard ussd_map_guard( ussd_map_lock );
+              ussd_map[sequence] = dialog->dialogid_map;
+            }
+          }
+        }
+        else
+        {
+          ResponseMO(dialog.get(),cmd->get_resp()->get_status());
+          CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+          DropMapDialog(dialog.get());
+        }
       }else 
         throw MAPDIALOG_BAD_STATE(
           FormatText("MAP::%s bad state %d, did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));

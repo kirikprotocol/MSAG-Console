@@ -71,7 +71,8 @@ enum MapState{
   MAPST_ImsiWaitOpenConf = 22,
   MAPST_ImsiWaitRInfo = 23,
   MAPST_ImsiWaitCloseInd = 24,
-  MAPST_WaitImsiReq = 25
+  MAPST_WaitImsiReq = 25,
+  MAPST_USSDWaitResponce = 26
 };
 
 class hash_func_ET96MAP_DID{
@@ -112,6 +113,7 @@ struct MapDialog{
   bool isUSSD;
   ET96MAP_LOCAL_SSN_T ssn;
   bool hasIndAddress;
+  long long ussdSequence;
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
@@ -124,7 +126,8 @@ struct MapDialog{
     associate(0),
     isUSSD(false),
     ssn(lssn),
-    hasIndAddress(false)
+    hasIndAddress(false),
+    ussdSequence(0)
 //    isMOreq(false),
 //    dialogid_req(0)
     {}
