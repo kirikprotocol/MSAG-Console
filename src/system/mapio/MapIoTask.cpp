@@ -50,7 +50,7 @@ USHORT_T Et96MapUAbortInd(ET96MAP_LOCAL_SSN_T lssn,
   const char* szReason = "<Reason-Unknown>";
   if ( *reason == ET96MAP_RESOURCE_UNAVAIL )
   {
-    szReasn = "ET96MAP_RESOURCE_UNAVAIL";
+    szReason = "ET96MAP_RESOURCE_UNAVAIL";
     switch(*diag){
     case ET96MAP_SHORT_TERM_PROBLEM: 
       szDiag = "ET96MAP_SHORT_TERM_PROBLEM";
