@@ -213,7 +213,7 @@ int SmppInputThread::Execute()
                 resppdu.get_header().
                   set_commandStatus(SmppStatusSet::ESME_RSYSERR);
                 trace2("registration failed:%s",e.what());
-                delete proxy;
+                //delete proxy;
                 err=true;
               }
 
