@@ -267,9 +267,12 @@ DROP TABLE SMS_STAT_SMS;
 CREATE TABLE SMS_STAT_SMS 
 (
   period       NUMBER(22)     NOT NULL,
-  received     NUMBER(22)     NOT NULL,
-  finalized    NUMBER(22)     NOT NULL,
-  rescheduled  NUMBER(22)     NOT NULL
+  accepted     NUMBER(22)     NOT NULL,
+  rejected     NUMBER(22)     NOT NULL,
+  delivered    NUMBER(22)     NOT NULL,
+  failed       NUMBER(22)     NOT NULL,
+  rescheduled  NUMBER(22)     NOT NULL,
+  temporal     NUMBER(22)     NOT NULL	
 ) TABLESPACE SMSC_DATA;
 
 CREATE INDEX SMS_STAT_SMS_IDX ON SMS_STAT_SMS (period)
@@ -294,8 +297,12 @@ CREATE TABLE SMS_STAT_SME
 (
   period       NUMBER(22)     NOT NULL,
   systemid     VARCHAR2(16)   NOT NULL,
-  received     NUMBER(22)     NOT NULL,
-  sent         NUMBER(22)     NOT NULL
+  accepted     NUMBER(22)     NOT NULL,
+  rejected     NUMBER(22)     NOT NULL,
+  delivered    NUMBER(22)     NOT NULL,
+  failed       NUMBER(22)     NOT NULL,
+  rescheduled  NUMBER(22)     NOT NULL,
+  temporal     NUMBER(22)     NOT NULL	
 ) TABLESPACE SMSC_DATA;
 
 CREATE INDEX SMS_STAT_SME_IDX ON SMS_STAT_SME (period)
@@ -309,7 +316,12 @@ CREATE TABLE SMS_STAT_ROUTE
 (
   period       NUMBER(22)     NOT NULL,
   routeid      VARCHAR2(32)   NOT NULL,
-  processed    NUMBER(22)     NOT NULL
+  accepted     NUMBER(22)     NOT NULL,
+  rejected     NUMBER(22)     NOT NULL,
+  delivered    NUMBER(22)     NOT NULL,
+  failed       NUMBER(22)     NOT NULL,
+  rescheduled  NUMBER(22)     NOT NULL,
+  temporal     NUMBER(22)     NOT NULL	
 ) TABLESPACE SMSC_DATA;
 
 CREATE INDEX SMS_STAT_ROUTE_IDX ON SMS_STAT_ROUTE (period)

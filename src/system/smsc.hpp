@@ -226,7 +226,7 @@ public:
       */
       case etSubmitOk:
       {
-        statMan->updateAccepted(sms->getSourceSmeId());
+        statMan->updateAccepted(sms->getSourceSmeId(),sms->getRouteId());
         MutexGuard g(perfMutex);
         submitOkCounter++;
       }break;
@@ -234,7 +234,7 @@ public:
       {
         MutexGuard g(perfMutex);
         submitErrCounter++;
-        statMan->updateRejected(sms->getLastResult());
+        statMan->updateRejected(sms->getSourceSmeId(),sms->getRouteId(), sms->getLastResult());
       }break;
       case etDeliveredOk:
       {
@@ -244,7 +244,7 @@ public:
       }break;
       case etDeliverErr:
       {
-        statMan->updateTemporal(sms->getLastResult());
+        statMan->updateTemporal(sms->getDestinationSmeId(),sms->getRouteId(),sms->getLastResult());
         MutexGuard g(perfMutex);
         deliverErrCounter++;
       }break;
@@ -256,7 +256,7 @@ public:
       }break;
       case etRescheduled:
       {
-        statMan->updateScheduled();
+        statMan->updateScheduled(sms->getDestinationSmeId(),sms->getRouteId());
 
         MutexGuard g(perfMutex);
         rescheduleCounter++;

@@ -6,7 +6,7 @@ namespace smsc { namespace stat
 
 StatisticsManager::StatisticsManager(DataSource& _ds)
     : Statistics(), ThreadedTask(),
-        log(Logger::getCategory("smsc.stat.StatisticsManager")),
+        logger(Logger::getCategory("smsc.stat.StatisticsManager")),
             ds(_ds), currentIndex(0), isStarted(false), bExternalFlush(false)
 {
     resetCounters(0); resetCounters(1);
@@ -16,84 +16,195 @@ StatisticsManager::~StatisticsManager()
     MutexGuard guard(stopLock);
 }
 
-void StatisticsManager::updateAccepted(const char* srcSmeId)
+void StatisticsManager::addError(IntHash<int>& hash, int errcode)
 {
-    MutexGuard  incomingGuard(incomingLock);
-    MutexGuard  switchGuard(switchLock);
+    int* counter = hash.GetPtr(errcode);
+    if (!counter) hash.Insert(errcode, 1);
+    else (*counter)++;
+}
 
-    acceptedCount[currentIndex]++;
+// SMS accepted by SMSC, affects accepted only
+void StatisticsManager::updateAccepted(const char* srcSmeId, const char* routeId)
+{
+    MutexGuard  switchGuard(switchLock);
+    
+    statGeneral[currentIndex].accepted++;
     if (srcSmeId && srcSmeId[0])
     {
-        MutexGuard guard(smeStatLock);
-
-        SmeStat* stat = statBySmeId[currentIndex].GetPtr(srcSmeId);
-        if (!stat) statBySmeId[currentIndex].Insert(srcSmeId, SmeStat(1, 0));
-        else stat->sent++;
+        SmsStat* stat = statBySmeId[currentIndex].GetPtr(srcSmeId);
+        if (stat) stat->accepted++;
+        else statBySmeId[currentIndex].Insert(srcSmeId, SmsStat(1));
     }
-}
-void StatisticsManager::updateRejected(int errcode)
-{
-    MutexGuard  incomingGuard(outgoingLock);
-    MutexGuard  switchGuard(switchLock);
-
-    int* counter = finalizedByError[currentIndex].GetPtr(errcode);
-    if (!counter) finalizedByError[currentIndex].Insert(errcode, 1);
-    else (*counter)++;
-}
-
-void StatisticsManager::updateChanged(const char* dstSmeId,
-    const char* routeId, int errcode)
-{
-    MutexGuard  outgoingGuard(outgoingLock);
-    MutexGuard  switchGuard(switchLock);
-
-    finalizedCount[currentIndex]++;
-    int* counter = finalizedByError[currentIndex].GetPtr(errcode);
-    if (!counter) finalizedByError[currentIndex].Insert(errcode, 1);
-    else (*counter)++;
-
-    if (routeId)
+    if (routeId && routeId[0])
     {
-        counter = finalizedByRoute[currentIndex].GetPtr(routeId);
-        if (!counter) finalizedByRoute[currentIndex].Insert(routeId, 1);
-        else (*counter)++;
-    }
-    if (errcode == 0 && dstSmeId && dstSmeId[0])
-    {
-        MutexGuard guard(smeStatLock);
-
-        SmeStat* stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
-        if (!stat) statBySmeId[currentIndex].Insert(dstSmeId, SmeStat(0, 1));
-        else stat->received++;
+        SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
+        if (stat) stat->accepted++;
+        else statByRoute[currentIndex].Insert(routeId, SmsStat(1));
     }
 }
-void StatisticsManager::updateScheduled()
+// SMS rejected by SMSC. Affects rejected && errors only
+void StatisticsManager::updateRejected(const char* srcSmeId, const char* routeId, int errcode)
 {
-    MutexGuard  scheduleGuard(scheduleLock);
     MutexGuard  switchGuard(switchLock);
 
-    rescheduledCount[currentIndex]++;
+    if (errcode != 0)
+    {
+        statGeneral[currentIndex].rejected++;
+
+        if (srcSmeId && srcSmeId[0])
+        {
+            SmsStat* stat = statBySmeId[currentIndex].GetPtr(srcSmeId);
+            if (stat) {
+                stat->rejected++;
+                addError(stat->errors, errcode);
+            }
+            else {
+                SmsStat newStat(0, 1); // rejected
+                addError(newStat.errors, errcode);
+                statBySmeId[currentIndex].Insert(srcSmeId, newStat);
+            }
+        }
+
+        if (routeId && routeId[0])
+        {
+            SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
+            if (stat) {
+                stat->rejected++;
+                addError(stat->errors, errcode);
+            }
+            else {
+                SmsStat newStat(0, 1); // rejected
+                addError(newStat.errors, errcode);
+                statByRoute[currentIndex].Insert(routeId, newStat);
+            }
+        }
+    }
+    addError(statGeneral[currentIndex].errors, errcode);
+}
+
+// SMS was't delivered by SMSC with temporal error. Affects temporal && errors only 
+void StatisticsManager::updateTemporal(const char* dstSmeId, const char* routeId, int errcode)
+{
+    MutexGuard  switchGuard(switchLock);
+
+    if (errcode != 0)
+    {
+        statGeneral[currentIndex].temporal++;
+
+        if (dstSmeId && dstSmeId[0])
+        {
+            SmsStat* stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
+            if (stat) {
+                stat->temporal++;
+                addError(stat->errors, errcode);
+            }
+            else {
+                SmsStat newStat(0, 0, 0, 0, 0, 1); // temporal
+                addError(newStat.errors, errcode);
+                statBySmeId[currentIndex].Insert(dstSmeId, newStat);
+            }
+        }
+        
+        if (routeId && routeId[0])
+        {
+            SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
+            if (stat) {
+                stat->temporal++;
+                addError(stat->errors, errcode);
+            }
+            else {
+                SmsStat newStat(0, 0, 0, 0, 0, 1); // temporal
+                addError(newStat.errors, errcode);
+                statByRoute[currentIndex].Insert(routeId, newStat);
+            }
+        }
+    }
+    addError(statGeneral[currentIndex].errors, errcode);
+}
+
+// SMS was delivered or failed by SMSC. Affects delivered or failed
+void StatisticsManager::updateChanged(const char* dstSmeId, const char* routeId, int errcode)
+{
+    MutexGuard  switchGuard(switchLock);
+
+    if (dstSmeId && dstSmeId[0])
+    {
+        SmsStat* stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
+        if (stat) {
+            if (errcode == 0) stat->delivered++;
+            else {
+                stat->failed++;
+                addError(stat->errors, errcode);
+            }
+        }
+        else {
+            SmsStat newStat(0, 0, (errcode) ? 0:1, (errcode) ? 1:0, 0, 0); // delivered or failed
+            if (errcode != 0) addError(newStat.errors, errcode);
+            statBySmeId[currentIndex].Insert(dstSmeId, newStat);
+        }
+    }
+    
+    if (routeId && routeId[0])
+    {
+        SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
+        if (stat) {
+            if (errcode == 0) stat->delivered++;
+            else {
+                stat->failed++;
+                addError(stat->errors, errcode);
+            }
+        }
+        else {
+            SmsStat newStat(0, 0, (errcode) ? 0:1, (errcode) ? 1:0, 0, 0); // delivered or failed
+            if (errcode != 0) addError(newStat.errors, errcode);
+            statByRoute[currentIndex].Insert(routeId, newStat);
+        }
+    }
+    
+    if (errcode == 0) statGeneral[currentIndex].delivered++;
+    else statGeneral[currentIndex].failed++;
+    addError(statGeneral[currentIndex].errors, errcode);
+}
+void StatisticsManager::updateScheduled(const char* dstSmeId, const char* routeId)
+{
+    MutexGuard  switchGuard(switchLock);
+    
+    if (dstSmeId && dstSmeId[0])
+    {
+        SmsStat* stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
+        if (stat) stat->rescheduled++;
+        else statBySmeId[currentIndex].Insert(dstSmeId, SmsStat(0, 0, 0, 0, 1, 0)); 
+    }
+    
+    if (routeId && routeId[0])
+    {
+        SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
+        if (stat) stat->rescheduled++;
+        else statByRoute[currentIndex].Insert(routeId, SmsStat(0, 0, 0, 0, 1, 0));
+    }
+    
+    statGeneral[currentIndex].rescheduled++;
 }
 
 int StatisticsManager::Execute()
 {
-    __trace2__("StatisticsManager::Execute() started (%d)", isStopping);
+    logger.debug("Execute() started (%d)", isStopping);
     isStarted = true; bExternalFlush = false;
     while (!isStopping)
     {
         int toSleep = calculateToSleep();
-        __trace2__("StatisticsManager::Execute() >> Start wait %d", toSleep);
+        logger.debug("Execute() >> Start wait %d", toSleep);
         awakeEvent.Wait(toSleep); // Wait for next hour begins ...
-        __trace__("StatisticsManager::Execute() >> End wait");
+        logger.debug("Execute() >> End wait");
 
         flushCounters(switchCounters());
         bExternalFlush = false;
         doneEvent.Signal();
-        __trace__("StatisticsManager::Execute() >> Flushed");
+        logger.debug("Execute() >> Flushed");
     }
     isStarted = false;
     exitEvent.Signal();
-    __trace__("StatisticsManager::Execute() exited");
+    logger.debug("Execute() exited");
     return 0;
 }
 
@@ -101,16 +212,16 @@ void StatisticsManager::stop()
 {
     MutexGuard guard(stopLock);
 
-    __trace2__("StatisticsManager::stop() called, started=%d", isStarted);
+    logger.debug("stop() called, started=%d", isStarted);
     ThreadedTask::stop();
     if (isStarted)
     {
         bExternalFlush = true;
         awakeEvent.Signal();
-        __trace__("StatisticsManager::ctop() waiting finish ...");
+        logger.debug("stop() waiting finish ...");
         exitEvent.Wait();
     }
-    __trace__("StatisticsManager::stop() exited");
+    logger.debug("stop() exited");
 }
 
 void StatisticsManager::flushStatistics()
@@ -151,26 +262,26 @@ int StatisticsManager::calculateToSleep() // returns msecs to next hour
 }
 
 const char* insertStatSmsSql = (const char*)
-"INSERT INTO sms_stat_sms (period, received, finalized, rescheduled)\
- VALUES (:period, :received, :finalized, :rescheduled)";
-
-const char* insertStatStateSql = (const char*)
-"INSERT INTO sms_stat_state (period, errcode, counter)\
- VALUES (:period, :errcode, :counter)";
+"INSERT INTO sms_stat_sms (period, accepted, rejected, delivered, rescheduled, temporal) "
+"VALUES (:period, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal)";
 
 const char* insertStatSmeSql = (const char*)
-"INSERT INTO sms_stat_sme (period, systemid, received, sent)\
- VALUES (:period, :systemid, :received, :sent)";
+"INSERT INTO sms_stat_sme (period, systemid, accepted, rejected, delivered, rescheduled, temporal)\
+ VALUES (:period, :systemid, :accepted, :rejected, :delivered, :rescheduled, :temporal)";
 
 const char* insertStatRouteSql = (const char*)
-"INSERT INTO sms_stat_route (period, routeid, processed)\
- VALUES (:period, :routeid, :processed)";
+"INSERT INTO sms_stat_route (period, routeid, accepted, rejected, delivered, rescheduled, temporal)\
+ VALUES (:period, :routeid, :accepted, :rejected, :delivered, :rescheduled, :temporal)";
+
+const char* insertStatStateSql = (const char*)
+"INSERT INTO sms_stat_state (period, errcode, counter) "
+"VALUES (:period, :errcode, :counter)";
 
 void StatisticsManager::flushCounters(short index)
 {
     uint32_t period = calculatePeriod();
 
-    __trace2__("Flushing statistics for period: %d / %d", period, time(0));
+    logger.debug("Flushing statistics for period: %d / %d", period, time(0));
 
     Connection* connection = 0;
 
@@ -184,8 +295,8 @@ void StatisticsManager::flushCounters(short index)
         if (!(connection = ds.getConnection()))
             throw SQLException("Statistics: Failed to obtain DB connection!");
 
-        insertStatSmeStmt   = connection->createStatement(insertStatSmeSql);
         insertStatSmsStmt   = connection->createStatement(insertStatSmsSql);
+        insertStatSmeStmt   = connection->createStatement(insertStatSmeSql);
         insertStatRouteStmt = connection->createStatement(insertStatRouteSql);
         insertStatStateStmt = connection->createStatement(insertStatStateSql);
 
@@ -194,13 +305,16 @@ void StatisticsManager::flushCounters(short index)
             throw SQLException("Statistics: Failed to create service statements!");
 
         insertStatSmsStmt->setUint32(1, period);
-        insertStatSmsStmt->setInt32(2, acceptedCount[index]);
-        insertStatSmsStmt->setInt32(3, finalizedCount[index]);
-        insertStatSmsStmt->setInt32(4, rescheduledCount[index]);
+        insertStatSmsStmt->setInt32 (2, statGeneral[index].accepted);
+        insertStatSmsStmt->setInt32 (3, statGeneral[index].rejected);
+        insertStatSmsStmt->setInt32 (4, statGeneral[index].delivered);
+        insertStatSmsStmt->setInt32 (5, statGeneral[index].failed);
+        insertStatSmsStmt->setInt32 (6, statGeneral[index].rescheduled);
+        insertStatSmsStmt->setInt32 (7, statGeneral[index].temporal);
         insertStatSmsStmt->executeUpdate();
 
         insertStatStateStmt->setUint32(1, period);
-        IntHash<int>::Iterator it = finalizedByError[index].First();
+        IntHash<int>::Iterator it = statGeneral[index].errors.First();
         int fbeError, fbeCounter;
         while (it.Next(fbeError, fbeCounter))
         {
@@ -210,24 +324,39 @@ void StatisticsManager::flushCounters(short index)
         }
 
         insertStatRouteStmt->setUint32(1, period);
-        finalizedByRoute[index].First();
-        char* fbrId; int fbrCounter;
-        while (finalizedByRoute[index].Next(fbrId, fbrCounter))
+        statByRoute[index].First();
+        char* routeId = 0; SmsStat routeStat;
+        while (statByRoute[index].Next(routeId, routeStat))
         {
-            insertStatRouteStmt->setString(2, fbrId);
-            insertStatRouteStmt->setInt32(3, fbrCounter);
+            if (!routeId || routeId[0] == '\0') continue;
+            insertStatRouteStmt->setString(2, routeId);
+            insertStatRouteStmt->setInt32 (3, routeStat.accepted);
+            insertStatRouteStmt->setInt32 (4, routeStat.rejected);
+            insertStatRouteStmt->setInt32 (5, routeStat.delivered);
+            insertStatRouteStmt->setInt32 (6, routeStat.failed);
+            insertStatRouteStmt->setInt32 (7, routeStat.rescheduled);
+            insertStatRouteStmt->setInt32 (8, routeStat.temporal);
             insertStatRouteStmt->executeUpdate();
+
+            // TODO: Add errors set flush here
         }
 
         insertStatSmeStmt->setUint32(1, period);
         statBySmeId[index].First();
-        char* sbsId; SmeStat sbsStat;
-        while (statBySmeId[index].Next(sbsId, sbsStat))
+        char* smeId = 0; SmsStat smeStat;
+        while (statBySmeId[index].Next(smeId, smeStat))
         {
-            insertStatSmeStmt->setString(2, sbsId);
-            insertStatSmeStmt->setInt32(3, sbsStat.received);
-            insertStatSmeStmt->setInt32(4, sbsStat.sent);
+            if (!smeId || smeId[0] == '\0') continue;
+            insertStatSmeStmt->setString(2, smeId);
+            insertStatSmeStmt->setInt32 (3, smeStat.accepted);
+            insertStatSmeStmt->setInt32 (4, smeStat.rejected);
+            insertStatSmeStmt->setInt32 (5, smeStat.delivered);
+            insertStatSmeStmt->setInt32 (6, smeStat.failed);
+            insertStatSmeStmt->setInt32 (7, smeStat.rescheduled);
+            insertStatSmeStmt->setInt32 (8, smeStat.temporal);
             insertStatSmeStmt->executeUpdate();
+
+            // TODO: Add errors set flush here
         }
 
         connection->commit();
@@ -235,7 +364,7 @@ void StatisticsManager::flushCounters(short index)
     catch (Exception& exc)
     {
         if (connection) connection->rollback();
-        log.error(exc.what());
+        logger.error(exc.what());
     }
 
     if (insertStatSmeStmt) delete insertStatSmeStmt;
@@ -248,13 +377,9 @@ void StatisticsManager::flushCounters(short index)
 }
 void StatisticsManager::resetCounters(short index)
 {
-    acceptedCount[index] = 0;
-    finalizedCount[index] = 0;
-    rescheduledCount[index] = 0;
-
+    statGeneral[index].Empty();
     statBySmeId[index].Empty();
-    finalizedByError[index].Empty();
-    finalizedByRoute[index].Empty();
+    statByRoute[index].Empty();
 }
 
 }}

@@ -24,19 +24,37 @@ namespace smsc { namespace stat
     
     using smsc::util::Logger;
     
-    struct SmeStat
+    struct SmsStat
     {
-        int sent; 
-        int received;
+        int accepted, rejected;                       
+        int delivered, failed, rescheduled, temporal;
+        IntHash<int> errors;
         
-        SmeStat() : sent(0), received(0) {};
-        SmeStat(int s, int r) : sent(s), received(r) {};
-        SmeStat(const SmeStat& stat) 
-            : sent(stat.sent), received(stat.received) {};
+        SmsStat(int accepted = 0, int rejected = 0, 
+                int delivered = 0, int failed = 0, 
+                int recheduled = 0, int temporal = 0) 
+            : accepted(accepted), rejected(rejected),
+              delivered(delivered), failed(failed),
+              rescheduled(rescheduled), temporal(temporal) 
+            { errors.Empty(); };
+        SmsStat(const SmsStat& stat) 
+            : accepted(stat.accepted), rejected(stat.rejected), 
+              delivered(stat.delivered), failed(stat.failed),
+              rescheduled(stat.rescheduled), temporal(stat.temporal), 
+              errors(stat.errors) {};
         
-        SmeStat& operator =(const SmeStat& stat) {
-            sent = stat.sent; received = stat.received;
+        SmsStat& operator =(const SmsStat& stat) {
+            accepted = stat.accepted; rejected = stat.rejected;
+            delivered = stat.delivered; failed = stat.failed;
+            rescheduled = stat.rescheduled; temporal = stat.temporal;
+            errors = stat.errors;
             return (*this);
+        };
+
+        inline void Empty() {
+            accepted = 0; rejected = 0; delivered = 0; 
+            failed = 0; rescheduled = 0; temporal = 0;
+            errors.Empty();
         };
     };
 
@@ -44,32 +62,28 @@ namespace smsc { namespace stat
     {
     protected:
     
-        log4cpp::Category       &log;
+        log4cpp::Category       &logger;
         DataSource              &ds;
         
-        int     acceptedCount[2];
-        int     finalizedCount[2];
-        int     rescheduledCount[2];
-
-        Hash<SmeStat>   statBySmeId[2];
-        IntHash<int>    finalizedByError[2];
-        Hash<int>       finalizedByRoute[2];
+        SmsStat         statGeneral[2];
+        Hash<SmsStat>   statBySmeId[2];
+        Hash<SmsStat>   statByRoute[2];
         
         short   currentIndex;
         bool    bExternalFlush;
         
-        Mutex   stopLock, switchLock, flushLock, smeStatLock;
-        Mutex   incomingLock, outgoingLock, scheduleLock;
-
+        Mutex   stopLock, switchLock, flushLock;
         Event   awakeEvent, exitEvent, doneEvent;
         bool    isStarted;
         
         short switchCounters();
         void  resetCounters(short index);
         void  flushCounters(short index);
-
+        
         uint32_t calculatePeriod();
         int      calculateToSleep();
+
+        void  addError(IntHash<int>& hash, int errcode);
 
     public:
         
@@ -79,14 +93,11 @@ namespace smsc { namespace stat
 
         virtual void flushStatistics();
 
-        virtual void updateScheduled();
-        virtual void updateAccepted(const char* srcSmeId);
-        virtual void updateRejected(int errcode);
-        virtual void updateTemporal(int errcode) {
-            updateRejected(errcode);
-        };
-        virtual void updateChanged(const char* dstSmeId, 
-            const char* routeId, int errcode = 0);
+        virtual void updateAccepted (const char* srcSmeId, const char* routeId);
+        virtual void updateRejected (const char* srcSmeId, const char* routeId, int errcode);
+        virtual void updateTemporal (const char* dstSmeId, const char* routeId, int errcode);
+        virtual void updateChanged  (const char* dstSmeId, const char* routeId, int errcode = 0);
+        virtual void updateScheduled(const char* dstSmeId, const char* routeId);
         
         StatisticsManager(DataSource& ds);
         virtual ~StatisticsManager();
