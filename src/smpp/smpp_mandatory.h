@@ -275,7 +275,7 @@ public:
   {
     if (stream->dataOffset < stream->dataLength)
     {
-      __warning__("packet has left data, dropped");
+      __warning2__("packet %08X has left data, dropped",stream->header.commandId);
       dropPdu(stream);
     }
   }
