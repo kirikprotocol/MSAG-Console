@@ -344,6 +344,7 @@ public:
         fillSmppPduFromSms(xsm.get(),c.get_sms());
 				xsm->message.set_scheduleDeliveryTime("");
 				xsm->message.set_validityPeriod("");
+				xsm->message.set_replaceIfPresentFlag(0);
         return reinterpret_cast<SmppHeader*>(xsm.release());
       }
     case SUBMIT_RESP:
