@@ -501,7 +501,7 @@ public:
     reader.Start();
     writer.Start();
     PduBindTRX pdu;
-    int expectedbindresp;
+    unsigned int expectedbindresp;
     switch(bindtype)
     {
       case BindType::Transceiver:
