@@ -12,6 +12,7 @@ import java.util.*;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class ServiceInfo
 {
@@ -19,25 +20,19 @@ public class ServiceInfo
           throws AdminException
   {
     host = serviceHost;
-    name = serviceElement.getAttribute("name");
-    pid = Long.decode(serviceElement.getAttribute("pid")).longValue();
-    cmdLine = serviceElement.getAttribute("command_line");
-    configFileName = serviceElement.getAttribute("config");
-    port = Integer.decode(serviceElement.getAttribute("port")).intValue();
+    name = StringEncoderDecoder.decode(serviceElement.getAttribute("name"));
+    pid = Long.decode(StringEncoderDecoder.decode(serviceElement.getAttribute("pid"))).longValue();
+    cmdLine = StringEncoderDecoder.decode(serviceElement.getAttribute("command_line"));
+    configFileName = StringEncoderDecoder.decode(serviceElement.getAttribute("config"));
+    port = Integer.decode(StringEncoderDecoder.decode(serviceElement.getAttribute("port"))).intValue();
 
-    NodeList childs = serviceElement.getElementsByTagName("arg");
-    args.setSize(childs.getLength());
-    for (int j = 0; j < childs.getLength(); j++) {
-      Element argElem = (Element) childs.item(j);
-      int num = Integer.decode(argElem.getAttribute("num")).intValue();
-      args.set(num, Utils.getNodeText(argElem));
-    }
+    args = StringEncoderDecoder.decode(serviceElement.getAttribute("args"));
     if (this.name.equals("") || this.cmdLine.equals("")) {
       throw new AdminException("service name or command line not specified in response");
     }
   }
 
-  public ServiceInfo(String name, String host, int port, String cmdLine, String configFileName, Vector args, long pid)
+  public ServiceInfo(String name, String host, int port, String cmdLine, String configFileName, String args, long pid)
   {
     this.name = name;
     this.host = host;
@@ -48,7 +43,7 @@ public class ServiceInfo
     this.pid = pid;
   }
 
-  public ServiceInfo(String name, String host, int port, String cmdLine, String configFileName, Vector args)
+  public ServiceInfo(String name, String host, int port, String cmdLine, String configFileName, String args)
   {
     this(name, host, port, cmdLine, configFileName, args, 0);
   }
@@ -59,7 +54,7 @@ public class ServiceInfo
   protected String cmdLine = "";
 
   protected String configFileName = "config.xml";
-  protected Vector args = new Vector();
+  protected String args = "";
   protected long pid = 0;
   protected Map components = new HashMap();
 
@@ -88,7 +83,7 @@ public class ServiceInfo
     return configFileName;
   }
 
-  public Vector getArgs()
+  public String getArgs()
   {
     return args;
   }

@@ -15,6 +15,14 @@ void initXerces()
 	}
 }
 
+void TerminateXerces()
+{
+	if (isXercesInitialized)
+	{
+		XMLPlatformUtils::Terminate();
+	}
+}
+
 }
 }
 }

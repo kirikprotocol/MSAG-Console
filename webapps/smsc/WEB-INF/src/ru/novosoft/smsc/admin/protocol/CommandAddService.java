@@ -8,6 +8,7 @@ package ru.novosoft.smsc.admin.protocol;
 import org.w3c.dom.Element;
 
 import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class CommandAddService extends Command
 {
@@ -19,19 +20,12 @@ public class CommandAddService extends Command
                  + serviceInfo.getPort() + ")");
 
     Element serviceElem = document.createElement("service");
-    serviceElem.setAttribute("name", serviceInfo.getName());
-    serviceElem.setAttribute("cmd_line", serviceInfo.getCmdLine());
-    serviceElem.setAttribute("config_file", serviceInfo.getConfigFileName());
-    serviceElem.setAttribute("port", String.valueOf(serviceInfo.getPort()));
+    serviceElem.setAttribute("name", StringEncoderDecoder.encode(serviceInfo.getName()));
+    serviceElem.setAttribute("cmd_line", StringEncoderDecoder.encode(serviceInfo.getCmdLine()));
+    serviceElem.setAttribute("config_file", StringEncoderDecoder.encode(serviceInfo.getConfigFileName()));
+    serviceElem.setAttribute("port", StringEncoderDecoder.encode(String.valueOf(serviceInfo.getPort())));
+    serviceElem.setAttribute("args", StringEncoderDecoder.encode(String.valueOf(serviceInfo.getArgs())));
     document.getDocumentElement().appendChild(serviceElem);
-
-    for (int i = 0; i < serviceInfo.getArgs().size(); i++) {
-      Element argElem = document.createElement("arg");
-      argElem.setAttribute("num", Integer.toString(i));
-      argElem.appendChild(document.createTextNode((String) serviceInfo.getArgs().elementAt(i)));
-      serviceElem.appendChild(argElem);
-      logger.debug("parameter[" + i + "]=\"" + (String) serviceInfo.getArgs().elementAt(i) + "\" added");
-    }
-    logger.debug("Command add_service created");
+    //logger.debug("Command add_service created");
   }
 }

@@ -1,6 +1,6 @@
 // Decompiled by Jad v1.5.5.3. Copyright 1997-98 Pavel Kouznetsov.
 // Jad home page:      http://web.unicom.com.cy/~kpd/jad.html
-// Decompiler options: packimports(3) printdflt 
+// Decompiler options: packimports(3) printdflt
 // Source File Name:   Response.java
 
 package ru.novosoft.smsc.admin.protocol;
@@ -15,6 +15,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 // Referenced classes of package ru.novosoft.smsc.admin.protocol:
 //      ResponseEntityResolver, Status
@@ -40,7 +41,7 @@ public class Response
       InputSource source = new InputSource(inputStream);
       doc = builder.parse(source);
       Element main = doc.getDocumentElement();
-      status = parseStatus(main.getAttribute("status"));
+      status = parseStatus(StringEncoderDecoder.decode(main.getAttribute("status")));
     }
     catch(FactoryConfigurationError error)
     {

@@ -119,7 +119,7 @@ int CommandDispatcher::Execute()
 				break;
 			}
 		}
-	} while (!isShutdownSignaled
+	} while (!isShutdownSignaled && command.get() != 0
 					 && (command->getId() != Command::undefined)
 					 && (command->getId() != Command::shutdown_service));
 	

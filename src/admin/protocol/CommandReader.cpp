@@ -96,13 +96,12 @@ Command* CommandReader::parseCommand(InputSource &source)
 		}
 		DOM_Document data = parser->getDocument();
 		
-		char * command_name = getCommandName(data);
-		Command::Id id = Command::getCommandIdByName(command_name);
-		delete[] command_name;
+		std::auto_ptr<char> command_name(getCommandName(data));
+		Command::Id id = Command::getCommandIdByName(command_name.get());
 
 		if (id == Command::undefined)
 		{
-			logger.warn("Unknown command \"%s\"", command_name);
+			logger.warn("Unknown command \"%s\"", command_name.get());
 			throw AdminException("Unknown command");
 		}
 		return createCommand(id,data);
@@ -134,20 +133,13 @@ Command* CommandReader::parseCommand(InputSource &source)
 
 char * CommandReader::getCommandName(DOM_Document data)
 {
-	DOM_NodeList list = data.getElementsByTagName("command");
-	if (list.getLength() == 0)
+	DOM_Element commandElem = data.getDocumentElement();
+	if (!commandElem.getNodeName().equals("command"))
 	{
 		logger.warn("<command> tag not found in command");
 		throw AdminException("<command> tag not found in command");
 	}
-	DOM_NamedNodeMap attrs = list.item(0).getAttributes();
-	DOM_Node name_attr = attrs.getNamedItem("name");
-	if (name_attr.isNull())
-	{
-		logger.warn("<command> tag has not have 'name' attribute");
-		throw AdminException("<command> tag has not have 'name' attribute");
-	}
-	return name_attr.getNodeValue().transcode();
+	return decode(commandElem.getAttribute("name"));
 }
 
 Command * CommandReader::createCommand(Command::Id id, DOM_Document data) {

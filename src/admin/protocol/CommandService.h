@@ -3,6 +3,7 @@
 
 #include <admin/protocol/Command.h>
 #include <util/xml/utilFunctions.h>
+#include <util/cstrings.h>
 
 namespace smsc {
 namespace admin {
@@ -10,6 +11,7 @@ namespace protocol {
 
 using smsc::admin::protocol::Command;
 using smsc::util::xml::getNodeText;
+using smsc::util::decode;
 
 class CommandService : public Command
 {
@@ -19,7 +21,7 @@ public:
 	{
 		serviceName = 0;
 		setData(doc);
-		serviceName = doc.getDocumentElement().getAttribute("service").transcode();
+		serviceName = decode(doc.getDocumentElement().getAttribute("service"));
 	}
 
 	virtual ~CommandService()

@@ -6,6 +6,7 @@ namespace util {
 namespace xml {
 
 void initXerces();
+void TerminateXerces();
 
 }
 }

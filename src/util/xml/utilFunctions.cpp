@@ -29,7 +29,7 @@ char * getNodeText(DOM_Node node)
 				delete[] text;
 			}
 		}
-		return cStringCopy(s.c_str());
+		return decode_(s.c_str());
 	} else
 		return 0;
 }
@@ -42,7 +42,7 @@ char * getNodeAttribute(DOM_Node node, const char * const attrName)
 		DOM_Node a = attrs.getNamedItem(attrName);
 		if (!a.isNull())
 		{
-			return a.getNodeValue().transcode();
+			return decode(a.getNodeValue());
 		}
 	}
 	

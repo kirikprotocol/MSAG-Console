@@ -10,6 +10,7 @@ import org.w3c.dom.*;
 import java.util.*;
 
 import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 
 public class Config
@@ -130,8 +131,8 @@ public class Config
   protected void parseNode(final String prefix, final Element elem)
   {
     String fullName = prefix == null || prefix.equals("")
-            ? elem.getAttribute("name")
-            : prefix + "." + elem.getAttribute("name");
+            ? StringEncoderDecoder.decode(elem.getAttribute("name"))
+            : prefix + "." + StringEncoderDecoder.decode(elem.getAttribute("name"));
 
     NodeList list = elem.getChildNodes();
     for (int i = 0; i < list.getLength(); i++)
@@ -151,10 +152,10 @@ public class Config
   protected void parseParamNode(final String prefix, final Element elem)
   {
     String fullName = prefix == null || prefix.equals("")
-            ? elem.getAttribute("name")
-            : prefix + "." + elem.getAttribute("name");
+            ? StringEncoderDecoder.decode(elem.getAttribute("name"))
+            : prefix + "." + StringEncoderDecoder.decode(elem.getAttribute("name"));
     String type = elem.getAttribute("type");
-    String value = Utils.getNodeText(elem);
+    String value = StringEncoderDecoder.decode(Utils.getNodeText(elem));
     if (type.equalsIgnoreCase("int"))
     {
       params.put(fullName, new Integer(value));

@@ -1,9 +1,12 @@
 #include "ServicesList.h"
 #include <admin/daemon/Service.h>
+#include <util/cstrings.h>
 
 namespace smsc {
 namespace admin {
 namespace daemon {
+
+using smsc::util::encode_;
 
 void ServicesList::add(Service *service) throw (AdminException)
 {
@@ -61,29 +64,24 @@ char * ServicesList::getText() const
 		snprintf(pid, sizeof(pid), "%lu", (unsigned long)s->getPid());
 		char port[sizeof(in_port_t)*3 + 1];
 		snprintf(port, sizeof(port), "%lu", (unsigned long)s->getPort());
+		std::auto_ptr<char> tmpServiceName(encode_(s->getName()));
+		std::auto_ptr<char> tmpCmdLine(encode_(s->getCommandLine()));
+		std::auto_ptr<char> tmpConfig(encode_(s->getConfigFileName()));
+		std::auto_ptr<char> tmpArgs(encode_(s->getArgs()));
 		
 		result += "<service name=\"";
-		result += s->getName();
+		result += tmpServiceName.get();
 		result += "\" pid=\"";
 		result += pid;
 		result += "\" command_line=\"";
-		result += s->getCommandLine();
+		result += tmpCmdLine.get();
 		result += "\" port=\"";
 		result += port;
 		result += "\" config=\"";
-		result += s->getConfigFileName();
-		result += "\">";
-		for (unsigned j=0; j<s->getArgs().size(); j++)
-		{
-			char argNum[sizeof(unsigned)*3+1];
-			snprintf(argNum, sizeof(argNum), "%u", j);
-			result += "<arg num=\"";
-			result += argNum;
-			result += "\">";
-			result += s->getArgs()[j];
-			result += "</arg>";
-		}
-		result += "</service>\n";
+		result += tmpConfig.get();
+		result += "\" args=\"";
+		result += tmpArgs.get();
+		result += "\"/>\n";
 	}
 	return cStringCopy(result.c_str());
 }
@@ -92,23 +90,23 @@ void ServicesList::markServiceAsStopped(pid_t old_pid)
 {
 	#ifdef SMSC_DEBUG
 		log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon.ServicesList"));
-		logger.debug("Mark service %lu as dead", (unsigned long) old_pid);
+		//logger.debug("Mark service %lu as dead", (unsigned long) old_pid);
 	#endif
 	char * sname;
 	Service *s;
 	for (_ServiceList::Iterator i = services.getIterator(); i.Next(sname, s); )
 	{
 		#ifdef SMSC_DEBUG
-			logger.debug("  test service %lu for pid", (unsigned long) s->getPid());
+			//logger.debug("  test service %lu for pid", (unsigned long) s->getPid());
 		#endif
 		if (s->getPid() == old_pid)
 		{
 			#ifdef SMSC_DEBUG
-				logger.debug("  FINDED SERVICE!!! %lu ", (unsigned long) old_pid);
+				//logger.debug("  FINDED SERVICE!!! %lu ", (unsigned long) old_pid);
 			#endif
 			s->setPid(0);
 			#ifdef SMSC_DEBUG
-				logger.debug("  SERVICE %lu MARKED AS DEAD", (unsigned long) old_pid);
+				logger.debug("SERVICE %lu MARKED AS DEAD", (unsigned long) old_pid);
 			#endif
 		}
 	}

@@ -10,6 +10,7 @@
 #include <core/synchronization/Mutex.hpp>
 #include <util/config/Config.h>
 #include <util/Logger.h>
+#include <util/cstrings.h>
 
 namespace smsc {
 namespace admin {
@@ -19,6 +20,7 @@ using smsc::admin::protocol::CommandCall;
 using smsc::admin::protocol::CommandListComponents;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
+using smsc::util::encode_;
 
 Response * ServiceCommandDispatcher::handle(const Command * const command)
 	throw (AdminException)
@@ -73,15 +75,17 @@ Response * ServiceCommandDispatcher::listComponents(const CommandListComponents 
 	Component * comp;
 	for (Components::Iterator i = ComponentManager::getComponents().getIterator(); i.Next(compName, comp); )
 	{
+		std::auto_ptr<char> tmpComponentName(encode_(comp->getName()));
 		componentsList += "  <component name=\"";
-		componentsList += comp->getName();
+		componentsList += tmpComponentName.get();
 		componentsList += "\">\n";
 		char * mName;
 		Method m;
 		for (Methods::Iterator j = comp->getMethods().getIterator(); j.Next(mName, m); )
 		{
+			std::auto_ptr<char> tmpMethodName(encode_(m.getName()));
 			componentsList += "    <method name=\"";
-			componentsList += m.getName();
+			componentsList += tmpMethodName.get();
 			componentsList += "\" type=\"";
 			const char * const tstr = type2cstr(m.getReturnType());
 			if (tstr == 0)
@@ -100,8 +104,9 @@ Response * ServiceCommandDispatcher::listComponents(const CommandListComponents 
 			char * pName;
 			for (Parameters::Iterator k = m.getParameters().getIterator(); k.Next(pName, p);)
 			{
+				std::auto_ptr<char> tmpParamName(encode_(p.getName()));
 				componentsList += "      <param name=\"";
-				componentsList += p.getName();
+				componentsList += tmpParamName.get();
 				const char * const typestr = type2cstr(p.getType());
 				if (typestr == 0)
 				{

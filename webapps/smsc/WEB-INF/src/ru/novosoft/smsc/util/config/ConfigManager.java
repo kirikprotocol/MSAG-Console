@@ -13,6 +13,8 @@ import javax.xml.parsers.*;
 import java.io.*;
 import java.util.*;
 
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+
 
 public class ConfigManager
 {
@@ -131,22 +133,22 @@ public class ConfigManager
       {
         String paramName = (String) i.next();
         Object paramValue = parameters.get(paramName);
-        out.write((prefix + "<param name=\"" + paramName + "\" type=\"").getBytes());
+        out.write((prefix + "<param name=\"" + StringEncoderDecoder.encode(paramName) + "\" type=\"").getBytes());
         if (paramValue instanceof String)
         {
           out.write(("string\">" + ((String) paramValue) + "</param>\n").getBytes());
         }
         else if (paramValue instanceof Integer)
         {
-          out.write(("int\">" + String.valueOf(((Integer) paramValue).longValue()) + "</param>\n").getBytes());
+          out.write(("int\">" + StringEncoderDecoder.encode(String.valueOf(((Integer) paramValue).longValue())) + "</param>\n").getBytes());
         }
         else if (paramValue instanceof Long)
         {
-          out.write(("int\">" + String.valueOf(((Long) paramValue).longValue()) + "</param>\n").getBytes());
+          out.write(("int\">" + StringEncoderDecoder.encode(String.valueOf(((Long) paramValue).longValue())) + "</param>\n").getBytes());
         }
         else if (paramValue instanceof Boolean)
         {
-          out.write(("bool\">" + String.valueOf(((Boolean) paramValue).booleanValue()) + "</param>\n").getBytes());
+          out.write(("bool\">" + StringEncoderDecoder.encode(String.valueOf(((Boolean) paramValue).booleanValue())) + "</param>\n").getBytes());
         }
         else
         {
@@ -162,7 +164,7 @@ public class ConfigManager
       {
         String secName = (String) i.next();
         SaveableConfigTree childs = (SaveableConfigTree) secs.get(secName);
-        out.write((prefix + "<section name=\"" + secName + "\">\n").getBytes());
+        out.write((prefix + "<section name=\"" + StringEncoderDecoder.encode(secName) + "\">\n").getBytes());
         childs.write(out, prefix + "  ");
         out.write((prefix + "</section>\n").getBytes());
       }

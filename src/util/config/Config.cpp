@@ -46,7 +46,7 @@ void Config::processNode(const DOM_Element &element,
 			if (n.getNodeType() == DOM_Node::ELEMENT_NODE)
 			{
 				DOM_Element &e = *(DOM_Element*)(&n);
-				auto_ptr<const char> name(e.getAttribute("name").transcode());
+				auto_ptr<const char> name(decode(e.getAttribute("name")));
 				auto_ptr<char> fullName(new char[strlen(prefix) +1 +strlen(name.get()) +1]);
 				if (prefix[0] != 0)
 				{
@@ -82,7 +82,7 @@ void Config::processParamNode(const DOM_Element &element,
 	throw (DOM_DOMException)
 {
 	//getting value
-	std::auto_ptr <char> value(getNodeText(element));
+	std::auto_ptr<char> value(getNodeText(element));
 	
 	if (strcmp(type, "string") == 0)
 	{
@@ -170,14 +170,17 @@ void Config::ConfigTree::write(std::ostream &out, std::string prefix)
 	std::string newPrefix(prefix + "  ");
 	for(sections.First(); sections.Next(_name, val);)
 	{
-		out << prefix << "<section name=\"" << _name << "\">" << std::endl;
+		std::auto_ptr<char> tmp_name(encode_(_name));
+		out << prefix << "<section name=\"" << tmp_name.get() << "\">" << std::endl;
 		val->write(out, newPrefix);
 		out << prefix << "</section>" << std::endl;
 	}
 
 	for (size_t i=0; i<params.size(); i++)
 	{
-		out << prefix << "<param name=\"" << params[i].name << "\" type=\"";
+		std::auto_ptr<char> paramName(encode_(params[i].name));
+		std::auto_ptr<char> paramValue(encode_(params[i].value));
+		out << prefix << "<param name=\"" << paramName.get() << "\" type=\"";
 		switch (params[i].type)
 		{
 		case ConfigParam::boolType:
@@ -190,7 +193,7 @@ void Config::ConfigTree::write(std::ostream &out, std::string prefix)
 			out << "string";
 			break;
 		}
-		out << "\">" << params[i].value << "</param>" << std::endl;
+		out << "\">" << paramValue.get() << "</param>" << std::endl;
 	}
 }
 
@@ -202,9 +205,10 @@ char * Config::ConfigTree::getText(std::string prefix)
 	std::string newPrefix(prefix + "  ");
 	for(sections.First(); sections.Next(_name, val);)
 	{
+		std::auto_ptr<char> tmp_name(encode_(_name));
 		result += prefix;
 		result += "<section name=\"";
-		result += _name;
+		result += tmp_name.get();
 		result += "\">\n";
 		char * tmp = val->getText(newPrefix);
 		result += tmp;
@@ -215,9 +219,11 @@ char * Config::ConfigTree::getText(std::string prefix)
 
 	for (size_t i=0; i<params.size(); i++)
 	{
+		std::auto_ptr<char> paramName(encode_(params[i].name));
+		std::auto_ptr<char> paramValue(encode_(params[i].value));
 		result += prefix;
 		result += "<param name=\"";
-		result += params[i].name;
+		result += paramName.get();
 		result += "\" type=\"";
 		switch (params[i].type)
 		{
@@ -232,7 +238,7 @@ char * Config::ConfigTree::getText(std::string prefix)
 			break;
 		}
 		result += "\">";
-		result += params[i].value;
+		result += paramValue.get();
 		result += "</param>\n";
 	}
 	char * str_result = new char[result.size() +1];

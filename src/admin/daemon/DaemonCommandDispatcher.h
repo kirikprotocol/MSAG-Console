@@ -83,7 +83,7 @@ protected:
 													const in_port_t servicePort,
 													const char * const serviceCmdLine,
 													const char * const serviceConfigFileName,
-													const ServiceArguments & serviceArgs);
+													const char * const serviceArgs);
 	void removeServiceFromConfig(const char * const serviceName);
 };
 

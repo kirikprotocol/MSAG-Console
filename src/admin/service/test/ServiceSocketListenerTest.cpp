@@ -1,7 +1,6 @@
 #include <iostream>
 #include <admin/service/ComponentManager.h>
 #include <admin/service/AdminSocketManager.h>
-#include <admin/service/ServiceAdminInterfaceStarter.h>
 #include <admin/service/ServiceSocketListener.h>
 #include <admin/service/ServiceCommandDispatcher.h>
 #include <admin/service/test/DumbServiceCommandHandler.h>
@@ -17,7 +16,6 @@ using std::endl;
 using smsc::admin::AdminException;
 using smsc::admin::service::ComponentManager;
 using smsc::admin::service::AdminSocketManager;
-using smsc::admin::service::ServiceAdminInterfaceStarter;
 using smsc::admin::service::ServiceSocketListener;
 using smsc::admin::service::ServiceCommandDispatcher;
 using smsc::admin::service::test::DumbServiceCommandHandler;

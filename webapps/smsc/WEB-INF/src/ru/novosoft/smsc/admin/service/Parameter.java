@@ -7,6 +7,8 @@ package ru.novosoft.smsc.admin.service;
 
 import org.w3c.dom.Element;
 
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+
 public class Parameter
 {
   protected Type type;
@@ -24,7 +26,7 @@ public class Parameter
 
   public Parameter(Element paramElement)
   {
-    name = paramElement.getAttribute("name");
+    name = StringEncoderDecoder.decode(paramElement.getAttribute("name"));
     type = Type.getInstance(paramElement.getAttribute("type"));
   }
 

@@ -22,9 +22,9 @@ using smsc::admin::protocol::CommandRemoveService;
 using smsc::admin::protocol::CommandListServices;
 using smsc::core::synchronization::MutexGuard;
 using smsc::util::setExtendedSignalHandler;
-using smsc::util::encode;
-using smsc::util::decode;
 using smsc::util::config::CStrSet;
+using smsc::util::encode_;
+using smsc::util::decode_;
 
 ServicesList DaemonCommandDispatcher::services;
 Mutex DaemonCommandDispatcher::servicesListMutex;
@@ -191,11 +191,12 @@ void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceName,
 																								 const in_port_t servicePort,
 																								 const char * const serviceCmdLine,
 																								 const char * const serviceConfigFileName,
-																								 const ServiceArguments & serviceArgs)
+																								 const char * const serviceArgs)
 {
 	MutexGuard lock(configManagerMutex);
 	std::string serviceSectionName = "services.";
-	serviceSectionName += encode(serviceName);
+	std::auto_ptr<char> tmpServiceName(encode_(serviceName));
+	serviceSectionName += tmpServiceName.get();
 
 	std::string tmpName = serviceSectionName;
 	tmpName += ".port";
@@ -210,15 +211,8 @@ void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceName,
 	configManager->setString(tmpName.c_str(), serviceConfigFileName);
 
 	tmpName = serviceSectionName;
-	tmpName += ".args.";
-	for (ServiceArguments::size_type i=0; i<serviceArgs.size(); i++)
-	{
-		char numStr[sizeof(ServiceArguments::size_type)*3+1] = {0};
-		snprintf(numStr, sizeof(numStr), "%ul", i);
-		std::string tmpNum = tmpName;
-		tmpNum += numStr;
-		configManager->setString(tmpNum.c_str(), encode(serviceArgs[i]).c_str());
-	}
+	tmpName += ".args";
+	configManager->setString(tmpName.c_str(), serviceArgs);
 	configManager->save();
 }
 
@@ -260,7 +254,8 @@ void DaemonCommandDispatcher::removeServiceFromConfig(const char * const service
 	MutexGuard lock(configManagerMutex);
 	std::string serviceSectionName = "services.";
 
-	serviceSectionName += encode(serviceName);
+	std::auto_ptr<char> tmpServiceName(encode_(serviceName));
+	serviceSectionName += tmpServiceName.get();
 	configManager->removeSection(serviceSectionName.c_str());
 	configManager->save();
 }
@@ -359,18 +354,18 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 			const char * fullServiceName = i->c_str();
 			char * dotpos = strrchr(fullServiceName, '.');
 			//const size_t serviceNameBufLen = strlen(dotpos+1) +1;
-			std::string serviceName = decode(dotpos+1);
+			std::auto_ptr<char> serviceName(decode_(dotpos+1));
 		
 			std::string prefix(fullServiceName);
 			prefix += '.';
 		
 			std::string tmp = prefix;
 			tmp += "cmd_line";
-			const char * const serviceCmdLine = configManager->getString(tmp.c_str());
+			std::auto_ptr<char> serviceCmdLine(configManager->getString(tmp.c_str()));
 		
 			tmp = prefix;
 			tmp += "config";
-			const char * const serviceConfigFileName = configManager->getString(tmp.c_str());
+			std::auto_ptr<char> serviceConfigFileName(configManager->getString(tmp.c_str()));
 		
 			tmp = prefix;
 			tmp += "port";
@@ -378,17 +373,9 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 		
 			tmp = prefix;
 			tmp += "args";
-			CStrSet *argNames = configManager->getChildSectionNames(tmp.c_str());
-			ServiceArguments serviceArgs(argNames->size(), "");
-			for (CStrSet::iterator j = argNames->begin(); j != argNames->end(); j++)
-			{
-				const char * argName = j->c_str();
-				char * dp = strrchr(argName, '.');
-				serviceArgs[atoi(dp+1)] = configManager->getString(argName);
-			}
-		
-			services.add(new Service(serviceName.c_str(), serviceCmdLine, serviceConfigFileName, servicePort, serviceArgs));
-			delete argNames;
+			std::auto_ptr<char> serviceArgs(configManager->getString(tmp.c_str()));
+			
+			services.add(new Service(serviceName.get(), serviceCmdLine.get(), serviceConfigFileName.get(), servicePort, serviceArgs.get()));
 		}
 		delete childs;
 	}

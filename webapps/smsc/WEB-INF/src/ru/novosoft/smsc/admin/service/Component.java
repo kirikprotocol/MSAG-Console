@@ -10,6 +10,8 @@ import org.w3c.dom.NodeList;
 
 import java.util.*;
 
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+
 public class Component
 {
   protected String name;
@@ -27,7 +29,7 @@ public class Component
 
   public Component(Element elem)
   {
-    this.name = elem.getAttribute("name");
+    this.name = StringEncoderDecoder.decode(elem.getAttribute("name"));
     NodeList list = elem.getElementsByTagName("method");
     for (int i = 0; i < list.getLength(); i++) {
       Element methodElem = (Element) list.item(i);

@@ -14,7 +14,7 @@ using smsc::util::cStringCopy;
 using smsc::admin::AdminException;
 using smsc::util::Logger;
 
-typedef std::vector<char*> ServiceArguments;
+//typedef std::vector<char*> ServiceArguments;
 
 class Service
 {
@@ -25,7 +25,7 @@ public:
 					const char * const serviceCommandLine,
           const char * const serviceconfigFileName,
 					const in_port_t serviceAdminPort,
-					const ServiceArguments serviceArgs,
+					const char * const serviceArgs,
 					const pid_t servicePID = 0)
 	{
 //		Logger::getCategory("smsc.admin.daemon.Service").debug("Service(...)");
@@ -36,7 +36,7 @@ public:
 	Service()
 	{	
 //		Logger::getCategory("smsc.admin.daemon.Service").debug("Service(0)");
-		init(0, 0, 0, 0, ServiceArguments(), 0);
+		init(0, 0, 0, 0, 0, 0);
 	}
 
 	Service(const Service & copy)
@@ -61,7 +61,7 @@ public:
 	const pid_t getPid() const {return pid;}
 	void setPid(const pid_t newPid) {pid = newPid;}
 	const Status getStatus() const {return pid == 0 ? stopped : running;}
-	const ServiceArguments& getArgs() const {return args;}
+	const char * const getArgs() const {return args;}
 	const in_port_t getPort() const {return port;}
 
 	Service &operator = (Service &copy)
@@ -71,18 +71,19 @@ public:
 	}
 
 protected:
+	char ** createArguments();
 	char * name;
 	char * command_line;
 	char * config_file;
 	pid_t pid;
-	ServiceArguments args;
+	char * args;
 	in_port_t port;
 
 	void init(const char * const serviceName,
 					const char * const serviceCommandLine,
           const char * const serviceconfigFileName,
 					const in_port_t serviceAdminPort,
-					const ServiceArguments &serviceArgs,
+					const char * const serviceArgs,
 					const pid_t servicePID = 0);
 	void deinit();
 };

@@ -5,12 +5,15 @@
  */
 package ru.novosoft.smsc.admin.protocol;
 
+import ru.novosoft.smsc.util.StringEncoderDecoder;
+
+
 public class ServiceCommand extends Command
 {
   public ServiceCommand(String commandName, String serviceName)
   {
     super(commandName);
 
-    document.getDocumentElement().setAttribute("service", serviceName);
+    document.getDocumentElement().setAttribute("service", StringEncoderDecoder.encode(serviceName));
   }
 }

@@ -15,6 +15,7 @@ import ru.novosoft.smsc.admin.protocol.CommandListComponents;
 import ru.novosoft.smsc.admin.protocol.Response;
 import ru.novosoft.smsc.admin.utli.Proxy;
 import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class Service extends Proxy
 {
@@ -50,11 +51,11 @@ public class Service extends Proxy
       Type resultType = Type.getInstance(resultElem.getAttribute("type"));
       switch (resultType.getId()) {
         case Type.StringType:
-          return Utils.getNodeText(resultElem);
+          return StringEncoderDecoder.decode(Utils.getNodeText(resultElem));
         case Type.IntType:
-          return Long.decode(Utils.getNodeText(resultElem));
+          return Long.decode(StringEncoderDecoder.decode(Utils.getNodeText(resultElem)));
         case Type.BooleanType:
-          return Boolean.valueOf(Utils.getNodeText(resultElem));
+          return Boolean.valueOf(StringEncoderDecoder.decode(Utils.getNodeText(resultElem)));
         default:
           throw new AdminException("Unknown result type");
       }

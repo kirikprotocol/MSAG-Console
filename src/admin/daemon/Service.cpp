@@ -29,20 +29,10 @@ pid_t Service::start()
 	}
 	else
 	{	// child process
-		char ** arguments = new (char*)[args.size()+4];
-		arguments[args.size()+3] = 0;
-		arguments[0] = command_line;
-		arguments[1] = new char[sizeof(in_port_t)*3+1];
-		snprintf(arguments[1], sizeof(in_port_t)*3+1, "%lu", (unsigned long) port);
-		arguments[2] = config_file;
-		for (size_t i=0; i<args.size(); i++)
-		{
-			arguments[i+3] = args[i];
-		}
 		#ifdef SMSC_DEBUG
 			freopen("smsc_service.err", "a",  stderr);
 		#endif
-		execv(command_line, arguments);
+		execv(command_line, createArguments());
 		return 0;
 	}
 }
@@ -104,7 +94,7 @@ void Service::init(const char * const serviceName,
 									 const char * const serviceCommandLine,
 									 const char * const serviceconfigFileName,
 									 const in_port_t serviceAdminPort,
-									 const ServiceArguments &serviceArgs,
+									 const char * const serviceArgs,
 									 const pid_t servicePID = 0)
 {
 	name = cStringCopy(serviceName);
@@ -112,7 +102,7 @@ void Service::init(const char * const serviceName,
 	config_file = cStringCopy(serviceconfigFileName);
 	port = serviceAdminPort;
 	pid = servicePID;
-	args = serviceArgs;
+	args = cStringCopy(serviceArgs);
 /*	#ifdef SMSC_DEBUG
 		Logger::getCategory("smsc.admin.daemon.Service").debug("Initialized service:");
 		Logger::getCategory("smsc.admin.daemon.Service").debug("  name=%s", name == 0 ? "null" : name);
@@ -142,14 +132,35 @@ void Service::deinit()
 	pid = 0;
 	port = 0;
 
-	for (size_t i=0; i<args.size(); i++)
+	if (args != 0)
+		delete[] args;
+}
+
+char ** Service::createArguments()
+{
+	char * port_str = new char[sizeof(in_port_t)*3+1];
+	snprintf(port_str, sizeof(in_port_t)*3+1, "%lu", (unsigned long) port);
+	
+	typedef std::vector<char *> chrvec;
+	chrvec args_vector;
+	args_vector.push_back(command_line);
+	args_vector.push_back(port_str);
+	args_vector.push_back(config_file);
+
+	///////////////////////////////////////
+	// parse arguments
+	///////////////////////////////////////
+	args_vector.push_back(args);
+
+	char ** arguments = new (char*)[args_vector.size()+1];
+	for (chrvec::size_type i = 0; i < args_vector.size(); i++)
 	{
-		delete[] args[i];
-		args[i] = 0;
+		arguments[i] = args_vector.at(i);
 	}
-	args.resize(0);
+	return arguments;
 }
 
 }
 }
 }
+

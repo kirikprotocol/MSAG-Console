@@ -19,6 +19,7 @@ using smsc::core::buffers::Hash;
 using smsc::util::cStringCopy;
 using smsc::util::xml::getNodeAttribute;
 using smsc::util::xml::getNodeText;
+using smsc::util::decode;
 
 class Method
 {
@@ -40,7 +41,7 @@ public:
 	Method(DOM_Element methodElem)
 		throw (AdminException)
 	{
-		name = methodElem.getAttribute("method").transcode();
+		name = decode(methodElem.getAttribute("method"));
 		std::auto_ptr<char> methodReturnTypeString(methodElem.getAttribute("returnType").transcode());
 		returnType = cstr2Type(methodReturnTypeString.get());
 		id = 0;
@@ -49,8 +50,8 @@ public:
 		{
 			DOM_Node paramNode = childs.item(i);
 			DOM_Element &elem = (DOM_Element&) paramNode;
-			std::auto_ptr<char> paramName(elem.getAttribute("name").transcode());
-			std::auto_ptr<char> paramtypeStr(elem.getAttribute("type").transcode());
+			std::auto_ptr<char> paramName(decode(elem.getAttribute("name")));
+			std::auto_ptr<char> paramtypeStr(decode(elem.getAttribute("type")));
 			params[paramName.get()]
 				= Parameter(paramName.get(), cstr2Type(paramtypeStr.get()));
 		}

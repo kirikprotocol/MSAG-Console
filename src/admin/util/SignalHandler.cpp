@@ -2,6 +2,7 @@
 
 #include <core/synchronization/Mutex.hpp>
 #include <util/signal.h>
+#include <util/xml/init.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <signal.h>
@@ -16,6 +17,7 @@ SignalHandler * SignalHandler::shutdownHandler = 0;
 void atExitHandler(void)
 {
 	sigsend(P_PID, getppid(), SIGCHLD);
+	smsc::util::xml::TerminateXerces();
 }
 
 void SignalHandler::registerShutdownHandler(SignalHandler * handler) throw()

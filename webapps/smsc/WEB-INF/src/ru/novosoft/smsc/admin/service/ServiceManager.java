@@ -110,7 +110,7 @@ public class ServiceManager
     }
   }
 
-  public synchronized Set getHosts()
+  public synchronized Set getHostNames()
   {
     return daemonManager.getHosts();
   }
@@ -229,7 +229,7 @@ public class ServiceManager
   public synchronized Set getServiceNames(String host)
           throws AdminException
   {
-    if (!getHosts().contains(host))
+    if (!getHostNames().contains(host))
       throw new AdminException("Host \"" + host + "\" not connected");
 
     Set result = new HashSet();
@@ -266,6 +266,26 @@ public class ServiceManager
     }
   }
 
+  public synchronized int getCountRunningServices(String hostName)
+          throws AdminException
+  {
+    Set serviceNames = getServiceNames(hostName);
+    int result = 0;
+    for (Iterator i = serviceNames.iterator(); i.hasNext(); )
+    {
+      String serviceName = (String) i.next();
+      if (getServiceInfo(serviceName).getPid() != 0)
+        result++;
+    }
+    return result;
+  }
+
+  public synchronized int getCountServices(String hostName)
+          throws AdminException
+  {
+    return getServiceNames(hostName).size();
+  }
+
   /************************************ helpers ******************************/
   public synchronized void refreshServices()
           throws AdminException
@@ -278,6 +298,16 @@ public class ServiceManager
       for (Iterator j = infos.values().iterator(); j.hasNext();)
         putService(new Service((ServiceInfo) j.next()));
     }
+  }
+
+  public synchronized void refreshService(String serviceName)
+          throws AdminException
+  {
+    Service s = getService(serviceName);
+    Daemon d = daemonManager.getDaemon(s.getInfo().getHost());
+    Map infos = d.listServices();
+    for (Iterator j = infos.values().iterator(); j.hasNext();)
+      replaceService(new Service((ServiceInfo) j.next()));
   }
 
   protected Service getService(String serviceName)
@@ -294,6 +324,12 @@ public class ServiceManager
   {
     if (services.containsKey(s.getInfo().getName()))
       throw new AdminException("Service \"" + s.getInfo().getName() + "\" already present");
+    replaceService(s);
+  }
+
+  protected void replaceService(Service s)
+          throws AdminException
+  {
     services.put(s.getInfo().getName(), s);
     if (s.getInfo().getPid() != 0)
     {

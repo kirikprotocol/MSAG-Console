@@ -14,6 +14,7 @@ import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 
 import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class Command
 {
@@ -31,7 +32,7 @@ public class Command
       DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
       document = builder.newDocument();
       Element elem = document.createElement("command");
-      elem.setAttribute("name", commandName);
+      elem.setAttribute("name", StringEncoderDecoder.encode(commandName));
       document.appendChild(elem);
     } catch (ParserConfigurationException e) {
       e.printStackTrace();

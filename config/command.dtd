@@ -7,14 +7,12 @@
     <!ATTLIST command method CDATA #IMPLIED>
     <!ATTLIST command returnType (string|int|bool) #IMPLIED>
     
-<!ELEMENT service (arg*)>
+<!ELEMENT service (#PCDATA)>
     <!ATTLIST service name CDATA #REQUIRED>
     <!ATTLIST service cmd_line CDATA #REQUIRED>
     <!ATTLIST service config_file CDATA #REQUIRED>
     <!ATTLIST service port CDATA #REQUIRED>
-
-<!ELEMENT arg (#PCDATA)>
-    <!ATTLIST arg num CDATA #REQUIRED>
+    <!ATTLIST service args CDATA #REQUIRED>
 
 <!ELEMENT param (#PCDATA)>
     <!ATTLIST param name CDATA #REQUIRED>
