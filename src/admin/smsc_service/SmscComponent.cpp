@@ -573,8 +573,11 @@ Variant SmscComponent::loadRoutes(void)
         smsc_app_runner->getApp()->getTestRouterInstance()->enableTrace(true);
         smsc_app_runner->getApp()->getTestRouterInstance()->getTrace(traceBuff);
         
+        // 0:   Message (Routes successfully loaded)
+        // 1..: Trace (if any)
+        
         Variant result(service::StringListType);
-        result.appendValueToStringList("Routes successfully loaded");
+        result.appendValueToStringList("Routes configuration successfully loaded");
 
         for (int i=0; i<traceBuff.size(); i++)
             result.appendValueToStringList(traceBuff[i].c_str());
@@ -608,13 +611,8 @@ Variant SmscComponent::traceRoute(const Arguments &args)
     const char* srcAddr  = getStringParameter(args, "srcAddress");
     const char* srcSysId = getStringParameter(args, "srcSysId");
 
-    // 0:   Message (Route found | not found)
-    // 1:   RouteInfo (if any)
-    // 2..: Trace (if any)
-
     try 
     {
-        vector<std::string> traceBuff;
         SmeProxy* proxy = 0;
         RouteInfo info;
         bool found = false;
@@ -633,13 +631,14 @@ Variant SmscComponent::traceRoute(const Arguments &args)
             found = smsc_app_runner->getApp()->getTestRouterInstance()->
                 lookup(Address(srcAddr), Address(dstAddr), proxy, 0, &info);
         }
+        
+        vector<std::string> traceBuff;
         smsc_app_runner->getApp()->getTestRouterInstance()->getTrace(traceBuff);
         
-        /*char result_msg[1024];
-        sprintf(result_msg, "Route from:%s (%s) to:%s %s", 
-                (srcAddr) ? srcAddr:"null", (srcSysId) ? srcSysId:"-",
-                (dstAddr) ? dstAddr:"null", (found) ? "found":"not found");*/
-        
+        // 0:   Message (Route found | not found)
+        // 1:   RouteInfo (if any)
+        // 2..: Trace (if any)
+
         Variant result(service::StringListType);
         result.appendValueToStringList((found) ? "Route found":"Route not found");
 
@@ -650,6 +649,7 @@ Variant SmscComponent::traceRoute(const Arguments &args)
             info.source.getText(srcAddressText, sizeof(srcAddressText));
             info.dest  .getText(dstAddressText, sizeof(dstAddressText));
             
+            //todo encode/decode ';' & ':' simbols
             sprintf(routeText, "priority:%u;billing:%s;archiving:%s;enabling:%s;"
                               "suppress delivery reports:%s;service id:%d;route id:%s;"
                               "sme system id:%s;source sme system id:%s;"
