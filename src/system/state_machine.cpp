@@ -468,6 +468,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       tmplname.assign(buf+m[1].start,m[1].end-m[1].start);
       __trace2__("DIRECT: template=%s",tmplname.c_str());
       tmplname="templates."+tmplname;
+      OutputFormatter *f=ResourceManager::getInstance()->getFormatter(p.locale,tmplname);
       int j=m[0].end;
       n=10;
       string name,value;
@@ -480,7 +481,37 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
           m[2].end-m[2].start-(buf[m[2].start]=='"'?2:0)
         );
         __trace2__("DIRECT: found template param %s=%s",name.c_str(),value.c_str());
-        ce.exportStr(name.c_str(),value.c_str());
+        if(f)
+        {
+          int et=f->getEntityType(name.c_str());
+          switch(et)
+          {
+            case ET_DATE:
+            {
+              int day,month,year,hh,mm,ss,n;
+              time_t t;
+              if(sscanf(value.c_str(),SMSC_DBSME_IO_DEFAULT_PARSE_PATTERN,
+                &day,&month,&year,&hh,&mm,&ss,&n)!=6)
+              {
+                sscanf(value.c_str(),"%d",&t);
+              }else
+              {
+                tm m;
+                m.tm_sec=ss;
+                m.tm_min=mm;
+                m.tm_hour=hh;
+                m.tm_mday=day;
+                m.tm_mon=month;
+                m.tm_year=year-1900;
+                t=mktime(&m);
+              }
+              ce.exportDat(name.c_str(),t);
+            }break;
+            default:
+              ce.exportStr(name.c_str(),value.c_str());
+              break;
+          }
+        }
         j=m[0].end;
       }
       Directive d(i,j-i);
@@ -926,9 +957,9 @@ StateType StateMachine::submit(Tuple& t)
 
   try{
     processDirectives(*sms,profile,srcprof);
-  }catch(...)
+  }catch(std::exception& e)
   {
-    __warning__("Failed to process directives due to exception");
+    __warning2__("Failed to process directives due to exception:%s",e.what());
     sms->lastResult=Status::SUBMITFAIL;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
     SmscCommand resp = SmscCommand::makeSubmitSmResp
