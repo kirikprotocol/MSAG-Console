@@ -772,7 +772,7 @@ ReplaceVTStatement::ReplaceVTStatement(Connection* connection, bool assign)
 
 const char* ReplaceWTStatement::sql = (const char*)
 "UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN,\
- NEXT_TRY_TIME=:WT, LAST_TRY_TIME=NULL\
+ NEXT_TRY_TIME=:WT\
  WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
 ReplaceWTStatement::ReplaceWTStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -780,7 +780,7 @@ ReplaceWTStatement::ReplaceWTStatement(Connection* connection, bool assign)
 
 const char* ReplaceVWTStatement::sql = (const char*)
 "UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN,\
- VALID_TIME=:VT, NEXT_TRY_TIME=:WT, LAST_TRY_TIME=NULL\
+ VALID_TIME=:VT, NEXT_TRY_TIME=:WT\
  WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
 ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection, bool assign)
     throw(StorageException)
