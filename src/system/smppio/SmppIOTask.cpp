@@ -389,7 +389,7 @@ int SmppInputThread::Execute()
             {
               __trace__("Received UNBIND");
               try{
-                if(ss->getProxy())
+                if(ss->getProxy() && ss->getProxy()->isOpened())
                 {
                   __trace__("UNBINDRESP sent");
                   ss->getProxy()->putCommand
