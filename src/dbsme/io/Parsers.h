@@ -8,8 +8,6 @@
  * @see 
  */
 
-#include <util/config/ConfigException.h>
-#include <util/config/ConfigView.h>
 #include <core/buffers/Array.hpp>
 #include <core/buffers/Hash.hpp>
 #include <util/Exception.hpp>
@@ -19,8 +17,6 @@
 
 namespace smsc { namespace dbsme { namespace io
 {
-    using smsc::util::config::ConfigException;
-    using smsc::util::config::ConfigView;
     using smsc::core::buffers::Array;
     using smsc::core::buffers::Hash;
     
@@ -29,9 +25,15 @@ namespace smsc { namespace dbsme { namespace io
     class ParsingException : public Exception
     {
     public:
-
+        
+        ParsingException(const char* fmt,...)
+            : Exception() 
+        {
+            SMSC_UTIL_EX_FILL(fmt);
+        };
         ParsingException() 
             : Exception("Exception occurred during input parsing !") {};
+        
         virtual ~ParsingException() throw() {};
     };
     
@@ -207,16 +209,13 @@ namespace smsc { namespace dbsme { namespace io
                 throw(ParsingException, AdapterException);
     };
 
-    class InputParser 
+    class InputParser : public FormatEntityRenderer 
     {
-    protected:
-
-        Array<FormatEntity *>   params;
-
     public:
 
-        InputParser(ConfigView* config);
-        virtual ~InputParser();
+        InputParser(const char* format)
+            throw(FormatRenderingException);
+        virtual ~InputParser() {};
 
         void parse(std::string input, SetAdapter& adapter)
             throw(ParsingException, AdapterException);

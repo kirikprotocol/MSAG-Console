@@ -9,34 +9,42 @@
  */
 
 #include <iostream.h>
+#include <core/buffers/Hash.hpp>
 #include <core/buffers/Array.hpp>
+#include <util/Exception.hpp>
 
 namespace smsc { namespace dbsme { namespace io
 {
+    using smsc::core::buffers::Hash;
     using smsc::core::buffers::Array;
-    
-    struct Option
-    {
-        std::string     name;
-        std::string     value;
-        
-        Option(std::string _name, std::string _value)
-            : name(_name), value(_value) {};
-        Option(const Option& option)
-            : name(option.name), value(option.value) {};
-        
-        Option& operator =(const Option& option) 
-        {
-            name = option.name; 
-            value = option.value;
-            return (*this);
-        };
-    };
 
-    static const char* entityTypeStrings[]  = 
+    using smsc::util::Exception;
+    
+    class FormatRenderingException : public Exception
+    {
+    public:
+
+        FormatRenderingException(const char* fmt,...)
+            : Exception() 
+        {
+            SMSC_UTIL_EX_FILL(fmt);
+        };
+        FormatRenderingException() 
+            : Exception("Exception occurred during format rendering !") {};
+        
+        virtual ~FormatRenderingException() throw() {};
+    };
+    
+    static const char SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER = '$';
+    static const char SMSC_DBSME_IO_FORMAT_STRING_DELIMETER = '\"';
+    static const char SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER   = '\\';
+    static const char SMSC_DBSME_IO_FORMAT_OPTION_ASSIGN    = '=';
+
+    const int entityTypesNumber = 12;
+    static const char* entityTypeStrings[entityTypesNumber]  = 
     { 
         "int8", "int16", "int32", "uint8", "uint16", "uint32",
-        "float", "double", "long-double", "date"
+        "float", "double", "long-double", "date",
         "string", "text"
     };
     
@@ -49,11 +57,36 @@ namespace smsc { namespace dbsme { namespace io
     struct FormatEntity
     {
         
-        EntityType      type;
-        Array<Option>   options;
+        EntityType          type;
+        Hash<std::string>   options;
+        std::string         str;
 
-        FormatEntity(std::string line);
+        FormatEntity(std::string line, bool type=true)
+            throw(FormatRenderingException);
         virtual ~FormatEntity();
+
+    private:
+
+        void renderOptions(const char* line)
+            throw(FormatRenderingException);
+    };
+
+    class FormatEntityRenderer
+    {
+    protected:
+
+        Array<FormatEntity *>   entities;
+
+        void clearEntities();
+
+    public:
+
+        FormatEntityRenderer(const char* format, bool text = false)
+            throw(FormatRenderingException);
+        virtual ~FormatEntityRenderer();
+
+        void addEntity(FormatEntity* entity)
+            throw(FormatRenderingException);
     };
 
 }}}

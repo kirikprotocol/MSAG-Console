@@ -8,7 +8,6 @@
  * @see 
  */
 
-#include <util/config/ConfigView.h>
 #include <core/buffers/Array.hpp>
 #include <core/buffers/Hash.hpp>
 #include <util/Exception.hpp>
@@ -18,7 +17,6 @@
 
 namespace smsc { namespace dbsme { namespace io
 {
-    using smsc::util::config::ConfigView;
     using smsc::core::buffers::Array;
     using smsc::core::buffers::Hash;
     
@@ -28,8 +26,14 @@ namespace smsc { namespace dbsme { namespace io
     {
     public:
 
+        FormattingException(const char* fmt,...)
+            : Exception() 
+        {
+            SMSC_UTIL_EX_FILL(fmt);
+        };
         FormattingException() 
             : Exception("Exception occurred during output formatting !") {};
+        
         virtual ~FormattingException() throw() {};
     };
     
@@ -218,16 +222,13 @@ namespace smsc { namespace dbsme { namespace io
                 throw(FormattingException, AdapterException);
     };
     
-    class OutputFormatter 
+    class OutputFormatter : public FormatEntityRenderer
     {
-    protected:
-
-        Array<FormatEntity *>   params;
-    
     public:
 
-        OutputFormatter(ConfigView* config);
-        virtual ~OutputFormatter();
+        OutputFormatter(const char* format)
+            throw(FormatRenderingException);
+        virtual ~OutputFormatter() {};
 
         void format(std::string& output, GetAdapter& adapter)
             throw(FormattingException, AdapterException);

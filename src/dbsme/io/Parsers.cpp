@@ -6,7 +6,9 @@ namespace smsc { namespace dbsme { namespace io
     
 Hash<Parser *>  ParserRegistry::parsers;
 
-InputParser::InputParser(ConfigView* config)
+InputParser::InputParser(const char* format)
+    throw(FormatRenderingException)
+        : FormatEntityRenderer(format, false)
 {
     static Int8Parser       _Int8Parser;
     static Int16Parser      _Int16Parser;
@@ -19,45 +21,13 @@ InputParser::InputParser(ConfigView* config)
     static DoubleParser     _DoubleParser;
     static LongDoubleParser _LongDoubleParser;
     static DateTimeParser   _DateTimeParser;
-
-    // ConfigView should containg *.*.input section
-
-    std::set<std::string>* set = config->getSectionNames();
-    printf("\nCat '%s'\n", config->getCategory());
-    
-    for (std::set<std::string>::iterator i=set->begin();i!=set->end();i++)
-    {
-        const char* section = (const char *)i->c_str();
-        const char* line = 0;
-        try
-        {
-            printf("Loading input parameter '%s'.\n", section);
-            line = config->getString(section);
-            printf("Loaded : '%s'\n", line);
-        }
-        catch (ConfigException& exc)
-        {
-            printf("Init of InputParser failed !"
-                   " Config exception: %s\n", exc.what());
-            if (set) delete set;
-            if (line) delete line;
-            throw;
-        }
-        if (line) delete line;
-    }
-
-    if (set) delete set;
-}
-InputParser::~InputParser()
-{
-    // Emty params here !
 }
 void InputParser::parse(std::string input, SetAdapter& adapter)
     throw(ParsingException, AdapterException)
 {
-    for (int i=0; i<params.Count(); i++)
+    for (int i=0; i<entities.Count(); i++)
     {
-        FormatEntity* entity = params[i];
+        FormatEntity* entity = entities[i];
         Parser* parser = 
             ParserRegistry::getParser(entityTypeStrings[entity->type]);
         if (parser && entity)

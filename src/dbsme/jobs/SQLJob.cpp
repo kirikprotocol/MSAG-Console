@@ -10,28 +10,20 @@ using namespace smsc::dbsme::io;
 void SQLJob::init(ConfigView* config)
     throw(ConfigException)
 {
-    //Job::init(config);
-    __require__(config);
-
+    Job::init(config);
+    
     printf("SQLJob loading ... ");
 
-    sql = config->getString("sql", "SQL request wasn't defined !");
-    outputFormat = config->getString("output", 
-                                    "Output data format wasn't defined !");
-    isQuery = config->getBool("query", "Type of SQL request undefined !");
-
-    ConfigView* inputConfig = config->getSubConfig("input");
     try 
     {
-        parser = new InputParser(inputConfig);
+        parser = new InputParser(inputFormat);
+        formatter = new OutputFormatter(outputFormat);
     }
     catch(Exception& exc)
     {
-        if (inputConfig) delete inputConfig;
-        throw ConfigException("SQL Job init failed !");
+        throw ConfigException("SQL Job init failed !: %s", exc.what());
     }
-    if (inputConfig) delete inputConfig;
-
+    
     printf("SQLJob loaded !\n");
 }
 
@@ -39,7 +31,29 @@ void SQLJob::process(Command& command, Statement& stmt)
     throw(CommandProcessException)
 {
     printf("SQL Job: Process command called !!!\n");
-    throw CommandProcessException();
+    try
+    {
+        if (!parser || !formatter)
+            throw CommandProcessException();
+
+        SQLSetAdapter setAdapter(&stmt);
+            
+        std::string input = 
+            (command.getInData()) ? command.getInData():"";
+        parser->parse(input, (SetAdapter&)setAdapter);
+
+        ResultSet* rs = (isQuery) ? stmt.executeQuery() : 0;
+
+        SQLGetAdapter getAdapter(rs);
+
+        std::string output = "";
+        formatter->format(output, (GetAdapter&)getAdapter);
+        command.setOutData(output.c_str()); 
+    }
+    catch(Exception& exc)
+    {
+        throw CommandProcessException();
+    }
 }
 
 }}

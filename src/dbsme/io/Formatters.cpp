@@ -6,7 +6,9 @@ namespace smsc { namespace dbsme { namespace io
 
 Hash<Formatter *>  FormatterRegistry::formatters;
 
-OutputFormatter::OutputFormatter(ConfigView* config)
+OutputFormatter::OutputFormatter(const char* format)
+    throw(FormatRenderingException)
+        : FormatEntityRenderer(format, true)
 {
     static Int8Formatter        _Int8Formatter;
     static Int16Formatter       _Int16Formatter;
@@ -21,16 +23,12 @@ OutputFormatter::OutputFormatter(ConfigView* config)
     static LongDoubleFormatter  _LongDoubleFormatter;
     static DateTimeFormatter    _DateTimeFormatter;
 }
-OutputFormatter::~OutputFormatter()
-{
-    // Emty params here !
-}
 void OutputFormatter::format(std::string& output, GetAdapter& adapter)
     throw(FormattingException, AdapterException)
 {
-    for (int i=0; i<params.Count(); i++)
+    for (int i=0; i<entities.Count(); i++)
     {
-        FormatEntity* entity = params[i];
+        FormatEntity* entity = entities[i];
         Formatter* formatter = 
             FormatterRegistry::getFormatter(entityTypeStrings[entity->type]);
         if (formatter && entity)
