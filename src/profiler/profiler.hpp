@@ -7,6 +7,9 @@
 #include "core/threads/ThreadedTask.hpp"
 
 namespace smsc{
+namespace db{
+class DataSource;
+};
 namespace profiler{
 
 using namespace smsc::sms;
@@ -20,12 +23,11 @@ namespace ProfileReportOptions{
 };
 
 namespace ProfileCharsetOptions{
-  static const int Default =0;
-  static const int Ucs2     =1;
+  static const int Default    =0;
+  static const int Ucs2       =1;
 };
 
 struct Profile{
-  int id;
   int codepage;
   int reportoptions;
   bool operator==(const Profile& src)
@@ -49,9 +51,10 @@ public:
   virtual void add(const Address& address,const Profile& profile)=0;
 };//ProfilerInterface
 
+
 class Profiler:public ProfilerInterface,public SmeProxy, public ThreadedTask{
 public:
-  Profiler();
+  Profiler(const Profile& pr);
   virtual ~Profiler();
 
   int Execute();
@@ -138,6 +141,8 @@ public:
     return seq++;
   }
 
+  void loadFromDB();
+
 protected:
   mutable EventMonitor mon;
   smsc::core::buffers::Array<SmscCommand> outQueue;
@@ -146,8 +151,10 @@ protected:
   ProxyMonitor *managerMonitor;
   ProfilesTable *profiles;
 
-  void dbUpdate(const Profile& profile);
-  void dbInsert(const Profile& profile);
+  smsc::db::DataSource *ds;
+
+  void dbUpdate(const Address& addr,const Profile& profile);
+  void dbInsert(const Address& addr,const Profile& profile);
 
   void internal_update(int flag,const Address& addr,int value);
 

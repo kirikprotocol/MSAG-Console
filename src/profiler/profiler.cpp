@@ -1,136 +1,102 @@
 #include "profiler/profiler.hpp"
 #include <vector>
 #include "core/buffers/Array.hpp"
+#include "profiler/XHash.hpp"
+
+#include "util/config/Manager.h"
+#include "util/config/ConfigView.h"
+
+#include "db/DataSource.h"
+#include "db/DataSourceLoader.h"
+
+#include "memory"
 
 namespace smsc{
 namespace profiler{
 
 using namespace smsc::core::buffers;
+using smsc::util::Exception;
 
+struct HashKey{
+  Address addr;
+  uint8_t defLength;
 
-class ProfilesTable{
-  struct PackedAddress{
-    uint16_t planAndType;
-    uint8_t addr[10];
-    uint8_t mask[10];
-    uint8_t addrLen;
-    void set(const Address& address)
-    {
-      planAndType=address.type|(address.plan<<8);
-      memset(addr,0,sizeof(addr));
-      memset(mask,0,sizeof(mask));
-      for(int i=0;i<address.lenght;i++)
-      {
-        addr[i>>1]|=(address.value[i]-'0')<<((i&1)?0:4);
-        mask[i>>1]|=(address.value[i]=='?'?0x0:0xf)<<((i&1)?0:4);
-      }
-      addrLen=address.lenght;
-    }
-    void assign(const PackedAddress& src)
-    {
-      planAndType=src.planAndType;
-      memcpy(addr,src.addr,sizeof(addr));
-      memcpy(mask,src.mask,sizeof(mask));
-      addrLen=src.addrLen;
-    }
-  };
-  struct ProfileRecord{
-    PackedAddress address;
-    Profile profile;
-  };
-  typedef Array<ProfileRecord*> RecordsVector;
-
-  RecordsVector table;
-
-  static int Compare(const PackedAddress& patt,const PackedAddress& addr)
+  HashKey(const HashKey& key)
   {
-    int res=patt.planAndType-addr.planAndType;
-    if(res!=0)return res;
-    for(int i=0;i<patt.addrLen && i<addr.addrLen;i++)
-    {
-      res=(patt.addr[i]&patt.mask[i]) - (addr.addr[i]&patt.mask[i]);
-      if(res!=0)
-      {
-        return res;
-      }
-    }
-    if(patt.addrLen==addr.addrLen)return 0;
-    if(patt.addrLen<addr.addrLen)return -1;
-    return 1;
+    addr=key.addr;
+    defLength=key.defLength;
   }
 
-  static bool ExactCompare(const PackedAddress& addr1,const PackedAddress& addr2)
+  HashKey(const Address& address)
   {
-    if(addr1.planAndType!=addr2.planAndType)return false;
-    if(addr1.addrLen!=addr2.addrLen)return false;
-    for(int i=0;i<addr1.addrLen;i++)
-    {
-      if(addr1.addr[i]!=addr2.addr[i])return false;
-    }
-    return true;
+    addr=address;
+    defLength=0;
+    while(defLength<address.lenght && address.value[defLength]!='?')defLength++;
   }
 
-  int findPos(const PackedAddress& pad)
+  bool operator==(const HashKey& key)
   {
-    if(table.Count()==0)return 0;
-    int idx=table.Count()>>1;
-    int step=idx>>1;
-    int cmp=1;
-    while(step)
-    {
-      cmp=Compare(table[idx]->address,pad);
-      if(!cmp)
-      {
-        while(idx>0 && !Compare(table[idx-1]->address,pad))
-        {
-          idx--;
-        }
-        return idx;
-      }
-      idx+=cmp>0?-step:step;
-      step>>=1;
-    }
-    return idx;
-  }
-
-public:
-  Profile& find(const Address& addr,bool exact)
-  {
-    PackedAddress pad;
-    pad.set(addr);
-    int pos=findPos(pad);
-    exact=ExactCompare(table[pos]->address,pad);
-    return table[pos]->profile;
-  }
-  Profile& insert(const Address& addr,const Profile& profile)
-  {
-    PackedAddress pad;
-    pad.set(addr);
-    int pos=findPos(pad);
-
-    table.Insert(pos,new ProfileRecord());
-    table[pos]->profile.assign(profile);
-    table[pos]->address.assign(pad);
-    return table[pos]->profile;
-  }
-  bool remove(const Address& addr)
-  {
-    bool exact;
-    PackedAddress pad;
-    pad.set(addr);
-    int pos=findPos(pad);
-    if(!ExactCompare(table[pos]->address,pad))return false;
-    delete table[pos];
-    table.Delete(pos);
-    return true;
+    return key.addr.lenght==addr.lenght &&
+           defLength==key.defLength &&
+           key.addr.plan==addr.plan &&
+           key.addr.type==addr.type &&
+           !strncmp(key.addr.value,addr.value,defLength);
   }
 };
 
-Profiler::Profiler()
+
+
+
+class HashFunc{
+public:
+static int CalcHash(const HashKey& key)
+{
+  int retval=key.addr.type^key.addr.plan;
+  int i;
+  for(i=0;i<key.defLength;i++)
+  {
+    retval=(retval<<1)^key.addr.value[i];
+  }
+  return retval;
+}
+};
+
+class ProfilesTable: public XHash<HashKey,Profile,HashFunc>
+{
+  Profile defaultProfile;
+public:
+  ProfilesTable(const Profile& pr,int n):XHash<HashKey,Profile,HashFunc>(n)
+  {
+    defaultProfile=pr;
+  }
+  Profile& find(const Address& address,bool& exact)
+  {
+    HashKey k(address);
+    while(!Exists(k))
+    {
+      if(!k.defLength)
+      {
+        return defaultProfile;
+      }
+      k.defLength--;
+    }
+    exact=k.defLength==address.lenght;
+    return Get(k);
+  }
+  Profile& add(const Address& address,const Profile& profile)
+  {
+    HashKey k(address);
+    Insert(k,profile);
+    return Get(k);
+  }
+};
+
+
+Profiler::Profiler(const Profile& pr)
 {
   state=VALID;
   managerMonitor=NULL;
-  profiles=new ProfilesTable;
+  profiles=new ProfilesTable(pr,400000);
 }
 
 Profiler::~Profiler()
@@ -152,24 +118,54 @@ void Profiler::update(const Address& address,const Profile& profile)
   if(exact)
   {
     prof.assign(profile);
-    dbUpdate(prof);
+    dbUpdate(address,prof);
   }else
   {
-    dbInsert(profiles->insert(address,profile));
+    dbInsert(address,profiles->add(address,profile));
   }
 }
 
 void Profiler::add(const Address& address,const Profile& profile)
 {
-  profiles->insert(address,profile);
+  profiles->add(address,profile);
 }
 
-void Profiler::dbUpdate(const Profile& profile)
+void Profiler::dbUpdate(const Address& addr,const Profile& profile)
 {
+  using namespace smsc::db;
+  using smsc::util::config::Manager;
+  using smsc::util::config::ConfigView;
+  using smsc::util::config::ConfigException;
+  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2 where mask=:3";
+  std::auto_ptr<Connection> connection(ds->getConnection());
+  if(!connection.get())throw Exception("Profiler: Failed to get connection");
+  auto_ptr<Statement> statement(connection->createStatement(sql));
+  if(!statement.get())throw Exception("Profiler: Failed to create statement");
+  statement->setInt8(1,profile.reportoptions);
+  statement->setInt8(2,profile.codepage);
+  char addrbuf[30];
+  sprintf(addrbuf,"%d.%d.%s",addr.type,addr.plan,addr.value);
+  statement->setString(3,addrbuf);
+  statement->executeUpdate();
 }
 
-void Profiler::dbInsert(const Profile& profile)
+void Profiler::dbInsert(const Address& addr,const Profile& profile)
 {
+  using namespace smsc::db;
+  using smsc::util::config::Manager;
+  using smsc::util::config::ConfigView;
+  using smsc::util::config::ConfigException;
+  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset)"
+                      " VALUES (:1, :2, :3)";
+  std::auto_ptr<Connection> connection(ds->getConnection());
+  if(!connection.get())throw Exception("Profiler: Failed to get connection");
+  auto_ptr<Statement> statement(connection->createStatement(sql));
+  char addrbuf[30];
+  sprintf(addrbuf,"%d.%d.%s",addr.type,addr.plan,addr.value);
+  statement->setString(1, addrbuf);
+  statement->setInt8(2, profile.reportoptions);
+  statement->setInt8(3, profile.codepage);
+  statement->executeUpdate();
 }
 
 static const int _update_report=1;
@@ -240,6 +236,82 @@ int Profiler::Execute()
   }
 }
 
+void Profiler::loadFromDB()
+{
+  using namespace smsc::db;
+  using smsc::util::config::Manager;
+  using smsc::util::config::ConfigView;
+  using smsc::util::config::ConfigException;
+
+  const char* OCI_DS_FACTORY_IDENTITY = "OCI";
+
+  const char* sql = "SELECT * FROM SMS_PROFILE";
+
+  ConfigView *dsConfig;
+
+  Manager::init("config.xml");
+  Manager& manager = Manager::getInstance();
+
+  dsConfig = new ConfigView(manager, "StartupLoader");
+  DataSourceLoader::loadup(dsConfig);
+
+  ds = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
+  if (!ds) throw Exception("Failed to get DataSource");
+  ConfigView* config =
+      new ConfigView(Manager::getInstance(),"DataSource");
+
+  ds->init(config);
+  __trace__("Profiler: init ok");
+  std::auto_ptr<Connection> connection(ds->getConnection());
+  if(!connection.get())throw Exception("Profiler: Failed to get connection");
+  auto_ptr<Statement> statement(connection->createStatement(sql));
+  if(!statement.get())throw Exception("Profiler: Failed to create statement");
+  auto_ptr<ResultSet> rs(statement->executeQuery());
+  if(!rs.get())throw Exception("Profiler: Failed to make a query to DB");
+  Address addr;
+  const char* dta;
+  int np;
+  int ton;
+  Profile p;
+  while(rs->fetchNext())
+  {
+    dta = rs->getString(1);
+    int scaned = sscanf(dta,".%d.%d.%20s",
+         &ton,
+         &np,
+         addr.value);
+    if ( scaned == 3 )
+    {
+      addr.type=ton;
+      addr.plan=np;
+    }else
+    {
+      scaned = sscanf(dta,"+%[0123456789]20s",addr.value);
+      if ( scaned )
+      {
+        addr.plan = 1;//ISDN
+        addr.type = 1;//INTERNATIONAL
+      }
+      else
+      {
+        scaned = sscanf(dta,"%[0123456789]20s",addr.value);
+        if ( !scaned )
+        {
+          continue;
+        }
+        else
+        {
+          addr.plan = 1;//ISDN
+          addr.type = 2;//NATIONAL
+        }
+      }
+    }
+    addr.lenght=strlen((char*)addr.value);
+    p.reportoptions=rs->getInt8(2);
+    p.codepage=rs->getInt8(3);
+    profiles->add(addr,p);
+  }
+}
 
 };//profiler
 };//smsc

@@ -24,7 +24,7 @@ public:
     }else
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
-      printf("\nReceived async submit sm resp\n");
+      printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
     }
   }
   void handleError(int errorCode)
@@ -62,7 +62,7 @@ int main(int argc,char* argv[])
     PduSubmitSm sm;
     SMS s;
 //    const char *dst="2";
-    s.setOriginatingAddress(strlen(cfg.sid.c_str()),0,0,cfg.sid.c_str());
+    s.setOriginatingAddress(strlen(cfg.sid.c_str()),1,1,cfg.sid.c_str());
     char msc[]="123";
     char imsi[]="123";
     s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
@@ -99,7 +99,7 @@ int main(int argc,char* argv[])
         }
         i++;
       }
-      s.setDestinationAddress(strlen((char*)message),0,0,(char*)message);
+      s.setDestinationAddress(strlen((char*)message),1,1,(char*)message);
       printf("Enter message:");fflush(stdout);
       fgets((char*)message,sizeof(message),stdin);
       for(int i=0;message[i];i++)

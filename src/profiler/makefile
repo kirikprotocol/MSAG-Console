@@ -6,6 +6,9 @@
 
 PACKAGE := profiler
 
+__LIBRARIES := $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so
+
+
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)
 endif
