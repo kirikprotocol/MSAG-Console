@@ -15,7 +15,7 @@
 #include <util/config/ConfigException.h>
 #include <util/config/Manager.h>
 #include <util/Logger.h>
-#include <util/signal.h>
+#include <util/signal.hpp>
 
 using smsc::admin::AdminException;
 using smsc::admin::daemon::DaemonSocketListener;

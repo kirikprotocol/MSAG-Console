@@ -9,7 +9,7 @@
 #include <admin/protocol/CommandSetServiceStartupParameters.h>
 #include <admin/daemon/config_parameter_names.h>
 #include <core/synchronization/Mutex.hpp>
-#include <util/signal.h>
+#include <util/signal.hpp>
 #include <util/config/Config.h>
 
 namespace smsc {

@@ -4,7 +4,7 @@
 #include <list>
 #include <core/synchronization/Mutex.hpp>
 #include <admin/util/Shutdownable.h>
-#include <util/signal.h>
+#include <util/signal.hpp>
 
 using smsc::core::synchronization::Mutex;
 

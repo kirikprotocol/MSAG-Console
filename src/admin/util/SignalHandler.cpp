@@ -1,7 +1,7 @@
 #include "SignalHandler.h"
 
 #include <core/synchronization/Mutex.hpp>
-#include <util/signal.h>
+#include <util/signal.hpp>
 #include <util/xml/init.h>
 #include <unistd.h>
 #include <stdlib.h>
