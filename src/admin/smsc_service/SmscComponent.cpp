@@ -57,6 +57,8 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 	sme_params["receiptSchemeName" ] = Parameter("receiptSchemeName" , StringType);
 	sme_params["disabled"          ] = Parameter("disabled"          , BooleanType);
 	sme_params["mode"              ] = Parameter("mode"              , StringType);
+	sme_params["proclimit"         ] = Parameter("proclimit"         , LongType);
+	sme_params["schedlimit"        ] = Parameter("schedlimit"        , LongType);
 	Parameters sme_id_params;
 	sme_id_params["id"] = Parameter("id", StringType);
 	Parameters sme_ids_params;
@@ -1025,6 +1027,10 @@ void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
 	smeInfo.forceDC           = args.Get("forceDC").getBooleanValue();
 	smeInfo.receiptSchemeName = args.Get("receiptSchemeName").getStringValue();
 	smeInfo.timeout           = args.Get("timeout").getLongValue();
+	if (args.Exists("proclimit"))
+		smeInfo.proclimit         = args.Get("proclimit").getLongValue();
+	if (args.Exists("schedlimit"))
+		smeInfo.schedlimit        = args.Get("schedlimit").getLongValue();
 	const char * const mode = args.Get("mode").getStringValue();
 	if (stricmp(mode,  "tx") == 0)
 	{
