@@ -36,7 +36,9 @@ public class TasksStatistics extends InfoSmeBean
     if (result != RESULT_OK)
       return result;
 
-    stat.setDataSource(getInfoSmeContext().getDataSource());
+    if (getInfoSmeContext().getDataSource() != null)
+      stat.setDataSource(getInfoSmeContext().getDataSource());
+
     stat.setInfoSme(getInfoSmeContext().getInfoSme());
 
     return RESULT_OK;
@@ -48,10 +50,16 @@ public class TasksStatistics extends InfoSmeBean
     if (result != RESULT_OK)
       return result;
 
+    if (getInfoSmeContext().getDataSource() == null)
+      warning("DataSource not initialized");
+
     if (mbQuery != null) {
       try {
         statistics = null;
-        statistics = stat.getStatistics(query);
+        if (getInfoSmeContext().getDataSource() != null)
+          statistics = stat.getStatistics(query);
+        else
+          return error("DataSource not initialized");
       } catch (Throwable e) {
         logger.debug("Couldn't get statisctics", e);
         return error("Couldn't get statisctics", e);

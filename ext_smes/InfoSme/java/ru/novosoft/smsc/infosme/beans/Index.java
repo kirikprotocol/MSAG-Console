@@ -103,6 +103,9 @@ public class Index extends IndexProperties
         getInfoSmeContext().setChangedProviders(false);
         getInfoSmeContext().setChangedSchedules(false);
         getInfoSmeContext().setChangedTasks(false);
+        getInfoSmeContext().reloadDataSource(oldConfig, getConfig());
+        if (getInfoSmeContext().getDataSource() == null)
+          warning("Invalid JDBC parameters");
         return message("Changes saved, you need to restart InfoSme to apply changes");
       } else if (isApply("tasks")) {
         if (getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedProviders())

@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.infosme.backend;
 
+import org.apache.log4j.Category;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
@@ -11,7 +12,6 @@ import javax.sql.DataSource;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -22,8 +22,9 @@ import java.util.*;
 public class InfoSmeContext
 {
   private static InfoSmeContext instance = null;
+  private Category logger = Category.getInstance(this.getClass());
 
-  public static synchronized InfoSmeContext getInstance(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, IOException, SAXException, Config.WrongParamTypeException, Config.ParamNotFoundException, SQLException
+  public static synchronized InfoSmeContext getInstance(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, IOException, SAXException
   {
     return instance != null ? instance : (instance = new InfoSmeContext(appContext));
   }
@@ -46,7 +47,7 @@ public class InfoSmeContext
   private boolean changedSchedules = false;
   private DataSource dataSource = null;
 
-  public InfoSmeContext(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, SAXException, IOException, Config.WrongParamTypeException, Config.ParamNotFoundException, SQLException
+  private InfoSmeContext(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, SAXException, IOException
   {
     this.appContext = appContext;
     this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID));
@@ -104,28 +105,39 @@ public class InfoSmeContext
     this.tasksPageSize = tasksPageSize;
   }
 
-  public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException, Config.WrongParamTypeException, Config.ParamNotFoundException, SQLException
+  public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException
   {
     Config newConfig = loadCurrentConfig();
-    final String newSource = newConfig.getString("InfoSme.systemDataSource.jdbc.source");
-    final String newDriver = newConfig.getString("InfoSme.systemDataSource.jdbc.driver");
-    final String newUser = newConfig.getString("InfoSme.systemDataSource.dbUserName");
-    final String newPassword = newConfig.getString("InfoSme.systemDataSource.dbUserPassword");
-    if (config == null
-            || !newSource.equals(config.getString("InfoSme.systemDataSource.jdbc.source"))
-            || !newDriver.equals(config.getString("InfoSme.systemDataSource.jdbc.driver"))
-            || !newUser.equals(config.getString("InfoSme.systemDataSource.dbUserName"))
-            || !newPassword.equals(config.getString("InfoSme.systemDataSource.dbUserPassword"))
-    ) {
-      Properties properties = new Properties();
-      properties.setProperty("jdbc.source", newSource);
-      properties.setProperty("jdbc.driver", newDriver);
-      properties.setProperty("jdbc.user", newUser);
-      properties.setProperty("jdbc.pass", newPassword);
-      dataSource = new NSConnectionPool(properties);
-    }
+    reloadDataSource(config, newConfig);
     config = newConfig;
   }
+
+  public void reloadDataSource(Config oldConfig, Config newConfig)
+  {
+    try {
+      dataSource = null;
+      final String newSource = newConfig.getString("InfoSme.systemDataSource.jdbc.source");
+      final String newDriver = newConfig.getString("InfoSme.systemDataSource.jdbc.driver");
+      final String newUser = newConfig.getString("InfoSme.systemDataSource.dbUserName");
+      final String newPassword = newConfig.getString("InfoSme.systemDataSource.dbUserPassword");
+      if (oldConfig == null
+              || !newSource.equals(oldConfig.getString("InfoSme.systemDataSource.jdbc.source"))
+              || !newDriver.equals(oldConfig.getString("InfoSme.systemDataSource.jdbc.driver"))
+              || !newUser.equals(oldConfig.getString("InfoSme.systemDataSource.dbUserName"))
+              || !newPassword.equals(oldConfig.getString("InfoSme.systemDataSource.dbUserPassword"))
+      ) {
+        Properties properties = new Properties();
+        properties.setProperty("jdbc.source", newSource);
+        properties.setProperty("jdbc.driver", newDriver);
+        properties.setProperty("jdbc.user", newUser);
+        properties.setProperty("jdbc.pass", newPassword);
+        dataSource = new NSConnectionPool(properties);
+      }
+    } catch (Throwable e) {
+      logger.error("Could not init datasource", e);
+    }
+  }
+
 
   public String getSchedulesSort()
   {
