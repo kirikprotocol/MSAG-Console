@@ -266,6 +266,7 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  __trace2__("SUBMIT: archivation request for %lld/%d is %s",t.msgId,dialogId,ri.archived?"true":"false");
   sms->setArchivationRequested(ri.archived);
   sms->setBillingRecord(ri.billing);
 
@@ -441,6 +442,10 @@ StateType StateMachine::forward(Tuple& t)
   {
     __trace__("FORWARD: failed to retriveSms");
     return UNKNOWN_STATE;
+  }
+  if(sms.getState()==EXPIRED_STATE)
+  {
+    return EXPIRED_STATE;
   }
   time_t now=time(NULL);
   if(sms.getValidTime()<=now)

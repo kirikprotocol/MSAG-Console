@@ -243,6 +243,33 @@ void Socket::setNonBlocking(int mode)
   ioctl(sock, FIONBIO, &mode);
 }
 
+int Socket::ReadAll(char* buf,int size)
+{
+  int rd=0,res;
+  while(rd<size)
+  {
+    res=Read(buf+rd,size-rd);
+    if(res<=0)
+    {
+      return -1;
+    }
+    rd+=res;
+  }
+  return size;
+}
+
+int Socket::WriteAll(const char *buf,int bufsize)
+{
+  int wr,count=0;
+  do{
+    wr=Write(buf+count,bufsize-count);
+    if(wr<=0)return -1;
+    count+=wr;
+  }while(count!=bufsize);
+  return count;
+}
+
+
 #ifdef _WIN32
 
 #define REQWINSOCK_VERSION 0x0101

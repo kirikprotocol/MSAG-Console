@@ -320,6 +320,18 @@ public:
     if(!link)throw XHashInvalidKeyException();
     return link->_keyval._value;
   }
+  const VT* GetPtr(const KT& key)const
+  {
+    Link* link=FindLink(key);
+    if(!link)return 0;
+    return &link->_keyval._value;
+  }
+  VT* GetPtr(const KT& key)
+  {
+    Link* link=FindLink(key);
+    if(!link)return 0;
+    return &link->_keyval._value;
+  }
   int Get(const KT& key,VT& value)const
   {
     //__trace2__("MAP:: XHash value addr 0x%x",&value);
@@ -485,6 +497,10 @@ public:
     _buckets=NULL;
     _bucketsnum=0;
     _count=0;
+  }
+  void Empty()
+  {
+    Clean();
   }
 };
 

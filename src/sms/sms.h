@@ -1,9 +1,9 @@
 #undef SMSDEFTAG
 #if !defined SMS_IMPLEMENTATION
-#define SMSDEFTAG(tag_type,tag,x) static const char* x
+#define SMSDEFTAG(tag_type,tag,x) static const std::string x
 #else
 #if defined SMS_IMPLEMENTATION_STATIC
-#define SMSDEFTAG(tag_type,tag,x) const char* Tag::x = #x
+#define SMSDEFTAG(tag_type,tag,x) const std::string Tag::x = #x
 #else
 #define SMSDEFTAG(tag_type,tag,x) \
   tagToKey[tag].type = tag_type;\
@@ -77,6 +77,7 @@ keyToTag[Tag::x]=tag;
 #include <netinet/in.h>
 #include <memory>
 #include "core/buffers/Hash.hpp"
+#include "core/buffers/XHash.hpp"
 
 #include <util/debug.h>
 
@@ -84,6 +85,7 @@ namespace smsc {
   namespace sms  {
     using std::string;
     using smsc::core::buffers::Hash;
+    using smsc::core::buffers::XHash;
     using std::runtime_error;
     using std::auto_ptr;
 
@@ -533,6 +535,20 @@ namespace smsc {
         virtual ~SMSDict(){}
       };
 
+      struct StringHashFunc{
+        static inline int CalcHash(const string& key)
+        {
+          const unsigned char* curr = (const unsigned char*)key.c_str();
+          unsigned count = *curr;
+          while(*curr)
+          {
+            count += 37 * count + *curr;
+            curr++;
+          }
+          count=(unsigned)(( ( count * (unsigned)19L ) + (unsigned)12451L ) % (unsigned)8882693L);
+          return count;
+        }
+      };
 
       class Tag
       {
@@ -548,7 +564,7 @@ namespace smsc {
           int type;
           SMSTag():type(SMS_BODY_UNKNOWN_TAG){}
         };
-        Hash<int> keyToTag;
+        XHash<string,int,StringHashFunc> keyToTag;
         SMSTag* tagToKey;
         public:
           TagHash();
@@ -609,14 +625,15 @@ namespace smsc {
 
       extern TagHash tag_hash;
 
+
       class TemporaryBodyStr
       {
-        Hash<string> hash;
+        XHash<string,string,StringHashFunc> hash;
       public:
         int getRequiredBufferSize()
         {
           int size = 0;
-          char* key;
+          string key;
           string* value;
           hash.First();
           while(hash.Next(key,value))
@@ -630,24 +647,24 @@ namespace smsc {
 
         int hasValue(const string& key)
         {
-          return hash.Exists(key.c_str());
+          return hash.Exists(key);
         }
 
         string getValue(const string& key)
         {
-          const string* value = hash.GetPtr(key.c_str());
+          const string* value = hash.GetPtr(key);
           if ( !value ) return "";
           else return string(*value);
         }
 
         void setValue(const string& key,const string& value)
         {
-          hash[key.c_str()] = value;
+          hash[key] = value;
         }
 
         int encode(uint8_t* buffer,int offs,int length)
         {
-          char* key;
+          string key;
           string* value;
           hash.First();
           while(hash.Next(key,value))
@@ -692,7 +709,7 @@ namespace smsc {
             if ( key )
             {
               __require__(*(buffer+pos+len-1) == 0);
-              hash[key->c_str()] = string((char*)buffer+pos);
+              hash[*key] = string((char*)buffer+pos);
             }
             pos+=len;
           }
@@ -701,12 +718,12 @@ namespace smsc {
 
       class TemporaryBodyInt
       {
-        Hash<int> hash;
+        XHash<string,int,StringHashFunc> hash;
       public:
         int getRequiredBufferSize()
         {
           int size = 0;
-          char* key;
+          string key;
           int* value;
           hash.First();
           while(hash.Next(key,value))
@@ -721,24 +738,24 @@ namespace smsc {
 
         bool hasValue(const string& key)
         {
-          return hash.Exists(key.c_str())!=0;
+          return hash.Exists(key)!=0;
         }
 
         int getValue(const string& key)
         {
-          const int* value = hash.GetPtr(key.c_str());
+          const int* value = hash.GetPtr(key);
           if ( !value ) return 0;
           else return *value;
         }
 
         void setValue(const string& key,int value)
         {
-          hash[key.c_str()] = value;
+          hash[key] = value;
         }
 
         int encode(uint8_t* buffer,int offs,int length)
         {
-          char* key;
+          string key;
           int* value;
           hash.First();
           while(hash.Next(key,value))
@@ -786,7 +803,7 @@ namespace smsc {
               __require__(len == 4);
               uint32_t tmp;
               memcpy(&tmp,buffer+pos,4);
-              hash[key->c_str()] = ntohl(tmp);
+              hash[*key] = ntohl(tmp);
 //              __trace2__("Idec: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key->c_str():"NULL",len,pos,length,ntohl(tmp));
             }
             pos+=len;
@@ -821,12 +838,12 @@ namespace smsc {
           COStr() : len(0) {}
           COStr(const COStr& costr): len(0){operator =(costr);}
         };
-        Hash<COStr> hash;
+        XHash<string,COStr,StringHashFunc> hash;
       public:
         int getRequiredBufferSize()
         {
           int size = 0;
-          char* key;
+          string key;
           COStr* value;
           hash.First();
           while(hash.Next(key,value))
@@ -840,24 +857,24 @@ namespace smsc {
 
         int hasValue(const string& key)
         {
-          return hash.Exists(key.c_str());
+          return hash.Exists(key);
         }
 
         const char* getValue(const string& key,unsigned* len)
         {
-          const COStr* value = hash.GetPtr(key.c_str());
+          const COStr* value = hash.GetPtr(key);
           if ( !value ) return 0;
           else return value->get(len);
         }
 
         void setValue(const string& key, const char* value, unsigned len)
         {
-          hash[key.c_str()].set(value,len);
+          hash[key].set(value,len);
         }
 
         int encode(uint8_t* buffer,int offs,int length)
         {
-          char* key;
+          string key;
           COStr* value;
           hash.First();
           while(hash.Next(key,value))
@@ -902,7 +919,7 @@ namespace smsc {
             if ( key )
             {
               //__require__(*(buffer+pos+len) == 0);
-              hash[key->c_str()].set((char*)buffer+pos,len);
+              hash[*key].set((char*)buffer+pos,len);
             }
             pos+=len;
           }
@@ -951,10 +968,14 @@ namespace smsc {
         Body(const Body& body)
           : buffLen(0)
         {
-          int len = body.getBufferLength();
+          /*int len = body.getBufferLength();
           uint8_t* b = new uint8_t[len];
           memcpy(b,body.getBuffer(),len);
-          setBuffer(b, len);
+          setBuffer(b, len);*/
+          buff=0;
+          temporaryBodyStr=body.temporaryBodyStr;
+          temporaryBodyInt=body.temporaryBodyInt;
+          temporaryBodyBin=body.temporaryBodyBin;
         };
 
         /**
@@ -966,10 +987,15 @@ namespace smsc {
         */
         Body& operator =(const Body& body)
         {
-          int len = body.getBufferLength();
+          buffLen=0;
+          buff=0;
+          temporaryBodyStr=body.temporaryBodyStr;
+          temporaryBodyInt=body.temporaryBodyInt;
+          temporaryBodyBin=body.temporaryBodyBin;
+          /*int len = body.getBufferLength();
           uint8_t* b = new uint8_t[len];
           memcpy(b,body.getBuffer(),len);
-          setBuffer(b, len);
+          setBuffer(b, len);*/
           return (*this);
         };
 
