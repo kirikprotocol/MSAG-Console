@@ -65,7 +65,12 @@ static class LeakHunter{
   smsc::core::synchronization::Mutex m;
 
 public:
-  LeakHunter(){init=0;Init();}
+  LeakHunter()
+  {
+    smsc::core::synchronization::MutexGuard guard(m);
+    init=0;
+    Init();
+  }
   ~LeakHunter();
 
   void Init();
@@ -79,7 +84,6 @@ public:
 
 void LeakHunter::Init()
 {
-  smsc::core::synchronization::MutexGuard guard(m);
   DummyThread t;
   t.Start();
   t.WaitFor();
