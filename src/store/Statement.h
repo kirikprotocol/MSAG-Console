@@ -106,6 +106,8 @@ namespace smsc { namespace store
         char    bHeaderIndicator;
         char    bNeedArchivate;
 
+        sb2     indWaitTime, indSvcType;
+        
     public:
         
         StoreStatement(Connection* connection, bool assign=true)
@@ -178,6 +180,8 @@ namespace smsc { namespace store
 
         char    bHeaderIndicator;
         char    bNeedArchivate;
+
+        sb2     indWaitTime, indSvcType;
     
     public:
 

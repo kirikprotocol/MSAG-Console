@@ -48,41 +48,44 @@ namespace smsc { namespace store
         static const char*  billingLookIdSql;
         static const char*  billingPutIdSql;
         
-        const char*     storageDBInstance;
-        const char*     storageDBUserName;
-        const char*     storageDBUserPassword;
+        const char* storageDBInstance;
+        const char* storageDBUserName;
+        const char* storageDBUserPassword;
         
-        const char*     billingDBInstance;
-        const char*     billingDBUserName;
-        const char*     billingDBUserPassword;
+        const char* billingDBInstance;
+        const char* billingDBUserName;
+        const char* billingDBUserPassword;
         
-        Connection*     storageConnection;
-        Connection*     billingConnection;
+        Connection* storageConnection;
+        Connection* billingConnection;
         
-        Statement*      storageSelectStmt;
-        Statement*      storageDeleteStmt;
-        Statement*      archiveInsertStmt;
+        Statement*  storageSelectStmt;
+        Statement*  storageDeleteStmt;
+        Statement*  archiveInsertStmt;
         
-        Statement*      billingCleanIdsStmt;
-        Statement*      billingInsertStmt;
-        Statement*      billingLookIdStmt;
-        Statement*      billingPutIdStmt;
+        Statement*  billingCleanIdsStmt;
+        Statement*  billingInsertStmt;
+        Statement*  billingLookIdStmt;
+        Statement*  billingPutIdStmt;
         
-        ub4             idCounter; // for lookIdStmt
+        ub4         idCounter; // for lookIdStmt
 
-        SMSId           id;
-        SMS             sms;
+        SMSId       id;
+        SMS         sms;
         
-        OCIDate         waitTime;
-        OCIDate         validTime;
-        OCIDate         submitTime;
-        OCIDate         lastTime;
-        OCIDate         nextTime;
+        OCIDate     waitTime;
+        OCIDate     validTime;
+        OCIDate     submitTime;
+        OCIDate     lastTime;
+        OCIDate     nextTime;
         
-        uint8_t         uState;
-        char            bStatusReport;
-        char            bHeaderIndicator;
-        char            bNeedArchivate;
+        uint8_t     uState;
+        char        bHeaderIndicator;
+        char        bNeedArchivate;
+
+        sb2         indOA, indSrcMsc, indSrcImsi, indSrcSme;
+        sb2         indDA, indDstMsc, indDstImsi, indDstSme;
+        sb2         indWaitTime, indLastTime;
         
         const char* loadDBInstance(Manager& config, const char* cat)
             throw(ConfigException);

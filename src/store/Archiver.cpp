@@ -509,16 +509,20 @@ void Archiver::prepareStorageSelectStmt() throw(StorageException)
                               (sb4) sizeof(sms.originatingAddress.plan));
     storageSelectStmt->define(6 , SQLT_STR, 
                               (dvoid *) (sms.originatingAddress.value),
-                              (sb4) sizeof(sms.originatingAddress.value));
+                              (sb4) sizeof(sms.originatingAddress.value),
+                              &indOA);
     storageSelectStmt->define(7 , SQLT_STR, 
                               (dvoid *) (sms.originatingDescriptor.msc),
-                              (sb4) sizeof(sms.originatingDescriptor.msc));
+                              (sb4) sizeof(sms.originatingDescriptor.msc),
+                              &indSrcMsc);
     storageSelectStmt->define(8 , SQLT_STR, 
                               (dvoid *) (sms.originatingDescriptor.imsi),
-                              (sb4) sizeof(sms.originatingDescriptor.imsi));
+                              (sb4) sizeof(sms.originatingDescriptor.imsi),
+                              &indSrcImsi);
     storageSelectStmt->define(9 , SQLT_UIN, 
                               (dvoid *)&(sms.originatingDescriptor.sme),
-                              (sb4) sizeof(sms.originatingDescriptor.sme));
+                              (sb4) sizeof(sms.originatingDescriptor.sme),
+                              &indSrcSme);
     storageSelectStmt->define(10, SQLT_UIN, 
                               (dvoid *) &(sms.destinationAddress.type),
                               (sb4) sizeof(sms.destinationAddress.type));
@@ -527,18 +531,23 @@ void Archiver::prepareStorageSelectStmt() throw(StorageException)
                               (sb4) sizeof(sms.destinationAddress.plan));
     storageSelectStmt->define(12, SQLT_STR, 
                               (dvoid *) (sms.destinationAddress.value),
-                              (sb4) sizeof(sms.destinationAddress.value));
+                              (sb4) sizeof(sms.destinationAddress.value),
+                              &indDA);
     storageSelectStmt->define(13, SQLT_STR, 
                               (dvoid *) (sms.destinationDescriptor.msc),
-                              (sb4) sizeof(sms.destinationDescriptor.msc));
+                              (sb4) sizeof(sms.destinationDescriptor.msc),
+                              &indDstMsc);
     storageSelectStmt->define(14, SQLT_STR, 
                               (dvoid *) (sms.destinationDescriptor.imsi),
-                              (sb4) sizeof(sms.destinationDescriptor.imsi));
+                              (sb4) sizeof(sms.destinationDescriptor.imsi),
+                              &indDstImsi);
     storageSelectStmt->define(15 , SQLT_UIN, 
                               (dvoid *)&(sms.destinationDescriptor.sme),
-                              (sb4) sizeof(sms.destinationDescriptor.sme));
+                              (sb4) sizeof(sms.destinationDescriptor.sme),
+                              &indDstSme);
     storageSelectStmt->define(16, SQLT_ODT, (dvoid *) &(waitTime),
-                              (sb4) sizeof(waitTime));
+                              (sb4) sizeof(waitTime),
+                              &indWaitTime);
     storageSelectStmt->define(17, SQLT_ODT, (dvoid *) &(validTime),
                               (sb4) sizeof(validTime));
     storageSelectStmt->define(18, SQLT_ODT, (dvoid *) &(submitTime),
@@ -548,7 +557,7 @@ void Archiver::prepareStorageSelectStmt() throw(StorageException)
     storageSelectStmt->define(20, SQLT_UIN, (dvoid *) &(sms.failureCause),
                               (sb4) sizeof(sms.failureCause));
     storageSelectStmt->define(21, SQLT_ODT, (dvoid *) &(lastTime),
-                              (sb4) sizeof(lastTime));
+                              (sb4) sizeof(lastTime), &indLastTime);
     storageSelectStmt->define(22, SQLT_UIN, (dvoid *) &(sms.deliveryReport),
                               (sb4) sizeof(sms.deliveryReport));
     storageSelectStmt->define(23, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
@@ -612,16 +621,20 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
                             (sb4) sizeof(sms.originatingAddress.plan));
     archiveInsertStmt->bind(6 , SQLT_STR, 
                             (dvoid *) (sms.originatingAddress.value), 
-                            (sb4) sizeof(sms.originatingAddress.value));
+                            (sb4) sizeof(sms.originatingAddress.value),
+                            &indOA);
     archiveInsertStmt->bind(7 , SQLT_STR, 
                             (dvoid *) (sms.originatingDescriptor.msc),
-                            (sb4) sizeof(sms.originatingDescriptor.msc));
+                            (sb4) sizeof(sms.originatingDescriptor.msc),
+                            &indSrcMsc);
     archiveInsertStmt->bind(8 , SQLT_STR, 
                             (dvoid *) (sms.originatingDescriptor.imsi),
-                            (sb4) sizeof(sms.originatingDescriptor.imsi));
+                            (sb4) sizeof(sms.originatingDescriptor.imsi),
+                            &indSrcImsi);
     archiveInsertStmt->bind(9 , SQLT_UIN, 
                             (dvoid *)&(sms.originatingDescriptor.sme),
-                            (sb4) sizeof(sms.originatingDescriptor.sme));
+                            (sb4) sizeof(sms.originatingDescriptor.sme),
+                            &indSrcSme);
     archiveInsertStmt->bind(10, SQLT_UIN, 
                             (dvoid *) &(sms.destinationAddress.type), 
                             (sb4) sizeof(sms.destinationAddress.type));
@@ -630,18 +643,22 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
                             (sb4) sizeof(sms.destinationAddress.plan));
     archiveInsertStmt->bind(12, SQLT_STR, 
                             (dvoid *) (sms.destinationAddress.value), 
-                            (sb4) sizeof(sms.destinationAddress.value));
+                            (sb4) sizeof(sms.destinationAddress.value),
+                            &indDA);
     archiveInsertStmt->bind(13, SQLT_STR, 
                             (dvoid *) (sms.destinationDescriptor.msc),
-                            (sb4) sizeof(sms.destinationDescriptor.msc));
+                            (sb4) sizeof(sms.destinationDescriptor.msc),
+                            &indDstMsc);
     archiveInsertStmt->bind(14, SQLT_STR, 
                             (dvoid *) (sms.destinationDescriptor.imsi),
-                            (sb4) sizeof(sms.destinationDescriptor.imsi));
+                            (sb4) sizeof(sms.destinationDescriptor.imsi),
+                            &indDstImsi);
     archiveInsertStmt->bind(15, SQLT_UIN, 
                             (dvoid *)&(sms.destinationDescriptor.sme),
-                            (sb4) sizeof(sms.destinationDescriptor.sme));
+                            (sb4) sizeof(sms.destinationDescriptor.sme),
+                            &indDstSme);
     archiveInsertStmt->bind(16, SQLT_ODT, (dvoid *) &(waitTime), 
-                            (sb4) sizeof(waitTime));
+                            (sb4) sizeof(waitTime), &indWaitTime);
     archiveInsertStmt->bind(17, SQLT_ODT, (dvoid *) &(validTime),
                             (sb4) sizeof(validTime));
     archiveInsertStmt->bind(18, SQLT_ODT, (dvoid *) &(submitTime), 
@@ -651,7 +668,7 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
     archiveInsertStmt->bind(20, SQLT_UIN, (dvoid *) &(sms.failureCause),
                             (sb4) sizeof(sms.failureCause));
     archiveInsertStmt->bind(21, SQLT_ODT, (dvoid *) &(lastTime), 
-                            (sb4) sizeof(lastTime));
+                            (sb4) sizeof(lastTime), &indLastTime);
     archiveInsertStmt->bind(22, SQLT_UIN, (dvoid *) &(sms.deliveryReport), 
                             (sb4) sizeof(sms.deliveryReport));
     archiveInsertStmt->bind(23, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
@@ -671,69 +688,77 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
 }
 
 const char* Archiver::billingInsertSql = (const char*)
-"INSERT INTO SMS_BR (ATTEMPT, CI, DATA,\
- DST_ADDR, DST_IMSI, DST_MSC, DST_NPI, DST_SME_N, DST_TON,\
- FD, LAST_RESULT, N, PRTY, RP, SMS_UPLOAD_N,\
- SRC_ADDR, SRC_IMSI, SRC_MSC, SRC_NPI, SRC_SME_N, SRC_TON,\
- STATUS, SUBMIT_FD, TD, TXT_LENGTH)\
- VALUES (:1,0,NULL,:2,:3,:4,:5,:6,:7,\
- 0,:8,0,:9,:10,0,\
- :11,:12,:13,:14,:15,:16,\
- :17,:18,0,:19)";
-
+"INSERT INTO SMS_BR (CI,\
+ SRC_ADDR, SRC_TON, SRC_NPI, SRC_MSC, SRC_IMSI, SRC_SME_N,\
+ DST_ADDR, DST_TON, DST_NPI, DST_MSC, DST_IMSI, DST_SME_N,\
+ SUBMIT_FD, STATUS, ATTEMPT, LAST_RESULT, PRTY, RP,\
+ TXT_LENGTH, DATA)\
+ VALUES (NULL,\
+ :SRC_ADDR, :SRC_TON, :SRC_NPI, :SRC_MSC, :SRC_IMSI, :SRC_SME_N,\
+ :DST_ADDR, :DST_TON, :DST_NPI, :DST_MSC, :DST_IMSI, :DST_SME_N,\
+ :SUBMIT_FD, :STATUS, :ATTEMPT, :LAST_RESULT, :PRTY, :RP,\
+ :TXT_LENGTH, NULL)";
 void Archiver::prepareBillingInsertStmt() throw(StorageException)
 {
     billingInsertStmt = new Statement(billingConnection, 
                                       Archiver::billingInsertSql, true);
     
-    billingInsertStmt->bind(1 , SQLT_UIN, (dvoid *)&(sms.attempts),
-                            (sb4) sizeof(sms.attempts));
-    billingInsertStmt->bind(2 , SQLT_STR, 
-                            (dvoid *) (sms.destinationAddress.value), 
-                            (sb4) sizeof(sms.destinationAddress.value));
-    billingInsertStmt->bind(3 , SQLT_STR, 
-                            (dvoid *) (sms.destinationDescriptor.imsi),
-                            (sb4) sizeof(sms.destinationDescriptor.imsi));
-    billingInsertStmt->bind(4 , SQLT_STR, 
-                            (dvoid *) (sms.destinationDescriptor.msc),
-                            (sb4) sizeof(sms.destinationDescriptor.msc));
-    billingInsertStmt->bind(5 , SQLT_UIN, 
-                            (dvoid *) &(sms.destinationAddress.plan), 
-                            (sb4) sizeof(sms.destinationAddress.plan));
-    billingInsertStmt->bind(6 , SQLT_UIN, 
-                            (dvoid *)&(sms.destinationDescriptor.sme),
-                            (sb4) sizeof(sms.destinationDescriptor.sme));
-    billingInsertStmt->bind(7 , SQLT_UIN, 
-                            (dvoid *) &(sms.destinationAddress.type), 
-                            (sb4) sizeof(sms.destinationAddress.type));
-    billingInsertStmt->bind(8 , SQLT_UIN, (dvoid *) &(sms.failureCause),
-                            (sb4) sizeof(sms.failureCause));
-    billingInsertStmt->bind(9 , SQLT_UIN, (dvoid *) &(sms.priority), 
-                            (sb4) sizeof(sms.priority));
-    billingInsertStmt->bind(10, SQLT_AFC, (dvoid *) &(bStatusReport), 
-                            (sb4) sizeof(bStatusReport));
-    billingInsertStmt->bind(11, SQLT_STR, 
+    billingInsertStmt->bind(1 , SQLT_STR, 
                             (dvoid *) (sms.originatingAddress.value), 
-                            (sb4) sizeof(sms.originatingAddress.value));
-    billingInsertStmt->bind(12, SQLT_STR, 
-                            (dvoid *) (sms.originatingDescriptor.imsi),
-                            (sb4) sizeof(sms.originatingDescriptor.imsi));
-    billingInsertStmt->bind(13, SQLT_STR, 
-                            (dvoid *) (sms.originatingDescriptor.msc),
-                            (sb4) sizeof(sms.originatingDescriptor.msc));
-    billingInsertStmt->bind(14, SQLT_UIN, 
-                            (dvoid *) &(sms.originatingAddress.plan), 
-                            (sb4) sizeof(sms.originatingAddress.plan));
-    billingInsertStmt->bind(15, SQLT_UIN, 
-                            (dvoid *)&(sms.originatingDescriptor.sme),
-                            (sb4) sizeof(sms.originatingDescriptor.sme));
-    billingInsertStmt->bind(16, SQLT_UIN, 
+                            (sb4) sizeof(sms.originatingAddress.value),
+                            &indOA);
+    billingInsertStmt->bind(2 , SQLT_UIN, 
                             (dvoid *) &(sms.originatingAddress.type), 
                             (sb4) sizeof(sms.originatingAddress.type));
-    billingInsertStmt->bind(17, SQLT_UIN, (dvoid *) &(uState),
+    billingInsertStmt->bind(3 , SQLT_UIN, 
+                            (dvoid *) &(sms.originatingAddress.plan), 
+                            (sb4) sizeof(sms.originatingAddress.plan));
+    billingInsertStmt->bind(4 , SQLT_STR, 
+                            (dvoid *) (sms.originatingDescriptor.msc),
+                            (sb4) sizeof(sms.originatingDescriptor.msc),
+                            &indSrcMsc);
+    billingInsertStmt->bind(5 , SQLT_STR, 
+                            (dvoid *) (sms.originatingDescriptor.imsi),
+                            (sb4) sizeof(sms.originatingDescriptor.imsi),
+                            &indSrcImsi);
+    billingInsertStmt->bind(6 , SQLT_UIN, 
+                            (dvoid *)&(sms.originatingDescriptor.sme),
+                            (sb4) sizeof(sms.originatingDescriptor.sme),
+                            &indSrcSme);
+    billingInsertStmt->bind(7 , SQLT_STR, 
+                            (dvoid *) (sms.destinationAddress.value), 
+                            (sb4) sizeof(sms.destinationAddress.value),
+                            &indDA);
+    billingInsertStmt->bind(8 , SQLT_UIN, 
+                            (dvoid *) &(sms.destinationAddress.type), 
+                            (sb4) sizeof(sms.destinationAddress.type));
+    billingInsertStmt->bind(9 , SQLT_UIN, 
+                            (dvoid *) &(sms.destinationAddress.plan), 
+                            (sb4) sizeof(sms.destinationAddress.plan));
+    billingInsertStmt->bind(10, SQLT_STR, 
+                            (dvoid *) (sms.destinationDescriptor.msc),
+                            (sb4) sizeof(sms.destinationDescriptor.msc),
+                            &indDstMsc);
+    billingInsertStmt->bind(11, SQLT_STR, 
+                            (dvoid *) (sms.destinationDescriptor.imsi),
+                            (sb4) sizeof(sms.destinationDescriptor.imsi),
+                            &indDstImsi);
+    billingInsertStmt->bind(12, SQLT_UIN, 
+                            (dvoid *)&(sms.destinationDescriptor.sme),
+                            (sb4) sizeof(sms.destinationDescriptor.sme),
+                            &indDstSme);
+    billingInsertStmt->bind(13, SQLT_ODT, (dvoid *) &(lastTime), 
+                            (sb4) sizeof(lastTime), &indLastTime);
+    billingInsertStmt->bind(14, SQLT_UIN, (dvoid *) &(uState),
                             (sb4) sizeof(uState));
-    billingInsertStmt->bind(18, SQLT_ODT, (dvoid *) &(lastTime), 
-                            (sb4) sizeof(lastTime));
+    billingInsertStmt->bind(15, SQLT_UIN, (dvoid *)&(sms.attempts),
+                            (sb4) sizeof(sms.attempts));
+    billingInsertStmt->bind(16, SQLT_UIN, (dvoid *) &(sms.failureCause),
+                            (sb4) sizeof(sms.failureCause));
+    billingInsertStmt->bind(17, SQLT_UIN, (dvoid *) &(sms.priority), 
+                            (sb4) sizeof(sms.priority));
+    billingInsertStmt->bind(18, SQLT_UIN, (dvoid *) &(sms.deliveryReport), 
+                            (sb4) sizeof(sms.deliveryReport));
     billingInsertStmt->bind(19, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
                             (sb4) sizeof(sms.messageBody.lenght));
 }

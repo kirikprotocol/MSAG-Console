@@ -252,12 +252,12 @@ bool NeedOverwriteStatement::needOverwrite()
 
 /* ------------------------- OverwriteStatement ---------------------- */
 const char* OverwriteStatement::sql = (const char*)
-"UPDATE SMS_MSG SET MR:=MR,\
+"UPDATE SMS_MSG SET MR=:MR,\
  SRC_MSC=:SRC_MSC, SRC_IMSI=:SRC_IMSI, SRC_SME_N=:SRC_SME_N,\
  DST_MSC=NULL, DST_IMSI=NULL, DST_SME_N=NULL,\
  WAIT_TIME=:WAIT_TIME, VALID_TIME=:VALID_TIME,\
  SUBMIT_TIME=:SUBMIT_TIME, ATTEMPTS=0, LAST_RESULT=0,\
- LAST_TRY_TIME=NULL, NEXT_TRY_TIME=NULL,\
+ LAST_TRY_TIME=NULL, NEXT_TRY_TIME=NULL, SVC_TYPE=:SVC\
  DR=:DR, ARC=:ARC, PRI=:PRI, PID=:PID,\
  UDHI=:UDHI, DCS=:DCS, UDL=:UDL, UD=:UD\
  WHERE ID=:ID";
@@ -284,34 +284,43 @@ void OverwriteStatement::bindSms(SMS& sms)
          (sb4) sizeof(sms.originatingDescriptor.imsi));
     bind(4 , SQLT_UIN, (dvoid *)&(sms.originatingDescriptor.sme),
          (sb4) sizeof(sms.originatingDescriptor.sme));
-    convertOCIDateToDate(&waitTime, &(sms.waitTime));
+    if (sms.waitTime) 
+    {
+        convertOCIDateToDate(&waitTime, &(sms.waitTime));
+        indWaitTime = OCI_IND_NOTNULL;
+    } 
+    else indWaitTime = OCI_IND_NULL;
     bind(5 , SQLT_ODT, (dvoid *) &(waitTime), 
-         (sb4) sizeof(waitTime));
+         (sb4) sizeof(waitTime), &indWaitTime);
+    
     convertOCIDateToDate(&validTime, &(sms.validTime));
     bind(6 , SQLT_ODT, (dvoid *) &(validTime), 
          (sb4) sizeof(validTime));
     convertOCIDateToDate(&submitTime, &(sms.submitTime));
     bind(7 , SQLT_ODT, (dvoid *) &(submitTime), 
          (sb4) sizeof(submitTime));
-    bind(16, SQLT_STR, (dvoid *) (sms.eServiceType),
-         (sb4) sizeof(sms.eServiceType));
-    bind(17, SQLT_UIN, (dvoid *)&(sms.deliveryReport),
+    
+    indSvcType = strlen(sms.eServiceType) ? 
+                    OCI_IND_NOTNULL:OCI_IND_NULL;
+    bind(8 , SQLT_STR, (dvoid *) (sms.eServiceType),
+         (sb4) sizeof(sms.eServiceType), &indSvcType);
+    bind(9 , SQLT_UIN, (dvoid *)&(sms.deliveryReport),
          (sb4) sizeof(sms.deliveryReport));
     bNeedArchivate = sms.needArchivate ? 'Y':'N';
-    bind(18, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
+    bind(10, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
          (sb4) sizeof(bNeedArchivate));
-    bind(19, SQLT_UIN, (dvoid *)&(sms.priority),
+    bind(11, SQLT_UIN, (dvoid *)&(sms.priority),
          (sb4) sizeof(sms.priority));
-    bind(20, SQLT_UIN, (dvoid *)&(sms.protocolIdentifier),
+    bind(12, SQLT_UIN, (dvoid *)&(sms.protocolIdentifier),
          (sb4) sizeof(sms.protocolIdentifier));
     bHeaderIndicator = sms.messageBody.header ? 'Y':'N';
-    bind(21, SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
+    bind(13, SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
          (sb4) sizeof(bHeaderIndicator));
-    bind(22, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme),
+    bind(14, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme),
          (sb4) sizeof(sms.messageBody.scheme));
-    bind(23, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght),
+    bind(15, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght),
          (sb4) sizeof(sms.messageBody.lenght));
-    bind(24, SQLT_BIN, (dvoid *) (sms.messageBody.data),
+    bind(16, SQLT_BIN, (dvoid *) (sms.messageBody.data),
          (sb4) sizeof(sms.messageBody.data));
 }
 
@@ -327,7 +336,7 @@ const char* StoreStatement::sql = (const char*)
  :OA_TON, :OA_NPI, :OA_VAL, :SRC_MSC, :SRC_IMSI, :SRC_SME_N,\
  :DA_TON, :DA_NPI, :DA_VAL,\
  :WAIT_TIME, :VALID_TIME, :SUBMIT_TIME, 0, 0, NULL, NULL,\
- :SVC_TYPE, :DR, :ARC, :PRI, :PID, :UDHI, :DCS, :UDL, :UD)";
+ :SVC, :DR, :ARC, :PRI, :PID, :UDHI, :DCS, :UDL, :UD)";
 StoreStatement::StoreStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, StoreStatement::sql, assign)
@@ -364,17 +373,28 @@ void StoreStatement::bindSms(SMS& sms)
          (sb4) sizeof(sms.destinationAddress.plan));
     bind(12, SQLT_STR, (dvoid *) (sms.destinationAddress.value),
          (sb4) sizeof(sms.destinationAddress.value));
-    convertOCIDateToDate(&waitTime, &(sms.waitTime));
+    
+    if (sms.waitTime) 
+    {
+        convertOCIDateToDate(&waitTime, &(sms.waitTime));
+        indWaitTime = OCI_IND_NOTNULL;
+    } 
+    else indWaitTime = OCI_IND_NULL;
     bind(13, SQLT_ODT, (dvoid *) &(waitTime), 
-         (sb4) sizeof(waitTime));
+         (sb4) sizeof(waitTime), &indWaitTime);
+    
     convertOCIDateToDate(&validTime, &(sms.validTime));
     bind(14, SQLT_ODT, (dvoid *) &(validTime), 
          (sb4) sizeof(validTime));
     convertOCIDateToDate(&submitTime, &(sms.submitTime));
     bind(15, SQLT_ODT, (dvoid *) &(submitTime), 
          (sb4) sizeof(submitTime));
+    
+    indSvcType = strlen(sms.eServiceType) ? 
+                    OCI_IND_NOTNULL:OCI_IND_NULL;
     bind(16, SQLT_STR, (dvoid *) (sms.eServiceType),
-         (sb4) sizeof(sms.eServiceType));
+         (sb4) sizeof(sms.eServiceType), &indSvcType);
+    
     bind(17, SQLT_UIN, (dvoid *)&(sms.deliveryReport),
          (sb4) sizeof(sms.deliveryReport));
     bNeedArchivate = sms.needArchivate ? 'Y':'N';
