@@ -312,23 +312,23 @@ struct MAP_TIMESTAMP{
   }year;
   struct{
     unsigned second:4;
-    unsigned first:4
+    unsigned first:4;
   }mon;
   struct{
     unsigned second:4;
-    unsigned first:4
+    unsigned first:4;
   }day;
   struct{
     unsigned second:4;
-    unsigned first:4
+    unsigned first:4;
   }hour;
   struct{
     unsigned second:4;
-    unsigned first:4
+    unsigned first:4;
   }min;
   struct{
     unsigned second:4;
-    unsigned first:4
+    unsigned first:4;
   }sec;
   unsigned char tz;
 };
