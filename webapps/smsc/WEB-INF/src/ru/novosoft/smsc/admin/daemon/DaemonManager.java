@@ -44,11 +44,11 @@ public class DaemonManager
 			}
 			catch (Config.ParamNotFoundException e)
 			{
-				logger.debug("Misconfigured daemon \"" + daemonName + "\", parameter port missing", e);
+				logger.debug("Misconfigured daemon \"" + daemonName + "\"", e);
 			}
 			catch (Config.WrongParamTypeException e)
 			{
-				logger.debug("Misconfigured daemon \"" + daemonName + "\", parameter port misformatted", e);
+				logger.debug("Misconfigured daemon \"" + daemonName + "\"", e);
 			}
 		}
 		logger.debug("Daemon manager initialized");
@@ -123,7 +123,9 @@ public class DaemonManager
 		for (Iterator i = daemons.iterator(); i.hasNext();)
 		{
 			Daemon daemon = (Daemon) i.next();
-			config.setInt("daemons." + StringEncoderDecoder.encodeDot(daemon.getHost()) + ".port", daemon.getPort());
+      final String daemonKey = "daemons." + StringEncoderDecoder.encodeDot(daemon.getHost());
+      config.setInt(daemonKey + ".port", daemon.getPort());
+      config.setString(daemonKey + ".services folder", daemon.getDaemonServicesFolder());
 		}
 	}
 
@@ -164,7 +166,10 @@ public class DaemonManager
 		config.removeSection("daemons");
 		for (Iterator i = daemons.getHostNames().iterator(); i.hasNext();) {
 			String hostName = (String) i.next();
-			config.setInt("daemons." + StringEncoderDecoder.encodeDot(hostName) + ".port", daemons.get(hostName).getPort());
+      final String hostKey = "daemons." + StringEncoderDecoder.encodeDot(hostName);
+      final Daemon daemon = daemons.get(hostName);
+      config.setInt(hostKey + ".port", daemon.getPort());
+      config.setString(hostKey + ".services folder", daemon.getDaemonServicesFolder());
 		}
 		config.save();
 	}
