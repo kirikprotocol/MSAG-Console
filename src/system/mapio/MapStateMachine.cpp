@@ -2689,6 +2689,10 @@ USHORT_T Et96MapDelimiterInd(
       dialog->state = MAPST_WaitSubmitUSSDRequestConf;
       SendSubmitCommand(dialog.get());
       break;
+    case MAPST_WaitUSSDNotifyClose:
+      dialog->state = MAPST_WaitSubmitUSSDNotifyConf;
+      SendSubmitCommand(dialog.get());
+      break;
     default:
       throw MAPDIALOG_BAD_STATE(
         FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
