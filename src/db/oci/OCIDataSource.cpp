@@ -522,7 +522,35 @@ void OCIStatement::setInt32(int pos, int32_t val, bool null)
 void OCIStatement::setInt64(int pos, int64_t val, bool null)
     throw(SQLException)
 {
-    setUint64(pos, val, null);
+    OCIDataDescriptor* descriptor =
+        setField(pos, SQLT_INT, sizeof(int32_t), null);
+
+    if (!null)
+    {
+        if (val < 0) {
+            val = -val;
+            val = UINT64_SWAP_LE_BE_CONSTANT(val);
+            OCINumber zero;
+            OCINumberSetZero(errhp, (OCINumber *)&(zero));
+            OCINumber negative;
+            check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                                   (uword)sizeof(int64_t),
+                                   (uword)OCI_NUMBER_UNSIGNED,
+                                   (OCINumber *)&(negative)));
+            check(OCINumberSub(errhp, (CONST OCINumber *)&zero, 
+                               (CONST OCINumber *)&negative, 
+                               (OCINumber *)&(descriptor->number)));
+        }
+        else {
+            val = UINT64_SWAP_LE_BE_CONSTANT(val);
+            check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                                   (uword)sizeof(int64_t),
+                                   (uword)OCI_NUMBER_UNSIGNED,
+                                   (OCINumber *)&(descriptor->number)));
+        }
+    }
+    bind(pos, descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
 }
 void OCIStatement::setUint8(int pos, uint8_t val, bool null)
     throw(SQLException)
@@ -1192,8 +1220,39 @@ int32_t OCIRoutine::getInt32(const char* key)
 void OCIRoutine::setInt64(const char* key, int64_t val, bool null)
     throw(SQLException, InvalidArgumentException)
 {
-    val = UINT64_SWAP_LE_BE_CONSTANT(val);
-    defineSetInt(key, val, true, null);
+    OCIDataDescriptor* descriptor = findDescriptor(key);                
+    if (descriptor->type != SQLT_VNU)                                   
+        throw InvalidArgumentException();                               
+    
+    if (!null)                                                          
+    {                                                                   
+        if (val < 0) {
+            val = -val;
+            val = UINT64_SWAP_LE_BE_CONSTANT(val);
+            OCINumber zero;
+            OCINumberSetZero(errhp, (OCINumber *)&(zero));
+            OCINumber negative;
+            check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                                   (uword)sizeof(int64_t),
+                                   (uword)OCI_NUMBER_UNSIGNED,
+                                   (OCINumber *)&(negative)));
+            check(OCINumberSub(errhp, (CONST OCINumber *)&zero, 
+                               (CONST OCINumber *)&negative, 
+                               (OCINumber *)&(descriptor->number)));
+        }
+        else {
+            val = UINT64_SWAP_LE_BE_CONSTANT(val);
+            check(OCINumberFromInt(errhp, (CONST dvoid *)&val,
+                                   (uword)sizeof(int64_t),
+                                   (uword)OCI_NUMBER_UNSIGNED,
+                                   (OCINumber *)&(descriptor->number)));
+        }
+        descriptor->ind = OCI_IND_NOTNULL;                              
+    }                                                                   
+    else descriptor->ind = OCI_IND_NULL;                                
+    
+    bind((text *)key, strlen(key), descriptor->type, descriptor->data,  
+         descriptor->size, (dvoid *) &descriptor->ind);                 
 }
 int64_t OCIRoutine::getInt64(const char* key)
     throw(SQLException, InvalidArgumentException)
