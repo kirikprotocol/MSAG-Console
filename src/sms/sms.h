@@ -693,8 +693,14 @@ public:
 
   unsigned getShortMessageLength()
   {
-      // Need to implement this functionality.
-      return getIntProperty(Tag::SMPP_SM_LENGTH);
+      if( hasIntProperty(Tag::SMPP_SM_LENGTH) ) {
+          return getIntProperty(Tag::SMPP_SM_LENGTH);
+      } else if( hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) {
+          unsigned len = 0;
+          getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, &len);
+          return len;
+      }
+      return 0;
   }
 
   void encode(uint8_t* buffer,int& length) const;
