@@ -40,9 +40,9 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         throw ConfigException("Task switch timeout should be positive");
     
     std::auto_ptr<ConfigView> tasksThreadPoolCfgGuard(config->getSubConfig("TasksThreadPool"));
-    taskManager.init(tasksThreadPoolCfgGuard.get()); // loads up thread pool for tasks
+    taskManager.init(tasksThreadPoolCfgGuard.get());   // loads up thread pool for tasks
     std::auto_ptr<ConfigView> eventsThreadPoolCfgGuard(config->getSubConfig("EventsThreadPool"));
-    taskManager.init(eventsThreadPoolCfgGuard.get()); // loads up thread pool for events
+    eventManager.init(eventsThreadPoolCfgGuard.get()); // loads up thread pool for events
     
     std::auto_ptr<ConfigView> providerCfgGuard(config->getSubConfig("DataProvider"));
     provider.init(providerCfgGuard.get());
