@@ -1374,7 +1374,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     dialog->ussdMrRef = MakeMrRef();
     ET96MAP_APP_CNTX_T appContext;
     appContext.acType = ET96MAP_NETWORK_UNSTRUCTURED_SS_CONTEXT;
-    setVersion(appContext, dialog->version);
+    SetVersion(appContext, dialog->version);
     ET96MAP_USERDATA_T specificInfo;
     specificInfo.specificInfoLen=3+(dialog->m_msAddr.addressLength+1)/2;
     specificInfo.specificData[0] = 0x82;
