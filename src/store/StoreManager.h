@@ -298,6 +298,8 @@ namespace smsc { namespace store
         
         static log4cpp::Category        &log;
 
+        static bool needCache(Manager& config);
+
     public:
 
         /**
@@ -490,8 +492,8 @@ namespace smsc { namespace store
     
         struct SMSIdIdx
         {
-            static inline int CalcHash(const SMSId& id) {
-                return (int)id;
+            static inline unsigned int CalcHash(const SMSId& id) {
+                return (unsigned int)id;
             };
         };
         struct AddressIdx
@@ -503,32 +505,55 @@ namespace smsc { namespace store
             AddressIdx(const AddressIdx& idx) 
                 : oa(idx.oa), da(idx.da) {};
 
+            static unsigned getStrHash(const char* key)
+            {
+                char* curr = (char *)key;
+                unsigned count = *curr;
+                while(*curr) {
+                  count += 37 * count + *curr; curr++;
+                }
+                count=(unsigned)(( ( count * (unsigned)19L ) + 
+                                   (unsigned)12451L ) % (unsigned)8882693L);
+                return count;
+            };
+            
+            inline AddressIdx& operator =(const AddressIdx& idx) {
+                oa = idx.oa; da = idx.da;
+                return (*this);
+            };
             inline int operator ==(const AddressIdx& idx) {
                 return (oa == idx.oa && da == idx.da);
-            };
-            static inline int addressHash() {
-                // Add real hash calculation code here !!!
-                return 0; 
             };
         };
         struct ComplexStIdx : public AddressIdx
         {
-            const char* st;
+            EService st;
+
+            void setSt(const char* _st) {
+                st[0] = '\0';
+                if (_st) strncpy(st, _st, sizeof(st)-1);
+            };
 
             ComplexStIdx(const Address& _oa, const Address& _da, 
                          const char* _st) 
-                : AddressIdx(_oa, _da), st(_st) {};
+                : AddressIdx(_oa, _da) { setSt(_st); };
             ComplexStIdx(const ComplexStIdx& idx) 
-                : AddressIdx(idx), st(idx.st) {};
+                : AddressIdx(idx) { setSt(idx.st); };
             
+            inline ComplexStIdx& operator =(const ComplexStIdx& idx) {
+                AddressIdx::operator =(idx); setSt(idx.st);
+                return (*this);
+            };
             inline int operator ==(const ComplexStIdx& idx) {
                 return (AddressIdx::operator ==(idx) && 
-                        ((!st && !idx.st) || 
-                         (st && idx.st && strcmp(st, idx.st) == 0)));
+                        strcmp(st, idx.st) == 0);
             };
-            static inline int CalcHash(const ComplexStIdx& idx) {
-                // Add real hash calculation code here !!!
-                return 0;
+            static inline unsigned int CalcHash(const ComplexStIdx& idx) {
+                char buff[128];
+                sprintf(buff, ".%d.%d.%s+.%d.%d.%s+%s", 
+                        idx.oa.type, idx.oa.plan, idx.oa.value,
+                        idx.da.type, idx.da.plan, idx.da.value, idx.st);
+                return AddressIdx::getStrHash(buff);
             };
         };
         struct ComplexMrIdx : public AddressIdx
@@ -541,13 +566,20 @@ namespace smsc { namespace store
             ComplexMrIdx(const ComplexMrIdx& idx) 
                 : AddressIdx(idx), mr(idx.mr) {};
                 
+            inline ComplexMrIdx& operator =(const ComplexMrIdx& idx) {
+                AddressIdx::operator =(idx); mr = idx.mr;
+                return (*this);
+            };
             inline int operator ==(const ComplexMrIdx& idx) {
                 return (AddressIdx::operator ==(idx) && 
                         mr == idx.mr);
             };
-            static inline int CalcHash(const ComplexMrIdx& idx) {
-                // Add real hash calculation code here !!!
-                return idx.mr;
+            static inline unsigned int CalcHash(const ComplexMrIdx& idx) {
+                char buff[128];
+                sprintf(buff, ".%d.%d.%s+.%d.%d.%s+%d", 
+                        idx.oa.type, idx.oa.plan, idx.oa.value,
+                        idx.da.type, idx.da.plan, idx.da.value, idx.mr);
+                return AddressIdx::getStrHash(buff);
             };
         };
 

@@ -33,6 +33,20 @@ Mutex RemoteStore::fakeMutex;
 #endif
 
 /* ------------------------------ Store Manager ----------------------------- */
+bool StoreManager::needCache(Manager& config)
+{
+    bool cacheIsNeeded = false;
+    try
+    {
+        cacheIsNeeded = config.getBool("MessageStore.Cache.enabled");
+    }
+    catch (ConfigException& exc)
+    {
+        log.warn("Config parameter: <MessageStore.Cache.enabled> missed. "
+                 "Cache disabled.");
+    }
+    return cacheIsNeeded;
+}
 void StoreManager::startup(Manager& config)
     throw(ConfigException, ConnectionFailedException)
 {
@@ -43,14 +57,17 @@ void StoreManager::startup(Manager& config)
         log.info("Storage Manager is starting ... ");
         try
         {
-            instance = new RemoteStore(config);
-            //instance = new CachedStore(config);
 
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+            
+            instance = (needCache(config)) ? 
+                        new CachedStore(config) : new RemoteStore(config);
+            
             archiver = new Archiver(config);
             generator = new IDGenerator(archiver->getLastUsedId());
-            archiver->Start();
+//            archiver->Start();
 #else
+            instance = new RemoteStore(config);
             generator = new IDGenerator(0);
 #endif
         }
@@ -1194,12 +1211,12 @@ void SmsCache::putSms(IdxSMS* sm)
     __require__(sm);
 
     idCache.Insert(sm->id, sm);
-    mrCache.Insert(ComplexMrIdx(sm->originatingAddress,
+    /*mrCache.Insert(ComplexMrIdx(sm->originatingAddress,
                                 sm->dealiasedDestinationAddress,
                                 sm->messageReference), sm);
     stCache.Insert(ComplexStIdx(sm->originatingAddress,
                                 sm->dealiasedDestinationAddress,
-                                sm->eServiceType), sm);
+                                sm->eServiceType), sm);*/
 }
 bool SmsCache::delSms(SMSId id)
 {
@@ -1208,14 +1225,14 @@ bool SmsCache::delSms(SMSId id)
     idCache.Get(id, sm);
     if (!sm) return false;
     idCache.Delete(id);
-    ComplexMrIdx mrIdx(sm->originatingAddress,
+    /*ComplexMrIdx mrIdx(sm->originatingAddress,
                        sm->dealiasedDestinationAddress,
                        sm->messageReference);
     mrCache.Delete(mrIdx);
     ComplexStIdx stIdx(sm->originatingAddress,
                        sm->dealiasedDestinationAddress,
                        sm->eServiceType);
-    stCache.Delete(stIdx);
+    stCache.Delete(stIdx);*/
     delete sm;
     __trace2__("Message for smsId = %lld deleted from cache", id);
     return true;
@@ -1254,7 +1271,7 @@ SMS* SmsCache::getSms(const Address& oa, const Address& da,
 /* ------------------------------ Cached Store ------------------------------ */
 
 const int SMSC_MAX_UNCOMMITED_UPDATES = 1000;
-const int SMSC_MAX_SLEEP_INTERVAL = 1000;
+const int SMSC_MAX_SLEEP_INTERVAL = 60000;
 
 void CachedStore::loadMaxUncommitedCount(Manager& config) 
 {
@@ -1360,7 +1377,7 @@ int CachedStore::Execute() // Thread for updates appling & committing
     exitedEvent.Signal();
 }
 
-SMSId CachedStore::createSms(SMS& sms, SMSId id,
+/*SMSId CachedStore::createSms(SMS& sms, SMSId id,
                             const CreateMode flag = CREATE_NEW)
     throw(StorageException, DuplicateMessageException)
 {
@@ -1441,6 +1458,30 @@ SMSId CachedStore::createSms(SMS& sms, SMSId id,
         retId = RemoteStore::createSms(sms, id, CREATE_NEW);
         MutexGuard guard(cacheMutex);
         cache.putSms(new IdxSMS(id, sms));
+    }
+
+    return retId;
+}*/
+
+SMSId CachedStore::createSms(SMS& sms, SMSId id,
+                            const CreateMode flag = CREATE_NEW)
+    throw(StorageException, DuplicateMessageException)
+{
+    SMSId retId = 0;
+
+    if (flag == CREATE_NEW)
+    {
+        __trace2__("CreateSms: creating new smsId = %lld", id);
+        retId = RemoteStore::createSms(sms, id, CREATE_NEW);
+        MutexGuard guard(cacheMutex);
+        cache.putSms(new IdxSMS(id, sms));
+    }
+    else 
+    {
+        __trace2__("CreateSms: creating %d smsId = %lld", flag, id);
+        MutexGuard guard(cacheMutex);
+        processUpdates();
+        retId = RemoteStore::createSms(sms, id, flag);
     }
 
     return retId;
