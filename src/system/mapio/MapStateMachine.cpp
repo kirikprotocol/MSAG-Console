@@ -1379,6 +1379,11 @@ USHORT_T Et96MapUAbortInd (
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId));
+    if ( dialog.isnull() )
+      throw runtime_error(
+        FormatText("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId));
+    dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s dialog 0x%x , userReason: 0x%x",__FUNCTION__,dialogid_map,userReason_p?*userReason_p:-1);
     //throw runtime_error("UABORT");
     throw MAPDIALOG_TEMP_ERROR("UABORT",userReason_p?*userReason_p:-1);
@@ -1396,6 +1401,11 @@ USHORT_T Et96MapPAbortInd(
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId));
+    if ( dialog.isnull() )
+      throw runtime_error(
+        FormatText("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId));
+    dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s dialog 0x%x provReason: 0x%x",__FUNCTION__,dialogid_map,provReason);
     throw MAPDIALOG_TEMP_ERROR("PABORT",provReason);
   }MAP_CATCH(dialogid_map,dialogid_smsc);
