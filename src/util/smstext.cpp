@@ -237,6 +237,10 @@ int partitionSms(SMS* sms,int dstdc)
     //len+=udhilen;
   }
   int maxlen=134,maxfulllen=140;
+  if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+  {
+    maxfulllen=160;
+  }
   if(dc==DataCoding::DEFAULT)
   {
     int xlen=len;
@@ -269,6 +273,7 @@ int partitionSms(SMS* sms,int dstdc)
     if(udhilen+len<=maxfulllen)return psSingle;
   }
   if(udhi)return psErrorUdhi;
+  if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))return psErrorUssd;
 
   int parts=1;
   uint16_t offsets[256];

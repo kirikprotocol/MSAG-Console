@@ -713,6 +713,7 @@ StateType StateMachine::submit(Tuple& t)
       src_proxy->putCommand(resp);
     }catch(...)
     {
+      __warning__("SUBMIT_SM: failed to put response command");
     }
     __warning2__("SUBMIT_SM: invalid datacoding %d",sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING));
     return ERROR_STATE;
@@ -1043,6 +1044,28 @@ StateType StateMachine::submit(Tuple& t)
     __warning__("SUBMIT_SM: udhi present in concatenated message!!!");
     return ERROR_STATE;
   }
+
+  if(pres==psErrorUssd)
+  {
+    sms->lastResult=Status::USSDMSGTOOLONG;
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           Status::USSDMSGTOOLONG,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+      __warning__("SUBMIT_SM: failed to put response command");
+    }
+    __warning__("SUBMIT_SM: ussd message too long!!!");
+    return ERROR_STATE;
+  }
+
 
   if(pres==psMultiple)
   {

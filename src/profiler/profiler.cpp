@@ -16,6 +16,7 @@
 #include "util/recoder/recode_dll.h"
 #include "util/smstext.h"
 #include "util/Logger.h"
+#include "system/status.h"
 
 #include "resourcemanager/ResourceManager.hpp"
 
@@ -25,6 +26,8 @@ namespace profiler{
 using namespace smsc::core::buffers;
 using smsc::util::Exception;
 using namespace smsc::util;
+
+using namespace smsc::system;
 
 using namespace smsc::resourcemanager;
 
@@ -347,12 +350,22 @@ int Profiler::Execute()
        (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3f)!=0
       )
     {
-      status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,SmppStatusSet::ESME_RINVESMCLASS);
+      status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVESMCLASS);
       resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
                                            cmd->get_dialogId(),status);
       putIncomingCommand(resp);
       continue;
     };
+
+    if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) && sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=1)
+    {
+      __warning2__("Profiler: ussd service op != 1");
+      status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVOPTPARAMVAL);
+      resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
+                                           cmd->get_dialogId(),status);
+      putIncomingCommand(resp);
+      continue;
+    }
 
     Address& addr=sms->getOriginatingAddress();
     //len = sms->getMessageBody().getData( (uint8_t*)body );
@@ -543,7 +556,7 @@ int Profiler::Execute()
     ans.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
     ans.setIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE,
       sms->getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
-    if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+    if(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==1)
     {
       ans.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,17);
     }
