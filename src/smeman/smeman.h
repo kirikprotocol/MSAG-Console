@@ -128,6 +128,15 @@ public:
   {
     return idx;
   }
+  virtual int getBindMode()
+  {
+    MutexGuard guard(mutex);
+    if ( proxy )
+    {
+      return proxy->getBindMode();
+    }
+    else throw runtime_error("proxy not connected");
+  }
   virtual bool getPeers(char* in,char* out)
   {
     MutexGuard guard(mutex);
