@@ -10,7 +10,7 @@
 #include <string>
 
 #if defined USE_MAP
-extern void MAPIO_PutCommand(const smsc::smeman::SmscCommad& cmd );
+extern void MAPIO_PutCommand(const smsc::smeman::SmscCommand& cmd );
 #endif
 
 namespace smsc{

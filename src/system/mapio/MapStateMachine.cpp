@@ -1,6 +1,6 @@
 #if defined USE_MAP
 
-#include MapDialog_spcific.cxx"
+#include "MapDialog_spcific.cxx"
 
 static string FormatText(const char* format,...)
 {
