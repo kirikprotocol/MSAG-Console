@@ -329,6 +329,10 @@ public:
     if(container) delete container;
     container=NULL;
   }
+
+  unsigned getDialogCount() {
+    hash.Count();
+  }
   
   unsigned getNumberOfDialogs()
   {

@@ -411,12 +411,13 @@ void MAPSTATS_Flush(unsigned x,bool dump)
     case MAPSTATS__SEC: 
       {
         log4cpp::Category* log = MAPSTATS_GetLoggerSec();
-        log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d, rcv %d",
+        log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d, rcv %d",
           MAPSTATS_open_in[0],
           MAPSTATS_open_out[0],
           MAPSTATS_close_in[0],
           MAPSTATS_close_out[0],
           MAPSTATS_dialogs_no,
+          MapDialogContainer::getInstance()->getDialogCount(),
           MAPSTATS_recv[0]
           );
       }
