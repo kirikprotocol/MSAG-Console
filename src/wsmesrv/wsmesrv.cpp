@@ -18,6 +18,24 @@
 
 #define RETURN_VALUE MSG_OK
 
+int going=0;
+
+void Deinit()
+{
+  printf( "Exiting program\n" );
+  going = 0;
+  EINSS7_I97TUnBindReq(SSN,USER);
+  sleep(2);
+  MsgRel(USER,PROVIDER);
+  MsgClose(USER);
+  MsgExit();
+  exit(0);
+}
+
+static void sighandler( int signal ) {
+  Deinit();
+}
+
 void Dump(UCHAR_T* buf,int len)
 {
   for(int i=0;i<len;i++)
@@ -69,12 +87,13 @@ USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T ssn,
   return RETURN_VALUE;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   MSG_T message;
   USHORT_T result;
   thread_t threadId;
 
-//  sigset( SIGINT, sighandler );
+  sigset( SIGINT, sighandler );
   mmsWaitDelimiter.dialogueId = 0;
   hlrResult.dialogueId = 0;
 
@@ -86,8 +105,7 @@ int main(int argc, char **argv) {
     printf("\nMsgInit Failed with code %d\n",result);
     exit(1);
   }
-  printf( "MsgInit\n");
-  result = MsgOpen(USER);
+  printf( "MsgInit\n");  result = MsgOpen(USER);
 
   if(result != 0) {
     printf("\nMsgOpen failed with code %d\n",result);
@@ -101,8 +119,7 @@ int main(int argc, char **argv) {
     printf("\nMsgConn TCAP failed with code %d\n",result);
     exit(3);
   }
-  printf( "MsgConn TCAP\n");
-
+  printf( "MsgConn TCAP\n");
 /*  result = MsgConn(USER,USER);
   if(result != 0) {
     printf("\nMsgConn to myself failed with code %d\n",result);
@@ -116,8 +133,7 @@ int main(int argc, char **argv) {
     exit(3);
   }
 
-  printf( "EINSS7_I97TBindReq\n");
-
+  printf( "EINSS7_I97TBindReq\n");
   going = 1;
   message.receiver = USER;
 
@@ -128,20 +144,14 @@ int main(int argc, char **argv) {
     if( result == MSG_TIMEOUT ) {
       continue;
     }
-    printf( "MsgRecv result=%d\n",result);
-
+    printf( "MsgRecv result=%d\n",result);
     if( result != MSG_OK ) going = 0;
     else {
         result = EINSS7_I97THandleInd(&message);
-        printf( "MsgHandle result=%d\n",result);
-        if(result != MSG_OK) going = 0;
+        printf( "MsgHandle result=%d\n",result);        if(result != MSG_OK) going = 0;
     }
 
   }
-  EINSS7_I97TUnBindReq(SSN, USER);
-  sleep(2);
-  MsgRel(USER,PROVIDER);
-  MsgClose(USER);
-  MsgExit();
+  Deinit();
   return result;
 }
