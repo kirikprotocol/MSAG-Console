@@ -409,4 +409,25 @@ public class Config implements Cloneable
     } else
       return false;
   }
+
+  public void removeParamsFromSection(String sectionName)
+  {
+    final int dotpos = sectionName.length();
+    for (Iterator i = new ArrayList(params.keySet()).iterator(); i.hasNext();) {
+      String name = (String) i.next();
+      if (name.length() > (dotpos + 1) && name.startsWith(sectionName) && name.lastIndexOf('.') == dotpos) {
+        params.remove(name);
+      }
+    }
+  }
+
+  public void copySectionParamsFromConfig(Config configToCopyFrom, String sectionName)
+  {
+    final int sectionNameLength = sectionName.length();
+    for (Iterator i = configToCopyFrom.getParameterNames().iterator(); i.hasNext();) {
+      String paramName = (String) i.next();
+      if (paramName.length() > (sectionNameLength+1) && paramName.startsWith(sectionName) && paramName.lastIndexOf('.') == sectionNameLength)
+        params.put(paramName, configToCopyFrom.params.get(paramName));
+    }
+  }
 }
