@@ -269,7 +269,8 @@ void SmppTestCases::checkWaitTime(time_t checkTime)
 		found++;
 		__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 		PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-		if (!routeChecker->isDestReachable(pdu->get_message().get_dest(), true))
+		if (!routeChecker->isDestReachable(pdu->get_message().get_source(),
+			pdu->get_message().get_dest(), true))
 		{
 			continue;
 		}
@@ -324,7 +325,8 @@ void SmppTestCases::checkValidTime(time_t checkTime)
 		found++;
 		__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 		PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-		if (!routeChecker->isDestReachable(pdu->get_message().get_dest(), true))
+		if (!routeChecker->isDestReachable(pdu->get_message().get_source(),
+			pdu->get_message().get_dest(), true))
 		{
 			pduData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
 		}

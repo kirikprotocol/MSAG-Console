@@ -223,7 +223,7 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	//checkSubmitSmResp, checkSubmitTime, checkWaitTime, checkValidTime
 	//pduData->responseFlag = PDU_REQUIRED_FLAG;
 	pduData->deliveryFlag = routeChecker->isDestReachable(
-		pdu->get_message().get_dest(), false) ?
+		pdu->get_message().get_source(), pdu->get_message().get_dest(), false) ?
 		PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
 	uint8_t regDelivery = pdu->get_message().get_registredDelivery();
 	pduData->deliveryReceiptFlag =

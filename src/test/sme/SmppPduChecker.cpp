@@ -40,7 +40,8 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	//__require__(pduData->waitTime == waitTime);
 	set<int> res;
 	//без проверки на bound sme
-	if (!routeChecker->isDestReachable(pdu->get_message().get_dest(), false))
+	if (!routeChecker->isDestReachable(pdu->get_message().get_source(),
+		pdu->get_message().get_dest(), false))
 	{
 		res.insert(NO_ROUTE);
 	}
