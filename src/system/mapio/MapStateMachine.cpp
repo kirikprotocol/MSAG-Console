@@ -564,13 +564,13 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
     unsigned char* tvp = (unsigned char*)(ud->signalInfo+2+msa_len+1+1);
     __trace2__("MAP:%s: TVP = 0x%x , first octet 0x%x",__FUNCTION__,(unsigned)ssfh->tp_vp,(unsigned)*tvp);
     time_t timeValue = time(0);
-    if ( ssfh->tp_vp == 1 ){
+    if ( ssfh->tp_vp == 2 ){
 parse_tvp_scheme1:
       if ( *tvp <= 143 ) timeValue+=(*tvp+1)*(5*60);
       else if ( *tvp <= 167 ) timeValue+=(12*60*60)+((*tvp-143)*(30*60));
       else if ( *tvp <= 196 ) timeValue+=(*tvp-166)*(60*60*24);
       else /*if ( *tvp <= 255 )*/ timeValue+=(*tvp-192)*(60*60*24*7);
-    }else if (ssfh->tp_vp == 2 ){
+    }else if (ssfh->tp_vp == 1 ){
       if (tpvpLen!=7) 
         throw runtime_error(FormatText("MAP:%s:incorrect tpvp data",__FUNCTION__));
 parse_tvp_scheme2:
