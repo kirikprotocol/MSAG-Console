@@ -522,16 +522,19 @@ extern "C" void clearSignalMask(void)
 
 struct ShutdownThread : public Thread
 {
+    Event shutdownEvent;
+
     ShutdownThread() : Thread() {};
     virtual ~ShutdownThread() {};
 
-    virtual int Execute()
-    {
+    virtual int Execute() {
         clearSignalMask();
         setShutdownHandler();
-        Event shutdownEvent;
         shutdownEvent.Wait();
         return 0;
+    };
+    void Stop() {
+        shutdownEvent.Signal();    
     };
 } shutdownThread;
 
@@ -700,5 +703,6 @@ int main(void)
 
     DataSourceLoader::unload();
     //smsc_log_debug(logger, "Exited !!!");
+    shutdownThread.Stop();
     return resultCode;
 }
