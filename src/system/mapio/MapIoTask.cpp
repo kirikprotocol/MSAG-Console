@@ -12,9 +12,7 @@ using namespace std;
 #ifdef USE_MAP
 
 //#define SMSC_FORWARD_RESPONSE 0x001
-log4cpp::Category &time_logger;
-
-static unsigned __global_bind_counter = 0;
+static unsigned __global_bind_counter = 0;
 static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
 static bool MAP_isAlive = false;
@@ -119,6 +117,7 @@ void MapIoTask::dispatcher()
   struct timeval utime, curtime;
   APP_EVENT_T *eventlist = NULL;
   INT_T	       eventlist_len = 0;
+  log4cpp::Category& time_logger = smsc::util::Logger::getCategory("map.time");
   
   message.receiver = MY_USER_ID;
   for(;;){
@@ -220,7 +219,6 @@ restart:
 
 void MapIoTask::init(unsigned timeout)
 {
-  time_logger = smsc::util::Logger::getCategory("map.time");
   USHORT_T err;
   __global_bind_counter = 0;
   __pingPongWaitCounter = 0;
