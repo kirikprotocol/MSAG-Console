@@ -396,8 +396,15 @@ void OverwriteStatement::bindSms(SMS& sms)
     bind(i++, SQLT_UIN, (dvoid *)&(bodyTextLen),
          (sb4) sizeof(bodyTextLen));
     
-    indMsgRef = (sms.hasBinProperty(Tag::SMSC_CONCATINFO)) ? 
-                OCI_IND_NOTNULL:OCI_IND_NULL;
+    try 
+    {
+        indMsgRef = (sms.hasBinProperty(Tag::SMSC_CONCATINFO)) ? 
+                    OCI_IND_NOTNULL:OCI_IND_NULL;
+    } 
+    catch (...) {
+        throw StorageException("Incorrect Sms body data. Set/Get Property failed!");
+    }
+
     bind(i++, SQLT_UIN, (dvoid *)&(sms.concatMsgRef),
          (sb4) sizeof(sms.concatMsgRef), &indMsgRef);
     bind(i++, SQLT_UIN, (dvoid *)&(sms.concatSeqNum),
@@ -512,8 +519,15 @@ void StoreStatement::bindSms(SMS& sms)
     bind(i++, SQLT_UIN, (dvoid *)&(bodyTextLen),
          (sb4) sizeof(bodyTextLen));
 
-    indMsgRef = (sms.hasBinProperty(Tag::SMSC_CONCATINFO)) ? 
-                OCI_IND_NOTNULL:OCI_IND_NULL;
+    try 
+    {
+        indMsgRef = (sms.hasBinProperty(Tag::SMSC_CONCATINFO)) ? 
+                    OCI_IND_NOTNULL:OCI_IND_NULL;
+    } 
+    catch (...) {
+        throw StorageException("Incorrect Sms body data. Set/Get Property failed!");
+    }
+
     bind(i++, SQLT_UIN, (dvoid *)&(sms.concatMsgRef),
          (sb4) sizeof(sms.concatMsgRef), &indMsgRef);
     bind(i++, SQLT_UIN, (dvoid *)&(sms.concatSeqNum),

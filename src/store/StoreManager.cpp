@@ -638,9 +638,15 @@ void RemoteStore::doReplaceSms(StorageConnection* connection,
         throw;
     }
 
-    body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, (const char*)newMsg,
-                        (unsigned)newMsgLen);
-    body.setIntProperty(Tag::SMPP_SM_LENGTH, (uint32_t)newMsgLen);
+    try 
+    {
+        body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, (const char*)newMsg,
+                            (unsigned)newMsgLen);
+        body.setIntProperty(Tag::SMPP_SM_LENGTH, (uint32_t)newMsgLen);
+    } 
+    catch (...) {
+        throw StorageException("Incorrect Sms body data. Set/Get Property failed!");
+    }
 
     ReplaceStatement* replaceStmt;
     if (waitTime == 0 && validTime == 0)
@@ -752,10 +758,16 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
     sms->nextTime = waitTime;
     sms->attempts = 0;
 
-    sms->getMessageBody().setBinProperty(Tag::SMPP_SHORT_MESSAGE,
-        (const char*)newMsg, (unsigned)newMsgLen);
-    sms->getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH,
-        (uint32_t)newMsgLen);
+    try 
+    {
+        sms->getMessageBody().setBinProperty(Tag::SMPP_SHORT_MESSAGE,
+            (const char*)newMsg, (unsigned)newMsgLen);
+        sms->getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH,
+            (uint32_t)newMsgLen);
+    } 
+    catch (...) {
+        throw StorageException("Incorrect Sms body data. Set/Get Property failed!");
+    }
 
     //fakeStore.Insert(id, new SMS(sms));
 
