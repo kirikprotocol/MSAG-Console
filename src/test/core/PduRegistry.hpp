@@ -12,6 +12,8 @@ namespace test {
 namespace core {
 
 using std::map;
+using std::multimap;
+using std::pair;
 using std::vector;
 using smsc::sms::SMSId;
 using smsc::sms::Address;
@@ -67,11 +69,14 @@ class PduRegistry
 	typedef map<const SMSId, PduData*> SmsIdMap;
 	typedef map<const uint32_t, PduData*> SeqNumMap;
 	typedef map<const uint16_t, PduData*> MsgRefMap;
+	typedef multimap<const time_t, PduData*> WaitTimeMap;
+	typedef pair<const time_t, PduData*> WaitTimeMapPair;
 	Mutex mutex;
 	uint16_t msgRef;
 	SmsIdMap idMap;
 	SeqNumMap seqNumMap;
 	MsgRefMap msgRefMap;
+	WaitTimeMap waitTimeMap;
 
 public:
 	Mutex& getMutex()
@@ -115,7 +120,7 @@ public:
 
 	bool removePdu(const PduData& pduData);
 
-	vector<PduData*> getExpiredPdu(time_t time);
+	//vector<PduData*> getExpiredPdu(time_t time);
 
 	PduData* getFirstPendingSubmitSmPdu(time_t waitTime);
 };
