@@ -120,6 +120,18 @@ static unsigned MakeMrRef()
   return time(0)%0x0ffff;
 }
 
+
+static string FormatText(const char* format,...)
+{
+  auto_ptr<char> b(new char[1024]);
+  memset(b.get(),0,1024);
+  va_list arg;
+  va_start(arg,format);
+  vsnprintf(b.get(),1024-1,format,arg);
+  va_end(arg);
+  return string(b.get());
+}
+
 static inline
 void SetVersion(ET96MAP_APP_CNTX_T& ac,unsigned version){
   if ( version > 3 || version == 0 ) throw runtime_error(
@@ -135,17 +147,6 @@ void SetVersion(ET96MAP_APP_CNTX_T& ac,unsigned version){
     ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_1;
     break;
   }
-}
-
-static string FormatText(const char* format,...)
-{
-  auto_ptr<char> b(new char[1024]);
-  memset(b.get(),0,1024);
-  va_list arg;
-  va_start(arg,format);
-  vsnprintf(b.get(),1024-1,format,arg);
-  va_end(arg);
-  return string(b.get());
 }
 
 #define MAP_ERRORS_BASE Status::MAP_ERR_BASE
