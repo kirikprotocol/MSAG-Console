@@ -452,6 +452,12 @@ static void SendSubmitCommand(MapDialog* dialog)
   __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
   if ( dialog->sms.get() == 0 )
     throw runtime_error("MAP::hereis no SMS for submiting");
+  Descriptor desc;
+  desc.setImsi(dialog->s_imsi.length(),dialog->s_imsi.c_str());
+  __trace2__("MAP::Send OK to SMSC: IMSI = %s",dialog->s_imsi.c_str());
+  desc.setMsc(dialog->s_msc.length(),dialog->s_msc.c_str());
+  __trace2__("MAP::Send OK to SMSC: MSC = %s",dialog->s_msc.c_str());
+  dialog->sms->setOriginatingDescriptor(desc);
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
   SmscCommand cmd = SmscCommand::makeSumbmitSm(
     *dialog->sms.get(),((uint32_t)dialog->dialogid_map)&0xffff);
