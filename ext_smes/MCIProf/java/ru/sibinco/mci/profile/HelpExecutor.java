@@ -30,7 +30,7 @@ public class HelpExecutor implements Executor
     helpBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_HELP);
     try {
       pageInfo = Transliterator.translit(helpBundle.getString(Constants.PAGE_INFO));
-      pageManual = Transliterator.translit(helpBundle.getString(Constants.PAGE_MAN));
+      pageManual = helpBundle.getString(Constants.PAGE_MAN);
     } catch (ScenarioResourceBundleException e) {
       final String err = "Executor init error";
       logger.error(err, e);
@@ -42,7 +42,7 @@ public class HelpExecutor implements Executor
   {
     Message resp = new Message();   resp.setMessageString(pageInfo);
     Message manual = new Message(); manual.setMessageString(pageManual);
-    return new ExecutorResponse(new Message[]{resp, manual}, false);
+    return new ExecutorResponse(new Message[]{resp, manual}, true);
   }
 
 }
