@@ -17,6 +17,7 @@
   <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
 
   <property environment="env"/>
+  <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
   <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
   <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
@@ -43,11 +44,7 @@ Targets:
     <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="build"/>
   </target>
 
-  <target name="distr_properties">
-    <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
-  </target>
-
-  <target name="rmdistr" depends="distr_properties">
+  <target name="rmdistr">
     <delete dir="${DISTR_DIR}"/>
   </target>
 
