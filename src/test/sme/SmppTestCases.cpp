@@ -373,6 +373,7 @@ void SmppTestCases::checkMissingPdu()
 	if (pduReg)
 	{
 		MutexGuard mguard(pduReg->getMutex());
+		__cfg_int__(timeCheckAccuracy);
 		time_t checkTime = time(NULL) - timeCheckAccuracy;
 		checkSubmitTime(checkTime);
 		checkWaitTime(checkTime);
