@@ -2,7 +2,7 @@
 #define SSN 8
 #define MAXENTRIES 10
  
-#define _CB(a) extern "C" USHORT_T a() {fprintf(stderr,"MAP::%s callback was called\n",#a);return MSG_OK;}
+#define _CB(a) USHORT_T a() {fprintf(stderr,"MAP::%s callback was called\n",#a);return MSG_OK;}
 
 #ifdef USE_MAPIO
 
@@ -16,6 +16,8 @@ static void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T
   Et96MapCloseReq (lssn,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
   MapDialogContainer::getInstance()->dropDialog(dialogId);
 }
+
+extern "C"{
 
 _CB(MapSubmitSMInd)              
 _CB(MapReportSMInd)
@@ -160,6 +162,7 @@ USHORT_T Et96MapStateInd (
   return MSG_OK;
 }
 
+} // extern "C"
 
 void MapIoTask::deinit()
 {
