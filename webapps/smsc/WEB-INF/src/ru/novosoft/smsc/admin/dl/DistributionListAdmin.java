@@ -18,18 +18,18 @@ public interface DistributionListAdmin
         throws AdminException, PrincipalAlreadyExistsException;
 
     public void addMember(String dlname, String address)
-        throws AdminException, MemberAlreadyExistsException;
+        throws AdminException, ListNotExistsException, MemberAlreadyExistsException;
     public void deleteMember(String dlname, String address)
-        throws AdminException, MemberNotExistsException;
+        throws AdminException, ListNotExistsException, MemberNotExistsException;
     public void removeMembers(String dlname)
         throws AdminException, ListNotExistsException;
     public List members(String dlname, String submitter)
-        throws AdminException, ListNotExistsException, IllegalSubmitterException;
+        throws AdminException, ListNotExistsException, SubmitterNotExistsException;
 
     public void grantPosting(String dlname, String address)
-        throws AdminException, ListNotExistsException;
+        throws AdminException, ListNotExistsException, SubmitterAlreadyExistsException;
     public void revokePosting(String dlname, String address)
-        throws AdminException, ListNotExistsException;
+        throws AdminException, ListNotExistsException, SubmitterNotExistsException;
 
     public void addDistributionList(DistributionList dl)
         throws AdminException, ListAlreadyExistsException;
