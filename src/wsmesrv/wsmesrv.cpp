@@ -61,6 +61,8 @@ USHORT_T EINSS7_I97TBeginInd(   UCHAR_T ssn,
   fprintf(stderr,"BeginInd ===>>>\n");
   fprintf(stderr,"ssn=%d, userId=%d, dId=%d\n",
     (int)ssn,(int)userId,(int)dialogueId);
+  fprintf(stderr,"priOrder=%d, qualityOfService=%d, compPresent=%d\n",
+    (int)priOrder,(int)qualityOfService,(int)compPresent);
   Dump("ac",appContext_p,appContextLength);
   Dump("ui",userInfo_p,userInfoLength);
   Dump("orgAddr",orgAdr_p,orgAdrLength);
@@ -88,7 +90,8 @@ USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T ssn,
 
   fprintf(stderr,"ssn=%d, userId=%d, dId=%d, invokeId=%d\n",
     (int)ssn,(int)userId,(int)dialogueId,(int)invokeId);
-
+  fprintf(stderr,"lastComponent=%d, linkedIdUsed=%d, linkedId=%d, operationTag=%d\n",
+  (int)lastComponent,(int)linkedIdUsed,(int)linkedId,(int)operationTag);
   Dump("opcode",operationCode_p,operationLength);
   Dump("param",parameters_p,paramLength);
 
