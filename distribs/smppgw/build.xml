@@ -2,8 +2,8 @@
 
   <target name="set_properties">
     <property file="build.properties"/>
-    <fail unless="${BUILD_DIR}" message="BUILD_DIR property not specified please configure build.properties file"/>
-    <fail unless="${CVS_DIR}" message="BUILD_DIR property not specified please configure build.properties file"/> 
+    <fail unless="${BUILD_DIR}" message="BUILD_DIR property not specified. Please configure build.properties file"/>
+    <fail unless="${CVS_DIR}" message="BUILD_DIR property not specified. Please configure build.properties file"/>
     <property environment="env"/>
     <property name="sibinco.cvs" location="${CVS_DIR}"/>
     <property name="sibinco.src" location="${sibinco.cvs}/src"/>
@@ -131,5 +131,8 @@
   </target>
   <target name="clean" depends="set_properties">
     <delete dir="${gw.exploded}"/>
+  </target>
+  <target name="clean_build" depends="set_properties">
+    <delete dir="${BUILD_DIR}"/>
   </target>
 </project>
