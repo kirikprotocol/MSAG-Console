@@ -458,6 +458,11 @@ public:
 		sess.sendBytes(pb);
 		__check__(1, checkComplete(timeCheckAccuracy));
 		__tc_ok_cond__;
+		if (invalidSize)
+		{
+			__cfg_int__(proxyTimeout);
+			sleep(proxyTimeout);
+		}
 	}
 	virtual void handleEvent(SmppHeader *pdu)
 	{
@@ -479,7 +484,7 @@ public:
 	}
 	virtual void handleError(int errorCode)
 	{
-		__trace2__("handleError(): errorCode = %d", errorCode);
+		__trace2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
 		__decl_tc__;
 		__tc__("protocolError.invalidBind.pduSize.connectionClose");
 		__check__(1, invalidSize);
@@ -645,6 +650,11 @@ public:
 		*/
 		__check__(1, checkComplete(timeCheckAccuracy));
 		__tc_ok_cond__;
+		if (invalidSize)
+		{
+			__cfg_int__(proxyTimeout);
+			sleep(proxyTimeout);
+		}
 	}
 	virtual void handleEvent(SmppHeader* pdu)
 	{
@@ -670,7 +680,7 @@ public:
 	}
 	virtual void handleError(int errorCode)
 	{
-		__trace2__("handleError(): errorCode = %d", errorCode);
+		__trace2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
 		__decl_tc__;
 		__tc__("protocolError.invalidPdu.pduSize.connectionClose");
 		__check__(1, invalidSize);
@@ -763,7 +773,7 @@ public:
 	}
 	virtual void handleError(int errorCode)
 	{
-		__warning2__("handleError(): errorCode = %d", errorCode);
+		__warning2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
 	}
 };
 
@@ -939,6 +949,11 @@ public:
 		sess.sendBytes(pb);
 		__check__(1, checkComplete(timeCheckAccuracy));
 		__tc_ok_cond__;
+		if (invalidSize)
+		{
+			__cfg_int__(proxyTimeout);
+			sleep(proxyTimeout);
+		}
 	}
 	virtual void handleEvent(SmppHeader* pdu)
 	{
@@ -969,7 +984,7 @@ public:
 	}
 	virtual void handleError(int errorCode)
 	{
-		__trace2__("handleError(): errorCode = %d", errorCode);
+		__trace2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
 		__decl_tc__;
 		__tc__("protocolError.submitAfterUnbind.pduSize.connectionClose");
 		__check__(1, invalidSize);
@@ -1062,7 +1077,7 @@ public:
 	}
 	virtual void handleError(int errorCode)
 	{
-		__warning2__("handleError(): errorCode = %d", errorCode);
+		__warning2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
 	}
 };
 
@@ -1179,7 +1194,7 @@ public:
 	}
 	virtual void handleError(int errorCode)
 	{
-		__warning2__("handleError(): errorCode = %d", errorCode);
+		__warning2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
 	}
 };
 
@@ -1282,7 +1297,7 @@ public:
 	}
 	virtual void handleError(int errorCode)
 	{
-		__warning2__("handleError(): errorCode = %d", errorCode);
+		__warning2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
 	}
 };
 
@@ -1394,7 +1409,7 @@ public:
 	}
 	virtual void handleError(int errorCode)
 	{
-		__warning2__("handleError(): errorCode = %d", errorCode);
+		__warning2__("handleError(): scenario = %p, errorCode = %d", this, errorCode);
 	}
 };
 
