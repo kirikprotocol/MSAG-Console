@@ -271,10 +271,11 @@ StateType StateMachine::submit(Tuple& t)
 
   __require__(src_proxy!=NULL);
 
-  __trace2__("StateMachine::submit:%lld",t.msgId);
-
   SMS* sms = t.command->get_sms();
   uint32_t dialogId =  t.command->get_dialogId();
+
+  __trace2__("SUBMIT_SM: msgId=%lld, seq=%d, from=%s",t.msgId,dialogId,src_proxy->getSystemId());
+
 
   if(sms->getNextTime()==-1)
   {
@@ -431,7 +432,6 @@ StateType StateMachine::submit(Tuple& t)
   time_t now=time(NULL);
   sms->setSubmitTime(now);
 
-  __trace2__("SUBMIT: seq=%d",dialogId);
   int dest_proxy_index;
   // route sms
   //SmeProxy* dest_proxy = 0;
@@ -450,7 +450,7 @@ StateType StateMachine::submit(Tuple& t)
   }
   sms->setDealiasedDestinationAddress(dst);
   smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms->getOriginatingAddress());
-  __trace2__("SUBMIT: lookup .%d.%d.%20s, result: %d,%d",sms->getOriginatingAddress().type,
+  __trace2__("SUBMIT_SM: lookup .%d.%d.%20s, result: %d,%d",sms->getOriginatingAddress().type,
     sms->getOriginatingAddress().plan,sms->getOriginatingAddress().value,
     profile.reportoptions,profile.codepage);
 
@@ -493,6 +493,8 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  __trace2__("SUBMIT_SM: route found, routeId=%s, smeSystemId=%s",ri.routeId.c_str(),ri.smeSystemId.c_str());
+
   if(ri.smeSystemId=="MAP_PROXY" && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
   {
     unsigned len=sms->getIntProperty(Tag::SMPP_SM_LENGTH);
@@ -500,6 +502,7 @@ StateType StateMachine::submit(Tuple& t)
     {
       sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
     }
+    __trace2__("SUBMIT_SM: sim specific, len=%d",len);
     if(len>140)
     {
       sms->lastResult=Status::INVMSGLEN;
@@ -852,7 +855,7 @@ StateType StateMachine::submit(Tuple& t)
 StateType StateMachine::forward(Tuple& t)
 {
   SMS sms;
-  __trace2__("FORWARD:%lld",t.msgId);
+  __trace2__("FORWARD: msgId=%lld",t.msgId);
   try{
     store->retriveSms((SMSId)t.msgId,sms);
   }catch(...)
@@ -1048,7 +1051,7 @@ StateType StateMachine::forward(Tuple& t)
 
 StateType StateMachine::deliveryResp(Tuple& t)
 {
-  __trace2__("delivering resp for :%lld",t.msgId);
+  __trace2__("DELIVERYRESP: msgId=%lld",t.msgId);
   //__require__(t.state==DELIVERING_STATE);
   if(t.state!=DELIVERING_STATE)
   {
@@ -1355,7 +1358,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
 StateType StateMachine::alert(Tuple& t)
 {
-  __trace2__("ALERT: %lld",t.msgId);
+  __trace2__("ALERT: msgId=%lld",t.msgId);
   //time_t now=time(NULL);
   Descriptor d;
   SMS sms;
@@ -1384,7 +1387,7 @@ StateType StateMachine::alert(Tuple& t)
 
 StateType StateMachine::replace(Tuple& t)
 {
-  __trace2__("REPLACE:msgid=%lld",t.msgId);
+  __trace2__("REPLACE: msgid=%lld",t.msgId);
 
 #define __REPLACE__RESPONSE(status)   \
     try{                              \
@@ -1552,7 +1555,7 @@ StateType StateMachine::replace(Tuple& t)
 
 StateType StateMachine::query(Tuple& t)
 {
-  __trace2__("QUERY:msguid=%lld",t.msgId);
+  __trace2__("QUERY: msgId=%lld",t.msgId);
   SMS sms;
   try{
     Address addr(t.command->get_querySm().sourceAddr.get());
@@ -1603,7 +1606,7 @@ StateType StateMachine::query(Tuple& t)
 
 StateType StateMachine::cancel(Tuple& t)
 {
-  __trace2__("CANCEL: msgid=%lld",t.msgId);
+  __trace2__("CANCEL: msgId=%lld",t.msgId);
   SMS sms;
   try{
     Address addr(t.command->get_cancelSm().sourceAddr.get());
