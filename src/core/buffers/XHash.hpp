@@ -16,7 +16,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "util/debug.h"
+//#include "util/debug.h"
 namespace smsc{
 namespace core{
 namespace buffers{
