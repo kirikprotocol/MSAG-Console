@@ -874,6 +874,7 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
       result.appendValueToStringList(divertActive);
       result.appendValueToStringList(profile.divertModifiable ? "true" : "false");
       result.appendValueToStringList((profile.codepage & 0x80) != 0 ? "true" : "false");
+      result.appendValueToStringList(profile.udhconcat ? "true" : "false");
 
       result.appendValueToStringList(getProfileMatchTypeStr(matchType));
       result.appendValueToStringList(matchAddress.c_str());
@@ -929,6 +930,7 @@ throw (AdminException)
       result.appendValueToStringList(divertActive);
       result.appendValueToStringList(profile.divertModifiable ? "true" : "false");
       result.appendValueToStringList((profile.codepage & 0x80) != 0 ? "true" : "false");
+      result.appendValueToStringList(profile.udhconcat ? "true" : "false");
       return result;
     }
     else
@@ -953,7 +955,8 @@ throw (AdminException)
   const char* divert            = *i++;
   const char* divertActive      = *i++;
   const char* divertModifiable  = *i++;
-  const char* ussd7bit          = *i;
+  const char* ussd7bit          = *i++;
+  const char* udhConcat         = *i;
 
   if (!codepageStr || !reportStr || !localeStr || !hideStr || !hideModifiableStr
     || !divert || !divertActive || !divertModifiable || !ussd7bit)
@@ -1014,6 +1017,8 @@ throw (AdminException)
   profile.divertModifiable = (strcmp("true", divertModifiable) == 0) ? 1:0;
   if (strcmp("true", ussd7bit) == 0)
     profile.codepage |= 0x80;
+  
+  profile.udhconcat = (strcmp("true", udhConcat) == 0) ? 1:0;
 }
 
 bool isMask(const Address & address)
