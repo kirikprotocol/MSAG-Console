@@ -35,6 +35,7 @@ public:
     managerMonitor=NULL;
     proxyType=proxyTransceiver;
     opened=true;
+    forceDC=true;
   }
   virtual ~SmppProxy(){}
   virtual void close()
@@ -210,7 +211,7 @@ public:
     proxyType=newtype;
   }
 
-  void setId(const std::string newid)
+  void setId(const std::string& newid)
   {
     id=newid;
   }
@@ -229,6 +230,16 @@ public:
     return cnt;
   }
 
+  void setForceDC(bool value)
+  {
+    forceDC=value;
+  }
+
+  bool getForceDC()
+  {
+    return forceDC;
+  }
+
 protected:
   mutable Mutex mutex,mutexin,mutexout;
   std::string id;
@@ -241,6 +252,7 @@ protected:
   ProxyMonitor *managerMonitor;
   SmppSocket *smppSocket;
   int refcnt;
+  bool forceDC;
 };
 
 bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)

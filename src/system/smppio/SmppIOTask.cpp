@@ -348,7 +348,11 @@ int SmppInputThread::Execute()
                     bindpdu->get_systemId()?bindpdu->get_systemId():"",
                     bindpdu->get_password()?bindpdu->get_password():"",
                     proxy);
-                  proxy->setId(bindpdu->get_systemId());
+                  std::string sid=bindpdu->get_systemId();
+                  proxy->setId(sid);
+                  SmeIndex proxyIndex=smeManager->lookup(sid);
+                  SmeInfo si=smeManager->getSmeInfo(proxyIndex);
+                  proxy->setForceDC(si.forceDC);
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_ROK);
                 }catch(SmeRegisterException& e)
@@ -478,7 +482,7 @@ int SmppInputThread::Execute()
             case SmppCommandSet::CANCEL_SM:
             {
               try{
-                SmscCommand cmd(pdu);
+                SmscCommand cmd(pdu,ss->getProxy()->getForceDC());
                 try{
                   if(ss->getProxy() && ss->getProxy()->isOpened())
                   {
@@ -652,7 +656,7 @@ int SmppOutputThread::Execute()
       {
         SmscCommand cmd=ss->getProxy()->getOutgoingCommand();
 
-        SmppHeader *pdu=cmd.makePdu();
+        SmppHeader *pdu=cmd.makePdu(ss->getProxy()->getForceDC());
         int cmdid=pdu->get_commandId();
         trace2("SmppOutThread: commandId=%x, seq number:%d",
           pdu->get_commandId(),pdu->get_sequenceNumber());

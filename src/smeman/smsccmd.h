@@ -661,7 +661,7 @@ public:
      dispose();
   }
   SmscCommand() : cmd (0) {}
-  SmscCommand(SmppHeader* pdu) : cmd (0)
+  SmscCommand(SmppHeader* pdu,bool forceDC=false) : cmd (0)
   {
     //if (!pdu) return;
     __require__ ( pdu != NULL );
@@ -732,7 +732,7 @@ public:
     {
       PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
       (SMS*)_cmd->dta =  new SMS;
-      fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta));
+      fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta),forceDC);
       SMS &s=*((SMS*)_cmd->dta);
       if(s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
       {
@@ -824,7 +824,7 @@ public:
     */
   }
 
-  SmppHeader* makePdu()
+  SmppHeader* makePdu(bool forceDC=false)
   {
     _SmscCommand& c = *cmd;
     switch ( c.get_commandId() )
@@ -834,7 +834,7 @@ public:
         auto_ptr<PduXSm> xsm(new PduXSm);
         xsm->header.set_commandId(SmppCommandSet::SUBMIT_SM);
         xsm->header.set_sequenceNumber(c.get_dialogId());
-        fillSmppPduFromSms(xsm.get(),c.get_sms());
+        fillSmppPduFromSms(xsm.get(),c.get_sms(),forceDC);
         return reinterpret_cast<SmppHeader*>(xsm.release());
       }
     case DELIVERY:
@@ -844,7 +844,7 @@ public:
           auto_ptr<PduDataSm> xsm(new PduDataSm);
           xsm->header.set_commandId(SmppCommandSet::DATA_SM);
           xsm->header.set_sequenceNumber(c.get_dialogId());
-          fillDataSmFromSms(xsm.get(),c.get_sms());
+          fillDataSmFromSms(xsm.get(),c.get_sms(),forceDC);
           return reinterpret_cast<SmppHeader*>(xsm.release());
         }else
         {

@@ -23,7 +23,7 @@ namespace smpp{
 using std::string;
 using namespace smsc::sms;
 
-inline void fillOptional(SmppOptional& optional,SMS* sms)
+inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
 {
   if ( sms->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) )
   {
@@ -36,12 +36,8 @@ inline void fillOptional(SmppOptional& optional,SMS* sms)
   }
   if ( sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) )
     optional.set_ussdServiceOp(sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
-  if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) )
-    optional.set_destAddrSubunit(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
   if ( sms->hasIntProperty(Tag::SMPP_PAYLOAD_TYPE) )
     optional.set_payloadType(sms->getIntProperty(Tag::SMPP_PAYLOAD_TYPE));
-  if ( sms->hasIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES) )
-    optional.set_msMsgWaitFacilities(sms->getIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES));
   if ( sms->hasIntProperty(Tag::SMPP_USER_RESPONSE_CODE) )
     optional.set_userResponseCode(sms->getIntProperty(Tag::SMPP_USER_RESPONSE_CODE));
   if ( sms->hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM) )
@@ -80,9 +76,16 @@ inline void fillOptional(SmppOptional& optional,SMS* sms)
     const char * data = sms->getBinProperty(Tag::SMSC_RAW_PAYLOAD,&len);
     optional.set_messagePayload(data,len);
   }
+  if(!forceDC)
+  {
+    if( sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) )
+      optional.set_msValidity(sms->getIntProperty(Tag::SMPP_MS_VALIDITY));
+    if ( sms->hasIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES) )
+      optional.set_msMsgWaitFacilities(sms->getIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES));
+    if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) )
+      optional.set_destAddrSubunit(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
+  }
 
-  if( sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) )
-    optional.set_msValidity(sms->getIntProperty(Tag::SMPP_MS_VALIDITY));
 
   if ( sms->hasIntProperty(Tag::SMPP_MSG_STATE) )
   {
@@ -97,7 +100,7 @@ inline void fillOptional(SmppOptional& optional,SMS* sms)
   }
 }
 
-inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
+inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,bool forceDC=false)
 {
   __require__ ( pdu != NULL );
   __require__ ( sms != NULL );
@@ -139,7 +142,13 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
       message.set_shortMessage(short_msg,msg_length);
       //message.set_smLength((uint8_t)msg_length);
       //message.set_dataCoding((uint8_t)sms_body.getCodingScheme());
-      message.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMPP_DATA_CODING));
+      if(forceDC && sms->hasIntProperty(Tag::SMSC_FORCE_DC))
+      {
+        message.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMSC_ORIGINAL_DC));
+      }else
+      {
+        message.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMPP_DATA_CODING));
+      }
     }
     //message.set_protocolId(sms->getProtocolIdentifier());
     message.set_protocolId(sms->getIntProperty(Tag::SMPP_PROTOCOL_ID));
@@ -174,11 +183,11 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
     pdu->message.set_replaceIfPresentFlag(0);
 
 
-  fillOptional(pdu->optional,sms);
+  fillOptional(pdu->optional,sms,forceDC);
   return true;
 }
 
-inline void fetchOptionals(SmppOptional& optional,SMS* sms)
+inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
 {
   if ( optional.has_userMessageReference() )
     //sms->setMessageReference(optional.get_userMessageReference());
@@ -209,12 +218,8 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms)
     //sms->setReceiptSmsId(0);
   if ( optional.has_ussdServiceOp() )
     sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,optional.get_ussdServiceOp());
-  if ( optional.has_destAddrSubunit() )
-    sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,optional.get_destAddrSubunit());
   if ( optional.has_payloadType() )
     sms->setIntProperty(Tag::SMPP_PAYLOAD_TYPE,optional.get_payloadType());
-  if ( optional.has_msMsgWaitFacilities() )
-    sms->setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,optional.get_msMsgWaitFacilities());
   if ( optional.has_userResponseCode() )
     sms->setIntProperty(Tag::SMPP_USER_RESPONSE_CODE,optional.get_userResponseCode());
   if ( optional.has_sarMsgRefNum() )
@@ -247,14 +252,22 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms)
   if(optional.has_sourceBearerType())
     sms->setIntProperty(Tag::SMPP_SOURCE_BEARER_TYPE,optional.get_sourceBearerType());
 
+  if(!forceDC)
+  {
+    if ( optional.has_destAddrSubunit() )
+      sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,optional.get_destAddrSubunit());
+    if ( optional.has_msMsgWaitFacilities() )
+      sms->setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,optional.get_msMsgWaitFacilities());
+    if(optional.has_msValidity())
+      sms->setIntProperty(Tag::SMPP_MS_VALIDITY,optional.get_msValidity());
+  }
+
 
   if ( optional.has_messagePayload() )
     sms->setBinProperty(Tag::SMSC_RAW_PAYLOAD,
                                optional.get_messagePayload(),
                                optional.size_messagePayload());
 
-  if(optional.has_msValidity())
-    sms->setIntProperty(Tag::SMPP_MS_VALIDITY,optional.get_msValidity());
   if ( optional.has_messageState() )
   {
     switch(optional.get_messageState())
@@ -269,7 +282,7 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms)
   }
 }
 
-inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
+inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms,bool forceDC=false)
 {
   __require__ ( pdu != NULL );
   __require__ ( sms != NULL );
@@ -311,13 +324,67 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
                         message.shortMessage.cstr()?message.shortMessage.cstr():"",message.shortMessage.length);
     sms->setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)message.shortMessage.size());
     int dc=(uint32_t)message.dataCoding;
-    if((dc&0xf0)==0xf0 && (dc&0x08)==0)
+    if(forceDC)
     {
-      sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(dc&0x03)+1);
-      sms->setIntProperty(Tag::SMPP_DATA_CODING,(dc&0x04)?DataCoding::BINARY:DataCoding::SMSC7BIT);
+      int user_data_coding=dc;
+      sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+      sms->setIntProperty(Tag::SMSC_FORCE_DC,1);
+      unsigned encoding = 0;
+      if ( (user_data_coding & 0xc0) == 0 ||  // 00xxxxxx
+           (user_data_coding & 0xc0) == 0x40 )  // 01xxxxxx
+      {
+        if ( user_data_coding&(1<<5) )
+        {
+          __trace2__("SmppToSms: required compression");
+          return false;
+        }
+        encoding = user_data_coding&0x0c;
+        if ( (user_data_coding & 0xc0) == 0x40 )
+          sms->setIntProperty(Tag::SMPP_MS_VALIDITY,0x03);
+      }
+      else if ( (user_data_coding & 0xf0) == 0xc0 ) // 1100xxxx
+      {
+        encoding = DataCoding::SMSC7BIT;
+        sms->setIntProperty(Tag::SMPP_MS_VALIDITY,0x3);
+        sms->setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
+                           (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
+      }
+      else if ( (user_data_coding & 0xf0) == 0xd0 ) // 1101xxxx
+      {
+        encoding = DataCoding::SMSC7BIT;
+        sms->setIntProperty(Tag::SMPP_MS_VALIDITY,0x0);
+        sms->setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
+                           (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
+      }
+      else if ( (user_data_coding & 0xf0) == 0xe0 ) // 1110xxxx
+      {
+        encoding = DataCoding::UCS2;
+        sms->setIntProperty(Tag::SMPP_MS_VALIDITY,0x0);
+        sms->setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
+                           (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
+      }
+      else if ( (user_data_coding & 0xf0) == 0xf0 ) // 1111xxxx
+      {
+        if ( user_data_coding & 0x4 ) encoding = DataCoding::BINARY;
+        else encoding = DataCoding::SMSC7BIT;
+        sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(user_data_coding&0x3)+1);
+      }
+      else{
+        __trace2__("SmppToSms: unknown coding scheme 0x%x",user_data_coding);
+        return false;
+      }
     }else
     {
-      sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
+      /*
+      if((dc&0xf0)==0xf0 && (dc&0x08)==0)
+      {
+        sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(dc&0x03)+1);
+        sms->setIntProperty(Tag::SMPP_DATA_CODING,(dc&0x04)?DataCoding::BINARY:DataCoding::SMSC7BIT);
+      }else
+      {
+      */
+        sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
+      //}
     }
 
     sms->setIntProperty(Tag::SMPP_PRIORITY,(uint32_t)message.priorityFlag);
@@ -340,11 +407,11 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
   }
   sms->setEServiceType(pdu->message.get_serviceType());
   sms->setIntProperty(Tag::SMPP_ESM_CLASS,(uint32_t)pdu->message.get_esmClass());
-  fetchOptionals(pdu->optional,sms);
+  fetchOptionals(pdu->optional,sms,forceDC);
   return true;
 }
 
-inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms)
+inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,bool forceDC=false)
 {
   PduDataPartSm& data = pdu->get_data();
   { // fill address
@@ -373,7 +440,7 @@ inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms)
   return true;
 }
 
-inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms)
+inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,bool forceDC=false)
 {
   PduDataPartSm& data = pdu->get_data();
   PduAddress& src = data.get_source();
