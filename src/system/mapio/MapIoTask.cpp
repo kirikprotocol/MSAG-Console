@@ -36,9 +36,9 @@ void CloseDialog( ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
   MAPSTATS_Update(MAPSTATS_GSMDIALOG_CLOSE);
   USHORT_T res = Et96MapCloseReq (SSN,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
   if ( res != ET96MAP_E_OK ){
-    __trace2__("MAP::close error, code 0x%hx",res);
+    __map_trace2__("close error, code 0x%hx",res);
   }else{
-    __trace2__("MAP::dialog closed");
+    __map_trace2__("dialog closed");
   }
 }
 
@@ -54,7 +54,7 @@ extern "C" {
 
 USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
 {
-  __trace2__("MAP::Et96MapBindConf confirmation received ssn=%x status=%x\n",lssn,status);
+  __map_trace2__("Et96MapBindConf confirmation received ssn=%d status=%d",lssn,status);
   ++__global_bind_counter;
   return ET96MAP_E_OK;
 }
@@ -66,16 +66,16 @@ USHORT_T Et96MapStateInd (
   ULONG_T affectedSPC,
   ULONG_T localSPC)
 {
-  __trace2__("MAP::Et96MapStateInd received ssn=%x user state=%x affected SSN=%d affected SPC=%ld local SPC=%ld\n",lssn,userState,affectedSSN,affectedSPC,localSPC);
+  __map_trace2__("Et96MapStateInd received ssn=%d user state=%d affected SSN=%d affected SPC=%ld local SPC=%ld",lssn,userState,affectedSSN,affectedSPC,localSPC);
   return ET96MAP_E_OK;
 }
 
 void Et96MapIndicationError(USHORT_T error,UCHAR_T* errString)
 {
   if ( errString ) {
-    __trace2__("MAP::Et96MapIndicationError: error 0x%hx text %s",error,errString);
+    __map_warn2__("Et96MapIndicationError: error 0x%hx text %s",error,errString);
   }else{
-    __trace2__("MAP::Et96MapIndicationError: error 0x%hx",error);
+    __map_warn2__("Et96MapIndicationError: error 0x%hx",error);
   }
 }
 
@@ -84,26 +84,26 @@ void Et96MapIndicationError(USHORT_T error,UCHAR_T* errString)
 void MapIoTask::deinit()
 {
   USHORT_T result;
-  __trace2__("MAP::deinitialize");
+  __map_trace2__("deinitialize");
   result = Et96MapUnbindReq(SSN);
   if ( result != ET96MAP_E_OK){
-    __trace2__("MAP::error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
+    __map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
 //    return;
   }
   result = Et96MapUnbindReq(USSD_SSN);
   if ( result != ET96MAP_E_OK){
-    __trace2__("MAP::error at Et96MapUnbindReq SSN=%d errcode 0x%hx",USSD_SSN,result);
+    __map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",USSD_SSN,result);
 //    return;
   }
   result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   if ( result != MSG_OK){
-    __trace2__("MAP::error at MsgRel errcode 0x%hx",result);
+    __map_warn2__("error at MsgRel errcode 0x%hx",result);
     kill(getpid(),17);
     return;
   }
   result = MsgClose(MY_USER_ID);
   if ( result != MSG_OK){
-    __trace2__("MAP::error at MsgClose errcode 0x%hx",result);
+    __map_warn2__("error at MsgClose errcode 0x%hx",result);
     kill(getpid(),17);
     return;
   }
@@ -155,31 +155,30 @@ void MapIoTask::dispatcher()
 */
     if ( result == MSG_TIMEOUT ) continue;
     if ( result == MSG_BROKEN_CONNECTION ){
-      __trace2__("MAP: Broken connection");
+      __map_warn2__("Broken connection");
 restart:
-      __trace2__("MAP:: try restart MAP service");
-//      warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
+      __map_warn2__("Try to restart MAP service");
       bool ok = false;
       while ( !ok ){
-        __trace2__("MAP:: check stopped flag");
+        __map_trace2__("Check stopped flag");
         if ( isStopping ) return;
         try{
-          __trace2__("MAP:: deinit MAP service");
+          __map_trace2__("Deinit MAP service");
           deinit();
-          __trace2__("MAP:: init MAP service");
+          __map_trace2__("Init MAP service");
           init(30);
-          __trace2__("MAP:: waiting binds");
+          __map_trace2__("Waiting binds");
           timecounter = 0;
           ok = true;
         }catch(...){
-          __trace2__("MAP:: Error reinitialization");
+          __map_warn2__("Error reinitialization");
           sleep(1);
         }
       }
       continue;
     }
     if ( result != MSG_OK ) {
-      __trace2__("MAP: error at MsgRecv with code x%hx",result);
+      __map_warn2__("Error at MsgRecv with code %d",result);
       if( !MAP_aborting ) {
         abort();
       }
@@ -187,18 +186,17 @@ restart:
 
     MAPSTATS_Update(MAPSTATS_GSMRECV);
 
-    __trace2__("MAP: MsgRecv receive msg with "
-               "recver 0x%hx,sender 0x%hx,prim 0x%hx, size %d",message.receiver,message.sender,message.primitive,message.size);
+    __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
     if( message.primitive == 0x8b && message.msg_p[6] >= 0x04 ) {
-      __trace2__("MAP: MsgRecv hatching msg to reset priority order " );
+      __map_trace2__("MsgRecv hatching msg to reset priority order " );
       message.msg_p[6] = 0;
     }
     else if( message.primitive == 0x8d && message.msg_p[4] >= 0x04 ) {
-      __trace2__("MAP: MsgRecv hatching msg to reset priority order " );
+      __map_trace2__("MsgRecv hatching msg to reset priority order " );
       message.msg_p[4] = 0;
     }
     map_result = Et96MapHandleIndication(&message);
-    if( map_result != ET96MAP_E_OK ) {
+    if( map_result != ET96MAP_E_OK && smsc::util::_map_cat.isWarnEnabled() ) {
      {
       char *text = new char[message.size*4+1];
       int k = 0;
@@ -206,18 +204,16 @@ restart:
         k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
       }
       text[k]=0;
-      __warning2__("MAP: WARN: error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
+      __log2__(smsc::util::_map_cat,log4cpp::Priority::WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
       delete text;
      }
     }
     EINSS7CpReleaseMsgBuffer(&message);
     if( time_logger.isDebugEnabled() ) {
-      char buf[128];
       long usecs;
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-      snprintf( buf, 128, "prim=%d s=%ld us=%ld", message.primitive, curtime.tv_sec-utime.tv_sec, usecs );
-      time_logger.debug( buf );
+      time_logger.debug( "prim=%d s=%ld us=%ld", message.primitive, curtime.tv_sec-utime.tv_sec, usecs );
     }
   }
 }
@@ -233,47 +229,47 @@ void MapIoTask::init(unsigned timeout)
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgOpen, code 0x%hx",err); throw runtime_error("MsgOpen error"); }
   err = MsgConn(MY_USER_ID,ETSIMAP_ID);
   if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgConn error"); }
-  __trace2__("MAP:: pause self and wait map initialization");
+  __map_trace2__("MAP:: pause self and wait map initialization");
   sleep(timeout);
-  __trace2__("MAP:: continue self initialization");
+  __map_trace2__("MAP:: continue self initialization");
 //  err = MsgConn(USER01_ID,USER01_ID);
 //  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn on self, code 0x%hx",err); throw runtime_error("MsgInit error"); }
-#ifndef DISABLE_TRACING
-  MsgTraceOn( MY_USER_ID );
-  MsgTraceOn( ETSIMAP_ID );
-  MsgTraceOn( TCAP_ID );
-#endif
-  __trace__("MAP: Bind");
+  if( smsc::util::_map_cat.isDebugEnabled() ) {
+    MsgTraceOn( MY_USER_ID );
+    MsgTraceOn( ETSIMAP_ID );
+    MsgTraceOn( TCAP_ID );
+  }
+  __map_trace__("Bind");
   USHORT_T bind_res = Et96MapBindReq(MY_USER_ID, SSN);
   if(bind_res!=ET96MAP_E_OK){
-    __trace2__("MAP: SSN Bind error 0x%hx",bind_res);
+    __map_trace2__("SSN Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");
   }
   bind_res = Et96MapBindReq(MY_USER_ID, USSD_SSN);
   if(bind_res!=ET96MAP_E_OK){
-    __trace2__("MAP: USSD Bind error 0x%hx",bind_res);
+    __map_trace2__("USSD Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");
   }
   MAPSTATS_Restart();
-  __trace__("MAP: Ok");
+  __map_trace__("Ok");
 }
 
 #else
 void MapIoTask::deinit()
 {
-  __trace2__("MapIoTask::deinit: no map stack on this platform");
+  __map_trace2__("MapIoTask::deinit: no map stack on this platform");
 }
 
 void MapIoTask::dispatcher()
 {
   Event e;
-  __trace2__("MapIoTask::dispatcher: no map stack on this platform");
+  __map_trace2__("MapIoTask::dispatcher: no map stack on this platform");
   e.Wait();
 }
 
 void MapIoTask::init(unsigned)
 {
-  __trace2__("MapIoTask::init: no map stack on this platform");
+  __map_trace2__("MapIoTask::init: no map stack on this platform");
 }
 
 #endif
@@ -289,7 +285,7 @@ int MapIoTask::Execute(){
     dispatcher();
     //deinit();
   }catch(exception& e){
-    __trace2__("exception in mapio: %s",e.what());
+    __map_warn2__("exception in mapio: %s",e.what());
   }
   return 0;
 }
@@ -314,10 +310,10 @@ int MapTracker::Execute(){
       if ( xx > t+15 ) break;
       e.Wait(1000*(t-xx+15));
     }
-    __trace2__("MAP tracker:: alive %d dispatching %d",MAP_isAlive,MAP_dispatching);
+    __map_trace2__("MAP tracker:: alive %d dispatching %d",MAP_isAlive,MAP_dispatching);
     if ( isStopping ) return 0;
     if ( MAP_dispatching && !MAP_isAlive ) {
-      __trace2__("\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+      __map_warn2__("\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
                  "MAP is DEAD"
                  "\n\n\n\n");
       abort();
@@ -332,25 +328,25 @@ int MapTracker::Execute(){
 void MapDialogContainer::registerSelf(SmeManager* smeman)
 {
   proxy.init();
-  __trace2__("MAP::register MAP_PROXY");
+  __map_trace2__("register MAP_PROXY");
 //#if defined USE_MAP // !!!! temporary !!!!!
 //  smeman->registerSmeProxy("MAP_PROXY",&proxy);
 //#else
   smeman->registerInternallSmeProxy("MAP_PROXY",&proxy);
 //#endif
-  __trace2__("MAP::register MAP_PROXY OK");
+  __map_trace2__("register MAP_PROXY OK");
 }
 
 void MapDialogContainer::unregisterSelf(SmeManager* smeman)
 {
   //proxy.init();
-  __trace2__("MAP::unregister MAP_PROXY");
+  __map_trace2__("unregister MAP_PROXY");
 //#if defined USE_MAP // !!!! temporary !!!!!
 //  smeman->registerSmeProxy("MAP_PROXY",&proxy);
 //#else
   smeman->unregisterSmeProxy("MAP_PROXY");
 //#endif
-  __trace2__("MAP::unregister MAP_PROXY OK");
+  __map_trace2__("unregister MAP_PROXY OK");
 }
 
 

@@ -36,7 +36,7 @@ extern unsigned char lll_8bit_2_7bit[256];
 //list<unsigned> DialogMapContainer::dialogId_pool;
 
 inline char GetChar(const unsigned char*& ptr,unsigned& shift){
-  //__trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,*ptr);
+  //__map_trace2__("7bit: shift %d *ptr 0x%x",shift,*ptr);
   char val = (*ptr >> shift)&0x7f;
   if ( shift > 1 )
     val |= (*(ptr+1) << (8-shift))&0x7f;
@@ -46,7 +46,7 @@ inline char GetChar(const unsigned char*& ptr,unsigned& shift){
     shift&=0x7;
     ++ptr;
   }
-  //__trace2__("MAP: 7bit : %x",val);
+  //__map_trace2__("7bit : %x",val);
   return val;
 }
 
@@ -78,18 +78,16 @@ inline void Convert7BitToSMSC7Bit(
   }
   text->len = chars;
   text->bytes[chars] = 0;
-#if !defined DISABLE_TRACING
-  __trace2__("MAP::7bit(%d)->SMSC7Bit: %s",chars,text->bytes);
-  {
+  __map_trace2__("7bit(%d)->SMSC7Bit: %s",chars,text->bytes);
+  if( smsc::util::_map_cat->isDebugEnabled() ) {
     char b[255*4];
     unsigned k;
     unsigned i;
     for ( i=0,k=0; i<text->len;++i){
       k += sprintf(b+k,"%x ",text->bytes[i]);
     }
-    __trace2__("MAP::latin1(hex): %s",b);
+    __map_trace2__("latin1(hex): %s",b);
   }
-#endif
 }
 
 inline void Convert7BitToText(
@@ -103,27 +101,25 @@ inline void Convert7BitToText(
   }
   text->len = chars;
   text->bytes[chars] = 0;
-#if !defined DISABLE_TRACING
-  __trace2__("MAP::7bit(%d)->Text: %s",chars,text->bytes);
-  {
+  __map_trace2__("7bit(%d)->Text: %s",chars,text->bytes);
+  if( smsc::util::_map_cat->isDebugEnabled() ){
     char b[255*4];
     unsigned k;
     unsigned i;
     for ( i=0,k=0; i<text->len;++i){
       k += sprintf(b+k,"%x ",text->bytes[i]);
     }
-    __trace2__("MAP::latin1(hex): %s",b);
+    __map_trace2__("MAP::latin1(hex): %s",b);
   }
-#endif
 }
 
 inline unsigned ConvertText27bit(
   const unsigned char* text, unsigned chars, unsigned char* bit7buf,unsigned* elen,
   unsigned offset=0)
 {
-  __trace2__("MAP::ConvertText27bit: text %s",text);
+  __map_trace2__("ConvertText27bit: text %s",text);
   if ( chars > 160 ){
-    __trace2__("MAP::ConvertText27bit: text length(%d) > 160",chars);
+    __map_warn2__("ConvertText27bit: text length(%d) > 160",chars);
     throw runtime_error("text length > 160");
   }
   unsigned char* base = bit7buf;
@@ -150,25 +146,25 @@ inline unsigned ConvertText27bit(
 #undef __pchar
 #undef __escape
   }
-#if !defined DISABLE_TRACING
-  {
-    char b[chars+1];
-    memcpy(b,text,chars);
-    b[chars] = 0;
-    __trace2__("MAP::latin1->7bit: %s",b);
-  }
-  {
-    char b[255*4];
-    unsigned k;
-    unsigned i;
-    for ( i=0,k=0; i<chars;++i){
-      k += sprintf(b+k,"%x ",text[i]);
+  if( smsc::util::_map_cat->isDebugEnabled() ){
+    {
+      char b[chars+1];
+      memcpy(b,text,chars);
+      b[chars] = 0;
+      __map_trace2__("latin1->7bit: %s",b);
     }
-    __trace2__("MAP::7bit(hex): %s",b);
+    {
+      char b[255*4];
+      unsigned k;
+      unsigned i;
+      for ( i=0,k=0; i<chars;++i){
+        k += sprintf(b+k,"%x ",text[i]);
+      }
+      __map_trace2__("7bit(hex): %s",b);
+    }
   }
-#endif
   unsigned _7bit_len = bit7buf-base+(shift?1:0);
-  __trace2__("MAP::7bit buffer length: %d",_7bit_len);
+  __map_trace2__("7bit buffer length: %d",_7bit_len);
   return _7bit_len;
 }
 
@@ -177,7 +173,7 @@ inline unsigned ConvertSMSC7bit27bit(
   unsigned offset=0)
 {
   if ( chars > 160 ){
-    __trace2__("MAP::ConvertSMSC7bit27bit: text length(%d) > 160",chars);
+    __map_trace2__("ConvertSMSC7bit27bit: text length(%d) > 160",chars);
     throw runtime_error("text length > 160");
   }
   unsigned char* base = bit7buf;
@@ -186,25 +182,25 @@ inline unsigned ConvertSMSC7bit27bit(
   for ( unsigned i=0; i< chars; ++i ){
     PutChar(bit7buf,shift,text[i],bit7buf_end);
   }
-#if !defined DISABLE_TRACING
-  {
-    char b[chars+1];
-    memcpy(b,text,chars);
-    b[chars] = 0;
-    __trace2__("MAP::SMSC7bit->7bit: %s",b);
-  }
-  {
-    char b[255*4];
-    unsigned k;
-    unsigned i;
-    for ( i=0,k=0; i<chars;++i){
-      k += sprintf(b+k,"%x ",text[i]);
+  if( smsc::util::_map_cat->isDebugEnabled() ){
+    {
+      char b[chars+1];
+      memcpy(b,text,chars);
+      b[chars] = 0;
+      __map_trace2__("SMSC7bit->7bit: %s",b);
     }
-    __trace2__("MAP::7bit(hex): %s",b);
+    {
+      char b[255*4];
+      unsigned k;
+      unsigned i;
+      for ( i=0,k=0; i<chars;++i){
+        k += sprintf(b+k,"%x ",text[i]);
+      }
+      __map_trace2__("7bit(hex): %s",b);
+    }
   }
-#endif
   unsigned _7bit_len = bit7buf-base+(shift?1:0);
-  __trace2__("MAP::7bit buffer length: %d",_7bit_len);
+  __map_trace2__("7bit buffer length: %d",_7bit_len);
   return _7bit_len;
 }
 
@@ -337,7 +333,6 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
     {
       char b[256] = {0,};
       memcpy(b,sa_val,i);
-      __trace2__("MAP::ConvAddrMSISDN2Smc::adr value(%d) %s",(ma->addrLen-1)*2,b);
     }
     sa->setValue(i,sa_val);
   }else{
@@ -365,7 +360,6 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
     {
       char b[256] = {0,};
       memcpy(b,sa_val,i);
-      __trace2__("MAP::ConvAddrMSISDN2Smc::adr value(%d) %s",ma->addressLength,b);
     }
     sa->setValue(i,sa_val);
   }else{
@@ -403,7 +397,6 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
     {
       char b[256] = {0,};
       memcpy(b,sa_val,ma->len);
-      __trace2__("MAP::ConvAddrMap2Smc::adr value(%d) %s",ma->len,b);
     }
   }else{
     throw runtime_error("MAP::ConvAddrMap2Smc  MAP_SMS_ADDRESS length should be greater than 0");

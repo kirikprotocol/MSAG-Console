@@ -15,6 +15,16 @@ extern void MAPIO_PutCommand(const smsc::smeman::SmscCommand& cmd );
 //#endif
 
 namespace smsc{
+namespace util{
+extern log4cpp::Category* _mapproxy_cat;
+};
+};
+#define __mapproxy_trace2__(format,args...) __debug2__(smsc::util::_mapproxy_cat,format,##args)
+#define __mapproxy_trace__(text) __debug__(smsc::util::_mapproxy_cat,text)
+
+
+
+namespace smsc{
 namespace system{
 namespace mapio{
 
@@ -43,7 +53,7 @@ public:
       long usecs;
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-      time_logger->debug( "cmdid=%d s=%ld us=%ld", cmd->get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
+      time_logger->_log( log4cpp::Priority::DEBUG, "cmdid=%d s=%ld us=%ld", cmd->get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
     }
 //#endif
   }
@@ -66,35 +76,31 @@ public:
     MutexGuard g(mutex);
     SmscCommand cmd;
     inqueue.Shift(cmd);
-    __trace2__("MAPPROXY::get command:%p",*((void**)&cmd));
+    __mapproxy_trace2__("get command:%p",*((void**)&cmd));
     return cmd;
   }
 
   void putIncomingCommand(const SmscCommand& cmd)
   {
-    __trace2__("MAPPROXY::putIncomingCommand");
+    __mapproxy_trace__("putIncomingCommand");
     {
       MutexGuard g(mutex);
-      __trace2__("MAPPROXY::putIncomingCommand: locked");
       if(inqueue.Count()==MAP_PROXY_QUEUE_LIMIT)
       {
-        __trace2__("MAPPROXY::putIncomingCommand: proxy queue limit exceded");
+        __mapproxy_trace__("putIncomingCommand: proxy queue limit exceded");
         throw ProxyQueueLimitException();
       }
       inqueue.Push(cmd);
     }
-    __trace2__("MAPPROXY::putIncomingCommand: signal");
     managerMonitor->Signal();
-    __trace2__("MAPPROXY::putIncomingCommand OK");
   }
 
   SmscCommand getOutgoingCommand()
   {
-    __trace2__("MAPPROXY::getOutgoingCommand");
+    __mapproxy_trace__("getOutgoingCommand");
     MutexGuard g(mutex);
     SmscCommand cmd;
     outqueue.Shift(cmd);
-    __trace2__("MAPPROXY::getOutgoingCommand OK");
     return cmd;
   }
 
@@ -136,7 +142,7 @@ public:
   uint32_t getNextSequenceNumber()
   {
     MutexGuard g(mutex);
-    __trace2__("MAP::Proxy:getNextSequenceNumber next number 0x%x",seq);
+//    __mapproxy_trace2__("getNextSequenceNumber next number 0x%x",seq);
     if (seq <  0x10000) seq = 0x10000;
     return seq++;
   }

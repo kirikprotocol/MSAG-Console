@@ -20,7 +20,6 @@ void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms)
 {
   pdu_tm->year.first  =  ((tms->tm_year)%100)/10;
   pdu_tm->year.second  = tms->tm_year%10;
-  //__trace2__("MAP::mkDeliverPDU: year: 0x%x, tms_year 0x%lx",pdu_tm->year,tms->tm_year);
   pdu_tm->mon.first  =  (tms->tm_mon+1)/10;
   pdu_tm->mon.second  = (tms->tm_mon+1)%10;
   pdu_tm->day.first  =  tms->tm_mday/10;
@@ -34,7 +33,7 @@ void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms)
   int tz = timezone;
   if ( tms->tm_isdst ) tz-=3600;
   tz = -tz/900;
-  __trace2__("MAP::mkDeliverPDU: timezone %d, %ld",tz,timezone);
+  __map_trace2__("mkDeliverPDU: timezone %d, %ld",tz,timezone);
   pdu_tm->tz = tz;
 }
 
@@ -68,10 +67,10 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   oa->st.npi = addr.getNumberingPlan();
   oa->st.reserved_1 = 1;
   unsigned oa_length = (oa->len+1)/2;
-  __trace2__("MAP::mkDeliverPDU: oa_length: 0x%x", oa_length);
+  __map_trace2__("MAP::mkDeliverPDU: oa_length: 0x%x", oa_length);
   if ( oa->st.ton == 5 && oa->st.npi == 0 ) 
   {
-    __trace2__(":MAP::mkDeliverPDU: alphanum address %s ",addr.value);
+    __map_trace2__("mkDeliverPDU: alphanum address %s ",addr.value);
     if (addr.getLength()>11) throw runtime_error(":MAP: invalid address length"); 
     unsigned tmpX = 0;
     unsigned _7bit_text_len = ConvertText27bit((const unsigned char*)addr.value,addr.length,oa->val,&tmpX,0);
@@ -99,14 +98,14 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     *pdu_ptr++ = (unsigned char)sms->getIntProperty(Tag::SMPP_PROTOCOL_ID);
   }
   unsigned encoding = sms->getIntProperty(Tag::SMPP_DATA_CODING);
-  __trace2__("MAP::mkDeliveryPDU: encoding = 0x%x",encoding);
+  __map_trace2__("MAP::mkDeliveryPDU: encoding = 0x%x",encoding);
   unsigned char datacoding;
   if ( encoding != 0 &&
        encoding != 0x08 &&
        encoding != 0x03 &&
        encoding != 0x04 &&
        encoding != 0xf0) {
-    __trace2__("MAP::mkDeliverPDU: unsuppprted encoding 0x%x",encoding);
+    __map_warn2__("MAP::mkDeliverPDU: unsuppprted encoding 0x%x",encoding);
     throw runtime_error("unsupported encoding");
   }
   else // make coding scheme
@@ -114,12 +113,12 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     if ( sms->getIntProperty(Tag::SMSC_FORCE_DC) ) {          
       datacoding = sms->getIntProperty(Tag::SMSC_ORIGINAL_DC);
     }else if ( sms->hasIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT) ){
-      __trace2__("MAP::mkDeliveryPDU: dest_addr_subunit = 0x%x",
+      __map_trace2__("MAP::mkDeliveryPDU: dest_addr_subunit = 0x%x",
                  sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT));
       // coding scheme 1111xxxx
       datacoding = 0xf0;
       if ( encoding == MAP_UCS2_ENCODING){
-        __trace2__("MAP::mkDeliveryPDU: coding group 1111xxxx could'not has USC2");
+        __map_trace2__("mkDeliveryPDU: coding group 1111xxxx could'not has USC2");
         throw runtime_error("MAP::mkDeliveryPDU: coding group 1111xxxx incompatible with encoding UCS2");
       }
       if ( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING || encoding == MAP_SMSC7BIT_ENCODING)
@@ -131,7 +130,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     else
     {
       if ( sms->hasIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES) ){
-        __trace2__("MAP::mkDeliveryPDU: ms_msg_wait_facilities = 0x%x",
+        __map_trace2__("mkDeliveryPDU: ms_msg_wait_facilities = 0x%x",
                    sms->getIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES));
         if ( encoding == MAP_UCS2_ENCODING ){
           datacoding = 0xe0;
@@ -142,18 +141,18 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         else
         {
           if ( !sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) ){
-            __trace2__("MAP::mkDeliveryPDU: Opss, has no ms_validity");
+            __map_trace2__("mkDeliveryPDU: Opss, has no ms_validity");
             throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
           }
           unsigned ms_validity = sms->getIntProperty(Tag::SMPP_MS_VALIDITY);
-          __trace2__("MAP::mkDeliveryPDU: ms_validity = 0x%x",
+          __map_trace2__("mkDeliveryPDU: ms_validity = 0x%x",
                      ms_validity);
           if ( (ms_validity & 0x3) == 0x3 ){
             datacoding = 0xc0;
           }else if ( (ms_validity & 0x3) == 0 ){
             datacoding = 0xd0;
           }else{
-            __trace2__("MAP::mkDeliveryPDU: Opss, ms_validity = 0x%x but must be 0x0 or 0x3",
+            __map_trace2__("mkDeliveryPDU: Opss, ms_validity = 0x%x but must be 0x0 or 0x3",
                        ms_validity);
             throw runtime_error("bad ms_validity value");
           }
@@ -165,37 +164,37 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
       else
       {
         /*if ( !sms->hasIntProperty(Tag::MS_VALIDITY) ){
-          __trace2__("MAP::mkDeliveryPDU: Opss, has no ms_validity");
+          __map_trace2__("mkDeliveryPDU: Opss, has no ms_validity");
           throw runtime_error("MAP::mkDeliveryPDU: Opss, has no ms_validity");
         }*/
         unsigned ms_validity = 0;
         if ( sms->hasIntProperty(Tag::SMPP_MS_VALIDITY) )
           ms_validity = sms->getIntProperty(Tag::SMPP_MS_VALIDITY);
-        __trace2__("MAP::mkDeliveryPDU: ms_validity = 0x%x",
+        __map_trace2__("mkDeliveryPDU: ms_validity = 0x%x",
                    ms_validity);
         if ( (ms_validity & 0x3) == 0x3 ){
-          __trace2__("MAP::mkDeliveryPDU: (validity & 0x3) == 0x3");
+          __map_trace2__("mkDeliveryPDU: (validity & 0x3) == 0x3");
           datacoding = 0x40;
         }else if ( (ms_validity & 0x3) == 0 ){
-          __trace2__("MAP::mkDeliveryPDU: (validity & 0x3) == 0");
+          __map_trace2__("mkDeliveryPDU: (validity & 0x3) == 0");
           datacoding = 0x00;
         }else{
-          __trace2__("MAP::mkDeliveryPDU: Opss, ms_validity = 0x%x but must be 0x0 or 0x3",
+          __map_warn2__("mkDeliveryPDU: Opss, ms_validity = 0x%x but must be 0x0 or 0x3",
                      ms_validity);
           throw runtime_error("bad ms_validity value");
         }
         if ( encoding == MAP_UCS2_ENCODING ){
-          __trace2__("MAP::mkDeliveryPDU: MAP_UCS2_ENCODING");
+          __map_trace2__("mkDeliveryPDU: MAP_UCS2_ENCODING");
            datacoding |= 0x8;
         }
         //if ( encoding == 0 && encoding == 0x3 ) nothing
         if ( encoding == MAP_8BIT_ENCODING ){
-          __trace2__("MAP::mkDeliveryPDU: MAP_8BIT_ENCODING");
+          __map_trace2__("mkDeliveryPDU: MAP_8BIT_ENCODING");
            datacoding |= 0x4;
         }
       }
     }
-    __trace2__("MAP::mkDeliveryPDU: user data coding = 0x%x",(unsigned)datacoding);
+    __map_trace2__("mkDeliveryPDU: user data coding = 0x%x",(unsigned)datacoding);
     if(!isrcpt)
     {
       if ( sms->getIntProperty(Tag::SMSC_FORCE_DC) ) {
@@ -252,13 +251,11 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         }
         if ( header->uu.s.udhi ){
           unsigned udh_len = (unsigned)*text;
-          __trace2__("MAP::mkDeliverPDU: udh_len 0x%x",udh_len);
           memcpy(pdu_ptr+1,text,udh_len+1);
           unsigned x = (udh_len+1)*8;
           if ( x%7 != 0 ) x+=7-(x%7);
           unsigned symbols = text_len-udh_len-1;
-          __trace2__("MAP::mkDeliverPDU: text symbols 0x%x",symbols);
-          __trace2__("MAP::mkDeliverPDU: text bit offset 0x%x",x-(udh_len+1)*8);
+          __map_trace2__("mkDeliverPDU: udh_len %d text symbols %d bit offset %d",udh_len,symbols,x-(udh_len+1)*8);
           unsigned _7bit_text_len;
           if (encoding == MAP_SMSC7BIT_ENCODING )
            _7bit_text_len = ConvertSMSC7bit27bit(
@@ -276,9 +273,8 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
               x-(udh_len+1)*8);
     }
           *pdu_ptr++ = x/7+symbols;
-          __trace2__("MAP::mkDeliverPDU: data length(symbols) 0x%x",x/7+symbols);
           pdu_ptr+= udh_len+_7bit_text_len+1;
-          __trace2__("MAP::mkDeliverPDU: data length(octets) 0x%x",udh_len+_7bit_text_len);
+          __map_trace2__("MAP::mkDeliverPDU: data length symbols %d octets %d",x/7+symbols,udh_len+_7bit_text_len);
         }else{
           *pdu_ptr++ = text_len;
           if (encoding == MAP_SMSC7BIT_ENCODING )
@@ -298,7 +294,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
       }
       //unsigned size_x = /*pdu_ptr-(unsigned char*)pdu->signalInfo*;
       if ( text_len > 140 ){
-        __trace2__("MAP::mkDeliverPDU:  UCS2 text length(%d) > 140",
+        __map_warn2__("mkDeliverPDU:  UCS2 text length %d > 140",
                   text_len);
         throw runtime_error("MAP::mkDeliverPDU:  UCS2 text length > pdu_ptr-pdu->signalInfoLen");
       }
@@ -309,14 +305,14 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   }
   pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
   //if ( pdu->signalInfoLen > 140 ) header->uu.s.mms = 1;
-  __trace2__("MAP::mkDeliverPDU: signalInfoLen 0x%x",pdu->signalInfoLen);
-  {
+  __map_trace2__("mkDeliverPDU: signalInfoLen %d",pdu->signalInfoLen);
+  if( smsc::util::_map_cat.isDebugEnabled() ) {
     char text[sizeof(*pdu)*4] = {0,};
     int k = 0;
     for ( int i=0; i<pdu->signalInfoLen; ++i){
       k+=sprintf(text+k,"%02x ",(unsigned)pdu->signalInfo[i]);
     }
-    __trace2__("MAP::mkDeliverPDU: PDU %s",text);
+    __map_trace2__("mkDeliverPDU: PDU %s",text);
   }
   return pdu;
 #else
