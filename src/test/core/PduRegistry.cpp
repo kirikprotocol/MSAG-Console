@@ -51,7 +51,10 @@ void PduRegistry::registerMonitor(PduMonitor* monitor)
 		default:
 			__unreachable__("Invalid monitor type");
 	}
-	checkTimeMap[TimeKey(monitor->getCheckTime(), monitor->getId())] = monitor;
+	TimeKey timeKey(monitor->getCheckTime(), monitor->getId());
+	TimeMap::const_iterator it = checkTimeMap.find(timeKey);
+	__require__(it == checkTimeMap.end());
+	checkTimeMap[timeKey] = monitor;
 	__trace2__("monitor registered: pduReg = %p, %s", this, monitor->str().c_str());
 }
 
