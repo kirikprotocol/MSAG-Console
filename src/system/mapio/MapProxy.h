@@ -32,7 +32,9 @@ public:
   void notifyOutThread(){}
   virtual void putCommand(const SmscCommand& cmd)
   {
+#if defined USE_MAP
     ::MAPIO_PutCommand(cmd);
+#endif
   }
   //{
   //  __trace2__("MAPPROXY::putCommand");

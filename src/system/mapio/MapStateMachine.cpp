@@ -317,25 +317,26 @@ static void TryDestroyDialog(unsigned dialogid)
 {
   {
     __trace2__("MAP::TryDestroyDialog: dialog 0x%x , reason error",dialogid);
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
-    if ( mdci.isnull() ) {
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid));
+    if ( dialog.isnull() ) {
       __trace2__("MAP::TryDestroyDialog: has no dialog 0x%x",dialogid);
       return;
     }
     switch(dialog->state){
-    case MAPST_WaitHlrVersion:
+    /*case MAPST_WaitHlrVersion:
     case MAPST_SendingRInfo:
     case MAPST_RInfoFallBack:
     case MAPST_WaitRInfoConf:
     case MAPST_WaitRInfoClose:
     case MAPST_WaitMcsVersion:
-    case MAPST_SendingSms:
+    //case MAPST_SendingSms:
     case MAPST_WaitSpecOpenConf:
     case MAPST_WaitOpenConf:
     case MAPST_WaitSmsConf:
     case MAPST_WaitSpecDelimeter:
-    case MAPST_WaitSmsClose:
-      CloseMapDialog(dialogid->dialogid_map);
+    case MAPST_WaitSmsClose:*/
+    default:
+      CloseMapDialog(dialog->dialogid_map);
     }
   }
   MapDialogContainer::getInstance()->dropDialog(dialogid);
@@ -347,7 +348,8 @@ static string RouteToString(MapDialog* dialog)
 #if !defined DIABLE_TRACING
   if ( dialog->sms.get() == 0 ) return skiped;
   auto_ptr<char> b(new char[1024]);
-  snprintf(b.get(),"%d.%d.%s -> %d.%d.%s",
+  memset(b.get(),0,1024);
+  snprintf(b.get(),1023,"%d.%d.%s -> %d.%d.%s",
     dialog->sms->getOriginatingAddress().getTypeOfNumber(),
     dialog->sms->getOriginatingAddress().getNumberingPlan(),
     dialog->sms->getOriginatingAddress().value,
@@ -381,11 +383,11 @@ static bool SendSms(MapDialog* dialog){
   __trace2__("MAP::SendSms: MAP.did 0x%x",dialog->dialogid_map);
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
-  SetVersion(appContext,dialogid->version);
+  SetVersion(appContext,dialog->version);
   USHORT_T result;
   bool segmentation = false;
 
-  result = Et96MapOpenReq(SSN,dialog->dialogid,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0);
+  result = Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0);
   if ( result != ET96MAP_E_OK )
     throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::SendSms: Et96MapOpenReq error 0x%x",result));
   
