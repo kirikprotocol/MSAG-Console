@@ -20,6 +20,7 @@ int main(void)
     using smsc::util::config::ConfigException;
 
     const char* OCI_DS_FACTORY_IDENTITY = "OCI";
+    const char* DEFAULT_JOB_IDENTITY = "default";
     const char* SAMPLE_JOB_IDENTITY = "sample1";
     
     DataSourceLoader::loadupDataSourceFactory(
@@ -27,6 +28,7 @@ int main(void)
 
     SampleJobFactory _sampleJobFactory;
     JobFactory::registerFactory(&_sampleJobFactory, SAMPLE_JOB_IDENTITY);
+    JobFactory::registerFactory(&_sampleJobFactory, DEFAULT_JOB_IDENTITY);
 
     ConfigView* config;
     try 

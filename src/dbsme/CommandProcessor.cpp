@@ -169,10 +169,12 @@ DataProvider::~DataProvider()
 void DataProvider::process(Command& command)
     throw(ServiceNotFoundException, CommandProcessException)
 {
-    if (!jobs.Exists(command.getJobName()))
-        throw ServiceNotFoundException(command.getJobName());
+    const char* name = (command.getJobName()) ? 
+                        command.getJobName():"default";
+    if (!jobs.Exists(name))
+        throw ServiceNotFoundException(name);
 
-    jobs.Get(command.getJobName())->process(command, *ds);
+    jobs.Get(name)->process(command, *ds);
 }
 
 

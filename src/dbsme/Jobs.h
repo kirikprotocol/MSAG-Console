@@ -82,7 +82,8 @@ namespace smsc { namespace dbsme
         
         static Job* getJob(const char* key)
         {
-            JobFactory* jf = (registry) ? registry->Get(key):0;
+            JobFactory* jf = (registry) ? 
+                ((registry->Exists(key)) ? registry->Get(key):0):0;
             return ((jf) ? jf->createJob():0);
         };
     };

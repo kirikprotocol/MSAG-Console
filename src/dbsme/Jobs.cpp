@@ -51,7 +51,7 @@ void Job::process(Command& command, DataSource& ds)
         catch(SQLException& exc)
         {
             ds.freeConnection(connection);
-            throw;
+            throw CommandProcessException();
         }
     }
     else

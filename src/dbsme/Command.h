@@ -32,9 +32,16 @@ namespace smsc { namespace dbsme
 
         inline void setString(char*& str, const char* name) 
         {
-            if (str) delete str;
-            str = new char[strlen(name)+1];
-            strcpy(str, name);
+            if (str) 
+            {
+                delete str;
+                str = 0;
+            }
+            if (name)
+            {
+                str = new char[strlen(name)+1];
+                strcpy(str, name);
+            }
         };
 
     public:
