@@ -46,8 +46,10 @@ namespace smsc { namespace dbsme
     static const char* JOB_NOT_FOUND       = "JOB_NOT_FOUND";
 
     class DataProvider;
+    class ProviderGuard;
     class CommandProcessor
     {
+    friend class DataProvider;
     private:
 
         log4cpp::Category       &log;
@@ -56,8 +58,19 @@ namespace smsc { namespace dbsme
         int     protocolId;
         char*   svcType;
         
-        Array<DataProvider *>   allProviders;   // all providers
+        Mutex                   providersLock;
+        Hash<DataProvider *>    allProviders;   // all providers by id
         Hash<DataProvider *>    idxProviders;   // by provider address
+        
+        ProviderGuard getProvider(const char* id);
+        ProviderGuard getProvider(const Address& address);
+        
+        bool hasProvider(const char* id);
+        bool hasProvider(const Address& address);
+        
+        bool addProvider(const char* id, const Address& address, DataProvider *provider);
+        bool addProviderIndex(const Address& address, DataProvider *provider);
+        bool delProviderIndex(const char* idx);
     
     public:
 
@@ -75,10 +88,6 @@ namespace smsc { namespace dbsme
         const char* getSvcType() { return (svcType) ? svcType:"DbSme"; };
         int getProtocolId() { return protocolId; };
 
-        DataProvider* getProvider(const Address& address);
-        bool addProvider(const Address& address, DataProvider *provider);
-        bool addProviderIndex(const Address& address, DataProvider *provider);
-
         /* ---------------- Admin interface implementation ----------------- */
 
         void addJob   (std::string providerId, std::string jobId);
@@ -88,39 +97,114 @@ namespace smsc { namespace dbsme
 
     class DataProvider
     {
+    friend class ProviderGuard;
     protected:
 
         log4cpp::Category       &log;
         MessageSet              messages;
         
+        Event       usersCountEvent;
+        Mutex       usersCountLock;
+        long        usersCount;
+        
+        Mutex       finalizingLock;
+        bool        bFinalizing;
+
         CommandProcessor*       owner;
         DataSource*             ds;
         
-        Array<Job *>            allJobs;
+        Mutex                   jobsLock;
+        Hash<Job *>             allJobs;        // jobs by id
         Hash<Job *>             jobsByAddress;  // jobs by address
         Hash<Job *>             jobsByName;     // jobs by sybolic & digital name
-    
+
+        void doFinalization()
+        {
+            {
+                MutexGuard guard(finalizingLock);
+                bFinalizing = true;
+            }
+            
+            while (true) {
+                usersCountEvent.Wait(10);
+                MutexGuard guard(usersCountLock);
+                if (usersCount <= 0) break;
+            }
+        }
+        
         void createDataSource(ConfigView* config) 
             throw(ConfigException);
-        void registerJob(Job* job, const char* address, 
+        void registerJob(Job* job, const char* id, const char* address, 
                          const char* alias, const char* name)
             throw(ConfigException);
-        void createJob(ConfigView* jobConfig) 
-            throw(ConfigException);
 
-        Job* getJob(const Address& address);
-        Job* getJob(const char* name);
+        JobGuard getJob(const Address& address);
+        JobGuard getJob(const char* name);
     
+        virtual ~DataProvider();
+
     public:
         
-        DataProvider(CommandProcessor* root, ConfigView* config, 
-                     const MessageSet& set)
+        DataProvider(CommandProcessor* root, ConfigView* config, const MessageSet& set)
             throw(ConfigException);
-        virtual ~DataProvider();
         
+        virtual void finalize() {
+            doFinalization();
+            delete this;
+        }
+        inline bool isFinalizing() {
+            MutexGuard guard(finalizingLock);
+            return bFinalizing;
+        }
+
         virtual void process(Command& command)
             throw(CommandProcessException);
+        
+        void createJob(const char* id, ConfigView* jobConfig) 
+            throw(ConfigException);
+        void removeJob(const char* id);
     };
+
+    class ProviderGuard
+    {
+    private:
+        
+        ProviderGuard& operator=(const ProviderGuard& pg) {
+            changeProviderCounter(false);
+            provider = pg.provider;
+            changeProviderCounter(true);
+            return *this;
+        };
+
+    protected:
+        
+        DataProvider* provider;
+        
+        inline void changeProviderCounter(bool increment) {
+           if (!provider) return;
+           MutexGuard guard(provider->usersCountLock);
+           if (increment) provider->usersCount++;
+           else provider->usersCount--;
+           provider->usersCountEvent.Signal();
+        }
+        
+    public:
+        
+        ProviderGuard(DataProvider* provider=0) : provider(provider) {
+            changeProviderCounter(true);
+        }
+        ProviderGuard(const ProviderGuard& pg) : provider(pg.provider) {
+            changeProviderCounter(true);
+        }
+        virtual ~ProviderGuard() {
+            changeProviderCounter(false);
+        }
+    
+        inline DataProvider* get() {
+            return provider;
+        }
+    };
+
 
 }}
 

@@ -91,14 +91,15 @@ namespace smsc { namespace dbsme
             if (messageConfig) delete messageConfig;
         };
 
-        const char* get(const char* key) 
-        {
+        const char* get(const char* key) {
             return (messages.Exists(key)) ? messages.Get(key).c_str() : 0;
         };
-        void set(const char* key, const char* message)
-        {
+        void set(const char* key, const char* message) {
             if (messages.Exists(key)) messages.Delete(key);
             messages.Insert(key, std::string(message));
+        };
+        void clear() {
+            messages.Empty();
         };
     };
 
@@ -210,19 +211,10 @@ namespace smsc { namespace dbsme
 
     class JobGuard
     {
-    private:
-        
-        JobGuard& operator=(const JobGuard& jg) {
-            changeJobCounter(false);
-            job = jg.job;
-            changeJobCounter(true);
-            return *this;
-        };
-
-
     protected:
         
         Job* job;
+        
         
         inline void changeJobCounter(bool increment) {
            if (!job) return;
@@ -237,10 +229,19 @@ namespace smsc { namespace dbsme
         JobGuard(Job* job=0) : job(job) {
             changeJobCounter(true);
         }
+        JobGuard(const JobGuard& jg) : job(jg.job) {
+            changeJobCounter(true);
+        }
         virtual ~JobGuard() {
             changeJobCounter(false);
         }
-    
+        
+        JobGuard& operator=(const JobGuard& jg) {
+            changeJobCounter(false);
+            job = jg.job;
+            changeJobCounter(true);
+            return *this;
+        };
         inline Job* get() {
             return job;
         }
