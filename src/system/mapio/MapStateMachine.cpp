@@ -587,11 +587,13 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   __map_trace2__("MAP::%s err.errCode 0x%x (state %d) ",__func__,err.errorCode,dialog->state);
   USHORT_T result;
   if ( dialog->version == 3 ) {
+    ET96MAP_SM_RP_UI_T ui;
+    ui.signalInfoLen=0;
     result = Et96MapV3ForwardSmMOResp(
       dialog->ssn,
       dialog->dialogid_map,
       dialog->invokeId,
-      0,
+      &ui,
       (status!=Status::OK)?&err:0);
   } else if ( dialog->version == 2 ) {
     result = Et96MapV2ForwardSmMOResp(
@@ -2526,11 +2528,14 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
     moResp.errorCode = ET96MAP_UE_SYS_FAILURE;
     moResp.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
     if( version == 3 ) {
+	ET96MAP_SM_RP_UI_T ui;
+        ui.signalInfoLen=0;
+      
         Et96MapV3ForwardSmMOResp(
         localSsn,
         dialogueId,
         invokeId,
-        0,
+        &ui,
         &moResp);
     } else if( version == 2 ) {
         Et96MapV2ForwardSmMOResp(
