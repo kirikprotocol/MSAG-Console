@@ -14,12 +14,10 @@ public class DateConvertor
 {
     public static Date convertLocalToGMT(Date date) {
         long time = date.getTime();
-        time += TimeZone.getDefault().getOffset(time);
-        return new Date(time);
+        return new Date(time - TimeZone.getDefault().getOffset(time));
     }
     public static Date convertGMTToLocal(Date gmt) {
         long time = gmt.getTime();
-        time -= TimeZone.getDefault().getOffset(time);
-        return new Date(time);
+        return new Date(time + TimeZone.getDefault().getOffset(time));
     }
 }

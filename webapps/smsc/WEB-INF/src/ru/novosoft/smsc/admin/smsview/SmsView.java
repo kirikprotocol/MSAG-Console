@@ -14,6 +14,8 @@ import javax.sql.*;
 
 import java.util.Vector;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -153,12 +155,14 @@ public class SmsView
       if (needExpression(query.getDstSmeId()))
           stmt.setString(pos++, getLikeExpression(query.getDstSmeId()));
 
-      if (query.getFromDateEnabled())
-        stmt.setTimestamp(pos++,
-          new java.sql.Timestamp(query .getFromDate().getTime()));
-      if (query.getTillDateEnabled())
-        stmt.setTimestamp(pos++,
-          new java.sql.Timestamp(query .getTillDate().getTime()));
+      if (query.getFromDateEnabled()) {
+        java.util.Date fromDate = DateConvertor.convertLocalToGMT(query.getFromDate());
+        stmt.setTimestamp(pos++, new java.sql.Timestamp(fromDate.getTime()));
+      }
+      if (query.getTillDateEnabled()) {
+        java.util.Date tillDate = DateConvertor.convertLocalToGMT(query.getTillDate());
+        stmt.setTimestamp(pos++, new java.sql.Timestamp(tillDate.getTime()));
+      }
     }
 
     private String prepareQueryString(SmsQuery query)
@@ -210,7 +214,7 @@ public class SmsView
         int pos=1;
         byte id[] = rs.getBytes(pos++);
         row.setId(id);
-        row.setDate(rs.getTimestamp(pos++));
+        row.setDate(DateConvertor.convertGMTToLocal(rs.getTimestamp(pos++)));
         row.setFrom(rs.getString(pos++));
         row.setTo(rs.getString(pos++));
         row.setStatus(rs.getInt(pos++));
