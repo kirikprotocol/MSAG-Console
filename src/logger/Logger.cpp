@@ -299,9 +299,6 @@ log4cplus::LogLevel getRealLogLevel(const Logger::LogLevel &myLevel)
 	case Logger::LEVEL_FATAL:
 		return log4cplus::FATAL_LOG_LEVEL;
 		break;
-	case Logger::LEVEL_CRIT:
-		return log4cplus::FATAL_LOG_LEVEL;
-		break;
 	case Logger::LEVEL_ERROR:
 		return log4cplus::ERROR_LOG_LEVEL;
 		break;
@@ -427,9 +424,6 @@ const char * const Logger::getLogLevelName(const LogLevel level) throw()
 	case Logger::LEVEL_FATAL:
 		return "FATAL";
 		break;
-	case Logger::LEVEL_CRIT:
-		return "CRIT";
-		break;
 	case Logger::LEVEL_ERROR:
 		return "ERROR";
 		break;
@@ -455,8 +449,6 @@ const Logger::LogLevel Logger::getLogLevel(const char * const logLevelName) thro
 {
 	if (strcmp("FATAL", logLevelName) == 0)
 		return Logger::LEVEL_FATAL;
-	if (strcmp("CRIT", logLevelName) == 0)
-		return Logger::LEVEL_CRIT;
 	if (strcmp("ERROR", logLevelName) == 0)
 		return Logger::LEVEL_ERROR;
 	if (strcmp("WARN", logLevelName) == 0)
@@ -488,19 +480,6 @@ void Logger::fatal(const char* stringFormat, ...) throw()
 void Logger::fatal(const std::string& message) throw()
 {
 	log(Logger::LEVEL_FATAL, message);
-}
-
-void Logger::crit(const char* stringFormat, ...) throw()
-{
-	va_list args;
-	va_start(args, stringFormat);
-	logva(Logger::LEVEL_CRIT, stringFormat, args);
-	va_end(args);
-}
-
-void Logger::crit(const std::string& message) throw()
-{
-	log(Logger::LEVEL_CRIT, message);
 }
 
 void Logger::error(const char* stringFormat, ...) throw()

@@ -19,7 +19,6 @@ class Logger
 public:
 	typedef enum {
 		LEVEL_FATAL,
-		LEVEL_CRIT,
 		LEVEL_ERROR,
 		LEVEL_WARN,
 		LEVEL_INFO,
@@ -118,27 +117,6 @@ public:
 	};
 
 
-	/** 
-	* Log a message with crit priority.
-	* @param stringFormat Format specifier for the string to write 
-	* in the log file.
-	* @param ... The arguments for stringFormat 
-	**/  
-	void crit(const char* stringFormat, ...) throw();
-
-	/** 
-	* Log a message with crit priority.
-	* @param message string to write in the log file
-	**/  
-	void crit(const std::string& message) throw();
-
-	/**
-	* Return true if the Category will log messages with priority CRIT.
-	* @returns Whether the Category will log.
-	**/ 
-	inline bool isCritEnabled() const throw() { 
-		return isLogLevelEnabled(Logger::LEVEL_CRIT);
-	};
 
 	/** 
 	* Log a message with error priority.
