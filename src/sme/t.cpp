@@ -68,13 +68,13 @@ public:
       if(getPduText((PduXSm*)pdu,buf,sizeof(buf))==-1)
       {
         int sz=((PduXSm*)pdu)->optional.size_messagePayload();
-        char *data=new char[sz+1];
-        if(getPduText((PduXSm*)pdu,buf,sizeof(buf))==-1)
+        char *data=new char[sz*2];
+        if(getPduText((PduXSm*)pdu,data,sz*2)!=-1)
         {
           printf("Message(payload):%s\n",data);
         }else
         {
-          printf("Error: faield to retrieve message");
+          printf("Error: faield to retrieve message\n");
         }
         delete [] data;
       }else
