@@ -18,24 +18,12 @@ using smsc::sms::Descriptor;
 using smsc::sms::Body;
 using smsc::sms::SMS;
 
+//constants
 const int MAX_ADDRESS_LENGTH = 20;
 const int MAX_SM_LENGTH = 254;
 const int MAX_PAYLOAD_LENGTH = 65535;
 const int MAX_SERVICE_TYPE_LENGTH = 5;
 const int MAX_MSG_ID_LENGTH = 64;
-
-typedef enum
-{
-	COMPARE_ALL = 0x0,
-	IGNORE_STATE = 0x1,
-	IGNORE_ORIGINATING_DESCRIPTOR = 0x2,
-	IGNORE_DESTINATION_DESCRIPTOR = 0x4,
-	IGNORE_LAST_TIME = 0x8,
-	IGNORE_NEXT_TIME = 0x10,
-	IGNORE_ARCHIVATION_REQUESTED = 0x20,
-	IGNORE_FAILURE_CAUSE = 0x40,
-	IGNORE_ATTEMPTS_COUNT = 0x80
-} SmsCompareFlag;
 
 class SmsUtil
 {
@@ -46,10 +34,11 @@ public:
 
 	//Использую вместо vector<int> operator==(const Body&, const Body&)
 	//для возможности добавления параметра compareFlag
-	static vector<int> compareMessageBodies(const Body& b1, const Body& b2);
+	static vector<int> compareMessageBodies(const Body& b1, const Body& b2,
+		uint64_t excludeMask = 0x0);
 
 	static vector<int> compareMessages(const SMS& sms1, const SMS& sms2,
-		SmsCompareFlag flag = COMPARE_ALL);
+		uint64_t excludeMask = 0x0);
 
 	static void setupRandomCorrectAddress(Address* addr, bool check = true);
 	

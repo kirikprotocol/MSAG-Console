@@ -53,32 +53,36 @@ bool SmsUtil::compareDescriptors(const Descriptor& d1, const Descriptor& d2)
 */
 
 #define __compare_int_body_tag__(tagName, errCode) \
-	if (_b1->hasIntProperty(Tag::tagName) && !_b2->hasIntProperty(Tag::tagName)) { \
-		__trace2__("%s: %d != NULL", #tagName, _b1->getIntProperty(Tag::tagName)); \
-		res.push_back(errCode); \
-	} else if (!_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName)) { \
-		__trace2__("%s: NULL != %d", #tagName, _b2->getIntProperty(Tag::tagName)); \
-		res.push_back(errCode); \
-	} else if (_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName) && \
-		_b1->getIntProperty(Tag::tagName) != _b2->getIntProperty(Tag::tagName)) { \
-	   __trace2__("%s: %d != %d", #tagName, _b1->getIntProperty(Tag::tagName), _b2->getIntProperty(Tag::tagName)); \
-	   res.push_back(errCode); \
+	if (!mask[pos++]) { \
+		if (_b1->hasIntProperty(Tag::tagName) && !_b2->hasIntProperty(Tag::tagName)) { \
+			__trace2__("%s: %d != NULL", #tagName, _b1->getIntProperty(Tag::tagName)); \
+			res.push_back(errCode); \
+		} else if (!_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName)) { \
+			__trace2__("%s: NULL != %d", #tagName, _b2->getIntProperty(Tag::tagName)); \
+			res.push_back(errCode); \
+		} else if (_b1->hasIntProperty(Tag::tagName) && _b2->hasIntProperty(Tag::tagName) && \
+			_b1->getIntProperty(Tag::tagName) != _b2->getIntProperty(Tag::tagName)) { \
+			__trace2__("%s: %d != %d", #tagName, _b1->getIntProperty(Tag::tagName), _b2->getIntProperty(Tag::tagName)); \
+			res.push_back(errCode); \
+		} \
 	}
 
 #define __compare_str_body_tag__(tagName, errCode) \
-	if (_b1->hasStrProperty(Tag::tagName) && !_b2->hasStrProperty(Tag::tagName)) { \
-	   __trace2__("%s: %s != NULL", #tagName, _b1->getStrProperty(Tag::tagName).c_str()); \
-	   res.push_back(errCode); \
-	} else if (!_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName)) { \
-	   __trace2__("%s: NULL != %s", #tagName, _b2->getStrProperty(Tag::tagName).c_str()); \
-	   res.push_back(errCode); \
-	} else if (_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName) && \
-		_b1->getStrProperty(Tag::tagName) != _b2->getStrProperty(Tag::tagName)) { \
-	   __trace2__("%s: %s != %s", #tagName, _b1->getStrProperty(Tag::tagName).c_str(), _b2->getStrProperty(Tag::tagName).c_str()); \
-	   res.push_back(errCode); \
+	if (!mask[pos++]) { \
+		if (_b1->hasStrProperty(Tag::tagName) && !_b2->hasStrProperty(Tag::tagName)) { \
+			__trace2__("%s: %s != NULL", #tagName, _b1->getStrProperty(Tag::tagName).c_str()); \
+			res.push_back(errCode); \
+		} else if (!_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName)) { \
+			__trace2__("%s: NULL != %s", #tagName, _b2->getStrProperty(Tag::tagName).c_str()); \
+			res.push_back(errCode); \
+		} else if (_b1->hasStrProperty(Tag::tagName) && _b2->hasStrProperty(Tag::tagName) && \
+			_b1->getStrProperty(Tag::tagName) != _b2->getStrProperty(Tag::tagName)) { \
+			__trace2__("%s: %s != %s", #tagName, _b1->getStrProperty(Tag::tagName).c_str(), _b2->getStrProperty(Tag::tagName).c_str()); \
+			res.push_back(errCode); \
+		} \
 	}
 
-vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
+vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2, uint64_t excludeMask)
 {
 	//return (b1.getBufferLength() == b2.getBufferLength() &&
 	//	memcmp(b1.getBuffer(), b2.getBuffer(), b1.getBufferLength()) == 0);
@@ -86,6 +90,8 @@ vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 	Body* _b2 = const_cast<Body*>(&b2);
 	__require__(_b1 && _b2);
 	vector<int> res;
+	Mask<uint64_t> mask(excludeMask);
+	int pos = 0;
 	__compare_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, 1);
 	__compare_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, 2);
 	__compare_int_body_tag__(SMPP_ESM_CLASS, 3);
@@ -111,7 +117,7 @@ vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 }
 
 #define __compare__(getter, errCode) \
-	if (_sms1->getter() != _sms2->getter()) { \
+	if (!mask[pos++] && _sms1->getter() != _sms2->getter()) { \
 		ostringstream s1, s2; \
 		s1 << _sms1->getter(); \
 		s2 << _sms2->getter(); \
@@ -120,7 +126,7 @@ vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 	}
 
 #define __compare_int__(getter, errCode, accuracy) \
-	if (abs(_sms1->getter() - _sms2->getter()) > accuracy) { \
+	if (!mask[pos++] && abs(_sms1->getter() - _sms2->getter()) > accuracy) { \
 		ostringstream s1, s2; \
 		s1 << _sms1->getter(); \
 		s2 << _sms2->getter(); \
@@ -128,12 +134,14 @@ vector<int> SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
 		res.push_back(errCode); \
 	}
 
-vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, SmsCompareFlag flag)
+vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t excludeMask)
 {
 	SMS* _sms1 = const_cast<SMS*>(&sms1);
 	SMS* _sms2 = const_cast<SMS*>(&sms2);
 	__require__(_sms1 && _sms2);
 	vector<int> res;
+	Mask<uint64_t> mask(excludeMask);
+	int pos = 0;
 	__compare__(getState, 1);
 	__compare__(getSubmitTime, 2);
 	__compare__(getValidTime, 3);
@@ -145,15 +153,16 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, SmsCompar
 	__compare__(getDestinationAddress, 9);
 	__compare__(getDealiasedDestinationAddress, 10);
 	__compare__(getMessageReference, 11);
-
-	EService serviceType1, serviceType2;
-	sms1.getEServiceType(serviceType1);
-	sms2.getEServiceType(serviceType2);
-	if (strcmp(serviceType1, serviceType2))
+	if (!mask[pos++])
 	{
-		res.push_back(12);
+		EService serviceType1, serviceType2;
+		sms1.getEServiceType(serviceType1);
+		sms2.getEServiceType(serviceType2);
+		if (strcmp(serviceType1, serviceType2))
+		{
+			res.push_back(12);
+		}
 	}
-
 	__compare__(isArchivationRequested, 13);
 	__compare__(getDeliveryReport, 14);
 	__compare__(getBillingRecord, 15);
@@ -161,7 +170,7 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, SmsCompar
 	__compare__(getDestinationDescriptor, 17);
 
 	vector<int> tmp = compareMessageBodies(sms1.getMessageBody(),
-		sms2.getMessageBody());
+		sms2.getMessageBody(), excludeMask >> 20);
 	for (int i = 0; i < tmp.size(); i++)
 	{
 		res.push_back(20 + tmp[i]);
