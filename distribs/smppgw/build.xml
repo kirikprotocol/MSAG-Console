@@ -178,7 +178,7 @@ Targets:
       </filterset>
     </copy>
     <symlink action="recreate">
-      <fileset dir="${DISTR_DIR}/lib" file="extra_lib_links.list"/>
+      <fileset dir="${DISTR_DIR}/lib" includes="extra_lib_links.list"/>
     </symlink>
     <delete file="${DISTR_DIR}/lib/extra_lib_links.list"/>
   </target>
