@@ -53,6 +53,7 @@
     <copy tofile="${exploded}/conf/config.xml" file="${TEMPL_DIR}/${esme_name}/config.xml" preservelastmodified="yes">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+    <copy todir="${exploded}/bin" file="${BUILD_BIN}/${esme_bin_path}/${esme_bin_name}" flatten="yes" preservelastmodified="yes"/>
     <copy tofile="${exploded}/bin/service" file="${TEMPL_DIR}/service/${esme_name}" preservelastmodified="yes">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
