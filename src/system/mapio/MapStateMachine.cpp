@@ -314,12 +314,12 @@ static void QueryHlrVersion(MapDialog* dialog)
   x_map.insert(make_pair(s_,dialog->dialogid_map));
   USHORT_T result = 
     Et96MapGetACVersionReq(SSN,&dialog->mshlrAddr,ET96MAP_SHORT_MSG_GATEWAY_CONTEXT);
+  __trace2__("MAP::QueryHlrVersion: done");
   if ( result != ET96MAP_E_OK ) {
     x_map.erase(s_);
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::QueryHlrVersion: error 0x%x when GetAcVersion",result),MAP_FALURE);
   }
-  __trace2__("MAP::QueryHlrVersion: done");
 }
 
 static void QueryMcsVersion(MapDialog* dialog)
@@ -694,6 +694,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error = false,unsigned 
         __trace2__("MAP::%s: catched exception when send error response to smsc",__FUNCTION__);
       }
     }
+    __trace2__("MAP::%s: dialod state %d",__FUNCTION__,dialog->state);
     switch(dialog->state){
     case MAPST_ABORTED: 
       __trace2__("MAP::ABORT: dialog 0x%x",dialog->dialogid_map);
