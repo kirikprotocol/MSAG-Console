@@ -223,9 +223,10 @@ void PduRegistry::dump(FILE* log) const
 		char submitTime[20];
 		char waitTime[20];
 		char validTime[20];
-		strftime(submitTime, 20, fmt, localtime(&data->submitTime));
-		strftime(waitTime, 20, fmt, localtime(&data->waitTime));
-		strftime(validTime, 20, fmt, localtime(&data->validTime));
+		tm t;
+		strftime(submitTime, 20, fmt, localtime_r(&data->submitTime, &t));
+		strftime(waitTime, 20, fmt, localtime_r(&data->waitTime, &t));
+		strftime(validTime, 20, fmt, localtime_r(&data->validTime, &t));
 		fprintf(log, "pduData[%u] = {%s}", it->first, toString(data));
 		switch (data->pdu->get_commandId())
 		{
