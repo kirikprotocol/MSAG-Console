@@ -1,8 +1,8 @@
 // 
-// File:   CommandApply.cc
-// Author: igork
+// File:   CommandTraceRoute.cpp
+// Author: loomox
 //
-// Created on 27 Май 2004 г., 17:09
+// Created on 24 march 2005
 //
 
 #include "CommandTraceRoute.h"
@@ -87,12 +87,9 @@ CommandTraceRoute::~CommandTraceRoute()
 smsc::admin::service::Variant CommandTraceRoute::GetTraceResult(smsc::smppgw::Smsc * SmscApp)
 {
   
-    const char* _dstAddr  = dstAddr.get();
-    const char* _srcAddr  = srcAddr.get();
-    const char* _srcSysId = srcSysId.get();
-  
-   
-
+  const char* _dstAddr  = dstAddr.get();
+  const char* _srcAddr  = srcAddr.get();
+  const char* _srcSysId = srcSysId.get();
   
   try
   {

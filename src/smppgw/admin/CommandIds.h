@@ -21,7 +21,8 @@ namespace CommandIds {
     updateSmeInfo,
     addSme,
     deleteSme,
-    traceRoute
+    traceRoute,
+    loadRoutes
   };
 }
 

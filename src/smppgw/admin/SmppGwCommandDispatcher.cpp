@@ -153,6 +153,7 @@ SmppGwCommandDispatcher::~SmppGwCommandDispatcher()
 
 Response * SmppGwCommandDispatcher::handle(const Command * const command) throw (AdminException)
 {
+  fprintf(stderr, "------Getting Handle\n");
   try
   {
     switch (command->getId())
@@ -165,8 +166,12 @@ Response * SmppGwCommandDispatcher::handle(const Command * const command) throw 
       return addSme((CommandAddSme*)command);
     case CommandIds::deleteSme:
       return deleteSme((CommandDeleteSme*)command);
-    case CommandIds::traceRoute:
+    case CommandIds::traceRoute: 
+      fprintf(stderr, "traceRoute\n");
       return traceRoute((CommandTraceRoute*)command);
+    case CommandIds::loadRoutes:
+      return loadRoutes((CommandLoadRoutes*)command);
+
     default:
       return new Response(Response::Error, "Unknown command");
     }
@@ -221,6 +226,23 @@ Response * SmppGwCommandDispatcher::traceRoute(CommandTraceRoute* command)
   try
   {
     data = command->GetTraceResult(runner->getApp());
+    return new Response(Response::Ok, data);
+  } catch (AdminException &e) {
+    return new Response(Response::Error, e.what());
+  } catch (const char * const e) {
+    return new Response(Response::Error, e);
+  } catch (...) {
+    return new Response(Response::Error, "Unknown exception");
+  }
+}
+
+Response * SmppGwCommandDispatcher::loadRoutes(CommandLoadRoutes* command)
+{
+  smsc::admin::service::Variant data;
+
+  try
+  {
+    data = command->GetLoadResult(runner->getApp());
     return new Response(Response::Ok, data);
   } catch (AdminException &e) {
     return new Response(Response::Error, e.what());
