@@ -1,13 +1,13 @@
 #ifndef TEST_DBSME_DBSME_CHECK_LIST
 #define TEST_DBSME_DBSME_CHECK_LIST
 
-#include "test/sme/SmppProtocolCheckList.hpp"
+#include "test/sme/SmppProfilerCheckList.hpp"
 
 namespace smsc {
 namespace test {
 namespace dbsme {
 
-using smsc::test::sme::SmppProtocolCheckList;
+using smsc::test::sme::SmppProfilerCheckList;
 
 #define __reg_tc__(id, desc) \
 	registerTc(id, desc)
@@ -15,7 +15,7 @@ using smsc::test::sme::SmppProtocolCheckList;
 #define __hide_tc__(id) \
 	hideTc(id)
 
-class DbSmeCheckList : public SmppProtocolCheckList
+class DbSmeCheckList : public SmppProfilerCheckList
 {
 
 void correctJobTc()
@@ -239,7 +239,7 @@ void processDbSmeRes()
 
 public:
 	DbSmeCheckList()
-		: SmppProtocolCheckList("Результаты функционального тестирования db sme", "dbsme.chk")
+		: SmppProfilerCheckList("Результаты функционального тестирования db sme", "dbsme.chk")
 	{
 		__hide_tc__("bindIncorrectSme");
 		__hide_tc__("submitSm.correct");
@@ -253,6 +253,8 @@ public:
 		//__hide_tc__("processDeliverySm.deliveryReceipt");
 		__hide_tc__("processDeliverySm.intermediateNotification");
 		__hide_tc__("notImplemented");
+		__hide_tc__("updateProfile");
+		__hide_tc__("processUpdateProfile");
 
 		//submitDbSmeCmd.correct
 		__reg_tc__("submitDbSmeCmd", "Отправка sms на db sme");
