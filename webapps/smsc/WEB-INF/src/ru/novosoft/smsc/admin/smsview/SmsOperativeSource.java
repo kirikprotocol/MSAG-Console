@@ -30,8 +30,8 @@ public class SmsOperativeSource extends SmsSource
     //  context = ArchiveDaemonContext.getInstance(appContext);
     Smsc smsc = appContext.getSmsc();
     String configPath = smsc.getConfigFolder().getAbsolutePath();
-    int len=configPath.lastIndexOf("\\");
-    String absolutePath=configPath.substring(0,len);
+    int len = configPath.lastIndexOf("\\");
+    String absolutePath = configPath.substring(0, len);
     Config config = smsc.getSmscConfig();
 
     try {
@@ -76,25 +76,28 @@ public class SmsOperativeSource extends SmsSource
       while (!allReaded) {
         responce = receive(input);
         allReaded = ((RsFileMessage) responce).isAllReaded();
-        SmsRow sms = ((RsFileMessage) responce).getSms();
-        long msgId = sms.getId();
         if (!querySelect(query, responce)) continue;
         if (responce == null)
           throw new AdminException("Message from file  is NULL");
         if (!allReaded || ((RsFileMessage) responce).isBodyRecived()) {
-          if (set.getRow(msgId) == null) {
-            if (!set.isHasMore()) set.addRow(((RsFileMessage) responce).getSms());
-            if (--toReceive <= 0) {
-              toReceive = rowsMaximum - set.getRowsCount();
-              if (toReceive <= 0) {
-                set.setHasMore(true);
-                break;
-              }
-              else {
-                toReceive = (toReceive < MAX_SMS_FETCH_SIZE) ? toReceive : MAX_SMS_FETCH_SIZE;
-              }
+          if (!set.isHasMore()) {
+            SmsRow smsNew = ((RsFileMessage) responce).getSms();
+            long msgId = smsNew.getId();
+            SmsRow smsOld = set.getRow(msgId);
+            if (smsOld != null) set.removeRow(smsOld);
+            set.addRow(smsNew);
+          }
+          if (--toReceive <= 0) {
+            toReceive = rowsMaximum - set.getRowsCount();
+            if (toReceive <= 0) {
+              set.setHasMore(true);
+              break;
+            }
+            else {
+              toReceive = (toReceive < MAX_SMS_FETCH_SIZE) ? toReceive : MAX_SMS_FETCH_SIZE;
             }
           }
+
         }
 
       }
@@ -232,19 +235,21 @@ public class SmsOperativeSource extends SmsSource
         while (!allReaded) {
           responce = receive(input);
           allReaded = ((RsFileMessage) responce).isAllReaded();
-          SmsRow sms = ((RsFileMessage) responce).getSms();
-          long msgId = sms.getId();
           if (!querySelect(query, responce)) continue;
           if (responce == null)
             throw new AdminException("Message from file  is NULL");
           if (!allReaded || ((RsFileMessage) responce).isBodyRecived()) {
-            if (set.getRow(msgId) == null) {
-              if (!set.isHasMore()) set.addRow(((RsFileMessage) responce).getSms());
-              smsCount++;
-              toReceive = rowsMaximum - set.getRowsCount();
-              if (toReceive <= 0) {
-                set.setHasMore(true);
-              }
+            if (!set.isHasMore()) {
+              SmsRow smsNew = ((RsFileMessage) responce).getSms();
+              long msgId = smsNew.getId();
+              SmsRow smsOld = set.getRow(msgId);
+              if (smsOld != null) set.removeRow(smsOld);
+              set.addRow(smsNew);
+            }
+            smsCount++;
+            toReceive = rowsMaximum - set.getRowsCount();
+            if (toReceive <= 0) {
+              set.setHasMore(true);
             }
           }
 
