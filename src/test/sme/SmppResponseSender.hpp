@@ -11,7 +11,7 @@ using smsc::smpp::PduDeliverySm;
 
 struct SmppResponseSender
 {
-	virtual bool sendDeliverySmResp(PduDeliverySm& pdu) = NULL;
+	virtual uint32_t sendDeliverySmResp(PduDeliverySm& pdu) = NULL;
 };
 
 }
