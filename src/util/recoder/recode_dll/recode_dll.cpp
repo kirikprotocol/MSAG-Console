@@ -117,6 +117,7 @@ const unsigned char* Translit(unsigned char ch, ConvEncodingEnum encoding, unsig
 
 int Transliterate(const char* buf,int len,ConvEncodingEnum encoding,char *dest,int destlen)
 {
+  if(len==0)return 0;
   int j=0;
   const unsigned char* res;
   bool prev_is_capital,next_is_capital;
