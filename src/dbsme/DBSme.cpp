@@ -24,6 +24,7 @@
 #include <admin/service/Component.h>
 #include <admin/service/ComponentManager.h>
 #include <admin/service/ServiceSocketListener.h>
+#include "version.inc"
 
 #include "DBSmeComponent.h"
 #include "CommandProcessor.h"
@@ -482,6 +483,7 @@ int main(void)
 
     try 
     {
+        logger.info(getStrVersion());
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
         
