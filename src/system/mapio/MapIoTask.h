@@ -351,7 +351,7 @@ class MapDialogContainer{
     hash_.First();
     time_t now = time(NULL);
     while(hash_.Next(key,dlg)) {
-      if((now-dlg->lockedAt)>processTimeout+1) {
+      if((now-(dlg->maked_at_mks/1000000))>processTimeout*2) {
         MAPSTATS_DumpDialog(dlg, now, true);
         AbortMapDialog(dlg->dialogid_map, dlg->ssn);
         for (;!dlg->chain.empty();dlg->chain.pop_front())
