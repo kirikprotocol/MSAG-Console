@@ -8,6 +8,12 @@
       <Host name="localhost" appBase="webapps">
         <Context path="/smppgw" docBase="smppgw" debug="0" privileged="true">
         </Context>
+        <Context path="/images" docBase="images" debug="0" privileged="true">
+        </Context>
+	<Context path="/styles" docBase="styles" debug="0" privileged="true">
+        </Context>
+	<Context path="/scripts" docBase="scripts" debug="0" privileged="true">
+        </Context>
       </Host>
     </Engine>
   </Service>
