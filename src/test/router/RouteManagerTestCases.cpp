@@ -46,6 +46,11 @@ void RouteManagerTestCases::debugRoute(const char* tc, const RouteInfo* route)
 	getLog().debug("[%d]\t%s: %s", thr_self(), tc, os.str().c_str());
 }
 
+void RouteManagerTestCases::commit()
+{
+	routeMan->commit();
+}
+
 void RouteManagerTestCases::setupRandomAddressMatch(Address& addr, int num)
 {
 	AddressValue addrVal;

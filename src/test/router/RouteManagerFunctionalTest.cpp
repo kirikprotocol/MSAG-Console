@@ -127,13 +127,12 @@ void RouteManagerFunctionalTest::executeTestCases(
 	//Создание нового стека для origAddr, destAddr
 	stack.push_back(new TCResultStack());
 
-	//Добавление корректного рабочего маршрута, 1/7
-	//Добавление корректного нерабочего маршрута, 2/7
-	//Добавление корректного маршрута с неправильными (непроверяемыми) значениями, 1/7
-	//Добавление некорректного маршрута, 1/7
-	//Поиск маршрута, 2/7
+	//Добавление корректного рабочего маршрута, 1/5
+	//Добавление корректного нерабочего маршрута, 2/5
+	//Добавление корректного маршрута с неправильными (непроверяемыми) значениями, 1/5
+	//Добавление некорректного маршрута, 1/5
 	RouteInfo* existentRoute = NULL;
-	for (TCSelector s(RAND_SET_TC, 7); s.check(); s++)
+	for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
 	{
 		switch (s.value())
 		{
@@ -189,11 +188,13 @@ void RouteManagerFunctionalTest::executeTestCases(
 					stack.back()->push_back(res);
 				}
 				break;
+			/*
 			default: //case 6..7
 				{
 					TCResult* res = tcRoute.lookupRoute(origAddr, destAddr);
 					stack.back()->push_back(res);
 				}
+			*/
 		}
 	}
 	if (existentRoute)
@@ -222,6 +223,7 @@ void RouteManagerFunctionalTest::executeTest(
 			executeTestCases(origAddr, destAddr);
 		}
 	}
+	tcRoute.commit();
 	
 	//Поиск маршрута для каждой пары адресов
 	for (int i = 0; i < numAddr; i++)
