@@ -235,7 +235,8 @@ public:
       __synchronized__
         trace("selanddeq: got mutex");
         Locker* prev = 0;
-        {
+#if !defined ( DISABLE_ANY_CHECKS )
+				{
           Locker *iter1,*iter2;
           int i;
           for(i=0;i<HashTable::TABLE_SIZE;i++)
@@ -272,7 +273,8 @@ public:
             }
           }
         }
-        __watch__(first_unlocked);
+#endif // LIST TEST        
+				__watch__(first_unlocked);
         __watch__(last_unlocked);
         for (Locker* iter = first_unlocked;
              iter != 0; ) //iter = iter->next_unlocked
@@ -290,7 +292,8 @@ public:
             if ( success ) // получена доступная команда
             {
               // удаляем из списка активных
-              {
+#if !defined (DISABLE_ANY_CHECKS)              
+							{
               __trace__("dump list before");
               Locker *iter2=first_unlocked;
               while(iter2)
@@ -299,7 +302,7 @@ public:
                 iter2=iter2->next_unlocked;
               }
               }
-
+#endif // DUMP LIST
               __trace2__("success:%p",locker);
               if ( locker == last_unlocked ) last_unlocked = prev;
               if ( prev )
@@ -311,6 +314,7 @@ public:
                 first_unlocked = locker->next_unlocked;
               }
 
+#if !defined (DISABLE_ANY_CHECKS)              
               {
               __trace__("dump list after");
               Locker *iter2=first_unlocked;
@@ -320,6 +324,7 @@ public:
                 iter2=iter2->next_unlocked;
               }
               }
+#endif // DUMP LIST
 
               locker->next_unlocked = 0;
               locker->locked = true;
@@ -387,6 +392,7 @@ public:
     // разблокируем запись и добавляем в список активных
     locker->locked = false;
 
+#if !defined (DISABLE_ANY_CHECKS)              
     {Locker *iter2=first_unlocked;
     __trace__("change state: list before");
     while(iter2)
@@ -394,6 +400,7 @@ public:
       __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
       iter2=iter2->next_unlocked;
     }}
+#endif // DUMP LIST
 
     if ( last_unlocked )
     {
@@ -407,6 +414,7 @@ public:
       first_unlocked = last_unlocked = locker;
     }
 
+#if !defined (DISABLE_ANY_CHECKS)              
     {Locker *iter2=first_unlocked;
     __trace__("change state: list after");
     while(iter2)
@@ -414,7 +422,9 @@ public:
       __trace2__("ptr:%p, id:%lld",iter2,iter2->msgId);
       iter2=iter2->next_unlocked;
     }}
-    __watch__(first_unlocked);
+#endif // DUMP LIST    
+
+		__watch__(first_unlocked);
     __watch__(last_unlocked);
     event.Signal();
   }
