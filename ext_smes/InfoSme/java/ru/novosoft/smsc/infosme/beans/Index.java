@@ -62,6 +62,7 @@ public class Index extends IndexProperties
       Task task = new Task(oldConfig, taskId);
       task.storeToConfig(getConfig());
     }
+    getInfoSmeContext().setChangedTasks(false);
     return RESULT_DONE;
   }
 
