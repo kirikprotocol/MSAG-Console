@@ -29,11 +29,12 @@ import ru.novosoft.smsc.admin.smsc_service.CancelMessageData;
 
 public class SmsView
 {
-    private static int   MAX_SMS_BODY_LENGTH    = 1500;
-    private static byte  INT_TAG_TYPE           = 0;
-    private static short SMPP_ESM_CLASS_TAG     = 2;
-    private static short SMPP_DATA_CODING_TAG   = 3;
-    private static short SMPP_SHORT_MESSAGE_TAG = 28;
+    private static int   MAX_SMS_BODY_LENGTH      = 1500;
+    private static byte  INT_TAG_TYPE             = 0;
+    private static short SMPP_ESM_CLASS_TAG       = 2;
+    private static short SMPP_DATA_CODING_TAG     = 3;
+    private static short SMPP_SHORT_MESSAGE_TAG   = 28;
+    private static short SMPP_MESSAGE_PAYLOAD_TAG = 29;
 
 
     private static short DATA_CODING_DEFAULT    = 0;    // 0
@@ -274,7 +275,7 @@ public class SmsView
 
           int   len = (type == INT_TAG_TYPE) ? 4:stream.readInt();
           //System.out.println("Tag: "+tag+" Type: "+type+" Len: "+len);
-          if (tag == SMPP_SHORT_MESSAGE_TAG) {
+          if (tag == SMPP_SHORT_MESSAGE_TAG || tag == SMPP_MESSAGE_PAYLOAD_TAG) {
             byte msgText[] = new byte[textLen = len];
             stream.read(msgText, 0, textLen);
             text = msgText;
