@@ -32,7 +32,7 @@ compile:
 	@mkdir -p $(SME_BUILDDIR)/lib
 	@mkdir -p $(SME_BUILDDIR)/jsp
 	@mkdir -p $(SME_BUILDDIR)/jsp/inc
-	@cp -f $(SMSC_BUILDDIR)/bin/dbsme/DBSme $(SME_BUILDDIR)/bin/service
+	@cp -f $(SMSC_BUILDDIR)/bin/dbsme/DBSme $(SME_BUILDDIR)/bin
 	@cp -f $(SMSC_BUILDDIR)/jars/dbSme.jar  $(SME_BUILDDIR)/lib/dbSme.jar
 	@cp -f $(DB_OCI_LIB) $(SME_BUILDDIR)/lib/libdb_oci.so
 	@cp -f ../../config/dbsme/config.xml $(SME_BUILDDIR)/conf/config.xml
@@ -40,6 +40,8 @@ compile:
 	@cp -f jsp/*.* $(SME_BUILDDIR)/jsp
 	@cp -f jsp/inc/*.* $(SME_BUILDDIR)/jsp/inc
 	@cp -f config.xml $(SME_BUILDDIR)
+	@cp -f service $(SME_BUILDDIR)/bin
+	@cp -f log4cpp.properties $(SME_BUILDDIR)
 
 pack:
 	@echo zipping archive
