@@ -206,9 +206,9 @@ bool NeedRejectStatement::needReject()
 /* ----------------------- NeedOverwriteStatement ---------------------- */
 const char* NeedOverwriteStatement::sql = (const char*)
 "SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE\
- AND SVC_TYPE=:SVC_TYPE\
  AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL\
- AND DA_TON=:OA_TON AND DA_NPI=:DA_NPI AND DA_VAL=:DA_VAL";
+ AND DA_TON=:OA_TON AND DA_NPI=:DA_NPI AND DA_VAL=:DA_VAL\
+ AND SVC_TYPE IS NULL";
 NeedOverwriteStatement::NeedOverwriteStatement(Connection* connection, 
                                                bool assign)
     throw(StorageException)
@@ -218,31 +218,54 @@ NeedOverwriteStatement::NeedOverwriteStatement(Connection* connection,
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
     define(1, SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
 }
-
-void NeedOverwriteStatement::bindEServiceType(dvoid* type, sb4 size)
+NeedOverwriteStatement::NeedOverwriteStatement(Connection* connection,
+                                               const char* sql,
+                                               bool assign)
     throw(StorageException)
+        : IdStatement(connection, sql, assign)
 {
-    bind(2 , SQLT_STR, type, size);
+    bind(1 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
+    define(1, SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
 }
+
 void NeedOverwriteStatement::bindOriginatingAddress(Address& oa)
     throw(StorageException)
 {
-    bind(3 , SQLT_UIN, (dvoid *)&(oa.type), (sb4) sizeof(oa.type)); 
-    bind(4 , SQLT_UIN, (dvoid *)&(oa.plan), (sb4) sizeof(oa.plan));
-    bind(5 , SQLT_STR, (dvoid *) (oa.value), (sb4) sizeof(oa.value));
+    bind(2 , SQLT_UIN, (dvoid *)&(oa.type), (sb4) sizeof(oa.type)); 
+    bind(3 , SQLT_UIN, (dvoid *)&(oa.plan), (sb4) sizeof(oa.plan));
+    bind(4 , SQLT_STR, (dvoid *) (oa.value), (sb4) sizeof(oa.value));
 }
 void NeedOverwriteStatement::bindDestinationAddress(Address& da)
     throw(StorageException)
 {
-    bind(6 , SQLT_UIN, (dvoid *)&(da.type), (sb4) sizeof(da.type)); 
-    bind(7 , SQLT_UIN, (dvoid *)&(da.plan), (sb4) sizeof(da.plan));
-    bind(8 , SQLT_STR, (dvoid *) (da.value), (sb4) sizeof(da.value));
+    bind(5 , SQLT_UIN, (dvoid *)&(da.type), (sb4) sizeof(da.type)); 
+    bind(6 , SQLT_UIN, (dvoid *)&(da.plan), (sb4) sizeof(da.plan));
+    bind(7 , SQLT_STR, (dvoid *) (da.value), (sb4) sizeof(da.value));
 }
 
 void NeedOverwriteStatement::getId(SMSId& id)
     throw(StorageException)
 {
     getSMSId(id);
+}
+
+const char* NeedOverwriteSvcStatement::sql = (const char*)
+"SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE\
+ AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL\
+ AND DA_TON=:OA_TON AND DA_NPI=:DA_NPI AND DA_VAL=:DA_VAL\
+ AND SVC_TYPE=:SVC_TYPE";
+NeedOverwriteSvcStatement::NeedOverwriteSvcStatement(Connection* connection, 
+                                                     bool assign=true)
+    throw(StorageException)
+        : NeedOverwriteStatement(connection, 
+                                 NeedOverwriteSvcStatement::sql, assign)
+{
+}
+void NeedOverwriteSvcStatement::bindEServiceType(dvoid* type, sb4 size)
+    throw(StorageException)
+{
+    bind(8 , SQLT_STR, type, size);
 }
 
 /* ------------------------- OverwriteStatement ---------------------- */

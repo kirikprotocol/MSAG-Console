@@ -393,6 +393,7 @@ void Connection::connect()
             retriveStmt = new RetriveStatement(this); 
             needRejectStmt = new NeedRejectStatement(this); 
             needOverwriteStmt = new NeedOverwriteStatement(this); 
+            needOverwriteSvcStmt = new NeedOverwriteSvcStatement(this);
             overwriteStmt = new OverwriteStatement(this);
             
             replaceStmt = new ReplaceStatement(this); 
@@ -454,6 +455,12 @@ void Connection::rollback()
     check(OCITransRollback(svchp, errhp, OCI_DEFAULT));
 }
 
+NeedOverwriteSvcStatement* Connection::getNeedOverwriteSvcStatement() 
+    throw(ConnectionFailedException)
+{
+    connect();
+    return needOverwriteSvcStmt;
+}
 NeedOverwriteStatement* Connection::getNeedOverwriteStatement() 
     throw(ConnectionFailedException) 
 {

@@ -111,13 +111,22 @@ SMSId StoreManager::doCreateSms(Connection* connection,
     
     if (flag == SMPP_OVERWRITE_IF_PRESENT)
     {
-        NeedOverwriteStatement* needOverwriteStmt 
-            = connection->getNeedOverwriteStatement();
-        
+        NeedOverwriteStatement* needOverwriteStmt;
+
+        if (!sms.eServiceType[0])
+        {
+            needOverwriteStmt = connection->getNeedOverwriteStatement();
+        }
+        else 
+        {
+            needOverwriteStmt = connection->getNeedOverwriteSvcStatement();
+            ((NeedOverwriteSvcStatement *)needOverwriteStmt)->
+                bindEServiceType((dvoid *) sms.eServiceType,
+                                 (sb4) sizeof(sms.eServiceType));
+
+        }
         needOverwriteStmt->bindOriginatingAddress(sms.originatingAddress);
         needOverwriteStmt->bindDestinationAddress(sms.destinationAddress);
-        needOverwriteStmt->bindEServiceType((dvoid *) sms.eServiceType, 
-                                           (sb4) sizeof(sms.eServiceType));
         
         sword result = needOverwriteStmt->execute();
         if (result != OCI_NO_DATA)

@@ -146,20 +146,37 @@ namespace smsc { namespace store
     class NeedOverwriteStatement : public IdStatement
     {
     static const char* sql;
+    protected:
+        
+        NeedOverwriteStatement(Connection* connection, const char* sql,
+                               bool assign=true)
+            throw(StorageException);
+
     public:
         
         NeedOverwriteStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~NeedOverwriteStatement() {};
 
-        void bindEServiceType(dvoid* type, sb4 size)
-            throw(StorageException);
         void bindOriginatingAddress(Address& oa)
             throw(StorageException);
         void bindDestinationAddress(Address& da)
             throw(StorageException);
         
         void getId(SMSId& id)
+            throw(StorageException);
+    };
+    
+    class NeedOverwriteSvcStatement : public NeedOverwriteStatement
+    {
+    static const char* sql;
+    public:
+        
+        NeedOverwriteSvcStatement(Connection* connection, bool assign=true)
+            throw(StorageException);
+        virtual ~NeedOverwriteSvcStatement() {};
+
+        void bindEServiceType(dvoid* type, sb4 size)
             throw(StorageException);
     };
     

@@ -62,17 +62,18 @@ namespace smsc { namespace store
         
         Array<Statement *>      statements;
 
-        NeedOverwriteStatement* needOverwriteStmt;
-        NeedRejectStatement*    needRejectStmt;
-        OverwriteStatement*     overwriteStmt;
-        StoreStatement*         storeStmt;
-        RetriveStatement*       retriveStmt;
-        DestroyStatement*       destroyStmt;
+        NeedOverwriteSvcStatement*  needOverwriteSvcStmt;
+        NeedOverwriteStatement*     needOverwriteStmt;
+        NeedRejectStatement*        needRejectStmt;
+        OverwriteStatement*         overwriteStmt;
+        StoreStatement*             storeStmt;
+        RetriveStatement*           retriveStmt;
+        DestroyStatement*           destroyStmt;
         
-        ReplaceStatement*       replaceStmt;
-        ReplaceVTStatement*     replaceVTStmt;
-        ReplaceWTStatement*     replaceWTStmt;
-        ReplaceVWTStatement*    replaceVWTStmt;
+        ReplaceStatement*           replaceStmt;
+        ReplaceVTStatement*         replaceVTStmt;
+        ReplaceWTStatement*         replaceWTStmt;
+        ReplaceVWTStatement*        replaceVWTStmt;
         
         ToEnrouteStatement*         toEnrouteStmt;
         ToDeliveredStatement*       toDeliveredStmt;
@@ -106,6 +107,8 @@ namespace smsc { namespace store
             return (isConnected && !isDead);
         };
 
+        NeedOverwriteSvcStatement* getNeedOverwriteSvcStatement() 
+            throw(ConnectionFailedException);
         NeedOverwriteStatement* getNeedOverwriteStatement() 
             throw(ConnectionFailedException);
         NeedRejectStatement*    getNeedRejectStatement() 
