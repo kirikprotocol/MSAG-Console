@@ -425,3 +425,8 @@ function encodeHEX( str ) {
 	}
 	return result;
 }
+function removeRow(tbl, rowId)
+{
+	var rowElem = tbl.rows(rowId);
+	tbl.deleteRow(rowElem.rowIndex);
+}
