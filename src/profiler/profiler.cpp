@@ -267,7 +267,7 @@ int Profiler::Execute()
     int status=MAKE_COMMAND_STATUS(CMD_OK,0);
     if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)!=0)
     {
-      status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,0);
+      status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,SmppStatusSet::ESME_RINVESMCLASS);
     };
 
     Address& addr=sms->getOriginatingAddress();
