@@ -66,6 +66,13 @@ typedef enum
 	SMPP_REJECTED_STATE = 8
 } SmppState;
 
+
+typedef enum
+{
+	DELIVERY_STATUS_NO_RESPONSE = 0xffffffff,
+	DELIVERY_STATUS_DEST_UNREACHABLE = 0xfffffffe
+} ExtDeliveryStatus;
+
 //esm_class parameter for SMSC -> ESME PDUs (SMPP v3.4, 5.2.12):
 //ESME -> SMSC PDUs:
 //xxxxxx00 - Default SMSC Mode (e.g. Store and Forward)
