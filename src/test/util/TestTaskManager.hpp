@@ -4,6 +4,7 @@
 #include "core/threads/ThreadPool.hpp"
 #include <iostream>
 #include <vector>
+#include <sys/timeb.h>
 
 namespace smsc {
 namespace test {
@@ -52,6 +53,7 @@ class TestTaskManager
 protected:
 	smsc::core::threads::ThreadPool tp;
 	vector<H*> taskHolders;
+	timeb timeStart;
 
 public:
 	virtual ~TestTaskManager()
@@ -87,6 +89,20 @@ public:
 				throw exception();
 			}
 		}
+	}
+
+	void startTimer()
+	{
+		ftime(&timeStart);
+	}
+
+	float getExecutionTime()
+	{
+		timeb curTime;
+		ftime(&curTime);
+		float dt = (curTime.time - timeStart.time) +
+			(curTime.millitm - timeStart.millitm) / 1000.0;
+		return dt;
 	}
 
 private:
