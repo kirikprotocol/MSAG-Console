@@ -1,5 +1,10 @@
-#include "profiler/profiler.hpp"
 #include <vector>
+#include <memory>
+#include <ctype.h>
+
+
+#include "profiler/profiler.hpp"
+
 #include "core/buffers/Array.hpp"
 #include "core/buffers/XHash.hpp"
 
@@ -9,7 +14,7 @@
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
 
-#include "memory"
+
 
 namespace smsc{
 namespace profiler{
@@ -219,6 +224,7 @@ int Profiler::Execute()
   SMS *sms;
   int len;
   char body[MAX_SHORT_MESSAGE_LENGTH];
+  char *str=body;
   while(!isStopping)
   {
     waitFor();
@@ -234,9 +240,12 @@ int Profiler::Execute()
     //len = sms->getMessageBody().getData( (uint8_t*)body );
    	strncpy(body,sms->getStrProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE).c_str(),sizeof(body));
    	len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
+   	int i;
+   	for(i=0;i<len;i++)body[i]=toupper(body[i]);
+   	while(!isalpha(body[i]) && i<len)i++;
     if(!strncmp(body,"REPORT",6))
     {
-      int i=7;
+      i+=7;
       while(i<len && !isalpha(body[i]))i++;
       if(i<len)
       {
