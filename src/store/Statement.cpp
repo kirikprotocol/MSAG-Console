@@ -1129,7 +1129,7 @@ const char* CancelIdsStatement::sql1 = (const char*)
  OA=:OA AND DA=:DA AND SVC_TYPE=:SVC";
 const char* CancelIdsStatement::sql2 = (const char*)
 "SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE AND\
- OA=:OA AND DA=:DA AND SVC_TYPE IS NULL";
+ OA=:OA AND DA=:DA"; //  AND SVC_TYPE IS NULL ???
 CancelIdsStatement::CancelIdsStatement(Connection* connection,
     const Address& _oa, const Address& _da, const char* svc, bool assign)
         throw(StorageException) 
