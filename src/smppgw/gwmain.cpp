@@ -17,6 +17,7 @@
 #include "license/check/license.hpp"
 #include "smppgw/admin/SmppGwCommandDispatcher.h"
 #include "smppgw/admin/SmppGwSocketListener.h"
+#include "Inst.h"
 
 #include "smppgw/version.inc"
 
@@ -81,6 +82,16 @@ int main(int argc,char* argv[])
     }
     catch (smsc::util::config::ConfigException &c)
     {}
+
+    // For instance control
+    char filename[20];
+    sprintf(filename, "/tmp/smppgw.%d", servicePort);
+    Inst inst(filename);
+    // Shutdown if there is instance allready.
+    if(!inst.run()) {
+        exit(-1);
+        fprintf(stderr, "Instance is runing allready.\n");
+    }
 
 
     if (servicePort == 0 || admin_host == 0) {

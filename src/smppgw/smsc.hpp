@@ -2,6 +2,7 @@
 #define __SYSTEM_SMSC_HPP__
 
 #include "core/threads/ThreadPool.hpp"
+#include "core/threads/ThreadedTask.hpp"
 #include "util/config/Manager.h"
 #include "util/config/route/RouteConfig.h"
 #include "system/smppio/SmppSocketsManager.hpp"
@@ -34,6 +35,7 @@ using smsc::alias::AliasManager;
 using smsc::router::RouteManager;
 using smsc::router::RouteInfo;
 using smsc::util::config::route::RouteConfig;
+using smsc::core::threads::ThreadedTask;
 //class smsc::store::MessageStore;
 
 template<class T>
@@ -316,6 +318,14 @@ public:
   GatewaySme* getGwSme(uint8_t uid)
   {
     return gwSmeMap[uid];
+  }
+  void setGwSme(uint8_t uid, GatewaySme* gwSme)
+  {
+    gwSmeMap[uid] = gwSme;
+  }
+  void startTpTask(ThreadedTask *tsk)
+  {
+    tp.startTask(tsk);
   }
 
   int ussdTransactionTimeout;

@@ -24,7 +24,8 @@ namespace CommandIds {
     deleteSme,
     traceRoute,
     loadRoutes,
-    regSmsc
+    regSmsc,
+    unregSme
   };
 }
 

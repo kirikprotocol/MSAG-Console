@@ -188,8 +188,9 @@ void Smsc::init(const SmscConfigs& cfg)
 {
   smsc::util::regexp::RegExp::InitLocale();
   smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.init");
+
   try{
-  InitLicense(*cfg.licconfig);
+  InitLicense(*cfg.licconfig);  
   tp.preCreateThreads(15);
   //smsc::util::config::Manager::init("config.xml");
   //cfgman=&cfgman->getInstance();
@@ -470,6 +471,8 @@ void Smsc::init(const SmscConfigs& cfg)
       tp.startTask(gwsme);
     }
   }
+
+  smsc_log_info(log, "Smsc connections done.");
 
   {
     billing::rules::BillingRulesManager::Init(findConfigFile("billing-rules.xml"));
