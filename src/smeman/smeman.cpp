@@ -318,14 +318,18 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
     for ( Records::const_iterator p = records.begin(); p != records.end(); ++p ) {
       if ( (*p) ) {
         if ( (*p)->deleted || (*p)->proxy==NULL) continue;
-        if ( (*p)->proxy->hasInput() ) {
+        //if ( (*p)->proxy->hasInput() ) {
           try {
-            frames.push_back((*p)->proxy->getCommand());
-            frames.back().setProxy((*p));
+            SmscCommand cmd=(*p)->proxy->getCommand();
+            if(cmd.IsOk())
+            {
+              frames.push_back(cmd);
+              frames.back().setProxy((*p));
+            }
           }catch(exception& e) {
             __warning2__("exception %s when getting command",e.what());
           }
-        }
+        //}
       }
     }
   }
