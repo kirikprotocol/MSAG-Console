@@ -120,6 +120,8 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 	__cfg_int__(maxSmeTimeOut);
 	sme->timeout = rand2(minSmeTimeOut, maxSmeTimeOut);
 	sme->receiptSchemeName = rand0(1) ? "default" : "special";
+	sme->disabled = false;
+	sme->bindMode = smeTRX;
 }
 
 #define __compare__(field, errCode) \

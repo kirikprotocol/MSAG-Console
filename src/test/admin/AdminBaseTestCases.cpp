@@ -61,7 +61,6 @@ bool AdminBaseTestCases::checkResponse(const char* pattern)
 	RegExp chkResp;
 	int regExpOk = chkResp.Compile(pattern);
 	__require__(regExpOk);
-	Hash<SMatch> h;
 	SMatch match;
 	int matchcount = 1;
 	string resp;

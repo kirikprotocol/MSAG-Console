@@ -46,7 +46,7 @@ class SimpleSmppTest
 public:
 	SimpleSmppTest(const string& _host, int _port)
 		: host(_host), port(_port) {}
-	void bind(const string& systemId, const string& passwd);
+	void bind(int mode, const string& systemId, const string& passwd);
 	void select(const string& systemId);
 	const string& getSelected() { return selectedId; }
 	void list();
@@ -60,7 +60,8 @@ public:
 	catch (Exception& e) { cout << "exception: " << e.what() << endl; } \
 	catch (...) { cout << "unknown exception" << endl; }
 
-void SimpleSmppTest::bind(const string& systemId, const string& passwd)
+void SimpleSmppTest::bind(int mode, const string& systemId,
+	const string& passwd)
 {
 	SmeConfig config;
 	config.host = host;
@@ -68,13 +69,15 @@ void SimpleSmppTest::bind(const string& systemId, const string& passwd)
 	config.sid = systemId;
 	config.timeOut = 8;
 	config.password = passwd;
+	__trace2__("bind(): host = %s, port = %d, systemId = %s, password = %s",
+		host.c_str(), port, systemId.c_str(), passwd.c_str());
 	try
 	{
 		SessionData* data = new SessionData();
 		data->listener = new SimpleSmppListener(systemId);
 		data->session = new SmppSession(config, data->listener);
 		data->listener->setSession(data->session);
-		data->session->connect();
+		data->session->connect(mode);
 		sessions[systemId] = data;
 		cout << "connected successfully" << endl;
 		select(systemId);
@@ -251,7 +254,7 @@ void executeTest(const string& smscHost, int smscPort)
 		if (help)
 		{
 			help = false;
-			cout << "bind <systemId> <password> - bind sme" << endl;
+			cout << "bind <mode> <systemId> <password> - bind sme" << endl;
 			cout << "select <systemId> - select sme" << endl;
 			cout << "list - list sessions" << endl;
 			cout << "unbind - unbind selected sme" << endl;
@@ -272,13 +275,25 @@ void executeTest(const string& smscHost, int smscPort)
 		is >> cmd;
 		if (cmd == "bind")
 		{
+			string strMode;
 			string systemId;
 			string passwd;
+			is >> strMode;
 			is >> systemId;
 			is >> passwd;
-			if (systemId.length())
+			if (strMode == "rx" && systemId.length())
 			{
-				test.bind(systemId, passwd);
+				test.bind(BindType::Receiver, systemId, passwd);
+				continue;
+			}
+			else if (strMode == "tx" && systemId.length())
+			{
+				test.bind(BindType::Transmitter, systemId, passwd);
+				continue;
+			}
+			else if (strMode == "trx" && systemId.length())
+			{
+				test.bind(BindType::Transceiver, systemId, passwd);
 				continue;
 			}
 		}

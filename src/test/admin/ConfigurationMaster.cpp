@@ -77,6 +77,21 @@ void ConfigurationMaster::genSmeConfig()
 		os << "\t<param name=\"forceDC\" value=\"false\"/>" << endl;
 		os << "\t<param name=\"timeout\" value=\"10\"/>" << endl;
 		os << "\t<param name=\"priority\" value=\"32\"/>" << endl;
+		os << "\t<param name=\"disabled\" value=\"false\"/>" << endl;
+		string mode;
+		switch (i % 3)
+		{
+			case 0:
+				mode = "rx";
+				break;
+			case 1:
+				mode = "tx";
+				break;
+			case 2:
+				mode = "trx";
+				break;
+		}
+		os << "\t<param name=\"mode\" value=\"" << mode << "\"/>" << endl;
 		os << "</smerecord>" << endl;
 	}
 }

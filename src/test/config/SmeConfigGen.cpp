@@ -50,6 +50,24 @@ void SmeConfigGen::saveConfig(const char* configFileName)
 			sme->priority << "\"/>" << endl;
 		os << "\t<param name=\"receiptSchemeName\" value=\"" <<
 			sme->receiptSchemeName << "\"/>" << endl;
+		os << "\t<param name=\"disabled\" value=\"" <<
+			(sme->disabled  ? "true" : "false") << "\"/>" << endl;
+		string mode;
+		switch (sme->bindMode)
+		{
+			case smeRX:
+				mode = "rx";
+				break;
+			case smeTX:
+				mode = "tx";
+				break;
+			case smeTRX:
+				mode = "trx";
+				break;
+			default:
+				__unreachable__("Invalid bindMode");
+		}
+		os << "\t<param name=\"mode\" value=\"" << mode << "\"/>" << endl;
 		os << "</smerecord>" << endl;
 		__tc_ok__;
 	}
