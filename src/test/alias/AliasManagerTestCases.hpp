@@ -46,6 +46,8 @@ public:
 
 	virtual ~AliasManagerTestCases() {}
 
+	void commit();
+
 	/**
 	 * Регистрация алиаса с преобразованием addr->alias и alias->addr.
 	 */

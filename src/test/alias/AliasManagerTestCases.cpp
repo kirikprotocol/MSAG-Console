@@ -35,6 +35,20 @@ void AliasManagerTestCases::debugAlias(const char* tc, int val,
 	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
 }
 
+void AliasManagerTestCases::commit()
+{
+	try
+	{
+		aliasMan->commit();
+		getLog().debug("[%d]\tCommit successful");
+	}
+	catch(...)
+	{
+		error();
+		getLog().error("[%d]\tCommit failed");
+	}
+}
+
 void AliasManagerTestCases::setupRandomAliasMatchWithQuestionMarks(
 	AliasInfo* alias, int len)
 {
