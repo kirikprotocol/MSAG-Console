@@ -3,12 +3,13 @@
 
 #include <signal.h>
 
-#include <system/smsc.hpp>
 #include <admin/smsc_service//SmscComponent.h>
 #include <admin/service/ServiceSocketListener.h>
 
 namespace smsc {
 namespace system {
+
+class Smsc;
 
 static const int SHUTDOWN_SIGNAL = SIGTERM;
 
