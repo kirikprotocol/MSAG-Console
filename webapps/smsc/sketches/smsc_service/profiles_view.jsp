@@ -1,6 +1,6 @@
 <%@ include file="/sketches/header.jsp"%>
 <%@ include file="menu.jsp"%>
-<H1><a href="index.jsp">SMSC admin module</a></H1>
+ 
 <form method="post" action="profiles_update.jsp">
 	<input type="Hidden" name="address" value="<%=request.getParameter("address")%>">
 	<h2>Profile: <%=request.getParameter("address")%></h2>

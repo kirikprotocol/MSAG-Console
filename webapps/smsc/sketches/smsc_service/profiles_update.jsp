@@ -1,6 +1,6 @@
 <%@ include file="/sketches/header.jsp"%>
 <%@ include file="menu.jsp"%>
-<H1><a href="index.jsp">SMSC admin module</a></H1>
+ 
 <h2>Profile: <%=request.getParameter("address")%></h2>
 Changes applied
 <table class="list" cellspacing="0">
