@@ -219,7 +219,7 @@ public class DivertManager
     str = readTelnetLine();
     if (str == null || str.length() <= 0)
       throw new IOException("Got empty responce from MSC");
-    if (checkQuery(AUTH_FAILED, str)) throw new IOException("Autentification failed");
+    if (checkQuery(AUTH_FAILED, str)) throw new IOException("Autentification failed, responce: "+str);
     else readTelnetString(ESC_PROMPT);
   }
   private void disconnect()
@@ -239,6 +239,7 @@ public class DivertManager
         disconnect();
         logger.info("Connecting to MSC "+mscHost+":"+mscPort+"...");
         mscSocket = new Socket(mscHost, mscPort);
+        mscSocket.setKeepAlive(true);
         is = mscSocket.getInputStream(); os = mscSocket.getOutputStream();
 
         // login using params MSC.nvtIODevice, MSC.USERCODE, MSC.PASSWORD
