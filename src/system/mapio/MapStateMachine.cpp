@@ -526,7 +526,7 @@ static void SendRInfo(MapDialog* dialog)
       }
     }*/
   }
-  __map_trace2__("MAP::%s dialogid:0x%x ssn:%d hiprior:%s ac:%d",__func__,dialog_id,dialog->ssn,hiPrior?"true":"false", sms?(int)sms->getAttemptsCount():-1);
+  __map_trace2__("MAP::%s dialogid:0x%x ssn:%d hiprior:%s ac:%d ver:%d",__func__,dialog_id,dialog->ssn,hiPrior?"true":"false", sms?(int)sms->getAttemptsCount():-1, dialog->version);
   USHORT_T result = Et96MapOpenReq(
     dialog->ssn, dialog_id,
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
@@ -2019,7 +2019,7 @@ USHORT_T Et96MapOpenConf (
         DoProvErrorProcessing(provErrCode_p);
         throw MAPDIALOG_FATAL_ERROR(
           FormatText("MAP::%s connection opening error, reason %d",__func__,refuseReason_p?*refuseReason_p:0),
-          refuseReason_p?(MAP_REFUSE_REASON_BASE+*refuseReason_p):MAP_REFUSE_REASON_NO_REASON);
+          refuseReason_p?(Status::MAP_REFUSE_REASON_BASE+*refuseReason_p):Status::MAP_REFUSE_REASON_NO_REASON);
       }
       dialog->state = MAPST_WaitFwdMOConf;
       break;
@@ -2029,7 +2029,7 @@ USHORT_T Et96MapOpenConf (
         DoProvErrorProcessing(provErrCode_p);
         throw MAPDIALOG_FATAL_ERROR(
           FormatText("MAP::%s connection opening error, reason %d",__func__,refuseReason_p?*refuseReason_p:0),
-          refuseReason_p?(MAP_REFUSE_REASON_BASE+*refuseReason_p):MAP_REFUSE_REASON_NO_REASON);
+          refuseReason_p?(Status::MAP_REFUSE_REASON_BASE+*refuseReason_p):Status::MAP_REFUSE_REASON_NO_REASON);
       }
       break;
     case MAPST_RInfoFallBack:
@@ -2057,7 +2057,7 @@ USHORT_T Et96MapOpenConf (
             //dialog->state = MAPST_BROKEN;
             throw MAPDIALOG_FATAL_ERROR(
               FormatText("MAP::%s version alredy 1 and unsupported!",__func__),
-              refuseReason_p?(MAP_ERRORS_BASE+*refuseReason_p):MAP_FALURE);
+              Status::MAP_REFUSE_REASON_BASE+*refuseReason_p);
           }
         }else{
           //dialog->state = MAPST_BROKEN;
@@ -2069,7 +2069,7 @@ USHORT_T Et96MapOpenConf (
           DoProvErrorProcessing(provErrCode_p);
           throw MAPDIALOG_FATAL_ERROR(
             FormatText("MAP::%s connection opening error, reason %d",__func__,refuseReason_p?*refuseReason_p:0),
-            refuseReason_p?(MAP_REFUSE_REASON_BASE+*refuseReason_p):MAP_REFUSE_REASON_NO_REASON);
+            refuseReason_p?(Status::MAP_REFUSE_REASON_BASE+*refuseReason_p):Status::MAP_REFUSE_REASON_NO_REASON);
         }
       }
       /* перевод в след состояние */
