@@ -582,7 +582,7 @@ public:
           *(uint16_t*)(buffer+offs) = htons(tag);
           *(uint16_t*)(buffer+offs+2) = htons(len);
           offs+=4;
-					__trace2__("Str: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key:"NULL",len,offs,length);
+					__trace2__("Str: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
           __require__(offs+len<=length);
           memcpy(buffer+offs,value->c_str(),len);
 					offs+=len;
@@ -662,7 +662,7 @@ public:
           *(uint16_t*)(buffer+offs) = htons(tag);
           *(uint16_t*)(buffer+offs+2) = htons(4);
           offs+=4;
-					__trace2__("Int: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key:"NULL",len,offs,length);
+					__trace2__("Int: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
           __require__(offs+len<=length);
           //memcpy(buffer+pos,value->c_str(),len);
 					*(uint32_t*)(buffer+offs) = htonl(*value); 
