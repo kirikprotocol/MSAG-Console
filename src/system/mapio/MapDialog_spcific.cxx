@@ -362,10 +362,11 @@ inline void ConvAddrMSISDN2Smc(const ET96MAP_ADDRESS_T* ma,Address* sa)
     int i = 0;
     for ( ;i<(ma->addressLength);i++){
       if( i % 2 == 0 ) {
-        sa_val[i] = ma->address[i/2]&0x0f;
+        sa_val[i] = ma->address[i/2]&0x0f+0x30;
       } else {
-        sa_val[i] = ma->address[i/2]>>4;
+        sa_val[i] = ma->address[i/2]>>4+0x30;
       }
+      if(sa_val[i] > 0x39 ) throw runtime_error("MAP::ConvAddrMap2Smc numeric address contains not digit.");
     }
     {
       char b[256] = {0,};
