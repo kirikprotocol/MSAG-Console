@@ -87,10 +87,17 @@ public:
 static int ru[3];
 static int busy[3];
 
+int working=0;
+Mutex wm;
+
 int TestTask::Execute()
 {
   int r;
-  for(;;)
+  wm.Lock();
+  working++;
+  wm.Unlock();
+  int *leak=new int;
+  for(int i=0;i<1000;i++)
   {
     r=rc.getResource(num);
     if(busy[r])
@@ -101,30 +108,33 @@ int TestTask::Execute()
     busy[r]=1;
     ru[r]++;
     timeval tv;
-    tv.tv_sec=1;
-    tv.tv_usec=0;
+    tv.tv_sec=0;
+    tv.tv_usec=200;
     //select(0,0,0,0,&tv);
     thr_yield();
     busy[r]=0;
     rc.freeResource(r,num);
     count++;
   }
+  wm.Lock();
+  working--;
+  wm.Unlock();
   return 0;
 }
 
 
 int main()
 {
-  ThreadPool tp;
+  ThreadPool *tp=new ThreadPool;
   const int n=25;
   TestTask *t[n];
   int i;
-  tp.preCreateThreads(n);
+  tp->preCreateThreads(n);
   sleep(1);
   for(i=0;i<n;i++)
   {
     t[i]=new TestTask(i);
-    tp.startTask(t[i]);
+    tp->startTask(t[i]);
   }
   for(;;)
   {
@@ -138,6 +148,13 @@ int main()
     printf(":%d\n",sum);
     for(i=0;i<3;i++)printf("%d ",ru[i]);
     printf("\n");
+    wm.Lock();
+    if(working==0)
+    {
+      wm.Unlock();
+      break;
+    }
+    wm.Unlock();
   }
 
 }

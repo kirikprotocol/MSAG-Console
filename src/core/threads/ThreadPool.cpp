@@ -61,6 +61,10 @@ ThreadPool::~ThreadPool()
     Unlock();
     Wait();
   }
+  for(int i=0;i<freeThreads.Count();i++)
+  {
+    delete freeThreads[i];
+  }
 }
 
 MemoryHeap* ThreadPool::getMemoryHeap(const char* taskname,int rawheapsize,int blocksheapquantum)

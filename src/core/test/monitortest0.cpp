@@ -69,9 +69,9 @@ int TestTask::Execute()
     r=rc.getResource(num);
     timeval tv;
     tv.tv_sec=0;
-    tv.tv_usec=10;
-    //select(0,0,0,0,&tv);
-    thr_yield();
+    tv.tv_usec=20000;
+    select(0,0,0,0,&tv);
+//    thr_yield();
     rc.freeResource(r,num);
     count++;
   }

@@ -13,7 +13,6 @@ public:
   {
     m.Lock();
     printf("%d\n",n);
-    sleep(1);
     m.Unlock();
   }
 };
@@ -26,7 +25,7 @@ public:
   MyThread(int n):num(n){}
   virtual int Execute()
   {
-    for(;;)
+    for(int i=0;i<10;i++)
     {
       a.aaa(num);
     }

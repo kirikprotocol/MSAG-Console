@@ -60,6 +60,13 @@ public:
     mutex.Unlock();
 #endif
   }
+  int isSignaled()
+  {
+    mutex.Lock();
+    int retval=signaled;
+    mutex.Unlock();
+    return retval;
+  }
 protected:
 #ifdef _WIN32
   HANDLE event;

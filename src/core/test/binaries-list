@@ -7,4 +7,3 @@ core/test/monitortest monitortest -lcore-threads -lcore-buffers -lthread
 core/test/monitortest0 monitortest0 -lcore-threads -lcore-buffers -lthread
 core/test/monitortest1 monitortest1 -lcore-threads -lcore-buffers -lthread
 core/test/mtx mtx -lcore-threads -lcore-buffers -lthread
-
