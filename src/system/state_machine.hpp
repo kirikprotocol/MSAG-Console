@@ -105,6 +105,9 @@ protected:
   void submitReceipt(SMS& sms);
 
   void submitResp(Tuple&,SMS*,int);
+
+  void finalizeSms(SMSId id,SMS& sms);
+
 };
 
 };//system

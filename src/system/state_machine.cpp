@@ -908,6 +908,7 @@ StateType StateMachine::submit(Tuple& t)
   int prio=sms->getPriority()+ri.priority;
   if(prio>SmeProxyPriorityMax)prio=SmeProxyPriorityMax;
   sms->setPriority(prio);
+  sms->setSourceSmeId(t.command->get_sourceId());
 
   //smsc->routeSms(sms,dest_proxy_index,dest_proxy);
   if ( !has_route )
@@ -928,8 +929,6 @@ StateType StateMachine::submit(Tuple& t)
 
   //__trace2__("SUBMIT_SM: route found, routeId=%s, smeSystemId=%s",ri.routeId.c_str(),ri.smeSystemId.c_str());
 
-  sms->setSourceSmeId(t.command->get_sourceId());
-
   sms->setDestinationSmeId(ri.smeSystemId.c_str());
   sms->setServiceId(ri.serviceId);
 
@@ -943,7 +942,7 @@ StateType StateMachine::submit(Tuple& t)
   int pres=psSingle;
 
   bool isForwardTo = false;
-  if( ri.forwardTo.length() > 0 && !strcmp(ri.smeSystemId.c_str(), "MAP_PROXY") )
+  if( ri.forwardTo.length() > 0 && ri.smeSystemId=="MAP_PROXY" )
   {
     sms->setStrProperty( Tag::SMSC_FORWARD_MO_TO, ri.forwardTo.c_str());
     // force forward(transaction) mode
@@ -954,185 +953,198 @@ StateType StateMachine::submit(Tuple& t)
   bool generateDeliver=true; // do not generate in case of merge-concat
   bool allowCreateSms=true;
 
-  if( !isForwardTo )
+  ////
+  //
+  //  Merging
+  //
+
+  if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
   {
-
-    sms->getMessageBody().dropProperty(Tag::SMSC_MO_PDU);
-
-    ////
-    //
-    //  Merging
-    //
-
-    if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+    bool firstPiece=sms->getIntProperty(Tag::SMSC_MERGE_CONCAT)==1;
+    unsigned char *body;
+    unsigned int len;
+    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
     {
-      bool firstPiece=sms->getIntProperty(Tag::SMSC_MERGE_CONCAT)==1;
-      unsigned char *body;
-      unsigned int len;
-      if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
-      {
-        body=(unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-      }else
-      {
-        body=(unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-      }
-      uint16_t mr;
-      uint8_t idx,num;
-      bool havemoreudh;
-      smsc::util::findConcatInfo(body,mr,idx,num,havemoreudh);
+      body=(unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    }else
+    {
+      body=(unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+    }
+    uint16_t mr;
+    uint8_t idx,num;
+    bool havemoreudh;
+    smsc::util::findConcatInfo(body,mr,idx,num,havemoreudh);
 
-      int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
-      bool needrecoding=
-          (dc==DataCoding::UCS2 && (profile.codepage&ProfileCharsetOptions::Ucs2)!=ProfileCharsetOptions::Ucs2) ||
-          (dc==DataCoding::LATIN1 && (profile.codepage&ProfileCharsetOptions::Latin1)!=ProfileCharsetOptions::Latin1);
+    int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
+    //bool needrecoding=
+    //    (dc==DataCoding::UCS2 && (profile.codepage&ProfileCharsetOptions::Ucs2)!=ProfileCharsetOptions::Ucs2) ||
+    //    (dc==DataCoding::LATIN1 && (profile.codepage&ProfileCharsetOptions::Latin1)!=ProfileCharsetOptions::Latin1);
 
-      if(firstPiece) //first piece
+    if(firstPiece) //first piece
+    {
+      smsLog->info("merging sms Id=%lld, first part arrived(%u/%u)",t.msgId,idx,num);
+      sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
+      string tmp;
+      if(!isForwardTo)
       {
-        smsLog->info("merging sms Id=%lld, first part arrived(%u/%u)",t.msgId,idx,num);
-        sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~0x40);
-        string tmp;
         tmp.assign((const char*)body,len);
-        sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),tmp.length());
-        sms->getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
-        sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
-        sms->setIntProperty(Tag::SMPP_SM_LENGTH,0);
-
-        ConcatInfo *ci=(ConcatInfo *)new char[1+2*num];
-        ci->num=1;
-        ci->off[0]=0;
-        sms->setBinProperty(Tag::SMSC_CONCATINFO,(char*)ci,1+2*num);
-        generateDeliver=false;
-        delete [] ((char*)ci);
       }else
       {
-        smsLog->info("merging sms Id=%lld, next part arrived(%u/%u)",t.msgId,idx,num);
-        SMS newsms;
-        try{
-          store->retriveSms(t.msgId,newsms);
-        }catch(...)
+        unsigned len;
+        const char *body=sms->getBinProperty(Tag::SMSC_MO_PDU,&len);
+        tmp.assign(body,len);
+        sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::BINARY);
+      }
+      sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),tmp.length());
+      sms->getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
+      sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
+      sms->setIntProperty(Tag::SMPP_SM_LENGTH,0);
+
+      ConcatInfo *ci=(ConcatInfo *)new char[1+2*num];
+      ci->num=1;
+      ci->off[0]=0;
+      sms->setBinProperty(Tag::SMSC_CONCATINFO,(char*)ci,1+2*num);
+      generateDeliver=false;
+      delete [] ((char*)ci);
+    }else
+    {
+      smsLog->info("merging sms Id=%lld, next part arrived(%u/%u)",t.msgId,idx,num);
+      SMS newsms;
+      try{
+        store->retriveSms(t.msgId,newsms);
+      }catch(...)
+      {
+        smsLog->warn("sms with id %lld not found or store error",t.msgId);
+        submitResp(t,sms,Status::SYSERR);
+        return ERROR_STATE;
+      }
+      unsigned int newlen;
+      unsigned char *newbody=(unsigned char*)newsms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&newlen);
+      unsigned int cilen;
+      ConcatInfo *ci=(ConcatInfo*)newsms.getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
+      __require__(ci!=NULL);
+      for(int i=0;i<ci->num;i++)
+      {
+        uint16_t mr0;
+        uint8_t idx0,num0;
+        bool havemoreudh;
+        smsc::util::findConcatInfo(newbody+ci->off[i],mr0,idx0,num0,havemoreudh);
+        if(idx0==idx || num0!=num || mr0!=mr)
         {
-          smsLog->warn("sms with id %lld not found or store error",t.msgId);
-          submitResp(t,sms,Status::SYSERR);
+          submitResp(t,sms,Status::INVOPTPARAMVAL);
+          smsLog->warn("Duplicate or invalid concatenated message part for id=%lld(idx:%d-%d,num:%d-%d,mr:%d-%d)",t.msgId,idx0,idx,num0,num,mr0,mr);
           return ERROR_STATE;
         }
-        unsigned int newlen;
-        unsigned char *newbody=(unsigned char*)newsms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&newlen);
-        unsigned int cilen;
-        ConcatInfo *ci=(ConcatInfo*)newsms.getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
-        __require__(ci!=NULL);
+      }
+      if(isForwardTo)
+      {
+        body=(unsigned char*)sms->getBinProperty(Tag::SMSC_MO_PDU,&len);
+      }
+      if(!isForwardTo && sms->getIntProperty(Tag::SMPP_DATA_CODING)!=newsms.getIntProperty(Tag::SMPP_DATA_CODING))
+      {
+        smsLog->error("different data coding of parts of concatenated message (%d!=%d) id=%lld",
+          sms->getIntProperty(Tag::SMPP_DATA_CODING),newsms.getIntProperty(Tag::SMPP_DATA_CODING),t.msgId);
+        submitResp(t,sms,Status::INVOPTPARAMVAL);
+        return ERROR_STATE;
+      }
+
+      string tmp;
+      tmp.assign((const char*)newbody,newlen);
+      tmp.append((const char*)body,len);
+      ci->off[ci->num]=newlen;
+      ci->num++;
+      if(ci->num==num) // all parts received
+      {
+        // now resort parts
+
+        vector<int> order;
+        bool rightOrder=true;
         for(int i=0;i<ci->num;i++)
         {
           uint16_t mr0;
           uint8_t idx0,num0;
           bool havemoreudh;
-          smsc::util::findConcatInfo(newbody+ci->off[i],mr0,idx0,num0,havemoreudh);
-          if(idx0==idx || num0!=num || mr0!=mr)
-          {
-            submitResp(t,sms,Status::INVOPTPARAMVAL);
-            smsLog->warn("Duplicate or invalid concatenated message part for id=%lld(idx:%d-%d,num:%d-%d,mr:%d-%d)",t.msgId,idx0,idx,num0,num,mr0,mr);
-            return ERROR_STATE;
-          }
+          smsc::util::findConcatInfo((unsigned char*)tmp.c_str()+ci->off[i],mr0,idx0,num0,havemoreudh);
+          order.push_back(idx0);
+          rightOrder=rightOrder && idx0==i+1;
         }
-        if(sms->getIntProperty(Tag::SMPP_DATA_CODING)!=newsms.getIntProperty(Tag::SMPP_DATA_CODING))
+        if(!rightOrder)
         {
-          smsLog->error("different data coding of parts of concatenated message (%d!=%d) id=%lld",
-            sms->getIntProperty(Tag::SMPP_DATA_CODING),newsms.getIntProperty(Tag::SMPP_DATA_CODING),t.msgId);
-          submitResp(t,sms,Status::INVOPTPARAMVAL);
-          return ERROR_STATE;
-        }
-
-        string tmp;
-        tmp.assign((const char*)newbody,newlen);
-        tmp.append((const char*)body,len);
-        ci->off[ci->num]=newlen;
-        ci->num++;
-        if(ci->num==num) // all parts received
-        {
-          // now resort parts
-
-          vector<int> order;
-          bool rightOrder=true;
-          for(int i=0;i<ci->num;i++)
+          //average number of parts is 2-3. so, don't f*ck mind with quick sort and so on.
+          //maximum is 255.  65025 comparisons. not very good, but not so bad too.
+          string newtmp;
+          for(unsigned i=1;i<=num;i++)
           {
-            uint16_t mr0;
-            uint8_t idx0,num0;
-            bool havemoreudh;
-            smsc::util::findConcatInfo((unsigned char*)tmp.c_str()+ci->off[i],mr0,idx0,num0,havemoreudh);
-            order.push_back(idx0);
-            rightOrder=rightOrder && idx0==i+1;
-          }
-          if(!rightOrder)
-          {
-            //average number of parts is 2-3. so, don't f*ck mind with quick sort and so on.
-            //maximum is 255.  65025 comparisons. not very good, but not so bad too.
-            string newtmp;
-            for(unsigned i=1;i<=num;i++)
+            for(unsigned j=0;j<num;j++)
             {
-              for(unsigned j=0;j<num;j++)
+              if(order[j]==i)
               {
-                if(order[j]==i)
-                {
-                  int partlen=i==num?tmp.length()-ci->off[i-1]:ci->off[i]-ci->off[i-1];
-                  newtmp.append(tmp.c_str()+ci->off[i-1],partlen);
-                }
+                int partlen=i==num?tmp.length()-ci->off[i-1]:ci->off[i]-ci->off[i-1];
+                newtmp.append(tmp.c_str()+ci->off[i-1],partlen);
               }
             }
-            tmp=newtmp;
           }
-          newsms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3); // final state
+          tmp=newtmp;
         }
+        newsms.setIntProperty(Tag::SMSC_MERGE_CONCAT,3); // final state
+      }
 
-        newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
+      newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
 
+      try{
+        store->replaceSms(t.msgId,newsms);
+      }catch(...)
+      {
+        smsLog->warn("Failed to replace sms with id=%lld",t.msgId);
+        submitResp(t,&newsms,Status::SUBMITFAIL);
+        return ERROR_STATE;
+      }
+      if(ci->num!=num)
+      {
+        smsLog->info("merging sms %lld, not all parts are here, waiting",t.msgId);
+        char buf[64];
+        sprintf(buf,"%lld",t.msgId);
+        SmscCommand resp = SmscCommand::makeSubmitSmResp
+                             (
+                               buf,
+                               dialogId,
+                               Status::OK,
+                               sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                             );
         try{
-          store->replaceSms(t.msgId,newsms);
+          src_proxy->putCommand(resp);
         }catch(...)
         {
-          smsLog->warn("Failed to replace sms with id=%lld",t.msgId);
-          submitResp(t,&newsms,Status::SUBMITFAIL);
-          return ERROR_STATE;
+          smsLog->warn("SBM: failed to put response command SUBMIT_OK Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+            t.msgId,dialogId,
+            sms->getOriginatingAddress().toString().c_str(),
+            sms->getDestinationAddress().toString().c_str(),
+            src_proxy->getSystemId(),
+            ri.smeSystemId.c_str()
+          );
         }
-        if(ci->num!=num)
-        {
-          smsLog->info("merging sms %lld, not all parts are here, waiting",t.msgId);
-          char buf[64];
-          sprintf(buf,"%lld",t.msgId);
-          SmscCommand resp = SmscCommand::makeSubmitSmResp
-                               (
-                                 buf,
-                                 dialogId,
-                                 Status::OK,
-                                 sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                               );
-          try{
-            src_proxy->putCommand(resp);
-          }catch(...)
-          {
-            smsLog->warn("SBM: failed to put response command SUBMIT_OK Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
-              t.msgId,dialogId,
-              sms->getOriginatingAddress().toString().c_str(),
-              sms->getDestinationAddress().toString().c_str(),
-              src_proxy->getSystemId(),
-              ri.smeSystemId.c_str()
-            );
-          }
-          return ENROUTE_STATE;
-        }
-
-        *sms=newsms;
-
-        // let deliver begin!
-
-        allowCreateSms=false;
-
+        return ENROUTE_STATE;
       }
+
+      *sms=newsms;
+
+      // let deliver begin!
+
+      allowCreateSms=false;
+
     }
+  }
 
-    //
-    //  End of merging
-    //
-    ////
+  //
+  //  End of merging
+  //
+  ////
 
+
+  if( !isForwardTo )
+  {
+
+    sms->getMessageBody().dropProperty(Tag::SMSC_MO_PDU);
 
     ////
     //
@@ -1455,7 +1467,10 @@ StateType StateMachine::submit(Tuple& t)
   if ( !dest_proxy )
   {
     sms->setLastResult(Status::SMENOTCONNECTED);
-    smsc->registerStatisticalEvent(StatEvents::etDeliverErr,sms);
+    if(!isTransaction && !isDatagram)
+    {
+      smsc->registerStatisticalEvent(StatEvents::etDeliverErr,sms);
+    }
     smsLog->debug("SBM: dest sme not connected Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
       t.msgId,dialogId,
       sms->getOriginatingAddress().toString().c_str(),
@@ -1579,7 +1594,8 @@ StateType StateMachine::submit(Tuple& t)
   Address dstOriginal=sms->getDestinationAddress();
   try{
 
-    if( !isForwardTo ) {
+    if( !isForwardTo )
+    {
       // send delivery
       Address src;
       __trace2__("SUBMIT: wantAlias=%s, hide=%s",smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias?"true":"false",sms->getIntProperty(Tag::SMSC_HIDE)?"true":"false");
@@ -1634,15 +1650,13 @@ StateType StateMachine::submit(Tuple& t)
             __warning2__("SUBMIT:Failed to transliterate: %s",e.what());
           }
         }
-      }else
-      {
-        extractSmsPart(sms,0);
       }
+    }
 
-      if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
-      {
-        sms->setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
-      }
+    if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
+    {
+      extractSmsPart(sms,0);
+      sms->setIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND,1);
     }
 
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
@@ -2227,32 +2241,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
-          if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
-          {
-            SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
-            if(src_proxy)
-            {
-              SmscCommand resp=SmscCommand::makeSubmitSmResp
-                               (
-                                 /*messageId*/"0",
-                                 sms.dialogId,
-                                 sms.lastResult,
-                                 sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
-                               );
-              try{
-                src_proxy->putCommand(resp);
-              }catch(...)
-              {
-                __warning2__("DELIVERYRESP: failed to put transaction response command");
-              }
-            }
-          }
-          try{
-            store->createFinalizedSms(t.msgId,sms);
-          }catch(...)
-          {
-            __warning2__("DELIVERYRESP: failed to finalize sms:%lld",t.msgId);
-          }
+          finalizeSms(t.msgId,sms);
           return UNDELIVERABLE_STATE;
         }
         return UNKNOWN_STATE;
@@ -2288,32 +2277,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
-          if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
-          {
-            SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
-            if(src_proxy)
-            {
-              SmscCommand resp=SmscCommand::makeSubmitSmResp
-                               (
-                                 /*messageId*/"0",
-                                 sms.dialogId,
-                                 sms.lastResult,
-                                 sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
-                               );
-              try{
-                src_proxy->putCommand(resp);
-              }catch(...)
-              {
-                __warning2__("DELIVERYRESP: failed to put transaction response command");
-              }
-            }
-          }
-          try{
-            store->createFinalizedSms(t.msgId,sms);
-          }catch(...)
-          {
-            __warning2__("DELIVERYRESP: failed to finalize sms:%lld",t.msgId);
-          }
+          finalizeSms(t.msgId,sms);
           return UNDELIVERABLE_STATE;
         }
         return UNKNOWN_STATE;
@@ -2339,32 +2303,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
-          if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
-          {
-            SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
-            if(src_proxy)
-            {
-              SmscCommand resp=SmscCommand::makeSubmitSmResp
-                               (
-                                 /*messageId*/"0",
-                                 sms.dialogId,
-                                 sms.lastResult,
-                                 sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
-                               );
-              try{
-                src_proxy->putCommand(resp);
-              }catch(...)
-              {
-                __warning2__("DELIVERYRESP: failed to put transaction response command");
-              }
-            }
-          }
-          try{
-            store->createFinalizedSms(t.msgId,sms);
-          }catch(...)
-          {
-            __warning2__("DELIVERYRESP: failed to finalize sms:%lld",t.msgId);
-          }
+          finalizeSms(t.msgId,sms);
         }
         return UNDELIVERABLE_STATE;
       }
@@ -2399,6 +2338,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
           }catch(...)
           {
              __warning2__("DELIVERYRESP: failed to cahnge sms state to enroute:%lld",t.msgId);
+          }
+          if(dgortr)
+          {
+            sms.state=UNDELIVERABLE;
+            finalizeSms(t.msgId,sms);
+            return UNDELIVERABLE_STATE;
           }
           return UNKNOWN_STATE;
         }
@@ -2440,6 +2385,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           __trace__("CONCAT: failed to change state to enroute");
         }
+        if(dgortr)
+        {
+          sms.state=UNDELIVERABLE;
+          finalizeSms(t.msgId,sms);
+          return UNDELIVERABLE_STATE;
+        }
         return ERROR_STATE;
       }
       if(!dest_proxy)
@@ -2460,7 +2411,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
           smsc->notifyScheduler();
         }catch(...)
         {
-          __trace__("CONCAT: failed to change state to enroute");
+          __warning__("CONCAT: failed to change state to enroute");
+        }
+        if(dgortr)
+        {
+          sms.state=UNDELIVERABLE;
+          finalizeSms(t.msgId,sms);
+          return UNDELIVERABLE_STATE;
         }
         return ENROUTE_STATE;
       }
@@ -2476,10 +2433,42 @@ StateType StateMachine::deliveryResp(Tuple& t)
         if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
         {
           __warning__("CONCAT: can't create task");
+          try{
+            //time_t now=time(NULL);
+            Descriptor d;
+            __trace__("CONCAT: change state to enroute");
+            changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
+            smsc->notifyScheduler();
+          }catch(...)
+          {
+            __warning__("CONCAT: failed to change state to enroute");
+          }
+          if(dgortr)
+          {
+            sms.state=UNDELIVERABLE;
+            finalizeSms(t.msgId,sms);
+            return UNDELIVERABLE_STATE;
+          }
           return ENROUTE_STATE;
         }
       }catch(...)
       {
+        try{
+          //time_t now=time(NULL);
+          Descriptor d;
+          __trace__("CONCAT: change state to enroute");
+          changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
+          smsc->notifyScheduler();
+        }catch(...)
+        {
+          __warning__("CONCAT: failed to change state to enroute");
+        }
+        if(dgortr)
+        {
+          sms.state=UNDELIVERABLE;
+          finalizeSms(t.msgId,sms);
+          return UNDELIVERABLE_STATE;
+        }
         return ENROUTE_STATE;
       }
       Address srcOriginal=sms.getOriginatingAddress();
@@ -2528,7 +2517,24 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }
       if(errstatus)
       {
-        __trace2__("CONCAT::Err %s",errtext);
+        __warning2__("CONCAT::Err %s",errtext);
+        try{
+          //time_t now=time(NULL);
+          Descriptor d;
+          __trace__("CONCAT: change state to enroute");
+          changeSmsStateToEnroute(sms,t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
+          smsc->notifyScheduler();
+        }catch(...)
+        {
+          __warning__("CONCAT: failed to change state to enroute");
+        }
+        if(dgortr)
+        {
+          sms.state=UNDELIVERABLE;
+          finalizeSms(t.msgId,sms);
+          return UNDELIVERABLE_STATE;
+        }
+        return ENROUTE_STATE;
       }
 
       //
@@ -3352,6 +3358,35 @@ void StateMachine::submitResp(Tuple& t,SMS* sms,int status)
   }
 }
 
+void StateMachine::finalizeSms(SMSId id,SMS& sms)
+{
+  if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
+  {
+    SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
+    if(src_proxy)
+    {
+      SmscCommand resp=SmscCommand::makeSubmitSmResp
+                       (
+                         /*messageId*/"0",
+                         sms.dialogId,
+                         sms.lastResult,
+                         sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
+                       );
+      try{
+        src_proxy->putCommand(resp);
+      }catch(...)
+      {
+        __warning2__("DELIVERYRESP: failed to put transaction response command");
+      }
+    }
+  }
+  try{
+    store->createFinalizedSms(id,sms);
+  }catch(...)
+  {
+    __warning2__("DELIVERYRESP: failed to finalize sms:%lld",id);
+  }
+}
 
 
 };//system

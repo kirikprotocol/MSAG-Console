@@ -630,12 +630,18 @@ void extractSmsPart(SMS* sms,int partnum)
     FillUd(sms);
   }else
   {
-    sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
-    sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)msg+off,newlen);
-    sms->setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
-    sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
-    sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
-    sms->setIntProperty(Tag::SMPP_DATA_SM,0);
+    if(sms->hasIntProperty(Tag::SMSC_FORWARD_MO_TO))
+    {
+      sms->setBinProperty(Tag::SMSC_MO_PDU,msg+off,newlen);
+    }else
+    {
+      sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
+      sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)msg+off,newlen);
+      sms->setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
+      sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
+      sms->getMessageBody().dropProperty(Tag::SMSC_RAW_PAYLOAD);
+      sms->setIntProperty(Tag::SMPP_DATA_SM,0);
+    }
   }
 }
 
