@@ -4,6 +4,7 @@
 #include "test/core/RouteRegistry.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "ConfigGen.hpp"
+#include "test/util/CheckList.hpp"
 #include "util/debug.h"
 #include <fstream>
 #include <memory>
@@ -17,6 +18,7 @@ using std::ostream;
 using std::vector;
 using smsc::router::RouteInfo;
 using smsc::test::core::RouteRegistry;
+using smsc::test::util::CheckList;
 using smsc::sms::Address;
 
 //компараторы
@@ -24,12 +26,14 @@ using smsc::sms::Address;
 class RouteConfigGen : public ConfigGen
 {
 	const RouteRegistry* routeReg;
+	CheckList* chkList;
 
 public:
-	RouteConfigGen(const RouteRegistry* _routeReg)
-		: routeReg(_routeReg)
+	RouteConfigGen(const RouteRegistry* _routeReg, CheckList* _chkList)
+		: routeReg(_routeReg), chkList(_chkList)
 	{
 		__require__(routeReg);
+		//__require__(chkList);
 	}
 
 	virtual ~RouteConfigGen() {}

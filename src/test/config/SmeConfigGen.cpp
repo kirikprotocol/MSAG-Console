@@ -8,10 +8,12 @@ namespace config {
 
 using namespace std;
 using smsc::smeman::SmeInfo;
+using namespace smsc::test::util;
 
 void SmeConfigGen::saveConfig(const char* configFileName)
 {
 	__require__(configFileName);
+	__decl_tc__;
 	ofstream os(configFileName);
 	os << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" << endl;
 	os << "<!DOCTYPE records SYSTEM \"SmeRecords.dtd\">" << endl;
@@ -20,6 +22,7 @@ void SmeConfigGen::saveConfig(const char* configFileName)
 	__require__(it);
 	while (const SmeInfo* sme = it->next())
 	{
+		__tc__("smeConfig.correctSme");
 		//sme.hostname;
 		//sme.disabled;
 		os << "<smerecord type=\"smpp\" uid=\"" << sme->systemId << "\">" << endl;
@@ -38,6 +41,7 @@ void SmeConfigGen::saveConfig(const char* configFileName)
 		os << "\t<param name=\"smeN\" value=\"" <<
 			sme->SME_N << "\"/>" << endl;
 		os << "</smerecord>" << endl;
+		__tc_ok__;
 	}
 	os << "</records>" << endl;
 }

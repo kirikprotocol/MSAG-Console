@@ -113,6 +113,7 @@ void RouteConfigGen::printSubject(ostream& os, const RouteInfo* route,
 	char type, const char* prefix)
 {
 	__require__(route);
+	__decl_tc__;
 	switch (type)
 	{
 		case 's':
@@ -120,9 +121,19 @@ void RouteConfigGen::printSubject(ostream& os, const RouteInfo* route,
 				auto_ptr<char> tmp = SmsUtil::configString(route->source);
 				os << "<subject_def id=\"" << prefix << "_src_" << route->routeId <<
 					"\" defSme=\"" << route->smeSystemId << "\">" << endl;
-				printFakeMask(os);
+				if (printFakeMask(os))
+				{
+					__tc__("routeConfig.routeSource.subject.fakeMaskBefore");
+					__tc_ok__;
+				}
+				//__tc__("routeConfig.routeSource.subject");
 				os << "\t<mask value=\"" << tmp.get() << "\"/>" << endl;
-				printFakeMask(os);
+				//__tc_ok__;
+				if (printFakeMask(os))
+				{
+					__tc__("routeConfig.routeSource.subject.fakeMaskAfter");
+					__tc_ok__;
+				}
 				os << "</subject_def>" << endl;
 			}
 			break;
@@ -131,9 +142,19 @@ void RouteConfigGen::printSubject(ostream& os, const RouteInfo* route,
 				auto_ptr<char> tmp = SmsUtil::configString(route->dest);
 				os << "<subject_def id=\"" << prefix << "_dst_" << route->routeId <<
 					"\" defSme=\"" << route->smeSystemId << "\">" << endl;
-				printFakeMask(os);
+				if (printFakeMask(os))
+				{
+					__tc__("routeConfig.routeDest.subject.fakeMaskBefore");
+					__tc_ok__;
+				}
+				//__tc__("routeConfig.routeDest.subject");
 				os << "\t<mask value=\"" << tmp.get() << "\"/>" << endl;
-				printFakeMask(os);
+				//__tc_ok__;
+				if (printFakeMask(os))
+				{
+					__tc__("routeConfig.routeDest.subject.fakeMaskAfter");
+					__tc_ok__;
+				}
 				os << "</subject_def>" << endl;
 			}
 			break;
@@ -146,6 +167,7 @@ void RouteConfigGen::printRouteStart(ostream& os, const RouteInfo* route,
 	const char* prefix)
 {
 	__require__(route);
+	__decl_tc__;
 	os << "<route id=\"" << prefix << "_route_" << route->routeId <<
 		"\" billing=\"" << (route->billing ? "true" : "false") <<
 		"\" archiving=\"" << (route->archived ? "true" : "false") <<
@@ -154,6 +176,21 @@ void RouteConfigGen::printRouteStart(ostream& os, const RouteInfo* route,
 		RoutePriority priority - пока не используется
 		bool paid - вообще не используется, синоним billing
 	*/
+	if (route->billing)
+	{
+		__tc__("routeConfig.billing");
+		__tc_ok__;
+	}
+	if (route->archived)
+	{
+		__tc__("routeConfig.archivate");
+		__tc_ok__;
+	}
+	if (!route->enabling)
+	{
+		__tc__("routeConfig.notEnabling");
+		__tc_ok__;
+	}
 }
 
 void RouteConfigGen::printRouteEnd(ostream& os)
@@ -165,24 +202,31 @@ void RouteConfigGen::printSource(ostream& os, const RouteInfo* route,
 	const char* prefix, bool printFake)
 {
 	__require__(route);
-	if (printFake)
+	__decl_tc__;
+	if (printFake && printFakeSource(os, route))
 	{
-		printFakeSource(os, route);
+		__tc__("routeConfig.routeSource.fakeSourceBefore");
+		__tc_ok__;
 	}
 	os << "\t<source>" << endl;
 	if (checkSubject(route->source))
 	{
+		__tc__("routeConfig.routeSource.subject");
 		os << "\t\t<subject id=\"" << prefix << "_src_" << route->routeId << "\"/>" << endl;
+		__tc_ok__;
 	}
 	else
 	{
+		__tc__("routeConfig.routeSource.mask");
 		auto_ptr<char> tmp = SmsUtil::configString(route->source);
 		os << "\t\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+		__tc_ok__;
 	}
 	os << "\t</source>" << endl;
-	if (printFake)
+	if (printFake && printFakeSource(os, route))
 	{
-		printFakeSource(os, route);
+		__tc__("routeConfig.routeSource.fakeSourceBefore");
+		__tc_ok__;
 	}
 }
 
@@ -204,24 +248,31 @@ void RouteConfigGen::printDest(ostream& os, const RouteInfo* route,
 	const char* prefix, bool printFake)
 {
 	__require__(route);
-	if (printFake)
+	__decl_tc__;
+	if (printFake && printFakeDest(os, route))
 	{
-		printFakeDest(os, route);
+		__tc__("routeConfig.routeDest.fakeDestBefore");
+		__tc_ok__;
 	}
 	os << "\t<destination sme=\"" << route->smeSystemId << "\">" << endl;
 	if (checkSubject(route->dest))
 	{
+		__tc__("routeConfig.routeDest.subject");
 		os << "\t\t<subject id=\"" << prefix << "_dst_" << route->routeId << "\"/>" << endl;
+		__tc_ok__;
 	}
 	else
 	{
+		__tc__("routeConfig.routeDest.mask");
 		auto_ptr<char> tmp = SmsUtil::configString(route->dest);
 		os << "\t\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+		__tc_ok__;
 	}
 	os << "\t</destination>" << endl;
-	if (printFake)
+	if (printFake && printFakeDest(os, route))
 	{
-		printFakeDest(os, route);
+		__tc__("routeConfig.routeDest.fakeDestAfter");
+		__tc_ok__;
 	}
 }
 
