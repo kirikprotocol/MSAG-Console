@@ -87,6 +87,8 @@ void Smsc::mainLoop()
 
   EventQueue::EnqueueVector enqueueVector;
   FindTaskVector findTaskVector;
+  typedef std::vector<int> IntVector;
+  IntVector shuffle;
 
   for(;;)
   {
@@ -226,6 +228,32 @@ void Smsc::mainLoop()
       continue; //start cycle from start
     }
 
+    if(enqueueVector.size())
+    {
+      hrtime_t eqStart=gethrtime();
+      eventqueue.enqueueEx(enqueueVector);
+      int sz=enqueueVector.size();
+      enqueueVector.clear();
+      hrtime_t eqEnd=gethrtime();
+      info2(log,"eventQueue.enqueue time=%lld, size=%d",eqEnd-eqStart,sz);
+    }
+
+    shuffle.clear();
+    {
+      for(int i=0;i<frame.size();i++)
+      {
+        int x=((double)rand()/RAND_MAX)*i;
+        if(x<shuffle.size())
+        {
+          shuffle.push_back(shuffle[x]);
+          shuffle[x]=i;
+        }else
+        {
+          shuffle.push_back(i);
+        }
+      }
+    }
+
     int stf=tcontrol->getConfig().shapeTimeFrame;
     //int smt=tcontrol->getConfig().smoothTimeFrame;
     int maxsms=tcontrol->getConfig().maxSmsPerSecond;
@@ -239,8 +267,10 @@ void Smsc::mainLoop()
     // main "delay/reject" cycle
 
     int eqsize,equnsize,cntInstant;
-    for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
+    //for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
+    for(int j=0;j<frame.size();j++)
     {
+      SmscCommand* i=&frame[shuffle[j]];
       cntInstant=tcontrol->getTotalCount();
       eventqueue.getStats(eqsize,equnsize);
       while(equnsize+1>eventQueueLimit)
@@ -266,15 +296,27 @@ void Smsc::mainLoop()
       if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
       {
         try{
-          if((*i)->get_commandId()==SUBMIT && !isUSSDSessionSms((*i)->get_sms()))
+          if((*i)->get_commandId()==FORWARD || !isUSSDSessionSms((*i)->get_sms()))
           {
             if(tcontrol->getTotalCount()>maxScaled)
             {
-              info2(log,"Sms %s->%s rejected: %d/%d",
-              (*i)->get_sms()->getOriginatingAddress().toString().c_str(),
-              (*i)->get_sms()->getDestinationAddress().toString().c_str(),
-              tcontrol->getTotalCount(),maxScaled);
-              RejectSms(*i);
+              if((*i)->get_commandId()==SUBMIT)
+              {
+                info2(log,"Sms %s->%s rejected: %d/%d",
+                (*i)->get_sms()->getOriginatingAddress().toString().c_str(),
+                (*i)->get_sms()->getDestinationAddress().toString().c_str(),
+                tcontrol->getTotalCount(),maxScaled);
+              }else
+              {
+                info2(log,"Sms id=%lld rejected",(*i)->get_forwardMsgId());
+              }
+              if((*i)->get_commandId()==SUBMIT)
+              {
+                RejectSms(*i);
+              }else
+              {
+                scheduler->RejectForward((*i)->get_forwardMsgId());
+              }
               continue;
             }
           }
@@ -549,8 +591,8 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
       if(pid)
       {
         info2(log,"msgId=%lld: kill mr cache item for %s,%s,%d",*pid,ki.org.toString().c_str(),ki.dst.toString().c_str(),(int)ki.mr);
-        SMSId id=*pid;
-        reverseMergeCache.Delete(id);
+        SMSId killId=*pid;
+        reverseMergeCache.Delete(killId);
         mergeCache.Delete(mci);
       }
       return;

@@ -67,10 +67,10 @@ public:
       clock_gettime(CLOCK_REALTIME,&start);
     Event ev;
     __trace__("enter SpeedMonitor");
-    timeshift=0;
+    firstCell=0;
     time_t perfStart=start.tv_sec;
     for(int i=0;i<60;i++)times[i]=start.tv_sec;
-    int lastscnt=0;
+    int lastIdx=0;
     memset(perfCnt,0,sizeof(perfCnt));
     uint64_t lastPerfCnt[performance::performanceCounters]={0,};
     //now.tv_sec=0;
@@ -113,27 +113,28 @@ public:
       int scnt=(now.tv_sec-perfStart)/60;
       //__trace2__("SpeedMonitor: scnt=%d",scnt);
       if(scnt<0)scnt=0;
+      int curIdx=scnt;
       if(scnt>=60)
       {
-        timeshift++;
-        if(timeshift>=60)timeshift=0;
-        perfStart=times[timeshift];
+        firstCell++;
+        if(firstCell>=60)firstCell=0;
+        perfStart=times[firstCell];
         scnt=59;
-        int idx=timeshift-1;
-        if(idx<0)idx=59;
-        times[idx]=now.tv_sec;
-        for(i=0;i<performance::performanceCounters;i++)perfCnt[i][idx]=0;
+        curIdx=firstCell-1;
+        if(curIdx<0)curIdx=59;
+        times[curIdx]=now.tv_sec;
+        for(i=0;i<performance::performanceCounters;i++)perfCnt[i][curIdx]=0;
       }
-      if(scnt!=lastscnt)
+      if(curIdx!=lastIdx)
       {
-        times[scnt]=now.tv_sec;
-        lastscnt=scnt;
+        times[curIdx]=now.tv_sec;
+        lastIdx=curIdx;
       }
       for(int j=0;j<performance::performanceCounters;j++)
       {
         d.counters[j].average=0;
       }
-      int idx=timeshift;
+      int idx=firstCell;
       for(i=0;i<=scnt;i++,idx++)
       {
         if(idx>=60)idx=0;
@@ -149,7 +150,7 @@ public:
           d.counters[j].average+=perfCnt[j][idx];
         }
       }
-      int diff=now.tv_sec-times[timeshift];
+      int diff=now.tv_sec-times[firstCell];
       if(diff==0)diff=1;
       //__trace2__("ca=%d,ea=%d,ra=%d, time diff=%u",
       //  d.success.average,d.error.average,d.rescheduled.average,diff);
@@ -194,7 +195,7 @@ public:
 protected:
   EventQueue& queue;
   int perfCnt[performance::performanceCounters][60];
-  int timeshift;
+  int firstCell;
   time_t times[60];
   timespec start;
   performance::PerformanceListener* perfListener;

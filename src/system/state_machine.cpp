@@ -2049,8 +2049,12 @@ StateType StateMachine::submit(Tuple& t)
       bool rip=sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)!=0;
       //if(rip || stime>now || )
       //{
-        store->createSms(*sms,t.msgId,rip?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
+        SMSId replaceId=store->createSms(*sms,t.msgId,rip?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
         sms->createdInStore=true;
+        if(rip && replaceId!=t.msgId)
+        {
+          smsc->getScheduler()->CancelSms(replaceId,sms->getDealiasedDestinationAddress());
+        }
       //}else
       /*
       {
@@ -3973,6 +3977,7 @@ StateType StateMachine::alert(Tuple& t)
     }catch(...)
     {
       smsc_log_warn(smsLog, "ALERT: Failed to retrieve sms:%lld",t.msgId);
+      smsc->getScheduler()->InvalidSms(t.msgId);
       return UNKNOWN_STATE;
     }
   }
@@ -3980,6 +3985,7 @@ StateType StateMachine::alert(Tuple& t)
   if(!sms.Invalidate(__FILE__,__LINE__))
   {
     smsc_log_warn(smsLog, "Invalidate of %lld failed",t.msgId);
+    smsc->getScheduler()->InvalidSms(t.msgId);
     return ERROR_STATE;
   }
 
@@ -4235,18 +4241,23 @@ StateType StateMachine::query(Tuple& t)
     }
   }catch(...)
   {
-    t.command.getProxy()->putCommand
-    (
-      SmscCommand::makeQuerySmResp
+    try{
+      t.command.getProxy()->putCommand
       (
-        t.command->get_dialogId(),
-        Status::QUERYFAIL,
-        t.msgId,
-        0,
-        0,
-        0
-      )
-    );
+        SmscCommand::makeQuerySmResp
+        (
+          t.command->get_dialogId(),
+          Status::QUERYFAIL,
+          t.msgId,
+          0,
+          0,
+          0
+        )
+      );
+    }catch(...)
+    {
+      __warning__("QUERY: failed to send query response");
+    }
     return t.state;
   }
   int state=7;
@@ -4258,18 +4269,23 @@ StateType StateMachine::query(Tuple& t)
     case DELETED:      state=4;break;
     case UNDELIVERABLE:state=5;break;
   }
-  t.command.getProxy()->putCommand
-  (
-    SmscCommand::makeQuerySmResp
+  try{
+    t.command.getProxy()->putCommand
     (
-      t.command->get_dialogId(),
-      Status::OK,
-      t.msgId,
-      state==1?0:sms.getLastTime(),
-      state,
-      0
-    )
-  );
+      SmscCommand::makeQuerySmResp
+      (
+        t.command->get_dialogId(),
+        Status::OK,
+        t.msgId,
+        state==1?0:sms.getLastTime(),
+        state,
+        0
+      )
+    );
+  }catch(...)
+  {
+    __warning__("QUERY: failed to send query response");
+  }
   return t.state;
 }
 
@@ -4322,19 +4338,27 @@ StateType StateMachine::cancel(Tuple& t)
   {
     if(!t.command->get_cancelSm().internall)
     {
-      t.command.getProxy()->putCommand
-      (
-        SmscCommand::makeCancelSmResp
+      try{
+        t.command.getProxy()->putCommand
         (
-          t.command->get_dialogId(),
-          Status::CANCELFAIL
-        )
-      );
+          SmscCommand::makeCancelSmResp
+          (
+            t.command->get_dialogId(),
+            Status::CANCELFAIL
+          )
+        );
+      }catch(...)
+      {
+        __warning__("CANCEL: failed to send cancel response");
+      }
     }
     __warning2__("CANCEL: failed to cancel sms:%s",e.what());
     return t.state;
   }
+  int code=Status::OK;
   try{
+    smsc->getScheduler()->CancelSms(t.msgId,sms.getDealiasedDestinationAddress());
+
     if(!t.command->get_cancelSm().force)
     {
       store->changeSmsStateToDeleted(t.msgId);
@@ -4354,35 +4378,28 @@ StateType StateMachine::cancel(Tuple& t)
         return t.state;
       }
     }
-    smsc->getScheduler()->CancelSms(t.msgId,sms.getDealiasedDestinationAddress());
     smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
   }catch(std::exception& e)
   {
-    if(!t.command->get_cancelSm().internall)
-    {
+    code=Status::CANCELFAIL;
+    __warning2__("CANCEL: failed to cancel sms:%s",e.what());
+    return t.state;
+  }
+  if(!t.command->get_cancelSm().internall)
+  {
+    try{
       t.command.getProxy()->putCommand
       (
         SmscCommand::makeCancelSmResp
         (
           t.command->get_dialogId(),
-          Status::CANCELFAIL
+          code
         )
       );
+    }catch(std::exception& e)
+    {
+      __warning2__("CANCEL: failed to send cancel response: %s",e.what());
     }
-    __warning2__("CANCEL: failed to cancel sms:%s",e.what());
-
-    return t.state;
-  }
-  if(!t.command->get_cancelSm().internall)
-  {
-    t.command.getProxy()->putCommand
-    (
-      SmscCommand::makeCancelSmResp
-      (
-        t.command->get_dialogId(),
-        Status::OK
-      )
-    );
   }
   return t.state;
 }

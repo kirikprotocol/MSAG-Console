@@ -111,6 +111,12 @@ public:
     if(!c)
     {
       info2(log,"DeliverOk - chain not found for %lld",id);
+
+      IdToTimeMap::iterator it=firstQueueProcessing.find(id);
+      if(it!=firstQueueProcessing.end())
+      {
+        firstQueueProcessing.erase(it);
+      }
       return;
     }
     debug2(log,"DeliverOk: id=%lld, c=%p",id,c);
@@ -130,6 +136,13 @@ public:
     Chain* c=GetProcessingChain(id);
     if(!c)
     {
+      IdToTimeMap::iterator it=firstQueueProcessing.find(id);
+      if(it==firstQueueProcessing.end())
+      {
+        warn2(log,"InvalidSms: processing chain for %lld not found!",id);
+        return;
+      }
+      firstQueueProcessing.erase(it);
       return;
     }
     if(c->Count()==0)
@@ -149,6 +162,29 @@ public:
     firstQueue.Push(SchedulerData(id,sms.getValidTime()));
   }
 
+  void RejectForward(SMSId id)
+  {
+    MutexGuard guard(mon);
+
+    Chain* c=GetProcessingChain(id);
+
+    if(!c)
+    {
+      IdToTimeMap::iterator it=firstQueueProcessing.find(id);
+      if(it==firstQueueProcessing.end())
+      {
+        warn2(log,"RejectForward: processing chain for %lld not found!",id);
+        return;
+      }
+      firstQueue.Push(SchedulerData(it->first,it->second));
+      firstQueueProcessing.erase(it);
+      return;
+    }
+    ChainSetHead(c,time(NULL),SchedulerData(id,c->lastValidTime));
+    UpdateChainChedule(c);
+    RescheduleChain(c,c->headTime);
+  }
+
   time_t RescheduleSms(SMSId id,SMS& sms,int smeIndex)
   {
     MutexGuard guard(mon);
@@ -157,6 +193,11 @@ public:
 
     if(!c)
     {
+      IdToTimeMap::iterator it=firstQueueProcessing.find(id);
+      if(it!=firstQueueProcessing.end())
+      {
+        firstQueueProcessing.erase(it);
+      }
       c=GetChain(sms.getDealiasedDestinationAddress());
     }
     if(!c)
@@ -382,6 +423,7 @@ public:
     if(firstQueue.Count())
     {
       firstQueue.Pop(sd);
+      firstQueueProcessing.insert(IdToTimeMap::value_type(sd.id,sd.expDate));
       debug2(log,"firstForward: id=%lld",sd.id);
       return true;
     }
@@ -392,6 +434,7 @@ public:
     Address addr;
     int smeIndex;
     time_t headTime;
+    time_t lastValidTime;
     bool inTimeLine;
     bool inProcMap;
 
@@ -495,11 +538,13 @@ public:
           timedQueue.erase(i);
           imap.erase(imap.find(d.id));
           queueSize--;
+          lastValidTime=d.expDate;
           return true;
         }
       }
       if(queue.empty())return false;
       d=*queue.begin();
+      lastValidTime=d.expDate;
       debug2(Scheduler::log,"Chain::Pop(queue), id=%lld",d.id);
       queue.erase(queue.begin());
       imap.erase(imap.find(d.id));
@@ -522,6 +567,7 @@ public:
         timedQueue.erase(it->second.mi);
       }
       imap.erase(it);
+      queueSize--;
       return true;
     }
 
@@ -786,6 +832,8 @@ public:
 
   CyclicQueue<SchedulerData> firstQueue;
   TimeLine timeLine;
+  typedef std::map<SMSId,time_t> IdToTimeMap;
+  IdToTimeMap firstQueueProcessing;
 
   void RescheduleChain(Chain* c,time_t sctime)
   {

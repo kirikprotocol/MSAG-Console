@@ -291,6 +291,7 @@ struct Address
     return snprintf(buf,buflen,".%d.%d.%s",type,plan,vl);
   }
   inline std::string toString()const{
+    if(length>32)abort();
     char vl[32];
     char buf[48];
     memcpy(vl,value,length);
