@@ -34,22 +34,61 @@ static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize,ConvEncodingEnu
   __trace2__("getSmsText: dc=%d, len=%d",coding,len);
   if(coding==DataCoding::UCS2)
   {
+    if(len/2>=bufsize)return -len/2;
     ConvertUCS2ToMultibyte((const short*)data,len,buf,bufsize,enc);
     len/=2;
-    __require__(len<bufsize);
   }else if(coding==DataCoding::SMSC7BIT)
   {
+    if(len>=bufsize)return -len;
     len=ConvertSMSC7BitToLatin1(data,len,buf);
-    __require__(len<bufsize);
   }
   else
   {
-    __require__(len<bufsize);
+    if(len>=bufsize)return -len;
     memcpy(buf,data,len);
   }
   buf[len]=0;
   return len;
 }
+
+static inline int getSmsText(SMS* sms,string& res,ConvEncodingEnum enc=CONV_ENCODING_CP1251)
+{
+  int coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
+  //int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
+  unsigned len;
+  const char *data=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+  if(len==0 && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  {
+    data=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+  }
+  if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)==0x40)
+  {
+    int l=(unsigned char)*data;
+    data+=l+1;
+    len-=l+1;
+  }
+  __trace2__("getSmsText: dc=%d, len=%d",coding,len);
+  if(coding==DataCoding::UCS2)
+  {
+    int bsz=len/2+2;
+    auto_ptr<char> buf(new char[bsz]);
+    ConvertUCS2ToMultibyte((const short*)data,len,buf.get(),bsz,enc);
+    len/=2;
+    res.assign(buf.get(),len);
+  }else if(coding==DataCoding::SMSC7BIT)
+  {
+    int bsz=len*2+2;
+    auto_ptr<char> buf(new char[bsz]);
+    len=ConvertSMSC7BitToLatin1(data,len,buf.get());
+    res.assign(buf.get(),len);
+  }
+  else
+  {
+    res.assign(data,len);
+  }
+  return len;
+}
+
 
 static inline int getPduText(PduXSm* pdu,char* buf,unsigned bufsize)
 {

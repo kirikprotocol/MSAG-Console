@@ -630,7 +630,7 @@ void extractSmsPart(SMS* sms,int partnum)
     FillUd(sms);
   }else
   {
-    if(sms->hasIntProperty(Tag::SMSC_FORWARD_MO_TO))
+    if(sms->hasStrProperty(Tag::SMSC_FORWARD_MO_TO))
     {
       sms->setBinProperty(Tag::SMSC_MO_PDU,msg+off,newlen);
     }else
