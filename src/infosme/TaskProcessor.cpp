@@ -2,6 +2,8 @@
 #include "TaskProcessor.h"
 #include <exception>
 
+extern bool isMSISDNAddress(const char* string);
+
 namespace smsc { namespace infosme 
 {
 
@@ -90,10 +92,20 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     : TaskProcessorAdapter(), Thread(),
         logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
             bStarted(false), bNeedExit(false), taskTablesPrefix(0), 
-                dsInternalName(0), dsInternal(0), dsIntConnection(0), messageSender(0)
+                dsInternalName(0), dsInternal(0), dsIntConnection(0), messageSender(0),
+                    protocolId(0), svcType(0), address(0)
 {
     logger.info("Loading ...");
 
+    address = config->getString("address");
+    if (!address || !isMSISDNAddress(address))
+        throw ConfigException("Address string '%s' is invalid", address ? address:"-");
+
+    try { protocolId = config->getInt("ProtocolId"); }
+    catch(ConfigException& exc) { protocolId = 0; };
+    try { svcType = config->getString("SvcType"); }
+    catch(ConfigException& exc) { svcType = 0; };
+    
     std::auto_ptr<ConfigView> threadPoolCfgGuard(config->getSubConfig("TasksThreadPool"));
     ConfigView* threadPoolCfg = threadPoolCfgGuard.get();
     manager.init(threadPoolCfg); // loads up thread pool for tasks
@@ -262,6 +274,8 @@ void TaskProcessor::MainLoop()
     {
         MutexGuard icGuard(dsIntConnectionLock);
         if (!task->getNextMessage(dsIntConnection, message)) return;
+        // TODO: Implement time dependent commit on dsIntConnection.
+        dsIntConnection->commit(); 
     }
 
     logger.debug("Message #%lld for '%s': %s", 
@@ -270,7 +284,13 @@ void TaskProcessor::MainLoop()
     MutexGuard msGuard(messageSenderLock);
     if (messageSender)
     {
-        int seqNum = messageSender->sendMessage(message.abonent, message.message, info);
+        int seqNum = 0;
+        if (!messageSender->send(message.abonent, message.message, info, seqNum)) {
+            logger.error("Failed to send message #%lld for '%s'", 
+                         message.id, message.abonent.c_str());
+            return;
+        }
+        
         MutexGuard snGuard(taskIdsBySeqNumLock);
         if (taskIdsBySeqNum.Exist(seqNum))
         {
@@ -287,12 +307,14 @@ const char* CREATE_ID_MAPPING_STATEMENT_SQL = (const char*)
 
 void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::string smscId)
 {
+    __require__(dsIntConnection);
+
     TaskMsgId* tmIds = 0;
     
     {   // Get taskId & msgId by seqNum
         MutexGuard snGuard(taskIdsBySeqNumLock);
         if (!(tmIds = taskIdsBySeqNum.GetPtr(seqNum))) {
-            logger.warn("Sequence number=%d is unknown !", seqNum);
+            logger.warn("processResponce(): Sequence number=%d is unknown !", seqNum);
             return;
         }
         taskIdsBySeqNum.Delete(seqNum);
@@ -311,7 +333,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
     if (!accepted)
     {
         if (retry && info.retryOnFail && info.retryTime > 0)
-             if (!task->doFailed(dsIntConnection, tmIds->msgId))
+             if (!task->doRetry(dsIntConnection, tmIds->msgId))
                 logger.warn("Message #%lld not found (doRetry).", tmIds->msgId);
         else if (!task->doFailed(dsIntConnection, tmIds->msgId))
                 logger.warn("Message #%lld not found (doFailed).", tmIds->msgId);
@@ -322,39 +344,100 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
             logger.warn("Message #%lld not found (doEnroute).", tmIds->msgId);
         else
         {
-            // TODO: try catch block here !!!
-            Statement* createMapping = Task::getStatement(dsIntConnection, 
-                                                          CREATE_ID_MAPPING_STATEMENT_ID,
-                                                          CREATE_ID_MAPPING_STATEMENT_SQL);
-            if (!createMapping) {
-                logger.error("Failed to create statement for ids mapping.");
-                return;
+            try
+            {
+                Statement* createMapping = Task::getStatement(dsIntConnection, 
+                                                              CREATE_ID_MAPPING_STATEMENT_ID,
+                                                              CREATE_ID_MAPPING_STATEMENT_SQL);
+                if (!createMapping)
+                    throw Exception("processResponce(): Failed to create statement for ids mapping.");
+                
+                createMapping->setUint64(1, tmIds->msgId);
+                createMapping->setString(2, smscId.c_str());
+                createMapping->setString(3, info.id.c_str());
+                
+                createMapping->executeUpdate();
             }
-            createMapping->setUint64(1, tmIds->msgId);
-            createMapping->setString(2, smscId.c_str());
-            createMapping->setString(3, info.id.c_str());
-            createMapping->executeUpdate();
+            catch (Exception& exc) {
+                logger.error("Task '%s'. Failed to process responce. Ids mapping failure. "
+                             "Details: %s", info.id.c_str(), exc.what());
+            }
+            catch (...) {
+                logger.error("Task '%s'. Failed to process responce. Ids mapping failure.", 
+                             info.id.c_str());
+            }
         }
     }
+    
     // TODO: Implement time dependent commit on dsIntConnection.
+    dsIntConnection->commit(); 
 }
 
 const char* GET_ID_MAPPING_STATEMENT_ID = "GET_ID_MAPPING_STATEMENT_ID";
 const char* GET_ID_MAPPING_STATEMENT_SQL = (const char*)
-"SELECT ID, TASK_ID FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID";
+"SELECT ID, TASK_ID FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID FOR UPDATE";
 
-const char* DELETE_ID_MAPPING_STATEMENT_ID = "DELETE_ID_MAPPING_STATEMENT_ID";
-const char* DELETE_ID_MAPPING_STATEMENT_SQL = (const char*)
-"DELETE FROM INFOSME_ID_MAPPING WHERE ID=:ID";
+const char* DEL_ID_MAPPING_STATEMENT_ID = "DEL_ID_MAPPING_STATEMENT_ID";
+const char* DEL_ID_MAPPING_STATEMENT_SQL = (const char*)
+"DELETE FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID";
 
-void TaskProcessor::precessReceipt (std::string smscId, bool delivered)
+void TaskProcessor::processReceipt (std::string smscId, bool delivered)
 {
-    /* TODO:
-            1) Lock dsIntConnection
-            2) Get taskId, msgId by smscId via SELECT FROM INFOSME_ID_MAPPING ...
-            3) DELETE FROM INFOSME_ID_MAPPING ...
-            4) call processReceipt(dsIntConnection, msgId, )
-    */
+    __require__(dsIntConnection);
+
+    MutexGuard icGuard(dsIntConnectionLock);
+
+    try
+    {
+        Statement* getMapping = Task::getStatement(dsIntConnection, 
+                                                   GET_ID_MAPPING_STATEMENT_ID,
+                                                   GET_ID_MAPPING_STATEMENT_SQL);
+        Statement* delMapping = Task::getStatement(dsIntConnection, 
+                                                   DEL_ID_MAPPING_STATEMENT_ID,
+                                                   DEL_ID_MAPPING_STATEMENT_SQL);
+        if (!getMapping || !delMapping)
+            throw Exception("processReceipt(): Failed to create statement for ids mapping.");
+       
+        getMapping->setString(1, smscId.c_str());
+        std::auto_ptr<ResultSet> rsGuard(getMapping->executeQuery());
+        ResultSet* rs = rsGuard.get();
+        if (!rs || !rs->fetchNext())
+            throw Exception("processReceipt(): Failed to obtain result set for ids mapping.");
+
+        uint64_t msgId = rs->getUint64(1);
+        std::string taskId = rs->getString(2);
+        
+        delMapping->setString(1, smscId.c_str());
+        delMapping->executeUpdate();
+        
+        TaskGuard taskGuard = container.getTask(taskId); 
+        Task* task = taskGuard.get();
+        if (!task)
+            throw Exception("processReceipt(): Unable to locate task '%s' for smscId=%s",
+                            taskId.c_str(), smscId.c_str());
+        TaskInfo info = task->getInfo();
+        
+        if (!delivered)
+        {
+            if (info.retryOnFail && info.retryTime > 0)
+                 if (!task->doRetry(dsIntConnection, msgId))
+                    logger.warn("Message #%lld not found (doRetry).", msgId);
+            else if (!task->doFailed(dsIntConnection, msgId))
+                    logger.warn("Message #%lld not found (doFailed).", msgId);
+        }
+        else if (!task->doDelivered(dsIntConnection, msgId))
+                    logger.warn("Message #%lld not found (doDelivered).", msgId);
+    }
+    catch (Exception& exc) {
+        logger.error("Failed to process receipt. Ids mapping failure. "
+                     "Details: %s", exc.what());
+    }
+    catch (...) {
+        logger.error("Failed to process receipt. Ids mapping failure.");
+    }
+    
+    // TODO: Implement time dependent commit on dsIntConnection.
+    dsIntConnection->commit(); 
 }
 
 }}

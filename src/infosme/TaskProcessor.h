@@ -158,7 +158,8 @@ namespace smsc { namespace infosme
 
     struct MessageSender
     {
-        virtual int sendMessage(std::string abonent, std::string message, TaskInfo info) = 0;
+        virtual bool send(std::string abonent, std::string message, 
+                          TaskInfo info, int& seqNum) = 0;
         virtual ~MessageSender() {};
 
     protected:
@@ -210,6 +211,10 @@ namespace smsc { namespace infosme
         IntHash<TaskMsgId> taskIdsBySeqNum;
         Mutex              taskIdsBySeqNumLock;
 
+        int     protocolId;
+        char*   svcType;
+        char*   address;
+        
         void MainLoop();
 
     public:
@@ -223,6 +228,10 @@ namespace smsc { namespace infosme
         TaskProcessor(ConfigView* config);
         virtual ~TaskProcessor();
 
+        int getProtocolId()      { return protocolId; };
+        const char* getSvcType() { return (svcType) ? svcType:"InfoSme"; };
+        const char* getAddress() { return address; };
+        
         virtual int Execute();
         void Start();
         void Stop();
@@ -245,7 +254,7 @@ namespace smsc { namespace infosme
         }
 
         void processResponce(int seqNum, bool accepted, bool retry, std::string smscId="");
-        void precessReceipt (std::string smscId, bool delivered);
+        void processReceipt (std::string smscId, bool delivered);
 
     };
 
