@@ -9,6 +9,7 @@ package ru.novosoft.smsc.admin.mscman;
 
 public class MscInfo
 {
+    private final static String TOTALLY_LOCKED = "Locked totally";
     private final static String MANUAL_LOCKED = "Locked manually";
     private final static String AUT0_LOCKED = "Locked automatically";
     private final static String NOT_LOCKED = "Available";
@@ -34,12 +35,13 @@ public class MscInfo
         this.mscNum = mscNum;
     }
     public String getLockString() {
+        if (mLock && aLock) return TOTALLY_LOCKED;
         if (mLock) return MANUAL_LOCKED;
         if (aLock) return AUT0_LOCKED;
         return NOT_LOCKED;
     }
     public boolean ismLock() {
-        return aLock;
+        return mLock;
     }
     public void setmLock(boolean mLock) {
         this.mLock = mLock;

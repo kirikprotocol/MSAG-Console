@@ -34,7 +34,7 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
     List mscList = bean.getMscs();
-    if (mscList.size() <= 0) {
+    if (mscList == null || mscList.size() <= 0) {
     %><div align=left>No commutators defined.</div><%
     } else { int posIdx = 0;%>
 <table class=secRep cellspacing=1 width="100%">
@@ -45,7 +45,7 @@
     <th width="20%"><div align=right>Commutator</div></th>
     <th width="25%"><div align=right>Status</div></th>
     <th width="10%"><div align=right>Failures</div></th>
-    <th width="45%"><div align=right>Action</div></th>
+    <th width="45%"><div align=right>Actions</div></th>
 </tr><%
         for (int i=0; i<mscList.size(); i++)
         {
@@ -53,14 +53,14 @@
             if (obj != null && obj instanceof MscInfo) {
                 MscInfo info = (MscInfo)obj; %>
 <tr class=row<%= (posIdx++)%2%>>
-    <td><div align=right><%= info.getMscNum()%></div></td>
-    <td><div align=right><%= info.getLockString()%></div></td>
+    <td><div align=right><%= StringEncoderDecoder.encode(info.getMscNum())%></div></td>
+    <td><div align=right><%= StringEncoderDecoder.encode(info.getLockString())%></div></td>
     <td><div align=right><%= info.getfCount()%></div></td>
     <td>
     <div class=secButtons align=right>
-        <input class=btn type="submit" name="mbBlock" value="Lock" onclick="document.forms[0].mscNum.value='<%= info.getMscNum()%>'">
-        <input class=btn type="submit" name="mbClear" value="UnLock" onclick="document.forms[0].mscNum.value='<%= info.getMscNum()%>'">
-        <input class=btn type="submit" name="mbUnregister" value="UnRegister" onclick="document.forms[0].mscNum.value='<%= info.getMscNum()%>'">
+        <input class=btn type="submit" name="mbBlock" value="Lock" onclick="this.form.mscKey.value='<%= info.getMscNum()%>'" <%= (info.ismLock()) ? "disabled":""%>>
+        <input class=btn type="submit" name="mbClear" value="UnLock" onclick="this.form.mscKey.value='<%= info.getMscNum()%>'" <%= (info.isaLock() || info.ismLock()) ? "":"disabled"%>>
+        <input class=btn type="submit" name="mbUnregister" value="UnRegister" onclick="this.form.mscKey.value='<%= info.getMscNum()%>'">
     </div>
     </td>
 </tr><%     }
@@ -72,7 +72,8 @@
 <table class=secRep cellspacing=1 width="100%">
 <tr class=row0>
      <td width="55%">
-        <input class=txtW type="text" id="mscNumId" name="mscNum" value="<%=bean.getMscNum()%>" size=21 maxlength=21>
+        <input type="hidden" name="mscKey" value="none">
+        <input class=txtW type="text" name="mscNum" value="<%=bean.getMscNum()%>" size=21 maxlength=21>
     </td>
 <td width="45%"><div class=secButtons>
         <input class=btn type="submit" name="mbRegister" value="Ok">

@@ -12,7 +12,6 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.admin.mscman.MscManager;
 
 import java.util.List;
-import java.util.ArrayList;
 
 public class MscManagerFormBean extends IndexBean
 {
@@ -25,6 +24,7 @@ public class MscManagerFormBean extends IndexBean
     private String mbClear = null;
 
     private String mscNum = "";
+    private String mscKey = "";
 
     protected int init(List errors)
     {
@@ -38,7 +38,7 @@ public class MscManagerFormBean extends IndexBean
     private void clearBeenProperties() {
         mbRegister = null;  mbUnregister = null;
         mbBlock = null; mbClear = null;
-        mscNum = "";
+        mscNum = ""; mscKey = "";
     }
     public int process(SMSCAppContext appContext, List errors)
     {
@@ -50,9 +50,9 @@ public class MscManagerFormBean extends IndexBean
         int result = super.process(appContext, errors);
         if (result != RESULT_OK) return result;
 
-        if (mbBlock != null) manager.block(mscNum);
-        else if (mbClear != null) manager.clear(mscNum);
-        else if (mbUnregister != null) manager.unregister(mscNum);
+        if (mbBlock != null) manager.block(mscKey);
+        else if (mbClear != null) manager.clear(mscKey);
+        else if (mbUnregister != null) manager.unregister(mscKey);
         else if (mbRegister != null) manager.register(mscNum);
 
         mscs = manager.list();
@@ -69,6 +69,12 @@ public class MscManagerFormBean extends IndexBean
     }
     public void setMscNum(String mscNum) {
         this.mscNum = mscNum;
+    }
+    public String getMscKey() {
+        return mscKey;
+    }
+    public void setMscKey(String mscKey) {
+        this.mscKey = mscKey;
     }
 
     public void setMbRegister(String mbRegister) {
