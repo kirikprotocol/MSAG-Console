@@ -79,6 +79,7 @@ namespace smsc { namespace mcisme
         void loadup(uint64_t currId, Connection* connection=0); // used from loadup() & loadupAll()
         void doWait(Connection* connection, const char* smsc_id, const MessageState& state);
         void doNewCurrent(Connection* connection);
+        void clearCurrent(Connection* connection);
 
     public:
 
@@ -87,7 +88,8 @@ namespace smsc { namespace mcisme
         static void         init(DataSource* _ds, Statistics* _statistics, int rowsPerMessage);
         static uint64_t     getNextId(Connection* connection=0);
         
-        static bool         getMessage(const char* smsc_id, Message& message, Connection* connection=0);
+        static bool         getMessage(const char* smsc_id, Message& message, 
+                                       MessageState& state, Connection* connection=0);
         static Hash<Task *> loadupAll();
 
         Task(const std::string& _abonent)  
@@ -114,7 +116,8 @@ namespace smsc { namespace mcisme
         // Adds new event to chain & inserts inassigned event to DB
         void addEvent(const MissedCallEvent& event);
 
-        // Formats message from events chain to message capacity, assigns events to current message
+        // ‘орматирует сообщение из текущих событий до его заполнени€ (если currentMessageId == 0, то создаЄт новое).
+        // ћаркирует event'ы текущим id'ом сообщени€ в таблице событий.
         bool formatMessage(Message& message);
 
         // Deletes message (by msg_id if defined, else getMessage(smsc_id)) & all assigned events
@@ -125,7 +128,8 @@ namespace smsc { namespace mcisme
         void waitReceipt (const char* smsc_id); // Makes current message WAIT_RCPT & set smsc_id
         void waitResponce();                    // Makes current message WAIT_RESP & set smsc_id to null
 
-        // Makes current message WAIT_RCPT & create new current message & shifts task events by eventCount
+        // Makes current message WAIT_RCPT & set smsc_id, 
+        // shifts task events by eventCount & clear currentMessageId
         void waitReceipt(int eventCount, const char* smsc_id);
     };
 

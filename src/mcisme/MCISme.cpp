@@ -10,6 +10,7 @@
 #include <util/recoder/recode_dll.h>
 #include <util/smstext.h>
 
+#include <pthread.h>
 #include <signal.h>
 
 #include <db/DataSourceLoader.h>
@@ -236,12 +237,12 @@ public:
         MutexGuard guard(sendLock);
         
         if (!session) {
-            smsc_log_error(logger, "Smpp session is undefined for MessageSender.");
+            smsc_log_error(logger, "Smpp session is undefined for MessageSender");
             return false;
         }
         SmppTransmitter* asyncTransmitter = session->getAsyncTransmitter();
         if (!asyncTransmitter) {
-            smsc_log_error(logger, "Smpp transmitter is undefined for MessageSender.");
+            smsc_log_error(logger, "Smpp transmitter is undefined for MessageSender");
             return false;
         }
         
@@ -418,7 +419,8 @@ public:
             if (msgid && msgid[0] != '\0')
             {
                 bool delivered = false;
-                bool retry = false;
+                bool expired   = false;
+                bool deleted   = false;
                 
                 if (sms.hasIntProperty(Tag::SMPP_MSG_STATE))
                 {
@@ -429,8 +431,10 @@ public:
                         delivered = true;
                         break;
                     case SmppMessageState::EXPIRED:
+                        expired = true;
+                        break;
                     case SmppMessageState::DELETED:
-                        retry = true;
+                        deleted = true;
                         break;
                     case SmppMessageState::ENROUTE:
                     case SmppMessageState::UNKNOWN:
@@ -444,7 +448,7 @@ public:
                     }
                 }
                 
-                bNeedResponce = processor.invokeProcessReceipt(msgid, delivered, retry);
+                bNeedResponce = processor.invokeProcessReceipt(msgid, delivered, expired, deleted);
             }
         }
 
@@ -517,7 +521,7 @@ extern "C" void setShutdownHandler(void)
     sigset_t set;
     sigemptyset(&set); 
     sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
-    if(thr_sigsetmask(SIG_UNBLOCK, &set, NULL) != 0) {
+    if(pthread_sigmask(SIG_UNBLOCK, &set, NULL) != 0) {
         if (logger) smsc_log_error(logger, "Failed to set signal mask (shutdown handler)");
     }
     sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
@@ -528,7 +532,7 @@ extern "C" void clearSignalMask(void)
     sigemptyset(&set);
     for(int i=1;i<=37;i++)
         if(i!=SIGQUIT && i!=SIGBUS && i!=SIGSEGV) sigaddset(&set,i);
-    if(thr_sigsetmask(SIG_SETMASK, &set, NULL) != 0) {
+    if(pthread_sigmask(SIG_SETMASK, &set, NULL) != 0) {
         if (logger) smsc_log_error(logger, "Failed to clear signal mask");
     }
 }
@@ -679,7 +683,7 @@ int main(void)
             //setShutdownHandler();
             processor.Run();
             clearSignalMask();
-            smsc_log_info(logger, "Message send loop exited.");
+            smsc_log_info(logger, "Message send loop exited");
             
             smsc_log_info(logger, "Disconnecting from SMSC ...");
             TrafficControl::stopControl();
@@ -690,23 +694,23 @@ int main(void)
     }
     catch (SmppConnectException& exc) {
         if (exc.getReason() == SmppConnectException::Reason::bindFailed)
-            smsc_log_error(logger, "Failed to bind MCISme. Exiting.");
+            smsc_log_error(logger, "Failed to bind MCISme. Exiting");
         resultCode = -1;
     }
     catch (ConfigException& exc) {
-        smsc_log_error(logger, "Configuration invalid. Details: %s Exiting.", exc.what());
+        smsc_log_error(logger, "Configuration invalid. Details: %s Exiting", exc.what());
         resultCode = -2;
     }
     catch (Exception& exc) {
-        smsc_log_error(logger, "Top level Exception: %s Exiting.", exc.what());
+        smsc_log_error(logger, "Top level Exception: %s Exiting", exc.what());
         resultCode = -3;
     }
     catch (exception& exc) {
-        smsc_log_error(logger, "Top level exception: %s Exiting.", exc.what());
+        smsc_log_error(logger, "Top level exception: %s Exiting", exc.what());
         resultCode = -4;
     }
     catch (...) {
-        smsc_log_error(logger, "Unknown exception: '...' caught. Exiting.");
+        smsc_log_error(logger, "Unknown exception: '...' caught. Exiting");
         resultCode = -5;
     }
     

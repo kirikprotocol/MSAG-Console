@@ -70,7 +70,7 @@ int EventRunner::Execute()
                                   cancel, cancel_failed, smscId);
         break;
     case processReceiptMethod:
-        processor.processReceipt (smscId, delivered, retry);
+        processor.processReceipt (smscId, delivered, expired, deleted);
         break;
     default:
         __trace2__("Invalid method '%d' invoked by event.", method);
@@ -301,9 +301,7 @@ void TaskProcessor::loadupTasks()
     while (tasks.Next(abonent, task))
     {
         if (!abonent || !task) continue;
-        smsc_log_debug(logger, "Loaded task for abonent: %s. Events=%d", 
-                       abonent, task->getEventsCount());
-
+        smsc_log_debug(logger, "Loaded task for abonent %s. Events=%d", abonent, task->getEventsCount());
         {
             AbonentProfile profile = task->getAbonentProfile();
             task->setTemplateFormatter((templateManager) ? 
@@ -318,20 +316,22 @@ void TaskProcessor::loadupTasks()
             message.smsc_id = task->getCurrentSmscId();
             const char* smsc_id = message.smsc_id.c_str();
             if (!smsc_id || !smsc_id[0]) {
-                smsc_log_warn(logger, "Smsc_id is undefined for message #%lld", message.id);
+                smsc_log_warn(logger, "Loadup: smscId is undefined for message #%lld (state=%d)",
+                              message.id, (int)state);
                 continue;
             }
             task->waitCancel(smsc_id);
-            smsc_log_debug(logger, "Cancel message #%lld smsc_id=%s put to out queue", message.id, smsc_id);
+            smsc_log_debug(logger, "Loadup: cancel message #%lld smscId=%s put to out queue (state=%d)",
+                           message.id, smsc_id, (int)state);
             putToOutQueue(message, true);
         }
         else if (task->formatMessage(message))
         {
-            smsc_log_debug(logger, "Message %lld put to out queue. Events=%d Rows=%d",
-                           message.id, message.eventsCount, message.rowsCount);
+            smsc_log_debug(logger, "Loadup: new message %lld put to out queue (state=%d). Events=%d Rows=%d",
+                           message.id, (int)state, message.eventsCount, message.rowsCount);
             putToOutQueue(message, true);
         }
-        else smsc_log_warn(logger, "Task for abonent %s has no message to send", abonent);
+        else smsc_log_warn(logger, "Loadup: task for abonent %s has no message to send", abonent);
     }
     smsc_log_info(logger, "All loaded tasks messages added to output queue.");
 }
@@ -375,7 +375,7 @@ Task* TaskProcessor::getTask(const char* abonent, bool& newone)
         task->setTemplateFormatter((templateManager) ? 
                                     templateManager->getInformFormatter(profile.informTemplateId):0);
     } catch (std::exception& exc) { 
-        smsc_log_error(logger, "Task loadup for abonent %s failed.", abonent);
+        smsc_log_error(logger, "Task loadup for abonent %s failed", abonent);
         delete task; throw;
     } catch (...) { 
         delete task; throw;
@@ -385,7 +385,8 @@ Task* TaskProcessor::getTask(const char* abonent, bool& newone)
     tasks.Insert(abonent, task);
     newone = true;
 
-    smsc_log_debug(logger, "Task for abonent %s created. Events=%d", abonent, task->getEventsCount());
+    smsc_log_debug(logger, "Task for abonent %s created (state=%d). Events=%d",
+                   abonent, (int)task->getCurrentState(), task->getEventsCount());
 
     return task;
 }
@@ -403,7 +404,8 @@ bool TaskProcessor::delTask(const char* abonent)
     Task** taskPtr = tasks.GetPtr(abonent);
     if (!taskPtr) return false;
     
-    smsc_log_debug(logger, "Task for abonent %s killed. Events=%d", abonent, (*taskPtr)->getEventsCount());
+    smsc_log_debug(logger, "Task for abonent %s killed. Events=%d", 
+                   abonent, (*taskPtr)->getEventsCount());
 
     delete *taskPtr;
     tasks.Delete(abonent);
@@ -480,34 +482,45 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
 
         bool isNewTask = false; // get or create task
         Task* task = taskAccessor.getTask(abonent, isNewTask); 
-        if (!task) throw Exception("Failed to obtain task for abonent: %s", abonent);
+        if (!task) throw Exception("Event: failed to obtain task for abonent %s", abonent);
 
         AbonentProfile profile = task->getAbonentProfile();
         if (profile.inform || Task::bInformAll)
         {
             task->addEvent(event); // add new event to task chain (inassigned to message in DB)
-            smsc_log_debug(logger, "Event for %s added to %s task. Events=%d",
+            smsc_log_debug(logger, "Event: for %s added to %s task. Events=%d",
                            abonent, (isNewTask) ? "new":"existed", task->getEventsCount());
 
-            // process event if task not exists or task awaiting receipt
-            if (!isNewTask && task->getCurrentState() != WAIT_RCPT) return;
+            MessageState state = task->getCurrentState();
+            if (!isNewTask && state != WAIT_RCPT) { 
+                smsc_log_debug(logger, "Event: is put off. Task for abonent %s "
+                               "is already processing events (state=%d)", abonent, (int)state);
+                return; // process event only if task not exists or task is awaiting receipt
+            } 
 
-            message.reset(abonent);
-            message.id = task->getCurrentMessageId();
             message.smsc_id = task->getCurrentSmscId();
-            const char* smsc_id = message.smsc_id.c_str();
+            const char* smsc_id = (message.smsc_id.length() > 0) ? message.smsc_id.c_str():0;
 
-            // TODO: ѕровер€ть ли возможность расширени€ текущего сообщени€ новым событием 
-            //      (отмен€ть ли при этом старое сообщение) ???
-            if ((task->getCurrentState() == WAIT_RCPT) && smsc_id && smsc_id[0]) {
-                message.cancel = true;
-                task->waitCancel(smsc_id);
-            } else {
-                if (!task->formatMessage(message)) return;
-                message.cancel = false;
-                task->waitResponce();
+            if (state == WAIT_RCPT && smsc_id && smsc_id[0])
+            {
+                message.reset(abonent);
+                message.id = task->getCurrentMessageId(); 
+                if (message.id > 0) { // task is waiting receipt for incomplete message
+                    smsc_log_debug(logger, "Event: message for abonent %s cancelling (extending)", abonent);
+                    message.cancel = true; needMessage = true;
+                    task->waitCancel(smsc_id);
+                } 
+                else smsc_log_error(logger, "Event: current message id is invalid for abonent %s", abonent);
+            } 
+            else
+            {
+                if (task->formatMessage(message)) {
+                    smsc_log_debug(logger, "Event: submitting new message for abonent %s", abonent);
+                    message.cancel = false; needMessage = true;
+                    task->waitResponce();
+                }
+                else smsc_log_error(logger, "Event: failed to format new message for abonent %s", abonent);
             }
-            needMessage = true;
         }
     }
     if (needMessage) putToOutQueue(message);
@@ -531,13 +544,13 @@ void TaskProcessor::processMessage(const Message& message)
     }
 
     if (!messageSender->send(seqNum, message)) {
-        smsc_log_error(logger, "Failed to send %s message #%lld to '%s'.",
+        smsc_log_error(logger, "Failed to send %s message #%lld for abonent %s",
                        (message.cancel) ? "cancel":"submit", message.id, message.abonent.c_str());
         invokeProcessResponce(seqNum, false, false, false, message.cancel, false, message.smsc_id);
         return;
     }
     
-    smsc_log_debug(logger, "Message #%lld to '%s'. %s sent.",
+    smsc_log_debug(logger, "Message #%lld for abonent %s. %s sent",
                    message.id, message.abonent.c_str(), (message.cancel) ? "Cancel":"Submit");
 }
 
@@ -549,7 +562,7 @@ void TaskProcessor::processNotificationResponce(Message& message,
     const char* smsc_id = (smscId.length() > 0) ? smscId.c_str():0;
 
     smsc_log_debug(logger, "Got notification responce: smscId=%s, accepted=%d, retry=%d, immediate=%d",
-                   smsc_id ? smsc_id:"-", accepted, retry, immediate);
+                   smsc_id ? smsc_id:"-", (int)accepted, (int)retry, (int)immediate);
     
     ReceiptData receipt; // check waiting receipt existance
     if (responcesTracker.popReceiptData(smsc_id, receipt))
@@ -558,33 +571,78 @@ void TaskProcessor::processNotificationResponce(Message& message,
     if (!accepted) 
     {
         if (retry) {
-            smsc_log_debug(logger, "Retrying to send notification message to abonent: %s", message.abonent.c_str());
+            smsc_log_debug(logger, "Retrying to send notification message to abonent %s", message.abonent.c_str());
             if (!immediate) message.attempts++;
             putToOutQueue(message);
         }
         else { // permanent error
-            smsc_log_error(logger, "Failed to send notification message to abonent: %s", message.abonent.c_str());
+            smsc_log_error(logger, "Failed to send notification message to abonent %s", message.abonent.c_str());
         }
     }
     else // accepted
     { 
         if(statistics) statistics->incNotified();
-        smsc_log_debug(logger, "Succeeded to send notification message to abonent: %s", message.abonent.c_str());
+        smsc_log_debug(logger, "Succeeded to send notification message to abonent %s", message.abonent.c_str());
     }
 }
+
+bool TaskProcessor::formatMessage(Task* task, Message& message)
+{
+    __require__(task); 
+
+    if (task->formatMessage(message)) {
+        smsc_log_debug(logger, "Need send %d events more to abonent %s", 
+                       message.eventsCount, task->getAbonent().c_str());
+        message.cancel = false;
+        task->waitResponce();
+        return true;
+    }
+    return false;
+}
+bool TaskProcessor::processCancel(Task* task, const char* smsc_id, Message& message,
+                                  bool receipted/*=false*/, bool delivered/*=false*/, bool expired/*=false*/)
+{
+    __require__(task); 
+    __require__(smsc_id);
+    __require__(task->getCurrentState() == WAIT_CNCL);
+
+    bool result = false;
+    const char* abonent = task->getAbonent().c_str();
+
+    uint64_t msg_id = task->getCurrentMessageId();
+    int newEvtCount = task->getNewEventsCount(); if (newEvtCount < 0) newEvtCount = 0; 
+    int allEvtCount = task->getEventsCount();    if (allEvtCount < 0) allEvtCount = 0;
+    
+    smsc_log_debug(logger, "Processing cancel on smscId=%s (all=%d new=%d) for abonent %s",
+                   smsc_id, allEvtCount, newEvtCount, abonent);
+    
+    // process finalization for old message (message is in WAIT_CNCL with smsc_id)
+    if (receipted) processReceipt(task, delivered, expired, smsc_id, msg_id);
+    else {
+        // set old message WAIT_RCPT & skip task events for it, clear current message
+        int oldEvtCount = allEvtCount - newEvtCount; if (oldEvtCount < 0) oldEvtCount = 0;
+        task->waitReceipt(oldEvtCount, smsc_id);
+    }
+    
+    // try send more events via submit new message (do not cancel)
+    return (newEvtCount > 0) ? formatMessage(task, message):false;
+}
+
 void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool immediate,
                                     bool cancel, bool cancel_failed, std::string smscId)
 {
     smsc_log_debug(logger, "Responce (%s): seqNum=%d, smscId=%s, accepted=%d, retry=%d, immediate=%d, cancel_failed=%d",
-                   cancel ? "cancel":"submit", seqNum, smscId.c_str(), accepted, retry, immediate, cancel_failed);
+                   cancel ? "cancel":"submit", seqNum, smscId.c_str(), 
+                   (int)accepted, (int)retry, (int)immediate, (int)cancel_failed);
 
     Message message; // get message by sequence number assigned in sender
-    if (!responcesTracker.popResponceData(seqNum, message)) {   
-        smsc_log_error(logger, "Unable to locate message for sequence number: %d", seqNum);
+    if (!responcesTracker.popResponceData(seqNum, message)) {
+        if (!cancel) smsc_log_error(logger, "Unable to locate message for seqNum=%d", seqNum);
+        else smsc_log_debug(logger, "Cancel message for seqNum=%d was processed by receipt", seqNum);
         return;
     }
     if (message.cancel != cancel && !message.notification) {
-        smsc_log_error(logger, "%s responce got on %s message #%lld, sequence number: %d",
+        smsc_log_error(logger, "%s responce got on %s message #%lld, seqNum=%d",
                        cancel ? "Cancel":"Submit", message.cancel ? "cancel":"submit", message.id, seqNum);
         return;
     }
@@ -609,122 +667,108 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
         TaskAccessor taskAccessor(this);
         Task* task = taskAccessor.getTask(message.abonent.c_str());
         if (!task) { // Do not create task! Task MUST be in map for valid responce.
-            smsc_log_error(logger, "Unable to locate task for abonent: %s", message.abonent.c_str());
+            smsc_log_error(logger, "Unable to locate task for abonent %s", message.abonent.c_str());
             return;
         }
+        MessageState state = task->getCurrentState();
 
-        if (!accepted)
+        if (state == WAIT_CNCL) // task is waiting responce on cancel message
         {
-            if (retry)  // temporal error => keep task & retry with message (possible extended)
-            { 
-                if (cancel) { 
-                    isMessageToSend = true; messageToSend = message; message.cancel = true;
-                }
-                else    // usual (submit) message
-                { 
-                    if (message.eventsCount < task->getEventsCount()) { // more events added => cancel current message
-                        // generate cancel message & move task to WAIT_CNCL state, keep events!
-                        task->waitCancel(smsc_id);
-                        isMessageToSend = true; messageToSend = message;
-                        messageToSend.cancel = true; messageToSend.notification = false;
-                    }
-                    else { // resend current message
-                        isMessageToSend = true; messageToSend = message;
-                        messageToSend.cancel = false; messageToSend.notification = false;
-                        if (!immediate) messageToSend.attempts = message.attempts+1;
-                    }
-                }
+            if (!cancel || !message.cancel || !smsc_id || !smsc_id[0]) {
+                smsc_log_error(logger, "Canceling task for abonent %s got invalid responce (c=%d, mc=%d, smscId=%s)",
+                               message.abonent.c_str(), (int)cancel, (int)message.cancel, (smsc_id) ? smsc_id:"-");
+                return;
             }
-            else       // permanent error
-            {
-                if (cancel && cancel_failed)
-                {
-                    int newEvtCount = task->getNewEventsCount();
-                    int allEvtCount = task->getEventsCount();
-                    smsc_log_debug(logger, "Message #%lld (smsc_id=%s, all=%d new=%d) cancel error for abonent: %s",
-                                   message.id, smsc_id ? smsc_id:"-", allEvtCount, newEvtCount, message.abonent.c_str());
-                    if (smsc_id)
-                    {
-                        if (newEvtCount < 0) newEvtCount = 0;
-                        if (allEvtCount < 0) allEvtCount = 0;
-                        int oldEvtCount = allEvtCount - newEvtCount;
-                        if (oldEvtCount < 0) oldEvtCount = 0;
-                        
-                        // set new current message & skip task events for old message
-                        task->waitReceipt(oldEvtCount, smsc_id);
-                        // TODO: check bWasRecepted & set wait timer ??? 
 
-                        // try send more events via submit next message (do not cancel)
-                        if (task->formatMessage(messageToSend))
-                        { 
-                            smsc_log_debug(logger, "Task has %d events more to send for abonent: %s (cancel error)",
-                                           messageToSend.eventsCount, messageToSend.abonent.c_str());
-                            isMessageToSend = true; messageToSend.cancel = false;
-                            task->waitResponce();
-                        } 
-                        else needKillTask = true; // if no more events to send => kill task
-                    }
-                    else needKillTask = true;
-                }
-                else // if !accepted && (!cancel || !cancel_failed)
-                {
-                    smsc_log_debug(logger, "Message #%lld (smsc_id=%s) %s error, deleting task for abonent: %s",
-                                   message.id, smsc_id ? smsc_id:"-", cancel ? "cancel":"submit",
-                                   message.abonent.c_str());
-                    task->finalizeMessage(smsc_id, false, false, message.id);
+            if (bWasReceipted) // skip responce processing
+            {
+                smsc_log_debug(logger, "Responce: Cancel was receipted. Message #%lld (smscId=%s), abonent %s",
+                               message.id, smsc_id, message.abonent.c_str());
+                needKillTask = true;
+            }
+            else if (accepted) // cancel ok
+            {
+                smsc_log_debug(logger, "Responce: cancel ok. Message #%lld (smscId=%s), abonent %s",
+                               message.id, smsc_id, message.abonent.c_str());
+                
+                // try send more events via submit new message
+                isMessageToSend = formatMessage(task, messageToSend);
+                if (!isMessageToSend) {
+                    smsc_log_warn(logger, "Responce: no events to send after cancel ok (smscId=%s) for abonent %s",
+                                  smsc_id, message.abonent.c_str());
                     needKillTask = true;
                 }
             }
-        }
-        else    // submit | cancel was accepted by SMSC
-        {
-            if (cancel) // cancel was accepted by SMSC
+            else // cancel error
             {
-                smsc_log_debug(logger, "Message #%lld (smscId=%s) cancel ok for abonent: %s",
-                               message.id, smsc_id ? smsc_id:"-", message.abonent.c_str());
-                
-                if (!bWasReceipted) {
-                    // cancel responce is first => need skip future receipt (if any) on this smsc_id
-                    if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(false, false))) {
-                        smsc_log_error(logger, "Failed to add receipt data (on responce). "
-                                       "smscId=%s already used.", smsc_id ? smsc_id:"-");
-                    }
-                }
-                else bWasReceipted = false; // skip receipt data for old message if present
-
-                // try send more events via submit next message (do not cancel)
-                if (task->formatMessage(messageToSend))
+                if (cancel_failed) // permanent error
                 { 
-                    smsc_log_debug(logger, "Task has %d events more to send for abonent: %s (cancel ok)",
-                                   messageToSend.eventsCount, messageToSend.abonent.c_str());
-                    isMessageToSend = true; messageToSend.cancel = false;
-                    task->waitResponce();
+                    smsc_log_debug(logger, "Responce: cancel failed. Message #%lld (smscId=%s), abonent %s",
+                                   message.id, smsc_id, message.abonent.c_str()); 
+
+                    // will roll current message for old event(s) to WAIT_RCPT & try to format new message
+                    isMessageToSend = processCancel(task, smsc_id, messageToSend);
+                    needKillTask = !isMessageToSend;
+                }
+                else if (retry)  // temporal error => keep task & resend cancel message
+                { 
+                    isMessageToSend = true; messageToSend = message; 
+                    messageToSend.cancel = true; messageToSend.notification = false;
+                    if (!immediate) messageToSend.attempts++;
                 } 
-                else { // if no more events to send => kill task
-                    smsc_log_error(logger, "Failed to extend message #%lld (after cancel) for abonent: %s", 
-                                   message.id, message.abonent.c_str());
+                else {
+                    smsc_log_error(logger, "Canceling task for abonent %s got invalid responce (r=%d, cf=%d, smscId=%s)",
+                                   message.abonent.c_str(), (int)retry, (int)cancel_failed, (int)smsc_id); 
+                    return;
+                }
+            }
+        }
+        else if (state == WAIT_RESP) // task is waiting responce on submit message
+        {
+            if (!accepted)
+            {
+                if (retry) // resend current message
+                {
+                    isMessageToSend = true; messageToSend = message;
+                    messageToSend.cancel = false; messageToSend.notification = false;
+                    if (!immediate) messageToSend.attempts++;
+                }
+                else      // permanent error
+                {
+                    smsc_log_debug(logger, "Responce: message #%lld (smscId=%s) submit error for abonent %s",
+                                   message.id, smsc_id ? smsc_id:"-", message.abonent.c_str());
+                    if (bWasReceipted) {
+                        smsc_log_warn(logger, "Responce: message #%lld was receipted after submit error for abonent %s",
+                                       message.id, smsc_id ? smsc_id:"-", message.abonent.c_str());
+                        bWasReceipted = false;
+                    }
+                    task->finalizeMessage(smsc_id, false, false, message.id);
                     needKillTask = true;
                 }
             }
             else // usual (submit) message was accepted by SMSC
             {
-                if (message.eventsCount < task->getEventsCount()) // some events were added to task
+                if (!smsc_id) {
+                    smsc_log_error(logger, "Got invalid submit ok responce (smscId=-) on message #%lld",
+                                   message.id);
+                    return;
+                }
+                smsc_log_debug(logger, "Message #%lld (smscId=%s) submit ok for abonent %s",
+                               message.id, smsc_id, message.abonent.c_str());
+                
+                if (message.eventsCount < task->getEventsCount()) // extra events were added to task
                 {
-                    if (message.isFull() || bWasReceipted) // sent message is full or was receipted
+                    if (message.isFull() || bWasReceipted) // sent message was full or was receipted
                     {
-                        // set new current message & skip task events for old message
+                        // set sent message WAIT_RCPT & skip task events for it, set clear current message
                         task->waitReceipt(message.eventsCount, smsc_id);
-                        // task now in WAIT_RESP state
-
-                        // try send more events via submit next message 
-                        if (task->formatMessage(messageToSend))
-                        { 
-                            smsc_log_debug(logger, "Task has %d events more to send for abonent: %s (%s)",
-                                           messageToSend.eventsCount, messageToSend.abonent.c_str(), 
-                                           (bWasReceipted) ? "on receipt":"msg full");
-                            isMessageToSend = true; messageToSend.cancel = false;
-                        } 
-                        else needKillTask = true; // if no more events to send => kill task
+                        // try send more events via submit new message
+                        isMessageToSend = formatMessage(task, messageToSend);
+                        if (!isMessageToSend) {
+                            smsc_log_debug(logger, "No events to send after submit ok responce (smscId=%s) for abonent %s",
+                                           smsc_id, message.abonent.c_str());
+                            needKillTask = true; // if no more events to send => kill task
+                        }
                     }
                     else // sent message could be extended and wasn't receipted yet => send cancel
                     {
@@ -742,12 +786,17 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                     needKillTask = true;
                 }
             }
-        }
 
-        if (bWasReceipted) //  process receipt waiting for responce on this smsc_id
+            if (bWasReceipted && smsc_id) { //  process receipt waiting for responce on this smsc_id
+                smsc_log_debug(logger, "Processing waiting receipt for smscId=%s", smsc_id);
+                processReceipt(task, receipt.delivered, receipt.expired, smsc_id);
+            }
+        }
+        else
         {
-            smsc_log_debug(logger, "Processing waiting receipt for smscId=%s.", smsc_id ? smsc_id:"");
-            processReceipt(task, receipt.delivered, receipt.retry, smsc_id);
+            smsc_log_error(logger, "Task for abonent %s is in invalid state=%d for %s responce",
+                           message.abonent.c_str(), (int)state, cancel ? "cancel":"submit");
+            return;
         }
         
         if (needKillTask) taskAccessor.delTask(message.abonent.c_str());
@@ -756,59 +805,106 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
     if (isMessageToSend) putToOutQueue(messageToSend);
 }
 
-void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool retry)
+void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool expired, bool deleted)
 {
-    const char* smsc_id = smscId.c_str();
-    smsc_log_debug(logger, "Receipt: smscId=%s, delivered=%d, retry=%d",
-                   smsc_id ? smsc_id:"-", delivered, retry);
-    
-    SmscIdAccessor smscIdAccessor(this, smsc_id); // lock smsc_id
-    if (smsc_id) smsc_log_debug(logger, "Receipt lock smscId=%s", smsc_id);
-
-    ReceiptData receipt; // check responce or another receipt processing
-    if (responcesTracker.popReceiptData(smsc_id, receipt))
-    {
-        if (delivered || receipt.delivered || receipt.retry)
-            smsc_log_warn (logger, "Invalid receipt waiting on smscId=%s (d=%d, rd=%d, rr=%d)",
-                           smsc_id ? smsc_id:"-", delivered, receipt.delivered, receipt.retry);
-        else
-            smsc_log_debug(logger, "Receipt for cancelled message (smscId=%s) skipped", 
-                           smsc_id ? smsc_id:"-");
+    const char* smsc_id = (smscId.length() > 0) ? smscId.c_str():0;
+    if (!smsc_id || !smsc_id[0]) {
+        smsc_log_error(logger, "Invalid receipt came (smscId=-)");
         return;
     }
+    smsc_log_debug(logger, "Receipt: smscId=%s (delivered=%d, expired=%d, deleted=%d)",
+                   smsc_id, (int)delivered, (int)expired, (int)deleted);
     
-    Message message; message.cancel = false;
-    if (Task::getMessage(smsc_id, message) && !message.cancel) // Try get message by smsc_id
+    const char* abonent = 0;
+    bool isMessageToSend = false;
+    Message message; Message messageToSend;
+    
+    // try get cancel message by smsc_id (will skip responce processing)
+    bool cancelResponceUnprocessed = responcesTracker.popResponceData(smsc_id, message);
+
+    SmscIdAccessor smscIdAccessor(this, smsc_id); // lock smsc_id
+    smsc_log_debug(logger, "Receipt: lock smscId=%s", smsc_id);
+    
+    if (cancelResponceUnprocessed) // task is waiting cancel for old message
     {
-        smsc_log_debug(logger, "Receipt found message with smscId=%s for abonent: %s.",
-                       smsc_id ? smsc_id:"-", message.abonent.c_str());
+        abonent = message.abonent.c_str();
+        smsc_log_debug(logger, "Receipt: got cancel message #%lld (smscId=%s) for abonent %s",
+                       message.id, smsc_id, abonent);
         
-        bool isTaskNew = false;
         TaskAccessor taskAccessor(this);
-        Task* task = taskAccessor.getTask(message.abonent.c_str(), isTaskNew);
+        Task* task = taskAccessor.getTask(abonent); // do not create task! Task MUST be in map for valid responce.
         if (!task) {
-            smsc_log_error(logger, "Failed to get task for abonent: %s", message.abonent.c_str());
+            smsc_log_error(logger, "Receipt: failed to obtain task for abonent %s", abonent);
             return;
         }
-        processReceipt(task, delivered, retry, smsc_id, message.id);
-        if (isTaskNew) taskAccessor.delTask(message.abonent.c_str());
+        MessageState state = task->getCurrentState();
+        if (state != WAIT_CNCL) {
+            smsc_log_error(logger, "Receipt: task for abonent %s has invalid state=%d (expecting WAIT_CNCL)",
+                           abonent, (int)state);
+            return;
+        }
+        isMessageToSend = (deleted) ? formatMessage(task, messageToSend):
+                          processCancel(task, smsc_id, messageToSend, true, delivered, expired);
+        if (!isMessageToSend) {
+            smsc_log_warn(logger, "No events to send after cancel %s receipt (smscId=%s) for abonent %s",
+                          (deleted) ? "ok":"fail", smsc_id, abonent);
+            taskAccessor.delTask(abonent); // if no more events to send => kill task
+        }
     }
-    else // message by smsc_id not found or is waiting cancel => wait responce
+    else // processing usual receipt or cancel responce processing (or was already processed)
     {
-        smsc_log_debug(logger, "Receipt not found message for smscId=%s. Receipt waiting %s responce.",
-                       smsc_id ? smsc_id:"-", message.cancel ? "cancel":"submit");
-
-        if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(delivered, retry)))
-            smsc_log_error(logger, "Failed to add receipt data (on receipt). smscId=%s already used", 
-                           smsc_id ? smsc_id:"-");
+        MessageState state = UNKNOWNST;
+        if (Task::getMessage(smsc_id, message, state)) // got message by smsc_id
+        {
+            abonent = message.abonent.c_str();
+            smsc_log_debug(logger, "Receipt: found message #%lld (smscId=%s) for abonent %s, state=%d",
+                           message.id, smsc_id, abonent, (int)state);
+            
+            bool isNewTask = false;
+            TaskAccessor taskAccessor(this);
+            Task* task = taskAccessor.getTask(abonent, isNewTask);
+            if (!task) {
+                smsc_log_error(logger, "Receipt: failed to obtain/create task for abonent %s", abonent);
+                return;
+            }
+            
+            // Responce is processing (possible locked on SmscIdAccessor or TaskAccessor)
+            if (!isNewTask && message.cancel && task->getCurrentMessageId() == message.id &&
+                task->getCurrentState() == WAIT_CNCL) 
+            {
+                isMessageToSend = (deleted) ? formatMessage(task, messageToSend):
+                                  processCancel(task, smsc_id, messageToSend, true, delivered, expired);
+                if (!isMessageToSend) {
+                    smsc_log_warn(logger, "No events to send after cancel %s receipt (smscId=%s) for abonent %s",
+                                  (deleted) ? "ok":"fail", smsc_id, abonent);
+                    //taskAccessor.delTask(abonent); // if no more events to send => kill task
+                }
+                if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(delivered, expired)))
+                    smsc_log_warn(logger, "Failed to add receipt data (on receipt 2). smscId=%s already used", smsc_id);
+                smsc_log_debug(logger, "Receipt has processed (smscId=%s) & mark responce to quit", smsc_id);
+            }
+            else
+            {
+                processReceipt(task, delivered, expired, smsc_id, message.id);
+                if (isNewTask) taskAccessor.delTask(abonent);
+            }
+        }
+        else // message by smsc_id not found => wait SMSC responce with smsc_id
+        {
+            smsc_log_debug(logger, "Receipt processing (smscId=%s) put off till responce come", smsc_id);
+            if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(delivered, expired)))
+                smsc_log_warn(logger, "Failed to add receipt data (on receipt 1). smscId=%s already used", smsc_id);
+        }
     }
+
+    if (isMessageToSend) putToOutQueue(messageToSend);
 }
 
-void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry, 
+void TaskProcessor::processReceipt(Task* task, bool delivered, bool expired, 
                                    const char* smsc_id, uint64_t msg_id/*=0*/)
 {
     std::string        abonent = task->getAbonent();
-    Array<std::string> callers = task->finalizeMessage(smsc_id, delivered, retry, msg_id);
+    Array<std::string> callers = task->finalizeMessage(smsc_id, delivered, expired, msg_id);
     if (callers.Count() <= 0) return;
 
     AbonentProfile profile = task->getAbonentProfile();
@@ -817,14 +913,14 @@ void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry,
         templateManager->getNotifyFormatter(profile.notifyTemplateId):0;
     OutputFormatter* formatter = (notifyFormatter) ? notifyFormatter->getMessageFormatter():0;
     if (!formatter) {
-        smsc_log_error(logger, "Failed to locate notify template formatter for abonent '%s'", abonent.c_str());
+        smsc_log_error(logger, "Failed to locate notify template formatter for abonent %s", abonent.c_str());
         return;
     }
     
     for (int i=0; i<callers.Count(); i++)
     {
         smsc_log_debug(logger, "Event(s) %s to %s from %s", 
-                       (delivered ? "delivered":(retry ? "expired":"failed")), abonent.c_str(), callers[i].c_str());
+                       (delivered ? "delivered":(expired ? "expired":"failed")), abonent.c_str(), callers[i].c_str());
         
         if (!delivered || callers[i].length() <= 0) continue;
 
@@ -837,11 +933,11 @@ void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry,
             formatter->format(message.message, adapter, ctx);
         } 
         catch (std::exception& exc) {
-            smsc_log_error(logger, "Failed to format notification message for abonent '%s'. Details: %s",
+            smsc_log_error(logger, "Failed to format notification message for abonent %s. Details: %s",
                            abonent.c_str(), exc.what());
         }
         catch (...) {
-            smsc_log_error(logger, "Failed to format notification message for abonent '%s'. Reason is unknown",
+            smsc_log_error(logger, "Failed to format notification message for abonent %s. Reason is unknown",
                            abonent.c_str());
         }
         putToOutQueue(message);
@@ -913,8 +1009,8 @@ int ResponcesTracker::Execute()
                 Message* message = messages.GetPtr(respTimer.seqNum);
                 if (message) {
                     const char* smsc_id = message->smsc_id.c_str();
-                    smsc_log_warn(logger, "Responce for message #%lld smscId=%s is timed out. Resending...",
-                                  message->id, smsc_id ? smsc_id:"-");
+                    smsc_log_warn(logger, "Responce for %s message #%lld smscId=%s is timed out. Resending...",
+                                  (message->cancel) ? "cancel":"submit", message->id, smsc_id ? smsc_id:"-");
                     processor->putToOutQueue(*message, true);
                     messages.Delete(respTimer.seqNum);
                 }
@@ -932,21 +1028,11 @@ int ResponcesTracker::Execute()
             else
             {
                 receiptWaitQueue.Pop(rcptTimer);
-                const char* smsc_id = rcptTimer.smscId.c_str();
+                const char* smsc_id = (rcptTimer.smscId.length() > 0) ? rcptTimer.smscId.c_str():0;
                 ReceiptData* receipt = (smsc_id) ? receipts.GetPtr(smsc_id):0;
-                if (receipt)
-                {
-                    if (smscIds.Exists(smsc_id)) {
-                        smsc_log_debug(logger, "Responce for receipted smscId=%s rescheduled. Waiting.", 
-                                       smsc_id ? smsc_id:"-");
-                        receiptWaitQueue.Push(ReceiptTimer(time(NULL)+responceWaitTime, smsc_id));
-                        responcesMonitor.wait(TRACKER_SERVICE_SLEEP/100);
-                    } else {
-                        smsc_log_warn(logger, "Responce for receipted smscId=%s is timed out. Deleting.",
-                                      smsc_id ? smsc_id:"-");
-                        if (smsc_id) receipts.Delete(smsc_id);
-                    }
-                } 
+                smsc_log_warn(logger, "Responce for receipted smscId=%s is timed out. Deleting",
+                              smsc_id ? smsc_id:"-");
+                if (receipt) receipts.Delete(smsc_id);
                 else responcesMonitor.wait(TRACKER_SERVICE_SLEEP/100);
             }
         }
@@ -967,10 +1053,10 @@ void ResponcesTracker::cleanup()
 bool ResponcesTracker::putResponceData(int seqNum, const Message& message)
 {
     MutexGuard guard(responcesMonitor);
-    const char* smsc_id = message.smsc_id.c_str();
-    if (smsc_id && smsc_id[0] && !smscIds.Exists(smsc_id)) smscIds.Insert(smsc_id, true);
+    const char* smsc_id = (message.cancel) ? message.smsc_id.c_str():0;
     Message* messagePtr = messages.GetPtr(seqNum);
     if (messagePtr) return false;
+    if (smsc_id && smsc_id[0] && !smscIds.Exists(smsc_id)) smscIds.Insert(smsc_id, seqNum);
     messages.Insert(seqNum, message);
     responceWaitQueue.Push(ResponceTimer(time(NULL)+responceWaitTime, seqNum));
     return true;
@@ -982,11 +1068,23 @@ bool ResponcesTracker::popResponceData(int seqNum, Message& message)
     if (!messagePtr) return false;
     message = *messagePtr;
     messages.Delete(seqNum);
-    const char* smsc_id = message.smsc_id.c_str();
+    const char* smsc_id = (message.cancel) ? message.smsc_id.c_str():0;
     if (smsc_id && smsc_id[0] && smscIds.Exists(smsc_id)) smscIds.Delete(smsc_id);
     return true;
 }
-
+bool ResponcesTracker::popResponceData(const char* smsc_id, Message& message)
+{
+    MutexGuard guard(responcesMonitor);
+    if (!smsc_id || !smsc_id[0]) return false;
+    int* seqNum = smscIds.GetPtr(smsc_id);
+    if (!seqNum) return false;
+    Message* messagePtr = messages.GetPtr(*seqNum);
+    if (!messagePtr) return false;
+    message = *messagePtr;
+    messages.Delete(*seqNum);
+    smscIds.Delete(smsc_id);
+    return true;
+}
 bool ResponcesTracker::putReceiptData(const char* smsc_id, const ReceiptData& receipt)            
 {
     if (!smsc_id || !smsc_id[0]) return false;
@@ -1042,7 +1140,7 @@ bool TaskProcessor::getFromInQueue(MissedCallEvent& event)
         }
         inQueueMonitor.wait();
     } while (bInQueueOpen);
-    smsc_log_info(logger, "Input queue closed.");
+    smsc_log_info(logger, "Input queue closed");
     return false;
 }
 
@@ -1080,7 +1178,7 @@ bool TaskProcessor::getFromOutQueue(Message& message)
         }
         outQueueMonitor.wait();
     } while (bOutQueueOpen);
-    smsc_log_info(logger, "Output queue closed.");
+    smsc_log_info(logger, "Output queue closed");
     return false;
 }
 

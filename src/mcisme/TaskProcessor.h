@@ -142,6 +142,7 @@ namespace smsc { namespace mcisme
 
         int             seqNum;
         bool            delivered, retry, immediate, cancel, cancel_failed;
+        bool            expired, deleted;
         std::string     smscId;
 
     public:
@@ -153,15 +154,16 @@ namespace smsc { namespace mcisme
                     bool cancel, bool cancel_failed, std::string smscId="")
             : method(method), processor(processor), manager(_manager), seqNum(seqNum),
               delivered(accepted), retry(retry), immediate(immediate), 
-              cancel(cancel), cancel_failed(cancel_failed), smscId(smscId) 
+              cancel(cancel), cancel_failed(cancel_failed), smscId(smscId),
+              expired(false), deleted(false)
         { 
             manager.newThread();
         };
         EventRunner(EventMethod method, TaskProcessor& processor, ThreadManager& _manager,
-                    std::string smscId, bool delivered, bool retry)
+                    std::string smscId, bool delivered, bool expired, bool deleted)
             : method(method), processor(processor), manager(_manager), seqNum(0),
-              delivered(delivered), retry(retry), immediate(false),
-              cancel(false), cancel_failed(false), smscId(smscId)
+              delivered(delivered), retry(false), immediate(false), cancel(false), 
+              cancel_failed(false), expired(expired), deleted(deleted), smscId(smscId)
         {
             manager.newThread();
         };
@@ -175,12 +177,12 @@ namespace smsc { namespace mcisme
 
     struct ReceiptData
     {
-        bool delivered, retry;
+        bool delivered, expired;
 
-        ReceiptData(bool delivered=false, bool retry=false) : delivered(delivered), retry(retry) {};
-        ReceiptData(const ReceiptData& rcpt) : delivered(rcpt.delivered), retry(rcpt.retry) {};
+        ReceiptData(bool delivered=false, bool expired=false) : delivered(delivered), expired(expired) {};
+        ReceiptData(const ReceiptData& rcpt) : delivered(rcpt.delivered), expired(rcpt.expired) {};
         ReceiptData& operator=(const ReceiptData& rcpt) {
-            delivered = rcpt.delivered; retry = rcpt.retry;
+            delivered = rcpt.delivered; expired = rcpt.expired;
             return *this;
         };
     };
@@ -223,13 +225,13 @@ namespace smsc { namespace mcisme
         Event           exitedEvent;
 
         EventMonitor                responcesMonitor;
-        Hash<bool>                  smscIds;            // unresponded smsc_ids
+        Hash<int>                   smscIds;            // unresponded cancel messages seqNums by smsc_ids
         IntHash<Message>            messages;           // messages by sequence number
         Hash<ReceiptData>           receipts;           // receipts by smsc_id
         CyclicQueue<ResponceTimer>  responceWaitQueue;  // used for responce waiting after submit|cancel
         CyclicQueue<ReceiptTimer>   receiptWaitQueue;   // used for responce waiting after receipt come
 
-        int                       responceWaitTime, receiptWaitTime;
+        int responceWaitTime, receiptWaitTime;
 
     public:
 
@@ -246,6 +248,7 @@ namespace smsc { namespace mcisme
         
         bool putResponceData(int seqNum, const Message& message);
         bool popResponceData(int seqNum, Message& message);
+        bool popResponceData(const char* smsc_id, Message& message);
         bool popReceiptData (const char* smsc_id, ReceiptData& receipt);
         bool putReceiptData (const char* smsc_id, const ReceiptData& receipt);
     };
@@ -300,15 +303,16 @@ namespace smsc { namespace mcisme
         
         void initDataSource(ConfigView* config);
 
+        bool formatMessage(Task* task, Message& message);
+        bool processCancel(Task* task, const char* smsc_id, Message& message,
+                           bool receipted=false, bool delivered=false, bool expired=false);
+        void processReceipt(Task* task, bool delivered, bool expired, const char* smsc_id, uint64_t msg_id=0);
+        void processNotificationResponce(Message& message,
+                                         bool accepted, bool retry, bool immediate, std::string smscId="");
         friend class EventRunner;
         virtual void processResponce(int seqNum, bool accepted, bool retry, bool immediate,
                                      bool cancel, bool cancel_failed, std::string smscId="");
-        virtual void processReceipt (std::string smscId, bool delivered, bool retry);
-
-        void processReceipt(Task* task, bool delivered, bool retry, const char* smsc_id, uint64_t msg_id=0);
-        
-        void processNotificationResponce(Message& message,
-                                         bool accepted, bool retry, bool immediate, std::string smscId="");
+        virtual void processReceipt (std::string smscId, bool delivered, bool expired, bool deleted);
     
     public:
 
@@ -355,10 +359,10 @@ namespace smsc { namespace mcisme
                                                             seqNum, accepted, retry, immediate, 
                                                             cancel, cancel_failed, smscId));
         };
-        virtual bool invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
+        virtual bool invokeProcessReceipt (std::string smscId, bool delivered, bool expired, bool deleted)
         {
             return eventManager.startThread(new EventRunner(processReceiptMethod, *this, eventManager,
-                                                            smscId, delivered, retry));
+                                                            smscId, delivered, expired, deleted));
         };
 
         /* ------------------------ Admin interface ------------------------ */

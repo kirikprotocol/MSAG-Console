@@ -28,7 +28,7 @@ const char* SET_ABONENT_PRO_SQL = "UPDATE MCISME_ABONENTS SET "
                                   "WHERE ABONENT=:ABONENT";
 const char* INS_ABONENT_PRO_SQL = "INSERT INTO MCISME_ABONENTS (ABONENT, INFORM, INFORM_ID, NOTIFY_ID) "
                                   "VALUES (:ABONENT, :INFORM, :INFORM_ID, :NOTIFY_ID)";
-const char* DEL_ABONENT_PRO_SQL = "DELETE MCISME_ABONENTS WHERE ABONENT=:ABONENT";
+const char* DEL_ABONENT_PRO_SQL = "DELETE FROM MCISME_ABONENTS WHERE ABONENT=:ABONENT";
 
 /* ----------------------- Main logic implementation (static functions) --------------------------------- */
 
