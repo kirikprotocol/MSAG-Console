@@ -5,6 +5,8 @@
 #include <log4cpp/Category.hh>
 
 #include <admin/protocol/Command.h>
+#include <admin/protocol/CommandCall.h>
+#include <admin/protocol/CommandListComponents.h>
 #include <admin/protocol/Response.h>
 #include <admin/service/Component.h>
 #include <admin/util/CommandDispatcher.h>
@@ -19,6 +21,8 @@ namespace service {
 
 using smsc::admin::AdminException;
 using smsc::admin::protocol::Command;
+using smsc::admin::protocol::CommandCall;
+using smsc::admin::protocol::CommandListComponents;
 using smsc::admin::protocol::Response;
 using smsc::admin::util::Shutdownable;
 using smsc::core::network::Socket;
@@ -37,33 +41,11 @@ public:
 
 	virtual void shutdown();
 
-	Response * handle(const Command * const command) throw (AdminException &);
-};
-
-/*class CommandDispatcher : public smsc::core::threads::ThreadedTask
-{
-public:
-	CommandDispatcher(ServiceSocketListener * parentListener,
-										int admSocket,
-										const char * const client_addr,
-										ServiceCommandHandler * commandHandler);
-	virtual ~CommandDispatcher();
-	virtual int Execute();
-	virtual const char* taskName(){return task_name;}
-
+	virtual Response * handle(const Command * const command) throw (AdminException);
 protected:
-	void init();
-
-private:
-	int sock;
-	log4cpp::Category &logger;
-	const static char * const task_name;
-	char cl_addr[16];
-	CommandReader reader;
-	ResponseWriter writer;
-	ServiceCommandHandler *handler;
-	ServiceSocketListener * parent;
-};*/
+	Response * call(const CommandCall * const command) throw (AdminException);
+	Response * listComponents(const CommandListComponents * const command) throw (AdminException);
+};
 
 }
 }

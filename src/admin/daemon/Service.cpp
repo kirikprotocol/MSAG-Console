@@ -34,7 +34,7 @@ pid_t Service::start()
 		arguments[0] = command_line;
 		arguments[1] = new char[sizeof(in_port_t)*3+1];
 		sprintf(arguments[1], "%lu", (unsigned long) port);
-		arguments[2] = "./";
+		arguments[2] = config_file;
 		for (size_t i=0; i<args.size(); i++)
 		{
 			arguments[i+3] = args[i];
@@ -61,6 +61,7 @@ void Service::kill()
 		case EPERM:
 			throw AdminException("Does not have permission to send the signal to Service process");
 		case ESRCH:
+			pid = 0;
       throw AdminException("No process or process group can be found corresponding to that specified by pid");
 		default:
 			throw AdminException("Unknown error");
@@ -87,6 +88,7 @@ void Service::shutdown()
 		case EPERM:
 			throw AdminException("Does not have permission to send the signal to Service process");
 		case ESRCH:
+			pid = 0;
       throw AdminException("No process or process group can be found corresponding to that specified by pid");
 		default:
 			throw AdminException("Unknown error");
@@ -96,12 +98,14 @@ void Service::shutdown()
 
 void Service::init(const char * const serviceName,
 									 const char * const serviceCommandLine,
+									 const char * const serviceconfigFileName,
 									 const in_port_t serviceAdminPort,
 									 const ServiceArguments &serviceArgs,
 									 const pid_t servicePID = 0)
 {
 	name = cStringCopy(serviceName);
 	command_line = cStringCopy(serviceCommandLine);
+	config_file = cStringCopy(serviceconfigFileName);
 	port = serviceAdminPort;
 	pid = servicePID;
 	args = serviceArgs;
@@ -127,6 +131,10 @@ void Service::deinit()
 		delete command_line;
 	command_line = 0;
 
+	if (config_file != 0)
+		delete config_file;
+	config_file = 0;
+	
 	pid = 0;
 	port = 0;
 

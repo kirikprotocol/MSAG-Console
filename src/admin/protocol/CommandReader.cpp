@@ -6,10 +6,6 @@
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
 #include <xercesc/dom/DOM_Node.hpp>
 
-//#include <admin/protocol/CommandGetConfig.h>
-//#include <admin/protocol/CommandSetConfig.h>
-//#include <admin/protocol/CommandGetLogs.h>
-//#include <admin/protocol/CommandGetMonitoringData.h>
 #include <admin/protocol/CommandStartService.h>
 #include <admin/protocol/CommandShutdown.h>
 #include <admin/protocol/CommandKillService.h>

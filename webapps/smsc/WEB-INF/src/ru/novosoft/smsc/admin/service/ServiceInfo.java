@@ -22,6 +22,7 @@ public class ServiceInfo
     name = serviceElement.getAttribute("name");
     pid = Long.decode(serviceElement.getAttribute("pid")).longValue();
     cmdLine = serviceElement.getAttribute("command_line");
+    configFileName = serviceElement.getAttribute("config_file");
     port = Integer.decode(serviceElement.getAttribute("port")).intValue();
 
     NodeList childs = serviceElement.getElementsByTagName("arg");
@@ -36,25 +37,28 @@ public class ServiceInfo
     }
   }
 
-  public ServiceInfo(String name, String host, int port, String cmdLine, Vector args, long pid)
+  public ServiceInfo(String name, String host, int port, String cmdLine, String configFileName, Vector args, long pid)
   {
     this.name = name;
     this.host = host;
     this.port = port;
     this.cmdLine = cmdLine;
+    this.configFileName = configFileName;
     this.args = args;
     this.pid = pid;
   }
 
-  public ServiceInfo(String name, String host, int port, String cmdLine, Vector args)
+  public ServiceInfo(String name, String host, int port, String cmdLine, String configFileName, Vector args)
   {
-    this(name, host, port, cmdLine, args, 0);
+    this(name, host, port, cmdLine, configFileName, args, 0);
   }
 
   protected String name = "";
   protected String host = "";
   protected int port = 0;
   protected String cmdLine = "";
+
+  protected String configFileName = "config.xml";
   protected Vector args = new Vector();
   protected long pid = 0;
   protected Map components = new HashMap();
@@ -77,6 +81,11 @@ public class ServiceInfo
   public String getCmdLine()
   {
     return cmdLine;
+  }
+
+  public String getConfigFileName()
+  {
+    return configFileName;
   }
 
   public Vector getArgs()

@@ -7,6 +7,7 @@
 	String host = request.getParameter("host");
 	String portString = request.getParameter("port");
 	String cmdLine = request.getParameter("cmdLine");
+	String configFileName = request.getParameter("config");
 	if (name == null       || name.equals("")        ||
 	    host == null       || host.equals("")        ||
 			portString == null || portString.equals("") ||
@@ -24,7 +25,7 @@
 	if (port == 0) 
 		throw new Exception("Port number not defined");
 	
-	serviceManager.addService(new ServiceInfo(name, host, port, cmdLine, new Vector()));
+	serviceManager.addService(new ServiceInfo(name, host, port, cmdLine, configFileName, new Vector()));
 	%>
 	Service added sucessfully<br>
 	<%=action("Host \""+host+'"', "viewHost.jsp", "host", host)%>

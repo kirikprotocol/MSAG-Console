@@ -64,7 +64,7 @@ Response::Response(Status status, Variant v)
 		throw AdminException("Unknown response value type");
 	}
 
-	std::auto_ptr<char> data(new char[VARIANT_TEMPLET_LENGTH+strlen(value)+1]);
+	std::auto_ptr<char> data(new char[VARIANT_TEMPLET_LENGTH+strlen(type)+strlen(value)+1]);
 	sprintf(data.get(),  "%s%s%s%s%s", VARIANT_HEADER, type, VARIANT_MIDDLE,
 					                           value, VARIANT_FOOTER);
 	init(data.get());

@@ -26,7 +26,7 @@ ServicesList DaemonCommandDispatcher::services;
 Mutex DaemonCommandDispatcher::servicesListMutex;
 
 Response * DaemonCommandDispatcher::handle(const Command * const command)
-	throw (AdminException &)
+	throw (AdminException)
 {
 	try
 	{
@@ -73,7 +73,7 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
 			pid_t newPid = 0;
 			{
 				MutexGuard guard(servicesListMutex);
-				newPid = services[command->getServiceName()].start();
+				newPid = services[command->getServiceName()]->start();
 			}
 			std::auto_ptr<char> text(new char[sizeof(pid_t)*3 +1]);
 			sprintf(text.get(),  "%lu", (unsigned long) newPid);
@@ -103,7 +103,7 @@ Response * DaemonCommandDispatcher::kill_service(const CommandKillService * cons
 			logger.debug("kill service \"%s\"", command->getServiceName());
 			{
 				MutexGuard guard(servicesListMutex);
-				services[command->getServiceName()].kill();
+				services[command->getServiceName()]->kill();
 			}
 			return new Response(Response::Ok, 0);
 		}
@@ -131,7 +131,7 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
 			logger.debug("shutdown service \"%s\"", command->getServiceName());
 			{
 				MutexGuard guard(servicesListMutex);
-				services[command->getServiceName()].shutdown();
+				services[command->getServiceName()]->shutdown();
 			}
 			return new Response(Response::Ok, 0);
 		}
@@ -151,23 +151,25 @@ Response * DaemonCommandDispatcher::shutdown_service(const CommandShutdown * con
 Response * DaemonCommandDispatcher::add_service(const CommandAddService * const command)
 	throw (AdminException &)
 {
-	logger.debug("add service \"%s\" (%s) %u",
+	logger.debug("add service \"%s\" (%s) %u %s",
 							 command->getServiceName(),
 							 command->getCmdLine(),
-							 command->getPort());
+							 command->getPort(),
+							 command->getConfigFileName());
 	if (command != 0)
 	{
-		if (command->getServiceName() != 0 && command->getCmdLine() != 0)
+		if (command->getServiceName() != 0 && command->getCmdLine() != 0
+				&& command->getConfigFileName() != 0)
 		{
 			{
 				MutexGuard guard(servicesListMutex);
-				services.add(Service(command->getServiceName(), command->getCmdLine(), command->getPort(), command->getArgs()));
+				services.add(new Service(command->getServiceName(), command->getCmdLine(), command->getConfigFileName(), command->getPort(), command->getArgs()));
 			}
 			return new Response(Response::Ok, 0);
 		}
 		else
 		{
-			logger.warn("service name or command line not specified");
+			logger.warn("service name or command line or config file name not specified");
 			throw AdminException("service name or command line not specified");
 		}
 	}
@@ -187,13 +189,13 @@ Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * 
 		{
 			{
 				MutexGuard guard(servicesListMutex);
-				Service &s(services[command->getServiceName()]);
+				Service *s = services[command->getServiceName()];
 				logger.debug("remove service \"%s\"", command->getServiceName());
-				if (s.getStatus() == Service::running)
+				if (s->getStatus() == Service::running)
 				{
-					s.kill();
+					s->kill();
 				}
-				services.remove(s.getName());
+				services.remove(s->getName());
 			}
 			return new Response(Response::Ok, 0);
 		}
@@ -234,27 +236,57 @@ void DaemonCommandDispatcher::childSignalListener(int signo,
 																									void *some_pointer)
 	throw ()
 {
+	#ifdef SMSC_DEBUG
+		log4cpp::Category &log(Logger::getCategory("smsc.admin.daemon.DaemonCommandDispatcher"));
+		log.debug("some signal received");
+	#endif
+	
 	if (signo != SIGCHLD || info->si_signo != SIGCHLD)
 	{
 		return;
 	}
 	
+	#ifdef SMSC_DEBUG
+		log.debug("CHILD signal received");
+	#endif
 	// ACTION: CHILD signal received
-	switch (info->si_code)
+	if (info->si_code <= 0)
 	{
-	case CLD_EXITED:
-	case CLD_KILLED:
-	case CLD_DUMPED:
 		{
+			#ifdef SMSC_DEBUG
+				log.debug("Handmaked signal from child (marking %lu child as dead)", (unsigned long)info->si_pid);
+			#endif
 			MutexGuard a(servicesListMutex);
 			services.markServiceAsStopped(info->si_pid);
+			#ifdef SMSC_DEBUG
+				log.debug("%lu child marked as dead", (unsigned long)info->si_pid);
+			#endif
 		}
-		break;
-	case CLD_TRAPPED:
-	case CLD_STOPPED:
-	case CLD_CONTINUED:
-	default:
-		;// skip these signals
+	}
+	else
+	{
+		switch (info->si_code)
+		{
+		case CLD_EXITED:
+		case CLD_KILLED:
+		case CLD_DUMPED:
+			{
+				#ifdef SMSC_DEBUG
+					log.debug("marking %lu child as dead", (unsigned long)info->si_pid);
+				#endif
+				MutexGuard a(servicesListMutex);
+				services.markServiceAsStopped(info->si_pid);
+				#ifdef SMSC_DEBUG
+					log.debug("%lu child marked as dead", (unsigned long)info->si_pid);
+				#endif
+			}
+			break;
+		case CLD_TRAPPED:
+		case CLD_STOPPED:
+		case CLD_CONTINUED:
+		default:
+			;// skip these signals
+		}
 	}
 }
 

@@ -77,21 +77,18 @@ int CommandDispatcher::Execute()
 		}
 		catch (AdminException &e)
 		{
-			response.reset(0);
+			response.reset(new Response(Response::Error, e.what()));
 			logger.warn("Command dispatching failed with exception: %s", e.what());
-			break;
 		}
 		catch (char * e)
 		{
-			response.reset(0);
+			response.reset(new Response(Response::Error, e));
 			logger.warn("Command dispatching failed with exception: %s", e);
-			break;
 		}
 		catch (...)
 		{
-			response.reset(0);
+			response.reset(new Response(Response::Error, "Command dispatching failed with unknown exception"));
 			logger.warn("Command dispatching failed with unknown exception");
-			break;
 		}
 	
 		if (!isShutdownSignaled)

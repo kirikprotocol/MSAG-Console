@@ -19,8 +19,17 @@ public:
 	
 	static void stop() throw ();
 
+	static void WaitFor() throw (AdminException)
+	{
+		if (listener == 0)
+		{
+			throw AdminException("Service Socket Listener is not started");
+		}
+		listener->WaitFor();
+	}
+
 protected:
-	static ServiceSocketListener listener;
+	static ServiceSocketListener * listener;
 };
 
 }

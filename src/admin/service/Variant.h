@@ -51,21 +51,12 @@ public:
 	Variant(const Variant &copy)
 		throw (AdminException &)
 	{
-		type = copy.type;
-		switch (type)
-		{
-		case StringType:
-			strValue = cStringCopy(copy.strValue);
-			break;
-		case LongType:
-			longValue = copy.longValue;
-			break;
-		case BooleanType:
-			boolValue = copy.boolValue;
-			break;
-		default:
-			throw AdminException("Unknow type of variant to copy");
-		}
+		initByCopy(copy);
+	}
+
+	Variant & operator = (const Variant & copy)
+	{
+		initByCopy(copy);
 	}
 
 	virtual ~Variant()
@@ -101,6 +92,26 @@ public:
 		if (type != BooleanType)
 			throw AdminException("Illegal parameter type");
 		return boolValue;
+	}
+
+protected:
+	void initByCopy(const Variant& copy)
+	{
+		type = copy.type;
+		switch (type)
+		{
+		case StringType:
+			strValue = cStringCopy(copy.strValue);
+			break;
+		case LongType:
+			longValue = copy.longValue;
+			break;
+		case BooleanType:
+			boolValue = copy.boolValue;
+			break;
+		default:
+			throw AdminException("Unknow type of variant to copy");
+		}
 	}
 };
 

@@ -27,6 +27,8 @@ bool setExtendedSignalHandler(int signo,
 	if (signo != SIGALRM)
 		act.sa_flags |= SA_RESTART;
 	act.sa_flags |= SA_SIGINFO;
+	if (signo == SIGCLD)
+		act.sa_flags |= SA_NOCLDWAIT;
 	act.sa_sigaction = handler;
 																																								
 	return sigaction(signo,  &act, &oact) == 0;

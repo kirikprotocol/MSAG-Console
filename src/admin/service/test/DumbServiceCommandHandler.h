@@ -33,22 +33,22 @@ public:
 		: logger(Logger::getCategory("smsc.admin.service.test.DumbServiceCommandHandler"))
 	{
 		Parameters params_empty;
-		methods["getServiceConfig"] = Method(getConfigId,
-																				 "getServiceConfig",
+		methods["get service config"] = Method(getConfigId,
+																					 "get service config",
+																					 params_empty,
+																					 StringType);
+		methods["get service logs"] = Method(getLogsId,
+																				 "get service logs",
 																				 params_empty,
 																				 StringType);
-		methods["getServiceLogs"] = Method(getLogsId,
-																			 "getServiceLogs",
-																			 params_empty,
-																			 StringType);
-		methods["getServiceMonitoringData"] = Method(getMonId,
-																								 "getServiceMonitoringData",
-																								 params_empty,
-																								 StringType);
+		methods["get service monitoring data"] = Method(getMonId,
+																										"get service monitoring data",
+																										params_empty,
+																										StringType);
 		Parameters params;
 		params["config"] = Parameter("config", StringType);
-		methods["setServiceConfig"] = Method(setConfigId,
-																				 "setServiceConfig",
+		methods["set service config"] = Method(setConfigId,
+																				 "set service config",
 																				 params,
 																				 StringType);
 	}
@@ -94,51 +94,8 @@ public:
 	{
 		logger.debug("setConfig:\n%s", params["config"].getStringValue());
 		//setConfig
+		return Variant("Config setted sucessfully");
 	}
-
-/*	virtual Config & getConfig()
-		throw(AdminException &)
-	{
-		logger.info("get config");
-		return config;
-	}
-
-	virtual const char * const getLogs(uint32_t startLine, uint32_t lines)
-		throw(AdminException &)
-	{
-		const char * const message =
-"1014980394 INFO smsc.admin.service.ServiceSocketListener : Admin socket listener started on port 6677\n\
-1014980424 DEBUG smsc.admin.service.CommandDispatcher : Command dispatcher \"192.168.2.72\" created.\n\
-1014980424 DEBUG smsc.admin.service.CommandDispatcher : Command dispather starting...\n";
-		logger.info("get logs");
-		char * str = new char[std::strlen(message)+1];
-		std::strcpy(str, message);
-		return str;
-	}
-
-	virtual const MonitoringData& getMonitoring()
-		throw(AdminException &)
-	{
-		logger.info("get monitoring");
-		return mdata;
-	}
-
-	virtual void setConfig(Config &config)
-		throw(AdminException &)
-	{
-		logger.info("set config");
-	}
-
-	virtual bool shutdown(void)
-			throw (AdminException &)
-	{
-		logger.info("shutdown");
-	}
-
-protected:
-	MonitoringData mdata;
-	log4cpp::Category &logger;
-*/
 };
 
 }

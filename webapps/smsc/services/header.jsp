@@ -1,5 +1,7 @@
 <%@ page errorPage="error.jsp" %>
 <%@ page import = "ru.novosoft.smsc.*"%>
+<%@ page import = "ru.novosoft.smsc.admin.*"%>
+<%@ page import = "ru.novosoft.smsc.admin.service.*"%>
 <%@ page import = "ru.novosoft.smsc.util.config.*"%>
 <%@ page import = "javax.servlet.*"%>
 <%@ page import = "javax.servlet.http.*"%>

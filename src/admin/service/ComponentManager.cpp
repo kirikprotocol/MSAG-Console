@@ -21,7 +21,7 @@ Variant ComponentManager::dispatch(const char * const componentName,
 	if (methods[method.getName()] != method)
 		throw AdminException("Incorrect method signature");
 
-	return component->call(method, args);
+	return component->call(methods[method.getName()], args);
 }
 
 void ComponentManager::registerComponent(Component * component)

@@ -21,6 +21,7 @@ public class CommandAddService extends Command
     Element serviceElem = document.createElement("service");
     serviceElem.setAttribute("name", serviceInfo.getName());
     serviceElem.setAttribute("cmd_line", serviceInfo.getCmdLine());
+    serviceElem.setAttribute("config_file", serviceInfo.getConfigFileName());
     serviceElem.setAttribute("port", String.valueOf(serviceInfo.getPort()));
     document.getDocumentElement().appendChild(serviceElem);
 

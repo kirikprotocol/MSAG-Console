@@ -35,6 +35,7 @@ public:
 				DOM_Element &serviceElem = (DOM_Element&) serviceNode;
 				serviceName = serviceElem.getAttribute("name").transcode();
 				cmdLine = serviceElem.getAttribute("cmd_line").transcode();
+				configFile = serviceElem.getAttribute("config_file").transcode();
 				std::auto_ptr<char> portStr(serviceElem.getAttribute("port").transcode());
 				port = atol(portStr.get());
 	
@@ -69,6 +70,10 @@ public:
 		{
 			delete[] cmdLine;
 		}
+		if (configFile != 0)
+		{
+			delete[] configFile;
+		}
 		for (size_t i=0; i<args.size(); i++)
 		{
 			if (args[i] != 0)
@@ -84,6 +89,11 @@ public:
 		return cmdLine;
 	}
 
+	const char * const getConfigFileName() const throw()
+	{
+		return configFile;
+	}
+
 	const ServiceArguments getArgs() const throw ()
 	{
 		return args;
@@ -95,6 +105,7 @@ public:
 	}
 protected:
 	char* cmdLine;
+	char* configFile;
 	in_port_t port;
 	ServiceArguments args;
 };

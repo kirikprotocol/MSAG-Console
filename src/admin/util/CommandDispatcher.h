@@ -31,7 +31,7 @@ public:
 										const char * const loggerCategory = "smsc.admin.util.CommandDispatcher");
 	virtual ~CommandDispatcher();
 	virtual Response *handle(const Command * const command)
-		throw (AdminException &) = 0;
+		throw (AdminException) = 0;
 	virtual void shutdown()
 	{
 		isShutdownSignaled = true;

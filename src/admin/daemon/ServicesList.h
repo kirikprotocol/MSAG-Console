@@ -26,12 +26,12 @@ public:
 		: logger(Logger::getCategory("smsc.admin.daemon.ServicesList"))
 	{}
 
-	void add(Service service) throw (AdminException &);
+	void add(Service *service) throw (AdminException &);
 	void remove(const char * const serviceName) throw (AdminException &);
-	Service & get(const char * const serviceName);
+	Service * get(const char * const serviceName);
 	char * getText() const;
 
-	Service& operator[](const char * const serviceName)
+	Service* operator[](const char * const serviceName)
 		throw (AdminException &)
 	{
 		return get(serviceName);
@@ -40,7 +40,7 @@ public:
 	void markServiceAsStopped(pid_t old_pid);
 
 protected:
-	typedef Hash<Service> _ServiceList;
+	typedef Hash<Service*> _ServiceList;
 	_ServiceList services;
 	log4cpp::Category &logger;
 };

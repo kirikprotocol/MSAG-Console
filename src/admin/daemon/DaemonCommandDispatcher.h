@@ -49,7 +49,7 @@ public:
 	{
 	}
 
-	Response * handle(const Command * const command) throw (AdminException &);
+	virtual Response * handle(const Command * const command) throw (AdminException);
 
 protected:
 	log4cpp::Category &logger;
