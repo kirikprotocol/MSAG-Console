@@ -169,8 +169,8 @@ inline void TestSme::onStopped()
 
 void TestSme::executeInitialTestCases()
 {
-	process(tc.bindNonRegisteredSme(RAND_TC));
-	process(tc.bindRegisteredSme(RAND_TC));
+	process(tc.bindCorrectSme(RAND_TC));
+	process(tc.bindIncorrectSme(RAND_TC)); //обязательно после bindCorrectSme
 	process(tc.getTransmitter().submitSmAssert(RAND_TC));
 }
 
@@ -252,8 +252,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 	AliasRegistry* aliasReg = new AliasRegistry();
 	RouteRegistry* routeReg = new RouteRegistry();
 	SmeManagerTestCases* tcSme = new SmeManagerTestCases(&smeman);
-smsc::alias::AliasManager* aliasMan = new smsc::alias::AliasManager();
-	AliasManagerTestCases* tcAlias = new AliasManagerTestCases(aliasMan, aliasReg);
+	AliasManagerTestCases* tcAlias = new AliasManagerTestCases(&aliaser, aliasReg);
 	RouteManagerTestCases* tcRoute = new RouteManagerTestCases(&router, routeReg);
 
 	vector<Address*> addr;
@@ -345,8 +344,9 @@ smsc::alias::AliasManager* aliasMan = new smsc::alias::AliasManager();
 		SmeConfig config;
 		config.host = __smscHost__;
 		config.port = __smscPort__;
-		auto_ptr<char> tmp = rand_char(15); //15 по спецификации
-		config.sid = tmp.get();
+		//auto_ptr<char> tmp = rand_char(15); //15 по спецификации
+		//config.sid = tmp.get();
+		config.sid = smeInfo[i]->systemId;
 		config.timeOut = 10;
 		//config.password;
 		//config.systemType;
@@ -427,10 +427,10 @@ void saveCheckList()
     cout << "Сохранение checklist" << endl;
     CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
     cl.startNewGroup("Smpp", "smsc::smpp");
-    cl.writeResult("Bind для sme зарегистрированной в smsc",
-        filter->getResults(TC_BIND_REGISTERED_SME));
-    cl.writeResult("Bind для sme незарегистрированной в smsc",
-        filter->getResults(TC_BIND_NON_REGISTERED_SME));
+    cl.writeResult("Bind sme зарегистрированной в smsc",
+        filter->getResults(TC_BIND_CORRECT_SME));
+    cl.writeResult("Bind sme с неправильными параметрами",
+        filter->getResults(TC_BIND_INCORRECT_SME));
     cl.writeResult("Все подтверждений доставки, нотификации и sms доставляются и не теряются",
         filter->getResults(TC_PROCESS_INVALID_SMS));
     cl.writeResult("Unbind для sme соединенной с smsc",
