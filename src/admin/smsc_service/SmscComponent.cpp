@@ -32,12 +32,40 @@ Variant SmscComponent::call(const Method & method, const Arguments & args)
   case updateProfileMethod:
     logger.debug("update profile...");
     return Variant((long)updateProfile(args));
+  case flushStatisticsMethod:
+    return Variant(flushStatistics(args).c_str());
+  case processCancelMessagesMethod:
+    return Variant(processCancelMessages(args).c_str());
   default:
     logger.debug("unknown method \"%s\" [%u]", method.getName(), method.getId());
     throw AdminException("Unknown method \"%s\"", method.getName());
   }
   logger.error("call \"%s\"[%u] done. Unreacheable code reached.", method.getName(), method.getId());
   return Variant("");
+}
+
+std::string SmscComponent::flushStatistics(const Arguments &args)
+    throw (AdminException)
+{
+  logger.debug("flushStatistics");
+  try {
+    smsc_app_runner->getApp()->flushStatistics();
+  } catch (std::exception &e) {
+    logger.error("Exception on flush statistics: %s", e.what());
+    throw AdminException("Exception on flush statistics");
+  } catch (...) {
+    logger.error("Unknown exception on flush statistics");
+    throw AdminException("Unknown exception on flush statistics");
+  }
+  return "";
+}
+
+std::string SmscComponent::processCancelMessages(const Arguments &args)
+    throw (AdminException)
+{
+  const char * const ids = args.Get("cancelMessageIds").getStringValue();
+  logger.debug("processCancelMessages(%s)", ids);
+  return "";
 }
 
 void SmscComponent::runSmsc()

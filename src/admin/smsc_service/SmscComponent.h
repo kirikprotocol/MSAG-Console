@@ -36,6 +36,8 @@ public:
     Parameters update_params;
     update_params["address"] = Parameter("address", StringType);
     update_params["profile"] = Parameter("profile", StringType);
+    Parameters cancelMessage_params;
+    cancelMessage_params["cancelMessageIds"] = Parameter("cancelMessageIds", StringType);
 
     Method apply_routes((unsigned)applyRoutesMethod, "apply_routes",
                         empty_params, StringType);
@@ -46,10 +48,17 @@ public:
     Method update_profile((unsigned)updateProfileMethod, "update_profile",
                           update_params, LongType);
 
+    Method flush_statistics((unsigned)flushStatisticsMethod, "flush_statistics",
+                      empty_params, StringType);
+    Method process_cancel_messages((unsigned)processCancelMessagesMethod, "process_cancel_messages",
+                          cancelMessage_params, StringType);
+
     methods[apply_routes.getName()] = apply_routes;
     methods[apply_aliases.getName()] = apply_aliases;
     methods[lookup_profile.getName()] = lookup_profile;
     methods[update_profile.getName()] = update_profile;
+    methods[flush_statistics.getName()] = flush_statistics;
+    methods[process_cancel_messages.getName()] = process_cancel_messages;
 
     smsc_app_runner.reset(0);
   }
@@ -78,6 +87,8 @@ public:
 protected:
   int updateProfile(const Arguments &args);
   std::string lookupProfile(const Arguments &args) throw (AdminException);
+  std::string flushStatistics(const Arguments &args) throw (AdminException);
+  std::string processCancelMessages(const Arguments &args) throw (AdminException);
 
   bool isSmscRunning() throw() {return smsc_app_runner.get() != 0;}
   void applyRoutes() throw (AdminException);
@@ -86,7 +97,7 @@ protected:
 
   SmscConfigs &configs;
   Methods methods;
-  enum {applyRoutesMethod, applyAliasesMethod, lookupProfileMethod, updateProfileMethod};
+  enum {applyRoutesMethod, applyAliasesMethod, lookupProfileMethod, updateProfileMethod, flushStatisticsMethod, processCancelMessagesMethod};
 
   smsc::core::synchronization::Mutex mutex;
 
