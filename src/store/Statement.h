@@ -527,8 +527,9 @@ namespace smsc { namespace store
     static const char* sql_immediate;
     private:
         
-        OCIDate rTime, nextTime;
-        sb2 indNextTime;
+        OCIDate     rTime, nextTime;
+        sb2         indNextTime;
+        uint32_t    lastResult;
 
     public:
 

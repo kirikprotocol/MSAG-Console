@@ -1172,25 +1172,26 @@ void ConcatDataStatement::setDestination(const Address& dda)
 /* --------------------- Sheduler's statements -------------------- */
 
 const char* ReadyByNextTimeStatement::sql_raw = (const char*)
-"SELECT ID, NEXT_TRY_TIME FROM SMS_MSG WHERE\
+"SELECT ID, NEXT_TRY_TIME, LAST_RESULT FROM SMS_MSG WHERE\
  NEXT_TRY_TIME<=:RT ORDER BY NEXT_TRY_TIME ASC";
 const char* ReadyByNextTimeStatement::sql_immediate = (const char*)
-"SELECT ID, NEXT_TRY_TIME FROM SMS_MSG WHERE\
+"SELECT ID, NEXT_TRY_TIME, LAST_RESULT FROM SMS_MSG WHERE\
  NEXT_TRY_TIME<=:RT AND LAST_RESULT=1134 ORDER BY NEXT_TRY_TIME ASC";
 ReadyByNextTimeStatement::ReadyByNextTimeStatement(Connection* connection,
     bool immediate, bool assign) throw(StorageException)
         : IdStatement(connection, (immediate) ? 
                       ReadyByNextTimeStatement::sql_immediate:
                       ReadyByNextTimeStatement::sql_raw, 
-                      assign)
+                      assign), 
+          indNextTime(OCI_IND_NOTNULL), lastResult(0)
 {
     __trace2__("%p : ReadyByNextTimeStatement creating %s ...", 
                stmt, (immediate) ? "for immediate sms":"");
 
-    indNextTime = OCI_IND_NOTNULL;
     define(1, SQLT_VNU, (dvoid *) &(smsId), (sb4) sizeof(smsId));
     define(2, SQLT_ODT, (dvoid *) &(nextTime),
            (sb4) sizeof(nextTime), (dvoid *)&indNextTime);
+    define(3, SQLT_UIN, (dvoid *) &(lastResult), (sb4) sizeof(lastResult));
 }
 void ReadyByNextTimeStatement::bindRetryTime(time_t retryTime)
     throw(StorageException)
@@ -1202,12 +1203,11 @@ void ReadyByNextTimeStatement::bindRetryTime(time_t retryTime)
 time_t ReadyByNextTimeStatement::getNextTime()
     throw(StorageException)
 {
-    if (indNextTime != OCI_IND_NOTNULL) return 0;
+    if (indNextTime != OCI_IND_NOTNULL || lastResult == 1134) return 0;
     time_t nextTryTime = 0;
     convertOCIDateToDate(&nextTime, &nextTryTime);
     return nextTryTime;
 }
-
 
 const char* MinNextTimeStatement::sql = (const char*)
 "SELECT MIN(NEXT_TRY_TIME) FROM SMS_MSG";
