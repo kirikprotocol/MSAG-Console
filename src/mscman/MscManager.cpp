@@ -315,7 +315,10 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
     {
         smsc_log_error(log, "Process change failed. %s", exc.what());
         if (statement) delete statement;
-        connection->rollback();
+        try { if (connection) connection->rollback(); } catch (...) {
+            smsc_log_error(log, "Rollback failed!");
+        }
+        
     }
 }
 
