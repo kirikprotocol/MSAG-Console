@@ -27,6 +27,7 @@ public:
     while(!isStopping)
     {
       t=time(NULL);
+      __trace__("scheduler started");
       try{
         it=store->getReadyForRetry(t);
         //cnt=0;
@@ -50,6 +51,7 @@ public:
       }
       delete it;
       it=NULL;
+      __trace__("scheduler finished, sleeping");
       sleep(1);
       r=store->getNextRetryTime();
       if(r>t)sleep(r-t);
