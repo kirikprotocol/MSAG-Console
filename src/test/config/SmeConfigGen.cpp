@@ -18,22 +18,19 @@ void SmeConfigGen::saveConfig(const char* configFileName)
 	os << "<records>" << endl;
 	SmeRegistry::SmeIterator* it = smeReg->iterator();
 	__require__(it);
-	int i = 0;
 	while (const SmeInfo* sme = it->next())
 	{
 		//sme.hostname;
 		//sme.disabled;
-		os << "<smerecord type=\"smpp\" uid=\"" << i++ << "\">" << endl;
+		os << "<smerecord type=\"smpp\" uid=\"" << sme->systemId << "\">" << endl;
 		os << "\t<param name=\"typeOfNumber\" value=\"" <<
-			sme->typeOfNumber << "\"/>" << endl;
+			(int) sme->typeOfNumber << "\"/>" << endl;
 		os << "\t<param name=\"numberingPlan\" value=\"" <<
-			sme->numberingPlan << "\"/>" << endl;
+			(int) sme->numberingPlan << "\"/>" << endl;
 		os << "\t<param name=\"interfaceVersion\" value=\"" <<
-			sme->interfaceVersion << "\"/>" << endl;
+			(int) sme->interfaceVersion << "\"/>" << endl;
 		os << "\t<param name=\"systemType\" value=\"" <<
 			sme->systemType << "\"/>" << endl;
-		os << "\t<param name=\"systemId\" value=\"" <<
-			sme->systemId << "\"/>" << endl;
 		os << "\t<param name=\"password\" value=\"" <<
 			sme->password << "\"/>" << endl;
 		os << "\t<param name=\"addrRange\" value=\"" <<
