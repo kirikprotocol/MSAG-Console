@@ -295,6 +295,26 @@ SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
   else return 0;
 }
 
+// SmeDispatcher implementation
+void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
+{
+  frames.clear();
+  for ( Records::const_iterator p = records.begin(); p != records.end(); ++p ) {
+    if ( (*p) ) {
+      if ( (*p)->deleted ) continue;
+      if ( p->hasInput() ) {
+        try {
+          frames.push_back((*p)->getCommand());
+          frames.back().setProxy((*p));
+        }catch(exception& e) {
+          __warning2__("exception %s when getting command",e.what())
+        }
+      }
+    }
+  }
+  if ( !frames.size() ) dispatcher.waitOnMon(timeout);
+}
+
 SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
 {
 //__synchronized__ не нужно поскольку вызывается из синхронизированных методов

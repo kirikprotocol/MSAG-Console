@@ -32,6 +32,7 @@ class SmeProxyDispatcher
 public:
   SmeProxyDispatcher(): queuedProxies(0),unqueuedProxies(0) {}
   SmeProxy* dispatchIn(unsigned long,int*);
+  void waitOnMon(unsigned long timeout);
   void attachSmeProxy(SmeProxy* proxy,int idx);
   void detachSmeProxy(SmeProxy* proxy);
 };

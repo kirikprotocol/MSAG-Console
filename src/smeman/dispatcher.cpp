@@ -13,6 +13,10 @@ using namespace std;
 using core::synchronization::MutexGuard;
 #define __synchronized__ MutexGuard mguard(dispatch_lock);
 
+void SmeProxyDispatcher::waitOnMon(unsigned long timeout) {
+  mon.Wait((int)timeout);
+};
+
 // !!!!
 // not synchronized because only one thread processed on this method
 // !!!!
