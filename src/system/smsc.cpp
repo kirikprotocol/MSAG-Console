@@ -335,11 +335,12 @@ void Smsc::init(const SmscConfigs& cfg)
 
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),0);
   store=smsc::store::StoreManager::getMessageStore();
-
+  log.info( "Initializing scheduler" );
   scheduler->Init(store,this);
-
+  log.info( "Scheduler initialized" );
+  log.info( "Initializing MR cache" );
   mrCache.assignStore(store);
-
+  log.info( "MR cache inited" );
   {
     log.info( "Starting statemachines" );
     int cnt=cfg.cfgman->getInt("core.state_machines_count");
