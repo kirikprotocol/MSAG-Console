@@ -116,7 +116,7 @@ void SmeManager::enableSme(const SmeSystemId& systemId)
 SmeIndex SmeManager::lookup(const SmeSystemId& systemId) const
 {
   SmeIndex index = internalLookup(systemId);
-  if ( index == INVALID_SME_INDEX ) throw runtime_error("can't find");
+  if ( index == INVALID_SME_INDEX ) throw runtime_error("can't find SME Proxy identifier");
   return index;
 }
 
@@ -213,14 +213,14 @@ SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
   for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
   {
     if ( (*p) == 0 ) 
-		{
-			__warning__("iterator pointed on null element");
-		}
-		else
-		{
-			if ( (*p)->deleted ) continue;
-			if ( (*p)->info.systemId.compare(systemId) == 0 ) return (*p)->idx;
-		}
+    {
+      __warning__("iterator pointed on null element");
+    }
+    else
+    {
+      if ( (*p)->deleted ) continue;
+      if ( (*p)->info.systemId.compare(systemId) == 0 ) return (*p)->idx;
+    }
   }
   return INVALID_SME_INDEX;
 }

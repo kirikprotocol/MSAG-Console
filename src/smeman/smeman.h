@@ -101,7 +101,9 @@ public:
       {
         if ( (*it)->proxy )
         {
-          __warning__((string("proxy with system id ")+(*it)->info.systemId).c_str());
+          __warning__((string("proxy with system id ")+
+											(*it)->info.systemId+
+											string(" is attached when destroy smeman")).c_str());
           dispatcher.detachSmeProxy((*it)->proxy);
         }
         delete (*it);
@@ -119,7 +121,7 @@ public:
 //  virtual void store();
   virtual SmeIterator* iterator(); // client must destroy returned object
 #if 0  
-	virtual void disableSme(const SmeSystemId& systemId);
+  virtual void disableSme(const SmeSystemId& systemId);
   virtual void enableSme(const SmeSystemId& systemId);
 #endif
   // SmeTable implementation

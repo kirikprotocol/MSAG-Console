@@ -3,6 +3,7 @@
 
 #include <ostream>
 #include <vector>
+#define ABORT_ON_FAILURE
 
 namespace smsc {
 namespace test {
