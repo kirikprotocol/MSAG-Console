@@ -35,10 +35,20 @@ CFLAGS := $(CFLAGS) -g
 CXXFLAGS := $(CXXFLAGS) -g
 export DEBUG
 else
+ifeq ($(COVER),YES)
+CFLAGS := $(CFLAGS) -pg -g -a
+CXXFLAGS := $(CXXFLAGS) -pg -g -a
+else
 ifdef OPTI
 CFLAGS := $(CFLAGS) -O2
 CXXFLAGS := $(CXXFLAGS) -O2
 endif
+endif
+endif
+
+ifdef ASSERT
+CFLAGS := $(CFLAGS) -DASSERT_THROW_IF_FAIL
+CXXFLAGS := $(CFLAGS) -DASSERT_THROW_IF_FAIL
 endif
 
 export CXXFLAGS
@@ -63,6 +73,12 @@ commit:
 update:
 	@echo "updating sources from CVS"
 	cvs update -d
+
+docs:
+	@echo Generating docs
+	@perl -e 'while(<>){s!\$$\(DOCSDIR\)!$(SMSC_BUILDDIR)/docs/html!;print;}' <Doxyfile.tmpl >Doxyfile
+	@doxygen Doxyfile
+	@rm Doxyfile
 
 __build_message__:
 	@echo "build in SMSC"
