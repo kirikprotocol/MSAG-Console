@@ -12,9 +12,12 @@ using smsc::util::Exception;
 class ConfigException	: public Exception
 {
 public:
-	ConfigException(const char * const exceptionMessage)
+/*	ConfigException(const char * const exceptionMessage)
 		: Exception(exceptionMessage)
-	{}
+	{}*/
+	ConfigException(const char * const exceptionMessage, ...)
+		: Exception()
+	{SMSC_UTIL_EX_FILL(exceptionMessage);}
 };
 
 }

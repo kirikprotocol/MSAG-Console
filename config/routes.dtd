@@ -2,25 +2,25 @@
 <!ELEMENT routes (subject_def*, route*)>
 <!ELEMENT route (source+, destination+)>
 <!ATTLIST route
-	name CDATA #REQUIRED
+	id CDATA #REQUIRED
 	billing (true | false) #REQUIRED
 	archiving (true | false) #REQUIRED
+	enabling (true | false) #REQUIRED
 >
 <!ELEMENT source (subject | mask)>
-<!ELEMENT destination ((subject | mask), sme)>
+<!ELEMENT destination (subject | mask)>
+<!ATTLIST destination
+	sme CDATA #REQUIRED
+>
 <!ELEMENT subject EMPTY>
 <!ATTLIST subject
-	id IDREF #IMPLIED
+	id CDATA #REQUIRED
 >
 <!ELEMENT subject_def (mask+)>
 <!ATTLIST subject_def
-	id ID #REQUIRED
+	id CDATA #REQUIRED
 >
 <!ELEMENT mask EMPTY>
 <!ATTLIST mask
 	value CDATA #REQUIRED
->
-<!ELEMENT sme EMPTY>
-<!ATTLIST sme
-	id CDATA #REQUIRED
 >
