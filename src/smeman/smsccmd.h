@@ -1,4 +1,12 @@
+//<<<<<<< smsccmd.h
+//<<<< smsccmd.h
 /*  $Id$
+=======
+/*  $Id$
+>>>>>>> 1.90
+=======
+/*  $Id$
+>>>>>>> 1.91
 */
 
 #if !defined __Cpp_Header__smsccmd_h__
@@ -11,9 +19,9 @@
 и создание PDU из команд
 */
 
-#include "sms/sms.h"
-#include "smpp/smpp_structures.h"
-#include "smpp/smpp_sms.h"
+#include "../sms/sms.h"
+#include "../smpp/smpp_structures.h"
+#include "../smpp/smpp_sms.h"
 #include "core/synchronization/Mutex.hpp"
 #include <string.h>
 #include <memory>
@@ -64,8 +72,9 @@ enum CommandId
   QUERYABONENTSTATUS,     //19
   QUERYABONENTSTATUS_RESP,//20
   SMPP_PDU,               //21
+  SUBMIT_MULTI,           //22
+  SUBMIT_MULTI_RESP,      //23
 };
-
 
 enum CommandStatus{
   CMD_OK=0,
@@ -279,6 +288,50 @@ struct CancelSm{
 
 };
 
+struct DlElement{
+  unsigned dest_flag : 1;
+  unsigned __  : 7;
+  unsigned ton : 8;
+  unsigned npi : 8;
+  string value;
+};
+
+struct UnsuccessElement{
+    Address addr;
+    uint32_t errcode;
+};
+
+struct SubmitMultiSm{
+  SMS msg;
+  uint8_t number_of_dests;
+  DlElement dests[255];
+  //SubmitMultiSm(const SMS& sms){}
+  //~SubmitMultiSm(){}
+};
+
+struct SubmitMultiResp{
+  //SMS msg;
+  char* messageId;
+  uint32_t status;
+  uint8_t no_unsuccess;
+  UnsuccessElement unsuccess[255];
+public:
+  void set_messageId(const char* msgid)
+  {
+    if(!msgid)return;
+    if ( messageId ) delete( messageId);
+    messageId = new char[strlen(msgid)+1];
+    strcpy(messageId,msgid);
+  }
+  void set_status(uint32_t st) { status = st; }
+  const char* get_messageId() {return messageId;}
+  UnsuccessElement* get_unsuccess() { return unsuccess; }
+  void set_unsuccessCount(unsigned c) { no_unsuccess = c; }
+  uint32_t get_status() { return status; }
+  SubmitMultiResp() : messageId(0), status(0) {};
+  ~SubmitMultiResp() { if ( messageId ) delete messageId; }
+};
+
 class SmeProxy;
 
 struct _SmscCommand
@@ -299,6 +352,13 @@ struct _SmscCommand
     case DELIVERY:
     case SUBMIT:
       delete ( (SMS*)dta );
+      break;
+
+    case SUBMIT_MULTI:
+      delete ( (SubmitMultiSm*)dta );
+      break;
+    case SUBMIT_MULTI_RESP:
+      delete ( (SubmitMultiResp*)dta );
       break;
 
     case DELIVERY_RESP:
@@ -344,6 +404,7 @@ struct _SmscCommand
       __unreachable__("unprocessed cmdid");
     }
   }
+
   uint32_t get_dialogId() const { return dialogId; }
   void set_dialogId(uint32_t dlgId) { dialogId=dlgId; }
   CommandId get_commandId() const { return cmdid; }
@@ -353,6 +414,8 @@ struct _SmscCommand
   const QuerySm& get_querySm(){return *(QuerySm*)dta;}
   const CancelSm& get_cancelSm(){return *(CancelSm*)dta;}
   SmsResp* get_resp() const { return (SmsResp*)dta; }
+  SubmitMultiResp* get_MultiResp() { return (SubmitMultiResp*)dta;}
+  SubmitMultiSm* get_Multi() { return (SubmitMultiSm*)dta;}
   int get_priority(){return priority;};
   void set_priority(int newprio){priority=newprio;}
   const char* get_sourceId(){return sourceId.c_str();}
@@ -459,6 +522,19 @@ public:
     return cmd;
   }
 
+  /*static SmscCommand makeMultiSubmitSm(const SMS& sms,uint32_t dialogId)
+  {
+    SmscCommand cmd;
+    cmd.cmd = new _SmscCommand;
+    _SmscCommand& _cmd = *cmd.cmd;
+    _cmd.ref_count = 1;
+    _cmd.cmdid = SUBMIT;
+    _cmd.dta = new SMS;
+    *_cmd.get_sms() = sms;
+    _cmd.dialogId = dialogId;
+    return cmd;
+  }*/
+
   static SmscCommand makeDeliverySm(const SMS& sms,uint32_t dialogId)
   {
     SmscCommand cmd;
@@ -486,6 +562,22 @@ public:
     _cmd.dialogId = dialogId;
     return cmd;
   }
+
+  static SmscCommand makeSubmitMultiResp(const char* messageId, uint32_t dialogId, uint32_t status)
+  {
+    SmscCommand cmd;
+    cmd.cmd = new _SmscCommand;
+    _SmscCommand& _cmd = *cmd.cmd;
+    _cmd.ref_count = 1;
+    _cmd.cmdid = SUBMIT_RESP;
+    _cmd.dta = new SubmitMultiResp;
+    _cmd.get_MultiResp ()->set_messageId(messageId);
+    _cmd.get_MultiResp()->set_status(status);
+    _cmd.dialogId = dialogId;
+    _cmd.get_MultiResp()->set_unsuccessCount(0);
+    return cmd;
+  }
+
   static SmscCommand makeDeliverySmResp(const char* messageId, uint32_t dialogId, uint32_t status)
   {
     SmscCommand cmd;
@@ -658,6 +750,30 @@ public:
     return cmd;
   }
 
+  static void makeSMSBody(SMS* sms,const SmppHeader* pdu,bool forceDC)
+  {
+    const PduXSm* xsm = reinterpret_cast<const PduXSm*>(pdu);
+    //(SMS*)_cmd->dta =  new SMS;
+    fetchSmsFromSmppPdu((PduXSm*)xsm,sms,forceDC);
+    SMS &s=*sms;//((SMS*)_cmd->dta);
+    if(s.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
+    {
+      unsigned len;
+      const unsigned char* data;
+      if(s.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+      {
+        data=(const unsigned char*)s.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      }else
+      {
+        data=(const unsigned char*)s.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+      }
+      if(len==0 || *data>len)
+      {
+        throw Exception("SmscCommand: Invalid pdu (udhi length > message length)");
+      }
+    }
+  }
+
   ~SmscCommand() {
      //__trace__(__PRETTY_FUNCTION__);
      dispose();
@@ -723,7 +839,33 @@ public:
         _cmd->cmdid=ENQUIRELINK_RESP;
         _cmd->dta=(void*)pdu->get_commandStatus();
         goto end_construct;
-      //case SUBMIT_MULTI: reinterpret_cast<PduMultiSm*>(_pdu)->dump(log); break;
+      case SmppCommandSet::SUBMIT_MULTI: //reinterpret_cast<PduMultiSm*>(_pdu)->dump(log); break;
+        {
+          PduMultiSm* pduX = reinterpret_cast<PduMultiSm*>(pdu);
+          _cmd->cmdid=SUBMIT_MULTI;
+          _cmd->dta=new SubmitMultiSm;
+          makeSMSBody(&((SubmitMultiSm*)_cmd->dta)->msg,pdu,forceDC);
+          unsigned u = 0;
+          unsigned uu = pduX->message.numberOfDests;
+          for ( ; u < uu; ++u ) {
+            ((SubmitMultiSm*)_cmd->dta)->dests[u].dest_flag = pduX->message.dests[u].flag;
+            if ( pduX->message.dests[u].flag == 1 ) // SME address
+            {
+              ((SubmitMultiSm*)_cmd->dta)->dests[u].value = pduX->message.dests[u].get_value();
+              ((SubmitMultiSm*)_cmd->dta)->dests[u].ton = pduX->message.dests[u].get_typeOfNumber();
+              ((SubmitMultiSm*)_cmd->dta)->dests[u].npi = pduX->message.dests[u].get_numberingPlan();
+            }
+            else // Distribution list
+            {
+              //__require__((strlen(pduX->message.dests[u].get_value())+1)<=sizeof(((SubmitMultiSm*)_cmd->dta)->dests[u].value));
+              //strcpy(((SubmitMultiSm*)_cmd->dta)->dests[u].el.dl.dl_name,pduX->message.dests[u].get_value());
+              ((SubmitMultiSm*)_cmd->dta)->dests[u].value = pduX->message.dests[u].get_value();
+            }
+            //((SubmitMultiSm*)_cmd->dta)->dests[u].dest_flag = pduX->message.dests[u].flag;
+          }
+          ((SubmitMultiSm*)_cmd->dta)->number_of_dests = uu;
+        }
+        goto end_construct;
       //case SUBMIT_MULTI_RESP: reinterpret_cast<PduMultiSmResp*>(_pdu)->dump(log); break;
       //case ALERT_NOTIFICATION: return reinterpret_cast<Pdu*>(_pdu)->size();
       //case DATA_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
@@ -732,9 +874,16 @@ public:
     __unreachable__("command id is not processed");
     sms_pdu:
     {
+///<<<<<<< smsccmd.h
+      //PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
+      (SMS*)_cmd->dta =  new SMS;
+      makeSMSBody((SMS*)_cmd->dta,pdu,forceDC);
+      /*fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta),forceDC);
+=======
       PduXSm* xsm = reinterpret_cast<PduXSm*>(pdu);
       (SMS*)_cmd->dta =  new SMS;
       if(!fetchSmsFromSmppPdu(xsm,(SMS*)(_cmd->dta),forceDC))throw Exception("Invalid data coding");
+>>>>>>> 1.90
       SMS &s=*((SMS*)_cmd->dta);
       if(s.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
       {
@@ -751,7 +900,7 @@ public:
         {
           throw Exception("SmscCommand: Invalid pdu (udhi length > message length)");
         }
-      }
+      }*/
       //delete (SMS*)_cmd; _cmd = 0;
       goto end_construct;
     }
@@ -858,7 +1007,7 @@ public:
           auto_ptr<PduXSm> xsm(new PduXSm);
           xsm->header.set_commandId(SmppCommandSet::DELIVERY_SM);
           xsm->header.set_sequenceNumber(c.get_dialogId());
-          fillSmppPduFromSms(xsm.get(),c.get_sms(),forceDC);
+          fillSmppPduFromSms(xsm.get(),c.get_sms());
           xsm->message.set_scheduleDeliveryTime("");
           xsm->message.set_validityPeriod("");
           xsm->message.set_replaceIfPresentFlag(0);
@@ -883,6 +1032,30 @@ public:
           xsm->header.set_commandStatus(makeSmppStatus(c.get_resp()->get_status()));
           xsm->set_messageId(c.get_resp()->get_messageId());
           return reinterpret_cast<SmppHeader*>(xsm.release());
+        }
+      }
+    case SUBMIT_MULTI_RESP:
+      {
+        {
+          auto_ptr<PduMultiSmResp> xsmR(new PduMultiSmResp);
+          xsmR->header.set_commandId(SmppCommandSet::SUBMIT_SM_RESP);
+          xsmR->header.set_sequenceNumber(c.get_dialogId());
+          SubmitMultiResp* mr = c.get_MultiResp();
+          xsmR->header.set_commandStatus(makeSmppStatus(mr->get_status()));
+          xsmR->set_messageId(mr->get_messageId());
+          if ( mr->no_unsuccess ) {
+            auto_ptr<UnsuccessDeliveries> ud(new UnsuccessDeliveries[mr->no_unsuccess]);
+            for ( unsigned u=0; u<mr->no_unsuccess; ++u )
+            {
+              ud.get()[u].addr.set_numberingPlan(mr->unsuccess[u].addr.getNumberingPlan());
+              ud.get()[u].addr.set_typeOfNumber(mr->unsuccess[u].addr.getTypeOfNumber());
+              ud.get()[u].addr.set_value(mr->unsuccess[u].addr.value);
+              ud.get()[u].errorStatusCode = mr->unsuccess[u].errcode;
+            }
+            xsmR->set_sme(ud.release());
+          }
+          xsmR->set_noUnsuccess(mr->no_unsuccess);
+          return reinterpret_cast<SmppHeader*>(xsmR.release());
         }
       }
     case DELIVERY_RESP:

@@ -37,14 +37,19 @@
 namespace smsc {
 namespace sms  {
 
-
-
 extern void UCS_htons(char* buffer, const char* orig, unsigned len, unsigned esm_class);
 extern void UCS_ntohs(char* buffer, const char* orig, unsigned len, unsigned esm_class);
 
 using std::string;
 using std::runtime_error;
 using std::auto_ptr;
+
+/**
+  имя списка рассылки
+*/
+struct DistrList {
+  char dl_name[21];
+};
 
 static bool HSNS_isEqual()
 {
