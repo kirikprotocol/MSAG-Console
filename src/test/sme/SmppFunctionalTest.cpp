@@ -358,6 +358,7 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numAlias, int numSme)
 				route.source = *addr[i];
 				route.dest = *addr[j];
 				route.smeSystemId = smeInfo[rand0(numAddr - 1)]->systemId;
+				route.enabling = rand0(2);
 				switch (s.value())
 				{
 					case 1:
