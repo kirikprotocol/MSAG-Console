@@ -536,7 +536,7 @@ USHORT_T EINSS7_I97IsupBindConf(USHORT_T isupUserID,UCHAR_T result)
         result == EINSS7_I97_SAME_CC_BOUND)
     {
       changeState(ISUPBOUND);
-      setTimer(&stacktimer,60000); /* max wait for MTP_RESUME */
+      setTimer(&stacktimer,120000); /* max wait for MTP_RESUME */
     }
     else
     {
@@ -800,7 +800,7 @@ USHORT_T EINSS7_I97IsupResourceInd(USHORT_T resourceGroup,
                                    UCHAR_T rgstate)
 {
   smsc_log_debug(missedCallProcessorLogger, "ResourceInd RG=%d is %s",resourceGroup,rgstate?"available":"unavailable");
-  if ( state == ISUPBOUND /* && rgstate */ )
+  if ( state == ISUPBOUND && rgstate )
   {
     cancelTimer(&stacktimer);
     changeState(LINKUP); 
