@@ -69,10 +69,9 @@ public class Templates extends MCISmeBean
 
   public int process(HttpServletRequest request)
   {
-    int result = super.process(request);
-    if (result != RESULT_OK) return result;
-
-    result = setDefaultTemplateIds(getConfig());
+    int superResult = super.process(request);
+    int result = setDefaultTemplateIds(getConfig());
+    if (superResult != RESULT_OK) return superResult;
     if (result != RESULT_OK) return result;
 
     if      (mbInformAdd != null)    return RESULT_INFORM_ADD;
