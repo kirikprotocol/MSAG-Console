@@ -5,12 +5,14 @@
 #include <xercesc/sax/InputSource.hpp>
 #include <admin/AdminException.h>
 #include <core/network/Socket.hpp>
+#include <util/xml/DOMTreeReader.h>
 
 namespace smsc {
 namespace admin {
 namespace protocol {
 
 using smsc::core::network::Socket;
+using smsc::util::xml::DOMTreeReader;
 
 class CommandReader
 {
@@ -39,9 +41,8 @@ protected:
 	uint32_t readMessageLength() throw (AdminException);
 	log4cpp::Category &logger;
 	Socket * sock;
-	DOMParser * parser;
+	DOMTreeReader reader;
 	
-	DOMParser * createParser();
 	Command * createCommand(Command::Id id, DOM_Document data);
 	Command * parseCommand(InputSource &source) throw (AdminException);
 

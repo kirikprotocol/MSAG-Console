@@ -31,15 +31,11 @@ CommandReader::CommandReader(Socket * admSocket)
 	: logger(Logger::getCategory("smsc.admin.protocol.CommandReader"))
 {
 	sock = admSocket;
-	parser = createParser();
 }
 
 CommandReader::~CommandReader()
 {
-	delete parser->getErrorHandler();
-	delete parser;
 	sock = 0;
-	parser = 0;
 }
 
 Command *CommandReader::read()
@@ -89,13 +85,7 @@ Command* CommandReader::parseCommand(InputSource &source)
 
 	try
 	{
-		parser->parse(source);
-		if (parser->getErrorCount() > 0)
-		{
-			logger.warn("%i errors occured in command", parser->getErrorCount());
-			throw AdminException("Errors in document");
-		}
-		DOM_Document data = parser->getDocument();
+		DOM_Document data = reader.read(source);
 		
 		std::auto_ptr<char> command_name(getCommandName(data));
 		Command::Id id = Command::getCommandIdByName(command_name.get());
@@ -106,6 +96,11 @@ Command* CommandReader::parseCommand(InputSource &source)
 			throw AdminException("Unknown command");
 		}
 		return createCommand(id,data);
+	}
+	catch (const DOMTreeReader::ParseException &e)
+	{
+		logger.warn("A parse error occured during parsing command: %s", e.what());
+		throw AdminException("An errors occured during parsing: %s", e.what());
 	}
 	catch (const XMLException& e)
 	{
@@ -130,6 +125,7 @@ Command* CommandReader::parseCommand(InputSource &source)
 		logger.warn("An error occured during parsing command");
 		throw AdminException("An errors occured during parsing");
 	}
+	throw AdminException("Fatal error: unreachible code reached in smsc::admin::protocol::CommandReader.parseCommand(InputSource &)");
 }
 
 char * CommandReader::getCommandName(DOM_Document data)
@@ -176,22 +172,6 @@ Command * CommandReader::createCommand(Command::Id id, DOM_Document data) {
 		logger.warn("Unknown command id \"%i\"", id);
 		throw AdminException("Unknown command");
 	}
-}
-
-DOMParser * CommandReader::createParser()
-{
-	// init parser
-	DOMParser *parser = new DOMParser;
-	parser->setValidationScheme(DOMParser::Val_Always);
-	parser->setDoNamespaces(false);
-	parser->setDoSchema(false);
-	parser->setValidationSchemaFullChecking(false);
-	DOMErrorLogger *errReporter =
-		new DOMErrorLogger("smsc.admin.protocol.CommandReader.errReporter");
-	parser->setErrorHandler(errReporter);
-	parser->setCreateEntityReferenceNodes(false);
-	parser->setToCreateXMLDeclTypeNode(false);
-	return parser;
 }
 
 }
