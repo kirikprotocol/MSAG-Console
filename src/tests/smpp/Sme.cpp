@@ -166,44 +166,25 @@ namespace smsc {
 			  if(session == 0) {
 				throw IllegalSmeOperation("IllegalSmeOperation: can't bind null session");
 			  }
-			  try {
-				smsc::smpp::PduBindTRX pdu;
-				switch (bindType) {
-				case BindType::Transceiver:
-					pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
-					break;
-				case BindType::Transmitter:
-					pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANSMITTER);
-					break;
-				case BindType::Receiver:
-					pdu.get_header().set_commandId(SmppCommandSet::BIND_RECIEVER);
-					break;
-				}
-				pdu.set_systemId(cfg.sid.c_str());
-				pdu.set_password(cfg.password.c_str());
-				pdu.set_systemType(cfg.systemType.c_str());
-				sequence = session->getNextSeq();
-				pdu.get_header().set_sequenceNumber(sequence);
+              smsc::smpp::PduBindTRX pdu;
+              switch (bindType) {
+              case BindType::Transceiver:
+                  pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANCIEVER);
+                  break;
+              case BindType::Transmitter:
+                  pdu.get_header().set_commandId(SmppCommandSet::BIND_TRANSMITTER);
+                  break;
+              case BindType::Receiver:
+                  pdu.get_header().set_commandId(SmppCommandSet::BIND_RECIEVER);
+                  break;
+              }
+              pdu.set_systemId(cfg.sid.c_str());
+              pdu.set_password(cfg.password.c_str());
+              pdu.set_systemType(cfg.systemType.c_str());
+              sequence = session->getNextSeq();
+              pdu.get_header().set_sequenceNumber(sequence);
 
-				SmppHeader *resp = session->getAsyncTransmitter()->sendPdu((SmppHeader*)&pdu);
-
-				if(resp != 0) {
-					log.error("Error when binding, PduBindTRXResp != NULL");
-					disposePdu((SmppHeader*)resp);
-				}
-				listener->checkError();
-				//listener->releaseError();
-
-			  } catch (smsc::sme::SmppConnectException &ex) {
-				  std::ostringstream msg;
-				  msg << "PduListenerException: smsc::sme::SmppConnectException #" << ex.getReason() << ", " << ex.getTextReason();
-				  throw PduListenerException(msg.str(), ex.getReason());
-			  } catch (std::exception &ex) {
-				log.error("BasicSme#bind(): Unknown std::exception when binding, %s, type=%s", ex.what(), typeid(ex).name());
-				//throw PduListenerException("PduListenerException: Unknown std::exception when binding", 0);
-			  } catch (...) {
-				log.error("BasicSme#bind(): Unknown exception when binding");
-			  }
+              sendPduAsIs((smsc::smpp::SmppHeader*)&pdu);
 			  log.debug("BasicSme#bind() exit");
 			  return sequence;
 			}
@@ -220,25 +201,7 @@ namespace smsc {
 			  sequence = session->getNextSeq();
 			  pdu.get_header().set_sequenceNumber(sequence);
 
-			  SmppHeader *resp = session->getAsyncTransmitter()->sendPdu((SmppHeader*)&pdu);
-
-			  if(resp != 0) {
-				  log.error("Error when unbinding, PduUnbindResp != NULL");
-				  disposePdu((SmppHeader*)resp);
-			  }
-			  try {
-				listener->checkError();
-				//listener->releaseError();
-			  } catch (smsc::sme::SmppConnectException &ex) {
-				  std::ostringstream msg;
-				  msg << "PduListenerException: smsc::sme::SmppConnectException #" << ex.getReason() << ", " << ex.getTextReason();
-				  throw PduListenerException(msg.str(), ex.getReason());
-			  } catch (std::exception &ex) {
-				log.error("BasicSme#unbind(): Unknown std::exception when unbinding\n, %s", ex.what());
-			  } catch (...) {
-				log.error("BasicSme#unbind(): Unknown exception when unbinding");
-			  }
-
+              sendPduAsIs((smsc::smpp::SmppHeader*)&pdu);
 			  log.debug("BasicSme#unbind() exit");
 			  return sequence;
 			}
@@ -252,9 +215,7 @@ namespace smsc {
 			  pdu.get_header().set_commandId(smsc::smpp::SmppCommandSet::ENQUIRE_LINK);
 			  pdu.get_header().set_sequenceNumber(sequence);
 			  pdu.get_header().set_commandStatus(0);
-			  smsc::sme::SmppTransmitter *atrans = session->getAsyncTransmitter();
-			  atrans->sendPdu((smsc::smpp::SmppHeader*)&pdu);
-			  listener->checkError();
+              sendPduAsIs((smsc::smpp::SmppHeader*)&pdu);
 			  return sequence;
 			}
 
@@ -265,9 +226,7 @@ namespace smsc {
 			  uint32_t sequence = session->getNextSeq();
 			  pdu->set_sequenceNumber(sequence);
 			  pdu->set_commandStatus(smsc::smpp::SmppStatusSet::ESME_ROK);
-			  smsc::sme::SmppTransmitter *atrans = session->getAsyncTransmitter();
-			  atrans->sendPdu(pdu);
-			  listener->checkError();
+              sendPduAsIs(pdu);
 			  return sequence;
 			}
 

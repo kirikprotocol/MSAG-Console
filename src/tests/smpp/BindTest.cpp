@@ -305,7 +305,11 @@ namespace smsc {
 						log.debug("testBind: unbinding \"sme\"");
 						sequence = sme->unbind();
 						ResponseChecker::checkUnbind(sequence, sme, timeout);
-					} catch (...) {
+					} catch (std::exception &ex) {
+                      log.error("checkDuplicateBinding: std exception has occured, typeid=%s, msg=%s", typeid(ex).name(), ex.what());
+                      sme->reconnect();
+                      sme1->reconnect();
+                    } catch (...) {
 						log.error("BindTest#checkDuplicateBinding: unknown exception has occured");
 					}
 

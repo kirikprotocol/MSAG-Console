@@ -9,7 +9,7 @@ namespace smsc {
 
 	  typedef smsc::test::util::Handler<smsc::sms::Address> SmsAddressHandler;
 
-	  class SmppProfileManager {
+	  class SmppProfileManager : smsc::test::util::ProtectedCopy {
         static const char* profileCommands[];
         static const char* profileResponses[];
         log4cpp::Category& log;
@@ -37,6 +37,8 @@ namespace smsc {
 		void setOriginatingAddress(const char *addr);
 		void setProfilerAddress(const char *addr);
 	  };
+
+      typedef smsc::test::util::Handler<SmppProfileManager> SmppProfileManagerHandler;
 	}//smpp
   }//namespace test
 }//namespace smsc

@@ -8,6 +8,8 @@
 #include <tests/util/Configurator.hpp>
 #include <tests/util/Event.hpp>
 #include "SmppSession.hpp"
+#include "ResponseQueue.hpp"
+#include "PduQueue.hpp"
 
 namespace smsc {
 	namespace test {
@@ -15,7 +17,6 @@ namespace smsc {
 
 			using smsc::test::util::ContextHandler;
 			using std::string;
-			typedef smsc::sme::SmeConfig SmeConfig;
 
 			class SmeConfigurationException : public std::runtime_error {
 			public:
@@ -101,26 +102,9 @@ namespace smsc {
 				}
 			};
 
-			// handler for pdu
-			// хэндлер освобождает PDU вызывая метод disposePdu
-			template <class T> class PduDisposePolicy {
-			public:
-				void dispose(T *pdu) {
-					smsc::smpp::disposePdu(pdu);
-				}
-			};
-
-			typedef smsc::test::util::Handler<smsc::smpp::SmppHeader, smsc::test::util::Exceptioner, PduDisposePolicy> PduHandler;
-
 			class SmppListener : public DeafSmppListener {
 				void handleEvent(smsc::smpp::SmppHeader *pdu) {}
 			};
-
-			// Typedefs
-			class GenericSme;
-			typedef smsc::test::util::Handler<GenericSme> GenericSmeHandler;
-			typedef smsc::test::util::Handler<SmppSession> SmppSessionHandler;
-			typedef smsc::test::util::Handler<SmppListener> PduListenerHandler;
 
 			class GenericSme : public smsc::test::util::ProtectedCopy {
 			public:
@@ -266,17 +250,8 @@ namespace smsc {
 				};
 				static Registrator reg;
 
-				typedef std::list<PduHandler> PduHandlerList;
-				typedef PduHandlerList::iterator PduHandlerListIterator;
-
-				std::list<PduHandler> pduQueue;
-                std::list<PduHandler> responseQueue;
-				smsc::core::synchronization::Mutex pduMutex;
-                smsc::core::synchronization::Mutex responseMutex;
-				smsc::test::util::Event pduEvent;
-				int maxSequence;
-				typedef smsc::test::util::Handler<smsc::core::synchronization::Event> MutexEventHandler;
-				smsc::core::buffers::IntHash<MutexEventHandler> sequenceLocks;
+                PduQueue pduQueue;
+                ResponseQueue responseQueue;
 
 				class InternalSmppListener : public SmppListener {
 					QueuedSme *queuedSme;
@@ -302,32 +277,9 @@ namespace smsc {
 						  isResponse = true;
 						}
                         if(isResponse) { //пришел ответ
-                          queuedSme->log.debug("QueuedSmeListener: responseMutex.Lock()");
-                          queuedSme->responseMutex.Lock();
-                          PduHandler pduHandler(pdu);
-                          int sequence = pduHandler->get_sequenceNumber();
-                          queuedSme->log.debug("QueuedSmeListener: SequenceNumber = %i", sequence);
-                          queuedSme->maxSequence = (queuedSme->maxSequence < sequence)?sequence:queuedSme->maxSequence;
-                          if (queuedSme->sequenceLocks.Exist(sequence)) {//наш ответ
-                              queuedSme->log.debug("QueuedSmeListener: pushing pduHandler into responseQueue");
-                              queuedSme->responseQueue.push_back(pduHandler);
-                              queuedSme->log.debug("QueuedSmeListener: signaling for sequence waiters");
-                              MutexEventHandler event = queuedSme->sequenceLocks.Get(sequence);
-                              event->Signal();
-                          } else {//ошибочный ответ попался
-                          }
-                          queuedSme->log.debug("QueuedSmeListener: responseMutex.Unlock()");
-                          queuedSme->responseMutex.Unlock();
+                          queuedSme->responseQueue.processResponse(pdu);
                         } else { //пришла pdu
-                          queuedSme->log.debug("QueuedSmeListener: pduMutex.Lock()");
-                          queuedSme->pduMutex.Lock();
-                          PduHandler pduHandler(pdu);
-                          queuedSme->log.debug("QueuedSmeListener: pushing pduHandler into pduQueue");
-                          queuedSme->pduQueue.push_back(pduHandler);
-                          queuedSme->log.debug("QueuedSmeListener: signaling for pdu waiters");
-                          queuedSme->pduEvent.Signal();
-                          queuedSme->log.debug("QueuedSmeListener: pduMutex.Unlock()");
-                          queuedSme->pduMutex.Unlock();
+                          queuedSme->pduQueue.processPdu(pdu);
                         }
 					}
 				};
@@ -351,86 +303,28 @@ namespace smsc {
 					}
 				}
 
-				PduHandler receive() {
-                  int status = pduEvent.Wait();
-                  if (status) {	//какая-то ошибка
-                      return PduHandler();
-                  }
-                  pduMutex.Lock();
-                  PduHandler pdu = pduQueue.front();
-                  pduQueue.pop_front();
-                  pduMutex.Unlock();
-                  return pdu;
+				virtual void sendPduAsIs(smsc::smpp::SmppHeader *pdu) throw(PduListenerException, IllegalSmeOperation) {
+                  BasicSme::sendPduAsIs(pdu);
+                  responseQueue.registerPdu(pdu->get_sequenceNumber());
+                }
+
+				virtual PduHandler receive() {
+                  return pduQueue.receive();
 				}
 
-				PduHandler receive(int timeout) {
-                  int status = pduEvent.Wait(timeout);
-                  if (status) {	//вылет по таймауту
-                      return PduHandler();
-                  }
-                  pduMutex.Lock();
-                  PduHandler pdu = pduQueue.front();
-                  pduQueue.pop_front();
-                  pduMutex.Unlock();
-                  return pdu;
+				virtual PduHandler receive(uint32_t timeout) {
+                  return pduQueue.receive(timeout);
 				}
 
-				PduHandler receiveResponse(int sequence) {
-					responseMutex.Lock();
-					PduHandler pdu = findResponse(sequence);
-					if (pdu == 0) {
-						if (sequenceLocks.Exist(sequence)) { //кто-то уже ждет
-							responseMutex.Unlock();
-							return pdu;
-						}
-						MutexEventHandler event = new smsc::core::synchronization::Event();
-						sequenceLocks.Insert(sequence, event);
-						responseMutex.Unlock();
-						int status = event->Wait();
-						responseMutex.Lock();
-						sequenceLocks.Delete(sequence);
-						if (status) {	//какая-то ошибка
-							return pdu;
-						}
-                        pdu = findResponse(sequence);
-					}
-					responseMutex.Unlock();
-
-					return pdu;
+				virtual PduHandler receiveResponse(uint32_t sequence) {
+                  return responseQueue.receiveResponse(sequence);
 				}
 
-				PduHandler receiveResponse(int sequence, int timeout) {
-  					log.debug("receiveResponse(%d, %d): --- enter", sequence, timeout);
-					responseMutex.Lock();
-					PduHandler pdu = findResponse(sequence);
-					if (pdu == 0) {
-  						log.debug("receiveResponse: the queue doesn't contain requested pdu");
-						if (sequenceLocks.Exist(sequence)) { //кто-то уже ждет
-  							log.error("receiveResponse: sequenceLocks for sequence=%u is alredy busy", sequence);
-							responseMutex.Unlock();
-							return pdu;
-						}
-						MutexEventHandler event = new smsc::core::synchronization::Event();
-						log.debug("receiveResponse: inserting sequence=%u into sequenceLocks", sequence);
-						sequenceLocks.Insert(sequence, event);
-						responseMutex.Unlock();
-						log.debug("receiveResponse: waiting for %u", timeout);
-						int status = event->Wait(timeout);
-						responseMutex.Lock();
-						log.debug("receiveResponse: wait_status=%u", status);
-						sequenceLocks.Delete(sequence);
-						if (status) {	// таймаут
-							return pdu;
-						}
-						pdu = findResponse(sequence);
-					}
-					responseMutex.Unlock();
-  					log.debug("receiveResponse: --- exit");
-
-					return pdu;
+				virtual PduHandler receiveResponse(uint32_t sequence, uint32_t timeout) {
+                  return responseQueue.receiveResponse(sequence, timeout);
 				}
 
-				/*PduHandler receiveNoWait() {
+				/*virtual PduHandler receiveNoWait() {
 					PduHandler pdu;
 					pduMutex.Lock();
 					if (!queue.empty()) {
@@ -441,36 +335,14 @@ namespace smsc {
 					return pdu;
 				}
 
-				PduHandler receiveNoWait(int sequence) {
+				virtual PduHandler receiveNoWait(int sequence) {
 					queueMutex.Lock();
 					PduHandler pdu = findPduWithSequence(sequence);
 					queueMutex.Unlock();
 					return pdu;
 				}*/
-			private:
-				PduHandler findResponse(uint32_t sequence) {
-					PduHandler pdu;
-					if (!responseQueue.empty() && sequence <= maxSequence) {
-					  log.debug("findResponse: searching response with sequence %d", sequence);
-					  for (PduHandlerListIterator itr = responseQueue.begin(); itr != responseQueue.end(); itr++) {
-						  PduHandler queuedPdu = *itr;
-						  log.debug("findResponse: extracted pdu with sequence %d", queuedPdu->get_sequenceNumber());
-						  if (sequence == queuedPdu->get_sequenceNumber()) {
-							  log.debug("findResponse: pdu with sequence %d found", queuedPdu->get_sequenceNumber());
-							  pdu = queuedPdu;
-							  responseQueue.erase(itr);
-							  break;
-						  }
-					  }
-					}
-					if(pdu != 0) {
-					  log.debug("findResponse: -- exit %d", pdu->get_sequenceNumber());
-					}
-					return pdu;
-				}
 			};
 
-			typedef smsc::test::util::Handler<QueuedSme> QueuedSmeHandler;
 		}
 	}
 }

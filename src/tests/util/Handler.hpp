@@ -98,9 +98,9 @@ namespace smsc {
 					}
 				}
 
-				template <typename T1>
-				Handler(Handler<T1, CheckingPolicy, DisposePolicy> &handler) {
-					if (handler.objectPtr != 0) {
+				template <class T1>
+				Handler(const Handler<T1, CheckingPolicy, DisposePolicy> &handler) {
+					if (handler.getObjectPtr() != 0) {
 						objectPtr = static_cast<T*>(handler.getObjectPtr());
 						referenceCount = handler.getReferenceCountPtr();
 						++(*referenceCount);
@@ -110,8 +110,8 @@ namespace smsc {
 					}
 				}
 
-				template <typename T1>
-				Handler<T, CheckingPolicy, DisposePolicy>& operator = (Handler<T1, CheckingPolicy, DisposePolicy> &handler) {
+				template <class T1>
+				Handler<T, CheckingPolicy, DisposePolicy>& operator = (const Handler<T1, CheckingPolicy, DisposePolicy> &handler) {
 					if (objectPtr != handler.getObjectPtr()) {
 						release();
 						if(handler != 0) {
@@ -202,11 +202,21 @@ namespace smsc {
 					return *checkPointer(objectPtr);
 				}*/
 
-				T* getObjectPtr() {
+                template <class T1>
+				operator Handler<T1, CheckingPolicy, DisposePolicy>& () const {
+					return *this;
+				}
+
+                template <class T1>
+                operator Handler<T1>& () const {
+                  return *this;
+                }
+
+				T* getObjectPtr() const {
 				  return objectPtr;
 				}
 
-				int* getReferenceCountPtr() {
+				int* getReferenceCountPtr() const {
 				  return referenceCount;
 				}
 

@@ -73,7 +73,7 @@ namespace smsc {
         sms.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS, 2);//transaction mode
         sms.setDeliveryReport(0);
         sms.setArchivationRequested(false);
-        sms.setIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE, 0);
+        sms.setIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE, 1234);
         sms.setEServiceType("XXX");
         // sending message 
         uint32_t length = strlen(profileCommands[cmd]);
@@ -91,7 +91,7 @@ namespace smsc {
         break;
         case smsc::smpp::DataCoding::SMSC7BIT: {
           char buff[length + 1];
-          uint32_t readLength = ConvertTextTo7Bit(profileCommands[cmd], length, buff, length, CONV_ENCODING_CP1251);
+          uint32_t readLength = ConvertLatin1ToSMSC7Bit(profileCommands[cmd], length, buff);
           log.debug("setProfile: DataCoding::SMSC7BIT, buff=%s", buff);
           sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD, buff, readLength);
         }
