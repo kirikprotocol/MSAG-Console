@@ -99,6 +99,17 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  if(sms->getWaitTime()>time(NULL)+maxValidTime)
+  {
+    SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDSCHEDULE);
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+    }
+    return ERROR_STATE;
+  }
+
   try{
     sms->setNextTime(RescheduleCalculator::calcNextTryTime(time(NULL),1));
     store->createSms(*sms,t.msgId);
@@ -126,6 +137,7 @@ StateType StateMachine::submit(Tuple& t)
     }
   }
 
+  __trace2__("Sms scheduled to %d, now %d",(int)sms->getWaitTime(),(int)time(NULL));
   if(sms->getWaitTime()>time(NULL))
   {
     smsc->notifyScheduler();

@@ -24,6 +24,8 @@ public:
 
   const char *taskName(){return "StateMachine";}
 
+  time_t maxValidTime;
+
 protected:
   EventQueue& eq;
   smsc::store::MessageStore* store;

@@ -187,9 +187,12 @@ void Smsc::init(const SmscConfigs& cfg)
 
   {
     int cnt=cfg.cfgman->getInt("core.state_machines_count");
+    time_t maxValidTime=cfg.cfgman->getInt("core.sms.max_valid_time");
     for(int i=0;i<cnt;i++)
     {
-      tp.startTask(new StateMachine(eventqueue,store,this));
+      StateMachine *m=new StateMachine(eventqueue,store,this);
+      m->maxValidTime=maxValidTime;
+      tp.startTask(m);
     }
   }
 
