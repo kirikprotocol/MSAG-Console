@@ -32,30 +32,17 @@ void executeTest()
 	SMS sms, sms2, sms3, sms4, sms5;
 	
 /*
-	storeCorrectSms(6)
-	storeIncorrectSms(1)
-	changeExistentSmsStateEnrouteToEnroute(5)
-	storeCorrectSms(1002)
-	storeCorrectSms(1002)
-	storeCorrectSms(1007)
-	storeIncorrectSms(1)
-storeCorrectSms(1007){1007}
-
+storeCorrectSms(13)->
+replaceIncorrectSms(3){3}
 */
-	SmsUtil::setupRandomCorrectSms(&sms);
-	sleep(3);
-	SmsUtil::setupRandomCorrectSms(&sms2);
-	vector<int> res = SmsUtil::compareMessages(sms, sms2);
-	for (int i = 0; i < res.size(); i++)
-	{
-		cout << res[i] << ",";
-	}
-	cout << endl;
+	cout << *tc.storeCorrectSms(&id, &sms, 11) << endl;
+	cout << *tc.changeExistentSmsStateEnrouteToFinal(id, &sms, 6) << endl;
+	cout << *tc.deleteExistentSms(id) << endl;
 /*
 	cout << *tc.storeCorrectSms(&id, &sms, 1) << endl;
 	cout << *tc.storeCorrectSms(&id2, &sms2, id, sms, 1) << endl;
 	cout << *tc.storeRejectDuplicateSms(sms) << endl;
-	cout << *tc.storeReplaceCorrectSms(id, &sms) << endl;
+	cout << *tc.storeReplaceCorrectSms(&id, &sms) << endl;
 	cout << *tc.storeReplaceSmsInFinalState(&id2, &sms2, id, sms) << endl;
 	cout << *tc.storeIncorrectSms(1) << endl;
 	cout << *tc.storeAssertSms(1) << endl;
