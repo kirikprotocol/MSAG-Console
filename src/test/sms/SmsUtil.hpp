@@ -34,9 +34,6 @@ public:
 
 	//Использую вместо vector<int> operator==(const Body&, const Body&)
 	//для возможности добавления параметра compareFlag
-	static vector<int> compareMessageBodies(const Body& b1, const Body& b2,
-		uint64_t excludeMask = 0x0);
-
 	static vector<int> compareMessages(const SMS& sms1, const SMS& sms2,
 		uint64_t excludeMask = 0x0);
 
@@ -46,11 +43,8 @@ public:
 	
 	static void setupRandomCorrectDescriptor(Descriptor* desc, bool check = true);
 	
-	static void setupRandomCorrectBody(Body* body,
-		uint64_t mask = 0xffffffffffffffff, bool check = true);
-	
 	static void setupRandomCorrectSms(SMS* sms,
-		uint64_t mask = 0xffffffffffffffff, bool check = true);
+		uint64_t includeMask = 0xffffffffffffffff, bool check = true);
 
 	static void clearSms(SMS* sms);
 
