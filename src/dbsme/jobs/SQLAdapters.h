@@ -316,7 +316,157 @@ namespace smsc { namespace dbsme { namespace io
         {
             return time(NULL);
         };
+    };
     
+    class SQLRoutineAdapter : public SetAdapter, public GetAdapter
+    {
+    protected:
+        
+        Routine*  base;
+
+    public:
+        
+        SQLRoutineAdapter(Routine* routine) 
+            : SetAdapter(), GetAdapter(), base(routine) {};
+        virtual ~SQLRoutineAdapter() {};
+        
+        virtual bool isNull(const char* key)
+            throw(AdapterException) 
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->isNull(key));
+        };
+        
+        virtual void setString(const char* key, const char* str, bool null=false)
+            throw(AdapterException) 
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setString(key, str, null));
+        };
+        virtual const char* getString(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getString(key));
+        };
+        
+        virtual void setInt8(const char* key, int8_t val, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setInt8(key, val, null));
+        };
+        virtual int8_t getInt8(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getInt8(key));
+        };
+        virtual void setInt16(const char* key, int16_t val, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setInt16(key, val, null));
+        };
+        virtual int16_t getInt16(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getInt16(key));
+        };
+        virtual void setInt32(const char* key, int32_t val, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setInt32(key, val, null));
+        };
+        virtual int32_t getInt32(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getInt32(key));
+        };
+        virtual void setInt64(const char* key, int64_t val, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setInt64(key, val, null));
+        };
+        virtual int64_t getInt64(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getInt64(key));
+        };
+        virtual void setUint8(const char* key, uint8_t val, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setUint8(key, val, null));
+        };
+        virtual uint8_t getUint8(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getUint8(key));
+        };
+        virtual void setUint16(const char* key, uint16_t val, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setUint16(key, val, null));
+        };
+        virtual uint16_t getUint16(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getUint16(key));
+        };
+        virtual void setUint32(const char* key, uint32_t val, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setUint32(key, val, null));
+        };
+        virtual uint32_t getUint32(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getUint32(key));
+        };
+        virtual void setUint64(const char* key, uint64_t val, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setUint64(key, val, null));
+        };
+        virtual uint64_t getUint64(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getUint64(key));
+        };
+        virtual void setFloat(const char* key, float val, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setFloat(key, val, null));
+        };
+        virtual float getFloat(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getFloat(key));
+        };
+        virtual void setDouble(const char* key, double val, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setDouble(key, val, null));
+        };
+        virtual double getDouble(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getDouble(key));
+        };
+        virtual void setLongDouble(const char* key, long double val, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setLongDouble(key, val, null));
+        };
+        virtual long double getLongDouble(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getLongDouble(key));
+        };
+        virtual void setDateTime(const char* key, time_t time, bool null=false)
+            throw(AdapterException)
+        {
+            SET_THROW_CAUGHT_EXCEPTION(base->setDateTime(key, time, null));
+        };
+        virtual time_t getDateTime(const char* key)
+            throw(AdapterException)
+        {
+            GET_THROW_CAUGHT_EXCEPTION(base->getDateTime(key));
+        };
     };
 
 }}}

@@ -24,7 +24,8 @@ namespace smsc { namespace dbsme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
     
-    static const char* SMSC_DBSME_SQL_JOB_IDENTITY  = "sql-job";
+    static const char* SMSC_DBSME_SQL_JOB_IDENTITY    = "sql-job";
+    static const char* SMSC_DBSME_PLSQL_JOB_IDENTITY  = "pl/sql-job";
     
     static const char* SMSC_DBSME_SQL_JOB_FROM_ADDR = "from-address";
     static const char* SMSC_DBSME_SQL_JOB_TO_ADDR   = "to-address";
@@ -39,18 +40,31 @@ namespace smsc { namespace dbsme
     static const char* SQL_JOB_OUTPUT_FORMAT    = "OUTPUT_FORMAT";
     static const char* SQL_JOB_INVALID_CONFIG   = "INVALID_CONFIG";
     
-
-    class SQLJob : public Job
+    class SQLQueryJob : public Job
     {
     protected:
 
         InputParser*        parser;
         OutputFormatter*    formatter;
-
+        
         char*   sql;
         char*   inputFormat;
         char*   outputFormat;
         
+    public:
+
+        SQLQueryJob() : Job(), parser(0), formatter(0),
+            sql(0), inputFormat(0), outputFormat(0) {};
+        virtual ~SQLQueryJob();
+        
+        virtual void init(ConfigView* config)
+            throw(ConfigException);
+    };
+
+    class SQLJob : public SQLQueryJob
+    {
+    protected:
+
         bool    isQuery;
 
         virtual void process(Command& command, Statement& stmt) 
@@ -58,10 +72,29 @@ namespace smsc { namespace dbsme
         
     public:
 
-        SQLJob() : Job(), parser(0), formatter(0),
-            sql(0), inputFormat(0), outputFormat(0) {};
+        SQLJob() : SQLQueryJob(), isQuery(false) {};
+        virtual ~SQLJob() {};
+        
+        virtual void init(ConfigView* config)
+            throw(ConfigException);
+        virtual void process(Command& command, DataSource& ds)
+            throw(CommandProcessException);
+    };
+    
+    class PLSQLJob : public SQLQueryJob
+    {
+    protected:
 
-        virtual ~SQLJob();
+        bool    needCommit;
+        bool    isFunction;
+
+        virtual void process(Command& command, Routine& routine) 
+            throw(CommandProcessException);
+        
+    public:
+
+        PLSQLJob() : SQLQueryJob(), needCommit(true), isFunction(false) {};
+        virtual ~PLSQLJob() {};
         
         virtual void init(ConfigView* config)
             throw(ConfigException);
@@ -82,6 +115,21 @@ namespace smsc { namespace dbsme
         
         SQLJobFactory() : JobFactory() {};
         virtual ~SQLJobFactory() {};
+    };
+    
+    class PLSQLJobFactory : public JobFactory
+    {
+    protected:
+
+        virtual Job* createJob() 
+        {
+            return new PLSQLJob();
+        };
+        
+    public:
+        
+        PLSQLJobFactory() : JobFactory() {};
+        virtual ~PLSQLJobFactory() {};
     };
 
 }}

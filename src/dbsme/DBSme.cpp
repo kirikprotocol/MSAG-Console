@@ -350,8 +350,12 @@ int main(void)
     return 0;*/
     
     SQLJobFactory _sqlJobFactory;
-    JobFactory::registerFactory(&_sqlJobFactory, SMSC_DBSME_SQL_JOB_IDENTITY);
-    
+    JobFactory::registerFactory(&_sqlJobFactory, 
+                                SMSC_DBSME_SQL_JOB_IDENTITY);
+    PLSQLJobFactory _plsqlJobFactory;
+    JobFactory::registerFactory(&_plsqlJobFactory, 
+                                SMSC_DBSME_PLSQL_JOB_IDENTITY);
+
     try 
     {
         Manager::init("config.xml");

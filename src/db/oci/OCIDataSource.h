@@ -208,7 +208,16 @@ namespace smsc { namespace db { namespace oci
         { 
             return OCIQuery::execute(mode, iters, rowoff);
         };
-    
+        
+        OCIDataDescriptor* findDescriptor(const char* key)
+            throw(InvalidArgumentException);
+        OCIDataDescriptor* findIntDescriptor(const char* key)
+            throw(InvalidArgumentException);
+        dvoid* getField(const char* key)
+            throw(InvalidArgumentException);
+
+        void cleanupDescriptors();
+
     public:
         
         OCIRoutine(OCIConnection* connection, 
@@ -219,64 +228,64 @@ namespace smsc { namespace db { namespace oci
         virtual void execute() 
             throw(SQLException);
         
+        virtual bool isNull(const char* key)
+            throw(SQLException, InvalidArgumentException);
+        
         virtual void setString(const char* key, const char* str, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual const char* getString(const char* key)
             throw(SQLException, InvalidArgumentException);
         
         virtual void setInt8(const char* key, int8_t val, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual int8_t getInt8(const char* key)
             throw(SQLException, InvalidArgumentException);
         virtual void setInt16(const char* key, int16_t val, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual int16_t getInt16(const char* key)
             throw(SQLException, InvalidArgumentException);
         virtual void setInt32(const char* key, int32_t val, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual int32_t getInt32(const char* key)
             throw(SQLException, InvalidArgumentException);
         virtual void setInt64(const char* key, int64_t val, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual int64_t getInt64(const char* key)
             throw(SQLException, InvalidArgumentException);
         
         virtual void setUint8(const char* key, uint8_t val, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual uint8_t getUint8(const char* key)
             throw(SQLException, InvalidArgumentException);
         virtual void setUint16(const char* key, uint16_t val, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual uint16_t getUint16(const char* key)
             throw(SQLException, InvalidArgumentException);
         virtual void setUint32(const char* key, uint32_t val, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual uint32_t getUint32(const char* key)
             throw(SQLException, InvalidArgumentException);
         virtual void setUint64(const char* key, uint64_t val, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual uint64_t getUint64(const char* key)
             throw(SQLException, InvalidArgumentException);
         
         virtual void setFloat(const char* key, float val, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual float getFloat(const char* key)
             throw(SQLException, InvalidArgumentException);
         virtual void setDouble(const char* key, double val, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual double getDouble(const char* key)
             throw(SQLException, InvalidArgumentException);
         virtual void setLongDouble(const char* key, long double val, bool null=false)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual long double getLongDouble(const char* key)
             throw(SQLException, InvalidArgumentException);
         
         virtual void setDateTime(const char* key, time_t time, bool null=false)
-            throw(SQLException);
-        virtual time_t getDateTime(const char* key)
             throw(SQLException, InvalidArgumentException);
-        
-        virtual bool isNull(const char* key)
+        virtual time_t getDateTime(const char* key)
             throw(SQLException, InvalidArgumentException);
     };
     

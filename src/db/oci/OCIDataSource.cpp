@@ -20,6 +20,9 @@ namespace smsc { namespace db { namespace oci
 
 Mutex OCIConnection::connectLock;
 
+const char* FUNCTION_RETURN_ATTR_NAME = "return";
+const int FUNCTION_RETURN_ATTR_LEN  = strlen(FUNCTION_RETURN_ATTR_NAME);
+
 OCIConnection::OCIConnection(const char* instance, 
                              const char* user, const char* password) 
     : Connection(), 
@@ -813,69 +816,120 @@ OCIRoutine::OCIRoutine(OCIConnection* connection,
 {
     // Loadup routine parameters set here.
 
-    OCIParam    *parmh;     // parameter handle 
-    OCIParam    *arglst;    // list of args
-    OCIParam    *arg;       // argument handle
-    OCIDescribe *dschp;     // describe handle
+    OCIParam    *parmh  = 0;    // parameter handle 
+    OCIParam    *arglst = 0;    // list of args
+    OCIParam    *arg    = 0;    // argument handle
+    OCIDescribe *dschp  = 0;    // describe handle
     
     ub2         numargs, pos, level;
     
-    // Allocate dschp here ????
-
-    /* get the describe handle for the table */
-    check(OCIDescribeAny(svchp, errhp, (text *)name, (ub4)strlen(name),
-                         OCI_OTYPE_NAME, 0, 
-                         (func) ? OCI_PTYPE_PROC : OCI_PTYPE_FUNC, dschp));
-    /* get the parameter handle */
-    check(OCIAttrGet(dschp, OCI_HTYPE_DESCRIBE, &parmh, 
-                     0, OCI_ATTR_PARAM, errhp));
-    /* get the number of arguments and the arg list */
-    check(OCIAttrGet(parmh, OCI_DTYPE_PARAM, &arglst,
-                     0, OCI_ATTR_LIST_ARGUMENTS, errhp));
-    check(OCIAttrGet(parmh, OCI_DTYPE_PARAM, &numargs, 0,
-                     OCI_ATTR_NUM_PARAMS, errhp));
-
-    __trace2__("Num-args is %d", numargs);
-
-    // For procedure, begin with 1 for function, begin with 0. 
-    for (ub4 i=((func) ? 0:1); i<numargs; i++) 
+    
+    /* allocate describe handle for routine */
+    check(OCIHandleAlloc((dvoid *) envhp, (dvoid **) &dschp,
+                         (ub4) OCI_HTYPE_DESCRIBE,
+                         (size_t) 0, (dvoid **) 0));                     
+    try
     {
-        text*       atr; 
-        ub4         atrlen;
-        OCIParam   *innerlst;   
-        
-        check(OCIParamGet(arglst, OCI_DTYPE_PARAM, errhp, (void **)&arg, i));
-        
-        ub2 type = 0; ub4 size = 0;
-        check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &atr, &atrlen, 
-                         OCI_ATTR_NAME, errhp)); 
-        check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &type, 0, 
-                         OCI_ATTR_DATA_TYPE, errhp));
-        check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &size, 0,
-                         OCI_ATTR_DATA_SIZE, errhp));
-        check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &innerlst, 0,
-                         OCI_ATTR_LIST_ARGUMENTS, errhp));
-        if (innerlst) // check if the current argument is a record.
-            throw SQLException("RecordSet types management "
-                               "is not supported in PL/SQL routines!");
+        /* get the describe handle for routine */
+        check(OCIDescribeAny(svchp, errhp, (text *)name, (ub4)strlen(name),
+                             OCI_OTYPE_NAME, 0, 
+                             (func) ? OCI_PTYPE_PROC : OCI_PTYPE_FUNC, dschp));
+        /* get the parameter handle */
+        check(OCIAttrGet(dschp, OCI_HTYPE_DESCRIBE, &parmh, 
+                         0, OCI_ATTR_PARAM, errhp));
+        /* get the number of arguments and the arglist */
+        check(OCIAttrGet(parmh, OCI_DTYPE_PARAM, &arglst,
+                         0, OCI_ATTR_LIST_ARGUMENTS, errhp));
+        check(OCIAttrGet(parmh, OCI_DTYPE_PARAM, &numargs, 0,
+                         OCI_ATTR_NUM_PARAMS, errhp));
 
-        __trace2__("Arg #%d: '%s'", i, atr);
-        
-        /*OCIDataDescriptor* descriptor = new OCIDataDescriptor(type, size);
-        define(counter, descriptor->type, descriptor->data,
-               descriptor->size, (dvoid *) &descriptor->ind);
-        descriptors.Push(descriptor);*/
-        
-        check(OCIDescriptorFree(arg, OCI_DTYPE_PARAM));
+        __trace2__("Num-args is %d", numargs);
+
+        // For procedure, begin with 1 for function, begin with 0. 
+        for (ub4 i=((func) ? 0:1); i<numargs; i++) 
+        {
+            text*       atr; 
+            ub4         atrlen;
+            OCIParam   *innerlst;   
+
+            check(OCIParamGet(arglst, OCI_DTYPE_PARAM, errhp, (void **)&arg, i));
+
+            try
+            {
+                ub2 type = 0; ub4 size = 0;
+                if (i != 0) 
+                {
+                    check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &atr, &atrlen, 
+                                     OCI_ATTR_NAME, errhp)); 
+                }
+                check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &type, 0, 
+                                 OCI_ATTR_DATA_TYPE, errhp));
+                check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &size, 0,
+                                 OCI_ATTR_DATA_SIZE, errhp));
+                check(OCIAttrGet(arg, OCI_DTYPE_PARAM, &innerlst, 0,
+                                 OCI_ATTR_LIST_ARGUMENTS, errhp));
+                if (innerlst) // check if the current argument is a record.
+                    throw SQLException("RecordSet type is not supported for use "
+                                       "in context of PL/SQL calls!");
+
+                __trace2__("Arg #%d: '%s'", i, atr);
+
+                OCIDataDescriptor* descriptor = new OCIDataDescriptor(type, size);
+                if (i == 0)
+                {
+                    atr = (text *)FUNCTION_RETURN_ATTR_NAME;
+                    atrlen = FUNCTION_RETURN_ATTR_LEN;
+                }
+                bind(atr, atrlen, descriptor->type, descriptor->data,
+                     descriptor->size, (dvoid *) &descriptor->ind);
+                descriptors.Insert((const char *)atr, descriptor);
+            }
+            catch (SQLException& exc)
+            {
+                if (arg) check(OCIDescriptorFree(arg, OCI_DTYPE_PARAM));
+                throw; 
+            }
+            
+            check(OCIDescriptorFree(arg, OCI_DTYPE_PARAM)); arg = 0;
+        }
+    }
+    catch (SQLException& exc)
+    {
+        if (dschp)
+            check(OCIHandleFree((dvoid *) dschp, (ub4) OCI_HTYPE_DESCRIBE));
+        throw; 
     }
 }
-OCIRoutine::~OCIRoutine()
+
+void OCIRoutine::cleanupDescriptors()
 {
     // Clean up descriptors hash here.
+
     descriptors.First();
     char* key; OCIDataDescriptor* descriptor = 0;
     while (descriptors.Next(key, descriptor))
         if (descriptor) delete descriptor;
+}
+
+OCIRoutine::~OCIRoutine() 
+{
+    cleanupDescriptors();
+}
+
+OCIDataDescriptor* OCIRoutine::findDescriptor(const char* key)
+    throw(InvalidArgumentException)
+{
+    OCIDataDescriptor* descriptor = 0;
+    if (!descriptors.Exists(key) || 
+        !(descriptor = descriptors.Get(key))) 
+            throw InvalidArgumentException();
+    return descriptor;
+}
+dvoid* OCIRoutine::getField(const char* key)
+    throw (InvalidArgumentException)
+{
+    OCIDataDescriptor* descriptor = findDescriptor(key);
+    return descriptor->data;
 }
 
 void OCIRoutine::execute() 
@@ -886,124 +940,241 @@ void OCIRoutine::execute()
 bool OCIRoutine::isNull(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return true;
+    OCIDataDescriptor* descriptor = findDescriptor(key);
+    return ((descriptor->ind == OCI_IND_NOTNULL) ? false : true);
 }
 void OCIRoutine::setString(const char* key, const char* str, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    OCIDataDescriptor* descriptor = findDescriptor(key);
+    if (descriptor->type != SQLT_STR)
+        throw InvalidArgumentException();
+    
+    if (!null) 
+    {
+        if (descriptor->data) delete ((uint8_t *)descriptor->data);
+        if (str)
+        {
+            descriptor->data = new uint8_t[descriptor->size = strlen(str)+1];
+            strcpy((char *)descriptor->data, str);
+        }
+        descriptor->ind = (str) ? OCI_IND_NOTNULL : OCI_IND_NULL;
+    }
+    else descriptor->ind = OCI_IND_NULL;
+    bind((text *)key, strlen(key), descriptor->type, descriptor->data,
+         descriptor->size, (dvoid *) &descriptor->ind);
 }
 const char* OCIRoutine::getString(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (const char*)getField(key);
 }
+
+#define defineSetInt(key, val, sign, null)\
+{\
+    OCIDataDescriptor* descriptor = findDescriptor(key);\
+    if (descriptor->type != SQLT_VNU)\
+        throw InvalidArgumentException();\
+    \
+    if (!null)\
+        check(OCINumberFromInt(errhp, (CONST dvoid *)&val,\
+                               (uword)sizeof(val),\
+                               (uword)((sign) ? \
+                               OCI_NUMBER_SIGNED:OCI_NUMBER_UNSIGNED),\
+                               (OCINumber *)&(descriptor->number)));\
+    else descriptor->ind = OCI_IND_NULL;\
+    bind((text *)key, strlen(key), descriptor->type, descriptor->data,\
+         descriptor->size, (dvoid *) &descriptor->ind);\
+}
+
 void OCIRoutine::setInt8(const char* key, int8_t val, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    defineSetInt(key, val, true, null);
 }
 int8_t OCIRoutine::getInt8(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (int8_t)getInt32(key);
 }
 void OCIRoutine::setInt16(const char* key, int16_t val, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    defineSetInt(key, val, true, null);
 }
 int16_t OCIRoutine::getInt16(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (int16_t)getInt32(key);
 }
 void OCIRoutine::setInt32(const char* key, int32_t val, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    defineSetInt(key, val, true, null);
 }
 int32_t OCIRoutine::getInt32(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    boolean     ok = FALSE;
+    int32_t     result = 0;
+    
+    OCINumber*  number = (OCINumber*)getField(key);
+    check(OCINumberIsInt(errhp, (CONST OCINumber *)number, &ok));
+    if (ok != TRUE) throw InvalidArgumentException();
+    check(OCINumberToInt(errhp, (CONST OCINumber *)number,
+                         (uword) sizeof(int32_t), 
+                         (uword)OCI_NUMBER_SIGNED,
+                         (dvoid *) &result)); 
+    return result;
 }
 void OCIRoutine::setInt64(const char* key, int64_t val, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    int32_t value = (int32_t)val;
+    defineSetInt(key, value, true, null);
 }
 int64_t OCIRoutine::getInt64(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (int64_t)getInt32(key);
 }
 void OCIRoutine::setUint8(const char* key, uint8_t val, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    defineSetInt(key, val, false, null);
 }
 uint8_t OCIRoutine::getUint8(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (uint8_t)getUint32(key);
 }
 void OCIRoutine::setUint16(const char* key, uint16_t val, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    defineSetInt(key, val, false, null);
 }
 uint16_t OCIRoutine::getUint16(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (uint16_t)getUint32(key);
 }
 void OCIRoutine::setUint32(const char* key, uint32_t val, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    defineSetInt(key, val, false, null);
 }
 uint32_t OCIRoutine::getUint32(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    boolean     ok = FALSE;
+    uint32_t    result = 0;
+    
+    OCINumber*  number = (OCINumber*)getField(key);
+    check(OCINumberIsInt(errhp, (CONST OCINumber *)number, &ok));
+    if (ok != TRUE) throw InvalidArgumentException();
+    check(OCINumberToInt(errhp, (CONST OCINumber *)number,
+                         (uword) sizeof(uint32_t),
+                         (uword)OCI_NUMBER_UNSIGNED,
+                         (dvoid *) &result));    
+    return result;
 }
 void OCIRoutine::setUint64(const char* key, uint64_t val, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    uint32_t value = (uint32_t)val;
+    defineSetInt(key, value, false, null);
 }
 uint64_t OCIRoutine::getUint64(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (uint64_t)getUint32(key);
 }
+    
+#define defineSetFloat(key, val, null)\
+{\
+    OCIDataDescriptor* descriptor = findDescriptor(key);\
+    if (descriptor->type != SQLT_FLT)\
+        throw InvalidArgumentException();\
+    \
+    if (!null)\
+        check(OCINumberFromReal(errhp, (CONST dvoid *)&val,\
+                               (uword)sizeof(val),\
+                               (OCINumber *)&(descriptor->number)));\
+    else descriptor->ind = OCI_IND_NULL;\
+    bind((text *)key, strlen(key), descriptor->type, descriptor->data,\
+         descriptor->size, (dvoid *) &descriptor->ind);\
+}
+
 void OCIRoutine::setFloat(const char* key, float val, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    defineSetFloat(key, val, null);
 }
 float OCIRoutine::getFloat(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    boolean     ok = FALSE;
+    float       result = 0;
+    
+    OCINumber*  number = (OCINumber*)getField(key);
+    check(OCINumberToReal(errhp, (CONST OCINumber *)number,
+                          (uword) sizeof(float),
+                          (dvoid *) &result));    
+    return result;
 }
 void OCIRoutine::setDouble(const char* key, double val, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    defineSetFloat(key, val, null);
 }
 double OCIRoutine::getDouble(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    boolean     ok = FALSE;
+    double      result = 0;
+    
+    OCINumber*  number = (OCINumber*)getField(key);
+    check(OCINumberToReal(errhp, (CONST OCINumber *)number,
+                          (uword) sizeof(double),
+                          (dvoid *) &result));    
+    return result;
 }
 void OCIRoutine::setLongDouble(const char* key, long double val, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    defineSetFloat(key, val, null);
 }
 long double OCIRoutine::getLongDouble(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    boolean     ok = FALSE;
+    long double result = 0;
+    
+    OCINumber*  number = (OCINumber*)getField(key);
+    check(OCINumberToReal(errhp, (CONST OCINumber *)number,
+                          (uword) sizeof(long double),
+                          (dvoid *) &result));    
+    return result;
 }
 void OCIRoutine::setDateTime(const char* key, time_t time, bool null=false)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
+    OCIDataDescriptor* descriptor = findDescriptor(key);
+    if (descriptor->type != SQLT_ODT)
+        throw InvalidArgumentException();
+    
+    if (!null) convertDateToOCIDate(&time, (OCIDate *)descriptor->data);
+    else descriptor->ind = OCI_IND_NULL;
+    bind((text *)key, strlen(key), descriptor->type, descriptor->data,\
+         descriptor->size, (dvoid *) &descriptor->ind);\
 }
 time_t OCIRoutine::getDateTime(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    time_t sys_date;
+    OCIDate* oci_date = (OCIDate *)getField(key);
+    convertOCIDateToDate(oci_date, &sys_date);
+    return sys_date;
 }
 
 /* -------------------------- Driver implementation ------------------------ */

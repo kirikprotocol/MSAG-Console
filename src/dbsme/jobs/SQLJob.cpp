@@ -8,7 +8,7 @@ namespace smsc { namespace dbsme
 using namespace smsc::util::templates;
 using namespace smsc::dbsme::io;
 
-SQLJob::~SQLJob()
+SQLQueryJob::~SQLQueryJob()
 {
     if (sql) delete sql;
     if (inputFormat) delete inputFormat;
@@ -18,19 +18,16 @@ SQLJob::~SQLJob()
     if (formatter) delete formatter;
 }
 
-void SQLJob::init(ConfigView* config)
+void SQLQueryJob::init(ConfigView* config)
     throw(ConfigException)
 {
     __require__(config);
-    //__trace__("SQLJob loading ... ");
     
-    sql = config->getString("sql", "SQL request wasn't defined !");
+    sql = config->getString("sql", "SQL query block wasn't defined !");
     inputFormat = config->getString("input", 
                                     "Input data format wasn't defined !");
     outputFormat = config->getString("output", 
                                     "Output data format wasn't defined !");
-    isQuery = config->getBool("query", "Type of SQL request undefined !");
-    
     try 
     {
         parser = new InputParser(inputFormat);
@@ -38,10 +35,15 @@ void SQLJob::init(ConfigView* config)
     }
     catch(Exception& exc)
     {
-        throw ConfigException("SQL Job init failed !: %s", exc.what());
+        throw ConfigException("SQLQueryJob init failed !: %s", exc.what());
     }
-    
-    //__trace__("SQLJob loaded !\n");
+}
+
+void SQLJob::init(ConfigView* config)
+    throw(ConfigException)
+{
+    SQLQueryJob::init(config);
+    isQuery = config->getBool("query", "Type of SQL request undefined !");
 }
 
 void SQLJob::process(Command& command, DataSource& ds)
@@ -168,6 +170,97 @@ void SQLJob::process(Command& command, Statement& stmt)
     
     command.setOutData(output.c_str()); 
 }
+
+void PLSQLJob::init(ConfigView* config)
+    throw(ConfigException)
+{
+    SQLQueryJob::init(config);
+    isFunction = config->getBool("function", 
+                                 "Type of PL/SQL call undefined "
+                                 "(Function or Procedure)");
+    needCommit = config->getBool("commit",
+                                 "Mode for PL/SQL call undefined "
+                                 "(Commit or No commit)");
+}
+
+void PLSQLJob::process(Command& command, DataSource& ds)
+    throw(CommandProcessException)
+{
+    Connection* connection = ds.getConnection();
+    if (!connection) error(SQL_JOB_DS_FAILURE, 
+                           "Failed to create DataSource connection!");
+    Routine* routine = 0;
+    try 
+    {
+        routine = connection->createRoutine(sql, isFunction); 
+        if (!routine) 
+        {
+            ds.freeConnection(connection);
+            error(SQL_JOB_DS_FAILURE, 
+                  "Failed to create DataSource routine call!");
+        }
+        process(command, *routine);            // throws CommandProcessException
+        if (needCommit) connection->commit();  // throws SQLException
+        delete routine;
+    }
+    catch(CommandProcessException& exc) 
+    {
+        if (routine) delete routine;
+        connection->rollback();
+        ds.freeConnection(connection);
+        throw;
+    }
+    catch(Exception& exc)
+    {
+        if (routine) delete routine;
+        connection->rollback();
+        ds.freeConnection(connection);
+        error(SQL_JOB_DS_FAILURE, exc.what());
+    }
+
+    ds.freeConnection(connection);
+}
+
+void PLSQLJob::process(Command& command, Routine& routine) 
+    throw(CommandProcessException)
+{
+    ContextEnvironment ctx;
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR, command.getFromAddress().value);
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR, command.getToAddress().value);
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_NAME, getName());
+
+    command.setOutData("");
+    
+    if (!parser || !formatter) 
+        error(SQL_JOB_INVALID_CONFIG, 
+              "IO Parser or Formatter wasn't defined!");
+    
+    std::string input = (command.getInData()) ? command.getInData():"";
+    std::string output = "";
+    
+    try 
+    {
+        SQLRoutineAdapter routineAdapter(&routine);
+        parser->parse(input, routineAdapter, ctx); 
+        routine.execute();
+        formatter->format(output, routineAdapter, ctx);
+    }
+    catch (FormattingException& exc)
+    {
+        error(SQL_JOB_OUTPUT_FORMAT, exc.what());
+    }
+    catch (ParsingException& exc) 
+    {
+        error(SQL_JOB_INPUT_PARSE, exc.what());
+    }
+    catch (Exception& exc) 
+    {
+        error(SQL_JOB_DS_FAILURE, exc.what());
+    }
+    
+    command.setOutData(output.c_str()); 
+}
+
 
 }}
 

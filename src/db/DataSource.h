@@ -163,35 +163,35 @@ namespace smsc { namespace db
         virtual ~SetKeyQuery() {};
 
         virtual void setString(const char* key, const char* str, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         
         virtual void setInt8(const char* key, int8_t val, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual void setInt16(const char* key, int16_t val, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual void setInt32(const char* key, int32_t val, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual void setInt64(const char* key, int64_t val, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         
         virtual void setUint8(const char* key, uint8_t val, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual void setUint16(const char* key, uint16_t val, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual void setUint32(const char* key, uint32_t val, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual void setUint64(const char* key, uint64_t val, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         
         virtual void setFloat(const char* key, float val, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual void setDouble(const char* key, double val, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual void setLongDouble(const char* key, long double val, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         
         virtual void setDateTime(const char* key, time_t time, bool null=false)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
     };
 
     class ResultSet : public GetPosQuery
