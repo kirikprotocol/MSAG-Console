@@ -14,13 +14,18 @@ using namespace smsc::smeman;
 #pragma pack(1)
 
 struct SMS_SUMBMIT_FORMAT_HEADER{
-  unsigned mg_type_ind:2;
-  unsigned reject_dupl:1;
-  unsigned tp_vp:2;
-  unsigned reply_path:1;
-  unsigned udhi:1;
-  unsigned srr:1;
-  unsigned mr:8;
+  union{
+    struct{
+      unsigned srr:1;
+      unsigned udhi:1;
+      unsigned reply_path:1;
+      unsigned tp_vp:2;
+      unsigned reject_dupl:1;
+      unsigned mg_type_ind:2;
+    };
+    unsigned char _val_01;
+  };
+  unsigned char mr;
 };
 
 struct MAP_SMS_ADDRESS{
