@@ -9,6 +9,7 @@ import org.apache.log4j.Category;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.route.RouteList;
 import ru.novosoft.smsc.admin.route.SMEList;
 import ru.novosoft.smsc.admin.route.SubjectList;
@@ -26,12 +27,14 @@ import java.util.HashMap;
 public class Smsc extends Service
 {
   private Component smsc_component = null;
-  private Method apply_method = null;
+  private Method apply_routes_method = null;
+  private Method apply_aliases_method = null;
   private ConfigManager configManager = null;
 
   private SMEList smes = null;
   private RouteList routes = null;
   private SubjectList subjects = null;
+  private AliasSet aliases = null;
 
   private Category logger = Category.getInstance(this.getClass());
 
@@ -47,16 +50,19 @@ public class Smsc extends Service
 
     refreshComponents();
     smsc_component = (Component) getInfo().getComponents().get("SMSC");
-    apply_method = (Method) smsc_component.getMethods().get("apply");
+    apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
+    apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
 
     try
     {
       final File smscConfFolder = getSmscConfFolder();
       Document smesDoc = Utils.parse(new FileInputStream(new File(smscConfFolder, "sme.xml")));
       Document routesDoc = Utils.parse(new FileInputStream(new File(smscConfFolder, "routes.xml")));
+      Document aliasesDoc = Utils.parse(new FileInputStream(new File(smscConfFolder, "aliases.xml")));
       smes = new SMEList(smesDoc.getDocumentElement());
       subjects = new SubjectList(routesDoc.getDocumentElement(), smes);
       routes = new RouteList(routesDoc.getDocumentElement(), subjects, smes);
+      aliases = new AliasSet(aliasesDoc.getDocumentElement());
     }
     catch (FactoryConfigurationError error)
     {
@@ -131,7 +137,18 @@ public class Smsc extends Service
     return out;
   }
 
-  public void apply()
+  protected PrintWriter storeAliases(PrintWriter out)
+  {
+    out.println("<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>");
+    out.println("<!DOCTYPE aliases SYSTEM \"file://AliasRecords.dtd\">");
+    out.println();
+    out.println("<aliases>");
+    aliases.store(out);
+    out.println("</aliases>");
+    return out;
+  }
+
+  public void applyRoutes()
           throws AdminException
   {
 
@@ -142,19 +159,50 @@ public class Smsc extends Service
       storeSmes(new PrintWriter(new FileOutputStream(new File(smscConfFolder, "sme.xml")), true)).close();
       storeRoutes(new PrintWriter(new FileOutputStream(new File(smscConfFolder, "routes.xml")), true)).close();
 
-      call(smsc_component, apply_method, Type.Types[Type.StringType], new HashMap());
+      call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
     }
     catch (Config.ParamNotFoundException e)
     {
-      throw new AdminException("Couldn't apply new settings: Administration application misconfigured: " + e.getMessage());
+      throw new AdminException("Couldn't apply_routes new settings: Administration application misconfigured: " + e.getMessage());
     }
     catch (Config.WrongParamTypeException e)
     {
-      throw new AdminException("Couldn't apply new settings: Administration application misconfigured: " + e.getMessage());
+      throw new AdminException("Couldn't apply_routes new settings: Administration application misconfigured: " + e.getMessage());
     }
     catch (FileNotFoundException e)
     {
-      throw new AdminException("Couldn't apply new settings: Couldn't write to destination config file: " + e.getMessage());
+      throw new AdminException("Couldn't apply_routes new settings: Couldn't write to destination config file: " + e.getMessage());
     }
+  }
+
+  public void applyAliases()
+          throws AdminException
+  {
+
+    try
+    {
+      final File smscConfFolder = getSmscConfFolder();
+
+      storeAliases(new PrintWriter(new FileOutputStream(new File(smscConfFolder, "aliases.xml")), true)).close();
+
+      call(smsc_component, apply_aliases_method, Type.Types[Type.StringType], new HashMap());
+    }
+    catch (Config.ParamNotFoundException e)
+    {
+      throw new AdminException("Couldn't apply_routes new settings: Administration application misconfigured: " + e.getMessage());
+    }
+    catch (Config.WrongParamTypeException e)
+    {
+      throw new AdminException("Couldn't apply_routes new settings: Administration application misconfigured: " + e.getMessage());
+    }
+    catch (FileNotFoundException e)
+    {
+      throw new AdminException("Couldn't apply_routes new settings: Couldn't write to destination config file: " + e.getMessage());
+    }
+  }
+
+  public AliasSet getAliases()
+  {
+    return aliases;
   }
 }

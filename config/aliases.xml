@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE aliases SYSTEM "file://AliasRecords.dtd">
+
 <aliases>
-	<record addr="tni:0,npi:0,val:902?" alias="tni:0,npi:0,val:1?"/>
+  <record addr=".0.0.val:902?" alias=".0.0.val:1?"/>
+  <record addr="+7902915????" alias="50????"/>
 </aliases>

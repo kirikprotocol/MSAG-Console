@@ -6,7 +6,7 @@
 package ru.novosoft.smsc.admin.route;
 
 
-public class RouteManager
+/*public class RouteManager
 {
   private RouteList routes = new RouteList();
   private SubjectList subjects = new SubjectList();
@@ -31,3 +31,4 @@ public class RouteManager
     return subjects;
   }
 }
+*/

@@ -30,7 +30,7 @@ public class Mask
   public boolean equals(Object obj)
   {
     if (obj instanceof Mask)
-      return mask.equals((Mask) obj);
+      return mask.equals(((Mask) obj).mask);
     else
       return super.equals(obj);
   }

@@ -2,6 +2,7 @@
 <% response.setHeader("Cache-Control", "no-cache");%>
 <%@ page import = "ru.novosoft.smsc.*"%>
 <%@ page import = "ru.novosoft.smsc.admin.*"%>
+<%@ page import = "ru.novosoft.smsc.admin.alias.*"%>
 <%@ page import = "ru.novosoft.smsc.admin.route.*"%>
 <%@ page import = "ru.novosoft.smsc.admin.service.*"%>
 <%@ page import = "ru.novosoft.smsc.admin.service.*"%>

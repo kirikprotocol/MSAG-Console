@@ -1,5 +1,6 @@
 <%@ page import = "java.net.URLEncoder"%>
 <%@ page import = "java.net.URLDecoder"%>
+<%@ page import = "ru.novosoft.smsc.util.*"%>
 <%! final static String urlPrefix = "/smsc/sketches/";%><html>
 <head>
 	<title>SMSC Admin. <%=request.getParameter("page.title")!=null?request.getParameter("page.title"):""%></title>

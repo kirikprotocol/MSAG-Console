@@ -10,8 +10,11 @@ Variant SmscComponent::call(const Method & method,
 {
 	switch (method.getId())
 	{
-	case applyMethod:
-		apply();
+	case applyRoutesMethod:
+		applyRoutes();
+		return Variant("");
+	case applyAliasesMethod:
+		applyAliases();
 		return Variant("");
 	default:
 		throw AdminException("Unknown method \"%s\"", method.getName());
@@ -44,12 +47,18 @@ void SmscComponent::stopSmsc()
 		throw AdminException("SMSC Application started already");
 }
 
-void SmscComponent::apply()
+void SmscComponent::applyRoutes()
 	throw (AdminException)
 {
 	stopSmsc();
 	reReadConfigs();
 	runSmsc();
+}
+
+void SmscComponent::applyAliases()
+	throw (AdminException)
+{
+	applyRoutes();
 }
 
 void SmscComponent::reReadConfigs()

@@ -33,9 +33,13 @@ public:
 		  logger(Logger::getCategory("smsc.admin.smsc_service.SmscComponent"))
 	{
 		Parameters empty_params;
-		Method apply((unsigned)applyMethod, "apply", empty_params, StringType);
+		Method apply_routes((unsigned)applyRoutesMethod, "apply_routes",
+												empty_params, StringType);
+		Method apply_aliases((unsigned)applyAliasesMethod, "apply_aliases",
+												empty_params, StringType);
 
-		methods[apply.getName()] = apply;
+		methods[apply_routes.getName()] = apply_routes;
+		methods[apply_aliases.getName()] = apply_aliases;
 
 		smsc_app_runner.reset(0);
 	}
@@ -64,12 +68,13 @@ public:
 protected:
 	
 	bool isSmscRunning() throw() {return smsc_app_runner.get() != 0;}
-	void apply() throw (AdminException);
+	void applyRoutes() throw (AdminException);
+	void applyAliases() throw (AdminException);
 	void reReadConfigs() throw (AdminException);
 
 	SmscConfigs &configs;
 	Methods methods;
-	enum {applyMethod};
+	enum {applyRoutesMethod, applyAliasesMethod};
 
 private:
 	class SmscAppRunner : public Thread
