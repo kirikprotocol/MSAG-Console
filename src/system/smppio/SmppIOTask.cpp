@@ -260,6 +260,7 @@ int SmppInputThread::Execute()
                 resp->set_commandId(pdu->get_commandId()|0x80000000);
                 resp->set_sequenceNumber(pdu->get_sequenceNumber());
                 resp->set_commandStatus(SmppStatusSet::ESME_RALYBND);
+                ((PduBindTRXResp*)resp)->set_scInterfaceVersion(0x34);
                 SmscCommand cmd=SmscCommand::makeSmppPduCommand(resp);
                 ss->getProxy()->putIncomingCommand(cmd);
                 continue;
