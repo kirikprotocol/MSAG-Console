@@ -94,7 +94,7 @@ const uint8_t INTERMEDIATE_NOTIFICATION_REQUESTED = 0x10;
 //размеры структур и сами структуры
 const int MAX_SMPP_TIME_LENGTH = 16;
 typedef char SmppTime[MAX_SMPP_TIME_LENGTH + 1];
-typedef char ShortMessage[MAX_SM_LENGTH];
+typedef char ShortMessage[MAX_SMPP_SM_LENGTH];
 typedef char MessageId[MAX_MSG_ID_LENGTH + 1];
 
 const uint64_t OPT_ALL = 0xffffffffffffffff;

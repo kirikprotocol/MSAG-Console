@@ -106,8 +106,11 @@ void SmeManagerTestCases::setupRandomCorrectSmeInfo(SmeInfo* sme)
 	sme->hostname = "localhost";
 	sme->port = rand1(65535);
 	//systemId
-	auto_ptr<char> _systemId = rand_char(MAX_SYSTEM_ID_LENGTH);
-	sme->systemId = _systemId.get();
+	if (!sme->systemId.length())
+	{
+		auto_ptr<char> _systemId = rand_char(MAX_SYSTEM_ID_LENGTH);
+		sme->systemId = _systemId.get();
+	}
 	sme->priority = rand2(SmeProxyPriorityMin, SmeProxyPriorityMax);
 	sme->SME_N = rand0(INT_MAX); //реально не используется
 	sme->disabled = !rand0(3); //реально не используется

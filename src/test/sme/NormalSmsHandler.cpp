@@ -111,7 +111,7 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 	int origMpLen = origPdu.get_optional().has_messagePayload() ?
 		origPdu.get_optional().size_messagePayload() : 0;
 
-	__tc__("deliverySm.normalSms.checkDataCoding");
+	__tc__("deliverySm.normalSms.notMap.checkDataCoding");
 	if (codePage == ProfileCharsetOptions::Default &&
 		origDc == UCS2 && dc != DEFAULT)
 	{
@@ -124,11 +124,11 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 	__tc_ok_cond__;
 	if (dc == origDc)
 	{
-		__tc__("deliverySm.normalSms.checkTextEqualDataCoding");
+		__tc__("deliverySm.normalSms.notMap.checkTextEqualDataCoding");
 	}
 	else
 	{
-		__tc__("deliverySm.normalSms.checkTextDiffDataCoding");
+		__tc__("deliverySm.normalSms.notMap.checkTextDiffDataCoding");
 	}
 	__tc_fail2__(compare(origUdhi, origDc, origSm, origSmLen,
 		udhi, dc, sm, smLen, false), 0);

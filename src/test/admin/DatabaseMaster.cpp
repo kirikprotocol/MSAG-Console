@@ -39,7 +39,7 @@ struct DatabaseMaster
 		Manager::init("config.xml");
 	}
 
-	void genProfiles(int count, int shift);
+	void genProfiles(int count);
 	void genSms();
 	const string str(int i);
 	const string getTonNpi(int i);
@@ -67,7 +67,7 @@ const string DatabaseMaster::getTonNpi(int i)
 	}
 }
 
-void DatabaseMaster::genProfiles(int count, int shift)
+void DatabaseMaster::genProfiles(int count)
 {
     ConfigView dsConfig(Manager::getInstance(), "StartupLoader");
     DataSourceLoader::loadup(&dsConfig);
@@ -88,6 +88,10 @@ void DatabaseMaster::genProfiles(int count, int shift)
 		sprintf(tmp, "%02d", i);
 		profiler.update(Address(tmp), profile);
 		sprintf(tmp, "+%02d", i);
+		profiler.update(Address(tmp), profile);
+		sprintf(tmp, "%02d?", i);
+		profiler.update(Address(tmp), profile);
+		sprintf(tmp, "+%02d?", i);
 		profiler.update(Address(tmp), profile);
 	}
 	profiler.stop();
@@ -188,7 +192,7 @@ void DatabaseMaster::genSms()
 			int udhiLen = rand0(5);
 			auto_ptr<uint8_t> udhi = rand_uint8_t(udhiLen);
 			int bufLen = msgLen + udhiLen + 1;
-			__require__(bufLen <= MAX_SM_LENGTH);
+			__require__(bufLen <= MAX_SMPP_SM_LENGTH);
 			char buf[bufLen];
 			*buf = (unsigned char) udhiLen;
 			memcpy(buf + 1, udhi.get(), udhiLen);
@@ -245,6 +249,6 @@ int main(int argc, char* argv[])
 {
 	DatabaseMaster gen;
 	gen.genSms();
-	gen.genProfiles(23, 1);
+	gen.genProfiles(3);
 	return 0;
 }

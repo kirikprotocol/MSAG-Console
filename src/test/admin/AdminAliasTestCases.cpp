@@ -45,12 +45,12 @@ void AdminAliasTestCases::correctCommands()
 		__cmd__("adminConsole.alias.view.existent", cmd, resp);
 	}
 	//add & delete
-	sprintf(resp, "/^\\Q%s Alias '123' for address '123' added\\E$/", respOk(100));
-	__cmd__("adminConsole.alias.add.correct",
-		"add alias 123 123 hide", resp);
-	sprintf(resp, "/^\\Q%s Alias '123' deleted\\E$/", respOk(100));
-	__cmd__("adminConsole.alias.delete.existent",
-		"delete alias 123", resp);
+	__cmd2__("adminConsole.alias.add.correct",
+		"add alias 123 123 hide",
+		100, "Alias '123' for address '123' added");
+	__cmd2__("adminConsole.alias.delete.existent",
+		"delete alias 123",
+		100, "Alias '123' deleted");
 	//delete
 	//const char* deleteList[] = {".0.1.00", ".1.1.00", ".0.1.00?", ".1.1.00?"};
 	const char* deleteList[] = {"00", "+00", "00?", "+00?"};

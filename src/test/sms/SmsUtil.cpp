@@ -444,7 +444,7 @@ try
 	__set_str2__(SourceSmeId, MAX_SMESYSID_TYPE_LENGTH, RAND_LAT_NUM);
 	__set_str2__(DestinationSmeId, MAX_SMESYSID_TYPE_LENGTH, RAND_LAT_NUM);
 	__set_int__(uint8_t, ConcatMsgRef, rand0(255));
-	__set_int__(uint8_t, ConcatSeqNum, rand0(255));
+	__set_int__(uint8_t, ConcatSeqNum, rand0(10));
 	//поля сохраняются в body случайным образом
 	//даже обязательные для sms поля могут не сохраняться в БД
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
@@ -463,7 +463,7 @@ try
 	BinMap binMap;
 
 	//set fields
-	int msgLen = rand1(MAX_SMPP_SM_LENGTH);
+	int msgLen = rand2(3, MAX_SMPP_SM_LENGTH);
 	__set_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, time(NULL) + rand0(24 * 3600));
 	__set_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, rand0(2));
 	__set_int_body_tag__(SMPP_ESM_CLASS, rand0(255));
