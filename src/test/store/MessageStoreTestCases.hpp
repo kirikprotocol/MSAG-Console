@@ -14,7 +14,7 @@ namespace store {
 using namespace smsc::test::util;
 
 const int MAX_ADDRESS_LENGTH = 21;
-const int MAX_MSG_BODY_LENGTH = 254;
+const int MAX_MSG_BODY_LENGTH = 200;
 
 const std::string TC_STORE_CORRECT_SM = "storeCorrectSM";
 const std::string TC_STORE_INCORRECT_SM = "storeIncorrectSM";
