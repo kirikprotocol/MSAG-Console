@@ -2121,7 +2121,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
 
     if ( errorSendRoutingInfoForSm_sp ) {
          
-      if(errorSendRoutingInfoForSm_sp->errorCode == 27 ) )
+      if(errorSendRoutingInfoForSm_sp->errorCode == 27 )
       {
         __map_trace2__("%s: absent subscriber",__func__);
         dialog->subscriberAbsent = true;
@@ -2129,15 +2129,16 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
            dialog->mwdStatus.mnrf = 1;
         }
         dialog->routeErr = MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_ERRORS_BASE+27);
-      } 
-      if(errorSendRoutingInfoForSm_sp->errorCode == 13 && (imsi_sp != 0 && mscNumber_sp != 0)) {
-        // normal situation no error
       } else {
-        try {
-          DoMAPErrorProcessor(errorSendRoutingInfoForSm_sp?errorSendRoutingInfoForSm_sp->errorCode:0,provErrCode_p);
-        }catch(MAPDIALOG_ERROR& e){
-          __map_trace2__("%s: was error %s",__func__,e.what());
-          dialog->routeErr = e.code;
+        if(errorSendRoutingInfoForSm_sp->errorCode == 13 && (imsi_sp != 0 && mscNumber_sp != 0)) {
+          // normal situation no error
+        } else {
+          try {
+            DoMAPErrorProcessor(errorSendRoutingInfoForSm_sp?errorSendRoutingInfoForSm_sp->errorCode:0,provErrCode_p);
+          }catch(MAPDIALOG_ERROR& e){
+            __map_trace2__("%s: was error %s",__func__,e.what());
+            dialog->routeErr = e.code;
+          }
         }
       }
     }
