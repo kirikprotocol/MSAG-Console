@@ -1,6 +1,7 @@
 #include "SmppProtocolTestCases.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
+#include "test/util/TextUtil.hpp"
 #include "util/debug.h"
 
 namespace smsc {
@@ -314,16 +315,25 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					if (!pdu->get_optional().has_messagePayload())
 					{
 						__tc__("submitSm.correct.smLengthMarginal");
-						auto_ptr<char> tmp = rand_char(MAX_SM_LENGTH);
-						pdu->get_message().set_shortMessage(tmp.get(), MAX_SM_LENGTH);
+						int len = MAX_SM_LENGTH;
+						bool udhi = pdu->get_message().get_esmClass() &
+							ESM_CLASS_UDHI_INDICATOR;
+						auto_ptr<char> tmp = rand_text2(len,
+							pdu->get_message().get_dataCoding(), udhi, false);
+						pdu->get_message().set_shortMessage(tmp.get(), len);
 					}
 					break;
 				case 10: //messagePayload максимальной длины
 					if (!pdu->get_message().size_shortMessage())
 					{
 						__tc__("submitSm.correct.messagePayloadLengthMarginal");
-						auto_ptr<char> tmp = rand_char(MAX_PAYLOAD_LENGTH);
-						pdu->get_optional().set_messagePayload(tmp.get(), MAX_PAYLOAD_LENGTH);
+						int len = MAX_PAYLOAD_LENGTH;
+						bool udhi = pdu->get_message().get_esmClass() &
+							ESM_CLASS_UDHI_INDICATOR;
+						auto_ptr<char> tmp = rand_text2(len,
+							pdu->get_message().get_dataCoding(), udhi, false);
+						pdu->get_optional().set_messagePayload(tmp.get(), len);
+
 					}
 					break;
 				case 11: //ussd запрос
@@ -740,13 +750,19 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 					if (!pdu->get_message().size_shortMessage())
 					{
 						int len = rand1(MAX_SM_LENGTH);
-						auto_ptr<char> tmp = rand_char(len);
+						bool udhi = pdu->get_message().get_esmClass() &
+							ESM_CLASS_UDHI_INDICATOR;
+						auto_ptr<char> tmp = rand_text2(len,
+							pdu->get_message().get_dataCoding(), udhi, false);
 						pdu->get_message().set_shortMessage(tmp.get(), len);
 					}
 					if (!pdu->get_optional().has_messagePayload())
 					{
 						int len = rand1(MAX_PAYLOAD_LENGTH);
-						auto_ptr<char> tmp = rand_char(len);
+						bool udhi = pdu->get_message().get_esmClass() &
+							ESM_CLASS_UDHI_INDICATOR;
+						auto_ptr<char> tmp = rand_text2(len,
+							pdu->get_message().get_dataCoding(), udhi, false);
 						pdu->get_optional().set_messagePayload(tmp.get(), len);
 					}
 					break;
