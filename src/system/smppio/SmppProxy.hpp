@@ -24,6 +24,7 @@ public:
   SmppProxy(SmppSocket* sock):smppSocket(sock)
   {
     smppSocket->assignProxy(this);
+    seq=1;
   }
   virtual void close()
   {
@@ -97,9 +98,16 @@ public:
     return managerMonitor!=NULL;
   }
 
+  uint32_t getNextSequenceNumber()
+  {
+    MutexGuard g(mutex);
+    return seq++;
+  }
+
 protected:
   mutable Mutex mutex;
   smsc::core::buffers::Array<SmscCommand> inqueue,outqueue;
+  int seq;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
   SmppSocket *smppSocket;
