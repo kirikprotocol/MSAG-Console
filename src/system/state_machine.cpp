@@ -1306,6 +1306,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         string out;
         sms.getDestinationAddress().getText(addr,sizeof(addr));
         const Descriptor& d=sms.getDestinationDescriptor();
+        __trace2__("RECEIPT: msc=%s, imsi=%s",d.msc,d.imsi);
         FormatData fd;
         fd.addr=addr;
         fd.date=time(NULL);
