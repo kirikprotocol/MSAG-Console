@@ -23,11 +23,11 @@ static inline void print(RouteInfo& info,const char* ppp= "")
    __trace2__("%s={SRC::%.20s(%d),n:%d,t:%d}{DST::%.20s(%d),n:%d,t:%d}",
              ppp,
              info.source.value,
-             info.source.lenght,
+             info.source.length,
              info.source.plan,
              info.source.type,
              info.dest.value,
-             info.dest.lenght,
+             info.dest.length,
              info.dest.plan,
              info.dest.type
             );
