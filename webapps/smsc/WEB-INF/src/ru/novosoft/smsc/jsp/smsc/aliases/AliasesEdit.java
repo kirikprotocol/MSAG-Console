@@ -5,6 +5,7 @@
  */
 package ru.novosoft.smsc.jsp.smsc.aliases;
 
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.route.Mask;
@@ -40,6 +41,23 @@ public class AliasesEdit extends SmscBean
 			hide = false;
 		}
 
+		try
+		{
+			alias = new Mask(alias).getMask();
+		}
+		catch (AdminException e)
+		{
+			return error(SMSCErrors.error.aliases.invalidAlias, alias);
+		}
+		try
+		{
+			address = new Mask(address).getMask();
+		}
+		catch (AdminException e)
+		{
+			return error(SMSCErrors.error.aliases.invalidAddress, address);
+		}
+
 		if (oldAlias == null || oldAddress == null)
 		{
 			oldAlias = alias;
@@ -55,6 +73,15 @@ public class AliasesEdit extends SmscBean
 		int result = super.process(appContext, errors);
 		if (result != RESULT_OK)
 			return result;
+
+		if (!Mask.isMaskValid(address))
+			return error(SMSCErrors.error.aliases.invalidAddress, address);
+		if (!Mask.isMaskValid(alias))
+			return error(SMSCErrors.error.aliases.invalidAlias, alias);
+		if (isHide() && (address.indexOf('?') >= 0 || alias.indexOf('?') >= 0))
+			return error(SMSCErrors.error.aliases.HideWithQuestion);
+		if (countQuestions(address) != countQuestions(alias))
+			return error(SMSCErrors.error.aliases.QuestionCountsNotMathes);
 
 		if (mbCancel != null)
 			return RESULT_DONE;
@@ -73,42 +100,66 @@ public class AliasesEdit extends SmscBean
 			return 0;
 	}
 
+	private static AliasSet getAliasesByAddressAndHide(AliasSet sourceSet, Mask address, boolean hide)
+	{
+		AliasSet result = new AliasSet();
+		for (Iterator i = sourceSet.iterator(); i.hasNext();)
+		{
+			Alias alias = (Alias) i.next();
+			if ((alias.isHide() == hide) && alias.getAddress().equals(address))
+				result.add(alias);
+		}
+		return result;
+	}
+
 	protected int save()
 	{
-		if (!Mask.isMaskValid(address))
-			return error(SMSCErrors.error.aliases.invalidAddress, address);
-		if (!Mask.isMaskValid(alias))
-			return error(SMSCErrors.error.aliases.invalidAlias, alias);
-		if (isHide() && (address.indexOf('?') >= 0 || alias.indexOf('?') >= 0))
-			return error(SMSCErrors.error.aliases.HideWithQuestion);
-		if (countQuestions(address) != countQuestions(alias))
-			return error(SMSCErrors.error.aliases.QuestionCountsNotMathes);
-
-		AliasSet _aliases = smsc.getAliases();
-		if (isHide())
+		Alias al;
+		try
 		{
-			for (Iterator i = _aliases.iterator(); i.hasNext();)
-			{
-				Alias alias = (Alias) i.next();
-				if (alias.isHide() && alias.getAddress().getMask().equals(address))
-					return error(SMSCErrors.error.aliases.alreadyExistsAddress, address);
-			}
+			al = new Alias(new Mask(address), new Mask(alias), hide);
+		}
+		catch (AdminException e)
+		{
+			logger.error("Ureachable code reached!", e);
+			return error(SMSCErrors.error.aliases.invalidAddress, address);
+		}
+		Alias oldAl;
+		try
+		{
+			oldAl = new Alias(new Mask(oldAddress), new Mask(oldAlias), oldHide);
+		}
+		catch (AdminException e)
+		{
+			logger.debug("Error in old alias", e);
+			return error(SMSCErrors.error.aliases.invalidAddress, oldAddress);
+		}
+
+		boolean aliasChanged = !oldAl.getAlias().equals(al.getAlias());
+		boolean addressChanged = !oldAl.getAddress().equals(al.getAddress());
+
+		if (aliasChanged && smsc.getAliases().contains(al))
+			return error(SMSCErrors.error.aliases.alreadyExistsAlias, al.getAlias().getMask());
+
+		if (al.isHide())
+		{
+			AliasSet byAddr = getAliasesByAddressAndHide(smsc.getAliases(), al.getAddress(), true);
+			if (!addressChanged)
+				byAddr.remove(al);
+			if (byAddr.size() > 0)
+				return error(SMSCErrors.error.aliases.alreadyExistsAddress, al.getAddress().getMask());
 		}
 
 		try
 		{
-			Alias _oldAlias = new Alias(new Mask(oldAddress), new Mask(oldAlias), oldHide);
-			Alias _newAlias = new Alias(new Mask(address), new Mask(alias), hide);
-			if (!_oldAlias.equals(_newAlias) && _aliases.contains(_newAlias))
-				return error(SMSCErrors.error.aliases.alreadyExists);
-			_aliases.remove(_oldAlias);
-			if (smsc.getAliases().add(_newAlias))
+			smsc.getAliases().remove(oldAl);
+			if (smsc.getAliases().add(al))
 			{
 				appContext.getStatuses().setAliasesChanged(true);
 				return RESULT_DONE;
 			}
 			else
-				return error(SMSCErrors.error.aliases.alreadyExists, alias);
+				return error(SMSCErrors.error.aliases.alreadyExistsAlias, alias);
 		}
 		catch (Throwable t)
 		{

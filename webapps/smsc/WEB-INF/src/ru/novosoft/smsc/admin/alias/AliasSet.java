@@ -27,6 +27,10 @@ public class AliasSet
 	private AliasDataSource dataSource = new AliasDataSource();
 	private Category logger = Category.getInstance(this.getClass());
 
+	public AliasSet()
+	{
+	}
+
 	public AliasSet(Element aliasesElem)
 	{
 		NodeList aliasNodes = aliasesElem.getElementsByTagName("record");
@@ -122,5 +126,10 @@ public class AliasSet
 				return alias;
 		}
 		return null;
+	}
+
+	public int size()
+	{
+		return aliases.size();
 	}
 }

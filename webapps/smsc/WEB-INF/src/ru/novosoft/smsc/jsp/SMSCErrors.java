@@ -76,6 +76,7 @@ public class SMSCErrors
 			public static final String invalidAddress = B + "invalidAddress";
 			public static final String HideWithQuestion = B + "invalidAliasHideWithQuestion";
 			public static final String QuestionCountsNotMathes = B + "QuestionCountsNotMathes";
+			public static final String alreadyExistsAlias = B + "alreadyExistsAlias";
 		}
 
 		public static class subjects
