@@ -74,7 +74,7 @@ ThreadPool::ThreadPool()
 
 static void disp(int sig)
 {
-  trace("got user signal");
+//  trace("got user signal");
 }
 
 ThreadPool::~ThreadPool()
