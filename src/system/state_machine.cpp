@@ -82,7 +82,7 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  if(sms->getNextTime()>time(NULL)+maxValidTime)
+  if(sms->getNextTime()>time(NULL)+maxValidTime || sms->getNextTime()>sms->getValidTime())
   {
     SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDSCHEDULE);
     try{
@@ -98,7 +98,8 @@ StateType StateMachine::submit(Tuple& t)
     {
       sms->setNextTime(RescheduleCalculator::calcNextTryTime(time(NULL),1));
     }
-    store->createSms(*sms,t.msgId);
+    store->createSms(*sms,t.msgId,
+      sms->getIntProperty("SMPP_REPLACE_IF_PRESENT_FLAG")?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
   }catch(...)
   {
     __trace2__("failed to create sms with id %lld",t.msgId);
