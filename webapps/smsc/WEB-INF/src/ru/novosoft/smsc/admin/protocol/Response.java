@@ -12,6 +12,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.smsc.util.xml.DtdsEntityResolver;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -41,7 +42,7 @@ public class Response
 			factory.setValidating(false);
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			logger.debug("setting entity resolver for response");
-			builder.setEntityResolver(new ResponseEntityResolver());
+			builder.setEntityResolver(new DtdsEntityResolver());
 			ByteArrayInputStream inputStream = new ByteArrayInputStream(text);
 			InputSource source = new InputSource(inputStream);
 			doc = builder.parse(source);
