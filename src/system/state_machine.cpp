@@ -339,7 +339,7 @@ StateType StateMachine::submit(Tuple& t)
     }
     ////
     // Unicode message with odd length
-    if(len&2)
+    if(len&1)
     {
       sms->lastResult=Status::INVMSGLEN;
       smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
@@ -357,6 +357,7 @@ StateType StateMachine::submit(Tuple& t)
       }
       __warning__("SUBMIT_SM: invalid message length");
     }
+    return ERROR_STATE;
   }
 
 
