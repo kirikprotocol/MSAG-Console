@@ -2,4 +2,5 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-dbsme/DBSme   DBSme       -ldl -L$(ORACLE_HOME)/lib -ldbsme -ldb -lutil-config -lutil-xml -lutil -llog4cpp -lcore-threads -lthread -lxerces-c1_5_2 -lxerces-c $(__LIBRARIES) -lrt
+#dbsme/DBDriverTest   DBDriverTest	-ldl -L$(ORACLE_HOME)/lib -ldbsme -ldb -lutil-config -lutil-xml -lutil -llog4cpp -lcore-threads -lthread -lxerces-c1_5_2 -lxerces-c $(__LIBRARIES) -lrt
+dbsme/DBSme   DBSme			-ldl -L$(ORACLE_HOME)/lib -ldbsme -ldb -lutil-config -lutil-xml -lutil -llog4cpp -lcore-threads -lthread -lxerces-c1_5_2 -lxerces-c $(__LIBRARIES) -lrt
