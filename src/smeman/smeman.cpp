@@ -138,6 +138,16 @@ __synchronized__
   return record->info;
 }
 
+void SmeManager::updateSmeInfo(const SmeSystemId& systemid,const SmeInfo& newinfo)
+{
+__synchronized__
+  SmeIndex idx=internalLookup(systemid);
+  if ( idx == INVALID_SME_INDEX ) throw runtime_error("can't find SME Proxy identifier");
+  SmeRecord *r=records.at(idx);
+  r->info=newinfo;
+}
+
+
 static uint32_t nextProxyUniqueId()
 {
   static uint32_t unique = 0;
@@ -193,6 +203,11 @@ __synchronized__
   if ( index == INVALID_SME_INDEX )
   {
     throw SmeRegisterException(SmeRegisterFailReasons::rfUnknownSystemId);
+  }
+  if ( records[index]->info.disabled)
+  {
+    __trace2__("Attempt to bind disabled sme:%s",systemId.c_str());
+    throw SmeRegisterException(SmeRegisterFailReasons::rfDisabled);
   }
   if ( records[index]->proxy )
   {

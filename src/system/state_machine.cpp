@@ -1824,6 +1824,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
        ) ||
        (
          sms.getDeliveryReport()==REPORT_NOACK
+       ) ||
+       (
+         sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)
        )
       )
     {

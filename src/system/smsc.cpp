@@ -239,7 +239,15 @@ void Smsc::init(const SmscConfigs& cfg)
         }
         __trace2__("INIT: addSme %s(to=%d,wa=%s)",si.systemId.c_str(),si.timeout,si.wantAlias?"true":"false");
         //si.hostname=rec->recdata->smppSme.
-        si.disabled=false;
+        si.disabled=rec->recdata.smppSme.disabled;
+        using namespace smsc::util::config::smeman;
+        switch(rec->recdata.smppSme.mode)
+        {
+          case MODE_TX:si.bindMode=smeTX;
+          case MODE_RX:si.bindMode=smeRX;
+          case MODE_TRX:si.bindMode=smeTRX;
+        };
+
         try{
           smeman.addSme(si);
         }catch(...)
@@ -322,6 +330,8 @@ void Smsc::init(const SmscConfigs& cfg)
 
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
   store=smsc::store::StoreManager::getMessageStore();
+
+  mrCache.assignStore(store);
 
   {
     log.info( "Starting statemachines" );
@@ -514,7 +524,6 @@ void Smsc::init(const SmscConfigs& cfg)
   ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
   ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
 
-  mrCache.loadFromStore(store);
   log.info( "MR cache loaded" );
 
   {

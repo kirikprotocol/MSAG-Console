@@ -35,6 +35,7 @@ namespace SmeRegisterFailReasons{
   const int rfAlreadyRegistered=1;
   const int rfInvalidPassword=2;
   const int rfInternalError=3;
+  const int rfDisabled=4;
 };
 
 class SmeRegisterException:public std::exception{
@@ -49,6 +50,7 @@ public:
       case SmeRegisterFailReasons::rfAlreadyRegistered:return "Already registered";
       case SmeRegisterFailReasons::rfInvalidPassword:return "Invalid passowrd";
       case SmeRegisterFailReasons::rfInternalError:return "Internal error";
+      case SmeRegisterFailReasons::rfDisabled:return "Disabled";
     }
     return "Unknown error";
   }
@@ -101,6 +103,15 @@ public:
   virtual void attachMonitor(ProxyMonitor* monitor) {__unreachable__("");}
   virtual bool attached(){__unreachable__("");return 0;}
   virtual void close() {__unreachable__("");}
+  virtual void disconnect()
+  {
+    MutexGuard guard(mutex);
+    if ( proxy )
+    {
+      proxy->disconnect();
+    }
+    else throw runtime_error("proxy not connected");
+  }
   virtual uint32_t getIndex()const{ return idx;}
   virtual unsigned long getPreferredTimeout() {
     return info.timeout;
@@ -171,6 +182,8 @@ public:
   virtual SmeIndex lookup(const SmeSystemId& systemId) const;
   virtual SmeProxy* getSmeProxy(SmeIndex index) const;
   virtual SmeInfo getSmeInfo(SmeIndex index) const;
+
+  virtual void updateSmeInfo(const SmeSystemId& systemid,const SmeInfo& newinfo);
 
 /*
   // SmeIterator implementation

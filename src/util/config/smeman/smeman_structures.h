@@ -74,9 +74,9 @@ struct SmppSmeRecord
   bool wantAlias;
   bool forceDC;
   uint32_t timeout;
-	char* receiptSchemeName;
-	bool disabled;
-	ModeType mode;
+  char* receiptSchemeName;
+  bool disabled;
+  ModeType mode;
 };
 
 struct Ss7SmeRecord

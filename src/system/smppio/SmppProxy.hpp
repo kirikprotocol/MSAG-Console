@@ -44,6 +44,11 @@ public:
   {
     opened=false;
   }
+  virtual void disconnect()
+  {
+    MutexGuard g(mutex);
+    if(smppSocket)smppSocket->getSocket()->Close();
+  }
   bool CheckValidIncomingCmd(const SmscCommand& cmd);
   bool CheckValidOutgoingCmd(const SmscCommand& cmd);
 
@@ -165,7 +170,7 @@ public:
       }
       inqueue.Push(cmd);
     }
-    managerMonitor->Signal();
+    if(managerMonitor)managerMonitor->Signal();
   }
   SmscCommand getOutgoingCommand()
   {

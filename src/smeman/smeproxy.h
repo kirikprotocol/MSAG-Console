@@ -63,6 +63,8 @@ public:
   virtual unsigned long getPreferredTimeout() { return 8; }
   virtual const std::string& getSourceAddressRange(){return nullstr;};
   virtual const char * getSystemId() const = 0;
+
+  virtual void disconnect(){};
 };
 
 }; // namespace smeman

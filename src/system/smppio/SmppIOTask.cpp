@@ -293,25 +293,58 @@ int SmppInputThread::Execute()
               PduBindTRX *bindpdu=
                 reinterpret_cast<smsc::smpp::PduBindTRX*>(pdu);
               SmppProxy *proxy=new SmppProxy(ss);
+              SmeIndex proxyIndex;
+              bool err=false;
+              PduBindTRXResp resppdu;
+              std::string sid=bindpdu->get_systemId()?bindpdu->get_systemId():"";
+              try{
+                proxyIndex=smeManager->lookup(sid);
+              }catch(...)
+              {
+                resppdu.get_header().
+                  set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                err=true;
+              }
+              SmeInfo si;
+              if(!err)
+              {
+                si=smeManager->getSmeInfo(proxyIndex);
+              }
               switch(pdu->get_commandId())
               {
                 case SmppCommandSet::BIND_RECIEVER:
                   proxy->setProxyType(proxyReceiver);
+                  if(!(si.bindMode==smeRX || si.bindMode==smeTRX))
+                  {
+                    resppdu.get_header().
+                      set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                    err=true;
+                  }
                   break;
                 case SmppCommandSet::BIND_TRANSMITTER:
                   proxy->setProxyType(proxyTranmitter);
+                  if(!(si.bindMode==smeTX || si.bindMode==smeTRX))
+                  {
+                    resppdu.get_header().
+                      set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                    err=true;
+                  }
                   break;
                 case SmppCommandSet::BIND_TRANCIEVER:
                   proxy->setProxyType(proxyTransceiver);
+                  if(si.bindMode!=smeTRX)
+                  {
+                    resppdu.get_header().
+                      set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                    err=true;
+                  }
                   break;
               }
-              PduBindTRXResp resppdu;
               resppdu.get_header().
                 set_commandId(pdu->get_commandId()|0x80000000);
               resppdu.get_header().
                 set_sequenceNumber(pdu->get_sequenceNumber());
               resppdu.set_systemId("smsc");
-              bool err=false;
 
               if(bindpdu->get_password() && strlen(bindpdu->get_password())>8)
               {
@@ -351,31 +384,29 @@ int SmppInputThread::Execute()
               if(!err)
               {
                 try{
-                  std::string sid=bindpdu->get_systemId();
                   __trace2__("try to register sme:%s",sid.c_str());
                   smeManager->registerSmeProxy(
                     bindpdu->get_systemId()?bindpdu->get_systemId():"",
                     bindpdu->get_password()?bindpdu->get_password():"",
                     proxy);
                   proxy->setId(sid);
-                  SmeIndex proxyIndex=smeManager->lookup(sid);
-                  SmeInfo si=smeManager->getSmeInfo(proxyIndex);
                   proxy->setForceDC(si.forceDC);
                   __trace2__("NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_ROK);
                 }catch(SmeRegisterException& e)
                 {
-                  int err=SmppStatusSet::ESME_RBINDFAIL;
+                  int errcode=SmppStatusSet::ESME_RBINDFAIL;
                   switch(e.getReason())
                   {
-                    case SmeRegisterFailReasons::rfUnknownSystemId:err=Status::INVSYSID;
-                    case SmeRegisterFailReasons::rfAlreadyRegistered:err=Status::ALYBND;
-                    case SmeRegisterFailReasons::rfInvalidPassword:err=Status::INVPASWD;
+                    case SmeRegisterFailReasons::rfUnknownSystemId:errcode=SmppStatusSet::ESME_RINVSYSID;
+                    case SmeRegisterFailReasons::rfAlreadyRegistered:errcode=SmppStatusSet::ESME_RALYBND;
+                    case SmeRegisterFailReasons::rfInvalidPassword:errcode=SmppStatusSet::ESME_RINVPASWD;
+                    case SmeRegisterFailReasons::rfDisabled:errcode=SmppStatusSet::ESME_RBINDFAIL;
                     //case SmeRegisterFailReasons::rfInternalError:;
                   }
                   resppdu.get_header().
-                    set_commandStatus(err);
+                    set_commandStatus(errcode);
                   trace2("registration failed:%s",e.what());
                   //delete proxy;
                   err=true;

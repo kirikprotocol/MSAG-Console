@@ -19,25 +19,14 @@ namespace system{
 using smsc::core::buffers::Hash;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
-using smsc::store::ConcatDataIterator;
 using smsc::store::MessageStore;
 
 class MessageReferenceCache{
 public:
-  MessageReferenceCache():cache(200000){}
-  void loadFromStore(MessageStore* ms)
+  MessageReferenceCache():cache(200000),store(0){}
+  void assignStore(MessageStore* st)
   {
-    try{
-      ConcatDataIterator *it=ms->getConcatInitInfo();
-      while(it->getNext())
-      {
-        cache[it->getDestination()]=it->getMessageReference();
-      }
-      delete it;
-    }catch(...)
-    {
-      __warning__("Failed to init mrcache");
-    }
+    store=st;
   }
   void setMR(const char* addr,uint8_t mr)
   {
@@ -54,13 +43,16 @@ public:
       return ++(*dta);
     }else
     {
-      cache[straddr]=0;
-      return 0;
+      int rv=store->getConcatMessageReference(addr);
+      rv=rv==-1?0:rv;
+      cache[straddr]=rv;
+      return rv;
     }
   }
 protected:
   Hash<uint8_t> cache;
   Mutex mtx;
+  MessageStore* store;
 };
 
 };//system
