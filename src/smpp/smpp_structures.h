@@ -154,6 +154,7 @@ namespace SmppOptionalFields{
 	static const uint64_t alertOnMessageDelivery /*alert_on_message_delivery(5.3.2.41)*/ = BIT(41);
   static const uint64_t itsReplayType 			/*its_reply_type(5.3.2.42)*/ = BIT(42);
   static const uint64_t itsSessionInfo    /*its_session_info(5.3.2.43)*/ = BIT(43);
+#undef BIT
 };
 
 namespace SmppComandSet{ /* SMPP v3.4 (5.1.2.1) */
@@ -237,14 +238,41 @@ namespace MsAvailabilityStatus{ /* SMPP v3.4 (5.3.2.30) */
 };
 
 namespace UssdServiceOpValue{/* SMPP v3.4 (5.3.2.44) */
-  static const PSSD_INDICATION        = 0;
-  static const PSSR_INDICATION        = 1;
-  static const USSR_REQUEST           = 2;
-  static const USSN_REQUEST           = 3;
-  static const PSSD_RESPONSE          = 16;
-  static const PSSR_RESPONSE          = 17;
-  static const USSR_CONFIRM           = 18;
-  static const USSN_CONFIRM           = 19;
+  static const int8_t PSSD_INDICATION        = 0;
+  static const int8_t PSSR_INDICATION        = 1;
+  static const int8_t USSR_REQUEST           = 2;
+  static const int8_t USSN_REQUEST           = 3;
+  static const int8_t PSSD_RESPONSE          = 16;
+  static const int8_t PSSR_RESPONSE          = 17;
+  static const int8_t USSR_CONFIRM           = 18;
+  static const int8_t USSN_CONFIRM           = 19;
+};
+
+namespace NumberingPlanValue{ /* SMPP v3.4 (5.2.6) */
+#define BIT(x) (((uint8_t)1)<<((uint8_t)x))
+	static const uint8_t UNKNOWN              = 0;
+	static const uint8_t ISDN									= BIT(0);
+	static const uint8_t DATA                 = BIT(1)|BIT(0);
+	static const uint8_t TELEX                = BIT(2);
+	static const uint8_t LAND_MOBILE          = BIT(2) | BIT(1);
+	static const uint8_t NATIONAL             = BIT(3);
+	static const uint8_t PRIVATE              = BIT(3) | BIT(0);
+	static const uint8_t ERMES                = BIT(3) | BIT(1);
+	static const uint8_t INTERNET             = BIT(3) | BIT(2) | BIT(1);
+	static const uint8_t WAP                  = BIT(4) | BIT(1);
+#undef BIT
+};
+
+namespace TypeOfNumberValue{ /* SMPP v3.4 (5.2.5) */
+#define BIT(x) (((uint8_t)1)<<((uint8_t)x))
+	static const uint8_t UNKNOWN              = 0;
+	static const uint8_t INTERNATIONAL        = BIT(0);
+	static const uint8_t NATIONAL             = BIT(1);
+	static const uint8_t NETWORK_SPECIFIC     = BIT(1) | BIT(0);
+	static const uint8_t SUBSCRIBER_NUMBER    = BIT(2);
+	static const uint8_t ALPHANUMERIC         = BIT(2) | BIT(0);
+	static const uint8_t ABBRIVIATED          = BIT(2) | BIT(1);
+#undef BIT
 };
 
 #define __int_property__(type,field) \
