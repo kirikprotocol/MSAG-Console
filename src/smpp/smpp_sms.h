@@ -63,7 +63,8 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
     }
     message.set_protocolId(sms->getProtocolIdentifier());
     message.set_priorityFlag(sms->getPriority());
-    message.set_registredDelivery(sms->isStatusReportRequested());
+    message.set_registredDelivery(/*sms->isStatusReportRequested()*/
+				sms->getDeliveryReport());
     {
       char smpp_time[SMPP_TIME_BUFFER_LENGTH];
       if ( cTime2SmppTime(sms->getWaitTime(),smpp_time) )
@@ -125,7 +126,7 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
     else
       sms->setValidTime(0);
 
-    sms->setStatusReportRequested(message.registredDelivery);
+    sms->setDeliveryReport(message.registredDelivery);
   }
 }
 
