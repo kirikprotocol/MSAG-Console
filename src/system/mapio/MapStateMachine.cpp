@@ -1894,6 +1894,7 @@ static bool NeedNotifyHLR(MapDialog* dialog)
 static void NotifyHLR(MapDialog* dialog)
 {
   MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,HLR_SSN);
+  dialog->hlrWasNotified = true;
   USHORT_T result;
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
