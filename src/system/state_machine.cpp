@@ -3204,6 +3204,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       sms.getDestinationAddress().getText(addr,sizeof(addr));
       rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
       rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
+      rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,sms.getSubmitTime());
       char msgid[60];
       sprintf(msgid,"%lld",t.msgId);
       rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
