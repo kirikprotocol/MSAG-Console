@@ -7,6 +7,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "util/timeslotcounter.hpp"
 #include "logger/Logger.h"
+#include <vector>
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -168,7 +169,7 @@ int main(int argc,char* argv[])
     //s.setSubmitTime(0);
     //s.setPriority(0);
     //s.setProtocolIdentifier(0);
-    s.setIntProperty(Tag::SMPP_ESM_CLASS,1);
+    s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
     s.setIntProperty(Tag::SMPP_MS_VALIDITY,3);
@@ -188,8 +189,20 @@ int main(int argc,char* argv[])
         {
           //Address dst(addrs[i].c_str());
           s.setDestinationAddress(addrs[i]);
-          s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-          s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msgs[msgidx].c_str(),msgs[msgidx].length());
+          if(hasHighBit(msgs[msgidx].c_str(),msgs[msgidx].length()))
+          {
+            std::vector<short> tmp(msgs[msgidx].length());
+            ConvertMultibyteToUCS2(msgs[msgidx].c_str(), msgs[msgidx].length(),
+                                          &tmp[0], msgs[msgidx].length()*2,
+                                          CONV_ENCODING_CP1251);
+
+            s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::UCS2);
+            s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)&tmp[0],msgs[msgidx].length()*2);
+          }else
+          {
+            s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
+            s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msgs[msgidx].c_str(),msgs[msgidx].length());
+          }
           s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
           fillSmppPduFromSms(&sm,&s);
           atr->submit(sm);
