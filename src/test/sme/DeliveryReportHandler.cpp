@@ -195,50 +195,31 @@ void DeliveryReportHandler::processPdu(SmppHeader* header, time_t recvTime)
 			__compare__(4, pdu.getEsmClass() & ESM_CLASS_MESSAGE_TYPE_BITS,
 				ESM_CLASS_NORMAL_MESSAGE);
 		}
-		else
+		//высавлен srr флаг в map
+		else if (origPdu.getRegistredDelivery() & SMSC_DELIVERY_REPORT_BITS)
 		{
-			bool statusReport;
-			switch (origPdu.getRegistredDelivery() & SMSC_DELIVERY_RECEIPT_BITS)
-			{
-				case NO_SMSC_DELIVERY_RECEIPT:
-				case SMSC_DELIVERY_RECEIPT_RESERVED:
-					statusReport = false;
-					break;
-				case FAILURE_SMSC_DELIVERY_RECEIPT:
-					statusReport = monitor->deliveryStatus != ESME_ROK;
-					break;
-				case FINAL_SMSC_DELIVERY_RECEIPT:
-					statusReport = true;
-					break;
-				default:
-					__unreachable__("Invalid reg dilivery");
-			}
-			if (statusReport && pduType == DELIVERY_RECEIPT)
+			if (pduType == DELIVERY_RECEIPT)
 			{
 				__compare__(5, pdu.getEsmClass() & ESM_CLASS_MESSAGE_TYPE_BITS,
 					ESM_CLASS_DELIVERY_RECEIPT);
 			}
-			else if (statusReport && pduType == INTERMEDIATE_NOTIFICATION)
+			else if (pduType == INTERMEDIATE_NOTIFICATION)
 			{
 				__compare__(6, pdu.getEsmClass() & ESM_CLASS_MESSAGE_TYPE_BITS,
 					ESM_CLASS_INTERMEDIATE_NOTIFICATION);
 			}
-			else if (senderData->profile.reportoptions == ProfileReportOptions::ReportFull)
-			{
-				__compare__(7, pdu.getEsmClass() & ESM_CLASS_MESSAGE_TYPE_BITS,
-					ESM_CLASS_NORMAL_MESSAGE);
-			}
-			else
-			{
-				__tc_fail__(8);
-			}
+		}
+		else
+		{
+			__compare__(7, pdu.getEsmClass() & ESM_CLASS_MESSAGE_TYPE_BITS,
+				ESM_CLASS_NORMAL_MESSAGE);
 		}
 		if (pdu.isDeliverSm())
 		{
-			__compare__(9, pdu.get_message().get_protocolId(), smeProtocolId);
-			__compare__(10, pdu.get_message().get_priorityFlag(), 0);
+			__compare__(8, pdu.get_message().get_protocolId(), smeProtocolId);
+			__compare__(9, pdu.get_message().get_priorityFlag(), 0);
 		}
-		__compare__(11, pdu.getRegistredDelivery(), 0);
+		__compare__(10, pdu.getRegistredDelivery(), 0);
 		__tc_ok_cond__;
 		//дл€ delivery report не провер€ю повторную доставку
 		if (pduType == DELIVERY_RECEIPT)

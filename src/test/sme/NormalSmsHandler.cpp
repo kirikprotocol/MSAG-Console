@@ -647,21 +647,11 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 		return;
 	}
 	__decl_tc__;
-	uint8_t regDelivery =
+	uint8_t regDelivery = INTERMEDIATE_NOTIFICATION_REQUESTED &
 		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData, chkList);
-	//flag
-	PduFlag flag;
-	switch (regDelivery)
+	if (!regDelivery)
 	{
-		case NO_SMSC_DELIVERY_RECEIPT:
-		case SMSC_DELIVERY_RECEIPT_RESERVED:
-			return;
-		case FINAL_SMSC_DELIVERY_RECEIPT:
-		case FAILURE_SMSC_DELIVERY_RECEIPT:
-			flag = PDU_REQUIRED_FLAG;
-			break;
-		default:
-			__unreachable__("Invalid regDelivery");
+		return;
 	}
 	//startTime
 	time_t startTime;
@@ -730,7 +720,7 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 			__unreachable__("Invalid flag");
 	}
 	//regDelivery
-	uint8_t regDelivery =
+	uint8_t regDelivery = SMSC_DELIVERY_RECEIPT_BITS &
 		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData, chkList);
 	switch (regDelivery)
 	{
@@ -782,7 +772,7 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 	}
 	//register
 	DeliveryReceiptMonitor* rcptMonitor = new DeliveryReceiptMonitor(
-		monitor->msgRef, startTime, monitor->pduData,flag);
+		monitor->msgRef, startTime, monitor->pduData, flag);
 	rcptMonitor->state = state;
 	rcptMonitor->deliveryStatus = deliveryStatus;
 	pduReg->registerMonitor(rcptMonitor);

@@ -754,15 +754,21 @@ void reportsTc()
 	__reg_tc__("sms.reports.priorityCheck",
 		"Приоритеты проверки необходимости отправки отчеты о доставке");
 	__reg_tc__("sms.reports.priorityCheck.ussdServiceOp",
-		"Если установлено опциональное поле ussd_service_op, то SC не отправляет отчеты о доставке (независимо от наличия директивы #ack#)");
+		"Если установлено опциональное поле ussd_service_op, то SC не отправляет отчеты о доставке (независимо от наличия директивы #ack#, опций профиля отправителя и т.д.)");
 	__reg_tc__("sms.reports.priorityCheck.directiveAck",
-		"Если задана директива #ack#, то SC отправляет отчеты о доставке (независимо от наличия на маршруте флага suppressDeliveryReports)");
+		"Если задана директива #ack#, то SC отправляет все отчеты о доставке (независимо от поля registered_delivery в pdu, опций профиля отправителя, наличия на маршруте флага suppressDeliveryReports и т.д.)");
 	__reg_tc__("sms.reports.priorityCheck.directiveNoAck",
-		"Если задана директива #noack#, то SC не отправляет отчеты о доставке (независимо от значения поля registered_delivery в pdu)");
+		"Если задана директива #noack#, то SC не отправляет отчеты о доставке (независимо от поля registered_delivery в pdu, опций профиля отправителя, значения поля registered_delivery в pdu и т.д.)");
+	__reg_tc__("sms.reports.priorityCheck.registeredDelivery",
+		"Если в поле registered_delivery установлен хотя бы один бит (delivery receipt или intermediate notification), то SC отправляет соответствующие отчеты о доставке (независимо от опций профиля отправителя, наличия на маршруте флага suppressDeliveryReports и т.д.)");
 	__reg_tc__("sms.reports.priorityCheck.suppressDeliveryReports",
-		"Если на маршруте установлен флаг suppressDeliveryReports, то SC не отправляет отчеты о доставке (независимо от значения поля registered_delivery в pdu)");
+		"Если на маршруте установлен флаг suppressDeliveryReports, то SC не отправляет отчеты о доставке (независимо от опций профиля отправителя)");
+	__reg_tc__("sms.reports.priorityCheck.profileReportNone",
+		"Если в профиле отправителя на момент отправки sms установлена опция REPORT_NONE, то SC не отправляет никакие отчеты");
+	__reg_tc__("sms.reports.priorityCheck.profileReportFinal",
+		"Если в профиле отправителя на момент отправки sms установлена опция REPORT_FINAL, то SC отправляет отчеты об окончании доставки");
 	__reg_tc__("sms.reports.priorityCheck.profileReportFull",
-		"Если в профиле отправителя на момент отправки sms установлен режим отчетов REPORT_FULL, то SC отправляет отчеты о доставке (независимо от значения поля registered_delivery в pdu)");
+		"Если в профиле отправителя на момент отправки sms установлена опция REPORT_FULL, то SC отправляет все отчеты о доставке и промежуточные нотификации");
 	//sms.reports.deliveryReceipt
 	__reg_tc__("sms.reports.deliveryReceipt",
 		"Подтверждения доставки");

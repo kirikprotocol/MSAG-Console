@@ -25,7 +25,9 @@ struct ProfilerReportMessage
 			case ProfileReportOptions::ReportNone:
 				return convert("Delivery reports are disabled", profile.codepage);
 			case ProfileReportOptions::ReportFull:
-				return convert("Отчеты доставки разрешены", profile.codepage);
+				return convert("Все отчеты доставки включены", profile.codepage);
+			case ProfileReportOptions::ReportFinal:
+				return convert("Отчеты финальной доставки доставки включены", profile.codepage);
 		}
 		__unreachable__("Invalid locale or report options");
 	}

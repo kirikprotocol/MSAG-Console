@@ -85,6 +85,7 @@ const uint8_t SMSC_DELIVERY_RECEIPT_RESERVED = 0x3;
 //xxx0xxxx - No Intermediate notification requested
 //xxx1xxxx - Intermediate notification requested
 const uint8_t INTERMEDIATE_NOTIFICATION_REQUESTED = 0x10;
+const uint8_t SMSC_DELIVERY_REPORT_BITS = SMSC_DELIVERY_RECEIPT_BITS | INTERMEDIATE_NOTIFICATION_REQUESTED;
 
 //размеры структур и сами структуры
 const int MAX_SMPP_TIME_LENGTH = 16;

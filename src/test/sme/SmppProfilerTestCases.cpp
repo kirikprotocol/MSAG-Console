@@ -179,7 +179,7 @@ void SmppProfilerTestCases::updateReportOptionsCorrect(bool sync,
 	{
 		return;
 	}
-	TCSelector s(num, 2);
+	TCSelector s(num, 3);
 	for (; s.check(); s++)
 	{
 		try
@@ -199,6 +199,12 @@ void SmppProfilerTestCases::updateReportOptionsCorrect(bool sync,
 					text = "report full";
 					intProps["profilerTc.reportOptions"] =
 						ProfileReportOptions::ReportFull;
+					break;
+				case 3: //report final
+					__tc__("updateProfile.reportOptions.reportFinal");
+					text = "report final";
+					intProps["profilerTc.reportOptions"] =
+						ProfileReportOptions::ReportFinal;
 					break;
 				default:
 					__unreachable__("Invalid num");
@@ -370,8 +376,8 @@ void SmppProfilerTestCases::updateProfileIncorrect(bool sync,
 		{
 			static const string invalidReportCmd[] =
 			{
-				"report", "report non", "report ful", "repor none"
-				//"report none2", "report full2", "report2 none"
+				"report", "report non", "report ful", "report fina", "repor none"
+				//"report none2", "report full2", "report final2", "report2 none"
 			};
 			static const string invalidDcCmd[] =
 			{

@@ -37,6 +37,8 @@ void profilerTc()
 		"Отказаться от уведомления о доставке (report none)");
 	__reg_tc__("updateProfile.reportOptions.reportFull",
 		"Установить прием уведомлений о доставке (report full)");
+	__reg_tc__("updateProfile.reportOptions.reportFinal",
+		"Установить прием уведомлений о результате доставке (report final)");
 	__reg_tc__("updateProfile.dataCoding",
 		"Изменение режима приема сообщений");
 	__reg_tc__("updateProfile.dataCoding.ucs2",

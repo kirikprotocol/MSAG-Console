@@ -224,7 +224,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	*errCode = (uint8_t) 3; //GSM
 	uint16_t tmp = rand0(65535);
 	memcpy(errCode + 1, &tmp, 2);
-	uint8_t regDelivery =
+	uint8_t regDelivery = SMSC_DELIVERY_RECEIPT_BITS &
 		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData, chkList);
 	switch(monitor->state)
 	{
