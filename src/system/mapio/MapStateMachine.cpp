@@ -1865,7 +1865,7 @@ USHORT_T Et96MapOpenInd (
   ET96MAP_USERDATA_T *specificInfo_sp)
 {
   try{
-    __map_trace2__("%s: dialog 0x%x",__FUNCTION__,dialogueId);
+    __map_trace2__("%s: dialog 0x%x dstref=%p orgref=%p",__FUNCTION__,dialogueId);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,localSsn/*,0*/));
     __require__(dialog->ssn==localSsn);
     dialog->hasIndAddress = false;
@@ -1881,8 +1881,7 @@ USHORT_T Et96MapOpenInd (
         memcpy(&dialog->m_msAddr,specificInfo_sp->specificData+1,specificInfo_sp->specificInfoLen-1);
         dialog->m_msAddr.addressLength = x;
         dialog->hasIndAddress = true;
-/*
-#if !defined DISABLE_TRACING
+        if( smsc::util::_map_cat->isDebugEnabled() )
         {
           ostringstream ost;
           unsigned x = specificInfo_sp->specificData[1]-1;
@@ -1890,8 +1889,6 @@ USHORT_T Et96MapOpenInd (
             ost << hex << setfill('0') << setw(2) << (((unsigned)(dialog->m_msAddr.address[i]))&0x0ff) << " ";
           __map_trace2__("MAP::%s::adr(%d):%s",__FUNCTION__,dialog->m_msAddr.addressLength,ost.str().c_str());
         }
-#endif
-*/
       }
     }
     if ( dialog.isnull() )
@@ -2276,8 +2273,7 @@ static void PauseOnImsiReq(MapDialog* map)
     {
       if (!map->hasIndAddress )
         throw runtime_error("MAP::%s MAP.did:{0x%x} has no originating address");
-/*
-#if !defined DISABLE_TRACING
+      if( smsc::util::_map_cat->isDebugEnabled() )
       {
         auto_ptr<char> b(new char[sizeof(ET96MAP_ADDRESS_T)*3+1]);
         memset(b.get(),0,sizeof(ET96MAP_ADDRESS_T)*3+1);
@@ -2285,7 +2281,7 @@ static void PauseOnImsiReq(MapDialog* map)
           unsigned char * d = (unsigned char*)&map->m_msAddr;
           k += sprintf(b.get()+k,"%02x ",(unsigned int)d[i]);
         }
-        __map_trace2__("MAP::%s ARRDDRESS: %s",__FUNCTION__,b.get());
+        __map_trace2__("%s ARRDDRESS: %s",__FUNCTION__,b.get());
       }
 #endif
 */
