@@ -664,6 +664,7 @@ public:
     MapDialogContainer::setProxy( &proxy );
   }
   ~MapIoTask() {
+    __mapdlg_trace__("Destroying MapIoTask");
     MapDialogContainer::setProxy( 0 );
   }
 private:

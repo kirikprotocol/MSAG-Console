@@ -157,6 +157,7 @@ void MapIoTask::dispatcher()
       __map_trace__("MsgRecv hatching msg to reset priority order " );
       message.msg_p[4] = 0;
     }
+  try {
     if( message.primitive == 0x88 ) {
       // MapOpenInd
       const int destAddrPos = 6;
@@ -186,8 +187,12 @@ void MapIoTask::dispatcher()
       );
     } else {
       map_result = Et96MapHandleIndication(&message);
-
     }
+  } catch(exception& e) {
+      __map_warn2__("Exception occured during processing MAP primitive: %s", e.what());
+  } catch (...) {
+      __map_warn__("Unknown exception occured during processing MAP primitive");
+  }
     if ( map_result != ET96MAP_E_OK && smsc::logger::_map_cat->isWarnEnabled() ) {
       {
         char *text = new char[message.size*4+1];
