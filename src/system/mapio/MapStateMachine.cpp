@@ -468,7 +468,8 @@ static void SendSubmitCommand(MapDialog* dialog)
   if ( dialog->isUSSD ) {
     Address src_addr;
     ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
-    __trace2__("MAP::%s:USSD request %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
+    sms.setOriginatingAddress(src_addr);
+    __trace2__("MAP::%s:USSD request %s",__FUNCTION__,RouteToString(dialog).c_str());
   }
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
   SmscCommand cmd = SmscCommand::makeSumbmitSm(
@@ -1557,6 +1558,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     string subsystem;
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
+    __trace2__("MAP::%s request encoding 0x%x",__FUNCTION__,ussdDataCodingScheme);
     {
       MicroString ms;
       __trace2__("MAP::%s request length %d",__FUNCTION__,ussdString_s.ussdStrLen);
@@ -1572,7 +1574,6 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
     sms.setMessageReference(0);
-    sms.setOriginatingAddress(src_addr);
     sms.setDestinationAddress(dest_addr);
     dialog->sms = _sms;
     dialog->state = MAPST_WaitSmsMODelimiter2;
