@@ -159,7 +159,7 @@ AliasRegistry::AliasIterator* AliasRegistry::iterator() const
 	return new AliasIterator(aliasMap.begin(), aliasMap.end());
 }
 
-auto_ptr<const Address> AliasRegistry::findAliasByAddress(const Address& addr,
+const Address AliasRegistry::findAliasByAddress(const Address& addr,
 	const AliasInfo** aliasInfo) const
 {
 	Address tmp(addr);
@@ -194,20 +194,20 @@ auto_ptr<const Address> AliasRegistry::findAliasByAddress(const Address& addr,
 		*/
 	}
 	//если не задано явное преобразование addr->alias, то alias=addr
-	Address* alias(new Address(addr));
+	Address alias(addr);
 	if (aliasInfo)
 	{
 		*aliasInfo = aliasHolder ? &aliasHolder->aliasInfo : NULL;
 	}
 	if (aliasHolder)
 	{
-		bool res = aliasHolder->addressToAlias(addr, *alias);
+		bool res = aliasHolder->addressToAlias(addr, alias);
 		__require__(res);
 	}
-	return auto_ptr<const Address>(alias);
+	return alias;
 }
 
-auto_ptr<const Address> AliasRegistry::findAddressByAlias(const Address& alias,
+const Address AliasRegistry::findAddressByAlias(const Address& alias,
 	const AliasInfo** aliasInfo) const
 {
 	Address tmp(alias);
@@ -242,17 +242,17 @@ auto_ptr<const Address> AliasRegistry::findAddressByAlias(const Address& alias,
 		*/
 	}
 	//если не задано явное преобразование alias->addr, то addr=alias
-	Address* addr(new Address(alias));
+	Address addr(alias);
 	if (aliasInfo)
 	{
 		*aliasInfo = aliasHolder ? &aliasHolder->aliasInfo : NULL;
 	}
 	if (aliasHolder)
 	{
-		bool res = aliasHolder->aliasToAddress(alias, *addr);
+		bool res = aliasHolder->aliasToAddress(alias, addr);
 		__require__(res);
 	}
-	return auto_ptr<const Address>(addr);
+	return addr;
 }
 
 }
