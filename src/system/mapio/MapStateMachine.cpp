@@ -1806,7 +1806,7 @@ static void NotifyHLR(MapDialog* dialog)
   unsigned dialog_id = dialog->dialogid_map;
   __trace2__("MAP::%s dialogid:0x%x ssn:%d",__FUNCTION__,dialog_id,dialog->ssn);
   result = Et96MapOpenReq(
-    SSN, dialog_id, 
+    HLR_SSN, dialog_id, 
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
@@ -1830,7 +1830,7 @@ static void NotifyHLR(MapDialog* dialog)
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::%s: Et96MapV2ReportSmDelStatReq error 0x%x",__FUNCTION__,result));
   }
-  result = Et96MapDelimiterReq(dialog->ssn,dialog->dialogid_map,);
+  result = Et96MapDelimiterReq(HLR_SSN,dialog->dialogid_map,0,0);
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("MAP::%s: Et96MapDelimiterReq error 0x%x",__FUNCTION__,result));
