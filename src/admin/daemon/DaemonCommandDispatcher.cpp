@@ -14,26 +14,17 @@
 #include <core/synchronization/Mutex.hpp>
 #include <util/signal.hpp>
 #include <util/config/Config.h>
+#include <core/buffers/FastMTQueue.hpp>
 
 namespace smsc {
 namespace admin {
 namespace daemon {
 
-using smsc::admin::protocol::Command;
-using smsc::admin::protocol::CommandStartService;
-using smsc::admin::protocol::CommandKillService;
-using smsc::admin::protocol::CommandAddService;
-using smsc::admin::protocol::CommandRemoveService;
-using smsc::admin::protocol::CommandListServices;
-using smsc::admin::protocol::CommandSetServiceStartupParameters;
+using namespace smsc::admin::protocol;
 using smsc::core::synchronization::MutexGuard;
-using smsc::util::setExtendedSignalHandler;
-using smsc::util::config::CStrSet;
-using smsc::util::config::ConfigException;
-using smsc::util::encode;
-using smsc::util::encodeDot;
-using smsc::util::decodeDot;
-using smsc::util::cStringCopy;
+using smsc::core::buffers::FastMTQueue;
+using namespace smsc::util;
+using namespace smsc::util::config;
 
 ServicesList DaemonCommandDispatcher::services;
 Mutex DaemonCommandDispatcher::servicesListMutex;
@@ -47,9 +38,11 @@ class ChildShutdownWaiter : public Thread
 private:
   smsc::logger::Logger *logger;
   bool isStopping;
+  FastMTQueue<std::string> startQueue;
+  pid_t pid;
 public:
   ChildShutdownWaiter()
-    : logger(Logger::getInstance("smsc.admin.daemon.ChildShutdownWaiter")), isStopping(false)
+    : logger(Logger::getInstance("smsc.admin.daemon.ChildShutdownWaiter")), isStopping(false), pid(-1)
   {};
   ~ChildShutdownWaiter()
   {
@@ -63,6 +56,7 @@ public:
 
   virtual int Execute()
   {
+    pid = ::getpid();
     while (!isStopping)
     {
       pid_t chldpid = waitpid(-1, 0, 0);
@@ -101,9 +95,30 @@ public:
         smsc_log_debug(logger, "waitpid returns %u ");
       }*/
 #endif
+      {
+        for (std::string serviceId; startQueue.Pop(serviceId);)
+        {
+          try {
+            MutexGuard servicesGuard(DaemonCommandDispatcher::servicesListMutex);
+            MutexGuard configGuard(DaemonCommandDispatcher::configManagerMutex);
+            DaemonCommandDispatcher::updateServiceFromConfig(DaemonCommandDispatcher::services[serviceId.c_str()]);
+            DaemonCommandDispatcher::services[serviceId.c_str()]->start();
+          } catch (AdminException& e) {
+            smsc_log_error(logger, "Couldn't start service \"%\", nested: %s", serviceId.c_str(), e.what());
+          } catch (...) {
+            smsc_log_error(logger, "Couldn't start service \"%\"", serviceId.c_str());
+          }
+        }
+      }
       sleep(1);
     }
     return 0;
+  }
+  
+  void startService(const char * const serviceId)
+  {
+    startQueue.Push(serviceId);
+    kill(pid, SIGCHLD);
   }
 };
 
@@ -304,16 +319,8 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
   {
     if (command->getServiceId() != 0)
     {
-      pid_t newPid = 0;
-      {
-        MutexGuard servicesGuard(servicesListMutex);
-        MutexGuard configGuard(configManagerMutex);
-        updateServiceFromConfig(services[command->getServiceId()]);
-        newPid = services[command->getServiceId()]->start();
-      }
-      char text[sizeof(pid_t)*3 +1];
-      snprintf(text, sizeof(text),  "%lu", (unsigned long) newPid);
-      return new Response(Response::Ok, text);
+      childShutdownWaiter->startService(command->getServiceId());
+      return new Response(Response::Ok, "");
     }
     else
     {
