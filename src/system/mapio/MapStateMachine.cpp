@@ -523,7 +523,7 @@ static void SendSubmitCommand(MapDialog* dialog)
 
 static const unsigned DIALOGID_BEFORE_CREATING = 0x10000;
 
-static void TryDestroyDialog(unsigned dialogid,bool send_error = false,err_code=0)
+static void TryDestroyDialog(unsigned dialogid,bool send_error = false,unsigned err_code=0)
 {
   {
     __trace2__("MAP::TryDestroyDialog: dialog 0x%x , reason error",dialogid);
@@ -585,12 +585,10 @@ static string RouteToString(MapDialog* dialog)
   __trace2__("#ERR#MAP::%s# MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,__dialogid_map,__dialogid_smsc);\
   __trace2__("   <exception>:%s",err.what());\
   TryDestroyDialog(__dialogid_map,true,err.code);\
-/*  SendErrToSmsc(__dialogid_smsc,err.code);*/\
 }catch(exception& e){\
   __trace2__("#except#MAP::%s# MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,__dialogid_map,__dialogid_smsc);\
   __trace2__("   <exception>:%s",e.what());\
   TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_FATAL,0)));\
-/*  SendErrToSmsc(__dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_FATAL,0))*/;\
 }
 
 static bool SendSms(MapDialog* dialog){
