@@ -182,8 +182,8 @@ void Smsc::mainLoop()
       MergeCacheItem* pmci=reverseMergeCache.GetPtr(id);
       if(pmci)
       {
-        reverseMergeCache.Delete(id);
         mergeCache.Delete(*pmci);
+        reverseMergeCache.Delete(id);
       }
       mergeCacheTimeouts.erase(mergeCacheTimeouts.begin());
     }
