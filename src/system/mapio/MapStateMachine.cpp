@@ -355,6 +355,7 @@ static void DropMapDialog(MapDialog* dialog){
 
 static unsigned RemapDialog(MapDialog* dialog,unsigned ssn){
   dialog->id_opened = false;
+  dialog->invokeId = 0;
   return MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,dialog->ssn,ssn);
 }
 
@@ -1139,6 +1140,7 @@ static bool SendSms(MapDialog* dialog){
 
   dialog->state = MAPST_WaitSmsConf;
   if ( !dialog->mms ) {
+    dialog->invokeId = 0;
     dialog->state = MAPST_WaitOpenConf;
     result = Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0);
     if ( result != ET96MAP_E_OK )
@@ -1162,10 +1164,11 @@ static bool SendSms(MapDialog* dialog){
     segmentation = true;
     dialog->state = MAPST_WaitSpecOpenConf;
   }else{
+    dialog->invokeId++;
     if ( dialog->version == 2 ) {
-      result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), mms?TRUE:FALSE);
+      result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), mms?TRUE:FALSE);
     }else if ( dialog->version == 1 ){
-      result = Et96MapV1ForwardSmMT_MOReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get());
+      result = Et96MapV1ForwardSmMT_MOReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get());
     }else throw runtime_error(
       FormatText("MAP::SendSMSCToMT: incorrect dialog version %d",dialog->version));
     if( result != ET96MAP_E_OK )
@@ -1209,8 +1212,9 @@ static void SendSegmentedSms(MapDialog* dialog)
   USHORT_T result;
 // We have already opened dialog and don't need to check this condition.
 //  CheckLockedByMO(dialog);
+  dialog->invokeId++;
   if ( dialog->version == 2 ) {
-    result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), dialog->mms);
+    result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), dialog->mms);
   }else if ( dialog->version == 1 ) {
 //    result = Et96MapV1ForwardSmMT_MOReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get());
     throw MAPDIALOG_FATAL_ERROR(
