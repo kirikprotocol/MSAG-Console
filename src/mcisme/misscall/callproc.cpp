@@ -63,7 +63,6 @@ void MissedCallProcessor::fireMissedCallEvent(MissedCallEvent& event)
       MutexGuard g(lock);
       if (listener) listener->missed(event);
     }
-    smsc_log_debug(missedCallProcessorLogger, "was event: %s->%s",event.from.c_str(),event.to.c_str());
   }
 }
 void MissedCallProcessor::stop()
@@ -268,6 +267,7 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValu
   UCHAR_T* addr = new UCHAR_T[(strlen(r)+1)/2];
   pack_addr(addr,r,strlen(r));
   redirectionNumber.addrSign_p = addr;
+  smsc_log_debug(missedCallProcessorLogger,"IsupReleaseReq %s",getHeadDescription(isupHead_sp).c_str());
   res = EINSS7_I97IsupReleaseReq(isupHead_sp, /*to do может ли он быть нулевой*/
                                   &cause,
                                   0, /* autoCongestLevel_p */
@@ -291,6 +291,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_ORIGINALNUMB_T 
 {
   MissedCallEvent event;
   fillEvent(calling,called,event);
+  smsc_log_debug(missedCallProcessorLogger,"send event: %s->%s",event.from.c_str(),event.to.c_str());
   MissedCallProcessor::instance()->fireMissedCallEvent(event);
 }
 USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
@@ -331,7 +332,20 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
     }
   }
   releaseConnection(isupHead_sp,causeValue);
-  registerEvent(calling,original);
+  if (redirectionInfo_sp)
+  {
+    switch (redirectionInfo_sp->redirecting)
+    {
+      case EINSS7_I97_CALL_RER          :
+      case EINSS7_I97_CALL_RER_RESTR    :
+      case EINSS7_I97_CALL_FORW         :
+      case EINSS7_I97_CALL_FORW_RESTR   :
+      case EINSS7_I97_CALL_RER_RED_RES  :
+      case EINSS7_I97_CALL_FORW_RED_RES :
+      case 0x07                         : /* spare */
+        registerEvent(calling,original);
+    }
+  }
   return EINSS7_I97_REQUEST_OK;
 }
 USHORT_T EINSS7_I97IsupReleaseConf(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
