@@ -70,6 +70,7 @@ public class Smsc extends Service
 		super(new ServiceInfo(Constants.SMSC_SME_ID, configManager.getConfig().getString("smsc.host"), configManager.getConfig().getInt("smsc.port"), "", null, ServiceInfo.STATUS_STOPPED));
 
 
+/*toremove
 		try
 		{
 			refreshComponents();
@@ -81,7 +82,7 @@ public class Smsc extends Service
 
 		if (getStatus() == Proxy.StatusConnected)
 			checkComponents();
-
+*/
 		try
 		{
 			final File smscConfFolder = WebAppFolders.getSmscConfFolder();
@@ -128,26 +129,16 @@ public class Smsc extends Service
 
 	public synchronized void applyRoutes(RouteSubjectManager routeSubjectManager) throws AdminException
 	{
-		checkComponents();
 		routeSubjectManager.save();
 		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+		{
+			refreshComponents();
 			call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
+		}
 	}
 
-/*
-	public synchronized void applyServices() throws AdminException
-	{
-		checkComponents();
-		smeManager.save();
-		routeSubjectManager.save();
-		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
-			call(smsc_component, apply_services_method, Type.Types[Type.StringType], new HashMap());
-	}
-
-*/
 	public synchronized void applyAliases() throws AdminException
 	{
-		checkComponents();
 		try
 		{
 			final File smscConfFolder = WebAppFolders.getSmscConfFolder();
@@ -164,8 +155,10 @@ public class Smsc extends Service
 			storeAliases(new PrintWriter(new FileOutputStream(aliasConfigFile), true)).close();
 
 			if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+			{
+				refreshComponents();
 				call(smsc_component, apply_aliases_method, Type.Types[Type.StringType], new HashMap());
-			else
+			}else
 				logger.debug("Couldn't call apply method on SMSC - SMSC is not running. Status is " + getInfo().getStatusStr() + " (" + getInfo().getStatus() + ")");
 		}
 		catch (FileNotFoundException e)
@@ -181,7 +174,7 @@ public class Smsc extends Service
 
 	public synchronized Profile lookupProfile(Mask mask) throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
 		Object result = call(smsc_component, lookup_profile_method, Type.Types[Type.StringType], args);
@@ -193,7 +186,7 @@ public class Smsc extends Service
 
 	public synchronized int updateProfile(Mask mask, Profile newProfile) throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		HashMap args = new HashMap();
 		args.put("address", mask.getMask());
 		args.put("profile", newProfile.getStringRepresentation());
@@ -212,7 +205,7 @@ public class Smsc extends Service
 
 	public synchronized void processCancelMessages(Collection messageIds) throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		String ids = "";
 		String srcs = "";
 		String dsts = "";
@@ -232,43 +225,36 @@ public class Smsc extends Service
 
 	public synchronized void flushStatistics() throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		call(smsc_component, flush_statistics_method, Type.Types[Type.StringType], new HashMap());
 	}
 
 	protected void checkComponents()
 	{
+		super.checkComponents();
 		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null || sme_status == null || sme_disconnect == null)
 		{
-			try
-			{
-				refreshComponents();
-				smsc_component = (Component) getInfo().getComponents().get("SMSC");
-				apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
-				apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
-				lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
-				update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
-				flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
-				process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
-				apply_smsc_config_method = (Method) smsc_component.getMethods().get("apply_smsc_config");
-				apply_services_method = (Method) smsc_component.getMethods().get("apply_services");
+			smsc_component = (Component) getInfo().getComponents().get("SMSC");
+			apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
+			apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
+			lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
+			update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
+			flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
+			process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
+			apply_smsc_config_method = (Method) smsc_component.getMethods().get("apply_smsc_config");
+			apply_services_method = (Method) smsc_component.getMethods().get("apply_services");
 
-				msc_registrate_method = (Method) smsc_component.getMethods().get("msc_registrate");
-				msc_unregister_method = (Method) smsc_component.getMethods().get("msc_unregister");
-				msc_block_method = (Method) smsc_component.getMethods().get("msc_block");
-				msc_clear_method = (Method) smsc_component.getMethods().get("msc_clear");
-				msc_list_method = (Method) smsc_component.getMethods().get("msc_list");
+			msc_registrate_method = (Method) smsc_component.getMethods().get("msc_registrate");
+			msc_unregister_method = (Method) smsc_component.getMethods().get("msc_unregister");
+			msc_block_method = (Method) smsc_component.getMethods().get("msc_block");
+			msc_clear_method = (Method) smsc_component.getMethods().get("msc_clear");
+			msc_list_method = (Method) smsc_component.getMethods().get("msc_list");
 
-				sme_add_method = (Method) smsc_component.getMethods().get("sme_add");
-				sme_remove_method = (Method) smsc_component.getMethods().get("sme_remove");
-				sme_update_method = (Method) smsc_component.getMethods().get("sme_update");
-				sme_status = (Method) smsc_component.getMethods().get("sme_status");
-				sme_disconnect = (Method) smsc_component.getMethods().get("sme_disconnect");
-			}
-			catch (AdminException e)
-			{
-				logger.error("Couldn't check components", e);
-			}
+			sme_add_method = (Method) smsc_component.getMethods().get("sme_add");
+			sme_remove_method = (Method) smsc_component.getMethods().get("sme_remove");
+			sme_update_method = (Method) smsc_component.getMethods().get("sme_update");
+			sme_status = (Method) smsc_component.getMethods().get("sme_status");
+			sme_disconnect = (Method) smsc_component.getMethods().get("sme_disconnect");
 		}
 	}
 
@@ -313,14 +299,14 @@ public class Smsc extends Service
 	{
 		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
 		{
-			checkComponents();
+			refreshComponents();
 			call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
 		}
 	}
 
 	public synchronized void mscRegistrate(String msc) throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		HashMap args = new HashMap();
 		args.put("msc", msc);
 		call(smsc_component, msc_registrate_method, Type.Types[Type.StringType], args);
@@ -328,7 +314,7 @@ public class Smsc extends Service
 
 	public synchronized void mscUnregister(String msc) throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		HashMap args = new HashMap();
 		args.put("msc", msc);
 		call(smsc_component, msc_unregister_method, Type.Types[Type.StringType], args);
@@ -336,7 +322,7 @@ public class Smsc extends Service
 
 	public synchronized void mscBlock(String msc) throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		HashMap args = new HashMap();
 		args.put("msc", msc);
 		call(smsc_component, msc_block_method, Type.Types[Type.StringType], args);
@@ -344,7 +330,7 @@ public class Smsc extends Service
 
 	public synchronized void mscClear(String msc) throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		HashMap args = new HashMap();
 		args.put("msc", msc);
 		call(smsc_component, msc_clear_method, Type.Types[Type.StringType], args);
@@ -352,7 +338,7 @@ public class Smsc extends Service
 
 	public synchronized List mscList() throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		Object result = call(smsc_component, msc_list_method, Type.Types[Type.StringListType], new HashMap());
 		if (result instanceof List)
 			return (List) result;
@@ -425,7 +411,7 @@ public class Smsc extends Service
 
 	public void smeAdd(SME sme) throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		Object result = call(smsc_component, sme_add_method, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
 		if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
 			throw new AdminException("Error in response");
@@ -433,7 +419,7 @@ public class Smsc extends Service
 
 	public void smeRemove(String smeId) throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		Map params = new HashMap();
 		params.put("id", smeId);
 		Object result = call(smsc_component, sme_remove_method, Type.Types[Type.BooleanType], params);
@@ -443,7 +429,7 @@ public class Smsc extends Service
 
 	public void smeUpdate(SME sme) throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		Object result = call(smsc_component, sme_update_method, Type.Types[Type.BooleanType], putSmeIntoMap(sme));
 		if (!(result instanceof Boolean && ((Boolean) result).booleanValue()))
 			throw new AdminException("Error in response");
@@ -454,9 +440,9 @@ public class Smsc extends Service
 		final long currentTime = System.currentTimeMillis();
 		if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp)
 		{
+			refreshComponents();
 			serviceRefreshTimeStamp = currentTime;
 			smeStatuses.clear();
-			checkComponents();
 			Object result = call(smsc_component, sme_status, Type.Types[Type.StringListType], new HashMap());
 			if (!(result instanceof List))
 				throw new AdminException("Error in response");
@@ -473,7 +459,7 @@ public class Smsc extends Service
 
 	public void disconnectSmes(List smeIdsToDisconnect) throws AdminException
 	{
-		checkComponents();
+		refreshComponents();
 		Map params = new HashMap();
 		params.put("ids", smeIdsToDisconnect);
 		Object result = call(smsc_component, sme_disconnect, Type.Types[Type.BooleanType], params);

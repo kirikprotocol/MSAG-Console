@@ -41,6 +41,8 @@ public class Service extends Proxy
 	 */
 	public Object call(Component component, Method method, Type returnType, Map arguments) throws AdminException
 	{
+		refreshComponents();
+
 		if (component != null && method != null && method.equals(component.getMethods().get(method.getName())))
 		{
 			Response r = runCommand(new CommandCall(info.getId(), component.getName(), method.getName(), returnType, arguments));
@@ -83,7 +85,7 @@ public class Service extends Proxy
 			{
 			}
 
-			throw new AdminException("Incorrect method signature");
+			throw new AdminException("Incorrect method \"" + (method == null ? "<null>" : method.getName()) + "\" signature");
 		}
 	}
 
@@ -91,7 +93,7 @@ public class Service extends Proxy
 	{
 		String buffer = "";
 		List result = new LinkedList();
-		for (int i = 0; i<listStr.length(); i++)
+		for (int i = 0; i < listStr.length(); i++)
 		{
 			char c = listStr.charAt(i);
 			if (c == ',')
@@ -100,11 +102,11 @@ public class Service extends Proxy
 				buffer = "";
 				continue;
 			}
-			if (c == '\\' && i<(listStr.length()-1))
+			if (c == '\\' && i < (listStr.length() - 1))
 			{
-				c=listStr.charAt(++i);
+				c = listStr.charAt(++i);
 			}
-         buffer += c;
+			buffer += c;
 		}
 		if (buffer.length() > 0)
 			result.add(buffer);
@@ -113,15 +115,26 @@ public class Service extends Proxy
 
 	public void refreshComponents() throws AdminException
 	{
-		Response r = runCommand(new CommandListComponents(info.getId()));
-		if (r.getStatus() != Response.StatusOk)
-			throw new AdminException("Error occured: " + r.getDataAsString());
-		info.setComponents(r.getData().getDocumentElement());
+		if (info.getComponents().isEmpty())
+		{
+			logger.debug("refreshComponents");
+			Response r = runCommand(new CommandListComponents(info.getId()));
+			if (r.getStatus() != Response.StatusOk)
+				throw new AdminException("Error occured: " + r.getDataAsString());
+			info.setComponents(r.getData().getDocumentElement());
+			logger.debug("found " + info.getComponents().keySet().size() + " components: " + info.getComponents().keySet());
+			checkComponents();
+		}
 	}
 
 	protected void setInfo(ServiceInfo info)
 	{
 		logger.debug("Set info. Status: " + info.getStatusStr() + " [" + info.getStatus() + ']');
 		this.info = info;
+	}
+
+	protected void checkComponents()
+	{
+		logger.debug("checkComponents");
 	}
 }
