@@ -299,6 +299,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
           unsigned symbols = text_len-udh_len-1;
           __map_trace2__("mkDeliverPDU: udh_len %d text symbols %d bit offset %d",udh_len,symbols,x-(udh_len+1)*8);
           unsigned _7bit_text_len;
+          unsigned tmpX = 0;
           if (encoding == MAP_SMSC7BIT_ENCODING )
            _7bit_text_len = ConvertSMSC7bit27bit(
               text+1+udh_len,
@@ -306,7 +307,6 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
               pdu_ptr+udh_len+1+1,
               x-(udh_len+1)*8);
           else {
-              unsigned tmpX = 0;
               _7bit_text_len = ConvertText27bit(//text,text_len,pdu_ptr+1,&elen);
               text+1+udh_len,
               symbols,
@@ -314,17 +314,20 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
               &tmpX,
               x-(udh_len+1)*8);
           }
-          *pdu_ptr++ = x/7+symbols;
+          *pdu_ptr++ = x/7+symbols+tmpX;
           pdu_ptr+= udh_len+_7bit_text_len+1;
           __map_trace2__("MAP::mkDeliverPDU: data length symbols %d octets %d",x/7+symbols,udh_len+_7bit_text_len);
         }else{
-          *pdu_ptr++ = text_len;
-          if (encoding == MAP_SMSC7BIT_ENCODING )
+          if (encoding == MAP_SMSC7BIT_ENCODING ) {
+           *pdu_ptr++ = text_len;
             pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
+          }
           else
           {
             unsigned tmpX = 0;
-            pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr,&tmpX);
+            int _newbuflen = ConvertText27bit(text,text_len,pdu_ptr,&tmpX);
+            *pdu_ptr++ = text_len+tmpX;
+            pdu_ptr += _newbuflen;
           }
         }
     }else{ // UCS2 || 8BIT
