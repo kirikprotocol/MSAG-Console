@@ -13,11 +13,11 @@
 	<section name="DBSme">
 
 		<section name="MessageSet">
-			<param name="PROVIDER_NOT_FOUND" type="string">Адрес не найден (DataProvider not found)</param>
-			<param name="JOB_NOT_FOUND" type="string">Задача не найдена (Job not found)</param>
-			<param name="DS_FAILURE" type="string">Ошибка выполнения запроса (Problem with DataSource)</param>
-			<param name="DS_CONNECTION_LOST" type="string">Ошибка соединения (Connection to DataSource lost)</param>
-			<param name="DS_STATEMENT_FAIL" type="string">Ошибка SQL (Failed to create SQL statement)</param>
+			<param name="PROVIDER_NOT_FOUND" type="string">Адрес получателя не зарегистрирован</param>
+			<param name="JOB_NOT_FOUND" type="string">Job not found</param>
+			<param name="DS_FAILURE" type="string">Ошибка выполнения запроса (дублирующийся ключ, пустой набор данных, внутренние ошибки сервера базы данных)</param>
+			<param name="DS_CONNECTION_LOST" type="string">Connection to data source is lost (this may be caused by internal database server errors, network problems, all the other possible and impossible errors all around the world)</param>
+			<param name="DS_STATEMENT_FAIL" type="string">Ошибка в SQL запросе (!@#$%^&amp;*( )_+-=|\:;&apos;&lt;,&gt;.?/)</param>
 			<param name="QUERY_NULL" type="string">Нулевой результат запроса (Query result is NULL)</param>
 			<param name="INPUT_PARSE" type="string">Ошибка во входных параметрах (Input parsing error)</param>
 			<param name="OUTPUT_FORMAT" type="string">Ошибка форматирования результата (Output formatting error)</param>
