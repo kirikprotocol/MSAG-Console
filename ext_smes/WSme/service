@@ -2,6 +2,18 @@
 export LC_ALL=ru_RU.ANSI1251            
 export NLS_LANG=RUSSIAN_CIS.CL8MSWIN1251
 
+if [ -d lib ]; then 
+  rm -rf lib
+fi
+
+if [ -d logs ]; then 
+  rm -rf logs
+fi
+
+if [ -d log ]; then 
+  rm -rf log
+fi
+
 if [ ! -L lib ]; then
   ln -s ../../../../../../lib lib
 fi
@@ -9,6 +21,8 @@ fi
 if [ ! -L logs ]; then
   ln -s ../../../../../../logs logs
 fi
+
+chmod +x bin/WSme
 
 echo $$ >pid
 if [ -f logs/wsme.err ]; then

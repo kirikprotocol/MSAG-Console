@@ -77,7 +77,7 @@
 			startParams(out);
 				param(out, "host", "WSme.SMSC.host",    bean.getStringParam("WSme.SMSC.host"));
 				param(out, "port", "WSme.SMSC.port",    bean.getIntParam("WSme.SMSC.port"));
-				param(out, "service ID", "WSme.SMSC.sid",    bean.getStringParam("WSme.SMSC.sid"));
+				param(out, "system ID", "WSme.SMSC.sid",    bean.getStringParam("WSme.SMSC.sid"));
 				param(out, "timeout", "WSme.SMSC.timeout",    bean.getIntParam("WSme.SMSC.timeout"));
 				param(out, "password", "WSme.SMSC.password",    bean.getStringParam("WSme.SMSC.password"));
 			finishParams(out);
