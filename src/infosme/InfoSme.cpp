@@ -179,8 +179,7 @@ public:
                               info.svcType.c_str():processor.getSvcType() );
         
         sms.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
-//        sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0 /*xx0000xx*/);
-        sms.setIntProperty(Tag::SMPP_ESM_CLASS, 2 /*xx0000xx*/); //test with transaction
+        sms.setIntProperty(Tag::SMPP_ESM_CLASS, (info.transactionMode) ? 2:0);
         sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
         sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
 
@@ -343,11 +342,11 @@ public:
         switch (pdu->get_commandId())
         {
         case SmppCommandSet::DELIVERY_SM:
-            logger.debug("Received DELIVERY_SM Pdu.");
+            //logger.debug("Received DELIVERY_SM Pdu.");
             processReceipt(pdu);
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
-            logger.debug("Received SUBMIT_SM_RESP Pdu.");
+            //logger.debug("Received SUBMIT_SM_RESP Pdu.");
             processResponce(pdu);
             break;
         default:
@@ -445,7 +444,16 @@ int main(void)
             }
             logger.info("Connected.");
             
-            while (!bInfoSmeIsStopped && bInfoSmeIsConnected) sleep(2);
+            Event aaa;
+            while (!bInfoSmeIsStopped && bInfoSmeIsConnected) {
+                aaa.Wait(1000);
+                //sleep(1);
+                TaskStat stat;
+                if (processor.getStatistics("Task1", stat)) {
+                    printf("Generated:%6d Delivered:%6d Retried:%6d Failed:%6d\r",
+                           stat.generated, stat.delivered, stat.retried, stat.failed);
+                }
+            }
             logger.info("Disconnecting from SMSC ...");
             processor.Stop();
             session.close();

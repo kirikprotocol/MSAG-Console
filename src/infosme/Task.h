@@ -24,6 +24,7 @@
 #include <core/synchronization/Event.hpp>
 
 #include "DataProvider.h"
+#include "Statistics.h"
 
 namespace smsc { namespace infosme 
 {
@@ -77,6 +78,7 @@ namespace smsc { namespace infosme
 
         bool    retryOnFail;
         bool    replaceIfPresent;
+        bool    transactionMode;
         
         time_t  endDate;            // full date/time
         time_t  retryTime;          // only HH:mm:ss in seconds
@@ -92,26 +94,32 @@ namespace smsc { namespace infosme
         std::string svcType;        // specified if replaceIfPresent == true
 
         int     dsOwnTimeout, dsIntTimeout;
-        int     dsUncommited;
+        int     dsUncommitedInProcess, dsUncommitedInGeneration;
+        int     messagesCacheSize, messagesCacheSleep;
         
         TaskInfo()
             : id(""), name(""), enabled(true), priority(0),
-              retryOnFail(false), replaceIfPresent(false),
-              endDate(-1), retryTime(-1), 
-              validityPeriod(-1), validityDate(-1),
+              retryOnFail(false), replaceIfPresent(false), transactionMode(false), 
+              endDate(-1), retryTime(-1), validityPeriod(-1), validityDate(-1),
               activePeriodStart(-1), activePeriodEnd(-1),
               dsId(""), tablePrefix(""), querySql(""), msgTemplate(""), svcType(""),
-              dsOwnTimeout(0), dsIntTimeout(0), dsUncommited(1) {};
+              dsOwnTimeout(0), dsIntTimeout(0), 
+              dsUncommitedInProcess(1), dsUncommitedInGeneration(1), 
+              messagesCacheSize(100), messagesCacheSleep(0) {};
         TaskInfo(const TaskInfo& info) 
             : id(info.id), name(info.name), enabled(info.enabled), priority(info.priority),
               retryOnFail(info.retryOnFail), replaceIfPresent(info.replaceIfPresent),
+              transactionMode(info.transactionMode), 
               endDate(info.endDate), retryTime(info.retryTime), 
               validityPeriod(info.validityPeriod), validityDate(info.validityDate),
               activePeriodStart(info.activePeriodStart), activePeriodEnd(info.activePeriodEnd),
               dsId(info.dsId), tablePrefix(info.tablePrefix), querySql(info.querySql), 
               msgTemplate(info.msgTemplate), svcType(info.svcType), 
               dsOwnTimeout(info.dsOwnTimeout), dsIntTimeout(info.dsIntTimeout), 
-              dsUncommited(info.dsUncommited) {};
+              dsUncommitedInProcess(info.dsUncommitedInProcess),
+              dsUncommitedInGeneration(info.dsUncommitedInGeneration),
+              messagesCacheSize(info.messagesCacheSize), 
+              messagesCacheSleep(info.messagesCacheSleep) {};
         
         virtual ~TaskInfo() {};
         
@@ -119,6 +127,7 @@ namespace smsc { namespace infosme
         {
             id = info.id; name = info.name; enabled = info.enabled; priority = info.priority;
             retryOnFail = info.retryOnFail; replaceIfPresent = info.replaceIfPresent;
+            transactionMode = info.transactionMode; 
             endDate = info.endDate; retryTime = info.retryTime;
             validityPeriod = info.validityPeriod; validityDate = info.validityDate;
             activePeriodStart = info.activePeriodStart; 
@@ -126,7 +135,10 @@ namespace smsc { namespace infosme
             dsId = info.dsId; tablePrefix = info.tablePrefix; querySql = info.querySql;
             msgTemplate = info.msgTemplate; svcType = info.svcType;
             dsOwnTimeout = info.dsOwnTimeout; dsIntTimeout = info.dsIntTimeout;
-            dsUncommited = info.dsUncommited;
+            dsUncommitedInProcess = info.dsUncommitedInProcess;
+            dsUncommitedInGeneration = info.dsUncommitedInGeneration;
+            messagesCacheSize = info.messagesCacheSize;
+            messagesCacheSleep = info.messagesCacheSleep;
             return *this;
         };
     };
@@ -178,8 +190,6 @@ namespace smsc { namespace infosme
         Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
              DataSource* dsOwn, DataSource* dsInt);
         
-        static Statement* getStatement(Connection* connection, 
-                                       const char* id, const char* sql);
         void createTable();
         void dropTable() {}; // TODO: implement it !!!
 
@@ -230,7 +240,7 @@ namespace smsc { namespace infosme
          * ¬ыполн€естс€ на ThreadPool'е по команде от Scheduler'а
          * »спользует два connection'а: один из своего,а другой внутреннего источника данных.
          */
-        void beginProcess();
+        void beginProcess(Statistics* statistics);
         /**
          * ќстанавливает процесс генерации сообщений дл€ отправки в спец.таблицу задачи.
          * ¬ыполн€естс€ на ThreadPool'е по команде от Scheduler'а или TaskProcessor'а.

@@ -89,6 +89,7 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
                               MAX_PRIORITY_VALUE);
     info.retryOnFail = config->getBool("retryOnFail");
     info.replaceIfPresent = config->getBool("replaceMessage");
+    info.transactionMode = config->getBool("transactionMode");
     info.endDate = parseDateTime(config->getString("endDate"));
     info.retryTime = parseTime(config->getString("retryTime"));
     if (info.retryOnFail && info.retryTime <= 0)
@@ -122,9 +123,19 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     info.dsIntTimeout = 0;
     try { info.dsIntTimeout = config->getInt("dsIntTimeout"); } catch(...) {}
     if (info.dsIntTimeout < 0) info.dsIntTimeout = 0;
-    info.dsUncommited = 1;
-    try { info.dsUncommited = config->getInt("uncommited"); } catch(...) {}
-    if (info.dsUncommited < 0) info.dsUncommited = 1;
+    
+    info.dsUncommitedInProcess = 1;
+    try { info.dsUncommitedInProcess = config->getInt("uncommitedInProcess"); } catch(...) {}
+    if (info.dsUncommitedInProcess < 0) info.dsUncommitedInProcess = 1;
+    info.dsUncommitedInGeneration = 1;
+    try { info.dsUncommitedInGeneration = config->getInt("uncommitedInGeneration"); } catch(...) {}
+    if (info.dsUncommitedInGeneration < 0) info.dsUncommitedInGeneration = 1;
+    info.messagesCacheSize = 100;
+    try { info.messagesCacheSize = config->getInt("messagesCacheSize"); } catch(...) {}
+    if (info.messagesCacheSize <= 0) info.messagesCacheSize = 100;
+    info.messagesCacheSleep = 1;
+    try { info.messagesCacheSleep = config->getInt("messagesCacheSleep"); } catch(...) {}
+    if (info.messagesCacheSleep <= 0) info.messagesCacheSleep = 1;
 }
 
 bool Task::isInProcess()
@@ -148,23 +159,6 @@ char* Task::prepareDoubleSqlCall(const char* sql)
     char* sqlCall = new char[strlen(sql)+tableName.length()*2+1];
     sprintf(sqlCall, sql, tableName.c_str(), tableName.c_str());
     return sqlCall;
-}
-
-Statement* Task::getStatement(Connection* connection, const char* id, const char* sql)
-{
-    if (!connection || !id) return 0;
-
-    static Mutex     statementLock;
-    MutexGuard guard(statementLock);
-    
-    Statement* statement = connection->getStatement(id);
-    if (!statement)
-    {
-        if (!sql) return 0;
-        statement = connection->createStatement(sql);
-        connection->registerStatement(id, statement);
-    }
-    return statement;
 }
 
 const char* NEW_TABLE_STATEMENT_SQL = 
@@ -238,7 +232,7 @@ const char* NEW_MESSAGE_STATEMENT_SQL = (const char*)
 "INSERT INTO %s (ID, STATE, ABONENT, SEND_DATE, MESSAGE) "
 "VALUES (INFOSME_MESSAGES_SEQ.NEXTVAL, :STATE, :ABONENT, :SEND_DATE, :MESSAGE)";
 
-void Task::beginProcess()
+void Task::beginProcess(Statistics* statistics)
 {
     {
         MutexGuard guard(inProcessLock);
@@ -261,15 +255,15 @@ void Task::beginProcess()
             throw Exception("Failed to obtain connection to own data source.");
         
         std::auto_ptr<char> userQueryId(prepareSqlCall(USER_QUERY_STATEMENT_ID));
-        Statement* userQuery = getStatement(ownConnection, userQueryId.get(), 
-                                            info.querySql.c_str());
+        Statement* userQuery = ownConnection->getStatement(userQueryId.get(),
+                                                           info.querySql.c_str());
         if (!userQuery)
             throw Exception("Failed to create user query statement on own data source.");
         
         std::auto_ptr<char> newMessageId(prepareSqlCall(NEW_MESSAGE_STATEMENT_ID));
         std::auto_ptr<char> newMessageSql(prepareSqlCall(NEW_MESSAGE_STATEMENT_SQL));
-        Statement* newMessage = getStatement(intConnection, newMessageId.get(), 
-                                             newMessageSql.get());
+        Statement* newMessage = intConnection->getStatement(newMessageId.get(),
+                                                            newMessageSql.get());
         if (!newMessage)
             throw Exception("Failed to create statement for message generation.");
             
@@ -309,8 +303,9 @@ void Task::beginProcess()
                 newMessage->executeUpdate();
 
                 //logger.info("Message '%s' for '%s' generated.", message.c_str(), abonentAddress);
+                if (statistics) statistics->incGenerated(info.id, 1);
 
-                if (info.dsUncommited <= 0 || ++uncommited >= info.dsUncommited) {
+                if (info.dsUncommitedInGeneration <= 0 || ++uncommited >= info.dsUncommitedInGeneration) {
                     intConnection->commit();
                     uncommited = 0;
                 }
@@ -383,8 +378,8 @@ void Task::dropAllMessages()
 
         std::auto_ptr<char> deleteMessagesId(prepareSqlCall(DELETE_MESSAGES_STATEMENT_ID));
         std::auto_ptr<char> deleteMessagesSql(prepareSqlCall(DELETE_MESSAGES_STATEMENT_SQL));
-        Statement* deleteMessages = getStatement(connection, deleteMessagesId.get(), 
-                                                 deleteMessagesSql.get());
+        Statement* deleteMessages = connection->getStatement(deleteMessagesId.get(), 
+                                                             deleteMessagesSql.get());
         if (!deleteMessages)
             throw Exception("Failed to create statement for messages access.");
 
@@ -435,8 +430,8 @@ void Task::resetWaiting(Connection* connection)
     {
         std::auto_ptr<char> resetMessagesId(prepareSqlCall(RESET_MESSAGES_STATEMENT_ID));
         std::auto_ptr<char> resetMessagesSql(prepareSqlCall(RESET_MESSAGES_STATEMENT_SQL));
-        Statement* resetMessages = getStatement(connection, resetMessagesId.get(), 
-                                                resetMessagesSql.get());
+        Statement* resetMessages = connection->getStatement(resetMessagesId.get(), 
+                                                            resetMessagesSql.get());
         if (!resetMessages)
             throw Exception("Failed to create statement for messages access.");
         
@@ -473,8 +468,8 @@ bool Task::doRetry(Connection* connection, uint64_t msgId)
     {
         std::auto_ptr<char> retryMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
         std::auto_ptr<char> retryMessageSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
-        Statement* retryMessage = getStatement(connection, retryMessageId.get(), 
-                                               retryMessageSql.get());
+        Statement* retryMessage = connection->getStatement(retryMessageId.get(), 
+                                                           retryMessageSql.get());
         if (!retryMessage)
             throw Exception("doRetry(): Failed to create statement for messages access.");
         
@@ -519,8 +514,8 @@ bool Task::doEnroute(Connection* connection, uint64_t msgId)
     {
         std::auto_ptr<char> enrouteMessageId(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_ID));
         std::auto_ptr<char> enrouteMessageSql(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_SQL));
-        Statement* enrouteMessage = getStatement(connection, enrouteMessageId.get(), 
-                                                 enrouteMessageSql.get());
+        Statement* enrouteMessage = connection->getStatement(enrouteMessageId.get(), 
+                                                             enrouteMessageSql.get());
         if (!enrouteMessage)
             throw Exception("doEnroute(): Failed to create statement for messages access.");
         
@@ -559,8 +554,8 @@ bool Task::doFailed(Connection* connection, uint64_t msgId)
     {
         std::auto_ptr<char> failedMessageId(prepareSqlCall(DO_FAILED_MESSAGE_STATEMENT_ID));
         std::auto_ptr<char> failedMessageSql(prepareSqlCall(DO_FAILED_MESSAGE_STATEMENT_SQL));
-        Statement* failedMessage = getStatement(connection, failedMessageId.get(), 
-                                                failedMessageSql.get());
+        Statement* failedMessage = connection->getStatement(failedMessageId.get(), 
+                                                            failedMessageSql.get());
         if (!failedMessage)
             throw Exception("doFailed(): Failed to create statement for messages access.");
         
@@ -600,8 +595,8 @@ bool Task::doDelivered(Connection* connection, uint64_t msgId)
     {
         std::auto_ptr<char> deliveredMessageId(prepareSqlCall(DO_DELIVERED_MESSAGE_STATEMENT_ID));
         std::auto_ptr<char> deliveredMessageSql(prepareSqlCall(DO_DELIVERED_MESSAGE_STATEMENT_SQL));
-        Statement* deliveredMessage = getStatement(connection, deliveredMessageId.get(), 
-                                                   deliveredMessageSql.get());
+        Statement* deliveredMessage = connection->getStatement(deliveredMessageId.get(), 
+                                                               deliveredMessageSql.get());
         if (!deliveredMessage)
             throw Exception("doDelivered(): Failed to create statement for messages access.");
         
@@ -627,7 +622,7 @@ bool Task::doDelivered(Connection* connection, uint64_t msgId)
 const char* SELECT_MESSAGES_STATEMENT_ID = "%s_SELECT_MESSAGES_STATEMENT_ID";
 const char* SELECT_MESSAGES_STATEMENT_SQL = (const char*)
 "SELECT ID, ABONENT, MESSAGE FROM %s WHERE "
-"STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY ID ASC FOR UPDATE";
+"STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY ID ASC";
 
 const char* DO_WAIT_MESSAGE_STATEMENT_ID = "%s_DO_WAIT_MESSAGE_STATEMENT_ID";
 const char* DO_WAIT_MESSAGE_STATEMENT_SQL = (const char*)
@@ -645,11 +640,8 @@ bool Task::getNextMessage(Connection* connection, Message& message)
         }
     }
 
-    const int sleepOnEmptyInterval = 1;
-    const int fetchSize = 1000;
-
     time_t currentTime = time(NULL);
-    if (currentTime-lastMessagesCacheEmpty > sleepOnEmptyInterval)
+    if (currentTime-lastMessagesCacheEmpty > info.messagesCacheSleep)
         lastMessagesCacheEmpty = currentTime;
     else if (!bInProcess) return false;
     
@@ -658,8 +650,8 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     {
         std::auto_ptr<char> selectMessageId(prepareSqlCall(SELECT_MESSAGES_STATEMENT_ID));
         std::auto_ptr<char> selectMessageSql(prepareSqlCall(SELECT_MESSAGES_STATEMENT_SQL));
-        Statement* selectMessage = getStatement(connection, selectMessageId.get(), 
-                                                selectMessageSql.get());
+        Statement* selectMessage = connection->getStatement(selectMessageId.get(), 
+                                                            selectMessageSql.get());
         if (!selectMessage)
             throw Exception("Failed to create statement for messages access.");
 
@@ -674,15 +666,15 @@ bool Task::getNextMessage(Connection* connection, Message& message)
             throw Exception("Failed to obtain result set for message access.");
         
         int fetched = 0; int uncommited = 0;
-        while (rs->fetchNext() && ++fetched <= fetchSize)
+        while (rs->fetchNext() && ++fetched <= info.messagesCacheSize)
         {
             Message fetchedMessage(rs->getUint64(1), rs->getString(2), rs->getString(3));
             dsInt->stopTimer(wdTimerId);
             
             std::auto_ptr<char> waitMessageId(prepareSqlCall(DO_WAIT_MESSAGE_STATEMENT_ID));
             std::auto_ptr<char> waitMessageSql(prepareSqlCall(DO_WAIT_MESSAGE_STATEMENT_SQL));
-            Statement* waitMessage = getStatement(connection, waitMessageId.get(), 
-                                                  waitMessageSql.get());
+            Statement* waitMessage = connection->getStatement(waitMessageId.get(), 
+                                                              waitMessageSql.get());
             if (!waitMessage)
                 throw Exception("Failed to create statement for messages access.");
             
@@ -697,7 +689,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
                 messagesCache.Push(fetchedMessage);
             }
             
-            if (info.dsUncommited <= 0 || ++uncommited >= info.dsUncommited) {
+            if (info.dsUncommitedInProcess <= 0 || ++uncommited >= info.dsUncommitedInProcess) {
                 connection->commit();
                 uncommited = 0;
             }

@@ -14,7 +14,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
             bStarted(false), bNeedExit(false), taskTablesPrefix(0), 
                 dsInternalName(0), dsInternal(0), dsIntConnection(0), dsCommitInterval(1),
-                    messageSender(0), protocolId(0), svcType(0), address(0)
+                    messageSender(0), dsStatConnection(0), statistics(0),
+                        protocolId(0), svcType(0), address(0)
 {
     logger.info("Loading ...");
 
@@ -45,8 +46,12 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     if (!dsInternal)
         throw ConfigException("Failed to obtail internal DataSource driver '%s'", dsInternalName);
     dsIntConnection = dsInternal->getConnection();
-    if (!dsIntConnection)
+    dsStatConnection = dsInternal->getConnection();
+    if (!dsIntConnection || !dsStatConnection)
         throw ConfigException("Failed to obtain connection to internal data source.");
+    
+    statistics = new StatisticsManager(dsStatConnection);
+    manager.setStatisticsManager(statistics);
 
     logger.info("Internal DataSource driver '%s' obtained.", dsInternalName);
     
@@ -100,20 +105,25 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     
     logger.info("Load success.");
     
+    if (statistics) statistics->Start();
     scheduler.Start();
 }
 TaskProcessor::~TaskProcessor()
 {
     scheduler.Stop();
     this->Stop();
-
+    manager.shutdown();
+    
     {
         MutexGuard guard(tasksLock);
         char* key = 0; Task* task = 0; tasks.First();
         while (tasks.Next(key, task))
             if (task) task->finalize();
     }
-    
+
+    if (statistics) delete statistics;
+    if (dsStatConnection) dsInternal->freeConnection(dsStatConnection);
+
     if (dsIntConnection) dsInternal->freeConnection(dsIntConnection);
     if (dsInternalName) delete dsInternalName;
     if (taskTablesPrefix) delete taskTablesPrefix;
@@ -380,9 +390,8 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
         {
             try
             {
-                Statement* createMapping = Task::getStatement(dsIntConnection, 
-                                                              CREATE_ID_MAPPING_STATEMENT_ID,
-                                                              CREATE_ID_MAPPING_STATEMENT_SQL);
+                Statement* createMapping = dsIntConnection->getStatement(CREATE_ID_MAPPING_STATEMENT_ID,
+                                                                         CREATE_ID_MAPPING_STATEMENT_SQL);
                 if (!createMapping)
                     throw Exception("processResponce(): Failed to create statement for ids mapping.");
                 
@@ -427,12 +436,10 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
 
     try
     {
-        Statement* getMapping = Task::getStatement(dsIntConnection, 
-                                                   GET_ID_MAPPING_STATEMENT_ID,
-                                                   GET_ID_MAPPING_STATEMENT_SQL);
-        Statement* delMapping = Task::getStatement(dsIntConnection, 
-                                                   DEL_ID_MAPPING_STATEMENT_ID,
-                                                   DEL_ID_MAPPING_STATEMENT_SQL);
+        Statement* getMapping = dsIntConnection->getStatement(GET_ID_MAPPING_STATEMENT_ID,
+                                                              GET_ID_MAPPING_STATEMENT_SQL);
+        Statement* delMapping = dsIntConnection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
+                                                              DEL_ID_MAPPING_STATEMENT_SQL);
         if (!getMapping || !delMapping)
             throw Exception("processReceipt(): Failed to create statement for ids mapping.");
        

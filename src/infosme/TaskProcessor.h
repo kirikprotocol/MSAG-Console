@@ -21,10 +21,8 @@
 
 #include <db/DataSource.h>
 
-#include "DataProvider.h"
 #include "TaskScheduler.h"
-#include "Task.h"
-
+#include "StatisticsManager.h"
 #include "InfoSmeAdmin.h"
 
 namespace smsc { namespace infosme 
@@ -50,11 +48,12 @@ namespace smsc { namespace infosme
     private:
         
         TaskMethod    method;
+        Statistics*   statistics;
         
     public:
         
-        TaskRunner(Task* task, TaskMethod method)
-            : TaskGuard(task), ThreadedTask(), method(method) {};
+        TaskRunner(Task* task, TaskMethod method, Statistics* statistics = 0)
+            : TaskGuard(task), ThreadedTask(), method(method), statistics(statistics) {};
 
         virtual ~TaskRunner() {};
         
@@ -68,7 +67,7 @@ namespace smsc { namespace infosme
                 task->endProcess();
                 break;
             case beginProcessMethod:
-                task->beginProcess();
+                task->beginProcess(statistics);
                 break;
             case dropAllMessagesMethod:
                 task->dropAllMessages();
@@ -90,11 +89,16 @@ namespace smsc { namespace infosme
     
         log4cpp::Category  &logger;
         ThreadPool          pool;
+        Mutex               stopLock;
+        bool                bStopping;
+        
+        StatisticsManager*  statistics;
         
     public:
     
-        TaskManager() : TaskInvokeAdapter(), 
-            logger(Logger::getCategory("smsc.infosme.TaskManager")) {};
+        TaskManager() 
+            : TaskInvokeAdapter(), logger(Logger::getCategory("smsc.infosme.TaskManager")), 
+                statistics(0), bStopping(false) {};
         virtual ~TaskManager() {
             shutdown();
         };
@@ -103,6 +107,10 @@ namespace smsc { namespace infosme
             pool.shutdown();
         }
     
+        void setStatisticsManager(StatisticsManager* manager) {
+            statistics = manager;
+        };
+        
         void init(ConfigView* config) // throw(ConfigException)
         {
             try 
@@ -128,7 +136,7 @@ namespace smsc { namespace infosme
             pool.startTask(new TaskRunner(task, endProcessMethod));
         };
         virtual void invokeBeginProcess(Task* task) {
-            pool.startTask(new TaskRunner(task, beginProcessMethod));
+            pool.startTask(new TaskRunner(task, beginProcessMethod, statistics));
         };
         virtual void invokeDropAllMessages(Task* task) {
             pool.startTask(new TaskRunner(task, dropAllMessagesMethod));
@@ -193,6 +201,9 @@ namespace smsc { namespace infosme
         IntHash<TaskMsgId> taskIdsBySeqNum;
         Mutex              taskIdsBySeqNumLock;
         
+        Connection*         dsStatConnection;
+        StatisticsManager*  statistics;
+
         int     protocolId;
         char*   svcType;
         char*   address;
@@ -236,6 +247,10 @@ namespace smsc { namespace infosme
         
         void processResponce(int seqNum, bool accepted, bool retry, std::string smscId="");
         void processReceipt (std::string smscId, bool delivered, bool retry);
+
+        bool getStatistics(std::string taskId, TaskStat& stat) {
+            return (statistics) ? statistics->getStatistics(taskId, stat):false;
+        };
 
         /* ------------------------ Admin interface ------------------------ */ 
 
