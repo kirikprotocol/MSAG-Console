@@ -45,7 +45,7 @@ const char* const TC_ITERATE_ROUTES = "iterateRoutes";
 class RouteManagerTestCases : BaseTestCases
 {
 public:
-	RouteManagerTestCases();
+	RouteManagerTestCases(RouteManager* routeMan, RouteRegistry* routeReg);
 
 	virtual ~RouteManagerTestCases() {}
 
@@ -77,19 +77,19 @@ public:
 	/**
 	 * Поиск маршрута.
 	 */
-	TCResult* lookupRoute(const RouteRegistry& routeReg,
-		const Address& origAddr, const Address& destAddr);
+	TCResult* lookupRoute(const Address& origAddr, const Address& destAddr);
 
 	/*
 	 * Итерирование по списку маршрутов.
 	 */
-	TCResult* iterateRoutes(const RouteRegistry& routeReg);
+	TCResult* iterateRoutes();
 
 protected:
 	virtual Category& getLog();
 
 private:
 	RouteManager* routeMan;
+	RouteRegistry* routeReg;
 	float setupRandomAddressMatch(Address& addr, int num);
 	void setupRandomAddressNotMatch(Address& addr, int num);
 	void printLookupResult(const Address& origAddr, const Address& destAddr,

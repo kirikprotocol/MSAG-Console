@@ -4,6 +4,7 @@
 #include "test/sms/SmsUtil.hpp"
 #include "test/core/RouteUtil.hpp"
 #include "test/util/Util.hpp"
+#include "util/debug.h"
 #include <sys/types.h>
 #include <sstream>
 #include <util/debug.h>
@@ -23,8 +24,13 @@ using smsc::util::Logger;
 using smsc::sms::AddressValue;
 using smsc::test::core::RouteUtil;
 
-RouteManagerTestCases::RouteManagerTestCases()
-	: routeMan(CoreTestManager::getRouteManager()) {}
+RouteManagerTestCases::RouteManagerTestCases(RouteManager* _routeMan,
+	RouteRegistry* _routeReg)
+	: routeMan(_routeMan), routeReg(_routeReg)
+{
+	__require__(routeMan);
+	__require__(routeReg);
+}
 
 Category& RouteManagerTestCases::getLog()
 {
@@ -126,6 +132,7 @@ TCResult* RouteManagerTestCases::addCorrectRouteMatch(
 				"]\taddCorrectRouteMatch(" << s.value1(num1) << "," <<
 				s.value2(num1) << "): " << *data;
 			routeMan->addRoute(*route);
+			routeReg->putRoute(*data);
 		}
 		catch(...)
 		{
@@ -186,6 +193,7 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch(
 					throw s;
 			}
 			routeMan->addRoute(*route);
+			routeReg->putRoute(*data);
 		}
 		catch(...)
 		{
@@ -237,6 +245,7 @@ TCResult* RouteManagerTestCases::addCorrectRouteNotMatch2(
 				"]\taddCorrectRouteNotMatch2(" <<
 				s.value() << "): " << *data;
 			routeMan->addRoute(*route);
+			routeReg->putRoute(*data);
 		}
 		catch(...)
 		{
@@ -333,15 +342,16 @@ void RouteManagerTestCases::printLookupResult(const Address& origAddr,
 	//getLog().debugStream() << ss.str();
 }
 
-TCResult* RouteManagerTestCases::lookupRoute(const RouteRegistry& routeReg,
-	const Address& origAddr, const Address& destAddr)
+TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
+	const Address& destAddr)
 {
 	TCResult* res = new TCResult(TC_LOOKUP_ROUTE);
 	try
 	{
 		SmeProxy* proxy = NULL;
 		bool found = routeMan->lookup(origAddr, destAddr, proxy);
-		const RouteRegistry::RouteList routeList = routeReg.lookup(origAddr, destAddr);
+		const RouteRegistry::RouteList routeList =
+			routeReg->lookup(origAddr, destAddr);
 		printLookupResult(origAddr, destAddr, routeList, found, proxy);
 		if (found)
 		{
@@ -384,7 +394,7 @@ TCResult* RouteManagerTestCases::lookupRoute(const RouteRegistry& routeReg,
 	return res;
 }
 
-TCResult* RouteManagerTestCases::iterateRoutes(const RouteRegistry& routeReg)
+TCResult* RouteManagerTestCases::iterateRoutes()
 {
 	TCResult* res = new TCResult(TC_ITERATE_ROUTES);
 	try
@@ -399,7 +409,7 @@ TCResult* RouteManagerTestCases::iterateRoutes(const RouteRegistry& routeReg)
 			//SmeProxy* proxy = iter->getSmeProxy();
 			//int index = iter->getIndex();
 			RouteInfo route = iter->getRouteInfo();
-			const RouteInfo* correctRoute = routeReg.getRoute(route.routeId);
+			const RouteInfo* correctRoute = routeReg->getRoute(route.routeId);
 			if (!correctRoute)
 			{
 				extraRoutes++;
@@ -421,7 +431,7 @@ TCResult* RouteManagerTestCases::iterateRoutes(const RouteRegistry& routeReg)
 			res->addFailure(101);
 		}
 		//итератор пропустил некоторые маршруты
-		if (foundRoutes != routeReg.size())
+		if (foundRoutes != routeReg->size())
 		{
 			res->addFailure(102);
 		}
