@@ -1,20 +1,19 @@
-	
-	$Id$
+
+        $Id$
 
 
-	SMS Center Project, Root directory
+        SMS Center Project, Root directory
 
-	docs - документация
-	src - исходные тексты
-	bin - различные бинарные файлы (архив, релизы, ... )
+        docs - фюъєьхэЄрЎш 
+        src - шёїюфэ√х ЄхъёЄ√
+        bin - Ёрчышўэ√х сшэрЁэ√х Їрщы√ (рЁїшт, Ёхышч√, ... )
 
 
-	для компиляции, тестирования и инсталяции, нужно определить три переменных среды
-	SMSC_BUILDDIR 	- каталог куда происходит компиляция
-	SMSC_SRCDIR 	- каталог где находятся сырки
-	SMSC_INSTALLDIR - куда будет производится инсталяция системы
-	
-	для выплнения update,build_update,commit нужно определить
-	CVSROOT=:pserver:<user>@src.novosoft.ru:/cvsroot/main
-	и хотя бы один раз выполнить cvs login
+        фы  ъюьяшы Ўшш, ЄхёЄшЁютрэш  ш шэёЄры Ўшш, эєцэю юяЁхфхышЄ№ ЄЁш яхЁхьхээ√ї ёЁхф√
+        SMSC_BUILDDIR   - ърЄрыюу ъєфр яЁюшёїюфшЄ ъюьяшы Ўш 
+        SMSC_SRCDIR     - ърЄрыюу уфх эрїюф Єё  ё√Ёъш
+        SMSC_INSTALLDIR - ъєфр сєфхЄ яЁюшчтюфшЄё  шэёЄры Ўш  ёшёЄхь√
 
+        фы  т√яыэхэш  update,build_update,commit эєцэю юяЁхфхышЄ№
+        CVSROOT=:pserver:<user>@src.novosoft.ru:/cvsroot/main
+        ш їюЄ  с√ юфшэ Ёрч т√яюыэшЄ№ cvs login
