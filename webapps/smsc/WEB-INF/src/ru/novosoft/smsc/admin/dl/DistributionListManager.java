@@ -259,7 +259,7 @@ public class DistributionListManager implements DistributionListAdmin
             rs.close(); rs = null; stmt.close();
 
             stmt = connection.prepareStatement(CHECK_PRINCIPAL_SQL);
-            stmt.setString(2, submitter);
+            stmt.setString(1, submitter);
             rs = stmt.executeQuery();
             if (!rs.next() || rs.getInt(1) == 0)
               throw new PrincipalNotExistsException(submitter);
