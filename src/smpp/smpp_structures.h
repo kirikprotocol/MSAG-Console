@@ -1149,10 +1149,10 @@ inline bool smppPduHasSms(SmppHeader* pdu)
 #undef __cstr_property__
 #undef __ostr_property__
 
-inline uint32_t calcSmppPacketLength(SmppHeader* _pdu)
+inline uint32_t calcSmppPacketLength(const SmppHeader* __pdu)
 {
   using namespace SmppCommandSet;
-  
+  SmppHeader* _pdu = const_cast<SmppHeader*>(__pdu);
   switch ( _pdu->commandId )
   {
   case GENERIC_NACK:  return reinterpret_cast<PduGenericNack*>(_pdu)->size();
