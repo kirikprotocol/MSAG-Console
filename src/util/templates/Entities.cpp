@@ -363,11 +363,8 @@ bool ContextEnvironment::importLdl(const char* key, long double &val)
 
 void ContextEnvironment::reset()
 {
-    strs.Empty();
-    ints.Empty(); 
-    flts.Empty();
-    dbls.Empty();
-    ldls.Empty();
+    strs.Empty(); ints.Empty(); dats.Empty();
+    flts.Empty(); dbls.Empty(); ldls.Empty();
 }
 
 }}}
