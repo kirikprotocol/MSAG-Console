@@ -13,6 +13,10 @@ using smsc::sms::SMSId;
 using namespace smsc::smpp;
 using namespace smsc::test::sms; //constants
 
+#define __maxValidPeriod__ (time(NULL) + 7 * 24 * 3600) //7 суток
+#define __numTime__ rand1(2)
+#define __absoluteTime__ 1
+
 typedef enum
 { 
 	SMPP_ENROUTE_STATE = 1,
