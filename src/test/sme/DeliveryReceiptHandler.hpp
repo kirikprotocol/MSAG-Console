@@ -8,6 +8,7 @@ namespace smsc {
 namespace test {
 namespace sme {
 
+using std::vector;
 using log4cpp::Category;
 using smsc::smpp::PduSubmitSm;
 using smsc::smpp::PduDeliverySm;

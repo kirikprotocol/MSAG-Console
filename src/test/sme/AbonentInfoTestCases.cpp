@@ -101,6 +101,7 @@ void AbonentInfoTestCases::queryAbonentInfoCorrect(bool sync,
 			case 2: //несуществующий адрес
 				__tc__("queryAbonentInfo.correct.nonExistentAddr"); __tc_ok__;
 				SmsUtil::setupRandomCorrectAddress(&addr);
+				break;
 			default:
 				__unreachable__("Invalid numAddr");
 		}
