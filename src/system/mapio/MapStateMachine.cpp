@@ -1810,7 +1810,7 @@ static void NotifyHLR(MapDialog* dialog)
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::%s: Et96MapOpenReq error 0x%x",__FUNCTON__,result));
+      FormatText("MAP::%s: Et96MapOpenReq error 0x%x",__FUNCTION__,result));
   }
   ET96MAP_DEL_OUTCOME_T deliveryOutcom;
   if ( dialog->wasDelivered ) deliveryOutcom = ET96MAP_TRANSFER_SUCCESSFUL;
@@ -1826,12 +1826,12 @@ static void NotifyHLR(MapDialog* dialog)
   } else throw runtime_error(FormatText("MAP::%s bad protocol version 0x%x",__FUNCTION__,dialog->hlrVersion);
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::%s: Et96MapV2ReportSmDelStatReq error 0x%x",__FUNCTON__,result));
+      FormatText("MAP::%s: Et96MapV2ReportSmDelStatReq error 0x%x",__FUNCTION__,result));
   }
   result = Et96MapDelimiterReq(dialog->ssn,dialog->dialogid_map,);
   if ( result != ET96MAP_E_OK ) {
     throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::%s: Et96MapDelimiterReq error 0x%x",__FUNCTON__,result));
+      FormatText("MAP::%s: Et96MapDelimiterReq error 0x%x",__FUNCTION__,result));
   }
   dialog->state = MAPST_WaitDelRepConf;
 }
@@ -1841,8 +1841,7 @@ USHORT_T Et96MapV2ReportSmDelStatConf (
   ET96MAP_DIALOGUE_ID_T dialogueId,
   ET96MAP_INVOKE_ID_T invokeId,
   ET96MAP_ADDRESS_T *msisdnAlert_sp,
-  ET96MAP_ERROR_REPORT_SM_DEL_STAT_T
-  *errorReportSmDelStat_sp,
+  ET96MAP_ERROR_REPORT_SM_DEL_STAT_T *errorReportSmDelStat_sp,
   ET96MAP_PROV_ERR_T *provErrCode_p)
 {
   // nothig;
