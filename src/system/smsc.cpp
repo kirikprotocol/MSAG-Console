@@ -200,7 +200,8 @@ void Smsc::init(const SmscConfigs& cfg)
   //smemancfg.load("sme.xml");
   {
     smsc::util::config::smeman::SmeManConfig::RecordIterator i=cfg.smemanconfig->getRecordIterator();
-    smsc::util::regexp::RegExp re;
+    using namespace smsc::util::regexp;
+    RegExp re;
     while(i.hasRecord())
     {
       smsc::util::config::smeman::SmeRecord *rec;

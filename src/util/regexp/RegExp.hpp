@@ -1,4 +1,5 @@
 /*
+  $Id$
   Copyright (c) Konstantin Stupnik (aka Xecutor) 2000-2001 <skv@novosoft.ru>
   You can use, modify, distribute this code or any other part
   only with permissions of author or Novosoft Inc!
@@ -22,25 +23,41 @@
   #define RE_NO_NEWARRAY
 #endif
 
-#include "core/buffers/Hash.hpp"
+#if defined(NAMEDBRACKETS) || defined(RELIB)
+#if defined(RE_SPINOZA_MODE)
+  #ifdef __BORLANDC__
+    #include "CHash/CHash.cpp"
+  #else
+    #include "../CHash/CHash.cpp"
+  #endif
+  #define Hash    CHash
+  #define SetItem setitem
+  #define GetPtr  getitem
+#else
+  #include "Hash.hpp"
+#endif
+#ifdef RELIB
+#include "List.hpp"
+#endif
+#endif
 
 namespace smsc{
 namespace util{
 namespace regexp{
 
-#ifdef SMSC_DEBUG
-//#define _DEBUG
-#endif
-
-#define NAMEDBRACKETS
 #define RE_STATIC_LOCALE
 
-using namespace smsc::core::buffers;
-
+#ifdef UNICODE
+typedef unsigned short rechar;
+typedef rechar* prechar;
+typedef unsigned short RECHAR;
+#else
 //! Used to avoid problems when mapping string chars
 typedef unsigned char rechar;
 //! Used to avoid problems when mapping string chars
 typedef rechar* prechar;
+typedef char RECHAR;
+#endif
 
 //! Possible compile and runtime errors returned by LastError.
 enum REError{
@@ -79,7 +96,7 @@ typedef REOpCode *PREOpCode;
 
 //! Max brackets depth can be redefined in compile time
 #ifndef MAXDEPTH
-#define MAXDEPTH 256
+static const int MAXDEPTH=256;
 #endif
 
 /**
@@ -87,19 +104,22 @@ typedef REOpCode *PREOpCode;
 */
 /*@{*/
 //! Match in a case insensetive manner
-#define OP_IGNORECASE    0x0001
+static const int OP_IGNORECASE   =0x0001;
 //! Single line mode, dot metacharacter will match newline symbol
-#define OP_SINGLELINE    0x0002
+static const int OP_SINGLELINE   =0x0002;
 //! Multiline mode, ^ and $ can match line start and line end
-#define OP_MULTILINE     0x0004
+static const int OP_MULTILINE    =0x0004;
 //! Extended syntax, spaces symbols are ignored unless escaped
-#define OP_XTENDEDSYNTAX 0x0008
+static const int OP_XTENDEDSYNTAX=0x0008;
 //! Perl style regexp provided. i.e. /expression/imsx
-#define OP_PERLSTYLE     0x0010
+static const int OP_PERLSTYLE    =0x0010;
 //! Optimize after compile
-#define OP_OPTIMIZE      0x0020
+static const int OP_OPTIMIZE     =0x0020;
 //! Strict escapes - only unrecognized escape will prodce errInvalidEscape error
-#define OP_STRICT        0x0040
+static const int OP_STRICT       =0x0040;
+//! Replace backslash with slash, used
+//! when regexp source embeded in c++ sources
+static const int OP_CPPMODE      =0x0080;
 /*@}*/
 
 
@@ -109,22 +129,32 @@ typedef REOpCode *PREOpCode;
 */
 /*@{*/
 //! Digits
-#define TYPE_DIGITCHAR   0x01
+static const int TYPE_DIGITCHAR  =0x01;
 //! space, newlines tab etc
-#define TYPE_SPACECHAR   0x02
+static const int TYPE_SPACECHAR  =0x02;
 //! alphanumeric and _
-#define TYPE_WORDCHAR    0x04
+static const int TYPE_WORDCHAR   =0x04;
 //! lowcase symbol
-#define TYPE_LOWCASE     0x08
+static const int TYPE_LOWCASE    =0x08;
 //! upcase symbol
-#define TYPE_UPCASE      0x10
+static const int TYPE_UPCASE     =0x10;
 //! letter
-#define TYPE_ALPHACHAR   0x20
+static const int TYPE_ALPHACHAR  =0x20;
 /*@}*/
+
+/**
+  \defgroup brhactions Bracket handler actions
+
+*/
+/*@{*/
+//! Matched Closing bracket
+static const int bhMatch=1;
+//! Bracket rollback
+static const int bhRollBack=2;
 
 //! default preallocated stack size, and stack page size
 #ifndef STACK_PAGE_SIZE
-#define STACK_PAGE_SIZE 16
+static const int STACK_PAGE_SIZE=16;
 #endif
 
 #ifdef RE_STATIC_LOCALE
@@ -138,14 +168,8 @@ typedef REOpCode *PREOpCode;
     #pragma option -a2
   #elif defined(__GNUC__) || (defined(__WATCOMC__) && (__WATCOMC__ < 1100)) || defined(__LCC__)
     #pragma pack(2)
-    #if defined(__LCC__)
-      #define _export __declspec(dllexport)
-    #endif
   #else
     #pragma pack(push,2)
-    #if _MSC_VER
-      #define _export
-    #endif
   #endif
 #endif // RE_SPINOZA_MODE
 //! Structure that contain single bracket info
@@ -216,6 +240,10 @@ typedef struct StateStackPage{
   StateStackPage* next;
 }*PStateStackPage;
 
+#ifdef UNICODE
+struct UniSet;
+#endif
+
 /*! Regular expressions support class.
 
 Expressions must be Compile'ed first,
@@ -225,7 +253,7 @@ class RegExp{
 private:
   // code
   PREOpCode code;
-#ifdef _DEBUG
+#ifdef RE_DEBUG
   prechar resrc;
 #endif
 
@@ -240,9 +268,13 @@ private:
   int reclevel;
 #endif
 
+  char slashChar;
+  char backslashChar;
+
   PStateStackPage firstpage;
   PStateStackPage lastpage;
 
+#ifndef UNICODE
   // locale info
 #ifdef RE_EXTERNAL_CTYPE
   LOCALEDEF prechar lc;
@@ -259,10 +291,17 @@ private:
   LOCALEDEF rechar chartypes[256];
   LOCALEDEF rechar charbits[256];
 #endif
+#endif
 
+#ifdef UNICODE
+  UniSet *firstptr;
+#else
   rechar first[256];
+#endif
   int havefirst;
   int havelookahead;
+
+  int minlength;
 
   // error info
   int errorcode;
@@ -308,8 +347,14 @@ private:
 
   int GetNum(const prechar src,int& i);
 
-  void SetBit(prechar bitset,int charindex);
-  int  GetBit(prechar bitset,int charindex);
+  static inline void SetBit(prechar bitset,int charindex)
+  {
+    bitset[charindex>>3]|=1<<(charindex&7);
+  }
+  static inline int GetBit(prechar bitset,int charindex)
+  {
+    return bitset[charindex>>3]&(1<<(charindex&7));
+  }
 
   void PushState();
   StateStackItem* GetState();
@@ -320,6 +365,7 @@ private:
   int StrCmp(prechar& str,prechar start,prechar end);
 
   void Init(const prechar,int options);
+  RegExp(const RegExp& re){};
 
 public:
   //! Default constructor.
@@ -335,13 +381,14 @@ public:
      Compilation status can be verified with LastError method.
      \sa LastError
   */
-  RegExp(const char* expr,int options=OP_PERLSTYLE|OP_OPTIMIZE
+  RegExp(const RECHAR* expr,int options=OP_PERLSTYLE|OP_OPTIMIZE
   #ifdef RE_SPINOZA_MODE
     |OP_STRICT
   #endif
   );
   virtual ~RegExp();
 
+#ifndef UNICODE
   /*! Set locale specific information
       \param newlc - table that convert any symbol to it's lowercase state if possible, or left unchanged
       \param newuc - table that convert any symbol to it's uppercase state if possible, or left unchanged
@@ -358,6 +405,7 @@ public:
      , prechar newcharbits
   #endif
     );
+#endif
 
 #ifdef RELIB
   void SetRELib(PRELib newlib){relib=newlib;}
@@ -381,7 +429,7 @@ public:
       \sa ErrorPosition
       \sa options
   */
-  int Compile(const char* src,int options=OP_PERLSTYLE|OP_OPTIMIZE
+  int Compile(const RECHAR* src,int options=OP_PERLSTYLE|OP_OPTIMIZE
   #ifdef RE_SPINOZA_MODE
     |OP_STRICT
   #endif
@@ -403,7 +451,7 @@ public:
       \return 1 on success, 0 if match failed.
       \sa SMatch
   */
-  int Match(const char* textstart,const char* textend,PMatch match,int& matchcount
+  int Match(const RECHAR* textstart,const RECHAR* textend,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
                  ,PMatchHash hmatch=NULL
 #endif
@@ -411,7 +459,7 @@ public:
   /*! Same as Match(const char* textstart,const char* textend,...), but for ASCIIZ string.
       textend calculated automatically.
   */
-  int Match(const char* textstart,PMatch match,int& matchcount
+  int Match(const RECHAR* textstart,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
                  ,PMatchHash hmatch=NULL
 #endif
@@ -419,7 +467,7 @@ public:
   /*! Advanced version of match. Can be used for multiple matches
       on one string (to imitate /g modifier of perl regexp
   */
-  int MatchEx(const char* datastart,const char* textstart,const char* textend,PMatch match,int& matchcount
+  int MatchEx(const RECHAR* datastart,const RECHAR* textstart,const RECHAR* textend,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
                  ,PMatchHash hmatch=NULL
 #endif
@@ -428,7 +476,7 @@ public:
       Parameters and return value are the same as for Match.
       It is highly recommended to call Optimize before Search.
   */
-  int Search(const char* textstart,const char* textend,PMatch match,int& matchcount
+  int Search(const RECHAR* textstart,const RECHAR* textend,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
                  ,PMatchHash hmatch=NULL
 #endif
@@ -436,7 +484,7 @@ public:
   /*! Same as Search with specified textend, but for ASCIIZ strings only.
       textend calculated automatically.
   */
-  int Search(const char* textstart,PMatch match,int& matchcount
+  int Search(const RECHAR* textstart,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
                  ,PMatchHash hmatch=NULL
 #endif
@@ -444,7 +492,7 @@ public:
   /*! Advanced version of search. Can be used for multiple searches
       on one string (to imitate /g modifier of perl regexp
   */
-  int SearchEx(const char* datastart,const char* textstart,const char* textend,PMatch match,int& matchcount
+  int SearchEx(const RECHAR* datastart,const RECHAR* textstart,const RECHAR* textend,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
                  ,PMatchHash hmatch=NULL
 #endif
@@ -473,15 +521,24 @@ public:
       and named brackets.
   */
   int GetBracketsCount() const {return bracketscount;}
+  typedef bool(*BracketHandler)(void* data,int action,int brindex,int start,int end);
+  void SetBracketHandler(BracketHandler bh,void* data)
+  {
+    brhandler=bh;
+    brhdata=data;
+  }
+protected:
+  BracketHandler brhandler;
+  void* brhdata;
 };
 
 #ifdef RELIB
-int RELibMatch(RELib& relib,MatchList& ml,const char* name,const char* start);
-int RELibMatch(RELib& relib,MatchList& ml,const char* name,const char* start,const char* end);
+int RELibMatch(RELib& relib,MatchList& ml,const RECHAR* name,const RECHAR* start);
+int RELibMatch(RELib& relib,MatchList& ml,const RECHAR* name,const RECHAR* start,const RECHAR* end);
 #endif
 
-};//regexp
-};//util
-};//smsc
+};
+};
+};
 
 #endif

@@ -1,4 +1,5 @@
 /*
+  $Id$
   Copyright (c) Konstantin Stupnik (aka Xecutor) 2001 <skv@novosoft.ru>
   You can use, modify, distribute this code or any other part
   only with permissions of author or Novosoft Inc!
@@ -34,17 +35,21 @@
 #endif
 //#include <stdlib.h>
 
+namespace smsc{
+namespace util{
+namespace regexp{
+
 #ifdef RE_SPINOZA_MODE
  #define dpf(x)
 #else
- #ifdef _DEBUG
+ #ifdef RE_DEBUG
    #include <stdio.h>
    #ifdef dpf
      #undef dpf
    #endif
    #define dpf(x) printf x
 
-static char *ops[]={
+char *ops[]={
   "opNone",
   "opLineStart",
   "opLineEnd",
@@ -111,9 +116,238 @@ static char *ops[]={
  #endif
 #endif // RE_SPINOZA_MODE
 
-namespace smsc{
-namespace util{
-namespace regexp{
+#ifndef UNICODE
+#ifdef RE_STATIC_LOCALE
+#ifdef RE_EXTERNAL_CTYPE
+prechar RegExp::lc;
+prechar RegExp::uc;
+prechar RegExp::chartypes;
+#else
+rechar RegExp::lc[256];
+rechar RegExp::uc[256];
+rechar RegExp::chartypes[256];
+#endif
+rechar RegExp::charbits[256];
+#endif
+#endif
+
+#ifdef UNICODE
+#define ISDIGIT(c) iswdigit(c)
+#define ISSPACE(c) iswspace(c)
+#define ISWORD(c)  (iswalnum(c) || c=='_')
+#define ISLOWER(c) iswlower(c)
+#define ISUPPER(c) iswupper(c)
+#define ISALPHA(c) iswalpha(c)
+#define TOUPPER(c) towupper(c)
+#define TOLOWER(c) towlower(c)
+
+#define ISTYPE(c,t) isType(c,t)
+
+bool isType(rechar chr,int type)
+{
+  switch(type)
+  {
+    case TYPE_DIGITCHAR:return ISDIGIT(chr);
+    case TYPE_SPACECHAR:return ISSPACE(chr);
+    case TYPE_WORDCHAR: return ISWORD(chr);
+    case TYPE_LOWCASE:  return ISLOWER(chr);
+    case TYPE_UPCASE:   return ISUPPER(chr);
+    case TYPE_ALPHACHAR:return ISALPHA(chr);
+  }
+  return false;
+}
+
+#define strlen wcslen
+
+struct UniSet{
+unsigned char* high[256];
+char types;
+char nottypes;
+char negative;
+UniSet()
+{
+  memset(high,0,sizeof(high));
+  types=0;
+  nottypes=0;
+  negative=0;
+}
+UniSet(const UniSet& src)
+{
+  for(int i=0;i<256;i++)
+  {
+    if(src.high[i])
+    {
+      high[i]=new unsigned char[32];
+      memcpy(high[i],src.high[i],32);
+    }else
+    {
+      high[i]=NULL;
+    }
+  }
+  types=src.types;
+  nottypes=src.nottypes;
+  negative=src.negative;
+}
+UniSet& operator=(const UniSet& src)
+{
+  for(int i=0;i<256;i++)
+  {
+    if(src.high[i])
+    {
+      if(!high[i])high[i]=new unsigned char[32];
+      memcpy(high[i],src.high[i],32);
+    }else
+    {
+      if(high[i])delete [] high[i];
+      high[i]=NULL;
+    }
+  }
+  types=src.types;
+  nottypes=src.nottypes;
+  negative=src.negative;
+}
+
+void Reset()
+{
+  for(int i=0;i<256;i++)
+  {
+    if(high[i])
+    {
+      delete [] high[i];
+      high[i]=0;
+    }
+  }
+  types=0;
+  nottypes=0;
+  negative=0;
+}
+
+struct Setter{
+UniSet& set;
+rechar idx;
+Setter(UniSet& s,rechar chr):set(s),idx(chr)
+{
+}
+void operator=(int val)
+{
+  if(val)set.SetBit(idx);
+  else set.ClearBit(idx);
+}
+bool operator!()const
+{
+  return !set.GetBit(idx);
+}
+};
+
+const bool operator[](rechar idx)const
+{
+  return GetBit(idx);
+}
+Setter operator[](rechar idx)
+{
+  return Setter(*this,idx);
+}
+~UniSet()
+{
+  for(int i=0;i<256;i++)
+  {
+    if(high[i])delete [] high[i];
+  }
+}
+bool GetBit(rechar chr)const
+{
+  int tps=negative?~types:types;
+  int ntps=negative?~nottypes:nottypes;
+  if(tps)
+  {
+    int t=TYPE_ALPHACHAR;
+    while(t)
+    {
+      if(tps&t)
+      {
+        switch(t)
+        {
+          case TYPE_DIGITCHAR:if(ISDIGIT(chr))return true;else break;
+          case TYPE_SPACECHAR:if(ISSPACE(chr))return true;else break;
+          case TYPE_WORDCHAR: if(ISWORD(chr)) return true;else break;
+          case TYPE_LOWCASE:  if(ISLOWER(chr))return true;else break;
+          case TYPE_UPCASE:   if(ISUPPER(chr))return true;else break;
+          case TYPE_ALPHACHAR:if(ISALPHA(chr))return true;else break;
+        }
+      }
+      t>>=1;
+    }
+  }
+  if(ntps)
+  {
+    int t=TYPE_ALPHACHAR;
+    while(t)
+    {
+      if(ntps&t)
+      {
+        switch(t)
+        {
+          case TYPE_DIGITCHAR:if(!ISDIGIT(chr))return true;else break;
+          case TYPE_SPACECHAR:if(!ISSPACE(chr))return true;else break;
+          case TYPE_WORDCHAR: if(!ISWORD(chr)) return true;else break;
+          case TYPE_LOWCASE:  if(!ISLOWER(chr))return true;else break;
+          case TYPE_UPCASE:   if(!ISUPPER(chr))return true;else break;
+          case TYPE_ALPHACHAR:if(!ISALPHA(chr))return true;else break;
+        }
+      }
+      t>>=1;
+    }
+  }
+  unsigned char h=(chr&0xff00)>>8;
+  if(!high[h])return negative?true:false;
+  if(((high[h][(chr&0xff)>>3]&(1<<(chr&7)))!=0?1:0))
+  {
+    return negative?false:true;
+  }else
+  {
+    return negative?true:false;
+  }
+}
+void SetBit(rechar  chr)
+{
+  unsigned char h=(chr&0xff00)>>8;
+  if(!high[h])
+  {
+    high[h]=new unsigned char[32];
+    memset(high[h],0,32);
+  }
+  high[h][(chr&0xff)>>3]|=1<<(chr&7);
+}
+void ClearBit(rechar  chr)
+{
+  unsigned char h=(chr&0xff00)>>8;
+  if(!high[h])
+  {
+    high[h]=new unsigned char[32];
+    memset(high[h],0,32);
+  }
+  high[h][(chr&0xff)>>3]&=~(1<<(chr&7));
+}
+
+};
+
+#define GetBit(cls,chr) cls->GetBit(chr)
+#define SetBit(cls,chr) cls->SetBit(chr)
+
+#else
+#define ISDIGIT(c) ((chartypes[c]&TYPE_DIGITCHAR)!=0)
+#define ISSPACE(c) ((chartypes[c]&TYPE_SPACECHAR)!=0)
+#define ISWORD(c)  ((chartypes[c]&TYPE_WORDCHAR)!=0)
+#define ISLOWER(c) ((chartypes[c]&TYPE_LOWCASE)!=0)
+#define ISUPPER(c) ((chartypes[c]&TYPE_UPCASE)!=0)
+#define ISALPHA(c) ((chartypes[c]&TYPE_ALPHACHAR)!=0)
+#define TOUPPER(c) uc[c]
+#define TOLOWER(c) lc[c]
+
+#define ISTYPE(c,t) (chartypes[c]&t)
+
+#endif //UNICODE
+
 
 
 enum REOp{
@@ -209,7 +443,7 @@ enum REOp{
 struct REOpCode{
   int op;
   REOpCode *next,*prev;
-#ifdef _DEBUG
+#ifdef RE_DEBUG
   int    srcpos;
 #endif
   #ifdef RE_NO_NEWARRAY
@@ -232,7 +466,11 @@ struct REOpCode{
         }bracket;
         int op;
         rechar symbol;
+#ifdef UNICODE
+        UniSet *symbolclass;
+#else
         prechar symbolclass;
+#endif
         REOpCode* nextalt;
         int refindex;
 #ifdef NAMEDBRACKETS
@@ -264,7 +502,11 @@ struct REOpCode{
       REOpCode* endindex;
     }alternative;
     rechar symbol;
+#ifdef UNICODE
+    UniSet *symbolclass;
+#else
     prechar symbolclass;
+#endif
     int refindex;
 #ifdef NAMEDBRACKETS
     prechar refname;
@@ -369,9 +611,18 @@ REOpCode::~REOpCode()
 {
   switch(op)
   {
+#ifdef UNICODE
+    case opSymbolClass:delete symbolclass;break;
+#else
     case opSymbolClass:delete [] symbolclass;break;
+#endif
+#ifdef UNICODE
+    case opClassRange:
+    case opClassMinRange:delete range.symbolclass;break;
+#else
     case opClassRange:
     case opClassMinRange:delete [] range.symbolclass;break;
+#endif
 #ifdef NAMEDBRACKETS
     case opNamedBracket:delete [] nbracket.name;break;
     case opNamedBackRef:delete [] refname;break;
@@ -383,29 +634,21 @@ REOpCode::~REOpCode()
 }
 #endif // RE_NO_NEWARRAY
 
-#ifdef RE_STATIC_LOCALE
-#ifdef RE_EXTERNAL_CTYPE
-prechar RegExp::lc;
-prechar RegExp::uc;
-prechar RegExp::chartypes;
-#else
-rechar RegExp::lc[256];
-rechar RegExp::uc[256];
-rechar RegExp::chartypes[256];
-#endif
-rechar RegExp::charbits[256];
-#endif
 
 
 void RegExp::Init(const prechar expr,int options)
 {
   //memset(this,0,sizeof(*this));
   code=NULL;
+  brhandler=NULL;
+  brhdata=NULL;
+#ifndef UNICODE
 #ifndef RE_STATIC_LOCALE
   #ifndef RE_EXTERNAL_CTYPE
     InitLocale();
-  #endif
-#endif
+  #endif //RE_EXTERNAL_CTYPE
+#endif//RE_STATIC_LOCALE
+#endif //UNICODE
 #ifdef NAMEDBRACKETS
   havenamedbrackets=0;
 #endif
@@ -416,22 +659,33 @@ void RegExp::Init(const prechar expr,int options)
   firstpage->next=NULL;
   firstpage->prev=NULL;
 
+#ifdef UNICODE
+  firstptr=new UniSet();
+#define first (*firstptr)
+#endif
+
   start=NULL;
   end=NULL;
   trimend=NULL;
 
-  Compile((char*)expr,options);
+  Compile((const RECHAR*)expr,options);
 }
 
 RegExp::RegExp()
 {
   //memset(this,0,sizeof(*this));
   code=NULL;
+  brhandler=NULL;
+  brhdata=NULL;
+  slashChar='/';
+  backslashChar='\\';
+#ifndef UNICODE
 #ifndef RE_STATIC_LOCALE
   #ifndef RE_EXTERNAL_CTYPE
     InitLocale();
   #endif
 #endif
+#endif//UNICODE
 #ifdef NAMEDBRACKETS
   havenamedbrackets=0;
 #endif
@@ -442,19 +696,26 @@ RegExp::RegExp()
   firstpage->next=NULL;
   firstpage->prev=NULL;
 
+#ifdef UNICODE
+  firstptr=new UniSet();
+
+#endif
+
   start=NULL;
   end=NULL;
   trimend=NULL;
 
   errorcode=errNotCompiled;
-  #ifdef _DEBUG
+  #ifdef RE_DEBUG
   resrc=NULL;
   #endif
 }
 
-RegExp::RegExp(const char* expr,int options)
+RegExp::RegExp(const RECHAR* expr,int options)
 {
-  #ifdef _DEBUG
+  slashChar='/';
+  backslashChar='\\';
+  #ifdef RE_DEBUG
   resrc=NULL;
   #endif
   Init((const prechar)expr,options);
@@ -462,7 +723,7 @@ RegExp::RegExp(const char* expr,int options)
 
 RegExp::~RegExp()
 {
-  #ifdef _DEBUG
+  #ifdef RE_DEBUG
     #ifdef RE_NO_NEWARRAY
       if(resrc)
         free(resrc);
@@ -483,8 +744,12 @@ RegExp::~RegExp()
   {
     CleanStack();
   }
+#ifdef UNICODE
+  delete firstptr;
+#endif
 }
 
+#ifndef UNICODE
 #ifndef RE_EXTERNAL_CTYPE
 void RegExp::InitLocale()
 {
@@ -520,6 +785,9 @@ void RegExp::InitLocale()
   }
 }
 #endif
+#endif
+
+
 
 int RegExp::CalcLength(const prechar src,int srclength)
 {
@@ -532,46 +800,46 @@ int RegExp::CalcLength(const prechar src,int srclength)
 
   for(i=0;i<srclength;i++,length++)
   {
-    if(inquote && src[i]!='\\' && src[i+1]!='E')
+    if(inquote && src[i]!=backslashChar && src[i+1]!='E')
     {
+      continue;
+    }
+    if(src[i]==backslashChar)
+    {
+      i++;
+      if(src[i]=='Q')inquote=1;
+      if(src[i]=='E')inquote=0;
+      if(src[i]=='x')
+      {
+        i++;
+        int c=TOLOWER(src[i]);
+        if((c>='0' && c<='9')||(c>='a' && c<='f'))
+        {
+          int c=TOLOWER(src[i+1]);
+          if((c>='0' && c<='9')||(c>='a' && c<='f'))i++;
+
+        }else return SetError(errSyntax,i);
+      }
+#ifdef NAMEDBRACKETS
+      if(src[i]=='p')
+      {
+        i++;
+        if(src[i]!='{')
+          return SetError(errSyntax,i);
+        i++;
+        int save=i;
+        while(i<srclength && (ISWORD(src[i]) || ISSPACE(src[i])) && src[i]!='}')
+          i++;
+        if(i>=srclength)
+          return SetError(errBrackets,save);
+        if(src[i]!='}' && !(ISWORD(src[i]) || ISSPACE(src[i])))
+          return SetError(errSyntax,i);
+      }
+#endif
       continue;
     }
     switch(src[i])
     {
-      case '\\':
-      {
-        i++;
-        if(src[i]=='Q')inquote=1;
-        if(src[i]=='E')inquote=0;
-        if(src[i]=='x')
-        {
-          i++;
-          int c=lc[src[i]];
-          if((c>='0' && c<='9')||(c>='a' && c<='f'))
-          {
-            int c=lc[src[i+1]];
-            if((c>='0' && c<='9')||(c>='a' && c<='f'))i++;
-
-          }else return SetError(errSyntax,i);
-        }
-#ifdef NAMEDBRACKETS
-        if(src[i]=='p')
-        {
-          i++;
-          if(src[i]!='{')
-            return SetError(errSyntax,i);
-          i++;
-          int save=i;
-          while(i<srclength && (chartypes[src[i]]&(TYPE_WORDCHAR|TYPE_SPACECHAR)) && src[i]!='}')
-            i++;
-          if(i>=srclength)
-            return SetError(errBrackets,save);
-          if(src[i]!='}' && !(chartypes[src[i]]&(TYPE_WORDCHAR|TYPE_SPACECHAR)))
-            return SetError(errSyntax,i);
-        }
-#endif
-        break;
-      }
       case '(':
       {
         brackets[count]=i;
@@ -585,11 +853,11 @@ int RegExp::CalcLength(const prechar src,int srclength)
           {
             save=i;
             i++;
-            while(i<srclength && (chartypes[src[i]]&(TYPE_WORDCHAR|TYPE_SPACECHAR)) && src[i]!='}')
+            while(i<srclength && (ISWORD(src[i]) || ISSPACE(src[i])) && src[i]!='}')
               i++;
             if(i>=srclength)
               return SetError(errBrackets,save);
-            if(src[i]!='}' && !(chartypes[src[i]]&(TYPE_WORDCHAR|TYPE_SPACECHAR)))
+            if(src[i]!='}' && !(ISWORD(src[i]) || ISSPACE(src[i])))
               return SetError(errSyntax,i);
           }
 #endif
@@ -648,9 +916,18 @@ int RegExp::CalcLength(const prechar src,int srclength)
   return length;
 }
 
-int RegExp::Compile(const char* src,int options)
+int RegExp::Compile(const RECHAR* src,int options)
 {
   int srcstart=0,srclength/*=0*/,relength;
+  if(options&OP_CPPMODE)
+  {
+    slashChar='\\';
+    backslashChar='/';
+  }else
+  {
+    slashChar='/';
+    backslashChar='\\';
+  }
   havefirst=0;
   #ifdef RE_NO_NEWARRAY
   DeleteArray(reinterpret_cast<void**>(&code),REOpCode::OnDelete);
@@ -660,12 +937,12 @@ int RegExp::Compile(const char* src,int options)
   #endif
   if(options&OP_PERLSTYLE)
   {
-    if(src[0]!='/')return SetError(errSyntax,0);
+    if(src[0]!=slashChar)return SetError(errSyntax,0);
     srcstart=1;
     srclength=1;
-    while(src[srclength] && src[srclength]!='/')
+    while(src[srclength] && src[srclength]!=slashChar)
     {
-      if(src[srclength]=='\\' && src[srclength+1]!=0)
+      if(src[srclength]==backslashChar && src[srclength+1]!=0)
       {
         srclength++;
       }
@@ -732,22 +1009,13 @@ int RegExp::Compile(const char* src,int options)
 int RegExp::GetNum(const prechar src,int& i)
 {
   int res=0;//atoi((const char*)src+i);
-  while(chartypes[src[i]]&TYPE_DIGITCHAR)
+  while(ISDIGIT(src[i]))
   {
     res*=10;
     res+=src[i]-'0';
     i++;
   }
   return res;
-}
-
-void inline RegExp::SetBit(prechar bitset,int charindex)
-{
-  bitset[charindex>>3]|=1<<(charindex&7);
-}
-int inline RegExp::GetBit(prechar bitset,int charindex)
-{
-  return bitset[charindex>>3]&(1<<(charindex&7));
 }
 
 int RegExp::InnerCompile(const prechar src,int srclength,int options)
@@ -775,8 +1043,12 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
 
   maxbackref=0;
 
+#ifdef UNICODE
+  UniSet *tmpclass;
+#else
   rechar tmpclass[32];
   int *itmpclass=(int*)tmpclass;
+#endif
 
   code->op=opOpenBracket;
   code->bracket.index=0;
@@ -791,7 +1063,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
   register PREOpCode op;//=code;
 
   brackets[0]=code;
-#ifdef _DEBUG
+#ifdef RE_DEBUG
   #ifdef RE_NO_NEWARRAY
     resrc=static_cast<rechar*>(malloc(sizeof(rechar)*(srclength+4)));
   #else
@@ -799,7 +1071,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
   #endif // RE_NO_NEWARRAY
   resrc[0]='(';
   resrc[1]=0;
-  memcpy(resrc+1,src,srclength);
+  memcpy(resrc+1,src,srclength*sizeof(rechar));
   resrc[srclength+1]=')';
   resrc[srclength+2]=27;
   resrc[srclength+3]=0;
@@ -810,154 +1082,155 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
   {
     op=code+pos;
     pos++;
-#ifdef _DEBUG
+#ifdef RE_DEBUG
     op->srcpos=i+1;
 #endif
-    if(inquote && src[i]!='\\')
+    if(inquote && src[i]!=backslashChar)
     {
       op->op=ignorecase?opSymbolIgnoreCase:opSymbol;
-      op->symbol=ignorecase?lc[src[i]]:src[i];
-      if(ignorecase && uc[op->symbol]==op->symbol)op->op=opSymbol;
+      op->symbol=ignorecase?TOLOWER(src[i]):src[i];
+      if(ignorecase && TOUPPER(op->symbol)==op->symbol)op->op=opSymbol;
+      continue;
+    }
+    if(src[i]==backslashChar)
+    {
+      i++;
+      if(inquote && src[i]!='E')
+      {
+        op->op=opSymbol;
+        op->symbol=backslashChar;
+        op=code+pos;
+        pos++;
+        op->op=ignorecase?opSymbolIgnoreCase:opSymbol;
+        op->symbol=ignorecase?TOLOWER(src[i]):src[i];
+        if(ignorecase && TOUPPER(op->symbol)==op->symbol)op->op=opSymbol;
+        continue;
+      }
+      op->op=opType;
+      switch(src[i])
+      {
+        case 'Q':inquote=1;pos--;continue;
+        case 'E':inquote=0;pos--;continue;
+
+        case 'b':op->op=opWordBound;continue;
+        case 'B':op->op=opNotWordBound;continue;
+        case 'D':op->op=opNotType;
+        case 'd':op->type=TYPE_DIGITCHAR;continue;
+        case 'S':op->op=opNotType;
+        case 's':op->type=TYPE_SPACECHAR;continue;
+        case 'W':op->op=opNotType;
+        case 'w':op->type=TYPE_WORDCHAR;continue;
+        case 'U':op->op=opNotType;
+        case 'u':op->type=TYPE_UPCASE;continue;
+        case 'L':op->op=opNotType;
+        case 'l':op->type=TYPE_LOWCASE;continue;
+        case 'I':op->op=opNotType;
+        case 'i':op->type=TYPE_ALPHACHAR;continue;
+        case 'A':op->op=opDataStart;continue;
+        case 'Z':op->op=opDataEnd;continue;
+        case 'n':op->op=opSymbol;op->symbol='\n';continue;
+        case 'r':op->op=opSymbol;op->symbol='\r';continue;
+        case 't':op->op=opSymbol;op->symbol='\t';continue;
+        case 'f':op->op=opSymbol;op->symbol='\f';continue;
+        case 'e':op->op=opSymbol;op->symbol=27;continue;
+        case 'O':op->op=opNoReturn;continue;
+#ifdef NAMEDBRACKETS
+        case 'p':
+        {
+          op->op=opNamedBackRef;
+          i++;
+          if(src[i]!='{')return SetError(errSyntax,i);
+          int len=0;i++;
+          while(src[i+len]!='}')len++;
+          if(len>0)
+          {
+            #ifdef RE_NO_NEWARRAY
+            op->refname=static_cast<rechar*>(malloc(sizeof(rechar)*(len+1)));
+            #else
+            op->refname=new rechar[len+1];
+            #endif
+            memcpy(op->refname,src+i,len*sizeof(rechar));
+            op->refname[len]=0;
+            if(!h.Exists((char*)op->refname))
+            {
+              return SetError(errReferenceToUndefinedNamedBracket,i);
+            }
+            i+=len;
+          }else
+          {
+            return SetError(errSyntax,i);
+          }
+        }continue;
+#endif
+        case 'x':
+        {
+          int c=0;
+          i++;
+          if(i>=srclength)return SetError(errSyntax,i-1);
+          c=TOLOWER(src[i]);
+          if((c>='0' && c<='9') ||
+             (c>='a' && c<='f'))
+          {
+            c-='0';
+            if(c>9)c-='a'-'0'-10;
+            op->op=ignorecase?opSymbolIgnoreCase:opSymbol;
+            op->symbol=c;
+            if(i+1<srclength)
+            {
+              c=TOLOWER(src[i+1]);
+              if((c>='0' && c<='9') ||
+                 (c>='a' && c<='f'))
+              {
+                i++;
+                c-='0';
+                if(c>9)c-='a'-'0'-10;
+                op->symbol<<=4;
+                op->symbol|=c;
+              }
+              if(ignorecase)
+              {
+                op->symbol=TOLOWER(op->symbol);
+                if(TOUPPER(op->symbol)==TOLOWER(op->symbol))
+                {
+                  op->op=opSymbol;
+                }
+              }
+
+            }
+          }else return SetError(errSyntax,i);
+          continue;
+        }
+        default:
+        {
+          if(ISDIGIT(src[i]))
+          {
+            int save=i;
+            op->op=opBackRef;
+            op->refindex=GetNum(src,i);i--;
+            if(op->refindex<=0 || op->refindex>brcount || !closedbrackets[op->refindex])
+            {
+              return SetError(errInvalidBackRef,save-1);
+            }
+            if(op->refindex>maxbackref)maxbackref=op->refindex;
+          }else
+          {
+            if(options&OP_STRICT && ISALPHA(src[i]))
+            {
+              return SetError(errInvalidEscape,i-1);
+            }
+            op->op=ignorecase?opSymbolIgnoreCase:opSymbol;
+            op->symbol=ignorecase?TOLOWER(src[i]):src[i];
+            if(TOLOWER(op->symbol)==TOUPPER(op->symbol))
+            {
+              op->op=opSymbol;
+            }
+          }
+        }
+      }
       continue;
     }
     switch(src[i])
     {
-      case '\\':
-      {
-        i++;
-        if(inquote && src[i]!='E')
-        {
-          op->op=opSymbol;
-          op->symbol='\\';
-          op=code+pos;
-          pos++;
-          op->op=ignorecase?opSymbolIgnoreCase:opSymbol;
-          op->symbol=ignorecase?lc[src[i]]:src[i];
-          if(ignorecase && uc[op->symbol]==op->symbol)op->op=opSymbol;
-          continue;
-        }
-        op->op=opType;
-        switch(src[i])
-        {
-          case 'Q':inquote=1;pos--;continue;
-          case 'E':inquote=0;pos--;continue;
-
-          case 'b':op->op=opWordBound;continue;
-          case 'B':op->op=opNotWordBound;continue;
-          case 'D':op->op=opNotType;
-          case 'd':op->type=TYPE_DIGITCHAR;continue;
-          case 'S':op->op=opNotType;
-          case 's':op->type=TYPE_SPACECHAR;continue;
-          case 'W':op->op=opNotType;
-          case 'w':op->type=TYPE_WORDCHAR;continue;
-          case 'U':op->op=opNotType;
-          case 'u':op->type=TYPE_UPCASE;continue;
-          case 'L':op->op=opNotType;
-          case 'l':op->type=TYPE_LOWCASE;continue;
-          case 'I':op->op=opNotType;
-          case 'i':op->type=TYPE_ALPHACHAR;continue;
-          case 'A':op->op=opDataStart;continue;
-          case 'Z':op->op=opDataEnd;continue;
-          case 'n':op->op=opSymbol;op->symbol='\n';continue;
-          case 'r':op->op=opSymbol;op->symbol='\r';continue;
-          case 't':op->op=opSymbol;op->symbol='\t';continue;
-          case 'f':op->op=opSymbol;op->symbol='\f';continue;
-          case 'e':op->op=opSymbol;op->symbol=27;continue;
-          case 'O':op->op=opNoReturn;continue;
-#ifdef NAMEDBRACKETS
-          case 'p':
-          {
-            op->op=opNamedBackRef;
-            i++;
-            if(src[i]!='{')return SetError(errSyntax,i);
-            int len=0;i++;
-            while(src[i+len]!='}')len++;
-            if(len>0)
-            {
-              #ifdef RE_NO_NEWARRAY
-              op->refname=static_cast<rechar*>(malloc(sizeof(rechar)*(len+1)));
-              #else
-              op->refname=new rechar[len+1];
-              #endif
-              memcpy(op->refname,src+i,len);
-              op->refname[len]=0;
-              if(!h.Exists((char*)op->refname))
-              {
-                return SetError(errReferenceToUndefinedNamedBracket,i);
-              }
-              i+=len;
-            }else
-            {
-              return SetError(errSyntax,i);
-            }
-          }continue;
-#endif
-          case 'x':
-          {
-            int c=0;
-            i++;
-            if(i>=srclength)return SetError(errSyntax,i-1);
-            c=lc[src[i]];
-            if((c>='0' && c<='9') ||
-               (c>='a' && c<='f'))
-            {
-              c-='0';
-              if(c>9)c-='a'-'0'-10;
-              op->op=ignorecase?opSymbolIgnoreCase:opSymbol;
-              op->symbol=c;
-              if(i+1<srclength)
-              {
-                c=lc[src[i+1]];
-                if((c>='0' && c<='9') ||
-                   (c>='a' && c<='f'))
-                {
-                  i++;
-                  c-='0';
-                  if(c>9)c-='a'-'0'-10;
-                  op->symbol<<=4;
-                  op->symbol|=c;
-                }
-                if(ignorecase)
-                {
-                  op->symbol=lc[op->symbol];
-                  if(uc[op->symbol]==lc[op->symbol])
-                  {
-                    op->op=opSymbol;
-                  }
-                }
-
-              }
-            }else return SetError(errSyntax,i);
-            continue;
-          }
-          default:
-          {
-            if(chartypes[src[i]]&TYPE_DIGITCHAR)
-            {
-              int save=i;
-              op->op=opBackRef;
-              op->refindex=GetNum(src,i);i--;
-              if(op->refindex<=0 || op->refindex>brcount || !closedbrackets[op->refindex])
-              {
-                return SetError(errInvalidBackRef,save-1);
-              }
-              if(op->refindex>maxbackref)maxbackref=op->refindex;
-            }else
-            {
-              if(options&OP_STRICT && chartypes[src[i]]&TYPE_ALPHACHAR)
-              {
-                return SetError(errInvalidEscape,i-1);
-              }
-              op->op=ignorecase?opSymbolIgnoreCase:opSymbol;
-              op->symbol=ignorecase?lc[src[i]]:src[i];
-              if(uc[op->symbol]==lc[op->symbol])
-              {
-                op->op=opSymbol;
-              }
-            }
-          }
-        }
-      }continue;
       case '.':
       {
         if(options&OP_SINGLELINE)
@@ -1051,7 +1324,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
                 #else
                 op->nbracket.name=new rechar[len+1];
                 #endif
-                memcpy(op->nbracket.name,src+i,len);
+                memcpy(op->nbracket.name,src+i,len*sizeof(rechar));
                 op->nbracket.name[len]=0;
                 //h.SetItem((char*)op->nbracket.name,m);
               }else
@@ -1145,11 +1418,16 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
         op->op=opSymbolClass;
         //op->symbolclass=new rechar[32];
         //memset(op->symbolclass,0,32);
+#ifdef UNICODE
+        op->symbolclass=new UniSet();
+        tmpclass=op->symbolclass;
+#else
         for(j=0;j<8;j++)itmpclass[j]=0;
-        int classindex;
+#endif
+        int classindex=0;
         for(;src[i]!=']';i++)
         {
-          if(src[i]=='\\')
+          if(src[i]==backslashChar)
           {
             i++;
             int isnottype=0;
@@ -1169,12 +1447,17 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
               case 'u':type=TYPE_UPCASE;classindex=128;break;
               case 'I':isnottype=1;
               case 'i':type=TYPE_ALPHACHAR;classindex=160;break;
+              case 'n':lastchar='\n';break;
+              case 'r':lastchar='\r';break;
+              case 't':lastchar='\t';break;
+              case 'f':lastchar='\f';break;
+              case 'e':lastchar=27;break;
               case 'x':
               {
                 int c=0;
                 i++;
                 if(i>=srclength)return SetError(errSyntax,i-1);
-                c=lc[src[i]];
+                c=TOLOWER(src[i]);
                 if((c>='0' && c<='9') ||
                    (c>='a' && c<='f'))
                 {
@@ -1183,7 +1466,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
                   lastchar=c;
                   if(i+1<srclength)
                   {
-                    c=lc[src[i+1]];
+                    c=TOLOWER(src[i+1]);
                     if((c>='0' && c<='9') ||
                        (c>='a' && c<='f'))
                     {
@@ -1200,7 +1483,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
               }
               default:
               {
-                if(options&OP_STRICT && chartypes[src[i]]&TYPE_ALPHACHAR)
+                if(options&OP_STRICT && ISALPHA(src[i]))
                 {
                   return SetError(errInvalidEscape,i-1);
                 }
@@ -1209,12 +1492,22 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
             }
             if(type)
             {
+#ifdef UNICODE
+              if(isnottype)
+              {
+                tmpclass->nottypes|=type;
+              }else
+              {
+                tmpclass->types|=type;
+              }
+#else
               isnottype=isnottype?0xffffffff:0;
               int *b=(int*)(charbits+classindex);
               for(j=0;j<8;j++)
               {
                 itmpclass[j]|=b[j]^isnottype;
               }
+#endif
               classsize=257;
               //for(int j=0;j<32;j++)op->symbolclass[j]|=charbits[classindex+j]^isnottype;
               //classsize+=charsizes[classindex>>5];
@@ -1239,8 +1532,8 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
             {
               if(options&OP_IGNORECASE)
               {
-                SetBit(tmpclass,lc[lastchar]);
-                SetBit(tmpclass,uc[lastchar]);
+                SetBit(tmpclass,TOLOWER(lastchar));
+                SetBit(tmpclass,TOUPPER(lastchar));
               }else
               {
                 SetBit(tmpclass,lastchar);
@@ -1254,13 +1547,13 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
             if(lastchar && src[i+1]!=']')
             {
               int to=src[i+1];
-              if(to=='\\')
+              if(to==backslashChar)
               {
                 to=src[i+2];
                 if(to=='x')
                 {
                   i+=2;
-                  to=src[i+1];
+                  to=TOLOWER(src[i+1]);
                   if((to>='0' && to<='9') ||
                      (to>='a' && to<='f'))
                   {
@@ -1268,7 +1561,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
                     if(to>9)to-='a'-'0'-10;
                     if(i+1<srclength)
                     {
-                      int c=lc[src[i+2]];
+                      int c=TOLOWER(src[i+2]);
                       if((c>='0' && c<='9') ||
                          (c>='a' && c<='f'))
                       {
@@ -1293,8 +1586,8 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
               {
                 if(ignorecase)
                 {
-                  SetBit(tmpclass,lc[j]);
-                  SetBit(tmpclass,uc[j]);
+                  SetBit(tmpclass,TOLOWER(j));
+                  SetBit(tmpclass,TOUPPER(j));
                 }else
                 {
                   SetBit(tmpclass,j);
@@ -1307,8 +1600,8 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
           lastchar=src[i];
           if(ignorecase)
           {
-            SetBit(tmpclass,lc[lastchar]);
-            SetBit(tmpclass,uc[lastchar]);
+            SetBit(tmpclass,TOLOWER(lastchar));
+            SetBit(tmpclass,TOUPPER(lastchar));
           }else
           {
             SetBit(tmpclass,lastchar);
@@ -1317,22 +1610,36 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
         }
         if(negative && classsize>1)
         {
+#ifdef UNICODE
+          tmpclass->negative=negative;
+#else
           for(int j=0;j<8;j++)itmpclass[j]^=0xffffffff;
+#endif
           //for(int j=0;j<32;j++)op->symbolclass[j]^=0xff;
         }
         if(classsize==1)
         {
+#ifdef UNICODE
+          delete op->symbolclass;
+          op->symbolclass=0;
+          tmpclass=0;
+#endif
           op->op=negative?opNotSymbol:opSymbol;
           if(ignorecase)
           {
             op->op+=2;
-            op->symbol=lc[lastchar];
+            op->symbol=TOLOWER(lastchar);
           }
           else
           {
             op->symbol=lastchar;
           }
-        }else
+
+        }
+#ifdef UNICODE
+        if(tmpclass)tmpclass->negative=negative;
+#else
+        else
         if(classsize==256 && !negative)
         {
           op->op=options&OP_SINGLELINE?opCharAnyAll:opCharAny;
@@ -1345,6 +1652,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
           #endif
           for(j=0;j<8;j++)((int*)op->symbolclass)[j]=itmpclass[j];
         }
+#endif
         continue;
       }
       case '+':
@@ -1353,7 +1661,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
       case '{':
       {
         if(lookbehind)return SetError(errSyntax,i);
-        int min,max;
+        int min=0,max=0;
         switch(src[i])
         {
           case '+':min=1;max=-1;break;
@@ -1389,9 +1697,9 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
             if(src[i]!='}')return SetError(errInvalidRange,save);
           }
         }
-        if(min==1 && max==1)continue;
         pos--;
         op=code+pos-1;
+        if(min==1 && max==1)continue;
         op->range.min=min;
         op->range.max=max;
         switch(op->op)
@@ -1498,7 +1806,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
         #else
         op->rename=new rechar[len+1];
         #endif
-        memcpy(op->rename,src+i,len);
+        memcpy(op->rename,src+i,len*sizeof(rechar));
         op->rename[len]=0;
         i+=len;
         continue;
@@ -1509,7 +1817,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
         op->op=options&OP_IGNORECASE?opSymbolIgnoreCase:opSymbol;
         if(ignorecase)
         {
-          op->symbol=lc[src[i]];
+          op->symbol=TOLOWER(src[i]);
         }else
         {
           op->symbol=src[i];
@@ -1531,14 +1839,14 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
   op->op=opClosingBracket;
   op->bracket.pairindex=code;
   code->bracket.pairindex=op;
-#ifdef _DEBUG
+#ifdef RE_DEBUG
   op->srcpos=i;
 #endif
 
   op=code+pos;
   //pos++;
   op->op=opRegExpEnd;
-#ifdef _DEBUG
+#ifdef RE_DEBUG
   op->srcpos=i+1;
 #endif
 
@@ -1576,7 +1884,7 @@ inline void RegExp::PushState()
   }
   st=&stack[stackcount];
 }
-int inline RegExp::PopState()
+inline int RegExp::PopState()
 {
   stackcount--;
 #ifdef RELIB
@@ -1648,7 +1956,7 @@ inline int RegExp::StrCmp(prechar& str,prechar start,prechar end)
   {
     while(start<end)
     {
-      if(lc[*str]!=lc[*start]){str=save;return 0;}
+      if(TOLOWER(*str)!=TOLOWER(*start)){str=save;return 0;}
       str++;
       start++;
     }
@@ -1687,35 +1995,35 @@ inline int RegExp::StrCmp(prechar& str,prechar start,prechar end)
               case opSymbolIgnoreCase: \
               { \
                 j=op->next->symbol; \
-                if(lc[str[1]]!=j) \
-                while(str<end && cmp && lc[str[1]]!=j && st->max--!=0)str++; \
+                if(TOLOWER(*str)!=j) \
+                while(str<end && cmp && TOLOWER(str[1])!=j && st->max--!=0)str++; \
                 break; \
               } \
               case opNotSymbolIgnoreCase: \
               { \
                 j=op->next->symbol; \
-                if(lc[str[1]]==j) \
-                while(str<end && cmp && lc[str[1]]==j && st->max--!=0)str++; \
+                if(TOLOWER(*str)==j) \
+                while(str<end && cmp && TOLOWER(str[1])==j && st->max--!=0)str++; \
                 break; \
               } \
               case opType: \
               { \
                 j=op->next->type; \
-                if(!(chartypes[str[1]]&j)) \
-                while(str<end && cmp && !(chartypes[str[1]]&j) && st->max--!=0)str++; \
+                if(!(ISTYPE(*str,j))) \
+                while(str<end && cmp && !(ISTYPE(str[1],j)) && st->max--!=0)str++; \
                 break; \
               } \
               case opNotType: \
               { \
                 j=op->next->type; \
-                if((chartypes[str[1]]&j)) \
-                while(str<end && cmp && (chartypes[str[1]]&j) && st->max--!=0)str++; \
+                if((ISTYPE(*str,j))) \
+                while(str<end && cmp && (ISTYPE(str[1],j)) && st->max--!=0)str++; \
                 break; \
               } \
               case opSymbolClass: \
               { \
                 cl=op->next->symbolclass; \
-                if(!GetBit(cl,str[1])) \
+                if(!GetBit(cl,*str)) \
                 while(str<end && cmp && !GetBit(cl,str[1]) && st->max--!=0)str++; \
                 break; \
               } \
@@ -1747,7 +2055,11 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
   int minimizing;
   PREOpCode op,tmp;
   PMatch m;
+#ifdef UNICODE
+  UniSet *cl;
+#else
   prechar cl;
+#endif
 #ifdef RELIB
   SMatchListItem ml;
 #endif
@@ -1815,23 +2127,23 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
       }
       case opWordBound:
       {
-        if((str==start && chartypes[*str]&TYPE_WORDCHAR)||
-           (!(chartypes[str[-1]]&TYPE_WORDCHAR) && chartypes[*str]&TYPE_WORDCHAR) ||
-           (!(chartypes[*str]&TYPE_WORDCHAR) && chartypes[str[-1]]&TYPE_WORDCHAR) ||
-           (str==end && chartypes[str[-1]]&TYPE_WORDCHAR))continue;
+        if((str==start && ISWORD(*str))||
+           (!(ISWORD(str[-1])) && ISWORD(*str)) ||
+           (!(ISWORD(*str)) && ISWORD(str[-1])) ||
+           (str==end && ISWORD(str[-1])))continue;
         break;
       }
       case opNotWordBound:
       {
-        if(!((str==start && chartypes[*str]&TYPE_WORDCHAR)||
-           (!(chartypes[str[-1]]&TYPE_WORDCHAR) && chartypes[*str]&TYPE_WORDCHAR) ||
-           (!(chartypes[*str]&TYPE_WORDCHAR) && chartypes[str[-1]]&TYPE_WORDCHAR) ||
-           (str==end && chartypes[str[-1]]&TYPE_WORDCHAR)))continue;
+        if(!((str==start && ISWORD(*str))||
+           (!(ISWORD(str[-1])) && ISWORD(*str)) ||
+           (!(ISWORD(*str)) && ISWORD(str[-1])) ||
+           (str==end && ISWORD(str[-1]))))continue;
         break;
       }
       case opType:
       {
-        if(chartypes[*str]&OP.type)
+        if(ISTYPE(*str,OP.type))
         {
           str++;
           continue;
@@ -1840,7 +2152,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
       }
       case opNotType:
       {
-        if(!(chartypes[*str]&OP.type))
+        if(!(ISTYPE(*str,OP.type)))
         {
           str++;
           continue;
@@ -1881,7 +2193,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
       }
       case opSymbolIgnoreCase:
       {
-        if(lc[*str]==OP.symbol)
+        if(TOLOWER(*str)==OP.symbol)
         {
           str++;
           continue;
@@ -1890,7 +2202,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
       }
       case opNotSymbolIgnoreCase:
       {
-        if(lc[*str]!=OP.symbol)
+        if(TOLOWER(*str)!=OP.symbol)
         {
           str++;
           continue;
@@ -1974,6 +2286,22 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
             if(OP.bracket.index>=0 && OP.bracket.index<matchcount)
             {
               match[OP.bracket.index].end=str-start;
+              if(brhandler)
+              {
+                if(
+                    !brhandler
+                    (
+                      brhdata,
+                      bhMatch,
+                      OP.bracket.index,
+                      match[OP.bracket.index].start,
+                      match[OP.bracket.index].end
+                    )
+                  )
+                {
+                  return -1;
+                }
+              }
             }
             continue;
           }
@@ -1997,6 +2325,22 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
               if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
               {
                 match[OP.range.bracket.index].end=str-start;
+                if(brhandler)
+                {
+                  if(
+                      !brhandler
+                      (
+                        brhdata,
+                        bhMatch,
+                        OP.range.bracket.index,
+                        match[OP.range.bracket.index].start,
+                        match[OP.range.bracket.index].end
+                      )
+                    )
+                  {
+                    return -1;
+                  }
+                }
               }
               inrangebracket--;
               continue;
@@ -2033,6 +2377,22 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
               if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
               {
                 match[OP.range.bracket.index].end=str-start;
+                if(brhandler)
+                {
+                  if(
+                      !brhandler
+                      (
+                        brhdata,
+                        bhMatch,
+                        OP.range.bracket.index,
+                        match[OP.range.bracket.index].start,
+                        match[OP.range.bracket.index].end
+                      )
+                    )
+                  {
+                    return -1;
+                  }
+                }
               }
               inrangebracket--;
               continue;
@@ -2040,6 +2400,22 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
             if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
             {
               match[OP.range.bracket.index].end=str-start;
+              if(brhandler)
+              {
+                if(
+                    !brhandler
+                    (
+                      brhdata,
+                      bhMatch,
+                      OP.range.bracket.index,
+                      match[OP.range.bracket.index].start,
+                      match[OP.range.bracket.index].end
+                    )
+                  )
+                {
+                  return -1;
+                }
+              }
               tmp=op;
             }
             st->startstr=str;
@@ -2080,6 +2456,22 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
               PushState();
               if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
               {
+                if(brhandler)
+                {
+                  if(
+                      !brhandler
+                      (
+                        brhdata,
+                        bhMatch,
+                        OP.range.bracket.index,
+                        match[OP.range.bracket.index].start,
+                        str-start
+                      )
+                    )
+                  {
+                    return -1;
+                  }
+                }
                 match[OP.range.bracket.index].start=str-start;
                 st->op=opOpenBracket;
                 st->pos=op;
@@ -2099,6 +2491,22 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
             if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
             {
               match[OP.range.bracket.index].end=str-start;
+              if(brhandler)
+              {
+                if(
+                    !brhandler
+                    (
+                      brhdata,
+                      bhMatch,
+                      OP.range.bracket.index,
+                      match[OP.range.bracket.index].start,
+                      match[OP.range.bracket.index].end
+                    )
+                  )
+                {
+                  return -1;
+                }
+              }
             }
             st->max--;
             inrangebracket--;
@@ -2174,7 +2582,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           j=m->end;
           for(i=m->start;i<j;i++,str++)
           {
-            if(lc[start[i]]!=lc[*str])break;
+            if(TOLOWER(start[i])!=TOLOWER(*str))break;
             if(str>end)break;
           }
           if(i<j)break;
@@ -2246,16 +2654,16 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         {
           for(i=0;i<j;i++,str++)
           {
-            if(str>end || lc[*str]!=OP.range.symbol)break;
+            if(str>end || TOLOWER(*str)!=OP.range.symbol)break;
           }
           if(i<j)break;
           st->startstr=str;
           if(!minimizing)
           {
-            while(str<end && lc[*str]==OP.range.symbol && st->max--!=0)str++;
+            while(str<end && TOLOWER(*str)==OP.range.symbol && st->max--!=0)str++;
           }else
           {
-            MINSKIP(lc[*str]==OP.range.symbol);
+            MINSKIP(TOLOWER(*str)==OP.range.symbol);
           }
         }else
         {
@@ -2290,16 +2698,16 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         {
           for(i=0;i<j;i++,str++)
           {
-            if(str>end || lc[*str]==OP.range.symbol)break;
+            if(str>end || TOLOWER(*str)==OP.range.symbol)break;
           }
           if(i<j)break;
           st->startstr=str;
           if(!minimizing)
           {
-            while(str<end && lc[*str]!=OP.range.symbol && st->max--!=0)str++;
+            while(str<end && TOLOWER(*str)!=OP.range.symbol && st->max--!=0)str++;
           }else
           {
-            MINSKIP(lc[*str]!=OP.range.symbol);
+            MINSKIP(TOLOWER(*str)!=OP.range.symbol);
           }
         }else
         {
@@ -2358,16 +2766,16 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         st->max=OP.range.max-j;
         for(i=0;i<j;i++,str++)
         {
-          if(str>end || (chartypes[*str]&OP.range.type)==0)break;
+          if(str>end || (ISTYPE(*str,OP.range.type))==0)break;
         }
         if(i<j)break;
         st->startstr=str;
         if(!minimizing)
         {
-          while(str<end && (chartypes[*str]&OP.range.type) && st->max--!=0)str++;
+          while(str<end && (ISTYPE(*str,OP.range.type)) && st->max--!=0)str++;
         }else
         {
-          MINSKIP((chartypes[*str]&OP.range.type));
+          MINSKIP((ISTYPE(*str,OP.range.type)));
         }
         if(OP.range.max==j)continue;
         st->savestr=str;
@@ -2384,16 +2792,16 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         st->max=OP.range.max-j;
         for(i=0;i<j;i++,str++)
         {
-          if(str>end || (chartypes[*str]&OP.range.type)!=0)break;
+          if(str>end || (ISTYPE(*str,OP.range.type))!=0)break;
         }
         if(i<j)break;
         st->startstr=str;
         if(!minimizing)
         {
-          while(str<end && (chartypes[*str]&OP.range.type)==0 && st->max--!=0)str++;
+          while(str<end && (ISTYPE(*str,OP.range.type))==0 && st->max--!=0)str++;
         }else
         {
-          MINSKIP((chartypes[*str]&OP.range.type)==0);
+          MINSKIP((ISTYPE(*str,OP.range.type))==0);
         }
         if(OP.range.max==j)continue;
         st->savestr=str;
@@ -2515,6 +2923,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         if(str-OP.assert.length<start)
         {
           if(OP.op==opLookBehind)break;
+          op=OP.assert.pairindex;
           continue;
         }
         str-=OP.assert.length;
@@ -2769,7 +3178,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           op=ps->pos;
           if(ignorecase)
           {
-            if(str<end && lc[*str]==OP.symbol)
+            if(str<end && TOLOWER(*str)==OP.symbol)
             {
               str++;
               ps->savestr=str;
@@ -2797,7 +3206,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           op=ps->pos;
           if(ignorecase)
           {
-            if(str<end && lc[*str]!=OP.symbol)
+            if(str<end && TOLOWER(*str)!=OP.symbol)
             {
               str++;
               ps->savestr=str;
@@ -2838,7 +3247,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           if(ps->max--==0)continue;
           str=ps->savestr;
           op=ps->pos;
-          if(str<end && chartypes[*str]&OP.range.type)
+          if(str<end && ISTYPE(*str,OP.range.type))
           {
             str++;
             ps->savestr=str;
@@ -2853,7 +3262,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           if(ps->max--==0)continue;
           str=ps->savestr;
           op=ps->pos;
-          if(str<end && ((chartypes[*str]&OP.range.type)==0))
+          if(str<end && ((ISTYPE(*str,OP.range.type))==0))
           {
             str++;
             ps->savestr=str;
@@ -2893,6 +3302,22 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         }
         case opBracketRange:
         {
+          if(ps->pos->range.bracket.index>=0 && brhandler)
+          {
+            if(
+                !brhandler
+                (
+                  brhdata,
+                  bhRollBack,
+                  ps->pos->range.bracket.index,
+                  -1,
+                  -1
+                )
+              )
+            {
+              return -1;
+            }
+          }
           if(ps->min)
           {
             inrangebracket--;
@@ -2904,6 +3329,13 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
             op=ps->pos->range.bracket.pairindex;
             inrangebracket--;
             str=ps->savestr;
+            if(OP.range.nextalt)
+            {
+              st->op=opAlternative;
+              st->pos=OP.range.bracket.nextalt;
+              st->savestr=str;
+              PushState();
+            }
 //            if(OP.bracket.index>=0 && OP.bracket.index<matchcount)
 //            {
 //              match[OP.bracket.index].end=str-start;
@@ -2914,6 +3346,22 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         }
         case opBracketMinRange:
         {
+          if(ps->pos->range.bracket.index>=0 && brhandler)
+          {
+            if(
+                !brhandler
+                (
+                  brhdata,
+                  bhRollBack,
+                  ps->pos->range.bracket.index,
+                  -1,
+                  -1
+                )
+              )
+            {
+              return -1;
+            }
+          }
           if(ps->max--==0)
           {
             inrangebracket--;
@@ -2933,6 +3381,13 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
               st->max=match[OP.range.bracket.index].end;
               PushState();
             }
+            if(OP.range.nextalt)
+            {
+              st->op=opAlternative;
+              st->pos=OP.range.bracket.nextalt;
+              st->savestr=str;
+              PushState();
+            }
             inrangebracket++;
             break;
           }
@@ -2944,6 +3399,22 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           j=ps->pos->bracket.index;
           if(j>=0 && j<matchcount)
           {
+            if(brhandler)
+            {
+              if(
+                  !brhandler
+                  (
+                    brhdata,
+                    bhRollBack,
+                    j,
+                    match[j].start,
+                    match[j].end
+                  )
+                )
+              {
+                return -1;
+              }
+            }
             match[j].start=ps->min;
             match[j].end=ps->max;
           }
@@ -3009,7 +3480,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
   return 1;
 }
 
-int RegExp::Match(const char* textstart,const char* textend,PMatch match,int& matchcount
+int RegExp::Match(const RECHAR* textstart,const RECHAR* textend,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
   ,PMatchHash hmatch
 #endif
@@ -3020,12 +3491,13 @@ int RegExp::Match(const char* textstart,const char* textend,PMatch match,int& ma
   if(havefirst && !first[*start])return 0;
   TrimTail(tempend);
   if(tempend<start)return 0;
+  if(minlength!=0 && tempend-start<minlength)return 0;
   int res=InnerMatch(start,tempend,match,matchcount
 #ifdef NAMEDBRACKETS
   ,hmatch
 #endif
   );
-  if(res)
+  if(res==1)
   {
     int i;
     for(i=0;i<matchcount;i++)
@@ -3039,7 +3511,7 @@ int RegExp::Match(const char* textstart,const char* textend,PMatch match,int& ma
   return res;
 }
 
-int RegExp::MatchEx(const char* datastart,const char* textstart,const char* textend,PMatch match,int& matchcount
+int RegExp::MatchEx(const RECHAR* datastart,const RECHAR* textstart,const RECHAR* textend,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
                  ,PMatchHash hmatch
 #endif
@@ -3058,12 +3530,13 @@ int RegExp::MatchEx(const char* datastart,const char* textstart,const char* text
   }
   end=(const prechar)textend;
   if(tempend<(const prechar)textstart)return 0;
+  if(minlength!=0 && tempend-start<minlength)return 0;
   int res=InnerMatch((const prechar)textstart,tempend,match,matchcount
 #ifdef NAMEDBRACKETS
   ,hmatch
 #endif
   );
-  if(res)
+  if(res==1)
   {
     int i;
     for(i=0;i<matchcount;i++)
@@ -3078,13 +3551,13 @@ int RegExp::MatchEx(const char* datastart,const char* textstart,const char* text
 }
 
 
-int RegExp::Match(const char* textstart,PMatch match,int& matchcount
+int RegExp::Match(const RECHAR* textstart,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
   ,PMatchHash hmatch
 #endif
 )
 {
-  const char* textend=textstart+strlen(textstart);
+  const RECHAR* textend=textstart+strlen(textstart);
   return Match(textstart,textend,match,matchcount
 #ifdef NAMEDBRACKETS
     ,hmatch
@@ -3100,9 +3573,109 @@ int RegExp::Optimize()
   PREOpCode jumps[MAXDEPTH];
   int jumpcount=0;
   if(havefirst)return 1;
-  if(!code)return 0;
+#ifdef UNICODE
+  first.Reset();
+#else
   memset(first,0,sizeof(first));
+#endif
   PREOpCode op;
+
+  minlength=0;
+  int mlstackmin[MAXDEPTH];
+  int mlstacksave[MAXDEPTH];
+  int mlscnt=0;
+
+  for(op=code;op;op=op->next)
+  {
+    switch(op->op)
+    {
+      case opType:
+      case opNotType:
+      case opCharAny:
+      case opCharAnyAll:
+      case opSymbol:
+      case opNotSymbol:
+      case opSymbolIgnoreCase:
+      case opNotSymbolIgnoreCase:
+      case opSymbolClass:
+       minlength++;
+       continue;
+      case opSymbolRange:
+      case opSymbolMinRange:
+      case opNotSymbolRange:
+      case opNotSymbolMinRange:
+      case opAnyRange:
+      case opAnyMinRange:
+      case opTypeRange:
+      case opTypeMinRange:
+      case opNotTypeRange:
+      case opNotTypeMinRange:
+      case opClassRange:
+      case opClassMinRange:
+        minlength+=op->range.min;
+        break;
+
+#ifdef NAMEDBRACKETS
+      case opNamedBracket:
+#endif
+      case opOpenBracket:
+      case opBracketRange:
+      case opBracketMinRange:
+        mlstacksave[mlscnt]=minlength;
+        mlstackmin[mlscnt++]=-1;
+        minlength=0;
+        continue;
+      case opClosingBracket:
+      {
+        if(op->bracket.pairindex->op>opAssertionsBegin &&
+           op->bracket.pairindex->op<opAsserionsEnd)
+        {
+          continue;
+        }
+        if(mlstackmin[mlscnt-1]!=-1 && mlstackmin[mlscnt-1]<minlength)
+        {
+          minlength=mlstackmin[mlscnt-1];
+        }
+
+        switch(op->bracket.pairindex->op)
+        {
+          case opBracketRange:
+          case opBracketMinRange:
+            minlength*=op->range.min;
+            break;
+        }
+        minlength+=mlstacksave[--mlscnt];
+      }continue;
+      case opAlternative:
+      {
+        if(mlstackmin[mlscnt-1]==-1)
+        {
+          mlstackmin[mlscnt-1]=minlength;
+        }else
+        {
+          if(minlength<mlstackmin[mlscnt-1])
+          {
+            mlstackmin[mlscnt-1]=minlength;
+          }
+        }
+        minlength=0;
+        break;
+      }
+      case opLookAhead:
+      case opNotLookAhead:
+      case opLookBehind:
+      case opNotLookBehind:
+      {
+        op=op->assert.pairindex;
+        continue;
+      }
+      case opRegExpEnd:
+        op=0;
+        break;
+    }
+    if(!op)break;
+  }
+  dpf(("minlength=%d\n",minlength));
   for(op=code;;op=op->next)
   {
     switch(OP.op)
@@ -3113,12 +3686,12 @@ int RegExp::Optimize()
       }
       case opType:
       {
-        for(i=0;i<255;i++)if(chartypes[i]&OP.type)first[i]=1;
+        for(i=0;i<255;i++)if(ISTYPE(i,OP.type))first[i]=1;
         break;
       }
       case opNotType:
       {
-        for(i=0;i<255;i++)if(!(chartypes[i]&OP.type))first[i]=1;
+        for(i=0;i<255;i++)if(!(ISTYPE(i,OP.type)))first[i]=1;
         break;
       }
       case opSymbol:
@@ -3129,7 +3702,7 @@ int RegExp::Optimize()
       case opSymbolIgnoreCase:
       {
         first[OP.symbol]=1;
-        first[uc[OP.symbol]]=1;
+        first[TOUPPER(OP.symbol)]=1;
         break;
       }
       case opSymbolClass:
@@ -3164,8 +3737,8 @@ int RegExp::Optimize()
       {
         if(ignorecase)
         {
-          first[lc[OP.range.symbol]]=1;
-          first[uc[OP.range.symbol]]=1;
+          first[TOLOWER(OP.range.symbol)]=1;
+          first[TOUPPER(OP.range.symbol)]=1;
         }else
         {
           first[OP.range.symbol]=1;
@@ -3178,7 +3751,7 @@ int RegExp::Optimize()
       {
         for(i=0;i<256;i++)
         {
-          if(chartypes[i]&OP.range.type)first[i]=1;
+          if(ISTYPE(i,OP.range.type))first[i]=1;
         }
         if(OP.range.min==0)continue;
         break;
@@ -3188,7 +3761,7 @@ int RegExp::Optimize()
       {
         for(i=0;i<256;i++)
         {
-          if(!(chartypes[i]&OP.range.type))first[i]=1;
+          if(!(ISTYPE(i,OP.range.type)))first[i]=1;
         }
         if(OP.range.min==0)continue;
         break;
@@ -3222,6 +3795,10 @@ int RegExp::Optimize()
     if(jumpcount>0)
     {
       op=jumps[--jumpcount];
+      if(OP.op==opAlternative && OP.alternative.nextalt)
+      {
+        jumps[jumpcount++]=OP.alternative.nextalt;
+      }
       continue;
     }
     break;
@@ -3230,13 +3807,13 @@ int RegExp::Optimize()
   return 1;
 }
 
-int RegExp::Search(const char* textstart,PMatch match,int& matchcount
+int RegExp::Search(const RECHAR* textstart,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
   ,PMatchHash hmatch
 #endif
 )
 {
-  const char* textend=textstart+strlen(textstart);
+  const RECHAR* textend=textstart+strlen(textstart);
   return Search(textstart,textend,match,matchcount
 #ifdef NAMEDBRACKETS
     ,hmatch
@@ -3244,7 +3821,7 @@ int RegExp::Search(const char* textstart,PMatch match,int& matchcount
   );
 }
 
-int RegExp::Search(const char* textstart,const char* textend,PMatch match,int& matchcount
+int RegExp::Search(const RECHAR* textstart,const RECHAR* textend,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
   ,PMatchHash hmatch
 #endif
@@ -3255,6 +3832,7 @@ int RegExp::Search(const char* textstart,const char* textend,PMatch match,int& m
   prechar tempend=(prechar)textend;
   TrimTail(tempend);
   if(tempend<start)return 0;
+  if(minlength!=0 && tempend-start<minlength)return 0;
   if(code->bracket.nextalt==0 && code->next->op==opDataStart)
   {
     return InnerMatch(start,tempend,match,matchcount
@@ -3263,32 +3841,65 @@ int RegExp::Search(const char* textstart,const char* textend,PMatch match,int& m
 #endif
     );
   }
+  if(code->bracket.nextalt==0 && code->next->op==opDataEnd && code->next->next->op==opClosingBracket)
+  {
+    matchcount=1;
+    match[0].start=textend-textstart;
+    match[0].end=match[0].start;
+    return 1;
+  }
+  int res=0;
   if(havefirst)
   {
     do{
       while(!first[*str] && str<tempend)str++;
-      if(InnerMatch(str,tempend,match,matchcount
+      if(0!=(res=InnerMatch(str,tempend,match,matchcount
 #ifdef NAMEDBRACKETS
          ,hmatch
 #endif
-      ))return 1;
+      )))
+      {
+        break;
+      }
       str++;
     }while(str<tempend);
+    if(!res && InnerMatch(str,tempend,match,matchcount
+#ifdef NAMEDBRACKETS
+       ,hmatch
+#endif
+    ))
+    {
+      res=1;
+    }
   }else
   {
     do{
-      if(InnerMatch(str,tempend,match,matchcount
+      if(0!=(res=InnerMatch(str,tempend,match,matchcount
 #ifdef NAMEDBRACKETS
          ,hmatch
 #endif
-      ))return 1;
+      )))
+      {
+        break;
+      }
       str++;
-    }while(str<tempend);
+    }while(str<=tempend);
   }
-  return 0;
+  if(res==1)
+  {
+    int i;
+    for(i=0;i<matchcount;i++)
+    {
+      if(match[i].start==-1 || match[i].end==-1 || match[i].start>match[i].end)
+      {
+        match[i].start=match[i].end=-1;
+      }
+    }
+  }
+  return res;
 }
 
-int RegExp::SearchEx(const char* datastart,const char* textstart,const char* textend,PMatch match,int& matchcount
+int RegExp::SearchEx(const RECHAR* datastart,const RECHAR* textstart,const RECHAR* textend,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
                ,PMatchHash hmatch
 #endif
@@ -3299,6 +3910,7 @@ int RegExp::SearchEx(const char* datastart,const char* textstart,const char* tex
   prechar tempend=(prechar)textend;
   TrimTail(tempend);
   if(tempend<start)return 0;
+  if(minlength!=0 && tempend-start<minlength)return 0;
   if(code->bracket.nextalt==0 && code->next->op==opDataStart)
   {
     return InnerMatch(start,tempend,match,matchcount
@@ -3307,29 +3919,62 @@ int RegExp::SearchEx(const char* datastart,const char* textstart,const char* tex
 #endif
     );
   }
+  if(code->bracket.nextalt==0 && code->next->op==opDataEnd && code->next->next->op==opClosingBracket)
+  {
+    matchcount=1;
+    match[0].start=textend-textstart;
+    match[0].end=match[0].start;
+    return 1;
+  }
+  int res=0;
   if(havefirst)
   {
     do{
       while(!first[*str] && str<tempend)str++;
-      if(InnerMatch(str,tempend,match,matchcount
+      if(0!=(res=InnerMatch(str,tempend,match,matchcount
 #ifdef NAMEDBRACKETS
          ,hmatch
 #endif
-      ))return 1;
+      )))
+      {
+        break;
+      }
       str++;
     }while(str<tempend);
+    if(!res && InnerMatch(str,tempend,match,matchcount
+#ifdef NAMEDBRACKETS
+       ,hmatch
+#endif
+    ))
+    {
+      res=1;
+    }
   }else
   {
     do{
-      if(InnerMatch(str,tempend,match,matchcount
+      if(0!=(res=InnerMatch(str,tempend,match,matchcount
 #ifdef NAMEDBRACKETS
          ,hmatch
 #endif
-      ))return 1;
+      )))
+      {
+        break;
+      }
       str++;
-    }while(str<tempend);
+    }while(str<=tempend);
   }
-  return 0;
+  if(res==1)
+  {
+    int i;
+    for(i=0;i<matchcount;i++)
+    {
+      if(match[i].start==-1 || match[i].end==-1 || match[i].start>match[i].end)
+      {
+        match[i].start=match[i].end=-1;
+      }
+    }
+  }
+  return res;
 }
 
 void RegExp::TrimTail(prechar& end)
@@ -3358,22 +4003,22 @@ void RegExp::TrimTail(prechar& end)
     }
     case opSymbolIgnoreCase:
     {
-      while(end>=start && lc[*end]!=OP.symbol)end--;
+      while(end>=start && TOLOWER(*end)!=OP.symbol)end--;
       break;
     }
     case opNotSymbolIgnoreCase:
     {
-      while(end>=start && lc[*end]==OP.symbol)end--;
+      while(end>=start && TOLOWER(*end)==OP.symbol)end--;
       break;
     }
     case opType:
     {
-      while(end>=start && !(chartypes[*end]&OP.type))end--;
+      while(end>=start && !(ISTYPE(*end,OP.type)))end--;
       break;
     }
     case opNotType:
     {
-      while(end>=start && chartypes[*end]&OP.type)end--;
+      while(end>=start && ISTYPE(*end,OP.type))end--;
       break;
     }
     case opSymbolClass:
@@ -3390,7 +4035,7 @@ void RegExp::TrimTail(prechar& end)
         while(end>=start && *end!=OP.range.symbol)end--;
       }else
       {
-        while(end>=start && lc[*end]!=OP.range.symbol)end--;
+        while(end>=start && TOLOWER(*end)!=OP.range.symbol)end--;
       }
       break;
     }
@@ -3403,7 +4048,7 @@ void RegExp::TrimTail(prechar& end)
         while(end>=start && *end==OP.range.symbol)end--;
       }else
       {
-        while(end>=start && lc[*end]==OP.range.symbol)end--;
+        while(end>=start && TOLOWER(*end)==OP.range.symbol)end--;
       }
       break;
     }
@@ -3411,14 +4056,14 @@ void RegExp::TrimTail(prechar& end)
     case opTypeMinRange:
     {
       if(OP.range.min==0)break;
-      while(end>=start && !(chartypes[*end]&OP.range.type))end--;
+      while(end>=start && !(ISTYPE(*end,OP.range.type)))end--;
       break;
     }
     case opNotTypeRange:
     case opNotTypeMinRange:
     {
       if(OP.range.min==0)break;
-      while(end>=start && chartypes[*end]&OP.range.type)end--;
+      while(end>=start && ISTYPE(*end,OP.range.type))end--;
       break;
     }
     case opClassRange:
@@ -3449,6 +4094,7 @@ void RegExp::CleanStack()
   }
 }
 
+#ifndef UNICODE
 void RegExp::SetLocaleInfo(prechar newlc,prechar newuc,prechar newchartypes
   #if defined(RE_EXTERNAL_CTYPE) && defined(RE_SPINOZA_MODE)
      , prechar newcharbits
@@ -3472,17 +4118,18 @@ void RegExp::SetLocaleInfo(prechar newlc,prechar newuc,prechar newchartypes
   memset(charbits,0,sizeof(charbits));
   for(i=0;i<256;i++)
   {
-    if(chartypes[i]&TYPE_DIGITCHAR){charbits[j]|=k;}
-    if(chartypes[i]&TYPE_SPACECHAR){charbits[32+j]|=k;}
-    if(chartypes[i]&TYPE_WORDCHAR){charbits[64+j]|=k;}
-    if(chartypes[i]&TYPE_LOWCASE){charbits[96+j]|=k;}
-    if(chartypes[i]&TYPE_UPCASE){charbits[128+j]|=k;}
-    if(chartypes[i]&TYPE_ALPHACHAR){charbits[160+j]|=k;}
+    if(ISDIGIT(i)){charbits[j]|=k;}
+    if(ISSPACE(i)){charbits[32+j]|=k;}
+    if(ISWORD(i)){charbits[64+j]|=k;}
+    if(ISLOWER(i)){charbits[96+j]|=k;}
+    if(ISUPPER(i)){charbits[128+j]|=k;}
+    if(ISALPHA(i)){charbits[160+j]|=k;}
     k<<=1;
     if(k==256){k=1;j++;}
   }
-#endif
+#endif //RE_SPINOZA_MODE
 }
+#endif //UNICODE
 
 #ifdef RELIB
 
@@ -3527,9 +4174,10 @@ int RELibMatch(RELib& relib,MatchList& ml,const char* name,const char* start,con
   delete [] m;
   return res;
 }
+
 #endif
 
+};
+};
+};
 
-};//regexp
-};//util
-};//smsc

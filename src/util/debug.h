@@ -120,9 +120,9 @@ static inline void warning2(const char* fmt,...)
 //  {if (expr) smsc::util::warningImpl("Warning !!! "#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__);}
 
 #if defined ENABLE_FILE_NAME
-#define __warning2__(text,arg...) fprintf(TRACE_LOG_STREAM,"*WARNING*: "text"\n\t%s(%s):%d\n",##arg,file,__PRETTY_FUNCTION__,__LINE__)
+#define __warning2__(text,arg...) fprintf(TRACE_LOG_STREAM,"*WARNING*[%d %d]: "text"\n\t%s(%s):%d\n",thr_self(),time(NULL),##arg,file,__PRETTY_FUNCTION__,__LINE__)
 #else
-#define __warning2__(text,arg...) fprintf(TRACE_LOG_STREAM,"*WARNING*: "text"\n\t%s(%s):%d\n",##arg,"",__PRETTY_FUNCTION__,__LINE__)
+#define __warning2__(text,arg...) fprintf(TRACE_LOG_STREAM,"*WARNING*[%d %d]: "text"\n\t%s(%s):%d\n",thr_self(),time(NULL),##arg,"",__PRETTY_FUNCTION__,__LINE__)
 #endif
 
 #if !defined DISABLE_WATCHDOG
@@ -242,17 +242,17 @@ static inline void warning2(const char* fmt,...)
     smsc::util::watchtextImpl(expr,len,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #define trace(text) trace2("%s", text)
   #if defined ENABLE_FILE_NAME
-    #define trace2(format,args...) { \
-      timeb __t__; ftime(&__t__); \
+    #define trace2(format,args...) do{ \
+      timeval tv;gettimeofday(&tv,0); \
       fprintf(TRACE_LOG_STREAM,\
-        "*trace* [%d %.3f]: " format " \n\t"__FILE__"(%s):%d\n",\
-        thr_self(), (__t__.time + __t__.millitm / 1000.0), ##args,__PRETTY_FUNCTION__,__LINE__); }
+        "*[%d %d.%03d]: " format " \n\t"__FILE__"(%s):%d\n",\
+        thr_self(), tv.tv_sec , tv.tv_usec / 1000, ##args,__PRETTY_FUNCTION__,__LINE__); }while(0)
   #else
-    #define trace2(format,args...) { \
-      timeb __t__; ftime(&__t__); \
+    #define trace2(format,args...) do{ \
+      timeval tv;gettimeofday(&tv,0); \
       fprintf(TRACE_LOG_STREAM,\
-        "*trace* [%d %.3f]: " format "\n",\
-        thr_self(), (__t__.time + __t__.millitm / 1000.0), ##args); }
+        "*[%d %d.%03d]: " format "\n",\
+        thr_self(), tv.tv_sec , tv.tv_usec / 1000, ##args); }while(0)
   #endif
 #else
   #define watch(expr)
@@ -477,7 +477,7 @@ namespace util{
 
   inline void warningImpl(const char* e, const char* file, const char* func, int line)
   {
-    fprintf(TRACE_LOG_STREAM,"*WARNING*: %s\n\t%s(%s):%d\n",e,
+    fprintf(TRACE_LOG_STREAM,"*WARNING* [%d %d]: %s\n\t%s(%s):%d\n",thr_self(),time(NULL),e,
             #if defined ENABLE_FILE_NAME
               file,
             #else

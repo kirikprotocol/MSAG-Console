@@ -191,7 +191,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
       throw BIG_MULTI();
     }
     if ( multi->dests[i].dest_flag ){
-      __trace2__(":DPL: distrib list %s",multi->dests[i].value.c_str())
+      __trace2__(":DPL: distrib list %s",multi->dests[i].value.c_str());
       Array<Address> addresses;
       try{
         addresses = admin->members(multi->dests[i].value,multi->msg.getOriginatingAddress());

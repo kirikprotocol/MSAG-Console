@@ -304,6 +304,7 @@ bool checkSourceAddress(const std::string& pattern,const Address& src)
   char buf[32];
   src.toString(buf,sizeof(buf));
   MutexGuard g(reCacheMtx);
+  using namespace smsc::util::regexp;
   RegExp **reptr=reCache.GetPtr(pattern.c_str());
   RegExp *re;
   if(!reptr)
