@@ -130,54 +130,78 @@ public class SmsStat
         DateCountersSet dateCounters = null;
         ResultSet rs = processQuery(connection, query, prepareSmsQuery(query));
 
-        while (rs.next())
-        {
-            int newPeriod = rs.getInt(1);
-            int hour = calculateHour(newPeriod);
-            HourCountersSet hourCounters = new HourCountersSet(
-                    rs.getInt(2), rs.getInt(3), rs.getInt(4), hour);
-            if (dateCounters == null) { // on first iteration
-                Date date = calculateDate(newPeriod);
-                dateCounters = new DateCountersSet(date);
+        try {
+            while (rs.next())
+            {
+                int newPeriod = rs.getInt(1);
+                int hour = calculateHour(newPeriod);
+                HourCountersSet hourCounters = new HourCountersSet(
+                        rs.getInt(2), rs.getInt(3), rs.getInt(4), hour);
+                if (dateCounters == null) { // on first iteration
+                    Date date = calculateDate(newPeriod);
+                    dateCounters = new DateCountersSet(date);
+                }
+                else if (needChangeDate(oldPeriod, newPeriod)) { // on date changed
+                    stat.addDateStat(dateCounters);
+                    Date date = calculateDate(newPeriod);
+                    dateCounters = new DateCountersSet(date);
+                }
+                dateCounters.addHourStat(hourCounters);
+                oldPeriod = newPeriod;
             }
-            else if (needChangeDate(oldPeriod, newPeriod)) { // on date changed
-                stat.addDateStat(dateCounters);
-                Date date = calculateDate(newPeriod);
-                dateCounters = new DateCountersSet(date);
-            }
-            dateCounters.addHourStat(hourCounters);
-            oldPeriod = newPeriod;
-        }
 
-        if (dateCounters != null) {
-            stat.addDateStat(dateCounters);
+            if (dateCounters != null) {
+                stat.addDateStat(dateCounters);
+            }
+        } catch (SQLException ex) {
+            throw ex;
+        } finally {
+            if (rs != null) rs.close();
         }
     }
     private void processSmeQuery(Connection connection, StatQuery query)
         throws SQLException
     {
         ResultSet rs = processQuery(connection, query, prepareSmeQuery(query));
-        while (rs.next()) {
-            stat.addSmeIdStat(new SmeIdCountersSet(
-                    rs.getString(1), rs.getInt(2), rs.getInt(3)));
+        try {
+            while (rs.next()) {
+                stat.addSmeIdStat(new SmeIdCountersSet(
+                        rs.getString(1), rs.getInt(2), rs.getInt(3)));
+            }
+        } catch (SQLException ex) {
+            throw ex;
+        } finally {
+            if (rs != null) rs.close();
         }
     }
     private void processStateQuery(Connection connection, StatQuery query)
         throws SQLException
     {
         ResultSet rs = processQuery(connection, query, prepareStateQuery(query));
-        while (rs.next()) {
-            stat.addErrorStat(new ErrorCounterSet(
-                    rs.getInt(1), rs.getInt(2)));
+        try {
+            while (rs.next()) {
+                stat.addErrorStat(new ErrorCounterSet(
+                        rs.getInt(1), rs.getInt(2)));
+            }
+        } catch (SQLException ex) {
+            throw ex;
+        } finally {
+            if (rs != null) rs.close();
         }
     }
     private void processRouteQuery(Connection connection, StatQuery query)
         throws SQLException
     {
         ResultSet rs = processQuery(connection, query, prepareRouteQuery(query));
-        while (rs.next()) {
-            stat.addRouteIdStat(new RouteIdCountersSet(
-                    rs.getString(1), rs.getInt(2)));
+        try {
+            while (rs.next()) {
+                stat.addRouteIdStat(new RouteIdCountersSet(
+                        rs.getString(1), rs.getInt(2)));
+            }
+        } catch (SQLException ex) {
+            throw ex;
+        } finally {
+            if (rs != null) rs.close();
         }
     }
 
