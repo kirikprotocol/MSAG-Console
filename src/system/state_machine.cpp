@@ -2081,18 +2081,24 @@ StateType StateMachine::replace(Tuple& t)
 
   if(!strcmp(sms.getDestinationSmeId(),"MAP_PROXY"))
   {
-    int pres=partitionSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
-    if(pres==psErrorUdhi || pres==psErrorUdhi)
+    try{
+      int pres=partitionSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
+      if(pres==psErrorUdhi || pres==psErrorUdhi)
+      {
+        __trace2__("REPLACE: concatenation failed(%d)",pres);
+        __REPLACE__RESPONSE(REPLACEFAIL);
+      }
+      if(pres==psMultiple)
+      {
+        Address dst=sms.getDealiasedDestinationAddress();
+        uint8_t msgref=smsc->getNextMR(dst);
+        sms.setConcatMsgRef(msgref);
+        sms.setConcatSeqNum(0);
+      }
+    }catch(...)
     {
-      __trace2__("REPLACE: concatenation failed(%d)",pres);
+      __warning__("Exception in replace!!!!!!!!!!!!!!");
       __REPLACE__RESPONSE(REPLACEFAIL);
-    }
-    if(pres==psMultiple)
-    {
-      Address dst=sms.getDealiasedDestinationAddress();
-      uint8_t msgref=smsc->getNextMR(dst);
-      sms.setConcatMsgRef(msgref);
-      sms.setConcatSeqNum(0);
     }
   }
 
