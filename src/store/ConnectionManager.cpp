@@ -589,6 +589,50 @@ void Connection::replace(SMSId id, const SMS &sms)
     checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
 }
 
+void Connection::update(SMSId id, const State state, 
+                        time_t operationTime, uint8_t fcs)
+    throw(StorageException, NoSuchMessageException)
+{
+    MutexGuard  guard(mutex);
+    
+    connect();
+    
+    SimpleUpdateStatement* UpdateStmt;
+    if (operationTime != 0)
+    {
+        UpdateStmt = new ComplexUpdateStatement(this);
+        ((ComplexUpdateStatement *)UpdateStmt)->setOpTime(operationTime);
+        ((ComplexUpdateStatement *)UpdateStmt)->setFcs(fcs);
+    }
+    else 
+    {
+        UpdateStmt = new SimpleUpdateStatement(this);
+    }
+    
+    UpdateStmt->setSMSId(id);
+    try 
+    {
+        checkErr(UpdateStmt->execute(OCI_DEFAULT/*OCI_COMMIT_ON_SUCCESS*/));
+    }
+    catch (StorageException& exc) 
+    {
+        delete UpdateStmt;
+        checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+        throw exc;
+    }
+
+    if (!UpdateStmt->wasUpdated())
+    {
+        delete UpdateStmt;
+        checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+        NoSuchMessageException exc(id);
+        //log.debug(exc.what());
+        throw exc;
+    }
+    delete UpdateStmt;
+    checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
+}
+
 void Connection::checkErr(sword status) 
     throw(StorageException)
 {

@@ -86,6 +86,9 @@ namespace smsc { namespace store
             throw(StorageException, NoSuchMessageException);
         void replace(SMSId id, const SMS &sms) 
             throw(StorageException, NoSuchMessageException);
+        virtual void update(SMSId id, const State state, 
+                            time_t operationTime=0, uint8_t fcs=0) 
+            throw(StorageException, NoSuchMessageException); 
     };
     
     struct ConnectionQueue

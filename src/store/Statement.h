@@ -26,6 +26,9 @@ namespace smsc { namespace store
         
         void checkErr(sword status) 
             throw(StorageException);
+        
+        void convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date);
+        void convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date);
 
     public:
         
@@ -81,9 +84,7 @@ namespace smsc { namespace store
         char            bStatusReport;
         char            bRejectDuplicates;
         char            bHeaderIndicator;
-        
-        void convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date);
-        void convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date);
+        char            bNeedArchivate;
         
         MessageStatement(Connection* connection, const char* sql) 
             throw(StorageException)
@@ -98,10 +99,7 @@ namespace smsc { namespace store
 
     class StoreStatement : public MessageStatement
     {
-    private:
-        
-        static const char* sql;
-    
+    static const char* sql;
     public:
         
         StoreStatement(Connection* connection)
@@ -111,10 +109,9 @@ namespace smsc { namespace store
     
     class IsRejectedStatement : public MessageStatement
     {
-    private:
-        
-        static const char* sql;
-        
+    static const char* sql;
+    protected:
+
         ub4 count;
     
     public:
@@ -128,10 +125,7 @@ namespace smsc { namespace store
     
     class RetriveStatement : public MessageStatement
     {
-    private:
-        
-        static const char* sql;
-    
+    static const char* sql;
     public:
         
         RetriveStatement(Connection* connection)
@@ -141,10 +135,7 @@ namespace smsc { namespace store
     
     class ReplaceStatement : public MessageStatement
     {
-    private:
-        
-        static const char* sql;
-    
+    static const char* sql;
     public:
         
         ReplaceStatement(Connection* connection)
@@ -156,10 +147,7 @@ namespace smsc { namespace store
     
     class RemoveStatement : public IdStatement
     {
-    private:
-        
-        static const char* sql;
-    
+    static const char* sql;
     public:
         
         RemoveStatement(Connection* connection)
@@ -171,10 +159,7 @@ namespace smsc { namespace store
     
     class GetMaxIdStatement : public IdStatement
     {
-    private:
-        
-        static const char* sql;
-    
+    static const char* sql;
     public:
         
         GetMaxIdStatement(Connection* connection)
@@ -182,6 +167,47 @@ namespace smsc { namespace store
         virtual ~GetMaxIdStatement() {};
     };
 
+    class SimpleUpdateStatement : public IdStatement
+    {
+    static const char* sql;
+    protected:
+        
+        State   state;
+
+        SimpleUpdateStatement(Connection* connection, const char* sql)
+            throw(StorageException);
+    
+    public:
+
+        SimpleUpdateStatement(Connection* connection)
+            throw(StorageException);
+        virtual ~SimpleUpdateStatement() {};
+
+        bool wasUpdated();
+        inline void setState(State state) {
+            this->state = state;
+        };
+    };
+    
+    class ComplexUpdateStatement : public SimpleUpdateStatement
+    {
+    static const char* sql;
+    protected:
+
+        OCIDate     operationDate;
+        uint8_t     fcs;
+
+    public:
+
+        ComplexUpdateStatement(Connection* connection)
+            throw(StorageException);
+        virtual ~ComplexUpdateStatement() {};
+
+        void setOpTime(time_t time);
+        inline void setFcs(uint8_t fcs) {
+            this->fcs = fcs;
+        };
+    };
 }}
 
 #endif

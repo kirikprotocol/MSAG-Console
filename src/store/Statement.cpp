@@ -97,7 +97,7 @@ void Statement::checkErr(sword status)
     owner->checkErr(status);
 }
 
-void MessageStatement::convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date)
+void Statement::convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date)
 {
     tm* dt = localtime(sms_date);
 
@@ -106,7 +106,7 @@ void MessageStatement::convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date)
     OCIDateSetTime(oci_date, (ub1)(dt->tm_hour), 
                    (ub1)(dt->tm_min), (ub1)(dt->tm_sec));
 }
-void MessageStatement::convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date)
+void Statement::convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date)
 {
     tm  dt;
     sb2 year;
@@ -141,6 +141,7 @@ void MessageStatement::setSMS(const SMS &_sms)
     convertDateToOCIDate(&(sms.submitTime), &submitTime);
     convertDateToOCIDate(&(sms.deliveryTime), &deliveryTime);
 
+    bNeedArchivate = sms.needArchivate ? 'Y':'N';
     bStatusReport = sms.statusReportRequested ? 'Y':'N';
     bRejectDuplicates = sms.rejectDuplicates ? 'Y':'N';
     bHeaderIndicator = sms.messageBody.header ? 'Y':'N';
@@ -150,6 +151,7 @@ void MessageStatement::setSMS(const SMS &_sms)
 void MessageStatement::getSMS(SMS &_sms)
 {
     sms.state = (State) uState;
+    sms.needArchivate = (bNeedArchivate == 'Y');
     sms.statusReportRequested = (bStatusReport == 'Y');
     sms.rejectDuplicates = (bRejectDuplicates == 'Y');
     sms.messageBody.header = (bHeaderIndicator == 'Y');
@@ -167,7 +169,7 @@ const char* StoreStatement::sql = (const char*)
 "INSERT INTO SMS_MSG VALUES (:ID, :ST, :MR, :RM,\
  :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
  :VALID_TIME, :WAIT_TIME, :SUBMIT_TIME, :DELIVERY_TIME,\
- :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";
+ :SRR, :RD, :ARC, :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";
 
 StoreStatement::StoreStatement(Connection* connection)
     throw(StorageException)
@@ -207,19 +209,21 @@ StoreStatement::StoreStatement(Connection* connection)
          (sb4) sizeof(bStatusReport));
     bind(18, SQLT_AFC, (dvoid *) &(bRejectDuplicates), 
          (sb4) sizeof(bRejectDuplicates));
-    bind(19, SQLT_UIN, (dvoid *) &(sms.priority), 
+    bind(19, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
+         (sb4) sizeof(bNeedArchivate));
+    bind(20, SQLT_UIN, (dvoid *) &(sms.priority), 
          (sb4) sizeof(sms.priority));
-    bind(20, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier), 
+    bind(21, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier), 
          (sb4) sizeof(sms.protocolIdentifier));
-    bind(21, SQLT_UIN, (dvoid *) &(sms.failureCause), 
+    bind(22, SQLT_UIN, (dvoid *) &(sms.failureCause), 
          (sb4) sizeof(sms.failureCause));
-    bind(22, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme), 
+    bind(23, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme), 
          (sb4) sizeof(sms.messageBody.scheme));
-    bind(23, SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
+    bind(24, SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
          (sb4) sizeof(bHeaderIndicator));
-    bind(24, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
+    bind(25, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
          (sb4) sizeof(sms.messageBody.lenght));
-    bind(25, SQLT_BIN, (dvoid *) (sms.messageBody.data), 
+    bind(26, SQLT_BIN, (dvoid *) (sms.messageBody.data), 
          (sb4) sizeof(sms.messageBody.data));
 }
 
@@ -267,7 +271,7 @@ bool IsRejectedStatement::isRejected()
 const char* RetriveStatement::sql = (const char*)
 "SELECT ST, MR, RM, OA_LEN, OA_TON, OA_NPI, OA_VAL, DA_LEN, DA_TON,\
  DA_NPI, DA_VAL, VALID_TIME, WAIT_TIME, SUBMIT_TIME, DELIVERY_TIME,\
- SRR, RD, PRI, PID, FCS, DCS, UDHI, UDL, UD FROM SMS_MSG WHERE ID=:ID";
+ SRR, RD, ARC, PRI, PID, FCS, DCS, UDHI, UDL, UD FROM SMS_MSG WHERE ID=:ID";
 
 RetriveStatement::RetriveStatement(Connection* connection)
     throw(StorageException)
@@ -308,19 +312,21 @@ RetriveStatement::RetriveStatement(Connection* connection)
            (sb4) sizeof(bStatusReport));
     define(17, SQLT_AFC, (dvoid *) &(bRejectDuplicates),
            (sb4) sizeof(bRejectDuplicates));
-    define(18, SQLT_UIN, (dvoid *) &(sms.priority),
+    define(18, SQLT_AFC, (dvoid *) &(bNeedArchivate), 
+           (sb4) sizeof(bNeedArchivate));
+    define(19, SQLT_UIN, (dvoid *) &(sms.priority),
            (sb4) sizeof(sms.priority));
-    define(19, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier),
+    define(20, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier),
            (sb4) sizeof(sms.protocolIdentifier));
-    define(20, SQLT_UIN, (dvoid *) &(sms.failureCause),
+    define(21, SQLT_UIN, (dvoid *) &(sms.failureCause),
            (sb4) sizeof(sms.failureCause));
-    define(21, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme),
+    define(22, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme),
            (sb4) sizeof(sms.messageBody.scheme));
-    define(22, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
+    define(23, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
            (sb4) sizeof(bHeaderIndicator));
-    define(23, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght),
+    define(24, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght),
            (sb4) sizeof(sms.messageBody.lenght));
-    define(24, SQLT_BIN, (dvoid *) (sms.messageBody.data),
+    define(25, SQLT_BIN, (dvoid *) (sms.messageBody.data),
            (sb4) sizeof(sms.messageBody.data));
 }
 
@@ -431,6 +437,60 @@ GetMaxIdStatement::GetMaxIdStatement(Connection* connection)
         : IdStatement(connection, GetMaxIdStatement::sql)
 {
     define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+}
+
+/* --------------------------- UpdateStatements ----------------------- */
+const char* SimpleUpdateStatement::sql = (const char*)
+"UPDATE SMS_MSG SET ST=:ST WHERE ID=:ID";
+
+SimpleUpdateStatement::SimpleUpdateStatement(
+    Connection* connection, const char* sql)
+        throw(StorageException)
+            : IdStatement(connection, sql) 
+{
+}
+
+SimpleUpdateStatement::SimpleUpdateStatement(Connection* connection)
+    throw(StorageException)
+        : IdStatement(connection, SimpleUpdateStatement::sql)
+{
+    bind((CONST text*) "ST", (sb4)strlen("ST"),
+         SQLT_UIN, (dvoid *) &(state), (sb4) sizeof(state));
+    bind((CONST text*) "ID", (sb4)strlen("ID"),
+         SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+}
+
+bool SimpleUpdateStatement::wasUpdated() 
+{
+    ub4 res = 0; 
+    if (OCIAttrGet((CONST dvoid *)stmt, OCI_HTYPE_STMT, 
+                   &res, NULL, OCI_ATTR_ROW_COUNT, errhp) != OCI_SUCCESS)
+    {
+        return false;
+    }
+    return ((res) ? true:false); 
+}
+
+const char* ComplexUpdateStatement::sql = (const char*)
+"UPDATE SMS_MSG SET ST=:ST, DELIVERY_TIME=:DT, FCS=:FC WHERE ID=:ID";
+
+ComplexUpdateStatement::ComplexUpdateStatement(Connection* connection)
+        throw(StorageException)
+            : SimpleUpdateStatement(connection, ComplexUpdateStatement::sql)
+{
+    bind((CONST text*) "ST", (sb4)strlen("ST"),
+         SQLT_UIN, (dvoid *) &(state), (sb4) sizeof(state));
+    bind((CONST text*) "DT", (sb4)strlen("DT"),
+         SQLT_ODT, (dvoid *) &(operationDate), (sb4) sizeof(operationDate));
+    bind((CONST text*) "FC", (sb4)strlen("FC"),
+         SQLT_UIN, (dvoid *) &(fcs), (sb4) sizeof(fcs));
+    bind((CONST text*) "ID", (sb4)strlen("ID"),
+         SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
+}
+
+void ComplexUpdateStatement::setOpTime(time_t time)
+{
+    convertDateToOCIDate(&(time), &operationDate);
 }
 
 }}
