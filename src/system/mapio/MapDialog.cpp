@@ -1132,8 +1132,7 @@ void  MapDialog::Et96MapOpenConf (
     }else{
       __trace2__("incorrect state, must be MAPST_OPENCONF(%d) but %d",
                           MAPST_OPENCONF,state);
-      throw runtime_error("incorrect state, must be MAPST_OPENCONF(%d) but %d",
-                          MAPST_OPENCONF,state);
+      throw runtime_error("incorrect state, must be MAPST_OPENCONF");
     }
   }catch(...){
     state = MAPST_BROKEN;
@@ -1310,7 +1309,7 @@ void MapProxy::putCommand(const SmscCommand& cmd)
       dialog.assign(MapDialogContainer::getInstance()->getDialog(did));
     }
     __trace2__("MAP:: process to dialog with ptr 0x%p",dialog);
-    if ( dialog == 0 ){
+    if ( dialog.isnull() ){
       __trace2__("MAP::QueueProcessing: Opss, here is no dialog with id x%x",dialogid);
       CloseDialog(SSN,dialogid);
     }else{

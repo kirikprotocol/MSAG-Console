@@ -198,7 +198,7 @@ public:
   ~DialogRefGuard(){
     if ( dialog ) dialog->Release();
   }
-  void asssign(MapDialog* d){
+  void assign(MapDialog* d){
     if ( dialog == d ) return;
     if ( dialog ) dialog->Release();
     dialog = d;
