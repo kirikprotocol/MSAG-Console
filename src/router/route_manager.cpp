@@ -17,12 +17,12 @@ using std::auto_ptr;
 static inline int compare_pataddr( const RoutePattern& pattern, 
                                    const RouteAddress& addr )
 {
-//      __trace2__("compare R(%s->%s) / A(%s->%s)",
-//                                       pattern.src_addressPattern,
-//                                       pattern.dest_addressPattern,
-//                                       addr.src_address,
-//                                       addr.dest_address
-//                                               );
+      __trace2__("compare R(%s->%s) / A(%s->%s)",
+                                       pattern.src_addressPattern,
+                                       pattern.dest_addressPattern,
+                                       addr.src_address,
+                                       addr.dest_address
+                                               );
 //      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
 //                                               pattern.src_addressPattern_32[0],
 //                                               pattern.dest_addressPattern_32[0],
@@ -221,6 +221,9 @@ __synchronized__
         //__trace2__("add route mask: %llx->%llx",
         //                                       *(uint64_t*)(table[table_ptr-1]->pattern.src_addressMask),
         //                                       *(uint64_t*)(table[table_ptr-1]->pattern.dest_addressMask));
+	__trace2__("add route: %s->%s",
+	           (table[table_ptr-1]->pattern.src_addressPattern),
+	           (table[table_ptr-1]->pattern.dest_addressPattern));
   sorted = false;
 }
 
@@ -252,17 +255,18 @@ __synchronized__
   RouteAddress address;
   proxy = 0;
   makeAddress(&address,&source,&dest);
+	__trace2__("lookup route %s->%s",address.src_address,address.dest_address);
   //RouteRecord* record = bsearch_record(&address,table,table_ptr);
   RouteRecord** recordX = (RouteRecord**)bsearch(
                         &address,table,table_ptr,sizeof(RouteRecord*),route_compare);
-  //__trace2__("xroute == %p",recordX);
+  __trace2__("xroute == %p",recordX);
         if (!recordX) return false;
         RouteRecord* record = *recordX;
   record->ok_next = 0;
   RouteRecord* ok_route = record;
-        __trace2__("found route %s->%s",
-                                                 ok_route->pattern.src_addressPattern,
-                                                 ok_route->pattern.dest_addressPattern);
+  __trace2__("found route %s->%s",
+             ok_route->pattern.src_addressPattern,
+             ok_route->pattern.dest_addressPattern);
   for (RouteRecord** r = recordX-1; r != table-1; --r )
   {
     if ( is_a((*r)->pattern,address) )
@@ -331,7 +335,7 @@ __synchronized__
         }
   proxy = smeTable->getSmeProxy(record->proxyIdx);
   if ( info ) *info = record->info;
-	if ( idx ) *idx = record->proxyIdx;
+        if ( idx ) *idx = record->proxyIdx;
   return true;
 }
 
