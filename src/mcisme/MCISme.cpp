@@ -266,6 +266,25 @@ public:
         }
         time_t smsValidityDate = time(NULL) + processor.getDaysValid()*3600*24;
         
+        const int MAX_SMS_MESSAGE_LENGTH = 255;
+        int msgLen = message.message.length();
+        const char* msgBuf = message.message.c_str();
+        int MCISmeDataCoding = DataCoding::LATIN1;
+        
+        /*
+        int MCISmeDataCoding = DataCoding::UCS2;
+        int outLen = message.message.length();
+        int msgLen = outLen*2;
+        std::auto_ptr<char> msgBufGuard(new char[msgLen+2]);
+        char* msgBuf = msgBufGuard.get();
+        ConvertMultibyteToUCS2(message.message.c_str(), outLen, 
+                               (short *)msgBuf, msgLen, CONV_ENCODING_CP1251);
+        smsc_log_debug(logger, "1251 >> UCS2. Message %p Len:%d/%d",
+                       message.message.c_str(), outLen, msgLen);
+        short* msgBufConv = (short *)msgBuf;
+        for (int p=0; p<outLen; p++) msgBufConv[p] = htons(msgBufConv[p]);
+        */
+        
         if (message.replace)
         {
             PduReplaceSm sm;
@@ -281,7 +300,8 @@ public:
             sm.set_scheduleDeliveryTime(timeBuffer);
             sm.set_registredDelivery(1);
             sm.set_smDefaultMsgId(0);
-            sm.shortMessage.copy(message.message.c_str(), message.message.length());
+            sm.set_shortMessage(msgBuf, (msgLen > MAX_SMS_MESSAGE_LENGTH) ? 
+                                MAX_SMS_MESSAGE_LENGTH:msgLen);
             
             sm.get_header().set_commandLength(sm.size());
             sm.get_header().set_commandId(SmppCommandSet::REPLACE_SM);
@@ -315,9 +335,11 @@ public:
             sm.get_message().set_scheduleDeliveryTime(timeBuffer);
             sm.get_message().set_registredDelivery((message.notification) ? 0:1);
             sm.get_message().set_replaceIfPresentFlag(0);
-            sm.get_message().set_dataCoding(DataCoding::LATIN1);
+
             sm.get_message().set_smDefaultMsgId(0);
-            sm.get_message().set_shortMessage(message.message.c_str(), message.message.length());
+            sm.get_message().set_dataCoding(MCISmeDataCoding);
+            sm.get_message().set_shortMessage(msgBuf, (msgLen > MAX_SMS_MESSAGE_LENGTH) ? 
+                                              MAX_SMS_MESSAGE_LENGTH:msgLen);
             
             sm.get_header().set_commandLength(sm.size(false));
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);

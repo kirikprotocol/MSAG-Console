@@ -498,12 +498,24 @@ bool MessageFormatter::isLastFromCaller(int index)
 }
 void MessageFormatter::formatMessage(Message& message)
 {
+    /* New
+    Vam zvonili:
+    +79161234567 vizovov 35, poslednij vizov 11:08 16/09/03;
+    +79167654321 vizovov 3, poslednij vizov 11:38 16/09/03;
+    +79167654321 v 11:38 16/09/03 
+    MTS
+    */
+    /* Was
+    Missed call(s):
+    +79161234567 (35) last at 16 Sep 11:08;
+    +79161234567 at 16 Sep 11:08;
+    */
     message.message = ""; message.rowsCount = 0; message.eventsCount = 0;
     if (events.Count() <= 0) return;
     
     char eventMessage[256];
-    sprintf(eventMessage, "Missed call%s:", (events.Count() > 1) ? "s":"");
-    message.message = eventMessage;
+    //message.message = "Вам звонили:";
+    message.message = "Vam zvonili:";
     message.eventsCount = events.Count(); 
     
     for (int i=0; i<events.Count(); i++)
@@ -515,18 +527,25 @@ void MessageFormatter::formatMessage(Message& message)
         if (separate || !recPtr || (recPtr && (*recPtr) <= 1))
         {
             tm dt; localtime_r(&event.time, &dt);
-            sprintf(eventMessage, "\n%s at %02d %s %02d:%02d", fromStr,
-                    dt.tm_mday, constShortEngMonthesNames[dt.tm_mon], dt.tm_hour, dt.tm_min);
+            //sprintf(eventMessage, " %s вызовов 1, последний вызов %02d:%02d %02d/%02d/%02d%s", 
+            sprintf(eventMessage, " %s vizovov 1, poslednij vizov %02d:%02d %02d/%02d/%02d%s", 
+                    fromStr, dt.tm_hour, dt.tm_min, dt.tm_mday, dt.tm_mon+1, dt.tm_year-100,
+                    (i == events.Count()-1) ? "":";");
             message.message += eventMessage; message.rowsCount++;
         }
         else if (isLastFromCaller(i)) // if event is last from this caller => add it
         {
             tm dt; localtime_r(&event.time, &dt);
-            sprintf(eventMessage, "\n%s (%d) last at %02d %s %02d:%02d", fromStr,
-                    (*recPtr), dt.tm_mday, constShortEngMonthesNames[dt.tm_mon], dt.tm_hour, dt.tm_min);
+            //sprintf(eventMessage, " %s вызовов %d, последний вызов %02d:%02d %02d/%02d/%02d%s",
+            sprintf(eventMessage, " %s vizovov %d, poslednij vizov %02d:%02d %02d/%02d/%02d%s",
+                    fromStr, (*recPtr), dt.tm_hour, dt.tm_min, dt.tm_mday, dt.tm_mon+1, dt.tm_year-100,
+                    (i == events.Count()-1) ? "":";");
             message.message += eventMessage; message.rowsCount++;
         }
     }
+
+    //message.message += " МТС";
+    message.message += " MTS";
 }
 
 void Task::addEvent(const MissedCallEvent& event)

@@ -693,7 +693,8 @@ void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry,
         if (notify)
         {
             Message message; message.abonent = callers[i]; 
-            message.message = "Abonent "+abonent+" is online";
+            //message.message = "Абонент "+abonent+" в сети";
+            message.message = "Anonent "+abonent+" is online";
             message.replace=false; message.notification = true;
             putToOutQueue(message);
         }
