@@ -370,7 +370,7 @@ void DataProvider::process(Command& command)
       long usecs;
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-      log.info( "command processed in s=%ld us=%ld", message.primitive, curtime.tv_sec-utime.tv_sec, usecs );
+      log.info( "job %s processed in s=%ld us=%ld", job->getName(), curtime.tv_sec-utime.tv_sec, usecs );
     }
 }
 
