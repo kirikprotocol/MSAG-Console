@@ -24,6 +24,10 @@ function encodeHEX( str ) {
 	}
 	return result;
 }
+function srcSmeIdChanged()
+{
+  opForm.all.forwardTo_row.disabled = opForm.all.srcSmeId.options[opForm.all.srcSmeId.selectedIndex] == null || opForm.all.srcSmeId.options[opForm.all.srcSmeId.selectedIndex].value != 'MAP_PROXY';
+}
 </script>
 <table cellspacing=0 cellpadding=0 _border=1>
 <col width="35%">
@@ -48,8 +52,17 @@ function encodeHEX( str ) {
 			<td><input class=txt name=serviceId value="<%=bean.getServiceId()%>" maxlength=5 validation="route_serviceId" onkeyup="resetValidation(this)"></td>
 		</tr>
 		<tr class=row<%=(rowN++)&1%>>
-			<th>srcSmeId</th>
-			<td><select name=srcSmeId>
+			<th>delivery&nbsp;mode</th>
+			<td><select name=deliveryMode>
+				<option value="default"  <%="default" .equalsIgnoreCase(bean.getDeliveryMode()) ? "selected" : ""%>>default</option>
+				<option value="store"    <%="store"   .equalsIgnoreCase(bean.getDeliveryMode()) ? "selected" : ""%>>store and forward</option>
+				<option value="forward"  <%="forward" .equalsIgnoreCase(bean.getDeliveryMode()) ? "selected" : ""%>>forward</option>
+				<option value="datagram" <%="datagram".equalsIgnoreCase(bean.getDeliveryMode()) ? "selected" : ""%>>datagram</option>
+			</select></td>
+    </tr>
+		<tr class=row<%=(rowN++)&1%>>
+			<th>source&nbsp;SME&nbsp;ID</th>
+			<td><select name=srcSmeId id=srcSmeId onchange="srcSmeIdChanged()">
 				<option value="" <%=(bean.getSrcSmeId() == null || bean.getSrcSmeId().length() == 0) ? "selected" : ""%>></option>
 				<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
 				{
@@ -59,7 +72,11 @@ function encodeHEX( str ) {
 				}
 				%>
 			</select></td>
-		</tr>		
+		</tr>
+    <tr class=row<%=(rowN++)&1%> id=forwardTo_row>
+      <th>forward to</th>
+      <td><input id=forwardTo class=txt name=forwardTo value="<%=StringEncoderDecoder.encode(bean.getForwardTo())%>" validation="address" onkeyup="resetValidation(this)"><script>srcSmeIdChanged();</script></td>
+    </tr>
 		</table>
 	</td>
 	<td>&nbsp;</td>
