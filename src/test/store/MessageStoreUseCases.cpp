@@ -10,7 +10,6 @@ bool MessageStoreUseCases::storeSM()
 	return tc.storeCorrectSM() &&
 		tc.storeIncorrectSM();
 }
-*/
 
 bool MessageStoreUseCases::setSMStatus()
 {
@@ -39,13 +38,11 @@ bool MessageStoreUseCases::deleteWaitingSMByNumber()
 
 }
 
-/*
 bool MessageStoreUseCases::loadSM()
 {
 	return tc.loadExistentSM() &&
 		tc.loadNonExistentSM();
 }
-*/
 
 bool MessageStoreUseCases::loadWaitingSMByDestinationNumber()
 {
@@ -75,6 +72,7 @@ bool MessageStoreUseCases::createBillingRecord()
 {
 	return tc.createBillingRecord();
 }
+*/
 
 }
 }
