@@ -1149,10 +1149,19 @@ bool SmppProtocolTestCases::setDirective(SmppHeader* header, const string& dir,
 {
 	__require__(offset >= 0);
 	SmsPduWrapper pdu(header, 0);
+	uint8_t dc = pdu.getDataCoding();
+	if (fixture->smeInfo.forceDC)
+	{
+		bool simMsg;
+		if (!SmppUtil::extractDataCoding(dc, dc, simMsg))
+		{
+			return false;
+		}
+	}
 	__trace2__("setDirective(): dc = %d, dir = '%s', offset = %d",
-		(int) pdu.getDataCoding(), dir.c_str(), offset);
+		(int) dc, dir.c_str(), offset);
 	//только для текстовых сообщений
-	switch (pdu.getDataCoding())
+	switch (dc)
 	{
 		case DEFAULT:
 		case UCS2:
@@ -1187,7 +1196,7 @@ bool SmppProtocolTestCases::setDirective(SmppHeader* header, const string& dir,
 	}
 	//вставить директиву
 	int dirLen;
-	auto_ptr<char> dirEnc = encode(dir, pdu.getDataCoding(), dirLen, false);
+	auto_ptr<char> dirEnc = encode(dir, dc, dirLen, false);
 	if (dirLen > len)
 	{
 		return false;
@@ -1358,6 +1367,15 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 	int& offset = intProps["directive.offset"];
 	string dir;
 	SmsPduWrapper pdu(header, 0);
+	uint8_t dc = pdu.getDataCoding();
+	if (fixture->smeInfo.forceDC)
+	{
+		bool simMsg;
+		if (!SmppUtil::extractDataCoding(dc, dc, simMsg))
+		{
+			return false;
+		}
+	}
 	switch (s.value())
 	{
 		case 1: //нет директивы
@@ -1373,7 +1391,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 			break;
 		case 3: //t1, параметр задан
 			{
-				string name = pdu.getDataCoding() == UCS2 ? "Мир" : "World";
+				string name = dc == UCS2 ? "Мир" : "World";
 				ostringstream s;
 				dir = "#template=t1# {name}=";
 				s << mixedCase(dir) << name << " ";
@@ -1388,7 +1406,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 			break;
 		case 4: //t1, параметр в кавычках и содержит пробелы
 			{
-				string name = pdu.getDataCoding() == UCS2 ? "Мега мир" : "Super world";
+				string name = dc == UCS2 ? "Мега мир" : "Super world";
 				ostringstream s;
 				dir = "#template=t1# {name}=";
 				s << mixedCase(dir) << "\"" << name << "\" ";
@@ -1427,8 +1445,8 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 			break;
 		case 7: //t2, параметры заданы
 			{
-				string name1 = pdu.getDataCoding() == UCS2 ? "Мир" : "World";
-				string name2 = pdu.getDataCoding() == UCS2 ? "Мир 2" : "World 2";
+				string name1 = dc == UCS2 ? "Мир" : "World";
+				string name2 = dc == UCS2 ? "Мир 2" : "World 2";
 				ostringstream s;
 				dir = "#template=t2# {name1}=";
 				s << mixedCase(dir) << name1;
@@ -1446,7 +1464,7 @@ bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
 			break;
 		case 8: //t2, дефолтный параметр не задан
 			{
-				string name2 = pdu.getDataCoding() == UCS2 ? "Мир" : "World";
+				string name2 = dc == UCS2 ? "Мир" : "World";
 				ostringstream s;
 				dir = "#template=t2# {name2}=";
 				s << mixedCase(dir) << name2 << " ";
@@ -3192,11 +3210,4 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDataSmRespError(
 }
 }
 }
-
-
-							//повторная доставка
-			__unreachable__("Not supported");
-		//все остальные коды ошибок
-		default:
-			return RESP_PDU_ERROR;
 

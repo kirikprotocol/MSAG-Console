@@ -552,6 +552,7 @@ vector<TestSme*> genConfig(int transceivers, int transmitters, int receivers,
 	{
 		Profile profile;
 		ProfileUtil::setupRandomCorrectProfile(profile);
+		profile.hideModifiable = false;
 		profileReg->putProfile(*addr[i], profile);
 		cout << "insert into sms_profile(mask,reportinfo,codeset,locale,hidden,hidden_mod) values(" <<
 			"'"  << *addr[i] << "'," <<

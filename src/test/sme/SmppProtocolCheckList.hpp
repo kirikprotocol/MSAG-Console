@@ -686,11 +686,13 @@ void normalSmsTc()
 	__reg_tc__("sms.normalSms.checkSourceAddr",
 		"Проверка правильности адреса отправителя");
 	__reg_tc__("sms.normalSms.checkSourceAddr.hideDirective",
-		"Если в настройках sme получателя wantAlias = true и в sms задана директива hide, то происходит сокрытие адреса отправителя (независимо от настроек профиля отправителя)");
+		"Если в настройках sme получателя wantAlias = true, в профиле отправтеля hideModifiable = true и в sms задана директива hide, то происходит сокрытие адреса отправителя (независимо от опции hide профиля отправителя)");
 	__reg_tc__("sms.normalSms.checkSourceAddr.unhideDirective",
-		"Если в настройках sme получателя wantAlias = true и в sms задана директива unhide, то сокрытие адреса отправителя не происходит (независимо от настроек профиля отправителя)");
+		"Если в настройках sme получателя wantAlias = true, в профиле отправтеля hideModifiable = true и в sms задана директива unhide, то сокрытие адреса отправителя не происходит (независимо от опции hide профиля отправителя)");
+	__reg_tc__("sms.normalSms.checkSourceAddr.notHideModifiable",
+		"Если в настройках sme получателя wantAlias = true, в профиле отправтеля hideModifiable = false, то сокрытие адреса отправителя происходит в зависимости от опции hide профиля отправителя независимо от наличия директив hide/unhide)");
 	__reg_tc__("sms.normalSms.checkSourceAddr.nohideDirective",
-		"Если в настройках sme получателя wantAlias = true и в sms не задана hide/unhide директива, то сокрытие адреса отправителя происходит в зависимости настроек профиля отправителя");
+		"Если в настройках sme получателя wantAlias = true и в sms не задана hide/unhide директива, то сокрытие адреса отправителя происходит в зависимости от опции hide профиля отправителя");
 	__reg_tc__("sms.normalSms.checkSourceAddr.notWantAlias",
 		"Если в настройках sme получателя wantAlias = false, то сокрытие адреса отправителя не происходит (независимо от настроек профиля отправителя и наличия hide директивы в sms)");
 	__reg_tc__("sms.normalSms.checkOptionalFields",

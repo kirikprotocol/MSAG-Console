@@ -665,6 +665,8 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 	{
 		pduData->intProps["ussdServiceOp"] = pdu.get_optional().get_ussdServiceOp();
 	}
+	const RouteInfo* routeInfo = fixture->routeChecker->getRouteInfoForNormalSms(
+		pdu.getSource(), pdu.getDest());
 	//dataCoding
 	bool simMsg = false;
 	if (fixture->smeInfo.forceDC)
@@ -675,7 +677,8 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 			pduData->intProps["dataCoding"] = dc;
 		}
 	}
-	else if (pdu.get_optional().has_destAddrSubunit() &&
+	else if (routeInfo && routeInfo->smeSystemId == "MAP_PROXY" &&
+		pdu.get_optional().has_destAddrSubunit() &&
 		pdu.get_optional().get_destAddrSubunit() == AddrSubunitValue::SMART_CARD1)
 	{
 		pduData->intProps["dataCoding"] = BINARY;
@@ -686,8 +689,6 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 		pduData->intProps["dataCoding"] = pdu.getDataCoding();
 	}
 	//дополнительные фишки для map proxy
-	const RouteInfo* routeInfo = fixture->routeChecker->getRouteInfoForNormalSms(
-		pdu.getSource(), pdu.getDest());
 	if (routeInfo && pduData->intProps.count("dataCoding"))
 	{
 		if (routeInfo->suppressDeliveryReports)

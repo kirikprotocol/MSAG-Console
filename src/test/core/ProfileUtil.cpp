@@ -61,7 +61,11 @@ bool operator!=(const Profile& p1, const Profile& p2)
 
 ostream& operator<< (ostream& os, const Profile& p)
 {
-	os << "codepage = " << p.codepage << ", reportoptions = " << p.reportoptions;
+	os << "codepage = " << p.codepage <<
+		", reportoptions = " << p.reportoptions <<
+		", locale = " << p.locale <<
+		", hide = " << p.hide <<
+		", hideModifiable = " << (p.hideModifiable ? "true" : "false");
 }
 
 const string str(const Profile& p)
