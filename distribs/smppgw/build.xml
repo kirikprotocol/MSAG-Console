@@ -93,22 +93,34 @@
     <symlink link="${ex.conf}/gw.routes_.xml"          resource="${gw.conf}/routes_.xml"/>
     <symlink link="${ex.conf}/gw.routes__.xml"         resource="${gw.conf}/routes__.xml"/>
     <symlink link="${ex.conf}/gw.sme.xml"              resource="${gw.conf}/sme.xml"/>
-
   </target>
 
-  <target name="compile" depends="set_properties">
+  <target name="makeclean" depends="set_properties">
     <exec executable="make" failifexecutionfails="yes" failonerror="yes" dir="${sibinco.src}">
       <arg line="clean"/>
-      <arg line="deps"/>
-      <arg line="logger"/>
-      <arg line="db"/>
-      <arg line="smppgw"/>
     </exec>
+  </target>
 
+  <target name="makedeps" depends="set_properties">
+    <exec executable="make" failifexecutionfails="yes" failonerror="yes" dir="${sibinco.src}">
+      <arg line="${MAKE_ARGS} deps"/>
+    </exec>
+  </target>
+
+  <target name="makesmppgw" depends="set_properties">
+    <exec executable="make" failifexecutionfails="yes" failonerror="yes" dir="${sibinco.src}">
+      <arg line="${MAKE_ARGS} logger db admin smppgw"/>
+    </exec>
+  </target>
+
+  <target name="makeweb" depends="set_properties">
     <ant dir="${sibinco.cvs}/webapps" target="build"/>
   </target>
 
-  <target name="build" depends="compile">
+  <target name="makeall" depends="makeclean, makedeps, makesmppgw, makeweb">
+  </target>
+
+  <target name="build" depends="makeall">
     <symlink link="${daemon.bin}/daemon" resource="${sibinco.build}/bin/admin/daemon/smsc_ssdaemon"/>
     <symlink link="${gw.bin}/service"    resource="${sibinco.build}/bin/smppgw/smppgw"/>
     <symlink link="${ex.lib}/libdb_exc.so" resource="${sibinco.build}/bin/db/exceptions/libdb_exc.so"/>
