@@ -38,7 +38,7 @@ CheckList* chkList = new SmppCheckList();
 /**
  * “естова€ sme.
  */
-class TestSme : public TestTask
+class TestSme : public TestTask, SmppResponseSender
 {
 	int smeNum;
 	SmppTestCases tc;
@@ -56,6 +56,7 @@ public:
 	virtual void onStopped();
 
 private:
+	virtual bool sendDeliverySmResp(PduDeliverySm& pdu);
 	virtual void updateStat();
 };
 
@@ -107,7 +108,7 @@ TestSme::TestSme(int _smeNum, const SmeConfig& config, const SmeSystemId& system
 	const Address& smeAddr, const SmeRegistry* smeReg,
 	const AliasRegistry* aliasReg, const RouteRegistry* routeReg, CheckList* chkList)
 	: TestTask("TestSme", _smeNum), smeNum(_smeNum), nextCheckTime(0),
-	tc(config, systemId, smeAddr, smeReg, aliasReg, routeReg, chkList),
+	tc(config, systemId, smeAddr, this, smeReg, aliasReg, routeReg, chkList),
 	boundOk(false) {}
 
 void TestSme::executeCycle()
@@ -174,7 +175,7 @@ void TestSme::executeCycle()
 	}
 }
 
-inline void TestSme::onStopped()
+void TestSme::onStopped()
 {
 	tc.unbind(); //Unbind дл€ sme соединенной с smsc
 	tc.unbind(); //Unbind дл€ sme несоединенной с smsc
@@ -182,7 +183,21 @@ inline void TestSme::onStopped()
 	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
 }
 
-inline void TestSme::updateStat()
+bool TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
+{
+	if (rand0(1))
+	{
+		tc.getTransmitter().sendDeliverySmRespOk(pdu, RAND_TC);
+		return true;
+	}
+	else
+	{
+		tc.getTransmitter().sendDeliverySmRespErr(pdu, RAND_TC);
+		return false;
+	}
+}
+
+void TestSme::updateStat()
 {
 	SmppFunctionalTest::updateStat(smeNum);
 }
@@ -201,13 +216,13 @@ SmppFunctionalTest::TaskStatList
 	SmppFunctionalTest::TaskStatList();
 Mutex SmppFunctionalTest::mutex = Mutex();
 	
-inline void SmppFunctionalTest::resize(int newSize)
+void SmppFunctionalTest::resize(int newSize)
 {
 	taskStat.clear();
 	taskStat.resize(newSize);
 }
 
-inline void SmppFunctionalTest::onStopped(int taskNum)
+void SmppFunctionalTest::onStopped(int taskNum)
 {
 	//MutexGuard guard(mutex);
 	taskStat[taskNum].stopped = true;

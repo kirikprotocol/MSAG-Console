@@ -25,7 +25,7 @@ SmeRegistry* smeReg = new SmeRegistry();
 /**
  * Тестовая sme.
  */
-class TestSme : public TestTask
+class TestSme : public TestTask, SmppResponseSender
 {
 	int smeNum;
 	SmppTestCases tc;
@@ -38,6 +38,7 @@ public:
 	virtual ~TestSme() {}
 	virtual void executeCycle();
 	virtual void onStopped();
+	virtual bool sendDeliverySmResp(PduDeliverySm& pdu);
 };
 
 /**
@@ -80,7 +81,7 @@ public:
 TestSme::TestSme(int _smeNum, const SmeConfig& config, const SmeSystemId& systemId,
 	const Address& smeAddr)
 	: TestTask("TestSme", _smeNum), smeNum(_smeNum),
-	tc(config, systemId, smeAddr, smeReg, NULL, NULL, NULL), boundOk(false) {}
+	tc(config, systemId, smeAddr, this, smeReg, NULL, NULL, NULL), boundOk(false) {}
 
 void TestSme::executeCycle()
 {
@@ -103,6 +104,20 @@ void TestSme::onStopped()
 	tc.unbind(); //Unbind для sme соединенной с smsc
 	SmppFunctionalTest::onStopped(smeNum);
 	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
+}
+
+bool TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
+{
+	if (rand0(1))
+	{
+		tc.getTransmitter().sendDeliverySmRespOk(pdu, RAND_TC);
+		return true;
+	}
+	else
+	{
+		tc.getTransmitter().sendDeliverySmRespErr(pdu, RAND_TC);
+		return false;
+	}
 }
 
 //TestSmeTaskManager

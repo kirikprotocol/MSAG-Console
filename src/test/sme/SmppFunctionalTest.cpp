@@ -49,7 +49,7 @@ CheckList* chkList = new SmppCheckList();
 /**
  * Тестовая sme.
  */
-class TestSme : public TestTask
+class TestSme : public TestTask, SmppResponseSender
 {
 	int smeNum;
 	SmppTestCases tc;
@@ -67,6 +67,7 @@ public:
 	virtual void onStopped();
 
 private:
+	virtual bool sendDeliverySmResp(PduDeliverySm& pdu);
 	virtual void updateStat();
 };
 
@@ -143,7 +144,7 @@ TestSme::TestSme(int _smeNum, const SmeConfig& config, const SmeSystemId& system
 	const Address& smeAddr, const SmeRegistry* smeReg,
 	const AliasRegistry* aliasReg, const RouteRegistry* routeReg, CheckList* chkList)
 	: TestTask("TestSme", _smeNum), smeNum(_smeNum), nextCheckTime(0),
-	tc(config, systemId, smeAddr, smeReg, aliasReg, routeReg, chkList),
+	tc(config, systemId, smeAddr, this, smeReg, aliasReg, routeReg, chkList),
 	boundOk(false) {}
 
 void TestSme::executeCycle()
@@ -212,6 +213,20 @@ inline void TestSme::onStopped()
 	tc.unbind(); //Unbind для sme несоединенной с smsc
 	SmppFunctionalTest::onStopped(smeNum);
 	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
+}
+
+bool TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
+{
+	if (rand0(1))
+	{
+		tc.getTransmitter().sendDeliverySmRespOk(pdu, RAND_TC);
+		return true;
+	}
+	else
+	{
+		tc.getTransmitter().sendDeliverySmRespErr(pdu, RAND_TC);
+		return false;
+	}
 }
 
 inline void TestSme::updateStat()
