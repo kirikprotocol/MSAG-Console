@@ -62,6 +62,12 @@ public class AliasSet
 
 	public boolean add(Alias new_alias)
 	{
+		for (Iterator i = aliases.iterator(); i.hasNext();)
+		{
+			Alias alias = (Alias) i.next();
+         if (alias.getAddress().equals(new_alias.getAddress()) && (alias.isHide() == new_alias.isHide()))
+				return false;
+		}
 		dataSource.add(new_alias);
 		return aliases.add(new_alias);
 	}
