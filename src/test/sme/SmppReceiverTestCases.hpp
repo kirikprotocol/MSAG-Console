@@ -17,18 +17,8 @@ using smsc::test::util::BaseTestCases;
 using smsc::test::core::RespPduFlag;
 using smsc::test::core::DeliveryMonitor;
 using smsc::test::core::DeliveryReceiptMonitor;
-using smsc::test::core::PduDataObject;
 using smsc::test::util::CheckList;
 using namespace smsc::smpp; //pdu
-
-struct AckText : public PduDataObject
-{
-	string text;
-	uint8_t dataCoding;
-	bool valid;
-	AckText(const string& _text, uint8_t _dataCoding, bool _valid)
-		: text(_text), dataCoding(_dataCoding), valid(_valid) {}
-};
 
 /**
  * Тест кейсы для обработки результатов асинхронных pdu.
@@ -37,7 +27,8 @@ class SmppReceiverTestCases : BaseTestCases, public SmppBaseReceiver
 {
 public:
 	SmppReceiverTestCases(SmppFixture* _fixture)
-		: fixture(_fixture), chkList(fixture->chkList) {}
+	: fixture(_fixture), chkList(fixture->chkList)
+	{ fixture->receiver = this; }
 
 	virtual ~SmppReceiverTestCases() {}
 
@@ -64,7 +55,8 @@ public:
 	/**
 	 * Ответные сообщение от внутренних sme SC доставляются правильно.
 	 */
-	void processSmeAcknowledgement(PduDeliverySm &pdu, time_t recvTime);
+	void processSmeAcknowledgement(PduDeliverySm &pdu, time_t recvTime,
+		SmeAcknowledgementHandler* ackHandler);
 
 	/**
 	 * Подтверждения доставки (delivery receipts) работают правильно.

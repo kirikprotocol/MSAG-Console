@@ -22,7 +22,8 @@ class SmppTransmitterTestCases : BaseTestCases
 {
 public:
 	SmppTransmitterTestCases(SmppFixture* _fixture)
-		: fixture(_fixture), chkList(fixture->chkList) {}
+	: fixture(_fixture), chkList(fixture->chkList)
+	{ fixture->transmitter = this; }
 	
 	virtual ~SmppTransmitterTestCases() {}
 

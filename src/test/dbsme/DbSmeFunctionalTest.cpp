@@ -1,15 +1,20 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
+#include "test/sme/SmppBaseTestCases.hpp"
+#include "test/sme/SmppTransmitterTestCases.hpp"
+#include "test/sme/SmppReceiverTestCases.hpp"
+#include "test/sme/SmppProtocolTestCases.hpp"
+#include "test/sme/SmppProfilerTestCases.hpp"
 #include "DbSmeTestCases.hpp"
 #include "DbSmeCheckList.hpp"
 #include "test/smeman/SmeManagerTestCases.hpp"
 #include "test/alias/AliasManagerTestCases.hpp"
 #include "test/router/RouteManagerTestCases.hpp"
-#include "test/profiler/ProfilerTestCases.hpp"
 #include "test/core/ProfileUtil.hpp"
 #include "test/config/SmeConfigGen.hpp"
 #include "test/config/AliasConfigGen.hpp"
 #include "test/config/RouteConfigGen.hpp"
+#include "test/config/ConfigUtil.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include "test/util/TextUtil.hpp"
 #include "util/debug.h"
@@ -25,13 +30,12 @@ using smsc::test::sms::operator<<;
 using smsc::test::smeman::SmeManagerTestCases;
 using smsc::test::alias::AliasManagerTestCases;
 using smsc::test::router::RouteManagerTestCases;
-using smsc::test::profiler::ProfilerTestCases;
-using smsc::test::sme::SmppResponseSender;
 using smsc::test::conf::TestConfig;
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::core::synchronization;
 using namespace smsc::core::threads; //ThreadPool, ThreadedTask
+using namespace smsc::test::sme;
 using namespace smsc::test::dbsme;
 using namespace smsc::test::config;
 using namespace smsc::test::util;
@@ -52,7 +56,14 @@ CheckList* chkList;
 class TestSme : public TestTask, SmppResponseSender
 {
 	int smeNum;
-	DbSmeTestCases tc;
+	SmppFixture* fixture;
+	SmppSession session;
+	SmppBaseTestCases baseTc;
+	SmppTransmitterTestCases transmitterTc;
+	SmppReceiverTestCases receiverTc;
+	SmppProtocolTestCases protocolTc;
+	SmppProfilerTestCases profilerTc;
+	DbSmeTestCases dbSmeTc;
 	time_t nextCheckTime;
 	bool boundOk;
 	Event evt;
@@ -64,6 +75,8 @@ public:
 	virtual ~TestSme() {}
 	virtual void executeCycle();
 	virtual void onStopped();
+	SmeAcknowledgementHandler* getProfilerAckHandler() { return &profilerTc; }
+	SmeAcknowledgementHandler* getDbSmeAckHandler() { return &dbSmeTc; }
 
 private:
 	virtual uint32_t sendDeliverySmResp(PduDeliverySm& pdu);
@@ -116,8 +129,11 @@ public:
 //TestSme
 TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* fixture)
 	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
-	tc(config, fixture, dbSmeReg), boundOk(false), idx(0)
+	baseTc(config, fixture), receiverTc(fixture), transmitterTc(fixture),
+	session(config, &receiverTc), protocolTc(fixture), profilerTc(fixture),
+	dbSmeTc(fixture, dbSmeReg), boundOk(false), idx(0)
 {
+	fixture->session = &session;
 	fixture->respSender = this;
 }
 
@@ -126,7 +142,7 @@ void TestSme::executeCycle()
 	//Проверка неполученых подтверждений доставки, нотификаций и sms от других sme
 	if (time(NULL) > nextCheckTime)
 	{
-		tc.getBase().checkMissingPdu();
+		baseTc.checkMissingPdu();
 		nextCheckTime = time(NULL) + 10;
 	}
 	//проверить тест остановлен/замедлен
@@ -147,14 +163,14 @@ void TestSme::executeCycle()
 	//Bind sme с неправильными параметрами
 	if (!boundOk)
 	{
-		boundOk = tc.getBase().bindCorrectSme(RAND_TC);
+		boundOk = baseTc.bindCorrectSme(RAND_TC);
 		if (!boundOk)
 		{
 			cout << "Bound failed" << endl;
 			exit(-1);
 		}
 		//установить профиль
-		tc.updateCodePageCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+		profilerTc.updateCodePageCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 		//подготовить последовательност команд
 		seq.insert(seq.end(), 5, 1); //format
 		seq.insert(seq.end(), 5, 2); //insert
@@ -168,35 +184,35 @@ void TestSme::executeCycle()
 	}
 	static int count = 0;
 	//каждый 10-ый цикл
-	//if (count % 10 == 0)
-	if (false)
+	if (count % 10 == 0)
+	//if (false)
 	{
 		count++;
-		tc.submitIncorrectDateFormatDbSmeCmd(rand0(1),
+		dbSmeTc.submitIncorrectDateFormatDbSmeCmd(rand0(1),
 			getDataCoding(RAND_TC), ALL_TC);
-		tc.submitIncorrectNumberFormatDbSmeCmd(rand0(1),
+		dbSmeTc.submitIncorrectNumberFormatDbSmeCmd(rand0(1),
 			getDataCoding(RAND_TC), ALL_TC);
-		tc.submitIncorrectParamsDbSmeCmd(rand0(1),
+		dbSmeTc.submitIncorrectParamsDbSmeCmd(rand0(1),
 			getDataCoding(RAND_TC), ALL_TC);
 	}
 	idx = idx < seq.size() ? idx : 0;
 	switch (seq[idx++])
 	{
 		case 1:
-			tc.submitCorrectFormatDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			dbSmeTc.submitCorrectFormatDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
 		case 2:
-			tc.submitCorrectInsertDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			dbSmeTc.submitCorrectInsertDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
 		case 3:
-			tc.submitCorrectUpdateDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			dbSmeTc.submitCorrectUpdateDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
 		case 4:
-			tc.submitCorrectSelectDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			dbSmeTc.submitCorrectSelectDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			evt.Wait(1000);
 			break;
 		case 5:
-			tc.submitCorrectDeleteDbSmeCmd(rand0(1), getDataCoding(RAND_TC));
+			dbSmeTc.submitCorrectDeleteDbSmeCmd(rand0(1), getDataCoding(RAND_TC));
 			break;
 		default:
 			__unreachable__("Invalid tc");
@@ -206,14 +222,14 @@ void TestSme::executeCycle()
 
 void TestSme::onStopped()
 {
-	tc.getBase().unbind();
+	baseTc.unbind();
 	DbSmeFunctionalTest::onStopped(smeNum);
 	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
 }
 
 uint32_t TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 {
-	return tc.sendDeliverySmRespOk(pdu, rand0(1));
+	return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
 }
 
 void TestSme::updateStat()
@@ -228,7 +244,7 @@ bool TestSmeTaskManager::isStopped() const
 }
 
 //DbSmeFunctionalTest
-int DbSmeFunctionalTest::delay = 500;
+int DbSmeFunctionalTest::delay = 1000;
 bool DbSmeFunctionalTest::pause = false;
 DbSmeFunctionalTest::TaskStatList
 	DbSmeFunctionalTest::taskStat =
@@ -313,14 +329,6 @@ bool checkRoute(const Address& smeAddr, const SmeSystemId& smeId,
 
 vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 {
-	__trace__("*** Generating config files ***");
-	smeReg->clear();
-	aliasReg->clear();
-	routeReg->clear();
-	SmeManagerTestCases tcSme(NULL, smeReg, NULL);
-	AliasManagerTestCases tcAlias(NULL, aliasReg, NULL);
-	RouteManagerTestCases tcRoute(NULL, routeReg, NULL);
-	
 	__cfg_addr__(dbSmeAddr);
 	__cfg_addr__(dbSmeAlias);
 	__cfg_addr__(dbSmeInvalidAddr);
@@ -328,9 +336,21 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
 	__cfg_str__(profilerSystemId);
+	__cfg_addr__(smscAddr);
+	__cfg_str__(smscSystemId);
 	__cfg_str__(mapProxySystemId);
 	__cfg_str__(abonentInfoSystemId);
 
+	__trace__("*** Generating config files ***");
+	smeReg->clear();
+	aliasReg->clear();
+	routeReg->clear();
+	SmeManagerTestCases tcSme(NULL, smeReg, NULL);
+	AliasManagerTestCases tcAlias(NULL, aliasReg, NULL);
+	RouteManagerTestCases tcRoute(NULL, routeReg, NULL);
+	ConfigUtil cfgUtil(smeReg, aliasReg, routeReg);
+	cfgUtil.setupSystemSme();
+	
 	vector<Address*> addr;
 	vector<Address*> alias;
 	vector<SmeInfo*> smeInfo;
@@ -356,35 +376,6 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		smeReg->registerAddress(*alias.back());
 		__trace2__("register alias: alias = %s", str(*alias.back()).c_str());
 	}
-	//регистрация db sme
-	SmeInfo dbSmeInfo;
-	dbSmeInfo.wantAlias = false;
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&dbSmeInfo);
-	dbSmeInfo.systemId = dbSmeSystemId;
-	smeReg->registerSme(dbSmeAddr, dbSmeInfo, false, true);
-	smeReg->bindSme(dbSmeInfo.systemId);
-	//регистрация profiler
-	SmeInfo profilerInfo;
-	profilerInfo.wantAlias = false;
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&profilerInfo);
-	profilerInfo.systemId = profilerSystemId;
-	smeReg->registerSme(profilerAddr, profilerInfo, false, true);
-	smeReg->bindSme(profilerInfo.systemId);
-	//регистрация map proxy
-	SmeInfo mapProxyInfo;
-	mapProxyInfo.wantAlias = false;
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&mapProxyInfo);
-	mapProxyInfo.systemId = mapProxySystemId;
-	smeReg->registerSme("+123", mapProxyInfo, false, true);
-	smeReg->bindSme(mapProxyInfo.systemId);
-	//abonent info прокси
-	SmeInfo abonentProxyInfo;
-	abonentProxyInfo.wantAlias = false;
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&abonentProxyInfo);
-	abonentProxyInfo.systemId = abonentInfoSystemId;
-	smeReg->registerSme("+321", abonentProxyInfo, false, true);
-	smeReg->bindSme(abonentProxyInfo.systemId);
-	//регистрация алиасов (самая простая схема)
 	for (int i = 0; i < numSme; i++)
 	{
 		AliasInfo aliasInfo;
@@ -393,20 +384,21 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		aliasInfo.hide = rand0(1);
 		tcAlias.addCorrectAliasMatch(&aliasInfo, RAND_TC);
 	}
+	//регистрация db sme
+	SmeInfo dbSmeInfo;
+	dbSmeInfo.wantAlias = false;
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&dbSmeInfo);
+	dbSmeInfo.systemId = dbSmeSystemId;
+	smeReg->registerSme(dbSmeAddr, dbSmeInfo, false, true);
+	smeReg->bindSme(dbSmeInfo.systemId);
 	//алиас для db sme
 	AliasInfo dbSmeAliasInfo;
 	dbSmeAliasInfo.addr = dbSmeAddr;
 	dbSmeAliasInfo.alias = dbSmeAlias;
 	dbSmeAliasInfo.hide = true;
 	aliasReg->putAlias(dbSmeAliasInfo);
-	//алиас для profiler
-	AliasInfo profilerAliasInfo;
-	profilerAliasInfo.addr = profilerAddr;
-	profilerAliasInfo.alias = profilerAlias;
-	profilerAliasInfo.hide = true;
-	aliasReg->putAlias(profilerAliasInfo);
 	//tcAlias->commit();
-	//регистрация маршрутов (от каждой sme до db sme и обратно)
+	//регистрация маршрутов sme <-> db sme
 	for (int i = 0; i < numSme; i++)
 	{
 		//sme -> db sme
@@ -428,13 +420,36 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		route2.source = dbSmeInvalidAddr;
 		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
 	}
-	//сохранение конфигов
-	SmeConfigGen smeCfg(smeReg, NULL);
-	AliasConfigGen aliasCfg(aliasReg, NULL);
-	RouteConfigGen routeCfg(routeReg, NULL);
-	smeCfg.saveConfig("../conf/sme.xml");
-	aliasCfg.saveConfig("../conf/aliases.xml");
-	routeCfg.saveConfig("../conf/routes.xml");
+	//регистрация маршрутов sme <-> profiler
+	for (int i = 0; i < numSme; i++)
+	{
+		//sme -> profiler
+		RouteInfo route1;
+		route1.source = *addr[i];
+		route1.dest = profilerAddr;
+		route1.smeSystemId = profilerSystemId;
+		route1.enabling = true;
+		tcRoute.addCorrectRouteMatch(&route1, NULL, RAND_TC);
+		//profiler -> sme
+		RouteInfo route2;
+		route2.source = profilerAddr;
+		route2.dest = *addr[i];
+		route2.smeSystemId = smeInfo[i]->systemId;
+		route2.enabling = true;
+		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
+	}
+	//регистрация маршрутов smsc -> sme (delivery receipts)
+	for (int i = 0; i < numSme; i++)
+	{
+		//smsc -> sme
+		RouteInfo route;
+		route.source = smscAddr;
+		route.dest = *addr[i];
+		route.smeSystemId = smeInfo[i]->systemId;
+		route.enabling = true;
+		tcRoute.addCorrectRouteMatch(&route, NULL, RAND_TC);
+	}
+	//tcRoute->commit();
 	//создание sme
 	vector<TestSme*> sme;
 	for (int i = 0; i < numSme; i++)
@@ -448,28 +463,41 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		//config.systemType;
 		//config.origAddr;
 		SmppFixture* fixture = new SmppFixture(smeInfo[i]->systemId, *addr[i],
-			NULL, NULL, smeReg, aliasReg, routeReg, profileReg, chkList);
+			NULL, smeReg, aliasReg, routeReg, profileReg, chkList);
 		sme.push_back(new TestSme(i, config, fixture));
+		fixture->ackHandler[profilerAddr] = sme.back()->getProfilerAckHandler();
+		fixture->ackHandler[dbSmeAddr] = sme.back()->getDbSmeAckHandler();
+		fixture->ackHandler[dbSmeInvalidAddr] = sme.back()->getDbSmeAckHandler();
 		smeReg->bindSme(smeInfo[i]->systemId);
 	}
-	//печать таблицы маршрутов
 	__trace__("Route table");
-	int routeCount = 0;
+	//печать таблицы маршрутов sme<->db sme
 	for (int i = 0; i < numSme; i++)
 	{
-		if (checkRoute(*addr[i], smeInfo[i]->systemId, dbSmeAlias))
-		{
-			routeCount++;
-		}
-		if (checkRoute(*addr[i], smeInfo[i]->systemId, dbSmeInvalidAddr))
-		{
-			routeCount++;
-		}
+		cfgUtil.checkRoute2(*addr[i], smeInfo[i]->systemId, dbSmeAlias);
 	}
-	__require__(routeCount);
+	//печать таблицы маршрутов sme<->profiler
+	for (int i = 0; i < numSme; i++)
+	{
+		cfgUtil.checkRoute2(*addr[i], smeInfo[i]->systemId, profilerAlias);
+	}
+	//печать таблицы маршрутов smsc->sme
+	for (int i = 0; i < numSme; i++)
+	{
+		cfgUtil.checkRoute(smscAddr, smscSystemId, *addr[i]);
+	}
+	//сохранение конфигов
+	SmeConfigGen smeCfg(smeReg, NULL);
+	AliasConfigGen aliasCfg(aliasReg, NULL);
+	RouteConfigGen routeCfg(routeReg, NULL);
+	smeCfg.saveConfig("../conf/sme.xml");
+	aliasCfg.saveConfig("../conf/aliases.xml");
+	routeCfg.saveConfig("../conf/routes.xml");
+	//чистка
 	for (int i = 0; i < numSme; i++)
 	{
 		delete addr[i];
+		delete alias[i];
 		delete smeInfo[i];
 	}
 	return sme;

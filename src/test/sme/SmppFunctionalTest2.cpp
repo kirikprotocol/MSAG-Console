@@ -1,15 +1,19 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
-#include "test/sme/SmppProfilerTestCases.hpp"
+#include "SmppBaseTestCases.hpp"
+#include "SmppTransmitterTestCases.hpp"
+#include "SmppReceiverTestCases.hpp"
+#include "SmppProtocolTestCases.hpp"
+#include "SmppProfilerTestCases.hpp"
 #include "test/smeman/SmeManagerTestCases.hpp"
 #include "test/alias/AliasManagerTestCases.hpp"
 #include "test/router/RouteManagerTestCases.hpp"
-#include "test/profiler/ProfilerTestCases.hpp"
 #include "test/core/ProfileUtil.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "test/config/SmeConfigGen.hpp"
 #include "test/config/AliasConfigGen.hpp"
 #include "test/config/RouteConfigGen.hpp"
+#include "test/config/ConfigUtil.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include "test/util/TextUtil.hpp"
 #include "SmppProfilerCheckList.hpp"
@@ -33,7 +37,6 @@ using smsc::test::sms::operator==;
 using smsc::test::smeman::SmeManagerTestCases;
 using smsc::test::alias::AliasManagerTestCases;
 using smsc::test::router::RouteManagerTestCases;
-using smsc::test::profiler::ProfilerTestCases;
 using smsc::test::conf::TestConfig;
 using smsc::test::core::ProfileUtil;
 using smsc::test::core::RouteHolder;
@@ -61,7 +64,13 @@ CheckList* configChkList;
 class TestSme : public TestTask, SmppResponseSender
 {
 	int smeNum;
-	SmppProfilerTestCases tc;
+	SmppFixture* fixture;
+	SmppSession session;
+	SmppBaseTestCases baseTc;
+	SmppTransmitterTestCases transmitterTc;
+	SmppReceiverTestCases receiverTc;
+	SmppProtocolTestCases protocolTc;
+	SmppProfilerTestCases profilerTc;
 	time_t nextCheckTime;
 	bool boundOk;
 	Event evt;
@@ -70,9 +79,10 @@ class TestSme : public TestTask, SmppResponseSender
 
 public:
 	TestSme(int smeNum, const SmeConfig& config, SmppFixture* fixture);
-	virtual ~TestSme() {}
+	virtual ~TestSme() { delete fixture; }
 	virtual void executeCycle();
 	virtual void onStopped();
+	SmeAcknowledgementHandler* getProfilerAckHandler() { return &profilerTc; }
 
 private:
 	virtual uint32_t sendDeliverySmResp(PduDeliverySm& pdu);
@@ -125,8 +135,11 @@ public:
 //TestSme
 TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* fixture)
 	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
-	tc(config, fixture), boundOk(false), idx(0)
+	baseTc(config, fixture), receiverTc(fixture), transmitterTc(fixture),
+	session(config, &receiverTc), protocolTc(fixture), profilerTc(fixture),
+	boundOk(false), idx(0)
 {
+	fixture->session = &session;
 	fixture->respSender = this;
 }
 
@@ -135,7 +148,7 @@ void TestSme::executeCycle()
 	//Проверка неполученых подтверждений доставки, нотификаций и sms от других sme
 	if (time(NULL) > nextCheckTime)
 	{
-		tc.getBase().checkMissingPdu();
+		baseTc.checkMissingPdu();
 		nextCheckTime = time(NULL) + 10;
 	}
 	//проверить тест остановлен/замедлен
@@ -167,7 +180,7 @@ void TestSme::executeCycle()
 			{
 				case 1: //правильный bind
 					evt.Wait(2000);
-					boundOk = tc.getBase().bindCorrectSme(RAND_TC);
+					boundOk = baseTc.bindCorrectSme(RAND_TC);
 					if (!boundOk)
 					{
 						cout << "Bound failed" << endl;
@@ -175,10 +188,10 @@ void TestSme::executeCycle()
 					}
 					break;
 				case 2: //неправильный bind
-					tc.getBase().bindIncorrectSme(RAND_TC);
+					baseTc.bindIncorrectSme(RAND_TC);
 					break;
 				case 3: //unbind
-					tc.getBase().unbind();
+					baseTc.unbind();
 					boundOk = false;
 					break;
 				default:
@@ -192,7 +205,7 @@ void TestSme::executeCycle()
 #ifdef SIMPLE_TEST
 	seq.push_back(201);
 #else
-	seq.insert(seq.end(), 30, 1);
+	seq.insert(seq.end(), 20, 1);
 	//seq.insert(seq.end(), 10, 2);
 	seq.push_back(3);
 	seq.push_back(4);
@@ -207,25 +220,25 @@ void TestSme::executeCycle()
 	switch (seq[idx++])
 	{
 		case 1: //правильная sms
-			tc.submitSmCorrect(rand0(1), RAND_TC);
+			protocolTc.submitSmCorrect(rand0(1), 1 /*RAND_TC*/);
 			break;
 		case 2: //неправильная sms
-			tc.submitSmIncorrect(rand0(1), RAND_TC);
+			protocolTc.submitSmIncorrect(rand0(1), RAND_TC);
 			break;
 		case 3: //обновление настроек кодировки
-			tc.updateCodePageCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			profilerTc.updateCodePageCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
 		case 4: //обновление настроек уведомления о доствке
-			tc.updateReportOptionsCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			profilerTc.updateReportOptionsCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
 		case 5: //обновление профиля некорректными данными
-			tc.updateProfileIncorrect(rand0(1), getDataCoding(RAND_TC));
+			profilerTc.updateProfileIncorrect(rand0(1), getDataCoding(RAND_TC));
 			break;
 		case 6:
-			tc.replaceSm(rand0(1), RAND_TC);
+			protocolTc.replaceSm(rand0(1), RAND_TC);
 			break;
 		case 101: //asserts
-			tc.submitSmAssert(RAND_TC);
+			protocolTc.submitSmAssert(RAND_TC);
 			break;
 		/*
 		case 102:
@@ -233,7 +246,7 @@ void TestSme::executeCycle()
 			break;
 		*/
 		case 201: //исключительно правильная sms
-			tc.submitSmCorrect(rand0(1), 1);
+			protocolTc.submitSmCorrect(rand0(1), 1);
 			break;
 		default:
 			__unreachable__("Invalid seq number");
@@ -243,8 +256,8 @@ void TestSme::executeCycle()
 
 void TestSme::onStopped()
 {
-	tc.getBase().unbind(); //Unbind для sme соединенной с smsc
-	tc.getBase().unbind(); //Unbind для sme несоединенной с smsc
+	baseTc.unbind(); //Unbind для sme соединенной с smsc
+	baseTc.unbind(); //Unbind для sme несоединенной с smsc
 	SmppFunctionalTest::onStopped(smeNum);
 	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
 }
@@ -261,20 +274,20 @@ uint32_t TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 	if (addr == smscAddr || addr == smscAlias ||
 		addr == profilerAddr || addr == profilerAlias)
 	{
-		return tc.sendDeliverySmRespOk(pdu, rand0(1));
+		return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
 	}
 	//на остальное ответить как придется
 #ifdef SIMPLE_TEST
-	return tc.sendDeliverySmRespOk(pdu, rand0(1));
+	return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
 #else
 	switch (rand1(3))
 	{
 		case 1:
-			return tc.sendDeliverySmRespError(pdu, rand0(1), RAND_TC);
+			return protocolTc.sendDeliverySmRespError(pdu, rand0(1), RAND_TC);
 		case 2:
-			return tc.sendDeliverySmRespRetry(pdu, rand0(1), RAND_TC);
+			return protocolTc.sendDeliverySmRespRetry(pdu, rand0(1), RAND_TC);
 		default:
-			return tc.sendDeliverySmRespOk(pdu, rand0(1));
+			return protocolTc.sendDeliverySmRespOk(pdu, rand0(1));
 	}
 #endif //SIMPLE_TEST
 }
@@ -339,126 +352,16 @@ void SmppFunctionalTest::printStat()
 	}
 }
 
-void systemSmeConfig()
-{
-	//smsc sme
-	__cfg_addr__(smscAddr);
-	__cfg_addr__(smscAlias);
-	__cfg_str__(smscSystemId);
-	SmeInfo smscSme;
-	smscSme.wantAlias = rand0(1);
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&smscSme);
-	smscSme.systemId = smscSystemId;
-	smeReg->registerSme(smscAddr, smscSme, false, true);
-	smeReg->bindSme(smscSme.systemId);
-	//алиас для smsc sme
-	AliasInfo smscAliasInfo;
-	smscAliasInfo.addr = smscAddr;
-	smscAliasInfo.alias = smscAlias;
-	smscAliasInfo.hide = true; //rand0(2);
-	aliasReg->putAlias(smscAliasInfo);
-	//регистрация profiler
-	__cfg_addr__(profilerAddr);
-	__cfg_addr__(profilerAlias);
-	__cfg_str__(profilerSystemId);
-	SmeInfo profilerSme;
-	profilerSme.wantAlias = false;
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&profilerSme);
-	profilerSme.systemId = profilerSystemId;
-	smeReg->registerSme(profilerAddr, profilerSme, false, true);
-	smeReg->bindSme(profilerSme.systemId);
-	//алиас для profiler
-	AliasInfo profilerAliasInfo;
-	profilerAliasInfo.addr = profilerAddr;
-	profilerAliasInfo.alias = profilerAlias;
-	profilerAliasInfo.hide = true; //rand0(2);
-	aliasReg->putAlias(profilerAliasInfo);
-	//регистрация map proxy
-	__cfg_str__(mapProxySystemId);
-	SmeInfo mapProxySme;
-	mapProxySme.wantAlias = rand0(1);
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&mapProxySme);
-	mapProxySme.systemId = mapProxySystemId;
-	smeReg->registerSme("+123", mapProxySme, false, true);
-	smeReg->bindSme(mapProxySme.systemId);
-	//abonent info прокси
-	__cfg_str__(abonentInfoSystemId);
-	SmeInfo abonentInfoSme;
-	abonentInfoSme.wantAlias = false;
-	SmeManagerTestCases::setupRandomCorrectSmeInfo(&abonentInfoSme);
-	abonentInfoSme.systemId = abonentInfoSystemId;
-	smeReg->registerSme("+321", abonentInfoSme, false, true);
-	smeReg->bindSme(abonentInfoSme.systemId);
-}
-
-void checkRoute(const Address& origAddr, const SmeSystemId& origSmeId,
-	const Address& destAlias, int* numRoutes = NULL, int* numBound = NULL)
-{
-	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
-	const RouteHolder* routeHolder = routeReg->lookup(origAddr, destAddr);
-	if (routeHolder)
-	{
-		if (numRoutes)
-		{
-			(*numRoutes)++;
-		}
-		const SmeSystemId& smeId = routeHolder->route.smeSystemId;
-		bool smeBound = smeReg->isSmeBound(smeId);
-		if (smeBound)
-		{
-			if (numBound)
-			{
-				(*numBound)++;
-			}
-		}
-		__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme bound = %s",
-			str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str(), smeId.c_str(),
-			(smeBound ? "yes" : "no"));
-	}
-	else
-	{
-		__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, no route",
-			str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str());
-	}
-}
-
-void checkRoute2(const Address& origAddr, const SmeSystemId& origSmeId,
-	const Address& destAlias)
-{
-	const Address destAddr = aliasReg->findAddressByAlias(destAlias);
-	const RouteHolder* routeHolder1 = routeReg->lookup(origAddr, destAddr);
-	if (routeHolder1)
-	{
-		const SmeSystemId& smeId1 = routeHolder1->route.smeSystemId;
-		bool smeBound1 = smeReg->isSmeBound(smeId1);
-		const RouteHolder* routeHolder2 = routeReg->lookup(destAddr, origAddr);
-		if (routeHolder2)
-		{
-			const SmeSystemId& smeId2 = routeHolder2->route.smeSystemId;
-			bool smeBound2 = smeReg->isSmeBound(smeId2);
-			__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme bound = %s, back route to = %s, sme bound = %s",
-				str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str(),
-				smeId1.c_str(), (smeBound1 ? "yes" : "no"),
-				smeId2.c_str(), (smeBound2 ? "yes" : "no"));
-		}
-		else
-		{
-			__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, route to = %s, sme bound = %s, no back route",
-				str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str(),
-				smeId1.c_str(), (smeBound1 ? "yes" : "no"));
-		}
-	}
-	else
-	{
-		__trace2__("route: origAddr = %s, origSmeId = %s, destAias = %s, no route",
-			str(origAddr).c_str(), origSmeId.c_str(), str(destAlias).c_str());
-	}
-}
-
 vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	const string& smscHost, int smscPort)
 {
 	__require__(numSme <= numAddr);
+	__cfg_addr__(smscAddr);
+	__cfg_str__(smscSystemId);
+	__cfg_addr__(profilerAddr);
+	__cfg_addr__(profilerAlias);
+	__cfg_str__(profilerSystemId);
+	
 	__trace__("*** Generating config files ***");
 	smeReg->clear();
 	aliasReg->clear();
@@ -466,15 +369,8 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	SmeManagerTestCases tcSme(NULL, smeReg, NULL);
 	AliasManagerTestCases tcAlias(NULL, aliasReg, NULL);
 	RouteManagerTestCases tcRoute(NULL, routeReg, NULL);
-
-	__cfg_addr__(smscAddr);
-	__cfg_str__(smscSystemId);
-	__cfg_addr__(profilerAddr);
-	__cfg_addr__(profilerAlias);
-	__cfg_str__(profilerSystemId);
-	
-	//системные sme
-	systemSmeConfig();
+	ConfigUtil cfgUtil(smeReg, aliasReg, routeReg);
+	cfgUtil.setupSystemSme();
 
 	vector<Address*> addr;
 	vector<Address*> alias;
@@ -533,18 +429,14 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	__trace__("*** Checking alias constraint d(a(A)) = A ***");
 	for (int i = 0; i < numAddr; i++)
 	{
-		const Address _alias = aliasReg->findAliasByAddress(*addr[i]);
-		const Address _addr = aliasReg->findAddressByAlias(_alias);
-		__trace2__("addr->alias->addr: %s -> %s -> %s",
-			str(*addr[i]).c_str(), str(_alias).c_str(), str(_addr).c_str());
-		if (_addr != *addr[i])
+		if (!cfgUtil.checkAlias(*addr[i]))
 		{
 			cout << "Alias constraint d(a(A)) = A violated" << endl;
 			break;
 		}
 	}
 	//tcAlias->commit();
-	//регистрация маршрутов
+	//регистрация маршрутов sme <-> sme
 	for (int i = 0; i < numAddr; i++)
 	{
 		for (int j = 0; j < numAddr; j++)
@@ -575,7 +467,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 			}
 		}
 	}
-	//маршруты на profiler
+	//регистрация маршрутов sme <-> profiler
 	for (int i = 0; i < numAddr; i++)
 	{
 		//sme -> profiler
@@ -593,7 +485,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		route2.enabling = true;
 		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
 	}
-	//маршруты на smsc (delivery receipts)
+	//регистрация маршрутов smsc -> sme (delivery receipts)
 	for (int i = 0; i < numAddr; i++)
 	{
 		//smsc -> sme
@@ -619,12 +511,14 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		//config.systemType;
 		//config.origAddr;
 		SmppFixture* fixture = new SmppFixture(smeInfo[i]->systemId, *addr[i],
-			NULL, NULL, smeReg, aliasReg, routeReg, profileReg, smppChkList);
+			NULL, smeReg, aliasReg, routeReg, profileReg, smppChkList);
 		sme.push_back(new TestSme(i, config, fixture)); //throws Exception
+		//fixture->ackHandler[smscAddr] = sme.back()->getAckHandler();
+		fixture->ackHandler[profilerAddr] = sme.back()->getProfilerAckHandler();
 		smeReg->bindSme(smeInfo[i]->systemId);
 	}
-	//печать таблицы маршрутов sme->sme
 	__trace__("*** Route table ***");
+	//печать таблицы маршрутов sme->sme
 	int numRoutes = 0;
 	int numBound = 0;
 	for (int i = 0; i < numAddr; i++)
@@ -632,18 +526,19 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		const vector<const Address*>& addrList = smeReg->getAddressList();
 		for (int j = 0; j < addrList.size(); j++)
 		{
-			checkRoute(*addr[i], smeInfo[i]->systemId, *addrList[j], &numRoutes, &numBound);
+			cfgUtil.checkRoute(*addr[i], smeInfo[i]->systemId,
+				*addrList[j], &numRoutes, &numBound);
 		}
-	}
-	//печать таблицы маршрутов smsc->sme
-	for (int i = 0; i < numSme; i++)
-	{
-		checkRoute(smscAddr, smscSystemId, *addr[i]);
 	}
 	//печать таблицы маршрутов sme<->profiler
 	for (int i = 0; i < numSme; i++)
 	{
-		checkRoute2(*addr[i], smeInfo[i]->systemId, profilerAlias);
+		cfgUtil.checkRoute2(*addr[i], smeInfo[i]->systemId, profilerAlias);
+	}
+	//печать таблицы маршрутов smsc->sme
+	for (int i = 0; i < numSme; i++)
+	{
+		cfgUtil.checkRoute(smscAddr, smscSystemId, *addr[i]);
 	}
 	if (!numBound)
 	{
@@ -660,6 +555,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	smeCfg.saveConfig("../conf/sme.xml");
 	aliasCfg.saveConfig("../conf/aliases.xml");
 	routeCfg.saveConfig("../conf/routes.xml");
+	//чистка
 	for (int i = 0; i < numAddr; i++)
 	{
 		delete addr[i];

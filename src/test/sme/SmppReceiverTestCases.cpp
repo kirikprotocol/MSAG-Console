@@ -376,9 +376,9 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 		SmppUtil::convert(pdu.get_message().get_source(), &origAlias);
 		const Address origAddr = fixture->aliasReg->findAddressByAlias(origAlias);
 		//проверить тип sme
-		if (fixture->smeReg->isExternalSme(origAddr))
+		if (fixture->ackHandler.count(origAddr))
 		{
-			processSmeAcknowledgement(pdu, recvTime);
+			processSmeAcknowledgement(pdu, recvTime, fixture->ackHandler[origAddr]);
 			return;
 		}
 		__tc__("processDeliverySm.normalSms");
@@ -386,7 +386,7 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 		if (!pdu.get_optional().has_userMessageReference())
 		{
 			__tc_fail__(1);
-			return;
+			throw TCException();
 		}
 		//перкрыть pduReg класса
 		PduRegistry* pduReg = fixture->smeReg->getPduRegistry(origAddr);
@@ -401,12 +401,12 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 		if (!monitor)
 		{
 			__tc_fail__(2);
-			return;
+			throw TCException();
 		}
 		if (!monitor->pduData->valid)
 		{
 			__tc_fail__(3);
-			return;
+			throw TCException();
 		}
 		__tc_ok_cond__;
 		__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);
@@ -464,7 +464,12 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 		//обновить статус delivery receipt монитора
 		updateDeliveryReceiptMonitor(monitor, pduReg, deliveryStatus, recvTime);
 	}
-	catch(...)
+	catch (TCException&)
+	{
+		//отправить респонс
+		fixture->respSender->sendDeliverySmResp(pdu);
+	}
+	catch (...)
 	{
 		__tc_fail__(100);
 		error();
@@ -507,8 +512,9 @@ void SmppReceiverTestCases::updateDeliveryReceiptMonitor(SmeAckMonitor* monitor,
 }
 
 void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
-	time_t recvTime)
+	time_t recvTime, SmeAcknowledgementHandler* ackHandler)
 {
+	__require__(ackHandler);
 	__trace__("processSmeAcknowledgement()");
 	__decl_tc__;
 	try
@@ -518,7 +524,7 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 		if (!pdu.get_optional().has_userMessageReference())
 		{
 			__tc_fail__(1);
-			return;
+			throw TCException();
 		}
 		Address destAddr;
 		SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
@@ -534,12 +540,12 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 		if (!monitor)
 		{
 			__tc_fail__(2);
-			return;
+			throw TCException();
 		}
 		if (!monitor->pduData->valid)
 		{
 			__tc_fail__(3);
-			return;
+			throw TCException();
 		}
 		__tc_ok_cond__;
 		__tc__("processDeliverySm.smeAck.checkAllowed");
@@ -551,10 +557,10 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 				break;
 			case PDU_RECEIVED_FLAG:
 				__tc_fail__(1);
-				return;
+				throw TCException();
 			case PDU_NOT_EXPECTED_FLAG:
 				__tc_fail__(2);
-				return;
+				throw TCException();
 			default:
 				__unreachable__("Unknown flag");
 		}
@@ -571,16 +577,13 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 		//проверить содержимое полученной pdu
 		__tc__("processDeliverySm.smeAck.checkFields");
 		//поля header проверяются в processDeliverySm()
-		//поля message проверяются в fixture->ackHandler->processSmeAcknowledgement()
+		//поля message проверяются в ackHandler->processSmeAcknowledgement()
 		//правильность адресов проверяется в fixture->routeChecker->checkRouteForAcknowledgementSms()
 		__check__(1, get_message().get_esmClass(), ESM_CLASS_NORMAL_MESSAGE);
 		__tc_ok_cond__;
-		if (fixture->ackHandler)
-		{
-			pduReg->removeMonitor(monitor);
-			fixture->ackHandler->processSmeAcknowledgement(monitor, pdu, recvTime);
-			pduReg->registerMonitor(monitor);
-		}
+		pduReg->removeMonitor(monitor);
+		ackHandler->processSmeAcknowledgement(monitor, pdu, recvTime);
+		pduReg->registerMonitor(monitor);
 		//для sme acknoledgement не проверяю повторную доставку
 		__tc__("processDeliverySm.smeAck.recvTimeChecks");
 		__cfg_int__(timeCheckAccuracy);
@@ -595,10 +598,16 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 		__tc_ok_cond__;
 		//отправить респонс, только ESME_ROK разрешено
 		uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
+		__require__(deliveryStatus == ESME_ROK);
 		RespPduFlag respFlag = isAccepted(deliveryStatus);
-		__require__(respFlag == RESP_PDU_OK);
 		//обновить статус delivery receipt монитора
 		updateDeliveryReceiptMonitor(monitor, pduReg, deliveryStatus, recvTime);
+	}
+	catch (TCException&)
+	{
+		//отправить респонс, только ESME_ROK разрешено
+		uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
+		__require__(deliveryStatus == ESME_ROK);
 	}
 	catch(...)
 	{
@@ -680,7 +689,7 @@ void SmppReceiverTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monit
 	if (!ack->valid)
 	{
 		__trace__("monitor is not valid");
-		monitor->pduData->intProps.count("skipReceivedCheck")
+		monitor->pduData->intProps["skipReceivedCheck"] = 1;
 		monitor->setReceived();
 		return;
 	}
@@ -762,6 +771,7 @@ void SmppReceiverTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monit
 		default:
 			__unreachable__("Invalid flag");
 	}
+	__trace2__("expected optional part:\n%s", str(opt).c_str());
 	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
 	__tc_ok_cond__;
 	__tc__("processDeliverySm.deliveryReceipt.checkText");
@@ -806,7 +816,7 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm& pdu,
 		if (!pdu.get_optional().has_userMessageReference())
 		{
 			__tc_fail__(1);
-			return;
+			throw TCException();
 		}
 		//перекрыть pduReg класса
 		Address destAddr;
@@ -823,12 +833,12 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm& pdu,
 		if (!monitor)
 		{
 			__tc_fail__(2);
-			return;
+			throw TCException();
 		}
 		if (!monitor->pduData->valid)
 		{
 			__tc_fail__(3);
-			return;
+			throw TCException();
 		}
 		__tc_ok_cond__;
 		__tc__("processDeliverySm.deliveryReceipt.checkAllowed");
@@ -843,10 +853,10 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm& pdu,
 				{
 					__tc_fail__(1);
 				}
-				return;
+				throw TCException();
 			case PDU_NOT_EXPECTED_FLAG:
 				__tc_fail__(2);
-				return;
+				throw TCException();
 			default:
 				__unreachable__("Unknown flag");
 		}
@@ -877,10 +887,16 @@ void SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm& pdu,
 		__tc_ok_cond__;
 		//отправить респонс, только ESME_ROK разрешено
 		uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
+		__require__(deliveryStatus == ESME_ROK);
 		RespPduFlag respFlag = isAccepted(deliveryStatus);
-		__require__(respFlag == RESP_PDU_OK);
 	}
-	catch(...)
+	catch (TCException&)
+	{
+		//отправить респонс, только ESME_ROK разрешено
+		uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
+		__require__(deliveryStatus == ESME_ROK);
+	}
+	catch (...)
 	{
 		__tc_fail__(100);
 		error();

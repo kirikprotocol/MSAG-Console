@@ -1,7 +1,6 @@
 #ifndef TEST_SME_SMPP_FIXTURE
 #define TEST_SME_SMPP_FIXTURE
 
-#include "sms/sms.h"
 #include "sme/SmppBase.hpp"
 #include "profiler/profiler.hpp"
 #include "test/core/AliasRegistry.hpp"
@@ -10,12 +9,15 @@
 #include "test/core/ProfileRegistry.hpp"
 #include "test/core/RouteRegistry.hpp"
 #include "test/core/RouteChecker.hpp"
+#include "test/sms/SmsUtil.hpp"
 #include "SmppPduChecker.hpp"
+#include <map>
 
 namespace smsc {
 namespace test {
 namespace sme {
 
+using std::map;
 using smsc::sme::SmppSession;
 using smsc::smeman::SmeSystemId;
 using smsc::sms::Address;
@@ -27,6 +29,8 @@ using smsc::test::core::RouteRegistry;
 using smsc::test::core::SmeRegistry;
 using smsc::test::core::ProfileRegistry;
 using smsc::test::core::RouteChecker;
+using smsc::test::core::PduDataObject;
+using smsc::test::sms::ltAddress;
 using smsc::test::util::CheckList;
 
 struct SmppResponseSender
@@ -40,13 +44,26 @@ struct SmeAcknowledgementHandler
 		PduDeliverySm &pdu, time_t recvTime) = NULL;
 };
 
+struct AckText : public PduDataObject
+{
+	string text;
+	uint8_t dataCoding;
+	bool valid;
+	AckText(const string& _text, uint8_t _dataCoding, bool _valid)
+		: text(_text), dataCoding(_dataCoding), valid(_valid) {}
+};
+
+class SmppBaseTestCases;
+class SmppTransmitterTestCases;
+class SmppReceiverTestCases;
+
 struct SmppFixture
 {
 	SmppSession* session;
 	const SmeSystemId systemId;
 	const Address smeAddr;
 	SmppResponseSender* respSender;
-	SmeAcknowledgementHandler* ackHandler;
+	map<const Address, SmeAcknowledgementHandler*, ltAddress> ackHandler;
 	const SmeRegistry* smeReg;
 	const AliasRegistry* aliasReg;
 	const RouteRegistry* routeReg;
@@ -55,20 +72,21 @@ struct SmppFixture
 	CheckList* chkList;
 	RouteChecker* routeChecker;
 	SmppPduChecker* pduChecker;
+	SmppBaseTestCases* base;
+	SmppTransmitterTestCases* transmitter;
+	SmppReceiverTestCases* receiver;
 
 	SmppFixture(const SmeSystemId& _systemId, const Address& _smeAddr,
-		SmppResponseSender* _respSender, SmeAcknowledgementHandler* _ackHandler,
-		const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
-		const RouteRegistry* _routeReg, ProfileRegistry* _profileReg,
-		CheckList* _chkList)
+		SmppResponseSender* _respSender, const SmeRegistry* _smeReg,
+		const AliasRegistry* _aliasReg, const RouteRegistry* _routeReg,
+		ProfileRegistry* _profileReg, CheckList* _chkList)
 	: session(NULL), systemId(_systemId), smeAddr(_smeAddr),
-	respSender(_respSender), ackHandler(_ackHandler), smeReg(_smeReg),
-	aliasReg(_aliasReg), routeReg(_routeReg),
-	pduReg(smeReg->getPduRegistry(smeAddr)), profileReg(_profileReg),
-	chkList(_chkList), routeChecker(NULL), pduChecker(NULL)
+	respSender(_respSender), smeReg(_smeReg), aliasReg(_aliasReg),
+	routeReg(_routeReg), pduReg(smeReg->getPduRegistry(smeAddr)),
+	profileReg(_profileReg), chkList(_chkList), routeChecker(NULL),
+	pduChecker(NULL), base(NULL), transmitter(NULL), receiver(NULL)
 	{
 		//__require__(respSender);
-		//__require__(ackHandler);
 		__require__(smeReg);
 		//__require__(aliasReg);
 		//__require__(routeReg);
