@@ -331,7 +331,7 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code)
 static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
 {
   if ( dialog == 0 || dialog->dialogid_smsc == 0 ) {
-    __map_warn2__("Send OK to SMSC: no smscid or no dialog exists");
+//    __map_warn2__("Send OK to SMSC: no smscid or no dialog exists");
     return;
   }
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialog->dialogid_smsc,0);
