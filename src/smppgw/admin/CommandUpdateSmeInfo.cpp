@@ -1,4 +1,4 @@
-// 
+//
 // File:   CommandUpdateSmeInfo.cc
 // Author: igork
 //
@@ -13,7 +13,7 @@
 namespace smsc {
 namespace smppgw {
 namespace admin {
-  
+
 using namespace smsc::util::xml;
 using smsc::smeman::SmeInfo;
 
@@ -54,7 +54,7 @@ CommandUpdateSmeInfo::CommandUpdateSmeInfo(const xercesc::DOMDocument * document
         smeInfo.timeout = atoi(value.get());
       if (::strcmp("receiptSchemeName", name) == 0)
         smeInfo.receiptSchemeName = value.get();
-      if (::strcmp("disabled", name) == 0) 
+      if (::strcmp("disabled", name) == 0)
         smeInfo.disabled = ::strcmp("true", value.get()) == 0;
       if (::strcmp("mode", name) == 0) {
         if (::strcmp("trx", value.get()) == 0)
