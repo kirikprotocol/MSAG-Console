@@ -271,6 +271,7 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 {
 	__require__(monitor);
 	__decl_tc__;
+	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
 	__cfg_str__(profilerServiceType);
 	__cfg_int__(profilerProtocolId);
@@ -291,18 +292,26 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	__check__(1, serviceType, profilerServiceType);
 	Address srcAlias;
 	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
-	if (srcAlias != profilerAlias)
+	Address destAddr;
+	SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
+	const SmeInfo* sme = fixture->smeReg->getSme(destAddr);
+	__require__(sme);
+	if (sme->wantAlias && srcAlias != profilerAlias)
 	{
 		__tc_fail__(2);
 	}
-	__check__(3, dataCoding, ack->dataCoding);
-	__check__(4, protocolId, profilerProtocolId);
-	__check__(5, priorityFlag, 0);
-	__check__(6, registredDelivery, 0);
-	__check__(7, replaceIfPresentFlag, 0);
+	else if (!sme->wantAlias && srcAlias != profilerAddr)
+	{
+		__tc_fail__(3);
+	}
+	__check__(4, dataCoding, ack->dataCoding);
+	__check__(5, protocolId, profilerProtocolId);
+	__check__(6, priorityFlag, 0);
+	__check__(7, registredDelivery, 0);
+	__check__(8, replaceIfPresentFlag, 0);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
-		__tc_fail__(8);
+		__tc_fail__(9);
 	}
     SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());

@@ -332,38 +332,54 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	__cfg_str__(abonentInfoSystemId);
 
 	vector<Address*> addr;
+	vector<Address*> alias;
 	vector<SmeInfo*> smeInfo;
 	addr.reserve(numSme);
+	alias.reserve(numSme);
 	smeInfo.reserve(numSme);
 	//регистрация sme
 	for (int i = 0; i < numSme; i++)
 	{
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
-		tcSme.addCorrectSme(addr[i], smeInfo[i], RAND_TC);
-		ostringstream os;
-		os << *addr[i];
+		smeInfo.back()->wantAlias = rand0(1);
+		tcSme.addCorrectSme(addr.back(), smeInfo.back(), RAND_TC);
+		__trace2__("register sme: addr = %s, systemId = %s",
+			str(*addr.back()).c_str(), smeInfo.back()->systemId.c_str());
+	}
+	//регистрация алиасов
+	for (int i = 0; i < numSme; i++)
+	{
+		alias.push_back(new Address());
+		SmsUtil::setupRandomCorrectAddress(alias.back(),
+			MAX_ADDRESS_VALUE_LENGTH / 2, MAX_ADDRESS_VALUE_LENGTH);
+		smeReg->registerAddress(*alias.back());
+		__trace2__("register alias: alias = %s", str(*alias.back()).c_str());
 	}
 	//регистрация db sme
 	SmeInfo dbSmeInfo;
+	dbSmeInfo.wantAlias = false;
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&dbSmeInfo);
 	dbSmeInfo.systemId = dbSmeSystemId;
 	smeReg->registerSme(dbSmeAddr, dbSmeInfo, false, true);
 	smeReg->bindSme(dbSmeInfo.systemId);
 	//регистрация profiler
 	SmeInfo profilerInfo;
+	profilerInfo.wantAlias = false;
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&profilerInfo);
 	profilerInfo.systemId = profilerSystemId;
 	smeReg->registerSme(profilerAddr, profilerInfo, false, true);
 	smeReg->bindSme(profilerInfo.systemId);
 	//регистрация map proxy
 	SmeInfo mapProxyInfo;
+	mapProxyInfo.wantAlias = false;
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&mapProxyInfo);
 	mapProxyInfo.systemId = mapProxySystemId;
 	smeReg->registerSme("+123", mapProxyInfo, false, true);
 	smeReg->bindSme(mapProxyInfo.systemId);
 	//abonent info прокси
 	SmeInfo abonentProxyInfo;
+	abonentProxyInfo.wantAlias = false;
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&abonentProxyInfo);
 	abonentProxyInfo.systemId = abonentInfoSystemId;
 	smeReg->registerSme("+321", abonentProxyInfo, false, true);
@@ -371,13 +387,11 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	//регистрация алиасов (самая простая схема)
 	for (int i = 0; i < numSme; i++)
 	{
-		for (int j = 0; j < numSme; j++)
-		{
-			AliasInfo alias;
-			alias.alias = *addr[i];
-			alias.addr = *addr[j];
-			tcAlias.addCorrectAliasMatch(&alias, RAND_TC);
-		}
+		AliasInfo aliasInfo;
+		aliasInfo.addr = *addr[i];
+		aliasInfo.alias = *alias[i];
+		aliasInfo.hide = rand0(1);
+		tcAlias.addCorrectAliasMatch(&aliasInfo, RAND_TC);
 	}
 	//алиас для db sme
 	AliasInfo dbSmeAliasInfo;
