@@ -2,6 +2,8 @@
 #include "util/debug.h"
 #include <memory>
 
+
+
 namespace smsc{
 namespace util{
 
@@ -148,7 +150,7 @@ void transLiterateSms(SMS* sms)
   len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
   buf8=auto_ptr<char>(new char[udhiDataLen+len*3+1]);
   int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen,len*3);
-  sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+  sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
   __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
   if(udhi)
   {
@@ -157,15 +159,110 @@ void transLiterateSms(SMS* sms)
   }
   if(pl)
   {
-    sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf8.get(),newlen);
+    sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,buf8.get(),newlen);
   }
   else
   {
-    sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8.get(),newlen);
-    sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
+    sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,buf8.get(),newlen);
+    sms->setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
   }
 }
 
+int partitionSms(SMS* sms,int dstdc)
+{
+  unsigned int len;
+  int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
+  const char* msg=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+  if(len==0 && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  {
+    msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+  }
+  if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)return psErrorUdhi;
+  __trace2__("partitionSms: len=%d, dc=%d, dstdc=%d",len,dc,dstdc);
+  auto_ptr<char> buf8;
+  auto_ptr<char> bufTr;
+  if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
+  {
+    buf8=auto_ptr<char>(new char[len]);
+    ConvertUCS2ToMultibyte((short*)msg,len/2,buf8.get(),len,CONV_ENCODING_CP1251);
+    len/=2;
+    bufTr=auto_ptr<char>(new char[len*3]);
+    len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get(),len*3);
+    msg=bufTr.get();
+  }
+  int maxlen=134,maxfulllen=140;
+  if(dstdc==DataCoding::DEFAULT)
+  {
+    maxlen=153;
+    maxfulllen=160;
+  }
+  if(len<maxfulllen)return psSingle;
+  int parts=len/maxlen+(len%maxlen?1:0);
+  if(parts>256)return psErrorLength;
+  __trace2__("partitionSms: newlen=%d, parts=%d, maxlen=%d",len,parts,maxlen);
+  uint16_t offsets[256];
+  for(int i=0;i<parts;i++)offsets[i]=maxlen*i;
+  char bin[1+256*2];
+  bin[0]=(char)parts;
+  memcpy(bin+1,offsets,parts*2);
+  int blen=parts*2+1;
+  sms->setBinProperty(Tag::SMSC_CONCATINFO,bin,blen);
+  sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,dstdc);
+  return psMultiple;
+}
+
+void extractSmsPart(SMS* sms,int partnum)
+{
+  if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO))return;
+  int dstdc=sms->getIntProperty(Tag::SMSC_DSTCODEPAGE);
+  unsigned int len;
+  int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
+  const char* msg=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+  if(len==0 && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  {
+    msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+  }
+  __trace2__("extractSmsPart: len=%d, dc=%d, dstdc=%d",len,dc,dstdc);
+  auto_ptr<char> buf8;
+  auto_ptr<char> bufTr;
+  if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
+  {
+    buf8=auto_ptr<char>(new char[len]);
+    ConvertUCS2ToMultibyte((short*)msg,len/2,buf8.get(),len,CONV_ENCODING_CP1251);
+    len/=2;
+    bufTr=auto_ptr<char>(new char[len*3]);
+    len=Transliterate(buf8.get(),len,CONV_ENCODING_CP1251,bufTr.get(),len*3);
+    msg=bufTr.get();
+  }
+  int maxlen=134;
+  if(dstdc==DataCoding::DEFAULT)
+  {
+    maxlen=153;
+  }
+  unsigned int cilen;
+  ConcatInfo *ci=(ConcatInfo *)sms->getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
+  int off=ci->off[partnum];
+  int newlen=len-off>maxlen?maxlen:len-off;
+  __trace2__("extractSmsPart: newlen=%d, part=%d/%d, maxlen=%d, off=%d, partlen=%d",len,partnum,(int)ci->num,maxlen,off,newlen);
+  if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
+  {
+    sms->setIntProperty(Tag::SMPP_DATA_CODING,dstdc);
+  }
+  uint8_t buf[256];
+  buf[0]=5;
+  buf[1]=0;
+  buf[2]=3;
+  buf[3]=sms->getConcatMsgRef();
+  buf[4]=ci->num;
+  buf[5]=partnum;
+  memcpy(buf+6,msg+off,newlen);
+  newlen+=6;
+
+  sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
+  sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)buf,newlen);
+  sms->setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
+  sms->getMessageBody().dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
+}
 
 };//util
 };//smsc

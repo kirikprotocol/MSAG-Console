@@ -507,6 +507,63 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  profile=smsc->getProfiler()->lookup(dst);
+  int pres=psSingle;
+  if(ri.smeSystemId=="MAP_PROXY")
+  {
+    pres=partitionSms(sms,profile.codepage);
+  }
+  if(pres==psErrorLength)
+  {
+    sms->lastResult=Status::INVMSGLEN;
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                       (
+                         /*messageId*/"0",
+                         dialogId,
+                         Status::INVMSGLEN,
+                         sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                       );
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+      __trace__("SUBMIT:Failed to put command");
+    }
+    unsigned int len;
+    const char *msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    __warning2__("SUBMIT_SM: invalid message length:%d",len);
+    return ERROR_STATE;
+  }
+
+  if(pres==psErrorUdhi)
+  {
+    sms->lastResult=Status::SUBMITFAIL;
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           Status::SUBMITFAIL,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+      __warning__("SUBMIT_SM: failed to put response command");
+    }
+    __warning__("SUBMIT_SM: udhi present in concatenated message!!!");
+    return ERROR_STATE;
+  }
+
+  if(pres==psMultiple)
+  {
+    uint8_t msgref=smsc->getNextMR(dst);
+    sms->setConcatMsgRef(msgref);
+    sms->setConcatSeqNum(0);
+  }
+
   __trace2__("Replace if present for message %lld=%d",t.msgId,sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG));
 
   time_t stime=sms->getNextTime();
@@ -653,17 +710,26 @@ StateType StateMachine::submit(Tuple& t)
     }
     sms->setDestinationAddress(dst);
 
-    profile=smsc->getProfiler()->lookup(dst);
-    if(profile.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
-       sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+    // profile lookup performed before partitioning
+    //profile=smsc->getProfiler()->lookup(dst);
+    //
+    if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO))
     {
-      try{
-        transLiterateSms(sms);
-      }catch(exception& e)
+      if(profile.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
+         sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
       {
-        __warning2__("Failed to transliterate: %s",e.what());
+        try{
+          transLiterateSms(sms);
+        }catch(exception& e)
+        {
+          __warning2__("SUBMIT:Failed to transliterate: %s",e.what());
+        }
       }
+    }else
+    {
+      extractSmsPart(sms,0);
     }
+
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
     unsigned bodyLen=0;
     delivery->get_sms()->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&bodyLen);
@@ -867,11 +933,17 @@ StateType StateMachine::forward(Tuple& t)
     }
     Address dst=sms.getDealiasedDestinationAddress();
     sms.setDestinationAddress(dst);
-    smsc::profiler::Profile p=smsc->getProfiler()->lookup(dst);
-    if(p.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
-       sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+    if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO))
     {
-      transLiterateSms(&sms);
+      smsc::profiler::Profile p=smsc->getProfiler()->lookup(dst);
+      if(p.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
+         sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+      {
+        transLiterateSms(&sms);
+      }
+    }else
+    {
+      extractSmsPart(&sms,sms.getConcatSeqNum());
     }
     if(t.command->is_reschedulingForward())
     {
@@ -1003,6 +1075,132 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }
     }
   }
+
+  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+  {
+    unsigned int len;
+    ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
+    sms.setConcatSeqNum(sms.getConcatSeqNum()+1);
+    store->changeSmsConcatSequenceNumber(t.msgId,sms.getConcatSeqNum());
+    if(sms.getConcatSeqNum()<ci->num)
+    {
+      ////
+      //
+      //  send concatenated
+      //
+
+      SmeProxy *dest_proxy=0;
+      int dest_proxy_index;
+
+      bool has_route = smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,NULL);
+      if ( !has_route )
+      {
+        __warning__("CONCAT: No route");
+        try{
+          sms.lastResult=Status::NOROUTE;
+          sendNotifyReport(sms,t.msgId,"destination unavailable");
+        }catch(...)
+        {
+          __trace__("CONCAT: failed to send intermediate notification");
+        }
+        try{
+          //time_t now=time(NULL);
+          Descriptor d;
+          __trace__("CONCAT: change state to enroute");
+          store->changeSmsStateToEnroute(t.msgId,d,Status::NOROUTE,rescheduleSms(sms));
+          smsc->notifyScheduler();
+        }catch(...)
+        {
+          __trace__("CONCAT: failed to change state to enroute");
+        }
+        return ERROR_STATE;
+      }
+      if(!dest_proxy)
+      {
+        __trace__("CONCAT: no proxy");
+        try{
+          sms.lastResult=Status::SMENOTCONNECTED;
+          sendNotifyReport(sms,t.msgId,"destination unavailable");
+        }catch(...)
+        {
+          __trace__("CONCAT: failed to send intermediate notification");
+        }
+        try{
+          //time_t now=time(NULL);
+          Descriptor d;
+          __trace__("CONCAT: change state to enroute");
+          store->changeSmsStateToEnroute(t.msgId,d,Status::SMENOTCONNECTED,rescheduleSms(sms));
+          smsc->notifyScheduler();
+        }catch(...)
+        {
+          __trace__("CONCAT: failed to change state to enroute");
+        }
+        return ENROUTE_STATE;
+      }
+      // create task
+
+      uint32_t dialogId2;
+      try{
+        dialogId2 = dest_proxy->getNextSequenceNumber();
+        __trace2__("CONCAT: seq number:%d",dialogId2);
+        //Task task((uint32_t)dest_proxy_index,dialogId2);
+        Task task(dest_proxy->getUniqueId(),dialogId2);
+        task.messageId=t.msgId;
+        if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
+        {
+          __warning__("CONCAT: can't create task");
+          return ENROUTE_STATE;
+        }
+      }catch(...)
+      {
+        return ENROUTE_STATE;
+      }
+      Address srcOriginal=sms.getOriginatingAddress();
+      Address dstOriginal=sms.getDestinationAddress();
+      int errstatus=0;
+      const char* errtext;
+      try{
+        // send delivery
+        Address src;
+        if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias && smsc->AddressToAlias(sms.getOriginatingAddress(),src))
+        {
+          sms.setOriginatingAddress(src);
+        }
+        Address dst=sms.getDealiasedDestinationAddress();
+        sms.setDestinationAddress(dst);
+
+        //
+        //
+        extractSmsPart(&sms,sms.getConcatSeqNum());
+
+        SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
+        dest_proxy->putCommand(delivery);
+      }
+      catch(InvalidProxyCommandException& e)
+      {
+        errstatus=Status::INVBNDSTS;
+        errtext="service rejected";
+      }
+      catch(...)
+      {
+        errstatus=Status::THROTTLED;
+        errtext="SME busy";
+      }
+      if(errstatus)
+      {
+        __trace2__("CONCAT::Err %s",errtext);
+      }
+
+      //
+      //
+      //
+      ////
+
+
+      return DELIVERING_STATE;
+    }
+  }
+
   try{
     __trace__("change state to delivered");
 

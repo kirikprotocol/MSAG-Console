@@ -52,6 +52,14 @@ static inline int getPduText(PduXSm* pdu,char* buf,unsigned bufsize)
   int coding=pdu->get_message().get_dataCoding();
   unsigned len=pdu->get_message().get_smLength();
   const char *data=pdu->get_message().get_shortMessage();
+  bool udhi=pdu->get_message().get_esmClass()&0x40;
+  if(udhi)
+  {
+    int udhilen=*((unsigned char*)data);
+    udhilen++;
+    data+=udhilen;
+    len-=udhilen;
+  }
   if(coding==DataCoding::UCS2)
   {
     ConvertUCS2ToMultibyte((const short*)data,len,buf,bufsize,CONV_ENCODING_CP1251);
@@ -86,6 +94,23 @@ int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,
 int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding);
 
 void transLiterateSms(SMS* sms);
+
+enum{
+  psSingle,
+  psMultiple,
+  psErrorLength,
+  psErrorUdhi
+};
+
+#pragma pack(1)
+struct ConcatInfo{
+  uint8_t num;
+  uint16_t off[1];
+};
+#pragma pack()
+
+int partitionSms(SMS* sms,int dstdc);
+void extractSmsPart(SMS* sms,int partnum);
 
 };
 };

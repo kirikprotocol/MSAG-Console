@@ -25,6 +25,8 @@
 
 #include "stat/StatisticsManager.h"
 
+#include "system/mrcache.hpp"
+
 #include <sys/types.h>
 #include <signal.h>
 
@@ -281,6 +283,11 @@ public:
     statMan->flushStatistics();
   }
 
+  uint8_t getNextMR(const Address& addr)
+  {
+    return mrCache.getNextMR(addr);
+  }
+
 protected:
   smsc::core::threads::ThreadPool tp;
   smsc::system::smppio::SmppSocketsManager ssockman;
@@ -307,6 +314,8 @@ protected:
   smsc::stat::StatisticsManager *statMan;
 
   SmeProxy* mapProxy;
+
+  MessageReferenceCache mrCache;
 
   Mutex perfMutex;
   uint64_t submitOkCounter;
