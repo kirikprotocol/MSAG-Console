@@ -146,6 +146,8 @@ public:
 			"Если код ошибки ESME_RINVSCHED в поле command_status, то время schedule_delivery_time действительно задано неправильно");
 		__reg_tc__("processResp.checkCmdStatusInvalidValidTime",
 			"Если код ошибки ESME_RINVEXPIRY в поле command_status, то время validity_period действительно задано неправильно");
+		__reg_tc__("processResp.checkCmdStatusOther",
+			"Прочие коды ошибок соответствуют спецификации");
 		//sendDeliverySmResp
 		__reg_tc__("sendDeliverySmResp",
 			"Отправка deliver_sm_resp pdu");
