@@ -533,10 +533,13 @@ void Smsc::init(const SmscConfigs& cfg)
     __trace2__("Smsc::init exception:unknown");
     throw;
   }
+  __trace__("Smsc::init completed");
 }
 
 void Smsc::run()
 {
+  __trace__("Smsc::run");
+  try{
   if(startTime==0)startTime=time(NULL);
   {
     Event accstarted;
@@ -581,6 +584,16 @@ void Smsc::run()
   mainLoop();
   // и после него
   //shutdown();
+  }catch(exception& e)
+  {
+    __trace2__("Smsc::run exception:%s",e.what());
+    throw;
+  }catch(...)
+  {
+    __trace2__("Smsc::run exception:unknown");
+    throw;
+  }
+  __trace__("Smsc::run completed");
 }
 
 void Smsc::shutdown()
