@@ -23,7 +23,7 @@ TestConfig::TestConfig()
 	addrMap["smscAddr"] = ".3.5.123abc";
 	addrMap["profilerAddr"] = ".3.5.456def";
 	//db sme
-	addrMap["dbSmeAddr"] = "+dbSmeAddr123";
+	addrMap["dbSmeAddr"] = "+1597534682";
 	addrMap["dbSmeAlias"] = ".5.5.dbSmeAlias123";
 	strMap["dbSmeSystemId"] = "dbSme";
 	//ресурсы
