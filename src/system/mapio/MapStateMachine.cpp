@@ -167,7 +167,7 @@ static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn){
   }
 }
 
-static void TryDestroyDialog(unsigned,bool send_error=false,unsigned err_code=0);
+static void TryDestroyDialog(unsigned,bool send_error=false,unsigned err_code=0,unsigned ssn=0);
 static string RouteToString(MapDialog*);
 
 static void QueryHlrVersion(MapDialog*);
