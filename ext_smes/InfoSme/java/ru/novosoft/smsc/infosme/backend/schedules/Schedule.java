@@ -6,9 +6,7 @@ import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.text.*;
 import java.util.*;
 
 /**
@@ -90,9 +88,8 @@ public abstract class Schedule
                                      boolean montlyTypeIsDay, Collection monthes,
                                      int dayOfMonth,
                                      String weekDayN, String weekDay,
-                                     String intervalTime
-                                     )
-          throws AdminException, ParseException
+                                     String intervalTime)
+      throws AdminException, ParseException
   {
     if ("once".equalsIgnoreCase(executeStr)) {
       return new ScheduleOnce(id, tasks, dateFormat.parse(startDateTime));
@@ -121,6 +118,7 @@ public abstract class Schedule
   /**
    * stores properties to config<br>
    * <B>MUST BE OVERLOADED IN CHILDS</B>
+   *
    * @param config
    */
   public void storeToConfig(Config config)
@@ -173,7 +171,9 @@ public abstract class Schedule
       return false;
   }
 
-  /************************************** properties ******************************/
+  /**
+   * *********************************** properties *****************************
+   */
 
   public String getId()
   {

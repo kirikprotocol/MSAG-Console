@@ -6,7 +6,7 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
 
-import java.util.*;
+import java.util.Iterator;
 
 /**
  * Created by igork
@@ -32,8 +32,7 @@ public class ScheduleDataSource extends AbstractDataSourceImpl
       try {
         add(new ScheduleDataItem(scheduleName,
                                  config.getString(currentSchedulePrefix + ".execute"),
-                                 config.getString(currentSchedulePrefix + ".startDateTime")
-        ));
+                                 config.getString(currentSchedulePrefix + ".startDateTime")));
       } catch (Exception e) {
         logger.error("Couldn't get parameter for schedule \"" + scheduleName + "\", schedule skipped", e);
       }

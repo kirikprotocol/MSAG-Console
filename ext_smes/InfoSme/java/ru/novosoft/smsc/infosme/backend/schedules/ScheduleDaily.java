@@ -3,7 +3,8 @@ package ru.novosoft.smsc.infosme.backend.schedules;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
 
 /**
  * Created by IntelliJ IDEA.
@@ -48,7 +49,9 @@ public class ScheduleDaily extends ScheduleEndDateTime
       return false;
   }
 
-  /************************************** properties ******************************/
+  /**
+   * *********************************** properties *****************************
+   */
 
   public int getEveryNDays()
   {

@@ -8,8 +8,6 @@
 package ru.novosoft.smsc.wsme.beans;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.security.Principal;
 
 public class WSmeVisitorsFilterFormBean extends WSmeBaseFilterFormBean
 {
@@ -19,20 +17,26 @@ public class WSmeVisitorsFilterFormBean extends WSmeBaseFilterFormBean
   {
     int result = super.process(request);
     if (result != RESULT_OK) {
-      mbApply = null; mbCancel = null; mbClear = null;
+      mbApply = null;
+      mbCancel = null;
+      mbClear = null;
       return result;
     }
 
     if (masks == null) { // init masks
       masks = (wsmePreferences != null) ?
-          wsmePreferences.getVisitorsFilter().getMasks() : new String[0];
+              wsmePreferences.getVisitorsFilter().getMasks() : new String[0];
     }
 
-    if (mbApply != null)        result = processApply();
-    else if (mbCancel != null)  result = processCancel();
-    else if (mbClear != null)   result = processClear();
+    if (mbApply != null)
+      result = processApply();
+    else if (mbCancel != null)
+      result = processCancel();
+    else if (mbClear != null) result = processClear();
 
-    mbApply = null; mbCancel = null; mbClear = null;
+    mbApply = null;
+    mbCancel = null;
+    mbClear = null;
     return result;
   }
   private int processApply()
@@ -44,7 +48,7 @@ public class WSmeVisitorsFilterFormBean extends WSmeBaseFilterFormBean
   private int processCancel()
   {
     masks = (wsmePreferences != null) ?
-        wsmePreferences.getVisitorsFilter().getMasks() : new String[0];
+            wsmePreferences.getVisitorsFilter().getMasks() : new String[0];
     return RESULT_DONE;
   }
   private int processClear()
@@ -53,10 +57,12 @@ public class WSmeVisitorsFilterFormBean extends WSmeBaseFilterFormBean
     return RESULT_OK;
   }
 
-  public String[] getMasks() {
+  public String[] getMasks()
+  {
     return masks;
   }
-  public void setMasks(String[] masks) {
+  public void setMasks(String[] masks)
+  {
     this.masks = prepareFilterList(masks, true);
   }
 

@@ -29,51 +29,66 @@ public class WSmePreferences
   private WSmeLangsFilter langsFilter = new WSmeLangsFilter();
   private WSmeAdsFilter adsFilter = new WSmeAdsFilter();
 
-  synchronized public int getVisitorsPageSize() {
+  synchronized public int getVisitorsPageSize()
+  {
     return visitorsPageSize;
   }
-  synchronized public void setVisitorsPageSize(int visitorsPageSize) {
+  synchronized public void setVisitorsPageSize(int visitorsPageSize)
+  {
     this.visitorsPageSize = visitorsPageSize;
   }
-  synchronized public int getLangsPageSize() {
+  synchronized public int getLangsPageSize()
+  {
     return langsPageSize;
   }
-  synchronized public void setLangsPageSize(int langsPageSize) {
+  synchronized public void setLangsPageSize(int langsPageSize)
+  {
     this.langsPageSize = langsPageSize;
   }
-  synchronized public int getAdsPageSize() {
+  synchronized public int getAdsPageSize()
+  {
     return adsPageSize;
   }
-  synchronized public void setAdsPageSize(int adsPageSize) {
+  synchronized public void setAdsPageSize(int adsPageSize)
+  {
     this.adsPageSize = adsPageSize;
   }
 
-  synchronized public String getVisitorsSortOrder() {
+  synchronized public String getVisitorsSortOrder()
+  {
     return visitorsSortOrder;
   }
-  synchronized public void setVisitorsSortOrder(String visitorsSortOrder) {
+  synchronized public void setVisitorsSortOrder(String visitorsSortOrder)
+  {
     this.visitorsSortOrder = visitorsSortOrder;
   }
-  synchronized public String getLangsSortOrder() {
+  synchronized public String getLangsSortOrder()
+  {
     return langsSortOrder;
   }
-  synchronized public void setLangsSortOrder(String langsSortOrder) {
+  synchronized public void setLangsSortOrder(String langsSortOrder)
+  {
     this.langsSortOrder = langsSortOrder;
   }
-  synchronized public String getAdsSortOrder() {
+  synchronized public String getAdsSortOrder()
+  {
     return adsSortOrder;
   }
-  synchronized public void setAdsSortOrder(String adsSortOrder) {
+  synchronized public void setAdsSortOrder(String adsSortOrder)
+  {
     this.adsSortOrder = adsSortOrder;
   }
 
-  synchronized public WSmeVisitorsFilter getVisitorsFilter() {
+  synchronized public WSmeVisitorsFilter getVisitorsFilter()
+  {
     return visitorsFilter;
   }
-  synchronized public WSmeLangsFilter getLangsFilter() {
+  synchronized public WSmeLangsFilter getLangsFilter()
+  {
     return langsFilter;
   }
-  synchronized public WSmeAdsFilter getAdsFilter() {
+  synchronized public WSmeAdsFilter getAdsFilter()
+  {
     return adsFilter;
   }
 }

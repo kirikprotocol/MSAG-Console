@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.infosme.backend;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
@@ -13,9 +12,9 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
  */
 public class InfoSme extends InfoSmeTransport
 {
-  public InfoSme(ServiceInfo info) throws AdminException
+  public InfoSme(ServiceInfo info, int port) throws AdminException
   {
-    super(info);
+    super(info, port);
   }
 
   public void updateInfo(SMSCAppContext appContext) throws AdminException

@@ -37,6 +37,7 @@ public abstract class ScheduleMonthly extends ScheduleEndDateTime
   /**
    * stores properties to config<br>
    * <B>MUST BE OVERLOADED IN CHILDS</B>
+   *
    * @param config
    */
   public void storeToConfig(Config config)

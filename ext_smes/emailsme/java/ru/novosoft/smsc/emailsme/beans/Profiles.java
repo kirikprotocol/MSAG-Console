@@ -1,16 +1,12 @@
 package ru.novosoft.smsc.emailsme.beans;
 
-import ru.novosoft.smsc.emailsme.backend.ProfilesDataSource;
-import ru.novosoft.smsc.emailsme.backend.ProfilesFilter;
-import ru.novosoft.smsc.emailsme.backend.ProfilesQuery;
+import ru.novosoft.smsc.emailsme.backend.*;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
 import javax.servlet.http.HttpServletRequest;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 /**

@@ -3,13 +3,10 @@ package ru.novosoft.smsc.infosme.backend;
 import ru.novosoft.smsc.admin.AdminException;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
 
 /**
  * Created by IntelliJ IDEA.
@@ -23,7 +20,7 @@ public class TasksStat
 {
   private static final String PERIOD_DATE_FORMAT = "yyyyMMddHH";
   private static final String STAT_QUERY =
-          "SELECT period, sum(generated), sum(delivered), sum(retried), sum(failed) FROM INFOSME_TASKS_STAT ";
+      "SELECT period, sum(generated), sum(delivered), sum(retried), sum(failed) FROM INFOSME_TASKS_STAT ";
 
   private InfoSme sme = null;
   private DataSource ds = null;
@@ -40,7 +37,7 @@ public class TasksStat
   }
 
   private void bindWherePart(PreparedStatement stmt, StatQuery query)
-          throws SQLException
+      throws SQLException
   {
     int pos = 1;
     if (query.getTaskId() != null)
@@ -54,7 +51,7 @@ public class TasksStat
   private String prepareWherePart(StatQuery query)
   {
     String str = (query.getTaskId() != null ||
-            query.isFromDateEnabled() || query.isTillDateEnabled()) ? " WHERE " : "";
+                  query.isFromDateEnabled() || query.isTillDateEnabled()) ? " WHERE " : "";
     if (query.getTaskId() != null) {
       str += "task_id = ? ";
       if (query.isFromDateEnabled() || query.isTillDateEnabled()) str += " AND ";
@@ -113,7 +110,7 @@ public class TasksStat
   }
 
   private PreparedStatement getQuery(Connection connection, StatQuery query, String sql)
-          throws SQLException
+      throws SQLException
   {
     PreparedStatement stmt = connection.prepareStatement(sql);
     bindWherePart(stmt, query);
@@ -121,7 +118,7 @@ public class TasksStat
   }
 
   private void processStatQuery(Connection connection, StatQuery query)
-          throws SQLException
+      throws SQLException
   {
     int oldPeriod = 0;
     DateCountersSet dateCounters = null;
@@ -132,8 +129,7 @@ public class TasksStat
       while (rs.next()) {
         int newPeriod = rs.getInt(1);
         int hour = calculateHour(newPeriod);
-        HourCountersSet hourCounters = new HourCountersSet(
-                rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), hour);
+        HourCountersSet hourCounters = new HourCountersSet(rs.getInt(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), hour);
         if (dateCounters == null) { // on first iteration
           Date date = calculateDate(newPeriod);
           dateCounters = new DateCountersSet(date);

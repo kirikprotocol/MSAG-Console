@@ -8,11 +8,10 @@
 package ru.novosoft.smsc.wsme;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.Service;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.service.Type;
+import ru.novosoft.smsc.admin.service.*;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class WSmeTransport extends Service
 {
@@ -23,14 +22,14 @@ public class WSmeTransport extends Service
   private static final String add_ad_method_ID = "add_ad";
   private static final String remove_ad_method_ID = "remove_ad";
 
-  public WSmeTransport(ServiceInfo info)
-          throws AdminException
+  public WSmeTransport(ServiceInfo info, int port)
+      throws AdminException
   {
-    super(info);
+    super(info, port);
   }
 
   synchronized public void addVisitor(String msisdn)
-          throws AdminException
+      throws AdminException
   {
     Map args = new HashMap();
     args.put("msisdn", msisdn.trim());
@@ -38,7 +37,7 @@ public class WSmeTransport extends Service
   }
 
   synchronized public void removeVisitor(String msisdn)
-          throws AdminException
+      throws AdminException
   {
     Map args = new HashMap();
     args.put("msisdn", msisdn.trim());
@@ -46,7 +45,7 @@ public class WSmeTransport extends Service
   }
 
   synchronized public void addLang(String mask, String lang)
-          throws AdminException
+      throws AdminException
   {
     Map args = new HashMap();
     args.put("mask", mask.trim());
@@ -55,7 +54,7 @@ public class WSmeTransport extends Service
   }
 
   synchronized public void removeLang(String mask)
-          throws AdminException
+      throws AdminException
   {
     Map args = new HashMap();
     args.put("mask", mask.trim());
@@ -63,7 +62,7 @@ public class WSmeTransport extends Service
   }
 
   synchronized public void addAd(int id, String lang, String ad)
-          throws AdminException
+      throws AdminException
   {
     Map args = new HashMap();
     args.put("id", new Long(id));
@@ -73,7 +72,7 @@ public class WSmeTransport extends Service
   }
 
   synchronized public void removeAd(int id, String lang)
-          throws AdminException
+      throws AdminException
   {
     Map args = new HashMap();
     args.put("id", new Long(id));

@@ -10,7 +10,7 @@ import ru.novosoft.util.conpool.NSConnectionPool;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.Properties;
 
 /**
  * Created by IntelliJ IDEA.
@@ -88,10 +88,10 @@ public class SmeContext
       final String newUser = config.getString("DataSource.dbUserName");
       final String newPassword = config.getString("DataSource.dbUserPassword");
       if (oldConfig == null
-              || !newSource.equals(oldConfig.getString("DataSource.jdbc.source"))
-              || !newDriver.equals(oldConfig.getString("DataSource.jdbc.driver"))
-              || !newUser.equals(oldConfig.getString("DataSource.dbUserName"))
-              || !newPassword.equals(oldConfig.getString("DataSource.dbUserPassword"))
+          || !newSource.equals(oldConfig.getString("DataSource.jdbc.source"))
+          || !newDriver.equals(oldConfig.getString("DataSource.jdbc.driver"))
+          || !newUser.equals(oldConfig.getString("DataSource.dbUserName"))
+          || !newPassword.equals(oldConfig.getString("DataSource.dbUserPassword"))
       ) {
         connectionPool = null;
         Properties connectionPoolConfig = new Properties();

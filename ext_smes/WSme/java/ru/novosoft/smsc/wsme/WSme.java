@@ -11,19 +11,13 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.service.Service;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.util.WebAppFolders;
-import ru.novosoft.util.conpool.NSConnectionPool;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.util.conpool.NSConnectionPool;
 
 import javax.sql.DataSource;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.sql.PreparedStatement;
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.io.File;
+import java.sql.*;
+import java.util.*;
 
 public class WSme extends WSmeTransport
 {
@@ -35,46 +29,55 @@ public class WSme extends WSmeTransport
 
   public WSme(Service wsmeService) throws AdminException
   {
-    super(wsmeService.getInfo());
-  }  
-  public void init(Service wsmeService)  throws AdminException 
+    super(wsmeService.getInfo(), -1);
+  }
+  public void init(Service wsmeService) throws AdminException
   {
     try {
       ServiceInfo info = wsmeService.getInfo();
       configFile = new File(new File(info.getServiceFolder(), "conf"), "config.xml");
-      System.out.println("Config file '"+configFile.getAbsolutePath()+"'");      config = new Config(configFile);      loadup(null, config, false);    }    catch (Exception e) {      AdminException ae = new AdminException("WSme admin init failed, cause: "+e.getMessage());      throw ae;    }  }
+      System.out.println("Config file '" + configFile.getAbsolutePath() + "'");
+
+      config = new Config(configFile);
+
+      setPort(config.getInt("WSme.Admin.port"));
+
+      loadup(null, config, false);
+
+    } catch (Exception e) {
+
+      AdminException ae = new AdminException("WSme admin init failed, cause: " + e.getMessage());
+
+      throw ae;
+
+    }
+
+  }
 
   private final static String CONFIG_PARAM_BASE = "WSme.Admin.Web.jdbc.";
   private synchronized void loadup(Config oldConfig, Config newConfig, boolean check)
-    throws AdminException
+      throws AdminException
   {
-    try
-    {
+    try {
       dsLock.acquireWrite();
 
       if (check && oldConfig != null &&
-          oldConfig.getString(CONFIG_PARAM_BASE+"source").equals(
-          newConfig.getString(CONFIG_PARAM_BASE+"source")) &&
-          oldConfig.getString(CONFIG_PARAM_BASE+"driver").equals(
-          newConfig.getString(CONFIG_PARAM_BASE+"driver")) &&
-          oldConfig.getString(CONFIG_PARAM_BASE+"user").equals(
-          newConfig.getString(CONFIG_PARAM_BASE+"user")) &&
-          oldConfig.getString(CONFIG_PARAM_BASE+"password").equals(
-          newConfig.getString(CONFIG_PARAM_BASE+"password"))
-      ) return; // We don't need to recreate datasource;
+          oldConfig.getString(CONFIG_PARAM_BASE + "source").equals(newConfig.getString(CONFIG_PARAM_BASE + "source")) &&
+          oldConfig.getString(CONFIG_PARAM_BASE + "driver").equals(newConfig.getString(CONFIG_PARAM_BASE + "driver")) &&
+          oldConfig.getString(CONFIG_PARAM_BASE + "user").equals(newConfig.getString(CONFIG_PARAM_BASE + "user")) &&
+          oldConfig.getString(CONFIG_PARAM_BASE + "password").equals(newConfig.getString(CONFIG_PARAM_BASE + "password"))
+      )
+        return; // We don't need to recreate datasource;
 
       ds = null;
       Properties props = new Properties();
-      props.setProperty("jdbc.source", newConfig.getString(CONFIG_PARAM_BASE+"source"));
-      props.setProperty("jdbc.driver", newConfig.getString(CONFIG_PARAM_BASE+"driver"));
-      props.setProperty("jdbc.user", newConfig.getString(CONFIG_PARAM_BASE+"user"));
-      props.setProperty("jdbc.pass", newConfig.getString(CONFIG_PARAM_BASE+"password"));
+      props.setProperty("jdbc.source", newConfig.getString(CONFIG_PARAM_BASE + "source"));
+      props.setProperty("jdbc.driver", newConfig.getString(CONFIG_PARAM_BASE + "driver"));
+      props.setProperty("jdbc.user", newConfig.getString(CONFIG_PARAM_BASE + "user"));
+      props.setProperty("jdbc.pass", newConfig.getString(CONFIG_PARAM_BASE + "password"));
       ds = new NSConnectionPool(props);
-    }
-    catch (Exception exc)
-    {
-      AdminException ae = new AdminException(
-          "Init datasource failed, cause: "+exc.getMessage());
+    } catch (Exception exc) {
+      AdminException ae = new AdminException("Init datasource failed, cause: " + exc.getMessage());
       System.out.println(ae.getMessage());
       throw ae;
     } finally {
@@ -82,29 +85,31 @@ public class WSme extends WSmeTransport
     }
   }
   public synchronized void reload(Config newConfig)
-    throws AdminException
+      throws AdminException
   {
     try {
       loadup(config, newConfig, true);
       newConfig.save();
       config = newConfig;
     } catch (Exception e) {
-      throw new AdminException("Apply config failed, cause: "+e.getMessage());
+      throw new AdminException("Apply config failed, cause: " + e.getMessage());
     }
   }
   public synchronized Config getConfig()
       throws AdminException
   {
-    try { return new Config(configFile); }
-    catch (Exception e) {
-      throw new AdminException("Load configuration failed, cause: "+e.getMessage());
+    try {
+      return new Config(configFile);
+    } catch (Exception e) {
+      throw new AdminException("Load configuration failed, cause: " + e.getMessage());
     }
   }
 
-  private final static String GET_VISITORS_SQL=
+  private final static String GET_VISITORS_SQL =
       "SELECT MASK FROM WSME_VISITORS ORDER BY MASK ASC";
   /**
    * Returns list of visitors' masks as Strings
+   *
    * @return list of visitors' masks as Strings
    */
   public List getVisitors() throws AdminException
@@ -114,8 +119,7 @@ public class WSme extends WSmeTransport
     PreparedStatement stmt = null;
     Connection connection = null;
     ResultSet rs = null;
-    try
-    {
+    try {
       dsLock.acquireRead();
       if (ds == null)
         throw new AdminException("DataSource not inited.");
@@ -124,21 +128,18 @@ public class WSme extends WSmeTransport
       rs = stmt.executeQuery();
       while (rs.next()) {
         String mask = rs.getString(1).trim();
-        try { mask = (new Mask(mask)).getMask().trim(); }
-        catch (Throwable th) {
-          System.out.println("Invalid mask retreived from DB: "+mask);
+        try {
+          mask = (new Mask(mask)).getMask().trim();
+        } catch (Throwable th) {
+          System.out.println("Invalid mask retreived from DB: " + mask);
           continue;
         }
         visitors.add(mask);
       }
-    }
-    catch (Exception exc)
-    {
+    } catch (Exception exc) {
       exc.printStackTrace();
       throw new AdminException(exc.getMessage());
-    }
-    finally
-    {
+    } finally {
       dsLock.release();
       try {
         if (stmt != null) stmt.close();
@@ -155,6 +156,7 @@ public class WSme extends WSmeTransport
       "SELECT MASK, LANG FROM WSME_LANGS ORDER BY MASK ASC";
   /**
    * Returns list of pairs (mask, lang)
+   *
    * @return list of pairs (mask, lang) as LangRow
    */
   public List getLangs() throws AdminException
@@ -167,8 +169,7 @@ public class WSme extends WSmeTransport
     PreparedStatement stmt = null;
     Connection connection = null;
     ResultSet rs = null;
-    try
-    {
+    try {
       dsLock.acquireRead();
       if (ds == null)
         throw new AdminException("DataSource not inited.");
@@ -178,21 +179,18 @@ public class WSme extends WSmeTransport
       while (rs.next()) {
         String mask = rs.getString(1).trim();
         String lang = rs.getString(2).trim();
-        try { mask = (new Mask(mask)).getMask().trim(); }
-        catch (Throwable th) {
-          System.out.println("Invalid mask retreived from DB: "+mask);
+        try {
+          mask = (new Mask(mask)).getMask().trim();
+        } catch (Throwable th) {
+          System.out.println("Invalid mask retreived from DB: " + mask);
           continue;
         }
         langs.add(new LangRow(mask, lang));
       }
-    }
-    catch (Exception exc)
-    {
+    } catch (Exception exc) {
       exc.printStackTrace();
       throw new AdminException(exc.getMessage());
-    }
-    finally
-    {
+    } finally {
       dsLock.release();
       try {
         if (stmt != null) stmt.close();
@@ -209,6 +207,7 @@ public class WSme extends WSmeTransport
       "SELECT ID, LANG, AD FROM WSME_AD ORDER BY ID ASC";
   /**
    * Returns list of pairs (mask, lang)
+   *
    * @return list of pairs (mask, lang) as LangRow
    */
   public List getAds() throws AdminException
@@ -218,8 +217,7 @@ public class WSme extends WSmeTransport
     PreparedStatement stmt = null;
     Connection connection = null;
     ResultSet rs = null;
-    try
-    {
+    try {
       dsLock.acquireRead();
       if (ds == null)
         throw new AdminException("DataSource not inited.");
@@ -228,14 +226,10 @@ public class WSme extends WSmeTransport
       rs = stmt.executeQuery();
       while (rs.next())
         ads.add(new AdRow(rs.getInt(1), rs.getString(2), rs.getString(3)));
-    }
-    catch (Exception exc)
-    {
+    } catch (Exception exc) {
       exc.printStackTrace();
       throw new AdminException(exc.getMessage());
-    }
-    finally
-    {
+    } finally {
       dsLock.release();
       try {
         if (stmt != null) stmt.close();

@@ -1,12 +1,7 @@
 package ru.novosoft.smsc.dbsme;
 
-import ru.novosoft.smsc.jsp.util.tables.DataItem;
-import ru.novosoft.smsc.jsp.util.tables.Filter;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
+import ru.novosoft.smsc.jsp.util.tables.*;
+import ru.novosoft.smsc.jsp.util.tables.impl.*;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;

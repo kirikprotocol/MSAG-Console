@@ -53,8 +53,7 @@ public class TaskDataSource extends AbstractDataSourceImpl
                              config.getString(currentTaskPrefix + ".svcType"),
                              generatingTasks != null ? generatingTasks.contains(taskId) : false,
                              processingTasks != null ? processingTasks.contains(taskId) : false,
-                             config.getBool(currentTaskPrefix + ".trackIntegrity")
-        ));
+                             config.getBool(currentTaskPrefix + ".trackIntegrity")));
       } catch (Exception e) {
         logger.error("Couldn't get parameter for task \"" + taskId + "\", task skipped", e);
       }

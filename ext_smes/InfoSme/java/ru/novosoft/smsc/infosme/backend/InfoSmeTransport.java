@@ -1,9 +1,7 @@
 package ru.novosoft.smsc.infosme.backend;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.Service;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.service.Type;
+import ru.novosoft.smsc.admin.service.*;
 
 import java.util.*;
 
@@ -43,9 +41,9 @@ class InfoSmeTransport extends Service
   private static final String method_flushStatistics_ID = "flushStatistics";
 
 
-  public InfoSmeTransport(ServiceInfo info) throws AdminException
+  public InfoSmeTransport(ServiceInfo info, int port) throws AdminException
   {
-    super(info);
+    super(info, port);
   }
 
   public synchronized void startTaskProcessor() throws AdminException
@@ -88,6 +86,7 @@ class InfoSmeTransport extends Service
 
   /**
    * add all tasks
+   *
    * @param taskId - таска, которую надо добавить (она уже должна быть прописана в конфиге)
    * @throws AdminException - если что-то не получилось
    */
@@ -100,6 +99,7 @@ class InfoSmeTransport extends Service
 
   /**
    * remove tasks
+   *
    * @param taskId - таска, которую надо удалить
    * @throws AdminException - если что-то не получилось
    */

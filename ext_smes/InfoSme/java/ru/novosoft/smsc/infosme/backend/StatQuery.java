@@ -10,7 +10,7 @@ package ru.novosoft.smsc.infosme.backend;
 
 import ru.novosoft.smsc.util.Functions;
 
-import java.util.*;
+import java.util.Date;
 
 public class StatQuery
 {

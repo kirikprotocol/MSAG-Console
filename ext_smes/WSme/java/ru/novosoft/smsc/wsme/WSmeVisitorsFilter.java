@@ -7,8 +7,8 @@
  */
 package ru.novosoft.smsc.wsme;
 
-import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.MaskList;
 
 public class WSmeVisitorsFilter
 {
@@ -16,23 +16,25 @@ public class WSmeVisitorsFilter
 
   public MaskList getMaskList() throws AdminException
   {
-    synchronized(masks) {
+    synchronized (masks) {
       MaskList maskList = null;
       try {
         maskList = new MaskList(masks);
       } catch (Exception e) {
-        throw new AdminException("WSmeVisitorsFilter: failed to obtain mask list, cause: "+e.getMessage());
+        throw new AdminException("WSmeVisitorsFilter: failed to obtain mask list, cause: " + e.getMessage());
       }
       return maskList;
     }
   }
-  public String[] getMasks() {
-    synchronized(masks) {
+  public String[] getMasks()
+  {
+    synchronized (masks) {
       return masks;
     }
   }
-  public void setMasks(String[] masks) {
-    synchronized(masks) {
+  public void setMasks(String[] masks)
+  {
+    synchronized (masks) {
       this.masks = masks;
     }
   }

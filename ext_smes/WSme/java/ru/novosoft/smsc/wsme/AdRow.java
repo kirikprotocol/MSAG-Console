@@ -9,14 +9,14 @@ package ru.novosoft.smsc.wsme;
 
 public class AdRow
 {
-  public int    id;
+  public int id;
   public String lang;
   public String ad;
 
   public AdRow(int id, String lang, String ad)
   {
     this.id = id;
-    this.lang = (lang != null) ? lang.trim():null;
-    this.ad = (ad != null) ? ad.trim():null;
+    this.lang = (lang != null) ? lang.trim() : null;
+    this.ad = (ad != null) ? ad.trim() : null;
   }
 }

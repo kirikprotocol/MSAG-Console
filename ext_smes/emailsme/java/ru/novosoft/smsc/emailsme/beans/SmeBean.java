@@ -6,7 +6,7 @@ import ru.novosoft.smsc.emailsme.backend.SmeContext;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.util.config.Config;
 
-import java.util.*;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.

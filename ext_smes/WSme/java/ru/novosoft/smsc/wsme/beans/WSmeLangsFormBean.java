@@ -9,16 +9,10 @@ package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.wsme.WSmeErrors;
-import ru.novosoft.smsc.wsme.WSmePreferences;
-import ru.novosoft.smsc.wsme.LangRow;
+import ru.novosoft.smsc.wsme.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.security.Principal;
+import java.util.*;
 
 public class WSmeLangsFormBean extends WSmeBaseFormBean
 {
@@ -32,12 +26,12 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
     int result = super.process(request);
 
     pageSize = (wsmePreferences != null) ?
-        wsmePreferences.getLangsPageSize():WSmePreferences.DEFAULT_langsPageSize;
+               wsmePreferences.getLangsPageSize() : WSmePreferences.DEFAULT_langsPageSize;
     if (sort == null)
       sort = (wsmePreferences != null) ?
-        wsmePreferences.getLangsSortOrder():WSmePreferences.DEFAULT_langsSortOrder;
+             wsmePreferences.getLangsSortOrder() : WSmePreferences.DEFAULT_langsSortOrder;
     else if (wsmePreferences != null)
-        wsmePreferences.setLangsSortOrder(sort);
+      wsmePreferences.setLangsSortOrder(sort);
 
     if (result != RESULT_OK && result != RESULT_LANGS) return result;
     result = RESULT_OK;
@@ -45,17 +39,19 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
     if (btnAdd != null && newMask != null && newLang != null) {
       result = addNewLang();
       if (result == RESULT_OK) return RESULT_LANGS; //redirect for refresh
-    }
-    else if (btnDel != null && selectedRows != null) {
+    } else if (btnDel != null && selectedRows != null) {
       result = delLangs();
       if (result == RESULT_OK) return RESULT_LANGS; //redirect for refresh
     }
 
     int loadResult = loadLangs();
-    result = (result == RESULT_OK) ? loadResult:result;
+    result = (result == RESULT_OK) ? loadResult : result;
 
-    selectedRows = null; btnAdd = null; btnDel = null;
-    newLang = null; newMask = null;
+    selectedRows = null;
+    btnAdd = null;
+    btnDel = null;
+    newLang = null;
+    newMask = null;
     return result;
   }
 
@@ -80,24 +76,21 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
     System.out.println("WSmeLangs::delLangs() called");
     int result = RESULT_OK;
     try {
-      for (int i=0; i<selectedRows.length; i++)
+      for (int i = 0; i < selectedRows.length; i++)
         wsme.removeLang((new Mask(selectedRows[i])).getNormalizedMask().trim());
-    }
-    catch (AdminException exc) {
-       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
+    } catch (AdminException exc) {
+      result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
 
   private int processSort()
   {
-    if (sort != null && sort.length() > 0)
-    {
+    if (sort != null && sort.length() > 0) {
       final boolean isNegativeSort = sort.startsWith("-");
       final String sortField = isNegativeSort ? sort.substring(1) : sort;
 
-      if (langs != null)
-      {
+      if (langs != null) {
         Collections.sort(langs, new Comparator()
         {
           public int compare(Object o1, Object o2)
@@ -127,32 +120,37 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
       langs = getMaskFilteredList(langs, wsmePreferences.getLangsFilter().getMaskList());
       langs = getLangFilteredList(langs, wsmePreferences.getLangsFilter().getLangList());
       langs = getPaginatedList(langs);
-    }
-    catch (AdminException exc) {
+    } catch (AdminException exc) {
       clearPaginatedList(langs);
       result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
     }
     return result;
   }
-  public List getLangs() {
+  public List getLangs()
+  {
     return langs;
   }
 
-  public String getNewLang() {
-    return (newLang == null) ? "":newLang;
+  public String getNewLang()
+  {
+    return (newLang == null) ? "" : newLang;
   }
-  public void setNewLang(String newLang) {
+  public void setNewLang(String newLang)
+  {
     this.newLang = newLang;
   }
 
-  public String getNewMask() {
-    return (newMask == null) ? "":newMask;
+  public String getNewMask()
+  {
+    return (newMask == null) ? "" : newMask;
   }
-  public void setNewMask(String newMask) {
+  public void setNewMask(String newMask)
+  {
     this.newMask = newMask;
   }
 
-  public int getMenuId() {
+  public int getMenuId()
+  {
     return RESULT_LANGS;
   }
 }

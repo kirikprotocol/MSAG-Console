@@ -3,7 +3,8 @@ package ru.novosoft.smsc.infosme.backend.schedules;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
 
 /**
  * Created by IntelliJ IDEA.
@@ -40,6 +41,7 @@ public abstract class ScheduleEndDateTime extends Schedule
   /**
    * stores properties to config<br>
    * <B>MUST BE OVERLOADED IN CHILDS</B>
+   *
    * @param config
    */
   public void storeToConfig(Config config)
@@ -54,8 +56,8 @@ public abstract class ScheduleEndDateTime extends Schedule
     if (obj instanceof ScheduleEndDateTime) {
       ScheduleEndDateTime schedule = (ScheduleEndDateTime) obj;
       return super.equals(schedule)
-              && ((this.endDateTime == null && schedule.endDateTime == null)
-              || (this.endDateTime != null && schedule.endDateTime != null && this.endDateTime.equals(schedule.endDateTime)));
+             && ((this.endDateTime == null && schedule.endDateTime == null)
+                 || (this.endDateTime != null && schedule.endDateTime != null && this.endDateTime.equals(schedule.endDateTime)));
     } else
       return false;
   }

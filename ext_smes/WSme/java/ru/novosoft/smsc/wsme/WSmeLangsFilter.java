@@ -7,11 +7,11 @@
  */
 package ru.novosoft.smsc.wsme;
 
-import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.MaskList;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 public class WSmeLangsFilter
 {
@@ -20,43 +20,47 @@ public class WSmeLangsFilter
 
   public MaskList getMaskList() throws AdminException
   {
-    synchronized(masks) {
+    synchronized (masks) {
       MaskList maskList = null;
       try {
         maskList = new MaskList(masks);
       } catch (Exception e) {
-        throw new AdminException("WSmeVisitorsFilter: failed to obtain mask list, cause: "+e.getMessage());
+        throw new AdminException("WSmeVisitorsFilter: failed to obtain mask list, cause: " + e.getMessage());
       }
       return maskList;
     }
   }
-  public String[] getMasks() {
-    synchronized(masks) {
+  public String[] getMasks()
+  {
+    synchronized (masks) {
       return masks;
     }
   }
-  public void setMasks(String[] masks) {
-    synchronized(masks) {
+  public void setMasks(String[] masks)
+  {
+    synchronized (masks) {
       this.masks = masks;
     }
   }
 
   public List getLangList()
   {
-    synchronized(langs) {
+    synchronized (langs) {
       List langList = new ArrayList();
-      for (int i=0; i<langs.length; i++)
+      for (int i = 0; i < langs.length; i++)
         langList.add(langs[i]);
       return langList;
     }
   }
-  public String[] getLangs() {
-    synchronized(langs) {
+  public String[] getLangs()
+  {
+    synchronized (langs) {
       return langs;
     }
   }
-  public void setLangs(String[] langs) {
-    synchronized(langs) {
+  public void setLangs(String[] langs)
+  {
+    synchronized (langs) {
       this.langs = langs;
     }
   }

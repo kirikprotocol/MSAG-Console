@@ -8,9 +8,7 @@
 package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.wsme.AdRow;
-import ru.novosoft.smsc.wsme.WSmeErrors;
-import ru.novosoft.smsc.wsme.WSmePreferences;
+import ru.novosoft.smsc.wsme.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -30,10 +28,10 @@ public class WSmeAdsFormBean extends WSmeBaseFormBean
     int result = super.process(request);
 
     pageSize = (wsmePreferences != null) ?
-            wsmePreferences.getAdsPageSize() : WSmePreferences.DEFAULT_adsPageSize;
+               wsmePreferences.getAdsPageSize() : WSmePreferences.DEFAULT_adsPageSize;
     if (sort == null)
       sort = (wsmePreferences != null) ?
-              wsmePreferences.getAdsSortOrder() : WSmePreferences.DEFAULT_adsSortOrder;
+             wsmePreferences.getAdsSortOrder() : WSmePreferences.DEFAULT_adsSortOrder;
     else if (wsmePreferences != null)
       wsmePreferences.setAdsSortOrder(sort);
 

@@ -3,11 +3,8 @@ package ru.novosoft.smsc.emailsme.beans;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
 import javax.servlet.http.HttpServletRequest;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
+import java.sql.*;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.

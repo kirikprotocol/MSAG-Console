@@ -2,12 +2,7 @@ package ru.novosoft.smsc.infosme.backend;
 
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
-
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.HashSet;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,11 +12,8 @@ import java.util.HashSet;
  */
 public class Task
 {
-  private final static String DEFAULT_ACTIVE_WEEK_DAYS = "Mon,Tue,Wed,Thu,Fri";
-
   private String id = "";
   private String name = "";
-  private String address = "";
   private String provider = "";
   private boolean enabled = false;
   private int priority = 0;
@@ -34,8 +26,6 @@ public class Task
   private String validityDate = "";
   private String activePeriodStart = "";
   private String activePeriodEnd = "";
-  private Collection activeWeekDays = new ArrayList();
-  private Collection activeWeekDaysSet = new HashSet();
   private String query = "";
   private String template = "";
   private int dsTimeout = 0;
@@ -49,23 +39,15 @@ public class Task
 
   public Task()
   {
-    activeWeekDays = new ArrayList();
-    Functions.addValuesToCollection(this.activeWeekDays, DEFAULT_ACTIVE_WEEK_DAYS, ",", true);
-    activeWeekDaysSet = new HashSet(activeWeekDays);
   }
 
-  public Task(String id, String name, String address, String provider,
-              boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage,
-              String svcType, String endDate, String retryTime, String validityPeriod, String validityDate,
-              String activePeriodStart, String activePeriodEnd, Collection activeWeekDays,
-              String query, String template, int dsTimeout,
+  public Task(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage, String svcType, String endDate, String retryTime, String validityPeriod, String validityDate, String activePeriodStart, String activePeriodEnd, String query, String template, int dsTimeout,
               int messagesCacheSize, int messagesCacheSleep, boolean transactionMode,
               int uncommitedInGeneration, int uncommitedInProcess, boolean trackIntegrity, boolean keepHistory)
   {
     this();
     this.id = id;
     this.name = name;
-    this.address = address;
     this.provider = provider;
     this.enabled = enabled;
     this.priority = priority;
@@ -88,8 +70,6 @@ public class Task
     this.uncommitedInProcess = uncommitedInProcess;
     this.trackIntegrity = trackIntegrity;
     this.keepHistory = keepHistory;
-    this.activeWeekDays = activeWeekDays;
-    this.activeWeekDaysSet = new HashSet(activeWeekDays);
   }
 
   public Task(Config config, String id) throws Config.WrongParamTypeException, Config.ParamNotFoundException
@@ -98,8 +78,6 @@ public class Task
     final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id);
     this.id = id;
     name = config.getString(prefix + ".name");
-    try { address = config.getString(prefix + ".address"); }
-    catch (Throwable th) { address = ""; }
     provider = config.getString(prefix + ".dsId");
     enabled = config.getBool(prefix + ".enabled");
     priority = config.getInt(prefix + ".priority");
@@ -122,21 +100,12 @@ public class Task
     uncommitedInProcess = config.getInt(prefix + ".uncommitedInProcess");
     trackIntegrity = config.getBool(prefix + ".trackIntegrity");
     keepHistory = config.getBool(prefix + ".keepHistory");
-    String activeWeekDaysStr = null;
-    try {  activeWeekDaysStr = config.getString(prefix + ".activeWeekDays"); }
-    catch (Throwable th) { activeWeekDaysStr = DEFAULT_ACTIVE_WEEK_DAYS; }
-    activeWeekDays = new ArrayList();
-    Functions.addValuesToCollection(this.activeWeekDays, activeWeekDaysStr, ",", true);
-    activeWeekDaysSet = new HashSet(this.activeWeekDays);
   }
 
   public void storeToConfig(Config config)
   {
     final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id);
     config.setString(prefix + ".name", name);
-    if (address != null && address.trim().length() > 0) {
-      config.setString(prefix + ".address", address.trim());
-    }
     config.setString(prefix + ".dsId", provider);
     config.setBool(prefix + ".enabled", enabled);
     config.setInt(prefix + ".priority", priority);
@@ -159,7 +128,6 @@ public class Task
     config.setInt(prefix + ".uncommitedInProcess", uncommitedInProcess);
     config.setBool(prefix + ".trackIntegrity", trackIntegrity);
     config.setBool(prefix + ".keepHistory", keepHistory);
-    config.setString(prefix + ".activeWeekDays", Functions.collectionToString(activeWeekDays, ","));
   }
 
   public boolean isContainsInConfig(Config config)
@@ -182,219 +150,248 @@ public class Task
     if (obj instanceof Task) {
       Task task = (Task) obj;
       return this.id.equals(task.id)
-              && this.name.equals(task.name)
-              && this.address.equals(task.address)
-              && this.provider.equals(task.provider)
-              && this.enabled == task.enabled
-              && this.priority == task.priority
-              && this.retryOnFail == task.retryOnFail
-              && this.replaceMessage == task.replaceMessage
-              && this.svcType.equals(task.svcType)
-              && this.endDate.equals(task.endDate)
-              && this.retryTime.equals(task.retryTime)
-              && this.validityPeriod.equals(task.validityPeriod)
-              && this.validityDate.equals(task.validityDate)
-              && this.activePeriodStart.equals(task.activePeriodStart)
-              && this.activePeriodEnd.equals(task.activePeriodEnd)
-              && this.query.equals(task.query)
-              && this.template.equals(task.template)
-              && this.dsTimeout == task.dsTimeout
-              && this.messagesCacheSize == task.messagesCacheSize
-              && this.messagesCacheSleep == task.messagesCacheSleep
-              && this.transactionMode == task.transactionMode
-              && this.uncommitedInGeneration == task.uncommitedInGeneration
-              && this.uncommitedInProcess == task.uncommitedInProcess
-              && this.trackIntegrity == task.trackIntegrity
-              && this.keepHistory == task.keepHistory
-              && this.activeWeekDays.equals(task.activeWeekDays);
+             && this.name.equals(task.name)
+             && this.provider.equals(task.provider)
+             && this.enabled == task.enabled
+             && this.priority == task.priority
+             && this.retryOnFail == task.retryOnFail
+             && this.replaceMessage == task.replaceMessage
+             && this.svcType.equals(task.svcType)
+             && this.endDate.equals(task.endDate)
+             && this.retryTime.equals(task.retryTime)
+             && this.validityPeriod.equals(task.validityPeriod)
+             && this.validityDate.equals(task.validityDate)
+             && this.activePeriodStart.equals(task.activePeriodStart)
+             && this.activePeriodEnd.equals(task.activePeriodEnd)
+             && this.query.equals(task.query)
+             && this.template.equals(task.template)
+             && this.dsTimeout == task.dsTimeout
+             && this.messagesCacheSize == task.messagesCacheSize
+             && this.messagesCacheSleep == task.messagesCacheSleep
+             && this.transactionMode == task.transactionMode
+             && this.uncommitedInGeneration == task.uncommitedInGeneration
+             && this.uncommitedInProcess == task.uncommitedInProcess
+             && this.trackIntegrity == task.trackIntegrity
+             && this.keepHistory == task.keepHistory;
     } else
       return false;
   }
 
-  /************************************** properties **************************************/
+  /**
+   * *********************************** properties *************************************
+   */
 
-  public String getId() {
+  public String getId()
+  {
     return id;
   }
-  public void setId(String id) {
+  public void setId(String id)
+  {
     this.id = id;
   }
 
-  public String getName() {
+  public String getName()
+  {
     return name;
   }
-  public void setName(String name) {
+  public void setName(String name)
+  {
     this.name = name;
   }
 
-  public String getAddress() {
-    return address;
-  }
-  public void setAddress(String address) {
-    this.address = address;
-  }
-
-  public String getProvider() {
+  public String getProvider()
+  {
     return provider;
   }
-  public void setProvider(String provider) {
+  public void setProvider(String provider)
+  {
     this.provider = provider;
   }
 
-  public boolean isEnabled() {
+  public boolean isEnabled()
+  {
     return enabled;
   }
-  public void setEnabled(boolean enabled) {
+  public void setEnabled(boolean enabled)
+  {
     this.enabled = enabled;
   }
 
-  public int getPriority() {
+  public int getPriority()
+  {
     return priority;
   }
-  public void setPriority(int priority) {
+  public void setPriority(int priority)
+  {
     this.priority = priority;
   }
 
-  public boolean isRetryOnFail() {
+  public boolean isRetryOnFail()
+  {
     return retryOnFail;
   }
-  public void setRetryOnFail(boolean retryOnFail) {
+  public void setRetryOnFail(boolean retryOnFail)
+  {
     this.retryOnFail = retryOnFail;
   }
 
-  public boolean isReplaceMessage() {
+  public boolean isReplaceMessage()
+  {
     return replaceMessage;
   }
-  public void setReplaceMessage(boolean replaceMessage) {
+  public void setReplaceMessage(boolean replaceMessage)
+  {
     this.replaceMessage = replaceMessage;
   }
 
-  public String getSvcType() {
+  public String getSvcType()
+  {
     return svcType;
   }
-  public void setSvcType(String svcType) {
+  public void setSvcType(String svcType)
+  {
     this.svcType = svcType;
   }
 
-  public String getEndDate() {
+  public String getEndDate()
+  {
     return endDate;
   }
-  public void setEndDate(String endDate) {
+  public void setEndDate(String endDate)
+  {
     this.endDate = endDate;
   }
 
-  public String getRetryTime() {
+  public String getRetryTime()
+  {
     return retryTime;
   }
-  public void setRetryTime(String retryTime) {
+  public void setRetryTime(String retryTime)
+  {
     this.retryTime = retryTime;
   }
 
-  public String getValidityPeriod() {
+  public String getValidityPeriod()
+  {
     return validityPeriod;
   }
-  public void setValidityPeriod(String validityPeriod) {
+  public void setValidityPeriod(String validityPeriod)
+  {
     this.validityPeriod = validityPeriod;
   }
 
-  public String getValidityDate() {
+  public String getValidityDate()
+  {
     return validityDate;
   }
-  public void setValidityDate(String validityDate) {
+  public void setValidityDate(String validityDate)
+  {
     this.validityDate = validityDate;
   }
 
-  public String getActivePeriodStart() {
+  public String getActivePeriodStart()
+  {
     return activePeriodStart;
   }
-  public void setActivePeriodStart(String activePeriodStart) {
+  public void setActivePeriodStart(String activePeriodStart)
+  {
     this.activePeriodStart = activePeriodStart;
   }
 
-  public String getActivePeriodEnd() {
+  public String getActivePeriodEnd()
+  {
     return activePeriodEnd;
   }
-  public void setActivePeriodEnd(String activePeriodEnd) {
+  public void setActivePeriodEnd(String activePeriodEnd)
+  {
     this.activePeriodEnd = activePeriodEnd;
   }
 
-  public String getQuery() {
+  public String getQuery()
+  {
     return query;
   }
-  public void setQuery(String query) {
+  public void setQuery(String query)
+  {
     this.query = query;
   }
 
-  public String getTemplate() {
+  public String getTemplate()
+  {
     return template;
   }
-  public void setTemplate(String template) {
+  public void setTemplate(String template)
+  {
     this.template = template;
   }
 
-  public int getDsTimeout() {
+  public int getDsTimeout()
+  {
     return dsTimeout;
   }
-  public void setDsTimeout(int dsTimeout) {
+  public void setDsTimeout(int dsTimeout)
+  {
     this.dsTimeout = dsTimeout;
   }
 
-  public int getMessagesCacheSize() {
+  public int getMessagesCacheSize()
+  {
     return messagesCacheSize;
   }
-  public void setMessagesCacheSize(int messagesCacheSize) {
+  public void setMessagesCacheSize(int messagesCacheSize)
+  {
     this.messagesCacheSize = messagesCacheSize;
   }
-  public int getMessagesCacheSleep() {
+  public int getMessagesCacheSleep()
+  {
     return messagesCacheSleep;
   }
-  public void setMessagesCacheSleep(int messagesCacheSleep) {
+  public void setMessagesCacheSleep(int messagesCacheSleep)
+  {
     this.messagesCacheSleep = messagesCacheSleep;
   }
 
-  public boolean isTransactionMode() {
+  public boolean isTransactionMode()
+  {
     return transactionMode;
   }
-  public void setTransactionMode(boolean transactionMode) {
+  public void setTransactionMode(boolean transactionMode)
+  {
     this.transactionMode = transactionMode;
   }
 
-  public int getUncommitedInGeneration() {
+  public int getUncommitedInGeneration()
+  {
     return uncommitedInGeneration;
   }
-  public void setUncommitedInGeneration(int uncommitedInGeneration) {
+  public void setUncommitedInGeneration(int uncommitedInGeneration)
+  {
     this.uncommitedInGeneration = uncommitedInGeneration;
   }
-  public int getUncommitedInProcess() {
+  public int getUncommitedInProcess()
+  {
     return uncommitedInProcess;
   }
-  public void setUncommitedInProcess(int uncommitedInProcess) {
+  public void setUncommitedInProcess(int uncommitedInProcess)
+  {
     this.uncommitedInProcess = uncommitedInProcess;
   }
 
-  public boolean isTrackIntegrity() {
+  public boolean isTrackIntegrity()
+  {
     return trackIntegrity;
   }
-  public void setTrackIntegrity(boolean trackIntegrity) {
+  public void setTrackIntegrity(boolean trackIntegrity)
+  {
     this.trackIntegrity = trackIntegrity;
   }
 
-  public boolean isKeepHistory() {
+  public boolean isKeepHistory()
+  {
     return keepHistory;
   }
-  public void setKeepHistory(boolean keepHistory) {
+  public void setKeepHistory(boolean keepHistory)
+  {
     this.keepHistory = keepHistory;
   }
-
-  public Collection getActiveWeekDays() {
-    return activeWeekDays;
-  }
-  public void setActiveWeekDays(Collection activeWeekDays) {
-    this.activeWeekDays = activeWeekDays;
-    activeWeekDaysSet = new HashSet(activeWeekDays);
-  }
-  public boolean isWeekDayActive(String weekday) {
-    return activeWeekDaysSet.contains(weekday);
-  }
-
 }

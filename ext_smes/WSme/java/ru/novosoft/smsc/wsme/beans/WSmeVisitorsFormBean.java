@@ -27,12 +27,12 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
     int result = super.process(request);
 
     pageSize = (wsmePreferences != null) ?
-        wsmePreferences.getVisitorsPageSize():WSmePreferences.DEFAULT_visitorsPageSize;
+               wsmePreferences.getVisitorsPageSize() : WSmePreferences.DEFAULT_visitorsPageSize;
     if (sort == null)
       sort = (wsmePreferences != null) ?
-        wsmePreferences.getVisitorsSortOrder():WSmePreferences.DEFAULT_visitorsSortOrder;
+             wsmePreferences.getVisitorsSortOrder() : WSmePreferences.DEFAULT_visitorsSortOrder;
     else if (wsmePreferences != null)
-        wsmePreferences.setVisitorsSortOrder(sort);
+      wsmePreferences.setVisitorsSortOrder(sort);
 
     if (result != RESULT_OK && result != RESULT_VISITORS) return result;
     result = RESULT_OK;
@@ -40,16 +40,17 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
     if (btnAdd != null && newVisitor != null) {
       result = addNewVisitor();
       if (result == RESULT_OK) return RESULT_VISITORS; //redirect for refresh
-    }
-    else if (btnDel != null && selectedRows != null) {
+    } else if (btnDel != null && selectedRows != null) {
       result = delVisitors();
       if (result == RESULT_OK) return RESULT_VISITORS; //redirect for refresh
     }
 
     int loadResult = loadVisitors();
-    result = (result == RESULT_OK) ? loadResult:result;
+    result = (result == RESULT_OK) ? loadResult : result;
 
-    selectedRows = null; btnAdd = null; btnDel = null;
+    selectedRows = null;
+    btnAdd = null;
+    btnDel = null;
     newVisitor = null;
     return result;
   }
@@ -63,10 +64,9 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
     }
     int result = RESULT_OK;
     try {
-       wsme.addVisitor(newVisitor);
-    }
-    catch (AdminException exc) {
-       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
+      wsme.addVisitor(newVisitor);
+    } catch (AdminException exc) {
+      result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
@@ -74,24 +74,21 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
   {
     int result = RESULT_OK;
     try {
-      for (int i=0; i<selectedRows.length; i++)
+      for (int i = 0; i < selectedRows.length; i++)
         wsme.removeVisitor((new Mask(selectedRows[i])).getNormalizedMask().trim());
-    }
-    catch (AdminException exc) {
-       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
+    } catch (AdminException exc) {
+      result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
 
   private int processSort()
   {
-    if (sort != null && sort.length() > 0)
-    {
+    if (sort != null && sort.length() > 0) {
       final boolean isNegativeSort = sort.startsWith("-");
       final String sortField = isNegativeSort ? sort.substring(1) : sort;
 
-      if (visitors != null)
-      {
+      if (visitors != null) {
         Collections.sort(visitors, new Comparator()
         {
           public int compare(Object o1, Object o2)
@@ -118,25 +115,28 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
       result = processSort();
       MaskList maskList = wsmePreferences.getVisitorsFilter().getMaskList();
       visitors = getPaginatedList(getMaskFilteredList(visitors, maskList));
-    }
-    catch (AdminException exc) {
+    } catch (AdminException exc) {
       clearPaginatedList(visitors);
       result = error(WSmeErrors.error.datasource.failure, exc.getMessage());
     }
     return result;
   }
-  public List getVisitors() {
+  public List getVisitors()
+  {
     return visitors;
   }
 
-  public String getNewVisitor() {
-    return (newVisitor == null) ? "":newVisitor;
+  public String getNewVisitor()
+  {
+    return (newVisitor == null) ? "" : newVisitor;
   }
-  public void setNewVisitor(String newVisitor) {
+  public void setNewVisitor(String newVisitor)
+  {
     this.newVisitor = newVisitor;
   }
 
-  public int getMenuId() {
+  public int getMenuId()
+  {
     return RESULT_VISITORS;
   }
 }

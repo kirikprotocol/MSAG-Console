@@ -8,7 +8,8 @@ import ru.novosoft.smsc.util.config.Config;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by igork

@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.infosme.backend;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.

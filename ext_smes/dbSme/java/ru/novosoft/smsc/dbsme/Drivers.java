@@ -3,7 +3,7 @@ package ru.novosoft.smsc.dbsme;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Iterator;
 
 /**
  * Created by igork

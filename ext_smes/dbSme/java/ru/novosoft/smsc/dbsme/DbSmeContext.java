@@ -6,11 +6,9 @@ import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.WebAppFolders;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.*;
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by igork
@@ -21,11 +19,11 @@ public class DbSmeContext
 {
   private static final Map instances = new HashMap();
 
-  public static synchronized DbSmeContext getInstance(SMSCAppContext appContext, String smeId) throws AdminException
+  public static synchronized DbSmeContext getInstance(SMSCAppContext appContext, String smeId, int adminPort) throws AdminException
   {
     DbSmeContext context = (DbSmeContext) instances.get(smeId);
     if (context == null) {
-      context = new DbSmeContext(appContext, smeId);
+      context = new DbSmeContext(appContext, smeId, adminPort);
       instances.put(smeId, context);
     }
     return context;
@@ -38,12 +36,12 @@ public class DbSmeContext
   private boolean jobsChanged = false;
   final private Category logger = Category.getInstance(this.getClass());
 
-  private DbSmeContext(SMSCAppContext appContext, String smeId) throws AdminException
+  private DbSmeContext(SMSCAppContext appContext, String smeId, int adminPort) throws AdminException
   {
     this.smeId = smeId;
     ServiceInfo serviceInfo = null;
     serviceInfo = appContext.getHostsManager().getServiceInfo(this.smeId);
-    this.smeTransport = serviceInfo == null ? null : new SmeTransport(serviceInfo);
+    this.smeTransport = serviceInfo == null ? null : new SmeTransport(serviceInfo, adminPort);
     this.configChanged = false;
     File tempConfigFile = new File(WebAppFolders.getWorkFolder(), "dbSme.config.xml.tmp");
     if (tempConfigFile.exists()) {

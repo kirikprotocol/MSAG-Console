@@ -1,17 +1,15 @@
 package ru.novosoft.smsc.dbsme;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
-import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.util.WebAppFolders;
+import ru.novosoft.smsc.util.*;
 import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by igork
@@ -45,14 +43,6 @@ public class DbsmeBean extends IndexBean
       return result;
 
     try {
-      context = DbSmeContext.getInstance(getAppContext(), smeId);
-    } catch (AdminException e) {
-      logger.error("Could not instantiate DbSme context", e);
-      return error("Could not instantiate DbSme context", e);
-    }
-    smeTransport = context.getSmeTransport();
-
-    try {
       originalConfigFile = new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(), "conf/config.xml");
       if (!tempConfigFile.exists()) {
         if (!originalConfigFile.exists()) {
@@ -68,6 +58,15 @@ public class DbsmeBean extends IndexBean
       }
 
       config = new Config(tempConfigFile);
+
+      try {
+        context = DbSmeContext.getInstance(getAppContext(), smeId, config.getInt("DBSme.Admin.port"));
+      } catch (AdminException e) {
+        logger.error("Could not instantiate DbSme context", e);
+        return error("Could not instantiate DbSme context", e);
+      }
+      smeTransport = context.getSmeTransport();
+
     } catch (Throwable e) {
       logger.error("Couldn't get DBSME config", e);
       return error(DBSmeErrors.error.couldntGetConfig, e);
@@ -243,44 +242,44 @@ public class DbsmeBean extends IndexBean
       logger.debug("invalid_config (\"" + invalid_config + "\"):" + config.isStringParamEquals(prefix + ".MessageSet.INVALID_CONFIG", invalid_config));
     }
     return providerName.equals(oldProviderName)
-            && config.isStringParamEquals(prefix + ".address", address)
-            && config.isIntParamEquals(prefix + ".DataSource.connections", connections)
-            && config.isStringParamEquals(prefix + ".DataSource.dbInstance", dbInstance)
-            && config.isStringParamEquals(prefix + ".DataSource.dbUserName", dbUserName)
-            && config.isStringParamEquals(prefix + ".DataSource.dbUserPassword", dbUserPassword)
-            && config.isStringParamEquals(prefix + ".DataSource.type", type)
-            && config.isBooleanParamEquals(prefix + ".DataSource.watchdog", watchdog)
+           && config.isStringParamEquals(prefix + ".address", address)
+           && config.isIntParamEquals(prefix + ".DataSource.connections", connections)
+           && config.isStringParamEquals(prefix + ".DataSource.dbInstance", dbInstance)
+           && config.isStringParamEquals(prefix + ".DataSource.dbUserName", dbUserName)
+           && config.isStringParamEquals(prefix + ".DataSource.dbUserPassword", dbUserPassword)
+           && config.isStringParamEquals(prefix + ".DataSource.type", type)
+           && config.isBooleanParamEquals(prefix + ".DataSource.watchdog", watchdog)
 
-            && config.isStringParamEquals(prefix + ".MessageSet.SERVICE_NOT_AVAIL", service_not_available)
-            && config.isStringParamEquals(prefix + ".MessageSet.JOB_NOT_FOUND", job_not_found)
-            && config.isStringParamEquals(prefix + ".MessageSet.DS_FAILURE", ds_failure)
-            && config.isStringParamEquals(prefix + ".MessageSet.DS_CONNECTION_LOST", ds_connection_lost)
-            && config.isStringParamEquals(prefix + ".MessageSet.DS_STATEMENT_FAIL", ds_statement_fail)
-            && config.isStringParamEquals(prefix + ".MessageSet.QUERY_NULL", query_null)
-            && config.isStringParamEquals(prefix + ".MessageSet.INPUT_PARSE", input_parse)
-            && config.isStringParamEquals(prefix + ".MessageSet.OUTPUT_FORMAT", output_format)
-            && config.isStringParamEquals(prefix + ".MessageSet.INVALID_CONFIG", invalid_config);
+           && config.isStringParamEquals(prefix + ".MessageSet.SERVICE_NOT_AVAIL", service_not_available)
+           && config.isStringParamEquals(prefix + ".MessageSet.JOB_NOT_FOUND", job_not_found)
+           && config.isStringParamEquals(prefix + ".MessageSet.DS_FAILURE", ds_failure)
+           && config.isStringParamEquals(prefix + ".MessageSet.DS_CONNECTION_LOST", ds_connection_lost)
+           && config.isStringParamEquals(prefix + ".MessageSet.DS_STATEMENT_FAIL", ds_statement_fail)
+           && config.isStringParamEquals(prefix + ".MessageSet.QUERY_NULL", query_null)
+           && config.isStringParamEquals(prefix + ".MessageSet.INPUT_PARSE", input_parse)
+           && config.isStringParamEquals(prefix + ".MessageSet.OUTPUT_FORMAT", output_format)
+           && config.isStringParamEquals(prefix + ".MessageSet.INVALID_CONFIG", invalid_config);
   }
 
   protected boolean isProviderEquals(Config originalConfig, String providerName)
   {
     String prefix = createProviderPrefix(providerName);
     return config.isParamEquals(originalConfig, prefix + ".address")
-            && config.isParamEquals(originalConfig, prefix + ".DataSource.connections")
-            && config.isParamEquals(originalConfig, prefix + ".DataSource.dbInstance")
-            && config.isParamEquals(originalConfig, prefix + ".DataSource.dbUserName")
-            && config.isParamEquals(originalConfig, prefix + ".DataSource.dbUserPassword")
-            && config.isParamEquals(originalConfig, prefix + ".DataSource.type")
-            && config.isParamEquals(originalConfig, prefix + ".DataSource.watchdog")
+           && config.isParamEquals(originalConfig, prefix + ".DataSource.connections")
+           && config.isParamEquals(originalConfig, prefix + ".DataSource.dbInstance")
+           && config.isParamEquals(originalConfig, prefix + ".DataSource.dbUserName")
+           && config.isParamEquals(originalConfig, prefix + ".DataSource.dbUserPassword")
+           && config.isParamEquals(originalConfig, prefix + ".DataSource.type")
+           && config.isParamEquals(originalConfig, prefix + ".DataSource.watchdog")
 
-            && config.isParamEquals(originalConfig, prefix + ".MessageSet.JOB_NOT_FOUND")
-            && config.isParamEquals(originalConfig, prefix + ".MessageSet.DS_FAILURE")
-            && config.isParamEquals(originalConfig, prefix + ".MessageSet.DS_CONNECTION_LOST")
-            && config.isParamEquals(originalConfig, prefix + ".MessageSet.DS_STATEMENT_FAIL")
-            && config.isParamEquals(originalConfig, prefix + ".MessageSet.QUERY_NULL")
-            && config.isParamEquals(originalConfig, prefix + ".MessageSet.INPUT_PARSE")
-            && config.isParamEquals(originalConfig, prefix + ".MessageSet.OUTPUT_FORMAT")
-            && config.isParamEquals(originalConfig, prefix + ".MessageSet.INVALID_CONFIG");
+           && config.isParamEquals(originalConfig, prefix + ".MessageSet.JOB_NOT_FOUND")
+           && config.isParamEquals(originalConfig, prefix + ".MessageSet.DS_FAILURE")
+           && config.isParamEquals(originalConfig, prefix + ".MessageSet.DS_CONNECTION_LOST")
+           && config.isParamEquals(originalConfig, prefix + ".MessageSet.DS_STATEMENT_FAIL")
+           && config.isParamEquals(originalConfig, prefix + ".MessageSet.QUERY_NULL")
+           && config.isParamEquals(originalConfig, prefix + ".MessageSet.INPUT_PARSE")
+           && config.isParamEquals(originalConfig, prefix + ".MessageSet.OUTPUT_FORMAT")
+           && config.isParamEquals(originalConfig, prefix + ".MessageSet.INVALID_CONFIG");
   }
 
   protected static String createProviderPrefix(String providerName)

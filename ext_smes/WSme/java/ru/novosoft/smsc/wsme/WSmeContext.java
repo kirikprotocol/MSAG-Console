@@ -12,7 +12,8 @@ import ru.novosoft.smsc.admin.service.Service;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.security.Principal;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class WSmeContext
 {

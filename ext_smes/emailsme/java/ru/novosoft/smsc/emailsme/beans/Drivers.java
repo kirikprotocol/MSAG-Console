@@ -48,7 +48,7 @@ public class Drivers extends SmeBean
       }
     }
     if (dsdriver_new_type != null && dsdriver_new_type.length() > 0
-            && dsdriver_new_loadup != null && dsdriver_new_loadup.length() > 0) {
+        && dsdriver_new_loadup != null && dsdriver_new_loadup.length() > 0) {
       getConfig().setString(PREFIX + dsdriver_new_type + ".type", dsdriver_new_type);
       getConfig().setString(PREFIX + dsdriver_new_type + ".loadup", dsdriver_new_loadup);
     }

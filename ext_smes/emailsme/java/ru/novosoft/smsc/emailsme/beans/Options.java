@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.emailsme.beans;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.

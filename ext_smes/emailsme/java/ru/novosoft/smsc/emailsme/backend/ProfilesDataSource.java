@@ -5,10 +5,7 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -31,7 +28,7 @@ public class ProfilesDataSource extends AbstractDataSourceImpl
     ResultSet resultSet = statement.executeQuery();
     while (resultSet.next()) {
       add(new ProfilesDataItem(resultSet.getString("address"), resultSet.getString("username"),
-                       resultSet.getInt("daily_limit"), resultSet.getString("forward")));
+                               resultSet.getInt("daily_limit"), resultSet.getString("forward")));
     }
     connection.close();
     return super.query(query_to_run);

@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.emailsme.backend;
 
-import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,9 +34,9 @@ public class ProfilesFilter implements Filter
   {
     ProfilesDataItem pitem = (ProfilesDataItem) item;
     return (addr == null || pitem.getAddr().startsWith(addr))
-            && (userid == null || pitem.getUserid().startsWith(userid))
-            && (dayLimit == -1 || pitem.getDayLimit() == dayLimit)
-            && (forward == null || pitem.getForward().startsWith(forward));
+           && (userid == null || pitem.getUserid().startsWith(userid))
+           && (dayLimit == -1 || pitem.getDayLimit() == dayLimit)
+           && (forward == null || pitem.getForward().startsWith(forward));
   }
 
   public String getAddr()

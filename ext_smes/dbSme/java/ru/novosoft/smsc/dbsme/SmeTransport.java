@@ -1,13 +1,11 @@
 package ru.novosoft.smsc.dbsme;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.service.Service;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.service.Type;
+import ru.novosoft.smsc.admin.service.*;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -24,9 +22,9 @@ public class SmeTransport extends Service
   private static final String method_changeJob_ID = "changeJob";
   private static final String method_setProviderEnabled_ID = "setProviderEnabled";
 
-  public SmeTransport(ServiceInfo info)
+  public SmeTransport(ServiceInfo info, int port)
   {
-    super(info);
+    super(info, port);
   }
 
   public synchronized void updateInfo(SMSCAppContext appContext) throws AdminException

@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.dbsme;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
@@ -217,26 +216,26 @@ public class Index extends DbsmeBean
     String jobPrefix = Job.createJobPrefix(providerName, jobId);
     try {
       return
-              oldConfig.isParamEquals(newConfig, jobPrefix + ".name")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".type")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".sql")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".input")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".output")
+          oldConfig.isParamEquals(newConfig, jobPrefix + ".name")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".type")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".sql")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".input")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".output")
 
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".address")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".alias")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".timeout")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".query")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".commit")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".address")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".alias")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".timeout")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".query")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".commit")
 
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".function")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.DS_FAILURE")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.DS_CONNECTION_LOST")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.DS_STATEMENT_FAIL")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.QUERY_NULL")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.INPUT_PARSE")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.OUTPUT_FORMAT")
-              && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.INVALID_CONFIG");
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".function")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.DS_FAILURE")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.DS_CONNECTION_LOST")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.DS_STATEMENT_FAIL")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.QUERY_NULL")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.INPUT_PARSE")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.OUTPUT_FORMAT")
+          && oldConfig.isParamEquals(newConfig, jobPrefix + ".MessageSet.INVALID_CONFIG");
     } catch (Throwable e) {
       return false;
     }
