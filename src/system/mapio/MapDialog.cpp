@@ -417,7 +417,7 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
 #if defined USE_MAP
   __trace2__("MAP::Et96MapCloseInd state: 0x%x",state);
   if ( state == MAPST_READY_FOR_SENDSMS ){
-    state == MAPST_READY_FOR_CLOSE;
+    state = MAPST_READY_FOR_CLOSE;
     __trace2__("MAP::Et96MapCloseInd state: REDY_FOR_SEND_SMS");
     ET96MAP_APP_CNTX_T appContext;
   	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
