@@ -557,6 +557,7 @@ StateType StateMachine::submit(Tuple& t)
     return ENROUTE_STATE;
   }
   Address srcOriginal=sms->getOriginatingAddress();
+  Address dstOriginal=sms->getDestinationAddress();
   try{
     // send delivery
     Address src;
@@ -592,6 +593,7 @@ StateType StateMachine::submit(Tuple& t)
     }catch(InvalidProxyCommandException& e)
     {
       sms->setOriginatingAddress(srcOriginal);
+      sms->setDestinationAddress(dstOriginal);
       sendNotifyReport(*sms,t.msgId,"facility not supported");
       __trace__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
       try{
@@ -608,6 +610,7 @@ StateType StateMachine::submit(Tuple& t)
   {
     __trace__("SUBMIT: failed to put delivery command");
     sms->setOriginatingAddress(srcOriginal);
+    sms->setDestinationAddress(dstOriginal);
     sendNotifyReport(*sms,t.msgId,"system failure");
     try{
       Descriptor d;
@@ -747,6 +750,7 @@ StateType StateMachine::forward(Tuple& t)
     return ENROUTE_STATE;
   }
   Address srcOriginal=sms.getOriginatingAddress();
+  Address dstOriginal=sms.getDestinationAddress();
   try{
     // send delivery
     Address src;
@@ -787,6 +791,7 @@ StateType StateMachine::forward(Tuple& t)
     //TODO!!!: remove task and reschedule
     __trace__("Failed to put delivery command");
     sms.setOriginatingAddress(srcOriginal);
+    sms.setDestinationAddress(dstOriginal);
     sendNotifyReport(sms,t.msgId,"facility not supported");
     try{
       //time_t now=time(NULL);
