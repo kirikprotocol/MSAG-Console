@@ -159,8 +159,18 @@ protected:
       hc=f.ReadNetInt32();
       k.Read(f);
       v.Read(f);
-      int idx=(hc%h.size)*recsize;
+      int attempt=0;
+      int idx;
+      for(;;attempt++)
+      {
+        hc=k.HashCode(attempt);
+        idx=(hc%h.size)*recsize;
+        g.Seek(idx+h.Size());
+        fl=g.ReadNetInt16();
+        if(!fl)break;
+      }
       g.Seek(idx+h.Size());
+      fl=1;
       g.WriteNetInt16(fl);
       g.WriteNetInt32(hc);
       k.Write(g);
