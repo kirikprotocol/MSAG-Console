@@ -32,19 +32,19 @@
 <div class=page_subtitle>Tracing parameters</div>
 <table class=properties_list cell>
   <tr class=row0>
-    <th>Destination Address:</th>
-    <td nowrap><input class=txt type="text" name="dstAddress"
-                value="<%=StringEncoderDecoder.encode(bean.getDstAddress())%>" validation="mask" size=25 maxlength=25></td>
+    <th width="30%">Destination Address:</th>
+    <td width="70%" nowrap><input class=txt type="text" name="dstAddress"
+        value="<%=StringEncoderDecoder.encode(bean.getDstAddress())%>" validation="mask" size=25 maxlength=25></td>
   </tr>
   <tr class=row1>
-    <th>Source Address:</th>
-    <td nowrap><input class=txt type="text" name="srcAddress"
-                value="<%=StringEncoderDecoder.encode(bean.getSrcAddress())%>" validation="mask" size=25 maxlength=25></td>
+    <th width="30%">Source Address:</th>
+    <td width="70%" nowrap><input class=txt type="text" name="srcAddress"
+        value="<%=StringEncoderDecoder.encode(bean.getSrcAddress())%>" validation="mask" size=25 maxlength=25></td>
   </tr>
   <tr class=row0>
-    <th>Source System Id:</th>
-    <td nowrap><input class=txt type="text" name="srcSysId"
-                value="<%=StringEncoderDecoder.encode(bean.getSrcSysId())%>" size=25 maxlength=25></td>
+    <th width="30%">Source System Id:</th>
+    <td width="70%" nowrap><input class=txt type="text" name="srcSysId"
+        value="<%=StringEncoderDecoder.encode(bean.getSrcSysId())%>" size=25 maxlength=25></td>
   </tr>
 </table>
 </div><%
