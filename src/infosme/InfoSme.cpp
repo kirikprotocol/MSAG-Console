@@ -283,15 +283,8 @@ public:
     void processReceipt (SmppHeader *pdu)
     {
         if (!pdu || !asyncTransmitter) return;
+        bool bNeedResponce = true;
 
-        {   // Send DeliverySmResp here for accepted DeliverySm
-            PduDeliverySmResp smResp;
-            smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-            smResp.set_messageId("");
-            smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-            asyncTransmitter->sendDeliverySmResp(smResp);
-        }
-        
         SMS sms;
         fetchSmsFromSmppPdu((PduXSm*)pdu, &sms);
         bool isReceipt = (sms.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
@@ -338,13 +331,18 @@ public:
                     }
                 }
                 
-                /*logger.debug("Got receipt, message=%s is %s (%s)", 
-                             msgid, delivered ? "delivered":"failed", 
-                             retry ? "need retry":"no retry");*/
-                
-                processor.invokeProcessReceipt(msgid, delivered, retry);
+                bNeedResponce = processor.invokeProcessReceipt(msgid, delivered, retry);
             }
-        } 
+        }
+
+        if (bNeedResponce)
+        {
+            PduDeliverySmResp smResp;
+            smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+            smResp.set_messageId("");
+            smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+            asyncTransmitter->sendDeliverySmResp(smResp);
+        }
     }
 
     void processResponce(SmppHeader *pdu)
@@ -498,7 +496,7 @@ int main(void)
             
             Event aaa;
             while (!bInfoSmeIsStopped && bInfoSmeIsConnected) {
-                aaa.Wait(2000);
+                aaa.Wait(100);
                 //sleep(1);
                 TaskStat stat;
                 if (processor.getStatistics("Task1", stat)) {

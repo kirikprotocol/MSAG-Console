@@ -13,16 +13,22 @@
     
     <section name="InfoSme">
 
-        <param name="Address" type="string">.0.1.123</param>
+        <param name="Address" type="string">.0.1.4</param>
 	<param name="SvcType" type="string">InfoSme</param>
         <param name="ProtocolId" type="int">111</param>
-	<param name="dsIntCommitInterval" type="int">2</param>
-
+	<param name="unrespondedMessagesMax" type="int">100</param>
+	<param name="unrespondedMessagesSleep" type="int">1000</param>
+	
         <section name="TasksThreadPool">
             <param name="max" type="int">15</param>
             <param name="init" type="int">5</param>
         </section>  
             
+        <section name="EventsThreadPool">
+            <param name="max" type="int">15</param>
+            <param name="init" type="int">5</param>
+        </section>  
+
         <section name="Admin">
             <param name="host" type="string">smsc</param>
             <param name="port" type="int">9669</param>
@@ -31,9 +37,9 @@
         <section name="SMSC">
             <param name="host" type="string">smsc</param>
             <param name="port" type="int">9229</param>
-            <param name="sid" type="string">2</param>
-            <param name="timeout" type="int">10</param>
-            <param name="password" type="string">2</param>
+            <param name="sid" type="string">4</param>
+            <param name="password" type="string">4</param>
+	    <param name="timeout" type="int">10</param>
         </section>  
 
 	<section name="DataProvider">
@@ -69,7 +75,7 @@
 	<section name="Tasks">
 
 	    <param name="taskTablesPrefix" type="string">INFOSME_TABLE_FOR_</param>
-	    <param name="switchTimeout" type="int">1000</param>
+	    <param name="switchTimeout" type="int">10</param> <!-- in msec -->
 	    
 	    <section name="Task1">
 		<param name="name" type="string">Task 1</param>
@@ -77,21 +83,25 @@
 		<param name="dsOwnTimeout" type="int">10</param> <!-- in seconds -->
 		<param name="dsIntTimeout" type="int">10</param> <!-- in seconds -->
 		<param name="enabled" type="bool">true</param>
-		<param name="priority" type="int">100</param>
-		<param name="retryOnFail" type="bool">true</param>
+		<param name="priority" type="int">1</param>
+		<param name="retryOnFail" type="bool">false</param>
 		<param name="replaceMessage" type="bool">false</param>
-		<param name="endDate" type="string">07.05.2003 00:00:00</param>
+		<param name="transactionMode" type="bool">false</param>
+		<param name="endDate" type="string"></param>
 		<param name="retryTime" type="string">03:10:10</param>
-		<param name="validityPeriod" type="string">01:00:00</param>
+		<param name="validityPeriod" type="string">00:01:00</param>
 		<param name="validityDate" type="string"></param>
 		<param name="activePeriodStart" type="string">09:00:00</param>
-		<param name="activePeriodEnd" type="string">20:00:00</param>
+		<param name="activePeriodEnd" type="string">22:00:00</param>
 		<param name="query" type="string">
 		    select abonent, balance from INFOSME_TEST_PROVIDER
 		</param>
 		<param name="template" type="string">Balance for '$$string arg=1$$' is $$float arg=2$$</param>
 		<param name="svcType" type="string">TASK_1</param>
-		<param name="uncommited" type="int">50</param>
+		<param name="uncommitedInProcess" type="int">50</param>
+		<param name="uncommitedInGeneration" type="int">50</param>
+		<param name="messagesCacheSize" type="int">1000</param>
+		<param name="messagesCacheSleep" type="int">10</param> <!-- in seconds -->
 	    </section>
 
 	    <!--section name="Task2">
@@ -100,7 +110,7 @@
 		<param name="dsOwnTimeout" type="int">10</param> 
 		<param name="dsIntTimeout" type="int">10</param>
 		<param name="enabled" type="bool">true</param>
-		<param name="priority" type="int">200</param>
+		<param name="priority" type="int">2</param>
 		<param name="retryOnFail" type="bool">true</param>
 		<param name="replaceMessage" type="bool">false</param>
 		<param name="endDate" type="string">07.05.2003 00:00:00</param>
@@ -125,7 +135,7 @@
 		<param name="dsOwnTimeout" type="int">10</param>
 		<param name="dsIntTimeout" type="int">10</param>
 		<param name="enabled" type="bool">true</param>
-		<param name="priority" type="int">300</param>
+		<param name="priority" type="int">3</param>
 		<param name="retryOnFail" type="bool">true</param>
 		<param name="replaceMessage" type="bool">false</param>
 		<param name="endDate" type="string">07.05.2003 00:00:00</param>
@@ -194,9 +204,9 @@
 		<param name="execute" type="string">interval</param>
 		<param name="tasks" type="string">Task1</param>
 		
-		<param name="startDateTime" type="string">11.09.2003 00:00:00</param>
+		<param name="startDateTime" type="string">20.09.2003 00:00:00</param>
 		<param name="endDateTime" type="string"></param>
-		<param name="intervalTime" type="string">00:00:10</param>			
+		<param name="intervalTime" type="string">00:00:01</param>			
 	    </section>
 	</section>
 	

@@ -178,10 +178,14 @@ namespace smsc { namespace infosme
             bStopping = true;
         }
         
-        void startThread(ThreadedTask* task) {
+        bool startThread(ThreadedTask* task) {
             MutexGuard guard(stopLock);
-            if (!bStopping && task) startTask(task);
+            if (!bStopping && task) {
+                startTask(task);
+                return true;
+            }
             else if (task) delete task;
+            return false;
         }
         
         void init(ConfigView* config) // throw(ConfigException)
@@ -297,26 +301,26 @@ namespace smsc { namespace infosme
         virtual bool hasTask(std::string taskId);
         virtual TaskGuard getTask(std::string taskId);
         
-        virtual void invokeEndProcess(Task* task) {
-            taskManager.startThread(new TaskRunner(task, endProcessMethod));
+        virtual bool invokeEndProcess(Task* task) {
+            return taskManager.startThread(new TaskRunner(task, endProcessMethod));
         };
-        virtual void invokeBeginProcess(Task* task) {
-            taskManager.startThread(new TaskRunner(task, beginProcessMethod, statistics));
+        virtual bool invokeBeginProcess(Task* task) {
+            return taskManager.startThread(new TaskRunner(task, beginProcessMethod, statistics));
         };
-        virtual void invokeDropAllMessages(Task* task) {
-            taskManager.startThread(new TaskRunner(task, dropAllMessagesMethod));
+        virtual bool invokeDropAllMessages(Task* task) {
+            return taskManager.startThread(new TaskRunner(task, dropAllMessagesMethod));
         };
 
-        virtual void invokeProcessResponce(int seqNum, bool accepted, 
-                                           bool retry, bool immediate, std::string smscId="")
+        virtual bool invokeProcessResponce(int seqNum, bool accepted, 
+                                           bool retry, bool immediate, std::string smscId="") 
         {
-            eventManager.startThread(new EventRunner(processResponceMethod, *this, 
-                                                     seqNum, accepted, retry, immediate, smscId));
+            return eventManager.startThread(new EventRunner(processResponceMethod, *this, 
+                                                            seqNum, accepted, retry, immediate, smscId));
         };
-        virtual void invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
+        virtual bool invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
         {
-            eventManager.startThread(new EventRunner(processReceiptMethod, *this, 
-                                                     smscId, delivered, retry));
+            return eventManager.startThread(new EventRunner(processReceiptMethod, *this, 
+                                                            smscId, delivered, retry));
         };
         
         bool getStatistics(std::string taskId, TaskStat& stat) {
