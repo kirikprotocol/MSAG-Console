@@ -76,6 +76,9 @@ enum MAPSTATS{
   MAPSTATS_NEWDIALOG_OUT,
   MAPSTATS_DISPOSEDIALOG_OUT
 };
+extern int MAPSTATS_dialogs_in;
+extern int MAPSTATS_dialogs_out;
+
 class MapDialog;
 
 extern void MAPSTATS_Restart();
@@ -644,7 +647,6 @@ void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId)
 //  __mapdlg_trace2__("Dialogid 0x%x retuned to pool",dialogueId);
   MapDialogContainer::getInstance()->dialogId_pool.push_back(dialogueId);
 }
-
 
 class MapTracker : public ThreadedTask{
 public:

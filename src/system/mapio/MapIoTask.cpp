@@ -347,6 +347,11 @@ void MapDialogContainer::unregisterSelf(SmeManager* smeman)
   __map_trace__("unregister MAP_PROXY OK");
 }
 
+void setMapProxyLimits(int timeout, int limit)
+{
+  MapDialogContainer::getInstance()->setPerformanceLimits( timeout, limit );
+}
+
 
 Mutex& MAPSTATS_GetMutex(){
   static Mutex mutex;
