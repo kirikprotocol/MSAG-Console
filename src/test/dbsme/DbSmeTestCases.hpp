@@ -22,6 +22,7 @@ using smsc::test::sme::SmppFixture;
 using smsc::test::sme::SmppProtocolTestCases;
 using smsc::test::sme::SmeAcknowledgementHandler;
 using smsc::test::core::SmeAckMonitor;
+using smsc::test::core::PduData;
 
 /**
  * Тест кейсы для db sme.
@@ -61,9 +62,14 @@ public:
 	void submitCorrectDeleteDbSmeCmd(bool sync, uint8_t dataCoding);
 
 	/**
-	 * Отправка неправильной команды db sme.
+	 * Отправка команды db sme с неправильным форматом даты.
 	 */
-	void submitIncorrectDbSmeCmd(bool sync, uint8_t dataCoding);
+	void submitIncorrectDateFormatDbSmeCmd(bool sync, uint8_t dataCoding, int num);
+
+	/**
+	 * Отправка команды db sme с неправильным форматом чисел.
+	 */
+	void submitIncorrectNumberFormatDbSmeCmd(bool sync, uint8_t dataCoding, int num);
 
 	/**
 	 * Получение ответных сообщений от db sme.
@@ -84,7 +90,12 @@ protected:
 	const string getFromAddress();
 	const string getToAddress();
 	const string getCmdText(DbSmeTestRecord* rec, const DateFormatter* df);
+	void sendDbSmePdu(const string& input, PduData::IntProps* intProps,
+		PduData::StrProps* strProps, PduData::ObjProps* objProps, bool sync,
+		uint8_t dataCoding);
 	void sendDbSmePdu(const string& text, DbSmeTestRecord* rec,
+		bool sync, uint8_t dataCoding);
+	void sendDbSmePdu(const string& text, const string& output,
 		bool sync, uint8_t dataCoding);
 };
 
