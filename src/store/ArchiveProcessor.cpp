@@ -71,11 +71,11 @@ void ArchiveProcessor::init(ConfigView* config)
             const char* locId = (const char *)i->c_str();
             if (!locId || locId[0] == '\0')
                 throw ConfigException("Source location id is empty or wasn't specified");
-            
+
             const char* locDir = sourcesCfg->getString(locId);
             if (!locDir || locDir[0] == '\0')
                 throw ConfigException("Source location value '%s' empty or wasn't specified", locId);
-            
+
             std::string location = locDir;
             locations.Insert(locId, location);
         }
@@ -90,13 +90,13 @@ void ArchiveProcessor::init(ConfigView* config)
     std::auto_ptr<ConfigView> indexatorCfgGuard(config->getSubConfig("Indexator"));
     indexator = new SmsIndex(baseDirectory.c_str());
     indexator->Init(indexatorCfgGuard.get());
-    
+
     smsc_log_info(log, "Init Ok.");
 }
 void ArchiveProcessor::Start()
 {
     MutexGuard guard(startLock);
-    
+
     if (!bStarted)
     {
         smsc_log_info(log, "Starting ...");
@@ -109,7 +109,7 @@ void ArchiveProcessor::Start()
 void ArchiveProcessor::Stop()
 {
     MutexGuard  guard(startLock);
-    
+
     if (bStarted)
     {
         smsc_log_info(log, "Stopping ...");
@@ -140,15 +140,15 @@ int ArchiveProcessor::Execute()
 void ArchiveProcessor::process()
 {
     MutexGuard guard(locationsLock);
-    
+
     smsc_log_debug(log, "Processing ...");
-    char* locId = 0; std::string* location = 0;  
+    char* locId = 0; std::string* location = 0;
     locations.First();
     while (locations.Next(locId, location))
     {
         if (!location) continue;
 
-        try 
+        try
         {
             Array<std::string> files;
             FileStorage::findFiles(*location, SMSC_PREV_ARCHIVE_FILE_EXTENSION, files);
@@ -156,7 +156,7 @@ void ArchiveProcessor::process()
                 smsc_log_debug(log, "No archive files found in '%s'", location->c_str());
                 continue;
             }
-            
+
             process(*location, files);
 
         } catch (std::exception& exc) {
@@ -168,7 +168,7 @@ void ArchiveProcessor::process()
     smsc_log_debug(log, "Processed.");
 }
 
-static bool switchDate(time_t date1, time_t date2, char* destinationFile, 
+static bool switchDate(time_t date1, time_t date2, char* destinationFile,
                        char* destinationDir=0, bool addExt=true)
 {
     tm dt1, dt2; gmtime_r(&date1, &dt1); gmtime_r(&date2, &dt2);
@@ -182,7 +182,7 @@ static bool switchDate(time_t date1, time_t date2, char* destinationFile,
         result = true;
     }
     if (date1 <= 0 || dt1.tm_hour != dt2.tm_hour) {
-        sprintf(destinationFile, "%02d%s%s", dt2.tm_hour, 
+        sprintf(destinationFile, "%02d%s%s", dt2.tm_hour,
                 (addExt) ? ".":"", (addExt) ? SMSC_PREV_ARCHIVE_FILE_EXTENSION:"");
         result = true;
     }
@@ -195,7 +195,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
 
     PersistentStorage*  arcDestination = 0;
     TextDumpStorage*    txtDestination = 0;
-    
+
     char destinationFileName[64];
     char destinationDirName[64];
     time_t lastProcessedTime = 0;
@@ -205,20 +205,23 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
     {
         std::string file = files[i];
         smsc_log_debug(log, "Processing archive file '%s' ...", file.c_str());
-        try 
+        try
         {
+            hrtime_t prtime=gethrtime();
+            long long count=0;
             {
                 PersistentStorage source(location, file);
                 while (true)
                 {
-                    SMSId id; SMS sms; 
+                    SMSId id; SMS sms;
                     if (!source.readRecord(id, sms, 0)) break;
-                    if (switchDate(lastProcessedTime, sms.lastTime, destinationFileName, destinationDirName, false) 
+                    count++;
+                    if (switchDate(lastProcessedTime, sms.lastTime, destinationFileName, destinationDirName, false)
                         || !arcDestination || !txtDestination)
                     {
                         if (arcDestination) delete arcDestination;
                         if (txtDestination) delete txtDestination;
-                        
+
                         std::string arcLocation = baseDirectory+'/'+destinationDirName;
                         std::string txtLocation = textDirectory+'/'+destinationDirName;
                         std::string arcFileName = destinationFileName;
@@ -228,34 +231,39 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
 
                         FileStorage::createDir(arcLocation);
                         FileStorage::createDir(txtLocation);
-                        
+
                         arcDestination = new PersistentStorage(arcLocation, arcFileName);
                         txtDestination = new TextDumpStorage(txtLocation, txtFileName);
 
                         lastProcessedTime = sms.lastTime;
                     }
-                    
+
                     fpos_t position = 0;
                     txtDestination->writeRecord(id, sms);
                     arcDestination->writeRecord(id, sms, &position);
-                    
+
                     //smsc_log_debug(log, "Archive file position=%lld", position);
-                    
+
                     indexator->IndexateSms(destinationDirName, id, (uint64_t)position, sms);
                 }
             }
+            prtime=gethrtime()-prtime;
+
+            double tmInSec=(double)prtime/1000000.0L;
+
+            smsc_log_info(log,"Processed file '%s' in %lld msec, %lld sms found, processing speed %lf sms/sec",file.c_str(),prtime/1000000,count,(double)count/tmInSec);
 
             FileStorage::deleteFile(location, file);
-        
+
         } catch (std::exception& exc) {
           smsc_log_error(log, "Error processing archive file '%s'. Details: %s", file.c_str(), exc.what());
-          try { 
+          try {
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
         } catch (...) {
           smsc_log_error(log, "Error processing archive file '%s'. Reason is unknown", file.c_str());
-          try { 
+          try {
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
@@ -271,7 +279,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
 Query::ProcessArchiveGuard::ProcessArchiveGuard()
 {
     Query::readLock.Lock();
-    
+
     MutexGuard wlg(Query::writeMonitor);
     while(Query::activeCounter > 0) {
         Query::writeMonitor.wait();
@@ -294,7 +302,7 @@ Query::ProcessQueryGuard::~ProcessQueryGuard()
 }
 
 Query::Query(ArchiveProcessor* processor, Socket *socket)
-    : ThreadedTask(), log(Logger::getInstance("smsc.store.ArchiveQuery")), 
+    : ThreadedTask(), log(Logger::getInstance("smsc.store.ArchiveQuery")),
         processor(processor), socket(socket), messagesToSend(0)
 {
 }
@@ -308,13 +316,13 @@ void Query::findDirsByQuery(QueryMessage* query, const std::string& location,
 {
     Array<std::string> allDirs;
     FileStorage::findDirs(location, allDirs);
-    
+
     tm tmdt; int64_t fd = -1; int64_t td = -1;
-    if (query->fromDate > 0) { 
-        gmtime_r(&(query->fromDate), &tmdt); 
+    if (query->fromDate > 0) {
+        gmtime_r(&(query->fromDate), &tmdt);
         fd = (tmdt.tm_year+1900)*10000+(tmdt.tm_mon+1)*100+tmdt.tm_mday;
     }
-    if (query->tillDate > 0) { 
+    if (query->tillDate > 0) {
         gmtime_r(&(query->tillDate), &tmdt);
         td = (tmdt.tm_year+1900)*10000+(tmdt.tm_mon+1)*100+tmdt.tm_mday;
     }
@@ -322,7 +330,7 @@ void Query::findDirsByQuery(QueryMessage* query, const std::string& location,
     {
         std::string dir = allDirs[i];
         if (sscanf(dir.c_str(), "%04d%02d%02d", &tmdt.tm_year, &tmdt.tm_mon, &tmdt.tm_mday) != 3) {
-            smsc_log_warn(log, "Invalid archive directory name format '%s'", dir.c_str());    
+            smsc_log_warn(log, "Invalid archive directory name format '%s'", dir.c_str());
             continue;
         }
         int64_t dd = tmdt.tm_year*10000+tmdt.tm_mon*100+tmdt.tm_mday;
@@ -332,18 +340,18 @@ void Query::findDirsByQuery(QueryMessage* query, const std::string& location,
         dirs.Push(DirEntry(dir, dd));
     }
 }
-void Query::findFilesByQuery(QueryMessage* query, const std::string& location, 
-                             uint64_t dirCode, Array<std::string>& files) 
+void Query::findFilesByQuery(QueryMessage* query, const std::string& location,
+                             uint64_t dirCode, Array<std::string>& files)
 {
     Array<std::string> allFiles;
     FileStorage::findFiles(location, SMSC_PREV_ARCHIVE_FILE_EXTENSION, allFiles);
-    
+
     tm tmdt; int64_t fd = -1; int64_t td = -1;
-    if (query->fromDate > 0) { 
-        gmtime_r(&(query->fromDate), &tmdt); 
+    if (query->fromDate > 0) {
+        gmtime_r(&(query->fromDate), &tmdt);
         fd = (tmdt.tm_year+1900)*1000000+(tmdt.tm_mon+1)*10000+tmdt.tm_mday*100+tmdt.tm_hour;
     }
-    if (query->tillDate > 0) { 
+    if (query->tillDate > 0) {
         gmtime_r(&(query->tillDate), &tmdt);
         td = (tmdt.tm_year+1900)*1000000+(tmdt.tm_mon+1)*10000+tmdt.tm_mday*100+tmdt.tm_hour;
     }
@@ -353,7 +361,7 @@ void Query::findFilesByQuery(QueryMessage* query, const std::string& location,
         std::string file = allFiles[i];
         int32_t hour;
         if (sscanf(file.c_str(), "%02d.arc", &hour) != 1) {
-            smsc_log_warn(log, "Invalid archive file name format '%s'", file.c_str());    
+            smsc_log_warn(log, "Invalid archive file name format '%s'", file.c_str());
             continue;
         }
         uint64_t dd = dirCode*100+hour;
@@ -372,14 +380,14 @@ bool Query::prepareIndex(QueryMessage* query, Array<Param>& index)
         Param param = query->parameters[i];
         switch(param.type)
         {
-        case T_SMS_ID: 
+        case T_SMS_ID:
             // Exclusive index by ID, other checks will be performed in checkMessage()
             index.Clean(); index.Push(param); noIdIndex = false;
             break;
         case T_FROM_DATE: case T_TILL_DATE:
             break;
         case T_SRC_ADDRESS: case T_DST_ADDRESS: case T_ABN_ADDRESS: {
-            // Skip masks for search index. All checks will be performed in checkMessage() 
+            // Skip masks for search index. All checks will be performed in checkMessage()
             const char* str = param.sValue.c_str();
             if (!str || str[0] == '\0') break;
             if (!strchr(str, '?')) index.Push(param);
@@ -409,13 +417,13 @@ bool Query::prepareIndex(QueryMessage* query, Array<Param>& index)
     return needIndex;
 }
 
-bool eqAdressWithMask(const Address& address, const std::string& mask) 
+bool eqAdressWithMask(const Address& address, const std::string& mask)
 {
     char aBuf[64];
     int al = address.toString(aBuf, sizeof(aBuf));
     if (al != mask.length()) return false;
     const char* aStr = aBuf; const char* mStr = mask.c_str();
-    
+
     for (;*aStr && *mStr; aStr++, mStr++)
         if (*aStr != *mStr && *mStr != '?') return false;
 
@@ -425,13 +433,13 @@ bool Query::checkMessage(QueryMessage* query, SMSId id, SMS& sms)
 {
     if (query->fromDate > 0 && sms.lastTime < query->fromDate) return false;
     if (query->tillDate > 0 && sms.lastTime > query->tillDate) return false;
-    
+
     if (query->bSrcMask && !eqAdressWithMask(sms.getOriginatingAddress(),          query->srcMask)) return false;
     if (query->bDstMask && !eqAdressWithMask(sms.getDealiasedDestinationAddress(), query->dstMask)) return false;
-    if (query->bAbnMask && !eqAdressWithMask(sms.getOriginatingAddress(),          query->abnMask) 
+    if (query->bAbnMask && !eqAdressWithMask(sms.getOriginatingAddress(),          query->abnMask)
                         && !eqAdressWithMask(sms.getDestinationAddress(),          query->abnMask)
                         && !eqAdressWithMask(sms.getDealiasedDestinationAddress(), query->abnMask)) return false;
-    
+
     return true;
 }
 bool Query::sendMessage(DaemonCommunicator& communicator, SMSId id, SMS& sms)
@@ -494,12 +502,12 @@ int Query::Execute()
     {
         uint64_t totalMessages = 0; messagesToSend = 0;
         Message* message = communicator.receive();
-        if (!message) 
+        if (!message)
             throw CommunicationException("Received message is NULL!");
         if (message->type != Message::QUERY && message->type != Message::COUNT)
             throw CommunicationException("Expected QUERY or COUNT message instead of %u type", message->type);
         query = (QueryMessage *)message;
-        
+
         Array<Param>   index; // trimmed parameters for indexator
         bool needIndex = prepareIndex(query, index);
         bool moreMessagesToSend = true;
@@ -508,7 +516,7 @@ int Query::Execute()
 
         Array<DirEntry> scanDirs;
         findDirsByQuery(query, baseDir, scanDirs);
-        
+
         for (int i=0; i<scanDirs.Count() && moreMessagesToSend; i++)
         {
             DirEntry dir = scanDirs[i];
@@ -517,14 +525,14 @@ int Query::Execute()
             if (needIndex)
             {
                 if (!indexator) throw Exception("Indexator is not avaliable !");
-                
+
                 ResultArray indecies;
                 indexator->QuerySms(dir.dir.c_str(), index, indecies);
 
                 for (int j=0; j<indecies.Count() && moreMessagesToSend; j++)
                 {
                     QueryResult& idx = indecies[j];
-                    
+
                     /*smsc_log_info(log, "Index offset: %lld, time: %ld %s", idx.offset,
                                   idx.lastTryTime, ctime((time_t *)&idx.lastTryTime));*/
                     checkDateForDir(dir.code, idx.lastTryTime);
@@ -576,7 +584,7 @@ int Query::Execute()
                 }
             }
         }
-        
+
         if (query->type != Message::COUNT) {
             EmptyMessage empty;
             communicator.send(&empty);
@@ -608,5 +616,3 @@ int Query::Execute()
 
 
 }}
-
-
