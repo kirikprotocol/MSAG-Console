@@ -79,10 +79,10 @@ function setSort(sorting)
 }
 function setFilter(filtering)
 {
-	if (filtering == "<%=bean.getFilter()%>")
+	if (filtering == "<%=bean.getSort()%>")
 		opForm.sort.value = "-<%=bean.getSort()%>";
 	else
-		opForm.sort.value = sorting;
+		opForm.sort.value = filtering;
 	opForm.submit();
 	return false;
 }
@@ -116,16 +116,18 @@ java.util.HashMap aq = new java.util.HashMap();
  aq.put("onenter", "return setSort('Route ID')");
 
 java.util.Hashtable o = new java.util.Hashtable();
-o.put("name", "1");
-o.put("active", "2");
-o.put("reports", "3");
-o.put("allow", "4");
-o.put("billing", "5");
-o.put("archiving", "6");
+o.put("Sources Subj", "1");
+o.put("Sources Mask", "2");
+o.put("Dest Subj", "3");
+o.put("Dest Mask", "4");
+o.put("SMEs", "5");
+o.put("Strict Filter", "6");
+o.put("Show Sources list", "7");
+o.put("Show Dest list", "8");
 %>
-<input:select name="mbFilter" default="1"
+<input:select name="filterSelect" default="1"
     attributes="<%= as %>" options="<%= o %>"  />
-    &nbsp; Query: &nbsp;<input:text name="mbQuery"  />
+    &nbsp; Query: &nbsp;<input:text name="query"  />
 
 <br>
 <table class=list cellspacing=0 cellpadding=0 id=ROUTE_LIST_TABLE>
