@@ -428,13 +428,8 @@ void StoreManager::doReplaceSms(StorageConnection* connection,
         throw;
     }
     
-    // Set Body fields here !!!
-    char* newStrMsg = new char[newMsgLen+1];
-    memcpy(newStrMsg, (const char *)newMsg, newMsgLen);
-    newStrMsg[newMsgLen] = '\0';
-    std::string newStringMessage(newStrMsg);
-    delete newStrMsg;
-    body.setStrProperty(Tag::SMPP_SHORT_MESSAGE, newStringMessage);
+    body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, (const char*)newMsg,
+                        (unsigned)newMsgLen); 
     body.setIntProperty(Tag::SMPP_SM_LENGTH, (uint32_t)newMsgLen);
 
     ReplaceStatement* replaceStmt;
