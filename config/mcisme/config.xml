@@ -69,6 +69,34 @@
 	    </section>
 	</section>
 
+    <section name="Reasons">
+
+      <section name="Absent">
+        <param name="cause" type="int">20</param>
+        <param name="inform" type="bool">true</param>
+      </section>
+
+      <section name="Busy">
+        <param name="cause" type="int">17</param>
+        <param name="inform" type="bool">true</param>
+      </section>
+
+      <section name="NoReply">
+        <param name="cause" type="int">19</param>
+        <param name="inform" type="bool">true</param>
+      </section>
+
+      <section name="Other">
+        <param name="cause" type="int">21</param>
+        <param name="inform" type="bool">false</param>
+      </section>
+
+      <section name="Unconditional">
+        <param name="cause" type="int">21</param>
+        <param name="inform" type="bool">false</param>
+      </section>
+    </section>
+    
     <section name="Templates">
 
       <section name="Inform">
