@@ -1301,6 +1301,8 @@ SMSId CachedStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
     MutexGuard cacheGuard(cacheMutex);
     if (retId != id) cache->delSms(retId);
     cache->putSms(id, sm);
+
+    return retId;
 }
 
 void CachedStore::retriveSms(SMSId id, SMS &sms)
