@@ -73,14 +73,19 @@
   <td><input class=txt name=maxRowsPerMessage value="<%=StringEncoderDecoder.encode(bean.getMaxRowsPerMessage())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=enableCallers>Enable max callers constraint</label></th>
-  <td><input class=check type=checkbox name=enabledCallers
-             id=enableCallers value=true <%=bean.isEnabledCallers() ? "checked" : ""%> onClick="switchEnableCallers();"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th id=maxCallersCountLabel>Max distinct callers for abonent</th>
-  <td><input class=txt name=maxCallersCount id=maxCallersCount
-             value="<%=StringEncoderDecoder.encode(bean.getMaxCallersCount())%>"></td>
+  <th><label for=constraintType>Abonent traffic constraint</label></th>
+  <td>
+  <select name=constraintType id=constraintType onChange="switchConstraint();">
+    <option value="<%= Options.NO_CONSTRAINT%>" <%=
+    (bean.getConstraintType() == Options.NO_CONSTRAINT) ? "selected":""%>>No constraint defined</option>
+    <option value="<%= Options.MAX_MESSAGES_CONSTRAINT%>" <%=
+    (bean.getConstraintType() == Options.MAX_MESSAGES_CONSTRAINT) ? "selected":""%>>Max messages per abonent</option>
+    <option value="<%= Options.MAX_CALLERS_CONSTRAINT%>" <%=
+    (bean.getConstraintType() == Options.MAX_CALLERS_CONSTRAINT) ? "selected":""%>>Max disctinct callers</option>
+  </select>
+  <input class=txt name=constraintValue id=constraintValue maxlength=3 style="width:54px"
+         value="<%=StringEncoderDecoder.encode(bean.getConstraintValue())%>">
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Inform abonents</th>
@@ -137,6 +142,15 @@
   <td><input class=txt name=smscPassword value="<%=StringEncoderDecoder.encode(bean.getSmscPassword())%>"></td>
 </tr>
 </table>
+<script>
+function switchConstraint()
+{
+  opForm.all.constraintValue.disabled = (opForm.all.constraintType.value == <%= Options.NO_CONSTRAINT%>);
+  if (!opForm.all.constraintValue.disabled) opForm.all.constraintValue.focus();
+  else opForm.all.constraintValue.value = '';
+}
+switchConstraint();
+</script>
 <div class=page_subtitle>Circuits settings</div>
 <table class=properties_list cellspacing=0  width="100%" <%rowN=0;%>>
 <col width="20%">
@@ -174,14 +188,6 @@
   </td>
 </tr>
 </table>
-<script>
-function switchEnableCallers() {
-  opForm.all.maxCallersCount.disabled = !(opForm.all.enableCallers.checked);
-  opForm.all.maxCallersCountLabel.disabled = !(opForm.all.enableCallers.checked);
-  if (!opForm.all.enableCallers.checked) opForm.all.maxCallersCount.value = '';
-}
-switchEnableCallers();
-</script>
 <table class=properties_list cellspacing=0  width="100%">
 <col width="38%">
 <col width="1%">

@@ -32,8 +32,12 @@ public class Options extends MCISmeBean
   private boolean forceNotify = false;
   private boolean defaultInform = false;
   private boolean defaultNotify = false;
-  private boolean enabledCallers = false;
-  private int maxCallersCount = -1;
+
+  public final static int NO_CONSTRAINT           = 0;
+  public final static int MAX_CALLERS_CONSTRAINT  = 10;
+  public final static int MAX_MESSAGES_CONSTRAINT = 20;
+  private int constraintType  = NO_CONSTRAINT;
+  private int constraintValue = -1;
 
   private int smppThreadPoolMax = 0;
   private int smppThreadPoolInit = 0;
@@ -140,11 +144,25 @@ public class Options extends MCISmeBean
         }
         setDefaultReasonsMask(defaultReasonsMask);
 
+        int maxCallersCount = -1;
         try { maxCallersCount = getConfig().getInt("MCISme.maxCallersCount"); } catch (Throwable th) {
           maxCallersCount = -1;
           logger.warn("Parameter 'MCISme.maxCallersCount' wasn't specified. Callers check disabled");
         }
-        enabledCallers = (maxCallersCount > 0);
+        int maxMessagesCount = -1;
+        try { maxMessagesCount = getConfig().getInt("MCISme.maxMessagesCount"); } catch (Throwable th) {
+          maxMessagesCount = -1;
+          logger.warn("Parameter 'MCISme.maxMessagesCount' wasn't specified. Messages check disabled");
+        }
+        if (maxCallersCount >= 0 && maxMessagesCount >= 0)
+          throw new Exception("Only one constraint could be defined. Either 'callers', or 'messages'");
+        if (maxCallersCount < 0 && maxMessagesCount < 0) {
+          constraintValue = -1; constraintType = NO_CONSTRAINT;
+        } else if (maxMessagesCount >= 0) {
+          constraintValue = maxMessagesCount; constraintType = MAX_MESSAGES_CONSTRAINT;
+        } else if (maxCallersCount >= 0) {
+          constraintValue = maxCallersCount; constraintType = MAX_CALLERS_CONSTRAINT;
+        }
 
         try {
           mciProfLocation = getConfig().getString(MCI_PROF_LOCATION_PARAM);
@@ -271,7 +289,17 @@ public class Options extends MCISmeBean
     getConfig().setBool  ("MCISme.defaultInform", defaultInform);
     getConfig().setBool  ("MCISme.defaultNotify", defaultNotify);
     getConfig().setInt   ("MCISme.defaultReasonsMask", getDefaultReasonsMask());
-    getConfig().setInt   ("MCISme.maxCallersCount", (!enabledCallers || maxCallersCount < 0) ? -1:maxCallersCount);
+
+    if (constraintType == NO_CONSTRAINT) {
+      getConfig().setInt("MCISme.maxCallersCount", -1);
+      getConfig().setInt("MCISme.maxMessagesCount", -1);
+    } else if (constraintType == MAX_MESSAGES_CONSTRAINT) {
+      getConfig().setInt("MCISme.maxCallersCount", -1);
+      getConfig().setInt("MCISme.maxMessagesCount", constraintValue);
+    } else if (constraintType == MAX_CALLERS_CONSTRAINT) {
+      getConfig().setInt("MCISme.maxCallersCount", constraintValue);
+      getConfig().setInt("MCISme.maxMessagesCount", -1);
+    }
 
     getConfig().setString(MCI_PROF_LOCATION_PARAM, mciProfLocation);
     if (mciProfLocation != null && mciProfLocation.trim().length() > 0) {
@@ -1004,33 +1032,32 @@ public class Options extends MCISmeBean
     this.mciSmeAddresses = mciSmeAddresses;
   }
 
-  public int getMaxCallersCountInt() {
-    return maxCallersCount;
+  public int getConstraintValueInt() {
+    return constraintValue;
   }
-  public void setCallersCountInt(int maxCallersCount) {
-    this.maxCallersCount = maxCallersCount;
-    this.enabledCallers = (maxCallersCount > 0);
+  public void setConstraintValueInt(int value) {
+    this.constraintValue = value;
   }
-  public String getMaxCallersCount() {
-    return (maxCallersCount < 0 || !this.enabledCallers) ? "":String.valueOf(maxCallersCount);
+  public String getConstraintValue() {
+    return (constraintValue < 0) ? "":String.valueOf(constraintValue);
   }
-  public void setMaxCallersCount(String maxCallersCount)
+  public void setConstraintValue(String constraintValue)
   {
-    if (maxCallersCount == null || maxCallersCount.trim().length() <= 0) this.maxCallersCount = -1;
+    if (constraintValue == null || constraintValue.trim().length() <= 0) this.constraintValue = -1;
     else {
       try {
-        this.maxCallersCount = Integer.decode(maxCallersCount).intValue();
+        this.constraintValue = Integer.decode(constraintValue).intValue();
       } catch (NumberFormatException e) {
-        logger.debug("Invalid int MCISme.maxCallersCount parameter value: " + maxCallersCount + '"', e);
+        logger.debug("Invalid int constraint value: " + constraintValue + '"', e);
       }
     }
   }
 
-  public boolean isEnabledCallers() {
-    return enabledCallers;
+  public int getConstraintType() {
+    return constraintType;
   }
-  public void setEnabledCallers(boolean enabledCallers) {
-    this.enabledCallers = enabledCallers;
+  public void setConstraintType(int constraintType) {
+    this.constraintType = constraintType;
   }
 
 }
