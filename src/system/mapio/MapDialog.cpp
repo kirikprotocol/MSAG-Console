@@ -114,7 +114,7 @@ void Convert7BitToSMSC7Bit(
 }
 
 unsigned ConvertText27bit(
-  const unsigned char* text, unsigned chars, unsigned char* bit7buf)
+  const unsigned char* text, unsigned chars, unsigned char* bit7buf,unsigned* elen)
 {
   //__require__(chars<=255);
   if ( chars > 160 ){
@@ -123,9 +123,10 @@ unsigned ConvertText27bit(
   }
   unsigned char* base = bit7buf;
   unsigned shift = 0;
+  (*elen) = 0;
   for ( unsigned i=0; i< chars; ++i ){
 #define __pchar(x) PutChar(bit7buf,shift,x)
-#define __escape(x) __pchar(0x1b); __pchar(x)
+#define __escape(x) __pchar(0x1b); __pchar(x); (*elen) += 2;
     switch(text[i]){
 		case '^': __escape(0x14); break;
 		case '\f':__escape(0x0a); break;
@@ -138,6 +139,7 @@ unsigned ConvertText27bit(
 		case '\\':__escape(0x2f); break;
 		default:
       PutChar(bit7buf,shift,lll_8bit_2_7bit[text[i]]);
+      (*elen) += 1;
     }
 #undef __pchar
 #undef __escape
@@ -645,8 +647,11 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   if ( encoding == MAP_OCTET7BIT_ENCODING  || encoding == MAP_LATIN1_ENCODING ){
     unsigned text_len;
     const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
-    *pdu_ptr++ = text_len;
-    pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr);
+    unsigned elen;
+    unsigned bytes;
+    bytes = ConvertText27bit(text,text_len,pdu_ptr,&elen);
+    *pdu_ptr++ = elen;
+    pdu_ptr += bytes;
   }else if ( encoding == MAP_SMSC7BIT_ENCODING  ){ // 7bit
       unsigned text_len;
       const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
