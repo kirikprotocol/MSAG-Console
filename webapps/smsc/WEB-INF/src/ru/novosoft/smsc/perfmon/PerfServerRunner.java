@@ -115,7 +115,6 @@ public class PerfServerRunner extends Thread {
         snap.queueSize = readNetworkInt(is);
         snap.uptime = readNetworkInt(is);
         snap.sctime = readNetworkInt(is);
-        logger.debug("Got performance data: queue="+snap.queueSize+" "+ snap.uptime + "/" + (new Date(((long) snap.sctime) * 1000)).toString());
     }
 
     void fillDebugSnap(PerfSnap snap) {
