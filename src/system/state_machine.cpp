@@ -1723,13 +1723,17 @@ StateType StateMachine::submit(Tuple& t)
           }
         }
       }else*/
+      if(!sandf)
       {
         if(sms->lastResult!=Status::OK)
         {
           sm->smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
         }else
         {
-          sm->smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
+          if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1)//datagram mode
+          {
+            sm->smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
+          }
         }
         if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1 ||
            ((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2 && sms->lastResult!=Status::OK))
@@ -2951,6 +2955,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
       if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
       {
+        smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
         SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
         if(src_proxy)
         {
@@ -3818,8 +3823,9 @@ void StateMachine::submitResp(Tuple& t,SMS* sms,int status)
 
 void StateMachine::finalizeSms(SMSId id,SMS& sms)
 {
-  if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)
+  if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)//forward mode (transaction)
   {
+    smsc->registerStatisticalEvent(sms.lastResult==0?StatEvents::etSubmitOk:StatEvents::etSubmitErr,&sms);
     SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
     if(src_proxy)
     {
