@@ -121,8 +121,17 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	else
 	{
 		__require__(pduData->strProps.count("smsId"));
+		const string& smsId = pduData->strProps["smsId"];
+		for (int i = 0; i < smsId.length(); i++)
+		{
+			if (!isdigit(smsId[i]))
+			{
+				res.insert(ESME_RINVMSGID);
+				break;
+			}
+		}
 		__require__(replacePduData->strProps.count("smsId"));
-		if (pduData->strProps["smsId"] != replacePduData->strProps["smsId"])
+		if (smsId != replacePduData->strProps["smsId"])
 		{
 			res.insert(ESME_RINVMSGID);
 		}
@@ -158,10 +167,22 @@ set<uint32_t> SmppPduChecker::checkQuerySm(PduData* pduData, PduData* origPduDat
 	{
 		res.insert(ESME_RINVMSGID);
 	}
+	if (!pdu->get_messageId())
+	{
+		res.insert(ESME_RINVMSGID);
+	}
 	else
 	{
+		for (int i = 0; pdu->get_messageId()[i]; i++)
+		{
+			if (!isdigit(pdu->get_messageId()[i]))
+			{
+				res.insert(ESME_RINVMSGID);
+				break;
+			}
+		}
 		__require__(origPduData->strProps.count("smsId"));
-		if (origPduData->strProps["smsId"] != nvl(pdu->get_messageId()))
+		if (origPduData->strProps["smsId"] != pdu->get_messageId())
 		{
 			res.insert(ESME_RINVMSGID);
 		}
@@ -190,36 +211,44 @@ set<uint32_t> SmppPduChecker::checkCancelSm(PduData* pduData,
 	//cancel одиночной sms
 	if (pdu->get_messageId())
 	{
+		for (int i = 0; pdu->get_messageId()[i]; i++)
+		{
+			if (!isdigit(pdu->get_messageId()[i]))
+			{
+				res.insert(ESME_RINVMSGID);
+				break;
+			}
+		}
 		if (pdu->get_serviceType())
 		{
 			res.insert(ESME_RCANCELFAIL);
 		}
 		else if (!cancelPduData)
 		{
-			res.insert(ESME_RINVMSGID);
+			res.insert(ESME_RCANCELFAIL); //ESME_RINVMSGID
 		}
 		else if (cancelPduFlag != PDU_REQUIRED_FLAG)
 		{
 			res.insert(ESME_RCANCELFAIL);
-			res.insert(ESME_RINVMSGID); //если sms уже удалена архиватором
+			//res.insert(ESME_RINVMSGID); //если sms уже удалена архиватором
 		}
 		else
 		{
 			__require__(cancelPduData->strProps.count("smsId"));
 			if (cancelPduData->strProps["smsId"] != nvl(pdu->get_messageId()))
 			{
-				res.insert(ESME_RINVMSGID);
+				res.insert(ESME_RCANCELFAIL); //ESME_RINVMSGID
 			}
 			__require__(cancelPduData->pdu->get_commandId() == SUBMIT_SM);
 			PduSubmitSm* cancelPdu = reinterpret_cast<PduSubmitSm*>(cancelPduData->pdu);
 			if (pdu->get_source() != cancelPdu->get_message().get_source())
 			{
-				res.insert(ESME_RINVSRCADR);
+				res.insert(ESME_RCANCELFAIL); //ESME_RINVSRCADR
 			}
 			if (pdu->get_dest() != nullAddr &&
 				pdu->get_dest() != cancelPdu->get_message().get_dest())
 			{
-				res.insert(ESME_RINVDSTADR);
+				res.insert(ESME_RCANCELFAIL); //ESME_RINVDSTADR
 			}
 		}
 	}
