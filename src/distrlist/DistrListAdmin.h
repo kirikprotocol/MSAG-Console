@@ -68,7 +68,8 @@ namespace smsc { namespace distrlist
         virtual ~DistrListAdmin() {};
         
         virtual void addDistrList(const DistrList& list) 
-            throw(SQLException, ListAlreadyExistsException) = 0;
+            throw(SQLException, ListAlreadyExistsException, PrincipalNotExistsException,
+                  IllegalListException, ListCountExceededException) = 0;
         virtual void deleteDistrList(string dlName)
             throw(SQLException, ListNotExistsException) = 0;
         virtual DistrList getDistrList(string dlName)
@@ -83,9 +84,14 @@ namespace smsc { namespace distrlist
         
         virtual void addPrincipal(const Principal& prc) 
             throw(SQLException, PrincipalAlreadyExistsException) = 0;
+        //virtual void deletePrincipal(const Address& address) 
+        //    throw(SQLException, PrincipalNotExistsException, PrincipalInUseException) = 0;
+        //virtual void changePrincipal(const Principal& prc) 
+        //    throw(SQLException, PrincipalNotExistsException, IllegalPrincipalException) = 0;
         
         virtual void addMember(string dlName, const Address& member) 
-            throw(SQLException, ListNotExistsException, MemberAlreadyExistsException) = 0;
+            throw(SQLException, ListNotExistsException, 
+                  MemberAlreadyExistsException, MemberCountExceededException) = 0;
         virtual void deleteMember(string dlName, const Address& member) 
             throw(SQLException, ListNotExistsException, MemberNotExistsException) = 0;
         virtual void deleteMembers(string dlName) 

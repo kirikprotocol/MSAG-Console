@@ -32,9 +32,14 @@ const char* CHECK_DL_SQL =
 "SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE LIST=:LIST";
 const char* ADD_DL_SQL =
 "INSERT INTO DL_SET (LIST, MAX_EL, OWNER) VALUES (:LIST, :MAX_EL, :OWNER)";
+const char* GET_PRINCIPAL_SQL =
+"SELECT MAX_LST, MAX_EL FROM DL_PRINCIPALS WHERE ADDRESS=:OWNER";
+const char* COUNT_ONWNER_DLS_SQL =
+"SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE OWNER=:OWNER";
 
 void DistrListManager::addDistrList(const DistrList& list) 
-    throw(SQLException, ListAlreadyExistsException)
+    throw(SQLException, ListAlreadyExistsException, 
+          PrincipalNotExistsException, IllegalListException, ListCountExceededException)
 {
     const char* dlNameStr  = list.name.c_str();
     const char* dlOwnerStr = (list.system) ? 0: ((list.owner.length() > 0) ? list.owner.c_str():0);
@@ -60,6 +65,47 @@ void DistrListManager::addDistrList(const DistrList& list)
             throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
         if (checkListRs->getUint32(1))
             throw ListAlreadyExistsException("DL '%s' already exists", dlNameStr);
+
+        if (dlOwnerStr)
+        {
+
+            std::auto_ptr<Statement> getPrincipalGuard(connection->createStatement(GET_PRINCIPAL_SQL));
+            Statement* getPrincipal = getPrincipalGuard.get();
+            if (!getPrincipal)        
+                throw SQLException(FAILED_TO_CREATE_STATEMENT);
+
+            getPrincipal->setString(1, dlOwnerStr);
+
+            std::auto_ptr<ResultSet> getPrincipalRsGuard(checkList->executeQuery());
+            ResultSet* getPrincipalRs = getPrincipalRsGuard.get();
+            if (!getPrincipalRs) 
+                throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+            if (!getPrincipalRs->fetchNext())
+                throw PrincipalNotExistsException("Principal for owner '%s' not exists", dlOwnerStr);
+            
+            int maxLst = getPrincipalRs->getInt32(1);
+            int maxEl  = getPrincipalRs->getInt32(2);
+            if (list.maxEl<=0  || list.maxEl > maxEl)
+                throw IllegalListException("DL's maxEl=%ld is invalid, principal value is %ld",
+                                           list.maxEl, maxEl);
+
+            std::auto_ptr<Statement> countDlsGuard(connection->createStatement(COUNT_ONWNER_DLS_SQL));
+            Statement* countDls = countDlsGuard.get();
+            if (!countDls)        
+                throw SQLException(FAILED_TO_CREATE_STATEMENT);
+
+            countDls->setString(1, dlOwnerStr);
+
+            std::auto_ptr<ResultSet> countDlsRsGuard(countDls->executeQuery());
+            ResultSet* countDlsRs = countDlsRsGuard.get();
+            if (!countDlsRs || !countDlsRs->fetchNext()) 
+                throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+
+            int lists = countDlsRs->getInt32(1);
+            if (lists >= maxLst)
+                throw ListCountExceededException("DL count exceeded for owner '%s', maximum is %ld", 
+                                                 dlOwnerStr, maxLst); 
+        }
         
         std::auto_ptr<Statement> addListGuard(connection->createStatement(ADD_DL_SQL));
         Statement* addList = addListGuard.get();
@@ -476,11 +522,14 @@ void DistrListManager::addPrincipal(const Principal& prc)
  
 const char* CHECK_MEMBER_SQL = (const char*)
 "SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=:LIST AND ADDRESS=:ADDRESS";
+const char* COUNT_MEMBERS_SQL = (const char*)
+"SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=:LIST";
 const char* ADD_MEMBER_SQL   = (const char*)
 "INSERT INTO DL_MEMBERS (LIST, ADDRESS) VALUES (:LIST, :ADDRESS)";
 
 void DistrListManager::addMember(string dlName, const Address& member) 
-    throw(SQLException, ListNotExistsException, MemberAlreadyExistsException)
+    throw(SQLException, ListNotExistsException, 
+          MemberAlreadyExistsException, MemberCountExceededException)
 {
     const char* dlNameStr = dlName.c_str();
     const char* memberStr = member.toString().c_str();
@@ -493,7 +542,8 @@ void DistrListManager::addMember(string dlName, const Address& member)
         if (!(connection = ds.getConnection())) 
             throw SQLException(FAILED_TO_OBTAIN_CONNECTION);
         
-        std::auto_ptr<Statement> checkListGuard(connection->createStatement(CHECK_DL_SQL));
+        // Check dl existence & get maxEl constraint
+        std::auto_ptr<Statement> checkListGuard(connection->createStatement(GET_DL_SQL));
         Statement* checkList = checkListGuard.get();
         if (!checkList)        
             throw SQLException(FAILED_TO_CREATE_STATEMENT);
@@ -502,11 +552,14 @@ void DistrListManager::addMember(string dlName, const Address& member)
         
         std::auto_ptr<ResultSet> checkListRsGuard(checkList->executeQuery());
         ResultSet* checkListRs = checkListRsGuard.get();
-        if (!checkListRs || !checkListRs->fetchNext()) 
+        if (!checkListRs) 
             throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
-        if (!checkListRs->getUint32(1))
+        if (!checkListRs->fetchNext())
             throw ListNotExistsException("DL '%s' not exists", dlNameStr);
-        
+
+        int maxMembers = checkListRs->getInt32(2);
+            
+        // Check member existence
         std::auto_ptr<Statement> checkMemberGuard(connection->createStatement(CHECK_MEMBER_SQL));
         Statement* checkMember = checkMemberGuard.get();
         if (!checkMember)        
@@ -522,7 +575,26 @@ void DistrListManager::addMember(string dlName, const Address& member)
         if (checkMemberRs->getUint32(1))
             throw MemberAlreadyExistsException("Member '%s' already exists in DL '%s'",
                                                memberStr, dlNameStr);
+        
+        // Check members count constraint 
+        std::auto_ptr<Statement> countMembersGuard(connection->createStatement(COUNT_MEMBERS_SQL));
+        Statement* countMembers = countMembersGuard.get();
+        if (!countMembers)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
+        
+        countMembers->setString(1, dlNameStr);
+        
+        std::auto_ptr<ResultSet> countMembersRsGuard(countMembers->executeQuery());
+        ResultSet* countMembersRs = countMembersRsGuard.get();
+        if (!countMembersRs || !countMembersRs->fetchNext()) 
+            throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
 
+        int members = countMembersRs->getUint32(1);
+        if (members >= maxMembers)
+            throw MemberCountExceededException("Members count exceeded in DL '%s', maximum is %ld ",
+                                               dlNameStr, maxMembers);
+        
+        // Add member
         std::auto_ptr<Statement> addMemberGuard(connection->createStatement(ADD_MEMBER_SQL));
         Statement* addMember = addMemberGuard.get();
         if (!addMember)        
@@ -530,7 +602,6 @@ void DistrListManager::addMember(string dlName, const Address& member)
 
         addMember->setString(1, dlNameStr);
         addMember->setString(2, memberStr);
-        
         addMember->executeUpdate();
         connection->commit();
     }

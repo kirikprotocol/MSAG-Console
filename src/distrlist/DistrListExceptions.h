@@ -79,6 +79,30 @@ namespace smsc { namespace distrlist
         virtual ~PrincipalNotExistsException() throw() {};
     };
     
+    class PrincipalInUseException : public Exception
+    {
+    public:
+
+        PrincipalInUseException() : Exception() {};
+        PrincipalInUseException(const char* fmt,...) 
+            : Exception() { SMSC_UTIL_EX_FILL(fmt); };
+        PrincipalInUseException(const Exception& exc)
+            : Exception(exc.what()) {};
+        virtual ~PrincipalInUseException() throw() {};
+    };
+    
+    class IllegalPrincipalException : public Exception
+    {
+    public:
+
+        IllegalPrincipalException() : Exception() {};
+        IllegalPrincipalException(const char* fmt,...) 
+            : Exception() { SMSC_UTIL_EX_FILL(fmt); };
+        IllegalPrincipalException(const Exception& exc)
+            : Exception(exc.what()) {};
+        virtual ~IllegalPrincipalException() throw() {};
+    };
+    
     class ListNotExistsException : public Exception
     {
     public:
@@ -101,6 +125,30 @@ namespace smsc { namespace distrlist
         ListAlreadyExistsException(const Exception& exc)
             : Exception(exc.what()) {};
         virtual ~ListAlreadyExistsException() throw() {};
+    };
+    
+    class IllegalListException : public Exception
+    {
+    public:
+
+        IllegalListException() : Exception() {};
+        IllegalListException(const char* fmt,...) 
+            : Exception() { SMSC_UTIL_EX_FILL(fmt); };
+        IllegalListException(const Exception& exc)
+            : Exception(exc.what()) {};
+        virtual ~IllegalListException() throw() {};
+    };
+
+    class ListCountExceededException : public Exception
+    {
+    public:
+
+        ListCountExceededException() : Exception() {};
+        ListCountExceededException(const char* fmt,...) 
+            : Exception() { SMSC_UTIL_EX_FILL(fmt); };
+        ListCountExceededException(const Exception& exc)
+            : Exception(exc.what()) {};
+        virtual ~ListCountExceededException() throw() {};
     };
     
     class MemberNotExistsException : public Exception
@@ -126,6 +174,18 @@ namespace smsc { namespace distrlist
         MemberAlreadyExistsException(const Exception& exc)
             : Exception(exc.what()) {};
         virtual ~MemberAlreadyExistsException() throw() {};
+    };
+    
+    class MemberCountExceededException : public Exception
+    {
+    public:
+
+        MemberCountExceededException() : Exception() {};
+        MemberCountExceededException(const char* fmt,...) 
+            : Exception() { SMSC_UTIL_EX_FILL(fmt); };
+        MemberCountExceededException(const Exception& exc)
+            : Exception(exc.what()) {};
+        virtual ~MemberCountExceededException() throw() {};
     };
 
 }}
