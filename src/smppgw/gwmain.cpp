@@ -58,9 +58,9 @@ int main(int argc,char* argv[])
     cfgs.smemanconfig=&smemancfg;
     smsc_log_info(logger,  "SME configuration loaded" );
     smsc::util::config::alias::AliasConfig aliascfg;
-    aliascfg.load(findConfigFile("aliases.xml"));
+    //aliascfg.load(findConfigFile("aliases.xml"));
     cfgs.aliasconfig=&aliascfg;
-    smsc_log_info(logger,  "Alias configuration loaded" );
+    //smsc_log_info(logger,  "Alias configuration loaded" );
     smsc::util::config::route::RouteConfig rc;
     rc.load(findConfigFile("routes.xml"));
     cfgs.routesconfig=&rc;
