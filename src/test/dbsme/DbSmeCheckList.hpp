@@ -78,20 +78,35 @@ void incorrectInputTc()
 		"ќтсутствуют об€зательные параметры");
 	__reg_tc__("submitDbSmeCmd.incorrect.input.extraParams",
 		"ѕрисутствуют лишние параметры");
-	__reg_tc__("submitDbSmeCmd.incorrect.input.intMismatch",
-		"ќтправл€етс€ int32, ожидаетс€ int16");
-	__reg_tc__("submitDbSmeCmd.incorrect.input.floatIntMismatch",
-		"ќтправл€етс€ float или double, ожидаетс€ int16 или int32");
-	__reg_tc__("submitDbSmeCmd.incorrect.input.stringIntMismatch",
-		"отправл€етс€ строка, ожидаетс€ число");
-	__reg_tc__("submitDbSmeCmd.incorrect.input.stringDateMismatch",
-		"ќтправл€етс€ строка, ожидаетс€ дата");
-	__reg_tc__("submitDbSmeCmd.incorrect.input.dateMismatch",
-		"ќтправл€етс€ дата, ожидаетс€ тоже дата, но в другом формате");
+	//dateFormat
+	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat",
+		"‘ормат даты не соответствует ожидаемому");
+	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidDay",
+		"Ќеправильное задано число (равно 0, больше 31 и т.п.)");
+	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidMonth",
+		"Ќеправильно задан мес€ца (равен 0, больше 13, ожидаетс€ Jan, получено 01 и т.п.)");
+	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidYear",
+		"Ќеправильно задан год (по формату ожидаетс€ 2002, получено 02 и наоборот)");
+	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidHour",
+		"Ќеправильно задан час (0 am, 0 pm, 13am, 13 pm, 24 часа)");
+	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidMinute",
+		"Ќеправильно задана минута (60 минут)");
+	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidSecond",
+		"Ќеправильно задана секунда (60 секунд)");
+	__reg_tc__("submitDbSmeCmd.incorrect.dateFormat.invalidIndicator",
+		"Ќеправильно задан индикатор am/pm");
+	//invalidNumber
+	__reg_tc__("submitDbSmeCmd.incorrect.invalidNumber",
+		"Ќедопустимые значени€ числовых параметров");
+	__reg_tc__("submitDbSmeCmd.incorrect.invalidNumber.int",
+		"Ќедопустимые значени€ параметров int8, int16, int32, int64 (больше максимально допустимого, меньше минимально допустимого, нецелочисленное, строка и т.п.)");
+	__reg_tc__("submitDbSmeCmd.incorrect.invalidNumber.uint",
+		"Ќедопустимые значени€ параметров uint8, uint16, uint32, uint64 (больше максимально допустимого, меньше минимально допустимого, нецелочисленное, строка и т.п.)");
+	__reg_tc__("submitDbSmeCmd.incorrect.invalidNumber.float",
+		"Ќедопустимые значени€ параметров float, double, long-double (больше максимально допустимого, строка и т.п.)");
+	//
 	__reg_tc__("submitDbSmeCmd.incorrect.input.stringTooLong",
 		"ƒлина строки больше длины пол€");
-	__reg_tc__("submitDbSmeCmd.incorrect.input.numTooLong",
-		"–азр€дность числа больше длины пол€");
 }
 
 void processDbSmeRes()
