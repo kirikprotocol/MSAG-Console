@@ -279,6 +279,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_int__(uint8_t, dataCoding, rand0(255));
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
 	__set_ostr__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
+	mask &= 0xfffffffffffff7ff; //исключить userMessageReference
 	setupRandomCorrectOptionalParams(pdu->get_optional(), mask, check);
 }
 
@@ -302,7 +303,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 
 #define __set_optional_int__(type, field, value) \
 	if (mask[pos++]) { \
-		__trace__("set_optional_int: " #field); \
+		__trace2__("set_optional_int[%d]: " #field, pos - 1); \
 		type tmp_##field = value; \
 		opt.set_##field(tmp_##field); \
 		if (check) { intMap.insert(IntMap::value_type(#field, tmp_##field)); } \
@@ -311,7 +312,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 #define __set_optional_intarr__(field, value, length) \
 	if (mask[pos++]) { \
 		__require__(length <= 4); \
-		__trace__("set_optional_intarr: " #field); \
+		__trace2__("set_optional_intarr[%d]: " #field, pos - 1); \
 		uint8_t* tmp_##field = value; \
 		opt.set_##field(tmp_##field); \
 		if (check) { \
@@ -323,7 +324,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 
 #define __set_optional_ostr__(field, length) \
 	if (mask[pos++]) { \
-		__trace__("set_optional_ostr: " #field); \
+		__trace2__("set_optional_ostr[%d]: " #field, pos - 1); \
 		int len_##field = length; \
 		auto_ptr<char> str_##field = rand_char(len_##field); \
 		opt.set_##field(str_##field.get(), len_##field); \
@@ -336,7 +337,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 
 #define __set_optional_cstr__(field, length) \
 	if (mask[pos++]) { \
-		__trace__("set_optional_cstr: " #field); \
+		__trace2__("set_optional_cstr[%d]: " #field, pos - 1); \
 		auto_ptr<char> str_##field = rand_char(length); \
 		opt.set_##field(str_##field.get()); \
 		if (check) { \
