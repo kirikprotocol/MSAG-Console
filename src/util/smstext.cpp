@@ -324,7 +324,7 @@ int partitionSms(SMS* sms,int dstdc)
         __trace2__("PARTITIONSMS: part=%d, l=%d, wl=%d",parts,l,wl);
         if(wl<153)
         {
-          if(i<len-1 && (c==32 || c==10 || c==13))
+          if(i<len-1 && l<=153 && (c==32 || c==10 || c==13))
           {
             offsets[parts++]=i;
             lastword=i;
