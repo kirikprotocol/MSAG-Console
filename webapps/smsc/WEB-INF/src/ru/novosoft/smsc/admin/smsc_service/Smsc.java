@@ -421,6 +421,8 @@ public class Smsc extends Service {
 		params.put("receiptSchemeName", sme.getReceiptSchemeName());
 		params.put("disabled", new Boolean(sme.isDisabled()));
 		params.put("mode", sme.getModeStr());
+    params.put("proclimit", new Integer(sme.getProclimit()));
+    params.put("schedlimit", new Integer(sme.getSchedlimit()));
 		return params;
 	}
 

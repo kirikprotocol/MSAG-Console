@@ -223,9 +223,9 @@ public class HostsManager
 		return smeManager.getSmeNames();
 	}
 
-	public synchronized SME addSme(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode) throws AdminException
+	public synchronized SME addSme(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, boolean forceDC, int timeout, String receiptSchemeName, boolean disabled, byte mode, int proclimit, int schedlimit) throws AdminException
 	{
-		return smeManager.add(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode);
+		return smeManager.add(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit);
 	}
 
 	public synchronized void removeSme(String smeId) throws AdminException
