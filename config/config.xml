@@ -35,8 +35,13 @@
   </section>
 
   <section name="smpp">
-    <param name="port" type="int">9002</param>
+    <param name="port" type="int">9009</param>
     <param name="host" type="string">smsc</param>
+  </section>
+
+  <section name="core">
+    <param name="state_machines_count" type="int">5</param>
+    <param name="reschedule_table" type="string">30s,1m,5m,15m,30m,1h,6h,12h,1d</param>
   </section>
 
 </config>
