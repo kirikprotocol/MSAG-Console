@@ -7,16 +7,16 @@ using namespace std;
 
 #ifdef USE_MAP
 
-#define SMSC_FORWARD_RESPONSE 0x001
+//#define SMSC_FORWARD_RESPONSE 0x001
 
 static unsigned __global_bind_counter = 0;
 static bool MAP_dispatching = false;
 static bool MAP_isAlive = false;
 #define CORRECT_BIND_COUNTER 2
 
-struct SMSC_FORWARD_RESPONSE_T {
-  ET96MAP_DIALOGUE_ID_T dialogId;
-};
+//struct SMSC_FORWARD_RESPONSE_T {
+//  ET96MAP_DIALOGUE_ID_T dialogId;
+//};
 
 void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 {
@@ -40,6 +40,7 @@ extern "C" {
 USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
 {
   __trace2__("MAP::Et96MapBindConf confirmation received ssn=%x status=%x\n",lssn,status);
+  ++__global_bind_counter;
   return ET96MAP_E_OK;
 }
 
