@@ -46,16 +46,16 @@ public:
 inline  void __check_smpp_stream_invariant__ (SmppStream* stream)
 {
 //#if defined SMPP_USE_BUFFER
-  __require__ ( stream->buffer != NULL ); 
-//  __require__ ( stream->dataLength >= 0 ); 
-//  __require__ ( stream->dataOffset >= 0 ); 
-  __require__ ( stream->bufferSize >= 0 ); 
-  __require__ ( stream->bufferSize >= stream->dataLength ); 
+  __require__ ( stream->buffer != NULL );
+//  __require__ ( stream->dataLength >= 0 );
+//  __require__ ( stream->dataOffset >= 0 );
+  __require__ ( stream->bufferSize >= 0 );
+  __require__ ( stream->bufferSize >= stream->dataLength );
 //  __require__ ( stream->dataOffset <= stream->dataLength );
 //#else
-  //__require__ ( stream->chanel != 0 ); 
-  __require__ ( stream->dataLength >= 0 ); 
-  __require__ ( stream->dataOffset >= 0 ); 
+  //__require__ ( stream->chanel != 0 );
+  __require__ ( stream->dataLength >= 0 );
+  __require__ ( stream->dataOffset >= 0 );
   __require__ ( stream->dataOffset <= stream->dataLength );
 //  __require__ ( stream->chanel > 0 );
 //#endif /*SMPP_USE_BUFFER*/
@@ -77,7 +77,7 @@ inline  void __check_smpp_stream_is_writable__ (SmppStream* stream)
 template<class T>
 inline T& __fetch_x__ (SmppStream* stream, T& data)
 {
-//#if defined SMPP_USE_BUFFER 
+//#if defined SMPP_USE_BUFFER
 //  __check_smpp_stream_invariant__ ( stream );
 //  __check_smpp_stream_is_readable__(stream);
 //  __require__ ( stream->dataOffset+sizeof(T) <= stream->dataLength );
@@ -88,8 +88,8 @@ inline T& __fetch_x__ (SmppStream* stream, T& data)
 //#error "undefined rules of fetchX"
   __check_smpp_stream_invariant__ ( stream );
   __check_smpp_stream_is_readable__(stream);
-  __throw_if_fail__ ( stream->dataOffset+sizeof(T) <= stream->dataLength, 
-											BadStreamException );
+  __throw_if_fail__ ( stream->dataOffset+sizeof(T) <= stream->dataLength,
+                      BadStreamException );
   data = *((T*)stream->buffer);
   stream->dataOffset+=sizeof(T);
 //  int wasread = read(stream->chanel,&data,sizeof(T));
@@ -97,7 +97,7 @@ inline T& __fetch_x__ (SmppStream* stream, T& data)
         //__watch__((int)stream->dataOffset);
         //__watch__((int)stream->dataLength);
 //        __require__ (wasread==sizeof(T));
-//	__check_smpp_stream_invariant__ ( stream );
+//  __check_smpp_stream_invariant__ ( stream );
   //__throw_if_fail__(wasread==sizeof(T),BadStreamException);
   //stream->dataOffset+=wasread;
   return data;
@@ -107,7 +107,7 @@ inline T& __fetch_x__ (SmppStream* stream, T& data)
 template<class T>
 inline void __fill_x__ (SmppStream* stream, T& data)
 {
-//#if defined SMPP_USE_BUFFER 
+//#if defined SMPP_USE_BUFFER
 //  __check_smpp_stream_invariant__ ( stream );
 //  __check_smpp_stream_is_writable__(stream);
 //  __require__ ( stream->dataOffset+sizeof(T) <= stream->dataLength );
@@ -118,8 +118,9 @@ inline void __fill_x__ (SmppStream* stream, T& data)
   __check_smpp_stream_invariant__ ( stream );
   __check_smpp_stream_is_writable__(stream);
   __throw_if_fail__ ( stream->dataOffset+sizeof(T) <= stream->dataLength ,
-											BadStreamException);
-  *((T*)stream->buffer) = data;
+                      BadStreamException);
+  //*((T*)stream->buffer) = data;
+  memcpy(stream->buffer,&data,sizeof(T));
   stream->dataOffset+sizeof(T);
 //  int writen = write(stream->chanel,&data,sizeof(T));
 //  __throw_if_fail__(writen==sizeof(T),BadStreamException);
@@ -145,7 +146,7 @@ inline void fillX(SmppStream* s,const int32_t& d){ int32_t x = (int32_t)htonl((u
 inline void dropPdu(SmppStream* stream)
 {
   __check_smpp_stream_invariant__ ( stream );
-//#if defined SMPP_USE_BUFFER 
+//#if defined SMPP_USE_BUFFER
   stream->dataOffset=stream->dataLength;
 //#else
 //  static char data[1024];
@@ -175,7 +176,7 @@ inline void assignStreamWith(SmppStream* stream,void* buffer,int bufferSize,bool
 //#else
 //  __require__( chanel > 0 );
 //  stream->chanel = chanel;
-//#endif  
+//#endif
   stream->dataOffset = 0;
   if ( readable )
   {
@@ -248,7 +249,7 @@ inline void fetchCOctetStr(SmppStream* stream,COStr& costr,int cOctMax)
   int length = 0;
   int maxLength;
   __check_smpp_stream_invariant__ ( stream );
-  
+
   maxLength = std::min ( stream->dataLength-stream->dataOffset, (uint32_t)cOctMax );
 
 //#if defined SMPP_SHARE_BUFFER_MEMORY
@@ -338,4 +339,3 @@ inline void fetchOctetStr(SmppStream* stream,OStr& ostr,uint32_t octets)
 };
 
 #endif
-
