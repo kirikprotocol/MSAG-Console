@@ -12,8 +12,9 @@ using namespace smsc::smpp;
 static inline int getSmsText(SMS* sms,char* buf)
 {
   int coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
-  int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
-  const char *data=sms->getStrProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE).c_str();
+  //int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
+  unsigned len;
+  const char *data=sms->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
   if(coding==DataCoding::DEFAULT)
   {
     Convert7BitToText(data,len,buf,MAX_SHORT_MESSAGE_LENGTH);
