@@ -31,22 +31,30 @@ Mutex DaemonCommandDispatcher::servicesListMutex;
 config::Manager *DaemonCommandDispatcher::configManager = 0;
 Mutex DaemonCommandDispatcher::configManagerMutex;
 
+class ChildShutdownWaiter;
 
+typedef std::vector<ChildShutdownWaiter*> WAITERS;
 ///<summary>child shutdown waiter</summary>
 class ChildShutdownWaiter : public Thread
 {
 private:
+  static WAITERS startedWaiters;
+  static Mutex startedWaitersMutex;
+
+private:
   smsc::logger::Logger *logger;
   bool isStopping;
-  FastMTQueue<std::string> startQueue;
+  bool isStopped_;
   pid_t pid;
+  const char * const serviceId;
 public:
-  ChildShutdownWaiter()
-    : logger(Logger::getInstance("smsc.admin.daemon.ChildShutdownWaiter")), isStopping(false), pid(-1)
-  {};
+  ChildShutdownWaiter(const char * const serviceId)
+    : logger(Logger::getInstance("smsc.admin.daemon.ChildShutdownWaiter")), isStopping(false), isStopped_(false), pid(-1), serviceId(cStringCopy(serviceId))
+  {}
   ~ChildShutdownWaiter()
   {
     Stop();
+    delete serviceId;
   }
 
   void Stop()
@@ -56,10 +64,24 @@ public:
 
   virtual int Execute()
   {
-    pid = ::getpid();
+    try {
+      MutexGuard servicesGuard(DaemonCommandDispatcher::servicesListMutex);
+      MutexGuard configGuard(DaemonCommandDispatcher::configManagerMutex);
+      DaemonCommandDispatcher::updateServiceFromConfig(DaemonCommandDispatcher::services[serviceId]);
+      pid = DaemonCommandDispatcher::services[serviceId]->start();
+    } catch (AdminException& e) {
+      smsc_log_error(logger, "Couldn't start service \"%s\", nested: %s", serviceId, e.what());
+      return -1;
+    } catch (...) {
+      smsc_log_error(logger, "Couldn't start service \"%s\"", serviceId);
+      return -1;
+    }
+
     while (!isStopping)
     {
-      pid_t chldpid = waitpid(-1, 0, 0);
+      __trace2__("ChildShutdownWaiter : waitpid \"%s\" %d", serviceId, pid);
+      pid_t chldpid = waitpid(pid, 0, 0);
+      __trace2__("ChildShutdownWaiter : waitpid \"%s\" %d finished", serviceId, pid);
       if (chldpid == -1)
       {
         switch (errno)
@@ -80,7 +102,7 @@ public:
       else if (chldpid > 0)
       {
 #ifdef SMSC_DEBUG
-        smsc_log_debug(logger, "CHILD %u is finished", chldpid);
+        __trace2__("CHILD %u is finished", chldpid);
 #endif
         MutexGuard a(DaemonCommandDispatcher::servicesListMutex);
         if (const char * const serviceId = DaemonCommandDispatcher::services.markServiceAsStopped(chldpid))
@@ -88,41 +110,68 @@ public:
           MutexGuard lock(DaemonCommandDispatcher::configManagerMutex);
           DaemonCommandDispatcher::updateServiceFromConfig(DaemonCommandDispatcher::services[serviceId]);
         }
+        isStopping = true;
       }
-#ifdef SMSC_DEBUG
-/*      else
-      {
-        smsc_log_debug(logger, "waitpid returns %u ");
-      }*/
-#endif
-      {
-        for (std::string serviceId; startQueue.Pop(serviceId);)
-        {
-          try {
-            MutexGuard servicesGuard(DaemonCommandDispatcher::servicesListMutex);
-            MutexGuard configGuard(DaemonCommandDispatcher::configManagerMutex);
-            DaemonCommandDispatcher::updateServiceFromConfig(DaemonCommandDispatcher::services[serviceId.c_str()]);
-            DaemonCommandDispatcher::services[serviceId.c_str()]->start();
-          } catch (AdminException& e) {
-            smsc_log_error(logger, "Couldn't start service \"%\", nested: %s", serviceId.c_str(), e.what());
-          } catch (...) {
-            smsc_log_error(logger, "Couldn't start service \"%\"", serviceId.c_str());
-          }
-        }
-      }
+
       sleep(1);
     }
+    isStopped_ = true;
+    __trace2__("ChildShutdownWaiter : waiter \"%s\" %d FINISHED", serviceId, pid);
     return 0;
   }
   
-  void startService(const char * const serviceId)
+  const char * const getServiceId() const {return serviceId;}
+  const bool isStopped() const {return isStopped_;}
+  
+  static void startService(const char * const serviceId)
   {
-    startQueue.Push(serviceId);
-    kill(pid, SIGCHLD);
+    __trace2__("ChildShutdownWaiter : start service \"%s\"", serviceId);
+    cleanStoppedWaiters();
+    MutexGuard guard(startedWaitersMutex);
+    __trace2__("ChildShutdownWaiter : start service \"%s\" continued", serviceId);
+    ChildShutdownWaiter* newWaiter = new ChildShutdownWaiter(serviceId);
+    startedWaiters.push_back(newWaiter);
+    newWaiter->Start();
+    __trace2__("ChildShutdownWaiter : start service \"%s\" finished", serviceId);
+  }
+  
+  static void cleanStoppedWaiters()
+  {
+    __trace__("ChildShutdownWaiter : clean stopped waiters");
+    MutexGuard guard(startedWaitersMutex);
+    std::vector<WAITERS::iterator> to_del;
+    for (WAITERS::iterator i = startedWaiters.begin(); i != startedWaiters.end(); i++) {
+      if ((*i)->isStopped()) {
+        __trace2__("ChildShutdownWaiter::cleanStoppedWaiters : delete waiter for \"%s\"", (*i)->getServiceId());
+        (*i)->WaitFor();
+        delete *i;
+        to_del.push_back(i);
+        __trace2__("ChildShutdownWaiter::cleanStoppedWaiters : waiter for \"%s\" deleted", (*i)->getServiceId());
+      }
+    }
+    for (std::vector<WAITERS::iterator>::const_iterator i = to_del.begin(); i != to_del.end(); i++) {
+      startedWaiters.erase(*i);
+      __trace2__("ChildShutdownWaiter::cleanStoppedWaiters : waiter for \"%s\" deleted nahren", (**i)->getServiceId());
+    }
+    __trace__("ChildShutdownWaiter : clean stopped waiters finished");
+  }
+  
+  static void stopWaiters()
+  {
+    __trace__("ChildShutdownWaiter::stopWaiters");
+    MutexGuard guard(startedWaitersMutex);
+    for (WAITERS::iterator i = startedWaiters.begin(); i != startedWaiters.end(); i++) {
+      (*i)->Stop();
+      (*i)->WaitFor();
+      delete *i;
+    }
+    startedWaiters.clear();
+    __trace__("ChildShutdownWaiter::stopWaiters finished");
   }
 };
 
-static std::auto_ptr<ChildShutdownWaiter> childShutdownWaiter;
+Mutex ChildShutdownWaiter::startedWaitersMutex;
+WAITERS ChildShutdownWaiter::startedWaiters;
 unsigned int DaemonCommandDispatcher::shutdownTimeout;
 
 
@@ -142,14 +191,11 @@ void DaemonCommandDispatcher::init(config::Manager * confManager) throw ()
     smsc_log_warn(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't get shutdown timeout from config. Shutdown timeout setted to %i seconds. Please define \"%s\" properly in daemon config.\nNested: Unknown exception", shutdownTimeout, CONFIG_SHUTDOWN_TIMEOUT);
   }
   addServicesFromConfig();
-
-  childShutdownWaiter.reset(new ChildShutdownWaiter());
-  childShutdownWaiter->Start();
 }
 void DaemonCommandDispatcher::shutdown()
 {
   stopAllServices(shutdownTimeout);
-  childShutdownWaiter->Stop();
+  ChildShutdownWaiter::stopWaiters();
 }
 
 
@@ -164,6 +210,7 @@ DaemonCommandDispatcher::DaemonCommandDispatcher(Socket * admSocket)
 Response * DaemonCommandDispatcher::handle(const Command * const command)
   throw (AdminException)
 {
+  ChildShutdownWaiter::cleanStoppedWaiters();
   try
   {
     switch (command->getId())
@@ -318,7 +365,7 @@ Response * DaemonCommandDispatcher::start_service(const CommandStartService * co
   {
     if (command->getServiceId() != 0)
     {
-      childShutdownWaiter->startService(command->getServiceId());
+      ChildShutdownWaiter::startService(command->getServiceId());
       return new Response(Response::Ok, "");
     }
     else
@@ -499,7 +546,7 @@ void DaemonCommandDispatcher::startAllServices()
   {
     if (servicePtr != NULL && servicePtr->isAutostart()) {
       try {
-        servicePtr->start();
+        ChildShutdownWaiter::startService(servicePtr->getId());
       } catch (...) {
         if (serviceId != NULL)
           smsc_log_error(Logger::getInstance("smsc.admin.daemon.DaemonCommandDispatcher"), "Couldn't start service \"%s\", skipped", serviceId);
