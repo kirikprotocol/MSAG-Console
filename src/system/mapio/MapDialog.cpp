@@ -464,25 +464,26 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
           __trace2__("MAP::DIALOG::ForwardReq: udh_len 0x%x",udh_len);
           unsigned x = (udh_len+1)*8;
           if ( x%7 != 0 ) x+=7-(x%7);
-          symbols = user_data_len-x/7;
+          unsigned symbols = user_data_len-x/7;
           __trace2__("MAP::DIALOG::ForwardReq: text symbols 0x%x",symbols);
           __trace2__("MAP::DIALOG::ForwardReq: text bit offset 0x%x",x-(udh_len+1)*8);
           Convert7BitToSMSC7Bit(user_data+udh_len+1,symbols,&ms,x-(udh_len+1)*8);
           memcpy(b.get(),user_data,udh_len+1);
           memcpy(b.get()+udh_len+1,ms.bytes,ms.len);
           sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,b.get(),udh_len+1+symbols);
-          sms.setBinProperty(Tag::SMPP_SM_LENGTH,udh_len+1+symbols);
+          sms.setIntProperty(Tag::SMPP_SM_LENGTH,udh_len+1+symbols);
         }else{
           MicroString ms;
           //Convert7BitToText(user_data,user_data_len,&ms);
           Convert7BitToSMSC7Bit(user_data,user_data_len,&ms,0);
           sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
-          sms.setBinProperty(Tag::SMPP_SM_LENGTH,ms.len);
+          sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
         }
         sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
       }
       else{
         sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
+        sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
         sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)encoding);
       }
     }
