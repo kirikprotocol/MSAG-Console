@@ -4,7 +4,6 @@
 #include "MessageStoreTestCases.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include <iostream>
-#include <sys/timeb.h>
 
 using namespace std;
 using namespace smsc::sms;
@@ -70,14 +69,8 @@ public:
 class MessageStoreBusinessCycleTestTaskManager
 	: public TestTaskManager<MessageStoreBusinessCycleTestTaskHolder>
 {
-private:
-	timeb t1;
-
 public:
-	MessageStoreBusinessCycleTestTaskManager()
-	{
-		ftime(&t1);
-	}
+	MessageStoreBusinessCycleTestTaskManager() {}
 	void printStatus();
 	int getOps();
 };
@@ -178,6 +171,7 @@ void executeBusinessCycleTest(int numThreads)
 			new MessageStoreBusinessCycleTestTaskHolder(i);
 		tm.addTask(taskHolder);
 	}
+	tm.startTimer();
 
 	while (true)
 	{
@@ -187,12 +181,15 @@ void executeBusinessCycleTest(int numThreads)
 		{
 			case 'q':
 				tm.stopTasks();
+				cout << "Total time = " << tm.getExecutionTime() << endl;
 				cout << "Total operations = " << tm.getOps() << endl;
 				return;
 			case 's':
+				cout << "Time = " << tm.getExecutionTime() << endl;
 				tm.printStatus();
 				break;
 			default:
+				cout << "Time = " << tm.getExecutionTime() << endl;
 				cout << "Total operations = " << tm.getOps() << endl;
 		}
 	}

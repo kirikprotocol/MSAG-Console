@@ -68,7 +68,7 @@ void MessageStoreTestCases::clearSM(SMS& sms)
 
 TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 {
-	TCSelector s(num, 6);
+	TCSelector s(num, 9);
 	TCResult* res = new TCResult(TC_STORE_CORRECT_SM, s.getChoice());
 	SMSId smsId;
 	SMS sms;
@@ -82,18 +82,29 @@ TCResult* MessageStoreTestCases::storeCorrectSM(SMSId* idp, SMS* smsp, int num)
 				case 1: //ничего особенного
 					break;
 				case 2: //пустой originatingAddress
-					sms.setOriginatingAddress(0, 20, 30, NULL);
+					sms.setOriginatingAddress(0, 0, 0, NULL);
 					break;
 				case 3: //пустой originatingAddress
 					sms.setOriginatingAddress(0, 20, 30, rand_char(1).get());
 					break;
-				case 4: //пустое тело сообщения
+				case 4: //originatingAddress максимальной длины
+					sms.setOriginatingAddress(MAX_ADDRESS_LENGTH, 20, 30, 
+						rand_char(MAX_ADDRESS_LENGTH).get());
+					break;
+				case 5: //destinationAddress минимальной длины
+					sms.setDestinationAddress(1, 20, 30, rand_char(1).get());
+					break;
+				case 6: //destinationAddress максимальной длины
+					sms.setDestinationAddress(MAX_ADDRESS_LENGTH, 20, 30, 
+						rand_char(MAX_ADDRESS_LENGTH).get());
+					break;
+				case 7: //пустое тело сообщения
 					sms.setMessageBody(0, 20, false, NULL);
 					break;
-				case 5: //пустое тело сообщения
+				case 8: //пустое тело сообщения
 					sms.setMessageBody(0, 20, false, rand_uint8_t(1).get());
 					break;
-				case 6: //длинное тело сообщения
+				case 9: //тело сообщения максимальной длины
 					sms.setMessageBody(MAX_MSG_BODY_LENGTH, 20, false, 
 						rand_uint8_t(MAX_MSG_BODY_LENGTH).get());
 					break;
@@ -185,7 +196,7 @@ TCResult* MessageStoreTestCases::storeAssertSM(int num)
 			switch(s.value())
 			{
 				case 1: //пустой destinationAddress
-					sms.setDestinationAddress(0, 20, 30, NULL);
+					sms.setDestinationAddress(0, 0, 0, NULL);
 					break;
 				case 2: //пустой destinationAddress
 					sms.setDestinationAddress(0, 20, 30, rand_char(1).get());

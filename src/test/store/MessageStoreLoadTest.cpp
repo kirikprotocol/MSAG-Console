@@ -115,6 +115,7 @@ MessageStoreLoadTestTaskHolder::MessageStoreLoadTestTaskHolder(int taskNum)
 //MessageStoreLoadTestTaskManager methods
 inline void MessageStoreLoadTestTaskManager::startTimer()
 {
+	TestTaskManager<MessageStoreLoadTestTaskHolder>::startTimer();
 	ftime(&t1);
 	ops1 = getOps();
 }
@@ -171,12 +172,17 @@ void executeLoadTest(int numThreads)
 		{
 			case 'q':
 				tm.stopTasks();
+				cout << "Total time = " << tm.getExecutionTime() << endl;
 				cout << "Total operations = " << tm.getOps() << endl;
+				cout << "Average rate = " <<
+					(tm.getOps() / tm.getExecutionTime()) << endl;
 				return;
 			case 's':
+				cout << "Time = " << tm.getExecutionTime() << endl;
 				tm.printStatus();
 				break;
 			default:
+				cout << "Time = " << tm.getExecutionTime() << endl;
 				cout << "Rate = " << tm.getRate()
 					<< " messages/second" << endl;
 		}
