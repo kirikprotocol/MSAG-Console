@@ -115,7 +115,7 @@ void RollingFileAppender::log(const char logLevelName, const char * const catego
   {
     smsc::core::synchronization::MutexGuard guard(mutex);
     fwrite(buffer, length, 1, file != NULL ? file : stderr);
-    ///TODO fflush(file);
+    fflush(file);
     currentFilePos += length;
   	if (currentFilePos > maxFileSize)
      	rollover();
