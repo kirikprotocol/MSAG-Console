@@ -195,6 +195,8 @@ public:
 
   EventQueue() : counter(0)
   {
+    first_unlocked=0;
+    last_unlocked=0;
   }
 
   ~EventQueue() {}
