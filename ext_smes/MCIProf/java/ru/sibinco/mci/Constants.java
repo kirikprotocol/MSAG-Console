@@ -23,14 +23,23 @@ public class Constants
   public final static String PAGE_PREFIXED_STRATEGY = "pagePrefixedStrategy";
   public final static String PAGE_REDIRECT_STRATEGY = "pageRedirectStrategy";
 
+  public final static String PARAM_SHORTCUT = "shortcut";
+
   public final static String PAGE_MAIN = PAGE_PREFIX + "main";
   public final static String PAGE_EXIT = PAGE_PREFIX + "exit";
   public final static String PAGE_INFO = PAGE_PREFIX + "info";
   public final static String PAGE_SET  = PAGE_PREFIX + "set";
   public final static String PAGE_MAN  = PAGE_PREFIX + "man";
   public final static String PAGE_ERR  = PAGE_PREFIX + "err";
+  public final static String PAGE_SHORTCUTS = PAGE_PREFIX  + "shortcuts";
   public final static String PAGE_MAIN_ALT  = PAGE_MAIN + "_alt";
   public final static String PAGE_INFO_ALT  = PAGE_INFO + "_alt";
+  public final static String PAGE_MAN_PREFIXED  = PAGE_MAN + "_prefixed";
+  public final static String PAGE_MAN_REDIRECT  = PAGE_MAN + "_redirect";
+  public final static String PAGE_MAN_SHORTCUTS = PAGE_MAN + "_shortcuts";
+  public final static String PAGE_ERR_SHORTCUT      = PAGE_ERR + "_shortcut";
+  public final static String PAGE_INFO_SHORTCUT     = PAGE_INFO     + "_shortcut";
+  public final static String PAGE_INFO_ALT_SHORTCUT = PAGE_INFO_ALT + "_shortcut";
 
   public final static String OFF        = "off";
   public final static String SERVICE    = "service";
@@ -42,6 +51,7 @@ public class Constants
   public final static String NOTIFY     = "notify";
 
   public final static String VALUE_OFF        = VALUE_PREFIX + OFF;
+  public final static String VALUE_OFF_FULL   = VALUE_OFF + "_full";
   public final static String VALUE_SERVICE    = VALUE_PREFIX + SERVICE;
   public final static String VALUE_VOICEMAIL  = VALUE_PREFIX + VOICEMAIL;
   public final static String VALUE_YES        = VALUE_PREFIX + YES;
@@ -52,6 +62,7 @@ public class Constants
   public final static String VALUE_BUSY       = VALUE_PREFIX + "busy";
   public final static String VALUE_NOREPLY    = VALUE_PREFIX + "noreply";
   public final static String VALUE_UNCOND     = VALUE_PREFIX + "uncond";
+  public final static String VALUE_CHANGED    = VALUE_PREFIX + "changed";
 
   public final static String ERROR_COMMUNICATION = ERROR_PREFIX + "communication";
   public final static String ERROR_NOT_ACCEPTED  = ERROR_PREFIX + "not_accepted";
@@ -67,6 +78,7 @@ public class Constants
   public final static String ATTR_REASON   = "REASON";
   public final static String ATTR_REASONS  = "REASONS";
   public final static String ATTR_FORMATS  = "FORMATS";
+  public final static String ATTR_OPTIONS  = "OPTIONS";
   public final static String ATTR_STRATEGY = "STRATEGY";
 
   public final static String OPTION_EXIT  = "0";

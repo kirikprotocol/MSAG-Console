@@ -3,6 +3,8 @@
 <scenarios>
   <scenario id="0" active="1" sms="1" ussd="2" resources="resources.xml">
 
+    <!-- ########### USSD menu pages (no shortcuts defined) ############ -->
+
     <page id="MAIN_PAGE" question="0">
       <pageExecutor class="ru.sibinco.mci.EntryExecutor">
         <initParam name="pagePrefixedStrategy" value="prefixed_entry"/>
@@ -122,6 +124,263 @@
         <bundle name="help"/>
       </pageExecutor>
       <command name="(**)" target="MAIN_PAGE"/>
+    </page>
+
+    <!-- ########### Single pages acessible by predefined shortcuts ############ -->
+
+    <page id="shortcut_smshelp" question="0" shortcut="0">
+      <pageExecutor class="ru.sibinco.mci.ShortcutHelpExecutor">
+        <bundle name="help"/>
+      </pageExecutor>
+    </page>
+
+    <!-- ServiceInfo: acessible for all strategies -->
+
+    <page id="shortcut_svc_info" question="0" shortcut="1">
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
+        <bundle name="system"/><bundle name="profile"/>
+        <initParam name="shortcut" value="1"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_inform" question="0" shortcut="10">
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
+        <bundle name="system"/><bundle name="profile"/>
+        <initParam name="shortcut" value="10"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_inform_msg" question="0" shortcut="11">
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
+        <bundle name="system"/><bundle name="profile"/>
+        <initParam name="shortcut" value="11"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_notify" question="0" shortcut="12">
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
+        <bundle name="system"/><bundle name="profile"/>
+        <initParam name="shortcut" value="12"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_notify_msg" question="0" shortcut="13">
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
+        <bundle name="system"/><bundle name="profile"/>
+        <initParam name="shortcut" value="13"/>
+      </pageExecutor>
+    </page>
+
+    <!-- ErrorPage: if shortcut was invalid for selected strategy -->
+
+    <page id="shortcut_svc_error" question="0">
+      <pageExecutor class="ru.sibinco.mci.ShortcutErrorExecutor">
+        <bundle name="system"/>
+      </pageExecutor>
+    </page>
+
+    <!-- DivertInfo: acessible only for one strategy -->
+
+    <page id="shortcut_svc_2" question="0" shortcut="2">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_profile" question="0">
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
+        <bundle name="system"/><bundle name="profile"/>
+        <initParam name="shortcut" value="2"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="2"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_20" question="0" shortcut="20">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_busy"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_busy_off"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_profile_busy" question="0">
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
+        <bundle name="system"/><bundle name="profile"/>
+        <initParam name="shortcut" value="20"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_busy_off" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="20"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_21" question="0" shortcut="21">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_noreply"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_busy_vm"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_profile_noreply" question="0">
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
+        <bundle name="system"/><bundle name="profile"/>
+        <initParam name="shortcut" value="21"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_busy_vm" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="21"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_22" question="0" shortcut="22">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_absent"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_busy_mci"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_profile_absent" question="0">
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
+        <bundle name="system"/><bundle name="profile"/>
+        <initParam name="shortcut" value="22"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_busy_mci" question="0" >
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="22"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_23" question="0" shortcut="23">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_uncond"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_error"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_profile_uncond" question="0">
+      <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
+        <bundle name="system"/><bundle name="profile"/>
+        <initParam name="shortcut" value="23"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_30" question="0" shortcut="30">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_noreply_off"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_noreply_off" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="30"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_31" question="0" shortcut="31">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_noreply_vm"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_noreply_vm" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="31"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_32" question="0" shortcut="32">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_noreply_mci"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_noreply_mci" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="32"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_40" question="0" shortcut="40">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_absent_off"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_absent_off" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="40"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_41" question="0" shortcut="41">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_absent_vm"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_absent_vm" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="41"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_42" question="0" shortcut="42">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_absent_mci"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_absent_mci" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="42"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_50" question="0" shortcut="50">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_uncond_off"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_uncond_off" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="50"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_51" question="0" shortcut="51">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_uncond_vm"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_uncond_vm" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="51"/>
+      </pageExecutor>
+    </page>
+
+    <page id="shortcut_svc_52" question="0" shortcut="52">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
+        <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
+        <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_uncond_mci"/>
+      </pageExecutor>
+    </page>
+    <page id="shortcut_svc_divert_uncond_mci" question="0">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertShortcutExecutor">
+        <bundle name="system"/><bundle name="divert"/>
+        <initParam name="shortcut" value="52"/>
+      </pageExecutor>
     </page>
 
   </scenario>

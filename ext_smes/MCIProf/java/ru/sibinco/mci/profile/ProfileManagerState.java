@@ -17,8 +17,6 @@ import java.text.MessageFormat;
  */
 public class ProfileManagerState
 {
-  //private static Category logger = Category.getInstance(ProfileManagerState.class);
-
   protected ScenarioResourceBundle systemBundle = null;
   protected ScenarioResourceBundle profileBundle = null;
   protected ProfileManager profileManager = null;

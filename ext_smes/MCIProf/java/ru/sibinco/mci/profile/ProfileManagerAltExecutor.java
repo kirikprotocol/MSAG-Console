@@ -37,10 +37,10 @@ public class ProfileManagerAltExecutor extends ProfileManagerState implements Ex
       pageFormat = new MessageFormat(profileBundle.getString(Constants.PAGE_INFO_ALT));
       valueYes = profileBundle.getString(Constants.VALUE_YES);
       valueNo  = profileBundle.getString(Constants.VALUE_NO);
-      valueAbsent  = profileBundle.getString(Constants.VALUE_ABSENT);
-      valueBusy    = profileBundle.getString(Constants.VALUE_BUSY);
-      valueNoreply = profileBundle.getString(Constants.VALUE_NOREPLY);
-      valueUncond  = profileBundle.getString(Constants.VALUE_UNCOND);
+      valueAbsent  = systemBundle.getString(Constants.VALUE_ABSENT);
+      valueBusy    = systemBundle.getString(Constants.VALUE_BUSY);
+      valueNoreply = systemBundle.getString(Constants.VALUE_NOREPLY);
+      valueUncond  = systemBundle.getString(Constants.VALUE_UNCOND);
     } catch (Exception e) {
       final String err = "Executor init error"; logger.error(err, e);
       throw new ScenarioInitializationException(err, e);

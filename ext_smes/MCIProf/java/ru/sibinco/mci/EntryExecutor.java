@@ -18,12 +18,11 @@ public class EntryExecutor implements Executor
 {
   private static Category logger = Category.getInstance(EntryExecutor.class);
 
-  private String jumpPage = null;
-  private String mciSmeReasons = null;
-  private int    strategy = 0;
+  protected String jumpPage = null;
+  protected String mciSmeReasons = null;
+  protected int    strategy = 0;
 
-
-  public void init(Properties initProperties) throws ScenarioInitializationException
+  public void loadup() throws ScenarioInitializationException
   {
     InputStream is = this.getClass().getClassLoader().getResourceAsStream(Constants.MCI_PROF_MSC_FILE);
     if (is == null)
@@ -41,6 +40,10 @@ public class EntryExecutor implements Executor
     } finally {
       try { is.close(); } catch (Throwable th) {}
     }
+  }
+  public void init(Properties initProperties) throws ScenarioInitializationException
+  {
+    this.loadup();
 
     if (strategy == Constants.RELEASE_PREFIXED_STRATEGY)
       jumpPage = initProperties.getProperty(Constants.PAGE_PREFIXED_STRATEGY);
