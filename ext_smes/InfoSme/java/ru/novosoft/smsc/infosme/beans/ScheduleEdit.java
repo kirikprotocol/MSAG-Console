@@ -67,6 +67,7 @@ public class ScheduleEdit extends InfoSmeBean
             case Schedule.EXECUTE_WEEKLY:
               endDateTime = ((ScheduleEndDateTime) schedule).getEndDateTimeStr();
               everyNWeeks = ((ScheduleWeekly) schedule).getEveryNWeeks();
+              checkedWeekDaysSet = new HashSet(((ScheduleWeekly) schedule).getWeekDays());
               break;
             case Schedule.EXECUTE_MONTHLY_DAY:
               endDateTime = ((ScheduleEndDateTime) schedule).getEndDateTimeStr();
