@@ -260,9 +260,13 @@ StateType StateMachine::submit(Tuple& t)
     }
     sms->setDestinationAddress(dst);
     smsc::profiler::Profile p=smsc->getProfiler()->lookup(dst);
+    __trace2__("SUBMIT: lookup .%d.%d.%20s, result: %d,%d",dst.type,dst.plan,dst.value,
+      p.reportoptions,p.codepage);
+
     if(p.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
        sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
     {
+      __trace__("SUBMIT: converting ucs2->text");
       char buf[260];
       char buf8[260];
       unsigned len;
@@ -413,13 +417,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
   __trace2__("delivering resp for :%lld",t.msgId);
   __require__(t.state==DELIVERING_STATE);
   smsc::sms::Descriptor d;
-  if(t.command->get_status()!=CMD_OK)
+  if(t.command->get_resp()->get_status()!=CMD_OK)
   {
-    switch(t.command->get_status())
+    switch(t.command->get_resp()->get_status())
     {
-      case CMD_TEMP:
+      case CMD_ERR_TEMP:
       {
         try{
+          SMS sms;
+          store->retriveSms((SMSId)t.msgId,sms);
           Descriptor d;
           __trace__("DELIVERYRESP: change state to enroute");
           store->changeSmsStateToEnroute(t.msgId,d,0,
