@@ -353,13 +353,14 @@ void RemoteStore::doChangeSmsConcatSequenceNumber(
 {
     __require__(connection);
 
-    UpdateSeqNumStatement* seqNumStmt = 0;
+    UpdateSeqNumStatement* seqNumStmt = 
+        connection->getUpdateSeqNumStatement();
+    
+    seqNumStmt->bindId(id);
+    seqNumStmt->bindInc(inc);        
 
     try
     {
-        seqNumStmt = connection->getUpdateSeqNumStatement();
-        seqNumStmt->bindId(id);
-        seqNumStmt->bindInc(inc);        
         connection->check(seqNumStmt->execute());
     }
     catch (StorageException& exc)

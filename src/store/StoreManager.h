@@ -69,6 +69,7 @@ namespace smsc { namespace store
         {
         private:
 
+            bool                        isNull;
             Connection*                 connection;
             ReadyByNextTimeStatement*   readyStmt;
             StorageConnectionPool*      pool;
@@ -87,6 +88,7 @@ namespace smsc { namespace store
         {
         private:
 
+            bool                        isNull;
             Connection*                 connection;
             CancelIdsStatement*         cancelStmt;
             StorageConnectionPool*      pool;
@@ -106,6 +108,7 @@ namespace smsc { namespace store
         {
         private:
 
+            bool                        isNull;
             Connection*                 connection;
             DeliveryIdsStatement*       deliveryStmt;
             StorageConnectionPool*      pool;
