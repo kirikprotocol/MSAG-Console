@@ -35,7 +35,7 @@ const string DbSmeTestCases::getFromAddress()
 }
 
 /**
- * Порядок аргументов: 	int16, int32, flt, dbl, dt, str
+ * Порядок аргументов: id, int16, int32, flt, dbl, str, dt
  */
 void DbSmeTestCases::sendDbSmePdu(PduSubmitSm* pdu, DbSmeTestRecord* rec,
 	const DateFormatter* df, bool sync, uint8_t dataCoding)
@@ -96,6 +96,7 @@ void DbSmeTestCases::sendDbSmePdu(PduSubmitSm* pdu, DbSmeTestRecord* rec,
 			__require__(df);
 			s << " " << df->format(rec->getDate());
 		}
+		__trace2__("sendDbSmePdu(): text = %s", s.str().c_str());
 		string encText = encode(s.str().c_str(), dataCoding);
 		pdu->get_message().set_shortMessage(encText.c_str(), encText.length());
 		pdu->get_message().set_dataCoding(dataCoding);
@@ -632,7 +633,7 @@ void DbSmeTestCases::processDateFormatJobAck(const string& text,
 {
 	__require__(rec);
 	__decl_tc__;
-	__tc__("processDbSmeRes.output.select.singleRecord"); __tc_ok__;
+	__tc__("processDbSmeRes.select.singleRecord"); __tc_ok__;
 	static const DateFormatter df("w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy yyyy yyyyy h hh hhh m mm mmm t tt");
 	static const string prefix("Date: ");
 	if (rec->checkDate())
@@ -756,16 +757,17 @@ void DbSmeTestCases::processInsertJobAck(const string& text,
 	else
 	{
 		__tc__("processDbSmeRes.insert.ok"); __tc_ok__;
+		static const DateFormatter df("dd-MM-yyyy HH:mm:ss");
 		ostringstream res;
 		res << "InsertJob:" << endl;
-		res << "from-address: " << getOutputFromAddress(rec) << endl;
 		res << "string: " << getOutputString(rec) << endl;
-		static const DateFormatter df("dd-MM-yyyy HH:mm:ss");
 		res << "date: " << getOutputDate(rec, df, 0) << endl;
 		res << "int16: " << getOutputInt16(rec) << endl;
 		res << "int32: " << getOutputInt32(rec) << endl;
 		res << "float: " << getOutputFloat(rec) << endl;
 		res << "double: " << getOutputDouble(rec) << endl;
+		res << "from-address: " << getOutputFromAddress(rec) << endl;
+		res << "id: " << rec->getId() << endl;
 		res << "rows-affected: 1";
 		dbSmeReg->putRecord(rec);
 	}
@@ -845,11 +847,12 @@ void DbSmeTestCases::processUpdateDuplicateJobAck(const string& text,
 		__tc__("processDbSmeRes.update.ok"); __tc_ok__;
 		ostringstream res;
 		res << "UpdateJob2:" << endl;
+		res << "id:" << rec->getId() << endl;
 		DbSmeRegistry::DbSmeTestRecordIterator* it = dbSmeReg->getRecords();
 		while (DbSmeTestRecord* r = it->next())
 		{
-			//обновить запись
-			r->setId(rec->getId());
+			//обновить id
+			dbSmeReg->updateRecord(rec->getId(), r);
 		}
 		delete it;
 		__tc__("processDbSmeRes.update.recordsAffected"); __tc_ok__;

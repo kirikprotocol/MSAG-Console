@@ -146,20 +146,54 @@ double: (::\$$$double import="numDouble"$$::);
 						<param name="type" type="string">sql-job</param>
 						<param name="query" type="bool">false</param>
 						<param name="sql" type="string">
-insert into db_sme_test (int16, int32, flt, dbl, dt, str)
-values (:1, :2, :3, :4, :5, :6 || ' from ' || :7)
+insert into db_sme_test (id, dt, str, flt, dbl, int16, int32)
+values (:1, :2, :3 || ' from ' || :4, :5, :6, :7, :8)
 						</param>
 						<param name="input" type="string">
-$$string arg=7 import="from-address"$$
-$$string arg=6 export="str" default="xxx"$$
-$$date arg=5 pattern="dd-MM-yyyy HH:mm:ss" export="dt" default="now"$$
+$$string arg=4 import="from-address"$$
+$$int32 arg=1 export="id"$$
+$$int16 arg=7 export="numInt16" default=16$$
+$$int32 arg=8 export="numInt32" default=32$$
+$$float arg=5 export="numFloat" default=16.16$$
+$$double arg=6 export="numDouble" default=32.32$$
+$$string arg=3 export="str" default="xxx"$$
+$$date arg=2 pattern="dd-MM-yyyy HH:mm:ss" export="dt" default="now"$$
+						</param>
+						<param name="output" type="string">
+InsertJob:
+string: $$string import="str"$$
+date: $$date pattern="dd-MM-yyyy HH:mm:ss" import="dt"$$
+int16: $$int16 import="numInt16"$$
+int32: $$int32 import="numInt32"$$
+float: $$float import="numFloat"$$
+double: $$double import="numDouble"$$
+from-address: $$string import="from-address"$$
+id: $$int32 import="id"$$
+rows-affected: $$int32 arg=1$$
+						</param>
+					</section>
+
+					<!-- tc2: update job ?? ?????????? ?? ????????? ? input,
+					???????? row affected ? output -->
+					<section name="UpdateJob1">
+						<param name="name" type="string">UpdateJob1</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">false</param>
+						<param name="sql" type="string">
+update db_sme_test set int16 = :1, int32 = :2, flt = :3, dbl = :4,
+dt = :5, str = :6 || ' from ' || :7 where mod(id, 2) = 0
+						</param>
+						<param name="input" type="string">
 $$int16 arg=1 export="numInt16" default=16$$
 $$int32 arg=2 export="numInt32" default=32$$
 $$float arg=3 export="numFloat" default=16.16$$
 $$double arg=4 export="numDouble" default=32.32$$
+$$string arg=6 export="str" default="xxx"$$
+$$date arg=5 pattern="dd-MM-yyyy HH:mm:ss" export="dt" default="now"$$
+$$string arg=7 import="from-address"$$
 						</param>
 						<param name="output" type="string">
-InsertJob:
+UpdateJob1:
 from-address: $$string import="from-address"$$
 string: $$string import="str"$$
 date: $$date pattern="dd-MM-yyyy HH:mm:ss" import="dt"$$
@@ -171,34 +205,19 @@ rows-affected: $$int32 arg=1$$
 						</param>
 					</section>
 
-					<!-- tc2: update job ?? ?????????? ?? ????????? ? input,
-					???????? row affected ? output -->
-					<section name="UpdateJob">
-						<param name="name" type="string">UpdateJob</param>
+					<section name="UpdateJob2">
+						<param name="name" type="string">UpdateJob2</param>
 						<param name="type" type="string">sql-job</param>
 						<param name="query" type="bool">false</param>
 						<param name="sql" type="string">
-update db_sme_test set int16 = :1, int32 = :2, flt = :3, dbl = :4,
-dt = :5, str = :6 || ' from ' || :7 where mod(id, 2) = 0
+update db_sme_test set id = :1
 						</param>
 						<param name="input" type="string">
-$$string arg=7 import="from-address"$$
-$$string arg=6 export="str" default="xxx"$$
-$$date arg=5 pattern="dd-MM-yyyy HH:mm:ss" export="dt" default="now"$$
-$$int16 arg=1 export="numInt16" default=16$$
-$$int32 arg=2 export="numInt32" default=32$$
-$$float arg=3 export="numFloat" default=16.16$$
-$$double arg=4 export="numDouble" default=32.32$$
+$$int32 arg=1 export="id"$$
 						</param>
 						<param name="output" type="string">
-UpdateJob:
-from-address: $$string import="from-address"$$
-string: $$string import="str"$$
-date: $$date pattern="dd-MM-yyyy HH:mm:ss" import="dt"$$
-int16: $$int16 import="numInt16"$$
-int32: $$int32 import="numInt32"$$
-float: $$float import="numFloat"$$
-double: $$double import="numDouble"$$
+UpdateJob2:
+id: $$int32 import="id"$$
 rows-affected: $$int32 arg=1$$
 						</param>
 					</section>
