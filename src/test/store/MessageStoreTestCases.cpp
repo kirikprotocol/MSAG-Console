@@ -625,8 +625,6 @@ TCResult* MessageStoreTestCases::replaceIncorrectSM2(SMSId id, const SMS& sms, i
 						char* addrValue = rand_char(addrLength).get();
 						_sms.setOriginatingAddress(addrLength, origAddrType,
 							origAddrPlan, addrValue);
-						delete[] addrValue;
-
 					}
 					break;
 				default:
