@@ -490,7 +490,8 @@ void Smsc::init(const SmscConfigs& cfg)
     while((*str=toupper(*str)))str++;
     str=dc;
     while((*str=toupper(*str)))str++;
-    smsc::profiler::Profile defProfile={0,0,cfg.cfgman->getString("core.default_locale"),0,false};
+    smsc::profiler::Profile defProfile;
+    defProfile.locale=cfg.cfgman->getString("core.default_locale");
 
     defProfile.hide=cfg.cfgman->getBool("profiler.defaultHide");
     defProfile.hideModifiable=cfg.cfgman->getBool("profiler.defaultHideModifiable");

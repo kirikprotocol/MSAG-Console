@@ -53,6 +53,46 @@ struct Profile{
   bool divertActive;
   bool divertModifiable;
 
+  Profile()
+  {
+    codepage=0;
+    reportoptions=ProfileReportOptions::ReportFull;
+    locale="";
+    hide=0;
+    hideModifiable=false;
+
+    divert="";
+    divertActive=false;
+    divertModifiable=false;
+  }
+
+  Profile(const Profile& src)
+  {
+    codepage=src.codepage;
+    reportoptions=src.reportoptions;
+    locale=src.locale;
+    hide=src.hide;
+    hideModifiable=src.hideModifiable;
+
+    divert=src.divert;
+    divertActive=src.divertActive;
+    divertModifiable=src.divertModifiable;
+  }
+
+  Profile& operator=(const Profile& src)
+  {
+    codepage=src.codepage;
+    reportoptions=src.reportoptions;
+    locale=src.locale;
+    hide=src.hide;
+    hideModifiable=src.hideModifiable;
+
+    divert=src.divert;
+    divertActive=src.divertActive;
+    divertModifiable=src.divertModifiable;
+    return *this;
+  }
+
   bool operator==(const Profile& src)
   {
     return codepage==src.codepage &&
