@@ -119,7 +119,7 @@ SmeProxy* SmeManager::getSmeProxy(SmeIndex index) const
 __synchronized__
   SmeRecord& record = records.at(index);
   if ( record.deleted ) throw SmeError();
-  return &record;
+  return (SmeProxy*)&record;
 }
 
 SmeInfo SmeManager::getSmeInfo(SmeIndex index) const
