@@ -2,6 +2,9 @@ package ru.sibinco.lib.backend.util;
 
 import ru.sibinco.lib.bean.TabledBean;
 
+import ru.sibinco.lib.LocaleMessages;
+import java.util.Locale;
+
 
 /**
  * Created by igork
@@ -37,5 +40,19 @@ public class TagLibFunctions
   public static final String concat(String s1, String s2)
   {
     return s1 + s2;
+  }
+
+  public static final String getErrorMessage(Locale locale, int errcode, boolean extended)
+  {
+    try {
+      String errMessage = LocaleMessages.getInstance().getMessage(locale, "smsc.errcode."+errcode);
+      if (errMessage == null) errMessage = LocaleMessages.getInstance().getMessage(locale, "smsc.errcode.unknown");
+      if (errMessage == null) return "! undefined error code "+ ((extended) ? ("("+errcode+") !"):"!");
+      if (extended) errMessage += " ("+errcode+")";
+      return errMessage;
+    } catch (Exception e) {
+      e.printStackTrace();
+      return null;
+    }
   }
 }
