@@ -79,18 +79,25 @@ void MapIoTask::deinit()
 {
   USHORT_T result;
   result = Et96MapUnbindReq(SSN);
-  if ( result != MSG_OK){
-    __trace2__("MAP::error at Et96MapUnbindReq errcode 0x%hx",result);
-    return;
+  if ( result != ET96MAP_E_OK){
+    __trace2__("MAP::error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
+//    return;
+  }
+  result = Et96MapUnbindReq(USSD_SSN);
+  if ( result != ET96MAP_E_OK){
+    __trace2__("MAP::error at Et96MapUnbindReq SSN=%d errcode 0x%hx",USSD_SSN,result);
+//    return;
   }
   result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   if ( result != MSG_OK){
     __trace2__("MAP::error at MsgRel errcode 0x%hx",result);
+    kill(getpid(),17);
     return;
   }
   result = MsgClose(MY_USER_ID);
   if ( result != MSG_OK){
     __trace2__("MAP::error at MsgClose errcode 0x%hx",result);
+    kill(getpid(),17);
     return;
   }
   MsgExit();
@@ -132,8 +139,6 @@ void MapIoTask::dispatcher()
     if ( result == MSG_TIMEOUT ) continue;
     if ( result == MSG_BROKEN_CONNECTION ){
       __trace2__("MAP: Broken connection");
-      kill(getpid(),17);
-      return;
 restart:
       __trace2__("MAP:: try restart MAP service");
 //      warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
@@ -217,7 +222,7 @@ void MapIoTask::init(unsigned timeout)
   }
   bind_res = Et96MapBindReq(MY_USER_ID, USSD_SSN);
   if(bind_res!=ET96MAP_E_OK){
-    __trace2__("MAP: 147 Bind error 0x%hx",bind_res);
+    __trace2__("MAP: USSD Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");
   }
   __trace__("MAP: Ok");
