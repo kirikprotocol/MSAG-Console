@@ -78,12 +78,22 @@ bool AliasRegistry::checkInverseTransformation(const Address& src1,
 bool AliasRegistry::putAlias(const AliasInfo& alias)
 {
 	//дублированные алиасы не сохраняются
-	if (addrMap.find(alias.addr) != addrMap.end() ||
-		aliasMap.find(alias.alias) != aliasMap.end())
+	AddressMap::const_iterator it = addrMap.find(alias.addr);
+	if (it != addrMap.end())
 	{
 		ostringstream os;
-		os << alias;
-		__trace2__("Duplicate alias: %s", os.str().c_str());
+		os << "AliasRegistry::putAlias(): " << alias <<
+			" duplicates exising " << (it->second->aliasInfo);
+		__trace2__("%s", os.str().c_str());
+		return false;
+	}
+	AddressMap::const_iterator it2 = aliasMap.find(alias.alias);
+	if (it2 != aliasMap.end())
+	{
+		ostringstream os;
+		os << "AliasRegistry::putAlias(): " << alias <<
+			" duplicates exising " << ((it2->second->aliasInfo));
+		__trace2__("%s", os.str().c_str());
 		return false;
 	}
 	//алиасы допускающие неоднозначные преобразования addr->alias->addr или
@@ -91,15 +101,17 @@ bool AliasRegistry::putAlias(const AliasInfo& alias)
 	for (AddressMap::const_iterator it = addrMap.begin(); it != addrMap.end(); it++)
 	{
 		const AliasInfo& info = it->second->aliasInfo;
+		//alias->addr->alias
 		if (!checkInverseTransformation(alias.alias, alias.addr, info.alias, info.addr) ||
-			!checkInverseTransformation(info.alias, info.addr, alias.alias, alias.addr) ||
-			!checkInverseTransformation(alias.addr, alias.alias, info.addr, info.alias) ||
-			!checkInverseTransformation(info.addr, info.alias, alias.addr, alias.alias))
+			!checkInverseTransformation(info.alias, info.addr, alias.alias, alias.addr))
+			/*!checkInverseTransformation(alias.addr, alias.alias, info.addr, info.alias) ||
+			!checkInverseTransformation(info.addr, info.alias, alias.addr, alias.alias)*/
 		{
 			ostringstream os;
-			os << alias;
-			__trace2__("Inverse transformation check failed for alias = %s",
-				os.str().c_str());
+			os << "AliasRegistry::putAlias(): " << alias <<
+				" conflicts with exising " << info;
+			__trace2__("%s", os.str().c_str());
+			return false;
 		}
 	}
 	//добавить алиас
