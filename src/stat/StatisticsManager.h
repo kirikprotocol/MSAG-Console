@@ -32,11 +32,10 @@ namespace smsc { namespace stat
         
         SmsStat(int accepted = 0, int rejected = 0, 
                 int delivered = 0, int failed = 0, 
-                int recheduled = 0, int temporal = 0) 
+                int rescheduled = 0, int temporal = 0) 
             : accepted(accepted), rejected(rejected),
               delivered(delivered), failed(failed),
-              rescheduled(rescheduled), temporal(temporal) 
-            { errors.Empty(); };
+              rescheduled(rescheduled), temporal(temporal) {};
         SmsStat(const SmsStat& stat) 
             : accepted(stat.accepted), rejected(stat.rejected), 
               delivered(stat.delivered), failed(stat.failed),

@@ -168,7 +168,7 @@ void StatisticsManager::updateChanged(const char* dstSmeId, const char* routeId,
 void StatisticsManager::updateScheduled(const char* dstSmeId, const char* routeId)
 {
     MutexGuard  switchGuard(switchLock);
-    
+
     if (dstSmeId && dstSmeId[0])
     {
         SmsStat* stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
@@ -333,21 +333,21 @@ void StatisticsManager::flushCounters(short index)
         insertStatRouteStmt->setUint32(1, period);
         insertStatRouteStateStmt->setUint32(1, period);
         statByRoute[index].First();
-        char* routeId = 0; SmsStat routeStat;
+        char* routeId = 0; SmsStat* routeStat = 0;
         while (statByRoute[index].Next(routeId, routeStat))
         {
-            if (!routeId || routeId[0] == '\0') continue;
+            if (!routeStat || !routeId || routeId[0] == '\0') continue;
             insertStatRouteStmt->setString(2, routeId);
-            insertStatRouteStmt->setInt32 (3, routeStat.accepted);
-            insertStatRouteStmt->setInt32 (4, routeStat.rejected);
-            insertStatRouteStmt->setInt32 (5, routeStat.delivered);
-            insertStatRouteStmt->setInt32 (6, routeStat.failed);
-            insertStatRouteStmt->setInt32 (7, routeStat.rescheduled);
-            insertStatRouteStmt->setInt32 (8, routeStat.temporal);
+            insertStatRouteStmt->setInt32 (3, routeStat->accepted);
+            insertStatRouteStmt->setInt32 (4, routeStat->rejected);
+            insertStatRouteStmt->setInt32 (5, routeStat->delivered);
+            insertStatRouteStmt->setInt32 (6, routeStat->failed);
+            insertStatRouteStmt->setInt32 (7, routeStat->rescheduled);
+            insertStatRouteStmt->setInt32 (8, routeStat->temporal);
             insertStatRouteStmt->executeUpdate();
 
             insertStatRouteStateStmt->setString(2, routeId);
-            IntHash<int>::Iterator rit = routeStat.errors.First();
+            IntHash<int>::Iterator rit = routeStat->errors.First();
             int recError, reCounter;
             while (rit.Next(recError, reCounter))
             {
@@ -355,26 +355,27 @@ void StatisticsManager::flushCounters(short index)
                 insertStatRouteStateStmt->setInt32(4, reCounter);
                 insertStatRouteStateStmt->executeUpdate();
             }
+            routeStat = 0;
         }
 
         insertStatSmeStmt->setUint32(1, period);
         insertStatSmeStateStmt->setUint32(1, period);
         statBySmeId[index].First();
-        char* smeId = 0; SmsStat smeStat;
+        char* smeId = 0; SmsStat* smeStat = 0;
         while (statBySmeId[index].Next(smeId, smeStat))
         {
-            if (!smeId || smeId[0] == '\0') continue;
+            if (!smeStat || !smeId || smeId[0] == '\0') continue;
             insertStatSmeStmt->setString(2, smeId);
-            insertStatSmeStmt->setInt32 (3, smeStat.accepted);
-            insertStatSmeStmt->setInt32 (4, smeStat.rejected);
-            insertStatSmeStmt->setInt32 (5, smeStat.delivered);
-            insertStatSmeStmt->setInt32 (6, smeStat.failed);
-            insertStatSmeStmt->setInt32 (7, smeStat.rescheduled);
-            insertStatSmeStmt->setInt32 (8, smeStat.temporal);
+            insertStatSmeStmt->setInt32 (3, smeStat->accepted);
+            insertStatSmeStmt->setInt32 (4, smeStat->rejected);
+            insertStatSmeStmt->setInt32 (5, smeStat->delivered);
+            insertStatSmeStmt->setInt32 (6, smeStat->failed);
+            insertStatSmeStmt->setInt32 (7, smeStat->rescheduled);
+            insertStatSmeStmt->setInt32 (8, smeStat->temporal);
             insertStatSmeStmt->executeUpdate();
 
             insertStatSmeStateStmt->setString(2, smeId);
-            IntHash<int>::Iterator sit = smeStat.errors.First();
+            IntHash<int>::Iterator sit = smeStat->errors.First();
             int secError, seCounter;
             while (sit.Next(secError, seCounter))
             {
@@ -382,6 +383,7 @@ void StatisticsManager::flushCounters(short index)
                 insertStatSmeStateStmt->setInt32(4, seCounter);
                 insertStatSmeStateStmt->executeUpdate();
             }
+            smeStat = 0;
         }
 
         connection->commit();
