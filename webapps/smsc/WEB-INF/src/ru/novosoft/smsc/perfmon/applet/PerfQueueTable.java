@@ -24,6 +24,7 @@ public class PerfQueueTable extends Canvas {
 
   public PerfQueueTable(PerfSnap snap) {
     this.snap = new PerfSnap(snap);
+    prefSize = new Dimension(100, 0);
     heads = new String[numCols];
     for(int i = 0; i < numCols; i++) {
       heads[i] = PerfMon.localeText.getString("pqueh." + i);
