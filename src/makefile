@@ -34,6 +34,10 @@ export XERCES_LIB
 export SHARED_OPT
 export SSL_LIB
 
+ifndef XTARGET
+XTARGET := -xtarget=ultra3 -xarch=v8plus
+endif
+
 ifndef SMSC_SRCDIR
 #$(warning SMSC_SRCDIR is not defined)
 SMSC_SRCDIR:=$(PWD)
@@ -75,7 +79,7 @@ CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SSL_DIR)/include -I$
 CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
 CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
 ifeq ($(CXX),CC)
-COMPFLAGS:=-features=extensions -mt -D_POSIX_PTHREAD_SEMANTICS
+COMPFLAGS:=-features=extensions -fast $(XTARGET) -mt -D_POSIX_PTHREAD_SEMANTICS
 CXXFLAGS := $(CXXFLAGS) -library=stlport4
 endif
 ifeq ($(CXX),CC)
@@ -124,8 +128,8 @@ endif
 endif
 
 ifeq ($(DEBUG),YES)
-CFLAGS := $(CFLAGS) -g -fast -DSMSC_DEBUG
-CXXFLAGS := $(CXXFLAGS) -g -fast -DSMSC_DEBUG
+CFLAGS := $(CFLAGS) -g -DSMSC_DEBUG
+CXXFLAGS := $(CXXFLAGS) -g -DSMSC_DEBUG
 export DEBUG
 else
 ifeq ($(COVER),YES)
@@ -134,8 +138,8 @@ CXXFLAGS := $(CXXFLAGS) -pg -g -a
 else
 ifdef OPTI
 ifeq ($(CXX),CC)
-CXXFLAGS := -fast -g $(CXXFLAGS) -DDISABLE_ANY_CHECKS
-CFLAGS := -fast -g $(CFLAGS) -DDISABLE_ANY_CHECKS
+CXXFLAGS := -g $(CXXFLAGS) -DDISABLE_ANY_CHECKS
+CFLAGS := -g $(CFLAGS) -DDISABLE_ANY_CHECKS
 else
 CFLAGS := $(CFLAGS) -O2 -finline-limit=2048 -DDISABLE_ANY_CHECKS
 CXXFLAGS := $(CXXFLAGS) -O2 -finline-limit=2048 -DDISABLE_ANY_CHECKS
