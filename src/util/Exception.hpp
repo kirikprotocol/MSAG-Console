@@ -28,16 +28,14 @@ public:
     int size=strlen(fmt)*4;
     char *buf=new char[size];
     int res;
-    do{
+    res=vsnprintf( buf, size,fmt,arglist);
+    if(res>size)
+    {
+      delete [] buf;
+      size=res+4;
+      buf=new char[size];
       res=vsnprintf( buf, size,fmt,arglist);
-      if(res<0)
-      {
-        delete [] buf;
-        size-=res;
-        size+=4;
-        buf=new char[size];
-      }
-    }while(res<0);
+    }
     message=buf;
     delete [] buf;
   }
