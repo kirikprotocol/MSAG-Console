@@ -172,9 +172,24 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 			rcptFlag = PDU_REQUIRED_FLAG;
 			break;
 		case FAILURE_SMSC_DELIVERY_RECEIPT:
-			startTime = validTime;
-			rcptFlag = destReachble && (pduType != PDU_NORMAL) ?
-				PDU_NOT_EXPECTED_FLAG : PDU_REQUIRED_FLAG;
+			switch (pduType)
+			{
+				case PDU_NORMAL:
+					startTime = validTime; //время заранее не известно
+					rcptFlag = PDU_REQUIRED_FLAG;
+					break;
+				case PDU_EXT_SME:
+					startTime = validTime;
+					rcptFlag = rcptFlag = destReachble ?
+						PDU_NOT_EXPECTED_FLAG : PDU_REQUIRED_FLAG;
+					break;
+				case PDU_NULL:
+					startTime = waitTime;
+					rcptFlag = PDU_REQUIRED_FLAG;
+					break;
+				default:
+					__unreachable__("Invalid pduType");
+			}
 			break;
 		case NO_SMSC_DELIVERY_RECEIPT: //default
 		case SMSC_DELIVERY_RECEIPT_RESERVED: //equal to default
@@ -187,10 +202,15 @@ PduData* SmppTransmitterTestCases::registerSubmitSm(PduSubmitSm* pdu,
 	DeliveryReceiptMonitor* rcptMonitor = new DeliveryReceiptMonitor(
 		startTime, pduData, rcptFlag);
 	rcptMonitor->regDelivery = regDelivery;
-	if (smeAckFlag == PDU_REQUIRED_FLAG)
+	if (smeAckFlag == PDU_REQUIRED_FLAG) //pduType == PDU_EXT_SME
 	{
 		rcptMonitor->deliveryFlag = PDU_RECEIVED_FLAG;
 		rcptMonitor->deliveryStatus = ESME_ROK;
+	}
+	if (pduType == PDU_NULL)
+	{
+		rcptMonitor->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
+		rcptMonitor->deliveryStatus = ESME_RX_P_APPN;
 	}
 	fixture->pduReg->registerMonitor(rcptMonitor);
 	//response monitor регистрируется когда станет известен seqNum
