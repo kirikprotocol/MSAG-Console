@@ -32,7 +32,8 @@ void ConnectionPool::loadMaxSize(Manager& config)
     catch (ConfigException& exc) 
     {
         size = SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE;
-        log.warn("Max size wasn't specified ! "
+        log.warn("Maximum ConnectionPool size wasn't specified ! "
+                 "Config parameter: <MessageStore.Connections.max> "
                  "Using default: %d", size);
     }
 }
@@ -46,7 +47,8 @@ void ConnectionPool::loadInitSize(Manager& config)
     catch (ConfigException& exc) 
     {
         count = SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE;
-        log.warn("Init size wasn't specified ! "
+        log.warn("Init ConnectionPool size wasn't specified ! "
+                 "Config parameter: <MessageStore.Connections.init> "
                  "Using default: %d", count);
     }
 }
@@ -61,7 +63,9 @@ void ConnectionPool::loadMaxQueueSize(Manager& config)
     catch (ConfigException& exc) 
     {
         maxQueueSize = SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE;
-        log.warn("Max queue size wasn't specified ! "
+        log.warn("Maximum count of pending requests to ConnectionPool "
+                 "for connections wasn't specified ! "
+                 "Config parameter: <MessageStore.Connections.queue> "
                  "Using default: %d", maxQueueSize);
     }
 }
@@ -75,7 +79,8 @@ void ConnectionPool::loadDBInstance(Manager& config)
     } 
     catch (ConfigException& exc) 
     {
-        log.error("DB instance name wasn't specified !");
+        log.error("DB instance name wasn't specified ! "
+                  "Config parameter: <MessageStore.dbInstance>");
         throw;
     }
 }
@@ -89,7 +94,8 @@ void ConnectionPool::loadDBUserName(Manager& config)
     } 
     catch (ConfigException& exc) 
     {
-        log.error("DB user name wasn't specified !");
+        log.error("DB user name wasn't specified ! "
+                  "Config parameter: <MessageStore.dbUserName>");
         throw;
     }
 }
@@ -103,7 +109,8 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
     } 
     catch (ConfigException& exc) 
     {
-        log.error("DB user password wasn't specified !");
+        log.error("DB user password wasn't specified ! "
+                  "Config parameter: <MessageStore.UserPassword>");
         throw;
     }
 }
@@ -122,8 +129,8 @@ ConnectionPool::ConnectionPool(Manager& config)
     if (size < count) 
     {
         size = count;
-        log.warn("Specified size less than init size. "
-                  "Using max: %d", size);
+        log.warn("Specified size of ConnectionPool less than it's init size. "
+                 "Using maximum value defined:  %d", size);
     }
 
     __require__(dbInstance && dbUserName && dbUserPassword);

@@ -30,7 +30,9 @@ void StoreManager::loadMaxTriesCount(Manager& config)
     catch (ConfigException& exc) 
     {
         maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
-        log.warn("Max tries count to process operation wasn't specified ! "
+        log.warn("Max tries count to process operation on MessageStore "
+                 "wasn't specified ! "
+                 "Config parameter: <MessageStore.maxTriesCount> "
                  "Using default: %d", maxTriesCount);
     }
 }
