@@ -73,20 +73,48 @@ namespace smsc { namespace infosme
     */                                                      
     class Task
     {
+    friend class TaskGuard;
     private:
+        
+        Event           usersCountChanged;
+        Mutex           usersCountLock;
+        long            usersCount;
+        
+        Mutex           finalizingLock;
+        bool            bFinalizing;
+
     protected:
         
         TaskInfo        info;
         DataSource*     dsOwn;
         DataSource*     dsInt;
         
-        Task() : dsOwn(0), dsInt(0) {};
+        Task() : usersCount(0), bFinalizing(false), dsOwn(0), dsInt(0) {};
+        virtual ~Task() {};
 
         virtual void init(ConfigView* config) = 0;
 
     public:
         
-        virtual ~Task() {};
+        void finalize()
+        {
+            {
+                MutexGuard guard(finalizingLock);
+                bFinalizing = true;
+            }
+            endProcess();
+            
+            while (true) {
+                usersCountChanged.Wait(10);
+                MutexGuard guard(usersCountLock);
+                if (usersCount <= 0) break;
+            }
+            delete this;
+        }
+        bool isFinalizing() {
+            MutexGuard guard(finalizingLock);
+            return bFinalizing;
+        }
 
         inline int getPriority() {
             return info.priority;
@@ -163,6 +191,34 @@ namespace smsc { namespace infosme
         virtual bool getNextMessage(Connection* connection, Message& message) = 0;
     };
     
+    class TaskGuard
+    {
+    protected:
+        
+        Task* task;
+
+    public:
+        
+        TaskGuard(Task* task) : task(task) {
+            if (!task) return;
+            MutexGuard guard(task->usersCountLock);
+            task->usersCount++;
+            task->usersCountChanged.Signal();
+        }
+        virtual ~TaskGuard() {
+            if (!task) return;
+            MutexGuard guard(task->usersCountLock);
+            if (task->usersCount > 0) { 
+                task->usersCount--;
+                task->usersCountChanged.Signal();
+            }
+        }
+        inline Task* get() {
+            return task;
+        }
+    };
+
+    
     struct TaskInvokeAdapter
     {
         virtual void invokeEndProcess(Task* task) = 0;
@@ -178,9 +234,11 @@ namespace smsc { namespace infosme
     };
     struct TaskContainerAdapter
     {
-        virtual bool  addTask(Task* task) = 0;
-        virtual bool  removeTask(std::string taskName) = 0;
-        virtual Task* getTask(std::string taskName) = 0;
+        virtual bool addTask(Task* task) = 0;
+        virtual bool removeTask(std::string taskName) = 0;
+        
+        virtual TaskGuard getTask(std::string taskName) = 0;
+        virtual TaskGuard getNextTask() = 0;
         
         virtual ~TaskContainerAdapter() {};
 

@@ -93,12 +93,16 @@ int TaskScheduler::Execute()
         {
             char* task_name = 0; bool task_key = false; tasks.First();
             while (tasks.Next(task_name, task_key))
-                if (task_name && task_name[0] != '\0') {
-                    Task* task = processor->getTaskContainerAdapter().getTask(task_name); 
+                if (task_name && task_name[0] != '\0')
+                {
+                    TaskGuard taskGuard = 
+                        processor->getTaskContainerAdapter().getTask(task_name);
+                    Task* task = taskGuard.get();
                     if (!task) { 
                         logger.error("Task '%s' not found.", task_name);
                         continue;
                     }
+                    
                     if (task->isEnabled() && !task->isInProcess())
                         processor->getTaskInvokeAdapter().invokeBeginProcess(task);
                 }

@@ -52,22 +52,21 @@ namespace smsc { namespace infosme
         TaskContainer() : TaskContainerAdapter(), prioritySum(0) {};
         virtual ~TaskContainer();
 
-        virtual bool  addTask(Task* task);
-        virtual bool  removeTask(std::string taskName);
-        virtual Task* getTask(std::string taskName);
-
-        virtual Task* getNextTask();
+        virtual bool addTask(Task* task);
+        virtual bool removeTask(std::string taskName);
+        
+        virtual TaskGuard getTask(std::string taskName);
+        virtual TaskGuard getNextTask();
     };
 
     typedef enum {
       beginProcessMethod, endProcessMethod, doNotifyMessageMethod, dropAllMessagesMethod
     } TaskMethod;
 
-    class TaskRunner : public ThreadedTask // for task method execution 
+    class TaskRunner : public TaskGuard, public ThreadedTask // for task method execution 
     {
     private:
         
-        Task*         task;
         TaskMethod    method;
         Connection*   connection;
         StateInfo     info;
@@ -75,16 +74,16 @@ namespace smsc { namespace infosme
     public:
         
         TaskRunner(Task* task, TaskMethod method, Connection* connection=0)
-            : ThreadedTask(), task(task), method(method), connection(connection) {};
+            : TaskGuard(task), ThreadedTask(), method(method), connection(connection) {};
         TaskRunner(Task* task, TaskMethod method, const StateInfo& info)
-            : ThreadedTask(), task(task), method(method), connection(0), info(info) {};
+            : TaskGuard(task), ThreadedTask(), method(method), connection(0), info(info) {};
 
         virtual ~TaskRunner() {};
         
         virtual int Execute()
         {
             __require__(task);
-
+            
             switch (method)
             {
             case endProcessMethod:

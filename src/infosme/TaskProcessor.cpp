@@ -15,7 +15,7 @@ TaskContainer::~TaskContainer()
     
     char* key = 0; Task* task = 0; tasks.First();
     while (tasks.Next(key, task))
-        if (task) { task->endProcess(); delete task; }
+        if (task) task->finalize();
 }
 bool TaskContainer::addTask(Task* task)
 {
@@ -38,19 +38,19 @@ bool TaskContainer::removeTask(std::string taskName)
     if (!task) return false;
     tasks.Delete(task_name);
     prioritySum -= task->getPriority();
-    task->endProcess();
-    delete task; // ???
+    task->finalize();
     return true;
 }
-Task* TaskContainer::getTask(std::string taskName)
+TaskGuard TaskContainer::getTask(std::string taskName)
 {
     MutexGuard guard(tasksLock);
     
     const char* task_name = taskName.c_str();
     if (!task_name || task_name[0] == '\0' || !tasks.Exists(task_name)) return 0;
-    return tasks.Get(task_name);
+    Task* task = tasks.Get(task_name);
+    return TaskGuard((task && !task->isFinalizing()) ? task:0);
 }
-Task* TaskContainer::getNextTask()
+TaskGuard TaskContainer::getNextTask()
 {
     MutexGuard guard(tasksLock);
     
@@ -64,10 +64,10 @@ Task* TaskContainer::getNextTask()
         if (task) 
         { 
             count += task->getPriority();
-            if (random <= count) return task;    
+            if (random <= count && !task->isFinalizing()) return TaskGuard(task);    
         }
     
-    return 0;
+    return TaskGuard(0);
 }
 
 /* ---------------------------- TaskProcessor ---------------------------- */
@@ -173,7 +173,8 @@ int TaskProcessor::Execute()
 void TaskProcessor::MainLoop()
 {
     logger.info("Entering MainLoop");
-    Task* task = container.getNextTask();
+    TaskGuard taskGuard = container.getNextTask(); 
+    Task* task = taskGuard.get();
     if (!task) return;
     
     Message message;
