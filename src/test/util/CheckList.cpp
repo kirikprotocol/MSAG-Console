@@ -207,7 +207,18 @@ void CheckList::saveHtml(bool printErrorCodes,
 		os << "<tr>" << endl;
 		os << "<td align=\"center\">" << cnt++ << "</td>" << endl;
 		os << "<td align=\"left\" style=\"padding-left: " << (20 * mag + 2) << ";\">" << toHtmlString(tc->desc) << "</td>" << endl;
-		os << "<td align=\"center\">" << (counts.second ? "Нет" : (counts.first ? "Да" : "-")) << "</td>" << endl;
+		if (counts.second)
+		{
+			os << "<td align=\"center\">Нет</td>" << endl;
+		}
+		else if (counts.first)
+		{
+			os << "<td align=\"center\" bgcolor=\"#80ff40\">Да</td>" << endl;
+		}
+		else
+		{
+			os << "<td align=\"center\">-</td>" << endl;
+		}
 		if (printExecCount)
 		{
 			if (counts.second)
