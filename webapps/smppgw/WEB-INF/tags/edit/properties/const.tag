@@ -4,4 +4,5 @@
  tag body-content="empty" %><%@
  attribute name="title" required="true"%><%@
  attribute name="name"  required="true"%><%@
- attribute name="value" required="true"%><sm-ep:property title="${title}"><input class=txt type="text" name="${fn:escapeXml(name)}" value="${fn:escapeXml(value)}" readonly></sm-ep:property>
+ attribute name="value" required="true"%><sm-ep:property title="${title}">
+<input class=txt type="text" name="${fn:escapeXml(name)}" value="${fn:escapeXml(value)}" readonly></sm-ep:property>

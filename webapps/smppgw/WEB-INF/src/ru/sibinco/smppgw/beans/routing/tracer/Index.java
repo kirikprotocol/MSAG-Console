@@ -19,9 +19,9 @@ import java.util.*;
  */
 public class Index extends TabledBeanImpl implements TabledBean
 {
-  public static final int TRACE_ROUTE_FOUND = 10;
-    public static final int TRACE_ROUTE_STATUS = 20;
-    public static final int TRACE_ROUTE_NOT_FOUND = 30;
+    public    final int traceRouteFound = 10;
+    public static final int traceRouteStatus = 20;
+    public  final int traceRouteNotFound = 30;
 
     private String dstAddress = null;
     private String srcAddress = null;
@@ -31,8 +31,9 @@ public class Index extends TabledBeanImpl implements TabledBean
 
   private String message = null;
     private List routeInfo = null;
+    private HashMap routeInfoMap = null;
     private List traceResults = null;
-    private int messageType = TRACE_ROUTE_STATUS;
+    private int messageType = traceRouteStatus;
 
     private String mbCheck = null;
     private String mbTrace = null;
@@ -63,7 +64,7 @@ public class Index extends TabledBeanImpl implements TabledBean
         if (null == traceResults || 0 >= traceResults.size())
           throw new SibincoException("Transport error, invalid responce.");
         message = (String) traceResults.get(0);
-        messageType = TRACE_ROUTE_STATUS;
+        messageType = traceRouteStatus;
         routeInfo = null;
         traceResults.remove(0);
       } catch (SibincoException e) {  e.printStackTrace();
@@ -134,13 +135,20 @@ public class Index extends TabledBeanImpl implements TabledBean
         if (null == traceResults || 1 >= traceResults.size())
           throw new SibincoException("Transport error, invalid responce.");
         message = (String) traceResults.get(0);
-        messageType = message.startsWith("Route found (disabled)") ? TRACE_ROUTE_STATUS :
-                message.startsWith("Route not found") ? TRACE_ROUTE_NOT_FOUND : TRACE_ROUTE_FOUND;
+        messageType = message.startsWith("Route found (disabled)") ? traceRouteStatus :
+                message.startsWith("Route not found") ? traceRouteNotFound : traceRouteFound;
         routeInfo = parseRouteInfo((String) traceResults.get(1));
+        if (routeInfo!=null) { routeInfoMap=new HashMap();
+        for (int i = 0; i < routeInfo.size(); i+=2) {
+          String key = (String)routeInfo.get(i);
+          String value= (String)routeInfo.get(i+1);
+          routeInfoMap.put(key,value);
+        }
+        }
         traceResults.remove(0);
         traceResults.remove(0);
       } catch (SibincoException e) { e.printStackTrace();
-        throw new SmppgwJspException(Constants.errors.routing.tracer.TraceRouteFailed,e.getMessage() );
+        throw new SmppgwJspException(Constants.errors.routing.tracer.TraceRouteFailed,e );
 
       }
     }
@@ -213,6 +221,11 @@ public class Index extends TabledBeanImpl implements TabledBean
       return routeInfo;
     }
 
+  public HashMap getRouteInfoMap()
+  {
+    return routeInfoMap;
+  }
+
     public int getMessageType()
     {
       return messageType;
@@ -246,6 +259,21 @@ public class Index extends TabledBeanImpl implements TabledBean
   public void setGateway(Gateway gateway)
   {
     this.gateway = gateway;
+  }
+
+  public  int getTraceRouteFound()
+  {
+    return traceRouteFound;
+  }
+
+  public  int getTraceRouteNotFound()
+  {
+    return traceRouteNotFound;
+  }
+
+  public static int getTraceRouteStatus()
+  {
+    return traceRouteStatus;
   }
 
    protected Collection getDataSource()

@@ -6,15 +6,13 @@ import ru.sibinco.lib.backend.service.Type;
 import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.protocol.Response;
 import ru.sibinco.lib.backend.util.xml.Utils;
+import ru.sibinco.lib.backend.sme.SmeStatus;
 import ru.sibinco.smppgw.backend.protocol.commands.*;
 import ru.sibinco.smppgw.backend.sme.GwSme;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
 import org.w3c.dom.Element;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
 
 /**
@@ -23,9 +21,12 @@ import java.util.HashMap;
 public class Gateway extends Proxy
 {
   private final String id;
+  private static final String SMPPGW_COMPONENT_ID = "SMPPGW";
   private static final String LOAD_ROUTES_METHOD_ID = "loadRoutes";
   private static final String TRACE_ROUTE_METHOD_ID = "traceRoute";
-
+  private static final String SME_STATUS_ID = "statusSme";
+  private long serviceRefreshTimeStamp = 0;
+  private Map smeStatuses = new HashMap();
   public Gateway(final ServiceInfo gwServiceInfo, final int port)
   {
     super(gwServiceInfo.getHost(), port);
@@ -114,6 +115,54 @@ public class Gateway extends Proxy
           throw new SibincoException("Unknown result type");
       }
      }
+
+  public synchronized SmeStatus getSmeStatus(final String id) throws SibincoException
+  {
+    final long currentTime = System.currentTimeMillis();
+    if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp) {
+      serviceRefreshTimeStamp = currentTime;
+      smeStatuses.clear();
+      final Object result = call(SME_STATUS_ID, Type.Types[Type.StringListType], new HashMap());
+      if (!(result instanceof List))
+        throw new SibincoException("Error in response");
+
+      for (Iterator i = ((List) result).iterator(); i.hasNext();) {
+        final String s = (String) i.next();
+        final SmeStatus smeStatus = new SmeStatus(s);
+        smeStatuses.put(smeStatus.getId(), smeStatus);
+      }
+    }
+    return (SmeStatus) smeStatuses.get(id);
+  }
+  public Object call( final String commandId, final Type returnType, final Map arguments) throws SibincoException
+   {
+//    if (info.status != ServiceInfo.STATUS_RUNNING)
+//      throw new SibincoException("Service \"" + info.getId() + "\" is not running");
+
+    // refreshComponents();
+
+
+       final Response r = runCommand(new CommandCall(commandId,  returnType, arguments));
+       if (Response.StatusOk != r.getStatus())
+         throw new SibincoException("Error occured: " + r.getDataAsString());
+       final Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
+       final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
+       switch (resultType.getId()) {
+         case Type.StringType:
+           return Utils.getNodeText(resultElem);
+         case Type.IntType:
+           return Long.decode(Utils.getNodeText(resultElem));
+         case Type.BooleanType:
+           return Boolean.valueOf(Utils.getNodeText(resultElem));
+         case Type.StringListType:
+           return translateStringList(Utils.getNodeText(resultElem));
+         default:
+           throw new SibincoException("Unknown result type");
+       }
+
+
+   }
+
 
   public synchronized List traceRoute(final String dstAddress, final String srcAddress, final String srcSysId)
           throws SibincoException

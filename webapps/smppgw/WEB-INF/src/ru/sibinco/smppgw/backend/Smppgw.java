@@ -48,8 +48,8 @@ public class Smppgw  extends Service
   private static final String SME_UPDATE_METHOD_ID = "sme_update";
   private static final String SME_STATUS_ID = "sme_status";
   private static final String SMPPGW_SME_ID = "SMPPGW";
-  private File configFolder = null;
-  private AliasSet aliases = null;
+ // private File configFolder = null;
+  //private AliasSet aliases = null;
   private long serviceRefreshTimeStamp = 0;
   private Map smeStatuses = new HashMap();
   public Smppgw(ServiceInfo info)
@@ -59,16 +59,16 @@ public class Smppgw  extends Service
   public Smppgw(final String smppgwHost,final int smppgwPort,final String smscConfFolderString,  SmppGWAppContext smscAppContext) throws SibincoException
   {
   super(new ServiceInfo(SMPPGW_SME_ID, smppgwHost, "", "", true, null, ServiceInfo.STATUS_STOPPED), smppgwPort);
-    try {
-          this.configFolder = new File(smscConfFolderString);
-          File file=new File(configFolder, "aliases.xml");
-          FileReader fileReader=new FileReader(file);
-          final Document aliasesDoc = Utils.parse(fileReader);
-          aliases = new AliasSet(aliasesDoc.getDocumentElement(), smscAppContext);
+ /*   try {
+    //      this.configFolder = new File(smscConfFolderString);
+      //    File file=new File(configFolder, "aliases.xml");
+      //    FileReader fileReader=new FileReader(file);
+       //   final Document aliasesDoc = Utils.parse(fileReader);
+        //  aliases = new AliasSet(aliasesDoc.getDocumentElement(), smscAppContext);
         } catch (FactoryConfigurationError error) {
           logger.error("Couldn't configure xml parser factory", error);
           throw new SibincoException("Couldn't configure xml parser factory: " + error.getMessage());
-        } catch (ParserConfigurationException e) {
+        }/* catch (ParserConfigurationException e) {
           logger.error("Couldn't configure xml parser", e);
           throw new SibincoException("Couldn't configure xml parser: " + e.getMessage());
         } catch (SAXException e) {
@@ -81,7 +81,7 @@ public class Smppgw  extends Service
           logger.error("Couldn't parse", e);
           throw new SibincoException("Couldn't parse: " + e.getMessage());
         }
-
+         */
 
   } /*
    public Object loadRoutes(final String subject) throws SibincoException
@@ -159,6 +159,7 @@ public class Smppgw  extends Service
      }
    }
    */
+        /*
    public synchronized void applyAliases() throws SibincoException
    {
      try {
@@ -180,12 +181,13 @@ public class Smppgw  extends Service
        throw new SibincoException("Couldn't apply_routes new settings: " + e.getMessage());
      }
    }
-
+  /*
   public AliasSet getAliases()
   {
     return aliases;
   }
-
+    */
+  /*
      protected PrintWriter storeAliases(final PrintWriter out)
   {
     Functions.storeConfigHeader(out, "aliases", "AliasRecords.dtd");
@@ -193,6 +195,7 @@ public class Smppgw  extends Service
     Functions.storeConfigFooter(out, "aliases");
     return out;
   }
+    */
 
   public synchronized void smeAdd(final Sme sme) throws SibincoException
   {

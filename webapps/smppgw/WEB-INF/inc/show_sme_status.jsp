@@ -1,6 +1,6 @@
-<%@ page import="ru.sibinco.lib.backend.sme.SmeStatus,
-                 ru.sibinco.lib.backend.route.SME,
-                 ru.sibinco.lib.backend.sme.SmeStatus"%><%!
+<%@ page import="ru.sibinco.lib.backend.sme.SmeStatus,ru.sibinco.smppgw.backend.SmppGWAppContext,
+                 ru.sibinco.lib.backend.sme.Sme,
+                 ru.sibinco.lib.backend.util.StringEncoderDecoder"%><%!
 String showSmeStatus(SmeStatus status)
 {
 	String result = "";
@@ -20,13 +20,13 @@ String showSmeStatus(SmeStatus status)
 			{
 				switch (status.getBindMode())
 				{
-					case SME.MODE_TX:
+					case Sme.MODE_TX:
 						result += " class=C080>TX&nbsp;" + status.getInAddress() + "</span>";
 						break;
-					case SME.MODE_RX:
+					case Sme.MODE_RX:
 						result += " class=C080>RX&nbsp;" + status.getInAddress() + "</span>";
 						break;
-					case SME.MODE_TRX:
+					case Sme.MODE_TRX:
 						result += " class=C080>TRX&nbsp;" + status.getInAddress() + "</span>";
 						break;
 					default:
@@ -40,5 +40,16 @@ String showSmeStatus(SmeStatus status)
 		result += " class=C000>unknown</span>";
 	}
 	return result;
+}
+String smeStatus(SmppGWAppContext appContext, String serviceId)
+{
+	SmeStatus status = null;
+	try {
+		status = appContext.getSmeHostsManager().smeStatus(serviceId);
+	}
+	catch (Throwable e)
+	{}
+	String elem_id = "CONNECTION_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
+	return "<span id=\"" + elem_id + "\" datasrc=#tdcConnStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\" "+ showSmeStatus(status);
 }
 %>
