@@ -47,6 +47,7 @@ public class DistributionListManager implements DistributionListAdmin
   private final static String GET_DL_SQL_FOR_UPDATE = "SELECT MAX_EL, OWNER FROM DL_SET WHERE LIST=?"; // FOR UPDATE
   private final static String GET_DLMEMBERS_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=?";
   private final static String GET_DLS_FOR_OWNER_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE OWNER=?";
+  private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MAX(COUNT(LIST)), 0) FROM DL_MEMBERS WHERE LIST IN (SELECT LIST FROM DL_SET WHERE OWNER=?) GROUP BY LIST";
 
 
   private DataSource ds;
@@ -201,7 +202,9 @@ public class DistributionListManager implements DistributionListAdmin
     return prc;
   }
 
-  public void alterPrincipal(Principal prc, boolean altLists, boolean altElements) throws AdminException, PrincipalNotExistsException
+  public void alterPrincipal(Principal prc, boolean altLists, boolean altElements)
+          throws AdminException, PrincipalNotExistsException, ListsCountExceededException,
+          MembersCountExceededForOwnerException
   {
     PreparedStatement stmt = null;
     Connection connection = null;
@@ -216,6 +219,28 @@ public class DistributionListManager implements DistributionListAdmin
       rs.close();
       rs = null;
       stmt.close();
+
+      stmt = connection.prepareStatement(GET_DLS_FOR_OWNER_SQL);
+      stmt.setString(1, prc.getAddress());
+      rs = stmt.executeQuery();
+      int listsCount = rs.next() ? rs.getInt(1) : 0;
+      rs.close();
+      rs = null;
+      stmt.close();
+
+      if (listsCount > prc.getMaxLists())
+        throw new ListsCountExceededException(prc.getAddress());
+
+      stmt = connection.prepareStatement(GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL);
+      stmt.setString(1, prc.getAddress());
+      rs = stmt.executeQuery();
+      int maxMembersCount = rs.next() ? rs.getInt(1) : 0;
+      rs.close();
+      rs = null;
+      stmt.close();
+
+      if (maxMembersCount > prc.getMaxElements())
+        throw new MembersCountExceededForOwnerException(prc.getAddress(), maxMembersCount, prc.getMaxElements());
 
       if (altLists) {
         stmt = connection.prepareStatement(ALT_PRINCIPAL_LIST_SQL);

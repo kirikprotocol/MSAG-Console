@@ -1,15 +1,15 @@
 package ru.novosoft.smsc.jsp.dl;
 
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.dl.exceptions.ListsCountExceededException;
+import ru.novosoft.smsc.admin.dl.exceptions.MembersCountExceededForOwnerException;
+import ru.novosoft.smsc.admin.dl.exceptions.PrincipalAlreadyExistsException;
+import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
+import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
-import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.AdminException;
 
-import java.security.Principal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -28,6 +28,7 @@ public class PrincipalsEdit extends SmscBean
 
   private String mbCancel = null;
   private String mbDone = null;
+  private DistributionListAdmin admin = null;
 
   protected int init(List errors)
   {
@@ -35,31 +36,20 @@ public class PrincipalsEdit extends SmscBean
     if (result != RESULT_OK)
       return result;
 
+    admin = appContext.getSmsc().getDistributionListAdmin();
+
     if (!initialized) {
       if (!create) {
-        Connection connection = null;
         try {
-          connection = appContext.getConnectionPool().getConnection();
-          PreparedStatement statement = connection.prepareStatement("select * from dl_principals where address=?");
-          statement.setString(1, address);
-          ResultSet resultSet = statement.executeQuery();
-          if (resultSet.next()) {
-            max_lst = resultSet.getInt("max_lst");
-            max_el = resultSet.getInt("max_el");
-          } else {
-            logger.error("Principal \"" + address + "\" not found");
-            return error("Principal \"" + address + "\" not found");
-          }
-        } catch (SQLException e) {
-          logger.error("Could not get principal", e);
-          return error("Could not get principal", e);
-        } finally {
-          try {
-            connection.close();
-          } catch (SQLException e) {
-            logger.error("Could not close connection", e);
-            return error("Could not close connection", e);
-          }
+          ru.novosoft.smsc.admin.dl.Principal principal = admin.getPrincipal(address);
+          max_lst = principal.getMaxLists();
+          max_el = principal.getMaxElements();
+        } catch (PrincipalNotExistsException e) {
+          logger.error("Principal \"" + address + "\" not found");
+          return error("Principal \"" + address + "\" not found");
+        } catch (AdminException e) {
+          logger.error("Cannot load principal \"" + address + "\"", e);
+          return error("Cannot load principal \"" + address + "\"", e);
         }
       }
     }
@@ -67,7 +57,7 @@ public class PrincipalsEdit extends SmscBean
     return result;
   }
 
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  public int process(SMSCAppContext appContext, List errors, java.security.Principal loginedPrincipal)
   {
     int result = super.process(appContext, errors, loginedPrincipal);
     if (result != RESULT_OK)
@@ -83,42 +73,35 @@ public class PrincipalsEdit extends SmscBean
 
   private int done()
   {
-    Connection connection = null;
+    Mask addressMask = null;
     try {
-      connection = appContext.getConnectionPool().getConnection();
-      PreparedStatement statement;
-      if (create)
-        statement = connection.prepareStatement("insert into dl_principals (max_lst, max_el, address) values (?, ?, ?)");
-      else
-        statement = connection.prepareStatement("update dl_principals set max_lst=?, max_el=? where address=?");
+      addressMask = new Mask(address);
+    } catch (AdminException e) {
+      logger.error("Invalid address \"" + address + "\"", e);
+      return error("Invalid address \"" + address + "\"", e);
+    }
 
-      statement.setInt(1, max_lst);
-      statement.setInt(2, max_el);
-      if (create) {
-        try {
-          statement.setString(3, create ? new Mask(address).getNormalizedMask() : address);
-        } catch (AdminException e) {
-          logger.error("Invalid address \"" + address + "\"", e);
-          return error("Invalid address \"" + address + "\"", e);
-        }
-      } else {
-        statement.setString(3, address);
-      }
-      int updatedRows = statement.executeUpdate();
-    } catch (SQLException e) {
-      logger.error("Could not update or create principal", e);
-      return error("Could not update or create principal", e);
-    } finally {
-      try {
-        if (connection != null)
-        {
-          connection.commit();
-          connection.close();
-        }
-      } catch (SQLException e) {
-        logger.error("Could not close database connection", e);
-        return error("Could not close database connection", e);
-      }
+    ru.novosoft.smsc.admin.dl.Principal principal = new ru.novosoft.smsc.admin.dl.Principal(addressMask.getNormalizedMask(), max_lst, max_el);
+    try {
+      if (create)
+        admin.addPrincipal(principal);
+      else
+        admin.alterPrincipal(principal, true, true);
+    } catch (PrincipalAlreadyExistsException e) {
+      logger.error("Principal \"" + address + "\" already exists");
+      return error("Principal \"" + address + "\" already exists");
+    } catch (PrincipalNotExistsException e) {
+      logger.error("Principal \"" + address + "\" not found");
+      return error("Principal \"" + address + "\" not found");
+    } catch (ListsCountExceededException e) {
+      logger.error("Max lists count (" + max_lst + ") too small for principal \"" + address + "\"");
+      return error("Max lists count too small");
+    } catch (MembersCountExceededForOwnerException e) {
+      logger.error("Max members count (" + max_el + ") too small for principal \"" + address + "\"");
+      return error("Max members count too small");
+    } catch (AdminException e) {
+      logger.error("Could not " + (create ? "create" : "update") + " principal \"" + address + '"', e);
+      return error("Could not " + (create ? "create" : "update") + " principal", address, e);
     }
     return RESULT_DONE;
   }
