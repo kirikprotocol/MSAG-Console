@@ -19,7 +19,7 @@ struct MicroString{
 };
 
 
-inline char GetChar(char*& ptr,unsigned& shift){
+inline char GetChar(const char*& ptr,unsigned& shift){
   char val = (*ptr >> shift)&0x7f;
   if ( shift > 1 )
     val |= (*(ptr+1) << (8-shift))&0x7f;
