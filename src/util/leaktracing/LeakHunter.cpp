@@ -105,6 +105,19 @@ public:
 const int LH_HASHSIZE=16*1024;
 const int LH_DEFAULTBUCKETSIZE=16;
 
+static int mmapfd;
+static char* mem;
+static int allocated;
+
+void FixAlloc()
+{
+  if(allocated&4095)
+  {
+    allocated+=4096-(allocated&4095);
+  }
+}
+
+
 class LeakHunter{
   BlockInfo *memblocks[LH_HASHSIZE];
   int memcounts[LH_HASHSIZE];
@@ -121,10 +134,6 @@ class LeakHunter{
 
   int maxmem;
   int alloc;
-
-  int fd;
-  char* mem;
-  int allocated;
 
   int idcnt;
 
@@ -146,6 +155,7 @@ public:
 
   void RegisterAlloc(void* ptr,int size);
   int RegisterDealloc(void* ptr);
+  int GetBlockSize(void* ptr);
   void AddFreeBlock(BlockInfo*);
   void* FindFreeBlock(int sz);
 
@@ -166,6 +176,14 @@ static void sigcheckpoint(int param)
   lh->CheckPoint();
 }
 
+void* innermalloc(size_t sz)
+{
+  void* ptr=mem+allocated;
+  allocated+=sz;
+  FixAlloc();
+  mprotect(ptr,sz,PROT_READ|PROT_WRITE);
+  return ptr;
+}
 
 
 void LeakHunter::Init()
@@ -179,32 +197,14 @@ void LeakHunter::Init()
   int i;
   for(i=0;i<LH_HASHSIZE;i++)
   {
-    memblocks[i]=(BlockInfo*)malloc(sizeof(BlockInfo)*LH_DEFAULTBUCKETSIZE);
+    memblocks[i]=(BlockInfo*)innermalloc(sizeof(BlockInfo)*LH_DEFAULTBUCKETSIZE);
+
     memcounts[i]=0;
     memsizes[i]=LH_DEFAULTBUCKETSIZE;
-    szmemblocks[i]=(BlockInfo*)malloc(sizeof(BlockInfo)*LH_DEFAULTBUCKETSIZE);
+    szmemblocks[i]=(BlockInfo*)innermalloc(sizeof(BlockInfo)*LH_DEFAULTBUCKETSIZE);
     szmemcounts[i]=0;
     szmemsizes[i]=LH_DEFAULTBUCKETSIZE;
   }
-
-  fd=open("mmap",O_CREAT|O_RDWR,0666);
-  if(fd==-1)
-  {
-    fprintf(stderr,"lh-open:%s\n",strerror(errno));
-    exit(-1);
-  }
-  lseek(fd,MMAP_SIZE,SEEK_SET);
-  char c=0;
-  write(fd,&c,1);
-
-  void* addr=mmap(0,MMAP_SIZE,PROT_READ|PROT_WRITE,MAP_PRIVATE,fd,0);
-  if(addr==MAP_FAILED)
-  {
-    fprintf(stderr,"lh-mmap:%s\n",strerror(errno));
-    exit(-1);
-  }
-  mem=(char*)addr;
-  allocated=0;
 
   maxmem=0;
   alloc=0;
@@ -219,14 +219,13 @@ void* LeakHunter::Alloc(int size)
   smsc::core::synchronization::MutexGuard guard(m);
   void *res=FindFreeBlock(size);
   if(res)return res;
-  int rsz=size+((size&0xfff)!=0?4096-(size&0xfff):0);
-  if(allocated+rsz>=MMAP_SIZE)
+  if(allocated+size>=MMAP_SIZE)
   {
     fprintf(stderr,"OUT OF MEMORY\n");
     abort();
   }
   res=mem+allocated;
-  allocated+=rsz;
+  allocated+=size;
   return res;
 }
 
@@ -259,8 +258,6 @@ LeakHunter::~LeakHunter()
   }
   fprintf(f,"---\n");
   fclose(f);
-  close(fd);
-  unlink("mmap");
 }
 
 #define PRE_ALLOC 256
@@ -273,6 +270,7 @@ LeakHunter::~LeakHunter()
 
 void LeakHunter::CheckPoint()
 {
+  /*
   f=fopen("lhcheckpoint.log","wt");
   if(!f)
   {
@@ -340,6 +338,7 @@ void LeakHunter::CheckPoint()
   cpalloc=alloc;
   fclose(f);
   m.Unlock();
+  */
 }
 
 void LeakHunter::DumpTrace(void** trace)
@@ -360,9 +359,9 @@ void LeakHunter::RegisterAlloc(void* ptr,int size)
   int idx=(((int)ptr)>>8)&(LH_HASHSIZE-1);
   if(memcounts[idx]==memsizes[idx])
   {
-    BlockInfo *tmp=(BlockInfo *)malloc(sizeof(BlockInfo)*memsizes[idx]*2);
+    BlockInfo *tmp=(BlockInfo*)innermalloc(sizeof(BlockInfo)*memsizes[idx]*2);
     memcpy(tmp,memblocks[idx],sizeof(BlockInfo)*memcounts[idx]);
-    free(memblocks[idx]);
+    //free(memblocks[idx]);
     memblocks[idx]=tmp;
     memsizes[idx]*=2;
   }
@@ -427,9 +426,9 @@ void LeakHunter::AddFreeBlock(BlockInfo* _bi)
   int idx=(rsize>>12)&(LH_HASHSIZE-1);
   if(szmemcounts[idx]==szmemsizes[idx])
   {
-    BlockInfo *tmp=(BlockInfo *)malloc(sizeof(BlockInfo)*szmemsizes[idx]*2);
+    BlockInfo *tmp=(BlockInfo *)innermalloc(sizeof(BlockInfo)*szmemsizes[idx]*2);
     memcpy(tmp,szmemblocks[idx],sizeof(BlockInfo)*szmemcounts[idx]);
-    free(szmemblocks[idx]);
+    //free(szmemblocks[idx]);
     szmemblocks[idx]=tmp;
     szmemsizes[idx]*=2;
   }
@@ -439,7 +438,7 @@ void LeakHunter::AddFreeBlock(BlockInfo* _bi)
   bi->addr=_bi->addr;
   bi->size=_bi->size;
   bi->id=idcnt++;
-  void* ptr=((char*)bi->addr)-rest;
+  void* ptr=((char*)bi->addr)-(_bi->size&0xfff);
   mprotect(ptr,rsize,PROT_NONE);
   szmemcounts[idx]++;
 }
@@ -454,7 +453,8 @@ void* LeakHunter::FindFreeBlock(int sz)
     int rsize=szmemblocks[idx][i].size+rest+4096;
     if(rsize==sz)
     {
-      void* ptr=((char*)szmemblocks[idx][i].addr)-rest;
+      void* ptr=((char*)szmemblocks[idx][i].addr)-(((int)szmemblocks[idx][i].addr)&0xfff);
+      //fprintf(stderr,"FFB: ptr=%p\n",ptr);
       mprotect(ptr,rsize,PROT_READ|PROT_WRITE);
       if(szmemcounts[idx]-1-i>0)
       {
@@ -498,11 +498,29 @@ int LeakHunter::RegisterDealloc(void* ptr)
   //throw "DELETE UNALLOCATED BLOCK";
 }
 
+int LeakHunter::GetBlockSize(void* ptr)
+{
+  smsc::core::synchronization::MutexGuard guard(m);
+  if(!init)Init();
+  int idx=(((int)ptr)>>8)&(LH_HASHSIZE-1);
+  int i;
+  for(i=memcounts[idx]-1;i>=0;i--)
+  {
+    if(memblocks[idx][i].addr==ptr)
+    {
+      return memblocks[idx][i].size;
+    }
+  }
+  return -1;
+}
+
+
 
 static void deletelh()
 {
+  close(mmapfd);
+  unlink("mmap");
   lh->~LeakHunter();
-  free(lh);
 }
 
 static void initlh()
@@ -513,8 +531,25 @@ static void initlh()
     mutex_lock(&mtx);
     if(!lh)
     {
-      void *mem=malloc(sizeof(LeakHunter));
-      lh=new(mem)LeakHunter();
+      mmapfd=open("mmap",O_CREAT|O_RDWR,0666);
+      if(mmapfd==-1)
+      {
+        fprintf(stderr,"lh-open:%s\n",strerror(errno));
+        exit(-1);
+      }
+      lseek(mmapfd,MMAP_SIZE,SEEK_SET);
+      char c=0;
+      write(mmapfd,&c,1);
+
+      void* addr=mmap(0,MMAP_SIZE,PROT_READ|PROT_WRITE,MAP_PRIVATE,mmapfd,0);
+      if(addr==MAP_FAILED)
+      {
+        fprintf(stderr,"lh-mmap:%s\n",strerror(errno));
+        exit(-1);
+      }
+      mem=(char*)addr;
+      allocated=0;
+      lh=new(innermalloc(sizeof(LeakHunter)))LeakHunter();
       atexit(deletelh);
     }
     mutex_unlock(&mtx);
@@ -533,6 +568,8 @@ static void* xmalloc(size_t size)
   void *rv=smsc::util::leaktracing::lh->Alloc(rsize+4096);
   char *mem=(char*)rv;
   mprotect(mem+rsize,4096,PROT_NONE);
+  rest&=~7;
+  //fprintf(stderr,"rest=%d, allocated=%d, p=%p\n",rest,smsc::util::leaktracing::allocated,mem+rest);
   return mem+rest;
 }
 
@@ -615,4 +652,62 @@ void operator delete[](void* mem)
     fprintf(stderr,"FATAL ERROR: delete [] NULL\n");
     smsc::util::leaktracing::PrintTrace();
   }
+}
+
+void* malloc(size_t size)
+{
+  smsc::util::leaktracing::initlh();
+  void* mem=xmalloc(size);
+  //printf("ALLOC:%x(%d)\n",mem,size);
+  if(!mem)
+  {
+    fprintf(stderr,"OUT OF MEMORY!\n");
+    throw "OUT OF MEMORY!\n";
+  }
+  if(getenv("LHFULLREPORT"))
+  {
+    fprintf(stderr,"malloc:0x%08x(%d)\n",(int)mem,size);
+    smsc::util::leaktracing::PrintTrace();
+  }
+  smsc::util::leaktracing::lh->RegisterAlloc(mem,size);
+  return mem;
+}
+
+void free(void* mem)
+{
+  smsc::util::leaktracing::initlh();
+  if(mem)
+  {
+    if(getenv("LHFULLREPORT"))
+    {
+      fprintf(stderr,"free:0x%08x\n",(int)mem);
+      smsc::util::leaktracing::PrintTrace();
+    }
+    if(smsc::util::leaktracing::lh->RegisterDealloc(mem))
+    {
+      //xfree(mem);
+    }
+  }
+}
+
+void* realloc(void* oldmem,size_t newsize)
+{
+  smsc::util::leaktracing::initlh();
+  void* mem=xmalloc(newsize);
+  if(getenv("LHFULLREPORT"))
+  {
+    fprintf(stderr,"realloc:0x%08x(%d)\n",(int)mem,newsize);
+    smsc::util::leaktracing::PrintTrace();
+  }
+  smsc::util::leaktracing::lh->RegisterAlloc(mem,newsize);
+  if(oldmem==0)return mem;
+  int sz=smsc::util::leaktracing::lh->GetBlockSize(oldmem);
+  if(sz==-1)
+  {
+    fprintf(stderr,"ERROR: REALLOC ON INVALID/UNKNOWN BLOCK:%p\n",oldmem);
+    abort();
+  }
+  memcpy(mem,oldmem,sz);
+  smsc::util::leaktracing::lh->RegisterDealloc(oldmem);
+  return mem;
 }
