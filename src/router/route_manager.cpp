@@ -389,8 +389,10 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
     if ( strong )
     {
       int left = 1;
-      int right = node->child.size();
-      if ( right > 0 ) for(;right >= left;)
+      int right = node->sources.size();
+      //if ( right > 0 ) 
+			__require__(right>0);
+			for(;right >= left;)
       {
         int ptr = (right+left) >> 1;
 				__require__(ptr > 0);
@@ -403,13 +405,13 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec)
         //}
         //else break;
       }
-			else
-			{
+			/*else
+			{*/
 				RouteSrcTreeNode* newSrcNode = new RouteSrcTreeNode;
 				newSrcNode->record = rec;
 				node->sources.push_back(newSrcNode);
 				return 0;
-			}
+			//}
     }
     __trace2__("weak equal:")
     if (node->record->dest_def > rec->dest_def) 
