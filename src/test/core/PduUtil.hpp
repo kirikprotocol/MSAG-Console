@@ -52,7 +52,10 @@ class PduReceiptFlag
 
 public:
 	PduReceiptFlag(PduFlag flg, time_t start, time_t end) :
-		flag(flg), startTime(start), endTime(end), lastTime(0), lastAttempt(0) {}
+		flag(flg), startTime(start), endTime(end), lastTime(0), lastAttempt(0)
+	{
+		__require__(startTime <= endTime);
+	}
 
 	PduReceiptFlag& operator= (PduFlag _flag) { flag = _flag; }
 	
