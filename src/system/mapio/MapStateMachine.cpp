@@ -445,7 +445,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   if ( dialog->udhiRef != INVALID )
   {
     XMOMAPLocker* locker;
-    __trace2__("MAP:UDHI:%s: find locked imsi %s",__FUNCTION__,dialog->s_imsi);
+    __trace2__("MAP:UDHI:%s: find locked imsi %s",__FUNCTION__,dialog->s_imsi.c_str());
     XMOMAP::iterator it = x_momap.find(dialog->s_imsi);
     if ( it == x_momap.end() )
     {
@@ -610,7 +610,7 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
       dialog->udhiRef = ref;
       dialog->udhiMsgNum = msgNum;
       dialog->udhiMsgCount = msgCount;
-      __trace2__(":MAP:UDHI: ref %x, msgNum %d, msgCont %d ",ref,msgNum.msgCount);
+      __trace2__(":MAP:UDHI: ref %x, msgNum %d, msgCont %d ",ref,msgNum,msgCount);
     }
   }
   unsigned esm_class = 0;
