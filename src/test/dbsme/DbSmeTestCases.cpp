@@ -27,9 +27,28 @@ DbSmeTestCases::DbSmeTestCases(SmppFixture* fixture, DbSmeRegistry* _dbSmeReg)
 	insertTc(dbSmeReg, fixture->chkList),
 	updateTc(dbSmeReg, fixture->chkList),
 	deleteTc(dbSmeReg, fixture->chkList),
-	selectTc(dbSmeReg, fixture->chkList)
+	selectTc(dbSmeReg, fixture->chkList),
+	plsqlTc(dbSmeReg, fixture->chkList)
 {
 	//__require__(dbSmeReg);
+	handlers["DateFormatJob1"] = &dateFormatTc;
+	handlers["DateFormatJob2"] = &dateFormatTc;
+	handlers["DateFormatJob3"] = &dateFormatTc;
+	handlers["DateFormatJob4"] = &dateFormatTc;
+	handlers["DateFormatJob5"] = &dateFormatTc;
+	handlers["OtherFormatJob"] = &otherFormatTc;
+	handlers["InsertJob1"] = &insertTc;
+	handlers["InsertJob2"] = &insertTc;
+	handlers["InsertJob3"] = &insertTc;
+	handlers["UpdateJob1"] = &updateTc;
+	handlers["UpdateJob2"] = &updateTc;
+	handlers["DeleteJob"] = &deleteTc;
+	handlers["SelectJob1"] = &selectTc;
+	handlers["SelectJob2"] = &selectTc;
+	handlers["SelectJob3"] = &selectTc;
+	handlers["ProcedureJob"] = &plsqlTc;
+	handlers["FunctionJob"] = &plsqlTc;
+	handlers["ExceptionJob"] = &plsqlTc;
 }
 
 Category& DbSmeTestCases::getLog()
@@ -75,11 +94,7 @@ const string DbSmeTestCases::getCmdText(DbSmeTestRecord* rec,
 	}
 	__tc__("submitDbSmeCmd.jobNameMixedCase"); __tc_ok__;
 	string job = rec->getJob();
-	for (int i = 0; i < job.length(); i++)
-	{
-		job[i] = rand0(1) ? toupper(job[i]) : tolower(job[i]);
-	}
-	s << job;
+	s << mixedCase(job);
 	__print__(Id);
 	__print__(Int8);
 	__print__(Int16);
@@ -88,7 +103,7 @@ const string DbSmeTestCases::getCmdText(DbSmeTestRecord* rec,
 	__print__(Float);
 	__print__(Double);
 	__print__(LongDouble);
-	__print__(String)
+	__print__(String);
 	if (rec->checkQuotedString())
 	{
 		s << __delim__ << "\"" << rec->getQuotedString() << "\"";
@@ -96,7 +111,8 @@ const string DbSmeTestCases::getCmdText(DbSmeTestRecord* rec,
 	if (rec->checkDate())
 	{
 		__require__(df);
-		s << __delim__ << df->format(rec->getDate());
+		string str = df->format(rec->getDate());
+		s << __delim__ << mixedCase(str);
 	}
 	if (rand0(1))
 	{
@@ -305,6 +321,38 @@ void DbSmeTestCases::submitCorrectDeleteDbSmeCmd(bool sync, uint8_t dataCoding)
 	__decl_tc__;
 	DbSmeTestRecord* rec = deleteTc.createDeleteAllJobInput();
 	sendDbSmePdu(getCmdText(rec, NULL), rec, sync, dataCoding);
+}
+
+void DbSmeTestCases::submitCorrectPlSqlDbSmeCmd(bool sync, uint8_t dataCoding, int num)
+{
+	__decl_tc__;
+	TCSelector s(num, 5);
+	for (; s.check(); s++)
+	{
+		static const DateFormatter& df = plsqlTc.getDateFormatter();
+		DbSmeTestRecord* rec;
+		switch (s.value())
+		{
+			case 1: //ProcedureJob без параметров
+				rec = plsqlTc.createDefaultsProcedureJobInput();
+				break;
+			case 2: //ProcedureJob с параметрами
+				rec = plsqlTc.createProcedureJobInput();
+				break;
+			case 3: //FunctionJob без параметров
+				rec = plsqlTc.createDefaultsFunctionJobInput();
+				break;
+			case 4: //FunctionJob с параметрами
+				rec = plsqlTc.createFunctionJobInput();
+				break;
+			case 5: //ExceptionJob
+				rec = plsqlTc.createExceptionJobInput();
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+		sendDbSmePdu(getCmdText(rec, &df), rec, sync, dataCoding);
+	}
 }
 
 void DbSmeTestCases::submitIncorrectDateFormatDbSmeCmd(bool sync,
@@ -661,37 +709,6 @@ void DbSmeTestCases::submitIncorrectParamsDbSmeCmd(bool sync,
 	}
 }
 
-const string DbSmeTestCases::processJobFirstOutput(const string& text,
-	DbSmeTestRecord* rec)
-{
-	__require__(rec);
-	if (rec->getJob().find("DateFormatJob") != string::npos)
-	{
-		return dateFormatTc.processJobFirstOutput(text, rec);
-	}
-	else if (rec->getJob() == "OtherFormatJob")
-	{
-		return otherFormatTc.processJobFirstOutput(text, rec);
-	}
-	else if (rec->getJob().find("InsertJob") != string::npos)
-	{
-		return insertTc.processJobFirstOutput(text, rec);
-	}
-	else if (rec->getJob().find("UpdateJob") != string::npos)
-	{
-		return updateTc.processJobFirstOutput(text, rec);
-	}
-	else if (rec->getJob() == "DeleteJob")
-	{
-		return deleteTc.processJobFirstOutput(text, rec);
-	}
-	else if (rec->getJob().find("SelectJob") != string::npos)
-	{
-		return selectTc.processJobFirstOutput(text, rec);
-	}
-	__unreachable__("Unsupported job");
-}
-
 AckText* DbSmeTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	PduDeliverySm& pdu, const string& text, time_t recvTime)
 {
@@ -700,7 +717,9 @@ AckText* DbSmeTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	MutexGuard mguard(dbSmeReg->getMutex());
 	DbSmeTestRecord* rec = dynamic_cast<DbSmeTestRecord*>(
 		monitor->pduData->objProps["dbSmeRec"]);
-	const string expected = processJobFirstOutput(text, rec);
+	HandlersMap::iterator it = handlers.find(rec->getJob());
+	__require__(it != handlers.end());
+	const string expected = it->second->processJobFirstOutput(text, rec);
 	Address addr;
 	SmppUtil::convert(pdu.get_message().get_dest(), &addr);
 	time_t t;
