@@ -1,10 +1,10 @@
 
 #define VER_MAJOR 1
 #define VER_MINOR 9
-#define VER_BUILD 1900
+#define VER_BUILD 1901
 #define VER_MAKE_STR2(X) #X
 #define VER_MAKE_STR(X) VER_MAKE_STR2(X)
-#define VER_DATE  "Tue Jan 25 13:19:06 2005"
+#define VER_DATE  "Wed Feb  2 15:32:12 2005"
 
 #define VER_STR "Sibinco SMSC ver " VER_MAKE_STR(VER_MAJOR) "." VER_MAKE_STR(VER_MINOR) " build " VER_MAKE_STR(VER_BUILD) " date " VER_DATE
 
