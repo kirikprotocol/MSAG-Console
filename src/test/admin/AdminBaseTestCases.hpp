@@ -85,7 +85,7 @@ public:
 
 	virtual ~AdminBaseTestCases();
 
-	const string login(const string& login, const string& passwd);
+	bool login(const char* login, const char* passwd, bool correct);
 
 	/**
 	 * Выполнение всех тест кейсов.
@@ -94,14 +94,16 @@ public:
 
 	void addTestCase(const char* id, const char* cmd, const char* humanResp
 		/*, const char* scriptResp*/);
+	void runTestCase(const char* id, const char* cmd, const char* humanResp
+		/*, const char* scriptResp*/);
 
 	void loginCommands();
 	void invalidCommands();
 
 protected:
 	virtual Category& getLog();
-	void sendRequest(const string& cmd);
-	const string getResponse();
+	void sendRequest(const char* cmd);
+	bool checkResponse(const char* pattern);
 
 private:
 	Socket socket;

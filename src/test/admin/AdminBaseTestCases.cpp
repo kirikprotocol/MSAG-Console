@@ -14,7 +14,7 @@ using namespace smsc::test::util;
 AdminBaseTestCases::AdminBaseTestCases(AdminFixture* fixture)
 : humanConsole(fixture->humanConsole), chkList(fixture->chkList)
 {
-	int timeout = 5;
+	int timeout = 8;
 	if (socket.Init(fixture->host, fixture->port, timeout) == -1)
 		throw Exception("Failed to init socket");
 	if (socket.Connect() == -1)
@@ -36,6 +36,62 @@ Category& AdminBaseTestCases::getLog()
 	return log;
 }
 
+void AdminBaseTestCases::sendRequest(const char* cmd)
+{
+	__require__(cmd);
+	__trace2__("request: %s", cmd);
+	int count = 0;
+	string tmp;
+	tmp.reserve(strlen(cmd) + 3);
+	tmp += cmd;
+	tmp += "\n";
+	int wr = socket.WriteAll(tmp.c_str(), tmp.length());
+	//__trace2__("socket write: wr = %d", wr);
+	if (wr <= 0)
+	{
+		__trace2__("socket write error: wr = %d, reason = %s", wr, strerror(errno));
+		throw Exception("Failed to send data");
+	}
+}
+
+bool AdminBaseTestCases::checkResponse(const char* pattern)
+{
+	__require__(pattern);
+	__trace2__("regexp: %s", pattern);
+	RegExp chkResp;
+	chkResp.Compile(pattern);
+	Hash<SMatch> h;
+	SMatch match;
+	int matchcount = 1;
+	string resp;
+	resp.reserve(128);
+	while (socket.canRead())
+	{
+		int ch = socket.readChar();
+		if (ch == -1)
+		{
+			throw Exception("socket read failed");
+		}
+		//trim
+		if (!resp.length() && (ch == '\n' || ch == '\r' || ch == ' '))
+		{
+			continue;
+		}
+		resp += ch;
+		if (!isalpha(ch))
+		{
+			//__trace2__("socket read: '%s'", resp.c_str());
+			if (chkResp.Match(resp.c_str(), &match, matchcount))
+			{
+				__trace2__("resp(ok): %s", resp.c_str());
+				return true;
+			}
+		}
+	}
+	__trace2__("resp(err): %s", resp.c_str());
+	return false;
+}
+
 void AdminBaseTestCases::addTestCase(const char* id, const char* cmd,
 	const char* humanResp /*, const char* scriptResp*/)
 {
@@ -44,30 +100,75 @@ void AdminBaseTestCases::addTestCase(const char* id, const char* cmd,
 	testCases.push_back(new AdminTestCase(id, cmd, humanResp, scriptResp));
 }
 
+void AdminBaseTestCases::runTestCase(const char* id, const char* cmd,
+	const char* humanResp /*, const char* scriptResp*/)
+{
+	bool isOk = true;
+	TestCase* tc = chkList->getTc(id);
+	sendRequest(cmd);
+	if (!checkResponse(humanConsole ? humanResp : NULL))
+	{
+		__tc_fail__(1);
+	}
+	if (!checkResponse("^>$"))
+	{
+		__tc_fail__(2);
+	}
+	__tc_ok_cond__;
+}
+
+bool AdminBaseTestCases::login(const char* login, const char* passwd,
+	bool correct)
+{
+	__require__(login && passwd);
+	bool res = true;
+	char pattern[128];
+	res &= checkResponse("/.*Login:$/ms");
+	sendRequest(login);
+	sprintf(pattern, "/^%s$^Password:$/ms", login);
+	res &= checkResponse(pattern);
+	sendRequest(passwd);
+	sprintf(pattern, "/%s$^Password:/ms", login);
+	res &= checkResponse(correct ?
+		"/^Welcome to SMSC Remote Console.$(^$)*>$/ms" :
+		"/^Authentication failed. Access denied.$/ms");
+	return res;
+}
+
+void AdminBaseTestCases::executeTestCases()
+{
+	RegExp::InitLocale();
+	for (int i = 0; i < testCases.size(); i++)
+	{
+		runTestCase(testCases[i]->id.c_str(), testCases[i]->cmd.c_str(),
+            testCases[i]->humanResp.c_str() /*, testCases[i]->scriptResp.c_str()*/);
+	}
+}
+
 void AdminBaseTestCases::loginCommands()
 {
 	__decl_tc__;
 	__tc__("adminConsole.login.incorrect");
-	const string resp1 = login("superadmin", "aaa");
-	if (resp1 != "Authentication failed. Access denied.")
+	if (!login("superadmin", "aaa", false))
 	{
 		__tc_fail__(1);
 	}
-	const string resp2 = login("aaa", "aaa");
-	if (resp2 != "Authentication failed. Access denied.")
+	if (!login("aaa", "aaa", false))
 	{
 		__tc_fail__(2);
 	}
 	__tc_ok_cond__;
 	__tc__("adminConsole.login.correct");
-	const string resp = login("superadmin", "123");
-	if (resp != "")
+	if (!login("superadmin", "123", true))
 	{
 		__tc_fail__(1);
 	}
 	__tc_ok_cond__;
 }
 
+#define __cmd__(id, cmd, humanResp) \
+	runTestCase(id, cmd, humanResp)
+	
 void AdminBaseTestCases::invalidCommands()
 {
 	string symbols = "~!@#$%^&*()_+|{}:\"<>?`1234567890-=\[];',./" \
@@ -81,121 +182,19 @@ void AdminBaseTestCases::invalidCommands()
 		//itself
 		sprintf(cmd, "%s", s);
 		sprintf(resp, "Failed: unexpected char: %c", symbols[i]);
-		addTestCase("adminConsole.invalidCommands", cmd, resp);
+		__cmd__("adminConsole.invalidCommands", cmd, resp);
 		//add, delete, view, alter, list
 		sprintf(resp, "Failed: unexpected token: %s", s);
 		sprintf(cmd, "add %s", s);
-		addTestCase("adminConsole.invalidCommands", cmd, resp);
+		__cmd__("adminConsole.invalidCommands", cmd, resp);
 		sprintf(cmd, "delete %s", s);
-		addTestCase("adminConsole.invalidCommands", cmd, resp);
+		__cmd__("adminConsole.invalidCommands", cmd, resp);
 		sprintf(cmd, "view %s", s);
-		addTestCase("adminConsole.invalidCommands", cmd, resp);
+		__cmd__("adminConsole.invalidCommands", cmd, resp);
 		sprintf(cmd, "alter %s", s);
-		addTestCase("adminConsole.invalidCommands", cmd, resp);
+		__cmd__("adminConsole.invalidCommands", cmd, resp);
 		sprintf(cmd, "list %s", s);
-		addTestCase("adminConsole.invalidCommands", cmd, resp);
-	}
-}
-
-void AdminBaseTestCases::sendRequest(const string& cmd)
-{
-	int count = 0;
-	string tmp = cmd + "\n";
-	while (count < tmp.length())
-	{
-		int wr = socket.Write(tmp.c_str() + count, tmp.length() - count);
-		//__trace2__("socket write: wr = %d", wr);
-		if (wr <= 0)
-		{
-			__trace2__("socket write error: wr = %d, reason = %s", wr, strerror(errno));
-			throw Exception("Failed to send data");
-		}
-		count += wr;
-	}
-}
-
-struct Buffer
-{
-	char* buffer;
-	int size;
-	int offset;
-
-	Buffer(int sz = 0) : buffer(NULL), size(0), offset(0) { if (sz) setSize(sz); }
-
-	~Buffer() { if (buffer) delete [] buffer; }
-
-	void setSize(int newSize)
-	{
-		if (newSize < size) return;
-		char* newBuf = new char[newSize];
-		if (offset) memcpy(newBuf, buffer, offset);
-		if (buffer) delete [] buffer;
-		buffer = newBuf;
-		size = newSize;
-	}
-	char* current(){ return buffer + offset; }
-	int freeSpace() { return size - offset; }
-};
-
-const string AdminBaseTestCases::getResponse()
-{
-	Buffer buf(64);
-	while (socket.canRead())
-	{
-		if (buf.freeSpace() <= 0)
-		{
-			buf.setSize(buf.size * 2);
-		}
-		int rd = socket.Read(buf.current(), buf.freeSpace());
-		//__trace2__("socket read: rd = %d", rd);
-		if (rd <= 0)
-		{
-			__trace2__("socket read error: rd = %d, reason = %s", rd, strerror(errno));
-			throw Exception("Failed to receive data");
-		}
-		buf.offset += rd;
-	}
-	return buf.buffer ? buf.buffer : "";
-}
-
-const string AdminBaseTestCases::login(const string& login, const string& passwd)
-{
-	const string loginPrompt = getResponse();
-	//__require__(loginPrompt == "Login: ");
-	__trace2__("loginPrompt = %s", loginPrompt.c_str());
-	sendRequest(login);
-	const string passwdPrompt = getResponse();
-	//__require__(passwdPrompt == "Password: ");
-	__trace2__("passwdPrompt = %s", passwdPrompt.c_str());
-	sendRequest(passwd);
-	const string resp = getResponse();
-	__trace2__("response = ", resp.c_str());
-	return resp;
-}
-
-void AdminBaseTestCases::executeTestCases()
-{
-	RegExp::InitLocale();
-	for (int i = 0; i < testCases.size(); i++)
-	{
-		bool isOk = true;
-		TestCase* tc = chkList->getTc(testCases[i]->id.c_str());
-		sendRequest(testCases[i]->cmd);
-		const string resp = getResponse();
-		const string& expectedResp = humanConsole ? testCases[i]->humanResp :
-			testCases[i]->scriptResp;
-		__trace2__("command: %s\nresponse: %s\nexpected: %s",
-			testCases[i]->cmd.c_str(), resp.c_str(), expectedResp.c_str());
-        RegExp chkResp;
-		chkResp.Compile(expectedResp.c_str());
-		Hash<SMatch> h;
-		SMatch match;
-		int matchcount = 1;
-		if(!chkResp.Match(resp.c_str(), &match, matchcount))
-		{
-			__tc_fail__(1);
-		}
-		__tc_ok_cond__;
+		__cmd__("adminConsole.invalidCommands", cmd, resp);
 	}
 }
 
