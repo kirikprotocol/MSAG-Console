@@ -37,9 +37,11 @@ class TestSme : public ThreadedTask, public SmppPduEventListener
 	const int smscPort;
 	const Address smeAddr;
 	const SmeInfo smeInfo;
-	vector<SmppSession*> sess;
+	SmppSession* sess;
 	Event event;
 	int count;
+	bool paused;
+	Event pauseEvent;
 
 	SmppTransmitter* getTransmitter(bool sync);
 
@@ -53,28 +55,32 @@ public:
 	void submitSm();
 	void permanentAppError(PduDeliverySm& pdu);
 	void genericNack(PduDeliverySm& pdu);
+	void handleSubmitSmResp(PduSubmitSmResp& pdu);
 	void handleDeliverSm(PduDeliverySm& pdu);
 	virtual void handleEvent(SmppHeader* pdu);
 	virtual void handleError(int errorCode);
 	virtual int Execute();
 	virtual const char* taskName() { return "TestSme"; }
+	void pause() { paused = true; }
+	void resume() { paused = false; pauseEvent.Signal(); }
+	void stop() { isStopping = true; pauseEvent.Signal(); }
 };
 
 TestSme::TestSme(const string& _smscHost, int _smscPort, const Address& _smeAddr,
 	const SmeInfo& _smeInfo) : smscHost(_smscHost), smscPort(_smscPort),
-	smeAddr(_smeAddr), smeInfo(_smeInfo), count(0) {}
+	smeAddr(_smeAddr), smeInfo(_smeInfo), count(0), paused(false) {}
 
 TestSme::~TestSme()
 {
-	for (int i = 0; i < sess.size(); i++)
+	if (sess)
 	{
-		delete sess[i];
+		delete sess;
 	}
 }
 
 SmppTransmitter* TestSme::getTransmitter(bool sync)
 {
-	return (sync ? sess.back()->getSyncTransmitter() : sess.back()->getAsyncTransmitter());
+	return (sync ? sess->getSyncTransmitter() : sess->getAsyncTransmitter());
 }
 
 void TestSme::bind()
@@ -86,20 +92,14 @@ void TestSme::bind()
 	conf.sid = smeInfo.systemId;
 	conf.timeOut = smeInfo.timeout;
 	conf.password = smeInfo.password;
-	sess.push_back(new SmppSession(conf, this));
-	sess.back()->connect();
-	//почистить лишние сессии
-	while (sess.size() > 3)
-	{
-		delete sess.front();
-		sess.erase(sess.begin());
-	}
+	sess = new SmppSession(conf, this);
+	sess->connect();
 }
 
 void TestSme::unbind()
 {
 	__trace2__("unbind(): sme = %p", this);
-	sess.back()->close();
+	delete sess; sess = NULL;
 }
 
 void TestSme::submitSm()
@@ -113,9 +113,22 @@ void TestSme::submitSm()
 	pdu.get_message().set_esmClass(ESM_CLASS_NORMAL_MESSAGE);
 	pdu.get_message().set_scheduleDeliveryTime("");
 	pdu.get_message().set_registredDelivery(0);
-	getTransmitter(rand0(1))->submit(pdu);
-	__trace2__("submitSm(): sme = %p, pdu = %u",
-		this, pdu.get_header().get_sequenceNumber());
+	bool sync = rand0(1);
+	PduSubmitSmResp* respPdu = getTransmitter(sync)->submit(pdu);
+	__trace2__("submitSm(): sme = %p, pdu = %u, sync = %s",
+		this, pdu.get_header().get_sequenceNumber(), sync ? "true" : "false");
+	if (sync)
+	{
+		if (respPdu)
+		{
+			handleSubmitSmResp(*respPdu);
+			delete respPdu;
+		}
+		else
+		{
+			__warning__("null response for sync request");
+		}
+	}
 }
 
 void TestSme::permanentAppError(PduDeliverySm& pdu)
@@ -138,8 +151,18 @@ void TestSme::genericNack(PduDeliverySm& pdu)
 		this, respPdu.get_header().get_sequenceNumber());
 }
 
+void TestSme::handleSubmitSmResp(PduSubmitSmResp& pdu)
+{
+	__trace2__("handleSubmitSmResp(): sme = %p, pdu = %u",
+		this, pdu.get_header().get_sequenceNumber());
+	unbind();
+	event.Signal();
+}
+
 void TestSme::handleDeliverSm(PduDeliverySm& pdu)
 {
+	__trace2__("handleDeliverSm(): sme = %p, pdu = %u",
+		this, pdu.get_header().get_sequenceNumber());
 	switch (rand1(3))
 	{
 		case 1:
@@ -157,26 +180,25 @@ void TestSme::handleDeliverSm(PduDeliverySm& pdu)
 	event.Signal();
 }
 
-void TestSme::handleEvent(SmppHeader* p)
+void TestSme::handleEvent(SmppHeader* pdu)
 {
-	switch (p->get_commandId())
+	switch (pdu->get_commandId())
 	{
 		case SUBMIT_SM_RESP:
-			__trace2__("handleEvent(): sme = %p, pdu = %u, type = submit_sm_resp",
-				this, p->get_sequenceNumber());
+			handleSubmitSmResp(*reinterpret_cast<PduSubmitSmResp*>(pdu));
 			break;
 		case DELIVERY_SM:
-			__trace2__("handleEvent(): sme = %p, pdu = %u, type = deliver_sm",
-				this, p->get_sequenceNumber());
-			handleDeliverSm(*reinterpret_cast<PduDeliverySm*>(p));
+			//handleDeliverSm(*reinterpret_cast<PduDeliverySm*>(pdu));
 			break;
 		default:
 			__unreachable__("Invalid pdu type");
 	}
+	disposePdu(pdu);
 }
 
 void TestSme::handleError(int errorCode)
 {
+	__trace2__("handleError(): errorCode = %d", errorCode);
 	__unreachable__("handleError()");
 }
 
@@ -188,13 +210,19 @@ int TestSme::Execute()
 		{
 			bind();
 			submitSm();
-			event.Wait(5000);
 			count++;
+			event.Wait(5000);
+			if (paused)
+			{
+				pauseEvent.Wait();
+			}
 		}
+		return 0;
 	}
 	catch(...)
 	{
 		__warning2__("exception in sme = %p", this);
+		return -1;
 	}
 }
 
@@ -249,7 +277,7 @@ void executeTest(const string& smscHost, int smscPort)
 		{
 			help = false;
 			cout << "conf <numSme> - generate config files" << endl;
-			cout << "test start - start test execution" << endl;
+			cout << "test <start|pause|resume> - start/pause/resume test execution" << endl;
 			cout << "stat - print statistics" << endl;
 			cout << "quit - quit test" << endl;
 			continue;
@@ -287,6 +315,24 @@ void executeTest(const string& smscHost, int smscPort)
 				cout << "Started " << sme.size() << " sme" << endl;
 				continue;
 			}
+			else if (cmd == "pause")
+			{
+				for (int i = 0; i < sme.size(); i++)
+				{
+					sme[i]->pause();
+				}
+				cout << "Paused " << sme.size() << " sme" << endl;
+				continue;
+			}
+			else if (cmd == "resume")
+			{
+				for (int i = 0; i < sme.size(); i++)
+				{
+					sme[i]->resume();
+				}
+				cout << "Resumed " << sme.size() << " sme" << endl;
+				continue;
+			}
 		}
 		else if (cmd == "stat")
 		{
@@ -298,6 +344,10 @@ void executeTest(const string& smscHost, int smscPort)
 		}
 		else if (cmd == "quit")
 		{
+			for (int i = 0; i < sme.size(); i++)
+			{
+				sme[i]->stop();
+			}
 			threadPool.shutdown();
 			return;
 		}
