@@ -35,7 +35,10 @@ public class ServiceInfo
   public ServiceInfo(Element serviceElement, String serviceHost, SmeManager smeManager, String daemonServicesFolder) throws SibincoException
   {
     host = serviceHost;
-    port = Integer.decode(serviceElement.getAttribute("port")).intValue();
+    try {
+      port = Integer.decode(serviceElement.getAttribute("port")).intValue();
+    } catch (NumberFormatException e) {
+    }
     id = serviceElement.getAttribute("id");
     this.autostart = "true".equals(serviceElement.getAttribute("autostart"));
     args = serviceElement.getAttribute("args");
