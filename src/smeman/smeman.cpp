@@ -292,7 +292,7 @@ void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
     else
       __warning2__("unregister null proxy(%s)",systemId.c_str());
     {
-      __synchronized__    
+      __synchronized__
       records[index]->proxy = 0;
     }
   }
@@ -313,7 +313,7 @@ SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
 }
 
 // SmeDispatcher implementation
-void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
+void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout,bool skipScheduler)
 {
   static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smeman");
   {
@@ -327,6 +327,7 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
         if ( (*p)->deleted || (*p)->proxy==NULL) continue;
 
         try {
+          if(skipScheduler && (*p)->info.systemId=="scheduler")continue;
           /*
           SmscCommand cmd;
           if((*p)->proxy->getCommand(cmd))

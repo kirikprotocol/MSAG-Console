@@ -236,8 +236,18 @@ public:
 
   // SmeDispatcher implementation
   virtual SmeProxy* selectSmeProxy(unsigned long timeout=0,int* idx=0);
-  virtual void getFrame(vector<SmscCommand>& frames, unsigned long timeout);
+  virtual void getFrame(vector<SmscCommand>& frames, unsigned long timeout,bool skipScheduler);
   //virtual ~SmeManager(){}
+
+  void Dump()
+  {
+    MutexGuard mg(mutex);
+    Records::iterator it = records.begin();
+    for ( ; it != records.end(); ++it )
+    {
+      __warning2__("Sme %s %s",(*it)->info.systemId.c_str(),(*it)->proxy?"registered":"unregistered");
+    }
+  }
 };
 
 } // namespace smeman
