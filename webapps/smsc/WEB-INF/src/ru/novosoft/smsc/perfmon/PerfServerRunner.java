@@ -85,7 +85,10 @@ public class PerfServerRunner extends Thread {
       offset = 0;
     }
     public int read() throws EOFException {
-      if( offset >= size ) throw new EOFException();
+      if( offset >= size ) {
+        logger.error("Buffer: Requested byte at "+offset+" of "+size);
+        throw new EOFException();
+      }
       return ((int)buf[offset++])&0xFF;
     }
 
@@ -98,6 +101,7 @@ public class PerfServerRunner extends Thread {
         if( cnt == -1 ) throw new EOFException();
         size += cnt;
       }
+      logger.debug("filled buffer with: "+size);
     }
   }
 
@@ -139,7 +143,7 @@ public class PerfServerRunner extends Thread {
   protected void readSnap(InputStream istream, PerfSnap snap)
           throws IOException {
     int len = readNetworkInt(istream);
-    inbuf.fill(istream, len);
+    inbuf.fill(istream, len-4);
     int numOfCounters = readNetworkInt(inbuf);
     snap.last[PerfSnap.IDX_SUBMIT] = (long) readNetworkInt(inbuf);
     snap.avg[PerfSnap.IDX_SUBMIT] = (long) readNetworkInt(inbuf);
