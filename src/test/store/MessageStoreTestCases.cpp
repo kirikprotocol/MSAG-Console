@@ -47,6 +47,7 @@ void MessageStoreTestCases::setupRandomCorrectSM(SMS* sms)
     int msgLen = rand1(MAX_MSG_BODY_LENGTH); //задаем случайную длину тела сообщения
 	sms->setMessageBody(msgLen, (uint8_t) rand0(255), (bool) rand0(1), 
 		rand_uint8_t(msgLen).get());
+	sms->setArchivationRequested(true); //!!! all will be archivated
 }
 
 void MessageStoreTestCases::clearSM(SMS* sms)
