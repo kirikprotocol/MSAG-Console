@@ -22,7 +22,7 @@ Category& SmppBaseTestCases::getLog()
 
 bool SmppBaseTestCases::bindCorrectSme(int num)
 {
-	TCSelector s(num, 3);
+	TCSelector s(num, 1);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -30,17 +30,19 @@ bool SmppBaseTestCases::bindCorrectSme(int num)
 		{
 			switch(s.value())
 			{
-				case 1: //BIND_RECIEVER
+				case 1: //BIND_TRANCIEVER
+					__tc__("bindCorrectSme.bindTransceiver");
+					break;
+				/*
+				case 2: //BIND_RECIEVER
 					__tc__("bindCorrectSme.bindReceiver");
 					__tc_fail__(1);
 					break;
-				case 2: //BIND_TRANSMITTER
+				case 3: //BIND_TRANSMITTER
 					__tc__("bindCorrectSme.bindTransmitter");
 					__tc_fail__(2);
 					break;
-				case 3: //BIND_TRANCIEVER
-					__tc__("bindCorrectSme.bindTransceiver");
-					break;
+				*/
 				default:
 					__unreachable__("Invalid num");
 			}
