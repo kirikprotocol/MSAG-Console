@@ -405,8 +405,8 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
         SRC(RouteIdDiskHash,"routeid");
       }break;
       case Param::tAbnAddress:{
-        IntLttChunkFile::ChunkHandle* h1;
-        IntLttChunkFile::ChunkHandle* h2;
+        IntLttChunkFile::ChunkHandle* h1=0;
+        IntLttChunkFile::ChunkHandle* h2=0;
         {
           AddrDiskHash h;
           h.Open((path+"srcaddr" ".idx").c_str());
