@@ -377,7 +377,7 @@ inline void fprintf_tab(__LOG__ log, int align) { for( int i=0; i<align; ++i) fp
 #define dump_int(field) dump_text("%s = %u",#field,(int32_t)field);
 #define dump_ostr(field){ dump_text("%s: length= %u", #field, (uint32_t)field.size()); \
     if ( field.cstr() ){ \
-    for ( int i = 0; i < field.size() ; ++i ) fprintf(log,"%02x ",field.cstr()[i]); fprintf(log,"\n");}}
+    for ( int i = 0; i < field.size() ; ++i ) fprintf(log,"%02x ",(unsigned char)field.cstr()[i]); fprintf(log,"\n");}}
 #define dump_cstr(field) { if ( field.cstr() ) {dump_text("%s = %s",#field,field.cstr());} \
   else {dump_text("%s = NULL",#field);} }
 
