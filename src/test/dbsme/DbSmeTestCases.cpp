@@ -1,5 +1,6 @@
 #include "DbSmeTestCases.hpp"
 #include "DateFormatter.hpp"
+#include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
 #include "test/conf/TestConfig.hpp"
 
@@ -9,7 +10,9 @@ namespace dbsme {
 
 using smsc::util::Logger;
 using smsc::test::conf::TestConfig;
+using smsc::test::smpp::SmppUtil;
 using namespace smsc::test::util;
+using namespace smsc::smpp::SmppCommandSet;
 
 Category& DbSmeTestCases::getLog()
 {
@@ -27,6 +30,8 @@ void DbSmeTestCases::sendDbSmePdu(PduSubmitSm* pdu,
 	__decl_tc__;
 	try
 	{
+		//установить немедленную доставку
+		pdu->get_message().set_scheduleDeliveryTime("");
 		switch (dataCoding)
 		{
 			case DATA_CODING_SMSC_DEFAULT:
@@ -235,7 +240,7 @@ void DbSmeTestCases::submitIncorrectDbSmeCmd(bool sync, uint8_t dataCoding)
 }
 
 void DbSmeTestCases::processDateFormatJobAck(const string& text,
-	const DbSmeTestRecord* rec, time_t submitTime, int dateJobNum)
+	const DbSmeTestRecord* rec, PduData* pduData, int dateJobNum)
 {
 	__decl_tc__;
 	__tc__("processDbSmeRes.output.select.singleRecord"); __tc_ok__;
@@ -264,8 +269,8 @@ void DbSmeTestCases::processDateFormatJobAck(const string& text,
 		{
 			case 1: //now
 				__tc__("processDbSmeRes.defaultInput.now"); __tc_ok__;
-				__require__(submitTime <= time(NULL));
-				for (time_t t = submitTime; t <= time(NULL); t++)
+				__require__(pduData->submitTime <= time(NULL));
+				for (time_t t = pduData->submitTime; t <= time(NULL); t++)
 				{
 					if (match = text == (prefix + df.format(t)))
 					{
@@ -300,14 +305,21 @@ void DbSmeTestCases::processDateFormatJobAck(const string& text,
 }
 
 void DbSmeTestCases::processOtherFormatJobAck(const string& text,
-	const DbSmeTestRecord* rec)
+	const DbSmeTestRecord* rec, PduData* pduData)
 {
 	__decl_tc__;
 	__tc__("processDbSmeRes.select.singleRecord"); __tc_ok__;
 	ostringstream res;
 	__tc__("processDbSmeRes.output.fromAddress"); __tc_ok__;
+	//получать алиас адреса отправителя исходной pdu
+	__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
+	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
+	Address srcAddr;
+	SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
+	const Address srcAlias =
+		fixture->aliasReg->findAliasByAddress(srcAddr);
 	AddressValue addrVal;
-	fixture->smeAddr.getValue(addrVal);
+	srcAlias.getValue(addrVal);
 	res << "from-address: '" << addrVal << "';" << endl;
 	string str;
 	if (rec->str.length())
@@ -389,22 +401,30 @@ void DbSmeTestCases::processSmeAcknowledgement(PduData* pduData, PduDeliverySm &
 		return;
 	}
 	__require__(pduData);
+	__decl_tc__;
 	PduData::IntProps::const_iterator it = pduData->intProps.find("recId");
 	__require__(it != pduData->intProps.end());
 	int id = it->second;
 	DbSmeTestRecord* rec = dbSmeReg->getRecord(id);
 	__require__(rec);
+	__tc__("processDbSmeRes.dataCoding");
+	if (pdu.get_message().get_dataCoding() != DATA_CODING_SMSC_DEFAULT)
+	{
+		__tc_fail__(1);
+		return;
+	}
+	__tc_ok_cond__;
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().size_shortMessage(), pdu.get_message().get_dataCoding());
 	int dateJobNum;
 	if (sscanf(rec->job.c_str(), "DateFormatJob%u", &dateJobNum))
 	{
 		__require__(dateJobNum >= 1 && dateJobNum <= 4);
-		processDateFormatJobAck(text, rec, pduData->submitTime, dateJobNum);
+		processDateFormatJobAck(text, rec, pduData, dateJobNum);
 	}
 	else if (rec->job == "OtherFormatJob")
 	{
-		processOtherFormatJobAck(text, rec);
+		processOtherFormatJobAck(text, rec, pduData);
 	}
 	else
 	{
