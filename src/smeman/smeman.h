@@ -75,35 +75,37 @@ public:
   virtual void attachMonitor(ProxyMonitor* monitor) {__unreachable__("");}
   virtual bool attached(){__unreachable__("");return 0;}
   virtual void close() {__unreachable__("");}
+  virtual uint32_t getIndex()const{ return idx;}
+
 };
-  
-using core::synchronization::Mutex; 
+
+using core::synchronization::Mutex;
 typedef std::vector<SmeRecord*> Records;
 
-class SmeManager : 
+class SmeManager :
   public SmeAdministrator,
   public SmeTable,
   public SmeRegistrar,
   public Dispatch
 {
-    
+
   mutable Mutex lock;
   SmeProxyDispatcher dispatcher;
   Records records;
   SmeIndex internalLookup(const SmeSystemId& systemId) const;
-public: 
+public:
   virtual ~SmeManager()
   {
     Records::iterator it = records.begin();
-    for ( ; it != records.end(); ++it ) 
+    for ( ; it != records.end(); ++it )
     {
       try
       {
         if ( (*it)->proxy )
         {
           __warning__((string("proxy with system id ")+
-											(*it)->info.systemId+
-											string(" is attached when destroy smeman")).c_str());
+                      (*it)->info.systemId+
+                      string(" is attached when destroy smeman")).c_str());
           dispatcher.detachSmeProxy((*it)->proxy);
         }
         delete (*it);
@@ -120,7 +122,7 @@ public:
   virtual void deleteSme(const SmeSystemId& systemId);
 //  virtual void store();
   virtual SmeIterator* iterator(); // client must destroy returned object
-#if 0  
+#if 0
   virtual void disableSme(const SmeSystemId& systemId);
   virtual void enableSme(const SmeSystemId& systemId);
 #endif
@@ -148,6 +150,3 @@ public:
 }; // namespace smeman
 }; // namespace smsc
 #endif
-
-
-

@@ -52,7 +52,7 @@ public:
   }
   bool AddressToAlias(const Address& addr,Address& alias)
   {
-		return aliaser.AddressToAlias(addr,alias);
+    return aliaser.AddressToAlias(addr,alias);
   }
 
   void notifyScheduler()
@@ -63,6 +63,11 @@ public:
   smsc::profiler::Profiler* getProfiler()
   {
     return profiler;
+  }
+
+  smsc::smeman::SmeInfo getSmeInfo(smsc::smeman::SmeIndex idx)
+  {
+    return smeman.getSmeInfo(idx);
   }
 
 protected:

@@ -5,6 +5,7 @@
 #include "system/rescheduler.hpp"
 #include "profiler/profiler.hpp"
 #include "util/recoder/recode_dll.h"
+#include "core/buffers/Hash.hpp"
 
 namespace smsc{
 namespace system{
@@ -13,6 +14,129 @@ using namespace smsc::smeman;
 using namespace smsc::sms;
 using namespace StateTypeValue;
 using namespace smsc::smpp;
+using std::exception;
+
+class ReceiptGetAdapter:public GetAdapter{
+public:
+
+  virtual bool isNull(const char* key)
+      throw(AdapterException)
+  {
+    return false;
+  }
+
+  virtual const char* getString(const char* key)
+      throw(AdapterException)
+  {
+    return "";
+  }
+
+  virtual int8_t getInt8(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int16_t getInt16(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int32_t getInt32(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual int64_t getInt64(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual uint8_t getUint8(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint16_t getUint16(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint32_t getUint32(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual uint64_t getUint64(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual float getFloat(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual double getDouble(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+  virtual long double getLongDouble(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+
+  virtual time_t getDateTime(const char* key)
+      throw(AdapterException)
+  {
+    return 0;
+  }
+
+};
+
+void StateMachine::formatDeliver(const char* addr,std::string& out)
+{
+  if(!ofDelivered)return;
+  ReceiptGetAdapter ga;
+  ContextEnvironment ce;
+  ce.exportStr("dest",addr);
+  try{
+    ofDelivered->format(out,ga,ce);
+  }catch(exception& e)
+  {
+    __trace2__("FORMATTER: %s",e.what());
+  }
+}
+void StateMachine::formatFailed(const char* addr,const char* err,std::string& out)
+{
+  if(!ofFailed)return;
+  ReceiptGetAdapter ga;
+  ContextEnvironment ce;
+  ce.exportStr("dest",addr);
+  ce.exportStr("error",err);
+
+  try{
+    ofFailed->format(out,ga,ce);
+  }catch(exception& e)
+  {
+    __trace2__("FORMATTER: %s",e.what());
+  }
+}
+
 
 int StateMachine::Execute()
 {
@@ -254,7 +378,7 @@ StateType StateMachine::submit(Tuple& t)
   try{
     // send delivery
     Address src;
-    if(smsc->AddressToAlias(sms->getOriginatingAddress(),src))
+    if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias && smsc->AddressToAlias(sms->getOriginatingAddress(),src))
     {
       sms->setOriginatingAddress(src);
     }
@@ -417,6 +541,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
   __trace2__("delivering resp for :%lld",t.msgId);
   __require__(t.state==DELIVERING_STATE);
   smsc::sms::Descriptor d;
+  SMS sms;
+  try{
+    store->retriveSms((SMSId)t.msgId,sms);
+  }catch(exception& e)
+  {
+    __trace2__("failed to retrieve sms:%s",e.what());
+  }
   if(t.command->get_resp()->get_status()!=CMD_OK)
   {
     switch(t.command->get_resp()->get_status())
@@ -424,8 +555,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
       case CMD_ERR_TEMP:
       {
         try{
-          SMS sms;
-          store->retriveSms((SMSId)t.msgId,sms);
           Descriptor d;
           __trace__("DELIVERYRESP: change state to enroute");
           store->changeSmsStateToEnroute(t.msgId,d,0,
@@ -439,13 +568,20 @@ StateType StateMachine::deliveryResp(Tuple& t)
       default:
       {
         try{
-          time_t now=time(NULL);
           Descriptor d;
           __trace__("DELIVERYRESP: change state to undeliverable");
           store->changeSmsStateToUndeliverable(t.msgId,d,0);
         }catch(...)
         {
           __trace__("DELIVERYRESP: failed to change state to undeliverable");
+        }
+        smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+        if(p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
+           sms.getDeliveryReport())
+        {
+          SMS rpt=sms;
+
+          //rpt.
         }
         return ERROR_STATE;
       }

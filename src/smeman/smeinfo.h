@@ -24,6 +24,7 @@ struct SmeInfo
   SmeSystemId systemId;
   SmeNType SME_N;
   bool  disabled;
+  bool wantAlias;
   ~SmeInfo(){}
   SmeInfo(){}
 };
@@ -31,5 +32,3 @@ struct SmeInfo
 }; // namespace smeman
 }; // namespace smsc
 #endif
-
-

@@ -203,6 +203,17 @@ void Smsc::init(const SmscConfigs& cfg)
     {
       StateMachine *m=new StateMachine(eventqueue,store,this);
       m->maxValidTime=maxValidTime;
+      try{
+        m->initFormatters(
+          cfg.cfgman->getString("core.receipt_delivered"),
+          cfg.cfgman->getString("core.receipt_failed"));
+      }catch(exception& e)
+      {
+        log.warn("INIT: Delivery receipts init failed:%s",e.what());
+        __warning__("INIT: Delivery receipts init failed");
+      }
+      Address addr(cfg.cfgman->getString("core.service_center_address"));
+      m->scAddress=addr;
       tp.startTask(m);
     }
   }
