@@ -29,7 +29,6 @@ using smsc::util::xml::initXerces;
 
 int main (int argc, char *argv[])
 {
-	char * configFileStr = 0;
 	if (argc < 3)
 	{
 		printf("suage: smsc_dumb_service port <full name of config file>\n\r");

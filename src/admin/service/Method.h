@@ -71,6 +71,7 @@ public:
 	{
 		uninit();
 		init(copy.id, copy.name, copy.params, copy.returnType);
+		return *this;
 	}
 
 	virtual ~Method()

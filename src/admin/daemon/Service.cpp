@@ -25,7 +25,7 @@ pid_t Service::start()
 
 	if (pid_t p = fork())
 	{ // parent process
-		pid = p;
+		return pid = p;
 	}
 	else
 	{	// child process
@@ -43,6 +43,7 @@ pid_t Service::start()
 			freopen("smsc_service.err", "a",  stderr);
 		#endif
 		execv(command_line, arguments);
+		return 0;
 	}
 }
 

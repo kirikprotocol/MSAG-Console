@@ -24,7 +24,12 @@ class DumbServiceCommandHandler : public Component
 {
 protected:
 	Methods methods;
-	enum MethodIds {getConfigId, getLogsId, getMonId, setConfigId};
+	enum MethodIds {
+		getConfigId,
+		getLogsId,
+		getMonId,
+		setConfigId
+	};
 	Config config;
 	log4cpp::Category &logger;
 	std::string dumb_config;
@@ -53,6 +58,8 @@ public:
 																				 params,
 																				 StringType);
 	}
+
+	virtual ~DumbServiceCommandHandler() {}
 
 	virtual const char * const getName() const
 	{

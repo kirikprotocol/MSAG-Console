@@ -43,6 +43,7 @@ public:
 			delete name;
 		name = cStringCopy(copy.name);
 		type = copy.type;
+		return *this;
 	}
 
 	virtual ~Parameter()

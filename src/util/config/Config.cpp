@@ -40,7 +40,7 @@ void Config::processNode(const DOM_Element &element,
 	if (!element.isNull())
 	{
 		DOM_NodeList list = element.getChildNodes();
-		for (int i=0; i<list.getLength(); i++)
+		for (unsigned i=0; i<list.getLength(); i++)
 		{
 			DOM_Node n = list.item(i);
 			if (n.getNodeType() == DOM_Node::ELEMENT_NODE)
@@ -309,9 +309,7 @@ void collect_section_names_into_set(CStrSet &result,
 			char sectName[dotpos - name+1];
 			memcpy(sectName, name, dotpos - name);
 			sectName[dotpos - name] = 0;
-			bool isInserted = result.insert(std::string(sectName)).second;
-			//if (isInserted)
-				//delete sectName;
+			result.insert(std::string(sectName)).second;
 		}
 	}
 }

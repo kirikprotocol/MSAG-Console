@@ -358,7 +358,7 @@ void DaemonCommandDispatcher::addServicesFromConfig()
 		{
 			const char * fullServiceName = i->c_str();
 			char * dotpos = strrchr(fullServiceName, '.');
-			const size_t serviceNameBufLen = strlen(dotpos+1) +1;
+			//const size_t serviceNameBufLen = strlen(dotpos+1) +1;
 			std::string serviceName = decode(dotpos+1);
 		
 			std::string prefix(fullServiceName);

@@ -155,7 +155,7 @@ public:
 
 	CStrSet *getChildSectionNames(const char * const sectionName)
 	{
-		config.getChildSectionNames(sectionName);
+		return config.getChildSectionNames(sectionName);
 	}
 
 protected:

@@ -19,7 +19,7 @@ char * getNodeText(DOM_Node node)
 		std::string s;
 
 		DOM_NodeList childs = node.getChildNodes();
-		for (int i=0; i<childs.getLength(); i++)
+		for (unsigned i=0; i<childs.getLength(); i++)
 		{
 			DOM_Node child = childs.item(i);
 			if (child.getNodeType() == DOM_Node::TEXT_NODE)

@@ -41,7 +41,7 @@ public:
 	
 				DOM_NodeList argElems = serviceElem.getElementsByTagName("arg");
 				args.resize(argElems.getLength());
-				for (int i=0; i<argElems.getLength(); i++)
+				for (unsigned i=0; i<argElems.getLength(); i++)
 				{
 					DOM_Node argNode = argElems.item(i);
 					DOM_Element &argElem = (DOM_Element&) argNode;

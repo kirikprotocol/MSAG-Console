@@ -57,6 +57,7 @@ public:
 	Variant & operator = (const Variant & copy)
 	{
 		initByCopy(copy);
+		return *this;
 	}
 
 	virtual ~Variant()

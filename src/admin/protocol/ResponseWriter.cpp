@@ -46,9 +46,9 @@ void ResponseWriter::writeLength(size_t length)
 void ResponseWriter::writeBuf(const void * const buf, size_t len)
 	throw (AdminException)
 {
-	for (size_t writed = 0; writed < len; )
+	for (long writed = 0; writed < (long)len; )
 	{
-		size_t writed_now = sock->Write((const char *)(buf) + writed, len - writed);
+		int writed_now = sock->Write((const char *)(buf) + writed, len - writed);
 		if (writed_now == 0 || writed_now == -1)
 		{
 			throw AdminException("Connect broken");

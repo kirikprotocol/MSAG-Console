@@ -45,7 +45,7 @@ void daemonInit()
 	}
 	struct rlimit flim;
 	getrlimit(RLIMIT_NOFILE, &flim);
-	for (int i=0; i<flim.rlim_max; i++)
+	for (rlim_t i=0; i<flim.rlim_max; i++)
 	{
 		close(i);
 	}
