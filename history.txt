@@ -52,3 +52,8 @@ New: Поле notes в маршрутах и субъектах.
 New: SMPP PDU dump. Включается из админ. интерфейса - 
      надо выставить DEBUG категории sd.name 
      где name это systemid желаемой SME.
+
+Build 1617
+Fix: Неправильный код опционального поля receiptedMessageId в SMPP
+Fix: Имя локали в profiler не переводилось в lower case 
+New: SMPP PDU dump в SMPP base (клиентская реализация SMPP). Категория логирования: sd

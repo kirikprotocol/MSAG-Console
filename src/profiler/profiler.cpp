@@ -526,7 +526,7 @@ int Profiler::Execute()
           {
             string loc;
             loc.assign(body+j,i-j);
-            for(int x=0;i<loc.length();x++)loc.at(x)=tolower(loc.at(x));
+            for(int x=0;x<loc.length();x++)loc.at(x)=tolower(loc.at(x));
             __trace2__("Profiler: new locale %s",loc.c_str());
             if(ResourceManager::getInstance()->isValidLocale(loc))
             {
