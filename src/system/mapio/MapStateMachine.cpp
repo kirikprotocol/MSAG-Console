@@ -533,7 +533,7 @@ static void SendNextMMS(MapDialog* dialog)
   SmscCommand cmd = dialog->chain.front();
   dialog->chain.pop_front();
   //dialog->
-  dialog->dialogid_smsc = cmd->get_dialogid();
+  dialog->dialogid_smsc = cmd->get_dialogId();
   dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
   SendSms(dialog);
 }
@@ -1152,7 +1152,7 @@ USHORT_T Et96MapDelimiterInd(
     case MAPST_WaitSmsClose:
       SendOkToSmsc(dialog->dialogid_smsc);
       //dialog->state = MAPST_WaitSmsConf;
-      SendNextMMS(dialog);
+      SendNextMMS(dialog.get());
       break;
     default:
       throw MAPDIALOG_BAD_STATE(
