@@ -24,36 +24,36 @@ using smsc::util::config::ConfigException;
 using smsc::util::config::Manager;
 
 namespace smsc {
-	namespace admin {
-		namespace daemon {
+namespace admin {
+namespace daemon {
 
-			void daemonInit()
-			{
-				if (getppid() != 1)
-				{
-					signal(SIGTSTP, SIG_IGN);
-					signal(SIGTTIN, SIG_IGN);
-					signal(SIGTTOU, SIG_IGN);
-					if (fork() != 0)
-					{
-						exit(0);
-					} else {
-						setsid();
-					}
-				}
-				struct rlimit flim;
-				getrlimit(RLIMIT_NOFILE, &flim);
-				for (rlim_t i=0; i<flim.rlim_max; i++)
-				{
-					close(i);
-				}
-				/*close(STDIN_FILENO);
-				close(STDOUT_FILENO);
-				close(STDERR_FILENO);*/
-			}
-
+void daemonInit()
+{
+	if (getppid() != 1)
+	{
+		signal(SIGTSTP, SIG_IGN);
+		signal(SIGTTIN, SIG_IGN);
+		signal(SIGTTOU, SIG_IGN);
+		if (fork() != 0)
+		{
+			exit(0);
+		} else {
+			setsid();
 		}
 	}
+	struct rlimit flim;
+	getrlimit(RLIMIT_NOFILE, &flim);
+	for (rlim_t i=0; i<flim.rlim_max; i++)
+	{
+		close(i);
+	}
+	/*close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);*/
+}
+
+}
+}
 }
 
 using smsc::admin::daemon::daemonInit;
@@ -63,7 +63,7 @@ static DaemonSocketListener * main_listener = 0;
 
 void pipehandler(int a, siginfo_t* info, void* p)
 {
-	fprintf(stderr, "BROKEN PIPE SIGNAL RECEIVED, ABORTING...\n");
+	fprintf(stderr, "BROKEN PIPE SIGNAL RECEIVED, SKIPPED...\n");
 	//abort();
 }
 
@@ -72,6 +72,15 @@ void shutdown_handler(int a, siginfo_t* info, void* p)
 	fprintf(stderr, "Shutdown signal %i received\n", a);
 	if (main_listener != 0)
 		main_listener->shutdown();
+}
+
+void initLogger()
+{
+	char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
+	if (logFileName)
+		smsc::logger::Logger::Init(logFileName);
+	else
+		smsc::logger::Logger::Init("logger.properties");
 }
 
 int main(int argc, char **argv)
@@ -84,6 +93,9 @@ int main(int argc, char **argv)
 				<< std::endl;
 			return -1;
 		}
+    
+    initLogger();
+  
 		daemonInit();
 
 		Manager::init(argv[1]);
@@ -96,7 +108,6 @@ int main(int argc, char **argv)
 		if (redirected_stderr == 0)
 			throw ConfigException("Couldn't redirect stderr");
 
-		Logger::Init(manager.getString(CONFIG_LOGGER_CONFIG_PARAMETER));
 		smsc::logger::Logger *logger(Logger::getInstance("smsc.admin.daemon"));
 
 		smsc_log_info(logger, "Starting...");
