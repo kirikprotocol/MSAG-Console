@@ -42,8 +42,11 @@ using namespace smsc::infosme;
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
 
-static bool bInfoSmeIsStopped   = false;
-static bool bInfoSmeIsConnected = false;
+static bool  bInfoSmeIsStopped   = false;
+static bool  bInfoSmeIsConnected = false;
+
+static Event infoSmeReady;
+static int   infoSmeReadyTimeout = 10000;
 
 static log4cpp::Category& logger = Logger::getCategory("smsc.infosme.InfoSme");
 
@@ -339,12 +342,12 @@ public:
 
     void handleEvent(SmppHeader *pdu)
     {
-        Event aaa;
-        while (!bInfoSmeIsConnected) {
-            static int counter = 0;
-            aaa.Wait(1000);    
-            if (++counter < 10) continue;
-            disposePdu(pdu);
+        if (!bInfoSmeIsConnected) {
+            infoSmeReady.Wait(infoSmeReadyTimeout);
+            if (!bInfoSmeIsConnected) {
+                disposePdu(pdu);
+                return;
+            }
         }
 
         switch (pdu->get_commandId())
@@ -354,7 +357,7 @@ public:
             processReceipt(pdu);
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
-            logger.debug("Received SUBMIT_SM_RESP Pdu.");
+            //logger.debug("Received SUBMIT_SM_RESP Pdu.");
             processResponce(pdu);
             break;
         default:
@@ -436,9 +439,11 @@ int main(void)
                 listener.setSyncTransmitter(session.getSyncTransmitter());
                 listener.setAsyncTransmitter(session.getAsyncTransmitter());
                 
+                infoSmeReady.Wait(0);
                 session.connect();
                 processor.Start();
                 bInfoSmeIsConnected = true;
+                infoSmeReady.Signal();
             }
             catch (SmppConnectException& exc)
             {

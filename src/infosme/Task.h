@@ -278,6 +278,15 @@ namespace smsc { namespace infosme
         bool getNextMessage(Connection* connection, Message& message);
         
         /**
+         * Удаляет сообщение.
+         * Выполняется из TaskProcessor'а
+         * 
+         * @param msgId         идентификатор сообщения в таблице задачи.
+         * @return true         если сообщение найдено и удалено. 
+         */
+        bool deleteMessage(uint64_t msgId);
+        
+        /**
          * Переводит сообщение в состояние NEW по получению deliveryReport Failed
          * или submitResponce Failed с временной ошибкой,
          * если в задаче стоит retryOnFail и установленно retryTime.
@@ -286,7 +295,7 @@ namespace smsc { namespace infosme
          * @param nextTime      время следующей попытки доставки.
          * @return true         если сообщение найдено и изменено 
          */
-        bool doRetry(uint64_t msgId, time_t nextTime);
+        bool retryMessage(uint64_t msgId, time_t nextTime);
 
         /**
          * ?????
@@ -301,29 +310,6 @@ namespace smsc { namespace infosme
          * @return true         если сообщение найдено и изменено 
          */
         bool doEnroute(Connection* connection, uint64_t msgId);
-        
-        /**
-         * Удаляет сообщение.
-         * Выполняется из TaskProcessor'а
-         * 
-         * @param connection    основной connection TaskProcessor'а
-         *                      из внутреннего источника данных. (оптимизация)
-         * @param msgId         идентификатор сообщения в таблице задачи.
-         * @return true         если сообщение найдено и удалено. 
-         */
-        //bool doDelete(Connection* connection, uint64_t msgId);
-        
-        /**
-         * Переводит сообщение в состояние DELIVERED по получению submitResponce Ok
-         * Сообщение должно быть в состоянии ENROUTE.
-         * Выполняется из TaskProcessor'а
-         * 
-         * @param connection    основной connection TaskProcessor'а
-         *                      из внутреннего источника данных. (оптимизация)
-         * @param msgId         идентификатор сообщения в таблице задачи.
-         * @return true         если сообщение найдено и изменено 
-         */
-        bool doDelivered(Connection* connection, uint64_t msgId);
         
     };
     

@@ -376,13 +376,46 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, std::
     }
     TaskInfo info = task->getInfo();
 
+    if (!accepted)
+    {
+        bool needDelete = true;
+        if (retry && info.retryOnFail && info.retryTime > 0)
+        {
+            time_t nextTime = time(NULL)+info.retryTime;
+            if (info.endDate > 0 && info.endDate >= nextTime) {
+                if (!task->retryMessage(tmIds.msgId, nextTime)) {
+                    logger.warn("Message #%lld not found for retry.", tmIds.msgId);
+                    statistics->incFailed(tmIds.taskId);
+                } else {
+                    needDelete = false;
+                    statistics->incRetried(tmIds.taskId);
+                }
+            }
+            else statistics->incFailed(tmIds.taskId);
+        }
+        else statistics->incFailed(tmIds.taskId);
+        if (needDelete) task->deleteMessage(tmIds.msgId);
+    }
+    else
+    {
+        // TODO: CREATE ID MAPPING HERE !!!
+        if (info.transactionMode) {
+            statistics->incDelivered(tmIds.taskId);
+            task->deleteMessage(tmIds.msgId);
+        }
+        else {
+            // TODO: implement it
+            logger.warn("Normal mode is not supported yet !!!");
+        }
+    }
+    
     /*
     MutexGuard icGuard(dsIntConnectionLock);
     if (!accepted)
     {
         if (retry && info.retryOnFail && info.retryTime > 0) {
             if (!task->doRetry(dsIntConnection, tmIds.msgId))
-               logger.warn("Message #%lld not found (doRetry).", tmIds.msgId);
+               
         }
         else if (!task->doFailed(dsIntConnection, tmIds.msgId))
                 logger.warn("Message #%lld not found (doFailed).", tmIds.msgId);
