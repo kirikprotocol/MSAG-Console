@@ -15,9 +15,9 @@ using namespace smsc::smpp;
 using namespace smsc::smpp::SmppCommandSet;
 
 SmppTransmitterTestCases::SmppTransmitterTestCases(SmppSession* sess,
-	const Address& addr, const SmeRegistry* _smeReg,
+	const SmeSystemId& id, const Address& addr, const SmeRegistry* _smeReg,
 	SmppPduChecker* _pduChecker)
-	: session(sess), smeAddr(addr), smeReg(_smeReg),
+	: session(sess), systemId(id), smeAddr(addr), smeReg(_smeReg),
 	pduChecker(_pduChecker)
 {
 	__require__(session);
@@ -80,7 +80,7 @@ TCResult* SmppTransmitterTestCases::submitSmAssert(int num)
 				default:
 					throw s;
 			}
-			__dumpPdu__("SmppTransmitterTestCases::submitSmAssert", pdu);
+			__dumpPdu__("SmppTransmitterTestCases::submitSmAssert", systemId, pdu);
 			res->addFailure(s.value());
 		}
 		catch (...)
@@ -275,11 +275,11 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 			PduSubmitSmResp* respPdu = NULL;
 			if (sync)
 			{
-				__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncBefore", pdu);
+				__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncBefore", systemId, pdu);
 				respPdu = session->getSyncTransmitter()->submit(*pdu);
-				__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncAfter", pdu);
-				__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespSync", respPdu);
-				getLog().debug("[%d]\tsubmitSmSync(%d): seqNum = %d",
+				__dumpPdu2__("SmppTransmitterTestCases::submitSmSyncAfter", systemId, pdu);
+				__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespSync", systemId, respPdu);
+				getLog().debug("[%d]\tsubmitSmSync(%d): sequenceNumber = %d",
 					thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
 				if (!respPdu)
 				{
@@ -288,11 +288,11 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 			}
 			else
 			{
-				__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncBefore", pdu);
+				__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncBefore", systemId, pdu);
 				respPdu = session->getAsyncTransmitter()->submit(*pdu);
-				__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncAfter", pdu);
-				__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespAsync", respPdu);
-				getLog().debug("[%d]\tsubmitSmAsync(%d): seqNum = %d",
+				__dumpPdu2__("SmppTransmitterTestCases::submitSmAsyncAfter", systemId, pdu);
+				__dumpPdu2__("SmppTransmitterTestCases::processSubmitSmRespAsync", systemId, respPdu);
+				getLog().debug("[%d]\tsubmitSmAsync(%d): sequenceNumber = %d",
 					thr_self(), s.value(), pdu->get_header().get_sequenceNumber());
 				if (respPdu)
 				{
