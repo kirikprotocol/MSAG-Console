@@ -146,6 +146,10 @@ void sendInvalidPduTc()
 {
 	__reg_tc__("sendInvalidPdu",
 		"Отправка некорректной pdu");
+	__reg_tc__("sendInvalidPdu.sync",
+		"Синхронная отправка pdu");
+	__reg_tc__("sendInvalidPdu.async",
+		"Асинхронная отправка pdu");
 	__reg_tc__("sendInvalidPdu.request",
 		"Реквест неправильной длины");
 	__reg_tc__("sendInvalidPdu.response",
@@ -195,6 +199,8 @@ void processRespTc()
 		"Если код ошибки ESME_RINVDCS в поле command_status, то кодировка сообщения действительно задана неправильно");
 	__reg_tc__("processResp.checkCmdStatusInvalidServiceType",
 		"Если код ошибки ESME_RINVSERTYP в поле command_status, то длина поля service_type действительно задана неправильно");
+	__reg_tc__("processResp.checkCmdStatusInvalidSourceAddr",
+		"Если код ошибки ESME_RINVSRCADR в поле command_status, то адрес отправителя действительно не соответствует address range для данной sme в конфигурации sme.xml SC");
 	__reg_tc__("processResp.checkCmdStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
 }
