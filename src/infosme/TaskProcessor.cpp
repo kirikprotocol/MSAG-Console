@@ -112,7 +112,7 @@ TaskProcessor::~TaskProcessor()
 {
     scheduler.Stop();
     this->Stop();
-    manager.shutdown();
+    manager.Stop();
     
     {
         MutexGuard guard(tasksLock);

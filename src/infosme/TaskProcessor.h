@@ -89,6 +89,7 @@ namespace smsc { namespace infosme
     
         log4cpp::Category  &logger;
         ThreadPool          pool;
+        
         Mutex               stopLock;
         bool                bStopping;
         
@@ -100,11 +101,13 @@ namespace smsc { namespace infosme
             : TaskInvokeAdapter(), logger(Logger::getCategory("smsc.infosme.TaskManager")), 
                 statistics(0), bStopping(false) {};
         virtual ~TaskManager() {
-            shutdown();
+            this->Stop();
+            pool.shutdown();
         };
     
-        void shutdown() {
-            pool.shutdown();
+        void Stop() {
+            MutexGuard guard(stopLock);
+            bStopping = true;
         }
     
         void setStatisticsManager(StatisticsManager* manager) {
@@ -133,13 +136,16 @@ namespace smsc { namespace infosme
         };
         
         virtual void invokeEndProcess(Task* task) {
-            pool.startTask(new TaskRunner(task, endProcessMethod));
+            MutexGuard guard(stopLock);
+            if (!bStopping) pool.startTask(new TaskRunner(task, endProcessMethod));
         };
         virtual void invokeBeginProcess(Task* task) {
-            pool.startTask(new TaskRunner(task, beginProcessMethod, statistics));
+            MutexGuard guard(stopLock);
+            if (!bStopping) pool.startTask(new TaskRunner(task, beginProcessMethod, statistics));
         };
         virtual void invokeDropAllMessages(Task* task) {
-            pool.startTask(new TaskRunner(task, dropAllMessagesMethod));
+            MutexGuard guard(stopLock);
+            if (!bStopping) pool.startTask(new TaskRunner(task, dropAllMessagesMethod));
         };
     };
     
