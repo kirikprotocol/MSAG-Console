@@ -38,36 +38,18 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduDeliverySm& pdu1,
 		res.push_back(1);
 	}
 	//destAddr1 является алиасом
-	const AliasRegistry::AliasList destList =
-		aliasReg->findAddressByAlias(destAddr1);
-	bool destFound = false;
-	for (int i = 0; i < destList.size(); i++)
-	{
-		Address tmp;
-		if (destList[i]->aliasToAddress(destAddr1, tmp) &&
-			SmsUtil::compareAddresses(tmp, destAddr2))
-		{
-			destFound = true;
-			break;
-		}
-	}
+	const AliasHolder* destHolder = aliasReg->findAddressByAlias(destAddr1);
+	Address tmp;
+	bool destFound = (destHolder && destHolder->aliasToAddress(destAddr1, tmp) &&
+		SmsUtil::compareAddresses(tmp, destAddr2));
 	if (!destFound)
 	{
 		res.push_back(2);
 	}
 	else
 	{
-		const RouteRegistry::RouteList routeList =
-			routeReg->lookup(origAddr1, destAddr2);
-		bool smeFound = false;
-		for (int i = 0; i < routeList.size(); i++)
-		{
-			if (systemId == routeList[i]->route->smeSystemId)
-			{
-				smeFound = true;
-				break;
-			}
-		}
+		const RouteHolder* routeHolder = routeReg->lookup(origAddr1, destAddr2);
+		bool smeFound = (routeHolder && systemId == routeHolder->route.smeSystemId);
 		if (!smeFound)
 		{
 			res.push_back(3);
@@ -75,19 +57,9 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduDeliverySm& pdu1,
 	}
 	//Проверить правильность source адреса для pdu2
 	//origAddr2 является алиасом
-	const AliasRegistry::AliasList origList =
-		aliasReg->findAliasByAddress(origAddr1);
-	bool origFound = false;
-	for (int i = 0; i < origList.size(); i++)
-	{
-		Address tmp;
-		if (origList[i]->addressToAlias(origAddr1, tmp) &&
-			SmsUtil::compareAddresses(tmp, origAddr2))
-		{
-			origFound = true;
-			break;
-		}
-	}
+	const AliasHolder* origHolder = aliasReg->findAliasByAddress(origAddr1);
+	bool origFound = (origHolder && origHolder->addressToAlias(origAddr1, tmp) &&
+		SmsUtil::compareAddresses(tmp, origAddr2));
 	if (!origFound)
 	{
 		res.push_back(4);
@@ -118,73 +90,23 @@ vector<int> RouteChecker::checkRouteForNotification(PduDeliverySm& pdu1,
 	return res;
 }
 
-bool RouteChecker::checkExistsReachableRoute(PduAddress& dest, bool checkSme) const
+bool RouteChecker::isDestReachable(PduAddress& dest, bool checkSme) const
 {
 	//dest является алиасом
 	Address destAlias;
 	SmppUtil::convert(dest, &destAlias);
-	const AliasRegistry::AliasList destList =
-		aliasReg->findAddressByAlias(destAlias);
-	for (int i = 0; i < destList.size(); i++)
+	const AliasHolder* destHolder = aliasReg->findAddressByAlias(destAlias);
+	Address destAddr;
+	if (destHolder && destHolder->aliasToAddress(destAlias, destAddr))
 	{
-		Address destAddr;
-		if (!destList[i]->aliasToAddress(destAlias, destAddr))
+		const RouteHolder* routeHolder = routeReg->lookup(smeAddr, destAddr);
+		if (checkSme && routeHolder)
 		{
-			continue;
+			return smeReg->isSmeRegistered(routeHolder->route.smeSystemId);
 		}
-		const RouteRegistry::RouteList routeList =
-			routeReg->lookup(smeAddr, destAddr);
-		if (checkSme)
+		else
 		{
-			for (int i = 0; i < routeList.size(); i++)
-			{
-				if (smeReg->isSmeRegistered(routeList[i]->route->smeSystemId))
-				{
-					return true;
-				}
-			}
-		}
-		else if (routeList.size())
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-bool RouteChecker::checkExistsUnreachableRoute(PduAddress& dest, bool checkSme) const
-{
-	//dest является алиасом
-	Address destAlias;
-	SmppUtil::convert(dest, &destAlias);
-	const AliasRegistry::AliasList destList =
-		aliasReg->findAddressByAlias(destAlias);
-	if (!destList.size())
-	{
-		return true;
-	}
-	for (int i = 0; i < destList.size(); i++)
-	{
-		Address destAddr;
-		if (!destList[i]->aliasToAddress(destAlias, destAddr))
-		{
-			return true;
-		}
-		const RouteRegistry::RouteList routeList =
-			routeReg->lookup(smeAddr, destAddr);
-		if (!routeList.size())
-		{
-			return true;
-		}
-		if (checkSme)
-		{
-			for (int i = 0; i < routeList.size(); i++)
-			{
-				if (!smeReg->isSmeRegistered(routeList[i]->route->smeSystemId))
-				{
-					return true;
-				}
-			}
+			return routeHolder;
 		}
 	}
 	return false;
