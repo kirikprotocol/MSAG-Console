@@ -40,10 +40,12 @@ static inline uint16_t MyNtoHs(uint16_t v) {return ntohs(v);}
 
 void UCS_htons(char* buffer, const char* orig, unsigned len, unsigned esm_class)
 {
+  __trace2__(":SMS:%s:",__FUNCTION__);
 	UCS_T(buffer,orig,len,esm_class,MyHtoNs);	
 }
 void UCS_ntohs(char* buffer, const char* orig, unsigned len, unsigned esm_class)
 {
+  __trace2__(":SMS:%s:",__FUNCTION__);
 	UCS_T(buffer,orig,len,esm_class,MyNtoHs);	
 }
 

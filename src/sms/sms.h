@@ -694,6 +694,7 @@ public:
     if ( !HSNS_isEqual() ) {
       if ( tag == Tag::SMPP_SHORT_MESSAGE || tag == Tag::SMSC_RAW_SHORTMESSAGE) 
       {
+        __trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
         dropProperty(Tag::SMPP_SHORT_MESSAGE);
         if ( tag == Tag::SMPP_SHORT_MESSAGE ){
           if ( !prop.properties[Tag::SMPP_DATA_CODING].isSet )
@@ -711,8 +712,9 @@ public:
       }else
         prop.properties[tag].setBin(value,len);
     }else{
-      if ( tag == Tag::SMPP_SHORT_MESSAGE ) tag = Tag::SMSC_RAW_SHORTMESSAGE;
 trivial:
+      __trace2__(":SMS::Body::%s set trivial value",__FUNCTION__);
+      if ( tag == Tag::SMPP_SHORT_MESSAGE ) tag = Tag::SMSC_RAW_SHORTMESSAGE;
       prop.properties[tag].setBin(value,len);
     }
   }
@@ -740,6 +742,7 @@ trivial:
     __require__(tag<=SMS_LAST_TAG);
     if ( !HSNS_isEqual() ) {
       if ( tag == Tag::SMPP_SHORT_MESSAGE ) {
+        __trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
         if ( !hasBinProperty(Tag::SMPP_SHORT_MESSAGE) )
         {
           if ( !prop.properties[Tag::SMPP_DATA_CODING].isSet )
@@ -758,6 +761,7 @@ trivial:
       }
     }else{
   trivial:
+      __trace2__(":SMS::Body::%s get trivial value",__FUNCTION__);
       tag = Tag::SMSC_RAW_SHORTMESSAGE;
     }
     return prop.properties[tag].getBin(len);
