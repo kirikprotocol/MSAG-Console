@@ -106,15 +106,12 @@ const string DbSmeSelectJobTestCases::processSelectNullsJobOutput(
 			}
 		}
 		delete it;
-		if (count)
+		if (!count)
 		{
-			__tc__("processDbSmeRes.select.multipleRecords"); __tc_ok__;
+			__cfg_str__(dbSmeRespQueryNull);
+			return dbSmeRespQueryNull;
 		}
-		else
-		{
-			//нет записей удовлетворяющих условиям
-			writeSelectJobRecord(os, NULL, &defOutput, t);
-		}
+		__tc__("processDbSmeRes.select.multipleRecords"); __tc_ok__;
 		string expected = os.str();
 		if (expected.find(text) != string::npos)
 		{
