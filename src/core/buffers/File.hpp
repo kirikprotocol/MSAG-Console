@@ -528,6 +528,12 @@ public:
 #endif
   }
 
+  void Rename(const char* newname)
+  {
+    if(rename(filename.c_str(),newname)!=0)throw FileException(FileException::errRenameFailed,filename.c_str());
+    filename=newname;
+  }
+
 protected:
   FILE *f;
   bool  inMemoryFile;

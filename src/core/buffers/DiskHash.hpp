@@ -139,7 +139,8 @@ protected:
   {
     __warning2__("disk hash rehashing %d/%d",count,size);
     File g;
-    g.RWCreate((name+".tmp").c_str());
+    std::string tmp=name+".tmp";
+    g.RWCreate(tmp.c_str());
     DiskHashHeader h;
     h.size=size*reallocPercent/100;
 
@@ -197,10 +198,12 @@ protected:
     f.Close();
     size=h.size;
     remove(name.c_str());
-    rename((name+".tmp").c_str(),name.c_str());
+    g.Rename(name.c_str());
     /*
+
     f.RWOpen(name.c_str());
     f.OpenInMemory(0);
+
     */
     f.Swap(g);
     __warning__("rehashing finished");
