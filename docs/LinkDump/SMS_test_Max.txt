@@ -1,0 +1,1652 @@
+1: 28/09/01 14:47:45.375  Avista      [3.1] Usr
+L1: [Primitive] L0 Raw Message
+L2: [MTP (Whitebook)]:
+  0 1....... : BIB.....................1 
+    .1101000 : BSN.....................68 Hex
+  1 1....... : FIB.....................1 
+    .1110111 : FSN.....................77 Hex
+  2 00...... : Spare...................00 Hex
+    ..111111 : Length indicator........63 Dec
+  3 11...... : Network indicator.......Reserved for national use 
+    ..00.... : Spare...................00 Hex
+    ....0011 : Service indicator.......SCCP-Sig connection control part 
+  4 ******** : DPC.....................3BF0 Hex
+  5 ******** : OPC.....................3BF6 Hex
+  7 0001.... : SLS.....................01 Dec
+L3: [SCCP (Whitebook)]:
+  8 00001001 : Message type............UDT-Unitdata 
+  9 1000.... : Message handling........Return message on error 
+    ....0000 : Class...................Class 0 
+ 10 00000011 : Parameter pointer.......03 Dec
+ 11 00001110 : Parameter pointer.......14 Dec
+ 12 00011001 : Parameter pointer.......25 Dec
+ -- Called party address
+ 13 00001011 : Length..................11 Dec
+ 14 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 15 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 16 00000000 : Translation type........00 Hex
+ 17 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 18 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 19 ******** : Address.................79029869990
+ -- Calling party address
+ 25 00001011 : Length..................11 Dec
+ 26 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 27 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 28 00000000 : Translation type........00 Hex
+ 29 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 30 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 31 ******** : Address.................79029860000
+ -- Data
+ 37 01011000 : Parameter length........88 Dec
+L7: [GSMMAP 1]:
+ -- Entry
+ -- CHOICE: tcap-pdu
+ -- MessageType
+ -- CHOICE: begin
+  1 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+  2 0....... : Length form.......... Short
+    .1010110 : Length............... 86
+ -- Begin
+ -- SEQUENCE:
+ -- otid
+ -- OrigTransactionID
+  3 01...... : Tag class............ Application-Wide
+    ..0..... : Tag form............. Primitive
+    ...01000 : Tag value............ 8
+  4 0....... : Length form.......... Short
+    .0000011 : Length............... 3
+  5 ******** : Octet string......... 29 00 FE 
+ -- dialoguePortion
+ -- DialoguePortion
+  8 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01011 : Tag value............ 11
+  9 0....... : Length form.......... Short
+    .0011110 : Length............... 30
+ 10 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...01000 : Tag value............ 8 (External)
+ 11 0....... : Length form.......... Short
+    .0011100 : Length............... 28
+ -- SEQUENCE:
+ -- direct-reference
+ 12 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00110 : Tag value............ 6 (Object Identifier)
+ 13 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ 14 ******** : Object identifier.... { 0 0 17 773 1 1 1 }
+ -- encoding
+ -- CHOICE: single-ASN1-type
+ 21 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00000 : Tag value............ 0
+ 22 0....... : Length form.......... Short
+    .0010001 : Length............... 17
+ -- ANY:
+ -- AARQ-apdu
+ 23 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00000 : Tag value............ 0
+ 24 0....... : Length form.......... Short
+    .0001111 : Length............... 15
+ -- SEQUENCE:
+ -- protocol-version
+ 25 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00000 : Tag value............ 0
+ 26 0....... : Length form.......... Short
+    .0000010 : Length............... 2
+ 27 00000111 : Unused bit count..... 7
+ 28 10000000 : Bit string........... 1
+ -- application-context-name
+ 29 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00001 : Tag value............ 1
+ 30 0....... : Length form.......... Short
+    .0001001 : Length............... 9
+ 31 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00110 : Tag value............ 6 (Object Identifier)
+ 32 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ 33 ******** : Object identifier.... { 0 4 0 0 1 0 21 2 }
+ -- components
+ -- ComponentPortion
+ 40 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01100 : Tag value............ 12
+ 41 10000000 : Length form.......... Indefinite
+ -- SEQUENCE OF:
+ -- Component
+ -- CHOICE: invoke
+ 42 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00001 : Tag value............ 1
+ 43 0....... : Length form.......... Short
+    .0101011 : Length............... 43
+ -- Invoke
+ -- SEQUENCE:
+ -- invokeID
+ -- InvokeIdType
+ 44 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 45 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 46 00000001 : Integer.............. 1
+ -- operationCode
+ -- OPERATION code
+ -- CHOICE: localvalue
+ 47 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 48 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 49 00101110 : Integer.............. 46 ( forwardShortMessage )
+ -- argument
+ -- OPERATION PARAMETER
+ 50 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 51 0....... : Length form.......... Short
+    .0100011 : Length............... 35
+ -- SEQUENCE:
+ -- sm-RP-DA
+ -- SM-RP-DA
+ -- CHOICE: serviceCentreAddress
+ 52 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00100 : Tag value............ 4
+ 53 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- AddressString
+ 54 ******** : Octet string......... 91 97 20 89 96 99 F0 
+ -- sm-RP-OA
+ -- SM-RP-OA
+ -- CHOICE: msIsdn
+ 61 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2
+ 62 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- IsdnAddressString
+ -- AddressString
+ 63 ******** : Octet string......... 91 97 20 89 15 51 F8 
+ -- sm-RP-UI
+ -- SM-RP-UI
+ 70 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00100 : Tag value............ 4 (Octet String)
+ 71 0....... : Length form.......... Short
+    .0001111 : Length............... 15
+ 72 ******** : Octet string......... B1 9B 06 81 31 11 33 00 00 A7 04 
+                                     D4 F2 9C 0E 
+ 87 ******** : Length marker........ EOC
+
+2: 28/09/01 14:47:45.564  Avista      [3.1] Net
+L1: [Primitive] L0 Raw Message
+L2: [MTP (Whitebook)]:
+  0 1....... : BIB.....................1 
+    .1110111 : BSN.....................77 Hex
+  1 1....... : FIB.....................1 
+    .1101001 : FSN.....................69 Hex
+  2 00...... : Spare...................00 Hex
+    ..111111 : Length indicator........63 Dec
+  3 11...... : Network indicator.......Reserved for national use 
+    ..00.... : Spare...................00 Hex
+    ....0011 : Service indicator.......SCCP-Sig connection control part 
+  4 ******** : DPC.....................3BF6 Hex
+  5 ******** : OPC.....................3BF0 Hex
+  7 0000.... : SLS.....................00 Dec
+L3: [SCCP (Whitebook)]:
+  8 00001001 : Message type............UDT-Unitdata 
+  9 0000.... : Message handling........No special options 
+    ....0000 : Class...................Class 0 
+ 10 00000011 : Parameter pointer.......03 Dec
+ 11 00001110 : Parameter pointer.......14 Dec
+ 12 00011001 : Parameter pointer.......25 Dec
+ -- Called party address
+ 13 00001011 : Length..................11 Dec
+ 14 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 15 00000110 : Subsystem number........HLR-Home loc register 
+ 16 00000000 : Translation type........00 Hex
+ 17 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 18 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 19 ******** : Address.................79029851158
+ -- Calling party address
+ 25 00001011 : Length..................11 Dec
+ 26 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 27 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 28 00000000 : Translation type........00 Hex
+ 29 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 30 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 31 ******** : Address.................79029869990
+ -- Data
+ 37 00101001 : Parameter length........41 Dec
+L7: [GSMMAP 1]:
+ -- Entry
+ -- CHOICE: tcap-pdu
+ -- MessageType
+ -- CHOICE: begin
+  1 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+  2 0....... : Length form.......... Short
+    .0100111 : Length............... 39
+ -- Begin
+ -- SEQUENCE:
+ -- otid
+ -- OrigTransactionID
+  3 01...... : Tag class............ Application-Wide
+    ..0..... : Tag form............. Primitive
+    ...01000 : Tag value............ 8
+  4 0....... : Length form.......... Short
+    .0000100 : Length............... 4
+  5 ******** : Octet string......... C7 7A 30 00 
+ -- components
+ -- ComponentPortion
+  9 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01100 : Tag value............ 12
+ 10 0....... : Length form.......... Short
+    .0011111 : Length............... 31
+ -- SEQUENCE OF:
+ -- Component
+ -- CHOICE: invoke
+ 11 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00001 : Tag value............ 1
+ 12 0....... : Length form.......... Short
+    .0011101 : Length............... 29
+ -- Invoke
+ -- SEQUENCE:
+ -- invokeID
+ -- InvokeIdType
+ 13 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 14 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 15 00000001 : Integer.............. 1
+ -- operationCode
+ -- OPERATION code
+ -- CHOICE: localvalue
+ 16 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 17 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 18 00101101 : Integer.............. 45 ( sendRoutingInfoForSM )
+ -- argument
+ -- OPERATION PARAMETER
+ 19 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 20 0....... : Length form.......... Short
+    .0010101 : Length............... 21
+ -- SEQUENCE:
+ -- msIsdn
+ 21 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00000 : Tag value............ 0
+ 22 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- IsdnAddressString
+ -- AddressString
+ 23 ******** : Octet string......... 91 97 20 89 15 51 F8 
+ -- sm-RP-RRI
+ 30 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00001 : Tag value............ 1
+ 31 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 32 00000000 : Boolean.............. False
+ -- serviceCentreAddress
+ 33 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2
+ 34 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- AddressString
+ 35 ******** : Octet string......... 91 97 20 89 96 99 F0 
+
+3: 28/09/01 14:47:45.582  Avista      [3.1] Usr
+L1: [Primitive] L0 Raw Message
+L2: [MTP (Whitebook)]:
+  0 1....... : BIB.....................1 
+    .1101001 : BSN.....................69 Hex
+  1 1....... : FIB.....................1 
+    .1111000 : FSN.....................78 Hex
+  2 00...... : Spare...................00 Hex
+    ..111111 : Length indicator........63 Dec
+  3 11...... : Network indicator.......Reserved for national use 
+    ..00.... : Spare...................00 Hex
+    ....0011 : Service indicator.......SCCP-Sig connection control part 
+  4 ******** : DPC.....................3BF0 Hex
+  5 ******** : OPC.....................3BF6 Hex
+  7 0010.... : SLS.....................02 Dec
+L3: [SCCP (Whitebook)]:
+  8 00001001 : Message type............UDT-Unitdata 
+  9 1000.... : Message handling........Return message on error 
+    ....0000 : Class...................Class 0 
+ 10 00000011 : Parameter pointer.......03 Dec
+ 11 00001110 : Parameter pointer.......14 Dec
+ 12 00011001 : Parameter pointer.......25 Dec
+ -- Called party address
+ 13 00001011 : Length..................11 Dec
+ 14 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 15 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 16 00000000 : Translation type........00 Hex
+ 17 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 18 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 19 ******** : Address.................79029869990
+ -- Calling party address
+ 25 00001011 : Length..................11 Dec
+ 26 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 27 00000110 : Subsystem number........HLR-Home loc register 
+ 28 00000000 : Translation type........00 Hex
+ 29 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 30 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 31 ******** : Address.................79029850000
+ -- Data
+ 37 00101110 : Parameter length........46 Dec
+L7: [GSMMAP 1]:
+ -- Entry
+ -- CHOICE: tcap-pdu
+ -- MessageType
+ -- CHOICE: end
+  1 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00100 : Tag value............ 4
+  2 0....... : Length form.......... Short
+    .0101100 : Length............... 44
+ -- End
+ -- SEQUENCE:
+ -- dtid
+ -- DestTransactionID
+  3 01...... : Tag class............ Application-Wide
+    ..0..... : Tag form............. Primitive
+    ...01001 : Tag value............ 9
+  4 0....... : Length form.......... Short
+    .0000100 : Length............... 4
+  5 ******** : Octet string......... C7 7A 30 00 
+ -- components
+ -- ComponentPortion
+  9 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01100 : Tag value............ 12
+ 10 0....... : Length form.......... Short
+    .0100100 : Length............... 36
+ -- SEQUENCE OF:
+ -- Component
+ -- CHOICE: returnResultLast
+ 11 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+ 12 0....... : Length form.......... Short
+    .0100010 : Length............... 34
+ -- ReturnResult
+ -- SEQUENCE:
+ -- invokeID
+ -- InvokeIdType
+ 13 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 14 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 15 00000001 : Integer.............. 1
+ -- result
+ 16 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 17 0....... : Length form.......... Short
+    .0011101 : Length............... 29
+ -- SEQUENCE:
+ -- operationCode
+ -- OPERATION code
+ -- CHOICE: localvalue
+ 18 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 19 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 20 00101101 : Integer.............. 45 ( sendRoutingInfoForSM )
+ -- result
+ -- OPERATION RESULT
+ 21 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 22 0....... : Length form.......... Short
+    .0011000 : Length............... 24
+ -- SEQUENCE:
+ -- imsi
+ -- IMSI
+ -- TBCD-STRING
+ 23 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00100 : Tag value............ 4 (Octet String)
+ 24 0....... : Length form.......... Short
+    .0001000 : Length............... 8
+ 25 ******** : Octet string......... 52 00 95 08 00 31 53 F3 
+ -- CHOICE: SEQUENCE
+ 33 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00000 : Tag value............ 0
+ 34 0....... : Length form.......... Short
+    .0001001 : Length............... 9
+ -- SEQUENCE:
+ -- locationInfo
+ -- LocationInfo
+ -- CHOICE: mscNumber
+ 35 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00001 : Tag value............ 1
+ 36 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- IsdnAddressString
+ -- AddressString
+ 37 ******** : Octet string......... 91 97 20 89 06 00 F0 
+ -- mwd-Set
+ 44 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2
+ 45 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 46 00000000 : Boolean.............. False
+
+4: 28/09/01 14:47:45.825  Avista      [3.1] Net
+L1: [Primitive] L0 Raw Message
+L2: [MTP (Whitebook)]:
+  0 1....... : BIB.....................1 
+    .1111001 : BSN.....................79 Hex
+  1 1....... : FIB.....................1 
+    .1101010 : FSN.....................6A Hex
+  2 00...... : Spare...................00 Hex
+    ..111111 : Length indicator........63 Dec
+  3 11...... : Network indicator.......Reserved for national use 
+    ..00.... : Spare...................00 Hex
+    ....0011 : Service indicator.......SCCP-Sig connection control part 
+  4 ******** : DPC.....................3BF6 Hex
+  5 ******** : OPC.....................3BF0 Hex
+  7 0000.... : SLS.....................00 Dec
+L3: [SCCP (Whitebook)]:
+  8 00001001 : Message type............UDT-Unitdata 
+  9 0000.... : Message handling........No special options 
+    ....0000 : Class...................Class 0 
+ 10 00000011 : Parameter pointer.......03 Dec
+ 11 00001110 : Parameter pointer.......14 Dec
+ 12 00011001 : Parameter pointer.......25 Dec
+ -- Called party address
+ 13 00001011 : Length..................11 Dec
+ 14 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 15 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 16 00000000 : Translation type........00 Hex
+ 17 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 18 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 19 ******** : Address.................79029860000
+ -- Calling party address
+ 25 00001011 : Length..................11 Dec
+ 26 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 27 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 28 00000000 : Translation type........00 Hex
+ 29 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 30 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 31 ******** : Address.................79029869990
+ -- Data
+ 37 00110110 : Parameter length........54 Dec
+L7: [GSMMAP 1]:
+ -- Entry
+ -- CHOICE: tcap-pdu
+ -- MessageType
+ -- CHOICE: end
+  1 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00100 : Tag value............ 4
+  2 0....... : Length form.......... Short
+    .0110100 : Length............... 52
+ -- End
+ -- SEQUENCE:
+ -- dtid
+ -- DestTransactionID
+  3 01...... : Tag class............ Application-Wide
+    ..0..... : Tag form............. Primitive
+    ...01001 : Tag value............ 9
+  4 0....... : Length form.......... Short
+    .0000011 : Length............... 3
+  5 ******** : Octet string......... 29 00 FE 
+ -- dialogue
+ -- DialoguePortion
+  8 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01011 : Tag value............ 11
+  9 0....... : Length form.......... Short
+    .0100110 : Length............... 38
+ 10 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...01000 : Tag value............ 8 (External)
+ 11 0....... : Length form.......... Short
+    .0100100 : Length............... 36
+ -- SEQUENCE:
+ -- direct-reference
+ 12 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00110 : Tag value............ 6 (Object Identifier)
+ 13 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ 14 ******** : Object identifier.... { 0 0 17 773 1 1 1 }
+ -- encoding
+ -- CHOICE: single-ASN1-type
+ 21 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00000 : Tag value............ 0
+ 22 0....... : Length form.......... Short
+    .0011001 : Length............... 25
+ -- ANY:
+ -- AARE-apdu
+ 23 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00001 : Tag value............ 1
+ 24 0....... : Length form.......... Short
+    .0010111 : Length............... 23
+ -- SEQUENCE:
+ -- application-context-name
+ 25 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00001 : Tag value............ 1
+ 26 0....... : Length form.......... Short
+    .0001001 : Length............... 9
+ 27 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00110 : Tag value............ 6 (Object Identifier)
+ 28 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ 29 ******** : Object identifier.... { 0 4 0 0 1 0 21 2 }
+ -- result
+ 36 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+ 37 0....... : Length form.......... Short
+    .0000011 : Length............... 3
+ -- Associate-result
+ 38 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 39 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 40 00000000 : Integer.............. 0 ( accepted )
+ -- result-source-diagnostic
+ 41 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00011 : Tag value............ 3
+ 42 0....... : Length form.......... Short
+    .0000101 : Length............... 5
+ -- Associate-source-diagnostic
+ -- CHOICE: dialogue-service-user
+ 43 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00001 : Tag value............ 1
+ 44 0....... : Length form.......... Short
+    .0000011 : Length............... 3
+ 45 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 46 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 47 00000000 : Integer.............. 0 ( null )
+ -- components
+ -- ComponentPortion
+ 48 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01100 : Tag value............ 12
+ 49 0....... : Length form.......... Short
+    .0000101 : Length............... 5
+ -- SEQUENCE OF:
+ -- Component
+ -- CHOICE: returnResultLast
+ 50 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+ 51 0....... : Length form.......... Short
+    .0000011 : Length............... 3
+ -- ReturnResult
+ -- SEQUENCE:
+ -- invokeID
+ -- InvokeIdType
+ 52 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 53 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 54 00000001 : Integer.............. 1
+
+5: 28/09/01 14:47:46.435  Avista      [3.1] Net
+L1: [Primitive] L0 Raw Message
+L2: [MTP (Whitebook)]:
+  0 1....... : BIB.....................1 
+    .1111001 : BSN.....................79 Hex
+  1 1....... : FIB.....................1 
+    .1101011 : FSN.....................6B Hex
+  2 00...... : Spare...................00 Hex
+    ..111111 : Length indicator........63 Dec
+  3 11...... : Network indicator.......Reserved for national use 
+    ..00.... : Spare...................00 Hex
+    ....0011 : Service indicator.......SCCP-Sig connection control part 
+  4 ******** : DPC.....................3BF6 Hex
+  5 ******** : OPC.....................3BF0 Hex
+  7 0000.... : SLS.....................00 Dec
+L3: [SCCP (Whitebook)]:
+  8 00001001 : Message type............UDT-Unitdata 
+  9 0000.... : Message handling........No special options 
+    ....0000 : Class...................Class 0 
+ 10 00000011 : Parameter pointer.......03 Dec
+ 11 00001110 : Parameter pointer.......14 Dec
+ 12 00011001 : Parameter pointer.......25 Dec
+ -- Called party address
+ 13 00001011 : Length..................11 Dec
+ 14 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 15 00000110 : Subsystem number........HLR-Home loc register 
+ 16 00000000 : Translation type........00 Hex
+ 17 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 18 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 19 ******** : Address.................79029851133
+ -- Calling party address
+ 25 00001011 : Length..................11 Dec
+ 26 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 27 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 28 00000000 : Translation type........00 Hex
+ 29 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 30 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 31 ******** : Address.................79029869990
+ -- Data
+ 37 00101001 : Parameter length........41 Dec
+L7: [GSMMAP 1]:
+ -- Entry
+ -- CHOICE: tcap-pdu
+ -- MessageType
+ -- CHOICE: begin
+  1 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+  2 0....... : Length form.......... Short
+    .0100111 : Length............... 39
+ -- Begin
+ -- SEQUENCE:
+ -- otid
+ -- OrigTransactionID
+  3 01...... : Tag class............ Application-Wide
+    ..0..... : Tag form............. Primitive
+    ...01000 : Tag value............ 8
+  4 0....... : Length form.......... Short
+    .0000100 : Length............... 4
+  5 ******** : Octet string......... C7 87 30 00 
+ -- components
+ -- ComponentPortion
+  9 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01100 : Tag value............ 12
+ 10 0....... : Length form.......... Short
+    .0011111 : Length............... 31
+ -- SEQUENCE OF:
+ -- Component
+ -- CHOICE: invoke
+ 11 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00001 : Tag value............ 1
+ 12 0....... : Length form.......... Short
+    .0011101 : Length............... 29
+ -- Invoke
+ -- SEQUENCE:
+ -- invokeID
+ -- InvokeIdType
+ 13 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 14 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 15 00000001 : Integer.............. 1
+ -- operationCode
+ -- OPERATION code
+ -- CHOICE: localvalue
+ 16 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 17 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 18 00101101 : Integer.............. 45 ( sendRoutingInfoForSM )
+ -- argument
+ -- OPERATION PARAMETER
+ 19 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 20 0....... : Length form.......... Short
+    .0010101 : Length............... 21
+ -- SEQUENCE:
+ -- msIsdn
+ 21 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00000 : Tag value............ 0
+ 22 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- IsdnAddressString
+ -- AddressString
+ 23 ******** : Octet string......... 91 97 20 89 15 31 F3 
+ -- sm-RP-RRI
+ 30 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00001 : Tag value............ 1
+ 31 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 32 00000000 : Boolean.............. False
+ -- serviceCentreAddress
+ 33 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2
+ 34 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- AddressString
+ 35 ******** : Octet string......... 91 97 20 89 96 99 F0 
+
+6: 28/09/01 14:47:46.464  Avista      [3.1] Usr
+L1: [Primitive] L0 Raw Message
+L2: [MTP (Whitebook)]:
+  0 1....... : BIB.....................1 
+    .1101011 : BSN.....................6B Hex
+  1 1....... : FIB.....................1 
+    .1111010 : FSN.....................7A Hex
+  2 00...... : Spare...................00 Hex
+    ..111111 : Length indicator........63 Dec
+  3 11...... : Network indicator.......Reserved for national use 
+    ..00.... : Spare...................00 Hex
+    ....0011 : Service indicator.......SCCP-Sig connection control part 
+  4 ******** : DPC.....................3BF0 Hex
+  5 ******** : OPC.....................3BF6 Hex
+  7 0011.... : SLS.....................03 Dec
+L3: [SCCP (Whitebook)]:
+  8 00001001 : Message type............UDT-Unitdata 
+  9 1000.... : Message handling........Return message on error 
+    ....0000 : Class...................Class 0 
+ 10 00000011 : Parameter pointer.......03 Dec
+ 11 00001110 : Parameter pointer.......14 Dec
+ 12 00011001 : Parameter pointer.......25 Dec
+ -- Called party address
+ 13 00001011 : Length..................11 Dec
+ 14 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 15 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 16 00000000 : Translation type........00 Hex
+ 17 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 18 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 19 ******** : Address.................79029869990
+ -- Calling party address
+ 25 00001011 : Length..................11 Dec
+ 26 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 27 00000110 : Subsystem number........HLR-Home loc register 
+ 28 00000000 : Translation type........00 Hex
+ 29 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 30 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 31 ******** : Address.................79029850000
+ -- Data
+ 37 00101110 : Parameter length........46 Dec
+L7: [GSMMAP 1]:
+ -- Entry
+ -- CHOICE: tcap-pdu
+ -- MessageType
+ -- CHOICE: end
+  1 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00100 : Tag value............ 4
+  2 0....... : Length form.......... Short
+    .0101100 : Length............... 44
+ -- End
+ -- SEQUENCE:
+ -- dtid
+ -- DestTransactionID
+  3 01...... : Tag class............ Application-Wide
+    ..0..... : Tag form............. Primitive
+    ...01001 : Tag value............ 9
+  4 0....... : Length form.......... Short
+    .0000100 : Length............... 4
+  5 ******** : Octet string......... C7 87 30 00 
+ -- components
+ -- ComponentPortion
+  9 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01100 : Tag value............ 12
+ 10 0....... : Length form.......... Short
+    .0100100 : Length............... 36
+ -- SEQUENCE OF:
+ -- Component
+ -- CHOICE: returnResultLast
+ 11 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+ 12 0....... : Length form.......... Short
+    .0100010 : Length............... 34
+ -- ReturnResult
+ -- SEQUENCE:
+ -- invokeID
+ -- InvokeIdType
+ 13 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 14 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 15 00000001 : Integer.............. 1
+ -- result
+ 16 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 17 0....... : Length form.......... Short
+    .0011101 : Length............... 29
+ -- SEQUENCE:
+ -- operationCode
+ -- OPERATION code
+ -- CHOICE: localvalue
+ 18 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 19 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 20 00101101 : Integer.............. 45 ( sendRoutingInfoForSM )
+ -- result
+ -- OPERATION RESULT
+ 21 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 22 0....... : Length form.......... Short
+    .0011000 : Length............... 24
+ -- SEQUENCE:
+ -- imsi
+ -- IMSI
+ -- TBCD-STRING
+ 23 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00100 : Tag value............ 4 (Octet String)
+ 24 0....... : Length form.......... Short
+    .0001000 : Length............... 8
+ 25 ******** : Octet string......... 52 00 95 08 00 00 40 F1 
+ -- CHOICE: SEQUENCE
+ 33 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00000 : Tag value............ 0
+ 34 0....... : Length form.......... Short
+    .0001001 : Length............... 9
+ -- SEQUENCE:
+ -- locationInfo
+ -- LocationInfo
+ -- CHOICE: mscNumber
+ 35 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00001 : Tag value............ 1
+ 36 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- IsdnAddressString
+ -- AddressString
+ 37 ******** : Octet string......... 91 97 20 89 06 00 F0 
+ -- mwd-Set
+ 44 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2
+ 45 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 46 00000000 : Boolean.............. False
+
+7: 28/09/01 14:47:46.647  Avista      [3.1] Net
+L1: [Primitive] L0 Raw Message
+L2: [MTP (Whitebook)]:
+  0 1....... : BIB.....................1 
+    .1111010 : BSN.....................7A Hex
+  1 1....... : FIB.....................1 
+    .1101100 : FSN.....................6C Hex
+  2 00...... : Spare...................00 Hex
+    ..111111 : Length indicator........63 Dec
+  3 11...... : Network indicator.......Reserved for national use 
+    ..00.... : Spare...................00 Hex
+    ....0011 : Service indicator.......SCCP-Sig connection control part 
+  4 ******** : DPC.....................3BF6 Hex
+  5 ******** : OPC.....................3BF0 Hex
+  7 0000.... : SLS.....................00 Dec
+L3: [SCCP (Whitebook)]:
+  8 00001001 : Message type............UDT-Unitdata 
+  9 0000.... : Message handling........No special options 
+    ....0000 : Class...................Class 0 
+ 10 00000011 : Parameter pointer.......03 Dec
+ 11 00001110 : Parameter pointer.......14 Dec
+ 12 00011001 : Parameter pointer.......25 Dec
+ -- Called party address
+ 13 00001011 : Length..................11 Dec
+ 14 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 15 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 16 00000000 : Translation type........00 Hex
+ 17 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 18 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 19 ******** : Address.................79029860000
+ -- Calling party address
+ 25 00001011 : Length..................11 Dec
+ 26 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 27 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 28 00000000 : Translation type........00 Hex
+ 29 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 30 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 31 ******** : Address.................79029869990
+ -- Data
+ 37 01000000 : Parameter length........64 Dec
+L7: [GSMMAP 1]:
+ -- Entry
+ -- CHOICE: tcap-pdu
+ -- MessageType
+ -- CHOICE: begin
+  1 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+  2 0....... : Length form.......... Short
+    .0111110 : Length............... 62
+ -- Begin
+ -- SEQUENCE:
+ -- otid
+ -- OrigTransactionID
+  3 01...... : Tag class............ Application-Wide
+    ..0..... : Tag form............. Primitive
+    ...01000 : Tag value............ 8
+  4 0....... : Length form.......... Short
+    .0000100 : Length............... 4
+  5 ******** : Octet string......... C7 8A 30 00 
+ -- components
+ -- ComponentPortion
+  9 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01100 : Tag value............ 12
+ 10 0....... : Length form.......... Short
+    .0110110 : Length............... 54
+ -- SEQUENCE OF:
+ -- Component
+ -- CHOICE: invoke
+ 11 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00001 : Tag value............ 1
+ 12 0....... : Length form.......... Short
+    .0110100 : Length............... 52
+ -- Invoke
+ -- SEQUENCE:
+ -- invokeID
+ -- InvokeIdType
+ 13 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 14 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 15 00000001 : Integer.............. 1
+ -- operationCode
+ -- OPERATION code
+ -- CHOICE: localvalue
+ 16 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 17 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 18 00101110 : Integer.............. 46 ( forwardShortMessage )
+ -- argument
+ -- OPERATION PARAMETER
+ 19 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 20 0....... : Length form.......... Short
+    .0101100 : Length............... 44
+ -- SEQUENCE:
+ -- sm-RP-DA
+ -- SM-RP-DA
+ -- CHOICE: imsi
+ 21 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00000 : Tag value............ 0
+ 22 0....... : Length form.......... Short
+    .0001000 : Length............... 8
+ -- IMSI
+ -- TBCD-STRING
+ 23 ******** : Octet string......... 52 00 95 08 00 00 40 F1 
+ -- sm-RP-OA
+ -- SM-RP-OA
+ -- CHOICE: serviceCentreAddress
+ 31 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00100 : Tag value............ 4
+ 32 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- AddressString
+ 33 ******** : Octet string......... 91 97 20 89 96 99 F0 
+ -- sm-RP-UI
+ -- SM-RP-UI
+ 40 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00100 : Tag value............ 4 (Octet String)
+ 41 0....... : Length form.......... Short
+    .0010111 : Length............... 23
+ 42 ******** : Octet string......... A4 0B 91 97 20 89 15 51 F8 00 00 
+                                     10 90 82 41 34 51 0C 04 D4 F2 9C 
+                                     0E 
+
+8: 28/09/01 14:47:52.334  Avista      [3.1] Usr
+L1: [Primitive] L0 Raw Message
+L2: [MTP (Whitebook)]:
+  0 1....... : BIB.....................1 
+    .1110010 : BSN.....................72 Hex
+  1 1....... : FIB.....................1 
+    .0000001 : FSN.....................01 Hex
+  2 00...... : Spare...................00 Hex
+    ..110010 : Length indicator........50 Dec
+  3 11...... : Network indicator.......Reserved for national use 
+    ..00.... : Spare...................00 Hex
+    ....0011 : Service indicator.......SCCP-Sig connection control part 
+  4 ******** : DPC.....................3BF0 Hex
+  5 ******** : OPC.....................3BF6 Hex
+  7 1100.... : SLS.....................12 Dec
+L3: [SCCP (Whitebook)]:
+  8 00001001 : Message type............UDT-Unitdata 
+  9 1000.... : Message handling........Return message on error 
+    ....0001 : Class...................Class 1 
+ 10 00000011 : Parameter pointer.......03 Dec
+ 11 00001110 : Parameter pointer.......14 Dec
+ 12 00011001 : Parameter pointer.......25 Dec
+ -- Called party address
+ 13 00001011 : Length..................11 Dec
+ 14 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 15 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 16 00000000 : Translation type........00 Hex
+ 17 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 18 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 19 ******** : Address.................79029869990
+ -- Calling party address
+ 25 00001011 : Length..................11 Dec
+ 26 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 27 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 28 00000000 : Translation type........00 Hex
+ 29 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 30 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 31 ******** : Address.................79029860000
+ -- Data
+ 37 00001111 : Parameter length........15 Dec
+L7: [GSMMAP 1]:
+ -- Entry
+ -- CHOICE: tcap-pdu
+ -- MessageType
+ -- CHOICE: end
+  1 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00100 : Tag value............ 4
+  2 0....... : Length form.......... Short
+    .0001101 : Length............... 13
+ -- End
+ -- SEQUENCE:
+ -- dtid
+ -- DestTransactionID
+  3 01...... : Tag class............ Application-Wide
+    ..0..... : Tag form............. Primitive
+    ...01001 : Tag value............ 9
+  4 0....... : Length form.......... Short
+    .0000100 : Length............... 4
+  5 ******** : Octet string......... C7 8A 30 00 
+ -- components
+ -- ComponentPortion
+  9 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01100 : Tag value............ 12
+ 10 0....... : Length form.......... Short
+    .0000101 : Length............... 5
+ -- SEQUENCE OF:
+ -- Component
+ -- CHOICE: returnResultLast
+ 11 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+ 12 0....... : Length form.......... Short
+    .0000011 : Length............... 3
+ -- ReturnResult
+ -- SEQUENCE:
+ -- invokeID
+ -- InvokeIdType
+ 13 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 14 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 15 00000001 : Integer.............. 1
+
+9: 28/09/01 14:47:53.486  Avista      [3.1] Net
+L1: [Primitive] L0 Raw Message
+L2: [MTP (Whitebook)]:
+  0 1....... : BIB.....................1 
+    .0000001 : BSN.....................01 Hex
+  1 1....... : FIB.....................1 
+    .1110011 : FSN.....................73 Hex
+  2 00...... : Spare...................00 Hex
+    ..111111 : Length indicator........63 Dec
+  3 11...... : Network indicator.......Reserved for national use 
+    ..00.... : Spare...................00 Hex
+    ....0011 : Service indicator.......SCCP-Sig connection control part 
+  4 ******** : DPC.....................3BF6 Hex
+  5 ******** : OPC.....................3BF0 Hex
+  7 0000.... : SLS.....................00 Dec
+L3: [SCCP (Whitebook)]:
+  8 00001001 : Message type............UDT-Unitdata 
+  9 0000.... : Message handling........No special options 
+    ....0000 : Class...................Class 0 
+ 10 00000011 : Parameter pointer.......03 Dec
+ 11 00001110 : Parameter pointer.......14 Dec
+ 12 00011001 : Parameter pointer.......25 Dec
+ -- Called party address
+ 13 00001011 : Length..................11 Dec
+ 14 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 15 00000110 : Subsystem number........HLR-Home loc register 
+ 16 00000000 : Translation type........00 Hex
+ 17 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 18 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 19 ******** : Address.................79029851158
+ -- Calling party address
+ 25 00001011 : Length..................11 Dec
+ 26 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 27 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 28 00000000 : Translation type........00 Hex
+ 29 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 30 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 31 ******** : Address.................79029869990
+ -- Data
+ 37 00101001 : Parameter length........41 Dec
+L7: [GSMMAP 1]:
+ -- Entry
+ -- CHOICE: tcap-pdu
+ -- MessageType
+ -- CHOICE: begin
+  1 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+  2 0....... : Length form.......... Short
+    .0100111 : Length............... 39
+ -- Begin
+ -- SEQUENCE:
+ -- otid
+ -- OrigTransactionID
+  3 01...... : Tag class............ Application-Wide
+    ..0..... : Tag form............. Primitive
+    ...01000 : Tag value............ 8
+  4 0....... : Length form.......... Short
+    .0000100 : Length............... 4
+  5 ******** : Octet string......... C7 D8 30 00 
+ -- components
+ -- ComponentPortion
+  9 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01100 : Tag value............ 12
+ 10 0....... : Length form.......... Short
+    .0011111 : Length............... 31
+ -- SEQUENCE OF:
+ -- Component
+ -- CHOICE: invoke
+ 11 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00001 : Tag value............ 1
+ 12 0....... : Length form.......... Short
+    .0011101 : Length............... 29
+ -- Invoke
+ -- SEQUENCE:
+ -- invokeID
+ -- InvokeIdType
+ 13 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 14 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 15 00000001 : Integer.............. 1
+ -- operationCode
+ -- OPERATION code
+ -- CHOICE: localvalue
+ 16 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 17 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 18 00101101 : Integer.............. 45 ( sendRoutingInfoForSM )
+ -- argument
+ -- OPERATION PARAMETER
+ 19 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 20 0....... : Length form.......... Short
+    .0010101 : Length............... 21
+ -- SEQUENCE:
+ -- msIsdn
+ 21 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00000 : Tag value............ 0
+ 22 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- IsdnAddressString
+ -- AddressString
+ 23 ******** : Octet string......... 91 97 20 89 15 51 F8 
+ -- sm-RP-RRI
+ 30 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00001 : Tag value............ 1
+ 31 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 32 00000000 : Boolean.............. False
+ -- serviceCentreAddress
+ 33 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2
+ 34 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- AddressString
+ 35 ******** : Octet string......... 91 97 20 89 96 99 F0 
+
+10: 28/09/01 14:47:53.503  Avista      [3.1] Usr
+L1: [Primitive] L0 Raw Message
+L2: [MTP (Whitebook)]:
+  0 1....... : BIB.....................1 
+    .1110011 : BSN.....................73 Hex
+  1 1....... : FIB.....................1 
+    .0000010 : FSN.....................02 Hex
+  2 00...... : Spare...................00 Hex
+    ..111111 : Length indicator........63 Dec
+  3 11...... : Network indicator.......Reserved for national use 
+    ..00.... : Spare...................00 Hex
+    ....0011 : Service indicator.......SCCP-Sig connection control part 
+  4 ******** : DPC.....................3BF0 Hex
+  5 ******** : OPC.....................3BF6 Hex
+  7 1000.... : SLS.....................08 Dec
+L3: [SCCP (Whitebook)]:
+  8 00001001 : Message type............UDT-Unitdata 
+  9 1000.... : Message handling........Return message on error 
+    ....0000 : Class...................Class 0 
+ 10 00000011 : Parameter pointer.......03 Dec
+ 11 00001110 : Parameter pointer.......14 Dec
+ 12 00011001 : Parameter pointer.......25 Dec
+ -- Called party address
+ 13 00001011 : Length..................11 Dec
+ 14 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 15 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 16 00000000 : Translation type........00 Hex
+ 17 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 18 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 19 ******** : Address.................79029869990
+ -- Calling party address
+ 25 00001011 : Length..................11 Dec
+ 26 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 27 00000110 : Subsystem number........HLR-Home loc register 
+ 28 00000000 : Translation type........00 Hex
+ 29 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 30 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 31 ******** : Address.................79029850000
+ -- Data
+ 37 00101110 : Parameter length........46 Dec
+L7: [GSMMAP 1]:
+ -- Entry
+ -- CHOICE: tcap-pdu
+ -- MessageType
+ -- CHOICE: end
+  1 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00100 : Tag value............ 4
+  2 0....... : Length form.......... Short
+    .0101100 : Length............... 44
+ -- End
+ -- SEQUENCE:
+ -- dtid
+ -- DestTransactionID
+  3 01...... : Tag class............ Application-Wide
+    ..0..... : Tag form............. Primitive
+    ...01001 : Tag value............ 9
+  4 0....... : Length form.......... Short
+    .0000100 : Length............... 4
+  5 ******** : Octet string......... C7 D8 30 00 
+ -- components
+ -- ComponentPortion
+  9 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01100 : Tag value............ 12
+ 10 0....... : Length form.......... Short
+    .0100100 : Length............... 36
+ -- SEQUENCE OF:
+ -- Component
+ -- CHOICE: returnResultLast
+ 11 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+ 12 0....... : Length form.......... Short
+    .0100010 : Length............... 34
+ -- ReturnResult
+ -- SEQUENCE:
+ -- invokeID
+ -- InvokeIdType
+ 13 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 14 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 15 00000001 : Integer.............. 1
+ -- result
+ 16 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 17 0....... : Length form.......... Short
+    .0011101 : Length............... 29
+ -- SEQUENCE:
+ -- operationCode
+ -- OPERATION code
+ -- CHOICE: localvalue
+ 18 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 19 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 20 00101101 : Integer.............. 45 ( sendRoutingInfoForSM )
+ -- result
+ -- OPERATION RESULT
+ 21 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 22 0....... : Length form.......... Short
+    .0011000 : Length............... 24
+ -- SEQUENCE:
+ -- imsi
+ -- IMSI
+ -- TBCD-STRING
+ 23 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00100 : Tag value............ 4 (Octet String)
+ 24 0....... : Length form.......... Short
+    .0001000 : Length............... 8
+ 25 ******** : Octet string......... 52 00 95 08 00 31 53 F3 
+ -- CHOICE: SEQUENCE
+ 33 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00000 : Tag value............ 0
+ 34 0....... : Length form.......... Short
+    .0001001 : Length............... 9
+ -- SEQUENCE:
+ -- locationInfo
+ -- LocationInfo
+ -- CHOICE: mscNumber
+ 35 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00001 : Tag value............ 1
+ 36 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- IsdnAddressString
+ -- AddressString
+ 37 ******** : Octet string......... 91 97 20 89 06 00 F0 
+ -- mwd-Set
+ 44 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2
+ 45 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 46 00000000 : Boolean.............. False
+
+11: 28/09/01 14:47:53.839  Avista      [3.1] Net
+L1: [Primitive] L0 Raw Message
+L2: [MTP (Whitebook)]:
+  0 1....... : BIB.....................1 
+    .0000010 : BSN.....................02 Hex
+  1 1....... : FIB.....................1 
+    .1110100 : FSN.....................74 Hex
+  2 00...... : Spare...................00 Hex
+    ..111111 : Length indicator........63 Dec
+  3 11...... : Network indicator.......Reserved for national use 
+    ..00.... : Spare...................00 Hex
+    ....0011 : Service indicator.......SCCP-Sig connection control part 
+  4 ******** : DPC.....................3BF6 Hex
+  5 ******** : OPC.....................3BF0 Hex
+  7 0000.... : SLS.....................00 Dec
+L3: [SCCP (Whitebook)]:
+  8 00001001 : Message type............UDT-Unitdata 
+  9 0000.... : Message handling........No special options 
+    ....0000 : Class...................Class 0 
+ 10 00000011 : Parameter pointer.......03 Dec
+ 11 00001110 : Parameter pointer.......14 Dec
+ 12 00011001 : Parameter pointer.......25 Dec
+ -- Called party address
+ 13 00001011 : Length..................11 Dec
+ 14 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 15 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 16 00000000 : Translation type........00 Hex
+ 17 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 18 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 19 ******** : Address.................79029860000
+ -- Calling party address
+ 25 00001011 : Length..................11 Dec
+ 26 0....... : Reserved................For national use 
+    .0...... : Routing.................Based on global title 
+    ..0100.. : Global title ind........Transl nr encod nature 
+    ......1. : Subsystem nr ind........Included 
+    .......0 : Point code..............Not included 
+ 27 00001000 : Subsystem number........MAP-Mobile switching centre 
+ 28 00000000 : Translation type........00 Hex
+ 29 0001.... : Numbering plan..........ISDN/Telephony (E.163 and E.164)  
+    ....0001 : Encoding scheme.........BCD (odd) 
+ 30 0....... : Spare...................00 Hex
+    .0000100 : Nature of address.......International number 
+ 31 ******** : Address.................79029869990
+ -- Data
+ 37 01000010 : Parameter length........66 Dec
+L7: [GSMMAP 1]:
+ -- Entry
+ -- CHOICE: tcap-pdu
+ -- MessageType
+ -- CHOICE: begin
+  1 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...00010 : Tag value............ 2
+  2 0....... : Length form.......... Short
+    .1000000 : Length............... 64
+ -- Begin
+ -- SEQUENCE:
+ -- otid
+ -- OrigTransactionID
+  3 01...... : Tag class............ Application-Wide
+    ..0..... : Tag form............. Primitive
+    ...01000 : Tag value............ 8
+  4 0....... : Length form.......... Short
+    .0000100 : Length............... 4
+  5 ******** : Octet string......... C7 DD 30 00 
+ -- components
+ -- ComponentPortion
+  9 01...... : Tag class............ Application-Wide
+    ..1..... : Tag form............. Constructed
+    ...01100 : Tag value............ 12
+ 10 0....... : Length form.......... Short
+    .0111000 : Length............... 56
+ -- SEQUENCE OF:
+ -- Component
+ -- CHOICE: invoke
+ 11 10...... : Tag class............ Context-Specific
+    ..1..... : Tag form............. Constructed
+    ...00001 : Tag value............ 1
+ 12 0....... : Length form.......... Short
+    .0110110 : Length............... 54
+ -- Invoke
+ -- SEQUENCE:
+ -- invokeID
+ -- InvokeIdType
+ 13 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 14 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 15 00000001 : Integer.............. 1
+ -- operationCode
+ -- OPERATION code
+ -- CHOICE: localvalue
+ 16 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00010 : Tag value............ 2 (Integer)
+ 17 0....... : Length form.......... Short
+    .0000001 : Length............... 1
+ 18 00101110 : Integer.............. 46 ( forwardShortMessage )
+ -- argument
+ -- OPERATION PARAMETER
+ 19 00...... : Tag class............ Universal
+    ..1..... : Tag form............. Constructed
+    ...10000 : Tag value............ 16 (Sequence / Sequence Of)
+ 20 0....... : Length form.......... Short
+    .0101110 : Length............... 46
+ -- SEQUENCE:
+ -- sm-RP-DA
+ -- SM-RP-DA
+ -- CHOICE: imsi
+ 21 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00000 : Tag value............ 0
+ 22 0....... : Length form.......... Short
+    .0001000 : Length............... 8
+ -- IMSI
+ -- TBCD-STRING
+ 23 ******** : Octet string......... 52 00 95 08 00 31 53 F3 
+ -- sm-RP-OA
+ -- SM-RP-OA
+ -- CHOICE: serviceCentreAddress
+ 31 10...... : Tag class............ Context-Specific
+    ..0..... : Tag form............. Primitive
+    ...00100 : Tag value............ 4
+ 32 0....... : Length form.......... Short
+    .0000111 : Length............... 7
+ -- AddressString
+ 33 ******** : Octet string......... 91 97 20 89 96 99 F0 
+ -- sm-RP-UI
+ -- SM-RP-UI
+ 40 00...... : Tag class............ Universal
+    ..0..... : Tag form............. Primitive
+    ...00100 : Tag value............ 4 (Octet String)
+ 41 0....... : Length form.......... Short
+    .0011001 : Length............... 25
+ 42 ******** : Octet string......... 06 9B 0B 91 97 20 89 15 31 F3 10 
+                                     90 82 41 34 22 0C 10 90 82 41 34 
+                                     22 0C 00 
+
