@@ -144,7 +144,9 @@ protected:
 	__get_output_float__(double, LongDouble, "float")
 	const string getOutputJobName(const DbSmeTestRecord* rec);
 	const string getOutputToAddress(const DbSmeTestRecord* rec);
+	const string getOutputToAddressUnified(const DbSmeTestRecord* rec);
 	const string getOutputFromAddress(const DbSmeTestRecord* rec);
+	const string getOutputFromAddressUnified(const DbSmeTestRecord* rec);
 	const string getOutputString(const DbSmeTestRecord* rec,
 		const DbSmeTestRecord* defOutput, bool& res);
 	time_t getDate(DateType dtType, time_t now = 0);

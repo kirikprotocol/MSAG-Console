@@ -170,8 +170,12 @@ void processDbSmeRes()
 		"«начение параметра имени задачи job-name вычисл€етс€ правильно");
 	__reg_tc__("processDbSmeRes.output.toAddress",
 		"«начение параметра адреса получател€ to-address вычисл€етс€ правильно");
+	__reg_tc__("processDbSmeRes.output.toAddressUnified",
+		"«начение параметра адреса получател€ to-address-unified вычисл€етс€ правильно");
 	__reg_tc__("processDbSmeRes.output.fromAddress",
 		"«начение параметра адреса отправител€ from-address вычисл€етс€ правильно");
+	__reg_tc__("processDbSmeRes.output.fromAddressUnified",
+		"«начение параметра адреса отправител€ from-address-unified вычисл€етс€ правильно");
 	__reg_tc__("processDbSmeRes.output.string",
 		"‘орматирование строковых полей выполн€етс€ правильно");
 	__reg_tc__("processDbSmeRes.output.string.left",

@@ -182,7 +182,9 @@ const string DbSmeOtherFormatJobTestCases::processJobFirstOutput(const string& t
 	ostringstream os;
 	os << lineSeparator << "job-name: '" << getOutputJobName(rec) << "'" << lineSeparator;
 	os << "from-address: /" << getOutputFromAddress(rec) << "/" << lineSeparator;
+	os << "from-address-unified: /" << getOutputFromAddressUnified(rec) << "/" << lineSeparator;
 	os << "to-address: \\" << getOutputToAddress(rec) << "\\" << lineSeparator;
+	os << "to-address-unified: \\" << getOutputToAddressUnified(rec) << "\\" << lineSeparator;
 	string str = getOutputString(rec, NULL, res);
 	os << "string: \"" << str << "\"," << lineSeparator;
 	__tc__("processDbSmeRes.output.string.left"); __tc_ok__;

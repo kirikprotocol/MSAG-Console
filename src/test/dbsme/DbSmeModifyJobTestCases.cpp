@@ -292,8 +292,8 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 		{
 			rowsAffected = 1;
 			r->setString("job " + rec->getJob() +
-				" from " + rec->getFromAddr() +
-				" to " + rec->getToAddr());
+				" from " + getOutputFromAddress(rec) +
+				" to " + getOutputToAddress(rec));
 		}
 		__tc__("processDbSmeRes.update.recordsAffected"); __tc_ok__;
 		os << "rows-affected: " << rowsAffected << lineSeparator;

@@ -1,8 +1,11 @@
 #include "DbSmeJobTestCases.hpp"
+#include "test/sms/SmsUtil.hpp"
 
 namespace smsc {
 namespace test {
 namespace dbsme {
+
+using namespace smsc::test::sms; //SmsUtil, str()
 
 DbSmeJobTestCases::DbSmeJobTestCases(DbSmeRegistry* _dbSmeReg, CheckList* _chkList)
 : dbSmeReg(_dbSmeReg), chkList(_chkList)
@@ -71,7 +74,16 @@ const string DbSmeJobTestCases::getOutputToAddress(const DbSmeTestRecord* rec)
 	__require__(rec);
 	__decl_tc__;
 	__tc__("processDbSmeRes.output.toAddress"); __tc_ok__;
-	return rec->getToAddr();
+	return SmsUtil::configString(rec->getToAddr());
+}
+
+const string DbSmeJobTestCases::getOutputToAddressUnified(
+	const DbSmeTestRecord* rec)
+{
+	__require__(rec);
+	__decl_tc__;
+	__tc__("processDbSmeRes.output.toAddressUnified"); __tc_ok__;
+	return str(rec->getToAddr());
 }
 
 const string DbSmeJobTestCases::getOutputFromAddress(const DbSmeTestRecord* rec)
@@ -79,7 +91,16 @@ const string DbSmeJobTestCases::getOutputFromAddress(const DbSmeTestRecord* rec)
 	__require__(rec);
 	__decl_tc__;
 	__tc__("processDbSmeRes.output.fromAddress"); __tc_ok__;
-	return rec->getFromAddr();
+	return SmsUtil::configString(rec->getFromAddr());
+}
+
+const string DbSmeJobTestCases::getOutputFromAddressUnified(
+	const DbSmeTestRecord* rec)
+{
+	__require__(rec);
+	__decl_tc__;
+	__tc__("processDbSmeRes.output.fromAddressUnified"); __tc_ok__;
+	return str(rec->getFromAddr());
 }
 
 const string DbSmeJobTestCases::getOutputString(const DbSmeTestRecord* rec,
