@@ -115,6 +115,10 @@ string LocationInfoToString(const ET96MAP_LOCATION_INFO_T* msc)
   return result;
 }                                       
 
+static unsigned MakeMrRef()
+{
+  return time(0)%0x0ffff;
+}
 
 static string FormatText(const char* format,...)
 {
@@ -1314,14 +1318,14 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   dialog->isUSSD = true;
   __map_trace2__("%s: dialogid 0x%x",__FUNCTION__,dialog->dialogid_map);
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
-  unsigned encoding = cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_CODING);
+  unsigned encoding = dialog->sms->getIntProperty(Tag::SMPP_DATA_CODING);
   ET96MAP_USSD_STRING_T ussdString = {0,};
   unsigned text_len;
 
   __map_trace2__("%s: datacoding 0x%x",__FUNCTION__,encoding);
 
 
-  const unsigned char* text = (const unsigned char*)dialog->sms()->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);
+  const unsigned char* text = (const unsigned char*)dialog->sms->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);
   if ( text_len > 160 )
     throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__FUNCTION__,dialog->dialogid_map,text_len));
 
@@ -1357,7 +1361,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   }
 
   ussdString.ussdStrLen = bytes;
-  int serviceOp = dialog->sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+  int serviceOp = dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
   if( serviceOp == USSD_USSR_REQ ) {
     dialog->state = MAPST_WaitUSSDReqConf;
   } else {
@@ -2806,11 +2810,6 @@ static string GetUSSDRequestString(
   else {
     return string(p+1,pEnd);
   }
-}
-
-static unsigned MakeMrRef()
-{
-  return time(0)%0x0ffff;
 }
 
 extern "C"
