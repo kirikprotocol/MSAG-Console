@@ -203,7 +203,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     gbc.fill = GridBagConstraints.HORIZONTAL;
     add(p, gbc);
 
-    lg = new LabelGroup(localeText.getString("lab.pque"), LabelGroup.NORTHWEST);
+    lg = new LabelGroup(localeText.getString("glab.pque"), LabelGroup.NORTHWEST);
     lg.setLayout(new BorderLayout());
     lg.add(perfQueue, BorderLayout.CENTER);
     gbc.gridx = 1;
