@@ -106,12 +106,23 @@ void saveCheckList(TCResultFilter* filter)
 	cout << "Сохранение checklist" << endl;
 	CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
 	cl.startNewGroup("Message Store", "smsc::store");
+	//заимплементированные test cases
 	cl.writeResult("Сохранение правильного SM",
 		filter->getResults(TC_STORE_CORRECT_SM));
 	cl.writeResult("Сохранение неправильного SM",
 		filter->getResults(TC_STORE_INCORRECT_SM));
 	cl.writeResult("Сохранение неправильного SM, проверка на assert",
 		filter->getResults(TC_STORE_ASSERT_SM));
+	cl.writeResult("Чтение существующего SM",
+		filter->getResults(TC_LOAD_EXISTENT_SM));
+	cl.writeResult("Чтение несуществующего SM",
+		filter->getResults(TC_LOAD_NON_EXISTENT_SM));
+	cl.writeResult("Удаление существующего SM",
+		filter->getResults(TC_DELETE_EXISTENT_SM));
+	cl.writeResult("Удаление несуществующего SM",
+		filter->getResults(TC_DELETE_NON_EXISTENT_SM));
+	
+	//пока еще незаимплементированные test cases
 	cl.writeResult("Корректное изменение статуса SM",
 		filter->getResults(TC_SET_CORRECT_SM_STATUS));
 	cl.writeResult("Некорректное изменение статуса SM",
@@ -124,18 +135,10 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_UPDATE_INCORRECT_EXISTENT_SM));
 	cl.writeResult("Обновление несуществующего SM",
 		filter->getResults(TC_UPDATE_NON_EXISTENT_SM));
-	cl.writeResult("Удаление существующего SM",
-		filter->getResults(TC_DELETE_EXISTENT_SM));
-	cl.writeResult("Удаление несуществующего SM",
-		filter->getResults(TC_DELETE_NON_EXISTENT_SM));
 	cl.writeResult("Удаление существующих SM ожидающих доставки на определенный номер",
 		filter->getResults(TC_DELETE_EXISTENT_WAITING_SM_BY_NUMBER));
 	cl.writeResult("Удаление несуществующих SM ожидающих доставки на определенный номер",
 		filter->getResults(TC_DELETE_NON_EXISTENT_WAITING_SM_BY_NUMBER));
-	cl.writeResult("Чтение существующего SM",
-		filter->getResults(TC_LOAD_EXISTENT_SM));
-	cl.writeResult("Чтение несуществующего SM",
-		filter->getResults(TC_LOAD_NON_EXISTENT_SM));
 	cl.writeResult("Загрузка непустого списка SM ожидающих доставки на определенный номер",
 		filter->getResults(TC_LOAD_EXISTENT_WAITING_SM_BY_DESTINATION_NUMBER));
 	cl.writeResult("Загрузка пустого списка SM ожидающих доставки на определенный номер",
