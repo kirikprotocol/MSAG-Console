@@ -133,8 +133,7 @@ text* Connection::sqlStoreInsert = (text *)
 text* Connection::sqlRetriveAll = (text *)
 "SELECT ST, MR, RM, OA_LEN, OA_TON, OA_NPI, OA_VAL, DA_LEN, DA_TON,\
  DA_NPI, DA_VAL, VALID_TIME, WAIT_TIME, SUBMIT_TIME, DELIVERY_TIME,\
- SRR, RD, PRI, PID, FCS, DCS, UDHI, UDL, UD\
- FORM SMS_MSG WHERE ID=:ID";
+ SRR, RD, PRI, PID, FCS, DCS, UDHI, UDL, UD FROM SMS_MSG WHERE ID=:ID";
 
 Connection::Connection(ConnectionPool* pool, int _id = 0) throw(StoreException) 
 	: owner(pool), id(_id), envhp(0L), errhp(0L), svchp(0L), 
@@ -206,14 +205,14 @@ Connection::Connection(ConnectionPool* pool, int _id = 0) throw(StoreException)
 								SQLT_INT, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
 								OCI_DEFAULT));
         		
-		// bind sms placeholder fields to insert statement
+		// bind sms placeholder fields for storing
         OCIBind*    bndId;
         checkErr(OCIBindByPos(stmtStoreInsert, &bndId, errhp, (ub4) 1,
 							  (dvoid *) &smsId, (sb4) sizeof(smsId),
 							  SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
 							  (ub4)0, (ub4 *)0, OCI_DEFAULT));
-        OCIBind*    bndState;
-        checkErr(OCIBindByPos(stmtStoreInsert, &bndState, errhp, (ub4) 2,
+        OCIBind*    bndSt;
+        checkErr(OCIBindByPos(stmtStoreInsert, &bndSt, errhp, (ub4) 2,
 							  (dvoid *) &(sms.state), 
 							  (sb4) sizeof(sms.state), SQLT_UIN, 
 							  (dvoid *) 0, (ub2 *)0, (ub2 *)0, (ub4)0,
@@ -224,8 +223,8 @@ Connection::Connection(ConnectionPool* pool, int _id = 0) throw(StoreException)
 							  (sb4)sizeof(sms.messageReference), SQLT_UIN,
 							  (dvoid *)0,(ub2 *)0, (ub2 *)0, (ub4)0,
 							  (ub4 *)0, OCI_DEFAULT));
-        OCIBind*    bndMsgIdent;
-        checkErr(OCIBindByPos(stmtStoreInsert, &bndMsgIdent, errhp, (ub4) 4,
+        OCIBind*    bndMsgInd;
+        checkErr(OCIBindByPos(stmtStoreInsert, &bndMsgInd, errhp, (ub4) 4,
 							  (dvoid *) &(sms.messageIdentifier),
 							  (sb4)sizeof(sms.messageIdentifier), SQLT_UIN,
 							  (dvoid *)0, (ub2 *)0, (ub2 *)0, (ub4)0,
@@ -356,12 +355,143 @@ Connection::Connection(ConnectionPool* pool, int _id = 0) throw(StoreException)
 							  (dvoid *)0, (ub2 *)0, (ub2 *)0,
 							  (ub4)0, (ub4 *)0, OCI_DEFAULT));
         
-		/*OCIDefine*  defSt;
-        checkErr(OCIDefineByPos(stmtStoreMaxId, &defhp, errhp, (ub4) 1,
-								(dvoid *) &smsId, (sword) sizeof(smsId),
-								SQLT_INT, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
-								OCI_DEFAULT));*/
-    } 
+		// define placeholders fields for retriving
+		OCIDefine*  defSt;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defSt, errhp, (ub4) 1,
+								(dvoid *) &(sms.state), 
+								(sword) sizeof(sms.state), SQLT_UIN,
+								(dvoid *) 0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+		OCIDefine*  defMsgRef;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defMsgRef, errhp, (ub4) 2,
+								(dvoid *) &(sms.messageReference), 
+								(sword) sizeof(sms.messageReference), SQLT_UIN,
+								(dvoid *) 0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+		OCIDefine*  defMsgInd;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defMsgInd, errhp, (ub4) 3,
+								(dvoid *) &(sms.messageIdentifier), 
+								(sword) sizeof(sms.messageIdentifier), SQLT_UIN,
+								(dvoid *) 0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+		OCIDefine*  defOALen;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defOALen, errhp, (ub4) 4,
+								(dvoid *) &(sms.originatingAddress.lenght), 
+								(sword) sizeof(sms.originatingAddress.lenght),
+								SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								OCI_DEFAULT));
+		OCIDefine*  defOATon;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defOATon, errhp, (ub4) 5,
+								(dvoid *) &(sms.originatingAddress.type), 
+								(sword) sizeof(sms.originatingAddress.type),
+								SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								OCI_DEFAULT));
+		OCIDefine*  defOANpi;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defOANpi, errhp, (ub4) 6,
+								(dvoid *) &(sms.originatingAddress.plan), 
+								(sword) sizeof(sms.originatingAddress.plan),
+								SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								OCI_DEFAULT));
+		OCIDefine*  defOAVal;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defOAVal, errhp, (ub4) 7,
+								(dvoid *) &(sms.originatingAddress.value), 
+								(sword) sizeof(sms.originatingAddress.value),
+								SQLT_CHR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								OCI_DEFAULT));
+		OCIDefine*  defDALen;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defDALen, errhp, (ub4) 8,
+								(dvoid *) &(sms.destinationAddress.lenght), 
+								(sword) sizeof(sms.destinationAddress.lenght),
+								SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								OCI_DEFAULT));
+		OCIDefine*  defDATon;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defDATon, errhp, (ub4) 9,
+								(dvoid *) &(sms.destinationAddress.type), 
+								(sword) sizeof(sms.destinationAddress.type),
+								SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								OCI_DEFAULT));
+		OCIDefine*  defDANpi;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defDANpi, errhp, (ub4) 10,
+								(dvoid *) &(sms.destinationAddress.plan), 
+								(sword) sizeof(sms.destinationAddress.plan),
+								SQLT_UIN, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								OCI_DEFAULT));
+		OCIDefine*  defDAVal;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defDAVal, errhp, (ub4) 11,
+								(dvoid *) &(sms.destinationAddress.value), 
+								(sword) sizeof(sms.destinationAddress.value),
+								SQLT_CHR, (dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								OCI_DEFAULT));
+        OCIDefine*	defVTime;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defVTime, errhp, (ub4) 12,
+								(dvoid *) &(validTime), 
+								(sword) sizeof(validTime), SQLT_ODT,
+								(dvoid *) 0, (ub2 *)0, (ub2 *)0,
+								OCI_DEFAULT));
+        OCIDefine*	defWTime;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defWTime, errhp, (ub4) 13,
+								(dvoid *) &(waitTime), 
+								(sb4)sizeof(waitTime), SQLT_ODT, 
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+        OCIDefine*	defSTime;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defSTime, errhp, (ub4) 14,
+								(dvoid *) &(submitTime), 
+								(sb4)sizeof(submitTime), SQLT_ODT,
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+        OCIDefine*	defDTime;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defDTime, errhp, (ub4) 15,
+								(dvoid *) &(deliveryTime), 
+								(sb4)sizeof(deliveryTime), SQLT_ODT,
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+        OCIDefine*	defSrr;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defSrr, errhp, (ub4) 16,
+								(dvoid *) &(bStatusReport), 
+								(sb4)sizeof(bStatusReport), SQLT_AFC,
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+		OCIDefine*	defRd;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defRd, errhp, (ub4) 17,
+								(dvoid *) &(bRejectDuplicates), 
+								(sb4)sizeof(bRejectDuplicates), SQLT_AFC,
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+		OCIDefine*	defMsgPri;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defMsgPri, errhp, (ub4) 18,
+								(dvoid *) &(sms.priority), 
+								(sb4)sizeof(sms.priority), SQLT_UIN,
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+		OCIDefine*	defMsgPid;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defMsgPid, errhp, (ub4) 19,
+								(dvoid *) &(sms.protocolIdentifier), 
+								(sb4)sizeof(sms.protocolIdentifier), SQLT_UIN,
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+        OCIDefine*	defFcs;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defFcs, errhp, (ub4) 20,
+								(dvoid *) &(sms.failureCause), 
+								(sb4)sizeof(sms.failureCause), SQLT_UIN,
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+        OCIDefine*	defDcs;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defDcs, errhp, (ub4) 21,
+								(dvoid *) &(sms.messageBody.scheme), 
+								(sb4)sizeof(sms.messageBody.scheme), SQLT_UIN,
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+		OCIDefine*	defUdhi;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defUdhi, errhp, (ub4) 22,
+								(dvoid *) &(bHeaderIndicator), 
+								(sb4)sizeof(bHeaderIndicator), SQLT_AFC,
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+		OCIDefine*	defUdl;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defUdl, errhp, (ub4) 23,
+								(dvoid *) &(sms.messageBody.lenght), 
+								(sb4)sizeof(sms.messageBody.lenght), SQLT_UIN,
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+		OCIDefine*	defUd;
+        checkErr(OCIDefineByPos(stmtRetriveAll, &defUd, errhp, (ub4) 24,
+								(dvoid *) &(sms.messageBody.data), 
+								(sb4)sizeof(sms.messageBody.data), SQLT_CHR,
+								(dvoid *)0, (ub2 *)0, (ub2 *)0, OCI_DEFAULT));
+
+        OCIBind*    bndRetriveId;
+        checkErr(OCIBindByPos(stmtRetriveAll, &bndRetriveId, errhp, (ub4) 1,
+							  (dvoid *) &(smsId), (sb4)sizeof(smsId), SQLT_UIN,
+							  (dvoid *)0, (ub2 *)0, (ub2 *)0,
+							  (ub4)0, (ub4 *)0, OCI_DEFAULT));
+	} 
 	else {
 		throw AuthenticationException();
 	}
@@ -385,7 +515,7 @@ void Connection::setSMS(SMS& _sms)
 	sms = _sms;
     
 	// set additional data
-	tm*         dt;
+	tm*	dt;
 
     dt = localtime(&(sms.validTime));
 	OCIDateSetDate(&validTime, (sb2)(1900+dt->tm_year), 
@@ -411,15 +541,49 @@ void Connection::setSMS(SMS& _sms)
 	OCIDateSetTime(&deliveryTime, (ub1)(dt->tm_hour), 
 				   (ub1)(dt->tm_min), (ub1)(dt->tm_sec));
 	
-	bStatusReport = sms.isStatusReportRequested() ? 'Y':'N';
-	bRejectDuplicates = sms.isRejectDuplicates() ? 'Y':'N';
-	bHeaderIndicator = sms.messageBody.isHeaderIndicator() ? 'Y':'N';
+	bStatusReport = sms.statusReportRequested ? 'Y':'N';
+	bRejectDuplicates = sms.rejectDuplicates ? 'Y':'N';
+	bHeaderIndicator = sms.messageBody.header ? 'Y':'N';
 }
 
 SMS& Connection::getSMS()
 {
-	// get additional data here !!!
-	return sms;
+	// get additional data
+	sms.statusReportRequested = (bStatusReport == 'Y');
+	sms.rejectDuplicates = (bRejectDuplicates == 'Y');
+	sms.messageBody.header = (bHeaderIndicator == 'Y');
+    
+	tm	dt;
+	
+	OCIDateGetTime(&deliveryTime, (ub1 *)&(dt.tm_hour), 
+				   (ub1 *)&(dt.tm_min), (ub1 *)&(dt.tm_sec));
+	OCIDateGetDate(&deliveryTime, (sb2 *)&(dt.tm_year), 
+				   (ub1 *)&(dt.tm_mon), (ub1 *)&(dt.tm_mday));
+	dt.tm_year -= 1900; dt.tm_mon--;
+    sms.deliveryTime = mktime(&dt);
+
+	OCIDateGetTime(&submitTime, (ub1 *)&(dt.tm_hour), 
+				   (ub1 *)&(dt.tm_min), (ub1 *)&(dt.tm_sec));
+	OCIDateGetDate(&submitTime, (sb2 *)&(dt.tm_year), 
+				   (ub1 *)&(dt.tm_mon), (ub1 *)&(dt.tm_mday));
+	dt.tm_year -= 1900; dt.tm_mon--;
+    sms.submitTime = mktime(&dt);
+
+	OCIDateGetTime(&waitTime, (ub1 *)&(dt.tm_hour), 
+				   (ub1 *)&(dt.tm_min), (ub1 *)&(dt.tm_sec));
+	OCIDateGetDate(&waitTime, (sb2 *)&(dt.tm_year), 
+				   (ub1 *)&(dt.tm_mon), (ub1 *)&(dt.tm_mday));
+	dt.tm_year -= 1900; dt.tm_mon--;
+	sms.waitTime = mktime(&dt);
+
+	OCIDateGetTime(&validTime, (ub1 *)&(dt.tm_hour), 
+				   (ub1 *)&(dt.tm_min), (ub1 *)&(dt.tm_sec));
+	OCIDateGetDate(&validTime, (sb2 *)&(dt.tm_year), 
+				   (ub1 *)&(dt.tm_mon), (ub1 *)&(dt.tm_mday));
+	dt.tm_year -= 1900; dt.tm_mon--;
+	sms.validTime = mktime(&dt);
+
+    return sms;
 }
 
 SMSId Connection::store(SMS& sms) throw(StoreException)
@@ -430,16 +594,14 @@ SMSId Connection::store(SMS& sms) throw(StoreException)
     checkErr(OCIStmtExecute(svchp, stmtStoreLock, errhp, (ub4) 1, (ub4) 0, 
 							(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
 							OCI_DEFAULT));
-	
-    // "select max(id) from sms_msg"
+    
+	// "select max(id) from sms_msg"
 	checkErr(OCIStmtExecute(svchp, stmtStoreMaxId, errhp, (ub4) 1, (ub4) 0,
 							(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
 							OCI_DEFAULT));
     
-	// !!!! check if no_data here (empty table) !!!!
-	
-	smsId++;
-	
+	smsId++; // If no data present in table smsId = 0 (NVL used)
+    
 	// insert new sms row into table
 	checkErr(OCIStmtExecute(svchp, stmtStoreInsert, errhp, (ub4) 1, (ub4) 0,
 							(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
@@ -452,8 +614,19 @@ SMSId Connection::store(SMS& sms) throw(StoreException)
 
 SMS& Connection::retrive(SMSId id) throw(StoreException)
 {
-	
-	return getSMS();
+	smsId = id;
+    
+	sword status;
+	// retrive entire sms row from table
+	status = OCIStmtExecute(svchp, stmtRetriveAll, errhp, (ub4) 1, (ub4) 0,
+							(CONST OCISnapshot *) NULL, (OCISnapshot *) NULL,
+							OCI_DEFAULT);
+	if (status == OCI_NO_DATA)
+    {
+		throw NoSuchMessageException();
+	}
+	// ???
+    return getSMS();
 }
 
 void Connection::checkErr(sword status) throw(StoreException)

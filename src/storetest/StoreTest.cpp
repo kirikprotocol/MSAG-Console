@@ -45,7 +45,10 @@ int main(void)
 		SMSId id = store->store(sms);
 		printf("Message stored, id = %d !\n", id);
 
-        //sms = store->retrive(id);
+		memset((void *)&sms, 0, sizeof(sms));
+
+        sms = store->retrive(id);
+		printf("Message retrived !\n", id);
     } 
     catch (StoreException& exc) {
         printf("Exception : %s\n", exc.what());
