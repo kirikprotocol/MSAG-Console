@@ -304,11 +304,13 @@ public:
       if(ct==ctReceiver && proxyType==proxyTransceiver)
       {
         proxyType=proxyTransmitter;
+        smppReceiverSocket=0;
         __trace2__("SmppProxy: downgrade to transmitter");
       }else if(ct==ctTransmitter && proxyType==proxyTransceiver)
       {
         __trace2__("SmppProxy: downgrade to receiver");
         proxyType=proxyReceiver;
+        smppTransmitterSocket=0;
       }
     }
     int cnt=--refcnt;
