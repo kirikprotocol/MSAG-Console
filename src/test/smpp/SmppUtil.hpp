@@ -15,8 +15,6 @@ using smsc::sms::SMSId;
 using namespace smsc::smpp;
 using namespace smsc::test::sms; //constants
 
-#define __maxValidPeriod__ 24 * 3600 //1 сутки
-#define __checkTime__ (time(NULL) - 5) //5 секунд
 #define __numTime__ rand1(3)
 #define __absoluteTime__ rand1(2)
 
