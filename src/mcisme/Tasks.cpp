@@ -527,11 +527,6 @@ void Task::addEvent(const MissedCallEvent& event)
     }
 }
 
-void Task::deleteMessages()
-{
-    smsc_log_info(logger, "Deleting last events for abonent: %s", abonent.c_str());
-    // TODO: delete current message & all active events for task (MSG_ID=CUR_MSG_ID or NULL)
-}
 bool Task::formatMessage(Message& message)
 {
     smsc_log_info(logger, "Formatting message for abonent: %s", abonent.c_str());

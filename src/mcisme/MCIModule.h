@@ -117,21 +117,21 @@ namespace smsc { namespace mcisme
         #ifdef MCI_MODULE_TEST
         void test()
         {
-            MissedCallEvent event; char abonent[128];
-            Event sleepEvent;
-            for (int i=0; i<10 && !isNeedExit(); i++)
+            const int maxAbonents = 1000000;
+            srandom((unsigned int)0xdeadbeaf);
+
+            MissedCallEvent event; char abonent[128]; Event sleepEvent;
+            for (int i=0; i<maxAbonents && !isNeedExit(); i++)
             {
-                for (int j=0; j<10 && !isNeedExit(); j++)
+                int number = (int)(random()%maxAbonents);
+                event.time = time(NULL)+i;
+                sprintf(abonent, "+79029%06d", number);             event.to   = abonent;
+                sprintf(abonent, "+79029%06d", maxAbonents-number); event.from = abonent;
                 {
-                    event.time = time(NULL)+i;
-                    sprintf(abonent, "+790290%05d", i);       event.to   = abonent;
-                    sprintf(abonent, "+790290%05d", 10000-j); event.from = abonent;
-                    {
-                        MutexGuard guard(attachLock);
-                        if (bAttached && listener) listener->missed(event);
-                    }
-                    sleepEvent.Wait(500);
+                    MutexGuard guard(attachLock);
+                    if (bAttached && listener) listener->missed(event);
                 }
+                sleepEvent.Wait(30);
             }
         }
         #endif

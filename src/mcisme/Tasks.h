@@ -140,8 +140,6 @@ namespace smsc { namespace mcisme
         // Formats message from events chain to message capacity, assigns events to current message
         bool formatMessage(Message& message);
 
-        void deleteMessages();
-
         // Deletes message (by msg_id if defined, else getMessage(smsc_id)) & all assigned events
         // Returns set of deleted events (for notification(s) processing) by caller
         Array<std::string> finalizeMessage(const char* smsc_id, bool delivered, bool retry, uint64_t msg_id=0);

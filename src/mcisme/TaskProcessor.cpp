@@ -551,7 +551,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                 {
                     smsc_log_debug(logger, "Message #%lld (smsc_id=%s) send error, deleting task for abonent: %s",
                                    message.id, smsc_id ? smsc_id:"-", message.abonent.c_str());
-                    task->deleteMessages(); // TODO: ???
+                    task->finalizeMessage(smsc_id, false, false, message.id);
                     needKillTask = true;
                 }
             }
