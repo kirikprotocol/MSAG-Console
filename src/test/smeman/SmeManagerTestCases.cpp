@@ -580,6 +580,7 @@ TCResult* SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& system
 	{
 		CorrectSmeProxy* tmp = new CorrectSmeProxy();
 		smeMan->registerSmeProxy(systemId, tmp);
+		smeReg->bindSme(systemId);
 		SmeIndex index = smeMan->lookup(systemId);
 		*proxy = smeMan->getSmeProxy(index);
 		getLog().debug("[%d]\tregisterCorrectSmeProxy(): systemId = %s, proxyId = %u",
