@@ -941,6 +941,10 @@ TCResult* MessageStoreTestCases::checkReadyForRetrySms(const vector<SMSId*>& ids
 		{
 			continue;
 		}
+		if (!sms[i]->getNextTime())
+		{
+			continue;
+		}
 		if (!found)
 		{
 			found = true;
@@ -966,9 +970,13 @@ TCResult* MessageStoreTestCases::checkReadyForRetrySms(const vector<SMSId*>& ids
 	try
 	{
 		time_t nextTime = msgStore->getNextRetryTime();
-		if (nextTime != minNextTime)
+		if (!found && nextTime != 0)
 		{
 			res->addFailure(1);
+		}
+		if (found && nextTime != minNextTime)
+		{
+			res->addFailure(2);
 		}
 	}
 	catch(...)
@@ -1017,7 +1025,8 @@ void MessageStoreTestCases::compareReadyForRetrySmsList(const vector<SMSId*>& id
 	vector<SmsIdTimePair> enroteIds;
 	for (int i = 0; i < sms.size(); i++)
 	{
-		if (sms[i]->getState() == ENROUTE && sms[i]->getNextTime() <= time)
+		if (sms[i]->getState() == ENROUTE && sms[i]->getNextTime() > 0 &&
+			sms[i]->getNextTime() <= time)
 		{
 			enroteIds.push_back(SmsIdTimePair(*ids[i], sms[i]->getNextTime()));
 		}
@@ -1033,6 +1042,7 @@ void MessageStoreTestCases::compareReadyForRetrySmsList(const vector<SMSId*>& id
 			res->addFailure(shift + 1);
 			break;
 		}
+log.debug("dbid = %d, msid = %d", id, enroteIds[i].smsId);
 		if (id != enroteIds[i].smsId)
 		{
 			res->addFailure(shift + 2);
@@ -1041,6 +1051,7 @@ void MessageStoreTestCases::compareReadyForRetrySmsList(const vector<SMSId*>& id
 	}
 	if (it->getNextId(id))
 	{
+log.debug("dbid!!! = %d", id);
 		res->addFailure(shift + 3);
 	}
 	delete it;
