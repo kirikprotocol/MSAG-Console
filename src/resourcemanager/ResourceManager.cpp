@@ -87,7 +87,7 @@ void ResourceManager::init(const _stringlist & localeNames, const std::string & 
     logger.error("Default locale \"%s\" not found in locales.", defaultLocaleName.c_str());
   }
   instance.get()->validLocales=localeNames;
-  __trace2__("ResMgr: set valid locales %p", &(instance.get()->validLocales) );
+  __trace2__("ResMgr: set valid locales %p/%d <- %p/%d", &(instance.get()->validLocales), instance.get()->validLocales.size(), &localeNames, localeNames.size() );
 }
 
 void ResourceManager::reload() throw ()
