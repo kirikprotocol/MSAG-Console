@@ -244,6 +244,11 @@ void MAPIO_QueryMscVersionInternal()
 
 static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
 {
+  dialog->wasDelivered = false;
+  dialog->hlrWasNotified = false;
+  dialog->hasMwdStatus = false;
+  dialog->memoryExceeded = false;
+  dialog->subscriberAbsent = false;
   dialog->dropChain = false;
   dialog->associate = 0;
   dialog->id_opened = false;
@@ -1101,6 +1106,7 @@ static string RouteToString(MapDialog* dialog)
 static bool SendSms(MapDialog* dialog){
   __map_trace2__("%s: dialogid 0x%x",__FUNCTION__,dialog->dialogid_map);
   CheckLockedByMO(dialog);
+  dialog->wasDelivered = false;
 
   if ( !MscManager::getMscStatus().check(dialog->s_msc.c_str()) )
     throw MAPDIALOG_TEMP_ERROR("MSC BLOCKED",Status::BLOCKEDMSC);
@@ -1512,7 +1518,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 if ( !dialog->isUSSD )
                   throw MAPDIALOG_FATAL_ERROR(
                     FormatText("MAP::putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq.c_str()));
-                if ( dialog->state != MAPST_USSDWaitResponce )
+                if ( dialog->state != MAPST_ReadyNextUSSDCmd )
                   throw MAPDIALOG_BAD_STATE(
                     FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
                 {
@@ -1665,9 +1671,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           if ( dialog->QueryAbonentCommand->get_abonentStatus().addr.getLenght() == 0 )
             throw MAPDIALOG_FATAL_ERROR("incorrect address");
         }
-        dialog->dropChain = false;
-        dialog->wasDelivered = false;
-        dialog->hlrWasNotified = false;
         dialogid_map = dialog->dialogid_map;
         if( dialog->state != MAPST_SendNextMMS ) {
           dialog->state = MAPST_START;
@@ -2513,8 +2516,7 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
 
       if ( errorForwardSMmt_sp )
       {
-        if ( errorForwardSMmt_sp->errorCode == 5 ||
-             errorForwardSMmt_sp->errorCode == 27 )
+        if ( errorForwardSMmt_sp->errorCode == 27 )
         {
           dialog->subscriberAbsent = true;
           throw MAPDIALOG_TEMP_XERROR("MAP::absent subscriber",MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
@@ -2645,6 +2647,7 @@ USHORT_T Et96MapDelimiterInd(
       DropMapDialog(dialog.get());
       break;
     case MAPST_WaitUSSDReqDelim:
+      dialog->state = MAPST_ReadyNextUSSDCmd;
       SendSubmitCommand(dialog.get());
       break;
     default:

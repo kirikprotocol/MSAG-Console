@@ -133,7 +133,8 @@ enum MapState{
   MAPST_WaitUSSDNotifyOpenConf = 39,
   MAPST_WaitUSSDNotifyConf = 40,
   MAPST_WaitUSSDNotifyClose = 41,
-  MAPST_WaitUSSDNotifyCloseErr = 42
+  MAPST_WaitUSSDNotifyCloseErr = 42,
+  MAPST_ReadyNextUSSDCmd = 43
 };
 
 class hash_func_ET96MAP_DID{
