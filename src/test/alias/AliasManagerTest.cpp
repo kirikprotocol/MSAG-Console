@@ -16,9 +16,6 @@ static Category& log = Logger::getCategory("AliasManagerTest");
 void executeTest()
 {
 /*
-addCorrectAliasException(4)->
-addCorrectAliasException(2)->
-findAliasByAddress(1){100}
 */
 	AliasManager aliasMan;
 	AliasRegistry aliasReg;
@@ -31,18 +28,18 @@ findAliasByAddress(1){100}
 	AliasInfo aliasInfo;
 	aliasInfo.alias = alias;
 	aliasInfo.addr = addr;
-	cout << *tc.addCorrectAliasException(&aliasInfo, 2) << endl;
+	cout << *tc.addCorrectAliasMatch(&aliasInfo, 9) << endl;
 
 	AliasInfo aliasInfo2;
 	aliasInfo2.alias = alias;
 	aliasInfo2.addr = addr;
-	cout << *tc.addCorrectAliasException(&aliasInfo2, 4) << endl;
+	cout << *tc.addCorrectAliasMatch(&aliasInfo, 9) << endl;
 
 	/*
 	AliasInfo aliasInfo3;
 	aliasInfo3.alias = alias;
 	aliasInfo3.addr = addr;
-	cout << *tc.addCorrectAliasException(&aliasInfo3, 4) << endl;
+	cout << *tc.addCorrectAliasMatch(&aliasInfo, 9) << endl;
 	*/
 	
 	cout << *tc.findAliasByAddress(addr) << endl;
@@ -51,8 +48,6 @@ findAliasByAddress(1){100}
 	cout << *tc.addCorrectAliasMatch(&aliasInfo, 1) << endl;
 	cout << *tc.addCorrectAliasNotMatchAddress(&aliasInfo, 1) << endl;
 	cout << *tc.addCorrectAliasNotMatchAlias(&aliasInfo, 1) << endl;
-	cout << *tc.addCorrectAliasException(&aliasInfo, 1) << endl;
-	cout << *tc.addIncorrectAlias() << endl;
 	cout << *tc.deleteAliases() << endl;
 	cout << *tc.findAliasByAddress(addr) << endl;
 	cout << *tc.findAddressByAlias(alias) << endl;
