@@ -59,6 +59,11 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		res.insert(ESME_RINVBNDSTS);
 		return res;
 	}
+	if (pdu->get_message().size_shortMessage() &&
+		pdu->get_optional().has_messagePayload())
+	{
+		res.insert(ESME_RSUBMITFAIL);
+	}
 	//неправильная длина полей
 	__check_len__(ESME_RINVSERTYP,
 		pdu->get_message().get_serviceType(), MAX_SERVICE_TYPE_LENGTH);
@@ -431,6 +436,10 @@ void SmppPduChecker::processSubmitSmResp(ResponseMonitor* monitor,
 		case ESME_RINVBNDSTS:
 			__tc__("submitSm.resp.checkCmdStatusInvalidBindStatus");
 			__check__(1, checkRes.count(ESME_RINVBNDSTS));
+			break;
+		case ESME_RSUBMITFAIL:
+			__tc__("submitSm.resp.checkCmdStatusSubmitFailed");
+			__check__(1, checkRes.count(ESME_RSUBMITFAIL));
 			break;
 		case Status::NOROUTE:
 			__tc__("submitSm.resp.checkCmdStatusNoRoute");
