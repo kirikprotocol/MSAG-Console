@@ -66,6 +66,16 @@ namespace smsc { namespace dbsme
         };
     };
 
+    class InvalidArgumentException : public BaseException
+    {
+    public:
+        
+        InvalidArgumentException() 
+            : BaseException("Argument is invalid !") {};
+        
+        virtual ~InvalidArgumentException() throw() {};
+    };
+
 }}
 
 #endif

@@ -14,7 +14,7 @@
 
 #include <util/debug.h>
 #include <util/Logger.h>
-#include <util/config/Manager.h>
+#include <util/config/ConfigView.h>
 #include <core/buffers/Array.hpp>
 #include <core/buffers/Hash.hpp>
 #include <core/synchronization/Mutex.hpp>
@@ -29,7 +29,7 @@ namespace smsc { namespace dbsme
     using smsc::util::Logger;
     using smsc::core::buffers::Hash;
     using smsc::core::buffers::Array;
-    using smsc::util::config::Manager;
+    using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
     class ResultSet
@@ -45,22 +45,24 @@ namespace smsc { namespace dbsme
         virtual bool fetchNext()
             throw(SQLException) = 0;
         
+        virtual bool isNull(int pos)
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual char* getString(int pos)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual int8_t getInt8(int pos)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual int16_t getInt16(int pos)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual int32_t getInt32(int pos)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual uint8_t getUint8(int pos)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual uint16_t getUint16(int pos)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual uint32_t getUint32(int pos)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         virtual time_t getDateTime(int pos)
-            throw(SQLException) = 0;
+            throw(SQLException, InvalidArgumentException) = 0;
         /* ... */
     };
 
@@ -152,7 +154,7 @@ namespace smsc { namespace dbsme
     {
     protected:
 
-        DBDriver(Manager& config, const char* cat)
+        DBDriver(ConfigView* config)
             throw (ConfigException) {};
 
     public:
@@ -176,7 +178,7 @@ namespace smsc { namespace dbsme
             if (driver) delete driver;
         };
 
-        virtual void init(Manager& config, const char* cat) 
+        virtual void init(ConfigView* config) 
             throw(ConfigException) = 0;
         
         virtual Connection* getConnection() = 0;
@@ -192,27 +194,29 @@ namespace smsc { namespace dbsme
     {
     protected:
 
-        static Hash<DataSourceFactory *>    registry;
+        static Hash<DataSourceFactory *>*   registry;
         
-        DataSourceFactory(const char* key)
-        {
-            DataSourceFactory::registerFactory(this, key);
-        };
+        DataSourceFactory() {};
         virtual ~DataSourceFactory() {};
-
-    public:
-
+        
         static void registerFactory(DataSourceFactory* dsf, const char* key)
         {
-            registry.Insert(key, dsf);
+            if (!registry)
+            {
+                registry = new Hash<DataSourceFactory *>();
+            }
+            registry->Insert(key, dsf);
         };
+        
+        virtual DataSource* createDataSource() = 0;
+        
+    public:
+
         static DataSource* getDataSource(const char* key)
         {
-            DataSourceFactory* dsf = registry.Get(key); 
+            DataSourceFactory* dsf = (registry) ? registry->Get(key):0;
             return ((dsf) ? dsf->createDataSource():0);
         };
-
-        virtual DataSource* createDataSource() = 0;
     };
     
     class ConnectionPool
@@ -237,7 +241,7 @@ namespace smsc { namespace dbsme
         Connection         *idleHead, *idleTail;
         unsigned            idleCount;
 
-        void loadPoolSize(Manager& config, const char* cat);
+        void loadPoolSize(ConfigView* config);
         
     protected:
 
@@ -249,7 +253,7 @@ namespace smsc { namespace dbsme
 
     public:
 
-        ConnectionPool(DataSource& ds, Manager& config, const char* cat) 
+        ConnectionPool(DataSource& ds, ConfigView* config) 
             throw(ConfigException);
 
         virtual ~ConnectionPool(); 
@@ -266,10 +270,10 @@ namespace smsc { namespace dbsme
         
         PoolledDataSource() : DataSource() {};
         
-        virtual void init(Manager& config, const char* cat)
+        virtual void init(ConfigView* config)
             throw(ConfigException)
         {
-            pool = new ConnectionPool(*((DataSource *)this), config, cat);
+            pool = new ConnectionPool(*((DataSource *)this), config);
         };
 
     public:

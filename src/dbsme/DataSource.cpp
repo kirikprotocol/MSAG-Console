@@ -5,31 +5,31 @@ namespace smsc { namespace dbsme
 {
 using smsc::util::Logger;
 
-Hash<DataSourceFactory *>   DataSourceFactory::registry;
-
 /* --------- Abstract Connection Management (ConnectionPool) --------------- */
+
+Hash<DataSourceFactory *>*  DataSourceFactory::registry = 0;
 
 const unsigned SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE = 10;
 const unsigned SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE_LIMIT = 1000;
 
-void ConnectionPool::loadPoolSize(Manager& config, const char* cat)
+void ConnectionPool::loadPoolSize(ConfigView* config)
 {
-    char sizeCat[512];
-    sprintf(sizeCat, "%s.size", cat);
-    
+    __require__(config);
+
+    const char* sizeParam = "connections";
     try 
     {
-        size = (unsigned)config.getInt(sizeCat); 
+        size = (unsigned)config->getInt(sizeParam); 
         if (!size || 
             size > SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE_LIMIT)
         {
             size = SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE;
             log.warn("Maximum ConnectionPool size is incorrect "
                      "(should be between 1 and %u) ! "
-                     "Config parameter: <%s> "
+                     "Config parameter: <%s.%s> "
                      "Using default: %u",
                      SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE_LIMIT,
-                     sizeCat,
+                     config->getCategory(), sizeParam,
                      SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE);
         }
     } 
@@ -37,19 +37,19 @@ void ConnectionPool::loadPoolSize(Manager& config, const char* cat)
     {
         size = SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE;
         log.warn("Maximum ConnectionPool size wasn't specified ! "
-                 "Config parameter: <%s> "
-                 "Using default: %u", sizeCat,
+                 "Config parameter: <%s.%s> "
+                 "Using default: %u", 
+                 config->getCategory(), sizeParam,
                  SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE);
     }
 }
 
-ConnectionPool::ConnectionPool(
-    DataSource& _ds, Manager& config, const char* cat)
-        throw(ConfigException) : ds(_ds), count(0),
-            log(Logger::getCategory("smsc.dbsme.ConnectionPool")),
-                head(0L), tail(0L), queueLen(0)
+ConnectionPool::ConnectionPool(DataSource& _ds, ConfigView* config)
+    throw(ConfigException) : ds(_ds), count(0),
+        log(Logger::getCategory("smsc.dbsme.ConnectionPool")),
+            head(0L), tail(0L), queueLen(0)
 {
-    loadPoolSize(config, cat); // add loading by cat
+    loadPoolSize(config);
 }
 
 void ConnectionPool::push(Connection* connection)

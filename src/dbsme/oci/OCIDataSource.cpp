@@ -3,8 +3,23 @@
 
 namespace smsc { namespace dbsme
 {
-
 /* ----------------------- OCI Connection Management ----------------------- */
+static OCIDataSourceFactory _OCIDataSourceFactory;
+
+const char* OCI_FACTORY_IDENTITY = "OCI";
+OCIDataSourceFactory::OCIDataSourceFactory() 
+    : DataSourceFactory() 
+{
+    printf("Registration: %s\n", OCI_FACTORY_IDENTITY);
+    DataSourceFactory::registerFactory(this, OCI_FACTORY_IDENTITY);
+}
+
+DataSource* OCIDataSourceFactory::createDataSource()
+{
+    return new OCIDataSource();
+}
+
+/* ------------------------ Connection implementation ---------------------- */
 
 Mutex OCIConnection::connectLock;
 
@@ -172,6 +187,8 @@ Statement* OCIConnection::createStatement(const char* sql)
     return new OCIStatement(this, sql);
 }
 
+/* ------------------------ Statement implementation ----------------------- */
+
 OCIStatement::OCIStatement(OCIConnection* connection, const char* sql) 
     throw(SQLException)
         : Statement(), owner(connection)
@@ -263,12 +280,25 @@ void OCIStatement::check(sword status)
     owner->check(status);
 }
         
+sword OCIStatement::execute(ub4 mode, ub4 iters, ub4 rowoff)
+    throw(SQLException)
+{
+    return OCIStmtExecute(svchp, stmt, errhp, iters, rowoff,
+                          (CONST OCISnapshot *) NULL, 
+                          (OCISnapshot *) NULL, mode);
+}
+
 void OCIStatement::execute() 
     throw(SQLException)
 {
-    check(OCIStmtExecute(svchp, stmt, errhp, 1, 0,
-                         (CONST OCISnapshot *) NULL, 
-                         (OCISnapshot *) NULL, OCI_DEFAULT));
+    check(execute(OCI_DEFAULT, 1, 0));
+}
+
+sword OCIStatement::fetch()
+    throw(SQLException)
+{
+    return OCIStmtFetch(stmt, errhp, (ub4) 1, (ub4) OCI_FETCH_NEXT,
+                        (ub4) OCI_DEFAULT);
 }
 
 uint32_t OCIStatement::executeUpdate() 
@@ -318,79 +348,178 @@ void OCIStatement::setDateTime(int pos, time_t time)
 {
 }
 
+/* ------------------------ ResultSet implementation ----------------------- */
+
+OCIResultSet::OCIDataDescriptor::OCIDataDescriptor(ub2 _type, sb4 _size) 
+        : type(_type), size(_size), ind(OCI_IND_NOTNULL)
+{
+    data = (type == SQLT_ODT) ? 
+            (dvoid *)&date : (dvoid *)(new uint8_t[size+1]);
+}
+
+OCIResultSet::OCIDataDescriptor::~OCIDataDescriptor()
+{
+    if (data && type != SQLT_ODT)
+    {
+        delete ((uint8_t *)data);
+    }
+}
+
 OCIResultSet::OCIResultSet(OCIStatement* statement)
     throw(SQLException)
         : ResultSet(), owner(statement)
 {
     __require__(owner);
     
-    owner->execute();
+    owner->check(owner->execute(OCI_DEFAULT, 0, 0));
+    // retrive describe info and process the set of defines here !
+
+    OCIParam *param;
+    ub4 counter = 1;
+    
+    /* Request a parameter descriptor for position 1 in the select-list */
+    sb4 status = OCIParamGet(owner->stmt, OCI_HTYPE_STMT, 
+                             owner->errhp, (dvoid **) &param, (ub4) counter);
+    /* Loop only if a descriptor was successfully retrieved for
+    current position, starting at 1 */
+    while (status==OCI_SUCCESS) 
+    {
+        ub2 type; ub4 size;
+
+        /* Retrieve the data type attribute */
+        owner->check(OCIAttrGet((dvoid*) param, (ub4) OCI_DTYPE_PARAM,
+                                (dvoid*) &type,(ub4 *) 0, 
+                                (ub4) OCI_ATTR_DATA_TYPE,
+                                (OCIError *) owner->errhp));
+        /* Retrieve max data size */
+        owner->check(OCIAttrSet((dvoid *) param, (ub4) OCI_DTYPE_PARAM,
+                                (dvoid *) &size, (ub4) 0,
+                                (ub4)OCI_ATTR_DATA_SIZE,
+                                (OCIError *) owner->errhp));
+        
+        OCIDataDescriptor* descriptor = new OCIDataDescriptor(type, size);
+        owner->define(counter, descriptor->type, descriptor->data,
+                      descriptor->size, (dvoid *) &descriptor->ind);
+        descriptors.Push(descriptor);
+        
+        /* increment counter and get next descriptor, if there is one */
+        status = OCIParamGet(owner->stmt, OCI_HTYPE_STMT, 
+                             owner->errhp, (dvoid **) &param, (ub4) ++counter);
+    }
 }
+
 OCIResultSet::~OCIResultSet()
 {
+    while (descriptors.Count())
+    {
+        OCIDataDescriptor* descriptor=0L;
+        (void) descriptors.Pop(descriptor);
+        if (descriptor) delete descriptor;
+    }
 }
 
 bool OCIResultSet::fetchNext()
     throw(SQLException)
 {
+    __require__(owner);
+
+    sword status = owner->fetch();
+    if (status != OCI_NO_DATA)
+    {
+        owner->check(status);
+        return true;
+    }
     return false;
 }
 
+dvoid* OCIResultSet::getField(int pos, ub2 type, ub4 size)
+    throw (InvalidArgumentException)
+{
+    OCIDataDescriptor* descriptor = descriptors[pos];
+    if (descriptor && descriptor->type == type && descriptor->size == size)
+    {
+        return descriptor->data;
+    }
+    throw InvalidArgumentException();
+}
+
+bool OCIResultSet::isNull(int pos)
+    throw (SQLException, InvalidArgumentException)
+{
+    OCIDataDescriptor* descriptor = descriptors[pos];
+    if (descriptor)
+    {
+        return ((descriptor->ind == OCI_IND_NOTNULL) ? false : true);
+    }
+    throw InvalidArgumentException();
+}
+
 char* OCIResultSet::getString(int pos)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
     return 0;
 }
 int8_t OCIResultSet::getInt8(int pos)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (*(int8_t *)(getField(pos, SQLT_INT, sizeof(int8_t))));
 }
 int16_t OCIResultSet::getInt16(int pos)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (*(int16_t *)(getField(pos, SQLT_INT, sizeof(int16_t))));
 }
 int32_t OCIResultSet::getInt32(int pos)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (*(int32_t *)(getField(pos, SQLT_INT, sizeof(int32_t))));
 }
 uint8_t OCIResultSet::getUint8(int pos)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (*(uint8_t *)(getField(pos, SQLT_UIN, sizeof(uint8_t))));
 }
 uint16_t OCIResultSet::getUint16(int pos)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (*(uint16_t *)(getField(pos, SQLT_UIN, sizeof(uint16_t))));
 }
 uint32_t OCIResultSet::getUint32(int pos)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    return (*(uint32_t *)(getField(pos, SQLT_UIN, sizeof(uint32_t))));
 }
 time_t OCIResultSet::getDateTime(int pos)
-    throw(SQLException)
+    throw(SQLException, InvalidArgumentException)
 {
-    return 0;
+    time_t sys_date;
+    OCIDate* oci_date = (OCIDate *)getField(pos, SQLT_ODT, sizeof(OCIDate));
+    owner->convertOCIDateToDate(oci_date, &sys_date);
+    return sys_date;
 }
 
+/* -------------------------- Driver implementation ------------------------ */
 
-OCIDriver::OCIDriver(Manager& config, const char* cat)
+OCIDriver::OCIDriver(ConfigView* config)
     throw (ConfigException)
-        : DBDriver(config, cat),
+        : DBDriver(config),
             dbInstance(0), dbUserName(0), dbUserPassword(0)
 {
-    // load it from config !
-    dbInstance = "";
-    dbUserName = "";
-    dbUserPassword = "";
+    __require__(config);
+
+    dbInstance = config->getString("dbInstance",
+                                   "DB instance name wasn't specified !");
+    dbUserName = config->getString("dbUserName",
+                                   "DB user name wasn't specified !");
+    dbUserPassword = config->getString("dbUserPassword", 
+                                    "DB user password wasn't specified !");
 }
 
 OCIDriver::~OCIDriver() 
 {
+    if (dbInstance) delete dbInstance;
+    if (dbUserName) delete dbUserName;
+    if (dbUserPassword) delete dbUserPassword;
 }
 
 Connection* OCIDriver::newConnection() 

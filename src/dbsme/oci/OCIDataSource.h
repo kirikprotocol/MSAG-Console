@@ -24,6 +24,23 @@ namespace smsc { namespace dbsme
         
         OCIStatement* owner;
 
+        struct OCIDataDescriptor 
+        {
+            ub2     type;
+            dvoid*  data;
+            OCIDate date;
+            sb4     size;
+            sb2     ind;
+    
+            OCIDataDescriptor(ub2 type, sb4 size);
+            ~OCIDataDescriptor();
+        };
+
+        Array<OCIDataDescriptor *>  descriptors;
+
+        dvoid* getField(int pos, ub2 type, ub4 size)
+            throw (InvalidArgumentException);
+
     public:
         
         OCIResultSet(OCIStatement* statement)
@@ -33,22 +50,24 @@ namespace smsc { namespace dbsme
         virtual bool fetchNext()
             throw(SQLException);
         
+        virtual bool isNull(int pos)
+            throw(SQLException, InvalidArgumentException);
         virtual char* getString(int pos)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual int8_t getInt8(int pos)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual int16_t getInt16(int pos)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual int32_t getInt32(int pos)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual uint8_t getUint8(int pos)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual uint16_t getUint16(int pos)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual uint32_t getUint32(int pos)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         virtual time_t getDateTime(int pos)
-            throw(SQLException);
+            throw(SQLException, InvalidArgumentException);
         /* ... */
     };
     
@@ -79,6 +98,11 @@ namespace smsc { namespace dbsme
             throw(SQLException);
         void define(ub4 pos, ub2 type, 
                     dvoid* placeholder, sb4 size, dvoid* indp = 0)
+            throw(SQLException);
+        
+        sword execute(ub4 mode, ub4 iters, ub4 rowoff)
+            throw(SQLException);
+        sword fetch()
             throw(SQLException);
         
         ub4 getRowsAffectedCount();
@@ -164,7 +188,7 @@ namespace smsc { namespace dbsme
 
     public:
         
-        OCIDriver(Manager& config, const char* cat)
+        OCIDriver(ConfigView* config)
             throw (ConfigException);
         virtual ~OCIDriver();
 
@@ -178,31 +202,25 @@ namespace smsc { namespace dbsme
         OCIDataSource() : PoolledDataSource() {};
         virtual ~OCIDataSource() {};
 
-        virtual void init(Manager& config, const char* cat)
+        virtual void init(ConfigView* config)
             throw(ConfigException)
         {
-            driver = new OCIDriver(config, cat);
-            PoolledDataSource::init(config, cat);
+            driver = new OCIDriver(config);
+            PoolledDataSource::init(config);
         };
     };
     
-    const char* OCI_FACTORY_IDENTITY = "OCIDataSourceFactory";
-
     class OCIDataSourceFactory : public DataSourceFactory
     {
     protected:
 
-        OCIDataSourceFactory() 
-            : DataSourceFactory(OCI_FACTORY_IDENTITY) {};
+        virtual DataSource* createDataSource();
         
-        virtual ~OCIDataSourceFactory() {};
-
     public:
 
-        virtual DataSource* createDataSource()
-        {
-            return new OCIDataSource();
-        };
+        OCIDataSourceFactory();
+        virtual ~OCIDataSourceFactory() {};
+
     };
 
 }}
