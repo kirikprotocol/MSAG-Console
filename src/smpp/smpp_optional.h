@@ -117,6 +117,12 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
     fillX(stream,opt->itsSessionInfo[1]);
   }
 
+  /* SMSC specific */
+  macroFillCOctetStr( supported_locale, -1 );
+  macroFillCOctetStr( imsi_address, -1 );
+  macroFillCOctetStr( msc_address, -1 );
+  macroFillField( supported_codeset );
+
 #undef macroFillField
 #undef macroFillOctetStr
 #undef macroFillCOctetStr
@@ -249,6 +255,11 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
         fetchX(stream,opt->itsSessionInfo[1]);
         opt->field_present |= SmppOptionalFields::itsSessionInfo;
         break;
+      /* SMSC specific */
+      macroFetchCOctetStr( supported_locale, length );
+      macroFetchCOctetStr( imsi_address, length );
+      macroFetchCOctetStr( msc_address, length );
+      macroFetchField( supported_codeset );
       }
       __throw_if_fail__( nextDataOffset == stream->dataOffset,BadStreamException );
       /*
