@@ -567,7 +567,11 @@ protected:
     MutexGuard g(lockMutex);
     if(!lock.Exist(seq))return NULL;
     Lock &l=lock.Get(seq);
-    if(l.error)throw Exception("Unknown error");
+    if(l.error)
+    {
+      lock.Delete(seq);
+      throw Exception("Unknown error");
+    }
     SmppHeader *retval=l.pdu;
     lock.Delete(seq);
     return retval;
