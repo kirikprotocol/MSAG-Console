@@ -40,7 +40,7 @@ int AlertAgent::Execute()
           __warning2__("AlertAgent: failed to retrieve sms: %lld",ids[i]);
         }
       }
-      ids.Clean();
+      ids.Empty();
     }catch(...)
     {
       __trace__("AlertAgent: database exception");
