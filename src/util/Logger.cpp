@@ -37,8 +37,9 @@ void log4cpp::Logger::Init(const std::string &configFileName)
 			log4cpp::Appender* appender = new log4cpp::FileAppender("FileAppender", "smsc.log");
 			appender->setLayout(new log4cpp::BasicLayout());
 			log4cpp::Category & cat = log4cpp::Category::getRoot();
-			cat.setAppender(appender);
-			cat.setPriority(log4cpp::Priority::DEBUG);
+			cat.removeAllAppenders();
+			cat.addAppender(appender);
+			cat.setRootPriority(log4cpp::Priority::DEBUG);
 		}
 		isInitialized = true;
 	}
