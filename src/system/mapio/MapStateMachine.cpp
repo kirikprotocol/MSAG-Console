@@ -2525,7 +2525,7 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
     ET96MAP_ERROR_FORW_SM_MO_T moResp;
     moResp.errorCode = ET96MAP_UE_SYS_FAILURE;
     moResp.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
-    if( version == 2 ) {
+    if( version == 3 ) {
         Et96MapV3ForwardSmMOResp(
         localSsn,
         dialogueId,
@@ -2545,8 +2545,7 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
         invokeId,
         &moResp);
     }
-
-    TryDestroyDialog(dialogueId,localSsn);
+//    TryDestroyDialog(dialogueId,localSsn);
   }
   return ET96MAP_E_OK;
 }
@@ -2811,6 +2810,14 @@ USHORT_T Et96MapDelimiterInd(
       dialog->state = MAPST_END;
       DropMapDialog(dialog.get());
       break;
+    case MAPST_ABORTED:
+      result = Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0);
+      if ( result != ET96MAP_E_OK )
+        throw runtime_error(
+          FormatText("MAP::Et96MapDelimiterInd: dialog closereq error 0x%x",result));
+      dialog->state = MAPST_END;
+      DropMapDialog(dialog.get());
+      break;
     default:
       throw MAPDIALOG_BAD_STATE(
         FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
@@ -2827,10 +2834,12 @@ USHORT_T Et96MapDelimiterInd(
         dialog->state = MAPST_ABORTED;
         __require__(dialog->ssn==localSsn);
         Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
-        Et96MapDelimiterReq(localSsn,dialogueId,0,0);
+        Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0);
+        DropMapDialog(dialog.get());
       }
+    } else {
+      TryDestroyDialog(dialogueId,localSsn);
     }
-    TryDestroyDialog(dialogueId,localSsn);
   }
   return ET96MAP_E_OK;
 }
