@@ -101,7 +101,7 @@ public:
   virtual void init(){__unreachable__("");}
   virtual SmeProxyPriority getPriority() const
   {
-    MutexGuard guard(mutex);
+//    MutexGuard guard(mutex);
     return info.priority;
     /*
     if ( proxy )

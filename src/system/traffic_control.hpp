@@ -61,21 +61,21 @@ public:
 
   int getTotalCount()
   {
-    MutexGuard g(mtx);
+//    MutexGuard g(mtx);
     return totalCounter.Get();
   }
 
-  int getTotalCountLong()
+/*  int getTotalCountLong()
   {
     MutexGuard g(mtx);
     return totalCounterLong.Get();
-  }
+  }*/
 
   void incTotalCount(int v)
   {
-    MutexGuard g(mtx);
+//    MutexGuard g(mtx);
     totalCounter.Inc(v);
-    totalCounterLong.IncDistr(v*1000,1000*cfg.maxSmsPerSecond/100);
+//    totalCounterLong.IncDistr(v*1000,1000*cfg.maxSmsPerSecond/100);
   }
 
 

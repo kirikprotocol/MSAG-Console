@@ -328,6 +328,7 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
     return;
   }
   __require__(dialog->ssn==ssn);
+  try{
   if ( !dialog.isnull() ){
     {
       //MutexGuard(dialog->mutex);
@@ -362,6 +363,11 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
         //return;
         goto dropDialogLabel;
       }
+    }
+    } catch (std::exception &e) {
+      __map_warn2__("%s: exception %s",__func__,e.what());
+    } catch (...) {
+      __map_warn2__("%s: unknown exception",__func__);
     }
     __map_trace2__("%s: restart on next in chain",__func__);
     if ( dialog->dropChain ) {
@@ -1081,6 +1087,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
     }
     __require__(dialog->ssn==ssn);
     __map_trace2__("TryDestroyDialog: dialogid 0x%x state %d",dialog->dialogid_map,dialog->state);
+    try{
     if ( send_error)
     {
       dialog->dropChain = true;
@@ -1117,6 +1124,11 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
         CloseMapDialog(dialog->dialogid_map,dialog->ssn);
       }
     }
+  }
+  }catch(std::exception &e){
+    __map_warn__("TryDestroyDialog: catched exception: %s", e.what());
+  }catch(...){
+    __map_warn__("TryDestroyDialog: catched unexpected exception");
   }
   DropMapDialog_(dialogid,ssn);
 }
@@ -2013,6 +2025,7 @@ USHORT_T Et96MapOpenConf (
               break;
             case MAPST_WaitSpecOpenConf:
             case MAPST_WaitOpenConf:
+              dialog->mms = FALSE;
               SendSms(dialog.get());
               break;
             }

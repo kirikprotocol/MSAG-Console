@@ -30,7 +30,7 @@ namespace smsc{
 namespace system{
 namespace mapio{
 
-#define MAP_PROXY_QUEUE_LIMIT 16*1024
+#define MAP_PROXY_QUEUE_LIMIT 512
 
 using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
