@@ -4,12 +4,14 @@
 
 #define SSN 8
 #define MAXENTRIES 10
- 
+#define My_USER_ID USER01_ID 
 using namespace std;
 
 #ifdef USE_MAPIO
 
-struct SMSC_FROWARD_RESPONCE_T {
+#define SMSC_FROWARD_RESPONSE 0x001
+
+struct SMSC_FROWARD_RESPONSE_T {
   ET96MAP_DIALOGUE_ID_T dialogId;
 };
 
@@ -27,16 +29,16 @@ static void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T
   MapDialogContainer::getInstance()->dropDialog(dialogId);
 }
 
-void FrwardResponse(ET96MAP_DIALOGUE_ID_T dialogId){
+void ForwardResponse(ET96MAP_DIALOGUE_ID_T dialogId){
   MapDialogCntItem* mdci = 
     MapDialogContainer::getInstance()->createDialog(dialogId);
   if ( mdci ) {
     if ( !mdci ){
       __trace2__("MAP::bad dialogid 0x%x",dialogId);
-      throw runtime_error("MAP::bad dialogid 0x%x",dialogId);
+      throw runtime_error("MAP::bad dialogid");
     }
   }
-  USHORT_T result = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
+  USHORT_T result = Et96MapV2ForwardSmMOResp(SSN,dialogId,invokeId,0);
   if ( result != ET96MAP_E_OK ){
     __trace2__("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
     throw runtime_error("MAP::Et96MapV2ForwardSmMOInd error when send response on froward_sm");
@@ -111,14 +113,14 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
       mdci->invokeId = invokeId;
       mdci->dialogue->Et96MapV2ForwardSmMOInd(
         SSN,dialogId,invokeId,dstAddr,srcAddr,ud);
-      SMSC_FROWARD_RESPONCE_T* p = new SMSC_FROWARD_RESPONCE_T();
+      SMSC_FROWARD_RESPONSE_T* p = new SMSC_FROWARD_RESPONSE_T();
       p->dialogId = dialogId;
       MSG_T msg;
-      msg.primitive = SMSC_FORWARD_RESPONCE;
+      msg.primitive = SMSC_FORWARD_RESPONSE;
       msg.sender = MY_USER_ID;
       msg.receiver = MY_USER_ID;
       msg.msg_p = (USHORT_T*)p;
-      msg.size = sizeof(SMSC_FORWARD_RESPONCE_T);
+      msg.size = sizeof(SMSC_FORWARD_RESPONSE_T);
       result =  MsgSend(&msg);
       if ( result != MSG_OK ){
         __trace2__("MAP::Et96MapV2ForwardSmMOInd MsgSend broken with code 0x%x",result);
@@ -169,7 +171,7 @@ void MapIoTask::dispatcher()
   USHORT_T result;
 	
 	//going = 0;
-  message.receiver = USER01_ID;
+  message.receiver = MY_USER_ID;
 
   for(;;){
     result = MsgRecv(&message);
@@ -183,13 +185,13 @@ void MapIoTask::dispatcher()
          message.sender == USER01_ID )
     {
       try{
-        if ( message.primitive == SMSC_FROWAR_RESPONCE ){
-          SMSC_FROWARD_RESPONCE_T* responce = (SMSC_FROWARD_RESPONCE_T*)message.msg_p;
-          if ( responce == 0 ) {
-            __trace2__("MAP::MessageProcessing Opss, forward responce has zero data");
+        if ( message.primitive == SMSC_FROWAR_RESPONSE ){
+          SMSC_FROWARD_RESPONSE_T* response = (SMSC_FROWARD_RESPONSE_T*)message.msg_p;
+          if ( response == 0 ) {
+            __trace2__("MAP::MessageProcessing Opss, forward response has zero data");
             throw 0;
           }
-          ForwardResponse(responce->dialogId);
+          ForwardResponse(response->dialogId);
         }
       }catch(...){
       }
@@ -211,15 +213,15 @@ void MapIoTask::init()
   USHORT_T err;
   err = MsgInit(MAXENTRIES);
   if ( err != MSG_OK ) { __trace2__("MAP: Erroat at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
-	err = MsgOpen(USER01_ID);
+	err = MsgOpen(MY_USER_ID);
   if ( err != MSG_OK ) { __trace2__("MAP: Erroat at MsgOpen, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   err = MsgConn(USER01_ID,ETSIMAP_ID);
   if ( err != MSG_OK ) { __trace2__("MAP: Erroat at MsgConn, code 0x%hx",err); throw runtime_error("MsgInit error"); }
-  MsgTraceOn( USER01_ID );
+  MsgTraceOn( MY_USER_ID );
   MsgTraceOn( ETSIMAP_ID );
   MsgTraceOn( TCAP_ID );
   __trace__("MAP: Bind");
-  USHORT_T bind_res = Et96MapBindReq(USER01_ID, SSN);
+  USHORT_T bind_res = Et96MapBindReq(MY_USER_ID, SSN);
   if(bind_res!=ET96MAP_E_OK){
     __trace2__("MAP: Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");
