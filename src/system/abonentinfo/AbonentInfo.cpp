@@ -130,14 +130,16 @@ int AbonentInfoSme::Execute()
             as.status==AbonentStatus::OFFLINE?"Offline":
                                               "Unknown",
             as.status==AbonentStatus::UNKNOWNVALUE?"":
-            (". msc"+as.msc).c_str()
+            (". msc +"+as.msc).c_str()
         );
       }else
       {
-        sprintf(answ,"%s:%d,%d",
+        sprintf(answ,"%s:%d,%d,%s",
           as.originalAddr.c_str(),
           as.status,
-          p.codepage);
+          p.codepage,
+          as.msc.length()?("+"+as.msc).c_str():""
+          );
       }
 
       int len=strlen(answ);
