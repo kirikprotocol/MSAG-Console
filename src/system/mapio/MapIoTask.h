@@ -77,9 +77,11 @@ enum MAPSTATS{
   MAPSTATS_REASSIGNDIALOG,
 };
 class MapDialog;
+
 extern void MAPSTATS_Restart();
 extern void MAPSTATS_Update(MAPSTATS);
 extern void MAPSTATS_DumpDialogLC(MapDialog*);
+extern void MAPSTATS_DumpDialog(MapDialog*);
 
 
 enum MapState{
@@ -289,17 +291,29 @@ class MapDialogContainer{
   static Mutex sync_object;
   Mutex sync;
   MapProxy proxy;
+  time_t last_dump_time;
   XHash<ET96MAP_DIALOGUE_ID_T,MapDialog*,hash_func_ET96MAP_DID> hash;
   XHash<const string,MapDialog*,StringHashFunc> lock_map;
   list<unsigned> dialogId_pool;
   friend void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
   static string SC_ADRESS_VALUE;
   //ET96MAP_DIALOGUE_ID_T allocateDialogueId();
+  void Dump() {
+    if ( time(0) < last_dump_time+60 ) return;
+    last_dump_time = time(0);
+    ET96MAP_DIALOGUE_ID_T key;
+    MapDialog* dlg;
+    hash.First();
+    while(hash.Next(key,dlg)) {
+      MAPSTATS_DumpDialog(dlg);
+    }
+  }
 public:
   static MapDialogContainer* getInstance(){
     MutexGuard g(sync_object);
     if ( !container ) {
 	    container = new MapDialogContainer();
+      container->last_dump_time = 0;
       for (unsigned n=1;n<MAX_DIALOGID_POOLED;++n){
       	container->dialogId_pool.push_back(n);
       }
@@ -350,7 +364,10 @@ public:
 
   MapDialog* createDialogImsiReq(ET96MAP_LOCAL_SSN_T lssn,MapDialog* associate){
     MutexGuard g(sync);
-    if ( dialogId_pool.size() == 0 ) throw runtime_error("MAP:: POOL is empty");
+    if ( dialogId_pool.size() == 0 ) {
+      Dump();
+      throw runtime_error("MAP:: POOL is empty");
+    }
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn,2);
     dialogId_pool.pop_front();
@@ -368,6 +385,7 @@ public:
     MutexGuard g(sync);
     if ( dialogId_pool.size() == 0 ) {
       smsc::util::_mapdlg_cat->warn( "Dialog id POOL is empty" );
+      Dump();
       throw runtime_error("MAP:: POOL is empty");
     }
     __mapdlg_trace2__("try to create SMSC dialog on abonent %s",abonent.c_str());
@@ -407,6 +425,7 @@ public:
     }
     if ( dialogId_pool.size() == 0 ) {
       smsc::util::_mapdlg_cat->warn( "Dialog id POOL is empty" );
+      Dump();
       throw runtime_error("MAP:: POOL is empty");
     }
     ET96MAP_DIALOGUE_ID_T dialogid_map = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();

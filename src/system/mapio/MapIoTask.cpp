@@ -516,3 +516,15 @@ void MAPSTATS_Update(MAPSTATS stats)
   MAPSTATS_Update_(stats);
 }
 
+void MAPSTATS_DumpDialog(MapDialog* dlg)
+{
+  static log4cpp::Category* logger = &smsc::util::Logger::getCategory("map.stat.dlgdump");
+  logger->info("dlg/map/smsc 0x%x/0x%x/0x%x(%s) %d sec, {%s->%s}",
+    dlg,
+    dlg->dialogid_map,
+    dlg->dialogid_smsc,
+    dlg->isUSSD?"USSD":"OTHER",
+    time(0)-(dlg->maked_at_mks/1000000),
+    dlg->sms.get()?dlg->sms->getOriginatingAddress().value:"???",
+    dlg->sms.get()?dlg->sms->getDestinationAddress().value:"???");
+}
