@@ -134,8 +134,8 @@ struct MapDialog{
     hasIndAddress(false),
     hasMwdStatus(false),
     wasDelivered(false),
-    subscriberAbsent(true);
-    hlrWasNotified(false,
+    subscriberAbsent(true),
+    hlrWasNotified(false),
     ref_count(1),
     state(MAPST_START), 
     dialogid_map(dialogid),
