@@ -11,7 +11,8 @@
     <section name="daemon">
       <param name="stderr" type="string">logs/daemon.err</param>
       <param name="host" type="string">@listen.host@</param>
-      <param name="services folder" type="string">services</param>
+      <param name="home" type="string">daemon</param>
+      <param name="services folder" type="string">../services</param>
       <param name="port" type="int">@daemon.admin.port@</param>
     </section>
   </section>
