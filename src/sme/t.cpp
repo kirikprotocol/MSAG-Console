@@ -86,7 +86,6 @@ int main(int argc,char* argv[])
   SmppSession ss(cfg,&lst);
   try{
     ss.connect();
-    sleep(1);
     PduSubmitSm sm;
     SMS s;
 //    const char *dst="2";
@@ -140,9 +139,9 @@ int main(int argc,char* argv[])
       int len7=ConvertTextTo7Bit((char*)message,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
 
       //s.setMessageBody(len,1,false,message);
-      s.setBinProperty("SMPP_SHORT_MESSAGE",buf7,len7);
-      s.setIntProperty("SMPP_SM_LENGTH",len7);
-      s.setIntProperty("SMPP_DATA_CODING",DataCoding::DEFAULT);
+      s.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf7,len7);
+      s.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len7);
+      s.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
 
       fillSmppPduFromSms(&sm,&s);
       PduSubmitSmResp *resp=tr->submit(sm);

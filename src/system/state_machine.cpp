@@ -3,6 +3,8 @@
 #include "system/state_machine.hpp"
 #include <exception>
 #include "system/rescheduler.hpp"
+#include "profiler/profiler.hpp"
+#include "util/recoder/recode_dll.h"
 
 namespace smsc{
 namespace system{
@@ -45,9 +47,9 @@ StateType StateMachine::submit(Tuple& t)
   SmeProxy *src_proxy,*dest_proxy=0;
 
   src_proxy=t.command.getProxy();
-  
+
   __trace2__("StateMachine::submit:%lld",t.msgId);
-  
+
   SMS* sms = t.command->get_sms();
   uint32_t dialogId =  t.command->get_dialogId();
 
@@ -240,6 +242,19 @@ StateType StateMachine::submit(Tuple& t)
       sms->setOriginatingAddress(src);
     }
     sms->setDestinationAddress(dst);
+    smsc::profiler::Profile p=smsc->getProfiler()->lookup(dst);
+    if(p.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
+       sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+    {
+      char buf7[200];
+      unsigned len;
+      int len7;
+      const short *msg=(const short*)sms->getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
+      len7=ConvertUCS2To7Bit(msg,len,buf7,sizeof(buf7));
+      sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf7,len7);
+      sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len7);
+      sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+    }
     SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
     dest_proxy->putCommand(delivery);
   }catch(...)
@@ -347,7 +362,21 @@ StateType StateMachine::forward(Tuple& t)
     {
       sms.setOriginatingAddress(src);
     }
-    sms.setDestinationAddress(sms.getDealiasedDestinationAddress());
+    Address dst=sms.getDealiasedDestinationAddress();
+    sms.setDestinationAddress(dst);
+    smsc::profiler::Profile p=smsc->getProfiler()->lookup(dst);
+    if(p.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
+       sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+    {
+      char buf7[200];
+      unsigned len;
+      int len7;
+      const short *msg=(const short*)sms.getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
+      ConvertUCS2To7Bit(msg,len,buf7,len7);
+      sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf7,len7);
+      sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len7);
+      sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+    }
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
     dest_proxy->putCommand(delivery);
   }catch(...)
@@ -392,7 +421,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");
         }
-        
+
       }
 
     }
