@@ -29,7 +29,7 @@ namespace smsc { namespace store
     {
     private:
 
-        static log4cpp::Category    &log;
+        log4cpp::Category    &log;
 
         unsigned    size;
         unsigned    count;
@@ -103,6 +103,8 @@ namespace smsc { namespace store
     {
     protected:
         
+        log4cpp::Category    &log;
+
         static text*    sqlGetMessagesCount;
         static text*    sqlStoreInsert;
         static text*    sqlRetriveAll;

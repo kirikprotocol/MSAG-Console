@@ -22,16 +22,13 @@ using smsc::util::config::ConfigException;
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE = 10;
 const unsigned SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE = 5;
 
-log4cpp::Category& ConnectionPool::log = 
-    Logger::getCategory("smsc.store.ConnectionPool");
-
 void ConnectionPool::loadMaxSize(Manager& config)
 {
     try {
-        size = (unsigned)config.getInt("db.connections.max");
+        size = (unsigned)config.getInt("MessageStore.Connections.max");
     } catch (ConfigException& exc) {
         size = SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE;
-        log.warn("ConnectionPool max size wasn't specified ! "
+        log.warn("Max size wasn't specified ! "
                  "Using default: %d", size);
     }
 }
@@ -39,10 +36,10 @@ void ConnectionPool::loadMaxSize(Manager& config)
 void ConnectionPool::loadInitSize(Manager& config)
 {
     try {
-        count = (unsigned)config.getInt("db.connections.init");
+        count = (unsigned)config.getInt("MessageStore.Connections.init");
     } catch (ConfigException& exc) {
         count = SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE;
-        log.warn("ConnectionPool init size wasn't specified ! "
+        log.warn("Init size wasn't specified ! "
                  "Using default: %d", count);
     }
 }
@@ -51,7 +48,7 @@ void ConnectionPool::loadDBInstance(Manager& config)
     throw(ConfigException)
 {
     try {
-        dbInstance = config.getString("db.instance");   
+        dbInstance = config.getString("MessageStore.dbInstance");   
     } catch (ConfigException& exc) {
         log.error("DB instance name wasn't specified !");
         throw;
@@ -62,7 +59,7 @@ void ConnectionPool::loadDBUserName(Manager& config)
     throw(ConfigException)
 {
     try {
-        dbUserName = config.getString("db.user");   
+        dbUserName = config.getString("MessageStore.dbUserName");   
     } catch (ConfigException& exc) {
         log.error("DB user name wasn't specified !");
         throw;
@@ -73,7 +70,7 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
     throw(ConfigException)
 {
     try {
-        dbUserPassword = config.getString("db.password");   
+        dbUserPassword = config.getString("MessageStore.dbUserPassword");   
     } catch (ConfigException& exc) {
         log.error("DB user password wasn't specified !");
         throw;
@@ -82,6 +79,7 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
 
 ConnectionPool::ConnectionPool(Manager& config)
     throw(ConfigException, ConnectionFailedException) 
+        : log(Logger::getCategory("smsc.store.ConnectionPool"))
 {
     
     loadMaxSize(config);
@@ -93,7 +91,7 @@ ConnectionPool::ConnectionPool(Manager& config)
     if (size < count) 
     {
         size = count;
-        log.warn("Specified ConnectionPool size less than init size. "
+        log.warn("Specified size less than init size. "
                   "Using max: %d", size);
     }
 
@@ -263,7 +261,8 @@ text* Connection::sqlRemove = (text *)
 
 Connection::Connection(ConnectionPool* pool) 
     throw(ConnectionFailedException) 
-        : owner(pool), envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L)
+        : log(Logger::getCategory("smsc.store.Connection")), 
+            owner(pool), envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L) 
 {
     __require__(owner);
 
@@ -557,7 +556,9 @@ void Connection::retrive(SMSId id, SMS &_sms)
     sword status;
     if ((status = stmtRetriveAll.execute(errhp, OCI_DEFAULT)) == OCI_NO_DATA)
     {
-        throw NoSuchMessageException();
+        NoSuchMessageException  exc;
+        log.error("Storage Exception : %s\n", exc.what());
+        throw exc;
     }
     checkErr(status);
     
@@ -609,8 +610,11 @@ void Connection::remove(SMSId id)
                                (sb4) sizeof(rows), errhp));
     
     checkErr(stmtRemove.execute(errhp, OCI_DEFAULT));
-    if (!rows) {
-        throw NoSuchMessageException();
+    if (!rows) 
+    {
+        NoSuchMessageException  exc;
+        log.error("Storage Exception : %s\n", exc.what());
+        throw exc;
     }
     checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
 }
@@ -674,7 +678,9 @@ void Connection::checkErr(sword status)
     __require__(owner);
     owner->killConnection(this);
 
-    throw StorageException((const char *)errbuf, (int)status);
+    StorageException    exc((const char *)errbuf, (int)status);
+    log.error("Storage Exception : %s\n", exc.what());
+    throw exc;
 }
 
 /* ------------------------------- Connection -------------------------- */
