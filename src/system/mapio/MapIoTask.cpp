@@ -56,7 +56,9 @@ extern "C" {
   USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
   {
     __map_trace2__("Et96MapBindConf confirmation received ssn=%d status=%d",lssn,status);
-    ++__global_bind_counter;
+    if( status == 0 || status == 1 ) {
+      ++__global_bind_counter;
+    }
     return ET96MAP_E_OK;
   }
 
