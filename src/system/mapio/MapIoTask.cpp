@@ -94,6 +94,7 @@ void MapIoTask::dispatcher()
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
       if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
         result = MSG_BROKEN_CONNECTION;
+        __trace2__("MAP:: not all binders dinded");
       }
       timecounter = 0;
     }
@@ -101,13 +102,18 @@ void MapIoTask::dispatcher()
     if ( result == MSG_BROKEN_CONNECTION ){
       __trace2__("MAP: Broken connection");
 restart:
+      __trace2__("MAP:: try restart MAP service");
       warning_if(MsgRel(MY_USER_ID,ETSIMAP_ID)!=MSG_OK);
       bool ok = false;
       while ( !ok ){
+        __trace2__("MAP:: check stopped flag");
         if ( isStopping ) return;
         try{
+          __trace2__("MAP:: deinit MAP service");
           deinit();
+          __trace2__("MAP:: init MAP service");
           init(30);
+          __trace2__("MAP:: waiting binds");
           timecounter = 0;
           /*if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
             __trace2__("MAP:: waiting bind confirm");
