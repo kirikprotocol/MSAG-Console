@@ -317,10 +317,12 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
       sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,0x0); // default
     }
-    else if ( (user_data_coding & 0x06) == 0x04  ) // UCS2
+    else if ( user_data_coding & 0x08  ) // UCS2
     {
       sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,/*user_data_coding*/0x08);
+    }else{
+      __trace2__("unsupported encoding 0x%x",user_data_coding);
     }
     unsigned esm_class = 0;
     esm_class |= (ssfh->udhi?0x40:0);
