@@ -68,10 +68,6 @@ TCResultFilter* newFilter()
 /**
  * Выполняет тестирование целостности данных (Data and Database Integrity 
  * Testing) и выводит результат по test cases в checklist.
- *
- * @param argc
- * @param argv
- * @return 
  */
 int main(int argc, char* argv[])
 {
@@ -102,19 +98,24 @@ int main(int argc, char* argv[])
 	{
 		SMSId id[listSize];
 		SMS sms[listSize];
+		TCResultStack stack[listSize];
 		cout << "Цикл 2: создание SM" << endl;
 		for (int i = 0; i < listSize; i++)
 		{
 			cout << "i = " << i << endl;
 			filter->addResult(*tc.storeCorrectSM(&id[i], &sms[i], RAND_TC));
+			stack[i].push_back(tc.storeCorrectSM(&id[i], &sms[i], RAND_TC));
 		}
 		cout << "Цикл 2: чтение SM" << endl;
 		for (int i = 0; i < listSize; i++)
 		{
 			cout << "i = " << i << endl;
 			filter->addResult(*tc.loadExistentSM(id[i], sms[i]));
+			stack[i].push_back(tc.loadExistentSM(id[i], sms[i]));
+			filter->addResultStack(stack[i]);
 		}
 	}
+
 	//прочее
 	cout << "Прочее" << endl;
 	filter->addResult(*tc.storeIncorrectSM(correctSM, ALL_TC));
@@ -126,6 +127,7 @@ int main(int argc, char* argv[])
 	CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
 	cl.startNewGroup("Message Store", "smsc::store");
 	cl.writeResult(*filter);
+	delete filter;
 
 	/*
 	//Изменение статуса SM

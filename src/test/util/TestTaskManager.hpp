@@ -21,9 +21,9 @@ private:
 
 public:
 	TestTask(int _taskNum)
-		: taskNum(_taskNum), flag(true), stopped(false) {};
+		: taskNum(_taskNum), flag(true), stopped(false) {}
 
-	virtual ~TestTask(){}
+	virtual ~TestTask() {}
 
 	virtual void executeCycle() = 0; //abstract
 
@@ -35,23 +35,24 @@ public:
 		}
 		stopped = true;
 		return 0;
-	};
+	}
 
 	const char* taskName()
 	{
-		//return (string("Task ") + taskNum);//.c_str();
-		return "task";
-	};
+		char* buf = new char[15];
+		sprintf(buf, "Task %d", taskNum);
+		return buf;
+	}
 
 	void stop()
 	{
 		flag = false;
-	};
+	}
 
-	bool isStopped()
+	bool isStopped() const
 	{
 		return stopped;
-	};
+	}
 };
 
 template<class T>
@@ -68,7 +69,7 @@ public:
 		{
 			delete tasks[i];
 		} */
-	};
+	}
 
 	void addTask(T* task)
 	{
@@ -93,17 +94,17 @@ public:
 		{
 			throw exception();
 		}
-	};
+	}
 
 private:
-	bool isStopped()
+	bool isStopped() const
 	{
 		bool stopped = true;
 		for (int i = 0; stopped && i < tasks.size(); i++)
 		{
 			stopped &= tasks[i]->isStopped();
 		}
-	};
+	}
 };
 
 }
