@@ -71,6 +71,7 @@ public class PerfQueueTable extends Canvas {
 
     Font font = getFont();
     FontMetrics fm = getFontMetrics(font);
+    g.setColor(textColor);
 
     int x = hpad;
     int y = fm.getAscent() + vpad;
