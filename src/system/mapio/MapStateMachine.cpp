@@ -1955,7 +1955,7 @@ static bool NeedNotifyHLR(MapDialog* dialog)
     __trace2__("MAP::%s hlrVersion is NULL",__FUNCTION__);
   }
   return !dialog->hlrWasNotified && dialog->hlrVersion != 0 && 
-    ((!dialog->wasDelivered || !dialog->routeErr)
+    ((!dialog->wasDelivered && !dialog->routeErr)
     || 
       (dialog->wasDelivered && dialog->hasMwdStatus &&
         ( ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
