@@ -164,6 +164,18 @@ void TestSme::executeCycle()
 		//зависнуть
 		evt.Wait(5000);
 	}
+	static int count = 0;
+	//каждый 10-ый цикл
+	if (count % 10 == 0)
+	{
+		count++;
+		tc.submitIncorrectDateFormatDbSmeCmd(rand0(1),
+			getDataCoding(RAND_TC), ALL_TC);
+		tc.submitIncorrectNumberFormatDbSmeCmd(rand0(1),
+			getDataCoding(RAND_TC), ALL_TC);
+		tc.submitIncorrectParamsDbSmeCmd(rand0(1),
+			getDataCoding(RAND_TC), ALL_TC);
+	}
 	idx = idx < seq.size() ? idx : 0;
 	switch (seq[idx++])
 	{
