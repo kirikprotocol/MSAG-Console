@@ -1,4 +1,3 @@
-#binary name        source name	libraries
--test/runtest        TestRunner
--test/test            test		-ltest-util
+#binary name	source name	libraries
+-test/test	test		-L$(ORACLE_HOME)/lib -ltest-store -ltest-util -lcore-threads -lcore-buffers -lstore -lsms -lutil-config -lutil -llog4cpp -lxerces-c1_5_2 $(__OBJECTS) $(__LIBRARIES)
 
