@@ -86,7 +86,7 @@ public class PerfServer extends Thread {
                     try {
                       sock.close();
                     } catch (IOException ex) {
-                      logger.warn("Can't close client socket", ee);
+                      logger.warn("Can't close client socket", ex);
                     }
                 }
             } catch (IOException ex) {
