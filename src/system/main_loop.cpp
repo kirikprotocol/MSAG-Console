@@ -203,28 +203,19 @@ void Smsc::mainLoop()
         (*i)->sourceId=i->getProxy()->getSystemId();
       }catch(exception& e)
       {
-        __trace2__("Source proxy died after selection: %s",e.what());
-#ifdef __GNUC__
+        __warning2__("Source proxy died after selection: %s",e.what());
         CmdVector::difference_type pos=std::distance(frame.begin(),i);
-#else
-        CmdVector::difference_type pos;
-        std::distance(frame.begin(),i,pos);
-#endif
         frame.erase(i);
+        if(frame.size()==0)break;
         i=frame.begin()+pos;
         i--;
         continue;
       }catch(...)
       {
-        __trace__("Source proxy died after selection");
-
-#ifdef __GNUC__
+        __warning__("Source proxy died after selection");
         CmdVector::difference_type pos=std::distance(frame.begin(),i);
-#else
-        CmdVector::difference_type pos;
-        std::distance(frame.begin(),i,pos);
-#endif
         frame.erase(i);
+        if(frame.size()==0)break;
         i=frame.begin()+pos;
         i--;
         continue;
@@ -460,6 +451,7 @@ void Smsc::processCommand(SmscCommand& cmd)
       }
       __trace2__("delivery response received. seqnum=%d,msgId=%lld,sms=%p",dialogId,task.messageId,task.sms);
       cmd->get_resp()->set_sms(task.sms);
+      cmd->get_resp()->set_diverted(task.diverted);
       id=task.messageId;
       break;
     }
