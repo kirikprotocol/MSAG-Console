@@ -5,11 +5,14 @@
 #include <memory>
 #include "sms/sms.h"
 #include "util/debug.h"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace smsc{
 namespace util{
 
 using namespace smsc::sms;
+
+using smsc::core::buffers::TmpBuf;
 
 inline bool findConcatInfo(unsigned char* body,uint16_t& mr,uint8_t& idx,uint8_t& num,bool& havemoreudh)
 {
