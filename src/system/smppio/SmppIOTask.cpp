@@ -492,25 +492,28 @@ int SmppInputThread::Execute()
             case SmppCommandSet::DATA_SM_RESP:
             case SmppCommandSet::CANCEL_SM:
             {
-              try{
-                SmscCommand cmd(pdu,ss->getProxy()->getForceDC());
+              if(ss->getProxy())
+              {
                 try{
-                  if(ss->getProxy() && ss->getProxy()->isOpened())
+                  SmscCommand cmd(pdu,ss->getProxy()->getForceDC());
+                  try{
+                    if(ss->getProxy()->isOpened())
+                    {
+                      ss->getProxy()->putIncomingCommand(cmd);
+                    }else
+                    {
+                      SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
+                    }
+                  }catch(...)
                   {
-                    ss->getProxy()->putIncomingCommand(cmd);
-                  }else
-                  {
-                    SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
+                    __trace__("SmppInput: exception in putIncomingCommand, proxy limit or proxy died");
                   }
+                  break;
                 }catch(...)
                 {
-                  __trace__("SmppInput: exception in putIncomingCommand, proxy limit or proxy died");
+                  __trace__("Failed to build command from pdu, sending gnack");
+                  errcode=Status::INVOPTPARAMVAL;
                 }
-                break;
-              }catch(...)
-              {
-                __trace__("Failed to build command from pdu, sending gnack");
-                errcode=Status::INVOPTPARAMVAL;
               }
               //
               // Это так и задумано, здесь не должно быть break!
