@@ -19,6 +19,17 @@ public class StatQuery
   private boolean fromDateEnabled = true;
   private boolean tillDateEnabled = false;
 
+  public StatQuery()
+  {
+    Calendar calendar = new GregorianCalendar();
+    calendar.setTime(fromDate);
+    calendar.set(Calendar.HOUR_OF_DAY, 0);
+    calendar.set(Calendar.MINUTE, 0);
+    calendar.set(Calendar.SECOND, 0);
+    calendar.set(Calendar.MILLISECOND, 0);
+    fromDate = calendar.getTime();
+  }
+
   public Date getFromDate()
   {
     return fromDate;
