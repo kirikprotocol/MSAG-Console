@@ -253,17 +253,6 @@ private:
 	void debug(const TCResult* res);
 };
 
-struct SmsIdTimePair
-{
-	SMSId smsId;
-	time_t time;
-	SmsIdTimePair(SMSId id, time_t t) : smsId(id), time(t) {}
-	bool operator< (const SmsIdTimePair& p) const
-	{
-		return time < p.time;
-	}
-};
-
 }
 }
 }
