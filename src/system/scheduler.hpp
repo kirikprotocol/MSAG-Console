@@ -18,7 +18,7 @@ using smsc::core::synchronization::Event;
 class Scheduler:public smsc::core::threads::ThreadedTask{
 public:
   Scheduler(EventQueue& eq,MessageStore* st):
-    queue(eq),store(st){}
+    queue(eq),store(st),rescheduleLimit(10){}
   int Execute()
   {
     time_t t,r;
@@ -32,21 +32,51 @@ public:
       t=time(NULL);
       __trace__("scheduler started");
       try{
+        it=store->getReadyForRetry(t,true);
+        if(it)
+        {
+          try{
+            while(it->getNextId(id))
+            {
+              ids.Push(id);
+              if(ids.Count()>=rescheduleLimit*2)break;
+            }
+          }catch(...)
+          {
+            __trace__("Scheduler: Exception in getReadyForRetry");
+          }
+          delete it;
+        }
         it=store->getReadyForRetry(t);
         if(it)
         {
-          while(it->getNextId(id))
+          try{
+            while(it->getNextId(id))
+            {
+              ids.Push(id);
+              if(ids.Count()>=rescheduleLimit*2)break;
+            }
+          }catch(...)
           {
-            ids.Push(id);
+            __trace__("Scheduler: Exception in getReadyForRetry");
           }
           delete it;
-          for(int i=0;i<ids.Count();i++)
+        }
+        if(ids.Count())
+        {
+          __trace2__("Scheduler: %d messages for rescheduling",ids.Count());
+          try{
+            for(int i=0;i<ids.Count();i++)
+            {
+              SmscCommand cmd=SmscCommand::makeForward();
+              queue.enqueue(ids[i],cmd);
+              //thr_yield();
+              e.Wait(1000/rescheduleLimit);
+              if(isStopping)break;
+            }
+          }catch(...)
           {
-            SmscCommand cmd=SmscCommand::makeForward();
-            queue.enqueue(ids[i],cmd);
-            //thr_yield();
-            e.Wait(100);
-            if(isStopping)break;
+            __trace__("Scheduler: Exception queue.enqueue");
           }
           ids.Clean();
         }
@@ -72,10 +102,15 @@ public:
   {
     event.Signal();
   }
+  void setRescheduleLimit(int rl)
+  {
+    rescheduleLimit=rl;
+  }
 protected:
   EventQueue &queue;
   MessageStore* store;
   Event event;
+  int rescheduleLimit;
 };
 
 };//system

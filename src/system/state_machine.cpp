@@ -1650,7 +1650,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           (
             t.msgId,
             sms.getDestinationDescriptor(),
-            GET_STATUS_CODE(t.command->get_resp()->get_status()),
+            Status::RESCHEDULEDNOW,
             rt,
             true
           );
@@ -1719,7 +1719,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   {
     unsigned int len;
     ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
-    if(sms.getConcatSeqNum()<ci->num)
+    if(sms.getConcatSeqNum()<ci->num-1)
     {
       {
         sms.setConcatSeqNum(sms.getConcatSeqNum()+1);
@@ -2410,7 +2410,9 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
 
 time_t StateMachine::rescheduleSms(SMS& sms)
 {
-  time_t nextTryTime=RescheduleCalculator::calcNextTryTime(sms.getLastTime(),sms.getAttemptsCount());
+  time_t basetime=sms.getLastTime();
+  if(basetime==0 || basetime==-1)basetime=time(NULL);
+  time_t nextTryTime=RescheduleCalculator::calcNextTryTime(basetime,sms.getAttemptsCount());
   if(nextTryTime>sms.getValidTime())nextTryTime=sms.getValidTime();
   return nextTryTime;
 }

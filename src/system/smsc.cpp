@@ -553,7 +553,18 @@ void Smsc::init(const SmscConfigs& cfg)
   AddressValue addrval;
   addr.getValue( addrval );
   scAddr = addrval;
+
+  // create scheduler here, and start later in run
+  scheduler=new Scheduler(eventqueue,store);
+  try{
+    scheduler->setRescheduleLimit(cfg.cfgman->getInt("core.reschedule_limit"));
+  }catch(...)
+  {
+    __warning__("reschedule_limit not found in config, using default");
+  }
+
   log.info( "SMSC init complete" );
+
   }catch(exception& e)
   {
     __trace2__("Smsc::init exception:%s",e.what());
@@ -599,7 +610,8 @@ void Smsc::run()
     MapDialogContainer::getInstance()->getProxy()->setId("MAP_PROXY");
   }
 
-  scheduler=new Scheduler(eventqueue,store);
+
+  // start rescheduler created in init
   tp.startTask(scheduler);
 
 #ifdef ENABLE_MAP_SYM
