@@ -39,11 +39,13 @@ public:
     proxyType=proxyTransceiver;
     opened=true;
     if(timeout==0)timeout=8;
-    totalLimit=limit*timeout/2;
+    totalLimit=procLimit*5;
+    if(totalLimit<200)totalLimit=200;
+    //limit*timeout/2;
     submitLimit=totalLimit/2;
     submitCount=0;
     processLimit=procLimit;
-    processTimeout=timeout+timeout/2;
+    processTimeout=timeout;
     __trace2__("SmppProxy: processLimit=%d, processTimeout=%u",processLimit,processTimeout);
   }
   virtual ~SmppProxy(){}
