@@ -1821,16 +1821,41 @@ public CommandParser(ParserSharedInputState state) {
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
+			case OPT_ACTIVE:
+			{
+				match(OPT_ACTIVE);
+				cmd.setActive(true);
+				break;
+			}
+			case OPT_INACTIVE:
+			{
+				match(OPT_INACTIVE);
+				cmd.setActive(false);	
+				break;
+			}
+			case OPT_BILL:
+			case OPT_NOBILL:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
 			case OPT_BILL:
 			{
 				match(OPT_BILL);
-				cmd.setBill(true);
+				cmd.setBill(true);   	
 				break;
 			}
 			case OPT_NOBILL:
 			{
 				match(OPT_NOBILL);
-				cmd.setBill(false);
+				cmd.setBill(false);  	
 				break;
 			}
 			default:
@@ -1844,13 +1869,13 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_ARCH:
 			{
 				match(OPT_ARCH);
-				cmd.setArc(true);
+				cmd.setArc(true);    	
 				break;
 			}
 			case OPT_NOARCH:
 			{
 				match(OPT_NOARCH);
-				cmd.setArc(false);
+				cmd.setArc(false);   	
 				break;
 			}
 			default:
@@ -1864,13 +1889,13 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_ALLOW:
 			{
 				match(OPT_ALLOW);
-				cmd.setAllow(true);
+				cmd.setAllow(true);  	
 				break;
 			}
 			case OPT_DENY:
 			{
 				match(OPT_DENY);
-				cmd.setAllow(false);
+				cmd.setAllow(false); 	
 				break;
 			}
 			default:
@@ -1902,7 +1927,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
+			throw new RecognitionException("Route flags expected. Syntax: [active|inactive] (bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
 				
 		}
 	}
@@ -1915,6 +1940,42 @@ public CommandParser(ParserSharedInputState state) {
 		try {      // for error handling
 			{
 			switch ( LA(1)) {
+			case OPT_ACTIVE:
+			{
+				match(OPT_ACTIVE);
+				cmd.setActive(true);
+				break;
+			}
+			case OPT_INACTIVE:
+			{
+				match(OPT_INACTIVE);
+				cmd.setActive(false);	
+				break;
+			}
+			case EOF:
+			case ACT_ADD:
+			case ACT_DELETE:
+			case OPT_BILL:
+			case OPT_NOBILL:
+			case OPT_ARCH:
+			case OPT_NOARCH:
+			case OPT_ALLOW:
+			case OPT_DENY:
+			case OPT_RCPT:
+			case OPT_NORCPT:
+			case OPT_SVCID:
+			case OPT_PRI:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
 			case OPT_BILL:
 			{
 				match(OPT_BILL);
@@ -2040,7 +2101,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
+			throw new RecognitionException("Route flags expected. Syntax: [active|inactive] [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
 				
 		}
 	}
@@ -2067,14 +2128,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop74:
+			_loop76:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop74;
+					break _loop76;
 				}
 				
 			} while (true);
@@ -2159,6 +2220,8 @@ public CommandParser(ParserSharedInputState state) {
 		"\"numelem\"",
 		"\"owner\"",
 		"\"locale\"",
+		"\"active\"",
+		"\"inactive\"",
 		"WS",
 		"more input",
 		"quoted string",

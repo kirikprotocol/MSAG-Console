@@ -26,6 +26,7 @@ public class RouteAlterCommand extends RouteGenCommand
     private boolean arc = true;
     private boolean allow = true;
     private boolean receipt = true;
+    private boolean active = true;
     private int serviceid;
     private int priority;
 
@@ -35,6 +36,7 @@ public class RouteAlterCommand extends RouteGenCommand
     private boolean setId = false;
     private boolean setPri = false;
     private boolean setReceipt = false;
+    private boolean setActive = false;
 
     public void setAction(byte action) {
         this.action = action;
@@ -55,6 +57,10 @@ public class RouteAlterCommand extends RouteGenCommand
     public void setReceipt(boolean receipt) {
         this.receipt = receipt; setReceipt = true;
     }
+    public void setActive(boolean active) {
+      this.active = active; setActive = true;
+    }
+
     public void setServiceId(int serviceid) {
         this.serviceid = serviceid; setId = true;
     }
@@ -76,12 +82,10 @@ public class RouteAlterCommand extends RouteGenCommand
                 return;
             }
 
-			   //todo add support for route "active" flag
             Route newRoute = new Route(route,
                     oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
                     oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
-						  true,
-					oldRoute.getServiceId(),
+						        oldRoute.isActive() , oldRoute.getServiceId(),
                     oldRoute.getSources(), oldRoute.getDestinations());
 
             if (target == TARGET_SRC)
@@ -220,6 +224,7 @@ public class RouteAlterCommand extends RouteGenCommand
             if (setArc) newRoute.setArchiving(arc);
             if (setAllow) newRoute.setEnabling(allow);
             if (setReceipt) newRoute.setSuppressDeliveryReports(!receipt);
+            if (setActive) newRoute.setActive(active);
             if (setId) newRoute.setServiceId(serviceid);
             if (setPri) {
                 if (priority < 0 || priority > 32000)

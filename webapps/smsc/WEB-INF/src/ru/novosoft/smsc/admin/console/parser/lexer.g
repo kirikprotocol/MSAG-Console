@@ -58,6 +58,8 @@ tokens {
   OPT_NELEM	= "numelem"	;
   OPT_OWNER	= "owner"	;
   OPT_LOCALE	= "locale"	;
+  OPT_ACTIVE	= "active"	;
+  OPT_INACTIVE	= "inactive"	;
 }
 
 WS    	: 	( STR_WS

@@ -147,8 +147,7 @@ getnameid[String msg] returns [String out] {
 srcdef[RouteGenCommand cmd] { // Special command required !!!
     RouteSrcDef def = new RouteSrcDef();
 }
-	:	( (
-	OPT_SUBJ { 
+	:	( (OPT_SUBJ { 
 		    def.setType(RouteSrcDef.TYPE_SUBJECT);
 		    def.setSrc(getnameid("Subject name"));
 		  }) 
@@ -226,18 +225,20 @@ addroute returns [RouteAddCommand cmd] {
 		route_dst[cmd, true]
 	;
 addroute_flags[RouteAddCommand cmd]
-	:	( OPT_BILL   { cmd.setBill(true);   }
-		| OPT_NOBILL { cmd.setBill(false);  })
-		( OPT_ARCH   { cmd.setArc(true);    }
-		| OPT_NOARCH { cmd.setArc(false);   })
-	        ( OPT_ALLOW  { cmd.setAllow(true);  }
-		| OPT_DENY   { cmd.setAllow(false); })
-	        ( OPT_RCPT   { cmd.setReceipt(true);  }
-		| OPT_NORCPT { cmd.setReceipt(false); })
+	:	( OPT_ACTIVE 	{ cmd.setActive(true);  }
+		| OPT_INACTIVE	{ cmd.setActive(false);	})?
+		( OPT_BILL   	{ cmd.setBill(true);   	}
+		| OPT_NOBILL 	{ cmd.setBill(false);  	})
+		( OPT_ARCH   	{ cmd.setArc(true);    	}
+		| OPT_NOARCH 	{ cmd.setArc(false);   	})
+	        ( OPT_ALLOW  	{ cmd.setAllow(true);  	}
+		| OPT_DENY   	{ cmd.setAllow(false); 	})
+	        ( OPT_RCPT   	{ cmd.setReceipt(true); }
+		| OPT_NORCPT 	{ cmd.setReceipt(false);})
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Route flags expected. Syntax: (bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
+           throw new RecognitionException("Route flags expected. Syntax: [active|inactive] (bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
 	}
 
 delroute returns [RouteDeleteCommand cmd] {
@@ -283,18 +284,20 @@ altroute returns [RouteAlterCommand cmd] {
 		)?
 	;
 altroute_flags[RouteAlterCommand cmd]
-	:	( OPT_BILL   { cmd.setBill(true);     } 
-		| OPT_NOBILL { cmd.setBill(false);    })?
-		( OPT_ARCH   { cmd.setArc(true);      } 
-		| OPT_NOARCH { cmd.setArc(false);     })?
-	        ( OPT_ALLOW  { cmd.setAllow(true);    }
-		| OPT_DENY   { cmd.setAllow(false);   })?
-	        ( OPT_RCPT   { cmd.setReceipt(true);  }
-		| OPT_NORCPT { cmd.setReceipt(false); })?
+	:	( OPT_ACTIVE 	{ cmd.setActive(true);   }
+		| OPT_INACTIVE	{ cmd.setActive(false);	 })?
+		( OPT_BILL   	{ cmd.setBill(true);     } 
+		| OPT_NOBILL 	{ cmd.setBill(false);    })?
+		( OPT_ARCH   	{ cmd.setArc(true);      } 
+		| OPT_NOARCH 	{ cmd.setArc(false);     })?
+	        ( OPT_ALLOW  	{ cmd.setAllow(true);    }
+		| OPT_DENY   	{ cmd.setAllow(false);   })?
+	        ( OPT_RCPT   	{ cmd.setReceipt(true);  }
+		| OPT_NORCPT 	{ cmd.setReceipt(false); })?
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Route flags expected. Syntax: [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
+           throw new RecognitionException("Route flags expected. Syntax: [active|inactive] [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
 	}
 
 viewroute returns [RouteViewCommand cmd] {

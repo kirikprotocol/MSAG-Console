@@ -43,7 +43,8 @@ public class RouteViewCommand implements Command
                         (smscRoute.isBilling()   ? "billing, ":"no billing, ")+
                         (smscRoute.isEnabling()  ? "allowed, ":"denied, ")+
                         (smscRoute.isSuppressDeliveryReports() ?
-                                                   "no receipt":"receipt"));
+                                                   "no receipt, ":"receipt, ")+
+                        (smscRoute.isActive() ? "active ":"inactive"));
 
         String srcsStr = "";
         Iterator srcs = smscRoute.getSources().iterator();

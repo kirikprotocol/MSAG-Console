@@ -42,11 +42,13 @@ OPT_NLIST="numlist"=42
 OPT_NELEM="numelem"=43
 OPT_OWNER="owner"=44
 OPT_LOCALE="locale"=45
-WS=46
-STR("more input")=47
-QSTR("quoted string")=48
-STR_WS=49
-STR_CHR=50
-COMMA("comma character ','")=51
-ESC=52
-DIGIT=53
+OPT_ACTIVE="active"=46
+OPT_INACTIVE="inactive"=47
+WS=48
+STR("more input")=49
+QSTR("quoted string")=50
+STR_WS=51
+STR_CHR=52
+COMMA("comma character ','")=53
+ESC=54
+DIGIT=55

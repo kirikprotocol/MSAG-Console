@@ -57,12 +57,14 @@ public interface CommandParserTokenTypes {
 	int OPT_NELEM = 43;
 	int OPT_OWNER = 44;
 	int OPT_LOCALE = 45;
-	int WS = 46;
-	int STR = 47;
-	int QSTR = 48;
-	int STR_WS = 49;
-	int STR_CHR = 50;
-	int COMMA = 51;
-	int ESC = 52;
-	int DIGIT = 53;
+	int OPT_ACTIVE = 46;
+	int OPT_INACTIVE = 47;
+	int WS = 48;
+	int STR = 49;
+	int QSTR = 50;
+	int STR_WS = 51;
+	int STR_CHR = 52;
+	int COMMA = 53;
+	int ESC = 54;
+	int DIGIT = 55;
 }

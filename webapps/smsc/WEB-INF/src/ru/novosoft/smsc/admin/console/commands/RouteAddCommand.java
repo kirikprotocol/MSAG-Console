@@ -17,6 +17,7 @@ public class RouteAddCommand extends RouteGenCommand
     private boolean arc = true;
     private boolean allow = true;
     private boolean receipt = true;
+    private boolean active = true;
     private int serviceid;
     private int priority;
 
@@ -37,6 +38,9 @@ public class RouteAddCommand extends RouteGenCommand
     }
     public void setReceipt(boolean receipt) {
         this.receipt = receipt;
+    }
+    public void setActive(boolean active) {
+      this.active = active;
     }
 
     public void process(CommandContext ctx)
@@ -104,9 +108,8 @@ public class RouteAddCommand extends RouteGenCommand
                 }
             }
 
-			   //todo add support for route "active" flag
             smscRoute = new Route(route, priority, allow, bill, arc, !receipt,
-                                  true, serviceid, srcList, dstList);
+                                  active, serviceid, srcList, dstList);
 
             if (priority < 0 || priority > 32000)
                 throw new Exception("Priority value should be between 0 and 32000");

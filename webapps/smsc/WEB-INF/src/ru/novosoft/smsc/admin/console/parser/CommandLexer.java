@@ -53,6 +53,7 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("mask", this), new Integer(31));
 	literals.put(new ANTLRHashString("view", this), new Integer(8));
 	literals.put(new ANTLRHashString("dlsubmitter", this), new Integer(17));
+	literals.put(new ANTLRHashString("inactive", this), new Integer(47));
 	literals.put(new ANTLRHashString("defaultsme", this), new Integer(35));
 	literals.put(new ANTLRHashString("subj", this), new Integer(32));
 	literals.put(new ANTLRHashString("principal", this), new Integer(15));
@@ -64,6 +65,7 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("none", this), new Integer(38));
 	literals.put(new ANTLRHashString("bill", this), new Integer(21));
 	literals.put(new ANTLRHashString("allow", this), new Integer(25));
+	literals.put(new ANTLRHashString("active", this), new Integer(46));
 	literals.put(new ANTLRHashString("alias", this), new Integer(11));
 	literals.put(new ANTLRHashString("subject", this), new Integer(14));
 	literals.put(new ANTLRHashString("add", this), new Integer(4));
