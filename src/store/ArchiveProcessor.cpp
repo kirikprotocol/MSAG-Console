@@ -16,7 +16,8 @@ int          Query::activeCounter = 0;
 
 ArchiveProcessor::ArchiveProcessor(ConfigView* config)
     : Thread(), log(Logger::getInstance("smsc.store.ArchiveProcessor")),
-        bStarted(false), bNeedExit(false), indexator(0)
+        bStarted(false), bNeedExit(false), indexator(0), bTransactionOpen(false), 
+            transactionSmsCount(0),  maxTransactionSms(0), transactionStartTime(0), maxTransactionTime(0)
 {
     init(config);
     Start();
@@ -33,15 +34,28 @@ void ArchiveProcessor::init(ConfigView* config)
 
     std::auto_ptr<ConfigView> queriesThreadPoolCfgGuard(config->getSubConfig("Queries"));
     ConfigView* queriesThreadPoolCfg = queriesThreadPoolCfgGuard.get();
-    try {
-        queriesPool.setMaxThreads(queriesThreadPoolCfg->getInt("max"));
-    } catch (ConfigException& exc) {
+    try { queriesPool.setMaxThreads(queriesThreadPoolCfg->getInt("max")); }
+    catch (ConfigException& exc) {
         smsc_log_warn(log, "Maximum threads count for queries wasn't specified !");
     }
-    try {
-        queriesPool.preCreateThreads(queriesThreadPoolCfg->getInt("init"));
-    } catch (ConfigException& exc) {
+    try { queriesPool.preCreateThreads(queriesThreadPoolCfg->getInt("init")); }
+    catch (ConfigException& exc) {
         smsc_log_warn(log, "Precreated threads count for queries wasn't specified !");
+    }
+
+    std::auto_ptr<ConfigView> transactionCfgGuard(config->getSubConfig("Transactions"));
+    ConfigView* transactionCfg = transactionCfgGuard.get();
+    try { maxTransactionSms  = transactionCfg->getInt("maxSmsCount"); }
+    catch (ConfigException& exc) {
+        maxTransactionSms = 10000;
+        smsc_log_warn(log, "Maximum sms per transaction parameter missed! Using default=%lld. Details: %s",
+                      maxTransactionSms, exc.what());
+    }
+    try { maxTransactionTime = transactionCfg->getInt("maxTimeInterval"); }
+    catch (ConfigException& exc) {
+        maxTransactionTime = 300;
+        smsc_log_warn(log, "Maximum transaction time interval parameter missed! Using default=%ld (sec). Details: %s",
+                      maxTransactionTime, exc.what());
     }
 
     std::auto_ptr<ConfigView> viewCfgGuard(config->getSubConfig("View"));
@@ -137,11 +151,89 @@ int ArchiveProcessor::Execute()
     return 0;
 }
 
+void ArchiveProcessor::cleanTransaction()
+{
+    transactionTrsFiles.Empty();
+    transactionSrcFiles.Empty();
+    transactionSmsCount = 0;
+}
+void ArchiveProcessor::startTransaction()
+{
+    if (bTransactionOpen) return;
+    
+    try
+    {
+        smsc_log_debug(log, "Starting transaction...");
+        if (indexator) indexator->BeginTransaction();
+        bTransactionOpen = true; cleanTransaction();
+        transactionStartTime = time(NULL);
+        smsc_log_debug(log, "Transaction started.");
+
+    } catch (std::exception& exc) {
+      smsc_log_error(log, "Error starting transaction. Details: %s", exc.what());
+    }
+}
+void ArchiveProcessor::commitTransaction(bool force /*= false*/)
+{
+    if (!bTransactionOpen) return;
+
+    try
+    {
+        if (force || (transactionSmsCount >= maxTransactionSms) ||
+            (transactionStartTime>0 && (time(NULL)-transactionStartTime >= maxTransactionTime)))
+        {
+            smsc_log_debug(log, "Commiting transaction...");
+            if (indexator) indexator->EndTransaction();
+
+            // flush transaction files
+            transactionTrsFiles.First();
+            char* trsFileNameStr = 0; fpos_t* trsPosition = 0;
+            while (transactionTrsFiles.Next(trsFileNameStr, trsPosition))
+            {
+                if (!trsPosition || !trsFileNameStr || !trsFileNameStr[0]) continue;
+                TransactionStorage trsFile(trsFileNameStr);
+                trsFile.setTransactionData(trsPosition);
+            }
+            // delete source files
+            transactionSrcFiles.First();
+            char* srcFileNameStr = 0; bool data = false;
+            while (transactionSrcFiles.Next(srcFileNameStr, data))
+            {
+                if (!srcFileNameStr || !srcFileNameStr[0]) continue;
+                FileStorage::deleteFile(srcFileNameStr);
+            }
+            bTransactionOpen = false; cleanTransaction();
+            smsc_log_debug(log, "Transaction commited.");
+        }
+    
+    } catch (std::exception& exc) {
+      smsc_log_error(log, "Error commiting transaction. Details: %s", exc.what());
+    }
+    
+}
+void ArchiveProcessor::rollbackTransaction()
+{
+    if (!bTransactionOpen) return;
+    
+    smsc_log_debug(log, "Rolling back transaction...");
+    if (indexator) indexator->RollBack();
+    bTransactionOpen = false; cleanTransaction();
+    smsc_log_debug(log, "Transaction rolled back.");
+}
+void ArchiveProcessor::skipProcessedFiles(const std::string& location, Array<std::string>& files)
+{
+    for (int i=0; i<files.Count(); i++) {
+        std::string fileName = location+"/"+files[i];
+        const char* fileNameStr = fileName.c_str();
+        if (transactionSrcFiles.Exists(fileNameStr)) files.Delete(i--);
+    }
+}
 void ArchiveProcessor::process()
 {
     MutexGuard guard(locationsLock);
 
     smsc_log_debug(log, "Processing ...");
+    commitTransaction(false);
     char* locId = 0; std::string* location = 0;
     locations.First();
     while (locations.Next(locId, location) && !bNeedExit)
@@ -152,11 +244,12 @@ void ArchiveProcessor::process()
         {
             Array<std::string> files;
             FileStorage::findFiles(*location, SMSC_PREV_ARCHIVE_FILE_EXTENSION, files);
+            skipProcessedFiles(*location, files); // filter out already processed files
             if (files.Count() <= 0) {
-                smsc_log_debug(log, "No archive files found in '%s'", location->c_str());
+                smsc_log_debug(log, "No new archive files found in '%s'", location->c_str());
                 continue;
             }
-
+            startTransaction();
             process(*location, files);
 
         } catch (std::exception& exc) {
@@ -165,6 +258,7 @@ void ArchiveProcessor::process()
           smsc_log_error(log, "Error processing archive files. Reason is unknown");
         }
     }
+    commitTransaction(bNeedExit);
     smsc_log_debug(log, "Processed.");
 }
 
@@ -201,6 +295,10 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
     for (int i=0; i<files.Count() && !bNeedExit; i++)
     {
         std::string file = files[i];
+        std::string srcFileName = location+"/"+file;
+        const char* srcFileNameStr = srcFileName.c_str();
+        if (!srcFileNameStr || !srcFileNameStr[0]) continue;
+        
         smsc_log_debug(log, "Processing archive file '%s' ...", file.c_str());
         
         PersistentStorage*  arcDestination = 0;
@@ -211,11 +309,12 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
             hrtime_t prtime=gethrtime();
             long long count=0;
             {
-                Hash<fpos_t> trsFilesPositions;
                 std::string trsFileName = "";
                 
                 PersistentStorage source(location, file);
-                indexator->BeginTransaction(); // start transactional indecies
+                startTransaction(); // start transactional indecies
+                if (!transactionSrcFiles.Exists(srcFileNameStr))
+                     transactionSrcFiles.Insert(srcFileNameStr, true);
 
                 while (true)
                 {
@@ -259,7 +358,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                         if (bNewArcFile) // destination file was switched
                         {
                             bNewArcFile = false;
-                            trsPosition = trsFilesPositions.GetPtr(trsFileNameStr);
+                            trsPosition = transactionTrsFiles.GetPtr(trsFileNameStr);
                             if (!trsPosition) // check reopened destination file
                             {
                                 fpos_t trans_position = 0;
@@ -287,10 +386,11 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                         txtDestination->writeRecord(id, sms);
                         arcDestination->writeRecord(id, sms);
                         arcDestination->getPos(&position);
+                        transactionSmsCount++;
                         
-                        trsPosition = trsFilesPositions.GetPtr(trsFileNameStr);
+                        trsPosition = transactionTrsFiles.GetPtr(trsFileNameStr);
                         if (trsPosition) *trsPosition = position;
-                        else trsFilesPositions.Insert(trsFileNameStr, position);
+                        else transactionTrsFiles.Insert(trsFileNameStr, position);
                     }
                     catch (DiskHashDuplicateKeyException& duplicateExc) {
                         smsc_log_warn(log, "SMS #%lld in file '%s' skipped. Details: %s.",
@@ -298,26 +398,15 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                     }
                 } // while all records from source file will not be fetched
 
-                indexator->EndTransaction(); // flush transactional indecies
+                commitTransaction(false); // flush transactional indecies
                 
                 if (arcDestination) { delete arcDestination; arcDestination=0; }
                 if (txtDestination) { delete txtDestination; txtDestination=0; }
-                
-                // write endTransaction positions for all destination files
-                trsFilesPositions.First();
-                char* trsFileNameStr = 0; fpos_t* trsPosition = 0;
-                while (trsFilesPositions.Next(trsFileNameStr, trsPosition))
-                {
-                    if (!trsPosition || !trsFileNameStr || trsFileNameStr[0] == '\0') continue;
-                    TransactionStorage trsFile(trsFileNameStr);
-                    trsFile.setTransactionData(trsPosition);
-                }
             }
             prtime=gethrtime()-prtime;
             double tmInSec=(double)prtime/1000000000.0L;
-            smsc_log_info(log,"Processed file '%s' in %lld msec, %lld sms found, processing speed %lf sms/sec",file.c_str(),prtime/1000000,count,(double)count/tmInSec);
-
-            FileStorage::deleteFile(location, file);
+            smsc_log_info(log,"Processed file '%s' in %lld msec, %lld sms found, processing speed %lf sms/sec",
+                          file.c_str(),prtime/1000000,count,(double)count/tmInSec);
 
         } catch (std::exception& exc) {
           smsc_log_error(log, "Error processing archive file '%s'. Details: %s", file.c_str(), exc.what());
@@ -325,7 +414,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
-          indexator->RollBack();
+          rollbackTransaction();
           if (arcDestination) { delete arcDestination; arcDestination=0; }
           if (txtDestination) { delete txtDestination; txtDestination=0; }
         } catch (...) {
@@ -334,7 +423,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
-          indexator->RollBack();
+          rollbackTransaction();
           if (arcDestination) { delete arcDestination; arcDestination=0; }
           if (txtDestination) { delete txtDestination; txtDestination=0; }
         }

@@ -115,6 +115,18 @@ namespace smsc { namespace store
 
         SmsIndex*   indexator;
 
+        bool         bTransactionOpen;
+        uint64_t     transactionSmsCount,  maxTransactionSms;
+        time_t       transactionStartTime, maxTransactionTime;
+        Hash<fpos_t> transactionTrsFiles;
+        Hash<bool>   transactionSrcFiles;
+
+        void cleanTransaction();
+        void startTransaction();
+        void commitTransaction(bool force=false);
+        void rollbackTransaction();
+
+        void skipProcessedFiles(const std::string& location, Array<std::string>& files);
         void process(const std::string& location, const Array<std::string>& files);
 
     public:
