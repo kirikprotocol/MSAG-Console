@@ -42,7 +42,7 @@ void Convert7BitToText(
   }
   text->len = chars;
   text->bytes[chars] = 0;
-  __trace2__("MAP::7bit->latin1: %s",text->len);
+  __trace2__("MAP::7bit->latin1: %s",text->bytes);
 }
 
 
