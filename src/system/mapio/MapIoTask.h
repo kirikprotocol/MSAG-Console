@@ -82,6 +82,7 @@ extern void MAPSTATS_Update(MAPSTATS);
 extern void MAPSTATS_DumpDialogLC(MapDialog*);
 extern void MAPSTATS_DumpDialog(MapDialog*,time_t,bool);
 extern bool isMapBound();
+extern void AbortMapDialog(unsigned dialogid,unsigned ssn);
 
 enum MapState{
   MAPST_UNKNOWN = 0,
@@ -352,11 +353,12 @@ class MapDialogContainer{
     while(hash_.Next(key,dlg)) {
       if((now-dlg->lockedAt)>processTimeout+1) {
         MAPSTATS_DumpDialog(dlg, now, true);
+        AbortMapDialog(dlg->dialogid_map, dlg->ssn);
         for (;!dlg->chain.empty();dlg->chain.pop_front())
         {
           //drop chain elements
         }
-        _dropDialog(dlg->dialogid_map, dlg->ssn);
+        _dropDialog(dlg);
       } else {
         MAPSTATS_DumpDialog(dlg, now, false);
       }
@@ -620,20 +622,24 @@ public:
     _dropDialog(dialogueid,ssn);
   }
 
+  void _dropDialog(MapDialog* item){
+    if ( item->abonent.length() != 0 && !item->isUSSD) {
+      lock_map.Delete(item->abonent);
+    }
+    hash_.Delete(MKDID(dialogueid,ssn));
+    item->state = MAPST_END;
+    item->Release();
+    if(dialogueid < MAX_DIALOGID_POOLED ) {
+      MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
+    } else {
+      MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_IN);
+    }
+  }
+
   void _dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn){
     MapDialog* item = 0;
     if ( hash_.Get(MKDID(dialogueid,ssn),item) ){
-      if ( item->abonent.length() != 0 && !item->isUSSD) {
-        lock_map.Delete(item->abonent);
-      }
-      hash_.Delete(MKDID(dialogueid,ssn));
-      item->state = MAPST_END;
-      item->Release();
-      if(dialogueid < MAX_DIALOGID_POOLED ) {
-        MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
-      } else {
-        MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_IN);
-      }
+      _dropDialog(item);
     }else{
       __mapdlg_trace2__("has no dialog for dialogid 0x%x",dialogueid);
     }
