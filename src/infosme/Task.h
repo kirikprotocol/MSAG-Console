@@ -186,8 +186,8 @@ namespace smsc { namespace infosme
         Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
              DataSource* dsOwn, DataSource* dsInt);
         
-        void createTable();
-        void dropTable();
+        bool createTable();
+        bool dropTable();
 
         void finalize()
         {

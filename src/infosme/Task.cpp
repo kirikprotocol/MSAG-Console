@@ -171,10 +171,11 @@ const char* NEW_TABLE_STATEMENT_SQL =
 const char* NEW_SD_INDEX_STATEMENT_SQL = 
 "CREATE INDEX %s_SD_IDX ON %s (STATE, SEND_DATE)";
 
-void Task::createTable()
+bool Task::createTable()
 {
     MutexGuard guard(createTableLock);
     
+    bool result = false;
     Connection* connection = 0;
     Statement* statement = 0;
     try
@@ -197,6 +198,7 @@ void Task::createTable()
         statement->execute();
 
         connection->commit();
+        result = true;
     } 
     catch (Exception& exc)
     {
@@ -217,14 +219,17 @@ void Task::createTable()
     }
     if (statement) delete statement;
     if (connection) dsInt->freeConnection(connection);
+
+    return result;
 }
 
 const char* DROP_TABLE_STATEMENT_SQL = "DROP TABLE %s";
 
-void Task::dropTable()
+bool Task::dropTable()
 {
     MutexGuard guard(createTableLock);
     
+    bool result = false;
     Connection* connection = 0;
     Statement* statement = 0;
     try
@@ -239,6 +244,7 @@ void Task::dropTable()
             throw Exception("Failed to create table statement.");
         statement->execute();
         connection->commit();
+        result = true;
     } 
     catch (Exception& exc)
     {
@@ -259,6 +265,8 @@ void Task::dropTable()
     }
     if (statement) delete statement;
     if (connection) dsInt->freeConnection(connection);
+
+    return result;
 }
 
 const char* USER_QUERY_STATEMENT_ID = "%s_USER_QUERY_STATEMENT_ID";
