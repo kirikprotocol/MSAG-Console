@@ -110,7 +110,7 @@
 
 <div class=secButtons>
 <input class=btn type=submit name=btnAdd value="Add new message" title="Add new message">
-<input class=btn type=button name=btnDel value="Delete selected" title="Delete selected" onClick="noValidationSubmit(this)">
+<input class=btn type=button name=btnDel value="Delete selected" title="Delete selected" onClick="return noValidationSubmit(this)">
 </div>
 <%}%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

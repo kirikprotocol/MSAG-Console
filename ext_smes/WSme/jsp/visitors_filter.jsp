@@ -59,8 +59,8 @@
 
 <div class=secButtons>
 <input class=btn type=submit name=mbApply value="Apply" title="Apply filter">
-<input class=btn type=button name=mbClear value="Clear" title="Clear filter" onclick="noValidationSubmit(this)">
-<input class=btn type=button name=mbCancel value="Cancel" onClick="noValidationSubmit(this)">
+<input class=btn type=button name=mbClear value="Clear" title="Clear filter" onclick="return noValidationSubmit(this)">
+<input class=btn type=button name=mbCancel value="Cancel" onClick="return noValidationSubmit(this)">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

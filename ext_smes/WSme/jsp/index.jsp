@@ -62,10 +62,10 @@ function showhide(elem)
 }
 </script>
 <dl><%-- ############################ StartupLoader ########################### --%>
-<dt class=secTitleClosed onclick='showhide(this)'>StartupLoader</dt>
+<dt class=secTitleClosed onclick='return showhide(this)'>StartupLoader</dt>
 <dd style="display:none">
 	<dl>
-	<dt class=secTitleClosed onclick='showhide(this)'>DataSourceDrivers</dt>
+	<dt class=secTitleClosed onclick='return showhide(this)'>DataSourceDrivers</dt>
 	<dd style="display:none">
 	<%
     for (Iterator i = bean.getDatasourceDrivers().iterator(); i.hasNext();)
@@ -73,7 +73,7 @@ function showhide(elem)
       String name = (String) i.next();
 			%>
 		<dl>
-		<dt class=secTitleClosed onclick='showhide(this)'><%=name%></dt>
+		<dt class=secTitleClosed onclick='return showhide(this)'><%=name%></dt>
 		<dd style="display:none">
 			<table class=secRep cellspacing=1 width="100%">
 			<%row=0;%>
@@ -95,7 +95,7 @@ function showhide(elem)
 </dd>
 </dl>
 <dl><%-- ############################ WSme ########################### --%>
-<dt class=secTitleOpened onclick='showhide(this)'>WSme</dt>
+<dt class=secTitleOpened onclick='return showhide(this)'>WSme</dt>
 <dd style="display">
 <%row=0;%>
 <table class=secRep cellspacing=1 width="100%">
@@ -110,7 +110,7 @@ function showhide(elem)
 </tr>
 </table>
 <dl><%-- ############################ WSme.SMSC ########################### --%>
-<dt class=secTitleClosed onclick='showhide(this)'>SMSC</dt>
+<dt class=secTitleClosed onclick='return showhide(this)'>SMSC</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -139,7 +139,7 @@ function showhide(elem)
 </dd>
 </dl>
 <dl><%-- ############################ WSme.ThreadPool ########################### --%>
-<dt class=secTitleClosed onclick='showhide(this)'>ThreadPool</dt>
+<dt class=secTitleClosed onclick='return showhide(this)'>ThreadPool</dt>
 <dd style="display:none">
 <%row=0;%>
 <table class=secRep cellspacing=1 width="100%">
@@ -156,7 +156,7 @@ function showhide(elem)
 </dd>
 </dl>
 <dl><%-- ############################ WSme.DataSource ########################### --%>
-<dt class=secTitleClosed onclick='showhide(this)'>DataSource</dt>
+<dt class=secTitleClosed onclick='return showhide(this)'>DataSource</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -185,7 +185,7 @@ function showhide(elem)
 </dd>
 </dl>
 <dl><%-- ############################ WSme.Admin ########################### --%>
-<dt class=secTitleClosed onclick='showhide(this)'>Admin</dt>
+<dt class=secTitleClosed onclick='return showhide(this)'>Admin</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -200,10 +200,10 @@ function showhide(elem)
 </tr>
 </table>
 <dl><%-- ############################ WSme.Admin.Web ########################### --%>
-<dt class=secTitleClosed onclick='showhide(this)'>Web</dt>
+<dt class=secTitleClosed onclick='return showhide(this)'>Web</dt>
 <dd style="display:none">
 <dl><%-- ############################ WSme.Admin.Web.jdbc ########################### --%>
-<dt class=secTitleOpened onclick='showhide(this)'>jdbc</dt>
+<dt class=secTitleOpened onclick='return showhide(this)'>jdbc</dt>
 <dd style="display">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -229,7 +229,7 @@ function showhide(elem)
 </dd>
 </dl>
 <dl><%-- ############################ WSme.LangManager ########################### --%>
-<dt class=secTitleClosed onclick='showhide(this)'>LangManager</dt>
+<dt class=secTitleClosed onclick='return showhide(this)'>LangManager</dt>
 <dd style="display:none">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
@@ -242,10 +242,10 @@ function showhide(elem)
 </dd>
 </dl>
 <dl><%-- ############################ WSme.AdManager ########################### --%>
-<dt class=secTitleClosed onclick='showhide(this)'>AdManager</dt>
+<dt class=secTitleClosed onclick='return showhide(this)'>AdManager</dt>
 <dd style="display:none">
 <dl><%-- ############################ WSme.AdManager.History ########################### --%>
-<dt class=secTitleOpened onclick='showhide(this)'>History</dt>
+<dt class=secTitleOpened onclick='return showhide(this)'>History</dt>
 <dd style="display">
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>

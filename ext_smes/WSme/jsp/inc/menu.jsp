@@ -20,13 +20,13 @@ function setSort(sorting)
 
 <table>
 	<tr>
-	<th>&nbsp;<a href="#" onclick='clickMenu(<%= WSmeFormBean.RESULT_DONE%>)' <%=
+	<th>&nbsp;<a href="#" onclick='return clickMenu(<%= WSmeFormBean.RESULT_DONE%>)' <%=
       ((bean.getMenuId() == WSmeFormBean.RESULT_DONE) ? "disabled":"")%>>Configuration</a>&nbsp;</th>
-	<th>&nbsp;<a href="#" onclick='clickMenu(<%= WSmeFormBean.RESULT_VISITORS%>)' <%=
+	<th>&nbsp;<a href="#" onclick='return clickMenu(<%= WSmeFormBean.RESULT_VISITORS%>)' <%=
       ((bean.getMenuId() == WSmeFormBean.RESULT_VISITORS) ? "disabled":"")%>>Visitors</a>&nbsp;</th>
-	<th>&nbsp;<a href="#" onclick='clickMenu(<%= WSmeFormBean.RESULT_LANGS%>)' <%=
+	<th>&nbsp;<a href="#" onclick='return clickMenu(<%= WSmeFormBean.RESULT_LANGS%>)' <%=
       ((bean.getMenuId() == WSmeFormBean.RESULT_LANGS) ? "disabled":"")%>>Languages</a>&nbsp;</th>
-	<th>&nbsp;<a href="#" onclick='clickMenu(<%= WSmeFormBean.RESULT_ADS%>)' <%=
+	<th>&nbsp;<a href="#" onclick='return clickMenu(<%= WSmeFormBean.RESULT_ADS%>)' <%=
       ((bean.getMenuId() == WSmeFormBean.RESULT_ADS) ? "disabled":"")%>>Messages</a>&nbsp;</th>
 	</tr>
 </table>
