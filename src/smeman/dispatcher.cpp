@@ -24,6 +24,8 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long /*timeout*/,int* idx)
         if ( unit->proxy->hasInput() )
         {
           unit->prior = unit->proxy->getPriority();
+          __require__ ( unit->prior > SmeProxyPriorityMinBr && 
+                        unit->prior < SmeProxyPriorityMaxBr );
           if ( unit->prev ) unit->prev->next = unit->next; // remove from list
           else
           {
@@ -41,12 +43,12 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long /*timeout*/,int* idx)
       if ( queuedProxies )
       {
         Unit* prior_unit = 0;
-        SmeProxyPriority prior = SmeProxyPriorityMin;
+        SmeProxyPriority prior = SmeProxyPriorityMinBr;
         unit = queuedProxies;
         while ( unit ) {
           SmeProxyPriority tmp;
-          __require__ ( unit->prior > SmeProxyPriorityMin && 
-                        unit->prior < SmeProxyPriorityMax );
+          __require__ ( unit->prior > SmeProxyPriorityMinBr && 
+                        unit->prior < SmeProxyPriorityMaxBr );
           if ( (tmp = unit->prior) > prior )
           {
             prior = tmp;
