@@ -428,8 +428,13 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		pduReg->registerMonitor(monitor); //тест кейсы на финализированные pdu
 		__tc_ok_cond__;
 		//зарегистрировать delivery report мониторы
-		registerDeliveryReportMonitors(monitor, pduReg, deliveryResp.first,
-			recvTime, deliveryResp.second);
+		SmeType smeType = fixture->smeReg->getSmeBindType(origAddr);
+		if (smeType != SME_TRANSMITTER)
+		{
+			__require__(smeType == SME_RECEIVER || smeType == SME_TRANSCEIVER);
+			registerDeliveryReportMonitors(monitor, pduReg, deliveryResp.first,
+				recvTime, deliveryResp.second);
+		}
 	}
 	catch (TCException&)
 	{
