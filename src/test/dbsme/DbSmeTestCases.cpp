@@ -111,6 +111,7 @@ const string DbSmeTestCases::getCmdText(DbSmeTestRecord* rec,
 	if (rec->checkDate())
 	{
 		__require__(df);
+		__tc__("submitDbSmeCmd.dateMixedCase"); __tc_ok__;
 		string str = df->format(rec->getDate());
 		s << __delim__ << mixedCase(str);
 	}
