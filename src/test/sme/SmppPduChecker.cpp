@@ -185,7 +185,7 @@ void SmppPduChecker::processResp(ResponseMonitor* monitor,
 				if (replaceData)
 				{
 					replaceData->valid = false;
-					replaceData = replaceData->replacePdu;
+					__trace2__("replaceData = {%s}", replaceData->str().c_str());
 				}
 			}
 			break;

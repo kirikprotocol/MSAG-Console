@@ -67,7 +67,7 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 				static const DateFormatter df2("dd-MMMM-yyyy hh:mm:ss t");
 				ostringstream s;
                 s << "(" << df1.format(t) << ") ";
-				s << "Ваше сообщение отправленное по адресу ";
+				s << "Ваше сообщение отправленное ";
 				s << SmsUtil::configString(destAlias);
 				s << " " << df2.format(t);
 				s << " не было доставлено: ";
