@@ -35,6 +35,59 @@ inline bool SmppPduChecker::checkTransmitter()
 	return true;
 }
 
+SmppPduChecker::MapMsgError SmppPduChecker::checkMapMsg(SmsMsg* msg)
+{
+	__require__(msg);
+	if (msg->udhi)
+	{
+		int msgLen = msg->len;
+		if (msg->dataCoding == DEFAULT || msg->dataCoding == SMSC7BIT)
+		{
+			int udhLen = 1 + *(unsigned char*) msg->msg;
+			int textLen = msg->len - udhLen;
+			for (int i = udhLen; i < msg->len; i++)
+			{
+				switch (msg->msg[i])
+				{
+					case '|':
+					case '^':
+					case '{':
+					case '}':
+					case '[':
+					case ']':
+					case '~':
+					case '\\':
+						textLen++;
+						break;
+				}
+			}
+			msgLen = udhLen + (textLen * 7 + 7) / 8;
+		}
+		if (msgLen > MAX_MAP_SM_LENGTH)
+		{
+			return UDHI_SINGLE_SEGMENT_ERR;
+		}
+	}
+	else
+	{
+		int numSegments; //примерное количество сегментов без учета переноса слов
+		int msgLen = msg->len;
+		if (msg->dataCoding == DEFAULT || msg->dataCoding == SMSC7BIT)
+		{
+			numSegments = (msg->len + 152) / 153;
+		}
+		else
+		{
+			numSegments = (msg->len + 133) / 134;
+		}
+		if (numSegments > 255)
+		{
+			return MAX_SEGMENTS_ERR;
+		}
+	}
+	return MSG_OK;
+}
+
 #define __check_len__(errCode, field, maxLen) \
 	if (strlen(nvl(field)) > maxLen) { \
 		/*res.insert(errCode);*/ \
@@ -79,53 +132,14 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	if (pduData->objProps.count("map.msg"))
 	{
 		SmsMsg* msg = dynamic_cast<SmsMsg*>(pduData->objProps["map.msg"]);
-		__require__(msg);
-		if (msg->udhi)
+		switch (checkMapMsg(msg))
 		{
-			int msgLen = msg->len;
-			if (msg->dataCoding == DEFAULT || msg->dataCoding == SMSC7BIT)
-			{
-				int udhLen = 1 + *(unsigned char*) msg->msg;
-				int textLen = msg->len - udhLen;
-				for (int i = udhLen; i < msg->len; i++)
-				{
-					switch (msg->msg[i])
-					{
-						case '|':
-						case '^':
-						case '{':
-						case '}':
-						case '[':
-						case ']':
-						case '~':
-						case '\\':
-							textLen++;
-							break;
-					}
-				}
-				msgLen = udhLen + (textLen * 7 + 7) / 8;
-			}
-			if (msgLen > MAX_MAP_SM_LENGTH)
-			{
+			case UDHI_SINGLE_SEGMENT_ERR:
 				res.insert(ESME_RSUBMITFAIL);
-			}
-		}
-		else
-		{
-			int numSegments; //примерное количество сегментов без учета переноса слов
-			int msgLen = msg->len;
-			if (msg->dataCoding == DEFAULT || msg->dataCoding == SMSC7BIT)
-			{
-				numSegments = (msg->len + 152) / 153;
-			}
-			else
-			{
-				numSegments = (msg->len + 133) / 134;
-			}
-			if (numSegments > 255)
-			{
+				break;
+			case MAX_SEGMENTS_ERR:
 				res.insert(ESME_RINVMSGLEN);
-			}
+				break;
 		}
 	}
 	//без проверки на bind статус
@@ -188,6 +202,12 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 		res.insert(ESME_RINVBNDSTS);
 		return res;
 	}
+	//если в замещаемом сообщении message_payload
+	if (pdu->get_message().size_shortMessage() &&
+		pdu->get_optional().has_messagePayload())
+	{
+		res.insert(ESME_RREPLACEFAIL);
+	}
 	//неправильная длина полей
 	__check_len__(ESME_RINVMSGID,
 		smsId.c_str(), MAX_MSG_ID_LENGTH);
@@ -197,6 +217,20 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 		pdu->get_message().get_validityPeriod(), MAX_SMPP_TIME_LENGTH);
 	__check_len__(ESME_RINVSCHED,
 		pdu->get_message().get_scheduleDeliveryTime(), MAX_SMPP_TIME_LENGTH);
+	//map
+	if (pduData->objProps.count("map.msg"))
+	{
+		SmsMsg* msg = dynamic_cast<SmsMsg*>(pduData->objProps["map.msg"]);
+		switch (checkMapMsg(msg))
+		{
+			case UDHI_SINGLE_SEGMENT_ERR:
+				res.insert(ESME_RREPLACEFAIL);
+				break;
+			case MAX_SEGMENTS_ERR:
+				__unreachable__("Impossible");
+				break;
+		}
+	}
 	//проверки
 	__cfg_int__(maxValidPeriod);
 	if (!validTime || validTime < pduData->sendTime ||
@@ -208,7 +242,7 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	{
 		res.insert(ESME_RINVSCHED);
 	}
-	if (!replacePduData)
+	if (!replacePduData || !smsId.length())
 	{
 		res.insert(ESME_RINVMSGID);
 	}
@@ -231,7 +265,7 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 		PduSubmitSm* replacePdu = reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
 		if (pdu->get_message().get_source() != replacePdu->get_message().get_source())
 		{
-			res.insert(ESME_RINVSRCADR);
+			res.insert(ESME_RREPLACEFAIL);
 		}
 		if (replacePduFlag != PDU_REQUIRED_FLAG)
 		{

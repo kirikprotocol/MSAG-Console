@@ -46,7 +46,16 @@ private:
 	SmppFixture* fixture;
 	CheckList* chkList;
 
+	typedef enum
+	{
+		MSG_OK = 0,
+		UDHI_SINGLE_SEGMENT_ERR = 1, //установлен udhi и сообщение разбивается на несколько сегментов
+		MAX_SEGMENTS_ERR = 2 //кол-во сегментов > 255
+	} MapMsgError;
+
+
 	bool checkTransmitter();
+	MapMsgError checkMapMsg(SmsMsg* msg);
 	void checkQuerySmRespStatus(ResponseMonitor* monitor, PduQuerySmResp& respPdu,
 		time_t respTime);
 };
