@@ -861,7 +861,7 @@ struct PduBindTRXResp //: public SmppHeader//MemoryManagerUnit
                       _s_ref_property__(SmppHeader,header)
                       _s_cstr_property__(systemId)
                     //optional
-                      _s_int_property__(int8_t,scInterfaceVersion));
+                      _s_int_property__(int8_t,scInterfaceVersion)+4);
   }
   inline void dump(__LOG__ log,int align = 0)
   {

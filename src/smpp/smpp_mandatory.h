@@ -68,7 +68,7 @@ inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
       fillSmppHeader(stream,pdu->header);
       fillCOctetStr(stream,pdu->systemId);
       fillX(stream,SmppOptionalTags::scInterfaceVersion);
-      fillX(stream,1);
+      fillX(stream,(uint16_t)1);
       fillX(stream,pdu->scInterfaceVersion);
       return true;
     }
@@ -280,11 +280,11 @@ inline SmppHeader* fetchSmppPdu(SmppStream* stream)
       fetchX(stream,sm.dataCoding);
       fetchX(stream,sm.smDefaultMsgId);
       uint8_t smLength = 0;
-			fetchX(stream,smLength);
-			sm.shortMessage.dispose();
+      fetchX(stream,smLength);
+      sm.shortMessage.dispose();
       if ( smLength )
-				fetchOctetStr(stream,sm.shortMessage,smLength);
-			fetchSmppOptional(stream,&pdu->optional);
+        fetchOctetStr(stream,sm.shortMessage,smLength);
+      fetchSmppOptional(stream,&pdu->optional);
       return reinterpret_cast<SmppHeader*>(pdu.release());
     }
     case SUBMIT_SM_RESP:
