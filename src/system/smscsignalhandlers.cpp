@@ -78,7 +78,8 @@ void registerSignalHandlers_internal()
 	sigaddset(&set, SIGFPE);
 	sigaddset(&set, SIGILL);
 	sigaddset(&set, SIGSEGV);
-  sigaddset(&set, SIGALRM);
+  	sigaddset(&set, SIGALRM);
+  	sigaddset(&set, SIGABRT);
 	sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
 //#ifndef SPARC
 //	sigaddset(&set,SIGQUIT);
@@ -93,7 +94,8 @@ void registerSignalHandlers_internal()
 	sigset(SIGFPE,  sigDumpDispatcher);
 	sigset(SIGILL,  sigDumpDispatcher);
 	sigset(SIGSEGV, sigDumpDispatcher);
-  sigset(SIGALRM, sigDumpDispatcher);
+	signal(SIGABRT, sigDumpDispatcher);
+	sigset(SIGALRM, sigDumpDispatcher);
 	sigset(smsc::system::SHUTDOWN_SIGNAL,  sigShutdownHandler);
 }
 
