@@ -2,7 +2,7 @@
   $Id$
 */
 #if !defined (DISABLE_TRACING)
-#define DISABLE_TRACING
+//#define DISABLE_TRACING
 #endif
 #include "aliasman.h"
 #include <stdexcept>

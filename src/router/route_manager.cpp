@@ -3,7 +3,7 @@
 */
 
 #if !defined DISABLE_TRACING
-#define DISABLE_TRACING
+//#define DISABLE_TRACING
 #endif
 
 #include "route_manager.h"
@@ -562,7 +562,7 @@ __synchronized__
   if ( info ) *info = rec->info;
   if ( idx && rec->info.enabling ) *idx = rec->proxyIdx;
   if (!rec->info.enabling) return false;
-	return rec->info.enabling;
+  return rec->info.enabling;
 }
 
 /*RouteInfo RouteManager::getRouteInfo(int idx)
