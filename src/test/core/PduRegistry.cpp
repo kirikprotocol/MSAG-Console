@@ -163,17 +163,17 @@ PduRegistry::PduDataIterator* PduRegistry::getPduByValidTime(time_t t1, time_t t
 	return new PduDataIterator(it1, it2);
 }
 
-int PduRegistry::size()
+int PduRegistry::size() const
 {
 	return seqNumMap.size();
 }
 
-void PduRegistry::dump(FILE* log)
+void PduRegistry::dump(FILE* log) const
 {
 	using namespace smsc::smpp;
 	using namespace smsc::smpp::SmppCommandSet;
 	fprintf(log, "PduRegistry::dump()\n");
-	for (SeqNumMap::iterator it = seqNumMap.begin(); it != seqNumMap.end(); it++)
+	for (SeqNumMap::const_iterator it = seqNumMap.begin(); it != seqNumMap.end(); it++)
 	{
 		PduData* data = it->second;
 		static const char* fmt = "%Y-%m-%d %H:%M:%S";

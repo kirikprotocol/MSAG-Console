@@ -27,6 +27,40 @@ static const int PDU_RECEIVED_FLAG = 0x1; //pdu получена вовремя
 static const int PDU_MISSING_ON_TIME_FLAG = 0x2;
 static const int PDU_NOT_EXPECTED_FLAG = 0x3; //данной pdu быть не должно
 
+/*
+struct PduReceiptData
+{
+	static int rescheduleTimes[];
+	int flag;
+	const time_t startTime;
+	time_t receiptTime;
+
+	PduReceiptData() :
+		flag(PDU_REQUIRED_FLAG), startTime(0), receiptTime(0) {}
+
+	void eval(time_t time, int& attempt, time_t& diff);
+};
+
+int PduReceiptData::rescheduleTimes[] = {10};
+
+inline void PduReceiptData::eval(time_t time, int& attempt, time_t& diff)
+{
+	int num = sizeof(rescheduleTimes) / sizeof(int);
+	time_t t = startTime;
+	diff = abs(time - startTime);
+	for (int attempt = 1; attempt < num; attempt++)
+	{
+		if (abs(time - t) < diff)
+		{
+			diff = time - t;
+			t += rescheduleTimes[attempt - 1];
+			continue;
+		}
+		return;
+	}
+}
+*/
+
 /**
  * Структура для хранения данных pdu.
  */
@@ -171,9 +205,9 @@ public:
 
 	PduDataIterator* getPduByValidTime(time_t t1, time_t t2);
 
-	int size();
+	int size() const;
 
-	void dump(FILE* log);
+	void dump(FILE* log) const;
 };
 
 }
