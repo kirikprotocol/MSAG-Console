@@ -69,13 +69,22 @@ void Et96MapIndicationError(USHORT_T error,UCHAR_T* errString)
 void MapIoTask::deinit()
 {
   USHORT_T result;
-  warning_if(Et96MapUnbindReq(SSN)!=ET96MAP_E_OK);  
+  result = Et96MapUnbindReq(SSN);
+  if ( result != MSG_OK){
+    __trace2__("MAP::error at Et96MapUnbindReq errcode 0x%hx",result);
+  }
   result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   if ( result != MSG_OK){
     __trace2__("MAP::error at MsgRel errcode 0x%hx",result);
   }
-  warning_if(MsgClose(MY_USER_ID)!=MSG_OK);
-  warning_if(MsgExit()!=MSG_OK);
+  result = MsgClose(MY_USER_ID);
+  if ( result != MSG_OK){
+    __trace2__("MAP::error at MsgClose errcode 0x%hx",result);
+  }
+  result = MsgExit();
+  if ( result != MSG_OK){
+    __trace2__("MAP::error at MsgExit errcode 0x%hx",result);
+  }
 }
 
 void MapIoTask::dispatcher()
