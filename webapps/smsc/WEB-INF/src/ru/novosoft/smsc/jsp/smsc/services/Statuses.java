@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.jsp.smsc.services;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.SmeStatus;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.PageBean;
 
@@ -16,22 +17,17 @@ public class Statuses extends PageBean
 {
 	public List getServiceIds()
 	{
-		try
-		{
-			return hostsManager.getServiceIds();
-		}
-		catch (AdminException e)
-		{
-			logger.debug("couldn't get service ids", e);
-			return new LinkedList();
-		}
+		return appContext.getSmeManager().getSmeNames();
 	}
 
 	public byte getServiceStatus(String id)
 	{
 		try
 		{
-			return hostsManager.getServiceInfo(id).getStatus();
+			if (hostsManager.isService(id))
+				return hostsManager.getServiceInfo(id).getStatus();
+			else
+				return ServiceInfo.STATUS_UNKNOWN;
 		}
 		catch (AdminException e)
 		{
@@ -40,16 +36,16 @@ public class Statuses extends PageBean
 		}
 	}
 
-	public boolean isServiceConnected(String id)
+	public SmeStatus getSmeStatus(String id)
 	{
 		try
 		{
-			return appContext.getSmeManager().isSmeConnected(id);
+			return appContext.getSmeManager().smeStatus(id);
 		}
 		catch (AdminException e)
 		{
 			logger.error("Couldn't get service \"" + id + "\" connection status", e);
-			return false;
+			return null;
 		}
 	}
 }

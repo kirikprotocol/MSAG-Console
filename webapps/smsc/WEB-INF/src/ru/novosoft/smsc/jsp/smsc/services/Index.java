@@ -7,6 +7,7 @@ package ru.novosoft.smsc.jsp.smsc.services;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.route.SmeStatus;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.*;
 
@@ -245,6 +246,19 @@ public class Index extends PageBean
 		else
 			return ServiceInfo.STATUS_RUNNING;
 	}
+	public SmeStatus getSmeStatus(String id)
+	{
+		try
+		{
+			return appContext.getSmeManager().smeStatus(id);
+		}
+		catch (AdminException e)
+		{
+			logger.error("Couldn't get sme status for service \"" + id + '"', e);
+			error(SMSCErrors.error.services.couldntGetServiceInfo, id);
+			return null;
+		}
+	}
 
 	public boolean isServiceDisabled(String serviceId)
 	{
@@ -263,7 +277,14 @@ public class Index extends PageBean
 	{
 		try
 		{
-			return appContext.getSmeManager().isSmeConnected(serviceId);
+			final SmeStatus smeStatus = appContext.getSmeManager().smeStatus(serviceId);
+			if (smeStatus != null)
+				return smeStatus.isConnected();
+			else
+			{
+				logger.debug("SME ID \"" + serviceId + "\" not found");
+				return false;
+			}
 		}
 		catch (AdminException e)
 		{

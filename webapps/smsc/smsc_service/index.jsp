@@ -1,5 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ include file="/WEB-INF/inc/service_status.jsp"%>
+<%@ include file="/WEB-INF/inc/smsc_status.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.smsc_service.Index,
                  ru.novosoft.smsc.admin.service.ServiceInfo,
 				 ru.novosoft.smsc.admin.Constants"%>
@@ -26,7 +26,7 @@ switch(bean.process(appContext, errorMessages, request, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SMSC";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-SMSC is <%=serviceStatus(Constants.SMSC_SME_ID, bean.getStatus(), "SMSC_STATUS_ELEM_ID")%>
+SMSC is <%=smscStatus(bean.getStatus(), "SMSC_STATUS_ELEM_ID")%>
 <div class=secButtons>
 <input class=btn type=submit id=mbStart name=mbStart value="Start" title="Start SMSC" <%=bean.getStatus() != ServiceInfo.STATUS_STOPPED ? "disabled" : ""%>>
 <input class=btn type=submit id=mbStop name=mbStop value="Stop" title="Stop  SMSC" <%=bean.getStatus() != ServiceInfo.STATUS_RUNNING ? "disabled" : ""%>>

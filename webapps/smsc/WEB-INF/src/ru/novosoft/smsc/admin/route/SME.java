@@ -19,6 +19,7 @@ public class SME
 	public static final byte MODE_TX = 1;
 	public static final byte MODE_RX = 2;
 	public static final byte MODE_TRX = 3;
+	public static final byte MODE_UNKNOWN = 0;
 
 	private String id = null;
 	private int priority = 0;

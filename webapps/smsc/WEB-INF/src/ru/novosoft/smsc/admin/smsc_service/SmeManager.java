@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.smsc_service;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.SME;
+import ru.novosoft.smsc.admin.route.SmeStatus;
 
 import java.util.Collection;
 import java.util.List;
@@ -32,7 +33,7 @@ public interface SmeManager
 
 	void save() throws AdminException;
 
-	boolean isSmeConnected(String id) throws AdminException;
+	SmeStatus smeStatus(String id) throws AdminException;
 
 	void disconnectSmes(List list) throws AdminException;
 }

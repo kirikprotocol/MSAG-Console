@@ -68,16 +68,16 @@ function editService(serviceId)
 <col width="1%">
 <col width="60%" align=left>
 <col width="20%" align=left>
-<col width="20%" align=center>
+<col align=center>
+<col align=center>
+<col align=center>
 <thead>
 <tr>
 	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th>&nbsp;</th>
 	<th>service</th>
 	<th>host</th>
-	<th>&nbsp;</th>
-	<th>&nbsp;</th>
-	<th>status</th>
+	<th colspan="3">status</th>
 </tr>
 </thead>
 <tbody>
@@ -115,7 +115,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 		}
 	%></td>
 	<td><%=bean.isServiceDisabled(serviceId) ? "<span style=\"color:red\">disabled</span>" : "<span style=\"color:green\">enabled</span>"%></td>
-	<td><%=serviceConnected(serviceId, bean.isServiceConnected(serviceId), "CONNECTION_STATUSERVICE_"+encodedServiceId)%></td>
+	<td><%=smeStatus(serviceId, bean.isServiceConnected(serviceId), "CONNECTION_STATUSERVICE_"+encodedServiceId, bean.getSmeStatus(serviceId))%></td>
 	<td><%
 		if (bean.isService(serviceId))
 		{

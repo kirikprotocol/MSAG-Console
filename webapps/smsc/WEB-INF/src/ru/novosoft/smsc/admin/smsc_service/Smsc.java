@@ -51,10 +51,10 @@ public class Smsc extends Service
 	private Method sme_add_method = null;
 	private Method sme_remove_method = null;
 	private Method sme_update_method = null;
-	private Method sme_isConnected_method = null;
+	private Method sme_status = null;
 	private Method sme_disconnect = null;
 
-	private Map smeIsConnectedMap = new HashMap();
+	private Map smeStatuses = new HashMap();
 
 
 	private DistributionListAdmin distributionListAdmin = null;
@@ -238,7 +238,7 @@ public class Smsc extends Service
 
 	protected void checkComponents()
 	{
-		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null || sme_isConnected_method == null || sme_disconnect == null)
+		if (apply_aliases_method == null || apply_routes_method == null || lookup_profile_method == null || update_profile_method == null || flush_statistics_method == null || process_cancel_messages_method == null || apply_smsc_config_method == null || apply_services_method == null || msc_registrate_method == null || msc_unregister_method == null || msc_block_method == null || msc_clear_method == null || msc_list_method == null || sme_add_method == null || sme_remove_method == null || sme_update_method == null || sme_status == null || sme_disconnect == null)
 		{
 			try
 			{
@@ -262,7 +262,7 @@ public class Smsc extends Service
 				sme_add_method = (Method) smsc_component.getMethods().get("sme_add");
 				sme_remove_method = (Method) smsc_component.getMethods().get("sme_remove");
 				sme_update_method = (Method) smsc_component.getMethods().get("sme_update");
-				sme_isConnected_method = (Method) smsc_component.getMethods().get("sme_isConnected");
+				sme_status = (Method) smsc_component.getMethods().get("sme_status");
 				sme_disconnect = (Method) smsc_component.getMethods().get("sme_disconnect");
 			}
 			catch (AdminException e)
@@ -449,27 +449,26 @@ public class Smsc extends Service
 			throw new AdminException("Error in response");
 	}
 
-	public Map smeIsConnected() throws AdminException
+	public SmeStatus getSmeStatus(String id) throws AdminException
 	{
 		final long currentTime = System.currentTimeMillis();
 		if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp)
 		{
 			serviceRefreshTimeStamp = currentTime;
-			smeIsConnectedMap.clear();
+			smeStatuses.clear();
 			checkComponents();
-			Object result = call(smsc_component, sme_isConnected_method, Type.Types[Type.StringListType], new HashMap());
+			Object result = call(smsc_component, sme_status, Type.Types[Type.StringListType], new HashMap());
 			if (!(result instanceof List))
 				throw new AdminException("Error in response");
 
 			for (Iterator i = ((List) result).iterator(); i.hasNext();)
 			{
 				String s = (String) i.next();
-				smeIsConnectedMap.put(s.substring(1), new Boolean(s.charAt(0) == '+'));
+				SmeStatus smeStatus = new SmeStatus(s);
+				smeStatuses.put(smeStatus.getId(), smeStatus);
 			}
-			return smeIsConnectedMap;
 		}
-		else
-			return smeIsConnectedMap;
+		return (SmeStatus) smeStatuses.get(id);
 	}
 
 	public void disconnectSmes(List smeIdsToDisconnect) throws AdminException

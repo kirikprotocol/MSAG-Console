@@ -4,8 +4,7 @@ import org.apache.log4j.Category;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.route.SME;
-import ru.novosoft.smsc.admin.route.SMEList;
+import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.util.*;
 import ru.novosoft.smsc.util.xml.Utils;
@@ -137,10 +136,9 @@ public class SmeManagerImpl implements SmeManager
 		}
 	}
 
-	public boolean isSmeConnected(String id) throws AdminException
+	public SmeStatus smeStatus(String id) throws AdminException
 	{
-		final Boolean connected = (Boolean)smsc.smeIsConnected().get(id);
-		return connected != null && connected.booleanValue();
+		return smsc.getSmeStatus(id);
 	}
 
 	public synchronized SME update(SME newSme) throws AdminException
