@@ -27,24 +27,24 @@ ProfilerTestCases::ProfilerTestCases(Profiler* _profiler,
   ProfileRegistry* _profileReg, CheckList* _chkList)
   : profiler(_profiler), profileReg(_profileReg), chkList(_chkList)
 {
-  //__require__(profiler);
-  //__require__(profileReg);
-  //__require__(chkList);
+	//__require__(profiler);
+	//__require__(profileReg);
+	//__require__(chkList);
 }
 
 Category& ProfilerTestCases::getLog()
 {
-  static Category& log = Logger::getCategory("ProfilerTestCases");
-  return log;
+	static Category& log = Logger::getCategory("ProfilerTestCases");
+	return log;
 }
 
 void ProfilerTestCases::fillAddressWithQuestionMarks(Address& addr, int len)
 {
-  __require__(len > 0 && len <= addr.getLength());
-  AddressValue addrVal;
-  uint8_t addrLen = addr.getValue(addrVal);
-  memset(addrVal + addrLen - len, '?', len);
-  addr.setValue(addrLen, addrVal);
+	__require__(len > 0 && len <= addr.getLength());
+	AddressValue addrVal;
+	uint8_t addrLen = addr.getValue(addrVal);
+	memset(addrVal + addrLen - len, '?', len);
+	addr.setValue(addrLen, addrVal);
 }
 
 bool ProfilerTestCases::updateProfile(const char* tc, int num,
@@ -229,120 +229,121 @@ void ProfilerTestCases::lookup(const Address& addr)
 
 void ProfilerTestCases::putCommand(const Address& addr, uint8_t dataCoding, int num)
 {
-  __require__(profiler);
-  TCSelector s(num, 9);
-  __decl_tc12__;
-  for (; s.check(); s++)
-  {
-    try
-    {
-      SMS sms;
-      SmsUtil::setupRandomCorrectSms(&sms);
-      sms.setOriginatingAddress(addr);
-      __cfg_addr__(profilerAddr);
-      sms.setDestinationAddress(profilerAddr);
-      string text;
-      int cmdType, codepage, reportoptions;
-      switch (s.value())
-      {
-        case 1: //report none
-          __tc1__("putCommand.reportOptions.reportNoneMixedCase");
-          text = "RePoRT NoNe";
-          reportoptions = ProfileReportOptions::ReportNone;
-          cmdType = UPDATE_REPORT_OPTIONS;
-          break;
-        case 2: //report none
-          __tc1__("putCommand.reportOptions.reportNoneSpaces");
-          text = "  rEpOrt  nOnE  ";
-          reportoptions = ProfileReportOptions::ReportNone;
-          cmdType = UPDATE_REPORT_OPTIONS;
-          break;
-        case 3: //report full
-          __tc1__("putCommand.reportOptions.reportFullMixedCase");
-          text = "RePoRT FuLL";
-          reportoptions = ProfileReportOptions::ReportFull;
-          cmdType = UPDATE_REPORT_OPTIONS;
-          break;
-        case 4: //report full
-          __tc1__("putCommand.reportOptions.reportFullSpaces");
-          text = "  rEpOrt  fUll  ";
-          reportoptions = ProfileReportOptions::ReportFull;
-          cmdType = UPDATE_REPORT_OPTIONS;
-          break;
-        case 5: //ucs2 codepage
-          __tc1__("putCommand.dataCoding.ucs2CodepageMixedCase");
-          text = "uCS2";
-          codepage = ProfileCharsetOptions::Ucs2;
-          cmdType = UPDATE_CODE_PAGE;
-          break;
-        case 6: //usc2 codepage
-          __tc1__("putCommand.dataCoding.ucs2CodepageSpaces");
-          text = "  Ucs2  ";
-          codepage = ProfileCharsetOptions::Ucs2;
-          cmdType = UPDATE_CODE_PAGE;
-          break;
-        case 7: //default codepage
-          __tc1__("putCommand.dataCoding.defaultCodepageMixedCase");
-          text = "DeFauLT";
-          codepage = ProfileCharsetOptions::Default;
-          cmdType = UPDATE_CODE_PAGE;
-          break;
-        case 8: //default codepage
-          __tc1__("putCommand.dataCoding.defaultCodepageSpaces");
-          text = "  dEfAUlt  ";
-          codepage = ProfileCharsetOptions::Default;
-          cmdType = UPDATE_CODE_PAGE;
-          break;
-        case 9: //неправильный текст
-          __tc1__("putCommand.incorrectCmdText");
-          cmdType = INCORRECT_COMMAND_TEXT;
-          break;
-        default:
-          __unreachable__("Invalid num");
-      }
-      //текст сообщения
-      switch (dataCoding)
-      {
-        case DATA_CODING_SMSC_DEFAULT:
-          __tc2__("putCommand.cmdTextDefault");
-          break;
-        case DATA_CODING_UCS2:
-          __tc2__("putCommand.cmdTextUcs2");
-          break;
-        default:
-          __unreachable__("Invalid dataCoding");
-      }
-      int msgLen;
-      auto_ptr<char> msg = encode(text, dataCoding, msgLen);
-      sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
-      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
-      sms.setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
-      SmscCommand cmd = SmscCommand::makeDeliverySm(sms, rand0(INT_MAX));
-      __trace2__("putProfilerCommand(): sms = %s", str(sms).c_str());
-      if (profileReg)
-      {
-        time_t t;
-        Profile profile = profileReg->getProfile(addr, t);
-        if (cmdType == UPDATE_REPORT_OPTIONS)
-        {
-          profile.reportoptions = reportoptions;
-        }
-        else if (cmdType == UPDATE_CODE_PAGE)
-        {
-          profile.codepage = codepage;
-        }
-        profileReg->putProfile(addr, profile);
-        profileReg->registerDialogId(cmd->get_dialogId(), cmdType);
-      }
-      profiler->putCommand(cmd);
-      __tc12_ok__;
-    }
-    catch(...)
-    {
-      __tc12_fail__(100);
-      error();
-    }
-  }
+	__require__(profiler);
+	TCSelector s(num, 9);
+	__decl_tc12__;
+	for (; s.check(); s++)
+	{
+		try
+		{
+		  SMS sms;
+		  SmsUtil::setupRandomCorrectSms(&sms);
+		  sms.setOriginatingAddress(addr);
+		  __cfg_addr__(profilerAddr);
+		  sms.setDestinationAddress(profilerAddr);
+		  sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0x0);
+		  string text;
+		  int cmdType, codepage, reportoptions;
+		  switch (s.value())
+		  {
+			  case 1: //report none
+				__tc1__("putCommand.reportOptions.reportNoneMixedCase");
+				text = "RePoRT NoNe";
+				reportoptions = ProfileReportOptions::ReportNone;
+				cmdType = UPDATE_REPORT_OPTIONS;
+				break;
+			  case 2: //report none
+				__tc1__("putCommand.reportOptions.reportNoneSpaces");
+				text = "  rEpOrt  nOnE  ";
+				reportoptions = ProfileReportOptions::ReportNone;
+				cmdType = UPDATE_REPORT_OPTIONS;
+				break;
+			  case 3: //report full
+				__tc1__("putCommand.reportOptions.reportFullMixedCase");
+				text = "RePoRT FuLL";
+				reportoptions = ProfileReportOptions::ReportFull;
+				cmdType = UPDATE_REPORT_OPTIONS;
+				break;
+			  case 4: //report full
+				__tc1__("putCommand.reportOptions.reportFullSpaces");
+				text = "  rEpOrt  fUll  ";
+				reportoptions = ProfileReportOptions::ReportFull;
+				cmdType = UPDATE_REPORT_OPTIONS;
+				break;
+			  case 5: //ucs2 codepage
+				__tc1__("putCommand.dataCoding.ucs2CodepageMixedCase");
+				text = "uCS2";
+				codepage = ProfileCharsetOptions::Ucs2;
+				cmdType = UPDATE_CODE_PAGE;
+				break;
+			  case 6: //usc2 codepage
+				__tc1__("putCommand.dataCoding.ucs2CodepageSpaces");
+				text = "  Ucs2  ";
+				codepage = ProfileCharsetOptions::Ucs2;
+				cmdType = UPDATE_CODE_PAGE;
+				break;
+			  case 7: //default codepage
+				__tc1__("putCommand.dataCoding.defaultCodepageMixedCase");
+				text = "DeFauLT";
+				codepage = ProfileCharsetOptions::Default;
+				cmdType = UPDATE_CODE_PAGE;
+				break;
+			  case 8: //default codepage
+				__tc1__("putCommand.dataCoding.defaultCodepageSpaces");
+				text = "  dEfAUlt  ";
+				codepage = ProfileCharsetOptions::Default;
+				cmdType = UPDATE_CODE_PAGE;
+				break;
+			  case 9: //неправильный текст
+				__tc1__("putCommand.incorrectCmdText");
+				cmdType = INCORRECT_COMMAND_TEXT;
+				break;
+			  default:
+				__unreachable__("Invalid num");
+		  }
+		  //текст сообщения
+		  switch (dataCoding)
+		  {
+			case DATA_CODING_SMSC_DEFAULT:
+			  __tc2__("putCommand.cmdTextDefault");
+			  break;
+			case DATA_CODING_UCS2:
+			  __tc2__("putCommand.cmdTextUcs2");
+			  break;
+			default:
+			  __unreachable__("Invalid dataCoding");
+		  }
+		  int msgLen;
+		  auto_ptr<char> msg = encode(text, dataCoding, msgLen);
+		  sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
+		  sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
+		  sms.setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
+		  SmscCommand cmd = SmscCommand::makeDeliverySm(sms, rand0(INT_MAX));
+		  __trace2__("putProfilerCommand(): sms = %s", str(sms).c_str());
+		  if (profileReg)
+		  {
+			time_t t;
+			Profile profile = profileReg->getProfile(addr, t);
+			if (cmdType == UPDATE_REPORT_OPTIONS)
+			{
+			  profile.reportoptions = reportoptions;
+			}
+			else if (cmdType == UPDATE_CODE_PAGE)
+			{
+			  profile.codepage = codepage;
+			}
+			profileReg->putProfile(addr, profile);
+			profileReg->registerDialogId(cmd->get_dialogId(), cmdType);
+		  }
+		  profiler->putCommand(cmd);
+		  __tc12_ok__;
+		}
+		catch(...)
+		{
+		  __tc12_fail__(100);
+		  error();
+		}
+	}
 }
 
 #define __ignore__(field) \
@@ -445,6 +446,7 @@ void ProfilerTestCases::onDeliveryResp(SmscCommand& cmd)
   __tc__("getCommand.deliverResp");
   if (respSms->get_status())
   {
+	  __trace2__("deliver_sm_resp status = %d", respSms->get_status());
     __tc_fail__(1);
   }
   __tc_ok_cond__;
