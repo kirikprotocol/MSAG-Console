@@ -604,15 +604,19 @@ void Smsc::init(const SmscConfigs& cfg)
     log.info( "Performance server started" );
   }
 
-  Address addr(cfg.cfgman->getString("core.service_center_address"));
-  AddressValue addrval;
-  addr.getValue( addrval );
-  scAddr = addrval;
+  {
+    Address addr(cfg.cfgman->getString("core.service_center_address"));
+    AddressValue addrval;
+    addr.getValue( addrval );
+    scAddr = addrval;
+  }
 
-  Address addr(cfg.cfgman->getString("core.ussd_center_address"));
-  AddressValue addrval1;
-  addr.getValue( addrval1 );
-  ussdCenterAddr = addrval1;
+  {
+    Address addr(cfg.cfgman->getString("core.ussd_center_address"));
+    AddressValue addrval;
+    addr.getValue( addrval );
+    ussdCenterAddr = addrval;
+  }
 
   ussdSSN=cfg.cfgman->getInt("core.ussd_ssn");
 
