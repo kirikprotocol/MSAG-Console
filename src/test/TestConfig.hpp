@@ -2,26 +2,50 @@
 #define TEST_TEST_CONFIG
 
 #include "sms/sms.h"
+#include <map>
+#include <string>
+#include <vector>
+
+#define __cfg_int__(param) \
+	static const int param = TestConfig::getIntParam(#param)
+	
+#define __cfg_int_arr__(param) \
+	static const vector<int>& param = TestConfig::getIntArrParam(#param)
+
+#define __cfg_str__(param) \
+	static const string& param = TestConfig::getStrParam(#param)
+
+#define __cfg_addr__(param) \
+	static const Address& param = TestConfig::getAddrParam(#param)
 
 namespace smsc {
 namespace test {
 
+using std::map;
+using std::string;
+using std::vector;
 using smsc::sms::Address;
 
-//конфигурационный параметр core/reschedule_table
-const int rescheduleTimes[] = {30, 20};
+class TestConfig
+{
+	typedef map<string, int> IntMap;
+	typedef map<string, vector<int> > IntArrMap;
+	typedef map<string, string> StrMap;
+	typedef map<string, Address> AddrMap;
 
-const int timeCheckAccuracy = 5; //5 сек
-const int sequentialPduInterval = 10; //10 сек
-const int maxValidPeriod = 86400; //1 сутки
-const int maxWaitTime = 60; //max(waitTime)
-const int maxDeliveryPeriod = 120; //max(validTime - waitTime)
+	IntMap intMap;
+	IntArrMap intArrMap;
+	StrMap strMap;
+	AddrMap addrMap;
+	static TestConfig cfg;
 
-//адрес SC
-const uint8_t smscAddrTon = 3;
-const uint8_t smscAddrNpi = 5;
-static const char* smscAddrVal = "123abc";
-static const Address smscAddr(strlen(smscAddrVal), smscAddrTon, smscAddrNpi, smscAddrVal);
+public:
+	TestConfig();
+	static int getIntParam(const char* name);
+	static const vector<int>& getIntArrParam(const char* name);
+	static const string& getStrParam(const char* name);
+	static const Address& getAddrParam(const char* name);
+};
 
 }
 }
