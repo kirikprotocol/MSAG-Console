@@ -144,7 +144,7 @@ void ArchiveProcessor::process()
     smsc_log_debug(log, "Processing ...");
     char* locId = 0; std::string* location = 0;
     locations.First();
-    while (locations.Next(locId, location))
+    while (locations.Next(locId, location) && !bNeedExit)
     {
         if (!location) continue;
 
@@ -201,7 +201,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
     time_t lastProcessedTime = 0;
 
     smsc_log_debug(log, "Processing location '%s' ...", location.c_str());
-    for (int i=0; i<files.Count(); i++)
+    for (int i=0; i<files.Count() && !bNeedExit; i++)
     {
         std::string file = files[i];
         smsc_log_debug(log, "Processing archive file '%s' ...", file.c_str());

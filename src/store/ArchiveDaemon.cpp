@@ -32,8 +32,10 @@ ArchiveProcessor* archiveProcessor = 0;
 static void setNeedStop(bool stop=true) {
     MutexGuard gauard(needStopLock);
     bServiceIsStopped = stop;
-    archiveProcessor->Stop();
-    if (stop) bServiceWaitEvent.Signal();
+    if (stop) {
+        if (archiveProcessor) archiveProcessor->Stop();
+        bServiceWaitEvent.Signal();
+    }
 }
 static bool isNeedStop() {
     MutexGuard gauard(needStopLock);
