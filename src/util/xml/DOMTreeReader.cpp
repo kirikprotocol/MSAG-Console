@@ -36,7 +36,7 @@ DOMTreeReader::~DOMTreeReader()
 }
 
 DOM_Document DOMTreeReader::read(const char * const filename)
-	throw (ParseException &)
+	throw (ParseException)
 {
 	try
 	{
@@ -45,7 +45,7 @@ DOM_Document DOMTreeReader::read(const char * const filename)
 		int errorCount = parser->getErrorCount();
 		if (errorCount > 0) {
 			logger.error("An %d errors occured during parsing \"%s\"", errorCount, filename);
-			throw new ParseException("An errors occured during parsing");
+			throw ParseException("An errors occured during parsing");
 		}
 	}
 	catch (const XMLException& e)
@@ -55,23 +55,23 @@ DOM_Document DOMTreeReader::read(const char * const filename)
 		const char *srcFile = e.getSrcFile();
 		unsigned int line = e.getSrcLine();
 		logger.error("An error occured during parsing \"%s\" at file \"%s\" on line %d. Nested: %d: %s", filename, srcFile, line, code, message.get());
-		throw new ParseException(message.get());
+		throw ParseException(message.get());
 	}
 	catch (const DOM_DOMException& e)
 	{
 		logger.error("A DOM error occured during parsing\"%s\". DOMException code: %i", filename, e.code);
-		throw new ParseException("An errors occured during parsing");
+		throw ParseException("An errors occured during parsing");
 	}
 	catch (const SAXException &e)
 	{
 		std::auto_ptr<char> message(DOMString(e.getMessage()).transcode());
 		logger.error("A DOM error occured during parsing\"%s\", nested: %s", filename, message.get());
-		throw new ParseException(message.get());
+		throw ParseException(message.get());
 	}
 	catch (...)
 	{
 		logger.error("An error occured during parsing \"%s\"", filename);
-		throw new ParseException("An errors occured during parsing");
+		throw ParseException("An errors occured during parsing");
 	}
 
 	return parser->getDocument();

@@ -16,29 +16,27 @@ public:
 	class ParseException : public std::exception
 	{
 	public:
-		ParseException(const char * const message)
+		ParseException(std::string message)
 		{
-			mess = new char[strlen(message) +1];
-			strcpy(mess, message);
+			mess = message;
 		}
 
-		virtual ~ParseException() throw()
+    virtual ~ParseException() throw()
 		{
-			delete[] mess;
 		}
 
 		virtual const char* what() const throw()
 		{
-			return mess;
+			return mess.c_str();
 		}
 	private:
-		char *mess;
+		std::string mess;
 	};
 
 	DOMTreeReader();
 	~DOMTreeReader();
 
-	DOM_Document read(const char * const filename) throw (ParseException &);
+	DOM_Document read(const char * const filename) throw (ParseException);
 
 protected:
 	log4cpp::Category &logger;
