@@ -68,8 +68,8 @@ static void ForwardMO(MapDialog* dialog);
 
 void AbortMapDialog(unsigned dialogid,unsigned ssn)
 {
-  __map_trace2__("%s: dlg 0x%x",__func__,dialog->dialogid_map);
   if ( dialogid == 0 ) return;
+  __map_trace2__("%s: dlg 0x%x",__func__,dialogid);
   Et96MapUAbortReq(ssn,dialogid,0,0,0,0);
 }
 
