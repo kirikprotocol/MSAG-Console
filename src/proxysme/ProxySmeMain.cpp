@@ -103,6 +103,7 @@ bool LoadConfig(ProxyConfig& pconf)
     x_pconf.left.systemType = left.systemType;
     x_pconf.left.origAddr = left.origAddr;
     x_pconf.left.password = left.password;
+    x_pconf.left_dcs = left.defaultDCS;
     const ProxySmeConfig::sme& right = cfg.getRigth();
     x_pconf.right.host = right.host;
     x_pconf.right.port = right.port;
@@ -111,6 +112,7 @@ bool LoadConfig(ProxyConfig& pconf)
     x_pconf.right.systemType = right.systemType;
     x_pconf.right.origAddr = right.origAddr;
     x_pconf.right.password = right.password;
+    x_pconf.right_dcs = right.defaultDCS;
     x_pconf.quelimit = 100;
     x_pconf.admin_host = cfg.getAdminHost();
     x_pconf.admin_port = cfg.getAdminPort();

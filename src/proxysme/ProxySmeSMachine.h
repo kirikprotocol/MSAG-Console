@@ -47,6 +47,8 @@ public:
 //  virtual int Execute();
   unsigned ProcessCommands(SMachineNotifier& notifier);
 private:
+  void DumpCommand(DIRECTION direct,SmppHeader*);
+  void RecodeIfNeed(DIRECTION direct,SmppHeader*);
   void TranslateToSubmitAndSend(DIRECTION direct,SmppHeader*);
   void TranslateToDeliverRespAndSend(DIRECTION direct,SmppHeader*);
 };

@@ -21,9 +21,10 @@
 
 namespace smsc { 
   namespace proxysme {
-    // definition
+    enum {    DEFAULTDCS_SMSC7BIT=0,    DEFAULTDCS_LATIN1=3    };    // definition
   }
 }
+
 
 #include "../logger/Logger.h"
 #include "../sme/SmppBase.hpp"
@@ -33,6 +34,7 @@ using smsc::sme::SmeConfig;
 struct ProxyConfig {
   SmeConfig left,right;
   int quelimit;
+  unsigned left_dcs,right_dcs;
   std::string admin_host;
   unsigned admin_port;
 };

@@ -6,7 +6,6 @@
 
 namespace smsc {
 namespace proxysme {
-enum {DEFAULTDCS_SMSC7BIT=0,DEFAULTDCS_LATIN1=3};
 using smsc::util::config::Config;
 
 class ProxySmeConfig {
