@@ -33,6 +33,7 @@ void executeIntegrityTest(MessageStoreTestCases& tc,
 	vector<SMSId*> id;
 	vector<SMS*> sms;
 	vector<TCResultStack*> stack;
+	static executeTestCounter = 0;
 
 	//—охранение правильного sms, 1/1
 	for (int i = 0; i < listSize; i++)
@@ -134,7 +135,7 @@ void executeIntegrityTest(MessageStoreTestCases& tc,
 	}
 
 	//ѕолучение списка sms дл€ повторной доставки
-	if (rand0(1))
+	if (!executeTestCounter)
 	{
 		TCResult* res = tc.checkReadyForRetrySms(id, sms, RAND_TC);
 		filter->addResult(res);
@@ -200,7 +201,7 @@ void executeIntegrityTest(MessageStoreTestCases& tc,
 	}
 
 	//ѕолучение списка sms дл€ повторной доставки
-	if (rand0(1))
+	if (!executeTestCounter)
 	{
 		TCResult* res = tc.checkReadyForRetrySms(id, sms, RAND_TC);
 		filter->addResult(res);
@@ -254,7 +255,7 @@ void executeIntegrityTest(MessageStoreTestCases& tc,
 	}
 
 	//ѕолучение списка sms дл€ повторной доставки
-	if (rand0(1))
+	if (!executeTestCounter)
 	{
 		TCResult* res = tc.checkReadyForRetrySms(vector<SMSId*>(),
 			vector<SMS*>(), RAND_TC);
@@ -280,6 +281,7 @@ void executeIntegrityTest(MessageStoreTestCases& tc,
 		delete sms[i];
 		delete stack[i];
 	}
+	executeTestCounter++;
 }
 
 void saveCheckList(TCResultFilter* filter)
