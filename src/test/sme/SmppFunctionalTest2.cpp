@@ -186,6 +186,10 @@ int TestSmeFunc::Execute()
 	seq.insert(seq.end(), 10, 2);
 	//seq.insert(seq.end(), 5, 3);
 	//seq.insert(seq.end(), 5, 4);
+	//seq.insert(seq.end(), 5, 5);
+	//seq.insert(seq.end(), 5, 6);
+	seq.insert(seq.end(), 1, 7);
+	seq.insert(seq.end(), 2, 8);
 	seq.push_back(51);
 	seq.push_back(52);
 	seq.push_back(53);
@@ -225,7 +229,7 @@ void TestSmeFunc::executeCycle()
 	int idx = ++tcCount % seq.size();
 	switch (seq[idx])
 	{
-		//smsc
+		//protocolTc
 		case 1: //правильная sms
 			protocolTc.submitSmCorrect(rand0(1), RAND_TC);
 			break;
@@ -238,7 +242,19 @@ void TestSmeFunc::executeCycle()
 		case 4:
 			protocolTc.replaceSmIncorrect(rand0(1), RAND_TC);
 			break;
-		//profiler
+		case 5:
+			protocolTc.querySmCorrect(rand0(1), RAND_TC);
+			break;
+		case 6:
+			protocolTc.querySmIncorrect(rand0(1), RAND_TC);
+			break;
+		case 7:
+			protocolTc.cancelSmCorrect(rand0(1), RAND_TC);
+			break;
+		case 8:
+			protocolTc.cancelSmIncorrect(rand0(1), RAND_TC);
+			break;
+		//profilerTc
 		case 51: //обновление настроек кодировки
 			profilerTc.updateCodePageCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
 			break;
