@@ -42,13 +42,6 @@ typedef enum
 } SmppState;
 
 
-typedef enum
-{
-	DELIVERY_STATUS_NO_RESPONSE = 0xffffffff,
-	DELIVERY_STATUS_DEST_NOT_BOUND = 0xfffffffe,
-	DELIVERY_STATUS_DEST_TRANSMITTER = 0xfffffffd
-} ExtDeliveryStatus;
-
 //esm_class parameter for SMSC -> ESME PDUs (SMPP v3.4, 5.2.12):
 //ESME -> SMSC PDUs:
 //xxxxxx00 - Default SMSC Mode (e.g. Store and Forward)
