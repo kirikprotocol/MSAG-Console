@@ -18,7 +18,7 @@
         <param name="ProtocolId" type="int">111</param>
 	<param name="unrespondedMessagesMax" type="int">100</param>
 	<param name="unrespondedMessagesSleep" type="int">1000</param>
-	<param name="responceWaitTime" type="string">00:00:10</param>
+	<param name="responceWaitTime" type="string">00:01:00</param>
 	<param name="receiptWaitTime" type="string">00:20:00</param>
 	
         <section name="TasksThreadPool">
@@ -43,19 +43,17 @@
             <param name="password" type="string">4</param>
 	    <param name="timeout" type="int">10</param>
         </section>  
+	
+	<section name="systemDataSource">
+    	    <param name="type" type="string">OCI</param>
+            <param name="connections" type="int">10</param>
+            <param name="dbInstance" type="string">smsc</param>
+            <param name="dbUserName" type="string">smsc_makar</param>
+            <param name="dbUserPassword" type="string">smsc_makar</param>
+	    <param name="watchdog" type="bool">true</param>
+	</section>
 
 	<section name="DataProvider">
-	    
-	    <param name="dsInternal" type="string">INTERNAL_DS</param>
-	    
-	    <section name="INTERNAL_DS">
-		<param name="type" type="string">OCI</param>
-                <param name="connections" type="int">10</param>
-                <param name="dbInstance" type="string">smsc</param>
-                <param name="dbUserName" type="string">smsc_makar</param>
-                <param name="dbUserPassword" type="string">smsc_makar</param>
-	        <param name="watchdog" type="bool">true</param>
-            </section>
             <section name="WORKING_DS1">
 		<param name="type" type="string">OCI</param>
                 <param name="connections" type="int">5</param>
@@ -133,7 +131,7 @@
 	    
 	    <section name="Task3">
 		<param name="name" type="string">Task 3</param>
-		<param name="dsId" type="string">INTERNAL_DS</param>
+		<param name="dsId" type="string">WORKING_DS1</param>
 		<param name="dsOwnTimeout" type="int">10</param>
 		<param name="dsIntTimeout" type="int">10</param>
 		<param name="enabled" type="bool">true</param>
