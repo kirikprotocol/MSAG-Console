@@ -162,6 +162,7 @@ bool TrafficControl::processCommand(SmscCommand& cmd)
          GET_STATUS_TYPE(cmd->get_resp()->get_status())==CMD_ERR_FATAL)
       {
         __debug2__(log,"TC: delresp for %s",cmd.getProxy()->getSystemId());
+        MutexGuard g(mtx);
         getTSC(responseCnt,cmd.getProxy()->getSmeIndex())->Inc();
       } // there is no break. так и задумано
     default:
