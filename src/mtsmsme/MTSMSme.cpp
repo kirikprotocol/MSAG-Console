@@ -494,7 +494,7 @@ int main(void)
     } catch (Exception& exc) {
         smsc_log_error(logger, "Top level Exception: %s Exiting", exc.what());
         resultCode = -3;*/
-    } catch (exception& exc) {
+    } catch (std::exception& exc) {
         smsc_log_error(logger, "Top level exception: %s Exiting", exc.what());
         resultCode = -4;
     } catch (...) {
