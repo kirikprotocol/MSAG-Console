@@ -861,6 +861,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
           dialog.assign(dialog2->AddRef());
           dialogid_map = dialog->dialogid_map;
           dialogid_map = MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,SSN);
+          dialog->dialogid_smsc = dialogid_smsc;
         }
       }catch(exception& e){
         __trace2__("#except#MAP::PutCommand# when create dialog");
