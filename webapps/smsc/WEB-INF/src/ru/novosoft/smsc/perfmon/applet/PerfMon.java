@@ -315,7 +315,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
   public void mouseClicked(MouseEvent e) {
     if( (e.getModifiers()&InputEvent.BUTTON3_MASK) != 0 ) {
-      popupMenu.show( this, e.getX()+e.getComponent().getX(), e.getY()+e.getComponent().getY() );
+      System.out.println("Modifiers: "+e.getModifiers());
+      popupMenu.show( this, e.getX()+e.getComponent().getBounds().x, e.getY()+e.getComponent().getBounds().y );
     }
   }
 
