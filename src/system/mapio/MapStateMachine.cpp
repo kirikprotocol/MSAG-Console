@@ -13,7 +13,7 @@ using namespace std;
 #include "MapDialog_spcific.cxx"
 #include "MapDialogMkPDU.cxx"
 
-string ImsiToStr(const ET96MAP_IMSI_T* imsi)
+string ImsiToString(const ET96MAP_IMSI_T* imsi)
 {
   unsigned n = imsi->imsiLen;
   ostringstream ost;
@@ -31,7 +31,7 @@ string ImsiToStr(const ET96MAP_IMSI_T* imsi)
   return result;
 }
 
-string MscToStr(const ET96MAP_ADDRESS_T* msc)
+string MscToString(const ET96MAP_ADDRESS_T* msc)
 {
   return "xxxxx";
 }
@@ -898,7 +898,7 @@ USHORT_T  Et96MapV2SendRInfoForSmConf (
     switch( dialog->state ){
     case MAPST_WaitRInfoConf:
       {
-        dialog->s_imsi = ImsToString(imsi_sp);
+        dialog->s_imsi = ImsiToString(imsi_sp);
         dialog->s_msc = MscToString(mscNumber_sp);
         mkSS7GTAddress( &dialog->destMscAddr, mscNumber_sp, 8 );
         dialog->smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
