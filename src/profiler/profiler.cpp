@@ -130,6 +130,29 @@ void Profiler::add(const Address& address,const Profile& profile)
   profiles->add(address,profile);
 }
 
+
+class ConnectionGuard{
+  smsc::db::DataSource *ds;
+  smsc::db::Connection *conn;
+public:
+  ConnectionGuard(smsc::db::DataSource *_ds):ds(_ds)
+  {
+    conn=ds->getConnection();
+  }
+  ~ConnectionGuard()
+  {
+    ds->freeConnection(conn);
+  }
+  smsc::db::Connection* operator->()
+  {
+    return conn;
+  }
+  smsc::db::Connection* get()
+  {
+    return conn;
+  }
+};
+
 void Profiler::dbUpdate(const Address& addr,const Profile& profile)
 {
   using namespace smsc::db;
@@ -137,7 +160,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
   const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2 where mask=:3";
-  std::auto_ptr<Connection> connection(ds->getConnection());
+  ConnectionGuard connection(ds);
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
   if(!statement.get())throw Exception("Profiler: Failed to create statement");
@@ -157,7 +180,9 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   using smsc::util::config::ConfigException;
   const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset)"
                       " VALUES (:1, :2, :3)";
-  std::auto_ptr<Connection> connection(ds->getConnection());
+  
+  ConnectionGuard connection(ds);
+
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
   char addrbuf[30];
@@ -265,7 +290,9 @@ void Profiler::loadFromDB()
 
   ds->init(config);
   __trace__("Profiler: init ok");
-  std::auto_ptr<Connection> connection(ds->getConnection());
+  
+  ConnectionGuard connection(ds);
+
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
   if(!statement.get())throw Exception("Profiler: Failed to create statement");
