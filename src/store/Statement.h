@@ -16,22 +16,12 @@ namespace smsc { namespace store
 
     static void convertAddressToString(const Address& address, char* string)
     {
-        FullAddressValue value;
-        (void)address.getValue(value);
-        sprintf(string, "%hu.%hu.%s", 
-                address.getTypeOfNumber(), address.getNumberingPlan(), value);
+        address.toString(string, MAX_FULL_ADDRESS_VALUE_LENGTH);
     };
     static void convertStringToAddress(const char* string, Address& address)
     {
-        int res, bytes=0;
-        unsigned type, plan;
-        res = sscanf(string, "%u.%u.%n", &type, &plan, &bytes);
-        __require__(res != EOF && res && bytes>0);
-
-        address.setTypeOfNumber(type);
-        address.setNumberingPlan(plan);
-        const char* rest = string+bytes;
-        address.setValue(strlen(rest), rest);
+        Address converted(string);
+        address = converted;
     };
     
     class Connection;
