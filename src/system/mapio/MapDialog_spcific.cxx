@@ -71,7 +71,7 @@ inline void Convert7BitToSMSC7Bit(
   const unsigned char* bit7buf, unsigned chars,
   MicroString* text,unsigned offset=0)
 {
-  __require__(chars<=255);
+  if (chars>255) throw runtime_error("Convert7BitToSMSC7Bit invalid chars value");
   unsigned shift = offset;
   for ( unsigned i=0; i< chars; ++i ){
     text->bytes[i] = GetChar(bit7buf,shift);
@@ -96,7 +96,7 @@ inline void Convert7BitToText(
   const unsigned char* bit7buf, unsigned chars,
   MicroString* text,unsigned offset=0)
 {
-  __require__(chars<=255);
+  if (chars>255) throw runtime_error("Convert7BitToSMSC7Bit invalid chars value");
   unsigned shift = offset;
   for ( unsigned i=0; i< chars; ++i ){
     text->bytes[i] = lll_7bit_2_8bit[GetChar(bit7buf,shift)&0x7f];
@@ -384,6 +384,7 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
   {
     MicroString text;
     Convert7BitToText(ma->val,(ma->len/2)*8/7,&text,0);
+    if ( text.len == 0 ) throw runtime_error("ConvAddrMap2Smc: zero address");
     sa->setValue(text.len,text.bytes);
   }
   else
