@@ -30,8 +30,22 @@ Schedule* Schedule::create(ConfigView* config, std::string id)
     }
     else throw ConfigException("Execution mode '%s' for schedule '%s' is unknown", 
                                execute, id.c_str());
-
-    if (schedule) schedule->init(config);
+    try 
+    {
+        if (schedule) schedule->init(config);
+    }
+    catch (Exception& exc) {
+        if (schedule) delete schedule;
+        throw ConfigException("Failed to create schedule '%s'. Reason: %s", id.c_str(), exc.what());
+    }
+    catch (std::exception& exc) {
+        if (schedule) delete schedule;
+        throw ConfigException("Failed to create schedule '%s'. Reason: %s", id.c_str(), exc.what());
+    }
+    catch (...) {
+        if (schedule) delete schedule;
+        throw ConfigException("Failed to create schedule '%s'. Unknown reason.", id.c_str());
+    }
     
     return schedule;
 }
@@ -45,6 +59,27 @@ void Schedule::init(ConfigView* config, bool full)
         deadLine = -1;
         try { deadLine = parseDateTime(config->getString("endDateTime")); } catch(...) {};
     }
+
+    const char* tasksStr = config->getString("tasks");
+    if (!tasksStr)
+        throw ConfigException("Schedule tasks set empty or wasn't specified.");
+
+    const char* tasksCur = tasksStr;
+    std::string taskId = "";
+
+    if (*tasksCur != '\0') do
+    {
+        if (*tasksCur == ',' || *tasksCur == '\0') {
+            const char* task_id = taskId.c_str();
+            if (!task_id || task_id[0] == '\0')
+                throw ConfigException("Task id is invalid.");
+            if (!addTask(taskId))
+                throw ConfigException("Task '%s' was already assigned to schedule.",task_id);
+            taskId = "";
+        } 
+        else if (!isspace(*tasksCur)) taskId += *tasksCur;
+    } 
+    while (*tasksCur++);
 }
 
 void OnceSchedule::init(ConfigView* config)

@@ -154,43 +154,12 @@ void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
             
             std::auto_ptr<ConfigView> scheduleConfigGuard(config->getSubConfig(scheduleId));
             ConfigView* scheduleConfig = scheduleConfigGuard.get();
-            
             Schedule* schedule = Schedule::create(scheduleConfig, scheduleId);
-
-            const char* tasksStr = scheduleConfig->getString("tasks");
-            if (!tasksStr)
-                throw ConfigException("Schedule tasks set empty or wasn't specified.");
             
-            const char* tasksCur = tasksStr;
-            std::string taskId = "";
-            
-            if (*tasksCur != '\0') do
-            {
-                if (*tasksCur == ',' || *tasksCur == '\0') {
-                    const char* task_id = taskId.c_str();
-                    if (!task_id || task_id[0] == '\0') {
-                        delete schedule;
-                        throw ConfigException("Task id is invalid.");
-                    }
-                    if (!processor->hasTask(taskId)) {
-                        delete schedule;
-                        throw ConfigException("Task '%s' wasn't defined.", task_id);
-                    }
-                    if (!schedule->addTask(taskId)) {
-                        delete schedule;
-                        throw ConfigException("Task '%s' was already assigned to schedule.",task_id);
-                    }
-                    taskId = "";
-                } 
-                else if (!isspace(*tasksCur)) taskId += *tasksCur;
-            } 
-            while (*tasksCur++);
-            
-            if (!addSchedule(schedule)) {
+            if (schedule && !addSchedule(schedule)) {
                 delete schedule;
                 throw ConfigException("Schedule for id '%s' already defined.");
             }
-                
         }
         catch (ConfigException& exc)
         {
