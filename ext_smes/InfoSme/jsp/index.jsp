@@ -44,14 +44,9 @@ function checkApplyResetButtons()
                                  );
 }
 </script>
-<%! private String status(boolean isChanged)
-{
-  if (isChanged)
-    return "<span style='color:red;'>changed</span>";
-  else
-    return "clear";
-}
-%>
+<%! private String configStatus(boolean isChanged) {
+    return (isChanged) ? "<span style='color:red;'>changed</span>":"clear";
+}%>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=edit>
@@ -92,17 +87,17 @@ function checkApplyResetButtons()
     <tr class=row0>
       <td><input class=check type=checkbox name=apply value=all id=allCheck onClick="checkApplyResetButtons();" <%=bean.isChangedAll() ? "" : "disabled"%>></td>
       <th><label for=allCheck>All configuration</label></th>
-      <td><%=status(bean.isChangedAll())%></td>
+      <td><%=configStatus(bean.isChangedAll())%></td>
     </tr>
     <tr class=row1 id=tasksRow>
       <td><input class=check type=checkbox name=apply value=tasks id=tasksCheck onClick="checkApplyResetButtons();" <%=bean.isInfosmeStarted() && bean.isChangedTasks() && !bean.isChangedAll() ? "" : "disabled"%>></td>
       <th><label for=tasksCheck>Tasks configuration</label></th>
-      <td><%=status(bean.isChangedTasks())%></td>
+      <td><%=configStatus(bean.isChangedTasks())%></td>
     </tr>
     <tr class=row0 id=schedsRow>
       <td><input class=check type=checkbox name=apply value=scheds id=schedsCheck onCLick="checkApplyResetButtons();" <%=bean.isInfosmeStarted() && bean.isChangedShedules() && !bean.isChangedAll() && !bean.isChangedTasks() ? "" : "disabled"%>></td>
       <th><label for=schedsCheck>Schedules configuration</label></th>
-      <td><%=status(bean.isChangedShedules())%></td>
+      <td><%=configStatus(bean.isChangedShedules())%></td>
     </tr>
     </table>
   </td>
