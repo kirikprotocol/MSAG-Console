@@ -31,16 +31,14 @@ const char* const TC_ENABLE_NON_EXISTENT_SME = "enableNonExistentSme";
 const char* const TC_GET_EXISTENT_SME = "getExistentSme";
 const char* const TC_GET_NON_EXISTENT_SME = "getNonExistentSme";
 const char* const TC_ITERATE_SME = "iterateSme";
-
-//max values
-const int MAX_SYSTEM_ID_LENGTH = 15;
-const int MAX_PASSWORD_LENGTH = 8;
-const int MAX_SYSTEM_TYPE_LENGTH = 12;
-const int MAX_ADDRESS_RANGE_LENGTH = 40;
+const char* const TC_REGISTER_CORRECT_SME_PROXY = "registerCorrectSmeProxy";
 
 /**
  * Ётот класс содержит test cases необходимые дл€ тестировани€ подсистемы
  * SME manager.
+ * “ест кейсы registerSmeProxy, unregisterSmeProxy, selectSmeProxy
+ * не имплементированы и предполагаетс€ их тестировать извне на рабочем
+ * smsc.
  * 
  * @author bryz
  */
@@ -105,6 +103,8 @@ public:
 	 * »терирование по списку зарегистрированных sme.
 	 */
 	TCResult* iterateSme(const vector<SmeInfo*> sme);
+
+	TCResult* registerCorrectSmeProxy(const SmeSystemId& systemId);
 
 protected:
 	virtual Category& getLog();

@@ -1,4 +1,5 @@
 #include "SmeManagerTestCases.hpp"
+#include "SmeManagerUtil.hpp"
 #include "test/core/CoreTestManager.hpp"
 #include "smeman/smetypes.h"
 #include <map>
@@ -433,6 +434,23 @@ TCResult* SmeManagerTestCases::iterateSme(const vector<SmeInfo*> sme)
 				res->addFailure(it->first);
 			}
 		}
+	}
+	catch(...)
+	{
+		error();
+		res->addFailure(100);
+	}
+	debug(res);
+	return res;
+}
+
+TCResult* SmeManagerTestCases::registerCorrectSmeProxy(const SmeSystemId& systemId)
+{
+	TCResult* res = new TCResult(TC_REGISTER_CORRECT_SME_PROXY);
+	try
+	{
+		TestSmeProxy* proxy = new TestSmeProxy(systemId);
+		smeMan->registerSmeProxy(systemId, proxy);
 	}
 	catch(...)
 	{
