@@ -113,12 +113,15 @@ public class Index extends SmscBean
 		if (params.size() == 0)
 			loadParams(appContext);
 
+		boolean isRequestHaveParams = false;
+
 		Enumeration parameterNames = request.getParameterNames();
 		while (parameterNames.hasMoreElements())
 		{
 			String s = (String) parameterNames.nextElement();
 			if (s.indexOf('.') > 0)
 			{
+				isRequestHaveParams = true;
 				Object oldValue = params.get(s);
 				if (oldValue != null)
 				{
@@ -143,17 +146,19 @@ public class Index extends SmscBean
 			}
 		}
 
-		for (Iterator i = params.keySet().iterator(); i.hasNext();)
+		if (isRequestHaveParams)
 		{
-			String paramName = (String) i.next();
-			Object value = params.get(paramName);
-			if (value instanceof Boolean)
+			for (Iterator i = params.keySet().iterator(); i.hasNext();)
 			{
-				logger.debug("process boolean param \"" + paramName + "\" (" + request.getParameter(paramName) + ")");
-				params.put(paramName, Boolean.valueOf(request.getParameter(paramName)));
+				String paramName = (String) i.next();
+				Object value = params.get(paramName);
+				if (value instanceof Boolean)
+				{
+					final String parameter = request.getParameter(paramName);
+					params.put(paramName, Boolean.valueOf(parameter));
+				}
 			}
 		}
-
 		return result;
 	}
 
@@ -240,22 +245,38 @@ public class Index extends SmscBean
 	{
 		Object param = params.get(paramName);
 		if (param == null)
+		{
+			logger.error("integer parameter \"" + paramName + "\" not found.");
 			return 0;
+		}
 		if (param instanceof Integer)
+		{
 			return ((Integer) param).intValue();
+		}
 		else
+		{
+			logger.error("parameter \"" + paramName + "\" is not integer.");
 			return -1;
+		}
 	}
 
 	public boolean getBoolParam(String paramName)
 	{
 		Object param = params.get(paramName);
 		if (param == null)
+		{
+			logger.error("boolean parameter \"" + paramName + "\" not found.");
 			return false;
+		}
 		if (param instanceof Boolean)
+		{
 			return ((Boolean) param).booleanValue();
+		}
 		else
+		{
+			logger.error("parameter \"" + paramName + "\" is not boolean.");
 			return false;
+		}
 	}
 
 	public void setStringParam(String paramName, String paramValue)

@@ -346,15 +346,22 @@ public class Smsc extends Service
 				|| update_profile_method == null || flush_statistics_method == null
 				|| process_cancel_messages_method == null)
 		{
-			refreshComponents();
-			smsc_component = (Component) getInfo().getComponents().get("SMSC");
-			apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
-			apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
-			lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
-			update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
-			flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
-			process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
-			apply_smsc_config_method = (Method) smsc_component.getMethods().get("apply_smsc_config");
+			try
+			{
+				refreshComponents();
+				smsc_component = (Component) getInfo().getComponents().get("SMSC");
+				apply_routes_method = (Method) smsc_component.getMethods().get("apply_routes");
+				apply_aliases_method = (Method) smsc_component.getMethods().get("apply_aliases");
+				lookup_profile_method = (Method) smsc_component.getMethods().get("lookup_profile");
+				update_profile_method = (Method) smsc_component.getMethods().get("update_profile");
+				flush_statistics_method = (Method) smsc_component.getMethods().get("flush_statistics");
+				process_cancel_messages_method = (Method) smsc_component.getMethods().get("process_cancel_messages");
+				apply_smsc_config_method = (Method) smsc_component.getMethods().get("apply_smsc_config");
+			}
+			catch (AdminException e)
+			{
+				logger.error("Couldn't check components", e);
+			}
 		}
 	}
 

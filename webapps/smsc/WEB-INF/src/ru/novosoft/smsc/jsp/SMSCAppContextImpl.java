@@ -1,11 +1,11 @@
 package ru.novosoft.smsc.jsp;
 
+import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.users.UserManager;
-import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
@@ -31,7 +31,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	private Statuses statuses = new StatusesImpl();
 	private Map localeMessages = new HashMap();
 
-    private Console console = null;
+	private Console console = null;
 
 	public SMSCAppContextImpl(String configFileName)
 	{
@@ -53,7 +53,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			daemonManager = serviceManager.getDaemonManager();
 			System.out.println("SMSCAppContextImpl.SMSCAppContextImpl **************************************************");
 			File usersConfig = new File(new File(configManager.getConfig().getString("system.webapp folder"), "WEB-INF"), configManager.getConfig().getString("system.users"));
-            startConsole();
+			startConsole();
 			userManager = new UserManager(usersConfig);
 			perfServer = new PerfServer(configManager.getConfig());
 			perfServer.start();
@@ -70,17 +70,24 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	}
 
 	private void startConsole()
-        throws Exception
-    {
-        boolean needConsole = false;
-        try { needConsole = configManager.getConfig().getBool("console.enabled"); }
-        catch (Exception eee) { /* do nothing, console disabled by default */ }
-        if (needConsole) {
-            console = new Console(this);
-            console.start();
-        }
-    }
-    public Config getConfig()
+			throws Exception
+	{
+		boolean needConsole = false;
+		try
+		{
+			needConsole = configManager.getConfig().getBool("console.enabled");
+		}
+		catch (Exception eee)
+		{ /* do nothing, console disabled by default */
+		}
+		if (needConsole)
+		{
+			console = new Console(this);
+			console.start();
+		}
+	}
+
+	public Config getConfig()
 	{
 		return configManager.getConfig();
 	}
@@ -123,12 +130,12 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	public void destroy()
 	{
 		if (console != null) console.close();
-        perfServer.shutdown();
+		perfServer.shutdown();
 	}
 
 	public ResourceBundle getLocaleMessages(Locale locale)
 	{
-		return (ResourceBundle)localeMessages.get(locale);
+		return (ResourceBundle) localeMessages.get(locale);
 	}
 }
 

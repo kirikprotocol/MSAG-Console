@@ -8,9 +8,7 @@ package ru.novosoft.smsc.util.config;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 public class SaveableConfigTree
 {
@@ -69,7 +67,16 @@ public class SaveableConfigTree
 	private void writeParams(PrintWriter out, String prefix, Map parameters)
 			  throws ConfigManager.WrongParamTypeException, IOException
 	{
-		for (Iterator i = parameters.keySet().iterator(); i.hasNext();)
+		List paramNames = new ArrayList(parameters.keySet());
+		Collections.sort(paramNames, new Comparator() {
+			public int compare(Object o1, Object o2)
+			{
+				String s1 = (String) o1;
+				String s2 = (String) o2;
+				return s1.compareTo(s2);
+			}
+		});
+		for (Iterator i = paramNames.iterator(); i.hasNext();)
 		{
 			String paramName = (String) i.next();
 			Object paramValue = parameters.get(paramName);
@@ -100,7 +107,17 @@ public class SaveableConfigTree
 	private void writeSections(PrintWriter out, String prefix, Map secs)
 			  throws IOException, ConfigManager.WrongParamTypeException
 	{
-		for (Iterator i = secs.keySet().iterator(); i.hasNext();)
+		List secNames = new ArrayList(secs.keySet());
+		Collections.sort(secNames, new Comparator()
+		{
+			public int compare(Object o1, Object o2)
+			{
+				String s1 = (String) o1;
+				String s2 = (String) o2;
+				return s1.compareTo(s2);
+			}
+		});
+		for (Iterator i = secNames.iterator(); i.hasNext();)
 		{
 			String secName = (String) i.next();
 			SaveableConfigTree childs = (SaveableConfigTree) secs.get(secName);

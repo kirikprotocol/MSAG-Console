@@ -1,5 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ include file="/WEB-INF/inc/service_status.jsp"%>
+<%--@ include file="/WEB-INF/inc/service_status.jsp"--%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.smsc_service.Index,
                  ru.novosoft.smsc.admin.service.ServiceInfo,
 				 ru.novosoft.smsc.admin.Constants"%>
@@ -25,7 +25,7 @@ switch(bean.process(appContext, errorMessages, request))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SMSC";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-SMSC is <%=serviceStatus(Constants.SMSC_SME_ID, bean.getStatus())%>
+SMSC is <%--=serviceStatus(Constants.SMSC_SME_ID, bean.getStatus())--%>
 <div class=secButtons>
 <input class=btn type=submit name=mbStart value="Start" title="Start SMSC" <%=bean.getStatus() != ServiceInfo.STATUS_STOPPED ? "disabled" : ""%>>
 <input class=btn type=submit name=mbStop value="Stop" title="Stop  SMSC" <%=bean.getStatus() != ServiceInfo.STATUS_RUNNING ? "disabled" : ""%>>
@@ -50,7 +50,7 @@ function showhide(elem)
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>init file:</th>
-	<td><input class=txtW name="logger.initFile" value="<%=bean.getStringParam("logger.initFile")%>"></td>
+	<td><input class=txtW name="logger.initFile" value="<%=StringEncoderDecoder.encode(bean.getStringParam("logger.initFile"))%>"></td>
 </tr>
 </table>
 </dd>
@@ -61,7 +61,7 @@ function showhide(elem)
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>host:</th>
-	<td><input class=txtW name="admin.host" value="<%=bean.getStringParam("admin.host")%>"></td>
+	<td><input class=txtW name="admin.host" value="<%=StringEncoderDecoder.encode(bean.getStringParam("admin.host"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>port:</th>
@@ -87,15 +87,15 @@ function showhide(elem)
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>dbInstance:</th>
-	<td><input class=txtW name="MessageStore.Storage.dbInstance" value="<%=bean.getStringParam("MessageStore.Storage.dbInstance")%>"></td>
+	<td><input class=txtW name="MessageStore.Storage.dbInstance" value="<%=StringEncoderDecoder.encode(bean.getStringParam("MessageStore.Storage.dbInstance"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>dbUserName:</th>
-	<td><input class=txtW name="MessageStore.Storage.dbUserName" value="<%=bean.getStringParam("MessageStore.Storage.dbUserName")%>"></td>
+	<td><input class=txtW name="MessageStore.Storage.dbUserName" value="<%=StringEncoderDecoder.encode(bean.getStringParam("MessageStore.Storage.dbUserName"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>dbUserPassword:</th>
-	<td><input class=txtW name="MessageStore.Storage.dbUserPassword" value="<%=bean.getStringParam("MessageStore.Storage.dbUserPassword")%>"></td>
+	<td><input class=txtW name="MessageStore.Storage.dbUserPassword" value="<%=StringEncoderDecoder.encode(bean.getStringParam("MessageStore.Storage.dbUserPassword"))%>"></td>
 </tr>
 </table>
 </dd>
@@ -146,15 +146,15 @@ function showhide(elem)
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>dbInstance:</th>
-	<td><input class=txtW name="MessageStore.Billing.dbInstance" value="<%=bean.getStringParam("MessageStore.Billing.dbInstance")%>"></td>
+	<td><input class=txtW name="MessageStore.Billing.dbInstance" value="<%=StringEncoderDecoder.encode(bean.getStringParam("MessageStore.Billing.dbInstance"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>dbUserName:</th>
-	<td><input class=txtW name="MessageStore.Billing.dbUserName" value="<%=bean.getStringParam("MessageStore.Billing.dbUserName")%>"></td>
+	<td><input class=txtW name="MessageStore.Billing.dbUserName" value="<%=StringEncoderDecoder.encode(bean.getStringParam("MessageStore.Billing.dbUserName"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>dbUserPassword:</th>
-	<td><input class=txtW name="MessageStore.Billing.dbUserPassword" value="<%=bean.getStringParam("MessageStore.Billing.dbUserPassword")%>"></td>
+	<td><input class=txtW name="MessageStore.Billing.dbUserPassword" value="<%=StringEncoderDecoder.encode(bean.getStringParam("MessageStore.Billing.dbUserPassword"))%>"></td>
 </tr>
 </table>
 </dd>
@@ -197,11 +197,11 @@ function showhide(elem)
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>hlr:</th>
-	<td><input class=txtW name="map.hlr" value="<%=bean.getStringParam("map.hlr")%>"></td>
+	<td><input class=txtW name="map.hlr" value="<%=StringEncoderDecoder.encode(bean.getStringParam("map.hlr"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>vlr:</th>
-	<td><input class=txtW name="map.vlr" value="<%=bean.getStringParam("map.vlr")%>"></td>
+	<td><input class=txtW name="map.vlr" value="<%=StringEncoderDecoder.encode(bean.getStringParam("map.vlr"))%>"></td>
 </tr>
 </table>
 </dd>
@@ -212,7 +212,7 @@ function showhide(elem)
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>host:</th>
-	<td><input class=txtW name="smpp.host" value="<%=bean.getStringParam("smpp.host")%>"></td>
+	<td><input class=txtW name="smpp.host" value="<%=StringEncoderDecoder.encode(bean.getStringParam("smpp.host"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>port:</th>
@@ -239,31 +239,31 @@ function showhide(elem)
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>reschedule_table:</th>
-	<td><input class=txtW name="core.reschedule_table" value="<%=bean.getStringParam("core.reschedule_table")%>"></td>
+	<td><input class=txtW name="core.reschedule_table" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.reschedule_table"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>receipt_delivered:</th>
-	<td><input class=txtW name="core.receipt_delivered" value="<%=bean.getStringParam("core.receipt_delivered")%>"></td>
+	<td><input class=txtW name="core.receipt_delivered" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.receipt_delivered"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>receipt_failed:</th>
-	<td><input class=txtW name="core.receipt_failed" value="<%=bean.getStringParam("core.receipt_failed")%>"></td>
+	<td><input class=txtW name="core.receipt_failed" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.receipt_failed"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>receipt_notify:</th>
-	<td><input class=txtW name="core.receipt_notify" value="<%=bean.getStringParam("core.receipt_notify")%>"></td>
+	<td><input class=txtW name="core.receipt_notify" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.receipt_notify"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>service_center_address:</th>
-	<td><input class=txtW name="core.service_center_address" value="<%=bean.getStringParam("core.service_center_address")%>"></td>
+	<td><input class=txtW name="core.service_center_address" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.service_center_address"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>systemId:</th>
-	<td><input class=txtW name="core.systemId" value="<%=bean.getStringParam("core.systemId")%>"></td>
+	<td><input class=txtW name="core.systemId" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.systemId"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>service_type:</th>
-	<td><input class=txtW name="core.service_type" value="<%=bean.getStringParam("core.service_type")%>"></td>
+	<td><input class=txtW name="core.service_type" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.service_type"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>protocol_id:</th>
@@ -278,7 +278,7 @@ function showhide(elem)
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>host:</th>
-	<td><input class=txtW name="core.performance.host" value="<%=bean.getStringParam("core.performance.host")%>"></td>
+	<td><input class=txtW name="core.performance.host" value="<%=StringEncoderDecoder.encode(bean.getStringParam("core.performance.host"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>port:</th>
@@ -288,22 +288,30 @@ function showhide(elem)
 </dd>
 </dl>
 </dd>
-<dt class=secTitle onclick='showhide(this)'>abonentinfo</dt>
+<dt class=secTitle onclick='showhide(this)'>Abonent Info</dt>
 <dd>
 <table class=secRep cellspacing=1 width="100%">
 <%row=0;%>
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>systemId:</th>
-	<td><input class=txtW name="abonentinfo.systemId" value="<%=bean.getStringParam("abonentinfo.systemId")%>"></td>
+	<td><input class=txtW name="abonentinfo.systemId" value="<%=StringEncoderDecoder.encode(bean.getStringParam("abonentinfo.systemId"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>service_type:</th>
-	<td><input class=txtW name="abonentinfo.service_type" value="<%=bean.getStringParam("abonentinfo.service_type")%>"></td>
+	<td><input class=txtW name="abonentinfo.service_type" value="<%=StringEncoderDecoder.encode(bean.getStringParam("abonentinfo.service_type"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>protocol_id:</th>
 	<td><input class=txtW name="abonentinfo.protocol_id" value="<%=bean.getIntParam("abonentinfo.protocol_id")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>mobile_access_address:</th>
+	<td><input class=txtW name="abonentinfo.mobile_access_address" value="<%=bean.getStringParam("abonentinfo.mobile_access_address")%>"></td>
+</tr>
+<tr class=row<%=(row++)&1%>>
+	<th class=label>smpp_access_address:</th>
+	<td><input class=txtW name="abonentinfo.smpp_access_address" value="<%=bean.getStringParam("abonentinfo.smpp_access_address")%>"></td>
 </tr>
 </table>
 </dd>
@@ -314,11 +322,11 @@ function showhide(elem)
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>systemId:</th>
-	<td><input class=txtW name="profiler.systemId" value="<%=bean.getStringParam("profiler.systemId")%>"></td>
+	<td><input class=txtW name="profiler.systemId" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.systemId"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>service_type:</th>
-	<td><input class=txtW name="profiler.service_type" value="<%=bean.getStringParam("profiler.service_type")%>"></td>
+	<td><input class=txtW name="profiler.service_type" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.service_type"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>protocol_id:</th>
@@ -326,31 +334,31 @@ function showhide(elem)
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>defaultReport:</th>
-	<td><input class=txtW name="profiler.defaultReport" value="<%=bean.getStringParam("profiler.defaultReport")%>"></td>
+	<td><input class=txtW name="profiler.defaultReport" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.defaultReport"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>defaultDataCoding:</th>
-	<td><input class=txtW name="profiler.defaultDataCoding" value="<%=bean.getStringParam("profiler.defaultDataCoding")%>"></td>
+	<td><input class=txtW name="profiler.defaultDataCoding" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.defaultDataCoding"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>msgReportNone:</th>
-	<td><input class=txtW name="profiler.msgReportNone" value="<%=bean.getStringParam("profiler.msgReportNone")%>"></td>
+	<td><input class=txtW name="profiler.msgReportNone" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.msgReportNone"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>msgReportFull:</th>
-	<td><input class=txtW name="profiler.msgReportFull" value="<%=bean.getStringParam("profiler.msgReportFull")%>"></td>
+	<td><input class=txtW name="profiler.msgReportFull" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.msgReportFull"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>msgDataCodingDefault:</th>
-	<td><input class=txtW name="profiler.msgDataCodingDefault" value="<%=bean.getStringParam("profiler.msgDataCodingDefault")%>"></td>
+	<td><input class=txtW name="profiler.msgDataCodingDefault" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.msgDataCodingDefault"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>msgDataCodingUCS2:</th>
-	<td><input class=txtW name="profiler.msgDataCodingUCS2" value="<%=bean.getStringParam("profiler.msgDataCodingUCS2")%>"></td>
+	<td><input class=txtW name="profiler.msgDataCodingUCS2" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.msgDataCodingUCS2"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>msgError:</th>
-	<td><input class=txtW name="profiler.msgError" value="<%=bean.getStringParam("profiler.msgError")%>"></td>
+	<td><input class=txtW name="profiler.msgError" value="<%=StringEncoderDecoder.encode(bean.getStringParam("profiler.msgError"))%>"></td>
 </tr>
 </table>
 </dd>
@@ -383,11 +391,11 @@ function showhide(elem)
 			<col width=180px>
 			<tr class=row<%=(row++)&1%>>
 				<th class=label>type:</th>
-				<td><input class=txtW name="StartupLoader.DataSourceDrivers.<%=name%>.type" value="<%=bean.getStringParam("StartupLoader.DataSourceDrivers." + name + ".type")%>"></td>
+				<td><input class=txtW name="StartupLoader.DataSourceDrivers.<%=StringEncoderDecoder.encode(name)%>.type" value="<%=StringEncoderDecoder.encode(bean.getStringParam("StartupLoader.DataSourceDrivers." + name + ".type"))%>"></td>
 			</tr>
 			<tr class=row<%=(row++)&1%>>
 				<th class=label>loadup:</th>
-				<td><input class=txtW name="StartupLoader.DataSourceDrivers.<%=name%>.loadup" value="<%=bean.getStringParam("StartupLoader.DataSourceDrivers." + name + ".loadup")%>"></td>
+				<td><input class=txtW name="StartupLoader.DataSourceDrivers.<%=StringEncoderDecoder.encode(name)%>.loadup" value="<%=StringEncoderDecoder.encode(bean.getStringParam("StartupLoader.DataSourceDrivers." + name + ".loadup"))%>"></td>
 			</tr>
 			</table>
 		</dd>
@@ -403,7 +411,7 @@ function showhide(elem)
 <col width=180px>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>type:</th>
-	<td><input class=txtW name="DataSource.type" value="<%=bean.getStringParam("DataSource.type")%>"></td>
+	<td><input class=txtW name="DataSource.type" value="<%=StringEncoderDecoder.encode(bean.getStringParam("DataSource.type"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>connections:</th>
@@ -411,15 +419,15 @@ function showhide(elem)
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>dbInstance:</th>
-	<td><input class=txtW name="DataSource.dbInstance" value="<%=bean.getStringParam("DataSource.dbInstance")%>"></td>
+	<td><input class=txtW name="DataSource.dbInstance" value="<%=StringEncoderDecoder.encode(bean.getStringParam("DataSource.dbInstance"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>dbUserName:</th>
-	<td><input class=txtW name="DataSource.dbUserName" value="<%=bean.getStringParam("DataSource.dbUserName")%>"></td>
+	<td><input class=txtW name="DataSource.dbUserName" value="<%=StringEncoderDecoder.encode(bean.getStringParam("DataSource.dbUserName"))%>"></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>dbUserPassword:</th>
-	<td><input class=txtW name="DataSource.dbUserPassword" value="<%=bean.getStringParam("DataSource.dbUserPassword")%>"></td>
+	<td><input class=txtW name="DataSource.dbUserPassword" value="<%=StringEncoderDecoder.encode(bean.getStringParam("DataSource.dbUserPassword"))%>"></td>
 </tr>
 </table>
 </dd>
