@@ -111,7 +111,7 @@ USHORT_T Et96MapUAbortInd(ET96MAP_LOCAL_SSN_T lssn,
       MapDialogContainer::getInstance()->dropDialog(dialogid);
     }
   }catch(...){
-    __trace2__("MAP::Et96MapCloseInd: catch exception when processing did 0x%x",dialogid);
+    __trace2__("MAP::Et96MapUAbort: catch exception when processing did 0x%x",dialogid);
     MapDialogContainer::getInstance()->dropDialog(dialogid);
   }
   return ET96MAP_E_OK;
@@ -134,7 +134,7 @@ USHORT_T Et96MapV2ForwardSmMTConf (
                                     provErrCode_p);
     }
   }catch(...){
-    __trace2__("MAP::Et96MapCloseInd: catch exception when processing did 0x%x",dialogid);
+    __trace2__("MAP::Et96MapV2ForwardSmMTConf: catch exception when processing did 0x%x",dialogid);
     //MapDialogContainer::getInstance()->dropDialog(dialogid);
   }
   return ET96MAP_E_OK;
@@ -177,7 +177,7 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
       MapDialogContainer::getInstance()->dropDialog(dialogid);
     }
   }catch(...){
-    __trace2__("MAP::Et96MapCloseInd: catch exception when processing did 0x%x",dialogid);
+    __trace2__("MAP::Et96MaPAbort: catch exception when processing did 0x%x",dialogid);
     MapDialogContainer::getInstance()->dropDialog(dialogid);
   }
   return ET96MAP_E_OK;
