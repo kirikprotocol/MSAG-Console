@@ -22,10 +22,16 @@ using smsc::util::Logger;
 using smsc::util::AssertException;
 
 MessageStoreTestCases::MessageStoreTestCases(MessageStore* _msgStore,
-	CheckList* _chkList) : msgStore(_msgStore), chkList(_chkList)
+	bool _loadTest, CheckList* _chkList) : msgStore(_msgStore), chkList(_chkList),
+	loadTest(_loadTest), mask(0xffffffffffffffff), check(true)
 {
 	__require__(msgStore);
 	//__require__(chkList);
+	if (loadTest)
+	{
+		mask ^= 0x100000; //отключить сеттер на SMPP_MESSAGE_PAYLOAD
+		check = false; //отключить проверки в сеттерах и геттерах
+	}
 }
 
 Category& MessageStoreTestCases::getLog()
@@ -37,26 +43,32 @@ Category& MessageStoreTestCases::getLog()
 #define __set_str__(field, len) \
 	auto_ptr<char> tmp_##field = rand_char(len); \
 	sms.set##field(tmp_##field.get()); \
-	char res_##field[len + 1]; \
-	sms.get##field(res_##field); \
-	if (strcmp(res_##field, tmp_##field.get())) { \
-		__trace2__("%s: set = %s, get = %s", #field, tmp_##field.get(), res_##field); \
+	if (check) { \
+		char res_##field[len + 1]; \
+		sms.get##field(res_##field); \
+		if (strcmp(res_##field, tmp_##field.get())) { \
+			__trace2__("%s: set = %s, get = %s", #field, tmp_##field.get(), res_##field); \
+		} \
 	}
 
 #define __set_int_body_tag__(tagName, value) \
 	uint32_t tmp_##tagName = value; \
 	__trace__("set_int_body_tag: " #tagName); \
 	sms.getMessageBody().setIntProperty(Tag::tagName, tmp_##tagName); \
-	if (sms.getMessageBody().getIntProperty(Tag::tagName) != tmp_##tagName) { \
-		__trace2__("set_int_body_tag: tag = " #tagName ", set = %d, get = %d", tmp_##tagName, sms.getMessageBody().getIntProperty(Tag::tagName)); \
+	if (check) { \
+		if (sms.getMessageBody().getIntProperty(Tag::tagName) != tmp_##tagName) { \
+			__trace2__("set_int_body_tag: tag = " #tagName ", set = %d, get = %d", tmp_##tagName, sms.getMessageBody().getIntProperty(Tag::tagName)); \
+		} \
 	}
 
 #define __set_str_body_tag__(tagName, len) \
 	auto_ptr<char> tmp_##tagName = rand_char(len); \
 	__trace__("set_str_body_tag: " #tagName); \
 	sms.getMessageBody().setStrProperty(Tag::tagName, tmp_##tagName.get()); \
-	if (strcmp(sms.getMessageBody().getStrProperty(Tag::tagName).c_str(), tmp_##tagName.get())) { \
-		__trace2__("set_str_body_tag: tag = " #tagName ", set = %s, get = %s", tmp_##tagName.get(), sms.getMessageBody().getStrProperty(Tag::tagName).c_str()); \
+	if (check) { \
+		if (strcmp(sms.getMessageBody().getStrProperty(Tag::tagName).c_str(), tmp_##tagName.get())) { \
+			__trace2__("set_str_body_tag: tag = " #tagName ", set = %s, get = %s", tmp_##tagName.get(), sms.getMessageBody().getStrProperty(Tag::tagName).c_str()); \
+		} \
 	}
 
 void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
@@ -68,7 +80,7 @@ void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 		try
 		{
 			SMS sms;
-			SmsUtil::setupRandomCorrectSms(&sms);
+			SmsUtil::setupRandomCorrectSms(&sms, mask, check);
 			switch(s.value())
 			{
 				case 1: //ничего особенного
@@ -135,10 +147,17 @@ void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 					break;
 				case 12: //short_message и message_payload максимальной длины
 					{
-						__tc__("storeCorrectSms.bodyMaxLength");
-                        __set_int_body_tag__(SMPP_SM_LENGTH, MAX_SM_LENGTH);
-						__set_str_body_tag__(SMPP_SHORT_MESSAGE, MAX_SM_LENGTH);
-						__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, MAX_PAYLOAD_LENGTH);
+						if (loadTest)
+						{
+							__tc__("storeCorrectSms");
+						}
+						else
+						{
+							__tc__("storeCorrectSms.bodyMaxLength");
+							__set_int_body_tag__(SMPP_SM_LENGTH, MAX_SM_LENGTH);
+							__set_str_body_tag__(SMPP_SHORT_MESSAGE, MAX_SM_LENGTH);
+							__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, MAX_PAYLOAD_LENGTH);
+						}
 					}
 					break;
 				case 13: //пустой serviceType, NULL недопустимо
@@ -207,7 +226,7 @@ void MessageStoreTestCases::storeSimilarSms(SMSId* idp, SMS* smsp,
 		try
 		{
 			SMS sms;
-			SmsUtil::setupRandomCorrectSms(&sms);
+			SmsUtil::setupRandomCorrectSms(&sms, mask, check);
 			CreateMode flag = ETSI_REJECT_IF_PRESENT;
 			uint8_t shift = rand1(254);
 			switch(s.value())
@@ -323,7 +342,7 @@ void MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
 	try
 	{
 		SMS sms;
-		SmsUtil::setupRandomCorrectSms(&sms);
+		SmsUtil::setupRandomCorrectSms(&sms, mask, check);
 		//Отсутствует в SMPP v3.4
 		//Согласно GSM 03.40 пункт 9.2.3.25 должны совпадать: TP-MR, TP-DA, OA.
 		sms.setMessageReference(existentSms.getMessageReference());
@@ -352,7 +371,7 @@ void MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existentSms)
 	try
 	{
 		SMS sms;
-		SmsUtil::setupRandomCorrectSms(&sms);
+		SmsUtil::setupRandomCorrectSms(&sms, mask, check);
 		//Отсутствует в GSM 03.40
 		//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 		//destination address and service_type. Сообщение должно быть в 
@@ -429,7 +448,7 @@ void MessageStoreTestCases::storeAssertSms(int num)
 	{
 		try
 		{
-			SmsUtil::setupRandomCorrectSms(&sms);
+			SmsUtil::setupRandomCorrectSms(&sms, mask, check);
 			switch(s.value())
 			{
 				case 1: //пустой destinationAddress

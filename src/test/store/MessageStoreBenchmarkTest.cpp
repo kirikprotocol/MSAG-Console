@@ -45,7 +45,7 @@ void printResult(const char* name, int size, float time)
 	
 void executeBenchmarkTest(const int size)
 {
-	MessageStoreTestCases tc(StoreManager::getMessageStore(), NULL); //throws exception
+	MessageStoreTestCases tc(StoreManager::getMessageStore(), true); //throws exception
 	vector<SMSId*> id;
 	vector<SMS*> sms;
 	getTime(); //init timer

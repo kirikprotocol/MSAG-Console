@@ -185,7 +185,7 @@ void executeLoadTest(int numThreads)
 {
 	MessageStoreLoadTest::init(numThreads);
 	MessageStoreLoadTestTaskManager tm;
-	MessageStoreTestCases tc(StoreManager::getMessageStore(), NULL); //throws exception
+	MessageStoreTestCases tc(StoreManager::getMessageStore(), true); //throws exception
 	for (int i = 0; i < numThreads; i++)
 	{
 		MessageStoreLoadTestTask* task =

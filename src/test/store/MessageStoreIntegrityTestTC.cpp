@@ -268,7 +268,7 @@ int main(int argc, char* argv[])
 		StoreManager::startup(Manager::getInstance());
 		//StoreManager::stopArchiver();
 		MessageStoreCheckList chkList;
-		MessageStoreTestCases tc(StoreManager::getMessageStore(),
+		MessageStoreTestCases tc(StoreManager::getMessageStore(), false,
 			&chkList); //throws exception
 		for (int i = 0; i < numCycles; i++)
 		{

@@ -56,9 +56,11 @@ public:
 	
 	static void setupRandomCorrectDescriptor(Descriptor* desc);
 	
-	static void setupRandomCorrectBody(Body* body);
+	static void setupRandomCorrectBody(Body* body,
+		uint64_t mask = 0xffffffffffffffff, bool check = true);
 	
-	static void setupRandomCorrectSms(SMS* sms);
+	static void setupRandomCorrectSms(SMS* sms,
+		uint64_t mask = 0xffffffffffffffff, bool check = true);
 
 	static void clearSms(SMS* sms);
 

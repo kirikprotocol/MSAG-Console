@@ -363,7 +363,7 @@ void executeBusinessCycleTest(int numThreads)
 	MessageStoreBusinessCycleTest::resize(numThreads);
 	MessageStoreBusinessCycleTestTaskManager tm;
 	MessageStoreCheckList chkList;
-	MessageStoreTestCases tc(StoreManager::getMessageStore(), &chkList); //throws exception
+	MessageStoreTestCases tc(StoreManager::getMessageStore(), false, &chkList); //throws exception
 	for (int i = 0; i < numThreads; i++)
 	{
 		MessageStoreBusinessCycleTestTask* task =

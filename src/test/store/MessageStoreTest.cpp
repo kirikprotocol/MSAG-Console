@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 	{
 		Manager::init("config.xml");
 		StoreManager::startup(Manager::getInstance());
-		MessageStoreTestCases tc(StoreManager::getMessageStore(), NULL); //throws exception
+		MessageStoreTestCases tc(StoreManager::getMessageStore()); //throws exception
 		executeTest(tc);
 		StoreManager::shutdown();
 		exit(0);

@@ -33,7 +33,8 @@ public:
 	 * Инициализирует подсистему Message Store.
 	 * @exception std::exception если инициализация не прошла.
 	 */
-	MessageStoreTestCases(MessageStore* msgStore, CheckList* chkList = NULL);
+	MessageStoreTestCases(MessageStore* msgStore, bool loadTest = false,
+		CheckList* chkList = NULL);
 
 	/**
 	 * Деинициализирует подсистему Message Store.
@@ -199,6 +200,9 @@ public:
 private:
 	MessageStore* msgStore;
 	CheckList* chkList;
+	bool loadTest;
+	uint64_t mask;
+	bool check;
 
 	virtual Category& getLog();
 	void checkNextRetryTime(const vector<SMSId*>& ids,

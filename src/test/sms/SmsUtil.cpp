@@ -215,16 +215,16 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 }
 
 #define __set_int_body_tag__(tagName, value) \
-	if ((mask >>= 1) & 0x1) { \
-		__trace__("set_int_body_tag: " #tagName); \
+	if (mask & (pos <<= 1)) { \
+		__trace2__("set_int_body_tag: " #tagName ", pos = 0x%llx", pos); \
 		uint32_t tmp = value; \
 		intMap[Tag::tagName] = tmp; \
 		body->setIntProperty(Tag::tagName, tmp); \
 	}
 
 #define __set_str_body_tag__(tagName, length) \
-	if ((mask >>= 1) & 0x1) { \
-		__trace__("set_str_body_tag: " #tagName); \
+	if (mask & (pos <<= 1)) { \
+		__trace2__("set_str_body_tag: " #tagName ", pos = 0x%llx", pos); \
 		auto_ptr<char> str = rand_char(length); \
 		strMap.insert(StrMap::value_type(Tag::tagName, str.get())); \
 		body->setStrProperty(Tag::tagName, str.get()); \
@@ -248,13 +248,15 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 			body->getStrProperty(Tag::tagName) == it_##tagName->second); \
 	}
 	
-void SmsUtil::setupRandomCorrectBody(Body* body)
+void SmsUtil::setupRandomCorrectBody(Body* body, uint64_t mask, bool check)
 {
 	__require__(body);
 	//поля сохраняются в body случайным образом
 	//даже обязательные для sms поля могут не сохраняться в БД
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
-	uint64_t mask = *((uint64_t*) tmp.get());
+	mask &= *((uint64_t*) tmp.get());
+	uint64_t pos = 0x1;
+	__trace2__("mask = 0x%llx", mask);
 
 	typedef map<const string, uint32_t> IntMap;
 	typedef map<const string, const string> StrMap;
@@ -285,30 +287,33 @@ void SmsUtil::setupRandomCorrectBody(Body* body)
 	__set_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, rand0(255));
 	__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, rand1(MAX_PAYLOAD_LENGTH));
 	//check fileds
-	__check_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME);
-	__check_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG);
-	__check_int_body_tag__(SMPP_ESM_CLASS);
-	__check_int_body_tag__(SMPP_DATA_CODING);
-	__check_int_body_tag__(SMPP_SM_LENGTH);
-	__check_int_body_tag__(SMPP_REGISTRED_DELIVERY);
-	__check_int_body_tag__(SMPP_PROTOCOL_ID);
-	__check_str_body_tag__(SMPP_SHORT_MESSAGE);
-	__check_int_body_tag__(SMPP_PRIORITY);
-	__check_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE);
-	__check_int_body_tag__(SMPP_USSD_SERVICE_OP);
-	__check_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT);
-	__check_int_body_tag__(SMPP_PAYLOAD_TYPE);
-	__check_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID);
-	__check_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES);
-	__check_int_body_tag__(SMPP_USER_RESPONSE_CODE);
-	__check_int_body_tag__(SMPP_SAR_MSG_REF_NUM);
-	__check_int_body_tag__(SMPP_LANGUAGE_INDICATOR);
-	__check_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS);
-	__check_int_body_tag__(SMPP_NUMBER_OF_MESSAGES);
-	__check_str_body_tag__(SMPP_MESSAGE_PAYLOAD);
+	if (check)
+	{
+		__check_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME);
+		__check_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG);
+		__check_int_body_tag__(SMPP_ESM_CLASS);
+		__check_int_body_tag__(SMPP_DATA_CODING);
+		__check_int_body_tag__(SMPP_SM_LENGTH);
+		__check_int_body_tag__(SMPP_REGISTRED_DELIVERY);
+		__check_int_body_tag__(SMPP_PROTOCOL_ID);
+		__check_str_body_tag__(SMPP_SHORT_MESSAGE);
+		__check_int_body_tag__(SMPP_PRIORITY);
+		__check_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE);
+		__check_int_body_tag__(SMPP_USSD_SERVICE_OP);
+		__check_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT);
+		__check_int_body_tag__(SMPP_PAYLOAD_TYPE);
+		__check_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID);
+		__check_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES);
+		__check_int_body_tag__(SMPP_USER_RESPONSE_CODE);
+		__check_int_body_tag__(SMPP_SAR_MSG_REF_NUM);
+		__check_int_body_tag__(SMPP_LANGUAGE_INDICATOR);
+		__check_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS);
+		__check_int_body_tag__(SMPP_NUMBER_OF_MESSAGES);
+		__check_str_body_tag__(SMPP_MESSAGE_PAYLOAD);
+	}
 }
 
-void SmsUtil::setupRandomCorrectSms(SMS* sms)
+void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t mask, bool check)
 {
 	__require__(sms);
 	SMS* p = sms;
@@ -336,7 +341,7 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms)
 	__set_int__(uint8_t, BillingRecord, rand0(3));
 	__set_desc__(OriginatingDescriptor);
 	//setupRandomCorrectDescriptor(sms->getDestinationDescriptor());
-	setupRandomCorrectBody(&sms->getMessageBody());
+	setupRandomCorrectBody(&sms->getMessageBody(), mask, check);
 	//bool attach;
 }
 
