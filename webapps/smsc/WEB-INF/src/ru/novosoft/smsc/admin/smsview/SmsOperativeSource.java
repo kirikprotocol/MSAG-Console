@@ -30,7 +30,7 @@ public class SmsOperativeSource extends SmsSource
     //  context = ArchiveDaemonContext.getInstance(appContext);
     Smsc smsc = appContext.getSmsc();
     String configPath = smsc.getConfigFolder().getAbsolutePath();
-    int len = configPath.lastIndexOf("\\");
+    int len = configPath.lastIndexOf("/") + 1;
     String absolutePath = configPath.substring(0, len);
     Config config = smsc.getSmscConfig();
 
