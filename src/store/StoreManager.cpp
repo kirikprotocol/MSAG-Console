@@ -353,13 +353,13 @@ void RemoteStore::doChangeSmsConcatSequenceNumber(
 {
     __require__(connection);
 
-    UpdateSeqNumStatement* seqNumStmt = 
-        connection->getUpdateSeqNumStatement();
-    seqNumStmt->bindId(id);
-    seqNumStmt->bindInc(inc);
+    UpdateSeqNumStatement* seqNumStmt = 0;
 
     try
     {
+        seqNumStmt = connection->getUpdateSeqNumStatement();
+        seqNumStmt->bindId(id);
+        seqNumStmt->bindInc(inc);        
         connection->check(seqNumStmt->execute());
     }
     catch (StorageException& exc)
@@ -603,6 +603,7 @@ void RemoteStore::doReplaceSms(StorageConnection* connection,
     __require__(connection);
 
     Body    body;
+    ReplaceStatement* replaceStmt = 0;
     RetrieveBodyStatement* retrieveBodyStmt
         = connection->getRetrieveBodyStatement();
     try
@@ -631,52 +632,35 @@ void RemoteStore::doReplaceSms(StorageConnection* connection,
             destroyBodyStmt->destroyBody();
             //connection->commit();
         }
-    }
-    catch (StorageException& exc)
-    {
-        connection->rollback();
-        throw;
-    }
-
-    try 
-    {
-        body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, (const char*)newMsg,
-                            (unsigned)newMsgLen);
-        body.setIntProperty(Tag::SMPP_SM_LENGTH, (uint32_t)newMsgLen);
-    } 
-    catch (...) {
-        throw StorageException("Incorrect Sms body data. Set/Get Property failed!");
-    }
-
-    ReplaceStatement* replaceStmt;
-    if (waitTime == 0 && validTime == 0)
-    {
-        replaceStmt = connection->getReplaceStatement();
-    }
-    else if (waitTime == 0)
-    {
-        replaceStmt = connection->getReplaceVTStatement();
-        ((ReplaceVTStatement *)replaceStmt)->bindValidTime(validTime);
-    }
-    else if (validTime == 0)
-    {
-        replaceStmt = connection->getReplaceWTStatement();
-        ((ReplaceWTStatement *)replaceStmt)->bindWaitTime(waitTime);
-    }
-    else
-    {
-        replaceStmt = connection->getReplaceVWTStatement();
-        ((ReplaceVWTStatement *)replaceStmt)->bindWaitTime(waitTime);
-        ((ReplaceVWTStatement *)replaceStmt)->bindValidTime(validTime);
-    }
-
-    replaceStmt->bindId(id);
-    replaceStmt->bindOriginatingAddress((Address&) oa);
-    replaceStmt->bindBody(body);
-    replaceStmt->bindDeliveryReport((dvoid *) &deliveryReport,
-                                    (sb4) sizeof(deliveryReport));
-    try
-    {
+        
+        try {
+            body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, (const char*)newMsg,
+                                (unsigned)newMsgLen);
+            body.setIntProperty(Tag::SMPP_SM_LENGTH, (uint32_t)newMsgLen);
+        } catch (...) {
+            throw StorageException("Incorrect Sms body data. Set/Get Property failed!");
+        }
+        
+        if (waitTime == 0 && validTime == 0) {
+            replaceStmt = connection->getReplaceStatement();
+        } else if (waitTime == 0) {
+            replaceStmt = connection->getReplaceVTStatement();
+            ((ReplaceVTStatement *)replaceStmt)->bindValidTime(validTime);
+        } else if (validTime == 0) {
+            replaceStmt = connection->getReplaceWTStatement();
+            ((ReplaceWTStatement *)replaceStmt)->bindWaitTime(waitTime);
+        } else {
+            replaceStmt = connection->getReplaceVWTStatement();
+            ((ReplaceVWTStatement *)replaceStmt)->bindWaitTime(waitTime);
+            ((ReplaceVWTStatement *)replaceStmt)->bindValidTime(validTime);
+        }
+        
+        replaceStmt->bindId(id);
+        replaceStmt->bindOriginatingAddress((Address&) oa);
+        replaceStmt->bindBody(body);
+        replaceStmt->bindDeliveryReport((dvoid *) &deliveryReport,
+                                        (sb4) sizeof(deliveryReport));
+        
         connection->check(replaceStmt->execute());
 
         int bodyLen = body.getBufferLength();
@@ -692,7 +676,7 @@ void RemoteStore::doReplaceSms(StorageConnection* connection,
     catch (StorageException& exc)
     {
         connection->rollback();
-        throw exc;
+        throw;
     }
 
     if (!replaceStmt->wasReplaced())
@@ -1215,10 +1199,12 @@ void RemoteStore::changeSmsStateToDeleted(SMSId id)
 
 RemoteStore::ReadyIdIterator::ReadyIdIterator(
     StorageConnectionPool* _pool, time_t retryTime) 
-        throw(StorageException) : IdIterator(), pool(_pool), connection(0)
+        throw(StorageException) 
+            : IdIterator(), pool(_pool), connection(0), readyStmt(0)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
+    isNull = false;
     connection = pool->getConnection();
     if (!connection) return;
     try
@@ -1227,15 +1213,16 @@ RemoteStore::ReadyIdIterator::ReadyIdIterator(
             connection->connect();
         
         readyStmt = new ReadyByNextTimeStatement(connection, false);
-        if (readyStmt)
-        {
-            readyStmt->bindRetryTime(retryTime);
-            connection->check(readyStmt->execute(OCI_DEFAULT, 0, 0));
-        }
+        readyStmt->bindRetryTime(retryTime);
+        sword status = readyStmt->execute(OCI_DEFAULT, 0, 0);
+        if (status != OCI_NO_DATA) connection->check(status);
+        else isNull = true;
     }
     catch (...)
     {
+        if (readyStmt) delete readyStmt;
         if (connection) pool->freeConnection(connection);
+        connection = 0; readyStmt = 0;
         throw;
     }
 #endif
@@ -1255,7 +1242,7 @@ bool RemoteStore::ReadyIdIterator::getNextId(SMSId &id)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
-    if (readyStmt && connection && connection->isAvailable())
+    if (!isNull && readyStmt && connection && connection->isAvailable())
     {
         sword status = readyStmt->fetch();
         if (status != OCI_NO_DATA)
@@ -1327,10 +1314,12 @@ time_t RemoteStore::getNextRetryTime()
 
 RemoteStore::DeliveryIdIterator::DeliveryIdIterator(
     StorageConnectionPool* _pool, const Address& da)
-        throw(StorageException) : IdIterator(), pool(_pool), connection(0)
+        throw(StorageException) 
+            : IdIterator(), pool(_pool), connection(0), deliveryStmt(0)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-
+    
+    isNull = false;
     connection = pool->getConnection();
     if (!connection) return;
     try
@@ -1339,12 +1328,16 @@ RemoteStore::DeliveryIdIterator::DeliveryIdIterator(
             connection->connect();
         
         deliveryStmt = new DeliveryIdsStatement(connection, da, false);
-        if (deliveryStmt)
-            connection->check(deliveryStmt->execute(OCI_DEFAULT, 0, 0));
+        sword status = deliveryStmt->execute(OCI_DEFAULT, 0, 0);
+        if (status != OCI_NO_DATA) connection->check(status);
+        else isNull = true;
+
     }
     catch (...)
     {
-        pool->freeConnection(connection);
+        if (deliveryStmt) delete deliveryStmt;
+        if (connection) pool->freeConnection(connection);
+        connection = 0; deliveryStmt = 0;
         throw;
     }
 #endif
@@ -1363,7 +1356,7 @@ bool RemoteStore::DeliveryIdIterator::getNextId(SMSId &id)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
-    if (deliveryStmt && connection && connection->isAvailable())
+    if (!isNull && deliveryStmt && connection && connection->isAvailable())
     {
         sword status = deliveryStmt->fetch();
         if (status != OCI_NO_DATA)
@@ -1389,10 +1382,12 @@ IdIterator* RemoteStore::getReadyForDelivery(const Address& da)
 
 RemoteStore::CancelIdIterator::CancelIdIterator(StorageConnectionPool* _pool, 
     const Address& oa, const Address& da, const char* svc)
-        throw(StorageException) : IdIterator(), pool(_pool), connection(0)
+        throw(StorageException) 
+            : IdIterator(), pool(_pool), connection(0), cancelStmt(0)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
+    isNull = false;
     connection = pool->getConnection();
     if (!connection) return;
     try
@@ -1401,12 +1396,15 @@ RemoteStore::CancelIdIterator::CancelIdIterator(StorageConnectionPool* _pool,
             connection->connect();
         
         cancelStmt = new CancelIdsStatement(connection, oa, da, svc, false);
-        if (cancelStmt)
-            connection->check(cancelStmt->execute(OCI_DEFAULT, 0, 0));
+        sword status = cancelStmt->execute(OCI_DEFAULT, 0, 0);
+        if (status != OCI_NO_DATA) connection->check(status);
+        else isNull = true;
     }
     catch (...)
     {
-        pool->freeConnection(connection);
+        if (cancelStmt) delete cancelStmt;
+        if (connection) pool->freeConnection(connection);
+        connection = 0; cancelStmt = 0;
         throw;
     }
 #endif
@@ -1424,8 +1422,7 @@ bool RemoteStore::CancelIdIterator::getNextId(SMSId &id)
     throw(StorageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-
-    if (cancelStmt && connection && connection->isAvailable())
+    if (!isNull && cancelStmt && connection && connection->isAvailable())
     {
         sword status = cancelStmt->fetch();
         if (status != OCI_NO_DATA)
@@ -1450,7 +1447,7 @@ IdIterator* RemoteStore::getReadyForCancel(const Address& oa,
 
 RemoteStore::ConcatInitIterator::ConcatInitIterator(StorageConnectionPool* _pool)
     throw(StorageException) 
-        : ConcatDataIterator(), pool(_pool), connection(0)
+        : ConcatDataIterator(), pool(_pool), connection(0), concatStmt(0)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
@@ -1469,7 +1466,9 @@ RemoteStore::ConcatInitIterator::ConcatInitIterator(StorageConnectionPool* _pool
     }
     catch (...)
     {
-        pool->freeConnection(connection);
+        if (concatStmt) delete concatStmt;
+        if (connection) pool->freeConnection(connection);
+        connection = 0; concatStmt = 0;
         throw;
     }
 #endif
