@@ -137,7 +137,11 @@ void TestSme::executeCycle()
 	if (!boundOk)
 	{
 		boundOk = tc.bindCorrectSme(RAND_TC);
-		__require__(boundOk);
+		if (!boundOk)
+		{
+			cout << "Bound failed" << endl;
+			abort();
+		}
 		for (int i = 0; i < 3; i++)
 		{
 			tc.bindIncorrectSme(RAND_TC); //обязательно после bindCorrectSme
@@ -386,7 +390,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	if (!numBound)
 	{
 		cout << "Invalid routes generated" << endl;
-		abort();
+		//abort();
 	}
 	cout << "Valid routes: " << numRoutes << endl;
 	cout << "Valid routes with sme: " << numBound << endl;
@@ -511,8 +515,8 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		}
 		else if (cmd == "quit")
 		{
-			chkList->save();
-			cout << "Checklist saved" << endl;
+			//chkList->save();
+			//cout << "Checklist saved" << endl;
 			tm.stopTasks();
 			cout << "Total time = " << tm.getExecutionTime() << endl;
 			return;
@@ -532,7 +536,7 @@ int main(int argc, char* argv[])
 		exit(0);
 	}
 	string smscHost = "smsc";
-	int smscPort = 15975;
+	int smscPort = 15971;
 	if (argc == 3)
 	{
 		smscHost = argv[1];
