@@ -366,7 +366,7 @@ int main(int argc, char* argv[])
 	{
 		Manager::init("config.xml");
 		StoreManager::startup(Manager::getInstance());
-		StoreManager::stopArchiver();
+		//StoreManager::stopArchiver();
 		TCResultFilter* filter = new TCResultFilter();
 		MessageStoreTestCases tc(StoreManager::getMessageStore()); //throws exception
 		for (int i = 0; i < numCycles; i++)
