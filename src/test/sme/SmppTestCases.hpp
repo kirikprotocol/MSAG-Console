@@ -85,9 +85,9 @@ private:
 	SmppReceiverTestCases* receiver;
 	SmppTransmitterTestCases* transmitter;
 
-	int checkSubmitTime();
-	int checkWaitTime();
-	int checkValidTime();
+	int checkSubmitTime(time_t checkTime);
+	int checkWaitTime(time_t checkTime);
+	int checkValidTime(time_t checkTime);
 };
 
 }
