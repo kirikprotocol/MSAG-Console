@@ -2,6 +2,7 @@
 #define TEST_DB_SME_DB_SME_REGISTRY
 
 #include "core/synchronization/Mutex.hpp"
+#include "test/core/PduUtil.hpp"
 #include <map>
 #include <string>
 #include <vector>
@@ -14,6 +15,7 @@ using std::string;
 using std::map;
 using std::vector;
 using smsc::core::synchronization::Mutex;
+using smsc::test::core::PduDataObject;
 
 #define __field__(idx, type, name) \
 	type __##name; \
@@ -21,7 +23,7 @@ using smsc::core::synchronization::Mutex;
 	void set##name(const type& val) { __##name = val; mask[idx] = true; } \
 	bool check##name() const { return mask[idx]; }
 
-struct DbSmeTestRecord
+struct DbSmeTestRecord : public PduDataObject
 {
 	vector<bool> mask;
 	__field__(0, string, Job)
