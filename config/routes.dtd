@@ -22,6 +22,7 @@ providerId CDATA "-1"
 	aclId CDATA "-1"
   allowBlocked (true|false) "false"
   billingId CDATA ""
+  categoryId CDATA "-1"
 >
 <!ELEMENT notes (#PCDATA)>
 <!ELEMENT source (subject | mask)>
