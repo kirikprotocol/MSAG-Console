@@ -310,7 +310,7 @@ void DataProvider::registerJob(Job* job, const char* id, const char* address,
     allJobs.Insert(id, job);
 }
 
-void DataProvider::createJob(const char* id, ConfigView* jobConfig)
+void DataProvider::createJob(const char* jobId, ConfigView* jobConfig)
     throw(ConfigException)
 {
     std::auto_ptr<char> typeGuard   (jobConfig->getString("type"));
@@ -331,9 +331,9 @@ void DataProvider::createJob(const char* id, ConfigView* jobConfig)
                               (type) ? type:"");
     try 
     {
-        std::string queryId = this->id; queryId += '.'; queryId += id;
+        std::string queryId = this->id; queryId += '.'; queryId += jobId;
         job->init(jobConfig, queryId.c_str(), messages);
-        registerJob(job, id, address, alias, name);
+        registerJob(job, jobId, address, alias, name);
     } 
     catch (...) {
         if (job) job->finalize();

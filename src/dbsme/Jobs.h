@@ -117,9 +117,10 @@ namespace smsc { namespace dbsme
         Mutex       finalizingLock;
         bool        bFinalizing;
         
-        MessageSet  messages;
+        std::string id;
         char*       name;
-
+        MessageSet  messages;
+        
         void doFinalization()
         {
             {
@@ -151,9 +152,10 @@ namespace smsc { namespace dbsme
             return bFinalizing;
         }
         
-        void init(ConfigView* config, const MessageSet& set)
+        void init(ConfigView* config, const char* jobId, const MessageSet& set)
             throw(ConfigException) 
         {
+            id = jobId;
             name = config->getString("name", "SQLJob name wasn't defined !");
             messages.init(set, config);
             init(config);

@@ -105,7 +105,8 @@ namespace smsc { namespace dbsme
 
         smsc::logger::Logger    log;
         MessageSet              messages;
-        
+        std::string             id;
+
         Event       usersCountEvent;
         Mutex       usersCountLock;
         long        usersCount[2];
@@ -149,7 +150,8 @@ namespace smsc { namespace dbsme
 
     public:
         
-        DataProvider(CommandProcessor* root, ConfigView* config, const MessageSet& set)
+        DataProvider(CommandProcessor* root, ConfigView* config, 
+                     const char* providerId, const MessageSet& set)
             throw(ConfigException);
         
         virtual void finalize()

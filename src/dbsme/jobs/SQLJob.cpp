@@ -75,15 +75,12 @@ void SQLJob::process(Command& command, DataSource& ds)
     
     int wdTimerId = ds.startTimer(connection, dsOperationTimeout);
 
-    Statement* stmt = 0;
     try 
     {
-        stmt = connection->createStatement(sql); // throws SQLException
-        if (!stmt) 
-        {
+        Statement* stmt = connection->getStatement(id.c_str(), sql);
+        if (!stmt) {
             ds.freeConnection(connection);
-            error(SQL_JOB_DS_FAILURE, 
-                  "Failed to create DataSource statement!");
+            error(SQL_JOB_DS_FAILURE, "Failed to create DataSource statement!");
         }
         process(command, *stmt);             // throws CommandProcessException
         if (!isQuery) connection->commit();  // throws SQLException
@@ -91,7 +88,6 @@ void SQLJob::process(Command& command, DataSource& ds)
     }
     catch(CommandProcessException& exc) 
     {
-        if (stmt) delete stmt;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
@@ -99,7 +95,6 @@ void SQLJob::process(Command& command, DataSource& ds)
     }
     catch(Exception& exc)
     {
-        if (stmt) delete stmt;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
@@ -107,7 +102,6 @@ void SQLJob::process(Command& command, DataSource& ds)
     }
     catch(std::exception& exc) 
     {
-        if (stmt) delete stmt;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
@@ -116,7 +110,6 @@ void SQLJob::process(Command& command, DataSource& ds)
     }
     catch(...) 
     {
-        if (stmt) delete stmt;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
@@ -143,7 +136,6 @@ void SQLJob::process(Command& command, Statement& stmt)
     ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR_UN, fromAddressUn);
     ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR_UN, toAddressUn);
     ctx.exportStr(SMSC_DBSME_SQL_JOB_NAME, getName());
-
 
     command.setOutData("");
     
@@ -175,38 +167,29 @@ void SQLJob::process(Command& command, Statement& stmt)
     std::string output = "";
     if (isQuery)
     {
-        ResultSet* rs = 0;
         try 
         {
-            rs = stmt.executeQuery();
+            std::auto_ptr<ResultSet> rsGuard(stmt.executeQuery());
+            ResultSet* rs = rsGuard.get();
             if (!rs)
-                error(SQL_JOB_DS_FAILURE, 
-                      "Result set of query execution is undefined!");
+                error(SQL_JOB_DS_FAILURE, "Result set of query execution is undefined!");
             
             SQLGetAdapter getAdapter(rs);
             if (!rs->fetchNext()) 
-                error(SQL_JOB_QUERY_NULL, 
-                      "Result set of query execution is NULL!");
+                error(SQL_JOB_QUERY_NULL, "Result set of query execution is NULL!");
             
             do formatter->format(output, getAdapter, ctx);
             while (rs->fetchNext());
         } 
-        catch (FormattingException& exc)
-        {
-            if (rs) delete rs;
+        catch (FormattingException& exc) {
             error(SQL_JOB_OUTPUT_FORMAT, exc.what());
         }
-        catch (CommandProcessException& exc) 
-        {
-            if (rs) delete rs;
+        catch (CommandProcessException& exc) {
             throw;
         }
-        catch (Exception& exc) 
-        {
-            if (rs) delete rs;
+        catch (Exception& exc) {
             error(SQL_JOB_DS_FAILURE, exc.what());
         }
-        if (rs) delete rs;
     }
     else // Not query
     {
@@ -216,12 +199,10 @@ void SQLJob::process(Command& command, Statement& stmt)
             SQLGetRowsAdapter getAdapter(result);
             formatter->format(output, getAdapter, ctx);
         }
-        catch (FormattingException& exc)
-        {
+        catch (FormattingException& exc) {
             error(SQL_JOB_OUTPUT_FORMAT, exc.what());
         }
-        catch (Exception& exc) 
-        {
+        catch (Exception& exc) {
             error(SQL_JOB_DS_FAILURE, exc.what());
         }
     }
@@ -250,23 +231,18 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     
     int wdTimerId = ds.startTimer(connection, dsOperationTimeout);
 
-    Routine* routine = 0;
     try 
     {
-        routine = connection->createRoutine(sql, isFunction); 
-        if (!routine) 
-        {
+        Routine* routine = connection->getRoutine(id.c_str(), sql, isFunction); 
+        if (!routine) {
             ds.freeConnection(connection);
-            error(SQL_JOB_DS_FAILURE, 
-                  "Failed to create DataSource routine call!");
+            error(SQL_JOB_DS_FAILURE, "Failed to create DataSource routine call!");
         }
         process(command, *routine);            // throws CommandProcessException
         if (needCommit) connection->commit();  // throws SQLException
-        delete routine;
     }
     catch(CommandProcessException& exc) 
     {
-        if (routine) delete routine;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
@@ -274,7 +250,6 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     }
     catch(Exception& exc)
     {
-        if (routine) delete routine;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
@@ -282,7 +257,6 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     }
     catch(std::exception& exc) 
     {
-        if (routine) delete routine;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
@@ -291,7 +265,6 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     }
     catch(...) 
     {
-        if (routine) delete routine;
         try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.stopTimer(wdTimerId);
         ds.freeConnection(connection);
@@ -339,16 +312,13 @@ void PLSQLJob::process(Command& command, Routine& routine)
         routine.execute();
         formatter->format(output, routineAdapter, ctx);
     }
-    catch (FormattingException& exc)
-    {
+    catch (FormattingException& exc) {
         error(SQL_JOB_OUTPUT_FORMAT, exc.what());
     }
-    catch (ParsingException& exc) 
-    {
+    catch (ParsingException& exc) {
         error(SQL_JOB_INPUT_PARSE, exc.what());
     }
-    catch (Exception& exc) 
-    {
+    catch (Exception& exc) {
         error(SQL_JOB_DS_FAILURE, exc.what());
     }
     

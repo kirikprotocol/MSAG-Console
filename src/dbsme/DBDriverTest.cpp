@@ -45,45 +45,52 @@ int main(void)
             Connection* connection = ds->getConnection();
             if (connection)
             {
-                /*
                 Statement* statement1 = connection->createStatement(sql1);
                 if (statement1)
                 {
-                    for (int i=0; i<10; i++)
+                    statement1->setInt64(1, 0xffffffffffffffff);
+                    statement1->setString(2, "Testing string value");
+                    statement1->setDateTime(3, 1000000);
+                    statement1->executeUpdate();
+                     
+                    /*for (int i=0; i<10; i++)
                     {
-                        statement1->setInt32(1, i*10);
+                        statement1->setInt64(1, -(0x0123456789000000+i));
                         statement1->setString(2, "Testing string value");
-                        statement1->setDateTime(3, i*100000);
-                        wdTimer = ds->startTimer(connection, 10);
+                        statement1->setDateTime(3, i*1000000);
                         int rows = statement1->executeUpdate();
-                    }
+                    }*/
+                    
+                    connection->commit();
                     delete statement1;
                 }
-                ds->stopTimer(wdTimer);
-
+                
                 Statement* statement2 = connection->createStatement(sql2);
                 if (statement2)
                 {
-                    wdTimer = ds->startTimer(connection, 10);
                     ResultSet* rs = statement2->executeQuery();
                     if (rs)
                     {
                         int count = 0;
                         while (rs->fetchNext())
                         {
-                            int8_t inum8 = rs->getInt8(1);
+                            /*int8_t inum8 = rs->getInt8(1);
                             printf("8i  : %d value selected\n", inum8);
                             int16_t inum16 = rs->getInt16(1);
                             printf("16i : %d value selected\n", inum16);
                             int32_t inum32 = rs->getInt32(1);
-                            printf("32i : %d value selected\n", inum32);
+                            printf("32i : %d value selected\n", inum32);*/
+                            int64_t inum64 = rs->getInt64(1);
+                            printf("64i : %llx value selected\n", inum64);
 
-                            uint8_t unum8 = rs->getUint8(1);
+                            /*uint8_t unum8 = rs->getUint8(1);
                             printf("8u  : %d value selected\n", unum8);
                             uint16_t unum16 = rs->getUint16(1);
                             printf("16u : %d value selected\n", unum16);
                             uint32_t unum32 = rs->getUint32(1);
-                            printf("32u : %d value selected\n", unum32);
+                            printf("32u : %d value selected\n", unum32);*/
+                            /*uint64_t unum64 = rs->getUint64(1);
+                            printf("64u : %llx value selected\n", unum64);*/
 
                             if (!rs->isNull(2))
                             {
@@ -95,16 +102,16 @@ int main(void)
                         delete rs;
                     }
                     delete statement2;
-                }*/
+                }
                 
-                Statement* statement3 = connection->createStatement(sql3);
+                /*Statement* statement3 = connection->createStatement(sql3);
                 if (statement3)
                 {
                     int wdTimer = ds->startTimer(connection, 10);
                     int rows = statement3->executeUpdate();
                     ds->stopTimer(wdTimer);
                     delete statement3;
-                }
+                }*/
 
                 ds->freeConnection(connection);
             }
