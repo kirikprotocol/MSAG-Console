@@ -638,9 +638,10 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   error.errorCode = 34; /*Sytem failure */
   ET96MAP_USSD_STRING_T ussdString = {0,};
   //memset(&ussdString,0,sizeof(ussdString));
+  UCHAR_T result;
   if ( dialog->version == 2 ) 
   {
-    Et96MapV2ProcessUnstructuredSSRequestResp(
+    result = Et96MapV2ProcessUnstructuredSSRequestResp(
       dialog->ssn,dialog->dialogid_map,dialog->invokeId,
       &ussdEncoding,
       &ussdString,
@@ -648,6 +649,9 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   }
   else throw runtime_error(
     FormatText("MAP::%s incorrect dialog version %d",__FUNCTION__,dialog->version));
+  if ( result != ET96MAP_E_OK )
+    throw runtime_error(
+      FormatText("MAP::%s Resp return error 0x%x",__FUNCTION__,result));
 }
 
 static long long NextSequence()
@@ -662,9 +666,10 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
   //ET96MAP_ERROR_PROCESS_UNSTRUCTURED_SS_REQ_T error = 0;
   ET96MAP_USSD_STRING_T ussdString = {0,};
+  UCHAR_T result;
   if ( dialog->version == 2 ) 
   {
-    Et96MapV2ProcessUnstructuredSSRequestResp(
+    result = Et96MapV2ProcessUnstructuredSSRequestResp(
       dialog->ssn,dialog->dialogid_map,dialog->invokeId,
       &ussdEncoding,
       &ussdString,
@@ -672,6 +677,10 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
   }
   else throw runtime_error(
     FormatText("MAP::%s incorrect dialog version %d",__FUNCTION__,dialog->version));
+  if ( result != ET96MAP_E_OK )
+    throw runtime_error(
+      FormatText("MAP::%s Resp return error 0x%x",__FUNCTION__,result));
+  TryDestroyDialog(dialog->dialogid_map);
 }
 
 void MAPIO_PutCommand(const SmscCommand& cmd ){ MAPIO_PutCommand(cmd, 0 ); }
@@ -736,8 +745,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
             ussd_map.erase(sequence);
             throw;
           }
-        }
-        if ( !dialog2  ) {
+        }else if ( !dialog2  ) {
           dialog.assign(MapDialogContainer::getInstance()->
                       createOrAttachSMSCDialog(
                         dialogid_smsc,
