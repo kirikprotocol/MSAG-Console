@@ -1439,7 +1439,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
   __map_trace2__("putCommand dialog /0x%x (state:NONE)",dialogid_smsc);
   DialogRefGuard dialog;
   MAP_TRY {
-    if ( dialogid_smsc > 0x3ffff ) { // SMSC dialog
+    if ( cmd->get_commandId() != SUBMIT_RESP ) { 
       if ( cmd->get_commandId() != DELIVERY && cmd->get_commandId() != QUERYABONENTSTATUS)
         throw MAPDIALOG_BAD_STATE("MAP::putCommand: must be DELIVERY or QUERYABONENTSTATUS");
       try
@@ -1485,7 +1485,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   FormatText("MAP::putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq.c_str()));
               if ( dialog->state != MAPST_USSDWaitResponce )
                 throw MAPDIALOG_BAD_STATE(
-                  FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+                  FormatText("MAP::%s ussd resp bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
               {
                 unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
                 if ( dialog->ussdMrRef != mr ) {
@@ -1521,7 +1521,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                     FormatText("MAP::putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq.c_str()));
                 if ( dialog->state != MAPST_ReadyNextUSSDCmd )
                   throw MAPDIALOG_BAD_STATE(
-                    FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+                    FormatText("MAP::%s ussd req/notify bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
                 {
                   unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
                   if ( dialog->ussdMrRef != mr ) {
@@ -1681,7 +1681,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           SendSms(dialog.get());
         }
       }
-    }else{ // MAP dialog
+    }else{ // !delivery !query abonent status
       dialogid_map = dialogid_smsc&0x0ffff;
       if ( ((dialogid_smsc >> 16)&0x3) == 1 ) dialog_ssn = USSD_SSN;
       else dialog_ssn = SSN; 
@@ -1725,6 +1725,33 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           CloseMapDialog(dialog->dialogid_map,dialog->ssn);
           DropMapDialog(dialog.get());
         }
+      }else if(dialog->state == MAPST_WaitSubmitUSSDRequestConf) {
+        __map_trace2__("%s processing USSD Request submit response", __FUNCTION__);
+        if ( cmd->get_resp()->get_status() != 0 )
+        {
+          {
+            MutexGuard ussd_map_guard( ussd_map_lock );
+            ussd_map.erase(dialog->ussdSequence);
+          }
+          CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+          DropMapDialog(dialog.get());
+        } else {
+          dialog->state == MAPST_ReadyNextUSSDCmd;
+        }
+      }else if(dialog->state == MAPST_WaitSubmitUSSDRequestCloseConf) {
+        __map_trace2__("%s processing USSD Request closed submit response", __FUNCTION__);
+        {
+          MutexGuard ussd_map_guard( ussd_map_lock );
+          ussd_map.erase(dialog->ussdSequence);
+        }
+        DropMapDialog(dialog.get());
+      }else if(dialog->state == MAPST_WaitSubmitUSSDNotifyConf) {
+        __map_trace2__("%s processing USSD Notify submit response", __FUNCTION__);
+        {
+          MutexGuard ussd_map_guard( ussd_map_lock );
+          ussd_map.erase(dialog->ussdSequence);
+        }
+        DropMapDialog(dialog.get());
       }else
         throw MAPDIALOG_BAD_STATE(
           FormatText("MAP::%s bad state %d, did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
@@ -2206,9 +2233,12 @@ USHORT_T Et96MapCloseInd(
       DropMapDialog(dialog.get());
       break;
     case MAPST_WaitUSSDNotifyClose:
-    case MAPST_WaitUSSDReqDelim:
+      dialog->state = MAPST_WaitSubmitUSSDNotifyConf;
       SendSubmitCommand(dialog.get());
-      DropMapDialog(dialog.get());
+      break;
+    case MAPST_WaitUSSDReqDelim:
+      dialog->state = MAPST_WaitSubmitUSSDRequestCloseConf;
+      SendSubmitCommand(dialog.get());
       break;
     case MAPST_ImsiWaitCloseInd:
       dialog->associate->hlrVersion = dialog->hlrVersion;
@@ -2647,7 +2677,7 @@ USHORT_T Et96MapDelimiterInd(
       DropMapDialog(dialog.get());
       break;
     case MAPST_WaitUSSDReqDelim:
-      dialog->state = MAPST_ReadyNextUSSDCmd;
+      dialog->state = MAPST_WaitSubmitUSSDRequestConf;
       SendSubmitCommand(dialog.get());
       break;
     default:
