@@ -21,11 +21,10 @@ import java.io.DataInputStream;
 
 public class SmsView
 {
-  private static int   MAX_SMS_FETCH_COUNT    = 10000;
-
   private static int   MAX_SMS_BODY_LENGTH    = 1650;
   private static short SMPP_SHORT_MESSAGE_TAG = 7;
   private static short SMPP_DATA_CODING_TAG   = 3;
+  private static short SMPP_ESM_CLASS_TAG     = 2;
 
   private static short DATA_CODING_DEFAULT    = 0;    // 0
   private static short DATA_CODING_BINARY     = 4;    // BIT(2)
@@ -96,7 +95,7 @@ public class SmsView
     Connection connection = stmt.getConnection();
     PreparedStatement lbstmt = connection.prepareStatement(selectLargeBody);
     int fetchedCount = 0;
-    while (rs.next() && MAX_SMS_FETCH_COUNT > fetchedCount++)
+    while (rs.next() && SmsSet.MAX_SMS_FETCH_COUNT > fetchedCount++)
     {
       SmsRow row = new SmsRow();
       int pos=1;
@@ -112,22 +111,17 @@ public class SmsView
       if (bodyLen <= 0) {
         row.setText("");
       }
-      else if (bodyLen <= MAX_SMS_BODY_LENGTH)
-      {
+      else if (bodyLen <= MAX_SMS_BODY_LENGTH) {
         byte body[] = rs.getBytes(pos);
         row.setText(convertBody(new ByteArrayInputStream(body, 0, bodyLen)));
-      }
-      else
-      {
+      } else {
         ResultSet lbrs = null;
-        try
-        {
+        try {
           lbstmt.setBytes(1, id);
           lbrs = lbstmt.executeQuery();
           Blob blob = lbrs.getBlob(1);
           row.setText("BLOB >> " +convertBody(blob.getBinaryStream()));
-        }
-        catch (Exception exc) {
+        } catch (Exception exc) {
             System.out.println("Retrive Blob from DB failed !");
             if (lbrs != null) lbrs.close();
             exc.printStackTrace();
@@ -175,9 +169,9 @@ public class SmsView
   {
     String  message = "";
     int     textEncoding = DATA_CODING_DEFAULT;
-    boolean textFound = false;
+    byte    esmClass = 0;
     int     textLen = 0;
-    byte    text[] = new byte[MAX_SMS_BODY_LENGTH];
+    byte    text[] = null;
 
     System.out.println("Converting SMS body ...");
     try
@@ -188,19 +182,33 @@ public class SmsView
         short tag = stream.readShort();
         int   len = stream.readInt();
         //System.out.println("Tag "+tag+" Len "+len);
-        if (tag == SMPP_SHORT_MESSAGE_TAG)
-        {
-          stream.read(text, 0, len);
-          textLen = len; textFound = true;
-        }
-        if (tag == SMPP_DATA_CODING_TAG)
-        {
+
+        if (tag == SMPP_SHORT_MESSAGE_TAG) {
+          byte msgText[] = new byte[textLen = len];
+          stream.read(msgText, 0, textLen);
+          text = msgText;
+        } else if (tag == SMPP_DATA_CODING_TAG) {
           textEncoding = stream.readInt();
+        } else if (tag == SMPP_ESM_CLASS_TAG) {
+          esmClass = (byte)stream.readInt();
+        } else {
+          stream.skip(len);
         }
-        else stream.skip(len);
       }
       stream.close();
-      message = decodeMessage(text, textLen, textEncoding);
+
+      if (text != null && (esmClass & 0x40) == 0x40) {
+        DataInputStream input = new DataInputStream(
+                                new ByteArrayInputStream(text, 0, textLen));
+        int headerLen = (int)input.readByte();          // Byte ???
+        textLen -= headerLen+1; input.skip(headerLen);  // +1 ???
+        byte msgText[] = new byte[textLen];
+        stream.read(msgText, 0, textLen);
+        text = msgText;
+      }
+
+      if (text != null)
+        message = decodeMessage(text, textLen, textEncoding);
     }
     catch (IOException exc)
     {
