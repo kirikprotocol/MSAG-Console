@@ -140,7 +140,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   Method acl_list_names       ((unsigned)aclListNamesMethod,       "acl_list_names",        empty_params,                StringListType);
   Method acl_get              ((unsigned)aclGetMethod,             "acl_get",               acl_id_params,               StringListType);
   Method acl_remove           ((unsigned)aclRemoveMethod,          "acl_remove",            acl_id_params,               BooleanType);
-  Method acl_create           ((unsigned)aclCreateMethod,          "acl_create",            acl_create_params,           BooleanType);
+  Method acl_create           ((unsigned)aclCreateMethod,          "acl_create",            acl_create_params,           LongType);
   Method acl_update_info      ((unsigned)aclUpdateInfoMethod,      "acl_update_info",       acl_info_params,             BooleanType);
   Method acl_lookup_addresses ((unsigned)aclLookupAddressesMethod, "acl_lookup_addresses",  acl_lookup_addresses_params, StringListType);
   Method acl_remove_addresses ((unsigned)aclRemoveAddressesMethod, "acl_remove_addresses",  acl_addresses_params,        BooleanType);
@@ -1459,11 +1459,11 @@ Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
     }
     
     try {
-    AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
+      AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
       if (cache_type_present)
-        aclmgr->create2(name, description, phones, (AclCacheType)(cache_type_str[0]));
+        return Variant((const long)aclmgr->create2(name, description, phones, (AclCacheType)(cache_type_str[0])));
       else
-        aclmgr->create2(name, description, phones);
+        return Variant((const long)aclmgr->create2(name, description, phones));
     } catch (std::exception &e) {
       throw AdminException("Could not create ACL, nested: \"%s\"", e.what());
     } catch (const char * const e) {
@@ -1471,9 +1471,6 @@ Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
     } catch (...) {
       throw AdminException("Could not create ACL, nested: Unknown exception");
     }
-    
-    Variant result("created");
-    return result;
   } catch (HashInvalidKeyException &e) {
     throw new AdminException("Parameter id or name or description or adressess not found");
   }
