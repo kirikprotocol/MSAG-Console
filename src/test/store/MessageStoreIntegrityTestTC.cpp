@@ -5,19 +5,34 @@
 #include "test/util/Util.hpp"
 #include "test/util/TCResultFilter.hpp"
 #include <iostream>
+#include <sstream>
 
-using namespace std;
-using namespace smsc::sms;
-using namespace smsc::store;
-using namespace smsc::test::store;
-using namespace smsc::test::util;
-using namespace smsc::util::config;
+using namespace smsc::sms; //SMSId, SMS
+using namespace smsc::test::store; //constants, MessageStoreTestCases
+using namespace smsc::test::util; //constants, TCResult, TCResultStack, ...
+using std::vector;
+using std::ostringstream;
+using log4cpp::Category;
+using smsc::util::Logger;
+using smsc::util::config::Manager;
+using smsc::store::StoreManager;
 
 #define PREPARE_FOR_NEW_SMS \
 	id.push_back(new SMSId()); \
 	sms.push_back(new SMS()); \
 	stack.push_back(new TCResultStack());
 	
+void debug(TCResult* res)
+{
+	static Category& log = Logger::getCategory("smsc.test.store.IntegrityTest");
+	if (res)
+	{
+		ostringstream os;
+		os << *res << endl;
+		log.debug("%s", os.str().c_str());
+	}
+}
+
 void executeIntegrityTest(TCResultFilter* filter, int listSize)
 {
 	cout << ".";
@@ -31,6 +46,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 	{
 		PREPARE_FOR_NEW_SMS
 		TCResult* res = tc.storeCorrectSms(id.back(), sms.back(), RAND_TC);
+		debug(res);
 		stack.back()->push_back(res);
 	}
 	
@@ -52,6 +68,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					PREPARE_FOR_NEW_SMS
 					TCResult* res = tc.storeCorrectSms(id.back(), sms.back(),
 						*id[i], *sms[i], RAND_TC);
+					debug(res);
 					stack.back()->push_back(res);
 				}
 				break;
@@ -59,6 +76,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.storeRejectDuplicateSms(*sms[i]);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -66,12 +84,14 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.storeReplaceCorrectSms(*id[i], sms[i]);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
 			case 4:
 				{
 					TCResult* res = tc.storeIncorrectSms(RAND_TC);
+					debug(res);
 					filter->addResult(res);
 					//stack[i]->push_back(res);
 				}
@@ -81,6 +101,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				{
 					TCResult* res = tc.changeExistentSmsStateEnrouteToEnroute(
 						*id[i], sms[i], RAND_TC);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -88,6 +109,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.replaceCorrectSms(*id[i], sms[i], RAND_TC);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -95,6 +117,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -102,6 +125,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.loadExistentSms(*id[i], *sms[i]);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 		}
@@ -112,6 +136,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 	{
 		TCResult* res = tc.changeExistentSmsStateEnrouteToFinal(*id[i], 
 			sms[i], RAND_TC);
+		debug(res);
 		stack[i]->push_back(res);
 	}
 	
@@ -126,6 +151,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.changeFinalSmsStateToAny(*id[i], RAND_TC);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -135,6 +161,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					PREPARE_FOR_NEW_SMS
 					TCResult* res = tc.storeReplaceSmsInFinalState(id.back(),
 						sms.back(), *id[i], *sms[i]);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -142,6 +169,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.loadExistentSms(*id[i], *sms[i]);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 		}
@@ -151,6 +179,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 	for (int i = 0; i < id.size(); i++)
 	{
 		TCResult* res = tc.deleteExistentSms(*id[i]);
+		debug(res);
 		stack[i]->push_back(res);
 	}
 
@@ -166,6 +195,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.changeFinalSmsStateToAny(*id[i], RAND_TC);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -173,6 +203,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -180,6 +211,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.loadNonExistentSms(*id[i]);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -187,6 +219,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.deleteNonExistentSms(*id[i]);
+					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -195,7 +228,9 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 
 //Сохранение неправильного sms с проверкой на assert
 #ifdef ASSERT_THROW_IF_FAIL
-	filter->addResult(tc.storeAssertSM(ALL_TC));
+	TCResult* res = tc.storeAssertSms(ALL_TC);
+	filter->addResult(res);
+	debug(res);
 #endif
 
 	//обработка результатов
@@ -285,6 +320,7 @@ int main(int argc, char* argv[])
 	{
 		Manager::init("config.xml");
 		StoreManager::startup(Manager::getInstance());
+		StoreManager::stopArchiver();
 		TCResultFilter* filter = new TCResultFilter();
 		for (int i = 0; i < 50; i++)
 		{
