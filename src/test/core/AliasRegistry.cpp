@@ -42,7 +42,7 @@ const AliasRegistry::AliasList AliasRegistry::findAliasByAddress(const Address& 
 	//список алиасов с максимальными addrMatch
 	for (int i = 0; i < list.size(); i++)
 	{
-		if (!list[i]->addrMatch)
+		if (!list[i]->addrMatch /*|| list[i]->addrToAliasException*/)
 		{
 			continue;
 		}
@@ -78,7 +78,7 @@ const AliasRegistry::AliasList AliasRegistry::findAddressByAlias(const Address& 
 	//список алиасов с максимальными aliasMatch
 	for (int i = 0; i < list.size(); i++)
 	{
-		if (!list[i]->aliasMatch)
+		if (!list[i]->aliasMatch /*|| list[i]->aliasToAddrException*/)
 		{
 			continue;
 		}
