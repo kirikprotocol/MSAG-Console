@@ -14,7 +14,10 @@
 #include <sstream>
 #include <iostream>
 
-#define __print__(val) cout << #val << " = " << (val) << endl
+#define SIMPLE_TEST
+#ifdef SIMPLE_TEST
+	#undef ASSERT
+#endif
 
 using smsc::sme::SmeConfig;
 using smsc::test::sms::SmsUtil;
@@ -151,28 +154,41 @@ void TestSme::executeCycle()
 	}
 	//Синхронная отправка submit_sm pdu другим sme
 	//Асинхронная отправка submit_sm pdu другим sme
-#ifdef ASSERT
-	for (TCSelector s(RAND_TC, 3); s.check(); s++)
-#else
-	for (TCSelector s(RAND_TC, 2); s.check(); s++)
-#endif
+#ifdef SIMPLE_TEST
+	for (TCSelector s(RAND_TC, 1); s.check(); s++)
 	{
 		switch (s.value())
 		{
 			case 1:
-				tc.getTransmitter().submitSm(true, RAND_TC);
+				tc.getTransmitter().submitSmCorrect(rand0(1), 1);
 				break;
-			case 2:
-				tc.getTransmitter().submitSm(false, RAND_TC);
-				break;
-#ifdef ASSERT
-			case 3:
-				tc.getTransmitter().submitSmAssert(RAND_TC);
-				break;
-#endif
 		}
 		updateStat();
 	}
+#else //!SIMPLE_TEST
+	#ifdef ASSERT
+	for (TCSelector s(RAND_TC, 3); s.check(); s++)
+	#else
+	for (TCSelector s(RAND_TC, 2); s.check(); s++)
+	#endif //ASSERT
+	{
+		switch (s.value())
+		{
+			case 1:
+				tc.getTransmitter().submitSmCorrect(rand0(1), RAND_TC);
+				break;
+			case 2:
+				tc.getTransmitter().submitSmIncorrect(rand0(1), RAND_TC);
+				break;
+	#ifdef ASSERT
+			case 3:
+				tc.getTransmitter().submitSmAssert(RAND_TC);
+				break;
+	#endif //ASSERT
+		}
+		updateStat();
+	}
+#endif //SIMPLE_TEST
 }
 
 void TestSme::onStopped()
@@ -185,16 +201,23 @@ void TestSme::onStopped()
 
 bool TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 {
-	if (rand0(1))
+#ifdef SIMPLE_TEST
+	tc.getTransmitter().sendDeliverySmRespOk(pdu, RAND_TC);
+	return true;
+#else
+	switch (rand1(3))
 	{
-		tc.getTransmitter().sendDeliverySmRespOk(pdu, RAND_TC);
-		return true;
+		case 1:
+			tc.getTransmitter().sendDeliverySmRespErr(pdu, RAND_TC);
+			return false;
+		case 2:
+			//не посылать респонс
+			return false;
+		default:
+			tc.getTransmitter().sendDeliverySmRespOk(pdu, RAND_TC);
+			return true;
 	}
-	else
-	{
-		tc.getTransmitter().sendDeliverySmRespErr(pdu, RAND_TC);
-		return false;
-	}
+#endif //SIMPLE_TEST
 }
 
 void TestSme::updateStat()
@@ -278,7 +301,7 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	{
 		addr.push_back(new Address());
 		smeInfo.push_back(new SmeInfo());
-		tcSme.addCorrectSme(addr[i], smeInfo[i], 1 /*RAND_TC*/);
+		tcSme.addCorrectSme(addr[i], smeInfo[i], 1/*RAND_TC*/);
 		ostringstream os;
 		os << *addr[i];
 		__trace2__("genConfig(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
@@ -380,21 +403,17 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 			Address& destAlias = *addr[j];
 			string smeId = "<>";
 			bool smeBound = false;
-			auto_ptr<const Address> destAddr =
-				aliasReg->findAddressByAlias(destAlias);
-			if (destAddr.get())
+			const Address destAddr = aliasReg->findAddressByAlias(destAlias);
+			const RouteHolder* routeHolder =
+				routeReg->lookup(origAddr, destAddr);
+			if (routeHolder)
 			{
-				const RouteHolder* routeHolder =
-					routeReg->lookup(origAddr, *destAddr);
-				if (routeHolder)
+				smeId = routeHolder->route.smeSystemId;
+				smeBound = smeReg->isSmeBound(smeId);
+				numRoutes++;
+				if (smeBound)
 				{
-					smeId = routeHolder->route.smeSystemId;
-					smeBound = smeReg->isSmeBound(smeId);
-					numRoutes++;
-					if (smeBound)
-					{
-						numBound++;
-					}
+					numBound++;
 				}
 			}
 			ostringstream os;
