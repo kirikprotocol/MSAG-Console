@@ -85,7 +85,7 @@ private:
     void incError(int errcode)
     {
         uint16_t* errCounter = errCounters.GetPtr(errcode);
-        if (errCounter) errCounter++;
+        if (errCounter) (*errCounter)++;
         else errCounters.Insert(errcode, 1);
 
         TimeSlotCounter<int>* errHourCounter = 0;
