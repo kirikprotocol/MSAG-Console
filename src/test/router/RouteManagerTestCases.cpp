@@ -25,21 +25,6 @@ using smsc::util::Logger;
 using smsc::sms::AddressValue;
 using smsc::test::core::RouteUtil;
 
-#define __decl_tc12__ \
-	TestCase* tc1 = NULL; \
-	TestCase* tc2 = NULL; \
-	bool isOk = true;
-
-#define __tc12_ok__ \
-	TestCase* tc; \
-	tc = tc1; __tc_ok__; \
-	tc = tc2; __tc_ok__;
-
-#define __tc12_fail__(errCode) \
-	TestCase* tc; \
-	tc = tc1; __tc_fail__(errCode); \
-	tc = tc2; __tc_fail__(errCode);
-
 RouteManagerTestCases::RouteManagerTestCases(RouteManager* _routeMan,
 	RouteRegistry* _routeReg, CheckList* _chkList)
 	: routeMan(_routeMan), routeReg(_routeReg), chkList(_chkList)
