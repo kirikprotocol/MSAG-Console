@@ -25,6 +25,9 @@ const int MAX_PAYLOAD_LENGTH = 65535;
 const int MAX_SERVICE_TYPE_LENGTH = 5;
 const int MAX_MSG_ID_LENGTH = 64;
 
+const uint64_t BODY_ALL = 0xffffffffffffffff;
+const uint64_t BODY_MSG_PAYLOAD = 0x100000;
+
 class SmsUtil
 {
 public:
@@ -44,7 +47,7 @@ public:
 	static void setupRandomCorrectDescriptor(Descriptor* desc, bool check = true);
 	
 	static void setupRandomCorrectSms(SMS* sms,
-		uint64_t includeMask = 0xffffffffffffffff, bool check = true);
+		uint64_t includeMask = BODY_ALL, bool check = true);
 
 	static void clearSms(SMS* sms);
 
