@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+    
+    <section name="StartupLoader">
+        <section name="DataSourceDrivers">
+            <section name="OCIDataSourceDriver">
+                <param name="type" type="string">OCI</param>
+                <param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+            </section>
+        </section>
+    </section>
+    
+    <section name="DBSme">
+
+        <param name="SvcType" type="string">DBSme</param>
+        <param name="ProtocolId" type="int">111</param>
+        
+        <section name="ThreadPool">
+            <param name="max" type="int">15</param>
+            <param name="init" type="int">5</param>
+        </section>  
+            
+        <section name="SMSC">
+            <param name="host" type="string">smsc</param>
+            <param name="port" type="int">9119</param>
+            <param name="sid" type="string">111</param>
+            <param name="timeout" type="int">10</param>
+            <param name="password" type="string"></param>
+        </section>  
+
+        <section name="DataProviders">
+        
+            <section name="SampleDataProvider1">
+                <param name="address" type="string">111</param>
+            
+                <section name="DataSource">
+                    <param name="type" type="string">OCI</param>
+                    <param name="connections" type="int">5</param>
+                    <param name="dbInstance" type="string">DBS_ORCL</param>
+                    <param name="dbUserName" type="string">smsc</param>
+                    <param name="dbUserPassword" type="string">smsc</param>
+                </section>
+            
+                <section name="Jobs">
+                
+                    <section name="DefautJob">
+                        <param name="name" type="string">default</param>
+                        <param name="type" type="string">sql-job</param>
+                        <param name="query" type="bool">false</param>
+                        <param name="sql" type="string">
+                            update sms_test set temp=temp
+                        </param>
+                        <param name="input" type="string">
+                            \\empty \$$ " \" \\" ""
+                        </param>
+<param name="output" type="string">
+Default Job called !.
+Current date/time   : \"$$date pattern="dd MMMM, yyyy hh:mm t" default="now"$$\"
+Rows affected count is  : $$int32 arg=1$$
+Float       : $$float precision="2" default="3.1415"$$
+Double      : $$double digits="8" default="3.1415"$$
+Long-Double : $$long-double digits="10" default="3.1415"$$
+</param>
+                    </section>
+            
+                    <section name="Test-SQLJob1">
+                        <param name="name" type="string">sample</param>
+                        <param name="type" type="string">sql-job</param>
+                        <param name="query" type="bool">true</param>
+                        <param name="sql" type="string">
+                            select temp, str, dt from sms_test where temp=:1 or str=:2 or dt=:3
+                        </param>
+                        <param name="input" type="string">
+                            $$string arg=2  nn="\\\"" ff="\"" ee="\\" dd= " \$$ " tt="\\\e"$$
+                            $$int16 arg="1"     $$
+                            $$date arg=3 pattern="dd MMMM, yyyy hh:mm t" default="now"$$
+                        </param>
+<param name="output" type="string">
+ Int32 value   :  $$uint32 arg=1 $$ 
+ String right  : '$$string arg=2 length=30 align="right"$$'
+ String center : '$$string arg=2 length=30 align="center"$$'
+ String left   : '$$string arg=2 length=30 align="left"$$'
+ Date/Time by system format        :  $$date arg=3 $$
+ Date/Time by user-desired pattern :  $$date arg=3 pattern="W, MMMM dd, yyyy hh:mm:ss (t)" default="now"$$
+ Date/Time today           :  $$date pattern="w, dd-MMM-yyyy HH:mm:ss" default="today"$$
+ That's all!
+ \$\$ \\
+</param>
+                    </section>
+            
+                    <section name="Test-Insert-SQLJob">
+                        <param name="name" type="string">insert</param>
+                        <param name="type" type="string">sql-job</param>
+                        <param name="query" type="bool">false</param>
+                        <param name="sql" type="string">
+                            insert into dbsme_test (address, cnt, dt) values (:1, :2, :3)
+                        </param>
+                        <param name="input" type="string">
+                            $$string arg=1 import="from-address" $$
+                            $$int16 arg=2 export="added-number"$$
+                            $$date arg=3 pattern="dd MMMM, yyyy hh:mm t" default="now"$$
+                        </param>
+<param name="output" type="string">
+ Insert: Record inserted (+\$$$int16 import="added-number"$$ added). 
+ Operation date/time is: $$date pattern="w, dd-MMM-yyyy HH:mm:ss" default="now"$$
+</param>
+                    </section>
+		    
+                    <section name="Test-Select-SQLJob">
+                        <param name="name" type="string">select</param>
+                        <param name="type" type="string">sql-job</param>
+                        <param name="query" type="bool">true</param>
+                        <param name="sql" type="string">
+                            select sum(cnt), count(*), max(dt) 
+			    from dbsme_test where address=:1 group by address
+                        </param>
+                        <param name="input" type="string">
+                            $$string arg=1 import="from-address"$$
+                        </param>
+<param name="output" type="string">
+ Selected:
+ For address            : '$$string length=30 align="right" import="from-address"$$'
+ Sum of counters        : $$int32 arg=1 default="No entries found !"$$
+ Count of records       : $$int32 arg=2 default="No entries found !"$$
+ Last insert date/time  : $$date arg=3 pattern="W, MMMM dd, yyyy hh:mm:ss (t)" default="today"$$
+ Operation date/time is : $$date pattern="w, dd-MMM-yyyy HH:mm:ss" default="now"$$
+</param>
+                    </section>
+		    
+                    <section name="Job3">
+                    </section>
+                    <section name="Job4">
+                    </section>
+            
+                </section>
+            
+            </section>
+
+            <section name="SampleDataProvider2">
+            </section>
+        
+        </section>
+        
+    </section>
+
+</config>
