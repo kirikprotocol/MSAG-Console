@@ -290,6 +290,15 @@ inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, ET96MAP_ADDRESS_T *saddr, 
   }
 }
 
+inline void SS7ToText(  const ET96MAP_SS7_ADDR_T *addr , char* text ){
+  unsigned k = 0;
+  for ( int i=0; i < addr->ss7AddrLen; ++i ){
+    k += sprintf(text+k,"%02x|",addr->ss7Addr[i]);
+  }
+  text[k] = 0;
+}
+
+
 inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, char *saddr, unsigned len) {
   unsigned i;
   int sz = (len+1)/2;

@@ -97,7 +97,9 @@ static void SendOkToSmsc(unsigned dialogid)
 
 static void QueryHlrVersion(MapDialog* dialog)
 {
-  string s_((char*)dialog->mshlrAddr.ss7Addr,(char*)dialog->mshlrAddr.ss7Addr+sizeof(dialog->mshlrAddr.ss7Addr));
+  const text[32];
+  SS7ToText(&dialog->mshlrAddr,text);
+  string s_(text);
   __trace2__("MAP::QueryHlrVersion: [store %s]=0x%x",s_.c_str(),dialog->dialogid_map);
   x_map[s_] = dialog->dialogid_map;
   USHORT_T result = 
@@ -111,7 +113,9 @@ static void QueryHlrVersion(MapDialog* dialog)
 
 static void QueryMcsVersion(MapDialog* dialog)
 {
-  string s_((char*)dialog->destMscAddr.ss7Addr,(char*)dialog->destMscAddr.ss7Addr+sizeof(dialog->destMscAddr.ss7Addr));
+  const text[32];
+  SS7ToText(&dialog->mshlrAddr,text);
+  string s_(text);
   __trace2__("MAP::QueryMcsVersion: [store %s]=0x%x",s_.c_str(),dialog->dialogid_map);
   x_map[s_] = dialog->dialogid_map;
   USHORT_T result = 
@@ -545,7 +549,9 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
   unsigned dialogid_smsc = 0;
   MAP_TRY{
     __trace2__("MAP::%s ",__FUNCTION__);
-    string s_((char*)ss7Address_sp->ss7Addr,(char*)ss7Address_sp->ss7Addr+sizeof(ss7Address_sp->ss7Addr));
+    const text[32];
+    SS7ToText(&dialog->mshlrAddr,text);
+    string s_(text);
     __trace2__("MAP::%s: [exists %s]?",__FUNCTION__,s_.c_str());
     map<string,unsigned>::iterator it = x_map.find(s_);
     if ( it == x_map.end() ){
