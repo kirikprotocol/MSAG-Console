@@ -79,7 +79,7 @@ public class RouteFilter implements Filter
     {
       for (Iterator i = subjects.iterator(); i.hasNext();) {
         String subject =  (String) i.next();
-        if (subj.indexOf(subject) != -1)
+        if (subj.toLowerCase().indexOf(subject.toLowerCase()) != -1)
           return ALLOWED;
       }
     }
@@ -190,24 +190,25 @@ public class RouteFilter implements Filter
       Destination dst = (Destination) i.next();
       if (intersection==0) {
 
-        if (!smes.contains(dst.getSme().getId()))
+        if (!smes.contains(dst.getSme().getId()) && !smes.contains(dst.getSme().getId().toLowerCase()))
+
           return NOT_ALLOWED;
         else
         {
           for (Iterator j = smes.iterator(); j.hasNext();) {
             String subject =  (String) j.next();
-            if (dst.getSme().getId().indexOf(subject) == -1)
+            if (dst.getSme().getId().toLowerCase().indexOf(subject.toLowerCase()) == -1)
               return NOT_ALLOWED;
           }
         }
       } else {
-        if (smes.contains(dst.getSme().getId()))
+        if (smes.contains(dst.getSme().getId()) || smes.contains(dst.getSme().getId().toLowerCase()))
           return ALLOWED;
         else
         {
           for (Iterator j = smes.iterator(); j.hasNext();) {
             String subject =  (String) j.next();
-            if (dst.getSme().getId().indexOf(subject) != -1)
+            if (dst.getSme().getId().toLowerCase().indexOf(subject.toLowerCase()) != -1)
               return ALLOWED;
           }
         }
@@ -221,7 +222,7 @@ public class RouteFilter implements Filter
     if (names.isEmpty())
       return UNKNOWN;
 
-    if (names.contains(name))
+    if (names.contains(name) || names.contains(name.toLowerCase()) || names.contains(name.toUpperCase()) )
       return ALLOWED;
 
     for (Iterator j = names.iterator(); j.hasNext();) {

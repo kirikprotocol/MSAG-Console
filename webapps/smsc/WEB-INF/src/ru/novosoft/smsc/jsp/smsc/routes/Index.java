@@ -82,7 +82,6 @@ public class Index extends IndexBean
 
     if (!initialized) {
         final RouteFilter routesFilter = preferences.getRoutesFilter();
-        //queryName=routesFilter.getNames()[0];
         srcChks = routesFilter.getSourceSubjectNames();
         srcMasks = routesFilter.getSourceMaskStrings();
         dstChks = routesFilter.getDestinationSubjectNames();
@@ -110,7 +109,7 @@ public class Index extends IndexBean
           querySMEs="";
         }
       }
-    
+
 
      if (mbAdd != null)
       return RESULT_ADD;
@@ -152,12 +151,12 @@ public class Index extends IndexBean
         final RouteFilter routesFilter = preferences.getRoutesFilter();
         routesFilter.setIntersection(1);
         if (queryName != null)
-            routesFilter.setNames(new String[]{queryName});
+            routesFilter.setNames(new String[]{queryName.toLowerCase()});
         else
             routesFilter.setNames(new String[0]);
           if (querySubj != null) {
-            routesFilter.setSourceSubjectNames(new String[]{querySubj});
-            routesFilter.setDestinationSubjectNames(new String[]{querySubj});
+            routesFilter.setSourceSubjectNames(new String[]{querySubj.toLowerCase()});
+            routesFilter.setDestinationSubjectNames(new String[]{querySubj.toLowerCase()});
         }
           else
           {
@@ -174,7 +173,7 @@ public class Index extends IndexBean
             routesFilter.setDestinationMaskStrings(new String[0]);
         }
         if (querySMEs != null)
-                    routesFilter.setSmeIds(new String[]{querySMEs});
+                    routesFilter.setSmeIds(new String[]{querySMEs.toLowerCase()});
         else
                     routesFilter.setSmeIds(new String[0]);
         /*    if ("5".equals(filterSelect))
