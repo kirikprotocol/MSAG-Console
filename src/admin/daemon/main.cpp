@@ -142,5 +142,6 @@ int main(int argc, char **argv)
 	{
 		smsc_log_info(Logger::getInstance("smsc.admin.daemon"), "Exception: <unknown>");
 	}
+  smsc::logger::Logger::Shutdown();
 }
 
