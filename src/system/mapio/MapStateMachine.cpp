@@ -155,7 +155,7 @@ static void DropMapDialog_(unsigned dialogid){
         return;
       }
     }
-    __trace2__("MAP::%s: 0x%x - restart on next in chain - ",__FUNCTION__,__dialogid_map);
+    __trace2__("MAP::%s: - restart on next in chain - ",__FUNCTION__);
     SmscCommand cmd = dialog->chain.front();
     dialog->chain.pop_front();
     dialog->Clean();
