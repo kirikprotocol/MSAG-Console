@@ -1,6 +1,7 @@
 #ifndef __SMSC_MISSCALL_CALLPROC_HPP__
 #define __SMSC_MISSCALL_CALLPROC_HPP__
 
+#include <time.h>
 #include <string>
 #include "core/synchronization/Mutex.hpp"
 
@@ -13,6 +14,7 @@ using smsc::core::synchronization::Mutex;
 struct MissedCallEvent{
   string from;
   string to;
+  time_t time;
 };
 class MissedCallListener{
   public:

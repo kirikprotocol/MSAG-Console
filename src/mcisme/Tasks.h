@@ -34,23 +34,26 @@ namespace smsc { namespace mcisme
     struct Message
     {
         uint64_t    id;
-        int         seqNumber;
         bool        replace, notify;
         std::string abonent, message;
+        int         eventCount;
 
-        Message(uint64_t id=0, int seq=0, std::string abonent="", std::string message="",
+        Message(uint64_t id=0, std::string abonent="", std::string message="",
                 bool replace=false, bool notify=false) 
-            : id(id), seqNumber(seq), abonent(abonent), message(message), replace(replace), notify(notify) {};
+            : id(id), abonent(abonent), message(message),
+              replace(replace), notify(notify), eventCount(0) {};
         Message(const Message& msg) 
-            : id(msg.id), seqNumber(msg.seqNumber), abonent(msg.abonent), message(msg.message),
-              replace(msg.replace), notify(msg.notify) {};
+            : id(msg.id), abonent(msg.abonent), message(msg.message),
+              replace(msg.replace), notify(msg.notify), eventCount(0) {};
         
         Message& operator=(const Message& msg) {
-            id = msg.id; seqNumber = msg.seqNumber;
+            id = msg.id; eventCount = msg.eventCount;
             abonent = msg.abonent; message = msg.message;
             replace = msg.replace; notify = msg.notify;
             return (*this);
         };
+
+        bool addEvent(const MissedCallEvent& event, bool force=false);
     };
     
     static const uint8_t MESSAGE_NEW_STATE          = 0;  // Ќовое или перешедуленное сообщение
@@ -67,18 +70,21 @@ namespace smsc { namespace mcisme
     {
     private:
         
-        static smsc::logger::Logger *logger;
+        static Logger*      logger;
         static DataSource*  ds;
+        static uint64_t     currentId, sequenceId;
 
         std::string     abonent;
         Array<Message>  messages; // Messages for abonent, 0 - current
 
+        void insertNewEvent(Connection* connection, 
+                            const MissedCallEvent& event, bool setCurrent=false);
+        void updateMessageText(Connection* connection, const Message& message);
+
     public:
 
-        static void init(DataSource* _ds) {
-            Task::logger = Logger::getInstance("smsc.mcisme.Task");
-            Task::ds = _ds;
-        };
+        static void init(DataSource* _ds);
+        static uint64_t getNextId(Connection* connection=0);
 
         Task(std::string abonent) : abonent(abonent) {};
         virtual ~Task() {};

@@ -221,7 +221,7 @@ public:
         MutexGuard guard(sendLock);
         return (session) ? session->getNextSeq():0;
     }
-    virtual bool send(const Message& message)
+    virtual bool send(int seqNumber, const Message& message)
     {
         MutexGuard guard(sendLock);
         

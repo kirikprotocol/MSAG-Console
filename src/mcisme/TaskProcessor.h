@@ -78,7 +78,7 @@ namespace smsc { namespace mcisme
     struct MessageSender
     {
         virtual int  getSequenceNumber() = 0;
-        virtual bool send(const Message& message) = 0;
+        virtual bool send(int seqNumber, const Message& message) = 0;
         virtual ~MessageSender() {};
 
     protected:
