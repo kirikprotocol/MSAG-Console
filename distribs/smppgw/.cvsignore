@@ -1,3 +1,4 @@
 build.properties
 smppgw.properties
 extra_libs.list
+extra_lib_links.list
