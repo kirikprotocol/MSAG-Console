@@ -80,7 +80,8 @@ int main(int argc,char* argv[])
     return -1;
   }
   SmeConfig cfg;
-  cfg.host="smsc";
+  cfg.host="0.0.0.0";
+
   cfg.port=argc>2?atoi(argv[2]):9001;
   cfg.sid=argv[1];
   cfg.timeOut=10;
