@@ -14,7 +14,6 @@ import org.apache.log4j.Category;
  * Time: 11:53:41
  */
 public class TopSnap {
-  private static Category logger = Category.getInstance(TopSnap.class);
   public int     smeCount;
   public SmeSnap smeSnap[];
   public int     errCount;
@@ -47,7 +46,6 @@ public class TopSnap {
         smeSnap[i] = new SmeSnap();
       }
     }
-    logger.debug("SmeSnap array = "+smeSnap+" count = "+smeCount);
     for( int i = 0; i < smeCount; i++) {
       smeSnap[i].init(in);
     }

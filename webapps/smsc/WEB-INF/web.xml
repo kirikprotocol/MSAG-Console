@@ -11,7 +11,7 @@
     <servlet-class>ru.novosoft.smsc.jsp.SMSCJspController</servlet-class>
     <init-param>
       <param-name>config</param-name>
-      <param-value>C:\work\cvs\smsc\src\webapp\smsc\WEB-INF\config.xml</param-value>
+      <param-value>webapps/smsc/WEB-INF/config.xml</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>
@@ -220,6 +220,18 @@
     </user-data-constraint>
   </security-constraint>
 
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/topmon/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>topmon</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
 
   <!-- login config-->
   <login-config>
@@ -247,6 +259,9 @@
   </security-role>
   <security-role>
     <role-name>perfmon</role-name>
+  </security-role>
+  <security-role>
+    <role-name>topmon</role-name>
   </security-role>
   <security-role>
     <role-name>smsView</role-name>
