@@ -249,9 +249,9 @@ TCResult* SmeTestCases::submitCorrectSms(const RouteRegistry& routeReg,
 	return res;
 }
 
-void SmeTestCases::processNormalSms(const SMS& sms, MessageRegistry& msgReg,
-	TCResult* res)
+TCResult* SmeTestCases::processNormalSms(const SMS& sms, MessageRegistry& msgReg)
 {
+	TCResult* res = new TCResult(TC_PROCESS_NORMAL_SMS);
 	//получить оригинальное sms
 	MutexGuard mguard(msgReg.getMutex(sms.getOriginatingAddress()));
 	MsgData* data = msgReg.getMsg(sms.getOriginatingAddress(),
@@ -276,42 +276,44 @@ void SmeTestCases::processNormalSms(const SMS& sms, MessageRegistry& msgReg,
 	{
 		msgReg.removeMsg(sms.getOriginatingAddress(), data->smsId);
 	}
+	return res;
 }
 
-void SmeTestCases::processDeliveryReceiptSms(const SMS& sms,
-	MessageRegistry& msgReg, TCResult* res)
+TCResult* SmeTestCases::processDeliveryReceiptSms(const SMS& sms,
+	messageRegistry& msgReg)
 {
+	TCResult* res = new TCResult(TC_PROCESS_DELIVERY_RECEIPT_SMS);
 	//получить оригинальное sms
 	MutexGuard mguard(msgReg.getMutex(sms.getDestinationAddress()));
 	MsgData* data = msgReg.getMsg(sms.getDestinationAddress(),
 		sms.getRecieptSmsId());
 	if (!data || !data->sms)
 	{
-		res->addFailure(200);
+		res->addFailure(100);
 		return;
 	}
 	switch (data->sms->getDeliveryReport() & SMSC_DELIVERY_RECEIPT_BITS)
 	{
 		case NO_SMSC_DELIVERY_RECEIPT:
-			res->addFailure(201);
+			res->addFailure(101);
 			break;
 		case FAILURE_SMSC_DELIVERY_RECEIPT:
 			//Должна быть причина ошибки
 			if (!sms.getFailureCause())
 			{
-				res->addFailure(202);
+				res->addFailure(102);
 			}
 			//break;
 		case FINAL_SMSC_DELIVERY_RECEIPT:
 			//Должно придти только одно подтверждение доставки
 			if (data->deliveryReceiptFlag)
 			{
-				res->addFailure(203);
+				res->addFailure(103);
 			}
 			//Статус должен быть финальным
 			if (sms.getState() == ENROUTE)
 			{
-				res->addFailure(204);
+				res->addFailure(104);
 			}
 			else
 			{
@@ -320,7 +322,7 @@ void SmeTestCases::processDeliveryReceiptSms(const SMS& sms,
 			break;
 		default:
 			//Некорректное значение
-			res->addFailure(205);
+			res->addFailure(105);
 	}
 	//Проверить содержимое sms
 	???
@@ -329,18 +331,20 @@ void SmeTestCases::processDeliveryReceiptSms(const SMS& sms,
 	{
 		msgReg.removeMsg(sms.getDestinationAddress(), data->smsId);
 	}
+	return res;
 }
 
-void SmeTestCases::processIntermediateNotificationSms(const SMS& sms,
-	MessageRegistry& msgReg, TCResult* res)
+TCResult* SmeTestCases::processIntermediateNotificationSms(const SMS& sms,
+	MessageRegistry& msgReg)
 {
+	TCResult* res = new TCResult(TC_PROCESS_INTERMEDIATE_NOTIFICATION_SMS);
 	//получить оригинальное sms
 	MutexGuard mguard(msgReg.getMutex(sms.getDestinationAddress()));
 	MsgData* data = msgReg.getMsg(sms.getDestinationAddress(),
 		sms.getRecieptSmsId());
 	if (!data || !data->sms)
 	{
-		res->addFailure(300);
+		res->addFailure(100);
 		return;
 	}
 	if (data->sms->getDeliveryReport() & INTERMEDIATE_NOTIFICATION_REQUESTED)
@@ -353,7 +357,7 @@ void SmeTestCases::processIntermediateNotificationSms(const SMS& sms,
 	}
 	else
 	{
-		res->addFailure(301);
+		res->addFailure(101);
 	}
 	//Проверить содержимое sms
 	???
@@ -362,36 +366,39 @@ void SmeTestCases::processIntermediateNotificationSms(const SMS& sms,
 	{
 		msgReg.removeMsg(sms.getDestinationAddress(), data->smsId);
 	}
+	return res;
 }
 
 TCResult* SmeTestCases::processSms(const SMS& sms, const RouteRegistry& routeReg,
 	MessageRegistry& msgReg)
 {
-	TCResult* res = new TCResult(TC_PROCESS_SMS);
-	//Сравнить правильность маршрута
-	const SmeSystemId& correctId = *routeReg.lookup(sms.getOriginatingAddress(),
-		sms.getDestinationAddress());
-	if (systemId != correctId)
-	{
-		res->addFailure(1);
-	}
+	TCResult* res;
 	//Определить тип сообщения
 	switch (sms.getEsmClass() & ESM_CLASS_MESSAGE_TYPE_BITS)
 	{
 		case ESM_CLASS_NORMAL_MESSAGE:
-			//коды ошибок - 1xx
-			processNormalSms(sms, msgReg, res);
+			res = processNormalSms(sms, msgReg, res);
 			break;
 		case ESM_CLASS_DELIVERY_RECEIPT:
-			//коды ошибок - 2xx
-			processDeliveryReceiptSms(sms, msgReg, res);
+			res = processDeliveryReceiptSms(sms, msgReg, res);
 			break;
 		case ESM_CLASS_INTERMEDIATE_NOTIFICATION:
-			//коды ошибок - 3xx
-			processIntermediateNotificationSms(sms, msgReg, res);
+			res = processIntermediateNotificationSms(sms, msgReg, res);
 			break;
 		default:
-			res->addFailure(400);
+			res = new TCResult(TC_PROCESS_SMS);
+			res->addFailure(201);
+	}
+	//Сравнить правильность маршрута
+	const SmeSystemId* correctId = routeReg.lookup(sms.getOriginatingAddress(),
+		sms.getDestinationAddress());
+	if (!correctId)
+	{
+		res->addFailure(202);
+	}
+	else if (systemId != *correctId)
+	{
+		res->addFailure(203);
 	}
 	debug(res);
 	return res;

@@ -22,6 +22,11 @@ using smsc::test::core::MessageRegistry;
 //implemented
 const char* const TC_BIND_REGISTERED_SME = "bindRegisteredSme";
 const char* const TC_BIND_NON_REGISTERED_SME = "bindNonRegisteredSme";
+const char* const TC_PROCESS_SMS = "processSms";
+const char* const TC_PROCESS_INTERMEDIATE_NOTIFICATION_SMS =
+	"processIntermediateNotificationSms";
+const char* const TC_PROCESS_DELIVERY_RECEIPT_SMS = "processDeliveryReceiptSms";
+const char* const TC_PROCESS_NORMAL_SMS = "processNormalSms";
 const char* const TC_UNBIND_BOUNDED = "unbindBounded";
 const char* const TC_UNBIND_NON_BOUNDED = "unbindNonBounded";
 
