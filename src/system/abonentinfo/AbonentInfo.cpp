@@ -210,7 +210,7 @@ int AbonentInfoSme::Execute()
     if(cmd->cmdid==smsc::smeman::QUERYABONENTSTATUS_RESP)
     {
       AbonentStatus &as=cmd->get_abonentStatus();
-      Address d=as.sourceAddr;
+      Address d=as.addr;
       __trace2__("AbonentInfo: QueryAbonentStatus->response for %s",
         as.originalAddr.c_str());
 
@@ -227,10 +227,11 @@ int AbonentInfoSme::Execute()
                                 as.status==AbonentStatus::OFFLINE?"Offline":
                                                                   "Unknown");
           ce.exportStr("msc",as.msc.length()?as.msc.c_str():"unknown");
-          OutputFormatter* f=ResourceManager::getInstance()->getFormatter(p.locale,"abonentinfo.mobileFormat");
+          Profile pr=smsc->getProfiler()->lookup(as.sourceAddr);
+          OutputFormatter* f=ResourceManager::getInstance()->getFormatter(pr.locale,"abonentinfo.mobileFormat");
           if(!f)
           {
-            answ="Unknown formatter abonentinfo.mobileFormat for locale "+p.locale;
+            answ="Unknown formatter abonentinfo.mobileFormat for locale "+pr.locale;
           }else
           {
             f->format(answ,ga,ce);
@@ -243,11 +244,12 @@ int AbonentInfoSme::Execute()
           ce.exportInt("status",as.status);
           ce.exportInt("encoding",p.codepage);
           ce.exportStr("msc",as.msc.length()?("+"+as.msc).c_str():"");
-          OutputFormatter* f=ResourceManager::getInstance()->getFormatter(p.locale,"abonentinfo.smeFormat");
+          Profile pr=smsc->getProfiler()->lookup(as.sourceAddr);
+          OutputFormatter* f=ResourceManager::getInstance()->getFormatter(pr.locale,"abonentinfo.smeFormat");
           __trace2__("AbonentInfo: formatter=%p",f);
           if(!f)
           {
-            answ="Unknown formatter abonentinfo.smeFormat for locale "+p.locale;
+            answ="Unknown formatter abonentinfo.smeFormat for locale "+pr.locale;
           }else
           {
             f->format(answ,ga,ce);
