@@ -55,7 +55,7 @@ int main(void/*int argc, char* argv[]*/)
         TaskProcessor processor(&tpConfig);
         processor.Start();
         Event aaa;
-        aaa.Wait(10000);
+        aaa.Wait(100000);
     }
     catch (SmppConnectException& exc)
     {

@@ -191,41 +191,48 @@ void TaskProcessor::Stop()
 int TaskProcessor::Execute()
 {
     bool first = true;
+    Connection* connection = 0;
     while (!bNeedExit)
     {
         awake.Wait((first) ? 100:switchTimeout);
         if (bNeedExit) break;
         try 
         {
-            MainLoop(); first = false;
+            if (first) connection = dsInternal->getConnection();
+            MainLoop(connection); first = false;
         } 
         catch (std::exception& exc) 
         {
+            if (connection) dsInternal->freeConnection(connection);
             awake.Wait(0); first = true;
             logger.error("Exception occurred during tasks execution : %s", exc.what());
         }
     }
+    if (connection) dsInternal->freeConnection(connection);
     exited.Signal();
     return 0;
 }
 
-void TaskProcessor::MainLoop()
+void TaskProcessor::MainLoop(Connection* connection)
 {
-    //logger.info("Entering MainLoop");
+    __require__(connection);
+
     TaskGuard taskGuard = container.getNextTask(); 
     Task* task = taskGuard.get();
     if (!task) return;
     
-    //printf("Executing task '%s'\t priority=%d\n", 
-    //       task->getId().c_str(), task->getPriority());
+    TaskInfo info = task->getInfo();
+    logger.info("Executing task '%s'\t priority=%d", 
+                info.id.c_str(), info.priority);
     
     Message message;
-    Connection* connection = dsInternal->getConnection();
-    if (connection && task->getNextMessage(connection, message))
+    if (task->getNextMessage(connection, message))
     {
-        logger.debug("Sending message ...");
+        logger.info("Message #%lld for '%s': %s", 
+                    message.id, message.abonent.c_str(), message.message.c_str());
+        
         // TODO: send sms here !!!
-        logger.debug("Message sent.");
+        task->doRespondMessage(connection, message.id, false);
     }
 }
 

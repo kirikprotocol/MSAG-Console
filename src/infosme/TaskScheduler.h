@@ -51,7 +51,7 @@ namespace smsc { namespace infosme
         Mutex                   schedulesLock; 
         
         Event   awake, exited;
-        bool    bStarted, bNeedExit;
+        bool    bStarted, bNeedExit, bChanged;
         Mutex   startLock;
 
 

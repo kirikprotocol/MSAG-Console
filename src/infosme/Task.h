@@ -62,10 +62,6 @@ namespace smsc { namespace infosme
         std::string message;
     };
 
-    struct StateInfo
-    {
-
-    };
     struct TaskInfo
     {
         std::string id;
@@ -129,10 +125,6 @@ namespace smsc { namespace infosme
         };
     };
 
-    /*  TODO:   
-            1) Разобраться с логикой getNextMessage & doNotifyMessage и 
-            2) Задать наконец структуры StateInfo && Message
-    */                                                      
     class Task
     {
     friend class TaskGuard;
@@ -212,6 +204,9 @@ namespace smsc { namespace infosme
         inline bool setEnabled(bool enabled=true) {
             return info.enabled = enabled;
         }
+        inline const TaskInfo& getInfo() {
+            return info;
+        }
         
         bool isInProcess();
 
@@ -229,18 +224,12 @@ namespace smsc { namespace infosme
         void endProcess();
         
         /**
-         * Производит обработку непосредственного ответа на отправленное сообщение.
-         * Если сообщение не было принято в обработку серсис центром, то его состояние
-         * меняется на FAILED, иначе сообщению присваивается номер пришедший от
-         * серсис центра и сообщение ставится на ожидание в состоянии ENROUTE.
+         * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи
+         * посредством endProcess(). Удаляет все сгенерированные сообщения.
          * Использует connection из внутреннего источника данных.
-         *
-         * @param msgId         идентификатор сообщения в таблице задачи 
-         * @param smscId        номер присвоенный smsc
-         * @param acepted       признак, принято ли сообщение к доставке.
          */
-        void doRespondMessage(uint64_t msgId, bool acepted, std::string smscId="");
-
+        void dropAllMessages();
+        
         /**
          * Производит обработку отчёта о доставке сообщения. Если сообщение было 
          * доставлено, то меняет его состояние на DELIVERED, иначе, если установлен
@@ -254,12 +243,21 @@ namespace smsc { namespace infosme
         void doReceiptMessage(std::string smscId, bool delivered);
 
         /**
-         * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи
-         * посредством endProcess(). Удаляет все сгенерированные сообщения.
-         * Использует connection из внутреннего источника данных.
+         * Производит обработку непосредственного ответа на отправленное сообщение.
+         * Если сообщение не было принято в обработку серсис центром, то его состояние
+         * меняется на FAILED, иначе сообщению присваивается номер пришедший от
+         * серсис центра и сообщение ставится на ожидание в состоянии ENROUTE.
+         * Выполняется в основном потоке TaskProcessor'а
+         *
+         * @param connection    основной connection TaskProcessor'а
+         *                      из внутреннего источника данных. (оптимизация)
+         * @param msgId         идентификатор сообщения в таблице задачи 
+         * @param smscId        номер присвоенный smsc
+         * @param acepted       признак, принято ли сообщение к доставке.
          */
-        void dropAllMessages();
-        
+        void doRespondMessage(Connection* connection, uint64_t msgId, 
+                              bool acepted, std::string smscId="");
+
         /**
          * Возвращает следующее сообщение для отправки из спец.таблицы задачи
          * Выполняется в основном потоке TaskProcessor'а
@@ -304,8 +302,6 @@ namespace smsc { namespace infosme
         virtual void invokeEndProcess(Task* task) = 0;
         virtual void invokeBeginProcess(Task* task) = 0;
         virtual void invokeDropAllMessages(Task* task) = 0;
-        virtual void invokeDoRespondMessage(Task* task, uint64_t msgId, 
-                                            bool acepted, std::string smscId="") = 0;
         virtual void invokeDoReceiptMessage(Task* task, std::string smscId, bool delivered) = 0;
         
         virtual ~TaskInvokeAdapter() {};

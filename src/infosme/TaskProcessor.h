@@ -62,8 +62,7 @@ namespace smsc { namespace infosme
 
     typedef enum {
       beginProcessMethod, endProcessMethod, 
-      doRespondMessageMethod, doReceiptMessageMethod, 
-      dropAllMessagesMethod
+      dropAllMessagesMethod, doReceiptMessageMethod
     } TaskMethod;
 
     class TaskRunner : public TaskGuard, public ThreadedTask // for task method execution 
@@ -74,20 +73,15 @@ namespace smsc { namespace infosme
         Connection*   connection;
         
         std::string   smscId;
-        uint64_t      msgId;
-        bool          flag;
+        bool          delivered;
         
     public:
         
         TaskRunner(Task* task, TaskMethod method, Connection* connection=0)
             : TaskGuard(task), ThreadedTask(), method(method), connection(connection) {};
-        TaskRunner(Task* task, TaskMethod method, 
-                   uint64_t msgId, bool acepted, std::string smscId="")
-            : TaskGuard(task), ThreadedTask(), method(method), connection(0),
-                   smscId(smscId), msgId(msgId), flag(acepted) {};
         TaskRunner(Task* task, TaskMethod method, std::string smscId, bool delivered)
             : TaskGuard(task), ThreadedTask(), method(method), connection(0),
-                   smscId(smscId), msgId(0), flag(delivered) {};
+                   smscId(smscId), delivered(delivered) {};
 
         virtual ~TaskRunner() {};
         
@@ -106,11 +100,8 @@ namespace smsc { namespace infosme
             case dropAllMessagesMethod:
                 task->dropAllMessages();
                 break;
-            case doRespondMessageMethod:
-                task->doRespondMessage(msgId, flag, smscId);
-                break;
             case doReceiptMessageMethod:
-                task->doReceiptMessage(smscId, flag);
+                task->doReceiptMessage(smscId, delivered);
                 break;
             default:
                 __trace2__("Invalid method '%d' invoked on task.", method);
@@ -169,11 +160,6 @@ namespace smsc { namespace infosme
         virtual void invokeBeginProcess(Task* task) {
             pool.startTask(new TaskRunner(task, beginProcessMethod));
         };
-        virtual void invokeDoRespondMessage(Task* task, uint64_t msgId, 
-                                            bool acepted, std::string smscId="") {
-            pool.startTask(new TaskRunner(task, doRespondMessageMethod, msgId,
-                                          acepted, smscId));
-        };
         virtual void invokeDoReceiptMessage(Task* task, std::string smscId, bool delivered) {
             pool.startTask(new TaskRunner(task, doReceiptMessageMethod, smscId, delivered));
         };
@@ -202,7 +188,7 @@ namespace smsc { namespace infosme
         const char* dsInternalName;
         DataSource* dsInternal;
         
-        void MainLoop();
+        void MainLoop(Connection* connection);
 
     public:
 

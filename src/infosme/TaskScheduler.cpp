@@ -6,7 +6,7 @@ namespace smsc { namespace infosme
 
 TaskScheduler::TaskScheduler()
     : Thread(), logger(Logger::getCategory("smsc.infosme.TaskScheduler")),
-        bStarted(false), bNeedExit(false)
+        bStarted(false), bNeedExit(false), bChanged(false)
 {
 }
 TaskScheduler::~TaskScheduler()
@@ -50,8 +50,11 @@ void TaskScheduler::Stop()
 
 int TaskScheduler::Execute()
 {
-    const int SERVICE_SLEEP = 3600000;
-    const int SERVICE_PAUSE = 1000;
+    const int SERVICE_SLEEP = 3600; // in seconds
+    const int SERVICE_PAUSE = 100;  // in m-seconds
+
+    Schedule*   schedule = 0;
+    std::string scheduleId = "";
 
     while (!bNeedExit)
     {
@@ -59,33 +62,48 @@ int TaskScheduler::Execute()
         {
             MutexGuard guard(schedulesLock);
             time_t scheduleTime = -1;
-            getNextSchedule(scheduleTime);
-            if (scheduleTime > 0) toSleep = scheduleTime-time(NULL);
+            schedule = getNextSchedule(scheduleTime);
+            if (scheduleTime > 0 && schedule) {
+                toSleep = scheduleTime-time(NULL);
+                scheduleId = schedule->id;
+            }
+            bChanged = false;
         }
         
-        if (toSleep < 0) awake.Wait(SERVICE_PAUSE);
+        if (toSleep < 0) {
+            awake.Wait(SERVICE_PAUSE);
+            continue;
+        }
         else
         {
-            while (toSleep > 0 && !bNeedExit) 
+            //printf("Sleepping %ld seconds ...\n", toSleep);
+            while (toSleep > 0 && !bNeedExit && !bChanged) 
             {
-                if (toSleep > SERVICE_SLEEP) {
+                if (toSleep > SERVICE_SLEEP*1000) {
                     toSleep -= SERVICE_SLEEP;
-                    awake.Wait(SERVICE_SLEEP);
+                    awake.Wait(SERVICE_SLEEP*1000);
+                    MutexGuard guard(schedulesLock);
+                    if (bChanged) break;
                 } 
                 else {
-                    awake.Wait(toSleep);
+                    awake.Wait(toSleep*1000);
                     break;
                 }
             }
         }
         if (bNeedExit) break;
         
+        {
+            MutexGuard guard(schedulesLock);
+            if (bChanged) continue;
+        }
+        
         Hash<bool> tasks;
         {
             MutexGuard guard(schedulesLock);
-            time_t scheduleTime = -1;
-            Schedule* schedule = getNextSchedule(scheduleTime);
-            if (!schedule || scheduleTime > time(NULL)) continue;
+            if (!schedules.Exists(scheduleId.c_str())) continue;
+            schedule = schedules.Get(scheduleId.c_str());
+            if (!schedule) continue;
             tasks = schedule->getTasks();
         }
         
@@ -195,8 +213,8 @@ Schedule* TaskScheduler::getNextSchedule(time_t& scheduleTime)
         time_t time = schedule->calulateNextTime();
         if (time < 0) continue;
         
-        //printf("Schedule %s\t Next time: %s", 
-        //       schedule ? schedule->id.c_str():"-", ctime(&time));
+        /*printf("Schedule %s\t Next time: %s", 
+               schedule ? schedule->id.c_str():"-", ctime(&time));*/
         
         if (minimalTime < 0 || time < minimalTime) {
             minimalTime = time;
@@ -216,6 +234,7 @@ bool TaskScheduler::addSchedule(Schedule* schedule)
     if (!scheduleId || scheduleId[0] == '\0' || 
         schedules.Exists(scheduleId)) return false;
     schedules.Insert(scheduleId, schedule);
+    bChanged = true;
     awake.Signal();
     return true;
 }
@@ -232,6 +251,7 @@ bool TaskScheduler::changeSchedule(std::string id, Schedule* schedule)
     if (old) delete old;
     schedules.Delete(scheduleId);
     schedules.Insert(newId, schedule);
+    bChanged = true;
     awake.Signal();
     return true;
 }
@@ -245,6 +265,7 @@ bool TaskScheduler::removeSchedule(std::string id)
     Schedule* old = schedules.Get(scheduleId);
     if (old) delete old;
     schedules.Delete(scheduleId);
+    bChanged = true;
     awake.Signal();
     return true;
 }
