@@ -45,34 +45,39 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long /*timeout*/,int* idx)
         unit = queuedProxies;
         while ( unit ) {
           SmeProxyPriority tmp;
-          if ( ( tmp = unit->prior) > prior )
+          __require__ ( unit->prior > SmeProxyPriorityMin && 
+												unit->prior < SmeProxyPriorityMax );
+					if ( (tmp = unit->prior) > prior )
           {
             prior = tmp;
             prior_unit = unit;
           }
           unit = unit->next;
         }
-
-        if ( prior_unit->prev ) 
-        {
-          prior_unit->prev->next = prior_unit->next;
-          if ( prior_unit->next ) prior_unit->next->prev = prior_unit->prev;
-        }
-        else
-        {
-          __require__(prior_unit == queuedProxies );
-          queuedProxies = prior_unit->next;
-          if ( queuedProxies ) queuedProxies->prev = 0;
-        }
-        prior_unit->next = unqueuedProxies;
-        if ( unqueuedProxies ) unqueuedProxies->prev = prior_unit;
-        prior_unit->prev = 0;
-        unqueuedProxies = prior_unit;
-        __require__(prior_unit != NULL);
-        __require__(prior_unit->proxy != NULL);
-        if ( idx ) *idx = prior_unit->idx;
-        return prior_unit->proxy;
-      }
+				__require__(prior_unit);
+				//if ( prior_unit ) 
+				//{
+					if ( prior_unit->prev ) 
+					{
+						prior_unit->prev->next = prior_unit->next;
+						if ( prior_unit->next ) prior_unit->next->prev = prior_unit->prev;
+					}
+					else
+					{
+						__require__(prior_unit == queuedProxies );
+						queuedProxies = prior_unit->next;
+						if ( queuedProxies ) queuedProxies->prev = 0;
+					}
+					prior_unit->next = unqueuedProxies;
+					if ( unqueuedProxies ) unqueuedProxies->prev = prior_unit;
+					prior_unit->prev = 0;
+					unqueuedProxies = prior_unit;
+					__require__(prior_unit != NULL);
+					__require__(prior_unit->proxy != NULL);
+					if ( idx ) *idx = prior_unit->idx;
+					return prior_unit->proxy;
+				//}
+			}
     }// __synchronization__
     mon.Wait();
   }
@@ -85,6 +90,7 @@ __synchronized__
   if ( proxy->attached() ) throw SmeError();
   Unit* unit = new Unit;
   unit->prev = 0;
+	unit->prior = SmeProxyPriorityDefault;
   unit->next = unqueuedProxies;
   if ( unqueuedProxies ) unqueuedProxies->prev = unit;
   unqueuedProxies = unit;
