@@ -16,6 +16,7 @@ using smsc::test::smpp::operator!=;
 using namespace std;
 using namespace smsc::test::core; //constants
 using namespace smsc::test::sms; //constants
+using namespace smsc::test::smpp; //constants
 using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
@@ -30,6 +31,13 @@ inline bool SmppPduChecker::checkTransmitter()
 	}
 	return true;
 }
+
+#define __check_len__(errCode, field, maxLen) \
+	if (strlen(nvl(field)) > maxLen) { \
+		/*res.insert(errCode);*/ \
+		res.insert(ESME_RSYSERR); \
+		return res; \
+	}
 
 set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 {
@@ -46,7 +54,19 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	if (!checkTransmitter())
 	{
 		res.insert(ESME_RINVBNDSTS);
+		return res;
 	}
+	//неправильная длина полей
+	__check_len__(ESME_RINVSERTYP,
+		pdu->get_message().get_serviceType(), MAX_SERVICE_TYPE_LENGTH);
+	__check_len__(ESME_RINVSRCADR,
+		pdu->get_message().get_source().get_value(), MAX_ADDRESS_LENGTH);
+	__check_len__(ESME_RINVDSTADR,
+		pdu->get_message().get_dest().get_value(), MAX_ADDRESS_LENGTH);
+	__check_len__(ESME_RINVEXPIRY,
+		pdu->get_message().get_validityPeriod(), MAX_SMPP_TIME_LENGTH);
+	__check_len__(ESME_RINVSCHED,
+		pdu->get_message().get_scheduleDeliveryTime(), MAX_SMPP_TIME_LENGTH);
 	//без проверки на bind статус
 	SmeType destType = fixture->routeChecker->isDestReachable(
 		pdu->get_message().get_source(), pdu->get_message().get_dest());
@@ -98,12 +118,25 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 		pdu->get_message().get_validityPeriod(), pduData->sendTime);
 	Address srcAddr;
 	SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
+	__require__(pduData->strProps.count("smsId"));
+	const string& smsId = pduData->strProps["smsId"];
 	set<uint32_t> res;
-	//проверки
+	//тип sme
 	if (!checkTransmitter())
 	{
 		res.insert(ESME_RINVBNDSTS);
+		return res;
 	}
+	//неправильная длина полей
+	__check_len__(ESME_RINVMSGID,
+		smsId.c_str(), MAX_MSG_ID_LENGTH);
+	__check_len__(ESME_RINVSRCADR,
+		pdu->get_message().get_source().get_value(), MAX_ADDRESS_LENGTH);
+	__check_len__(ESME_RINVEXPIRY,
+		pdu->get_message().get_validityPeriod(), MAX_SMPP_TIME_LENGTH);
+	__check_len__(ESME_RINVSCHED,
+		pdu->get_message().get_scheduleDeliveryTime(), MAX_SMPP_TIME_LENGTH);
+	//проверки
 	__cfg_int__(maxValidPeriod);
 	if (!validTime || validTime < pduData->sendTime ||
 		validTime > pduData->sendTime + maxValidPeriod)
@@ -120,8 +153,6 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	}
 	else
 	{
-		__require__(pduData->strProps.count("smsId"));
-		const string& smsId = pduData->strProps["smsId"];
 		for (int i = 0; i < smsId.length(); i++)
 		{
 			if (!isdigit(smsId[i]))
@@ -158,11 +189,18 @@ set<uint32_t> SmppPduChecker::checkQuerySm(PduData* pduData, PduData* origPduDat
 	__require__(pduData && pduData->pdu->get_commandId() == QUERY_SM);
 	PduQuerySm* pdu = reinterpret_cast<PduQuerySm*>(pduData->pdu);
 	set<uint32_t> res;
-	//проверки
+	//тип sme
 	if (!checkTransmitter())
 	{
 		res.insert(ESME_RINVBNDSTS);
+		return res;
 	}
+	//неправильная длина полей
+	__check_len__(ESME_RINVMSGID,
+		pdu->get_messageId(), MAX_MSG_ID_LENGTH);
+	__check_len__(ESME_RINVSRCADR,
+		pdu->get_source().get_value(), MAX_ADDRESS_LENGTH);
+	//проверки
 	if (!origPduData)
 	{
 		res.insert(ESME_RINVMSGID);
@@ -202,12 +240,22 @@ set<uint32_t> SmppPduChecker::checkCancelSm(PduData* pduData,
 	__require__(pduData && pduData->pdu->get_commandId() == CANCEL_SM);
 	PduCancelSm* pdu = reinterpret_cast<PduCancelSm*>(pduData->pdu);
 	set<uint32_t> res;
-	//проверки
-	static /* const */ PduAddress nullAddr;
+	//тип sme
 	if (!checkTransmitter())
 	{
 		res.insert(ESME_RINVBNDSTS);
+		return res;
 	}
+	//неправильная длина полей
+	__check_len__(ESME_RINVMSGID,
+		pdu->get_messageId(), MAX_MSG_ID_LENGTH);
+	__check_len__(ESME_RINVSERTYP,
+		pdu->get_serviceType(), MAX_SERVICE_TYPE_LENGTH);
+	__check_len__(ESME_RINVSRCADR,
+		pdu->get_source().get_value(), MAX_ADDRESS_LENGTH);
+	__check_len__(ESME_RINVDSTADR,
+		pdu->get_dest().get_value(), MAX_ADDRESS_LENGTH);
+	static /* const */ PduAddress nullAddr;
 	//cancel одиночной sms
 	if (pdu->get_messageId())
 	{

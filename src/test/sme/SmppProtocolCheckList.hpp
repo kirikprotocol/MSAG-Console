@@ -185,6 +185,16 @@ void submitSmTc()
 		"Значения schedule_delivery_time меньше validity_period, но оба больше максимального validity_period для SC");
 	__reg_tc__("submitSm.incorrect.dataCoding",
 		"Недопустимые значения dataCoding");
+	__reg_tc__("submitSm.incorrect.serviceTypeLength",
+		"Длина поля service_type больше допустимой");
+	__reg_tc__("submitSm.incorrect.sourceAddrLength",
+		"Длина поля source_addr больше допустимой");
+	__reg_tc__("submitSm.incorrect.destAddrLength",
+		"Длина поля dest_addr больше допустимой");
+	__reg_tc__("submitSm.incorrect.validTimeLength",
+		"Длина поля validity_period больше допустимой");
+	__reg_tc__("submitSm.incorrect.waitTimeLength",
+		"Длина поля schedule_delivery_time больше допустимой");
 	__reg_tc__("submitSm.incorrect.transactionRollback",
 		"Специальные sms эмулирующие transaction rollback на стороне сервера БД");
 	//submitSm.assert
@@ -282,6 +292,14 @@ void replaceSmTc()
 		"Значение schedule_delivery_time = NULL (сохранить оригинальное значение), а validity_period меньше schedule_delivery_time замещаемого сообщения");
 	__reg_tc__("replaceSm.incorrect.replaceFinal",
 		"Замещение сообщения находящегося в финальном состоянии (код ошибки ESME_RREPLACEFAIL)");
+	__reg_tc__("replaceSm.incorrect.messageIdLength",
+		"Длина поля message_id больше допустимой");
+	__reg_tc__("replaceSm.incorrect.sourceAddrLength",
+		"Длина поля source_addr больше допустимой");
+	__reg_tc__("replaceSm.incorrect.validTimeLength",
+		"Длина поля validity_period больше допустимой");
+	__reg_tc__("replaceSm.incorrect.waitTimeLength",
+		"Длина поля schedule_delivery_time больше допустимой");
 	__reg_tc__("replaceSm.incorrect.transactionRollback",
 		"Специальные sms эмулирующие transaction rollback на стороне сервера БД");
 	//replaceSm.resp
@@ -466,6 +484,10 @@ void querySmTc()
 		"Неправильный message_id");
 	__reg_tc__("querySm.incorrect.sourceAddr",
 		"Значение message_id правильное, но source_addr не совпадает");
+	__reg_tc__("querySm.incorrect.messageIdLength",
+		"Длина поля message_id больше допустимой");
+	__reg_tc__("querySm.incorrect.sourceAddrLength",
+		"Длина поля source_addr больше допустимой");
 	//querySm.resp
 	__reg_tc__("querySm.resp", "Получение query_sm_resp pdu");
 	__reg_tc__("querySm.resp.sync",
@@ -543,6 +565,14 @@ void cancelSmTc()
 		"Задан message_id существующего сообщения в финальном состоянии, source_addr совпадает, dest_addr и service_type нулевые");
 	__reg_tc__("cancelSm.incorrect.noSms",
 		"Заданы правильные source_addr, dest_addr и service_type и нулевой message_id, но нет сообщений в БД удовлетворяющих условиям запроса");
+	__reg_tc__("cancelSm.incorrect.messageIdLength",
+		"Длина поля message_id больше допустимой");
+	__reg_tc__("cancelSm.incorrect.serviceTypeLength",
+		"Длина поля service_type больше допустимой");
+	__reg_tc__("cancelSm.incorrect.sourceAddrLength",
+		"Длина поля source_addr больше допустимой");
+	__reg_tc__("cancelSm.incorrect.destAddrLength",
+		"Длина поля dest_addr больше допустимой");
 	//cancelSm.resp
 	__reg_tc__("cancelSm.resp",
 		"Получение cancel_sm_resp pdu");

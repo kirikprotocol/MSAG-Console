@@ -552,7 +552,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 
 void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 {
-	TCSelector s(num, 12);
+	TCSelector s(num, 12 /*17*/);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -682,6 +682,47 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 					__tc__("submitSm.incorrect.transactionRollback");
 					pdu->get_message().set_serviceType("-----");
 					break;
+				/*
+				case 13: //длина service_type больше допустимой
+					{
+						__tc__("submitSm.incorrect.serviceTypeLength");
+						auto_ptr<char> tmp = rand_char(MAX_SERVICE_TYPE_LENGTH + 1);
+						pdu->get_message().set_serviceType(tmp.get());
+					}
+					break;
+				case 14: //длина source_addr больше допустимой
+					{
+						__tc__("submitSm.incorrect.sourceAddrLength");
+						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_LENGTH + 1);
+						PduAddress addr;
+						addr.set_value(tmp.get());
+						pdu->get_message().set_source(addr);
+					}
+					break;
+				case 15: //длина dest_addr больше допустимой
+					{
+						__tc__("submitSm.incorrect.destAddrLength");
+						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_LENGTH + 1);
+						PduAddress addr;
+						addr.set_value(tmp.get());
+						pdu->get_message().set_dest(addr);
+					}
+					break;
+				case 16: //длина validity_period больше допустимой
+					{
+						__tc__("submitSm.incorrect.validTimeLength");
+						auto_ptr<char> tmp = rand_char(MAX_SMPP_TIME_LENGTH + 1);
+						pdu->get_message().set_validityPeriod(tmp.get());
+					}
+					break;
+				case 17: //длина schedule_delivery_time больше допустимой
+					{
+						__tc__("submitSm.incorrect.waitTimeLength");
+						auto_ptr<char> tmp = rand_char(MAX_SMPP_TIME_LENGTH + 1);
+						pdu->get_message().set_scheduleDeliveryTime(tmp.get());
+					}
+					break;
+				*/
 				default:
 					__unreachable__("Invalid num");
 			}
@@ -839,7 +880,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 {
 	__require__(fixture->pduReg);
-	TCSelector s(num, 13);
+	TCSelector s(num, 13 /*17*/);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(timeCheckAccuracy);
@@ -992,6 +1033,38 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 						}
 					}
 					break;
+				/*
+				case 14: //длина message_id больше допустимой
+					{
+						__tc__("replaceSm.incorrect.messageIdLength");
+						auto_ptr<char> tmp = rand_char(MAX_MSG_ID_LENGTH + 1);
+						pdu->set_messageId(tmp.get());
+					}
+					break;
+				case 15: //длина source_addr больше допустимой
+					{
+						__tc__("replaceSm.incorrect.sourceAddrLength");
+						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_LENGTH + 1);
+						PduAddress addr;
+						addr.set_value(tmp.get());
+						pdu->set_source(addr);
+					}
+					break;
+				case 16: //длина validity_period больше допустимой
+					{
+						__tc__("replaceSm.incorrect.validTimeLength");
+						auto_ptr<char> tmp = rand_char(MAX_SMPP_TIME_LENGTH + 1);
+						pdu->set_validityPeriod(tmp.get());
+					}
+					break;
+				case 17: //длина schedule_delivery_time больше допустимой
+					{
+						__tc__("replaceSm.incorrect.waitTimeLength");
+						auto_ptr<char> tmp = rand_char(MAX_SMPP_TIME_LENGTH + 1);
+						pdu->set_scheduleDeliveryTime(tmp.get());
+					}
+					break;
+				*/
 				default:
 					__unreachable__("Invalid num");
 			}
@@ -1078,7 +1151,7 @@ void SmppProtocolTestCases::querySmIncorrect(bool sync, int num)
 {
 	__require__(fixture->pduReg);
 	__decl_tc__;
-	int numState = 5; int numOther = 3;
+	int numState = 5; int numOther = 3 /*5*/;
 	TCSelector s(num, numState * numOther);
 	__tc__("querySm.incorrect");
 	for (; s.check(); s++)
@@ -1142,6 +1215,24 @@ void SmppProtocolTestCases::querySmIncorrect(bool sync, int num)
 						pdu->set_messageId(msgId.get());
 					}
 					break;
+				/*
+				case 4: //длина message_id больше допустимой
+					{
+						__tc__("querySm.incorrect.messageIdLength");
+						auto_ptr<char> tmp = rand_char(MAX_MSG_ID_LENGTH + 1);
+						pdu->set_messageId(tmp.get());
+					}
+					break;
+				case 5: //длина source_addr больше допустимой
+					{
+						__tc__("querySm.incorrect.sourceAddrLength");
+						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_LENGTH + 1);
+						PduAddress addr;
+						addr.set_value(tmp.get());
+						pdu->set_source(addr);
+					}
+					break;
+				*/
 				default:
 					__unreachable__("Invalid num other");
 			}
@@ -1246,7 +1337,7 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 {
 	__require__(fixture->pduReg);
 	__decl_tc__;
-	TCSelector s(num, 15);
+	TCSelector s(num, 15 /*19*/);
 	__tc__("cancelSm.incorrect");
 	for (; s.check(); s++)
 	{
@@ -1430,6 +1521,40 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 						pdu->set_serviceType(tmp.get());
 					}
 					break;
+				/*
+				case 16: //длина message_id больше допустимой
+					{
+						__tc__("cancelSm.incorrect.messageIdLength");
+						auto_ptr<char> tmp = rand_char(MAX_MSG_ID_LENGTH + 1);
+						pdu->set_messageId(tmp.get());
+					}
+					break;
+				case 17: //длина service_type больше допустимой
+					{
+						__tc__("cancelSm.incorrect.serviceTypeLength");
+						auto_ptr<char> tmp = rand_char(MAX_SERVICE_TYPE_LENGTH + 1);
+						pdu->set_serviceType(tmp.get());
+					}
+					break;
+				case 18: //длина source_addr больше допустимой
+					{
+						__tc__("cancelSm.incorrect.sourceAddrLength");
+						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_LENGTH + 1);
+						PduAddress addr;
+						addr.set_value(tmp.get());
+						pdu->set_source(addr);
+					}
+					break;
+				case 19: //длина dest_addr больше допустимой
+					{
+						__tc__("cancelSm.incorrect.destAddrLength");
+						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_LENGTH + 1);
+						PduAddress addr;
+						addr.set_value(tmp.get());
+						pdu->set_dest(addr);
+					}
+					break;
+				*/
 				default:
 					__unreachable__("Invalid num");
 			}
