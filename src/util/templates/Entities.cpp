@@ -66,6 +66,10 @@ void FormatEntity::renderOptions(const char* line)
                     }
                     break;
                 default:
+                    if (escape)
+                    {
+                        value += SMSC_DBSME_IO_FORMAT_ENTITY_ESCAPER;
+                    }
                     break;
                 }
                 
