@@ -1093,6 +1093,9 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
 {
     smsc_log_debug(log, "Finalizing msg#%lld", id);
 
+    if (sms.needArchivate) archiveStorage.createRecord(id, sms);
+    if (sms.billingRecord) billingStorage.createRecord(id, sms);
+    
     if (needDelete)
     {
         __require__(pool);
@@ -1131,9 +1134,6 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms, bool needDelete)
             }
         }
     }
-   
-    if (sms.needArchivate) archiveStorage.createRecord(id, sms);
-    if (sms.billingRecord) billingStorage.createRecord(id, sms);
     
     smsc_log_debug(log, "Finalized msg#%lld" , id);
 }
