@@ -2912,7 +2912,7 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }
-    __map_trace2__("%s: dialogid 0x%x request encoding 0x%x length %d subsystem %s",__FUNCTION__,dialogueId,*ussdDataCodingScheme_p,ussdString_s.ussdStrLen,originator.toString().c_str());
+    __map_trace2__("%s: dialogid 0x%x request encoding 0x%x length %d subsystem %s",__FUNCTION__,dialogueId,*ussdDataCodingScheme_p,ussdString_sp->ussdStrLen,originator.toString().c_str());
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
