@@ -25,7 +25,7 @@ Category& MessageStoreTestCases::log = Logger::getCategory("smsc.test.store.Test
 
 MessageStoreTestCases::MessageStoreTestCases()
 {
-	srand(time(NULL));
+	init_rand();
 	msgStore = StoreManager::getMessageStore();
 }
 
