@@ -279,7 +279,7 @@ void Smsc::init(const SmscConfigs& cfg)
 
   {
     smsc::system::abonentinfo::AbonentInfoSme *ai=
-      new smsc::system::abonentinfo::AbonentInfoSme(profiler,&smeman,
+      new smsc::system::abonentinfo::AbonentInfoSme(this,
         cfg.cfgman->getString("abonentinfo.systemId"));
     ai->servType=cfg.cfgman->getString("abonentinfo.service_type");
     ai->protId=cfg.cfgman->getInt("abonentinfo.protocol_id");

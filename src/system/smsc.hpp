@@ -76,6 +76,11 @@ public:
     smscsme->putSms(sms);
   }
 
+  void unregisterSmeProxy(const string& sysid)
+  {
+    smeman.unregisterSmeProxy(sysid);
+  }
+
 protected:
   smsc::core::threads::ThreadPool tp;
   smsc::system::smppio::SmppSocketsManager ssockman;

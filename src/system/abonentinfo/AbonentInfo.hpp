@@ -6,6 +6,7 @@
 #include "core/threads/ThreadedTask.hpp"
 #include "profiler/profiler.hpp"
 #include "util/debug.h"
+#include "system/smsc.hpp"
 
 namespace smsc{
 namespace system{
@@ -19,12 +20,10 @@ using namespace smsc::profiler;
 
 class AbonentInfoSme:public SmeProxy,public ThreadedTask{
 public:
-  AbonentInfoSme(ProfilerInterface* profiler,
-    SmeRegistrar* smeman,const char* sysId):
+  AbonentInfoSme(Smsc* smsc,const char* sysId):
       seq(1),
       managerMonitor(NULL),
-      profiler(profiler),
-      smeman(smeman),
+      smsc(smsc),
       systemId(sysId)
   {
   }
@@ -33,7 +32,7 @@ public:
   {
     __trace__("try to unregister abonentinfo sme");
     try{
-      smeman->unregisterSmeProxy(systemId);
+      smsc->unregisterSmeProxy(systemId);
     }catch(...)
     {
       __trace__("failed to unregister abonentinfo sme");
@@ -141,8 +140,7 @@ protected:
   int seq;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
-  ProfilerInterface* profiler;
-  SmeRegistrar *smeman;
+  Smsc *smsc;
   string systemId;
 };
 
