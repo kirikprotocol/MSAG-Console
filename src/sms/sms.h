@@ -1201,7 +1201,7 @@ namespace smsc { namespace sms
          * 
          * @param _name указатель на буфер куда будет скопированно имя
          *              буфер должен иметь размер не меньше
-         *              MAX_ADDRESS_VALUE_LENGTH+1, чтобы принять 
+         *              MAX_ESERVICE_TYPE_LENGTH+1, чтобы принять 
          *              любое значение
          */
         inline void getEServiceType(char* _name) const 
