@@ -30,7 +30,7 @@ public:
   void Inc(T inc=inc_v)
   {
     hrtime_t now=gethrtime();
-    int diff=(now-lastTime)/1000000/slotRes;
+    unsigned int diff=(now-lastTime)/1000000/slotRes;
     if(diff==0)
     {
       slot[last]+=inc;
