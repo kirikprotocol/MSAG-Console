@@ -176,22 +176,11 @@ void MapIoTask::dispatcher()
   message.receiver = MY_USER_ID;
 
   for(;;){
-    result = MsgRecv_NW(&message,100);
-    if ( result != MSG_OK ) {
-      __trace2__("MAP: error at MsgRecv with code x%hx",result);
-      return;
-    }
-    
     if ( isStopping ) return;
     
-    __trace2__("MAP: MsgRecv receive msg with "
-               "recver 0x%hx,sender 0x%hx,prim 0x%hx",message.receiver,message.sender,message.primitive);
-    
-    Et96MapHandleIndication(&message);
-
     try{
       MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
-      if ( proxy->hasOutput() ){
+      while ( proxy->hasOutput() ){
         SmscCommand cmd = proxy->getOutgoingCommand();
         uint32_t did = cmd->get_dialogId();
         if ( did > 0x0ffff ) {
@@ -209,6 +198,20 @@ void MapIoTask::dispatcher()
       }
     }catch(...){
     }
+
+    result = MsgRecv_NW(&message);
+    
+    if ( result == MSG_TIMEOUT ) continue;
+    if ( result == MSG_OK ) {
+      __trace2__("MAP: error at MsgRecv with code x%hx",result);
+      return;
+    }
+    
+    __trace2__("MAP: MsgRecv receive msg with "
+               "recver 0x%hx,sender 0x%hx,prim 0x%hx",message.receiver,message.sender,message.primitive);
+    
+    Et96MapHandleIndication(&message);
+    
   }
 }
 
