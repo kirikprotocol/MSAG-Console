@@ -215,8 +215,9 @@ private:
   }
   Link* FindLinkEx(const KT& key,unsigned &index)
   {
-    if(_count==0)return NULL;
+    if(_bucketsnum==0)return NULL;
     index=((unsigned int)HF::CalcHash(key)) % _bucketsnum;
+    if(_count==0)return NULL;
     return _buckets[index].Find(key);
   }
 
