@@ -86,6 +86,8 @@ void aliasTc()
 		"Для неправильно введенных данных выдаются соответствующие сообщения об ошибках");
 	__reg_tc__("adminConsole.alias.alter.incorrect.missingRequiredParam",
 		"Не заданы обязательные параметры (алиас, адрес)");
+	__reg_tc__("adminConsole.alias.alter.incorrect.nonExistent",
+		"Изменение несуществующего алиаса");
 	__reg_tc__("adminConsole.alias.alter.incorrect.invalidAliasFormat",
 		"Неправильный формат алиаса");
 	__reg_tc__("adminConsole.alias.alter.incorrect.invalidAddrFormat",
