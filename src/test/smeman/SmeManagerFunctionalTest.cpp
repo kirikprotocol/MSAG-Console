@@ -13,6 +13,12 @@ using smsc::smeman::SmeProxy;
 using smsc::test::util::CheckList;
 static Category& log = Logger::getCategory("SmeManagerFunctionalTest");
 
+inline void prepareForNewSme(vector<SmeInfo*>& sme, vector<TCResultStack*>& stack)
+{
+	sme.push_back(new SmeInfo());
+	stack.push_back(new TCResultStack());
+}
+
 void executeFunctionalTest(TCResultFilter* filter, int listSize)
 {
 	SmeManagerTestCases tc;
@@ -24,17 +30,18 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 	//–егистраци€ sme с корректными параметрами
 	for (int i = 0; i < listSize; i++)
 	{
-		sme.push_back(new SmeInfo());
-		stack.push_back(new TCResultStack());
+		prepareForNewSme(sme, stack);
 		TCResult* res = tc.addCorrectSme(sme.back(), RAND_TC);
 		stack.back()->push_back(res);
 	}
 
-	//–егистраци€ sme с некорректными параметрами, 1/5
-	//Disable зарегистрированного sme, 1/5
-	//Enable зарегистрированного sme, 1/5
-	//ѕолучение зарегистрированного sme, 2/5
-	for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
+	//–егистраци€ sme с некорректными параметрами, 1/6
+	//–егистраци€ sme с пустым systemId, 1/6
+	//Disable зарегистрированного sme, 1/6
+	//Enable зарегистрированного sme, 1/6
+	//ѕолучение зарегистрированного sme, 2/6
+	bool emptySystemId = true; //можно создать только единственный sme
+	for (TCSelector s(RAND_SET_TC, 6); s.check(); s++)
 	{
 		switch (s.value())
 		{
@@ -46,20 +53,29 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 				}
 				break;
 			case 2:
+				if (emptySystemId)
+				{
+					emptySystemId = false;
+					prepareForNewSme(sme, stack);
+					TCResult* res = tc.addCorrectSmeWithEmptySystemId(sme.back());
+					stack.back()->push_back(res);
+				}
+				break;
+			case 3:
 				for (int i = 0; i < sme.size(); i++)
 				{
 					TCResult* res = tc.disableExistentSme(sme[i]);
 					stack[i]->push_back(res);
 				}
 				break;
-			case 3:
+			case 4:
 				for (int i = 0; i < sme.size(); i++)
 				{
 					TCResult* res = tc.enableExistentSme(sme[i]);
 					stack[i]->push_back(res);
 				}
 				break;
-			default: //case = 4..5
+			default: //case = 5..6
 				for (int i = 0; i < sme.size(); i++)
 				{
 					SmeProxy* proxy;
