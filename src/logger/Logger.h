@@ -1,15 +1,26 @@
-#ifndef LOG4CPPINIT_H_INCLUDED_C3A87A6B
-#define LOG4CPPINIT_H_INCLUDED_C3A87A6B
+#ifndef SMSC_LOGGER_H_INCLUDED_C3A87A6B
+#define SMSC_LOGGER_H_INCLUDED_C3A87A6B
 
-#include <string>
 #include <stdarg.h>
-#include <map>
+#include <core/buffers/Hash.hpp>
+#include <core/synchronization/Mutex.hpp>
+#include <util/Exception.hpp>
+#include <util/Properties.h>
 
-#ifdef LOGGER_LIB_LOG4CPP
-#include <log4cpp/Category.hh>
-#else
-#include <log4cplus/logger.h>
-#endif
+#include "logger/Appender.h"
+#include "logger/additional/ConfigReader.h"
+
+
+#define smsc_log_fatal(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isFatalEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_FATAL, __VA_ARGS__)
+#define smsc_log_error(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isErrorEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_ERROR, __VA_ARGS__)
+#define smsc_log_warn(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isWarnEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_WARN, __VA_ARGS__)
+#define smsc_log_info(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isInfoEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_INFO, __VA_ARGS__)
+#define smsc_log_debug(logger_param_blahbalh_balh,...) if (!logger_param_blahbalh_balh->isDebugEnabled()) ;else logger_param_blahbalh_balh->log_(smsc::logger::Logger::LEVEL_DEBUG, __VA_ARGS__)
+
+
+using namespace smsc::core::buffers;
+using namespace smsc::core::synchronization;
+using namespace smsc::util;
 
 namespace smsc {
 namespace logger {
@@ -18,29 +29,17 @@ class Logger
 {
 public:
 	typedef enum {
-		LEVEL_FATAL,
-		LEVEL_CRIT,
-		LEVEL_ERROR,
-		LEVEL_WARN,
-		LEVEL_INFO,
-		LEVEL_DEBUG,
-		LEVEL_NOTSET
+		LEVEL_FATAL = 5,
+		LEVEL_ERROR = 4,
+		LEVEL_WARN = 3,
+		LEVEL_INFO = 2,
+		LEVEL_DEBUG = 1,
+		LEVEL_NOTSET = 0
 	} LogLevel;
 
-	typedef std::map<std::string, LogLevel> LogCats;
-	/**
-	* retrieves smsc::logger::Logger instance for given category name
-	* \param logCategoryName Category name to retrieve
-	* \return smsc::logger::Logger logger
-	**/
-	static Logger getInstance(const std::string &logCategoryName);
+	typedef Hash<LogLevel> LogLevels;
 
-	/**
-	* retrieves smsc::logger::Logger instance for given category name
-	* \param logCategoryName Category name to retrieve
-	* \return smsc::logger::Logger logger
-	**/
-	static Logger getInstance(const char * const logCategoryName);
+	//////////////////////////  static //////////////////////////
 
 	/**
 	* Инициализирует Logger по данному файлу конфигурации.
@@ -50,34 +49,83 @@ public:
 	* (файл smsc.log в текущей директории, уровень DEBUG)
 	* \param configFileName имя файла конфигурации logger
 	**/
-	static void Init(const std::string & configFileName);
+	static void Init(const char * const configFileName);
 
 	/*!
 	* Деинициализирует logger. После этого его можно снова инициализировать.
 	*/
 	static void Shutdown();
 
-	static LogCats* getCurrentCategories();
-	static void setCategoryLogLevel(const char * const catName, Logger::LogLevel logLevel);
-	static const char * const getLogLevelName(const LogLevel level) throw();
+	static inline bool isInitialized() 
+	{
+		MutexGuard guard(static_mutex);
+		return initialized;
+	}
+
+	/**
+	* retrieves smsc::logger::Logger instance for given category name
+	* \param logCategoryName Category name to retrieve
+	* \return smsc::logger::Logger logger
+	**/
+	static Logger * getInstance(const char * const logCategoryName);
+
+	/**
+	* Возвращает map CatName -> DebugLevel.
+	*/
+	static const LogLevels & getLogLevels();
+	static void setLogLevels(const LogLevels & newLogCats);
+	static const char * const getLogLevel(const LogLevel level) throw();
 	static const LogLevel getLogLevel(const char * const logLevelName) throw();
 
+	//////////////////////////  instance //////////////////////////
 
-	Logger(const Logger& copy);
-	/** 
-    * Returns true if the chained log level of the Logger is equal to
-    * or higher than given priority.
-    * @param logLevel The log level to compare with.
-    * @returns whether logging is enable for this log level.
-    **/
-	bool isLogLevelEnabled(const LogLevel logLevel) const throw();
+	inline const char * const getName() const throw() {
+		return name;
+	}
+
+	inline bool isLogLevelEnabled(const LogLevel _logLevel) throw() {
+		MutexGuard guard(mutex);
+		return this->logLevel <= _logLevel;
+	}
+
+	inline bool isFatalEnabled() throw() 
+	{ 
+		return isLogLevelEnabled(Logger::LEVEL_FATAL);
+	};
+
+	inline bool isErrorEnabled() throw() 
+	{ 
+		return isLogLevelEnabled(Logger::LEVEL_ERROR);
+	};
+
+	inline bool isWarnEnabled() throw() 
+	{ 
+		return isLogLevelEnabled(Logger::LEVEL_WARN);
+	};
+
+	inline bool isInfoEnabled() throw() 
+	{ 
+		return isLogLevelEnabled(Logger::LEVEL_INFO);
+	};
+
+	inline bool isDebugEnabled() throw() 
+	{ 
+		return isLogLevelEnabled(Logger::LEVEL_DEBUG);
+	};
+
+	inline const LogLevel getLogLevel() throw() 
+	{
+		MutexGuard guard(mutex);
+		return logLevel;
+	}
+
 
 	/** 
 	* Log a message.
 	* @param message String to write in the log file.
 	* @param ... The arguments for stringFormat 
 	**/  
-	void log(const LogLevel logLevel, const std::string &message) throw();
+	void log_(const LogLevel logLevel, const std::string &message) throw();
 
 	/** 
 	* Log a message with debug priority.
@@ -85,7 +133,7 @@ public:
 	* in the log file.
 	* @param ... The arguments for stringFormat 
 	**/  
-	void log(const LogLevel logLevel, const char * const stringFormat, ...) throw();
+	void log_(const LogLevel logLevel, const char * const stringFormat, ...) throw();
 
 	/** 
 	* Log a message with debug priority.
@@ -93,138 +141,47 @@ public:
 	* in the log file.
 	* @param ... The arguments for stringFormat 
 	**/  
-	void logva(const LogLevel logLevel, const char * const stringFormat, va_list args) throw();
+	void logva_(const LogLevel logLevel, const char * const stringFormat, va_list args) throw();
 
-	/** 
-	* Log a message with fatal priority. 
-	* @param stringFormat Format specifier for the string to write 
-	* in the log file.
-	* @param ... The arguments for stringFormat 
-	**/  
-	void fatal(const char* stringFormat, ...) throw();
-
-	/** 
-	* Log a message with fatal priority.
-	* @param message string to write in the log file
-	**/  
-	void fatal(const std::string& message) throw();
-
-	/**
-	* Return true if the Category will log messages with priority FATAL.
-	* @returns Whether the Category will log.
-	**/ 
-	inline bool isFatalEnabled() const throw() { 
-		return isLogLevelEnabled(Logger::LEVEL_FATAL);
-	};
-
-
-
-	/** 
-	* Log a message with error priority.
-	* @param stringFormat Format specifier for the string to write 
-	* in the log file.
-	* @param ... The arguments for stringFormat 
-	**/  
-	void error(const char* stringFormat, ...) throw();
-
-	/** 
-	* Log a message with error priority.
-	* @param message string to write in the log file
-	**/  
-	void error(const std::string& message) throw();
-
-	/**
-	* Return true if the Category will log messages with priority ERROR.
-	* @returns Whether the Category will log.
-	**/ 
-	inline bool isErrorEnabled() const throw() { 
-		return isLogLevelEnabled(Logger::LEVEL_ERROR);
-	};
-
-
-	/** 
-	* Log a message with warn priority.
-	* @param stringFormat Format specifier for the string to write 
-	* in the log file.
-	* @param ... The arguments for stringFormat 
-	**/  
-	void warn(const char* stringFormat, ...) throw();
-
-	/** 
-	* Log a message with warn priority.
-	* @param message string to write in the log file
-	**/  
-	void warn(const std::string& message) throw();
-
-	/**
-	* Return true if the Category will log messages with priority WARN.
-	* @returns Whether the Category will log.
-	**/ 
-	inline bool isWarnEnabled() const throw() { 
-		return isLogLevelEnabled(Logger::LEVEL_WARN);
-	};
-
-
-	/** 
-	* Log a message with info priority.
-	* @param stringFormat Format specifier for the string to write 
-	* in the log file.
-	* @param ... The arguments for stringFormat 
-	**/  
-	void info(const char* stringFormat, ...) throw();
-
-	/** 
-	* Log a message with info priority.
-	* @param message string to write in the log file
-	**/  
-	void info(const std::string& message) throw();
-
-	/**
-	* Return true if the Category will log messages with priority INFO.
-	* @returns Whether the Category will log.
-	**/ 
-	inline bool isInfoEnabled() const throw() { 
-		return isLogLevelEnabled(Logger::LEVEL_INFO);
-	};
-
-
-	/** 
-	* Log a message with debug priority.
-	* @param stringFormat Format specifier for the string to write 
-	* in the log file.
-	* @param ... The arguments for stringFormat 
-	**/  
-	void debug(const char* stringFormat, ...) throw();
-
-	/** 
-	* Log a message with debug priority.
-	* @param message string to write in the log file
-	**/  
-	void debug(const std::string& message) throw();
-
-	/**
-	* Return true if the Category will log messages with priority DEBUG.
-	* @returns Whether the Category will log.
-	**/ 
-	inline bool isDebugEnabled() const throw() { 
-		return isLogLevelEnabled(Logger::LEVEL_DEBUG);
-	};
-
-
-protected:
-	static bool isInitialized;
-
-	Logger(const std::string & logCategoryName);
-	Logger(const char * const logCategoryName);
+#ifdef SMSC_DEBUG
+	static void printDebugInfo();
+#endif //SMSC_DEBUG
 
 private:
-#ifdef LOGGER_LIB_LOG4CPP
-	log4cpp::Category& logger;
-#else
-	log4cplus::Logger logger;
-#endif
+	static bool initialized;
+	typedef smsc::core::buffers::Hash<Logger*> LoggersHash;
+	typedef smsc::core::buffers::Hash<Appender*> AppendersHash;
+	static LoggersHash loggers;
+	static AppendersHash appenders;
+	static LogLevels logLevels;
+	static Properties cats2appenders;
+	static Mutex static_mutex;
+
+	static Logger * getInstanceInternal(const char * const logCategoryName);
+	static void clear() throw(Exception);
+	static void configure(const char * const configFileName) throw (Exception);
+	static void configureAppenders(const ConfigReader & properties) throw (Exception);
+	static void configureCatAppenders(const ConfigReader & properties) throw (Exception);
+	static void configureRoot(const ConfigReader & config) throw (Exception);
+	static LogLevel findDebugLevel(const char * const name);
+	static Appender* findAppenderByCat(const char * const name);
+
+	Logger(const char * const logCategoryName, const LogLevel logLevel, Appender * const appender);
+	LogLevel logLevel;
+	const char* const name;
+	Appender * const appender;
+	Mutex mutex;
+
+	// disable copying
+	Logger(const Logger & copy);
+	Logger & operator=(const Logger & other);
+	inline void setLogLevel(const LogLevel level) throw() 
+	{ 
+		MutexGuard guard(mutex); 
+		logLevel = level;
+	}
 };
 
 }
 }
-#endif // ifndef LOG4CPPINIT_H_INCLUDED_C3A87A6B
+#endif // ifndef SMSC_LOGGER_H_INCLUDED_C3A87A6B
