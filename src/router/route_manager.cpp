@@ -3,7 +3,7 @@
 */
 
 #if !defined DISABLE_TRACING
-#define DISABLE_TRACING
+//#define DISABLE_TRACING
 #endif
 
 #include "route_manager.h"
@@ -48,6 +48,30 @@ static inline int compare_pataddr( const RoutePattern& pattern,
                                                addr.src_address_32[0],
                                                addr.dest_address_32[0]
                                                );
+      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
+                                               pattern.src_addressPattern_32[1],
+                                               pattern.dest_addressPattern_32[1],
+                                               addr.src_address_32[1],
+                                               addr.dest_address_32[1]
+                                               );
+      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
+                                               pattern.src_addressPattern_32[2],
+                                               pattern.dest_addressPattern_32[2],
+                                               addr.src_address_32[2],
+                                               addr.dest_address_32[2]
+                                               );
+      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
+                                               pattern.src_addressPattern_32[3],
+                                               pattern.dest_addressPattern_32[3],
+                                               addr.src_address_32[3],
+                                               addr.dest_address_32[3]
+                                               );
+      __trace2__("compare R(%lx->%lx) / A(%lx->%lx)",
+                                               pattern.src_addressPattern_32[4],
+                                               pattern.dest_addressPattern_32[4],
+                                               addr.src_address_32[4],
+                                               addr.dest_address_32[4]
+                                               );
 #define compare_src(n) \
   (pattern.src_addressPattern_32[n] - \
     (pattern.src_addressMask_32[n] & addr.src_address_32[n]))
@@ -67,11 +91,19 @@ static inline int compare_pataddr( const RoutePattern& pattern,
   result = compare_dest(2); ifn0goto;
   result = compare_dest(3); ifn0goto;
   result = compare_dest(4); ifn0goto;
+	__trace2__("check_src_length: %c : P%d ? A%d",
+						 pattern.src_hasStar?'*':' ',
+						 pattern.src_length,
+						 addr.src_length);
 	result = pattern.src_hasStar?0:
-			((int)pattern.src_length)-((int)addr.src_length);
+			((int)pattern.src_length)-((int)addr.src_length)?-1:0;
 	ifn0goto;
+	__trace2__("check_dest_length: %c : P%d ? A%d",
+						 pattern.dest_hasStar?'*':' ',
+						 pattern.dest_length,
+						 addr.dest_length);
 	result = pattern.dest_hasStar?0:
-			((int)pattern.dest_length)-((int)addr.dest_length);
+			((int)pattern.dest_length)-((int)addr.dest_length)?-1:0;
 	ifn0goto;
 result_:
   __trace2__("=== %d",result);
@@ -203,19 +235,22 @@ __synchronized__
 	record->pattern.dest_length = length;
   //__require__( length < 21 );
 	if ( length >= 21 ) throw runtime_error("assertoin 'dest addr length < 21' failed");
-  memset(addrPattern,0,sizeof(addrPattern));
+  memset(addrPattern,0xff,sizeof(addrPattern));
+	addrPattern[20] = 0;
 	record->pattern.dest_hasStar = false;
   for ( int i=0; i<20; ++i )
   {
     switch(addrVal[i])
     {
     case '?': // any part
+			addrPattern[i] = 0;
       break;
     case '*': // only end of value
 			record->pattern.dest_hasStar = true;
+			memset(addrPattern+i,0,20-i);
       goto end_dest_pattern_loop;
     default:
-			addrPattern[i] = 0xff;
+			//addrPattern[i] = 0xff;
       --undefVal;
     }
   }
