@@ -1,5 +1,5 @@
 /*
-	$Id$
+  $Id$
 */
 
 #if !defined __Cpp_Header__smeman_smeiter_h__
@@ -17,10 +17,10 @@ namespace smeman {
 class SmeIterator
 {
 public:
-	virtual bool next() = 0;
-	virtual SmeProxy* getSmeProxy() const = 0;
-	virtual SmeInfo  getSmeInfo() const = 0;
-	virtual SmeIndex getSmeIndex() const = 0;
+  virtual bool next() = 0;
+  virtual SmeProxy* getSmeProxy() const = 0;
+  virtual SmeInfo  getSmeInfo() const = 0;
+  virtual SmeIndex getSmeIndex() const = 0;
 };
 
 

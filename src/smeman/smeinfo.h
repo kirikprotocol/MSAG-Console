@@ -1,5 +1,5 @@
 /*
-	$Id$
+  $Id$
 */
 #include <string>
 #include "smetypes.h"
@@ -13,19 +13,19 @@ namespace smeman {
 
 struct SmeInfo
 {
-	uint8_t typeOfNumber;
-	uint8_t numberingPlan;
-	uint8_t interfaceVersion;
-	std::string rangeOfAddress;
-	std::string systemType;
-	std::string password;
-	std::string hostname;
-	int port;
-	SmeSystemId systemId;
-	SmeNType SME_N;
-	bool  disabled;
-	~SmeInfo(){}
-	SmeInfo(){}
+  uint8_t typeOfNumber;
+  uint8_t numberingPlan;
+  uint8_t interfaceVersion;
+  std::string rangeOfAddress;
+  std::string systemType;
+  std::string password;
+  std::string hostname;
+  int port;
+  SmeSystemId systemId;
+  SmeNType SME_N;
+  bool  disabled;
+  ~SmeInfo(){}
+  SmeInfo(){}
 };
 
 }; // namespace smeman

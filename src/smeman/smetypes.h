@@ -1,5 +1,5 @@
 /*
-	$Id$
+  $Id$
 */
 
 #if !defined __Cpp_Header__smeman_smetyes_h__
@@ -21,10 +21,10 @@ const int32_t INVALID_SME_INDEX = -1;
 
 class SmeError : public std::exception
 {
-	virtual const char* what() const	throw()
-	{
-		return "SmeError";
-	}
+  virtual const char* what() const  throw()
+  {
+    return "SmeError";
+  }
 };
 
 };

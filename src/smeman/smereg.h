@@ -1,6 +1,6 @@
 
 /*
-	$Id$
+  $Id$
 */
 
 #if !defined __Cpp_Header__smeman_smereg_h__
@@ -16,7 +16,7 @@ namespace smeman {
 class SmeRegistrar
 {
 public:
-	virtual void registerSmeProxy(const SmeSystemId& systemId, SmeProxy* smeProxy) = 0;
+  virtual void registerSmeProxy(const SmeSystemId& systemId, SmeProxy* smeProxy) = 0;
 };
 
 

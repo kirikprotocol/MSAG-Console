@@ -1,6 +1,6 @@
 
 /*
-	$Id$
+  $Id$
 */
 
 #if !defined __Cpp_Header__smeman_dispatch_h__
@@ -15,7 +15,7 @@ namespace smeman {
 class Dispatch
 {
 public:
-	virtual SmeProxy* selectSmeProxy() = 0;
+  virtual SmeProxy* selectSmeProxy() = 0;
 };
 
 }; // namespace smeman
