@@ -45,12 +45,16 @@ int main (int argc, char *argv[])
 			logger.debug("Param[%u]=\"%s\"", i, argv[i]);
 
 		logger.debug("Initializing service");
-		ComponentManager::registerComponent(new DumbServiceCommandHandler());
+		DumbServiceCommandHandler main_component;
+		ComponentManager::registerComponent(&main_component);
  		logger.debug("Starting service");
-		DumbServiceShutdownHandler::registerShutdownHandler(new DumbServiceShutdownHandler());
-		AdminSocketManager::start(config.getString("dumbtest.host"), servicePort);
+		DumbServiceShutdownHandler shutdown_handler;
+		DumbServiceShutdownHandler::registerShutdownHandler(&shutdown_handler);
+		std::auto_ptr<char> host(config.getString("dumbtest.host"));
+		AdminSocketManager::start(host.get(), servicePort);
  		logger.debug("Service started");
 		AdminSocketManager::WaitFor();
+		Manager::deinit();
  		logger.debug("Service stopped");
  	} catch (AdminException &e) {
  		Logger::getCategory("smsc.admin.service.test.ServiceSocketListenerTest").debug("Exception occured: \"%s\"", e.what());

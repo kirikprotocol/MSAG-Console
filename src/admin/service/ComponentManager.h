@@ -29,6 +29,8 @@ public:
 	static void deregisterComponent(const char * const componentName)
 		throw (AdminException);
 
+	static void deregisterAllComponent();
+
 	static const Components & getComponents() throw();
 
 protected:

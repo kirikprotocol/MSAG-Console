@@ -36,6 +36,39 @@ public:
 		parse(element);
 	}
 
+	~Config()
+	{
+		strParams.Empty();
+		intParams.Empty();
+		boolParams.Empty();
+		/*
+		char * name;
+		char * value;
+		for (strParamsType::Iterator i = strParams.getIterator(); i.Next(name, value);)
+		{
+			strParams.Delete(name);
+			if (value != 0)
+			{
+				delete value;
+				delete name;
+			}
+		}
+
+		int32_t ival;
+		for (intParamsType::Iterator i = intParams.getIterator(); i.Next(name, ival);)
+		{
+			intParams.Delete(name);
+			delete name;
+		}
+	
+		bool bval;
+		for (boolParamsType::Iterator i = boolParams.getIterator(); i.Next(name, bval);)
+		{
+			boolParams.Delete(name);
+			delete name;
+		}
+		*/
+	}
 	/**
 	 *
 	 * @param paramName имя параметра

@@ -10,6 +10,7 @@
 
 #include <store/StoreConfig.h>
 #include <core/buffers/Hash.hpp>
+#include <util/cstrings.h>
 #include <util/config/ConfigException.h>
 #include <util/config/Config.h>
 
@@ -19,6 +20,7 @@ namespace config {
 
 using smsc::store::StoreConfig;
 using smsc::core::buffers::Hash;
+using smsc::util::cStringCopy;
 
 /**
  * Класс, отвечающий за чтение и запись конфигурации системы.
@@ -38,9 +40,22 @@ public:
 	{
 		if (manager != 0)
 			throw ConfigException("Configuration manager already initialized");
-		config_filename = new char[strlen(configurationFileName)+1];
-		strcpy(config_filename, configurationFileName);
+		config_filename = cStringCopy(configurationFileName);
 		manager = new Manager();
+	}
+
+	static void deinit()
+	{
+		if (manager != 0)
+		{
+			delete manager;
+			manager = 0;
+		}
+		if (config_filename != 0)
+		{
+			delete config_filename;
+			config_filename = 0;
+		}
 	}
 
 	/**

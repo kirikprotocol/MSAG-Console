@@ -44,6 +44,12 @@ void ComponentManager::deregisterComponent(const char * const componentName)
 	components.Delete(componentName);
 }
 
+void ComponentManager::deregisterAllComponent()
+{
+	MutexGuard mutexGuard(componentsLock);
+	components.Empty();
+}
+
 const Components & ComponentManager::getComponents() throw()
 {
 	return components;
