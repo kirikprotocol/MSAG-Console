@@ -95,18 +95,21 @@ vector<int> SmppPduChecker::checkSubmitSmResp(
 		case ESME_RINVDSTADR: //Invalid Dest Addr
 			if (!pduRes.count(NO_ROUTE))
 			{
+				res.push_back(-ESME_RINVDSTADR);
 				res.push_back(NO_ROUTE);
 			}
 			break;
 		case ESME_RINVSCHED: //Invalid Scheduled Delivery Time
 			if (!pduRes.count(BAD_WAIT_TIME))
 			{
+				res.push_back(-ESME_RINVSCHED);
 				res.push_back(BAD_WAIT_TIME);
 			}
 			break;
 		case ESME_RINVEXPIRY: //Invalid message validity period
 			if (!pduRes.count(BAD_VALID_TIME))
 			{
+				res.push_back(-ESME_RINVEXPIRY);
 				res.push_back(BAD_VALID_TIME);
 			}
 			break;
