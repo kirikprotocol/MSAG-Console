@@ -21,16 +21,8 @@ static const int INVALID_VALID_TIME = 2;
 static const int INVALID_WAIT_TIME = 3;
 static const int INVALID_DATA_CODING = 4;
 static const int INVALID_SERVICE_TYPE = 5;
+static const int INVALID_SOURCE_ADDR = 6;
 
-SmppPduChecker::SmppPduChecker(PduRegistry* _pduReg,
-	const RouteChecker* _routeChecker, CheckList* _chkList)
-	: pduReg(_pduReg), routeChecker(_routeChecker), chkList(_chkList)
-{
-	__require__(routeChecker);
-	__require__(pduReg);
-	//__require__(chkList);
-}
-	
 set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu->get_commandId() == SUBMIT_SM);
@@ -39,9 +31,11 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		pdu->get_message().get_scheduleDeliveryTime(), pduData->submitTime);
 	time_t validTime = SmppUtil::getValidTime(
 		pdu->get_message().get_validityPeriod(), pduData->submitTime);
+	Address srcAddr;
+	SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
 	set<int> res;
 	//без проверки на bound sme
-	if (!routeChecker->isDestReachable(pdu->get_message().get_source(),
+	if (!fixture->routeChecker->isDestReachable(pdu->get_message().get_source(),
 		pdu->get_message().get_dest(), false))
 	{
 		res.insert(NO_ROUTE);
@@ -64,10 +58,18 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		default:
 			res.insert(INVALID_DATA_CODING);
 	}
-	if (pdu->get_message().get_serviceType() &&
-		strlen(pdu->get_message().get_serviceType()) > MAX_SERVICE_TYPE_LENGTH)
+	if (strlen(nvl(pdu->get_message().get_serviceType())) > MAX_SERVICE_TYPE_LENGTH)
 	{
 		res.insert(INVALID_SERVICE_TYPE);
+	}
+	if (fixture->smeInfo.rangeOfAddress.length())
+	{
+		AddressValue addrVal;
+		srcAddr.getValue(addrVal);
+		if (fixture->smeInfo.rangeOfAddress.find(addrVal) == string::npos)
+		{
+			res.insert(INVALID_SOURCE_ADDR);
+		}
 	}
 	return res;
 }
@@ -231,6 +233,14 @@ void SmppPduChecker::processResp(ResponseMonitor* monitor,
 		case ESME_RINVSERTYP:
 			__tc__("processResp.checkCmdStatusInvalidServiceType");
 			if (!pduRes.count(INVALID_SERVICE_TYPE))
+			{
+				__tc_fail__(1);
+			}
+			__tc_ok_cond__;
+			break;
+		case ESME_RINVSRCADR:
+			__tc__("processResp.checkCmdStatusInvalidSourceAddr");
+			if (!pduRes.count(INVALID_SOURCE_ADDR))
 			{
 				__tc_fail__(1);
 			}

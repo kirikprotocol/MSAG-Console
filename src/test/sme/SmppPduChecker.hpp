@@ -2,9 +2,7 @@
 #define TEST_SME_SMPP_RESPONSE_PDU_CHECKER
 
 #include "smpp/smpp_structures.h"
-#include "test/core/PduRegistry.hpp"
-#include "test/core/RouteChecker.hpp"
-#include "test/util/CheckList.hpp"
+#include "SmppFixture.hpp"
 #include <set>
 #include <vector>
 
@@ -21,8 +19,10 @@ using namespace smsc::smpp; //pdu
 class SmppPduChecker
 {
 public:
-	SmppPduChecker(PduRegistry* pduReg, const RouteChecker* routeChecker,
-		CheckList* chkList);
+	SmppPduChecker(SmppFixture* _fixture)
+	: fixture(_fixture), chkList(_fixture->chkList)
+	{ fixture->pduChecker = this; }
+
 	~SmppPduChecker() {}
 	
 	set<int> checkSubmitSm(PduData* pduData);
@@ -34,8 +34,7 @@ public:
 		time_t respTime);
 
 private:
-	const RouteChecker* routeChecker;
-	PduRegistry* pduReg;
+	SmppFixture* fixture;
 	CheckList* chkList;
 
 	template <class Resp>
