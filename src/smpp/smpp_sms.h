@@ -58,10 +58,11 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
     {
       //char msg[256];
       //const smsc::sms::Body& sms_body = sms->getMessageBody();
-			string short_msg = sms->getStrProperty(Tag::SMPP_SHORT_MESSAGE);
-      int msg_length = sms->getIntProperty(Tag::SMPP_SM_LENGTH);
-      __require__(msg_length <= (signed)short_msg.length());
-      message.set_shortMessage(short_msg.c_str(),msg_length);
+			unsigned len = 0;
+      const char* short_msg = sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+      unsigned msg_length = sms->getIntProperty(Tag::SMPP_SM_LENGTH);
+      __require__(msg_length <= len);
+      message.set_shortMessage(short_msg,msg_length);
       //message.set_smLength((uint8_t)msg_length);
       //message.set_dataCoding((uint8_t)sms_body.getCodingScheme());
       message.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMPP_DATA_CODING));
@@ -130,8 +131,11 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
 		pdu->optional.set_sarTotalSegments(sms->getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS));
 	if ( sms->hasIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES) )
 		pdu->optional.set_numberOfMessages(sms->getIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES));
-	if ( sms->hasStrProperty(Tag::SMPP_MESSAGE_PAYLOAD) )
-		pdu->optional.set_messagePayload(sms->getStrProperty(Tag::SMPP_MESSAGE_PAYLOAD).c_str(),sms->getStrProperty(Tag::SMPP_MESSAGE_PAYLOAD).length());	
+	if ( sms->hasStrProperty(Tag::SMPP_MESSAGE_PAYLOAD) ){
+		unsigned len;
+    const char * data = sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    pdu->optional.set_messagePayload(data,len);	
+  }
 
 	if ( sms->hasIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG) )
 		pdu->message.set_replaceIfPresentFlag(sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG));
@@ -179,8 +183,8 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
     //__require__ ( message.shortMessage.size() == message.smLength );
     //sms->setMessageBody(message.smLength, message.dataCoding, false, message.shortMessage.cstr());
     //sms->setMessageBody((unsigned char)message.shortMessage.size(), (unsigned char)message.dataCoding, false, (uint8_t*)message.shortMessage.cstr());
-		sms->setStrProperty(Tag::SMPP_SHORT_MESSAGE,
-												message.shortMessage.cstr()?string(message.shortMessage.cstr(),message.shortMessage.length):string(""));
+		sms->setBinProperty(Tag::SMPP_SHORT_MESSAGE,
+												message.shortMessage.cstr()?message.shortMessage.cstr():"",message.shortMessage.length);
 		sms->setIntProperty(Tag::SMPP_SM_LENGTH,(uint32_t)message.shortMessage.size());
 		sms->setIntProperty(Tag::SMPP_DATA_CODING,(uint32_t)message.dataCoding);
     sms->setIntProperty(Tag::SMPP_PRIORITY,(uint32_t)message.priorityFlag);
@@ -250,9 +254,9 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
 	if ( pdu->optional.has_numberOfMessages() )
 		sms->setIntProperty(Tag::SMPP_NUMBER_OF_MESSAGES,pdu->optional.get_numberOfMessages());
 	if ( pdu->optional.has_messagePayload() )
-		sms->setStrProperty(Tag::SMPP_MESSAGE_PAYLOAD,
-												string(pdu->optional.get_messagePayload(),
-															 pdu->optional.size_messagePayload()));
+		sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,
+												       pdu->optional.get_messagePayload(),
+															 pdu->optional.size_messagePayload());
   return true;
 }
 

@@ -497,10 +497,13 @@ namespace smsc {
       public:
         virtual void setStrProperty(const string& s,const string& value)= 0;
         virtual void setIntProperty(const string& s,const uint32_t value) = 0;
+        virtual void setBinProperty(const string& s,const char* data, unsigned len) = 0;
         virtual string getStrProperty(const string& s) = 0;
         virtual uint32_t getIntProperty(const string& s) = 0;
+        virtual const char* getBinProperty(const string& s,unsigned* len) = 0;
         virtual bool hasIntProperty(const string& s) = 0;
         virtual bool hasStrProperty(const string& s) = 0;
+        virtual bool hasBinProperty(const string& s) = 0;
         virtual ~SMSDict(){}
       };
       
@@ -753,6 +756,121 @@ namespace smsc {
         }
       };
       
+      class TemporaryBodyBin
+      {
+        class COStr{
+          auto_ptr<char> data;
+          unsigned len;
+        public:
+          unsigned length() {return len;}
+          void set(const char* text,unsigned len){
+            this->len = len;
+            data = new char[len];
+            memcpy(data.get(),text,len);
+          }
+          const char* dat() { return data.get();}
+          const char* get(unsigned* _len) const {
+            require(_len!=0);
+            *_len = this->len;
+            return data.get();
+          }
+          COStr& operator = (const COStr& costr){
+            unsigned l;
+            const char* t = costr.get(&l);
+            set(t,l);
+            return *this;
+          }
+          COStr() : len(0) {}
+          COStr(const COStr& costr): len(0){operator =(costr);}
+        };
+        Hash<COStr> hash;
+      public:
+        int getRequiredBufferSize()
+        {
+          int size = 0;
+          char* key;
+          COStr* value;
+          hash.First();
+          while(hash.Next(key,value))
+          {
+            __require__(value!=0);
+            size+=value->length()+4+2; 
+          }
+          __trace2__("TemporaryBodyStr size: %d",size);
+          return size;
+        }
+        
+        int hasValue(const string& key)
+        {
+          return hash.Exists(key.c_str());
+        }
+        
+        const char* getValue(const string& key,unsigned* len)
+        {
+          const COStr* value = hash.GetPtr(key.c_str());
+          if ( !value ) return 0;
+          else return value->get(len);
+        }
+        
+        void setValue(const string& key, const char* value, unsigned len)
+        {
+          hash[key.c_str()].set(value,len);
+        }
+        
+        int encode(uint8_t* buffer,int offs,int length)
+        {
+          char* key;
+          COStr* value;
+          hash.First();
+          while(hash.Next(key,value))
+          {
+            __require__(value!=0);
+            __require__(offs+4<length);
+            uint32_t len = (uint32_t)value->length(); 
+            uint16_t tag = tag_hash.getTag(key);
+            {
+              uint16_t tmp16 = htons(tag);;
+              //*(uint16_t*)(buffer+offs) = htons(tag);
+              memcpy(buffer+offs,&tmp16,2);
+              uint32_t tmp32 = htonl(len);
+              //*(uint32_t*)(buffer+offs+2) = htonl(len);
+              memcpy(buffer+offs+2,&tmp32,4);
+            }
+            offs+=4+2;
+            __trace2__("Senc: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key:"NULL",len,offs,length);
+            __require__(offs+len<=(unsigned)length);
+            memcpy(buffer+offs,value->dat(),len);
+            offs+=len;
+          }
+          return offs;
+        }
+        
+        void decode(uint8_t* buffer, int length)
+        {
+          hash.Empty();
+          if ( !buffer || !length ) return;
+          for(int pos = 0; pos+4 < length;)
+          {
+            uint16_t tag;
+            memcpy(&tag,buffer+pos,2);
+            tag = ntohs(tag);
+            uint32_t len;
+            memcpy(&len,buffer+pos+2,4); 
+            len = ntohl(len);
+            pos+=4+2;
+            __require__(pos+len<=(unsigned)length);
+            string* key = tag_hash.getStrKeyForString(tag);
+            __trace2__("Sdec: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
+            if ( key )
+            {
+              __require__(*(buffer+pos+len) == 0);
+              hash[key->c_str()].set((char*)buffer+pos,len);
+            }
+            pos+=len;
+          }
+        }
+      };
+      
       /**
       * Структура описывает тело сообщения
       * 
@@ -767,6 +885,7 @@ namespace smsc {
         mutable int         buffLen;
         mutable TemporaryBodyStr temporaryBodyStr;
         mutable TemporaryBodyInt temporaryBodyInt;
+        mutable TemporaryBodyBin temporaryBodyBin;
       public:
       /**
                      * Default конструктор, просто инициализирует поля нулями
@@ -861,6 +980,7 @@ namespace smsc {
           int offs;
           offs = temporaryBodyStr.encode(buffer,0,length);
           offs = temporaryBodyInt.encode(buffer,offs,length);
+          offs = temporaryBodyInt.encode(buffer,offs,length);
         };
         
         int getRequiredBufferSize() const
@@ -877,11 +997,17 @@ namespace smsc {
           __require__( length >= 0 );
           temporaryBodyStr.decode(buffer,length);
           temporaryBodyInt.decode(buffer,length);
+          temporaryBodyInt.decode(buffer,length);
         };
         
         void setStrProperty(const string& s,const string& value) 
         {
           temporaryBodyStr.setValue(s,value);
+        }
+        
+        void setBinProperty(const string& s,const char* value, unsigned len) 
+        {
+          temporaryBodyBin.setValue(s,value,len);
         }
         
         void setIntProperty(const string& s,const uint32_t value) 
@@ -892,6 +1018,11 @@ namespace smsc {
         string getStrProperty(const string& s)
         {
           return temporaryBodyStr.getValue(s);
+        } 
+        
+        const char* getBinProperty(const string& s,unsigned* len)
+        {
+          return temporaryBodyBin.getValue(s,len);
         } 
         
         uint32_t getIntProperty(const string& s)
@@ -907,6 +1038,11 @@ namespace smsc {
         bool hasStrProperty(const string& s)
         {
           return temporaryBodyStr.hasValue(s);
+        }
+        
+        bool hasBinProperty(const string& s)
+        {
+          return temporaryBodyBin.hasValue(s);
         }
       };
       
@@ -1873,6 +2009,10 @@ namespace smsc {
         {
           ___SMS_DICT.setIntProperty(s,value);
         }
+        virtual void setBinProperty(const string& s,const char* value,unsigned len)
+        {
+          ___SMS_DICT.setBinProperty(s,value,len);
+        }
         virtual string getStrProperty(const string& s)
         {
           return ___SMS_DICT.getStrProperty(s);
@@ -1881,6 +2021,10 @@ namespace smsc {
         {
           return ___SMS_DICT.getIntProperty(s);
         }
+        virtual const char* getBinProperty(const string& s,unsigned* len)
+        {
+          return ___SMS_DICT.getBinProperty(s,len);
+        }
         virtual bool hasIntProperty(const string& s)
         {
           return ___SMS_DICT.hasIntProperty(s);
@@ -1888,6 +2032,10 @@ namespace smsc {
         virtual bool hasStrProperty(const string& s)
         {
           return ___SMS_DICT.hasStrProperty(s);
+        }
+        virtual bool hasBinProperty(const string& s)
+        {
+          return ___SMS_DICT.hasBinProperty(s);
         }
 #undef ___SMS_DICT
         virtual ~SMS() {}
