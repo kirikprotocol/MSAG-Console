@@ -101,8 +101,10 @@ private:
 	void debugAlias(const char* tc, int val, const AliasInfo* alias);
 	void setupRandomAliasMatchWithQuestionMarks(AliasInfo* alias, int len);
 	void setupRandomAliasMatchWithAsterisk(AliasInfo* alias, int adLen, int alLen);
+	void printFindResult(const char* name, const Address& param,
+		const AliasRegistry::AliasList& data);
 	void printFindResult(const char* tc, const Address& param, bool found,
-		const Address& result, const AliasRegistry::AliasList& data);
+		const Address& result);
 };
 
 }

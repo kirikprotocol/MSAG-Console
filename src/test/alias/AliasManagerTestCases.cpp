@@ -456,21 +456,12 @@ TCResult* AliasManagerTestCases::deleteAliases()
 	return res;
 }
 
-void AliasManagerTestCases::printFindResult(const char* tc,
-	const Address& param, bool found, const Address& result,
-	const AliasRegistry::AliasList& list)
+void AliasManagerTestCases::printFindResult(const char* name,
+	const Address& param, const AliasRegistry::AliasList& list)
 {
 	ostringstream os;
-	os << tc << ": param = " << param;
-	if (found)
-	{
-		os << ", result = " << result;
-	}
-	else
-	{
-		os << ", result = false";
-	}
-	os << ", test = (";
+	os << name << ": param = " << param;
+	os << ", result = (";
 	for (int i = 0; i < list.size(); i++)
 	{
 		if (i)
@@ -479,6 +470,20 @@ void AliasManagerTestCases::printFindResult(const char* tc,
 		}
 		os << *list[i];
 	}
+	os << ")";
+	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
+}
+
+void AliasManagerTestCases::printFindResult(const char* tc,
+	const Address& param, bool found, const Address& result)
+{
+	ostringstream os;
+	os << tc << ": param = " << param;
+	os << ", found = " << (found ? "true" : "false");
+	if (found)
+	{
+		os << ", result = " << result;
+	}
 	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
 }
 
@@ -486,11 +491,12 @@ TCResult* AliasManagerTestCases::findAliasByAddress(const Address& addr)
 {
 	TCResult* res = new TCResult(TC_FIND_ALIAS_BY_ADDRESS);
 	const AliasRegistry::AliasList list = aliasReg->findAliasByAddress(addr);
+	printFindResult("AliasRegistry::findAliasByAddress()", addr, list);
 	try
 	{
 		Address alias;
 		bool found = aliasMan->AddressToAlias(addr, alias);
-		printFindResult("AliasManager::AddressToAlias()", addr, found, alias, list);
+		printFindResult("AliasManager::AddressToAlias()", addr, found, alias);
 		if (!found && list.size())
 		{
 			res->addFailure(101);
@@ -538,11 +544,12 @@ TCResult* AliasManagerTestCases::findAddressByAlias(const Address& alias)
 {
 	TCResult* res = new TCResult(TC_FIND_ADDRESS_BY_ALIAS);
 	const AliasRegistry::AliasList list = aliasReg->findAddressByAlias(alias);
+	printFindResult("AliasRegistry::findAddressByAlias()", alias, list);
 	try
 	{
 		Address addr;
 		bool found = aliasMan->AliasToAddress(alias, addr);
-		printFindResult("AliasManager::AliasToAddress()", alias, found, addr, list);
+		printFindResult("AliasManager::AliasToAddress()", alias, found, addr);
 		if (!found && list.size())
 		{
 			res->addFailure(101);
