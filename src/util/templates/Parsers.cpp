@@ -366,13 +366,10 @@ void StringParser::parse(std::string& input,
                     line += str[curPos++];
             }
             
-            /*if (!line.length())
-                throw ParsingException("Parameter of type string missed."
-                                       "Processing string: '%s'", 
-                                       input.c_str());*/
              input.erase(0, curPos);
         }
-        else 
+        
+        if (!line.length())
         {
             const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
             if (def) line += def;
