@@ -51,6 +51,10 @@
             <param name="dbUserName" type="string">smsc_makar</param>
             <param name="dbUserPassword" type="string">smsc_makar</param>
 	    <param name="watchdog" type="bool">true</param>
+	    <section name="jdbc">
+	        <param name="driver" type="string">oracle.jdbc.driver.OracleDriver</param>
+	        <param name="source" type="string">jdbc:oracle:thin:@dbs.novosoft.ru:1521:ORCL</param>
+	    </section>
 	</section>
 
 	<section name="DataProvider">
