@@ -355,6 +355,7 @@ public class DistributionListManager implements DistributionListAdmin
 
             stmt = connection.prepareStatement(GET_PRINCIPALS_SQL);
             stmt.setString(1, dlname);
+            rs = stmt.executeQuery();
             while (rs.next()) {
                 list.add(new Principal(rs.getString(1), rs.getInt(2), rs.getInt(3)));
             }
