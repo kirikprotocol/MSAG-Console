@@ -70,7 +70,7 @@ static inline void print(RouteRecord* record,const char* ppp= "")
 }
 
 static inline 
-string AddrToString(Address& addr)
+string AddrToString(const Address& addr)
 {
   char buff[128] = {0};
   snprintf(buff,127,"%d.%d.%s\0",addr.plan,addr.type,addr.value);
@@ -626,15 +626,24 @@ __synchronized__
   // изменение от 4 июля 2003, ищем альтернативный маршрут
   RouteRecord* rec0 = 0;
 
-  if ( trace_enabled_ )
-    trace_.push_back(( ostringstream() << "lookup for src proxy indices: " << srcidx  ).str());
+  if ( trace_enabled_ ) {
+    ostringstream ost;
+    ost << "lookup for src proxy indices: " << srcidx;
+    trace_.push_back(ost.str());
+  }
 
   for ( ; rec != 0 ; rec = rec->alternate_pair ) {
-    if ( trace_enabled_ )
-      trace_.push_back(( ostringstream() << "src index: " << rec->srcProxyIdx  ).str());
+    if ( trace_enabled_ ) {
+      ostringstream ost;
+      ost << "src index: " << rec->srcProxyIdx;
+      trace_.push_back(ost.str());
+    }
     if ( rec->srcProxyIdx == srcidx ) {
-      if ( trace_enabled_ )
-        trace_.push_back(( ostringstream() << "found strong matching with src index" << rec->srcProxyIdx  ).str());
+      if ( trace_enabled_ ) {
+        ostringstream ost;
+        ost << "found strong matching with src index" << rec->srcProxyIdx;
+        trace_.push_back(ost.str());
+      }
       break;
     }
     if ( rec->srcProxyIdx == 0 ) {
@@ -652,8 +661,9 @@ __synchronized__
   }
 
   proxy = sme_table->getSmeProxy(rec->proxyIdx);
-  if ( trace_enabled_ )
-    trace_.push_back(string("route fond, target proxy is ").append(rec->info.smeSystemId));
+  if ( trace_enabled_ ) {
+    trace_.push_back(string("route fond, target proxy is ")+=rec->info.smeSystemId);
+  }
   if ( info ) *info = rec->info;
   if ( idx && rec->info.enabling ) *idx = rec->proxyIdx;
   if (!rec->info.enabling) return false;
