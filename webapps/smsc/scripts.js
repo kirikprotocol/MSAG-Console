@@ -237,14 +237,6 @@ function selectFirstTextInput()
 	}
 }
 
-function noValidationSubmit(buttonElem)
-{
-  document.all.jbutton.name  = buttonElem.name;
-  document.all.jbutton.value = buttonElem.value;
-  opForm.submit();
-  return false;
-}
-
 function findPosX(o)
 {
 	var x=0;

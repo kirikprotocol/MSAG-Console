@@ -1,5 +1,4 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ include file="/WEB-INF/inc/service_status.jsp"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.hosts.HostView"/>
 <jsp:setProperty name="bean" property="*"/>
 <%@page import="ru.novosoft.smsc.jsp.smsc.hosts.HostView, ru.novosoft.smsc.admin.service.ServiceInfo"%>
@@ -115,7 +114,7 @@ String serviceControl = (row == 0) ? "start" : "stop";
 	<td><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=checkedServices.contains(serviceId) ? "checked" : ""%>></td>
 	<td><a  href="#" title="Edit service parameters" onClick="return editService('<%=encodedServiceId%>');">edit</a></td>
 	<td><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td>
-	<td><%=serviceStatus(serviceId, service.getStatus(), "STATUS_ELEM_FOR_SERVICE_"+encodedServiceId)%></td>
+	<td><%=serviceStatus(serviceId)%></td>
 </tr>
 <%}}%>
 </tbody>

@@ -9,7 +9,9 @@ private String FORM_ENCTYPE = "application/x-www-form-urlencoded";
 private String CPATH = "/smsc";
 private java.security.Principal loginedUserPrincipal = null;
 private ru.novosoft.smsc.jsp.SMSCAppContext appContext = null;
-private boolean is_SMSC_status_needed = false;
+private String ServiceIDForShowStatus = null;
+private boolean isServiceStatusColored = false;
+private boolean isServiceStatusNeeded = false;
 %><%@
 page pageEncoding="windows-1251"%><%@
 page errorPage="/error.jsp"%><%@

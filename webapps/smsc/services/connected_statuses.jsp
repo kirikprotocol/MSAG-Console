@@ -11,7 +11,7 @@ for (Iterator i = c.iterator(); i.hasNext(); )
 	if (i.hasNext())
 		out.print(", ");
 }
-System.out.println("*** connected_statuses.jsp called");
+//System.out.println("*** connected_statuses.jsp called");
 out.println();
 for (Iterator i = c.iterator(); i.hasNext(); )
 {

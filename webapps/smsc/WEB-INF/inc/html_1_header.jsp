@@ -32,6 +32,10 @@ function openPerfMon()
 </script>
 </head>
 <body>
+<%
+if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0))
+{%><%@ include file="/WEB-INF/inc/service_status.jsp"%><%}
+%>
 <table height=100% cellspacing=0 cellpadding=0 class=main_table>
 <tr>
 	<td width=50 background="img/smsc_02.jpg" rowspan=3></td>
@@ -137,7 +141,9 @@ function openPerfMon()
 		<table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
 		<tr>
 			<th background="img/smsc_17.jpg" nowrap><%=TITLE%></th>
-			<td >&nbsp;<%if (is_SMSC_status_needed){%><%@ include file="/WEB-INF/inc/smsc_status.jsp"%>SMSC&nbsp;is&nbsp;<%=smscStatus("SMSC_STATUS_ELEM_ID")%><%}%></td>
+			<td >&nbsp;<%if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0){
+				%><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;is&nbsp;<%=serviceStatus(ServiceIDForShowStatus)%><%
+			}%></td>
 			<td width=12px background="img/smsc_19.jpg"></td>
 		</tr>
 		</table>

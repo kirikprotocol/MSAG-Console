@@ -1,9 +1,10 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%><%
-%><%@ page import="ru.novosoft.smsc.jsp.smsc.Index"%>
+%><%@ page import="ru.novosoft.smsc.jsp.smsc.Index,
+                   ru.novosoft.smsc.admin.Constants"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-is_SMSC_status_needed = true;
+ServiceIDForShowStatus = Constants.SMSC_SME_ID;
 if (request.isUserInRole("super-admin"))
 {
 TITLE = "Configuration status";

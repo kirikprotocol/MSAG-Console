@@ -8,7 +8,7 @@
 					  java.util.Iterator"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.Index"
 /><jsp:setProperty name="bean" property="*"/><%
-is_SMSC_status_needed = true;
+ServiceIDForShowStatus = Constants.SMSC_SME_ID;
 FORM_METHOD = "POST";
 TITLE = "SMSC";
 MENU0_SELECTION = "MENU0_SMSC";
@@ -28,7 +28,8 @@ switch(bean.process(appContext, errorMessages, request, loginedUserPrincipal))
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 }
 %><%@ 
-include file="/WEB-INF/inc/html_3_header.jsp"%><%
+include file="/WEB-INF/inc/html_3_header.jsp"%><%@ 
+include file="/WEB-INF/inc/collapsing_tree.jsp"%><%
 page_menu_begin(out);
 page_menu_button(out, "mbSave",  "Save",  "Save config");
 page_menu_button(out, "mbReset", "Reset", "Reset", "clickCancel()");
@@ -39,8 +40,8 @@ page_menu_end(out);
 %><script>
 function refreshStartStopButtonsStatus()
 {
-	document.all.mbStart.disabled = (document.all.SMSC_STATUS_ELEM_ID.innerText != "stopped");
-	document.all.mbStop.disabled = (document.all.SMSC_STATUS_ELEM_ID.innerText != "running");
+	document.all.mbStart.disabled = (document.all.RUNNING_STATUSERVICE_<%=Constants.SMSC_SME_ID%>.innerText != "stopped");
+	document.all.mbStop.disabled = (document.all.RUNNING_STATUSERVICE_<%=Constants.SMSC_SME_ID%>.innerText != "running");
 	window.setTimeout(refreshStartStopButtonsStatus, 500);
 }
 refreshStartStopButtonsStatus();
@@ -48,74 +49,7 @@ refreshStartStopButtonsStatus();
 <%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=content>
 <div class=secSmsc>SMSC Configuration</div>
-<script>
-function showhide(sectionId)
-{
-	var headerElem = opForm.all(sectionId + "_header");
-	var valueElem = opForm.all(sectionId + "_value");
-	if (valueElem.style.display != "none")
-	{
-		headerElem.className = "collapsing_tree_closed";
-		valueElem.style.display="none";
-	}
-	else
-	{
-		headerElem.className = "collapsing_tree_opened";
-		valueElem.style.display = "";
-	}
-}
-</script>
-<%!
-	int row = 0;
-	void startSection(JspWriter out, String sectionId, String sectionName, boolean opened) throws IOException
-	{
-		out.print("<div class=" + (opened ? "collapsing_tree_opened" : "collapsing_tree_closed") + "  id=\"" + sectionId + "_header\" onclick=\"showhide('" + sectionId + "')\">");
-		out.print(sectionName);
-		out.print("</div>");
-
-		out.print("<table cellspacing=0 cellpadding=0 id=\"" + sectionId + "_value\" " + (opened ? "" : "style=\"display:none\"") + ">");
-		out.print("<col width='56px'/>");
-
-		out.print("<tr><th/><td>");
-	}
-	void continueSection(JspWriter out) throws IOException
-	{
-		out.print("</td></tr><tr><th/><td>");
-	}
-	void finishSection(JspWriter out) throws IOException
-	{
-		out.print("</td></tr>");
-		out.print("</table>");
-	}
-	void startParams(JspWriter out) throws IOException
-	{
-		row = 0;
-		out.print("<table cellspacing=0 cellpadding=0>");
-		out.print("<col width=150px>");
-	}
-	void param(JspWriter out, String label, String id, String value) throws IOException
-	{
-		out.print("<tr class=row" + ((row++) & 1) + ">");
-      out.print("<th nowrap>" + label + ":</th>");
-		out.print("<td><input class=txt name=\"" + id + "\" value=\"" + StringEncoderDecoder.encode(value) + "\"></td>");
-		out.print("</tr>");
-	}
-	void param(JspWriter out, String label, String id, int value) throws IOException
-	{
-      param(out, label, id, String.valueOf(value));
-	}
-	void param(JspWriter out, String label, String id, boolean value) throws IOException
-	{
-		out.print("<tr class=row" + ((row++) & 1) + ">");
-		out.print("<th nowrap>" + label + ":</th>");
-		out.print("<td><input class=check type=checkbox name=\"" + id + "\" value=true " + (value ? "checked" : "") + "></td>");
-		out.print("</tr>");
-	}
-	void finishParams(JspWriter out) throws IOException
-	{
-		out.print("</table>");
-	}
-%><%
+<%
    //################################# logger #############################
 	startSection(out, "logger", "Logger", false);
 		startParams(out);

@@ -1,10 +1,11 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ include file="/WEB-INF/inc/service_status.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.services.Index"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = "Services";
+isServiceStatusNeeded = true;
+isServiceStatusColored = true;
 switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 {
 	case Index.RESULT_DONE:
@@ -40,9 +41,9 @@ page_menu_begin(out);
 page_menu_button(out, "mbAddService",  "Add",  "Add service");
 page_menu_button(out, "mbDelete", "Delete", "Delete selected services", "return confirm('Are you sure to delete all selected services?')");
 page_menu_space(out);
+page_menu_button(out, "mbDisconnectServices",  "Disconnect",  "Disconnect all selected services", "return confirm('Are you sure to disconnect all selected services?')", bean.isSmscAlive());
 page_menu_button(out, "mbStartService",  "Start",  "Start selected services");
 page_menu_button(out, "mbStopService",  "Stop",  "Stop selected services");
-page_menu_button(out, "mbDisconnectServices",  "Disconnect",  "Disconnect all selected services", "return confirm('Are you sure to disconnect all selected services?')", bean.isSmscAlive());
 page_menu_end(out);
 %><div class=content>
 <input type=hidden name=serviceId>
@@ -127,11 +128,11 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 		}
 	%></td>
 	<td class=name><%=bean.isServiceDisabled(serviceId) ? "<span style=\"color:red\">disabled</span>" : "<span style=\"color:green\">enabled</span>"%></td>
-	<td class=name><%=smeStatus(serviceId, bean.isServiceConnected(serviceId), "CONNECTION_STATUSERVICE_"+encodedServiceId, bean.getSmeStatus(serviceId))%></td>
+	<td class=name><%=smeStatus(serviceId)%></td>
 	<td class=name><%
 		if (bean.isService(serviceId))
 		{
-			%><%=serviceStatus(serviceId, bean.getServiceStatus(serviceId), "STATUS_ELEM_FOR_SERVICE_"+encodedServiceId)%><%
+			%><%=serviceStatus(serviceId)%><%
 		} else
 		{
 			%>&nbsp;<%
@@ -147,9 +148,9 @@ page_menu_begin(out);
 page_menu_button(out, "mbAddService",  "Add",  "Add service");
 page_menu_button(out, "mbDelete", "Delete", "Delete selected services", "return confirm('Are you sure to delete all selected services?')");
 page_menu_space(out);
+page_menu_button(out, "mbDisconnectServices",  "Disconnect",  "Disconnect all selected services", "return confirm('Are you sure to disconnect all selected services?')", bean.isSmscAlive());
 page_menu_button(out, "mbStartService",  "Start",  "Start selected services");
 page_menu_button(out, "mbStopService",  "Stop",  "Stop selected services");
-page_menu_button(out, "mbDisconnectServices",  "Disconnect",  "Disconnect all selected services", "return confirm('Are you sure to disconnect all selected services?')", bean.isSmscAlive());
 page_menu_end(out);
 %><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
