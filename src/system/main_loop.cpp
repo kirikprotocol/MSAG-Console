@@ -23,19 +23,27 @@ using std::auto_ptr;
 bool Smsc::routeSms(SMS* sms, int& dest_idx,SmeProxy*& proxy)
 {
   //smeman.getSmeProxy(0)
-	proxy = 0;
-	bool ok = router.lookup(sms->getOriginatingAddress(),
-													sms->getDestinationAddress(),
-													proxy,
-													&dest_idx);
-	return ok;
+  proxy = 0;
+  bool ok = router.lookup(sms->getOriginatingAddress(),
+                          sms->getDestinationAddress(),
+                          proxy,
+                          &dest_idx);
+  return ok;
 }
 
 void Smsc::mainLoop()
 {
   int src_proxy_index;
   int dest_proxy_index;
-  SmeProxy* src_proxy = smeman.selectSmeProxy(WAIT_DATA_TIMEOUT,&src_proxy_index);
+  SmeProxy* src_proxy;
+	
+	do 
+	{ 
+		src_proxy = smeman.selectSmeProxy(WAIT_DATA_TIMEOUT,&src_proxy_index);
+		if ( stopFlag ) return;
+	}	
+	while(!src_proxy);
+
   SmscCommand cmd = src_proxy->getCommand();
   try
   {
@@ -48,19 +56,7 @@ void Smsc::mainLoop()
         uint32_t dialogId =  cmd->get_dialogId();
         // route sms
         SmeProxy* dest_proxy = 0;
-				bool has_route = routeSms(sms,dest_proxy_index,dest_proxy);
-        /*auto_ptr<SmeIterator> it(smeman.iterator());
-        while (it->next())
-        {
-          SmeProxy* proxy = it->getSmeProxy();
-          if ( proxy != src_proxy )
-          {
-            dest_proxy = proxy;
-            dest_proxy_index = it->getSmeIndex();
-            break;
-          }
-        }*/
-
+        bool has_route = routeSms(sms,dest_proxy_index,dest_proxy);
         if ( !has_route )
         {
           //send_no_route;
@@ -69,13 +65,13 @@ void Smsc::mainLoop()
           __warning__("SUBMIT_SM: no route");
           break;
         }
-				else if ( !dest_proxy )
-				{
+        else if ( !dest_proxy )
+        {
           SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::ERROR);
           src_proxy->putCommand(resp);
           __warning__("SUBMIT_SM: SME is not connected");
           break;
-				}
+        }
         // store sms
         // create task
         uint32_t dialogId2 = dest_proxy->getNextSequenceNumber();

@@ -16,9 +16,10 @@ using core::synchronization::MutexGuard;
 // !!!!
 // not synchronized because only one thread processed on this method
 // !!!!
-SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long /*timeout*/,int* idx)
+SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long timeout,int* idx)
 {
-  for(;;)
+  bool after_wait = false;
+	for(;;)
   {
     {__synchronized__
       Unit* unit = unqueuedProxies;
@@ -86,7 +87,9 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long /*timeout*/,int* idx)
         //}
       }
     }// __synchronization__
-    mon.Wait();
+    if ( after_wait ) return 0;
+		mon.Wait((int)timeout);
+		after_wait = true;
   }
 }
 
