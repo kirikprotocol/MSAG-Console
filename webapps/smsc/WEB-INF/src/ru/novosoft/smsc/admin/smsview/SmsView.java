@@ -577,7 +577,7 @@ public class SmsView
       {
         int headerLen = ((int)text[0])&0xff;  // convert negative byte to int
         if( headerLen >= textLen-1 ) {
-          text = null; textLen = 0;
+          text = "UDH len greater then message len "+headerLen+">"+(textLen-1); textLen = text.length();
         } else {
           byte msgText[] = new byte[textLen = textLen-headerLen-1];
           System.arraycopy(text,  headerLen+1, msgText, 0, textLen);
@@ -590,7 +590,7 @@ public class SmsView
         messagePrefix = StringEncoderDecoder.encode(messagePrefix);
 
       row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
-      row.setText(messagePrefix + decodeMessage(text, textLen, textEncoding));
+      row.setText(messagePrefix + text!=null?decodeMessage(text, textLen, textEncoding):"");
     }
     catch (IOException exc) {
       System.out.println("SMS Body parsing failed !");
