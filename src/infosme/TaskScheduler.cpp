@@ -195,7 +195,7 @@ Schedule* TaskScheduler::getNextSchedule(time_t& scheduleTime)
         time_t time = schedule->calulateNextTime();
         if (time < 0) continue;
         
-        printf("Schedule '%s' Next time: %s", 
+        printf("Schedule %s\t Next time: %s", 
                schedule ? schedule->id.c_str():"-", ctime(&time));
         
         if (minimalTime < 0 || time < minimalTime) {

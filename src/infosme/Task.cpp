@@ -25,7 +25,7 @@ time_t parseDate(const char* str)
         sscanf(str, "%02d.%02d.%4d", 
                     &day, &month, &year) != 3) return -1;
     
-    tm  dt; dt.tm_isdst = 0;
+    tm  dt; dt.tm_isdst = -1;
     dt.tm_year = year - 1900; dt.tm_mon = month - 1; dt.tm_mday = day;
     dt.tm_hour = 0; dt.tm_min = 0; dt.tm_sec = 0;
     

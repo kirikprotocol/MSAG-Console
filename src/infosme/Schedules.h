@@ -127,7 +127,7 @@ namespace smsc { namespace infosme
     {
     protected:
         
-        int  weekDaysSet[7];
+        bool  weekDaysSet[7];
         
     public:
         

@@ -77,6 +77,7 @@ time_t DailySchedule::calulateNextTime()
     tm dt; localtime_r(&st, &dt);
     int intervalInSeconds = 86400*everyNDays;
     dt.tm_mday += ((ct-st)/intervalInSeconds+1)*everyNDays;
+    dt.tm_isdst = -1;
     st = mktime(&dt); 
 
     return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
@@ -96,20 +97,12 @@ static const char*  constFullEngWeekDays[7] = {
     "Friday", "Saturday", "Sunday"
 };
 static const char*  constShortEngWeekDays[7] = {
-    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"
 };
 static const char*  constFullEngWeekDayN[5] = {
     "first", "second", "third", "fourth", "last"
 };
 
-int scanWeekDay(const char* str)
-{
-    if (!str || str[0] == '\0') return -1;
-    for (int i=0; i<7; i++)
-        if (strcmp(constFullEngWeekDays[i], str) == 0 ||
-            strcmp(constShortEngWeekDays[i], str) == 0) return i;
-    return -1;    
-}
 int scanMonthName(const char* str)
 {
     if (!str || str[0] == '\0') return -1;
@@ -118,10 +111,18 @@ int scanMonthName(const char* str)
             strcmp(constShortEngMonthesNames[i], str) == 0) return i;
     return -1;    
 }
-int scanWeekDayN(const char* str)
+int scanWeekDay(const char* str)
 {
     if (!str || str[0] == '\0') return -1;
     for (int i=0; i<7; i++)
+        if (strcmp(constFullEngWeekDays[i], str) == 0 ||
+            strcmp(constShortEngWeekDays[i], str) == 0) return i;
+    return -1;    
+}
+int scanWeekDayN(const char* str)
+{
+    if (!str || str[0] == '\0') return -1;
+    for (int i=0; i<5; i++)
         if (strcmp(constFullEngWeekDayN[i], str) == 0) return i;
     return -1;    
 }
@@ -140,10 +141,10 @@ bool WeekDaysParser::initWeekDays(std::string weekDays)
         if (*str == ',' || *str == '\0') {
             int day = scanWeekDay(weekDay.c_str());
             if (day < 0 || day > 6) return false;
-            weekDaysSet[day] = day;
+            weekDaysSet[day] = true;
             weekDay = "";
         } 
-        else weekDay += *str;
+        else if (!isspace(*str)) weekDay += *str;
     } 
     while (*str++);
     return true;
@@ -156,7 +157,7 @@ void WeeklySchedule::init(ConfigView* config)
     if (everyNWeeks <= 0)
         throw ConfigException("Invalid everyNWeeks parameter, should be positive.");
     if (!initWeekDays(config->getString("weekDays")))
-        throw ConfigException("Invalid weekDay parameter, should be "
+        throw ConfigException("Invalid weekDays parameter, should be "
                               "',' separated list of week days.");
 }
 time_t WeeklySchedule::calulateNextTime()
@@ -168,45 +169,44 @@ time_t WeeklySchedule::calulateNextTime()
     time_t st = startDateTime;
     
     tm dt; localtime_r(&st, &dt);
-    dt.tm_mday -= ((dt.tm_wday == 0) ? 6:(dt.tm_wday-1));
-    st = mktime(&dt); // Понедельник первой стартовой недели.
-
+    
     int intervalInDays = 7*everyNWeeks;
     int intervalInSeconds = intervalInDays*86400;
 
-    if (ct >= st) { 
+    if (ct >= st) { // сдвиг до текущего времени
         dt.tm_mday += ((ct-st)/intervalInSeconds)*intervalInDays;
-        st = mktime(&dt); // Понедельник очередной стартовой недели.
+        dt.tm_isdst = -1;
+        st = mktime(&dt);
     }
     
-    while (st < startDateTime || st <= ct)
+    while (1)
     {
         if (deadLine > 0 && st >= deadLine) return -1;
-        for (int i=0; i<7; i++) {
-            if (st <= ct) {
-                dt.tm_mday += weekDaysSet[i];
-                st = mktime(&dt);
-            }
-            else if (st > startDateTime) {
+        
+        for (int i=0; i<7; i++, dt.tm_mday++)
+        {
+            dt.tm_isdst = -1;
+            st = mktime(&dt);
+            //printf("Scanning %s", ctime(&st));
+            if (weekDaysSet[(dt.tm_wday == 0) ? 6:(dt.tm_wday-1)] &&
+                st > ct && st >= startDateTime) {
                 return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
             }
         }
-        dt.tm_mday += intervalInDays;
-        st = mktime(&dt); // Переходим к следующей недели и ... 
-        dt.tm_mday -= ((dt.tm_wday == 0) ? 6:(dt.tm_wday-1));
-        st = mktime(&dt); // Берём на ней понедельник
+        
+        //printf("Switch to next week\n");
+        dt.tm_mday += intervalInDays; // Переходим к следующей неделе. 
+        dt.tm_isdst = -1;
+        st = mktime(&dt); 
     }
     
-    return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
+    return -1;
 }
 
 bool MonthesNamesParser::initWeekDay(std::string weekDayStr)
 {
     // Monday | Tuesday |  ...
-    const char* str = weekDayStr.c_str();
-    if (!str || str[0] == '\0') return false;
-    
-    weekDay = scanWeekDay(str);
+    weekDay = scanWeekDay(weekDayStr.c_str());
     if (weekDay < 0 || weekDay > 6) {
         weekDay = 0;
         return false;
@@ -216,10 +216,7 @@ bool MonthesNamesParser::initWeekDay(std::string weekDayStr)
 bool MonthesNamesParser::initWeekDayN(std::string weekDayNStr)
 {
     // first | second | third | fourth | last.
-    const char* str = weekDayNStr.c_str();
-    if (!str || str[0] == '\0') return false;
-    
-    int weekDayN = scanWeekDayN(str);
+    weekDayN = scanWeekDayN(weekDayNStr.c_str());
     if (weekDayN < 0 || weekDayN > 4) {
         weekDayN = 0;
         return false;
@@ -243,7 +240,7 @@ bool MonthesNamesParser::initMonthesNames(std::string monthesNames)
             monthesNamesSet[month] = true;
             monthName = "";
         } 
-        else monthName += *str;
+        else if (!isspace(*str)) monthName += *str;
     } 
     while (*str++);
     return true;
@@ -273,8 +270,8 @@ void MonthlySchedule::init(ConfigView* config)
 }
 int getLastMonthDay(tm dt)
 {
-    for (int i=27; i<32; i++) {
-        dt.tm_mday = i;
+    for (int i=27; i<33; i++) {
+        dt.tm_mday = i; dt.tm_isdst = -1;
         (void) mktime(&dt);
         if (dt.tm_mday != i) return i-1;
     }
@@ -293,17 +290,31 @@ time_t MonthlySchedule::calulateNextTime()
     tm dt; localtime_r(&ct, &dt); // начинаем с текущего времени.
     tm dtst; localtime_r(&startDateTime, &dtst);
     dt.tm_hour = dtst.tm_hour; dt.tm_min = dtst.tm_min; dt.tm_sec = dtst.tm_sec;
+    dt.tm_isdst = -1;             // меняем время на время запуска.
     time_t st = mktime(&dt); 
 
-    while (1)
+    int maxMonthesTries = 12;
+    while (maxMonthesTries--)
     {
-        if (dt.tm_mon < 0 || dt.tm_mon >= 12) return -1;
+        dt.tm_mday = 1;
+        int start_mon = dt.tm_mon;              // начинаем с текущего месяца
+        while (dt.tm_mon < start_mon+12)        // сканируем 12 месяцев после него
+            if (monthesNamesSet[dt.tm_mon%12]) break; // выходим если нашли месяц
+            else dt.tm_mon++;
         
+        if (dt.tm_mon >= start_mon+12) return -1; // нечего не нашли => месяцев нет (ошибка инита)
+        dt.tm_isdst = -1;
+        st = mktime(&dt); // нормализуем структуру dt, вычисляем нормальный месяц ???
+        
+        int lastMonthDay = getLastMonthDay(dt);
+        if (lastMonthDay < 0 || lastMonthDay > 31) return -1;
+
         if (dayOfMonth > 0)
         {
-            if (dayOfMonth <= getLastMonthDay(dt))
+            if (dayOfMonth <= lastMonthDay)
             {
                 dt.tm_mday = dayOfMonth;  // задали день старта
+                dt.tm_isdst = -1;
                 st = mktime(&dt);        
                 if (st > ct && st >= startDateTime) 
                     return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
@@ -311,11 +322,12 @@ time_t MonthlySchedule::calulateNextTime()
         }
         else
         {
-            int lastMonthDay = getLastMonthDay(dt);
+            //printf("WeekDayN = %d, WeekDay = %d\n", weekDayN, weekDay);
             if (weekDayN == 4) // search for last weekDay
             {
                 for (dt.tm_mday = lastMonthDay; dt.tm_mday > 0; dt.tm_mday--)
                 {
+                    dt.tm_isdst = -1;
                     st = mktime(&dt); // нормализируем структуру, вычисляем день недели
                     if (dt.tm_wday == ((weekDay == 6) ? 0:weekDay+1))
                     {
@@ -330,6 +342,7 @@ time_t MonthlySchedule::calulateNextTime()
                 int found = 0;
                 for (dt.tm_mday = 1; dt.tm_mday <= lastMonthDay; dt.tm_mday++)
                 {
+                    dt.tm_isdst = -1;
                     st = mktime(&dt); // нормализируем структуру, вычисляем день недели
                     if (dt.tm_wday == ((weekDay == 6) ? 0:weekDay+1))
                     {
@@ -344,20 +357,11 @@ time_t MonthlySchedule::calulateNextTime()
             }
         }
 
-        // не нашли в текущем месяце, увеличиваем месяц
-        dt.tm_mday = 1;
-        int start_mon = dt.tm_mon;                // начинаем с текущего месяца
-        while (++dt.tm_mon < start_mon+12) {      // сканируем 12 месяцев после него
-            int index = dt.tm_mon-start_mon;
-            if (index>=0 && index<12 && monthesNamesSet[index]) break; // выходим если нашли след. месяц
-        }
-        if (dt.tm_mon >= start_mon+12) return -1; // нечего не нашли => месяцев нет (ошибка инита)
-
-        (void)mktime(&dt); // нормализуем структуру dt, вычисляем нормальный месяц
+        dt.tm_mon++; dt.tm_isdst = -1;
+        st = mktime(&dt); // нормализируем структуру
     }
     
-    st = mktime(&dt);
-    return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
+    return -1;
 }
 
 void IntervalSchedule::init(ConfigView* config)
@@ -370,14 +374,13 @@ void IntervalSchedule::init(ConfigView* config)
 }
 time_t IntervalSchedule::calulateNextTime()
 {
-    if (startDateTime <= 0) return -1;
+    if (startDateTime <= 0 || intervalTime <= 0) return -1;
 
     time_t ct = time(NULL);
     time_t st = startDateTime;
     if (deadLine > 0 && ct >= deadLine) return -1;
     if (ct < st) return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
-    if (intervalTime <= 0) return -1;
-    
+
     st += ((ct-st)/intervalTime + 1)*intervalTime; // no need to ajust daylight
     return ((deadLine <= 0) ? st:((st < deadLine) ? st:-1));
 }
