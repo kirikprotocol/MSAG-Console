@@ -1,6 +1,8 @@
 <%@page import="java.util.*,
                 ru.novosoft.smsc.jsp.SMSCJspException,
-                ru.novosoft.smsc.jsp.SMSCAppContext"%><%
+                ru.novosoft.smsc.jsp.SMSCAppContext,
+                org.apache.catalina.Logger,
+                org.apache.log4j.Category"%><%
 if (errorMessages.size() > 0)
 {
   SMSCAppContext appContext = (SMSCAppContext) request.getAttribute("appContext");
@@ -8,6 +10,7 @@ if (errorMessages.size() > 0)
 	for(Iterator it = errorMessages.iterator(); it.hasNext();)
 	{
 		SMSCJspException exc = (SMSCJspException) it.next();
+    Category.getInstance("jsp errors").warn("JSP Exception occured", exc);
 		String code = exc.getMessage();
     String nested = exc.getCause() == null ? "" : "<br>Nested: \"" + exc.getCause().getMessage() + "\" (" + exc.getCause().getClass().getName() + ")";
     String param = exc.getParam() == null ? "" : ": " + exc.getParam();
