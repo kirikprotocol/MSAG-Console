@@ -54,7 +54,7 @@ int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,
   {
     SMS *s=new SMS(*tmplSms);
     int piece=datalen-sent>maxlen?maxlen:datalen-sent;
-    if(dc==DataCoding::DEFAULT)piece-=countEscapedChars(buf.get()+sent,piece);
+    if(dc==DataCoding::DEFAULT && piece==maxlen)piece-=countEscapedChars(buf.get()+sent,piece);
     s->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get()+sent,piece);
     s->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,piece);
     s->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
