@@ -976,6 +976,60 @@ inline bool dump_pdu(SmppHeader* _pdu,FILE* log = stderr)
   return true;
 }
 
+void disposePdu(SmppHeader* _pdu)
+{
+  using namespace SmppCommandSet;
+	if ( !_pdu ) return;
+  switch ( _pdu->commandId )
+  {
+  case GENERIC_NACK:  
+		delete(reinterpret_cast<PduGenericNack*>(_pdu)); break;
+  case BIND_RECIEVER: 
+		delete(reinterpret_cast<PduBindTRX*>(_pdu)); break;
+  case BIND_RECIEVER_RESP: 
+		delete(reinterpret_cast<PduBindTRXResp*>(_pdu)); break;
+  case BIND_TRANSMITTER: 
+		delete(reinterpret_cast<PduBindTRX*>(_pdu)); break;
+  case BIND_TRANSMITTER_RESP: 
+		delete(reinterpret_cast<PduBindTRXResp*>(_pdu)); break;
+  //case QUERY_SM: reinterpret_cast<*>(_pdu)
+  //case QUERY_SM_RESP: reinterpret_cast<*>(_pdu)
+  case SUBMIT_SM: 
+		delete(reinterpret_cast<PduSubmitSm*>(_pdu));  break;
+  case SUBMIT_SM_RESP: 
+		delete(reinterpret_cast<PduSubmitSmResp*>(_pdu));  break;
+  case DELIVERY_SM: 
+		delete(reinterpret_cast<PduDeliverySm*>(_pdu)); break;
+  case DELIVERY_SM_RESP: 
+		delete(reinterpret_cast<PduDeliverySmResp*>(_pdu)); break;
+  case UNBIND: 
+		delete(reinterpret_cast<PduUnbind*>(_pdu)); break;
+  case UNBIND_RESP: 
+		delete(reinterpret_cast<PduUnbindResp*>(_pdu)); break;
+  //case REPLACE_SM: reinterpret_cast<*>(_pdu)
+  //case REPLACE_SM_RESP: reinterpret_cast<*>(_pdu)
+  //case CANCEL_SM: reinterpret_cast<*>(_pdu)
+  //case CANCEL_SM_RESP: reinterpret_cast<*>(_pdu)
+  case BIND_TRANCIEVER: 
+		delete(reinterpret_cast<PduBindTRX*>(_pdu)); break;
+  case BIND_TRANCIEVER_RESP: 
+		delete(reinterpret_cast<PduBindTRXResp*>(_pdu)); break;
+  case OUTBIND: 
+		delete(reinterpret_cast<PduOutBind*>(_pdu)); break;
+  //case ENQUIRE_LINK: reinterpret_cast<*>(_pdu)
+  //case ENQUIRE_LINK_RESP: reinterpret_cast<*>(_pdu)
+  case SUBMIT_MULTI: 
+		delete(reinterpret_cast<PduMultiSm*>(_pdu)); break;
+  case SUBMIT_MULTI_RESP: 
+		delete(reinterpret_cast<PduMultiSmResp*>(_pdu)); break;
+  //case ALERT_NOTIFICATION: reinterpret_cast<*>(_pdu)
+  //case DATA_SM: reinterpret_cast<*>(_pdu)
+  //case DATA_SM_RESP: reinterpret_cast<*>(_pdu)
+  default:
+    __unreachable__("this code is not reachable");
+  }
+}
+
 };
 };
 #endif
