@@ -37,7 +37,7 @@ int AbonentInfoSme::Execute()
     cmd=getOutgoingCommand();
     if(cmd->cmdid!=smsc::smeman::DELIVERY || cmd->cmdid!=smsc::smeman::QUERYABONENTSTATUS_RESP)
     {
-      __trace2__("AbonentInfoSme: incorrect command submitted");
+      __trace2__("AbonentInfoSme: incorrect command submitted:%d",cmd->cmdid);
       log.warn("Incorrect command received");
       continue;
     }
