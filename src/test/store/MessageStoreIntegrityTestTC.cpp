@@ -33,7 +33,7 @@ void executeIntegrityTest(MessageStoreTestCases& tc,
 	vector<SMSId*> id;
 	vector<SMS*> sms;
 	vector<TCResultStack*> stack;
-	static executeTestCounter = 0;
+	static int executeTestCounter = 0;
 
 	//Сохранение правильного sms, 1/1
 	for (int i = 0; i < listSize; i++)
