@@ -171,7 +171,7 @@ __synchronized__
   length = routeInfo.source.getValue(addrVal);
 	record->pattern.src_length = length;
   //__require__( length < 21 );
-	if ( length >= 21 ) throw runtime_error("assertoin 'source addr length < 21' failed");
+	if ( length >= 21 ) throw runtime_error("assertin 'source addr length < 21' failed");
   memset(addrPattern,0,sizeof(addrPattern));
 	record->pattern.src_hasStar = false;
   for ( int i=0; i<length; ++i )
@@ -252,11 +252,11 @@ static inline void makeAddress( RouteAddress* addr, const Address* source, const
   addr->dest_numberingPlan = dest->getNumberingPlan();
   length = source->getValue((char*)addr->src_address);
   //__require__( length < 21 );
-	if ( length < 21 ) throw runtime_error("assertoin 'source addr length < 21' failed");
+	if ( length >= 21 ) throw runtime_error("assertion 'source addr length < 21' failed");
 	addr->src_length = length;
   length = dest->getValue((char*)addr->dest_address);
-  __require__( length < 21 );
-	if ( length < 21 ) throw runtime_error("assertoin 'dest addr length < 21' failed");
+  //__require__( length < 21 );
+	if ( length >= 21 ) throw runtime_error("assertion 'dest addr length < 21' failed");
 	addr->dest_length = length;
 }
 
