@@ -102,5 +102,8 @@
       <param name="1187">Data Missing</param>
       <param name="1188">Unexpected Data value</param>
     </section>
+    <section name="templates">
+      <param name="hello">Hello $$string import=who$$</param>
+    </section>
   </resources>
 </locale_resources>
