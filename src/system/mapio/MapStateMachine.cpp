@@ -1484,13 +1484,12 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
 }
 
 void MAPIO_PutCommand(const SmscCommand& cmd ){
-    MAPIO_PutCommand(cmd, 0 );
+  MutexGuard mapMutexGuard(mapMutex);
+  MAPIO_PutCommand(cmd, 0 );
 }
 
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
 {
-  MutexGuard mapMutexGuard(mapMutex);
-
   unsigned dialogid_smsc = cmd->get_dialogId();
   unsigned dialogid_map = 0;
   unsigned dialog_ssn = 0;
