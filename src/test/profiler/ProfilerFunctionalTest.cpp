@@ -3,6 +3,7 @@
 #include "test/util/TextUtil.hpp"
 #include "test/core/ProfileUtil.hpp"
 #include "core/threads/ThreadPool.hpp"
+#include "smeman/smeman.h"
 #include "smeman/smeproxy.h"
 #include "util/Logger.h"
 #include "util/config/Manager.h"
@@ -12,6 +13,7 @@
 using log4cpp::Category;
 using smsc::util::Logger;
 using smsc::profiler::Profile;
+using smsc::smeman::SmeManager;
 using smsc::smeman::ProxyMonitor;
 using smsc::core::threads::ThreadPool;
 using smsc::core::threads::ThreadedTask;
@@ -38,6 +40,7 @@ public:
 class ProfilerFunctionalTest
 {
 	Profile defProfile;
+	SmeManager smeMan;
 	Profiler* profiler;
 	ThreadPool threadPool;
 	ProfileRegistry* profileReg;
@@ -96,7 +99,7 @@ void ProfilerFunctionalTest::reinit()
 		//profiler->putCommand(SmscCommand()); //чтобы отработал stop()
 		//delete profiler;
 	}
-	profiler = new Profiler(defProfile);
+	profiler = new Profiler(defProfile, &smeMan, "profiler");
 	profiler->loadFromDB();
 	if (tc)
 	{
