@@ -4,6 +4,8 @@
 Modules:
       dbSme_distr
       dbSme_update
+      mciprof_distr
+      mciprof_update
     </echo>
   </target>
   <target name="dbSme_distr">
@@ -11,5 +13,11 @@ Modules:
   </target>
   <target name="dbSme_update">
     <ant dir="dbSme" antfile="build.xml" target="update"/>
+  </target>
+  <target name="mciprof_distr">
+    <ant dir="MCIProf" antfile="build.xml" target="distr"/>
+  </target>
+  <target name="mciprof_update">
+    <ant dir="MCIProf" antfile="build.xml" target="update"/>
   </target>
 </project>
