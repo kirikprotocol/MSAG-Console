@@ -73,9 +73,6 @@ int EventRunner::Execute()
         __trace2__("Invalid method '%d' invoked by event.", method);
         return -1;
     }
-
-    // TODO: correct threads shutdown in EventManager !!!
-
     return 0;
 }
 
@@ -237,11 +234,21 @@ void TaskProcessor::loadupTasks()
     lockedTasks.Empty();
     tasks = Task::loadupAll();
     smsc_log_info(logger, "Processing tasks loaded. Resending messages...");
+    
     Message message;
     char* abonent=0; Task* task = 0; tasks.First();
     while (tasks.Next(abonent, task))
-        if (task && task->formatMessage(message))
+    {
+        if (!task) continue;
+        smsc_log_debug(logger, "Loaded task for abonent: %s. Events=%d", abonent, task->eventsCount());
+
+        if (task->formatMessage(message)) {
+            smsc_log_debug(logger, "%s message put to out queue. Message events=%d",
+                           message.replace ? "Replace":"Send", message.eventCount);
             putToOutQueue(message, true);
+        }
+        else smsc_log_debug(logger, "Task for abonent: %s has no message to send", abonent);
+    }
     smsc_log_info(logger, "All loaded tasks messages added to output queue.");
 }
 void TaskProcessor::unloadTasks()

@@ -68,7 +68,7 @@ static bool  bMCISmeIsConnecting = false;
 static void setNeedStop(bool stop=true) {
     MutexGuard gauard(needStopLock);
     bMCISmeIsStopped = stop;
-    if (taskProcessor) taskProcessor->Stop();
+    if (stop && taskProcessor) taskProcessor->Stop();
 }
 static bool isNeedStop() {
     MutexGuard gauard(needStopLock);
@@ -558,6 +558,9 @@ int main(void)
 
         while (!isNeedStop())
         {
+            sigemptyset(&set);
+            sigprocmask(SIG_SETMASK, &set, &old);
+            
             MCISmePduListener       listener(processor);
             SmppSession             session(cfg, &listener);
             MCISmeMessageSender     sender(processor, &session);
@@ -590,10 +593,6 @@ int main(void)
                 continue;
             }
             smsc_log_info(logger, "Connected.");
-            
-            sigemptyset(&set);
-            sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
-            sigprocmask(SIG_SETMASK, &set, &old);
             
             smsc_log_info(logger, "Running messages send loop...");
             processor.Run();

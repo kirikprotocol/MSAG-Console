@@ -44,39 +44,7 @@ namespace smsc { namespace mcisme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
-    typedef enum { processResponceMethod, processReceiptMethod } EventMethod;
-
-    class TaskProcessor;
-    class EventRunner : public ThreadedTask
-    {
-    private:
-
-        EventMethod     method;
-        TaskProcessor&  processor;
-
-        int             seqNum;
-        bool            delivered, retry, immediate, replace, replace_failed;
-        std::string     smscId;
-
-    public:
-
-        virtual const char* taskName() { return "MCISmeEvent"; };
-
-        EventRunner(EventMethod method, TaskProcessor& processor, int seqNum,
-                    bool accepted, bool retry, bool immediate, 
-                    bool replace, bool replace_failed, std::string smscId="")
-            : method(method), processor(processor), seqNum(seqNum),
-              delivered(accepted), retry(retry), immediate(immediate), 
-              replace(replace), replace_failed(replace_failed), smscId(smscId) {};
-        EventRunner(EventMethod method, TaskProcessor& processor, std::string smscId,
-                    bool delivered, bool retry)
-            : method(method), processor(processor), seqNum(0),
-              delivered(delivered), retry(retry), immediate(false),
-              replace(false), replace_failed(false), smscId(smscId) {};
-
-        virtual ~EventRunner() {};
-        virtual int Execute();
-    };
+    class TaskProcessor; class EventRunner;
 
     struct MessageSender
     {
@@ -99,19 +67,41 @@ namespace smsc { namespace mcisme
         Mutex               stopLock;
         bool                bStopping;
 
+        EventMonitor        threadMonitor;
+        int                 threadCount;
+
+        friend class EventRunner;
+
+        void newThread() {
+            MutexGuard guard(threadMonitor);
+            threadCount++; 
+            threadMonitor.notifyAll();
+        }
+        void delThread() {
+            MutexGuard guard(threadMonitor);
+            if (threadCount) threadCount--;
+            threadMonitor.notifyAll();
+        }
+
     public:
 
-        ThreadManager() : ThreadPool(),
-            logger(Logger::getInstance("smsc.mcisme.ThreadManager")), bStopping(false) {};
+        ThreadManager() : ThreadPool(), logger(Logger::getInstance("smsc.mcisme.ThreadManager")),
+            bStopping(false), threadCount(0) {};
         virtual ~ThreadManager() {
             this->Stop();
             shutdown();
         };
 
-        void Stop() {
-            MutexGuard guard(stopLock);
-            bStopping = true;
-            // TODO: correct threads shutdown !!!
+        void Stop()
+        {
+            {
+                MutexGuard guard(stopLock);
+                bStopping = true;
+            }
+            __trace__("Waiting pooled threads finishing ...");
+            MutexGuard guard(threadMonitor);
+            while (threadCount > 0) threadMonitor.wait();
+            __trace__("All pooled threads finished.");
         }
         bool startThread(ThreadedTask* task) {
             MutexGuard guard(stopLock);
@@ -136,6 +126,48 @@ namespace smsc { namespace mcisme
                 smsc_log_warn(logger, "Precreated threads count in pool wasn't specified !");
             }
         }
+    };
+
+    typedef enum { processResponceMethod, processReceiptMethod } EventMethod;
+    class EventRunner : public ThreadedTask
+    {
+    private:
+
+        EventMethod     method;
+        TaskProcessor&  processor;
+        ThreadManager&  manager;
+
+        int             seqNum;
+        bool            delivered, retry, immediate, replace, replace_failed;
+        std::string     smscId;
+
+    public:
+
+        virtual const char* taskName() { return "MCISmeEvent"; };
+
+        EventRunner(EventMethod method, TaskProcessor& processor, ThreadManager& _manager,
+                    int seqNum, bool accepted, bool retry, bool immediate, 
+                    bool replace, bool replace_failed, std::string smscId="")
+            : method(method), processor(processor), manager(_manager), seqNum(seqNum),
+              delivered(accepted), retry(retry), immediate(immediate), 
+              replace(replace), replace_failed(replace_failed), smscId(smscId) 
+        { 
+            manager.newThread();
+        };
+        EventRunner(EventMethod method, TaskProcessor& processor, ThreadManager& _manager,
+                    std::string smscId, bool delivered, bool retry)
+            : method(method), processor(processor), manager(_manager), seqNum(0),
+              delivered(delivered), retry(retry), immediate(false),
+              replace(false), replace_failed(false), smscId(smscId)
+        {
+            manager.newThread();
+        };
+        virtual ~EventRunner()
+        { 
+            manager.delThread();
+        };
+        
+        virtual int Execute();
     };
 
     struct ReceiptData
@@ -311,13 +343,13 @@ namespace smsc { namespace mcisme
         virtual bool invokeProcessResponce(int seqNum, bool accepted, bool retry, bool immediate,
                                            bool replace, bool replace_failed, std::string smscId="")
         {
-            return eventManager.startThread(new EventRunner(processResponceMethod, *this, seqNum,
-                                                            accepted, retry, immediate, 
+            return eventManager.startThread(new EventRunner(processResponceMethod, *this, eventManager,
+                                                            seqNum, accepted, retry, immediate, 
                                                             replace, replace_failed, smscId));
         };
         virtual bool invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
         {
-            return eventManager.startThread(new EventRunner(processReceiptMethod, *this,
+            return eventManager.startThread(new EventRunner(processReceiptMethod, *this, eventManager,
                                                             smscId, delivered, retry));
         };
 
