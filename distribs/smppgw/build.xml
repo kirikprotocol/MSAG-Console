@@ -115,7 +115,7 @@ Targets:
       </fileset>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy todir="${WEBINF_DIR}/classes" file="${CATALINA_HOME}/shared/classes/log4j.properties">
+    <copy todir="${CATALINA_HOME}/shared/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
