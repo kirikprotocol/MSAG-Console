@@ -7,8 +7,6 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include <set>
-
 #include <logger/Logger.h>
 
 #include <util/config/ConfigView.h>
@@ -41,45 +39,12 @@ namespace smsc { namespace infosme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
-    struct TaskHolder
-    {
-        Task* task;
-        
-        TaskHolder() : task(0) {};
-        TaskHolder(Task* task) : task(task) {};
-        TaskHolder(const TaskHolder& holder) : task(holder.task) {};
-        virtual ~TaskHolder() {};
-
-        TaskHolder& operator=(const TaskHolder& holder) {
-            task = holder.task;
-            return *this;
-        }
-        bool operator>(const TaskHolder& holder) const {
-            return (task && holder.task) ? 
-                task->getPriority() > holder.task->getPriority() : false;
-        }
-        bool operator<(const TaskHolder& holder) const {
-            return (task && holder.task) ? 
-                task->getPriority() < holder.task->getPriority() : false;
-        }
-        bool operator==(const TaskHolder& holder) const {
-            return (task && holder.task) ? 
-                (task->getPriority() == holder.task->getPriority() && 
-                 task == holder.task) : false;
-        }
-    };
-    
-    typedef std::multiset< TaskHolder, 
-                           std::greater<TaskHolder>, 
-                           std::allocator<TaskHolder> > TaskSet;
-    
     class TaskContainer : public TaskContainerAdapter
     {
     private:
         
+        Hash<Task *>    tasks;
         Mutex           tasksLock;
-        Hash<Task *>    tasksByName;        // hash by task name;
-        TaskSet         tasksByPriority;    // multiset sorted by descending priority
         int             prioritySum;
 
     public:
@@ -201,7 +166,7 @@ namespace smsc { namespace infosme
         };
     };
     
-    class TaskProcessor : public Thread
+    class TaskProcessor : public TaskProcessorAdapter, public Thread
     {
     private:
 
@@ -242,10 +207,16 @@ namespace smsc { namespace infosme
             return bStarted;
         };
         
-        inline TaskInvokeAdapter& getTaskInvokeAdapter() {
+        virtual DataProvider& getDataProvider() {
+            return provider;
+        }
+        virtual DataSource* getInternalDataSource() {
+            return dsInternal;
+        }
+        virtual TaskInvokeAdapter& getTaskInvokeAdapter() {
             return manager;
         }
-        inline TaskContainerAdapter& getTaskContainerAdapter() {
+        virtual TaskContainerAdapter& getTaskContainerAdapter() {
             return container;
         }
     };

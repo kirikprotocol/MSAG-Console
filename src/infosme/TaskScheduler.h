@@ -34,14 +34,14 @@ namespace smsc { namespace infosme
 
         log4cpp::Category  &logger;
 
-        TaskInvokeAdapter* invoker;
+        TaskProcessorAdapter*   processor;
+        Hash<Schedule*>         schedules;
+        Mutex                   schedulesLock; 
+        
+        Event   awake, exited;
+        bool    bStarted, bNeedExit;
+        Mutex   startLock;
 
-        Event       awake, exited;
-        bool        bStarted, bNeedExit;
-        Mutex       startLock;
-
-        IntHash<Schedule*>  schedules;
-        Mutex               schedulesLock; 
 
         Schedule* getNextSchedule(time_t& scheduleTime);
         
@@ -59,37 +59,37 @@ namespace smsc { namespace infosme
          * @param config
          * @exception ConfigException throws when configuration is invalid
          */
-        void init(TaskInvokeAdapter* invoker, ConfigView* config);
+        void init(TaskProcessorAdapter* processor, ConfigView* config);
 
         virtual int Execute();
         void Start();
         void Stop();
         
         /**
-         * Adds task schedule into scheduling plan and reactivates scheduler.
+         * Adds schedule into scheduling plan and reactivates scheduler.
          *
          * @param schedule      shedule for task(s)
          */
         void addSchedule(Schedule* schedule);
 
         /**
-         * Changes task schedule in scheduling plan and reactivates scheduler.
-         * If task wasn't scheduled returns false, else returns true.
+         * Changes task(s) schedule in scheduling plan and reactivates scheduler.
+         * If schedule not found returns false, else returns true.
          *
-         * @param scheduleId    id of old shedule for task
-         * @param schedule      new shedule for task
-         * @return false if task wasn't scheduled, else returns true.
+         * @param id            id of old shedule
+         * @param schedule      new shedule
+         * @return false if schedule not found, else returns true.
          */
-        bool changeSchedule(int scheduleId, Schedule* schedule);
+        bool changeSchedule(std::string id, Schedule* schedule);
         
         /**
          * Removes task schedule from scheduling plan.
-         * If task wasn't scheduled returns false, else returns true.
-         *
-         * @param taskName      task name to be removed
-         * @return false if task wasn't scheduled, else returns true.
+         * If schedule not found returns false, else returns true.
+         * 
+         * @param id            schedule id
+         * @return false if schedule not found, else returns true.
          */
-        bool removeSchedule(int scheduleId);
+        bool removeSchedule(std::string id);
     };
 
 }}

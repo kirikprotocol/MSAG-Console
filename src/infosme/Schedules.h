@@ -43,31 +43,49 @@ namespace smsc { namespace infosme
 
     struct Schedule
     {
-        int             id;
+        std::string     id;
         ScheduleType    type;
         Advanced        advanced;
 
-        Task*           task;
+        Mutex           taskNamesLock;
+        Hash<bool>      taskNames;
         
         virtual ~Schedule() {};
         
         virtual time_t calulateNextTime() = 0;
 
-        void assignTask(Task* task) { this->task = task; };
+        void assignId(std::string id) { this->id = id; };
         void assignAdvanced(const Advanced& advanced) { this->advanced = advanced; };
+        
+        virtual bool addTask(std::string taskName)
+        { 
+            MutexGuard guard(taskNamesLock);
+
+            const char* task_name = taskName.c_str();
+            if (!task_name || task_name[0] == '\0' || taskNames.Exists(task_name)) 
+                return false;
+            else taskNames.Insert(task_name, true);
+            return true;
+        };
+        virtual bool removeTask(std::string taskName)
+        { 
+            MutexGuard guard(taskNamesLock);
+
+            const char* task_name = taskName.c_str();
+            if (!task_name || task_name[0] == '\0' || !taskNames.Exists(task_name)) 
+                return false;
+            else taskNames.Delete(task_name);
+            return true;
+        };
+
+        Hash<bool>& getTasks() {
+            return taskNames;
+        }
     
     protected:
-        Schedule(ScheduleType type) 
-            : id(Schedule::getNextId()), type(type), task(0) {};
-    private:
-        static int getNextId()
-        {
-            static Mutex getNextIdMutex;
-            static int currentId = 0;
-            
-            MutexGuard guard(getNextIdMutex);
-            return currentId++;
-        };
+        
+        Schedule(std::string id, ScheduleType type) 
+            : id(id), type(type) {};
     };
 
     struct OnceSchedule : public Schedule
@@ -77,8 +95,8 @@ namespace smsc { namespace infosme
         
         // Has no startTime & endDate in advanced
         
-        OnceSchedule(time_t startTime, time_t startDate)
-            : Schedule(ONCE), 
+        OnceSchedule(std::string id, time_t startTime, time_t startDate)
+            : Schedule(id, ONCE), 
               startTime(startTime), startDate(startDate) {};
 
         virtual time_t calulateNextTime();
@@ -89,8 +107,8 @@ namespace smsc { namespace infosme
         time_t  startTime;  // only HH:mm:ss
         int     everyNDays;
 
-        DailySchedule(time_t startTime, int everyNDays)
-            : Schedule(DAILY), 
+        DailySchedule(std::string id, time_t startTime, int everyNDays)
+            : Schedule(id, DAILY), 
               startTime(startTime), everyNDays(everyNDays) {};
 
         virtual time_t calulateNextTime();
@@ -102,8 +120,8 @@ namespace smsc { namespace infosme
         int         everyNWeeks;
         std::string weekDays;   // ',' separated list Mon, Thu, ...
 
-        WeeklySchedule(time_t startTime, int everyNWeeks, std::string weekDays)
-            : Schedule(WEEKLY), 
+        WeeklySchedule(std::string id, time_t startTime, int everyNWeeks, std::string weekDays)
+            : Schedule(id, WEEKLY), 
               startTime(startTime), everyNWeeks(everyNWeeks), weekDays(weekDays) {};
         
         virtual time_t calulateNextTime();
@@ -117,9 +135,9 @@ namespace smsc { namespace infosme
         std::string weekDays;    // ',' separated list Mon, Thu, ...  
         std::string monthDays;   // ',' separated list Jan, Feb, ...
 
-        MonthlySchedule(time_t startTime, int dayOfMonth, 
+        MonthlySchedule(std::string id, time_t startTime, int dayOfMonth, 
                         std::string weekN, std::string weekDays, std::string monthDays)
-            : Schedule(MONTHLY), 
+            : Schedule(id, MONTHLY), 
               startTime(startTime), dayOfMonth(dayOfMonth),
               weekN(weekN), weekDays(weekDays), monthDays(monthDays) {};
 

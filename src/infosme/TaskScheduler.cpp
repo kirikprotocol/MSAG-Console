@@ -15,9 +15,8 @@ TaskScheduler::~TaskScheduler()
     
     this->Stop();
 
-    int key = 0; Schedule* schedule = 0;
-    IntHash<Schedule*>::Iterator it = schedules.First();
-    while (it.Next(key, schedule))
+    char* key = 0; Schedule* schedule = 0; schedules.First();
+    while (schedules.Next(key, schedule))
         if (schedule) delete schedule;
 }
 void TaskScheduler::Start()
@@ -81,23 +80,27 @@ int TaskScheduler::Execute()
         }
         if (bNeedExit) break;
         
-        Task* task = 0;
+        Hash<bool> tasks;
         {
             MutexGuard guard(schedulesLock);
             time_t scheduleTime = -1;
             Schedule* schedule = getNextSchedule(scheduleTime);
             if (!schedule || scheduleTime > time(NULL)) continue;
-            task = schedule->task; // TODO: get task name only
-        }
-        if (!task) { 
-            logger.error("Task not found.");
-            continue;
+            tasks = schedule->getTasks();
         }
         
         try 
         {
-            //invoker->invokeBeginProcess(task, ???);
-            // TODO locate task & call beginProcess via invoker
+            char* task_name = 0; bool task_key = false; tasks.First();
+            while (tasks.Next(task_name, task_key))
+                if (task_name && task_name[0] != '\0') {
+                    Task* task = processor->getTaskContainerAdapter().getTask(task_name); 
+                    if (!task) { 
+                        logger.error("Task '%s' not found.", task_name);
+                        continue;
+                    }
+                    //processor->getTaskInvokeAdapter().invokeBeginProcess(task, ???);
+                }
         } 
         catch (std::exception& exc) 
         {
@@ -109,11 +112,12 @@ int TaskScheduler::Execute()
     return 0;
 }
 
-void TaskScheduler::init(TaskInvokeAdapter* invoker, ConfigView* config)
+void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
 {
-    __require__(invoker && config);
+    __require__(processor && config);
     
-    this->invoker = invoker;
+    this->processor = processor;
+
     // TODO: load up task scheduling plan from config
 }
 
@@ -122,9 +126,8 @@ Schedule* TaskScheduler::getNextSchedule(time_t& scheduleTime)
     Schedule*   nextSchedule = 0;
     time_t      minimalTime = -1;
 
-    int key = 0; Schedule* schedule = 0;
-    IntHash<Schedule*>::Iterator it = schedules.First();
-    while (it.Next(key, schedule)) 
+    char* key = 0; Schedule* schedule = 0; schedules.First();
+    while (schedules.Next(key, schedule))
     {
         if (!schedule) continue;
         time_t time = schedule->calulateNextTime();
@@ -144,26 +147,34 @@ void TaskScheduler::addSchedule(Schedule* schedule)
     __require__(schedule);
     MutexGuard guard(schedulesLock);
     
-    if (schedules.Exist(schedule->id)) schedules.Delete(schedule->id);
-    schedules.Insert(schedule->id, schedule);
+    const char* scheduleId = schedule->id.c_str();
+    if (scheduleId && scheduleId[0] != '\0') {
+        if (schedules.Exists(scheduleId)) schedules.Delete(scheduleId);
+        schedules.Insert(scheduleId, schedule);
+    }
 }
-bool TaskScheduler::changeSchedule(int scheduleId, Schedule* schedule)
-{
+bool TaskScheduler::changeSchedule(std::string id, Schedule* schedule)
+{                   
     __require__(schedule);
     MutexGuard guard(schedulesLock);
     
-    if (!schedules.Exist(scheduleId)) return false;
+    const char* scheduleId = id.c_str();
+    const char* newId = schedule->id.c_str();
+    if (!scheduleId || scheduleId[0] == '\0' || !newId || newId[0] == '\0' || 
+        !schedules.Exists(scheduleId)) return false;
     Schedule* old = schedules.Get(scheduleId);
     if (old) delete old;
     schedules.Delete(scheduleId);
-    schedules.Insert(schedule->id, schedule);
+    schedules.Insert(newId, schedule);
     return true;
 }
-bool TaskScheduler::removeSchedule(int scheduleId)
+bool TaskScheduler::removeSchedule(std::string id)
 {
     MutexGuard guard(schedulesLock);
 
-    if (!schedules.Exist(scheduleId)) return false;
+    const char* scheduleId = id.c_str();
+    if (!scheduleId || scheduleId[0] == '\0' || 
+        !schedules.Exists(scheduleId)) return false;
     Schedule* old = schedules.Get(scheduleId);
     if (old) delete old;
     schedules.Delete(scheduleId);

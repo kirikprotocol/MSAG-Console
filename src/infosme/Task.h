@@ -21,7 +21,7 @@
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 
-#include <db/DataSource.h>
+#include "DataProvider.h"
 
 namespace smsc { namespace infosme 
 {
@@ -35,6 +35,8 @@ namespace smsc { namespace infosme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
+    class Task;
+
     struct Message
     {
 
@@ -45,34 +47,82 @@ namespace smsc { namespace infosme
     };
     struct TaskInfo
     {
-        int id;
-        int priority;
         std::string name;
+        std::string dsId;
+        int         priority;
 
         TaskInfo()
-            : id(0), priority(0), name("") {};
+            : name(""), dsId(""), priority(0) {};
         TaskInfo(const TaskInfo& info) 
-            : id(info.id), priority(info.priority), name(info.name) {}; 
+            : name(info.name), dsId(info.dsId), priority(info.priority) {}; 
         virtual ~TaskInfo() {};
         
         TaskInfo& operator=(const TaskInfo& info)
         {
-            id = info.id;
-            priority = info.priority;
             name = info.name;
+            dsId = info.dsId;
+            priority = info.priority;
             return *this;
         };
     };
 
+    struct TaskInvokeAdapter
+    {
+        virtual void invokeEndProcess(Task* task) = 0;
+        virtual void invokeBeginProcess(Task* task, Connection* connection) = 0;
+        virtual void invokeDoNotifyMessage(Task* task, const StateInfo& info) = 0;
+        virtual void invokeDropAllMessages(Task* task, Connection* connection) = 0;
+    
+        virtual ~TaskInvokeAdapter() {};
+
+    protected:
+
+        TaskInvokeAdapter() {};
+    };
+    struct TaskContainerAdapter
+    {
+        virtual bool  addTask(Task* task) = 0;
+        virtual bool  removeTask(std::string taskName) = 0;
+        virtual Task* getTask(std::string taskName) = 0;
+        
+        virtual ~TaskContainerAdapter() {};
+
+    protected:
+        
+        TaskContainerAdapter() {};
+    };
+    struct TaskProcessorAdapter
+    {
+        virtual TaskInvokeAdapter& getTaskInvokeAdapter() = 0;
+        virtual TaskContainerAdapter& getTaskContainerAdapter() = 0;
+        virtual DataProvider& getDataProvider() = 0;
+        virtual DataSource* getInternalDataSource() = 0;
+    
+        virtual ~TaskProcessorAdapter() {};
+
+     protected:
+
+        TaskProcessorAdapter() {};
+    };
+    
+    /* 
+        TODO: 1) Разобраться на что ссылается таска, на DataProvider со своим DS
+              и/или на DS, шареный с TaskProcessor'ом ??? 
+              2) Вообще, нужно-ли ссылаться на них а не получать готовые извне ???
+              3) Пересмотреть сигнатуру методов и соответственно поменять TaskRunner
+              4) Предусмотреть загрузку таски из конфига (+ позволить это делать виртуально) 
+              5) Задать наконец структуры StateInfo && Message
+              5) Нужен ли таске интерфейс TaskProcessor'а ???
+    */                                                      
     class Task
     {
     private:
     protected:
         
-        TaskInfo    info;
-        DataSource* ds; // Cсылка на внутренний источник данных shared with TaskProcessor
+        TaskInfo                info;
+        TaskProcessorAdapter*   processor;
 
-        Task() {};
+        Task() : processor(0) {};
 
     public:
         
@@ -87,16 +137,20 @@ namespace smsc { namespace infosme
         inline std::string getName() {
             return info.name;
         }
+        inline std::string getDSId() {
+            return info.dsId;
+        }
 
         /**
          * Initializes Task
-         *
+         * 
          * @param info
-         * @param ds
+         * @param processor
          */
-        void init(TaskInfo& info, DataSource* ds) {
+        virtual void init(TaskInfo& info, TaskProcessorAdapter* processor) {
+            __require__(processor);
             this->info = info;
-            this->ds = ds;
+            this->processor = processor;
         };
 
         /**
@@ -141,33 +195,6 @@ namespace smsc { namespace infosme
         virtual bool getNextMessage(Connection* connection, Message& message) = 0;
     };
     
-    struct TaskInvokeAdapter
-    {
-        virtual void invokeEndProcess(Task* task) = 0;
-        virtual void invokeBeginProcess(Task* task, Connection* connection) = 0;
-        virtual void invokeDoNotifyMessage(Task* task, const StateInfo& info) = 0;
-        virtual void invokeDropAllMessages(Task* task, Connection* connection) = 0;
-    
-        virtual ~TaskInvokeAdapter() {};
-
-    protected:
-
-        TaskInvokeAdapter() {};
-    };
-    
-    struct TaskContainerAdapter
-    {
-        virtual bool  addTask(Task* task) = 0;
-        virtual bool  removeTask(std::string taskName) = 0;
-        virtual Task* getTask(std::string taskName) = 0;
-        
-        virtual ~TaskContainerAdapter() {};
-
-    protected:
-        
-        TaskContainerAdapter() {};
-    };
-
     class TaskFactory
     {
     protected:
