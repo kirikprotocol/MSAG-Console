@@ -12,7 +12,7 @@
 #include "ProxySmeSMachine.h"
 #include "ProxySmeQueue.h"
 #include "ProxySmeMixer.h"
-#if defined _WIN32
+#if !defined _WIN32
 #include "ProxySmeConfig.h"
 #endif
 #include "../logger/Logger.h"
