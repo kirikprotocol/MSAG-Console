@@ -72,16 +72,32 @@ void SQLJob::process(Command& command, DataSource& ds)
     catch(CommandProcessException& exc) 
     {
         if (stmt) delete stmt;
-        connection->rollback();
+        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.freeConnection(connection);
         throw;
     }
     catch(Exception& exc)
     {
         if (stmt) delete stmt;
-        connection->rollback();
+        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.freeConnection(connection);
         error(SQL_JOB_DS_FAILURE, exc.what());
+    }
+    catch(std::exception& exc) 
+    {
+        if (stmt) delete stmt;
+        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.freeConnection(connection);
+        log.warn("std::exception catched");
+        error(SQL_JOB_DS_FAILURE, exc.what());
+    }
+    catch(...) 
+    {
+        if (stmt) delete stmt;
+        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.freeConnection(connection);
+        log.warn("... catched");
+        error(SQL_JOB_DS_FAILURE, "");
     }
 
     ds.freeConnection(connection);
@@ -218,16 +234,32 @@ void PLSQLJob::process(Command& command, DataSource& ds)
     catch(CommandProcessException& exc) 
     {
         if (routine) delete routine;
-        connection->rollback();
+        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.freeConnection(connection);
         throw;
     }
     catch(Exception& exc)
     {
         if (routine) delete routine;
-        connection->rollback();
+        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
         ds.freeConnection(connection);
         error(SQL_JOB_DS_FAILURE, exc.what());
+    }
+    catch(std::exception& exc) 
+    {
+        if (stmt) delete stmt;
+        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.freeConnection(connection);
+        log.warn("std::exception catched");
+        error(SQL_JOB_DS_FAILURE, exc.what());
+    }
+    catch(...) 
+    {
+        if (stmt) delete stmt;
+        try{ connection->rollback(); } catch (...) {log.warn( "Rollback failed");}
+        ds.freeConnection(connection);
+        log.warn("... catched");
+        error(SQL_JOB_DS_FAILURE, "");
     }
 
     ds.freeConnection(connection);
