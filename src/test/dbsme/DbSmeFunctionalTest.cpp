@@ -56,6 +56,8 @@ class TestSme : public TestTask, SmppResponseSender
 	time_t nextCheckTime;
 	bool boundOk;
 	Event evt;
+	int idx;
+	vector<int> seq;
 
 public:
 	TestSme(int smeNum, const SmeConfig& config, SmppFixture* fixture);
@@ -114,7 +116,7 @@ public:
 //TestSme
 TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* fixture)
 	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
-	tc(config, fixture, dbSmeReg), boundOk(false)
+	tc(config, fixture, dbSmeReg), boundOk(false), idx(0)
 {
 	fixture->respSender = this;
 }
@@ -155,18 +157,42 @@ void TestSme::executeCycle()
 		{
 			tc.getBase().bindIncorrectSme(RAND_TC); //об€зательно после bindCorrectSme
 		}
+		//подготовить последовательност команд
+		seq.insert(seq.end(), 5, 1); //format
+		seq.insert(seq.end(), 5, 2); //insert
+		seq.push_back(4); //select (мало записей)
+		seq.push_back(3); //update
+		seq.push_back(4); //select (мало записей, после update)
+		seq.insert(seq.end(), 20, 2); //insert
+		seq.push_back(4); //select (много записей)
+		seq.push_back(3); //update
+		seq.push_back(4); //select (много записей, после update)
+		seq.push_back(5); //delete (удалить все записи)
+		seq.push_back(4); //select (пуста€ таблица)
+		//зависнуть
 		evt.Wait(5000);
 	}
-	//ќтправка неправильной команды db sme, 1/5
-	//ќтправка правильной команды db sme, 4/5
-	switch (rand1(1))
+	idx = idx < seq.size() ? idx : 0;
+	switch (seq[idx++])
 	{
 		case 1:
-			tc.submitCorrectQueryDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			tc.submitCorrectFormatDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			break;
+		case 2:
+			tc.submitCorrectInsertDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			break;
+		case 3:
+			tc.submitCorrectUpdateDbSmeCmd(rand0(1), getDataCoding(RAND_TC), RAND_TC);
+			break;
+		case 4:
+			tc.submitCorrectSelectDbSmeCmd(rand0(1), getDataCoding(RAND_TC));
+			evt.Wait(1000);
+			break;
+		case 5:
+			tc.submitCorrectDeleteDbSmeCmd(rand0(1), getDataCoding(RAND_TC));
 			break;
 		default:
-			//tc.submitCorrectDbSmeCmd(...);
-			break;
+			__unreachable__("Invalid tc");
 	}
 	updateStat();
 }
@@ -275,7 +301,7 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	SmeInfo dbSmeInfo;
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&dbSmeInfo);
 	dbSmeInfo.systemId = dbSmeSystemId;
-	smeReg->registerSme(dbSmeAddr, dbSmeInfo);
+	smeReg->registerSme(dbSmeAddr, dbSmeInfo, true);
 	smeReg->bindSme(dbSmeInfo.systemId);
 	//регистраци€ алиасов (сама€ проста€ схема)
 	for (int i = 0; i < numSme; i++)
