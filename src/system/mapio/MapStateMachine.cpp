@@ -944,7 +944,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
     typedef multimap<string,unsigned>::iterator I;
     MutexGuard guard(x_map_lock);
     pair<I,I> range = x_map.equal_range(s_key);
-    if ( range.first == range.second ) return;
+    if ( range.first == range.second ) return ET96MAP_E_OK;
       //throw runtime_error("MAP::Et96MapGetACVersionConf has no address for AC resolving");
     I it;
     for ( it = range.first; it != range.second;++it) {
