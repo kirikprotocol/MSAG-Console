@@ -176,10 +176,6 @@ for (Iterator j = jobs.iterator(); j.hasNext(); )
 	<td><%=StringEncoderDecoder.encode(job.getType())%></td>
 </tr>
 <tr>
-	<th>query</th>
-	<td><%=job.isQuery()%></td>
-</tr>
-<tr>
 	<th>sql</th>
 	<td><pre><%=StringEncoderDecoder.encode(job.getSql())%></pre></td>
 </tr>

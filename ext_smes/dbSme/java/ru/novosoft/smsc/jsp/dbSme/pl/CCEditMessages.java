@@ -5,15 +5,13 @@
  */
 package ru.novosoft.smsc.jsp.dbSme.pl;
 
-import ru.novosoft.smsc.jsp.dbSme.bl.DataProviderInfo;
-import ru.novosoft.smsc.jsp.dbSme.bl.JobInfo;
-import ru.novosoft.smsc.jsp.dbSme.bl.MessageSet;
+import ru.novosoft.smsc.jsp.dbSme.bl.*;
 import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.smsc.util.config.SaveableConfigTree;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CCEditMessages extends CC
 {
@@ -31,8 +29,7 @@ public class CCEditMessages extends CC
 	protected String providerName = null;
 	protected String jobName = null;
 
-	public int process(HttpServletRequest request, HttpServletResponse response)
-			throws Exception
+	public int process(HttpServletRequest request, HttpServletResponse response) throws Exception
 	{
 		int result = super.process(request, response);
 		if (result == RESULT_Ok)
@@ -45,19 +42,18 @@ public class CCEditMessages extends CC
 		return result;
 	}
 
-	public int processSave()
-			throws Exception
+	public int processSave() throws Exception
 	{
-			for (int i = 0; i < MessageSet.MESSAGES_TYPES.length; i++)
-			{
-				String name = MessageSet.MESSAGES_TYPES[i];
-				String value = (String) newMessages.get(name);
-				if (value == null || value.length() == 0)
-					messageSet.removeMessage(name);
-				else
-					messageSet.setMessage(name, value);
-			}
-			config.save();
+		for (int i = 0; i < MessageSet.MESSAGES_TYPES.length; i++)
+		{
+			String name = MessageSet.MESSAGES_TYPES[i];
+			String value = (String) newMessages.get(name);
+			if (value == null || value.length() == 0)
+				messageSet.removeMessage(name);
+			else
+				messageSet.setMessage(name, value);
+		}
+		config.save();
 		return RESULT_Done;
 	}
 
@@ -105,8 +101,7 @@ public class CCEditMessages extends CC
 		return RESULT_Ok;
 	}
 
-	public Map getMessages()
-			throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	public Map getMessages() throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return messageSet.getMessages();
 	}

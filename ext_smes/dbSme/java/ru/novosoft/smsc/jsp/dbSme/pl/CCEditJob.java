@@ -5,9 +5,7 @@
  */
 package ru.novosoft.smsc.jsp.dbSme.pl;
 
-import ru.novosoft.smsc.jsp.dbSme.bl.DataProviderInfo;
-import ru.novosoft.smsc.jsp.dbSme.bl.JobInfo;
-import ru.novosoft.smsc.jsp.dbSme.bl.MessageSet;
+import ru.novosoft.smsc.jsp.dbSme.bl.*;
 import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
@@ -15,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class CCEditJob extends CC
 {
-	public static final String DEFAULT_Type = "sql-job";
+	public static final String DEFAULT_Type = SqlJobInfo.JOB_TYPE_Sql;
 
 	public static final String PARAM_ProviderName = "pProviderName";
 
@@ -29,6 +27,8 @@ public class CCEditJob extends CC
 	public static final String PARAM_IsCreating = "pIsCreating";
 	public static final String PARAM_Address = "pAddress";
 	public static final String PARAM_Alias = "pAlias";
+	public static final String PARAM_Commit = "pCommit";
+	public static final String PARAM_Function = "pFunction";
 
 	public static final String BUTTON_Save = "bSave";
 	public static final String BUTTON_Cancel = "bCancel";
@@ -48,6 +48,8 @@ public class CCEditJob extends CC
 	protected String sql = null;
 	protected String input = null;
 	protected String output = null;
+	protected boolean commit = false;
+	protected boolean function = false;
 
 	protected boolean isSaveButton = false;
 	protected boolean isCancelButton = false;
@@ -55,8 +57,7 @@ public class CCEditJob extends CC
 	protected boolean isCreateNewJobButton = false;
 	protected boolean isDeleteJobButton = false;
 
-	public int process(HttpServletRequest request, HttpServletResponse response)
-			throws Exception
+	public int process(HttpServletRequest request, HttpServletResponse response) throws Exception
 	{
 		int result = super.process(request, response);
 		if (result == RESULT_Ok)
@@ -73,26 +74,40 @@ public class CCEditJob extends CC
 		return result;
 	}
 
-	protected int processSave()
-			throws Exception
+	protected int processSave() throws Exception
 	{
 		if (isCreating)
 		{
 			if (provider.getJob(name) != null)
 				return RESULT_Error;
-			provider.createJob(name, type, query, address, alias, sql, input, output);
+			if (type.equals(SqlJobInfo.JOB_TYPE_Sql))
+				provider.createSqlJob(name, query, address, alias, sql, input, output);
+			else if (type.equals(PlSqlJobInfo.JOB_TYPE_PlSql))
+				provider.createPlSqlJob(name, commit, function, sql, input, output);
+			else
+				return RESULT_Error;
 		}
 		else
 		{
 			System.out.println("name = " + name);
 			job.setName(name);
 			job.setType(type);
-			job.setQuery(query);
-			job.setAddress(address);
-			job.setAlias(alias);
 			job.setSql(sql);
 			job.setInput(input);
 			job.setOutput(output);
+			if (type.equals(SqlJobInfo.JOB_TYPE_Sql))
+			{
+				((SqlJobInfo) job).setQuery(query);
+				((SqlJobInfo) job).setAddress(address);
+				((SqlJobInfo) job).setAlias(alias);
+			}
+			else if (type.equals(PlSqlJobInfo.JOB_TYPE_PlSql))
+			{
+				((PlSqlJobInfo) job).setCommit(commit);
+				((PlSqlJobInfo) job).setFunction(function);
+			}
+			else
+				return RESULT_Error;
 		}
 		config.save();
 		return RESULT_Done;
@@ -114,12 +129,13 @@ public class CCEditJob extends CC
 		alias = "";
 		input = "";
 		output = "";
+		commit = false;
+		function = false;
 		isCreating = true;
 		return RESULT_Ok;
 	}
 
-	protected int processDelete()
-			throws Exception
+	protected int processDelete() throws Exception
 	{
 		provider.deleteJob(oldName);
 		config.save();
@@ -170,6 +186,8 @@ public class CCEditJob extends CC
 				address = request.getParameter(PARAM_Address);
 				alias = request.getParameter(PARAM_Alias);
 				String queryStr = request.getParameter(PARAM_Query);
+				String functionStr = request.getParameter(PARAM_Function);
+				String commitStr = request.getParameter(PARAM_Commit);
 				sql = request.getParameter(PARAM_Sql);
 				input = request.getParameter(PARAM_Input);
 				output = request.getParameter(PARAM_Output);
@@ -183,16 +201,28 @@ public class CCEditJob extends CC
 				{
 					name = job.getName();
 					type = job.getType();
-					address = job.getAddress();
-					alias = job.getAlias();
 					sql = job.getSql();
 					input = job.getInput();
 					output = job.getOutput();
-					query = job.isQuery();
+					if (type.equals(SqlJobInfo.JOB_TYPE_Sql))
+					{
+						address = ((SqlJobInfo) job).getAddress();
+						alias = ((SqlJobInfo) job).getAlias();
+						query = ((SqlJobInfo) job).isQuery();
+					}
+					else if (type.equals(PlSqlJobInfo.JOB_TYPE_PlSql))
+					{
+						commit = ((PlSqlJobInfo) job).isCommit();
+						function = ((PlSqlJobInfo) job).isFunction();
+					}
+					else
+						return RESULT_Error;
 				}
 				else
 				{
 					query = queryStr != null;
+					function = functionStr != null;
+					commit = commitStr != null;
 					if (sql == null)
 						sql = "";
 					if (input == null)
@@ -265,8 +295,17 @@ public class CCEditJob extends CC
 		return isCreating;
 	}
 
-	public MessageSet getMessages()
-			throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	public boolean isCommit()
+	{
+		return commit;
+	}
+
+	public boolean isFunction()
+	{
+		return function;
+	}
+
+	public MessageSet getMessages() throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return job.getMessages();
 	}

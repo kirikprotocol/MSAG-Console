@@ -9,11 +9,11 @@ if (result == UC.RESULT_Done)
 {
 	response.sendRedirect("index.jsp");
 }
-else if (result == UC.RESULT_NotAllParams) 
+else if (result == UC.RESULT_NotAllParams)
 {
 	%><div style="width:100%; font-size:150%; color:Red; text-align:center;">Error: Not all required params defined</div><%
 }
-else if (result == UC.RESULT_Error) 
+else if (result == UC.RESULT_Error)
 {
 	%><div style="width:100%; font-size:150%; color:Red; text-align:center;">Error:</div><%
 }
@@ -121,7 +121,6 @@ for (Iterator j = datasourceMessages.getMessages().keySet().iterator(); j.hasNex
 <tr>
 	<th align=center>name</th>
 	<th>type</th>
-	<th>query</th>
 	<th>&nbsp;</th>
 </tr>
 </thead>
@@ -138,7 +137,6 @@ for (Iterator j = jobs.iterator(); j.hasNext(); )
 <tr>
 	<td><a href="<%=href%>"><%=StringEncoderDecoder.encode(job.getName())%></a></td>
 	<td nowrap><%=StringEncoderDecoder.encode(job.getType())%></td>
-	<td><input type="Checkbox" disabled <%=job.isQuery() ? "checked" : ""%>></td>
 	<td class=h1b><a href="edit_messages.jsp?<%=CCEditMessages.PARAM_ProviderName%>=<%=
 	URLEncoder.encode(provider.getName())%>&<%=CCEditMessages.PARAM_JobName%>=<%=
 	URLEncoder.encode(job.getName())%>">messages</a></td>

@@ -11,31 +11,23 @@ import java.util.*;
 
 public class MessageSet
 {
-	public static final String MESSAGES_TYPES[] = {"PROVIDER_NOT_FOUND",
-																  "JOB_NOT_FOUND",
+	public static final String MESSAGES_TYPES[] = {"PROVIDER_NOT_FOUND", "JOB_NOT_FOUND",
 
-																  "DS_FAILURE",
-																  "DS_CONNECTION_LOST",
-																  "DS_STATEMENT_FAIL",
+																  "DS_FAILURE", "DS_CONNECTION_LOST", "DS_STATEMENT_FAIL",
 
-																  "QUERY_NULL",
-																  "INPUT_PARSE",
-																  "OUTPUT_FORMAT",
-																  "INVALID_CONFIG"};
+																  "QUERY_NULL", "INPUT_PARSE", "OUTPUT_FORMAT", "INVALID_CONFIG"};
 	public static final Set messagesTypes = new HashSet(Arrays.asList(MESSAGES_TYPES));
 
 	protected Config config = null;
 	protected String prefix = null;
 
 	public MessageSet(Config config, String prefix)
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		this.config = config;
 		this.prefix = prefix;
 	}
 
-	public Map getMessages()
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	public Map getMessages() throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		Map messages = new HashMap();
 		for (Iterator i = config.getSectionChildParamsNames(prefix + ".MessageSet").iterator(); i.hasNext();)

@@ -1,26 +1,24 @@
-/*
- * Created by igork
- * Date: 07.10.2002
- * Time: 17:50:31
- */
 package ru.novosoft.smsc.jsp.dbSme.bl;
 
 import ru.novosoft.smsc.util.config.Config;
 
-public class JobInfo
+/**
+ * Created by igork
+ * Date: 04.04.2003
+ * Time: 19:03:05
+ */
+public abstract class JobInfo
 {
 	protected Config config;
 	protected String prefixName;
 
-	public JobInfo(Config config, String prefix)
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	protected JobInfo(Config config, String prefixName)
 	{
 		this.config = config;
-		this.prefixName = prefix;
+		this.prefixName = prefixName;
 	}
 
-	public String getName()
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	public String getName() throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return config.getString(prefixName + ".name");
 	}
@@ -30,8 +28,7 @@ public class JobInfo
 		config.setString(prefixName + ".name", name);
 	}
 
-	public String getType()
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	public String getType() throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return config.getString(prefixName + ".type");
 	}
@@ -41,41 +38,7 @@ public class JobInfo
 		config.setString(prefixName + ".type", type);
 	}
 
-	public boolean isQuery()
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
-	{
-		return config.getBool(prefixName + ".query");
-	}
-
-	public void setQuery(boolean query)
-	{
-		config.setBool(prefixName + ".query", query);
-	}
-
-	public String getAddress()
-			throws Config.ParamNotFoundException, Config.WrongParamTypeException
-	{
-		return config.getString(prefixName + ".address");
-	}
-
-	public void setAddress(String address)
-	{
-		config.setString(prefixName + ".address", address);
-	}
-
-	public String getAlias()
-			throws Config.ParamNotFoundException, Config.WrongParamTypeException
-	{
-		return config.getString(prefixName + ".alias");
-	}
-
-	public void setAlias(String alias)
-	{
-		config.setString(prefixName + ".alias", alias);
-	}
-
-	public String getSql()
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	public String getSql() throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return config.getString(prefixName + ".sql");
 	}
@@ -85,8 +48,7 @@ public class JobInfo
 		config.setString(prefixName + ".sql", sql);
 	}
 
-	public String getInput()
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	public String getInput() throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return config.getString(prefixName + ".input");
 	}
@@ -96,8 +58,7 @@ public class JobInfo
 		config.setString(prefixName + ".input", input);
 	}
 
-	public String getOutput()
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	public String getOutput() throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return config.getString(prefixName + ".output");
 	}
@@ -108,7 +69,6 @@ public class JobInfo
 	}
 
 	public MessageSet getMessages()
-			  throws Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		return new MessageSet(config, prefixName);
 	}
