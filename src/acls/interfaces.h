@@ -41,11 +41,11 @@ struct AclInfo
 };
 inline AclInfo MakeAclInfo(AclIdent ident,const char * name,const char * desc,AclCacheType cache)
 {
-  if (name != NULL)
+  if (name == NULL)
     name = "";
-  if (desc != NULL)
+  if (desc == NULL)
     desc = "";
-  AclInfo aclinfo = { ident,name,desc,cache };
+  AclInfo aclinfo = { ident, name,desc,cache };
   return aclinfo;
 }
 

@@ -65,6 +65,10 @@ int main(int argc,char* argv[])
 	  	acl->create(1,"acl0","acl0_desc",phones);
 		}
 
+    {
+      AclInfo aclInfo = acl->getInfo(1);
+      printf("Getted info: #%d, name:\"%s\", description:\"%s\"\n", aclInfo.ident, aclInfo.name.c_str(), aclInfo.desctiption.c_str());
+    }
 
   	vector<AclNamedIdent> result;
   	acl->enumerate(result);

@@ -211,7 +211,7 @@ void AclManager::lookupByPrefix(AclIdent aclident,const char* prefix,vector<AclP
 
 void AclManager::removePhone(AclIdent aclident,const AclPhoneNumber& phone)
 {
-  static const char* sql = "DELETE FROM SMS_ACL WHERE ID=%d AND ADRESS='%s'";
+  static const char* sql = "DELETE FROM SMS_ACL WHERE ID=%d AND ADDRESS='%s'";
 
   ConnectionGuard connection(datasource_);
   if(!connection.get())throw Exception(ACLMGRPREFIX"Failed to get connection");
@@ -255,7 +255,7 @@ void AclManager::addPhone(AclIdent aclident,const AclPhoneNumber& phone)
 
 void AclManager::updateAclInfo(AclIdent aclident,const char* aclname,const char* acldesc,AclCacheType act)
 {
-  static const char* sql = "UPDATE SMS_ACLINFO SET NAME=:1,DESCRIPTION=:2,CACHE_TYPE=:3) where ident=:4";
+  static const char* sql = "UPDATE SMS_ACLINFO SET NAME=:1,DESCRIPTION=:2,CACHE_TYPE=:3 where id=:4";
   
   ConnectionGuard connection(datasource_);
   if(!connection.get())throw Exception(ACLMGRPREFIX"Failed to get connection");
