@@ -35,7 +35,7 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
 	public RouteSubjectManagerImpl(SmeManager smeManager) throws AdminException
 	{
     this.smeManager = smeManager;
-    load();
+    load(); trace();
 	}
 
 	public RouteList getRoutes() {

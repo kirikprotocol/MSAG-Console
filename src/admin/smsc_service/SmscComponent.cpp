@@ -641,8 +641,19 @@ Variant SmscComponent::traceRoute(const Arguments &args)
     try 
     {
         if (!bTemporalRoutesManagerConfigLoaded)
-            throw AdminException("Trace route failed. Routes configuration wasn't loaded");
+        {
+            RouteConfig cfg;
+            if (cfg.load("conf/routes__.xml") == RouteConfig::fail)
+                throw AdminException("Load routes config file failed.");
 
+            vector<std::string> traceBuff;
+            smsc_app_runner->getApp()->reloadTestRoutes(cfg);
+            smsc_app_runner->getApp()->getTestRouterInstance()->enableTrace(true);
+            smsc_app_runner->getApp()->getTestRouterInstance()->getTrace(traceBuff);
+            
+            bTemporalRoutesManagerConfigLoaded = true;
+        }
+        
         SmeProxy* proxy = 0;
         RouteInfo info;
         bool found = false;
@@ -712,7 +723,7 @@ Variant SmscComponent::traceRoute(const Arguments &args)
         throw;
     }
     catch (ConfigException& cexc) {
-        throw AdminException("Trace route failed. Cause: %s", cexc.what());
+        throw AdminException("Load routes config file failed. Cause: %s", cexc.what());
     }
     catch (std::exception& exc) {
         throw AdminException("Trace route failed. Cause: %s.", exc.what());
