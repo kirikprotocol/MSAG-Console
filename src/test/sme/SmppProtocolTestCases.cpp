@@ -766,34 +766,40 @@ uint32_t SmppProtocolTestCases::sendDeliverySmRespRetry(PduDeliverySm& pdu,
 	__decl_tc__;
 	try
 	{
+		uint32_t commandStatus = ESME_ROK;
 		PduDeliverySmResp respPdu;
 		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
+		respPdu.get_header().set_commandStatus(ESME_ROK);
 		switch (s.value())
 		{
 			case 1: //не отправлять респонс
 				__tc__("sendDeliverySmResp.sendRetry.notSend");
-				respPdu.get_header().set_commandStatus(0xffffffff);
+				commandStatus = 0xffffffff;
 				break;
 			case 2: //временная ошибка на стороне sme, запрос на повторную доставку
 				__tc__("sendDeliverySmResp.sendRetry.tempAppError");
-				respPdu.get_header().set_commandStatus(ESME_RX_T_APPN);
+				commandStatus = ESME_RX_T_APPN;
+				respPdu.get_header().set_commandStatus(commandStatus);
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 				break;
 			case 3: //переполнение очереди стороне sme
 				__tc__("sendDeliverySmResp.sendRetry.msgQueueFull");
-				respPdu.get_header().set_commandStatus(ESME_RMSGQFUL);
+				commandStatus = ESME_RMSGQFUL;
+				respPdu.get_header().set_commandStatus(commandStatus);
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 				break;
 			case 4: //отправить респонс с неправильным sequence_number
 				__tc__("sendDeliverySmResp.sendRetry.invalidSequenceNumber");
+				commandStatus = 0xffffffff;
 				respPdu.get_header().set_sequenceNumber(INT_MAX);
-				respPdu.get_header().set_commandStatus(0xffffffff);
-				//respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
+				respPdu.get_header().set_commandStatus(ESME_ROK);
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 				break;
 			case 5: //отправить респонс после sme timeout
 				{
 					__tc__("sendDeliverySmResp.sendRetry.sendAfterSmeTimeout");
+					commandStatus = 0xffffffff;
+					respPdu.get_header().set_commandStatus(ESME_ROK);
 					__cfg_int__(sequentialPduInterval);
 					int timeout = 1000 * (sme->timeout + rand2(1, sequentialPduInterval));
 					__trace2__("sendAfterSmeTimeout(): sme timeout = %d, timeout = %d",
@@ -805,7 +811,7 @@ uint32_t SmppProtocolTestCases::sendDeliverySmRespRetry(PduDeliverySm& pdu,
 				__unreachable__("Invalid num");
 		}
 		__tc_ok__;
-		return respPdu.get_header().get_commandStatus();
+		return commandStatus;
 	}
 	catch(...)
 	{

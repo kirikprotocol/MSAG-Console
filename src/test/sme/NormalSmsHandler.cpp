@@ -161,7 +161,6 @@ void NormalSmsHandler::updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
 		monitor->pduData->msgRef);
 	__require__(rcptMonitor);
 	__cfg_int__(timeCheckAccuracy);
-	RespPduFlag respFlag = isAccepted(deliveryStatus);
 	pduReg->removeMonitor(rcptMonitor);
 	switch (rcptMonitor->regDelivery)
 	{
@@ -200,8 +199,16 @@ void NormalSmsHandler::updateDeliveryReceiptMonitor(DeliveryMonitor* monitor,
 				case PDU_EXPIRED_FLAG:
 					__tc__("processDeliverySm.deliveryReceipt.expiredDeliveryReceipt");
 					__tc_ok__;
-					rcptMonitor->reschedule(max(monitor->getValidTime(),
-						recvTime + (time_t) smeTimeout - (time_t) timeCheckAccuracy));
+					if (deliveryStatus == 0xffffffff) //респонс не отослан
+					{
+						time_t waitTime = recvTime + (time_t) smeTimeout -
+							(time_t) timeCheckAccuracy;
+						rcptMonitor->reschedule(max(monitor->getValidTime(), waitTime));
+					}
+					else
+					{
+						rcptMonitor->reschedule(monitor->getValidTime());
+					}
 					break;
 				default:
 					__unreachable__("Invalid monitor flag");

@@ -509,7 +509,7 @@ void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu,
 	bool sync, int delay)
 {
 	__decl_tc__;
-	pdu.set_messageId("0");
+	//pdu.set_messageId("0");
 	if (delay)
 	{
 		__require__(fixture->pduSender);

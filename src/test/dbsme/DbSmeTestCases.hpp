@@ -91,8 +91,8 @@ protected:
 	DbSmeSelectJobTestCases selectTc;
 
 	virtual Category& getLog();
-	const string getFromAddress();
-	const string getToAddress();
+	const Address getFromAddress();
+	const Address getToAddress();
 	const string getCmdText(DbSmeTestRecord* rec, const DateFormatter* df);
 	void sendDbSmePdu(const Address& addr, const string& input,
 		PduData::IntProps* intProps, PduData::StrProps* strProps,

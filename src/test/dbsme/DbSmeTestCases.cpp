@@ -38,18 +38,16 @@ Category& DbSmeTestCases::getLog()
 	return log;
 }
 
-const string DbSmeTestCases::getFromAddress()
+const Address DbSmeTestCases::getFromAddress()
 {
 	//dbSmeInfo.wantAlias = true
-	const Address smeAlias =
-		fixture->aliasReg->findAliasByAddress(fixture->smeAddr);
-	return SmsUtil::configString(smeAlias);
+	return fixture->aliasReg->findAliasByAddress(fixture->smeAddr);
 }
 
-const string DbSmeTestCases::getToAddress()
+const Address DbSmeTestCases::getToAddress()
 {
 	__cfg_addr__(dbSmeAddr);
-	return SmsUtil::configString(dbSmeAddr);
+	return dbSmeAddr;
 }
 
 #define __delim__ \

@@ -14,6 +14,7 @@ namespace dbsme {
 using std::string;
 using std::map;
 using std::vector;
+using smsc::sms::Address;
 using smsc::core::synchronization::Mutex;
 using smsc::test::core::PduDataObject;
 
@@ -52,8 +53,8 @@ public:
 	__field__(10, time_t, Date)
 	__field__(11, string, String)
 	__field__(12, string, QuotedString)
-	__field__(13, string, FromAddr)
-	__field__(14, string, ToAddr)
+	__field__(13, Address, FromAddr)
+	__field__(14, Address, ToAddr)
 	DbSmeTestRecord* getDefInput() const { return defInput; }
 	void setDefInput(DbSmeTestRecord* defInput);
 	bool checkDefInput() const { return defInput; }
