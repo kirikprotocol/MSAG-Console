@@ -18,7 +18,7 @@ import java.io.IOException;
 public class InfoSmeContext {
   private static InfoSmeContext instance = null;
 
-  public static InfoSmeContext getInstance(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, IOException, SAXException
+  public static synchronized InfoSmeContext getInstance(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, IOException, SAXException
   {
     return instance != null ? instance : (instance = new InfoSmeContext(appContext));
   }
@@ -26,6 +26,7 @@ public class InfoSmeContext {
 
   private final SMSCAppContext appContext;
   private Config config = null;
+  private InfoSme infoSme = null;
   private String providersSort = "provider";
   private int providersPageSize = 20;
   private String tasksSort = "name";
@@ -36,6 +37,7 @@ public class InfoSmeContext {
   public InfoSmeContext(SMSCAppContext appContext) throws AdminException, ParserConfigurationException, SAXException, IOException
   {
     this.appContext = appContext;
+    this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(Constants.INFO_SME_ID));
     resetConfig();
   }
 
@@ -108,5 +110,10 @@ public class InfoSmeContext {
   public void setSchedulesPageSize(int schedulesPageSize)
   {
     this.schedulesPageSize = schedulesPageSize;
+  }
+
+  public InfoSme getInfoSme()
+  {
+    return infoSme;
   }
 }
