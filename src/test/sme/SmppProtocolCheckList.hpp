@@ -275,6 +275,8 @@ void replaceSmTc()
 		"Отправка replace_sm реквеста с sme зарегистрированной как transmitter");
 	__reg_tc__("replaceSm.transceiver",
 		"Отправка replace_sm реквеста с sme зарегистрированной как transceiver");
+	__reg_tc__("replaceSm.map",
+		"Отправка replace_sm реквеста для sms, которая будет доставляться на map proxy");
 	//replaceSm.correct
 	__reg_tc__("replaceSm.correct",
 		"Отправка replace_sm pdu с правильными значениями полей");
