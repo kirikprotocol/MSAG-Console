@@ -15,6 +15,8 @@
 
         <param name="SvcType" type="string">DBSme</param>
         <param name="ProtocolId" type="int">111</param>
+	<param name="origAddress" type="string">003</param>
+	<param name="systemType" type="string">smpp</param>
         
         <section name="ThreadPool">
             <param name="max" type="int">15</param>
