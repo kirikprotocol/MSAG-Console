@@ -117,7 +117,8 @@ void DbSmeTestCases::sendDbSmePdu(const string& input, PduData::IntProps* intPro
 		//создать pdu
 		PduSubmitSm* pdu = new PduSubmitSm();
 		__cfg_addr__(dbSmeAlias);
-		transmitter->setupRandomCorrectSubmitSmPdu(pdu, dbSmeAlias);
+		transmitter->setupRandomCorrectSubmitSmPdu(pdu, dbSmeAlias,
+			OPT_ALL & ~OPT_MSG_PAYLOAD); // отключить messagePayload
 		//установить немедленную доставку
 		pdu->get_message().set_scheduleDeliveryTime("");
 		//текст сообщения
@@ -298,10 +299,11 @@ void DbSmeTestCases::submitIncorrectDateFormatDbSmeCmd(bool sync,
 {
 	__decl_tc__;
 	TCSelector s(num, 19);
+	__cfg_str__(dbSmeRespInputParse);
+	string output = dbSmeRespInputParse;
 	for (; s.check(); s++)
 	{
 		string input;
-		string output = "Invalid date format";
 		switch (s.value())
 		{
 			//DateFormatJob1
@@ -396,10 +398,11 @@ void DbSmeTestCases::submitIncorrectNumberFormatDbSmeCmd(bool sync,
 {
 	__decl_tc__;
 	TCSelector s(num, 41);
+	__cfg_str__(dbSmeRespInputParse);
+	string output = dbSmeRespInputParse;
 	for (; s.check(); s++)
 	{
 		string input;
-		string output = "Invalid number format";
 		char tmp[64];
 		switch (s.value())
 		{
@@ -605,18 +608,25 @@ void DbSmeTestCases::submitIncorrectParamsDbSmeCmd(bool sync,
 					__tc__("submitDbSmeCmd.incorrect.invalidJob"); __tc_ok__;
 					auto_ptr<char> tmp = rand_char(20);
 					input = tmp.get();
-					output = "Invalid job name";
+					__cfg_str__(dbSmeRespJobNotFound);
+					output = dbSmeRespJobNotFound;
 				}
 				break;
 			case 2: //отсутствуют обязательные параметры
-				__tc__("submitDbSmeCmd.incorrect.missingParams"); __tc_ok__;
-				input = "InsertJob1";
-				output = "Required parameter is missing";
+				{
+					__tc__("submitDbSmeCmd.incorrect.missingParams"); __tc_ok__;
+					input = "InsertJob1";
+					__cfg_str__(dbSmeRespInputParse);
+					output = dbSmeRespInputParse;
+				}
 				break;
 			case 3: //присутствуют лишние параметры
-				__tc__("submitDbSmeCmd.incorrect.extraParams"); __tc_ok__;
-				input = "DateFormatJob1 1/1/02 12:0:0 AM str";
-				output = "Extra parameters found";
+				{
+					__tc__("submitDbSmeCmd.incorrect.extraParams"); __tc_ok__;
+					input = "DateFormatJob1 1/1/02 12:0:0 AM str";
+					__cfg_str__(dbSmeRespInputParse);
+					output = dbSmeRespInputParse;
+				}
 				break;
 			default:
 				__unreachable__("Invalid num");
