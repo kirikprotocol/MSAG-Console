@@ -28,13 +28,13 @@ compile:
 	@cp -f $(SMSC_BUILDDIR)/jars/dbSme.jar  $(SME_BUILDDIR)/lib/dbSme.jar
 	@cp -f $(DB_OCI_LIB) $(SME_BUILDDIR)/lib/libdb_oci.so
 	@cp -f ../../config/dbsme/config.xml $(SME_BUILDDIR)/conf/config.xml
-	@cp -f jsp/* $(SME_BUILDDIR)/jsp
+	@cp -f jsp/*.* $(SME_BUILDDIR)/jsp
 	@cp -f config.xml $(SME_BUILDDIR)
 
 pack:
 	@echo zipping archive
-	@cd $(SME_BUILDDIR); zip -9 -r $(SMSC_BUILDDIR)/ext_smes/dbsme bin conf jsp lib config.xml
-#	@jar -cf $(SMSC_BUILDDIR)/ext_smes/dbsme.jar -C $(SME_BUILDDIR) .
+#	@cd $(SME_BUILDDIR); zip -9 -r $(SMSC_BUILDDIR)/ext_smes/dbsme bin conf jsp lib config.xml
+	@jar -cfM $(SMSC_BUILDDIR)/ext_smes/dbsme.war -C $(SME_BUILDDIR) .
 
 clean:
 	@echo Clean
