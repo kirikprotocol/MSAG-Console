@@ -11,6 +11,7 @@ using smsc::util::Logger;
 using namespace smsc::sms; //constants
 using namespace smsc::test::smpp; //constants, SmppUtil
 using namespace smsc::test::sms; //constants
+using namespace smsc::smpp;
 using namespace smsc::smpp::SmppCommandSet;
 
 SmppTransmitterTestCases::SmppTransmitterTestCases(SmppSession* sess,
@@ -308,9 +309,9 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 				pduData.msgRef = pdu->get_optional().get_userMessageReference();
 				pduData.submitTime = time(NULL);
 				pduData.waitTime =
-					SmppUtil::convert(pdu->get_message().get_scheduleDeliveryTime());
+					SmppUtil::string2time(pdu->get_message().get_scheduleDeliveryTime());
 				pduData.validTime =
-					SmppUtil::convert(pdu->get_message().get_validityPeriod());
+					SmppUtil::string2time(pdu->get_message().get_validityPeriod());
 				//pduData.responseFlag = false;
 				pduData.deliveryFlag = false;
 				//если delivery receipt и intermediate notifications не должно быть,
@@ -323,7 +324,7 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 					INTERMEDIATE_NOTIFICATION_REQUESTED;
 				pduData.replacePdu = replacePduData;
 				pduReg->putPdu(pduData);
-				//проверить респонс, с случае ошибки удалить из PduRegistry
+				//проверить респонс
 				if (respPdu)
 				{
 					vector<int> tmp =
@@ -335,14 +336,14 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 				}
 				pduReg->getMutex().Unlock();
 				//pdu life time определяется PduRegistry
-				//delete pdu;
+				//disposePdu(pdu);
 			}
 			else
 			{
 				//если ничего проверять не надо (для performance testing)
-				delete pdu;
+				delete pdu; //disposePdu
 			}
-			delete respPdu;
+			delete respPdu; //disposePdu
 		}
 		catch(...)
 		{
