@@ -751,7 +751,7 @@ public:
       //return prop.properties[Tag::SMSC_RAW_SHORTMESSAGE].isSet!=0;;
       tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
     }
-    if ( tag == unType(Tag::SMPP_PAYLOAD_MESSAGE) ) {
+    if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) ) {
       //return prop.properties[Tag::SMSC_RAW_SHORTMESSAGE].isSet!=0;;
       tag = unType(Tag::SMSC_RAW_PAYLOAD);
     }
