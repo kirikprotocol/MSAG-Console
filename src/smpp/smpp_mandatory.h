@@ -23,21 +23,21 @@ using std::auto_ptr;
 
 class BadDataException {};
 
-inline void fetchPduAddress(SmppStream* stream,PduAddress& addr)
+static inline void fetchPduAddress(SmppStream* stream,PduAddress& addr)
 {
   fetchX(stream,addr.typeOfNumber);
   fetchX(stream,addr.numberingPlan);
   fetchCOctetStr(stream,addr.value,21);
 }
 
-inline void fillPduAddress(SmppStream* stream,PduAddress& addr)
+static inline void fillPduAddress(SmppStream* stream,PduAddress& addr)
 {
   fillX(stream,addr.typeOfNumber);
   fillX(stream,addr.numberingPlan);
   fillCOctetStr(stream,addr.value);
 }
 
-inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
+static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
 {
   using namespace SmppCommandSet;
   int cmdid = _pdu->commandId;
@@ -184,26 +184,28 @@ inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
   }
 }
 
+  
+class StreamGuard
+{ 
+  SmppStream* stream;
+public:
+  StreamGuard(SmppStream* stream):stream(stream){}
+  ~StreamGuard()
+  {
+    if (stream->dataOffset < stream->dataLength) 
+    {
+			__warning__("packet has left data, dropped");
+      dropPdu(stream);
+    }
+  }
+};
+
 /**
   Достаем обязательные поля
 */
-inline SmppHeader* fetchSmppPdu(SmppStream* stream)
+static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
 {
   using namespace SmppCommandSet;
-  class StreamGuard
-  { 
-    SmppStream* stream;
-  public:
-    StreamGuard(SmppStream* stream):stream(stream){}
-    ~StreamGuard()
-		{
-			if (stream->dataOffset < stream->dataLength) 
-			{
-				__warning__("packet has left data, dropped");
-				dropPdu(stream);
-			}
-		}
-  };
   __check_smpp_stream_invariant__ ( stream );
   StreamGuard guard(stream);
   try
