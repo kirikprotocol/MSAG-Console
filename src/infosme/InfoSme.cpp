@@ -475,7 +475,6 @@ int main(void)
             SmppSession             session(cfg, &listener);
             InfoSmeMessageSender    sender(processor, &session);
             
-            processor.assignMessageSender(&sender);
             logger.info("Connecting to SMSC ... ");
             try
             {
@@ -484,6 +483,7 @@ int main(void)
                 
                 infoSmeReady.Wait(0);
                 session.connect();
+                processor.assignMessageSender(&sender);
                 processor.Start();
                 bInfoSmeIsConnected = true;
                 infoSmeReady.Signal();
@@ -518,6 +518,7 @@ int main(void)
             logger.info("Disconnecting from SMSC ...");
             unrespondedMessagesEvent.Signal();
             processor.Stop();
+            processor.assignMessageSender(0);
             session.close();
         }
     }
