@@ -1,7 +1,7 @@
+#include <winsock2.h>
 #include <stdio.h>
 #include "sme/SmppBase.hpp"
 #include "sms/sms.h"
-#include <unistd.h>
 #include "util/smstext.h"
 
 using namespace smsc::sms;

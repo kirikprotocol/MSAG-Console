@@ -5,7 +5,7 @@ $Id$
 #if !defined HEADER_RECODE_DLL_H
 #define HEADER_RECODE_DLL_H
 
-#ifdef _WIN32
+#ifdef _DLL
 
 #ifdef RECODE_DLL_EXPORTS
 #define RECODE_DLL_API __declspec(dllexport)

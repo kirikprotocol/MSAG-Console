@@ -3,6 +3,9 @@
   этот файл содержит код для проверки условий.
 */
 
+#if !defined ( __Cpp_Header__smsc_util_debug_h__ )
+#define __Cpp_Header__smsc_util_debug_h__
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/timeb.h>
@@ -16,6 +19,7 @@ using std::runtime_error;
 
 #include <stdarg.h>
 #include <windows.h>
+#include <time.h>
 
 #define __require__(expr)
 #define require(expr)
@@ -23,7 +27,7 @@ using std::runtime_error;
 #define __trace__(txt) trace(txt)
 #define __trace2__ trace2
 
-inline void trace2(const char* fmt,...)
+static inline void trace2(const char* fmt,...)
 {
 #ifndef DISABLE_TRACING
 #ifdef _MSC_VER
@@ -38,19 +42,18 @@ inline void trace2(const char* fmt,...)
     *stderr=*fopen(fn,"wt");
   }
   char buf[4096];
-  int n=sprintf(buf,"*trace*[%d %d]:",GetCurrentThreadId(),time(NULL));
-  n=vsprintf(buf+n,fmt,lst);
+  int n=sprintf(buf,"*trace*[%-5d %d]:",GetCurrentThreadId(),time(NULL));
+  n+=vsprintf(buf+n,fmt,lst);
   sprintf(buf+n,"\n");
-  vfprintf(stderr,"%s",buf)
-  fflosh(stderr);
+  fprintf(stderr,"%s",buf);
+  fflush(stderr);
   va_end(lst);
 #endif
 }
 
-#define warning(txt) warning2("%s",txt)
-#define __warning__ warning
+#define __warning__(txt) warning2("%s",txt)
 #define __warning2__ warning2
-inline void warning2(const char* fmt,...)
+static inline void warning2(const char* fmt,...)
 {
 #ifndef DISABLE_ANY_CHECKS
   va_list lst;
@@ -62,11 +65,11 @@ inline void warning2(const char* fmt,...)
     sprintf(fn,"smpp.%u-%08x.log",time(NULL),GetCurrentProcessId());
     *stderr=*fopen(fn,"wt");
   }
-  int n=sprintf(buf,"*WARNING*[%d %d]:",GetCurrentThreadId(),time(NULL));
-  n=vsprintf(buf+n,fmt,lst);
+  int n=sprintf(buf,"*WARNING*[%-5d %d]:",GetCurrentThreadId(),time(NULL));
+  n+=vsprintf(buf+n,fmt,lst);
   sprintf(buf+n,"\n");
-  vfprintf(stderr,"%s",buf)
-  fflosh(stderr);
+  fprintf(stderr,"%s",buf);
+  fflush(stderr);
   va_end(lst);
 #endif
 }
@@ -83,9 +86,6 @@ inline void warning2(const char* fmt,...)
 #define __trace2_if_fail__
 
 #else
-
-#if !defined ( __Cpp_Header__smsc_util_debug_h__ )
-#define __Cpp_Header__smsc_util_debug_h__
 
 #if defined ccassert
   #error "opps, ccassert alreadry defined"
