@@ -1171,7 +1171,7 @@ StateType StateMachine::submit(Tuple& t)
         unsigned char* umrList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
         if(idx<len)
         {
-          umrList[idx]=sms->getMessageReference();
+          umrList[idx-1]=sms->getMessageReference();
           newsms.setBinProperty(Tag::SMSC_UMR_LIST,(const char*)umrList,len);
         }
       }
@@ -3034,13 +3034,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
         (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1?4:0);
       rpt.setDestinationAddress(sms.getOriginatingAddress());
       rpt.setMessageReference(sms.getMessageReference());
-      if(umrIndex==-1 || umrIndex>=umrList.size())
+      rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
+        sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+      if(umrIndex!=-1 && umrIndex<umrList.size())
       {
-        rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
-          sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-      }else
-      {
-        rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,umrList[umrIndex]);
+        rpt.setMessageReference(umrList[umrIndex]);
       }
       rpt.setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED_STATE);
       char addr[64];
@@ -3087,7 +3085,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         umrIndex++;
         while(umrIndex<umrList.size())
         {
-          rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,umrList[umrIndex]);
+          rpt.setMessageReference(umrList[umrIndex]);
           submitReceipt(rpt);
           umrIndex++;
         }
