@@ -38,6 +38,7 @@
 	
 	<section name="MessageSet">
 	    <param name="PROVIDER_NOT_FOUND" type="string">Provider not found!</param>
+	    <param name="SERVICE_NOT_AVAIL" type="string">Service not available!</param>
 	    <param name="JOB_NOT_FOUND" type="string">Job not found!</param>
 	    <param name="DS_FAILURE" type="string">DataSource failure!</param>
 	    <param name="DS_CONNECTION_LOST" type="string">Connection to DataSource lost !</param>
@@ -52,6 +53,7 @@
         
             <section name="SampleDataProvider1">
                 <param name="address" type="string">+111</param>
+		<param name="enabled" type="bool">true</param>
             
                 <section name="DataSource">
                     <param name="type" type="string">OCI</param>
@@ -199,6 +201,7 @@ Long-Double : $$long-double digits="10" default="3.1415"$$
             </section>
 
             <section name="SampleDataProvider2">
+		<param name="enabled" type="bool">false</param>
             </section>
         
         </section>
