@@ -901,6 +901,14 @@ throw (AdminException)
 	{
 		profile.codepage = smsc::profiler::ProfileCharsetOptions::Ucs2;
 	}
+	else if (strcmp("Latin1", codepageStr) == 0)
+	{
+		profile.codepage = smsc::profiler::ProfileCharsetOptions::Latin1;
+	}
+	else if (strcmp("UCS2AndLatin1", codepageStr) == 0)
+	{
+		profile.codepage = smsc::profiler::ProfileCharsetOptions::Ucs2AndLat;
+	}
 	else
 		throw	  AdminException("Unknown charset");
 
