@@ -6,6 +6,8 @@ use strict;
 use File::Copy;
 use Time::Local qw(timegm timelocal);
 
+#use re 'debug';
+
 my @OUT_FIELDS;
 
 my $header='';
@@ -21,7 +23,7 @@ my $imsirx=qr'25001390\d{7}|2500598\d{8}';
 my $svclstfile=$0;
 if($svclstfile=~/[\\\/]/)
 {
-  $svclstfile=~s/([\\\/])[^\\\/]+/roamed_services.lst/;
+  $svclstfile=~s/([\\\/])[^\\\/]+$/$1roamed_services.lst/;
 }else
 {
   $svclstfile='roamed_services.lst';
@@ -53,6 +55,64 @@ if(-e $svclstfile)
   }
 }
 print "svcrx=$svcrx\n";
+
+my $regionsfile=$0;
+if($regionsfile=~/[\\\/]/)
+{
+  $regionsfile=~s/([\\\/])[^\\\/]+$/$1regions.lst/;
+}else
+{
+  $regionsfile='regions.lst';
+}
+
+print "Regions file:$regionsfile\n";
+
+my @regions;
+
+if(-e $regionsfile)
+{
+  open(F,$regionsfile);
+  my @l=<F>;
+  close F;
+  s/[\x0d\x0a]//g for(@l);
+  @l=grep !/^$/,@l;
+  @l=grep !/^#/,@l;
+  if(@l)
+  {
+    for(@l)
+    {
+      if(/(\w+):(.*)$/)
+      {
+        my $rx;
+        eval{
+          $rx=qr($2);
+        };
+        if($@)
+        {
+          print "Invalid regexp $2 in regions.lst\n";
+          exit;
+        }
+        push @regions,{prefix=>$1,rx=>$rx};
+      }else
+      {
+        print "Unrecognized line in regions.lst: $_\n";
+        exit;
+      }
+    }
+  }
+}
+if(!@regions)
+{
+  print "Required file: regions.lst not found or empty!\n";
+  exit;
+}
+
+if($regions[-1]->{rx} ne qr(.*))
+{
+  print "Regexp of last line in regions.lst MUST be '.*' !\n";
+  exit;
+}
+
 
 @OUT_FIELDS=(
 {value=>'-1',width=>6},
@@ -133,24 +193,27 @@ for(@dir)
   $mon++;
   $timestamp=sprintf("%04d%02d%02d%02d%02d%02d",$year,$mon,$mday,$hour,$min,$sec);
 
-  my $tmpfile=$tmpdir.$ofn;
-  my $outfile=$outdir.
-              'ns'.
-#             sprintf("SMS2_%02d%s%d_%02d&%02d&%02d_",$mday,$curmon,$year,$hour,$min,$sec).
-              $ofn;
-  print "$outfile\n";
+  my $tmpfile=[$tmpdir.$ofn];
+  #my $outfile=$outdir.'ns'.$ofn;
+  #print "$outfile\n";
 
   $header="90$timestamp".(' 'x81).'0'.(' 'x7).'90'.(' 'x17).'0'.(' 'x385);
   $footer="90$timestamp".(' 'x81)."0\x0d\x0a$crc";
   process($infile,$tmpfile);
-  if(-f $tmpfile)
+  for my $tmp(@$tmpfile)
   {
-    `chown smscdr:smsbill $tmpfile`;
-    `chmod 664 $tmpfile`;
-    if(!move($tmpfile,$outfile))
+    if(-f $tmp)
     {
-      unlink $tmpfile;
-      die "failed to move $tmpfile to $outfile";
+      `chown smscdr:smsbill $tmp`;
+      `chmod 664 $tmp`;
+      $tmp=~/.*[\\\/]([^\\\/]+)$/;
+      my $outfile=$outdir.$1;
+      print "$outfile\n";
+      if(!move($tmp,$outfile))
+      {
+        unlink $tmp;
+        die "failed to move $tmp to $outfile";
+      }
     }
   }
   my $arcout=sprintf("%s/%04d-%s",$arcdir,$year,$curmon);
@@ -173,6 +236,28 @@ sub outrow{
   return unless $fields->{PAYER_MSC}=~/$mscrx/ || ($svcrx && $fields->{OTHER_ADDR}=~/$svcrx/);
   return unless $fields->{PAYER_IMSI}=~/$imsirx/;
 
+  my $outf;
+  for my $r(@regions)
+  {
+    #print "Check:".$fields->{PAYER_ADDR}." -> '".$r->{rx}."'\n";
+    #my $str='9139292642'; #.$fields->{PAYER_ADDR};
+    #my $rx=$r->{rx};
+    #print "str='$str',rx='$rx'\n";
+    #print 'ref='.ref($rx)."\n";
+    #if( $str =~m/.*/ )
+    if($fields->{PAYER_ADDR}=~$r->{rx})
+    {
+#      print "Match\n";
+      $outf=$out->{$r->{prefix}};
+      last;
+    }
+  }
+  if(!$outf)
+  {
+    print "Error: out file not found for payer ".$fields->{PAYER_ADDR}."\n";
+    exit;
+  }
+
   for my $f(@OUT_FIELDS)
   {
     my $v;
@@ -191,10 +276,10 @@ sub outrow{
     {
       $v.=' 'x($f->{width}-length($v));
     }
-    $out->print($v);
+    $outf->print($v);
   }
 
-  $out->print($eoln);
+  $outf->print($eoln);
 }
 
 sub conv_addr_other{
@@ -266,12 +351,24 @@ sub datetotimestamp{
 };
 
 sub process{
-  my ($inf,$outf)=@_;
+  my ($inf,$outarr)=@_;
   my $in=IO::File->new;
   if(!$in->open('<'.$inf)){die "Faield to open input file $inf"};
-  my $out=DelayedFile->new('>'.$outf);
-  $out->{header}=$header.$eoln;
-  $out->{footer}=$footer.$eoln;
+  my $out={};
+
+  my $outtemplate=pop @$outarr;
+
+  for my $r(@regions)
+  {
+    my $newfn=$outtemplate;
+    $newfn=~s/(.*[\\\/])([^\\\/]+)$/$1.$r->{prefix}.$2/e;
+    push @$outarr,$newfn;
+    my $f=DelayedFile->new('>'.$newfn);
+    $f->{header}=$header.$eoln;
+    $f->{footer}=$footer.$eoln;
+    $out->{$r->{prefix}}=$f;
+#    print "Set file for prefix ".$r->{prefix}."\n";
+  }
   my $csv=Text::CSV_XS->new({'binary'=>1});
   my $hdr=$csv->getline($in);
   die "Input file parsing failed" unless $hdr;
