@@ -39,7 +39,7 @@ USHORT_T  Et96MapOpenInd(
 	ET96MAP_ADDRESS_T* mapAddress, 
 	ET96MAP_USERDATA_T *ud ) 
 {
-	__trace2__("MAP::Et96MapOpenInd ssn 0x%x, dalogid 0x%x",dialogId);
+	__trace2__("MAP::Et96MapOpenInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
 	try{
     MapDialogCntItem* mdci = 
 		  MapDialogContainer::getInstance()->createDialog(dialogId);
