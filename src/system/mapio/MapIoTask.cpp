@@ -137,7 +137,7 @@ void MapIoTask::dispatcher()
     result = Et96MapHandleIndication(&message);
     if ( result != ET96MAP_E_OK ) {
       __trace2__("MAP: error at Et96MapHandleIndication with code x%hx",result);
-      return;
+      //return;
     }
   }
 }
