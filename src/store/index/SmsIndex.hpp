@@ -8,6 +8,7 @@
 #include "core/buffers/DiskHash.hpp"
 #include "core/buffers/ChunkFile.hpp"
 #include "util/crc32.h"
+#include "util/debug.h"
 
 
 #include <sms/sms.h>
@@ -90,7 +91,7 @@ public:
   int QuerySms(const char* dir,const ParamArray& params,ResultArray& res);
   void BeginTransaction()
   {
-    //
+    __trace__("IDX: begin transaction");
   }
 
   struct MemUseStat{
@@ -105,6 +106,7 @@ public:
 
   void EndTransaction()
   {
+    __trace__("IDX: flushing transaction");
     cache.First();
     char* k;
     CacheItem*  v;
@@ -119,6 +121,7 @@ public:
       v->usedInLastTransaction=false;
       if(now-v->lastUsage>cacheLifeTime*60*60)
       {
+        __trace2__("IDX: cached location %s marked to kill",k);
         toKill.push_back(k);
       }else
       {
@@ -130,6 +133,9 @@ public:
         memStat.insert(mus);
       }
     }
+
+    __trace2__("IDX: mem used by cache: %lld",memUse);
+
 
     if(memUse>maxCacheMemUsage)
     {
@@ -150,6 +156,7 @@ public:
       delete cache.Get(i->c_str());
       cache.Delete(i->c_str());
     }
+    __trace__("IDX: transaction finished");
   }
   void RollBack()
   {
@@ -158,7 +165,12 @@ public:
     cache.First();
     while(cache.Next(k,v))
     {
-      if(v->usedInLastTransaction)v->ds.Discard();
+      if(v->usedInLastTransaction)
+      {
+        __trace2__("IDX: rollback transaction %s",k);
+        v->ds.Discard();
+        v->usedInLastTransaction=false;
+      }
     }
   }
 

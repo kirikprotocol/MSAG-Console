@@ -42,7 +42,11 @@ namespace buffers{
 
 class FileException:public std::exception{
 public:
-  enum{errOpenFailed,errReadFailed,errEndOfFile,errWriteFailed,errSeekFailed,errFileNotOpened};
+  enum{
+    errOpenFailed,errReadFailed,errEndOfFile,
+    errWriteFailed,errSeekFailed,errFileNotOpened,
+    errRenameFailed
+  };
   FileException(int err):errCode(err)
   {
     error=errno;
@@ -99,6 +103,10 @@ public:
       case errFileNotOpened:
         errbuf="Attempt to make an operation on file that is not opened"+errbuf;
         return errbuf.c_str();
+      case errRenameFailed:
+        errbuf="Failed to rename file"+errbuf;
+        errbuf+=":";
+        errbuf+=strerror(error);
       default: return "Unknown error";
     }
   }
@@ -178,8 +186,15 @@ public:
     }
     std::string old=filename+".old";
     fclose(f);
-    rename(filename.c_str(),old.c_str());
-    rename(tmp.c_str(),filename.c_str());
+    f=0;
+    if(rename(filename.c_str(),old.c_str())!=0)
+    {
+      throw FileException(FileException::errRenameFailed,filename.c_str());
+    }
+    if(rename(tmp.c_str(),filename.c_str())!=0)
+    {
+      throw FileException(FileException::errRenameFailed,filename.c_str());
+    }
     remove(old.c_str());
     f=g;
     fseek(f,0,SEEK_SET);
