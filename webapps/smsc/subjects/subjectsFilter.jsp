@@ -1,5 +1,4 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.subjects.SubjectsFilter,
 					  ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.subjects.SubjectsFilter"/>

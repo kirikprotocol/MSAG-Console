@@ -1,5 +1,4 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.dl.*"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.dl.dlFilter"/>
 <jsp:setProperty name="bean" property="*"/>

@@ -1,4 +1,3 @@
-<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <div class=content>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Common values ~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=page_subtitle>Distribution list</div>

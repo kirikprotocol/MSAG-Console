@@ -1,6 +1,5 @@
 <%@ page import="ru.novosoft.smsc.util.*,
                  java.util.*"%>
-<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <div class=content>
 <%int rowN = 0;%>
 <table class=properties_list cellspacing=0 cellpadding=2>

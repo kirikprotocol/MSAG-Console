@@ -1,5 +1,4 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.routes.RoutesFilter,
 					  ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.routes.RoutesFilter"/>
@@ -107,13 +106,13 @@ String encName = StringEncoderDecoder.encode(name);
 <table class=properties_list cellspacing=0 cellspadding=0>
 <%rowN = 0;%>
 <tr class=row<%=(rowN++)&1%>>
-	<td nowrap><input class=check type="checkbox" name=strict <%=bean.isStrict() ? "checked" : ""%>>Strict Filter</td>
+	<td nowrap><input id=options_strict_filter class=check type="checkbox" name=strict <%=bean.isStrict() ? "checked" : ""%>>&nbsp;<label for=options_strict_filter>Strict Filter</label></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<td nowrap><input class=check type="checkbox" name=showSrc <%=bean.isShowSrc() ? "checked" : ""%>>Show sources list</td>
+	<td nowrap><input id=options_show_src class=check type="checkbox" name=showSrc <%=bean.isShowSrc() ? "checked" : ""%>>&nbsp;<label for=options_show_src>Show sources list</label></td>
 </tr>
 <tr class=rowLast>
-	<td nowrap><input class=check type="checkbox" name=showDst <%=bean.isShowDst() ? "checked" : ""%>>Show destinations list</td>
+	<td nowrap><input id=options_show_dst class=check type="checkbox" name=showDst <%=bean.isShowDst() ? "checked" : ""%>>&nbsp;<label for=options_show_dst>Show destinations list</label></td>
 </tr>
 </table>
 </div>

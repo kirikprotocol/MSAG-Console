@@ -13,12 +13,6 @@ function navigatePage(pageNum)
 	opForm.submit();
 	return false;
 }
-function clickFilter()
-{
-	document.all.jbutton.name = "mbFilter";
-	opForm.submit();
-	return false;
-}
 </script>
 <table class=navbar cellspacing=1 cellpadding=0>
 <tr>

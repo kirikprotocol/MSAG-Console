@@ -1,5 +1,4 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <%@ page import="java.util.*,
                  ru.novosoft.smsc.jsp.SMSCAppContext,
                  ru.novosoft.smsc.util.StringEncoderDecoder"%>

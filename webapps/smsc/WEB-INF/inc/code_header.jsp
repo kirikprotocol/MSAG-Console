@@ -30,4 +30,5 @@ page import="java.util.*,
 			 ru.novosoft.smsc.util.StringEncoderDecoder"
 %><%@ 
 include file="/WEB-INF/inc/messages_header.jsp"%><%@ 
-include file="/WEB-INF/inc/page_menu.jsp"%>
+include file="/WEB-INF/inc/page_menu.jsp"%><%@ 
+include file="/WEB-INF/inc/buttons.jsp"%>

@@ -24,15 +24,13 @@ table.navbar td.current,
 table.navbar td.next,
 table.navbar td.next a,
 table.navbar td.last,
-table.navbar td.last a,
-table.navbar td.filter
+table.navbar td.last a
 {
 	width: 12px;
 }
 
 table.navbar td.page,
-table.navbar td.current,
-table.navbar td.filter
+table.navbar td.current
 {
 	cursor: hand;
 }
@@ -50,8 +48,11 @@ table.navbar td.total
 
 table.navbar td.filter
 {
-	background-color: #D3D3D3;
+	width: 60px;
+	padding-left: 0px;
+	padding-right: 0px;
 }
+
 table.navbar td.first a,
 table.navbar td.prev a,
 table.navbar td.next a,

@@ -1,4 +1,3 @@
-<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <div class=content>
 <div class=page_subtitle>Subject information</div>
 <%int rowN = 0;%>
