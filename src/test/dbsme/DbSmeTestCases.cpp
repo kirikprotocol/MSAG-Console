@@ -23,8 +23,7 @@ using namespace smsc::smpp::SmppCommandSet;
 
 DbSmeTestCases::DbSmeTestCases(const SmeConfig& config, SmppFixture* fixture,
 	DbSmeRegistry* _dbSmeReg)
-: SmppProtocolTestCases(config, fixture), dbSmeReg(_dbSmeReg),
-	simpleTc(dbSmeReg, fixture->chkList),
+: SmppProfilerTestCases(config, fixture), dbSmeReg(_dbSmeReg),
 	dateFormatTc(dbSmeReg, fixture->chkList),
 	otherFormatTc(dbSmeReg, fixture->chkList),
 	insertTc(dbSmeReg, fixture->chkList),
@@ -118,7 +117,7 @@ void DbSmeTestCases::sendDbSmePdu(const string& input, PduData::IntProps* intPro
 		PduSubmitSm* pdu = new PduSubmitSm();
 		__cfg_addr__(dbSmeAlias);
 		transmitter->setupRandomCorrectSubmitSmPdu(pdu, dbSmeAlias,
-			OPT_ALL & ~OPT_MSG_PAYLOAD); // отключить messagePayload
+			OPT_ALL & ~OPT_MSG_PAYLOAD); //отключить messagePayload
 		//установить немедленную доставку
 		pdu->get_message().set_scheduleDeliveryTime("");
 		//текст сообщения
@@ -165,8 +164,14 @@ void DbSmeTestCases::sendDbSmePdu(const string& input,
 {
 	PduData::StrProps strProps;
 	strProps["input"] = input;
-	strProps["output"] = output;
-	sendDbSmePdu(input, NULL, &strProps, NULL, sync, dataCoding);
+	time_t t;
+	const Profile& profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
+	const pair<string, uint8_t> p = convert(output, profile.codepage);
+	DbSmeAck* ack = new DbSmeAck(p.first, p.second);
+	ack->ref();
+	PduData::ObjProps objProps;
+	objProps["output"] = ack;
+	sendDbSmePdu(input, NULL, &strProps, &objProps, sync, dataCoding);
 }
 
 void DbSmeTestCases::submitCorrectFormatDbSmeCmd(bool sync, uint8_t dataCoding, int num)
@@ -635,93 +640,135 @@ void DbSmeTestCases::submitIncorrectParamsDbSmeCmd(bool sync,
 	}
 }
 
-bool DbSmeTestCases::checkPdu(PduDeliverySm &pdu)
+const string DbSmeTestCases::processJobFirstOutput(const string& text,
+	DbSmeTestRecord* rec)
 {
-	__decl_tc__;
-	__cfg_addr__(dbSmeAlias);
-	__cfg_str__(dbSmeServiceType);
-	__cfg_int__(dbSmeProtocolId);
-
-	__tc__("processDbSmeRes.checkFields");
-	Address srcAlias;
-	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
-	if (srcAlias != dbSmeAlias)
+	__require__(rec);
+	if (rec->getJob().find("DateFormatJob") != string::npos)
 	{
-		__tc_fail__(1);
+		return dateFormatTc.processJobFirstOutput(text, rec);
 	}
-	if (pdu.get_message().get_dataCoding() != DATA_CODING_SMSC_DEFAULT)
+	else if (rec->getJob() == "OtherFormatJob")
 	{
-		__tc_fail__(2);
-		return false;
+		return otherFormatTc.processJobFirstOutput(text, rec);
 	}
-	if (dbSmeServiceType != pdu.get_message().get_serviceType())
+	else if (rec->getJob().find("InsertJob") != string::npos)
 	{
-		__tc_fail__(3);
+		return insertTc.processJobFirstOutput(text, rec);
 	}
-	if (pdu.get_message().get_protocolId() != dbSmeProtocolId)
+	else if (rec->getJob().find("UpdateJob") != string::npos)
 	{
-		__tc_fail__(4);
+		return updateTc.processJobFirstOutput(text, rec);
 	}
-	__tc_ok_cond__;
-	return true;
+	else if (rec->getJob() == "DeleteJob")
+	{
+		return deleteTc.processJobFirstOutput(text, rec);
+	}
+	else if (rec->getJob().find("SelectJob") != string::npos)
+	{
+		return selectTc.processJobFirstOutput(text, rec);
+	}
+	__unreachable__("Unsupported job");
 }
+
+DbSmeAck* DbSmeTestCases::getExpectedResponse(SmeAckMonitor* monitor,
+	PduDeliverySm &pdu, const string& text)
+{
+	__require__(monitor->pduData->objProps.count("dbSmeRec"));
+	MutexGuard mguard(dbSmeReg->getMutex());
+	DbSmeTestRecord* rec = dynamic_cast<DbSmeTestRecord*>(
+		monitor->pduData->objProps["dbSmeRec"]);
+	const string expected = processJobFirstOutput(text, rec);
+	Address addr;
+	SmppUtil::convert(pdu.get_message().get_dest(), &addr);
+	time_t t;
+	const Profile& profile = fixture->profileReg->getProfile(addr, t);
+	const pair<string, uint8_t> p = convert(expected, profile.codepage);
+	return new DbSmeAck(p.first, p.second);
+}
+
+#define __check__(errorCode, field, value) \
+	if (value != pdu.get_message().get_##field()) { __tc_fail__(errorCode); }
 
 void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	PduDeliverySm &pdu)
 {
+	__decl_tc__;
+	__cfg_addr__(profilerAlias);
+	__cfg_addr__(dbSmeAlias);
+	__cfg_str__(dbSmeServiceType);
+	__cfg_int__(dbSmeProtocolId);
+
+	Address srcAlias;
+	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
+	if (srcAlias == profilerAlias)
+	{
+		SmppProfilerTestCases::processSmeAcknowledgement(monitor, pdu);
+		return;
+	}
 	if (!dbSmeReg)
 	{
 		return;
 	}
+	__require__(monitor);
 	if (monitor->getFlag() != PDU_REQUIRED_FLAG)
 	{
 		return;
 	}
-	__require__(monitor);
-	if (!checkPdu(pdu))
-	{
-		return;
-	}
+
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().size_shortMessage(), pdu.get_message().get_dataCoding());
-	MutexGuard mguard(dbSmeReg->getMutex());
-	if (!monitor->pduData->objProps.count("dbSmeRec"))
+	if (!monitor->pduData->objProps.count("output"))
 	{
-		simpleTc.processJobOutput(text, NULL, monitor);
-		return;
+		DbSmeAck* ack = getExpectedResponse(monitor, pdu, text);
+		ack->ref();
+		monitor->pduData->objProps["output"] = ack;
 	}
-	DbSmeTestRecord* rec = reinterpret_cast<DbSmeTestRecord*>(
-		monitor->pduData->objProps["dbSmeRec"]);
-	__require__(rec);
-	if (rec->getJob().find("DateFormatJob") != string::npos)
+	DbSmeAck* ack =
+		dynamic_cast<DbSmeAck*>(monitor->pduData->objProps["output"]);
+	__require__(ack);
+	__tc__("processDbSmeRes.checkFields");
+	__check__(1, serviceType, dbSmeServiceType);
+	if (srcAlias != dbSmeAlias)
 	{
-		dateFormatTc.processJobOutput(text, rec, monitor);
+		__tc_fail__(2);
 	}
-	else if (rec->getJob() == "OtherFormatJob")
+	__check__(3, dataCoding, ack->dataCoding);
+	__check__(4, protocolId, dbSmeProtocolId);
+	__check__(5, priorityFlag, 0);
+	__check__(6, registredDelivery, 0);
+	__check__(7, replaceIfPresentFlag, 0);
+    SmppOptional opt;
+	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
+	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
+	__tc_ok_cond__;
+	__tc__("processDbSmeRes.output");
+	int pos = ack->text.find(text);
+	__trace2__("db sme cmd: pos = %d, input:\n%s\noutput:\n%s\nexpected:\n%s\n",
+		pos, monitor->pduData->strProps["input"].c_str(), text.c_str(), ack->text.c_str());
+	if (pos == string::npos)
 	{
-		otherFormatTc.processJobOutput(text, rec, monitor);
-	}
-	else if (rec->getJob().find("InsertJob") != string::npos)
-	{
-		insertTc.processJobOutput(text, rec, monitor);
-	}
-	else if (rec->getJob().find("UpdateJob") != string::npos)
-	{
-		updateTc.processJobOutput(text, rec, monitor);
-	}
-	else if (rec->getJob() == "DeleteJob")
-	{
-		deleteTc.processJobOutput(text, rec, monitor);
-	}
-	else if (rec->getJob().find("SelectJob") != string::npos)
-	{
-		selectTc.processJobOutput(text, rec, monitor);
+		__tc_fail__(1);
+		monitor->setReceived();
 	}
 	else
 	{
-		__unreachable__("Unsupported job");
+		__tc_ok__;
+		ack->text.erase(pos, text.length());
+		if (!ack->text.length())
+		{
+			monitor->setReceived();
+		}
+		else
+		{
+			__tc__("processDbSmeRes.longOutput");
+			if (text.length() != getMaxChars(ack->dataCoding))
+			{
+				__tc_fail__(1);
+			}
+			__tc_ok_cond__;
+		}
 	}
-	//delete rec;
 }
 
 }
