@@ -39,8 +39,8 @@ void Body::encode(uint8_t* buffer,int& length) const
   int offset=0;
   for(int i=0;i<=SMS_LAST_TAG;i++)
   {
-		if ( i == Tag::SMPP_SHORT_MESSAGE ) continue;
-		if ( i == Tag::SMPP_MESSAGE_PAYLOAD ) continue;
+    if ( i == Tag::SMPP_SHORT_MESSAGE ) continue;
+    if ( i == Tag::SMPP_MESSAGE_PAYLOAD ) continue;
     if(prop.properties[i].isSet)
     {
       __require__(offset<length);
@@ -216,10 +216,10 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
           buffer = auto_ptr<char>(new char[len]);
           UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
           //const_cast<Body*>(this)->setBinProperty(Tag::SMPP_SHORT_MESSAGE,buffer.get(),len);
-          const_cast<Body*>(this)->prop.properties[uType(Tag::SMPP_SHORT_MESSAGE)].setBin(buffer.get(),len);
+          const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_SHORT_MESSAGE)].setBin(buffer.get(),len);
         }else{
           //const_cast<Body*>(this)->setBinProperty(Tag::SMPP_SHORT_MESSAGE,"",len);
-          const_cast<Body*>(this)->prop.properties[uType(Tag::SMPP_SHORT_MESSAGE)].setBin("",0);
+          const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_SHORT_MESSAGE)].setBin("",0);
         }
       }
     }
@@ -240,10 +240,10 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
           buffer = auto_ptr<char>(new char[len]);
           UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
           //const_cast<Body*>(this)->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,buffer.get(),len);
-          const_cast<Body*>(this)->prop.properties[uType(Tag::SMPP_MESSAGE_PAYLOAD)].setBin(buffer.get(),len);
+          const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_MESSAGE_PAYLOAD)].setBin(buffer.get(),len);
         }else{
           //const_cast<Body*>(this)->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,"",len);
-          const_cast<Body*>(this)->prop.properties[uType(Tag::SMPP_MESSAGE_PAYLOAD)].setBin("",0);
+          const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_MESSAGE_PAYLOAD)].setBin("",0);
         }
       }
     }
@@ -251,9 +251,9 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
 trivial:
     __trace2__(":SMS::Body::%s get trivial value",__FUNCTION__);
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) )
-	    tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
-	  if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) )
-	  	tag = unType(Tag::SMSC_RAW_PAYLOAD);
+      tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
+    if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) )
+      tag = unType(Tag::SMSC_RAW_PAYLOAD);
   }
   return prop.properties[tag].getBin(len);
 }

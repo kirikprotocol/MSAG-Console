@@ -605,7 +605,6 @@ StateType StateMachine::submit(Tuple& t)
     if(profile.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
        sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
     {
-      __trace__("SUBMIT: converting ucs2->text");
       char buf[260];
       char buf8[260];
       unsigned len;
@@ -613,6 +612,7 @@ StateType StateMachine::submit(Tuple& t)
       len=ConvertUCS2ToMultibyte(msg,len,buf,sizeof(buf),CONV_ENCODING_CP1251);
       int newlen=Transliterate(buf,len,CONV_ENCODING_CP1251,buf8,sizeof(buf8));
       sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+      __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
       sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8,newlen);
       sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
     }
