@@ -55,7 +55,7 @@ public class DivertManager
       mscUserCode      = properties.getProperty("MSC.usercode");
       mscUserPassword  = properties.getProperty("MSC.userpassword");
       mciSmeAddress    = properties.getProperty("MCISme.Address");
-      voiceMailAddress = properties.getProperty("VoiceMail.Address");
+      voiceMailAddress = properties.getProperty("MCISme.VoiceMail");
 
     } catch(Exception e) {
       throw new ScenarioInitializationException("Failed to load commutator properties", e);
