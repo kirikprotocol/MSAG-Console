@@ -5,12 +5,14 @@
 #include "DbSmeRegistry.hpp"
 #include "DateFormatter.hpp"
 #include <string>
+#include <ostream>
 
 namespace smsc {
 namespace test {
 namespace dbsme {
 
 using std::string;
+using std::ostream;
 using log4cpp::Category;
 using smsc::sme::SmeConfig;
 using smsc::smpp::PduSubmitSm;
@@ -95,14 +97,23 @@ protected:
 	void setInputQuotedString(DbSmeTestRecord* rec, const string& val);
 	void setRandomInputString(DbSmeTestRecord* rec, bool quotedString);
 
+	DbSmeTestRecord* getInsertJobDefaultInput();
+	DbSmeTestRecord* getUpdateJob1DefaultInput();
+
 	const string getOutputFromAddress(const DbSmeTestRecord* rec);
-	const string getOutputString(const DbSmeTestRecord* rec);
+	const string getOutputString(const DbSmeTestRecord* rec,
+		const DbSmeTestRecord* defOutput, bool& res);
+	time_t getDate(DateType dtType, time_t now = 0);
 	const string getOutputDate(const DbSmeTestRecord* rec,
-		const DateFormatter& df, int addDays);
-	int getOutputInt16(const DbSmeTestRecord* rec);
-	int getOutputInt32(const DbSmeTestRecord* rec);
-	float getOutputFloat(const DbSmeTestRecord* rec);
-	double getOutputDouble(const DbSmeTestRecord* rec);
+		const DbSmeTestRecord* defOutput, const DateFormatter& df, bool& res);
+	int getOutputInt16(const DbSmeTestRecord* rec,
+		const DbSmeTestRecord* defOutput, bool& res);
+	int getOutputInt32(const DbSmeTestRecord* rec,
+		const DbSmeTestRecord* defOutput, bool& res);
+	float getOutputFloat(const DbSmeTestRecord* rec,
+		const DbSmeTestRecord* defOutput, bool& res);
+	double getOutputDouble(const DbSmeTestRecord* rec,
+		const DbSmeTestRecord* defOutput, bool& res);
 
 	void processDateFormatJobAck(const string& text, DbSmeTestRecord* rec,
 		SmeAckMonitor* monitor, int dateJobNum);
@@ -116,6 +127,8 @@ protected:
 		DbSmeTestRecord* rec, SmeAckMonitor* monitor);
 	void processDeleteJobAck(const string& text, DbSmeTestRecord* rec,
 		SmeAckMonitor* monitor);
+	void writeSelectJobRecord(ostream& os, DbSmeTestRecord* rec,
+		DbSmeTestRecord* defOutput, time_t now, bool& res);
 	void processSelectJobAck(const string& text, DbSmeTestRecord* rec,
 		SmeAckMonitor* monitor);
 	void processSelectNoDefaultJobAck(const string& text,
