@@ -19,13 +19,22 @@ using smsc::test::util::convert;
 struct AbonentInfoSmeMessage
 {
 	static const pair<string, uint8_t> format(const Profile& profile,
-		const string& abonent, int status, const string& msc)
+		const string& abonent, SmeType status, const string& msc)
 	{
 		if (profile.locale == "en_us" || profile.locale == "en_gb")
 		{
 			ostringstream s;
 			s << "Abonent " << abonent;
-			s << ": status " << status;
+			switch (status)
+			{
+				case SME_RECEIVER:
+				case SME_TRANSMITTER:
+				case SME_TRANSCEIVER:
+					s << ": status 1";
+					break;
+				default:
+					s << ": status 0";
+			}
 			s << ", encoding " << profile.codepage;
 			s << ", msc " << msc;
 			return convert(s.str(), profile.codepage);
@@ -43,11 +52,20 @@ struct AbonentInfoSmeMessage
 struct AbonentInfoMobileMessage
 {
 	static const pair<string, uint8_t> format(const Profile& profile,
-		const string& abonent, int status, const string& msc)
+		const string& abonent, SmeType status, const string& msc)
 	{
 		ostringstream s;
 		s << "Абонент " << abonent;
-		s << ": статус " << (status ? "Online" : "Offline");
+		switch (status)
+		{
+			case SME_RECEIVER:
+			case SME_TRANSMITTER:
+			case SME_TRANSCEIVER:
+				s << ": статус Online";
+				break;
+			default:
+				s << ": статус Offline";
+		}
 		s << ", msc " << (msc.length() ? msc : "unknown");
 		return convert(s.str(), profile.codepage);
 	}

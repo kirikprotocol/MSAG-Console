@@ -3,6 +3,7 @@
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/core/PduUtil.hpp"
+#include "test/core/ProfileUtil.hpp"
 #include "test/util/TextUtil.hpp"
 
 namespace smsc {
@@ -12,6 +13,10 @@ namespace sme {
 using smsc::util::Logger;
 using smsc::test::conf::TestConfig;
 using smsc::test::sms::SmsUtil;
+using smsc::test::core::operator==;
+using smsc::test::core::operator!=;
+using smsc::test::sms::operator==;
+using smsc::test::sms::operator!=;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::smpp::DataCoding;
@@ -41,52 +46,25 @@ Category& AbonentInfoTestCases::getLog()
 	return log;
 }
 
-AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
-	const Address& smeAddr, time_t submitTime)
+AbonentData* AbonentInfoTestCases::getAbonentData(const string& input)
 {
-	__decl_tc__;
-	__cfg_addr__(abonentInfoAliasSme);
-	__cfg_addr__(abonentInfoAliasMobile);
 	__cfg_int__(timeCheckAccuracy);
 	try
 	{
-		Address destAlias(input.c_str());
-		const Address destAddr = fixture->aliasReg->findAddressByAlias(destAlias);
-		//status
-		int status = 0;
-		SmeType smeType = fixture->routeChecker->isDestReachable(
-			fixture->smeAddr, destAlias);
-		switch (smeType)
-		{
-			case SME_RECEIVER:
-			case SME_TRANSMITTER:
-			case SME_TRANSCEIVER:
-				status = 1;
-				break;
-		}
+		Address abonentAlias(input.c_str());
+		const Address abonentAddr = fixture->aliasReg->findAddressByAlias(abonentAlias);
 		//profile
 		time_t t;
-		const Profile& profile = fixture->profileReg->getProfile(destAddr, t);
-		bool valid = t + timeCheckAccuracy <= submitTime;
-		if (smeAddr == abonentInfoAliasSme)
-		{
-			const pair<string, uint8_t> p =
-				AbonentInfoSmeMessage::format(profile, input, status, "");
-			__trace2__("getExpectedResponse(): input = %s, output = %s", input.c_str(), p.first.c_str());
-			return new AckText(p.first, p.second, valid);
-		}
-		else if (smeAddr == abonentInfoAliasMobile)
-		{
-			const pair<string, uint8_t> p =
-				AbonentInfoMobileMessage::format(profile, input, status, "");
-			__trace2__("getExpectedResponse(): input = %s, output = %s", input.c_str(), p.first.c_str());
-			return new AckText(p.first, p.second, valid);
-		}
-		__unreachable__("Invalid address");
+		const Profile& abonentProfile =
+			fixture->profileReg->getProfile(abonentAddr, t);
+		//status
+		SmeType smeType = fixture->routeChecker->isDestReachable(
+			fixture->smeAddr, abonentAlias);
+		return new AbonentData(input, abonentAddr, smeType, abonentProfile,
+			time(NULL) > t + timeCheckAccuracy);
 	}
 	catch (...)
 	{
-		__trace2__("getExpectedResponse(): input = %s, ack = NULL", input.c_str());
 		return NULL;
 	}
 }
@@ -97,7 +75,7 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 	__decl_tc__;
 	try
 	{
-		//текст сообщения
+		//кодировка текста сообщения
 		switch (dataCoding)
 		{
 			case DEFAULT:
@@ -112,6 +90,23 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 			default:
 				__unreachable__("Invalid data coding"); __tc_ok__;
 		}
+		uint8_t dcs = dataCoding;
+		if (fixture->smeInfo.forceDC)
+		{
+			if (dataCoding == DEFAULT)
+			{
+				dataCoding = SMSC7BIT;
+			}
+			uint8_t dc;
+			bool simMsg;
+			do
+			{
+				dcs = rand0(255);
+				SmppUtil::extractDataCoding(dcs, dc, simMsg);
+			}
+			while (dc != dataCoding);
+		}
+		//перекодирование
 		int msgLen;
 		auto_ptr<char> msg = encode(input, dataCoding, msgLen, false);
 		//адрес
@@ -132,22 +127,15 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 				__unreachable__("Invalid address");
 		}
 		//установить props
-		PduData::StrProps strProps;
-		strProps["abonentInfoTc.input"] = input;
 		PduData::ObjProps objProps;
-		//на всякий случай всегда вычислять
-		AckText* ack = getExpectedResponse(input, abonentInfoAlias, time(NULL));
-		if (correct)
+        AbonentData* abonentData = getAbonentData(input);
+		if (abonentData)
 		{
-			__require__(ack);
-		}
-		if (ack)
-		{
-			ack->ref();
-			objProps["abonentInfoTc.output"] = ack;
+			abonentData->ref();
+			objProps["abonentInfoTc.abonentData"] = abonentData;
 		}
 		//при неправильно заданном адресе abonent info не пришлет ответ
-		PduType pduType = ack ? PDU_EXT_SME : PDU_NULL_OK;
+		PduType pduType = correct ? PDU_EXT_SME : PDU_NULL_OK;
 		if (rand0(1))
 		{
 			__tc__("queryAbonentInfo.submitSm");
@@ -158,7 +146,7 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 			//установить немедленную доставку
 			pdu->get_message().set_esmClass(0x0); //иначе abonent info отлупит
 			pdu->get_message().set_scheduleDeliveryTime("");
-			pdu->get_message().set_dataCoding(dataCoding);
+			pdu->get_message().set_dataCoding(dcs);
 			if (rand0(1))
 			{
 				pdu->get_message().set_shortMessage(msg.get(), msgLen);
@@ -168,7 +156,7 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 				pdu->get_optional().set_messagePayload(msg.get(), msgLen);
 			}
 			fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync,
-				NULL, &strProps, &objProps, pduType);
+				NULL, NULL, &objProps, pduType);
 		}
 		else
 		{
@@ -179,10 +167,10 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 				abonentInfoAlias, OPT_ALL & ~OPT_MSG_PAYLOAD);
 			//установить немедленную доставку
 			pdu->get_data().set_esmClass(0x0); //иначе abonent info отлупит
-			pdu->get_data().set_dataCoding(dataCoding);
+			pdu->get_data().set_dataCoding(dcs);
 			pdu->get_optional().set_messagePayload(msg.get(), msgLen);
 			fixture->transmitter->sendDataSmPdu(pdu, NULL, sync,
-				NULL, &strProps, &objProps, pduType);
+				NULL, NULL, &objProps, pduType);
 		}
 		__tc_ok__;
 	}
@@ -294,23 +282,52 @@ void AbonentInfoTestCases::queryAbonentInfoIncorrect(bool sync,
 	}
 }
 
-//не используется из-за особой логики работы abonent info
 AckText* AbonentInfoTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	const string& text, time_t recvTime)
 {
 	__require__(monitor);
+	__require__(monitor->pduData->objProps.count("recipientData"));
+
+	__decl_tc__;
+	__cfg_addr__(abonentInfoAddrSme);
+	__cfg_addr__(abonentInfoAddrMobile);
 	__cfg_int__(timeCheckAccuracy);
-	const string input = monitor->pduData->strProps["abonentInfoTc.input"];
-	Address alias(input.c_str());
-	const Address addr = fixture->aliasReg->findAddressByAlias(alias);
-	//profile
+
+	if (!monitor->pduData->objProps.count("abonentInfoTc.abonentData"))
+	{
+		return new AckText("", DEFAULT, false);
+	}
+	AbonentData* abonentData =
+		dynamic_cast<AbonentData*>(monitor->pduData->objProps["abonentInfoTc.abonentData"]);
+	bool valid = abonentData->validProfile;
+	if (!valid)
+	{
+		return new AckText("", DEFAULT, false);
+	}
+	//проверить изменение профиля
 	time_t t;
-	const Profile& profile = fixture->profileReg->getProfile(addr, t);
-	bool valid = t + timeCheckAccuracy <= recvTime;
-	ostringstream s;
-	//статус абонента всегда 1
-	s << input << ":1," << profile.codepage;
-	return new AckText(s.str(), DEFAULT, valid);
+	const Profile& profile = fixture->profileReg->getProfile(abonentData->addr, t);
+	if (profile != abonentData->profile || recvTime <= t + timeCheckAccuracy)
+	{
+		return new AckText("", DEFAULT, false);
+	}
+	RecipientData* recipientData =
+		dynamic_cast<RecipientData*>(monitor->pduData->objProps["recipientData"]);
+	if (recipientData->destAddr == abonentInfoAddrSme)
+	{
+		const pair<string, uint8_t> p = AbonentInfoSmeMessage::format(
+			abonentData->profile, abonentData->input, abonentData->status, "");
+		__trace2__("getExpectedResponse(): input = %s, output = %s", abonentData->input.c_str(), p.first.c_str());
+		return new AckText(p.first, p.second, valid);
+	}
+	if (recipientData->destAddr == abonentInfoAddrMobile)
+	{
+		const pair<string, uint8_t> p = AbonentInfoMobileMessage::format(
+				abonentData->profile, abonentData->input, abonentData->status, "");
+		__trace2__("getExpectedResponse(): input = %s, output = %s", abonentData->input.c_str(), p.first.c_str());
+		return new AckText(p.first, p.second, valid);
+	}
+	__unreachable__("Invalid address");
 }
 
 #define __check__(errCode, cond) \
@@ -321,13 +338,12 @@ void AbonentInfoTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 {
 	__decl_tc__;
 	SmsPduWrapper pdu(header, 0);
-	__require__(pdu.isDeliverSm() && pdu.get_message().size_shortMessage());
+	__require__(pdu.isDeliverSm());
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().size_shortMessage(), pdu.getDataCoding(), false);
 	if (!monitor->pduData->objProps.count("abonentInfoTc.output"))
 	{
-		__unreachable__("specific to abonent info internals");
 		AckText* ack = getExpectedResponse(monitor, text, recvTime);
 		ack->ref();
 		monitor->pduData->objProps["abonentInfoTc.output"] = ack;

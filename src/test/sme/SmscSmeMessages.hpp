@@ -46,7 +46,7 @@ struct SmscSmeMessage
 	}
 	static const char* getErrDescEn(int reason)
 	{
-		switch (reason)
+		switch (reason & 0xffff)
 		{
 			case Status::INVMSGLEN:
 				return "Message Length is invalid";
@@ -181,12 +181,12 @@ struct SmscSmeMessage
 			case Status::UNEXPDATA:
 				return "Unexpected Data value";
 			default:
-				return "";
+				return NULL;
 		}
 	}
 	static const char* getErrDescRu(int reason)
 	{
-		switch (reason)
+		switch (reason & 0xffff)
 		{
 			case Status::INVBNDSTS:
 				return "Неправильный тип соединения sme";
@@ -199,19 +199,37 @@ struct SmscSmeMessage
 			case Status::DELIVERYTIMEDOUT:
 				return "Таймаут при доставке сообщения";
 			default:
-				return "";
+				return NULL;
 		}
 	}
-	static const char* getErrDesc(const Profile& profile, int reason)
+	static const string getErrDesc(const Profile& profile, int reason)
 	{
 		if (profile.locale == "en_us" || profile.locale == "en_gb")
 		{
-			return getErrDescEn(reason);
+			const char* errDesc = getErrDescEn(reason);
+			if (errDesc)
+			{
+				return errDesc;
+			}
+			ostringstream s;
+			s << reason;
+			return s.str();
 		}
 		if (profile.locale == "ru_ru")
 		{
-			const char* desc = getErrDescRu(reason);
-			return strlen(desc) ? desc : getErrDescEn(reason);
+			const char* errDesc = getErrDescRu(reason);
+			if (errDesc)
+			{
+				return errDesc;
+			}
+			errDesc = getErrDescEn(reason);
+			if (errDesc)
+			{
+				return errDesc;
+			}
+			ostringstream s;
+			s << reason;
+			return s.str();
 		}
 		__unreachable__("Invalid locale");
 	}

@@ -202,7 +202,10 @@ void DeliveryReportHandler::processPdu(SmppHeader* header, time_t recvTime)
 			default:
 				__unreachable__("Invalid reg dilivery");
 		}
-		__require__(monitor->pduData->intProps.count("reportOptions"));
+		__require__(monitor->pduData->objProps.count("senderData"));
+		SenderData* senderData =
+			dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
+		__require__(senderData->validProfile);
 		if (statusReport)
 		{
 			if (pduType == DELIVERY_RECEIPT)
@@ -215,7 +218,7 @@ void DeliveryReportHandler::processPdu(SmppHeader* header, time_t recvTime)
 				__compare__(5, pdu.getEsmClass(), ESM_CLASS_INTERMEDIATE_NOTIFICATION);
 			}
 		}
-		else if (monitor->pduData->intProps["reportOptions"] == ProfileReportOptions::ReportFull)
+		else if (senderData->profile.reportoptions == ProfileReportOptions::ReportFull)
 		{
 			__compare__(6, pdu.getEsmClass(), ESM_CLASS_NORMAL_MESSAGE);
 		}

@@ -77,15 +77,11 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 	const string& text, time_t recvTime)
 {
 	__require__(monitor);
+	__require__(monitor->pduData->objProps.count("senderData"));
 	__cfg_int__(timeCheckAccuracy);
 	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
-	//профиль
-	Address srcAddr;
-	SmppUtil::convert(origPdu.getSource(), &srcAddr);
-	time_t t;
-	const Profile& profile = fixture->profileReg->getProfile(srcAddr, t);
-	bool valid = t + timeCheckAccuracy <= time(NULL);
-	//destAlias
+	SenderData* senderData =
+		dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
 	Address destAlias;
 	SmppUtil::convert(origPdu.getDest(), &destAlias);
 	switch (monitor->state)
@@ -94,11 +90,11 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 			for (time_t t = recvTime; t > recvTime - timeCheckAccuracy; t--)
 			{
 				const pair<string, uint8_t> p =
-					SmscSmeDeliveredReceipt::format(profile, destAlias, t);
+					SmscSmeDeliveredReceipt::format(senderData->profile, destAlias, t);
 				__trace2__("getExpectedResponse(): %s", p.first.c_str());
 				if (p.first.find(text) != string::npos)
 				{
-					return new AckText(p.first, p.second, valid);
+					return new AckText(p.first, p.second, senderData->validProfile);
 				}
 			}
 			break;
@@ -119,17 +115,17 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 				for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 				{
 					const pair<string, uint8_t> p =
-						SmscSmeFailedReceipt::format(profile, destAlias, t, status);
+						SmscSmeFailedReceipt::format(senderData->profile, destAlias, t, status);
 					__trace2__("getExpectedResponse(): %s", p.first.c_str());
 					if (p.first.find(text) != string::npos)
 					{
-						return new AckText(p.first, p.second, valid);
+						return new AckText(p.first, p.second, senderData->validProfile);
 					}
 				}
 			}
 			break;
 	}
-	return new AckText("Unknown", DEFAULT, valid);
+	return new AckText("Unknown", DEFAULT, senderData->validProfile);
 }
 
 AckText* SmscSmeTestCases::getExpectedResponse(
@@ -138,13 +134,8 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 	__require__(monitor);
 	__cfg_int__(timeCheckAccuracy);
 	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
-	//профиль
-	Address srcAddr;
-	SmppUtil::convert(origPdu.getSource(), &srcAddr);
-	time_t t;
-	const Profile& profile = fixture->profileReg->getProfile(srcAddr, t);
-	bool valid = t + timeCheckAccuracy <= time(NULL);
-	//destAlias
+	SenderData* senderData =
+		dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
 	Address destAlias;
 	SmppUtil::convert(origPdu.getDest(), &destAlias);
 	time_t sendTime = monitor->pduData->sendTime;
@@ -159,14 +150,14 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 	for (time_t t = sendTime; t <= sendTime + timeCheckAccuracy; t++)
 	{
 		const pair<string, uint8_t> p =
-			SmscSmeNotification::format(profile, destAlias, t, monitor->deliveryStatus);
+			SmscSmeNotification::format(senderData->profile, destAlias, t, monitor->deliveryStatus);
 		__trace2__("getExpectedResponse(): %s", p.first.c_str());
 		if (p.first.find(text) != string::npos)
 		{
-			return new AckText(p.first, p.second, valid);
+			return new AckText(p.first, p.second, senderData->validProfile);
 		}
 	}
-	return new AckText("Unknown", DEFAULT, valid);
+	return new AckText("Unknown", DEFAULT, senderData->validProfile);
 }
 
 #define __compare__(errCode, field, value) \
