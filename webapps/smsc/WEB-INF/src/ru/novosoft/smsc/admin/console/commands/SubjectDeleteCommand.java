@@ -13,16 +13,12 @@ import ru.novosoft.smsc.admin.route.Subject;
 
 public class SubjectDeleteCommand extends SubjectGenCommand
 {
-    private boolean canDelete(CommandContext ctx, String subject) {
-        ctx.getSmsc().getRoutes().isSubjectUsed()
-        return true;
-    }
     public void process(CommandContext ctx)
     {
         String out = "Subject '"+subject+"'";
         try {
             if (ctx.getSmsc().getRoutes().isSubjectUsed(subject))
-                throw new Exception(out+" is used in existed dst or src definition(s)");
+                throw new Exception("subject is used in existing dst or src definition(s)");
             Subject smscSubject = ctx.getSmsc().getSubjects().remove(subject);
             if (smscSubject == null) {
                 ctx.setMessage(out+" not found");
