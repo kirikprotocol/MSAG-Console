@@ -13,6 +13,32 @@ using namespace smsc::test::util;
 using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
 
+RouteRegistry::RouteIterator::RouteIterator(
+	AddressMap::const_iterator i1, AddressMap::const_iterator i2)
+	: it(i1), itEnd(i2)
+{
+	if (it != itEnd)
+	{
+		it2 = it->second.begin();
+	}
+}
+
+const RouteHolder* RouteRegistry::RouteIterator::next()
+{
+	while (it != itEnd)
+	{
+		while (it2 != it->second.end())
+		{
+			return (it2++)->second;
+		}
+		if ((++it != itEnd))
+		{
+			it2 = it->second.begin();
+		}
+	}
+	return NULL;
+}
+
 RouteRegistry::~RouteRegistry()
 {
 	clear();
@@ -47,6 +73,11 @@ void RouteRegistry::clear()
 	}
 	addrMap.clear();
 	routeMap.clear();
+}
+
+RouteRegistry::RouteIterator* RouteRegistry::iterator() const
+{
+	return new RouteIterator(addrMap.begin(), addrMap.end());
 }
 
 const RouteHolder* RouteRegistry::getRoute(RouteId routeId) const
@@ -138,11 +169,6 @@ const RouteHolder* RouteRegistry::lookup(const Address& origAddr,
 int RouteRegistry::size() const
 {
 	return routeMap.size();
-}
-
-void RouteRegistry::saveConfig(const char* configFileName)
-{
-	abort();
 }
 
 }

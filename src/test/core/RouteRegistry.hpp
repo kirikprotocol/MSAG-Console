@@ -21,8 +21,21 @@ using smsc::test::sms::ltAddress;
 
 class RouteRegistry
 {
+	typedef map<const RouteId, const RouteHolder*> RouteMap;
+	typedef map<const Address, const RouteHolder*, ltAddress> AddressMap2;
+	typedef map<const Address, AddressMap2, ltAddress> AddressMap;
+
 public:
-	RouteRegistry(){}
+	struct RouteIterator
+	{
+		AddressMap::const_iterator it;
+		AddressMap::const_iterator itEnd;
+		AddressMap2::const_iterator it2;
+		RouteIterator(AddressMap::const_iterator i1, AddressMap::const_iterator i2);
+		const RouteHolder* next();
+	};
+	
+	RouteRegistry() {}
 
 	virtual ~RouteRegistry();
 
@@ -30,7 +43,7 @@ public:
 	
 	void clear();
 	
-	//RouteIterator* iterator();
+	RouteIterator* iterator() const;
 	
 	const RouteHolder* getRoute(RouteId routeId) const;
 
@@ -39,12 +52,7 @@ public:
 
 	int size() const;
 
-	void saveConfig(const char* configFileName);
-	
 private:
-	typedef map<const RouteId, const RouteHolder*> RouteMap;
-	typedef map<const Address, const RouteHolder*, ltAddress> AddressMap2;
-	typedef map<const Address, AddressMap2, ltAddress> AddressMap;
 	RouteMap routeMap;
 	AddressMap addrMap; //поиск маршрута сначала по destAddr, затем по origAddr
 
