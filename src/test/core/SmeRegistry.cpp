@@ -9,6 +9,7 @@ namespace core {
 
 using namespace std;
 using smsc::test::sms::operator<<;
+using smsc::test::sms::operator==;
 using smsc::test::sms::SmsUtil;
 using namespace smsc::test::util;
 
@@ -44,7 +45,7 @@ void SmeRegistry::deleteSme(const SmeSystemId& smeId)
 	__require__(res);
 	for (AddressList::iterator it2 = addrList.begin(); it2 != addrList.end(); it2++)
 	{
-		if (SmsUtil::compareAddresses(**it2, smeData->smeAddr))
+		if (**it2 == smeData->smeAddr)
 		{
 			delete smeData;
 			delete *it2;

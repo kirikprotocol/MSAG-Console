@@ -12,6 +12,7 @@ using std::vector;
 using smsc::sms::Address;
 using smsc::sms::AddressValue;
 using smsc::test::sms::SmsUtil;
+using smsc::test::sms::operator!=;
 using smsc::test::smpp::SmppUtil;
 using namespace smsc::test; //config constants
 
@@ -42,7 +43,7 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduSubmitSm& pdu1,
 	{
 		res.push_back(1);
 	}
-	else if (!SmsUtil::compareAddresses(*destAddr, destAddr2))
+	else if (*destAddr != destAddr2)
 	{
 		res.push_back(2);
 	}
@@ -57,7 +58,7 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduSubmitSm& pdu1,
 	{
 		res.push_back(3);
 	}
-	else if (!SmsUtil::compareAddresses(*origAlias, origAlias2))
+	else if (*origAlias != origAlias2)
 	{
 		res.push_back(4);
 	}
@@ -91,14 +92,14 @@ vector<int> RouteChecker::checkRouteForNotification(PduSubmitSm& pdu1,
 	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
 	//правильность destAddr для pdu2
 	bool destOk = true;
-	if (!SmsUtil::compareAddresses(destAddr2, origAddr1))
+	if (destAddr2 != origAddr1)
 	{
 		res.push_back(1);
 		destOk = false;
 	}
 	//правильность origAddr для pdu2
 	bool origOk = true;
-	if (!SmsUtil::compareAddresses(origAddr2, smscAddr))
+	if (origAddr2 != smscAddr)
 	{
 		res.push_back(2);
 		origOk = false;

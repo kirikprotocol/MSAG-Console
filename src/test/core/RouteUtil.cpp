@@ -9,6 +9,7 @@ namespace core {
 
 using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
+using smsc::test::sms::operator!=;
 using namespace smsc::router;
 using namespace smsc::test::util;
 
@@ -53,11 +54,11 @@ vector<int> RouteUtil::compareRoutes(const RouteInfo& route1,
 	{
 		res.push_back(6);
 	}
-	if (!SmsUtil::compareAddresses(route1.source, route2.source))
+	if (route1.source != route2.source)
 	{
 		res.push_back(7);
 	}
-	if (!SmsUtil::compareAddresses(route1.dest, route2.dest))
+	if (route1.dest != route2.dest)
 	{
 		res.push_back(8);
 	}
