@@ -109,7 +109,7 @@ void RouteManagerFunctionalTest::executeTestCases(
 					stack.back()->push_back(tcRoute.addCorrectRouteMatch(
 						sme.back()->systemId, &routeData, RAND_TC));
 					routeReg.putRoute(routeData);
-					if (!existentRoute)
+					if (!existentRoute && routeData.route)
 					{
 						existentRoute = new RouteInfo(*routeData.route);
 					}
@@ -122,7 +122,7 @@ void RouteManagerFunctionalTest::executeTestCases(
 					stack.back()->push_back(tcRoute.addCorrectRouteMatch(
 						sme.back()->systemId, &routeData, RAND_TC));
 					routeReg.putRoute(routeData);
-					if (!existentRoute)
+					if (!existentRoute && routeData.route)
 					{
 						existentRoute = new RouteInfo(*routeData.route);
 					}
@@ -135,7 +135,7 @@ void RouteManagerFunctionalTest::executeTestCases(
 					stack.back()->push_back(tcRoute.addCorrectRouteNotMatch(
 						sme.back()->systemId, &routeData, RAND_TC));
 					routeReg.putRoute(routeData);
-					if (!existentRoute)
+					if (!existentRoute && routeData.route)
 					{
 						existentRoute = new RouteInfo(*routeData.route);
 					}
@@ -148,7 +148,7 @@ void RouteManagerFunctionalTest::executeTestCases(
 					stack.back()->push_back(tcRoute.addCorrectRouteNotMatch2(
 						sme.back()->systemId, &routeData, RAND_TC));
 					routeReg.putRoute(routeData);
-					if (!existentRoute)
+					if (!existentRoute && routeData.route)
 					{
 						existentRoute = new RouteInfo(*routeData.route);
 					}
