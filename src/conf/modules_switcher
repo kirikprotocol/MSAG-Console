@@ -10,7 +10,7 @@ MODULES :=
 	
 else
 
-MODULES := $(shell cat modules-list | awk '//{print $$1}')
+MODULES := $(shell cat modules-list | awk '{print $$1}')
 __.empty.__:
 	@echo >> /dev/null
 
