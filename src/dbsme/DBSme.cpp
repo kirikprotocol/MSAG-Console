@@ -423,7 +423,7 @@ int main(void)
             DBSmePduListener listener(processor, runner);
             SmppSession      session(cfg, &listener);
 
-            printf("Connecting to SMSC ... ");
+            log.info("Connecting to SMSC ... ");
             try
             {
                 session.connect();
@@ -434,14 +434,14 @@ int main(void)
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what(); 
-                printf("Connect failed.\nCause: %s\n", (msg) ? msg:"unknown");
+                log.error("Connect failed.\nCause: %s\n", (msg) ? msg:"unknown");
                 bDBSmeIsConnected = false;
                 if (exc.getReason() == 
                     SmppConnectException::Reason::bindFailed) throw;
                 sleep(cfg.timeOut);
                 continue;
             }
-            printf("Connected.\n");
+            log.info("Connected.\n");
             
             while (!bDBSmeIsStopped && bDBSmeIsConnected) 
             {
@@ -452,7 +452,7 @@ int main(void)
                            requestsProcessingCount, requestsProcessedCount,
                            failuresNoticedCount);*/
             };
-            printf("Disconnecting from SMSC ...\n");
+            log.info("Disconnecting from SMSC ...\n");
         };
     }
     catch (ConfigException& exc) 
