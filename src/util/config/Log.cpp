@@ -7,17 +7,17 @@ namespace config {
 
 const DOMString Log::location_name(createDOMString("location"));
 
-Log::Log(DOM_Element & config_node) : node(config_node)
+Log::Log(DOM_Element & config_node)
 {
-	location = config_node.getAttribute(location_name).transcode();
+	node = config_node;
+	location = node.getAttribute(location_name).transcode();
 }
 
-void Log::setLocation(const char * const new_location)
+void Log::setLocation(const char * const newLocation)
+	throw (DOM_DOMException)
 {
-	if (new_location != 0)
-	{
-		node.setAttribute(location_name, new_location);
-	}
+	node.setAttribute(location_name, newLocation);
+	replaceString(location, newLocation);
 }
 
 }

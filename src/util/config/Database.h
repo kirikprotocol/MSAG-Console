@@ -2,6 +2,9 @@
 #define DBCONFIGURATION_H_INCLUDED_C3A87A6B
 
 #include <xercesc/dom/DOM_Element.hpp>
+#include <xercesc/dom/DOM_DOMException.hpp>
+#include <log4cpp/Category.hh>
+#include <util/config/ConfigException.h>
 
 namespace smsc   {
 namespace util   {
@@ -17,18 +20,20 @@ class Database
 {
 public:
 	Database(DOM_Element & config_node);
-	const char *getUrl() const {return url;};
-	const char *getUserName() const {return user;};
-	const char *getPassword() const {return password;};
-	void setUrl(const char * const new_url);
-	void setUserName(const char * const new_user_name);
-	void setPassword(const char * const new_password);
+	const char * const getUrl() const {return url;};
+	const char * const getUserName() const {return user;};
+	const char * const getPassword() const {return password;};
+	void setUrl(const char * const newUrl) throw (DOM_DOMException);
+	void setUserName(const char * const newUserName) throw (DOM_DOMException);
+	void setPassword(const char * const newPassword) throw (DOM_DOMException);
 
 private:
 	char *url;
 	char* user;
 	char* password;
-	DOM_Element& node;
+	DOM_Element node;
+
+	log4cpp::Category &logger;
 
 	static const DOMString url_name;
 	static const DOMString user_name;

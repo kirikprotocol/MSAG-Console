@@ -71,6 +71,10 @@ private:
 	DOMParser * createParser();
 	void parse(DOMParser *parser, const char * const filename) throw (ConfigException &);
 	void processTree(const DOM_Element &element);
+
+	static const DOMString db_name;
+	static const DOMString map_name;
+	static const DOMString log_name;
 };
 
 }

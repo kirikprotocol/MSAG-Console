@@ -11,6 +11,10 @@ namespace smsc   {
 namespace util   {
 namespace config {
 
+const DOMString Manager::db_name(createDOMString("db"));
+const DOMString Manager::map_name(createDOMString("map"));
+const DOMString Manager::log_name(createDOMString("log"));
+
 Manager::Manager(const char * const _config_filename)
 	throw(ConfigException &)
 	: cat(smsc::util::Logger::getCategory("smsc.util.config.Manager"))
@@ -32,8 +36,8 @@ Manager::Manager(const char * const _config_filename)
 		cat.debug("Parse result is null");
 	}
 
-	delete parser->getErrorHandler();
-	delete parser;
+//	delete parser->getErrorHandler();
+//	delete parser;
 }
 
 /**
@@ -110,12 +114,13 @@ void Manager::processTree(const DOM_Element &element) {
 			if (n.getNodeType() == DOM_Node::ELEMENT_NODE)
 			{
 				DOM_Element &e = *(DOM_Element*)(&n);
-				if (e.getNodeName() == "db")
+				DOMString name = e.getNodeName();
+				if (name.compareString(db_name) == 0)
 					db = new Database(e);
-				else if (e.getNodeName() == "log")
-					log = new Log(e);
-				else if (e.getNodeName() == "map")
+				else if (name.compareString(map_name) == 0)
 					map = new MapProtocol(e);
+				else if (name.compareString(log_name) == 0)
+					log = new Log(e);
 			}
 		}
 	}

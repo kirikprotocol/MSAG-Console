@@ -2,6 +2,7 @@
 #define LOGGERCONFIGURATION_H_INCLUDED_C3A83759
 
 #include <xercesc/dom/DOM_Element.hpp>
+#include <xercesc/dom/DOM_DOMException.hpp>
 
 namespace smsc   {
 namespace util   {
@@ -22,17 +23,17 @@ public:
 	 *
 	 * @return путь к файлам лога
 	 */
-	const char *getLocation() const {return location;};
+	const char * const getLocation() const {return location;};
 	/**
 	 * устанавливает новый путь к файлам лога
 	 *
 	 * @param new_location
 	 *               новый путь к файлам лога
 	 */
-	void setLocation(const char * const new_location);
+	void setLocation(const char * const new_location) throw (DOM_DOMException);
 private:
 	char* location;
-	DOM_Element &node;
+	DOM_Element node;
 
 	static const DOMString location_name;
 };
