@@ -26,9 +26,14 @@ export CVSROOT
 endif
 
 CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include
-CFLAGS := $(CAMMON_INCLUDES)
-CXXFLAGS := $(CAMMON_INCLUDES)
+CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT
+CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT
 LDFLAGS := -L$(SMSC_BUILDDIR)/lib
+
+ifeq ($(LEAKTRACE),YES)
+LDFLAGS := $(LDFLAGS) -lcore-threads -lutil-leaktracing
+DEBUG := YES
+endif
 
 ifeq ($(DEBUG),YES)
 CFLAGS := $(CFLAGS) -g
@@ -116,7 +121,7 @@ override _modules = $(subst ., ,$@)
 override _module = $(firstword $(_modules))
 override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), rbuild )
 	@if [ -d $(_module) ]; then \
-	    cd $(_module); make $(_subtarget); \
+	    cd $(_module); make -s $(_subtarget); \
 	else \
 	    echo "'$(_module)' is not module"; exit 1;\
 	fi
