@@ -101,6 +101,25 @@ namespace smsc { namespace store
             virtual bool getNextId(SMSId &id)
                 throw(StorageException);
         };
+        
+        class DeliveryIdIterator : public IdIterator
+        {
+        private:
+
+            Connection*                 connection;
+            DeliveryIdsStatement*       deliveryStmt;
+            StorageConnectionPool*      pool;
+            
+        public:
+            
+            DeliveryIdIterator(StorageConnectionPool* _pool, 
+                const Address& da)
+                    throw(StorageException);
+            virtual ~DeliveryIdIterator();
+
+            virtual bool getNextId(SMSId &id)
+                throw(StorageException);
+        };
 
         SMSId doCreateSms(StorageConnection* connection,
             SMS& sms, SMSId id, const CreateMode flag)
@@ -237,7 +256,12 @@ namespace smsc { namespace store
          */
         virtual void changeSmsStateToDeleted(SMSId id)
                 throw(StorageException, NoSuchMessageException);
-
+        /**
+         * Реализация метода MessageStore
+         * @see MessageStore
+         */
+        virtual IdIterator* getReadyForDelivery(const Address& da)
+                throw(StorageException); 
         /**
          * Реализация метода MessageStore
          * @see MessageStore

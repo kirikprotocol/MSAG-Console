@@ -1153,6 +1153,21 @@ CancelIdsStatement::CancelIdsStatement(Connection* connection,
     define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
 }
 
+const char* DeliveryIdsStatement::sql = (const char*)
+"SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE AND DDA=:DA"; // ??? DA or DDA ???
+DeliveryIdsStatement::DeliveryIdsStatement(Connection* connection, 
+                                           const Address& _da, bool assign)
+    throw(StorageException)
+    : IdStatement(connection, DeliveryIdsStatement::sql, assign)
+{
+    ub4 i=1; 
+    bind(i++, SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
+         (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
+    convertAddressToString(_da, da);
+    bind(i++, SQLT_STR, (dvoid *) (da), (sb4) sizeof(da));
+    define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
+}
+
 /* --------------------- Body (BLOB) statements -------------------- */
 
 BodyStatement::BodyStatement(Connection* connection, const char* sql, 

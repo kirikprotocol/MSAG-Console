@@ -1197,6 +1197,65 @@ time_t RemoteStore::getNextRetryTime()
 #endif
 }
 
+RemoteStore::DeliveryIdIterator::DeliveryIdIterator(
+    StorageConnectionPool* _pool, const Address& da)
+        throw(StorageException) : IdIterator(), pool(_pool), connection(0)
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+
+    connection = pool->getConnection();
+    try
+    {
+        if (connection && !connection->isAvailable()) 
+            connection->connect();
+        
+        deliveryStmt = new DeliveryIdsStatement(connection, da, false);
+        if (deliveryStmt)
+            connection->check(deliveryStmt->execute(OCI_DEFAULT, 0, 0));
+    }
+    catch (...)
+    {
+        pool->freeConnection(connection);
+        throw;
+    }
+#endif
+}
+RemoteStore::DeliveryIdIterator::~DeliveryIdIterator()
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
+    if (deliveryStmt) delete deliveryStmt;
+    if (pool && connection) pool->freeConnection(connection);
+
+#endif
+}
+bool RemoteStore::DeliveryIdIterator::getNextId(SMSId &id)
+    throw(StorageException)
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+
+    if (deliveryStmt && connection && connection->isAvailable())
+    {
+        sword status = deliveryStmt->fetch();
+        if (status != OCI_NO_DATA)
+        {
+            connection->check(status);
+            deliveryStmt->getSMSId(id);
+            return true;
+        }
+    }
+    return false;
+#else
+    return false;
+#endif
+}
+
+IdIterator* RemoteStore::getReadyForDelivery(const Address& da)
+    throw(StorageException)
+{
+    return (new DeliveryIdIterator(pool, da));
+}
+
 /* --------------------- Service classes & methods -------------------- */
 
 RemoteStore::CancelIdIterator::CancelIdIterator(StorageConnectionPool* _pool, 

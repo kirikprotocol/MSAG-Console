@@ -275,6 +275,21 @@ namespace smsc { namespace store
                 throw(StorageException, NoSuchMessageException) = 0;
     
         /**
+         * ¬озвращает итератор над набором id сообщений по адресу получател€.
+         * »спользуетс€ дл€ обработки сообщени€ от HLR (SME готова к приЄму)
+         *         
+         * @param   da      адрес получател€
+         *
+         * @return итератор над набором id сообщений
+         * @exception StorageException
+         *                   возникает при ошибке хранилища физической природы,
+         *                   т.н когда хранилище недоступно.
+         * @see IdIterator
+         */
+        virtual IdIterator* getReadyForDelivery(const Address& da)
+                throw(StorageException) = 0; 
+        
+        /**
          * ¬озвращает итератор над набором id сообщений по составному ключу:
          *  адрес отправител€ + адрес получател€ + идентификатор сервиса
          * 
