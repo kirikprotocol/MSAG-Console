@@ -556,10 +556,22 @@ StateType StateMachine::deliveryResp(Tuple& t)
   {
     __trace2__("failed to retrieve sms:%s",e.what());
   }
-  if(t.command->get_resp()->get_status()!=CMD_OK)
+  if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
-    switch(t.command->get_resp()->get_status())
+    switch(GET_STATUS_TYPE(t.command->get_resp()->get_status()))
     {
+      case CMD_ERR_RESCHEDULENOW:
+      {
+        try{
+          Descriptor d;
+          __trace__("DELIVERYRESP: change state to enroute");
+          store->changeSmsStateToEnroute(t.msgId,d,0,time(NULL)+2);
+        }catch(...)
+        {
+          __trace__("DELIVERYRESP: failed to change state to enroute");
+        }
+        return UNKNOWN_STATE;
+      }break;
       case CMD_ERR_TEMP:
       {
         try{
