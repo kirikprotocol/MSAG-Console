@@ -247,7 +247,7 @@ void TaskProcessor::loadupTasks()
                            message.replace ? "Replace":"Send", message.eventCount);
             putToOutQueue(message, true);
         }
-        else smsc_log_debug(logger, "Task for abonent: %s has no message to send", abonent);
+        else smsc_log_warn(logger, "Task for abonent: %s has no message to send", abonent);
     }
     smsc_log_info(logger, "All loaded tasks messages added to output queue.");
 }

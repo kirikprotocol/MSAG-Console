@@ -187,7 +187,8 @@ Hash<Task *> Task::loadupAll()
             if (!tasks.Exists(abonent)) {
                 Task* task = new Task(abonent);
                 task->loadup(rs->getUint64(2), connection);
-                tasks.Insert(abonent, task);
+                if (task->eventsCount()) tasks.Insert(abonent, task);
+                else delete task;
             }
             else smsc_log_error(logger, "Duplicate current message found for abonent: %s");
         }
