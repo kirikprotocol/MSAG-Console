@@ -162,7 +162,11 @@ Targets:
     <copy tofile="${DISTR_DIR}/tomcat/tomcat_runner.sh" file="${TEMPL_DIR}/tomcat_runner.sh">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/smppgw/webapp.xml">
+    <copy todir="${DISTR_DIR}/webapps/smsc/WEB-INF">
+      <fileset dir="${TEMPL_DIR}/smsc" includes="web.xml users.xml"/> 
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/smsc/webapp.xml">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
 
