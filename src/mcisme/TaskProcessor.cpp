@@ -97,7 +97,7 @@ void TaskProcessor::initDataSource(ConfigView* config)
 }
 
 TaskProcessor::TaskProcessor(ConfigView* config)
-    : Thread(), MissedCallListener(), MCISmeAdmin(), 
+    : Thread(), MissedCallListener(), AdminInterface(), 
         logger(Logger::getInstance("smsc.mcisme.TaskProcessor")), 
         protocolId(0), svcType(0), address(0), messageSender(0), ds(0),
         dsStatConnection(0), statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),

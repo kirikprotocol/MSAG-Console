@@ -2,6 +2,7 @@ package ru.novosoft.smsc.mcisme.beans;
 
 import ru.novosoft.smsc.mcisme.backend.MCISme;
 import ru.novosoft.smsc.mcisme.backend.CountersSet;
+import ru.novosoft.smsc.mcisme.backend.RuntimeSet;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 
@@ -64,15 +65,15 @@ public abstract class IndexProperties extends MCISmeBean
     return cs;
   }
 
-  public long getActiveTasksCount()
+  public RuntimeSet getRuntime()
   {
-    long count = 0;
+    RuntimeSet rs = null;
     try {
-      if (getStatus() == ServiceInfo.STATUS_RUNNING) count = mciSme.getActiveTasksCount();
+      if (getStatus() == ServiceInfo.STATUS_RUNNING) rs = mciSme.getRuntime();
     } catch (AdminException e) {
       e.printStackTrace();
     }
-    return count;
+    return rs;
   }
 
   public boolean isConfigChanged() {

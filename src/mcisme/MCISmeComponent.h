@@ -26,22 +26,19 @@ namespace smsc { namespace mcisme
         MCISmeAdmin       &admin;
         Methods            methods;
         
-        enum
-        {
-            flushStatisticsMethod, getStatisticsMethod,
-            getActiveTasksCountMethod
-        };
+        enum { flushStatisticsMethod, getStatisticsMethod, getRuntimeMethod };
         
     protected:
         
         void error(const char* method, const char* param);
 
         Variant getStatistics();
+        Variant getRuntime();
     
     public:
         
         MCISmeComponent(MCISmeAdmin& admin);
-        virtual ~MCISmeComponent();
+        virtual ~MCISmeComponent() {};
         
         virtual const char* const getName() const {
             return "MCISme";

@@ -10,26 +10,27 @@ MCISmeComponent::MCISmeComponent(MCISmeAdmin& admin)
     : logger(Logger::getInstance("smsc.mcisme.MCISmeComponent")), admin(admin)
 {
     Parameters empty_params;
-    Method flush_statistics((unsigned)flushStatisticsMethod, 
-                            "flushStatistics", empty_params, StringType);
-    Method get_statistics  ((unsigned)getStatisticsMethod, 
-                            "getStatistics", empty_params, StringType);
-    Method get_active_tasks_count((unsigned)getActiveTasksCountMethod, 
-                            "getActiveTasksCount", empty_params, LongType);
+    Method flush_statistics((unsigned)flushStatisticsMethod, "flushStatistics", empty_params, StringType);
+    Method get_statistics  ((unsigned)getStatisticsMethod,   "getStatistics", empty_params, StringType);
+    Method get_runtime     ((unsigned)getRuntimeMethod,      "getRuntime", empty_params, StringType);
 
-    methods[flush_statistics.getName()]         = flush_statistics;
-    methods[get_statistics.getName()]           = get_statistics;
-    methods[get_active_tasks_count.getName()]   = get_active_tasks_count;
-}
-
-MCISmeComponent::~MCISmeComponent()
-{
+    methods[flush_statistics.getName()] = flush_statistics;
+    methods[get_statistics.getName()] = get_statistics;
+    methods[get_runtime.getName()] = get_runtime;
 }
 
 Variant MCISmeComponent::getStatistics()
 {
     EventsStat stat = admin.getStatistics(); char buff[1024];
-    sprintf(buff, "%d,%d,%d,%d", stat.missed, stat.delivered, stat.failed, stat.notified);
+    sprintf(buff, "%d,%d,%d,%d",
+            stat.missed, stat.delivered, stat.failed, stat.notified);
+    return Variant(buff);
+}
+Variant MCISmeComponent::getRuntime()
+{
+    RuntimeStat stat = admin.getRuntimeStatistics(); char buff[1024];
+    sprintf(buff, "%d,%d,%d,%d,%d", 
+            stat.activeTasks, stat.inQueueSize, stat.outQueueSize, stat.inSpeed, stat.outSpeed);
     return Variant(buff);
 }
 
@@ -47,8 +48,8 @@ Variant MCISmeComponent::call(const Method& method, const Arguments& args)
             break;
         case getStatisticsMethod:
             return getStatistics();
-        case getActiveTasksCountMethod:
-            return Variant(admin.getActiveTasksCount());
+        case getRuntimeMethod:
+            return getRuntime();
         
         default:
             smsc_log_debug(logger, "unknown method \"%s\" [%u]", method.getName(), method.getId());

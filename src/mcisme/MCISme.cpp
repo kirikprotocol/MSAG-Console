@@ -127,6 +127,12 @@ public:
             smsc_log_debug(logger, "nowait");
         }
     };
+    static bool getTraffic(int& in, int& out)
+    {
+        MutexGuard guard(trafficMonitor);
+        in = incoming.Get()/10; out = outgoing.Get()/10; 
+        return (!TrafficControl::stopped);
+    };
     static void incIncoming()
     {
         MutexGuard guard(trafficMonitor);
@@ -529,6 +535,34 @@ struct ShutdownThread : public Thread
     };
 } shutdownThread;
 
+class MCISmeAdministrator : public MCISmeAdmin
+{
+private:
+    
+    AdminInterface& admin;
+
+public:
+    
+    MCISmeAdministrator(AdminInterface& _admin) : MCISmeAdmin(), admin(_admin) {};
+    virtual ~MCISmeAdministrator() {};
+
+    virtual void flushStatistics() {
+        admin.flushStatistics();
+    };
+    virtual EventsStat  getStatistics() {
+        return admin.getStatistics();
+    };
+    virtual RuntimeStat getRuntimeStatistics()
+    {
+        int inSpeed = 0; int outSpeed = 0;
+        int activeTasks  = admin.getActiveTasksCount();
+        int inQueueSize  = admin.getInQueueSize();
+        int outQueueSize = admin.getOutQueueSize();
+        TrafficControl::getTraffic(inSpeed, outSpeed);
+        return RuntimeStat(activeTasks, inQueueSize, outQueueSize, inSpeed, outSpeed);
+    };
+};
+
 int main(void)
 {
     Logger::Init();
@@ -580,7 +614,8 @@ int main(void)
         TaskProcessor processor(&tpConfig);
         taskProcessor = &processor;
         
-        MCISmeComponent admin(processor);                   
+        MCISmeAdministrator adminHandler(processor);
+        MCISmeComponent admin(adminHandler);                   
         ComponentManager::registerComponent(&admin); 
         adminListener->Start();
         

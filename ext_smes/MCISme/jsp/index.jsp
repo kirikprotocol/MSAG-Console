@@ -4,7 +4,8 @@
                  java.util.*, ru.novosoft.smsc.util.StringEncoderDecoder,
                  ru.novosoft.smsc.util.Functions,
                  ru.novosoft.smsc.admin.service.ServiceInfo,
-                 ru.novosoft.smsc.mcisme.backend.CountersSet"%>
+                 ru.novosoft.smsc.mcisme.backend.CountersSet,
+                 ru.novosoft.smsc.mcisme.backend.RuntimeSet"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -71,34 +72,49 @@ function refreshStartStopButtonsStatus()
 }
 refreshStartStopButtonsStatus();
 </script><%
-  CountersSet statSet = bean.getStatistics();
+  CountersSet cstatSet = bean.getStatistics(); RuntimeSet  rstatSet = bean.getRuntime();
 %><div class=content>
 <div class=page_subtitle>Service runtime status</div>
-<table class=properties_list cellspacing=0>
+<table class=properties_list cellspacing=0 width="100%">
+<col width="20%" align=left>
+<col width="25%" align=left>
+<col width="30%" align=left>
+<col width="25%" align=left>
+<thread>
   <tr class=row1>
-    <th width="20%" nowrap valign=top>&nbsp;</th>
-    <td width="80%" nowrap valign=top>&nbsp;</td>
+    <th>In service</th>
+    <th>In/Out queues</th>
+    <th>In/Out speed (sms per sec)</th>
+    <th>&nbsp;</th>
   </tr>
   <tr class=row0>
-    <th width="20%" nowrap valign=top>Abonents in service:&nbsp;</th>
-    <td width="80%" nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="MCISmeActiveAbonents"><%= bean.getActiveTasksCount()%></span></td>
+    <td nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="rstatActive"><%= (rstatSet != null) ? rstatSet.activeTasks:0%></span></td>
+    <td nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="rstatInQS"><%= (rstatSet != null) ? rstatSet.inQueueSize:0%></span>/<span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="rstatOutQS"><%= (rstatSet != null) ? rstatSet.outQueueSize:0%></span></td>
+    <td nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="rstatInSpeed"><%= (rstatSet != null) ? rstatSet.inSpeed:0%></span>/<span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="rstatOutSpeed"><%= (rstatSet != null) ? rstatSet.outSpeed:0%></span></td>
+    <td nowrap valign=top>&nbsp;</td>
   </tr>
+</thread>
 </table><br/>
-<table class=properties_list cellspacing=0>
+<div class=page_subtitle>Last hour statistics</div>
+<table class=properties_list cellspacing=0 width="100%">
+<col width="20%" align=left>
+<col width="25%" align=left>
+<col width="30%" align=left>
+<col width="25%" align=left>
+<thread>
   <tr class=row1>
-    <th width="20%" nowrap valign=top>&nbsp;</th>
-    <td width="20%" nowrap valign=top>Missed calls</td>
-    <td width="20%" nowrap valign=top>Abonents informed</td>
-    <td width="20%" nowrap valign=top>Failures count</td>
-    <td width="20%" nowrap valign=top>Notifications sent</td>
+    <th>Missed calls</th>
+    <th>Abonents informed</th>
+    <th>Failures count</th>
+    <th>Notifications sent</th>
   </tr>
   <tr class=row0>
-    <th width="20%" nowrap valign=top>Last hour statistics:&nbsp;</th>
-    <td width="20%" nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="statMissed">   <%= (statSet != null) ? statSet.missed:0%>   </span></td>
-    <td width="20%" nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="statDelivered"><%= (statSet != null) ? statSet.delivered:0%></span></td>
-    <td width="20%" nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="statFailed">   <%= (statSet != null) ? statSet.failed:0%>   </span></td>
-    <td width="20%" nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="statNotified"> <%= (statSet != null) ? statSet.notified:0%> </span></td>
+    <td nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="cstatMissed"><%= (cstatSet != null) ? cstatSet.missed:0%></span></td>
+    <td nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="cstatDelivered"><%= (cstatSet != null) ? cstatSet.delivered:0%></span></td>
+    <td nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="cstatFailed"><%= (cstatSet != null) ? cstatSet.failed:0%></span></td>
+    <td nowrap valign=top><span datasrc=#tdcMCISmeStatuses DATAFORMATAS=html datafld="cstatNotified"><%= (cstatSet != null) ? cstatSet.notified:0%></span></td>
   </tr>
+</thread>
 </table>
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

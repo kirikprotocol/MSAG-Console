@@ -248,7 +248,7 @@ namespace smsc { namespace mcisme
         bool putReceiptData (const char* smsc_id, const ReceiptData& receipt);
     };
 
-    class TaskProcessor : public Thread, public MissedCallListener, public MCISmeAdmin
+    class TaskProcessor : public Thread, public MissedCallListener, public AdminInterface
     {
     private:
 
@@ -365,16 +365,15 @@ namespace smsc { namespace mcisme
         virtual EventsStat getStatistics() {
             return (statistics) ? statistics->getStatistics():EventsStat(0,0,0,0);
         }
-        virtual long getActiveTasksCount() {
+        virtual int getActiveTasksCount() {
             MutexGuard guard(tasksMonitor);
             return tasks.GetCount();
         }
-
-        virtual long getInQueueSize() {
+        virtual int getInQueueSize() {
             MutexGuard guard(inQueueMonitor);
             return inQueue.Count();
         }
-        virtual long getOutQueueSize() {
+        virtual int getOutQueueSize() {
             MutexGuard guard(outQueueMonitor);
             return outQueue.Count();
         }
