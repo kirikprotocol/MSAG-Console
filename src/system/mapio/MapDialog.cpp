@@ -20,8 +20,8 @@ struct MicroString{
 
 extern unsigned char lll_7bit_2_8bit[128];
 
-inline char GetChar(const char*& ptr,unsigned& shift){
-  __trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,(unsigned char)*ptr);
+inline char GetChar(const unsigned char*& ptr,unsigned& shift){
+  __trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,*ptr);
   char val = (*ptr >> shift)&0x7f;
   if ( shift > 1 )
     val |= (*(ptr+1) << (8-shift))&0x7f;
@@ -31,12 +31,12 @@ inline char GetChar(const char*& ptr,unsigned& shift){
     shift&=0x7;
     ++ptr;
   }
-  __trace2__("MAP: 7bit : %x",(unsigned char)val);
+  __trace2__("MAP: 7bit : %x",val);
   return lll_7bit_2_8bit[val];
 }
 
 void Convert7BitToText(
-  const char* bit7buf, int chars,
+  const unsigned char* bit7buf, int chars,
   MicroString* text)
 {
   __require__(chars<=255);
@@ -52,7 +52,7 @@ void Convert7BitToText(
     unsigned k;
     unsigned i;
     for ( i=0,k=0; i<text->len;++i){
-      k += sprintf(b+k,"%x ",(unsigned char)text->bytes[i]);
+      k += sprintf(b+k,"%x ",text->bytes[i]);
     }
     __trace2__("MAP::latin1(hex): %s",b);
   }
