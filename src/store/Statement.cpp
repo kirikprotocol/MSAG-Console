@@ -970,9 +970,10 @@ void ToUndeliverableStatement::bindDestinationDescriptor(Descriptor& dst)
     bind(6 , SQLT_UIN, (dvoid *)&(dst.sme),
          (sb4) sizeof(dst.sme));
 }
-
+/* HARDCODE -> 132 : validity period is over ! */
 const char* ToExpiredStatement::sql = (const char*)
-"UPDATE SMS_MSG SET NEXT_TRY_TIME=NULL, ST=:EXPIRED\
+"UPDATE SMS_MSG SET LAST_TRY_TIME=:CT,\
+ LAST_RESULT=132, NEXT_TRY_TIME=NULL, ST=:EXPIRED\
  WHERE ID=:ID AND ST=:ENROUTE";
 ToExpiredStatement::ToExpiredStatement(Connection* connection, bool assign)
         throw(StorageException)
@@ -993,10 +994,16 @@ void ToExpiredStatement::bindId(SMSId id)
     setSMSId(id);
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
          SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+    
+    time_t cTime = time(NULL);
+    convertDateToOCIDate(&(cTime), &currTime);
+    bind(1, SQLT_ODT, (dvoid *) &(currTime), (sb4) sizeof(currTime));
 }
 
+/* HARDCODE -> 136 : message has been deleted ! */
 const char* ToDeletedStatement::sql = (const char*)
-"UPDATE SMS_MSG SET NEXT_TRY_TIME=NULL, ST=:DELETED\
+"UPDATE SMS_MSG SET LAST_TRY_TIME=:CT,\
+ LAST_RESULT=136, NEXT_TRY_TIME=NULL, ST=:DELETED\
  WHERE ID=:ID AND ST=:ENROUTE";
 ToDeletedStatement::ToDeletedStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -1017,6 +1024,10 @@ void ToDeletedStatement::bindId(SMSId id)
     setSMSId(id);
     bind((CONST text *)"ID", (sb4) 2*sizeof(char), 
          SQLT_BIN, (dvoid *)&(smsId), sizeof(smsId));
+    
+    time_t cTime = time(NULL);
+    convertDateToOCIDate(&(cTime), &currTime);
+    bind(1, SQLT_ODT, (dvoid *) &(currTime), (sb4) sizeof(currTime));
 }
     
 /* --------------------- Sheduler's statements -------------------- */

@@ -480,6 +480,10 @@ namespace smsc { namespace store
     class ToExpiredStatement : public IdStatement
     {
     static const char* sql;
+    protected:
+        
+        OCIDate currTime;
+
     public:
 
         ToExpiredStatement(Connection* connection, bool assign=true)
@@ -497,6 +501,10 @@ namespace smsc { namespace store
     class ToDeletedStatement : public IdStatement
     {
     static const char* sql;
+    protected:
+        
+        OCIDate currTime;
+
     public:
 
         ToDeletedStatement(Connection* connection, bool assign=true)
