@@ -33,6 +33,19 @@ const char* LOADUP_CUR_MSG_SQL  = "SELECT STATE, SMSC_ID FROM MCISME_MSG_SET WHE
 const char* SELECT_OLD_MSG_SQL  = "SELECT ID, STATE, ABONENT FROM MCISME_MSG_SET WHERE SMSC_ID=:SMSC_ID";
 const char* ROLLUP_CUR_MSG_SQL  = "UPDATE MCISME_MSG_SET SET STATE=:STATE, SMSC_ID=:SMSC_ID WHERE ID=:ID";
 
+const char* LOADUP_ALL_CUR_SQL = 
+"SELECT MCISME_CUR_MSG.ABONENT, MCISME_CUR_MSG.ID, "
+       "MCISME_ABONENTS.INFORM, MCISME_ABONENTS.NOTIFY, "
+       "MCISME_ABONENTS.INFORM_ID, MCISME_ABONENTS.NOTIFY_ID, MCISME_ABONENTS.EVENT_MASK, "
+       "MCISME_MSG_SET.STATE, MCISME_MSG_SET.SMSC_ID, "
+       "MCISME_EVT_SET.ID, MCISME_EVT_SET.DT, MCISME_EVT_SET.CALLER, MCISME_EVT_SET.MSG_ID "
+"FROM   MCISME_CUR_MSG, MCISME_ABONENTS, MCISME_MSG_SET, MCISME_EVT_SET "
+"WHERE  MCISME_ABONENTS.ABONENT (+)= MCISME_CUR_MSG.ABONENT "
+   "AND MCISME_MSG_SET.ID = MCISME_CUR_MSG.ID "
+   "AND MCISME_EVT_SET.ABONENT = MCISME_CUR_MSG.ABONENT "
+   "AND (MCISME_EVT_SET.MSG_ID=MCISME_CUR_MSG.ID OR MCISME_EVT_SET.MSG_ID IS NULL) "
+"ORDER  BY MCISME_CUR_MSG.ID, MCISME_EVT_SET.ID";
+
 /* ----------------------- Access to current events set (MCI_EVT_SET) ------------------------ */
 
 const char* LOADUP_MSG_EVT_ID   = "LOADUP_MSG_EVT_ID";
@@ -168,6 +181,134 @@ bool Task::getMessage(const char* smsc_id, Message& message,
     return messageExists;
 }
 
+/*
+const char* LOADUP_ALL_CUR_SQL = 
+"SELECT MCISME_CUR_MSG.ABONENT, MCISME_CUR_MSG.ID, "
+       "MCISME_ABONENTS.INFORM, MCISME_ABONENTS.NOTIFY, "
+       "MCISME_ABONENTS.INFORM_ID, MCISME_ABONENTS.NOTIFY_ID, MCISME_ABONENTS.EVENT_MASK, "
+       "MCISME_MSG_SET.STATE, MCISME_MSG_SET.SMSC_ID, "
+       "MCISME_EVT_SET.ID, MCISME_EVT_SET.DT, MCISME_EVT_SET.CALLER, MCISME_EVT_SET.MSG_ID "
+"FROM   MCISME_CUR_MSG, MCISME_ABONENTS, MCISME_MSG_SET, MCISME_EVT_SET "
+"WHERE  MCISME_ABONENTS.ABONENT (+)= MCISME_CUR_MSG.ABONENT "
+   "AND MCISME_MSG_SET.ID = MCISME_CUR_MSG.ID "
+   "AND MCISME_EVT_SET.ABONENT = MCISME_CUR_MSG.ABONENT "
+   "AND (MCISME_EVT_SET.MSG_ID=MCISME_CUR_MSG.ID OR MCISME_EVT_SET.MSG_ID IS NULL) "
+"ORDER  BY MCISME_CUR_MSG.ID, MCISME_EVT_SET.ID";
+*/
+Hash<Task *> Task::loadupAll()
+{
+    Hash<Task *> tasks;
+    
+    __require__(ds);
+    Connection* connection = 0;
+
+    try
+    {   
+        connection = ds->getConnection();
+        if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+        
+        std::auto_ptr<Statement> allMsgsStmtGuard(connection->createStatement(LOADUP_ALL_CUR_SQL));
+        Statement* allMsgsStmt = allMsgsStmtGuard.get();
+        if (!allMsgsStmt)
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "all tasks loadup");
+        
+        smsc_log_debug(logger, "Task: Running load all tasks statement ...");
+        std::auto_ptr<ResultSet> rsGuard(allMsgsStmt->executeQuery());
+        ResultSet* rs = rsGuard.get();
+        if (!rs)
+            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "all tasks loadup");
+        smsc_log_debug(logger, "Task: All tasks fetching ...");
+
+        Task* task = 0;
+        uint64_t lastMsgId = 0;
+        while (rs->fetchNext())
+        {
+            const char* abonent = rs->getString(1);
+            uint64_t currentMsgId = rs->getUint64(2);
+            if (!task || lastMsgId != currentMsgId)
+            {
+                if (!abonent || tasks.Exists(abonent)) {
+                    smsc_log_error(logger, "Task: duplicate current message found for abonent %s", 
+                                   abonent ? abonent:"-");
+                    continue;
+                }
+                lastMsgId = currentMsgId;
+                
+                // switch task
+                if (task) {
+                    const char*  taskAbonent = task->getAbonent().c_str();
+                    MessageState taskState = task->getCurrentState();
+                    int eventsCount = task->getEventsCount();
+                    int newEventsCount = task->getNewEventsCount();
+                    smsc_log_debug(logger, "Task: loaded for abonent %s (state=%d, events: all=%d new=%d)",
+                                   taskAbonent, taskState, eventsCount, newEventsCount);
+                    if (eventsCount > 0 && 
+                        (taskState != WAIT_RCPT || newEventsCount > 0)) tasks.Insert(taskAbonent, task);
+                    else delete task;
+                    task = 0;
+                }
+                
+                // loadup profile for task
+                AbonentProfile profile;
+                const char* infStr = rs->isNull(3) ? 0:rs->getString(3);
+                const char* notStr = rs->isNull(4) ? 0:rs->getString(4);
+                profile.inform   = (infStr && (infStr[0]=='Y' || infStr[0]=='y'));
+                profile.notify   = (notStr && (notStr[0]=='Y' || notStr[0]=='y'));
+                profile.informTemplateId = rs->isNull(5) ?   -1:rs->getUint32(5);
+                profile.notifyTemplateId = rs->isNull(6) ?   -1:rs->getUint32(6);
+                profile.eventMask        = rs->isNull(7) ? 0xFF:rs->getUint8 (7);
+
+                // loadup current message for task
+                uint8_t msgState = rs->getUint8(8);
+                if (msgState != MESSAGE_WAIT_RESP && msgState != MESSAGE_WAIT_CNCL && 
+                    msgState != MESSAGE_WAIT_RCPT && msgState != MESSAGE_UNKNOWNST) 
+                    throw Exception("Invalid message state %d for message #%lld", msgState, currentMsgId);
+                const char* smsc_id = (rs->isNull(9)) ? 0:rs->getString(9);
+                
+                task = new Task(abonent);
+                task->cur_smsc_id = (smsc_id) ? smsc_id:"";
+                task->currentMessageState = (MessageState)msgState;
+                task->currentMessageId = currentMsgId;
+                task->abonentProfile = profile;
+            }
+
+            // loadup events for task (add next event)
+            TaskEvent event; event.to = abonent;
+            event.id     = rs->getUint64  (10);
+            event.time   = rs->getDateTime(11);
+            event.from   = (rs->isNull(12)) ? "":rs->getString(12);
+            event.msg_id = (rs->isNull(13)) ?  0:rs->getUint64(13);
+            if (event.msg_id <= 0) task->newEventsCount++;
+            task->events.Push(event);
+        }
+
+        if (task) { // add last task
+            const char*  taskAbonent = task->getAbonent().c_str();
+            MessageState taskState = task->getCurrentState();
+            int eventsCount = task->getEventsCount();
+            int newEventsCount = task->getNewEventsCount();
+            smsc_log_debug(logger, "Task: loaded for abonent %s (state=%d, events: all=%d new=%d)",
+                           taskAbonent, taskState, eventsCount, newEventsCount);
+            if (eventsCount > 0 && 
+                (taskState != WAIT_RCPT || newEventsCount > 0)) tasks.Insert(taskAbonent, task);
+            else delete task;
+            task = 0;
+        }
+
+        if (connection) ds->freeConnection(connection);
+    }
+    catch (Exception& exc) {
+        smsc_log_error(logger, "%s", exc.what());
+        if (connection) ds->freeConnection(connection);
+        //if (task) delete task; // TODO: ???
+        throw;
+    }
+    
+    smsc_log_debug(logger, "Task: All tasks loaded");
+    //abort();
+    return tasks;
+}
+/*
 Hash<Task *> Task::loadupAll()
 {
     Hash<Task *> tasks;
@@ -179,7 +320,7 @@ Hash<Task *> Task::loadupAll()
         connection = ds->getConnection();
         if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
 
-        /* SELECT ABONENT, ID FROM MCISME_CUR_MSG */
+        // SELECT ABONENT, ID FROM MCISME_CUR_MSG 
         std::auto_ptr<Statement> allMsgsStmtGuard(connection->createStatement(ALL_CURRENT_MSG_SQL));
         Statement* allMsgsStmt = allMsgsStmtGuard.get();
         if (!allMsgsStmt)
@@ -223,6 +364,7 @@ Hash<Task *> Task::loadupAll()
     
     return tasks;
 }
+*/
 
 /* ----------------------- Main logic implementation ----------------------- */
 
