@@ -54,7 +54,6 @@ class PduRegistry
 	typedef map<const TimeKey, PduMonitor*> TimeMap;
 
 	Mutex mutex;
-	uint16_t msgRef;
 
 	//SmsIdMap idMap;
 	SeqNumMap seqNumMap;
@@ -74,7 +73,7 @@ public:
 		}
 	};
 
-	PduRegistry() : msgRef(0) {}
+	PduRegistry() {}
 	~PduRegistry();
 
 	Mutex& getMutex()
@@ -84,7 +83,9 @@ public:
 
 	uint16_t nextMsgRef()
 	{
-		MutexGuard guard(mutex);
+		static Mutex m;
+		static uint16_t msgRef = 0;
+		MutexGuard guard(m);
 		return ++msgRef;
 	}
 
