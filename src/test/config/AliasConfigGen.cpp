@@ -26,11 +26,11 @@ void AliasConfigGen::saveConfig(const char* configFileName)
 	while (const AliasHolder* aliasHolder = it->next())
 	{
 		const AliasInfo& aliasInfo = aliasHolder->aliasInfo;
-		auto_ptr<char> addr = SmsUtil::configString(aliasInfo.addr);
-		auto_ptr<char> alias = SmsUtil::configString(aliasInfo.alias);
+		const string addr = SmsUtil::configString(aliasInfo.addr);
+		const string alias = SmsUtil::configString(aliasInfo.alias);
 		__tc__("aliasConfig.correctAlias");
-		os << "\t<record addr=\"" << addr.get() <<
-			"\" alias=\"" << alias.get() <<
+		os << "\t<record addr=\"" << addr.c_str() <<
+			"\" alias=\"" << alias.c_str() <<
 			"\" hide=\"" << (aliasInfo.hide ? "true" : "false") << "\"/>" << endl;
 		__tc_ok__;
 	}

@@ -4,12 +4,13 @@
 #include "sms/sms.h"
 #include <vector>
 #include <ostream>
+#include <string>
 
 namespace smsc {
 namespace test {
 namespace sms  {
 
-using std::auto_ptr;
+using std::string;
 using std::ostream;
 using std::vector;
 using smsc::sms::Address;
@@ -64,7 +65,7 @@ public:
 
 	static void clearSms(SMS* sms);
 
-	static auto_ptr<char> configString(const Address& addr);
+	static const string configString(const Address& addr);
 };
 
 struct ltAddress
@@ -76,7 +77,7 @@ ostream& operator<< (ostream& os, const Address& a);
 bool operator== (const Address& a1, const Address& a2);
 bool operator!= (const Address& a1, const Address& a2);
 bool operator< (const Address& a1, const Address& a2);
-auto_ptr<char> str(const Address& a);
+const string str(const Address& a);
 
 ostream& operator<< (ostream& os, const Descriptor& d);
 bool operator==(const Descriptor& d1, const Descriptor& d2);

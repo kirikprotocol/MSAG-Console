@@ -118,7 +118,7 @@ void RouteConfigGen::printSubject(ostream& os, const RouteInfo* route,
 	{
 		case 's':
 			{
-				auto_ptr<char> tmp = SmsUtil::configString(route->source);
+				const string tmp = SmsUtil::configString(route->source);
 				os << "<subject_def id=\"" << prefix << "_src_" << route->routeId <<
 					"\" defSme=\"" << route->smeSystemId << "\">" << endl;
 				if (printFakeMask(os))
@@ -127,7 +127,7 @@ void RouteConfigGen::printSubject(ostream& os, const RouteInfo* route,
 					__tc_ok__;
 				}
 				//__tc__("routeConfig.routeSource.subject");
-				os << "\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+				os << "\t<mask value=\"" << tmp.c_str() << "\"/>" << endl;
 				//__tc_ok__;
 				if (printFakeMask(os))
 				{
@@ -139,7 +139,7 @@ void RouteConfigGen::printSubject(ostream& os, const RouteInfo* route,
 			break;
 		case 'd':
 			{
-				auto_ptr<char> tmp = SmsUtil::configString(route->dest);
+				const string tmp = SmsUtil::configString(route->dest);
 				os << "<subject_def id=\"" << prefix << "_dst_" << route->routeId <<
 					"\" defSme=\"" << route->smeSystemId << "\">" << endl;
 				if (printFakeMask(os))
@@ -148,7 +148,7 @@ void RouteConfigGen::printSubject(ostream& os, const RouteInfo* route,
 					__tc_ok__;
 				}
 				//__tc__("routeConfig.routeDest.subject");
-				os << "\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+				os << "\t<mask value=\"" << tmp.c_str() << "\"/>" << endl;
 				//__tc_ok__;
 				if (printFakeMask(os))
 				{
@@ -218,8 +218,8 @@ void RouteConfigGen::printSource(ostream& os, const RouteInfo* route,
 	else
 	{
 		__tc__("routeConfig.routeSource.mask");
-		auto_ptr<char> tmp = SmsUtil::configString(route->source);
-		os << "\t\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+		const string tmp = SmsUtil::configString(route->source);
+		os << "\t\t<mask value=\"" << tmp.c_str() << "\"/>" << endl;
 		__tc_ok__;
 	}
 	os << "\t</source>" << endl;
@@ -264,8 +264,8 @@ void RouteConfigGen::printDest(ostream& os, const RouteInfo* route,
 	else
 	{
 		__tc__("routeConfig.routeDest.mask");
-		auto_ptr<char> tmp = SmsUtil::configString(route->dest);
-		os << "\t\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+		const string tmp = SmsUtil::configString(route->dest);
+		os << "\t\t<mask value=\"" << tmp.c_str() << "\"/>" << endl;
 		__tc_ok__;
 	}
 	os << "\t</destination>" << endl;

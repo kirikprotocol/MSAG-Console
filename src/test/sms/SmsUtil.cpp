@@ -405,25 +405,25 @@ void SmsUtil::clearSms(SMS* sms)
 	//bool attach;
 }
 
-auto_ptr<char> SmsUtil::configString(const Address& addr)
+const string SmsUtil::configString(const Address& addr)
 {
-	char* tmp = new char[32];
+	ostringstream os;
 	AddressValue addrVal;
 	addr.getValue(addrVal);
 	if (addr.getTypeOfNumber() == 1 && addr.getNumberingPlan() == 1)
 	{
-		sprintf(tmp, "+%s", addrVal);
+		os << "+" << addrVal;
 	}
 	else if (addr.getTypeOfNumber() == 2 && addr.getNumberingPlan() == 1)
 	{
-		sprintf(tmp, "%s", addrVal);
+		os << addrVal;
 	}
 	else
 	{
-		sprintf(tmp, ".%d.%d.%s", (int) addr.getTypeOfNumber(),
-				(int) addr.getNumberingPlan(), addrVal);
+		os << "." << (int) addr.getTypeOfNumber() << "." <<
+			(int) addr.getNumberingPlan() << "." << addrVal;
 	}
-	return auto_ptr<char>(tmp);
+	return os.str();
 }
 
 bool ltAddress::operator() (const Address& a1, const Address& a2) const
@@ -435,10 +435,8 @@ ostream& operator<< (ostream& os, const Address& a)
 {
 	AddressValue addrVal;
 	int addrLen = a.getValue(addrVal);
-	int ton = a.getTypeOfNumber();
-	int npi = a.getNumberingPlan();
-	os << "{ton=" << ton << ", npi=" << npi <<
-		", val=" << addrVal << "(" << addrLen << ")}";
+	os << "." << (int) a.getTypeOfNumber() << "." <<
+		(int) a.getNumberingPlan() << "." << addrVal;
 	return os;
 }
 
@@ -482,14 +480,11 @@ bool operator< (const Address& a1, const Address& a2)
 	return memcmp(val1, val2, a1.getLenght()) < 0;
 }
 
-auto_ptr<char> str(const Address& addr)
+const string str(const Address& addr)
 {
-	char* tmp = new char[32];
-	AddressValue addrVal;
-	addr.getValue(addrVal);
-	sprintf(tmp, ".%d.%d.%s", (int) addr.getTypeOfNumber(),
-		(int) addr.getNumberingPlan(), addrVal);
-	return auto_ptr<char>(tmp);
+	ostringstream os;
+	os << addr;
+	return os.str();
 }
 
 ostream& operator<< (ostream& os, const Descriptor& d)
