@@ -27,7 +27,7 @@ using std::exception;
 using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
 
-class SmppConnectException:exception{
+class SmppConnectException:public exception{
 int reason;
 public:
   struct Reason{
