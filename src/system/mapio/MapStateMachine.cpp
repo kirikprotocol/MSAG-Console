@@ -580,7 +580,11 @@ void ResponseMO(MapDialog* dialog,unsigned status)
     err.errorCode = 32;
     break;
   default:
-    err.errorCode = 36;
+    if( Status::isErrorPermanent(status) ) {
+      err.errorCode = 21;
+    } else {
+      err.errorCode = 36;
+    }
     break;
   };
   __map_trace2__("MAP::%s errCode=0x%x status=%d (state %d) ",__func__,err.errorCode,status,dialog->state);
