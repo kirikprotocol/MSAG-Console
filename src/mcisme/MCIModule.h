@@ -78,7 +78,7 @@ namespace smsc { namespace mcisme
             if (!setCallingMask(callingMask))
                 throw Exception("Failed to compile calling mask '%s'.", callingMask ? callingMask:"");
             if (!setCalledMask(calledMask)) 
-                throw Exception("Failed to compile calling mask '%s'.", calledMask ? calledMask:"");
+                throw Exception("Failed to compile called mask '%s'.", calledMask ? calledMask:"");
         #endif
             Thread::Start();
 

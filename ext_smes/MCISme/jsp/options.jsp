@@ -40,6 +40,10 @@
   <td><input class=txt name=callingMask value="<%=StringEncoderDecoder.encode(bean.getCallingMask())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th>Called mask (regexp)</th>
+  <td><input class=txt name=calledMask value="<%=StringEncoderDecoder.encode(bean.getCalledMask())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>Unresponded messages max</th>
   <td><input class=txt name=unrespondedMessagesMax value="<%=StringEncoderDecoder.encode(bean.getUnrespondedMessagesMax())%>"></td>
 </tr>
