@@ -13,22 +13,24 @@ create table arc_stat
 	final_rec integer,
 	last_arc date
 ) tablespace smsc_data;
-insert into arc_stat (final_rec, last_arc) values (0, sysdate + 3600);
+insert into arc_stat (final_rec, last_arc) values (0, sysdate + 1/24);
 
 --проверка условий на активацию архиватора
 create or replace procedure check_arc_stat is
-	final_max integer := 300; --config.xml: MessageStore/Archive/finalized
-    interval_max integer := 30; --config.xml: MessageStore/Archive/interval
+	final_max integer := 100; --config.xml: MessageStore/Archive/finalized
+    interval_max integer := 20; --config.xml: MessageStore/Archive/interval
+	final_check_accuracy integer := 5;
+	interval_check_accuracy integer := 1;
 	stat arc_stat%rowtype;
 	interval integer;
 begin
 	select * into stat from arc_stat;
 	interval := sysdate - stat.last_arc;
 	--архиватор стартует не реже, чем прописано в конфиге
-	if stat.final_rec > final_max then
+	if stat.final_rec > (final_max + final_check_accuracy) then
 		raise_application_error(-20201, 'Finalized rec count = ' || stat.final_rec || ' exceeds max allowed');
 	end if;
-	if interval > interval_max then
+	if interval > (interval_max + interval_check_accuracy) then
 		raise_application_error(-20201, 'Archiver idle interval = ' || interval || ' exceeds max allowed');
 	end if;
 	--архиватор стартует не чаще, чем прописано в конфиге
@@ -45,8 +47,8 @@ create or replace trigger smsc_msg_insert after insert on sms_msg
 	referencing new as msg for each row
 begin
 	check_arc_stat;
-	if msg.svc_type = '-----' then
-		raise_application_error(-20101, 'Abort sms_msg insert transaction test case');
+	if :msg.svc_type = '-----' then
+		raise_application_error(-20101, 'Abort sms_msg insert transaction test case: svc_type = ''-----''');
 	end if;
 	if :msg.st != 0 then
 		raise_application_error(-20201, 'New message created with state != ENROTE');
