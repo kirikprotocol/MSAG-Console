@@ -15,7 +15,7 @@ using namespace smsc::sms;
 using namespace smsc::smpp;
 using namespace smsc::core::buffers;
 
-static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize)
+static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize,ConvEncodingEnum enc=CONV_ENCODING_CP1251)
 {
   int coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
   //int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
@@ -34,7 +34,7 @@ static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize)
   __trace2__("getSmsText: dc=%d, len=%d",coding,len);
   if(coding==DataCoding::UCS2)
   {
-    ConvertUCS2ToMultibyte((const short*)data,len,buf,bufsize,CONV_ENCODING_CP1251);
+    ConvertUCS2ToMultibyte((const short*)data,len,buf,bufsize,enc);
     len/=2;
     __require__(len<bufsize);
   }else if(coding==DataCoding::SMSC7BIT)

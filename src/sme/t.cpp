@@ -8,11 +8,14 @@
 #include "readline/readline.h"
 #include "readline/history.h"
 #include <locale.h>
+#include "core/buffers/Hash.hpp"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
 using namespace smsc::smpp;
 using namespace smsc::util;
+using namespace std;
+using namespace smsc::core::buffers;
 
 int stopped=0;
 
@@ -22,8 +25,342 @@ int permErrProb=0;
 
 int respDelay=0;
 
+int mode=0;
+
+bool unicode=false;
+bool dataSm=false;
+bool smsc7bit=false;
+bool ussd=false;
+
+bool ansi1251=false;
+
+struct Option{
+  const char* name;
+  char type;
+  void* addr;
+  int& asInt(){return *(int*)addr;}
+  bool& asBool(){return *(bool*)addr;}
+};
+
+Option options[]={
+{"temperr",'i',&temperrProb},
+{"noresp",'i',&dontrespProb},
+{"permerr",'i',&permErrProb},
+{"respdelay",'i',&respDelay},
+{"mode",'m',&mode},
+{"unicode",'b',&unicode},
+{"datasm",'b',&dataSm},
+{"7bit",'b',&smsc7bit},
+{"ussd",'b',&ussd},
+{"ansi1251",'b',&ansi1251},
+};
+
+const int optionsCount=sizeof(options)/sizeof(Option);
+
+string sourceAddress;
+
 
 bool autoAnswer=false;
+
+static bool splitString(/*in,out*/string& head,/*out*/string& tail)
+{
+  string::size_type pos=head.find(' ');
+  if(pos==string::npos)return false;
+  int firstPos=pos;
+  while(head[pos]==' ')pos++;
+  tail=head.substr(pos);
+  head.erase(firstPos);
+  return true;
+}
+
+typedef void(*CommandProc)(SmppSession&,const string& args);
+
+struct CmdRec{
+  const char* cmdname;
+  CommandProc cmd;
+};
+
+void QueryCmd(SmppSession& ss,const string& args)
+{
+  PduQuerySm q;
+  if(args.length()==0)
+  {
+    printf("Usage: query msgId\n");
+    return;
+  }
+  q.set_messageId(args.c_str());
+  Address src=sourceAddress.c_str();
+  q.get_source().set_typeOfNumber(src.type);
+  q.get_source().set_numberingPlan(src.plan);
+  q.get_source().set_value(src.value);
+  SmppTransmitter *tr=ss.getSyncTransmitter();
+  PduQuerySmResp *qresp=tr->query(q);
+  if(qresp)
+  {
+      printf("Query result:commandStatus=%#x(%d), messageState=%d, errorCode=%d, finalDate=%s\n",
+        qresp->get_header().get_commandStatus(),qresp->get_header().get_commandStatus(),
+        qresp->get_messageState(),
+        qresp->get_errorCode(),
+        qresp->get_finalDate()?qresp->get_finalDate():"NULL"
+      );
+    disposePdu((SmppHeader*)qresp);
+  }
+  else
+  {
+    printf("Query timed out\n");
+  }
+}
+
+void EnquireLinkCmd(SmppSession& ss,const string& args)
+{
+  PduEnquireLink eq;
+  SmppTransmitter* tr=ss.getSyncTransmitter();
+  eq.get_header().set_commandId(SmppCommandSet::ENQUIRE_LINK);
+  eq.get_header().set_sequenceNumber(ss.getNextSeq());
+  SmppHeader *resp=tr->sendPdu((SmppHeader*)&eq);
+  if(resp)
+  {
+    printf("Enquire link ok\n");
+    disposePdu(resp);
+  }else
+  {
+    printf("No response\n");
+  }
+}
+
+void ReplaceCmd(SmppSession& ss,const string& args)
+{
+  PduReplaceSm r;
+  string id=args;
+  string msg;
+  if(!splitString(id,msg))
+  {
+    printf("Usage: replace msgId newmessage\n");
+    return;
+  }
+  r.set_messageId(id.c_str());
+  Address addr(sourceAddress.c_str());
+  r.get_source().set_typeOfNumber(addr.type);
+  r.get_source().set_numberingPlan(addr.plan);
+  r.get_source().set_value(addr.value);
+  r.shortMessage.copy(msg.c_str(),msg.length());
+  SmppTransmitter* tr=ss.getSyncTransmitter();
+  PduReplaceSmResp *replresp=tr->replace(r);
+  if(replresp)
+  {
+    printf("Replace status:%#x(%d)\n",replresp->get_header().get_commandStatus(),replresp->get_header().get_commandStatus());
+    disposePdu((SmppHeader*)replresp);
+  }
+  else
+  {
+    printf("Replace timed out\n");
+  }
+}
+
+void CancelCmd(SmppSession& ss,const string& args)
+{
+  if(args.length()==0)
+  {
+    printf("Usage: cancel msgId\n");
+    return;
+  }
+  PduCancelSm q;
+  q.set_messageId(args.c_str());
+
+
+  Address addr(sourceAddress.c_str());
+  q.get_source().set_typeOfNumber(addr.type);
+  q.get_source().set_numberingPlan(addr.plan);
+  q.get_source().set_value(addr.value);
+
+  /*
+  q.set_serviceType("XXX");
+  q.get_dest().set_typeOfNumber(s.getDestinationAddress().type);
+  q.get_dest().set_numberingPlan(s.getDestinationAddress().plan);
+  q.get_dest().set_value(s.getDestinationAddress().value);
+  //printf("Cancelling:%s\n",resp->get_messageId());*/
+  SmppTransmitter* tr=ss.getSyncTransmitter();
+  PduCancelSmResp *cresp=tr->cancel(q);
+  if(cresp)
+  {
+    printf("Cancel result:%d\n",cresp->get_header().get_commandStatus());
+    disposePdu((SmppHeader*)cresp);
+  }
+  else
+  {
+    printf("Cancel timedout\n");
+  }
+}
+
+const char* modes[]=
+{
+  "default(def)",
+  "datagram(dg)",
+  "forward(fwd)",
+  "store and forward(store)"
+};
+
+static void ShowOption(Option& opt)
+{
+  printf("%s=",opt.name);
+  switch(opt.type)
+  {
+    case 'i':printf("%d\n",opt.asInt());break;
+    case 'b':printf("%s\n",opt.asBool()?"yes":"no");break;
+    case 'm':printf("%s\n",modes[opt.asInt()]);break;
+  }
+}
+
+static bool atob(const string& val)
+{
+  return val=="yes" || val=="true";
+}
+
+void SetOption(SmppSession& ss,const string& args)
+{
+  if(args.length()==0)
+  {
+    printf("Usage: set optionname=optionvalue\nAvailable options are:\n");
+    for(unsigned int i=0;i<sizeof(options)/sizeof(Option);i++)
+    {
+      ShowOption(options[i]);
+    }
+    return;
+  }
+  string::size_type pos=args.find('=');
+  if(pos==string::npos)
+  {
+    for(unsigned int i=0;i<sizeof(options)/sizeof(Option);i++)
+    {
+      if(args==options[i].name)
+      {
+        ShowOption(options[i]);
+        return;
+      }
+    }
+    printf("Unknown option\n");
+    return;
+  }
+  string opt,val;
+  opt=args.substr(0,pos);
+  val=args.substr(pos+1);
+  for(unsigned int i=0;i<sizeof(options)/sizeof(Option);i++)
+  {
+    if(opt==options[i].name)
+    {
+      switch(options[i].type)
+      {
+        case 'i':options[i].asInt()=atoi(val.c_str());break;
+        case 'b':options[i].asBool()=atob(val);break;
+        case 'm':
+        {
+          if(val=="def")options[i].asInt()=0;
+          else if(val=="dg")options[i].asInt()=1;
+          else if(val=="fwd")options[i].asInt()=2;
+          else if(val=="store")options[i].asInt()=4;
+        }break;
+      }
+      return;
+    }
+  }
+  printf("Unknown option\n");
+}
+
+void ShowHelp(SmppSession& ss,const string& args);
+
+CmdRec commands[]={
+{"query",QueryCmd},
+{"eq",EnquireLinkCmd},
+{"replace",ReplaceCmd},
+{"cancel",CancelCmd},
+{"set",SetOption},
+{"help",ShowHelp},
+};
+
+const int commandsCount=sizeof(commands)/sizeof(CmdRec);
+
+void ShowHelp(SmppSession& ss,const string& args)
+{
+  printf("Available commands:\n");
+  for( int i=0;i<commandsCount;i++)
+  {
+    printf("%s\n",commands[i].cmdname);
+  }
+  printf("/ - send last message\n");
+}
+
+char** cmd_completion(const char *text,int start,int end)
+{
+  string word(rl_line_buffer+start,rl_line_buffer +end);
+  vector<string> found;
+  string tmp;
+  rl_attempted_completion_over=1;
+  __trace2__("completion: %s,%d,%d",rl_line_buffer ,start,end);
+  if(start>=4 && !strncmp(rl_line_buffer ,"set ",4))
+  {
+    __trace__("options completion");
+    rl_completion_append_character='=';
+    for(int i=0;i<optionsCount;i++)
+    {
+      tmp.assign(options[i].name,word.length());
+      if(tmp==word)
+      {
+        found.push_back(options[i].name);
+      }
+    }
+  }else
+  {
+    __trace__("commands completion");
+    rl_completion_append_character=' ';
+    if(strchr(rl_line_buffer,' '))
+    {
+      /*char **rv=(char**)malloc(2*sizeof(char*));
+      rv[0]=(char*)malloc(1);
+      rv[0][0]=0;
+      rv[1]=0;
+      rl_completion_append_character=0;
+      return rv;*/
+      return 0;
+    }
+    for(int i=0;i<commandsCount;i++)
+    {
+      tmp.assign(commands[i].cmdname,word.length());
+      if(tmp==word)
+      {
+        found.push_back(commands[i].cmdname);
+      }
+    }
+  }
+  if(found.size()==0)
+  {
+    /*char **rv=(char**)malloc(2*sizeof(char*));
+    rv[0]=(char*)malloc(1);
+    rv[0][0]=0;
+    rv[1]=0;
+    rl_completion_append_character=0;
+    return rv;*/
+    return 0;
+  }
+  __trace2__("completion: found %d entries",found.size());
+  char **rv;
+  rv=(char**)malloc((2+found.size())*sizeof(char*));
+  int j=0;
+  if(found.size()>1)
+  {
+    rv[0]=(char*)malloc(1);
+    rv[0][0]=0;
+    j++;
+  }
+  for(vector<string>::size_type i=0;i<found.size();i++,j++)
+  {
+    rv[j]=(char*)malloc(found[i].length()+1);
+    memcpy(rv[j],found[i].c_str(),found[i].length()+1);
+    __trace2__("match%d=%s",i,rv[j]);
+  }
+  rv[j]=0;
+  return rv;
+}
+
 
 class MyListener:public SmppPduEventListener{
 public:
@@ -72,12 +409,15 @@ public:
       s.getDestinationAddress().toString(buf,sizeof(buf));
       printf("To:%s\n",buf);
       printf("DCS:%d\n",s.getIntProperty(Tag::SMPP_DATA_CODING));
-      printf("UMR:%d\n",s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+      if(s.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
+      {
+        printf("UMR:%d\n",s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+      }
       if(s.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
       {
         printf("MsgState:%d\n",s.getIntProperty(Tag::SMPP_MSG_STATE));
       }
-      if(getSmsText(&s,buf,sizeof(buf))==-1)
+      if(getSmsText(&s,buf,sizeof(buf),ansi1251?CONV_ENCODING_CP1251:CONV_ENCODING_KOI8R)==-1)
       {
         int sz=65536;
         char *data=new char[sz];
@@ -134,7 +474,9 @@ public:
     }else
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
-      printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
+      printf("\nReceived async submit sm resp:status=%#x, msgId=%s\n",
+        pdu->get_commandStatus(),
+        ((PduXSmResp*)pdu)->get_messageId());
     }
     rl_forced_update_display();
     disposePdu(pdu);
@@ -154,6 +496,7 @@ protected:
   SmppTransmitter* trans;
   SmppTransmitter* atrans;
 };
+
 
 int main(int argc,char* argv[])
 {
@@ -186,21 +529,15 @@ int main(int argc,char* argv[])
   string host="smsc";
   int port=9001;
 
-  int mode=0;
 
-  bool unicode=false;
-  bool dataSm=false;
+  sourceAddress=argv[1];
 
-  string source=argv[1];
-
-  cfg.sid=source;
+  cfg.sid=sourceAddress;
   cfg.password=cfg.sid;
   MyListener lst;
 
   int bindType=BindType::Transceiver;
 
-  bool smsc7bit=false;
-  bool ussd=false;
   bool receiveOnly=false;
 
   for(int i=2;i<argc;i+=2)
@@ -264,7 +601,7 @@ int main(int argc,char* argv[])
       }break;
       case 'a':
       {
-        source=optarg;
+        sourceAddress=optarg;
       }break;
       case 'p':
       {
@@ -331,7 +668,7 @@ int main(int argc,char* argv[])
 
     {
       try{
-        Address addr(source.c_str());
+        Address addr(sourceAddress.c_str());
         s.setOriginatingAddress(addr);
       }catch(...)
       {
@@ -351,42 +688,53 @@ int main(int argc,char* argv[])
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
 
-    s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,1234);
-
-    if(ussd)s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,1);
+    //s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,1234);
 
     s.setEServiceType("XXX");
     char *addr=NULL;
     char *message=NULL;
+
+    using_history();
+
+    rl_attempted_completion_function=cmd_completion;
+
+    HISTORY_STATE cmdHist,msgHist;
+
+    cmdHist=*history_get_history_state();
+    msgHist=*history_get_history_state();
+
+
     if(!receiveOnly)
     while(!stopped)
     {
       if(addr)free(addr);
       addr=NULL;
-      addr=readline("Enter destination:");
+      history_set_history_state(&cmdHist);
+      addr=readline("Address or cmd>");
       if(!addr)break;
       if(!*addr)continue;
-      if(!strcmp((char*)addr,"quit"))
+      add_history(addr);
+      cmdHist=*history_get_history_state();
+      string cmd=addr;
+      string arg;
+      splitString(cmd,arg);
+      if(cmd=="quit")
       {
         break;
       }
-      if(!strcmp((char*)addr,"eq"))
+      bool cmdFound=false;
+      for(int i=0;i<commandsCount;i++)
       {
-        PduEnquireLink eq;
-        eq.get_header().set_commandId(SmppCommandSet::ENQUIRE_LINK);
-        eq.get_header().set_sequenceNumber(ss.getNextSeq());
-        SmppHeader *resp=tr->sendPdu((SmppHeader*)&eq);
-        if(resp)
+        if(cmd==commands[i].cmdname)
         {
-          printf("Enquire link ok\n");
-          disposePdu(resp);
-        }else
-        {
-          printf("No response\n");
+          commands[i].cmd(ss,arg);
+          cmdFound=true;
+          break;
         }
-        continue;
       }
-      if(strcmp(addr,"/"))
+      if(cmdFound)continue;
+
+      if(cmd!="/")
       {
         try{
           Address dst((char*)addr);
@@ -398,18 +746,24 @@ int main(int argc,char* argv[])
         }
         if(message)free(message);
         message=NULL;
+        history_set_history_state(&msgHist);
         message=readline("Enter message:");
         if(!message)break;
+        add_history(message);
+        msgHist=*history_get_history_state();
         rl_reset_line_state();
       }
       if(!message)continue;
       int len=strlen(message);
 
+      if(ussd)s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,1);
+      else s.messageBody.dropIntProperty(Tag::SMPP_USSD_SERVICE_OP);
+
 
       if(unicode)
       {
         auto_ptr<short> msg(new short[len+1]);
-        ConvertMultibyteToUCS2(message,len,msg.get(),len*2,CONV_ENCODING_KOI8R);
+        ConvertMultibyteToUCS2(message,len,msg.get(),len*2,ansi1251?CONV_ENCODING_CP1251:CONV_ENCODING_KOI8R);
         s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::UCS2);
         len*=2;
         s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)msg.get(),len);
@@ -450,7 +804,7 @@ int main(int argc,char* argv[])
 
       if(resp && resp->get_commandStatus()==0)
       {
-        printf("Accepted:%d bytes\n",len);fflush(stdout);
+        printf("Accepted:%d bytes, msgId=%s\n",len,((PduXSmResp*)resp)->get_messageId());fflush(stdout);
       }else
       {
         if(resp)
@@ -483,6 +837,7 @@ int main(int argc,char* argv[])
   {
     printf("unknown exception\n");
   }
+  printf("\nUnbinding\n");
   {
     PduUnbind pdu;
     pdu.get_header().set_commandId(SmppCommandSet::UNBIND);
@@ -490,11 +845,11 @@ int main(int argc,char* argv[])
     SmppHeader *resp=tr->sendPdu((SmppHeader*)&pdu);
     if(resp)
     {
-      printf("unbind resp:%x-%x\n",resp->get_commandId(),resp->get_commandStatus());
+      printf("Unbind response:status=%#x\n",resp->get_commandStatus());
       disposePdu(resp);
     }else
     {
-      printf("unbind resp timed out\n");
+      printf("Unbind response timed out\n");
     }
   }
   ss.close();
