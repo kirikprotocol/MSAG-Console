@@ -45,7 +45,7 @@ namespace smsc { namespace store
     using namespace smsc::sms;
     using namespace smsc::core::synchronization;
     using namespace smsc::core::buffers;
-    
+
     using smsc::logger::Logger;
     using smsc::core::threads::Thread;
     using smsc::util::config::Manager;
@@ -67,13 +67,13 @@ namespace smsc { namespace store
         Mutex   startLock;
         Event   awake, exited;
         bool    bStarted, bNeedExit;
-        
+
         Mutex       sequenceIdLock;
         SMSId       currentId, sequenceId;
 
         BillingStorage  billingStorage;
         ArchiveStorage  archiveStorage;
-        
+
     protected:
 
         void loadMaxTriesCount(Manager& config);
@@ -93,7 +93,7 @@ namespace smsc { namespace store
 
         public:
 
-            ReadyIdIterator(StorageConnectionPool* _pool, 
+            ReadyIdIterator(StorageConnectionPool* _pool,
                             time_t retryTime, bool immediate=false)
                 throw(StorageException);
             virtual ~ReadyIdIterator();
@@ -104,7 +104,11 @@ namespace smsc { namespace store
                 throw(StorageException);
             virtual time_t getTime()
                 throw(StorageException);
-            virtual bool getDstSmeId(char* buffer) 
+            virtual bool getDstSmeId(char* buffer)
+                throw(StorageException);
+            virtual bool getDda(char* buffer)
+                throw(StorageException);
+            virtual int  getAttempts()
                 throw(StorageException);
         };
 
@@ -175,10 +179,10 @@ namespace smsc { namespace store
                 throw(StorageException, NoSuchMessageException);
         void doFinalizeSms(SMSId id, SMS& sms, bool needDelete=true)
             throw(StorageException, NoSuchMessageException);
-        
+
         void doChangeSmsConcatSequenceNumber(StorageConnection* connection,
-                                             SMSId id, int8_t inc) 
-                throw(StorageException, NoSuchMessageException); 
+                                             SMSId id, int8_t inc)
+                throw(StorageException, NoSuchMessageException);
     public:
 
         RemoteStore(Manager& config, SchedTimer* sched)
@@ -188,7 +192,7 @@ namespace smsc { namespace store
         virtual int Execute();
         void Start();
         void Stop();
-        
+
         void setPoolSize(unsigned size) {
             __require__(pool);
             pool->setSize(size);
@@ -252,8 +256,8 @@ namespace smsc { namespace store
          * @see MessageStore
          */
         virtual void replaceSms(SMSId id, SMS& sms)
-                throw(StorageException, NoSuchMessageException); 
-        
+                throw(StorageException, NoSuchMessageException);
+
         /**
          * Реализация метода MessageStore
          * @see MessageStore
@@ -266,7 +270,7 @@ namespace smsc { namespace store
          * @see MessageStore
          */
         virtual void changeSmsStateToEnroute(SMSId id,
-            const Descriptor& dst, uint32_t failureCause, 
+            const Descriptor& dst, uint32_t failureCause,
                 time_t nextTryTime, uint32_t attempts)
                     throw(StorageException, NoSuchMessageException);
         /**
@@ -305,8 +309,8 @@ namespace smsc { namespace store
          * Реализация метода MessageStore
          * @see MessageStore
          */
-        virtual void changeSmsConcatSequenceNumber(SMSId id, int8_t inc=1) 
-                throw(StorageException, NoSuchMessageException); 
+        virtual void changeSmsConcatSequenceNumber(SMSId id, int8_t inc=1)
+                throw(StorageException, NoSuchMessageException);
 
         /**
          * Реализация метода MessageStore
@@ -314,7 +318,7 @@ namespace smsc { namespace store
          */
         virtual int getConcatMessageReference(const Address& dda)
                 throw(StorageException);
-        
+
         /**
          * Реализация метода MessageStore
          * @see MessageStore
@@ -380,7 +384,7 @@ namespace smsc { namespace store
          * воспользоваться методом getMessageStore()
          *
          * @param config интерфес для получения конфигурационных параметров
-         * @param sched интерфейс для изменения schedule time для sms 
+         * @param sched интерфейс для изменения schedule time для sms
          * @exception ConfigException
          *                   возникает в случае некорректности и/или
          *                   неполноты набора конфигурационных параметров.
@@ -555,11 +559,11 @@ namespace smsc { namespace store
             uint8_t deliveryReport, time_t validTime = 0, time_t waitTime = 0)
                 throw(StorageException, NoSuchMessageException);
         virtual void replaceSms(SMSId id, SMS& sms)
-            throw(StorageException, NoSuchMessageException); 
+            throw(StorageException, NoSuchMessageException);
         virtual void destroySms(SMSId id)
                 throw(StorageException, NoSuchMessageException);
         virtual void changeSmsStateToEnroute(SMSId id,
-            const Descriptor& dst, uint32_t failureCause, 
+            const Descriptor& dst, uint32_t failureCause,
                 time_t nextTryTime, uint32_t attempts)
                 throw(StorageException, NoSuchMessageException);
         virtual void changeSmsStateToDelivered(SMSId id,
@@ -572,8 +576,8 @@ namespace smsc { namespace store
                 throw(StorageException, NoSuchMessageException);
         virtual void changeSmsStateToDeleted(SMSId id)
                 throw(StorageException, NoSuchMessageException);
-        virtual void changeSmsConcatSequenceNumber(SMSId id, int8_t inc=1) 
-                throw(StorageException, NoSuchMessageException); 
+        virtual void changeSmsConcatSequenceNumber(SMSId id, int8_t inc=1)
+                throw(StorageException, NoSuchMessageException);
 
     };
 

@@ -55,7 +55,11 @@ namespace smsc { namespace store
         virtual ~TimeIdIterator() {};
         virtual time_t getTime()
             throw(StorageException) = 0;
-        virtual bool getDstSmeId(char* buffer) 
+        virtual bool getDstSmeId(char* buffer)
+            throw(StorageException) = 0;
+        virtual bool getDda(char* buffer)
+            throw(StorageException) = 0;
+        virtual int getAttempts()
             throw(StorageException) = 0;
     };
 
@@ -197,7 +201,7 @@ namespace smsc { namespace store
          * @see SMS
          */
         virtual void changeSmsStateToEnroute(SMSId id,
-            const Descriptor& dst, uint32_t failureCause, 
+            const Descriptor& dst, uint32_t failureCause,
             time_t nextTryTime, uint32_t attempts)
                 throw(StorageException, NoSuchMessageException) = 0;
 

@@ -1376,6 +1376,27 @@ bool RemoteStore::ReadyIdIterator::getDstSmeId(char* buffer)
     return false;
 }
 
+bool RemoteStore::ReadyIdIterator::getDda(char* buffer)
+    throw(StorageException)
+{
+    __require__(buffer);
+    if (!isNull && readyStmt && connection && connection->isAvailable()) {
+        return readyStmt->getDda(buffer);
+    }
+    buffer[0] = '\0';
+    return false;
+}
+
+int RemoteStore::ReadyIdIterator::getAttempts()
+    throw(StorageException)
+{
+    if (!isNull && readyStmt && connection && connection->isAvailable()) {
+        return readyStmt->getAttempts();
+    }
+    return 0;
+}
+
+
 
 TimeIdIterator* RemoteStore::getReadyForRetry(time_t retryTime, bool immediate)
     throw(StorageException)

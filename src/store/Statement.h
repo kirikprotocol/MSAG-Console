@@ -506,10 +506,10 @@ namespace smsc { namespace store
     private:
 
         OCIDate         rTime, nextTime;
-        sb2             indNextTime, indDstSmeId;
-        uint32_t        lastResult;
+        sb2             indNextTime, indDstSmeId,indDda;
+        uint32_t        lastResult,attempts;
         SmeSystemIdType dstSmeId;
-
+        FullAddressValue dda;
     public:
 
         ReadyByNextTimeStatement(Connection* connection,
@@ -521,8 +521,11 @@ namespace smsc { namespace store
             throw(StorageException);
         time_t getNextTime()
             throw(StorageException);
-        bool getDstSmeId(char* buffer) 
+        bool getDstSmeId(char* buffer)
             throw(StorageException);
+        bool getDda(char* buffer)
+            throw(StorageException);
+        int getAttempts();
     };
 
     class CancelIdsStatement : public IdStatement

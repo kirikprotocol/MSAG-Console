@@ -35,7 +35,7 @@ Statement::Statement(Connection* connection, const char* sql, bool assign)
     ub4 prefetch=256;
     check(OCIAttrSet(stmt, (ub4) OCI_HTYPE_STMT, (dvoid *) &prefetch, (ub4) sizeof(ub4),
                      (ub4) OCI_ATTR_PREFETCH_ROWS, errhp));
-    
+
     if (assign) owner->assign(this);
 }
 
@@ -1029,21 +1029,21 @@ void ConcatDataStatement::setDestination(const Address& dda)
 /* --------------------- Sheduler's statements -------------------- */
 
 const char* ReadyByNextTimeStatement::sql_raw = (const char*)
-"SELECT ID, NEXT_TRY_TIME, LAST_RESULT, DST_SME_ID FROM SMS_MSG WHERE\
+"SELECT ID, NEXT_TRY_TIME, LAST_RESULT, DST_SME_ID,DDA,ATTEMPTS FROM SMS_MSG WHERE\
  NEXT_TRY_TIME<=:RT ORDER BY NEXT_TRY_TIME ASC";
 const char* ReadyByNextTimeStatement::sql_immediate = (const char*)
 "SELECT ID, NEXT_TRY_TIME, LAST_RESULT, DST_SME_ID FROM SMS_MSG WHERE\
  NEXT_TRY_TIME<=:RT AND LAST_RESULT=1134 ORDER BY NEXT_TRY_TIME ASC";
 ReadyByNextTimeStatement::ReadyByNextTimeStatement(Connection* connection,
     bool immediate, bool assign) throw(StorageException)
-        : IdStatement(connection, (immediate) ? 
+        : IdStatement(connection, (immediate) ?
                       ReadyByNextTimeStatement::sql_immediate:
-                      ReadyByNextTimeStatement::sql_raw, assign), 
+                      ReadyByNextTimeStatement::sql_raw, assign),
           indNextTime(OCI_IND_NOTNULL), indDstSmeId(OCI_IND_NOTNULL), lastResult(0)
 {
-    __trace2__("%p : ReadyByNextTimeStatement creating %s ...", 
+    __trace2__("%p : ReadyByNextTimeStatement creating %s ...",
                stmt, (immediate) ? "for immediate sms":"");
-    
+
     dstSmeId[0]='\0';
 
     define(1, SQLT_VNU, (dvoid *) &(smsId), (sb4) sizeof(smsId));
@@ -1051,7 +1051,8 @@ ReadyByNextTimeStatement::ReadyByNextTimeStatement(Connection* connection,
            (sb4) sizeof(nextTime), (dvoid *)&indNextTime);
     define(3, SQLT_UIN, (dvoid *) &(lastResult), (sb4) sizeof(lastResult));
     define(4, SQLT_STR, (dvoid *) (dstSmeId), (sb4) sizeof(dstSmeId), &indDstSmeId);
-
+    define(5, SQLT_STR, (dvoid *) (dda), (sb4) sizeof(dda), &indDda);
+    define(6, SQLT_UIN, (dvoid *) &(attempts), (sb4) sizeof(attempts));
 }
 void ReadyByNextTimeStatement::bindRetryTime(time_t retryTime)
     throw(StorageException)
@@ -1068,14 +1069,29 @@ time_t ReadyByNextTimeStatement::getNextTime()
     convertOCIDateToDate(&nextTime, &nextTryTime);
     return nextTryTime;
 }
-bool ReadyByNextTimeStatement::getDstSmeId(char* buffer) 
+bool ReadyByNextTimeStatement::getDstSmeId(char* buffer)
     throw(StorageException)
 {
     __require__(buffer);
-    
+
     if (indDstSmeId != OCI_IND_NOTNULL) { buffer[0] = '\0'; return false; }
     strncpy(buffer, dstSmeId, sizeof(dstSmeId));
     return true;
+}
+
+bool ReadyByNextTimeStatement::getDda(char* buffer)
+            throw(StorageException)
+{
+    __require__(buffer);
+
+    if (indDda != OCI_IND_NOTNULL) { buffer[0] = '\0'; return false; }
+    strncpy(buffer, dda, sizeof(dda));
+    return true;
+}
+
+int ReadyByNextTimeStatement::getAttempts()
+{
+  return attempts;
 }
 
 
