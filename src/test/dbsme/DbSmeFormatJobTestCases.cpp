@@ -205,10 +205,10 @@ const string DbSmeOtherFormatJobTestCases::processJobFirstOutput(const string& t
 		os << "string_center: -" << str << "." << endl;
 		os << "string_left  : +" << str << "?" << endl;
 	}
-	os << "int8: $" << getOutputInt8(rec, NULL, res) << "!" << endl;
-	os << "int16: <" << getOutputInt16(rec, NULL, res) << "@" << endl;
-	os << "int32: >" << getOutputInt32(rec, NULL, res) << "#" << endl;
-	os << "int64: (" << getOutputInt64(rec, NULL, res) << ")" << endl;
+	os << "int8: $" << (int) getOutputInt8(rec, NULL, res) << "!" << endl;
+	os << "int16: <" << (int) getOutputInt16(rec, NULL, res) << "@" << endl;
+	os << "int32: >" << (int) getOutputInt32(rec, NULL, res) << "#" << endl;
+	os << "int64: (" << (int) getOutputInt64(rec, NULL, res) << ")" << endl;
 	static const FloatFormatter ff(1);
 	static const DoubleFormatter df(3, true);
 	static const DoubleFormatter ldf(2, false);

@@ -137,24 +137,26 @@ const string DbSmeJobTestCases::getOutputString(const DbSmeTestRecord* rec,
 	//res = true;
 	if (rec)
 	{
-		if (rec->checkString())
+		if (rec->checkString() && rec->getString().length())
 		{
 			__tc__("processDbSmeRes.input.string"); __tc_ok__;
 			return rec->getString();
 		}
-		if (rec->checkQuotedString())
+		if (rec->checkQuotedString() && rec->getQuotedString().length())
 		{
 			__tc__("processDbSmeRes.input.string"); __tc_ok__;
 			return rec->getQuotedString();
 		}
 		if (rec->getDefInput())
 		{
-			if (rec->getDefInput()->checkString())
+			if (rec->getDefInput()->checkString() &&
+				rec->getDefInput()->getString().length())
 			{
 				__tc__("processDbSmeRes.defaultInput.string"); __tc_ok__;
 				return rec->getDefInput()->getString();
 			}
-			if (rec->getDefInput()->checkQuotedString())
+			if (rec->getDefInput()->checkQuotedString() &&
+				rec->getDefInput()->getQuotedString().length())
 			{
 				__tc__("processDbSmeRes.defaultInput.string"); __tc_ok__;
 				return rec->getDefInput()->getQuotedString();
@@ -163,12 +165,12 @@ const string DbSmeJobTestCases::getOutputString(const DbSmeTestRecord* rec,
 	}
 	if (defOutput)
 	{
-		if (defOutput->checkString())
+		if (defOutput->checkString() /* && defOutput->getString().length()*/)
 		{
 			__tc__("processDbSmeRes.select.defaultOutput.string"); __tc_ok__;
 			return defOutput->getString();
 		}
-		if (defOutput->checkQuotedString())
+		if (defOutput->checkQuotedString() /* && defOutput->getQuotedString().length()*/)
 		{
 			__tc__("processDbSmeRes.select.defaultOutput.string"); __tc_ok__;
 			return defOutput->getQuotedString();

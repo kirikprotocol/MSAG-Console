@@ -111,7 +111,7 @@ DbSmeTestRecord* DbSmeInsertJobTestCases::createUintDefaultsJobInput()
 	DbSmeTestRecord* rec = new DbSmeTestRecord();
 	rec->setJob("InsertJob2");
 	rec->setId(dbSmeReg->nextId());
-	rec->setDefInput(newDefInput1());
+	rec->setDefInput(newDefInput2());
 	__tc__("submitDbSmeCmd.correct.defaultInput.uint"); __tc_ok__;
 	__tc__("submitDbSmeCmd.correct.defaultInput.float"); __tc_ok__;
 	__tc__("submitDbSmeCmd.correct.defaultInput.string"); __tc_ok__;
@@ -168,6 +168,10 @@ const string DbSmeInsertJobTestCases::processJobFirstOutput(const string& text,
 	__require__(rec && rec->checkId());
 	__require__(dbSmeReg);
 	__decl_tc__;
+	static const DateFormatter dateFmt("dd-MM-yyyy HH:mm:ss");
+	static const FloatFormatter fltFmt(6);
+	static const DoubleFormatter dblFmt(6, false);
+	static const DoubleFormatter ldblFmt(6, false);
 	if (dbSmeReg->getRecord(rec->getId()))
 	{
 		__tc__("processDbSmeRes.insert.duplicateKey"); __tc_ok__;
@@ -178,17 +182,16 @@ const string DbSmeInsertJobTestCases::processJobFirstOutput(const string& text,
 		ostringstream os;
 		bool res = true;
 		__tc__("processDbSmeRes.insert.ok"); __tc_ok__;
-		static const DateFormatter df("dd-MM-yyyy HH:mm:ss");
 		os << endl << "InsertJob1:" << endl;
 		os << "string: " << getOutputString(rec, NULL, res) << endl;
-		os << "date: " << getOutputDate(rec, NULL, df, res) << endl;
-		os << "float: " << getOutputFloat(rec, NULL, res) << endl;
-		os << "double: " << getOutputDouble(rec, NULL, res) << endl;
-		os << "long-double: " << getOutputLongDouble(rec, NULL, res) << endl;
-		os << "int8: " << getOutputInt8(rec, NULL, res) << endl;
-		os << "int16: " << getOutputInt16(rec, NULL, res) << endl;
-		os << "int32: " << getOutputInt32(rec, NULL, res) << endl;
-		os << "int64: " << getOutputInt64(rec, NULL, res) << endl;
+		os << "date: " << getOutputDate(rec, NULL, dateFmt, res) << endl;
+		os << "float: " << getOutputFloat(rec, NULL, fltFmt, res) << endl;
+		os << "double: " << getOutputDouble(rec, NULL, dblFmt, res) << endl;
+		os << "long-double: " << getOutputLongDouble(rec, NULL, ldblFmt, res) << endl;
+		os << "int8: " << (int) getOutputInt8(rec, NULL, res) << endl;
+		os << "int16: " << (int) getOutputInt16(rec, NULL, res) << endl;
+		os << "int32: " << (int) getOutputInt32(rec, NULL, res) << endl;
+		os << "int64: " << (int) getOutputInt64(rec, NULL, res) << endl;
 		os << "id: " << rec->getId() << endl;
 		os << "rows-affected: 1" << endl;
 		__require__(res);
@@ -203,14 +206,14 @@ const string DbSmeInsertJobTestCases::processJobFirstOutput(const string& text,
 		static const DateFormatter df("dd-MM-yyyy HH:mm:ss");
 		os << endl << "InsertJob2:" << endl;
 		os << "string: " << getOutputString(rec, NULL, res) << endl;
-		os << "date: " << getOutputDate(rec, NULL, df, res) << endl;
-		os << "float: " << getOutputFloat(rec, NULL, res) << endl;
-		os << "double: " << getOutputDouble(rec, NULL, res) << endl;
-		os << "long-double: " << getOutputLongDouble(rec, NULL, res) << endl;
-		os << "uint8: " << getOutputInt8(rec, NULL, res) << endl;
-		os << "uint16: " << getOutputInt16(rec, NULL, res) << endl;
-		os << "uint32: " << getOutputInt32(rec, NULL, res) << endl;
-		os << "uint64: " << getOutputInt64(rec, NULL, res) << endl;
+		os << "date: " << getOutputDate(rec, NULL, dateFmt, res) << endl;
+		os << "float: " << getOutputFloat(rec, NULL, fltFmt, res) << endl;
+		os << "double: " << getOutputDouble(rec, NULL, dblFmt, res) << endl;
+		os << "long-double: " << getOutputLongDouble(rec, NULL, ldblFmt, res) << endl;
+		os << "uint8: " << (int) getOutputUint8(rec, NULL, res) << endl;
+		os << "uint16: " << (int) getOutputUint16(rec, NULL, res) << endl;
+		os << "uint32: " << (int) getOutputUint32(rec, NULL, res) << endl;
+		os << "uint64: " << (int) getOutputUint64(rec, NULL, res) << endl;
 		os << "id: " << rec->getId() << endl;
 		os << "rows-affected: 1" << endl;
 		__require__(res);
@@ -270,6 +273,7 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 	__decl_tc__;
 	if (rec->getJob() == "UpdateJob1")
 	{
+		__require__(rec->checkId());
 		__tc__("processDbSmeRes.update.ok"); __tc_ok__;
 		__tc__("processDbSmeRes.input.jobName"); __tc_ok__;
 		__tc__("processDbSmeRes.input.toAddress"); __tc_ok__;
@@ -280,8 +284,8 @@ const string DbSmeUpdateJobTestCases::processJobFirstOutput(const string& text,
 		os << "job-name: " << getOutputJobName(rec) << endl;
 		os << "from-address: " << getOutputFromAddress(rec) << endl;
 		os << "to-address: " << getOutputToAddress(rec) << endl;
+		os << "id: " << rec->getId() << endl;
 		int rowsAffected = 0;
-		__require__(rec->checkId());
 		DbSmeTestRecord* r = dbSmeReg->getRecord(rec->getId());
 		if (r)
 		{

@@ -53,8 +53,8 @@ void setRandomInput##typeName(DbSmeTestRecord* rec) { \
 	setInput##typeName(rec, randDouble(len, precision)); \
 }
 
-#define __get_output__(type, typeName, tcType) \
-type getOutput##typeName(const DbSmeTestRecord* rec, \
+#define __get_output__(type, outputTypeName, typeName, tcType) \
+type getOutput##outputTypeName(const DbSmeTestRecord* rec, \
 	const DbSmeTestRecord* defOutput, bool& res) { \
 	__decl_tc__; \
 	if (rec) { \
@@ -120,21 +120,25 @@ protected:
 	__set_random_int__(Int64, INT_MIN + 1, INT_MAX - 1)
 	__set_random_int__(Uint8, 0, 255)
 	__set_random_int__(Uint16, 0, 65534)
-	__set_random_int__(Uint32, 0, UINT_MAX - 1)
-	__set_random_int__(Uint64, 0, UINT_MAX - 1)
+	__set_random_int__(Uint32, 0, INT_MAX - 1)
+	__set_random_int__(Uint64, 0, INT_MAX - 1)
 	__set_random_float__(Float, 5, 2)
 	__set_random_float__(Double, 5, 2)
 	__set_random_float__(LongDouble, 5, 2)
 	void setRandomInputString(DbSmeTestRecord* rec, bool quotedString);
 	void setRandomInputDate(DbSmeTestRecord* rec);
 	//output
-	__get_output__(int, Int8, "int")
-	__get_output__(int, Int16, "int")
-	__get_output__(int, Int32, "int")
-	__get_output__(int, Int64, "int")
-	__get_output__(double, Float, "float")
-	__get_output__(double, Double, "float")
-	__get_output__(double, LongDouble, "float")
+	__get_output__(int8_t, Int8, Int8, "int")
+	__get_output__(int16_t, Int16, Int16, "int")
+	__get_output__(int32_t, Int32, Int32, "int")
+	__get_output__(int64_t, Int64, Int64, "int")
+	__get_output__(uint8_t, Uint8, Int8, "uint")
+	__get_output__(uint16_t, Uint16, Int16, "uint")
+	__get_output__(uint32_t, Uint32, Int32, "uint")
+	__get_output__(uint64_t, Uint64, Int64, "uint")
+	__get_output__(double, Float, Float, "float")
+	__get_output__(double, Double, Double, "float")
+	__get_output__(double, LongDouble, LongDouble, "float")
 	__get_output_float__(double, Float, "float")
 	__get_output_float__(double, Double, "float")
 	__get_output_float__(double, LongDouble, "float")

@@ -40,33 +40,36 @@ DbSmeTestRecord* DbSmeSelectJobTestCases::createSelectNoDefaultsJobInput()
 void DbSmeSelectJobTestCases::writeSelectJobRecord(ostream& os,
 	DbSmeTestRecord* rec, DbSmeTestRecord* defOutput, time_t now)
 {
-	static const DateFormatter df1("d/M/yy h:m:s t");
-	static const DateFormatter df2("dd.MM.yyyy hh-mm-ss t");
-	static const DateFormatter df3("d-MMM-yy H m s");
-	static const DateFormatter df4("dd MMMM yyyy HH.mm.ss");
+	static const DateFormatter dateFmt1("d/M/yy h:m:s t");
+	static const DateFormatter dateFmt2("dd.MM.yyyy hh-mm-ss t");
+	static const DateFormatter dateFmt3("d-MMM-yy H m s");
+	static const DateFormatter dateFmt4("dd MMMM yyyy HH.mm.ss");
+	static const FloatFormatter fltFmt(6);
+	static const DoubleFormatter dblFmt(6, false);
+	static const DoubleFormatter ldblFmt(6, false);
 
 	bool res = true;
 	os << endl << "SelectJob:" << endl;
 	defOutput->setDateType(DT_NOW);
 	defOutput->setDate(now);
-	os << getOutputDate(rec, defOutput, df1, res) << endl;
+	os << getOutputDate(rec, defOutput, dateFmt1, res) << endl;
 	defOutput->setDateType(DT_TODAY);
 	defOutput->setDate(getDate(DT_TODAY));
-	os << getOutputDate(rec, defOutput, df2, res) << endl;
+	os << getOutputDate(rec, defOutput, dateFmt2, res) << endl;
 	defOutput->setDateType(DT_YESTERDAY);
 	defOutput->setDate(getDate(DT_YESTERDAY));
-	os << getOutputDate(rec, defOutput, df3, res) << endl;
+	os << getOutputDate(rec, defOutput, dateFmt3, res) << endl;
 	defOutput->setDateType(DT_TOMORROW);
 	defOutput->setDate(getDate(DT_TOMORROW));
-	os << getOutputDate(rec, defOutput, df4, res) << endl;
+	os << getOutputDate(rec, defOutput, dateFmt4, res) << endl;
 
-	os << getOutputInt8(rec, defOutput, res) << endl;
-	os << getOutputInt16(rec, defOutput, res) << endl;
-	os << getOutputInt32(rec, defOutput, res) << endl;
-	os << getOutputInt64(rec, defOutput, res) << endl;
-	os << getOutputFloat(rec, defOutput, res) << endl;
-	os << getOutputDouble(rec, defOutput, res) << endl;
-	os << getOutputLongDouble(rec, defOutput, res) << endl;
+	os << (int) getOutputInt8(rec, defOutput, res) << endl;
+	os << (int) getOutputInt16(rec, defOutput, res) << endl;
+	os << (int) getOutputInt32(rec, defOutput, res) << endl;
+	os << (int) getOutputInt64(rec, defOutput, res) << endl;
+	os << getOutputFloat(rec, defOutput, fltFmt, res) << endl;
+	os << getOutputDouble(rec, defOutput, dblFmt, res) << endl;
+	os << getOutputLongDouble(rec, defOutput, ldblFmt, res) << endl;
 	os << getOutputString(rec, defOutput, res) << endl;
 	__require__(res);
 }
@@ -162,7 +165,10 @@ const string DbSmeSelectJobTestCases::processSelectNoDefaultsJobOutput()
 	__decl_tc__;
 	ostringstream os;
 	bool res = true;
-	static const DateFormatter df("dd.MM.yyyy hh-mm-ss t");
+	static const DateFormatter dateFmt("dd.MM.yyyy hh-mm-ss t");
+	static const FloatFormatter fltFmt(6);
+	static const DoubleFormatter dblFmt(6, false);
+	static const DoubleFormatter ldblFmt(6, false);
 	DbSmeRegistry::DbSmeTestRecordIterator* it = dbSmeReg->getRecords();
 	int count = 0;
 	while (DbSmeTestRecord* r = it->next())
@@ -170,14 +176,14 @@ const string DbSmeSelectJobTestCases::processSelectNoDefaultsJobOutput()
 		__require__(r->checkId());
 		count++;
 		os << endl << "SelectJob:" << endl;
-		os << getOutputDate(r, NULL, df, res) << endl;
-		os << getOutputInt8(r, NULL, res) << endl;
-		os << getOutputInt16(r, NULL, res) << endl;
-		os << getOutputInt32(r, NULL, res) << endl;
-		os << getOutputInt64(r, NULL, res) << endl;
-		os << getOutputFloat(r, NULL, res) << endl;
-		os << getOutputDouble(r, NULL, res) << endl;
-		os << getOutputLongDouble(r, NULL, res) << endl;
+		os << getOutputDate(r, NULL, dateFmt, res) << endl;
+		os << (int) getOutputInt8(r, NULL, res) << endl;
+		os << (int) getOutputInt16(r, NULL, res) << endl;
+		os << (int) getOutputInt32(r, NULL, res) << endl;
+		os << (int) getOutputInt64(r, NULL, res) << endl;
+		os << getOutputFloat(r, NULL, fltFmt, res) << endl;
+		os << getOutputDouble(r, NULL, dblFmt, res) << endl;
+		os << getOutputLongDouble(r, NULL, ldblFmt, res) << endl;
 		os << getOutputString(r, NULL, res) << endl;
 		if (!res)
 		{
