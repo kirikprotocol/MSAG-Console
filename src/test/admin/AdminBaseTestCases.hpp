@@ -62,11 +62,9 @@ struct AdminTestCase
 {
 	const string id;
 	const string cmd;
-	const string humanResp;
-	const string scriptResp;
-	AdminTestCase(const char* _id, const char* _cmd, const char* _humanResp,
-		const char* _scriptResp)
-	: id(_id), cmd(_cmd), humanResp(_humanResp), scriptResp(_scriptResp) {}
+	const string resp;
+	AdminTestCase(const char* _id, const char* _cmd, const char* _resp)
+	: id(_id), cmd(_cmd), resp(_resp) {}
 };
 
 struct AdminFixture
@@ -96,15 +94,15 @@ public:
 	 */
 	void executeTestCases();
 
-	void addTestCase(const char* id, const char* cmd, const char* humanResp
-		/*, const char* scriptResp*/);
-	void runTestCase(const char* id, const char* cmd, const char* humanResp
-		/*, const char* scriptResp*/);
+	void addTestCase(const char* id, const char* cmd, const char* resp);
+	void runTestCase(const char* id, const char* cmd, const char* resp);
 
 	void loginCommands();
 	void invalidCommands();
 
 protected:
+	AdminFixture* fixture;
+
 	virtual Category& getLog();
 	void sendRequest(const char* cmd);
 	bool checkResponse(const char* pattern);
@@ -112,7 +110,6 @@ protected:
 private:
 	Socket socket;
 	CheckList* chkList;
-	bool humanConsole;
 	vector<AdminTestCase*> testCases;
 };
 

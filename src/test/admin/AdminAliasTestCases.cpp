@@ -12,21 +12,28 @@ Category& AdminAliasTestCases::getLog()
 	return log;
 }
 
-#define __cmd__(id, cmd, humanResp) \
-	runTestCase(id, cmd, hasRights ? humanResp : noRights)
+#define __cmd__(id, cmd, resp) \
+	if (hasRights) { \
+		runTestCase(id, cmd, resp); \
+	} else { \
+		runTestCase(id, cmd, noRights); \
+	}
+
+#define __human__(humanStr, scriptStr) \
+	(fixture->humanConsole ? humanStr : scriptStr)
 
 void AdminAliasTestCases::correctCommands()
 {
+	char cmd[128];
+	char resp[256];
 	//add correct
 	vector<const char*> masks = Masks::correct();
 	for (int i = 0; i < masks.size(); i++)
 	{
-		char cmd[128];
-		char resp[256];
 		sprintf(cmd, "add alias %s %s nohide %s",
 			masks[i], masks[i], shit);
-		sprintf(resp, "/^\\QOk. Alias '%s' for address '%s' added\\E$/",
-			masks[i], masks[i]);
+		sprintf(resp, "/^\\Q%s Alias '%s' for address '%s' added\\E$/",
+			__human__("Ok.", "+ 100"), masks[i], masks[i]);
 		__cmd__("adminConsole.alias.add.correct", cmd, resp);
 	}
 	//view added
@@ -35,26 +42,27 @@ void AdminAliasTestCases::correctCommands()
 		char cmd[128];
 		char resp[256];
 		sprintf(cmd, "view alias %s %s", masks[i], shit);
-		sprintf(resp, "/^\\QOk. Alias '%s' Address '%s' (nohide)\\E$/",
-			masks[i], masks[i]);
+		sprintf(resp, "/^\\Q%s Alias '%s' Address '%s' (nohide)\\E$/",
+			__human__("Ok.", "+ 100"), masks[i], masks[i]);
 		__cmd__("adminConsole.alias.view.existent", cmd, resp);
 	}
 	//add & delete
+	sprintf(resp, "/^\\Q%s Alias '123' for address '123' added\\E$/",
+		__human__("Ok.", "+ 100"));
 	__cmd__("adminConsole.alias.add.correct",
-		"add alias 123 123 hide",
-		"/^\\QOk. Alias '123' for address '123' added\\E$/");
+		"add alias 123 123 hide", resp);
+	sprintf(resp, "/^\\Q%s Alias '123' deleted\\E$/",
+		__human__("Ok.", "+ 100"));
 	__cmd__("adminConsole.alias.delete.existent",
-		"delete alias 123",
-		"/^\\QOk. Alias '123' deleted\\E$/");
-	char cmd[128];
-	char resp[128];
+		"delete alias 123", resp);
 	//delete
 	//const char* deleteList[] = {".0.1.00", ".1.1.00", ".0.1.00?", ".1.1.00?"};
 	const char* deleteList[] = {"00", "+00", "00?", "+00?"};
 	for (int i = 0; i < sizeof(deleteList) / sizeof(*deleteList); i++)
 	{
 		sprintf(cmd, "delete alias %s %s", deleteList[i], shit);
-		sprintf(resp, "/^\\QOk. Alias '%s' deleted\\E$/", deleteList[i]);
+		sprintf(resp, "/^\\Q%s Alias '%s' deleted\\E$/",
+			__human__("Ok.", "+ 100"), deleteList[i]);
 		__cmd__("adminConsole.alias.delete.existent", cmd, resp);
 	}
 	//alter
@@ -65,16 +73,19 @@ void AdminAliasTestCases::correctCommands()
 	{
 		sprintf(cmd, "alter alias %s %s %s %s", alterList[i], alterList[i],
 			alterOptions[i], strlen(alterOptions[i]) ? shit : "");
-		sprintf(resp, "/^\\QOk. Alias '%s' altered\\E$/", alterList[i]);
+		sprintf(resp, "/^\\Q%s Alias '%s' altered\\E$/",
+			__human__("Ok.", "+ 100"), alterList[i]);
 		__cmd__("adminConsole.alias.alter.correct", cmd, resp);
 	}
 	//view
 	sprintf(cmd, "view alias 20 %s", shit);
-	__cmd__("adminConsole.alias.view.existent", cmd,
-		"/^\\QOk. Alias '20' Address '02' (hide)\\E$/");
+	sprintf(resp, "/^\\Q%s Alias '20' Address '02' (hide)\\E$/",
+		__human__("Ok.", "+ 100"));
+	__cmd__("adminConsole.alias.view.existent", cmd, resp);
 	sprintf(cmd, "view alias 20? %s", shit);
-	__cmd__("adminConsole.alias.view.existent",
-		cmd, "/^\\QOk. Alias '20?' Address '02?' (nohide)\\E$/");
+	sprintf(resp, "/^\\Q%s Alias '20?' Address '02?' (nohide)\\E$/",
+		__human__("Ok.", "+ 100"));
+	__cmd__("adminConsole.alias.view.existent", cmd, resp);
 	//list (список не сортированный)
 	static const string list[] = {
 		"20?",
@@ -96,19 +107,19 @@ void AdminAliasTestCases::correctCommands()
 		"+10"
 	};
 	static const int listSize = sizeof(list) / sizeof(*list);
-	string humanResp;
-	humanResp.reserve(1024);
-	humanResp += "/^Alias list:$";
+	string listResp;
+	listResp.reserve(1024);
+	listResp += __human__("/^Alias list:$", "");
 	for (int i = 0; i < listSize; i++)
 	{
-		humanResp += "^ \\Q";
-		humanResp += list[i];
-		humanResp += "\\E$";
+		listResp += "^ \\Q";
+		listResp += list[i];
+		listResp += "\\E$";
 	}
-	humanResp += "/ms";
+	listResp += __human__("", "+ 200 Alias list");
+	listResp += "/ms";
 	sprintf(cmd, "list alias %s", shit);
-	__cmd__("adminConsole.alias.list",
-		cmd, humanResp.c_str());
+	__cmd__("adminConsole.alias.list", cmd, listResp.c_str());
 }
 
 void AdminAliasTestCases::incorrectCommands()

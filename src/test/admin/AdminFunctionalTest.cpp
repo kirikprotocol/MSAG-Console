@@ -25,9 +25,9 @@ void AdminFunctionalTest::executeTest()
 	AdminAliasTestCases aliasTc(fixture, true);
 	aliasTc.loginCommands();
 	//aliasTc.incorrectCommands(); //не мен€ют конфигурации
-	aliasTc.correctCommands();
+	//aliasTc.correctCommands();
 	//aliasTc.executeTestCases();
-	aliasTc.apply();
+	//aliasTc.apply();
 }
 
 /**

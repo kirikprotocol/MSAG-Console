@@ -11,8 +11,8 @@ using smsc::util::Exception;
 using namespace smsc::util::regexp;
 using namespace smsc::test::util;
 
-AdminBaseTestCases::AdminBaseTestCases(AdminFixture* fixture)
-: humanConsole(fixture->humanConsole), chkList(fixture->chkList)
+AdminBaseTestCases::AdminBaseTestCases(AdminFixture* _fixture)
+: fixture(_fixture), chkList(_fixture->chkList)
 {
 	int timeout = 8;
 	if (socket.Init(fixture->host, fixture->port, timeout) == -1)
@@ -103,16 +103,16 @@ bool AdminBaseTestCases::checkResponse(const char* pattern)
 }
 
 void AdminBaseTestCases::addTestCase(const char* id, const char* cmd,
-	const char* humanResp /*, const char* scriptResp*/)
+	const char* resp)
 {
-	const char* scriptResp = "";
-	__require__(id && cmd && humanResp && scriptResp);
-	testCases.push_back(new AdminTestCase(id, cmd, humanResp, scriptResp));
+	__require__(id && cmd && resp);
+	testCases.push_back(new AdminTestCase(id, cmd, resp));
 }
 
 void AdminBaseTestCases::runTestCase(const char* id, const char* cmd,
-	const char* humanResp /*, const char* scriptResp*/)
+	const char* resp)
 {
+	__require__(id && cmd && resp);
 	bool isOk = true;
 	TestCase* tc = chkList->getTc(id);
 	sendRequest(cmd);
@@ -122,7 +122,7 @@ void AdminBaseTestCases::runTestCase(const char* id, const char* cmd,
 	{
 		__tc_fail__(1);
 	}
-	if (!checkResponse(humanConsole ? humanResp : NULL))
+	if (!checkResponse(resp))
 	{
 		__tc_fail__(2);
 	}
@@ -140,15 +140,34 @@ bool AdminBaseTestCases::login(const char* login, const char* passwd,
 	__require__(login && passwd);
 	bool res = true;
 	char pattern[128];
-	res &= checkResponse("/.*Login:$/ms");
-	sendRequest(login);
-	sprintf(pattern, "/^%s$^Password:$/ms", login);
-	res &= checkResponse(pattern);
-	sendRequest(passwd);
-	sprintf(pattern, "/%s$^Password:/ms", login);
-	res &= checkResponse(correct ?
-		"/^Welcome to SMSC Remote Console.$(^$)*>$/ms" :
-		"/^Authentication failed. Access denied.$/ms");
+	if (fixture->humanConsole)
+	{
+		res &= checkResponse("/.*Login:$/ms");
+		sendRequest(login);
+		sprintf(pattern, "/^%s$/", login);
+		res &= checkResponse(pattern);
+		res &= checkResponse("/^Password:$/");
+		sendRequest(passwd);
+		if (correct)
+		{
+			res &= checkResponse("/^\\QWelcome to SMSC Remote Console.\\E$/");
+			res &= checkResponse("/^>$/");
+		}
+		else
+		{
+			res &= checkResponse("/^\\QAuthentication failed. Access denied.\\E$/");
+		}
+	}
+	else
+	{
+		res &= checkResponse("/^\\Q+ 100 Connected. Login:\\E$/");
+		sendRequest(login);
+		res &= checkResponse("/^\\Q+ 100 Login accepted. Password:\\E$/");
+		sendRequest(passwd);
+		res &= checkResponse(correct ?
+			"/^\\Q+ 100 Logged in. Access granted.\\E$/" :
+			"/^\\Q- 500 Authentication failed. Access denied.\\E$/");
+	}
 	return res;
 }
 
@@ -165,7 +184,7 @@ void AdminBaseTestCases::executeTestCases()
 	for (int i = 0; i < testCases.size(); i++)
 	{
 		runTestCase(testCases[i]->id.c_str(), testCases[i]->cmd.c_str(),
-            testCases[i]->humanResp.c_str() /*, testCases[i]->scriptResp.c_str()*/);
+            testCases[i]->resp.c_str());
 	}
 }
 
@@ -190,8 +209,8 @@ void AdminBaseTestCases::loginCommands()
 	__tc_ok_cond__;
 }
 
-#define __cmd__(id, cmd, humanResp) \
-	runTestCase(id, cmd, humanResp)
+#define __cmd__(id, cmd, resp) \
+	runTestCase(id, cmd, resp)
 	
 void AdminBaseTestCases::invalidCommands()
 {
