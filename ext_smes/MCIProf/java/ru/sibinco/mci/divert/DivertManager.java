@@ -371,7 +371,14 @@ public class DivertManager
         }
         return new DivertInfo(info);
       }
-      catch (IOException exc) {
+      catch (IOException exc)
+      {
+        if (mscSocket != null) {
+          try { if (is != null) is.close(); } catch (IOException e) { logger.error("MSC is close error", e); }
+          try { if (os != null) os.close(); } catch (IOException e) { logger.error("MSC os close error", e); } 
+          try { mscSocket.close(); } catch (IOException e) { logger.error("MSC socket close error", e); }
+          mscSocket = null;
+        }
         logger.error("Communication with MSC error", exc);
         throw new DivertManagerException(exc, DivertManagerException.COMMUNICATION);
       }
@@ -409,7 +416,14 @@ public class DivertManager
           info.clearUncond();
         }
       }
-      catch (IOException exc) {
+      catch (IOException exc)
+      {
+        if (mscSocket != null) {
+          try { if (is != null) is.close(); } catch (IOException e) { logger.error("MSC is close error", e); }
+          try { if (os != null) os.close(); } catch (IOException e) { logger.error("MSC os close error", e); }
+          try { mscSocket.close(); } catch (IOException e) { logger.error("MSC socket close error", e); }
+          mscSocket = null;
+        }
         logger.error("Communication with MSC error", exc);
         throw new DivertManagerException(exc, DivertManagerException.COMMUNICATION);
       }
