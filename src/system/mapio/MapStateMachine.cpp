@@ -3043,7 +3043,8 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       __map_warn2__("DCS 0x%02X received in Et96MapV2ProcessUnstructuredSSRequestInd", ussdDataCodingScheme );
       throw runtime_error("Datacoding other then GSM7bit is not supported in Et96MapV2ProcessUnstructuredSSRequestInd");
     }
-    __map_trace2__("%s: dialogid 0x%x invokeid=%d request encoding 0x%x length %d subsystem %s",__func__,dialogueId,invokeId,ussdDataCodingScheme,ussdString_s.ussdStrLen,subsystem.c_str());
+    dialog->ussdMrRef = MakeMrRef();
+    __map_trace2__("%s: dialogid 0x%x invokeid=%d request encoding 0x%x length %d subsystem %s mr=%x",__func__,dialogueId,invokeId,ussdDataCodingScheme,ussdString_s.ussdStrLen,subsystem.c_str(),dialog->ussdMrRef);
     subsystem.insert(0, ".5.0.ussd:");
     Address dest_addr = Address(subsystem.c_str());
 //    dest_addr.type = 0;
@@ -3056,7 +3057,6 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     dialog->sms = _sms;
     dialog->state = MAPST_WaitUssdDelimiter;
     //dialog->ussdSequence = NextSequence();
-    dialog->ussdMrRef = MakeMrRef();
     dialog->sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
     dialog->sms->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,dialog->ussdMrRef);
     //{
