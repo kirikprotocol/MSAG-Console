@@ -103,7 +103,10 @@ void ConfigurationMaster::genAliasConfig()
 	{
 		os << "\t<record addr=\"+" << str(i) <<
 			"\" alias=\"" << str((i + shift) % count) <<
-			"\" hide=\"" << (i % 2 ? "true" : "false") << "\"/>" << endl;
+			"\" hide=\"true\"/>" << endl;
+		os << "\t<record addr=\"+" << str(i) <<
+			"?\" alias=\"" << str((i + shift) % count) <<
+			"?\" hide=\"false\"/>" << endl;
 	}
 }
 
