@@ -89,7 +89,6 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	SMSId correctId;
 	SMS correctSM;
 	doStat(tc.storeCorrectSM(&correctId, &correctSM, RAND_TC));
-	doStat(tc.storeIncorrectSM(correctSM, ALL_TC));
 
 	//создаю SM, сразу читаю, замещаю, читаю и удаляю
 	for (int i = 0; i < 10; i++)
@@ -106,11 +105,11 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	}
 
 	//создаю и удаляю кривые SM
-	doStat(tc.storeIncorrectSM(correctSM, ALL_TC));
-	doStat(tc.replaceCorrectSM(correctId, correctSM, ALL_TC));
-	doStat(tc.replaceIncorrectSM(correctId, correctSM, ALL_TC));
+	//doStat(tc.storeIncorrectSM(correctSM, RAND_TC));
+	doStat(tc.replaceCorrectSM(correctId, correctSM, RAND_TC));
+	doStat(tc.replaceIncorrectSM(correctId, correctSM, RAND_TC));
 	doStat(tc.deleteExistentSM(correctId));
-	doStat(tc.replaceNonExistentSM(correctId, ALL_TC));
+	doStat(tc.replaceNonExistentSM(correctId, RAND_TC));
 
 	//сначала создаю список, потом читаю этот список, потом удаляю
 	//список большой специально для того, чтобы было большое количество 
@@ -159,9 +158,12 @@ inline void MessageStoreBusinessCycleTestTask::onStopped()
 
 void MessageStoreBusinessCycleTestTask::doStat(const TCResult* res)
 {
-	(MessageStoreBusinessCycleTestStat::taskStat[taskNum].ops)++;
-	(MessageStoreBusinessCycleTestStat::tcStat[res->getId()])++;
-	delete res;
+	if (res)
+	{
+		(MessageStoreBusinessCycleTestStat::taskStat[taskNum].ops)++;
+	    (MessageStoreBusinessCycleTestStat::tcStat[res->getId()])++;
+	    delete res;
+	}
 }
 
 //MessageStoreBusinessCycleTestTaskManager methods
@@ -242,10 +244,9 @@ void executeBusinessCycleTest(int numThreads)
 	}
 	tm.startTimer();
 
+	char ch = '*';
 	while (true)
 	{
-		char ch;
-		cin >> ch;
 		switch (ch)
 		{
 			case 'q':
@@ -266,7 +267,7 @@ void executeBusinessCycleTest(int numThreads)
 				cin >> newSize;
 				StoreManager::setPoolSize(newSize);
 				break;
-			default:
+			case 'a':
 				cout << "Time = " << tm.getExecutionTime() << endl;
 				cout << "Total ops = " << tm.getOps() << endl;
 				cout << "Connection pool size = " <<
@@ -277,7 +278,14 @@ void executeBusinessCycleTest(int numThreads)
 					StoreManager::getBusyConnectionsCount() << endl;
 				cout << "Idle connections count = " <<
 					StoreManager::getIdleConnectionsCount() << endl;
+				break;
+			default:
+				cout << "'a' - show totals" << endl;
+				cout << "'s' - show statistics" << endl;
+				cout << "'p' - change pool settings" << endl;
+				cout << "'q' - quit" << endl;
 		}
+		cin >> ch;
 	}
 }
 

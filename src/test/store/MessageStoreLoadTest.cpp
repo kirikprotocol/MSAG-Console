@@ -200,10 +200,15 @@ void executeLoadTest(int numThreads)
 				cout << "Time = " << tm.getExecutionTime() << endl;
 				tm.printStatus();
 				break;
-			default:
+			case 'a':
 				cout << "Time = " << tm.getExecutionTime() << endl;
 				cout << "Rate = " << tm.getRate()
 					<< " messages/second" << endl;
+				break;
+			default:
+				cout << "'a' - show totals" << endl;
+				cout << "'s' - show statistics" << endl;
+				cout << "'q' - quit" << endl;
 		}
 	}
 }
