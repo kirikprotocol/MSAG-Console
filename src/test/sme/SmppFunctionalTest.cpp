@@ -351,21 +351,24 @@ vector<TestSme*> TestSmsc::config(int numAddr, int numSme)
 		{
 			for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
 			{
-				TestRouteData route(*addr[i], *addr[j]);
+				RouteInfo route;
+				route.source = *addr[i];
+				route.dest = *addr[j];
+				route.smeSystemId = smeInfo[rand0(numAddr - 1)]->systemId;
 				switch (s.value())
 				{
 					case 1:
 					case 2:
 						process(tcRoute->addCorrectRouteMatch(
-							smeInfo[i]->systemId, &route, RAND_TC));
+							&route, NULL, RAND_TC));
 						break;
 					case 3:
 						process(tcRoute->addCorrectRouteNotMatch(
-							smeInfo[i]->systemId, &route, RAND_TC));
+							&route, NULL, RAND_TC));
 						break;
 					case 4:
 						process(tcRoute->addCorrectRouteNotMatch2(
-							smeInfo[i]->systemId, &route, RAND_TC));
+							&route, NULL, RAND_TC));
 						break;
 				}
 			}

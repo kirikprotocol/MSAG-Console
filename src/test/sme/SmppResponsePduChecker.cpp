@@ -47,7 +47,7 @@ vector<int> SmppResponsePduChecker::checkSubmitSmResp(
 	switch (respPdu.get_header().get_commandStatus())
 	{
 		case ESME_ROK: //No Error
-			if (!routeChecker->checkExistsReachableRoute(
+			if (!routeChecker->isDestReachable(
 				pdu->get_message().get_dest(), false)) //без проверки на bound sme
 			{
 				res.push_back(11);
@@ -81,7 +81,7 @@ vector<int> SmppResponsePduChecker::checkSubmitSmResp(
 			pduData->replacePdu = NULL;
 			break;
 		case ESME_RINVDSTADR: //Invalid Dest Addr
-			if (!routeChecker->checkExistsUnreachableRoute(
+			if (routeChecker->isDestReachable(
 				pdu->get_message().get_dest(), false)) //без проверки на bound sme
 			{
 				res.push_back(15);
