@@ -179,17 +179,31 @@ void SmsUtil::setupRandomCorrectAddress(Address* addr)
 		addr->setValue(len, val.get());
 	}
 }
+
+void SmsUtil::setupRandomCorrectAddressFull(Address* addr)
+{
+	if (addr)
+	{
+		//задаю максимальную длину адреса, т.к. в некоторых тест кейсах
+		//адрес - ключевое поле
+		auto_ptr<char> val = rand_char(MAX_ADDRESS_VALUE_LENGTH);
+		addr->setTypeOfNumber((uint8_t) rand0(255));
+		addr->setNumberingPlan((uint8_t) rand0(255));
+		addr->setValue(MAX_ADDRESS_VALUE_LENGTH, val.get());
+	}
+}
 	
 void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 {
 	if (desc)
 	{
-		int len = rand1(MAX_ADDRESS_VALUE_LENGTH);
-		auto_ptr<char> mscAddr = rand_char(len);
-		auto_ptr<char> imsiAddr = rand_char(len);
-		desc->setMsc(len, mscAddr.get());
-		desc->setImsi(len, imsiAddr.get());
-		desc->setSmeNumber((uint32_t) rand0(65535));
+		//задаю максимальную длину адресов на всякий случай, возможно
+		//в некоторых тест кейсах это будут ключевые поля
+		auto_ptr<char> mscAddr = rand_char(MAX_ADDRESS_VALUE_LENGTH);
+		auto_ptr<char> imsiAddr = rand_char(MAX_ADDRESS_VALUE_LENGTH);
+		desc->setMsc(MAX_ADDRESS_VALUE_LENGTH, mscAddr.get());
+		desc->setImsi(MAX_ADDRESS_VALUE_LENGTH, imsiAddr.get());
+		desc->setSmeNumber((uint32_t) rand0(INT_MAX));
 	}
 }
 	
@@ -226,12 +240,12 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms)
 	//			outcome is delivery success or failure
 	//xxxxxx10 - SMSC Delivery Receipt requested where the final
 	//			delivery outcome is delivery failure
-	sms->setDeliveryReport((uint8_t) rand0(2));
+	sms->setDeliveryReport((uint8_t) rand0(255));
 	sms->setArchivationRequested(true); //!!! архивировать все сообщения
 	//sms->setFailureCause();
 	//sms->setAttemptsCount();
 	setupRandomCorrectBody(&sms->getMessageBody());
-	auto_ptr<char> tmp = rand_char(rand1(MAX_ESERVICE_TYPE_LENGTH));
+	auto_ptr<char> tmp = rand_char(MAX_ESERVICE_TYPE_LENGTH);
 	sms->setEServiceType(tmp.get());
 	sms->setReceiptSmsId(rand0(INT_MAX));
 	sms->setEsmClass((uint8_t) rand0(255));
