@@ -29,7 +29,7 @@ public class SmsView
     if (smsc == null) {
       this.smsc = appContext.getSmsc();
       // operative.setDataSource(appContext.getConnectionPool());
-      operative.init(appContext);
+      operative.init(smsc);
       archive.init(appContext);
 
     }

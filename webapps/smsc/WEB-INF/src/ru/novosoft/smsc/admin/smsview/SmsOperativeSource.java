@@ -19,7 +19,7 @@ public class SmsOperativeSource extends SmsSource
 {
   private final static int MAX_SMS_FETCH_SIZE = 200;
   private String smsstorePath;
-  private static final String SECTION_NAME_LocalStore = "LocalStore";
+  private static final String SECTION_NAME_LocalStore = "MessageStore.LocalStore";
   private static final String PARAM_NAME_filename = "filename";
   //protected boolean allReaded=false;
   // ArchiveDaemonContext context = null;
