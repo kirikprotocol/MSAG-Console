@@ -492,8 +492,17 @@ static void SendRInfo(MapDialog* dialog)
   }
   dialog->id_opened = true;
   bool hiPrior = false;
-  if ( !dialog->isQueryAbonentStatus && dialog->sms.get() != 0 && dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 )
-    hiPrior = true;
+
+  if ( !dialog->isQueryAbonentStatus ) {
+    if( dialog->sms.get() != 0 &&
+       (dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ||
+        dialog->sms->getNextTime() > dialog->sms->getSubmitTime() + ((dialog->sms->getValidTime() - dialog->sms->getSubmitTime())/2)
+       )
+      )
+    {
+      hiPrior = true;
+    }
+  }
 
   // €Š !!!!
   if ( dialog->version != 2 && dialog->version != 1 ) dialog->version = 2;
