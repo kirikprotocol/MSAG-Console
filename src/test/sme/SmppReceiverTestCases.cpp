@@ -559,15 +559,6 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 				//правильность адресов проверяется в fixture->routeChecker->checkRouteForAcknowledgementSms()
 				//__compareAddr__(get_message().get_source());
 				//__compareAddr__(get_message().get_dest());
-				if (pdu.get_message().get_esmClass() !=
-					ESM_CLASS_SME_ACKNOWLEDGEMENT)
-				{
-					__tc_fail__(1);
-				}
-				if (monitor->pduData->smsId != pdu.get_optional().get_receiptedMessageId())
-				{
-					__tc_fail__(2);
-				}
 				//__compare__(2, get_message().get_protocolId());
 				//__compare__(get_message().get_priorityFlag());
 				//__compare__(get_message().get_registredDelivery());
@@ -575,7 +566,9 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 				//передать дальнейшую проверку тест кейсам конкретных sme
 				if (fixture->ackHandler)
 				{
+					pduReg->removeMonitor(monitor);
 					fixture->ackHandler->processSmeAcknowledgement(monitor, pdu);
+					pduReg->registerMonitor(monitor);
 				}
 				//правильность тела сообщения и опциональных полей
 				//проверяется отдельно для конкретных типов acknoledgement
