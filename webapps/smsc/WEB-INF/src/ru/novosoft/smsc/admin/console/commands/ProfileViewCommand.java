@@ -27,6 +27,7 @@ public class ProfileViewCommand implements Command
     {
         return "Profile '"+profile.getMask().getMask()+"'"+
                " Report: "+profile.getReportOptionsString()+
+               " Locale: "+profile.getLocale()+
                " Encoding: "+profile.getCodepageString();
     }
 
