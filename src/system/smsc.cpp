@@ -497,6 +497,8 @@ void Smsc::init(const SmscConfigs& cfg)
     defProfile.hideModifiable=cfg.cfgman->getBool("profiler.defaultHideModifiable");
     defProfile.divertModifiable=cfg.cfgman->getBool("profiler.defaultDivertModifiable");
 
+    defProfile.udhconcat=cfg.cfgman->getBool("profiler.defaultUdhConcat");
+
     if(!strcmp(dc,"DEFAULT"))
       defProfile.codepage=profiler::ProfileCharsetOptions::Default;
     else if(!strcmp(dc,"UCS2"))
