@@ -1,0 +1,2 @@
+#binary name			source name			libraries
+test/ProfilerFunctionalTest	ProfilerFunctionalTest		-ltest-profiler -ltest-core -ltest-sms -ltest-util -lprofiler -lsms -ldb-exceptions -ldb -lcore-threads -lcore-buffers -lcore-network -lutil-config -lutil-xml -lutil -llog4cpp -lxerces-c1_5_2 -lrt -L$(ORACLE_HOME)/lib $(ORACLE_HOME)/lib/libclntsh.so $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so -lthread -lsocket
