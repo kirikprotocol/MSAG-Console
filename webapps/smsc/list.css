@@ -16,7 +16,7 @@ table.list tr.row0
 }
 table.list tr.row1
 {
-	
+	background-color: #F8F6EE;
 }
 
 table.list tr.row0 td,
@@ -50,3 +50,32 @@ table.list th a.down
 	background-image: url(img/sort_down.gif);
 }
 
+
+
+
+
+table.list tr.row00 td,
+table.list tr.row00 th
+{
+	background-color: #F2EEDA;
+	border-bottom : 1px solid #E4E0CE;
+}
+table.list tr.row01 td,
+table.list tr.row01 th
+{
+	background-color: #F2EEDA;
+	border-bottom : 1px solid #E4E0CE;
+}
+
+table.list tr.row10 td,
+table.list tr.row10 th
+{
+	background-color: #F8F6EE;
+	border-bottom : 1px solid #E6E3D8;
+}
+table.list tr.row11 td,
+table.list tr.row11 th
+{
+	background-color: #F8F6EE;
+	border-bottom : 1px solid #E6E3D8;
+}
