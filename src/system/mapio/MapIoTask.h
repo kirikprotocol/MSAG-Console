@@ -206,7 +206,7 @@ public:
     ET96MAP_LOCAL_SSN_T localSsn,
     ET96MAP_DIALOGUE_ID_T dialogueId,
     ET96MAP_INVOKE_ID_T invokeId,
-    ET96MAP_IMSI_T *imsi_sp
+    ET96MAP_IMSI_T *imsi_sp,
     ET96MAP_LOCATION_INFO_T *locationInfo_sp,
     ET96MAP_LMSI_T *lmsi_sp,
     ET96MAP_MWD_SETS_T *mwdSet,
