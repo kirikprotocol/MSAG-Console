@@ -6,11 +6,26 @@
 #define __compare__(failureCode, field) \
 	if (pdu.field != origPdu->field) { res->addFailure(failureCode); }
 
-#define __compareStr__(failureCode, field) \
+#define __compareCOStr__(failureCode, field) \
 	if ((pdu.field && !origPdu->field) || \
 		(!pdu.field && origPdu->field) || \
-		(pdu.field && origPdu->field && string(pdu.field) != origPdu->field)) \
-	{ res->addFailure(failureCode); }
+		(pdu.field && origPdu->field && strcmp(pdu.field, origPdu->field))) { \
+		__trace2__("%s = {%s, %s}", #field, pdu.field, origPdu->field); \
+		res->addFailure(failureCode); \
+	}
+
+#define __compareOStr__(failureCode, field, fieldSize) \
+	if ((pdu.field && !origPdu->field) || \
+		(!pdu.field && origPdu->field)) { \
+		res->addFailure(failureCode); \
+	} else if (pdu.field && origPdu->field) { \
+		if ((pdu.fieldSize != origPdu->fieldSize) || \
+			strncmp(pdu.field, origPdu->field, pdu.fieldSize)) { \
+			__trace2__("%s = {%s(%d), %s(%d)}", #field, pdu.field, \
+				(int) pdu.fieldSize, origPdu->field, (int) origPdu->fieldSize); \
+			res->addFailure(failureCode); \
+		} \
+	}
 
 #define __compareAddr__(failureCode, field) \
 	if ((pdu.field && !origPdu->field) || \
@@ -39,7 +54,7 @@ SmppReceiverTestCases::SmppReceiverTestCases(const SmeSystemId& _systemId,
 	const AliasRegistry* _aliasReg, const RouteRegistry* _routeReg,
 	ResultHandler* handler, RouteChecker* _routeChecker,
 	SmppPduChecker* _pduChecker)
-	: systemId(_systemId), smeAddr(addr), smeReg(_smeReg),
+	: systemId(_systemId), smeAlias(addr), smeReg(_smeReg),
 	aliasReg(_aliasReg), routeReg(_routeReg), resultHandler(handler),
 	routeChecker(_routeChecker), pduChecker(_pduChecker)
 {
@@ -49,7 +64,7 @@ SmppReceiverTestCases::SmppReceiverTestCases(const SmeSystemId& _systemId,
 	__require__(resultHandler);
 	__require__(routeChecker);
 	__require__(pduChecker);
-	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
+	pduReg = smeReg->getPduRegistry(smeAlias); //может быть NULL
 }
 
 Category& SmppReceiverTestCases::getLog()
@@ -197,27 +212,15 @@ TCResult* SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu)
 	TCResult* res = new TCResult(TC_PROCESS_NORMAL_SMS);
 	try
 	{
-		PduRegistry* pduReg; //перкрыть pduReg класса
-		Address origAlias, origAddr;
+		Address origAlias;
 		SmppUtil::convert(pdu.get_message().get_source(), &origAlias);
-		const AliasHolder* aliasHolder = aliasReg->findAddressByAlias(origAlias);
-		if (!aliasHolder)
-		{
-			res->addFailure(101);
-		}
-		else if (!aliasHolder->aliasToAddress(origAlias, origAddr))
+		//перкрыть pduReg класса
+		PduRegistry* pduReg = smeReg->getPduRegistry(origAlias);
+		if (!pduReg)
 		{
 			ostringstream os;
-			os << "origAlias = " << origAlias << ", origAddr = " << origAddr;
-			__trace2__("SmppReceiverTestCases::processNormalSms(102): %s",
-				os.str().c_str());
-			res->addFailure(102);
-		}
-		else if (!(pduReg = smeReg->getPduRegistry(origAddr)))
-		{
-			ostringstream os;
-			os << "origAlias = " << origAlias << ", origAddr = " << origAddr;
-			__trace2__("SmppReceiverTestCases::processNormalSms(103): %s",
+			os << origAlias;
+			__trace2__("SmppReceiverTestCases::processNormalSms(): pduReg not found for origAlias = %s",
 				os.str().c_str());
 			res->addFailure(103);
 		}
@@ -228,10 +231,6 @@ TCResult* SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu)
 		}
 		else
 		{
-			ostringstream os;
-			os << "origAlias = " << origAlias << ", origAddr = " << origAddr;
-			__trace2__("SmppReceiverTestCases::processNormalSms(): %s",
-				os.str().c_str());
 			//получить оригинальную pdu
 			MutexGuard mguard(pduReg->getMutex());
 			PduData* pduData =
@@ -283,21 +282,24 @@ TCResult* SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu)
 				//header
 				//__compare__(get_header().get_commandLength());
 				//message (mandatory)
-				__compareStr__(131, get_message().get_serviceType());
+				__compareCOStr__(131, get_message().get_serviceType());
 				//__compareAddr__(get_message().get_source());
 				//__compareAddr__(get_message().get_dest());
 				//__compare__(get_message().get_esmClass());
-				if (pdu.get_message().get_esmClass() & ESM_CLASS_MESSAGE_TYPE_BITS !=
+				if ((pdu.get_message().get_esmClass() & ESM_CLASS_MESSAGE_TYPE_BITS) !=
 					ESM_CLASS_NORMAL_MESSAGE)
 				{
 					res->addFailure(132);
 				}
 				__compare__(133, get_message().get_protocolId());
+				//в действительности, priority задается маршрутом и
+				//влияет на порядок доставки сообщений
 				__compare__(134, get_message().get_priorityFlag());
 				__compare__(135, get_message().get_registredDelivery());
 				__compare__(136, get_message().get_dataCoding());
 				__compare__(137, get_message().get_smLength());
-				__compareStr__(138, get_message().get_shortMessage());
+				__compareOStr__(138, get_message().get_shortMessage(),
+					get_message().size_shortMessage());
 				//optional
 				vector<int> tmp2 = SmppUtil::compareOptional(
 					pdu.get_optional(), origPdu->get_optional());
@@ -436,7 +438,7 @@ TCResult* SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu)
 				//header
 				//__compare__(get_header().get_commandLength());
 				//message (mandatory)
-				//__compareStr__(get_message().get_serviceType());
+				//__compareCOStr__(get_message().get_serviceType());
 				//__compareAddr__(get_message().get_source());
 				//__compareAddr__(get_message().get_dest());
 				if (pdu.get_message().get_esmClass() !=
@@ -449,7 +451,8 @@ TCResult* SmppReceiverTestCases::processDeliveryReceipt(PduDeliverySm &pdu)
 				//__compare__(get_message().get_registredDelivery());
 				__compare__(233, get_message().get_dataCoding());
 				//__compare__(get_message().get_smLength());
-				//__compareStr__(get_message().get_shortMessage());
+				//__compareOStr__(get_message().get_shortMessage(),
+				//	get_message().size_shortMessage());
 				//optional
 				vector<int> tmp2 = SmppUtil::compareOptional(
 					pdu.get_optional(), origPdu->get_optional());
@@ -532,7 +535,7 @@ TCResult* SmppReceiverTestCases::processIntermediateNotification(
 				//header
 				//__compare__(get_header().get_commandLength());
 				//message (mandatory)
-				//__compareStr__(get_message().get_serviceType());
+				//__compareCOStr__(get_message().get_serviceType());
 				//__compareAddr__(get_message().get_source());
 				//__compareAddr__(get_message().get_dest());
 				if (pdu.get_message().get_esmClass() !=
@@ -545,7 +548,8 @@ TCResult* SmppReceiverTestCases::processIntermediateNotification(
 				//__compare__(get_message().get_registredDelivery());
 				__compare__(333, get_message().get_dataCoding());
 				//__compare__(get_message().get_smLength());
-				//__compareStr__(get_message().get_shortMessage());
+				//__compareOStr__(get_message().get_shortMessage(),
+				//	get_message().size_shortMessage());
 				//optional
 				vector<int> tmp2 = SmppUtil::compareOptional(
 					pdu.get_optional(), origPdu->get_optional());
