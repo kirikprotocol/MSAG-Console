@@ -29,7 +29,7 @@ public class ProfileAlterCommand extends ProfileGenCommand
                            "Syntax: alter profile <profile_address> "+
                            "[report (full|none)] [locale <locale_name>] [encoding (ucs2|default)] "+
                            "[alias [hide|nohide] [modifiable|notmodifiable]] "+
-                           "[divert [<divert>] [active|inactive] [modifiable|notmodifiable]] ");
+                           "[divert [(set <divert>)|clear] [active|inactive] [modifiable|notmodifiable]] ");
             ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
             return;
         }

@@ -47,18 +47,19 @@ OPT_DM="dm"=47
 OPT_FWD="fwd"=48
 OPT_SRCSME="srcsme"=49
 OPT_SET="set"=50
-VAL_FULL="full"=51
-VAL_NONE="none"=52
-VAL_UCS2="ucs2"=53
-VAL_DEF="default"=54
-VAL_STORE="store"=55
-VAL_FORWARD="forward"=56
-VAL_DATAGRAM="datagram"=57
-WS=58
-STR("more input")=59
-QSTR("quoted string")=60
-STR_WS=61
-STR_CHR=62
-COMMA("comma character ','")=63
-ESC=64
-DIGIT=65
+OPT_CLEAR="clear"=51
+VAL_FULL="full"=52
+VAL_NONE="none"=53
+VAL_UCS2="ucs2"=54
+VAL_DEF="default"=55
+VAL_STORE="store"=56
+VAL_FORWARD="forward"=57
+VAL_DATAGRAM="datagram"=58
+WS=59
+STR("more input")=60
+QSTR("quoted string")=61
+STR_WS=62
+STR_CHR=63
+COMMA("comma character ','")=64
+ESC=65
+DIGIT=66

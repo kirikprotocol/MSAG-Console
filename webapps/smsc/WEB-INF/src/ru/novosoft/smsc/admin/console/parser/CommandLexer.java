@@ -46,7 +46,7 @@ public CommandLexer(LexerSharedInputState state) {
 	literals = new Hashtable();
 	literals.put(new ANTLRHashString("priority", this), new Integer(34));
 	literals.put(new ANTLRHashString("dl", this), new Integer(16));
-	literals.put(new ANTLRHashString("full", this), new Integer(51));
+	literals.put(new ANTLRHashString("full", this), new Integer(52));
 	literals.put(new ANTLRHashString("fwd", this), new Integer(48));
 	literals.put(new ANTLRHashString("list", this), new Integer(7));
 	literals.put(new ANTLRHashString("numelem", this), new Integer(39));
@@ -56,7 +56,7 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("divert", this), new Integer(46));
 	literals.put(new ANTLRHashString("dlsubmitter", this), new Integer(17));
 	literals.put(new ANTLRHashString("modifiable", this), new Integer(44));
-	literals.put(new ANTLRHashString("datagram", this), new Integer(57));
+	literals.put(new ANTLRHashString("datagram", this), new Integer(58));
 	literals.put(new ANTLRHashString("inactive", this), new Integer(43));
 	literals.put(new ANTLRHashString("defaultsme", this), new Integer(35));
 	literals.put(new ANTLRHashString("subj", this), new Integer(32));
@@ -67,7 +67,7 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("set", this), new Integer(50));
 	literals.put(new ANTLRHashString("report", this), new Integer(36));
 	literals.put(new ANTLRHashString("noreceipt", this), new Integer(28));
-	literals.put(new ANTLRHashString("none", this), new Integer(52));
+	literals.put(new ANTLRHashString("none", this), new Integer(53));
 	literals.put(new ANTLRHashString("srcsme", this), new Integer(49));
 	literals.put(new ANTLRHashString("bill", this), new Integer(21));
 	literals.put(new ANTLRHashString("allow", this), new Integer(25));
@@ -77,13 +77,13 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("add", this), new Integer(4));
 	literals.put(new ANTLRHashString("dst", this), new Integer(30));
 	literals.put(new ANTLRHashString("notmodifiable", this), new Integer(45));
-	literals.put(new ANTLRHashString("forward", this), new Integer(56));
+	literals.put(new ANTLRHashString("forward", this), new Integer(57));
 	literals.put(new ANTLRHashString("route", this), new Integer(12));
 	literals.put(new ANTLRHashString("apply", this), new Integer(9));
 	literals.put(new ANTLRHashString("receipt", this), new Integer(27));
 	literals.put(new ANTLRHashString("nobill", this), new Integer(22));
 	literals.put(new ANTLRHashString("dlmember", this), new Integer(18));
-	literals.put(new ANTLRHashString("store", this), new Integer(55));
+	literals.put(new ANTLRHashString("store", this), new Integer(56));
 	literals.put(new ANTLRHashString("hide", this), new Integer(19));
 	literals.put(new ANTLRHashString("src", this), new Integer(29));
 	literals.put(new ANTLRHashString("profile", this), new Integer(13));
@@ -95,8 +95,9 @@ public CommandLexer(LexerSharedInputState state) {
 	literals.put(new ANTLRHashString("dm", this), new Integer(47));
 	literals.put(new ANTLRHashString("alter", this), new Integer(5));
 	literals.put(new ANTLRHashString("noarc", this), new Integer(24));
-	literals.put(new ANTLRHashString("default", this), new Integer(54));
-	literals.put(new ANTLRHashString("ucs2", this), new Integer(53));
+	literals.put(new ANTLRHashString("default", this), new Integer(55));
+	literals.put(new ANTLRHashString("clear", this), new Integer(51));
+	literals.put(new ANTLRHashString("ucs2", this), new Integer(54));
 	literals.put(new ANTLRHashString("nohide", this), new Integer(20));
 caseSensitiveLiterals = true;
 setCaseSensitive(true);

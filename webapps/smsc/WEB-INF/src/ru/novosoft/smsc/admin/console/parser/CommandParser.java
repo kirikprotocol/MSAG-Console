@@ -1567,8 +1567,18 @@ public CommandParser(ParserSharedInputState state) {
 			switch ( LA(1)) {
 			case OPT_SET:
 			{
+				{
 				match(OPT_SET);
 				cmd.setDivert(getnameid("Divert value"));
+				}
+				break;
+			}
+			case OPT_CLEAR:
+			{
+				{
+				match(OPT_CLEAR);
+				cmd.setDivert("");
+				}
 				break;
 			}
 			case EOF:
@@ -2654,6 +2664,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"fwd\"",
 		"\"srcsme\"",
 		"\"set\"",
+		"\"clear\"",
 		"\"full\"",
 		"\"none\"",
 		"\"ucs2\"",

@@ -493,7 +493,8 @@ altprofile returns [ProfileAlterCommand cmd] {
 			    |VAL_UCS2 { cmd.setUcs2Encoding(); } ))?
 		(TGT_ALIAS  profile_alias_opt[cmd]  )?
 		(OPT_DIVERT { cmd.setDivertOptions(true); }
-			    (OPT_SET { cmd.setDivert(getnameid("Divert value")); })?
+			    ((OPT_SET   { cmd.setDivert(getnameid("Divert value")); })|
+			     (OPT_CLEAR { cmd.setDivert(""); }))?
 			     profile_divert_opt[cmd] )?
 	;
 	exception[addr]

@@ -25,13 +25,14 @@ public class ProfileViewCommand implements Command
   private String showProfile(Profile profile)
       throws AdminException
   {
+    String divert = profile.getDivert();
     return "Profile '"+profile.getMask().getMask()+"'"+
            " Report: "+profile.getReportOptionsString()+
            " Locale: "+profile.getLocale()+
            " Encoding: "+profile.getCodepageString()+
            " Alias: "+(profile.isAliasHide() ? "hide":"nohide")+
            ", "+(profile.isAliasModifiable() ? "modifiable":"nomodifiable")+
-           " Divert: "+(profile.getDivert() == null ? "-":profile.getDivert())+
+           " Divert: "+((divert == null || divert.length() <= 0) ? "-":divert)+
            ", "+(profile.isDivertActive() ? "active":"inactive")+
            ", "+(profile.isDivertModifiable() ? "modifiable":"nomodifiable");
   }
