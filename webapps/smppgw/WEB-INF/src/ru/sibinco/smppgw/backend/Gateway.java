@@ -13,6 +13,8 @@ import org.w3c.dom.Element;
 
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.HashMap;
 
 
 /**
@@ -86,17 +88,45 @@ public class Gateway extends Proxy
           throws SibincoException
   {
     gwRoutingManager.trace();
-   
+
     //final Object res = call(SMPPGW_COMPONENT_ID, LOAD_ROUTES_METHOD_ID, Type.Types[Type.StringListType], new HashMap());
     final Object res =loadRoutes(LOAD_ROUTES_METHOD_ID);
     return res instanceof List ? (List) res : null;
   }
- public void TraceRoute(final String subject) throws SibincoException
-   {
-     final Response response = super.runCommand(new TraceRoute(subject));
-     if (Response.StatusOk != response.getStatus())
-       throw new SibincoException("Couldn't trace route , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
-   }
+ public  Object traceRoute(final String subject,final Map args) throws SibincoException
+     {
+      //final Response response = super.runCommand(new CommandCall(TRACE_ROUTE_METHOD_ID, TRACE_ROUTE_METHOD_ID, Type.Types[Type.StringListType], args));
+       final Response response = runCommand(new CommandCall(subject, Type.Types[Type.StringListType], args));
+       if (Response.StatusOk != response.getStatus())
+             throw new SibincoException("Couldn't trace route , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+      final Element resultElem = (Element) response.getData().getElementsByTagName("variant").item(0);
+      final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
+      switch (resultType.getId()) {
+        case Type.StringType:
+          return Utils.getNodeText(resultElem);
+        case Type.IntType:
+          return Long.decode(Utils.getNodeText(resultElem));
+        case Type.BooleanType:
+          return Boolean.valueOf(Utils.getNodeText(resultElem));
+        case Type.StringListType:
+          return translateStringList(Utils.getNodeText(resultElem));
+        default:
+          throw new SibincoException("Unknown result type");
+      }
+     }
+
+  public synchronized List traceRoute(final String dstAddress, final String srcAddress, final String srcSysId)
+          throws SibincoException
+  {
+
+    final Map args = new HashMap();
+    args.put("dstAddress", dstAddress);
+    args.put("srcAddress", srcAddress);
+    args.put("srcSysId", srcSysId);
+    //final Object res = call(SMPPGW_COMPONENT_ID, TRACE_ROUTE_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res =traceRoute(TRACE_ROUTE_METHOD_ID,args);
+    return res instanceof List ? (List) res : null;
+  }
   protected List translateStringList(final String listStr)
     {
       if (null == listStr || 0 == listStr.length())

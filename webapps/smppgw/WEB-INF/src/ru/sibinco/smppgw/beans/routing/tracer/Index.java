@@ -133,7 +133,7 @@ public class Index extends TabledBeanImpl implements TabledBean
          throw new SibincoException(Constants.errors.routing.tracer.srcAddressIsAlias
                     +dstAddress + " -> " + appContext.getSmppgw().getAliases().getAddressByAlias(dstAddressMask).getAddress().getMask());
 
-       traceResults = appContext.getSmppgw().traceRoute(dstAddress, srcAddress, srcSysId);
+       traceResults = appContext.getGateway().traceRoute(dstAddress, srcAddress, srcSysId);
         if (null == traceResults || 1 >= traceResults.size())
           throw new SibincoException("Transport error, invalid responce.");
         message = (String) traceResults.get(0);

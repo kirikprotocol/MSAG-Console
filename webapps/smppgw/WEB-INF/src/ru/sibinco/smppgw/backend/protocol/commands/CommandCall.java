@@ -22,13 +22,13 @@ import org.w3c.dom.Element;
  */
 public class CommandCall extends Command
 {
-  public CommandCall(String commandName, String componentName, String methodName, Type returnType, Map args)
+  public CommandCall(String commandName,  Type returnType, Map args)
           throws SibincoException
   {
     super(commandName, "file:///command_gw.dtd");
     	Element callElem = document.getDocumentElement();
-		callElem.setAttribute("component", StringEncoderDecoder.encode(componentName));
-		callElem.setAttribute("method", StringEncoderDecoder.encode(methodName));
+		//callElem.setAttribute("component", StringEncoderDecoder.encode(componentName));
+		//callElem.setAttribute("method", StringEncoderDecoder.encode(methodName));
 		callElem.setAttribute("returnType", returnType.getName());
 
 		for (Iterator i = args.keySet().iterator(); i.hasNext();)

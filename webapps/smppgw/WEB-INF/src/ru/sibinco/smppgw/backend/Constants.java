@@ -8,7 +8,6 @@ package ru.sibinco.smppgw.backend;
  */
 public interface Constants
 {
-  public static final String SMPPGW_SME_ID = "SMPPGW";
   static final String SECTION_NAME_SMSC_CONNECTIONS = "smsc-connections";
   static final String SECTION_NAME_SME_PROVIDERS = "sme-providers";
 }
