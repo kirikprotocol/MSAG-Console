@@ -73,6 +73,8 @@ public:
 	bool registerSme(const Address& smeAddr, const SmeInfo& sme,
 		bool pduReg = true, bool externalSme = false);
 
+	bool registerAddress(const Address& addr);
+
 	void deleteSme(const SmeSystemId& smeId);
 
 	void bindSme(const SmeSystemId& smeId);
@@ -82,6 +84,7 @@ public:
 	int size();
 
 	const SmeInfo* getSme(const SmeSystemId& smeId) const;
+	const SmeInfo* getSme(const Address& smeAddr) const;
 
 	bool isExternalSme(const Address& smeAddr) const;
 	

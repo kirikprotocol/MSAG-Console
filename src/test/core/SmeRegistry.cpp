@@ -39,6 +39,18 @@ bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme,
 	return true;
 }
 
+bool SmeRegistry::registerAddress(const Address& addr)
+{
+	if (addrMap.find(addr) != addrMap.end())
+	{
+		return false;
+	}
+	addrMap[addr] = NULL;
+	addrList.push_back(new Address(addr));
+	__trace2__("SmeRegistry::registerAddress(): addr = %s", str(addr).c_str());
+	return true;
+}
+
 void SmeRegistry::deleteSme(const SmeSystemId& smeId)
 {
 	SmeIdMap::iterator it = smeIdMap.find(smeId);
@@ -73,10 +85,14 @@ void SmeRegistry::bindSme(const SmeSystemId& smeId)
 
 void SmeRegistry::clear()
 {
-	__require__(addrMap.size() == smeIdMap.size());
+	//__require__(addrMap.size() == smeIdMap.size());
 	for (AddressMap::iterator it = addrMap.begin(); it != addrMap.end(); it++)
 	{
-		delete it->second;
+		SmeData* smeData = it->second;
+		if (smeData)
+		{
+			delete smeData;
+		}
 	}
 	for (int i = 0; i < addrList.size(); i++)
 	{
@@ -89,7 +105,7 @@ void SmeRegistry::clear()
 
 int SmeRegistry::size()
 {
-	__require__(addrMap.size() == smeIdMap.size());
+	//__require__(addrMap.size() == smeIdMap.size());
 	return smeIdMap.size();
 }
 
@@ -99,16 +115,22 @@ const SmeInfo* SmeRegistry::getSme(const SmeSystemId& smeId) const
 	return (it == smeIdMap.end() ? NULL : &it->second->sme);
 }
 
+const SmeInfo* SmeRegistry::getSme(const Address& smeAddr) const
+{
+	AddressMap::const_iterator it = addrMap.find(smeAddr);
+	return (it == addrMap.end() || !it->second ? NULL : &it->second->sme);
+}
+
 bool SmeRegistry::isExternalSme(const Address& smeAddr) const
 {
 	AddressMap::const_iterator it = addrMap.find(smeAddr);
-	return (it == addrMap.end() ? false : it->second->externalSme);
+	return (it == addrMap.end() || !it->second ? false : it->second->externalSme);
 }
 
 PduRegistry* SmeRegistry::getPduRegistry(const Address& smeAddr) const
 {
 	AddressMap::const_iterator it = addrMap.find(smeAddr);
-	return (it == addrMap.end() ? NULL : it->second->pduReg);
+	return (it == addrMap.end() || !it->second ? NULL : it->second->pduReg);
 }
 
 const Address* SmeRegistry::getRandomAddress() const
