@@ -498,14 +498,16 @@ void  fillEvent(EINSS7_I97_CALLINGNUMB_T *calling,
   {
     vector<char> addr(calling->noOfAddrSign +  1);
     unpack_addr(&addr[0], calling->addrSign_p, calling->noOfAddrSign);
-    if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
-    {
-      addr.insert(addr.begin(),'7'); // valid only for Russia!!!
-      addr.insert(addr.begin(),'+');
-    }
-    else if (calling->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
-    {
-      addr.insert(addr.begin(),'+');
+    if( addr.size() > 0 ) {
+      if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
+      {
+        addr.insert(addr.begin(),'7'); // valid only for Russia!!!
+        addr.insert(addr.begin(),'+');
+      }
+      else if (calling->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
+      {
+        addr.insert(addr.begin(),'+');
+      }
     }
     event.from = &addr[0];
   }
@@ -513,14 +515,16 @@ void  fillEvent(EINSS7_I97_CALLINGNUMB_T *calling,
   {
     vector<char> addr(called->noOfAddrSign +  1);
     unpack_addr(&addr[0], called->addrSign_p, called->noOfAddrSign);
-    if (called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
-    {
-      addr.insert(addr.begin(),'7'); // valid only for Russia!!!
-      addr.insert(addr.begin(),'+');
-    }
-    else if (called->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
-    {
-      addr.insert(addr.begin(),'+');
+    if( addr.size() > 0 ) {
+      if (called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
+      {
+        addr.insert(addr.begin(),'7'); // valid only for Russia!!!
+        addr.insert(addr.begin(),'+');
+      }
+      else if (called->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
+      {
+        addr.insert(addr.begin(),'+');
+      }
     }
     event.to = &addr[0];
   }
