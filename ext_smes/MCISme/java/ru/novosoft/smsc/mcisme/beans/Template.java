@@ -38,7 +38,7 @@ public class Template extends MCISmeBean
     if (!initialized && !createTemplate)
     {
       if (templateName == null || templateName.length() == 0)
-        return error("Template is not specified");
+        return error("Template name not specified");
       result = loadFromConfig(getConfig(), templateName);
       if (result != RESULT_OK) return result;
       oldTemplateName = templateName;
@@ -62,7 +62,7 @@ public class Template extends MCISmeBean
   private int done()
   {
     if (templateName == null || templateName.length() == 0)
-      return error("Task name not specified");
+      return error("Template name not specified");
 
     // TODO: check templateId (if duplicate) !!!
 
@@ -83,7 +83,7 @@ public class Template extends MCISmeBean
   }
 
   private String getTemplateSectionPrefix() {
-    return (informTemplate) ? NOTIFY_TEMPLATES_SECTION_NAME : INFORM_TEMPLATES_SECTION_NAME;
+    return (informTemplate) ? INFORM_TEMPLATES_SECTION_NAME : NOTIFY_TEMPLATES_SECTION_NAME;
   }
   private boolean containsInConfig(Config config, String name) {
     return config.containsSection(getTemplateSectionPrefix()+'.'+StringEncoderDecoder.encodeDot(name));
@@ -146,7 +146,7 @@ public class Template extends MCISmeBean
   public String getTemplateName() {
     return templateName;
   }
-  public void setTempalteName(String templateName) {
+  public void setTemplateName(String templateName) {
     this.templateName = templateName;
   }
 

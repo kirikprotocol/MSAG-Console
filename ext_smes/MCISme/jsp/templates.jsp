@@ -37,7 +37,18 @@ int rowN=1;
 List informList = bean.getInformTemplates();
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
+<script>
+function editMCISmeTemplate(editObjectName, editButtonName)
+{
+  opForm.all.jbutton.name       = editButtonName;
+  opForm.all.jbutton.value      = editButtonName;
+  opForm.all.editTemplate.value = editObjectName;
+  opForm.submit();
+  return false;
+}
+</script>
 <div class=content>
+<input type=hidden name=editTemplate value="<%=bean.getEditTemplate()%>">
 <div class=page_subtitle>Inform abonents templates</div>
 <table id="inform_table" cellspacing=5>
 <tr><td>
@@ -59,11 +70,13 @@ List informList = bean.getInformTemplates();
     <th nowrap valign=top style="text-align: left">Template name</th>
   </tr>
   <%for (Iterator i=informList.iterator(); i.hasNext();) {
-    Templates.Identity id = (Templates.Identity)i.next();%>
+    Templates.Identity id = (Templates.Identity)i.next();
+    String encName = StringEncoderDecoder.encode(id.name);%>
     <tr class=row<%=(rowN++)&1%>>
       <td>&nbsp;</td> <!-- TODO: checkboxes -->
       <td><%= id.id%></td>
-      <td><%= StringEncoderDecoder.encode(id.name)%></td>
+      <td><a href="#" title="Edit inform template"
+             onClick='return editMCISmeTemplate("<%=encName%>", "mbInformEdit");'><%=encName%></a></td>
     </tr><%
   }%>
   </table>
@@ -99,11 +112,13 @@ List notifyList = bean.getNotifyTemplates();
     <th nowrap valign=top style="text-align: left">Template name</th>
   </tr>
   <%for (Iterator i=notifyList.iterator(); i.hasNext();) {
-    Templates.Identity id = (Templates.Identity)i.next();%>
+    Templates.Identity id = (Templates.Identity)i.next();
+    String encName = StringEncoderDecoder.encode(id.name);%>
     <tr class=row<%=(rowN++)&1%>>
       <td>&nbsp;</td> <!-- TODO: checkboxes -->
       <td><%= id.id%></td>
-      <td><%= StringEncoderDecoder.encode(id.name)%></td>
+      <td><a href="#" title="Edit notify template"
+             onClick='return editMCISmeTemplate("<%=encName%>", "mbNotifyEdit");'><%=encName%></a></td>
     </tr><%
   }%>
   </table>

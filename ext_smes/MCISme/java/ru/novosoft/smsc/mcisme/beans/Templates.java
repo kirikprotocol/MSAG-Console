@@ -55,12 +55,17 @@ public class Templates extends MCISmeBean
     int result = super.process(request);
     if (result != RESULT_OK) return result;
 
+    result = setDefaultTemplateIds(getConfig());
+    if (result != RESULT_OK) return result;
+
     if      (mbInformAdd != null)  return RESULT_INFORM_ADD;
     else if (mbInformEdit != null) return RESULT_INFORM_EDIT;
     else if (mbNotifyAdd  != null) return RESULT_NOTIFY_ADD;
     else if (mbNotifyEdit != null) return RESULT_NOTIFY_EDIT;
-    /*else if (mbInformDelete)
-    else if (mbNotifyDelete)*/
+
+    //TODO: templates deleting
+    /*else if (mbInformDelete != null)
+    else if (mbNotifyDelete != null)*/
 
     return loadupFromConfig(getConfig());
   }
@@ -91,6 +96,25 @@ public class Templates extends MCISmeBean
       return error("Failed to load notify templates", e);
     }
 
+    return RESULT_OK;
+  }
+
+  private int setDefaultTemplateIds(Config config)
+  {
+    final String informTemplateIdParam = INFORM_TEMPLATES_SECTION_NAME+".default";
+    final String notifyTemplateIdParam = NOTIFY_TEMPLATES_SECTION_NAME+".default";
+    try {
+      if (config.getInt(informTemplateIdParam) != defaultInformId) {
+        config.setInt(informTemplateIdParam, defaultInformId);
+        getMCISmeContext().setChangedTemplates(true);
+      }
+      if (config.getInt(notifyTemplateIdParam) != defaultNotifyId) {
+        config.setInt(notifyTemplateIdParam, defaultNotifyId);
+        getMCISmeContext().setChangedTemplates(true);
+      }
+    } catch (Exception e) {
+      return error("Failed to check default template id", e);
+    }
     return RESULT_OK;
   }
 

@@ -32,7 +32,7 @@
        " template "+((createTemplate) ? "create":"modify");
 %>
 <div class=content>
-<input type=hidden name=initialized value=true>
+<input type=hidden name=initialized     value=true>
 <input type=hidden name=informTemplate  value=<%=bean.isInformTemplate()%>>
 <input type=hidden name=createTemplate  value=<%=bean.isCreateTemplate()%>>
 <input type=hidden name=oldTemplateName value="<%=bean.getOldTemplateName()%>">
