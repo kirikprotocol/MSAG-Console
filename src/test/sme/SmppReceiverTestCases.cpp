@@ -64,6 +64,8 @@ Category& SmppReceiverTestCases::getLog()
 void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 {
 	__dumpPdu__("SmppReceiverTestCases::processSubmitSmResp", pdu);
+	getLog().debug("[%d]\tprocessDeliverySm(): seqNum = %u",
+		thr_self(), pdu.get_header().get_sequenceNumber());
 	if (!pduReg)
 	{
 		return;
@@ -118,6 +120,8 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 {
 	__dumpPdu__("SmppReceiverTestCases::processDeliverySm", pdu);
+	getLog().debug("[%d]\tprocessDeliverySm(): seqNum = %u",
+		thr_self(), pdu.get_header().get_sequenceNumber());
 	__require__(session);
 	TCResult* res = new TCResult(TC_PROCESS_DELIVERY_SM);
 	//общая проверка полей
