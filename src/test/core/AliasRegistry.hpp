@@ -18,7 +18,18 @@ using smsc::test::sms::ltAddress;
 
 class AliasRegistry
 {
+	typedef map<const Address, AliasHolder*, ltAddress> AddressMap;
+
 public:
+	struct AliasIterator
+	{
+		AddressMap::const_iterator it1;
+		AddressMap::const_iterator it2;
+		AliasIterator(AddressMap::const_iterator i1, AddressMap::const_iterator i2)
+			: it1(i1), it2(i2) {}
+		const AliasHolder* next();
+	};
+	
 	AliasRegistry(){}
 
 	virtual ~AliasRegistry();
@@ -27,16 +38,13 @@ public:
 
 	void clear();
 	
-	//AliasIterator* iterator();
+	AliasIterator* iterator() const;
 
 	const AliasHolder* findAliasByAddress(const Address& addr) const;
 
 	const AliasHolder* findAddressByAlias(const Address& alias) const;
 
-	void saveConfig(const char* configFileName);
-
 private:
-	typedef map<const Address, AliasHolder*, ltAddress> AddressMap;
 	AddressMap addrMap;
 	AddressMap aliasMap;
 };

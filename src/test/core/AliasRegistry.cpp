@@ -1,4 +1,5 @@
 #include "AliasRegistry.hpp"
+#include "test/sms/SmsUtil.hpp"
 #include <fstream>
 
 namespace smsc {
@@ -7,6 +8,12 @@ namespace core {
 
 using namespace std;
 using namespace smsc::sms; //AddressValue, constants
+using smsc::test::sms::SmsUtil;
+
+const AliasHolder* AliasRegistry::AliasIterator::next()
+{
+	return (it1 != it2 ? (it1++)->second : NULL);
+}
 
 AliasRegistry::~AliasRegistry()
 {
@@ -36,6 +43,12 @@ void AliasRegistry::clear()
 	//для aliasMap ничего удалять не нужно, т.к. объекты в aliasMap и addrMap общие
 	addrMap.clear();
 	aliasMap.clear();
+}
+
+AliasRegistry::AliasIterator* AliasRegistry::iterator() const
+{
+	__require__(addrMap.size() == aliasMap.size());
+	return new AliasIterator(addrMap.begin(), addrMap.end());
 }
 
 const AliasHolder* AliasRegistry::findAliasByAddress(const Address& addr) const
@@ -102,29 +115,6 @@ const AliasHolder* AliasRegistry::findAddressByAlias(const Address& alias) const
 		*/
 	}
 	return NULL;
-}
-
-void AliasRegistry::saveConfig(const char* configFileName)
-{
-	__require__(configFileName);
-	__require__(addrMap.size() == aliasMap.size());
-	ofstream os(configFileName);
-	os << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" << endl;
-	os << "<!DOCTYPE aliases SYSTEM \"AliasRecords.dtd\">" << endl;
-	os << "<aliases>" << endl;
-	for (AddressMap::const_iterator it = addrMap.begin(); it != addrMap.end(); it++)
-	{
-		const AliasInfo& aliasInfo = it->second->aliasInfo;
-		AddressValue addrVal, aliasVal;
-		aliasInfo.addr.getValue(addrVal);
-		aliasInfo.alias.getValue(aliasVal);
-		os << "\t<record addr=\"tni:" << aliasInfo.addr.getTypeOfNumber() <<
-			",npi:" << aliasInfo.addr.getNumberingPlan() << ",val:" << addrVal <<
-			"\" alias=\"tni:" << aliasInfo.alias.getTypeOfNumber() <<
-			",npi:" << aliasInfo.alias.getNumberingPlan() << ",val:" << aliasVal <<
-			"\"/>" << endl;
-	}
-	os << "</aliases>" << endl;
 }
 
 }
