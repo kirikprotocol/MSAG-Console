@@ -146,6 +146,9 @@ throw (SubjectNotFoundException)
   unsigned int priority = atoi(priorityStr.get());
   unsigned int serviceId = atoi(serviceIdStr.get());
   std::auto_ptr<char> srcSmeSystemId(elem.getAttribute("srcSmeId").transcode());
+  std::auto_ptr<char> deliveryModeStr(elem.getAttribute("deliveryMode").transcode());
+  std::auto_ptr<char> forwardToStr(elem.getAttribute("forwardTo").transcode());
+
   std::auto_ptr<Route> r(new Route(std::string(id.get()),
                                    priority,
                                    strcmp("true", billing.get()) == 0,
@@ -154,7 +157,9 @@ throw (SubjectNotFoundException)
                                    strcmp("true", suppressDeliveryReports.get()) == 0,
 																	 strcmp("true", active.get()) == 0,
                                    serviceId,
-								   std::string(srcSmeSystemId.get()))
+								   std::string(srcSmeSystemId.get()),
+								   std::string(deliveryModeStr.get()),
+								   std::string(forwardToStr.get()))
                          );
 
   DOM_NodeList srcs = elem.getElementsByTagName("source");
@@ -264,6 +269,8 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       << "\" enabling=\""  << (r->isEnabling() ? "true" : "false")
       << "\" priority=\""  << r->getPriority()
       << "\" serviceId=\""  << r->getServiceId()
+      << "\" deliveryMode=\""  << r->getDeliveryMode()
+      << "\" forwardTo=\""  << r->getForwardTo()
       << "\">" << std::endl;
 
       Source s;
