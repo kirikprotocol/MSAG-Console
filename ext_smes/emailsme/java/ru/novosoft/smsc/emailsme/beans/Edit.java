@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.emailsme.beans;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.util.conpool.NSConnectionPool;
 
 import java.security.Principal;
 import java.sql.Connection;
@@ -40,9 +41,13 @@ public class Edit extends SmeBean
         dayLimit = 0;
         forward = "";
       } else {
+        final NSConnectionPool connectionPool = getSmeContext().getConnectionPool();
+        if (connectionPool == null)
+          return error("Could not connect to SQL server");
+
         Connection connection = null;
         try {
-          connection = getSmeContext().getConnectionPool().getConnection();
+          connection = connectionPool.getConnection();
           PreparedStatement statement = connection.prepareStatement("select * from emlsme_profiles where address=?");
           statement.setString(1, addr);
           ResultSet resultSet = statement.executeQuery();
@@ -83,9 +88,13 @@ public class Edit extends SmeBean
 
   private int done()
   {
+    final NSConnectionPool connectionPool = getSmeContext().getConnectionPool();
+    if (connectionPool == null)
+      return error("Could not connect to SQL server");
+
     Connection connection = null;
     try {
-      connection = getSmeContext().getConnectionPool().getConnection();
+      connection = connectionPool.getConnection();
       if (create) {
         logger.debug("Create new profile: address=" + addr + ", username=" + userid + ", daily_limit=" + dayLimit + ", forward=" + forward);
         PreparedStatement statement = connection.prepareStatement("insert into emlsme_profiles (address, username, daily_limit, forward) values (?, ?, ?, ?)");

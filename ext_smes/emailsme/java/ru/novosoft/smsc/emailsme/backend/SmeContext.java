@@ -1,7 +1,9 @@
 package ru.novosoft.smsc.emailsme.backend;
 
+import org.apache.log4j.Category;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.conpool.NSConnectionPool;
@@ -10,7 +12,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.sql.SQLException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -25,7 +26,7 @@ public class SmeContext
 
   private static SmeContext instance = null;
 
-  public static SmeContext getInstance(SMSCAppContext appContext) throws AdminException, IOException, SAXException, ParserConfigurationException, Config.ParamNotFoundException, Config.WrongParamTypeException, SQLException
+  public static SmeContext getInstance(SMSCAppContext appContext) throws AdminException, IOException, SAXException, ParserConfigurationException
   {
     return instance == null ? instance = new SmeContext(appContext) : instance;
   }
@@ -36,23 +37,17 @@ public class SmeContext
   private NSConnectionPool connectionPool;
   private String sort = "addr";
   private int pageSize = 20;
+  private Category logger = Category.getInstance(this.getClass());
 
-  public SmeContext(SMSCAppContext appContext) throws AdminException, IOException, SAXException, ParserConfigurationException, Config.ParamNotFoundException, Config.WrongParamTypeException, SQLException
+  public SmeContext(SMSCAppContext appContext) throws IOException, ParserConfigurationException, SAXException, AdminException
   {
     this.appContext = appContext;
     resetConfig();
-
-    Properties connectionPoolConfig = new Properties();
-    connectionPoolConfig.setProperty("jdbc.source", "jdbc:oracle:thin:@dark:1521:smsc"); //jdbc:oracle:thin:@dark:1521:smsc
-    connectionPoolConfig.setProperty("jdbc.driver", "oracle.jdbc.driver.OracleDriver"); //oracle.jdbc.driver.OracleDriver
-    connectionPoolConfig.setProperty("jdbc.user", config.getString("DataSource.dbUserName"));
-    connectionPoolConfig.setProperty("jdbc.pass", config.getString("DataSource.dbUserPassword"));
-    connectionPool = new NSConnectionPool(connectionPoolConfig);
   }
 
-  public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException
+  public void resetConfig() throws AdminException, IOException, ParserConfigurationException, SAXException
   {
-    config = new Config(new File(appContext.getHostsManager().getServiceInfo(SME_ID).getServiceFolder(), "conf" + File.separatorChar + "config.xml"));
+    config = loadCurrentConfig();
   }
 
   public Config getConfig()
@@ -83,5 +78,37 @@ public class SmeContext
   public void setPageSize(int pageSize)
   {
     this.pageSize = pageSize;
+  }
+
+  public void applyJdbc(Config oldConfig)
+  {
+    try {
+      final String newSource = config.getString("DataSource.jdbc.source");
+      final String newDriver = config.getString("DataSource.jdbc.driver");
+      final String newUser = config.getString("DataSource.dbUserName");
+      final String newPassword = config.getString("DataSource.dbUserPassword");
+      if (oldConfig == null
+              || !newSource.equals(oldConfig.getString("DataSource.jdbc.source"))
+              || !newDriver.equals(oldConfig.getString("DataSource.jdbc.driver"))
+              || !newUser.equals(oldConfig.getString("DataSource.dbUserName"))
+              || !newPassword.equals(oldConfig.getString("DataSource.dbUserPassword"))
+      ) {
+        connectionPool = null;
+        Properties connectionPoolConfig = new Properties();
+        connectionPoolConfig.setProperty("jdbc.source", newSource);
+        connectionPoolConfig.setProperty("jdbc.driver", newDriver);
+        connectionPoolConfig.setProperty("jdbc.user", newUser);
+        connectionPoolConfig.setProperty("jdbc.pass", newPassword);
+        connectionPool = new NSConnectionPool(connectionPoolConfig);
+      }
+    } catch (Throwable e) {
+      logger.error("Could not init connection pool", e);
+      connectionPool = null;
+    }
+  }
+
+  public Config loadCurrentConfig() throws AdminException, IOException, SAXException, ParserConfigurationException
+  {
+    return new Config(new File(appContext.getHostsManager().getServiceInfo(SME_ID).getServiceFolder(), "conf" + File.separatorChar + "config.xml"));
   }
 }

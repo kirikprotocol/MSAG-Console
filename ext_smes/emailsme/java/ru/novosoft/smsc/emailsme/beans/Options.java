@@ -94,6 +94,9 @@ public class Options extends SmeBean
     if (result != RESULT_OK)
       return result;
 
+    if (getSmeContext().getConnectionPool() == null)
+      message("Applied JDBC properties is incorrect");
+
     if (mbDone != null)
       return done();
     if (mbCancel != null)

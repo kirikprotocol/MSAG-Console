@@ -44,15 +44,6 @@ public class SmeBean extends PageBean
       return error("Could not get SME config", e);
     }
 
-    return result;
-  }
-
-  public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
-  {
-    int result = super.process(appContext, errors, loginedPrincipal);
-    if (result != RESULT_OK)
-      return result;
-
     if ("apply".equals(mbMenu))
       return RESULT_INDEX;
     else if ("options".equals(mbMenu))

@@ -6,6 +6,7 @@ import ru.novosoft.smsc.emailsme.backend.ProfilesQuery;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.util.conpool.NSConnectionPool;
 
 import java.security.Principal;
 import java.sql.SQLException;
@@ -55,11 +56,16 @@ public class Profiles extends SmeBean
 
     checkedSet.addAll(Arrays.asList(checked));
 
-    try {
-      resultSet = new ProfilesDataSource().query(getSmeContext().getConnectionPool(), new ProfilesQuery(getPageSizeInt(), new ProfilesFilter(null, null, -1, null), getSort(), getStartPositionInt()));
-    } catch (SQLException e) {
-      return error("Could not get profiles from db", e);
-    }
+    final NSConnectionPool connectionPool = getSmeContext().getConnectionPool();
+    if (connectionPool != null) {
+      try {
+        resultSet = new ProfilesDataSource().query(connectionPool, new ProfilesQuery(getPageSizeInt(), new ProfilesFilter(null, null, -1, null), getSort(), getStartPositionInt()));
+      } catch (SQLException e) {
+        return error("Could not get profiles from db", e);
+      }
+    } else
+      return result = error("Could not connect to SQL server.");
+
     return result;
   }
 
@@ -78,10 +84,14 @@ public class Profiles extends SmeBean
 
   private int delete()
   {
+    final NSConnectionPool connectionPool = getSmeContext().getConnectionPool();
+    if (connectionPool == null)
+      return error("Could not connect to SQL server");
+
     Connection connection = null;
     logger.debug("delete " + checked.length + " profiles");
     try {
-      connection = getSmeContext().getConnectionPool().getConnection();
+      connection = connectionPool.getConnection();
       PreparedStatement statement = connection.prepareStatement("delete from emlsme_profiles where address=?");
       for (int i = 0; i < checked.length; i++) {
         String checkedAddr = checked[i];

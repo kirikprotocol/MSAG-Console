@@ -4,9 +4,15 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.emailsme.backend.SmeContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.util.config.Config;
 
 import java.security.Principal;
 import java.util.*;
+import java.io.IOException;
+
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -73,13 +79,25 @@ public class Index extends SmeBean
 
   private int applyAll()
   {
+    int result = RESULT_DONE;
     try {
+      Config oldConfig = null;
+      try {
+        oldConfig = getSmeContext().loadCurrentConfig();
+      } catch (Throwable e) {
+        logger.warn("Could not load old config", e);
+      }
       getConfig().save();
+      if (appContext.getHostsManager().getServiceInfo(SmeContext.SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING)
+        result = warning("You need to restart sme to apply changes");
+      getSmeContext().applyJdbc(oldConfig);
+      if (getSmeContext().getConnectionPool() == null)
+        result = warning("SQL JDBC properties is invalid");
     } catch (Throwable e) {
-      logger.error("Could not save config", e);
-      return error("Could not save config", e);
+      logger.error("Could not apply config", e);
+      return error("Could not apply config", e);
     }
-    return RESULT_DONE;
+    return result;
   }
 
   public String getMbApplyAll()
