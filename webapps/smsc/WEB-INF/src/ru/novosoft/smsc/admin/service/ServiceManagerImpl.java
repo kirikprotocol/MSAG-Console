@@ -36,7 +36,7 @@ public class ServiceManagerImpl implements ServiceManager
 			add((Service) i.next());
 	}
 
-	private Service add(Service newService) throws AdminException
+	public Service add(Service newService) throws AdminException
 	{
 		final String id = newService.getInfo().getId();
 		if (services.containsKey(id))

@@ -56,7 +56,8 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			routeSubjectManager = new RouteSubjectManagerImpl(smeManager.getSmes());
 			smsc = new Smsc(configManager, connectionPool, smeManager, routeSubjectManager);
 			DaemonManager daemonManager = new DaemonManager(smeManager.getSmes(), config);
-			ServiceManager serviceManager = new ServiceManagerImpl();
+			ServiceManagerImpl serviceManager = new ServiceManagerImpl();
+			serviceManager.add(smsc);
 			hostsManager = new HostsManager(daemonManager, serviceManager, smeManager, routeSubjectManager);
 
 			File usersConfig = new File(new File(config.getString("system.webapp folder"), "WEB-INF"), config.getString("system.users"));

@@ -162,6 +162,8 @@ public class Smsc extends Service
 
 			if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
 				call(smsc_component, apply_aliases_method, Type.Types[Type.StringType], new HashMap());
+			else
+				logger.debug("Couldn't call apply method on SMSC - SMSC is not running. Status is " + getInfo().getStatusStr() + " (" + getInfo().getStatus() + ")");
 		}
 		catch (FileNotFoundException e)
 		{
