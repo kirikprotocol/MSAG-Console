@@ -8,8 +8,7 @@ package ru.novosoft.smsc.jsp.util.tables.impl;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.*;
 
 
 public class QueryResultSetImpl implements QueryResultSet
@@ -64,6 +63,44 @@ public class QueryResultSetImpl implements QueryResultSet
 	public boolean isLast()
 	{
 		return last;
+	}
+
+	public void additionalSort(String columnName)
+	{
+		String sortColumn = (String) sortOrder.get(0);
+		if (sortColumn.startsWith("-"))
+			sortColumn = sortColumn.substring(1);
+
+		Vector newResults = new Vector(results.size());
+		int blockEnd = 0;
+		for (int blockStart = 0; blockStart < results.size(); blockStart = blockEnd)
+		{
+			blockEnd = getBlockEnd(blockStart, sortColumn);
+			Vector block = new Vector(blockEnd - blockStart);
+			for (int i = blockStart; i < blockEnd; i++)
+				block.add(results.get(i));
+			Collections.sort(block, new DataItemComparator(columnName));
+			newResults.addAll(block);
+		}
+		results = newResults;
+	}
+
+	private int getBlockEnd(int blockStart, String columnName)
+	{
+		System.out.println("QueryResultSetImpl.getBlockEnd(\"" + columnName + "\")");
+		DataItem startItem = (DataItem) results.get(blockStart);
+		Object startValue = startItem.getValue(columnName);
+		for (int i = blockStart + 1; i < results.size(); i++)
+		{
+			System.out.println("i = " + i);
+			DataItem dataItem = (DataItem) results.get(i);
+			System.out.println("dataItem = " + dataItem);
+			if (dataItem != null)
+				System.out.println("dataItem.getValue(columnName) = " + dataItem.getValue(columnName));
+			if (!dataItem.getValue(columnName).equals(startValue))
+				return i;
+		}
+		return results.size();
 	}
 
 	public void setLast(boolean last)

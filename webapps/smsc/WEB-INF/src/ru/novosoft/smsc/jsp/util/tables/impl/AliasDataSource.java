@@ -12,7 +12,9 @@ import ru.novosoft.smsc.jsp.util.tables.Query;
 
 public class AliasDataSource extends AbstractDataSourceImpl
 {
-  private static final String[] columnNames = {"Alias", "Address", "Hide"};
+	private static final String aliasColumnName = "Alias";
+	private static final String hideColumnName = "Hide";
+  private static final String[] columnNames = {aliasColumnName, "Address", hideColumnName};
 
   public AliasDataSource()
   {
@@ -31,6 +33,12 @@ public class AliasDataSource extends AbstractDataSourceImpl
 
   public QueryResultSet query(AliasQuery query_to_run)
   {
-    return super.query(query_to_run);
+	  QueryResultSet result = super.query(query_to_run);
+	  final String sortOrder = (String) query_to_run.getSortOrder().get(0);
+	  if (sortOrder != null && sortOrder.endsWith(hideColumnName))
+	  {
+		  result.additionalSort(aliasColumnName);
+	  }
+	  return result;
   }
 }

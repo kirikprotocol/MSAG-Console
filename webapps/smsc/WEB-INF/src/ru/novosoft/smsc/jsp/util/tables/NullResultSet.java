@@ -44,4 +44,8 @@ public class NullResultSet implements QueryResultSet
 	{
 		return true;
 	}
+
+	public void additionalSort(String columnName)
+	{
+	}
 }

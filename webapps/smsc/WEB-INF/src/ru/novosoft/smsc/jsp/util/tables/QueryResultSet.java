@@ -24,4 +24,6 @@ public interface QueryResultSet
 	Vector getSortOrder();
 
 	boolean isLast();
+
+	void additionalSort(String columnName);
 }
