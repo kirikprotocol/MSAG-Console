@@ -14,6 +14,8 @@ namespace test {
 namespace router {
 
 using std::vector;
+using std::ostream;
+using log4cpp::Category;
 using smsc::sms::Address;
 using smsc::router::RouteInfo;
 using smsc::router::RouteManager;
@@ -26,6 +28,8 @@ const char* const TC_ADD_CORRECT_ROUTE = "addCorrectRoute";
 const char* const TC_ADD_INCORRECT_ROUTE = "addIncorrectRoute";
 const char* const TC_LOOKUP_ROUTE = "lookupRoute";
 const char* const TC_ITERATE_ROUTES = "iterateRoutes";
+
+ostream& operator<< (ostream& os, const RouteInfo& route);
 
 struct TestRouteData
 {
@@ -47,6 +51,8 @@ struct TestRouteData
 			delete route;
 		}
 	}
+
+	friend ostream& operator<< (ostream& os, const TestRouteData& data);
 };
 
 /**
@@ -63,20 +69,20 @@ public:
 	virtual ~RouteManagerTestCases() {}
 
 	/**
-	 * Добавление корректного матшрута.
+	 * Добавление корректного маршрута.
 	 */
 	TCResult* addCorrectRoute(const SmeSystemId& smeSystemId,
 		TestRouteData* data, int num);
 
 	/**
-	 * Добавление корректного матшрута с неправильными (непроверяемыми)
+	 * Добавление корректного маршрута с неправильными (непроверяемыми)
 	 * значениями.
 	 */
 	TCResult* addCorrectRoute2(const SmeSystemId& smeSystemId,
 		TestRouteData* data, int num);
 
 	/**
-	 * Добавление некорректного матшрута.
+	 * Добавление некорректного маршрута.
 	 */
 	TCResult* addIncorrectRoute(const SmeSystemId& smeSystemId,
 		const RouteInfo& existingRoute, int num);
@@ -85,12 +91,15 @@ public:
 	 * Поиск маршрута.
 	 */
 	TCResult* lookupRoute(const Address& origAddr, const Address& destAddr,
-		const vector<const TestRouteData*>& routes);
+		const vector<TestRouteData*>& routes);
 
 	/*
 	 * Итерирование по списку маршрутов.
 	 */
-	TCResult* iterateRoutes(const vector<const TestRouteData*>& routes);
+	TCResult* iterateRoutes(const vector<TestRouteData*>& routes);
+
+protected:
+	virtual Category& getLog();
 
 private:
 	RouteManager* routeMan;
@@ -98,6 +107,7 @@ private:
 	void setupRandomCorrectRouteInfo(const SmeSystemId& smeSystemId,
 		RouteInfo* info);
 	vector<int> compareRoutes(const RouteInfo& route1, const RouteInfo& route2);
+	void debugRoute(RouteInfo& route);
 };
 
 }

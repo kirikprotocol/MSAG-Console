@@ -4,20 +4,68 @@
 #include "test/sms/SmsUtil.hpp"
 #include "test/util/Util.hpp"
 #include <sys/types.h>
+#include <sstream>
 
 namespace smsc {
 namespace test {
 namespace router {
 
-using smsc::test::core::CoreTestManager;
-using smsc::test::sms::SmsUtil;
+using namespace std;
 using namespace smsc::sms; //constants, AddressValue
 using namespace smsc::router; //constants
 using namespace smsc::test::util;
 using namespace smsc::test::smeman; //constants, TestSmeProxy
+using smsc::test::core::CoreTestManager;
+using smsc::test::sms::SmsUtil;
+using smsc::util::Logger;
+using smsc::sms::AddressValue;
+
+ostream& operator<< (ostream& os, const RouteInfo& route)
+{
+	int len;
+	AddressValue tmp;
+	os << "routeId = " << route.routeId;
+	os << ", smeSystemId = " << route.smeSystemId << "(" <<
+		route.smeSystemId.length() << ")";
+	len = route.source.getValue(tmp);
+	os << ", source = " << tmp << "(" << len << ")";
+	len = route.dest.getValue(tmp);
+	os << ", dest = " << tmp << "(" << len << ")";
+	os << ", priority = " << route.priority;
+	os << ", billing = " << (route.billing ? "true" : "false");
+	os << ", paid = " << (route.paid ? "true" : "false");
+	os << ", archived = " << (route.archived ? "true" : "false");
+}
+
+ostream& operator<< (ostream& os, const TestRouteData& data)
+{
+	int len;
+	AddressValue tmp;
+	os << "match = " << (data.match ? "true" : "false");
+	len = data.origAddr.getValue(tmp);
+	os << ", origAddr = " << tmp << "(" << len << ")";
+	len = data.destAddr.getValue(tmp);
+	os << ", destAddr = " << tmp << "(" << len << ")";
+	os << ", origAddrMatch = " << data.origAddrMatch;
+	os << ", destAddrMatch = " << data.destAddrMatch;
+	os << ", route = {" << *data.route << "}";
+}
+
+void RouteManagerTestCases::debugRoute(RouteInfo& route)
+{
+	ostringstream os;
+	os << route << endl;
+	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
+}
 
 RouteManagerTestCases::RouteManagerTestCases()
 	: routeMan(CoreTestManager::getRouteManager()) {}
+
+Category& RouteManagerTestCases::getLog()
+{
+	static Category& log = Logger::getCategory("RouteManagerTestCases");
+	return log;
+}
 
 void RouteManagerTestCases::setupRandomCorrectRouteInfo(
 	const SmeSystemId& smeSystemId, RouteInfo* route)
@@ -26,7 +74,7 @@ void RouteManagerTestCases::setupRandomCorrectRouteInfo(
 	route->billing = rand0(1);
 	route->paid = rand0(1);
 	route->archived = rand0(1);
-	route->routeId = rand0(INT_MAX);
+	route->routeId = (RouteId) rand0(INT_MAX);
 	route->smeSystemId = smeSystemId;
 	//route->source = ...
 	//route->dest = ...
@@ -207,6 +255,7 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 				default:
 					throw s;
 			}
+debugRoute(*route);
 			routeMan->addRoute(*route);
 		}
 		catch(...)
@@ -224,7 +273,7 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 TCResult* RouteManagerTestCases::addCorrectRoute2(const SmeSystemId& smeSystemId,
 	TestRouteData* data, int num)
 {
-	TCSelector s(num, 1000, 8);
+	TCSelector s(num, 8, 1000);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE, s.getChoice());
 	for (; s.check(); s++)
 	{
@@ -238,13 +287,13 @@ TCResult* RouteManagerTestCases::addCorrectRoute2(const SmeSystemId& smeSystemId
 			SmsUtil::setupRandomCorrectAddress(&route->dest);
 			switch(s.value())
 			{
-				case 1: //origAddr.typeOfNumber вне диапазона
+				case 1001: //origAddr.typeOfNumber вне диапазона
 					route->source.setTypeOfNumber(rand2(0x7, 0xff));
 					break;
-				case 2: //origAddr.numberingPlan вне диапазона
+				case 1002: //origAddr.numberingPlan вне диапазона
 					route->source.setNumberingPlan(rand2(0x13, 0xff));
 					break;
-				case 3: //символ '?' в середине origAddr
+				case 1003: //символ '?' в середине origAddr
 					{
 						AddressValue addrVal;
 						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_VALUE_LENGTH);
@@ -253,7 +302,7 @@ TCResult* RouteManagerTestCases::addCorrectRoute2(const SmeSystemId& smeSystemId
 						route->source.setValue(MAX_ADDRESS_VALUE_LENGTH, addrVal);
 					}
 					break;
-				case 4: //символ '*' в середине origAddr
+				case 1004: //символ '*' в середине origAddr
 					{
 						AddressValue addrVal;
 						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_VALUE_LENGTH);
@@ -262,13 +311,13 @@ TCResult* RouteManagerTestCases::addCorrectRoute2(const SmeSystemId& smeSystemId
 						route->source.setValue(MAX_ADDRESS_VALUE_LENGTH, addrVal);
 					}
 					break;
-				case 5: //destAddr.typeOfNumber вне диапазона
+				case 1005: //destAddr.typeOfNumber вне диапазона
 					route->dest.setTypeOfNumber(rand2(0x7, 0xff));
 					break;
-				case 6: //destAddr.numberingPlan вне диапазона
+				case 1006: //destAddr.numberingPlan вне диапазона
 					route->dest.setNumberingPlan(rand2(0x13, 0xff));
 					break;
-				case 7: //символ '?' в середине destAddr
+				case 1007: //символ '?' в середине destAddr
 					{
 						AddressValue addrVal;
 						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_VALUE_LENGTH);
@@ -277,7 +326,7 @@ TCResult* RouteManagerTestCases::addCorrectRoute2(const SmeSystemId& smeSystemId
 						route->dest.setValue(MAX_ADDRESS_VALUE_LENGTH, addrVal);
 					}
 					break;
-				case 8: //символ '*' в середине destAddr
+				case 1008: //символ '*' в середине destAddr
 					{
 						AddressValue addrVal;
 						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_VALUE_LENGTH);
@@ -289,6 +338,7 @@ TCResult* RouteManagerTestCases::addCorrectRoute2(const SmeSystemId& smeSystemId
 				default:
 					throw s;
 			}
+debugRoute(*route);
 			routeMan->addRoute(*route);
 		}
 		catch(...)
@@ -340,8 +390,7 @@ TCResult* RouteManagerTestCases::addIncorrectRoute(const SmeSystemId& smeSystemI
 		}
 		catch(...)
 		{
-			error();
-			res->addFailure(100);
+			//Ok
 		}
 	}
 	debug(res);
@@ -349,7 +398,7 @@ TCResult* RouteManagerTestCases::addIncorrectRoute(const SmeSystemId& smeSystemI
 }
 
 TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
-	const Address& destAddr, const vector<const TestRouteData*>& routes)
+	const Address& destAddr, const vector<TestRouteData*>& routes)
 {
 	TCResult* res = new TCResult(TC_LOOKUP_ROUTE);
 	try
@@ -412,7 +461,7 @@ TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
 }
 
 TCResult* RouteManagerTestCases::iterateRoutes(
-	const vector<const TestRouteData*>& routes)
+	const vector<TestRouteData*>& routes)
 {
 	TCResult* res = new TCResult(TC_ITERATE_ROUTES);
 	try
