@@ -34,6 +34,7 @@ public class SubjectList
     for (int i = 0; i < subjList.getLength(); i++) {
       Element subjElem = (Element) subjList.item(i);
       String name = subjElem.getAttribute("id");
+      logger.debug( "Parsing: "+name);
       NodeList masksList = subjElem.getElementsByTagName("mask");
       String[] masks = new String[masksList.getLength()];
       for (int j = 0; j < masksList.getLength(); j++) {
