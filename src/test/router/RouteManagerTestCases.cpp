@@ -42,7 +42,7 @@ Category& RouteManagerTestCases::getLog()
 TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 	TestRouteData* data, int num)
 {
-	int num1 = 8; int num2 = 8; int num3 = 2;
+	int num1 = 12; int num2 = 12; int num3 = 2;
 	TCSelector s(num, num1 * num2 * num3);
 	TCResult* res = new TCResult(TC_ADD_CORRECT_ROUTE, s.getChoice());
 	for (; s.check(); s++)
@@ -55,10 +55,12 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 			RouteUtil::setupRandomCorrectRouteInfo(smeSystemId, route);
 			//origAddr
 			route->source = data->origAddr;
+			data->origAddrMatch = 100;
 			AddressValue origAddrVal;
 			uint8_t origAddrLen = data->origAddr.getValue(origAddrVal);
 			int oaLen = rand1(origAddrLen);
 			int oaLen2 = rand1(oaLen);
+			int oaLen3 = rand1(MAX_ADDRESS_VALUE_LENGTH - origAddrLen + oaLen - oaLen2);
 			switch(s.value1(num1, num2))
 			{
 				case 1: //source адрес с одним или всеми '?' в конце
@@ -76,13 +78,9 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 					{
 						origAddrVal[origAddrLen] = '?';
 						route->source.setValue(origAddrLen + 1, origAddrVal);
+						data->origAddrMatch = 0;
+						data->match = false;
 					}
-					else
-					{
-						origAddrVal[origAddrLen - 1 ] = '+';
-						route->source.setValue(origAddrLen, origAddrVal);
-					}
-					data->match = false;
 					break;
 				case 4: //source адрес целиком или частично со '*' в конце
 					memset(origAddrVal + origAddrLen - oaLen, '*', oaLen2);
@@ -99,17 +97,55 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 					{
 						origAddrVal[origAddrLen] = '*';
 						route->source.setValue(origAddrLen + 1, origAddrVal);
+						data->origAddrMatch = 99.5;
 					}
-					data->origAddrMatch = 100;
 					break;
-				case 7: //source адрес с несовпадающим typeOfNumber
-					route->source.setTypeOfNumber(
-						data->origAddr.getTypeOfNumber() + 1);
+				case 7: //source адрес с '?*'
+					if (origAddrLen - oaLen + oaLen2 < MAX_ADDRESS_VALUE_LENGTH)
+					{
+						memset(origAddrVal + origAddrLen - oaLen, '?', oaLen2);
+						memset(origAddrVal + origAddrLen - oaLen + oaLen2, '*', oaLen3);
+						route->source.setValue(
+							origAddrLen - oaLen + oaLen2 + oaLen3, origAddrVal);
+						data->origAddrMatch = 100 - oaLen - 0.25;
+					}
+					break;
+				case 8: //source адрес с '*?'
+					if (origAddrLen - oaLen + oaLen2 < MAX_ADDRESS_VALUE_LENGTH)
+					{
+						memset(origAddrVal + origAddrLen - oaLen, '*', oaLen3);
+						memset(origAddrVal + origAddrLen - oaLen + oaLen3, '?', oaLen2);
+						route->source.setValue(
+							origAddrLen - oaLen + oaLen2 + oaLen3, origAddrVal);
+						data->origAddrMatch = 100 - oaLen - 0.25;
+					}
+					break;
+				case 9: //source адрес с '*?' и лишними '?'
+					if (origAddrLen + 1 < MAX_ADDRESS_VALUE_LENGTH)
+					{
+						memset(origAddrVal + origAddrLen - oaLen, '*', 1);
+						memset(origAddrVal + origAddrLen - oaLen + 1, '?', oaLen + 1);
+						route->source.setValue(origAddrLen + 2, origAddrVal);
+						data->origAddrMatch = 0;
+						data->match = false;
+					}
+					break;
+				case 10: //отличающийся source адрес
+					origAddrVal[oaLen - 1] = '+';
+					route->source.setValue(origAddrLen, origAddrVal);
+					data->origAddrMatch = 0;
 					data->match = false;
 					break;
-				case 8: //source адрес с несовпадающим numberingPlan
+				case 11: //source адрес с несовпадающим typeOfNumber
+					route->source.setTypeOfNumber(
+						data->origAddr.getTypeOfNumber() + 1);
+					data->origAddrMatch = 0;
+					data->match = false;
+					break;
+				case 12: //source адрес с несовпадающим numberingPlan
 					route->source.setNumberingPlan(
 						data->origAddr.getNumberingPlan() + 1);
+					data->origAddrMatch = 0;
 					data->match = false;
 					break;
 				default:
@@ -117,10 +153,12 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 			}
 			//destAddr
 			route->dest = data->destAddr;
+			data->destAddrMatch = 100;
 			AddressValue destAddrVal;
 			uint8_t destAddrLen = data->destAddr.getValue(destAddrVal);
 			int daLen = rand1(destAddrLen);
 			int daLen2 = rand1(daLen);
+			int daLen3 = rand1(MAX_ADDRESS_VALUE_LENGTH - destAddrLen + daLen - daLen2);
 			switch(s.value2(num1, num2))
 			{
 				case 1: //dest адрес с одним или всеми '?' в конце
@@ -138,13 +176,9 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 					{
 						destAddrVal[destAddrLen] = '?';
 						route->dest.setValue(destAddrLen + 1, destAddrVal);
+						data->destAddrMatch = 0;
+						data->match = false;
 					}
-					else
-					{
-						destAddrVal[destAddrLen - 1] = '+';
-						route->dest.setValue(destAddrLen, destAddrVal);
-					}
-					data->match = false;
 					break;
 				case 4: //dest адрес целиком или частично со '*' в конце
 					memset(destAddrVal + destAddrLen - daLen, '*', daLen2);
@@ -161,17 +195,55 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 					{
 						destAddrVal[destAddrLen] = '*';
 						route->dest.setValue(destAddrLen + 1, destAddrVal);
+						data->destAddrMatch = 99.5;
 					}
-					data->destAddrMatch = 100;
 					break;
-				case 7: //dest адрес с несовпадающим typeOfNumber
-					route->dest.setTypeOfNumber(
-						data->destAddr.getTypeOfNumber() + 1);
+				case 7: //dest адрес с '?*'
+					if (destAddrLen - daLen + daLen2 < MAX_ADDRESS_VALUE_LENGTH)
+					{
+						memset(destAddrVal + destAddrLen - daLen, '?', daLen2);
+						memset(destAddrVal + destAddrLen - daLen + daLen2, '*', daLen3);
+						route->dest.setValue(
+							destAddrLen - daLen + daLen2 + daLen3, destAddrVal);
+						data->destAddrMatch = 100 - daLen - 0.25;
+					}
+					break;
+				case 8: //dest адрес с '*?'
+					if (destAddrLen - daLen + daLen2 < MAX_ADDRESS_VALUE_LENGTH)
+					{
+						memset(destAddrVal + destAddrLen - daLen, '*', daLen3);
+						memset(destAddrVal + destAddrLen - daLen + daLen3, '?', daLen2);
+						route->dest.setValue(
+							destAddrLen - daLen + daLen2 + daLen3, destAddrVal);
+						data->destAddrMatch = 100 - daLen - 0.25;
+					}
+					break;
+				case 9: //dest адрес с '*?' и лишними '?'
+					if (destAddrLen + 1 < MAX_ADDRESS_VALUE_LENGTH)
+					{
+						memset(destAddrVal + destAddrLen - daLen, '*', 1);
+						memset(destAddrVal + destAddrLen - daLen + 1, '?', daLen + 1);
+						route->dest.setValue(destAddrLen + 2, destAddrVal);
+						data->destAddrMatch = 0;
+						data->match = false;
+					}
+					break;
+				case 10: //отличающийся dest адрес
+					destAddrVal[daLen - 1] = '+';
+					route->dest.setValue(destAddrLen, destAddrVal);
+					data->destAddrMatch = 0;
 					data->match = false;
 					break;
-				case 8: //dest адрес с несовпадающим numberingPlan
+				case 11: //dest адрес с несовпадающим typeOfNumber
+					route->dest.setTypeOfNumber(
+						data->destAddr.getTypeOfNumber() + 1);
+					data->destAddrMatch = 0;
+					data->match = false;
+					break;
+				case 12: //dest адрес с несовпадающим numberingPlan
 					route->dest.setNumberingPlan(
 						data->destAddr.getNumberingPlan() + 1);
+					data->destAddrMatch = 0;
 					data->match = false;
 					break;
 				default:
@@ -191,6 +263,8 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 			}
 __require__(route->source.getLenght());
 __require__(route->dest.getLenght());
+getLog().debug("num = %d, num1 = %d, num2 = %d, num3 = %d",
+	s.getChoice(), s.value1(num1, num2), s.value2(num1, num2), s.value3(num1, num2));
 debugRoute(*route);
 			routeMan->addRoute(*route);
 		}
@@ -215,6 +289,8 @@ TCResult* RouteManagerTestCases::addCorrectRoute2(const SmeSystemId& smeSystemId
 	{
 		RouteInfo* route = new RouteInfo();
 		data->match = false;
+		data->origAddrMatch = 0;
+		data->destAddrMatch = 0;
 		data->route = route;
 		try
 		{
