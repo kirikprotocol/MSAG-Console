@@ -38,6 +38,8 @@ const int RAND_SYM = 8;
 const int RAND_DEF_SMS = 16;
 const int RAND_LAT_NUM = RAND_LAT + RAND_NUM;
 
+inline const char* nvl(const char* str) { return (str ? str : ""); }
+
 void init_rand();
 
 int rand2(int minValue, int maxValue);
