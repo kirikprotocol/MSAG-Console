@@ -561,7 +561,11 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
     }
     __map_trace2__("Received PDU: PDU %s",text);
   }
-
+  if( ud->signalInfo[0]&0x3 == 0 ) { // SMS_DELIVER_REPORT
+    throw runtime_error( "SMS_DELIVER_REPORT recieved but not supported in this version" );
+  } else if(ud->signalInfo[0]&0x3 == 2 ) {
+    throw runtime_error( "SMS_COMMAND recieved but not supported in this version" );
+  }
   auto_ptr<SMS> _sms ( new SMS() );
   SMS& sms = *_sms.get();
   Address src_addr;
