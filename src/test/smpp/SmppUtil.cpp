@@ -236,7 +236,7 @@ bool SmppUtil::compareAddresses(PduAddress& a1, PduAddress& a2)
 		memcmp(p1.get_##field(), p2.get_##field(), sizeof(p1.get_##field())), errCode)
 
 #define __compare_cstr__(field, errCode) \
-	__compare__(field, !strcmp(p1.get_##field(), p2.get_##field()), errCode)
+	__compare__(field, strcmp(p1.get_##field(), p2.get_##field()), errCode)
 
 #define __compare_ostr__(field, errCode) \
 	__compare__(field, p1.size_##field() != p2.size_##field() || \
@@ -349,6 +349,22 @@ void SmppUtil::setupRandomCorrectAddress(PduAddress* addr, bool check)
 	__set_cstr__(value, rand1(MAX_ADDRESS_VALUE_LENGTH));
 }
 
+time_t SmppUtil::adjustValidTime(time_t waitTime, time_t validTime)
+{
+	__cfg_int_arr__(rescheduleTimes);
+	__cfg_int__(timeCheckAccuracy);
+	time_t t = waitTime;
+	for (int i = 0; t <= validTime; i++)
+	{
+		if (validTime <= t + timeCheckAccuracy)
+		{
+			return (t - 1);
+		}
+		t += i < rescheduleTimes.size() ? rescheduleTimes[i] : rescheduleTimes.back();
+	}
+	return validTime;
+}
+
 void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	uint64_t mask, bool check)
 {
@@ -366,7 +382,8 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_int__(uint8_t, protocolId, rand0(255));
 	__set_int__(uint8_t, priorityFlag, rand0(255));
 	time_t waitTime = time(NULL) + rand1(maxWaitTime);
-	time_t validTime = waitTime + rand2(sequentialPduInterval, maxDeliveryPeriod);
+	time_t validTime = adjustValidTime(waitTime,
+		waitTime + rand2(sequentialPduInterval, maxDeliveryPeriod));
 	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
@@ -385,13 +402,15 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	__require__(pdu);
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxDeliveryPeriod);
+	__cfg_int__(sequentialPduInterval);
 	PduReplaceSm& p = *pdu;
 	SmppTime tmp;
 	//set & check fields
 	__set_cstr__(messageId, MAX_MSG_ID_LENGTH);
 	__set_addr__(source);
 	time_t waitTime = time(NULL) + rand1(maxWaitTime);
-	time_t validTime = waitTime + rand1(maxDeliveryPeriod);
+	time_t validTime = adjustValidTime(waitTime,
+		waitTime + rand2(sequentialPduInterval, maxDeliveryPeriod));
 	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
