@@ -101,11 +101,13 @@ void StoreManager::shutdown()
     }   
 }
 
-void StoreManager::doCreateSms(Connection* connection,
-    SMS& sms, SMSId id, const CreateMode flag)
+SMSId StoreManager::doCreateSms(Connection* connection,
+    SMS& sms, const CreateMode flag)
         throw(StorageException, DuplicateMessageException)
 {
     __require__(connection);
+    
+    SMSId id;
     
     if (flag == SMPP_OVERWRITE_IF_PRESENT)
     {
@@ -120,10 +122,24 @@ void StoreManager::doCreateSms(Connection* connection,
         connection->check(needOverwriteStmt->execute());
         if (needOverwriteStmt->needOverwrite()) 
         {
+            needOverwriteStmt->getId(id);
+            
             OverwriteStatement* overwriteStmt 
                 = connection->getOverwriteStatement();
-            // do overwrite here !
-            return; // if ok
+            
+            overwriteStmt->bindId(id);
+            overwriteStmt->bindSms(sms);
+            try
+            {
+                connection->check(overwriteStmt->execute());
+                connection->commit();
+            } 
+            catch (StorageException& exc) 
+            {
+                connection->rollback();
+                throw exc;
+            }
+            return id; 
         }
     }
     else if (flag == ETSI_REJECT_IF_PRESENT)
@@ -146,7 +162,7 @@ void StoreManager::doCreateSms(Connection* connection,
     StoreStatement* storeStmt 
         = connection->getStoreStatement();
 
-    storeStmt->bindId(id);
+    storeStmt->bindId(id=generator->getNextId());
     storeStmt->bindSms(sms);
     try 
     {
@@ -158,15 +174,16 @@ void StoreManager::doCreateSms(Connection* connection,
         connection->rollback();
         throw exc;
     }
-
+    
+    return id;
 }
 SMSId StoreManager::createSms(SMS& sms, const CreateMode flag)
     throw(StorageException, DuplicateMessageException)
 {
     __require__(pool && generator);
     
-    SMSId id = generator->getNextId();
-    
+    SMSId id=0;
+
     Connection* connection = 0L;
     unsigned iteration=1;
     while (true)
@@ -174,7 +191,7 @@ SMSId StoreManager::createSms(SMS& sms, const CreateMode flag)
         try 
         {
             connection = pool->getConnection();
-            doCreateSms(connection, sms, id, flag);
+            id = doCreateSms(connection, sms, flag);
             pool->freeConnection(connection);
             break;
         }

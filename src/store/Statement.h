@@ -162,7 +162,7 @@ namespace smsc { namespace store
             throw(StorageException);
         
         void getId(SMSId& id)
-            throw(StorageException) {/*Implement it later*/};
+            throw(StorageException);
 
         bool needOverwrite();
     };
@@ -189,6 +189,10 @@ namespace smsc { namespace store
             throw(StorageException);
         void bindSms(SMS& sms)
             throw(StorageException);
+        
+        inline bool wasOverwrited() {
+            return (getRowsAffectedCount() ? true:false);
+        };
     };
 
     class RetriveStatement : public IdStatement

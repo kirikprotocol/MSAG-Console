@@ -60,8 +60,8 @@ namespace smsc { namespace store
         StoreManager() : MessageStore() {};
         virtual ~StoreManager() {};
         
-        void doCreateSms(Connection* connection,
-            SMS& sms, SMSId id, const CreateMode flag)
+        SMSId doCreateSms(Connection* connection,
+            SMS& sms, const CreateMode flag)
                 throw(StorageException, DuplicateMessageException);
         void doRetriveSms(Connection* connection, 
             SMSId id, SMS& sms)
