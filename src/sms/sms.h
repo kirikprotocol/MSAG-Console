@@ -113,9 +113,11 @@ namespace smsc {
     const int MAX_ADDRESS_VALUE_LENGTH = 20;
     const int MAX_SHORT_MESSAGE_LENGTH = 255; // Depricated !!!
     const int MAX_BODY_LENGTH          = 1550;
+    const int MAX_FULL_ADDRESS_VALUE_LENGTH = 30;
 
     typedef uint64_t    SMSId;
     typedef char        AddressValue[MAX_ADDRESS_VALUE_LENGTH+1];
+    typedef char        FullAddressValue[MAX_FULL_ADDRESS_VALUE_LENGTH+1];
     typedef char        SmeSystemIdType[MAX_SMESYSID_TYPE_LENGTH+1];
     typedef char        EService[MAX_ESERVICE_TYPE_LENGTH+1];
     typedef char        RouteId[MAX_ROUTE_ID_TYPE_LENGTH+1];
