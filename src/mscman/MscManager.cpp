@@ -22,11 +22,13 @@ namespace smsc { namespace mscman
     const char* MSCMAN_INSTANCE_EXIST = "MscManager already instantiated";
     const char* MSCMAN_NOT_STARTED    = "MscManager wasn't started";
 
-    typedef enum { INSERT, UPDATE, DELETE } MscInfoOp;
+    typedef enum { INSERT=1, UPDATE=2, DELETE=3, UNKNOWN=4 } MscInfoOp;
     struct MscInfoChange : public MscInfo
     {
         MscInfoOp   op;
 
+        MscInfoChange()
+            : MscInfo(""), op(UNKNOWN) {};
         MscInfoChange(MscInfoOp _op, const MscInfo& info)
             : MscInfo(info), op(_op) {};
         MscInfoChange(MscInfoOp _op, string msc, bool mLock=false, 
@@ -40,22 +42,34 @@ namespace smsc { namespace mscman
             MscInfo::operator=(info);
             return (*this);
         };
-        
     };
 
     class MscManagerImpl : public MscManager, public Thread
     {
+    private:
+        
+        static const char* selectSql;
+        static const char* insertSql;
+        static const char* updateSql;
+        static const char* deleteSql;
+
     protected:
 
-        bool                bStarted, bNeedExit;
         Mutex               hashLock;
+        bool                bStarted, bNeedExit;
         Event               flushEvent, exitedEvent;
+
+        Connection*         connection;
         
         Hash<MscInfo*>          mscs;
         Array<MscInfoChange>    changes;
         Mutex                   changesLock;
         
         void addChange(const MscInfoChange& change, bool signal=true);
+        void processChange(const MscInfoChange& change);
+
+        void init(Manager& config)
+            throw(ConfigException, InitException);
 
     public:
 
@@ -130,9 +144,19 @@ MscManagerImpl::MscManagerImpl(DataSource& _ds, Manager& config)
         : MscManager(_ds, config), Thread(), 
             bStarted(false), bNeedExit(false) 
 {
+    init(config);
 }
 MscManagerImpl::~MscManagerImpl() 
 {
+    MutexGuard  guard(hashLock);
+
+    // Clean msc info hash here.
+    mscs.First();
+    char* key; MscInfo* info = 0;
+    while (mscs.Next(key, info))
+        if (info) delete info;
+
+    if (connection) ds.freeConnection(connection);
 }
 void MscManagerImpl::Start() 
 {
@@ -157,7 +181,17 @@ int MscManagerImpl::Execute()
     do 
     {
         flushEvent.Wait(); // ??? sleepInterval
-        // TODO: Implement DbUpdate process here !!!
+
+        MscInfoChange change;
+        int result = 1;
+        while (result)
+        {
+            {
+                MutexGuard guard(changesLock);
+                result = changes.Shift(change);
+            }
+            processChange(change);
+        }
     } 
     while (!bNeedExit);
 
@@ -171,6 +205,120 @@ void MscManagerImpl::addChange(const MscInfoChange& change, bool signal)
     MutexGuard  guard(changesLock);
     changes.Push(change);
     if (signal) flushEvent.Signal();
+}
+
+const char* MscManagerImpl::selectSql =
+"SELECT MSC, M_LOCK, A_LOCK, F_COUNT FROM MSC_LOCK";
+const char* MscManagerImpl::insertSql =
+"INSERT INTO MSC_LOCK (MSC, M_LOCK, A_LOCK, F_COUNT) "
+"VALUES (:MSC, :M_LOCK, :A_LOCK, :F_COUNT)";
+const char* MscManagerImpl::updateSql =
+"UPDATE MSC_LOCK SET M_LOCK=:M_LOCK, A_LOCK=:A_LOCK, F_COUNT=:F_COUNT "
+"WHERE MSC=:MSC";
+const char* MscManagerImpl::deleteSql =
+"DELETE FROM MSC_LOCK WHERE MSC=:MSC";
+
+void MscManagerImpl::init(Manager& config)
+    throw(ConfigException, InitException)
+{
+    // TODO: Load up extra params from config if needed
+
+    connection = ds.getConnection();
+    if (!connection || !connection->isAvailable()) 
+    {
+        InitException exc("Get connection to DB failed");
+        log.error(exc.what());
+        throw exc;
+    }
+
+    // TODO: Load up msc info here !!!
+    Statement* statement = 0;
+    ResultSet* rs = 0;
+    try
+    {
+        statement = connection->createStatement(selectSql);
+        if (!statement)
+            throw InitException("Create statement failed");
+        ResultSet* rs = statement->executeQuery();
+        if (!rs)
+            throw InitException("Get result set failed");
+
+        while (rs->fetchNext())
+        {
+            const char* mscNum = rs->getString(1);
+            const char* mLockStr = rs->getString(2);
+            const char* aLockStr = rs->getString(3);
+            int fc = rs->getInt32(4);
+            bool mLock = (mLockStr && mLockStr[0]=='Y' && mLockStr[1]=='\0');
+            bool aLock = (aLockStr && aLockStr[0]=='Y' && aLockStr[1]=='\0');
+            MscInfo* info = new MscInfo(mscNum, mLock, aLock, fc);
+            
+            MutexGuard  guard(hashLock);
+            mscs.Insert(mscNum, info);
+        }
+
+        if (rs) delete rs;
+        if (statement) delete statement;
+    }
+    catch (Exception& exc)
+    {
+        if (rs) delete rs;
+        if (statement) delete statement;
+        log.error(exc.what());
+        throw InitException(exc.what());
+    }
+}
+
+void MscManagerImpl::processChange(const MscInfoChange& change)
+{
+    __require__(connection);
+
+    __trace2__("Processing change on DB Op=%d "
+               "Msc:%s, mLock=%d, aLock=%d fc=%d", change.op, 
+               change.mscNum.c_str(), change.manualLock, 
+               change.automaticLock, change.failureCount);
+    
+    Statement* statement = 0; 
+    try
+    {
+        if (!connection->isAvailable()) connection->connect();
+        
+        switch (change.op)
+        {
+        case INSERT:
+            statement = connection->createStatement(insertSql);
+            statement->setString(1, change.mscNum.c_str());
+            statement->setString(2, change.manualLock ? "Y":"N");
+            statement->setString(3, change.automaticLock ? "Y":"N");
+            statement->setInt32 (4, change.failureCount);
+            break;
+        case UPDATE:
+            statement = connection->createStatement(updateSql);
+            statement->setString(1, change.manualLock ? "Y":"N");
+            statement->setString(2, change.automaticLock ? "Y":"N");
+            statement->setInt32 (3, change.failureCount);
+            statement->setString(4, change.mscNum.c_str());
+            break;
+        case DELETE:
+            statement = connection->createStatement(deleteSql);
+            statement->setString(1, change.mscNum.c_str());
+            break;
+        default:
+            throw Exception("Operation unknown", change.op);
+        }
+
+        if (statement) {
+            statement->executeUpdate();
+            connection->commit();
+            delete statement;
+        }
+    }
+    catch (Exception& exc)
+    {
+        log.error("Process change failed. %s", exc.what());
+        if (statement) delete statement;
+        connection->rollback();
+    }
 }
 
 /* ------------------------ MscStatus implementation ------------------------ */
