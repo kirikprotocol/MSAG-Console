@@ -15,7 +15,6 @@
 #include "smppgw/performance.hpp"
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
-#include "snmp/SnmpAgent.hpp"
 
 #include "smppgw/stat/StatisticsManager.h"
 
@@ -345,7 +344,6 @@ protected:
   SmeProxy* abonentInfoProxy;
 
   smsc::smppgw::stat::GWStatisticsManager *statMan;
-  snmp::SnmpAgent *snmpAgent;
 
   struct LicenseInfo{
     int maxsms;

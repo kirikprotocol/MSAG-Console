@@ -30,7 +30,6 @@ using std::exception;
 using namespace smsc::sms;
 using namespace smsc::smeman;
 using namespace smsc::router;
-using namespace smsc::snmp;
 using namespace smsc::core::synchronization;
 using util::Exception;
 
