@@ -480,15 +480,11 @@ void MAPSTATS_Flush(unsigned x,bool dump)
 void MAPSTATS_Update_(MAPSTATS stats)
 {
   switch ( stats ) {
-  case MAPSTATS_GSMDIALOG_OPENIN:   ++MAPSTATS_open_in[0]; break;
-  case MAPSTATS_GSMDIALOG_OPENOUT:  ++MAPSTATS_open_out[0]; break;
-  case MAPSTATS_GSMDIALOG_CLOSEIN:  ++MAPSTATS_close_in[0]; break;
-  case MAPSTATS_GSMDIALOG_CLOSEOUT: ++MAPSTATS_close_out[0]; break;
   case MAPSTATS_GSMRECV:            ++MAPSTATS_recv[0]; break;
-  case MAPSTATS_DISPOSEDIALOG_IN:   --MAPSTATS_dialogs_in; break;
-  case MAPSTATS_NEWDIALOG_IN:       ++MAPSTATS_dialogs_in; break;
-  case MAPSTATS_DISPOSEDIALOG_OUT:  --MAPSTATS_dialogs_out; break;
-  case MAPSTATS_NEWDIALOG_OUT:      ++MAPSTATS_dialogs_out; break;
+  case MAPSTATS_DISPOSEDIALOG_IN:   --MAPSTATS_dialogs_in; ++MAPSTATS_close_in[0]; break;
+  case MAPSTATS_NEWDIALOG_IN:       ++MAPSTATS_dialogs_in; ++MAPSTATS_open_in[0]; break;
+  case MAPSTATS_DISPOSEDIALOG_OUT:  --MAPSTATS_dialogs_out; ++MAPSTATS_close_out[0]; break;
+  case MAPSTATS_NEWDIALOG_OUT:      ++MAPSTATS_dialogs_out; ++MAPSTATS_open_out[0]; break;
   default:; // nothing
   }
 }

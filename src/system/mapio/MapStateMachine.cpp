@@ -60,7 +60,6 @@ static void ForwardMO(MapDialog* dialog);
 static void AbortMapDialog(unsigned dialogid,unsigned ssn)
 {
   if ( dialogid == 0 ) return;
-  MAPSTATS_Update(MAPSTATS_GSMDIALOG_ABORT);
   Et96MapUAbortReq(ssn,dialogid,0,0,0,0);
 }
 
@@ -205,7 +204,6 @@ struct MAPDIALOG_FATAL_XERROR : public MAPDIALOG_XERROR
 
 static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn){
   if ( dialogid == 0 ) return;
-  MAPSTATS_Update(MAPSTATS_GSMDIALOG_CLOSE);
   USHORT_T res = Et96MapCloseReq (dialog_ssn,dialogid,ET96MAP_NORMAL_RELEASE,0,0,0);
   if ( res != ET96MAP_E_OK ){
     __map_trace2__("%s dialog 0x%x error, code 0x%hx",__func__,dialogid,res);
@@ -2080,7 +2078,6 @@ USHORT_T Et96MapOpenConf (
       throw MAPDIALOG_BAD_STATE(
         FormatText("MAP::%s bad state %d",__func__,dialog->state));
     }
-    MAPSTATS_Update(MAPSTATS_GSMDIALOG_OPENOUT);
   }MAP_CATCH(dialogid_map,dialogid_smsc,localSsn);
   return ET96MAP_E_OK;
 }
@@ -2259,7 +2256,6 @@ USHORT_T Et96MapCloseInd(
         FormatText("MAP::dialog 0x%x is not present",_di));
     }
     __require__(dialog->ssn==localSsn);
-    MAPSTATS_Update(MAPSTATS_GSMDIALOG_CLOSEOUT);
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__func__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
     dialog->id_opened = false;
@@ -2431,7 +2427,6 @@ USHORT_T Et96MapOpenInd (
     }
     if ( dialog.isnull() )
       throw runtime_error("MAP:: can't create dialog");
-    MAPSTATS_Update(MAPSTATS_GSMDIALOG_OPENIN);
     dialog->state = MAPST_WaitSms;
   }
   catch(exception& e)
