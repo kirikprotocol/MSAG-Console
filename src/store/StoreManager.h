@@ -21,12 +21,12 @@ namespace smsc { namespace store
 	    ConnectionPool*	pool;
 
         StoreManager()
-			throw(ConnectFailureException);
+			throw(ConnectionFailedException);
 
     public:    
 
         static MessageStore* getInstance()
-			throw(ConnectFailureException);
+			throw(ConnectionFailedException);
         
         virtual ~StoreManager();
 

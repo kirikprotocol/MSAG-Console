@@ -13,13 +13,13 @@ using namespace smsc::sms;
 MessageStore* StoreManager::instance = 0L;
 
 MessageStore* StoreManager::getInstance() 
-	throw(ConnectFailureException)
+	throw(ConnectionFailedException)
 {
     return ((instance) ? instance : (instance = new StoreManager()));
 }
 
 StoreManager::StoreManager() 
-	throw(ConnectFailureException)
+	throw(ConnectionFailedException)
 {
     // It is needed to obtain init parameters from config here !
 
@@ -32,12 +32,15 @@ StoreManager::~StoreManager()
     if (pool) delete pool;
 }
 
+const int MAX_TRIES_TO_PROCESS = 3;
+
 SMSId StoreManager::store(SMS& sms) 
 	throw(StorageException)
 {
 	__require__(pool);
-
-    while (1) 
+	
+	int iteration=0;
+    while(true)
 	{
 		try 
 		{
@@ -46,12 +49,19 @@ SMSId StoreManager::store(SMS& sms)
             pool->freeConnection(conn);
 			return id;
 		} 
-		catch (ConnectFailureException& exc) {
+		catch (ConnectionFailedException& exc) {
 			throw;
 		}
-		catch (StorageException& exc) {
+		catch (StorageException& exc) 
+		{
+			// Write log here
 			printf("Storage Exception : %s\n", exc.what());
-			continue;
+			if (iteration < MAX_TRIES_TO_PROCESS) 
+			{
+				iteration++;
+				continue;
+            }
+			throw;
 		}
 	}
 }
@@ -61,7 +71,8 @@ SMS& StoreManager::retrive(SMSId id)
 {
     __require__(pool);
     
-	while (1) 
+	int iteration=0;
+    while (true)
 	{
 		try 
 		{
@@ -70,15 +81,22 @@ SMS& StoreManager::retrive(SMSId id)
             pool->freeConnection(conn);
 			return sms;
 		}
-		catch (ConnectFailureException& exc) {
+		catch (ConnectionFailedException& exc) {
 			throw;
 		}
 		catch (NoSuchMessageException& exc) {
 			throw;
 		}
-		catch (StorageException& exc) {
-			printf("Storage Exception : %s\n", exc.what());
-			continue;
+		catch (StorageException& exc) 
+		{
+			// Write log here
+            printf("Storage Exception : %s\n", exc.what());
+			if (iteration < MAX_TRIES_TO_PROCESS) 
+			{
+				iteration++;
+				continue;
+            }
+            throw;
 		}
 	}
 }

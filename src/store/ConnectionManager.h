@@ -51,7 +51,7 @@ namespace smsc { namespace store
 	public:
 	
 	    ConnectionPool(StoreConfig* _config, int max, int init) 
-			throw(ConnectFailureException);
+			throw(ConnectionFailedException);
 	    virtual ~ConnectionPool(); 
         
 	    inline StoreConfig*	getConfig() {
@@ -62,7 +62,7 @@ namespace smsc { namespace store
 			throw(StorageException);
 
 		Connection* getConnection() 
-			throw(ConnectFailureException);
+			throw(ConnectionFailedException);
 	    void freeConnection(Connection* connection);
     };
 	
@@ -135,7 +135,7 @@ namespace smsc { namespace store
 		Mutex        	mutex;
 
 		void checkConnErr(sword status) 
-			throw(ConnectFailureException);
+			throw(ConnectionFailedException);
 		
 		void checkErr(sword status) 
 			throw(StorageException);
@@ -152,7 +152,7 @@ namespace smsc { namespace store
 	public:
 
         Connection(ConnectionPool* pool)
-			throw(ConnectFailureException);
+			throw(ConnectionFailedException);
 		virtual ~Connection();
 
         virtual SMSId store(SMS& sms) 

@@ -56,16 +56,16 @@ namespace smsc { namespace store
 		};
 	};
 	
-	class ConnectFailureException : public StorageException
+	class ConnectionFailedException : public StorageException
     {
 	public:
 		
-		ConnectFailureException(StorageException& exc) 
+		ConnectionFailedException(StorageException& exc) 
 			: StorageException(exc.getErrorCode())
 		{
 			strcpy(cause, exc.what());
 		};
-		virtual ~ConnectFailureException() throw() {};
+		virtual ~ConnectionFailedException() throw() {};
 	};
     
     class NoSuchMessageException : public StoreException

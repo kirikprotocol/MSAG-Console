@@ -30,7 +30,7 @@ StoreConfig::~StoreConfig()
 
 /* ----------------------------- ConnectionPool ------------------------ */
 ConnectionPool::ConnectionPool(StoreConfig* _config, int max, int init) 
-	throw(ConnectFailureException)
+	throw(ConnectionFailedException)
 		: config(_config), maxConnectionsCount(max), curConnectionsCount(init)
 {
     __require__(config);
@@ -133,7 +133,7 @@ void ConnectionPool::checkErr(sword status, Connection* connection)
 }
 
 Connection* ConnectionPool::getConnection()
-	throw(ConnectFailureException)
+	throw(ConnectionFailedException)
 {
     idleLock.Lock();
 	connectionsLock.Lock();
@@ -155,7 +155,7 @@ Connection* ConnectionPool::getConnection()
 		try {
 			connection = new Connection(this);
 		}
-		catch (ConnectFailureException& exc) {
+		catch (ConnectionFailedException& exc) {
 			connectionsLock.Unlock();
 			throw;
 		}
@@ -207,7 +207,7 @@ text* Connection::sqlRetriveAll = (text *)
  SRR, RD, PRI, PID, FCS, DCS, UDHI, UDL, UD FROM SMS_MSG WHERE ID=:ID";
 
 Connection::Connection(ConnectionPool* pool) 
-	throw(ConnectFailureException) 
+	throw(ConnectionFailedException) 
 		: owner(pool), envhp(0L), errhp(0L), 
 			svchp(0L), srvhp(0L), sesshp(0L), rawUd(0L)
 {
@@ -728,7 +728,7 @@ sb4 Connection::failoverCallback(
 }
 
 void Connection::checkConnErr(sword status) 
-	throw(ConnectFailureException)
+	throw(ConnectionFailedException)
 {
     try 
 	{
@@ -736,7 +736,7 @@ void Connection::checkConnErr(sword status)
 	} 
 	catch (StorageException& exc) 
 	{
-		throw ConnectFailureException(exc);
+		throw ConnectionFailedException(exc);
 	}
 	
 }
