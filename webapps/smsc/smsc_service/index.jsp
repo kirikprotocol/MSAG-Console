@@ -1,4 +1,4 @@
-<%@
+D:\serge\smsc\src\webapp\smsc\smsc_service\index.jsp<%@
  include file="/WEB-INF/inc/code_header.jsp"%><%@
  page import="ru.novosoft.smsc.jsp.smsc.smsc_service.Index,
                  ru.novosoft.smsc.admin.service.ServiceInfo,
@@ -96,6 +96,15 @@ refreshStartStopButtonsStatus();
       finishParams(out);
     finishSection(out);
   finishSection(out);
+  //################################## map #############################
+  startSection(out, "map", "MAP", false);
+    startParams(out);
+      param(out, "BusyMT delay", "map.busyMTDelay", bean.getIntParam("map.busyMTDelay"));
+      param(out, "Locked by MO delay", "map.lockedByMODelay", bean.getIntParam("map.lockedByMODelay"));
+      param(out, "MO lock timeout", "map.MOLockTimeout", bean.getIntParam("map.MOLockTimeout"));
+    finishParams(out);
+  finishSection(out);
+
   //################################## traffic control #############################
   startSection(out, "trafficControl", "Traffic control", false);
     startParams(out);
@@ -246,17 +255,6 @@ refreshStartStopButtonsStatus();
       param(out, "failure limit",          "MscManager.failureLimit",          bean.getIntParam( "MscManager.failureLimit"));
     finishParams(out);
   finishSection(out);
-
-
-
-	//################################## map #############################
-/*	startSection(out, "map", "map", false);
-		startParams(out);
-			param(out, "hlr", "map.hlr", bean.getStringParam("map.hlr"));
-			param(out, "vlr", "map.vlr", bean.getStringParam("map.vlr"));
-		finishParams(out);
-	finishSection(out);
-*/
 %></div><%
 page_menu_begin(out);
 page_menu_button(out, "mbSave",  "Save",  "Save config");
