@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="windows-1251"?>
 
 <project name="MCIProf" default="build" basedir=".">
 
@@ -12,12 +12,14 @@
   <property name="mciprof_out" location="${build.dir}/mciprof"/>
   <property name="mciprof_lib" location="${mciprof_out}/lib"/>
 
-  <fileset id="sources"  dir="${java_src}" includes="**/*.java" />
-  <fileset id="libs"  dir="${java_lib}" includes="**/*.jar" />
+  <fileset id="sources" dir="${java_src}" includes="**/*.java"/>
+  <fileset id="common_libs"  dir="${basedir}/../lib" includes="**/*.jar" />
+  <fileset id="project_libs" dir="${java_lib}"       includes="**/*.jar"/>
 
   <path id="classpath">
     <pathelement location="${java_src}"/>
-    <fileset refid="libs"/>
+    <fileset refid="common_libs"/>
+    <fileset refid="project_libs"/>
   </path>
 
   <target name="init" description="initialize">
@@ -31,12 +33,13 @@
   </target>
 
   <target name="compile" depends="init" description="compile java sources">
-    <javac srcdir="${java_src}" classpathref="classpath" debug="yes" destdir="${mciprof_out}"/>
+    <mkdir dir="${mciprof_out}/classes"/>
+    <javac srcdir="${java_src}" classpathref="classpath" debug="yes" destdir="${mciprof_out}/classes"/>
   </target>
 
   <target name="build" depends="compile" description="build all">
     <jar jarfile="${mciprof_lib}/mciprof.jar">
-      <fileset dir="${mciprof_out}"/>
+      <fileset dir="${mciprof_out}/classes"/>
     </jar>
   </target>
 
@@ -44,14 +47,14 @@
 
   <target name="distr" depends="rebuild" description="make war">
     <!-- должен сделать war с jar'ами, конфигами, схемами и т.д. и т.п. -->
-    <copy todir="${mciprof_lib}" preservelastmodified="yes">
-      <fileset refid="libs"/>
+    <copy todir="${mciprof_lib}">
+      <fileset refid="project_libs"/>
     </copy>
-    <jar destfile="${mciprof_out}/mciprof.war" basedir="${mciprof_out}">
-      <!-- TODO: include ./bin script(s) -->
-      <zipfileset dir="${mciprof_lib}"    prefix="lib"/>
-      <zipfileset dir="${basedir}/config" prefix="config"/>
-      <zipfileset dir="${basedir}/schema" prefix="schema"/>
+    <jar destfile="${mciprof_out}/mciprof.war">
+      <zipfileset file="${basedir}/service" prefix="bin"/>
+      <zipfileset dir="${mciprof_lib}"      prefix="lib"/>
+      <zipfileset dir="${basedir}/config"   prefix="config"/>
+      <zipfileset dir="${basedir}/schema"   prefix="schema"/>
     </jar>
   </target>
 
@@ -61,7 +64,7 @@
 
   <target name="update" depends="cvs_update, build" description="make update package">
     <!-- должен сделать зип с jar'ами, schema.xml, resources.xml -->
-    <zip>
+    <zip destfile="${mciprof_out}/mciprof.zip">
       <zipfileset dir="${mciprof_lib}"    prefix="lib"/>
       <zipfileset dir="${basedir}/schema" prefix="schema"/>
     </zip>
