@@ -141,6 +141,7 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
       __trace2__("broken response with error 0x%hx",err);
       throw runtime_error("MAPIO::ERR broken response");
     }
+    CloseAndRemoveDialog(lssn,dialogId);
 	}catch(...){
 		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
     CloseAndRemoveDialog(lssn,dialogId);
