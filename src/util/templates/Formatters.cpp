@@ -357,9 +357,10 @@ void StringFormatter::format(std::string& output,
         }
         else if (strcmp(align, "center") == 0)
         {
-            output.append((str_len-tmp_len)/2, ' ');
+            int ind_len = (str_len-tmp_len)/2;
+            output.append(ind_len, ' ');
             output += str;
-            output.append((str_len-tmp_len)/2, ' ');
+            output.append(str_len-tmp_len-ind_len, ' ');
         }
         else if (strcmp(align, "right") == 0)
         {
