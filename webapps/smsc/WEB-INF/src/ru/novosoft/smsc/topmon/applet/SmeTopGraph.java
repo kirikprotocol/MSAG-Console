@@ -364,11 +364,13 @@ public class SmeTopGraph  extends Canvas implements MouseListener, MouseMotionLi
     int barwidth = (errListWidth - graphTextWidth - 3*barSeparator - 2*pad)/2;
     g.setFont( graphFont );
     // draw bars
-    SmeSnap smesnap = snapHistory.getLast();
     int barx = pad+graphTextWidth+barSeparator;
-    int spent = 0;
     g.setColor(graphBarBGColor);
     g.fillRect(barx, top-pad, barwidth, height-fh-pad );
+
+    SmeSnap smesnap = snapHistory.getLast();
+    if( smesnap == null ) return;
+    int spent = 0;
     // last submit err bar
     g.setColor(colorGraphSubmitErr);
     int barheight = smesnap.speed[SmeSnap.SP_REJECTED]*graphScale;
