@@ -39,10 +39,15 @@ void setStrParam(std::string & param, const char * const prefix, const char * co
 {
 	try {
 		char fullParamName[128];
-		snprintf(fullParamName, sizeof(fullParamName), "%s.%s", prefix, paramName);
-		param = config.getString(fullParamName);
+		if (prefix == NULL)
+			param = config.getString(paramName);
+		else
+		{
+			snprintf(fullParamName, sizeof(fullParamName), "%s.%s", prefix, paramName);
+			param = config.getString(fullParamName);
+		}
 	} catch (smsc::core::buffers::HashInvalidKeyException & e) {
-		throw Exception("Parameter \"%s\" for %s sme not found", paramName, prefix);
+		throw Exception("Parameter \"%s\" for %s sme not found", paramName, prefix == NULL ? "" : prefix);
 	}
 }
 
@@ -86,6 +91,7 @@ ProxySmeConfig::ProxySmeConfig(const char * const config_filename) //throw(smsc:
 			fillSme(right, "right", config);
 			setIntParam(queueLength, NULL, "queueLength", config);
 			setIntParam(adminPort, NULL, "adminPort", config);
+			setStrParam(adminHost, NULL, "adminHost", config);
 		} catch (DOMTreeReader::ParseException &e) {
 			throw Exception("couldn't read or parse config file, nested: %s", e.what());
 		} catch (Exception &e) {

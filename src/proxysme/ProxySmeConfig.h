@@ -25,10 +25,12 @@ public:
 	const sme & getRigth() {return right;}
 	int getQueueLength() {return queueLength;}
 	int getAdminPort() {return adminPort;}
+	const std::string & getAdminHost() {return adminHost;}
 private:
 	sme left, right;
 	int queueLength;
 	int adminPort;
+	std::string adminHost;
 	void fillSme(ProxySmeConfig::sme& smeItem, const char * const prefix, const Config config); //throw(smsc::util::Exception)
 };
 
