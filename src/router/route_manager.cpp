@@ -167,12 +167,12 @@ __synchronized__
   sme_table = smetable;
 }
 
-RouteIterator* RouteManager::iterator()
+/*RouteIterator* RouteManager::iterator()
 {
 __synchronized__
   throw runtime_error("RouteManager::iterator() unsuppoerted");
   return 0;
-}
+}*/
 
 // RouteAdministrator implementaion
 void RouteManager::addRoute(const RouteInfo& routeInfo)
