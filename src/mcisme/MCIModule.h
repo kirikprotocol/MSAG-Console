@@ -2,6 +2,9 @@
 #ifndef SMSC_MCI_SME_MCI_MODULE
 #define SMSC_MCI_SME_MCI_MODULE
 
+#include <unistd.h>
+#include <signal.h>
+#include <string.h>
 #include <string>
 
 #include <logger/Logger.h>
@@ -10,6 +13,8 @@
 #include <core/threads/Thread.hpp>
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
+
+#include <system/smscsignalhandlers.h>
 
 #include "misscall/callproc.hpp"
 
@@ -149,7 +154,17 @@ namespace smsc { namespace mcisme
                 try
                 {   
         #ifndef MCI_MODULE_TEST
-                    if (module) module->run();
+                    int result = 0;
+                    if (module && ((result = module->run()) != 0))
+                    {
+                        smsc_log_error(logger, "MCI Module run/init failure. Exit code=%d. Stopping service", result);
+                        if (sigsend(P_PID, P_MYID, smsc::system::SHUTDOWN_SIGNAL) != 0) {
+                            smsc_log_error(logger, "Failed to send shutdown signal. Cause: %s. Terminating process...",
+                                           strerror(errno));
+                            exit(errno);
+                        }
+                        break;
+                    }
         #else                    
                     test();
         #endif
