@@ -74,7 +74,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
     __trace2__(":MAP::mkDeliverPDU: alphanum address %s ",addr.value);
     if (addr.getLength()>11) throw runtime_error(":MAP: invalid address length"); 
     unsigned tmpX = 0;
-    unsigned _7bit_text_len = ConvertText27bit(addr.value,addr.length,oa->val,&tmpX,0);
+    unsigned _7bit_text_len = ConvertText27bit((const unsigned char*)addr.value,addr.length,oa->val,&tmpX,0);
     oa->len = _7bit_text_len*2;
     oa_length = _7bit_text_len;
   }
