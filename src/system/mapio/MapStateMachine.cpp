@@ -1432,11 +1432,8 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   if ( result != ET96MAP_E_OK )
     throw runtime_error(
       FormatText("MAP::%s Et96MapV2UnstructuredSSRequestReq return error 0x%x",__FUNCTION__,result));
-  if( serviceOp == USSD_USSR_REQ ) {
-    result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
-  } else {
-    result = Et96MapCloseReq(dialog->ssn, dialog->dialogid_map, ET96MAP_NORMAL_RELEASE, 0, 0, 0 );
-  }
+  
+  result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
   if ( result != ET96MAP_E_OK )
     throw runtime_error(
       FormatText("MAP::%s Et96MapDelimiterReq return error 0x%x",__FUNCTION__,result));
@@ -2730,6 +2727,10 @@ USHORT_T Et96MapDelimiterInd(
     case MAPST_WaitUSSDNotifyClose:
       dialog->state = MAPST_WaitSubmitUSSDNotifyConf;
       SendSubmitCommand(dialog.get());
+      result = Et96MapCloseReq(dialog->ssn, dialog->dialogid_map, ET96MAP_NORMAL_RELEASE, 0, 0, 0 );
+      if ( result != ET96MAP_E_OK )
+        throw runtime_error(
+          FormatText("MAP::Et96MapDelimiterInd: ussd dialog close after notify error 0x%x",result));
       break;
     default:
       throw MAPDIALOG_BAD_STATE(
