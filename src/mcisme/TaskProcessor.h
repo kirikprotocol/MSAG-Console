@@ -259,7 +259,7 @@ namespace smsc { namespace mcisme
 
         ThreadManager       eventManager;
         ResponcesTracker    responcesTracker;
-        MCIModule           mciModule;
+        MCIModule*          mciModule;
 
         Mutex               messageSenderLock;
         MessageSender*      messageSender;

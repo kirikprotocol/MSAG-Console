@@ -99,8 +99,8 @@ void TaskProcessor::initDataSource(ConfigView* config)
 TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), MissedCallListener(), AdminInterface(), 
         logger(Logger::getInstance("smsc.mcisme.TaskProcessor")), 
-        protocolId(0), daysValid(1), svcType(0), address(0), messageSender(0), ds(0),
-        dsStatConnection(0), statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
+        protocolId(0), daysValid(1), svcType(0), address(0), mciModule(0), messageSender(0),
+        ds(0), dsStatConnection(0), statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
         bStarted(false), bInQueueOpen(false), bOutQueueOpen(false)
 {
     smsc_log_info(logger, "Loading ...");
@@ -115,6 +115,20 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     catch(ConfigException& exc) { svcType = 0; };
     try { daysValid = config->getInt("DaysValid"); }
     catch(ConfigException& exc) { daysValid = 1; };
+    
+    std::auto_ptr<ConfigView> circuitsCfgGuard(config->getSubConfig("Circuits"));
+    ConfigView* circuitsCfg = circuitsCfgGuard.get();
+    Circuits circuits;
+    circuits.hsn = circuitsCfg->getInt("hsn");
+    circuits.spn = circuitsCfg->getInt("spn");
+    const char* tsmStr = circuitsCfg->getString("tsm");
+    uint32_t tsmLong = 0;
+    if (!tsmStr || !tsmStr[0] || sscanf(tsmStr, "%lx", &tsmLong) != 1)
+        throw ConfigException("Parameter <MCISme.Circuits.tsm> value is empty or invalid."
+                              " Expecting hex string, found '%s'.", tsmStr ? tsmStr:"null");
+    //smsc_log_debug(logger, "TSM = %lx (%ld)", tsmLong, tsmLong);
+    circuits.ts = tsmLong;
+    mciModule = new MCIModule(circuits);
     
     responcesTracker.init(this, config);
 
@@ -155,6 +169,7 @@ TaskProcessor::~TaskProcessor()
     eventManager.Stop();
     this->Stop();
     
+    if (mciModule) delete mciModule;
     if (statistics) delete statistics;
     if (dsStatConnection) ds->freeConnection(dsStatConnection);
     if (ds) delete ds;
@@ -178,7 +193,7 @@ void TaskProcessor::Start()
         
         Thread::Start();
         responcesTracker.Start();
-        mciModule.Attach(this);
+        if (mciModule) mciModule->Attach(this);
         
         bStarted = true;
         smsc_log_info(logger, "Started.");
@@ -191,7 +206,7 @@ void TaskProcessor::Stop()
     {
         smsc_log_info(logger, "Stopping ...");
         
-        mciModule.Detach();
+        if (mciModule) mciModule->Detach();
         responcesTracker.Stop();
         
         closeInQueue();

@@ -13,8 +13,8 @@
 
 #include "misscall/callproc.hpp"
 
-#define MCI_MODULE_TEST YES
-//#undef  MCI_MODULE_TEST
+//#define MCI_MODULE_TEST YES
+#undef  MCI_MODULE_TEST
 
 extern "C" void clearSignalMask(void);
 
@@ -58,14 +58,16 @@ namespace smsc { namespace mcisme
 
     public:
 
-        MCIModule() : Thread(), logger(Logger::getInstance("smsc.mcisme.MCIModule")), 
-            listener(0), bAttached(false), bNeedExit(false)
+        MCIModule(const Circuits& circuits) 
+            : Thread(), logger(Logger::getInstance("smsc.mcisme.MCIModule")), 
+                listener(0), bAttached(false), bNeedExit(false)
         {
             smsc_log_info(logger, "Starting MCI Module...");
             
         #ifndef MCI_MODULE_TEST    
             module = MissedCallProcessor::instance();
             if (!module) throw Exception("Failed to instantiate MCI Module processor.");
+            module->setCircuits(circuits);
         #endif
             Thread::Start();
 

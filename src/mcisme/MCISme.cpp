@@ -699,5 +699,6 @@ int main(void)
     }
 
     DataSourceLoader::unload();
+    //smsc_log_debug(logger, "Exited !!!");
     return resultCode;
 }
