@@ -17,33 +17,10 @@ using namespace smsc::test::smpp;
 using namespace smsc::test::core; //constants
 using namespace smsc::test::util;
 
-SmppProtocolTestCases::SmppProtocolTestCases(const SmeConfig& config,
-	SmppFixture* _fixture) : fixture(_fixture), chkList(fixture->chkList)
-{
-	__require__(fixture);
-	base = new SmppBaseTestCases(config, fixture);
-	receiver = new SmppReceiverTestCases(fixture);
-	transmitter = new SmppTransmitterTestCases(fixture);
-	fixture->session = new SmppSession(config, receiver);
-}
-
-SmppProtocolTestCases::~SmppProtocolTestCases()
-{
-	delete base;
-	delete receiver;
-	delete transmitter;
-	delete fixture;
-}
-
 Category& SmppProtocolTestCases::getLog()
 {
 	static Category& log = Logger::getCategory("SmppProtocolTestCases");
 	return log;
-}
-
-SmppBaseTestCases& SmppProtocolTestCases::getBase()
-{
-	return *base;
 }
 
 void SmppProtocolTestCases::submitSmAssert(int num)
@@ -217,7 +194,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 			PduSubmitSm* pdu = new PduSubmitSm();
 			const Address* destAlias = fixture->smeReg->getRandomAddress();
 			__require__(destAlias);
-			transmitter->setupRandomCorrectSubmitSmPdu(pdu, *destAlias);
+			fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, *destAlias);
 			PduData* existentPduData = NULL;
 			switch (s.value())
 			{
@@ -457,7 +434,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					__unreachable__("Invalid num");
 			}
 			//отправить и зарегистрировать pdu
-			transmitter->sendSubmitSmPdu(pdu, existentPduData, sync);
+			fixture->transmitter->sendSubmitSmPdu(pdu, existentPduData, sync);
 			__tc_ok__;
 		}
 		catch(...)
@@ -484,7 +461,7 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 			PduSubmitSm* pdu = new PduSubmitSm();
 			const Address* destAlias = fixture->smeReg->getRandomAddress();
 			__require__(destAlias);
-			transmitter->setupRandomCorrectSubmitSmPdu(pdu, *destAlias);
+			fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, *destAlias);
 			switch (s.value())
 			{
 				case 1: //неправильный адрес отправителя
@@ -588,7 +565,7 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 					__unreachable__("Invalid num");
 			}
 			//отправить и зарегистрировать pdu
-			transmitter->sendSubmitSmPdu(pdu, NULL, sync);
+			fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync);
 			__tc_ok__;
 		}
 		catch(...)
@@ -620,7 +597,7 @@ void SmppProtocolTestCases::replaceSm(bool sync, int num)
 				MutexGuard mguard(fixture->pduReg->getMutex());
 				replacePduData = getNonReplaceEnrotePdu();
 			}
-			transmitter->setupRandomCorrectReplaceSmPdu(pdu, replacePduData);
+			fixture->transmitter->setupRandomCorrectReplaceSmPdu(pdu, replacePduData);
 			switch (s.value())
 			{
 				case 1: //ничего особенного
@@ -696,7 +673,7 @@ void SmppProtocolTestCases::replaceSm(bool sync, int num)
 						if (replacePduData)
 						{
 							__tc__("replaceSm.replaceReplacedEnrote");
-							transmitter->setupRandomCorrectReplaceSmPdu(pdu,
+							fixture->transmitter->setupRandomCorrectReplaceSmPdu(pdu,
 								replacePduData);
 							pdu->set_messageId(replacePduData->smsId.c_str());
 						}
@@ -724,7 +701,7 @@ void SmppProtocolTestCases::replaceSm(bool sync, int num)
 						if (replacePduData)
 						{
 							__tc__("replaceSm.replaceRepeatedDeliveryEnrote");
-							transmitter->setupRandomCorrectReplaceSmPdu(pdu,
+							fixture->transmitter->setupRandomCorrectReplaceSmPdu(pdu,
 								replacePduData);
 							pdu->set_messageId(replacePduData->smsId.c_str());
 						}
@@ -734,7 +711,7 @@ void SmppProtocolTestCases::replaceSm(bool sync, int num)
 					__unreachable__("Invalid num");
 			}
 			//отправить и зарегистрировать pdu
-			transmitter->sendReplaceSmPdu(pdu, replacePduData, sync);
+			fixture->transmitter->sendReplaceSmPdu(pdu, replacePduData, sync);
 			__tc_ok__;
 		}
 		catch(...)
@@ -755,7 +732,7 @@ uint32_t SmppProtocolTestCases::sendDeliverySmRespOk(PduDeliverySm& pdu, bool sy
 		PduDeliverySmResp respPdu;
 		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
 		respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
-		transmitter->sendDeliverySmResp(respPdu, sync);
+		fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 		__tc_ok__;
 		return ESME_ROK;
 	}
@@ -786,19 +763,19 @@ uint32_t SmppProtocolTestCases::sendDeliverySmRespRetry(PduDeliverySm& pdu,
 			case 2: //временная ошибка на стороне sme, запрос на повторную доставку
 				__tc__("sendDeliverySmResp.sendRetry.tempAppError");
 				respPdu.get_header().set_commandStatus(ESME_RX_T_APPN);
-				transmitter->sendDeliverySmResp(respPdu, sync);
+				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 				break;
 			case 3: //переполнение очереди стороне sme
 				__tc__("sendDeliverySmResp.sendRetry.msgQueueFull");
 				respPdu.get_header().set_commandStatus(ESME_RMSGQFUL);
-				transmitter->sendDeliverySmResp(respPdu, sync);
+				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 				break;
 			case 4: //отправить респонс с неправильным sequence_number
 				__tc__("sendDeliverySmResp.sendRetry.invalidSequenceNumber");
 				respPdu.get_header().set_sequenceNumber(INT_MAX);
 				respPdu.get_header().set_commandStatus(0xffffffff);
 				//respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
-				transmitter->sendDeliverySmResp(respPdu, sync);
+				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 				break;
 			default:
 				__unreachable__("Invalid num");
@@ -854,7 +831,7 @@ uint32_t SmppProtocolTestCases::sendDeliverySmRespError(PduDeliverySm& pdu,
 		{
 			return sendDeliverySmRespError(pdu, sync, num);
 		}
-		transmitter->sendDeliverySmResp(respPdu, sync);
+		fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 		__tc_ok__;
 		return respPdu.get_header().get_commandStatus();
 	}

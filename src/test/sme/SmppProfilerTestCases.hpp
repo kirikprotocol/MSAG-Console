@@ -1,7 +1,9 @@
 #ifndef TEST_SME_SMPP_PROFILER_TEST_CASES
 #define TEST_SME_SMPP_PROFILER_TEST_CASES
 
-#include "SmppProtocolTestCases.hpp"
+#include "test/util/BaseTestCases.hpp"
+#include "SmppFixture.hpp"
+#include "SmppTransmitterTestCases.hpp"
 #include <string>
 
 namespace smsc {
@@ -11,22 +13,20 @@ namespace sme {
 using std::string;
 using std::pair;
 using log4cpp::Category;
-using smsc::sme::SmeConfig;
 using smsc::test::core::PduData;
+using smsc::test::core::SmeAckMonitor;
+using smsc::test::util::BaseTestCases;
 using namespace smsc::smpp; //pdu
 
 /**
  * Тест кейсы для profiler через smpp протокол.
  */
-class SmppProfilerTestCases : public SmppProtocolTestCases,
+class SmppProfilerTestCases : public BaseTestCases,
 	public SmeAcknowledgementHandler
 {
 public:
-	SmppProfilerTestCases(const SmeConfig& config, SmppFixture* fixture)
-		: SmppProtocolTestCases(config, fixture)
-	{
-		fixture->ackHandler = this;
-	}
+	SmppProfilerTestCases(SmppFixture* _fixture)
+	: fixture(_fixture), chkList(fixture->chkList) {}
 
 	virtual ~SmppProfilerTestCases() {}
 
@@ -52,6 +52,9 @@ public:
 		PduDeliverySm& pdu, time_t recvTime);
 
 protected:
+	SmppFixture* fixture;
+	CheckList* chkList;
+
 	virtual Category& getLog();
 	void sendUpdateProfilePdu(const string& text, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, bool sync,

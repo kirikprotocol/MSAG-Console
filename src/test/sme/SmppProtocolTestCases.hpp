@@ -2,16 +2,15 @@
 #define TEST_SME_SMPP_PROTOCOL_TEST_CASES
 
 #include "test/util/BaseTestCases.hpp"
-#include "SmppBaseTestCases.hpp"
+#include "SmppFixture.hpp"
 #include "SmppTransmitterTestCases.hpp"
-#include "SmppReceiverTestCases.hpp"
 
 namespace smsc {
 namespace test {
 namespace sme {
 
 using log4cpp::Category;
-using smsc::sme::SmeConfig;
+using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 
 /**
@@ -21,14 +20,10 @@ using smsc::test::util::CheckList;
 class SmppProtocolTestCases : public BaseTestCases
 {
 public:
-	SmppProtocolTestCases(const SmeConfig& config, SmppFixture* fixture); //throws Exception
+	SmppProtocolTestCases(SmppFixture* _fixture)
+	: fixture(_fixture), chkList(fixture->chkList) {}
 	
-	virtual ~SmppProtocolTestCases();
-
-	/**
-	 * Базовые тест кейсы для smpp.
-	 */
-	SmppBaseTestCases& getBase();
+	virtual ~SmppProtocolTestCases() {}
 
 	/**
 	 * Отправка корректной submit_sm pdu другим sme.
@@ -74,9 +69,6 @@ public:
 
 protected:
 	SmppFixture* fixture;
-	SmppBaseTestCases* base;
-	SmppTransmitterTestCases* transmitter;
-	SmppReceiverTestCases* receiver;
 	CheckList* chkList;
 	
 	virtual Category& getLog();

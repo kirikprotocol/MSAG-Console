@@ -1,7 +1,9 @@
 #ifndef TEST_DBSME_DBSME_TEST_CASES
 #define TEST_DBSME_DBSME_TEST_CASES
 
-#include "test/sme/SmppProfilerTestCases.hpp"
+#include "test/util/BaseTestCases.hpp"
+#include "test/sme/SmppFixture.hpp"
+#include "test/sme/SmppTransmitterTestCases.hpp"
 #include "DbSmeRegistry.hpp"
 #include "DbSmeFormatJobTestCases.hpp"
 #include "DbSmeModifyJobTestCases.hpp"
@@ -15,24 +17,24 @@ namespace dbsme {
 using std::string;
 using log4cpp::Category;
 using smsc::sms::Address;
-using smsc::sme::SmeConfig;
 using smsc::smpp::PduSubmitSm;
 using smsc::smpp::PduDeliverySm;
 using smsc::test::sme::SmppFixture;
-using smsc::test::sme::SmppProfilerTestCases;
 using smsc::test::sme::SmeAcknowledgementHandler;
+using smsc::test::util::BaseTestCases;
+using smsc::test::sme::AckText;
 using smsc::test::core::SmeAckMonitor;
 using smsc::test::core::PduData;
 
 /**
  * Тест кейсы для db sme.
  */
-class DbSmeTestCases : public SmppProfilerTestCases
+class DbSmeTestCases : public BaseTestCases,
+	public SmeAcknowledgementHandler
 {
 public:
-	DbSmeTestCases(const SmeConfig& config, SmppFixture* fixture,
-		DbSmeRegistry* _dbSmeReg);
-
+	DbSmeTestCases(SmppFixture* _fixture, DbSmeRegistry* _dbSmeReg);
+	
 	virtual ~DbSmeTestCases() {}
 
 	/**
@@ -82,6 +84,8 @@ public:
 		PduDeliverySm &pdu, time_t recvTime);
 
 protected:
+	SmppFixture* fixture;
+	CheckList* chkList;
 	DbSmeRegistry* dbSmeReg;
 	DbSmeDateFormatJobTestCases dateFormatTc;
 	DbSmeOtherFormatJobTestCases otherFormatTc;
@@ -105,7 +109,7 @@ protected:
 		const string& output, bool sync, uint8_t dataCoding);
 	const string processJobFirstOutput(const string& text, DbSmeTestRecord* rec);
 	AckText* getExpectedResponse(SmeAckMonitor* monitor, PduDeliverySm &pdu,
-		const string& text);
+		const string& text, time_t recvTime);
 };
 
 }

@@ -31,7 +31,7 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 		//создать pdu
 		PduSubmitSm* pdu = new PduSubmitSm();
 		__cfg_addr__(profilerAlias);
-		transmitter->setupRandomCorrectSubmitSmPdu(pdu, profilerAlias,
+		fixture->transmitter->setupRandomCorrectSubmitSmPdu(pdu, profilerAlias,
 			OPT_ALL & ~OPT_MSG_PAYLOAD); //отключить messagePayload
 		//установить немедленную доставку
 		pdu->get_message().set_scheduleDeliveryTime("");
@@ -52,7 +52,7 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& text,
 		pdu->get_message().set_shortMessage(msg.get(), msgLen);
 		pdu->get_message().set_dataCoding(dataCoding);
 		//отправить pdu
-		transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps, NULL, NULL, false);
+		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps, NULL, NULL, false);
 		__tc_ok__;
 		//обновить профиль, ответные сообщения от профайлера и
 		//подтверждения доставки  уже по новым настройкам
