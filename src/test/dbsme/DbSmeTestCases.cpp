@@ -21,7 +21,8 @@ using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet;
 
 DbSmeTestCases::DbSmeTestCases(SmppFixture* fixture, DbSmeRegistry* _dbSmeReg)
-: SmeAcknowledgementHandler(fixture), dbSmeReg(_dbSmeReg),
+: SmeAcknowledgementHandler(fixture, TestConfig::getStrProp("dbSmeServiceType"),
+	TestConfig::getIntProp("dbSmeProtocolId")), dbSmeReg(_dbSmeReg),
 	dateFormatTc(dbSmeReg, fixture->chkList),
 	otherFormatTc(dbSmeReg, fixture->chkList),
 	insertTc(dbSmeReg, fixture->chkList),
@@ -30,6 +31,13 @@ DbSmeTestCases::DbSmeTestCases(SmppFixture* fixture, DbSmeRegistry* _dbSmeReg)
 	selectTc(dbSmeReg, fixture->chkList),
 	plsqlTc(dbSmeReg, fixture->chkList)
 {
+	__cfg_addr__(dbSmeAddr);
+	__cfg_addr__(dbSmeInvalidAddr);
+	__cfg_addr__(dbSmeAlias);
+	addSmeAddr(dbSmeAddr);
+	addSmeAddr(dbSmeInvalidAddr);
+	addSmeAlias(dbSmeAlias);
+	addSmeAlias(dbSmeInvalidAddr);
 	//__require__(dbSmeReg);
 	handlers["DateFormatJob1"] = &dateFormatTc;
 	handlers["DateFormatJob2"] = &dateFormatTc;
@@ -739,14 +747,6 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	PduDeliverySm &pdu, time_t recvTime)
 {
 	__decl_tc__;
-	__cfg_addr__(dbSmeAddr);
-	__cfg_addr__(dbSmeInvalidAddr);
-	__cfg_addr__(dbSmeAlias);
-	__cfg_str__(dbSmeServiceType);
-	__cfg_int__(dbSmeProtocolId);
-
-	Address srcAlias;
-	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
 	if (!dbSmeReg)
 	{
 		return;
@@ -771,26 +771,10 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		return;
 	}
 	__tc__("processDbSmeRes.checkFields");
-	__check__(1, serviceType, dbSmeServiceType);
-	if (srcAlias == dbSmeInvalidAddr)
-	{
-		//ok
-	}
-	else if (fixture->smeInfo.wantAlias && srcAlias != dbSmeAlias)
-	{
-		__tc_fail__(2);
-	}
-	else if (!fixture->smeInfo.wantAlias && srcAlias != dbSmeAddr)
-	{
-		__tc_fail__(3);
-	}
-	__check__(4, protocolId, dbSmeProtocolId);
-	__check__(5, priorityFlag, 0);
-	__check__(6, registredDelivery, 0);
-	__check__(7, dataCoding, ack->dataCoding);
+	__check__(1, dataCoding, ack->dataCoding);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
-		__tc_fail__(8);
+		__tc_fail__(2);
 	}
     SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());

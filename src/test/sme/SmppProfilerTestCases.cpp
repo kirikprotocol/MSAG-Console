@@ -15,6 +15,17 @@ using namespace smsc::test::core; //constants
 using namespace smsc::test::util;
 using namespace smsc::test::smpp; //constants, SmppUtil
 
+SmppProfilerTestCases::SmppProfilerTestCases(SmppFixture* fixture)
+: SmeAcknowledgementHandler(fixture,
+	TestConfig::getStrParam("profilerServiceType"),
+	TestConfig::getIntParam("profilerProtocolId"))
+{
+	__cfg_addr__(profilerAddr);
+	__cfg_addr__(profilerAlias);
+	addSmeAddr(profilerAddr);
+	addSmeAlias(profilerAlias);
+}
+
 Category& SmppProfilerTestCases::getLog()
 {
 	static Category& log = Logger::getCategory("SmppProfilerReceiverTestCases");
@@ -276,11 +287,6 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 {
 	__require__(monitor);
 	__decl_tc__;
-	__cfg_addr__(profilerAddr);
-	__cfg_addr__(profilerAlias);
-	__cfg_str__(profilerServiceType);
-	__cfg_int__(profilerProtocolId);
-
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
 	if (!monitor->pduData->objProps.count("profilerOutput"))
@@ -299,24 +305,10 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	}
 	//проверить и обновить профиль
 	__tc__("processUpdateProfile.checkFields");
-	__check__(1, serviceType, profilerServiceType);
-	Address srcAlias;
-	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
-	if (fixture->smeInfo.wantAlias && srcAlias != profilerAlias)
-	{
-		__tc_fail__(2);
-	}
-	else if (!fixture->smeInfo.wantAlias && srcAlias != profilerAddr)
-	{
-		__tc_fail__(3);
-	}
-	__check__(4, protocolId, profilerProtocolId);
-	__check__(5, priorityFlag, 0);
-	__check__(6, registredDelivery, 0);
-	__check__(7, dataCoding, ack->dataCoding);
+	__check__(1, dataCoding, ack->dataCoding);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
-		__tc_fail__(8);
+		__tc_fail__(2);
 	}
     SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());

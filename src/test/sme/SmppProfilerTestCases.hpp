@@ -23,8 +23,7 @@ using namespace smsc::smpp; //pdu
 class SmppProfilerTestCases : public SmeAcknowledgementHandler
 {
 public:
-	SmppProfilerTestCases(SmppFixture* fixture)
-	: SmeAcknowledgementHandler(fixture) {}
+	SmppProfilerTestCases(SmppFixture* fixture);
 
 	virtual ~SmppProfilerTestCases() {}
 

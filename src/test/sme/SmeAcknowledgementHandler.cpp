@@ -15,8 +15,26 @@ using namespace smsc::test::smpp;
 using namespace smsc::test::core;
 using namespace smsc::test::util;
 
-SmeAcknowledgementHandler::SmeAcknowledgementHandler(SmppFixture* _fixture)
-: fixture(_fixture), chkList(_fixture->chkList) {}
+SmeAcknowledgementHandler::SmeAcknowledgementHandler(SmppFixture* _fixture,
+	const string& _smeServiceType, uint8_t _smeProtocolId)
+: fixture(_fixture), chkList(_fixture->chkList), smeServiceType(_smeServiceType),
+	smeProtocolId(_smeProtocolId) {}
+
+SmeAcknowledgementHandler::~SmeAcknowledgementHandler()
+{
+	for (int i = 0; i < smeAddr.size(); i++) { delete smeAddr[i]; }
+	for (int i = 0; i < smeAlias.size(); i++) { delete smeAlias[i]; }
+}
+
+void SmeAcknowledgementHandler::addSmeAddr(const Address& addr)
+{
+	smeAddr.push_back(new Address(addr));
+}
+
+void SmeAcknowledgementHandler::addSmeAlias(const Address& alias)
+{
+	smeAlias.push_back(new Address(alias));
+}
 
 vector<int> SmeAcknowledgementHandler::checkRoute(PduSubmitSm& pdu1,
 	PduDeliverySm& pdu2) const
@@ -175,7 +193,40 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		//поля header проверяются в processDeliverySm()
 		//поля message проверяются в ackHandler->processSmeAcknowledgement()
 		//правильность адресов проверяется в fixture->routeChecker->checkRouteForAcknowledgementSms()
-		__compare__(1, get_message().get_esmClass(), ESM_CLASS_NORMAL_MESSAGE);
+		__compare__(1, get_message().get_serviceType(), smeServiceType);
+		__compare__(2, get_message().get_esmClass(), ESM_CLASS_NORMAL_MESSAGE);
+		Address srcAlias;
+		SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
+		bool addrOk = false;
+		if (fixture->smeInfo.wantAlias)
+		{
+			for (int i = 0 ; i < smeAlias.size(); i++)
+			{
+				if (srcAlias == *smeAlias[i])
+				{
+					addrOk = true;
+					break;
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0 ; i < smeAddr.size(); i++)
+			{
+				if (srcAlias == *smeAddr[i])
+				{
+					addrOk = true;
+					break;
+				}
+			}
+		}
+		if (!addrOk)
+		{
+			__tc_fail__(3);
+		}
+		__compare__(4, get_message().get_protocolId(), smeProtocolId);
+		__compare__(5, get_message().get_priorityFlag(), 0);
+		__compare__(6, get_message().get_registredDelivery(), 0);
 		__tc_ok_cond__;
 		pduReg->removeMonitor(monitor);
 		processSmeAcknowledgement(monitor, pdu, recvTime);

@@ -26,9 +26,13 @@ using smsc::test::core::SmeAckMonitor;
 class SmeAcknowledgementHandler : public BaseTestCases, public PduHandler
 {
 public:
-	SmeAcknowledgementHandler(SmppFixture* fixture);
+	SmeAcknowledgementHandler(SmppFixture* fixture, const string& smeServiceType,
+		uint8_t smeProtocolId);
 	
-	virtual ~SmeAcknowledgementHandler() {}
+	virtual ~SmeAcknowledgementHandler();
+
+	void addSmeAddr(const Address& addr);
+	void addSmeAlias(const Address& alias);
 
 	virtual void processPdu(PduDeliverySm& pdu, time_t recvTime);
 
@@ -41,6 +45,10 @@ public:
 protected:
 	SmppFixture* fixture;
 	CheckList* chkList;
+	vector<const Address*> smeAddr;
+	vector<const Address*> smeAlias;
+	const string smeServiceType;
+	uint8_t smeProtocolId;
 
 	virtual Category& getLog() = NULL;
 	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
