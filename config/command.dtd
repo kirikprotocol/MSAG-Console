@@ -1,7 +1,7 @@
 <?xml encoding="ISO-8859-1"?>
 
 <!ELEMENT command (service|param*)>
-    <!ATTLIST command name (start_service|shutdown_service|kill_service|add_service|remove_service|list_services|list_components|call) #REQUIRED>
+    <!ATTLIST command name (start_service|shutdown_service|kill_service|add_service|remove_service|list_services|list_components|call|set_service_startup_parameters) #REQUIRED>
     <!ATTLIST command service CDATA #IMPLIED>
     <!ATTLIST command component CDATA #IMPLIED>
     <!ATTLIST command method CDATA #IMPLIED>

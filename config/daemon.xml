@@ -3,14 +3,9 @@
 <config>
   <section name="services">
     <section name="TDS v0/2">
-      <param name="args" type="string">qwer+asdf%0D%0Azxcv+fgh</param>
-      <param name="name" type="string">test+Dumb+Service+2</param>
-      <param name="port" type="int">6673</param>
-    </section>
-    <section name="TDS v0/2b">
-      <param name="args" type="string">opoiuyoiu</param>
-      <param name="name" type="string">BlahBlah+service</param>
-      <param name="port" type="int">6671</param>
+      <param name="args" type="string">aaa bbb ccc</param>
+      <param name="name" type="string">Test</param>
+      <param name="port" type="int">6672</param>
     </section>
   </section>
   <section name="admin">
@@ -20,8 +15,8 @@
       </section>
       <param name="stderr" type="string">logs/daemon.err</param>
       <param name="home" type="string">/export/home/igork/smsc_bin_daemon</param>
-      <param name="services folder" type="string">services</param>
       <param name="host" type="string">smsc</param>
+      <param name="services folder" type="string">services</param>
       <param name="port" type="int">6680</param>
     </section>
   </section>
