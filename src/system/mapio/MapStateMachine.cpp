@@ -1069,20 +1069,28 @@ static long long NextSequence()
   return ++sequence;
 }
 
-static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
-{
-  __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);
-  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
-  ET96MAP_USSD_STRING_T ussdString = {0,};
-  unsigned text_len;
-  const unsigned char* text = (const unsigned char*)cmd->get_sms()->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);
-  if ( text_len > 160 ) throw runtime_error(
-    FormatText("MAP::%s MAP.did:{0x%x} very long string %d",__FUNCTION__,dialog->dialogid_map,text_len));
+static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog){  __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;  unsigned encoding = sms->getIntProperty(Tag::SMPP_DATA_CODING);  ET96MAP_USSD_STRING_T ussdString = {0,};  unsigned text_len;  const unsigned char* text = (const unsigned char*)cmd->get_sms()->getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&text_len);  if ( text_len > 160 ) 
+    throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__FUNCTION__,dialog->dialogid_map,text_len));
+
   unsigned bytes = 0;
-  {
+  if( encoding == MAP_UCS2_ENCODING ) {
+    bytes = text_len;
+    memcpy( ussdString.ussdStr, text, text_len );
+    ussdEncoding = 0x48;
+  } else if( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING || encoding == MAP_SMSC7BIT_ENCODING ) {
     unsigned elen = sizeof(ussdString.ussdStr);
-    bytes = ConvertText27bit(text,text_len,ussdString.ussdStr,&elen);
+    if (encoding == MAP_SMSC7BIT_ENCODING ) {
+      bytes = ConvertSMSC7bit27bit(text,text_len,ussdString.ussdStr,elen);
+    } else {
+      bytes = ConvertText27bit(text,text_len,ussdString.ussdStr,&elen);
+    }
+    ussdEncoding = 0x0f;
+  } else { //8 bit
+    bytes = text_len;
+    memcpy( ussdString.ussdStr, text, text_len );
+    ussdEncoding = 0x44;
   }
+
   ussdString.ussdStrLen = bytes;
   UCHAR_T result;
   if ( dialog->version == 2 )
