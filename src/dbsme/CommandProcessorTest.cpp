@@ -11,8 +11,19 @@
 #include <dbsme/jobs/SampleJob.h>
 #include <dbsme/jobs/SQLJob.h>
 
-int main(void) 
+int main(int argc, char* argv[]) 
 {
+    /*printf("Args : %d\n", argc);
+    for (int x=0; x<argc; x++)
+    {
+        printf("%d: %s\n", x, argv[x]);
+    }*/
+    if (argc != 2)
+    {
+        printf("Usage: ComProcTest \"<command>\"\n");
+        return -1;
+    }
+    
     using namespace smsc::dbsme;
 
     using smsc::db::DataSourceLoader;
@@ -41,12 +52,12 @@ int main(void)
         // --------------------- Command Processing --------------------
 
         Command command;
-        const char* toAddressStr = "111";
-        Address toAddress(strlen(toAddressStr), 0, 0, toAddressStr);
+        Address toAddress("+333333333333");
         command.setToAddress(toAddress);
         //command.setJobName("test-sql-job");
         command.setJobName(0);
-        command.setInData("PrOcTeSt");
+        //command.setInData("PrOcTeSt");
+        command.setInData(argv[1]);
         
         printf("\nInput  : '%s'\n",
                (command.getInData() ? command.getInData():""));
