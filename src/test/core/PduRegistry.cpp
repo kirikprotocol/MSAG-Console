@@ -45,26 +45,27 @@ PduData* PduRegistry::getPdu(const SMSId smsId)
 	return NULL;
 }
 
-bool PduRegistry::removePdu(const PduData& pduData)
+bool PduRegistry::removePdu(PduData* pduData)
 {
-	__require__(pduData.pdu);
-	idMap.erase(pduData.smsId);
-	seqNumMap.erase(pduData.pdu->get_sequenceNumber());
-	msgRefMap.erase(pduData.msgRef);
+	__require__(pduData && pduData->pdu);
+	idMap.erase(pduData->smsId);
+	seqNumMap.erase(pduData->pdu->get_sequenceNumber());
+	msgRefMap.erase(pduData->msgRef);
 	pair<WaitTimeMap::iterator, WaitTimeMap::iterator> p =
-		waitTimeMap.equal_range(pduData.waitTime);
+		waitTimeMap.equal_range(pduData->waitTime);
 	for (; p.first != p.second; p.first++)
 	{
 		PduData* data = p.first->second;
 		if (data->pdu->get_sequenceNumber() == 
-			pduData.pdu->get_sequenceNumber() &&
-			data->msgRef == pduData.msgRef)
+			pduData->pdu->get_sequenceNumber() &&
+			data->msgRef == pduData->msgRef)
 		{
 			waitTimeMap.erase(p.first);
 			break;
 		}
 	}
-	delete pduData.pdu;
+	delete pduData->pdu;
+	delete pduData;
 	return true;
 }
 

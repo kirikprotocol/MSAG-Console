@@ -118,7 +118,7 @@ public:
 	 */
 	PduData* getPdu(const SMSId smsId);
 
-	bool removePdu(const PduData& pduData);
+	bool removePdu(PduData* pduData);
 
 	vector<PduData*> getOverduePdu(time_t waitTime);
 
