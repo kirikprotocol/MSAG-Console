@@ -40,15 +40,20 @@ Category& MessageStoreTestCases::getLog()
 	return log;
 }
 
+const char* str(SMSId id)
+{
+	ostringstream s;
+	s << id;
+	return s.str().c_str();
+}
+
 #define __set_str__(field, len) \
 	auto_ptr<char> tmp_##field = rand_char(len); \
 	p.set##field(tmp_##field.get()); \
 	if (check) { \
 		char res_##field[len + 1]; \
 		p.get##field(res_##field); \
-		if (strcmp(res_##field, tmp_##field.get())) { \
-			__trace2__("%s: set = %s, get = %s", #field, tmp_##field.get(), res_##field); \
-		} \
+		__require__(!strcmp(res_##field, tmp_##field.get())); \
 	}
 
 #define __set_int_body_tag__(tagName, value) \
@@ -56,9 +61,7 @@ Category& MessageStoreTestCases::getLog()
 	__trace__("set_int_body_tag: " #tagName); \
 	p.getMessageBody().setIntProperty(Tag::tagName, tmp_##tagName); \
 	if (check) { \
-		if (p.getMessageBody().getIntProperty(Tag::tagName) != tmp_##tagName) { \
-			__trace2__("set_int_body_tag: tag = " #tagName ", set = %d, get = %d", tmp_##tagName, p.getMessageBody().getIntProperty(Tag::tagName)); \
-		} \
+		__require__(p.getMessageBody().getIntProperty(Tag::tagName) == tmp_##tagName); \
 	}
 
 #define __set_str_body_tag__(tagName, len) \
@@ -66,9 +69,7 @@ Category& MessageStoreTestCases::getLog()
 	__trace__("set_str_body_tag: " #tagName); \
 	p.getMessageBody().setStrProperty(Tag::tagName, tmp_##tagName.get()); \
 	if (check) { \
-		if (p.getMessageBody().getStrProperty(Tag::tagName) == tmp_##tagName.get()) { \
-			__trace2__("set_str_body_tag: tag = " #tagName ", set = %s, get = %s", tmp_##tagName.get(), p.getMessageBody().getStrProperty(Tag::tagName).c_str()); \
-		} \
+		__require__(p.getMessageBody().getStrProperty(Tag::tagName) == tmp_##tagName.get()); \
 	}
 
 #define __set_str_body_tag2__(tagName, len, value) \
@@ -76,9 +77,7 @@ Category& MessageStoreTestCases::getLog()
 	__trace__("set_str_body_tag: " #tagName); \
 	p.getMessageBody().setStrProperty(Tag::tagName, tmp_##tagName); \
 	if (check) { \
-		if (p.getMessageBody().getStrProperty(Tag::tagName) == tmp_##tagName) { \
-			__trace2__("set_str_body_tag: tag = " #tagName ", set = %s, get = %s", tmp_##tagName.c_str(), p.getMessageBody().getStrProperty(Tag::tagName).c_str()); \
-		} \
+		__require__(p.getMessageBody().getStrProperty(Tag::tagName) == tmp_##tagName); \
 	}
 
 void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
@@ -192,6 +191,7 @@ void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 					__unreachable__("Invalid num");
 			}
 			SMSId smsId = msgStore->getNextId();
+			__trace2__("storeCorrectSms(%d): smsId = %s", s.value(), str(smsId));
 			msgStore->createSms(sms, smsId, CREATE_NEW);
 			__tc_ok__;
 			if (idp != NULL && smsp != NULL)
@@ -294,6 +294,7 @@ void MessageStoreTestCases::storeSimilarSms(SMSId* idp, SMS* smsp,
 					__unreachable__("Invalid num");
 			}
 			SMSId smsId = msgStore->getNextId();
+			__trace2__("storeSimilarSms(%d): smsId = %s", s.value(), str(smsId));
 			msgStore->createSms(sms, smsId, flag);
 			if (smsId == existentId)
 			{
@@ -325,6 +326,7 @@ void MessageStoreTestCases::storeDuplicateSms(SMSId* idp, SMS* smsp,
 	{
 		SMS sms(existentSms);
 		SMSId id = msgStore->getNextId();
+		__trace2__("storeDuplicateSms(): smsId = %s", str(id));
 		msgStore->createSms(sms, id, CREATE_NEW);
 		if (id == existentId)
 		{
@@ -361,6 +363,7 @@ void MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
 		//sms.setDestinationAddress(existentSms.getDestinationAddress());
 		sms.setDealiasedDestinationAddress(existentSms.getDealiasedDestinationAddress());
 		SMSId smsId = msgStore->getNextId();
+		__trace2__("storeRejectDuplicateSms(): smsId = %s", str(smsId));
 		msgStore->createSms(sms, smsId, ETSI_REJECT_IF_PRESENT);
 		__tc_fail__(101);
 	}
@@ -394,6 +397,7 @@ void MessageStoreTestCases::storeReplaceCorrectSms(SMSId* idp, SMS* existentSms)
 		existentSms->getEServiceType(serviceType);
 		sms.setEServiceType(serviceType);
 		SMSId smsId = msgStore->getNextId();
+		__trace2__("storeReplaceCorrectSms(): smsId = %s", str(smsId));
 		msgStore->createSms(sms, smsId, SMPP_OVERWRITE_IF_PRESENT);
 		__tc_ok__;
 		*idp = smsId;
@@ -419,6 +423,7 @@ void MessageStoreTestCases::storeReplaceSmsInFinalState(SMSId* idp, SMS* smsp,
 		//ENROTE state. В противном случае создается новое сообщение.
 		SMS sms(existentSms);
 		SMSId smsId = msgStore->getNextId();
+		__trace2__("storeReplaceSmsInFinalState(): smsId = %s", str(smsId));
 		msgStore->createSms(sms, smsId, SMPP_OVERWRITE_IF_PRESENT);
 		__tc_ok__;
 		if (idp != NULL && smsp != NULL)
@@ -553,7 +558,6 @@ void MessageStoreTestCases::storeAssertSms(int num)
 					__unreachable__("Invalid num");
 			}
 			//SMSId smsId = msgStore->store(sms);
-			//res->addFailure(s.value());
 			__tc_fail__(s.value());
 		}
 		catch(AssertException&)
@@ -613,6 +617,7 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 				default:
 					__unreachable__("Invalid num");
 			}
+			__trace2__("changeExistentSmsStateEnrouteToEnroute(%d): smsId = %s", s.value(), str(id));
 			msgStore->changeSmsStateToEnroute(id, dst, lastResult, nextTryTime);
 			__tc_ok__;
 			sms->setNextTime(nextTryTime);
@@ -665,6 +670,7 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					__tc__("changeExistentSmsStateEnrouteToFinal.stateDeliveredDestDescMarginal");
 					dst.setMsc(0, NULL);
 					dst.setImsi(0, NULL);
+					__trace2__("changeExistentSmsStateEnrouteToFinal(%d): smsId = %s, state = DELIVERED", s.value(), str(id));
 					msgStore->changeSmsStateToDelivered(id, dst);
 					SET_DELIVERED_SMS
 					break;
@@ -672,6 +678,7 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					__tc__("changeExistentSmsStateEnrouteToFinal.stateDeliveredDestDescMarginal");
 					dst.setMsc(0, "*");
 					dst.setImsi(0, "*");
+					__trace2__("changeExistentSmsStateEnrouteToFinal(%d): smsId = %s, state = DELIVERED", s.value(), str(id));
 					msgStore->changeSmsStateToDelivered(id, dst);
 					SET_DELIVERED_SMS
 					break;
@@ -683,6 +690,7 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 						dst.setMsc(MAX_ADDRESS_LENGTH, mscAddr.get());
 						dst.setImsi(MAX_ADDRESS_LENGTH, imsiAddr.get());
 					}
+					__trace2__("changeExistentSmsStateEnrouteToFinal(%d): smsId = %s, state = DELIVERED", s.value(), str(id));
 					msgStore->changeSmsStateToDelivered(id, dst);
 					SET_DELIVERED_SMS
 					break;
@@ -690,6 +698,7 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					__tc__("changeExistentSmsStateEnrouteToFinal.stateUndeliverableDestDescMarginal");
 					dst.setMsc(0, NULL);
 					dst.setImsi(0, NULL);
+					__trace2__("changeExistentSmsStateEnrouteToFinal(%d): smsId = %s, state = UNDELIVERABLE", s.value(), str(id));
 					msgStore->changeSmsStateToUndeliverable(id, dst, lastResult);
 					SET_UNDELIVERABLE_SMS
 					break;
@@ -697,6 +706,7 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					__tc__("changeExistentSmsStateEnrouteToFinal.stateUndeliverableDestDescMarginal");
 					dst.setMsc(0, "*");
 					dst.setImsi(0, "*");
+					__trace2__("changeExistentSmsStateEnrouteToFinal(%d): smsId = %s, state = UNDELIVERABLE", s.value(), str(id));
 					msgStore->changeSmsStateToUndeliverable(id, dst, lastResult);
 					SET_UNDELIVERABLE_SMS
 					break;
@@ -708,17 +718,20 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 						dst.setMsc(MAX_ADDRESS_LENGTH, mscAddr.get());
 						dst.setImsi(MAX_ADDRESS_LENGTH, imsiAddr.get());
 					}
+					__trace2__("changeExistentSmsStateEnrouteToFinal(%d): smsId = %s, state = UNDELIVERABLE", s.value(), str(id));
 					msgStore->changeSmsStateToUndeliverable(id, dst, lastResult);
 					SET_UNDELIVERABLE_SMS
 					break;
 				case 7: //UNDELIVERABLE, lastResult не задан
 					__tc__("changeExistentSmsStateEnrouteToFinal.stateUndeliverableLastResultEmpty");
 					lastResult = 0;
+					__trace2__("changeExistentSmsStateEnrouteToFinal(%d): smsId = %s, state = UNDELIVERABLE", s.value(), str(id));
 					msgStore->changeSmsStateToUndeliverable(id, dst, lastResult);
 					SET_UNDELIVERABLE_SMS
 					break;
 				case 8: //EXPIRED
 					__tc__("changeExistentSmsStateEnrouteToFinal.stateExpired");
+					__trace2__("changeExistentSmsStateEnrouteToFinal(%d): smsId = %s, state = EXPIRED", s.value(), str(id));
 					msgStore->changeSmsStateToExpired(id);
 					sms->setNextTime(0);
 					//hack, все сеттеры запрещены
@@ -727,6 +740,7 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					break;
 				case 9: //DELETED
 					__tc__("changeExistentSmsStateEnrouteToFinal.stateDeleted");
+					__trace2__("changeExistentSmsStateEnrouteToFinal(%d): smsId = %s, state = DELETED", s.value(), str(id));
 					msgStore->changeSmsStateToDeleted(id);
 					sms->setNextTime(0);
 					//hack, все сеттеры запрещены
@@ -762,22 +776,27 @@ void MessageStoreTestCases::changeFinalSmsStateToAny(const SMSId id, int num)
 			{
 				case 1: //ENROUTE
 					__tc__("changeFinalSmsStateToAny.stateEnrote");
+					__trace2__("changeFinalSmsStateToAny(%d): smsId = %s, state = ENROUTE", s.value(), str(id));
 					msgStore->changeSmsStateToEnroute(id, dst, lastResult, nextTryTime);
 					break;
 				case 2: //DELIVERED
 					__tc__("changeFinalSmsStateToAny.stateDelivered");
+					__trace2__("changeFinalSmsStateToAny(%d): smsId = %s, state = DELIVERED", s.value(), str(id));
 					msgStore->changeSmsStateToDelivered(id, dst);
 					break;
 				case 3: //UNDELIVERABLE
 					__tc__("changeFinalSmsStateToAny.stateUndeliverable");
+					__trace2__("changeFinalSmsStateToAny(%d): smsId = %s, state = UNDELIVERABLE", s.value(), str(id));
 					msgStore->changeSmsStateToUndeliverable(id, dst, lastResult);
 					break;
 				case 4: //EXPIRED
 					__tc__("changeFinalSmsStateToAny.stateExpired");
+					__trace2__("changeFinalSmsStateToAny(%d): smsId = %s, state = EXPIRED", s.value(), str(id));
 					msgStore->changeSmsStateToExpired(id);
 					break;
 				case 5: //DELETED
 					__tc__("changeFinalSmsStateToAny.stateDeleted");
+					__trace2__("changeFinalSmsStateToAny(%d): smsId = %s, state = DELETED", s.value(), str(id));
 					msgStore->changeSmsStateToDeleted(id);
 					break;
 				default:
@@ -845,6 +864,7 @@ void MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int num)
 				default:
 					__unreachable__("Invalid num");
 			}
+			__trace2__("replaceCorrectSms(%d): smsId = %s", s.value(), str(id));
 			msgStore->replaceSms(id, sms->getOriginatingAddress(),
                 sm, len, deliveryReport, validTime, nextTime);
 			__tc_ok__;
@@ -906,6 +926,7 @@ void MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 				default:
 					__unreachable__("Invalid num");
 			}
+			__trace2__("replaceIncorrectSms(%d): smsId = %s", s.value(), str(id));
 			msgStore->replaceSms(id, addr, sm, len, deliveryReport, validTime, nextTime);
 			__tc_fail__(s.value());
 		}
@@ -928,6 +949,7 @@ void MessageStoreTestCases::replaceFinalSms(const SMSId id, const SMS& sms)
 	try
 	{
 		__prepare_for_replace_sms__;
+		__trace2__("replaceFinalSms(): smsId = %s", str(id));
 		msgStore->replaceSms(id, sms.getOriginatingAddress(), sm, len,
 			deliveryReport, validTime, nextTime);
 		__tc_fail__(101);
@@ -950,6 +972,7 @@ void MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
 	try
 	{
 		SMS _sms;
+		__trace2__("loadExistentSms(): smsId = %s", str(id));
 		msgStore->retriveSms(id, _sms);
 		if (&sms == NULL || &_sms == NULL)
 		{
@@ -976,6 +999,7 @@ void MessageStoreTestCases::loadNonExistentSms(const SMSId id)
 	try
 	{
 		SMS sms;
+		__trace2__("loadNonExistentSms(): smsId = %s", str(id));
 		msgStore->retriveSms(id, sms);
 		__tc_fail__(101);
 	}
@@ -996,6 +1020,7 @@ void MessageStoreTestCases::deleteExistentSms(const SMSId id)
 	__tc__("deleteSms.existentSms");
 	try
 	{
+		__trace2__("deleteExistentSms(): smsId = %s", str(id));
 		msgStore->destroySms(id);
 		__tc_ok__;
 	}
@@ -1012,6 +1037,7 @@ void MessageStoreTestCases::deleteNonExistentSms(const SMSId id)
 	__tc__("deleteSms.nonExistentSms");
 	try
 	{
+		__trace2__("deleteNonExistentSms(): smsId = %s", str(id));
 		msgStore->destroySms(id);
 		__tc_fail__(101);
 	}
