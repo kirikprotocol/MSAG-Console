@@ -31,7 +31,7 @@ public:
 	virtual ~SmppTransmitterTestCases() {}
 
 	void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu, const Address& destAlias,
-		uint64_t mask = OPT_ALL);
+		bool useShortMessage, uint64_t mask = OPT_ALL);
 
 	void sendSubmitSmPdu(PduSubmitSm* pdu, PduData* existentPduData, bool sync,
 		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
@@ -72,7 +72,7 @@ protected:
 	//общие манипуляции с мониторами
 	void cancelMonitor(PduMonitor* monitor, time_t cancelTime,
 		bool forceRemoveMonitor);
-	void cancelPduMonitors(PduData* pduData, time_t cancelTime,
+	uint16_t cancelPduMonitors(PduData* pduData, time_t cancelTime,
 		bool forceRemoveMonitors, State state);
 	void registerTransmitterReportMonitors(uint16_t msgRef, time_t waitTime,
 		time_t validTime, PduData* pduData);

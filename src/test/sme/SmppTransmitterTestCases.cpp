@@ -31,10 +31,11 @@ Category& SmppTransmitterTestCases::getLog()
 }
 
 void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
-	const Address& destAlias, uint64_t mask)
+	const Address& destAlias, bool useShortMessage, uint64_t mask)
 {
 	__require__(pdu);
-	SmppUtil::setupRandomCorrectSubmitSmPdu(pdu, mask);
+	SmppUtil::setupRandomCorrectSubmitSmPdu(pdu, useShortMessage,
+		mask & ~OPT_USSD_SERVICE_OP);
 	 //Default message Type (i.e. normal message)
 	pdu->get_message().set_esmClass(
 		pdu->get_message().get_esmClass() & 0xc3);
@@ -111,7 +112,7 @@ void SmppTransmitterTestCases::cancelMonitor(PduMonitor* monitor,
 	}
 }
 
-void SmppTransmitterTestCases::cancelPduMonitors(PduData* pduData,
+uint16_t SmppTransmitterTestCases::cancelPduMonitors(PduData* pduData,
 	time_t cancelTime, bool forceRemoveMonitors, State state)
 {
 	__require__(pduData && pduData->pdu->get_commandId() == SUBMIT_SM);
@@ -141,6 +142,7 @@ void SmppTransmitterTestCases::cancelPduMonitors(PduData* pduData,
 		notifMonitor->state = state;
 		cancelMonitor(notifMonitor, cancelTime, forceRemoveMonitors);
 	}
+	return msgRef;
 }
 
 void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef,
@@ -282,7 +284,9 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 					existentPduData->ref();
 					deliveryMonitor->pduData->replacePdu = existentPduData;
 					existentPduData->replacedByPdu = pduData;
-					cancelPduMonitors(existentPduData, pduData->sendTime, false, ENROUTE);
+					uint16_t cancelMsgRef =
+						cancelPduMonitors(existentPduData, pduData->sendTime, false, ENROUTE);
+					__trace2__("replaced pdu:\n\tuserMessageReference = %d", (int) cancelMsgRef);
 				}
 				else
 				{
@@ -634,7 +638,9 @@ void SmppTransmitterTestCases::registerReplaceMonitors(PduSubmitSm* resPdu,
 		default: //SME_NO_ROUTE
 			__unreachable__("Invalid sme type");
 	}
-	cancelPduMonitors(replacePduData, pduData->sendTime, true, ENROUTE);
+	uint16_t cancelMsgRef =
+		cancelPduMonitors(replacePduData, pduData->sendTime, true, ENROUTE);
+	__trace2__("replaced pdu:\n\tuserMessageReference = %d", (int) cancelMsgRef);
 	//delivery monitor
 	if (deliveryFlag)
 	{
@@ -1071,7 +1077,9 @@ void SmppTransmitterTestCases::processCancelledMonitors(PduCancelSm* pdu,
 	{
 		__require__(!pdu->get_serviceType());
 		__require__(cancelPduData);
-		cancelPduMonitors(cancelPduData, cancelTime, false, DELETED);
+		uint16_t cancelMsgRef =
+			cancelPduMonitors(cancelPduData, cancelTime, false, DELETED);
+		__trace2__("cancelled pdu:\n\tuserMessageReference = %d", (int) cancelMsgRef);
 	}
 	else
 	{
@@ -1097,9 +1105,12 @@ void SmppTransmitterTestCases::processCancelledMonitors(PduCancelSm* pdu,
 			}
 		}
 		delete it;
+		__trace__("cancelled pdus:\n");
 		for (int i = 0; i < cancelPduDataList.size(); i++)
 		{
-			cancelPduMonitors(cancelPduDataList[i], cancelTime, false, DELETED);
+			uint16_t cancelMsgRef =
+				cancelPduMonitors(cancelPduDataList[i], cancelTime, false, DELETED);
+			__trace2__("\tuserMessageReference = %d\n", (int) cancelMsgRef);
 		}
 	}
 }
