@@ -151,7 +151,7 @@ void Archiver::loadMaxUncommitedCount(Manager& config)
     }
 }
 
-Archiver::Archiver(Manager& config) throw(ConfigException, StorageException) 
+Archiver::Archiver(Manager& config) throw(ConfigException) 
     : Thread(), finalizedCount(0), bStarted(false),
         storageDBInstance(0L), storageDBUserName(0L), storageDBUserPassword(0L),
         billingDBInstance(0L), billingDBUserName(0L), billingDBUserPassword(0L),
