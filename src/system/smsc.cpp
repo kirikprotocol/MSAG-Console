@@ -10,6 +10,7 @@
 #include "system/rescheduler.hpp"
 #include "util/config/route/RouteConfig.h"
 #include "system/mapio/MapIoTask.h"
+#include "system/abonentinfo/AbonentInfo.hpp"
 
 namespace smsc{
 namespace system{
@@ -207,9 +208,9 @@ void Smsc::init(const SmscConfigs& cfg)
     char *rep=cfg.cfgman->getString("profiler.defaultReport");
     char *dc=cfg.cfgman->getString("profiler.defaultDataCoding");
     char *str=rep;
-    while(*str=toupper(*str))str++;
+    while((*str=toupper(*str)))str++;
     str=dc;
-    while(*str=toupper(*str))str++;
+    while((*str=toupper(*str)))str++;
     smsc::profiler::Profile defProfile;
     if(!strcmp(str,"DEFAULT"))
       defProfile.codepage=profiler::ProfileCharsetOptions::Default;
@@ -226,6 +227,13 @@ void Smsc::init(const SmscConfigs& cfg)
   tp.startTask(profiler);
 
   smeman.registerSmeProxy(cfg.cfgman->getString("profiler.systemId"),profiler);
+
+  {
+    smsc::system::abonentinfo::AbonentInfoSme *ai=
+      new smsc::system::abonentinfo::AbonentInfoSme(profiler);
+    tp.startTask(ai);
+    smeman.registerSmeProxy("abonentinfo",ai);
+  }
 
   smscHost=cfg.cfgman->getString("smpp.host");
   smscPort=cfg.cfgman->getInt("smpp.port");

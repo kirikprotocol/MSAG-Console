@@ -16,7 +16,6 @@
 #include "system/scheduler.hpp"
 #include "profiler/profiler.hpp"
 
-
 namespace smsc{
 namespace system{
 
