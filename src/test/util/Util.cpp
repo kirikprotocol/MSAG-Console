@@ -12,7 +12,12 @@ using namespace std;
 
 int rand0(int maxValue)
 {
-	return (int) (maxValue * rand() / (RAND_MAX + 1.0));
+	return (int) ((maxValue + 1) * rand() / (RAND_MAX + 1.0));
+}
+
+int rand1(int maxValue)
+{
+	return 1 + (int) (maxValue * rand() / (RAND_MAX + 1.0));
 }
 
 auto_ptr<uint8_t> rand_uint8_t(int length)
@@ -23,6 +28,16 @@ auto_ptr<uint8_t> rand_uint8_t(int length)
 		res[i] = 65 + rand0(26);
 	}
 	return auto_ptr<uint8_t>(res);
+}
+
+auto_ptr<char> rand_char(int length)
+{
+	char* res = new char[length];
+	for (int i = 0; i < length; i++)
+	{
+		res[i] = 65 + rand0(26);
+	}
+	return auto_ptr<char>(res);
 }
 
 bool TCResult::operator== (const TCResult& tcRes) const
@@ -37,20 +52,6 @@ bool TCResult::operator== (const TCResult& tcRes) const
 		}
 	}
 	return res;
-}
-
-void TCResult::print(ostream& os)
-{
-	os << id << "(";
-	for (int i = 0; i < failures.size(); i++)
-	{
-		if (i > 0)
-		{
-			os << ",";
-		}
-		os << failures[i];
-	}
-	os << ")";
 }
 
 TCSelector::TCSelector(int _val, int _maxVal)
@@ -68,6 +69,22 @@ TCSelector::TCSelector(int _val, int _maxVal)
 	{
 		i = val;
 	}
+}
+
+ostream& operator<< (ostream& os, const TCResult& res)
+{
+	os << res.getId() << "(" << res.getChoice() << ")";
+	os << "{";
+	const vector<int>& failures = res.getFailures();
+	for (int i = 0; i < failures.size(); i++)
+	{
+		if (i > 0)
+		{
+			os << ",";
+		}
+		os << failures[i];
+	}
+	os << "}";
 }
 
 }

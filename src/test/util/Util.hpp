@@ -20,7 +20,11 @@ const int ALL_TC = 0;
 
 int rand0(int maxValue);
 
+int rand1(int maxValue);
+
 std::auto_ptr<uint8_t> rand_uint8_t(int length);
+
+std::auto_ptr<char> rand_char(int length);
 
 /**
  * Класс для хранения результатов выполнения test case.
@@ -40,8 +44,8 @@ public:
 	void addFailure(int subTC);
 	const std::vector<int>& getFailures() const;
 	bool value();
-	void print(std::ostream& os);
 	bool operator== (const TCResult& tcRes) const;
+	friend std::ostream& operator<< (std::ostream& os, const TCResult& res);
 };
 
 /**

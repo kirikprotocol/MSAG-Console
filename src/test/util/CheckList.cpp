@@ -44,9 +44,7 @@ void CheckList::startNewGroup(const string& groupName, const string& packageName
 void CheckList::writeResult(const string& testCaseDesc, TCResult& result)
 {
 	os << counter++ << "|" << testCaseDesc << "|";
-	os << (result.value() ? "Да" : "Нет") << "|";
-	result.print(os);
-	os << endl;
+	os << (result.value() ? "Да" : "Нет") << "|" << result << endl;
 	os.flush();
 }
 
@@ -82,7 +80,7 @@ void CheckList::writeResult(TCResultFilter& resultFilter)
 						os << "->";
 					}
 					TCResult& res = *stack[j];
-					os << res.getId() << "(" << res.getChoice() << ")";
+					os << res;
 				}
 			}
 		}
