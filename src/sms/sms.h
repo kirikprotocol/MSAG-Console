@@ -686,7 +686,7 @@ public:
     prop.properties[tag].setStr(value);
   }
 
-  int unType(int tag) { return tag&0x0ff; }
+  static int unType(int tag) { return tag&0x0ff; }
 
   void setBinProperty(int tag,const char* value, unsigned len)
   {
