@@ -122,6 +122,32 @@ protected:
   int stopped;
 };
 
+
+static inline void DumpPduBuffer(smsc::logger::Logger* log,const char* prefix,const char* buf)
+{
+  if(!log)return;
+  if(!log->isDebugEnabled())return;
+  int32_t sz,id,st,sq;
+  memcpy(&sz,buf,4);
+  memcpy(&id,buf+4,4);
+  memcpy(&st,buf+8,4);
+  memcpy(&sq,buf+12,4);
+  sz=ntohl(sz);
+  id=ntohl(id);
+  st=ntohl(st);
+  sq=ntohl(sq);
+  string res=prefix;
+  char tmp[128];
+  sprintf(tmp,"sz=%d,id=%x,st=%d,sq=%d:",sz,id,st,sq);
+  res+=tmp;
+  for(int i=16;i<sz;i++)
+  {
+    sprintf(tmp," %02X",(unsigned int)(unsigned char)buf[i]);
+    res+=tmp;
+  }
+  log->log(smsc::logger::Logger::LEVEL_DEBUG,"%s",res.c_str());
+}
+
 class SmppReader:public SmppThread{
 public:
   SmppReader(SmppPduEventListener *lst,Socket *sock,int it,int dt):
@@ -130,6 +156,7 @@ public:
     idleTimeout(it),disconnectTimeout(dt),
     lastUpdate(0)
   {
+    log=smsc::logger::Logger::getInstance("smppdump");
   }
   int Execute()
   {
@@ -165,6 +192,7 @@ protected:
   Buffer buf;
   int idleTimeout;
   int disconnectTimeout;
+  smsc::logger::Logger* log;
 
   time_t lastUpdate;
 
@@ -207,6 +235,11 @@ protected:
     }
     lastUpdate=time(NULL);
     int sz=ntohl(*((int*)buf.buffer));
+    if(sz>70000)
+    {
+      __warning2__("Invalid pdu size=%d",sz);
+      return NULL;
+    }
     buf.setSize(sz);
     while(buf.offset<sz)
     {
@@ -215,6 +248,8 @@ protected:
       if(rd<=0)return NULL;
       buf.offset+=rd;
     }
+
+    DumpPduBuffer(log,"in :",buf.buffer);
     SmppStream s;
     assignStreamWith(&s,buf.buffer,sz,true);
     return fetchSmppPdu(&s);
@@ -597,7 +632,11 @@ public:
                resp->get_header().get_commandStatus()==SmppStatusSet::ESME_RBINDFAIL?
                SmppConnectException::Reason::bindFailed:
                SmppConnectException::Reason::unknown;
-      if(resp)disposePdu((SmppHeader*)resp);
+      if(resp)
+      {
+        __warning2__("Unexpected bind response code:%04X",resp->get_header().get_commandStatus());
+        disposePdu((SmppHeader*)resp);
+      }
       reader.Stop();
       writer.Stop();
       socket.Close();
