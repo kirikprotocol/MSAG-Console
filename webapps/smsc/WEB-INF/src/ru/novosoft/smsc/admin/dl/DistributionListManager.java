@@ -66,6 +66,50 @@ public class DistributionListManager implements DistributionListAdmin
         }
     }
 
+    private final static String CHECK_PRINCIPAL_SUB_SQL =
+        "SELECT NVL(COUNT(*), 0) FROM DL_SUBMITTERS WHERE ADDRESS=?";
+    private final static String DELETE_PRINCIPAL_SQL =
+        "DELETE FROM DL_PRINCIPALS WHERE ADDRESS=?";
+    public void deletePrincipal(String address)
+        throws AdminException, PrincipalNotExistsException, PrincipalInUseException
+    {
+        PreparedStatement stmt = null;
+        Connection connection = null;
+        ResultSet rs = null;
+        try {
+            connection = ds.getConnection();
+            stmt = connection.prepareStatement(CHECK_PRINCIPAL_SQL);
+            stmt.setString(1, address);
+            rs = stmt.executeQuery();
+            if (!rs.next() || rs.getInt(1) == 0)
+              throw new PrincipalNotExistsException(address);
+            rs.close(); rs = null; stmt.close();
+
+            stmt = connection.prepareStatement(CHECK_PRINCIPAL_SUB_SQL);
+            stmt.setString(1, address);
+            rs = stmt.executeQuery();
+            if (rs.next() && rs.getInt(1) != 0)
+              throw new PrincipalInUseException(address);
+            rs.close(); rs = null; stmt.close();
+
+            stmt = connection.prepareStatement(DELETE_PRINCIPAL_SQL);
+            stmt.setString(1, address);
+            stmt.executeUpdate();
+            connection.commit();
+        } catch (AdminException exc) {
+            throw exc;
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            throw new AdminException(exc.getMessage());
+        } finally {
+            try { if (stmt != null) stmt.close(); connection.close(); }
+            catch (Exception cexc) {
+                cexc.printStackTrace();
+                throw new AdminException(cexc.getMessage());
+            }
+        }
+    }
+
     private final static String CHECK_MEMBER_SQL =
         "SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=? AND ADDRESS=?";
     private final static String ADD_MEMBER_SQL =
@@ -156,46 +200,10 @@ public class DistributionListManager implements DistributionListAdmin
         }
     }
 
-    private final static String REMOVE_MEMBERS_SQL =
-        "DELETE FROM DL_MEMBERS WHERE LIST=?";
-    public void removeMembers(String dlname)
-        throws AdminException, ListNotExistsException
-    {
-        PreparedStatement stmt = null;
-        Connection connection = null;
-        ResultSet rs = null;
-        try {
-            connection = ds.getConnection();
-            stmt = connection.prepareStatement(CHECK_DL_SQL);
-            stmt.setString(1, dlname);
-            rs = stmt.executeQuery();
-            if (!rs.next() || rs.getInt(1) == 0)
-              throw new ListNotExistsException(dlname);
-            rs.close(); rs = null; stmt.close();
-
-            stmt = connection.prepareStatement(REMOVE_MEMBERS_SQL);
-            stmt.setString(1, dlname);
-            stmt.executeUpdate();
-            connection.commit();
-            connection.close();
-        } catch (AdminException exc) {
-            throw exc;
-        } catch (Exception exc) {
-            exc.printStackTrace();
-            throw new AdminException(exc.getMessage());
-        } finally {
-            try { if (stmt != null) stmt.close(); connection.close(); }
-            catch (Exception cexc) {
-                cexc.printStackTrace();
-                throw new AdminException(cexc.getMessage());
-            }
-        }
-    }
-
     private final static String GET_MEMBERS_SQL =
         "SELECT ADDRESS FROM DL_MEMBERS WHERE LIST=?";
-    public List members(String dlname, String submitter)
-        throws AdminException, ListNotExistsException, SubmitterNotExistsException
+    public List members(String dlname)
+        throws AdminException, ListNotExistsException
     {
         List list = new ArrayList();
         PreparedStatement stmt = null;
@@ -208,14 +216,6 @@ public class DistributionListManager implements DistributionListAdmin
             rs = stmt.executeQuery();
             if (!rs.next() || rs.getInt(1) == 0)
               throw new ListNotExistsException(dlname);
-            rs.close(); rs = null; stmt.close();
-
-            stmt = connection.prepareStatement(CHECK_SUBMITTER_SQL);
-            stmt.setString(1, dlname);
-            stmt.setString(2, submitter);
-            rs = stmt.executeQuery();
-            if (!rs.next() || rs.getInt(1) == 0)
-              throw new SubmitterNotExistsException(submitter, dlname);
             rs.close(); rs = null; stmt.close();
 
             stmt = connection.prepareStatement(GET_MEMBERS_SQL);
@@ -242,8 +242,9 @@ public class DistributionListManager implements DistributionListAdmin
         "SELECT NVL(COUNT(*), 0) FROM DL_SUBMITTERS WHERE LIST=? AND ADDRESS=?";
     private final static String ADD_SUBMITTER_SQL =
         "INSERT INTO DL_SUBMITTERS (LIST, ADDRESS) VALUES (?, ?)";
-    public void grantPosting(String dlname, String address)
-        throws AdminException, ListNotExistsException, SubmitterAlreadyExistsException
+    public void grantPosting(String dlname, String submitter)
+        throws AdminException, ListNotExistsException,
+               PrincipalNotExistsException, SubmitterAlreadyExistsException
     {
         PreparedStatement stmt = null;
         Connection connection = null;
@@ -257,17 +258,24 @@ public class DistributionListManager implements DistributionListAdmin
               throw new ListNotExistsException(dlname);
             rs.close(); rs = null; stmt.close();
 
+            stmt = connection.prepareStatement(CHECK_PRINCIPAL_SQL);
+            stmt.setString(2, submitter);
+            rs = stmt.executeQuery();
+            if (!rs.next() || rs.getInt(1) == 0)
+              throw new PrincipalNotExistsException(submitter);
+            rs.close(); rs = null; stmt.close();
+
             stmt = connection.prepareStatement(CHECK_SUBMITTER_SQL);
             stmt.setString(1, dlname);
-            stmt.setString(2, address);
+            stmt.setString(2, submitter);
             rs = stmt.executeQuery();
             if (rs.next() && rs.getInt(1) != 0)
-              throw new SubmitterAlreadyExistsException(address, dlname);
+              throw new SubmitterAlreadyExistsException(submitter, dlname);
             rs.close(); rs = null; stmt.close();
 
             stmt = connection.prepareStatement(ADD_SUBMITTER_SQL);
             stmt.setString(1, dlname);
-            stmt.setString(2, address);
+            stmt.setString(2, submitter);
             stmt.executeUpdate();
         } catch (AdminException exc) {
             throw exc;
@@ -285,7 +293,7 @@ public class DistributionListManager implements DistributionListAdmin
 
     private final static String DELETE_SUBMITTER_SQL =
         "DELETE FROM DL_SUBMITTERS WHERE LIST=? AND ADDRESS=?";
-    public void revokePosting(String dlname, String address)
+    public void revokePosting(String dlname, String submitter)
         throws AdminException, ListNotExistsException, SubmitterNotExistsException
     {
         PreparedStatement stmt = null;
@@ -302,15 +310,15 @@ public class DistributionListManager implements DistributionListAdmin
 
             stmt = connection.prepareStatement(CHECK_SUBMITTER_SQL);
             stmt.setString(1, dlname);
-            stmt.setString(2, address);
+            stmt.setString(2, submitter);
             rs = stmt.executeQuery();
             if (!rs.next() || rs.getInt(1) == 0)
-              throw new SubmitterNotExistsException(address, dlname);
+              throw new SubmitterNotExistsException(submitter, dlname);
             rs.close(); rs = null; stmt.close();
 
             stmt = connection.prepareStatement(DELETE_SUBMITTER_SQL);
             stmt.setString(1, dlname);
-            stmt.setString(2, address);
+            stmt.setString(2, submitter);
             stmt.executeUpdate();
         } catch (AdminException exc) {
             throw exc;
@@ -324,6 +332,43 @@ public class DistributionListManager implements DistributionListAdmin
                 throw new AdminException(cexc.getMessage());
             }
         }
+    }
+
+    private final static String GET_PRINCIPALS_SQL =
+        "SELECT ADDRESS, MAX_LST, MAX_EL FROM DL_PRINCIPALS WHERE ADDRESS IN " +
+            "SELECT ADDRESS FROM DL_SUBMITTERS WHERE LIST=?";
+    public List submitters(String dlname)
+        throws AdminException, ListNotExistsException
+    {
+        List list = new ArrayList();
+        PreparedStatement stmt = null;
+        Connection connection = null;
+        ResultSet rs = null;
+        try {
+            connection = ds.getConnection();
+            stmt = connection.prepareStatement(CHECK_DL_SQL);
+            stmt.setString(1, dlname);
+            rs = stmt.executeQuery();
+            if (!rs.next() || rs.getInt(1) == 0)
+              throw new ListNotExistsException(dlname);
+            rs.close(); rs = null; stmt.close();
+
+            stmt = connection.prepareStatement(GET_PRINCIPALS_SQL);
+            stmt.setString(1, dlname);
+            while (rs.next()) {
+                list.add(new Principal(rs.getString(1), rs.getInt(2), rs.getInt(3)));
+            }
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            throw new AdminException(exc.getMessage());
+        } finally {
+            try { if (stmt != null) stmt.close(); connection.close(); }
+            catch (Exception cexc) {
+                cexc.printStackTrace();
+                throw new AdminException(cexc.getMessage());
+            }
+        }
+        return list;
     }
 
     private final static String CHECK_DL_SQL =
@@ -366,6 +411,8 @@ public class DistributionListManager implements DistributionListAdmin
         }
     }
 
+    private final static String DELETE_MEMBERS_SQL =
+        "DELETE FROM DL_MEMBERS WHERE LIST=?";
     private final static String DELETE_DL_SUB_SQL =
         "DELETE FROM DL_SUBMITTERS WHERE LIST=?";
     private final static String DELETE_DL_SQL =
@@ -385,7 +432,7 @@ public class DistributionListManager implements DistributionListAdmin
               throw new ListNotExistsException(dlname);
             rs.close(); rs = null; stmt.close();
 
-            stmt = connection.prepareStatement(REMOVE_MEMBERS_SQL);
+            stmt = connection.prepareStatement(DELETE_MEMBERS_SQL);
             stmt.setString(1, dlname);
             stmt.executeUpdate(); stmt.close();
 
@@ -408,43 +455,6 @@ public class DistributionListManager implements DistributionListAdmin
                 throw new AdminException(cexc.getMessage());
             }
         }
-    }
-
-    public boolean checkPermission(String dlname, String address)
-        throws AdminException, ListNotExistsException
-    {
-        boolean permission = false;
-        PreparedStatement stmt = null;
-        Connection connection = null;
-        ResultSet rs = null;
-        try {
-            connection = ds.getConnection();
-            stmt = connection.prepareStatement(CHECK_DL_SQL);
-            stmt.setString(1, dlname);
-            rs = stmt.executeQuery();
-            if (!rs.next() || rs.getInt(1) == 0)
-              throw new ListNotExistsException(dlname);
-            rs.close(); rs = null; stmt.close();
-
-            stmt = connection.prepareStatement(CHECK_SUBMITTER_SQL);
-            stmt.setString(1, dlname);
-            stmt.setString(2, address);
-            rs = stmt.executeQuery();
-            permission = rs.next() && (rs.getInt(1) != 0);
-            rs.close(); rs = null;
-        } catch (AdminException exc) {
-            throw exc;
-        } catch (Exception exc) {
-            exc.printStackTrace();
-            throw new AdminException(exc.getMessage());
-        } finally {
-            try { if (stmt != null) stmt.close(); connection.close(); }
-            catch (Exception cexc) {
-                cexc.printStackTrace();
-                throw new AdminException(cexc.getMessage());
-            }
-        }
-        return permission;
     }
 
     private final static String LIST_DL_SQL =
