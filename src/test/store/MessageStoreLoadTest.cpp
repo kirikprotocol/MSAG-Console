@@ -89,7 +89,7 @@ void MessageStoreLoadTestTask::executeCycle()
 	for (int i = 0; i < 20; i++)
 	{
 		doStat(tc.storeCorrectSM(&id, &sms, RAND_TC));
-		//tc.setCorrectSMStatus();
+		doStat(tc.setCorrectSMStatus(id, &sms, RAND_TC));
 		//tc.createBillingRecord();
 	}
 	//tc.updateCorrectExistentSM(); ops++;
