@@ -1,5 +1,5 @@
-<%@page import="java.util.*"%>
-<%
+<%@page import="java.util.*,
+                ru.novosoft.smsc.jsp.SMSCJspException"%><%
 if (errorMessages.size() > 0)
 {
 	%><div class=content><%
@@ -7,19 +7,21 @@ if (errorMessages.size() > 0)
 	{
 		SMSCJspException exc = (SMSCJspException) it.next();
 		String code = exc.getMessage();
-		String msg = null;
-		String param = exc.getParam();
-		msg = appContext.getLocaleString(appContext.getUserPreferences(loginedUserPrincipal).getLocale(), code);
+    String nested = exc.getCause() == null ? "" : "<br>Nested: \"" + exc.getCause().getMessage() + "\" (" + exc.getCause().getClass().getName() + ")";
+    String param = exc.getParam() == null ? "" : ": " + exc.getParam();
+		String msg = appContext.getLocaleString(appContext.getUserPreferences(loginedUserPrincipal).getLocale(), code);
+    if (msg == null) msg = code;
+
+    String text = msg + param + nested;
 		if(code.startsWith("error."))
 		{
-			%><div class=error><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
+			%><div class=error><div class=error_header>Error:</div><%=text%></div><%
 		} else if(code.startsWith("warning."))
 		{
-			%><div class=warning><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
+			%><div class=warning><div class=warning_header>Warning:</div><%=text%></div><%
 		} else {
-			%><div class=message><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
+			%><div class=message><div class=message_header>Attention!</div><%=text%></div><%
 		}
-
 	}
 	%></div><%
 }
