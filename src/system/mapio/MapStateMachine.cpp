@@ -1549,7 +1549,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                       mr,dialog->ussdMrRef));
                 }
               }
-              if (dialog->state == MAPST_WaitSubmitCmdConf) {
+              if (dialog->state == MAPST_WaitSubmitCmdConf || dialog->state == MAPST_WaitSubmitUSSDRequestConf) {
                 // Seems PSSR_RESP goes earlier than submitResp
                 __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
                 dialog->chain.insert(dialog->chain.begin(), cmd);
