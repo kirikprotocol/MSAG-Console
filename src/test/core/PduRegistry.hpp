@@ -35,11 +35,11 @@ class PduRegistry
 	struct TimeKey
 	{
 		time_t time;
-		uint16_t msgRef;
-		TimeKey(time_t t, uint16_t _msgRef) : time(t), msgRef(_msgRef) {}
+		uint32_t id;
+		TimeKey(time_t t, uint32_t _id) : time(t), id(_id) {}
 		bool operator< (const TimeKey& key) const
 		{
-			return (time == key.time ? (msgRef < key.msgRef) : (time < key.time));
+			return (time == key.time ? (id < key.id) : (time < key.time));
 		}
 	};
 	typedef map<const TimeKey, PduData*> TimeMap;
