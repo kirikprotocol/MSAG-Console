@@ -243,8 +243,10 @@ public abstract class Session extends Thread
     protected void printString(String str) throws IOException {
         byte data[] = str.getBytes();
         for (int i=0; i<data.length; i++) {
-            if (data[i] == ESC_IAC) os.write(ESC_IAC);
-            os.write(data[i]);
+            if (data[i] == -1 || data[i] == ESC_IAC) {
+                os.write(ESC_IAC); os.write(ESC_IAC);
+            } else os.write(data[i]);
+            //System.out.println("Output: '"+data[i]+"' simbol !");
         }
         os.flush();
     }
