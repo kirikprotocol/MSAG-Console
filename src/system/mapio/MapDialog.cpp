@@ -13,6 +13,65 @@ using namespace smsc::smeman;
 
 #pragma pack(1)
 
+struct MicroString{
+  unsigned char len;
+  char bytes[256];
+};
+
+
+inline char GetChar(char*& ptr,unsigned& shift){
+  char val = (*ptr >> shift)&0x7f;
+  if ( shift > 1 )
+    val |= (*(ptr+1) << (8-shift))&0x7f;
+  shift += 7;
+  if ( shift >= 8 ) 
+  {
+    shift&=0x7;
+    ++ptr;
+  }
+}
+
+void Convert7BitToText(
+  const char* bit7buf, int chars,
+  MicroString* text)
+{
+  __require__(chars<=255);
+  unsigned shift = 0;
+  for ( int i=0; i< chars; ++i ){
+    text->bytes[i] = GetChar(bit7buf,shift);
+  }
+  text->len = chars;
+  text->bytes[chars] = 0;
+  __trace2__("7bit->latin1: %s",text->len);
+  return i;
+}
+
+int ConvertTextTo7Bit(MicroString* text, char* bit7buf, int bit7buf_size)
+{
+  OutBitStream bstream((unsigned char*)bit7buf,bit7buf_size);
+  bool prev_is_capital;
+  if ( textbuf_size > 1 ) {
+    if ( (unsigned char)text[1] > 127 ) Translit(text[1],encoding,0,&prev_is_capital);
+    else if ( text[1] >= 'A' && text[1] <= 'Z' ) prev_is_capital = true;
+    else prev_is_capital = false;
+  }
+  for ( int i=0; i < textbuf_size; ++i )
+  {
+    unsigned char ch = (unsigned char)(text[i]);
+    if ( ch > 127 ) {
+      const unsigned char* sequence = Translit(ch,encoding,prev_is_capital?CONV_PREVIOUS_IS_CAPITAL:0,&prev_is_capital);
+      for (; *sequence != 0 ;++sequence){
+        bstream.Put(*sequence);
+      }
+    }else{ 
+      bstream.Put(ch);
+      if ( ch >= 'A' && ch <= 'Z' ) prev_is_capital = true;
+      else prev_is_capital = false;
+    }
+  }
+  return bstream.Size();
+}
+
 struct SMS_SUMBMIT_FORMAT_HEADER{
   union{
     struct{
@@ -129,9 +188,19 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2);
   __trace2__("MAP::DIALOG::ForwardReaq: user_data_len = %d",user_data_len);
   unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+2);
-  sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
+  if ( user_data_coding == 0 ) // 7bit
+  {
+    MicroString ms;
+    Convert7BitToText(user_data,user_data_len,&ms);
+    sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
+    sms.setIntProperty(Tag::SMPP_DATA_CODING,0x03); // Latin1
+  }
+  else
+  {
+    sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
+    sms.setIntProperty(Tag::SMPP_DATA_CODING,user_data_coding);
+  }
   sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
-  sms.setIntProperty(Tag::SMPP_DATA_CODING,user_data_coding);
   sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
   sms.setMessageReference(ssfh->mr);
   ConvAddrMSISDN2Smc(srcAddr,&src_addr);
