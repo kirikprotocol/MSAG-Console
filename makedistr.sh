@@ -16,6 +16,7 @@ ln -s ../../lib $DISTR_DIR/services/SMSC/lib
 ln -s ../../logs $DISTR_DIR/services/SMSC/logs
 mkdir $DISTR_DIR/webapps/smsc
 mkdir $DISTR_DIR/webapps/smsc/perfmon
+mkdir $DISTR_DIR/webapps/smsc/topmon
 mkdir $DISTR_DIR/webapps/smsc/WEB-INF
 mkdir $DISTR_DIR/webapps/smsc/WEB-INF/lib
 mkdir $DISTR_DIR/webapps/smsc/WEB-INF/classes
