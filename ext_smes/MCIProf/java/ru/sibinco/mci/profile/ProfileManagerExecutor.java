@@ -7,6 +7,7 @@ import java.util.Properties;
 
 import ru.sibinco.smpp.appgw.scenario.*;
 import ru.sibinco.smpp.appgw.util.Transliterator;
+import ru.sibinco.mci.Constants;
 import ru.aurorisoft.smpp.Message;
 
 /**

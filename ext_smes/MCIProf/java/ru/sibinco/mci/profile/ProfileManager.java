@@ -2,6 +2,7 @@ package ru.sibinco.mci.profile;
 
 import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
 import ru.sibinco.smpp.appgw.util.ConnectionPool;
+import ru.sibinco.mci.Constants;
 
 import java.util.Iterator;
 import java.util.Properties;

@@ -1,4 +1,4 @@
-package ru.sibinco.mci.profile;
+package ru.sibinco.mci;
 
 import org.apache.log4j.Category;
 import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;

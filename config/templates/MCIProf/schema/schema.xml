@@ -4,7 +4,7 @@
   <scenario id="0" active="1" sms="1" ussd="2" resources="resources.xml">
 
     <page id="MAIN_PAGE" question="0">
-      <pageExecutor class="ru.sibinco.mci.profile.EntryExecutor">
+      <pageExecutor class="ru.sibinco.mci.EntryExecutor">
         <initParam name="pagePrefixedStrategy" value="prefixed_entry"/>
         <initParam name="pageRedirectStrategy" value="redirect_entry"/>
       </pageExecutor>
@@ -12,7 +12,7 @@
     
     <page id="redirect_entry" question="0">
       <!-- Show MAIN dialog & set MAIN attribute -->
-      <pageExecutor class="ru.sibinco.mci.profile.MainExecutor">
+      <pageExecutor class="ru.sibinco.mci.MainExecutor">
         <bundle name="system"/>
       </pageExecutor>
       <command name="1" target="divert_mgr"/>
@@ -22,7 +22,7 @@
     </page>
     <page id="prefixed_entry" question="0">
       <!-- Show MAIN dialog & set MAIN attribute -->
-      <pageExecutor class="ru.sibinco.mci.profile.MainExecutor">
+      <pageExecutor class="ru.sibinco.mci.MainExecutor">
         <bundle name="system"/>
       </pageExecutor>
       <command name="1" target="profile_mgr_alt"/>
@@ -32,19 +32,19 @@
     </page>
 
     <page id="EXIT_PAGE" question="0">
-      <pageExecutor class="ru.sibinco.mci.profile.ExitExecutor">
+      <pageExecutor class="ru.sibinco.mci.ExitExecutor">
         <bundle name="system"/>
       </pageExecutor>
     </page>
 
     <page id="divert_mgr" question="0">
       <!-- if (!MAIN attr && !"0") set divert & remove MAIN attribute -->
-      <pagePreProcessor class="ru.sibinco.mci.profile.DivertManagerPreprocessor">
+      <pagePreProcessor class="ru.sibinco.mci.divert.DivertManagerPreprocessor">
         <bundle name="system"/>
         <bundle name="divert"/>
       </pagePreProcessor>
       <!-- Query & show divert info in resons dialog -->
-      <pageExecutor class="ru.sibinco.mci.profile.DivertManagerExecutor">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertManagerExecutor">
         <bundle name="system"/>
         <bundle name="divert"/>
       </pageExecutor>
@@ -56,12 +56,12 @@
     </page>
     <page id="divert_set" question="0">
       <!-- Set divert reason attribute (занят/отсутств./не доступен/безусл.) -->
-      <pagePreProcessor class="ru.sibinco.mci.profile.DivertSetPreprocessor">
+      <pagePreProcessor class="ru.sibinco.mci.divert.DivertSetPreprocessor">
         <bundle name="system"/>
         <bundle name="divert"/>
       </pagePreProcessor>
       <!-- Show alternatives for select divert value -->
-      <pageExecutor class="ru.sibinco.mci.profile.DivertSetExecutor">
+      <pageExecutor class="ru.sibinco.mci.divert.DivertSetExecutor">
         <bundle name="system"/>
         <bundle name="divert"/>
       </pageExecutor>
@@ -118,7 +118,7 @@
     </page>
 
     <page id="smshelp_mgr" question="0">
-      <pageExecutor class="ru.sibinco.mci.profile.HelpExecutor">
+      <pageExecutor class="ru.sibinco.mci.HelpExecutor">
         <bundle name="help"/>
       </pageExecutor>
       <command name="(**)" target="MAIN_PAGE"/>

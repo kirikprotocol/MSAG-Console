@@ -1,6 +1,7 @@
 package ru.sibinco.mci.profile;
 
 import ru.sibinco.smpp.appgw.scenario.*;
+import ru.sibinco.mci.Constants;
 import org.apache.log4j.Category;
 
 import java.util.Properties;

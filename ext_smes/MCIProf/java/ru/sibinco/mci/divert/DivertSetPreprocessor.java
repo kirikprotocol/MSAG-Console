@@ -1,6 +1,7 @@
-package ru.sibinco.mci.profile;
+package ru.sibinco.mci.divert;
 
 import ru.sibinco.smpp.appgw.scenario.*;
+import ru.sibinco.mci.Constants;
 
 import java.util.Properties;
 

@@ -1,4 +1,4 @@
-package ru.sibinco.mci.profile;
+package ru.sibinco.mci;
 
 import ru.sibinco.smpp.appgw.scenario.*;
 

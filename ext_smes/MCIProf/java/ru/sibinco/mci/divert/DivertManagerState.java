@@ -1,8 +1,9 @@
-package ru.sibinco.mci.profile;
+package ru.sibinco.mci.divert;
 
 import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
 import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
 import ru.sibinco.smpp.appgw.scenario.ScenarioState;
+import ru.sibinco.mci.Constants;
 
 import java.util.Properties;
 import java.text.MessageFormat;
