@@ -206,6 +206,7 @@ void Smsc::init(const SmscConfigs& cfg)
   defProfile.codepage=0;
   defProfile.reportoptions=0;
   profiler=new smsc::profiler::Profiler(defProfile);
+  profiler->loadFromDB();
   tp.startTask(profiler);
 
   smscHost=cfg.cfgman->getString("smpp.host");
