@@ -199,7 +199,8 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
         __trace2__(":DPL: %d.%d.%s",addresses[i].type,addresses[i].plan,addresses[i].value);
         task->list[task->count].addr = addresses[i];
         task->list[task->count].dialogId = 0;
-        task->list[task->count].success = false;
+        task->list[task->count].responsed = false;
+        task->list[task->count].errcode = Status::CNTSUBDL;
         ++task->count;
       }
     }
@@ -213,7 +214,8 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
        multi->dests[i].value.c_str());
      __trace2__(":DPL: %d.%d.%s",multi->dests[i].ton,multi->dests[i].npi,multi->dests[i].value.c_str());
      task->list[task->count].dialogId = 0;
-     task->list[task->count].success = false;
+     task->list[task->count].responsed = false;
+     task->list[task->count].errcode = Status::CNTSUBDL;
       ++task->count;
     }
   }
@@ -249,7 +251,8 @@ void DistrListProcess::SubmitResp(SmscCommand& cmd)
       // за пределом массива адресов !!!
     }else{
       ListTask* task = taskpair.first;
-      task->list[taskpair.second].success = cmd->get_resp()->get_status() == 0;
+      task->list[taskpair.second].responsed = true;//cmd->get_resp()->get_status() == 0;
+      task->list[taskpair.second].errcode = cmd->get_resp()->get_status();
       task_map.erase(task->list[taskpair.second].dialogId);
       task->submited_count++;
       __trace2__(":DPL: task %d of (0x%x:%d:%d) has been submited",
@@ -280,10 +283,10 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
     for ( unsigned i=0,j=0; i < task->count; ++i )
     {
       __require__ ( j  < 256 );
-      if ( !task->list[i].success ) {
-        task_map.erase(task->list[i].dialogId); // остальные уже удалены
+      if ( !task->list[i].errcode == 0 ) {
+        if (!task->list[i].responsed) task_map.erase(task->list[i].dialogId); // остальные уже удалены
         ue[j].addr = task->list[i].addr;
-        ue[j].errcode = 0; // !!!!! must be fixed
+        ue[j].errcode = task->list[i].errcode; //0; // !!!!! must be fixed
       }
     }
   }

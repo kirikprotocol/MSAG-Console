@@ -28,7 +28,8 @@ class DistrListProcess : public ThreadedTask, public SmeProxy{
   struct LISTELEMENT{
     unsigned dialogId;
     Address addr;           // адрес получателя
-    bool success;           // удачность завершения посылки
+    bool responsed;
+    unsigned errcode;
   };
   struct ListTask{
     time_t startTime;
