@@ -274,6 +274,9 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	__cfg_addr__(dbSmeAddr);
 	__cfg_addr__(dbSmeAlias);
 	__cfg_str__(dbSmeSystemId);
+	__cfg_addr__(profilerAddr);
+	__cfg_addr__(profilerAlias);
+	__cfg_str__(profilerSystemId);
 
 	vector<Address*> addr;
 	vector<SmeInfo*> smeInfo;
@@ -294,6 +297,12 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	dbSmeInfo.systemId = dbSmeSystemId;
 	smeReg->registerSme(dbSmeAddr, dbSmeInfo, false, true);
 	smeReg->bindSme(dbSmeInfo.systemId);
+	//регистрация profiler
+	SmeInfo profilerInfo;
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&profilerInfo);
+	profilerInfo.systemId = profilerSystemId;
+	smeReg->registerSme(profilerAddr, profilerInfo, false, true);
+	smeReg->bindSme(profilerInfo.systemId);
 	//регистрация алиасов (самая простая схема)
 	for (int i = 0; i < numSme; i++)
 	{
@@ -311,6 +320,12 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	dbSmeAliasInfo.alias = dbSmeAlias;
 	dbSmeAliasInfo.hide = true;
 	aliasReg->putAlias(dbSmeAliasInfo);
+	//алиас для profiler
+	AliasInfo profilerAliasInfo;
+	profilerAliasInfo.addr = profilerAddr;
+	profilerAliasInfo.alias = profilerAlias;
+	profilerAliasInfo.hide = true;
+	aliasReg->putAlias(profilerAliasInfo);
 	//tcAlias->commit();
 	//регистрация маршрутов (от каждой sme до db sme и обратно)
 	for (int i = 0; i < numSme; i++)
