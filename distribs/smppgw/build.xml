@@ -93,7 +93,7 @@ Targets:
     <symlink resource="${DAEMON2HOME_PATH}/conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
     <symlink resource="${DAEMON2HOME_PATH}/conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
 
-    <symlink resource="../tomcat/shared/class/log4j.properties" link="${DISTR_DIR}/conf"/>
+    <symlink resource="../tomcat/shared/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
   </target>
 
   <target name="update" depends="create_distr_tree_update, makegw, makeweb">
@@ -109,6 +109,7 @@ Targets:
   </target>
 
   <target name="configure">
+    <!-- webapps configuration -->
     <copy todir="${DISTR_DIR}/conf" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
         <include name="tomcat5/*"/>
@@ -118,12 +119,55 @@ Targets:
     <copy todir="${CATALINA_HOME}/shared/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+    <copy todir="${DISTR_DIR}" flatten="yes">
+      <fileset dir="${TEMPL_DIR}" includes="start_tomcat.sh stop_tomcat.sh"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy tofile="${DISTR_DIR}/tomcat/tomcat_runner.sh" file="${TEMPL_DIR}/tomcat_runner.sh">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/smppgw/webapp.xml">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+
+    <!-- daemon configuration-->
     <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/smppgw/daemon.xml">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <symlink resource="../daemon/conf/daemon.xml" link="${DISTR_DIR}/conf/daemon.xml" overwrite="yes"/>
+    <copy todir="${DISTR_DIR}" flatten="yes">
+      <fileset dir="${TEMPL_DIR}" includes="start_daemon.sh stop_daemon.sh"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy tofile="${DISTR_DIR}/daemon/bin/daemon.sh" file="${TEMPL_DIR}/daemon.sh">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+
+    <!-- gateway configuration-->
     <copy tofile="${DISTR_DIR}/services/smppgw/logger.properties" file="${TEMPL_DIR}/logger/smppgw.logger">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
+    <copy tofile="${DISTR_DIR}/services/smppgw/bin/service" file="${TEMPL_DIR}/service/smppgw">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <chmod file="${DISTR_DIR}/services/smppgw/bin/service" perm="755"/>
+    <copy todir="${DISTR_DIR}/services/smppgw/conf" flatten="yes">
+      <fileset dir="${TEMPL_DIR}/smppgw" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <symlink resource="../services/smppgw/conf/config.xml" link="${DISTR_DIR}/conf/smppgw.xml" overwrite="yes"/>
+    <symlink resource="../services/smppgw/conf/routes.xml" link="${DISTR_DIR}/conf/routes.xml" overwrite="yes"/>
+    <symlink resource="../services/smppgw/conf/routes_.xml" link="${DISTR_DIR}/conf/routes_.xml" overwrite="yes"/>
+    <symlink resource="../services/smppgw/conf/routes__.xml" link="${DISTR_DIR}/conf/routes__.xml" overwrite="yes"/>
+    <symlink resource="../services/smppgw/conf/sme.xml" link="${DISTR_DIR}/conf/sme.xml" overwrite="yes"/>
+
+    <!-- turn scripts be executable -->
+    <chmod perm="755">
+      <fileset dir="${DISTR_DIR}" includes="**/*.sh"/> 
+    </chmod>
   </target>
 
   <target name="create_distr" depends="create_distr_tree, update">
@@ -132,76 +176,4 @@ Targets:
   <target name="distr" depends="create_distr, configure">
   </target>
 
-  <!--
-  <target name="copy_files" depends="create_dirs">
-    <property name="sibinco.cvs.conf" location="${sibinco.cvs}/config"/>
-
-    <copy todir="${ex.conf}" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${sibinco.cvs.conf}" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd"/>
-    </copy>
-    <copy file="${sibinco.cvs.conf}/daemon.xml"               tofile="${daemon.conf}/config.xml"/>
-    <copy file="${sibinco.cvs.conf}/logger.properties"        tofile="${daemon.conf}/logger.properties"/>
-
-    <copy todir="${gw.conf}">
-      <fileset dir="${sibinco.cvs.conf}/smppgw" includes="*.xml *.properties"/>
-    </copy>
-    <copy file="${gw.conf}/routes.xml" tofile="${gw.conf}/routes_.xml"/>
-    <copy file="${gw.conf}/routes.xml" tofile="${gw.conf}/routes__.xml"/>
-
-    <symlink link="${daemon.conf}/command.dtd"               resource="${ex.conf}/command.dtd"/>
-    <symlink link="${daemon.conf}/configuration.dtd"         resource="${ex.conf}/configuration.dtd"/>
-    <symlink link="${daemon.conf}/response.dtd"              resource="${ex.conf}/response.dtd"/>
-    <symlink link="${ex.conf}/daemon.xml"                    resource="${daemon.conf}/config.xml"/>
-    <symlink link="${ex.conf}/daemon.logger.properties"      resource="${daemon.conf}/logger.properties"/>
-
-    <symlink link="${gw.conf}/AliasRecords.dtd"     resource="${ex.conf}/AliasRecords.dtd"/>
-    <symlink link="${gw.conf}/SmeRecords.dtd"       resource="${ex.conf}/SmeRecords.dtd"/>
-    <symlink link="${gw.conf}/command_gw.dtd"       resource="${ex.conf}/command_gw.dtd"/>
-    <symlink link="${gw.conf}/configuration.dtd"    resource="${ex.conf}/configuration.dtd"/>
-    <symlink link="${gw.conf}/locale_resources.dtd" resource="${ex.conf}/locale_resources.dtd"/>
-    <symlink link="${gw.conf}/response.dtd"         resource="${ex.conf}/response.dtd"/>
-    <symlink link="${gw.conf}/routes.dtd"           resource="${ex.conf}/routes.dtd"/>
-
-    <symlink link="${ex.conf}/gw.aliases.xml"          resource="${gw.conf}/aliases.xml"/>
-    <symlink link="${ex.conf}/gw.config.xml"           resource="${gw.conf}/config.xml"/>
-    <symlink link="${ex.conf}/gw.logger.properties"    resource="${gw.conf}/logger.properties"/>
-    <symlink link="${ex.conf}/gw.routes.xml"           resource="${gw.conf}/routes.xml"/>
-    <symlink link="${ex.conf}/gw.routes_.xml"          resource="${gw.conf}/routes_.xml"/>
-    <symlink link="${ex.conf}/gw.routes__.xml"         resource="${gw.conf}/routes__.xml"/>
-    <symlink link="${ex.conf}/gw.sme.xml"              resource="${gw.conf}/sme.xml"/>
-  </target>
-
-  <target name="makeweb" depends="set_properties">
-    <ant dir="${sibinco.cvs}/webapps" target="build"/>
-  </target>
-
-
-  <target name="build" depends="makeall">
-    <symlink link="${daemon.bin}/daemon" resource="${sibinco.build}/bin/admin/daemon/smsc_ssdaemon"/>
-    <symlink link="${gw.bin}/service"    resource="${sibinco.build}/bin/smppgw/smppgw"/>
-    <symlink link="${ex.lib}/libdb_exc.so" resource="${sibinco.build}/bin/db/exceptions/libdb_exc.so"/>
-    <symlink link="${ex.lib}/libdb_oci.so" resource="${sibinco.build}/bin/db/oci/libdb_oci.so"/>
-    <symlink link="${ex.lib}/liblogger.so" resource="${sibinco.build}/bin/liblogger.so"/>
-
-    <copy todir="${ex.webapp}">
-      <fileset dir="${sibinco.exploded}/smppgw"/>
-    </copy>
-  </target>
-
-  <target name="install" depends="clean,copy_files,build">
-  </target>
-
-  <target name="test" depends="set_properties">
-    <echoproperties prefix="sibinco"/>
-    <echoproperties prefix="ex"/>
-    <echoproperties prefix="daemon"/>
-    <echoproperties prefix="gw"/>
-  </target>
-  <target name="clean" depends="set_properties">
-    <delete dir="${gw.exploded}"/>
-  </target>
-  <target name="clean_build" depends="set_properties">
-    <delete dir="${BUILD_DIR}" includeemptydirs="yes"/>
-  </target>
-  -->
 </project>
