@@ -2,7 +2,7 @@
 
 	Logging:
 	подключаете "util/Logger.h"
-	метод log4cpp::Logger.getCategory(const std::string & categoryName) 
+	метод smsc::util::Logger.getCategory(const std::string & categoryName) 
 	возвращает log4cpp::Category, с помощью которго и производится запись 
 	в лог. Имя категории состоит из полного имени класса, где "::" 
 	заменяются на ".". Например, для класса "smsc::util::SMyUtilClass" имя 
@@ -19,6 +19,6 @@
 		info (const char *stringFormat,...)
 		debug (const char *stringFormat,...)
 	Важно: Для получения log4cpp::Category 
-		используйте log4cpp::Logger.getCategory(), 
+		используйте smsc::util::Logger.getCategory(), 
 		а не log4cpp::Category.getInstance().
 		

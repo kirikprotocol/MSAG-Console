@@ -3,14 +3,17 @@
 #include <log4cpp/BasicLayout.hh>
 #include <log4cpp/FileAppender.hh>
 
-bool log4cpp::Logger::isInitialized = false;
+namespace smsc {
+namespace util {
+
+bool Logger::isInitialized = false;
 
 /*!
  * retrieves log4cpp::Category instance for given category name
  * \param name Category name to retrieve
  * \return log4cppCategory logger category
  */
-log4cpp::Category & log4cpp::Logger::getCategory(const std::string & name)				
+log4cpp::Category & Logger::getCategory(const std::string & name)				
 {
 	if (!isInitialized)
 	{
@@ -27,7 +30,7 @@ log4cpp::Category & log4cpp::Logger::getCategory(const std::string & name)
  * (файл smsc.log в текущей директории, уровень DEBUG)
  * \param configFileName имя файла конфигурации log4cpp
  */
-void log4cpp::Logger::Init(const std::string &configFileName)
+void Logger::Init(const std::string &configFileName)
 {
 	if (!isInitialized)
 	{
@@ -48,6 +51,11 @@ void log4cpp::Logger::Init(const std::string &configFileName)
 /*!
  * Деинициализирует log4cpp. После этого его можно снова инициализировать.
  */
-void log4cpp::Logger::Shutdown()
+void Logger::Shutdown()
 {
+	log4cpp::Category::shutdown();
+	isInitialized = false;
+}
+
+}
 }
