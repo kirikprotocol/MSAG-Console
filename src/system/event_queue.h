@@ -252,7 +252,7 @@ public:
       __synchronized__
         trace("selanddeq: got mutex");
         Locker* prev = 0;
-#if !defined ( DISABLE_ANY_CHECKS ) || defined(DISABLE_LIST_DUMP)
+#if !defined ( DISABLE_ANY_CHECKS ) && !defined(DISABLE_LIST_DUMP)
         {
           Locker *iter1,*iter2;
           int i;
@@ -309,7 +309,7 @@ public:
             if ( success ) // получена доступная команда
             {
               // удаляем из списка активных
-#if !defined (DISABLE_ANY_CHECKS) || defined(DISABLE_LIST_DUMP)              
+#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)              
               {
               __trace__("dump list before");
               Locker *iter2=first_unlocked;
@@ -331,7 +331,7 @@ public:
                 first_unlocked = locker->next_unlocked;
               }
 
-#if !defined (DISABLE_ANY_CHECKS) || defined(DISABLE_LIST_DUMP)              
+#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)              
               {
               __trace__("dump list after");
               Locker *iter2=first_unlocked;
@@ -413,7 +413,7 @@ public:
       ++counter;
 
 
-#if !defined (DISABLE_ANY_CHECKS) || defined(DISABLE_LIST_DUMP)              
+#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)              
     {Locker *iter2=first_unlocked;
     __trace__("change state: list before");
     while(iter2)
@@ -435,7 +435,7 @@ public:
       first_unlocked = last_unlocked = locker;
     }
 
-#if !defined (DISABLE_ANY_CHECKS) || defined(DISABLE_LIST_DUMP)              
+#if !defined (DISABLE_ANY_CHECKS) && !defined(DISABLE_LIST_DUMP)              
     {Locker *iter2=first_unlocked;
     __trace__("change state: list after");
     while(iter2)
