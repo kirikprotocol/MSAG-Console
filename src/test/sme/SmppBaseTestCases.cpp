@@ -1,7 +1,6 @@
 #include "SmppBaseTestCases.hpp"
 #include "test/conf/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
-#include "test/smpp/TestSmppSession.hpp"
 #include "test/util/Util.hpp"
 
 namespace smsc {
@@ -13,9 +12,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::test::conf::TestConfig;
 using namespace smsc::sme; //SmppConnectException, BindType
 using namespace smsc::smpp::SmppCommandSet;
-using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::test::core; //flags
-using namespace smsc::test::smpp;
 using namespace smsc::test::util;
 
 Category& SmppBaseTestCases::getLog()
@@ -149,134 +146,6 @@ void SmppBaseTestCases::bindIncorrectSme(int num)
 			__tc_ok_cond__;
 		}
 		catch(...)
-		{
-			__tc_fail__(100);
-			error();
-		}
-	}
-}
-
-#define __check__(errCode, cond) \
-	if (!(cond)) { __tc_fail__(errCode); }
-
-class BindUnbindListener : public SmppPduEventListener
-{
-	uint32_t cmdId;
-	bool bound;
-	CheckList* chkList;
-public:
-	BindUnbindListener(uint32_t _cmdId, CheckList* _chkList)
-	: cmdId(_cmdId), chkList(_chkList), bound(false) {}
-	void checkBindResp(SmppHeader* pdu)
-	{
-		__decl_tc__;
-		__tc__("bind.resp.checkCommandStatus");
-		__check__(1, pdu->get_commandStatus() == ESME_ROK);
-		__tc_ok_cond__;
-		__tc__("bind.resp.checkInterfaceVersion");
-		__check__(1, reinterpret_cast<PduBindTRXResp*>(pdu)->get_scInterfaceVersion() == 0x34);
-		__tc_ok_cond__;
-	}
-	void checkUnbindResp(SmppHeader* pdu)
-	{
-		__decl_tc__;
-		__tc__("unbind.resp.checkCommandStatus");
-		__check__(1, pdu->get_commandStatus() == ESME_ROK);
-		__tc_ok_cond__;
-	}
-	virtual void handleEvent(SmppHeader* pdu)
-	{
-		__decl_tc__;
-		switch (pdu->get_commandId())
-		{
-			case BIND_RECIEVER_RESP:
-				__tc__("bind.resp.receiver");
-				__check__(1, cmdId == BIND_RECIEVER);
-				__check__(2, !bound);
-				checkBindResp(pdu);
-				bound = true;
-				break;
-			case BIND_TRANSMITTER_RESP:
-				__tc__("bind.resp.transmitter");
-				__check__(1, cmdId == BIND_TRANSMITTER);
-				__check__(2, !bound);
-				checkBindResp(pdu);
-				bound = true;
-				break;
-			case BIND_TRANCIEVER_RESP:
-				__tc__("bind.resp.transceiver");
-				__check__(1, cmdId == BIND_TRANCIEVER);
-				__check__(2, !bound);
-				checkBindResp(pdu);
-				bound = true;
-				break;
-			case UNBIND_RESP:
-				__tc__("unbind.resp");
-				__check__(1, bound);
-				checkUnbindResp(pdu);
-				bound = false;
-				break;
-			default:
-				__unreachable__("not expected");
-		}
-		__tc_ok_cond__;
-	}
-	virtual void handleError(int errorCode)
-	{
-		__trace2__("handleError(): errorCode = %d", errorCode);
-		__unreachable__("not expected");
-	}
-};
-
-void SmppBaseTestCases::bindUnbindCorrect(int num)
-{
-	__decl_tc__;
-	TCSelector s(num, 3);
-	for (; s.check(); s++)
-	{
-		try
-		{
-			__tc__("bind.correct");
-			uint32_t cmdId;
-			switch (s.value())
-			{
-				case 1:
-					__tc__("bind.correct.transceiver");
-					cmdId = BIND_TRANCIEVER;
-					break;
-				case 2:
-					__tc__("bind.correct.receiver");
-					cmdId = BIND_RECIEVER;
-					break;
-				case 3:
-					__tc__("bind.correct.transmitter");
-					cmdId = BIND_TRANSMITTER;
-					break;
-				default:
-					__unreachable__("Invalid num");
-			}
-			BindUnbindListener listener(cmdId, chkList);
-			TestSmppSession sess(&listener);
-			sess.connect(config.host.c_str(), config.port, config.timeOut);
-			//bind
-			PduBindTRX bindPdu;
-			bindPdu.get_header().set_commandId(cmdId);
-			bindPdu.set_systemId(config.sid.c_str());
-			bindPdu.set_password(config.password.c_str());
-			bindPdu.set_systemType(config.systemType.c_str());
-			bindPdu.get_header().set_sequenceNumber(sess.getNextSeq());
-			sess.sendPdu(reinterpret_cast<SmppHeader*>(&bindPdu));
-			__tc_ok__;
-			//unbind
-			__tc__("unbind");
-			PduUnbind unbindPdu;
-			unbindPdu.get_header().set_commandId(SmppCommandSet::UNBIND);
-			unbindPdu.get_header().set_sequenceNumber(sess.getNextSeq());
-			sess.sendPdu(reinterpret_cast<SmppHeader*>(&unbindPdu));
-			sess.close();
-			__tc_ok__;
-		}
-		catch (...)
 		{
 			__tc_fail__(100);
 			error();
