@@ -66,6 +66,7 @@ public class RouteAlterCommand extends RouteGenCommand
         return;
       }
 
+      //todo add allowBlocked flag
       Route newRoute = new Route(route,
                                  oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
                                  oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
@@ -73,7 +74,8 @@ public class RouteAlterCommand extends RouteGenCommand
                                  oldRoute.getSources(), oldRoute.getDestinations(),
                                  oldRoute.getSrcSmeId(), oldRoute.getDeliveryMode(), oldRoute.getForwardTo(),
                                  oldRoute.isHide(), oldRoute.getReplayPath(), oldRoute.getNotes(),
-                                 oldRoute.isForceDelivery(), oldRoute.getAclId());
+                                 oldRoute.isForceDelivery(), oldRoute.getAclId(),
+                                 false);
 
       if (target == TARGET_SRC) {
         for (int i = 0; i < srcs.size(); i++) {

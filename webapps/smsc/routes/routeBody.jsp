@@ -123,6 +123,10 @@ function srcSmeIdChanged()
 			<td><input id=forceDelivery class=check type=checkbox name=forceDelivery <%=bean.isForceDelivery() ? "checked" : ""%>></td>
 			<td><label for=forceDelivery style="padding-left:4px;">force delivery</label></td>
 		</tr>
+		<tr>
+			<td><input id="allowBlocked" class=check type=checkbox name="allowBlocked" <%=bean.isAllowBlocked() ? "checked" : ""%>></td>
+			<td><label for=allowBlocked style="padding-left:4px;">allow blocked</label></td>
+		</tr>
 		</table>
 	</td>
 </tr>

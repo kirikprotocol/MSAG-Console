@@ -42,10 +42,13 @@ public class Route
   private String notes = "";
   private boolean forceDelivery = false;
   private long aclId;
+  private boolean allowBlocked;
 
-  public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId, String deliveryMode, String forwardTo, boolean hide, byte replayPath, String notes, boolean forceDelivery, long aclId)
+  public Route(final String routeName, final int priority, final boolean isEnabling, final boolean isBilling, final boolean isArchiving,
+               final boolean isSuppressDeliveryReports, final boolean active, final int serviceId, final SourceList sources,
+               final DestinationList destinations, final String srcSmeId, final String deliveryMode, final String forwardTo, final boolean hide,
+               final byte replayPath, final String notes, final boolean forceDelivery, final long aclId, final boolean allowBlocked)
   {
-    this.aclId = aclId;
     if (routeName == null)
       throw new NullPointerException("Route name is null");
     if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
@@ -72,9 +75,11 @@ public class Route
     this.replayPath = replayPath;
     this.notes = notes;
     this.forceDelivery = forceDelivery;
+    this.allowBlocked = allowBlocked;
+    this.aclId = aclId;
   }
 
-  public Route(String routeName)
+  public Route(final String routeName)
   {
     if (routeName == null)
       throw new NullPointerException("Route name is null");
@@ -99,9 +104,10 @@ public class Route
     notes = "";
     forceDelivery = false;
     aclId = -1;
+    allowBlocked = false;
   }
 
-  public Route(Element routeElem, SubjectList subjects, SmeManager smeManager) throws AdminException
+  public Route(final Element routeElem, final SubjectList subjects, final SmeManager smeManager) throws AdminException
   {
     name = routeElem.getAttribute("id");
     if (name.length() > Constants.ROUTE_ID_MAXLENGTH) {
@@ -122,15 +128,16 @@ public class Route
     hide = routeElem.getAttribute("hide").length() > 0 ? routeElem.getAttribute("hide").equalsIgnoreCase("true") : true;
     replayPath = getReplayPathValue(routeElem.getAttribute("replayPath"));
     notes = "";
-    NodeList notesList = routeElem.getElementsByTagName("notes");
+    final NodeList notesList = routeElem.getElementsByTagName("notes");
     for (int i = 0; i < notesList.getLength(); i++)
       notes += Utils.getNodeText(notesList.item(i));
     forceDelivery = Boolean.valueOf(routeElem.getAttribute("forceDelivery")).booleanValue();
     final String aclIdStr = routeElem.getAttribute("aclId");
     aclId = aclIdStr != null && aclIdStr.trim().length() > 0 ? Long.decode(aclIdStr).longValue() : -1;
+    allowBlocked = Boolean.valueOf(routeElem.getAttribute("allowBlocked")).booleanValue();
   }
 
-  public static byte getReplayPathValue(String replayPathStr)
+  public static byte getReplayPathValue(final String replayPathStr)
   {
     if (replayPathStr == null || replayPathStr.length() == 0)
       return REPLAY_PATH_PASS;
@@ -144,7 +151,7 @@ public class Route
     return REPLAY_PATH_PASS;
   }
 
-  public static String getReplayPathValue(byte replayPath)
+  public static String getReplayPathValue(final byte replayPath)
   {
     switch (replayPath) {
       case REPLAY_PATH_FORCE:
@@ -163,14 +170,14 @@ public class Route
     return name;
   }
 
-  public void setName(String name)
+  public void setName(final String name)
   {
     if (name.length() > Constants.ROUTE_ID_MAXLENGTH)
       throw new IllegalArgumentException("Route name is too long");
     this.name = name;
   }
 
-  public void addSource(Source newSrc)
+  public void addSource(final Source newSrc)
   {
     if (newSrc == null)
       throw new NullPointerException("Source is null");
@@ -178,17 +185,17 @@ public class Route
     src.add(newSrc);
   }
 
-  public Source removeSource(String sourceName)
+  public Source removeSource(final String sourceName)
   {
     return src.remove(sourceName);
   }
 
-  public Destination removeDestination(String destinationName)
+  public Destination removeDestination(final String destinationName)
   {
     return dst.remove(destinationName);
   }
 
-  public void addDestination(Destination newDst)
+  public void addDestination(final Destination newDst)
   {
     if (newDst == null)
       throw new NullPointerException("Destination is null");
@@ -206,17 +213,17 @@ public class Route
     return dst;
   }
 
-  public void updateSources(Set sourcesStrings, String masksString, SubjectList allSubjects)
+  public void updateSources(final Set sourcesStrings, final String masksString, final SubjectList allSubjects)
   {
-    SourceList source_selected = new SourceList();
+    final SourceList source_selected = new SourceList();
     for (Iterator i = sourcesStrings.iterator(); i.hasNext();) {
-      String token = (String) i.next();
+      final String token = (String) i.next();
       source_selected.add(new Source(allSubjects.get(token)));
     }
 
-    MaskList masks = new MaskList(masksString);
+    final MaskList masks = new MaskList(masksString);
     for (Iterator i = masks.iterator(); i.hasNext();) {
-      Mask m = (Mask) i.next();
+      final Mask m = (Mask) i.next();
       source_selected.add(new Source(m));
     }
 
@@ -225,17 +232,18 @@ public class Route
     src.addAll(source_selected);
   }
 
-  public void updateDestinations(Set destinationsStrings, String masksString, SubjectList allSubjects, SME defaultSme) throws AdminException
+  public void updateDestinations(final Set destinationsStrings, final String masksString, final SubjectList allSubjects, final SME defaultSme)
+      throws AdminException
   {
-    DestinationList list = new DestinationList();
+    final DestinationList list = new DestinationList();
     for (Iterator i = destinationsStrings.iterator(); i.hasNext();) {
-      String token = (String) i.next();
+      final String token = (String) i.next();
       list.add(new Destination(allSubjects.get(token)));
     }
 
-    MaskList masks = new MaskList(masksString);
+    final MaskList masks = new MaskList(masksString);
     for (Iterator i = masks.iterator(); i.hasNext();) {
-      Mask m = (Mask) i.next();
+      final Mask m = (Mask) i.next();
       list.add(new Destination(m, defaultSme));
     }
 
@@ -249,7 +257,7 @@ public class Route
     return enabling;
   }
 
-  public void setEnabling(boolean enabling)
+  public void setEnabling(final boolean enabling)
   {
     this.enabling = enabling;
   }
@@ -259,7 +267,7 @@ public class Route
     return billing;
   }
 
-  public void setBilling(boolean billing)
+  public void setBilling(final boolean billing)
   {
     this.billing = billing;
   }
@@ -269,22 +277,28 @@ public class Route
     return archiving;
   }
 
-  public void setArchiving(boolean archiving)
+  public void setArchiving(final boolean archiving)
   {
     this.archiving = archiving;
   }
 
-  public PrintWriter store(PrintWriter out)
+  public PrintWriter store(final PrintWriter out)
   {
-    out.println("  <route id=\"" + StringEncoderDecoder.encode(getName()) + "\" billing=\"" + isBilling()
-                + "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority()
-                + "\" serviceId=\"" + getServiceId() + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports()
-                + "\" active=\"" + isActive() + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
+    out.println("  <route id=\"" + StringEncoderDecoder.encode(getName())
+                + "\" billing=\"" + isBilling()
+                + "\" archiving=\"" + isArchiving()
+                + "\" enabling=\"" + isEnabling()
+                + "\" priority=\"" + getPriority()
+                + "\" serviceId=\"" + getServiceId()
+                + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports()
+                + "\" active=\"" + isActive()
+                + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
                 + "\" deliveryMode=\"" + StringEncoderDecoder.encode(getDeliveryMode())
-                + "\" hide=\"" + (isHide() ? "true" : "false")
+                + "\" hide=\"" + isHide()
                 + "\" replayPath=\"" + getReplayPathValue(getReplayPath())
                 + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
                 + "\" aclId=\"" + getAclId()
+                + "\" allowBlocked=\"" + isAllowBlocked()
                 + "\">");
     if (notes != null)
       out.println("    <notes>" + notes + "</notes>");
@@ -299,7 +313,7 @@ public class Route
     return priority;
   }
 
-  public void setPriority(int priority)
+  public void setPriority(final int priority)
   {
     this.priority = priority;
   }
@@ -309,7 +323,7 @@ public class Route
     return serviceId;
   }
 
-  public void setServiceId(int serviceId)
+  public void setServiceId(final int serviceId)
   {
     this.serviceId = serviceId;
   }
@@ -319,7 +333,7 @@ public class Route
     return suppressDeliveryReports;
   }
 
-  public void setSuppressDeliveryReports(boolean suppressDeliveryReports)
+  public void setSuppressDeliveryReports(final boolean suppressDeliveryReports)
   {
     this.suppressDeliveryReports = suppressDeliveryReports;
   }
@@ -329,7 +343,7 @@ public class Route
     return active;
   }
 
-  public void setActive(boolean active)
+  public void setActive(final boolean active)
   {
     this.active = active;
   }
@@ -339,7 +353,7 @@ public class Route
     return srcSmeId;
   }
 
-  public void setSrcSmeId(String srcSmeId)
+  public void setSrcSmeId(final String srcSmeId)
   {
     this.srcSmeId = srcSmeId;
   }
@@ -349,7 +363,7 @@ public class Route
     return deliveryMode;
   }
 
-  public void setDeliveryMode(String deliveryMode)
+  public void setDeliveryMode(final String deliveryMode)
   {
     this.deliveryMode = deliveryMode;
   }
@@ -359,7 +373,7 @@ public class Route
     return forwardTo;
   }
 
-  public void setForwardTo(String forwardTo)
+  public void setForwardTo(final String forwardTo)
   {
     this.forwardTo = forwardTo;
   }
@@ -369,7 +383,7 @@ public class Route
     return hide;
   }
 
-  public void setHide(boolean hide)
+  public void setHide(final boolean hide)
   {
     this.hide = hide;
   }
@@ -379,7 +393,7 @@ public class Route
     return replayPath;
   }
 
-  public void setReplayPath(byte replayPath)
+  public void setReplayPath(final byte replayPath)
   {
     this.replayPath = replayPath;
   }
@@ -389,7 +403,7 @@ public class Route
     return notes;
   }
 
-  public void setNotes(String notes)
+  public void setNotes(final String notes)
   {
     this.notes = notes;
   }
@@ -399,7 +413,7 @@ public class Route
     return forceDelivery;
   }
 
-  public void setForceDelivery(boolean forceDelivery)
+  public void setForceDelivery(final boolean forceDelivery)
   {
     this.forceDelivery = forceDelivery;
   }
@@ -409,8 +423,18 @@ public class Route
     return aclId;
   }
 
-  public void setAclId(long aclId)
+  public void setAclId(final long aclId)
   {
     this.aclId = aclId;
+  }
+
+  public boolean isAllowBlocked()
+  {
+    return allowBlocked;
+  }
+
+  public void setAllowBlocked(final boolean allowBlocked)
+  {
+    this.allowBlocked = allowBlocked;
   }
 }

@@ -9,9 +9,7 @@ import java.util.*;
 
 
 /**
- * Created by igork
- * Date: Feb 3, 2003
- * Time: 2:48:46 PM
+ * Created by igork Date: Feb 3, 2003 Time: 2:48:46 PM
  */
 public class RouteBody extends SmscBean
 {
@@ -42,13 +40,14 @@ public class RouteBody extends SmscBean
   protected String notes = "";
   protected boolean forceDelivery = false;
   protected long aclId = -1;
+  protected boolean allowBlocked = false;
 
-  public boolean isSrcChecked(String srcName)
+  public boolean isSrcChecked(final String srcName)
   {
     return checkedSourcesSet.contains(srcName);
   }
 
-  public boolean isDstChecked(String dstName)
+  public boolean isDstChecked(final String dstName)
   {
     return checkedDestinationsSet.contains(dstName);
   }
@@ -63,12 +62,12 @@ public class RouteBody extends SmscBean
     return new SortedList(smeManager.getSmeNames());
   }
 
-  public boolean isSmeSelected(String dstName, String smeId)
+  public boolean isSmeSelected(final String dstName, final String smeId)
   {
     return smeId.equals(selectedSmes.get(dstName));
   }
 
-  public boolean isMaskSmeSelected(String dstMask, String smeId)
+  public boolean isMaskSmeSelected(final String dstMask, final String smeId)
   {
     return smeId.equals(selectedMaskSmes.get(dstMask));
   }
@@ -92,7 +91,7 @@ public class RouteBody extends SmscBean
     return mbSave;
   }
 
-  public void setMbSave(String mbSave)
+  public void setMbSave(final String mbSave)
   {
     this.mbSave = mbSave;
   }
@@ -102,7 +101,7 @@ public class RouteBody extends SmscBean
     return mbCancel;
   }
 
-  public void setMbCancel(String mbCancel)
+  public void setMbCancel(final String mbCancel)
   {
     this.mbCancel = mbCancel;
   }
@@ -112,7 +111,7 @@ public class RouteBody extends SmscBean
     return routeId;
   }
 
-  public void setRouteId(String routeId)
+  public void setRouteId(final String routeId)
   {
     this.routeId = routeId;
   }
@@ -122,7 +121,7 @@ public class RouteBody extends SmscBean
     return permissible;
   }
 
-  public void setPermissible(boolean permissible)
+  public void setPermissible(final boolean permissible)
   {
     this.permissible = permissible;
   }
@@ -132,7 +131,7 @@ public class RouteBody extends SmscBean
     return billing;
   }
 
-  public void setBilling(boolean billing)
+  public void setBilling(final boolean billing)
   {
     this.billing = billing;
   }
@@ -142,7 +141,7 @@ public class RouteBody extends SmscBean
     return archiving;
   }
 
-  public void setArchiving(boolean archiving)
+  public void setArchiving(final boolean archiving)
   {
     this.archiving = archiving;
   }
@@ -152,7 +151,7 @@ public class RouteBody extends SmscBean
     return checkedSources;
   }
 
-  public void setCheckedSources(String[] checkedSources)
+  public void setCheckedSources(final String[] checkedSources)
   {
     this.checkedSources = checkedSources;
   }
@@ -162,7 +161,7 @@ public class RouteBody extends SmscBean
     return srcMasks;
   }
 
-  public void setSrcMasks(String[] srcMasks)
+  public void setSrcMasks(final String[] srcMasks)
   {
     this.srcMasks = srcMasks;
   }
@@ -172,7 +171,7 @@ public class RouteBody extends SmscBean
     return checkedDestinations;
   }
 
-  public void setCheckedDestinations(String[] checkedDestinations)
+  public void setCheckedDestinations(final String[] checkedDestinations)
   {
     this.checkedDestinations = checkedDestinations;
   }
@@ -182,7 +181,7 @@ public class RouteBody extends SmscBean
     return dstMasks;
   }
 
-  public void setDstMasks(String[] dstMasks)
+  public void setDstMasks(final String[] dstMasks)
   {
     this.dstMasks = dstMasks;
   }
@@ -192,7 +191,7 @@ public class RouteBody extends SmscBean
     return dst_mask_sme_;
   }
 
-  public void setDst_mask_sme_(String dst_mask_sme_)
+  public void setDst_mask_sme_(final String dst_mask_sme_)
   {
     this.dst_mask_sme_ = dst_mask_sme_;
   }
@@ -202,7 +201,7 @@ public class RouteBody extends SmscBean
     return Integer.toString(priority);
   }
 
-  public void setPriority(String priority)
+  public void setPriority(final String priority)
   {
     try {
       this.priority = Integer.decode(priority).intValue();
@@ -216,7 +215,7 @@ public class RouteBody extends SmscBean
     return Integer.toString(serviceId);
   }
 
-  public void setServiceId(String serviceId)
+  public void setServiceId(final String serviceId)
   {
     try {
       this.serviceId = Integer.decode(serviceId).intValue();
@@ -230,7 +229,7 @@ public class RouteBody extends SmscBean
     return suppressDeliveryReports;
   }
 
-  public void setSuppressDeliveryReports(boolean suppressDeliveryReports)
+  public void setSuppressDeliveryReports(final boolean suppressDeliveryReports)
   {
     this.suppressDeliveryReports = suppressDeliveryReports;
   }
@@ -240,7 +239,7 @@ public class RouteBody extends SmscBean
     return active;
   }
 
-  public void setActive(boolean active)
+  public void setActive(final boolean active)
   {
     this.active = active;
   }
@@ -250,12 +249,12 @@ public class RouteBody extends SmscBean
     return srcSmeId;
   }
 
-  public void setSrcSmeId(String srcSmeId)
+  public void setSrcSmeId(final String srcSmeId)
   {
     this.srcSmeId = srcSmeId;
   }
 
-  public String getDefaultSubjectSme(String subjId)
+  public String getDefaultSubjectSme(final String subjId)
   {
     try {
       return routeSubjectManager.getSubjects().get(subjId).getDefaultSme().getId();
@@ -270,7 +269,7 @@ public class RouteBody extends SmscBean
     return deliveryMode;
   }
 
-  public void setDeliveryMode(String deliveryMode)
+  public void setDeliveryMode(final String deliveryMode)
   {
     this.deliveryMode = deliveryMode;
   }
@@ -280,7 +279,7 @@ public class RouteBody extends SmscBean
     return forwardTo;
   }
 
-  public void setForwardTo(String forwardTo)
+  public void setForwardTo(final String forwardTo)
   {
     this.forwardTo = forwardTo;
   }
@@ -290,7 +289,7 @@ public class RouteBody extends SmscBean
     return hide;
   }
 
-  public void setHide(boolean hide)
+  public void setHide(final boolean hide)
   {
     this.hide = hide;
   }
@@ -300,7 +299,7 @@ public class RouteBody extends SmscBean
     return replayPath;
   }
 
-  public void setReplayPath(byte replayPath)
+  public void setReplayPath(final byte replayPath)
   {
     this.replayPath = replayPath;
   }
@@ -310,7 +309,7 @@ public class RouteBody extends SmscBean
     return notes;
   }
 
-  public void setNotes(String notes)
+  public void setNotes(final String notes)
   {
     this.notes = notes;
   }
@@ -320,7 +319,7 @@ public class RouteBody extends SmscBean
     return forceDelivery;
   }
 
-  public void setForceDelivery(boolean forceDelivery)
+  public void setForceDelivery(final boolean forceDelivery)
   {
     this.forceDelivery = forceDelivery;
   }
@@ -330,8 +329,18 @@ public class RouteBody extends SmscBean
     return aclId;
   }
 
-  public void setAclId(long aclId)
+  public void setAclId(final long aclId)
   {
     this.aclId = aclId;
+  }
+
+  public boolean isAllowBlocked()
+  {
+    return allowBlocked;
+  }
+
+  public void setAllowBlocked(final boolean allowBlocked)
+  {
+    this.allowBlocked = allowBlocked;
   }
 }

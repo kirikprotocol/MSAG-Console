@@ -23,14 +23,14 @@ public class RoutesEdit extends RouteBody
   protected String oldRouteId = null;
 
 
-  protected int init(List errors)
+  protected int init(final List errors)
   {
     int result = super.init(errors);
     if (result != RESULT_OK)
       return result;
 
     for (Iterator i = routeSubjectManager.getSubjects().iterator(); i.hasNext();) {
-      Subject subj = (Subject) i.next();
+      final Subject subj = (Subject) i.next();
       selectedSmes.put(subj.getName(), subj.getDefaultSme().getId());
     }
 
@@ -41,7 +41,7 @@ public class RoutesEdit extends RouteBody
 
     if (oldRouteId == null) {
       oldRouteId = routeId;
-      Route r = routeSubjectManager.getRoutes().get(routeId);
+      final Route r = routeSubjectManager.getRoutes().get(routeId);
       if (r == null)
         result = error(SMSCErrors.error.routes.nameNotSpecified);
       else {
@@ -65,15 +65,16 @@ public class RoutesEdit extends RouteBody
         notes = r.getNotes();
 
         for (int i = 0; i < checkedDestinations.length; i++) {
-          String destination = checkedDestinations[i];
+          final String destination = checkedDestinations[i];
           selectedSmes.put(destination.trim(), r.getDestinations().get(destination).getSme().getId());
         }
         for (int i = 0; i < dstMasks.length; i++) {
-          String mask = dstMasks[i];
+          final String mask = dstMasks[i];
           selectedMaskSmes.put(mask, r.getDestinations().get(mask).getSme().getId());
         }
+        aclId = r.getAclId();
+        allowBlocked = r.isAllowBlocked();
       }
-      aclId = r.getAclId();
     }
 
     if (deliveryMode == null) deliveryMode = "default";
@@ -94,9 +95,9 @@ public class RoutesEdit extends RouteBody
     return result;
   }
 
-  public int process(HttpServletRequest request)
+  public int process(final HttpServletRequest request)
   {
-    int result = super.process(request);
+    final int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
@@ -104,7 +105,7 @@ public class RoutesEdit extends RouteBody
     final String maskprefix = "dst_mask_sme_";
     final Map requestParameters = request.getParameterMap();
     for (Iterator i = requestParameters.keySet().iterator(); i.hasNext();) {
-      String paramName = (String) i.next();
+      final String paramName = (String) i.next();
       if (paramName.startsWith(subjprefix)) {
         final String[] strings = (String[]) requestParameters.get(paramName);
         if (strings.length > 0) {
@@ -120,7 +121,7 @@ public class RoutesEdit extends RouteBody
       }
     }
     for (int i = 0; i < dstMasks.length; i++) {
-      String mask = dstMasks[i];
+      final String mask = dstMasks[i];
       if (!selectedMaskSmes.containsKey(mask))
         selectedMaskSmes.put(mask, dst_mask_sme_);
     }
@@ -133,7 +134,7 @@ public class RoutesEdit extends RouteBody
     return result;
   }
 
-  protected int save(java.security.Principal loginedPrincipal, String sessionId)
+  protected int save(final java.security.Principal loginedPrincipal, final String sessionId)
   {
     if (routeId == null || routeId.length() <= 0 || oldRouteId == null || oldRouteId.length() <= 0)
       return error(SMSCErrors.error.routes.nameNotSpecified);
@@ -144,29 +145,29 @@ public class RoutesEdit extends RouteBody
       return error(SMSCErrors.error.routes.alreadyExists, routeId);
 
     try {
-      SourceList sources = new SourceList();
+      final SourceList sources = new SourceList();
       for (int i = 0; i < checkedSources.length; i++) {
-        String source = checkedSources[i];
+        final String source = checkedSources[i];
         sources.add(new Source(routeSubjectManager.getSubjects().get(source)));
       }
       for (int i = 0; i < srcMasks.length; i++) {
-        String mask = srcMasks[i];
+        final String mask = srcMasks[i];
         sources.add(new Source(new Mask(mask)));
       }
 
-      DestinationList destinations = new DestinationList();
+      final DestinationList destinations = new DestinationList();
       for (int i = 0; i < checkedDestinations.length; i++) {
-        String destination = checkedDestinations[i];
-        Subject subj = routeSubjectManager.getSubjects().get(destination);
-        SME sme = smeManager.get((String) selectedSmes.get(destination));
+        final String destination = checkedDestinations[i];
+        final Subject subj = routeSubjectManager.getSubjects().get(destination);
+        final SME sme = smeManager.get((String) selectedSmes.get(destination));
         destinations.add(new Destination(subj, sme));
       }
       for (int i = 0; i < dstMasks.length; i++) {
-        String mask = dstMasks[i];
+        final String mask = dstMasks[i];
         String smeId = (String) selectedMaskSmes.get(mask);
         if (smeId == null)
           smeId = dst_mask_sme_;
-        SME sme = smeManager.get(smeId);
+        final SME sme = smeManager.get(smeId);
         destinations.add(new Destination(new Mask(mask), sme));
       }
 
@@ -176,7 +177,8 @@ public class RoutesEdit extends RouteBody
         return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
       routeSubjectManager.getRoutes().remove(oldRouteId);
-      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId));
+      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
+                                                    deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked));
       if (oldRouteId.equals(routeId))
         journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY);
       else
@@ -193,7 +195,7 @@ public class RoutesEdit extends RouteBody
     return oldRouteId;
   }
 
-  public void setOldRouteId(String oldRouteId)
+  public void setOldRouteId(final String oldRouteId)
   {
     this.oldRouteId = oldRouteId;
   }

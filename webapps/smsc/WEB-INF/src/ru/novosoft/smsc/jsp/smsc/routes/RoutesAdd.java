@@ -18,9 +18,9 @@ import java.util.*;
 
 public class RoutesAdd extends RouteBody
 {
-  protected int init(List errors)
+  protected int init(final List errors)
   {
-    int result = super.init(errors);
+    final int result = super.init(errors);
     if (result != RESULT_OK)
       return result;
 
@@ -47,16 +47,16 @@ public class RoutesAdd extends RouteBody
     checkedDestinationsSet = new HashSet(Arrays.asList(checkedDestinations));
 
     for (Iterator i = routeSubjectManager.getSubjects().iterator(); i.hasNext();) {
-      Subject subj = (Subject) i.next();
+      final Subject subj = (Subject) i.next();
       selectedSmes.put(subj.getName(), subj.getDefaultSme().getId());
     }
 
     return result;
   }
 
-  public int process(HttpServletRequest request)
+  public int process(final HttpServletRequest request)
   {
-    int result = super.process(request);
+    final int result = super.process(request);
     if (result != RESULT_OK)
       return result;
 
@@ -64,7 +64,7 @@ public class RoutesAdd extends RouteBody
     final String maskprefix = "dst_mask_sme_";
     final Map requestParameters = request.getParameterMap();
     for (Iterator i = requestParameters.keySet().iterator(); i.hasNext();) {
-      String paramName = (String) i.next();
+      final String paramName = (String) i.next();
       if (paramName.startsWith(subjprefix)) {
         final String[] strings = (String[]) requestParameters.get(paramName);
         if (strings.length > 0) {
@@ -80,7 +80,7 @@ public class RoutesAdd extends RouteBody
       }
     }
     for (int i = 0; i < dstMasks.length; i++) {
-      String mask = dstMasks[i];
+      final String mask = dstMasks[i];
       if (!selectedMaskSmes.containsKey(mask))
         selectedMaskSmes.put(mask, dst_mask_sme_);
     }
@@ -93,7 +93,7 @@ public class RoutesAdd extends RouteBody
     return RESULT_OK;
   }
 
-  protected int save(String sessionId)
+  protected int save(final String sessionId)
   {
     if (routeId == null || routeId.length() <= 0)
       return error(SMSCErrors.error.routes.nameNotSpecified);
@@ -103,29 +103,29 @@ public class RoutesAdd extends RouteBody
       return error(SMSCErrors.error.routes.invalidPriority, String.valueOf(priority));
 
     try {
-      SourceList sources = new SourceList();
+      final SourceList sources = new SourceList();
       for (int i = 0; i < checkedSources.length; i++) {
-        String source = checkedSources[i];
+        final String source = checkedSources[i];
         sources.add(new Source(routeSubjectManager.getSubjects().get(source)));
       }
       for (int i = 0; i < srcMasks.length; i++) {
-        String mask = srcMasks[i];
+        final String mask = srcMasks[i];
         sources.add(new Source(new Mask(mask)));
       }
 
-      DestinationList destinations = new DestinationList();
+      final DestinationList destinations = new DestinationList();
       for (int i = 0; i < checkedDestinations.length; i++) {
-        String destination = checkedDestinations[i];
-        Subject subj = routeSubjectManager.getSubjects().get(destination);
-        SME sme = smeManager.get((String) selectedSmes.get(destination));
+        final String destination = checkedDestinations[i];
+        final Subject subj = routeSubjectManager.getSubjects().get(destination);
+        final SME sme = smeManager.get((String) selectedSmes.get(destination));
         destinations.add(new Destination(subj, sme));
       }
       for (int i = 0; i < dstMasks.length; i++) {
-        String mask = dstMasks[i];
+        final String mask = dstMasks[i];
         String smeId = (String) selectedMaskSmes.get(mask);
         if (smeId == null)
           smeId = dst_mask_sme_;
-        SME sme = smeManager.get(smeId);
+        final SME sme = smeManager.get(smeId);
         destinations.add(new Destination(new Mask(mask), sme));
       }
 
@@ -134,8 +134,8 @@ public class RoutesAdd extends RouteBody
       if (destinations.isEmpty())
         return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
-      //todo: change replayPath<boolean> to replayPath<byte>
-      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId));
+      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
+                                                    deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked));
       journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_ADD);
       appContext.getStatuses().setRoutesChanged(true);
       return RESULT_DONE;
