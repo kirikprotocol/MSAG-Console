@@ -256,7 +256,12 @@ int SmppInputThread::Execute()
             {
               if(ss->getProxy() && ss->getProxy()->isOpened())
               {
-                SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
+                SmppHeader *resp=(SmppHeader*)new PduBindTRXResp();
+                resp->set_commandId(pdu->get_commandId()|0x80000000);
+                resp->set_sequenceNumber(pdu->get_sequenceNumber());
+                resp->set_commandStatus(SmppStatusSet::ESME_RALYBND);
+                SmscCommand cmd=SmscCommand::makeSmppPduCommand(resp);
+                ss->getProxy()->putIncomingCommand(cmd);
                 continue;
               }
               PduBindTRX *bindpdu=

@@ -62,6 +62,7 @@ enum CommandId
   ENQUIRELINK_RESP,       //18
   QUERYABONENTSTATUS,     //19
   QUERYABONENTSTATUS_RESP,//20
+  SMPP_PDU,               //21
 };
 
 
@@ -312,6 +313,9 @@ struct _SmscCommand
     case QUERYABONENTSTATUS_RESP:
       delete ( (AbonentStatus*)dta);
       break;
+    case SMPP_PDU:
+      if(dta)disposePdu((SmppHeader*)dta);
+      break;
     case UNKNOWN:
     case FORWARD:
     case ALERT:
@@ -342,6 +346,8 @@ struct _SmscCommand
   const char* get_sourceId(){return sourceId.c_str();}
   const Address& get_address() { return *(Address*)dta; }
   void set_address(const Address& addr) { *(Address*)dta = addr; }
+
+  SmppHeader* get_smppPdu(){return (SmppHeader*)dta;}
 
   AbonentStatus& get_abonentStatus()
   {
@@ -626,6 +632,18 @@ public:
     return cmd;
   }
 
+  static SmscCommand makeSmppPduCommand(SmppHeader* pdu)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=SMPP_PDU;
+    _cmd.dta=0;
+    _cmd.dialogId=0;
+    return cmd;
+  }
+
   ~SmscCommand() {
      //__trace__(__PRETTY_FUNCTION__);
      dispose();
@@ -899,6 +917,12 @@ public:
         pdu->header.set_sequenceNumber(c.get_dialogId());
         pdu->header.set_commandStatus(makeSmppStatus((uint32_t)c.dta));
         return reinterpret_cast<SmppHeader*>(pdu.release());
+      }
+    case SMPP_PDU:
+      {
+        SmppHeader* pdu=(SmppHeader*)c.dta;
+        c.dta=0;
+        return pdu;
       }
     default:
       __unreachable__("unknown commandid");

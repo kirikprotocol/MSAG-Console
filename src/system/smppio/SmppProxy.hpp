@@ -137,12 +137,12 @@ public:
         ,
         SmscCommandDefaultPriority
       );
-    }/*else if(cmd->get_commandId()==GENERIC_NACK)
+    }else if(cmd->get_commandId()==SMPP_PDU)
     {
       MutexGuard g(mutexout);
       if(!opened)return;
       outqueue.Push(cmd,SmscCommandDefaultPriority);
-    }*/
+    }
     else
     {
       MutexGuard g(mutexin);
@@ -242,6 +242,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
     case UNBIND:
     case UNBIND_RESP:
     case GENERIC_NACK:
+    case SMPP_PDU:
       return true;
   }
 
@@ -291,6 +292,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
     case UNBIND:
     case UNBIND_RESP:
     case GENERIC_NACK:
+    case SMPP_PDU:
       return true;
   }
   switch(proxyType)
