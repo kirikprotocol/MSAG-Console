@@ -26,12 +26,8 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
   {
     try {
       super.init(properties);
-      String s1 = divertBundle.getString(Constants.PAGE_SET);
-      String sss = Transliterator.translit(divertBundle.getString(Constants.PAGE_SET));
-      logger.debug("s1= \""+s1+"\"  sss=\""+sss+"\"");
-
-      pageFormat = new MessageFormat(sss);
-      valueService = Transliterator.translit(divertBundle.getString(Constants.VALUE_SERVICE));
+      pageFormat = new MessageFormat(divertBundle.getString(Constants.PAGE_SET));
+      valueService = divertBundle.getString(Constants.VALUE_SERVICE);
     } catch (Exception e) {
       final String err = "Executor init error";
       logger.error(err, e);
@@ -46,16 +42,15 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
     if (exc != null) {
       logger.warn("Got stored exception", exc);
       state.removeAttribute(Constants.ATTR_ERROR);
-      resp.setMessageString(errorFormat.format(new Object [] {getErrorMessage(exc)}));
+      final String msg = errorFormat.format(new Object [] {getErrorMessage(exc)});
+      resp.setMessageString(Transliterator.translit(msg));
       return new ExecutorResponse(new Message[]{resp}, true);
     }
-    String reason = (String)state.getAttribute(Constants.ATTR_REASON);
-    String menuOpt = (checkReason(reason)) ? ("3>"+valueService):"";
-    Object args[] = new Object [] {menuOpt};
-    String resss = pageFormat.format(args);
-    logger.debug("resss="+resss);
-    resp.setMessageString(resss);
-    logger.debug("RS="+reason+",menu opt="+menuOpt+", msg="+resp.getMessageString());
+    final String reason  = (String)state.getAttribute(Constants.ATTR_REASON);
+    final String menuOpt = (checkReason(reason)) ? ("3>"+valueService):"";
+    final String msg = pageFormat.format(new Object [] {menuOpt});
+    resp.setMessageString(Transliterator.translit(msg));
+    //logger.debug("RS="+reason+",menu opt="+menuOpt+", msg="+resp.getMessageString());
     return new ExecutorResponse(new Message[]{resp}, false);
   }
 }
