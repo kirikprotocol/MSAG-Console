@@ -22,7 +22,9 @@ public abstract class Gate extends Thread
     protected ServerSocket serverSocket = null;
 
     protected Gate(Console owner, int port) throws IOException {
+        super();
         this.owner = owner;
+        this.port = port;
         serverSocket = new ServerSocket(port);
     }
 

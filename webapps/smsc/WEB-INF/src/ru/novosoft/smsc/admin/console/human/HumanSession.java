@@ -29,7 +29,7 @@ public class HumanSession extends Session
         writer.flush();
     }
     protected void prompt(PrintWriter writer) {
-        writer.println("\r\n"+CONSOLE_PROMPT+'\r');
+        writer.print("\r\n"+CONSOLE_PROMPT);
         writer.flush();
     }
 
@@ -38,7 +38,7 @@ public class HumanSession extends Session
     }
 
     protected void display(PrintWriter writer, CommandContext ctx) {
-        writer.println(ctx.getMessage()+'\r');
+        writer.print(ctx.getMessage()+'\r');
     }
 
 }

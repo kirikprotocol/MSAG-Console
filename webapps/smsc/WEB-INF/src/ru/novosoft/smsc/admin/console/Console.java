@@ -35,7 +35,7 @@ public class Console
             int scriptPort = context.getConfig().getInt("console.scriptPort");
             humanGate = new HumanGate(this, humanPort);
             scriptGate = new ScriptGate(this, scriptPort);
-            this.start();
+            //this.start();
         }
     }
 

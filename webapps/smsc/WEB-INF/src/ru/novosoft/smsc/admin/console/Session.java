@@ -49,16 +49,17 @@ public abstract class Session extends Thread
             String input = reader.readLine();
             if (input == null) continue;
             if (input.equalsIgnoreCase(COMMAND_QUIT)) {
-                farewell(writer); break;
+                farewell(writer); sleep(100); break;
             }
             CommandContext ctx = new CommandContext(owner.getSmsc());
             try {
-                CommandLexer lexer = new CommandLexer(new DataInputStream(System.in));
+                CommandLexer lexer = new CommandLexer(new StringReader(input));
                 CommandParser parser = new CommandParser(lexer);
                 parser.parse(ctx);
             }
             catch (Exception e) {
                 String error = "Exc: "+e.getMessage();
+                ctx.setMessage(error);
                 logger.error(error, e);
             }
             display(writer, ctx);
