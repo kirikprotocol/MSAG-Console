@@ -35,8 +35,8 @@ struct Circuits {
   long ts;
 };
 
-static const uint8_t PREFIXED_STRATEGY = 0x01;
-static const uint8_t REDIRECT_STRATEGY = 0x02;
+static const uint8_t PREFIXED_STRATEGY = 0x01; // Strategy used by UralTelecom
+static const uint8_t REDIRECT_STRATEGY = 0x02; // MTS defualt strategy
 
 struct ReleaseSettings {
   int strategy;
