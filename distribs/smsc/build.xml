@@ -336,15 +336,9 @@ Targets:
 
   <target name="sibinfosme_update">
     <antcall target="infosme_update"/>
-    <delete>
-      <fileset dir="${DISTR_DIR}/services/InfoSme"/>
-    </delete>
     <move todir="${DISTR_DIR}/services/SibinfoSme">
       <fileset dir="${DISTR_DIR}/services/InfoSme"/>
     </move>
-    <delete>
-      <fileset dir="${DISTR_DIR}/webapps/smsc/esme_InfoSme"/>
-    </delete>
     <move todir="${DISTR_DIR}/webapps/smsc/esme_SibinfoSme">
       <fileset dir="${DISTR_DIR}/webapps/smsc/esme_InfoSme"/>
     </move>
