@@ -4,8 +4,8 @@
 */
 
 #include <stdio.h>
-#include <stdlib.h> 
-  
+#include <stdlib.h>
+
 #if !defined ( __Cpp_Header__smsc_util_debug_h__ )
 #define __Cpp_Header__smsc_util_debug_h__
 
@@ -14,15 +14,15 @@
 #endif
 
 #if defined DISABLE_ANY_CHECKS
-  #warning "any chacks will disabled, it is very dungrouse mode"
+//  #warning "any chacks will disabled, it is very dungrouse mode"
   #define DISABLE_HARD_CHECKS
   #define DISABLE_SOFT_CHECKS
   #define DISABLE_WATCHDOG
   #define DISABLE_TRACING
 #endif
 
-#define require(expr) ccassert(expr)  
-#define __require__(expr) ccassert(expr)  
+#define require(expr) ccassert(expr)
+#define __require__(expr) ccassert(expr)
 
 // very hard checks and can't be disabled
 #define __abort_if_fail__(expr) \
@@ -73,7 +73,7 @@
 #endif
 
 #if !defined ( ASSERT_LOG_STREAM )
-  #define ASSERT_LOG_STREAM LOG_STREAM 
+  #define ASSERT_LOG_STREAM LOG_STREAM
 #endif
 
 #if defined ( DISABLE_HARD_CHECKS )
@@ -118,17 +118,17 @@
   #define watchtext(expr,len) \
     smsc::util::watchtextImpl(expr,len,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #define trace(text) trace2("%s",text)
-  #if defined ENABLE_FILE_NAME  
+  #if defined ENABLE_FILE_NAME
     #define trace2(format,args...) \
       fprintf(TRACE_LOG_STREAM,\
         "*trace*: " format " \n\t"__FILE__"(%s):%d\n",\
         ##args,__PRETTY_FUNCTION__,__LINE__);
-  #else     
+  #else
     #define trace2(format,args...) \
       fprintf(TRACE_LOG_STREAM,\
         "*trace*: " format "     (%s):%d\n",\
         ##args,__PRETTY_FUNCTION__,__LINE__);
-  #endif      
+  #endif
 #else
   #define watch(expr)
   #define watchx(expr)
@@ -149,7 +149,7 @@ namespace smsc
 namespace util
 {
   inline void abortIfFail(bool expr,const char* expr_text,
-                          const char* file, const char* func, int line) throw() 
+                          const char* file, const char* func, int line) throw()
   {
     if (!expr)
     {
@@ -179,7 +179,7 @@ namespace util
     }
   }
   inline void warningIfFail(bool expr,const char* expr_text,
-                            const char* file, const char* func, int line) throw() 
+                            const char* file, const char* func, int line) throw()
   {
     if (!expr)
     {
@@ -191,13 +191,13 @@ namespace util
               expr_text);
     }
   }
-  
-  inline void watchImpl(bool e, const char* expr, 
+
+  inline void watchImpl(bool e, const char* expr,
                         const char* file, const char* func, int line)
   {
     fprintf(WATCH_LOG_STREAM,"*watch*: %s = %s     %s(%s):%d\n",
             expr,e?"true":"false",
-            #if defined ENABLE_FILE_NAME              
+            #if defined ENABLE_FILE_NAME
               file,
             #else
               "",
@@ -205,38 +205,38 @@ namespace util
             func,line);
   }
 
-  inline void watchImpl(int e, const char* expr, 
+  inline void watchImpl(int e, const char* expr,
                         const char* file, const char* func, int line)
   {
     fprintf(WATCH_LOG_STREAM,"*watch*: %s = %d     %s(%s):%d\n",
             expr,e,
-            #if defined ENABLE_FILE_NAME              
+            #if defined ENABLE_FILE_NAME
               file,
             #else
               "",
             #endif
             func,line);
   }
-  
-  inline void watchxImpl(int e, const char* expr, 
+
+  inline void watchxImpl(int e, const char* expr,
                          const char* file, const char* func, int line)
   {
     fprintf(WATCH_LOG_STREAM,"*watch*: %s = %x     %s(%s):%d\n",
             expr,e,
-            #if defined ENABLE_FILE_NAME              
+            #if defined ENABLE_FILE_NAME
               file,
             #else
               "",
             #endif
             func,line);
   }
-  
-  inline void watchImpl(char e, const char* expr, 
+
+  inline void watchImpl(char e, const char* expr,
                         const char* file, const char* func, int line)
   {
     fprintf(WATCH_LOG_STREAM,"*watch*: %s = '%c'     %s(%s):%d\n",
             expr,e,
-            #if defined ENABLE_FILE_NAME              
+            #if defined ENABLE_FILE_NAME
               file,
             #else
               "",
@@ -244,12 +244,12 @@ namespace util
             func,line);
   }
 
-  inline void watchImpl(void* e, const char* expr, 
+  inline void watchImpl(void* e, const char* expr,
                         const char* file, const char* func, int line)
   {
     fprintf(WATCH_LOG_STREAM,"*watch*: %s = %p     %s(%s):%d\n",
             expr,e,
-            #if defined ENABLE_FILE_NAME              
+            #if defined ENABLE_FILE_NAME
               file,
             #else
               "",
@@ -257,12 +257,12 @@ namespace util
             func,line);
   }
 
-  inline void watchtImpl(const char* e, const char* expr, 
+  inline void watchtImpl(const char* e, const char* expr,
                          const char* file, const char* func, int line)
   {
     fprintf(WATCH_LOG_STREAM,"*watch*: %s = %s     %s(%s):%d\n",
             expr,e,
-            #if defined ENABLE_FILE_NAME              
+            #if defined ENABLE_FILE_NAME
               file,
             #else
               "",
@@ -270,37 +270,37 @@ namespace util
             func,line);
   }
 
-  inline void watchtextImpl(const char* e, int len, const char* expr, 
+  inline void watchtextImpl(const char* e, int len, const char* expr,
                             const char* file, const char* func, int line)
   {
     fprintf(WATCH_LOG_STREAM,"*watch*: %s = '",expr);
     fwrite(e,len,1,WATCH_LOG_STREAM);
     fprintf(WATCH_LOG_STREAM,"'\t%s(%s):%d\n",
-            #if defined ENABLE_FILE_NAME              
+            #if defined ENABLE_FILE_NAME
               file,
             #else
               "",
             #endif
             func,line);
   }
-  
+
   inline void warningImpl(const char* e, const char* file, const char* func, int line)
   {
     fprintf(TRACE_LOG_STREAM,"*WARNING*: %s\n\t%s(%s):%d\n",e,
-            #if defined ENABLE_FILE_NAME              
+            #if defined ENABLE_FILE_NAME
               file,
             #else
               "",
             #endif
             func,line);
   }
-  
-  inline bool watchdogImpl(bool expr, const char* info, const char* e, 
+
+  inline bool watchdogImpl(bool expr, const char* info, const char* e,
                            const char* file, const char* func, int line)
   {
     if ( !expr )
       fprintf(TRACE_LOG_STREAM,"*%s*: %s     %s(%s):%d\n",info,e,
-            #if defined ENABLE_FILE_NAME              
+            #if defined ENABLE_FILE_NAME
               file,
             #else
               "",
@@ -312,4 +312,3 @@ namespace util
 };
 
 #endif /* __Cpp_Header__smsc_util_debug_h__ */
-
