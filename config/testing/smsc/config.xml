@@ -3,7 +3,7 @@
 
 <config>
 	<section name="DataSource">
-		<param name="connections" type="int">3</param>
+		<param name="connections" type="int">10</param>
 		<param name="dbInstance" type="string">smscdb</param>
 		<param name="dbUserName" type="string">smsc2</param>
 		<param name="dbUserPassword" type="string">smsc2</param>
