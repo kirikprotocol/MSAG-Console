@@ -88,6 +88,13 @@ namespace smsc { namespace store
     public:    
         
         /**
+         * ¬озвращает следующий id дл€ создани€ SMS в хранилище
+         * 
+         * @return следующий id дл€ создани€ SMS в хранилище
+         */
+        virtual SMSId getNextId() = 0;
+        
+        /**
          * ѕомещает SMS в состо€нии ENROUTE в хранилище сообщений.
          * Ќеобходимо чтобы сохран€ема€ sms была корректно
          * проинициализированна через весь набор своих setter'ов.
@@ -106,7 +113,8 @@ namespace smsc { namespace store
          * @see CreateMode
          * @see SMS
          */
-        virtual SMSId createSms(SMS& sms, const CreateMode flag = CREATE_NEW)
+        virtual void createSms(SMS& sms, SMSId id,
+                               const CreateMode flag = CREATE_NEW)
                 throw(StorageException, DuplicateMessageException) = 0;
         
         /**

@@ -99,6 +99,8 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
         
+        SMSId   rcptId;
+
         OCIDate waitTime;
         OCIDate validTime;
         OCIDate submitTime;
@@ -185,6 +187,8 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
         
+        SMSId   newId, rcptId;
+
         OCIDate waitTime;
         OCIDate validTime;
         OCIDate submitTime;
@@ -200,7 +204,9 @@ namespace smsc { namespace store
             throw(StorageException);
         virtual ~OverwriteStatement() {};
         
-        void bindId(SMSId id)
+        void bindOldId(SMSId id)
+            throw(StorageException);
+        void bindNewId(SMSId id)
             throw(StorageException);
         void bindSms(SMS& sms)
             throw(StorageException);
@@ -222,6 +228,8 @@ namespace smsc { namespace store
         OCIDate nextTime;
         
         uint8_t uState;
+        SMSId   rcptId;
+
         char    bHeaderIndicator;
         char    bNeedArchivate;
 

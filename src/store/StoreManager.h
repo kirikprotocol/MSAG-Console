@@ -131,8 +131,8 @@ namespace smsc { namespace store
         StoreManager() : MessageStore() {};
         virtual ~StoreManager() {};
         
-        SMSId doCreateSms(StorageConnection* connection,
-            SMS& sms, const CreateMode flag)
+        void doCreateSms(StorageConnection* connection,
+            SMS& sms, SMSId id, const CreateMode flag)
                 throw(StorageException, DuplicateMessageException);
         void doRetriveSms(StorageConnection* connection, 
             SMSId id, SMS& sms)
@@ -311,10 +311,23 @@ namespace smsc { namespace store
         }
 
         /**
+         * Реализация метода MessageStore для внешней генерация ключа.
+         *
+         * @see MessageStore 
+         * @see IdGenerator
+         */
+        virtual SMSId getNextId() 
+        {
+            __require__(generator);
+            return generator->getNextId();
+        };
+
+        /**
          * Реализация метода MessageStore
          * @see MessageStore 
          */
-        virtual SMSId createSms(SMS& sms, const CreateMode flag = CREATE_NEW)
+        virtual void createSms(SMS& sms, SMSId id,
+                               const CreateMode flag = CREATE_NEW)
                 throw(StorageException, DuplicateMessageException);
         /**
          * Реализация метода MessageStore
@@ -384,7 +397,6 @@ namespace smsc { namespace store
          */
         virtual time_t getNextRetryTime() 
                 throw(StorageException);
-    
     };
 
 }}
