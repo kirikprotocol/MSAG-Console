@@ -1004,7 +1004,7 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms)
     throw(StorageException)
 {
     __require__(pool);
-
+    log.debug( "Finalizing msg#%lld", id );
     StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
@@ -1041,7 +1041,7 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms)
             if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to finalize message "
-                         "#%d exceeded !\n", id);
+                         "#%lld exceeded !\n", id);
                 throw;
             }
         }
@@ -1696,7 +1696,7 @@ void CachedStore::changeSmsStateToDelivered(SMSId id,
                                             const Descriptor& dst)
     throw(StorageException, NoSuchMessageException)
 {
-    __trace2__("Changing to DELIVERED for smsId = %lld.", id);
+    log.debug("Changing to DELIVERED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToDelivered(id, dst);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
@@ -1706,7 +1706,7 @@ void CachedStore::changeSmsStateToUndeliverable(SMSId id,
                                                 uint32_t failureCause)
     throw(StorageException, NoSuchMessageException)
 {
-    __trace2__("Changing to UNDELIVERABLE for smsId = %lld.", id);
+    log.debug("Changing to UNDELIVERABLE for smsId = %lld.", id);
     RemoteStore::changeSmsStateToUndeliverable(id, dst, failureCause);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
@@ -1714,7 +1714,7 @@ void CachedStore::changeSmsStateToUndeliverable(SMSId id,
 void CachedStore::changeSmsStateToExpired(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
-    __trace2__("Changing to EXPIRED for smsId = %lld.", id);
+    log.debug("Changing to EXPIRED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToExpired(id);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
@@ -1722,7 +1722,7 @@ void CachedStore::changeSmsStateToExpired(SMSId id)
 void CachedStore::changeSmsStateToDeleted(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
-    __trace2__("Changing to DELETED for smsId = %lld.", id);
+    log.debug("Changing to DELETED for smsId = %lld.", id);
     RemoteStore::changeSmsStateToDeleted(id);
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
