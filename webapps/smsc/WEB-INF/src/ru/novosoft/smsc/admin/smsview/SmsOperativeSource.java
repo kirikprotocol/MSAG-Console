@@ -4,6 +4,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsview.archive.Message;
 import ru.novosoft.smsc.admin.smsview.operative.RsFileMessage;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
@@ -24,10 +25,10 @@ public class SmsOperativeSource extends SmsSource
   //protected boolean allReaded=false;
   // ArchiveDaemonContext context = null;
 
-  public void init(Smsc smsc) throws AdminException
+  public void init(SMSCAppContext appContext) throws AdminException
   {
     //  context = ArchiveDaemonContext.getInstance(appContext);
-
+    Smsc smsc = appContext.getSmsc();
     Config config;
     config = smsc.getSmscConfig();
 
