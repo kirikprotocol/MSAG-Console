@@ -212,7 +212,8 @@ void ProfilerTestCases::lookup(const Address& addr)
 	try
 	{
 		const Profile& p1 = profiler->lookup(addr);
-		const Profile& p2 = profileReg->getProfile(addr);
+		time_t t;
+		const Profile& p2 = profileReg->getProfile(addr, t);
 		__trace2__("lookupProfile(): addr = %s, profiler.lookup() = {%s}, profileReg.getProfile() = {%s}",
 			str(addr).c_str(), str(p1).c_str(), str(p2).c_str());
 		__tc_fail2__(ProfileUtil::compareProfiles(p1, p2), 0);
@@ -290,7 +291,7 @@ void ProfilerTestCases::putCommand(const Address& addr, int num)
 					cmdType = UPDATE_CODE_PAGE;
 					break;
 				case 9: //неправильный текст
-					__tc1__("putCommand.incorrectText");
+					__tc1__("putCommand.incorrectCmdText");
 					cmdType = INCORRECT_COMMAND_TEXT;
 					break;
 				default:
@@ -318,7 +319,8 @@ void ProfilerTestCases::putCommand(const Address& addr, int num)
 			__trace2__("putProfilerCommand(): sms = %s", str(sms).c_str());
 			if (profileReg)
 			{
-				Profile profile = profileReg->getProfile(addr);
+				time_t t;
+				Profile profile = profileReg->getProfile(addr, t);
 				if (cmdType == UPDATE_REPORT_OPTIONS)
 				{
 					profile.reportoptions = reportoptions;
@@ -360,6 +362,8 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
 	}
 	__tc_ok_cond__;
 	__tc__("getCommand.submit.checkFields");
+	__cfg_int__(maxValidPeriod);
+	__cfg_addr__(smscAddr);
 	SMS sms;
 	sms.setSubmitTime(time(NULL));
 	sms.setValidTime(sms.getSubmitTime() + maxValidPeriod);
@@ -382,29 +386,45 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
 	body.setIntProperty(Tag::SMPP_ESM_CLASS, 0x10); //ESME Acknowledgement
 	body.setIntProperty(Tag::SMPP_DATA_CODING, DATA_CODING_SMSC_DEFAULT);
 	//поиск по алиасенному srcAddr
-	Profile profile = profileReg->getProfile(ackSms->getOriginatingAddress());
+	time_t t;
+	Profile profile = profileReg->getProfile(ackSms->getOriginatingAddress(), t);
 	string text;
 	if (cmdType == UPDATE_REPORT_OPTIONS)
 	{
-		if (profile.reportoptions == ProfileReportOptions::ReportNone)
+		__cfg_str__(cmdRespReportNone);
+		__cfg_str__(cmdRespReportFull);
+		switch (profile.reportoptions)
 		{
-			text = "Now you will not receive auxillary delivery reports";
-		}
-		else if (profile.reportoptions == ProfileReportOptions::ReportFull)
-		{
-			text = "Now you will receive auxillary delivery reports";
+			case ProfileReportOptions::ReportNone:
+				text = cmdRespReportNone;
+				break;
+			case ProfileReportOptions::ReportFull:
+				text = cmdRespReportFull;
+				break;
+			default:
+				__unreachable__("Invalid reportoptions");
 		}
 	}
 	else if (cmdType == UPDATE_CODE_PAGE)
 	{
-		if (profile.codepage == ProfileCharsetOptions::Default)
+		__cfg_str__(cmdRespDataCodingDefault);
+		__cfg_str__(cmdRespDataCodingUcs2);
+		switch (profile.codepage)
 		{
-			text = "Now you will not be able to receive ucs2 encoded messages";
+			case ProfileCharsetOptions::Default:
+				text = cmdRespDataCodingDefault;
+				break;
+			case ProfileCharsetOptions::Ucs2:
+				text = cmdRespDataCodingUcs2;
+				break;
+			default:
+				__unreachable__("Invalid codepage");
 		}
-		else if (profile.codepage == ProfileCharsetOptions::Ucs2)
-		{
-			text = "Now you will be able to receive ucs2 encoded messages";
-		}
+	}
+	else if (cmdType == INCORRECT_COMMAND_TEXT)
+	{
+		__cfg_str__(cmdRespInvalidCmdText);
+		text = cmdRespInvalidCmdText;
 	}
 	string encText = encode(text.c_str(), DATA_CODING_SMSC_DEFAULT);
 	body.setIntProperty(Tag::SMPP_SM_LENGTH, encText.length());
