@@ -3,6 +3,7 @@
 
 #include "test/util/Util.hpp"
 #include "util/Logger.h"
+#include "core/threads/Thread.hpp"
 #include <iostream>
 #include <sstream>
 
