@@ -112,8 +112,8 @@ for(@dir)
 sub outrow{
   my ($out,$fields)=@_;
 
-#  return unless $fields->{PAYER_ADDR}=~/$addrrx/;
-#  return unless $fields->{PAYER_MSC}=~/$mscrx/;
+  return unless $fields->{PAYER_ADDR}=~/$addrrx/;
+  return unless $fields->{PAYER_MSC}=~/$mscrx/;
 
   for my $f(@OUT_FIELDS)
   {
