@@ -51,7 +51,7 @@ if (request.getMethod().equals("POST"))
     	<td colspan=1>
       <b>Source&nbsp;address:</b><br>
     	<input type="text" name="fromAddress"
-        value="<%= formBean.getFromAddress()%>" size=25>
+        value="<%= formBean.getFromAddress()%>" size=25 maxlength=25>
       </td>
 
       <td colspan=1>
@@ -59,7 +59,7 @@ if (request.getMethod().equals("POST"))
       <input type="checkbox" name="fromDateEnabled"
         <%= (formBean.getFromDateEnabled()) ? "checked":""%>>
       <input type="text" name="fromDateDay" style="width:16pt;"
-        value="<%= formBean.getFromDateDay()%>">
+        value="<%= formBean.getFromDateDay()%>" size=2 maxlength=2>
       <select name="fromDateMonth">
       <% int fromDateMonth = formBean.getFromDateMonth();%>
       <% for (int fdm=0; fdm<12; fdm++) { %>
@@ -80,13 +80,13 @@ if (request.getMethod().equals("POST"))
 	    </select>
       &nbsp;
       <input type="text" name="fromDateHour" style="width:16pt;"
-        value="<%= formBean.getFromDateHour()%>">
+        value="<%= formBean.getFromDateHour()%>" size=2 maxlength=2>
       <b>:</b>
       <input type="text" name="fromDateMinute" style="width:16pt;"
-        value="<%= formBean.getFromDateMinute()%>">
+        value="<%= formBean.getFromDateMinute()%>" size=2 maxlength=2>
       <b>:</b>
       <input type="text" name="fromDateSecond" style="width:16pt;"
-        value="<%= formBean.getFromDateSecond()%>">
+        value="<%= formBean.getFromDateSecond()%>" size=2 maxlength=2>
       </td>
 
       <td colspan=1>
@@ -107,7 +107,7 @@ if (request.getMethod().equals("POST"))
       <td colspan=1>
     	<b>Destination&nbsp;address:</b><br>
     	<input type="text" name="toAddress"
-        value="<%= formBean.getToAddress()%>" size=25>
+        value="<%= formBean.getToAddress()%>" size=25 maxlength=25>
       </td>
 
       <td colspan=1>
@@ -115,7 +115,7 @@ if (request.getMethod().equals("POST"))
       <input type="checkbox" name="tillDateEnabled"
         <%= (formBean.getTillDateEnabled()) ? "checked":""%>>
       <input type="text" name="toDateDay" style="width:16pt;"
-        value="<%= formBean.getToDateDay()%>">
+        value="<%= formBean.getToDateDay()%>" size=2 maxlength=2>
       <select name="toDateMonth">
       <% int toDateMonth = formBean.getToDateMonth();%>
       <% for (int fdm=0; fdm<12; fdm++) { %>
@@ -136,13 +136,13 @@ if (request.getMethod().equals("POST"))
 	    </select>
       &nbsp;
       <input type="text" name="toDateHour" style="width:16pt;"
-        value="<%= formBean.getToDateHour()%>">
+        value="<%= formBean.getToDateHour()%>" size=2 maxlength=2>
       <b>:</b>
       <input type="text" name="toDateMinute" style="width:16pt;"
-        value="<%= formBean.getToDateMinute()%>">
+        value="<%= formBean.getToDateMinute()%>" size=2 maxlength=2>
       <b>:</b>
       <input type="text" name="toDateSecond" style="width:16pt;"
-        value="<%= formBean.getToDateSecond()%>">
+        value="<%= formBean.getToDateSecond()%>" size=2 maxlength=2>
       </td>
 
       <td colspan=1>

@@ -46,7 +46,7 @@ public class SmsView
     {
       connection = ds.getConnection();
       String sql = prepareQueryString(query);
-      System.out.println("SQL: "+sql);
+      //System.out.println("SQL: "+sql);
       PreparedStatement stmt = connection.prepareStatement(sql);
       bindInput(stmt, query);
       fetchRows(stmt, set);
@@ -98,9 +98,8 @@ public class SmsView
       int pos=1;
       byte id[] = rs.getBytes(pos++);
       /*System.out.print("ID-size "+id.length+">> ");
-      for (int i=0; i<id.length; i++) {
-        System.out.print(id[i]);
-      } System.out.println();*/
+      for (int i=0; i<id.length; i++) { System.out.print(id[i]); }
+      System.out.println();*/
       row.setDate(rs.getTimestamp(pos++));
       row.setFrom(rs.getString(pos++));
       row.setTo(rs.getString(pos++));
@@ -111,15 +110,24 @@ public class SmsView
       }
       else if (bodyLen <= MAX_SMS_BODY_LENGTH)
       {
-        row.setText(
-          convertBody(new ByteArrayInputStream(rs.getBytes(pos), 0, bodyLen), bodyLen)
-        );
+        byte body[] = rs.getBytes(pos);
+        row.setText(convertBody(new ByteArrayInputStream(body, 0, bodyLen)));
       }
       else
       {
-        /*lbstmt.setBytes(1, id);
-        ResultSet lbrs = lbstmt.executeQuery();*/
-        row.setText("Large, len "+bodyLen);
+        ResultSet lbrs = null;
+        try
+        {
+          lbstmt.setBytes(1, id);
+          lbrs = lbstmt.executeQuery();
+          Blob blob = lbrs.getBlob(1);
+          row.setText("BLOB >> " +convertBody(blob.getBinaryStream()));
+        }
+        catch (Exception exc) {
+            System.out.println("Retrive Blob from DB failed !");
+            if (lbrs != null) lbrs.close();
+            exc.printStackTrace();
+        }
       }
       set.addRow(row);
     }
@@ -159,7 +167,7 @@ public class SmsView
     else return "";
     return " ORDER BY "+order;
   }
-  private String convertBody(InputStream source, int length)
+  private String convertBody(InputStream source)
   {
     String  message = "";
     int     textEncoding = DATA_CODING_DEFAULT;
@@ -175,7 +183,7 @@ public class SmsView
       {
         short tag = stream.readShort();
         int   len = stream.readInt();
-        System.out.println("Tag "+tag+" Len "+len);
+        //System.out.println("Tag "+tag+" Len "+len);
         if (tag == SMPP_SHORT_MESSAGE_TAG)
         {
           stream.read(text, 0, len);
