@@ -18,7 +18,7 @@ class FloatFormatter : public NumberFormatter
 {
 	char fmt[16];
 public:
-	FloatFormatter(int precision)
+	FloatFormatter(int precision = 6)
 	{
 		__require__(precision >= 0);
 		sprintf(fmt, "%%.%dlf", precision);
