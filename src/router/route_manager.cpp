@@ -551,7 +551,7 @@ void RouteManager::cancel()
 bool RouteManager::lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
 {
 __synchronized__
-	if ( info ) *info = 0;
+	//if ( info ) *info = 0;
 	if ( idx ) *idx = 0;
   proxy = 0;
   __require__(sme_table);
