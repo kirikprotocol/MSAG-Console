@@ -3,9 +3,6 @@
 #include "test/smpp/SmppUtil.hpp"
 #include "util/debug.h"
 
-#define __numTime__ rand1(2)
-#define __absoluteTime__ 1
-
 namespace smsc {
 namespace test {
 namespace sme {
@@ -105,7 +102,7 @@ TCResult* SmppTransmitterTestCases::submitSmAsync(int num)
 //метод имеет внутреннюю синхронизацию по pduReg->getMutex()
 TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 {
-	TCSelector s(num, 10);
+	TCSelector s(num, 11);
 	TCResult* res = new TCResult(tc, s.getChoice());
 	for (; s.check(); s++)
 	{
@@ -155,7 +152,14 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
-				case 5: //waitTime > validTime
+				case 5: //срок валидности больше максимального
+					{
+						SmppTime t;
+						SmppUtil::time2string(__maxValidPeriod__ + 1, t, __absoluteTime__);
+						pdu->get_message().set_validityPeriod(t);
+					}
+					break;
+				case 6: //waitTime > validTime
 					{
 						SmppTime t;
 						time_t validTime = time(NULL) + rand0(60);
@@ -166,18 +170,18 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
-				case 6: //пустое тело сообщения
+				case 7: //пустое тело сообщения
 					pdu->get_message().set_shortMessage(NULL, 0);
 					//pdu->get_message().set_shortMessage("", 0);
 					break;
-				case 7: //тело сообщения максимальной длины
+				case 8: //тело сообщения максимальной длины
 					{
 						ShortMessage msg;
 						rand_char(MAX_MSG_BODY_LENGTH, msg);
 						pdu->get_message().set_shortMessage(msg, MAX_MSG_BODY_LENGTH);
 					}
 					break;
-				case 8: //msgRef одинаковые (эквивалентно msgRef отсутствуют)
+				case 9: //msgRef одинаковые (эквивалентно msgRef отсутствуют)
 					//Согласно GSM 03.40 пункт 9.2.3.25 если совпадают
 					//TP-MR, TP-DA, OA, то при ETSI_REJECT_IF_PRESENT будет ошибка.
 					//Для SMPP все должно работать независимо от msgRef.
@@ -197,7 +201,7 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 						}
 					}
 					break;
-				case 9: //отправка дублированного сообщения без замещения уже существующего
+				case 10: //отправка дублированного сообщения без замещения уже существующего
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
 					//ENROTE state.
@@ -218,7 +222,7 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 						}
 					}
 					break;
-				case 10: //отправка дублированного сообщения с замещением уже существующего
+				case 11: //отправка дублированного сообщения с замещением уже существующего
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
 					//ENROTE state.
@@ -257,21 +261,13 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 				{
 					res->addFailure(101);
 				}
-				else
-				{
-					vector<int> tmp =
-						responseChecker->checkSubmitSmResp(*pdu, *respPdu);
-					for (int i = 0; i < tmp.size(); i++)
-					{
-						res->addFailure(110 + tmp[i]);
-					}
-				}
 			}
 			else
 			{
-				if (session->getAsyncTransmitter()->submit(*pdu))
+				respPdu = session->getAsyncTransmitter()->submit(*pdu);
+				if (respPdu)
 				{
-					res->addFailure(201);
+					res->addFailure(102);
 				}
 			}
 			if (pduReg)
@@ -298,6 +294,16 @@ TCResult* SmppTransmitterTestCases::submitSm(const char* tc, bool sync, int num)
 					INTERMEDIATE_NOTIFICATION_REQUESTED;
 				pduData.replacePdu = replacePduData;
 				pduReg->putPdu(pduData);
+				//проверить респонс, с случае ошибки удалить из PduRegistry
+				if (respPdu)
+				{
+					vector<int> tmp =
+						responseChecker->checkSubmitSmResp(&pduData, *respPdu);
+					for (int i = 0; i < tmp.size(); i++)
+					{
+						res->addFailure(110 + tmp[i]);
+					}
+				}
 				pduReg->getMutex().Unlock();
 				//pdu life time определяется PduRegistry
 				//delete pdu;
