@@ -59,7 +59,7 @@ void SmscLayout::formatAndAppend(log4cplus::tostream& output, const log4cplus::s
 //	const size_t threadNameLength = threadName.length();
 	unsigned currThread = LOG4CPLUS_GET_CURRENT_THREAD;
 
-	const size_t printed = snprintf(buffer, bufferSize, "%c %s,%3.3u %3.3u %10.10s: %s\n", 
+	const size_t printed = snprintf(buffer, bufferSize, "%c %s,%3.3u % 3.3u %10.10s: %s\n", 
 		logLevel, timeStr, time.usec()/1000, 
 		//threadNameLength > 3 ? threadName.c_str() + (threadNameLength - 3) : threadName.c_str(), 
 		currThread,
