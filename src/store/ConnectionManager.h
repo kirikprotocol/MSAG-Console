@@ -18,7 +18,10 @@
 #include <oci.h>
 #include <orl.h>
 
+
 #include <core/synchronization/EventMonitor.hpp>
+#include <core/synchronization/Event.hpp>
+
 #include <core/buffers/Array.hpp>
 #include <util/config/Manager.h>
 #include <util/Logger.h>
@@ -98,6 +101,8 @@ namespace smsc { namespace store
         OCIServer*      srvhp;  // OCI server handle
         OCIError*       errhp;  // OCI error handle
         OCISession*     sesshp; // OCI session handle
+
+        Event           sleepOnReconnect;
         
     public:
 

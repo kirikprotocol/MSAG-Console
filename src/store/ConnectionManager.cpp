@@ -13,9 +13,11 @@
 namespace smsc { namespace store 
 {
 using namespace smsc::sms;
+
 using smsc::util::Logger;
 using smsc::util::config::Manager;
 using smsc::util::config::ConfigException;
+using smsc::core::synchronization::Event;
 
 /* ---------------------- Abstract Connection Management --------------------*/
 
@@ -350,7 +352,8 @@ void Connection::connect()
 {
     if (isConnected && isDead) {
         disconnect();
-        usleep(100000); //100 msec
+        //usleep(100000); //100 msec
+        sleepOnReconnect.Wait(100);
     }
     
     try
