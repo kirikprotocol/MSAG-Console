@@ -1,5 +1,15 @@
 /*
   $Id$
+
+
+  4 июля 2003
+  изменена схема поиска/хранения маршрутов
+
+  в пределах одного маршрута src->dst добавлен список структур RouteRecord для реализации
+  альтернотивного определения прокси назначения по прокси отправителя.
+  Данная структура являясь избыточной, тем неменее проста в реализации и имеет минимальный оверхед
+  при незначительном использовании такой возможности.
+
 */
 
 #if !defined DISABLE_TRACING
@@ -184,7 +194,12 @@ __synchronized__
   r->src_def = calcDefLengthAndCheck(&r->info.source);
   r->dest_def = calcDefLengthAndCheck(&r->info.dest);
   r->next = new_first_record;
-  r->proxyIdx = sme_table->lookup(r->info.smeSystemId);
+  r->proxyIdx = r->srcProxyIdx = 0;
+  r->alternate_pair = 0;
+  if ( r->info.smeSystemId.length() != 0 )
+    r->proxyIdx = sme_table->lookup(r->info.smeSystemId);
+  if ( r->info.srcSmeSystemId.length() != 0 )
+    r->srcProxyIdx = sme_table->lookup(r->info.srcSmeSystemId);
   new_first_record = r.release();
 }
 
@@ -376,7 +391,19 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec)
   {
     if ( strong )
     {
-      __warning__("duplicate route, is not added");
+      bool conflicted = false;
+      for ( RouteRecord* r0 = node->record; r0 != 0 ; r0 = r0->alternate_pair ) {
+        if ( r0->srcProxyIdx == rec->srcProxyIdx ) {
+          __warning__("duplicate route, is not added");
+          conflicted = true;
+        }
+      }
+      if ( !conflicted ) {
+        __trace2__("*** add alternate src proxy ***");
+        rec->alternate_pair = node->record;
+        node->record = rec;
+        return 0;
+      }
     }
     else //  weak
     {
@@ -550,7 +577,7 @@ void RouteManager::cancel()
 }
 
 // RoutingTable implementation
-bool RouteManager::lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
+bool RouteManager::lookup(int srcidx, const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
 {
 __synchronized__
   //if ( info ) *info = 0;
@@ -560,11 +587,25 @@ __synchronized__
   // ....
   RouteRecord* rec =  findInTree(&root,&source,&dest);
   if ( !rec ) return false;
+  // изменение от 4 июля 2003, ищем альтернативный маршрут
+  RouteRecord* rec0 = 0;
+  for ( ; rec != 0 ; rec = rec->alternate_pair ) {
+    if ( rec->srcProxyIdx == srcidx ) break;
+    if ( rec->srcProxyIdx == 0 ) rec0 = rec;
+  }
+  if ( !rec ) rec = rec0;
+  if ( !rec ) return false; // не найден
   proxy = sme_table->getSmeProxy(rec->proxyIdx);
   if ( info ) *info = rec->info;
   if ( idx && rec->info.enabling ) *idx = rec->proxyIdx;
   if (!rec->info.enabling) return false;
   return rec->info.enabling;
+}
+
+// RoutingTable implementation
+bool RouteManager::lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
+{
+  return lookup(0,source,dest,proxy,idx,info);
 }
 
 /*RouteInfo RouteManager::getRouteInfo(int idx)

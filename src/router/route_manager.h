@@ -35,6 +35,8 @@ struct RouteRecord
 {
   RouteInfo info; // has address
   SmeIndex proxyIdx;
+  SmeIndex srcProxyIdx;
+  RouteRecord* alternate_pair;
   uint8_t src_def;
   uint8_t dest_def;
   RouteRecord* next;
@@ -46,10 +48,7 @@ struct RouteSrcTreeNode
   RouteRecord* record;
   vector<RouteSrcTreeNode*> child;
   RouteSrcTreeNode() : record(0) {}
-  ~RouteSrcTreeNode()
-  {
-    clean();
-  }
+  ~RouteSrcTreeNode() {clean();}
   void clean()
   {
     record = 0;
@@ -64,10 +63,7 @@ struct RouteTreeNode
   vector<RouteTreeNode*> child;
   vector<RouteSrcTreeNode*> sources;
   RouteTreeNode() : record(0) {}
-  ~RouteTreeNode()
-  {
-    clean();
-  }
+  ~RouteTreeNode() {clean();}
   void clean()
   {
     record = 0;

@@ -28,6 +28,7 @@ struct RouteInfo
   int serviceId;
   RouteId routeId;
   smsc::smeman::SmeSystemId smeSystemId;
+  smsc::smeman::SmeSystemId srcSmeSystemId;
   smsc::sms::Address source;
   smsc::sms::Address dest;
 };
