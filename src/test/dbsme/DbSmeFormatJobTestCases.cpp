@@ -11,10 +11,18 @@ DbSmeTestRecord* DbSmeDateFormatJobTestCases::createJobInput(
 	int jobNum, bool params, const DateFormatter** df)
 {
 	__decl_tc__;
-	static const DateFormatter df1("d/M/yy h:m:s t");
-	static const DateFormatter df2("dd.MM.yyyy hh-mm-ss t");
-	static const DateFormatter df3("d-MMM-yy H m s");
-	static const DateFormatter df4("dd MMMM yyyy HH.mm.ss");
+	static const DateFormatter df1[] =
+		{DateFormatter("d/M/yy h:m:s t") /*, DateFormatter("dd/MM/yy hh:mm:ss t") */};
+	static const DateFormatter df2[] =
+		{DateFormatter("dd.MM.yyyy hh-mm-ss t") /*, DateFormatter("d.M.yyyy h-m-s t")*/};
+	static const DateFormatter df3[] =
+		{DateFormatter("d-MMM-yy H m s") /*, DateFormatter("dd-MMM-yy HH mm ss")*/};
+	static const DateFormatter df4[] =
+		{DateFormatter("dd MMMM yyyy HH.mm.ss") /*, DateFormatter("d MMMM yyyy H.m.s")*/};
+	static const int dfLen1 = sizeof(df1) / sizeof(*df1);
+	static const int dfLen2 = sizeof(df2) / sizeof(*df2);
+	static const int dfLen3 = sizeof(df3) / sizeof(*df3);
+	static const int dfLen4 = sizeof(df4) / sizeof(*df4);
 	
 	DbSmeTestRecord* rec = new DbSmeTestRecord();
 	rec->setDefInput(new DbSmeTestRecord());
@@ -24,25 +32,25 @@ DbSmeTestRecord* DbSmeDateFormatJobTestCases::createJobInput(
 			rec->setJob("DateFormatJob1");
 			rec->getDefInput()->setDateType(DT_NOW);
 			rec->getDefInput()->setDate(time(NULL));
-			*df = &df1;
+			*df = df1 + rand0(dfLen1);
 			break;
 		case 2:
 			rec->setJob("DateFormatJob2");
 			rec->getDefInput()->setDateType(DT_TODAY);
 			rec->getDefInput()->setDate(getDate(DT_TODAY));
-			*df = &df2;
+			*df = df2 + rand0(dfLen2);
 			break;
 		case 3:
 			rec->setJob("DateFormatJob3");
 			rec->getDefInput()->setDateType(DT_YESTERDAY);
 			rec->getDefInput()->setDate(getDate(DT_YESTERDAY));
-			*df = &df3;
+			*df = df3 + rand0(dfLen3);
 			break;
 		case 4:
 			rec->setJob("DateFormatJob4");
 			rec->getDefInput()->setDateType(DT_TOMORROW);
 			rec->getDefInput()->setDate(getDate(DT_TOMORROW));
-			*df = &df4;
+			*df = df4 + rand0(dfLen4);
 			break;
 		default:
 			__unreachable__("Invalid jobNum");
@@ -82,7 +90,7 @@ const string DbSmeDateFormatJobTestCases::processJobFirstOutput(const string& te
 		{
 			expected = prefix + getOutputDate(rec, NULL, df, res) + "\n";
 			__require__(res);
-			if (!expected.compare(0, text.length(), text))
+			if (expected.find(text) != string::npos)
 			{
 				return expected;
 			}
@@ -190,7 +198,7 @@ const string DbSmeOtherFormatJobTestCases::processJobFirstOutput(const string& t
 	os << "int8: $" << getOutputInt8(rec, NULL, res) << "!" << endl;
 	os << "int16: <" << getOutputInt16(rec, NULL, res) << "@" << endl;
 	os << "int32: >" << getOutputInt32(rec, NULL, res) << "#" << endl;
-	os << "int64: (" << getOutputInt16(rec, NULL, res) << ")" << endl;
+	os << "int64: (" << getOutputInt64(rec, NULL, res) << ")" << endl;
 	static const FloatFormatter ff(1);
 	static const DoubleFormatter df(3, true);
 	static const DoubleFormatter ldf(2, false);
