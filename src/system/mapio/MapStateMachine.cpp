@@ -2144,18 +2144,11 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
         }
         dialog->routeErr = MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_ERRORS_BASE+27);
       } else {
-        if(errorSendRoutingInfoForSm_sp->errorCode == 13 && 
-           MapDialogContainer::getAllowCallBarred() && 
-           MAPST_ImsiWaitRInfo) {
-          // normal situation no error
-          // smsc will accept message from abonent
-        } else {
-          try {
-            DoMAPErrorProcessor(errorSendRoutingInfoForSm_sp->errorCode,0);
-          }catch(MAPDIALOG_ERROR& e){
-            __map_trace2__("%s: was error %s",__func__,e.what());
-            dialog->routeErr = e.code;
-          }
+        try {
+          DoMAPErrorProcessor(errorSendRoutingInfoForSm_sp->errorCode,0);
+        }catch(MAPDIALOG_ERROR& e){
+          __map_trace2__("%s: was error %s",__func__,e.what());
+          dialog->routeErr = e.code;
         }
       }
     } else if( provErrCode_p ) {
@@ -2175,9 +2168,20 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     case MAPST_ImsiWaitRInfo:
       {
         if ( dialog->routeErr ) {
-          dialog->s_imsi = "";
-          dialog->s_msc = "";
-          dialog->state = MAPST_ImsiWaitCloseInd;
+          if(errorSendRoutingInfoForSm_sp->errorCode == 13 && 
+             MapDialogContainer::getAllowCallBarred() && 
+             MAPST_ImsiWaitRInfo) {
+            // normal situation no error
+            // smsc will accept message from abonent
+            __map_trace2__("%s: call barred but allowed", __func__);
+            dialog->s_imsi = "";
+            dialog->s_msc = "";
+            dialog->routeErr = 0;
+          } else {
+            dialog->s_imsi = "";
+            dialog->s_msc = "";
+            dialog->state = MAPST_ImsiWaitCloseInd;
+          }
           break;
         }
         else {
