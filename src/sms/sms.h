@@ -20,13 +20,15 @@ namespace smsc { namespace sms
 {
     const int MAX_ESERVICE_TYPE_LENGTH = 5;
     const int MAX_ADDRESS_VALUE_LENGTH = 20;
-    const int MAX_SHORT_MESSAGE_LENGTH = 200;
+    //const int MAX_SHORT_MESSAGE_LENGTH = 200; depricated
+    const int MAX_BODY_LENGTH          = 2000; 
+    // move it to SQL statements processing
     
     //const char* DEFAULT_ETSI_GSM_SEVICE_NAME = "GSM-SM";
 
     typedef char        AddressValue[MAX_ADDRESS_VALUE_LENGTH+1];
     typedef char        EService[MAX_ESERVICE_TYPE_LENGTH+1];
-    typedef uint8_t     SMSData[MAX_SHORT_MESSAGE_LENGTH];
+    //typedef uint8_t     SMSData[MAX_SHORT_MESSAGE_LENGTH]; depricated
     typedef uint64_t    SMSId;
 
     /**
@@ -39,13 +41,13 @@ namespace smsc { namespace sms
      */
     struct Address
     {
-        uint8_t      lenght, type, plan;
+        uint8_t      length, type, plan;
         AddressValue value;
         
         /**
          * Default конструктор, просто инициализирует некоторые поля нулями
          */
-        Address() : lenght(0), type(0), plan(0) 
+        Address() : length(1), type(0), plan(0) 
         {
             value[0] = '0'; value[1] = '\0';
         };
@@ -60,7 +62,7 @@ namespace smsc { namespace sms
          * @param _value значение адреса
          */
         Address(uint8_t _len, uint8_t _type, uint8_t _plan, const char* _value)
-            : lenght(_len), type(_type), plan(_plan) 
+            : length(_len), type(_type), plan(_plan) 
         { 
             setValue(_len, _value);
         };
@@ -71,9 +73,9 @@ namespace smsc { namespace sms
          * @param addr   образец адреса.
          */
         Address(const Address& addr) 
-            : lenght(addr.lenght), type(addr.type), plan(addr.plan) 
+            : length(addr.length), type(addr.type), plan(addr.plan) 
         {
-            setValue(addr.lenght, addr.value);   
+            setValue(addr.length, addr.value);   
         };
 
         /**
@@ -86,7 +88,7 @@ namespace smsc { namespace sms
         Address& operator =(const Address& addr) 
         {
             type = addr.type; plan = addr.plan; 
-            setValue(addr.lenght, addr.value);
+            setValue(addr.length, addr.value);
             return (*this);
         };
        
@@ -103,7 +105,7 @@ namespace smsc { namespace sms
                         && _len<sizeof(AddressValue));
             
             memcpy(value, _value, _len*sizeof(uint8_t));
-            value[lenght = _len] = '\0';
+            value[length = _len] = '\0';
         };
         
         /**
@@ -118,22 +120,28 @@ namespace smsc { namespace sms
         {
             __require__(_value);
             
-            if (lenght)
+            if (length)
             {
-                memcpy(_value, value, lenght*sizeof(uint8_t));
-                _value[lenght] = '\0';
+                memcpy(_value, value, length*sizeof(uint8_t));
+                _value[length] = '\0';
             }
-            return lenght;
+            return length;
         }
+        
+        // depricated
+        inline uint8_t getLenght() const 
+        {
+            return getLength();
+        };
         
         /**
          * Возвращает длинну адреса
          * 
          * @return длинна адреса
          */
-        inline uint8_t getLenght() const 
+        inline uint8_t getLength() const 
         {
-            return lenght;
+            return length;
         };
        
         /**
@@ -188,14 +196,14 @@ namespace smsc { namespace sms
      */
     struct Descriptor
     {
-        uint8_t         mscLenght, imsiLenght;
+        uint8_t         mscLength, imsiLength;
         AddressValue    msc, imsi;
         uint32_t        sme;
         
         /**
          * Default конструктор, просто инициализирует некоторые поля нулями
          */
-        Descriptor() : mscLenght(0), imsiLenght(0), sme(0) 
+        Descriptor() : mscLength(0), imsiLength(0), sme(0) 
         {
             msc[0] = '\0'; imsi[0] = '\0';
         };
@@ -212,10 +220,10 @@ namespace smsc { namespace sms
          */
         Descriptor(uint8_t _mscLen, const char* _msc,
                    uint8_t _imsiLen, const char* _imsi, uint32_t _sme)
-            : mscLenght(_mscLen), imsiLenght(_imsiLen), sme(_sme)
+            : mscLength(_mscLen), imsiLength(_imsiLen), sme(_sme)
         { 
-            setMsc(mscLenght, _msc);
-            setImsi(imsiLenght, _imsi);
+            setMsc(mscLength, _msc);
+            setImsi(imsiLength, _imsi);
         };
   
         /**
@@ -225,11 +233,11 @@ namespace smsc { namespace sms
          * @param descr образец дескриптора.
          */
         Descriptor(const Descriptor& descr) 
-            : mscLenght(descr.mscLenght), 
-                imsiLenght(descr.imsiLenght), sme(descr.sme)
+            : mscLength(descr.mscLength), 
+                imsiLength(descr.imsiLength), sme(descr.sme)
         {
-            setMsc(descr.mscLenght, descr.msc);
-            setImsi(descr.imsiLenght, descr.imsi);
+            setMsc(descr.mscLength, descr.msc);
+            setImsi(descr.imsiLength, descr.imsi);
         };
 
         /**
@@ -242,8 +250,8 @@ namespace smsc { namespace sms
         Descriptor& operator =(const Descriptor& descr) 
         {
             sme = descr.sme;
-            setMsc(descr.mscLenght, descr.msc);
-            setImsi(descr.imsiLenght, descr.imsi);
+            setMsc(descr.mscLength, descr.msc);
+            setImsi(descr.imsiLength, descr.imsi);
             return (*this);
         };
        
@@ -261,12 +269,12 @@ namespace smsc { namespace sms
             if (_len && _value)
             {
                 memcpy(msc, _value, _len*sizeof(uint8_t));
-                msc[mscLenght = _len] = '\0';
+                msc[mscLength = _len] = '\0';
             }
             else 
             {
                 memset(msc, 0, sizeof(AddressValue));
-                mscLenght = 0;
+                mscLength = 0;
             }
         };
         
@@ -284,12 +292,12 @@ namespace smsc { namespace sms
             if (_len && _value)
             {
                 memcpy(imsi, _value, _len*sizeof(uint8_t));
-                imsi[imsiLenght = _len] = '\0';
+                imsi[imsiLength = _len] = '\0';
             }
             else 
             {
                 memset(imsi, 0, sizeof(AddressValue));
-                imsiLenght = 0;
+                imsiLength = 0;
             }
         };
         
@@ -305,12 +313,12 @@ namespace smsc { namespace sms
         {
             __require__(_value);
             
-            if (mscLenght)
+            if (mscLength)
             {
-                memcpy(_value, msc, mscLenght*sizeof(uint8_t));
-                _value[mscLenght] = '\0';
+                memcpy(_value, msc, mscLength*sizeof(uint8_t));
+                _value[mscLength] = '\0';
             }
-            return mscLenght;
+            return mscLength;
         }
         
         /**
@@ -325,22 +333,34 @@ namespace smsc { namespace sms
         {
             __require__(_value);
             
-            if (imsiLenght)
+            if (imsiLength)
             {
-                memcpy(_value, imsi, imsiLenght*sizeof(uint8_t));
-                _value[imsiLenght] = '\0';
+                memcpy(_value, imsi, imsiLength*sizeof(uint8_t));
+                _value[imsiLength] = '\0';
             }
-            return imsiLenght;
+            return imsiLength;
         }
+        
+        // depricated
+        inline uint8_t getMscLenght() const 
+        {
+            return getMscLength();
+        };
         
         /**
          * Возвращает длинну адреса MSC
          * 
          * @return длинна адреса MSC
          */
-        inline uint8_t getMscLenght() const 
+        inline uint8_t getMscLength() const 
         {
-            return mscLenght;
+            return mscLength;
+        };
+        
+        // depricated
+        inline uint8_t getImsiLenght() const 
+        {
+            return getImsiLength();
         };
         
         /**
@@ -348,9 +368,9 @@ namespace smsc { namespace sms
          * 
          * @return длинна адреса IMSI
          */
-        inline uint8_t getImsiLenght() const 
+        inline uint8_t getImsiLength() const 
         {
-            return imsiLenght;
+            return imsiLength;
         };
         
         /**
@@ -383,46 +403,42 @@ namespace smsc { namespace sms
      */
     struct Body
     {
-        bool        header;
-        uint8_t     scheme;
-        uint8_t     lenght;
-        SMSData     data;
+    private:
 
+        uint8_t*    buff;
+        int         buffLen;
+
+    public:    
+        
         /**
-         * Default конструктор, просто инициализирует некоторые поля нулями
+         * Default конструктор, просто инициализирует поля нулями
          */
-        Body() : header(false), scheme(0), lenght(0)
-        {
-            //memset((void *)data, 0, sizeof(data));
-            data[0]='\0';
-        };
+        Body() : buff(0), buffLen(0) {};
         
         /**
          * Конструктор для Body, инициализирует поля структуры реальными данными.
          * Копирует даннуе из буфера к себе
          * 
-         * @param _len    длинна буфера _data
-         * @param _scheme схема кодирования тела сообщения
-         * @param _header идентифицирует содержит ли тело заголовок
-         * @param _data   закодированное тело сообщения
+         * @param data   данные в теле сообщения
+         * @param len    длинна буфера data
          */
-        Body(uint8_t _len, uint8_t _scheme, bool _header, const uint8_t* _data)
-            : header(_header), scheme(_scheme), lenght(_len)
+        Body(uint8_t* data, int len)
+            : buff(0), buffLen(0)
         { 
-            setData(_len, _data);
+            setBuffer(data, len);
         };
-        
+
         /**
          * Конструктор копирования, используется для создания тела по образцу
          * 
          * @param body   образец тела.
          */
         Body(const Body& body) 
-            : header(body.header), scheme(body.scheme), lenght(body.lenght)
+            : buff(0), buffLen(0)
         {
-            setData(body.lenght, body.data);   
+            setBuffer(body.getBuffer(), body.getBufferLength());
         };
-        
+
         /**
          * Переопределённый оператор '=',
          * используется для копирования тел сообщений друг в друга
@@ -432,105 +448,8 @@ namespace smsc { namespace sms
          */
         Body& operator =(const Body& body) 
         {
-            header = body.header; scheme = body.scheme;
-            setData(body.lenght, body.data);
+            setBuffer(body.getBuffer(), body.getBufferLength());
             return (*this);
-        };
-
-        /**
-         * Метод устанавливает значение тела и его длинну.
-         * Длинна тела должна быть меньше либо равна MAX_SMS_DATA_LENGTH.
-         * 
-         * @param _len   длинна нового тела
-         * @param _value значение нового тела
-         */
-        inline void setData(uint8_t _len, const uint8_t* _data) 
-        {
-            __require__( _len<=sizeof(SMSData) );
-            
-            if (_len && _data)
-            {
-                memcpy(data, _data, _len*sizeof(uint8_t));
-                lenght = _len;
-                if (lenght < sizeof(SMSData)) 
-                {
-                    data[lenght] = '\0';
-                }
-            }
-            else
-            {
-                memset(data, 0, sizeof(SMSData));
-                lenght = _len;
-            }
-        };
-        
-        /**
-         * Метод копирует значение тела и возвращает его длинну
-         * 
-         * @param _data  указатель на буфер куда будет скопированно значение тела
-         *               буфер должен иметь размер не меньше
-         *               MAX_SMS_DATA_LENGTH, чтобы принять любое значение
-         * @return длинна тела
-         */
-        inline uint8_t getData(uint8_t* _data) const 
-        {
-            __require__(_data);
-
-            if (lenght)
-            {
-                memcpy(_data, data, lenght*sizeof(uint8_t));
-            }
-            return lenght;
-        };
-        
-        /**
-         * Устанавливает схему кодирования тела сообщения
-         * 
-         * @param _scheme схема кодирования тела сообщения
-         */
-        inline void setCodingScheme(uint8_t _scheme) 
-        {
-            scheme = _scheme;
-        };
-        
-        /**
-         * Возвращает схему кодирования тела сообщения
-         * 
-         * @return схема кодирования тела сообщения
-         */
-        inline uint8_t getCodingScheme() const 
-        {
-            return scheme;
-        };
-        
-        /**
-         * Устанавливает признак наличия заголовка в теле сообщения
-         * 
-         * @param _header признак наличия заголовка в теле сообщения
-         */
-        inline void setHeaderIndicator(bool _header) 
-        {
-            header = _header;
-        };
-        
-        /**
-         * Проверяет установлен ли признак наличия заголовка в теле сообщения
-         * 
-         * @return да / нет
-         */
-        inline bool isHeaderIndicator() const 
-        {
-            return header;
-        };
-
-        /**
-         * Возвращает длинну закодированного тела сообщения 
-         * 
-         * @return длинна закодированного тела сообщения 
-         */
-        inline uint8_t getDataLenght() const 
-        {
-            return lenght;
         };
 
         /**
@@ -540,11 +459,35 @@ namespace smsc { namespace sms
          * 
          * @return декодированное тело сообщения. Сейчас NULL.
          */
-        char* getDecodedText();
-
-				uint8_t* getBuffer();
-				int getBufferLength();
-				void setBuffer(uint8_t* buffer,int length);
+        char* getDecodedText() 
+        {
+            return 0L;
+        };
+        
+        uint8_t* getBuffer() const
+        {
+            return buff;
+        };
+        
+        int getBufferLength() const
+        {
+            return buffLen;
+        };
+        
+        void setBuffer(uint8_t* buffer,int length)
+        {
+            if (buff) 
+            {
+                buff = 0; buffLen = 0;
+                delete buff;
+            }
+            
+            if (buffer && length>0)
+            {
+                buff = new uint8_t[buffLen = length];
+                memcpy(buff, buffer, length);
+            }
+        };
     };
    
     const uint8_t SMSC_BYTE_ENROUTE_STATE       = (uint8_t)0;
@@ -576,6 +519,8 @@ namespace smsc { namespace sms
      */
     struct SMS 
     {
+        /*                      !!! Depricated !!!
+        
         State       state;
         uint16_t    messageReference;
         
@@ -603,23 +548,66 @@ namespace smsc { namespace sms
         EService    eServiceType;   
 
         SMSId       receiptSmsId;   // id сообщения на который идёт ответ-репорт
-        uint8_t     esmClass;       // тип сообщения: нормальное, ответ ...
+        uint8_t     esmClass;       // тип сообщения: нормальное, ответ ... 
+        */
+
+        State       state;
+        time_t      submitTime;     // Время/Дата поступления на SMSC
+        time_t      validTime;      // Время/Дата до которого сообщение валидно
+        
+        uint32_t    attempts;       // Количество неуспешных попыток доставки
+        uint8_t     lastResult;     // Результат последней попытки
+        time_t      lastTime;       // Время/Дата последней попытки доставки
+        time_t      nextTime;       // Время/Дата слудующей попытки доставки
+        
+        Address     originatingAddress;
+        Address     destinationAddress;
+
+        uint16_t    messageReference;
+        EService    eServiceType;   
+
+        bool        needArchivate;
+        uint8_t     deliveryReport;
+        uint8_t     billingRecord;
+        
+        Descriptor  originatingDescriptor;
+        Descriptor  destinationDescriptor;
+        
+        Body        messageBody;    // Тело сообщения + PDU поля.
+        bool        attach;
 
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Default конструктор, просто инициализирует поле state как ENROUTE
-         */
+         *
         SMS() : state(ENROUTE), lastTime(0), nextTime(0),
                 failureCause(0), attempts(0), receiptSmsId(0), esmClass(0)
         {
             eServiceType[0]='\0';
+        };*/
+
+        /**
+         * Default конструктор, просто инициализирует поле state как ENROUTE
+         * и прочие поля дефолтными значениями
+         */
+        SMS() : state(ENROUTE), submitTime(0), validTime(0),
+                attempts(0), lastResult(0), lastTime(0), nextTime(0),
+                messageReference(0), needArchivate(true),
+                deliveryReport(0), billingRecord(0), attach(false)
+        {
+            eServiceType[0]='\0';
         }; 
+
         
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Конструктор копирования, используется для создания
          * SMS по образцу
          * 
          * @param sms    образец SMS
-         */
+         *
         SMS(const SMS& sms) :
             state(sms.state), 
             messageReference(sms.messageReference),
@@ -640,15 +628,46 @@ namespace smsc { namespace sms
             esmClass(sms.esmClass)
         {
             strncpy(eServiceType, sms.eServiceType, sizeof(EService));
-        };
+        };*/
         
         /**
+         * Конструктор копирования, используется для создания
+         * SMS по образцу
+         * 
+         * @param sms    образец SMS
+         */
+        SMS(const SMS& sms) :
+            state(sms.state),
+            submitTime(sms.submitTime), 
+            validTime(sms.validTime),
+            attempts(sms.attempts),
+            lastResult(sms.lastResult),
+            lastTime(sms.lastTime),
+            nextTime(sms.nextTime),
+            originatingAddress(sms.originatingAddress),
+            destinationAddress(sms.destinationAddress), 
+            messageReference(sms.messageReference),
+            needArchivate(sms.needArchivate),
+            deliveryReport(sms.deliveryReport),
+            billingRecord(sms.billingRecord),
+            originatingDescriptor(sms.originatingDescriptor),
+            destinationDescriptor(sms.destinationDescriptor), 
+            messageBody(sms.messageBody),
+            attach(sms.attach)
+        {
+            strncpy(eServiceType, sms.eServiceType, sizeof(EService));
+        };
+
+        
+        /**
+         *                      !!! Depricated !!!                  
+         *
          * Переопределённый оператор '=',
          * используется для копирования сообщений
          * 
          * @param sms   Правая часть оператора '='
          * @return ссылку на себя
-         */
+         *
         SMS& operator =(const SMS& sms) 
         {
             state = sms.state; 
@@ -671,6 +690,37 @@ namespace smsc { namespace sms
             
             strncpy(eServiceType, sms.eServiceType, sizeof(EService));
             return (*this);
+        };*/
+
+        /**
+         * Переопределённый оператор '=',
+         * используется для копирования сообщений
+         * 
+         * @param sms   Правая часть оператора '='
+         * @return ссылку на себя
+         */
+        SMS& operator =(const SMS& sms) 
+        {
+            state = sms.state;
+            submitTime = sms.submitTime;
+            validTime = sms.validTime;
+            attempts = sms.attempts;
+            lastResult = sms.lastResult;
+            lastTime = sms.lastTime;
+            nextTime = sms.nextTime;
+            originatingAddress = sms.originatingAddress;
+            destinationAddress = sms.destinationAddress;
+            messageReference = sms.messageReference;
+            needArchivate = sms.needArchivate;
+            deliveryReport = sms.deliveryReport;
+            billingRecord = sms.billingRecord;
+            originatingDescriptor = sms.originatingDescriptor;
+            destinationDescriptor = sms.destinationDescriptor;
+            messageBody = sms.messageBody;
+            attach = sms.attach;
+            
+            strncpy(eServiceType, sms.eServiceType, sizeof(EService));
+            return (*this);
         };
         
         /**
@@ -687,18 +737,18 @@ namespace smsc { namespace sms
          * Устанавливает адрес отправителя.
          * Копирует адрес во внутренние структуры
          * 
-         * @param lenght длинна адреса (0 < lenght <= MAX_ADDRESS_VALUE_LENGTH)
+         * @param length длинна адреса (0 < length <= MAX_ADDRESS_VALUE_LENGTH)
          * @param type   тип адреса
          * @param plan   план нумерации адреса
          * @param buff   значение адреса
          * @see Address
          */
-        inline void setOriginatingAddress(uint8_t lenght, uint8_t type, 
+        inline void setOriginatingAddress(uint8_t length, uint8_t type, 
                                           uint8_t plan, const char* buff) 
         { // Copies address value from 'buff' to static structure
             originatingAddress.setTypeOfNumber(type);
             originatingAddress.setNumberingPlan(plan);
-            originatingAddress.setValue(lenght, buff);
+            originatingAddress.setValue(length, buff);
         };
         
         /**
@@ -739,18 +789,18 @@ namespace smsc { namespace sms
          * Устанавливает адрес получателя
          * Копирует адрес во внутренние структуры
          * 
-         * @param lenght длинна адреса (0 < lenght <= MAX_ADDRESS_VALUE_LENGTH)
+         * @param length длинна адреса (0 < length <= MAX_ADDRESS_VALUE_LENGTH)
          * @param type   тип адреса
          * @param plan   план нумерации адреса
          * @param buff   значение адреса
          * @see Address
          */
-        inline void setDestinationAddress(uint8_t lenght, uint8_t type, 
+        inline void setDestinationAddress(uint8_t length, uint8_t type, 
                                           uint8_t plan, const char* buff) 
         { // Copies address value from 'buff' to static structure 
             destinationAddress.setTypeOfNumber(type);
             destinationAddress.setNumberingPlan(plan);
-            destinationAddress.setValue(lenght, buff);
+            destinationAddress.setValue(length, buff);
         };
         
         /**
@@ -877,6 +927,8 @@ namespace smsc { namespace sms
         
 
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Устанавливает время ожидания. 
          * 
          * @param time   дата, когда сообщение должно быть отправлено
@@ -884,10 +936,14 @@ namespace smsc { namespace sms
          */
         inline void setWaitTime(time_t time) 
         {
-            waitTime = time;
+            __trace__("Method is depricated !!!");
+            __require__(false);
+            //waitTime = time;
         };
         
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Возвращает время ожидания.
          * 
          * @return дата, когда сообщение должно быть отправлено
@@ -895,7 +951,9 @@ namespace smsc { namespace sms
          */
         inline time_t getWaitTime() const 
         {
-            return waitTime;
+            __trace__("Method is depricated !!!");
+            __require__(false);
+            //return waitTime;
         };
         
         /**
@@ -1003,6 +1061,8 @@ namespace smsc { namespace sms
         };
        
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Устанавливает приоритет сообщения.
          * В чистом стандарте SMS не используется, но нужен для SMPP
          * 
@@ -1010,10 +1070,14 @@ namespace smsc { namespace sms
          */
         inline void setPriority(uint8_t pri) 
         {
-            priority = pri;
+            __trace__("Method is depricated !!!");
+            __require__(false);
+            //priority = pri;
         };
         
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Возвращает приоритет сообщения.
          * В чистом стандарте SMS не используется, но нужен для SMPP
          * 
@@ -1021,10 +1085,14 @@ namespace smsc { namespace sms
          */
         inline uint8_t getPriority() const 
         {
-            return priority;
+            __trace__("Method is depricated !!!");
+            __require__(false);
+            //return priority;
         };
        
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Устанавливает прокол передачи сообщения.
          * В чистом стандарте SMS не используется, но нужен для SMPP
          * 
@@ -1032,10 +1100,14 @@ namespace smsc { namespace sms
          */
         inline void setProtocolIdentifier(uint8_t pid) 
         {
-            protocolIdentifier = pid;
+            __trace__("Method is depricated !!!");
+            __require__(false);
+            //protocolIdentifier = pid;
         };
         
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Возвращает прокол передачи сообщения.
          * В чистом стандарте SMS не используется, но нужен для SMPP
          * 
@@ -1043,13 +1115,15 @@ namespace smsc { namespace sms
          */
         inline uint8_t getProtocolIdentifier() const 
         {
-            return protocolIdentifier;
+            __trace__("Method is depricated !!!");
+            __require__(false);
+            //return protocolIdentifier;
         };
        
         /**
-         * Устанавливает признак, нужен ли отчет о доставке сообщения 
+         * Устанавливает тип отчета о доставке сообщения 
          * 
-         * @param req    признак, нужен ли отчет о доставке сообщения
+         * @param req    тип отчета о доставке сообщения
          */
         inline void setDeliveryReport(uint8_t report) 
         {
@@ -1057,13 +1131,33 @@ namespace smsc { namespace sms
         };
         
         /**
-         * Возвращает признак, нужен ли отчет о доставке сообщения
+         * Возвращает тип отчета о доставке сообщения
          * 
-         * @return признак, нужен ли отчет о доставке сообщения (да / нет)
+         * @return      тип отчета о доставке сообщения
          */
         inline uint8_t getDeliveryReport() const 
         {
             return deliveryReport;
+        };
+        
+        /**
+         * Устанавливает тип биллинга сообщения 
+         * 
+         * @param req    тип биллинга сообщения
+         */
+        inline void setBillingRecord(uint8_t billing) 
+        {
+            billingRecord = billing;
+        };
+        
+        /**
+         * Возвращает тип биллинга сообщения
+         * 
+         * @return      тип биллинга сообщения
+         */
+        inline uint8_t getBillingRecord() const 
+        {
+            return billingRecord;
         };
        
         /**
@@ -1100,6 +1194,8 @@ namespace smsc { namespace sms
         };*/
         
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Возвращает причину в случае
          * отказа/некорректности/недоставки сообщения
          * 
@@ -1107,7 +1203,20 @@ namespace smsc { namespace sms
          */
         inline uint8_t getFailureCause() const 
         {
-            return failureCause;
+            __trace__("Method is depricated !!!");
+            //return failureCause;
+            return getLastResult();
+        };
+        
+        /**
+         * Возвращает причину в случае
+         * отказа/некорректности/недоставки последней попытки доставки сообщения
+         * 
+         * @return причина отказа/некорректности/недоставки сообщения
+         */
+        inline uint8_t getLastResult() const 
+        {
+            return lastResult;
         };
         
         /**
@@ -1142,21 +1251,39 @@ namespace smsc { namespace sms
         };
         
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Устанавливает тело сообщения
          * 
-         * @param lenght длинна тела сообщения
+         * @param length длинна тела сообщения
          * @param scheme схема кодировки тела сообщения
          * @param header признак, содержит ли тело заголовок
          * @param buff   закодированные данные в теле сообщения 
          * @see Body
          */
-        inline void setMessageBody(uint8_t lenght, uint8_t scheme, 
+        inline void setMessageBody(uint8_t length, uint8_t scheme, 
                                    bool header, const uint8_t* buff) 
         { // Copies body data from 'buff' to static structure 
-            messageBody.setCodingScheme(scheme);
+            /*messageBody.setCodingScheme(scheme);
             messageBody.setHeaderIndicator(header);
-            messageBody.setData(lenght, buff);
+            messageBody.setData(length, buff);*/
+            __trace__("Method is depricated !!!");
+            setMessageBody((uint8_t *)buff, length); 
         };
+        
+        /**
+         * Устанавливает тело сообщения
+         * 
+         * @param buff   закодированные данные в теле сообщения 
+         * @param length длинна тела сообщения
+         *
+         * @see Body
+         */
+        inline void setMessageBody(uint8_t* buff, int length) 
+        { // Copies body data from 'buff' to static structure 
+            messageBody.setBuffer(buff, length);
+        };
+
         
         /**
          * Устанавливает тело сообщения
@@ -1235,6 +1362,8 @@ namespace smsc { namespace sms
         };
         
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Устанавливает id сообщения, на которое идёт ответ-репорт.
          * Используется в случае если esmClass это ответ-репорт.
          * 
@@ -1242,10 +1371,14 @@ namespace smsc { namespace sms
          */
         inline void setReceiptSmsId(SMSId id) 
         {
-            receiptSmsId = id;
+            __trace__("Method is depricated !!!");
+            __require__(false);
+            //receiptSmsId = id;
         };
         
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Возвращает id сообщения, на которое идёт ответ-репорт.
          * Используется в случае если esmClass это ответ-репорт.
          * 
@@ -1253,27 +1386,37 @@ namespace smsc { namespace sms
          */
         inline SMSId getReceiptSmsId() const 
         {
-            return receiptSmsId;
+            __trace__("Method is depricated !!!");
+            __require__(false);
+            //return receiptSmsId;
         };
         
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Устанавливает тип-сообщения.
          * 
          * @param type      тип-сообщения    
          */
         inline void setEsmClass(uint8_t type) 
         {
-            esmClass = type;
+            __trace__("Method is depricated !!!");
+            __require__(false);
+            //esmClass = type;
         };
         
         /**
+         *                      !!! Depricated !!!                  
+         *
          * Возвращает тип-сообщения.
          * 
          * @return тип-сообщения
          */
         inline uint8_t getEsmClass() const 
         {
-            return esmClass;
+            __trace__("Method is depricated !!!");
+            __require__(false);
+            //return esmClass;
         };
     
     };
