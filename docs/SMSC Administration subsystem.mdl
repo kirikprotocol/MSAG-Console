@@ -306,7 +306,7 @@
 				    location   	(1248, 784)
 				    anchor_loc 	1
 				    nlines     	2
-				    max_width  	678
+				    max_width  	680
 				    justify    	0
 				    label      	"Admin")
 				icon       	"Actor"
@@ -1143,7 +1143,7 @@
 				    location   	(1280, 800)
 				    anchor_loc 	1
 				    nlines     	2
-				    max_width  	693
+				    max_width  	696
 				    justify    	0
 				    label      	"Admin")
 				icon       	"Actor"
@@ -1446,7 +1446,7 @@
 				    location   	(1120, 992)
 				    anchor_loc 	1
 				    nlines     	2
-				    max_width  	680
+				    max_width  	682
 				    justify    	0
 				    label      	"Admin")
 				icon       	"Actor"
@@ -1492,7 +1492,7 @@
 			    location   	(1104, 688)
 			    anchor_loc 	1
 			    nlines     	2
-			    max_width  	662
+			    max_width  	664
 			    justify    	0
 			    label      	"Admin")
 			icon       	"Actor"
@@ -1629,7 +1629,7 @@
 			    location   	(288, 480)
 			    anchor_loc 	1
 			    nlines     	2
-			    max_width  	664
+			    max_width  	667
 			    justify    	0
 			    label      	"User")
 			icon       	"Actor"
@@ -2672,7 +2672,7 @@
 						    location   	(1983, 1244)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	482
+						    max_width  	485
 						    justify    	0
 						    label      	"RightsChecker")
 						icon       	"Interface"
@@ -2722,7 +2722,7 @@
 						    location   	(911, 1244)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	485
+						    max_width  	488
 						    justify    	0
 						    label      	"AdminManager")
 						icon       	"Interface"
@@ -2772,7 +2772,7 @@
 						    location   	(1487, 1244)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	488
+						    max_width  	490
 						    justify    	0
 						    label      	"GroupManager")
 						icon       	"Interface"
@@ -2822,7 +2822,7 @@
 						    location   	(207, 1244)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	490
+						    max_width  	493
 						    justify    	0
 						    label      	"Loginer")
 						icon       	"Interface"
@@ -2896,7 +2896,7 @@
 						    fill_color 	16777215
 						    anchor     	2
 						    nlines     	2
-						    max_width  	356)
+						    max_width  	365)
 						width      	376
 						height     	186
 						annotation 	8
@@ -3241,7 +3241,7 @@
 						    location   	(2048, 2336)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	685
+						    max_width  	690
 						    justify    	0
 						    label      	"User")
 						icon       	"Actor"
@@ -3495,7 +3495,7 @@
 						    fill_color 	16777215
 						    anchor     	2
 						    nlines     	2
-						    max_width  	409)
+						    max_width  	418)
 						width      	430
 						height     	186
 						annotation 	8
@@ -3565,7 +3565,7 @@
 						    fill_color 	16777215
 						    anchor     	2
 						    nlines     	15
-						    max_width  	544)
+						    max_width  	553)
 						width      	564
 						height     	836
 						annotation 	8
@@ -3628,17 +3628,17 @@
 						    default_color 	TRUE)
 						label      	(object ItemLabel
 						    Parent_View 	@128
-						    location   	(2763, 812)
+						    location   	(2767, 812)
 						    fill_color 	13434879
 						    nlines     	1
-						    max_width  	330
+						    max_width  	322
 						    justify    	0
 						    label      	"SSDaemonsList")
 						icon_style 	"Icon"
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C6A503F03C5"
-						width      	348
+						width      	340
 						height     	128
 						annotation 	8
 						autoResize 	TRUE)
@@ -3913,13 +3913,13 @@
 						    fill_color 	13434879
 						    anchor     	2
 						    nlines     	5
-						    max_width  	350)
+						    max_width  	359)
 						width      	370
 						height     	336
 						annotation 	8
 						autoResize 	TRUE)
 					    (object AssociationViewNew "$UNNAMED$54" @141
-						location   	(3202, 864)
+						location   	(3200, 864)
 						font       	(object Font
 						    size       	10
 						    face       	"Arial"
@@ -3936,7 +3936,7 @@
 						roleview_list 	(list RoleViews
 						    (object RoleView "$UNNAMED$55" @142
 							Parent_View 	@141
-							location   	(194, -3680)
+							location   	(192, -3680)
 							font       	(object Font
 							    size       	10
 							    face       	"Arial"
@@ -3955,7 +3955,7 @@
 							line_style 	0
 							label      	(object SegLabel @143
 							    Parent_View 	@142
-							    location   	(3256, 917)
+							    location   	(3254, 917)
 							    font       	(object Font
 								size       	10
 								face       	"Arial"
@@ -3977,7 +3977,7 @@
 							    orientation 	1))
 						    (object RoleView "$UNNAMED$56" @144
 							Parent_View 	@141
-							location   	(194, -3680)
+							location   	(192, -3680)
 							font       	(object Font
 							    size       	10
 							    face       	"Arial"
@@ -3996,7 +3996,7 @@
 							line_style 	0
 							label      	(object SegLabel @145
 							    Parent_View 	@144
-							    location   	(3115, 917)
+							    location   	(3112, 917)
 							    font       	(object Font
 								size       	10
 								face       	"Arial"
@@ -4158,7 +4158,7 @@
 						    fill_color 	16777215
 						    anchor     	2
 						    nlines     	7
-						    max_width  	463)
+						    max_width  	471)
 						width      	484
 						height     	436
 						annotation 	8
@@ -4379,7 +4379,7 @@
 						vertices   	(list Points
 						    (886, 2111)
 						    (512, 1848)
-						    (263, 1269))
+						    (309, 1376))
 						line_style 	0)
 					    (object RealizeView "" @164
 						stereotype 	TRUE
@@ -4894,7 +4894,7 @@
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
-						location   	(416, 816)
+						location   	(528, 800)
 						font       	(object Font
 						    size       	10
 						    face       	"Arial"
@@ -4907,7 +4907,7 @@
 						    default_color 	TRUE)
 						label      	(object ItemLabel
 						    Parent_View 	@186
-						    location   	(196, 765)
+						    location   	(308, 749)
 						    fill_color 	13434879
 						    nlines     	1
 						    max_width  	440
@@ -4925,7 +4925,7 @@
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
-						location   	(416, 528)
+						location   	(528, 512)
 						font       	(object Font
 						    size       	10
 						    face       	"Arial"
@@ -4938,7 +4938,7 @@
 						    default_color 	TRUE)
 						label      	(object ItemLabel
 						    Parent_View 	@187
-						    location   	(278, 451)
+						    location   	(390, 435)
 						    fill_color 	13434879
 						    nlines     	2
 						    max_width  	276
@@ -4954,7 +4954,7 @@
 						autoResize 	TRUE)
 					    (object ClassView "Class" "Logical View::smsc::admin::protocols::Command" @188
 						ShowCompartmentStereotypes 	TRUE
-						location   	(192, 208)
+						location   	(304, 192)
 						font       	(object Font
 						    size       	10
 						    face       	"Arial"
@@ -4967,7 +4967,7 @@
 						    default_color 	TRUE)
 						label      	(object ItemLabel
 						    Parent_View 	@188
-						    location   	(50, 129)
+						    location   	(162, 113)
 						    fill_color 	13434879
 						    nlines     	1
 						    max_width  	284
@@ -4983,7 +4983,7 @@
 						autoResize 	TRUE)
 					    (object ClassView "Class" "Logical View::smsc::admin::protocols::Response" @189
 						ShowCompartmentStereotypes 	TRUE
-						location   	(640, 208)
+						location   	(752, 192)
 						font       	(object Font
 						    size       	10
 						    face       	"Arial"
@@ -4996,7 +4996,7 @@
 						    default_color 	TRUE)
 						label      	(object ItemLabel
 						    Parent_View 	@189
-						    location   	(498, 129)
+						    location   	(610, 113)
 						    fill_color 	13434879
 						    nlines     	1
 						    max_width  	284
@@ -5035,7 +5035,7 @@
 						ShowCompartmentStereotypes 	TRUE
 						IncludeAttribute 	TRUE
 						IncludeOperation 	TRUE
-						location   	(1120, 528)
+						location   	(1232, 512)
 						font       	(object Font
 						    size       	10
 						    face       	"Arial"
@@ -5048,7 +5048,7 @@
 						    default_color 	TRUE)
 						label      	(object ItemLabel
 						    Parent_View 	@193
-						    location   	(850, 422)
+						    location   	(962, 406)
 						    fill_color 	13434879
 						    nlines     	2
 						    max_width  	540
@@ -5060,7 +5060,7 @@
 						quidu      	"3C6BA6580235"
 						compartment 	(object Compartment
 						    Parent_View 	@193
-						    location   	(850, 483)
+						    location   	(962, 467)
 						    font       	(object Font
 							size       	10
 							face       	"Arial"
@@ -5188,24 +5188,6 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C6A3B0F01D7"
-						compartment 	(object Compartment
-						    Parent_View 	@195
-						    location   	(164, 665)
-						    font       	(object Font
-							size       	10
-							face       	"Arial"
-							charSet    	204
-							bold       	FALSE
-							italics    	FALSE
-							underline  	FALSE
-							strike     	FALSE
-							color      	0
-							default_color 	TRUE)
-						    icon_style 	"Icon"
-						    fill_color 	13434879
-						    anchor     	2
-						    nlines     	5
-						    max_width  	415)
 						width      	426
 						height     	384
 						annotation 	8
@@ -5237,24 +5219,6 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C6A3B1E02AB"
-						compartment 	(object Compartment
-						    Parent_View 	@196
-						    location   	(637, 665)
-						    font       	(object Font
-							size       	10
-							face       	"Arial"
-							charSet    	204
-							bold       	FALSE
-							italics    	FALSE
-							underline  	FALSE
-							strike     	FALSE
-							color      	0
-							default_color 	TRUE)
-						    icon_style 	"Icon"
-						    fill_color 	13434879
-						    anchor     	2
-						    nlines     	5
-						    max_width  	428)
 						width      	440
 						height     	384
 						annotation 	8
@@ -5317,24 +5281,6 @@
 						line_color 	3342489
 						fill_color 	13434879
 						quidu      	"3C6BA5DB02AC"
-						compartment 	(object Compartment
-						    Parent_View 	@197
-						    location   	(93, 138)
-						    font       	(object Font
-							size       	10
-							face       	"Arial"
-							charSet    	204
-							bold       	FALSE
-							italics    	FALSE
-							underline  	FALSE
-							strike     	FALSE
-							color      	0
-							default_color 	TRUE)
-						    icon_style 	"Icon"
-						    fill_color 	13434879
-						    anchor     	2
-						    nlines     	4
-						    max_width  	419)
 						width      	440
 						height     	286
 						annotation 	8
