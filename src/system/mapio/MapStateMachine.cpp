@@ -625,14 +625,17 @@ static void ForwardMO(MapDialog* dialog) {
   mkRP_OA_Address( &smRpOa, sms->getOriginatingAddress().value, sms->getOriginatingAddress().length, ET96MAP_ADDRTYPE_MSISDN );
   unsigned length;
   const char* mo_pdu = sms->getBinProperty(Tag::SMSC_MO_PDU, &length);
+
   memcpy(ui.signalInfo, mo_pdu, length );
   ui.signalInfoLen = (UCHAR_T)length;
+
+  __map_trace2("MAP:: ForwardMO: forwarding msg %s->%s to sc: %s", sms->getOriginatingAddress().toString(), sms->getDestinationAddress().toString(), addr.toString() );
 
   USHORT_T result = Et96MapOpenReq( SSN, dialog->dialogid_map, &appContext, &destAddr, &dialog->scAddr, 0, 0, 0 );
   if ( result != ET96MAP_E_OK )
     throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::ForwardMO: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
 
-  result = Et96MapV2ForwardSmMOReq(SSN,dialog->dialogid_map, 0, &smRpDa, &smRpOa, &ui);
+  result = Et96MapV2ForwardSmMOReq(SSN,dialog->dialogid_map, 1, &smRpDa, &smRpOa, &ui);
   if ( result != ET96MAP_E_OK )
     throw MAPDIALOG_FATAL_ERROR(FormatText("MAP::ForwardMO: Et96MapV2ForwardSmMOReq error 0x%x",result),MAP_FALURE);
   
@@ -2153,6 +2156,7 @@ USHORT_T Et96MapV2ForwardSmMOConf(ET96MAP_LOCAL_SSN_T localSsn,
     }
     __require__(dialog->ssn==localSsn);
     dialogid_smsc = dialog->dialogid_smsc;
+    __map_trace2__("%s: dialogid 0x%x  (state %d) forward %s",__FUNCTION__,dialog->dialogid_map,dialog->state, RouteToString(dialog.get()).c_str());
 
     try {
       try{ DoProvErrorProcessing(provErrCode_p);}
