@@ -303,12 +303,12 @@ void MapDialogContainer::registerSelf(SmeManager* smeman)
 
 void MapDialogContainer::unregisterSelf(SmeManager* smeman)
 {
-  proxy.init();
-  __trace2__("MAP::register MAP_PROXY");
+  //proxy.init();
+  __trace2__("MAP::unregister MAP_PROXY");
 //#if defined USE_MAP // !!!! temporary !!!!!
 //  smeman->registerSmeProxy("MAP_PROXY",&proxy);
 //#else
   smeman->unregisterSmeProxy("MAP_PROXY");
 //#endif
-  __trace2__("MAP::register MAP_PROXY OK");
+  __trace2__("MAP::unregister MAP_PROXY OK");
 }
