@@ -546,6 +546,9 @@ protected:
             listener->handleEvent(pdu);
             lock.Delete(seq);
           }
+        }else
+        {
+          disposePdu(pdu);
         }
       }break;
       // и отдельно собственно пришедшие smpp-шки.
