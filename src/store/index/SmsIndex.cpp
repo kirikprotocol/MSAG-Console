@@ -517,15 +517,30 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
   }
   ReadToVector(sources.front().Get(),rv,fromDate,tillDate);
   sort(rv.begin(),rv.end());
+  /*
+  printf("After first read: %d\n",rv.size());
+  for(int i=0;i<rv.size();i++)
+  {
+    printf("%d,%lld\n",rv[i].first,rv[i].second);
+  }
+  */
   sources.erase(sources.begin());
   while(sources.size()>0)
   {
+    tmp1.resize(0);
     ReadToVector(sources.front().Get(),tmp1,fromDate,tillDate);
     sort(tmp1.begin(),tmp1.end());
     tmp2.resize(0);
     set_intersection(rv.begin(),rv.end(),tmp1.begin(),tmp1.end(),back_inserter(tmp2));
     swap(tmp2,rv);
     sources.erase(sources.begin());
+    /*
+    printf("After next read: %d\n",rv.size());
+    for(int i=0;i<rv.size();i++)
+    {
+      printf("%d,%lld\n",rv[i].first,rv[i].second);
+    }
+    */
   }
 
   for(ResVector::iterator i=rv.begin();i!=rv.end();i++)
