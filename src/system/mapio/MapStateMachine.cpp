@@ -2358,7 +2358,7 @@ USHORT_T Et96MapUAbortInd (
     dialog->id_opened = false;
     __map_trace2__("%s: dialogid 0x%x userReason 0x%x",__func__,dialogid_map,userReason_p?*userReason_p:-1);
     //throw runtime_error("UABORT");
-    throw MAPDIALOG_TEMP_ERROR("UABORT",MAP_ERRORS_BASE+(userReason_p?*userReason_p:-1));
+    throw MAPDIALOG_TEMP_ERROR("UABORT",MAP_USER_REASON_BASE+(userReason_p?*userReason_p:-1));
   }MAP_CATCH(dialogid_map,dialogid_smsc,localSsn);
   return ET96MAP_E_OK;
 }
