@@ -1585,7 +1585,7 @@ static string GetUSSDSubsystem(
   return string(sBegin,sEnd);
 }
 
-static unsigned makeMrRef()
+static unsigned MakeMrRef()
 {
   return time(0)%0x0ffff;
 }
