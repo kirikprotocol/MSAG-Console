@@ -16,6 +16,8 @@
       <param name="msgReportNone">Now you will receive only requested delivery reports</param>
       <param name="msgLocaleChanged">Your locale settings changed</param>
       <param name="msgLocaleUnknown">Unknown locale</param>
+      <param name="msgHide">Hidden</param>
+      <param name="msgUnhide">Not Hidden</param>
       <param name="msgError">Unrecognized profile management command</param>
     </section>
     <section name="abonentinfo">
