@@ -10,7 +10,7 @@ public class PerfInfoTable extends Canvas {
 
   static final int pad = 1;
   static final int grid = 1;
-  static final int numHeads = 5;
+  static final int numHeads = 6;
   static final int numRows = 3;
   static final int colorShift = 16;
 
@@ -20,10 +20,11 @@ public class PerfInfoTable extends Canvas {
   static final Color textColor = SystemColor.textText;
   static final Color headsColor[] = {
     new Color(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue() + colorShift),
-    new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue()),
+    new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift),
     new Color(bgColor.getRed(), bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift),
     new Color(bgColor.getRed(), bgColor.getGreen() + colorShift, bgColor.getBlue()),
-    new Color(bgColor.getRed() + colorShift, bgColor.getGreen(), bgColor.getBlue())
+    new Color(bgColor.getRed() + colorShift, bgColor.getGreen(), bgColor.getBlue()),
+    new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue())
   };
 
   PerfSnap snap;
