@@ -38,7 +38,7 @@ void ConnectionPool::loadMaxSize(Manager& config)
         {
             size = SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE;
             log.warn("Maximum ConnectionPool size is incorrect "
-                     "(should be between 0 and %u) ! "
+                     "(should be between 1 and %u) ! "
                      "Config parameter: <MessageStore.Connections.max> "
                      "Using default: %u",
                      SMSC_DEFAULT_CONNECTION_POOL_MAX_SIZE_LIMIT,
@@ -63,9 +63,9 @@ void ConnectionPool::loadInitSize(Manager& config)
         if (!count || 
             count > SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE_LIMIT)
         {
-            size = SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE;
+            count = SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE;
             log.warn("Init ConnectionPool size is incorrect "
-                     "(should be positive and less than %u) ! "
+                     "(should be between 0 and %u) ! "
                      "Config parameter: <MessageStore.Connections.init> "
                      "Using default: %u",
                      SMSC_DEFAULT_CONNECTION_POOL_INIT_SIZE_LIMIT, 
@@ -91,10 +91,10 @@ void ConnectionPool::loadMaxQueueSize(Manager& config)
         if (!maxQueueSize || 
             maxQueueSize > SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE_LIMIT)
         {
-            size = SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE;
+            maxQueueSize = SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE;
             log.warn("Maximum count of pending requests to ConnectionPool "
                      "for connections is incorrect "
-                     "(should be positive and less than %u) ! "
+                     "(should be between 1 and %u) ! "
                      "Config parameter: <MessageStore.Connections.queue> "
                      "Using default: %u",
                      SMSC_DEFAULT_CONNECTION_POOL_MAX_QUEUE_SIZE_LIMIT, 
@@ -152,7 +152,7 @@ void ConnectionPool::loadDBUserPassword(Manager& config)
     catch (ConfigException& exc) 
     {
         log.error("DB user password wasn't specified ! "
-                  "Config parameter: <MessageStore.UserPassword>");
+                  "Config parameter: <MessageStore.dbUserPassword>");
         throw;
     }
 }
@@ -260,7 +260,7 @@ void ConnectionPool::freeConnection(Connection* connection)
     __require__(connection);
     MutexGuard  guard(monitor);
     
-    if (head)
+    if (head && (count <= size))
     {
         ConnectionQueue *queue = head;
         head = head->next;
@@ -297,12 +297,17 @@ void ConnectionPool::setSize(unsigned new_size)
     
     if (new_size < size)
     {
-        Connection* connection = 0L;
-        for (int i=new_size-1; i<idle.Count(); i++)
+        unsigned counter = size - new_size;
+        while(counter--)
         {
-            (void) idle.Pop(connection);
-            if (connection) delete connection;
-            count--;
+            Connection* connection = 0L;
+            if (idle.Count())
+            {
+                (void) idle.Pop(connection);
+                delete connection;
+                count--;
+            }
+            else break;
         }
     } 
     else
@@ -312,12 +317,14 @@ void ConnectionPool::setSize(unsigned new_size)
         {
             Connection* connection = 
                     new Connection(dbInstance, dbUserName, dbUserPassword);
+            count++;
             if (head)
             {   // Notify waiting threads & give them new connections
                 ConnectionQueue *queue = head;
                 head = head->next;
                 if (!head) tail = 0L;
                 queueLen--;
+                (void) busy.Push(connection);
                 queue->connection = connection;
                 monitor.notify(&(queue->condition));
             }

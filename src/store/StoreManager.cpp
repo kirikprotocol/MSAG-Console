@@ -32,7 +32,7 @@ void StoreManager::loadMaxTriesCount(Manager& config)
         {
             maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION; 
             log.warn("Max tries count to process operation on MessageStore "
-                     "is incorrect (should be between 0 and %u) ! "
+                     "is incorrect (should be between 1 and %u) ! "
                      "Config parameter: <MessageStore.maxTriesCount> "
                      "Using default: %u",
                      SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT,
