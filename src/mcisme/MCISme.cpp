@@ -514,6 +514,21 @@ extern "C" void clearSignalMask(void)
     }
 }
 
+struct ShutdownThread : public Thread
+{
+    ShutdownThread() : Thread() {};
+    virtual ~ShutdownThread() {};
+
+    virtual int Execute()
+    {
+        clearSignalMask();
+        setShutdownHandler();
+        Event shutdownEvent;
+        shutdownEvent.Wait();
+        return 0;
+    };
+} shutdownThread;
+
 int main(void)
 {
     Logger::Init();
@@ -521,6 +536,8 @@ int main(void)
     
     atexit(atExitHandler);
     clearSignalMask();
+
+    shutdownThread.Start();
 
     std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
     adminListener = adml.get();
@@ -608,7 +625,7 @@ int main(void)
             smsc_log_info(logger, "Connected.");
             
             smsc_log_info(logger, "Running messages send loop...");
-            setShutdownHandler();
+            //setShutdownHandler();
             processor.Run();
             clearSignalMask();
             smsc_log_info(logger, "Message send loop exited.");
