@@ -347,7 +347,6 @@ inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms)
   fillOptional(pdu->optional,sms);
   data.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMPP_DATA_CODING));
   data.set_registredDelivery(sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY));
-  data.set_registredDelivery(sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY));
   return true;
 }
 

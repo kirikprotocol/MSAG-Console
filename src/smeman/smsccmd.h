@@ -395,7 +395,6 @@ public:
     _cmd.dta = new SmsResp;
     _cmd.get_resp()->set_messageId(messageId);
     _cmd.get_resp()->set_status(status);
-    _cmd.get_resp()->set_dataSm();
     if(dataSm)_cmd.get_resp()->set_dataSm();
     _cmd.dialogId = dialogId;
     return cmd;
