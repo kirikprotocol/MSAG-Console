@@ -59,8 +59,9 @@ public class Index extends SmscBean
 			}
 			catch (AdminException e)
 			{
+				logger.error("Couldn't remove host \"" + id + '"', e);
 				notRemovedIds.add(id);
-				error(SMSCErrors.error.hosts.couldntRemoveHost, hostName);
+				error(SMSCErrors.error.hosts.couldntRemoveHost, id);
 			}
 		}
 

@@ -36,7 +36,7 @@ SMSC is <%=serviceStatus(Constants.SMSC_SME_ID, bean.getStatus())%>
 <script>
 function showhide(elem)
 {
-	var st = elem.nextSibling.runtimeStyle;
+	var st = elem.nextSibling.style;
 	if (st.display != "none")
 		st.display="none";
 	else
