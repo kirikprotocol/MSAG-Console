@@ -1082,7 +1082,7 @@ StateType StateMachine::submit(Tuple& t)
       if(sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
       {
         vector<unsigned char> umrlist(num);
-        umrlist[0]=sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+        umrlist[0]=sms->getMessageReference();
         sms->setBinProperty(Tag::SMSC_UMR_LIST,(const char*)&umrlist[0],num);
       }
 
@@ -1171,7 +1171,7 @@ StateType StateMachine::submit(Tuple& t)
         unsigned char* umrList=(unsigned char*)newsms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
         if(idx<len)
         {
-          umrList[idx]=sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+          umrList[idx]=sms->getMessageReference();
           newsms.setBinProperty(Tag::SMSC_UMR_LIST,(const char*)umrList,len);
         }
       }
