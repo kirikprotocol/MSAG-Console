@@ -19,7 +19,8 @@ public class SmsSet
 
   private Vector rows = new Vector();
   private boolean hasMore = false;
-  private int maxRows=0;
+  private int maxRows = 0;
+
   public int getRowsCount()
   {
     return rows.size();
@@ -55,6 +56,14 @@ public class SmsSet
   {
     SmsRow pattern = new SmsRow();
     pattern.setId(Long.parseLong(id));
+    int index = rows.indexOf(pattern);
+    return (index >= 0) ? getRow(index) : null;
+  }
+
+  public SmsRow getRow(long id)
+  {
+    SmsRow pattern = new SmsRow();
+    pattern.setId(id);
     int index = rows.indexOf(pattern);
     return (index >= 0) ? getRow(index) : null;
   }
