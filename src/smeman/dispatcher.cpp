@@ -24,19 +24,19 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long /*timeout*/,int* idx)
         if ( unit->proxy->hasInput() )
         {
           unit->prior = unit->proxy->getPriority();
-        }
-        if ( unit->prev ) unit->prev->next = unit->next; // remove from list
-        else
-        {
-          __require__ ( unit == unqueuedProxies );
-          unqueuedProxies = unit->next; // remove first elemment
-          if ( unqueuedProxies ) unqueuedProxies->prev = 0;
-        }
-        unit->next = queuedProxies;
-        unit->prev = 0;
-        if ( queuedProxies ) queuedProxies->prev = unit;
-        queuedProxies = unit;
-        unit = __next;
+					if ( unit->prev ) unit->prev->next = unit->next; // remove from list
+					else
+					{
+						__require__ ( unit == unqueuedProxies );
+						unqueuedProxies = unit->next; // remove first elemment
+						if ( unqueuedProxies ) unqueuedProxies->prev = 0;
+					}
+					unit->next = queuedProxies;
+					unit->prev = 0;
+					if ( queuedProxies ) queuedProxies->prev = unit;
+					queuedProxies = unit;
+				}
+				unit = __next;
       }
       if ( queuedProxies )
       {
@@ -71,7 +71,7 @@ SmeProxy* SmeProxyDispatcher::dispatchIn(unsigned long /*timeout*/,int* idx)
         __require__(prior_unit != NULL);
         __require__(prior_unit->proxy != NULL);
         if ( idx ) *idx = prior_unit->idx;
-				return prior_unit->proxy;
+        return prior_unit->proxy;
       }
     }// __synchronization__
     mon.Wait();
@@ -89,7 +89,7 @@ __synchronized__
   if ( unqueuedProxies ) unqueuedProxies->prev = unit;
   unqueuedProxies = unit;
   unit->proxy = proxy;
-	unit->idx = idx;
+  unit->idx = idx;
   proxy->attachMonitor(&mon);
 }
 
