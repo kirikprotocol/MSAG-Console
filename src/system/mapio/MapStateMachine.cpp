@@ -46,6 +46,7 @@ static X_MAP x_map;
 static Mutex ussd_map_lock;
 typedef std::map<long long,unsigned> USSD_MAP;
 static USSD_MAP ussd_map;
+static Mutex x_momap_lock;
 static XMOMAP x_momap;
 
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc);
@@ -413,6 +414,7 @@ static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
 
 static void CheckLockedByMO(MapDialog* dialog)
 {
+  MutexGuard guard(x_momap_lock);
   XMOMAP::iterator it = x_momap.find(dialog->s_imsi);
   if ( it != x_momap.end() )
   {
@@ -612,6 +614,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   unsigned INVALID = (unsigned)-1;
   if ( dialog->udhiRef != INVALID )
   {
+    MutexGuard guard(x_momap_lock);
     XMOMAPLocker* locker;
     __map_trace2__("UDHI:%s: find locker with imsi %s, ref %x",__func__,dialog->s_imsi.c_str(),dialog->udhiRef);
     XMOMAP::iterator it = x_momap.find(dialog->s_imsi);

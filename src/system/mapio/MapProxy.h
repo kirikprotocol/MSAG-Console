@@ -39,7 +39,7 @@ typedef smsc::core::buffers::Array<SmscCommand> MapIOQueue;
 
 class MapProxy:public SmeProxy{
 public:
-  MapProxy() : seq(0),smereg(0) {
+  MapProxy() : seq(0),smereg(0),managerMonitor(0) {
    time_logger = smsc::logger::Logger::getInstance("map.otime");
   }
   virtual ~MapProxy()
@@ -85,7 +85,7 @@ public:
       }
       inqueue.Push(cmd);
     }
-    managerMonitor->Signal();
+    if( managerMonitor ) managerMonitor->Signal();
   }
 
   SmscCommand getOutgoingCommand()
