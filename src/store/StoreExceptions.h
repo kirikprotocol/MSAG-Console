@@ -1,22 +1,19 @@
-#ifndef STRORE_EXCEPTIONS_DECLARATIONS
-#define STRORE_EXCEPTIONS_DECLARATIONS
+#ifndef STRORE_EXCEPTIONS_DECLARATIONS#define STRORE_EXCEPTIONS_DECLARATIONS
 
 #include <exception>
 using std::exception;
-
-namespace smsc { namespace store 
-{
+namespace smsc { namespace store {
     class AuthenticationException : public exception
     {
     public:
         AuthenticationException() {};
         virtual ~AuthenticationException() throw() {};
-        
+       
         virtual const char* what() const throw() {
             return "Unable to authenticate user to DB !";
         };    
     };
-    
+   
     class ResourceAllocationException : public exception
     {
     public:
@@ -42,7 +39,4 @@ namespace smsc { namespace store
 }}
 
 #endif
-
-
-
 
