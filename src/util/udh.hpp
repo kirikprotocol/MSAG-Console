@@ -51,6 +51,20 @@ inline bool findConcatInfo(unsigned char* body,uint16_t& mr,uint8_t& idx,uint8_t
   return haveconcat;
 }
 
+inline bool findConcatInfo(const SMS& sms,uint16_t& mr,uint8_t& idx,uint8_t& num,bool& havemoreudh)
+{
+  unsigned char* body;
+  if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  {
+    body=(unsigned char*)sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,0);
+  }else
+  {
+    body=(unsigned char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,0);
+  }
+  return findConcatInfo(body,mr,idx,num,havemoreudh);
+}
+
+
 inline void extractPortsFromUdh(SMS& sms)
 {
   if(!(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40))return;
