@@ -97,6 +97,9 @@ public:
             disposePdu(pdu);
             sms.setDestinationAddress(command.getFromAddress());
             sms.setOriginatingAddress(command.getToAddress());
+            sms.setArchivationRequested(false);
+            sms.setDeliveryReport(0);
+            sms.setValidTime(time(NULL)+3600);
             const char* out = command.getOutData();
             sms.getMessageBody().setBuffer((uint8_t *)out, strlen(out));
 
