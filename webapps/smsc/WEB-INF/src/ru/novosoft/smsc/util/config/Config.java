@@ -129,6 +129,7 @@ public class Config implements Cloneable
 
   /**
    * Ищет имена секций (только секций)
+   *
    * @return section names that is immediate descedants of given section. Full names.
    */
   public synchronized Set getSectionChildSectionNames(String sectionName)
@@ -146,6 +147,7 @@ public class Config implements Cloneable
 
   /**
    * Ищет имена секций (только секций)
+   *
    * @return section names that is immediate descedants of given section. Full names.
    */
   public synchronized Set getSectionChildShortSectionNames(String sectionName)
@@ -163,6 +165,7 @@ public class Config implements Cloneable
 
   /**
    * Ищет имена секций (только секций)
+   *
    * @return section names that is immediate descedants of given section.
    */
   public synchronized Set getSectionChildParamsNames(String sectionName)
@@ -236,21 +239,23 @@ public class Config implements Cloneable
   /**
    * Записывает конфиг в тот файл, из которого прочитал в конструкторе. Если конфиг был построен через
    * Config(Reader configReader) - то есть файл конфига неизвестен - будет брошен NullPointerException <br>
-   * В файл конфига будет записана кодировка "ISO-8859-1"
+   * В файл конфига будет записана та кодировка, под которой запущен сервлет контейнер.
+   *
    * @throws IOException
    * @throws WrongParamTypeException
-   * @throws NullPointerException если неизвестен файл конфига. Если вы создаёте конфиг с помощью
-   * Config(Reader configReader), то будьте добры для записи использовать метод save(File configFileToSave, String encoding)
+   * @throws NullPointerException    если неизвестен файл конфига. Если вы создаёте конфиг с помощью
+   *                                 Config(Reader configReader), то будьте добры для записи использовать метод save(File configFileToSave, String encoding)
    * @see #save(File configFileToSave)
    */
   public synchronized void save() throws IOException, WrongParamTypeException, NullPointerException
   {
-    save("ISO-8859-1");
+    save(Functions.getLocaleEncoding());
   }
 
   /**
    * Записывает конфиг в указанный файл.<br>
-   * В файл конфига будет записана кодировка "ISO-8859-1"
+   * В файл конфига будет записана та кодировка, под которой запущен сервлет контейнер.
+   *
    * @throws IOException
    * @throws WrongParamTypeException
    */
@@ -258,21 +263,21 @@ public class Config implements Cloneable
   {
     if (configFile == null)
       throw new NullPointerException("config file not specified");
-    save(configFile, "ISO-8859-1");
+    save(configFile, Functions.getLocaleEncoding());
   }
 
   /**
    * Записывает конфиг в тот файл, из которого прочитал в конструкторе. Если конфиг был построен через
    * Config(Reader configReader) - то есть файл конфига неизвестен - будет брошен NullPointerException
-   * @param encoding - кодировка, которая будет указана в файле конфига. Сейчас С-шный xerces понимает только
-   * "ISO-8859-1"
+   *
+   * @param encoding - кодировка, которая будет указана в файле конфига.
    * @throws IOException
    * @throws WrongParamTypeException
-   * @throws NullPointerException если неизвестен файл конфига. Если вы создаёте конфиг с помощью
-   * Config(Reader configReader), то будьте добры для записи использовать метод save(File configFileToSave, String encoding)
+   * @throws NullPointerException    если неизвестен файл конфига. Если вы создаёте конфиг с помощью
+   *                                 Config(Reader configReader), то будьте добры для записи использовать метод save(File configFileToSave, String encoding)
    * @see #save(File configFileToSave, String encoding)
    */
-  public synchronized void save(final String encoding) throws IOException, WrongParamTypeException, NullPointerException
+  private synchronized void save(final String encoding) throws IOException, WrongParamTypeException, NullPointerException
   {
     if (configFile == null)
       throw new NullPointerException("config file not specified");
@@ -281,14 +286,14 @@ public class Config implements Cloneable
 
   /**
    * Записывает конфиг в указанный файл.
-   * @param encoding - кодировка, которая будет указана в файле конфига. Сейчас С-шный xerces понимает только
-   * "ISO-8859-1"
+   *
+   * @param encoding         - кодировка, которая будет указана в файле конфига.
    * @param configFileToSave
    * @param encoding
    * @throws IOException
    * @throws WrongParamTypeException
    */
-  public synchronized void save(final File configFileToSave, final String encoding) throws IOException, WrongParamTypeException
+  private synchronized void save(final File configFileToSave, final String encoding) throws IOException, WrongParamTypeException
   {
     File configXmlNew = Functions.createNewFilenameForSave(configFileToSave);
 
@@ -301,7 +306,7 @@ public class Config implements Cloneable
   {
     // save new config to temp file
     SaveableConfigTree tree = new SaveableConfigTree(this);
-    PrintWriter out = new PrintWriter(new FileWriter(fileToSaveTo));
+    PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(fileToSaveTo), Functions.getLocaleEncoding()));
     Functions.storeConfigHeader(out, "config", "configuration.dtd", encoding); // C++ code doesn't know about other codings // System.getProperty("file.encoding");
     tree.write(out, "  ");
     Functions.storeConfigFooter(out, "config");
@@ -313,7 +318,7 @@ public class Config implements Cloneable
   {
     if (configFile == null)
       throw new NullPointerException("config file not specified");
-    saveInternal(configFile, "ISO-8859-1");
+    saveInternal(configFile, Functions.getLocaleEncoding());
   }
 
   public synchronized Collection getSectionChildShortParamsNames(String sectionName)
@@ -359,7 +364,7 @@ public class Config implements Cloneable
     Object o1 = config1.params.get(fullParamName);
     Object o2 = config2.params.get(fullParamName);
     return (o1 == null && o2 == null)
-            || (o1 != null && o2 != null && o1.equals(o2));
+           || (o1 != null && o2 != null && o1.equals(o2));
   }
 
   public synchronized boolean isParamEquals(Config anotherConfig, String fullParamName)
@@ -367,14 +372,14 @@ public class Config implements Cloneable
     Object o1 = this.params.get(fullParamName);
     Object o2 = anotherConfig.params.get(fullParamName);
     return (o1 == null && o2 == null)
-            || (o1 != null && o2 != null && o1.equals(o2));
+           || (o1 != null && o2 != null && o1.equals(o2));
   }
 
   public synchronized boolean isParamEquals(String fullParamName, Object paramValue)
   {
     Object o1 = this.params.get(fullParamName);
     return (o1 == null && paramValue == null)
-            || (o1 != null && paramValue != null && o1.equals(paramValue));
+           || (o1 != null && paramValue != null && o1.equals(paramValue));
   }
 
   public synchronized boolean isStringParamEquals(String fullParamName, String paramValue)
@@ -383,7 +388,7 @@ public class Config implements Cloneable
     if (o1 == null || o1 instanceof String) {
       String s1 = (String) o1;
       return ((s1 == null || s1.length() == 0) && (paramValue == null || paramValue.length() == 0))
-              || (s1 != null && s1.length() > 0 && paramValue != null && paramValue.length() > 0 && s1.equals(paramValue));
+             || (s1 != null && s1.length() > 0 && paramValue != null && paramValue.length() > 0 && s1.equals(paramValue));
     } else
       return false;
   }
@@ -426,7 +431,7 @@ public class Config implements Cloneable
     final int sectionNameLength = sectionName.length();
     for (Iterator i = configToCopyFrom.getParameterNames().iterator(); i.hasNext();) {
       String paramName = (String) i.next();
-      if (paramName.length() > (sectionNameLength+1) && paramName.startsWith(sectionName) && paramName.lastIndexOf('.') == sectionNameLength)
+      if (paramName.length() > (sectionNameLength + 1) && paramName.startsWith(sectionName) && paramName.lastIndexOf('.') == sectionNameLength)
         params.put(paramName, configToCopyFrom.params.get(paramName));
     }
   }

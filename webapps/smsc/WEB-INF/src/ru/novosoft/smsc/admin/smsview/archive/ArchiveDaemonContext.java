@@ -1,9 +1,9 @@
 package ru.novosoft.smsc.admin.smsview.archive;
 
-import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.util.config.Config;
 
 import java.io.File;
 
@@ -18,7 +18,7 @@ public class ArchiveDaemonContext
 {
   private static ArchiveDaemonContext instance = null;
 
-  public static synchronized ArchiveDaemonContext getInstance(SMSCAppContext appContext)  throws AdminException
+  public static synchronized ArchiveDaemonContext getInstance(SMSCAppContext appContext) throws AdminException
   {
     if (instance == null)
       instance = new ArchiveDaemonContext(appContext);
@@ -28,7 +28,7 @@ public class ArchiveDaemonContext
   private final SMSCAppContext appContext;
   private Config config = null;
   private String host;
-  private short  port;
+  private short port;
 
   private ArchiveDaemonContext(SMSCAppContext appContext) throws AdminException
   {
@@ -44,16 +44,17 @@ public class ArchiveDaemonContext
                                      "conf" + File.separatorChar + "daemon.xml"));
       }
       host = config.getString("ArchiveDaemon.View.host");
-      port = (short)config.getInt("ArchiveDaemon.View.port");
+      port = (short) config.getInt("ArchiveDaemon.View.port");
     } catch (Throwable t) {
       t.printStackTrace();
       throw new AdminException(t.getMessage());
     }
   }
+
   public void saveConfig(Config config) throws AdminException
   {
     try {
-      config.save("ISO-8859-1");
+      config.save();
     } catch (Throwable t) {
       throw new AdminException("Couldn't store SMSC config: " + t.getMessage());
     }
@@ -61,13 +62,18 @@ public class ArchiveDaemonContext
     resetConfig(false);
   }
 
-  public Config getConfig() {
+  public Config getConfig()
+  {
     return config;
   }
-  public String getHost() {
+
+  public String getHost()
+  {
     return host;
   }
-  public short getPort() {
+
+  public short getPort()
+  {
     return port;
   }
 }

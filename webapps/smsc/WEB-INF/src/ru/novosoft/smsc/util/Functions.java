@@ -9,7 +9,8 @@ import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.zip.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Created by igork
@@ -37,7 +38,7 @@ public class Functions
   }
 
   public static void unZipFileFromArchive(File folderUnpackTo, String name, ZipInputStream zin)
-          throws IOException
+      throws IOException
   {
     File file = new File(folderUnpackTo, name);
     file.getParentFile().mkdirs();
@@ -47,7 +48,7 @@ public class Functions
   }
 
   public static void unZipArchive(File folderUnpackTo, InputStream in)
-          throws IOException
+      throws IOException
   {
     ZipInputStream zin = new ZipInputStream(in);
     for (ZipEntry e = zin.getNextEntry(); e != null; e = zin.getNextEntry()) {
@@ -59,7 +60,7 @@ public class Functions
   }
 
   public static File saveFileToTemp(InputStream in, File file)
-          throws IOException
+      throws IOException
   {
     File tmpFile = Functions.createNewFilenameForSave(file);
     OutputStream out = new BufferedOutputStream(new FileOutputStream(tmpFile));
@@ -82,7 +83,7 @@ public class Functions
 
   public static PrintWriter storeConfigHeader(PrintWriter out, String docType, String dtdFile, String encoding)
   {
-    out.println("<?xml version=\"1.0\" encoding=\"" + (encoding == null || encoding.length() == 0 ? "ISO-8859-1" : encoding) + "\"?>");
+    out.println("<?xml version=\"1.0\" encoding=\"" + (encoding == null || encoding.length() == 0 ? Functions.getLocaleEncoding() : encoding) + "\"?>");
     out.println("<!DOCTYPE " + docType + " SYSTEM \"file://" + dtdFile + "\">");
     out.println();
     out.println("<" + docType + ">");
@@ -113,10 +114,11 @@ public class Functions
 
   /**
    * Parses string to values by StringTokenizer and adds values to collection in order returned by StringTokenizer.
+   *
    * @param checkedTasksSet values will be added to this collection
-   * @param values string to tokenize
-   * @param delimeter string values delimiter
-   * @param trimValues if true, each value will be trimmed before add to collection
+   * @param values          string to tokenize
+   * @param delimeter       string values delimiter
+   * @param trimValues      if true, each value will be trimmed before add to collection
    */
   public static void addValuesToCollection(Collection checkedTasksSet, final String values, final String delimeter, boolean trimValues)
   {

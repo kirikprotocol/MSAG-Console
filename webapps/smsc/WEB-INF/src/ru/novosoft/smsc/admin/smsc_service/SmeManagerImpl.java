@@ -4,22 +4,29 @@ import org.apache.log4j.Category;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.route.*;
+import ru.novosoft.smsc.admin.route.SME;
+import ru.novosoft.smsc.admin.route.SMEList;
+import ru.novosoft.smsc.admin.route.SmeStatus;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.util.*;
+import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.xml.Utils;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by igork
  * Date: Jan 30, 2003
  * Time: 3:19:25 PM
  */
-public class SmeManagerImpl implements SmeManager {
+public class SmeManagerImpl implements SmeManager
+{
   private Category logger = Category.getInstance(this.getClass());
   private SMEList smes = null;
   private File smeConfigFile = null;
@@ -109,7 +116,7 @@ public class SmeManagerImpl implements SmeManager {
   {
     try {
       File newFile = Functions.createNewFilenameForSave(smeConfigFile);
-      PrintWriter out = new PrintWriter(new FileWriter(newFile), true);
+      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
       Functions.storeConfigHeader(out, "records", "SmeRecords.dtd");
       smes.store(out);
       Functions.storeConfigFooter(out, "records");

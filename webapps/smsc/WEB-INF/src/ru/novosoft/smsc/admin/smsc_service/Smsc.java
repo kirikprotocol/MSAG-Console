@@ -164,7 +164,7 @@ public class Smsc extends Service
 
       final File aliasConfigFile = new File(smscConfFolder, "aliases.xml");
       final File newFile = Functions.createNewFilenameForSave(aliasConfigFile);
-      storeAliases(new PrintWriter(new FileWriter(newFile), true)).close();
+      storeAliases(new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()))).close();
       Functions.renameNewSavedFileToOriginal(newFile, aliasConfigFile);
 
       if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
@@ -284,7 +284,7 @@ public class Smsc extends Service
   public synchronized void saveSmscConfig(Config config) throws AdminException
   {
     try {
-      config.save("ISO-8859-1");
+      config.save();
     } catch (Throwable t) {
       logger.error("Couldn't store SMSC config", t);
       throw new AdminException("Couldn't store SMSC config: " + t.getMessage());

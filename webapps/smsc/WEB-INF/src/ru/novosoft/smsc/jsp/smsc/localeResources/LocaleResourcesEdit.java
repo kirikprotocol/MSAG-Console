@@ -5,8 +5,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.Functions;
@@ -15,11 +15,10 @@ import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.xml.Utils;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.*;
+import java.io.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by igork
@@ -103,7 +102,7 @@ public class LocaleResourcesEdit extends PageBean
   {
     try {
       File tempFile = Functions.createNewFilenameForSave(new File(WebAppFolders.getSmscConfFolder(), "resources_" + locale + ".xml.new"));
-      PrintWriter out = new PrintWriter(new FileWriter(tempFile));
+      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(tempFile), Functions.getLocaleEncoding()));
       Functions.storeConfigHeader(out, "locale_resources", "locale_resources.dtd");
       out.println("<settings>");
       storeSection(settings, out, "   ");
