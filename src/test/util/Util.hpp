@@ -36,7 +36,6 @@ const int RAND_RUS = 2;
 const int RAND_NUM = 4;
 const int RAND_SYM = 8;
 const int RAND_WS = 16;
-const int RAND_DEF_SMS = 32;
 const int RAND_LAT_NUM = RAND_LAT + RAND_NUM;
 
 static const char* digitChars = "1234567890";

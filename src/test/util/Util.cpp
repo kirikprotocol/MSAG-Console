@@ -97,47 +97,35 @@ auto_ptr<char> rand_char(int length, int type)
 
 void rand_char(int length, char* buf, int type)
 {
-	static const int sz = strlen(latinChars) + strlen(rusChars) +
-		strlen(digitChars) + strlen(symbolChars) + 1;
-	if (type == RAND_DEF_SMS)
+	vector<int> charTypes;
+	if (type & RAND_LAT) { charTypes.push_back(RAND_LAT); }
+	if (type & RAND_RUS) { charTypes.push_back(RAND_RUS); }
+	if (type & RAND_NUM) { charTypes.push_back(RAND_NUM); }
+	if (type & RAND_SYM) { charTypes.push_back(RAND_SYM); }
+	__require__(charTypes.size());
+	for (int i = 0; i < length; i++)
 	{
-		for (int i = 0; i < length; i++)
+		if ((type & RAND_WS) && !rand0(15))
 		{
-			buf[i] = rand0(127);
+			buf[i] = wsChars[rand0(wsCharsLen - 1)];
+			continue;
 		}
-	}
-	else
-	{
-		vector<int> charTypes;
-		if (type & RAND_LAT) { charTypes.push_back(RAND_LAT); }
-		if (type & RAND_RUS) { charTypes.push_back(RAND_RUS); }
-		if (type & RAND_NUM) { charTypes.push_back(RAND_NUM); }
-		if (type & RAND_SYM) { charTypes.push_back(RAND_SYM); }
-		__require__(charTypes.size());
-		for (int i = 0; i < length; i++)
+		switch (charTypes[rand0(charTypes.size() - 1)])
 		{
-			if ((type & RAND_WS) && !rand0(15))
-			{
-				buf[i] = wsChars[rand0(wsCharsLen - 1)];
-				continue;
-			}
-			switch (charTypes[rand0(charTypes.size() - 1)])
-			{
-				case RAND_LAT:
-					buf[i] = latinChars[rand0(latinCharsLen - 1)];
-					break;
-				case RAND_RUS:
-					buf[i] = rusChars[rand0(rusCharsLen - 1)];
-					break;
-				case RAND_NUM:
-					buf[i] = digitChars[rand0(digitCharsLen - 1)];
-					break;
-				case RAND_SYM:
-					buf[i] = symbolChars[rand0(symbolCharsLen - 1)];
-					break;
-				default:
-					__unreachable__("Invalid char type");
-			}
+			case RAND_LAT:
+				buf[i] = latinChars[rand0(latinCharsLen - 1)];
+				break;
+			case RAND_RUS:
+				buf[i] = rusChars[rand0(rusCharsLen - 1)];
+				break;
+			case RAND_NUM:
+				buf[i] = digitChars[rand0(digitCharsLen - 1)];
+				break;
+			case RAND_SYM:
+				buf[i] = symbolChars[rand0(symbolCharsLen - 1)];
+				break;
+			default:
+				__unreachable__("Invalid char type");
 		}
 	}
 	buf[length] = 0;
