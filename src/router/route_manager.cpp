@@ -561,7 +561,7 @@ __synchronized__
   proxy = sme_table->getSmeProxy(rec->proxyIdx);
   if ( info ) *info = rec->info;
   if ( idx && rec->info.enabling ) *idx = rec->proxyIdx;
-  if (!rc->info.enabling) return false;
+  if (!rec->info.enabling) return false;
 	return rec->info.enabling;
 }
 
