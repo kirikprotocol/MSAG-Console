@@ -105,9 +105,9 @@ java.util.Hashtable o = new java.util.Hashtable();
 o.put("name", "1");
 o.put("active", "2");
 o.put("allow", "3");
-o.put("billing", "1");
-o.put("archiving", "2");
-o.put("reports", "3");
+o.put("billing", "4");
+o.put("archiving", "5");
+o.put("reports", "6");
 %>
 <input:select name="mbFilter" default="1"
     attributes="<%= a %>" options="<%= o %>" />
