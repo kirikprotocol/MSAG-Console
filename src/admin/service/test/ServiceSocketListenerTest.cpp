@@ -35,7 +35,7 @@ int main (int argc, char *argv[])
 		ComponentManager::registerComponent(new DumbServiceCommandHandler());
  		logger.debug("Starting service");
 		DumbServiceShutdownHandler::registerShutdownHandler(new DumbServiceShutdownHandler());
-		AdminSocketManager::start("smsc", 6677, "smsc.admin.service.test.SocketListener");
+		AdminSocketManager::start("smsc", 6677);
  		logger.debug("Service started");
  	} catch (AdminException &e) {
  		logger.debug("Exception occured: \"%s\"", e.what());

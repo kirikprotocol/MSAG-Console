@@ -8,17 +8,14 @@ namespace service {
 
 using smsc::admin::util::ShutdownableList;
 
-ServiceSocketListener * AdminSocketManager::listener = 0;
+ServiceSocketListener AdminSocketManager::listener("smsc.admin.service.SocketListener");
 
 void AdminSocketManager::start(const char * const host,
-															 const in_port_t port,
-															 const char * const debugCategory = "smsc.admin.service.SocketListener")
+															 const in_port_t port)
 	throw (AdminException)
 {
-	if (listener != 0)
-		throw AdminException("Admin socket managaer already started");
-	listener = new ServiceSocketListener(host, port, debugCategory);
-	listener->Start();
+	listener.init(host, port);
+	listener.Start();
 }
 
 void AdminSocketManager::stop()
@@ -32,8 +29,6 @@ void AdminSocketManager::stop()
 	{
 		// ignoring all exceptions
 	}
-	delete listener;
-	listener = 0;
 }
 
 }

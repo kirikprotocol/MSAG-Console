@@ -89,7 +89,7 @@ public class ServiceManager
     Daemon d = getDaemon(s.getInfo().getHost());
 
     try {
-      d.shutdownService(s.getInfo().getHost());
+      d.shutdownService(serviceName);
     } catch (AdminException e) {
       d.killService(serviceName);
     }

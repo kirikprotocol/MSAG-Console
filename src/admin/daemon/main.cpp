@@ -63,7 +63,7 @@ using smsc::admin::daemon::DaemonCommandDispatcher;
 
 int main(int argc, char **argv)
 {
-	if (argc != 2)
+/*	if (argc != 2)
 	{
 		std::cout << "Usage: smsc_admin_daemon <path to home directory>"
 			<< std::endl;
@@ -72,14 +72,14 @@ int main(int argc, char **argv)
 
 	try
 	{
-		//daemonInit(argv[1]);
+		daemonInit(argv[1]);
 	}
 	catch (...)
 	{
 		printf("Some exception in daemon init\n\r");
 		exit(-1);
 	}
-	
+*/	
 	log4cpp::Category &logger(Logger::getCategory("smsc.admin.daemon"));
 	
 	try
@@ -87,12 +87,19 @@ int main(int argc, char **argv)
 		logger.info("Start");
 		Manager::init("daemon.xml");
 		Manager manager = Manager::getInstance();
-		int32_t port = manager.getInt("admin.daemon.port");
-		AdminSocketManager::start(manager.getString("admin.daemon.host"),
+/*		AdminSocketManager::start(manager.getString("admin.daemon.host"),
 															port,
 															"smsc.admin.daemon.DaemonSocketListener");
+*/		
+		DaemonSocketListener listener("smsc.admin.daemon.DaemonSocketListener");
+		listener.init(manager.getString("admin.daemon.host"),
+									manager.getInt("admin.daemon.port"));
+		listener.Start();
+
 		DaemonCommandDispatcher::activateChildSignalHandler();
 		logger.info("Started");
+		listener.WaitFor();
+		logger.info("Stopped");
 	}
 	catch (AdminException &e)
 	{

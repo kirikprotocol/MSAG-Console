@@ -1,15 +1,19 @@
 <?xml encoding="ISO-8859-1"?>
 
-<!ELEMENT command (service*|logs)>
-    <!ATTLIST command name (get_config|set_config|get_logs|get_monitoring|start_service|shutdown_service|kill_service|add_service|remove_service|list_services) #REQUIRED>
+<!ELEMENT command (service|param*)>
+    <!ATTLIST command name (start_service|shutdown_service|kill_service|add_service|remove_service|list_services|list_components|call) #REQUIRED>
+    <!ATTLIST command service CDATA #IMPLIED>
+    <!ATTLIST command component CDATA #IMPLIED>
+    <!ATTLIST command method CDATA #IMPLIED>
     
-<!ELEMENT service (name,cmd_line?,port?,arg*)>
+<!ELEMENT service (arg*)>
+    <!ATTLIST service name CDATA #REQUIRED>
+    <!ATTLIST service cmd_line CDATA #REQUIRED>
+    <!ATTLIST service port CDATA #REQUIRED>
 
-<!ELEMENT name (#PCDATA)>
-<!ELEMENT cmd_line (#PCDATA)>
-<!ELEMENT port (#PCDATA)>
 <!ELEMENT arg (#PCDATA)>
     <!ATTLIST arg num CDATA #REQUIRED>
-    
-<!ELEMENT logs (#PCDATA)>
-    <!ATTLIST logs start CDATA #REQUIRED length CDATA #REQUIRED>
+
+<!ELEMENT param (#PCDATA)>
+    <!ATTLIST param name CDATA #REQUIRED>
+    <!ATTLIST param type (string|int|bool) #REQUIRED>

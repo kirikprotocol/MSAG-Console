@@ -14,14 +14,13 @@ class AdminSocketManager
 {
 public:
 	static void start(const char * const host,
-										const in_port_t port,
-										const char * const debugCategory = "smsc.admin.service.SocketListener")
+										const in_port_t port)
 		throw (AdminException);
 	
 	static void stop() throw ();
 
 protected:
-	static ServiceSocketListener * listener;
+	static ServiceSocketListener listener;
 };
 
 }

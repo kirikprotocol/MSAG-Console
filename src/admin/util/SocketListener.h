@@ -30,11 +30,14 @@ class SocketListener : public Shutdownable, public Thread
 {
 public:
 
-	SocketListener(const char * const hostName,
-								 in_port_t portToListen,
-								 const char * const debugCategory = "smsc.admin.util.SocketListener")
+	SocketListener(const char * const debugCategory = "smsc.admin.util.SocketListener")
 		throw (AdminException &)
 		: logger(Logger::getCategory(debugCategory))
+	{
+	}
+	
+	void init(const char * const hostName, in_port_t portToListen)
+		throw (AdminException &)
 	{
 		isShutdownSignaled = false;
 
@@ -82,6 +85,16 @@ protected:
 	bool isShutdownSignaled;
 	ThreadPool pool;
 	Category &logger;
+
+/*	SocketListener(const char * const hostName,
+								 in_port_t portToListen,
+								 const char * const debugCategory = "smsc.admin.util.SocketListener")
+		throw (AdminException &)
+		: logger(Logger::getCategory(debugCategory))
+	{
+		init(hostName, portToListen);
+	}
+*/
 };
 
 }
