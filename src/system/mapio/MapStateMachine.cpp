@@ -23,7 +23,7 @@ struct XMOMAPLocker {
   unsigned parts;
   unsigned ref;
 };
-typedef map<XMOMAPLocker> XMOMAP;
+typedef map<string,XMOMAPLocker> XMOMAP;
 
 static Mutex x_map_lock;
 typedef multimap<string,unsigned> X_MAP;
