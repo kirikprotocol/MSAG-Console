@@ -14,6 +14,7 @@
 #include <util/config/Manager.h>
 #include <logger/Logger.h>
 #include <util/signal.hpp>
+#include <util/xml/init.h>
 #include <system/smscsignalhandlers.h>
 
 using smsc::admin::AdminException;
@@ -83,6 +84,12 @@ void initLogger()
 		smsc::logger::Logger::Init("logger.properties");
 }
 
+void atExitHandler(void)
+{
+  smsc::util::xml::TerminateXerces();
+	smsc::logger::Logger::Shutdown();
+}
+
 int main(int argc, char **argv)
 {
 	try
@@ -94,9 +101,10 @@ int main(int argc, char **argv)
 			return -1;
 		}
     
-    initLogger();
-  
 		daemonInit();
+
+    initLogger();
+    atexit(atExitHandler);
 
 		Manager::init(argv[1]);
 
@@ -142,6 +150,5 @@ int main(int argc, char **argv)
 	{
 		smsc_log_info(Logger::getInstance("smsc.admin.daemon"), "Exception: <unknown>");
 	}
-  smsc::logger::Logger::Shutdown();
 }
 

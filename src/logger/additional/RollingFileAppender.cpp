@@ -108,6 +108,7 @@ void RollingFileAppender::log(const char logLevelName, const char * const catego
 	const size_t timeStrLength = ::strftime(timeStr, sizeof(timeStr)/sizeof(timeStr[0]), "%d-%m %H:%M:%S", &lcltm);
 	timeStr[timeStrLength] = 0;
 	fprintf(file != NULL ? file : stderr, "%c %s,%3.3u %3.3u % 10.10s: %s\n", logLevelName, timeStr, tp.tv_usec/1000, ::pthread_self(), category, message);
+  fflush(file);
 	if (file != NULL && ftell(file) > maxFileSize)
 		rollover();
 }
