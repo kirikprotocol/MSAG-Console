@@ -75,20 +75,6 @@ void rand_char(int length, char* buf)
 	buf[length] = 0;
 }
 
-bool TCResult::operator== (const TCResult& tcRes) const
-{
-	bool res = id == tcRes.getId() && choice == tcRes.getChoice() &&
-		failures.size() == tcRes.getFailures().size();
-	if (res)
-	{
-		for (int i = 0; i < failures.size(); i++)
-		{
-			res &= failures[i] == tcRes.getFailures()[i];
-		}
-	}
-	return res;
-}
-
 TCSelector::TCSelector(int _val, int _maxVal, int _base)
 	: pos(0), val(NULL)
 {
@@ -125,26 +111,6 @@ TCSelector::TCSelector(int _val, int _maxVal, int _base)
 			val = new int(_val);
 			choice = *val;
 	}
-}
-
-ostream& operator<< (ostream& os, const TCResult& res)
-{
-	os << res.getId() << "(" << res.getChoice() << ")";
-	const vector<int>& failures = res.getFailures();
-	if (failures.size())
-	{
-		os << "{";
-		for (int i = 0; i < failures.size(); i++)
-		{
-			if (i > 0)
-			{
-				os << ",";
-			}
-			os << failures[i];
-		}
-		os << "}";
-	}
-	return os;
 }
 
 }
