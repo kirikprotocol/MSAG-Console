@@ -150,7 +150,7 @@ void MapIoTask::init()
   MsgTraceOn( ETSIMAP_ID );
   MsgTraceOn( TCAP_ID );
   __trace__("MAP: Unbind");
-  warning_if(!Et96MapUnbindReq(SSN));  
+  Et96MapUnbindReq(SSN);  
   __trace__("MAP: Bind");
   throw_if(Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK);
   __trace__("MAP: Ok");
@@ -181,8 +181,8 @@ Mutex MapDialogContainer::sync_object;
 int MapIoTask::Execute(){
   try{
     init();
-    startevent->Signal();
     is_started = true;
+    startevent->Signal();
     dispatcher();
     //deinit();
   }catch(exception& e){
