@@ -15,6 +15,8 @@
   <param name="timeout" value="20"/>
   <param name="receiptSchemeName" value="default"/>
   <param name="priority" value="16384"/>
+  <param name="disabled" value="true"/>
+  <param name="mode" value="tx"/>
 </smerecord>
 <smerecord type="smpp" uid="2">
   <param name="typeOfNumber" value="0"/>
@@ -28,6 +30,7 @@
   <param name="forceDC" value="false"/>
   <param name="timeout" value="20"/>
   <param name="receiptSchemeName" value="default"/>
+  <param name="mode" value="rx"/>
 <param name="priority" value="16384"/>
 </smerecord>
 <smerecord type="smpp" uid="3">
@@ -43,6 +46,7 @@
   <param name="timeout" value="20"/>
   <param name="receiptSchemeName" value="default"/>
   <param name="priority" value="16384"/>
+  <param name="mode" value="trx"/>
 </smerecord>
 <smerecord type="smpp" uid="4">
   <param name="typeOfNumber" value="0"/>
