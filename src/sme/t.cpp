@@ -5,6 +5,8 @@
 #include "sme/SmppBase.hpp"
 #include "sms/sms.h"
 #include "util/smstext.h"
+#include "readline/readline.h"
+#include "readline/history.h"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -47,6 +49,7 @@ public:
     {
       printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
     }
+    rl_forced_update_display();
     disposePdu(pdu);
   }
   void handleError(int errorCode)
@@ -65,124 +68,164 @@ protected:
 
 int main(int argc,char* argv[])
 {
+  using_history ();
+
   if(argc==1)
   {
-    printf("usage: %s systemid host[:port] [sourceaddr]\n",argv[0]);
+    printf("usage: %s systemid [options]\n",argv[0]);
+    printf("Options are:\n");
+    printf("\t -h host[:port] (default == smsc:9001)\n"
+           "\t -a addr (defauld == sid)\n"
+           "\t -p password (default == sid)\n"
+           "\t -t bind type (tx,rx,trx)\n");
     return -1;
   }
   Logger::Init("log4cpp.t");
   SmeConfig cfg;
-  string host=argc>2?argv[2]:"smsc";
-  int pos=host.find(":");
+  string host="smsc";
   int port=9001;
-  if(pos>0)
-  {
-    port=atoi(host.substr(pos+1).c_str());
-    host.erase(pos);
-  }
+
   string source=argv[1];
-  if(argc>3)source=argv[3];
+
   cfg.host=host;
   cfg.port=port;
-  cfg.sid=argv[1];
+  cfg.sid=source;
   cfg.timeOut=10;
-  cfg.password=argc>4?argv[4]:cfg.sid;
+  cfg.password=cfg.sid;
   MyListener lst;
+
+  int bindType=BindType::Transceiver;
+
+  for(int i=2;i<argc;i+=2)
+  {
+    char *opt=argv[i];
+    if(i+1==argc)
+    {
+      fprintf(stderr,"Option argument missing:%s\n",opt);
+      return -1;
+    }
+    char *optarg=argv[i+1];
+    if(opt[0]!='-' || strlen(opt)!=2)
+    {
+      fprintf(stderr,"Unrecognized option:%s\n",opt);
+      return -1;
+    }
+    switch(opt[1])
+    {
+      case 'h':
+      {
+        host=optarg;
+        int pos=host.find(":");
+        if(pos>0)
+        {
+          port=atoi(host.substr(pos+1).c_str());
+          host.erase(pos);
+        }
+      }break;
+      case 'a':
+      {
+        source=optarg;
+      }break;
+      case 'p':
+      {
+        cfg.password=optarg;
+      }break;
+      case 't':
+      {
+        string t=optarg;
+        if(t=="rx")bindType=BindType::Receiver;
+        else if(t=="tx")bindType=BindType::Transmitter;
+        else if(t=="trx")bindType=BindType::Transceiver;
+        else
+        {
+          fprintf(stderr,"Unknown bind type:%s\n",optarg);
+          return -1;
+        }
+      }break;
+    }
+  }
+
+
   SmppSession ss(cfg,&lst);
   try{
-    ss.connect();//BindType::Receiver);
+    ss.connect(bindType);
     PduSubmitSm sm;
     SMS s;
-//    const char *dst="2";
-//47.44.rymhrwDMy4
-    Address addr(source.c_str());
-    s.setOriginatingAddress(addr);
+
+    {
+      try{
+        Address addr(source.c_str());
+        s.setOriginatingAddress(addr);
+      }catch(...)
+      {
+        fprintf(stderr,"Invalid source address\n");
+        return -1;
+      }
+    }
     char msc[]="";
     char imsi[]="";
     s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
-    //s.setWaitTime(0);
-    //time_t t=time(NULL)+60;
+
+
     s.setValidTime(0);
-    //s.setSubmitTime(0);
-    //s.setPriority(0);
-    //s.setProtocolIdentifier(0);
+
+
     s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
     s.setDeliveryReport(0);
     s.setArchivationRequested(false);
-//    s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,2);
-    //unsigned char message[]="SME test message";
+
     SmppTransmitter *tr=ss.getSyncTransmitter();
-    //SmppTransmitter *atr=ss.getAsyncTransmitter();
+
     lst.setTrans(tr);
     s.setEServiceType("XXX");
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+    char *addr=NULL;
+    char *message=NULL;
     while(!stopped)
     {
-      char message[512];
-      printf("Enter destination:");fflush(stdout);
-      fgets((char*)message,sizeof(message),stdin);
-      int i=0;
-      while(message[i])
-      {
-        if(message[i]<32)
-        {
-          message[i]=0;
-          break;
-        }
-        i++;
-      }
-      if(!*message)continue;
-      if(!strcmp((char*)message,"quit"))
+      if(addr)free(addr);
+      addr=NULL;
+      addr=readline("Enter destination:");
+      if(!addr)break;
+      if(!*addr)continue;
+      if(!strcmp((char*)addr,"quit"))
       {
         break;
       }
       try{
-        Address dst((char*)message);
+        Address dst((char*)addr);
         s.setDestinationAddress(dst);
       }catch(...)
       {
         printf("Invalid address\n");
         continue;
       }
-      printf("Enter message:");fflush(stdout);
-      fgets((char*)message,sizeof(message),stdin);
-      for(int i=0;message[i];i++)
-      {
-        if(message[i]<32)message[i]=0;
-      }
-      int len=strlen((char*)message);
-      //char buf7[256];
-      //int len7=ConvertTextTo7Bit((char*)message,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
+      if(message)free(message);
+      message=NULL;
+      message=readline("Enter message:");
+      int len=strlen(message);
 
-      //s.setMessageBody(len,1,false,message);
-      //s.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,message,len);
-      //s.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len);
-      s.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
-      s.setIntProperty(smsc::sms::Tag::SMPP_REGISTRED_DELIVERY,61);
-      Array<SMS*> smsarr;
-      splitSms(&s,message,len,CONV_ENCODING_KOI8R,DataCoding::DEFAULT,smsarr);
-      for(int x=0;x<smsarr.Count();x++)
-      {
-        fillSmppPduFromSms(&sm,smsarr[x]);
-        PduSubmitSmResp *resp;
-        try{
-          resp=tr->submit(sm);
-        }catch(SmppInvalidBindState& e)
-        {
-          resp=NULL;
-          printf("Pdu sent  in invalid bind state\n");
-        }
+      s.setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+      s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,message,len);
 
-  //      atr->submit(sm);
-        if(resp && resp->get_header().get_commandStatus()==0)
-        {
-          printf("Accepted:%d bytes\n",len);fflush(stdout);
-        }else
-        {
-          printf("Wasn't accepted\n");fflush(stdout);
-        }
-        if(resp)disposePdu((SmppHeader*)resp);
+      fillSmppPduFromSms(&sm,&s);
+      PduSubmitSmResp *resp;
+      try{
+        resp=tr->submit(sm);
+      }catch(SmppInvalidBindState& e)
+      {
+        resp=NULL;
+        printf("Pdu sent  in invalid bind state\n");
       }
+
+      if(resp && resp->get_header().get_commandStatus()==0)
+      {
+        printf("Accepted:%d bytes\n",len);fflush(stdout);
+      }else
+      {
+        printf("Wasn't accepted\n");fflush(stdout);
+      }
+      if(resp)disposePdu((SmppHeader*)resp);
     }
   }
   catch(SmppConnectException& e)
