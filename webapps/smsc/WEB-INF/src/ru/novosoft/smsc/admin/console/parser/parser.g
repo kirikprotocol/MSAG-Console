@@ -44,41 +44,46 @@ options {
 parse returns [Command cmd] {
     cmd = null;
 }
-	:	ACT_ADD 	cmd = add 
-	| 	ACT_DELETE 	cmd = del
-	| 	ACT_ALTER 	cmd = alt
-	| 	ACT_LIST 	cmd = lst 
-	| 	ACT_VIEW	cmd = view
-	|	ACT_SHOW	cmd = show
-	|	ACT_APPLY     { cmd = new ApplyCommand(); }
+	:	ACT_ADD     cmd = add
+	| ACT_DELETE 	cmd = del
+	| ACT_ALTER 	cmd = alt
+	| ACT_LIST 	  cmd = lst
+	| ACT_VIEW	  cmd = view
+	|	ACT_SHOW	  cmd = show
+  | ACT_GRANT   cmd = grant
+  | ACT_REVOKE  cmd = revoke
+  | ACT_CHECK   cmd = check
+	|	ACT_APPLY { cmd = new ApplyCommand(); }
 	;
 	
 /* ----------------------- Add action parser ---------------------- */
 add returns [Command cmd] {
     cmd = null;
 }
-	:	TGT_ROUTE 	cmd = addroute
-	|	TGT_ALIAS 	cmd = addalias
-	|	TGT_SUBJECT	cmd = addsubject
-	|	TGT_PROFILE	cmd = addprofile
+	:	TGT_ROUTE 	  cmd = addroute
+	|	TGT_ALIAS 	  cmd = addalias
+	|	TGT_SUBJECT	  cmd = addsubject
+	|	TGT_PROFILE	  cmd = addprofile
 	|	TGT_PRINCIPAL	cmd = addprincipal
-	|	TGT_DL		cmd = adddl
-	|	TGT_DLSUB	cmd = adddlsubmitter
-	|	TGT_DLMEM	cmd = adddlmember
+	| TGT_ACL       cmd = addacl
+	|	TGT_DL		    cmd = adddl
+	|	TGT_DLSUB	    cmd = adddlsubmitter
+	|	TGT_DLMEM	    cmd = adddlmember
 	;
 	
 /* ----------------------- Del action parser ---------------------- */
 del returns [Command cmd] {
     cmd = null;
 }
-	:	TGT_ROUTE 	cmd = delroute
-	|	TGT_ALIAS 	cmd = delalias
-	|	TGT_SUBJECT	cmd = delsubject
-	|	TGT_PROFILE	cmd = delprofile
+	:	TGT_ROUTE 	  cmd = delroute
+	|	TGT_ALIAS 	  cmd = delalias
+	|	TGT_SUBJECT	  cmd = delsubject
+	|	TGT_PROFILE	  cmd = delprofile
 	|	TGT_PRINCIPAL	cmd = delprincipal
-	|	TGT_DL		cmd = deldl
-	|	TGT_DLSUB	cmd = deldlsubmitter
-	|	TGT_DLMEM	cmd = deldlmember
+	| TGT_ACL       cmd = delacl
+	|	TGT_DL		    cmd = deldl
+	|	TGT_DLSUB	    cmd = deldlsubmitter
+	|	TGT_DLMEM	    cmd = deldlmember
 	;
 /* ----------------------- Alt action parser ---------------------- */
 alt returns [Command cmd] {
@@ -89,28 +94,31 @@ alt returns [Command cmd] {
 	|	TGT_SUBJECT 	cmd = altsubject
 	|	TGT_PROFILE 	cmd = altprofile
 	|	TGT_PRINCIPAL	cmd = altprincipal
-	|	TGT_DL		cmd = altdl
+	| TGT_ACL       cmd = altacl
+	|	TGT_DL		    cmd = altdl
 	;
 /* ----------------------- Lst action parser ---------------------- */
 lst returns [Command cmd] {
     cmd = null;
 }
-	:	TGT_ROUTE 	{ cmd = new RouteListCommand();     }
-	|	TGT_ALIAS 	{ cmd = new AliasListCommand();     }
-	|	TGT_SUBJECT	{ cmd = new SubjectListCommand();   }
+	:	TGT_ROUTE 	  { cmd = new RouteListCommand();     }
+	|	TGT_ALIAS 	  { cmd = new AliasListCommand();     }
+	|	TGT_SUBJECT	  { cmd = new SubjectListCommand();   }
 	|	TGT_PRINCIPAL	{ cmd = new PrincipalListCommand(); }
-	|	TGT_DL		{ cmd = new DistributionListListCommand(); }
+	| TGT_ACL       { cmd = new AclListCommand(); }
+	|	TGT_DL		    { cmd = new DistributionListListCommand(); }
 	;
 /* ----------------------- View action parser --------------------- */
 view returns [Command cmd] {
     cmd = null;
 }
-	:	TGT_ROUTE	cmd = viewroute
-	|	TGT_ALIAS 	cmd = viewalias
-	|	TGT_SUBJECT	cmd = viewsubject
-	|	TGT_PROFILE	cmd = viewprofile
+	:	TGT_ROUTE	    cmd = viewroute
+	|	TGT_ALIAS 	  cmd = viewalias
+	|	TGT_SUBJECT	  cmd = viewsubject
+	|	TGT_PROFILE	  cmd = viewprofile
 	|	TGT_PRINCIPAL	cmd = viewprincipal
-	|	TGT_DL		cmd = viewdl
+	| TGT_ACL       cmd = viewacl
+	|	TGT_DL		    cmd = viewdl
 	;
 /* ----------------------- Show action parser --------------------- */
 show returns [AliasShowCommand cmd] {
@@ -125,8 +133,25 @@ show returns [AliasShowCommand cmd] {
 	catch [RecognitionException ex] {
 	    throw new RecognitionException("Target address for aliases expected");
 	}
-	
-	
+/* ----------------------- Grant action parser --------------------- */
+grant returns[Command cmd] {
+    cmd = null;
+}
+  : ADD_ACCESS ADD_TO TGT_ACL cmd = grantacl
+  ;
+/* ----------------------- Revoke action parser -------------------- */
+revoke returns[Command cmd] {
+    cmd = null;
+}
+  : ADD_ACCESS ADD_TO TGT_ACL cmd = revokeacl
+  ;
+/* ----------------------- Check action parser --------------------- */
+check returns[Command cmd] {
+    cmd = null;
+}
+  : ADD_ACCESS ADD_TO TGT_ACL cmd = checkacl
+  ;
+
 /* ----------------------- Common names parser ------------------------- */
 getnameid[String msg] returns [String out] {
     out = null; 
@@ -140,41 +165,46 @@ getnameid[String msg] returns [String out] {
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException(ex.getMessage()+". "+
-					  msg+" expected. ");
+    throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
 	}
-
+/* ----------------------- Common long parser ------------------------- */
+getlongid[String msg] returns [long id] {
+    id = 0;
+} : (num:STR { id = Long.parseLong(num.getText()); })
+  ;
+	exception
+	catch [RecognitionException ex] {
+    throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
+	}
+	catch [NumberFormatException ex] {
+    throw new RecognitionException(ex.getMessage()+". Long value for <"+msg+"> expected. ");
+	}
 /* ----------------------- Common routes parsers ----------------------- */
 srcdef[RouteGenCommand cmd] { // Special command required !!!
     RouteSrcDef def = new RouteSrcDef();
 }
-	:	( (
-OPT_SUBJ { 
+	:	((OPT_SUBJ {
 		    def.setType(RouteSrcDef.TYPE_SUBJECT);
 		    def.setSrc(getnameid("Subject name"));
 		  }) 
-		| (OPT_MASK addr:STR {
+		|(OPT_MASK addr:STR {
 		    def.setType(RouteSrcDef.TYPE_MASK); 
 		    def.setSrc(addr.getText());
-		  })
-		) 
-		({ 
-		    cmd.addSrcDef(def);	
-		})
+		 }))
+		({ cmd.addSrcDef(def); })
 	;
 	       	
 dstdef[RouteGenCommand cmd, boolean needSmeId] { // Special command required !!!
     RouteDstDef def = new RouteDstDef();
 }
-	:	( (OPT_SUBJ { 
+	:	((OPT_SUBJ {
 		    def.setType(RouteDstDef.TYPE_SUBJECT);
 		    def.setDst(getnameid("Subject name"));
-		  }) 
-		| (OPT_MASK addr:STR { 
+		 })
+		|(OPT_MASK addr:STR {
 		    def.setType(RouteDstDef.TYPE_MASK); 
 		    def.setDst(addr.getText());
-		  })
-		)
+		 }))
 		({
 		    if (needSmeId) def.setSmeId(getnameid("SME System id"));
 		    cmd.addDstDef(def);
@@ -220,16 +250,16 @@ addroute returns [RouteAddCommand cmd] {
 		addroute_flags[cmd]
 		(OPT_SVCID num:STR {
 		    try {
-			cmd.setServiceId(Integer.parseInt(num.getText()));
+			    cmd.setServiceId(Integer.parseInt(num.getText()));
 		    } catch (NumberFormatException ex) {
-			throw new NumberFormatException("Expecting integer value for <serviceid>");
+			    throw new NumberFormatException("Expecting integer value for <serviceid>");
 		    }
 		})
 		(OPT_PRI pri:STR {
 		    try {
-			cmd.setPriority(Integer.parseInt(pri.getText()));		    
+			    cmd.setPriority(Integer.parseInt(pri.getText()));
 		    } catch (NumberFormatException ex) {
-			throw new NumberFormatException("Expecting integer value for <priority>");
+			    throw new NumberFormatException("Expecting integer value for <priority>");
 		    }
 		})
 		(OPT_DM route_dm[cmd])?
@@ -240,20 +270,20 @@ addroute returns [RouteAddCommand cmd] {
 	;
 
 addroute_flags[RouteAddCommand cmd]
-	:	( OPT_ACTIVE 	{ cmd.setActive(true);  }
+	:	( OPT_ACTIVE 	  { cmd.setActive(true);  }
 		| OPT_INACTIVE	{ cmd.setActive(false);	})?
 		( OPT_HIDE      { cmd.setHide(true);    }
 		| OPT_NOHIDE    { cmd.setHide(false);   })?
-		( OPT_FRP	{ cmd.setForceReplayPath(true); })?
-		( OPT_FD	{ cmd.setForceDelivery(true);   })?
-		( OPT_BILL   	{ cmd.setBill(true);   	}
-		| OPT_NOBILL 	{ cmd.setBill(false);  	})
-		( OPT_ARCH   	{ cmd.setArc(true);    	}
-		| OPT_NOARCH 	{ cmd.setArc(false);   	})
-	        ( OPT_ALLOW  	{ cmd.setAllow(true);  	}
-		| OPT_DENY   	{ cmd.setAllow(false); 	})
-	        ( OPT_RCPT   	{ cmd.setReceipt(true); }
-		| OPT_NORCPT 	{ cmd.setReceipt(false);})
+		( OPT_FRP	      { cmd.setForceReplayPath(true); })?
+		( OPT_FD	      { cmd.setForceDelivery(true);   })?
+		( OPT_BILL   	  { cmd.setBill(true);   	}
+		| OPT_NOBILL 	  { cmd.setBill(false);  	})
+		( OPT_ARCH   	  { cmd.setArc(true);    	}
+		| OPT_NOARCH 	  { cmd.setArc(false);   	})
+	  ( OPT_ALLOW  	  { cmd.setAllow(true);  	}
+		| OPT_DENY   	  { cmd.setAllow(false); 	})
+	  ( OPT_RCPT   	  { cmd.setReceipt(true); }
+		| OPT_NORCPT 	  { cmd.setReceipt(false);})
 	;
 	exception
 	catch [RecognitionException ex] {
@@ -277,11 +307,11 @@ altroute returns [RouteAlterCommand cmd] {
 		altroute_flags[cmd]
 		(OPT_SVCID num:STR {
 		    try {
-			cmd.setServiceId(Integer.parseInt(num.getText()));
+			    cmd.setServiceId(Integer.parseInt(num.getText()));
 		    } catch (NumberFormatException ex) {
-			throw new NumberFormatException("Expecting integer value for <serviceid>");
+			    throw new NumberFormatException("Expecting integer value for <serviceid>");
 		    }
-		}) ?
+		})?
 		(OPT_PRI pri:STR {
 		    try {
 			cmd.setPriority(Integer.parseInt(pri.getText()));		    
@@ -290,8 +320,8 @@ altroute returns [RouteAlterCommand cmd] {
 		    }
 		}) ?
 		(OPT_DM route_dm[cmd])?
-		(OPT_SRCSME { cmd.setSrcSmeId(getnameid("srcSmeId value"));   } )?
-		(OPT_FWD    { cmd.setForwardTo(getnameid("forwardTo value")); } )?
+		(OPT_SRCSME  { cmd.setSrcSmeId(getnameid("srcSmeId value"));   })?
+		(OPT_FWD     { cmd.setForwardTo(getnameid("forwardTo value")); })?
 		(
 		((ACT_ADD    { cmd.setAction(RouteAlterCommand.ACTION_ADD); addAction=true;  })
 		|(ACT_DELETE { cmd.setAction(RouteAlterCommand.ACTION_DEL); addAction=false; }))
@@ -305,22 +335,22 @@ altroute returns [RouteAlterCommand cmd] {
 		)?
 	;
 altroute_flags[RouteAlterCommand cmd]
-	:	( OPT_ACTIVE 	{ cmd.setActive(true);   }
-		| OPT_INACTIVE	{ cmd.setActive(false);	 })?
-		( OPT_HIDE      { cmd.setHide(true);     }
-		| OPT_NOHIDE    { cmd.setHide(false);    })?
-		( OPT_FRP (OPT_ON  { cmd.setForceReplayPath(true);  }
-			  |OPT_OFF { cmd.setForceReplayPath(false); }))?
-		( OPT_FD  (OPT_ON  { cmd.setForceDelivery(true);    }
-			  |OPT_OFF { cmd.setForceDelivery(false);   }))?
-		( OPT_BILL   	{ cmd.setBill(true);     } 
-		| OPT_NOBILL 	{ cmd.setBill(false);    })?
-		( OPT_ARCH   	{ cmd.setArc(true);      } 
-		| OPT_NOARCH 	{ cmd.setArc(false);     })?
-	        ( OPT_ALLOW  	{ cmd.setAllow(true);    }
-		| OPT_DENY   	{ cmd.setAllow(false);   })?
-	        ( OPT_RCPT   	{ cmd.setReceipt(true);  }
-		| OPT_NORCPT 	{ cmd.setReceipt(false); })?
+	:	( OPT_ACTIVE 	      { cmd.setActive(true);   }
+		| OPT_INACTIVE	    { cmd.setActive(false);	 })?
+		( OPT_HIDE          { cmd.setHide(true);     }
+		| OPT_NOHIDE        { cmd.setHide(false);    })?
+		( OPT_FRP (OPT_ON   { cmd.setForceReplayPath(true);  }
+		          |OPT_OFF  { cmd.setForceReplayPath(false); }))?
+		( OPT_FD  (OPT_ON   { cmd.setForceDelivery(true);    }
+		          |OPT_OFF  { cmd.setForceDelivery(false);   }))?
+		( OPT_BILL   	      { cmd.setBill(true);     }
+		| OPT_NOBILL 	      { cmd.setBill(false);    })?
+		( OPT_ARCH   	      { cmd.setArc(true);      }
+		| OPT_NOARCH 	      { cmd.setArc(false);     })?
+	  ( OPT_ALLOW  	      { cmd.setAllow(true);    }
+		| OPT_DENY   	      { cmd.setAllow(false);   })?
+	  ( OPT_RCPT   	      { cmd.setReceipt(true);  }
+		| OPT_NORCPT 	      { cmd.setReceipt(false); })?
 	;
 	exception
 	catch [RecognitionException ex] {
@@ -505,7 +535,7 @@ altprofile returns [ProfileAlterCommand cmd] {
 }
 	:	(addr:STR   { cmd.setAddress(addr.getText()); })
 		(OPT_REPORT (VAL_FULL { cmd.setFullReport(); }
-			   | VAL_NONE { cmd.setNoneReport(); } ))?
+			          |VAL_NONE { cmd.setNoneReport(); } ))?
 		(OPT_LOCALE { cmd.setLocale(getnameid("Locale name")); } )?
 		(OPT_ENCODE profile_encode_opt[cmd] )?
 		(TGT_ALIAS  profile_alias_opt[cmd]  )?
@@ -541,7 +571,6 @@ viewprofile returns [ProfileViewCommand cmd] {
 	}
 
 /* ------------------ Distribution lists commands parsers ---------------- */
-
 addprincipal returns [PrincipalAddCommand cmd] {
     cmd = new PrincipalAddCommand();
 }
@@ -584,18 +613,18 @@ altprincipal returns [PrincipalAlterCommand cmd] {
 	:	(addr:STR  { cmd.setAddress(addr.getText()); })
 		(OPT_NLIST numl:STR {
 		    try {
-			cmd.setMaxLists(Integer.parseInt(numl.getText()));
+			    cmd.setMaxLists(Integer.parseInt(numl.getText()));
 		    } catch (NumberFormatException ex) {
-			throw new NumberFormatException("Expecting integer value for <numlist>");
+			    throw new NumberFormatException("Expecting integer value for <numlist>");
 		    }
-		}) ?
+		})?
 		(OPT_NELEM nume:STR {
 		    try {
-			cmd.setMaxElements(Integer.parseInt(nume.getText()));
+			    cmd.setMaxElements(Integer.parseInt(nume.getText()));
 		    } catch (NumberFormatException ex) {
-			throw new NumberFormatException("Expecting integer value for <numelem>");
+			    throw new NumberFormatException("Expecting integer value for <numelem>");
 		    }
-		}) ?
+		})?
 	;
 	exception[addr]
 	catch [RecognitionException ex] {
@@ -630,19 +659,17 @@ viewprincipal returns [PrincipalViewCommand cmd] {
 adddl returns [DistributionListAddCommand cmd] {
     cmd = new DistributionListAddCommand();
 }
-	:	({	
-		    cmd.setName(getnameid("Distribution list name"));
-		})
+	:	({ cmd.setName(getnameid("Distribution list name")); })
 		(OPT_NELEM nume:STR  {
 		    try {
-			cmd.setMaxElements(Integer.parseInt(nume.getText()));
+			    cmd.setMaxElements(Integer.parseInt(nume.getText()));
 		    } catch (NumberFormatException ex) {
-			throw new NumberFormatException("Expecting integer value for <numelem>");
+			    throw new NumberFormatException("Expecting integer value for <numelem>");
 		    }
 		})		
 		(OPT_OWNER owner:STR { 
 		    cmd.setOwner(owner.getText());
-		}) ?
+		})?
 	;
 	exception[nume]
 	catch [RecognitionException ex] {
@@ -660,14 +687,12 @@ adddl returns [DistributionListAddCommand cmd] {
 altdl returns [DistributionListAlterCommand cmd] {
     cmd = new DistributionListAlterCommand();
 }
-	:	({	
-		    cmd.setName(getnameid("Distribution list name"));
-		})
+	:	({ cmd.setName(getnameid("Distribution list name")); })
 		(OPT_NELEM nume:STR  {
 		    try {
-			cmd.setMaxElements(Integer.parseInt(nume.getText()));
+			    cmd.setMaxElements(Integer.parseInt(nume.getText()));
 		    } catch (NumberFormatException ex) {
-			throw new NumberFormatException("Expecting integer value for <numelem>");
+			    throw new NumberFormatException("Expecting integer value for <numelem>");
 		    }
 		})		
 	;
@@ -680,28 +705,20 @@ altdl returns [DistributionListAlterCommand cmd] {
 viewdl returns [DistributionListViewCommand cmd] {
     cmd = new DistributionListViewCommand();
 }
-	:	({	
-		    cmd.setName(getnameid("Distribution list name"));
-		})
+	:	({ cmd.setName(getnameid("Distribution list name")); })
 	;
 
 deldl returns [DistributionListDeleteCommand cmd] {
     cmd = new DistributionListDeleteCommand();
 }
-	:	({	
-		    cmd.setName(getnameid("Distribution list name"));
-		})
+	:	({ cmd.setName(getnameid("Distribution list name")); })
 	;
 
 adddlmember returns [MemberAddCommand cmd] {
     cmd = new MemberAddCommand();
 }
-	:	({	
-		    cmd.setName(getnameid("Distribution list name"));
-		})
-		(member:STR { 
-		    cmd.setMember(member.getText());
-		})
+	:	({ cmd.setName(getnameid("Distribution list name")); })
+		(member:STR   { cmd.setMember(member.getText());     })
 	;
 	exception[member]
 	catch [RecognitionException ex] {
@@ -711,12 +728,8 @@ adddlmember returns [MemberAddCommand cmd] {
 deldlmember returns [MemberDeleteCommand cmd] {
     cmd = new MemberDeleteCommand();
 }
-	:	({	
-		    cmd.setName(getnameid("Distribution list name"));
-		})
-		(member:STR { 
-		    cmd.setMember(member.getText());
-		})
+	:	({ cmd.setName(getnameid("Distribution list name")); })
+		(member:STR   { cmd.setMember(member.getText());     })
 	;
 	exception[member]
 	catch [RecognitionException ex] {
@@ -726,12 +739,8 @@ deldlmember returns [MemberDeleteCommand cmd] {
 adddlsubmitter returns [SubmitterAddCommand cmd] {
     cmd = new SubmitterAddCommand();
 }
-	:	({	
-		    cmd.setName(getnameid("Distribution list name"));
-		})
-		(submitter:STR { 
-		    cmd.setSubmitter(submitter.getText());
-		})
+	:	({ cmd.setName(getnameid("Distribution list name")); })
+		(submitter:STR { cmd.setSubmitter(submitter.getText()); })
 	;
 	exception[submitter]
 	catch [RecognitionException ex] {
@@ -741,14 +750,62 @@ adddlsubmitter returns [SubmitterAddCommand cmd] {
 deldlsubmitter returns [SubmitterDeleteCommand cmd] {
     cmd = new SubmitterDeleteCommand();
 }
-	:	({	
-		    cmd.setName(getnameid("Distribution list name"));
-		})
-		(submitter:STR { 
-		    cmd.setSubmitter(submitter.getText());
-		})
+	:	({ cmd.setName(getnameid("Distribution list name")); })
+		(submitter:STR { cmd.setSubmitter(submitter.getText());	})
 	;
 	exception[submitter]
 	catch [RecognitionException ex] {
 	    throw new RecognitionException("Submitter address expected");
+	}
+
+/* ------------------ ACL commands parsers ---------------- */
+addacl returns[AclAddCommand cmd] {
+    cmd = new AclAddCommand();
+} : (OPT_NAME  { cmd.setName (getnameid("acl name")); })
+    (OPT_NOTES { cmd.setDescription(getnameid("acl notes")); })?
+    (OPT_CACHE (VAL_FULL { cmd.setCache(AclGenCommand.CACHE_FULLCACHE); }
+               |VAL_NONE { cmd.setCache(AclGenCommand.CACHE_DBSDIRECT); }))
+  ;
+delacl returns[AclDeleteCommand cmd] {
+    cmd = new AclDeleteCommand();
+} : ({ cmd.setAclId(getlongid("acl id"));   })
+  ;
+altacl returns[AclAlterCommand cmd] {
+    cmd = new AclAlterCommand();
+} : ({ cmd.setAclId(getlongid("acl id"));   })
+    (OPT_NAME  { cmd.setName (getnameid("acl name")); })?
+    (OPT_NOTES { cmd.setDescription(getnameid("acl notes")); })?
+    (OPT_CACHE (VAL_FULL { cmd.setCache(AclGenCommand.CACHE_FULLCACHE); }
+               |VAL_NONE { cmd.setCache(AclGenCommand.CACHE_DBSDIRECT); }))?
+  ;
+viewacl returns[AclViewCommand cmd] {
+    cmd = new AclViewCommand();
+} : ({ cmd.setAclId(getlongid("acl id"));   })
+  ;
+grantacl returns[AclGrantCommand cmd] {
+    cmd = new AclGrantCommand();
+} : ({ cmd.setAclId(getlongid("acl id"));   })
+    (ADD_FOR addr:STR { cmd.setAddress(addr.getText()); })
+  ;
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Address string expected");
+	}
+revokeacl returns[AclRevokeCommand cmd] {
+    cmd = new AclRevokeCommand();
+} : ({ cmd.setAclId(getlongid("acl id"));   })
+    (ADD_FOR addr:STR { cmd.setAddress(addr.getText()); })
+  ;
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Address string expected");
+	}
+checkacl returns[AclCheckCommand cmd] {
+    cmd = new AclCheckCommand();
+} : ({ cmd.setAclId(getlongid("acl id"));   })
+    (ADD_FOR addr:STR { cmd.setAddress(addr.getText()); })
+  ;
+	exception[addr]
+	catch [RecognitionException ex] {
+	    throw new RecognitionException("Address string expected");
 	}

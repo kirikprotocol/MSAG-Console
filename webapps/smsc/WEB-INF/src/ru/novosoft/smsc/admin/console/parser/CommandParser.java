@@ -100,6 +100,24 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=show();
 			break;
 		}
+		case ACT_GRANT:
+		{
+			match(ACT_GRANT);
+			cmd=grant();
+			break;
+		}
+		case ACT_REVOKE:
+		{
+			match(ACT_REVOKE);
+			cmd=revoke();
+			break;
+		}
+		case ACT_CHECK:
+		{
+			match(ACT_CHECK);
+			cmd=check();
+			break;
+		}
 		case ACT_APPLY:
 		{
 			match(ACT_APPLY);
@@ -150,6 +168,12 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_PRINCIPAL);
 			cmd=addprincipal();
+			break;
+		}
+		case TGT_ACL:
+		{
+			match(TGT_ACL);
+			cmd=addacl();
 			break;
 		}
 		case TGT_DL:
@@ -216,6 +240,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=delprincipal();
 			break;
 		}
+		case TGT_ACL:
+		{
+			match(TGT_ACL);
+			cmd=delacl();
+			break;
+		}
 		case TGT_DL:
 		{
 			match(TGT_DL);
@@ -280,6 +310,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=altprincipal();
 			break;
 		}
+		case TGT_ACL:
+		{
+			match(TGT_ACL);
+			cmd=altacl();
+			break;
+		}
 		case TGT_DL:
 		{
 			match(TGT_DL);
@@ -324,6 +360,12 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_PRINCIPAL);
 			cmd = new PrincipalListCommand();
+			break;
+		}
+		case TGT_ACL:
+		{
+			match(TGT_ACL);
+			cmd = new AclListCommand();
 			break;
 		}
 		case TGT_DL:
@@ -378,6 +420,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=viewprincipal();
 			break;
 		}
+		case TGT_ACL:
+		{
+			match(TGT_ACL);
+			cmd=viewacl();
+			break;
+		}
 		case TGT_DL:
 		{
 			match(TGT_DL);
@@ -416,6 +464,48 @@ public CommandParser(ParserSharedInputState state) {
 				    cmd.setAddress(addr.getText());   
 				
 		}
+		return cmd;
+	}
+	
+	public final Command  grant() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
+		
+		
+		match(ADD_ACCESS);
+		match(ADD_TO);
+		match(TGT_ACL);
+		cmd=grantacl();
+		return cmd;
+	}
+	
+	public final Command  revoke() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
+		
+		
+		match(ADD_ACCESS);
+		match(ADD_TO);
+		match(TGT_ACL);
+		cmd=revokeacl();
+		return cmd;
+	}
+	
+	public final Command  check() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
+		
+		
+		match(ADD_ACCESS);
+		match(ADD_TO);
+		match(TGT_ACL);
+		cmd=checkacl();
 		return cmd;
 	}
 	
@@ -463,9 +553,9 @@ public CommandParser(ParserSharedInputState state) {
 		match(STR);
 		
 				    try {
-					cmd.setServiceId(Integer.parseInt(num.getText()));
+					    cmd.setServiceId(Integer.parseInt(num.getText()));
 				    } catch (NumberFormatException ex) {
-					throw new NumberFormatException("Expecting integer value for <serviceid>");
+					    throw new NumberFormatException("Expecting integer value for <serviceid>");
 				    }
 				
 		}
@@ -475,9 +565,9 @@ public CommandParser(ParserSharedInputState state) {
 		match(STR);
 		
 				    try {
-					cmd.setPriority(Integer.parseInt(pri.getText()));		    
+					    cmd.setPriority(Integer.parseInt(pri.getText()));
 				    } catch (NumberFormatException ex) {
-					throw new NumberFormatException("Expecting integer value for <priority>");
+					    throw new NumberFormatException("Expecting integer value for <priority>");
 				    }
 				
 		}
@@ -823,6 +913,61 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final AclAddCommand  addacl() throws RecognitionException, TokenStreamException {
+		AclAddCommand cmd;
+		
+		
+		cmd = new AclAddCommand();
+		
+		
+		{
+		match(OPT_NAME);
+		cmd.setName (getnameid("acl name"));
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_NOTES:
+		{
+			match(OPT_NOTES);
+			cmd.setDescription(getnameid("acl notes"));
+			break;
+		}
+		case OPT_CACHE:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		match(OPT_CACHE);
+		{
+		switch ( LA(1)) {
+		case VAL_FULL:
+		{
+			match(VAL_FULL);
+			cmd.setCache(AclGenCommand.CACHE_FULLCACHE);
+			break;
+		}
+		case VAL_NONE:
+		{
+			match(VAL_NONE);
+			cmd.setCache(AclGenCommand.CACHE_DBSDIRECT);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		}
+		return cmd;
+	}
+	
 	public final DistributionListAddCommand  adddl() throws RecognitionException, TokenStreamException {
 		DistributionListAddCommand cmd;
 		
@@ -834,9 +979,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		try {      // for error handling
 			{
-				
-					    cmd.setName(getnameid("Distribution list name"));
-					
+			cmd.setName(getnameid("Distribution list name"));
 			}
 			{
 			match(OPT_NELEM);
@@ -851,9 +994,9 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			
 					    try {
-						cmd.setMaxElements(Integer.parseInt(nume.getText()));
+						    cmd.setMaxElements(Integer.parseInt(nume.getText()));
 					    } catch (NumberFormatException ex) {
-						throw new NumberFormatException("Expecting integer value for <numelem>");
+						    throw new NumberFormatException("Expecting integer value for <numelem>");
 					    }
 					
 			}
@@ -904,9 +1047,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-			
-				    cmd.setName(getnameid("Distribution list name"));
-				
+		cmd.setName(getnameid("Distribution list name"));
 		}
 		{
 		try { // for error handling
@@ -918,9 +1059,7 @@ public CommandParser(ParserSharedInputState state) {
 				    throw new RecognitionException("Submitter address expected");
 				
 		}
-		
-				    cmd.setSubmitter(submitter.getText());
-				
+		cmd.setSubmitter(submitter.getText());
 		}
 		return cmd;
 	}
@@ -934,9 +1073,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-			
-				    cmd.setName(getnameid("Distribution list name"));
-				
+		cmd.setName(getnameid("Distribution list name"));
 		}
 		{
 		try { // for error handling
@@ -948,9 +1085,7 @@ public CommandParser(ParserSharedInputState state) {
 				    throw new RecognitionException("Member address expected");
 				
 		}
-		
-				    cmd.setMember(member.getText());
-				
+		cmd.setMember(member.getText());
 		}
 		return cmd;
 	}
@@ -1050,6 +1185,19 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final AclDeleteCommand  delacl() throws RecognitionException, TokenStreamException {
+		AclDeleteCommand cmd;
+		
+		
+		cmd = new AclDeleteCommand();
+		
+		
+		{
+		cmd.setAclId(getlongid("acl id"));
+		}
+		return cmd;
+	}
+	
 	public final DistributionListDeleteCommand  deldl() throws RecognitionException, TokenStreamException {
 		DistributionListDeleteCommand cmd;
 		
@@ -1058,9 +1206,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-			
-				    cmd.setName(getnameid("Distribution list name"));
-				
+		cmd.setName(getnameid("Distribution list name"));
 		}
 		return cmd;
 	}
@@ -1074,9 +1220,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-			
-				    cmd.setName(getnameid("Distribution list name"));
-				
+		cmd.setName(getnameid("Distribution list name"));
 		}
 		{
 		try { // for error handling
@@ -1088,9 +1232,7 @@ public CommandParser(ParserSharedInputState state) {
 				    throw new RecognitionException("Submitter address expected");
 				
 		}
-		
-				    cmd.setSubmitter(submitter.getText());
-				
+		cmd.setSubmitter(submitter.getText());	
 		}
 		return cmd;
 	}
@@ -1104,9 +1246,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-			
-				    cmd.setName(getnameid("Distribution list name"));
-				
+		cmd.setName(getnameid("Distribution list name"));
 		}
 		{
 		try { // for error handling
@@ -1118,9 +1258,7 @@ public CommandParser(ParserSharedInputState state) {
 				    throw new RecognitionException("Member address expected");
 				
 		}
-		
-				    cmd.setMember(member.getText());
-				
+		cmd.setMember(member.getText());
 		}
 		return cmd;
 	}
@@ -1187,9 +1325,9 @@ public CommandParser(ParserSharedInputState state) {
 			match(STR);
 			
 					    try {
-						cmd.setServiceId(Integer.parseInt(num.getText()));
+						    cmd.setServiceId(Integer.parseInt(num.getText()));
 					    } catch (NumberFormatException ex) {
-						throw new NumberFormatException("Expecting integer value for <serviceid>");
+						    throw new NumberFormatException("Expecting integer value for <serviceid>");
 					    }
 					
 			break;
@@ -1764,9 +1902,9 @@ public CommandParser(ParserSharedInputState state) {
 				match(STR);
 				
 						    try {
-							cmd.setMaxLists(Integer.parseInt(numl.getText()));
+							    cmd.setMaxLists(Integer.parseInt(numl.getText()));
 						    } catch (NumberFormatException ex) {
-							throw new NumberFormatException("Expecting integer value for <numlist>");
+							    throw new NumberFormatException("Expecting integer value for <numlist>");
 						    }
 						
 				break;
@@ -1791,9 +1929,9 @@ public CommandParser(ParserSharedInputState state) {
 				match(STR);
 				
 						    try {
-							cmd.setMaxElements(Integer.parseInt(nume.getText()));
+							    cmd.setMaxElements(Integer.parseInt(nume.getText()));
 						    } catch (NumberFormatException ex) {
-							throw new NumberFormatException("Expecting integer value for <numelem>");
+							    throw new NumberFormatException("Expecting integer value for <numelem>");
 						    }
 						
 				break;
@@ -1817,6 +1955,95 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final AclAlterCommand  altacl() throws RecognitionException, TokenStreamException {
+		AclAlterCommand cmd;
+		
+		
+		cmd = new AclAlterCommand();
+		
+		
+		{
+		cmd.setAclId(getlongid("acl id"));
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_NAME:
+		{
+			match(OPT_NAME);
+			cmd.setName (getnameid("acl name"));
+			break;
+		}
+		case EOF:
+		case OPT_NOTES:
+		case OPT_CACHE:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_NOTES:
+		{
+			match(OPT_NOTES);
+			cmd.setDescription(getnameid("acl notes"));
+			break;
+		}
+		case EOF:
+		case OPT_CACHE:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_CACHE:
+		{
+			match(OPT_CACHE);
+			{
+			switch ( LA(1)) {
+			case VAL_FULL:
+			{
+				match(VAL_FULL);
+				cmd.setCache(AclGenCommand.CACHE_FULLCACHE);
+				break;
+			}
+			case VAL_NONE:
+			{
+				match(VAL_NONE);
+				cmd.setCache(AclGenCommand.CACHE_DBSDIRECT);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case EOF:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		return cmd;
+	}
+	
 	public final DistributionListAlterCommand  altdl() throws RecognitionException, TokenStreamException {
 		DistributionListAlterCommand cmd;
 		
@@ -1826,9 +2053,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-			
-				    cmd.setName(getnameid("Distribution list name"));
-				
+		cmd.setName(getnameid("Distribution list name"));
 		}
 		{
 		match(OPT_NELEM);
@@ -1843,9 +2068,9 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		
 				    try {
-					cmd.setMaxElements(Integer.parseInt(nume.getText()));
+					    cmd.setMaxElements(Integer.parseInt(nume.getText()));
 				    } catch (NumberFormatException ex) {
-					throw new NumberFormatException("Expecting integer value for <numelem>");
+					    throw new NumberFormatException("Expecting integer value for <numelem>");
 				    }
 				
 		}
@@ -1947,6 +2172,19 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final AclViewCommand  viewacl() throws RecognitionException, TokenStreamException {
+		AclViewCommand cmd;
+		
+		
+		cmd = new AclViewCommand();
+		
+		
+		{
+		cmd.setAclId(getlongid("acl id"));
+		}
+		return cmd;
+	}
+	
 	public final DistributionListViewCommand  viewdl() throws RecognitionException, TokenStreamException {
 		DistributionListViewCommand cmd;
 		
@@ -1955,9 +2193,88 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
+		cmd.setName(getnameid("Distribution list name"));
+		}
+		return cmd;
+	}
+	
+	public final AclGrantCommand  grantacl() throws RecognitionException, TokenStreamException {
+		AclGrantCommand cmd;
+		
+		Token  addr = null;
+		
+		cmd = new AclGrantCommand();
+		
+		
+		{
+		cmd.setAclId(getlongid("acl id"));
+		}
+		{
+		match(ADD_FOR);
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
 			
-				    cmd.setName(getnameid("Distribution list name"));
+				    throw new RecognitionException("Address string expected");
 				
+		}
+		cmd.setAddress(addr.getText());
+		}
+		return cmd;
+	}
+	
+	public final AclRevokeCommand  revokeacl() throws RecognitionException, TokenStreamException {
+		AclRevokeCommand cmd;
+		
+		Token  addr = null;
+		
+		cmd = new AclRevokeCommand();
+		
+		
+		{
+		cmd.setAclId(getlongid("acl id"));
+		}
+		{
+		match(ADD_FOR);
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Address string expected");
+				
+		}
+		cmd.setAddress(addr.getText());
+		}
+		return cmd;
+	}
+	
+	public final AclCheckCommand  checkacl() throws RecognitionException, TokenStreamException {
+		AclCheckCommand cmd;
+		
+		Token  addr = null;
+		
+		cmd = new AclCheckCommand();
+		
+		
+		{
+		cmd.setAclId(getlongid("acl id"));
+		}
+		{
+		match(ADD_FOR);
+		try { // for error handling
+			addr = LT(1);
+			match(STR);
+		}
+		catch (RecognitionException ex) {
+			
+				    throw new RecognitionException("Address string expected");
+				
+		}
+		cmd.setAddress(addr.getText());
 		}
 		return cmd;
 	}
@@ -2006,11 +2323,40 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException(ex.getMessage()+". "+
-								  msg+" expected. ");
+			throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
 				
 		}
 		return out;
+	}
+	
+	public final long  getlongid(
+		String msg
+	) throws RecognitionException, TokenStreamException {
+		long id;
+		
+		Token  num = null;
+		
+		id = 0;
+		
+		
+		try {      // for error handling
+			{
+			num = LT(1);
+			match(STR);
+			id = Long.parseLong(num.getText());
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
+				
+		}
+		catch (NumberFormatException ex) {
+			
+			throw new RecognitionException(ex.getMessage()+". Long value for <"+msg+"> expected. ");
+				
+		}
+		return id;
 	}
 	
 	public final void srcdef(
@@ -2055,9 +2401,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		{
-		
-				    cmd.addSrcDef(def);	
-				
+		cmd.addSrcDef(def);
 		}
 	}
 	
@@ -2119,17 +2463,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SRC);
 			{
-			int _cnt25=0;
-			_loop25:
+			int _cnt30=0;
+			_loop30:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt25>=1 ) { break _loop25; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt30>=1 ) { break _loop30; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt25++;
+				_cnt30++;
 			} while (true);
 			}
 			}
@@ -2151,17 +2495,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_DST);
 			{
-			int _cnt29=0;
-			_loop29:
+			int _cnt34=0;
+			_loop34:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd, needSmeId);
 				}
 				else {
-					if ( _cnt29>=1 ) { break _loop29; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt34>=1 ) { break _loop34; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt29++;
+				_cnt34++;
 			} while (true);
 			}
 			}
@@ -2774,14 +3118,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop94:
+			_loop99:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop94;
+					break _loop99;
 				}
 				
 			} while (true);
@@ -3154,6 +3498,12 @@ public CommandParser(ParserSharedInputState state) {
 		"\"view\"",
 		"\"apply\"",
 		"\"show\"",
+		"\"grant\"",
+		"\"revoke\"",
+		"\"check\"",
+		"\"access\"",
+		"\"for\"",
+		"\"to\"",
 		"\"alias\"",
 		"\"route\"",
 		"\"profile\"",
@@ -3162,6 +3512,8 @@ public CommandParser(ParserSharedInputState state) {
 		"\"dl\"",
 		"\"dlsubmitter\"",
 		"\"dlmember\"",
+		"\"acl\"",
+		"\"name\"",
 		"\"hide\"",
 		"\"nohide\"",
 		"\"bill\"",
@@ -3207,6 +3559,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"notes\"",
 		"\"forceReplayPath\"",
 		"\"forceDelivery\"",
+		"\"cache\"",
 		"\"full\"",
 		"\"none\"",
 		"\"default\"",
