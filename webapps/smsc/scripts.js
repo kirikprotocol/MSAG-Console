@@ -60,12 +60,16 @@ function validateField_mask(elem)
 	{
 		return true;
 	}
-	var pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
-	var pattern1 = RegExp(pattern_header + "\\d{1,20}\\?{0,19}$");
-	var pattern2 = RegExp(pattern_header + "(\\d|\\?){1,20}$");
-	var special_pattern_header = "^\\.5\\.0\\.";
-	var special_pattern1 = RegExp(special_pattern_header + "[ _\\-0-9A-Za-z]{1,20}\\?{0,19}$");
-	var special_pattern2 = RegExp(special_pattern_header + "([ _\\-0-9A-Za-z]|\\?){1,20}$");
+	//var pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
+	//var pattern1 = RegExp(pattern_header + "\\d{1,20}\\?{0,19}$");
+	//var pattern2 = RegExp(pattern_header + "(\\d|\\?){1,20}$");
+	var pattern1 = /^((\.[0-6]\.(0|1|3|4|6|8|9|10|14|18)\.)|(\+))?\d{1,20}\?{0,19}$/;
+    var pattern2 = /^((\.[0-6]\.(0|1|3|4|6|8|9|10|14|18)\.)|(\+))?(\d|\?){1,20}$/;
+	//var special_pattern_header = "^\\.5\\.0\\.";
+	//var special_pattern1 = RegExp(special_pattern_header + "[ _\\-0-9A-Za-z]{1,20}\\?{0,19}$");
+	//var special_pattern2 = RegExp(special_pattern_header + "([ _\\-0-9A-Za-z]|\\?){1,20}$");
+    var special_pattern1 = /^\.5\.0\.[ _\-0-9A-Za-z]{1,20}\?{0,19}$/;
+    var special_pattern2 = /^\.5\.0\.([ _\-0-9A-Za-z]|\?){1,20}$/;
 
 	return elem.value == null
 		|| (
@@ -113,7 +117,8 @@ function validateField_nonEmpty(elem)
 
 function validateField_email(elem)
 {
-	var r = RegExp("(^).*\@.*\..*$");
+	//var r = RegExp("(^).*\@.*\..*$");
+	var r = /(^).*\@.*\..*$/
 	return elem.value == null || elem.value.match(r) == null
 		? validationError(elem, "Invalid mask")
 		: true;
@@ -129,7 +134,8 @@ function validateField_positive(elem)
 
 function validateField_unsigned(elem)
 {
-	var r = RegExp("^(\\s*)(\\d+)(\\s*)$");
+	//var r = RegExp("^(\\s*)(\\d+)(\\s*)$");
+	var r = /^(\s*)(\d+)(\s*)$/;
 	return elem.value == null || elem.value.match(r) == null
 		? validationError(elem, "value must be decimal without sign")
 		: true;
@@ -141,8 +147,11 @@ function validateField_address(elem)
 	{
 		return true;
 	}
-	var r1 = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
-	var r2 = RegExp("^\\.5\\.0\\.[ _\\-0-9A-Za-z]{1,20}$");
+	//var r1 = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
+	//var r2 = RegExp("^\\.5\\.0\\.[ _\\-0-9A-Za-z]{1,20}$");
+	var r1 = /^((\.[0-6]\.(0|1|3|4|6|8|9|10|14|18)\.)|(\+))?\d{1,20}$/
+    var r2 = /^\.5\.0\.[ _\-0-9A-Za-z]{1,20}$/;
+
 	return elem.value == null || (elem.value.match(r1) == null && elem.value.match(r2) == null)
 		? validationError(elem, "Invalid address")
 		: true;
