@@ -138,30 +138,13 @@ function showhide(sectionId)
 				param(out, "DB user password", "MessageStore.Storage.dbUserPassword", bean.getStringParam("MessageStore.Storage.dbUserPassword"));
 			finishParams(out);
 		finishSection(out);
-		//~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Archive ~~~~~~~~~~~~~~~~~~~~~~~~
-		startSection(out, "MessageStore.Archive", "Archive", false);
+		//~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Archive.Cleaner ~~~~~~~~~~~~~~~~~~~~~~~~
+		startSection(out, "MessageStore.Archive.Cleaner", "Cleaner", false);
 			startParams(out);
-				param(out, "enabled",    "MessageStore.Archive.enabled",    bean.getBoolParam("MessageStore.Archive.enabled"));
-				param(out, "interval",   "MessageStore.Archive.interval",   bean.getIntParam( "MessageStore.Archive.interval"));
-				param(out, "finalized",  "MessageStore.Archive.finalized",  bean.getIntParam( "MessageStore.Archive.finalized"));
-				param(out, "uncommited", "MessageStore.Archive.uncommited", bean.getIntParam( "MessageStore.Archive.uncommited"));
-			finishParams(out);
-			//~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Archive.Cleaner ~~~~~~~~~~~~~~~~~~~~~~~~
-			startSection(out, "MessageStore.Archive.Cleaner", "Cleaner", false);
-				startParams(out);
-					param(out, "enabled",         "MessageStore.Archive.Cleaner.enabled",  bean.getBoolParam("MessageStore.Archive.Cleaner.enabled"));
-					param(out, "age (days)",      "MessageStore.Archive.Cleaner.age",      bean.getIntParam( "MessageStore.Archive.Cleaner.age"));
-					param(out, "awake (seconds)", "MessageStore.Archive.Cleaner.awake",    bean.getIntParam( "MessageStore.Archive.Cleaner.awake"));
-					param(out, "interval",        "MessageStore.Archive.Cleaner.interval", bean.getIntParam( "MessageStore.Archive.Cleaner.interval"));
-				finishParams(out);
-			finishSection(out);
-		finishSection(out);
-		//~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Billing ~~~~~~~~~~~~~~~~~~~~~~~~
-		startSection(out, "MessageStore.Billing", "Billing", false);
-			startParams(out);
-				param(out, "DB instance", "MessageStore.Billing.dbInstance", bean.getStringParam("MessageStore.Storage.dbInstance"));
-				param(out, "DB user name", "MessageStore.Billing.dbUserName", bean.getStringParam("MessageStore.Storage.dbUserName"));
-				param(out, "DB user password", "MessageStore.Billing.dbUserPassword", bean.getStringParam("MessageStore.Storage.dbUserPassword"));
+				param(out, "enabled",         "MessageStore.Archive.Cleaner.enabled",  bean.getBoolParam("MessageStore.Cleaner.enabled"));
+				param(out, "age (days)",      "MessageStore.Archive.Cleaner.age",      bean.getIntParam( "MessageStore.Cleaner.age"));
+				param(out, "awake (seconds)", "MessageStore.Archive.Cleaner.awake",    bean.getIntParam( "MessageStore.Cleaner.awake"));
+				param(out, "interval",        "MessageStore.Archive.Cleaner.interval", bean.getIntParam( "MessageStore.Cleaner.interval"));
 			finishParams(out);
 		finishSection(out);
 		//~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Cache ~~~~~~~~~~~~~~~~~~~~~~~~
