@@ -27,9 +27,12 @@ static Mutex needStopLock;
 static Event bServiceWaitEvent;
 static bool  bServiceIsStopped = false;
 
+ArchiveProcessor* archiveProcessor = 0;
+
 static void setNeedStop(bool stop=true) {
     MutexGuard gauard(needStopLock);
     bServiceIsStopped = stop;
+    archiveProcessor->Stop();
     if (stop) bServiceWaitEvent.Signal();
 }
 static bool isNeedStop() {
@@ -37,15 +40,13 @@ static bool isNeedStop() {
     return bServiceIsStopped;
 }
 
-extern "C" void signalHandler(int sig)
+extern "C" void appSignalHandler(int sig)
 {
     smsc_log_debug(logger, "Signal %d handled !", sig);
-    if (sig==SIGTERM || sig==SIGINT) {
+    if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT)
+    {
         smsc_log_info(logger, "Stopping ...");
         setNeedStop(true);
-    }
-    if (sig==SIGPIPE) {
-        smsc_log_warn(logger, "Sig Pipe received !!!");
     }
 }
 extern "C" void atExitHandler(void)
@@ -54,23 +55,57 @@ extern "C" void atExitHandler(void)
     smsc::util::xml::TerminateXerces();
 }
 
+extern "C" void setShutdownHandler(void)
+{
+    sigset_t set;
+    sigemptyset(&set); 
+    sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+    if(thr_sigsetmask(SIG_UNBLOCK, &set, NULL) != 0) {
+        if (logger) smsc_log_error(logger, "Failed to set signal mask (shutdown handler)");
+    }
+    sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
+}
+extern "C" void clearSignalMask(void)
+{
+    sigset_t set;
+    sigemptyset(&set);
+    for(int i=1;i<=37;i++)
+        if(i!=SIGQUIT && i!=SIGBUS && i!=SIGSEGV) sigaddset(&set,i);
+    if(thr_sigsetmask(SIG_SETMASK, &set, NULL) != 0) {
+        if (logger) smsc_log_error(logger, "Failed to clear signal mask");
+    }
+}
+
+struct ShutdownThread : public Thread
+{
+    Event shutdownEvent;
+
+    ShutdownThread() : Thread() {};
+    virtual ~ShutdownThread() {};
+
+    virtual int Execute() {
+        clearSignalMask();
+        setShutdownHandler();
+        shutdownEvent.Wait();
+        return 0;
+    };
+    void Stop() {
+        shutdownEvent.Signal();    
+    };
+} shutdownThread;
+
 int main(void)
 {
-    Logger::Init("logger.properties");
-    logger = Logger::getInstance("smsc.store.ArchiveDaemon");
-
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
+    
+    Logger::Init("logger.properties");
+    logger = Logger::getInstance("smsc.store.ArchiveDaemon");
 
     atexit(atExitHandler);
-    
-    sigset_t set; sigemptyset(&set);
-    sigaddset(&set, SIGINT); sigaddset(&set, SIGPIPE); sigaddset(&set, SIGTERM);
-    sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
-    pthread_sigmask(SIG_SETMASK, &set, NULL);
-    sigset(SIGINT, signalHandler); sigset(SIGTERM, signalHandler); sigset(SIGPIPE, signalHandler);
-    sigset(smsc::system::SHUTDOWN_SIGNAL, signalHandler);
+    clearSignalMask();
+    shutdownThread.Start();
     
     int resultCode = 0;
     try 
@@ -81,12 +116,15 @@ int main(void)
         ConfigView apConfig(Manager::getInstance(), "ArchiveDaemon");
         int daemonInterval = apConfig.getInt("interval");
         ArchiveProcessor processor(&apConfig);
+        archiveProcessor = &processor;
 
         while (!isNeedStop())
         {
             processor.process();
             bServiceWaitEvent.Wait(daemonInterval*1000);
         }
+
+        archiveProcessor = 0;
 
     } catch (ConfigException& exc) {
         smsc_log_error(logger, "Configuration invalid. Details: %s Exiting.", exc.what());
@@ -102,5 +140,6 @@ int main(void)
         resultCode = -4;
     }
 
+    shutdownThread.Stop();
     return resultCode;
 }
