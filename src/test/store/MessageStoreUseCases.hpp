@@ -1,7 +1,7 @@
 #ifndef TEST_STORE_MESSAGE_STORE_USE_CASES
 #define TEST_STORE_MESSAGE_STORE_USE_CASES
 
-#include "MessageStoreTestCases.h"
+#include "MessageStoreTestCases.hpp"
 
 namespace smsc  {
 namespace test  {
@@ -37,9 +37,35 @@ public:
 	bool deleteSM();
 	
 	/**
+	 * Удаление SM ожидающих доставки на определенный номер.
+	 */
+	bool deleteWaitingSMByNumber();
+
+	/**
 	 * Чтение SM.
 	 */
 	bool loadSM();
+
+	/**
+	 * Загрузка SM ожидающих доставки на определенный номер.
+	 */
+	bool loadWaitingSMByDestinationNumber();
+
+	/**
+	 * Загрузка архива SM доставленных на определенный номер.
+	 */
+	bool loadSMArchieveByDestinationNumber();
+
+	/**
+	 * Загрузка архива SM доставленных с определенного номера.
+	 */
+	bool loadSMArchieveByOriginatingNumber();
+
+	/**
+	 * Просмотр статистики причин недоставки сообщений с указанием количества 
+	 * абонентов, которым не были доставлены сообщения по этим причинам.
+	 */
+	bool getSMDeliveryFailureStatistics();
 
 	/**
 	 * Создание записи для начисления оплаты.

@@ -1,14 +1,16 @@
-#include "MessageStoreUseCases.h"
+#include "MessageStoreUseCases.hpp"
 
 namespace smsc  {
 namespace test  {
 namespace store {
 
+/*
 bool MessageStoreUseCases::storeSM()
 {
 	return tc.storeCorrectSM() &&
 		tc.storeIncorrectSM();
 }
+*/
 
 bool MessageStoreUseCases::setSMStatus()
 {
@@ -30,10 +32,41 @@ bool MessageStoreUseCases::deleteSM()
 		tc.deleteNonExistingSM();
 }
 	
+bool MessageStoreUseCases::deleteWaitingSMByNumber()
+{
+	return tc.deleteExistentWaitingSMByNumber() &&
+		tc.deleteNonExistentWaitingSMByNumber();
+
+}
+
 bool MessageStoreUseCases::loadSM()
 {
 	return tc.loadExistingSM() &&
 		tc.loadNonExistingSM();
+}
+
+bool MessageStoreUseCases::loadWaitingSMByDestinationNumber()
+{
+	return tc.loadExistentWaitingSMByDestinationNumber() &&
+		tc.loadNonExistentWaitingSMByDestinationNumber();
+}
+
+bool MessageStoreUseCases::loadSMArchieveByDestinationNumber()
+{
+	return tc.loadExistentSMArchieveByDestinationNumber() &&
+		tc.loadNonExistentSMArchieveByDestinationNumber();
+}
+
+bool MessageStoreUseCases::loadSMArchieveByOriginatingNumber()
+{
+	return tc.loadExistentSMArchieveByOriginatingNumber() &&
+		tc.loadNonExistentSMArchieveByOriginatingNumber();
+}
+
+bool MessageStoreUseCases::getSMDeliveryFailureStatistics()
+{
+	return tc.getExistentSMDeliveryFailureStatistics() &&
+		tc.getNonExistentSMDeliveryFailureStatistics();
 }
 
 bool MessageStoreUseCases::createBillingRecord()

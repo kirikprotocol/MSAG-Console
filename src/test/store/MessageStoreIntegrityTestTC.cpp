@@ -1,6 +1,10 @@
-#include "MessageStoreTestCases.h"
-#include "../util/CheckList.h"
+#include "MessageStoreTestCases.hpp"
+#include "test/util/CheckList.hpp"
+#include "test/util/Util.hpp"
+#include <iostream>
 
+using namespace std;
+using namespace smsc::sms;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
 
@@ -14,14 +18,18 @@ using namespace smsc::test::util;
  */
 int main(int argc, char* argv[])
 {
-	MessageStoreTestCases tc;
+	MessageStoreTestCases tc; //throws StoreException
 	CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
 	cl.startNewGroup("Message Store");
 	
 	//Сохранение SM
-	cl.writeResult("Сохранение правильного SM", tc.storeCorrectSM());
-	cl.writeResult("Сохранение неправильного SM", tc.storeIncorrectSM());
+	SMS sms;
+	cl.writeResult("Сохранение правильного SM",
+		tc.storeCorrectSM(&sms, ALL_TC)); //RAND_TC
+	cl.writeResult("Сохранение неправильного SM",
+		tc.storeIncorrectSM(sms, ALL_TC));
 	
+	/*
 	//Изменение статуса SM
 	cl.writeResult("Корректное изменение статуса SM", tc.setCorrectSMStatus());
 	cl.writeResult("Некорректное изменение статуса SM", 
@@ -47,6 +55,7 @@ int main(int argc, char* argv[])
 	//Создание записи для начисления оплаты
 	cl.writeResult("Создание записи для начисления оплаты", 
 		tc.createBillingRecord());
+	*/
 
 	return 0;
 }

@@ -1,45 +1,36 @@
-#include "MessageStoreTestCases.h"
+#include "MessageStoreLoadTestTaskManager.hpp"
+#include <iostream>
 
-namespace smsc  {
-namespace test  {
-namespace store {
-
-MessageStoreTestCases tc;
-
-int businessCycle()
-{
-	int ops = 0;
-	for (; ops < 200; ops++)
-	{
-		//store
-		if (ops % 100 == 0)
-		{
-			tc.storeIncorrectSM();
-		}
-		else if (ops % 50 == 0)
-		{
-			tc.storeCorrectSM();
-			tc.setIncorrectSMStatus();
-		}
-		else
-		{
-			tc.storeCorrectSM();
-			tc.setCorrectSMStatus();
-		}
-		//tc.createBillingRecord();
-	}
-	tc.updateCorrectExistentSM(); ops++;
-	tc.deleteExistingSM(); ops++;
-	tc.loadExistingSM(); ops++;
-
-	return ops;
-}
-
-}
-}
-}
+using namespace std;
+using namespace smsc::test::store;
 
 int main(int argc, char* argv[])
 {
+	if (argc != 2)
+	{
+		cout << "Usage: MessageStoreLoadTest <numThreads>" << endl;
+		exit(-1);
+	}
+	
+	const int numThreads = atoi(argv[1]);
+	MessageStoreLoadTestTaskManager tm;
+	tm.startTasks(numThreads);
+	while (true)
+	{
+		char ch;
+		cin >> ch;
+		switch (ch)
+		{
+			case 'q':
+				tm.stopTasks();
+				cout << "Total operations = " << tm.getOps() << endl;
+				exit(0);
+				break;
+			default:
+				cout << "Rate = " << tm.getRate()
+					<< " messages/second" << endl;
+		}
+	}
 	return 0;
 }
+
