@@ -64,7 +64,7 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
   {
     ds.CreateNew();
 
-    ds.idHash->Create((path+"smsid.idx").c_str(),config.smsIdHashSize,cached);//!!!!!!!!!!!!!!!!!!!!!
+    ds.idHash->Create((path+"smsid.idx").c_str(),config.smsIdHashSize,cached);
 
     ds.srcIdHash->Create((path+"srcsmeid.idx").c_str(),config.smeIdHashSize,cached);
     ds.srcIdData->Create((path+"srcsmeid.dat").c_str(),config.smeIdRootSize,cached);

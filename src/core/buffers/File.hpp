@@ -185,6 +185,30 @@ public:
     fseek(f,0,SEEK_SET);
   }
 
+  void DiscardCache()
+  {
+    if(!inMemoryFile || !f)throw FileException(FileException::errFileNotOpened,filename.c_str());
+    inMemoryFile=false;
+    int sz=(int)Size();
+    if(bufferSize<sz)
+    {
+      delete [] buffer;
+      buffer=new char[sz];
+      bufferSize=sz;
+    }
+    inMemoryFile=true;
+    fseek(f,0,SEEK_SET);
+    if(fread(buffer,sz,1,f)!=1)throw FileException(FileException::errReadFailed,filename.c_str());
+    fileSize=sz;
+    bufferPosition=0;
+  }
+
+  const std::string& getFileName()
+  {
+    return filename;
+  }
+
+
   void ROpen(const char* fn)
   {
     Close();
@@ -237,6 +261,8 @@ public:
       inMemoryFile=false;
     }
   }
+
+
   int Read(void* buf,size_t sz)
   {
     if(inMemoryFile)

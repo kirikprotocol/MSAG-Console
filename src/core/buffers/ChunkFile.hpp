@@ -257,8 +257,7 @@ public:
   {
     if(isCached)
     {
-      f.Close();
-      opened=false;
+      f.DiscardCache();
     }
   }
 

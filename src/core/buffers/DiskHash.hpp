@@ -306,11 +306,7 @@ public:
 
   void DiscardCache()
   {
-    if(isFileOpen)
-    {
-      f.Close();
-      isFileOpen=false;
-    }
+    if(isCached)f.DiscardCache();
   }
 
   void Insert(const K& key,const V& value)
