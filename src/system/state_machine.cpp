@@ -688,12 +688,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
           Descriptor d;
           __trace__("DELIVERYRESP: change state to enroute");
           store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
-          smsc->notifyScheduler();
         }catch(...)
         {
           __trace__("DELIVERYRESP: failed to change state to enroute");
         }
         smsc->notifyScheduler();
+        sendNotifyReport(sms,t.msgId,"subscriper busy");
         return UNKNOWN_STATE;
       }break;
       default:
@@ -779,22 +779,28 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
 StateType StateMachine::alert(Tuple& t)
 {
-  __trace2__("ALERT:%lld",t.msgId);
+  __trace2__("ALERT: %lld",t.msgId);
   //time_t now=time(NULL);
+  Descriptor d;
+  SMS sms;
   try{
-    Descriptor d;
-    SMS sms;
     store->retriveSms((SMSId)t.msgId,sms);
-
-    store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
-    smsc->notifyScheduler();
-  }catch(std::exception& e)
-  {
-    __trace2__("alert failed:%s",e.what());
   }catch(...)
   {
-    __trace2__("alert failed");
+    __trace2__("ALERT: Failed to retrieve sms:%lld",t.msgId);
+    return UNKNOWN_STATE;
   }
+  try{
+    store->changeSmsStateToEnroute(t.msgId,d,0,rescheduleSms(sms));
+  }catch(std::exception& e)
+  {
+    __trace2__("ALERT: failed to change state to enroute:%s",e.what());
+  }catch(...)
+  {
+    __trace2__("ALERT: failed to change state to enroute");
+  }
+  smsc->notifyScheduler();
+  sendNotifyReport(sms,t.msgId,"delivery attempt timed out");
   return UNKNOWN_STATE;
 }
 

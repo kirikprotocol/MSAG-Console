@@ -15,6 +15,10 @@ namespace smppio{
 
 #define SMPP_PROXY_QUEUE_LIMIT 4096
 
+const int proxyTranmitter=1;
+const int proxyReceiver=2;
+const int proxyTransceiver=3;
+
 using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
 
@@ -27,15 +31,31 @@ public:
     smppSocket->assignProxy(this);
     seq=1;
     managerMonitor=NULL;
+    proxyType=proxyTransceiver;
   }
   virtual ~SmppProxy(){}
   virtual void close()
   {
 
   }
+  bool CheckValidIncomingCmd(const SmscCommand& cmd);
+  bool CheckValidOutgoingCmd(const SmscCommand& cmd);
+
+
   virtual void putCommand(const SmscCommand& cmd)
   {
     trace("put command:enter");
+    if(!CheckValidIncomingCmd(cmd))
+    {
+      putIncomingCommand
+      (
+        SmscCommand::makeGenericNack
+        (
+          cmd->get_dialogId(),
+          SmppStatusSet::ESME_RINVCMDID
+        )
+      );
+    }
     {
       MutexGuard g(mutexout);
       if(outqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
@@ -113,6 +133,11 @@ public:
     return seq++;
   }
 
+  void setProxyType(int newtype)
+  {
+    proxyType=newtype;
+  }
+
   void setId(const std::string newid)
   {
     id=newid;
@@ -125,10 +150,86 @@ protected:
   std::string id;
   smsc::core::buffers::Array<SmscCommand> inqueue,outqueue;
   int seq;
+  int proxyType;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
   SmppSocket *smppSocket;
 };
+
+bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
+{
+  switch(proxyType)
+  {
+    case proxyReceiver:
+      switch(cmd->get_commandId())
+      {
+        case DELIVERY:
+        case GENERIC_NACK:
+        case UNBIND_RESP:
+          return true;
+        case SUBMIT_RESP:
+        case DELIVERY_RESP:
+        case SUBMIT:
+        case QUERY:
+        default:
+          return false;
+      }
+    case proxyTranmitter:
+      switch(cmd->get_commandId())
+      {
+        case GENERIC_NACK:
+        case SUBMIT_RESP:
+        case UNBIND_RESP:
+          return true;
+        case DELIVERY:
+        case DELIVERY_RESP:
+        case SUBMIT:
+        case QUERY:
+        default:
+          return false;
+      }
+    case proxyTransceiver:return true;
+  }
+  return false;
+}
+
+bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
+{
+  switch(proxyType)
+  {
+    case proxyReceiver:
+      switch(cmd->get_commandId())
+      {
+        case DELIVERY_RESP:
+        case GENERIC_NACK:
+          return true;
+        case SUBMIT_RESP:
+        case DELIVERY:
+        case SUBMIT:
+        case QUERY:
+        case UNBIND_RESP:
+        default:
+          return false;
+      }
+    case proxyTranmitter:
+      switch(cmd->get_commandId())
+      {
+        case SUBMIT:
+        case GENERIC_NACK:
+        case DELIVERY_RESP:
+          return true;
+        case DELIVERY:
+        case SUBMIT_RESP:
+        case QUERY:
+        case UNBIND_RESP:
+        default:
+          return false;
+      }
+    case proxyTransceiver:return true;
+  }
+  return true;
+}
+
 
 };//smppio
 };//system

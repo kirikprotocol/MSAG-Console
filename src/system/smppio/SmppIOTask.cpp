@@ -217,6 +217,18 @@ int SmppInputThread::Execute()
               PduBindTRX *bindpdu=
                 reinterpret_cast<smsc::smpp::PduBindTRX*>(pdu);
               SmppProxy *proxy=new SmppProxy(ss);
+              switch(pdu->get_commandId())
+              {
+                case SmppCommandSet::BIND_RECIEVER:
+                  proxy->setProxyType(proxyReceiver);
+                  break;
+                case SmppCommandSet::BIND_TRANSMITTER:
+                  proxy->setProxyType(proxyTranmitter);
+                  break;
+                case SmppCommandSet::BIND_TRANCIEVER:
+                  proxy->setProxyType(proxyTransceiver);
+                  break;
+              }
               PduBindTRXResp resppdu;
               resppdu.get_header().
                 set_commandId(pdu->get_commandId()|0x80000000);

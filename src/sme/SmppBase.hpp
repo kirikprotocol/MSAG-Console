@@ -27,7 +27,7 @@ using std::exception;
 using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
 
-class SmppConnectException{
+class SmppConnectException:exception{
 int reason;
 public:
   struct Reason{
@@ -53,7 +53,9 @@ public:
       case Reason::timeout:return "Bind attempt timed out";
       case Reason::unknown:return "Unknown error";
     }
+    return "INVALID REASON";
   }
+  virtual const char* what(){return getTextReason();}
 };
 
 
