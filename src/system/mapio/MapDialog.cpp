@@ -419,6 +419,8 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
   	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
   	appContext.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
 
+    USHORT_T result;
+    
     result = Et96MapOpenReq(ssn, dialogid, &appContext, &destMscAddr, &scAddr, 0, 0, 0 );
     if ( result != ET96MAP_E_OK ) {
       __trace2__("MAP::MapDialog::Et96MapCloseInd Et96MapOpenReq error 0x%x",result);
@@ -435,7 +437,6 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
     ET96MAP_SM_RP_UI_T ui;
     mkDeliverPDU(sms.get(),&ui);
 
-    USHORT_T result;
     __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
 	  result = Et96MapV2ForwardSmMTReq( SSN, dialogid, 1, &smRpDa, &smRpOa, &ui, FALSE);
 	  if( result != ET96MAP_E_OK ) {
