@@ -271,8 +271,9 @@ private:
   }
   Link* FindLinkEx(pchashstr key,unsigned &index)
   {
-    if(!_bucketsnum || !_count)return NULL;
+    if(!_bucketsnum)return NULL;
     index=HashFunc(key) % _bucketsnum;
+    if(!_count)return NULL;
     return _buckets[index].Find(key);
   }
 
