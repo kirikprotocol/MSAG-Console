@@ -365,6 +365,7 @@ int SmppInputThread::Execute()
                   }
                 }catch(...)
                 {
+                  __trace__("SmppInput: exception in putIncomingCommand, proxy limit or proxy died");
                 }
                 break;
               }catch(...)
