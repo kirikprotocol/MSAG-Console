@@ -71,7 +71,10 @@ void Smsc::mainLoop()
     }
     do
     {
+      hrtime_t gfStart=gethrtime();
       smeman.getFrame(frame,WAIT_DATA_TIMEOUT);
+      hrtime_t gfEnd=gethrtime();
+      info2(log,"getFrame time:%lld",gfEnd-gfStart);
       now = time(NULL);
       if ( stopFlag ) return;
       Task task;
