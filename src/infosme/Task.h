@@ -44,14 +44,20 @@ namespace smsc { namespace infosme
     extern time_t parseDate(const char* str);
     extern int    parseTime(const char* str);
     
-    static const uint8_t MESSAGE_NEW_STATE          = 0;  // Новое или перешедуленное сообщение
+    static const uint8_t MESSAGE_NEW_STATE          =  0; // Новое или перешедуленное сообщение
     static const uint8_t MESSAGE_WAIT_STATE         = 10; // Ожидает submitResponce
     static const uint8_t MESSAGE_ENROUTE_STATE      = 20; // В процессе доставки, ожидает deliveryReciept
-
+    static const uint8_t MESSAGE_DELIVERED_STATE    = 30; // Доставлено
+    static const uint8_t MESSAGE_EXPIRED_STATE      = 40; // Не доставлено, время жизни истекло
+    static const uint8_t MESSAGE_FAILED_STATE       = 50; // Не доставлено, фатальная ошибка при доставке
+    
     typedef enum {
-        NEW         = MESSAGE_NEW_STATE,
+        NEW         = MESSAGE_NEW_STATE, 
         WAIT        = MESSAGE_WAIT_STATE,
-        ENROUTE     = MESSAGE_ENROUTE_STATE
+        ENROUTE     = MESSAGE_ENROUTE_STATE,
+        DELIVERED   = MESSAGE_DELIVERED_STATE,
+        EXPIRED     = MESSAGE_EXPIRED_STATE,
+        FAILED      = MESSAGE_FAILED_STATE
     } MessageState;
 
     struct Message
@@ -72,10 +78,7 @@ namespace smsc { namespace infosme
         bool        enabled;
         int         priority;
 
-        bool    retryOnFail;
-        bool    replaceIfPresent;
-        bool    trackIntegrity;
-        bool    transactionMode;
+        bool    retryOnFail, replaceIfPresent, trackIntegrity, transactionMode, keepHistory;
         
         time_t  endDate;            // full date/time
         time_t  retryTime;          // only HH:mm:ss in seconds
@@ -96,7 +99,7 @@ namespace smsc { namespace infosme
         TaskInfo()
             : id(""), name(""), enabled(true), priority(0),
               retryOnFail(false), replaceIfPresent(false), 
-              trackIntegrity(false), transactionMode(false), 
+              trackIntegrity(false), transactionMode(false), keepHistory(false),
               endDate(-1), retryTime(-1), validityPeriod(-1), validityDate(-1),
               activePeriodStart(-1), activePeriodEnd(-1),
               dsId(""), tablePrefix(""), querySql(""), msgTemplate(""), svcType(""),
@@ -106,7 +109,7 @@ namespace smsc { namespace infosme
             : id(info.id), name(info.name), enabled(info.enabled), priority(info.priority),
               retryOnFail(info.retryOnFail), replaceIfPresent(info.replaceIfPresent),
               trackIntegrity(info.trackIntegrity), transactionMode(info.transactionMode), 
-              endDate(info.endDate), retryTime(info.retryTime), 
+              keepHistory(info.keepHistory), endDate(info.endDate), retryTime(info.retryTime), 
               validityPeriod(info.validityPeriod), validityDate(info.validityDate),
               activePeriodStart(info.activePeriodStart), activePeriodEnd(info.activePeriodEnd),
               dsId(info.dsId), tablePrefix(info.tablePrefix), querySql(info.querySql), 
@@ -123,7 +126,7 @@ namespace smsc { namespace infosme
             id = info.id; name = info.name; enabled = info.enabled; priority = info.priority;
             retryOnFail = info.retryOnFail; replaceIfPresent = info.replaceIfPresent;
             trackIntegrity = info.trackIntegrity; transactionMode = info.transactionMode; 
-            endDate = info.endDate; retryTime = info.retryTime;
+            keepHistory = info.keepHistory; endDate = info.endDate; retryTime = info.retryTime;
             validityPeriod = info.validityPeriod; validityDate = info.validityDate;
             activePeriodStart = info.activePeriodStart; 
             activePeriodEnd = info.activePeriodEnd;
@@ -259,7 +262,7 @@ namespace smsc { namespace infosme
          * посредством endGeneration(). Удаляет все сгенерированные сообщения.
          * Использует connection из внутреннего источника данных.
          */
-        void dropAllMessages(Statistics* statistics);
+        void dropNewMessages(Statistics* statistics);
         
         /**
          * Используется для восстановления сообщения из состояния WAIT в случае,
@@ -284,14 +287,16 @@ namespace smsc { namespace infosme
         bool getNextMessage(Connection* connection, Message& message);
         
         /**
-         * Удаляет сообщение. Выполняется из TaskProcessor'а
+         * Финализирует/удаляет сообщение. Выполняется из TaskProcessor'а
+         * Финализация/удаление регулируется флагом info.keepHistory
          * 
          * @param msgId         идентификатор сообщения в таблице задачи.
+         * @param state         финальное состояние сообщения              
          * @param connection    connection от TaskProcessor'а 
          *                      из внутреннего источника данных. (оптимизация)
-         * @return true         если сообщение найдено и удалено. 
+         * @return true         если сообщение найдено и финализированно/удалено. 
          */
-        bool deleteMessage(uint64_t msgId, Connection* connection=0);
+        bool finalizeMessage(uint64_t msgId, MessageState state, Connection* connection=0);
         
         /**
          * Переводит сообщение в состояние NEW по получению deliveryReport Failed

@@ -421,27 +421,36 @@ void TaskProcessor::processMessage(Task* task, Connection* connection, uint64_t 
 
     if (delivered)
     {
-        task->deleteMessage(msgId, connection);
+        task->finalizeMessage(msgId, DELIVERED, connection);
         statistics->incDelivered(task->getId());
     }
     else
     {
-        bool needDelete = true;
         TaskInfo info = task->getInfo();
         if (retry && (immediate || (info.retryOnFail && info.retryTime > 0)))
         {
             time_t nextTime = time(NULL)+((immediate) ? 0:info.retryTime);
-            
-            if (!task->retryMessage(msgId, nextTime, connection)) {
-                smsc_log_warn(logger, "Message #%lld not found for retry.", msgId);
+
+            if ((info.endDate>0 && nextTime >=info.endDate) ||
+                (info.validityDate>0 && nextTime>=info.validityDate))
+            {
+                task->finalizeMessage(msgId, EXPIRED, connection);
                 statistics->incFailed(info.id);
-            } else {
-                needDelete = false;
-                if (!immediate) statistics->incRetried(info.id);
+            } 
+            else
+            {
+                if (!task->retryMessage(msgId, nextTime, connection)) {
+                    smsc_log_warn(logger, "Message #%lld not found for retry.", msgId);
+                    statistics->incFailed(info.id);
+                } 
+                else if (!immediate) statistics->incRetried(info.id);
             }
         }
-        else statistics->incFailed(info.id);
-        if (needDelete) task->deleteMessage(msgId, connection);
+        else
+        { 
+            task->finalizeMessage(msgId, FAILED, connection);
+            statistics->incFailed(info.id);
+        }
     }
 }
 
@@ -480,7 +489,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
     Task* task = taskGuard.get();
     if (!task) {
         if (!internal) smsc_log_warn(logger, "Unable to locate task '%s' for sequence number=%d", 
-                                   tmIds.taskId.c_str(), seqNum);
+                                     tmIds.taskId.c_str(), seqNum);
         return;
     }
     TaskInfo info = task->getInfo();
@@ -491,22 +500,33 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
         if (retry && (immediate || (info.retryOnFail && info.retryTime > 0)))
         {
             time_t nextTime = time(NULL)+((immediate) ? 0:info.retryTime);
-            if (!task->retryMessage(tmIds.msgId, nextTime)) {
-                smsc_log_warn(logger, "Message #%lld not found for retry.", tmIds.msgId);
-                statistics->incFailed(tmIds.taskId);
-            } else {
-                needDelete = false;
-                if (!immediate) statistics->incRetried(tmIds.taskId);
+
+            if ((info.endDate>0 && nextTime >=info.endDate) ||
+                (info.validityDate>0 && nextTime>=info.validityDate))
+            {
+                task->finalizeMessage(tmIds.msgId, EXPIRED);
+                statistics->incFailed(info.id);
+            } 
+            else
+            {
+                if (!task->retryMessage(tmIds.msgId, nextTime)) {
+                    smsc_log_warn(logger, "Message #%lld not found for retry.", tmIds.msgId);
+                    statistics->incFailed(info.id);
+                } 
+                else if (!immediate) statistics->incRetried(info.id);
             }
         }
-        else statistics->incFailed(tmIds.taskId);
-        if (needDelete) task->deleteMessage(tmIds.msgId);
+        else
+        {
+            task->finalizeMessage(tmIds.msgId, FAILED);
+            statistics->incFailed(info.id);
+        }
     }
     else
     {
         if (info.transactionMode) {
-            statistics->incDelivered(tmIds.taskId);
-            task->deleteMessage(tmIds.msgId);
+            task->finalizeMessage(tmIds.msgId, DELIVERED);
+            statistics->incDelivered(info.id);
             return;
         }
         

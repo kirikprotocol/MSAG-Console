@@ -70,7 +70,7 @@ namespace smsc { namespace infosme
                 }
                 break;
             case dropAllMessagesMethod:
-                task->dropAllMessages(statistics); // TODO: update statistics here too !!!
+                task->dropNewMessages(statistics);
                 break;
             default:
                 __trace2__("Invalid method '%d' invoked on task.", method);

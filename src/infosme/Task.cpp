@@ -52,11 +52,10 @@ const char* DELETE_GENERATING_STATEMENT_ID    = "DELETE_GENERATING_STATEMENT_ID"
 const char* INSERT_GENERATING_STATEMENT_ID    = "INSERT_GENERATING_STATEMENT_ID"; 
 const char* DELETE_NEW_MESSAGES_STATEMENT_ID  = "%s_DELETE_NEW_MESSAGES_STATEMENT_ID";
 const char* SELECT_MESSAGES_STATEMENT_ID      = "%s_SELECT_MESSAGES_STATEMENT_ID";
-const char* DO_WAIT_MESSAGE_STATEMENT_ID      = "%s_DO_WAIT_MESSAGE_STATEMENT_ID";
 const char* NEW_MESSAGE_STATEMENT_ID          = "%s_NEW_MESSAGE_STATEMENT_ID";
 const char* CLEAR_MESSAGES_STATEMENT_ID       = "%s_CLEAR_MESSAGES_STATEMENT_ID";
-const char* DELETE_MESSAGES_STATEMENT_ID      = "%s_DELETE_MESSAGES_STATEMENT_ID";
 const char* RESET_MESSAGES_STATEMENT_ID       = "%s_RESET_MESSAGES_STATEMENT_ID";
+const char* DO_STATE_MESSAGE_STATEMENT_ID     = "%s_DO_STATE_MESSAGE_STATEMENT_ID";
 const char* DO_RETRY_MESSAGE_STATEMENT_ID     = "%s_DO_RETRY_MESSAGE_STATEMENT_ID";
 const char* DO_DELETE_MESSAGE_STATEMENT_ID    = "%s_DO_DELETE_MESSAGE_STATEMENT_ID";
 const char* DO_ENROUTE_MESSAGE_STATEMENT_ID   = "%s_DO_ENROUTE_MESSAGE_STATEMENT_ID";
@@ -64,12 +63,11 @@ const char* DO_ENROUTE_MESSAGE_STATEMENT_ID   = "%s_DO_ENROUTE_MESSAGE_STATEMENT
 const char* DELETE_GENERATING_STATEMENT_SQL   = "DELETE FROM INFOSME_GENERATING_TASKS WHERE TASK_ID=:TASK_ID";
 const char* INSERT_GENERATING_STATEMENT_SQL   = "INSERT INTO INFOSME_GENERATING_TASKS TASK_ID VALUES(:TASK_ID)";
 const char* DELETE_NEW_MESSAGES_STATEMENT_SQL = "DELETE FROM %s WHERE STATE=:NEW";
-const char* DO_WAIT_MESSAGE_STATEMENT_SQL     = "UPDATE %s SET STATE=:WAIT WHERE ID=:ID";
 const char* CLEAR_MESSAGES_STATEMENT_SQL      = "DELETE FROM %s WHERE STATE=:NEW AND ABONENT=:ABONENT";
 const char* NEW_SD_INDEX_STATEMENT_SQL        = "CREATE INDEX %s_SD_IDX ON %s (STATE, SEND_DATE)";
 const char* NEW_AB_INDEX_STATEMENT_SQL        = "CREATE INDEX %s_AB_IDX ON %s (STATE, ABONENT)";
-const char* DELETE_MESSAGES_STATEMENT_SQL     = "DELETE FROM %s WHERE STATE=:NEW";
 const char* RESET_MESSAGES_STATEMENT_SQL      = "UPDATE %s SET STATE=:NEW WHERE STATE=:WAIT";
+const char* DO_STATE_MESSAGE_STATEMENT_SQL    = "UPDATE %s SET STATE=:STATE WHERE ID=:ID";
 const char* DO_RETRY_MESSAGE_STATEMENT_SQL    = "UPDATE %s SET STATE=:NEW, SEND_DATE=:SEND_DATE WHERE ID=:ID";
 const char* DO_DELETE_MESSAGE_STATEMENT_SQL   = "DELETE FROM %s WHERE ID=:ID";
 const char* DO_ENROUTE_MESSAGE_STATEMENT_SQL  = "UPDATE %s SET STATE=:ENROUTE WHERE ID=:ID AND STATE=:WAIT";
@@ -122,14 +120,12 @@ Task::~Task()
         dsInt->closeRegisteredQueries(DELETE_GENERATING_STATEMENT_ID);
         */
         
-        std::auto_ptr<char> delGeneratedId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(delGeneratedId.get());
+        std::auto_ptr<char> delNewMessagesId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(delNewMessagesId.get());
         std::auto_ptr<char> newMessageId(prepareSqlCall(NEW_MESSAGE_STATEMENT_ID));
         dsInt->closeRegisteredQueries(newMessageId.get());
         std::auto_ptr<char> clearMessagesId(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_ID));
         dsInt->closeRegisteredQueries(clearMessagesId.get());
-        std::auto_ptr<char> deleteMessagesId(prepareSqlCall(DELETE_MESSAGES_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(deleteMessagesId.get());
         std::auto_ptr<char> resetMessagesId(prepareSqlCall(RESET_MESSAGES_STATEMENT_ID));
         dsInt->closeRegisteredQueries(resetMessagesId.get());
         std::auto_ptr<char> retryMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
@@ -140,8 +136,8 @@ Task::~Task()
         dsInt->closeRegisteredQueries(enrouteMessageId.get());
         std::auto_ptr<char> selectMessageId(prepareSqlCall(SELECT_MESSAGES_STATEMENT_ID));
         dsInt->closeRegisteredQueries(selectMessageId.get());
-        std::auto_ptr<char> waitMessageId(prepareSqlCall(DO_WAIT_MESSAGE_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(waitMessageId.get());
+        std::auto_ptr<char> stateMessageId(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(stateMessageId.get());
     }
     if (dsOwn)
     {
@@ -168,6 +164,7 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     info.replaceIfPresent = config->getBool("replaceMessage");
     info.transactionMode = config->getBool("transactionMode");
     info.trackIntegrity = config->getBool("trackIntegrity");
+    info.keepHistory = config->getBool("keepHistory");
     info.endDate = parseDateTime(config->getString("endDate"));
     info.retryTime = parseTime(config->getString("retryTime"));
     if (info.retryOnFail && info.retryTime <= 0)
@@ -639,7 +636,7 @@ void Task::endGeneration()
     generationEndEvent.Wait();
 }
 
-void Task::dropAllMessages(Statistics* statistics)
+void Task::dropNewMessages(Statistics* statistics)
 {
     smsc_log_debug(logger, "dropAllMessages method called on task '%s'",
                    info.id.c_str());
@@ -654,8 +651,8 @@ void Task::dropAllMessages(Statistics* statistics)
         if (!connection)
             throw Exception("Failed to obtain connection to internal data source.");
 
-        std::auto_ptr<char> deleteMessagesId(prepareSqlCall(DELETE_MESSAGES_STATEMENT_ID));
-        std::auto_ptr<char> deleteMessagesSql(prepareSqlCall(DELETE_MESSAGES_STATEMENT_SQL));
+        std::auto_ptr<char> deleteMessagesId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
+        std::auto_ptr<char> deleteMessagesSql(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_SQL));
         Statement* deleteMessages = connection->getStatement(deleteMessagesId.get(), 
                                                              deleteMessagesSql.get());
         if (!deleteMessages)
@@ -812,12 +809,18 @@ bool Task::retryMessage(uint64_t msgId, time_t nextTime, Connection* connection)
     return result;
 }
 
-bool Task::deleteMessage(uint64_t msgId, Connection* connection)
-{
-    smsc_log_debug(logger, "deleteMessage method called on task '%s' for id=%lld",
-                 info.id.c_str(), msgId);
+bool Task::finalizeMessage(uint64_t msgId, MessageState state, Connection* connection)
+{   
+    if (state == NEW || state == WAIT || state == ENROUTE) {
+        smsc_log_warn(logger, "Invalid state=%d to finalize message on task '%s' for id=%lld",
+                      state, info.id.c_str(), msgId);
+        return false;
+    } else {
+        smsc_log_debug(logger, "finalizeMessage(%d) method called on task '%s' for id=%lld",
+                       state, info.id.c_str(), msgId);
+    }
 
-    int wdTimerId = -1;
+    int wdTimerId = -1; 
     bool result = false;
     bool connectionInternal = false;
     try
@@ -827,18 +830,32 @@ bool Task::deleteMessage(uint64_t msgId, Connection* connection)
             connectionInternal = true;
         }
         if (!connection) 
-            throw Exception("deleteMessage(): Failed to obtain connection");
+            throw Exception("finalizeMessage(): Failed to obtain connection");
 
-        std::auto_ptr<char> deleteMessageId(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_ID));
-        std::auto_ptr<char> deleteMessageSql(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_SQL));
-        Statement* deleteMessage = connection->getStatement(deleteMessageId.get(), 
-                                                            deleteMessageSql.get());
-        if (!deleteMessage)
-            throw Exception("deleteMessage(): Failed to create statement for messages access.");
+        Statement* finalizeMessage = 0;
+        if (info.keepHistory)
+        {
+            std::auto_ptr<char> changeStateId(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_ID));
+            std::auto_ptr<char> changeStateSql(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_SQL));
+            finalizeMessage = connection->getStatement(changeStateId.get(), changeStateSql.get());
+            if (finalizeMessage) {
+                finalizeMessage->setUint8 (1, state);
+                finalizeMessage->setUint64(2, msgId);
+            }
+        }
+        else
+        {
+            std::auto_ptr<char> deleteMessageId(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_ID));
+            std::auto_ptr<char> deleteMessageSql(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_SQL));
+            finalizeMessage = connection->getStatement(deleteMessageId.get(), deleteMessageSql.get());
+            if (finalizeMessage) finalizeMessage->setUint64(1, msgId);
+        }
+        
+        if (!finalizeMessage)
+            throw Exception("finalizeMessage(): Failed to create statement for messages access.");
         
         wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
-        deleteMessage->setUint64  (1, msgId);
-        result = (deleteMessage->executeUpdate() > 0);
+        result = (finalizeMessage->executeUpdate() > 0);
         if (result) connection->commit();
         else connection->rollback();
     }
@@ -850,7 +867,7 @@ bool Task::deleteMessage(uint64_t msgId, Connection* connection)
         } catch (...) {
             smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        smsc_log_error(logger, "Task '%s'. deleteMessage(): Messages access failure. "
+        smsc_log_error(logger, "Task '%s'. finalizeMessage(): Messages access failure. "
                      "Details: %s", info.id.c_str(), exc.what());
     }
     catch (...) {
@@ -861,7 +878,7 @@ bool Task::deleteMessage(uint64_t msgId, Connection* connection)
         } catch (...) {
             smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
         }
-        smsc_log_error(logger, "Task '%s'. deleteMessage(): Messages access failure.", 
+        smsc_log_error(logger, "Task '%s'. finalizeMessage(): Messages access failure.", 
                      info.id.c_str());
     }
     
@@ -989,8 +1006,8 @@ bool Task::getNextMessage(Connection* connection, Message& message)
             Message fetchedMessage(rs->getUint64(1), rs->getString(2), rs->getString(3));
             dsInt->stopTimer(wdTimerId);
             
-            std::auto_ptr<char> waitMessageId(prepareSqlCall(DO_WAIT_MESSAGE_STATEMENT_ID));
-            std::auto_ptr<char> waitMessageSql(prepareSqlCall(DO_WAIT_MESSAGE_STATEMENT_SQL));
+            std::auto_ptr<char> waitMessageId(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_ID));
+            std::auto_ptr<char> waitMessageSql(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_SQL));
             Statement* waitMessage = connection->getStatement(waitMessageId.get(), 
                                                               waitMessageSql.get());
             if (!waitMessage)
