@@ -127,7 +127,7 @@ public class Options extends MCISmeBean
     getConfig().setString("MCISme.receiptWaitTime", receiptWaitTime);
     getConfig().setInt("MCISme.inputQueueSize", inputQueueSize);
     getConfig().setInt("MCISme.outputQueueSize", outputQueueSize);
-    getConfig().setInt("MCISme.maxEventsPerMessage", maxRowsPerMessage);
+    getConfig().setInt("MCISme.maxRowsPerMessage", maxRowsPerMessage);
     getConfig().setBool("MCISme.forceInform", forceInform);
     getConfig().setBool("MCISme.forceNotify", forceNotify);
     getConfig().setBool("MCISme.forceSeparate", forceSeparate);
