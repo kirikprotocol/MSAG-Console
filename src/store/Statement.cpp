@@ -294,7 +294,7 @@ bool IsRejectedStatement::isRejected()
 const char* IsTimeCorrectStatement::sql = (const char*)
 "SELECT NVL(COUNT(*), 0) FROM SMS_MSG\
  WHERE ST=:1 AND OA_LEN=:2 AND OA_TON=:3 AND OA_NPI=:4 AND OA_VAL=:5\
- AND SUBMIT_TIME=:6)";
+ AND SUBMIT_TIME=:6";
 
 IsTimeCorrectStatement::IsTimeCorrectStatement(Connection* connection)
     throw(StorageException)
