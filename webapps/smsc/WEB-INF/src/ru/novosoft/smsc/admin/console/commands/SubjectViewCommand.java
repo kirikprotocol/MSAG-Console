@@ -9,11 +9,27 @@ package ru.novosoft.smsc.admin.console.commands;
 
 
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.route.Subject;
 
 public class SubjectViewCommand extends SubjectGenCommand
 {
-    public void process(CommandContext ctx) {
-        ctx.setMessage("Not implemented yet");
+    private String showSubject(Subject subj)
+    {
+        // todo Show masks here ?
+        return "Subject '"+subj.getName()+"'"+
+               " Default SME id:"+subj.getDefaultSme().getId();
+    }
+    public void process(CommandContext ctx)
+    {
+        Subject smscSubject = ctx.getSmsc().getSubjects().get(subject);
+        if (smscSubject != null) {
+            ctx.setMessage(showSubject(smscSubject));
+            ctx.setStatus(CommandContext.CMD_OK);
+        }
+        else {
+            ctx.setMessage("Subject '"+subject+"' not found");
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+        }
     }
 }
 

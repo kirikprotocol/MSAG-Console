@@ -15,7 +15,7 @@ import java.util.ArrayList;
 public abstract class SubjectGenCommand implements Command
 {
     protected String subject;
-    protected String defaultSmeId;
+    protected String defaultSmeId = null;
     protected ArrayList masks = new ArrayList();
 
     public void setDefaultSmeId(String defaultSmeId) {
@@ -23,6 +23,9 @@ public abstract class SubjectGenCommand implements Command
     }
     public void setSubject(String subject) {
         this.subject = subject;
+    }
+    public void addMask(String mask) {
+        masks.add(mask);
     }
 }
 

@@ -58,10 +58,8 @@ public abstract class Session extends Thread
                 parser.parse(ctx);
             }
             catch (Exception e) {
-                String error = "Exc: "+e.getMessage();
-                ctx.setMessage(error);
+                ctx.setMessage(e.getMessage());
                 ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
-                logger.error(error, e);
             }
             display(writer, ctx);
         }

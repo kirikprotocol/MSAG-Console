@@ -14,7 +14,6 @@ import javax.sql.*;
 
 import java.util.Vector;
 import java.util.ArrayList;
-//import java.util.Enumeration;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -24,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.smsc_service.CancelMessageData;
 
 public class SmsView
 {
@@ -106,12 +106,13 @@ public class SmsView
       for (int i=0; i<set.getRowsCount(); i++) {
         SmsRow row = set.getRow(i);
         if (row != null) {
-          output.addElement(row.getIdString());
+          output.addElement(new CancelMessageData(
+                  row.getIdString(), row.getFrom(), row.getTo()));
           deleted++;
         }
       }
-      try
-      {
+
+      try {
         smsc.processCancelMessages(output);
       }
       catch (Exception exc) {

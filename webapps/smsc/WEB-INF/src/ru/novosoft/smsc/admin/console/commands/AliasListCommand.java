@@ -15,7 +15,8 @@ import java.util.Iterator;
 
 public class AliasListCommand implements Command
 {
-    public void process(CommandContext ctx) {
+    public void process(CommandContext ctx)
+    {
         Iterator i = ctx.getSmsc().getAliases().iterator();
         if (!i.hasNext()) {
             ctx.setMessage("No aliases defined");

@@ -13,6 +13,7 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 
 import java.net.Socket;
 import java.io.PrintWriter;
+import java.util.Iterator;
 
 public class HumanSession extends Session
 {
@@ -37,8 +38,25 @@ public class HumanSession extends Session
         super(owner, socket);
     }
 
-    protected void display(PrintWriter writer, CommandContext ctx) {
-        writer.print(ctx.getMessage()+'\r');
+    protected void display(PrintWriter writer, CommandContext ctx)
+    {
+        int status = ctx.getStatus();
+        String message = ctx.getMessage();
+
+        if (status == CommandContext.CMD_LIST) {
+            if (message != null) writer.println(ctx.getMessage()+":\r");
+            Iterator i = ctx.getResults().iterator();
+            while (i.hasNext()) {
+                Object obj = i.next();
+                if (obj != null) {
+                    String str = (obj instanceof String) ? (String)obj:obj.toString();
+                    writer.println(' '+str+'\r');
+                }
+            }
+        } else {
+            writer.print((status == CommandContext.CMD_OK) ? "Ok. ":"Failed: ");
+            writer.println(message+'\r');
+        }
     }
 
 }

@@ -9,10 +9,28 @@ package ru.novosoft.smsc.admin.console.commands;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.route.Subject;
+
+import java.util.Iterator;
 
 public class SubjectListCommand implements Command
 {
-    public void process(CommandContext ctx) {
-        ctx.setMessage("Not implemented yet");
+    public void process(CommandContext ctx)
+    {
+        Iterator i = ctx.getSmsc().getSubjects().iterator();
+        if (!i.hasNext()) {
+            ctx.setMessage("No subjects defined");
+            ctx.setStatus(CommandContext.CMD_OK);
+        }
+        else {
+            while (i.hasNext()) {
+                Subject subj = (Subject)i.next();
+                if (subj != null) {
+                    ctx.addResult(subj.getName());
+                }
+            }
+            ctx.setMessage("Subjects list");
+            ctx.setStatus(CommandContext.CMD_LIST);
+        }
     }
 }
