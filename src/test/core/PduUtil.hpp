@@ -55,7 +55,8 @@ typedef enum
 {
 	PDU_NORMAL = 1, //pdu отправляемая тестовой sme
 	PDU_EXT_SME = 2, //pdu отправляемая внешней sme (db sme, profiler, ...)
-	PDU_NULL = 3 //pdu отправляемая в никуда (smscsme)
+	PDU_NULL_OK = 3, //pdu отправляемая sme, которая не вышлет sme ack и в deliver_sm_resp ответит ESME_ROK (smsc sme)
+	PDU_NULL_ERR = 4 //pdu отправляемая sme, которая не вышлет sme ack и в deliver_sm_resp вышлет error
 } PduType;
 
 class PduDataObject
@@ -120,6 +121,7 @@ protected:
 	time_t checkTime;
 	time_t validTime; //окончание доставки pdu
 	PduFlag flag; //флаг получения сообщения получателем
+	bool registered;
 
 public:
 	PduData* const pduData;
@@ -127,16 +129,20 @@ public:
 	PduMonitor(time_t checkTime, time_t validTime, PduData* pduData, PduFlag flag);
 	virtual ~PduMonitor();
 
-	uint32_t getId() { return id; }
-	PduFlag getFlag() { return flag; }
-	time_t getCheckTime() { return checkTime; }
-	time_t getValidTime() { return validTime; }
+	uint32_t getId() const { return id; }
+	PduFlag getFlag() const { return flag; }
+	time_t getCheckTime() const { return checkTime; }
+	time_t getValidTime() const { return validTime; }
 	
 	void setMissingOnTime();
 	void setReceived();
 	void setNotExpected();
 	void setExpired();
 	void setError();
+
+	bool isRegistered() const { return registered; }
+	void setRegistered(bool val) { registered = val; }
+
 	virtual MonitorType getType() const = NULL;
 	virtual string str() const;
 
@@ -175,7 +181,7 @@ public:
 	time_t getStartTime() const { return startTime; }
 	time_t getLastTime() const { return lastTime; }
 	time_t calcNextTime(time_t t) const;
-	int getLastAttempt() { return lastAttempt; }
+	int getLastAttempt() const { return lastAttempt; }
 
 	/**
 	 * Проверки:
@@ -215,7 +221,7 @@ struct DeliveryReportMonitor : public PduMonitor
 	uint32_t deliveryStatus;
 
 	DeliveryReportMonitor(time_t checkTime, PduData* pduData, PduFlag flag);
-	virtual ~DeliveryReportMonitor();
+	virtual ~DeliveryReportMonitor() {}
 
 	void reschedule(time_t checkTime);
 	virtual MonitorType getType() const = NULL;
@@ -224,15 +230,15 @@ struct DeliveryReportMonitor : public PduMonitor
 
 struct DeliveryReceiptMonitor : public DeliveryReportMonitor
 {
-	DeliveryReceiptMonitor(time_t startTime, PduData* pduData, PduFlag flag)
-		: DeliveryReportMonitor(startTime, pduData, flag) {}
+	DeliveryReceiptMonitor(time_t checkTime, PduData* pduData, PduFlag flag);
+	virtual ~DeliveryReceiptMonitor();
 	virtual MonitorType getType() const { return DELIVERY_RECEIPT_MONITOR; }
 };
 
 struct IntermediateNotificationMonitor : public DeliveryReportMonitor
 {
-	IntermediateNotificationMonitor(time_t startTime, PduData* pduData, PduFlag flag)
-		: DeliveryReportMonitor(startTime, pduData, flag) {}
+	IntermediateNotificationMonitor(time_t checkTime, PduData* pduData, PduFlag flag);
+	virtual ~IntermediateNotificationMonitor();
 	virtual MonitorType getType() const { return INTERMEDIATE_NOTIFICATION_MONITOR; }
 };
 

@@ -108,6 +108,7 @@ vector<int> ReschedulePduMonitor::checkSchedule(time_t recvTime) const
 
 vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 {
+	__require__(!registered);
 	vector<int> res;
 	PduFlag prevFlag = flag;
 	int attempt = 0;
@@ -232,10 +233,12 @@ PduData::~PduData()
 
 void PduData::ref()
 {
+	//__trace2__("PduData::ref(): this = %p, count = %d", this, count);
 	count++;
 }
 void PduData::unref()
 {
+	//__trace2__("PduData::unref(): this = %p, count = %d", this, count);
 	__require__(count > 0);
 	count--;
 	if (!count)
@@ -262,7 +265,8 @@ string PduData::str() const
 
 PduMonitor::PduMonitor(time_t _checkTime, time_t _validTime,
 	PduData* _pduData, PduFlag _flag)
-: checkTime(_checkTime), validTime(_validTime), pduData(_pduData), flag(_flag)
+: checkTime(_checkTime), validTime(_validTime), pduData(_pduData), flag(_flag),
+	registered(false)
 {
 	__require__(pduData);
 	pduData->ref();
@@ -276,12 +280,14 @@ PduMonitor::PduMonitor(time_t _checkTime, time_t _validTime,
 	
 PduMonitor::~PduMonitor()
 {
+	__require__(!registered);
 	__require__(pduData);
 	pduData->unref();
 }
 
 void PduMonitor::setMissingOnTime()
 {
+	__require__(!registered);
 	flag = PDU_MISSING_ON_TIME_FLAG;
 	checkTime = validTime;
 	__trace2__("monitor set missing: %s", str().c_str());
@@ -289,6 +295,7 @@ void PduMonitor::setMissingOnTime()
 	
 void PduMonitor::setReceived()
 {
+	__require__(!registered);
 	flag = PDU_RECEIVED_FLAG;
 	checkTime = validTime;
 	__trace2__("monitor set received: %s", str().c_str());
@@ -296,6 +303,7 @@ void PduMonitor::setReceived()
 
 void PduMonitor::setNotExpected()
 {
+	__require__(!registered);
 	flag = PDU_NOT_EXPECTED_FLAG;
 	checkTime = validTime;
 	__trace2__("monitor set not expected: %s", str().c_str());
@@ -303,6 +311,7 @@ void PduMonitor::setNotExpected()
 
 void PduMonitor::setExpired()
 {
+	__require__(!registered);
 	flag = PDU_EXPIRED_FLAG;
 	checkTime = validTime;
 	__trace2__("monitor set expired: %s", str().c_str());
@@ -310,6 +319,7 @@ void PduMonitor::setExpired()
 
 void PduMonitor::setError()
 {
+	__require__(!registered);
 	flag = PDU_ERROR_FLAG;
 	checkTime = validTime;
 	__trace2__("monitor set error: %s", str().c_str());
@@ -337,7 +347,7 @@ string PduMonitor::str() const
 			s << ", type = sme ack";
 			break;
 		case GENERIC_NACK_MONITOR:
-			s << ", type = generic type";
+			s << ", type = generic nack";
 			break;
 		default:
 			__unreachable__("Invalid monitor type");
@@ -374,12 +384,12 @@ ResponseMonitor::ResponseMonitor(uint32_t seqNum, PduData* pduData, PduFlag flag
 : PduMonitor(pduData->submitTime, pduData->submitTime, pduData, flag),
 	sequenceNumber(seqNum)
 {
-	__trace2__("monitor created: %s", str().c_str());
+	//__trace2__("monitor created: %s", str().c_str());
 }
 
 ResponseMonitor::~ResponseMonitor()
 {
-	__trace2__("monitor deleted: %s", str().c_str());
+	//__trace2__("monitor deleted: %s", str().c_str());
 }
 
 string ResponseMonitor::str() const
@@ -402,12 +412,12 @@ DeliveryMonitor::DeliveryMonitor(const string& _serviceType, time_t waitTime,
 : ReschedulePduMonitor(waitTime, validTime, pduData, flag),
 	serviceType(_serviceType)
 {
-	__trace2__("monitor created: %s", str().c_str());
+	//__trace2__("monitor created: %s", str().c_str());
 }
 
 DeliveryMonitor::~DeliveryMonitor()
 {
-	__trace2__("monitor deleted: %s", str().c_str());
+	//__trace2__("monitor deleted: %s", str().c_str());
 }
 
 string DeliveryMonitor::str() const
@@ -417,9 +427,9 @@ string DeliveryMonitor::str() const
 	return s.str();
 }
 
-DeliveryReportMonitor::DeliveryReportMonitor(time_t checkTime,
-	PduData* pduData, PduFlag flag)
-: PduMonitor(checkTime, 0, pduData, flag), deliveryFlag(PDU_REQUIRED_FLAG),
+DeliveryReportMonitor::DeliveryReportMonitor(time_t _checkTime,
+	PduData* _pduData, PduFlag _flag)
+: PduMonitor(_checkTime, 0, _pduData, _flag), deliveryFlag(PDU_REQUIRED_FLAG),
 	deliveryStatus(0)
 {
 	__cfg_int__(maxValidPeriod);
@@ -428,16 +438,11 @@ DeliveryReportMonitor::DeliveryReportMonitor(time_t checkTime,
 	{
 		checkTime = validTime;
 	}
-	__trace2__("monitor created: %s", str().c_str());
-}
-
-DeliveryReportMonitor::~DeliveryReportMonitor()
-{
-	__trace2__("monitor deleted: %s", str().c_str());
 }
 
 void DeliveryReportMonitor::reschedule(time_t _checkTime)
 {
+	__require__(!registered);
 	__cfg_int__(maxValidPeriod);
 	switch (flag)
 	{
@@ -460,6 +465,29 @@ string DeliveryReportMonitor::str() const
 	return s.str();
 }
 
+DeliveryReceiptMonitor::DeliveryReceiptMonitor(time_t checkTime, PduData* pduData,
+	PduFlag flag) : DeliveryReportMonitor(checkTime, pduData, flag)
+{
+	//__trace2__("monitor created: %s", str().c_str());
+}
+
+DeliveryReceiptMonitor::~DeliveryReceiptMonitor()
+{
+	//__trace2__("monitor deleted: %s", str().c_str());
+}
+
+IntermediateNotificationMonitor::IntermediateNotificationMonitor(time_t checkTime,
+	PduData* pduData, PduFlag flag)
+: DeliveryReportMonitor(checkTime, pduData, flag)
+{
+	//__trace2__("monitor created: %s", str().c_str());
+}
+
+IntermediateNotificationMonitor::~IntermediateNotificationMonitor()
+{
+	//__trace2__("monitor deleted: %s", str().c_str());
+}
+
 SmeAckMonitor::SmeAckMonitor(time_t _startTime, PduData* pduData, PduFlag flag)
 : PduMonitor(_startTime, 0, pduData, flag), startTime(_startTime)
 {
@@ -469,12 +497,12 @@ SmeAckMonitor::SmeAckMonitor(time_t _startTime, PduData* pduData, PduFlag flag)
 	{
 		checkTime = validTime;
 	}
-	__trace2__("monitor created: %s", str().c_str());
+	//__trace2__("monitor created: %s", str().c_str());
 }
 
 SmeAckMonitor::~SmeAckMonitor()
 {
-	__trace2__("monitor deleted: %s", str().c_str());
+	//__trace2__("monitor deleted: %s", str().c_str());
 }
 
 string SmeAckMonitor::str() const
@@ -489,12 +517,12 @@ GenericNackMonitor::GenericNackMonitor(uint32_t seqNum, PduData* pduData,
 : PduMonitor(pduData->submitTime, pduData->submitTime, pduData, flag),
 	sequenceNumber(seqNum)
 {
-	__trace2__("monitor created: %s", str().c_str());
+	//__trace2__("monitor created: %s", str().c_str());
 }
 
 GenericNackMonitor::~GenericNackMonitor()
 {
-	__trace2__("monitor deleted: %s", str().c_str());
+	//__trace2__("monitor deleted: %s", str().c_str());
 }
 
 string GenericNackMonitor::str() const
