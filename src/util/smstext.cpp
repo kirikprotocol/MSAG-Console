@@ -202,7 +202,7 @@ int partitionSms(SMS* sms,int dstdc)
     int xlen=len;
     for(int i=0;i<len;i++)
     {
-      switch(msg[i])
+      switch(msg[udhilen+i])
       {
         case '{':
         case '}':
