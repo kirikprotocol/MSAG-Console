@@ -11,6 +11,8 @@ using namespace std;
 using smsc::test::core::RouteHolder;
 using smsc::test::sms::SmsUtil;
 
+ltAddress RouteConfigGen::ltAddr = ltAddress();
+
 bool RouteConfigGen::ltSource(const RouteInfo* r1, const RouteInfo* r2)
 {
 	if (ltAddr.operator()(r1->source, r2->source))
