@@ -70,7 +70,7 @@ public:
   {
     MutexGuard guard(mutex);
     unsigned long _time = time(NULL);
-    if ( timeout_link_begin && timeout_link_begin->timeout < _time )
+	if ( timeout_link_begin && timeout_link_begin->timeout < _time )
     {
       *t = *timeout_link_begin;
       __trace2__("TASK::getExpired 0x%x:0x%x",t->sequenceNumber,t->proxy_id);
@@ -172,7 +172,15 @@ public:
     if ( task->timeout_prev )
     {
       task->timeout_prev->timeout_next = task->timeout_next;
-      if ( task->timeout_next ) task->timeout_next->timeout_prev = task->timeout_prev;
+      if ( task->timeout_next )
+      {
+        task->timeout_next->timeout_prev = task->timeout_prev;
+      }
+      else
+	  {
+	    __require__(timeout_link_end==task);
+        timeout_link_end=timeout_link_end->timeout_prev;
+	  }
     }
     else
     {
