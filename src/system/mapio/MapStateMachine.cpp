@@ -592,7 +592,7 @@ static void AttachSmsToDialog(MapDialog* dialog,ET96MAP_SM_RP_UI_T *ud,ET96MAP_S
             msgCount = udh[ptr+3];
             msgNum   = udh[ptr+4];
           }else{
-            ref = ntohs((unsigned short*)(udh+ptr+2));
+            ref = ntohs(*(unsigned short*)(udh+ptr+2));
             msgCount = udh[ptr+4];
             msgNum   = udh[ptr+5];
           }
