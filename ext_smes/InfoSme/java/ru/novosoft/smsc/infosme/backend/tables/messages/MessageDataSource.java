@@ -7,9 +7,7 @@ import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.admin.AdminException;
 
 import javax.sql.DataSource;
-import java.util.Date;
-import java.util.Vector;
-import java.util.ArrayList;
+import java.util.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -61,6 +59,7 @@ public class MessageDataSource implements ru.novosoft.smsc.jsp.util.tables.DataS
       int start = query.getStartPosition();
       int quantity = query.getExpectedResultsQuantity();
       int total = 0;
+      GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
       while (rs.next())
       {
         if (start > total++) continue;
@@ -70,8 +69,7 @@ public class MessageDataSource implements ru.novosoft.smsc.jsp.util.tables.DataS
           String abonent = rs.getString(2);
           if (abonent == null || rs.wasNull()) abonent = "<unknown>";
           byte status = rs.getByte(3);
-          java.sql.Timestamp ts = rs.getTimestamp(4);
-          java.util.Date sendDate = (ts == null || rs.wasNull()) ? null:new Date(ts.getTime());
+          java.util.Date sendDate = rs.getTimestamp(4, cal);
           String message = rs.getString(5);
           if (message == null || rs.wasNull()) message = "<empty>";
           results.add(new MessageDataItem(id, abonent, message, sendDate, status));
@@ -204,13 +202,14 @@ public class MessageDataSource implements ru.novosoft.smsc.jsp.util.tables.DataS
       String sql = prepareSqlResend(taskId);
       stmt = connection.prepareStatement(sql);
 
+      GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
       for (int i=0; i<toDelete.length; i++)
       {
         long id = 0;
         try { id = Long.parseLong(toDelete[i]); }
         catch (Exception e) { e.printStackTrace(); continue; }
         stmt.setByte(1, Message.MESSAGE_NEW_STATE);
-        stmt.setTimestamp(2, new java.sql.Timestamp((new Date()).getTime()));
+        stmt.setTimestamp(2, new java.sql.Timestamp((new Date()).getTime()), cal);
         stmt.setLong(3, id);
         resent += stmt.executeUpdate();
         connection.commit();
@@ -289,8 +288,9 @@ public class MessageDataSource implements ru.novosoft.smsc.jsp.util.tables.DataS
   {
     if (needExpression(filter.getAddress())) stmt.setString(index++, filter.getAddress());
     if (filter.getStatus() != Message.MESSAGE_UNDEFINED_STATE) stmt.setByte(index++, filter.getStatus());
-    if (filter.isFromDateEnabled()) stmt.setTimestamp(index++, new java.sql.Timestamp(filter.getFromDate().getTime()));
-    if (filter.isTillDateEnabled()) stmt.setTimestamp(index++, new java.sql.Timestamp(filter.getTillDate().getTime()));
+    GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+    if (filter.isFromDateEnabled()) stmt.setTimestamp(index++, new java.sql.Timestamp(filter.getFromDate().getTime()), cal);
+    if (filter.isTillDateEnabled()) stmt.setTimestamp(index++, new java.sql.Timestamp(filter.getTillDate().getTime()), cal);
   }
   private void bindQueryInput(MessageFilter filter, PreparedStatement stmt) throws SQLException  {
     bindInput(filter, stmt, 1);
@@ -300,7 +300,8 @@ public class MessageDataSource implements ru.novosoft.smsc.jsp.util.tables.DataS
   }
   private void bindResendInput(MessageFilter filter, PreparedStatement stmt) throws SQLException {
     stmt.setByte(1, Message.MESSAGE_NEW_STATE);
-    stmt.setTimestamp(2, new java.sql.Timestamp((new java.util.Date()).getTime()));
+    GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+    stmt.setTimestamp(2, new java.sql.Timestamp((new java.util.Date()).getTime()), cal);
     bindInput(filter, stmt, 3);
   }
 }
