@@ -345,7 +345,7 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
       }
       return true;
       }
-    case DELIVER_SM: {
+    case DELIVERY: {
       USHORT_T result;
       sms = auto_ptr<SMS>(cmd->get_sms_and_forget(););
 
@@ -430,7 +430,7 @@ void MapProxy::putCommand(const SmscCommand& cmd)
       }
       did = dialog->getDialogId();
       __trace2__("MAP::QueueProcessing: dialog translation SC:%x -> MAP:%x",
-                 dialog->getSMSDialogId(),
+                 dialog->getSMSCDialogId(),
                  dialog->getDialogId());
     }else{
       __trace2__("MAP::QueueProcessing: MAP request");

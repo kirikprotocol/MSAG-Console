@@ -72,8 +72,8 @@ class MapDialog{
   ET96MAP_LOCAL_SSN_T ssn;
   auto_ptr<SMS> sms;
   ET96MAP_APP_CNTX_T appContext;
-  ET96MAP_ADDRESS_T m_msaddr;	
-  ET96MAP_ADDRESS_T m_scaddr;	
+  ET96MAP_ADDRESS_T m_msAddr;	
+  ET96MAP_ADDRESS_T m_scAddr;	
   ET96MAP_SS7_ADDR_T scAddr;
   ET96MAP_SS7_ADDR_T destMscAddr;
   ET96MAP_SS7_ADDR_T mshlrAddr;
@@ -87,7 +87,8 @@ public:
       freeDialogueId(dialogid);
     }
   }
-  void setSmscDialogId(unsigned did) {smscDialogId=did;}
+  USHORT_T getDialogId() { return dialogid; }
+  void setSMSCDialogId(unsigned did) {smscDialogId=did;}
   virtual USHORT_T  Et96MapV2SendRInfoForSmConf ( 
     ET96MAP_LOCAL_SSN_T localSsn,
 		ET96MAP_DIALOGUE_ID_T dialogueId,

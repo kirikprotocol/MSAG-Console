@@ -5,7 +5,7 @@
 #define MY_USER_ID USER01_ID 
 using namespace std;
 
-#ifdef USE_MAPIO
+#ifdef USE_MAP
 
 #define SMSC_FORWARD_RESPONSE 0x001
 

@@ -108,6 +108,7 @@ struct _SmscCommand
   uint32_t get_dialogId() const { return dialogId; }
   CommandId get_commandId() const { return cmdid; }
   SMS* get_sms() const { return (SMS*)dta; }
+  SMS* get_sms_and_forget() { SMS* s = (SMS*)dta; dta = 0; return s;}
   SmsResp* get_resp() const { return (SmsResp*)dta; }
 };
 
