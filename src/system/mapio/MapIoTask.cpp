@@ -97,7 +97,7 @@ USHORT_T Et96MapV1SendRInfoForSmConf (
     ET96MAP_IMSI_T *imsi_sp,
     ET96MAP_LOCATION_INFO_T *locationInfo_sp,
     ET96MAP_LMSI_T *lmsi_sp,
-    ET96MAP_MWD_SETS_T *mwdSet,
+    ET96MAP_MWD_SET_T *mwdSet,
     ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
     ET96MAP_PROV_ERR_T *provErrCode_p)
 {
