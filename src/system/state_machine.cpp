@@ -630,7 +630,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
     if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
        sms.getDeliveryReport() ||
-       (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&1)==1  ||
+       (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1  ||
        sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
     {
       SMS rpt;
@@ -643,7 +643,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setArchivationRequested(false);
       rpt.setIntProperty(Tag::SMPP_ESM_CLASS,
         sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) ||
-        (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&1)==1?4:0);
+        (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1?4:0);
       rpt.setDestinationAddress(sms.getOriginatingAddress());
       rpt.setMessageReference(sms.getMessageReference());
       rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
@@ -705,7 +705,8 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,const char* reason
   rpt.setArchivationRequested(false);
   rpt.setIntProperty(Tag::SMPP_ESM_CLASS,
     sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) ||
-    (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)
+    (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1 ||
+    (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==2
     ?4:0);
   rpt.setDestinationAddress(sms.getOriginatingAddress());
   rpt.setMessageReference(sms.getMessageReference());
