@@ -155,7 +155,7 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
   if ( !HSNS_isEqual() && len != 0 ) {
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) || tag == unType(Tag::SMSC_RAW_SHORTMESSAGE))
     {
-      __trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
+      //__trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
       dropProperty(Tag::SMPP_SHORT_MESSAGE);
       if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ){
         if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
@@ -173,7 +173,7 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
     }
     else if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) || tag == unType(Tag::SMSC_RAW_PAYLOAD))
     {
-      __trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
+      //__trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
       dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
       if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) ){
         if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
@@ -207,7 +207,7 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
   __require__(tag<=SMS_LAST_TAG);
   if ( !HSNS_isEqual() ) {
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ) {
-      __trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
+      //__trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
       if ( !prop.properties[unType(Tag::SMPP_SHORT_MESSAGE)].isSet )
       {
         if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
@@ -231,7 +231,7 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
       }
     }
     else if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) ){
-      __trace2__(":SMS::Body::%s processing MESSAGE_PAYLOAD",__FUNCTION__);
+      //__trace2__(":SMS::Body::%s processing MESSAGE_PAYLOAD",__FUNCTION__);
       if ( !prop.properties[unType(Tag::SMPP_MESSAGE_PAYLOAD)].isSet )
       {
         if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
